@@ -193,6 +193,8 @@ QMAH 是 ASP.NET Core MVC 網站，必須由 ASP.NET Core 主機執行 Controlle
 dotnet watch --project QMAH.Web
 ```
 
+兩個啟動設定檔已在 `Properties/launchSettings.json` 開啟 `hotReloadEnabled`。Visual Studio 的「儲存檔案時套用 Hot Reload」屬於個人 IDE 選項，無法由 Repository 強制設定；需要時可在 `工具 → 選項 → 偵錯 → .NET／C++ Hot Reload` 開啟。使用 `dotnet watch` 時，檔案儲存會由檔案監看器觸發 Hot Reload 或瀏覽器重新整理。
+
 不另外安裝 Live Server。它只能預覽靜態 HTML，無法執行 MVC Controller、Razor、Identity 或資料庫查詢。Visual Studio 的舊版 Web Live Preview 主要面向 ASP.NET Framework，也不作為本專案的共同依賴；需要同時檢查多個瀏覽器時，使用 Visual Studio 的 **Browse With**／Browser Link 即可。
 
 > **微軟官方建議：** Razor Runtime Compilation 在 .NET 10 已標示 obsolete，官方建議開發時改用 Hot Reload。Live Server 只提供靜態檔案伺服器，也無法代替 ASP.NET Core 主機。[Razor runtime compilation is obsolete](https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/10/razor-runtime-compilation-obsolete?view=aspnetcore-10.0)
