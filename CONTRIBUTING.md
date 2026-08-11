@@ -56,6 +56,6 @@ docs: 補充資料庫還原步驟
 
 Push 前逐一確認 Git Changes，避免提交密碼、個人連線設定、raw、快取、log、`bin`、`obj`、大型 EXE 或 `.bak`。資料工具產出只放工作區根目錄 `_工具輸出`，不納入 Repository。
 
-Pull Request 請寫明：修改功能、Area、網址、使用的資料表、驗證方式、共同檔案影響，以及 Schema／資料／圖片是否變動。合併前確認本機建置與 GitHub Actions `Build` 都成功。
+Push 前先確認本機建置成功。Pull Request 請寫明：修改功能、Area、網址、使用的資料表、驗證方式、共同檔案影響，以及 Schema／資料／圖片是否變動。合併前確認 GitHub Actions `Build` 成功。
 
 不要 force push、清除共同歷史、刪除其他人的 Commit，或未經討論改動共同檔案。分支、權限與衝突處理細節見 [Git 與 GitHub 協作手冊](docs/git-workflow.md)。
