@@ -132,7 +132,7 @@ dotnet aspnet-codegenerator `
 | 已有 Action 與 ViewModel，只缺 `.cshtml` | 在 Views 資料夾新增 Razor View |
 | Create 與 Edit 共用欄位 | 新增 Razor Partial View |
 | 批次驗證或圖形介面無法使用 | `dotnet-aspnet-codegenerator` |
-| Identity 帳號、跨表交易、付款、點數、遊戲結算 | 不使用完整 CRUD Scaffold；依既有 API 與流程撰寫 |
+| Identity 帳號、跨表交易、付款、點數、遊戲結算 | 不使用完整 CRUD Scaffold；依既有 Entity、`QmahDbContext`、ViewModel 與流程規則撰寫 |
 
 ## 產生後先修 Area
 
