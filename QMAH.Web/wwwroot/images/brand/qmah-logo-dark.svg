@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 112" role="img" aria-labelledby="title desc">
+  <title id="title">清明鑑定屋</title>
+  <desc id="desc">清明鑑定屋深色介面的長形品牌標誌</desc>
+  <defs>
+    <mask id="lens-mask" maskUnits="userSpaceOnUse">
+      <rect width="560" height="112" fill="#fff"/>
+      <circle cx="70" cy="65" r="15" fill="#000"/>
+    </mask>
+  </defs>
+  <g transform="translate(5 8)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 22h62c5 0 9 4 9 9v38c0 5-4 9-9 9H22c-6 0-11-5-11-11s5-11 11-11h55" stroke="#315e55" stroke-width="5"/>
+  </g>
+  <g transform="translate(5 8)" mask="url(#lens-mask)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M23 45c9-2 17-8 25-17 8 9 16 15 25 17M27 46h42M32 48v14M48 48v14" stroke="#fffaf0" stroke-width="5"/>
+    <path d="M20 67h30" stroke="#fffaf0" stroke-width="5"/>
+  </g>
+  <g transform="translate(5 8)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m74 66 10 10" stroke="#bd503a" stroke-width="6"/>
+    <circle cx="65" cy="57" r="12" stroke="#c9ae69" stroke-width="5"/>
+  </g>
+  <g fill="#fffaf0">
+    <text x="116" y="51" font-family="Noto Serif TC, Source Han Serif TC, Microsoft JhengHei, serif" font-size="33" font-weight="700" letter-spacing="5">清明鑑定屋</text>
+    <text x="117" y="79" fill="#c2d0cc" font-family="Georgia, Times New Roman, serif" font-size="14" font-weight="700" letter-spacing="2.7">QING MING APPRAISAL HOUSE</text>
+  </g>
+  <rect x="116" y="91" width="364" height="2" rx="1" fill="#c9ae69"/>
+  <rect x="491" y="84" width="11" height="11" rx="1.5" fill="#bd503a"/>
+</svg>

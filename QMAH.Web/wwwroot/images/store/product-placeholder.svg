@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title description">
+  <title id="title">商品圖片預留圖</title>
+  <desc id="description">清明鑑定屋開發環境使用的商品圖片預留圖</desc>
+  <rect width="800" height="600" fill="#f4efe5"/>
+  <rect x="85" y="70" width="630" height="460" rx="28" fill="#fffaf0" stroke="#8d6e4a" stroke-width="8"/>
+  <path d="M270 395h260l-35-185H305z" fill="#d8b77b" stroke="#694f32" stroke-width="8"/>
+  <path d="M335 225c0-55 130-55 130 0" fill="none" stroke="#694f32" stroke-width="12" stroke-linecap="round"/>
+  <text x="400" y="470" text-anchor="middle" font-family="sans-serif" font-size="38" fill="#4a3928">QMAH 商品樣本</text>
+</svg>

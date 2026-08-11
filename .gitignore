@@ -1,0 +1,59 @@
+# Visual Studio 與編輯器個人設定
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.rsuser
+*.sln.docstates
+*.code-workspace
+
+# .NET 編譯與測試產物
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+coverage/
+coverage.*
+*.binlog
+publish/
+
+# 本機設定與機密資料
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+*.secrets.json
+*.pfx
+*.publishsettings
+*.pubxml
+
+# SQL Server 實體檔與備份
+*.bak
+*.mdf
+*.ldf
+*.ndf
+
+# 日誌與暫存檔
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+~$*
+
+# 資料收集工具的執行輸出
+_工具輸出/
+**/crawler-output/
+**/crawler-cache/
+**/raw-html/
+**/failed-downloads/
+**/debug-logs/
+
+# 作業系統產生的檔案
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

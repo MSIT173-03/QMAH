@@ -1,0 +1,12 @@
+# 共用核心檔案變更時通知資料庫與整合負責人。
+# 這只會在 Pull Request 自動提出檢視，不會阻擋 feature branch Push。
+/QMAH.Web/Program.cs @HsuanC0921
+/QMAH.Web/Data/ @HsuanC0921
+/QMAH.Web/Models/Entities/ @HsuanC0921
+/QMAH.Web/Models/Identity/ @HsuanC0921
+/QMAH.Web/QMAH.Web.csproj @HsuanC0921
+/QMAH.Web/packages.lock.json @HsuanC0921
+/database/ @HsuanC0921
+/.github/ @HsuanC0921
+/README.md @HsuanC0921
+/CONTRIBUTING.md @HsuanC0921
