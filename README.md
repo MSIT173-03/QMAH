@@ -106,6 +106,7 @@ QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 
 | --- | --- |
 | 從最基礎 List 做到完整 CRUD | [從清單到完整 CRUD](docs/crud-tutorial.md) |
 | 開始 Area 後台與 CRUD | [後台開發起點](docs/backend-start-guide.md) |
+| 各 Area 開始前必做與不要先做的事項 | [五個 Area 開發前檢查](docs/area-development-checklist.md) |
 | 查詢、新增、修改、刪除與交易 | [QmahDbContext 使用方式](docs/dbcontext-usage.md) |
 | 判斷 Entity、ViewModel、DTO、Service | [架構與資料存取規則](docs/architecture-and-data-access.md) |
 | 使用共同資料與測試情境 | [開發資料基準與測試情境](docs/development-data.md) |

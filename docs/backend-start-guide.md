@@ -4,6 +4,8 @@
 
 若還不熟悉 List、Controller、ViewModel、Razor 表單與完整 CRUD 的連接方式，先照[從清單到完整 CRUD](crud-tutorial.md)做一次，再回來依自己的資料表調整。
 
+開始各 Area 前，先閱讀[五個 Area 開發前檢查與執行界線](area-development-checklist.md)，確認哪些事情要先做、哪些資料不能直接刪除，以及各 Area 的跨表責任
+
 ## 開始前
 
 1. 還原最新 Release 附帶的 `QMAH-reference-*.bak`。
