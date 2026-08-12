@@ -28,7 +28,64 @@
 
 不要用一般 CRUD 直接改 `AspNetUsers.PasswordHash`、`AspNetUserRoles` 或 Token。Identity 還要同步正規化欄位、安全戳記與密碼雜湊，直接改資料表很容易留下無法登入的帳號
 
-`Program.cs` 已完成 Identity DI、唯一 Email 規則、登入路徑 `/User/Account/Login` 與拒絕存取路徑 `/User/Account/AccessDenied`。最後整合登入頁時不需要再次註冊另一套 Identity。
+`Program.cs` 已完成 Identity DI、角色授權服務、唯一 Email 規則，以及登入、登出與拒絕存取路徑：
+
+- `/User/Account/Login`
+- `/User/Account/Logout`
+- `/User/Account/AccessDenied`
+
+最後整合登入頁時不需要再次註冊另一套 Identity，也不需要建立第二個 `DbContext`
+
+## Microsoft 官方參考
+
+以下連結以 ASP.NET Core 10 文件為準：
+
+- [Identity：註冊、登入與登出](https://learn.microsoft.com/zh-tw/aspnet/core/security/authentication/identity?view=aspnetcore-10.0)
+- [瀏覽器登入使用 Cookie 的原因](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-10.0)
+- [Cookie 驗證與 Data Protection](https://learn.microsoft.com/zh-tw/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0)
+- [Data Protection 預設演算法與金鑰設定](https://learn.microsoft.com/zh-tw/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0)
+- [Role 與 `[Authorize]` 權限限制](https://learn.microsoft.com/en-us/aspnet/core/mvc/security/authorization/roles?view=aspnetcore-10.0)
+- [PasswordHasher 與密碼雜湊](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-10.0)
+- [Identity Scaffolding](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/scaffold-identity?view=aspnetcore-10.0)
+
+Microsoft 建議瀏覽器網站使用 Cookie，因為瀏覽器會自動處理 Cookie，不需要把登入憑證交給 JavaScript。Identity API 的 Token 模式是不能使用 Cookie 的 Client 才考慮的替代方案，該模式產生的 Token 也不是標準 JWT
+
+登入 Cookie 由 ASP.NET Core Data Protection 保護。未自行覆寫設定時，目前文件列出的預設加密演算法是 AES-256-CBC，完整性驗證使用 HMACSHA256，金鑰存留期預設為 90 天。這些是框架預設值，不是資料庫欄位或 QMAH 自訂的加密流程
+
+密碼交給 Identity 的 `PasswordHasher`。不要在 Controller 或 Service 自己呼叫低階 PBKDF2 API，也不要直接讀寫 `PasswordHash`
+
+`AddIdentity<ApplicationUser, IdentityRole<Guid>>()` 已包含目前 QMAH 使用的 Identity 與角色服務。`[Authorize(Roles = "Admin")]` 的角色名稱需要和資料庫中的角色完全一致，`Admin` 與 `admin` 不視為同一個角色
+
+## 另開空白 MVC 專案測試 Identity
+
+如果只是想先看 Microsoft 範本的完整流程，可以在 Visual Studio 建立：
+
+1. 選擇 **ASP.NET Core Web 應用程式（模型-視圖-控制器）**
+2. 驗證類型選 **個別帳戶（Individual Accounts）**
+3. 建立專案後再依範本執行資料庫初始化
+
+也可以使用 CLI：
+
+```powershell
+dotnet new mvc -au Individual -uld -o IdentityMvcSample
+```
+
+這個測試專案會有自己的 `ApplicationDbContext` 與 Identity 設定，只用來了解官方範本。不要把它的 Context、Migration 或 Identity 類別直接複製回 QMAH
+
+## 已存在 QMAH 專案時的 Identity Scaffolding
+
+QMAH 已經有 `QmahDbContext`、`ApplicationUser`、SQL Server Store 與 Identity 套件。若使用 Visual Studio 的 **Add → New Scaffolded Item → Identity**：
+
+1. 使用既有的 `QmahDbContext`，不要建立新的 Context
+2. 使用既有的 `ApplicationUser`，不要產生另一個 `IdentityUser`
+3. 只選真正需要的頁面，例如 Login、Logout 或 AccessDenied
+4. 產生後檢查差異，確認沒有重複註冊 Identity、改動既有 Schema 或加入不需要的 Migration
+
+官方 Identity Scaffolding 通常會產生 Razor Pages。若採用這條路線，必須依產生結果加入 `AddRazorPages()` 與 `MapRazorPages()`；目前 QMAH 的期中範例採用 MVC `AccountController` 與 View，不要把兩種路由寫法混在同一個登入流程
+
+QMAH 目前已安裝 `Microsoft.AspNetCore.Identity.EntityFrameworkCore`、`Microsoft.EntityFrameworkCore.SqlServer`、`Microsoft.EntityFrameworkCore.Design`、`Microsoft.EntityFrameworkCore.Tools` 與 `Microsoft.VisualStudio.Web.CodeGeneration.Design`。一般開發不需要重複安裝，版本以 `QMAH.Web.csproj` 和 `packages.lock.json` 為準
+
+目前的 MVC `AccountController` 與 View 不需要額外安裝 `Microsoft.AspNetCore.Identity.UI`。若改採官方 Identity Razor Pages Scaffold，才依 Visual Studio 或官方文件提示加入該路線需要的套件，並重新確認 `Program.cs` 的 Razor Pages 註冊
 
 ## 參考資料庫帳號
 
