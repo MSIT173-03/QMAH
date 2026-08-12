@@ -1,6 +1,6 @@
 # 五個 Area 開發前檢查與執行界線
 
-這份文件是 `Catalog`、`Game`、`Social`、`User`、`Store` 共用的開發檢查表。
+`Catalog`、`Game`、`Social`、`User`、`Store` 共用以下開發檢查表。
 
 每開始一個頁面或流程，先確認三件事：
 
@@ -8,7 +8,7 @@
 2. 哪些人可以查看或修改
 3. 這筆資料之後是否仍要保留成歷史
 
-資料庫結構以 SQL Server 為準，程式以既有 Entity、`QmahDbContext` 與 Identity 對照。這份文件不取代 `Schema.sql`、`QmahDbContext` 或 CRUD 範例，而是用來避免開發順序和責任邊界出錯。
+資料庫結構以 SQL Server 為準，程式以既有 Entity、`QmahDbContext` 與 Identity 對照。資料表、`QmahDbContext` 與 CRUD 細節仍以各自文件為準；本表只規定開發順序、資料責任與跨 Area 的修改界線。
 
 ## 共用開發順序
 

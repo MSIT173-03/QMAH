@@ -324,4 +324,4 @@ public async Task<IActionResult> MyProfile()
 5. 登出使用 POST，登出後不能回到受保護頁面
 6. `returnUrl` 只接受站內網址
 
-第三方登入留到期末，請看[第三方登入預留方式](external-login.md)
+第三方登入留到後續階段，請看[第三方登入預留方式](external-login.md)

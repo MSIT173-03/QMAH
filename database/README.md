@@ -38,7 +38,7 @@ Microsoft 對「資料庫 Schema 是來源」的做法稱為 Reverse Engineering
 
 ## 開發環境建立：還原 `.bak`
 
-從 Release 下載最新參考 `.bak`，並在 SSMS 完成一次還原：
+從 GitHub Repository 右側的 **Releases** 開啟最新版本，在 **Assets** 下載參考 `.bak`，再在 SSMS 完成一次還原：
 
 1. 開啟 SQL Server Management Studio（SSMS）。
 2. 連線到本機 SQL Server／LocalDB；預設連線名稱是 `(localdb)\MSSQLLocalDB`。
@@ -87,7 +87,7 @@ Diagram 與 `.bak` 是驗證完成後的閱讀／還原產物，不反過來決�
 
 如果要在另一個已完成正式資料匯入的資料庫補上同一批社群展示資料，可執行 [`seed-showcase-data.sql`](seed-showcase-data.sql)。腳本只新增資料列，不會改動 Schema，也不會在網站啟動時自動執行；重複執行會先辨識既有展示標題，不會重複灌入。
 
-各 Area 開發時可以在自己的 LocalDB 新增、修改、刪除測試資料。只有要調整資料表、欄位、外鍵、索引、約束或跨 Area 關係時，才需要走整合流程。完整邊界請看[共同資料與開發測試資料](../docs/development-data.md)。
+各 Area 開發時可以在自己的 LocalDB 新增、修改、刪除測試資料。只有要調整資料表、欄位、外鍵、索引、約束或跨 Area 關係時，才需要走整合流程。完整邊界請看[共同資料與開發測試資料](../docs/02-development-data.md)。
 
 ## Entity／`QmahDbContext` 對照基準
 

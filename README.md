@@ -38,7 +38,7 @@ QMAH 是 **Qing Ming Appraisal House（清明鑑定屋）** 的縮寫
 
 不需要執行 Migration，也不需要自己建立資料表。先還原參考資料庫，再用 Visual Studio 啟動專案即可
 
-1. 從[最新 Release](https://github.com/MSIT173-03/QMAH/releases/latest)下載 `QMAH-reference-*.bak`
+1. 開啟 Repository 右側的 [最新 Release](https://github.com/MSIT173-03/QMAH/releases/latest)，在 **Assets** 下載 `QMAH-reference-*.bak`
 2. 在 SSMS 連線 `(localdb)\MSSQLLocalDB`
 3. 選擇 **Restore Database...** → **Device**，將資料庫名稱設為 `QMAH`
 4. 用 Visual Studio 開啟 `QMAH.sln`，等待 NuGet 自動還原
@@ -46,7 +46,7 @@ QMAH 是 **Qing Ming Appraisal House（清明鑑定屋）** 的縮寫
 
 備份已包含資料表、索引、外鍵、共同資料與開發情境資料。SSMS Diagram 不包含在備份內，需要時可依[資料庫說明](database/README.md)自行建立
 
-若 Visual Studio、LocalDB、NuGet 或 Scaffold 尚未準備好，請先看[開發環境與共用套件](docs/development-environment.md)
+若 Visual Studio、LocalDB、NuGet 或 Scaffold 尚未準備好，請先看[開發環境與共用套件](docs/01-development-environment.md)
 
 ## 開發前先知道
 
@@ -64,7 +64,7 @@ SQL Server Schema → Entity／Fluent mapping → QmahDbContext → Controller�
 
 Controller 透過建構式取得 scoped `QmahDbContext`，不要自行建立 SQL 連線，也不要使用 `new QmahDbContext()`
 
-一般清單查詢使用 `AsNoTracking()`；表單使用 ViewModel、`ModelState` 與 `[ValidateAntiForgeryToken]`。新增、修改、交易、Identity 與 `RowVersion` 的專案實例都在[QmahDbContext 使用方式](docs/dbcontext-usage.md)
+一般清單查詢使用 `AsNoTracking()`；表單使用 ViewModel、`ModelState` 與 `[ValidateAntiForgeryToken]`。新增、修改、交易、Identity 與 `RowVersion` 的專案實例都在[QmahDbContext 使用方式](docs/07-dbcontext-usage.md)
 
 ### 資料存取維持可追蹤
 
@@ -72,7 +72,7 @@ Controller 透過建構式取得 scoped `QmahDbContext`，不要自行建立 SQL
 
 跨表交易、外部服務、較長的狀態流程、重複呼叫或需要獨立測試的規則，建立用途明確的 Service。這是 QMAH 目前的團隊規則，不代表所有 ASP.NET Core 專案都必須採用相同分層
 
-QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 能封裝 Entity 本身無法表達、而且必須集中維護的行為時才建立；單純轉送屬性只會增加轉換與除錯位置。完整界線請看[架構與資料存取規則](docs/architecture-and-data-access.md)
+QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 能封裝 Entity 本身無法表達、而且必須集中維護的行為時才建立；單純轉送屬性只會增加轉換與除錯位置。完整界線請看[架構與資料存取規則](docs/08-architecture-and-data-access.md)
 
 ## 五個 Area
 
@@ -102,24 +102,33 @@ QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 
 
 ## 文件入口
 
-| 要處理的事情 | 文件 |
-| --- | --- |
-| 從最基礎 List 做到完整 CRUD | [從清單到完整 CRUD](docs/crud-tutorial.md) |
-| 開始 Area 後台與 CRUD | [後台開發起點](docs/backend-start-guide.md) |
-| 各 Area 開始前必做與不要先做的事項 | [五個 Area 開發前檢查](docs/area-development-checklist.md) |
-| 查詢、新增、修改、刪除與交易 | [QmahDbContext 使用方式](docs/dbcontext-usage.md) |
-| 判斷 Entity、ViewModel、DTO、Service | [架構與資料存取規則](docs/architecture-and-data-access.md) |
-| 使用共同資料與測試情境 | [開發資料基準與測試情境](docs/development-data.md) |
-| 查看目前 40 張資料表與資料筆數 | [參考資料庫內容](docs/database-content.md) |
-| 使用資料收集、產生、預檢與備份工具 | [QMAH 資料工具](tools/QmahDataTools/README.md) |
-| 完成期中登入、登出與角色限制 | [期中 Identity 實作](docs/midterm-identity.md) |
-| 用 Visual Studio 產生 CRUD 頁面 | [Visual Studio Scaffold 操作教學](docs/scaffolding-guide.md) |
-| 安裝環境、套件與開發工具 | [開發環境與共用套件](docs/development-environment.md) |
-| 撰寫 Razor、表單、CSS 與 JavaScript | [Razor 與前端開發](docs/frontend-guide.md) |
-| 理解 Schema、備份與 Diagram | [資料庫說明](database/README.md) |
-| 日後加入 Google 或 Microsoft 登入 | [第三方登入預留方式](docs/external-login.md) |
-| 建立分支、Push 與 Pull Request | [Git 與 GitHub 協作](docs/git-workflow.md) |
-| 修改共用檔案與跨 Area 協作 | [CONTRIBUTING](CONTRIBUTING.md) |
+以下順序是建議的閱讀順序。根目錄 `README.md` 是 Repository 首頁，資料庫與工具則保留在各自資料夾的入口文件。
+
+| 順序 | 開發階段 | 文件 |
+| ---: | --- | --- |
+| 01 | 準備 Visual Studio、LocalDB、NuGet 與 Hot Reload | [開發環境與共用套件](docs/01-development-environment.md) |
+| 02 | 查看共同資料、測試資料、資料表筆數與狀態值 | [開發資料與參考資料庫](docs/02-development-data.md) |
+| 03 | 確認五個 Area 的責任、資料與開發界線 | [Area 開發檢查](docs/03-area-development-checklist.md) |
+| 04 | 了解後台功能的開發順序 | [後台開發起點](docs/04-backend-start-guide.md) |
+| 05 | 從 List 完成 Details、Create、Edit、Delete | [從清單到完整 CRUD](docs/05-crud-tutorial.md) |
+| 06 | 使用 Visual Studio 或 CLI 產生 CRUD 起始檔案 | [Scaffold 操作教學](docs/06-scaffolding-guide.md) |
+| 07 | 使用 `QmahDbContext` 查詢、新增、修改、刪除與交易 | [QmahDbContext 使用方式](docs/07-dbcontext-usage.md) |
+| 08 | 判斷 Entity、ViewModel、DTO、Service 與 Wrapper 的界線 | [架構與資料存取規則](docs/08-architecture-and-data-access.md) |
+| 09 | 實作 Identity 登入、登出、角色與會員 CRUD | [期中 Identity 實作](docs/09-midterm-identity.md) |
+| 10 | 撰寫 Razor、表單、CSS、JavaScript 與響應式畫面 | [Razor 與前端開發](docs/10-frontend-guide.md) |
+
+參考文件：
+
+- [文物資料、圖片授權與商品產生](docs/data-and-media.md)
+- [Git 與 GitHub 協作](docs/git-workflow.md)
+- [日後加入 Google 或 Microsoft 登入](docs/external-login.md)
+
+其他入口：
+
+- [資料庫說明、參考 `.bak` 還原與 Schema](database/README.md)
+- [SSMS Diagram 操作](database/Diagram-Guide.md)
+- [QMAH 資料處理工具](tools/QmahDataTools/README.md)
+- [共同協作規則](CONTRIBUTING.md)
 
 ## Repository 結構
 
@@ -133,8 +142,8 @@ QMAH/
 │  ├─ Models/Identity/           ApplicationUser
 │  ├─ Views/                     共用 Razor View
 │  └─ wwwroot/                   樣式、腳本、套件、圖片與品牌素材
-├─ database/                     Schema、資料庫說明與展示資料腳本
-├─ docs/                         全組開發文件
+├─ database/                     README、Schema.sql、seed 腳本與 Diagram 說明
+├─ docs/                         01–10 核心開發文件；其餘為參考與選用文件
 ├─ tools/QmahDataTools/          可重現的資料處理工具
 ├─ CONTRIBUTING.md               協作規則
 └─ README.md

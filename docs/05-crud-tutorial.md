@@ -550,7 +550,7 @@ Bootstrap 與套件已經放在專案內，不需要各 Area 再安裝一份。�
 - 已成交訂單、付款、遊戲回合、作答、投票：保留歷史，不做一般實體刪除
 - 上傳圖片：ViewModel 使用 `IFormFile`，實際檔案與資料庫欄位分開驗證
 
-專案內更完整的查詢、關聯、交易、`RowVersion` 與 Identity 寫法請看[QmahDbContext 使用手冊](dbcontext-usage.md)
+專案內更完整的查詢、關聯、交易、`RowVersion` 與 Identity 寫法請看[QmahDbContext 使用手冊](07-dbcontext-usage.md)
 
 ## Microsoft 官方教學
 

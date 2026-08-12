@@ -1,10 +1,10 @@
 # 後台開發起點
 
-這份文件說明從哪裡開始寫，以及一個後台功能應如何接到現有資料庫。可直接搭配各 Area 的交接手冊使用。
+後台功能從這裡開始。依序確認資料表、路由、ViewModel、授權與 CRUD，再依自己的 Area 延伸。
 
-若還不熟悉 List、Controller、ViewModel、Razor 表單與完整 CRUD 的連接方式，先照[從清單到完整 CRUD](crud-tutorial.md)做一次，再回來依自己的資料表調整。
+若還不熟悉 List、Controller、ViewModel、Razor 表單與完整 CRUD 的連接方式，先照[從清單到完整 CRUD](05-crud-tutorial.md)做一次，再回來依自己的資料表調整。
 
-開始各 Area 前，先閱讀[五個 Area 開發前檢查與執行界線](area-development-checklist.md)，確認哪些事情要先做、哪些資料不能直接刪除，以及各 Area 的跨表責任
+開始各 Area 前，先閱讀[五個 Area 開發前檢查與執行界線](03-area-development-checklist.md)，確認哪些事情要先做、哪些資料不能直接刪除，以及各 Area 的跨表責任
 
 ## 開始前
 
@@ -53,7 +53,7 @@ QMAH.Web/Areas/Catalog/
 | `User` | Identity 帳號、Profile、地址、成就與會員成就 | 使用 Identity API 維護 Email、鎖定與角色；使用 DbContext CRUD Profile、地址與成就資料 | 帳號使用鎖定或停用；密碼、角色與 Token 不直接修改資料表；未被使用的地址或測試成就可依外鍵規則刪除 |
 | `Store` | 商品、購物車、優惠券、訂單、付款與點數 | 新增與修改商品、庫存、優惠券；訂單與付款提供詳細頁與合法狀態操作 | 商品使用上架／下架；訂單、明細、付款與點數流水保留歷史，不做實體刪除 |
 
-每個管理項目至少處理下列情況：有資料與空資料的 List、存在與不存在 Id 的 Details、合法與錯誤輸入、重複值、外鍵限制、未授權存取，以及 POST 完成後重新導向。完整單表範例見[從清單到完整 CRUD](crud-tutorial.md)。
+每個管理項目至少處理下列情況：有資料與空資料的 List、存在與不存在 Id 的 Details、合法與錯誤輸入、重複值、外鍵限制、未授權存取，以及 POST 完成後重新導向。完整單表範例見[從清單到完整 CRUD](05-crud-tutorial.md)。
 
 ## 開發順序
 
@@ -147,13 +147,13 @@ public async Task<IActionResult> Create(
 - 目前登入者使用 `UserManager<ApplicationUser>` 取得，不解析顯示名稱代替 UserId。
 - 點數、庫存、訂單、付款或遊戲結算若同時更新多張表，使用同一個 scoped DbContext 與交易。
 
-完整程式範例見[QmahDbContext 使用方式](dbcontext-usage.md)。Identity 的期中製作範圍見[期中 Identity 實作](midterm-identity.md)。
+完整程式範例見[QmahDbContext 使用方式](07-dbcontext-usage.md)。Identity 的期中製作範圍見[期中 Identity 實作](09-midterm-identity.md)。
 
 ## Scaffold 的正確用途
 
 Visual Studio 的 **Add → New Scaffolded Item → MVC Controller with views, using Entity Framework** 可快速建立單表 CRUD 起始碼。
 
-完整操作步驟見[Visual Studio Scaffold 操作教學](scaffolding-guide.md)。
+完整操作步驟見[Visual Studio Scaffold 操作教學](06-scaffolding-guide.md)。
 
 產生後仍要逐項檢查：
 

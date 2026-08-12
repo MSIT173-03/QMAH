@@ -159,4 +159,4 @@ dotnet build QMAH.sln --no-restore --configuration Release
 - PR 已列出共用檔案與資料庫影響。
 - GitHub Actions `Build` 成功。
 
-環境問題請看[開發環境與共用套件](development-environment.md)；資料存取請看[QmahDbContext 使用方式](dbcontext-usage.md)。
+環境問題請看[開發環境與共用套件](01-development-environment.md)；資料存取請看[QmahDbContext 使用方式](07-dbcontext-usage.md)。

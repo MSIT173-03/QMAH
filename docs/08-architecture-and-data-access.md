@@ -1,6 +1,6 @@
 # 架構與資料存取規則
 
-本文件定義五個 Area 共用 SQL Server、EF Core 與 ASP.NET Core Identity 時的資料存取界線。
+這裡規定五個 Area 共用 SQL Server、EF Core 與 ASP.NET Core Identity 時的資料存取界線。
 
 ## 目前採用的做法
 
@@ -155,4 +155,4 @@ Scaffold 核對輸出只放工作區 `_工具輸出`，不納入 Repository。
 4. 再做表單 POST，使用 ViewModel、`ModelState`、Anti-forgery 與 Post/Redirect/Get
 5. 跨表交易、長流程、外部服務、重用規則或獨立測試需求出現時新增 Service
 
-完整範例請看[從清單到完整 CRUD](crud-tutorial.md)、[Visual Studio Scaffold 操作教學](scaffolding-guide.md)與[QmahDbContext 使用手冊](dbcontext-usage.md)。
+完整範例請看[從清單到完整 CRUD](05-crud-tutorial.md)、[Visual Studio Scaffold 操作教學](06-scaffolding-guide.md)與[QmahDbContext 使用手冊](07-dbcontext-usage.md)。

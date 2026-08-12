@@ -2,7 +2,7 @@
 
 QMAH 的資料分成文物圖鑑與商城商品兩部分。資料列與網站圖片已放入共同基準，但來源、授權與更新方式不同，不能混用。
 
-目前資料表筆數與狀態分布見[參考資料庫內容](database-content.md)。資料收集、標準化、商品產生與備份流程見[QMAH 資料工具](../tools/QmahDataTools/README.md)。
+目前資料表筆數與狀態分布見[開發資料與參考資料庫](02-development-data.md)。資料收集、標準化、商品產生與備份流程見[QMAH 資料工具](../tools/QmahDataTools/README.md)。
 
 ## 文物資料
 

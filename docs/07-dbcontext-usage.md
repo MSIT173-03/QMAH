@@ -6,7 +6,7 @@
 
 > **微軟官方做法：** EF Core 官方要求先決定 Schema 的唯一來源。若資料庫 Schema 是來源，就使用 Reverse Engineering 對照既有資料庫；若 C# 模型是來源，才使用 Migration。QMAH 已選擇前者，所以沒有 `InitialCreate`、`__EFMigrationsHistory` 或程式端建表。[Managing Database Schemas](https://learn.microsoft.com/en-us/ef/core/managing-schemas/)／[Reverse Engineering](https://learn.microsoft.com/en-us/ef/core/managing-schemas/scaffolding/)
 
-## 先用一句話理解
+## DbContext 在 QMAH 負責什麼
 
 把 `QmahDbContext` 想成「這次網頁操作要使用的資料庫工作區」。Controller 收到一個 request 後，透過它找到資料表、讀取資料、追蹤準備修改的 Entity，最後用 `SaveChangesAsync()` 一次寫回 SQL Server。
 

@@ -8,7 +8,7 @@
 2. 以最新遠端內容重新 Clone 或更新本機工作目錄。
 3. 開啟 `QMAH.sln`，切到自己的 Area 分支，按 **F5** 確認網站可啟動。
 4. 從最新 Release 還原 `QMAH-reference-*.bak`，在 `appsettings.Local.json` 設定自己的資料庫連線。
-5. 先閱讀 README、`docs/backend-start-guide.md`、`docs/dbcontext-usage.md` 與自己 Area 的資料表關係。
+5. 依序閱讀 README、`docs/01-development-environment.md`、`docs/02-development-data.md`、`docs/03-area-development-checklist.md`、`docs/04-backend-start-guide.md`、`docs/07-dbcontext-usage.md` 與自己 Area 的資料表關係。
 
 一般功能開發不需要命令列，也不需要建立資料表。
 
@@ -34,7 +34,7 @@
 - `(Services)`、`(Models/Api)`、Area 專用 CSS、Area 專用 JavaScript 與 Partial View 都是可選結構；出現實際需求才建立。
 - `Data/`、`Program.cs`、`Models/Identity/`、`database/`、共用 Layout、`wwwroot` 的共用檔案、NuGet 套件與 README 是共同範圍。修改前先在群組說明影響。
 
-完整檔案結構範例見 [架構與資料存取規則](docs/architecture-and-data-access.md)。
+完整檔案結構範例見 [架構與資料存取規則](docs/08-architecture-and-data-access.md)。
 
 ## 資料庫規則
 

@@ -301,4 +301,4 @@ Scaffold 不知道適合的顯示名稱。Controller 查詢選項後建立 `Sele
 6. 重新整理 POST 完成後的頁面，確認不會重複送出
 7. Build Solution，檢查瀏覽器 Console 與應用程式 Log
 
-一份可直接對照的完整程式在[從清單到完整 CRUD](crud-tutorial.md)，DbContext 的查詢與寫入細節在[QmahDbContext 使用手冊](dbcontext-usage.md)
+一份可直接對照的完整程式在[從清單到完整 CRUD](05-crud-tutorial.md)，DbContext 的查詢與寫入細節在[QmahDbContext 使用手冊](07-dbcontext-usage.md)

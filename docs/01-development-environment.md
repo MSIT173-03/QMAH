@@ -1,6 +1,6 @@
 # 開發環境與共用套件
 
-這份文件說明如何在新電腦上啟動 QMAH，以及 Visual Studio、SQL Server、NuGet、Hot Reload 與 CRUD Scaffold 的共同使用方式。
+這裡集中說明 QMAH 的開發環境、資料庫還原、NuGet 套件、Hot Reload 與 CRUD Scaffold。
 
 完成資料庫還原後，可直接用 Visual Studio 開啟方案並按 `F5`，不需要先執行命令列。
 
@@ -95,7 +95,7 @@ Visual Studio 提供三個啟動設定：
 
 參考 `.bak` 已包含資料庫結構、共同文物資料與畫面開發所需的情境資料。還原後可直接在本機 LocalDB 建立、修改與刪除 CRUD 測試資料，不需要執行 Seed 命令。
 
-不同資料庫副本的測試資料可以不同；共同契約是 Schema。新增或修改資料表、欄位、外鍵、索引、約束或跨 Area 關係時，依資料庫結構變更流程處理。詳細原則見[共同資料與開發測試資料](development-data.md)。
+不同資料庫副本的測試資料可以不同；共同契約是 Schema。新增或修改資料表、欄位、外鍵、索引、約束或跨 Area 關係時，依資料庫結構變更流程處理。詳細原則見[共同資料與開發測試資料](02-development-data.md)。
 
 ## NuGet 如何保持一致
 
@@ -153,9 +153,9 @@ dotnet restore QMAH.sln --locked-mode
 
 Scaffold 適合加快基本頁面製作，不等於功能已完成。
 
-從最基礎清單、Scaffold 修正到完整新增、編輯與刪除範例，請看[從清單到完整 CRUD](crud-tutorial.md)。
+從最基礎清單、Scaffold 修正到完整新增、編輯與刪除範例，請看[從清單到完整 CRUD](05-crud-tutorial.md)。
 
-Scaffold 不只有一次產生完整 CRUD。也可以建立 Empty MVC Controller、從 Action 逐頁新增 View、直接建立 Razor View／Partial View，或使用 `dotnet-aspnet-codegenerator`。各方法與 MVC Razor View／Razor Pages 的差異見[Visual Studio Scaffold 操作教學](scaffolding-guide.md)。
+Scaffold 不只有一次產生完整 CRUD。也可以建立 Empty MVC Controller、從 Action 逐頁新增 View、直接建立 Razor View／Partial View，或使用 `dotnet-aspnet-codegenerator`。各方法與 MVC Razor View／Razor Pages 的差異見[Visual Studio Scaffold 操作教學](06-scaffolding-guide.md)。
 
 > **微軟官方工具：** ASP.NET Core MVC 官方教學本身就示範以 Scaffolding 產生 EF Core CRUD 起始碼。產生後仍要依實際欄位、授權與商業規則調整，因此 QMAH 只把它當作起點。[ASP.NET Core MVC with EF Core](https://learn.microsoft.com/en-us/aspnet/core/data/ef-mvc/intro?view=aspnetcore-10.0)
 
@@ -250,4 +250,4 @@ dotnet tool restore
 - 個人連線只寫在 `appsettings.Local.json` 或 User Secrets。
 - 沒有建立 Migration、空白資料庫或第二套 Schema。
 
-資料存取寫法請接著閱讀 [`dbcontext-usage.md`](dbcontext-usage.md)，Razor 與前端檔案安排請看 [`frontend-guide.md`](frontend-guide.md)。
+資料存取寫法請接著閱讀 [`07-dbcontext-usage.md`](07-dbcontext-usage.md)，Razor 與前端檔案安排請看 [`10-frontend-guide.md`](10-frontend-guide.md)。
