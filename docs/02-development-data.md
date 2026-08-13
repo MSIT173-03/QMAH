@@ -24,9 +24,9 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | Schema | 主要內容 | 目前資料概況 |
 | --- | --- | --- |
 | `catalog` | 文物、分類、年代、鑰匙、解鎖 | 8 類、13 個年代桶、256 件文物與鑰匙情境 |
-| `game` | 題庫設定、房間、玩家、回合、作答、投票 | 256 筆題庫設定與一組可追查的遊戲流程 |
+| `game` | 題庫設定、房間、玩家、回合、作答、投票 | 256 筆題庫設定、10 個房間、19 位玩家與一組完整遊戲流程 |
 | `social` | 貼文、留言、檢舉、公告、活動、報名、通知 | 49 筆貼文、49 筆留言與管理情境 |
-| `store` | 商品、購物車、優惠券、訂單、付款、點數 | 256 件商品與 3 組訂單／付款狀態 |
+| `store` | 商品、購物車、優惠券、訂單、付款、點數 | 256 件商品與 12 組訂單／付款紀錄 |
 | `user` | Identity、Profile、地址、成就 | 8 個帳號、2 個角色、8 筆 Profile 與會員情境 |
 
 ### 2.2 Catalog
@@ -46,8 +46,8 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | 資料表 | 筆數 | 用途 |
 | --- | ---: | --- |
 | `ArtifactQuestionEntries` | 256 | 每件文物的題型、難度與啟用設定 |
-| `GameRooms` | 2 | `WAITING`、`COMPLETED` 房間各一筆 |
-| `GamePlayers` | 3 | 房間玩家 |
+| `GameRooms` | 10 | 3 筆 `WAITING`、2 筆 `PLAYING`、3 筆 `COMPLETED`、2 筆 `CANCELLED` |
+| `GamePlayers` | 19 | 8 位 `ONLINE`、1 位 `OFFLINE`、10 位 `LEFT`，可測試玩家與連線狀態清單 |
 | `GameRounds` | 1 | 已建立的回合 |
 | `RoundAnswers` | 2 | 玩家作答 |
 | `Votes` | 1 | 玩家投票 |
@@ -72,9 +72,9 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | `CartItems` | 1 | 購物車情境 |
 | `CouponDefinitions` | 1 | 優惠券定義 |
 | `UserCoupons` | 1 | `AVAILABLE` 會員優惠券 |
-| `StoreOrders` | 3 | `PENDING_PAYMENT`、`COMPLETED`、`CANCELLED` 各一筆 |
-| `OrderDetails` | 3 | 成交品名與單價快照 |
-| `Payments` | 3 | `PENDING`、`PAID`、`FAILED` 各一筆 |
+| `StoreOrders` | 12 | 六種訂單狀態各 2 筆，可測試付款、備貨、出貨、完成與取消清單 |
+| `OrderDetails` | 12 | 每張訂單各一筆成交品名、單價與數量快照 |
+| `Payments` | 12 | 2 筆 `PENDING`、8 筆 `PAID`、2 筆 `FAILED` |
 | `PointBalances` | 1 | 會員點數餘額 |
 | `PointTransactions` | 1 | 點數異動流水 |
 
@@ -153,9 +153,9 @@ catalog.Artifacts.Id
 
 測試資料仍須符合既有外鍵、唯一索引與 CHECK constraint。各副本的資料列不必相同；共同契約是 Schema。
 
-訂單、付款、房間、活動與檢舉目前只提供代表性情境，不是每個狀態各一筆。若畫面需要測試 `CANCELLED`、`FAILED` 或 `PENDING_PAYMENT`，就在自己的資料庫建立，不要改共同基準。
+共同資料已涵蓋所有房間狀態、所有訂單狀態，以及付款的 `PENDING`、`PAID`、`FAILED`。個人開發仍可在自己的 LocalDB 增加資料，但不需要為了測試基本清單與篩選重新準備這些狀態。
 
-若資料庫已有正式文物資料但缺少社群展示資料，可執行 [`database/seed-showcase-data.sql`](../database/seed-showcase-data.sql)。腳本只新增貼文與留言，不會改 Schema，也不會由網站啟動流程自動執行。
+若資料庫已有正式文物與 Identity 資料，但缺少共同展示情境，可執行 [`database/seed-showcase-data.sql`](../database/seed-showcase-data.sql)。腳本會補入社群貼文與留言、遊戲房間與玩家、商城訂單與付款，不會改 Schema，也不會由網站啟動流程自動執行。各區段都有防重複條件，可安全地再次執行。
 
 ## 6. 訂單與付款規則
 
