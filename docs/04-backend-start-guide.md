@@ -8,7 +8,7 @@
 
 ## 開始前
 
-1. 還原最新 Release 附帶的 `QMAH-reference-*.bak`。
+1. 還原最新 Release 附帶的 `QMAH-<version>.bak`，或完整執行 `database/QMAH.sql`。
 2. 開啟 `QMAH.sln`，確認網站可啟動。
 3. 切到自己負責的 `feature/*` 分支並先 Pull。
 4. 先閱讀 `QMAH.Web/Data/QmahDbContext.cs` 中本 Area 的 DbSet 與 mapping。

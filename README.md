@@ -36,15 +36,17 @@ QMAH 是 **Qing Ming Appraisal House（清明鑑定屋）** 的縮寫
 
 ## 開始開發
 
-不需要執行 Migration，也不需要自己建立資料表。先還原參考資料庫，再用 Visual Studio 啟動專案即可
+不需要執行 Migration，也不需要自己建立資料表。最快的方式是從 Release 還原 `.bak`；如果需要可 review 的文字版，也可以只執行 [`database/QMAH.sql`](database/QMAH.sql)
 
-1. 開啟 Repository 右側的 [最新 Release](https://github.com/MSIT173-03/QMAH/releases/latest)，在 **Assets** 下載 `QMAH-reference-*.bak`
+1. 開啟 Repository 右側的 [最新 Release](https://github.com/MSIT173-03/QMAH/releases/latest)，在 **Assets** 下載 `QMAH-<version>.bak`
 2. 在 SSMS 連線 `(localdb)\MSSQLLocalDB`
 3. 選擇 **Restore Database...** → **Device**，將資料庫名稱設為 `QMAH`
 4. 用 Visual Studio 開啟 `QMAH.sln`，等待 NuGet 自動還原
 5. 選擇 `https` 啟動設定，按 `F5`
 
-備份已包含資料表、索引、外鍵、共同資料與開發情境資料。SSMS Diagram 不包含在備份內，需要時可依[資料庫說明](database/README.md)自行建立
+備份已包含該版本 reference database 的資料表、索引、外鍵、Identity、共同資料與展示資料。SSMS Diagram 不屬於資料庫契約，也不包含在 Release 還原內容內
+
+若使用文字版，直接在 SSMS 開啟 [`database/QMAH.sql`](database/QMAH.sql) 並執行即可，不需要先執行 `Schema.sql` 或 seed 腳本。兩種方式的完整差異與資料庫整合流程請看[資料庫還原與版本管理](database/README.md)
 
 若 Visual Studio、LocalDB、NuGet 或 Scaffold 尚未準備好，請先看[開發環境與共用套件](docs/01-development-environment.md)
 
@@ -142,7 +144,7 @@ QMAH/
 │  ├─ Models/Identity/           ApplicationUser
 │  ├─ Views/                     共用 Razor View
 │  └─ wwwroot/                   樣式、腳本、套件、圖片與品牌素材
-├─ database/                     README、Schema.sql、seed 腳本與 Diagram 說明
+├─ database/                     QMAH.sql、Schema.sql、seed 腳本與 Diagram 說明
 ├─ docs/                         01–10 核心開發文件；其餘為參考與選用文件
 ├─ tools/QmahDataTools/          可重現的資料處理工具
 ├─ CONTRIBUTING.md               協作規則

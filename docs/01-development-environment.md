@@ -37,11 +37,11 @@ Clone Repository 後開啟 `QMAH.sln`。若本機缺少工作負載，Visual Stu
 (localdb)\MSSQLLocalDB
 ```
 
-需要完整 SQL Server 功能時，也可以使用 SQL Server Developer。兩者都需要 SSMS 來還原參考 `.bak` 與查看 Diagram。
+需要完整 SQL Server 功能時，也可以使用 SQL Server Developer。兩者都需要 SSMS 來還原參考 `.bak`、執行完整 `database/QMAH.sql` 與查看 Diagram。
 
 ### 參考資料庫
 
-從 [最新 GitHub Release](https://github.com/MSIT173-03/QMAH/releases/latest) 下載該版本附帶的 `QMAH-reference-*.bak`。
+從 [最新 GitHub Release](https://github.com/MSIT173-03/QMAH/releases/latest) 下載該版本附帶的 `QMAH-<version>.bak`。若不使用二進位備份，也可直接執行 Repository 的 [`database/QMAH.sql`](../database/QMAH.sql)。
 
 在 SSMS：
 
@@ -65,7 +65,7 @@ Visual Studio 提供三個啟動設定：
 
 選擇 `https` 或 `http` 後按 `F5`。可先檢查 `/Game`、`/Social`、`/Catalog`、`/User` 與 `/Store` 是否都能開啟。
 
-網站啟動時不會建立資料庫、不會建表、不會塞測試資料，也不會套用 Migration。若缺少必要 Schema，請先確認是否已還原正確的參考 `.bak`。
+網站啟動時不會建立資料庫、不會建表、不會塞測試資料，也不會套用 Migration。若缺少必要 Schema，請先確認是否已還原正確的 Release `.bak`，或完整執行 `database/QMAH.sql`。
 
 ## 連線字串
 

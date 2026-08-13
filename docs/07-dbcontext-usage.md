@@ -150,7 +150,7 @@ ViewModel 是 View 與 Controller 之間的資料；Entity 是 Controller／Serv
 
 ## 開始前
 
-1. 從 GitHub Release 還原參考 `.bak`，資料庫名稱使用 `QMAH`。
+1. 從 GitHub Release 還原 `QMAH-<version>.bak`，或在 SSMS 完整執行 `database/QMAH.sql`，資料庫名稱使用 `QMAH`。
 2. 用 Visual Studio 開啟 `QMAH.sln`，確認網站可以按 `F5` 啟動。
 3. 在所屬 Area 的 Controller 建構式注入 `QmahDbContext`。
 

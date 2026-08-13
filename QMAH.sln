@@ -5,6 +5,12 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QMAH.Web", "QMAH.Web\QMAH.Web.csproj", "{1254C784-65DC-4764-859C-96ADD3FE5054}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E-EAC7-C090-1BA3-A61EC2A24D84}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "QmahDataTools", "QmahDataTools", "{56164E83-669B-543D-25DE-13732C2A46FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QmahDatabaseRelease", "tools\QmahDataTools\QmahDatabaseRelease\QmahDatabaseRelease.csproj", "{BAB565FE-6692-44B7-ADA4-CEF982348E9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +33,24 @@ Global
 		{1254C784-65DC-4764-859C-96ADD3FE5054}.Release|x64.Build.0 = Release|Any CPU
 		{1254C784-65DC-4764-859C-96ADD3FE5054}.Release|x86.ActiveCfg = Release|Any CPU
 		{1254C784-65DC-4764-859C-96ADD3FE5054}.Release|x86.Build.0 = Release|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Debug|x64.Build.0 = Debug|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Debug|x86.Build.0 = Debug|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Release|x64.ActiveCfg = Release|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Release|x64.Build.0 = Release|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Release|x86.ActiveCfg = Release|Any CPU
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{56164E83-669B-543D-25DE-13732C2A46FB} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{BAB565FE-6692-44B7-ADA4-CEF982348E9C} = {56164E83-669B-543D-25DE-13732C2A46FB}
 	EndGlobalSection
 EndGlobal

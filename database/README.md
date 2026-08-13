@@ -1,121 +1,128 @@
-# QMAH SQL Server 資料庫流程
+# QMAH 資料庫還原與版本管理
 
-## DB-first 定義
+QMAH 採 SQL Server DB-first
 
-QMAH 採 SQL Server DB-first。
+資料庫 Schema 是資料契約，Entity 與 `QmahDbContext` 只負責對照 SQL Server，不使用 EF Migration，也不建立 `__EFMigrationsHistory`
 
-DB-first 的意思是：資料庫 Schema、欄位、索引、外鍵與 Identity 表先定案，程式再依照這份契約存取資料。
+## 一般開發者只需要兩種還原方式
 
-實際資料列永遠存在 SQL Server。
+### 方式一：Release 的 `.bak`
 
-Entity 檔案不保存資料；它只是程式執行時代表資料列的 C# 類別。
+這是最快的方式，適合直接開始開發
 
-`QmahDbContext` 也不會把資料放在 Entity 裡面。
+1. 開啟 GitHub Repository 的 [Releases](https://github.com/MSIT173-03/QMAH/releases)
+2. 在最新版本的 Assets 下載 `QMAH-<version>.bak`
+3. 用 SSMS 連線到自己的 SQL Server 或 `(localdb)\MSSQLLocalDB`
+4. 在 Databases 按右鍵，選 **Restore Database...**
+5. 選 **Device**，加入下載的 `.bak`
+6. 資料庫名稱使用 `QMAH`
+7. 還原完成後，以 Visual Studio 開啟 `QMAH.sln` 並按 F5
 
-它只負責把 LINQ 查詢、寫入與 SQL Server 資料表連接起來。
+`.bak` 是已驗證的二進位資料庫快照，方便快速取得完整資料庫
 
-Microsoft 對「資料庫 Schema 是來源」的做法稱為 Reverse Engineering：從既有資料庫核對或產生 `DbContext` 與 Entity。
+### 方式二：完整文字版 `QMAH.sql`
 
-參考 Microsoft 官方文件：
+Repository 的 [`QMAH.sql`](QMAH.sql) 是一般組員唯一需要知道的完整 SQL 還原入口
 
-- [Managing Database Schemas](https://learn.microsoft.com/en-us/ef/core/managing-schemas/)
-- [Reverse Engineering](https://learn.microsoft.com/en-us/ef/core/managing-schemas/scaffolding/)
+在全新的 SQL Server 上，使用 SSMS 開啟 `QMAH.sql` 後按 **Execute**，單獨執行這一個檔案即可建立目前版本的資料庫、資料表、約束與共同資料
 
-本專案不使用 EF Migration，也不建立 `__EFMigrationsHistory`。第一版空白結構由 `Schema.sql` 建立；SQL Server 資料庫是唯一 Schema 來源。
+Release 也會附上同一次匯出的 `QMAH-<version>.sql`，內容與 Repository 的 `database/QMAH.sql` 對應同一個 reference database snapshot
 
-## 目前的整合結果
+執行前請確認目標 SQL Server 上沒有同名的 `QMAH` 資料庫；腳本不會覆蓋既有資料庫
 
-資料庫整合的責任範圍如下：
+## `.bak` 與 `.sql` 的分工
 
-- SQL Server Schema、ERD 與 `database/Schema.sql` 的定案。
-- Entity／`QmahDbContext` 與實際 Schema 的對照。
-- 經驗證的參考 `.bak` 與 Release 附件。
-- 正式文物／商品匯入前的 Schema 檢查與資料包預檢。
+| 檔案 | 用途 | 是否進 Git Repository |
+| --- | --- | --- |
+| `database/QMAH.sql` | 可閱讀、可 review、可 diff 的完整還原入口 | 是 |
+| `QMAH-<version>.sql` | Release 對應的完整文字版快照 | 僅作 Release Asset |
+| `QMAH-<version>.bak` | SQL Server 快速還原用的二進位快照 | 僅作 Release Asset |
+| `Schema.sql` | Schema 結構審核與 DB-first 對照來源 | 是 |
+| `seed-showcase-data.sql` | 特定展示資料的可重複補充腳本 | 是 |
 
-一般功能開發不建立資料庫、不修改 Schema、不產生 EF Migration，也不執行正式資料匯入命令。
+Git 可以保存 `.bak`，但無法對二進位內容提供有意義的逐行差異，因此 `.bak` 不作為唯一版本紀錄
 
-需要變更資料表時，提交欄位、索引、外鍵、原因與受影響功能；資料庫整合流程會同步更新 SQL／ERD、對照模型、文件與參考資料庫。
+`QMAH.sql` 才是可審查的完整文字版；`.bak` 只是讓組員更快取得同一份資料庫
 
-## 開發環境建立：還原 `.bak`
+## 完整 SQL 的內容
 
-從 GitHub Repository 右側的 **Releases** 開啟最新版本，在 **Assets** 下載參考 `.bak`，再在 SSMS 完成一次還原：
+匯出工具會從同一個 canonical/reference SQL Server database 取得：
 
-1. 開啟 SQL Server Management Studio（SSMS）。
-2. 連線到本機 SQL Server／LocalDB；預設連線名稱是 `(localdb)\MSSQLLocalDB`。
-3. 在 **Databases** 按右鍵，選 **Restore Database...**。
-4. 選 **Device**，加入 Release 提供的 `.bak`。
-5. 資料庫名稱使用 `QMAH`。
-6. 在 **Files** 頁確認資料檔與記錄檔路徑是本機可寫入的位置。
-7. 按 **OK** 完成還原。
+- `catalog`、`game`、`social`、`store`、`user` schemas
+- 所有非 SSMS 系統表的 QMAH tables
+- columns、資料型別、NULL 設定、identity、computed／rowversion 欄位
+- primary key、unique constraint、foreign key、index、default、CHECK constraint
+- ASP.NET Core Identity tables、roles、demo accounts 及其關聯資料
+- 當時 reference database 中被確認保留的 canonical 與展示資料
 
-還原完成後，連線字串已符合 [`QMAH.Web/appsettings.json`](../QMAH.Web/appsettings.json) 的預設值。
+資料列會以固定欄位順序、固定主鍵排序與不受文化設定影響的格式輸出。Unicode、NULL、bit、decimal、日期時間、GUID、binary 與單引號都會由 exporter 正確序列化；`rowversion` 不會被錯誤地當成一般欄位寫入
 
-還原完成後，以 Visual Studio 開啟 `QMAH.sln`，選擇 `https` 或 `http` 啟動設定並按 **F5**。
+SSMS 建立的 `dbo.sysdiagrams` 與 Diagram stored procedures 不屬於 QMAH 資料契約，不會放進完整 SQL 或 Release snapshot
 
-網站會使用還原好的 SQL Server 資料庫，不會自動建表，也不會自動修改 Schema。
+## Repository 內的結構檔案
 
-如果電腦使用 SQL Server Developer，而不是 LocalDB，複製 `QMAH.Web/appsettings.Local.example.json` 為未提交的 `QMAH.Web/appsettings.Local.json`，再覆蓋 `QmahDatabase` 即可；網站啟動時會自動讀取該檔案，不需要改動 Entity 或 `QmahDbContext`。
+### `Schema.sql`
 
-## Schema 審核與實機順序
+只描述資料庫結構，適合審核欄位、主鍵、外鍵、索引、預設值與 CHECK constraint
 
-目前 Repository 不放本機資料庫、SSMS Diagram 或 `.bak`。
+### `seed-showcase-data.sql`
 
-目前的驗證順序是：
+只補充特定展示情境，不建立 Schema，也不會由網站啟動時自動執行；腳本具備既有資料判斷，可重複執行
 
-1. SQL／ERD／Identity 表的結構審核。
-2. Entity／`QmahDbContext` 對照與 EF Core 模型檢查。
-3. `Schema.sql` 與空白 SQL Server 的實機驗證。
-4. 五個 Area 的 CRUD 與跨表流程驗證。
+### `QMAH.sql`
 
-以上項目均已在同一個 `QMAH` 資料庫完成。參考 `.bak` 不附帶 SSMS Diagram；需要看關聯時，再依 [`Diagram-Guide.md`](Diagram-Guide.md) 在自己的資料庫建立閱讀用圖表即可。已建立並以 `RESTORE VERIFYONLY` 驗證 Release 參考 `.bak`。
+由 exporter 從 reference database 產生的完整單檔還原版本，一般組員不需要先執行 `Schema.sql` 或任何 seed 腳本
 
-Diagram 與 `.bak` 是驗證完成後的閱讀／還原產物，不反過來決定 Schema。
+## 資料庫整合者的匯出流程
 
-## 建立新的參考 `.bak`
-
-資料更新與驗證完成後，在 Repository 根目錄執行：
+需要產生新的 Release 時，在 Repository 根目錄執行：
 
 ```powershell
-.\tools\QmahDataTools\Export-ReferenceDatabase.ps1
+.\tools\QmahDataTools\Export-ReferenceDatabase.ps1 -Version 0.3.0
 ```
 
-工具會從 `(localdb)\MSSQLLocalDB` 的 `QMAH` 建立帶時間戳記的新 `.bak`，輸出至工作區根目錄 `_工具輸出\reference-database`，並自動執行 `RESTORE VERIFYONLY`。備份通過驗證後上傳至 GitHub Release；`.bak` 本身不進 Repository。
+工具會依序完成：
 
-## 共同資料與本機測試資料
+1. 建置匯出與驗證工具
+2. 確認 canonical database 存在並建立隔離備份
+3. 在暫時 LocalDB instance 還原同一份 snapshot
+4. 排除 SSMS Diagram 系統物件並掃描明顯的測試佔位資料
+5. 建立 `.bak` 並執行 `RESTORE VERIFYONLY WITH CHECKSUM`
+6. 連續匯出兩次 SQL，確認內容 byte-for-byte 一致
+7. 只使用完整 SQL 在新的資料庫重建
+8. 比較 source／rebuilt database 的 metadata、row count 與每表 SHA-256 hash
+9. 驗證 `QmahDbContext`、Entities 與 `QMAH.Web` 啟動
+10. 更新 `database/QMAH.sql`，並產生 Release 用 `.bak`、`.sql` 與 `SHA256SUMS.txt`
 
-文物、題庫設定、商品與各 Area 展示情境是共同基準資料，隨 Release 的參考 `.bak` 提供。參考資料庫目前包含 256 件文物、256 筆題庫設定、256 件商品、49 筆社群貼文、49 筆留言、10 個遊戲房間、19 位房間玩家，以及 12 組商城訂單／付款紀錄，方便各 Area 直接開發列表、詳情、篩選與 CRUD。
+輸出位置：
 
-如果要在另一個已完成正式資料與 Identity 初始化的資料庫補上相同情境，可執行 [`seed-showcase-data.sql`](seed-showcase-data.sql)。腳本只新增社群、遊戲與商城展示資料，不會改動 Schema，也不會在網站啟動時自動執行；各區段會辨識既有資料，不會重複灌入。
+```text
+_工具輸出/reference-database/<version>/
+```
 
-各 Area 開發時可以在自己的 LocalDB 新增、修改、刪除測試資料。只有要調整資料表、欄位、外鍵、索引、約束或跨 Area 關係時，才需要走整合流程。完整邊界請看[共同資料與開發測試資料](../docs/02-development-data.md)。
+`.bak`、暫存資料庫檔、log、parity report 與其他產物都只放在 `_工具輸出`，不提交到 Git
 
-## Entity／`QmahDbContext` 對照基準
+## 目前版本的定位
 
-目前已核對：
+目前的 `database/QMAH.sql` 與最新 Release 只代表這個 Repository commit 對應的 reference database snapshot，不宣稱是所有 Area 功能整合完成後的期中最終資料庫
 
-- 33 個業務 Entity／`DbSet`。
-- `IdentityDbContext` 提供 `ApplicationUser` 與 7 張 Identity 資料表。
-- `QmahDbContext` 對應 SQL Server 的 40 張專案資料表；`dbo.sysdiagrams` 是 SSMS 自行建立的 Diagram 系統表，不是 QMAH 業務資料。
-- 資料表、欄位、資料型別、nullability、主鍵、索引、外鍵與 CHECK constraint 都以 SQL Server Schema／ERD 為準。
-- Entity 與 Fluent mapping 只保留 EF Core 在查詢、寫入與關聯操作需要的對照。CHECK constraint 由 SQL Server 執行，不在 Fluent mapping 重複寫一份。
-- 不使用 `dotnet ef migrations` 建立、套用或檢查 Schema。
+其他 Area 合併新的 table、column、index、foreign key、constraint、Identity 初始化或共同資料後，不需要重寫工具，只需：
 
-實機資料庫建立後，需要再次核對時，使用 `dotnet ef dbcontext scaffold` 產生暫存對照檔。檢查結果放在 `_工具輸出`，不直接覆蓋 Repository 內的 Entity。
+1. 完成功能整合並更新 canonical database
+2. 重新執行同一支 `Export-ReferenceDatabase.ps1`
+3. 通過 SQL-only 重建與 parity validation
+4. 以新的版本號發布同源的 `.bak` 與 `.sql`
 
-## 結構變更規則
+若某筆資料無法判定是共同資料或個人測試資料，匯出流程不會自行刪除；需由資料庫整合者依文件、seed、reference DB 與 Area 負責人確認後再決定資料邊界
 
-1. 先提出資料表、欄位、索引、外鍵與原因。
-2. 更新 SQL Server Schema／ERD 與審核用 SQL。
-3. 使用 EF Core Scaffold 重新核對 Entity 與 `QmahDbContext`，再同步必要的程式端對照。
-4. 更新 `Schema.sql` 後，在空白資料庫重跑並核對 Entity／`QmahDbContext`；不建立 EF Migration。
-5. 在空白測試資料庫驗證腳本，再提供新的參考 `.bak`。
+## Schema 變更規則
 
-不要直接手寫 `AspNetUsers`／`AspNetRoles` 的帳號資料。
+資料表、欄位、索引、外鍵、constraint 或跨 Area 關聯需要變更時：
 
-帳號與角色初始化統一走 `UserManager`／`RoleManager`。
+1. 先在 PR 說明資料庫影響範圍
+2. 更新 SQL Server 與 `Schema.sql`
+3. 重新核對 Entity 與 `QmahDbContext`
+4. 重新執行完整匯出與 parity validation
+5. 通過驗證後才建立新的 Release
 
-## 檔案邊界
-
-`.bak`、`.mdf`、`.ldf`、本機資料庫、Diagram、raw JSON、下載圖片、快取、log、`bin`、`obj` 與大型執行檔不進 Repository。
-
-工具輸出一律放在工作區根目錄的 `_工具輸出`。
+不要只修改 Entity，也不要在 `Program.cs` 呼叫 `EnsureCreated()` 或 `Migrate()`

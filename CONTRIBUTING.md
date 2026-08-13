@@ -7,7 +7,7 @@
 1. 接受 `MSIT173-03` 組織邀請，並確認 Repository 權限為 `Write`。組織成員預設可能只有 `Read`，無法 Push 時請先確認權限。
 2. 以最新遠端內容重新 Clone 或更新本機工作目錄。
 3. 開啟 `QMAH.sln`，切到自己的 Area 分支，按 **F5** 確認網站可啟動。
-4. 從最新 Release 還原 `QMAH-reference-*.bak`，在 `appsettings.Local.json` 設定自己的資料庫連線。
+4. 從最新 Release 還原 `QMAH-<version>.bak`，或在 SSMS 執行 `database/QMAH.sql`；再於 `appsettings.Local.json` 設定自己的資料庫連線。
 5. 依序閱讀 README、`docs/01-development-environment.md`、`docs/02-development-data.md`、`docs/03-area-development-checklist.md`、`docs/04-backend-start-guide.md`、`docs/07-dbcontext-usage.md` 與自己 Area 的資料表關係。
 
 一般功能開發不需要命令列，也不需要建立資料表。
@@ -42,6 +42,7 @@
 - 不呼叫 `EnsureCreated()` 或 `Migrate()`。
 - 不只改 Entity 而未確認 SQL Server Schema。
 - 欄位、外鍵、索引、CHECK、預設值或跨 Area 關係需要變更時，先列出影響範圍，再同步 Schema、Entity、DbContext、文件與 Release `.bak`。
+- 每次新的 reference database 版本都必須由同一次驗證流程產生 `database/QMAH.sql`、Release `.sql` 與 Release `.bak`；不可分別手動維護兩種快照。
 - 一般 CRUD 可以新增、修改或刪除測試資料；只有 Schema 改動需要走資料庫整合流程。
 
 ## Commit、Push 與 Pull Request
@@ -56,6 +57,6 @@ docs: 補充資料庫還原步驟
 
 Push 前逐一確認 Git Changes，避免提交密碼、個人連線設定、raw、快取、log、`bin`、`obj`、大型 EXE 或 `.bak`。資料工具產出只放工作區根目錄 `_工具輸出`，不納入 Repository。
 
-Push 前先確認本機建置成功。Pull Request 請寫明：修改功能、Area、網址、使用的資料表、驗證方式、共同檔案影響，以及 Schema／資料／圖片是否變動。合併前確認 GitHub Actions `Build` 成功。
+Push 前先確認本機建置成功。Pull Request 請寫明：修改功能、Area、網址、使用的資料表、驗證方式、共同檔案影響，以及 Schema／資料／圖片是否變動。資料庫整合 PR 另需附 parity report 或說明輸出位置。合併前確認 GitHub Actions `Build` 成功。
 
 不要 force push、清除共同歷史、刪除其他人的 Commit，或未經討論改動共同檔案。分支、權限與衝突處理細節見 [Git 與 GitHub 協作手冊](docs/git-workflow.md)。

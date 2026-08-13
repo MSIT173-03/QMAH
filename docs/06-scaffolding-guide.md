@@ -6,7 +6,7 @@ Scaffold 會根據 Entity 與 `QmahDbContext` 產生 MVC Controller 和 Razor Vi
 
 ## 開始前要準備什麼
 
-1. 從 Release 還原 `QMAH-reference-*.bak`
+1. 從 Release 還原 `QMAH-<version>.bak`，或執行 `database/QMAH.sql`
 2. 用 Visual Studio 開啟 `QMAH.sln`
 3. 確認啟動專案是 `QMAH.Web`
 4. 先執行一次 **Build Solution**，確認沒有錯誤

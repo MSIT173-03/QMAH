@@ -4,7 +4,7 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 
 ## 1. 取得共同資料
 
-先到 GitHub Repository 頁面的 **Releases** 開啟最新版本，在 **Assets** 下載 `QMAH-reference-*.bak`。資料庫還原步驟請看 [`database/README.md`](../database/README.md)。
+先到 GitHub Repository 頁面的 **Releases** 開啟最新版本，在 **Assets** 下載 `QMAH-<version>.bak`；也可以直接執行 [`database/QMAH.sql`](../database/QMAH.sql)。資料庫還原步驟請看 [`database/README.md`](../database/README.md)。
 
 還原後可以直接用 Visual Studio 啟動網站。網站啟動時不會建表、重設資料、執行 Seed 或覆寫本機資料。
 

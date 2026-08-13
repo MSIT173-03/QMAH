@@ -2,3 +2,6 @@
 
 # 第三方前端套件保留原始內容，不做換行轉換或一般文字差異比較。
 QMAH.Web/wwwroot/lib/** -text -diff linguist-vendored
+
+# Database source and generated full restore script remain reviewable text.
+database/*.sql text eol=lf

@@ -55,7 +55,7 @@ Repository 採 Public，以使用 GitHub Free 組織的 Branch Protection。保�
 2. 選擇本機資料夾並完成 Clone。
 3. 開啟 `QMAH.sln`。
 4. 在 Git 分支選單切到自己負責的 Area 分支。
-5. 依 README 從 Release 還原參考 `.bak`。
+5. 依 README 從 Release 還原 `QMAH-<version>.bak`，或執行 `database/QMAH.sql`。
 
 Visual Studio 檔案旁的藍色鎖通常表示「檔案目前沒有本機修改」，不是唯讀，也不代表沒有權限。
 
@@ -141,7 +141,7 @@ dotnet build QMAH.sln --no-restore --configuration Release
 - 自行建立另一套資料庫或 schema。
 - 只改 Entity，卻沒有確認 SQL Server 欄位。
 
-需要調整 Schema 時，在 PR 或群組列出欄位名稱、型別、是否允許 `NULL`、預設值、索引／外鍵與受影響功能，再由資料庫整合流程同步 SQL、Entity、DbContext、Diagram 與 Release `.bak`。
+需要調整 Schema 時，在 PR 或群組列出欄位名稱、型別、是否允許 `NULL`、預設值、索引／外鍵與受影響功能，再由資料庫整合流程同步 `Schema.sql`、`database/QMAH.sql`、Entity、DbContext、Diagram 與同版本 Release `.sql`／`.bak`。
 
 ## 衝突處理
 
