@@ -775,7 +775,13 @@ internal static class DatabaseReleaseProgram
         return parts.Count == 0 ? (unicode ? "N''" : "''") : string.Join(" + ", parts);
     }
     private static string EscapeSqlText(string value) => value.Replace("'", "''", StringComparison.Ordinal);
-    private static string NormalizeNewLines(string value) => value.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\r", "\n", StringComparison.Ordinal).Replace("\n", "\r\n", StringComparison.Ordinal);
+    private static string NormalizeNewLines(string value)
+    {
+        var lines = value.Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace("\r", "\n", StringComparison.Ordinal)
+            .Split('\n');
+        return string.Join("\r\n", lines.Select(line => line.TrimEnd()));
+    }
 
     private static void EnsureDatabaseName(SqlConnection connection, string expected)
     {
