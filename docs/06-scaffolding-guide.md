@@ -28,14 +28,47 @@ Visual Studio 的 Add View／Scaffold 並不是按照檔案所在資料夾尋找
 
 ```text
 QMAH.Web/Models/Entities/ArtifactCategory.cs
-QMAH.Web/Areas/Catalog/Controllers/ArtifactCategoriesController.cs
+QMAH.Web/Areas/Catalog/Controllers/ArtifactCategoryController.cs
 QMAH.Web/Areas/Catalog/ViewModels/ArtifactCategoryFormViewModel.cs
-QMAH.Web/Areas/Catalog/Views/ArtifactCategories/Create.cshtml
+QMAH.Web/Areas/Catalog/Views/ArtifactCategory/Create.cshtml
 ```
 
 上面四個位置各自負責共用資料表對照、Catalog 路由、Catalog 表單契約與 Razor 畫面。Entity 留在 `Models/Entities`，各 Area 只建立自己需要的 Controller、ViewModel、View 與必要 Service，不複製 Entity 或 `QmahDbContext`
 
 Add View 只需要讀取 Model 的 properties，不要求該型別一定是 Entity，也不要求 `QmahDbContext` 有對應 `DbSet`。因此正式 Create／Edit 頁面可以先建立 `public` ViewModel，Build 後直接在 Model class 選擇該 ViewModel。只有使用 **MVC Controller with views, using Entity Framework** 一次產生 EF CRUD 時，才需要同時選擇 Entity 與既有 `QmahDbContext`
+
+## QMAH 固定使用單數 MVC 名稱
+
+為了讓 Visual Studio 產生的 View 資料夾可以原封不動搬進 Area，QMAH 的 Controller、View 資料夾與路由一律直接使用 Entity 的單數名稱。DbSet 與 SQL 資料表是另一層，維持 DB-first 現有名稱：
+
+| 用途 | `ArtifactCategory` 範例 | 是否自行改名 |
+| --- | --- | --- |
+| Entity | `ArtifactCategory` | 否 |
+| Controller | `ArtifactCategoryController` | 直接用 Entity 名稱加 `Controller` |
+| View 資料夾 | `Views/ArtifactCategory` | 必須和 Controller 去掉 `Controller` 後相同 |
+| Area View 位置 | `Areas/Catalog/Views/ArtifactCategory` | 只搬資料夾，不改資料夾名稱 |
+| ViewModel | `ArtifactCategoryFormViewModel` | 直接用 Entity 名稱加用途後綴 |
+| Area 網址 | `/Catalog/ArtifactCategory/Index` | 使用單數 Controller 名稱 |
+| DbSet | `_db.ArtifactCategories` | 不修改，直接使用 `QmahDbContext` 現有屬性 |
+| SQL 資料表 | `catalog.ArtifactCategories` | 不修改，由 `ToTable()` 明確對應 |
+
+其他功能同樣照抄 Entity 名稱：
+
+```text
+Artifact          → ArtifactController          → Views/Artifact
+GameRoom          → GameRoomController          → Views/GameRoom
+UserAddress       → UserAddressController       → Views/UserAddress
+CouponDefinition  → CouponDefinitionController  → Views/CouponDefinition
+```
+
+不要建立下列混合結構：
+
+```text
+ArtifactCategoryController + Views/ArtifactCategories
+ArtifactCategoriesController + Views/ArtifactCategory
+```
+
+MVC 不會替 View 資料夾轉換英文單複數。上述混合命名會讓 `return View()` 找不到預設 View。新功能如果已經建立成複數 Controller，先將 Controller、View 資料夾、`asp-controller` 與網址一起改成單數，再繼續開發
 
 ## 方法一：一次產生 Controller 與 CRUD Views
 
@@ -48,17 +81,17 @@ Add View 只需要讀取 Model 的 properties，不要求該型別一定是 Enti
 5. 按 **Add**
 6. Model class 選 `ArtifactCategory`
 7. Data context class 選 `QmahDbContext`
-8. Controller name 使用 `ArtifactCategoriesController`
+8. Controller name 使用 `ArtifactCategoryController`
 9. 勾選 **Generate views**
 10. 不勾選建立新的 DbContext
 11. 按 **Add**，等待產生完成
 
-Visual Studio 會產生 Controller 與五個 View。依版本與執行位置不同，View 可能出現在根目錄 `Views/ArtifactCategories`，也可能位於 Area。最後必須整理成：
+Visual Studio 會產生 Controller 與五個 View。依版本與執行位置不同，View 可能出現在根目錄 `Views/ArtifactCategory`，也可能位於 Area。最後必須整理成：
 
 ```text
 QMAH.Web/Areas/Catalog/
-├─ Controllers/ArtifactCategoriesController.cs
-└─ Views/ArtifactCategories/
+├─ Controllers/ArtifactCategoryController.cs
+└─ Views/ArtifactCategory/
    ├─ Index.cshtml
    ├─ Details.cshtml
    ├─ Create.cshtml
@@ -66,7 +99,23 @@ QMAH.Web/Areas/Catalog/
    └─ Delete.cshtml
 ```
 
-若 View 被產生到 `QMAH.Web/Views/ArtifactCategories`，使用 Visual Studio 將整個資料夾移到 `Areas/Catalog/Views/ArtifactCategories`
+若 View 被產生到 `QMAH.Web/Views/ArtifactCategory`，使用 Visual Studio 將整個資料夾移到 `Areas/Catalog/Views/ArtifactCategory`
+
+搬移時只改上層位置，資料夾名稱和五個 `.cshtml` 檔名都不要改：
+
+```text
+搬移前：QMAH.Web/Views/ArtifactCategory/
+搬移後：QMAH.Web/Areas/Catalog/Views/ArtifactCategory/
+```
+
+官方 Scaffolder 可能不會自動補上正確的 Area namespace 與 `[Area]`。Controller 產生後必須確認：
+
+```csharp
+namespace QMAH.Web.Areas.Catalog.Controllers;
+
+[Area("Catalog")]
+public class ArtifactCategoryController : Controller
+```
 
 ## 方法二：先建立 Controller，再逐頁新增 View
 
@@ -93,14 +142,13 @@ QMAH.Web/Areas/Catalog/
 
 目前 Visual Studio 的 Add Razor View 視窗沒有讓使用者指定輸出目錄的欄位。從 Area Controller 的 Action 開啟時，產生器仍可能把檔案放到根目錄 `Views/<Controller>`。若發生此情況，將 `.cshtml` 手動移到 `Areas/<Area>/Views/<Controller>`，重新 Build，並停止後重新啟動網站
 
-View 資料夾名稱不是依 Entity 名稱推測，也不會自動處理英文單複數。MVC 只會把 Controller 類別名稱最後的 `Controller` 去掉：
+View 資料夾名稱不是依 Entity 名稱推測，也不會自動處理英文單複數。MVC 只會把 Controller 類別名稱最後的 `Controller` 去掉。QMAH 新功能固定使用下列單數組合：
 
 | Controller | 預設 View 資料夾 | 預設 Area 網址 |
 | --- | --- | --- |
 | `ArtifactCategoryController` | `Views/ArtifactCategory` | `/Catalog/ArtifactCategory/...` |
-| `ArtifactCategoriesController` | `Views/ArtifactCategories` | `/Catalog/ArtifactCategories/...` |
 
-兩種命名都能運作，但 Controller、View 資料夾、連結中的 `asp-controller` 與網址必須使用同一個名稱。不要期待 MVC 根據 Entity `ArtifactCategory` 自動猜測單數或複數
+技術上也能使用複數 Controller，但 QMAH 不採用這種命名。組員只要直接複製 Entity 名稱，就不需要自己判斷 `Category` 是否要改成 `Categories`
 
 ## 方法三：直接在 Views 資料夾新增 Razor View
 
@@ -145,10 +193,11 @@ dotnet tool restore
 dotnet aspnet-codegenerator `
   --project .\QMAH.Web\QMAH.Web.csproj `
   controller `
-  --controllerName ArtifactCategoriesController `
+  --controllerName ArtifactCategoryController `
   --model QMAH.Web.Models.Entities.ArtifactCategory `
   --dataContext QMAH.Web.Data.QmahDbContext `
   --relativeFolderPath Areas\Catalog\Controllers `
+  --controllerNamespace QMAH.Web.Areas.Catalog.Controllers `
   --useAsyncActions `
   --useDefaultLayout `
   --referenceScriptLibraries
@@ -187,11 +236,11 @@ using QMAH.Web.Data;
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
 [Area("Catalog")]
-public class ArtifactCategoriesController : Controller
+public class ArtifactCategoryController : Controller
 {
     private readonly QmahDbContext _db;
 
-    public ArtifactCategoriesController(QmahDbContext db)
+    public ArtifactCategoryController(QmahDbContext db)
     {
         _db = db;
     }
@@ -202,15 +251,15 @@ public class ArtifactCategoriesController : Controller
 
 ```cshtml
 <a asp-area="Catalog"
-   asp-controller="ArtifactCategories"
+   asp-controller="ArtifactCategory"
    asp-action="Index">文物分類</a>
 ```
 
-啟動後先直接輸入 `/Catalog/ArtifactCategories`。若出現 404，依序檢查：
+啟動後先直接輸入 `/Catalog/ArtifactCategory`。若出現 404，依序檢查：
 
 - Controller 是否有 `[Area("Catalog")]`
 - Controller namespace 是否在 `QMAH.Web.Areas.Catalog.Controllers`
-- View 是否位於 `Areas/Catalog/Views/ArtifactCategories`
+- View 是否位於 `Areas/Catalog/Views/ArtifactCategory`
 - `Program.cs` 是否保留 Area route
 - Controller 名稱、View 資料夾名稱與網址是否一致
 
@@ -269,7 +318,7 @@ Scaffold 產生的 POST 通常已包含 `[ValidateAntiForgeryToken]`。專案也
 ```csharp
 [Authorize(Roles = "Admin")]
 [Area("Catalog")]
-public class ArtifactCategoriesController : Controller
+public class ArtifactCategoryController : Controller
 ```
 
 只在 View 隱藏按鈕不算授權，Controller 仍要檢查

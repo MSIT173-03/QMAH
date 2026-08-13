@@ -108,7 +108,7 @@ QMAH.Web/
 ├─ Areas/
 │  └─ Catalog/
 │     ├─ Controllers/
-│     │  └─ ArtifactsController.cs      # 路由、HTTP、ModelState、頁面導向
+│     │  └─ ArtifactController.cs      # 路由、HTTP、ModelState、頁面導向
 │     ├─ ViewModels/
 │     │  ├─ ArtifactListItemViewModel.cs # Index 每列需要的欄位
 │     │  ├─ ArtifactEditViewModel.cs     # Create／Edit 允許輸入的欄位與表單驗證

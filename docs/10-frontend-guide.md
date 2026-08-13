@@ -35,20 +35,20 @@ QMAH.Web/Areas/<Area>/Views/<Controller>/<Action>.cshtml
 例如：
 
 ```text
-QMAH.Web/Areas/Catalog/Views/Artifacts/Index.cshtml
+QMAH.Web/Areas/Catalog/Views/Artifact/Index.cshtml
 ```
 
 Controller 必須有正確的 `[Area("Catalog")]`，導覽連結則明確指定 `asp-area`：
 
 ```cshtml
 <a asp-area="Catalog"
-   asp-controller="Artifacts"
+   asp-controller="Artifact"
    asp-action="Index">
     查看圖鑑
 </a>
 ```
 
-不要手寫 `/Catalog/Artifacts/Index?id=...` 字串。使用 Tag Helper 可以跟著路由與參數產生正確網址。
+不要手寫 `/Catalog/Artifact/Index?id=...` 字串。使用 Tag Helper 可以跟著路由與參數產生正確網址。
 
 > **微軟官方做法：** MVC 的 Anchor Tag Helper 會依 Area、Controller、Action 與 route values 產生連結，避免路由調整後留下硬編碼網址。[Anchor Tag Helper in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/mvc/views/tag-helpers/built-in/anchor-tag-helper?view=aspnetcore-10.0)
 
@@ -153,7 +153,7 @@ Razor 預設會進行 HTML 編碼，直接使用 `@Model.Name` 即可。
 
 ```cshtml
 <form asp-area="Catalog"
-      asp-controller="Artifacts"
+      asp-controller="Artifact"
       asp-action="Create"
       method="post">
     <div asp-validation-summary="ModelOnly"

@@ -26,9 +26,9 @@ Identity 的資料表、服務註冊與標準 API 已備妥，但正式登入／
 
 ```text
 QMAH.Web/Areas/Catalog/
-├─ Controllers/ArtifactsController.cs
+├─ Controllers/ArtifactController.cs
 ├─ ViewModels/ArtifactEditViewModel.cs
-└─ Views/Artifacts/
+└─ Views/Artifact/
    ├─ Index.cshtml
    ├─ Details.cshtml
    ├─ Create.cshtml

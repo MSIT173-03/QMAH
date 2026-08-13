@@ -27,7 +27,7 @@
 `Program.cs` 已登記 `QmahDbContext` 與連線字串。Controller 在建構式宣告需要 DbContext，ASP.NET Core 會在每個 request 自動建立並傳入，request 結束後再釋放。
 
 ```csharp
-public ArtifactsController(QmahDbContext db)
+public ArtifactController(QmahDbContext db)
 {
     _db = db;
 }
@@ -55,13 +55,13 @@ builder.Services.AddDbContext<QmahDbContext>(options =>
 Controller 只取得已設定好的 `QmahDbContext`：
 
 ```csharp
-public sealed class ArtifactsController : Controller
+public sealed class ArtifactController : Controller
 {
     // 這個欄位代表目前 HTTP request 的資料庫工作區。
     private readonly QmahDbContext _db;
 
     // ASP.NET Core DI 在建立 Controller 時自動傳入 _db。
-    public ArtifactsController(QmahDbContext db)
+    public ArtifactController(QmahDbContext db)
     {
         _db = db;
     }
@@ -181,11 +181,11 @@ using QMAH.Web.Data;
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
 [Area("Catalog")]
-public class ArtifactsController : Controller
+public class ArtifactController : Controller
 {
     private readonly QmahDbContext _db;
 
-    public ArtifactsController(QmahDbContext db)
+    public ArtifactController(QmahDbContext db)
     {
         _db = db;
     }

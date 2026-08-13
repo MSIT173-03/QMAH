@@ -1,6 +1,6 @@
 # 從清單到完整 CRUD
 
-這份教學使用專案現有的 `catalog.ArtifactCategories` 示範後台開發。完成後可在 `/Catalog/ArtifactCategories` 查看分類清單、搜尋、詳細資料、新增、編輯與刪除未被使用的測試分類
+這份教學使用專案現有的 `catalog.ArtifactCategories` 示範後台開發。完成後可在 `/Catalog/ArtifactCategory` 查看分類清單、搜尋、詳細資料、新增、編輯與刪除未被使用的測試分類
 
 `ArtifactCategory` 只有 `Id`、`Code`、`Name`，適合先學完整流程。現有 8 個正式分類已被文物或鑰匙使用，不能刪除；練習刪除時，請先新增一筆沒有關聯的測試分類
 
@@ -20,9 +20,9 @@
 
 ```text
 QMAH.Web/Areas/Catalog/
-├─ Controllers/ArtifactCategoriesController.cs
+├─ Controllers/ArtifactCategoryController.cs
 ├─ ViewModels/ArtifactCategoryViewModels.cs
-└─ Views/ArtifactCategories/
+└─ Views/ArtifactCategory/
    └─ Index.cshtml
 ```
 
@@ -73,7 +73,7 @@ Entity 對應資料表，ViewModel 對應畫面。清單只需要 4 個欄位，
 
 ### 2. 建立 Controller 與 Index
 
-`Areas/Catalog/Controllers/ArtifactCategoriesController.cs`
+`Areas/Catalog/Controllers/ArtifactCategoryController.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -85,11 +85,11 @@ using QMAH.Web.Models.Entities;
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
 [Area("Catalog")]
-public sealed class ArtifactCategoriesController : Controller
+public sealed class ArtifactCategoryController : Controller
 {
     private readonly QmahDbContext _db;
 
-    public ArtifactCategoriesController(QmahDbContext db)
+    public ArtifactCategoryController(QmahDbContext db)
     {
         _db = db;
     }
@@ -136,7 +136,7 @@ public sealed class ArtifactCategoriesController : Controller
 
 ### 3. 建立 Index View
 
-`Areas/Catalog/Views/ArtifactCategories/Index.cshtml`
+`Areas/Catalog/Views/ArtifactCategory/Index.cshtml`
 
 ```cshtml
 @model IReadOnlyList<QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryListItemViewModel>
@@ -153,7 +153,7 @@ public sealed class ArtifactCategoriesController : Controller
     </div>
     <a class="btn btn-primary"
        asp-area="Catalog"
-       asp-controller="ArtifactCategories"
+       asp-controller="ArtifactCategory"
        asp-action="Create">新增分類</a>
 </div>
 
@@ -214,7 +214,7 @@ else
 }
 ```
 
-先啟動網站並開啟 `/Catalog/ArtifactCategories`。能看到 8 個分類，就代表 Area 路由、Controller、DbContext、查詢、ViewModel 與 Razor View 已經接通
+先啟動網站並開啟 `/Catalog/ArtifactCategory`。能看到 8 個分類，就代表 Area 路由、Controller、DbContext、查詢、ViewModel 與 Razor View 已經接通
 
 ## 補上 Details、Create、Edit、Delete
 
@@ -421,7 +421,7 @@ Delete GET 只顯示確認頁，真正刪除必須使用 POST。既有分類有�
 
 Create 與 Edit 欄位相同，可使用 Partial 避免複製兩份 HTML
 
-`Areas/Catalog/Views/ArtifactCategories/_Form.cshtml`
+`Areas/Catalog/Views/ArtifactCategory/_Form.cshtml`
 
 ```cshtml
 @model QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryFormViewModel
