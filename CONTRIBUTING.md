@@ -29,7 +29,10 @@
 ## 檔案放置原則
 
 - Area 的 Controller、ViewModel 與 Razor View 放在 `QMAH.Web/Areas/<Area>/`。
+- DB-first Entity 統一保留在 `QMAH.Web/Models/Entities/`，Identity Model 保留在 `QMAH.Web/Models/Identity/`，`QmahDbContext` 保留在 `QMAH.Web/Data/`；不要搬進 Area，也不要在各 Area 複製一份。
 - 每一個新增或修改表單使用對應的 ViewModel；不要直接把 Entity 當 POST 表單模型。
+- MVC 的 View 資料夾名稱等於 Controller 類別名稱去掉最後的 `Controller`，不會自動轉換單數或複數；Controller、View 資料夾與 `asp-controller` 必須一致。
+- Visual Studio 的 Add View 視窗可能把 Area View 產生到根 `Views/<Controller>`，且該視窗沒有輸出目錄選項；產生後要移到 `Areas/<Area>/Views/<Controller>` 再 Build。
 - 單表 CRUD 可直接由 Controller 注入 `QmahDbContext`。跨表交易、外部服務、長流程或重複規則，才在該 Area 建立用途明確的 Service。
 - `(Services)`、`(Models/Api)`、Area 專用 CSS、Area 專用 JavaScript 與 Partial View 都是可選結構；出現實際需求才建立。
 - `Data/`、`Program.cs`、`Models/Identity/`、`database/`、共用 Layout、`wwwroot` 的共用檔案、NuGet 套件與 README 是共同範圍。修改前先在群組說明影響。

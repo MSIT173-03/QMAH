@@ -11,7 +11,7 @@
 # .NET 編譯與測試產物
 **/bin/
 **/obj/
-artifacts/
+/artifacts/
 TestResults/
 coverage/
 coverage.*

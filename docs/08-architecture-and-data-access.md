@@ -18,6 +18,25 @@ Razor View ⇄ ViewModel ⇄ Controller ⇄ [Service] ⇄ QmahDbContext ⇄ SQL 
 
 QMAH 不採「每張表一個 Wrapper」、Generic Repository 或「每張表一個 Service」。EF Core 已提供查詢、Change Tracking 與交易；單表 CRUD 再包一層只會增加轉換與除錯位置。
 
+## 與課堂單層 MVC 範例的差異
+
+一般課堂範例可能把全站的 `Controllers`、`Models`、`ViewModels`、`Views` 都放在專案根目錄。這適合單一功能範例；QMAH 則以五個 Area 讓組員分工，但不代表所有 C# Model 都要跟著搬進 Area
+
+```text
+課堂單層範例                     QMAH
+Controllers/                     Areas/<Area>/Controllers/
+Models/                           Models/Entities/、Models/Identity/
+ViewModels/                       Areas/<Area>/ViewModels/
+Views/                            Areas/<Area>/Views/
+DbContext 放在 Models/            Data/QmahDbContext.cs
+```
+
+QMAH 的 DB-first Entity、Identity Model 與 `QmahDbContext` 是共用資料契約，保留在 Area 外面。各 Area 分開的是畫面與流程：Controller、ViewModel、View、Area 專用前端檔案，以及真正需要時才建立的 Service
+
+Entity 技術上可以放在其他資料夾，只要 namespace 與編譯引用正確，ASP.NET Core MVC 和 EF Core 仍能使用。但 QMAH 不建議搬移或在 Area 複製 Entity，因為同一個 Entity 可能被多個 Area 關聯查詢，DB-first 對照也包含分散於共用 partial 檔案的 navigation properties。搬移只會增加 namespace、DbContext、關聯與重新 Scaffold 對照時的維護成本
+
+另一個差異是 QMAH 已在 `Program.cs` 以 DI 註冊 scoped `QmahDbContext`。Controller 必須透過建構式注入，不沿用教學範例中每個 Action 自行 `new DbContext()` 的寫法
+
 ## Controller 什麼時候直接用 DbContext
 
 單一資料表的列表、詳情、新增、修改與刪除，可由 Controller 直接注入 `QmahDbContext`。
