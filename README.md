@@ -27,7 +27,7 @@ QMAH 是 **Qing Ming Appraisal House（清明鑑定屋）** 的縮寫
 
 - SQL Server Schema、Entity 對照與 `QmahDbContext`
 - ASP.NET Core Identity 資料表與 DI 註冊
-- 256 件文物、256 筆題庫設定與 256 件對應商城商品
+- 256 件文物、256 筆題庫設定、256 件對應商城商品，以及各 Area 可直接使用的情境資料
 - 8 個文物分類、網站圖片、資料處理工具與參考資料庫備份
 - Game、Catalog、Social、User、Store 五個 Area 的空白入口
 - DB-first、資料存取、前端、測試資料與 Git 協作文件
