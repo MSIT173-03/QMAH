@@ -1,6 +1,6 @@
 # NpmDataImporter
 
-本工具驗證並匯入已標準化的文物資料包。一般網站開發使用 GitHub Release 的參考 `.bak`，不直接執行本工具。
+本工具驗證並匯入已標準化的文物資料包。一般網站開發不需要執行本工具；建立本機資料庫時，可從 GitHub Release 還原參考 `.bak`，或直接執行 Repository 的 `database/QMAH.sql`，兩種方式擇一即可。
 
 安全地把已核對的文物資料包新增到 QMAH。舊商城資料包參數仍保留相容性，但目前正式商品改由獨立的 `ArtifactProductGenerator` 從已匯入文物建立。工具只接受已存在的 SQL Server Schema，不建立資料庫、不執行 EF Migration，也不覆蓋既有資產。
 

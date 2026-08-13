@@ -4,9 +4,9 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 
 ## 1. 取得共同資料
 
-先到 GitHub Repository 頁面的 **Releases** 開啟最新版本，在 **Assets** 下載 `QMAH-<version>.bak`；也可以直接執行 [`database/QMAH.sql`](../database/QMAH.sql)。資料庫還原步驟請看 [`database/README.md`](../database/README.md)。
+先到 GitHub Repository 頁面的 **Releases** 開啟最新版本，在 **Assets** 下載 `QMAH-<version>.bak` 並用 SSMS 還原；也可以直接在 SSMS 執行 Repository 的 [`database/QMAH.sql`](../database/QMAH.sql)，或執行 Release 附帶的同版本 `.sql`。兩種方式擇一即可，資料庫還原步驟請看 [`database/README.md`](../database/README.md)。
 
-還原後可以直接用 Visual Studio 啟動網站。網站啟動時不會建表、重設資料、執行 Seed 或覆寫本機資料。
+完成其中一種方式後即可直接用 Visual Studio 啟動網站。網站啟動時不會建表、重設資料、執行 Seed 或覆寫本機資料。
 
 共同備份包含：
 
@@ -17,7 +17,7 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 
 ## 2. 目前參考資料庫內容
 
-以下數量以目前 Release 參考 `.bak` 為準。`dbo.sysdiagrams` 是 SSMS 使用的系統表，不列入 QMAH 業務資料表數量。
+以下數量以目前 Release 的 `.bak`／`.sql` 同源 snapshot 為準。`dbo.sysdiagrams` 是 SSMS 使用的系統表，不列入 QMAH 業務資料表數量。
 
 ### 2.1 五個 Schema
 
@@ -190,7 +190,7 @@ catalog.Artifacts.Id
 資料工具整理與驗證
   → SQL Server 共同資料庫
   → Entity、QmahDbContext、Schema.sql 一致性檢查
-  → 輸出新的參考 .bak
+  → 同一次輸出新的 `database/QMAH.sql`、Release `.sql` 與 `.bak`
   → 上傳 GitHub Release 的 Assets
 ```
 

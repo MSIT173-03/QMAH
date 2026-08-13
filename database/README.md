@@ -6,6 +6,8 @@ QMAH 採 SQL Server DB-first
 
 ## 一般開發者只需要兩種還原方式
 
+建立本機資料庫時二選一即可：可以還原最新 Release 的 `.bak`，也可以直接執行 Repository 或 Release 提供的完整 `.sql`。兩種檔案都來自同一份 reference database，不需要同時使用，也不需要另外執行 `Schema.sql` 或 seed 腳本。
+
 ### 方式一：Release 的 `.bak`
 
 這是最快的方式，適合直接開始開發

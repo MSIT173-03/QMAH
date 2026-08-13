@@ -761,7 +761,7 @@ Database.Migrate();
 Database.EnsureCreated();
 ```
 
-欄位、索引、外鍵或 CHECK constraint 需要調整時，依序處理 SQL Server 設計、`database/Schema.sql`、EF Core Scaffold 核對、必要的 Entity／`QmahDbContext` 對照、Diagram 與參考 `.bak`。
+欄位、索引、外鍵或 CHECK constraint 需要調整時，依序處理 SQL Server 設計、`database/Schema.sql`、EF Core Scaffold 核對、必要的 Entity／`QmahDbContext` 對照、Diagram，以及同一次匯出的 `database/QMAH.sql`、Release `.sql`／`.bak`。
 
 不要新增 EF Migration，也不要建立 `__EFMigrationsHistory`。
 
@@ -771,7 +771,7 @@ Database.EnsureCreated();
 
 ### `Invalid object name` 或找不到資料表
 
-通常代表連到錯誤資料庫，或尚未還原參考 `.bak`。先確認連線字串中的 Server 與 Database，再到 SSMS 檢查 `catalog`、`game`、`social`、`store`、`user` schema。
+通常代表連到錯誤資料庫，或尚未還原參考 `.bak`／執行完整 `database/QMAH.sql`。先確認連線字串中的 Server 與 Database，再到 SSMS 檢查 `catalog`、`game`、`social`、`store`、`user` schema。
 
 ### 查詢回傳重複資料
 

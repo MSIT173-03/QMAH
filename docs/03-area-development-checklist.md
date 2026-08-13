@@ -15,7 +15,7 @@
 ### 開始前一定先做
 
 - 從最新 `develop` 建立或更新自己的 `feature/<area>` 分支
-- 還原參考資料庫，確認網站能啟動，並先完成一次 Build
+- 從最新 Release 還原 `QMAH-<version>.bak`，或在 SSMS 執行 `database/QMAH.sql`，確認網站能啟動，並先完成一次 Build
 - 閱讀該功能使用的 Entity、`DbSet`、外鍵、唯一索引、`CHECK`、`NOT NULL`、Default 與 `rowversion`
 - 先決定這個頁面是清單、詳細資料、新增、編輯、狀態操作，還是跨表流程
 - 列出 ViewModel 允許輸入的欄位，不把 Entity 全部直接當成表單模型

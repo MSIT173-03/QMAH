@@ -2,7 +2,7 @@
 
 本目錄保存文物資料收集、標準化、商品產生、匯入預檢與資料庫 Release 匯出工具
 
-一般網站開發只需從 GitHub Release 還原 `.bak`，或執行 Repository 的 `database/QMAH.sql`
+一般網站開發不需要執行本目錄的資料處理工具。建立本機資料庫時，從 GitHub Release 還原同版本 `.bak`，或直接執行 Repository 的 `database/QMAH.sql`（Release 也提供同源的 `.sql`）即可，兩種方式擇一即可
 
 ## 工具分類
 

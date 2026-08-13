@@ -93,7 +93,7 @@ Visual Studio 提供三個啟動設定：
 
 ## 開發資料
 
-參考 `.bak` 已包含資料庫結構、共同文物資料與畫面開發所需的情境資料。還原後可直接在本機 LocalDB 建立、修改與刪除 CRUD 測試資料，不需要執行 Seed 命令。
+參考 `.bak` 與完整 `database/QMAH.sql` 都包含資料庫結構、共同文物資料與畫面開發所需的情境資料。完成其中一種還原方式後，即可在本機 LocalDB 建立、修改與刪除 CRUD 測試資料，不需要執行 Seed 命令。
 
 不同資料庫副本的測試資料可以不同；共同契約是 Schema。新增或修改資料表、欄位、外鍵、索引、約束或跨 Area 關係時，依資料庫結構變更流程處理。詳細原則見[共同資料與開發測試資料](02-development-data.md)。
 
@@ -226,7 +226,7 @@ dotnet tool restore
 
 ### 網站能啟動，但顯示資料表不存在
 
-通常是資料庫名稱不是 `QMAH`、連錯 instance，或只建立空資料庫而沒有還原 `.bak`。先在 SSMS 展開 Tables，確認五個 schema 的資料表存在。
+通常是資料庫名稱不是 `QMAH`、連錯 instance，或只建立空資料庫而沒有還原 `.bak`／執行完整 `database/QMAH.sql`。先在 SSMS 展開 Tables，確認五個 schema 的資料表存在。
 
 ### HTTPS 憑證警告
 

@@ -28,7 +28,7 @@ QMAH 是 **Qing Ming Appraisal House（清明鑑定屋）** 的縮寫
 - SQL Server Schema、Entity 對照與 `QmahDbContext`
 - ASP.NET Core Identity 資料表與 DI 註冊
 - 256 件文物、256 筆題庫設定、256 件對應商城商品，以及各 Area 可直接使用的情境資料
-- 8 個文物分類、網站圖片、資料處理工具與參考資料庫備份
+- 8 個文物分類、網站圖片、資料處理工具，以及可用 `.sql` 或 `.bak` 取得的參考資料庫
 - Game、Catalog、Social、User、Store 五個 Area 的空白入口
 - DB-first、資料存取、前端、測試資料與 Git 協作文件
 
@@ -36,17 +36,26 @@ QMAH 是 **Qing Ming Appraisal House（清明鑑定屋）** 的縮寫
 
 ## 開始開發
 
-不需要執行 Migration，也不需要自己建立資料表。最快的方式是從 Release 還原 `.bak`；如果需要可 review 的文字版，也可以只執行 [`database/QMAH.sql`](database/QMAH.sql)
+不需要執行 Migration，也不需要自己建立資料表。建立本機資料庫時，從下列兩種方式擇一即可；兩者都是同一版本的完整 reference database，不需要兩種都執行
+
+**方式一：還原 Release 的 `.bak`**
 
 1. 開啟 Repository 右側的 [最新 Release](https://github.com/MSIT173-03/QMAH/releases/latest)，在 **Assets** 下載 `QMAH-<version>.bak`
 2. 在 SSMS 連線 `(localdb)\MSSQLLocalDB`
 3. 選擇 **Restore Database...** → **Device**，將資料庫名稱設為 `QMAH`
+
+**方式二：直接執行完整 `.sql`**
+
+在 SSMS 開啟 Repository 的 [`database/QMAH.sql`](database/QMAH.sql) 並執行即可；最新 Release 也會附上同一次匯出的 `QMAH-<version>.sql`
+
+完成其中一種方式後：
+
 4. 用 Visual Studio 開啟 `QMAH.sln`，等待 NuGet 自動還原
 5. 選擇 `https` 啟動設定，按 `F5`
 
-備份已包含該版本 reference database 的資料表、索引、外鍵、Identity、共同資料與展示資料。SSMS Diagram 不屬於資料庫契約，也不包含在 Release 還原內容內
+`.bak` 與 `.sql` 都包含該版本 reference database 的資料表、索引、外鍵、Identity、共同資料與展示資料。SSMS Diagram 不屬於資料庫契約，也不包含在 Release 還原內容內
 
-若使用文字版，直接在 SSMS 開啟 [`database/QMAH.sql`](database/QMAH.sql) 並執行即可，不需要先執行 `Schema.sql` 或 seed 腳本。兩種方式的完整差異與資料庫整合流程請看[資料庫還原與版本管理](database/README.md)
+不論使用 `.bak` 或 `.sql`，都不需要先執行 `Schema.sql` 或 seed 腳本。兩種方式的完整差異與資料庫整合流程請看[資料庫還原與版本管理](database/README.md)
 
 若 Visual Studio、LocalDB、NuGet 或 Scaffold 尚未準備好，請先看[開發環境與共用套件](docs/01-development-environment.md)
 
@@ -127,7 +136,7 @@ QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 
 
 其他入口：
 
-- [資料庫說明、參考 `.bak` 還原與 Schema](database/README.md)
+- [資料庫說明、完整 `.sql` 與 `.bak` 還原](database/README.md)
 - [SSMS Diagram 操作](database/Diagram-Guide.md)
 - [QMAH 資料處理工具](tools/QmahDataTools/README.md)
 - [共同協作規則](CONTRIBUTING.md)

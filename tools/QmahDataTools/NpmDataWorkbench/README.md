@@ -4,7 +4,7 @@ Windows WPF GUI，統一呼叫文物 Pipeline、商城 Collector 與安全 Impor
 
 本工作台用於資料估算、收集、預檢與正式匯入。
 
-一般網站開發不需要開啟本工具或執行資料匯入命令；使用 Release 的 `.bak` 建立開發資料庫。
+一般網站開發不需要開啟本工具或執行資料匯入命令。建立開發資料庫時，可從 Release 還原 `.bak`，或直接在 SSMS 執行 Repository 的 `database/QMAH.sql`；兩種方式擇一即可。
 
 可直接執行的版本位於工作區根目錄 `_工具輸出/portable-tools/NpmDataWorkbench.exe`。
 
@@ -26,6 +26,6 @@ Windows WPF GUI，統一呼叫文物 Pipeline、商城 Collector 與安全 Impor
 
 GUI 不會在網站啟動時偷偷建立 SQL Server 或資料表，也不會自動改正式分類設定。
 
-資料庫依 SQL／ERD 建立與驗證，再輸出參考 `.bak`。
+資料庫依 SQL／ERD 建立與驗證，再由同一次匯出流程產生 `database/QMAH.sql`、Release `.sql` 與 `.bak`。
 
 商城根頁發現的新分類則另存 `source-categories.auto.json` 供映射審核。
