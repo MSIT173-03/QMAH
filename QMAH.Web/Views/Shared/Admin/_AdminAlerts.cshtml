@@ -1,0 +1,19 @@
+@{
+    var alerts = new[]
+    {
+        (Message: TempData["Success"] as string ?? TempData["SuccessMessage"] as string, ClassName: "alert-success", Role: "status"),
+        (Message: TempData["Info"] as string, ClassName: "alert-info", Role: "status"),
+        (Message: TempData["Warning"] as string, ClassName: "alert-warning", Role: "alert"),
+        (Message: TempData["Error"] as string ?? TempData["ErrorMessage"] as string, ClassName: "alert-danger", Role: "alert")
+    };
+}
+@foreach (var alert in alerts)
+{
+    if (!string.IsNullOrWhiteSpace(alert.Message))
+    {
+        <div class="alert @alert.ClassName alert-dismissible" role="@alert.Role">
+            <div>@alert.Message</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="關閉訊息"></button>
+        </div>
+    }
+}

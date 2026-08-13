@@ -311,4 +311,4 @@ wwwroot/js/areas/store.js
 - 桌面與窄螢幕都能閱讀及操作。
 - 瀏覽器 Console 沒有未處理錯誤。
 
-完整 CRUD 與 Razor 表單範例見[從清單到完整 CRUD](05-crud-tutorial.md)。自動產生起始頁面的步驟見[Visual Studio Scaffold 操作教學](06-scaffolding-guide.md)。資料查詢與寫入方式見 [`07-dbcontext-usage.md`](07-dbcontext-usage.md)，套件與 Hot Reload 說明見 [`01-development-environment.md`](01-development-environment.md)。
+完整 CRUD 與 Razor 表單範例見[從清單到完整 CRUD](05-crud-tutorial.md)。自動產生起始頁面的步驟見[Visual Studio Scaffold 操作教學](06-scaffolding-guide.md)。資料查詢與寫入方式見 [`07-dbcontext-usage.md`](07-dbcontext-usage.md)，套件與 Hot Reload 說明見 [`01-development-environment.md`](01-development-environment.md)。使用共用後台骨架與 Tabler 元件時，請接著閱讀 [`11-tabler-admin-guide.md`](11-tabler-admin-guide.md)。

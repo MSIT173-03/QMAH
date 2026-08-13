@@ -127,6 +127,7 @@ QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 
 | 08 | 判斷 Entity、ViewModel、DTO、Service 與 Wrapper 的界線 | [架構與資料存取規則](docs/08-architecture-and-data-access.md) |
 | 09 | 實作 Identity 登入、登出、角色與會員 CRUD | [期中 Identity 實作](docs/09-midterm-identity.md) |
 | 10 | 撰寫 Razor、表單、CSS、JavaScript 與響應式畫面 | [Razor 與前端開發](docs/10-frontend-guide.md) |
+| 11 | 使用 Tabler 共用骨架與元件製作各系統後台頁面 | [Tabler 後台實作指南](docs/11-tabler-admin-guide.md) |
 
 參考文件：
 
@@ -154,7 +155,7 @@ QMAH/
 │  ├─ Views/                     共用 Razor View
 │  └─ wwwroot/                   樣式、腳本、套件、圖片與品牌素材
 ├─ database/                     QMAH.sql、Schema.sql、seed 腳本與 Diagram 說明
-├─ docs/                         01–10 核心開發文件；其餘為參考與選用文件
+├─ docs/                         01–11 核心開發文件；其餘為參考與選用文件
 ├─ tools/QmahDataTools/          可重現的資料處理工具
 ├─ CONTRIBUTING.md               協作規則
 └─ README.md

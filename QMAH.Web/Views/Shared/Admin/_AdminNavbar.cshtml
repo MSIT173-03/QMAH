@@ -1,0 +1,42 @@
+@{
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    var sectionName = currentArea switch
+    {
+        "Catalog" => "圖鑑管理",
+        "Game" => "遊戲管理",
+        "Social" => "社群管理",
+        "Store" => "商城管理",
+        "User" => "會員管理",
+        _ => "總覽"
+    };
+}
+<header class="navbar d-print-none qmah-topbar" aria-label="後台工具列">
+    <div class="container-xl">
+        <div class="qmah-location" aria-label="目前位置">
+            <span class="qmah-location__root">管理後台</span>
+            <span class="qmah-location__divider" aria-hidden="true">/</span>
+            <strong>@sectionName</strong>
+        </div>
+        <div class="navbar-nav flex-row ms-auto align-items-center qmah-topbar-actions">
+            <div class="nav-item">
+                <button type="button" class="qmah-theme-toggle" data-qmah-theme-toggle aria-pressed="false" title="切換顯示模式">
+                    <partial name="Admin/_Icon" model="@("theme")" />
+                    <span data-qmah-theme-label>深色</span>
+                </button>
+            </div>
+            <div class="nav-item dropdown">
+                <button class="qmah-account" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="開啟帳號選單">
+                    <span class="avatar avatar-sm">管</span>
+                    <span class="qmah-account__text">
+                        <strong>管理員</strong>
+                        <small>內容管理</small>
+                    </span>
+                    <span class="qmah-account__chevron" aria-hidden="true">⌄</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                    <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">回到網站</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

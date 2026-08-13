@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-Hant" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14252c" />
+    <title>@ViewData["Title"]｜清明鑑定屋後台</title>
+    <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" />
+    <script>
+        (() => {
+            const savedTheme = localStorage.getItem("qmah-admin-theme");
+            const theme = savedTheme === "dark" || savedTheme === "light"
+                ? savedTheme
+                : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.dataset.bsTheme = theme;
+        })();
+    </script>
+    <link rel="stylesheet" href="~/admin/vendor/tabler/tabler.min.css" />
+    <link rel="stylesheet" href="~/admin/css/qmah-admin-core.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-tabler.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <a class="qmah-skip-link" href="#admin-main">跳至主要內容</a>
+    <div class="page">
+        <partial name="Admin/_AdminSidebar" />
+        <partial name="Admin/_AdminNavbar" />
+
+        <div class="page-wrapper">
+            <main id="admin-main">
+                @if (IsSectionDefined("PageHeader"))
+                {
+                    @await RenderSectionAsync("PageHeader")
+                }
+                else
+                {
+                    <div class="page-header d-print-none">
+                        <div class="container-xl">
+                            <div class="row align-items-center g-3">
+                                <div class="col">
+                                    <h1 class="page-title">@(ViewData["Title"] ?? "管理後台")</h1>
+                                    @if (ViewData["AdminDescription"] is string description && !string.IsNullOrWhiteSpace(description))
+                                    {
+                                        <p class="qmah-page-description">@description</p>
+                                    }
+                                </div>
+                                @if (IsSectionDefined("PageActions"))
+                                {
+                                    <div class="col-auto ms-auto d-print-none">
+                                        <div class="qmah-actions">
+                                            @await RenderSectionAsync("PageActions")
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="page-body">
+                    <div class="container-xl">
+                        <partial name="Admin/_AdminAlerts" />
+                        @RenderBody()
+                    </div>
+                </div>
+            </main>
+            <footer class="footer footer-transparent d-print-none">
+                <div class="container-xl">
+                    <div class="text-center">清明鑑定屋 QMAH · 內容管理後台</div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/admin/vendor/tabler/tabler.min.js"></script>
+    <script src="~/admin/js/qmah-admin.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

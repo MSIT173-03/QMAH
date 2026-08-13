@@ -8,7 +8,7 @@
 2. 以最新遠端內容重新 Clone 或更新本機工作目錄。
 3. 開啟 `QMAH.sln`，切到自己的 Area 分支，按 **F5** 確認網站可啟動。
 4. 從最新 Release 還原 `QMAH-<version>.bak`，或在 SSMS 執行 `database/QMAH.sql`；再於 `appsettings.Local.json` 設定自己的資料庫連線。
-5. 依序閱讀 README、`docs/01-development-environment.md`、`docs/02-development-data.md`、`docs/03-area-development-checklist.md`、`docs/04-backend-start-guide.md`、`docs/07-dbcontext-usage.md` 與自己 Area 的資料表關係。
+5. 依序閱讀 README、`docs/01-development-environment.md`、`docs/02-development-data.md`、`docs/03-area-development-checklist.md`、`docs/04-backend-start-guide.md`、`docs/07-dbcontext-usage.md`、`docs/10-frontend-guide.md`、`docs/11-tabler-admin-guide.md` 與所負責 Area 的資料表關係。
 
 一般功能開發不需要命令列，也不需要建立資料表。
 
