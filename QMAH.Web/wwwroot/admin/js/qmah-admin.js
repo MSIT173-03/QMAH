@@ -22,8 +22,38 @@
     }
 
     applyTheme(root.dataset.bsTheme === "dark" ? "dark" : "light");
-    toggle?.addEventListener("click", () => {
-        applyTheme(root.dataset.bsTheme === "dark" ? "light" : "dark");
+    toggle?.addEventListener("click", async () => {
+        const nextTheme = root.dataset.bsTheme === "dark" ? "light" : "dark";
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (!document.startViewTransition || reduceMotion) {
+            applyTheme(nextTheme);
+            return;
+        }
+
+        const rect = toggle.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const radius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y));
+        const switchingToDark = nextTheme === "dark";
+        const transition = document.startViewTransition(() => applyTheme(nextTheme));
+
+        await transition.ready;
+        root.animate(
+            {
+                clipPath: switchingToDark
+                    ? [`circle(${radius}px at ${x}px ${y}px)`, `circle(0 at ${x}px ${y}px)`]
+                    : [`circle(0 at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`]
+            },
+            {
+                duration: 520,
+                easing: "cubic-bezier(.4, 0, .2, 1)",
+                pseudoElement: switchingToDark
+                    ? "::view-transition-old(root)"
+                    : "::view-transition-new(root)"
+            });
     });
 
     function applySidebar(collapsed) {

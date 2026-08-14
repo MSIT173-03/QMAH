@@ -62,6 +62,8 @@
 - 統一內容寬度與頁尾
 - Tabler CSS 與 JavaScript
 
+明暗模式按鈕會以按鈕位置為中心播放圓形光圈轉場。使用者若在系統開啟「減少動態效果」，或瀏覽器不支援 View Transition API，會自動改用無動畫切換，不影響功能。
+
 Sidebar 的五個主要按鈕會切換 Catalog、Game、Social、Store 與 User。CRUD Controller 可自行選擇是否加入目前 Area 的次級選單；加入後，共用 Sidebar 會自動建立連結並標示目前 Controller。
 
 CRUD Controller 可使用 `AdminNavigation` 指定次級選單的中文名稱與順序：
