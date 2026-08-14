@@ -45,10 +45,34 @@ public class OrderHomeController : Controller
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> GetOrder(Guid id)
     {
-        StoreOrder? order = this._db.StoreOrders.FirstOrDefault(v => v.Id == id);
-        if (order == null)
+        var query = from order in this._db.StoreOrders
+                    join user in this._db.Users on order.UserId equals user.Id
+                    where order.Id == id
+                    select new
+                    {
+                        Name = user.UserName,
+                        Order = order
+                    };
+        var res = query.FirstOrDefault();
+        if (res == null) return RedirectToAction("Index");
+
+        var queryItems = from items in this._db.OrderDetails
+                         join product in this._db.Products on items.ProductId equals product.Id
+                         where items.OrderId == res.Order.Id
+                         select new OrderItemSimplefyData
         {
-            return RedirectToAction("Index");
+                             Id = items.Id,
+                             Amount = items.Quantity,
+                             Price = product.Price,
+                             ImageUrl = product.PrimaryImagePath ?? string.Empty,
+
+                         };
+        var list = queryItems.ToList();
+        if (list == null) list = [];
+
+        var detail = new OrderFullDetail(res.Order, res.Name, list);
+
+        return View(detail);
         }
 
         return View(order);
