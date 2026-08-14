@@ -8,14 +8,16 @@
     <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" />
     <script>
         (() => {
+            const root = document.documentElement;
             const savedTheme = localStorage.getItem("qmah-admin-theme");
             const theme = savedTheme === "dark" || savedTheme === "light"
                 ? savedTheme
                 : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-            document.documentElement.dataset.bsTheme = theme;
+            root.dataset.bsTheme = theme;
+            root.style.colorScheme = theme;
 
             if (localStorage.getItem("qmah-admin-sidebar") === "collapsed") {
-                document.documentElement.dataset.qmahSidebar = "collapsed";
+                root.dataset.qmahSidebar = "collapsed";
             }
         })();
     </script>

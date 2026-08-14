@@ -1,6 +1,8 @@
 :root {
+  --qmah-sidebar-width: 15.25rem;
   --tblr-primary: var(--qmah-primary);
   --tblr-primary-rgb: 63, 111, 134;
+  --tblr-navbar-vertical-width: var(--qmah-sidebar-width);
   --tblr-body-bg: var(--qmah-porcelain);
   --tblr-body-color: var(--qmah-ink);
   --tblr-border-color: var(--qmah-line);
@@ -60,10 +62,27 @@ html[data-bs-theme="dark"] {
   --qmah-sidebar-active-ink: #ffffff;
 }
 
+html[data-bs-theme="light"] {
+  color-scheme: light;
+}
+
+html[data-bs-theme="dark"] {
+  color-scheme: dark;
+}
+
+html,
 body,
 .page,
 .page-wrapper {
   background: var(--qmah-porcelain);
+}
+
+html.qmah-theme-switching,
+html.qmah-theme-switching *,
+html.qmah-theme-switching *::before,
+html.qmah-theme-switching *::after {
+  transition: none !important;
+  animation: none !important;
 }
 
 ::view-transition-image-pair(root) {
@@ -498,6 +517,16 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
 }
 
 @media (min-width: 992px) {
+  .page > .navbar-vertical.navbar-expand-lg {
+    width: var(--qmah-sidebar-width);
+  }
+
+  .page > .navbar-vertical.navbar-expand-lg ~ .qmah-topbar,
+  .page > .navbar-vertical.navbar-expand-lg ~ .page-wrapper {
+    margin-left: var(--qmah-sidebar-width);
+    margin-inline-start: var(--qmah-sidebar-width);
+  }
+
   .navbar-vertical {
     top: 0;
     bottom: 0;
