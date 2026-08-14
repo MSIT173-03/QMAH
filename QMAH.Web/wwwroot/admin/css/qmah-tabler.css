@@ -14,7 +14,6 @@
   --tblr-focus-ring-color: var(--qmah-focus);
   --tblr-link-color: var(--qmah-primary);
   --tblr-link-hover-color: var(--qmah-primary-hover);
-  --tblr-navbar-vertical-width: 15.25rem;
   --qmah-sidebar-bg: #f8fafb;
   --qmah-sidebar-surface: #edf2f4;
   --qmah-sidebar-border: #d7e1e5;
@@ -114,6 +113,23 @@ html[data-bs-theme="light"]::view-transition-new(root) {
 
 .page-wrapper {
   min-height: 100vh;
+}
+
+/* The shell owns the sidebar offset. Content must not add a second gutter. */
+.page {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page > .qmah-topbar,
+.page > .page-wrapper {
+  min-width: 0;
+}
+
+.page > .navbar-vertical.navbar-expand-lg ~ .qmah-topbar,
+.page > .navbar-vertical.navbar-expand-lg ~ .page-wrapper {
+  margin: 0 !important;
 }
 
 .page-wrapper > :where(main, .footer) .container-xl,
@@ -517,37 +533,64 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
 }
 
 @media (min-width: 992px) {
+  .page {
+    display: grid;
+    min-height: 100vh;
+    min-height: 100dvh;
+    grid-template-columns: var(--qmah-sidebar-width) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "sidebar navbar"
+      "sidebar content";
+  }
+
   .page > .navbar-vertical.navbar-expand-lg {
-    width: var(--qmah-sidebar-width);
-  }
-
-  .page > .navbar-vertical.navbar-expand-lg ~ .qmah-topbar,
-  .page > .navbar-vertical.navbar-expand-lg ~ .page-wrapper {
-    margin-left: var(--qmah-sidebar-width);
-    margin-inline-start: var(--qmah-sidebar-width);
-  }
-
-  .navbar-vertical {
+    grid-area: sidebar;
+    align-self: start;
+    width: auto !important;
+    min-width: 0;
+    position: sticky;
     top: 0;
-    bottom: 0;
     height: 100vh;
     height: 100dvh;
     min-height: 100vh;
+    min-height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
   }
 
-  html[data-qmah-sidebar="collapsed"] .navbar-vertical {
+  .page > .qmah-topbar {
+    grid-area: navbar;
+    width: auto;
+    margin: 0 !important;
+  }
+
+  .page > .page-wrapper {
+    grid-area: content;
+    width: auto;
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  html[data-qmah-sidebar="collapsed"] .page {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "navbar"
+      "content";
+  }
+
+  html[data-qmah-sidebar="collapsed"] .page > .navbar-vertical {
     display: none;
   }
 
-  html[data-qmah-sidebar="collapsed"] .qmah-topbar,
-  html[data-qmah-sidebar="collapsed"] .page-wrapper {
+  html[data-qmah-sidebar="collapsed"] .page > .qmah-topbar,
+  html[data-qmah-sidebar="collapsed"] .page > .page-wrapper {
     width: 100%;
-    margin-left: 0 !important;
-    margin-inline-start: 0 !important;
+    margin: 0 !important;
   }
 
   html[data-qmah-sidebar="collapsed"] .qmah-sidebar-toggle .qmah-icon {
@@ -556,6 +599,32 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
 }
 
 @media (max-width: 991.98px) {
+  .page {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .page > .navbar-vertical,
+  .page > .qmah-topbar,
+  .page > .page-wrapper {
+    width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+  }
+
+  .page > .navbar-vertical {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
   .navbar-vertical > .container-fluid {
     min-height: 4.25rem;
     align-items: center;
