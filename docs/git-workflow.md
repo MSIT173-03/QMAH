@@ -39,7 +39,7 @@ Repository 採 Public，以使用 GitHub Free 組織的 Branch Protection。保�
 | `feature/user` | 會員模組 |
 | `feature/store` | 商城模組 |
 
-一般功能仍應在自己的 `feature/<area>` 分支開發；只有小型同步、文件修正或團隊已同意的簡單變更，才直接 Push 到 `main` 或 `develop`。
+一般功能不要直接在 `main` 或 `develop` 修改。
 
 ## 第一次 Clone
 
@@ -63,7 +63,7 @@ Pull → 修改 → 本機驗證 → Commit → Push
 
 1. 確認目前位於自己的 feature branch。
 2. Pull 遠端同分支。
-3. 如果要同步目前最新版展示內容，先取得 `origin/main`；如果只是跟進團隊整合進度，再依通知使用 `origin/develop`。
+3. 取得團隊目前指定的共同分支內容並處理衝突；平時以 `develop` 為整合分支，團隊通知直接同步最新展示版時則使用 `origin/main`。
 4. 再開始修改。
 
 完成一個可驗證階段後：
@@ -78,38 +78,20 @@ Pull → 修改 → 本機驗證 → Commit → Push
 
 ## Visual Studio：保留自己的修改並同步最新 main
 
-不要在還有一堆「未認可變更」時直接切換分支或 Pull。最安全的方式是先把目前進度 Commit 到自己的分支，再把最新版 `main` 合併進來。同步 `main` 通常不會刪掉自己的程式，真正需要小心的是不要讓未提交的修改被切換或衝突流程弄亂。
+不要在還有「未認可變更」時直接切換分支或 Pull。最安全的做法是先將目前進度 Commit 到自己的分支，再把 `origin/main` 合併進來：
 
-Microsoft 官方也有完整的 [Fetch、Pull、Push 與 Sync 教學](https://learn.microsoft.com/en-us/visualstudio/version-control/git-fetch-pull-sync?view=vs-2022)、[Visual Studio Git Repository 與分支合併教學](https://learn.microsoft.com/en-us/visualstudio/version-control/git-manage-repository?view=vs-2022)，以下只列 QMAH 這個專案實際要用的流程。
+1. 看 Visual Studio 右下角的分支名稱，確認目前在自己的 `feature/<area>`，不是 `main`。
+2. 開啟 **檢視 → Git 變更**，檢查檔案後輸入訊息並選 **認可全部**（Commit All）。功能尚未完成也可以先做進度 Commit。
+3. 建議先選 **推送**（Push），將自己的分支備份到 GitHub。
+4. 選 **Git → 擷取**（Fetch）。Fetch 只更新遠端分支資訊，不會修改目前檔案。
+5. 開啟 **檢視 → Git 存放庫**，展開 **遠端 → origin**，對 `origin/main` 按右鍵，選 **合併至目前分支**（Merge into Current Branch）。不要切到 `main` 才操作。
+6. 若出現衝突，逐檔比較「目前內容」與「傳入內容」。不要直接對所有檔案選「全部接受目前」或「全部接受傳入」。
+7. 衝突處理完成後執行 **建置 → 建置方案**，再認可合併結果並 Push 自己的分支。
 
-### 正常做法：Commit 後合併 `origin/main`
-
-1. 看 Visual Studio 右下角的分支名稱，確認目前在自己的功能分支，例如：
-
-   ```text
-   feature/game
-   feature/catalog
-   feature/social
-   feature/store
-   feature/user
-   ```
-
-   不要在 `main` 上直接開發。也可以開啟 **Git → 管理分支**，或 **檢視 → Git 存放庫** 確認目前分支。
-
-2. 開啟 **檢視 → Git 變更**，確認檔案都是自己這次修改的內容，輸入 Commit 訊息，例如「完成會員查詢頁初版」，再按 **認可全部**（Commit All）。功能還沒完成也可以先 Commit，這只是把進度安全存進自己的分支。
-
-3. 建議按 **推送**（Push），先把自己的分支備份到 GitHub。
-
-4. 選擇 **Git → 擷取**（Fetch）。Fetch 只取得遠端最新資訊，不會立刻修改目前檔案。
-
-5. 保持在自己的功能分支，不要切到 `main`。開啟 **檢視 → Git 存放庫**，展開 **遠端 → origin**，對 `origin/main` 按右鍵，選 **合併至目前分支**（Merge into Current Branch）。這代表保留自己的分支，再把 `main` 的最新修改加進來，不是把自己的分支換成 `main`。
-
-6. 完成合併後執行 **建置 → 建置方案**，確認沒有編譯錯誤，再回到 **檢視 → Git 變更**，Commit 這次合併結果並 Push 自己的分支。
-
-最簡單的順序：
+簡化順序：
 
 ```text
-確認在自己的功能分支
+確認在自己的分支
 → Commit 自己的修改
 → Push 備份
 → Fetch
@@ -119,29 +101,7 @@ Microsoft 官方也有完整的 [Fetch、Pull、Push 與 Sync 教學](https://le
 → Commit 並 Push
 ```
 
-### 如果出現衝突
-
-如果自己和 `main` 修改的是不同檔案，Git 通常會直接合併。只有雙方修改同一個檔案的同一個位置，才需要人工處理。
-
-Visual Studio 會在 Git 變更中顯示衝突檔案，通常可以看到：
-
-- 目前內容：自己的分支版本
-- 傳入內容：`main` 的版本
-- 合併結果：最後要留下的內容
-
-不要對所有檔案直接選「全部接受目前」或「全部接受傳入」，要逐段確認哪些是自己的功能、哪些是 `main` 的更新。可以只保留其中一邊，也可以保留兩邊再手動整理。處理完成後，將檔案標示為已解決，再建立合併 Commit。
-
-需要畫面操作時，直接參考 Microsoft 的[在 Visual Studio 解決合併衝突教學](https://learn.microsoft.com/en-us/visualstudio/version-control/git-resolve-conflicts?view=visualstudio)。
-
-### 特別檢查 `_ViewStart.cshtml`
-
-同步後確認自己負責的 Area 仍有：
-
-```text
-Areas/<你的Area>/Views/_ViewStart.cshtml
-```
-
-內容應該是：
+同步後要確認 Area 的 `Views/_ViewStart.cshtml` 仍指定：
 
 ```cshtml
 @{
@@ -149,39 +109,15 @@ Areas/<你的Area>/Views/_ViewStart.cshtml
 }
 ```
 
-不要刪掉這個檔案，也不要用自己的舊檔案覆蓋最新版。Scaffold 產生的 View 如果包含：
+Scaffold 產生的完整 View 若包含 `Layout = null`，請移除，否則會覆蓋 `_ViewStart.cshtml`。
 
-```cshtml
-Layout = null;
-```
+### 不熟悉衝突時的外部備份方案
 
-也要移除，不然會蓋掉 `_ViewStart.cshtml`。
+若真的不想處理 Git 衝突，可以先把自己新增或修改的 Controller、ViewModel、View 與相關檔案複製到 Repository 外，保留原本資料夾結構；原分支仍建議先 Commit 並 Push，作為可恢復的備份。
 
-### 真的不想處理衝突時：外部備份法
+接著 Fetch，從最新的 `origin/main` 建立另一個功能分支，再只將自己的功能檔案複製回正確位置並 Build。不要用整個舊 Area 覆蓋新版，也不要把舊的 `_ViewStart.cshtml` 蓋回去，否則可能移除 main 已加入的共用設定或覆蓋別人的修改。
 
-如果真的不想處理 Git 衝突，可以先把自己寫好的檔案複製到 Repository 外面，再從最新版 `main` 建立一個乾淨的新功能分支，最後把自己的檔案放回去。
-
-1. 在 Repository 外建立備份資料夾，例如 `桌面/QMAH-我的功能備份`。
-2. 複製自己新增或修改的檔案，保留原本的資料夾結構，例如：
-
-   ```text
-   Areas/<你的Area>/Controllers
-   Areas/<你的Area>/ViewModels
-   Areas/<你的Area>/Views/<你的功能>
-   ```
-
-3. 即使已經複製出去，原本分支仍建議先 Commit 並 Push，這樣 GitHub 上還有一份可以救回來的版本。
-4. 在 Visual Studio 執行 **Git → 擷取**。
-5. 從最新的 `origin/main` 建立新的功能分支，例如 `feature/user-rebuild` 或 `feature/game-rebuild`。先不要刪除原本的分支。
-6. 只把真正修改的 Controller、ViewModel、View 和相關檔案放回正確位置，再執行 Build。
-7. 不要直接用整個舊 Area 覆蓋新版，也不要用舊的 `_ViewStart.cshtml` 覆蓋最新版，避免蓋掉別人的修改或移除共用後台設定。
-8. 確認功能正常後，再 Commit 和 Push 新分支。
-
-這個方法比較容易理解，但可能漏檔或蓋掉新版內容。正常情況仍優先使用 Merge，真的不想處理衝突時才使用外部備份法。
-
-### 最新外觀套版方法
-
-後台共用模板、`_ViewStart.cshtml`、Tabler CRUD class 與手機版操作方式，請看 Discord 的[最新外觀套版方法](https://discord.com/channels/1526757626241618031/1526757626719764555/1537676235075752066)。
+這種方式較容易理解，但有漏檔與蓋掉新內容的風險。正常情況仍優先使用 Merge，只有不確定如何處理衝突時才使用外部備份方案。
 
 ## Commit
 
