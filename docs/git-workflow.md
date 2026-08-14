@@ -22,10 +22,10 @@ Repository 採 Public，以使用 GitHub Free 組織的 Branch Protection。保�
 
 | 分支 | Pull Request | 人工核准 | 必要檢查 |
 | --- | --- | --- | --- |
-| `main` | 可選，大改動建議使用 | 不需要 | `Build` |
-| `develop` | 可選，大改動建議使用 | 不需要 | `Build` |
+| `main` | 必須，Owner 純同步可例外 | 不需要 | `Build` |
+| `develop` | 必須，Owner 純同步可例外 | 不需要 | `Build` |
 
-`main` 禁止 force push 與刪除。PR 不是每次變更的必要條件；小型修正或同步可以直接 Push，較大的功能、共用檔案或需要討論的變更再開 PR 留下紀錄。`Build` 仍是共同分支的必要檢查。
+`main` 禁止 force push 與刪除。組員原則上不要直接修改 `main` 或 `develop`，整合共同分支時透過 PR 留下變更紀錄，但不要求人工核准。Owner 只在確認來源分支沒有任何額外提交、單純將共同版本快轉同步時直接繞過 PR。`Build` 仍是共同分支的必要檢查。
 
 ## 分支用途
 
@@ -56,7 +56,7 @@ Visual Studio 檔案旁的藍色鎖通常表示「檔案目前沒有本機修改
 ## 每次開始與結束
 
 ```text
-Pull → 修改 → 本機驗證 → Commit → Push
+Pull → 修改 → 本機驗證 → Commit → Push → Pull Request → develop
 ```
 
 開始前：
@@ -72,9 +72,9 @@ Pull → 修改 → 本機驗證 → Commit → Push
 2. 確認沒有密碼、個人設定、raw、快取、`bin`、`obj` 或 `.bak`。
 3. 本機建置並操作受影響頁面。
 4. Commit、Push 自己的 feature branch。
-5. 小型變更到此即可；如果是大改動、共用檔案或需要留下討論紀錄，再建立 `feature/<area> → develop` 的 Pull Request。
+5. 建立 `feature/<area> → develop` 的 Pull Request。
 
-期中或期末展示前，可建立 `develop → main` Pull Request 留下展示版本紀錄；確認 Build 通過後即可合併，不要求人工核准。
+期中或期末展示前，建立 `develop → main` Pull Request 留下展示版本紀錄；確認 Build 通過後即可合併，不要求人工核准。
 
 ## Visual Studio：保留自己的修改並同步最新 main
 
