@@ -1,0 +1,10 @@
+@model VoteFormViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="row g-3">
+    <div class="col-md-6"><label asp-for="RoundId" class="form-label"></label><select asp-for="RoundId" asp-items="ViewBag.Rounds" class="form-select"><option value="">請選擇回合</option></select><span asp-validation-for="RoundId" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="VoterGamePlayerId" class="form-label"></label><select asp-for="VoterGamePlayerId" asp-items="ViewBag.Players" class="form-select"><option value="">請選擇投票玩家</option></select><span asp-validation-for="VoterGamePlayerId" class="text-danger"></span></div>
+    <div class="col-md-8"><label asp-for="AnswerId" class="form-label"></label><select asp-for="AnswerId" asp-items="ViewBag.Answers" class="form-select"><option value="">請選擇被投作答</option></select><span asp-validation-for="AnswerId" class="text-danger"></span></div>
+    <div class="col-md-2"><label asp-for="Count" class="form-label"></label><input asp-for="Count" class="form-control" min="1" max="3" /><span asp-validation-for="Count" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="SubmittedAt" class="form-label"></label><input asp-for="SubmittedAt" type="datetime-local" class="form-control" /><span asp-validation-for="SubmittedAt" class="text-danger"></span></div>
+</div>
+<div class="form-hint mt-3">只維護投票資料，不會執行計票、勝負或獎勵判定</div>

@@ -1,0 +1,13 @@
+@model RoomFormViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="row g-3">
+    <div class="col-md-6"><label asp-for="RoomCode" class="form-label"></label><input asp-for="RoomCode" class="form-control" autocomplete="off" /><span asp-validation-for="RoomCode" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="Visibility" class="form-label"></label><select asp-for="Visibility" asp-items="GameCodeLists.ToSelectList(GameCodeLists.Visibilities, Model.Visibility)" class="form-select"></select><span asp-validation-for="Visibility" class="text-danger"></span></div>
+    <div class="col-12"><label asp-for="Password" class="form-label"></label><input asp-for="Password" class="form-control" autocomplete="new-password" /><div class="form-hint">公開房間不需要密碼；編輯私人房間時留白會保留原密碼。</div><span asp-validation-for="Password" class="text-danger"></span></div>
+    <div class="col-sm-6 col-lg-3"><label asp-for="MaxPlayers" class="form-label"></label><input asp-for="MaxPlayers" class="form-control" min="3" max="10" /><span asp-validation-for="MaxPlayers" class="text-danger"></span></div>
+    <div class="col-sm-6 col-lg-3"><label asp-for="TotalRounds" class="form-label"></label><input asp-for="TotalRounds" class="form-control" min="1" max="5" /><span asp-validation-for="TotalRounds" class="text-danger"></span></div>
+    <div class="col-sm-6 col-lg-3"><label asp-for="AnswerSeconds" class="form-label"></label><input asp-for="AnswerSeconds" class="form-control" min="30" max="300" /><span asp-validation-for="AnswerSeconds" class="text-danger"></span></div>
+    <div class="col-sm-6 col-lg-3"><label asp-for="VotingSeconds" class="form-label"></label><input asp-for="VotingSeconds" class="form-control" min="20" max="180" /><span asp-validation-for="VotingSeconds" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="CategoryFilterCode" class="form-label"></label><select asp-for="CategoryFilterCode" asp-items="ViewBag.Categories" class="form-select"><option value="">不限分類</option></select><span asp-validation-for="CategoryFilterCode" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="EraBucketFilterCode" class="form-label"></label><select asp-for="EraBucketFilterCode" asp-items="ViewBag.Eras" class="form-select"><option value="">不限年代</option></select><span asp-validation-for="EraBucketFilterCode" class="text-danger"></span></div>
+</div>

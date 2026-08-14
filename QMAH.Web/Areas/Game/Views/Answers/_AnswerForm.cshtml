@@ -1,0 +1,10 @@
+@model AnswerFormViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="row g-3">
+    <div class="col-md-6"><label asp-for="RoundId" class="form-label"></label><select asp-for="RoundId" asp-items="ViewBag.Rounds" class="form-select"><option value="">請選擇回合</option></select><span asp-validation-for="RoundId" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="GamePlayerId" class="form-label"></label><select asp-for="GamePlayerId" asp-items="ViewBag.Players" class="form-select"><option value="">請選擇玩家</option></select><span asp-validation-for="GamePlayerId" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="AnswerType" class="form-label"></label><select asp-for="AnswerType" asp-items="GameCodeLists.ToSelectList(GameCodeLists.AnswerTypes, Model.AnswerType)" class="form-select"></select><span asp-validation-for="AnswerType" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="SubmittedAt" class="form-label"></label><input asp-for="SubmittedAt" type="datetime-local" class="form-control" /><span asp-validation-for="SubmittedAt" class="text-danger"></span></div>
+    <div class="col-12"><label asp-for="Text" class="form-label"></label><textarea asp-for="Text" class="form-control" rows="6"></textarea><span asp-validation-for="Text" class="text-danger"></span></div>
+</div>
+<div class="form-hint mt-3">只維護作答資料，不會檢查或推進回合階段</div>

@@ -1,0 +1,63 @@
+@model AnswerDetailsViewModel
+@{
+    ViewData["Title"] = "作答詳細資料";
+    ViewData["AdminDescription"] = "檢視玩家作答內容與這筆作答收到的投票。";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
+}
+
+@section PageActions {
+    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">編輯作答</a>
+    <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id">刪除作答</a>
+    <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Rounds" asp-action="Details" asp-route-id="@Model.RoundId">查看回合</a>
+    <a class="btn btn-outline-secondary" asp-action="Index">返回清單</a>
+}
+
+<div class="row row-cards mb-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header"><h2 class="card-title">作答內容</h2></div>
+            <div class="card-body">
+                <div class="game-admin-content">@Model.Text</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><h2 class="card-title">作答資訊</h2></div>
+            <div class="card-body">
+                <dl class="game-admin-definition">
+                    <div><dt>房間／回合</dt><dd>@Model.RoomCode／第 @Model.RoundNumber 回合</dd></div>
+                    <div><dt>文物</dt><dd>@Model.ArtifactName</dd></div>
+                    <div><dt>玩家</dt><dd>@Model.PlayerName</dd></div>
+                    <div><dt>類型</dt><dd>@GameCodeLists.Label(GameCodeLists.AnswerTypes, Model.AnswerType)</dd></div>
+                    <div><dt>票數</dt><dd>@Model.VoteCount</dd></div>
+                    <div><dt>送出時間</dt><dd>@Model.SubmittedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</dd></div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div><h2 class="card-title mb-1">投票明細</h2><div class="card-subtitle">@Model.Votes.Count 筆</div></div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table game-admin-table">
+            <thead><tr><th>投票玩家</th><th>票數</th><th>時間</th><th class="w-1"></th></tr></thead>
+            <tbody>
+            @if (Model.Votes.Count == 0)
+            {
+                <tr><td colspan="4"><div class="empty py-5"><p class="empty-title">尚無投票</p></div></td></tr>
+            }
+            @foreach (var vote in Model.Votes)
+            {
+                <tr><td data-label="投票玩家">@vote.VoterName</td><td data-label="票數" class="text-nowrap">@vote.Count</td><td data-label="時間" class="text-secondary text-nowrap">@vote.SubmittedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</td><td data-label="" class="game-admin-cell-actions"><a class="btn btn-sm btn-outline-secondary" asp-area="Game" asp-controller="Votes" asp-action="Details" asp-route-id="@vote.Id">查看投票</a></td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

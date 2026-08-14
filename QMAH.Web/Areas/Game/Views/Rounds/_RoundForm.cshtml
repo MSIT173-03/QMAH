@@ -1,0 +1,15 @@
+@model RoundFormViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="row g-3">
+    <div class="col-md-6"><label asp-for="RoomId" class="form-label"></label><select asp-for="RoomId" asp-items="ViewBag.Rooms" class="form-select"><option value="">請選擇房間</option></select><span asp-validation-for="RoomId" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="ArtifactId" class="form-label"></label><select asp-for="ArtifactId" asp-items="ViewBag.Artifacts" class="form-select"><option value="">請選擇文物</option></select><span asp-validation-for="ArtifactId" class="text-danger"></span></div>
+    <div class="col-sm-6 col-lg-3"><label asp-for="RoundNumber" class="form-label"></label><input asp-for="RoundNumber" class="form-control" min="1" /><span asp-validation-for="RoundNumber" class="text-danger"></span></div>
+    <div class="col-sm-6 col-lg-3"><label asp-for="Status" class="form-label"></label><select asp-for="Status" asp-items="GameCodeLists.ToSelectList(GameCodeLists.RoundStatuses, Model.Status)" class="form-select"></select><span asp-validation-for="Status" class="text-danger"></span></div>
+    <div class="col-sm-6 col-lg-3"><label asp-for="StateVersion" class="form-label"></label><input asp-for="StateVersion" class="form-control" min="0" /><span asp-validation-for="StateVersion" class="text-danger"></span></div>
+    <div class="col-sm-6 col-lg-3 d-flex align-items-end"><label class="form-check mb-2"><input asp-for="IsSettled" class="form-check-input" /><span class="form-check-label">已結算</span></label></div>
+    <div class="col-md-6"><label asp-for="StartedAt" class="form-label"></label><input asp-for="StartedAt" type="datetime-local" class="form-control" /><span asp-validation-for="StartedAt" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="AnswerDeadlineAt" class="form-label"></label><input asp-for="AnswerDeadlineAt" type="datetime-local" class="form-control" /><span asp-validation-for="AnswerDeadlineAt" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="VotingDeadlineAt" class="form-label"></label><input asp-for="VotingDeadlineAt" type="datetime-local" class="form-control" /><span asp-validation-for="VotingDeadlineAt" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="SettledAt" class="form-label"></label><input asp-for="SettledAt" type="datetime-local" class="form-control" /><span asp-validation-for="SettledAt" class="text-danger"></span></div>
+</div>
+<div class="form-hint mt-3">這裡只維護資料欄位，不會自動推進回合、揭曉或發放獎勵</div>

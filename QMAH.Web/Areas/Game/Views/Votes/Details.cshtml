@@ -1,0 +1,41 @@
+@model VoteDetailsViewModel
+@{
+    ViewData["Title"] = "投票詳細資料";
+    ViewData["AdminDescription"] = "檢視投票玩家、被投作答與送出時間。";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
+}
+
+@section PageActions {
+    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">編輯投票</a>
+    <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id">刪除投票</a>
+    <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Rounds" asp-action="Details" asp-route-id="@Model.RoundId">查看回合</a>
+    <a class="btn btn-outline-secondary" asp-action="Index">返回清單</a>
+}
+
+<div class="row row-cards">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header"><h2 class="card-title">被投作答</h2></div>
+            <div class="card-body">
+                <div class="game-admin-content">@Model.AnswerText</div>
+                <div class="text-secondary mt-3">@Model.AnswerPlayerName · @GameCodeLists.Label(GameCodeLists.AnswerTypes, Model.AnswerType)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><h2 class="card-title">投票資訊</h2></div>
+            <div class="card-body">
+                <dl class="game-admin-definition">
+                    <div><dt>房間／回合</dt><dd>@Model.RoomCode／第 @Model.RoundNumber 回合</dd></div>
+                    <div><dt>投票玩家</dt><dd>@Model.VoterName</dd></div>
+                    <div><dt>票數</dt><dd>@Model.Count</dd></div>
+                    <div><dt>送出時間</dt><dd>@Model.SubmittedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</dd></div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
