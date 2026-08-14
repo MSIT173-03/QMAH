@@ -100,28 +100,30 @@ html.qmah-theme-switching *::after {
 
 ::view-transition-group(root) {
   overflow: hidden;
+  animation: none !important;
 }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none;
+  animation: none !important;
+  opacity: 1 !important;
   mix-blend-mode: normal;
 }
 
 html[data-qmah-theme-transition="to-dark"]::view-transition-old(root) {
-  z-index: 2;
+  z-index: 2 !important;
 }
 
 html[data-qmah-theme-transition="to-dark"]::view-transition-new(root) {
-  z-index: 1;
+  z-index: 1 !important;
 }
 
 html[data-qmah-theme-transition="to-light"]::view-transition-old(root) {
-  z-index: 1;
+  z-index: 1 !important;
 }
 
 html[data-qmah-theme-transition="to-light"]::view-transition-new(root) {
-  z-index: 2;
+  z-index: 2 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
