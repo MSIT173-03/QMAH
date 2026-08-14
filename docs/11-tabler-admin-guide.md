@@ -4,9 +4,9 @@
 
 ## 懶人包：新建後台 View 要做什麼
 
-1. 目前五個 Area 並沒有自己的 `Views/_ViewStart.cshtml`，共用的 `Areas/_ViewStart.cshtml` 也還在使用一般網站 Layout。
-2. 如果你負責的 Area 全部都是後台頁面，先建立 `Areas/<Area>/Views/_ViewStart.cshtml`，將 Layout 指定為 `/Views/Shared/Admin/_AdminLayout.cshtml`。
-3. 完成後，新建的完整 View 會自動擁有 Tabler CSS／JavaScript、Sidebar、Navbar、頁首、提示訊息與頁尾。
+1. Catalog、Game、Social、Store、User 已各自建立 `Views/_ViewStart.cshtml`，並指定 `/Views/Shared/Admin/_AdminLayout.cshtml`。
+2. 在這五個 Area 新建的完整 View 會自動擁有 Tabler CSS／JavaScript、Sidebar、Navbar、頁首、提示訊息、頁尾與右側主要內容區。
+3. 個別 View 只需提供要放進 `@RenderBody()` 的 CRUD 內容，不需要自行建立外框或預留側邊欄寬度。
 4. Scaffold 產生的 View 可能有 `Layout = null`，這會覆蓋 `_ViewStart.cshtml`；產生後請檢查並移除，或在 Scaffold 視窗選擇使用 Layout。
 5. Admin Layout 只會自動提供後台外框。View 內的 Card、Table、Form 和按鈕仍要使用本文範例或 Tabler 官方 class。
 6. 專案目前沒有自訂 Scaffold templates，所以 Visual Studio 不會自動產生 QMAH Tabler CRUD markup；未來若要自動化，可再新增 project-local `Templates/ViewGenerator/Bootstrap5` templates。
@@ -15,7 +15,7 @@
 
 專案已內建 Tabler 1.4.0，並完成共用側邊欄、頂部工具列、QMAH 配色、明暗模式與手機版導覽。一般功能開發不需要安裝 Node.js，也不需要另外下載 Tabler。
 
-共用後台介面已經完成，但目前 `QMAH.Web/Areas/_ViewStart.cshtml` 仍使用一般網站的 `_Layout.cshtml`。新建 Area View 不會自動改用後台 Layout；功能負責人必須先在所負責 Area 的 `Views/_ViewStart.cshtml` 指定 `_AdminLayout.cshtml`，或在個別 View 指定 Layout。
+共用後台介面已經完成。`QMAH.Web/Areas/_ViewStart.cshtml` 仍保留一般網站的 `_Layout.cshtml`，五個後台 Area 則各自由 `Views/_ViewStart.cshtml` 覆寫為 `_AdminLayout.cshtml`，避免影響其他 Area。
 
 完成 Layout 設定後，側邊欄、頂部工具列與明暗模式會由共用介面提供，不應在個別 Area 重複實作。功能負責人仍需實作所負責系統的資料表、查詢表單、編輯表單與業務流程。
 
@@ -81,7 +81,7 @@ Layout 設定完成後，即可加入該頁面的實際內容：
 QMAH.Web/Areas/User/Views/_ViewStart.cshtml
 ```
 
-目前五個 Area 都沒有這份 Area 專用檔案。建立方式：
+目前 Catalog、Game、Social、Store、User 都已經有這份 Area 專用檔案，不需要由功能負責人重複建立。若未來新增第六個後台 Area，建立方式如下：
 
 1. 在 Solution Explorer 對 `Areas/<Area>/Views` 資料夾按右鍵。
 2. 選 **Add** → **New Item...**。
