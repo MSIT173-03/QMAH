@@ -1,7 +1,86 @@
-# <類型>(<系統>): <中文說明>
-
-# - 修改內容一
-# - 修改內容二
-# - 是否影響資料庫或其他系統
-
-# <Brief English summary>
+# <type>(<scope>): <subject>
+# 中文、英文或中英混用皆可；第一行先說完成什麼，下面補充 What、Why、How
+# Header：subject 必填，盡量 50 字元內、結尾不加句號、一次只描述一個主題
+# Body：補充 What / Why / How，每行盡量 72 字元內
+# Footer：需要時填 issue 編號或 BREAKING CHANGE
+#
+# What / 做了什麼：
+# - 實際修改了哪些頁面、Controller、ViewModel、View 或共用資源
+#
+# Why / 為什麼：
+# - 這次修改要解決什麼問題，或為什麼需要新增這項功能
+#
+# How / 怎麼做：
+# - 用什麼方式完成，並說明重要的實作取捨
+#
+# Test / 測試（可選）：
+# - 建置方案、執行測試，或手動檢查過哪些網址與操作
+#
+# Footer / 其他（可選）：
+# issue #123
+# BREAKING CHANGE: 說明不相容變更與使用者需要做的調整
+#
+# Examples / 範例：
+# feat(game): 新增房間管理 CRUD 頁面
+#
+# What / 做了什麼：
+# - 新增房間列表、詳細資料、建立與編輯頁面
+#
+# Why / 為什麼：
+# - 讓管理員可以維護房間資料，不必直接操作資料庫
+#
+# How / 怎麼做：
+# - 使用 Game Area 的 Controller、ViewModel 與共用 Admin Layout
+# - 保留 Razor validation 與既有資料表欄位
+#
+# Test / 測試：
+# - 建置方案成功
+# - 手動檢查 /Game/Rooms 的查詢與 CRUD 連結
+#
+# issue #123
+#
+# fix(admin): remove the gap after collapsing the desktop sidebar
+#
+# What:
+# - Adjust the shared shell grid so the navbar fills the available width
+#
+# Why:
+# - The old collapsed state left a dark strip beside the navbar
+#
+# How:
+# - Reuse the existing sidebar state and transition classes
+# - Keep the light/dark theme switch and mobile overlay behavior
+#
+# Test:
+# - Checked expanded and collapsed desktop states
+# - Checked the mobile menu without pushing content downward
+#
+# Impact / 影響：
+# - Shared admin layout only; no CRUD or database behavior changes
+#
+# docs(git): improve the branch sync guide
+#
+# What:
+# - Added Visual Studio and GitHub Desktop steps for Fetch and Pull
+#
+# Why:
+# - New contributors need a safe way to update their feature branches
+#
+# How:
+# - Explained commit, fetch, merge, conflict handling, and push order
+#
+# issue #456
+#
+# Breaking example / 破壞性變更範例：
+# feat(api)!: 調整玩家查詢 API 回應格式
+#
+# What:
+# - Changed the response shape of the player query endpoint
+#
+# Why:
+# - The old contract cannot represent the new player status fields
+#
+# How:
+# - Added the new response fields and migration notes
+#
+# BREAKING CHANGE: API clients must update to the new response format
