@@ -166,7 +166,7 @@ Logo、獨立圖標與 favicon 位於 `QMAH.Web/wwwroot/images/brand/`。請直�
 ## Git 協作
 
 ```text
-feature/<area> → Pull Request → develop → Pull Request → main
+feature/<area> → 直接 Push 或 Pull Request → develop → 直接 Push 或 Pull Request → main
 ```
 
 | 分支 | 用途 |
@@ -179,7 +179,7 @@ feature/<area> → Pull Request → develop → Pull Request → main
 | `feature/user` | 會員模組 |
 | `feature/store` | 商城模組 |
 
-五個 Area 分支都已建立，可直接 Push，不需要逐次核准。整合進 `develop` 時建立 PR，通過 `Build` 即可，不要求人工核准；整合進 `main` 時，PR 需要 `Build` 與任一位協作者核准
+五個 Area 分支都已建立，可直接 Push，不需要逐次核准。小型修正或同步可直接 Push；較大的功能或共用檔案變更再建立 PR，方便留下討論與變更紀錄。PR 不要求人工核准，但仍建議確認 `Build` 成功
 
 不要直接在 `main` 開發，也不要把 `.bak`、`bin`、`obj`、log、快取、raw output、`.mdf`、`.ldf` 或大型執行檔提交進 Repository
 
