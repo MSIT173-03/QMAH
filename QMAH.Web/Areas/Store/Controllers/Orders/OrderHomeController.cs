@@ -26,25 +26,20 @@ public class OrderHomeController : Controller
         bool isOverShot = this._db.StoreOrders.Count() < page * rows;
         if (isOverShot) page = 0;
 
-        var ls = from order in this._db.StoreOrders.Skip(page * rows).Take(rows)
+        var query = from order in this._db.StoreOrders.Skip(page * rows).Take(rows)
                  join user in this._db.Users on order.UserId equals user.Id
                  join items in this._db.OrderDetails on order.Id equals items.OrderId into itemsGroup
-                 select new OrderSimplefyListItem()
+                    select new
                  {
-                     Id = order.Id,
-                     UserName = user.UserName ?? string.Empty,
-                     Status = order.Status,
-                     ItemsCount = itemsGroup.Sum(v => v.Quantity),
-                     ItemsTotal = order.Subtotal,
-                     DiscountAmount = order.DiscountAmount,
-                     PointUsed = order.PointsUsed,
-                     Total = order.TotalAmount,
-                     CreateAt = order.CreatedAt,
-                     CancelledAt = order.CancelledAt,
-                     PaidAt = order.PaidAt
+                        Order = order,
+                        User = user,
+                        Items = itemsGroup,
                  };
+        var data = query
+            .Select(static v => new OrderSimplefyListItem(v.Order, v.User, v.Items.ToList()))
+            .ToList();
 
-        return View(ls);
+        return View(data);
     }
 
     [HttpGet("{id:Guid}")]

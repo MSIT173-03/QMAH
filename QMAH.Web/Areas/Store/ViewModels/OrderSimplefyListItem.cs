@@ -1,29 +1,34 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+using QMAH.Web.Models.Entities;
+using QMAH.Web.Models.Identity;
+
 namespace QMAH.Web.Areas.Store.ViewModels;
 
-public class OrderSimplefyListItem
+public class OrderSimplefyListItem(StoreOrder order, ApplicationUser user, List<OrderDetail> items)
 {
     [Display(Name = "訂單編號")]
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; } = order.Id;
+    [Display(Name = "下訂會員編號")]
+    public Guid UserId { get; set; } = user.Id;
     [Display(Name = "下訂會員名稱")]
-    public required string UserName { get; set; }
+    public string UserName { get; set; } = user.UserName ?? string.Empty;
     [Display(Name = "狀態")]
-    public required string Status { get; set; }
+    public string Status { get; set; } = order.Status;
     [Display(Name = "商品數量")]
-    public required int ItemsCount { get; set; }
+    public int ItemsCount { get; set; } = items.Sum(v => v.Quantity);
     [Display(Name = "商品小計")]
-    public required decimal ItemsTotal { get; set; }
+    public decimal ItemsTotal { get; set; } = order.Subtotal;
     [Display(Name = "折扣金額")]
-    public required decimal DiscountAmount { get; set; }
+    public decimal DiscountAmount { get; set; } = order.DiscountAmount;
     [Display(Name = "點數消耗")]
-    public required decimal PointUsed { get; set; }
+    public decimal PointUsed { get; set; } = order.PointsUsed;
     [Display(Name = "總計")]
-    public required decimal Total { get; set; }
+    public decimal Total { get; set; } = order.TotalAmount;
     [Display(Name = "建立時間")]
-    public required DateTime CreateAt { get; set; }
+    public DateTime CreateAt { get; set; } = order.CreatedAt;
     [Display(Name = "付款時間")]
-    public DateTime? PaidAt { get; set; }
+    public DateTime? PaidAt { get; set; } = order.PaidAt;
     [Display(Name = "取消時間")]
-    public DateTime? CancelledAt { get; set; }
-}
+    public DateTime? CancelledAt { get; set; } = order.CancelledAt;
+};
