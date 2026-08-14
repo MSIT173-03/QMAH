@@ -6,9 +6,9 @@
     var isDashboard = string.IsNullOrWhiteSpace(currentArea) && currentController == "Home";
     var areaItems = AdminNavigation.GetAreaItems(currentArea);
 }
-<aside class="navbar navbar-vertical navbar-expand-lg" aria-label="後台主要導覽">
+<aside class="navbar navbar-vertical navbar-expand-xl" aria-label="後台主要導覽">
     <div class="container-fluid">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#admin-sidebar-menu"
+        <button class="navbar-toggler" type="button" data-qmah-mobile-sidebar-toggle
                 aria-controls="admin-sidebar-menu" aria-expanded="false" aria-label="開啟側邊導覽">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -16,7 +16,7 @@
             <img class="qmah-brand-logo qmah-brand-logo--light" src="~/images/brand/qmah-logo.svg" alt="清明鑑定屋 QMAH" />
             <img class="qmah-brand-logo qmah-brand-logo--dark" src="~/images/brand/qmah-logo-dark.svg" alt="" />
         </a>
-        <div class="collapse navbar-collapse" id="admin-sidebar-menu">
+        <div class="collapse navbar-collapse" id="admin-sidebar-menu" aria-hidden="true">
             <ul class="navbar-nav pt-lg-2">
                 <li class="nav-item">
                     <a class="nav-link @(isDashboard ? "active" : null)" asp-area="" asp-controller="Home" asp-action="Index" title="總覽"
@@ -82,4 +82,5 @@
             </div>
         </div>
     </div>
+    <div class="qmah-sidebar-backdrop" data-qmah-sidebar-backdrop aria-hidden="true"></div>
 </aside>
