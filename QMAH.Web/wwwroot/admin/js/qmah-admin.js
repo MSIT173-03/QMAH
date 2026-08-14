@@ -5,10 +5,12 @@
     const toggle = document.querySelector("[data-qmah-theme-toggle]");
     const label = toggle?.querySelector("[data-qmah-theme-label]");
     const sidebarToggle = document.querySelector("[data-qmah-sidebar-toggle]");
+    const themeSwitchingClass = "qmah-theme-switching";
 
     function applyTheme(theme) {
         const isDark = theme === "dark";
         root.dataset.bsTheme = theme;
+        root.style.colorScheme = theme;
         localStorage.setItem("qmah-admin-theme", theme);
 
         if (toggle) {
@@ -22,8 +24,7 @@
     }
 
     applyTheme(root.dataset.bsTheme === "dark" ? "dark" : "light");
-    toggle?.addEventListener("click", async () => {
-        const nextTheme = root.dataset.bsTheme === "dark" ? "light" : "dark";
+    async function switchTheme(nextTheme) {
         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
         if (!document.startViewTransition || reduceMotion) {
@@ -38,22 +39,37 @@
             Math.max(x, window.innerWidth - x),
             Math.max(y, window.innerHeight - y));
         const switchingToDark = nextTheme === "dark";
-        const transition = document.startViewTransition(() => applyTheme(nextTheme));
+        root.classList.add(themeSwitchingClass);
 
-        await transition.ready;
-        root.animate(
-            {
-                clipPath: switchingToDark
-                    ? [`circle(${radius}px at ${x}px ${y}px)`, `circle(0 at ${x}px ${y}px)`]
-                    : [`circle(0 at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`]
-            },
-            {
-                duration: 520,
-                easing: "cubic-bezier(.4, 0, .2, 1)",
-                pseudoElement: switchingToDark
-                    ? "::view-transition-old(root)"
-                    : "::view-transition-new(root)"
-            });
+        try {
+            const transition = document.startViewTransition(() => applyTheme(nextTheme));
+            await transition.ready;
+            const reveal = root.animate(
+                {
+                    clipPath: switchingToDark
+                        ? [`circle(${radius}px at ${x}px ${y}px)`, `circle(0 at ${x}px ${y}px)`]
+                        : [`circle(0 at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`]
+                },
+                {
+                    duration: 520,
+                    easing: "cubic-bezier(.4, 0, .2, 1)",
+                    pseudoElement: switchingToDark
+                        ? "::view-transition-old(root)"
+                        : "::view-transition-new(root)"
+                });
+
+            await Promise.allSettled([transition.finished, reveal.finished]);
+        } finally {
+            root.classList.remove(themeSwitchingClass);
+        }
+    }
+
+    toggle?.addEventListener("click", () => {
+        if (root.classList.contains(themeSwitchingClass)) {
+            return;
+        }
+
+        void switchTheme(root.dataset.bsTheme === "dark" ? "light" : "dark");
     });
 
     function applySidebar(collapsed) {
