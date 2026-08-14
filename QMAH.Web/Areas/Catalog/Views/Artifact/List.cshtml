@@ -91,6 +91,14 @@
             </div>
 
             <div class="filter-item">
+                <label>類別分類 : </label>
+                <select name="categoryId" id="cat" asp-items="ViewBag.ArtifactCategoriesList"
+                        class="form-control bar_edit">
+                    <option value="" class="midddle_text">-- 請選擇 --</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
                 <label>年代分類 : </label>
                 <select name="eraBucketId" id="era" asp-items="ViewBag.EraBucketList"
                         class="form-control bar_edit">
@@ -118,22 +126,22 @@
                 年代
             </th>
             <th style="width: 20%;">
-                @Html.DisplayNameFor(model => model.Description)
+                描述
             </th>
             <th style="width: 10%;">
-                @Html.DisplayNameFor(model => model.PrimaryImagePath)
+                圖片
             </th>
             <th style="width: 10%;">
-                @Html.DisplayNameFor(model => model.ArtifactRef)
+                識別碼
             </th>
-            <th style="width: 10%;">
-                @Html.DisplayNameFor(model => model.AttributionText)
-            </th>
-            <th style="width: 15%;">
-                @Html.DisplayNameFor(model => model.SourceUrl)
+            <th style="width: 20%;">
+                來源文字說明
             </th>
             <th style="width: 5%;">
                 @Html.DisplayNameFor(model => model.LicenseCode)
+            </th>
+            <th style="width: 5%;">
+                啟用狀態
             </th>
             <th style="width : 10%;">編輯</th>
         </tr>
@@ -157,7 +165,7 @@
                 @Html.DisplayFor(model => item.Description)
             </td>
             <td class="midddle_text">
-                    <img src="@item.PrimaryImagePath" width="150" height="200" />
+                    <img src="@item.ThumbnailPath" width="150" height="200" />
             </td>
              <td class="midddle_text">
                 @Html.DisplayFor(model => item.ArtifactRef)
@@ -165,11 +173,11 @@
             <td class="description-cell">
                 @Html.DisplayFor(model => item.AttributionText)
             </td>
-            <td class="description-cell">
-                @Html.DisplayFor(model => item.SourceUrl)
-            </td>
             <td class="midddle_text">
                 @Html.DisplayFor(model => item.LicenseCode)
+            </td>
+            <td class="midddle_text">
+                @Html.DisplayFor(model => item.IsActive)
             </td>
             <td class="midddle_text" style="font-size : 20px;">
                    <a asp-action="Edit" asp-route-id="@item.Id">編輯</a> |
@@ -185,6 +193,8 @@
     function clearFilter() {
 
         document.getElementById('keyword').value = '';
+
+        document.getElementById('cat').value = '';
 
         document.getElementById('era').value = '';
 
