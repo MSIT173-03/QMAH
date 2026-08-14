@@ -579,6 +579,7 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
     grid-template-areas:
       "sidebar navbar"
       "sidebar content";
+    will-change: grid-template-columns;
     transition: grid-template-columns 220ms cubic-bezier(.4, 0, .2, 1);
   }
 
@@ -623,12 +624,12 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
   }
 
   html[data-qmah-sidebar="collapsed"] .page > .navbar-vertical {
-    display: block;
-    width: 0 !important;
-    min-width: 0 !important;
-    max-width: 0 !important;
-    min-height: 0;
-    max-height: 0;
+    width: auto !important;
+    min-width: 0;
+    max-width: none;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-height: none;
     margin: 0 !important;
     padding: 0 !important;
     transform: translateX(-100%);
@@ -637,7 +638,6 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
     overflow: hidden;
     scrollbar-gutter: auto;
     border: 0 !important;
-    background: transparent !important;
   }
 
   html[data-qmah-sidebar="collapsed"] .page > .qmah-topbar,
