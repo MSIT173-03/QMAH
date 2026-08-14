@@ -4,6 +4,7 @@
     const root = document.documentElement;
     const toggle = document.querySelector("[data-qmah-theme-toggle]");
     const label = toggle?.querySelector("[data-qmah-theme-label]");
+    const sidebarToggle = document.querySelector("[data-qmah-sidebar-toggle]");
 
     function applyTheme(theme) {
         const isDark = theme === "dark";
@@ -23,5 +24,27 @@
     applyTheme(root.dataset.bsTheme === "dark" ? "dark" : "light");
     toggle?.addEventListener("click", () => {
         applyTheme(root.dataset.bsTheme === "dark" ? "light" : "dark");
+    });
+
+    function applySidebar(collapsed) {
+        if (collapsed) {
+            root.dataset.qmahSidebar = "collapsed";
+        } else {
+            delete root.dataset.qmahSidebar;
+        }
+
+        localStorage.setItem("qmah-admin-sidebar", collapsed ? "collapsed" : "expanded");
+
+        if (sidebarToggle) {
+            sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+            sidebarToggle.setAttribute("aria-label", collapsed ? "展開側邊欄" : "收合側邊欄");
+            sidebarToggle.setAttribute("title", collapsed ? "展開側邊欄" : "收合側邊欄");
+        }
+
+    }
+
+    applySidebar(root.dataset.qmahSidebar === "collapsed");
+    sidebarToggle?.addEventListener("click", () => {
+        applySidebar(root.dataset.qmahSidebar !== "collapsed");
     });
 })();
