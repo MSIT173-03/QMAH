@@ -5,6 +5,9 @@
     const toggle = document.querySelector("[data-qmah-theme-toggle]");
     const label = toggle?.querySelector("[data-qmah-theme-label]");
     const sidebarToggle = document.querySelector("[data-qmah-sidebar-toggle]");
+    const mobileSidebarToggle = document.querySelector("[data-qmah-mobile-sidebar-toggle]");
+    const mobileSidebar = document.querySelector("#admin-sidebar-menu");
+    const mobileSidebarBackdrop = document.querySelector("[data-qmah-sidebar-backdrop]");
     const themeSwitchingClass = "qmah-theme-switching";
 
     function applyTheme(theme) {
@@ -39,27 +42,37 @@
             Math.max(x, window.innerWidth - x),
             Math.max(y, window.innerHeight - y));
         const switchingToDark = nextTheme === "dark";
-        root.classList.add(themeSwitchingClass);
 
+        root.dataset.qmahThemeTransition = switchingToDark ? "to-dark" : "to-light";
+        root.classList.add(themeSwitchingClass);
         try {
             const transition = document.startViewTransition(() => applyTheme(nextTheme));
             await transition.ready;
             const reveal = root.animate(
                 {
                     clipPath: switchingToDark
-                        ? [`circle(${radius}px at ${x}px ${y}px)`, `circle(0 at ${x}px ${y}px)`]
-                        : [`circle(0 at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`]
+                        ? [
+                            `circle(${radius}px at ${x}px ${y}px)`,
+                            `circle(0px at ${x}px ${y}px)`
+                        ]
+                        : [
+                            `circle(0px at ${x}px ${y}px)`,
+                            `circle(${radius}px at ${x}px ${y}px)`
+                        ]
                 },
                 {
-                    duration: 520,
-                    easing: "cubic-bezier(.4, 0, .2, 1)",
+                    duration: 720,
+                    easing: "cubic-bezier(.16, 1, .3, 1)",
                     pseudoElement: switchingToDark
                         ? "::view-transition-old(root)"
                         : "::view-transition-new(root)"
                 });
 
             await Promise.allSettled([transition.finished, reveal.finished]);
+        } catch {
+            applyTheme(nextTheme);
         } finally {
+            delete root.dataset.qmahThemeTransition;
             root.classList.remove(themeSwitchingClass);
         }
     }
@@ -93,4 +106,44 @@
     sidebarToggle?.addEventListener("click", () => {
         applySidebar(root.dataset.qmahSidebar !== "collapsed");
     });
+
+    function isDrawerLayout() {
+        return window.matchMedia("(max-width: 1199.98px)").matches;
+    }
+
+    function applyMobileSidebar(open) {
+        if (!mobileSidebar || !mobileSidebarToggle || !mobileSidebarBackdrop) {
+            return;
+        }
+
+        if (!isDrawerLayout()) {
+            mobileSidebar.classList.remove("show");
+            mobileSidebar.removeAttribute("aria-hidden");
+            mobileSidebarBackdrop.classList.remove("is-visible");
+            document.body.classList.remove("qmah-sidebar-open");
+            return;
+        }
+
+        mobileSidebar.classList.toggle("show", open);
+        mobileSidebar.setAttribute("aria-hidden", String(!open));
+        mobileSidebarToggle.setAttribute("aria-expanded", String(open));
+        mobileSidebarToggle.setAttribute("aria-label", open ? "關閉側邊導覽" : "開啟側邊導覽");
+        mobileSidebarBackdrop.classList.toggle("is-visible", open);
+        document.body.classList.toggle("qmah-sidebar-open", open);
+    }
+
+    applyMobileSidebar(false);
+    mobileSidebarToggle?.addEventListener("click", () => {
+        applyMobileSidebar(!mobileSidebar?.classList.contains("show"));
+    });
+    mobileSidebarBackdrop?.addEventListener("click", () => applyMobileSidebar(false));
+    mobileSidebar?.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => applyMobileSidebar(false));
+    });
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            applyMobileSidebar(false);
+        }
+    });
+    window.matchMedia("(max-width: 1199.98px)").addEventListener("change", () => applyMobileSidebar(false));
 })();
