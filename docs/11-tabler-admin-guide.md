@@ -2,9 +2,22 @@
 
 本文件說明 QMAH 後台共用介面的使用方式，適用於 Catalog、Game、Social、Store 與 User 系統的功能負責人。
 
+## 懶人包：新建後台 View 要做什麼
+
+1. 目前五個 Area 並沒有自己的 `Views/_ViewStart.cshtml`，共用的 `Areas/_ViewStart.cshtml` 也還在使用一般網站 Layout。
+2. 如果你負責的 Area 全部都是後台頁面，先建立 `Areas/<Area>/Views/_ViewStart.cshtml`，將 Layout 指定為 `/Views/Shared/Admin/_AdminLayout.cshtml`。
+3. 完成後，新建的完整 View 會自動擁有 Tabler CSS／JavaScript、Sidebar、Navbar、頁首、提示訊息與頁尾。
+4. Scaffold 產生的 View 可能有 `Layout = null`，這會覆蓋 `_ViewStart.cshtml`；產生後請檢查並移除，或在 Scaffold 視窗選擇使用 Layout。
+5. Admin Layout 只會自動提供後台外框。View 內的 Card、Table、Form 和按鈕仍要使用本文範例或 Tabler 官方 class。
+6. 專案目前沒有自訂 Scaffold templates，所以 Visual Studio 不會自動產生 QMAH Tabler CRUD markup；未來若要自動化，可再新增 project-local `Templates/ViewGenerator/Bootstrap5` templates。
+
+正常畫面在桌機會是「左側固定側邊欄＋右側主要內容區」，組員新增 View 的 CRUD UI 會放進右側內容區。若側邊欄撐滿整個畫面、Navbar 和 CRUD 內容被排到頁面下方，這不是 `_ViewStart.cshtml` 的正常結果；請先確認 `wwwroot/admin/vendor/tabler/tabler.min.css` 是否完整載入，不要靠個別 View 加 margin 或複製 Layout 來補救。
+
 專案已內建 Tabler 1.4.0，並完成共用側邊欄、頂部工具列、QMAH 配色、明暗模式與手機版導覽。一般功能開發不需要安裝 Node.js，也不需要另外下載 Tabler。
 
-每位功能負責人只需實作所負責系統的頁面內容，例如資料表、查詢表單、編輯表單與業務流程。側邊欄、頂部工具列與明暗模式由共用介面提供，不應在個別 Area 重複實作。
+共用後台介面已經完成，但目前 `QMAH.Web/Areas/_ViewStart.cshtml` 仍使用一般網站的 `_Layout.cshtml`。新建 Area View 不會自動改用後台 Layout；功能負責人必須先在所負責 Area 的 `Views/_ViewStart.cshtml` 指定 `_AdminLayout.cshtml`，或在個別 View 指定 Layout。
+
+完成 Layout 設定後，側邊欄、頂部工具列與明暗模式會由共用介面提供，不應在個別 Area 重複實作。功能負責人仍需實作所負責系統的資料表、查詢表單、編輯表單與業務流程。
 
 ## 共用介面包含的功能
 
@@ -22,7 +35,11 @@
 - 統一內容寬度與頁尾
 - Tabler CSS 與 JavaScript
 
-上述內容會由共用 Layout 自動產生，不需要複製到系統 View。
+上述內容會由共用 Layout 自動產生，不需要複製到系統 View。這裡的「自動」只指後台外框；載入 Tabler CSS 與 JavaScript 不會自動將 Scaffold 產生的 HTML 改成 Tabler Card、Table 或 Form。
+
+`@RenderBody()` 對應的主要內容區已由 Layout 預留。桌機版位於固定側邊欄右側，手機版則移到導覽列下方；個別 View 不需要自行預留側邊欄寬度，也不應再加入 `page` 或 `page-wrapper`。
+
+Visual Studio Scaffold 預設只會產生一般 CRUD 骨架。`card`、`table-vcenter`、`card-table`、`form-label` 與頁面排列等 Tabler markup，目前仍需依本文範例調整。
 
 ## 開始使用
 
@@ -58,7 +75,18 @@ Layout 設定完成後，即可加入該頁面的實際內容：
 
 ### 2. 在 Area 統一設定後台 Layout
 
-若所負責 Area 的所有 View 都是後台頁面，可以在該 Area 的 `Views/_ViewStart.cshtml` 統一指定：
+若所負責 Area 的所有 View 都是後台頁面，標準作法是在該 Area 的 `Views/_ViewStart.cshtml` 統一指定。例如 User Area 的檔案位置是：
+
+```text
+QMAH.Web/Areas/User/Views/_ViewStart.cshtml
+```
+
+目前五個 Area 都沒有這份 Area 專用檔案。建立方式：
+
+1. 在 Solution Explorer 對 `Areas/<Area>/Views` 資料夾按右鍵。
+2. 選 **Add** → **New Item...**。
+3. 選 **Razor View - Empty**，檔名輸入 `_ViewStart.cshtml`。
+4. 將內容改為：
 
 ```cshtml
 @{
@@ -68,7 +96,11 @@ Layout 設定完成後，即可加入該頁面的實際內容：
 
 設定後，該 Area 內的 View 不需要逐頁重複指定 `Layout`。
 
-每位功能負責人只應修改所負責 Area 內的 `_ViewStart.cshtml`。請勿修改共用的 `QMAH.Web/Areas/_ViewStart.cshtml`，因為該檔案會同時影響所有系統。
+每個 Area 各自建立 `Views/_ViewStart.cshtml` 是 ASP.NET Core Razor 正常的階層式用法，適合由不同負責人維護，也可避免誤傷前台頁面。若五個 Area 未來確定全部都只有後台 View，也可由團隊統一將 `QMAH.Web/Areas/_ViewStart.cshtml` 改成 Admin Layout，就不需要建立五份相同檔案。這是會影響所有 Area 的共用決定，不應由個別功能負責人自行修改。
+
+如果同一個 Area 同時有前台與後台頁面，請將 `_ViewStart.cshtml` 放在更小的 View 資料夾，或逐頁指定 Layout，不要讓整個 Area 都使用 Admin Layout。
+
+Scaffold 產生的完整 View 可能自己寫入 `Layout = null`。View 內的 Layout 設定會覆蓋 `_ViewStart.cshtml`，因此產生後要移除 `Layout = null`，或在 Scaffold 視窗選擇使用 Layout。Partial View 不會執行 `_ViewStart.cshtml`；它被完整後台 View 引用時，會顯示在外層 View 的 Admin Layout 中。
 
 ### 3. 設定頁首操作按鈕
 
@@ -375,6 +407,14 @@ return RedirectToAction(nameof(Index));
 ```cshtml
 Layout = "/Views/Shared/Admin/_AdminLayout.cshtml";
 ```
+
+如果是 Scaffold 產生的 View，再檢查檔案內是否有：
+
+```cshtml
+Layout = null;
+```
+
+有的話會覆蓋 `_ViewStart.cshtml`，請移除這行或改成 Admin Layout。如果 Controller 回傳的是 Partial View，則本來就不會包含完整後台外框。
 
 ### 樣式完全沒有出現
 
