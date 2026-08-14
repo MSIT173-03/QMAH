@@ -1,0 +1,193 @@
+@model IEnumerable<QMAH.Web.Models.Entities.Artifact>
+
+<style>
+
+    /*間隔*/
+    .bar_space{
+        margin-right : 20px;
+    }
+
+    /*搜尋列大小 */
+    .Font_edit{
+        font-size : 2em;
+    }
+
+    /*標題樣式 */
+    .midddle_title{
+        margin : auto;
+        text-align : center;
+        font-size : 3em;
+    }
+
+    /*內文樣式 */
+    .midddle_text {
+        text-align: center;
+    }
+
+    /* 重新調整table內物件占比 */
+    .table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    /* 描述內容超過範圍自動換行 */
+    .description-cell {
+        white-space: normal;
+        word-break: break-word;
+    } 
+    /* ---------------------------------------------------------------------- */
+    .filter-bar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap; /* 螢幕太窄時自動換行,避免擠壓變形 */
+        gap: 30px; /* 用 gap 統一控制每個元素之間的間距,取代空白字元 */
+    }
+
+    .filter-item {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* label 跟輸入框之間的小間距 */
+        white-space: nowrap;
+    }
+
+    .bar_edit {
+        width: 250px;
+        max-width: 350px; /* 限制下拉選單最大寬度,不會被最長的選項名稱撐開 */
+    }
+
+    th {
+        text-align: center;
+        border: solid 2px #336b59;
+    }
+
+    td {
+        border: solid 2px #336b59;
+    }
+
+    .btn_edit{
+        font-size : 30px;
+        border: solid 5px #336b59;
+        background-color: #336b59;
+        border-radius : 5px;
+        padding : 2px;
+    }
+
+</style>
+
+
+@{
+    ViewData["Title"] = "圖鑑管理";
+}
+<h1 class="midddle_title">-文物清單-</h1>
+
+<br /><br />
+
+<div>
+    <form method="post" id="filterForm" class="Font_edit filter-bar">
+        <div class="filter-item" style="margin : auto;">
+            <div class="filter-item">
+                <label>關鍵字查詢 : </label>
+                <input type="text" name="txtKeyword" id="keyword" class="bar_edit" />
+            </div>
+
+            <div class="filter-item">
+                <label>年代分類 : </label>
+                <select name="eraBucketId" id="era" asp-items="ViewBag.EraBucketList"
+                        class="form-control bar_edit">
+                    <option value="" class="midddle_text">-- 請選擇 --</option>
+                </select>
+                <button type="submit" class="btn btn_edit">搜尋</button>
+                <button type="button" class="btn btn_edit" onclick="clearFilter()">清除</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<br />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width : 5%;">
+                序
+            </th>
+            <th style="width: 10%;">
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th style="width: 5%;">
+                年代
+            </th>
+            <th style="width: 20%;">
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th style="width: 10%;">
+                @Html.DisplayNameFor(model => model.PrimaryImagePath)
+            </th>
+            <th style="width: 10%;">
+                @Html.DisplayNameFor(model => model.ArtifactRef)
+            </th>
+            <th style="width: 10%;">
+                @Html.DisplayNameFor(model => model.AttributionText)
+            </th>
+            <th style="width: 15%;">
+                @Html.DisplayNameFor(model => model.SourceUrl)
+            </th>
+            <th style="width: 5%;">
+                @Html.DisplayNameFor(model => model.LicenseCode)
+            </th>
+            <th style="width : 10%;">編輯</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int count = 0;
+            foreach (var item in Model) {
+                count++;
+        <tr>
+             <td class="midddle_text">
+                      @count
+            </td>
+            <td class="midddle_text">
+                @Html.DisplayFor(model => item.Name)
+            </td>
+            <td class="midddle_text">
+                @Html.DisplayFor(model => item.EraTextOriginal)
+            </td>
+            <td class="description-cell">
+                @Html.DisplayFor(model => item.Description)
+            </td>
+            <td class="midddle_text">
+                    <img src="@item.PrimaryImagePath" width="150" height="200" />
+            </td>
+             <td class="midddle_text">
+                @Html.DisplayFor(model => item.ArtifactRef)
+            </td>
+            <td class="description-cell">
+                @Html.DisplayFor(model => item.AttributionText)
+            </td>
+            <td class="description-cell">
+                @Html.DisplayFor(model => item.SourceUrl)
+            </td>
+            <td class="midddle_text">
+                @Html.DisplayFor(model => item.LicenseCode)
+            </td>
+            <td class="midddle_text" style="font-size : 20px;">
+                   <a asp-action="Edit" asp-route-id="@item.Id">編輯</a> |
+                   <a asp-action="Delete" asp-route-id="@item.Id" onclick="return confirm('確定要刪除嗎?')">刪除</a>
+             </td>
+        </tr>
+}}
+    </tbody>
+</table>
+
+
+<script>
+    function clearFilter() {
+
+        document.getElementById('keyword').value = '';
+
+        document.getElementById('era').value = '';
+
+        document.getElementById('filterForm').submit();
+    }
+</script>
