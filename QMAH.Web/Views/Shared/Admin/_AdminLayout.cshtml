@@ -13,6 +13,10 @@
                 ? savedTheme
                 : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
             document.documentElement.dataset.bsTheme = theme;
+
+            if (localStorage.getItem("qmah-admin-sidebar") === "collapsed") {
+                document.documentElement.dataset.qmahSidebar = "collapsed";
+            }
         })();
     </script>
     <link rel="stylesheet" href="~/admin/vendor/tabler/tabler.min.css" />
