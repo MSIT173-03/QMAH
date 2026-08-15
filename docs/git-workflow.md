@@ -8,13 +8,7 @@ Repository：<https://github.com/MSIT173-03/QMAH>
 
 加入 `MSIT173-03` 組織不會自動取得此 Repository 的 `Write` 權限。目前先以 `Read` 為預設；需要直接 Push 自己的 feature branch 時，請由 Repository 管理員另外授予 `Write`。
 
-加入組織後可以：
-
-- Clone Repository。
-- Pull 所有分支。
-- 直接 Push 自己的 `feature/*` 分支。
-- 建立 Pull Request。
-- 檢視 GitHub Actions 結果。
+加入組織後可以 Clone、Pull、建立 Pull Request 與檢視 GitHub Actions。取得此 Repository 的 `Write` 權限後，才可以直接 Push 自己的 `feature/*` 分支。
 
 日常 Push 不需要 Owner 逐次核准。`Write` 不包含刪除 Repository、修改敏感設定或管理組織的權限。
 
@@ -28,10 +22,10 @@ Repository 採 Public，以使用 GitHub Free 組織的 Branch Protection。保�
 
 | 分支 | Pull Request | 人工核准 | 必要檢查 |
 | --- | --- | --- | --- |
-| `main` | 必須 | 任一位協作者 1 人 | `Build` |
-| `develop` | 必須 | 不需要 | `Build` |
+| `main` | 必須，Owner 純同步可例外 | 不需要 | `Build` |
+| `develop` | 必須，Owner 純同步可例外 | 不需要 | `Build` |
 
-`main` 禁止 force push 與刪除，並要求 PR 討論已解決。`main` 的一人核准不必固定由 Owner 執行；Owner 保留緊急管理權限，但日常整合仍依 PR 流程。
+`main` 禁止 force push 與刪除。組員原則上不要直接修改 `main` 或 `develop`，整合共同分支時透過 PR 留下變更紀錄，但不要求人工核准。Owner 只在確認來源分支沒有任何額外提交、單純將共同版本快轉同步時直接繞過 PR。`Build` 仍是共同分支的必要檢查。
 
 ## 分支用途
 
@@ -69,7 +63,7 @@ Pull → 修改 → 本機驗證 → Commit → Push → Pull Request → develo
 
 1. 確認目前位於自己的 feature branch。
 2. Pull 遠端同分支。
-3. 取得 `develop` 最近已整合的內容並處理衝突。
+3. 取得團隊目前指定的共同分支內容並處理衝突；平時以 `develop` 為整合分支，團隊通知直接同步最新展示版時則使用 `origin/main`。
 4. 再開始修改。
 
 完成一個可驗證階段後：
@@ -80,7 +74,50 @@ Pull → 修改 → 本機驗證 → Commit → Push → Pull Request → develo
 4. Commit、Push 自己的 feature branch。
 5. 建立 `feature/<area> → develop` 的 Pull Request。
 
-期中或期末展示前，建立 `develop → main` Pull Request，確認 Build 通過並完成 1 人核准後再合併。
+期中或期末展示前，建立 `develop → main` Pull Request 留下展示版本紀錄；確認 Build 通過後即可合併，不要求人工核准。
+
+## Visual Studio：保留自己的修改並同步最新 main
+
+不要在還有「未認可變更」時直接切換分支或 Pull。最安全的做法是先將目前進度 Commit 到自己的分支，再把 `origin/main` 合併進來：
+
+1. 看 Visual Studio 右下角的分支名稱，確認目前在自己的 `feature/<area>`，不是 `main`。
+2. 開啟 **檢視 → Git 變更**，檢查檔案後輸入訊息並選 **認可全部**（Commit All）。功能尚未完成也可以先做進度 Commit。
+3. 建議先選 **推送**（Push），將自己的分支備份到 GitHub。
+4. 選 **Git → 擷取**（Fetch）。Fetch 只更新遠端分支資訊，不會修改目前檔案。
+5. 開啟 **檢視 → Git 存放庫**，展開 **遠端 → origin**，對 `origin/main` 按右鍵，選 **合併至目前分支**（Merge into Current Branch）。不要切到 `main` 才操作。
+6. 若出現衝突，逐檔比較「目前內容」與「傳入內容」。不要直接對所有檔案選「全部接受目前」或「全部接受傳入」。
+7. 衝突處理完成後執行 **建置 → 建置方案**，再認可合併結果並 Push 自己的分支。
+
+簡化順序：
+
+```text
+確認在自己的分支
+→ Commit 自己的修改
+→ Push 備份
+→ Fetch
+→ 將 origin/main 合併至目前分支
+→ 處理衝突
+→ Build
+→ Commit 並 Push
+```
+
+同步後要確認 Area 的 `Views/_ViewStart.cshtml` 仍指定：
+
+```cshtml
+@{
+    Layout = "/Views/Shared/Admin/_AdminLayout.cshtml";
+}
+```
+
+Scaffold 產生的完整 View 若包含 `Layout = null`，請移除，否則會覆蓋 `_ViewStart.cshtml`。
+
+### 不熟悉衝突時的外部備份方案
+
+若真的不想處理 Git 衝突，可以先把自己新增或修改的 Controller、ViewModel、View 與相關檔案複製到 Repository 外，保留原本資料夾結構；原分支仍建議先 Commit 並 Push，作為可恢復的備份。
+
+接著 Fetch，從最新的 `origin/main` 建立另一個功能分支，再只將自己的功能檔案複製回正確位置並 Build。不要用整個舊 Area 覆蓋新版，也不要把舊的 `_ViewStart.cshtml` 蓋回去，否則可能移除 main 已加入的共用設定或覆蓋別人的修改。
+
+這種方式較容易理解，但有漏檔與蓋掉新內容的風險。正常情況仍優先使用 Merge，只有不確定如何處理衝突時才使用外部備份方案。
 
 ## Commit
 
