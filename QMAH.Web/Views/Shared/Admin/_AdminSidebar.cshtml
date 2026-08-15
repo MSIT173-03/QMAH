@@ -26,7 +26,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(currentArea == "Catalog" ? "active" : null)" asp-area="Catalog" asp-controller="Home" asp-action="Index" title="圖鑑管理"
+                    <a class="nav-link @(currentArea == "Catalog" ? "active" : null)" asp-area="Catalog" asp-controller="Artifact" asp-action="List" title="圖鑑管理"
                        aria-current="@(currentArea == "Catalog" ? "page" : null)">
                         <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("catalog")" /></span>
                         <span class="nav-link-title">圖鑑管理</span>
