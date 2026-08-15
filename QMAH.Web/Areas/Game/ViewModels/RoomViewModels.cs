@@ -139,12 +139,14 @@ public abstract class RoomFormViewModel : IValidatableObject
 
     public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (Visibility is not ("PUBLIC" or "PRIVATE"))
+        var visibility = Visibility?.Trim().ToUpperInvariant() ?? string.Empty;
+
+        if (visibility is not ("PUBLIC" or "PRIVATE"))
         {
             yield return new ValidationResult("可見範圍不正確", [nameof(Visibility)]);
         }
 
-        if (Visibility == "PRIVATE" && string.IsNullOrWhiteSpace(Password) && this is RoomCreateViewModel)
+        if (visibility == "PRIVATE" && string.IsNullOrWhiteSpace(Password) && this is RoomCreateViewModel)
         {
             yield return new ValidationResult("私人房間必須設定密碼", [nameof(Password)]);
         }

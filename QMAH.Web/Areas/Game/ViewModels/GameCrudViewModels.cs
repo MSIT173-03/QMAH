@@ -114,7 +114,9 @@ public abstract class RoundFormViewModel : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (!GameCodeLists.RoundStatuses.ContainsKey(Status?.Trim().ToUpperInvariant() ?? string.Empty))
+        var status = Status?.Trim().ToUpperInvariant() ?? string.Empty;
+
+        if (!GameCodeLists.RoundStatuses.ContainsKey(status))
         {
             yield return new ValidationResult("回合狀態不正確", [nameof(Status)]);
         }
@@ -129,22 +131,22 @@ public abstract class RoundFormViewModel : IValidatableObject
             yield return new ValidationResult("投票截止時間必須晚於作答截止時間", [nameof(VotingDeadlineAt)]);
         }
 
-        if (Status == "REVEALED" && !IsSettled)
+        if (status == "REVEALED" && !IsSettled)
         {
             yield return new ValidationResult("已揭曉回合必須標記為已結算", [nameof(IsSettled)]);
         }
 
-        if (Status == "REVEALED" && !SettledAt.HasValue)
+        if (status == "REVEALED" && !SettledAt.HasValue)
         {
             yield return new ValidationResult("已揭曉回合必須填寫結算時間", [nameof(SettledAt)]);
         }
 
-        if (Status != "REVEALED" && IsSettled)
+        if (status != "REVEALED" && IsSettled)
         {
             yield return new ValidationResult("作答中或投票中的回合不能標記為已結算", [nameof(IsSettled)]);
         }
 
-        if (Status != "REVEALED" && SettledAt.HasValue)
+        if (status != "REVEALED" && SettledAt.HasValue)
         {
             yield return new ValidationResult("作答中或投票中的回合不能填寫結算時間", [nameof(SettledAt)]);
         }
