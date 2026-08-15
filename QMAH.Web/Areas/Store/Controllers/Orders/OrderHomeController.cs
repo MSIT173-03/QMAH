@@ -76,5 +76,49 @@ public class OrderHomeController : Controller
         }
 
         return View(order);
+    [HttpPost("Cancel")]
+    public async Task<IActionResult> SetCancel([FromForm] Guid id)
+    {
+        try
+        {
+            var order = this._db.StoreOrders.Where(o => o.Id == id).FirstOrDefault();
+            if (order == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return Json(new OrderCancelResult
+                {
+                    Type = OrderCancelResult.EResultType.ErrorNotFound
+                });
+            }
+
+            if (order.CancelledAt != null)
+            {
+                HttpContext.Response.StatusCode = 409;
+                return Json(new OrderCancelResult
+                {
+                    Type = OrderCancelResult.EResultType.ErrorCancelled,
+                });
+            }
+
+            order.CancelledAt = DateTime.Now;
+            order.Status = "CANCELLED";
+
+            this._db.StoreOrders.Update(order);
+            this._db.SaveChanges();
+
+            return Json(new OrderCancelResult
+            {
+                Type = OrderCancelResult.EResultType.Success
+            });
+        }
+        catch (Exception ex)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return Json(new OrderCancelResult
+            {
+                Type = OrderCancelResult.EResultType.ErrorOtherException,
+                Message = ex.Message
+            });
+        }
     }
 }

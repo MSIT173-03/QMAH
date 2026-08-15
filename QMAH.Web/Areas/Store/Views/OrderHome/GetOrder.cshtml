@@ -6,6 +6,19 @@
 
 <h1>Details</h1>
 
+
+<div>
+    <a asp-action="Index">Back to List</a>
+    @if(Model!=null){
+        @:|
+        <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> @:|
+        <form asp-controller="Order" asp-action="Cancel" method="post" id="set-cancel-order" class="d-inline">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" id="set-cancel-button">取消此訂單</button>
+        </form>
+    }
+</div>
+
 <div>
     <h4>OrderFullDetail</h4>
     <hr />
@@ -145,7 +158,27 @@
     </tbody>
 </table>
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+<script>
+    document
+        .getElementById("set-cancel-order") 
+        .addEventListener("submit", async function(e) {
+            e.preventDefault();
+            try {  
+                const formData = new FormData(this);
+                const response = await fetch(this.action, {
+                    method: "POST",
+                    body: formData
+                })
+
+                if (response.ok)
+                    return alert("取消成功")
+                
+                const result = await response.text();
+
+                return alert(result)
+            }
+            catch(e) {
+                alert(e.message)
+            }
+        });
+</script>
