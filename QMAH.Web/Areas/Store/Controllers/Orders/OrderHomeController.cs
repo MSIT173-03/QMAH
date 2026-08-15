@@ -64,8 +64,8 @@ public class OrderHomeController : Controller
                              Id = items.Id,
                              Amount = items.Quantity,
                              Price = product.Price,
-                             ImageUrl = product.PrimaryImagePath ?? string.Empty,
-
+                             ProductId = product.Id,
+                             ProductName = product.Name,
                          };
         var list = queryItems.ToList();
         if (list == null) list = [];

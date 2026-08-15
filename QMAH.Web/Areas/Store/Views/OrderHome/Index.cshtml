@@ -1,15 +1,19 @@
 @model IEnumerable<QMAH.Web.Areas.Store.ViewModels.OrderSimplefyListItem>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "訂單列表";
 }
 
-<h1>Index</h1>
-
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">新增訂單</a>
 </p>
-<table class="table">
+<style>
+    #order-list-table > tbody > tr{
+        cursor:pointer;
+    }
+</style>
+
+<table id="order-list-table" class="table table-hover border">
     <thead>
         <tr>
             <th>
