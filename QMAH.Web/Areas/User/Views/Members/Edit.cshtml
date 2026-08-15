@@ -1,0 +1,55 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.MemberEditViewModel
+
+@{
+    ViewData["Title"] = "編輯會員";
+}
+
+<h1>編輯會員</h1>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="UserId" />
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input asp-for="Email"
+               class="form-control"
+               readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nickname" class="form-label">暱稱</label>
+        <input asp-for="Nickname" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Bio" class="form-label">自我介紹</label>
+        <textarea asp-for="Bio"
+                  class="form-control"
+                  rows="4"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AvatarPath" class="form-label">頭像路徑</label>
+        <input asp-for="AvatarPath" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Visibility" class="form-label">公開範圍</label>
+
+        <select asp-for="Visibility" class="form-select">
+            <option value="PUBLIC">公開</option>
+            <option value="FRIENDS">好友</option>
+            <option value="PRIVATE">私人</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        儲存
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        返回
+    </a>
+</form>

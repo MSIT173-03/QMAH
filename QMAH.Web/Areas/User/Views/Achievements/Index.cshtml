@@ -1,0 +1,80 @@
+﻿@model IEnumerable<QMAH.Web.Areas.User.ViewModels.AchievementListItemViewModel>
+
+@{
+    ViewData["Title"] = "成就管理";
+}
+
+<h1>成就管理</h1>
+<a asp-action="Create" class="btn btn-primary mb-3">
+    新增成就
+</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>成就名稱</th>
+            <th>代碼</th>
+            <th>條件類型</th>
+            <th>門檻</th>
+            <th>狀態</th>
+            <th>取得人數</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Achievement.Name</td>
+                <td>@item.Achievement.Code</td>
+                <td>@item.Achievement.ConditionType</td>
+                <td>@item.Achievement.ThresholdValue</td>
+
+                <td>
+                    @if (item.Achievement.Status == "ACTIVE")
+                    {
+                        <span class="badge bg-success">啟用</span>
+                    }
+                    else if (item.Achievement.Status == "INACTIVE")
+                    {
+                        <span class="badge bg-secondary text-white">停用</span>
+                    }
+                </td>
+
+                <td>@item.EarnedCount</td>
+                <td>
+                    <a asp-action="Edit"
+                       asp-route-id="@item.Achievement.Id"
+                       class="btn btn-primary">
+                        編輯
+                    </a>
+                    <form asp-action="ChangeStatus"
+                          asp-route-id="@item.Achievement.Id"
+                          method="post"
+                          class="d-inline">
+
+                        @Html.AntiForgeryToken()
+
+                        @if (item.Achievement.Status == "ACTIVE")
+                        {
+                            <button type="submit"
+                                    class="btn btn-danger"
+                                    onclick="return confirm('確定要停用這個成就嗎？')">
+                                停用
+                            </button>
+                        }
+                        else if (item.Achievement.Status == "INACTIVE")
+                        {
+                            <button type="submit"
+                                    class="btn btn-success"
+                                    onclick="return confirm('確定要啟用這個成就嗎？')">
+                                啟用
+                            </button>
+                        }
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

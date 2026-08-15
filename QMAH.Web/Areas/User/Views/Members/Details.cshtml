@@ -1,0 +1,130 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.MemberDetailsViewModel
+
+@{
+    ViewData["Title"] = "會員詳細資料";
+}
+
+<h1>會員詳細資料</h1>
+
+<h3>帳號資料</h3>
+
+<p>Email：@Model.User.Email</p>
+<p>帳號狀態：@Model.User.Status</p>
+<p>註冊時間：@Model.User.CreatedAt</p>
+
+<hr />
+
+<h3>個人資料</h3>
+
+@if (Model.Profile != null)
+{
+    <p>暱稱：@Model.Profile.Nickname</p>
+    <p>自我介紹：@Model.Profile.Bio</p>
+    <p>公開範圍：@Model.Profile.Visibility</p>
+    <p>頭像路徑：@Model.Profile.AvatarPath</p>
+}
+else
+{
+    <p>此會員尚未建立個人資料。</p>
+}
+
+<hr />
+
+<h3>收件地址</h3>
+
+@if (Model.Addresses.Count == 0)
+{
+    <p>目前沒有地址資料。</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>標籤</th>
+                <th>收件人</th>
+                <th>電話</th>
+                <th>地址</th>
+                <th>預設</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var address in Model.Addresses)
+            {
+                <tr>
+                    <td>@address.AddressLabel</td>
+                    <td>@address.RecipientName</td>
+                    <td>@address.RecipientPhone</td>
+
+                    <td>
+                        @address.PostalCode
+                        @address.City
+                        @address.District
+                        @address.AddressLine
+                    </td>
+
+                    <td>
+                        @if (address.IsDefault)
+                        {
+                            <span class="badge bg-success">預設</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<hr />
+
+<h3>點數異動紀錄</h3>
+
+@if (Model.PointTransactions.Count == 0)
+{
+    <p>目前沒有點數異動紀錄。</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>時間</th>
+                <th>異動</th>
+                <th>原因</th>
+                <th>類型</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model.PointTransactions)
+            {
+                <tr>
+                    <td>@item.CreatedAt</td>
+
+                    <td>
+                        @if (item.Amount > 0)
+                        {
+                            <span class="text-success">
+                                +@item.Amount
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">
+                                @item.Amount
+                            </span>
+                        }
+                    </td>
+
+                    <td>@item.Reason</td>
+
+                    <td>@item.ReferenceType</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-action="Index" class="btn btn-secondary">
+    返回會員列表
+</a>

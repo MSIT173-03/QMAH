@@ -1,0 +1,63 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.PointAdjustViewModel
+
+@{
+    ViewData["Title"] = "調整會員點數";
+}
+
+<h1>調整會員點數</h1>
+
+<form asp-action="AdjustPoints"
+      asp-route-id="@Model.UserId"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="UserId" />
+
+    <div class="mb-3">
+        <label class="form-label">會員</label>
+        <input asp-for="Email"
+               class="form-control"
+               readonly />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">目前點數</label>
+        <input asp-for="CurrentBalance"
+               class="form-control"
+               readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Amount" class="form-label">
+            調整點數
+        </label>
+
+        <input asp-for="Amount"
+               type="number"
+               class="form-control"
+               placeholder="例如：100 或 -50" />
+
+        <div class="form-text">
+            正數代表增加，負數代表扣除
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Reason" class="form-label">
+            調整原因
+        </label>
+
+        <input asp-for="Reason"
+               class="form-control"
+               placeholder="例如：活動補償" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        確認調整
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        返回
+    </a>
+</form>

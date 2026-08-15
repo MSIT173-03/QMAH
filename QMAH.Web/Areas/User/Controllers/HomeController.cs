@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using QMAH.Web.Data;
 
 namespace QMAH.Web.Areas.User.Controllers;
 

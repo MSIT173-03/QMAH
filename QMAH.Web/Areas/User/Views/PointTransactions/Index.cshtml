@@ -1,0 +1,164 @@
+﻿@model IEnumerable<QMAH.Web.Areas.User.ViewModels.PointTransactionListItemViewModel>
+
+@{
+    ViewData["Title"] = "點數異動紀錄";
+}
+
+<h1>點數異動紀錄</h1>
+
+<form method="get"
+      asp-action="Index"
+      class="mb-3">
+
+    <div class="row g-2">
+
+        <div class="col-md-6">
+            <input type="text"
+                   name="keyword"
+                   value="@ViewBag.Keyword"
+                   class="form-control"
+                   placeholder="搜尋 Email、原因或異動類型" />
+        </div>
+
+        <div class="col-md-3">
+            <select name="amountType"
+                    class="form-select">
+
+                <option value="">
+                    全部異動
+                </option>
+
+                <option value="increase"
+                        selected="@(ViewBag.AmountType == "increase")">
+                    增加點數
+                </option>
+
+                <option value="decrease"
+                        selected="@(ViewBag.AmountType == "decrease")">
+                    扣除點數
+                </option>
+
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit"
+                    class="btn btn-primary">
+                搜尋
+            </button>
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+                清除
+            </a>
+        </div>
+
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>時間</th>
+            <th>會員</th>
+            <th>異動</th>
+            <th>原因</th>
+            <th>類型</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    目前沒有符合條件的點數異動紀錄。
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Transaction.CreatedAt</td>
+
+                    <td>@item.Email</td>
+
+                    <td>
+                        @if (item.Transaction.Amount > 0)
+                        {
+                            <span class="text-success">
+                                +@item.Transaction.Amount
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">
+                                @item.Transaction.Amount
+                            </span>
+                        }
+                    </td>
+
+                    <td>@item.Transaction.Reason</td>
+                    <td>@item.Transaction.ReferenceType</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+@{
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+    int totalCount = ViewBag.TotalCount;
+    int pageSize = ViewBag.PageSize;
+
+    int start = totalCount == 0
+        ? 0
+        : ((currentPage - 1) * pageSize) + 1;
+
+    int end = Math.Min(currentPage * pageSize, totalCount);
+}
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+
+    <div class="text-muted">
+        顯示第 @start～@end 筆，共 @totalCount 筆
+    </div>
+
+    <div>
+        @if (currentPage > 1)
+        {
+            <a asp-action="Index"
+               asp-route-page="@(currentPage - 1)"
+               asp-route-keyword="@ViewBag.Keyword"
+               asp-route-amountType="@ViewBag.AmountType"
+               class="btn btn-secondary">
+                上一頁
+            </a>
+        }
+
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            <a asp-action="Index"
+               asp-route-page="@i"
+               asp-route-keyword="@ViewBag.Keyword"
+               asp-route-amountType="@ViewBag.AmountType"
+               class="btn @(i == currentPage ? "btn-primary" : "btn-outline-secondary")">
+                @i
+            </a>
+        }
+
+        @if (currentPage < totalPages)
+        {
+            <a asp-action="Index"
+               asp-route-page="@(currentPage + 1)"
+               asp-route-keyword="@ViewBag.Keyword"
+               asp-route-amountType="@ViewBag.AmountType"
+               class="btn btn-secondary">
+                下一頁
+            </a>
+        }
+    </div>
+
+</div>
