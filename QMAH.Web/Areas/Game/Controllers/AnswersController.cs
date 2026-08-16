@@ -410,7 +410,6 @@ public sealed class AnswersController(QmahDbContext db) : Controller
         var rounds = await db.GameRounds
             .AsNoTracking()
             .OrderByDescending(x => x.StartedAt)
-            .Take(200)
             .Select(x => new { x.Id, Label = x.Room.RoomCode + " · 第 " + x.RoundNumber + " 回合" })
             .ToListAsync(cancellationToken);
         ViewBag.Rounds = new SelectList(rounds, "Id", "Label", selected);
@@ -426,7 +425,6 @@ public sealed class AnswersController(QmahDbContext db) : Controller
         var players = await db.GamePlayers
             .AsNoTracking()
             .OrderBy(x => x.DisplayName)
-            .Take(500)
             .Select(x => new
             {
                 x.Id,
