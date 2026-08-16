@@ -34,8 +34,8 @@
         </label>
 
         <input asp-for="Amount"
-               type="number"
                class="form-control"
+               onchange="this.value = parseInt(this.value) || 0;"
                placeholder="例如：100 或 -50" />
 
         <div class="form-text">

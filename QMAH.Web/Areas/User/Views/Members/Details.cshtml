@@ -10,7 +10,55 @@
 
 <p>Email：@Model.User.Email</p>
 <p>帳號狀態：@Model.User.Status</p>
+<p>目前點數：@Model.PointBalance</p>
 <p>註冊時間：@Model.User.CreatedAt</p>
+
+@if (TempData["StatusError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["StatusError"]
+    </div>
+}
+
+<a asp-action="EditRoles"
+   asp-route-id="@Model.User.Id"
+   class="btn btn-warning mb-3">
+    角色設定
+</a>
+
+<form asp-action="ChangeStatus"
+      method="post"
+      class="d-inline">
+
+    <input type="hidden"
+           name="id"
+           value="@Model.User.Id" />
+
+    @if (Model.User.Status == "ACTIVE")
+    {
+        <button type="submit"
+                class="btn btn-danger mb-3"
+                onclick="return confirm('確定要停權這個會員嗎？');">
+            停權
+        </button>
+    }
+    else if (Model.User.Status == "BANNED")
+    {
+        <button type="submit"
+                class="btn btn-success mb-3"
+                onclick="return confirm('確定要解除停權嗎？');">
+            解除停權
+        </button>
+    }
+    else if (Model.User.Status == "DISABLED")
+    {
+        <button type="button"
+                class="btn btn-secondary mb-3"
+                disabled>
+            帳號已停用
+        </button>
+    }
+</form>
 
 <hr />
 
@@ -32,6 +80,19 @@ else
 
 <h3>收件地址</h3>
 
+@if (TempData["AddressError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["AddressError"]
+    </div>
+}
+
+<a asp-action="CreateAddress"
+   asp-route-userId="@Model.User.Id"
+   class="btn btn-success mb-3">
+    新增地址
+</a>
+
 @if (Model.Addresses.Count == 0)
 {
     <p>目前沒有地址資料。</p>
@@ -46,6 +107,7 @@ else
                 <th>電話</th>
                 <th>地址</th>
                 <th>預設</th>
+                <th>操作</th>
             </tr>
         </thead>
 
@@ -70,14 +132,143 @@ else
                             <span class="badge bg-success">預設</span>
                         }
                     </td>
+
+                    <td>
+                        <a asp-action="EditAddress"
+                           asp-route-id="@address.Id"
+                           class="btn btn-sm btn-primary">
+                            編輯
+                        </a>
+
+                        <form asp-action="DeleteAddress"
+                              method="post"
+                              class="d-inline">
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@address.Id" />
+
+                            <input type="hidden"
+                                   name="userId"
+                                   value="@Model.User.Id" />
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    onclick="return confirm('確定要刪除這筆地址嗎？');">
+                                刪除
+                            </button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 }
+
+<hr />
+
+
+<hr />
+
+<h3>已取得成就</h3>
+
+<a asp-action="GrantAchievement"
+   asp-route-userId="@Model.User.Id"
+   class="btn btn-primary mb-3">
+    授予成就
+</a>
+
+@if (Model.Achievements.Count == 0)
+{
+    <p>目前尚未取得任何成就。</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>成就名稱</th>
+                <th>標題</th>
+                <th>取得時間</th>
+                <th>展示狀態</th>
+                <th>展示時間</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model.Achievements)
+            {
+                <tr>
+                    <td>@item.Achievement.Name</td>
+
+                    <td>@item.Achievement.Title</td>
+
+                    <td>@item.AchievedAt</td>
+
+                    <td>
+                        @if (item.IsDisplayed)
+                        {
+                            <span class="badge bg-success">
+                                展示中
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">
+                                未展示
+                            </span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (item.DisplayedAt.HasValue)
+                        {
+                            @item.DisplayedAt.Value
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </td>
+
+                    <td>
+                        <form asp-action="RemoveAchievement"
+                              method="post"
+                              class="d-inline">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@item.Id" />
+
+                            <input type="hidden"
+                                   name="userId"
+                                   value="@Model.User.Id" />
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    onclick="return confirm('確定要移除此會員的這個成就嗎？');">
+                                移除
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 <hr />
 
 <h3>點數異動紀錄</h3>
+
+<a asp-action="AdjustPoints"
+   asp-route-id="@Model.User.Id"
+   class="btn btn-warning mb-3">
+    調整點數
+</a>
 
 @if (Model.PointTransactions.Count == 0)
 {
@@ -117,7 +308,6 @@ else
                     </td>
 
                     <td>@item.Reason</td>
-
                     <td>@item.ReferenceType</td>
                 </tr>
             }
@@ -125,6 +315,7 @@ else
     </table>
 }
 
-<a asp-action="Index" class="btn btn-secondary">
+<a asp-action="Index"
+   class="btn btn-secondary">
     返回會員列表
 </a>

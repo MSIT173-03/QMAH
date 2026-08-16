@@ -1,0 +1,27 @@
+﻿@model QMAH.Web.Models.Entities.UserProfile
+
+@{
+    ViewData["Title"] = "我的個人資料";
+}
+
+<h1>我的個人資料</h1>
+
+<div class="mb-3">
+    <strong>暱稱：</strong>
+    @Model.Nickname
+</div>
+
+<div class="mb-3">
+    <strong>自我介紹：</strong>
+    @Model.Bio
+</div>
+
+<div class="mb-3">
+    <strong>公開範圍：</strong>
+    @Model.Visibility
+</div>
+
+<div class="mb-3">
+    <strong>頭像路徑：</strong>
+    @Model.AvatarPath
+</div>

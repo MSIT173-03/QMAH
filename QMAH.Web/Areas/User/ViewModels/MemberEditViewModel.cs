@@ -12,5 +12,7 @@ public class MemberEditViewModel
 
     public string? AvatarPath { get; set; }
 
-    public string Visibility { get; set; } = "PUBLIC";
+    public string Visibility { get; set; } = "";
+
+    public byte[] RowVersion { get; set; } = null!;
 }
