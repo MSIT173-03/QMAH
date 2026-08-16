@@ -7,12 +7,14 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Catalog.ViewModel;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
 
 [Area("Catalog")]
+[AdminNavigation("文物總覽", order: 10)]
 public class ArtifactController : Controller
 {
     private readonly QmahDbContext _db;
@@ -22,7 +24,8 @@ public class ArtifactController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> List(C_KeywordViewModel vm, Guid? eraBucketId, Guid? categoryId, CancellationToken cancellationToken)
+
+    public async Task<IActionResult> Index(C_KeywordViewModel vm, Guid? eraBucketId, Guid? categoryId, CancellationToken cancellationToken)
     {
         IEnumerable<Artifact> datas_art = null;
 
@@ -107,9 +110,9 @@ public class ArtifactController : Controller
         return View(datas_art);
     }
 
+
     public ActionResult Delete(Guid? id)
     {
-        var artifacts = _db.Artifacts;
         Artifact a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
         if (a != null)
         {
@@ -141,7 +144,6 @@ public class ArtifactController : Controller
                     .OrderBy(e => e.Name)
                     .ToList();
 
-            var artifacts = _db.Artifacts;
             Artifact a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
             ViewBag.ArtifactCategoriesList = new SelectList(category, "Id", "Name", a.CategoryId);
             ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", a.EraBucketId);
@@ -149,10 +151,10 @@ public class ArtifactController : Controller
         }
     }
 
+
     [HttpPost]
     public ActionResult Edit(Artifact af, Guid eraBucketId, Guid categoryId)
     {
-        var artifacts = _db.Artifacts;
         Artifact a = _db.Artifacts.FirstOrDefault(t => t.Id == af.Id);
         if (af.Id == null)
         {
@@ -177,6 +179,6 @@ public class ArtifactController : Controller
             a.IsActive = af.IsActive;
             _db.SaveChanges();
         }
-        return RedirectToAction("List");
+        return RedirectToAction("Index");
     }
 }

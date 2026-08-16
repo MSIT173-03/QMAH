@@ -2,7 +2,7 @@
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
-public class KeyBackpack : Controller
+public class KeyBackpackController : Controller
 {
 
     public IActionResult List()
