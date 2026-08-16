@@ -124,7 +124,7 @@ public sealed class VotesController(QmahDbContext db) : Controller
         VoteCreateViewModel model,
         CancellationToken cancellationToken)
     {
-        await ValidateReferencesAsync(model, null, cancellationToken);
+        await ValidateReferencesAsync(model, cancellationToken);
 
         if (model.RoundId.HasValue && model.VoterGamePlayerId.HasValue && model.AnswerId.HasValue && await db.Votes.AnyAsync(
                 x => x.RoundId == model.RoundId.Value &&
@@ -208,7 +208,7 @@ public sealed class VotesController(QmahDbContext db) : Controller
             return NotFound();
         }
 
-        await ValidateReferencesAsync(model, id, cancellationToken);
+        await ValidateReferencesAsync(model, cancellationToken);
 
         var entity = await db.Votes.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null)
@@ -325,7 +325,6 @@ public sealed class VotesController(QmahDbContext db) : Controller
 
     private async Task ValidateReferencesAsync(
         VoteFormViewModel model,
-        Guid? excludedId,
         CancellationToken cancellationToken)
     {
         var round = model.RoundId.HasValue

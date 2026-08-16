@@ -149,7 +149,7 @@ public sealed class AnswersController(QmahDbContext db) : Controller
         CancellationToken cancellationToken)
     {
         Normalize(model);
-        await ValidateReferencesAsync(model, null, cancellationToken);
+        await ValidateReferencesAsync(model, cancellationToken);
 
         if (model.RoundId.HasValue && model.GamePlayerId.HasValue && await db.RoundAnswers.AnyAsync(
                 x => x.RoundId == model.RoundId.Value && x.GamePlayerId == model.GamePlayerId.Value,
@@ -232,7 +232,7 @@ public sealed class AnswersController(QmahDbContext db) : Controller
         }
 
         Normalize(model);
-        await ValidateReferencesAsync(model, id, cancellationToken);
+        await ValidateReferencesAsync(model, cancellationToken);
 
         var entity = await db.RoundAnswers.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null)
@@ -352,7 +352,6 @@ public sealed class AnswersController(QmahDbContext db) : Controller
 
     private async Task ValidateReferencesAsync(
         AnswerFormViewModel model,
-        Guid? excludedId,
         CancellationToken cancellationToken)
     {
         model.AnswerType = (model.AnswerType ?? string.Empty).Trim().ToUpperInvariant();

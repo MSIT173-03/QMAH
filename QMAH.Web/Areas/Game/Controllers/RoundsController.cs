@@ -166,7 +166,7 @@ public sealed class RoundsController(QmahDbContext db) : Controller
         CancellationToken cancellationToken)
     {
         Normalize(model);
-        await ValidateReferencesAsync(model, null, cancellationToken);
+        await ValidateReferencesAsync(model, cancellationToken);
 
         if (model.RoomId.HasValue && await db.GameRounds.AnyAsync(
                 x => x.RoomId == model.RoomId.Value && x.RoundNumber == model.RoundNumber,
@@ -262,7 +262,7 @@ public sealed class RoundsController(QmahDbContext db) : Controller
         }
 
         Normalize(model);
-        await ValidateReferencesAsync(model, id, cancellationToken);
+        await ValidateReferencesAsync(model, cancellationToken);
 
         var entity = await db.GameRounds.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null)
@@ -399,7 +399,6 @@ public sealed class RoundsController(QmahDbContext db) : Controller
 
     private async Task ValidateReferencesAsync(
         RoundFormViewModel model,
-        Guid? excludedId,
         CancellationToken cancellationToken)
     {
         model.Status = (model.Status ?? string.Empty).Trim().ToUpperInvariant();
