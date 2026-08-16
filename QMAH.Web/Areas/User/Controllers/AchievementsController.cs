@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Authorization;
 using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Web.Data;
 using QMAH.Web.Models.Entities;
@@ -8,6 +8,7 @@ using QMAH.Web.Models.Entities;
 namespace QMAH.Web.Areas.User.Controllers;
 
 [Area("User")]
+[Authorize(Roles = "Admin")]
 public class AchievementsController : Controller
 {
     private readonly QmahDbContext _context;
@@ -62,7 +63,8 @@ public class AchievementsController : Controller
             IconPath = achievement.IconPath,
             ConditionType = achievement.ConditionType,
             ThresholdValue = achievement.ThresholdValue,
-            Status = achievement.Status
+            Status = achievement.Status,
+            RowVersion = achievement.RowVersion
         };
 
         return View(model);
@@ -91,6 +93,12 @@ public class AchievementsController : Controller
             return NotFound();
         }
 
+        // 告訴 EF：
+        // 使用者開啟編輯頁面時，資料的版本是 model.RowVersion
+        _context.Entry(achievement)
+            .Property(x => x.RowVersion)
+            .OriginalValue = model.RowVersion;
+
         achievement.Code = model.Code.Trim();
         achievement.Name = model.Name.Trim();
         achievement.Title = model.Title.Trim();
@@ -101,9 +109,38 @@ public class AchievementsController : Controller
         achievement.Status = model.Status;
         achievement.UpdatedAt = DateTime.UtcNow;
 
-        _context.SaveChanges();
+        try
+        {
+            _context.SaveChanges();
 
-        return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            var databaseAchievement = _context.Achievements
+                .AsNoTracking()
+                .SingleOrDefault(x => x.Id == id);
+
+            if (databaseAchievement == null)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "此成就已被其他人刪除。");
+
+                return View(model);
+            }
+
+            // 更新成目前資料庫最新版本，
+            // 讓使用者重新確認後可以再次送出
+            model.RowVersion = databaseAchievement.RowVersion;
+
+            ModelState.Remove(nameof(model.RowVersion));
+            ModelState.AddModelError(
+                "",
+                "此成就已被其他人修改，請重新確認資料後再儲存。");
+
+            return View(model);
+        }
     }
 
     public IActionResult Create()

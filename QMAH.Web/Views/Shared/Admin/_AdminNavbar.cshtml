@@ -39,6 +39,18 @@
                 </button>
                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">回到網站</a>
+                    <div class="dropdown-divider"></div>
+
+                    <form asp-area="User"
+                          asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+
+                        <button type="submit" class="dropdown-item">
+                            登出
+                        </button>
+
+                    </form>
                 </div>
             </div>
         </div>

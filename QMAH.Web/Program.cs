@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using QMAH.Web.Infrastructure.Development;
 using QMAH.Web.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Identity;
@@ -46,6 +47,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    await DevelopmentAdminSeeder.ResetDevelopmentPasswordsAsync(
+        app.Services,
+        builder.Configuration);
+}
 
 if (!app.Environment.IsDevelopment())
 {

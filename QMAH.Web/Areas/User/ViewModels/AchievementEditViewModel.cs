@@ -19,4 +19,6 @@ public class AchievementEditViewModel
     public long ThresholdValue { get; set; }
 
     public string Status { get; set; } = "";
+
+    public byte[] RowVersion { get; set; } = [];
 }

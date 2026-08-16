@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Web.Data;
@@ -9,6 +10,7 @@ using QMAH.Web.Models.Identity;
 namespace QMAH.Web.Areas.User.Controllers;
 
 [Area("User")]
+[Authorize(Roles = "Admin")]
 public class PointTransactionsController : Controller
 {
     private readonly QmahDbContext _context;
