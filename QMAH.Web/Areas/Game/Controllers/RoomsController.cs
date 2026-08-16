@@ -385,8 +385,6 @@ public sealed class RoomsController(
         CancellationToken cancellationToken)
     {
         var entity = await db.GameRooms
-            .Include(x => x.GamePlayers)
-            .Include(x => x.GameRounds)
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null)
@@ -394,7 +392,9 @@ public sealed class RoomsController(
             return RedirectToAction(nameof(Index));
         }
 
-        if (entity.Status != "WAITING" || entity.GamePlayers.Count != 0 || entity.GameRounds.Count != 0)
+        if (entity.Status != "WAITING" ||
+            await db.GamePlayers.AnyAsync(x => x.RoomId == id, cancellationToken) ||
+            await db.GameRounds.AnyAsync(x => x.RoomId == id, cancellationToken))
         {
             TempData["Error"] = "只有沒有玩家與回合的等待中房間可以刪除。";
             return RedirectToAction(nameof(Details), new { id });
