@@ -1,7 +1,7 @@
 @model QMAH.Web.Areas.Store.ViewModels.OrderFullDetail
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "訂單細節";
 }
 
 <div class="my-3">
@@ -15,9 +15,15 @@
     }
 </div>
 
+<style>
+    .infomation-hover > .row:hover {
+        background-color: var(--qmah-surface-soft);
+    }
+</style>
+
 <div class="row">
 
-    <div class="border container col-12 col-md-4 py-3">
+    <div class="infomation-hover border border-2 container col-12 col-md-4 py-3">
         <dl class="row">
             <dt class="col-sm-2">
                 @Html.DisplayNameFor(model => model.UserId)

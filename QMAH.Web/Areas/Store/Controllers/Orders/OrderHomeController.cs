@@ -2,8 +2,6 @@
 
 using QMAH.Web.Areas.Store.ViewModels;
 using QMAH.Web.Data;
-using QMAH.Web.Models.Entities;
-
 
 
 namespace QMAH.Web.Areas.Store.Controllers.Orders;
@@ -12,23 +10,23 @@ namespace QMAH.Web.Areas.Store.Controllers.Orders;
 [Route("store/order")]
 public class OrderHomeController : Controller
 {
-    private readonly QmahDbContext _db;
+    private readonly QmahDbContext db;
 
     public OrderHomeController(QmahDbContext db)
     {
-        _db = db;
+        this.db = db;
     }
 
     [HttpGet]
     [HttpGet("Index")]
     public async Task<IActionResult> Index(int page = 0, int rows = 20)
     {
-        bool isOverShot = this._db.StoreOrders.Count() < page * rows;
-        if (isOverShot) page = 0;
+        bool isOverShot = this.db.StoreOrders.Count() < page * rows;
+        if (isOverShot) return View(new List<OrderSimplefyListItem>());
 
-        var query = from order in this._db.StoreOrders.Skip(page * rows).Take(rows)
-                 join user in this._db.Users on order.UserId equals user.Id
-                 join items in this._db.OrderDetails on order.Id equals items.OrderId into itemsGroup
+        var query = from order in this.db.StoreOrders.Skip(page * rows).Take(rows)
+                    join user in this.db.Users on order.UserId equals user.Id
+                    join items in this.db.OrderDetails on order.Id equals items.OrderId into itemsGroup
                     select new
                  {
                         Order = order,
@@ -45,8 +43,8 @@ public class OrderHomeController : Controller
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> GetOrder(Guid id)
     {
-        var query = from order in this._db.StoreOrders
-                    join user in this._db.Users on order.UserId equals user.Id
+        var query = from order in this.db.StoreOrders
+                    join user in this.db.Users on order.UserId equals user.Id
                     where order.Id == id
                     select new
                     {
@@ -56,8 +54,8 @@ public class OrderHomeController : Controller
         var res = query.FirstOrDefault();
         if (res == null) return RedirectToAction("Index");
 
-        var queryItems = from items in this._db.OrderDetails
-                         join product in this._db.Products on items.ProductId equals product.Id
+        var queryItems = from items in this.db.OrderDetails
+                         join product in this.db.Products on items.ProductId equals product.Id
                          where items.OrderId == res.Order.Id
                          select new OrderItemSimplefyData
         {
@@ -81,7 +79,7 @@ public class OrderHomeController : Controller
     {
         try
         {
-            var order = this._db.StoreOrders.Where(o => o.Id == id).FirstOrDefault();
+            var order = this.db.StoreOrders.Where(o => o.Id == id).FirstOrDefault();
             if (order == null)
             {
                 HttpContext.Response.StatusCode = 404;
@@ -103,8 +101,8 @@ public class OrderHomeController : Controller
             order.CancelledAt = DateTime.Now;
             order.Status = "CANCELLED";
 
-            this._db.StoreOrders.Update(order);
-            this._db.SaveChanges();
+            this.db.StoreOrders.Update(order);
+            this.db.SaveChanges();
 
             return Json(new OrderCancelResult
             {
