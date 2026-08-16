@@ -24,7 +24,7 @@
 </form>
 
 <div class="card">
-    <div class="card-header"><div><h2 class="card-title mb-1">回合清單</h2><div class="card-subtitle">共 @Model.Results.TotalCount 筆，保留完整歷史紀錄；需要時可從詳細頁執行階段操作。</div></div></div>
+    <div class="card-header"><div><h2 class="card-title mb-1">回合清單</h2><div class="card-subtitle">共 @Model.Results.TotalCount 筆，保留完整歷史紀錄；可從詳細頁查看作答與投票資料。</div></div></div>
     @if (Model.Results.Items.Count == 0)
     {
         <div class="empty py-5"><p class="empty-title">找不到符合條件的回合</p><p class="empty-subtitle text-secondary">請調整房間、狀態或關鍵字。</p></div>
