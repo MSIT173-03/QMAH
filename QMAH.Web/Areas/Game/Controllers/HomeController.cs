@@ -11,23 +11,29 @@ public sealed class HomeController(QmahDbContext db) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
+        var questionStats = await db.ArtifactQuestionEntries
+            .AsNoTracking()
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                TotalCount = group.Count(),
+                EnabledCount = group.Count(entry => entry.IsEnabled)
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        var roomCounts = await db.GameRooms
+            .AsNoTracking()
+            .GroupBy(room => room.Status)
+            .Select(group => new { Status = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.Status, item => item.Count, cancellationToken);
+
         var model = new GameDashboardViewModel
         {
-            EnabledQuestionCount = await db.ArtifactQuestionEntries
-                .AsNoTracking()
-                .CountAsync(x => x.IsEnabled, cancellationToken),
-            TotalQuestionCount = await db.ArtifactQuestionEntries
-                .AsNoTracking()
-                .CountAsync(cancellationToken),
-            WaitingRoomCount = await db.GameRooms
-                .AsNoTracking()
-                .CountAsync(x => x.Status == "WAITING", cancellationToken),
-            PlayingRoomCount = await db.GameRooms
-                .AsNoTracking()
-                .CountAsync(x => x.Status == "PLAYING", cancellationToken),
-            CompletedRoomCount = await db.GameRooms
-                .AsNoTracking()
-                .CountAsync(x => x.Status == "COMPLETED", cancellationToken),
+            EnabledQuestionCount = questionStats?.EnabledCount ?? 0,
+            TotalQuestionCount = questionStats?.TotalCount ?? 0,
+            WaitingRoomCount = roomCounts.GetValueOrDefault("WAITING"),
+            PlayingRoomCount = roomCounts.GetValueOrDefault("PLAYING"),
+            CompletedRoomCount = roomCounts.GetValueOrDefault("COMPLETED"),
             OnlinePlayerCount = await db.GamePlayers
                 .AsNoTracking()
                 .CountAsync(x => x.ConnectionStatus == "ONLINE", cancellationToken),
