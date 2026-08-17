@@ -146,7 +146,7 @@ public class KeyController : Controller
         var eraBuckets = _db.EraBuckets.OrderBy(e => e.Name).ToList();
         var category = _db.ArtifactCategories.OrderBy(e => e.Name).ToList();
 
-        ViewBag.ArtifactCategoriesList = new SelectList(category, "Id", "Name", categoryId);
+        ViewBag.ArtifactCategoryList = new SelectList(category, "Id", "Name", categoryId);
         ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", eraBucketId);
     }
 

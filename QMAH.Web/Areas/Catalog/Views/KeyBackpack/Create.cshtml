@@ -1,4 +1,4 @@
-@model QMAH.Web.Models.Entities.KeyDefinition
+﻿@model QMAH.Web.Models.Entities.UserKeyBalance
 
 <style>
 
@@ -72,15 +72,15 @@
 
 
 @{
-    ViewData["Title"] = "新增鑰匙";
+    ViewData["Title"] = "背包編輯";
 }
 
-<h1>鑰匙資訊</h1>
+<h1>玩家背包資訊</h1>
 
 
 <hr />
 
-@* 錯誤訊息 *@
+@* 錯誤訊息。 *@
 @if (ViewBag.ErrorMessage != null)
 {
     <div class="alert alert-danger" style="width:auto">
@@ -94,75 +94,35 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
-                <label asp-for="Name" class="control-label">鑰匙名稱</label>
+                <label asp-for="UserId" class="control-label">玩家</label>
                 <br /><br />
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-
-            <br />
-
-            <div class="form-group">
-                <label asp-for="Code" class="control-label"></label>
-                <br /><br />
-                <input asp-for="Code" class="form-control" />
-                <span asp-validation-for="Code" class="text-danger"></span>
-            </div>
-
-            <br />
-
-            <div class="form-group">
-                <label asp-for="ScopeType" class="control-label"></label>
-                <br /><br />
-                <input asp-for="ScopeType" class="form-control" />
-                <span asp-validation-for="ScopeType" class="text-danger"></span>
-            </div>
-
-            <br />
-
-            <div class="form-group">
-                <label asp-for="CategoryId" class="control-label">類別</label>
-                <br /><br />
-                <select name="categoryId" id="cat" asp-items="ViewBag.ArtifactCategoryList"
+                <select name="userId" id="user" asp-items="ViewBag.UserProfileList"
                         class="form-control bar_edit">
                     <option value="" class="midddle_text">-- 請選擇 --</option>
                 </select>
             </div>
 
-            <br />
-
             <div class="form-group">
-                <label asp-for="EraBucketId" class="control-label">年代</label>
+                <label asp-for="KeyDefinitionId" class="control-label">鑰匙種類</label>
                 <br /><br />
-                <select name="eraBucketId" id="cat" asp-items="ViewBag.EraBucketList"
+                <select name="keydefinitionId" id="keyd" asp-items="ViewBag.KeyDefinitionList"
                         class="form-control bar_edit">
                     <option value="" class="midddle_text">-- 請選擇 --</option>
                 </select>
             </div>
 
+
             <br />
 
-            <div class="form-row">
-
-                <div>
-
-                    <label asp-for="IsActive" class="control-label">啟用狀態</label>
-
-                    <br/><br/>
-
-                    <div class="switch-container">
-
-                        <input asp-for="IsActive" class="form-check-input" style="width:40px" type="checkbox" />
-
-                        <span style="font-size:10px;">啟用此圖鑑條目</span>
-
-                    </div>
-
-                    <span asp-validation-for="IsActive" class="text-danger"></span>
-
-                </div>
-
+            <div class="form-group">
+                <label asp-for="Balance" class="control-label">數量(結餘)</label>
+                <br /><br />
+                <input asp-for="Balance" class="form-control" />
+                <span asp-validation-for="Balance" class="text-danger"></span>
             </div>
+
+            <br />
+
 
             <br />
 

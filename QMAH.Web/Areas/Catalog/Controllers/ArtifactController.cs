@@ -46,7 +46,7 @@ public class ArtifactController : Controller
            .OrderBy(e => e.Name)
            .ToListAsync();
 
-        ViewBag.ArtifactCategoriesList = new SelectList(category, "Id", "Name", categoryId);
+        ViewBag.ArtifactCategoryList = new SelectList(category, "Id", "Name", categoryId);
         ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", eraBucketId);
 
         if (string.IsNullOrEmpty(vm.txtKeyword) && eraBucketId == null && categoryId == null)
@@ -60,26 +60,26 @@ public class ArtifactController : Controller
             {
                 datas_art = artifacts.Where(t => t.EraBucketId == eraBucketId
                 && t.CategoryId == categoryId
-                && t.Name.Contains(vm.txtKeyword)
+                && (t.Name.Contains(vm.txtKeyword)
                 || t.EraTextOriginal.Contains(vm.txtKeyword)
-                || t.ArtifactRef.Contains(vm.txtKeyword));
+                || t.ArtifactRef.Contains(vm.txtKeyword)));
             }
             else
             {
                 if (!string.IsNullOrEmpty(vm.txtKeyword) && eraBucketId != null)
                 {
                     datas_art = artifacts.Where(t => t.EraBucketId == eraBucketId
-                    && t.Name.Contains(vm.txtKeyword)
+                    && (t.Name.Contains(vm.txtKeyword)
                     || t.EraTextOriginal.Contains(vm.txtKeyword)
-                    || t.ArtifactRef.Contains(vm.txtKeyword));
+                    || t.ArtifactRef.Contains(vm.txtKeyword)));
                 }
 
                 else if (!string.IsNullOrEmpty(vm.txtKeyword) && categoryId != null)
                 {
                     datas_art = artifacts.Where(t => t.CategoryId == categoryId
-                    && t.Name.Contains(vm.txtKeyword)
+                    && (t.Name.Contains(vm.txtKeyword)
                     || t.EraTextOriginal.Contains(vm.txtKeyword)
-                    || t.ArtifactRef.Contains(vm.txtKeyword));
+                    || t.ArtifactRef.Contains(vm.txtKeyword)));
                 }
                 else if (categoryId != null && eraBucketId != null)
                 {
@@ -145,7 +145,7 @@ public class ArtifactController : Controller
                     .ToList();
 
             Artifact a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
-            ViewBag.ArtifactCategoriesList = new SelectList(category, "Id", "Name", a.CategoryId);
+            ViewBag.ArtifactCategoryList = new SelectList(category, "Id", "Name", a.CategoryId);
             ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", a.EraBucketId);
             return View(a);
         }
