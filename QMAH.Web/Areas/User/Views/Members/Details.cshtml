@@ -6,13 +6,9 @@
 
 <h1>會員詳細資料</h1>
 
-<h3>帳號資料</h3>
-
-<p>Email：@Model.User.Email</p>
-<p>帳號狀態：@Model.User.Status</p>
-<p>目前點數：@Model.PointBalance</p>
-<p>註冊時間：@Model.User.CreatedAt</p>
-
+<!-- =========================
+     系統訊息
+========================= -->
 @if (TempData["StatusError"] != null)
 {
     <div class="alert alert-danger">
@@ -20,15 +16,127 @@
     </div>
 }
 
+@if (TempData["AddressError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["AddressError"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+
+<!-- =========================
+     帳號資料
+========================= -->
+
+<h3>帳號資料</h3>
+
+<p>
+    Email：@Model.User.Email
+</p>
+
+<p>
+    Email 驗證：
+
+    @if (Model.User.EmailConfirmed)
+    {
+        <span class="badge bg-success">
+            已驗證
+        </span>
+    }
+    else
+    {
+        <span class="badge bg-warning text-dark">
+            未驗證
+        </span>
+    }
+</p>
+
+<p>
+    角色：
+
+    @if (Model.Roles.Count == 0)
+    {
+        <span>-</span>
+    }
+    else
+    {
+        @string.Join(", ", Model.Roles)
+    }
+</p>
+
+<p>
+    帳號狀態：
+
+    @if (Model.User.Status == "ACTIVE")
+    {
+        <span class="badge bg-success">
+            ACTIVE
+        </span>
+    }
+    else if (Model.User.Status == "BANNED")
+    {
+        <span class="badge bg-danger">
+            BANNED
+        </span>
+    }
+    else if (Model.User.Status == "DISABLED")
+    {
+        <span class="badge bg-secondary">
+            DISABLED
+        </span>
+    }
+    else
+    {
+        <span class="badge bg-secondary">
+            @Model.User.Status
+        </span>
+    }
+</p>
+
+<p>
+    目前點數：@Model.CurrentBalance
+</p>
+
+<p>
+    註冊時間：@Model.User.CreatedAt
+</p>
+
+<p>
+    最後更新：@Model.User.UpdatedAt
+</p>
+
+
 <a asp-action="EditRoles"
    asp-route-id="@Model.User.Id"
    class="btn btn-warning mb-3">
     角色設定
 </a>
 
+<a asp-action="Edit"
+   asp-route-id="@Model.User.Id"
+   class="btn btn-primary mb-3">
+    編輯個人資料
+</a>
+
 <form asp-action="ChangeStatus"
       method="post"
       class="d-inline">
+
+    @Html.AntiForgeryToken()
 
     <input type="hidden"
            name="id"
@@ -60,32 +168,83 @@
     }
 </form>
 
+
 <hr />
+
+
+<!-- =========================
+     個人資料
+========================= -->
 
 <h3>個人資料</h3>
 
 @if (Model.Profile != null)
 {
-    <p>暱稱：@Model.Profile.Nickname</p>
-    <p>自我介紹：@Model.Profile.Bio</p>
-    <p>公開範圍：@Model.Profile.Visibility</p>
-    <p>頭像路徑：@Model.Profile.AvatarPath</p>
+    <p>
+        暱稱：@Model.Profile.Nickname
+    </p>
+
+    <p>
+        自我介紹：@Model.Profile.Bio
+    </p>
+
+    <p>
+        公開範圍：
+
+        @if (Model.Profile.Visibility == "PUBLIC")
+        {
+            <span class="badge bg-success">
+                公開
+            </span>
+        }
+        else if (Model.Profile.Visibility == "FRIENDS")
+        {
+            <span class="badge bg-warning text-dark">
+                好友
+            </span>
+        }
+        else if (Model.Profile.Visibility == "PRIVATE")
+        {
+            <span class="badge bg-secondary">
+                私人
+            </span>
+        }
+        else
+        {
+            <span>
+                @Model.Profile.Visibility
+            </span>
+        }
+    </p>
+
+    <p>
+        頭像路徑：@Model.Profile.AvatarPath
+    </p>
+
+    <p>
+        Profile 建立時間：@Model.Profile.CreatedAt
+    </p>
+
+    <p>
+        Profile 最後更新：@Model.Profile.UpdatedAt
+    </p>
 }
 else
 {
-    <p>此會員尚未建立個人資料。</p>
+    <p>
+        此會員尚未建立個人資料。
+    </p>
 }
+
 
 <hr />
 
-<h3>收件地址</h3>
 
-@if (TempData["AddressError"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["AddressError"]
-    </div>
-}
+<!-- =========================
+     收件地址
+========================= -->
+
+<h3>收件地址</h3>
 
 <a asp-action="CreateAddress"
    asp-route-userId="@Model.User.Id"
@@ -95,80 +254,114 @@ else
 
 @if (Model.Addresses.Count == 0)
 {
-    <p>目前沒有地址資料。</p>
+    <p>
+        目前沒有地址資料。
+    </p>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>標籤</th>
-                <th>收件人</th>
-                <th>電話</th>
-                <th>地址</th>
-                <th>預設</th>
-                <th>操作</th>
-            </tr>
-        </thead>
+    <div class="table-responsive">
 
-        <tbody>
-            @foreach (var address in Model.Addresses)
-            {
+        <table class="table">
+
+            <thead>
                 <tr>
-                    <td>@address.AddressLabel</td>
-                    <td>@address.RecipientName</td>
-                    <td>@address.RecipientPhone</td>
-
-                    <td>
-                        @address.PostalCode
-                        @address.City
-                        @address.District
-                        @address.AddressLine
-                    </td>
-
-                    <td>
-                        @if (address.IsDefault)
-                        {
-                            <span class="badge bg-success">預設</span>
-                        }
-                    </td>
-
-                    <td>
-                        <a asp-action="EditAddress"
-                           asp-route-id="@address.Id"
-                           class="btn btn-sm btn-primary">
-                            編輯
-                        </a>
-
-                        <form asp-action="DeleteAddress"
-                              method="post"
-                              class="d-inline">
-
-                            <input type="hidden"
-                                   name="id"
-                                   value="@address.Id" />
-
-                            <input type="hidden"
-                                   name="userId"
-                                   value="@Model.User.Id" />
-
-                            <button type="submit"
-                                    class="btn btn-sm btn-danger"
-                                    onclick="return confirm('確定要刪除這筆地址嗎？');">
-                                刪除
-                            </button>
-                        </form>
-                    </td>
+                    <th>標籤</th>
+                    <th>收件人</th>
+                    <th>電話</th>
+                    <th>地址</th>
+                    <th>預設</th>
+                    <th>操作</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+
+            <tbody>
+
+                @foreach (var address in Model.Addresses)
+                {
+                    <tr>
+
+                        <td>
+                            @address.AddressLabel
+                        </td>
+
+                        <td>
+                            @address.RecipientName
+                        </td>
+
+                        <td>
+                            @address.RecipientPhone
+                        </td>
+
+                        <td>
+                            @address.PostalCode
+                            @address.City
+                            @address.District
+                            @address.AddressLine
+                        </td>
+
+                        <td>
+                            @if (address.IsDefault)
+                            {
+                                <span class="badge bg-success">
+                                    預設
+                                </span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+
+                        <td>
+
+                            <a asp-action="EditAddress"
+                               asp-route-id="@address.Id"
+                               class="btn btn-sm btn-primary">
+                                編輯
+                            </a>
+
+                            <form asp-action="DeleteAddress"
+                                  method="post"
+                                  class="d-inline">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@address.Id" />
+
+                                <input type="hidden"
+                                       name="userId"
+                                       value="@Model.User.Id" />
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('確定要刪除這筆地址嗎？');">
+                                    刪除
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
 }
 
+
 <hr />
 
 
-<hr />
+<!-- =========================
+     已取得成就
+========================= -->
 
 <h3>已取得成就</h3>
 
@@ -180,91 +373,122 @@ else
 
 @if (Model.Achievements.Count == 0)
 {
-    <p>目前尚未取得任何成就。</p>
+    <p>
+        目前尚未取得任何成就。
+    </p>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>成就名稱</th>
-                <th>標題</th>
-                <th>取得時間</th>
-                <th>展示狀態</th>
-                <th>展示時間</th>
-                <th>操作</th>
-            </tr>
-        </thead>
+    <div class="table-responsive">
 
-        <tbody>
-            @foreach (var item in Model.Achievements)
-            {
+        <table class="table">
+
+            <thead>
                 <tr>
-                    <td>@item.Achievement.Name</td>
-
-                    <td>@item.Achievement.Title</td>
-
-                    <td>@item.AchievedAt</td>
-
-                    <td>
-                        @if (item.IsDisplayed)
-                        {
-                            <span class="badge bg-success">
-                                展示中
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">
-                                未展示
-                            </span>
-                        }
-                    </td>
-
-                    <td>
-                        @if (item.DisplayedAt.HasValue)
-                        {
-                            @item.DisplayedAt.Value
-                        }
-                        else
-                        {
-                            <span>-</span>
-                        }
-                    </td>
-
-                    <td>
-                        <form asp-action="RemoveAchievement"
-                              method="post"
-                              class="d-inline">
-
-                            @Html.AntiForgeryToken()
-
-                            <input type="hidden"
-                                   name="id"
-                                   value="@item.Id" />
-
-                            <input type="hidden"
-                                   name="userId"
-                                   value="@Model.User.Id" />
-
-                            <input type="hidden"
-                                   name="rowVersion"
-                                   value="@Convert.ToBase64String(item.RowVersion)" />
-
-                            <button type="submit"
-                                    class="btn btn-sm btn-danger"
-                                    onclick="return confirm('確定要移除此會員的這個成就嗎？');">
-                                移除
-                            </button>
-                        </form>
-                    </td>
+                    <th>成就名稱</th>
+                    <th>標題</th>
+                    <th>取得時間</th>
+                    <th>展示狀態</th>
+                    <th>展示時間</th>
+                    <th>操作</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+
+            <tbody>
+
+                @foreach (var item in Model.Achievements)
+                {
+                    <tr>
+
+                        <td>
+                            @item.Achievement.Name
+                        </td>
+
+                        <td>
+                            @item.Achievement.Title
+                        </td>
+
+                        <td>
+                            @item.AchievedAt
+                        </td>
+
+                        <td>
+
+                            @if (item.IsDisplayed)
+                            {
+                                <span class="badge bg-success">
+                                    展示中
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    未展示
+                                </span>
+                            }
+
+                        </td>
+
+                        <td>
+
+                            @if (item.DisplayedAt.HasValue)
+                            {
+                                @item.DisplayedAt.Value
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+
+                        </td>
+
+                        <td>
+
+                            <form asp-action="RemoveAchievement"
+                                  method="post"
+                                  class="d-inline">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@item.Id" />
+
+                                <input type="hidden"
+                                       name="userId"
+                                       value="@Model.User.Id" />
+
+                                <input type="hidden"
+                                       name="rowVersion"
+                                       value="@Convert.ToBase64String(item.RowVersion)" />
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('確定要移除此會員的這個成就嗎？');">
+                                    移除
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
 }
 
+
 <hr />
+
+
+<!-- =========================
+     點數異動紀錄
+========================= -->
 
 <h3>點數異動紀錄</h3>
 
@@ -276,48 +500,70 @@ else
 
 @if (Model.PointTransactions.Count == 0)
 {
-    <p>目前沒有點數異動紀錄。</p>
+    <p>
+        目前沒有點數異動紀錄。
+    </p>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>時間</th>
-                <th>異動</th>
-                <th>原因</th>
-                <th>類型</th>
-            </tr>
-        </thead>
+    <div class="table-responsive">
 
-        <tbody>
-            @foreach (var item in Model.PointTransactions)
-            {
+        <table class="table">
+
+            <thead>
                 <tr>
-                    <td>@item.CreatedAt</td>
-
-                    <td>
-                        @if (item.Amount > 0)
-                        {
-                            <span class="text-success">
-                                +@item.Amount
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="text-danger">
-                                @item.Amount
-                            </span>
-                        }
-                    </td>
-
-                    <td>@item.Reason</td>
-                    <td>@item.ReferenceType</td>
+                    <th>時間</th>
+                    <th>異動</th>
+                    <th>原因</th>
+                    <th>類型</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+
+            <tbody>
+
+                @foreach (var item in Model.PointTransactions)
+                {
+                    <tr>
+
+                        <td>
+                            @item.CreatedAt
+                        </td>
+
+                        <td>
+
+                            @if (item.Amount > 0)
+                            {
+                                <span class="text-success">
+                                    +@item.Amount
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">
+                                    @item.Amount
+                                </span>
+                            }
+
+                        </td>
+
+                        <td>
+                            @item.Reason
+                        </td>
+
+                        <td>
+                            @item.ReferenceType
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
 }
+
 
 <a asp-action="Index"
    class="btn btn-secondary">

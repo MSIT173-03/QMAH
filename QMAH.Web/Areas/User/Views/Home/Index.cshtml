@@ -1,6 +1,482 @@
+@model QMAH.Web.Areas.User.ViewModels.HomeDashboardViewModel
+
 @{
-    ViewData["Title"] = "會員";
+    ViewData["Title"] = "會員管理";
 }
 
-<h1>會員</h1>
-<p>會員系統空白開發區</p>
+<!-- =========================
+     標題
+========================= -->
+<div class="mb-4">
+    <h1>會員管理</h1>
+
+    <p class="text-muted mb-0">
+        會員帳號、角色、個人檔案與近期活動
+    </p>
+</div>
+
+
+<!-- =========================
+     會員統計
+========================= -->
+<div class="row g-3 mb-4">
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">
+                    會員帳號
+                </div>
+
+                <h2 class="mb-0">
+                    @Model.TotalMembers
+                </h2>
+
+                <small class="text-muted">
+                    全部帳號
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">
+                    本月新增
+                </div>
+
+                <h2 class="mb-0">
+                    @Model.NewMembers
+                </h2>
+
+                <small class="text-muted">
+                    近 30 天
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">
+                    停權帳號
+                </div>
+
+                <h2 class="mb-0">
+                    @Model.BannedMembers
+                </h2>
+
+                <small class="text-muted">
+                    目前停權
+                </small>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- =========================
+     會員管理清單
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>會員管理清單</strong>
+
+            <div class="small text-muted">
+                最近建立的會員
+            </div>
+        </div>
+
+        <a asp-area="User"
+           asp-controller="Members"
+           asp-action="Index"
+           class="btn btn-sm btn-primary">
+            查看全部
+        </a>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table mb-0">
+
+                <thead>
+                    <tr>
+                        <th>會員</th>
+                        <th>Email</th>
+                        <th>帳號狀態</th>
+                        <th>建立時間</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var member in Model.RecentMembers)
+                    {
+                        <tr>
+
+                            <td>
+                                @(member.UserName ?? "-")
+                            </td>
+
+                            <td>
+                                @(member.Email ?? "-")
+                            </td>
+
+                            <td>
+                                @if (member.Status == "ACTIVE")
+                                {
+                                    <span class="badge bg-success">
+                                        ACTIVE
+                                    </span>
+                                }
+                                else if (member.Status == "BANNED")
+                                {
+                                    <span class="badge bg-danger">
+                                        BANNED
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @member.Status
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @member.CreatedAt
+                            </td>
+
+                            <td>
+                                <a asp-area="User"
+                                   asp-controller="Members"
+                                   asp-action="Details"
+                                   asp-route-id="@member.Id"
+                                   class="btn btn-sm btn-primary">
+                                    詳細
+                                </a>
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     個人檔案與近期活動
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header">
+
+        <strong>個人檔案與近期活動</strong>
+
+        <div class="small text-muted">
+            最近更新的會員個人檔案
+        </div>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        @if (Model.ProfileActivities.Count == 0)
+        {
+            <div class="p-3 text-muted">
+                目前沒有個人檔案資料。
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+
+                <table class="table mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>會員</th>
+                            <th>暱稱</th>
+                            <th>檔案可見性</th>
+                            <th>貼文 / 留言</th>
+                            <th>最近活動</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in Model.ProfileActivities)
+                        {
+                            <tr>
+
+                                <td>
+                                    @item.Email
+                                </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(item.Nickname)
+                                        ? "-"
+                                        : item.Nickname)
+                                </td>
+
+                                <td>
+
+                                    @if (item.Visibility == "PUBLIC")
+                                    {
+                                        <span class="badge bg-success">
+                                            公開
+                                        </span>
+                                    }
+                                    else if (item.Visibility == "FRIENDS")
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            好友
+                                        </span>
+                                    }
+                                    else if (item.Visibility == "PRIVATE")
+                                    {
+                                        <span class="badge bg-secondary">
+                                            私人
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            @item.Visibility
+                                        </span>
+                                    }
+
+                                </td>
+
+                                <td>
+                                    @item.PostCount / @item.CommentCount
+                                </td>
+
+                                <td>
+                                    @item.RecentActivity
+                                </td>
+
+                                <td>
+
+                                    <a asp-area="User"
+                                       asp-controller="Members"
+                                       asp-action="Details"
+                                       asp-route-id="@item.UserId"
+                                       class="btn btn-sm btn-primary">
+                                        詳細
+                                    </a>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     最近點數異動
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>最近點數異動</strong>
+
+            <div class="small text-muted">
+                最近 5 筆點數流水
+            </div>
+        </div>
+
+        <a asp-area="User"
+           asp-controller="PointTransactions"
+           asp-action="Index"
+           class="btn btn-sm btn-warning">
+            查看全部
+        </a>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table mb-0">
+
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>異動</th>
+                        <th>原因</th>
+                        <th>類型</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Model.RecentPointTransactions)
+                    {
+                        <tr>
+
+                            <td>
+                                @item.CreatedAt
+                            </td>
+
+                            <td>
+
+                                @if (item.Amount > 0)
+                                {
+                                    <span class="text-success">
+                                        +@item.Amount
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">
+                                        @item.Amount
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+                                @item.Reason
+                            </td>
+
+                            <td>
+                                @item.ReferenceType
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     成就管理
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>成就管理</strong>
+
+            <div class="small text-muted">
+                成就設定與狀態
+            </div>
+        </div>
+
+        <a asp-area="User"
+           asp-controller="Achievements"
+           asp-action="Index"
+           class="btn btn-sm btn-secondary">
+            查看全部
+        </a>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table mb-0">
+
+                <thead>
+                    <tr>
+                        <th>成就名稱</th>
+                        <th>代碼</th>
+                        <th>條件類型</th>
+                        <th>門檻</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var achievement in Model.Achievements)
+                    {
+                        <tr>
+
+                            <td>
+                                @achievement.Name
+                            </td>
+
+                            <td>
+                                @achievement.Code
+                            </td>
+
+                            <td>
+                                @achievement.ConditionType
+                            </td>
+
+                            <td>
+                                @achievement.ThresholdValue
+                            </td>
+
+                            <td>
+
+                                @if (achievement.Status == "ACTIVE")
+                                {
+                                    <span class="badge bg-success">
+                                        啟用
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        停用
+                                    </span>
+                                }
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

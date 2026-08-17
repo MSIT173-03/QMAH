@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization; //登入權限
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization; //登入權限
+
 using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Web.Data;
 using QMAH.Web.Models.Entities;
@@ -144,53 +145,59 @@ public class MembersController : Controller
         return View(members);
     }
 
-    public IActionResult Details(Guid id)
+    public async Task<IActionResult> Details(Guid id)
     {
-        var user = _userManager.Users
-            .SingleOrDefault(x => x.Id == id);
+        var user = await _userManager.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == id);
 
         if (user == null)
         {
             return NotFound();
         }
 
-        var profile = _context.UserProfiles
-            .SingleOrDefault(x => x.UserId == id);
+        var roles = await _userManager.GetRolesAsync(user);
 
-        var addresses = _context.UserAddresses
+        var profile = await _context.UserProfiles
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.UserId == id);
+
+        var addresses = await _context.UserAddresses
+            .AsNoTracking()
             .Where(x => x.UserId == id)
             .OrderByDescending(x => x.IsDefault)
-            .ToList();
+            .ToListAsync();
 
-        var pointBalance = _context.PointBalances
+        var pointBalance = await _context.PointBalances
             .AsNoTracking()
-            .SingleOrDefault(x => x.UserId == id);
+            .SingleOrDefaultAsync(x => x.UserId == id);
 
-        var pointTransactions = _context.PointTransactions
+        var pointTransactions = await _context.PointTransactions
             .AsNoTracking()
             .Where(x => x.UserId == id)
             .OrderByDescending(x => x.CreatedAt)
             .Take(10)
-            .ToList();
+            .ToListAsync();
 
-        var achievements = _context.UserAchievements
+        var achievements = await _context.UserAchievements
             .AsNoTracking()
             .Include(x => x.Achievement)
             .Where(x => x.UserId == id)
             .OrderByDescending(x => x.AchievedAt)
-            .ToList();
+            .ToListAsync();
 
-        var viewModel = new MemberDetailsViewModel
+        var model = new MemberDetailsViewModel
         {
             User = user,
             Profile = profile,
             Addresses = addresses,
-            PointBalance = pointBalance?.Balance ?? 0,
+            Achievements = achievements,
             PointTransactions = pointTransactions,
-            Achievements = achievements
+            CurrentBalance = pointBalance?.Balance ?? 0,
+            Roles = roles.ToList()
         };
 
-        return View(viewModel);
+        return View(model);
     }
 
     [HttpPost]
@@ -567,6 +574,12 @@ public class MembersController : Controller
                     currentDefault.IsDefault = false;
                     currentDefault.UpdatedAt = DateTime.UtcNow;
                 }
+
+                // 先讓舊預設地址真的變成 false
+                if (currentDefaultAddresses.Count > 0)
+                {
+                    await _context.SaveChangesAsync();
+                }
             }
 
             address.AddressLabel = model.AddressLabel.Trim();
@@ -579,7 +592,9 @@ public class MembersController : Controller
             address.IsDefault = model.IsDefault;
             address.UpdatedAt = DateTime.UtcNow;
 
+            // 再儲存新的預設地址
             await _context.SaveChangesAsync();
+
             await transaction.CommitAsync();
 
             return RedirectToAction(
