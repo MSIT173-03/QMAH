@@ -5,7 +5,7 @@
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
 }
 
-<div class="page-header d-print-none text-white">
+<div class="page-header d-print-none">
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
@@ -36,7 +36,7 @@
                                 <td>@item.Title</td>
                                 <td>@item.Description</td>
                                 <td>
-                                    <span class="badge @(item.Status == "APPROVED" ? "bg-success" : item.Status == "REJECTED" ? "bg-danger" : "bg-warning")">
+                                    <span class="badge @(item.Status == "APPROVED" ? "bg-success-lt" : item.Status == "REJECTED" ? "bg-danger-lt" : "bg-warning-lt")">
                                         @item.Status
                                     </span>
                                 </td>

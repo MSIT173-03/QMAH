@@ -50,7 +50,7 @@
                         {
                             <tr>
                                 <td>
-                                    <span class="badge bg-secondary">@item.TargetType</span>
+                                    <span class="badge bg-secondary-lt">@item.TargetType</span>
                                 </td>
                                 <td>
                                     <!-- 點擊觸發 Modal 彈窗預覽完整內容與檢舉細節 -->
@@ -67,10 +67,10 @@
                                     </button>
                                 </td>
                                 <td>
-                                    <span class="badge bg-danger">@item.Reason</span>
+                                    <span class="badge bg-danger-lt">@item.Reason</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-warning text-dark">@item.Status</span>
+                                    <span class="badge bg-warning-lt">@item.Status</span>
                                 </td>
                                 <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                                 <td>
@@ -102,7 +102,7 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label text-muted">標題 / 主題</label>
-                    <div id="modalTargetTitle" class="fw-bold fs-3 text-white"></div>
+                    <div id="modalTargetTitle" class="fw-bold fs-3"></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-6">
@@ -116,11 +116,11 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted">檢舉人填寫的詳細說明</label>
-                    <div id="modalDetail" class="p-3 bg-dark text-warning rounded border border-secondary" style="min-height: 50px;"></div>
+                    <div id="modalDetail" class="qmah-theme-panel p-3 rounded border text-warning" style="min-height: 50px;"></div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted">貼文 / 留言完整內文</label>
-                    <div id="modalContentArea" class="p-3 bg-dark text-light rounded border border-secondary" style="min-height: 120px; white-space: pre-wrap;"></div>
+                    <div id="modalContentArea" class="qmah-theme-panel qmah-content-panel p-3 rounded border"></div>
                 </div>
             </div>
             <div class="modal-footer">

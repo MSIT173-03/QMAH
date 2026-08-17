@@ -5,7 +5,7 @@
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
 }
 
-<div class="page-header d-print-none text-white">
+<div class="page-header d-print-none">
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
@@ -49,7 +49,7 @@
                         @foreach (var item in Model)
                         {
                             <tr>
-                                <td><span class="badge bg-secondary">@item.BoardCode</span></td>
+                                <td><span class="badge bg-secondary-lt">@item.BoardCode</span></td>
                                 <td>@item.Title</td>
                                 <td>@item.Status</td>
                                 <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
