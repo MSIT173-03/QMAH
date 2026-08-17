@@ -8,11 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Social.Services;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.Social.Controllers
 {
     [Area("Social")]
+    [AdminNavigation("活動", 20)]
     public class EventsController : Controller
     {
         private readonly QmahDbContext _context;

@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Social.Models;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 
 namespace QMAH.Web.Areas.Social.Controllers
 {
     [Area("Social")]
+    [AdminNavigation("貼文審核", 30)]
     //[Authorize(Policy = "Policy.Social.ManageReports")]
     public class SocialPostAdminController : Controller
     {
@@ -40,6 +42,8 @@ namespace QMAH.Web.Areas.Social.Controllers
 
             return View("~/Areas/Social/Views/SocialAdmin/SocialPostAdmin.cshtml", list);
         }
+
+        public Task<IActionResult> Index(string? status) => Posts(status);
 
         // POST: /Social/SocialPostAdmin/TogglePostStatus
         [HttpPost]

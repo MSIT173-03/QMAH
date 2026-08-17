@@ -6,10 +6,12 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Social.Models;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 
 namespace QMAH.Web.Areas.Social.Controllers
 {
     [Area("Social")]
+    [AdminNavigation("活動審核", 50)]
     //[Authorize(Policy = "Policy.Social.ManageEvents")]
     public class SocialEventAdminController : Controller
     {
@@ -38,6 +40,8 @@ namespace QMAH.Web.Areas.Social.Controllers
 
             return View("~/Areas/Social/Views/SocialAdmin/SocialEventAdmin.cshtml", list);
         }
+
+        public Task<IActionResult> Index() => Events();
 
         // POST: /Social/SocialEventAdmin/ReviewEvent
         [HttpPost]

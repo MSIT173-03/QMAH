@@ -8,11 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Social.Models;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 
 namespace QMAH.Web.Areas.Social.Controllers;
 
 [Area("Social")]
 [AllowAnonymous]
+[AdminNavigation("檢舉審核", 40)]
 public class SocialReportAdminController : Controller
 {
     private readonly QmahDbContext _context;
@@ -48,6 +50,9 @@ public class SocialReportAdminController : Controller
 
         return View("~/Areas/Social/Views/SocialAdmin/SocialReportAdmin.cshtml", reports);
     }
+
+    public Task<IActionResult> Index() => Reports();
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ReviewReport(Guid reportId, bool isApprove)

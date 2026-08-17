@@ -8,12 +8,14 @@ using Microsoft.EntityFrameworkCore;
 using QMAH.Web.Areas.Social.Models;
 using QMAH.Web.Areas.Social.Services;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models;
 using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.Social.Controllers
 {
     [Area("Social")]
+    [AdminNavigation("貼文", 10)]
     public class PostsController : Controller
     {
         private readonly QmahDbContext _context;
