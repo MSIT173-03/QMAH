@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,7 @@ builder.Services
     .AddEntityFrameworkStores<QmahDbContext>()
     .AddDefaultTokenProviders();
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<AdminNavigationService>();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     // Identity 會把登入狀態放在受 Data Protection 保護的 HttpOnly Cookie。

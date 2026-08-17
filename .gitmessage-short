@@ -1,2 +1,22 @@
-# <類型>(<系統>): <中文說明>
-# 例如：feat(game): 新增房間建立頁面
+# <type>(<scope>): <subject>
+# 中文、英文或中英混用皆可，請選最容易讓團隊理解的寫法
+# subject 必填：盡量 50 字元內、結尾不加句號、一次只描述一個主題
+# type：feat 新功能、fix 修正、docs 文件、style 格式、refactor 重構
+#       perf 效能、test 測試、chore 維護、revert 撤銷
+#
+# Examples / 範例：
+# feat(game): 新增房間管理 CRUD
+# feat(game): add room management CRUD views
+# fix(admin): 修正 sidebar 收合後 navbar 空隙
+# fix(admin): remove the gap after collapsing the sidebar
+# docs(git): 補充同步 main 的操作說明
+# docs(git): expand the guide for syncing main
+# style(catalog): 統一篩選器與表格排版
+# refactor(store): extract product form fields into a view model
+# perf(game): 減少房間列表的重複查詢
+# test(user): add validation tests for the member form
+# chore(admin): 更新共用 Tabler 後台資源
+# revert: fix(admin): 移除實驗性的版型動畫
+#
+# 破壞性變更可在 type 後加 !，例如：
+# feat(api)!: 調整玩家查詢 API 回應格式

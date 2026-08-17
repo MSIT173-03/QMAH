@@ -2,6 +2,33 @@
 
 本文件說明 QMAH 後台共用介面的使用方式，適用於 Catalog、Game、Social、Store 與 User 系統的功能負責人。
 
+## 最新套版方法：給組員的快速說明
+
+1. 先同步最新版 `main`。五個 Area 都已經有 `Areas/<Area>/Views/_ViewStart.cshtml`，不必再自己建立，也不必在每一頁重寫 `Layout`。
+2. Controller 對應的完整 View 只放自己的 CRUD 內容，例如標題資料、搜尋表單、Card、Table 與按鈕；不要再加入 `page`、`page-wrapper`、Sidebar、Navbar 或整份 HTML 外框。
+3. 頁面標題使用 `ViewData["Title"]`，說明使用 `ViewData["AdminDescription"]`，右上角按鈕放在 `@section PageActions`。
+4. Scaffold 後若看到 `Layout = null`，請移除。Partial View 本身不會產生 Layout，應由一般 View 引用。
+5. View 自己的 CSS 請加上功能專用 class 作為範圍，例如 `.social-post-list`，不要直接改 `.page`、`.navbar`、`.page-wrapper`、`header` 或 `body`，否則可能蓋掉共用外框。
+
+最小完整 View 範例：
+
+```cshtml
+@{
+    ViewData["Title"] = "社群討論區";
+    ViewData["AdminDescription"] = "管理社群貼文與討論內容";
+}
+
+@section PageActions {
+    <a class="btn btn-primary" asp-action="Create">發表新貼文</a>
+}
+
+<div class="social-post-list">
+    <!-- 此處只放自己的 CRUD UI -->
+</div>
+```
+
+成功套用後，畫面應同時看得到 Sidebar、頂部工具列、共用頁首與自己的 CRUD 內容。只出現其中一部分不算完整成功。
+
 ## 懶人包：新建後台 View 要做什麼
 
 1. Catalog、Game、Social、Store、User 已各自建立 `Views/_ViewStart.cshtml`，並指定 `/Views/Shared/Admin/_AdminLayout.cshtml`。
@@ -34,6 +61,25 @@
 - 成功、提醒與錯誤訊息
 - 統一內容寬度與頁尾
 - Tabler CSS 與 JavaScript
+
+明暗模式按鈕會以按鈕位置為中心播放圓形光圈轉場。使用者若在系統開啟「減少動態效果」，或瀏覽器不支援 View Transition API，會自動改用無動畫切換，不影響功能。
+
+Sidebar 的五個主要按鈕會切換 Catalog、Game、Social、Store 與 User。CRUD Controller 可自行選擇是否加入目前 Area 的次級選單；加入後，共用 Sidebar 會自動建立連結並標示目前 Controller。
+
+CRUD Controller 可使用 `AdminNavigation` 指定次級選單的中文名稱與順序：
+
+```csharp
+using QMAH.Web.Infrastructure.AdminNavigation;
+
+[Area("Catalog")]
+[AdminNavigation("文物分類", order: 10)]
+public class ArtifactCategoryController : Controller
+{
+    public IActionResult Index() => View();
+}
+```
+
+只有加上 `AdminNavigation` 且具有 `Index` Action 的 Controller 才會出現在次級選單。未加 Attribute 不會影響 Controller、路由、Scaffold 或 View，方便各 Area 自行決定哪些 CRUD 功能需要顯示。
 
 上述內容會由共用 Layout 自動產生，不需要複製到系統 View。這裡的「自動」只指後台外框；載入 Tabler CSS 與 JavaScript 不會自動將 Scaffold 產生的 HTML 改成 Tabler Card、Table 或 Form。
 

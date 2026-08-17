@@ -179,7 +179,7 @@ feature/<area> → Pull Request → develop → Pull Request → main
 | `feature/user` | 會員模組 |
 | `feature/store` | 商城模組 |
 
-五個 Area 分支都已建立，可直接 Push，不需要逐次核准。整合進 `develop` 時建立 PR，通過 `Build` 即可，不要求人工核准；整合進 `main` 時，PR 需要 `Build` 與任一位協作者核准
+五個 Area 分支都已建立，可直接 Push，不需要逐次核准。組員原則上不要直接修改 `main` 或 `develop`；整合共同分支時建立 PR 留下變更紀錄，但不要求人工核准。Owner 只在確認沒有其他提交的純同步情況下直接快轉分支
 
 不要直接在 `main` 開發，也不要把 `.bak`、`bin`、`obj`、log、快取、raw output、`.mdf`、`.ldf` 或大型執行檔提交進 Repository
 
