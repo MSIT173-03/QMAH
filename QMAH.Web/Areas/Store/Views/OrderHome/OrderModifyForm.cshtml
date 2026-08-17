@@ -1,0 +1,100 @@
+﻿@model QMAH.Web.Areas.Store.ViewModels.OrderCreateData
+
+@{
+    var action = ViewData["ActionName"];
+}
+
+<form asp-controller="Order" asp-action="@action" method="post" class="d-inline">
+    
+    <div class="mb-3">
+        <label for="inputUserId" class="form-label">@Html.DisplayNameFor(model => model.UserId)</label>
+        <input type="text" name="UserId" class="form-control" id="inputUserId" aria-describedby="userIdExplain">
+        <div id="userIdExplain" class="form-text">@Html.DisplayNameFor(model => model.UserId)於每個帳號固定且唯一。</div>
+    </div>
+
+        <span class="form-label">
+            @Html.DisplayNameFor(model => model.Status)
+        </span>
+
+    <div class="mb-3 form-check p-0 d-flex">
+
+        <input type="radio" name="Status" class="btn-check" id="inputStatusPendingPayment" autocomplete="off">
+        <label class="btn btn-outline-primary me-3" for="inputStatusPendingPayment">待付款</label>
+
+        <input type="radio" name="Status" class="btn-check" id="inputStatusPaid" autocomplete="off">
+        <label class="btn btn-outline-primary me-3" for="inputStatusPaid">已付款</label>
+
+        <input type="radio" name="Status" class="btn-check" id="inputStatusShipped" autocomplete="off">
+        <label class="btn btn-outline-primary me-3" for="inputStatusShipped">送出</label>
+
+        <input type="radio" name="Status" class="btn-check" id="inputStatusFulfilling" autocomplete="off">
+        <label class="btn btn-outline-primary me-3" for="inputStatusFulfilling">送達</label>
+
+        <input type="radio" name="Status" class="btn-check" id="inputStatusCompleted" autocomplete="off">
+        <label class="btn btn-outline-primary me-3" for="inputStatusCompleted">完成</label>
+
+        <input type="radio" name="Status" class="btn-check" id="inputStatusCancelled" autocomplete="off">
+        <label class="btn btn-outline-primary" for="inputStatusCancelled">取消</label>
+    </div>
+
+    <hr/>
+
+    <fieldset>
+        <legend>折抵方案</legend>
+
+        <div class="mb-3">
+            <label for="inputCouponId" class="form-label">@Html.DisplayNameFor(model => model.CouponId)</label>
+            <input type="text" name="CouponId" class="form-control" id="inputCouponId">
+        </div>
+
+        <div class="mb-3">
+            <label for="inputPointUsed" class="form-label">@Html.DisplayNameFor(model => model.PointUsed)</label>
+            <input type="number" name="PointUsed" class="form-control" id="inputPointUsed" value="0" min="0">
+        </div>
+    </fieldset>
+    
+    <hr/>
+
+    <fieldset>
+        <legend>收件人資料</legend>
+
+        <div class="mb-3">
+            <label for="inputRecipientName" class="form-label">@Html.DisplayNameFor(model => model.RecipientName)</label>
+            <input type="text" name="RecipientName" class="form-control" id="inputRecipientName">
+        </div>
+
+        <div class="mb-3">
+            <label for="inputRecipientPhone" class="form-label">@Html.DisplayNameFor(model => model.RecipientPhone)</label>
+            <input type="text" name="RecipientPhone" class="form-control" id="inputRecipientPhone">
+        </div>
+    </fieldset>
+
+    <hr/>
+
+    <fieldset>
+        <legend>寄件資料</legend>
+
+        <div class="mb-3">
+            <label for="inputShippingCity" class="form-label">@Html.DisplayNameFor(model => model.ShippingCity)</label>
+            <input type="text" name="ShippingCity" class="form-control" id="inputShippingCity">
+        </div>
+
+        <div class="mb-3">
+            <label for="inputShippingDistrict" class="form-label">@Html.DisplayNameFor(model => model.ShippingDistrict)</label>
+            <input type="text" name="ShippingDistrict" class="form-control" id="inputShippingDistrict">
+        </div>
+
+        <div class="mb-3">
+            <label for="inputShippingAddressLine" class="form-label">@Html.DisplayNameFor(model => model.ShippingAddressLine)</label>
+            <input type="text" name="ShippingAddressLine" class="form-control" id="inputShippingAddressLine">
+        </div>
+
+        <div class="mb-3">
+            <label for="inputShippingPostalCode" class="form-label">@Html.DisplayNameFor(model => model.ShippingPostalCode)</label>
+            <input type="text" name="ShippingPostalCode" class="form-control" id="inputShippingPostalCode">
+        </div>
+    </fieldset>
+
+
+    <button type="submit" class="btn btn-primary">送出</button>
+</form>

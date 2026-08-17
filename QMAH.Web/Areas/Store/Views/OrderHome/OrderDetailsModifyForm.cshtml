@@ -1,0 +1,165 @@
+﻿@{
+    var actionName = ViewData["ActionName"] as string ?? "Modify";
+    var targetGuid = ViewData["TargetGuid"] as string;
+}
+ 
+    <div class="input-row">
+        <input type="text" id="set-guid-input" placeholder="請輸入產品編號" />
+        <button type="button" id="append-button">新增</button>
+    </div>
+    
+    <form id="product-list-form" asp-controller="Order" asp-action="@actionName" method="post" class="d-inline" data-id="@targetGuid">
+        <ul id="product-list">
+            <!-- 動態新增 -->
+        </ul>
+
+        <button type="submit" id="submit-all-button">送出全部</button>
+    </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+    const setGuidInput = document.getElementById("set-guid-input")
+    const appendButton = document.getElementById("append-button")
+    const listForm = document.getElementById("product-list-form")
+    const productList = document.getElementById("product-list")
+    const submitAllBtn = document.getElementById("submit-all-button")
+
+
+    // =================================
+    // Guid 添加至列表
+    // =================================
+
+    appendButton.addEventListener("click", function () {
+        const value = setGuidInput.value.trim()
+        if (value === "") return
+
+        addItemRow(value)
+        setGuidInput.value = ""
+        setGuidInput.focus()
+    })
+
+    setGuidInput.addEventListener("keydown", ev => {
+        if (ev.key === "Enter") {
+            ev.preventDefault()
+            appendButton.click()
+        }
+    })
+
+    function addItemRow(value) {
+        let li = document.createElement("li")
+        li.className = "item-row"
+
+        let input = document.createElement("input")
+        input.type = "text"
+        input.name = "Items"
+        input.value = value
+        input.readOnly = true
+        input.dataset.id = value
+
+        // input.addEventListener("input", function () {
+        //     input.classList.remove("is-invalid");
+        // });
+
+        let delBtn = document.createElement("button")
+        delBtn.type = "button"
+        delBtn.className = "delete-btn"
+        delBtn.textContent = "刪除"
+        delBtn.addEventListener("click", function () {
+            li.remove()
+        })
+
+        // let rowSubmitBtn = document.createElement("button")
+        // rowSubmitBtn.type = "button"
+        // rowSubmitBtn.className = "row-submit-btn"
+        // rowSubmitBtn.textContent = "送出"
+        // rowSubmitBtn.addEventListener("click", function () {
+        //     rowSubmitBtn.disabled = true
+
+        //     sendItems([input.value]).finally(function () {
+        //         rowSubmitBtn.disabled = false
+        //     })
+        // })
+
+        let amountInput = document.createElement("input")
+        amountInput.type = "number"
+        amountInput.min = 1
+        amountInput.value = 1
+        amountInput.name = "Amount"
+        amountInput.className = "amount-input"
+
+        li.appendChild(input)
+        li.appendChild(amountInput)
+        li.appendChild(delBtn)
+        productList.appendChild(li)
+    }
+
+    // =================================
+    // 請求後端（{Id: string, List: List<string>} -> { Id: string, Name: string }[]）
+    // =================================
+    function sendItems(itemsArray) {
+        let formData = new FormData()
+
+        const targetId = listForm.getAttribute("data-id")
+        formData.append("Id", targetId)
+
+        itemsArray.forEach(function (value) { formData.append("List", value) })
+
+        const token = listForm.querySelector('input[name="__RequestVerificationToken"]').value
+        formData.append("__RequestVerificationToken", token)
+
+        return fetch(listForm.action, {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(result => { handleResult(result) })
+            .catch(error => { alert("送出失敗：" + error.message) })
+    }
+
+    // 送出全部
+    listForm.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+
+        submitAllBtn.disabled = true;
+        appendButton.disabled = true;
+
+        const items = Array.prototype.map.call(
+            productList.querySelectorAll('input[name="Items"]:not(.is-valided)'),
+            input => ({
+                id: input.value,
+                amount: input.nextElementSibling.value
+            })
+        )
+
+        sendItems(items)
+    });
+
+    function handleResult(result) {
+        let inputs = productList.querySelectorAll('input[type="text"][data-id]');
+        console.log(result)
+
+        inputs.forEach(function (input) {
+            let matched = result.list.find(function (item) {
+                return item.Id === input.dataset.id;
+            })
+
+            if (matched) {
+                input.value = matched.Name
+                input.readOnly = true
+                input.classList.remove("is-invalid")
+                input.classList.add("is-valided")
+                
+                return
+            }  
+
+            input.readOnly = false;
+            input.classList.add("is-invalid")
+             
+        })
+
+        submitAllBtn.disabled = false;
+        appendButton.disabled = false;
+    }
+})
+    </script>

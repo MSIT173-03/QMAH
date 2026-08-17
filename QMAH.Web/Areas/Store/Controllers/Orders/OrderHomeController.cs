@@ -2,6 +2,7 @@
 
 using QMAH.Web.Areas.Store.ViewModels;
 using QMAH.Web.Data;
+using QMAH.Web.Models.Entities;
 
 
 namespace QMAH.Web.Areas.Store.Controllers.Orders;
@@ -74,6 +75,57 @@ public class OrderHomeController : Controller
         }
 
         return View(order);
+    [HttpPost("AppendItems")]
+    public async Task<IActionResult> AppendOrderItems([FromForm] OrderDetailAppendData data)
+    {
+        var target = this.db.StoreOrders.Where(v => v.Id == data.Id).FirstOrDefault();
+        if (target == null)
+        {
+            HttpContext.Response.StatusCode = 404;
+            return Json(new OrderDetailAppendDataResponse()
+            {
+                Type = OrderDetailAppendDataResponse.EResultType.ErrorOrderNotFound,
+                List = [],
+            });
+        }
+
+        var query = from prod in this.db.Products
+                    from list in data.List
+                    where prod.Id == list.Id && prod.Stock >= list.Amount
+                    select new
+                    {
+                        Id = prod.Id,
+                        Name = prod.Name,
+                        Price = prod.Price,
+                        Amount = list.Amount,
+                    };
+        var ls = query.ToList();
+
+        foreach (var item in query)
+        {
+            OrderDetail detail = new OrderDetail()
+            {
+                OrderId = data.Id,
+                ProductId = item.Id,
+                ProductNameSnapshot = item.Name,
+                UnitPrice = item.Price,
+                Quantity = item.Amount,
+                LineTotal = item.Amount * item.Price,
+            };
+
+            this.db.OrderDetails.Add(detail);
+        }
+
+        this.db.SaveChanges();
+
+
+        return Json(new OrderDetailAppendDataResponse()
+        {
+            Type = OrderDetailAppendDataResponse.EResultType.Success,
+            List = ls.Select(v => new OrderDetailAppendDataResponse.Data { Id = v.Id, Name = v.Name }).ToList(),
+        });
+    }
+
     [HttpPost("Cancel")]
     public async Task<IActionResult> SetCancel([FromForm] Guid id)
     {
