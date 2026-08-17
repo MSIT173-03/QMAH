@@ -1,0 +1,111 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.UserAddressCreateViewModel
+
+@{
+    ViewData["Title"] = "新增我的收件地址";
+}
+
+<h1>新增我的收件地址</h1>
+
+<form asp-action="CreateAddress" method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger mb-3">
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AddressLabel" class="form-label">
+            地址標籤
+        </label>
+
+        <input asp-for="AddressLabel"
+               class="form-control"
+               placeholder="例如：住家、公司" />
+
+        <span asp-validation-for="AddressLabel"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="RecipientName" class="form-label">
+            收件人
+        </label>
+
+        <input asp-for="RecipientName"
+               class="form-control" />
+
+        <span asp-validation-for="RecipientName"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="RecipientPhone" class="form-label">
+            電話
+        </label>
+
+        <input asp-for="RecipientPhone"
+               class="form-control" />
+
+        <span asp-validation-for="RecipientPhone"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PostalCode" class="form-label">
+            郵遞區號
+        </label>
+
+        <input asp-for="PostalCode"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="City" class="form-label">
+            縣市
+        </label>
+
+        <input asp-for="City"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="District" class="form-label">
+            區域
+        </label>
+
+        <input asp-for="District"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AddressLine" class="form-label">
+            詳細地址
+        </label>
+
+        <input asp-for="AddressLine"
+               class="form-control" />
+
+        <span asp-validation-for="AddressLine"
+              class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsDefault"
+               class="form-check-input" />
+
+        <label asp-for="IsDefault"
+               class="form-check-label">
+            設為預設地址
+        </label>
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary">
+        儲存
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        返回
+    </a>
+</form>

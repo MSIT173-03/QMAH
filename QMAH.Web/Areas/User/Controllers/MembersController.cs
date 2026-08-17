@@ -959,7 +959,8 @@ public class MembersController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveAchievement(
     Guid id,
-    Guid userId)
+    Guid userId,
+    string rowVersion)
     {
         var userAchievement = await _context.UserAchievements
             .SingleOrDefaultAsync(x =>
@@ -968,12 +969,45 @@ public class MembersController : Controller
 
         if (userAchievement == null)
         {
-            return NotFound();
+            TempData["ErrorMessage"] =
+                "這筆會員成就已被其他操作移除，請重新確認。";
+
+            return RedirectToAction(
+                nameof(Details),
+                new { id = userId });
         }
+
+        // 把畫面送回來的 RowVersion 轉回 byte[]
+        byte[] originalRowVersion;
+
+        try
+        {
+            originalRowVersion = Convert.FromBase64String(rowVersion);
+        }
+        catch (FormatException)
+        {
+            return BadRequest();
+        }
+
+        // 告訴 EF：
+        // 使用者看到這筆資料時，是這個版本
+        _context.Entry(userAchievement)
+            .Property(x => x.RowVersion)
+            .OriginalValue = originalRowVersion;
 
         _context.UserAchievements.Remove(userAchievement);
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "會員成就已成功移除。";
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            TempData["ErrorMessage"] =
+                "這筆會員成就已被其他操作修改或移除，請重新確認。";
+        }
 
         return RedirectToAction(
             nameof(Details),

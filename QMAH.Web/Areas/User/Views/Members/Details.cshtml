@@ -247,6 +247,10 @@ else
                                    name="userId"
                                    value="@Model.User.Id" />
 
+                            <input type="hidden"
+                                   name="rowVersion"
+                                   value="@Convert.ToBase64String(item.RowVersion)" />
+
                             <button type="submit"
                                     class="btn btn-sm btn-danger"
                                     onclick="return confirm('確定要移除此會員的這個成就嗎？');">

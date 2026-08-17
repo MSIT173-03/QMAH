@@ -1,4 +1,4 @@
-﻿@model QMAH.Web.Models.Entities.UserProfile
+﻿@model QMAH.Web.Areas.User.ViewModels.ProfileIndexViewModel
 
 @{
     ViewData["Title"] = "我的個人資料";
@@ -6,22 +6,129 @@
 
 <h1>我的個人資料</h1>
 
-<div class="mb-3">
-    <strong>暱稱：</strong>
-    @Model.Nickname
-</div>
+<h3>我的個人資料</h3>
 
-<div class="mb-3">
-    <strong>自我介紹：</strong>
-    @Model.Bio
-</div>
+<a asp-action="CreateAddress"
+   class="btn btn-success mb-3">
+    新增地址
+</a>
 
-<div class="mb-3">
-    <strong>公開範圍：</strong>
-    @Model.Visibility
-</div>
+<a asp-action="Edit"
+   class="btn btn-primary mb-3">
+    編輯個人資料
+</a>
 
-<div class="mb-3">
-    <strong>頭像路徑：</strong>
-    @Model.AvatarPath
-</div>
+<p>
+    Email：@Model.User.Email
+</p>
+
+<p>
+    暱稱：@Model.Profile.Nickname
+</p>
+
+<p>
+    自我介紹：@Model.Profile.Bio
+</p>
+
+<p>
+    公開範圍：@Model.Profile.Visibility
+</p>
+
+<p>
+    頭像路徑：@Model.Profile.AvatarPath
+</p>
+
+<hr />
+
+<h3>我的收件地址</h3>
+
+@if (TempData["AddressError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["AddressError"]
+    </div>
+}
+
+@if (Model.Addresses.Count == 0)
+{
+    <p>目前沒有收件地址。</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>標籤</th>
+                <th>收件人</th>
+                <th>電話</th>
+                <th>地址</th>
+                <th>預設</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var address in Model.Addresses)
+            {
+                <tr>
+                    <td>
+                        @address.AddressLabel
+                    </td>
+
+                    <td>
+                        @address.RecipientName
+                    </td>
+
+                    <td>
+                        @address.RecipientPhone
+                    </td>
+
+                    <td>
+                        @address.PostalCode
+                        @address.City
+                        @address.District
+                        @address.AddressLine
+                    </td>
+
+                    <td>
+                        @if (address.IsDefault)
+                        {
+                            <span class="badge bg-success">
+                                預設
+                            </span>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </td>
+
+                    <td>
+                        <a asp-action="EditAddress"
+                           asp-route-id="@address.Id"
+                           class="btn btn-sm btn-primary">
+                            編輯
+                        </a>
+
+                        <form asp-action="DeleteAddress"
+                              method="post"
+                              class="d-inline">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@address.Id" />
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    onclick="return confirm('確定要刪除這筆地址嗎？');">
+                                刪除
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
