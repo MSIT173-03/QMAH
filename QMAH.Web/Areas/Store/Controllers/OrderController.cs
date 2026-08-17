@@ -5,15 +5,15 @@ using QMAH.Web.Data;
 using QMAH.Web.Models.Entities;
 
 
-namespace QMAH.Web.Areas.Store.Controllers.Orders;
+namespace QMAH.Web.Areas.Store.Controllers;
 
 [Area("Store")]
 [Route("store/order")]
-public class OrderHomeController : Controller
+public class OrderController : Controller
 {
     private readonly QmahDbContext db;
 
-    public OrderHomeController(QmahDbContext db)
+    public OrderController(QmahDbContext db)
     {
         this.db = db;
     }
@@ -29,11 +29,11 @@ public class OrderHomeController : Controller
                     join user in this.db.Users on order.UserId equals user.Id
                     join items in this.db.OrderDetails on order.Id equals items.OrderId into itemsGroup
                     select new
-                 {
+                    {
                         Order = order,
                         User = user,
                         Items = itemsGroup,
-                 };
+                    };
         var data = query
             .Select(static v => new OrderSimplefyListItem(v.Order, v.User, v.Items.ToList()))
             .ToList();
@@ -59,7 +59,7 @@ public class OrderHomeController : Controller
                          join product in this.db.Products on items.ProductId equals product.Id
                          where items.OrderId == res.Order.Id
                          select new OrderItemSimplefyData
-        {
+                         {
                              Id = items.Id,
                              Amount = items.Quantity,
                              Price = product.Price,
@@ -72,9 +72,22 @@ public class OrderHomeController : Controller
         var detail = new OrderFullDetail(res.Order, res.Name, list);
 
         return View(detail);
-        }
+    }
 
-        return View(order);
+    [HttpGet("Create")]
+    public async Task<IActionResult> Create()
+    {
+        return View("OrderModifyForm", new OrderCreateData());
+    }
+
+    [HttpGet("AppendItems/{id:Guid}")]
+    public async Task<IActionResult> AppendOrderItems(Guid id)
+    {
+        ViewData["ActionName"] = "AppendItems";
+        ViewData["TargetGuid"] = id.ToString();
+        return View("OrderDetailsModifyForm");
+    }
+
     [HttpPost("AppendItems")]
     public async Task<IActionResult> AppendOrderItems([FromForm] OrderDetailAppendData data)
     {

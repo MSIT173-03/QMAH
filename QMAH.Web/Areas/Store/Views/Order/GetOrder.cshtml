@@ -8,7 +8,7 @@
     <a asp-action="Index" class="btn btn-light mx-3">返回列表</a>
     @if(Model!=null){
         @* <a asp-action="Edit" asp-route-id="@Model.Id">編輯</a> *@
-        <form asp-controller="Order" asp-action="Cancel" method="post" id="set-cancel-order" class="d-inline ">
+        <form asp-controller="Order" asp-action="Cancel" method="post" id="set-cancel-order" class="d-inline">
             <input type="hidden" name="id" value="@Model.Id" />
             <button type="submit" id="set-cancel-button" class="btn btn-danger">取消此訂單</button>
         </form>

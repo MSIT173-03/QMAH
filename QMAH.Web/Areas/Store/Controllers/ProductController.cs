@@ -3,16 +3,16 @@
 using QMAH.Web.Areas.Store.ViewModels;
 using QMAH.Web.Data;
 
-namespace QMAH.Web.Areas.Store.Controllers.Products;
+namespace QMAH.Web.Areas.Store.Controllers;
 
 [Area("Store")]
 [Route("store/product")]
-public class ProductHomeController : Controller
+public class ProductController : Controller
 {
 
     private readonly QmahDbContext db;
 
-    public ProductHomeController(QmahDbContext db)
+    public ProductController(QmahDbContext db)
     {
         this.db = db;
     }
