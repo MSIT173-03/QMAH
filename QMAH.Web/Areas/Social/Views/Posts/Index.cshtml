@@ -1,0 +1,409 @@
+﻿@model IEnumerable<QMAH.Web.Areas.Social.Models.PostListViewModel>
+
+@{
+    ViewData["Title"] = "社群討論區";
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+}
+
+<div class="page-header d-print-none text-white">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center justify-content-between">
+            <div class="col">
+                <h2 class="page-title text-white fs-1 fw-bold">
+                    <i class="ti ti-messages me-2"></i>社群討論區
+                </h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <!-- 管理員後台選單 -->
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-1 shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-settings fs-3"></i>
+                            <span>管理員後台</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li><h6 class="dropdown-header">社群管理模組</h6></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Posts">
+                                    <i class="ti ti-file-text text-info"></i> 貼文內容管理
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Reports">
+                                    <i class="ti ti-shield-alert text-danger"></i> 檢舉與風控審核
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Events">
+                                    <i class="ti ti-calendar-event text-success"></i> 社群活動審核
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <a asp-area="Social" asp-controller="Posts" asp-action="Create" class="btn btn-primary shadow-sm">
+                        <i class="ti ti-plus me-1"></i>發表新貼文
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <i class="ti ti-check me-2"></i>@TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty card p-5 border-0 shadow-sm">
+                <div class="empty-icon">
+                    <i class="ti ti-inbox fs-1 text-muted"></i>
+                </div>
+                <p class="empty-title">目前還沒有任何貼文</p>
+                <p class="empty-subtitle text-muted">快來搶頭香發表第一篇討論吧！</p>
+            </div>
+        }
+        else
+        {
+            <div class="row row-cards">
+                @foreach (var item in Model)
+                {
+                    <div class="col-12">
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        @if (!string.IsNullOrEmpty(item.BoardCode))
+                                        {
+                                            <span class="badge bg-primary text-white me-2">@item.BoardCode</span>
+                                        }
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="ti ti-clock me-1"></i>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                                    </small>
+                                </div>
+
+                                <h3 class="card-title mb-2">
+                                    <!-- 點擊標題彈出貼文內容與留言 Modal -->
+                                    <button type="button" 
+                                            class="btn btn-link text-reset text-decoration-none fw-bold fs-2 text-start p-0"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#postDetailModal"
+                                            data-post-id="@item.Id"
+                                            data-title="@item.Title"
+                                            data-content="@item.Content"
+                                            data-user="@item.UserName"
+                                            data-time="@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")">
+                                        @item.Title
+                                    </button>
+                                </h3>
+
+                                <p class="text-muted mb-3">
+                                    @item.Content
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
+                                    <small class="text-muted">
+                                        <i class="ti ti-user me-1"></i>@item.UserName
+                                        @if (item.ArtifactId.HasValue)
+                                        {
+                                            <span class="ms-2 badge bg-dark text-light border border-secondary">
+                                                <i class="ti ti-building-monument me-1"></i>文物 ID: @item.ArtifactId
+                                            </span>
+                                        }
+                                    </small>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <!-- 觸發檢舉 Modal 彈窗 -->
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#reportModal"
+                                                data-target-type="POST"
+                                                data-target-id="@item.Id">
+                                            <i class="ti ti-flag me-1"></i>檢舉
+                                        </button>
+
+                                        <!-- 觸發貼文詳情與留言 Modal 彈窗 -->
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-light"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#postDetailModal"
+                                                data-post-id="@item.Id"
+                                                data-title="@item.Title"
+                                                data-content="@item.Content"
+                                                data-user="@item.UserName"
+                                                data-time="@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")">
+                                            <i class="ti ti-message-circle me-1"></i>查看與留言
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- CSRF Token 供 JavaScript AJAX 調用 -->
+@Html.AntiForgeryToken()
+
+<!-- 貼文詳情與留言 Modal 視窗 -->
+<div class="modal fade" id="postDetailModal" tabindex="-1" aria-labelledby="postDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="postDetailModalLabel">
+                    <i class="ti ti-article me-1"></i>貼文內文與討論
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 貼文主體區塊 -->
+                <div class="border-bottom border-secondary pb-3 mb-4">
+                    <h2 id="modalPostTitle" class="fw-bold text-white mb-2"></h2>
+                    <div class="d-flex align-items-center gap-3 text-muted mb-3">
+                        <small><i class="ti ti-user me-1"></i><span id="modalPostUser"></span></small>
+                        <small><i class="ti ti-clock me-1"></i><span id="modalPostTime"></span></small>
+                    </div>
+                    <div id="modalPostContent" class="p-3 bg-dark text-light rounded border border-secondary fs-3" style="white-space: pre-wrap; min-height: 80px;"></div>
+                </div>
+
+                <!-- 留言列表區塊 -->
+                <div class="mb-3">
+                    <h4 class="text-white mb-3"><i class="ti ti-messages me-1"></i>留言列表</h4>
+                    <div id="commentsContainer" class="d-flex flex-column gap-2 mb-3">
+                        <div class="text-center text-muted py-3">載入留言中...</div>
+                    </div>
+
+                    <!-- 新增留言輸入框 -->
+                    <div class="card p-3 bg-dark border border-secondary">
+                        <label class="form-label text-white">發表新增留言</label>
+                        <input type="hidden" id="currentPostId" />
+                        <div class="mb-2">
+                            <textarea id="newCommentContent" class="form-control" rows="2" placeholder="撰寫您的回覆..."></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="submitComment()">
+                                <i class="ti ti-send me-1"></i>送出留言
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 檢舉 Modal 視窗 -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="reportModalLabel">
+                    <i class="ti ti-flag me-1"></i>檢舉內容
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reportTargetType" />
+                <input type="hidden" id="reportTargetId" />
+
+                <div class="mb-3">
+                    <label class="form-label required">檢舉原因</label>
+                    <select id="reportReason" class="form-select">
+                        <option value="SPAM">垃圾廣告 / 濫發訊息</option>
+                        <option value="SPOILER">未標示暴雷內容</option>
+                        <option value="ABUSE">言語攻擊 / 仇恨言論</option>
+                        <option value="OTHER">其他原因</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">詳細說明</label>
+                    <textarea id="reportDetail" class="form-control" rows="3" placeholder="請簡述違規狀況（選填）..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" onclick="submitReport()">送出檢舉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 貼文詳情與留言 Modal 事件觸發
+        var postDetailModal = document.getElementById('postDetailModal');
+        if (postDetailModal) {
+            postDetailModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                if (button) {
+                    var postId = button.getAttribute('data-post-id');
+                    var title = button.getAttribute('data-title');
+                    var content = button.getAttribute('data-content');
+                    var user = button.getAttribute('data-user');
+                    var time = button.getAttribute('data-time');
+
+                    document.getElementById('currentPostId').value = postId || '';
+                    document.getElementById('modalPostTitle').innerText = title || '';
+                    document.getElementById('modalPostContent').innerText = content || '';
+                    document.getElementById('modalPostUser').innerText = user || '匿名';
+                    document.getElementById('modalPostTime').innerText = time || '';
+                    document.getElementById('newCommentContent').value = '';
+
+                    // 載入該貼文的留言
+                    loadComments(postId);
+                }
+            });
+        }
+
+        // 檢舉 Modal 事件觸發
+        var reportModal = document.getElementById('reportModal');
+        if (reportModal) {
+            reportModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                if (button) {
+                    var targetType = button.getAttribute('data-target-type');
+                    var targetId = button.getAttribute('data-target-id');
+
+                    document.getElementById('reportTargetType').value = targetType || '';
+                    document.getElementById('reportTargetId').value = targetId || '';
+                    document.getElementById('reportReason').value = 'SPAM';
+                    document.getElementById('reportDetail').value = '';
+                }
+            });
+        }
+    });
+
+    // 取得留言 API
+    async function loadComments(postId) {
+        const container = document.getElementById('commentsContainer');
+        container.innerHTML = '<div class="text-center text-muted py-3">載入留言中...</div>';
+
+        try {
+            const response = await fetch(`/Social/SocialComments/GetByPostId?postId=${postId}`);
+            if (!response.ok) {
+                container.innerHTML = '<div class="text-muted p-2">目前沒有留言。</div>';
+                return;
+            }
+
+            const comments = await response.json();
+            if (!comments || comments.length === 0) {
+                container.innerHTML = '<div class="text-muted p-2">目前還沒有留言，快來發表第一條回覆！</div>';
+                return;
+            }
+
+            container.innerHTML = comments.map(c => `
+                <div class="p-3 bg-dark rounded border border-secondary mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong class="text-info">${escapeHtml(c.userName || '匿名')}</strong>
+                        <small class="text-muted">${c.createdAt ? c.createdAt.substring(0, 16).replace('T', ' ') : ''}</small>
+                    </div>
+                    <div class="text-light fs-4" style="white-space: pre-wrap;">${escapeHtml(c.content)}</div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading comments:', error);
+            container.innerHTML = '<div class="text-muted p-2">目前沒有留言或無法載入留言。</div>';
+        }
+    }
+
+    // 送出新增留言 API
+    async function submitComment() {
+        const postId = document.getElementById('currentPostId').value;
+        const content = document.getElementById('newCommentContent').value.trim();
+
+        if (!content) {
+            alert('請輸入留言內容！');
+            return;
+        }
+
+        const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+        const token = tokenElement ? tokenElement.value : '';
+
+        try {
+            const response = await fetch('/Social/SocialComments/Create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ postId: postId, content: content })
+            });
+
+            const result = await response.json();
+            if (response.ok && result.success) {
+                document.getElementById('newCommentContent').value = '';
+                loadComments(postId); // 重新載入留言列表
+            } else {
+                alert(result.message || '留言失敗，請重試。');
+            }
+        } catch (error) {
+            console.error('Error submitting comment:', error);
+            alert('送出留言時發生錯誤，請稍後再試。');
+        }
+    }
+
+    // 送出檢舉 API
+    async function submitReport() {
+        const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+        const token = tokenElement ? tokenElement.value : '';
+
+        const payload = {
+            targetType: document.getElementById('reportTargetType').value,
+            targetId: document.getElementById('reportTargetId').value,
+            reason: document.getElementById('reportReason').value,
+            detail: document.getElementById('reportDetail').value
+        };
+
+        try {
+            const response = await fetch('/Social/ContentReports/Create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert(result.message);
+                const modalElement = document.getElementById('reportModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            } else {
+                alert(result.message || '檢舉送出失敗，請重試。');
+            }
+        } catch (error) {
+            console.error('Error submitting report:', error);
+            alert('網路或系統發生錯誤，請稍後再試。');
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>

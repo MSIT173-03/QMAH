@@ -1,9 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace QMAH.Web.Areas.Social.Controllers;
-
-[Area("Social")]
-public class HomeController : Controller
+namespace QMAH.Web.Areas.Social.Controllers
 {
-    public IActionResult Index() => View();
+    [Area("Social")]
+    public class HomeController : Controller
+    {
+        public IActionResult Index()
+        {
+            return View();
+        }
+    }
 }
