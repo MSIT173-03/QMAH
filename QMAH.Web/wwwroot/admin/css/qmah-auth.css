@@ -1,0 +1,303 @@
+.qmah-auth-body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--qmah-porcelain);
+}
+
+.qmah-auth-main {
+  min-height: 100vh;
+}
+
+.qmah-auth-page {
+  position: relative;
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(2rem, 6vw, 5.5rem) clamp(1rem, 5vw, 5rem);
+  background: var(--qmah-porcelain);
+}
+
+.qmah-auth-art {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.qmah-auth-shape,
+.qmah-auth-line,
+.qmah-auth-dot {
+  position: absolute;
+  display: block;
+}
+
+.qmah-auth-orbit {
+  border: 1px solid rgba(63, 111, 134, 0.18);
+  border-radius: 50%;
+}
+
+.qmah-auth-orbit--one {
+  top: -13rem;
+  right: -9rem;
+  width: 35rem;
+  height: 35rem;
+  transform: rotate(18deg);
+  box-shadow: 0 0 0 2.25rem rgba(63, 111, 134, 0.035), 0 0 0 6rem rgba(63, 111, 134, 0.025);
+}
+
+.qmah-auth-orbit--two {
+  bottom: -12rem;
+  left: -8rem;
+  width: 27rem;
+  height: 27rem;
+  border-color: rgba(156, 183, 177, 0.32);
+  transform: rotate(-22deg);
+}
+
+.qmah-auth-diamond {
+  top: 17%;
+  left: 10%;
+  width: 9rem;
+  height: 9rem;
+  border: 1px solid rgba(173, 89, 74, 0.2);
+  transform: rotate(36deg);
+}
+
+.qmah-auth-square {
+  right: 13%;
+  bottom: 15%;
+  width: 6rem;
+  height: 6rem;
+  border: 1px solid rgba(139, 118, 83, 0.24);
+  transform: rotate(12deg);
+}
+
+.qmah-auth-line {
+  width: 14rem;
+  height: 1px;
+  background: rgba(63, 111, 134, 0.18);
+  transform: rotate(-28deg);
+}
+
+.qmah-auth-line--one {
+  top: 22%;
+  right: 5%;
+}
+
+.qmah-auth-line--two {
+  bottom: 22%;
+  left: 3%;
+  width: 10rem;
+  background: rgba(156, 183, 177, 0.3);
+  transform: rotate(26deg);
+}
+
+.qmah-auth-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--qmah-primary);
+  opacity: 0.42;
+}
+
+.qmah-auth-dot--one {
+  top: 29%;
+  right: 23%;
+}
+
+.qmah-auth-dot--two {
+  bottom: 25%;
+  left: 23%;
+  background: var(--qmah-cinnabar);
+  opacity: 0.5;
+}
+
+.qmah-auth-dot--three {
+  top: 13%;
+  left: 37%;
+  width: 0.35rem;
+  height: 0.35rem;
+  background: var(--qmah-bronze);
+  opacity: 0.55;
+}
+
+.qmah-auth-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(70rem, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 28rem);
+  gap: clamp(3rem, 9vw, 8rem);
+  align-items: center;
+}
+
+.qmah-auth-brand {
+  max-width: 30rem;
+  padding: 1rem 0;
+}
+
+.qmah-auth-logo {
+  display: block;
+  width: min(15rem, 72vw);
+  height: auto;
+}
+
+.qmah-auth-logo--dark {
+  display: none;
+}
+
+.qmah-auth-brand h1 {
+  margin: clamp(2rem, 5vw, 3.5rem) 0 0.75rem;
+  color: var(--qmah-ink);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.15;
+}
+
+.qmah-auth-brand p {
+  max-width: 28rem;
+  margin: 0;
+  color: var(--qmah-ink-soft);
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.qmah-auth-panel {
+  overflow: hidden;
+  border: 1px solid var(--qmah-line);
+  border-radius: 1rem;
+  background: var(--qmah-surface);
+  box-shadow: 0 1.25rem 3.5rem rgba(23, 42, 51, 0.12), var(--qmah-shadow-sm);
+}
+
+.qmah-auth-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.4rem 1.5rem;
+  border-bottom: 1px solid var(--qmah-line-soft);
+}
+
+.qmah-auth-panel-header .avatar {
+  flex: 0 0 auto;
+  color: var(--qmah-primary);
+}
+
+.qmah-auth-panel-header h2 {
+  margin: 0;
+  color: var(--qmah-ink);
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+
+.qmah-auth-panel-header p {
+  margin: 0.25rem 0 0;
+  color: var(--qmah-ink-faint);
+  font-size: 0.85rem;
+}
+
+.qmah-auth-form {
+  padding: 1.5rem;
+}
+
+.qmah-auth-form .form-control {
+  min-height: 3rem;
+  font-size: 0.95rem;
+}
+
+.qmah-auth-form .form-check {
+  color: var(--qmah-ink-soft);
+}
+
+.qmah-auth-form .btn-primary {
+  min-height: 3rem;
+}
+
+.qmah-auth-validation:empty {
+  display: none;
+}
+
+html[data-bs-theme="dark"] .qmah-auth-logo--light {
+  display: none;
+}
+
+html[data-bs-theme="dark"] .qmah-auth-logo--dark {
+  display: block;
+}
+
+html[data-bs-theme="dark"] .qmah-auth-orbit {
+  border-color: rgba(145, 189, 206, 0.2);
+}
+
+html[data-bs-theme="dark"] .qmah-auth-orbit--one {
+  box-shadow: 0 0 0 2.25rem rgba(145, 189, 206, 0.045), 0 0 0 6rem rgba(145, 189, 206, 0.03);
+}
+
+html[data-bs-theme="dark"] .qmah-auth-diamond {
+  border-color: rgba(223, 136, 120, 0.3);
+}
+
+html[data-bs-theme="dark"] .qmah-auth-square {
+  border-color: rgba(208, 180, 126, 0.32);
+}
+
+html[data-bs-theme="dark"] .qmah-auth-line {
+  background: rgba(145, 189, 206, 0.24);
+}
+
+@media (max-width: 767.98px) {
+  .qmah-auth-page {
+    padding: 2rem 1rem;
+  }
+
+  .qmah-auth-shell {
+    width: min(30rem, 100%);
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .qmah-auth-brand {
+    padding: 0;
+    text-align: center;
+  }
+
+  .qmah-auth-logo {
+    margin-inline: auto;
+  }
+
+  .qmah-auth-brand h1 {
+    margin-top: 1.75rem;
+    font-size: 2.25rem;
+  }
+
+  .qmah-auth-brand p {
+    margin-inline: auto;
+  }
+
+  .qmah-auth-panel-header,
+  .qmah-auth-form {
+    padding: 1.25rem;
+  }
+
+  .qmah-auth-diamond {
+    top: 8%;
+    left: -3rem;
+  }
+
+  .qmah-auth-square {
+    right: -1.5rem;
+    bottom: 5%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qmah-auth-shape,
+  .qmah-auth-line,
+  .qmah-auth-dot {
+    transition: none;
+  }
+}

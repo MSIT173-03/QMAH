@@ -1,37 +1,62 @@
 @model QMAH.Web.Areas.User.ViewModels.LoginViewModel
 
 @{
-    ViewData["Title"] = "後台管理員登入";
-    ViewData["AdminDescription"] = "登入後進入五大系統管理總覽。登入是全站後台入口，不屬於會員資料管理。";
+    Layout = "/Views/Shared/Auth/_AuthLayout.cshtml";
+    ViewData["Title"] = "管理員登入";
 }
 
-<div class="row row-cards justify-content-center">
-    <div class="col-12 col-md-6 col-lg-5 col-xl-4">
-        <div class="card">
-            <div class="card-header"><h2 class="card-title">後台管理員登入</h2></div>
-            <div class="card-body">
-                <form action="/Account/Login" method="post">
-                    @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label"></label>
-                        <input asp-for="Email" class="form-control" autocomplete="username" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label"></label>
-                        <input asp-for="Password" class="form-control" autocomplete="current-password" />
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
-                    <label class="form-check mb-3">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <span class="form-check-label">記住我</span>
-                    </label>
-                    <button type="submit" class="btn btn-primary w-100"><i class="ti ti-login me-1"></i>登入管理後台</button>
-                    <div class="text-center mt-3 text-secondary small">請使用管理員帳號進入系統總覽。</div>
-                </form>
+<div class="qmah-auth-page">
+    <div class="qmah-auth-art" aria-hidden="true">
+        <span class="qmah-auth-shape qmah-auth-orbit qmah-auth-orbit--one"></span>
+        <span class="qmah-auth-shape qmah-auth-orbit qmah-auth-orbit--two"></span>
+        <span class="qmah-auth-shape qmah-auth-diamond"></span>
+        <span class="qmah-auth-shape qmah-auth-square"></span>
+        <span class="qmah-auth-line qmah-auth-line--one"></span>
+        <span class="qmah-auth-line qmah-auth-line--two"></span>
+        <span class="qmah-auth-dot qmah-auth-dot--one"></span>
+        <span class="qmah-auth-dot qmah-auth-dot--two"></span>
+        <span class="qmah-auth-dot qmah-auth-dot--three"></span>
+    </div>
+
+    <div class="qmah-auth-shell">
+        <section class="qmah-auth-brand" aria-labelledby="auth-title">
+            <img class="qmah-auth-logo qmah-auth-logo--light" src="~/images/brand/qmah-logo.svg" alt="清明鑑定屋 QMAH" />
+            <img class="qmah-auth-logo qmah-auth-logo--dark" src="~/images/brand/qmah-logo-dark.svg" alt="清明鑑定屋 QMAH" />
+            <h1 id="auth-title">管理員登入</h1>
+            <p>進入清明鑑定屋管理工作台。</p>
+        </section>
+
+        <section class="qmah-auth-panel" aria-labelledby="login-form-title">
+            <div class="qmah-auth-panel-header">
+                <span class="avatar avatar-md bg-blue-lt" aria-hidden="true"><i class="ti ti-lock-open-2"></i></span>
+                <div>
+                    <h2 id="login-form-title">登入</h2>
+                    <p>使用管理員帳號繼續。</p>
+                </div>
             </div>
-        </div>
+
+            <form action="/Account/Login" method="post" class="qmah-auth-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger qmah-auth-validation" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="username" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <label class="form-check mb-3">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <span class="form-check-label">記住我</span>
+                </label>
+                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-login me-1"></i>登入</button>
+            </form>
+        </section>
     </div>
 </div>
 

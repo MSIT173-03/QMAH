@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-Hant" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f7f8" />
+    <title>@(ViewData["Title"] ?? "管理員登入")｜清明鑑定屋 QMAH</title>
+    <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" />
+    <script>
+        (() => {
+            const root = document.documentElement;
+            const savedTheme = localStorage.getItem("qmah-admin-theme");
+            const theme = savedTheme === "dark" || savedTheme === "light"
+                ? savedTheme
+                : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            root.dataset.bsTheme = theme;
+            root.style.colorScheme = theme;
+        })();
+    </script>
+    <link rel="stylesheet" href="~/admin/vendor/tabler/tabler.min.css" />
+    <link rel="stylesheet" href="~/admin/css/qmah-admin-core.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-tabler.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-auth.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="qmah-auth-body">
+    <a class="qmah-skip-link" href="#auth-main">跳至登入表單</a>
+    <main id="auth-main" class="qmah-auth-main">
+        @RenderBody()
+    </main>
+
+    <script src="~/admin/vendor/tabler/tabler.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
