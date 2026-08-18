@@ -1,0 +1,58 @@
+﻿@model IEnumerable<QMAH.Web.Areas.Social.Models.EventListViewModel>
+
+@{
+    ViewData["Title"] = "社群活動審核";
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+}
+
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">社群活動審核</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th>活動標題</th>
+                            <th>內文說明</th>
+                            <th>審核狀態</th>
+                            <th>建立時間</th>
+                            <th>審核操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Title</td>
+                                <td>@item.Description</td>
+                                <td>
+                                    <span class="badge @(item.Status == "APPROVED" ? "bg-success-lt" : item.Status == "REJECTED" ? "bg-danger-lt" : "bg-warning-lt")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <form asp-action="ReviewEvent" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" name="status" value="APPROVED" class="btn btn-sm btn-success">核准</button>
+                                        <button type="submit" name="status" value="REJECTED" class="btn btn-sm btn-danger">駁回</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

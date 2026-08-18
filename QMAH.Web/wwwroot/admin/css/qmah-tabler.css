@@ -38,6 +38,7 @@ html[data-bs-theme="dark"] {
   --qmah-line-soft: #293a42;
   --qmah-primary: #91bdce;
   --qmah-primary-hover: #b7d4df;
+  --qmah-primary-contrast: #14252c;
   --qmah-celadon: #a9c3bd;
   --qmah-cinnabar: #df8878;
   --qmah-bronze: #d0b47e;
@@ -470,6 +471,50 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
   color: var(--qmah-ink-soft) !important;
 }
 
+.text-body {
+  color: var(--qmah-ink) !important;
+}
+
+.text-muted {
+  color: var(--qmah-ink-faint) !important;
+}
+
+.text-info {
+  color: var(--qmah-info) !important;
+}
+
+.text-success {
+  color: var(--qmah-success) !important;
+}
+
+.text-warning {
+  color: var(--qmah-warning) !important;
+}
+
+.text-danger {
+  color: var(--qmah-danger) !important;
+}
+
+.border-secondary {
+  border-color: var(--qmah-line) !important;
+}
+
+.qmah-primary-surface {
+  background-color: var(--qmah-primary) !important;
+  color: var(--qmah-primary-contrast) !important;
+}
+
+.qmah-theme-panel {
+  background-color: var(--qmah-surface-soft) !important;
+  border-color: var(--qmah-line) !important;
+  color: var(--qmah-ink) !important;
+}
+
+.qmah-content-panel {
+  min-height: 5rem;
+  white-space: pre-wrap;
+}
+
 .table {
   color: var(--qmah-ink);
   --tblr-table-border-color: var(--qmah-line-soft);
@@ -527,6 +572,7 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
 }
 
 .btn-primary {
+  --tblr-btn-color: var(--qmah-primary-contrast);
   --tblr-btn-bg: var(--qmah-primary);
   --tblr-btn-border-color: var(--qmah-primary);
   --tblr-btn-hover-bg: var(--qmah-primary-hover);

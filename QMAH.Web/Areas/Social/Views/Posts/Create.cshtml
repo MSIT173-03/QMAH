@@ -1,0 +1,55 @@
+﻿@model QMAH.Web.Areas.Social.Models.PostCreateViewModel
+
+@{
+    ViewData["Title"] = "發表新貼文";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header qmah-primary-surface p-3">
+                    <h4 class="mb-0 fs-5"><i class="bi bi-pencil-square me-2"></i>發表新貼文</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="BoardCode" class="form-label fw-bold"></label>
+                            <input asp-for="BoardCode" class="form-control" placeholder="預設 GENERAL" />
+                            <span asp-validation-for="BoardCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-bold"></label>
+                            <input asp-for="Title" class="form-control" placeholder="請輸入吸引人的標題..." />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Content" class="form-label fw-bold"></label>
+                            <textarea asp-for="Content" class="form-control" rows="6" placeholder="分享你的想法與討論內容..."></textarea>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ArtifactId" class="form-label fw-bold"></label>
+                            <input asp-for="ArtifactId" class="form-control" placeholder="選填，欲關聯的文物 ID (例: 101)" />
+                            <span asp-validation-for="ArtifactId" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                            <button type="submit" class="btn btn-primary px-4">發表文章</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

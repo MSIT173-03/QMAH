@@ -1,0 +1,155 @@
+﻿@model IEnumerable<QMAH.Web.Areas.Social.Models.ReportListViewModel>
+
+@{
+    ViewData["Title"] = "檢舉與風控審核";
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+}
+
+<div class="container-xl pt-3">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <i class="ti ti-check me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+            <i class="ti ti-alert-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>目標類型</th>
+                        <th>被檢舉內容 / 標題</th>
+                        <th>檢舉類別</th>
+                        <th>狀態</th>
+                        <th>建立時間</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model == null || !Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                目前沒有待審核的檢舉項目
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary-lt">@item.TargetType</span>
+                                </td>
+                                <td>
+                                    <!-- 點擊觸發 Modal 彈窗預覽完整內容與檢舉細節 -->
+                                    <button type="button"
+                                            class="btn btn-link text-reset text-decoration-underline fw-bold p-0 text-start"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#previewModal"
+                                            data-title="@item.TargetTitle"
+                                            data-type="@item.TargetType"
+                                            data-reason="@item.Reason"
+                                            data-detail="@item.Detail"
+                                            data-content="@item.TargetContent">
+                                        <i class="ti ti-eye me-1"></i>@item.TargetTitle
+                                    </button>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger-lt">@item.Reason</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning-lt">@item.Status</span>
+                                </td>
+                                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <form asp-action="ReviewReport" method="post" class="d-inline">
+                                        <input type="hidden" name="reportId" value="@item.Id" />
+                                        <button type="submit" name="isApprove" value="true" class="btn btn-sm btn-danger">核准並下架</button>
+                                        <button type="submit" name="isApprove" value="false" class="btn btn-sm btn-secondary">駁回</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 檢舉內容彈出預覽 Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">
+                    <i class="ti ti-file-search me-1"></i>被檢舉內容與理由詳情
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">標題 / 主題</label>
+                    <div id="modalTargetTitle" class="fw-bold fs-3"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-muted">目標類型</label>
+                        <div><span id="modalTargetType" class="badge bg-secondary fs-4"></span></div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-muted">檢舉類別</label>
+                        <div><span id="modalReason" class="badge bg-danger fs-4"></span></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">檢舉人填寫的詳細說明</label>
+                    <div id="modalDetail" class="qmah-theme-panel p-3 rounded border text-warning" style="min-height: 50px;"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">貼文 / 留言完整內文</label>
+                    <div id="modalContentArea" class="qmah-theme-panel qmah-content-panel p-3 rounded border"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var previewModal = document.getElementById('previewModal');
+        if (previewModal) {
+            previewModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                if (button) {
+                    var title = button.getAttribute('data-title');
+                    var type = button.getAttribute('data-type');
+                    var reason = button.getAttribute('data-reason');
+                    var detail = button.getAttribute('data-detail');
+                    var content = button.getAttribute('data-content');
+
+                    document.getElementById('modalTargetTitle').innerText = title || '無標題';
+                    document.getElementById('modalTargetType').innerText = type || '';
+                    document.getElementById('modalReason').innerText = reason || '';
+                    document.getElementById('modalDetail').innerText = detail ? detail : '（檢舉人未填寫詳細說明）';
+                    document.getElementById('modalContentArea').innerText = content || '無內文資料';
+                }
+            });
+        }
+    });
+</script>

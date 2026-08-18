@@ -1,0 +1,68 @@
+@model IEnumerable<QMAH.Web.Models.Entities.Event>
+
+@{
+    ViewData["Title"] = "社群活動";
+}
+
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">社群活動</h2>
+                <div class="text-secondary mt-1">查看已審核並公開的社群活動</div>
+            </div>
+            <div class="col-auto">
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="ti ti-plus me-1"></i>提出活動
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        @if (TempData["SuccessMessage"] is string message)
+        {
+            <div class="alert alert-success" role="alert">@message</div>
+        }
+
+        <div class="row row-cards">
+            @if (!Model.Any())
+            {
+                <div class="col-12">
+                    <div class="empty card">
+                        <div class="empty-icon"><i class="ti ti-calendar-event"></i></div>
+                        <p class="empty-title">目前沒有公開活動</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var item in Model)
+                {
+                    <div class="col-12 col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between gap-3 mb-2">
+                                    <h3 class="card-title mb-0">@item.Title</h3>
+                                    <span class="badge bg-success-lt">已發布</span>
+                                </div>
+                                <div class="text-secondary mb-3">@item.EventType</div>
+                                <p class="mb-3">@item.Content</p>
+                                <dl class="row mb-0">
+                                    <dt class="col-5 text-secondary">活動時間</dt>
+                                    <dd class="col-7">@item.StartAt.ToString("yyyy-MM-dd HH:mm")</dd>
+                                    <dt class="col-5 text-secondary">地點</dt>
+                                    <dd class="col-7">@(item.Location ?? "未提供")</dd>
+                                    <dt class="col-5 text-secondary">名額</dt>
+                                    <dd class="col-7">@(item.Capacity?.ToString() ?? "不限")</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using QMAH.Web.Areas.Social;
+using QMAH.Web.Areas.Social.Services;
 using QMAH.Web.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Entities;
@@ -35,6 +37,8 @@ builder.Services
     .AddEntityFrameworkStores<QmahDbContext>()
     .AddDefaultTokenProviders();
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
+builder.Services.AddSocialAuthorizationPolicies();
 builder.Services.AddSingleton<AdminNavigationService>();
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
 builder.Services.ConfigureApplicationCookie(options =>
