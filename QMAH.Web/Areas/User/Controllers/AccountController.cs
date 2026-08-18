@@ -27,7 +27,6 @@ public class AccountController : Controller
         _context = context;
     }
 
-    [HttpGet]
     [HttpGet("/Account/Login")]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -36,7 +35,6 @@ public class AccountController : Controller
         return View();
     }
 
-    [HttpPost]
     [HttpPost("/Account/Login")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
