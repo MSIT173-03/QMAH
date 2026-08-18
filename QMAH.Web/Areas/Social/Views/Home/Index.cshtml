@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "社群管理總覽";
-    ViewData["AdminDescription"] = "社群內容的後台工作台，不提供一般使用者瀏覽或互動入口。";
+    ViewData["AdminDescription"] = "社群內容、活動與檢舉作業的管理入口。";
     var canManagePosts = User.IsInRole("Admin") || User.IsInRole("ContentModerator");
     var canManageEvents = User.IsInRole("Admin") || User.IsInRole("EventModerator");
 }
@@ -10,7 +10,7 @@
 <div class="qmah-dashboard-intro">
     <div>
         <h1 class="qmah-dashboard-title">社群管理總覽</h1>
-        <p class="qmah-dashboard-lede">集中處理貼文、板塊、活動與檢舉，不把後台內容誤當成公開討論區。</p>
+        <p class="qmah-dashboard-lede">集中處理貼文、板塊、活動與檢舉。</p>
     </div>
     <div class="qmah-actions">
         @if (canManagePosts)
