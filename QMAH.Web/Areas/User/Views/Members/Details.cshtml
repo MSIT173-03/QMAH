@@ -305,15 +305,25 @@
                 </div>
 
                 <div class="col-12">
-                    <div class="text-muted small">
-                        頭像路徑
+                    <div class="text-muted small mb-2">
+                        會員頭像
                     </div>
 
-                    <div>
-                        @(string.IsNullOrWhiteSpace(Model.Profile.AvatarPath)
-                            ? "-"
-                            : Model.Profile.AvatarPath)
-                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Profile.AvatarPath))
+                    {
+                        <img src="@Model.Profile.AvatarPath"
+                             alt="會員頭像"
+                             style="width:100px;
+                        height:100px;
+                        object-fit:cover;
+                        border-radius:50%;" />
+                    }
+                    else
+                    {
+                        <div class="text-muted">
+                            尚未設定頭像
+                        </div>
+                    }
                 </div>
 
                 <div class="col-md-6">
