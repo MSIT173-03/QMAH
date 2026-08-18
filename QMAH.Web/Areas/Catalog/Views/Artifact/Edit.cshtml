@@ -1,0 +1,845 @@
+@model QMAH.Web.Models.Entities.Artifact
+
+@{
+    ViewData["Title"] = "資料編輯";
+}
+
+<style>
+    body {
+        background-color: #0f181d;
+        color: #dce8ed;
+    }
+
+    .artifact-page {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-bottom: 20px;
+        min-height: 100vh;
+    }
+
+    /* ===== 頁面標題 ===== */
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 28px;
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 40px;
+        font-weight: 700;
+        color: #f2f7f9;
+    }
+
+        .page-title small {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 11px;
+            color: #83aebe;
+            font-weight: 500;
+        }
+
+    .page-description {
+        margin-top: 4px;
+        color: #8da4ae;
+        font-size: 12px;
+    }
+
+    .btn-back {
+        background: #18252d;
+        border: 1px solid #344854;
+        color: #c7dbe2;
+        padding: 8px 14px;
+        border-radius: 5px;
+        font-size: 12px;
+        text-decoration: none;
+    }
+
+        .btn-back:hover {
+            background: #22343e;
+            color: white;
+        }
+
+
+    /* ===== 左右區域 ===== */
+
+    .editor-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+        gap: 14px;
+        align-items: start;
+    }
+
+
+    /* ===== 卡片 ===== */
+
+    .editor-card {
+        background: #1c2835;
+        border: 1px solid #304452;
+        border-radius: 7px;
+        overflow: hidden;
+    }
+
+    .card-header-custom {
+        padding: 15px 16px;
+        border-bottom: 1px solid #304452;
+    }
+
+        .card-header-custom h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #e6f0f4;
+            font-weight: 700;
+        }
+
+        .card-header-custom p {
+            margin: 5px 0 0;
+            color: #839ba6;
+            font-size: 11px;
+        }
+
+    .card-body-custom {
+        padding: 16px;
+    }
+
+
+    /* ===== Tab ===== */
+
+    .custom-tabs {
+        display: flex;
+        gap: 5px;
+        border-bottom: 1px solid #304452;
+        padding: 0 16px;
+    }
+
+    .custom-tab {
+        padding: 11px 13px;
+        color: #91a8b2;
+        font-size: 12px;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+    }
+
+        .custom-tab.active {
+            color: #d8edf5;
+            border-bottom-color: #72abc0;
+            background: #20313c;
+        }
+
+
+    /* ===== 表單 ===== */
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+    .form-label-custom {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 11px;
+        color: #bdd0d7;
+        font-weight: 600;
+    }
+
+    .required {
+        color: #df7777;
+        margin-left: 2px;
+    }
+
+    .form-control,
+    .form-select {
+        background-color: #14252d !important;
+        border: 1px solid #304b58 !important;
+        color: #dce9ee !important;
+        border-radius: 5px;
+        font-size: 12px;
+        min-height: 32px;
+    }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: #172a33 !important;
+            color: white !important;
+            border-color: #6f9eaf !important;
+            box-shadow: 0 0 0 2px rgba(111, 158, 175, .15) !important;
+        }
+
+    textarea.form-control {
+        min-height: 92px;
+        resize: vertical;
+    }
+
+    .form-control::placeholder {
+        color: #718892;
+    }
+
+    .field-help {
+        display: block;
+        margin-top: 5px;
+        font-size: 10px;
+        color: #728b96;
+    }
+
+    .text-danger {
+        font-size: 10px;
+    }
+
+
+    /* ===== Checkbox / Switch ===== */
+
+    .switch-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 5px;
+    }
+
+        .switch-container input {
+            width: 35px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+
+    /* ===== 底部按鈕 ===== */
+
+    .form-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-top: 1px solid #304452;
+        background: #1a2632;
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: none;
+        color: #76aabd;
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .btn-save {
+        background: #79b0c4;
+        border: 1px solid #79b0c4;
+        color: #102027;
+        border-radius: 5px;
+        padding: 8px 15px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+        .btn-save:hover {
+            background: #8dc0d2;
+            border-color: #8dc0d2;
+        }
+
+
+    /* ===== 右側圖片 ===== */
+
+    .image-preview {
+        height: 166px;
+        margin: 0;
+        background: #1d343e;
+        border: 1px dashed #36515e;
+        border-radius: 6px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+    .image-info {
+        position: absolute;
+        bottom: 7px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        padding: 0 10px;
+        background: rgba(15, 24, 29, .72);
+    }
+
+    .image-name {
+        font-size: 11px;
+        font-weight: 700;
+        color: #edf6f9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .image-ref {
+        font-size: 10px;
+        color: #8fa8b1;
+    }
+
+    .side-help {
+        font-size: 10px;
+        color: #728c96;
+        margin-top: 10px;
+    }
+
+
+    /* ===== 關聯資訊 ===== */
+
+    .relation-list {
+        padding: 15px;
+    }
+
+    .relation-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 11px;
+        border-bottom: 1px solid rgba(55, 76, 87, .45);
+    }
+
+        .relation-item:last-child {
+            border-bottom: none;
+        }
+
+    .relation-label {
+        color: #b7cbd2;
+    }
+
+    .relation-value {
+        color: #e2edf0;
+        font-weight: 600;
+    }
+
+
+    /* ===== 隱藏關聯物件 ===== */
+
+    .advanced-fields {
+        display: none;
+    }
+
+
+    /* ===== RWD ===== */
+
+    @@media (max-width: 900px) {
+        .editor-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 650px) {
+        .artifact-page {
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-bottom: 10px;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+            gap: 12px;
+        }
+    }
+
+</style>
+
+
+<div class="artifact-page">
+
+    <!-- ==================== 頁面標題 ==================== -->
+
+    <div class="page-header">
+
+        <div>
+            <small>典藏資料 / 圖鑑管理</small>
+            <h1 class="page-title">
+                修改圖鑑
+            </h1>
+
+            <div class="page-description">
+                建立圖鑑條目、來源授權與題庫關聯設定。
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ==================== 左右主要區域 ==================== -->
+
+    <div class="editor-layout">
+
+
+        <!-- ==================== 左側編輯區 ==================== -->
+
+        <div class="editor-card">
+
+            <div class="card-header-custom">
+
+                <h3>圖鑑條目</h3>
+
+                <p>
+                    標示 <span class="required">*</span> 的欄位為必填。
+                </p>
+
+            </div>
+
+
+            <!-- Tabs -->
+
+            <div class="custom-tabs">
+
+                <a href="#" class="custom-tab active">
+                    基本資料
+                </a>
+
+            </div>
+
+
+            <form asp-action="Edit" method="post">
+
+                <div class="card-body-custom">
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="text-danger mb-3">
+                    </div>
+
+                    <input type="hidden" asp-for="Id" />
+
+
+                    <!-- 文件名稱 / 館藏編號 -->
+
+                    <div class="form-row">
+
+                        <div>
+                            <label asp-for="Name" class="form-label-custom">
+                                文物名稱<span class="required">*</span>
+                            </label>
+
+                            <input asp-for="Name"
+                                   class="form-control"
+                                   placeholder="請輸入文物名稱" />
+
+                            <span asp-validation-for="Name"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+
+                        <div>
+                            <label asp-for="ArtifactRef"
+                                   class="form-label-custom">
+                                館藏編號<span class="required">*</span>
+                            </label>
+
+                            <input asp-for="ArtifactRef"
+                                   class="form-control" />
+
+                            <span asp-validation-for="ArtifactRef"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    <!-- 分類 / 年代 -->
+
+                    <div class="form-row">
+
+                        <div>
+
+                            <label asp-for="CategoryId"
+                                   class="form-label-custom">
+                                分類<span class="required">*</span>
+                            </label>
+
+                            <select name="categoryId"
+                                    class="form-select"
+                                    asp-items=" ViewBag.ArtifactCategoryList">
+                                <option value="">
+                                    請選擇分類
+                                </option>
+                            </select>
+
+                            <span asp-validation-for="CategoryId"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+
+                        <div>
+
+                            <label asp-for="EraBucketId"
+                                   class="form-label-custom">
+                                年代桶<span class="required">*</span>
+                            </label>
+
+                            <select name="eraBucketId"
+                                    class="form-select"
+                                    asp-items="ViewBag.EraBucketList">
+                                <option value="">
+                                    請選擇年代
+                                </option>
+                            </select>
+
+                            <span asp-validation-for="EraBucketId"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 原始年代 / 作者 -->
+
+                    <div class="form-row">
+
+                        <div>
+
+                            <label asp-for="EraTextOriginal"
+                                   class="form-label-custom">
+                                原始年代文字
+                            </label>
+
+                            <input asp-for="EraTextOriginal"
+                                   class="form-control" />
+
+                            <span class="field-help">
+                                保留來源所載的原始年代文字。
+                            </span>
+
+                            <span asp-validation-for="EraTextOriginal"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+
+                        <div>
+
+                            <label asp-for="CreatorDisplay"
+                                   class="form-label-custom">
+                                作者／製作者顯示
+                            </label>
+
+                            <input asp-for="CreatorDisplay"
+                                   class="form-control"
+                                   placeholder="未提供" />
+
+                            <span class="field-help">
+                                若來源未記載作者或製作者可留空。
+                            </span>
+
+                            <span asp-validation-for="CreatorDisplay"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 文物說明 -->
+
+                    <div class="form-row full">
+
+                        <div>
+
+                            <label asp-for="Description"
+                                   class="form-label-custom">
+                                文物說明
+                            </label>
+
+                            <textarea asp-for="Description"
+                                      class="form-control"
+                                      rows="4"
+                                      placeholder="請輸入文物說明"></textarea>
+
+                            <span class="field-help">
+                                保留館藏資料中的原始說明。
+                            </span>
+
+                            <span asp-validation-for="Description"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 尺寸 -->
+
+                    <div class="form-row full">
+
+                        <div>
+
+                            <label asp-for="SizeText"
+                                   class="form-label-custom">
+                                尺寸文字
+                            </label>
+
+                            <input asp-for="SizeText"
+                                   class="form-control"
+                                   placeholder="例如：長 5.5 公分・寬 3.8 公分・高 2.4 公分" />
+
+                            <span class="field-help">
+                                可填寫原始尺寸描述。
+                            </span>
+
+                            <span asp-validation-for="SizeText"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ==================== 進階欄位 ==================== -->
+
+                    <div class="advanced-fields">
+
+                        <input asp-for="PrimaryImagePath"
+                               class="form-control" />
+
+                        <input asp-for="ThumbnailPath"
+                               class="form-control" />
+
+                        <input asp-for="SourceUrl"
+                               class="form-control" />
+
+                        <input asp-for="LicenseCode"
+                               class="form-control" />
+
+                        <input asp-for="AttributionText"
+                               class="form-control" />
+
+                        <input asp-for="ArtifactQuestionEntry"
+                               class="form-control" />
+
+                        <input asp-for="ArtifactUnlocks"
+                               class="form-control" />
+
+                    </div>
+
+
+                    <!-- 啟用狀態 -->
+
+                    <div class="form-row">
+
+                        <div>
+
+                            <label asp-for="IsActive"
+                                   class="form-label-custom">
+                                啟用狀態
+                            </label>
+
+                            <div class="switch-container">
+
+                                <input asp-for="IsActive"
+                                       class="form-check-input"
+                                       type="checkbox" />
+
+                                <span style="font-size:11px;">
+                                    啟用此圖鑑條目
+                                </span>
+
+                            </div>
+
+                            <span asp-validation-for="IsActive"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==================== 底部按鈕 ==================== -->
+
+                <div class="form-footer">
+
+                    <a asp-action="Index"
+                       class="btn-cancel">
+                        取消
+                    </a>
+
+                    <button type="submit"
+                            class="btn-save">
+                        儲存文物
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+
+        <!-- ==================== 右側 ==================== -->
+
+        <div>
+
+
+            <!-- 主要影像 -->
+
+            <div class="editor-card mb-3">
+
+                <div class="card-header-custom">
+
+                    <h3>主要影像</h3>
+
+                </div>
+
+
+                <div class="card-body-custom">
+
+                    <div class="image-preview">
+
+                        @if (!string.IsNullOrEmpty(Model.PrimaryImagePath))
+                        {
+                            <img src="@Model.PrimaryImagePath"
+                                 alt="@Model.Name" />
+                        }
+                        else
+                        {
+                            <span style="font-size:12px;color:#718892;">
+                                尚無主要影像
+                            </span>
+                        }
+
+
+                        @if (!string.IsNullOrEmpty(Model.Name))
+                        {
+                            <div class="image-info">
+
+                                <div class="image-name">
+                                    @Model.Name
+                                </div>
+
+                                <div class="image-ref">
+                                    @Model.ArtifactRef
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+
+                    <div class="side-help">
+                        顯示目前保存的主要影像。
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 遊戲題庫關聯 -->
+
+            <div class="editor-card">
+
+                <div class="card-header-custom">
+
+                    <h3>遊戲題庫關聯</h3>
+
+                </div>
+
+
+                <div class="relation-list">
+
+                    <div class="relation-item">
+
+                        <span class="relation-label">
+                            模板代碼
+                        </span>
+
+                        <span class="relation-value">
+                            GENERAL
+                        </span>
+
+                    </div>
+
+
+                    <div class="relation-item">
+
+                        <span class="relation-label">
+                            難度
+                        </span>
+
+                        <span class="relation-value">
+                            1
+                        </span>
+
+                    </div>
+
+
+                    <div class="relation-item">
+
+                        <span class="relation-label">
+                            文物啟用
+                        </span>
+
+                        <span class="relation-value">
+                            @(Model.IsActive ? "是" : "否")
+                        </span>
+
+                    </div>
+
+
+                    <div class="relation-item">
+
+                        <span class="relation-label">
+                            題庫啟用
+                        </span>
+
+                        <span class="relation-value">
+                            @(Model.ArtifactQuestionEntry != null ? "是" : "否")
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+}

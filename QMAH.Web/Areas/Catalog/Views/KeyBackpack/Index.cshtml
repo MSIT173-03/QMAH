@@ -1,0 +1,226 @@
+﻿@using QMAH.Web.Areas.Catalog.ViewModel
+@model IEnumerable<UserKeyBalanceViewModel>
+
+<style>
+
+ /* ---------------------------------------------------------------------- */
+    .filter-bar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap; /* 螢幕太窄時自動換行,避免擠壓變形 */
+        gap: 30px; /* 用 gap 統一控制每個元素之間的間距,取代空白字元 */
+    }
+
+    .filter-item {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* label 跟輸入框之間的小間距 */
+        white-space: nowrap;
+    }
+
+    .bar_edit {
+        width: 250px;
+        max-width: 350px; /* 限制下拉選單最大寬度,不會被最長的選項名稱撐開 */
+    }
+
+    /*按鈕樣式 */
+    .btn_edit {
+        font-size: 30px;
+        border: solid 5px seagreen;
+        background-color: seagreen;
+        border-radius: 5px;
+        padding: 2px;
+    }
+
+    /*標題樣式 */
+    .midddle_title {
+        margin: auto;
+        text-align: center;
+        font-size: 3em;
+    }
+
+    /*內文樣式 */
+    .midddle_text {
+        text-align: center;
+    }
+
+    th {
+        text-align: center;
+        border: solid 2px #336b59;
+    }
+
+    td {
+        border: solid 2px #336b59;
+    }
+
+
+    /*標頭樣式 */
+    #keyTable thead th {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+        #keyTable thead th:hover {
+            background-color: #2c4f50;
+        }
+</style>
+
+
+
+@{
+    ViewData["Title"] = "玩家背包一覽";
+}
+
+
+<h1 class="midddle_title">-背包道具清單-</h1>
+<br />
+<br />
+
+<p>
+    <button type="button" class="btn btn_edit" onclick="location.href='@Url.Action("Create", "KeyBackPack")'">新增道具</button>
+</p>
+
+<div>
+    <form method="post" id="filterForm" class="Font_edit filter-bar">
+        <div class="filter-item" style="margin : auto;">
+
+           <div class="filter-item">
+                <label>玩家 : </label>
+                <select name="userId" id="urd" asp-items="ViewBag.UserProfileList" class="form-control bar_edit">
+                <option value="" class="midddle_text">-- 請選擇 --</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label>關鍵字查詢 : </label>
+                <input type="text" name="txtKeyword" id="keyword" class="bar_edit" />
+                <button type="submit" class="btn btn_edit">搜尋</button>
+                <button type="button" class="btn btn_edit" onclick="clearFilter()">清除</button>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<br />
+
+
+<table class="table" id="keyTable">
+    <thead>
+        <tr>
+            <th style="width : 10%;" data-column="0">
+                序
+            </th>
+            <th style="width: 20%;" data-column="1">
+                玩家
+            </th>
+            <th style="width: 20%;" data-column="2">
+                鑰匙種類
+            </th>
+            <th style="width: 20%;" data-column="3">
+                結餘
+            </th>
+            <th style="width: 20%;" data-column="4">
+                更新日期
+            </th>
+            <th style="width : 10%;">編輯</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int count = 0;
+            foreach (var item in Model)
+            {
+                count++;
+                <tr>
+                    <td class="midddle_text">
+                        @count
+                    </td>
+                    <td class="midddle_text">
+                        @Html.DisplayFor(model => item.Nickname)
+                    </td>
+                    <td class="midddle_text">
+                        @Html.DisplayFor(model => item.UserKeyBalance.KeyDefinition.Name)
+                    </td>
+                    <td class="midddle_text">
+                        @Html.DisplayFor(model => item.UserKeyBalance.Balance)
+                    </td>
+                    <td class="midddle_text">
+                        @Html.DisplayFor(model => item.UserKeyBalance.UpdatedAt)
+                    </td>
+                    <td class="midddle_text" style="font-size : 20px;">
+                        <a asp-action="Edit" asp-route-userId="@item.UserKeyBalance.UserId" asp-route-keydefinitionId="@item.UserKeyBalance.KeyDefinitionId">編輯</a> |
+                        <a asp-action="Delete" asp-route-userId="@item.UserKeyBalance.UserId" asp-route-keydefinitionId="@item.UserKeyBalance.KeyDefinitionId" onclick="return confirm('確定要刪除嗎?')">刪除</a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<script>
+
+    function clearFilter() {
+
+        document.getElementById('keyword').value = '';
+
+        document.getElementById('urd').value = '';
+
+        document.getElementById('filterForm').submit();
+    }
+
+    const table = document.getElementById("keyTable");
+    const headers = table.querySelectorAll("thead th");
+
+    let sortColumn = -1;
+    let sortAscending = true;
+
+    headers.forEach(header => {
+
+        header.style.cursor = "pointer";
+
+        header.addEventListener("click", function() {
+
+            const column = parseInt(this.dataset.column);
+
+            if (sortColumn === column) {
+                sortAscending = !sortAscending;
+            } else {
+                sortColumn = column;
+                sortAscending = true;
+            }
+
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            rows.sort((a, b) => {
+
+                const valueA = a.children[column].textContent.trim();
+                const valueB = b.children[column].textContent.trim();
+
+                const numberA = Number(valueA);
+                const numberB = Number(valueB);
+
+                if (!isNaN(numberA) && !isNaN(numberB)) {
+                    return sortAscending
+                        ? numberA - numberB
+                        : numberB - numberA;
+                }
+
+                return sortAscending
+                    ? valueA.localeCompare(valueB)
+                    : valueB.localeCompare(valueA);
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+
+            headers.forEach(h => {
+                h.textContent = h.textContent
+                    .replace(" ↑", "")
+                    .replace(" ↓", "");
+            });
+
+            this.textContent += sortAscending ? " ↑" : " ↓";
+        });
+    });
+</script>

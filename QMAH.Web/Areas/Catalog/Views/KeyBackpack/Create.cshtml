@@ -1,0 +1,138 @@
+﻿@model QMAH.Web.Models.Entities.UserKeyBalance
+
+<style>
+
+    /* 排版樣式 */
+    .editor-card {
+        width: 500px;
+        background: #1c2835;
+        border: 1px solid #304452;
+        border-radius: 7px;
+        padding: 10px;
+    }
+
+    .form-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-top: 1px solid #304452;
+        background: #1a2632;
+    }
+
+    /* Button樣式 */
+    .btn-cancel {
+        background: transparent;
+        border: none;
+        color: #76aabd;
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .btn-save {
+        background: #79b0c4;
+        border: 1px solid #79b0c4;
+        color: #102027;
+        border-radius: 5px;
+        padding: 8px 15px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+
+    /* IsActivate樣式 */
+    .form-label-custom {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 11px;
+        color: #bdd0d7;
+        font-weight: 600;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+
+    .switch-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 5px;
+    }
+
+    .text-danger {
+        font-size: 10px;
+    }
+
+</style>
+
+
+@{
+    ViewData["Title"] = "背包編輯";
+}
+
+<h1>玩家背包資訊</h1>
+
+
+<hr />
+
+@* 錯誤訊息。 *@
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger" style="width:auto">
+        @ViewBag.ErrorMessage
+    </div>
+}
+
+<div class="editor-card">
+    <div class="col-md-12">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="UserId" class="control-label">玩家</label>
+                <br /><br />
+                <select name="userId" id="user" asp-items="ViewBag.UserProfileList"
+                        class="form-control bar_edit">
+                    <option value="" class="midddle_text">-- 請選擇 --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="KeyDefinitionId" class="control-label">鑰匙種類</label>
+                <br /><br />
+                <select name="keydefinitionId" id="keyd" asp-items="ViewBag.KeyDefinitionList"
+                        class="form-control bar_edit">
+                    <option value="" class="midddle_text">-- 請選擇 --</option>
+                </select>
+            </div>
+
+
+            <br />
+
+            <div class="form-group">
+                <label asp-for="Balance" class="control-label">數量(結餘)</label>
+                <br /><br />
+                <input asp-for="Balance" class="form-control" />
+                <span asp-validation-for="Balance" class="text-danger"></span>
+            </div>
+
+            <br />
+
+
+            <br />
+
+            <div class="form-footer">
+
+                <a asp-action="Index" class="btn-cancel">取消</a>
+
+                <button type="submit" class="btn-save">儲存</button>
+
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,131 @@
+@model QMAH.Web.Models.Entities.KeyDefinition
+
+<style>
+
+    /* 排版樣式 */
+    .editor-card {
+        width: 500px;
+        background: #1c2835;
+        border: 1px solid #304452;
+        border-radius: 7px;
+        padding: 10px;
+    }
+
+    .form-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-top: 1px solid #304452;
+        background: #1a2632;
+    }
+
+    /* Button樣式 */
+    .btn-cancel {
+        background: transparent;
+        border: none;
+        color: #76aabd;
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .btn-save {
+        background: #79b0c4;
+        border: 1px solid #79b0c4;
+        color: #102027;
+        border-radius: 5px;
+        padding: 8px 15px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+</style>
+
+
+@{
+    ViewData["Title"] = "鑰匙編輯";
+}
+
+<h1>鑰匙資訊</h1>
+
+
+<hr/>
+
+@* 錯誤訊息*@
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger" style="width:auto">
+        @ViewBag.ErrorMessage
+    </div>
+}
+
+<div class="editor-card">
+    <div class="col-md-12">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <br /><br />
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <br/>
+
+            <div class="form-group">
+                <label asp-for="Code" class="control-label"></label>
+                <br/><br/>
+                <input asp-for="Code" class="form-control" />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+
+            <br/>
+
+            <div class="form-group">
+                <label asp-for="ScopeType" class="control-label"></label>
+                <br/><br/>
+                <input asp-for="ScopeType" class="form-control" />
+                <span asp-validation-for="ScopeType" class="text-danger"></span>
+            </div>
+
+            <br/>
+
+            <div class="form-group">
+                <label asp-for="CategoryId" class="control-label">類別</label>
+                <br /><br />
+                <select name="categoryId" id="cat" asp-items="ViewBag.ArtifactCategoryList"
+                        class="form-control bar_edit">
+                    <option value="" class="midddle_text">-- 請選擇 --</option>
+                </select>
+            </div>
+
+            <br />
+
+            <div class="form-group">
+                <label asp-for="EraBucketId" class="control-label">年代</label>
+                <br /><br />
+                <select name="eraBucketId" id="cat" asp-items="ViewBag.EraBucketList"
+                        class="form-control bar_edit">
+                    <option value="" class="midddle_text">-- 請選擇 --</option>
+                </select>
+            </div>
+
+            <div class="form-footer">
+
+                <a asp-action="Index" class="btn-cancel">取消</a>
+
+                <button type="submit" class="btn-save">儲存</button>
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
