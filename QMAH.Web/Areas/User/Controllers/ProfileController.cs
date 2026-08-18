@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Entities;
 using QMAH.Web.Models.Identity;
 
@@ -14,6 +15,7 @@ namespace QMAH.Web.Areas.User.Controllers;
 
 [Area("User")]
 [Authorize]
+[AdminNavigation("個人資料", 20)]
 public class ProfileController : Controller
 {
     private readonly QmahDbContext _context;

@@ -1,19 +1,14 @@
 @model QMAH.Web.Areas.User.ViewModels.HomeDashboardViewModel
 
 @{
-    ViewData["Title"] = "會員管理";
+    ViewData["Title"] = "會員總覽";
+    ViewData["AdminDescription"] = "會員帳號、角色、個人檔案、成就與點數活動。";
 }
 
-<!-- =========================
-     標題
-========================= -->
-<div class="mb-4">
-    <h1>會員管理總覽</h1>
-
-    <p class="text-muted mb-0">
-        會員帳號、角色、個人檔案與近期活動
-    </p>
-</div>
+@section PageActions {
+    <a asp-area="User" asp-controller="Members" asp-action="Index" class="btn btn-primary"><i class="ti ti-users me-1"></i>會員帳號</a>
+    <a asp-area="User" asp-controller="Achievements" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-award me-1"></i>成就設定</a>
+}
 
 
 <!-- =========================

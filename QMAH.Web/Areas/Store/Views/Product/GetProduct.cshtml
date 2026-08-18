@@ -7,6 +7,16 @@
 <div class="my-3">
     <a asp-action="Index" class="btn btn-light mx-3">返回列表</a>
     <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-outline-info">編輯</a> 
+    @if (Model is not null)
+    {
+        <form asp-action="ToggleStatus" method="post" class="d-inline ms-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn @(Model.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                @(Model.IsActive ? "下架商品" : "重新上架")
+            </button>
+        </form>
+    }
 </div>
 
 <style>

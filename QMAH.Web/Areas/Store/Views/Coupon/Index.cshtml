@@ -1,77 +1,70 @@
 @model IEnumerable<QMAH.Web.Models.Entities.CouponDefinition>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "優惠券管理";
+    ViewData["AdminDescription"] = "管理優惠券定義與啟用狀態，停用不會刪除既有會員券或訂單紀錄。";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Code)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DiscountType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DiscountValue)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.MinimumAmount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StartAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EndAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.Code)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.DiscountType)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.DiscountValue)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.MinimumAmount)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.StartAt)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.EndAt)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.IsActive)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+@section PageActions {
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="ti ti-plus me-1"></i>新增優惠券
+    </a>
 }
-    </tbody>
-</table>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table">
+            <thead>
+                <tr>
+                    <th>代碼</th>
+                    <th>名稱</th>
+                    <th>折扣</th>
+                    <th>最低消費</th>
+                    <th>有效期間</th>
+                    <th>狀態</th>
+                    <th class="w-1">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-secondary py-5">目前沒有優惠券資料。</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><code>@item.Code</code></td>
+                            <td class="fw-semibold">@item.Name</td>
+                            <td>@item.DiscountType · @item.DiscountValue.ToString("0.##")</td>
+                            <td>@item.MinimumAmount.ToString("C0")</td>
+                            <td class="text-secondary text-nowrap">
+                                @item.StartAt.ToString("yyyy-MM-dd")<br />至 @item.EndAt.ToString("yyyy-MM-dd")
+                            </td>
+                            <td>
+                                <span class="badge @(item.IsActive ? "bg-green-lt" : "bg-secondary-lt")">
+                                    @(item.IsActive ? "啟用中" : "已停用")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                                    <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                                            @(item.IsActive ? "停用" : "啟用")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

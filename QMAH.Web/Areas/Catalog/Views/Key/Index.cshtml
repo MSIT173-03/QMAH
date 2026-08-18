@@ -115,8 +115,12 @@
                         @Html.DisplayFor(model => item.IsActive)
                     </td>
                     <td class="midddle_text" style="font-size : 20px;">
-                        <a asp-action="Edit" asp-route-id="@item.Id">編輯</a> |
-                        <a asp-action="Delete" asp-route-id="@item.Id" onclick="return confirm('確定要刪除嗎?')">刪除</a>
+                        <a asp-action="Edit" asp-route-id="@item.Id">編輯</a>
+                        <form asp-action="Delete" method="post" class="d-inline ms-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-link p-0" onclick="return confirm('確定要停用這把鑰匙嗎?')">停用</button>
+                        </form>
                     </td>
                 </tr>
             }

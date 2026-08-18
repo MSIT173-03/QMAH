@@ -1,117 +1,76 @@
 @model IEnumerable<QMAH.Web.Areas.Store.ViewModels.ProductSimplefyListItem>
 
 @{
-    ViewData["Title"] = "產品列表";
+    ViewData["Title"] = "商品管理";
+    ViewData["AdminDescription"] = "維持既有商品資料模型，提供商品建立、編輯與上下架處理。";
 }
 
-<style>
-    #product-list-table > tbody > tr {
-        cursor: pointer;
-        position: relative;
-    }
-
-    .products-cover {
-        position: absolute;
-        width: 20%;
-    }
-
-    .products-cover.at-top {
-        bottom: 100%;
-        left: 0;
-    }
-
-    .products-cover.at-bottom {
-        top: 100%;
-        left: 0;
-    }
-</style>
-
-<p>
-    <a asp-action="Create">新增產品</a>
-</p>
+@section PageActions {
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="ti ti-plus me-1"></i>新增商品
+    </a>
+}
 
 @{
     var viewData = new ViewDataDictionary(ViewData)
     {
-        {"Controller", "Product"},
-        {"Action", "Index"}
+        { "Controller", "Product" },
+        { "Action", "Index" }
     };
 }
 <partial name="OptionSetListPage" view-data="viewData" />
 
-<table id="product-list-table" class="table table-hover">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Stock)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr onclick="window.location.assign('@item.Id')">
-            <td>
-                @Html.DisplayFor(model => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Category)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Stock)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.IsActive)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">編輯</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">細節</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">刪除</a>
-                    <div class="products-cover at-top" hidden="hidden">
-                        <img src="@item.ImageUrl" />
-                    </div>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
-
-
-<script>
-    document.querySelectorAll("#product-list-table > tbody > tr").forEach(row => {
-        const imgBox = row.querySelector(".products-cover")
-        const img = row.querySelector(".products-cover > img")
-        
-        row.addEventListener("mouseenter", ev => {
-            // const rowT = row.getBoundingClientRect().top
-            // const imgH = img.getBoundingClientRect().height
-            
-            imgBox.removeAttribute("hidden")
-
-            // if (imgH + 8 > rowT) imgBox.classList.add("at-bottom")
-            // else imgBox.classList.add("at-top")
-        })
-
-        row.addEventListener("mouseleave", ev => {
-            imgBox.setAttribute("hidden", true)
-            // imgBox.classList.remove("at-top", "at-bottom")
-        })
-    })
-
-
-</script>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table">
+            <thead>
+                <tr>
+                    <th>商品名稱</th>
+                    <th>分類</th>
+                    <th>價格</th>
+                    <th>庫存</th>
+                    <th>狀態</th>
+                    <th class="w-1">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-5">目前沒有商品資料。</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@item.Name</td>
+                            <td><span class="badge bg-blue-lt">@item.Category</span></td>
+                            <td>@item.Price.ToString("C0")</td>
+                            <td>@item.Stock</td>
+                            <td>
+                                <span class="badge @(item.IsActive ? "bg-green-lt" : "bg-secondary-lt")">
+                                    @(item.IsActive ? "上架中" : "已下架")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a asp-action="GetProduct" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">查看</a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                                    <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                                            @(item.IsActive ? "下架" : "上架")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

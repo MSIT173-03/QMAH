@@ -15,6 +15,7 @@ namespace QMAH.Web.Areas.Catalog.Controllers;
 
 
 [Area("Catalog")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [AdminNavigation("鑰匙總覽", order: 10)]
 public class KeyController : Controller
 {
@@ -75,7 +76,9 @@ public class KeyController : Controller
     }
 
 
-    public ActionResult delete(Guid? id)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public ActionResult Delete(Guid? id)
     {
         KeyDefinition kd = _db.KeyDefinitions.FirstOrDefault(t => t.Id == id);
         if (kd != null)

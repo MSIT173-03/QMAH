@@ -149,8 +149,13 @@
                         @Html.DisplayFor(model => item.UserKeyBalance.UpdatedAt)
                     </td>
                     <td class="midddle_text" style="font-size : 20px;">
-                        <a asp-action="Edit" asp-route-userId="@item.UserKeyBalance.UserId" asp-route-keydefinitionId="@item.UserKeyBalance.KeyDefinitionId">編輯</a> |
-                        <a asp-action="Delete" asp-route-userId="@item.UserKeyBalance.UserId" asp-route-keydefinitionId="@item.UserKeyBalance.KeyDefinitionId" onclick="return confirm('確定要刪除嗎?')">刪除</a>
+                        <a asp-action="Edit" asp-route-userId="@item.UserKeyBalance.UserId" asp-route-keydefinitionId="@item.UserKeyBalance.KeyDefinitionId">編輯</a>
+                        <form asp-action="Delete" method="post" class="d-inline ms-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userId" value="@item.UserKeyBalance.UserId" />
+                            <input type="hidden" name="keydefinitionId" value="@item.UserKeyBalance.KeyDefinitionId" />
+                            <button type="submit" class="btn btn-link p-0" onclick="return confirm('確定要刪除此筆背包紀錄嗎?')">刪除</button>
+                        </form>
                     </td>
                 </tr>
             }

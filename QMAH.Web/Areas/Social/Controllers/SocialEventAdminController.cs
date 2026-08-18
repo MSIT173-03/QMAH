@@ -12,7 +12,7 @@ namespace QMAH.Web.Areas.Social.Controllers
 {
     [Area("Social")]
     [AdminNavigation("活動審核", 50)]
-    //[Authorize(Policy = "Policy.Social.ManageEvents")]
+    [Authorize(Policy = "Policy.Social.ManageEvents")]
     public class SocialEventAdminController : Controller
     {
         private readonly QmahDbContext _context;

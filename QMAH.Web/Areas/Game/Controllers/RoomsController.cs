@@ -11,6 +11,7 @@ using QMAH.Web.Models.Entities;
 namespace QMAH.Web.Areas.Game.Controllers;
 
 [Area("Game")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [AdminNavigation("房間", order: 20)]
 public sealed class RoomsController(
     QmahDbContext db,

@@ -18,7 +18,289 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
+  margin: 0;
+  color: #23343a;
+  background: #f5f7f8;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+}
+
+.qmah-public-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid #d8e2e5;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+}
+
+.qmah-public-header .navbar {
+  min-height: 4.75rem;
+}
+
+.qmah-public-brand img {
+  display: block;
+  width: clamp(9.5rem, 20vw, 12rem);
+  height: auto;
+}
+
+.qmah-public-header .nav-link {
+  color: #536a73;
+  font-weight: 650;
+}
+
+.qmah-public-header .nav-link:hover,
+.qmah-public-header .nav-link:focus-visible {
+  color: #315d72;
+}
+
+.qmah-public-account {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.qmah-public-account form {
+  margin: 0;
+}
+
+.qmah-public-main {
+  min-height: calc(100vh - 9rem);
+  padding: clamp(1.5rem, 4vw, 4rem) 0;
+}
+
+.qmah-home-hero {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  padding: clamp(1.75rem, 5vw, 4.5rem);
+  border: 1px solid #d6e1e4;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, #ffffff 0%, #edf3f4 100%);
+  box-shadow: 0 18px 50px rgba(34, 62, 72, 0.09);
+}
+
+.qmah-home-hero__copy {
+  max-width: 48rem;
+}
+
+.qmah-home-hero__label {
+  margin: 0 0 0.75rem;
+  color: #3f6f86;
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.qmah-home-hero h1 {
+  max-width: 13ch;
+  margin: 0;
+  color: #1b2c34;
+  font-size: clamp(2.2rem, 4.7vw, 4.5rem);
+  font-weight: 780;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.qmah-home-hero p:not(.qmah-home-hero__label) {
+  max-width: 60ch;
+  margin: 1.25rem 0 0;
+  color: #566a73;
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.qmah-home-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+}
+
+.qmah-home-hero__aside {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+  max-width: 18rem;
+  color: #566a73;
+  line-height: 1.5;
+}
+
+.qmah-home-hero__aside strong {
+  color: #1b2c34;
+}
+
+.qmah-home-hero__mark {
+  display: grid;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: 0.75rem;
+  place-items: center;
+  border-radius: 1rem;
+  background: #3f6f86;
+  color: #fff;
+  font-size: 2.6rem;
+  font-weight: 800;
+}
+
+.qmah-home-section {
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.qmah-home-section__heading {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.qmah-home-section h2,
+.qmah-home-member-panel h2 {
+  margin: 0;
+  color: #1b2c34;
+  font-size: clamp(1.45rem, 2.5vw, 2rem);
+  font-weight: 760;
+  letter-spacing: -0.025em;
+}
+
+.qmah-home-section__heading p,
+.qmah-home-member-panel p {
+  margin: 0.35rem 0 0;
+  color: #687c84;
+}
+
+.qmah-home-member-state {
+  color: #2f765c;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.qmah-system-card {
+  position: relative;
+  display: flex;
+  min-height: 10.5rem;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.35rem;
+  overflow: hidden;
+  border: 1px solid #d8e2e5;
+  border-radius: 0.9rem;
+  background: #fff;
+  color: #1b2c34;
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.qmah-system-card::after {
+  position: absolute;
+  right: -1.5rem;
+  bottom: -2rem;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background: var(--qmah-system-accent, #dbe9ed);
+  content: "";
+  opacity: 0.72;
+}
+
+.qmah-system-card:hover,
+.qmah-system-card:focus-visible {
+  border-color: var(--qmah-system-accent-strong, #3f6f86);
+  box-shadow: 0 14px 32px rgba(34, 62, 72, 0.11);
+  color: #1b2c34;
+  transform: translateY(-2px);
+}
+
+.qmah-system-card__icon {
+  display: grid;
+  z-index: 1;
+  width: 2.85rem;
+  height: 2.85rem;
+  flex: 0 0 2.85rem;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: var(--qmah-system-accent, #dbe9ed);
+  color: var(--qmah-system-accent-strong, #3f6f86);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.qmah-system-card__body {
+  display: grid;
+  z-index: 1;
+  min-width: 0;
+  gap: 0.3rem;
+}
+
+.qmah-system-card__body strong {
+  font-size: 1.12rem;
+}
+
+.qmah-system-card__body small {
+  color: #3f6f86;
+  font-weight: 700;
+}
+
+.qmah-system-card__body span {
+  color: #687c84;
+  line-height: 1.5;
+}
+
+.qmah-system-card__arrow {
+  z-index: 1;
+  margin-left: auto;
+  color: var(--qmah-system-accent-strong, #3f6f86);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.qmah-system-card--catalog { --qmah-system-accent: #dbe9ed; --qmah-system-accent-strong: #3f6f86; }
+.qmah-system-card--game { --qmah-system-accent: #e9e1cf; --qmah-system-accent-strong: #8b7653; }
+.qmah-system-card--social { --qmah-system-accent: #dceae5; --qmah-system-accent-strong: #2f765c; }
+.qmah-system-card--user { --qmah-system-accent: #e5e1ed; --qmah-system-accent-strong: #66547f; }
+.qmah-system-card--store { --qmah-system-accent: #f0dfdb; --qmah-system-accent-strong: #ad594a; }
+
+.qmah-home-member-panel {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border: 1px solid #d8e2e5;
+  border-radius: 0.9rem;
+  background: #eef3f4;
+}
+
+.qmah-public-footer {
+  padding: 1.5rem 0;
+  border-top: 1px solid #d8e2e5;
+  color: #74868e;
+  font-size: 0.8rem;
+}
+
+@media (min-width: 900px) {
+  .qmah-home-hero {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .qmah-home-section__heading,
+  .qmah-home-member-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .qmah-home-hero h1 {
+    max-width: none;
+  }
+
+  .qmah-home-hero__actions .btn,
+  .qmah-home-member-panel .btn {
+    flex: 1 1 auto;
+  }
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {

@@ -2,13 +2,16 @@
 
 using QMAH.Web.Areas.Store.ViewModels;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Entities;
 
 
 namespace QMAH.Web.Areas.Store.Controllers;
 
 [Area("Store")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [Route("store/order")]
+[AdminNavigation("訂單管理", 20)]
 public class OrderController : Controller
 {
     private readonly QmahDbContext db;

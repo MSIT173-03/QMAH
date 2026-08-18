@@ -3,12 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
 [Area("User")]
 [Authorize(Roles = "Admin")]
+[AdminNavigation("成就設定", 30)]
 public class AchievementsController : Controller
 {
     private readonly QmahDbContext _context;

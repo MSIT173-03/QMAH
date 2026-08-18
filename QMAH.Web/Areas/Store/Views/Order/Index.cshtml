@@ -1,102 +1,66 @@
 @model IEnumerable<QMAH.Web.Areas.Store.ViewModels.OrderSimplefyListItem>
 
 @{
-    ViewData["Title"] = "訂單列表";
+    ViewData["Title"] = "訂單管理";
+    ViewData["AdminDescription"] = "檢視訂單、付款與取消紀錄；訂單明細不提供任意刪除，避免破壞交易歷史。";
 }
-
-<p>
-    <a asp-action="Create">新增訂單</a>
-</p>
-<style>
-    #order-list-table > tbody > tr{
-        cursor:pointer;
-    }
-</style>
 
 @{
     var viewData = new ViewDataDictionary(ViewData)
     {
-        {"Controller", "Order"},
-        {"Action", "Index"}
+        { "Controller", "Order" },
+        { "Action", "Index" }
     };
 }
 <partial name="OptionSetListPage" view-data="viewData" />
 
-<table id="order-list-table" class="table table-hover border">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.UserName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ItemsCount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ItemsTotal)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DiscountAmount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PointUsed)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Total)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreateAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PaidAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CancelledAt)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-            <tr onclick="window.location.assign('@item.Id')">
-            <td>
-                @Html.DisplayFor(model => item.UserName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ItemsCount)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ItemsTotal)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.DiscountAmount)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PointUsed)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Total)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CreateAt)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PaidAt)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CancelledAt)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table">
+            <thead>
+                <tr>
+                    <th>會員</th>
+                    <th>狀態</th>
+                    <th>商品數量</th>
+                    <th>小計</th>
+                    <th>折扣</th>
+                    <th>點數</th>
+                    <th>總計</th>
+                    <th>建立時間</th>
+                    <th>付款時間</th>
+                    <th>取消時間</th>
+                    <th class="w-1">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="11" class="text-center text-secondary py-5">目前沒有訂單資料。</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@item.UserName</td>
+                            <td><span class="badge bg-secondary-lt">@item.Status</span></td>
+                            <td>@item.ItemsCount</td>
+                            <td>@item.ItemsTotal.ToString("C0")</td>
+                            <td>@item.DiscountAmount.ToString("C0")</td>
+                            <td>@item.PointUsed</td>
+                            <td class="fw-semibold">@item.Total.ToString("C0")</td>
+                            <td class="text-secondary text-nowrap">@item.CreateAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-secondary">@(item.PaidAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                            <td class="text-secondary">@(item.CancelledAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                            <td>
+                                <a asp-action="GetOrder" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">查看</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

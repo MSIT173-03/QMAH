@@ -7,6 +7,7 @@ using QMAH.Web.Data;
 namespace QMAH.Web.Areas.Game.Controllers;
 
 [Area("Game")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 public sealed class HomeController(QmahDbContext db) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken)

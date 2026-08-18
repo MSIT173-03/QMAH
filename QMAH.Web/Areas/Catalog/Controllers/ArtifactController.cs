@@ -14,6 +14,7 @@ namespace QMAH.Web.Areas.Catalog.Controllers;
 
 
 [Area("Catalog")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [AdminNavigation("文物總覽", order: 10)]
 public class ArtifactController : Controller
 {
@@ -111,6 +112,8 @@ public class ArtifactController : Controller
     }
 
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public ActionResult Delete(Guid? id)
     {
         Artifact a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
@@ -123,7 +126,7 @@ public class ArtifactController : Controller
         {
             return Content("Id 不存在");
         }
-        return RedirectToAction("List");
+        return RedirectToAction(nameof(Index));
     }
 
 

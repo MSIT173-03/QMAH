@@ -12,8 +12,8 @@ using QMAH.Web.Areas.Social.Models;
 namespace QMAH.Web.Areas.Social.Controllers;
 
 [Area("Social")]
-[AllowAnonymous] // 👈 暫時改為 AllowAnonymous 排查權限驗證問題
 [Route("Social/[controller]/[action]")] // 👈 加上此屬性路由，明確指定 API 網址為 /Social/ContentReports/Create
+[Authorize(Policy = "Policy.Social.ManageReports")]
 public class ContentReportsController : Controller
 {
     private readonly QmahDbContext _context;
@@ -26,7 +26,7 @@ public class ContentReportsController : Controller
     }
 
     [HttpPost]
-    [IgnoreAntiforgeryToken] // 先忽略 Token 驗證，排查 404/400 瓶頸
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromBody] ReportCreateInputModel model)
     {
         if (!ModelState.IsValid)

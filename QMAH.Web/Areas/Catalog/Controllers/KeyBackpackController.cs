@@ -15,6 +15,7 @@ namespace QMAH.Web.Areas.Catalog.Controllers;
 
 
 [Area("Catalog")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [AdminNavigation("玩家鑰匙背包一覽", order: 10)]
 public class KeyBackPackController : Controller
 {
@@ -119,7 +120,9 @@ public class KeyBackPackController : Controller
     }
 
 
-    public ActionResult delete(Guid? userId, Guid? keydefinitionId)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public ActionResult Delete(Guid? userId, Guid? keydefinitionId)
     {
         UserKeyBalance ukb = _db.UserKeyBalances.FirstOrDefault(t => t.UserId == userId && t.KeyDefinitionId == keydefinitionId);
         if (ukb != null)

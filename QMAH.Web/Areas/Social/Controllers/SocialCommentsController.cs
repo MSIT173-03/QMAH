@@ -14,8 +14,8 @@ using QMAH.Web.Models.Entities;
 namespace QMAH.Web.Areas.Social.Controllers;
 
 [Area("Social")]
-[AllowAnonymous]
 [Route("Social/[controller]/[action]")]
+[Authorize(Policy = "Policy.Social.ManageReports")]
 public class SocialCommentsController : Controller
 {
     private readonly QmahDbContext _context;
@@ -49,7 +49,7 @@ public class SocialCommentsController : Controller
     }
 
     [HttpPost]
-    [IgnoreAntiforgeryToken]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromBody] SocialCommentCreateModel model)
     {
         if (!ModelState.IsValid || string.IsNullOrWhiteSpace(model.Content))

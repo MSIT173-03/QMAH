@@ -1,73 +1,145 @@
-﻿@model IEnumerable<QMAH.Web.Areas.Social.Models.AdminPostListViewModel>
+@model QMAH.Web.Areas.Social.Models.SocialPostAdminPageViewModel
 
 @{
-    ViewData["Title"] = "社群貼文管理";
+    ViewData["Title"] = "貼文內容處理";
+    ViewData["AdminDescription"] = "依板塊、狀態、關鍵字與日期篩選貼文，再進行編輯、隱藏、恢復或下架。";
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
 }
 
-<div class="page-header d-print-none">
-    <div class="container-xl">
-        <div class="row g-2 align-items-center">
-            <div class="col">
-                <h2 class="page-title">社群貼文管理</h2>
-            </div>
+@section PageActions {
+    <a asp-area="Social" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回社群總覽
+    </a>
+}
+
+<div class="card mb-3">
+    <div class="card-header d-flex align-items-center justify-content-between gap-3">
+        <div>
+            <h2 class="card-title mb-1">貼文篩選</h2>
+            <div class="text-secondary">後台只呈現可操作的內容資料，不混入前台討論版面。</div>
         </div>
+        <span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Index">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-4">
+                    <label asp-for="Keyword" class="form-label">關鍵字</label>
+                    <input asp-for="Keyword" class="form-control" placeholder="搜尋標題或內文" />
+                </div>
+                <div class="col-12 col-sm-6 col-lg-2">
+                    <label asp-for="BoardCode" class="form-label">板塊</label>
+                    <select asp-for="BoardCode" class="form-select">
+                        <option value="">全部板塊</option>
+                        @foreach (var boardCode in Model.BoardCodes)
+                        {
+                            <option value="@boardCode">@boardCode</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-2">
+                    <label asp-for="Status" class="form-label">狀態</label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="">全部狀態</option>
+                        <option value="PUBLISHED">已發布</option>
+                        <option value="HIDDEN">已隱藏</option>
+                        <option value="DELETED">已下架</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-2">
+                    <label asp-for="From" class="form-label">建立日起</label>
+                    <input asp-for="From" type="date" class="form-control" />
+                </div>
+                <div class="col-12 col-sm-6 col-lg-2">
+                    <label asp-for="To" class="form-label">建立日迄</label>
+                    <input asp-for="To" type="date" class="form-control" />
+                </div>
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-filter me-1"></i>套用篩選
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">清除條件</a>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
-<div class="page-body">
-    <div class="container-xl">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show shadow-sm mb-3" role="alert">
-                <i class="ti ti-check me-2"></i>@TempData["SuccessMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-3" role="alert">
-                <i class="ti ti-alert-circle me-2"></i>@TempData["ErrorMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        }
-
-        <div class="card">
-            <div class="table-responsive">
-                <table class="table table-vcenter card-table">
-                    <thead>
-                        <tr>
-                            <th>看板</th>
-                            <th>標題</th>
-                            <th>狀態</th>
-                            <th>建立時間</th>
-                            <th class="w-1">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table">
+            <thead>
+                <tr>
+                    <th>板塊</th>
+                    <th>標題</th>
+                    <th>作者</th>
+                    <th>留言</th>
+                    <th>狀態</th>
+                    <th>建立時間</th>
+                    <th class="w-1">處理</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Posts.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-secondary py-5">找不到符合條件的貼文。</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model.Posts)
+                    {
+                        var statusClass = item.Status switch
                         {
-                            <tr>
-                                <td><span class="badge bg-secondary-lt">@item.BoardCode</span></td>
-                                <td>@item.Title</td>
-                                <td>@item.Status</td>
-                                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td>
-                                    <form asp-action="TogglePostStatus" method="post">
-                                        <input type="hidden" name="id" value="@item.Id" />
-                                        <!-- 當狀態為 HIDDEN 時切換回 PUBLISHED，否則切換為 HIDDEN -->
-                                        <input type="hidden" name="status" value="@(item.Status == "HIDDEN" ? "PUBLISHED" : "HIDDEN")" />
-                                        <button type="submit" class="btn btn-sm btn-outline-warning">
-                                            @(item.Status == "HIDDEN" ? "顯示" : "隱藏")
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                            "PUBLISHED" => "bg-green-lt",
+                            "HIDDEN" => "bg-yellow-lt",
+                            "DELETED" => "bg-red-lt",
+                            _ => "bg-secondary-lt"
+                        };
+                        var nextStatus = item.Status == "PUBLISHED" ? "HIDDEN" : "PUBLISHED";
+                        var nextStatusLabel = item.Status == "PUBLISHED" ? "隱藏" : "恢復發布";
+
+                        <tr>
+                            <td><span class="badge bg-blue-lt">@item.BoardCode</span></td>
+                            <td class="fw-semibold">@item.Title</td>
+                            <td class="text-secondary">@item.AuthorName</td>
+                            <td>@item.CommentCount</td>
+                            <td><span class="badge @statusClass">@item.Status</span></td>
+                            <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                                    @if (item.Status != "DELETED")
+                                    {
+                                        <form asp-action="SetPostStatus" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="status" value="@nextStatus" />
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">@nextStatusLabel</button>
+                                        </form>
+                                        <form asp-action="SetPostStatus" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="status" value="DELETED" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要將這篇貼文下架嗎？')">下架</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="SetPostStatus" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="status" value="PUBLISHED" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success">恢復發布</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
     </div>
 </div>

@@ -1,0 +1,99 @@
+@model QMAH.Web.Areas.Store.ViewModels.ProductEditViewModel
+
+@{
+    var isEdit = Model.Id != Guid.Empty;
+    ViewData["Title"] = isEdit ? "編輯商品" : "新增商品";
+    ViewData["AdminDescription"] = "只更新商品欄位，不修改既有訂單明細或資料庫結構。";
+}
+
+@section PageActions {
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回商品管理
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-9">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">@(isEdit ? "商品資料" : "建立商品")</h2>
+            </div>
+            <div class="card-body">
+                <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.Id : null)" method="post">
+                    <input asp-for="Id" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="CategoryCode" class="form-label"></label>
+                            <input asp-for="CategoryCode" class="form-control" placeholder="例如 ARTIFACT" />
+                            <span asp-validation-for="CategoryCode" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Price" class="form-label"></label>
+                            <input asp-for="Price" class="form-control" inputmode="decimal" />
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Stock" class="form-label"></label>
+                            <input asp-for="Stock" class="form-control" />
+                            <span asp-validation-for="Stock" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ArtifactId" class="form-label"></label>
+                            <input asp-for="ArtifactId" class="form-control" />
+                            <span asp-validation-for="ArtifactId" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ExternalRef" class="form-label"></label>
+                            <input asp-for="ExternalRef" class="form-control" />
+                            <span asp-validation-for="ExternalRef" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="SizeText" class="form-label"></label>
+                            <input asp-for="SizeText" class="form-control" />
+                            <span asp-validation-for="SizeText" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="PrimaryImagePath" class="form-label"></label>
+                            <input asp-for="PrimaryImagePath" class="form-control" />
+                            <span asp-validation-for="PrimaryImagePath" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="SourceUrl" class="form-label"></label>
+                            <input asp-for="SourceUrl" class="form-control" />
+                            <span asp-validation-for="SourceUrl" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <span class="form-check-label">上架此商品</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i>儲存
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

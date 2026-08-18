@@ -1,6 +1,92 @@
+@model QMAH.Web.Areas.Social.Models.SocialDashboardViewModel
+
 @{
-    ViewData["Title"] = "Social";
+    ViewData["Title"] = "社群管理總覽";
+    ViewData["AdminDescription"] = "社群內容的後台工作台，不提供一般使用者瀏覽或互動入口。";
+    var canManagePosts = User.IsInRole("Admin") || User.IsInRole("ContentModerator");
+    var canManageEvents = User.IsInRole("Admin") || User.IsInRole("EventModerator");
 }
 
-<h1>Social</h1>
-<p>社群系統空白開發區</p>
+<div class="qmah-dashboard-intro">
+    <div>
+        <h1 class="qmah-dashboard-title">社群管理總覽</h1>
+        <p class="qmah-dashboard-lede">集中處理貼文、板塊、活動與檢舉，不把後台內容誤當成公開討論區。</p>
+    </div>
+    <div class="qmah-actions">
+        @if (canManagePosts)
+        {
+            <a asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" class="btn btn-primary">
+                <i class="ti ti-file-pencil me-1"></i>貼文內容處理
+            </a>
+        }
+        @if (canManageEvents)
+        {
+            <a asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="ti ti-calendar-check me-1"></i>活動審核
+            </a>
+        }
+    </div>
+</div>
+
+<div class="row row-cards qmah-dashboard-metrics">
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body">
+        <span class="qmah-metric-label">已發布貼文</span><strong class="qmah-metric-value">@Model.PublishedPostCount</strong><span class="qmah-metric-note">可由內容審核人員處理</span>
+    </div></div></div>
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body">
+        <span class="qmah-metric-label">留言總量</span><strong class="qmah-metric-value">@Model.CommentCount</strong><span class="qmah-metric-note">貼文互動資料</span>
+    </div></div></div>
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body">
+        <span class="qmah-metric-label">待處理檢舉</span><strong class="qmah-metric-value">@Model.PendingReportCount</strong><span class="qmah-metric-note">需要風控審核</span>
+    </div></div></div>
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body">
+        <span class="qmah-metric-label">待審活動</span><strong class="qmah-metric-value">@Model.PendingEventCount</strong><span class="qmah-metric-note">已發布 @Model.PublishedEventCount 場</span>
+    </div></div></div>
+</div>
+
+<div class="row row-cards">
+    <div class="col-12 col-lg-7">
+        <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title">社群工作區</h2><div class="text-secondary">依照權限進入相應的管理作業。</div></div><span class="badge bg-blue-lt">公告 @Model.PublishedAnnouncementCount</span></div>
+            <div class="card-body">
+                <div class="qmah-quick-grid">
+                    @if (canManagePosts)
+                    {
+                        <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index">
+                            <span class="avatar bg-blue-lt"><i class="ti ti-file-pencil"></i></span><span><strong>貼文內容處理</strong><small>依板塊、狀態、關鍵字與日期篩選</small></span>
+                        </a>
+                        <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index">
+                            <span class="avatar bg-red-lt"><i class="ti ti-shield-alert"></i></span><span><strong>檢舉風控</strong><small>查看內容與處理檢舉結果</small></span>
+                        </a>
+                    }
+                    @if (canManageEvents)
+                    {
+                        <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index">
+                            <span class="avatar bg-green-lt"><i class="ti ti-calendar-check"></i></span><span><strong>活動審核</strong><small>核准或駁回活動提案</small></span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><h2 class="card-title">最近貼文資料</h2></div>
+            <div class="list-group list-group-flush">
+                @if (Model.RecentPosts.Count == 0)
+                {
+                    <div class="empty py-5"><p class="empty-title">目前沒有貼文資料</p></div>
+                }
+                else
+                {
+                    @foreach (var post in Model.RecentPosts)
+                    {
+                        <a class="list-group-item list-group-item-action" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" asp-route-keyword="@post.Title">
+                            <div class="d-flex justify-content-between gap-3"><strong class="text-truncate">@post.Title</strong><span class="badge bg-secondary-lt">@post.BoardCode</span></div>
+                            <small class="text-secondary">@post.CreatedAt.ToString("yyyy-MM-dd HH:mm") · 進入內容處理</small>
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

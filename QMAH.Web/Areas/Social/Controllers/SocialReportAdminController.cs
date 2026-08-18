@@ -13,8 +13,8 @@ using QMAH.Web.Infrastructure.AdminNavigation;
 namespace QMAH.Web.Areas.Social.Controllers;
 
 [Area("Social")]
-[AllowAnonymous]
 [AdminNavigation("檢舉審核", 40)]
+[Authorize(Policy = "Policy.Social.ManageReports")]
 public class SocialReportAdminController : Controller
 {
     private readonly QmahDbContext _context;

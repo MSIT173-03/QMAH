@@ -38,7 +38,8 @@ builder.Services
     .AddEntityFrameworkStores<QmahDbContext>()
     .AddDefaultTokenProviders();
 builder.Services.AddAuthorization();
-builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
 builder.Services.AddSocialAuthorizationPolicies();
 builder.Services.AddSingleton<AdminNavigationService>();
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();

@@ -1,8 +1,87 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model QMAH.Web.Models.HomeDashboardViewModel
+
+@{
+    ViewData["Title"] = "管理總覽";
+    ViewData["AdminDescription"] = "五大系統的共同管理入口；所有功能均以後台作業與資料維護為主。";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@section PageActions {
+    <a asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-primary">
+        <i class="ti ti-user-cog me-1"></i>會員管理
+    </a>
+}
+
+<div class="qmah-dashboard-intro">
+    <div>
+        <h1 class="qmah-dashboard-title">五大系統管理總覽</h1>
+        <p class="qmah-dashboard-lede">從同一個 Tabler 工作台進入圖鑑、遊戲、社群、會員與商城，不提供一般使用者前台入口。</p>
+    </div>
+    <div class="qmah-dashboard-note qmah-dashboard-note--compact">
+        <span class="qmah-status qmah-status--info">目前帳號</span>
+        <strong>@Model.MemberDisplayName</strong>
+    </div>
+</div>
+
+<div class="row row-cards qmah-dashboard-metrics">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card qmah-metric-card"><div class="card-body">
+            <span class="qmah-metric-label">啟用文物</span>
+            <strong class="qmah-metric-value">@Model.ActiveArtifactCount</strong>
+            <span class="qmah-metric-note">文物總數 @Model.ArtifactCount</span>
+        </div></div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card qmah-metric-card"><div class="card-body">
+            <span class="qmah-metric-label">公開貼文</span>
+            <strong class="qmah-metric-value">@Model.PublishedPostCount</strong>
+            <span class="qmah-metric-note">社群內容待後台管理</span>
+        </div></div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card qmah-metric-card"><div class="card-body">
+            <span class="qmah-metric-label">正常會員</span>
+            <strong class="qmah-metric-value">@Model.ActiveMemberCount</strong>
+            <span class="qmah-metric-note">會員總數 @Model.MemberCount</span>
+        </div></div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card qmah-metric-card"><div class="card-body">
+            <span class="qmah-metric-label">上架商品</span>
+            <strong class="qmah-metric-value">@Model.ActiveProductCount</strong>
+            <span class="qmah-metric-note">商品總數 @Model.ProductCount</span>
+        </div></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">系統工作區</h2>
+            <div class="text-secondary">選擇要處理的後台模組。</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="qmah-quick-grid">
+            <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Home" asp-action="Index">
+                <span class="avatar bg-blue-lt"><i class="ti ti-building-monument"></i></span>
+                <span><strong>圖鑑管理</strong><small>文物、分類、年代、鑰匙與解鎖資料</small></span>
+            </a>
+            <a class="qmah-quick-link" asp-area="Game" asp-controller="Home" asp-action="Index">
+                <span class="avatar bg-purple-lt"><i class="ti ti-device-gamepad-2"></i></span>
+                <span><strong>遊戲管理</strong><small>題庫、房間、回合、玩家與作答</small></span>
+            </a>
+            <a class="qmah-quick-link" asp-area="Social" asp-controller="Home" asp-action="Index">
+                <span class="avatar bg-orange-lt"><i class="ti ti-messages"></i></span>
+                <span><strong>社群管理</strong><small>貼文、板塊、活動、公告與風控</small></span>
+            </a>
+            <a class="qmah-quick-link" asp-area="User" asp-controller="Home" asp-action="Index">
+                <span class="avatar bg-green-lt"><i class="ti ti-users"></i></span>
+                <span><strong>會員管理</strong><small>帳號、角色、成就與點數</small></span>
+            </a>
+            <a class="qmah-quick-link" asp-area="Store" asp-controller="Home" asp-action="Index">
+                <span class="avatar bg-azure-lt"><i class="ti ti-shopping-bag"></i></span>
+                <span><strong>商城管理</strong><small>商品、庫存、訂單、付款與優惠券</small></span>
+            </a>
+        </div>
+    </div>
 </div>

@@ -10,6 +10,7 @@ using QMAH.Web.Models.Entities;
 namespace QMAH.Web.Areas.Game.Controllers;
 
 [Area("Game")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [AdminNavigation("回合", order: 40)]
 public sealed class RoundsController(QmahDbContext db) : Controller
 {

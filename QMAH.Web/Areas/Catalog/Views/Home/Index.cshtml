@@ -1,6 +1,97 @@
+@model QMAH.Web.Areas.Catalog.ViewModel.CatalogDashboardViewModel
+
 @{
-    ViewData["Title"] = "Catalog";
+    ViewData["Title"] = "圖鑑總覽";
 }
 
-<h1>Catalog</h1>
-<p>圖鑑系統空白開發區</p>
+<div class="qmah-dashboard-intro">
+    <div>
+        <h1 class="qmah-dashboard-title">圖鑑總覽</h1>
+        <p class="qmah-dashboard-lede">從文物主資料開始，快速進入分類、年代、鑰匙與解鎖紀錄。</p>
+    </div>
+    <div class="qmah-actions">
+        <a asp-area="Catalog" asp-controller="Artifact" asp-action="Index" class="btn btn-primary">
+            <i class="ti ti-building-monument me-1"></i>查看文物
+        </a>
+        <a asp-area="Catalog" asp-controller="Key" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-key me-1"></i>管理鑰匙
+        </a>
+    </div>
+</div>
+
+<div class="row row-cards qmah-dashboard-metrics">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">文物總數</span>
+                <strong class="qmah-metric-value">@Model.ArtifactCount</strong>
+                <span class="qmah-metric-note">已啟用 @Model.ActiveArtifactCount 件</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">分類</span>
+                <strong class="qmah-metric-value">@Model.CategoryCount</strong>
+                <span class="qmah-metric-note">可供篩選與導覽</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">年代區間</span>
+                <strong class="qmah-metric-value">@Model.EraBucketCount</strong>
+                <span class="qmah-metric-note">圖鑑與題庫共用</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">解鎖紀錄</span>
+                <strong class="qmah-metric-value">@Model.UnlockCount</strong>
+                <span class="qmah-metric-note">會員鑑定進度</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cards">
+    <div class="col-12 col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">圖鑑工作區</h2>
+                    <div class="text-secondary">維護共同文物資料，讓遊戲題庫與商城商品能沿用同一個 Artifact。</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="qmah-quick-grid">
+                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Artifact" asp-action="Index">
+                        <span class="avatar bg-primary-lt"><i class="ti ti-building-monument"></i></span>
+                        <span><strong>文物總覽</strong><small>搜尋、篩選與調整啟用狀態</small></span>
+                    </a>
+                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Key" asp-action="Index">
+                        <span class="avatar bg-azure-lt"><i class="ti ti-key"></i></span>
+                        <span><strong>鑰匙總覽</strong><small>管理解鎖規則與 Scope</small></span>
+                    </a>
+                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="KeyBackpack" asp-action="Index">
+                        <span class="avatar bg-green-lt"><i class="ti ti-backpack"></i></span>
+                        <span><strong>玩家鑰匙背包</strong><small>查看會員鑰匙餘額</small></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="card h-100 qmah-dashboard-note">
+            <div class="card-body">
+                <span class="qmah-status qmah-status--info">資料關係</span>
+                <h2 class="card-title mt-3">一份文物，三個系統共用</h2>
+                <p class="text-secondary mb-0">圖鑑是主資料來源，題庫以 ArtifactId 對應遊戲，商品也沿用相同文物圖片與授權資訊。</p>
+            </div>
+        </div>
+    </div>
+</div>

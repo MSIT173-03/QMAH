@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Authorization;
 
 using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Web.Data;
+using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Identity;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
 [Area("User")]
 [Authorize(Roles = "Admin")]
+[AdminNavigation("點數流水", 40)]
 public class PointTransactionsController : Controller
 {
     private readonly QmahDbContext _context;

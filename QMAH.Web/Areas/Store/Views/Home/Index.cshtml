@@ -1,6 +1,61 @@
+@model QMAH.Web.Areas.Store.ViewModels.StoreDashboardViewModel
+
 @{
-    ViewData["Title"] = "Store";
+    ViewData["Title"] = "商城總覽";
 }
 
-<h1>Store</h1>
-<p>商城系統空白開發區</p>
+<div class="qmah-dashboard-intro">
+    <div>
+        <h1 class="qmah-dashboard-title">商城總覽</h1>
+        <p class="qmah-dashboard-lede">從商品上架、庫存到訂單與付款，先看需要處理的狀態，再進入詳細清單。</p>
+    </div>
+    <div class="qmah-actions">
+        <a asp-area="Store" asp-controller="Product" asp-action="Index" class="btn btn-primary"><i class="ti ti-package me-1"></i>商品管理</a>
+        <a asp-area="Store" asp-controller="Order" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-receipt me-1"></i>訂單管理</a>
+    </div>
+</div>
+
+<div class="row row-cards qmah-dashboard-metrics">
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">商品</span><strong class="qmah-metric-value">@Model.ProductCount</strong><span class="qmah-metric-note">上架 @Model.ActiveProductCount 件</span></div></div></div>
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">低庫存</span><strong class="qmah-metric-value">@Model.LowStockProductCount</strong><span class="qmah-metric-note">啟用商品庫存 ≤ 5</span></div></div></div>
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">訂單</span><strong class="qmah-metric-value">@Model.OrderCount</strong><span class="qmah-metric-note">待處理 @Model.PendingOrderCount 筆</span></div></div></div>
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">付款成功</span><strong class="qmah-metric-value">@Model.SuccessfulPaymentCount</strong><span class="qmah-metric-note">折價券定義 @Model.CouponCount 組</span></div></div></div>
+</div>
+
+<div class="row row-cards">
+    <div class="col-12 col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><h2 class="card-title">商城工作區</h2></div>
+            <div class="card-body">
+                <div class="qmah-quick-grid">
+                    <a class="qmah-quick-link" asp-area="Store" asp-controller="Product" asp-action="Index"><span class="avatar bg-blue-lt"><i class="ti ti-package"></i></span><span><strong>商品管理</strong><small>上架狀態、價格與庫存</small></span></a>
+                    <a class="qmah-quick-link" asp-area="Store" asp-controller="Order" asp-action="Index"><span class="avatar bg-green-lt"><i class="ti ti-receipt"></i></span><span><strong>訂單管理</strong><small>付款、出貨與取消紀錄</small></span></a>
+                    <a class="qmah-quick-link" asp-area="Store" asp-controller="Coupon" asp-action="Index"><span class="avatar bg-orange-lt"><i class="ti ti-ticket"></i></span><span><strong>折價券</strong><small>查看目前優惠券定義</small></span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between"><h2 class="card-title">最近訂單</h2><a asp-area="Store" asp-controller="Order" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a></div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead><tr><th>訂單</th><th>會員</th><th>狀態</th><th class="text-end">金額</th></tr></thead>
+                    <tbody>
+                    @if (Model.RecentOrders.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center text-secondary py-4">目前沒有訂單資料</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var order in Model.RecentOrders)
+                        {
+                            <tr><td><a asp-area="Store" asp-controller="Order" asp-action="GetOrder" asp-route-id="@order.Id">@order.OrderNo</a><div class="text-secondary small">@order.CreatedAt.ToString("yyyy-MM-dd HH:mm")</div></td><td>@order.CustomerName</td><td><span class="badge bg-secondary-lt">@order.Status</span></td><td class="text-end">@order.TotalAmount.ToString("N0")</td></tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
