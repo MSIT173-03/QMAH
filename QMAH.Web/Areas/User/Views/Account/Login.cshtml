@@ -22,8 +22,9 @@
         <section class="qmah-auth-brand" aria-labelledby="auth-title">
             <img class="qmah-auth-logo qmah-auth-logo--light" src="~/images/brand/qmah-logo.svg" alt="清明鑑定屋 QMAH" />
             <img class="qmah-auth-logo qmah-auth-logo--dark" src="~/images/brand/qmah-logo-dark.svg" alt="清明鑑定屋 QMAH" />
-            <h1 id="auth-title">管理員登入</h1>
-            <p>進入清明鑑定屋管理工作台。</p>
+            <div class="qmah-auth-kicker"><span aria-hidden="true"></span>QMAH 管理後台</div>
+            <h1 id="auth-title">登入管理後台</h1>
+            <p>使用管理員帳號進入清明鑑定屋工作台。</p>
         </section>
 
         <section class="qmah-auth-panel" aria-labelledby="login-form-title">
@@ -40,16 +41,16 @@
                 <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger qmah-auth-validation" role="alert" aria-live="assertive"></div>
 
-                <div class="mb-3">
+                <div class="mb-3 qmah-auth-field">
                     <label asp-for="Email" class="form-label"></label>
                     <input asp-for="Email" class="form-control" autocomplete="username" autofocus aria-describedby="email-error" />
                     <span id="email-error" asp-validation-for="Email" class="text-danger" aria-live="polite"></span>
                 </div>
-                <div class="mb-3">
+                <div class="mb-3 qmah-auth-field">
                     <label asp-for="Password" class="form-label"></label>
                     <div class="input-group qmah-password-field">
                         <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" aria-describedby="password-error" />
-                        <button type="button" class="btn btn-outline-secondary qmah-password-toggle" data-qmah-password-toggle aria-controls="Password" aria-pressed="false">
+                        <button type="button" class="btn btn-outline-secondary qmah-password-toggle" data-qmah-password-toggle aria-controls="Password" aria-pressed="false" aria-label="顯示密碼">
                             <i class="ti ti-eye" aria-hidden="true"></i><span class="visually-hidden">顯示密碼</span>
                         </button>
                     </div>
@@ -62,6 +63,7 @@
                 <button type="submit" class="btn btn-primary w-100" data-qmah-auth-submit>
                     <i class="ti ti-login me-1" aria-hidden="true"></i><span data-qmah-submit-label>登入</span>
                 </button>
+                <p class="qmah-auth-note"><i class="ti ti-shield-lock" aria-hidden="true"></i> 僅限授權的管理人員使用</p>
             </form>
         </section>
     </div>
@@ -82,6 +84,7 @@
                 const isVisible = password.type === "text";
                 password.type = isVisible ? "password" : "text";
                 toggle.setAttribute("aria-pressed", String(!isVisible));
+                toggle.setAttribute("aria-label", isVisible ? "顯示密碼" : "隱藏密碼");
                 toggle.querySelector("i")?.classList.toggle("ti-eye", isVisible);
                 toggle.querySelector("i")?.classList.toggle("ti-eye-off", !isVisible);
                 toggle.querySelector(".visually-hidden").textContent = isVisible ? "顯示密碼" : "隱藏密碼";

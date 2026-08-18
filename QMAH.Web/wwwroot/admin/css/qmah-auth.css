@@ -16,7 +16,10 @@
   overflow: hidden;
   isolation: isolate;
   padding: clamp(2rem, 6vw, 5.5rem) clamp(1rem, 5vw, 5rem);
-  background: var(--qmah-porcelain);
+  background:
+    radial-gradient(circle at 18% 22%, rgba(63, 111, 134, 0.07), transparent 20rem),
+    radial-gradient(circle at 82% 76%, rgba(173, 89, 74, 0.045), transparent 18rem),
+    var(--qmah-porcelain);
 }
 
 .qmah-auth-art {
@@ -139,6 +142,26 @@
   padding: 1rem 0;
 }
 
+.qmah-auth-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+  color: var(--qmah-primary);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.qmah-auth-kicker span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--qmah-cinnabar);
+  box-shadow: 0 0 0 0.25rem rgba(173, 89, 74, 0.12);
+}
+
 .qmah-auth-logo {
   display: block;
   width: min(15rem, 72vw);
@@ -150,7 +173,7 @@
 }
 
 .qmah-auth-brand h1 {
-  margin: clamp(2rem, 5vw, 3.5rem) 0 0.75rem;
+  margin: 1rem 0 0.75rem;
   color: var(--qmah-ink);
   font-size: clamp(2rem, 4vw, 3.25rem);
   font-weight: 800;
@@ -167,11 +190,20 @@
 }
 
 .qmah-auth-panel {
+  position: relative;
   overflow: hidden;
   border: 1px solid var(--qmah-line);
   border-radius: 1rem;
   background: var(--qmah-surface);
   box-shadow: 0 1.25rem 3.5rem rgba(23, 42, 51, 0.12), var(--qmah-shadow-sm);
+}
+
+.qmah-auth-panel::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.2rem;
+  background: linear-gradient(90deg, var(--qmah-primary), var(--qmah-sage));
+  content: "";
 }
 
 .qmah-auth-panel-header {
@@ -209,6 +241,36 @@
   font-size: 0.95rem;
 }
 
+.qmah-auth-form .form-label {
+  margin-bottom: 0.45rem;
+  color: var(--qmah-ink);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.qmah-auth-field .text-danger {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.qmah-auth-form .form-control:hover {
+  border-color: color-mix(in srgb, var(--qmah-primary) 45%, var(--qmah-line));
+}
+
+.qmah-auth-form .form-control:focus {
+  border-color: var(--qmah-primary);
+  box-shadow: 0 0 0 0.2rem rgba(63, 111, 134, 0.14);
+}
+
+.qmah-auth-form .form-control.input-validation-error {
+  border-color: var(--tblr-danger);
+}
+
+.qmah-auth-form .form-control.input-validation-error:focus {
+  box-shadow: 0 0 0 0.2rem rgba(214, 57, 57, 0.14);
+}
+
 .qmah-password-field .form-control {
   min-width: 0;
 }
@@ -216,6 +278,12 @@
 .qmah-password-toggle {
   min-width: 3rem;
   color: var(--qmah-ink-soft);
+}
+
+.qmah-password-toggle:hover,
+.qmah-password-toggle:focus-visible {
+  color: var(--qmah-primary);
+  background: rgba(63, 111, 134, 0.08);
 }
 
 .qmah-auth-form.qmah-is-submitting .btn[type="submit"] {
@@ -228,6 +296,38 @@
 
 .qmah-auth-form .btn-primary {
   min-height: 3rem;
+  font-weight: 650;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.qmah-auth-form .btn-primary:hover {
+  filter: brightness(0.96);
+}
+
+.qmah-auth-form.qmah-is-submitting .btn-primary {
+  opacity: 0.8;
+}
+
+.qmah-auth-form.qmah-is-submitting .btn-primary i {
+  animation: qmah-auth-spin 0.8s linear infinite;
+}
+
+.qmah-auth-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 1rem 0 0;
+  color: var(--qmah-ink-faint);
+  font-size: 0.75rem;
+}
+
+.qmah-auth-note i {
+  color: var(--qmah-sage);
+}
+
+@keyframes qmah-auth-spin {
+  to { transform: rotate(360deg); }
 }
 
 .qmah-auth-validation:empty {
@@ -262,6 +362,17 @@ html[data-bs-theme="dark"] .qmah-auth-line {
   background: rgba(145, 189, 206, 0.24);
 }
 
+html[data-bs-theme="dark"] .qmah-auth-page {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(145, 189, 206, 0.1), transparent 20rem),
+    radial-gradient(circle at 82% 76%, rgba(223, 136, 120, 0.07), transparent 18rem),
+    var(--qmah-porcelain);
+}
+
+html[data-bs-theme="dark"] .qmah-auth-panel {
+  box-shadow: 0 1.25rem 3.5rem rgba(0, 0, 0, 0.28), var(--qmah-shadow-sm);
+}
+
 @media (max-width: 767.98px) {
   .qmah-auth-page {
     padding: 2rem 1rem;
@@ -283,7 +394,7 @@ html[data-bs-theme="dark"] .qmah-auth-line {
   }
 
   .qmah-auth-brand h1 {
-    margin-top: 1.75rem;
+    margin-top: 1rem;
     font-size: 2.25rem;
   }
 
