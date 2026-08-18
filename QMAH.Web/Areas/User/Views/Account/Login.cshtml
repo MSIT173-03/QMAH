@@ -29,7 +29,6 @@
 
         <section class="qmah-auth-panel" aria-labelledby="login-form-title">
             <div class="qmah-auth-panel-header">
-                <span class="avatar avatar-md bg-blue-lt" aria-hidden="true"><i class="ti ti-lock-open-2"></i></span>
                 <div>
                     <h2 id="login-form-title">登入</h2>
                     <p>使用管理員帳號繼續。</p>
@@ -51,7 +50,7 @@
                     <div class="input-group qmah-password-field">
                         <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" aria-describedby="password-error" />
                         <button type="button" class="btn btn-outline-secondary qmah-password-toggle" data-qmah-password-toggle aria-controls="Password" aria-pressed="false" aria-label="顯示密碼">
-                            <i class="ti ti-eye" aria-hidden="true"></i><span class="visually-hidden">顯示密碼</span>
+                            <span class="qmah-password-toggle-label">顯示</span><span class="visually-hidden">密碼</span>
                         </button>
                     </div>
                     <span id="password-error" asp-validation-for="Password" class="text-danger" aria-live="polite"></span>
@@ -85,9 +84,8 @@
                 password.type = isVisible ? "password" : "text";
                 toggle.setAttribute("aria-pressed", String(!isVisible));
                 toggle.setAttribute("aria-label", isVisible ? "顯示密碼" : "隱藏密碼");
-                toggle.querySelector("i")?.classList.toggle("ti-eye", isVisible);
-                toggle.querySelector("i")?.classList.toggle("ti-eye-off", !isVisible);
-                toggle.querySelector(".visually-hidden").textContent = isVisible ? "顯示密碼" : "隱藏密碼";
+                toggle.querySelector(".qmah-password-toggle-label").textContent = isVisible ? "顯示" : "隱藏";
+                toggle.querySelector(".visually-hidden").textContent = isVisible ? "密碼" : "密碼";
             });
 
             form?.addEventListener("submit", (event) => {

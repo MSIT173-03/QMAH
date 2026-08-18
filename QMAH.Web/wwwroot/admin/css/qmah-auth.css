@@ -8,6 +8,29 @@
   min-height: 100vh;
 }
 
+.qmah-auth-theme-toggle {
+  position: fixed;
+  z-index: 5;
+  top: 1.25rem;
+  right: 1.5rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--qmah-line);
+  border-radius: 0.5rem;
+  color: var(--qmah-ink-soft);
+  background: color-mix(in srgb, var(--qmah-surface) 86%, transparent);
+  box-shadow: var(--qmah-shadow-sm);
+  font-size: 0.8rem;
+  font-weight: 650;
+  backdrop-filter: blur(0.75rem);
+}
+
+.qmah-auth-theme-toggle:hover,
+.qmah-auth-theme-toggle:focus-visible {
+  border-color: var(--qmah-primary);
+  color: var(--qmah-primary);
+}
+
 .qmah-auth-page {
   position: relative;
   display: grid;
@@ -276,8 +299,10 @@
 }
 
 .qmah-password-toggle {
-  min-width: 3rem;
+  min-width: 4.25rem;
   color: var(--qmah-ink-soft);
+  font-size: 0.8rem;
+  font-weight: 650;
 }
 
 .qmah-password-toggle:hover,
@@ -376,6 +401,11 @@ html[data-bs-theme="dark"] .qmah-auth-panel {
 @media (max-width: 767.98px) {
   .qmah-auth-page {
     padding: 2rem 1rem;
+  }
+
+  .qmah-auth-theme-toggle {
+    top: 0.75rem;
+    right: 0.75rem;
   }
 
   .qmah-auth-shell {

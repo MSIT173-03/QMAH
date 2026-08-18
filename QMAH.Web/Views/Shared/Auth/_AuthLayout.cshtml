@@ -25,11 +25,36 @@
 </head>
 <body class="qmah-auth-body">
     <a class="qmah-skip-link" href="#auth-main">跳至登入表單</a>
+    <button type="button" class="qmah-auth-theme-toggle" data-qmah-theme-toggle aria-pressed="false">
+        <span data-qmah-theme-label>切換深色</span>
+    </button>
     <main id="auth-main" class="qmah-auth-main">
         @RenderBody()
     </main>
 
     <script src="~/admin/vendor/tabler/tabler.min.js"></script>
+    <script>
+        (() => {
+            const root = document.documentElement;
+            const toggle = document.querySelector("[data-qmah-theme-toggle]");
+            const label = toggle?.querySelector("[data-qmah-theme-label]");
+            const sync = () => {
+                const isDark = root.dataset.bsTheme === "dark";
+                toggle?.setAttribute("aria-pressed", String(isDark));
+                toggle?.setAttribute("aria-label", isDark ? "切換淺色模式" : "切換深色模式");
+                if (label) label.textContent = isDark ? "切換淺色" : "切換深色";
+            };
+
+            toggle?.addEventListener("click", () => {
+                const next = root.dataset.bsTheme === "dark" ? "light" : "dark";
+                root.dataset.bsTheme = next;
+                root.style.colorScheme = next;
+                localStorage.setItem("qmah-admin-theme", next);
+                sync();
+            });
+            sync();
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
