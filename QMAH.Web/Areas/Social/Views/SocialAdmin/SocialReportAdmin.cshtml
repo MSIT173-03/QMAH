@@ -54,7 +54,7 @@
 
 <div class="card">
     <div class="table-responsive">
-        <table class="table table-vcenter table-hover card-table">
+        <table class="table table-vcenter table-hover card-table qmah-crud-table">
             <thead>
                 <tr>
                     <th>目標</th>
@@ -81,7 +81,7 @@
                     };
                     <tr>
                         <td>
-                            <span class="badge bg-blue-lt">@item.TargetType</span>
+                            <span class="badge bg-blue-lt">@AdminDisplayLabels.TargetType(item.TargetType)</span>
                             <div class="fw-semibold mt-1">@item.TargetTitle</div>
                             <details class="small text-secondary mt-1">
                                 <summary>查看內容</summary>
@@ -90,7 +90,7 @@
                         </td>
                         <td>
                             <div class="text-secondary small">@item.ReporterName</div>
-                            <div class="fw-semibold">@item.Reason</div>
+                            <div class="fw-semibold">@AdminDisplayLabels.ReportReason(item.Reason)</div>
                             @if (!string.IsNullOrWhiteSpace(item.Detail))
                             {
                                 <div class="text-secondary small">@item.Detail</div>
@@ -100,10 +100,10 @@
                                 <div class="text-secondary small">處理：@item.Resolution</div>
                             }
                         </td>
-                        <td><span class="badge @statusClass">@item.Status</span></td>
+                        <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
                         <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>
-                            <div class="btn-list flex-nowrap">
+                            <div class="qmah-table-actions">
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
                                 @if (item.Status == "PENDING")
                                 {

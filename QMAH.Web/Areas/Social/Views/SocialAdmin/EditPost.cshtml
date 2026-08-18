@@ -4,7 +4,7 @@
     var isCreate = ViewData["IsCreate"] is true;
     ViewData["Title"] = isCreate ? "新增社群貼文" : "編輯社群貼文";
     ViewData["AdminDescription"] = isCreate
-        ? "先選擇板塊，再由管理者建立貼文。這裡不是一般使用者討論區。"
+        ? "先選擇板塊，再由管理者建立貼文。"
         : "修正板塊、標題、內容或關聯文物，保留原作者與建立時間。";
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
     var postId = ViewData["PostId"];

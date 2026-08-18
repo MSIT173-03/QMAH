@@ -99,6 +99,175 @@ body {
   align-items: center;
 }
 
+/* 共用 CRUD 排版：讓列表、表單與詳細頁有一致的操作節奏。 */
+.qmah-crud-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.qmah-filter-panel .card-header {
+  min-height: 3.75rem;
+}
+
+.qmah-filter-panel .card-title,
+.qmah-list-card .card-title,
+.qmah-form-card .card-title,
+.qmah-detail-section .card-title {
+  margin-bottom: 0.2rem;
+  font-size: 0.98rem;
+}
+
+.qmah-crud-table {
+  min-width: 42rem;
+}
+
+.qmah-crud-table th:last-child,
+.qmah-crud-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.qmah-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.qmah-table-actions form {
+  display: inline-flex;
+}
+
+.qmah-empty-state {
+  min-height: 11rem;
+  padding: 2.25rem 1rem;
+}
+
+.qmah-pagination-bar {
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--qmah-line-soft);
+  border-radius: var(--qmah-radius);
+  background: var(--qmah-surface);
+}
+
+.qmah-pagination-bar .number-input {
+  width: 4.5rem;
+  min-width: 4.5rem;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.qmah-pagination-bar .number-input::-webkit-outer-spin-button,
+.qmah-pagination-bar .number-input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.qmah-form-card .card-body {
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+.qmah-form-section {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--qmah-line-soft);
+}
+
+.qmah-form-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.qmah-form-section-title {
+  margin: 0 0 0.85rem;
+  color: var(--qmah-ink);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.qmah-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--qmah-line-soft);
+}
+
+.qmah-detail-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 0.35rem;
+  border: 1px solid var(--qmah-line);
+  border-radius: var(--qmah-radius);
+  background: var(--qmah-surface);
+}
+
+.qmah-detail-nav a {
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--qmah-radius-sm);
+  color: var(--qmah-ink-soft);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.qmah-detail-nav a:hover,
+.qmah-detail-nav a:focus-visible {
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-ink);
+}
+
+.qmah-detail-section {
+  scroll-margin-top: 5.5rem;
+}
+
+.qmah-detail-section .card-header {
+  min-height: 3.5rem;
+}
+
+.qmah-detail-section .card-header strong {
+  color: var(--qmah-ink);
+  font-size: 0.95rem;
+}
+
+.qmah-member-avatar {
+  width: 7.5rem;
+  height: 7.5rem;
+  border: 1px solid var(--qmah-line);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+@media (max-width: 767.98px) {
+  .qmah-crud-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .qmah-crud-table {
+    min-width: 36rem;
+  }
+
+  .qmah-table-actions {
+    justify-content: flex-start;
+  }
+
+  .qmah-form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .qmah-form-actions .btn {
+    width: 100%;
+  }
+}
+
 .qmah-dashboard-intro {
   display: flex;
   gap: 1.5rem;

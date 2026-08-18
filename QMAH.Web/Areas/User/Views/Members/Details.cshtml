@@ -2,21 +2,15 @@
 
 @{
     ViewData["Title"] = "會員詳細資料";
+    ViewData["AdminDescription"] = "分區查看會員帳號、個人資料、地址、成就與點數紀錄。";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="mb-1">會員詳細資料</h1>
-        <p class="text-muted mb-0">
-            查看會員帳號、個人資料、地址、成就與點數紀錄
-        </p>
-    </div>
-
+@section PageActions {
     <a asp-action="Index"
-       class="btn btn-secondary">
-        返回會員列表
+       class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回會員列表
     </a>
-</div>
+}
 
 
 <!-- 系統訊息 -->
@@ -48,11 +42,20 @@
     </div>
 }
 
+<nav class="qmah-detail-nav" aria-label="會員資料區段">
+    <a href="#account-data">帳號資料</a>
+    <a href="#profile-data">個人資料</a>
+    <a href="#addresses">收件地址</a>
+    <a href="#achievements">成就</a>
+    <a href="#point-transactions">點數紀錄</a>
+</nav>
 
 <!-- =========================
      帳號資料
 ========================= -->
-<div class="card mb-4">
+<div class="row row-cards mb-3">
+<div class="col-12 col-xl-6" id="account-data">
+<div class="card qmah-detail-section h-100">
 
     <div class="card-header">
         <strong>帳號資料</strong>
@@ -131,13 +134,13 @@
                     else if (Model.User.Status == "DISABLED")
                     {
                         <span class="badge bg-secondary">
-                            DISABLED
+                            @AdminDisplayLabels.Status(Model.User.Status)
                         </span>
                     }
                     else
                     {
                         <span class="badge bg-secondary">
-                            @Model.User.Status
+                            @AdminDisplayLabels.Status(Model.User.Status)
                         </span>
                     }
                 </div>
@@ -176,11 +179,11 @@
         </div>
 
 
-        <div class="mt-4">
+        <div class="qmah-actions mt-4">
 
             <a asp-action="EditRoles"
                asp-route-id="@Model.User.Id"
-               class="btn btn-warning">
+               class="btn btn-outline-warning">
                 角色設定
             </a>
 
@@ -203,7 +206,7 @@
                 @if (Model.User.Status == "ACTIVE")
                 {
                     <button type="submit"
-                            class="btn btn-danger"
+                            class="btn btn-outline-danger"
                             onclick="return confirm('確定要停權這個會員嗎？');">
                         停權
                     </button>
@@ -211,7 +214,7 @@
                 else if (Model.User.Status == "BANNED")
                 {
                     <button type="submit"
-                            class="btn btn-success"
+                            class="btn btn-outline-success"
                             onclick="return confirm('確定要解除停權嗎？');">
                         解除停權
                     </button>
@@ -237,7 +240,8 @@
 <!-- =========================
      個人資料
 ========================= -->
-<div class="card mb-4">
+<div class="col-12 col-xl-6" id="profile-data">
+<div class="card qmah-detail-section h-100">
 
     <div class="card-header">
         <strong>個人資料</strong>
@@ -358,12 +362,13 @@
     </div>
 
 </div>
-
+</div>
+</div>
 
 <!-- =========================
      收件地址
 ========================= -->
-<div class="card mb-4">
+<div class="card qmah-detail-section mb-3" id="addresses">
 
     <div class="card-header d-flex justify-content-between align-items-center">
 
@@ -373,7 +378,7 @@
 
         <a asp-action="CreateAddress"
            asp-route-userId="@Model.User.Id"
-           class="btn btn-sm btn-success">
+            class="btn btn-sm btn-outline-primary">
             新增地址
         </a>
 
@@ -383,15 +388,16 @@
 
         @if (Model.Addresses.Count == 0)
         {
-            <div class="p-3 text-muted">
-                目前沒有地址資料。
+            <div class="empty qmah-empty-state">
+                <div class="empty-icon"><i class="ti ti-map-pin-off"></i></div>
+                <p class="empty-title">目前沒有地址資料</p>
             </div>
         }
         else
         {
             <div class="table-responsive">
 
-                <table class="table mb-0">
+                <table class="table table-vcenter table-hover card-table qmah-crud-table mb-0">
 
                     <thead>
                         <tr>
@@ -443,10 +449,10 @@
                                 </td>
 
                                 <td>
-
+                                    <div class="qmah-table-actions">
                                     <a asp-action="EditAddress"
                                        asp-route-id="@address.Id"
-                                       class="btn btn-sm btn-primary">
+                                       class="btn btn-sm btn-outline-secondary">
                                         編輯
                                     </a>
 
@@ -465,12 +471,13 @@
                                                value="@Model.User.Id" />
 
                                         <button type="submit"
-                                                class="btn btn-sm btn-danger"
+                                                 class="btn btn-sm btn-outline-danger"
                                                 onclick="return confirm('確定要刪除這筆地址嗎？');">
                                             刪除
                                         </button>
 
                                     </form>
+                                    </div>
 
                                 </td>
 
@@ -492,7 +499,7 @@
 <!-- =========================
      已取得成就
 ========================= -->
-<div class="card mb-4">
+<div class="card qmah-detail-section mb-3" id="achievements">
 
     <div class="card-header d-flex justify-content-between align-items-center">
 
@@ -512,15 +519,16 @@
 
         @if (Model.Achievements.Count == 0)
         {
-            <div class="p-3 text-muted">
-                目前尚未取得任何成就。
+            <div class="empty qmah-empty-state">
+                <div class="empty-icon"><i class="ti ti-award-off"></i></div>
+                <p class="empty-title">目前尚未取得任何成就</p>
             </div>
         }
         else
         {
             <div class="table-responsive">
 
-                <table class="table mb-0">
+                <table class="table table-vcenter table-hover card-table qmah-crud-table mb-0">
 
                     <thead>
                         <tr>
@@ -578,7 +586,7 @@
                                 </td>
 
                                 <td>
-
+                                    <div class="qmah-table-actions">
                                     <form asp-action="RemoveAchievement"
                                           method="post"
                                           class="d-inline">
@@ -604,6 +612,7 @@
                                         </button>
 
                                     </form>
+                                    </div>
 
                                 </td>
 
@@ -625,7 +634,7 @@
 <!-- =========================
      點數異動紀錄
 ========================= -->
-<div class="card mb-4">
+<div class="card qmah-detail-section" id="point-transactions">
 
     <div class="card-header d-flex justify-content-between align-items-center">
 
@@ -645,15 +654,16 @@
 
         @if (Model.PointTransactions.Count == 0)
         {
-            <div class="p-3 text-muted">
-                目前沒有點數異動紀錄。
+            <div class="empty qmah-empty-state">
+                <div class="empty-icon"><i class="ti ti-coins-off"></i></div>
+                <p class="empty-title">目前沒有點數異動紀錄</p>
             </div>
         }
         else
         {
             <div class="table-responsive">
 
-                <table class="table mb-0">
+                <table class="table table-vcenter table-hover card-table qmah-crud-table mb-0">
 
                     <thead>
                         <tr>

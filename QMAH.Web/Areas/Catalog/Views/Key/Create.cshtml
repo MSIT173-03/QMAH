@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "新增鑰匙";
-    ViewData["AdminDescription"] = "建立圖鑑解鎖規則，設定可套用的 Scope。";
+    ViewData["AdminDescription"] = "建立圖鑑解鎖規則，設定適用的解鎖範圍。";
 }
 
 @section PageActions {
@@ -41,7 +41,7 @@
                         <span asp-validation-for="Code" class="text-danger"></span>
                     </div>
                     <div class="col-12 col-md-6">
-                        <label asp-for="ScopeType" class="form-label">Scope 類型</label>
+                        <label asp-for="ScopeType" class="form-label">適用範圍</label>
                         <input asp-for="ScopeType" class="form-control" placeholder="例如：CATEGORY、ERA 或 GLOBAL" />
                         <span asp-validation-for="ScopeType" class="text-danger"></span>
                     </div>

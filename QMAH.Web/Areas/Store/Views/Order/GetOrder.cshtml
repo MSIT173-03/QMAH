@@ -1,4 +1,5 @@
 @model QMAH.Web.Areas.Store.ViewModels.OrderFullDetail
+@using QMAH.Web.Infrastructure
 
 @{
     ViewData["Title"] = "訂單細節";
@@ -45,7 +46,7 @@
                 @Html.DisplayNameFor(model => model.Status)
             </dt>
             <dd class = "col-sm-10">
-                @Html.DisplayFor(model => model.Status)
+                <span class="badge bg-secondary-lt">@AdminDisplayLabels.Status(Model.Status)</span>
             </dd>
         </dl>
         <dl class="row">

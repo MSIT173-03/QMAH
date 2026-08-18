@@ -14,14 +14,16 @@
 
 <div class="row justify-content-center">
     <div class="col-12 col-xl-8">
-        <div class="card">
+        <div class="card qmah-form-card">
             <div class="card-header"><h2 class="card-title">@(isEdit ? "優惠券資料" : "建立優惠券")</h2></div>
             <div class="card-body">
                 <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.Id : null)" method="post">
                     <input asp-for="Id" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                    <div class="row g-3">
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">優惠券內容</h3>
+                        <div class="row g-3">
                         <div class="col-12 col-md-6">
                             <label asp-for="Code" class="form-label"></label>
                             <input asp-for="Code" class="form-control" />
@@ -50,6 +52,12 @@
                             <input asp-for="MinimumAmount" class="form-control" inputmode="decimal" />
                             <span asp-validation-for="MinimumAmount" class="text-danger"></span>
                         </div>
+                        </div>
+                    </section>
+
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">有效期間與狀態</h3>
+                        <div class="row g-3">
                         <div class="col-12 col-md-6">
                             <label asp-for="StartAt" class="form-label"></label>
                             <input asp-for="StartAt" type="datetime-local" class="form-control" />
@@ -66,9 +74,10 @@
                                 <span class="form-check-label">啟用此優惠券</span>
                             </label>
                         </div>
-                    </div>
+                        </div>
+                    </section>
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
+                    <div class="qmah-form-actions">
                         <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
                         <button type="submit" class="btn btn-primary">
                             <i class="ti ti-device-floppy me-1"></i>儲存

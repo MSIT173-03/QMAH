@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "管理總覽";
-    ViewData["AdminDescription"] = "五大系統的共同管理入口；所有功能均以後台作業與資料維護為主。";
+    ViewData["AdminDescription"] = "從這裡進入圖鑑、遊戲、社群、會員與商城的管理作業。";
 }
 
 @section PageActions {
@@ -10,17 +10,6 @@
         <i class="ti ti-user-cog me-1"></i>會員管理
     </a>
 }
-
-<div class="qmah-dashboard-intro">
-    <div>
-        <h1 class="qmah-dashboard-title">五大系統管理總覽</h1>
-        <p class="qmah-dashboard-lede">從同一個 Tabler 工作台進入圖鑑、遊戲、社群、會員與商城，不提供一般使用者前台入口。</p>
-    </div>
-    <div class="qmah-dashboard-note qmah-dashboard-note--compact">
-        <span class="qmah-status qmah-status--info">目前帳號</span>
-        <strong>@Model.MemberDisplayName</strong>
-    </div>
-</div>
 
 <div class="row row-cards qmah-dashboard-metrics">
     <div class="col-12 col-sm-6 col-xl-3">
@@ -72,7 +61,7 @@
             </a>
             <a class="qmah-quick-link" asp-area="Social" asp-controller="Home" asp-action="Index">
                 <span class="avatar bg-orange-lt"><i class="ti ti-messages"></i></span>
-                <span><strong>社群管理</strong><small>貼文、板塊、活動、公告與風控</small></span>
+                <span><strong>社群管理</strong><small>貼文、板塊、活動、公告與檢舉處理</small></span>
             </a>
             <a class="qmah-quick-link" asp-area="User" asp-controller="Home" asp-action="Index">
                 <span class="avatar bg-green-lt"><i class="ti ti-users"></i></span>

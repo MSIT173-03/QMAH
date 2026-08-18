@@ -12,26 +12,13 @@
 }
 
 @section PageActions {
-    <div class="qmah-actions">
-        <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
-            <i class="ti ti-books me-1"></i>查看題庫
-        </a>
-        <a class="btn btn-primary" asp-area="Game" asp-controller="Rooms" asp-action="Create">
-            <i class="ti ti-plus me-1"></i>建立房間
-        </a>
-    </div>
+    <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
+        <i class="ti ti-books me-1"></i>查看題庫
+    </a>
+    <a class="btn btn-primary" asp-area="Game" asp-controller="Rooms" asp-action="Create">
+        <i class="ti ti-plus me-1"></i>建立房間
+    </a>
 }
-
-<div class="qmah-dashboard-intro">
-    <div>
-        <h1 class="qmah-dashboard-title">遊戲管理總覽</h1>
-        <p class="qmah-dashboard-lede">集中掌握題庫供應、房間生命週期、玩家連線與最近的遊戲活動。</p>
-    </div>
-    <div class="qmah-dashboard-note qmah-dashboard-note--compact">
-        <span class="qmah-status qmah-status--info">遊戲後台</span>
-        <strong>以圖鑑文物驅動題庫</strong>
-    </div>
-</div>
 
 <div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-5 qmah-dashboard-metrics">
     <div class="col">

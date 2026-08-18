@@ -51,7 +51,7 @@
 
 <div class="card">
     <div class="table-responsive">
-        <table class="table table-vcenter table-hover card-table">
+        <table class="table table-vcenter table-hover card-table qmah-crud-table">
             <thead>
                 <tr>
                     <th>活動</th>
@@ -92,11 +92,11 @@
                             @item.StartAt.ToString("yyyy-MM-dd HH:mm")<br />
                             <span class="small">至 @item.EndAt.ToString("yyyy-MM-dd HH:mm") · @(item.Location ?? "未設定地點")</span>
                         </td>
-                        <td><span class="badge @reviewClass">@item.Status</span></td>
-                        <td><span class="badge @publishClass">@item.PublishStatus</span></td>
+                        <td><span class="badge @reviewClass">@AdminDisplayLabels.ReviewStatus(item.Status)</span></td>
+                        <td><span class="badge @publishClass">@AdminDisplayLabels.PublishStatus(item.PublishStatus)</span></td>
                         <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>
-                            <div class="btn-list flex-nowrap">
+                            <div class="qmah-table-actions">
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
                                 @if (item.Status != "APPROVED")
                                 {

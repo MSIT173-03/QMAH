@@ -2,18 +2,13 @@
 
 @{
     ViewData["Title"] = "商城管理總覽";
+    ViewData["AdminDescription"] = "管理商品、庫存、訂單、付款與折價券。";
 }
 
-<div class="qmah-dashboard-intro">
-    <div>
-        <h1 class="qmah-dashboard-title">商城管理總覽</h1>
-        <p class="qmah-dashboard-lede">從商品上架、庫存到訂單與付款，先看需要處理的狀態，再進入詳細清單。</p>
-    </div>
-    <div class="qmah-actions">
-        <a asp-area="Store" asp-controller="Product" asp-action="Index" class="btn btn-primary"><i class="ti ti-package me-1"></i>商品管理</a>
-        <a asp-area="Store" asp-controller="Order" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-receipt me-1"></i>訂單管理</a>
-    </div>
-</div>
+@section PageActions {
+    <a asp-area="Store" asp-controller="Product" asp-action="Index" class="btn btn-primary"><i class="ti ti-package me-1"></i>商品管理</a>
+    <a asp-area="Store" asp-controller="Order" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-receipt me-1"></i>訂單管理</a>
+}
 
 <div class="row row-cards qmah-dashboard-metrics">
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">商品</span><strong class="qmah-metric-value">@Model.ProductCount</strong><span class="qmah-metric-note">上架 @Model.ActiveProductCount 件</span></div></div></div>
@@ -50,7 +45,7 @@
                     {
                         @foreach (var order in Model.RecentOrders)
                         {
-                            <tr><td><a asp-area="Store" asp-controller="Order" asp-action="GetOrder" asp-route-id="@order.Id">@order.OrderNo</a><div class="text-secondary small">@order.CreatedAt.ToString("yyyy-MM-dd HH:mm")</div></td><td>@order.CustomerName</td><td><span class="badge bg-secondary-lt">@order.Status</span></td><td class="text-end">@order.TotalAmount.ToString("N0")</td></tr>
+                            <tr><td><a asp-area="Store" asp-controller="Order" asp-action="GetOrder" asp-route-id="@order.Id">@order.OrderNo</a><div class="text-secondary small">@order.CreatedAt.ToString("yyyy-MM-dd HH:mm")</div></td><td>@order.CustomerName</td><td><span class="badge bg-secondary-lt">@AdminDisplayLabels.Status(order.Status)</span></td><td class="text-end">@order.TotalAmount.ToString("N0")</td></tr>
                         }
                     }
                     </tbody>

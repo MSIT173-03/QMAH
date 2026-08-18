@@ -35,26 +35,33 @@
                 </div>
             </div>
 
-            <form action="/Account/Login" method="post" class="qmah-auth-form">
+            <form asp-area="User" asp-controller="Account" asp-action="Login" method="post" class="qmah-auth-form" data-qmah-auth-form>
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger qmah-auth-validation" role="alert"></div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger qmah-auth-validation" role="alert" aria-live="assertive"></div>
 
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label"></label>
-                    <input asp-for="Email" class="form-control" autocomplete="username" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
+                    <input asp-for="Email" class="form-control" autocomplete="username" autofocus aria-describedby="email-error" />
+                    <span id="email-error" asp-validation-for="Email" class="text-danger" aria-live="polite"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
+                    <div class="input-group qmah-password-field">
+                        <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" aria-describedby="password-error" />
+                        <button type="button" class="btn btn-outline-secondary qmah-password-toggle" data-qmah-password-toggle aria-controls="Password" aria-pressed="false">
+                            <i class="ti ti-eye" aria-hidden="true"></i><span class="visually-hidden">顯示密碼</span>
+                        </button>
+                    </div>
+                    <span id="password-error" asp-validation-for="Password" class="text-danger" aria-live="polite"></span>
                 </div>
                 <label class="form-check mb-3">
                     <input asp-for="RememberMe" class="form-check-input" />
                     <span class="form-check-label">記住我</span>
                 </label>
-                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-login me-1"></i>登入</button>
+                <button type="submit" class="btn btn-primary w-100" data-qmah-auth-submit>
+                    <i class="ti ti-login me-1" aria-hidden="true"></i><span data-qmah-submit-label>登入</span>
+                </button>
             </form>
         </section>
     </div>
@@ -62,4 +69,35 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const form = document.querySelector("[data-qmah-auth-form]");
+            const password = document.querySelector("#Password");
+            const toggle = document.querySelector("[data-qmah-password-toggle]");
+            const submit = document.querySelector("[data-qmah-auth-submit]");
+            const submitLabel = submit?.querySelector("[data-qmah-submit-label]");
+
+            toggle?.addEventListener("click", () => {
+                if (!password) return;
+                const isVisible = password.type === "text";
+                password.type = isVisible ? "password" : "text";
+                toggle.setAttribute("aria-pressed", String(!isVisible));
+                toggle.querySelector("i")?.classList.toggle("ti-eye", isVisible);
+                toggle.querySelector("i")?.classList.toggle("ti-eye-off", !isVisible);
+                toggle.querySelector(".visually-hidden").textContent = isVisible ? "顯示密碼" : "隱藏密碼";
+            });
+
+            form?.addEventListener("submit", (event) => {
+                if (form.classList.contains("qmah-is-submitting")) {
+                    event.preventDefault();
+                    return;
+                }
+
+                form.classList.add("qmah-is-submitting");
+                form.setAttribute("aria-busy", "true");
+                if (submit) submit.disabled = true;
+                if (submitLabel) submitLabel.textContent = "登入中…";
+            });
+        })();
+    </script>
 }

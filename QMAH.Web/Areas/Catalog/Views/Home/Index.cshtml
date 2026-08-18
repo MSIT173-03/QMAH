@@ -2,22 +2,17 @@
 
 @{
     ViewData["Title"] = "圖鑑管理總覽";
+    ViewData["AdminDescription"] = "維護文物主資料、分類、年代、鑰匙與會員解鎖紀錄。";
 }
 
-<div class="qmah-dashboard-intro">
-    <div>
-        <h1 class="qmah-dashboard-title">圖鑑管理總覽</h1>
-        <p class="qmah-dashboard-lede">從文物主資料開始，快速進入分類、年代、鑰匙與解鎖紀錄。</p>
-    </div>
-    <div class="qmah-actions">
-        <a asp-area="Catalog" asp-controller="Artifact" asp-action="Index" class="btn btn-primary">
-            <i class="ti ti-building-monument me-1"></i>查看文物
-        </a>
-        <a asp-area="Catalog" asp-controller="Key" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="ti ti-key me-1"></i>管理鑰匙
-        </a>
-    </div>
-</div>
+@section PageActions {
+    <a asp-area="Catalog" asp-controller="Artifact" asp-action="Index" class="btn btn-primary">
+        <i class="ti ti-building-monument me-1"></i>查看文物
+    </a>
+    <a asp-area="Catalog" asp-controller="Key" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="ti ti-key me-1"></i>管理鑰匙
+    </a>
+}
 
 <div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-5 qmah-dashboard-metrics">
     <div class="col">

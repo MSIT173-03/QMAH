@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "鑰匙編輯";
-    ViewData["AdminDescription"] = "調整既有解鎖規則的名稱、Scope 與適用範圍。";
+    ViewData["AdminDescription"] = "調整既有解鎖規則的名稱與適用範圍。";
 }
 
 @section PageActions {
@@ -42,7 +42,7 @@
                         <span asp-validation-for="Code" class="text-danger"></span>
                     </div>
                     <div class="col-12 col-md-6">
-                        <label asp-for="ScopeType" class="form-label">Scope 類型</label>
+                        <label asp-for="ScopeType" class="form-label">適用範圍</label>
                         <input asp-for="ScopeType" class="form-control" />
                         <span asp-validation-for="ScopeType" class="text-danger"></span>
                     </div>

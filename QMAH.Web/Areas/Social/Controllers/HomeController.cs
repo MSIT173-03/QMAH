@@ -45,7 +45,7 @@ namespace QMAH.Web.Areas.Social.Controllers
                     .ToListAsync(cancellationToken)
             };
 
-            ViewData["AdminDescription"] = "貼文、活動、公告與社群風控的共同工作台。";
+            ViewData["AdminDescription"] = "貼文、活動、公告與檢舉處理的共同工作台。";
             return View(model);
         }
     }

@@ -1,63 +1,69 @@
-﻿@model QMAH.Web.Areas.User.ViewModels.PointAdjustViewModel
+@model QMAH.Web.Areas.User.ViewModels.PointAdjustViewModel
 
 @{
     ViewData["Title"] = "調整會員點數";
+    ViewData["AdminDescription"] = "新增一筆點數異動，正數代表增加，負數代表扣除。";
 }
 
-<h1>調整會員點數</h1>
+@section PageActions {
+    <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回會員詳細資料</a>
+}
 
-<form asp-action="AdjustPoints"
-      asp-route-id="@Model.UserId"
-      method="post">
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+        <div class="card qmah-form-card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">點數異動</h2>
+                    <div class="text-secondary">送出後會保留在會員的點數異動紀錄中。</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form asp-action="AdjustPoints" asp-route-id="@Model.UserId" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="UserId" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-    @Html.AntiForgeryToken()
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">會員目前狀態</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-7">
+                                <label class="form-label" asp-for="Email">會員</label>
+                                <input asp-for="Email" class="form-control" readonly />
+                            </div>
+                            <div class="col-12 col-md-5">
+                                <label class="form-label" asp-for="CurrentBalance">目前點數</label>
+                                <input asp-for="CurrentBalance" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </section>
 
-    <input type="hidden" asp-for="UserId" />
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">異動內容</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-5">
+                                <label asp-for="Amount" class="form-label">調整點數</label>
+                                <input asp-for="Amount" class="form-control" inputmode="numeric" placeholder="例如：100 或 -50" />
+                                <span asp-validation-for="Amount" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-7">
+                                <label asp-for="Reason" class="form-label">調整原因</label>
+                                <input asp-for="Reason" class="form-control" placeholder="例如：活動補償" />
+                                <span asp-validation-for="Reason" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </section>
 
-    <div class="mb-3">
-        <label class="form-label">會員</label>
-        <input asp-for="Email"
-               class="form-control"
-               readonly />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">目前點數</label>
-        <input asp-for="CurrentBalance"
-               class="form-control"
-               readonly />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Amount" class="form-label">
-            調整點數
-        </label>
-
-        <input asp-for="Amount"
-               class="form-control"
-               onchange="this.value = parseInt(this.value) || 0;"
-               placeholder="例如：100 或 -50" />
-
-        <div class="form-text">
-            正數代表增加，負數代表扣除
+                    <div class="qmah-form-actions">
+                        <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary"><i class="ti ti-coins me-1"></i>確認調整</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Reason" class="form-label">
-            調整原因
-        </label>
-
-        <input asp-for="Reason"
-               class="form-control"
-               placeholder="例如：活動補償" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">
-        確認調整
-    </button>
-
-    <a asp-action="Index" class="btn btn-secondary">
-        返回
-    </a>
-</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

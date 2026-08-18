@@ -9,7 +9,7 @@ namespace QMAH.Web.Areas.Social
     public static class SocialServiceCollectionExtensions
     {
         /// <summary>
-        /// 註冊社群後台與風控相關的 Policy 授權策略
+        /// 註冊社群後台與內容審核相關的 Policy 授權策略
         /// </summary>
         public static IServiceCollection AddSocialAuthorizationPolicies(this IServiceCollection services)
         {
@@ -23,7 +23,7 @@ namespace QMAH.Web.Areas.Social
                 options.AddPolicy("Policy.Social.ManageAnnouncements", policy =>
                     policy.RequireRole("Admin", "AnnouncementEditor"));
 
-                // 3. 社群風控與貼文審核權限 (Admin 超級管理員 + 風控審核員)
+                // 3. 社群內容審核與貼文管理權限 (Admin 超級管理員 + 內容審核員)
                 options.AddPolicy("Policy.Social.ManageReports", policy =>
                     policy.RequireRole("Admin", "ContentModerator"));
 

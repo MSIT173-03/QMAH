@@ -7,26 +7,20 @@
     var canManageEvents = User.IsInRole("Admin") || User.IsInRole("EventModerator");
 }
 
-<div class="qmah-dashboard-intro">
-    <div>
-        <h1 class="qmah-dashboard-title">社群管理總覽</h1>
-        <p class="qmah-dashboard-lede">集中處理貼文、板塊、活動與檢舉。</p>
-    </div>
-    <div class="qmah-actions">
-        @if (canManagePosts)
-        {
-            <a asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" class="btn btn-primary">
-                <i class="ti ti-file-pencil me-1"></i>貼文內容處理
-            </a>
-        }
-        @if (canManageEvents)
-        {
-            <a asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index" class="btn btn-outline-secondary">
-                <i class="ti ti-calendar-check me-1"></i>活動管理
-            </a>
-        }
-    </div>
-</div>
+@section PageActions {
+    @if (canManagePosts)
+    {
+        <a asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" class="btn btn-primary">
+            <i class="ti ti-file-pencil me-1"></i>貼文內容處理
+        </a>
+    }
+    @if (canManageEvents)
+    {
+        <a asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-calendar-check me-1"></i>活動管理
+        </a>
+    }
+}
 
 <div class="row row-cards qmah-dashboard-metrics">
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body">
@@ -36,7 +30,7 @@
         <span class="qmah-metric-label">留言總量</span><strong class="qmah-metric-value">@Model.CommentCount</strong><span class="qmah-metric-note">貼文互動資料</span>
     </div></div></div>
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body">
-        <span class="qmah-metric-label">待處理檢舉</span><strong class="qmah-metric-value">@Model.PendingReportCount</strong><span class="qmah-metric-note">需要風控審核</span>
+        <span class="qmah-metric-label">待處理檢舉</span><strong class="qmah-metric-value">@Model.PendingReportCount</strong><span class="qmah-metric-note">需要內容審核</span>
     </div></div></div>
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body">
         <span class="qmah-metric-label">待審活動</span><strong class="qmah-metric-value">@Model.PendingEventCount</strong><span class="qmah-metric-note">已發布 @Model.PublishedEventCount 場</span>
@@ -81,7 +75,7 @@
                     @foreach (var post in Model.RecentPosts)
                     {
                         <a class="list-group-item list-group-item-action" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" asp-route-keyword="@post.Title">
-                            <div class="d-flex justify-content-between gap-3"><strong class="text-truncate">@post.Title</strong><span class="badge bg-secondary-lt">@post.BoardCode</span></div>
+                            <div class="d-flex justify-content-between gap-3"><strong class="text-truncate">@post.Title</strong><span class="badge bg-secondary-lt">@AdminDisplayLabels.Board(post.BoardCode)</span></div>
                             <small class="text-secondary">@post.CreatedAt.ToString("yyyy-MM-dd HH:mm") · 進入內容處理</small>
                         </a>
                     }

@@ -8,41 +8,27 @@
     string action = ViewData["Action"]?.ToString() ?? "";
 }
 
-<style>
-    /* 隱藏數字輸入框的箭頭 */
-    input.number-input[type="number"] {
-        -moz-appearance: textfield;
-        appearance: textfield;
-    }
-
-    input.number-input[type="number"]::-webkit-outer-spin-button,
-    input.number-input[type="number"]::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    input.number-input {
-        max-width: 5em;
-    }
-</style>
-
-<section class="row">
-    <div class="d-flex justify-content-center">
+<section class="qmah-pagination-bar" aria-label="商品清單分頁設定">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="text-secondary small">可調整每頁顯示筆數，按 Enter 套用。</div>
+        <div class="d-flex flex-wrap align-items-center justify-content-center gap-1">
         <a asp-controller="@controller" asp-action="@action" asp-route-page="@prev" asp-route-rows="@rows"
-            class="btn btn-outline-info me-1">
+            class="btn btn-sm btn-outline-secondary">
+            <i class="ti ti-chevron-left" aria-hidden="true"></i>
             上一頁
         </a>
         <input id="list-display-config-page" type="number" min="0" value="@curPage" class="number-input form-control text-center" />
         <a asp-controller="@controller" asp-action="@action" asp-route-page="@next" asp-route-rows="@rows"
-           class="btn btn-outline-info ms-1">
-            下一頁
+           class="btn btn-sm btn-outline-secondary">
+           下一頁
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
         </a>
 
-        <div class="d-flex ms-6">
-            <label for="list-display-config-rows" class="form-label align-content-center mb-0 me-1" style="width: 5em;">每頁行數：</label>
-            <input name="list-display-config-rows" id="list-display-config-rows" type="number" min="0" value="@rows" class="number-input ms-auto form-control text-center me-1" />
+        <div class="d-flex align-items-center ms-md-3">
+            <label for="list-display-config-rows" class="form-label mb-0 me-2">每頁筆數</label>
+            <input name="list-display-config-rows" id="list-display-config-rows" type="number" min="1" value="@rows" class="number-input form-control text-center" />
         </div>
-
+        </div>
     </div>
 </section>
 

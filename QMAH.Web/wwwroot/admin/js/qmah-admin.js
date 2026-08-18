@@ -147,4 +147,31 @@
         }
     });
     window.matchMedia("(max-width: 1199.98px)").addEventListener("change", () => applyMobileSidebar(false));
+
+    document.querySelectorAll('form[method="post"], form:not([method])').forEach((form) => {
+        form.addEventListener("submit", (event) => {
+            const submitter = event.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+            const isDangerous = submitter?.classList.contains("btn-danger") || submitter?.classList.contains("btn-outline-danger");
+
+            if (isDangerous && !form.classList.contains("qmah-is-submitting")) {
+                const message = submitter.dataset.confirm || `確定要${submitter.textContent.trim() || "執行這項操作"}嗎？`;
+                if (!window.confirm(message)) {
+                    event.preventDefault();
+                    return;
+                }
+            }
+
+            if (form.classList.contains("qmah-is-submitting")) {
+                event.preventDefault();
+                return;
+            }
+
+            form.classList.add("qmah-is-submitting");
+            form.setAttribute("aria-busy", "true");
+            if (submitter && !submitter.disabled) {
+                submitter.disabled = true;
+                submitter.textContent = "處理中…";
+            }
+        });
+    });
 })();

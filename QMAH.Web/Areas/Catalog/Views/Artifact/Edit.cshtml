@@ -13,7 +13,7 @@
 
 <div class="row row-cards">
     <div class="col-12 col-xl-8">
-        <form asp-action="Edit" method="post" class="card">
+        <form asp-action="Edit" method="post" class="card qmah-form-card">
             <div class="card-header">
                 <div>
                     <h2 class="card-title">文物主資料</h2>
@@ -69,7 +69,7 @@
                         <span asp-validation-for="SizeText" class="text-danger"></span>
                     </div>
                     <div class="col-12">
-                        <h3 class="card-title border-bottom pb-2 mb-0">來源與授權</h3>
+                        <h3 class="qmah-form-section-title border-bottom pb-2 mb-0">來源與授權</h3>
                     </div>
                     <div class="col-12">
                         <label asp-for="SourceUrl" class="form-label">來源網址</label>
@@ -87,7 +87,7 @@
                         <span asp-validation-for="AttributionText" class="text-danger"></span>
                     </div>
                     <div class="col-12">
-                        <h3 class="card-title border-bottom pb-2 mb-0">圖片與狀態</h3>
+                        <h3 class="qmah-form-section-title border-bottom pb-2 mb-0">圖片與狀態</h3>
                     </div>
                     <div class="col-12">
                         <label asp-for="PrimaryImagePath" class="form-label">主要圖片網址</label>
@@ -116,7 +116,7 @@
     <div class="col-12 col-xl-4">
         <div class="card mb-3">
             <div class="card-header"><h2 class="card-title">目前圖片</h2></div>
-            <div class="card-body text-center">
+            <div class="card-body text-center qmah-detail-section">
                 @if (!string.IsNullOrWhiteSpace(Model.PrimaryImagePath) || !string.IsNullOrWhiteSpace(Model.ThumbnailPath))
                 {
                     <img src="@(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? Model.ThumbnailPath : Model.PrimaryImagePath)" alt="@Model.Name" class="img-fluid rounded" style="max-height: 18rem; object-fit: contain;" />

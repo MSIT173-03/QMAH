@@ -209,6 +209,19 @@
   font-size: 0.95rem;
 }
 
+.qmah-password-field .form-control {
+  min-width: 0;
+}
+
+.qmah-password-toggle {
+  min-width: 3rem;
+  color: var(--qmah-ink-soft);
+}
+
+.qmah-auth-form.qmah-is-submitting .btn[type="submit"] {
+  cursor: wait;
+}
+
 .qmah-auth-form .form-check {
   color: var(--qmah-ink-soft);
 }

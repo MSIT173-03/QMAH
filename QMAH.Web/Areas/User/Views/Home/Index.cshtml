@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "會員管理總覽";
-    ViewData["AdminDescription"] = "集中管理會員帳號、角色、個人資料、成就與點數；登入入口位於全站管理總覽。";
+    ViewData["AdminDescription"] = "集中管理會員帳號、角色、個人資料、成就與點數。";
 }
 
 @section PageActions {
@@ -10,13 +10,6 @@
     <a asp-area="User" asp-controller="Achievements" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-award me-1"></i>成就設定</a>
     <a asp-area="User" asp-controller="PointTransactions" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-coin me-1"></i>點數流水</a>
 }
-
-<div class="qmah-dashboard-intro">
-    <div>
-        <h1 class="qmah-dashboard-title">會員管理總覽</h1>
-        <p class="qmah-dashboard-lede">從會員帳號開始，進入角色、檔案、成就與點數等管理作業。</p>
-    </div>
-</div>
 
 <div class="row row-cards qmah-dashboard-metrics">
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">會員總數</span><strong class="qmah-metric-value">@Model.TotalMembers</strong><span class="qmah-metric-note">全部 Identity 帳號</span></div></div></div>
@@ -47,7 +40,7 @@
                             <tr>
                                 <td class="fw-semibold">@(member.UserName ?? "-")</td>
                                 <td>@(member.Email ?? "-")</td>
-                                <td><span class="badge @(member.Status == "ACTIVE" ? "bg-green-lt" : member.Status == "BANNED" ? "bg-red-lt" : "bg-secondary-lt")">@member.Status</span></td>
+                                <td><span class="badge @(member.Status == "ACTIVE" ? "bg-green-lt" : member.Status == "BANNED" ? "bg-red-lt" : "bg-secondary-lt")">@AdminDisplayLabels.Status(member.Status)</span></td>
                                 <td class="text-secondary text-nowrap">@member.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
                                 <td><a asp-area="User" asp-controller="Members" asp-action="Details" asp-route-id="@member.Id" class="btn btn-sm btn-outline-secondary">詳細</a></td>
                             </tr>

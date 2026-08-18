@@ -571,6 +571,19 @@ html[data-bs-theme="dark"] .qmah-brand .qmah-brand-logo--dark {
   font-weight: 650;
 }
 
+form.qmah-is-submitting {
+  cursor: wait;
+}
+
+form.qmah-is-submitting .form-control,
+form.qmah-is-submitting .form-select {
+  opacity: 0.72;
+}
+
+form.qmah-is-submitting button[type="submit"] {
+  cursor: wait;
+}
+
 .btn-primary {
   --tblr-btn-color: var(--qmah-primary-contrast);
   --tblr-btn-bg: var(--qmah-primary);

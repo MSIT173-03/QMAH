@@ -19,7 +19,7 @@
     <div class="card-header d-flex align-items-center justify-content-between gap-3">
         <div>
             <h2 class="card-title mb-1">貼文篩選</h2>
-            <div class="text-secondary">後台只呈現可操作的內容資料，不混入前台討論版面。</div>
+            <div class="text-secondary">依條件查看貼文，並在清單中進行編輯與狀態處理。</div>
         </div>
         <span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span>
     </div>
@@ -70,7 +70,7 @@
 
 <div class="card">
     <div class="table-responsive">
-        <table class="table table-vcenter table-hover card-table">
+        <table class="table table-vcenter table-hover card-table qmah-crud-table">
             <thead>
                 <tr>
                     <th>板塊</th>
@@ -104,14 +104,14 @@
                         var nextStatusLabel = item.Status == "PUBLISHED" ? "隱藏" : "恢復發布";
 
                         <tr>
-                            <td><span class="badge bg-blue-lt">@item.BoardCode</span></td>
+                            <td><span class="badge bg-blue-lt">@AdminDisplayLabels.Board(item.BoardCode)</span></td>
                             <td class="fw-semibold">@item.Title</td>
                             <td class="text-secondary">@item.AuthorName</td>
                             <td>@item.CommentCount</td>
-                            <td><span class="badge @statusClass">@item.Status</span></td>
+                            <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
                             <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                             <td>
-                                <div class="btn-list flex-nowrap">
+                                <div class="qmah-table-actions">
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
                                     @if (item.Status != "DELETED")
                                     {

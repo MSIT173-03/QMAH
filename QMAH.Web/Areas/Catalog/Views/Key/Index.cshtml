@@ -3,7 +3,7 @@
 
 @{
     ViewData["Title"] = "鑰匙總覽";
-    ViewData["AdminDescription"] = "維護圖鑑解鎖規則，以及分類與年代的 Scope 設定。";
+    ViewData["AdminDescription"] = "維護圖鑑解鎖規則，以及分類與年代的適用範圍。";
     var records = Model?.ToList() ?? [];
 }
 
@@ -44,7 +44,7 @@
                 <thead>
                     <tr>
                         <th>鑰匙</th>
-                        <th>Scope</th>
+                        <th>適用範圍</th>
                         <th>分類</th>
                         <th>年代</th>
                         <th>狀態</th>
@@ -59,7 +59,7 @@
                                 <div class="fw-semibold">@item.Name</div>
                                 <div class="text-secondary small">@item.Code</div>
                             </td>
-                            <td><span class="badge bg-blue-lt">@item.ScopeType</span></td>
+                            <td><span class="badge bg-blue-lt">@AdminDisplayLabels.Scope(item.ScopeType)</span></td>
                             <td>@(item.Category?.Name ?? "全域")</td>
                             <td>@(item.EraBucket?.Name ?? "全域")</td>
                             <td>
