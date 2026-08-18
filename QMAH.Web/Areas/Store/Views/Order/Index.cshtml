@@ -1,0 +1,102 @@
+@model IEnumerable<QMAH.Web.Areas.Store.ViewModels.OrderSimplefyListItem>
+
+@{
+    ViewData["Title"] = "訂單列表";
+}
+
+<p>
+    <a asp-action="Create">新增訂單</a>
+</p>
+<style>
+    #order-list-table > tbody > tr{
+        cursor:pointer;
+    }
+</style>
+
+@{
+    var viewData = new ViewDataDictionary(ViewData)
+    {
+        {"Controller", "Order"},
+        {"Action", "Index"}
+    };
+}
+<partial name="OptionSetListPage" view-data="viewData" />
+
+<table id="order-list-table" class="table table-hover border">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.UserName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Status)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ItemsCount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ItemsTotal)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DiscountAmount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PointUsed)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Total)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreateAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PaidAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CancelledAt)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+            <tr onclick="window.location.assign('@item.Id')">
+            <td>
+                @Html.DisplayFor(model => item.UserName)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Status)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ItemsCount)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ItemsTotal)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.DiscountAmount)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PointUsed)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Total)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreateAt)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PaidAt)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CancelledAt)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

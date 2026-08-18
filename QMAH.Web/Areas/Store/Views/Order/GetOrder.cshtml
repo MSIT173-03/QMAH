@@ -1,0 +1,198 @@
+@model QMAH.Web.Areas.Store.ViewModels.OrderFullDetail
+
+@{
+    ViewData["Title"] = "訂單細節";
+}
+
+<div class="my-3">
+    <a asp-action="Index" class="btn btn-light mx-3">返回列表</a>
+    @if(Model!=null){
+        @* <a asp-action="Edit" asp-route-id="@Model.Id">編輯</a> *@
+        <form asp-controller="Order" asp-action="Cancel" method="post" id="set-cancel-order" class="d-inline">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" id="set-cancel-button" class="btn btn-danger">取消此訂單</button>
+        </form>
+    }
+</div>
+
+<style>
+    .infomation-hover > .row:hover {
+        background-color: var(--qmah-surface-soft);
+    }
+</style>
+
+<div class="row">
+
+    <div class="infomation-hover border border-2 container col-12 col-md-4 py-3">
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.UserId)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.UserId)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.UserName)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.UserName)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Status)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Status)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.ItemsCount)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.ItemsCount)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.ItemsTotal)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.ItemsTotal)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.DiscountAmount)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.DiscountAmount)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.PointUsed)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.PointUsed)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Total)
+                </dt>
+                <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Total)
+                </dd>
+            </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.CreateAt)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.CreateAt)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.PaidAt)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.PaidAt)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.CancelledAt)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.CancelledAt)
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.ItemList)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.ItemList)
+            </dd>
+        </dl>
+    </div>
+
+    <div class="container col-12 col-md-8">
+
+        <style>
+            .clickable-tablerow{
+                cursor:pointer;
+            }
+        </style>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        訂單項目編號
+                    </th>
+                    <th>
+                        產品名稱
+                    </th>
+                    <th>
+                        價格
+                    </th>
+                    <th>
+                        購買數量
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.ItemList)
+                {
+                    <tr class="clickable-tablerow" onclick="window.location.assign('/store/product/@item.ProductId')">
+                        <td>
+                            @Html.DisplayFor(model => item.Id)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => item.ProductName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => item.Price)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => item.Amount)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+    document
+        .getElementById("set-cancel-order") 
+        .addEventListener("submit", async function(e) {
+            e.preventDefault();
+            try {  
+                const formData = new FormData(this);
+                const response = await fetch(this.action, {
+                    method: "POST",
+                    body: formData
+                })
+
+                if (response.ok)
+                    return alert("取消成功")
+                
+                const result = await response.text();
+
+                return alert(result)
+            }
+            catch(e) {
+                alert(e.message)
+            }
+        });
+</script>

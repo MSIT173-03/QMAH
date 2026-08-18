@@ -1,0 +1,66 @@
+﻿@{
+    int curPage = Math.Max(0, Convert.ToInt32(ViewData["Page"]));
+    int rows = Math.Max(0, Convert.ToInt32(ViewData["Rows"]));
+    int prev = Math.Max(0, curPage - 1);
+    int next = curPage + 1;
+
+    string controller = ViewData["Controller"]?.ToString() ?? "";
+    string action = ViewData["Action"]?.ToString() ?? "";
+}
+
+<style>
+    /* 隱藏數字輸入框的箭頭 */
+    input.number-input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+
+    input.number-input[type="number"]::-webkit-outer-spin-button,
+    input.number-input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input.number-input {
+        max-width: 5em;
+    }
+</style>
+
+<section class="row">
+    <div class="d-flex justify-content-center">
+        <a asp-controller="@controller" asp-action="@action" asp-route-page="@prev" asp-route-rows="@rows"
+            class="btn btn-outline-info me-1">
+            上一頁
+        </a>
+        <input id="list-display-config-page" type="number" min="0" value="@curPage" class="number-input form-control text-center" />
+        <a asp-controller="@controller" asp-action="@action" asp-route-page="@next" asp-route-rows="@rows"
+           class="btn btn-outline-info ms-1">
+            下一頁
+        </a>
+
+        <div class="d-flex ms-6">
+            <label for="list-display-config-rows" class="form-label align-content-center mb-0 me-1" style="width: 5em;">每頁行數：</label>
+            <input name="list-display-config-rows" id="list-display-config-rows" type="number" min="0" value="@rows" class="number-input ms-auto form-control text-center me-1" />
+        </div>
+
+    </div>
+</section>
+
+<script>
+    document.querySelectorAll("input.number-input").forEach(input => {
+        input.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+
+                const newRows = document.querySelector("input#list-display-config-rows").value
+                const newPage = document.querySelector("input#list-display-config-page").value
+                const url = new URL(window.location.href)
+
+                url.searchParams.set("page", newPage)
+                url.searchParams.set("rows", newRows)
+
+                window.location.href = url.toString()
+            }
+        })
+    })
+</script>

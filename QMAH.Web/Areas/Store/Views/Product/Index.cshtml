@@ -1,0 +1,117 @@
+@model IEnumerable<QMAH.Web.Areas.Store.ViewModels.ProductSimplefyListItem>
+
+@{
+    ViewData["Title"] = "產品列表";
+}
+
+<style>
+    #product-list-table > tbody > tr {
+        cursor: pointer;
+        position: relative;
+    }
+
+    .products-cover {
+        position: absolute;
+        width: 20%;
+    }
+
+    .products-cover.at-top {
+        bottom: 100%;
+        left: 0;
+    }
+
+    .products-cover.at-bottom {
+        top: 100%;
+        left: 0;
+    }
+</style>
+
+<p>
+    <a asp-action="Create">新增產品</a>
+</p>
+
+@{
+    var viewData = new ViewDataDictionary(ViewData)
+    {
+        {"Controller", "Product"},
+        {"Action", "Index"}
+    };
+}
+<partial name="OptionSetListPage" view-data="viewData" />
+
+<table id="product-list-table" class="table table-hover">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Category)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Price)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Stock)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsActive)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr onclick="window.location.assign('@item.Id')">
+            <td>
+                @Html.DisplayFor(model => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Category)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Price)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Stock)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.IsActive)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">編輯</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">細節</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">刪除</a>
+                    <div class="products-cover at-top" hidden="hidden">
+                        <img src="@item.ImageUrl" />
+                    </div>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+
+<script>
+    document.querySelectorAll("#product-list-table > tbody > tr").forEach(row => {
+        const imgBox = row.querySelector(".products-cover")
+        const img = row.querySelector(".products-cover > img")
+        
+        row.addEventListener("mouseenter", ev => {
+            // const rowT = row.getBoundingClientRect().top
+            // const imgH = img.getBoundingClientRect().height
+            
+            imgBox.removeAttribute("hidden")
+
+            // if (imgH + 8 > rowT) imgBox.classList.add("at-bottom")
+            // else imgBox.classList.add("at-top")
+        })
+
+        row.addEventListener("mouseleave", ev => {
+            imgBox.setAttribute("hidden", true)
+            // imgBox.classList.remove("at-top", "at-bottom")
+        })
+    })
+
+
+</script>
