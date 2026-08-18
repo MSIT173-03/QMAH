@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "無權限";
+}
+
+<div class="container mt-5">
+    <div class="alert alert-danger text-center">
+        <h2>無法存取</h2>
+        <p>你沒有權限進入這個頁面。</p>
+
+        <a asp-area="User"
+           asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-secondary">
+            回到首頁
+        </a>
+    </div>
+</div>

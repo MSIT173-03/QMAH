@@ -1,0 +1,105 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.AchievementEditViewModel
+
+@{
+    ViewData["Title"] = "編輯成就";
+}
+
+<h1>編輯成就</h1>
+
+<form asp-action="Edit"method="post"enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="RowVersion" />
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="Code" class="form-label">代碼</label>
+        <input asp-for="Code" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">成就名稱</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">標題</label>
+        <input asp-for="Title" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">說明</label>
+        <textarea asp-for="Description"
+                  class="form-control"
+                  rows="4"></textarea>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.IconPath))
+    {
+        <div class="mb-3">
+            <label class="form-label">目前圖示</label>
+
+            <div>
+                <img src="@Model.IconPath"
+                     alt="成就圖示"
+                     style="width:100px;
+                height:100px;
+                object-fit:cover;
+                border-radius:12px;" />
+            </div>
+        </div>
+    }
+
+    <div class="mb-3">
+        <label asp-for="IconFile"
+               class="form-label">
+            上傳新圖示
+        </label>
+
+        <input asp-for="IconFile"
+               type="file"
+               class="form-control"
+               accept=".jpg,.jpeg,.png,.webp" />
+
+        <span asp-validation-for="IconFile"
+              class="text-danger">
+        </span>
+
+        <div class="form-text">
+            支援 JPG、JPEG、PNG、WEBP，最大 5 MB。
+            若不選擇圖片，會保留原本圖示。
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConditionType" class="form-label">條件類型</label>
+        <input asp-for="ConditionType" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ThresholdValue" class="form-label">門檻</label>
+        <input asp-for="ThresholdValue"
+               class="form-control"
+               type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Status" class="form-label">狀態</label>
+
+        <select asp-for="Status" class="form-select">
+            <option value="ACTIVE">啟用</option>
+            <option value="INACTIVE">停用</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        儲存
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        返回
+    </a>
+</form>

@@ -1,0 +1,83 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.AchievementCreateViewModel
+
+@{
+    ViewData["Title"] = "新增成就";
+}
+
+<h1>新增成就</h1>
+
+<form asp-action="Create"  method="post"  enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label asp-for="Code" class="form-label">代碼</label>
+        <input asp-for="Code" class="form-control" />
+        <span asp-validation-for="Code" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">成就名稱</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">標題</label>
+        <input asp-for="Title" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">說明</label>
+        <textarea asp-for="Description"
+                  class="form-control"
+                  rows="4"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="IconFile"
+               class="form-label">
+            成就圖示
+        </label>
+
+        <input asp-for="IconFile"
+               type="file"
+               class="form-control"
+               accept=".jpg,.jpeg,.png,.webp" />
+
+        <span asp-validation-for="IconFile"
+              class="text-danger">
+        </span>
+
+        <div class="form-text">
+            支援 JPG、JPEG、PNG、WEBP，最大 5 MB。
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConditionType" class="form-label">條件類型</label>
+        <input asp-for="ConditionType" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ThresholdValue" class="form-label">門檻</label>
+        <input asp-for="ThresholdValue"
+               type="number"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Status" class="form-label">狀態</label>
+
+        <select asp-for="Status" class="form-select">
+            <option value="ACTIVE">啟用</option>
+            <option value="INACTIVE">停用</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        新增
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        返回
+    </a>
+</form>

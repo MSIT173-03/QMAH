@@ -1,0 +1,112 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.MemberEditViewModel
+
+@{
+    ViewData["Title"] = "編輯我的個人資料";
+}
+
+<h1>編輯我的個人資料</h1>
+
+<form asp-action="Edit"
+      method="post"
+      enctype="multipart/form-data">
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger mb-3">
+    </div>
+
+    <input asp-for="RowVersion" type="hidden" />
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input value="@Model.Email"
+               class="form-control"
+               readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nickname" class="form-label">
+            暱稱
+        </label>
+
+        <input asp-for="Nickname"
+               class="form-control" />
+
+        <span asp-validation-for="Nickname"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Bio" class="form-label">
+            自我介紹
+        </label>
+
+        <textarea asp-for="Bio"
+                  class="form-control"
+                  rows="4"></textarea>
+
+        <span asp-validation-for="Bio"
+              class="text-danger">
+        </span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
+    {
+        <div class="mb-3">
+            <label class="form-label">目前頭像</label>
+
+            <div>
+                <img src="@Model.AvatarPath"
+                     alt="目前頭像"
+                     style="width:120px;height:120px;object-fit:cover;border-radius:50%;" />
+            </div>
+        </div>
+    }
+
+    <div class="mb-3">
+        <label asp-for="AvatarFile" class="form-label">
+            上傳頭像
+        </label>
+
+        <input asp-for="AvatarFile"
+               type="file"
+               class="form-control"
+               accept=".jpg,.jpeg,.png,.webp" />
+
+        <span asp-validation-for="AvatarFile"
+              class="text-danger">
+        </span>
+
+        <div class="form-text">
+            支援 JPG、JPEG、PNG、WEBP，最大 5 MB。
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Visibility" class="form-label">
+            公開範圍
+        </label>
+
+        <select asp-for="Visibility"
+                class="form-select">
+            <option value="PUBLIC">PUBLIC</option>
+            <option value="FRIENDS">FRIENDS</option>
+            <option value="PRIVATE">PRIVATE</option>
+        </select>
+
+        <span asp-validation-for="Visibility"
+              class="text-danger">
+        </span>
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary">
+        儲存
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        返回
+    </a>
+
+</form>

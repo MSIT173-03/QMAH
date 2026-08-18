@@ -1,0 +1,119 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "會員註冊";
+}
+
+<h1>會員註冊</h1>
+
+<form asp-action="Register"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger mb-3">
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email"
+               class="form-label">
+            Email
+        </label>
+
+        <input asp-for="Email"
+               class="form-control" />
+
+        <span asp-validation-for="Email"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nickname"
+               class="form-label">
+            暱稱
+        </label>
+
+        <input asp-for="Nickname"
+               class="form-control" />
+
+        <span asp-validation-for="Nickname"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password"
+               class="form-label">
+            密碼
+        </label>
+
+        <div class="input-group">
+            <input asp-for="Password"
+                   type="password"
+                   id="password"
+                   class="form-control" />
+
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    onclick="togglePassword('password', this)">
+                顯示
+            </button>
+        </div>
+
+        <span asp-validation-for="Password"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConfirmPassword"
+               class="form-label">
+            確認密碼
+        </label>
+
+        <div class="input-group">
+            <input asp-for="ConfirmPassword"
+                   type="password"
+                   id="confirmPassword"
+                   class="form-control" />
+
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    onclick="togglePassword('confirmPassword', this)">
+                顯示
+            </button>
+        </div>
+
+        <span asp-validation-for="ConfirmPassword"
+              class="text-danger">
+        </span>
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary">
+        註冊
+    </button>
+
+    <a asp-action="Login"
+       class="btn btn-secondary">
+        返回登入
+    </a>
+</form>
+
+@section Scripts {
+    <script>
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+
+            if (input.type === "password") {
+                input.type = "text";
+                button.textContent = "隱藏";
+            } else {
+                input.type = "password";
+                button.textContent = "顯示";
+            }
+        }
+    </script>
+}

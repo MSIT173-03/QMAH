@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Social;
 using QMAH.Web.Areas.Social.Services;
+using QMAH.Web.Infrastructure.Development;
 using QMAH.Web.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Models.Entities;
@@ -52,6 +53,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    await DevelopmentAdminSeeder.ResetDevelopmentPasswordsAsync(
+        app.Services,
+        builder.Configuration);
+}
 
 if (!app.Environment.IsDevelopment())
 {

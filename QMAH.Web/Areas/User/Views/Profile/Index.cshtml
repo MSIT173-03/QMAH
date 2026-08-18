@@ -1,0 +1,313 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.ProfileIndexViewModel
+
+@{
+    ViewData["Title"] = "我的個人資料";
+}
+
+<h1>我的個人資料</h1>
+
+<div class="d-flex gap-2 mb-4">
+    <a asp-action="Edit"
+       class="btn btn-primary">
+        編輯個人資料
+    </a>
+
+    <a asp-action="CreateAddress"
+       class="btn btn-success">
+        新增地址
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+
+                @if (!string.IsNullOrWhiteSpace(Model.Profile.AvatarPath))
+                {
+                    <img src="@Model.Profile.AvatarPath"
+                         alt="會員頭像"
+                         class="mb-3"
+                         style="width:120px;
+                    height:120px;
+                    object-fit:cover;
+                    border-radius:50%;" />
+                }
+                else
+                {
+                    <div class="mb-3">
+                        目前尚未設定頭像
+                    </div>
+                }
+
+                <h4>
+                    @Model.Profile.Nickname
+                </h4>
+
+                <p class="text-muted mb-0">
+                    @Model.User.Email
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-9">
+        <div class="card h-100">
+            <div class="card-body">
+
+                <h4 class="card-title mb-3">
+                    個人資料
+                </h4>
+
+                <p>
+                    <strong>Email：</strong>
+                    @Model.User.Email
+                </p>
+
+                <p>
+                    <strong>暱稱：</strong>
+                    @Model.Profile.Nickname
+                </p>
+
+                <p>
+                    <strong>自我介紹：</strong>
+
+                    @if (string.IsNullOrWhiteSpace(Model.Profile.Bio))
+                    {
+                        <span class="text-muted">
+                            尚未填寫
+                        </span>
+                    }
+                    else
+                    {
+                        @Model.Profile.Bio
+                    }
+                </p>
+
+                <p>
+                    <strong>公開範圍：</strong>
+                    @Model.Profile.Visibility
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<h3 class="mb-3">我的會員資訊</h3>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+
+                <div class="text-muted">
+                    目前點數
+                </div>
+
+                <div class="fs-2 fw-bold">
+                    @Model.PointBalance
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+
+                <div class="text-muted">
+                    已取得成就
+                </div>
+
+                <div class="fs-2 fw-bold">
+                    @Model.AchievementCount
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+
+                <div class="text-muted">
+                    收件地址
+                </div>
+
+                <div class="fs-2 fw-bold">
+                    @Model.Addresses.Count
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<hr />
+
+<h3>我的收件地址</h3>
+
+@if (TempData["AddressError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["AddressError"]
+    </div>
+}
+
+@if (Model.Addresses.Count == 0)
+{
+    <p class="text-muted">
+        目前沒有收件地址。
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>標籤</th>
+                <th>收件人</th>
+                <th>電話</th>
+                <th>地址</th>
+                <th>預設</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var address in Model.Addresses)
+            {
+                <tr>
+                    <td>
+                        @address.AddressLabel
+                    </td>
+
+                    <td>
+                        @address.RecipientName
+                    </td>
+
+                    <td>
+                        @address.RecipientPhone
+                    </td>
+
+                    <td>
+                        @address.PostalCode
+                        @address.City
+                        @address.District
+                        @address.AddressLine
+                    </td>
+
+                    <td>
+                        @if (address.IsDefault)
+                        {
+                            <span class="badge bg-success">
+                                預設
+                            </span>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </td>
+
+                    <td>
+                        <a asp-action="EditAddress"
+                           asp-route-id="@address.Id"
+                           class="btn btn-sm btn-primary">
+                            編輯
+                        </a>
+
+                        <form asp-action="DeleteAddress"
+                              method="post"
+                              class="d-inline">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@address.Id" />
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    onclick="return confirm('確定要刪除這筆地址嗎？');">
+                                刪除
+                            </button>
+
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+<hr />
+
+<h3>最近點數異動</h3>
+
+@if (Model.RecentPointTransactions.Count == 0)
+{
+    <p class="text-muted">
+        目前沒有點數異動紀錄。
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>時間</th>
+                <th>異動</th>
+                <th>原因</th>
+                <th>類型</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model.RecentPointTransactions)
+            {
+                <tr>
+                    <td>
+                        @item.CreatedAt
+                    </td>
+
+                    <td>
+                        @if (item.Amount > 0)
+                        {
+                            <span class="text-success">
+                                +@item.Amount
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">
+                                @item.Amount
+                            </span>
+                        }
+                    </td>
+                    <td>
+                        @item.Reason
+                    </td>
+
+                    <td>
+                        @item.ReferenceType
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,274 @@
+@model IEnumerable<QMAH.Web.Areas.User.ViewModels.MemberListItemViewModel>
+
+@{
+    ViewData["Title"] = "會員管理";
+}
+
+<h1>會員清單</h1>
+
+<a asp-area="User"
+   asp-controller="Home"
+   asp-action="Index"
+   class="btn btn-secondary mb-3">
+    返回會員管理總覽
+</a>
+
+<div class="row mb-4">
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div class="text-muted">會員帳號</div>
+
+            <div class="fs-1 fw-bold">
+                @ViewBag.TotalMembers
+            </div>
+
+            <div class="text-muted">
+                全部帳號
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div class="text-muted">近期新增</div>
+
+            <div class="fs-1 fw-bold">
+                @ViewBag.NewMembers
+            </div>
+
+            <div class="text-muted">
+                近 30 天
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div class="text-muted">停權帳號</div>
+
+            <div class="fs-1 fw-bold">
+                @ViewBag.BannedMembers
+            </div>
+
+            <div class="text-muted">
+                目前停權
+            </div>
+        </div>
+    </div>
+
+</div>
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="row g-2">
+
+        <div class="col-md-5">
+            <input type="text"
+                   name="keyword"
+                   value="@ViewBag.Keyword"
+                   class="form-control"
+                   placeholder="輸入 Email 或帳號關鍵字" />
+        </div>
+
+        <div class="col-md-2">
+            <select name="role" class="form-select">
+                <option value="">全部角色</option>
+
+                <option value="Admin"
+                        selected="@(ViewBag.Role == "Admin")">
+                    Admin
+                </option>
+
+                <option value="User"
+                        selected="@(ViewBag.Role == "User")">
+                    User
+                </option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="">全部狀態</option>
+
+                <option value="ACTIVE"
+                        selected="@(ViewBag.Status == "ACTIVE")">
+                    ACTIVE
+                </option>
+
+                <option value="BANNED"
+                        selected="@(ViewBag.Status == "BANNED")">
+                    BANNED
+                </option>
+
+                <option value="DISABLED"
+                        selected="@(ViewBag.Status == "DISABLED")">
+                    DISABLED
+                </option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary">
+                搜尋
+            </button>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                清除
+            </a>
+        </div>
+
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>會員</th>
+            <th>角色</th>
+            <th>Email 驗證</th>
+            <th>點數</th>
+            <th>狀態</th>
+            <th>建立時間</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <div>
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(item.Nickname)
+                                ? "未設定暱稱"
+                                : item.Nickname)
+                        </strong>
+
+                        <div class="text-muted">
+                            @item.User.Email
+                        </div>
+                    </div>
+                </td>
+
+                <td>@item.Role</td>
+
+                <td>
+                    @if (item.User.EmailConfirmed)
+                    {
+                        <span class="badge bg-success">已驗證</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning">未驗證</span>
+                    }
+                </td>
+                <td>@item.PointBalance</td>
+                <td>@item.User.Status</td>
+                <td>@item.User.CreatedAt</td>
+
+                <td>
+                    <a asp-action="Details"
+                       asp-route-id="@item.User.Id"
+                       class="btn btn-sm btn-primary">
+                        詳細
+                    </a>
+
+                    <a asp-action="Edit"
+                       asp-route-id="@item.User.Id"
+                       class="btn btn-primary">
+                        編輯
+                    </a>
+
+                    <a asp-action="AdjustPoints"
+                       asp-route-id="@item.User.Id"
+                       class="btn btn-warning">
+                        點數
+                    </a>
+
+                    <form asp-action="ChangeStatus"
+                          asp-route-id="@item.User.Id"
+                          method="post"
+                          class="d-inline">
+
+                        @Html.AntiForgeryToken()
+
+                        @if (item.User.Status == "ACTIVE")
+                        {
+                            <button type="submit"
+                                    class="btn btn-danger"
+                                    onclick="return confirm('確定要停權這個會員嗎？')">
+                                停權
+                            </button>
+                        }
+                        else if (item.User.Status == "BANNED")
+                        {
+                            <button type="submit"
+                                    class="btn btn-success"
+                                    onclick="return confirm('確定要解除停權嗎？')">
+                                解除停權
+                            </button>
+                        }
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@{
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+    int totalCount = ViewBag.TotalCount;
+    int pageSize = ViewBag.PageSize;
+
+    int start = totalCount == 0
+        ? 0
+        : ((currentPage - 1) * pageSize) + 1;
+
+    int end = Math.Min(currentPage * pageSize, totalCount);
+}
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+
+    <div class="text-muted">
+        顯示第 @start～@end 筆，共 @totalCount 筆
+    </div>
+
+    <div>
+        @if (currentPage > 1)
+        {
+            <a asp-action="Index"
+               asp-route-page="@(currentPage - 1)"
+               asp-route-keyword="@ViewBag.Keyword"
+               asp-route-role="@ViewBag.Role"
+               asp-route-status="@ViewBag.Status"
+               class="btn btn-secondary">
+                上一頁
+            </a>
+        }
+
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            <a asp-action="Index"
+               asp-route-page="@i"
+               asp-route-keyword="@ViewBag.Keyword"
+               asp-route-role="@ViewBag.Role"
+               asp-route-status="@ViewBag.Status"
+               class="btn @(i == currentPage ? "btn-primary" : "btn-outline-secondary")">
+                @i
+            </a>
+        }
+
+        @if (currentPage < totalPages)
+        {
+            <a asp-action="Index"
+               asp-route-page="@(currentPage + 1)"
+               asp-route-keyword="@ViewBag.Keyword"
+               asp-route-role="@ViewBag.Role"
+               asp-route-status="@ViewBag.Status"
+               class="btn btn-secondary">
+                下一頁
+            </a>
+        }
+    </div>
+
+</div>

@@ -1,0 +1,712 @@
+﻿@model QMAH.Web.Areas.User.ViewModels.MemberDetailsViewModel
+
+@{
+    ViewData["Title"] = "會員詳細資料";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1">會員詳細資料</h1>
+        <p class="text-muted mb-0">
+            查看會員帳號、個人資料、地址、成就與點數紀錄
+        </p>
+    </div>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        返回會員列表
+    </a>
+</div>
+
+
+<!-- 系統訊息 -->
+@if (TempData["StatusError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["StatusError"]
+    </div>
+}
+
+@if (TempData["AddressError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["AddressError"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+
+<!-- =========================
+     帳號資料
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header">
+        <strong>帳號資料</strong>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <div class="text-muted small">
+                    Email
+                </div>
+
+                <div>
+                    @Model.User.Email
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="text-muted small">
+                    Email 驗證
+                </div>
+
+                <div>
+                    @if (Model.User.EmailConfirmed)
+                    {
+                        <span class="badge bg-success">
+                            已驗證
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">
+                            未驗證
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="text-muted small">
+                    角色
+                </div>
+
+                <div>
+                    @if (Model.Roles.Count == 0)
+                    {
+                        <span>-</span>
+                    }
+                    else
+                    {
+                        @string.Join(", ", Model.Roles)
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="text-muted small">
+                    帳號狀態
+                </div>
+
+                <div>
+                    @if (Model.User.Status == "ACTIVE")
+                    {
+                        <span class="badge bg-success">
+                            ACTIVE
+                        </span>
+                    }
+                    else if (Model.User.Status == "BANNED")
+                    {
+                        <span class="badge bg-danger">
+                            BANNED
+                        </span>
+                    }
+                    else if (Model.User.Status == "DISABLED")
+                    {
+                        <span class="badge bg-secondary">
+                            DISABLED
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">
+                            @Model.User.Status
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="text-muted small">
+                    目前點數
+                </div>
+
+                <div class="fw-semibold">
+                    @Model.CurrentBalance
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="text-muted small">
+                    註冊時間
+                </div>
+
+                <div>
+                    @Model.User.CreatedAt
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="text-muted small">
+                    最後更新
+                </div>
+
+                <div>
+                    @Model.User.UpdatedAt
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="mt-4">
+
+            <a asp-action="EditRoles"
+               asp-route-id="@Model.User.Id"
+               class="btn btn-warning">
+                角色設定
+            </a>
+
+            <a asp-action="Edit"
+               asp-route-id="@Model.User.Id"
+               class="btn btn-primary">
+                編輯個人資料
+            </a>
+
+            <form asp-action="ChangeStatus"
+                  method="post"
+                  class="d-inline">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       value="@Model.User.Id" />
+
+                @if (Model.User.Status == "ACTIVE")
+                {
+                    <button type="submit"
+                            class="btn btn-danger"
+                            onclick="return confirm('確定要停權這個會員嗎？');">
+                        停權
+                    </button>
+                }
+                else if (Model.User.Status == "BANNED")
+                {
+                    <button type="submit"
+                            class="btn btn-success"
+                            onclick="return confirm('確定要解除停權嗎？');">
+                        解除停權
+                    </button>
+                }
+                else if (Model.User.Status == "DISABLED")
+                {
+                    <button type="button"
+                            class="btn btn-secondary"
+                            disabled>
+                        帳號已停用
+                    </button>
+                }
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     個人資料
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header">
+        <strong>個人資料</strong>
+    </div>
+
+    <div class="card-body">
+
+        @if (Model.Profile != null)
+        {
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <div class="text-muted small">
+                        暱稱
+                    </div>
+
+                    <div>
+                        @Model.Profile.Nickname
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="text-muted small">
+                        公開範圍
+                    </div>
+
+                    <div>
+                        @if (Model.Profile.Visibility == "PUBLIC")
+                        {
+                            <span class="badge bg-success">
+                                公開
+                            </span>
+                        }
+                        else if (Model.Profile.Visibility == "FRIENDS")
+                        {
+                            <span class="badge bg-warning text-dark">
+                                好友
+                            </span>
+                        }
+                        else if (Model.Profile.Visibility == "PRIVATE")
+                        {
+                            <span class="badge bg-secondary">
+                                私人
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                @Model.Profile.Visibility
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="text-muted small">
+                        自我介紹
+                    </div>
+
+                    <div>
+                        @(string.IsNullOrWhiteSpace(Model.Profile.Bio)
+                            ? "-"
+                            : Model.Profile.Bio)
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="text-muted small mb-2">
+                        會員頭像
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Profile.AvatarPath))
+                    {
+                        <img src="@Model.Profile.AvatarPath"
+                             alt="會員頭像"
+                             style="width:100px;
+                        height:100px;
+                        object-fit:cover;
+                        border-radius:50%;" />
+                    }
+                    else
+                    {
+                        <div class="text-muted">
+                            尚未設定頭像
+                        </div>
+                    }
+                </div>
+
+                <div class="col-md-6">
+                    <div class="text-muted small">
+                        Profile 建立時間
+                    </div>
+
+                    <div>
+                        @Model.Profile.CreatedAt
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="text-muted small">
+                        Profile 最後更新
+                    </div>
+
+                    <div>
+                        @Model.Profile.UpdatedAt
+                    </div>
+                </div>
+
+            </div>
+        }
+        else
+        {
+            <p class="text-muted mb-0">
+                此會員尚未建立個人資料。
+            </p>
+        }
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     收件地址
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>收件地址</strong>
+        </div>
+
+        <a asp-action="CreateAddress"
+           asp-route-userId="@Model.User.Id"
+           class="btn btn-sm btn-success">
+            新增地址
+        </a>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        @if (Model.Addresses.Count == 0)
+        {
+            <div class="p-3 text-muted">
+                目前沒有地址資料。
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+
+                <table class="table mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>標籤</th>
+                            <th>收件人</th>
+                            <th>電話</th>
+                            <th>地址</th>
+                            <th>預設</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var address in Model.Addresses)
+                        {
+                            <tr>
+
+                                <td>
+                                    @address.AddressLabel
+                                </td>
+
+                                <td>
+                                    @address.RecipientName
+                                </td>
+
+                                <td>
+                                    @address.RecipientPhone
+                                </td>
+
+                                <td>
+                                    @address.PostalCode
+                                    @address.City
+                                    @address.District
+                                    @address.AddressLine
+                                </td>
+
+                                <td>
+                                    @if (address.IsDefault)
+                                    {
+                                        <span class="badge bg-success">
+                                            預設
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
+
+                                <td>
+
+                                    <a asp-action="EditAddress"
+                                       asp-route-id="@address.Id"
+                                       class="btn btn-sm btn-primary">
+                                        編輯
+                                    </a>
+
+                                    <form asp-action="DeleteAddress"
+                                          method="post"
+                                          class="d-inline">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@address.Id" />
+
+                                        <input type="hidden"
+                                               name="userId"
+                                               value="@Model.User.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('確定要刪除這筆地址嗎？');">
+                                            刪除
+                                        </button>
+
+                                    </form>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     已取得成就
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>已取得成就</strong>
+        </div>
+
+        <a asp-action="GrantAchievement"
+           asp-route-userId="@Model.User.Id"
+           class="btn btn-sm btn-primary">
+            授予成就
+        </a>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        @if (Model.Achievements.Count == 0)
+        {
+            <div class="p-3 text-muted">
+                目前尚未取得任何成就。
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+
+                <table class="table mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>成就名稱</th>
+                            <th>標題</th>
+                            <th>取得時間</th>
+                            <th>展示狀態</th>
+                            <th>展示時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in Model.Achievements)
+                        {
+                            <tr>
+
+                                <td>
+                                    @item.Achievement.Name
+                                </td>
+
+                                <td>
+                                    @item.Achievement.Title
+                                </td>
+
+                                <td>
+                                    @item.AchievedAt
+                                </td>
+
+                                <td>
+                                    @if (item.IsDisplayed)
+                                    {
+                                        <span class="badge bg-success">
+                                            展示中
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            未展示
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (item.DisplayedAt.HasValue)
+                                    {
+                                        @item.DisplayedAt.Value
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
+
+                                <td>
+
+                                    <form asp-action="RemoveAchievement"
+                                          method="post"
+                                          class="d-inline">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@item.Id" />
+
+                                        <input type="hidden"
+                                               name="userId"
+                                               value="@Model.User.Id" />
+
+                                        <input type="hidden"
+                                               name="rowVersion"
+                                               value="@Convert.ToBase64String(item.RowVersion)" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('確定要移除此會員的這個成就嗎？');">
+                                            移除
+                                        </button>
+
+                                    </form>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     點數異動紀錄
+========================= -->
+<div class="card mb-4">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>點數異動紀錄</strong>
+        </div>
+
+        <a asp-action="AdjustPoints"
+           asp-route-id="@Model.User.Id"
+           class="btn btn-sm btn-warning">
+            調整點數
+        </a>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        @if (Model.PointTransactions.Count == 0)
+        {
+            <div class="p-3 text-muted">
+                目前沒有點數異動紀錄。
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+
+                <table class="table mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>時間</th>
+                            <th>異動</th>
+                            <th>原因</th>
+                            <th>類型</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in Model.PointTransactions)
+                        {
+                            <tr>
+
+                                <td>
+                                    @item.CreatedAt
+                                </td>
+
+                                <td>
+                                    @if (item.Amount > 0)
+                                    {
+                                        <span class="text-success fw-semibold">
+                                            +@item.Amount
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger fw-semibold">
+                                            @item.Amount
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @item.Reason
+                                </td>
+
+                                <td>
+                                    @item.ReferenceType
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+</div>

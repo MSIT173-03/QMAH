@@ -1,14 +1,19 @@
 @{
+    var isAdmin = User.IsInRole("Admin");
+
     var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
-    var sectionName = currentArea switch
-    {
-        "Catalog" => "圖鑑管理",
-        "Game" => "遊戲管理",
-        "Social" => "社群管理",
-        "Store" => "商城管理",
-        "User" => "會員管理",
-        _ => "總覽"
-    };
+
+    var sectionName = isAdmin
+        ? currentArea switch
+        {
+            "Catalog" => "圖鑑管理",
+            "Game" => "遊戲管理",
+            "Social" => "社群管理",
+            "Store" => "商城管理",
+            "User" => "會員管理",
+            _ => "總覽"
+        }
+        : "個人中心";
 }
 <header class="navbar d-print-none qmah-topbar" aria-label="後台工具列">
     <div class="container-xl">
@@ -30,15 +35,36 @@
             </div>
             <div class="nav-item dropdown">
                 <button class="qmah-account" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="開啟帳號選單">
-                    <span class="avatar avatar-sm">管</span>
-                    <span class="qmah-account__text">
-                        <strong>管理員</strong>
-                        <small>內容管理</small>
+                    <span class="avatar avatar-sm">
+                        @(isAdmin ? "管" : "會")
                     </span>
+
+                    <span class="qmah-account__text">
+                        <strong>
+                            @(isAdmin ? "管理員" : "會員")
+                        </strong>
+
+                        <small>
+                            @(isAdmin ? "內容管理" : "個人中心")
+                        </small>
+                    </span>
+        
                     <span class="qmah-account__chevron" aria-hidden="true">⌄</span>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">回到網站</a>
+                    <div class="dropdown-divider"></div>
+
+                    <form asp-area="User"
+                          asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+
+                        <button type="submit" class="dropdown-item">
+                            登出
+                        </button>
+
+                    </form>
                 </div>
             </div>
         </div>
