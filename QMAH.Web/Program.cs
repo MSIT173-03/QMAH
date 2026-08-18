@@ -48,7 +48,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     // Identity 會把登入狀態放在受 Data Protection 保護的 HttpOnly Cookie。
     options.Cookie.HttpOnly = true;
     options.SlidingExpiration = true;
-    options.LoginPath = "/User/Account/Login";
+    options.LoginPath = "/Account/Login";
     options.LogoutPath = "/User/Account/Logout";
     options.AccessDeniedPath = "/User/Account/AccessDenied";
 });

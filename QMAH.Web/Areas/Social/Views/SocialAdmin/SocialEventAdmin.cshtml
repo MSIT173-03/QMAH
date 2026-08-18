@@ -1,58 +1,144 @@
-﻿@model IEnumerable<QMAH.Web.Areas.Social.Models.EventListViewModel>
+@model QMAH.Web.Areas.Social.Models.EventAdminPageViewModel
 
 @{
-    ViewData["Title"] = "社群活動審核";
+    ViewData["Title"] = "活動管理";
+    ViewData["AdminDescription"] = "在後台建立、編輯、刪除活動，並分開處理審核與發布狀態。";
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
 }
 
-<div class="page-header d-print-none">
-    <div class="container-xl">
-        <div class="row g-2 align-items-center">
-            <div class="col">
-                <h2 class="page-title">社群活動審核</h2>
-            </div>
+@section PageActions {
+    <a asp-action="Create" class="btn btn-primary"><i class="ti ti-plus me-1"></i>新增活動</a>
+    <a asp-area="Social" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回社群總覽</a>
+}
+
+<div class="card mb-3">
+    <div class="card-header d-flex align-items-center justify-content-between gap-3">
+        <div>
+            <h2 class="card-title mb-1">活動篩選</h2>
+            <div class="text-secondary">審核狀態與發布狀態分開管理，避免未審核活動直接上架。</div>
         </div>
+        <span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Index">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-5">
+                    <label class="form-label" for="reviewStatus">審核狀態</label>
+                    <select class="form-select" id="reviewStatus" name="reviewStatus">
+                        <option value="">全部審核狀態</option>
+                        <option value="PENDING" selected="@(Model.ReviewStatus == "PENDING" ? "selected" : null)">待審核</option>
+                        <option value="APPROVED" selected="@(Model.ReviewStatus == "APPROVED" ? "selected" : null)">已核准</option>
+                        <option value="REJECTED" selected="@(Model.ReviewStatus == "REJECTED" ? "selected" : null)">已駁回</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-5">
+                    <label class="form-label" for="publishStatus">發布狀態</label>
+                    <select class="form-select" id="publishStatus" name="publishStatus">
+                        <option value="">全部發布狀態</option>
+                        <option value="DRAFT" selected="@(Model.PublishStatus == "DRAFT" ? "selected" : null)">草稿</option>
+                        <option value="PUBLISHED" selected="@(Model.PublishStatus == "PUBLISHED" ? "selected" : null)">已發布</option>
+                        <option value="CANCELLED" selected="@(Model.PublishStatus == "CANCELLED" ? "selected" : null)">已刪除／取消</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="ti ti-filter me-1"></i>套用</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
-<div class="page-body">
-    <div class="container-xl">
-        <div class="card">
-            <div class="table-responsive">
-                <table class="table table-vcenter card-table">
-                    <thead>
-                        <tr>
-                            <th>活動標題</th>
-                            <th>內文說明</th>
-                            <th>審核狀態</th>
-                            <th>建立時間</th>
-                            <th>審核操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>@item.Title</td>
-                                <td>@item.Description</td>
-                                <td>
-                                    <span class="badge @(item.Status == "APPROVED" ? "bg-success-lt" : item.Status == "REJECTED" ? "bg-danger-lt" : "bg-warning-lt")">
-                                        @item.Status
-                                    </span>
-                                </td>
-                                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table">
+            <thead>
+                <tr>
+                    <th>活動</th>
+                    <th>時間／地點</th>
+                    <th>審核</th>
+                    <th>發布</th>
+                    <th>建立時間</th>
+                    <th class="w-1">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Events.Count == 0)
+            {
+                <tr><td colspan="6" class="text-center text-secondary py-5">目前沒有符合條件的活動。</td></tr>
+            }
+            else
+            {
+                @foreach (var item in Model.Events)
+                {
+                    var reviewClass = item.Status switch
+                    {
+                        "APPROVED" => "bg-green-lt",
+                        "REJECTED" => "bg-red-lt",
+                        _ => "bg-yellow-lt"
+                    };
+                    var publishClass = item.PublishStatus switch
+                    {
+                        "PUBLISHED" => "bg-green-lt",
+                        "CANCELLED" => "bg-red-lt",
+                        _ => "bg-secondary-lt"
+                    };
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@item.Title</div>
+                            <div class="text-secondary small">@item.EventType · @item.Description</div>
+                        </td>
+                        <td class="text-secondary text-nowrap">
+                            @item.StartAt.ToString("yyyy-MM-dd HH:mm")<br />
+                            <span class="small">至 @item.EndAt.ToString("yyyy-MM-dd HH:mm") · @(item.Location ?? "未設定地點")</span>
+                        </td>
+                        <td><span class="badge @reviewClass">@item.Status</span></td>
+                        <td><span class="badge @publishClass">@item.PublishStatus</span></td>
+                        <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <div class="btn-list flex-nowrap">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                                @if (item.Status != "APPROVED")
+                                {
                                     <form asp-action="ReviewEvent" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
-                                        <button type="submit" name="status" value="APPROVED" class="btn btn-sm btn-success">核准</button>
-                                        <button type="submit" name="status" value="REJECTED" class="btn btn-sm btn-danger">駁回</button>
+                                        <input type="hidden" name="status" value="APPROVED" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">核准</button>
                                     </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                                }
+                                @if (item.Status != "REJECTED")
+                                {
+                                    <form asp-action="ReviewEvent" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="status" value="REJECTED" />
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">駁回</button>
+                                    </form>
+                                }
+                                @if (item.PublishStatus == "CANCELLED")
+                                {
+                                    <form asp-action="SetPublishStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="status" value="DRAFT" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">恢復草稿</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Delete" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要標記刪除這場活動嗎？')">刪除</button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
     </div>
 </div>

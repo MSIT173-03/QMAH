@@ -14,7 +14,7 @@ using QMAH.Web.Models.Identity;
 namespace QMAH.Web.Areas.User.Controllers;
 
 [Area("User")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 [AdminNavigation("個人資料", 20)]
 public class ProfileController : Controller
 {

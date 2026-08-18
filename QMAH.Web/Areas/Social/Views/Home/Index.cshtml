@@ -22,7 +22,7 @@
         @if (canManageEvents)
         {
             <a asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index" class="btn btn-outline-secondary">
-                <i class="ti ti-calendar-check me-1"></i>活動審核
+                <i class="ti ti-calendar-check me-1"></i>活動管理
             </a>
         }
     </div>
@@ -55,13 +55,13 @@
                             <span class="avatar bg-blue-lt"><i class="ti ti-file-pencil"></i></span><span><strong>貼文內容處理</strong><small>依板塊、狀態、關鍵字與日期篩選</small></span>
                         </a>
                         <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index">
-                            <span class="avatar bg-red-lt"><i class="ti ti-shield-alert"></i></span><span><strong>檢舉風控</strong><small>查看內容與處理檢舉結果</small></span>
+                            <span class="avatar bg-red-lt"><i class="ti ti-shield-alert"></i></span><span><strong>檢舉管理</strong><small>新增、編輯、刪除與審核紀錄</small></span>
                         </a>
                     }
                     @if (canManageEvents)
                     {
                         <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index">
-                            <span class="avatar bg-green-lt"><i class="ti ti-calendar-check"></i></span><span><strong>活動審核</strong><small>核准或駁回活動提案</small></span>
+                            <span class="avatar bg-green-lt"><i class="ti ti-calendar-check"></i></span><span><strong>活動管理</strong><small>建立、編輯、刪除與審核活動</small></span>
                         </a>
                     }
                 </div>

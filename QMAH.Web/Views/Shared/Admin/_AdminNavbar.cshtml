@@ -2,8 +2,12 @@
     var isAdmin = User.IsInRole("Admin");
 
     var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var isAccountPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase);
 
-    var sectionName = isAdmin
+    var sectionName = isAccountPage
+        ? "總覽"
+        : isAdmin
         ? currentArea switch
         {
             "Catalog" => "圖鑑管理",
@@ -36,16 +40,16 @@
             <div class="nav-item dropdown">
                 <button class="qmah-account" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="開啟帳號選單">
                     <span class="avatar avatar-sm">
-                        @(isAdmin ? "管" : "會")
+                        @(isAccountPage ? "入" : isAdmin ? "管" : "會")
                     </span>
 
                     <span class="qmah-account__text">
                         <strong>
-                            @(isAdmin ? "管理員" : "會員")
+                            @(isAccountPage ? "後台入口" : isAdmin ? "管理員" : "會員")
                         </strong>
 
                         <small>
-                            @(isAdmin ? "內容管理" : "個人中心")
+                            @(isAccountPage ? "管理員登入" : isAdmin ? "內容管理" : "個人中心")
                         </small>
                     </span>
         

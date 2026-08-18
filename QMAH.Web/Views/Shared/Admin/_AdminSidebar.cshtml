@@ -3,7 +3,8 @@
 @{
     var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-    var isDashboard = string.IsNullOrWhiteSpace(currentArea) && currentController == "Home";
+    var isAccountPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase);
+    var isDashboard = (string.IsNullOrWhiteSpace(currentArea) && currentController == "Home") || isAccountPage;
     var areaItems = AdminNavigation.GetAreaItems(currentArea);
 }
 <aside class="navbar navbar-vertical navbar-expand-xl" aria-label="後台主要導覽">
@@ -54,8 +55,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(currentArea == "User" ? "active" : null)" asp-area="User" asp-controller="Home" asp-action="Index" title="會員管理"
-                       aria-current="@(currentArea == "User" ? "page" : null)">
+                    <a class="nav-link @(currentArea == "User" && !isAccountPage ? "active" : null)" asp-area="User" asp-controller="Home" asp-action="Index" title="會員管理"
+                       aria-current="@(currentArea == "User" && !isAccountPage ? "page" : null)">
                         <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("user")" /></span>
                         <span class="nav-link-title">會員管理</span>
                     </a>

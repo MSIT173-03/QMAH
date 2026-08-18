@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
+using Microsoft.AspNetCore.Authorization;
+
 
 using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Web.Models.Entities;
@@ -26,6 +28,7 @@ public class AccountController : Controller
     }
 
     [HttpGet]
+    [HttpGet("/Account/Login")]
     public IActionResult Login(string? returnUrl = null)
     {
         ViewBag.ReturnUrl = returnUrl;
@@ -34,6 +37,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
+    [HttpPost("/Account/Login")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
         LoginViewModel model,
@@ -81,26 +85,20 @@ public class AccountController : Controller
             return View(model);
         }
 
-        if (!string.IsNullOrEmpty(returnUrl) &&
-            Url.IsLocalUrl(returnUrl))
+        // 管理員 → 後台首頁
+        if (!await _userManager.IsInRoleAsync(user, "Admin"))
+        {
+            // 本專案目前只有管理後台，不提供一般會員前台。
+            await _signInManager.SignOutAsync();
+            return RedirectToAction(nameof(AccessDenied));
+        }
+
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
             return LocalRedirect(returnUrl);
         }
 
-        // 管理員 → 後台首頁
-        if (await _userManager.IsInRoleAsync(user, "Admin"))
-        {
-            return RedirectToAction(
-                "Index",
-                "Home",
-                new { area = "User" });
-        }
-
-        // 一般會員 → 自己的個人資料頁
-        return RedirectToAction(
-            "Index",
-            "Profile",
-            new { area = "User" });
+        return RedirectToAction("Index", "Home", new { area = "" });
     }
 
     [HttpPost]
@@ -109,10 +107,7 @@ public class AccountController : Controller
     {
         await _signInManager.SignOutAsync();
 
-        return RedirectToAction(
-            "Login",
-            "Account",
-            new { area = "User" });
+        return Redirect("/Account/Login");
     }
 
     [HttpGet]
@@ -122,11 +117,13 @@ public class AccountController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public IActionResult Register()
     {
         return View();
     }
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {

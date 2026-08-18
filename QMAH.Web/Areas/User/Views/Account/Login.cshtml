@@ -1,67 +1,35 @@
-﻿@model QMAH.Web.Areas.User.ViewModels.LoginViewModel
+@model QMAH.Web.Areas.User.ViewModels.LoginViewModel
 
 @{
-    ViewData["Title"] = "會員登入";
+    ViewData["Title"] = "後台管理員登入";
+    ViewData["AdminDescription"] = "登入後進入五大系統管理總覽。登入是全站後台入口，不屬於會員資料管理。";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-body p-4">
-                    <h2 class="text-center mb-4">會員登入</h2>
-
-                    <form asp-area="User"
-                          asp-controller="Account"
-                          asp-action="Login"
-                          method="post">
-
-                        <div asp-validation-summary="ModelOnly"
-                             class="text-danger mb-3"></div>
-
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" />
-                            <span asp-validation-for="Email"
-                                  class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label"></label>
-                            <input asp-for="Password" class="form-control" />
-                            <span asp-validation-for="Password"
-                                  class="text-danger"></span>
-                        </div>
-
-                        <div class="form-check mb-3">
-                            <input asp-for="RememberMe"
-                                   class="form-check-input" />
-                            <label asp-for="RememberMe"
-                                   class="form-check-label">
-                                記住我
-                            </label>
-                        </div>
-
-                        <button type="submit"
-                                class="btn btn-primary w-100">
-                            登入
-                        </button>
-
-                        <div class="text-center mt-3">
-                            <span class="text-muted">
-                                還沒有帳號？
-                            </span>
-
-                            <a asp-area="User"
-                               asp-controller="Account"
-                               asp-action="Register"
-                               class="fw-bold text-decoration-none">
-                                立即註冊
-                            </a>
-                        </div>
-
-                    </form>
-                </div>
+<div class="row row-cards justify-content-center">
+    <div class="col-12 col-md-6 col-lg-5 col-xl-4">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">後台管理員登入</h2></div>
+            <div class="card-body">
+                <form action="/Account/Login" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" autocomplete="username" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <label class="form-check mb-3">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <span class="form-check-label">記住我</span>
+                    </label>
+                    <button type="submit" class="btn btn-primary w-100"><i class="ti ti-login me-1"></i>登入管理後台</button>
+                    <div class="text-center mt-3 text-secondary small">請使用管理員帳號進入系統總覽。</div>
+                </form>
             </div>
         </div>
     </div>
