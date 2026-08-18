@@ -12,64 +12,120 @@
 }
 
 @section PageActions {
-    <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">查看題庫</a>
-    <a class="btn btn-primary" asp-area="Game" asp-controller="Rooms" asp-action="Create">建立房間</a>
+    <div class="qmah-actions">
+        <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
+            <i class="ti ti-books me-1"></i>查看題庫
+        </a>
+        <a class="btn btn-primary" asp-area="Game" asp-controller="Rooms" asp-action="Create">
+            <i class="ti ti-plus me-1"></i>建立房間
+        </a>
+    </div>
 }
 
+<div class="qmah-dashboard-intro">
+    <div>
+        <h1 class="qmah-dashboard-title">遊戲管理總覽</h1>
+        <p class="qmah-dashboard-lede">集中掌握題庫供應、房間生命週期、玩家連線與最近的遊戲活動。</p>
+    </div>
+    <div class="qmah-dashboard-note qmah-dashboard-note--compact">
+        <span class="qmah-status qmah-status--info">遊戲後台</span>
+        <strong>以圖鑑文物驅動題庫</strong>
+    </div>
+</div>
+
+<div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-5 qmah-dashboard-metrics">
+    <div class="col">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">啟用題目</span>
+                <strong class="qmah-metric-value">@Model.EnabledQuestionCount</strong>
+                <span class="qmah-metric-note">題庫共 @Model.TotalQuestionCount 題</span>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">進行中房間</span>
+                <strong class="qmah-metric-value">@Model.PlayingRoomCount</strong>
+                <span class="qmah-metric-note">等待中 @Model.WaitingRoomCount 間</span>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">在線玩家</span>
+                <strong class="qmah-metric-value">@Model.OnlinePlayerCount</strong>
+                <span class="qmah-metric-note">房內即時連線狀態</span>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">已完成房間</span>
+                <strong class="qmah-metric-value">@Model.CompletedRoomCount</strong>
+                <span class="qmah-metric-note">已結束的遊戲場次</span>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">遊戲紀錄</span>
+                <strong class="qmah-metric-value">@Model.RoundCount</strong>
+                <span class="qmah-metric-note">作答 @Model.AnswerCount · 投票 @Model.VoteCount</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row row-cards mb-3">
-    <div class="col-sm-6 col-xl-3">
-        <div class="card card-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-secondary">可用題目</div>
-                        <div class="game-admin-stat-value">@Model.EnabledQuestionCount</div>
-                    </div>
-                    <span class="badge bg-green-lt text-green">啟用</span>
+    <div class="col-12 col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">遊戲工作區</h2>
+                    <div class="text-secondary">從題庫設定到房間活動，集中進入各項管理作業。</div>
                 </div>
-                <div class="mt-2 small text-secondary">共 @Model.TotalQuestionCount 題，停用 @Model.DisabledQuestionCount 題</div>
+            </div>
+            <div class="card-body">
+                <div class="qmah-quick-grid">
+                    <a class="qmah-quick-link" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
+                        <span class="avatar bg-primary-lt"><i class="ti ti-books"></i></span>
+                        <span><strong>題庫設定</strong><small>管理題型、難度與啟用狀態</small></span>
+                    </a>
+                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Rooms" asp-action="Index">
+                        <span class="avatar bg-blue-lt"><i class="ti ti-door"></i></span>
+                        <span><strong>房間管理</strong><small>查看房間生命週期與玩家數</small></span>
+                    </a>
+                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Rounds" asp-action="Index">
+                        <span class="avatar bg-purple-lt"><i class="ti ti-rotate-clockwise"></i></span>
+                        <span><strong>回合紀錄</strong><small>追蹤回合、作答與投票進度</small></span>
+                    </a>
+                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Players" asp-action="Index">
+                        <span class="avatar bg-green-lt"><i class="ti ti-users"></i></span>
+                        <span><strong>玩家活動</strong><small>查看連線與加入房間狀態</small></span>
+                    </a>
+                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Answers" asp-action="Index">
+                        <span class="avatar bg-orange-lt"><i class="ti ti-message-2"></i></span>
+                        <span><strong>作答紀錄</strong><small>查詢玩家提交的答案</small></span>
+                    </a>
+                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Votes" asp-action="Index">
+                        <span class="avatar bg-yellow-lt"><i class="ti ti-checklist"></i></span>
+                        <span><strong>投票紀錄</strong><small>查看答案投票與結果</small></span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card card-sm h-100">
+    <div class="col-12 col-lg-5">
+        <div class="card h-100 qmah-dashboard-note">
             <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-secondary">進行中的房間</div>
-                        <div class="game-admin-stat-value">@Model.PlayingRoomCount</div>
-                    </div>
-                    <span class="badge bg-blue-lt text-blue">PLAYING</span>
-                </div>
-                <div class="mt-2 small text-secondary">等待中 @Model.WaitingRoomCount 間</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card card-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-secondary">在線玩家</div>
-                        <div class="game-admin-stat-value">@Model.OnlinePlayerCount</div>
-                    </div>
-                    <span class="badge bg-green-lt text-green">ONLINE</span>
-                </div>
-                <div class="mt-2 small text-secondary">房內即時連線狀態</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card card-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-secondary">已完成房間</div>
-                        <div class="game-admin-stat-value">@Model.CompletedRoomCount</div>
-                    </div>
-                    <span class="badge bg-secondary-lt text-secondary">COMPLETED</span>
-                </div>
-                <div class="mt-2 small text-secondary">回合 @Model.RoundCount · 作答 @Model.AnswerCount · 投票 @Model.VoteCount</div>
+                <span class="qmah-status qmah-status--info">資料關係</span>
+                <h2 class="card-title mt-3">題庫與圖鑑共用文物</h2>
+                <p class="text-secondary mb-0">每筆題庫設定都對應圖鑑中的 Artifact；房間建立後，回合會依題庫設定產生作答與投票活動。</p>
             </div>
         </div>
     </div>
