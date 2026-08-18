@@ -16,7 +16,7 @@ namespace QMAH.Web.Areas.Catalog.Controllers;
 
 [Area("Catalog")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-[AdminNavigation("玩家鑰匙背包一覽", order: 10)]
+[AdminNavigation("玩家鑰匙背包一覽", order: 30)]
 public class KeyBackPackController : Controller
 {
 

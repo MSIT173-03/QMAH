@@ -1,281 +1,148 @@
+@using System.Linq
 @model IEnumerable<QMAH.Web.Models.Entities.Artifact>
-
-<style>
-
-    /*間隔*/
-    .bar_space {
-        margin-right: 20px;
-    }
-
-    /*搜尋列大小 */
-    .Font_edit {
-        font-size: 2em;
-    }
-
-    /*標題樣式 */
-    .midddle_title {
-        margin: auto;
-        text-align: center;
-        font-size: 3em;
-    }
-
-    /*內文樣式 */
-    .midddle_text {
-        text-align: center;
-    }
-
-    /* 描述內容超過範圍自動換行 */
-    .description-cell {
-        white-space: normal;
-        word-break: break-word;
-    }
-    /* ---------------------------------------------------------------------- */
-    .filter-bar {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap; /* 螢幕太窄時自動換行,避免擠壓變形 */
-        gap: 30px; /* 用 gap 統一控制每個元素之間的間距,取代空白字元 */
-    }
-
-    .filter-item {
-        display: flex;
-        align-items: center;
-        gap: 10px; /* label 跟輸入框之間的小間距 */
-        white-space: nowrap;
-    }
-
-    .bar_edit {
-        width: 250px;
-        max-width: 350px; /* 限制下拉選單最大寬度,不會被最長的選項名稱撐開 */
-    }
-
-    /*按鈕樣式 */
-    .btn_edit {
-        font-size: 30px;
-        border: solid 5px seagreen;
-        background-color: seagreen;
-        border-radius: 5px;
-        padding: 2px;
-    }
-
-
-    th {
-        text-align: center;
-        border: solid 2px #336b59;
-    }
-
-    td {
-        border: solid 2px #336b59;
-    }
-
-
-    /*標頭樣式 */
-    #keyTable thead th {
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-        #keyTable thead th:hover {
-            background-color: #2c4f50;
-        }
-
-</style>
-
 
 @{
     ViewData["Title"] = "文物總覽";
+    ViewData["AdminDescription"] = "搜尋、篩選並維護圖鑑中的文物主資料。";
+    var keyword = Context.Request.Query["txtKeyword"].ToString();
+    var records = Model?.ToList() ?? [];
 }
-<h1 class="midddle_title">-文物清單-</h1>
 
-<br />
-<br />
+@section PageActions {
+    <a asp-area="Catalog" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="ti ti-layout-dashboard me-1"></i>圖鑑管理總覽
+    </a>
+}
 
-<div>
-    <form method="post" id="filterForm" class="Font_edit filter-bar">
-        <div class="filter-item" style="margin : auto;">
-            <div class="filter-item">
-                <label>關鍵字查詢 : </label>
-                <input type="text" name="txtKeyword" id="keyword" class="bar_edit" />
-            </div>
-
-            <div class="filter-item">
-                <label>類別分類 : </label>
-                <select name="categoryId" id="cat" asp-items="ViewBag.ArtifactCategoryList"
-                        class="form-control bar_edit">
-                    <option value="" class="midddle_text">-- 請選擇 --</option>
-                </select>
-            </div>
-
-            <div class="filter-item">
-                <label>年代分類 : </label>
-                <select name="eraBucketId" id="era" asp-items="ViewBag.EraBucketList"
-                        class="form-control bar_edit">
-                    <option value="" class="midddle_text">-- 請選擇 --</option>
-                </select>
-                <button type="submit" class="btn btn_edit">搜尋</button>
-                <button type="button" class="btn btn_edit" onclick="clearFilter()">清除</button>
-            </div>
+<div class="card mb-3">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">文物資料篩選</h2>
+            <div class="text-secondary">以名稱、館藏編號、分類或年代快速縮小清單。</div>
         </div>
-    </form>
+        <span class="badge bg-blue-lt">@records.Count 筆結果</span>
+    </div>
+    <div class="card-body">
+        <form asp-action="Index" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-xl-5">
+                    <label class="form-label" for="keyword">關鍵字</label>
+                    <input class="form-control" id="keyword" name="txtKeyword" value="@keyword"
+                           placeholder="文物名稱、館藏編號或年代文字" />
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label" for="categoryId">分類</label>
+                    <select class="form-select" id="categoryId" name="categoryId" asp-items="ViewBag.ArtifactCategoryList">
+                        <option value="">全部分類</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label" for="eraBucketId">年代</label>
+                    <select class="form-select" id="eraBucketId" name="eraBucketId" asp-items="ViewBag.EraBucketList">
+                        <option value="">全部年代</option>
+                    </select>
+                </div>
+                <div class="col-12 col-xl-1 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill" title="搜尋">
+                        <i class="ti ti-search"></i><span class="visually-hidden">搜尋</span>
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary" title="清除篩選">
+                        <i class="ti ti-refresh"></i><span class="visually-hidden">清除</span>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
-<br />
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">文物清單</h2>
+            <div class="text-secondary">停用只會更新啟用狀態，不會刪除既有主資料。</div>
+        </div>
+    </div>
 
-<table class="table" id="keyTable">
-    <thead>
-        <tr>
-            <th style="width : 3%;" data-column="0">
-                序
-            </th>
-            <th style="width: 10%;" data-column="1">
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th style="width: 5%;" data-column="2">
-                年代
-            </th>
-            <th style="width: 5%;" data-column="3">
-                分類
-            </th>
-            <th style="width: 20%;" data-column="4">
-                描述
-            </th>
-            <th style="width: 10%;">
-                圖片
-            </th>
-            <th style="width: 10%;">
-                識別碼
-            </th>
-            <th style="width: 20%;">
-                來源文字說明
-            </th>
-            <th style="width: 5%;" data-column="5">
-                @Html.DisplayNameFor(model => model.LicenseCode)
-            </th>
-            <th style="width: 3%;">
-                啟用狀態
-            </th>
-            <th style="width : 9%;">編輯</th>
-        </tr>
-    </thead>
-    <tbody>
-        @{
-            int count = 0;
-            foreach (var item in Model)
-            {
-                count++;
-                <tr>
-                    <td class="midddle_text">
-                        @count
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.Name)
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.EraTextOriginal)
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.Category.Name)
-                    </td>
-                    <td class="description-cell">
-                        @Html.DisplayFor(model => item.Description)
-                    </td>
-                    <td class="midddle_text">
-                        <img src="@item.ThumbnailPath" width="150" height="200" />
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.ArtifactRef)
-                    </td>
-                    <td class="description-cell">
-                        @Html.DisplayFor(model => item.AttributionText)
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.LicenseCode)
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.IsActive)
-                    </td>
-                    <td class="midddle_text" style="font-size : 20px;">
-                        <a asp-action="Edit" asp-route-id="@item.Id">編輯</a>
-                        <form asp-action="Delete" method="post" class="d-inline ms-2">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn btn-link p-0" onclick="return confirm('確定要停用這筆文物嗎?')">停用</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-
-        
-        }
-    </tbody>
-</table>
-
-
-<script>
-    function clearFilter() {
-
-        document.getElementById('keyword').value = '';
-
-        document.getElementById('cat').value = '';
-
-        document.getElementById('era').value = '';
-
-        document.getElementById('filterForm').submit();
+    @if (records.Count == 0)
+    {
+        <div class="empty py-5">
+            <div class="empty-icon"><i class="ti ti-search-off"></i></div>
+            <p class="empty-title">找不到符合條件的文物</p>
+            <p class="empty-subtitle text-secondary">請調整關鍵字或篩選條件後再試一次。</p>
+        </div>
     }
-
-
-    const table = document.getElementById("keyTable");
-    const headers = table.querySelectorAll("thead th");
-
-    let sortColumn = -1;
-    let sortAscending = true;
-
-    headers.forEach(header => {
-
-        header.style.cursor = "pointer";
-
-        header.addEventListener("click", function() {
-
-            const column = parseInt(this.dataset.column);
-
-            if (sortColumn === column) {
-                sortAscending = !sortAscending;
-            } else {
-                sortColumn = column;
-                sortAscending = true;
-            }
-
-            const tbody = table.querySelector("tbody");
-            const rows = Array.from(tbody.querySelectorAll("tr"));
-
-            rows.sort((a, b) => {
-
-                const valueA = a.children[column].textContent.trim();
-                const valueB = b.children[column].textContent.trim();
-
-                const numberA = Number(valueA);
-                const numberB = Number(valueB);
-
-                if (!isNaN(numberA) && !isNaN(numberB)) {
-                    return sortAscending
-                        ? numberA - numberB
-                        : numberB - numberA;
-                }
-
-                return sortAscending
-                    ? valueA.localeCompare(valueB)
-                    : valueB.localeCompare(valueA);
-            });
-
-            rows.forEach(row => tbody.appendChild(row));
-
-            headers.forEach(h => {
-                h.textContent = h.textContent
-                    .replace(" ↑", "")
-                    .replace(" ↓", "");
-            });
-
-            this.textContent += sortAscending ? " ↑" : " ↓";
-        });
-    });
-</script>
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table">
+                <thead>
+                    <tr>
+                        <th>文物</th>
+                        <th>分類</th>
+                        <th>年代</th>
+                        <th>授權</th>
+                        <th>狀態</th>
+                        <th class="text-end">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in records)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="avatar avatar-lg">
+                                        <img src="@(item.ThumbnailPath ?? item.PrimaryImagePath)" alt="" loading="lazy" />
+                                    </span>
+                                    <div class="min-width-0">
+                                        <div class="fw-semibold text-truncate" title="@item.Name">@item.Name</div>
+                                        <div class="text-secondary small">@item.ArtifactRef</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@(item.Category?.Name ?? "未分類")</td>
+                            <td>
+                                <div>@(item.EraBucket?.Name ?? "未標示")</div>
+                                @if (!string.IsNullOrWhiteSpace(item.EraTextOriginal))
+                                {
+                                    <div class="text-secondary small">@item.EraTextOriginal</div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-lt">@(string.IsNullOrWhiteSpace(item.LicenseCode) ? "未標示" : item.LicenseCode)</span>
+                            </td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-green-lt">啟用</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-lt">停用</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="qmah-actions justify-content-end">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">
+                                        <i class="ti ti-edit me-1"></i>編輯
+                                    </a>
+                                    @if (item.IsActive)
+                                    {
+                                        <form asp-action="Delete" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('確定要停用這筆文物嗎？')">
+                                                <i class="ti ti-ban me-1"></i>停用
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

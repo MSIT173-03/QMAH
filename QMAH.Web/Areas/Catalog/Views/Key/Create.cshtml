@@ -1,178 +1,89 @@
 @model QMAH.Web.Models.Entities.KeyDefinition
 
-<style>
-
-    /* 排版樣式 */
-    .editor-card {
-        width: 500px;
-        background: #1c2835;
-        border: 1px solid #304452;
-        border-radius: 7px;
-        padding: 10px;
-    }
-
-    .form-footer {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 16px;
-        border-top: 1px solid #304452;
-        background: #1a2632;
-    }
-
-    /* Button樣式 */
-    .btn-cancel {
-        background: transparent;
-        border: none;
-        color: #76aabd;
-        font-size: 12px;
-        padding: 8px 12px;
-    }
-
-    .btn-save {
-        background: #79b0c4;
-        border: 1px solid #79b0c4;
-        color: #102027;
-        border-radius: 5px;
-        padding: 8px 15px;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-
-    /* IsActivate樣式 */
-    .form-label-custom {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 11px;
-        color: #bdd0d7;
-        font-weight: 600;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 15px;
-    }
-
-    .switch-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-top: 5px;
-    }
-
-    .text-danger {
-        font-size: 10px;
-    }
-
-</style>
-
-
 @{
     ViewData["Title"] = "新增鑰匙";
+    ViewData["AdminDescription"] = "建立圖鑑解鎖規則，設定可套用的 Scope。";
 }
 
-<h1>鑰匙資訊</h1>
+@section PageActions {
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回鑰匙總覽
+    </a>
+}
 
-
-<hr />
-
-@* 錯誤訊息 *@
-@if (ViewBag.ErrorMessage != null)
+@if (ViewBag.ErrorMessage is string errorMessage)
 {
-    <div class="alert alert-danger" style="width:auto">
-        @ViewBag.ErrorMessage
+    <div class="alert alert-danger" role="alert">
+        <i class="ti ti-alert-circle me-2"></i>@errorMessage
     </div>
 }
 
-<div class="editor-card">
-    <div class="col-md-12">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="form-group">
-                <label asp-for="Name" class="control-label">鑰匙名稱</label>
-                <br /><br />
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-
-            <br />
-
-            <div class="form-group">
-                <label asp-for="Code" class="control-label"></label>
-                <br /><br />
-                <input asp-for="Code" class="form-control" />
-                <span asp-validation-for="Code" class="text-danger"></span>
-            </div>
-
-            <br />
-
-            <div class="form-group">
-                <label asp-for="ScopeType" class="control-label"></label>
-                <br /><br />
-                <input asp-for="ScopeType" class="form-control" />
-                <span asp-validation-for="ScopeType" class="text-danger"></span>
-            </div>
-
-            <br />
-
-            <div class="form-group">
-                <label asp-for="CategoryId" class="control-label">類別</label>
-                <br /><br />
-                <select name="categoryId" id="cat" asp-items="ViewBag.ArtifactCategoryList"
-                        class="form-control bar_edit">
-                    <option value="" class="midddle_text">-- 請選擇 --</option>
-                </select>
-            </div>
-
-            <br />
-
-            <div class="form-group">
-                <label asp-for="EraBucketId" class="control-label">年代</label>
-                <br /><br />
-                <select name="eraBucketId" id="cat" asp-items="ViewBag.EraBucketList"
-                        class="form-control bar_edit">
-                    <option value="" class="midddle_text">-- 請選擇 --</option>
-                </select>
-            </div>
-
-            <br />
-
-            <div class="form-row">
-
+<div class="row row-cards">
+    <div class="col-12 col-xl-8">
+        <form asp-action="Create" method="post" class="card">
+            <div class="card-header">
                 <div>
-
-                    <label asp-for="IsActive" class="control-label">啟用狀態</label>
-
-                    <br/><br/>
-
-                    <div class="switch-container">
-
-                        <input asp-for="IsActive" class="form-check-input" style="width:40px" type="checkbox" />
-
-                        <span style="font-size:10px;">啟用此圖鑑條目</span>
-
-                    </div>
-
-                    <span asp-validation-for="IsActive" class="text-danger"></span>
-
+                    <h2 class="card-title">鑰匙資訊</h2>
+                    <div class="text-secondary">建立後可在鑰匙總覽繼續調整規則。</div>
                 </div>
-
             </div>
-
-            <br />
-
-            <div class="form-footer">
-
-                <a asp-action="Index" class="btn-cancel">取消</a>
-
-                <button type="submit" class="btn-save">儲存</button>
-
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Name" class="form-label">鑰匙名稱</label>
+                        <input asp-for="Name" class="form-control" placeholder="例如：青銅器鑑定鑰匙" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Code" class="form-label">鑰匙代碼</label>
+                        <input asp-for="Code" class="form-control" placeholder="例如：KEY_BRONZE" />
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="ScopeType" class="form-label">Scope 類型</label>
+                        <input asp-for="ScopeType" class="form-control" placeholder="例如：CATEGORY、ERA 或 GLOBAL" />
+                        <span asp-validation-for="ScopeType" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="CategoryId" class="form-label">分類</label>
+                        <select asp-for="CategoryId" asp-items="ViewBag.ArtifactCategoryList" class="form-select">
+                            <option value="">不限定分類</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="EraBucketId" class="form-label">年代</label>
+                        <select asp-for="EraBucketId" asp-items="ViewBag.EraBucketList" class="form-select">
+                            <option value="">不限定年代</option>
+                        </select>
+                        <span asp-validation-for="EraBucketId" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <span class="form-check-label">啟用此鑰匙規則</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>儲存鑰匙</button>
             </div>
         </form>
     </div>
+    <div class="col-12 col-xl-4">
+        <div class="card h-100 qmah-dashboard-note">
+            <div class="card-body">
+                <span class="qmah-status qmah-status--info">設定提示</span>
+                <h2 class="card-title mt-3">先決定解鎖範圍</h2>
+                <p class="text-secondary mb-0">Scope 會決定鑰匙套用到全域、特定分類或特定年代；分類與年代留空時，代表不限制該條件。</p>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

@@ -165,15 +165,17 @@ public class ArtifactController : Controller
         }
         else
         {
-            if (af.PrimaryImagePath != null)
+            if (!string.IsNullOrWhiteSpace(af.PrimaryImagePath))
             {
-                a.ThumbnailPath = af.ThumbnailPath;
+                a.PrimaryImagePath = af.PrimaryImagePath;
             }
+            a.ThumbnailPath = af.ThumbnailPath;
             a.ArtifactRef = af.ArtifactRef;
             a.Name = af.Name;
             a.CategoryId = af.CategoryId;
             a.EraBucketId = af.EraBucketId;
             a.EraTextOriginal = af.EraTextOriginal;
+            a.CreatorDisplay = af.CreatorDisplay;
             a.Description = af.Description;
             a.SourceUrl = af.SourceUrl;
             a.LicenseCode = af.LicenseCode;

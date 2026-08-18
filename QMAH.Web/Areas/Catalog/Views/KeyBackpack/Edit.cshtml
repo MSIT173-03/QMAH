@@ -1,143 +1,62 @@
-﻿@model QMAH.Web.Models.Entities.UserKeyBalance
-
-<style>
-
-    /*搜尋列大小 */
-    .Font_edit {
-        font-size: 2em;
-    }
-
-    /* 排版樣式 */
-    .editor-card {
-        width: 500px;
-        background: #1c2835;
-        border: 1px solid #304452;
-        border-radius: 7px;
-        padding: 10px;
-    }
-
-    .form-footer {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 16px;
-        border-top: 1px solid #304452;
-        background: #1a2632;
-    }
-
-    /* Button樣式 */
-    .btn-cancel {
-        background: transparent;
-        border: none;
-        color: #76aabd;
-        font-size: 12px;
-        padding: 8px 12px;
-    }
-
-    .btn-save {
-        background: #79b0c4;
-        border: 1px solid #79b0c4;
-        color: #102027;
-        border-radius: 5px;
-        padding: 8px 15px;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-
-    /* IsActivate樣式 */
-    .form-label-custom {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 11px;
-        color: #bdd0d7;
-        font-weight: 600;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 15px;
-    }
-
-    .switch-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-top: 5px;
-    }
-
-    .text-danger {
-        font-size: 10px;
-    }
-
-</style>
-
+@model QMAH.Web.Models.Entities.UserKeyBalance
 
 @{
     ViewData["Title"] = "背包編輯";
+    ViewData["AdminDescription"] = "調整會員目前持有的鑰匙與餘額。";
 }
 
-<h1>道具資訊</h1>
+@section PageActions {
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回玩家鑰匙背包
+    </a>
+}
 
-
-<hr />
-
-@* 錯誤訊息。 *@
-@if (ViewBag.ErrorMessage != null)
+@if (ViewBag.ErrorMessage is string errorMessage)
 {
-    <div class="alert alert-danger" style="width:auto">
-        @ViewBag.ErrorMessage
+    <div class="alert alert-danger" role="alert">
+        <i class="ti ti-alert-circle me-2"></i>@errorMessage
     </div>
 }
 
-<div class="editor-card">
-    <div class="col-md-12">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label">玩家</label>
-                <br /><br />
-                <select name="userId" id="user" asp-items="ViewBag.UserProfileList"
-                        class="form-control bar_edit">
-                    <option value="" class="midddle_text">-- 請選擇 --</option>
-                </select>
+<div class="row row-cards">
+    <div class="col-12 col-xl-8">
+        <form asp-action="Edit" method="post" class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">會員背包資訊</h2>
+                    <div class="text-secondary">儲存後會更新最後異動時間。</div>
+                </div>
             </div>
-
-            <div class="form-group">
-                <label asp-for="KeyDefinitionId" class="control-label">鑰匙種類</label>
-                <br /><br />
-                <select name="keydefinitionId" id="keyd" asp-items="ViewBag.KeyDefinitionList"
-                        class="form-control bar_edit">
-                    <option value="" class="midddle_text">-- 請選擇 --</option>
-                </select>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label asp-for="UserId" class="form-label">會員</label>
+                        <select name="userId" id="userId" asp-items="ViewBag.UserProfileList" class="form-select">
+                            <option value="">請選擇會員</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="KeyDefinitionId" class="form-label">鑰匙種類</label>
+                        <select name="keydefinitionId" id="keydefinitionId" asp-items="ViewBag.KeyDefinitionList" class="form-select">
+                            <option value="">請選擇鑰匙</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Balance" class="form-label">目前餘額</label>
+                        <input asp-for="Balance" class="form-control" type="number" min="0" />
+                        <span asp-validation-for="Balance" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-
-
-            <br />
-
-            <div class="form-group">
-                <label asp-for="Balance" class="control-label">數量(結餘)</label>
-                <br /><br />
-                <input asp-for="Balance" class="form-control" />
-                <span asp-validation-for="Balance" class="text-danger"></span>
-            </div>
-
-            <br />
-
-
-            <br />
-
-            <div class="form-footer">
-
-                <a asp-action="Index" class="btn-cancel">取消</a>
-
-                <button type="submit" class="btn-save">儲存</button>
-
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>儲存變更</button>
             </div>
         </form>
     </div>
 </div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

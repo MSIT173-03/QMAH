@@ -1,231 +1,130 @@
-﻿@using QMAH.Web.Areas.Catalog.ViewModel
+@using System.Linq
+@using QMAH.Web.Areas.Catalog.ViewModel
 @model IEnumerable<UserKeyBalanceViewModel>
 
-<style>
-
- /* ---------------------------------------------------------------------- */
-    .filter-bar {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap; /* 螢幕太窄時自動換行,避免擠壓變形 */
-        gap: 30px; /* 用 gap 統一控制每個元素之間的間距,取代空白字元 */
-    }
-
-    .filter-item {
-        display: flex;
-        align-items: center;
-        gap: 10px; /* label 跟輸入框之間的小間距 */
-        white-space: nowrap;
-    }
-
-    .bar_edit {
-        width: 250px;
-        max-width: 350px; /* 限制下拉選單最大寬度,不會被最長的選項名稱撐開 */
-    }
-
-    /*按鈕樣式 */
-    .btn_edit {
-        font-size: 30px;
-        border: solid 5px seagreen;
-        background-color: seagreen;
-        border-radius: 5px;
-        padding: 2px;
-    }
-
-    /*標題樣式 */
-    .midddle_title {
-        margin: auto;
-        text-align: center;
-        font-size: 3em;
-    }
-
-    /*內文樣式 */
-    .midddle_text {
-        text-align: center;
-    }
-
-    th {
-        text-align: center;
-        border: solid 2px #336b59;
-    }
-
-    td {
-        border: solid 2px #336b59;
-    }
-
-
-    /*標頭樣式 */
-    #keyTable thead th {
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-        #keyTable thead th:hover {
-            background-color: #2c4f50;
-        }
-</style>
-
-
-
 @{
-    ViewData["Title"] = "玩家背包一覽";
+    ViewData["Title"] = "玩家鑰匙背包";
+    ViewData["AdminDescription"] = "查詢會員持有的鑰匙餘額，並調整解鎖資源。";
+    var keyword = Context.Request.Query["txtKeyword"].ToString();
+    var records = Model?.ToList() ?? [];
 }
 
+@section PageActions {
+    <div class="qmah-actions">
+        <a asp-area="Catalog" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-layout-dashboard me-1"></i>圖鑑管理總覽
+        </a>
+        <a asp-controller="KeyBackPack" asp-action="Create" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>新增背包紀錄
+        </a>
+    </div>
+}
 
-<h1 class="midddle_title">-背包道具清單-</h1>
-<br />
-<br />
-
-<p>
-    <button type="button" class="btn btn_edit" onclick="location.href='@Url.Action("Create", "KeyBackPack")'">新增道具</button>
-</p>
-
-<div>
-    <form method="post" id="filterForm" class="Font_edit filter-bar">
-        <div class="filter-item" style="margin : auto;">
-
-           <div class="filter-item">
-                <label>玩家 : </label>
-                <select name="userId" id="urd" asp-items="ViewBag.UserProfileList" class="form-control bar_edit">
-                <option value="" class="midddle_text">-- 請選擇 --</option>
-                </select>
-            </div>
-
-            <div class="filter-item">
-                <label>關鍵字查詢 : </label>
-                <input type="text" name="txtKeyword" id="keyword" class="bar_edit" />
-                <button type="submit" class="btn btn_edit">搜尋</button>
-                <button type="button" class="btn btn_edit" onclick="clearFilter()">清除</button>
-            </div>
-
+<div class="card mb-3">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">背包資料篩選</h2>
+            <div class="text-secondary">依會員或鑰匙名稱查看目前餘額。</div>
         </div>
-    </form>
+        <span class="badge bg-green-lt">@records.Count 筆紀錄</span>
+    </div>
+    <div class="card-body">
+        <form asp-action="Index" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-4">
+                    <label class="form-label" for="userId">會員</label>
+                    <select class="form-select" id="userId" name="userId" asp-items="ViewBag.UserProfileList">
+                        <option value="">全部會員</option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-5">
+                    <label class="form-label" for="keyword">關鍵字</label>
+                    <input class="form-control" id="keyword" name="txtKeyword" value="@keyword"
+                           placeholder="會員暱稱或鑰匙名稱" />
+                </div>
+                <div class="col-12 col-lg-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="ti ti-search me-1"></i>搜尋
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
-<br />
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">會員鑰匙餘額</h2>
+            <div class="text-secondary">調整紀錄會留下最後更新時間，刪除則移除這筆背包關聯。</div>
+        </div>
+    </div>
 
-
-<table class="table" id="keyTable">
-    <thead>
-        <tr>
-            <th style="width : 10%;" data-column="0">
-                序
-            </th>
-            <th style="width: 20%;" data-column="1">
-                玩家
-            </th>
-            <th style="width: 20%;" data-column="2">
-                鑰匙種類
-            </th>
-            <th style="width: 20%;" data-column="3">
-                結餘
-            </th>
-            <th style="width: 20%;" data-column="4">
-                更新日期
-            </th>
-            <th style="width : 10%;">編輯</th>
-        </tr>
-    </thead>
-    <tbody>
-        @{
-            int count = 0;
-            foreach (var item in Model)
-            {
-                count++;
-                <tr>
-                    <td class="midddle_text">
-                        @count
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.Nickname)
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.UserKeyBalance.KeyDefinition.Name)
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.UserKeyBalance.Balance)
-                    </td>
-                    <td class="midddle_text">
-                        @Html.DisplayFor(model => item.UserKeyBalance.UpdatedAt)
-                    </td>
-                    <td class="midddle_text" style="font-size : 20px;">
-                        <a asp-action="Edit" asp-route-userId="@item.UserKeyBalance.UserId" asp-route-keydefinitionId="@item.UserKeyBalance.KeyDefinitionId">編輯</a>
-                        <form asp-action="Delete" method="post" class="d-inline ms-2">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="userId" value="@item.UserKeyBalance.UserId" />
-                            <input type="hidden" name="keydefinitionId" value="@item.UserKeyBalance.KeyDefinitionId" />
-                            <button type="submit" class="btn btn-link p-0" onclick="return confirm('確定要刪除此筆背包紀錄嗎?')">刪除</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        }
-    </tbody>
-</table>
-
-<script>
-
-    function clearFilter() {
-
-        document.getElementById('keyword').value = '';
-
-        document.getElementById('urd').value = '';
-
-        document.getElementById('filterForm').submit();
+    @if (records.Count == 0)
+    {
+        <div class="empty py-5">
+            <div class="empty-icon"><i class="ti ti-backpack-off"></i></div>
+            <p class="empty-title">目前沒有符合條件的背包紀錄</p>
+            <p class="empty-subtitle text-secondary">請調整篩選條件，或建立新的背包紀錄。</p>
+        </div>
     }
-
-    const table = document.getElementById("keyTable");
-    const headers = table.querySelectorAll("thead th");
-
-    let sortColumn = -1;
-    let sortAscending = true;
-
-    headers.forEach(header => {
-
-        header.style.cursor = "pointer";
-
-        header.addEventListener("click", function() {
-
-            const column = parseInt(this.dataset.column);
-
-            if (sortColumn === column) {
-                sortAscending = !sortAscending;
-            } else {
-                sortColumn = column;
-                sortAscending = true;
-            }
-
-            const tbody = table.querySelector("tbody");
-            const rows = Array.from(tbody.querySelectorAll("tr"));
-
-            rows.sort((a, b) => {
-
-                const valueA = a.children[column].textContent.trim();
-                const valueB = b.children[column].textContent.trim();
-
-                const numberA = Number(valueA);
-                const numberB = Number(valueB);
-
-                if (!isNaN(numberA) && !isNaN(numberB)) {
-                    return sortAscending
-                        ? numberA - numberB
-                        : numberB - numberA;
-                }
-
-                return sortAscending
-                    ? valueA.localeCompare(valueB)
-                    : valueB.localeCompare(valueA);
-            });
-
-            rows.forEach(row => tbody.appendChild(row));
-
-            headers.forEach(h => {
-                h.textContent = h.textContent
-                    .replace(" ↑", "")
-                    .replace(" ↓", "");
-            });
-
-            this.textContent += sortAscending ? " ↑" : " ↓";
-        });
-    });
-</script>
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table">
+                <thead>
+                    <tr>
+                        <th>會員</th>
+                        <th>鑰匙</th>
+                        <th>餘額</th>
+                        <th>最後更新</th>
+                        <th class="text-end">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in records)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar avatar-sm bg-green-lt"><i class="ti ti-user"></i></span>
+                                    <span class="fw-semibold">@(string.IsNullOrWhiteSpace(item.Nickname) ? "未命名會員" : item.Nickname)</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@item.UserKeyBalance.KeyDefinition.Name</div>
+                                <div class="text-secondary small">@item.UserKeyBalance.KeyDefinition.Code</div>
+                            </td>
+                            <td>
+                                <span class="badge @(item.UserKeyBalance.Balance > 0 ? "bg-green-lt" : "bg-secondary-lt")">
+                                    @item.UserKeyBalance.Balance
+                                </span>
+                            </td>
+                            <td>@item.UserKeyBalance.UpdatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td>
+                                <div class="qmah-actions justify-content-end">
+                                    <a asp-action="Edit"
+                                       asp-route-userId="@item.UserKeyBalance.UserId"
+                                       asp-route-keydefinitionId="@item.UserKeyBalance.KeyDefinitionId"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="ti ti-edit me-1"></i>編輯
+                                    </a>
+                                    <form asp-action="Delete" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@item.UserKeyBalance.UserId" />
+                                        <input type="hidden" name="keydefinitionId" value="@item.UserKeyBalance.KeyDefinitionId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('確定要刪除此筆背包紀錄嗎？')">
+                                            <i class="ti ti-trash me-1"></i>刪除
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

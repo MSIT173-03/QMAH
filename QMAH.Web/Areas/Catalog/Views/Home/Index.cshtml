@@ -19,8 +19,8 @@
     </div>
 </div>
 
-<div class="row row-cards qmah-dashboard-metrics">
-    <div class="col-12 col-sm-6 col-xl-3">
+<div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-5 qmah-dashboard-metrics">
+    <div class="col">
         <div class="card qmah-metric-card">
             <div class="card-body">
                 <span class="qmah-metric-label">文物總數</span>
@@ -29,7 +29,7 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
+    <div class="col">
         <div class="card qmah-metric-card">
             <div class="card-body">
                 <span class="qmah-metric-label">分類</span>
@@ -38,7 +38,7 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
+    <div class="col">
         <div class="card qmah-metric-card">
             <div class="card-body">
                 <span class="qmah-metric-label">年代區間</span>
@@ -47,7 +47,16 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
+    <div class="col">
+        <div class="card qmah-metric-card">
+            <div class="card-body">
+                <span class="qmah-metric-label">鑰匙規則</span>
+                <strong class="qmah-metric-value">@Model.KeyDefinitionCount</strong>
+                <span class="qmah-metric-note">圖鑑解鎖設定</span>
+            </div>
+        </div>
+    </div>
+    <div class="col">
         <div class="card qmah-metric-card">
             <div class="card-body">
                 <span class="qmah-metric-label">解鎖紀錄</span>
