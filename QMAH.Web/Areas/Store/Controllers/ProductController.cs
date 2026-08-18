@@ -21,13 +21,16 @@ public class ProductController : Controller
     [HttpGet("Index")]
     public IActionResult Index(int page = 0, int rows = 20)
     {
-        bool isOverShot = this.db.Products.Count() < page * rows;
+        bool isOverShot = page < 0 || rows < 0 || this.db.Products.Count() < page * rows;
         if (isOverShot) return View(new List<ProductSimplefyListItem>());
 
         var data = this.db.Products
             .Skip(page * rows).Take(rows)
             .Select(p => new ProductSimplefyListItem(p))
             .ToList();
+
+        ViewData["Page"] = page;
+        ViewData["Rows"] = rows;
 
         return View(data);
     }

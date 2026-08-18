@@ -22,7 +22,7 @@ public class OrderController : Controller
     [HttpGet("Index")]
     public async Task<IActionResult> Index(int page = 0, int rows = 20)
     {
-        bool isOverShot = this.db.StoreOrders.Count() < page * rows;
+        bool isOverShot = page < 0 || rows < 0 || this.db.StoreOrders.Count() < page * rows;
         if (isOverShot) return View(new List<OrderSimplefyListItem>());
 
         var query = from order in this.db.StoreOrders.Skip(page * rows).Take(rows)
@@ -37,6 +37,9 @@ public class OrderController : Controller
         var data = query
             .Select(static v => new OrderSimplefyListItem(v.Order, v.User, v.Items.ToList()))
             .ToList();
+
+        ViewData["Page"] = page;
+        ViewData["Rows"] = rows;
 
         return View(data);
     }
