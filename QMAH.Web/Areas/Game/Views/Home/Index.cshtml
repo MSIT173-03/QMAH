@@ -1,6 +1,192 @@
+@model GameDashboardViewModel
 @{
-    ViewData["Title"] = "Game";
+    ViewData["Title"] = "遊戲管理總覽";
+    ViewData["AdminDescription"] = "掌握題庫供應、房間狀態與最近的遊戲活動。";
+    var maxDifficultyCount = Model.DifficultyDistribution.Count == 0
+        ? 1
+        : Model.DifficultyDistribution.Max(x => x.Count);
 }
 
-<h1>Game</h1>
-<p>遊戲系統空白開發區</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
+}
+
+@section PageActions {
+    <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">查看題庫</a>
+    <a class="btn btn-primary" asp-area="Game" asp-controller="Rooms" asp-action="Create">建立房間</a>
+}
+
+<div class="row row-cards mb-3">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-secondary">可用題目</div>
+                        <div class="game-admin-stat-value">@Model.EnabledQuestionCount</div>
+                    </div>
+                    <span class="badge bg-green-lt text-green">啟用</span>
+                </div>
+                <div class="mt-2 small text-secondary">共 @Model.TotalQuestionCount 題，停用 @Model.DisabledQuestionCount 題</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-secondary">進行中的房間</div>
+                        <div class="game-admin-stat-value">@Model.PlayingRoomCount</div>
+                    </div>
+                    <span class="badge bg-blue-lt text-blue">PLAYING</span>
+                </div>
+                <div class="mt-2 small text-secondary">等待中 @Model.WaitingRoomCount 間</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-secondary">在線玩家</div>
+                        <div class="game-admin-stat-value">@Model.OnlinePlayerCount</div>
+                    </div>
+                    <span class="badge bg-green-lt text-green">ONLINE</span>
+                </div>
+                <div class="mt-2 small text-secondary">房內即時連線狀態</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-secondary">已完成房間</div>
+                        <div class="game-admin-stat-value">@Model.CompletedRoomCount</div>
+                    </div>
+                    <span class="badge bg-secondary-lt text-secondary">COMPLETED</span>
+                </div>
+                <div class="mt-2 small text-secondary">回合 @Model.RoundCount · 作答 @Model.AnswerCount · 投票 @Model.VoteCount</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">最近房間</h2>
+                    <div class="card-subtitle">依建立時間顯示最近的房間活動</div>
+                </div>
+                <div class="card-actions"><a asp-area="Game" asp-controller="Rooms" asp-action="Index">查看全部</a></div>
+            </div>
+            @if (Model.RecentRooms.Count == 0)
+            {
+                <div class="empty py-5">
+                    <p class="empty-title">目前沒有房間資料</p>
+                    <p class="empty-subtitle text-secondary">建立第一個房間後，最近活動會顯示在這裡。</p>
+                    <div class="empty-action"><a class="btn btn-primary" asp-area="Game" asp-controller="Rooms" asp-action="Create">建立房間</a></div>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-hover card-table game-admin-table">
+                        <thead>
+                            <tr><th>房間</th><th>狀態</th><th>玩家</th><th>回合</th><th>建立時間</th><th class="w-1"></th></tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var room in Model.RecentRooms)
+                        {
+                            <tr>
+                                <td data-label="房間"><a class="fw-bold" asp-area="Game" asp-controller="Rooms" asp-action="Details" asp-route-id="@room.Id">@room.RoomCode</a><div class="text-secondary small">@GameCodeLists.Label(GameCodeLists.Visibilities, room.Visibility)</div></td>
+                                <td data-label="狀態"><span class="badge @GameCodeLists.StatusBadgeClass(room.Status)">@GameCodeLists.Label(GameCodeLists.RoomStatuses, room.Status)</span></td>
+                                <td data-label="玩家" class="text-nowrap">@room.PlayerCount</td>
+                                <td data-label="回合" class="text-nowrap">@room.RoundCount</td>
+                                <td data-label="建立時間" class="text-secondary text-nowrap">@room.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                                <td data-label="" class="game-admin-cell-actions"><a class="btn btn-sm btn-outline-secondary" asp-area="Game" asp-controller="Rooms" asp-action="Details" asp-route-id="@room.Id">查看房間</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">題庫難度</h2>
+                    <div class="card-subtitle">目前題庫設定的分布</div>
+                </div>
+            </div>
+            @if (Model.DifficultyDistribution.Count == 0)
+            {
+                <div class="empty py-5"><p class="empty-title">尚無題庫設定</p><p class="empty-subtitle text-secondary">新增題庫設定後會顯示難度分布。</p></div>
+            }
+            else
+            {
+                <div class="card-body">
+                    @foreach (var item in Model.DifficultyDistribution)
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between gap-3 small mb-1"><span>難度 @item.Difficulty</span><span class="text-secondary">@item.EnabledCount / @item.Count 題啟用</span></div>
+                            <div class="game-admin-progress" aria-label="難度 @item.Difficulty 題數"><span style="width: @(Math.Round(item.Count / (double)maxDifficultyCount * 100))%"></span></div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row row-cards">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title mb-1">最近回合</h2><div class="card-subtitle">依開始時間排列</div></div><div class="card-actions"><a asp-area="Game" asp-controller="Rounds" asp-action="Index">全部回合</a></div></div>
+            @if (Model.RecentRounds.Count == 0)
+            {
+                <div class="empty py-5"><p class="empty-title">尚無回合紀錄</p><p class="empty-subtitle text-secondary">房間開始遊戲後會出現回合資料。</p></div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                @foreach (var round in Model.RecentRounds)
+                {
+                    <a class="list-group-item list-group-item-action" asp-area="Game" asp-controller="Rounds" asp-action="Details" asp-route-id="@round.Id">
+                        <div class="d-flex align-items-center justify-content-between gap-3"><div><strong>@round.RoomCode · 第 @round.RoundNumber 回合</strong><div class="text-secondary small">@round.ArtifactName</div></div><span class="badge @GameCodeLists.StatusBadgeClass(round.Status)">@GameCodeLists.Label(GameCodeLists.RoundStatuses, round.Status)</span></div>
+                        <div class="text-secondary small mt-1">@round.StartedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div>
+                    </a>
+                }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title mb-1">最近玩家活動</h2><div class="card-subtitle">依加入時間顯示</div></div><div class="card-actions"><a asp-area="Game" asp-controller="Players" asp-action="Index">全部玩家</a></div></div>
+            @if (Model.RecentPlayers.Count == 0)
+            {
+                <div class="empty py-5"><p class="empty-title">尚無玩家紀錄</p><p class="empty-subtitle text-secondary">玩家加入房間後會出現在這裡。</p></div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                @foreach (var player in Model.RecentPlayers)
+                {
+                    <a class="list-group-item list-group-item-action" asp-area="Game" asp-controller="Players" asp-action="Details" asp-route-id="@player.Id">
+                        <div class="d-flex align-items-center justify-content-between gap-3"><div><strong>@player.DisplayName</strong><div class="text-secondary small">房間 @player.RoomCode</div></div><span class="badge @GameCodeLists.StatusBadgeClass(player.ConnectionStatus)">@GameCodeLists.Label(GameCodeLists.ConnectionStatuses, player.ConnectionStatus)</span></div>
+                        <div class="text-secondary small mt-1">加入於 @player.JoinedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div>
+                    </a>
+                }
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,25 @@
+@model RoundDeleteViewModel
+@{
+    ViewData["Title"] = "刪除回合資料";
+    ViewData["AdminDescription"] = "刪除前會檢查作答、投票與文物解鎖關聯。";
+}
+@section Styles { <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" /> }
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title">確認刪除回合</h2></div>
+    <div class="card-body">
+        <p>確定要刪除 <strong>@Model.RoomCode · 第 @Model.RoundNumber 回合</strong>（@Model.ArtifactName）嗎？</p>
+        <p class="text-secondary mb-0">作答 @Model.AnswerCount 筆 · 投票 @Model.VoteCount 筆 · 解鎖 @Model.UnlockCount 筆</p>
+        @if (!Model.CanDelete)
+        {
+            <div class="alert alert-warning mt-3 mb-0">已有相關歷史紀錄，為保留資料一致性不能刪除</div>
+        }
+    </div>
+    <div class="card-footer d-flex justify-content-end gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">取消</a>
+        @if (Model.CanDelete)
+        {
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post"><input name="rowVersion" value="@Model.RowVersion" type="hidden" /><button class="btn btn-danger" type="submit">確認刪除</button></form>
+        }
+    </div>
+</div>

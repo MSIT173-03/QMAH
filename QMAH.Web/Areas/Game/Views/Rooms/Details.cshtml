@@ -1,0 +1,58 @@
+@model RoomDetailsViewModel
+@{
+    ViewData["Title"] = $"房間 {Model.RoomCode}";
+    ViewData["AdminDescription"] = "檢視與維護房間資料、玩家清單與回合歷程；遊戲流程由前台後端負責。";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
+}
+
+@section PageActions {
+    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">編輯設定</a>
+    @if (Model.PlayerCount == 0 && Model.RoundCount == 0)
+    {
+        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id">刪除房間</a>
+    }
+    <a class="btn btn-outline-secondary" asp-action="Index">返回清單</a>
+}
+
+<div class="row row-cards mb-3">
+    <div class="col-md-6 col-xl-3"><div class="card card-sm h-100"><div class="card-body"><div class="text-secondary">目前狀態</div><div class="mt-2"><span class="badge @GameCodeLists.StatusBadgeClass(Model.Status)">@GameCodeLists.Label(GameCodeLists.RoomStatuses, Model.Status)</span></div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card card-sm h-100"><div class="card-body"><div class="text-secondary">玩家</div><div class="game-admin-stat-value">@Model.PlayerCount <span class="text-secondary fs-4">/ @Model.MaxPlayers</span></div><div class="small text-secondary">房內玩家數</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card card-sm h-100"><div class="card-body"><div class="text-secondary">回合進度</div><div class="game-admin-stat-value">@Model.CurrentRoundNo <span class="text-secondary fs-4">/ @Model.TotalRounds</span></div><div class="small text-secondary">已建立 @Model.RoundCount 個回合</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card card-sm h-100"><div class="card-body"><div class="text-secondary">可見範圍</div><div class="mt-2"><span class="badge @GameCodeLists.StatusBadgeClass(Model.Visibility)">@GameCodeLists.Label(GameCodeLists.Visibilities, Model.Visibility)</span></div><div class="small text-secondary mt-2">房間代碼 <code>@Model.RoomCode</code></div></div></div></div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-lg-6">
+        <div class="card h-100"><div class="card-header"><h2 class="card-title">房間設定</h2></div><div class="card-body"><dl class="game-admin-definition"><div><dt>作答時間</dt><dd>@Model.AnswerSeconds 秒</dd></div><div><dt>投票時間</dt><dd>@Model.VotingSeconds 秒</dd></div><div><dt>限定分類</dt><dd>@(Model.CategoryFilterName ?? (Model.CategoryFilterCode is null ? "不限分類" : Model.CategoryFilterCode))</dd></div><div><dt>限定年代</dt><dd>@(Model.EraBucketFilterName ?? (Model.EraBucketFilterCode is null ? "不限年代" : Model.EraBucketFilterCode))</dd></div><div><dt>狀態版本</dt><dd>@Model.StateVersion</dd></div></dl></div></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100"><div class="card-header"><h2 class="card-title">時間紀錄</h2></div><div class="card-body"><dl class="game-admin-definition"><div><dt>建立</dt><dd>@Model.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</dd></div><div><dt>開始</dt><dd>@(Model.StartedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未開始")</dd></div><div><dt>結束</dt><dd>@(Model.EndedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未結束")</dd></div><div><dt>完成</dt><dd>@(Model.CompletedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未完成")</dd></div></dl></div></div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header"><div><h2 class="card-title mb-1">玩家</h2><div class="card-subtitle">@Model.Players.Count 位</div></div><div class="card-actions"><a asp-area="Game" asp-controller="Players" asp-action="Create" asp-route-roomId="@Model.Id">建立玩家</a><a asp-area="Game" asp-controller="Players" asp-action="Index" asp-route-search="@Model.RoomCode">查看清單</a></div></div>
+    @if (Model.Players.Count == 0)
+    {
+        <div class="empty py-5"><p class="empty-title">尚無玩家</p><p class="empty-subtitle text-secondary">玩家加入房間後會顯示在這裡。</p></div>
+    }
+    else
+    {
+        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table"><thead><tr><th>座位</th><th>名稱</th><th>角色</th><th>連線</th><th>準備</th><th class="w-1"></th></tr></thead><tbody>@foreach (var player in Model.Players) { <tr><td data-label="座位">@(player.SeatNo?.ToString() ?? "未安排")</td><td data-label="名稱" class="fw-bold">@player.DisplayName</td><td data-label="角色">@GameCodeLists.Label(GameCodeLists.PlayerRoles, player.Role)</td><td data-label="連線"><span class="badge @GameCodeLists.StatusBadgeClass(player.ConnectionStatus)">@GameCodeLists.Label(GameCodeLists.ConnectionStatuses, player.ConnectionStatus)</span></td><td data-label="準備">@if (player.IsReady) { <span class="badge bg-green-lt text-green">已準備</span> } else { <span class="text-secondary">未準備</span> }</td><td data-label="" class="game-admin-cell-actions"><a class="btn btn-sm btn-outline-secondary" asp-area="Game" asp-controller="Players" asp-action="Details" asp-route-id="@player.Id">查看玩家</a></td></tr> }</tbody></table></div>
+    }
+</div>
+
+<div class="card">
+    <div class="card-header"><div><h2 class="card-title mb-1">回合</h2><div class="card-subtitle">@Model.Rounds.Count 個</div></div><div class="card-actions"><a asp-area="Game" asp-controller="Rounds" asp-action="Create" asp-route-roomId="@Model.Id">建立回合</a><a asp-area="Game" asp-controller="Rounds" asp-action="Index" asp-route-roomId="@Model.Id">查看清單</a></div></div>
+    @if (Model.Rounds.Count == 0)
+    {
+        <div class="empty py-5"><p class="empty-title">尚無回合</p><p class="empty-subtitle text-secondary">房間開始遊戲後會建立回合紀錄。</p></div>
+    }
+    else
+    {
+        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table"><thead><tr><th>回合</th><th>文物</th><th>狀態</th><th>作答</th><th>投票</th><th class="w-1"></th></tr></thead><tbody>@foreach (var round in Model.Rounds) { <tr><td data-label="回合" class="fw-bold">第 @round.RoundNumber 回合</td><td data-label="文物">@round.ArtifactName</td><td data-label="狀態"><span class="badge @GameCodeLists.StatusBadgeClass(round.Status)">@GameCodeLists.Label(GameCodeLists.RoundStatuses, round.Status)</span></td><td data-label="作答" class="text-nowrap">@round.AnswerCount</td><td data-label="投票" class="text-nowrap">@round.VoteCount</td><td data-label="" class="game-admin-cell-actions"><a class="btn btn-sm btn-outline-secondary" asp-area="Game" asp-controller="Rounds" asp-action="Details" asp-route-id="@round.Id">查看回合</a></td></tr> }</tbody></table></div>
+    }
+</div>

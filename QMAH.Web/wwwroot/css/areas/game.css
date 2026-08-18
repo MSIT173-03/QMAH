@@ -1,1 +1,278 @@
-/* 遊戲系統專用樣式。需要時由遊戲負責人載入。 */
+/* Game 後台資料管理樣式，沿用共用 Admin Layout 與 Tabler 元件。 */
+.game-admin-filter .form-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.game-admin-filter {
+    border-color: var(--qmah-line);
+    background: color-mix(in srgb, var(--qmah-surface) 92%, var(--qmah-primary) 8%);
+}
+
+.game-admin-filter .card-body {
+    padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+.game-admin-filter .row {
+    row-gap: 1rem;
+}
+
+.game-admin-filter .row > * {
+    min-width: 0;
+}
+
+.game-admin-filter .form-control,
+.game-admin-filter .form-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.game-admin-filter-actions {
+    display: flex;
+    min-width: 0;
+    align-items: flex-end;
+}
+
+.game-admin-filter-actions .btn-list {
+    width: 100%;
+    min-width: 0;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.game-admin-filter-actions .btn-list > * {
+    min-width: 0;
+    flex: 1 1 7rem;
+}
+
+.game-admin-text-cell {
+    min-width: 18rem;
+    max-width: 38rem;
+    white-space: normal;
+    line-height: 1.65;
+}
+
+.game-admin-table {
+    --tblr-table-border-color: var(--qmah-line-soft);
+}
+
+.game-admin-table tbody tr {
+    transition: background-color 160ms ease;
+}
+
+.game-admin-table td.game-admin-cell-actions {
+    white-space: nowrap;
+}
+
+.game-admin-table td.game-admin-cell-actions .btn-list {
+    justify-content: flex-end;
+}
+
+.game-admin-table td > a.fw-bold,
+.game-admin-table td > strong {
+    color: var(--qmah-ink);
+}
+
+.game-admin-table td > a.fw-bold:hover {
+    color: var(--qmah-primary-hover);
+}
+
+.game-admin-content {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.75;
+}
+
+.game-admin-definition {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.game-admin-definition > div {
+    display: grid;
+    grid-template-columns: minmax(7rem, 0.8fr) minmax(0, 1.7fr);
+    gap: 1rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--qmah-line-soft);
+}
+
+.game-admin-definition > div:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.game-admin-definition dt {
+    color: var(--qmah-ink-soft);
+    font-size: 0.8rem;
+}
+
+.game-admin-definition dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-weight: 650;
+}
+
+.game-admin-media {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 1.2fr);
+    align-items: start;
+}
+
+.game-admin-detail-grid > [class*="col-"] {
+    display: flex;
+}
+
+.game-admin-detail-grid .card {
+    width: 100%;
+}
+
+.game-admin-media-frame {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    min-height: 12rem;
+    max-height: 20rem;
+    aspect-ratio: 4 / 3;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid var(--qmah-line);
+    border-radius: var(--qmah-radius);
+    background: var(--qmah-surface-soft);
+}
+
+.game-admin-media-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.game-admin-media-placeholder {
+    padding: 1rem;
+    color: var(--qmah-ink-soft);
+    text-align: center;
+}
+
+.game-admin-media-copy {
+    min-width: 0;
+    padding-top: 0.15rem;
+}
+
+.game-admin-media-copy h3 {
+    overflow-wrap: anywhere;
+}
+
+.game-admin-stat-value {
+    font-size: 1.7rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+}
+
+.game-admin-progress {
+    height: 0.4rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--qmah-surface-muted);
+}
+
+.game-admin-progress > span {
+    display: block;
+    height: 100%;
+    background: var(--qmah-primary);
+}
+
+@media (max-width: 767.98px) {
+    .game-admin-filter-actions {
+        width: 100%;
+    }
+
+    .game-admin-filter .btn-list {
+        width: 100%;
+    }
+
+    .game-admin-filter .btn-list > * {
+        flex: 1 1 0;
+    }
+
+    .game-admin-table,
+    .game-admin-table tbody,
+    .game-admin-table tr,
+    .game-admin-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .game-admin-table thead {
+        display: none;
+    }
+
+    .game-admin-table tbody tr {
+        padding: 0.8rem 0;
+        border-bottom: 1px solid var(--qmah-line-soft);
+    }
+
+    .game-admin-table tbody tr:last-child {
+        border-bottom: 0;
+    }
+
+    .game-admin-table td {
+        display: grid;
+        grid-template-columns: minmax(5.75rem, 0.45fr) minmax(0, 1fr);
+        gap: 0.75rem;
+        align-items: start;
+        padding: 0.45rem 1rem;
+        border: 0;
+    }
+
+    .game-admin-table td::before {
+        color: var(--qmah-ink-soft);
+        content: attr(data-label);
+        font-size: 0.76rem;
+        font-weight: 700;
+    }
+
+    .game-admin-table td[data-label=""] {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 0.7rem;
+    }
+
+    .game-admin-table td[data-label=""]::before {
+        display: none;
+    }
+
+    .game-admin-table td[colspan] {
+        display: block;
+    }
+
+    .game-admin-table td[colspan]::before {
+        display: none;
+    }
+
+    .game-admin-table td.game-admin-text-cell {
+        min-width: 0;
+        max-width: none;
+    }
+
+    .game-admin-media {
+        grid-template-columns: 1fr;
+    }
+
+    .game-admin-media-frame {
+        max-height: none;
+    }
+
+    .game-admin-definition > div {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .game-admin-filter-actions {
+        margin-left: auto;
+    }
+}

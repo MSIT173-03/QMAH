@@ -1,0 +1,63 @@
+@model QuestionEntryDetailsViewModel
+@{
+    ViewData["Title"] = $"題庫設定：{Model.ArtifactName}";
+    ViewData["AdminDescription"] = "查看題庫設定與對應的文物資訊。文物主檔仍由圖鑑管理負責。";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
+}
+
+@section PageActions { <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">編輯設定</a><a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id">刪除設定</a><a class="btn btn-outline-secondary" asp-action="Index">返回清單</a> }
+
+<div class="row row-cards g-4 game-admin-detail-grid">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">文物參考</h2>
+                    <div class="card-subtitle">這筆題庫設定所對應的文物主檔</div>
+                </div>
+            </div>
+            <div class="card-body game-admin-media">
+                <div class="game-admin-media-frame">
+                    @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
+                    {
+                        <img src="@Model.ImagePath" alt="@Model.ArtifactName" />
+                    }
+                    else
+                    {
+                        <div class="game-admin-media-placeholder">尚未提供文物圖片</div>
+                    }
+                </div>
+                <div class="game-admin-media-copy">
+                    <h3 class="h2 mb-2">@Model.ArtifactName</h3>
+                    <p class="text-secondary mb-4"><code>@Model.ArtifactRef</code></p>
+                    <dl class="game-admin-definition">
+                        <div><dt>分類</dt><dd>@Model.CategoryName</dd></div>
+                        <div><dt>年代</dt><dd>@Model.EraName</dd></div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">題庫設定</h2>
+                    <div class="card-subtitle">目前後台出題資料</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="game-admin-definition">
+                    <div><dt>狀態</dt><dd><span class="badge @GameCodeLists.EnabledBadgeClass(Model.IsEnabled)">@(Model.IsEnabled ? "啟用" : "停用")</span></dd></div>
+                    <div><dt>難度</dt><dd><span class="badge bg-blue-lt text-blue">@Model.Difficulty</span></dd></div>
+                    <div><dt>題型範本</dt><dd>@GameCodeLists.Label(GameCodeLists.QuestionTemplates, Model.QuestionTemplateCode)</dd></div>
+                    <div><dt>建立時間</dt><dd>@Model.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</dd></div>
+                    <div><dt>更新時間</dt><dd>@Model.UpdatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</dd></div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

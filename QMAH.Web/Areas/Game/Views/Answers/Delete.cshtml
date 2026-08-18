@@ -1,0 +1,26 @@
+@model AnswerDeleteViewModel
+@{
+    ViewData["Title"] = "刪除作答資料";
+    ViewData["AdminDescription"] = "已有投票關聯的作答不能刪除，以保留歷史資料。";
+}
+@section Styles { <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" /> }
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title">確認刪除作答</h2></div>
+    <div class="card-body">
+        <p>確定要刪除 <strong>@Model.RoomCode · 第 @Model.RoundNumber 回合</strong> 的 @Model.PlayerName 作答嗎？</p>
+        <div class="game-admin-content border rounded p-3">@Model.Text</div>
+        <p class="text-secondary mt-3 mb-0">目前投票 @Model.VoteCount 票</p>
+        @if (!Model.CanDelete)
+        {
+            <div class="alert alert-warning mt-3 mb-0">已有投票指向這筆作答，不能刪除</div>
+        }
+    </div>
+    <div class="card-footer d-flex justify-content-end gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">取消</a>
+        @if (Model.CanDelete)
+        {
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post"><input name="rowVersion" value="@Model.RowVersion" type="hidden" /><button class="btn btn-danger" type="submit">確認刪除</button></form>
+        }
+    </div>
+</div>

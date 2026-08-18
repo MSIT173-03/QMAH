@@ -1,0 +1,35 @@
+@model RoundDetailsViewModel
+@{
+    ViewData["Title"] = $"{Model.RoomCode} 第 {Model.RoundNumber} 回合";
+    ViewData["AdminDescription"] = "檢視與維護回合資料、作答內容與投票紀錄；遊戲流程由前台後端負責。";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
+}
+
+@section PageActions {
+    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">編輯回合</a>
+    @if (Model.AnswerCount == 0 && Model.VoteCount == 0)
+    {
+        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id">刪除回合</a>
+    }
+    <a class="btn btn-outline-secondary" asp-action="Index">返回清單</a>
+    <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Rooms" asp-action="Details" asp-route-id="@Model.RoomId">查看相關房間</a>
+}
+
+<div class="row row-cards mb-3">
+    <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title">文物參考</h2></div><div class="card-body game-admin-media">@if (!string.IsNullOrWhiteSpace(Model.ImagePath)) { <img src="@Model.ImagePath" alt="@Model.ArtifactName" /> }<div><h3 class="h2">@Model.ArtifactName</h3><p class="text-secondary mb-0"><code>@Model.ArtifactRef</code></p></div></div></div></div>
+    <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title">回合狀態</h2></div><div class="card-body"><dl class="game-admin-definition"><div><dt>房間／回合</dt><dd><code>@Model.RoomCode</code> · 第 @Model.RoundNumber 回合</dd></div><div><dt>狀態</dt><dd><span class="badge @GameCodeLists.StatusBadgeClass(Model.Status)">@GameCodeLists.Label(GameCodeLists.RoundStatuses, Model.Status)</span></dd></div><div><dt>結算</dt><dd>@if (Model.IsSettled) { <span class="badge bg-green-lt text-green">已結算</span> } else { <span class="text-secondary">未結算</span> }</dd></div><div><dt>狀態版本</dt><dd>@Model.StateVersion</dd></div><div><dt>開始</dt><dd>@Model.StartedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</dd></div><div><dt>結算時間</dt><dd>@(Model.SettledAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未結算")</dd></div><div><dt>作答截止</dt><dd>@Model.AnswerDeadlineAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</dd></div><div><dt>投票截止</dt><dd>@Model.VotingDeadlineAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</dd></div></dl></div></div></div>
+</div>
+
+<div class="card">
+    <div class="card-header"><div><h2 class="card-title mb-1">作答內容</h2><div class="card-subtitle">@Model.AnswerCount 筆作答，總票數 @Model.VoteCount</div></div><div class="card-actions"><a asp-area="Game" asp-controller="Answers" asp-action="Index" asp-route-roundId="@Model.Id">查看本回合作答</a><a asp-area="Game" asp-controller="Votes" asp-action="Index" asp-route-roundId="@Model.Id">查看本回合投票</a></div></div>
+    @if (Model.Answers.Count == 0)
+    {
+        <div class="empty py-5"><p class="empty-title">尚無作答</p><p class="empty-subtitle text-secondary">玩家送出作答後會顯示在這裡。</p></div>
+    }
+    else
+    {
+        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table"><thead><tr><th>玩家</th><th>類型</th><th>內容</th><th>票數</th><th>送出時間</th><th class="w-1"></th></tr></thead><tbody>@foreach (var answer in Model.Answers) { <tr><td data-label="玩家" class="fw-bold">@answer.PlayerName</td><td data-label="類型">@GameCodeLists.Label(GameCodeLists.AnswerTypes, answer.AnswerType)</td><td data-label="內容" class="game-admin-text-cell">@answer.Text</td><td data-label="票數" class="text-nowrap">@answer.VoteCount</td><td data-label="送出時間" class="text-secondary text-nowrap">@answer.SubmittedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td><td data-label="" class="game-admin-cell-actions"><div class="btn-list flex-nowrap"><a class="btn btn-sm btn-outline-secondary" asp-area="Game" asp-controller="Answers" asp-action="Details" asp-route-id="@answer.Id">查看</a><a class="btn btn-sm btn-outline-secondary" asp-area="Game" asp-controller="Answers" asp-action="Edit" asp-route-id="@answer.Id">編輯</a></div></td></tr> }</tbody></table></div>
+    }
+</div>
