@@ -1,4 +1,8 @@
-﻿namespace QMAH.Web.Areas.User.ViewModels;
+﻿using System.ComponentModel.DataAnnotations;
+
+using Microsoft.AspNetCore.Http;
+
+namespace QMAH.Web.Areas.User.ViewModels;
 
 public class AchievementCreateViewModel
 {
@@ -10,11 +14,18 @@ public class AchievementCreateViewModel
 
     public string? Description { get; set; }
 
+    // 新增成功後寫進資料庫的圖示路徑
     public string? IconPath { get; set; }
+
+    // 新增時選擇的圖片
+    public IFormFile? IconFile { get; set; }
 
     public string ConditionType { get; set; } = "";
 
-    public long ThresholdValue { get; set; }
+
+    [Range(1, long.MaxValue, ErrorMessage = "門檻必須大於 0。")]
+    public long ThresholdValue { get; set; } = 1;
+
 
     public string Status { get; set; } = "ACTIVE";
 }

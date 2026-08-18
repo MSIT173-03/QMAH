@@ -296,8 +296,8 @@ public class MembersController : Controller
     }
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(Guid id, MemberEditViewModel model)
-    {
+    public async Task<IActionResult> Edit(Guid id, MemberEditViewModel model)
+        {
         if (id != model.UserId)
         {
             return BadRequest();
@@ -323,13 +323,74 @@ public class MembersController : Controller
 
         profile.Nickname = model.Nickname.Trim();
         profile.Bio = model.Bio?.Trim();
-        profile.AvatarPath = model.AvatarPath?.Trim();
         profile.Visibility = model.Visibility;
         profile.UpdatedAt = DateTime.UtcNow;
 
+        // 管理員有選新頭像才更換
+        if (model.AvatarFile != null &&
+            model.AvatarFile.Length > 0)
+        {
+            var extension = Path.GetExtension(
+                model.AvatarFile.FileName
+            ).ToLowerInvariant();
+
+            var allowedExtensions = new[]
+            {
+        ".jpg", ".jpeg", ".png", ".webp"
+    };
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                ModelState.AddModelError(
+                    nameof(model.AvatarFile),
+                    "只允許 JPG、JPEG、PNG、WEBP 圖片。"
+                );
+
+                return View(model);
+            }
+
+            if (model.AvatarFile.Length > 5 * 1024 * 1024)
+            {
+                ModelState.AddModelError(
+                    nameof(model.AvatarFile),
+                    "圖片大小不能超過 5 MB。"
+                );
+
+                return View(model);
+            }
+
+            var fileName =
+                $"{Guid.NewGuid()}{extension}";
+
+            var folderPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                "avatars"
+            );
+
+            Directory.CreateDirectory(folderPath);
+
+            var filePath = Path.Combine(
+                folderPath,
+                fileName
+            );
+
+            await using var stream =
+                new FileStream(
+                    filePath,
+                    FileMode.Create
+                );
+
+            await model.AvatarFile.CopyToAsync(stream);
+
+            profile.AvatarPath =
+                $"/uploads/avatars/{fileName}";
+        }
+
         try
         {
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Details), new { id });
         }

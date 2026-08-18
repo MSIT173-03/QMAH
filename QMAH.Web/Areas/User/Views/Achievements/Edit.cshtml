@@ -6,7 +6,7 @@
 
 <h1>編輯成就</h1>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit"method="post"enctype="multipart/form-data">
     @Html.AntiForgeryToken()
 
     <input type="hidden" asp-for="Id" />
@@ -37,9 +37,41 @@
                   rows="4"></textarea>
     </div>
 
+    @if (!string.IsNullOrWhiteSpace(Model.IconPath))
+    {
+        <div class="mb-3">
+            <label class="form-label">目前圖示</label>
+
+            <div>
+                <img src="@Model.IconPath"
+                     alt="成就圖示"
+                     style="width:100px;
+                height:100px;
+                object-fit:cover;
+                border-radius:12px;" />
+            </div>
+        </div>
+    }
+
     <div class="mb-3">
-        <label asp-for="IconPath" class="form-label">圖示路徑</label>
-        <input asp-for="IconPath" class="form-control" />
+        <label asp-for="IconFile"
+               class="form-label">
+            上傳新圖示
+        </label>
+
+        <input asp-for="IconFile"
+               type="file"
+               class="form-control"
+               accept=".jpg,.jpeg,.png,.webp" />
+
+        <span asp-validation-for="IconFile"
+              class="text-danger">
+        </span>
+
+        <div class="form-text">
+            支援 JPG、JPEG、PNG、WEBP，最大 5 MB。
+            若不選擇圖片，會保留原本圖示。
+        </div>
     </div>
 
     <div class="mb-3">

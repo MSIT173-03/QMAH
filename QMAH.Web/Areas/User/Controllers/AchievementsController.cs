@@ -71,9 +71,9 @@ public class AchievementsController : Controller
     }
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(
-    Guid id,
-    AchievementEditViewModel model)
+    public async Task<IActionResult> Edit(
+       Guid id,
+       AchievementEditViewModel model)
     {
         if (id != model.Id)
         {
@@ -85,16 +85,14 @@ public class AchievementsController : Controller
             return View(model);
         }
 
-        var achievement = _context.Achievements
-            .SingleOrDefault(x => x.Id == id);
+        var achievement = await _context.Achievements
+            .SingleOrDefaultAsync(x => x.Id == id);
 
         if (achievement == null)
         {
             return NotFound();
         }
 
-        // 告訴 EF：
-        // 使用者開啟編輯頁面時，資料的版本是 model.RowVersion
         _context.Entry(achievement)
             .Property(x => x.RowVersion)
             .OriginalValue = model.RowVersion;
@@ -103,41 +101,100 @@ public class AchievementsController : Controller
         achievement.Name = model.Name.Trim();
         achievement.Title = model.Title.Trim();
         achievement.Description = model.Description?.Trim();
-        achievement.IconPath = model.IconPath?.Trim();
         achievement.ConditionType = model.ConditionType.Trim();
         achievement.ThresholdValue = model.ThresholdValue;
         achievement.Status = model.Status;
         achievement.UpdatedAt = DateTime.UtcNow;
 
+        // 有選新圖片才更換圖示
+        if (model.IconFile != null && model.IconFile.Length > 0)
+        {
+            var allowedExtensions =
+                new[] { ".jpg", ".jpeg", ".png", ".webp" };
+
+            var extension = Path.GetExtension(
+                model.IconFile.FileName
+            ).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                ModelState.AddModelError(
+                    nameof(model.IconFile),
+                    "只允許 JPG、JPEG、PNG 或 WEBP 圖片。"
+                );
+
+                return View(model);
+            }
+
+            if (model.IconFile.Length > 5 * 1024 * 1024)
+            {
+                ModelState.AddModelError(
+                    nameof(model.IconFile),
+                    "圖片大小不能超過 5 MB。"
+                );
+
+                return View(model);
+            }
+
+            var uploadFolder = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                "achievements"
+            );
+
+            Directory.CreateDirectory(uploadFolder);
+
+            var fileName =
+                $"{Guid.NewGuid()}{extension}";
+
+            var filePath = Path.Combine(
+                uploadFolder,
+                fileName
+            );
+
+            await using (var stream =
+                new FileStream(filePath, FileMode.Create))
+            {
+                await model.IconFile.CopyToAsync(stream);
+            }
+
+            achievement.IconPath =
+                $"/uploads/achievements/{fileName}";
+        }
+
         try
         {
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
         catch (DbUpdateConcurrencyException)
         {
-            var databaseAchievement = _context.Achievements
-                .AsNoTracking()
-                .SingleOrDefault(x => x.Id == id);
+            var databaseAchievement =
+                await _context.Achievements
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(x => x.Id == id);
 
             if (databaseAchievement == null)
             {
                 ModelState.AddModelError(
                     "",
-                    "此成就已被其他人刪除。");
+                    "此成就已被其他人刪除。"
+                );
 
                 return View(model);
             }
 
-            // 更新成目前資料庫最新版本，
-            // 讓使用者重新確認後可以再次送出
             model.RowVersion = databaseAchievement.RowVersion;
+            model.IconPath = databaseAchievement.IconPath;
 
             ModelState.Remove(nameof(model.RowVersion));
+
             ModelState.AddModelError(
                 "",
-                "此成就已被其他人修改，請重新確認資料後再儲存。");
+                "此成就已被其他人修改，請重新確認資料後再儲存。"
+            );
 
             return View(model);
         }
@@ -154,7 +211,7 @@ public class AchievementsController : Controller
     }
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(AchievementCreateViewModel model)
+    public async Task<IActionResult> Create(AchievementCreateViewModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -163,6 +220,64 @@ public class AchievementsController : Controller
 
         bool codeExists = _context.Achievements
             .Any(x => x.Code == model.Code);
+
+        string? iconPath = null;
+
+        if (model.IconFile != null && model.IconFile.Length > 0)
+        {
+            var allowedExtensions =
+                new[] { ".jpg", ".jpeg", ".png", ".webp" };
+
+            var extension = Path.GetExtension(
+                model.IconFile.FileName
+            ).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                ModelState.AddModelError(
+                    nameof(model.IconFile),
+                    "只允許 JPG、JPEG、PNG 或 WEBP 圖片。"
+                );
+
+                return View(model);
+            }
+
+            if (model.IconFile.Length > 5 * 1024 * 1024)
+            {
+                ModelState.AddModelError(
+                    nameof(model.IconFile),
+                    "圖片大小不能超過 5 MB。"
+                );
+
+                return View(model);
+            }
+
+            var uploadFolder = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                "achievements"
+            );
+
+            Directory.CreateDirectory(uploadFolder);
+
+            var fileName =
+                $"{Guid.NewGuid()}{extension}";
+
+            var filePath = Path.Combine(
+                uploadFolder,
+                fileName
+            );
+
+            await using (var stream =
+                new FileStream(filePath, FileMode.Create))
+            {
+                await model.IconFile.CopyToAsync(stream);
+            }
+
+            iconPath =
+                $"/uploads/achievements/{fileName}";
+        }
 
         if (codeExists)
         {
@@ -181,7 +296,7 @@ public class AchievementsController : Controller
             Name = model.Name.Trim(),
             Title = model.Title.Trim(),
             Description = model.Description?.Trim(),
-            IconPath = model.IconPath?.Trim(),
+            IconPath = iconPath,
             ConditionType = model.ConditionType.Trim(),
             ThresholdValue = model.ThresholdValue,
             Status = model.Status,
@@ -190,7 +305,7 @@ public class AchievementsController : Controller
         };
 
         _context.Achievements.Add(achievement);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }

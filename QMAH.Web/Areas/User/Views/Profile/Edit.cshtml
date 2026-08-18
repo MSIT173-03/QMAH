@@ -6,7 +6,9 @@
 
 <h1>編輯我的個人資料</h1>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit"
+      method="post"
+      enctype="multipart/form-data">
 
     <div asp-validation-summary="ModelOnly"
          class="text-danger mb-3">
@@ -48,17 +50,36 @@
         </span>
     </div>
 
+    @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
+    {
+        <div class="mb-3">
+            <label class="form-label">目前頭像</label>
+
+            <div>
+                <img src="@Model.AvatarPath"
+                     alt="目前頭像"
+                     style="width:120px;height:120px;object-fit:cover;border-radius:50%;" />
+            </div>
+        </div>
+    }
+
     <div class="mb-3">
-        <label asp-for="AvatarPath" class="form-label">
-            頭像路徑
+        <label asp-for="AvatarFile" class="form-label">
+            上傳頭像
         </label>
 
-        <input asp-for="AvatarPath"
-               class="form-control" />
+        <input asp-for="AvatarFile"
+               type="file"
+               class="form-control"
+               accept=".jpg,.jpeg,.png,.webp" />
 
-        <span asp-validation-for="AvatarPath"
+        <span asp-validation-for="AvatarFile"
               class="text-danger">
         </span>
+
+        <div class="form-text">
+            支援 JPG、JPEG、PNG、WEBP，最大 5 MB。
+        </div>
     </div>
 
     <div class="mb-3">

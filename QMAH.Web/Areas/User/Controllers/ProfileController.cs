@@ -59,11 +59,30 @@ public class ProfileController : Controller
             .ThenBy(x => x.AddressLabel)
             .ToListAsync();
 
+        var pointBalance = await _context.PointBalances
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.UserId == user.Id);
+
+        var recentPointTransactions = await _context.PointTransactions
+            .AsNoTracking()
+            .Where(x => x.UserId == user.Id)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(5)
+            .ToListAsync();
+
+        var achievementCount = await _context.UserAchievements
+            .AsNoTracking()
+            .CountAsync(x => x.UserId == user.Id);
+
         var model = new ProfileIndexViewModel
         {
             User = user,
             Profile = profile,
-            Addresses = addresses
+            Addresses = addresses,
+
+            PointBalance = pointBalance?.Balance ?? 0,
+            RecentPointTransactions = recentPointTransactions,
+            AchievementCount = achievementCount
         };
 
         return View(model);
@@ -145,9 +164,68 @@ public class ProfileController : Controller
 
         profile.Nickname = model.Nickname.Trim();
         profile.Bio = model.Bio?.Trim();
-        profile.AvatarPath = model.AvatarPath?.Trim();
         profile.Visibility = model.Visibility;
         profile.UpdatedAt = DateTime.UtcNow;
+
+        if (model.AvatarFile != null && model.AvatarFile.Length > 0)
+        {
+            // 允許的圖片副檔名
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+
+            var extension = Path.GetExtension(
+                model.AvatarFile.FileName
+            ).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                ModelState.AddModelError(
+                    nameof(model.AvatarFile),
+                    "只允許上傳 JPG、JPEG、PNG 或 WEBP 圖片。"
+                );
+
+                return View(model);
+            }
+
+            // 最大 5 MB
+            if (model.AvatarFile.Length > 5 * 1024 * 1024)
+            {
+                ModelState.AddModelError(
+                    nameof(model.AvatarFile),
+                    "圖片大小不能超過 5 MB。"
+                );
+
+                return View(model);
+            }
+
+            // wwwroot/uploads/avatars
+            var uploadFolder = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                "avatars"
+            );
+
+            Directory.CreateDirectory(uploadFolder);
+
+            // 產生新的檔名，避免同名圖片互相覆蓋
+            var fileName =
+                $"{Guid.NewGuid()}{extension}";
+
+            var filePath = Path.Combine(
+                uploadFolder,
+                fileName
+            );
+
+            await using (var stream =
+                new FileStream(filePath, FileMode.Create))
+            {
+                await model.AvatarFile.CopyToAsync(stream);
+            }
+
+            // 資料庫只存網站路徑
+            profile.AvatarPath =
+                $"/uploads/avatars/{fileName}";
+        }
 
         try
         {
