@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Social.Models;
+using QMAH.Web.Areas.Social.Services;
 using QMAH.Web.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
+using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.Social.Controllers;
 
@@ -16,10 +18,52 @@ public class SocialPostAdminController : Controller
     private static readonly HashSet<string> AllowedStatuses = ["PUBLISHED", "HIDDEN", "DELETED"];
 
     private readonly QmahDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public SocialPostAdminController(QmahDbContext context)
+    public SocialPostAdminController(QmahDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
+    {
+        ViewData["IsCreate"] = true;
+        ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
+        return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", new PostCreateViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(
+        PostCreateViewModel model,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ModelState.IsValid)
+        {
+            ViewData["IsCreate"] = true;
+            ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
+            return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", model);
+        }
+
+        var now = DateTime.UtcNow;
+        _context.SocialPosts.Add(new SocialPost
+        {
+            Id = Guid.NewGuid(),
+            BoardCode = NormalizeBoardCode(model.BoardCode),
+            UserId = _currentUserService.GetCurrentUserId(),
+            ArtifactId = model.ArtifactId,
+            Title = model.Title.Trim(),
+            Content = model.Content.Trim(),
+            Status = "PUBLISHED",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        await _context.SaveChangesAsync(cancellationToken);
+        TempData["SuccessMessage"] = "貼文已新增至指定板塊。";
+        return RedirectToAction(nameof(Index));
     }
 
     // GET: /Social/SocialPostAdmin/Posts
@@ -118,6 +162,7 @@ public class SocialPostAdminController : Controller
         }
 
         ViewData["PostId"] = post.Id;
+        ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
         return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", new PostCreateViewModel
         {
             BoardCode = post.BoardCode,
@@ -137,6 +182,7 @@ public class SocialPostAdminController : Controller
         if (!ModelState.IsValid)
         {
             ViewData["PostId"] = id;
+            ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
             return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", model);
         }
 
@@ -146,9 +192,7 @@ public class SocialPostAdminController : Controller
             return NotFound();
         }
 
-        post.BoardCode = string.IsNullOrWhiteSpace(model.BoardCode)
-            ? "GENERAL"
-            : model.BoardCode.Trim().ToUpperInvariant();
+        post.BoardCode = NormalizeBoardCode(model.BoardCode);
         post.Title = model.Title.Trim();
         post.Content = model.Content.Trim();
         post.ArtifactId = model.ArtifactId;
@@ -194,4 +238,24 @@ public class SocialPostAdminController : Controller
         Guid id,
         string status,
         CancellationToken cancellationToken = default) => SetPostStatus(id, status, cancellationToken);
+
+    private async Task<List<string>> LoadBoardCodes(CancellationToken cancellationToken)
+    {
+        var boardCodes = await _context.SocialPosts
+            .AsNoTracking()
+            .Select(post => post.BoardCode)
+            .Distinct()
+            .OrderBy(boardCode => boardCode)
+            .ToListAsync(cancellationToken);
+
+        if (!boardCodes.Contains("GENERAL"))
+        {
+            boardCodes.Insert(0, "GENERAL");
+        }
+
+        return boardCodes;
+    }
+
+    private static string NormalizeBoardCode(string? boardCode) =>
+        string.IsNullOrWhiteSpace(boardCode) ? "GENERAL" : boardCode.Trim().ToUpperInvariant();
 }
