@@ -119,7 +119,7 @@
             <div class="card-body text-center qmah-detail-section">
                 @if (!string.IsNullOrWhiteSpace(Model.PrimaryImagePath) || !string.IsNullOrWhiteSpace(Model.ThumbnailPath))
                 {
-                    <img src="@(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? Model.ThumbnailPath : Model.PrimaryImagePath)" alt="@Model.Name" class="img-fluid rounded" style="max-height: 18rem; object-fit: contain;" />
+                    <a href="@(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? Model.ThumbnailPath : Model.PrimaryImagePath)" data-bs-toggle="modal" data-bs-target="#qmah-image-preview"><img src="@(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? Model.ThumbnailPath : Model.PrimaryImagePath)" alt="@Model.Name" class="qmah-edit-image rounded" /></a>
                 }
                 else
                 {
@@ -142,6 +142,8 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="qmah-image-preview" tabindex="-1" aria-labelledby="qmah-image-preview-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="qmah-image-preview-title">圖片預覽</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button></div><div class="modal-body text-center"><img class="qmah-image-preview" src="@(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? Model.ThumbnailPath : Model.PrimaryImagePath)" alt="@Model.Name" /></div></div></div></div>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
