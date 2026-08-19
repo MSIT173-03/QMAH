@@ -17,6 +17,29 @@
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">付款成功</span><strong class="qmah-metric-value">@Model.SuccessfulPaymentCount</strong><span class="qmah-metric-note">折價券定義 @Model.CouponCount 組</span></div></div></div>
 </div>
 
+<div class="row row-cards mt-3 mb-3">
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title">商品與庫存</h2><div class="card-subtitle">目前商品維護摘要</div></div></div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Store" asp-controller="Product" asp-action="Index"><span>商品總數</span><strong>@Model.ProductCount</strong></a>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Store" asp-controller="Product" asp-action="Index"><span>上架商品</span><strong>@Model.ActiveProductCount</strong></a>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Store" asp-controller="Product" asp-action="Index"><span>低庫存商品</span><strong class="@(Model.LowStockProductCount > 0 ? "text-danger" : "text-success")">@Model.LowStockProductCount</strong></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title">訂單與優惠</h2><div class="card-subtitle">目前交易資料摘要</div></div></div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Store" asp-controller="Order" asp-action="Index"><span>訂單總數</span><strong>@Model.OrderCount</strong></a>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Store" asp-controller="Order" asp-action="Index"><span>待處理訂單</span><strong class="@(Model.PendingOrderCount > 0 ? "text-warning" : "text-success")">@Model.PendingOrderCount</strong></a>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Store" asp-controller="Coupon" asp-action="Index"><span>優惠券定義</span><strong>@Model.CouponCount</strong></a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row row-cards">
     <div class="col-12 col-lg-5">
         <div class="card h-100">
@@ -34,7 +57,7 @@
         <div class="card h-100">
             <div class="card-header d-flex align-items-center justify-content-between"><h2 class="card-title">最近訂單</h2><a asp-area="Store" asp-controller="Order" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a></div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table qmah-crud-table">
                     <thead><tr><th>訂單</th><th>會員</th><th>狀態</th><th class="text-end">金額</th></tr></thead>
                     <tbody>
                     @if (Model.RecentOrders.Count == 0)

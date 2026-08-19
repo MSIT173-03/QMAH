@@ -102,9 +102,7 @@ Release 參考資料庫包含 8 個教學帳號與 `Admin`、`User` 兩個角色
 | `player-a@qmah.local` | `User` | 遊戲玩家情境 |
 | `player-b@qmah.local` | `User` | 遊戲玩家情境 |
 
-教學帳號共用密碼：`QmahDemo2026!`
-
-這組密碼只用於本機課程資料庫。若網站部署到可由外部連線的環境，必須先更換密碼
+`admin@qmah.local` 保留密碼 `QmahDemo2026!`；其餘教學帳號改用各自不同的密碼。完整明文清單只放在 repository 外的 `QMAH-demo-accounts.txt`，不納入版本控制。若網站部署到可由外部連線的環境，必須先更換這些展示用密碼。
 
 ## Login ViewModel
 

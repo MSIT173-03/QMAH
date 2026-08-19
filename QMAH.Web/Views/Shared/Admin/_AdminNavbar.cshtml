@@ -1,5 +1,9 @@
 @{
     var isAdmin = User.IsInRole("Admin");
+    var currentAccount = User.Identity?.IsAuthenticated == true
+        ? (User.Identity.Name ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "目前帳號")
+        : "未登入";
+    var accountInitial = currentAccount.Length > 0 ? currentAccount[..1].ToUpperInvariant() : "帳";
 
     var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
@@ -40,16 +44,16 @@
             <div class="nav-item dropdown">
                 <button class="qmah-account" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="開啟帳號選單">
                     <span class="avatar avatar-sm">
-                        @(isAccountPage ? "入" : isAdmin ? "管" : "會")
+                        @accountInitial
                     </span>
 
                     <span class="qmah-account__text">
                         <strong>
-                            @(isAccountPage ? "後台入口" : isAdmin ? "管理員" : "會員")
+                            @currentAccount
                         </strong>
 
                         <small>
-                            @(isAccountPage ? "管理員登入" : isAdmin ? "內容管理" : "個人中心")
+                            @(isAccountPage ? "管理後台" : isAdmin ? "內容管理" : "個人中心")
                         </small>
                     </span>
         

@@ -37,6 +37,29 @@
     </div></div></div>
 </div>
 
+<div class="row row-cards mt-3 mb-3">
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title">內容狀態</h2><div class="card-subtitle">目前社群資料的處理摘要</div></div></div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index"><span>已發布貼文</span><strong>@Model.PublishedPostCount</strong></a>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index"><span>待處理檢舉</span><strong class="@(Model.PendingReportCount > 0 ? "text-danger" : "text-success")">@Model.PendingReportCount</strong></a>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index"><span>已發布活動</span><strong>@Model.PublishedEventCount</strong></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title">互動與公告</h2><div class="card-subtitle">社群日常維護資訊</div></div></div>
+            <div class="list-group list-group-flush">
+                <div class="list-group-item d-flex align-items-center justify-content-between gap-3 py-3"><span>留言總量</span><strong>@Model.CommentCount</strong></div>
+                <div class="list-group-item d-flex align-items-center justify-content-between gap-3 py-3"><span>待審活動</span><strong class="@(Model.PendingEventCount > 0 ? "text-warning" : "text-success")">@Model.PendingEventCount</strong></div>
+                <div class="list-group-item d-flex align-items-center justify-content-between gap-3 py-3"><span>已發布公告</span><strong>@Model.PublishedAnnouncementCount</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row row-cards">
     <div class="col-12 col-lg-7">
         <div class="card h-100">

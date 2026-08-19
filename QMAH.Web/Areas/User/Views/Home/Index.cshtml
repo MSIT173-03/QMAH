@@ -26,7 +26,7 @@
                 <a asp-area="User" asp-controller="Members" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a>
             </div>
             <div class="table-responsive">
-                <table class="table table-vcenter table-hover card-table">
+                <table class="table table-vcenter table-hover card-table qmah-crud-table">
                     <thead><tr><th>帳號</th><th>Email</th><th>狀態</th><th>建立時間</th><th class="w-1"></th></tr></thead>
                     <tbody>
                     @if (Model.RecentMembers.Count == 0)
@@ -91,7 +91,7 @@
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center"><h2 class="card-title">最近點數異動</h2><a asp-area="User" asp-controller="PointTransactions" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a></div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table qmah-crud-table">
                     <thead><tr><th>時間</th><th>異動</th><th>原因</th></tr></thead>
                     <tbody>
                     @foreach (var item in Model.RecentPointTransactions)

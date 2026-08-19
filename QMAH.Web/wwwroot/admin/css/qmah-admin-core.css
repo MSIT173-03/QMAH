@@ -107,6 +107,67 @@ body {
   justify-content: space-between;
 }
 
+.qmah-filter-form .form-control,
+.qmah-filter-form .form-select {
+  min-height: 2.5rem;
+}
+
+.qmah-list-card {
+  overflow: hidden;
+}
+
+.qmah-list-card .card-header {
+  min-height: 4rem;
+}
+
+.qmah-crud-table thead th {
+  color: var(--qmah-ink-soft);
+  font-size: 0.74rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.qmah-crud-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.qmah-crud-table td {
+  vertical-align: middle;
+}
+
+/* 舊頁面仍保留組員原本的 markup，這些規則讓它們也遵循同一套資料表節奏。 */
+.page-body .table.table-vcenter {
+  --tblr-table-cell-padding-y: 0.8rem;
+  --tblr-table-cell-padding-x: 1rem;
+}
+
+.page-body .table thead th {
+  color: var(--qmah-ink-soft);
+  font-size: 0.74rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.page-body .table tbody td {
+  vertical-align: middle;
+}
+
+.page-body > .container-xl > h1,
+.page-body > .container-xl > h2 {
+  margin-bottom: 1rem;
+  color: var(--qmah-ink);
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.page-body .card > .table:not(.card-table),
+.page-body .card > form > .table {
+  margin-bottom: 0;
+}
+
 .qmah-filter-panel .card-header {
   min-height: 3.75rem;
 }
@@ -130,10 +191,12 @@ body {
 }
 
 .qmah-table-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 0.35rem;
   justify-content: flex-end;
+  white-space: nowrap;
 }
 
 .qmah-table-actions form {
@@ -252,6 +315,39 @@ body {
 
   .qmah-crud-table {
     min-width: 36rem;
+  }
+
+  .page-body .table-responsive {
+    margin-right: -1px;
+    margin-left: -1px;
+  }
+
+  /* 尚未包在 table-responsive 的既有頁面仍可在小螢幕閱讀完整欄位。 */
+  .page-body .table:not(.card-table) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .qmah-filter-form .d-flex {
+    align-items: stretch !important;
+  }
+
+  .qmah-pagination-bar {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  .qmah-pagination-bar nav,
+  .qmah-pagination-bar .btn-list {
+    width: 100%;
+  }
+
+  .qmah-pagination-bar .btn-list {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
   }
 
   .qmah-table-actions {
