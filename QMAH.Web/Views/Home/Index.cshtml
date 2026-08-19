@@ -2,74 +2,330 @@
 
 @{
     ViewData["Title"] = "管理總覽";
-    ViewData["AdminDescription"] = "從這裡進入圖鑑、遊戲、社群、會員與商城的管理作業。";
+    ViewData["AdminDescription"] = "查看目前主要資料狀態，或直接進入各區後台。";
+
+    var activeArtifactRate = Model.ArtifactCount == 0
+        ? 0
+        : (int)Math.Round(Model.ActiveArtifactCount * 100d / Model.ArtifactCount);
+
+    var activeMemberRate = Model.MemberCount == 0
+        ? 0
+        : (int)Math.Round(Model.ActiveMemberCount * 100d / Model.MemberCount);
+
+    var activeProductRate = Model.ProductCount == 0
+        ? 0
+        : (int)Math.Round(Model.ActiveProductCount * 100d / Model.ProductCount);
 }
 
-@section PageActions {
-    <a asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-primary">
-        <i class="ti ti-user-cog me-1"></i>會員管理
-    </a>
-}
+<div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-5 qmah-dashboard-metrics mb-3">
+    <div class="col">
+        <div class="card qmah-metric-card h-100">
+            <div class="card-body">
+                <span class="qmah-metric-label">啟用文物</span>
+                <strong class="qmah-metric-value">@Model.ActiveArtifactCount</strong>
+                <span class="qmah-metric-note">共 @Model.ArtifactCount 件 · @activeArtifactRate%</span>
+            </div>
+        </div>
+    </div>
 
-<div class="row row-cards qmah-dashboard-metrics">
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card qmah-metric-card"><div class="card-body">
-            <span class="qmah-metric-label">啟用文物</span>
-            <strong class="qmah-metric-value">@Model.ActiveArtifactCount</strong>
-            <span class="qmah-metric-note">文物總數 @Model.ArtifactCount</span>
-        </div></div>
+    <div class="col">
+        <div class="card qmah-metric-card h-100">
+            <div class="card-body">
+                <span class="qmah-metric-label">公開貼文</span>
+                <strong class="qmah-metric-value">@Model.PublishedPostCount</strong>
+                <span class="qmah-metric-note">目前公開中的貼文</span>
+            </div>
+        </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card qmah-metric-card"><div class="card-body">
-            <span class="qmah-metric-label">公開貼文</span>
-            <strong class="qmah-metric-value">@Model.PublishedPostCount</strong>
-            <span class="qmah-metric-note">社群內容待後台管理</span>
-        </div></div>
+
+    <div class="col">
+        <div class="card qmah-metric-card h-100">
+            <div class="card-body">
+                <span class="qmah-metric-label">已發布活動</span>
+                <strong class="qmah-metric-value">@Model.ActiveEventCount</strong>
+                <span class="qmah-metric-note">已審核並發布</span>
+            </div>
+        </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card qmah-metric-card"><div class="card-body">
-            <span class="qmah-metric-label">正常會員</span>
-            <strong class="qmah-metric-value">@Model.ActiveMemberCount</strong>
-            <span class="qmah-metric-note">會員總數 @Model.MemberCount</span>
-        </div></div>
+
+    <div class="col">
+        <div class="card qmah-metric-card h-100">
+            <div class="card-body">
+                <span class="qmah-metric-label">正常會員</span>
+                <strong class="qmah-metric-value">@Model.ActiveMemberCount</strong>
+                <span class="qmah-metric-note">共 @Model.MemberCount 人 · @activeMemberRate%</span>
+            </div>
+        </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card qmah-metric-card"><div class="card-body">
-            <span class="qmah-metric-label">上架商品</span>
-            <strong class="qmah-metric-value">@Model.ActiveProductCount</strong>
-            <span class="qmah-metric-note">商品總數 @Model.ProductCount</span>
-        </div></div>
+
+    <div class="col">
+        <div class="card qmah-metric-card h-100">
+            <div class="card-body">
+                <span class="qmah-metric-label">上架商品</span>
+                <strong class="qmah-metric-value">@Model.ActiveProductCount</strong>
+                <span class="qmah-metric-note">共 @Model.ProductCount 件 · @activeProductRate%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-xl-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">各區管理</h2>
+                    <div class="card-subtitle">選擇要處理的後台區域。</div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="qmah-quick-grid">
+                    <a class="qmah-quick-link"
+                       asp-area="Catalog"
+                       asp-controller="Home"
+                       asp-action="Index">
+                        <span class="avatar bg-blue-lt"><i class="ti ti-building-monument"></i></span>
+                        <span>
+                            <strong>圖鑑總覽</strong>
+                            <small>文物、分類、年代、鑰匙與解鎖紀錄</small>
+                        </span>
+                    </a>
+
+                    <a class="qmah-quick-link"
+                       asp-area="Game"
+                       asp-controller="Home"
+                       asp-action="Index">
+                        <span class="avatar bg-purple-lt"><i class="ti ti-device-gamepad-2"></i></span>
+                        <span>
+                            <strong>遊戲總覽</strong>
+                            <small>題庫、房間、玩家與遊戲紀錄</small>
+                        </span>
+                    </a>
+
+                    <a class="qmah-quick-link"
+                       asp-area="Social"
+                       asp-controller="Home"
+                       asp-action="Index">
+                        <span class="avatar bg-orange-lt"><i class="ti ti-messages"></i></span>
+                        <span>
+                            <strong>社群總覽</strong>
+                            <small>貼文、活動、公告與檢舉處理</small>
+                        </span>
+                    </a>
+
+                    <a class="qmah-quick-link"
+                       asp-area="User"
+                       asp-controller="Home"
+                       asp-action="Index">
+                        <span class="avatar bg-green-lt"><i class="ti ti-users"></i></span>
+                        <span>
+                            <strong>會員總覽</strong>
+                            <small>帳號、角色、成就與點數紀錄</small>
+                        </span>
+                    </a>
+
+                    <a class="qmah-quick-link"
+                       asp-area="Store"
+                       asp-controller="Home"
+                       asp-action="Index">
+                        <span class="avatar bg-azure-lt"><i class="ti ti-shopping-bag"></i></span>
+                        <span>
+                            <strong>商城總覽</strong>
+                            <small>商品、庫存、訂單、付款與優惠券</small>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">目前狀態</h2>
+                    <div class="card-subtitle">幾個需要快速確認的數字。</div>
+                </div>
+            </div>
+
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3"
+                   asp-area="Catalog"
+                   asp-controller="Artifact"
+                   asp-action="Index">
+                    <span>停用文物</span>
+                    <strong>@(Model.ArtifactCount - Model.ActiveArtifactCount)</strong>
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3"
+                   asp-area="User"
+                   asp-controller="Members"
+                   asp-action="Index">
+                    <span>非正常狀態會員</span>
+                    <strong>@(Model.MemberCount - Model.ActiveMemberCount)</strong>
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3"
+                   asp-area="Store"
+                   asp-controller="Product"
+                   asp-action="Index">
+                    <span>未上架商品</span>
+                    <strong>@(Model.ProductCount - Model.ActiveProductCount)</strong>
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3"
+                   asp-area="Social"
+                   asp-controller="SocialEventAdmin"
+                   asp-action="Index">
+                    <span>已發布活動</span>
+                    <strong>@Model.ActiveEventCount</strong>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">內容資料</h2>
+                    <div class="card-subtitle">圖鑑與社群目前的公開內容。</div>
+                </div>
+            </div>
+
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action d-flex justify-content-between gap-3 py-3"
+                   asp-area="Catalog"
+                   asp-controller="Artifact"
+                   asp-action="Index">
+                    <span>文物總數</span>
+                    <strong>@Model.ArtifactCount</strong>
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex justify-content-between gap-3 py-3"
+                   asp-area="Social"
+                   asp-controller="SocialPostAdmin"
+                   asp-action="Index">
+                    <span>公開貼文</span>
+                    <strong>@Model.PublishedPostCount</strong>
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex justify-content-between gap-3 py-3"
+                   asp-area="Social"
+                   asp-controller="SocialEventAdmin"
+                   asp-action="Index">
+                    <span>已發布活動</span>
+                    <strong>@Model.ActiveEventCount</strong>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">會員資料</h2>
+                    <div class="card-subtitle">目前會員帳號的基本狀態。</div>
+                </div>
+            </div>
+
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action d-flex justify-content-between gap-3 py-3"
+                   asp-area="User"
+                   asp-controller="Members"
+                   asp-action="Index">
+                    <span>會員總數</span>
+                    <strong>@Model.MemberCount</strong>
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex justify-content-between gap-3 py-3"
+                   asp-area="User"
+                   asp-controller="Members"
+                   asp-action="Index">
+                    <span>正常會員</span>
+                    <strong>@Model.ActiveMemberCount</strong>
+                </a>
+
+                <div class="list-group-item d-flex justify-content-between gap-3 py-3">
+                    <span>正常會員比例</span>
+                    <strong>@activeMemberRate%</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">商城資料</h2>
+                    <div class="card-subtitle">目前商品與上架狀態。</div>
+                </div>
+            </div>
+
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action d-flex justify-content-between gap-3 py-3"
+                   asp-area="Store"
+                   asp-controller="Product"
+                   asp-action="Index">
+                    <span>商品總數</span>
+                    <strong>@Model.ProductCount</strong>
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex justify-content-between gap-3 py-3"
+                   asp-area="Store"
+                   asp-controller="Product"
+                   asp-action="Index">
+                    <span>上架商品</span>
+                    <strong>@Model.ActiveProductCount</strong>
+                </a>
+
+                <div class="list-group-item d-flex justify-content-between gap-3 py-3">
+                    <span>商品上架比例</span>
+                    <strong>@activeProductRate%</strong>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header">
         <div>
-            <h2 class="card-title">系統工作區</h2>
-            <div class="text-secondary">選擇要處理的後台模組。</div>
+            <h2 class="card-title mb-1">常用功能</h2>
+            <div class="card-subtitle">直接前往平常較常使用的管理頁面。</div>
         </div>
     </div>
+
     <div class="card-body">
         <div class="qmah-quick-grid">
-            <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Home" asp-action="Index">
+            <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Artifact" asp-action="Index">
                 <span class="avatar bg-blue-lt"><i class="ti ti-building-monument"></i></span>
-                <span><strong>圖鑑管理</strong><small>文物、分類、年代、鑰匙與解鎖資料</small></span>
+                <span><strong>文物管理</strong><small>搜尋與維護文物資料</small></span>
             </a>
-            <a class="qmah-quick-link" asp-area="Game" asp-controller="Home" asp-action="Index">
-                <span class="avatar bg-purple-lt"><i class="ti ti-device-gamepad-2"></i></span>
-                <span><strong>遊戲管理</strong><small>題庫、房間、回合、玩家與作答</small></span>
+
+            <a class="qmah-quick-link" asp-area="Game" asp-controller="Rooms" asp-action="Index">
+                <span class="avatar bg-purple-lt"><i class="ti ti-door"></i></span>
+                <span><strong>房間管理</strong><small>查看目前房間與遊戲狀態</small></span>
             </a>
-            <a class="qmah-quick-link" asp-area="Social" asp-controller="Home" asp-action="Index">
-                <span class="avatar bg-orange-lt"><i class="ti ti-messages"></i></span>
-                <span><strong>社群管理</strong><small>貼文、板塊、活動、公告與檢舉處理</small></span>
+
+            <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index">
+                <span class="avatar bg-red-lt"><i class="ti ti-shield-alert"></i></span>
+                <span><strong>檢舉管理</strong><small>查看與處理檢舉紀錄</small></span>
             </a>
-            <a class="qmah-quick-link" asp-area="User" asp-controller="Home" asp-action="Index">
-                <span class="avatar bg-green-lt"><i class="ti ti-users"></i></span>
-                <span><strong>會員管理</strong><small>帳號、角色、成就與點數</small></span>
+
+            <a class="qmah-quick-link" asp-area="User" asp-controller="Members" asp-action="Index">
+                <span class="avatar bg-green-lt"><i class="ti ti-user-cog"></i></span>
+                <span><strong>會員帳號</strong><small>查看會員狀態與角色</small></span>
             </a>
-            <a class="qmah-quick-link" asp-area="Store" asp-controller="Home" asp-action="Index">
-                <span class="avatar bg-azure-lt"><i class="ti ti-shopping-bag"></i></span>
-                <span><strong>商城管理</strong><small>商品、庫存、訂單、付款與優惠券</small></span>
+
+            <a class="qmah-quick-link" asp-area="Store" asp-controller="Order" asp-action="Index">
+                <span class="avatar bg-azure-lt"><i class="ti ti-receipt"></i></span>
+                <span><strong>訂單管理</strong><small>查看付款與訂單狀態</small></span>
             </a>
         </div>
     </div>
