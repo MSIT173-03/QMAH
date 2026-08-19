@@ -509,3 +509,155 @@
     grid-template-columns: minmax(5.75rem, .45fr) minmax(0, 1fr);
   }
 }
+/* 共用列表排序與互動 */
+
+:root {
+  --qmah-table-header-hover: rgba(44, 79, 80, .82);
+  --qmah-table-header-active: rgba(44, 79, 80, .09);
+  --qmah-row-hover: rgba(44, 79, 80, .04);
+}
+
+.qmah-sortable-header {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color .18s ease,
+    color .18s ease,
+    box-shadow .18s ease;
+}
+
+.qmah-sortable-header:hover,
+.qmah-sortable-header:focus-visible {
+  background-color: var(--qmah-table-header-hover) !important;
+  color: #fff !important;
+}
+
+.qmah-sortable-header:focus-visible {
+  z-index: 1;
+  outline: 2px solid var(--qmah-primary);
+  outline-offset: -2px;
+}
+
+.qmah-sortable-header[data-sort-direction="asc"],
+.qmah-sortable-header[data-sort-direction="desc"] {
+  background-color: var(--qmah-table-header-active);
+}
+
+.qmah-sortable-header[data-sort-direction="asc"]:not(:hover):not(:focus-visible),
+.qmah-sortable-header[data-sort-direction="desc"]:not(:hover):not(:focus-visible) {
+  color: var(--qmah-primary);
+}
+
+.qmah-sort-icon {
+  display: inline-block;
+  width: 1rem;
+  margin-inline-start: .3rem;
+  vertical-align: -.1rem;
+  opacity: .55;
+  transition:
+    opacity .18s ease,
+    transform .18s ease;
+}
+
+.qmah-sortable-header:hover .qmah-sort-icon,
+.qmah-sortable-header:focus-visible .qmah-sort-icon,
+.qmah-sortable-header[data-sort-direction="asc"] .qmah-sort-icon,
+.qmah-sortable-header[data-sort-direction="desc"] .qmah-sort-icon {
+  opacity: 1;
+}
+
+.qmah-sortable-header:hover .qmah-sort-icon {
+  transform: translateY(-1px);
+}
+
+.qmah-crud-table tbody tr,
+.game-admin-table tbody tr {
+  transition: background-color .15s ease;
+}
+
+.qmah-crud-table tbody tr:hover,
+.game-admin-table tbody tr:hover {
+  background-color: var(--qmah-row-hover);
+}
+
+.qmah-quick-link,
+.qmah-metric-card {
+  transition:
+    transform .16s ease,
+    border-color .16s ease,
+    box-shadow .16s ease;
+}
+
+.qmah-quick-link:hover,
+.qmah-quick-link:focus-visible,
+.qmah-metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.qmah-quick-link:hover,
+.qmah-quick-link:focus-visible {
+  border-color: rgba(44, 79, 80, .32);
+  box-shadow: 0 .45rem 1.1rem rgba(34, 62, 72, .08);
+}
+
+.page-body .btn,
+.page-header .btn {
+  transition:
+    transform .12s ease,
+    box-shadow .12s ease,
+    background-color .15s ease,
+    border-color .15s ease,
+    color .15s ease;
+}
+
+.page-body .btn:active:not(:disabled):not(.disabled),
+.page-header .btn:active:not(:disabled):not(.disabled) {
+  transform: translateY(1px) scale(.985);
+}
+
+.game-admin-filter:focus-within,
+.qmah-filter-card:focus-within {
+  border-color: rgba(44, 79, 80, .32);
+  box-shadow: 0 .3rem .9rem rgba(34, 62, 72, .055);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qmah-sortable-header,
+  .qmah-sort-icon,
+  .qmah-crud-table tbody tr,
+  .game-admin-table tbody tr,
+  .qmah-quick-link,
+  .qmah-metric-card,
+  .page-body .btn,
+  .page-header .btn,
+  .game-admin-filter,
+  .qmah-filter-card {
+    transition: none !important;
+  }
+
+  .qmah-quick-link:hover,
+  .qmah-quick-link:focus-visible,
+  .qmah-metric-card:hover,
+  .page-body .btn:active,
+  .page-header .btn:active {
+    transform: none !important;
+  }
+}
+/* 排序細節 */
+.qmah-sort-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  stroke-width: 2;
+  vertical-align: -.18rem;
+}
+
+.qmah-sortable-header[data-sort-direction="asc"] .qmah-sort-icon,
+.qmah-sortable-header[data-sort-direction="desc"] .qmah-sort-icon {
+  opacity: 1;
+}
+
+.qmah-crud-table tbody tr:hover > td:first-child,
+.game-admin-table tbody tr:hover > td:first-child {
+  box-shadow: inset 2px 0 0 rgba(44, 79, 80, .45);
+}

@@ -1,0 +1,326 @@
+/* 共用互動 */
+.navbar-vertical .navbar-brand,
+.navbar-vertical .navbar-nav .nav-link,
+.navbar-vertical .navbar-nav .nav-link-icon,
+.qmah-sidebar-toggle,
+.qmah-theme-toggle,
+.qmah-account,
+.dropdown-menu .dropdown-item,
+.page-body .card,
+.page-body .list-group-item-action,
+.page-body .badge,
+.page-body .form-control,
+.page-body .form-select,
+.qmah-auth-panel,
+.qmah-auth-logo,
+.qmah-auth-theme-toggle,
+.qmah-auth-field,
+.qmah-password-toggle,
+.qmah-auth-form .btn-primary {
+  transition:
+    transform .16s ease,
+    background-color .16s ease,
+    border-color .16s ease,
+    color .16s ease,
+    box-shadow .16s ease,
+    opacity .16s ease;
+}
+
+.navbar-vertical .qmah-brand-logo {
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.navbar-vertical .navbar-brand:hover .qmah-brand-logo {
+  transform: translateY(-1px) scale(1.015);
+}
+
+.navbar-vertical .navbar-nav .nav-link:hover,
+.navbar-vertical .navbar-nav .nav-link:focus-visible {
+  transform: translateX(2px);
+}
+
+.navbar-vertical .navbar-nav .nav-link:hover .nav-link-icon,
+.navbar-vertical .navbar-nav .nav-link:focus-visible .nav-link-icon {
+  transform: translateX(1px) scale(1.08);
+}
+
+.navbar-vertical .navbar-nav .nav-link::before {
+  transition:
+    top .16s ease,
+    bottom .16s ease,
+    width .16s ease,
+    background-color .16s ease;
+}
+
+.navbar-vertical .navbar-nav .nav-link:hover::before,
+.navbar-vertical .navbar-nav .nav-link:focus-visible::before {
+  top: .55rem;
+  bottom: .55rem;
+  width: 3px;
+  background: color-mix(in srgb, var(--qmah-primary) 52%, transparent);
+}
+
+.navbar-vertical .navbar-nav .nav-link.active::before,
+.navbar-vertical .navbar-nav .nav-link[aria-current="page"]::before {
+  top: .45rem;
+  bottom: .45rem;
+  width: 3px;
+}
+
+.qmah-sidebar-toggle:hover,
+.qmah-theme-toggle:hover,
+.qmah-account:hover {
+  transform: translateY(-1px);
+}
+
+.qmah-sidebar-toggle:active,
+.qmah-theme-toggle:active,
+.qmah-account:active {
+  transform: scale(.97);
+}
+
+.qmah-account .avatar {
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.qmah-account:hover .avatar {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 .2rem color-mix(in srgb, var(--qmah-primary) 15%, transparent);
+}
+
+.qmah-account__chevron {
+  transition: transform .18s ease;
+}
+
+.qmah-account[aria-expanded="true"] .qmah-account__chevron {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  transform-origin: top right;
+}
+
+.dropdown-menu.show {
+  animation: qmah-dropdown-in .16s ease-out;
+}
+
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+  transform: translateX(2px);
+}
+
+.page-body .card:not(.qmah-metric-card):hover {
+  border-color: color-mix(in srgb, var(--qmah-primary) 22%, var(--qmah-line));
+}
+
+.page-body .list-group-item-action:hover,
+.page-body .list-group-item-action:focus-visible {
+  padding-left: calc(var(--tblr-list-group-item-padding-x, 1rem) + .15rem);
+}
+
+.page-body a:hover .badge,
+.page-body tr:hover .badge {
+  transform: scale(1.035);
+}
+
+.page-body .form-control:hover,
+.page-body .form-select:hover {
+  border-color: color-mix(in srgb, var(--qmah-primary) 34%, var(--qmah-line));
+}
+
+.page-body .form-control:focus,
+.page-body .form-select:focus {
+  transform: translateY(-1px);
+}
+
+.alert {
+  animation: qmah-alert-in .22s ease-out;
+}
+
+.pagination .page-link {
+  transition:
+    transform .12s ease,
+    background-color .15s ease,
+    border-color .15s ease,
+    color .15s ease;
+}
+
+.pagination .page-link:hover {
+  transform: translateY(-1px);
+}
+
+.pagination .page-link:active {
+  transform: scale(.98);
+}
+
+/* 登入頁 */
+.qmah-auth-brand,
+.qmah-auth-panel {
+  animation: qmah-auth-enter .42s ease-out both;
+}
+
+.qmah-auth-panel {
+  animation-delay: .06s;
+}
+
+.qmah-auth-panel:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--qmah-primary) 30%, var(--qmah-line));
+  box-shadow: 0 1.5rem 4rem rgba(23, 42, 51, .14), var(--qmah-shadow-sm);
+}
+
+.qmah-auth-brand:hover .qmah-auth-logo {
+  transform: translateY(-2px) scale(1.015);
+}
+
+.qmah-auth-kicker span {
+  animation: qmah-auth-pulse 2.6s ease-in-out infinite;
+}
+
+.qmah-auth-orbit--one {
+  animation: qmah-auth-drift-one 18s ease-in-out infinite alternate;
+}
+
+.qmah-auth-orbit--two {
+  animation: qmah-auth-drift-two 15s ease-in-out infinite alternate;
+}
+
+.qmah-auth-diamond {
+  animation: qmah-auth-float 10s ease-in-out infinite alternate;
+}
+
+.qmah-auth-square {
+  animation: qmah-auth-float 8s ease-in-out infinite alternate-reverse;
+}
+
+.qmah-auth-dot {
+  animation: qmah-auth-dot 4s ease-in-out infinite;
+}
+
+.qmah-auth-theme-toggle:hover,
+.qmah-auth-theme-toggle:focus-visible,
+.qmah-auth-field:focus-within {
+  transform: translateY(-1px);
+}
+
+.qmah-password-toggle:active,
+.qmah-auth-theme-toggle:active {
+  transform: scale(.97);
+}
+
+.qmah-auth-form .btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.qmah-auth-form .btn-primary::after {
+  position: absolute;
+  top: -50%;
+  left: -35%;
+  width: 28%;
+  height: 200%;
+  background: rgba(255, 255, 255, .16);
+  content: "";
+  transform: rotate(18deg) translateX(-180%);
+  transition: transform .45s ease;
+}
+
+.qmah-auth-form .btn-primary:hover::after {
+  transform: rotate(18deg) translateX(620%);
+}
+
+.qmah-auth-form .btn-primary:active {
+  transform: translateY(1px) scale(.99);
+}
+
+.qmah-auth-validation:not(:empty) {
+  animation: qmah-auth-shake .28s ease;
+}
+
+@keyframes qmah-dropdown-in {
+  from { opacity: 0; transform: translateY(-4px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes qmah-alert-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes qmah-auth-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes qmah-auth-pulse {
+  0%, 100% { box-shadow: 0 0 0 .2rem rgba(173, 89, 74, .1); }
+  50% { box-shadow: 0 0 0 .45rem rgba(173, 89, 74, 0); }
+}
+
+@keyframes qmah-auth-drift-one {
+  to { transform: translate(-1rem, 1.25rem) rotate(22deg); }
+}
+
+@keyframes qmah-auth-drift-two {
+  to { transform: translate(1rem, -1rem) rotate(-17deg); }
+}
+
+@keyframes qmah-auth-float {
+  to { translate: 0 -8px; }
+}
+
+@keyframes qmah-auth-dot {
+  0%, 100% { opacity: .35; transform: scale(.9); }
+  50% { opacity: .62; transform: scale(1.12); }
+}
+
+@keyframes qmah-auth-shake {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-3px); }
+  70% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  .navbar-vertical .navbar-brand,
+  .navbar-vertical .navbar-nav .nav-link,
+  .navbar-vertical .navbar-nav .nav-link-icon,
+  .qmah-sidebar-toggle,
+  .qmah-theme-toggle,
+  .qmah-account,
+  .dropdown-menu,
+  .dropdown-menu .dropdown-item,
+  .page-body .card,
+  .page-body .list-group-item-action,
+  .page-body .badge,
+  .page-body .form-control,
+  .page-body .form-select,
+  .qmah-auth-brand,
+  .qmah-auth-panel,
+  .qmah-auth-logo,
+  .qmah-auth-theme-toggle,
+  .qmah-auth-field,
+  .qmah-password-toggle,
+  .qmah-auth-form .btn-primary,
+  .qmah-auth-kicker span,
+  .qmah-auth-orbit--one,
+  .qmah-auth-orbit--two,
+  .qmah-auth-diamond,
+  .qmah-auth-square,
+  .qmah-auth-dot,
+  .alert {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    translate: none !important;
+  }
+
+  .qmah-auth-form .btn-primary::after {
+    display: none;
+  }
+}
