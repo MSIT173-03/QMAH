@@ -2,79 +2,110 @@
 
 @{
     ViewData["Title"] = "編輯我的個人資料";
-    ViewData["AdminDescription"] = "更新登入後顯示的暱稱、自我介紹、頭像與公開範圍。";
+    ViewData["AdminDescription"] = "更新暱稱、自我介紹、頭像與公開範圍。";
+}
+
+@section PageActions {
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回個人資料
+    </a>
 }
 
 <div class="row row-cards justify-content-center">
-    <div class="col-12 col-xl-9">
+    <div class="col-12 col-xl-10">
         <form asp-action="Edit" method="post" enctype="multipart/form-data">
             <input asp-for="RowVersion" type="hidden" />
+
             <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
             <div class="card">
                 <div class="card-header">
                     <div>
-                        <h2 class="card-title"><i class="ti ti-user-edit me-2"></i>個人資料</h2>
-                        <div class="text-secondary">這些內容會套用到目前登入的管理帳號。</div>
+                        <h2 class="card-title">個人資料</h2>
+                        <div class="card-subtitle">修改目前帳號的基本顯示資訊。</div>
                     </div>
                 </div>
+
                 <div class="card-body">
                     <div class="row g-4">
-                        <div class="col-12 col-md-4">
-                            <div class="text-center">
-                                @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
-                                {
-                                    <img src="@Model.AvatarPath" alt="目前頭像" class="avatar avatar-xl mb-3" />
-                                }
-                                else
-                                {
-                                    <div class="avatar avatar-xl bg-blue-lt text-blue mb-3"><i class="ti ti-user" aria-hidden="true"></i></div>
-                                }
-                                <div class="text-secondary small">可上傳 JPG、JPEG、PNG 或 WEBP，最大 5 MB。</div>
+                        <div class="col-12 col-lg-4">
+                            <div class="card bg-body-tertiary h-100">
+                                <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-4">
+                                    @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
+                                    {
+                                        <img src="@Model.AvatarPath"
+                                             alt="目前頭像"
+                                             class="avatar avatar-xl rounded-circle mb-3" />
+                                    }
+                                    else
+                                    {
+                                        <span class="avatar avatar-xl rounded-circle bg-blue-lt text-blue mb-3">
+                                            <i class="ti ti-user fs-1"></i>
+                                        </span>
+                                    }
+
+                                    <div class="fw-semibold mb-1">@Model.Nickname</div>
+                                    <div class="text-secondary small text-break mb-3">@Model.Email</div>
+
+                                    <label asp-for="AvatarFile" class="form-label w-100 text-start">更換頭像</label>
+                                    <input asp-for="AvatarFile"
+                                           type="file"
+                                           class="form-control"
+                                           accept=".jpg,.jpeg,.png,.webp" />
+                                    <span asp-validation-for="AvatarFile" class="text-danger"></span>
+                                    <div class="form-hint text-start w-100">支援 JPG、JPEG、PNG、WEBP，最大 5 MB。</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-12 col-md-8">
-                            <div class="mb-3">
-                                <label class="form-label" for="Email">登入帳號</label>
-                                <div class="input-icon">
-                                    <span class="input-icon-addon"><i class="ti ti-at"></i></span>
-                                    <input id="Email" value="@Model.Email" class="form-control" readonly />
+
+                        <div class="col-12 col-lg-8">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label" for="Email">登入帳號</label>
+                                    <div class="input-icon">
+                                        <span class="input-icon-addon"><i class="ti ti-at"></i></span>
+                                        <input id="Email" value="@Model.Email" class="form-control" readonly />
+                                    </div>
+                                    <div class="form-hint">Email 不會在此頁修改。</div>
                                 </div>
-                                <div class="form-hint">登入帳號請至密碼管理功能處理。</div>
-                            </div>
-                            <div class="mb-3">
-                                <label asp-for="Nickname" class="form-label">暱稱</label>
-                                <div class="input-icon">
-                                    <span class="input-icon-addon"><i class="ti ti-id-badge"></i></span>
-                                    <input asp-for="Nickname" class="form-control" autocomplete="nickname" />
+
+                                <div class="col-12">
+                                    <label asp-for="Nickname" class="form-label">暱稱</label>
+                                    <div class="input-icon">
+                                        <span class="input-icon-addon"><i class="ti ti-id-badge"></i></span>
+                                        <input asp-for="Nickname" class="form-control" autocomplete="nickname" />
+                                    </div>
+                                    <span asp-validation-for="Nickname" class="text-danger"></span>
                                 </div>
-                                <span asp-validation-for="Nickname" class="text-danger"></span>
-                            </div>
-                            <div class="mb-3">
-                                <label asp-for="Bio" class="form-label">自我介紹</label>
-                                <textarea asp-for="Bio" class="form-control" rows="4" placeholder="簡單介紹自己"></textarea>
-                                <span asp-validation-for="Bio" class="text-danger"></span>
-                            </div>
-                            <div class="mb-3">
-                                <label asp-for="AvatarFile" class="form-label">更換頭像</label>
-                                <input asp-for="AvatarFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
-                                <span asp-validation-for="AvatarFile" class="text-danger"></span>
-                            </div>
-                            <div>
-                                <label asp-for="Visibility" class="form-label">個人資料公開範圍</label>
-                                <select asp-for="Visibility" class="form-select">
-                                    <option value="PUBLIC">公開</option>
-                                    <option value="FRIENDS">僅好友</option>
-                                    <option value="PRIVATE">不公開</option>
-                                </select>
-                                <span asp-validation-for="Visibility" class="text-danger"></span>
+
+                                <div class="col-12">
+                                    <label asp-for="Bio" class="form-label">自我介紹</label>
+                                    <textarea asp-for="Bio"
+                                              class="form-control"
+                                              rows="5"
+                                              placeholder="簡單介紹自己"></textarea>
+                                    <span asp-validation-for="Bio" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Visibility" class="form-label">個人資料公開範圍</label>
+                                    <select asp-for="Visibility" class="form-select">
+                                        <option value="PUBLIC">公開</option>
+                                        <option value="FRIENDS">僅好友</option>
+                                        <option value="PRIVATE">不公開</option>
+                                    </select>
+                                    <span asp-validation-for="Visibility" class="text-danger"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="card-footer d-flex flex-wrap justify-content-end gap-2">
-                    <a asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回個人資料</a>
-                    <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>儲存變更</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-device-floppy me-1"></i>儲存變更
+                    </button>
                 </div>
             </div>
         </form>
