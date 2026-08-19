@@ -8,6 +8,11 @@
     const mobileSidebarToggle = document.querySelector("[data-qmah-mobile-sidebar-toggle]");
     const mobileSidebar = document.querySelector("#admin-sidebar-menu");
     const mobileSidebarBackdrop = document.querySelector("[data-qmah-sidebar-backdrop]");
+    document.addEventListener("click", (event) => {
+        const trigger = event.target.closest("[data-qmah-image-preview]");
+        const target = document.querySelector("[data-qmah-image-preview-target]");
+        if (trigger && target) target.src = trigger.dataset.qmahImagePreview;
+    });
     const themeSwitchingClass = "qmah-theme-switching";
 
     function applyTheme(theme) {
