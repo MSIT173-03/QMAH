@@ -1,82 +1,95 @@
 @model QMAH.Web.Models.Entities.KeyDefinition
 
 @{
-    ViewData["Title"] = "鑰匙編輯";
-    ViewData["AdminDescription"] = "調整既有解鎖規則的名稱與適用範圍。";
+    ViewData["Title"] = "編輯鑰匙";
+    ViewData["AdminDescription"] = "調整既有解鎖規則的名稱、適用範圍與啟用狀態。";
 }
 
 @section PageActions {
-    <a asp-action="Index" class="btn btn-outline-secondary">
+    <a asp-action="Index" class="btn btn-secondary">
         <i class="ti ti-arrow-left me-1"></i>返回鑰匙總覽
     </a>
 }
 
 @if (ViewBag.ErrorMessage is string errorMessage)
 {
-    <div class="alert alert-danger" role="alert">
-        <i class="ti ti-alert-circle me-2"></i>@errorMessage
-    </div>
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
 }
 
 <div class="row row-cards">
     <div class="col-12 col-xl-8">
-        <form asp-action="Edit" method="post" class="card">
+        <form asp-action="Edit" method="post" class="card qmah-form-card">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
             <div class="card-header">
                 <div>
                     <h2 class="card-title">鑰匙資訊</h2>
-                    <div class="text-secondary">代碼通常是系統識別值，修改前請確認沒有外部資料依賴。</div>
+                    <div class="text-secondary">代碼是系統識別值；適用範圍改用中文選項，實際儲存值仍維持既有代碼。</div>
                 </div>
             </div>
             <div class="card-body">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <label asp-for="Name" class="form-label">鑰匙名稱</label>
                         <input asp-for="Name" class="form-control" />
-                        <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="Code" class="form-label">鑰匙代碼</label>
                         <input asp-for="Code" class="form-control" />
-                        <span asp-validation-for="Code" class="text-danger"></span>
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="ScopeType" class="form-label">適用範圍</label>
-                        <input asp-for="ScopeType" class="form-control" />
-                        <span asp-validation-for="ScopeType" class="text-danger"></span>
+                        <select asp-for="ScopeType" class="form-select">
+                            <option value="NORMAL">一般鑰匙</option>
+                            <option value="CATEGORY">分類鑰匙</option>
+                            <option value="ERA">年代鑰匙</option>
+                            <option value="UNIVERSAL">萬用鑰匙</option>
+                        </select>
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="CategoryId" class="form-label">分類</label>
                         <select asp-for="CategoryId" asp-items="ViewBag.ArtifactCategoryList" class="form-select">
                             <option value="">不限定分類</option>
                         </select>
-                        <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="EraBucketId" class="form-label">年代</label>
                         <select asp-for="EraBucketId" asp-items="ViewBag.EraBucketList" class="form-select">
                             <option value="">不限定年代</option>
                         </select>
-                        <span asp-validation-for="EraBucketId" class="text-danger"></span>
                     </div>
                     <div class="col-12">
                         <label class="form-check form-switch">
                             <input asp-for="IsActive" class="form-check-input" />
-                            <span class="form-check-label"><i class="ti ti-toggle-right me-1"></i>啟用這項鑰匙規則</span>
+                            <span class="form-check-label">啟用這項鑰匙規則</span>
                         </label>
-                        <div class="form-hint">停用後不會刪除既有背包或交易紀錄，之後仍可重新啟用。</div>
+                        <div class="form-hint">此開關現在會隨「儲存變更」正確寫回資料庫。</div>
                     </div>
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
-                <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                <a asp-action="Index" class="btn btn-secondary">取消</a>
                 <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>儲存變更</button>
             </div>
         </form>
     </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card border-danger h-100">
+            <div class="card-header"><h2 class="card-title text-danger">危險操作</h2></div>
+            <div class="card-body">
+                <p class="text-secondary">強制刪除會一併清除這把鑰匙的會員餘額、流水，以及由該流水建立的解鎖關聯。只在確定測試資料不需保留時使用。</p>
+                <form asp-area="" asp-controller="AdminEmergency" asp-action="ForceDelete" method="post"
+                      onsubmit="return confirm('強制刪除無法復原，確定要繼續嗎？');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="type" value="key" />
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger w-100"><i class="ti ti-alert-triangle me-1"></i>強制刪除鑰匙</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
-@section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

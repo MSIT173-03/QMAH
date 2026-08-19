@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = $"房間 {Model.RoomCode}";
     ViewData["AdminDescription"] = "檢視與維護房間資料、玩家清單與回合歷程；遊戲流程由前台後端負責。";
+    var canEdit = Model.Status == "WAITING";
+    var canDelete = canEdit && Model.PlayerCount == 0 && Model.RoundCount == 0;
 }
 
 @section Styles {
@@ -9,12 +11,25 @@
 }
 
 @section PageActions {
-    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">編輯設定</a>
-    @if (Model.PlayerCount == 0 && Model.RoundCount == 0)
+    @if (canEdit)
     {
-        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.Id">刪除房間</a>
+        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id"><i class="ti ti-edit me-1"></i>編輯設定</a>
     }
-    <a class="btn btn-outline-secondary" asp-action="Index">返回清單</a>
+    else
+    {
+        <button type="button" class="btn btn-primary" disabled title="只有等待中的房間可以編輯"><i class="ti ti-edit me-1"></i>編輯設定</button>
+    }
+
+    @if (canDelete)
+    {
+        <a class="btn btn-danger" asp-action="Delete" asp-route-id="@Model.Id"><i class="ti ti-trash me-1"></i>刪除房間</a>
+    }
+    else
+    {
+        <button type="button" class="btn btn-danger" disabled title="只有沒有玩家與回合的等待中房間可以刪除"><i class="ti ti-trash me-1"></i>刪除房間</button>
+    }
+
+    <a class="btn btn-secondary" asp-action="Index"><i class="ti ti-arrow-left me-1"></i>返回清單</a>
 }
 
 <div class="row row-cards mb-3">
@@ -34,25 +49,79 @@
 </div>
 
 <div class="card mb-3">
-    <div class="card-header"><div><h2 class="card-title mb-1">玩家</h2><div class="card-subtitle">@Model.Players.Count 位</div></div><div class="card-actions"><a asp-area="Game" asp-controller="Players" asp-action="Create" asp-route-roomId="@Model.Id">建立玩家</a><a asp-area="Game" asp-controller="Players" asp-action="Index" asp-route-search="@Model.RoomCode">查看清單</a></div></div>
+    <div class="card-header">
+        <div><h2 class="card-title mb-1">玩家</h2><div class="card-subtitle">@Model.Players.Count 位</div></div>
+        <div class="card-actions"><a class="btn btn-sm btn-primary" asp-area="Game" asp-controller="Players" asp-action="Create" asp-route-roomId="@Model.Id">建立玩家</a><a class="btn btn-sm btn-secondary" asp-area="Game" asp-controller="Players" asp-action="Index" asp-route-search="@Model.RoomCode">查看清單</a></div>
+    </div>
     @if (Model.Players.Count == 0)
     {
         <div class="empty py-5"><p class="empty-title">尚無玩家</p><p class="empty-subtitle text-secondary">玩家加入房間後會顯示在這裡。</p></div>
     }
     else
     {
-        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table"><thead><tr><th>座位</th><th>名稱</th><th>角色</th><th>連線</th><th>準備</th><th class="w-1"></th></tr></thead><tbody>@foreach (var player in Model.Players) { <tr><td data-label="座位">@(player.SeatNo?.ToString() ?? "未安排")</td><td data-label="名稱" class="fw-bold">@player.DisplayName</td><td data-label="角色">@GameCodeLists.Label(GameCodeLists.PlayerRoles, player.Role)</td><td data-label="連線"><span class="badge @GameCodeLists.StatusBadgeClass(player.ConnectionStatus)">@GameCodeLists.Label(GameCodeLists.ConnectionStatuses, player.ConnectionStatus)</span></td><td data-label="準備">@if (player.IsReady) { <span class="badge bg-green-lt text-green">已準備</span> } else { <span class="text-secondary">未準備</span> }</td><td data-label="" class="game-admin-cell-actions"><a class="btn btn-sm btn-outline-secondary" asp-area="Game" asp-controller="Players" asp-action="Details" asp-route-id="@player.Id">查看玩家</a></td></tr> }</tbody></table></div>
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table game-admin-table">
+                <thead><tr><th>座位</th><th>名稱</th><th>角色</th><th>連線</th><th>準備</th><th class="qmah-action-cell qmah-actions--1">操作</th></tr></thead>
+                <tbody>
+                @foreach (var player in Model.Players)
+                {
+                    <tr>
+                        <td data-label="座位">@(player.SeatNo?.ToString() ?? "未安排")</td>
+                        <td data-label="名稱" class="fw-bold">@player.DisplayName</td>
+                        <td data-label="角色">@GameCodeLists.Label(GameCodeLists.PlayerRoles, player.Role)</td>
+                        <td data-label="連線"><span class="badge @GameCodeLists.StatusBadgeClass(player.ConnectionStatus)">@GameCodeLists.Label(GameCodeLists.ConnectionStatuses, player.ConnectionStatus)</span></td>
+                        <td data-label="準備">@if (player.IsReady) { <span class="badge bg-green-lt text-green">已準備</span> } else { <span class="text-secondary">未準備</span> }</td>
+                        <td data-label="操作" class="qmah-action-cell qmah-actions--1 game-admin-cell-actions"><div class="qmah-table-actions"><a class="btn btn-sm btn-info" asp-area="Game" asp-controller="Players" asp-action="Details" asp-route-id="@player.Id">查看</a></div></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     }
 </div>
 
 <div class="card">
-    <div class="card-header"><div><h2 class="card-title mb-1">回合</h2><div class="card-subtitle">@Model.Rounds.Count 個</div></div><div class="card-actions"><a asp-area="Game" asp-controller="Rounds" asp-action="Create" asp-route-roomId="@Model.Id">建立回合</a><a asp-area="Game" asp-controller="Rounds" asp-action="Index" asp-route-roomId="@Model.Id">查看清單</a></div></div>
+    <div class="card-header">
+        <div><h2 class="card-title mb-1">回合</h2><div class="card-subtitle">@Model.Rounds.Count 個</div></div>
+        <div class="card-actions"><a class="btn btn-sm btn-primary" asp-area="Game" asp-controller="Rounds" asp-action="Create" asp-route-roomId="@Model.Id">建立回合</a><a class="btn btn-sm btn-secondary" asp-area="Game" asp-controller="Rounds" asp-action="Index" asp-route-roomId="@Model.Id">查看清單</a></div>
+    </div>
     @if (Model.Rounds.Count == 0)
     {
         <div class="empty py-5"><p class="empty-title">尚無回合</p><p class="empty-subtitle text-secondary">房間開始遊戲後會建立回合紀錄。</p></div>
     }
     else
     {
-        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table"><thead><tr><th>回合</th><th>文物</th><th>狀態</th><th>作答</th><th>投票</th><th class="w-1"></th></tr></thead><tbody>@foreach (var round in Model.Rounds) { <tr><td data-label="回合" class="fw-bold">第 @round.RoundNumber 回合</td><td data-label="文物">@round.ArtifactName</td><td data-label="狀態"><span class="badge @GameCodeLists.StatusBadgeClass(round.Status)">@GameCodeLists.Label(GameCodeLists.RoundStatuses, round.Status)</span></td><td data-label="作答" class="text-nowrap">@round.AnswerCount</td><td data-label="投票" class="text-nowrap">@round.VoteCount</td><td data-label="" class="game-admin-cell-actions"><a class="btn btn-sm btn-outline-secondary" asp-area="Game" asp-controller="Rounds" asp-action="Details" asp-route-id="@round.Id">查看回合</a></td></tr> }</tbody></table></div>
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table game-admin-table">
+                <thead><tr><th>回合</th><th>文物</th><th>狀態</th><th>作答</th><th>投票</th><th class="qmah-action-cell qmah-actions--1">操作</th></tr></thead>
+                <tbody>
+                @foreach (var round in Model.Rounds)
+                {
+                    <tr>
+                        <td data-label="回合" class="fw-bold">第 @round.RoundNumber 回合</td>
+                        <td data-label="文物">@round.ArtifactName</td>
+                        <td data-label="狀態"><span class="badge @GameCodeLists.StatusBadgeClass(round.Status)">@GameCodeLists.Label(GameCodeLists.RoundStatuses, round.Status)</span></td>
+                        <td data-label="作答" class="text-nowrap">@round.AnswerCount</td>
+                        <td data-label="投票" class="text-nowrap">@round.VoteCount</td>
+                        <td data-label="操作" class="qmah-action-cell qmah-actions--1 game-admin-cell-actions"><div class="qmah-table-actions"><a class="btn btn-sm btn-info" asp-area="Game" asp-controller="Rounds" asp-action="Details" asp-route-id="@round.Id">查看</a></div></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     }
+</div>
+
+<div class="card border-danger mt-3">
+    <div class="card-header"><h2 class="card-title text-danger">危險操作</h2></div>
+    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="text-secondary">一般刪除受到歷史資料保護；只有確定這是可捨棄資料時才使用強制刪除。</div>
+        <form asp-area="" asp-controller="AdminEmergency" asp-action="ForceDelete" method="post"
+              onsubmit="return confirm('這會連同相依歷史資料一起刪除且無法復原，確定繼續嗎？');">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="type" value="room" />
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-danger">強制刪除房間</button>
+        </form>
+    </div>
 </div>

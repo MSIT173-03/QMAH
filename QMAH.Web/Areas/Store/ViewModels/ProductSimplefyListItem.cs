@@ -1,21 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace QMAH.Web.Areas.Store.ViewModels;
 
-public class ProductSimplefyListItem(QMAH.Web.Models.Entities.Product product)
+public class ProductSimplefyListItem
 {
     [Display(Name = "編號")]
-    public Guid Id { get; } = product.Id;
+    public Guid Id { get; init; }
+
     [Display(Name = "名稱")]
-    public string Name { get; } = product.Name;
+    public string Name { get; init; } = string.Empty;
+
     [Display(Name = "分類")]
-    public string Category { get; } = product.CategoryCode;
+    public string Category { get; init; } = string.Empty;
+
     [Display(Name = "價格")]
-    public decimal Price { get; } = product.Price;
+    public decimal Price { get; init; }
+
     [Display(Name = "庫存")]
-    public int Stock { get; } = product.Stock;
+    public int Stock { get; init; }
+
     [Display(Name = "封面圖片網址")]
-    public string ImageUrl { get; } = product.PrimaryImagePath ?? string.Empty;
+    public string ImageUrl { get; init; } = string.Empty;
+
     [Display(Name = "上架")]
-    public bool IsActive { get; } = product.IsActive;
+    public bool IsActive { get; init; }
 }

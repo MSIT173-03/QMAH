@@ -1,0 +1,168 @@
+@using QMAH.Web.Infrastructure.AdminNavigation
+@model IEnumerable<QMAH.Web.Areas.Catalog.ViewModel.KeyTransactionListItemViewModel>
+
+@{
+    ViewData["Title"] = "鑰匙流水";
+    ViewData["AdminDescription"] = "依會員、鑰匙、原因或異動方向篩選紀錄。";
+
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+    int totalCount = ViewBag.TotalCount;
+    int pageSize = ViewBag.PageSize;
+
+    int start = totalCount == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+    int end = Math.Min(currentPage * pageSize, totalCount);
+}
+
+@section PageActions {
+    <div class="qmah-actions d-flex flex-wrap gap-2">
+        <a asp-area="Catalog" asp-controller="Key" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-key me-1"></i>鑰匙規則
+        </a>
+        <a asp-area="Catalog" asp-controller="KeyBackpack" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-backpack me-1"></i>鑰匙背包
+        </a>
+        <a asp-area="Catalog" asp-controller="KeyTransactions" asp-action="Index" class="btn btn-secondary">
+            <i class="ti ti-receipt me-1"></i>鑰匙流水
+        </a>
+    </div>
+}
+
+<div class="card qmah-filter-panel mb-3">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">查詢鑰匙流水</h2>
+            <div class="card-subtitle">依會員、鑰匙、原因或異動方向篩選紀錄。</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="qmah-filter-form">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <input type="text"
+                           name="keyword"
+                           value="@ViewBag.Keyword"
+                           class="form-control"
+                           placeholder="搜尋會員、鑰匙或原因" />
+                </div>
+                <div class="col-md-3">
+                    <select name="direction" class="form-select">
+                        <option value="">全部異動</option>
+                        <option value="increase" selected="@(ViewBag.Direction == "increase")">增加鑰匙</option>
+                        <option value="decrease" selected="@(ViewBag.Direction == "decrease")">扣除鑰匙</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="ti ti-search me-1"></i>搜尋
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card qmah-list-card">
+    <div class="card-header qmah-crud-toolbar">
+        <div>
+            <h2 class="card-title">流水紀錄</h2>
+            <div class="card-subtitle">共 @totalCount 筆</div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table qmah-crud-table">
+            <thead>
+                <tr>
+                    <th>時間</th>
+                    <th>會員</th>
+                    <th>鑰匙</th>
+                    <th>異動</th>
+                    <th>原因</th>
+                    <th>類型</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty qmah-empty-state">
+                                <div class="empty-icon"><i class="ti ti-receipt-off"></i></div>
+                                <p class="empty-title">目前沒有符合條件的紀錄</p>
+                                <p class="empty-subtitle text-secondary">請調整搜尋條件後再試一次。</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-nowrap">
+                                <span class="fw-semibold">@item.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</span>
+                                <div class="text-secondary small">@item.CreatedAt.ToLocalTime().ToString("HH:mm")</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@item.MemberName</div>
+                                <div class="text-secondary small">@item.Email</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@item.KeyName</div>
+                                <code>@item.KeyCode</code>
+                            </td>
+                            <td>
+                                @if (item.Delta > 0)
+                                {
+                                    <span class="badge bg-green-lt">+@item.Delta</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-red-lt">@item.Delta</span>
+                                }
+                            </td>
+                            <td>@AdminCodeLabels.KeyTransactionReason(item.Reason)</td>
+                            <td><span class="badge bg-secondary-lt">@AdminCodeLabels.ReferenceType(item.ReferenceType)</span></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="qmah-pagination-bar d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
+    <div class="text-muted">顯示第 @start～@end 筆，共 @totalCount 筆</div>
+
+    <nav aria-label="鑰匙流水分頁">
+        <div class="btn-list">
+            @if (currentPage > 1)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@(currentPage - 1)"
+                   asp-route-keyword="@ViewBag.Keyword"
+                   asp-route-direction="@ViewBag.Direction"
+                   class="btn btn-secondary">上一頁</a>
+            }
+
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@i"
+                   asp-route-keyword="@ViewBag.Keyword"
+                   asp-route-direction="@ViewBag.Direction"
+                   class="btn btn-sm @(i == currentPage ? "btn-primary" : "btn-outline-secondary")">@i</a>
+            }
+
+            @if (currentPage < totalPages)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@(currentPage + 1)"
+                   asp-route-keyword="@ViewBag.Keyword"
+                   asp-route-direction="@ViewBag.Direction"
+                   class="btn btn-secondary">下一頁</a>
+            }
+        </div>
+    </nav>
+</div>

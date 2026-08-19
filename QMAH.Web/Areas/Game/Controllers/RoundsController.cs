@@ -11,7 +11,7 @@ namespace QMAH.Web.Areas.Game.Controllers;
 
 [Area("Game")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-[AdminNavigation("回合", order: 40)]
+[AdminNavigation("遊戲紀錄", order: 40)]
 public sealed class RoundsController(QmahDbContext db) : Controller
 {
     public async Task<IActionResult> Index(

@@ -12,7 +12,7 @@ namespace QMAH.Web.Areas.Game.Controllers;
 
 [Area("Game")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-[AdminNavigation("房間", order: 20)]
+[AdminNavigation("房間管理", order: 20)]
 public sealed class RoomsController(
     QmahDbContext db,
     IPasswordHasher<GameRoom> passwordHasher) : Controller

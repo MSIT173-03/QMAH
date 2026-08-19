@@ -3,27 +3,26 @@
     ViewData["Title"] = "回合紀錄";
     ViewData["AdminDescription"] = "依房間、文物與遊戲階段檢視每一回合的時間與紀錄數量。";
 }
-
-@section Styles {
-    <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
-}
-
+@section Styles { <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" /> }
 @section PageActions {
-    <a class="btn btn-primary" asp-action="Create">建立回合資料</a>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" asp-action="Create"><i class="ti ti-plus me-1"></i>建立回合資料</a>
+        <a class="btn btn-secondary" asp-area="Game" asp-controller="Rounds" asp-action="Index"><i class="ti ti-rotate-clockwise me-1"></i>回合紀錄</a>
+        <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Answers" asp-action="Index"><i class="ti ti-message-2 me-1"></i>作答紀錄</a>
+        <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Votes" asp-action="Index"><i class="ti ti-checklist me-1"></i>投票紀錄</a>
+    </div>
 }
 
-<form method="get" class="card mb-3 game-admin-filter">
-    <div class="card-body"><div class="row g-3 align-items-end">
-        <div class="col-12 col-lg-3"><label class="form-label" for="search">關鍵字</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="房間、文物名稱或編號" autocomplete="off" /></div>
-        <div class="col-12 col-lg-3"><label class="form-label" for="roomId">房間</label><select class="form-select" id="roomId" name="roomId" asp-items="ViewBag.Rooms"><option value="">全部房間</option></select></div>
-        <div class="col-6 col-lg-2"><label class="form-label" for="status">狀態</label><select class="form-select" id="status" name="status" asp-items="GameCodeLists.ToSelectList(GameCodeLists.RoundStatuses, Model.Status, true)"></select></div>
-        <div class="col-6 col-lg-2"><label class="form-label" for="sort">排序</label><select class="form-select" id="sort" name="sort"><option value="started" selected="@(Model.Sort == "started")">最近開始</option><option value="room" selected="@(Model.Sort == "room")">房間</option><option value="round" selected="@(Model.Sort == "round")">回合號碼</option><option value="status" selected="@(Model.Sort == "status")">狀態</option><option value="answers" selected="@(Model.Sort == "answers")">作答數量</option></select></div>
-        <div class="col-6 col-lg-1"><label class="form-label" for="pageSize">每頁</label><select class="form-select" id="pageSize" name="pageSize">@foreach (var size in GameCodeLists.PageSizes) { <option value="@size" selected="@(Model.PageSize == size)">@size</option> }</select></div>
-        <div class="col-12 col-lg-auto game-admin-filter-actions"><div class="btn-list"><button class="btn btn-primary" type="submit"><i class="ti ti-search me-1"></i>搜尋</button><a class="btn btn-outline-secondary" asp-action="Index"><i class="ti ti-refresh me-1"></i>清除</a></div></div>
-    </div></div>
-</form>
+<form method="get" class="card mb-3 game-admin-filter"><div class="card-body"><div class="row g-3 align-items-end">
+    <div class="col-12 col-lg-3"><label class="form-label" for="search">關鍵字</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="房間、文物名稱或編號" autocomplete="off" /></div>
+    <div class="col-12 col-lg-3"><label class="form-label" for="roomId">房間</label><select class="form-select" id="roomId" name="roomId" asp-items="ViewBag.Rooms"><option value="">全部房間</option></select></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="status">狀態</label><select class="form-select" id="status" name="status" asp-items="GameCodeLists.ToSelectList(GameCodeLists.RoundStatuses, Model.Status, true)"></select></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="sort">排序</label><select class="form-select" id="sort" name="sort"><option value="started" selected="@(Model.Sort == "started")">最近開始</option><option value="room" selected="@(Model.Sort == "room")">房間</option><option value="round" selected="@(Model.Sort == "round")">回合號碼</option><option value="status" selected="@(Model.Sort == "status")">狀態</option><option value="answers" selected="@(Model.Sort == "answers")">作答數量</option></select></div>
+    <div class="col-6 col-lg-1"><label class="form-label" for="pageSize">每頁</label><select class="form-select" id="pageSize" name="pageSize">@foreach (var size in GameCodeLists.PageSizes) { <option value="@size" selected="@(Model.PageSize == size)">@size</option> }</select></div>
+    <div class="col-12 col-lg-auto game-admin-filter-actions"><div class="btn-list"><button class="btn btn-primary" type="submit"><i class="ti ti-search me-1"></i>搜尋</button><a class="btn btn-outline-secondary" asp-action="Index"><i class="ti ti-refresh me-1"></i>清除</a></div></div>
+</div></div></form>
 
-<div class="card">
+<div class="card qmah-list-card">
     <div class="card-header"><div><h2 class="card-title mb-1">回合清單</h2><div class="card-subtitle">共 @Model.Results.TotalCount 筆，保留完整歷史紀錄；可從詳細頁查看作答與投票資料。</div></div></div>
     @if (Model.Results.Items.Count == 0)
     {
@@ -31,12 +30,15 @@
     }
     else
     {
-        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table"><thead><tr><th>房間／回合</th><th>文物</th><th>狀態</th><th>作答</th><th>投票</th><th>開始時間</th><th class="w-1"></th></tr></thead><tbody>
-        @foreach (var item in Model.Results.Items)
-        {
-            <tr><td data-label="房間／回合"><a class="fw-bold" asp-area="Game" asp-controller="Rooms" asp-action="Details" asp-route-id="@item.RoomId"><code>@item.RoomCode</code></a><div class="text-secondary small">第 @item.RoundNumber 回合</div></td><td data-label="文物">@item.ArtifactName</td><td data-label="狀態"><span class="badge @GameCodeLists.StatusBadgeClass(item.Status)">@GameCodeLists.Label(GameCodeLists.RoundStatuses, item.Status)</span></td><td data-label="作答" class="text-nowrap">@item.AnswerCount</td><td data-label="投票" class="text-nowrap">@item.VoteCount</td><td data-label="開始時間" class="text-secondary text-nowrap">@item.StartedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td><td data-label="" class="game-admin-cell-actions"><div class="btn-list flex-nowrap"><a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@item.Id">查看</a><a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@item.Id">編輯</a></div></td></tr>
-        }
-        </tbody></table></div>
+        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table">
+            <thead><tr><th>房間／回合</th><th>文物</th><th>狀態</th><th>作答</th><th>投票</th><th>開始時間</th><th class="qmah-action-cell qmah-actions--3">操作</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.Results.Items)
+            {
+                <tr><td data-label="房間／回合"><a class="fw-bold" asp-area="Game" asp-controller="Rooms" asp-action="Details" asp-route-id="@item.RoomId"><code>@item.RoomCode</code></a><div class="text-secondary small">第 @item.RoundNumber 回合</div></td><td data-label="文物">@item.ArtifactName</td><td data-label="狀態"><span class="badge @GameCodeLists.StatusBadgeClass(item.Status)">@GameCodeLists.Label(GameCodeLists.RoundStatuses, item.Status)</span></td><td data-label="作答" class="text-nowrap">@item.AnswerCount</td><td data-label="投票" class="text-nowrap">@item.VoteCount</td><td data-label="開始時間" class="text-secondary text-nowrap">@item.StartedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td><td data-label="操作" class="qmah-action-cell qmah-actions--3 game-admin-cell-actions"><div class="qmah-table-actions"><a class="btn btn-sm btn-primary" asp-action="Details" asp-route-id="@item.Id">查看</a><a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.Id">編輯</a>@if (item.AnswerCount == 0 && item.VoteCount == 0) { <a class="btn btn-sm" asp-action="Delete" asp-route-id="@item.Id">刪除</a> } else { <button type="button" class="btn btn-sm" disabled title="已有作答或投票紀錄，不能直接刪除">刪除</button> }</div></td></tr>
+            }
+            </tbody>
+        </table></div>
         <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-roomId="@Model.RoomId" asp-route-status="@Model.Status" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-roomId="@Model.RoomId" asp-route-status="@Model.Status" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
     }
 </div>

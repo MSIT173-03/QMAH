@@ -1,6 +1,6 @@
 @model GameDashboardViewModel
 @{
-    ViewData["Title"] = "遊戲管理總覽";
+    ViewData["Title"] = "遊戲總覽";
     ViewData["AdminDescription"] = "掌握題庫供應、房間狀態與最近的遊戲活動。";
     var maxDifficultyCount = Model.DifficultyDistribution.Count == 0
         ? 1
@@ -13,7 +13,7 @@
 
 @section PageActions {
     <a class="btn btn-primary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
-        <i class="ti ti-books me-1"></i>查看題庫
+        <i class="ti ti-books me-1"></i>題庫管理
     </a>
     <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Rooms" asp-action="Create">
         <i class="ti ti-plus me-1"></i>建立房間
@@ -74,34 +74,26 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title">遊戲工作區</h2>
-                    <div class="text-secondary">從題庫設定到房間活動，集中進入各項管理作業。</div>
+                    <div class="text-secondary">依管理功能與歷史紀錄集中進入各項作業。</div>
                 </div>
             </div>
             <div class="card-body">
                 <div class="qmah-quick-grid">
                     <a class="qmah-quick-link" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
                         <span class="avatar bg-primary-lt"><i class="ti ti-books"></i></span>
-                        <span><strong>題庫設定</strong><small>管理題型、難度與啟用狀態</small></span>
+                        <span><strong>題庫管理</strong><small>管理題型、難度與啟用狀態</small></span>
                     </a>
                     <a class="qmah-quick-link" asp-area="Game" asp-controller="Rooms" asp-action="Index">
                         <span class="avatar bg-blue-lt"><i class="ti ti-door"></i></span>
                         <span><strong>房間管理</strong><small>查看房間生命週期與玩家數</small></span>
                     </a>
-                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Rounds" asp-action="Index">
-                        <span class="avatar bg-purple-lt"><i class="ti ti-rotate-clockwise"></i></span>
-                        <span><strong>回合紀錄</strong><small>追蹤回合、作答與投票進度</small></span>
-                    </a>
                     <a class="qmah-quick-link" asp-area="Game" asp-controller="Players" asp-action="Index">
                         <span class="avatar bg-green-lt"><i class="ti ti-users"></i></span>
                         <span><strong>玩家活動</strong><small>查看連線與加入房間狀態</small></span>
                     </a>
-                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Answers" asp-action="Index">
-                        <span class="avatar bg-orange-lt"><i class="ti ti-message-2"></i></span>
-                        <span><strong>作答紀錄</strong><small>查詢玩家提交的答案</small></span>
-                    </a>
-                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Votes" asp-action="Index">
-                        <span class="avatar bg-yellow-lt"><i class="ti ti-checklist"></i></span>
-                        <span><strong>投票紀錄</strong><small>查看答案投票與結果</small></span>
+                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Rounds" asp-action="Index">
+                        <span class="avatar bg-purple-lt"><i class="ti ti-history"></i></span>
+                        <span><strong>遊戲紀錄</strong><small>集中查看回合、作答與投票紀錄</small></span>
                     </a>
                 </div>
             </div>

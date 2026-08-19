@@ -11,7 +11,7 @@ namespace QMAH.Web.Areas.Game.Controllers;
 
 [Area("Game")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-[AdminNavigation("題庫設定", order: 10)]
+[AdminNavigation("題庫管理", order: 10)]
 public sealed class QuestionEntriesController(QmahDbContext db) : Controller
 {
     public async Task<IActionResult> Index(
@@ -63,10 +63,12 @@ public sealed class QuestionEntriesController(QmahDbContext db) : Controller
 
         query = sort switch
         {
+            "default_desc" => query.OrderByDescending(x => x.Id),
+            "artifact" => query.OrderBy(x => x.Artifact.Category.Name).ThenBy(x => x.Artifact.Name),
             "difficulty" => query.OrderByDescending(x => x.Difficulty).ThenBy(x => x.Artifact.Name),
             "enabled" => query.OrderByDescending(x => x.IsEnabled).ThenBy(x => x.Artifact.Name),
             "updated" => query.OrderByDescending(x => x.UpdatedAt).ThenBy(x => x.Artifact.Name),
-            _ => query.OrderBy(x => x.Artifact.Category.Name).ThenBy(x => x.Artifact.Name)
+            _ => query.OrderBy(x => x.Id)
         };
 
         var items = await query
@@ -77,6 +79,7 @@ public sealed class QuestionEntriesController(QmahDbContext db) : Controller
                 Id = x.Id,
                 ArtifactRef = x.Artifact.ArtifactRef,
                 ArtifactName = x.Artifact.Name,
+                ImagePath = x.Artifact.ThumbnailPath ?? x.Artifact.PrimaryImagePath,
                 CategoryName = x.Artifact.Category.Name,
                 EraName = x.Artifact.EraBucket.Name,
                 SizeText = x.Artifact.SizeText,
@@ -347,7 +350,7 @@ public sealed class QuestionEntriesController(QmahDbContext db) : Controller
 
     private static string NormalizeSort(string? sort) => sort?.Trim().ToLowerInvariant() switch
     {
-        "difficulty" or "enabled" or "updated" => sort.Trim().ToLowerInvariant(),
-        _ => "artifact"
+        "default_desc" or "artifact" or "difficulty" or "enabled" or "updated" => sort.Trim().ToLowerInvariant(),
+        _ => "default"
     };
 }

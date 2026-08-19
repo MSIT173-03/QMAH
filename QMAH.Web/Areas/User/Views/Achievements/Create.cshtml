@@ -6,7 +6,7 @@
 }
 
 @section PageActions {
-    <a asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回成就管理</a>
+    <a asp-action="Index" class="btn btn-secondary"><i class="ti ti-arrow-left me-1"></i>返回成就管理</a>
 }
 
 <div class="row justify-content-center">
@@ -16,68 +16,33 @@
             <div class="card-body">
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-                    <section class="qmah-form-section">
-                        <h3 class="qmah-form-section-title">基本資料</h3>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <label asp-for="Code" class="form-label">代碼</label>
-                                <input asp-for="Code" class="form-control" />
-                                <span asp-validation-for="Code" class="text-danger"></span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label asp-for="Name" class="form-label">成就名稱</label>
-                                <input asp-for="Name" class="form-control" />
-                                <span asp-validation-for="Name" class="text-danger"></span>
-                            </div>
-                            <div class="col-12">
-                                <label asp-for="Title" class="form-label">標題</label>
-                                <input asp-for="Title" class="form-control" />
-                                <span asp-validation-for="Title" class="text-danger"></span>
-                            </div>
-                            <div class="col-12">
-                                <label asp-for="Description" class="form-label">說明</label>
-                                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                                <span asp-validation-for="Description" class="text-danger"></span>
-                            </div>
+                    <div class="row g-3">
+                        <div class="col-md-6"><label asp-for="Code" class="form-label">代碼</label><input asp-for="Code" class="form-control" /></div>
+                        <div class="col-md-6"><label asp-for="Name" class="form-label">成就名稱</label><input asp-for="Name" class="form-control" /></div>
+                        <div class="col-12"><label asp-for="Title" class="form-label">標題</label><input asp-for="Title" class="form-control" /></div>
+                        <div class="col-12"><label asp-for="Description" class="form-label">說明</label><textarea asp-for="Description" class="form-control" rows="4"></textarea></div>
+                        <div class="col-md-6">
+                            <label asp-for="ConditionType" class="form-label">取得條件</label>
+                            <select asp-for="ConditionType" class="form-select">
+                                <option value="POST_COUNT">發布貼文數</option>
+                                <option value="COMMENT_COUNT">留言數</option>
+                                <option value="EVENT_JOIN_COUNT">活動參與數</option>
+                                <option value="GAME_PLAY_COUNT">遊戲參與數</option>
+                                <option value="ARTIFACT_UNLOCK_COUNT">圖鑑解鎖數</option>
+                            </select>
                         </div>
-                    </section>
-
-                    <section class="qmah-form-section">
-                        <h3 class="qmah-form-section-title">取得條件與圖示</h3>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <label asp-for="ConditionType" class="form-label">條件類型</label>
-                                <input asp-for="ConditionType" class="form-control" placeholder="例如：GAME_WIN_COUNT" />
-                                <div class="form-hint">請填入系統目前支援的條件代碼。</div>
-                                <span asp-validation-for="ConditionType" class="text-danger"></span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label asp-for="ThresholdValue" class="form-label">門檻</label>
-                                <input asp-for="ThresholdValue" type="number" min="1" class="form-control" />
-                                <span asp-validation-for="ThresholdValue" class="text-danger"></span>
-                            </div>
-                            <div class="col-12">
-                                <label asp-for="IconFile" class="form-label">成就圖示</label>
-                                <input asp-for="IconFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
-                                <span asp-validation-for="IconFile" class="text-danger"></span>
-                                <div class="form-hint">支援 JPG、JPEG、PNG、WEBP，最大 5 MB。</div>
-                            </div>
+                        <div class="col-md-6"><label asp-for="ThresholdValue" class="form-label">門檻</label><input asp-for="ThresholdValue" type="number" min="1" class="form-control" /></div>
+                        <div class="col-12"><label asp-for="IconFile" class="form-label">成就圖示</label><input asp-for="IconFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" /></div>
+                        <div class="col-md-6">
+                            <label asp-for="Status" class="form-label">狀態</label>
+                            <select asp-for="Status" class="form-select"><option value="ACTIVE">啟用</option><option value="INACTIVE">停用</option></select>
                         </div>
-                    </section>
+                    </div>
 
-                    <section class="qmah-form-section">
-                        <h3 class="qmah-form-section-title">顯示狀態</h3>
-                        <label asp-for="Status" class="form-label">狀態</label>
-                        <select asp-for="Status" class="form-select">
-                            <option value="ACTIVE">啟用</option>
-                            <option value="INACTIVE">停用</option>
-                        </select>
-                    </section>
-
-                    <div class="qmah-form-actions">
-                        <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                    <div class="qmah-form-actions mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">取消</a>
                         <button type="submit" class="btn btn-primary"><i class="ti ti-plus me-1"></i>建立成就</button>
                     </div>
                 </form>

@@ -14,7 +14,7 @@
 }
 <partial name="OptionSetListPage" view-data="viewData" />
 
-<div class="card">
+<div class="card qmah-list-card">
     <div class="table-responsive">
         <table class="table table-vcenter table-hover card-table qmah-crud-table">
             <thead>
@@ -29,15 +29,13 @@
                     <th>建立時間</th>
                     <th>付款時間</th>
                     <th>取消時間</th>
-                    <th class="w-1">操作</th>
+                    <th class="qmah-action-cell qmah-actions--1">操作</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Any())
                 {
-                    <tr>
-                        <td colspan="11" class="text-center text-secondary py-5">目前沒有訂單資料。</td>
-                    </tr>
+                    <tr><td colspan="11" class="text-center text-secondary py-5">目前沒有訂單資料。</td></tr>
                 }
                 else
                 {
@@ -54,8 +52,10 @@
                             <td class="text-secondary text-nowrap">@item.CreateAt.ToString("yyyy-MM-dd HH:mm")</td>
                             <td class="text-secondary">@(item.PaidAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
                             <td class="text-secondary">@(item.CancelledAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
-                            <td>
-                                <a asp-action="GetOrder" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">查看</a>
+                            <td class="qmah-action-cell qmah-actions--1">
+                                <div class="qmah-table-actions">
+                                    <a asp-action="GetOrder" asp-route-id="@item.Id" class="btn btn-sm btn-info">查看</a>
+                                </div>
                             </td>
                         </tr>
                     }

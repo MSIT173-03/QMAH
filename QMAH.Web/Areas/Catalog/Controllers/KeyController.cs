@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
 
 using Microsoft.AspNetCore.Mvc;
@@ -12,21 +12,17 @@ using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
-
-
 [Area("Catalog")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-[AdminNavigation("鑰匙總覽", order: 20)]
+[AdminNavigation("鑰匙規則", order: 20)]
 public class KeyController : Controller
 {
-
     private readonly QmahDbContext _db;
 
     public KeyController(QmahDbContext db)
     {
         _db = db;
     }
-
 
     public async Task<ActionResult> Index(CancellationToken cancellationToken)
     {
@@ -45,7 +41,6 @@ public class KeyController : Controller
         return View(datas_keyD);
     }
 
-
     public ActionResult Create(Guid eraBucketId, Guid categoryId)
     {
         data(eraBucketId, categoryId);
@@ -62,19 +57,18 @@ public class KeyController : Controller
             _db.SaveChanges();
             return RedirectToAction("Index");
         }
-        catch (DbUpdateException ex)
+        catch (DbUpdateException)
         {
             ViewBag.ErrorMessage = "選填資料與所選Scope type不同。";
             data(kd.EraBucketId, kd.CategoryId);
             return View(kd);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
             return View(kd);
         }
     }
-
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -90,6 +84,7 @@ public class KeyController : Controller
         {
             return Content("Id 不存在");
         }
+
         return RedirectToAction("Index");
     }
 
@@ -99,11 +94,12 @@ public class KeyController : Controller
     {
         var key = await _db.KeyDefinitions.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (key == null) return NotFound();
+
         key.IsActive = !key.IsActive;
         await _db.SaveChangesAsync(cancellationToken);
+
         return RedirectToAction(nameof(Index));
     }
-
 
     public ActionResult Edit(Guid? id, Guid eraBucketId, Guid categoryId)
     {
@@ -111,49 +107,47 @@ public class KeyController : Controller
         {
             return Content("Id 不存在");
         }
-        else
-        {
-            KeyDefinition kd = _db.KeyDefinitions.FirstOrDefault(t => t.Id == id);
-            data(kd.EraBucketId, kd.CategoryId);
-            return View(kd);
-        }
+
+        KeyDefinition kd = _db.KeyDefinitions.FirstOrDefault(t => t.Id == id);
+        data(kd.EraBucketId, kd.CategoryId);
+
+        return View(kd);
     }
 
     [HttpPost]
     public IActionResult Edit(KeyDefinition kd, Guid eraBucketId, Guid categoryId)
     {
         KeyDefinition k = _db.KeyDefinitions.FirstOrDefault(t => t.Id == kd.Id);
+
         if (kd.Id == null)
         {
             return Content("Id 不存在");
         }
-        else
-        {
-            try
-            {
-                k.Name = kd.Name;
-                k.Code = kd.Code;
-                k.ScopeType = kd.ScopeType;
-                k.CategoryId = kd.CategoryId;
-                k.EraBucketId = kd.EraBucketId;
-                _db.SaveChanges();
-            }
-            catch (DbUpdateException ex)
-            {
-                ViewBag.ErrorMessage = "選填資料與所選Scope type不同。";
-                data(kd.EraBucketId, kd.CategoryId);
-                return View(kd);
-            }
-            catch (Exception ex)
-            {
-                ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
-                return View(kd);
-            }
 
+        try
+        {
+            k.Name = kd.Name;
+            k.Code = kd.Code;
+            k.ScopeType = kd.ScopeType;
+            k.CategoryId = kd.CategoryId;
+            k.EraBucketId = kd.EraBucketId;
+            k.IsActive = kd.IsActive;
+            _db.SaveChanges();
         }
+        catch (DbUpdateException)
+        {
+            ViewBag.ErrorMessage = "選填資料與所選Scope type不同。";
+            data(kd.EraBucketId, kd.CategoryId);
+            return View(kd);
+        }
+        catch (Exception)
+        {
+            ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
+            return View(kd);
+        }
+
         return RedirectToAction("Index");
     }
-
 
     private void data(Guid? eraBucketId, Guid? categoryId)
     {
@@ -163,6 +157,4 @@ public class KeyController : Controller
         ViewBag.ArtifactCategoryList = new SelectList(category, "Id", "Name", categoryId);
         ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", eraBucketId);
     }
-
-
 }

@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Office2010.Excel;
 
 using Microsoft.AspNetCore.Mvc;
@@ -26,15 +26,25 @@ public class ArtifactController : Controller
     }
 
 
-    public async Task<IActionResult> Index(C_KeywordViewModel vm, Guid? eraBucketId, Guid? categoryId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(
+        C_KeywordViewModel vm,
+        Guid? eraBucketId,
+        Guid? categoryId,
+        string? sortDirection,
+        CancellationToken cancellationToken)
     {
         IEnumerable<Artifact> datas_art = null;
 
-        var artifacts = await _db.Artifacts
+        var isDescending = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+        var artifactsQuery = _db.Artifacts
             .AsNoTracking()
             .Include(artifact => artifact.Category)
-            .Include(artifact => artifact.EraBucket)
-            .OrderBy(artifact => artifact.Name)
+            .Include(artifact => artifact.EraBucket);
+
+        var artifacts = await (isDescending
+                ? artifactsQuery.OrderByDescending(artifact => artifact.Id)
+                : artifactsQuery.OrderBy(artifact => artifact.Id))
             .ToListAsync(cancellationToken);
 
 
@@ -108,6 +118,7 @@ public class ArtifactController : Controller
         }
         ViewBag.SelectedCategory = categoryId;
         ViewBag.SelectedEraBucketId = eraBucketId;
+        ViewBag.SortDirection = isDescending ? "desc" : "asc";
         return View(datas_art);
     }
 

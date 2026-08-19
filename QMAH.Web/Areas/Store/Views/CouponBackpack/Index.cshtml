@@ -1,0 +1,297 @@
+@using QMAH.Web.Infrastructure.AdminNavigation
+@using QMAH.Web.Areas.Store.ViewModels
+@model IEnumerable<CouponBackpackItemViewModel>
+
+@{
+    ViewData["Title"] = "優惠券背包";
+    ViewData["AdminDescription"] = "查詢會員並查看持有的優惠券。";
+
+    var records = Model.ToList();
+    var owners =
+        ViewBag.OwnerSummaries as IEnumerable<CouponOwnerSummaryViewModel> ?? [];
+
+    Guid? selectedUserId =
+        ViewBag.SelectedUserId is Guid id ? id : null;
+
+    var selectedMemberName =
+        ViewBag.SelectedMemberName as string ?? "未命名會員";
+}
+
+@section PageActions {
+    <div class="qmah-actions d-flex flex-wrap gap-2">
+        <a asp-area="Store" asp-controller="Coupon" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-settings me-1"></i>優惠券規則
+        </a>
+        <a asp-area="Store" asp-controller="CouponBackpack" asp-action="Index" class="btn btn-secondary">
+            <i class="ti ti-backpack me-1"></i>優惠券背包
+        </a>
+        <a asp-area="Store" asp-controller="CouponTransactions" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-receipt me-1"></i>優惠券流水
+        </a>
+    </div>
+}
+
+@if (!selectedUserId.HasValue)
+{
+    <div class="card qmah-filter-panel mb-3">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">查詢會員背包</h2>
+                <div class="card-subtitle">依會員暱稱或 Email 搜尋。</div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <form method="get"
+                  asp-action="Index"
+                  class="qmah-filter-form">
+                <div class="row g-2">
+                    <div class="col-md-9">
+                        <input type="text"
+                               name="keyword"
+                               value="@ViewBag.Keyword"
+                               class="form-control"
+                               placeholder="搜尋會員暱稱或 Email" />
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button type="submit"
+                                class="btn btn-primary flex-fill">
+                            <i class="ti ti-search me-1"></i>搜尋
+                        </button>
+
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary">
+                            清除
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card qmah-list-card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">會員背包</h2>
+                <div class="card-subtitle">
+                    選擇會員後查看持有的優惠券。
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table qmah-crud-table">
+                <colgroup>
+                    <col style="width: 44%;" />
+                    <col style="width: 18%;" />
+                    <col style="width: 23%;" />
+                    <col style="width: 15%;" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>會員</th>
+                        <th>可使用</th>
+                        <th>總數</th>
+                        <th class="text-center pe-3 pe-md-4">操作</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (!owners.Any())
+                    {
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty qmah-empty-state">
+                                    <div class="empty-icon">
+                                        <i class="ti ti-user-search"></i>
+                                    </div>
+                                    <p class="empty-title">
+                                        目前沒有符合條件的會員
+                                    </p>
+                                    <p class="empty-subtitle text-secondary">
+                                        請調整搜尋條件後再試一次。
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var owner in owners)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">
+                                        @owner.MemberName
+                                    </div>
+                                    <div class="text-secondary small">
+                                        @owner.Email
+                                    </div>
+                                </td>
+
+                                <td>@owner.AvailableCount</td>
+
+                                <td class="text-success fw-bold">
+                                    @owner.TotalCount
+                                </td>
+
+                                <td class="text-center pe-3 pe-md-4">
+                                    <a asp-action="Index"
+                                       asp-route-userId="@owner.UserId"
+                                       class="btn btn-sm btn-primary px-3">
+                                        <i class="ti ti-backpack me-1"></i>查看背包
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">
+                    @selectedMemberName 的優惠券背包
+                </h2>
+                <div class="text-secondary">
+                    共 @records.Count 張優惠券
+                </div>
+            </div>
+
+            <a asp-action="Index"
+               class="btn btn-outline-secondary">
+                <i class="ti ti-arrow-left me-1"></i>返回會員清單
+            </a>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="Grant" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="userId"
+                       value="@selectedUserId" />
+
+                <div class="row g-3 align-items-end">
+                    <div class="col">
+                        <label class="form-label">優惠券</label>
+
+                        <select name="couponDefinitionId"
+                                asp-items="ViewBag.CouponDefinitions"
+                                class="form-select">
+                        </select>
+                    </div>
+
+                    <div class="col-auto">
+                        <button class="btn btn-success">
+                            <i class="ti ti-ticket me-1"></i>發放
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card qmah-list-card">
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table qmah-crud-table">
+                <thead>
+                    <tr>
+                        <th>優惠券</th>
+                        <th>狀態</th>
+                        <th>發放時間</th>
+                        <th>使用時間</th>
+                        <th class="qmah-action-cell qmah-actions--1 text-center pe-3 pe-md-4">
+                            操作
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (!records.Any())
+                    {
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty qmah-empty-state">
+                                    <div class="empty-icon">
+                                        <i class="ti ti-ticket-off"></i>
+                                    </div>
+                                    <p class="empty-title">
+                                        目前沒有優惠券
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in records)
+                        {
+                            var removable =
+                                item.Status == "AVAILABLE";
+
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">
+                                        @item.CouponName
+                                    </div>
+                                    <code>@item.CouponCode</code>
+                                </td>
+
+                                <td>
+                                    @AdminCodeLabels.CouponStatus(item.Status)
+                                </td>
+
+                                <td class="text-secondary text-nowrap">
+                                    @item.IssuedAt
+                                        .ToLocalTime()
+                                        .ToString("yyyy/MM/dd HH:mm")
+                                </td>
+
+                                <td class="text-secondary text-nowrap">
+                                    @(item.UsedAt?
+                                        .ToLocalTime()
+                                        .ToString("yyyy/MM/dd HH:mm") ?? "—")
+                                </td>
+
+                                <td class="qmah-action-cell qmah-actions--1 text-center pe-3 pe-md-4">
+                                    <div class="qmah-table-actions justify-content-center">
+                                        @if (removable)
+                                        {
+                                            <form asp-action="Remove"
+                                                  method="post"
+                                                  onsubmit="return confirm('確定移除這張尚未使用的優惠券嗎？');">
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="id"
+                                                       value="@item.Id" />
+
+                                                <button class="btn btn-sm btn-outline-danger px-3">
+                                                    移除
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger px-3"
+                                                    disabled>
+                                                移除
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

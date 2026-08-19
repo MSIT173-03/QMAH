@@ -12,7 +12,7 @@ public sealed class QuestionEntryIndexViewModel
 
     public string? CategoryCode { get; init; }
 
-    public string Sort { get; init; } = "artifact";
+    public string Sort { get; init; } = "default";
 
     public int PageSize { get; init; } = 20;
 
@@ -26,6 +26,8 @@ public class QuestionEntryListItemViewModel
     public required string ArtifactRef { get; init; }
 
     public required string ArtifactName { get; init; }
+
+    public string? ImagePath { get; init; }
 
     public required string CategoryName { get; init; }
 
@@ -44,8 +46,6 @@ public class QuestionEntryListItemViewModel
 
 public sealed class QuestionEntryDetailsViewModel : QuestionEntryListItemViewModel
 {
-    public string? ImagePath { get; init; }
-
     public DateTime CreatedAt { get; init; }
 }
 

@@ -11,123 +11,40 @@
     <a asp-area="Social" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回社群總覽</a>
 }
 
-<div class="card mb-3">
-    <div class="card-header d-flex align-items-center justify-content-between gap-3">
-        <div>
-            <h2 class="card-title mb-1">檢舉篩選</h2>
-            <div class="text-secondary">依處理狀態、目標類型與理由文字查找紀錄。</div>
-        </div>
-        <span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span>
-    </div>
-    <div class="card-body">
-        <form method="get" asp-action="Index">
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-md-3">
-                    <label class="form-label" for="status">處理狀態</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="">全部狀態</option>
-                        <option value="PENDING" selected="@(Model.Status == "PENDING" ? "selected" : null)">待審核</option>
-                        <option value="RESOLVED" selected="@(Model.Status == "RESOLVED" ? "selected" : null)">已處理</option>
-                        <option value="REJECTED" selected="@(Model.Status == "REJECTED" ? "selected" : null)">已駁回</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label" for="targetType">目標類型</label>
-                    <select class="form-select" id="targetType" name="targetType">
-                        <option value="">全部類型</option>
-                        <option value="POST" selected="@(Model.TargetType == "POST" ? "selected" : null)">貼文</option>
-                        <option value="COMMENT" selected="@(Model.TargetType == "COMMENT" ? "selected" : null)">留言</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-4">
-                    <label class="form-label" for="keyword">關鍵字</label>
-                    <input class="form-control" id="keyword" name="keyword" value="@Model.Keyword" placeholder="檢舉理由或處理結果" />
-                </div>
-                <div class="col-12 col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary"><i class="ti ti-filter me-1"></i>套用</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
-                </div>
-            </div>
-        </form>
-    </div>
+<div class="card qmah-filter-panel mb-3">
+    <div class="card-header"><div><h2 class="card-title mb-1">檢舉篩選</h2><div class="d-flex flex-wrap align-items-center gap-2 text-secondary"><span>依處理狀態、目標類型與理由文字查找紀錄。</span><span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span></div></div></div>
+    <div class="card-body"><form method="get" asp-action="Index"><div class="row g-3 align-items-end">
+        <div class="col-12 col-md-3"><label class="form-label" for="status">處理狀態</label><select class="form-select" id="status" name="status"><option value="">全部狀態</option><option value="PENDING" selected="@(Model.Status == "PENDING" ? "selected" : null)">待審核</option><option value="RESOLVED" selected="@(Model.Status == "RESOLVED" ? "selected" : null)">已處理</option><option value="REJECTED" selected="@(Model.Status == "REJECTED" ? "selected" : null)">已駁回</option></select></div>
+        <div class="col-12 col-md-3"><label class="form-label" for="targetType">目標類型</label><select class="form-select" id="targetType" name="targetType"><option value="">全部類型</option><option value="POST" selected="@(Model.TargetType == "POST" ? "selected" : null)">貼文</option><option value="COMMENT" selected="@(Model.TargetType == "COMMENT" ? "selected" : null)">留言</option></select></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="keyword">關鍵字</label><input class="form-control" id="keyword" name="keyword" value="@Model.Keyword" placeholder="檢舉理由或處理結果" /></div>
+        <div class="col-12 col-md-2"><div class="qmah-actions"><button type="submit" class="btn btn-primary"><i class="ti ti-filter me-1"></i>套用</button><a asp-action="Index" class="btn btn-outline-secondary">清除</a></div></div>
+    </div></form></div>
 </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table class="table table-vcenter table-hover card-table qmah-crud-table">
-            <thead>
-                <tr>
-                    <th>目標</th>
-                    <th>檢舉人／理由</th>
-                    <th>狀態</th>
-                    <th>建立時間</th>
-                    <th class="w-1">操作</th>
-                </tr>
-            </thead>
-            <tbody>
-            @if (Model.Reports.Count == 0)
-            {
-                <tr><td colspan="5" class="text-center text-secondary py-5">目前沒有符合條件的檢舉紀錄。</td></tr>
-            }
-            else
-            {
-                @foreach (var item in Model.Reports)
-                {
-                    var statusClass = item.Status switch
-                    {
-                        "RESOLVED" => "bg-green-lt",
-                        "REJECTED" => "bg-secondary-lt",
-                        _ => "bg-yellow-lt"
-                    };
-                    <tr>
-                        <td>
-                            <span class="badge bg-blue-lt">@AdminDisplayLabels.TargetType(item.TargetType)</span>
-                            <div class="fw-semibold mt-1">@item.TargetTitle</div>
-                            <details class="small text-secondary mt-1">
-                                <summary>查看內容</summary>
-                                <div class="qmah-content-panel mt-2 p-2">@item.TargetContent</div>
-                            </details>
-                        </td>
-                        <td>
-                            <div class="text-secondary small">@item.ReporterName</div>
-                            <div class="fw-semibold">@AdminDisplayLabels.ReportReason(item.Reason)</div>
-                            @if (!string.IsNullOrWhiteSpace(item.Detail))
-                            {
-                                <div class="text-secondary small">@item.Detail</div>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(item.Resolution))
-                            {
-                                <div class="text-secondary small">處理：@item.Resolution</div>
-                            }
-                        </td>
-                        <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
-                        <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>
-                            <div class="qmah-table-actions qmah-actions--four">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
-                                <form asp-action="ReviewReport" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="reportId" value="@item.Id" />
-                                    <input type="hidden" name="status" value="@(item.Status == "PENDING" ? "RESOLVED" : "PENDING")" />
-                                    @if (item.Status == "PENDING") { <button type="submit" class="btn btn-sm btn-outline-danger">核准並下架</button> } else { <button type="submit" class="btn btn-sm btn-outline-warning">重新審核</button> }
-                                </form>
-                                <form asp-action="ReviewReport" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="reportId" value="@item.Id" />
-                                    <input type="hidden" name="status" value="REJECTED" />
-                                    @if (item.Status == "PENDING") { <button type="submit" class="btn btn-sm btn-outline-secondary">駁回</button> } else { <button type="button" class="btn btn-sm btn-outline-secondary" disabled>駁回</button> }
-                                </form>
-                                <form asp-action="Delete" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要刪除這筆檢舉紀錄嗎？')">刪除</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            }
-            </tbody>
-        </table>
-    </div>
-</div>
+<div class="card qmah-list-card"><div class="table-responsive"><table class="table table-vcenter table-hover card-table qmah-crud-table">
+    <thead><tr><th>目標</th><th>檢舉人／理由</th><th>狀態</th><th>建立時間</th><th class="qmah-action-cell qmah-actions--4">操作</th></tr></thead>
+    <tbody>
+    @if (Model.Reports.Count == 0) { <tr><td colspan="5" class="text-center text-secondary py-5">目前沒有符合條件的檢舉紀錄。</td></tr> }
+    else
+    {
+        @foreach (var item in Model.Reports)
+        {
+            var statusClass = item.Status switch { "RESOLVED" => "bg-green-lt", "REJECTED" => "bg-secondary-lt", _ => "bg-yellow-lt" };
+            <tr>
+                <td><span class="badge bg-blue-lt">@AdminDisplayLabels.TargetType(item.TargetType)</span><div class="fw-semibold mt-1">@item.TargetTitle</div><details class="small text-secondary mt-1"><summary>查看內容</summary><div class="qmah-content-panel mt-2 p-2">@item.TargetContent</div></details></td>
+                <td><div class="text-secondary small">@item.ReporterName</div><div class="fw-semibold">@AdminDisplayLabels.ReportReason(item.Reason)</div>@if (!string.IsNullOrWhiteSpace(item.Detail)) { <div class="text-secondary small">@item.Detail</div> } @if (!string.IsNullOrWhiteSpace(item.Resolution)) { <div class="text-secondary small">處理：@item.Resolution</div> }</td>
+                <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
+                <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                <td class="qmah-action-cell qmah-actions--4">
+                    <div class="qmah-table-actions">
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm">編輯</a>
+                        <form asp-action="ReviewReport" method="post">@Html.AntiForgeryToken()<input type="hidden" name="reportId" value="@item.Id" /><input type="hidden" name="status" value="@(item.Status == "PENDING" ? "RESOLVED" : "PENDING")" />@if (item.Status == "PENDING") { <button type="submit" class="btn btn-sm">核准</button> } else { <button type="submit" class="btn btn-sm btn-outline-warning">重審</button> }</form>
+                        <form asp-action="ReviewReport" method="post">@Html.AntiForgeryToken()<input type="hidden" name="reportId" value="@item.Id" /><input type="hidden" name="status" value="REJECTED" />@if (item.Status == "PENDING") { <button type="submit" class="btn btn-sm btn-outline-warning">駁回</button> } else { <button type="button" class="btn btn-sm btn-outline-warning" disabled>駁回</button> }</form>
+                        <form asp-action="Delete" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要刪除這筆檢舉紀錄嗎？')">刪除</button></form>
+                    </div>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table></div></div>

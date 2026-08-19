@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml.Spreadsheet;
 
@@ -13,78 +13,93 @@ using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
-
 [Area("Catalog")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-[AdminNavigation("鑰匙背包總覽", order: 30)]
+[AdminNavigation("鑰匙背包", order: 30)]
 public class KeyBackPackController : Controller
 {
-
     private readonly QmahDbContext _db;
+
     public KeyBackPackController(QmahDbContext db)
     {
         _db = db;
     }
 
-
-    public async Task<ActionResult> Index(C_KeywordViewModel vm, Guid? userId, CancellationToken cancellationToken)
+    public async Task<ActionResult> Index(
+        C_KeywordViewModel vm,
+        Guid? userId,
+        CancellationToken cancellationToken)
     {
-        var memberKeyword = Request.Query["memberKeyword"].ToString();
-        var ownerRows = await (from b in _db.UserKeyBalances.AsNoTracking()
-                               join u in _db.UserProfiles.AsNoTracking() on b.UserId equals u.UserId
-                               group b by new { b.UserId, u.Nickname } into g
-                               select new UserKeyOwnerSummaryViewModel
-                               {
-                                   UserId = g.Key.UserId,
-                                   Nickname = g.Key.Nickname,
-                                   KeyTypeCount = g.Count(),
-                                   TotalBalance = g.Sum(x => x.Balance)
-                               }).ToListAsync(cancellationToken);
-        if (!string.IsNullOrWhiteSpace(memberKeyword))
+        vm.txtKeyword = vm.txtKeyword?.Trim();
+
+        if (!userId.HasValue)
         {
-            ownerRows = ownerRows.Where(x => (x.Nickname ?? "").Contains(memberKeyword, StringComparison.OrdinalIgnoreCase)
-                || x.UserId.ToString().Contains(memberKeyword, StringComparison.OrdinalIgnoreCase)).ToList();
+            var ownerRows = await (
+                from u in _db.UserProfiles.AsNoTracking()
+                join b in _db.UserKeyBalances.AsNoTracking()
+                    on u.UserId equals b.UserId into balances
+                select new UserKeyOwnerSummaryViewModel
+                {
+                    UserId = u.UserId,
+                    Nickname = u.Nickname,
+                    KeyTypeCount = balances.Count(),
+                    TotalBalance = balances.Sum(x => (int?)x.Balance) ?? 0
+                })
+                .OrderBy(x => x.Nickname)
+                .ToListAsync(cancellationToken);
+
+            if (!string.IsNullOrWhiteSpace(vm.txtKeyword))
+            {
+                ownerRows = ownerRows
+                    .Where(x =>
+                        (x.Nickname ?? "").Contains(
+                            vm.txtKeyword,
+                            StringComparison.OrdinalIgnoreCase) ||
+                        x.UserId.ToString().Contains(
+                            vm.txtKeyword,
+                            StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            ViewBag.Keyword = vm.txtKeyword;
+            ViewBag.OwnerSummaries = ownerRows;
+
+            return View(Array.Empty<UserKeyBalanceViewModel>());
         }
-        ViewBag.OwnerSummaries = ownerRows.OrderBy(x => x.Nickname).ToList();
 
         var ukb = await _db.UserKeyBalances
             .AsNoTracking()
-            .Include(UserKeyBalances => UserKeyBalances.KeyDefinition)
-            .Where(x => userId.HasValue && x.UserId == userId.Value)
-            .OrderBy(UserKeyBalances => UserKeyBalances.UserId)
+            .Include(x => x.KeyDefinition)
+            .Where(x => x.UserId == userId.Value)
+            .OrderBy(x => x.KeyDefinition.Name)
             .ToListAsync(cancellationToken);
 
-        var up = await _db.UserProfiles
+        var profile = await _db.UserProfiles
             .AsNoTracking()
-            .OrderBy(e => e.Nickname)
-            .ToListAsync(cancellationToken);
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId.Value,
+                cancellationToken);
 
-        var datas_ukb = (from t in ukb
-                         join u in up on t.UserId equals u.UserId
-                         select new UserKeyBalanceViewModel
-                         {
-                             UserKeyBalance = t,
-                             Nickname = u.Nickname
-                         }).ToList();
+        var nickname = profile?.Nickname ?? "未命名會員";
 
-        var uid = _db.UserProfiles.OrderBy(e => e.Nickname).ToList();
+        var datas_ukb = ukb
+            .Select(x => new UserKeyBalanceViewModel
+            {
+                UserKeyBalance = x,
+                Nickname = nickname
+            })
+            .ToList();
 
-        ViewBag.UserProfileList = new SelectList(uid, "UserId", "Nickname", userId);
+        ViewBag.SelectedUserId = userId.Value;
+        ViewBag.SelectedNickname = nickname;
 
-        if (!string.IsNullOrWhiteSpace(vm.txtKeyword) && userId != null)
-        {
-            datas_ukb = datas_ukb
-                .Where(t => t.UserKeyBalance.UserId == userId && (t.Nickname.Contains(vm.txtKeyword)
-                || t.UserKeyBalance.KeyDefinition.Name.Contains(vm.txtKeyword)))
-                .ToList();
-        }
         return View(datas_ukb);
     }
-
 
     public ActionResult Create(Guid userId, Guid keydefinitionId)
     {
         data(userId, keydefinitionId);
+        ViewBag.ReturnUserId = userId;
         return View();
     }
 
@@ -94,7 +109,13 @@ public class KeyBackPackController : Controller
         try
         {
             data(userId, keydefinitionId);
-            var existing = _db.UserKeyBalances.FirstOrDefault(x => x.UserId == userId && x.KeyDefinitionId == keydefinitionId);
+            ViewBag.ReturnUserId = userId;
+
+            var existing = _db.UserKeyBalances
+                .FirstOrDefault(x =>
+                    x.UserId == userId &&
+                    x.KeyDefinitionId == keydefinitionId);
+
             if (existing == null)
             {
                 ukb.UpdatedAt = DateTime.Now;
@@ -106,27 +127,35 @@ public class KeyBackPackController : Controller
                 existing.UpdatedAt = DateTime.Now;
                 _db.UserKeyBalances.Update(existing);
             }
+
             _db.SaveChanges();
-            return RedirectToAction("Index");
+
+            return RedirectToAction("Index", new { userId });
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("is unknown when attempting to save changes"))
+        catch (InvalidOperationException ex)
+            when (ex.Message.Contains("is unknown when attempting to save changes"))
         {
             ViewBag.ErrorMessage = "請勿空值";
+            ViewBag.ReturnUserId = userId;
             return View(ukb);
         }
-        catch (DbUpdateException ex)
+        catch (DbUpdateException)
         {
             ViewBag.ErrorMessage = "未知異常，請重試";
+            ViewBag.ReturnUserId = userId;
             return View(ukb);
         }
     }
-
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public ActionResult Delete(Guid? userId, Guid? keydefinitionId)
     {
-        UserKeyBalance ukb = _db.UserKeyBalances.FirstOrDefault(t => t.UserId == userId && t.KeyDefinitionId == keydefinitionId);
+        UserKeyBalance? ukb = _db.UserKeyBalances
+            .FirstOrDefault(t =>
+                t.UserId == userId &&
+                t.KeyDefinitionId == keydefinitionId);
+
         if (ukb != null)
         {
             _db.UserKeyBalances.Remove(ukb);
@@ -136,9 +165,9 @@ public class KeyBackPackController : Controller
         {
             return Content("Id 不存在");
         }
-        return RedirectToAction("Index");
-    }
 
+        return RedirectToAction("Index", new { userId });
+    }
 
     public ActionResult Edit(Guid? userId, Guid? keydefinitionId)
     {
@@ -146,54 +175,83 @@ public class KeyBackPackController : Controller
         {
             return Content("Id 不存在");
         }
-        else
+
+        UserKeyBalance? kd = _db.UserKeyBalances
+            .FirstOrDefault(t =>
+                t.UserId == userId &&
+                t.KeyDefinitionId == keydefinitionId);
+
+        if (kd == null)
         {
-            UserKeyBalance kd = _db.UserKeyBalances.FirstOrDefault(t => t.UserId == userId && t.KeyDefinitionId == keydefinitionId);
-            data(userId, keydefinitionId);
-            return View(kd);
+            return Content("Id 不存在");
         }
+
+        data(userId, keydefinitionId);
+        ViewBag.ReturnUserId = userId;
+
+        return View(kd);
     }
 
     [HttpPost]
-    public ActionResult Edit(UserKeyBalance ukb, Guid? userId, Guid? keydefinitionId)
+    public ActionResult Edit(
+        UserKeyBalance ukb,
+        Guid? userId,
+        Guid? keydefinitionId)
     {
-        UserKeyBalance u = _db.UserKeyBalances.FirstOrDefault(t => t.UserId == userId && t.KeyDefinitionId == keydefinitionId);
         if (userId == null || keydefinitionId == null)
         {
             return Content("Id 不存在");
         }
-        else
+
+        UserKeyBalance? u = _db.UserKeyBalances
+            .FirstOrDefault(t =>
+                t.UserId == userId &&
+                t.KeyDefinitionId == keydefinitionId);
+
+        if (u == null)
         {
-            try
-            {
-                u.UserId = ukb.UserId;
-                u.KeyDefinitionId = ukb.KeyDefinitionId;
-                u.Balance = ukb.Balance;
-                u.UpdatedAt = DateTime.Now;
-                _db.SaveChanges();
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("is unknown when attempting to save changes"))
-            {
-                ViewBag.ErrorMessage = "請勿空值";
-                return View(ukb);
-            }
-            catch (DbUpdateException ex)
-            {
-                ViewBag.ErrorMessage = "未知異常，請重試";
-                return View(ukb);
-            }
+            return Content("Id 不存在");
         }
-        return RedirectToAction("Index");
+
+        try
+        {
+            u.UserId = ukb.UserId;
+            u.KeyDefinitionId = ukb.KeyDefinitionId;
+            u.Balance = ukb.Balance;
+            u.UpdatedAt = DateTime.Now;
+            _db.SaveChanges();
+        }
+        catch (InvalidOperationException ex)
+            when (ex.Message.Contains("is unknown when attempting to save changes"))
+        {
+            ViewBag.ErrorMessage = "請勿空值";
+            ViewBag.ReturnUserId = userId;
+            return View(ukb);
+        }
+        catch (DbUpdateException)
+        {
+            ViewBag.ErrorMessage = "未知異常，請重試";
+            ViewBag.ReturnUserId = userId;
+            return View(ukb);
+        }
+
+        return RedirectToAction("Index", new { userId = ukb.UserId });
     }
-
-
 
     private void data(Guid? userId, Guid? keydefinitionId)
     {
-        var uid = _db.UserProfiles.OrderBy(e => e.UserId).ToList();
-        var kdid = _db.KeyDefinitions.OrderBy(e => e.Id).ToList();
+        var uid = _db.UserProfiles
+            .OrderBy(e => e.UserId)
+            .ToList();
 
-        ViewBag.UserProfileList = new SelectList(uid, "UserId", "Nickname", userId);
-        ViewBag.KeyDefinitionList = new SelectList(kdid, "Id", "Name", keydefinitionId);
+        var kdid = _db.KeyDefinitions
+            .OrderBy(e => e.Id)
+            .ToList();
+
+        ViewBag.UserProfileList =
+            new SelectList(uid, "UserId", "Nickname", userId);
+
+        ViewBag.KeyDefinitionList =
+            new SelectList(kdid, "Id", "Name", keydefinitionId);
     }
 }

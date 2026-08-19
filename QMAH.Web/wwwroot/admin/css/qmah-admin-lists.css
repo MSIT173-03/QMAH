@@ -1,0 +1,511 @@
+/* QMAH admin list/table consistency overrides.
+   Loaded after qmah-admin-core.css and qmah-tabler.css on purpose. */
+
+:root {
+  --qmah-action-gap: .375rem;
+  --qmah-action-btn-min: 4.75rem;
+}
+
+/* Do not force every last column to 18rem. Each list owns its action width. */
+.page-body .table th:last-child,
+.page-body .table td:last-child,
+.qmah-crud-table th:last-child,
+.qmah-crud-table td:last-child,
+.game-admin-table th:last-child,
+.game-admin-table td:last-child {
+  width: auto;
+  min-width: 0;
+  text-align: start;
+}
+
+.qmah-action-cell {
+  text-align: center !important;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.qmah-action-cell.qmah-actions--1 { width: 7rem; min-width: 7rem; }
+.qmah-action-cell.qmah-actions--2 { width: 12rem; min-width: 12rem; }
+.qmah-action-cell.qmah-actions--3 { width: 17rem; min-width: 17rem; }
+.qmah-action-cell.qmah-actions--4 { width: 23rem; min-width: 23rem; }
+
+.qmah-table-actions,
+.game-admin-cell-actions .btn-list,
+.qmah-action-buttons {
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--qmah-action-gap);
+  overflow: visible;
+}
+
+.qmah-table-actions form,
+.game-admin-cell-actions form,
+.qmah-action-buttons form {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.qmah-table-actions .btn,
+.game-admin-cell-actions .btn,
+.qmah-action-buttons .btn,
+.qmah-action-cell > .btn {
+  display: inline-flex;
+  min-width: var(--qmah-action-btn-min);
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  padding-inline: .75rem;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Make table actions visually legible instead of a row of pale outlines. */
+.qmah-table-actions .btn-outline-secondary,
+.game-admin-cell-actions .btn-outline-secondary,
+.qmah-action-buttons .btn-outline-secondary,
+.qmah-action-cell > .btn-outline-secondary {
+  border-color: var(--qmah-primary);
+  background: var(--qmah-primary);
+  color: #fff;
+}
+
+.qmah-table-actions .btn-outline-secondary:hover,
+.game-admin-cell-actions .btn-outline-secondary:hover,
+.qmah-action-buttons .btn-outline-secondary:hover,
+.qmah-action-cell > .btn-outline-secondary:hover {
+  border-color: var(--qmah-primary-hover);
+  background: var(--qmah-primary-hover);
+  color: #fff;
+}
+
+.qmah-table-actions .btn-outline-primary,
+.game-admin-cell-actions .btn-outline-primary,
+.qmah-action-buttons .btn-outline-primary {
+  border-color: var(--tblr-primary, #206bc4);
+  background: var(--tblr-primary, #206bc4);
+  color: #fff;
+}
+
+.qmah-table-actions .btn-outline-success,
+.game-admin-cell-actions .btn-outline-success,
+.qmah-action-buttons .btn-outline-success {
+  border-color: var(--tblr-success, #2fb344);
+  background: var(--tblr-success, #2fb344);
+  color: #fff;
+}
+
+.qmah-table-actions .btn-outline-warning,
+.game-admin-cell-actions .btn-outline-warning,
+.qmah-action-buttons .btn-outline-warning {
+  border-color: var(--tblr-warning, #f59f00);
+  background: var(--tblr-warning, #f59f00);
+  color: #17242b;
+}
+
+.qmah-table-actions .btn-outline-danger,
+.game-admin-cell-actions .btn-outline-danger,
+.qmah-action-buttons .btn-outline-danger {
+  border-color: var(--tblr-danger, #d63939);
+  background: var(--tblr-danger, #d63939);
+  color: #fff;
+}
+
+.qmah-table-actions .btn:disabled,
+.game-admin-cell-actions .btn:disabled,
+.qmah-action-buttons .btn:disabled,
+.qmah-action-cell .btn.disabled {
+  border-color: var(--qmah-line) !important;
+  background: var(--qmah-surface-muted) !important;
+  color: var(--qmah-ink-faint) !important;
+  opacity: 1;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* List headers align with their data instead of inheriting odd end alignment. */
+.qmah-crud-table thead th,
+.game-admin-table thead th {
+  vertical-align: middle;
+}
+
+.qmah-crud-table th:first-child,
+.qmah-crud-table td:first-child,
+.game-admin-table th:first-child,
+.game-admin-table td:first-child {
+  padding-left: 1rem;
+}
+
+/* Question bank: protect fields that were becoming one-character-wide. */
+.game-admin-table .qmah-col-type { width: 9rem; min-width: 9rem; }
+.game-admin-table .qmah-col-difficulty { width: 4.5rem; min-width: 4.5rem; }
+.game-admin-table .qmah-col-status { width: 5.5rem; min-width: 5.5rem; }
+.game-admin-table .qmah-col-updated { width: 10.5rem; min-width: 10.5rem; }
+.game-admin-table td[data-label="題型"] { min-width: 9rem; }
+.game-admin-table td[data-label="更新時間"] { min-width: 10.5rem; }
+
+/* Backpack tables use member identity as one coherent cell. */
+.qmah-member-cell {
+  min-width: 14rem;
+}
+.qmah-member-id {
+  margin-top: .2rem;
+  color: var(--qmah-ink-faint);
+  font-family: var(--tblr-font-monospace, ui-monospace, monospace);
+  font-size: .78rem;
+  overflow-wrap: anywhere;
+}
+.qmah-backpack-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1.5rem;
+  align-items: center;
+  padding: .9rem 1rem;
+  border-bottom: 1px solid var(--qmah-line-soft);
+  background: var(--qmah-surface-soft);
+}
+.qmah-backpack-summary strong { color: var(--qmah-ink); }
+
+/* Mobile: keep actions horizontal and scroll only the table, not the buttons inside a cell. */
+@media (max-width: 767.98px) {
+  .qmah-action-cell.qmah-actions--1,
+  .qmah-action-cell.qmah-actions--2,
+  .qmah-action-cell.qmah-actions--3,
+  .qmah-action-cell.qmah-actions--4 {
+    min-width: max-content;
+  }
+
+  .qmah-table-actions,
+  .game-admin-cell-actions .btn-list,
+  .qmah-action-buttons {
+    justify-content: flex-start;
+  }
+}
+
+
+/* Legacy Game markup used display:flex on the <td> itself, which breaks desktop table geometry. */
+@media (min-width: 768px) {
+  td.game-admin-cell-actions {
+    display: table-cell !important;
+    vertical-align: middle;
+  }
+}
+
+/* Older CRUD pages may place buttons directly in the last cell instead of qmah-table-actions.
+   Keep those pages visually consistent without requiring a per-page rewrite. */
+.qmah-crud-table td:last-child > .btn,
+.qmah-crud-table td:last-child > form,
+.qmah-crud-table td:last-child > form > .btn {
+  vertical-align: middle;
+}
+
+.qmah-crud-table td:last-child > form {
+  display: inline-flex;
+  margin: 0 .2rem;
+}
+
+.qmah-crud-table td:last-child > .btn {
+  min-width: var(--qmah-action-btn-min);
+  margin: 0 .2rem;
+  font-weight: 700;
+}
+
+.qmah-crud-table td:last-child > .btn-outline-secondary,
+.qmah-crud-table td:last-child > form .btn-outline-secondary {
+  border-color: var(--qmah-primary);
+  background: var(--qmah-primary);
+  color: #fff;
+}
+
+.qmah-crud-table td:last-child > .btn-outline-success,
+.qmah-crud-table td:last-child > form .btn-outline-success {
+  border-color: var(--tblr-success, #2fb344);
+  background: var(--tblr-success, #2fb344);
+  color: #fff;
+}
+
+.qmah-crud-table td:last-child > .btn-outline-warning,
+.qmah-crud-table td:last-child > form .btn-outline-warning {
+  border-color: var(--tblr-warning, #f59f00);
+  background: var(--tblr-warning, #f59f00);
+  color: #17242b;
+}
+
+.qmah-crud-table td:last-child > .btn-outline-danger,
+.qmah-crud-table td:last-child > form .btn-outline-danger {
+  border-color: var(--tblr-danger, #d63939);
+  background: var(--tblr-danger, #d63939);
+  color: #fff;
+}
+
+
+/* Semantic CRUD action colors. The list stylesheet is loaded after area styles. */
+.qmah-action-cell .btn-info,
+.qmah-action-buttons .btn-info,
+.game-admin-cell-actions .btn-info {
+  color: #fff;
+}
+
+.qmah-action-cell .btn.disabled,
+.qmah-action-cell .btn:disabled,
+.qmah-action-buttons .btn.disabled,
+.qmah-action-buttons .btn:disabled,
+.game-admin-cell-actions .btn.disabled,
+.game-admin-cell-actions .btn:disabled {
+  border-color: var(--qmah-line) !important;
+  background: var(--qmah-surface-muted) !important;
+  color: var(--qmah-ink-faint) !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Area-specific CSS used to right-align Game actions; keep all CRUD rows centered. */
+.game-admin-table td.game-admin-cell-actions .btn-list {
+  justify-content: center !important;
+}
+
+/* Page-level neutral navigation stays neutral, not primary-colored. */
+.page-header .qmah-actions .btn-secondary,
+.qmah-form-actions .btn-secondary,
+.card-footer .btn-secondary {
+  color: var(--tblr-secondary-fg, #fff);
+}
+
+
+/* CRUD detail pages */
+.qmah-product-detail-image {
+  display: block;
+  width: 100%;
+  max-width: 26rem;
+  max-height: 28rem;
+  object-fit: contain;
+}
+
+.qmah-detail-copy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+
+/* PageActions can contain forms; keep them aligned like links/buttons. */
+.page-header .qmah-actions > form {
+  display: inline-flex;
+  margin: 0;
+}
+
+/* Disabled destructive controls keep their position without looking actionable. */
+.page-header .qmah-actions .btn:disabled,
+.card-footer .btn:disabled {
+  border-color: var(--qmah-line) !important;
+  background: var(--qmah-surface-muted) !important;
+  color: var(--qmah-ink-faint) !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+/* Restore Game's mobile label/value layout after the desktop action-cell overrides. */
+@media (max-width: 767.98px) {
+  .game-admin-table td.game-admin-cell-actions {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: minmax(5.75rem, .45fr) minmax(0, 1fr);
+  }
+
+  .game-admin-table td.game-admin-cell-actions .btn-list {
+    justify-content: flex-start !important;
+  }
+
+  .game-admin-table .qmah-action-cell {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+
+
+/* =========================================================
+   QMAH management/action columns — final alignment override
+   Reference: Social / Report management
+   ========================================================= */
+
+:root {
+  --qmah-action-gap: .5rem;
+  --qmah-action-slot: 4.75rem;
+}
+
+/* Never let the older "last column" rules decide management-column width. */
+.page-body .table th:last-child,
+.page-body .table td:last-child,
+.qmah-crud-table th:last-child,
+.qmah-crud-table td:last-child,
+.game-admin-table th:last-child,
+.game-admin-table td:last-child {
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+/* Header and body use exactly the same box geometry. */
+.qmah-action-cell {
+  vertical-align: middle !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  padding-right: .75rem !important;
+  padding-left: .75rem !important;
+}
+
+.qmah-action-cell.qmah-actions--1 { width: 6.75rem !important; min-width: 6.75rem !important; }
+.qmah-action-cell.qmah-actions--2 { width: 12rem !important; min-width: 12rem !important; }
+.qmah-action-cell.qmah-actions--3 { width: 17.25rem !important; min-width: 17.25rem !important; }
+.qmah-action-cell.qmah-actions--4 { width: 22.5rem !important; min-width: 22.5rem !important; }
+
+/* Social's word-form aliases. */
+.qmah-table-actions.qmah-actions--one {
+  grid-template-columns: repeat(1, var(--qmah-action-slot));
+}
+.qmah-table-actions.qmah-actions--two {
+  grid-template-columns: repeat(2, var(--qmah-action-slot));
+}
+.qmah-table-actions.qmah-actions--three {
+  grid-template-columns: repeat(3, var(--qmah-action-slot));
+}
+.qmah-table-actions.qmah-actions--four {
+  grid-template-columns: repeat(4, var(--qmah-action-slot));
+}
+
+/* Parent numeric slot counts used by the other Areas. */
+.qmah-action-cell.qmah-actions--1 :is(.qmah-table-actions, .qmah-action-buttons, .btn-list) {
+  grid-template-columns: repeat(1, var(--qmah-action-slot));
+}
+.qmah-action-cell.qmah-actions--2 :is(.qmah-table-actions, .qmah-action-buttons, .btn-list) {
+  grid-template-columns: repeat(2, var(--qmah-action-slot));
+}
+.qmah-action-cell.qmah-actions--3 :is(.qmah-table-actions, .qmah-action-buttons, .btn-list) {
+  grid-template-columns: repeat(3, var(--qmah-action-slot));
+}
+.qmah-action-cell.qmah-actions--4 :is(.qmah-table-actions, .qmah-action-buttons, .btn-list) {
+  grid-template-columns: repeat(4, var(--qmah-action-slot));
+}
+
+.qmah-table-actions,
+.qmah-action-buttons,
+.game-admin-cell-actions .btn-list {
+  display: grid !important;
+  width: max-content !important;
+  max-width: none !important;
+  margin-right: auto !important;
+  margin-left: auto !important;
+  gap: var(--qmah-action-gap) !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+/* Legacy Social groups without an explicit numeric parent still stay compact. */
+.qmah-table-actions:not(.qmah-actions--one):not(.qmah-actions--two):not(.qmah-actions--three):not(.qmah-actions--four) {
+  grid-auto-flow: column;
+  grid-auto-columns: var(--qmah-action-slot);
+}
+
+.qmah-table-actions > a,
+.qmah-table-actions > button,
+.qmah-table-actions > form,
+.qmah-action-buttons > a,
+.qmah-action-buttons > button,
+.qmah-action-buttons > form,
+.game-admin-cell-actions .btn-list > a,
+.game-admin-cell-actions .btn-list > button,
+.game-admin-cell-actions .btn-list > form {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.qmah-table-actions form,
+.qmah-action-buttons form,
+.game-admin-cell-actions form {
+  display: block !important;
+}
+
+.qmah-table-actions .btn,
+.qmah-action-buttons .btn,
+.game-admin-cell-actions .btn,
+.qmah-action-cell > .btn {
+  display: inline-flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 2.25rem;
+  padding-right: .4rem;
+  padding-left: .4rem;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Match the visually successful Report-management palette. */
+.qmah-table-actions .btn-outline-secondary,
+.qmah-action-buttons .btn-outline-secondary,
+.game-admin-cell-actions .btn-outline-secondary {
+  border-color: var(--qmah-primary) !important;
+  background: var(--qmah-primary) !important;
+  color: #fff !important;
+}
+
+.qmah-table-actions .btn-outline-success,
+.qmah-action-buttons .btn-outline-success,
+.game-admin-cell-actions .btn-outline-success {
+  border-color: var(--tblr-success, #2fb344) !important;
+  background: var(--tblr-success, #2fb344) !important;
+  color: #fff !important;
+}
+
+.qmah-table-actions .btn-outline-warning,
+.qmah-action-buttons .btn-outline-warning,
+.game-admin-cell-actions .btn-outline-warning {
+  border-color: var(--tblr-warning, #f59f00) !important;
+  background: var(--tblr-warning, #f59f00) !important;
+  color: #17242b !important;
+}
+
+.qmah-table-actions .btn-outline-danger,
+.qmah-action-buttons .btn-outline-danger,
+.game-admin-cell-actions .btn-outline-danger {
+  border-color: var(--tblr-danger, #d63939) !important;
+  background: var(--tblr-danger, #d63939) !important;
+  color: #fff !important;
+}
+
+.qmah-table-actions .btn:disabled,
+.qmah-action-buttons .btn:disabled,
+.game-admin-cell-actions .btn:disabled,
+.qmah-action-cell .btn.disabled {
+  border-color: var(--qmah-line) !important;
+  background: var(--qmah-surface-muted) !important;
+  color: var(--qmah-ink-faint) !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* The table itself owns horizontal overflow on small screens; slots do not reflow per row. */
+@media (max-width: 767.98px) {
+  .qmah-action-cell.qmah-actions--1 { width: 6.75rem !important; min-width: 6.75rem !important; }
+  .qmah-action-cell.qmah-actions--2 { width: 12rem !important; min-width: 12rem !important; }
+  .qmah-action-cell.qmah-actions--3 { width: 17.25rem !important; min-width: 17.25rem !important; }
+  .qmah-action-cell.qmah-actions--4 { width: 22.5rem !important; min-width: 22.5rem !important; }
+
+  .game-admin-table td.game-admin-cell-actions {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: minmax(5.75rem, .45fr) minmax(0, 1fr);
+  }
+}
