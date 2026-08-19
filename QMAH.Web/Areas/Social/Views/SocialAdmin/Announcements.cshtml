@@ -1,129 +1,68 @@
-﻿@model IEnumerable<QMAH.Web.Areas.Social.Models.AnnouncementListViewModel>
+@model IEnumerable<QMAH.Web.Areas.Social.Models.AnnouncementListViewModel>
 @{
     ViewData["Title"] = "官方公告管理";
-   Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+    ViewData["AdminDescription"] = "管理系統發布的重要公告、活動預告與更新維護通知。";
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
 }
 
-<div class="page-header d-print-none">
-    <div class="container-xl">
-        <div class="row g-2 align-items-center">
-            <div class="col">
-                <h2 class="page-title">官方公告管理</h2>
-                <div class="text-secondary mt-1">管理系統發布之重要公告、活動預告與更新維護通知</div>
-            </div>
-            <div class="col-auto ms-auto d-print-none">
-                <a asp-action="CreateAnnouncement" class="btn btn-primary">
-                    <i class="ti ti-plus me-1"></i> 新增公告
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+@section PageActions {
+    <a asp-action="CreateAnnouncement" class="btn btn-primary"><i class="ti ti-plus me-1"></i>新增公告</a>
+    <a asp-area="Social" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回社群總覽</a>
+}
 
-<div class="page-body">
-    <div class="container-xl">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success alert-dismissible" role="alert">
-                <div class="d-flex">
-                    <div><i class="ti ti-check icon alert-icon"></i></div>
-                    <div>@TempData["SuccessMessage"]</div>
-                </div>
-                <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-            </div>
-        }
-
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">公告列表</h3>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-vcenter card-table qmah-crud-table text-nowrap">
-                    <thead>
-                        <tr>
-                            <th>分類</th>
-                            <th>標題 / 摘要</th>
-                            <th>發布者</th>
-                            <th>發布時間</th>
-                            <th>狀態</th>
-                            <th class="w-1">即時上架</th>
-                            <th class="w-1">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!Model.Any())
-                        {
-                            <tr>
-                                <td colspan="7" class="text-center text-secondary py-4">目前尚無公告資料</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td>
-                                        <span class="badge bg-blue-lt">@item.Category</span>
-                                    </td>
-                                    <td>
-                                        <div class="font-weight-medium">@item.Title</div>
-                                        <div class="text-secondary small text-truncate" style="max-width: 280px;">
-                                            @(string.IsNullOrEmpty(item.Summary) ? "無摘要" : item.Summary)
-                                        </div>
-                                    </td>
-                                    <td>@item.CreatedByUserName</td>
-                                    <td>@(item.PublishAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
-                                    <td>
-                                        @if (item.Status == "PUBLISHED")
-                                        {
-                                            <span class="badge bg-success me-1"></span> <span>已發布</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary me-1"></span> <span>草稿</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <label class="form-check form-switch m-0">
-                                            <input class="form-check-input" type="checkbox"
-                                                   checked="@(item.Status == "PUBLISHED")"
-                                                   onchange="toggleStatus('@item.Id', this.checked)">
-                                        </label>
-                                    </td>
-                                    <td>
-                                        <a asp-action="EditAnnouncement" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
-                                            編輯
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<div class="card qmah-list-card">
+    <div class="card-header"><div><h2 class="card-title">公告清單</h2><div class="text-secondary">發布狀態直接從操作欄切換，避免另外占用一個只放開關的欄位。</div></div></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table qmah-crud-table">
+            <thead><tr><th>分類</th><th>標題／摘要</th><th>發布者</th><th>發布時間</th><th>狀態</th><th class="qmah-action-cell qmah-actions--2">操作</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="6" class="text-center text-secondary py-5">目前尚無公告資料</td></tr>
+            }
+            else
+            {
+                @foreach (var item in Model)
+                {
+                    var published = item.Status == "PUBLISHED";
+                    <tr>
+                        <td><span class="badge bg-blue-lt">@item.Category</span></td>
+                        <td><div class="fw-semibold">@item.Title</div><div class="text-secondary small text-truncate" style="max-width: 28rem;">@(string.IsNullOrEmpty(item.Summary) ? "無摘要" : item.Summary)</div></td>
+                        <td>@item.CreatedByUserName</td>
+                        <td class="text-secondary text-nowrap">@(item.PublishAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                        <td><span class="badge @(published ? "bg-green-lt" : "bg-secondary-lt")">@(published ? "已發布" : "草稿")</span></td>
+                        <td class="qmah-action-cell qmah-actions--2">
+                            <div class="qmah-table-actions">
+                                <a asp-action="EditAnnouncement" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                                <button type="button"
+                                        class="btn btn-sm @(published ? "btn-warning" : "btn-success")"
+                                        onclick="toggleStatus('@item.Id', @(!published ? "true" : "false"))">
+                                    @(published ? "轉草稿" : "發布")
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
     </div>
 </div>
 
 @section Scripts {
-    <script>
-        function toggleStatus(id, isPublished) {
-            fetch('@Url.Action("ToggleAnnouncementStatus", "SocialAdmin", new { area = "Social" })', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `id=${id}&isPublished=${isPublished}`
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message || '操作失敗');
-                }
-            })
-            .catch(err => console.error(err));
-        }
-    </script>
+<script>
+    function toggleStatus(id, isPublished) {
+        fetch('@Url.Action("ToggleAnnouncementStatus", "SocialAdmin", new { area = "Social" })', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}&isPublished=${isPublished}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert(data.message || '操作失敗');
+        })
+        .catch(() => alert('操作失敗，請稍後再試。'));
+    }
+</script>
 }

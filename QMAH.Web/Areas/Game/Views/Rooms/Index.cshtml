@@ -3,107 +3,67 @@
     ViewData["Title"] = "房間管理";
     ViewData["AdminDescription"] = "查看房間生命週期、玩家數量與回合進度。";
 }
-
-@section Styles {
-    <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
-}
-
-@section PageActions {
-    <a class="btn btn-primary" asp-action="Create">建立房間</a>
-}
+@section Styles { <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" /> }
+@section PageActions { <a class="btn btn-primary" asp-action="Create"><i class="ti ti-plus me-1"></i>建立房間</a> }
 
 <form method="get" class="card mb-3 game-admin-filter">
-    <div class="card-body">
-        <div class="row g-3 align-items-end">
-            <div class="col-12 col-lg-3">
-                <label class="form-label" for="search">房間代碼</label>
-                <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="輸入代碼" autocomplete="off" />
-            </div>
-            <div class="col-6 col-lg-2">
-                <label class="form-label" for="status">狀態</label>
-                <select class="form-select" id="status" name="status" asp-items="GameCodeLists.ToSelectList(GameCodeLists.RoomStatuses, Model.Status, true)"></select>
-            </div>
-            <div class="col-6 col-lg-2">
-                <label class="form-label" for="visibility">可見範圍</label>
-                <select class="form-select" id="visibility" name="visibility" asp-items="GameCodeLists.ToSelectList(GameCodeLists.Visibilities, Model.Visibility, true)"></select>
-            </div>
-            <div class="col-6 col-lg-2">
-                <label class="form-label" for="sort">排序</label>
-                <select class="form-select" id="sort" name="sort">
-                    <option value="created" selected="@(Model.Sort == "created")">最新建立</option>
-                    <option value="code" selected="@(Model.Sort == "code")">房間代碼</option>
-                    <option value="status" selected="@(Model.Sort == "status")">狀態</option>
-                    <option value="players" selected="@(Model.Sort == "players")">玩家數量</option>
-                    <option value="rounds" selected="@(Model.Sort == "rounds")">回合數量</option>
-                </select>
-            </div>
-            <div class="col-6 col-lg-1">
-                <label class="form-label" for="pageSize">每頁</label>
-                <select class="form-select" id="pageSize" name="pageSize">
-                    @foreach (var size in GameCodeLists.PageSizes)
-                    {
-                        <option value="@size" selected="@(Model.PageSize == size)">@size</option>
-                    }
-                </select>
-            </div>
-            <div class="col-12 col-lg-auto game-admin-filter-actions">
-                <div class="btn-list">
-                    <button class="btn btn-primary flex-fill" type="submit"><i class="ti ti-search me-1"></i>搜尋</button>
-                    <a class="btn btn-outline-secondary" asp-action="Index"><i class="ti ti-refresh me-1"></i>清除</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="card-body"><div class="row g-3 align-items-end">
+        <div class="col-12 col-lg-3"><label class="form-label" for="search">房間代碼</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="輸入代碼" autocomplete="off" /></div>
+        <div class="col-6 col-lg-2"><label class="form-label" for="status">狀態</label><select class="form-select" id="status" name="status" asp-items="GameCodeLists.ToSelectList(GameCodeLists.RoomStatuses, Model.Status, true)"></select></div>
+        <div class="col-6 col-lg-2"><label class="form-label" for="visibility">可見範圍</label><select class="form-select" id="visibility" name="visibility" asp-items="GameCodeLists.ToSelectList(GameCodeLists.Visibilities, Model.Visibility, true)"></select></div>
+        <div class="col-6 col-lg-2"><label class="form-label" for="sort">排序</label><select class="form-select" id="sort" name="sort"><option value="created" selected="@(Model.Sort == "created")">最新建立</option><option value="code" selected="@(Model.Sort == "code")">房間代碼</option><option value="status" selected="@(Model.Sort == "status")">狀態</option><option value="players" selected="@(Model.Sort == "players")">玩家數量</option><option value="rounds" selected="@(Model.Sort == "rounds")">回合數量</option></select></div>
+        <div class="col-6 col-lg-1"><label class="form-label" for="pageSize">每頁</label><select class="form-select" id="pageSize" name="pageSize">@foreach (var size in GameCodeLists.PageSizes) { <option value="@size" selected="@(Model.PageSize == size)">@size</option> }</select></div>
+        <div class="col-12 col-lg-auto game-admin-filter-actions"><div class="btn-list"><button class="btn btn-primary" type="submit"><i class="ti ti-search me-1"></i>搜尋</button><a class="btn btn-outline-secondary" asp-action="Index"><i class="ti ti-refresh me-1"></i>清除</a></div></div>
+    </div></div>
 </form>
 
-<div class="card">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title mb-1">房間清單</h2>
-            <div class="card-subtitle">共 @Model.Results.TotalCount 筆，列表查詢由資料庫分頁處理</div>
-        </div>
-    </div>
+<div class="card qmah-list-card">
+    <div class="card-header"><div><h2 class="card-title mb-1">房間清單</h2><div class="card-subtitle">共 @Model.Results.TotalCount 筆，列表查詢由資料庫分頁處理</div></div></div>
     @if (Model.Results.Items.Count == 0)
     {
-        <div class="empty py-5">
-            <p class="empty-title">找不到符合條件的房間</p>
-            <p class="empty-subtitle text-secondary">請調整搜尋條件，或建立一個新的等待中房間。</p>
-            <div class="empty-action"><a class="btn btn-primary" asp-action="Create">建立房間</a></div>
-        </div>
+        <div class="empty py-5"><p class="empty-title">找不到符合條件的房間</p><p class="empty-subtitle text-secondary">請調整搜尋條件，或建立一個新的等待中房間。</p></div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-vcenter table-hover card-table game-admin-table">
-                <thead><tr><th>房間</th><th>狀態</th><th>可見範圍</th><th>玩家</th><th>回合</th><th>建立時間</th><th class="w-1"></th></tr></thead>
-                <tbody>
-                @foreach (var item in Model.Results.Items)
-                {
-                    <tr>
-                        <td data-label="房間"><a class="fw-bold" asp-action="Details" asp-route-id="@item.Id"><code>@item.RoomCode</code></a></td>
-                        <td data-label="狀態"><span class="badge @GameCodeLists.StatusBadgeClass(item.Status)">@GameCodeLists.Label(GameCodeLists.RoomStatuses, item.Status)</span></td>
-                        <td data-label="可見範圍"><span class="badge @GameCodeLists.StatusBadgeClass(item.Visibility)">@GameCodeLists.Label(GameCodeLists.Visibilities, item.Visibility)</span></td>
-                        <td data-label="玩家" class="text-nowrap">@item.PlayerCount / @item.MaxPlayers</td>
-                        <td data-label="回合" class="text-nowrap">@item.CurrentRoundNo / @item.TotalRounds</td>
-                        <td data-label="建立時間" class="text-secondary text-nowrap">@item.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
-                        <td data-label="" class="game-admin-cell-actions"><div class="btn-list flex-nowrap"><a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@item.Id">查看</a>@if (item.Status == "WAITING") { <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@item.Id">編輯</a> }</div></td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span>
-            <ul class="pagination m-0">
-                @if (Model.Results.HasPreviousPage)
-                {
-                    <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-visibility="@Model.Visibility" asp-route-sort="@Model.Sort">上一頁</a></li>
-                }
-                @if (Model.Results.HasNextPage)
-                {
-                    <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-visibility="@Model.Visibility" asp-route-sort="@Model.Sort">下一頁</a></li>
-                }
-            </ul>
-        </div>
+        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table">
+            <thead><tr><th>房間</th><th>狀態</th><th>可見範圍</th><th>玩家</th><th>回合</th><th>建立時間</th><th class="qmah-action-cell qmah-actions--3">操作</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.Results.Items)
+            {
+                var canEdit = item.Status == "WAITING";
+                var canDelete = canEdit && item.PlayerCount == 0 && item.RoundCount == 0;
+                <tr>
+                    <td data-label="房間"><a class="fw-bold" asp-action="Details" asp-route-id="@item.Id"><code>@item.RoomCode</code></a></td>
+                    <td data-label="狀態"><span class="badge @GameCodeLists.StatusBadgeClass(item.Status)">@GameCodeLists.Label(GameCodeLists.RoomStatuses, item.Status)</span></td>
+                    <td data-label="可見範圍"><span class="badge @GameCodeLists.StatusBadgeClass(item.Visibility)">@GameCodeLists.Label(GameCodeLists.Visibilities, item.Visibility)</span></td>
+                    <td data-label="玩家" class="text-nowrap">@item.PlayerCount / @item.MaxPlayers</td>
+                    <td data-label="回合" class="text-nowrap">@item.CurrentRoundNo / @item.TotalRounds</td>
+                    <td data-label="建立時間" class="text-secondary text-nowrap">@item.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                    <td data-label="操作" class="qmah-action-cell qmah-actions--3 game-admin-cell-actions">
+                        <div class="qmah-table-actions">
+                            <a class="btn btn-sm btn-primary" asp-action="Details" asp-route-id="@item.Id">查看</a>
+                            @if (canEdit)
+                            {
+                                <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.Id">編輯</a>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-primary" disabled title="只有等待中的房間可以編輯">編輯</button>
+                            }
+                            @if (canDelete)
+                            {
+                                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">刪除</a>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-danger" disabled title="只有沒有玩家與回合的等待中房間可以刪除">刪除</button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table></div>
+        <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-visibility="@Model.Visibility" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-visibility="@Model.Visibility" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
     }
 </div>

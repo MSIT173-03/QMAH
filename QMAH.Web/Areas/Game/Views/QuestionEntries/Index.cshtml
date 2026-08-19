@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "題庫設定";
     ViewData["AdminDescription"] = "管理可出題文物的啟用狀態、難度與題型範本。";
+    var nextDefaultSort = Model.Sort == "default" ? "default_desc" : "default";
+    var defaultSortIcon = Model.Sort == "default_desc" ? "ti-arrow-down" : "ti-arrow-up";
 }
 
 @section Styles {
@@ -16,7 +18,7 @@
         <div class="col-6 col-lg-2"><label class="form-label" for="categoryCode">分類</label><select class="form-select" id="categoryCode" name="categoryCode" asp-items="ViewBag.Categories"><option value="">全部分類</option></select></div>
         <div class="col-6 col-lg-1"><label class="form-label" for="difficulty">難度</label><select class="form-select" id="difficulty" name="difficulty"><option value="">全部</option>@for (byte i = 1; i <= 5; i++) { <option value="@i" selected="@(Model.Difficulty == i)">@i</option> }</select></div>
         <div class="col-6 col-lg-2"><label class="form-label" for="isEnabled">狀態</label><select class="form-select" id="isEnabled" name="isEnabled"><option value="">全部狀態</option><option value="true" selected="@(Model.IsEnabled == true)">啟用</option><option value="false" selected="@(Model.IsEnabled == false)">停用</option></select></div>
-        <div class="col-6 col-lg-2"><label class="form-label" for="sort">排序</label><select class="form-select" id="sort" name="sort"><option value="artifact" selected="@(Model.Sort == "artifact")">文物名稱</option><option value="difficulty" selected="@(Model.Sort == "difficulty")">難度</option><option value="enabled" selected="@(Model.Sort == "enabled")">啟用狀態</option><option value="updated" selected="@(Model.Sort == "updated")">最近更新</option></select></div>
+        <div class="col-6 col-lg-2"><label class="form-label" for="sort">排序</label><select class="form-select" id="sort" name="sort"><option value="default" selected="@(Model.Sort == "default" || Model.Sort == "default_desc")">預設排序</option><option value="artifact" selected="@(Model.Sort == "artifact")">文物名稱</option><option value="difficulty" selected="@(Model.Sort == "difficulty")">難度</option><option value="enabled" selected="@(Model.Sort == "enabled")">啟用狀態</option><option value="updated" selected="@(Model.Sort == "updated")">最近更新</option></select></div>
         <div class="col-6 col-lg-1"><label class="form-label" for="pageSize">每頁</label><select class="form-select" id="pageSize" name="pageSize">@foreach (var size in GameCodeLists.PageSizes) { <option value="@size" selected="@(Model.PageSize == size)">@size</option> }</select></div>
         <div class="col-12 col-lg-auto game-admin-filter-actions"><div class="btn-list"><button class="btn btn-primary" type="submit"><i class="ti ti-search me-1"></i>搜尋</button><a class="btn btn-outline-secondary" asp-action="Index"><i class="ti ti-refresh me-1"></i>清除</a></div></div>
     </div></div>
@@ -30,12 +32,88 @@
     }
     else
     {
-        <div class="table-responsive"><table class="table table-vcenter table-hover card-table game-admin-table"><colgroup><col class="qmah-col-name" /><col class="qmah-col-ref" /><col class="qmah-col-category" /><col class="qmah-col-era" /><col class="qmah-col-size" /><col class="qmah-col-type" /><col class="qmah-col-difficulty" /><col class="qmah-col-status" /><col class="qmah-col-updated" /><col class="qmah-col-actions" /></colgroup><thead><tr><th>文物名稱</th><th>館藏編號</th><th>分類</th><th>年代</th><th>尺寸</th><th>題型</th><th>難度</th><th>狀態</th><th>更新時間</th><th class="w-1"></th></tr></thead><tbody>
-        @foreach (var item in Model.Results.Items)
-        {
-            <tr><td data-label="文物名稱"><a class="fw-bold" asp-action="Details" asp-route-id="@item.Id">@item.ArtifactName</a></td><td data-label="館藏編號"><code>@item.ArtifactRef</code></td><td data-label="分類">@item.CategoryName</td><td data-label="年代">@item.EraName</td><td data-label="尺寸">@(string.IsNullOrWhiteSpace(item.SizeText) ? "未標示" : item.SizeText)</td><td data-label="題型">@GameCodeLists.Label(GameCodeLists.QuestionTemplates, item.QuestionTemplateCode)</td><td data-label="難度"><span class="badge bg-blue-lt text-blue">@item.Difficulty</span></td><td data-label="狀態"><span class="badge @GameCodeLists.EnabledBadgeClass(item.IsEnabled)">@(item.IsEnabled ? "啟用" : "停用")</span></td><td data-label="更新時間" class="text-secondary text-nowrap">@item.UpdatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td><td data-label="" class="game-admin-cell-actions"><div class="btn-list flex-nowrap"><a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@item.Id">查看</a><a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@item.Id">編輯</a></div></td></tr>
-        }
-        </tbody></table></div>
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table game-admin-table">
+                <colgroup>
+                    <col style="width: 7rem;" />
+                    <col class="qmah-col-name" />
+                    <col class="qmah-col-ref" />
+                    <col class="qmah-col-category" />
+                    <col class="qmah-col-era" />
+                    <col class="qmah-col-size" />
+                    <col class="qmah-col-type" />
+                    <col class="qmah-col-difficulty" />
+                    <col class="qmah-col-status" />
+                    <col class="qmah-col-updated" />
+                    <col style="width: 15rem; min-width: 15rem;" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="text-center">
+                            <a asp-action="Index"
+                               asp-route-page="1"
+                               asp-route-pageSize="@Model.PageSize"
+                               asp-route-search="@Model.Search"
+                               asp-route-categoryCode="@Model.CategoryCode"
+                               asp-route-difficulty="@Model.Difficulty"
+                               asp-route-isEnabled="@Model.IsEnabled"
+                               asp-route-sort="@nextDefaultSort"
+                               class="link-secondary text-decoration-none text-nowrap"
+                               title="依資料庫預設順序切換正序或倒序">
+                                預設排序
+                                @if (Model.Sort == "default" || Model.Sort == "default_desc")
+                                {
+                                    <i class="ti @defaultSortIcon ms-1"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>文物名稱</th>
+                        <th>館藏編號</th>
+                        <th>分類</th>
+                        <th>年代</th>
+                        <th>尺寸</th>
+                        <th>題型</th>
+                        <th>難度</th>
+                        <th>狀態</th>
+                        <th>更新時間</th>
+                        <th class="qmah-action-cell qmah-actions--3">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Results.Items)
+                {
+                    <tr>
+                        <td data-label="預設排序" class="text-center">
+                            @if (!string.IsNullOrWhiteSpace(item.ImagePath))
+                            {
+                                <span class="avatar avatar-lg"><img class="qmah-table-thumbnail" src="@item.ImagePath" alt="" loading="lazy" /></span>
+                            }
+                            else
+                            {
+                                <span class="avatar avatar-lg"><i class="ti ti-photo-off"></i></span>
+                            }
+                        </td>
+                        <td data-label="文物名稱"><a class="fw-bold" asp-action="Details" asp-route-id="@item.Id">@item.ArtifactName</a></td>
+                        <td data-label="館藏編號"><code>@item.ArtifactRef</code></td>
+                        <td data-label="分類">@item.CategoryName</td>
+                        <td data-label="年代">@item.EraName</td>
+                        <td data-label="尺寸">@(string.IsNullOrWhiteSpace(item.SizeText) ? "未標示" : item.SizeText)</td>
+                        <td data-label="題型">@GameCodeLists.Label(GameCodeLists.QuestionTemplates, item.QuestionTemplateCode)</td>
+                        <td data-label="難度"><span class="badge bg-blue-lt text-blue">@item.Difficulty</span></td>
+                        <td data-label="狀態"><span class="badge @GameCodeLists.EnabledBadgeClass(item.IsEnabled)">@(item.IsEnabled ? "啟用" : "停用")</span></td>
+                        <td data-label="更新時間" class="text-secondary text-nowrap">@item.UpdatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                        <td data-label="操作" class="qmah-action-cell qmah-actions--3 game-admin-cell-actions">
+                            <div class="qmah-table-actions">
+                                <a class="btn btn-sm btn-primary" asp-action="Details" asp-route-id="@item.Id">查看</a>
+                                <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.Id">編輯</a>
+                                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">刪除</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
         <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-categoryCode="@Model.CategoryCode" asp-route-difficulty="@Model.Difficulty" asp-route-isEnabled="@Model.IsEnabled" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-categoryCode="@Model.CategoryCode" asp-route-difficulty="@Model.Difficulty" asp-route-isEnabled="@Model.IsEnabled" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
     }
 </div>

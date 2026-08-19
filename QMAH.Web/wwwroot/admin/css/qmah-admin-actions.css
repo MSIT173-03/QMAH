@@ -1,0 +1,127 @@
+/* QMAH admin management/action columns — authoritative, loaded last */
+:root {
+  --qmah-action-gap: .5rem;
+  --qmah-action-button-width: 5rem;
+  --qmah-action-button-height: 2.5rem;
+}
+
+/* Every management column uses an explicit width based on its maximum button count. */
+.page-body .table th.qmah-action-cell.qmah-actions--1:last-child,
+.page-body .table td.qmah-action-cell.qmah-actions--1:last-child {
+  width: 7rem !important; min-width: 7rem !important; max-width: 7rem !important;
+}
+.page-body .table th.qmah-action-cell.qmah-actions--2:last-child,
+.page-body .table td.qmah-action-cell.qmah-actions--2:last-child {
+  width: 12.5rem !important; min-width: 12.5rem !important; max-width: 12.5rem !important;
+}
+.page-body .table th.qmah-action-cell.qmah-actions--3:last-child,
+.page-body .table td.qmah-action-cell.qmah-actions--3:last-child {
+  width: 18rem !important; min-width: 18rem !important; max-width: 18rem !important;
+}
+.page-body .table th.qmah-action-cell.qmah-actions--4:last-child,
+.page-body .table td.qmah-action-cell.qmah-actions--4:last-child {
+  width: 23.5rem !important; min-width: 23.5rem !important; max-width: 23.5rem !important;
+}
+
+th.qmah-action-cell,
+td.qmah-action-cell {
+  box-sizing: border-box !important;
+  padding: .75rem !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* The button group fills the same inner width as the header cell. */
+.qmah-action-cell > .qmah-table-actions,
+.qmah-action-cell.game-admin-cell-actions > .qmah-table-actions {
+  display: grid !important;
+  width: 100% !important;
+  margin: 0 !important;
+  gap: var(--qmah-action-gap) !important;
+  align-items: center !important;
+  justify-items: stretch !important;
+}
+
+.qmah-action-cell.qmah-actions--1 > .qmah-table-actions { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+.qmah-action-cell.qmah-actions--2 > .qmah-table-actions { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.qmah-action-cell.qmah-actions--3 > .qmah-table-actions { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.qmah-action-cell.qmah-actions--4 > .qmah-table-actions { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+
+.qmah-table-actions > a,
+.qmah-table-actions > button,
+.qmah-table-actions > form {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.qmah-table-actions > form > .btn,
+.qmah-table-actions > .btn {
+  display: inline-flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: var(--qmah-action-button-height) !important;
+  min-height: var(--qmah-action-button-height) !important;
+  margin: 0 !important;
+  padding: 0 .5rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+
+/* One shared color language:
+   view/edit = teal, positive = green, warning = orange, destructive = red. */
+.qmah-table-actions .btn-info,
+.qmah-table-actions .btn-primary,
+.qmah-table-actions .btn-outline-secondary {
+  border-color: var(--qmah-primary) !important;
+  background: var(--qmah-primary) !important;
+  color: #fff !important;
+}
+.qmah-table-actions .btn-success,
+.qmah-table-actions .btn-outline-success {
+  border-color: var(--tblr-success, #2fb344) !important;
+  background: var(--tblr-success, #2fb344) !important;
+  color: #fff !important;
+}
+.qmah-table-actions .btn-warning,
+.qmah-table-actions .btn-outline-warning {
+  border-color: var(--tblr-warning, #f59f00) !important;
+  background: var(--tblr-warning, #f59f00) !important;
+  color: #17242b !important;
+}
+.qmah-table-actions .btn-danger,
+.qmah-table-actions .btn-outline-danger {
+  border-color: var(--tblr-danger, #d63939) !important;
+  background: var(--tblr-danger, #d63939) !important;
+  color: #fff !important;
+}
+
+/* Disabled actions always keep the same slot and are visibly grey. */
+.qmah-table-actions .btn:disabled,
+.qmah-table-actions .btn.disabled {
+  border-color: #d8e0e5 !important;
+  background: #f3f5f7 !important;
+  color: #9aa3ad !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Older Social groups that carry their count on the group itself. */
+.qmah-table-actions.qmah-actions--one { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+.qmah-table-actions.qmah-actions--two { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.qmah-table-actions.qmah-actions--three { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.qmah-table-actions.qmah-actions--four { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+
+/* Do not let game.css turn the action <td> into a flex item on desktop. */
+@media (min-width: 768px) {
+  .game-admin-table td.qmah-action-cell {
+    display: table-cell !important;
+  }
+}

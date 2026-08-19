@@ -7,142 +7,57 @@
 }
 
 @section PageActions {
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="ti ti-plus me-1"></i>指定板塊新增貼文
-    </a>
-    <a asp-area="Social" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
-        <i class="ti ti-arrow-left me-1"></i>返回社群總覽
-    </a>
+    <a asp-action="Create" class="btn btn-primary"><i class="ti ti-plus me-1"></i>指定板塊新增貼文</a>
+    <a asp-area="Social" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回社群總覽</a>
 }
 
-<div class="card mb-3">
-    <div class="card-header d-flex align-items-center justify-content-between gap-3">
-        <div>
-            <h2 class="card-title mb-1">貼文篩選</h2>
-            <div class="text-secondary">依條件查看貼文，並在清單中進行編輯與狀態處理。</div>
-        </div>
-        <span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span>
-    </div>
-    <div class="card-body">
-        <form method="get" asp-action="Index" class="qmah-post-filter">
-            <div class="row g-3 align-items-end qmah-post-filter-row">
-                <div class="col-12 col-lg-4">
-                    <label asp-for="Keyword" class="form-label">關鍵字</label>
-                    <input asp-for="Keyword" class="form-control" placeholder="搜尋標題或內文" />
-                </div>
-                <div class="col-12 col-sm-6 col-lg-2">
-                    <label asp-for="BoardCode" class="form-label">板塊</label>
-                    <select asp-for="BoardCode" class="form-select">
-                        <option value="">全部板塊</option>
-                        @foreach (var boardCode in Model.BoardCodes)
+<div class="card qmah-filter-panel mb-3">
+    <div class="card-header d-flex align-items-center justify-content-between gap-3"><div><h2 class="card-title mb-1">貼文篩選</h2><div class="text-secondary">依條件查看貼文，並在清單中進行編輯與狀態處理。</div></div><span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span></div>
+    <div class="card-body"><form method="get" asp-action="Index" class="qmah-post-filter"><div class="row g-3 align-items-end qmah-post-filter-row">
+        <div class="col-12 col-lg-4"><label asp-for="Keyword" class="form-label">關鍵字</label><input asp-for="Keyword" class="form-control" placeholder="搜尋標題或內文" /></div>
+        <div class="col-12 col-sm-6 col-lg-2"><label asp-for="BoardCode" class="form-label">板塊</label><select asp-for="BoardCode" class="form-select"><option value="">全部板塊</option>@foreach (var boardCode in Model.BoardCodes) { <option value="@boardCode">@boardCode</option> }</select></div>
+        <div class="col-12 col-sm-6 col-lg-2"><label asp-for="Status" class="form-label">狀態</label><select asp-for="Status" class="form-select"><option value="">全部狀態</option><option value="PUBLISHED">已發布</option><option value="HIDDEN">已隱藏</option><option value="DELETED">已下架</option></select></div>
+        <div class="col-12 col-sm-6 col-lg-2"><label asp-for="From" class="form-label">建立日起</label><input asp-for="From" type="date" class="form-control" /></div>
+        <div class="col-12 col-sm-6 col-lg-2"><label asp-for="To" class="form-label">建立日迄</label><input asp-for="To" type="date" class="form-control" /></div>
+        <div class="col-12 d-flex gap-2 qmah-post-filter-actions"><button type="submit" class="btn btn-primary"><i class="ti ti-filter me-1"></i>套用篩選</button><a asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-refresh me-1"></i>清除條件</a></div>
+    </div></form></div>
+</div>
+
+<div class="card qmah-list-card"><div class="table-responsive"><table class="table table-vcenter table-hover card-table qmah-crud-table">
+    <thead><tr><th>板塊</th><th>標題</th><th>作者</th><th>留言</th><th>狀態</th><th>建立時間</th><th class="qmah-action-cell qmah-actions--3">操作</th></tr></thead>
+    <tbody>
+    @if (Model.Posts.Count == 0) { <tr><td colspan="7" class="text-center text-secondary py-5">找不到符合條件的貼文。</td></tr> }
+    else
+    {
+        @foreach (var item in Model.Posts)
+        {
+            var statusClass = item.Status switch { "PUBLISHED" => "bg-green-lt", "HIDDEN" => "bg-yellow-lt", "DELETED" => "bg-red-lt", _ => "bg-secondary-lt" };
+            var nextStatus = item.Status == "PUBLISHED" ? "HIDDEN" : "PUBLISHED";
+            var nextStatusLabel = item.Status == "PUBLISHED" ? "隱藏" : "恢復";
+            var nextStatusClass = item.Status == "PUBLISHED" ? "btn-outline-warning" : "btn-outline-success";
+            <tr>
+                <td><span class="badge bg-blue-lt">@AdminDisplayLabels.Board(item.BoardCode)</span></td>
+                <td class="fw-semibold">@item.Title</td>
+                <td class="text-secondary">@item.AuthorName</td>
+                <td>@item.CommentCount</td>
+                <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
+                <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                <td class="qmah-action-cell qmah-actions--3">
+                    <div class="qmah-table-actions">
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                        <form asp-action="SetPostStatus" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="status" value="@nextStatus" /><button type="submit" class="btn btn-sm @nextStatusClass">@nextStatusLabel</button></form>
+                        @if (item.Status != "DELETED")
                         {
-                            <option value="@boardCode">@boardCode</option>
+                            <form asp-action="SetPostStatus" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="status" value="DELETED" /><button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要將這篇貼文下架嗎？')">下架</button></form>
                         }
-                    </select>
-                </div>
-                <div class="col-12 col-sm-6 col-lg-2">
-                    <label asp-for="Status" class="form-label">狀態</label>
-                    <select asp-for="Status" class="form-select">
-                        <option value="">全部狀態</option>
-                        <option value="PUBLISHED">已發布</option>
-                        <option value="HIDDEN">已隱藏</option>
-                        <option value="DELETED">已下架</option>
-                    </select>
-                </div>
-                <div class="col-12 col-sm-6 col-lg-2">
-                    <label asp-for="From" class="form-label">建立日起</label>
-                    <input asp-for="From" type="date" class="form-control" />
-                </div>
-                <div class="col-12 col-sm-6 col-lg-2">
-                    <label asp-for="To" class="form-label">建立日迄</label>
-                    <input asp-for="To" type="date" class="form-control" />
-                </div>
-                <div class="col-12 d-flex gap-2 qmah-post-filter-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ti ti-filter me-1"></i>套用篩選
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-refresh me-1"></i>清除條件</a>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card">
-    <div class="table-responsive">
-        <table class="table table-vcenter table-hover card-table qmah-crud-table">
-            <thead>
-                <tr>
-                    <th>板塊</th>
-                    <th>標題</th>
-                    <th>作者</th>
-                    <th>留言</th>
-                    <th>狀態</th>
-                    <th>建立時間</th>
-                    <th class="w-1">處理</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Posts.Count == 0)
-                {
-                    <tr>
-                        <td colspan="7" class="text-center text-secondary py-5">找不到符合條件的貼文。</td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var item in Model.Posts)
-                    {
-                        var statusClass = item.Status switch
+                        else
                         {
-                            "PUBLISHED" => "bg-green-lt",
-                            "HIDDEN" => "bg-yellow-lt",
-                            "DELETED" => "bg-red-lt",
-                            _ => "bg-secondary-lt"
-                        };
-                        var nextStatus = item.Status == "PUBLISHED" ? "HIDDEN" : "PUBLISHED";
-                        var nextStatusLabel = item.Status == "PUBLISHED" ? "隱藏" : "恢復發布";
-
-                        <tr>
-                            <td><span class="badge bg-blue-lt">@AdminDisplayLabels.Board(item.BoardCode)</span></td>
-                            <td class="fw-semibold">@item.Title</td>
-                            <td class="text-secondary">@item.AuthorName</td>
-                            <td>@item.CommentCount</td>
-                            <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
-                            <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>
-                                <div class="qmah-table-actions">
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
-                                    @if (item.Status != "DELETED")
-                                    {
-                                        <form asp-action="SetPostStatus" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <input type="hidden" name="status" value="@nextStatus" />
-                                            <button type="submit" class="btn btn-sm btn-outline-warning">@nextStatusLabel</button>
-                                        </form>
-                                        <form asp-action="SetPostStatus" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <input type="hidden" name="status" value="DELETED" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要將這篇貼文下架嗎？')">下架</button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <form asp-action="SetPostStatus" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <input type="hidden" name="status" value="PUBLISHED" />
-                                            <button type="submit" class="btn btn-sm btn-outline-success">恢復發布</button>
-                                        </form>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" disabled>下架</button>
+                        }
+                    </div>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table></div></div>

@@ -14,212 +14,81 @@
 }
 
 @section PageActions {
-    <a asp-area="User" asp-controller="Profile" asp-action="Edit" class="btn btn-primary">
-        <i class="ti ti-user-edit me-1"></i>編輯我的資料
-    </a>
-    <a asp-action="ChangePassword" class="btn btn-primary">
-        <i class="ti ti-lock me-1"></i>修改我的密碼
-    </a>
-    <a asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
-        <i class="ti ti-arrow-left me-1"></i>返回會員管理總覽
-    </a>
+    <a asp-area="User" asp-controller="Profile" asp-action="Edit" class="btn btn-primary"><i class="ti ti-user-edit me-1"></i>編輯我的資料</a>
+    <a asp-action="ChangePassword" class="btn btn-primary"><i class="ti ti-lock me-1"></i>修改我的密碼</a>
+    <a asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回會員管理總覽</a>
 }
 
 <div class="row row-cards mb-3">
-    <div class="col-12 col-md-4">
-        <div class="card qmah-metric-card h-100">
-            <div class="card-body">
-                <div class="qmah-metric-label">會員帳號</div>
-                <div class="qmah-metric-value">@ViewBag.TotalMembers</div>
-                <div class="qmah-metric-note">目前全部帳號</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4">
-        <div class="card qmah-metric-card h-100">
-            <div class="card-body">
-                <div class="qmah-metric-label">近期新增</div>
-                <div class="qmah-metric-value">@ViewBag.NewMembers</div>
-                <div class="qmah-metric-note">最近 30 天</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4">
-        <div class="card qmah-metric-card h-100">
-            <div class="card-body">
-                <div class="qmah-metric-label">停權帳號</div>
-                <div class="qmah-metric-value">@ViewBag.BannedMembers</div>
-                <div class="qmah-metric-note">目前停權</div>
-            </div>
-        </div>
-    </div>
+    <div class="col-12 col-md-4"><div class="card qmah-metric-card h-100"><div class="card-body"><div class="qmah-metric-label">會員帳號</div><div class="qmah-metric-value">@ViewBag.TotalMembers</div><div class="qmah-metric-note">目前全部帳號</div></div></div></div>
+    <div class="col-12 col-md-4"><div class="card qmah-metric-card h-100"><div class="card-body"><div class="qmah-metric-label">近期新增</div><div class="qmah-metric-value">@ViewBag.NewMembers</div><div class="qmah-metric-note">最近 30 天</div></div></div></div>
+    <div class="col-12 col-md-4"><div class="card qmah-metric-card h-100"><div class="card-body"><div class="qmah-metric-label">停權帳號</div><div class="qmah-metric-value">@ViewBag.BannedMembers</div><div class="qmah-metric-note">目前停權</div></div></div></div>
 </div>
 
 <div class="card qmah-filter-panel mb-3">
-    <div class="card-header align-items-start gap-3">
-        <div>
-            <h2 class="card-title">會員篩選</h2>
-            <div class="text-secondary small">依帳號、角色或狀態縮小清單範圍。</div>
-        </div>
-        <span class="badge bg-blue-lt">符合 @totalCount 筆</span>
-    </div>
-    <div class="card-body">
-        <form method="get" asp-action="Index">
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-lg-5">
-                    <label class="form-label" for="memberKeyword">帳號關鍵字</label>
-                    <input id="memberKeyword" type="text" name="keyword" value="@ViewBag.Keyword" class="form-control" placeholder="Email 或會員帳號" />
-                </div>
-                <div class="col-12 col-md-6 col-lg-2">
-                    <label class="form-label" for="memberRole">角色</label>
-                    <select id="memberRole" name="role" class="form-select">
-                        <option value="">全部角色</option>
-                        <option value="Admin" selected="@(ViewBag.Role == "Admin" ? "selected" : null)">管理員</option>
-                        <option value="User" selected="@(ViewBag.Role == "User" ? "selected" : null)">一般會員</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6 col-lg-2">
-                    <label class="form-label" for="memberStatus">帳號狀態</label>
-                    <select id="memberStatus" name="status" class="form-select">
-                        <option value="">全部狀態</option>
-                        <option value="ACTIVE" selected="@(ViewBag.Status == "ACTIVE" ? "selected" : null)">啟用</option>
-                        <option value="BANNED" selected="@(ViewBag.Status == "BANNED" ? "selected" : null)">停權</option>
-                        <option value="DISABLED" selected="@(ViewBag.Status == "DISABLED" ? "selected" : null)">停用</option>
-                    </select>
-                </div>
-                <div class="col-12 col-lg-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary"><i class="ti ti-search me-1"></i>搜尋</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
-                </div>
-            </div>
-        </form>
-    </div>
+    <div class="card-header align-items-start gap-3"><div><h2 class="card-title">會員篩選</h2><div class="text-secondary small">依帳號、角色或狀態縮小清單範圍。</div></div><span class="badge bg-blue-lt">符合 @totalCount 筆</span></div>
+    <div class="card-body"><form method="get" asp-action="Index"><div class="row g-3 align-items-end">
+        <div class="col-12 col-lg-5"><label class="form-label" for="memberKeyword">帳號關鍵字</label><input id="memberKeyword" type="text" name="keyword" value="@ViewBag.Keyword" class="form-control" placeholder="Email 或會員帳號" /></div>
+        <div class="col-12 col-md-6 col-lg-2"><label class="form-label" for="memberRole">角色</label><select id="memberRole" name="role" class="form-select"><option value="">全部角色</option><option value="Admin" selected="@(ViewBag.Role == "Admin" ? "selected" : null)">管理員</option><option value="User" selected="@(ViewBag.Role == "User" ? "selected" : null)">一般會員</option></select></div>
+        <div class="col-12 col-md-6 col-lg-2"><label class="form-label" for="memberStatus">帳號狀態</label><select id="memberStatus" name="status" class="form-select"><option value="">全部狀態</option><option value="ACTIVE" selected="@(ViewBag.Status == "ACTIVE" ? "selected" : null)">啟用</option><option value="BANNED" selected="@(ViewBag.Status == "BANNED" ? "selected" : null)">停權</option><option value="DISABLED" selected="@(ViewBag.Status == "DISABLED" ? "selected" : null)">停用</option></select></div>
+        <div class="col-12 col-lg-3"><div class="qmah-actions"><button type="submit" class="btn btn-primary"><i class="ti ti-search me-1"></i>搜尋</button><a asp-action="Index" class="btn btn-outline-secondary">清除</a></div></div>
+    </div></form></div>
 </div>
 
 <div class="card qmah-list-card">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title">會員清單</h2>
-            <div class="text-secondary small">可查看詳細資料、編輯個人資料、調整點數或管理密碼。</div>
-        </div>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-vcenter table-hover card-table qmah-crud-table">
-            <thead>
-                <tr>
-                    <th>會員</th>
-                    <th>角色</th>
-                    <th>Email 驗證</th>
-                    <th>點數</th>
-                    <th>帳號狀態</th>
-                    <th>建立時間</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-            @if (members.Count == 0)
+    <div class="card-header"><div><h2 class="card-title">會員清單</h2><div class="text-secondary small">可查看詳細資料、編輯個人資料、調整點數或管理帳號狀態。</div></div></div>
+    <div class="table-responsive"><table class="table table-vcenter table-hover card-table qmah-crud-table">
+        <thead><tr><th>會員</th><th>角色</th><th>Email 驗證</th><th>點數</th><th>帳號狀態</th><th>建立時間</th><th class="qmah-action-cell qmah-actions--4">操作</th></tr></thead>
+        <tbody>
+        @if (members.Count == 0)
+        {
+            <tr><td colspan="7"><div class="empty qmah-empty-state"><div class="empty-icon"><i class="ti ti-users-off"></i></div><p class="empty-title">找不到符合條件的會員</p><p class="empty-subtitle text-secondary">請調整搜尋條件後再試一次。</p></div></td></tr>
+        }
+        else
+        {
+            foreach (var item in members)
             {
                 <tr>
-                    <td colspan="7">
-                        <div class="empty qmah-empty-state">
-                            <div class="empty-icon"><i class="ti ti-users-off"></i></div>
-                            <p class="empty-title">找不到符合條件的會員</p>
-                            <p class="empty-subtitle text-secondary">請調整搜尋條件後再試一次。</p>
+                    <td><div class="fw-semibold">@(string.IsNullOrWhiteSpace(item.Nickname) ? "未設定暱稱" : item.Nickname)</div><div class="text-secondary small">@item.User.Email</div></td>
+                    <td><span class="badge bg-blue-lt">@(item.Role == "Admin" ? "管理員" : "一般會員")</span></td>
+                    <td><span class="badge @(item.User.EmailConfirmed ? "bg-green-lt" : "bg-yellow-lt")">@(item.User.EmailConfirmed ? "已驗證" : "未驗證")</span></td>
+                    <td class="text-nowrap">@item.PointBalance</td>
+                    <td><span class="badge @(item.User.Status == "ACTIVE" ? "bg-green-lt" : item.User.Status == "BANNED" ? "bg-red-lt" : "bg-secondary-lt")">@AdminDisplayLabels.Status(item.User.Status)</span></td>
+                    <td class="text-secondary text-nowrap">@item.User.CreatedAt</td>
+                    <td class="qmah-action-cell qmah-actions--4">
+                        <div class="qmah-table-actions">
+                            <a asp-action="Details" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-secondary">詳細</a>
+                            <a asp-action="Edit" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                            <a asp-action="AdjustPoints" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-warning">點數</a>
+                            @if (item.User.Status == "ACTIVE")
+                            {
+                                <form asp-action="ChangeStatus" asp-route-id="@item.User.Id" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要停權這個會員嗎？')">停權</button></form>
+                            }
+                            else if (item.User.Status == "BANNED")
+                            {
+                                <form asp-action="ChangeStatus" asp-route-id="@item.User.Id" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('確定要解除停權嗎？')">解除</button></form>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled>停用</button>
+                            }
                         </div>
                     </td>
                 </tr>
             }
-            else
-            {
-                foreach (var item in members)
-                {
-                    <tr>
-                        <td>
-                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(item.Nickname) ? "未設定暱稱" : item.Nickname)</div>
-                            <div class="text-secondary small">@item.User.Email</div>
-                        </td>
-                        <td><span class="badge bg-blue-lt">@(item.Role == "Admin" ? "管理員" : "一般會員")</span></td>
-                        <td>
-                            @if (item.User.EmailConfirmed)
-                            {
-                                <span class="badge bg-green-lt">已驗證</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-yellow-lt">未驗證</span>
-                            }
-                        </td>
-                        <td class="text-nowrap">@item.PointBalance</td>
-                        <td>
-                            @if (item.User.Status == "ACTIVE")
-                            {
-                                <span class="badge bg-green-lt">啟用</span>
-                            }
-                            else if (item.User.Status == "BANNED")
-                            {
-                                <span class="badge bg-red-lt">停權</span>
-                            }
-                            else if (item.User.Status == "DISABLED")
-                            {
-                                <span class="badge bg-secondary-lt">停用</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary-lt">@AdminDisplayLabels.Status(item.User.Status)</span>
-                            }
-                        </td>
-                        <td class="text-secondary text-nowrap">@item.User.CreatedAt</td>
-                        <td>
-                            <div class="qmah-table-actions">
-                                <a asp-action="Details" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-secondary"><i class="ti ti-eye me-1"></i>詳細</a>
-                                <a asp-action="Edit" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-secondary"><i class="ti ti-edit me-1"></i>編輯</a>
-                                <a asp-action="AdjustPoints" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-warning"><i class="ti ti-coins me-1"></i>點數</a>
-                                <form asp-action="ChangeStatus" asp-route-id="@item.User.Id" method="post">
-                                    @Html.AntiForgeryToken()
-                                    @if (item.User.Status == "ACTIVE")
-                                    {
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要停權這個會員嗎？')">停權</button>
-                                    }
-                                    else if (item.User.Status == "BANNED")
-                                    {
-                                        <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('確定要解除停權嗎？')">解除停權</button>
-                                    }
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            }
-            </tbody>
-        </table>
-    </div>
+        }
+        </tbody>
+    </table></div>
 </div>
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
     <div class="text-secondary small">顯示第 @start～@end 筆，共 @totalCount 筆</div>
     @if (totalPages > 0)
     {
-        <nav aria-label="會員清單分頁">
-            <ul class="pagination mb-0">
-                @if (currentPage > 1)
-                {
-                    <li class="page-item">
-                        <a asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-keyword="@ViewBag.Keyword" asp-route-role="@ViewBag.Role" asp-route-status="@ViewBag.Status" class="page-link">上一頁</a>
-                    </li>
-                }
-                @for (int i = 1; i <= totalPages; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a asp-action="Index" asp-route-page="@i" asp-route-keyword="@ViewBag.Keyword" asp-route-role="@ViewBag.Role" asp-route-status="@ViewBag.Status" class="page-link">@i</a>
-                    </li>
-                }
-                @if (currentPage < totalPages)
-                {
-                    <li class="page-item">
-                        <a asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-keyword="@ViewBag.Keyword" asp-route-role="@ViewBag.Role" asp-route-status="@ViewBag.Status" class="page-link">下一頁</a>
-                    </li>
-                }
-            </ul>
-        </nav>
+        <nav aria-label="會員清單分頁"><ul class="pagination mb-0">
+            @if (currentPage > 1) { <li class="page-item"><a asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-keyword="@ViewBag.Keyword" asp-route-role="@ViewBag.Role" asp-route-status="@ViewBag.Status" class="page-link">上一頁</a></li> }
+            @for (int i = 1; i <= totalPages; i++) { <li class="page-item @(i == currentPage ? "active" : "")"><a asp-action="Index" asp-route-page="@i" asp-route-keyword="@ViewBag.Keyword" asp-route-role="@ViewBag.Role" asp-route-status="@ViewBag.Status" class="page-link">@i</a></li> }
+            @if (currentPage < totalPages) { <li class="page-item"><a asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-keyword="@ViewBag.Keyword" asp-route-role="@ViewBag.Role" asp-route-status="@ViewBag.Status" class="page-link">下一頁</a></li> }
+        </ul></nav>
     }
 </div>

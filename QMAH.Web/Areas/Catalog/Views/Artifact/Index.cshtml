@@ -6,6 +6,8 @@
     ViewData["AdminDescription"] = "搜尋、篩選並維護圖鑑中的文物主資料。";
     var keyword = Context.Request.Query["txtKeyword"].ToString();
     var records = Model?.ToList() ?? [];
+    var sortDirection = (ViewBag.SortDirection as string) == "desc" ? "desc" : "asc";
+    var nextSortDirection = sortDirection == "asc" ? "desc" : "asc";
 }
 
 @section PageActions {
@@ -42,6 +44,7 @@
                         <option value="">全部年代</option>
                     </select>
                 </div>
+                <input type="hidden" name="sortDirection" value="@sortDirection" />
                 <div class="col-12 col-xl-2 qmah-actions">
                     <button type="submit" class="btn btn-primary" title="搜尋">
                         <i class="ti ti-search me-1"></i>搜尋
@@ -75,9 +78,31 @@
     {
         <div class="table-responsive">
             <table class="table table-vcenter table-hover card-table qmah-crud-table">
-                <colgroup><col class="qmah-col-name" /><col class="qmah-col-ref" /><col class="qmah-col-category" /><col class="qmah-col-era" /><col class="qmah-col-size" /><col class="qmah-col-license" /><col class="qmah-col-status" /><col class="qmah-col-actions" /></colgroup>
+                <colgroup>
+                    <col style="width: 7rem;" />
+                    <col class="qmah-col-name" />
+                    <col class="qmah-col-ref" />
+                    <col class="qmah-col-category" />
+                    <col class="qmah-col-era" />
+                    <col class="qmah-col-size" />
+                    <col class="qmah-col-license" />
+                    <col class="qmah-col-status" />
+                    <col class="qmah-col-actions" />
+                </colgroup>
                 <thead>
                     <tr>
+                        <th class="text-center">
+                            <a asp-action="Index"
+                               asp-route-txtKeyword="@keyword"
+                               asp-route-categoryId="@ViewBag.SelectedCategory"
+                               asp-route-eraBucketId="@ViewBag.SelectedEraBucketId"
+                               asp-route-sortDirection="@nextSortDirection"
+                               class="link-secondary text-decoration-none text-nowrap"
+                               title="依資料庫預設順序切換正序或倒序">
+                                預設排序
+                                <i class="ti @(sortDirection == "asc" ? "ti-arrow-up" : "ti-arrow-down") ms-1"></i>
+                            </a>
+                        </th>
                         <th>名稱</th>
                         <th>館藏編號</th>
                         <th>分類</th>
@@ -85,20 +110,35 @@
                         <th>尺寸</th>
                         <th>授權</th>
                         <th>狀態</th>
-                        <th class="text-end">操作</th>
+                        <th class="qmah-action-cell qmah-actions--2">操作</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in records)
                     {
+                        var thumbnailPath = item.ThumbnailPath ?? item.PrimaryImagePath;
+                        var previewPath = item.PrimaryImagePath ?? item.ThumbnailPath;
                         <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
+                            <td class="text-center">
+                                @if (!string.IsNullOrWhiteSpace(thumbnailPath))
+                                {
                                     <span class="avatar avatar-lg">
-                                        <a href="@(item.PrimaryImagePath ?? item.ThumbnailPath)" data-bs-toggle="modal" data-bs-target="#qmah-image-preview" data-qmah-image-preview="@(item.PrimaryImagePath ?? item.ThumbnailPath)" aria-label="查看 @item.Name 大圖"><img class="qmah-table-thumbnail" src="@(item.ThumbnailPath ?? item.PrimaryImagePath)" alt="" loading="lazy" /></a>
+                                        <a href="@previewPath"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#qmah-image-preview"
+                                           data-qmah-image-preview="@previewPath"
+                                           aria-label="查看 @item.Name 大圖">
+                                            <img class="qmah-table-thumbnail" src="@thumbnailPath" alt="" loading="lazy" />
+                                        </a>
                                     </span>
-                                    <div class="fw-semibold text-truncate" title="@item.Name">@item.Name</div>
-                                </div>
+                                }
+                                else
+                                {
+                                    <span class="avatar avatar-lg"><i class="ti ti-photo-off"></i></span>
+                                }
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-truncate" title="@item.Name">@item.Name</div>
                             </td>
                             <td><code class="text-secondary">@item.ArtifactRef</code></td>
                             <td>@(item.Category?.Name ?? "未分類")</td>
@@ -123,9 +163,9 @@
                                     <span class="badge bg-secondary-lt">停用</span>
                                 }
                             </td>
-                            <td>
+                            <td class="qmah-action-cell qmah-actions--2">
                                 <div class="qmah-table-actions">
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">
                                         <i class="ti ti-edit me-1"></i>編輯
                                     </a>
                                     @if (item.IsActive)
@@ -133,7 +173,7 @@
                                         <form asp-action="Delete" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@item.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            <button type="submit" class="btn btn-sm btn-danger"
                                                     onclick="return confirm('確定要停用這筆文物嗎？')">
                                                 <i class="ti ti-ban me-1"></i>停用
                                             </button>

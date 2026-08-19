@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Store.ViewModels;
@@ -39,13 +40,26 @@ public class ProductController : Controller
             return View(new List<ProductSimplefyListItem>());
         }
 
-        var data = await db.Products
-            .AsNoTracking()
-            .OrderByDescending(product => product.IsActive)
-            .ThenBy(product => product.Name)
+        var query =
+            from product in db.Products.AsNoTracking()
+            join category in db.ArtifactCategories.AsNoTracking()
+                on product.CategoryCode equals category.Code into categoryGroup
+            from category in categoryGroup.DefaultIfEmpty()
+            orderby product.IsActive descending, product.Name
+            select new ProductSimplefyListItem
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Category = category != null ? category.Name : product.CategoryCode,
+                Price = product.Price,
+                Stock = product.Stock,
+                ImageUrl = product.PrimaryImagePath ?? string.Empty,
+                IsActive = product.IsActive
+            };
+
+        var data = await query
             .Skip(page * rows)
             .Take(rows)
-            .Select(product => new ProductSimplefyListItem(product))
             .ToListAsync(cancellationToken);
 
         ViewData["Page"] = page;
@@ -58,15 +72,29 @@ public class ProductController : Controller
     {
         var product = await db.Products
             .AsNoTracking()
+            .Include(item => item.Artifact)
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
 
-        return product is null ? NotFound() : View(product);
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        ViewBag.CategoryName = await db.ArtifactCategories
+            .AsNoTracking()
+            .Where(category => category.Code == product.CategoryCode)
+            .Select(category => category.Name)
+            .FirstOrDefaultAsync(cancellationToken) ?? product.CategoryCode;
+
+        return View(product);
     }
 
     [HttpGet("Create")]
-    public IActionResult Create()
+    public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
     {
-        return View("ProductEdit", new ProductEditViewModel());
+        var model = new ProductEditViewModel();
+        await LoadProductOptionsAsync(model.CategoryCode, model.ArtifactId, cancellationToken);
+        return View("ProductEdit", model);
     }
 
     [HttpPost("Create")]
@@ -77,6 +105,7 @@ public class ProductController : Controller
     {
         if (!ModelState.IsValid)
         {
+            await LoadProductOptionsAsync(model.CategoryCode, model.ArtifactId, cancellationToken);
             return View("ProductEdit", model);
         }
 
@@ -116,7 +145,9 @@ public class ProductController : Controller
             return NotFound();
         }
 
-        return View("ProductEdit", ToEditModel(product));
+        var model = ToEditModel(product);
+        await LoadProductOptionsAsync(model.CategoryCode, model.ArtifactId, cancellationToken);
+        return View("ProductEdit", model);
     }
 
     [HttpPost("Edit/{id:Guid}")]
@@ -133,6 +164,7 @@ public class ProductController : Controller
 
         if (!ModelState.IsValid)
         {
+            await LoadProductOptionsAsync(model.CategoryCode, model.ArtifactId, cancellationToken);
             return View("ProductEdit", model);
         }
 
@@ -178,6 +210,32 @@ public class ProductController : Controller
             ? "商品已重新上架。"
             : "商品已下架，既有訂單資料不受影響。";
         return RedirectToAction(nameof(Index));
+    }
+
+
+    private async Task LoadProductOptionsAsync(
+        string? categoryCode,
+        Guid? artifactId,
+        CancellationToken cancellationToken)
+    {
+        var categories = await db.ArtifactCategories
+            .AsNoTracking()
+            .OrderBy(category => category.Name)
+            .ToListAsync(cancellationToken);
+
+        var artifacts = await db.Artifacts
+            .AsNoTracking()
+            .Where(artifact => artifact.IsActive || artifact.Id == artifactId)
+            .OrderBy(artifact => artifact.Name)
+            .Select(artifact => new
+            {
+                artifact.Id,
+                Label = artifact.Name + "（" + artifact.ArtifactRef + "）"
+            })
+            .ToListAsync(cancellationToken);
+
+        ViewBag.Categories = new SelectList(categories, "Code", "Name", categoryCode);
+        ViewBag.Artifacts = new SelectList(artifacts, "Id", "Label", artifactId);
     }
 
     private static ProductEditViewModel ToEditModel(Product product) => new()
