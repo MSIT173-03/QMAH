@@ -204,6 +204,14 @@ body {
   color: #fff;
 }
 
+.page-body form[method="get"] .qmah-page-size-field {
+  flex-basis: 5.5rem;
+}
+
+.page-body form[method="get"] .qmah-page-size-field .form-select {
+  min-width: 4.5rem;
+}
+
 /* 桌面版讓欄位有彈性收縮，避免篩選操作被擠到第二行；窄版才進行重排。 */
 @media (min-width: 992px) {
   .page-body form[method="get"] > .row,
