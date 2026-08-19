@@ -26,7 +26,7 @@ public class KeyController : Controller
 
     public async Task<ActionResult> Index(CancellationToken cancellationToken)
     {
-        IEnumerable<KeyDefinition> datas_keyD = null;
+        IEnumerable<KeyDefinition> datas_keyD = [];
 
         var keyd = await _db.KeyDefinitions
             .AsNoTracking()
@@ -74,7 +74,7 @@ public class KeyController : Controller
     [ValidateAntiForgeryToken]
     public ActionResult Delete(Guid? id)
     {
-        KeyDefinition kd = _db.KeyDefinitions.FirstOrDefault(t => t.Id == id);
+        var kd = _db.KeyDefinitions.FirstOrDefault(t => t.Id == id);
         if (kd != null)
         {
             kd.IsActive = false;
@@ -108,7 +108,9 @@ public class KeyController : Controller
             return Content("Id 不存在");
         }
 
-        KeyDefinition kd = _db.KeyDefinitions.FirstOrDefault(t => t.Id == id);
+        var kd = _db.KeyDefinitions.FirstOrDefault(t => t.Id == id);
+        if (kd == null) return Content("Id 不存在");
+
         data(kd.EraBucketId, kd.CategoryId);
 
         return View(kd);
@@ -117,9 +119,9 @@ public class KeyController : Controller
     [HttpPost]
     public IActionResult Edit(KeyDefinition kd, Guid eraBucketId, Guid categoryId)
     {
-        KeyDefinition k = _db.KeyDefinitions.FirstOrDefault(t => t.Id == kd.Id);
+        var k = _db.KeyDefinitions.FirstOrDefault(t => t.Id == kd.Id);
 
-        if (kd.Id == null)
+        if (k == null)
         {
             return Content("Id 不存在");
         }

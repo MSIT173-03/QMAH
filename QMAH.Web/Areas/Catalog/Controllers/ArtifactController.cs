@@ -33,7 +33,7 @@ public class ArtifactController : Controller
         string? sortDirection,
         CancellationToken cancellationToken)
     {
-        IEnumerable<Artifact> datas_art = null;
+        IEnumerable<Artifact> datas_art = [];
 
         var isDescending = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
 
@@ -72,7 +72,7 @@ public class ArtifactController : Controller
                 datas_art = artifacts.Where(t => t.EraBucketId == eraBucketId
                 && t.CategoryId == categoryId
                 && (t.Name.Contains(vm.txtKeyword)
-                || t.EraTextOriginal.Contains(vm.txtKeyword)
+                || t.EraTextOriginal?.Contains(vm.txtKeyword) == true
                 || t.ArtifactRef.Contains(vm.txtKeyword)));
             }
             else
@@ -81,7 +81,7 @@ public class ArtifactController : Controller
                 {
                     datas_art = artifacts.Where(t => t.EraBucketId == eraBucketId
                     && (t.Name.Contains(vm.txtKeyword)
-                    || t.EraTextOriginal.Contains(vm.txtKeyword)
+                    || t.EraTextOriginal?.Contains(vm.txtKeyword) == true
                     || t.ArtifactRef.Contains(vm.txtKeyword)));
                 }
 
@@ -89,7 +89,7 @@ public class ArtifactController : Controller
                 {
                     datas_art = artifacts.Where(t => t.CategoryId == categoryId
                     && (t.Name.Contains(vm.txtKeyword)
-                    || t.EraTextOriginal.Contains(vm.txtKeyword)
+                    || t.EraTextOriginal?.Contains(vm.txtKeyword) == true
                     || t.ArtifactRef.Contains(vm.txtKeyword)));
                 }
                 else if (categoryId != null && eraBucketId != null)
@@ -106,7 +106,7 @@ public class ArtifactController : Controller
                     if (vm.txtKeyword != null)
                     {
                         datas_art = artifacts.Where(t => t.Name.Contains(vm.txtKeyword)
-                        || t.EraTextOriginal.Contains(vm.txtKeyword)
+                        || t.EraTextOriginal?.Contains(vm.txtKeyword) == true
                         || t.ArtifactRef.Contains(vm.txtKeyword));
                     }
                     if (categoryId != null)
@@ -127,7 +127,7 @@ public class ArtifactController : Controller
     [ValidateAntiForgeryToken]
     public ActionResult Delete(Guid? id)
     {
-        Artifact a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
+        var a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
         if (a != null)
         {
             a.IsActive = false;
@@ -158,7 +158,9 @@ public class ArtifactController : Controller
                     .OrderBy(e => e.Name)
                     .ToList();
 
-            Artifact a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
+            var a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
+            if (a == null) return Content("Id 不存在");
+
             ViewBag.ArtifactCategoryList = new SelectList(category, "Id", "Name", a.CategoryId);
             ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", a.EraBucketId);
             return View(a);
@@ -169,8 +171,8 @@ public class ArtifactController : Controller
     [HttpPost]
     public ActionResult Edit(Artifact af, Guid eraBucketId, Guid categoryId)
     {
-        Artifact a = _db.Artifacts.FirstOrDefault(t => t.Id == af.Id);
-        if (af.Id == null)
+        var a = _db.Artifacts.FirstOrDefault(t => t.Id == af.Id);
+        if (a == null)
         {
             return Content("Id 不存在");
         }

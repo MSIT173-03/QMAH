@@ -1,4 +1,4 @@
-﻿namespace QMAH.Web.Areas.Store.ViewModels;
+namespace QMAH.Web.Areas.Store.ViewModels;
 
 public class OrderDetailAppendData
 {
@@ -9,5 +9,5 @@ public class OrderDetailAppendData
     }
 
     public Guid Id { get; set; }
-    public List<Data> List { get; set; }
+    public List<Data> List { get; set; } = [];
 }

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace QMAH.Web.Areas.Store.ViewModels;
 
@@ -7,7 +7,7 @@ public class OrderCreateData
     [Display(Name = "會員編號")]
     public Guid UserId { get; set; }
     [Display(Name = "訂單狀態")]
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 
     // ----------
 
@@ -19,18 +19,18 @@ public class OrderCreateData
     // ----------
 
     [Display(Name = "收件人姓名")]
-    public string RecipientName { get; set; }
+    public string RecipientName { get; set; } = string.Empty;
     [Display(Name = "收件人電話")]
-    public string RecipientPhone { get; set; }
+    public string RecipientPhone { get; set; } = string.Empty;
 
     // ----------
 
     [Display(Name = "寄送城市")]
-    public string ShippingCity { get; set; }
+    public string ShippingCity { get; set; } = string.Empty;
     [Display(Name = "寄送縣市")]
-    public string ShippingDistrict { get; set; }
+    public string ShippingDistrict { get; set; } = string.Empty;
     [Display(Name = "寄送地址")]
-    public string ShippingAddressLine { get; set; }
+    public string ShippingAddressLine { get; set; } = string.Empty;
     [Display(Name = "寄送郵遞區號")]
-    public string ShippingPostalCode { get; set; }
+    public string ShippingPostalCode { get; set; } = string.Empty;
 }

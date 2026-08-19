@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace QMAH.Web.Areas.Store.ViewModels;
 
@@ -18,5 +18,5 @@ public class OrderDetailAppendDataResponse
     }
 
     public EResultType Type { get; set; }
-    public List<Data> List { get; set; }
+    public List<Data> List { get; set; } = [];
 }

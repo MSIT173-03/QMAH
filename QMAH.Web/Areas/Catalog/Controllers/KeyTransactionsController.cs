@@ -36,7 +36,7 @@ public sealed class KeyTransactionsController(QmahDbContext db) : Controller
                 KeyCode = key.Code,
                 Delta = tx.Amount,
                 Reason = tx.Reason,
-                ReferenceType = tx.ReferenceType,
+                ReferenceType = tx.ReferenceType ?? string.Empty,
                 CreatedAt = tx.CreatedAt
             };
 
