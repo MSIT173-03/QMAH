@@ -204,6 +204,31 @@ body {
   color: #fff;
 }
 
+/* 桌面版讓欄位有彈性收縮，避免篩選操作被擠到第二行；窄版才進行重排。 */
+@media (min-width: 992px) {
+  .page-body form[method="get"] > .row,
+  .page-body form[method="get"] .row {
+    flex-wrap: nowrap;
+  }
+
+  .page-body form[method="get"] .row > * {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .page-body form[method="get"] .game-admin-filter-actions,
+  .page-body form[method="get"] .filter-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .page-body form[method="get"] .row {
+    flex-wrap: wrap;
+  }
+}
+
 .qmah-list-card {
   overflow: hidden;
 }
