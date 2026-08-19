@@ -93,6 +93,17 @@ public class KeyController : Controller
         return RedirectToAction("Index");
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleActive(Guid id, CancellationToken cancellationToken)
+    {
+        var key = await _db.KeyDefinitions.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (key == null) return NotFound();
+        key.IsActive = !key.IsActive;
+        await _db.SaveChangesAsync(cancellationToken);
+        return RedirectToAction(nameof(Index));
+    }
+
 
     public ActionResult Edit(Guid? id, Guid eraBucketId, Guid categoryId)
     {

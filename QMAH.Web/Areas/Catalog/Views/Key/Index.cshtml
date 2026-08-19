@@ -77,17 +77,14 @@
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">
                                         <i class="ti ti-edit me-1"></i>編輯
                                     </a>
-                                    @if (item.IsActive)
-                                    {
-                                        <form asp-action="Delete" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('確定要停用這把鑰匙嗎？')">
-                                                <i class="ti ti-ban me-1"></i>停用
-                                            </button>
-                                        </form>
-                                    }
+                                    <form asp-action="ToggleActive" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                onclick="return confirm('@(item.IsActive ? "確定要停用這把鑰匙嗎？" : "確定要重新啟用這把鑰匙嗎？")')">
+                                            <i class="ti @(item.IsActive ? "ti-ban" : "ti-check") me-1"></i>@(item.IsActive ? "停用" : "啟用")
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

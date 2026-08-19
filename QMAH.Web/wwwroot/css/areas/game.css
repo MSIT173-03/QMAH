@@ -37,14 +37,16 @@
 .game-admin-filter-actions .btn-list {
     width: 100%;
     min-width: 0;
-    align-items: stretch;
-    flex-wrap: wrap;
+    align-items: center;
+    flex-wrap: nowrap;
     gap: 0.5rem;
+    overflow-x: auto;
 }
 
 .game-admin-filter-actions .btn-list > * {
-    min-width: 0;
-    flex: 1 1 7rem;
+    min-width: max-content;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .game-admin-text-cell {
@@ -193,9 +195,7 @@
         width: 100%;
     }
 
-    .game-admin-filter .btn-list > * {
-        flex: 1 1 0;
-    }
+    .game-admin-filter .btn-list > * { flex: 0 0 auto; }
 
     .game-admin-table,
     .game-admin-table tbody,
