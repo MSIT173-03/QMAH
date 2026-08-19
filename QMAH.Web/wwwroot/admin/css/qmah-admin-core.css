@@ -167,6 +167,43 @@ body {
   min-height: 2.5rem;
 }
 
+/* 所有後台 GET 篩選器共用同一套欄位節奏與操作列，不讓個別 Area 自行直排。 */
+.page-body form[method="get"] .row {
+  row-gap: 1rem;
+}
+
+.page-body form[method="get"] .btn-list,
+.page-body form[method="get"] .qmah-actions,
+.page-body form[method="get"] .filter-actions,
+.page-body form[method="get"] > .row > .d-flex {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.page-body form[method="get"] .btn-list > *,
+.page-body form[method="get"] .qmah-actions > *,
+.page-body form[method="get"] .filter-actions > *,
+.page-body form[method="get"] > .row > .d-flex > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.page-body form[method="get"] .btn-outline-secondary {
+  border-color: var(--qmah-primary);
+  background: var(--qmah-primary);
+  color: #fff;
+}
+
+.page-body form[method="get"] .btn-outline-secondary:hover {
+  border-color: var(--qmah-primary-hover);
+  background: var(--qmah-primary-hover);
+  color: #fff;
+}
+
 .qmah-list-card {
   overflow: hidden;
 }
