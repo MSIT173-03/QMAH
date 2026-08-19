@@ -16,7 +16,7 @@ namespace QMAH.Web.Areas.Catalog.Controllers;
 
 [Area("Catalog")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-[AdminNavigation("玩家鑰匙背包一覽", order: 30)]
+[AdminNavigation("鑰匙背包總覽", order: 30)]
 public class KeyBackPackController : Controller
 {
 
@@ -29,15 +29,34 @@ public class KeyBackPackController : Controller
 
     public async Task<ActionResult> Index(C_KeywordViewModel vm, Guid? userId, CancellationToken cancellationToken)
     {
+        var memberKeyword = Request.Query["memberKeyword"].ToString();
+        var ownerRows = await (from b in _db.UserKeyBalances.AsNoTracking()
+                               join u in _db.UserProfiles.AsNoTracking() on b.UserId equals u.UserId
+                               group b by new { b.UserId, u.Nickname } into g
+                               select new UserKeyOwnerSummaryViewModel
+                               {
+                                   UserId = g.Key.UserId,
+                                   Nickname = g.Key.Nickname,
+                                   KeyTypeCount = g.Count(),
+                                   TotalBalance = g.Sum(x => x.Balance)
+                               }).ToListAsync(cancellationToken);
+        if (!string.IsNullOrWhiteSpace(memberKeyword))
+        {
+            ownerRows = ownerRows.Where(x => (x.Nickname ?? "").Contains(memberKeyword, StringComparison.OrdinalIgnoreCase)
+                || x.UserId.ToString().Contains(memberKeyword, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        ViewBag.OwnerSummaries = ownerRows.OrderBy(x => x.Nickname).ToList();
+
         var ukb = await _db.UserKeyBalances
             .AsNoTracking()
             .Include(UserKeyBalances => UserKeyBalances.KeyDefinition)
+            .Where(x => userId.HasValue && x.UserId == userId.Value)
             .OrderBy(UserKeyBalances => UserKeyBalances.UserId)
             .ToListAsync(cancellationToken);
 
         var up = await _db.UserProfiles
             .AsNoTracking()
-            .OrderBy(e => e.UserId)
+            .OrderBy(e => e.Nickname)
             .ToListAsync(cancellationToken);
 
         var datas_ukb = (from t in ukb
@@ -48,7 +67,7 @@ public class KeyBackPackController : Controller
                              Nickname = u.Nickname
                          }).ToList();
 
-        var uid = _db.UserProfiles.OrderBy(e => e.UserId).ToList();
+        var uid = _db.UserProfiles.OrderBy(e => e.Nickname).ToList();
 
         ViewBag.UserProfileList = new SelectList(uid, "UserId", "Nickname", userId);
 
@@ -58,23 +77,6 @@ public class KeyBackPackController : Controller
                 .Where(t => t.UserKeyBalance.UserId == userId && (t.Nickname.Contains(vm.txtKeyword)
                 || t.UserKeyBalance.KeyDefinition.Name.Contains(vm.txtKeyword)))
                 .ToList();
-        }
-        else if (!string.IsNullOrWhiteSpace(vm.txtKeyword))
-        {
-            datas_ukb = datas_ukb
-                .Where(t => t.Nickname != null && t.Nickname.Contains(vm.txtKeyword)
-                || t.UserKeyBalance.KeyDefinition.Name.Contains(vm.txtKeyword))
-                .ToList();
-        }
-        else if(userId != null)
-        {
-            datas_ukb = datas_ukb
-                .Where(t => t.UserKeyBalance.UserId == userId)
-                .ToList();
-        }
-        else
-        {
-            datas_ukb = datas_ukb;
         }
         return View(datas_ukb);
     }

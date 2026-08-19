@@ -3,10 +3,14 @@
 @model IEnumerable<UserKeyBalanceViewModel>
 
 @{
-    ViewData["Title"] = "玩家鑰匙背包";
+    ViewData["Title"] = "鑰匙背包總覽";
     ViewData["AdminDescription"] = "查詢會員持有的鑰匙餘額，並調整解鎖資源。";
     var keyword = Context.Request.Query["txtKeyword"].ToString();
     var records = Model?.ToList() ?? [];
+    var selectedUserId = Context.Request.Query["userId"].ToString();
+    var hasSelectedUser = Guid.TryParse(selectedUserId, out _);
+    var memberKeyword = Context.Request.Query["memberKeyword"].ToString();
+    var ownerSummaries = ViewBag.OwnerSummaries as IEnumerable<UserKeyOwnerSummaryViewModel> ?? [];
 }
 
 @section PageActions {
@@ -24,26 +28,34 @@
     <div class="card-header">
         <div>
             <h2 class="card-title">背包資料篩選</h2>
-            <div class="text-secondary">依會員或鑰匙名稱查看目前餘額。</div>
+            <div class="text-secondary">先選擇一名會員，再查看該會員持有的鑰匙。</div>
         </div>
         <span class="badge bg-green-lt">@records.Count 筆紀錄</span>
     </div>
     <div class="card-body">
         <form asp-action="Index" method="get">
             <div class="row g-3 align-items-end">
-                <div class="col-12 col-lg-4">
-                    <label class="form-label" for="userId">會員</label>
-                    <select class="form-select" id="userId" name="userId" asp-items="ViewBag.UserProfileList">
-                        <option value="">全部會員</option>
-                    </select>
-                </div>
-                <div class="col-12 col-lg-5">
-                    <label class="form-label" for="keyword">關鍵字</label>
-                    <input class="form-control" id="keyword" name="txtKeyword" value="@keyword"
-                           placeholder="會員暱稱或鑰匙名稱" />
-                </div>
-                <div class="col-12 col-lg-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill">
+                @if (!hasSelectedUser)
+                {
+                    <div class="col-12 col-lg-9">
+                        <label class="form-label" for="memberKeyword">搜尋會員</label>
+                        <input class="form-control" id="memberKeyword" name="memberKeyword" value="@memberKeyword" placeholder="會員編號或暱稱" />
+                    </div>
+                }
+                else
+                {
+                    <div class="col-12 col-lg-5">
+                        <label class="form-label" for="userId">目前會員</label>
+                        <select class="form-select" id="userId" name="userId" asp-items="ViewBag.UserProfileList" required></select>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label" for="keyword">關鍵字</label>
+                        <input class="form-control" id="keyword" name="txtKeyword" value="@keyword"
+                               placeholder="鑰匙名稱" />
+                    </div>
+                }
+                <div class="col-12 col-lg-3 qmah-actions align-items-end">
+                    <button type="submit" class="btn btn-primary">
                         <i class="ti ti-search me-1"></i>搜尋
                     </button>
                     <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
@@ -61,7 +73,35 @@
         </div>
     </div>
 
-    @if (records.Count == 0)
+    @if (!hasSelectedUser && ownerSummaries.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table qmah-crud-table">
+                <thead><tr><th>會員編號</th><th>會員</th><th>鑰匙種類</th><th>鑰匙總數</th><th class="text-end">操作</th></tr></thead>
+                <tbody>
+                    @foreach (var owner in ownerSummaries)
+                    {
+                        <tr>
+                            <td class="text-secondary text-nowrap">@owner.UserId</td>
+                            <td class="fw-semibold">@(string.IsNullOrWhiteSpace(owner.Nickname) ? "未命名會員" : owner.Nickname)</td>
+                            <td>@owner.KeyTypeCount</td>
+                            <td><span class="badge bg-green-lt">@owner.TotalBalance</span></td>
+                            <td><div class="qmah-table-actions"><a asp-action="Index" asp-route-userId="@owner.UserId" class="btn btn-sm btn-primary"><i class="ti ti-backpack me-1"></i>查看背包</a></div></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (!hasSelectedUser)
+    {
+        <div class="empty py-5">
+            <div class="empty-icon"><i class="ti ti-user-search"></i></div>
+            <p class="empty-title">請先選擇會員</p>
+            <p class="empty-subtitle text-secondary">選定會員後，這裡會顯示他的所有鑰匙與目前餘額。</p>
+        </div>
+    }
+    else if (records.Count == 0)
     {
         <div class="empty py-5">
             <div class="empty-icon"><i class="ti ti-backpack-off"></i></div>
