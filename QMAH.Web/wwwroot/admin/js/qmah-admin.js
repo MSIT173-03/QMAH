@@ -3,7 +3,6 @@
 
     const root = document.documentElement;
     const toggle = document.querySelector("[data-qmah-theme-toggle]");
-    const wash = document.querySelector("[data-qmah-theme-wash]");
     const themeColor = document.querySelector("[data-qmah-theme-color]");
     const sidebarToggle = document.querySelector("[data-qmah-sidebar-toggle]");
     const mobileSidebarToggle = document.querySelector("[data-qmah-mobile-sidebar-toggle]");
@@ -39,21 +38,22 @@
         syncThemeUi();
     }
 
-    function getThemeWashGeometry() {
+    function getThemeTransitionGeometry() {
         const rect = toggle?.getBoundingClientRect();
-        const size = 48;
-        const centerX = rect ? rect.left + rect.width / 2 : window.innerWidth - 40;
-        const centerY = rect ? rect.top + rect.height / 2 : 32;
-        const farthestX = Math.max(centerX, window.innerWidth - centerX);
-        const farthestY = Math.max(centerY, window.innerHeight - centerY);
-        const radius = Math.hypot(farthestX, farthestY);
-        const scale = Math.max(1, radius / (size / 2) * 1.06);
 
-        return {
-            x: centerX - size / 2,
-            y: centerY - size / 2,
-            scale
-        };
+        const x = rect
+            ? rect.left + rect.width / 2
+            : window.innerWidth - 40;
+
+        const y = rect
+            ? rect.top + rect.height / 2
+            : 32;
+
+        const radius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y));
+
+        return { x, y, radius };
     }
 
     async function switchTheme(theme, persist = true) {
@@ -61,55 +61,70 @@
             return;
         }
 
-        if (!wash || reduceMotion.matches || !toggle) {
-            applyTheme(theme, persist);
-            return;
+        switchingTheme = true;
+
+        if (toggle) {
+            toggle.disabled = true;
         }
 
-        switchingTheme = true;
-        toggle.disabled = true;
-
-        const geometry = getThemeWashGeometry();
-        const origin = `translate3d(${geometry.x}px, ${geometry.y}px, 0)`;
-        wash.style.opacity = "1";
-
         try {
-            const cover = wash.animate(
-                [
-                    { transform: `${origin} scale(.02)` },
-                    { transform: `${origin} scale(${geometry.scale})` }
-                ],
+            if (reduceMotion.matches || !document.startViewTransition) {
+                applyTheme(theme, persist);
+                return;
+            }
+
+            const isDark = theme === "dark";
+            const { x, y, radius } = getThemeTransitionGeometry();
+
+            root.dataset.qmahThemeTransition =
+                isDark ? "to-dark" : "to-light";
+
+            root.classList.add("qmah-theme-switching");
+
+            const transition = document.startViewTransition(() => {
+                applyTheme(theme, persist);
+            });
+
+            await transition.ready;
+
+            const full = `circle(${radius}px at ${x}px ${y}px)`;
+            const point = `circle(0px at ${x}px ${y}px)`;
+
+            const animation = root.animate(
+                isDark
+                    ? [
+                        { clipPath: full },
+                        { clipPath: point }
+                    ]
+                    : [
+                        { clipPath: point },
+                        { clipPath: full }
+                    ],
                 {
-                    duration: 430,
-                    easing: "cubic-bezier(.55, .02, .3, 1)",
-                    fill: "forwards"
+                    duration: isDark ? 520 : 620,
+                    easing: isDark
+                        ? "cubic-bezier(.4, 0, .2, 1)"
+                        : "cubic-bezier(.16, 1, .3, 1)",
+                    fill: "both",
+                    pseudoElement: isDark
+                        ? "::view-transition-old(root)"
+                        : "::view-transition-new(root)"
                 });
 
-            await cover.finished;
-            cover.cancel();
-            wash.style.transform = `${origin} scale(${geometry.scale})`;
-
-            applyTheme(theme, persist);
-
-            const reveal = wash.animate(
-                [
-                    { transform: `${origin} scale(${geometry.scale})` },
-                    { transform: `${origin} scale(.02)` }
-                ],
-                {
-                    duration: 610,
-                    easing: "cubic-bezier(.16, 1, .3, 1)",
-                    fill: "forwards"
-                });
-
-            await reveal.finished;
+            await animation.finished;
+            await transition.finished;
         } catch {
-            applyTheme(theme, persist);
+            if (root.dataset.bsTheme !== theme) {
+                applyTheme(theme, persist);
+            }
         } finally {
-            wash.getAnimations().forEach((animation) => animation.cancel());
-            wash.style.opacity = "0";
-            wash.style.transform = "translate3d(0, 0, 0) scale(.02)";
-            toggle.disabled = false;
+            delete root.dataset.qmahThemeTransition;
+            root.classList.remove("qmah-theme-switching");
+
+            if (toggle) {
+                toggle.disabled = false;
+            }
+
             switchingTheme = false;
         }
     }
