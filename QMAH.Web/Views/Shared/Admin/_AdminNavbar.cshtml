@@ -27,7 +27,12 @@
     <div class="container-xl">
         <button type="button" class="qmah-sidebar-toggle d-none d-xl-inline-flex" data-qmah-sidebar-toggle
                 aria-controls="admin-sidebar-menu" aria-expanded="true" title="收合側邊欄">
-            <partial name="Admin/_Icon" model="@("sidebar")" />
+            <span class="qmah-sidebar-toggle-icon qmah-sidebar-toggle-icon--collapse" aria-hidden="true">
+                <partial name="Admin/_Icon" model="@("sidebar-collapse")" />
+            </span>
+            <span class="qmah-sidebar-toggle-icon qmah-sidebar-toggle-icon--expand" aria-hidden="true">
+                <partial name="Admin/_Icon" model="@("sidebar-expand")" />
+            </span>
         </button>
 
         <div class="qmah-location" aria-label="目前位置">
@@ -44,10 +49,10 @@
                         aria-label="切換深色模式"
                         aria-pressed="false">
                     <span class="qmah-theme-icon qmah-theme-icon--moon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M20.4 15.3A8.5 8.5 0 0 1 8.7 3.6 8.5 8.5 0 1 0 20.4 15.3Z" /></svg>
+                        <i class="ti ti-moon"></i>
                     </span>
                     <span class="qmah-theme-icon qmah-theme-icon--sun" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" /></svg>
+                        <i class="ti ti-sun"></i>
                     </span>
                 </button>
             </div>
@@ -61,7 +66,9 @@
                         <small>@(isAccountPage ? "管理後台" : isAdmin ? "內容管理" : "個人中心")</small>
                     </span>
 
-                    <span class="qmah-account__chevron" aria-hidden="true">⌄</span>
+                    <span class="qmah-account__chevron" aria-hidden="true">
+                        <i class="ti ti-chevron-down"></i>
+                    </span>
                 </button>
 
                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">

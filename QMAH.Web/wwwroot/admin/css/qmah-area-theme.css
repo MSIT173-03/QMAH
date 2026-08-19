@@ -1,0 +1,476 @@
+/* 五大 Area 共用識別色；版型與元件仍維持同一套後台系統。 */
+.qmah-admin {
+  --qmah-area-accent: #3d6c6f;
+  --qmah-area-accent-hover: #315b5e;
+  --qmah-area-soft: #e7efed;
+  --qmah-area-focus: rgba(61, 108, 111, .2);
+}
+
+.qmah-admin[data-qmah-area="catalog"] {
+  --qmah-area-accent: #347a78;
+  --qmah-area-accent-hover: #286461;
+  --qmah-area-soft: #e3efec;
+  --qmah-area-focus: rgba(52, 122, 120, .22);
+}
+
+.qmah-admin[data-qmah-area="game"] {
+  --qmah-area-accent: #665d91;
+  --qmah-area-accent-hover: #554d7d;
+  --qmah-area-soft: #ece9f4;
+  --qmah-area-focus: rgba(102, 93, 145, .22);
+}
+
+.qmah-admin[data-qmah-area="social"] {
+  --qmah-area-accent: #a05e4d;
+  --qmah-area-accent-hover: #874b3d;
+  --qmah-area-soft: #f4e9e5;
+  --qmah-area-focus: rgba(160, 94, 77, .22);
+}
+
+.qmah-admin[data-qmah-area="store"] {
+  --qmah-area-accent: #987132;
+  --qmah-area-accent-hover: #7f5d28;
+  --qmah-area-soft: #f3eee1;
+  --qmah-area-focus: rgba(152, 113, 50, .22);
+}
+
+.qmah-admin[data-qmah-area="user"] {
+  --qmah-area-accent: #4b765f;
+  --qmah-area-accent-hover: #3d624e;
+  --qmah-area-soft: #e6eee9;
+  --qmah-area-focus: rgba(75, 118, 95, .22);
+}
+
+/* 讓現有共用元件直接繼承 Area 身份。 */
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) {
+  --qmah-primary: var(--qmah-area-accent);
+  --qmah-primary-hover: var(--qmah-area-accent-hover);
+  --qmah-primary-soft: var(--qmah-area-soft);
+  --qmah-focus: var(--qmah-area-focus);
+  --tblr-primary: var(--qmah-area-accent);
+  --tblr-link-color: var(--qmah-area-accent);
+  --tblr-link-hover-color: var(--qmah-area-accent-hover);
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="catalog"] {
+  --qmah-area-accent: #79b9b1;
+  --qmah-area-accent-hover: #9acdc7;
+  --qmah-area-soft: #203a38;
+  --qmah-area-focus: rgba(121, 185, 177, .25);
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="game"] {
+  --qmah-area-accent: #aaa1d2;
+  --qmah-area-accent-hover: #c0b9df;
+  --qmah-area-soft: #302d45;
+  --qmah-area-focus: rgba(170, 161, 210, .25);
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="social"] {
+  --qmah-area-accent: #d78d7d;
+  --qmah-area-accent-hover: #e5aa9d;
+  --qmah-area-soft: #432c28;
+  --qmah-area-focus: rgba(215, 141, 125, .25);
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="store"] {
+  --qmah-area-accent: #d0ae70;
+  --qmah-area-accent-hover: #dfc38f;
+  --qmah-area-soft: #403522;
+  --qmah-area-focus: rgba(208, 174, 112, .25);
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="user"] {
+  --qmah-area-accent: #8cbea3;
+  --qmah-area-accent-hover: #aad0bb;
+  --qmah-area-soft: #263c31;
+  --qmah-area-focus: rgba(140, 190, 163, .25);
+}
+
+/* 頁面標題只留下小面積識別，不把整頁染色。 */
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .page-title {
+  display: flex;
+  gap: .62rem;
+  align-items: center;
+}
+
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .page-title::before {
+  width: .28rem;
+  height: 1.18em;
+  flex: 0 0 .28rem;
+  border-radius: 999px;
+  background: var(--qmah-area-accent);
+  content: "";
+}
+
+/* 各 Area 總覽的工作區 icon 使用同一主色，不把卡片變成彩色拼盤。 */
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .qmah-quick-link .avatar {
+  border-color: color-mix(in srgb, var(--qmah-area-accent) 28%, var(--qmah-line)) !important;
+  background: var(--qmah-area-soft) !important;
+  color: var(--qmah-area-accent) !important;
+}
+
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .qmah-quick-link:hover,
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .qmah-quick-link:focus-visible {
+  border-color: color-mix(in srgb, var(--qmah-area-accent) 42%, var(--qmah-line));
+  background: color-mix(in srgb, var(--qmah-area-soft) 60%, var(--qmah-surface));
+}
+
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .qmah-quick-link::after {
+  color: var(--qmah-area-accent);
+}
+
+/* 管理總覽五個 Area portal：各自有識別色，但保留共同的白／深色 surface。 */
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link {
+  --qmah-portal-accent: #3d6c6f;
+  --qmah-portal-soft: #e7efed;
+  min-height: 5.35rem;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: .9rem;
+  padding: .85rem .95rem;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Catalog"] {
+  --qmah-portal-accent: #347a78;
+  --qmah-portal-soft: #e3efec;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Game"] {
+  --qmah-portal-accent: #665d91;
+  --qmah-portal-soft: #ece9f4;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Social"] {
+  --qmah-portal-accent: #a05e4d;
+  --qmah-portal-soft: #f4e9e5;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Store"] {
+  --qmah-portal-accent: #987132;
+  --qmah-portal-soft: #f3eee1;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/User"] {
+  --qmah-portal-accent: #4b765f;
+  --qmah-portal-soft: #e6eee9;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link .avatar {
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid color-mix(in srgb, var(--qmah-portal-accent) 25%, var(--qmah-line));
+  border-radius: 9px;
+  background: var(--qmah-portal-soft) !important;
+  color: var(--qmah-portal-accent) !important;
+  font-size: 1.25rem;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link::before {
+  position: absolute;
+  top: .8rem;
+  bottom: .8rem;
+  left: 0;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--qmah-portal-accent);
+  content: "";
+  opacity: .72;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link::after {
+  color: var(--qmah-portal-accent);
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link:hover,
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link:focus-visible {
+  border-color: color-mix(in srgb, var(--qmah-portal-accent) 32%, var(--qmah-line));
+  background: color-mix(in srgb, var(--qmah-portal-soft) 48%, var(--qmah-surface));
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Catalog"] {
+  --qmah-portal-accent: #79b9b1;
+  --qmah-portal-soft: #203a38;
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Game"] {
+  --qmah-portal-accent: #aaa1d2;
+  --qmah-portal-soft: #302d45;
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Social"] {
+  --qmah-portal-accent: #d78d7d;
+  --qmah-portal-soft: #432c28;
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Store"] {
+  --qmah-portal-accent: #d0ae70;
+  --qmah-portal-soft: #403522;
+}
+
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/User"] {
+  --qmah-portal-accent: #8cbea3;
+  --qmah-portal-soft: #263c31;
+}
+
+/* 常用功能只在 icon 借用來源 Area 顏色，避免再次搶走主視覺。 */
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-shortcuts .qmah-quick-link[href*="/Catalog"] .avatar {
+  color: #347a78 !important;
+  background: #e3efec !important;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-shortcuts .qmah-quick-link[href*="/Game"] .avatar {
+  color: #665d91 !important;
+  background: #ece9f4 !important;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-shortcuts .qmah-quick-link[href*="/Social"] .avatar {
+  color: #a05e4d !important;
+  background: #f4e9e5 !important;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-shortcuts .qmah-quick-link[href*="/Store"] .avatar {
+  color: #987132 !important;
+  background: #f3eee1 !important;
+}
+
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-shortcuts .qmah-quick-link[href*="/User"] .avatar {
+  color: #4b765f !important;
+  background: #e6eee9 !important;
+}
+
+/* Tabler Icons 的尺寸由使用位置控制。 */
+.qmah-admin .ti {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  font-size: 1.15em;
+  line-height: 1;
+  vertical-align: -.12em;
+}
+
+.qmah-admin .nav-link-icon .ti {
+  font-size: 1.18rem;
+}
+
+.qmah-admin .qmah-quick-link .avatar .ti {
+  font-size: 1.22rem;
+}
+
+.qmah-admin .qmah-dashboard-primary .qmah-quick-link .avatar .ti {
+  font-size: 1.35rem;
+}
+
+/* 收合按鈕使用正式 Tabler collapse / expand icon。 */
+.qmah-sidebar-toggle-icon {
+  display: inline-grid;
+  width: 1.15rem;
+  height: 1.15rem;
+  place-items: center;
+}
+
+.qmah-sidebar-toggle-icon--expand {
+  display: none;
+}
+
+html[data-qmah-sidebar="collapsed"] .qmah-sidebar-toggle-icon--collapse {
+  display: none;
+}
+
+html[data-qmah-sidebar="collapsed"] .qmah-sidebar-toggle-icon--expand {
+  display: inline-grid;
+}
+
+/* 桌面 sidebar 尺度依可用寬度調整。 */
+@media (min-width: 1200px) and (max-width: 1439.98px) {
+  :root {
+    --qmah-sidebar-width: 13.5rem;
+    --tblr-navbar-vertical-width: var(--qmah-sidebar-width);
+  }
+
+  .qmah-admin .navbar-vertical .navbar-nav .nav-link {
+    margin-inline: .55rem;
+  }
+}
+
+@media (min-width: 1440px) and (max-width: 1919.98px) {
+  :root {
+    --qmah-sidebar-width: 14.5rem;
+    --tblr-navbar-vertical-width: var(--qmah-sidebar-width);
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --qmah-sidebar-width: 15.25rem;
+    --tblr-navbar-vertical-width: var(--qmah-sidebar-width);
+  }
+}
+
+/* 收合後不是單純把文字藏起來，而是變成完整的 icon rail。 */
+@media (min-width: 1200px) {
+  html[data-qmah-sidebar="collapsed"] {
+    --qmah-sidebar-width: 4.65rem;
+    --tblr-navbar-vertical-width: var(--qmah-sidebar-width);
+  }
+
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .navbar-vertical .navbar-brand {
+    min-height: 4.75rem;
+    padding: .75rem;
+  }
+
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .navbar-vertical .qmah-brand-logo {
+    display: none !important;
+  }
+
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .navbar-vertical .qmah-brand::before {
+    display: block;
+    width: 2.15rem;
+    height: 2.15rem;
+    background: url("/images/brand/qmah-favicon.svg") center / contain no-repeat;
+    content: "";
+  }
+
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .navbar-vertical .nav-link-title,
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .qmah-sidebar-section-label,
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .qmah-sidebar-footer {
+    display: none !important;
+  }
+
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .navbar-vertical .navbar-collapse {
+    padding-top: .65rem;
+  }
+
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .navbar-vertical .navbar-nav .nav-link,
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .qmah-sidebar-subnav .nav-link {
+    display: flex;
+    width: auto;
+    min-height: 2.8rem;
+    margin: .16rem .55rem;
+    padding: .65rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .navbar-vertical .nav-link-icon {
+    display: grid;
+    width: 1.35rem;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    margin: 0 !important;
+    place-items: center;
+  }
+
+  html[data-qmah-sidebar="collapsed"] .qmah-admin .navbar-vertical .nav-link::before {
+    top: .55rem;
+    bottom: .55rem;
+  }
+}
+
+/* 800×600 一帶採 drawer sidebar，主內容保有足夠寬度。 */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .qmah-admin .page-header {
+    padding-top: 1.15rem;
+    padding-bottom: .8rem;
+  }
+
+  .qmah-admin .page-body {
+    padding-bottom: 2rem;
+  }
+
+  .qmah-admin .qmah-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qmah-admin .qmah-dashboard-primary > [class*="col-"] {
+    width: 100%;
+  }
+
+  .qmah-admin .qmah-dashboard-primary .qmah-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qmah-admin .qmah-dashboard-shortcuts .qmah-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qmah-admin .card-header {
+    min-height: 3.25rem;
+  }
+}
+
+@media (min-width: 768px) and (max-height: 700px) {
+  .qmah-admin .page > .qmah-topbar,
+  .qmah-admin .page > .qmah-topbar .container-xl {
+    min-height: 3.25rem;
+  }
+
+  .qmah-admin .page-header {
+    padding-top: .85rem;
+    padding-bottom: .65rem;
+  }
+
+  .qmah-admin .qmah-page-description {
+    margin-top: .22rem;
+  }
+
+  .qmah-admin .page-body {
+    padding-bottom: 1.4rem;
+  }
+
+  .qmah-admin .qmah-dashboard-metrics .card-body {
+    min-height: 5rem;
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+  }
+}
+
+/* 小螢幕不讓彩色識別犧牲內容空間。 */
+@media (max-width: 767.98px) {
+  .qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .page-title::before {
+    width: .22rem;
+    flex-basis: .22rem;
+  }
+
+  .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link {
+    min-height: 4.8rem;
+    grid-template-columns: 2.7rem minmax(0, 1fr) auto;
+    padding: .75rem .8rem;
+  }
+
+  .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link .avatar {
+    width: 2.7rem;
+    height: 2.7rem;
+  }
+}
+
+/* 4K 不把資料攤到整片畫面；保留足夠留白與可掃讀行長。 */
+@media (min-width: 2400px) {
+  .qmah-admin .page-wrapper > :where(main, .footer) .container-xl,
+  .qmah-admin .qmah-topbar .container-xl {
+    width: min(100%, 138rem);
+    max-width: 138rem;
+    margin-inline: auto;
+    padding-inline: 3rem;
+  }
+
+  .qmah-admin .page-title {
+    font-size: 2rem;
+  }
+
+  .qmah-admin .qmah-page-description {
+    font-size: .92rem;
+  }
+
+  .qmah-admin .qmah-dashboard-primary .qmah-quick-grid {
+    gap: .8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qmah-admin .qmah-sidebar-toggle-icon,
+  .qmah-admin .qmah-quick-link,
+  .qmah-admin .qmah-quick-link .avatar {
+    transition: none !important;
+  }
+}
