@@ -193,6 +193,21 @@
                 編輯個人資料
             </a>
 
+            @if (Model.Roles.Contains("User"))
+            {
+                <a asp-action="ResetPassword"
+                   asp-route-id="@Model.User.Id"
+                   class="btn btn-outline-primary">
+                    <i class="ti ti-key me-1"></i>重設登入密碼
+                </a>
+            }
+            else if (Model.Roles.Contains("Admin") && User.Identity?.Name == Model.User.Email)
+            {
+                <a asp-action="ChangePassword" class="btn btn-outline-primary">
+                    <i class="ti ti-lock me-1"></i>修改我的密碼
+                </a>
+            }
+
             <form asp-action="ChangeStatus"
                   method="post"
                   class="d-inline">

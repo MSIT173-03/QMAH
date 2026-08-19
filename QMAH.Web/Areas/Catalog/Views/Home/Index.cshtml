@@ -90,12 +90,48 @@
         </div>
     </div>
     <div class="col-12 col-lg-5">
-        <div class="card h-100 qmah-dashboard-note">
-            <div class="card-body">
-                <span class="qmah-status qmah-status--info">資料關係</span>
-                <h2 class="card-title mt-3">一份文物，三個系統共用</h2>
-                <p class="text-secondary mb-0">圖鑑是主資料來源，題庫以 ArtifactId 對應遊戲，商品也沿用相同文物圖片與授權資訊。</p>
-            </div>
+        <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title">近期解鎖</h2><div class="card-subtitle">會員最近取得的圖鑑進度</div></div></div>
+            @if (Model.RecentUnlocks.Count == 0)
+            {
+                <div class="empty py-5"><p class="empty-title">目前沒有解鎖紀錄</p></div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var item in Model.RecentUnlocks)
+                    {
+                        <div class="list-group-item"><div class="d-flex justify-content-between gap-3"><strong>@item.ArtifactName</strong><span class="badge bg-blue-lt">@(item.UnlockMethod switch { "KEY" => "鑰匙", "GAME" => "遊戲", _ => item.UnlockMethod })</span></div><div class="text-secondary small mt-1">@item.UnlockedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div></div>
+                    }
+                </div>
+            }
         </div>
+    </div>
+</div>
+
+<div class="row row-cards mt-1">
+    <div class="col-12 col-lg-4">
+        <div class="card h-100"><div class="card-header"><div><h2 class="card-title">分類分布</h2><div class="card-subtitle">文物數量與啟用狀態</div></div></div><div class="list-group list-group-flush">
+            @foreach (var item in Model.CategoryBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center gap-3"><span>@item.Name</span><span class="text-secondary small">@item.ActiveCount / @item.Count 件啟用</span></div>
+            }
+        </div></div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card h-100"><div class="card-header"><div><h2 class="card-title">年代分布</h2><div class="card-subtitle">目前收錄的年代區間</div></div></div><div class="list-group list-group-flush">
+            @foreach (var item in Model.EraBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center gap-3"><span>@item.Name</span><span class="text-secondary small">@item.Count 件</span></div>
+            }
+        </div></div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card h-100"><div class="card-header"><div><h2 class="card-title">鑰匙規則分布</h2><div class="card-subtitle">依解鎖範圍整理</div></div></div><div class="list-group list-group-flush">
+            @foreach (var item in Model.KeyScopeBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center gap-3"><span>@(item.Name switch { "CATEGORY" => "分類鑰匙", "ERA" => "年代鑰匙", "UNIVERSAL" => "萬用鑰匙", "NORMAL" => "一般鑰匙", _ => item.Name })</span><span class="text-secondary small">@item.ActiveCount / @item.Count 啟用</span></div>
+            }
+        </div></div>
     </div>
 </div>

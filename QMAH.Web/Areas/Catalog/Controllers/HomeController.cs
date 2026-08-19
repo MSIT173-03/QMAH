@@ -21,7 +21,51 @@ public sealed class HomeController(QmahDbContext db) : Controller
             CategoryCount = await db.ArtifactCategories.CountAsync(cancellationToken),
             EraBucketCount = await db.EraBuckets.CountAsync(cancellationToken),
             KeyDefinitionCount = await db.KeyDefinitions.CountAsync(cancellationToken),
-            UnlockCount = await db.ArtifactUnlocks.CountAsync(cancellationToken)
+            UnlockCount = await db.ArtifactUnlocks.CountAsync(cancellationToken),
+            CategoryBreakdown = await db.Artifacts
+                .AsNoTracking()
+                .GroupBy(x => x.Category.Name)
+                .OrderByDescending(x => x.Count())
+                .Select(x => new CatalogBreakdownItemViewModel
+                {
+                    Name = x.Key,
+                    Count = x.Count(),
+                    ActiveCount = x.Count(item => item.IsActive)
+                })
+                .ToListAsync(cancellationToken),
+            EraBreakdown = await db.Artifacts
+                .AsNoTracking()
+                .GroupBy(x => x.EraBucket.Name)
+                .OrderByDescending(x => x.Count())
+                .Select(x => new CatalogBreakdownItemViewModel
+                {
+                    Name = x.Key,
+                    Count = x.Count(),
+                    ActiveCount = x.Count(item => item.IsActive)
+                })
+                .ToListAsync(cancellationToken),
+            KeyScopeBreakdown = await db.KeyDefinitions
+                .AsNoTracking()
+                .GroupBy(x => x.ScopeType)
+                .OrderByDescending(x => x.Count())
+                .Select(x => new CatalogBreakdownItemViewModel
+                {
+                    Name = x.Key,
+                    Count = x.Count(),
+                    ActiveCount = x.Count(item => item.IsActive)
+                })
+                .ToListAsync(cancellationToken),
+            RecentUnlocks = await db.ArtifactUnlocks
+                .AsNoTracking()
+                .OrderByDescending(x => x.UnlockedAt)
+                .Take(8)
+                .Select(x => new CatalogRecentUnlockViewModel
+                {
+                    ArtifactName = x.Artifact.Name,
+                    UnlockMethod = x.UnlockMethod,
+                    UnlockedAt = x.UnlockedAt
+                })
+                .ToListAsync(cancellationToken)
         };
 
         ViewData["AdminDescription"] = "文物資料、分類、年代與解鎖狀態的共同入口。";

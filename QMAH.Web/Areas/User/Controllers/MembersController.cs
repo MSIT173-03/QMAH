@@ -17,15 +17,18 @@ namespace QMAH.Web.Areas.User.Controllers;
 public class MembersController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly QmahDbContext _context;
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
 
     public MembersController(
         UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
         QmahDbContext context,
         RoleManager<IdentityRole<Guid>> roleManager)
     {
         _userManager = userManager;
+        _signInManager = signInManager;
         _context = context;
         _roleManager = roleManager;
     }
@@ -201,6 +204,108 @@ public class MembersController : Controller
 
         return View(model);
     }
+
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        return View(new ChangeOwnPasswordViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangeOwnPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null)
+        {
+            return Challenge();
+        }
+
+        var result = await _userManager.ChangePasswordAsync(
+            currentUser, model.CurrentPassword, model.NewPassword);
+
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, PasswordError(error));
+            }
+
+            return View(model);
+        }
+
+        await _signInManager.RefreshSignInAsync(currentUser);
+        TempData["SuccessMessage"] = "管理員密碼已更新。";
+        return RedirectToAction(nameof(ChangePassword));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ResetPassword(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null || !await _userManager.IsInRoleAsync(user, "User"))
+        {
+            return NotFound();
+        }
+
+        return View(new ResetMemberPasswordViewModel
+        {
+            UserId = user.Id,
+            Email = user.Email ?? ""
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(Guid id, ResetMemberPasswordViewModel model)
+    {
+        if (id != model.UserId)
+        {
+            return BadRequest();
+        }
+
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null || !await _userManager.IsInRoleAsync(user, "User"))
+        {
+            return NotFound();
+        }
+
+        model.Email = user.Email ?? "";
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, PasswordError(error));
+            }
+
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = $"{user.Email} 的密碼已重設。";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    private static string PasswordError(IdentityError error) => error.Code switch
+    {
+        "PasswordRequiresNonAlphanumeric" => "密碼至少需要一個特殊符號，例如 ! @ # $。",
+        "PasswordRequiresLower" => "密碼至少需要一個小寫英文字母。",
+        "PasswordRequiresUpper" => "密碼至少需要一個大寫英文字母。",
+        "PasswordRequiresDigit" => "密碼至少需要一個數字。",
+        "PasswordTooShort" => "密碼長度不足。",
+        _ => error.Description
+    };
 
     [HttpPost]
     [ValidateAntiForgeryToken]
