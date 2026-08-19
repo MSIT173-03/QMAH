@@ -6,7 +6,9 @@
 }
 
 @section PageActions {
-    <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回會員詳細資料</a>
+    <a href="javascript:history.back()" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回上一頁
+    </a>
 }
 
 <div class="row justify-content-center">
@@ -55,8 +57,10 @@
                     </section>
 
                     <div class="qmah-form-actions">
-                        <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary">取消</a>
-                        <button type="submit" class="btn btn-primary"><i class="ti ti-coins me-1"></i>確認調整</button>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-coins me-1"></i>確認調整
+                        </button>
                     </div>
                 </form>
             </div>

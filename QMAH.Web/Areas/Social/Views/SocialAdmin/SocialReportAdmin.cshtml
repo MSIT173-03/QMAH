@@ -12,7 +12,7 @@
 }
 
 <div class="card qmah-filter-panel mb-3">
-    <div class="card-header d-flex align-items-center justify-content-between gap-3"><div><h2 class="card-title mb-1">檢舉篩選</h2><div class="text-secondary">依處理狀態、目標類型與理由文字查找紀錄。</div></div><span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span></div>
+    <div class="card-header"><div><h2 class="card-title mb-1">檢舉篩選</h2><div class="d-flex flex-wrap align-items-center gap-2 text-secondary"><span>依處理狀態、目標類型與理由文字查找紀錄。</span><span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span></div></div></div>
     <div class="card-body"><form method="get" asp-action="Index"><div class="row g-3 align-items-end">
         <div class="col-12 col-md-3"><label class="form-label" for="status">處理狀態</label><select class="form-select" id="status" name="status"><option value="">全部狀態</option><option value="PENDING" selected="@(Model.Status == "PENDING" ? "selected" : null)">待審核</option><option value="RESOLVED" selected="@(Model.Status == "RESOLVED" ? "selected" : null)">已處理</option><option value="REJECTED" selected="@(Model.Status == "REJECTED" ? "selected" : null)">已駁回</option></select></div>
         <div class="col-12 col-md-3"><label class="form-label" for="targetType">目標類型</label><select class="form-select" id="targetType" name="targetType"><option value="">全部類型</option><option value="POST" selected="@(Model.TargetType == "POST" ? "selected" : null)">貼文</option><option value="COMMENT" selected="@(Model.TargetType == "COMMENT" ? "selected" : null)">留言</option></select></div>

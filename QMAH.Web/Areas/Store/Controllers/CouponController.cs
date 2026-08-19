@@ -11,7 +11,7 @@ namespace QMAH.Web.Areas.Store.Controllers;
 [Area("Store")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [Route("store/coupon")]
-[AdminNavigation("優惠券", 30)]
+[AdminNavigation("優惠券規則", 30)]
 public class CouponController : Controller
 {
     private readonly QmahDbContext db;
@@ -71,7 +71,7 @@ public class CouponController : Controller
         });
 
         await db.SaveChangesAsync(cancellationToken);
-        TempData["SuccessMessage"] = "優惠券已建立。";
+        TempData["SuccessMessage"] = "優惠券規則已建立。";
         return RedirectToAction(nameof(Index));
     }
 
@@ -124,7 +124,7 @@ public class CouponController : Controller
         coupon.IsActive = model.IsActive;
 
         await db.SaveChangesAsync(cancellationToken);
-        TempData["SuccessMessage"] = "優惠券已更新。";
+        TempData["SuccessMessage"] = "優惠券規則已更新。";
         return RedirectToAction(nameof(Index));
     }
 
@@ -140,7 +140,7 @@ public class CouponController : Controller
 
         coupon.IsActive = !coupon.IsActive;
         await db.SaveChangesAsync(cancellationToken);
-        TempData["SuccessMessage"] = coupon.IsActive ? "優惠券已啟用。" : "優惠券已停用。";
+        TempData["SuccessMessage"] = coupon.IsActive ? "優惠券規則已啟用。" : "優惠券規則已停用。";
         return RedirectToAction(nameof(Index));
     }
 

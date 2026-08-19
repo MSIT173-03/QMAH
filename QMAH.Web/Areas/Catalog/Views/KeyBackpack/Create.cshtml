@@ -3,11 +3,12 @@
 @{
     ViewData["Title"] = "新增背包紀錄";
     ViewData["AdminDescription"] = "為會員新增鑰匙餘額；若已有同一組關聯，系統會累加數量。";
+    Guid? returnUserId = ViewBag.ReturnUserId is Guid id ? id : null;
 }
 
 @section PageActions {
-    <a asp-action="Index" class="btn btn-outline-secondary">
-        <i class="ti ti-arrow-left me-1"></i>返回鑰匙背包總覽
+    <a asp-action="Index" asp-route-userId="@returnUserId" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回鑰匙背包
     </a>
 }
 
@@ -50,7 +51,7 @@
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
-                <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                <a asp-action="Index" asp-route-userId="@returnUserId" class="btn btn-outline-secondary">取消</a>
                 <button type="submit" class="btn btn-primary"><i class="ti ti-plus me-1"></i>新增紀錄</button>
             </div>
         </form>

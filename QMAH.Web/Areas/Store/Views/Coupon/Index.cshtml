@@ -1,52 +1,140 @@
+@using System.Linq
 @model IEnumerable<QMAH.Web.Models.Entities.CouponDefinition>
 
 @{
-    ViewData["Title"] = "優惠券管理";
-    ViewData["AdminDescription"] = "管理優惠券定義與啟用狀態，停用不會刪除既有會員券或訂單紀錄。";
+    ViewData["Title"] = "優惠券規則";
+    ViewData["AdminDescription"] = "管理優惠券規則與啟用狀態，停用不會刪除既有會員券或訂單紀錄。";
+    var records = Model?.ToList() ?? [];
+    var activeCount = records.Count(item => item.IsActive);
+    var inactiveCount = records.Count - activeCount;
 }
 
 @section PageActions {
-    <a asp-action="Create" class="btn btn-primary"><i class="ti ti-plus me-1"></i>新增優惠券</a>
+    <div class="qmah-actions d-flex flex-wrap gap-2">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>新增優惠券規則
+        </a>
+        <a asp-area="Store" asp-controller="Coupon" asp-action="Index" class="btn btn-secondary">
+            <i class="ti ti-settings me-1"></i>優惠券規則
+        </a>
+        <a asp-area="Store" asp-controller="CouponBackpack" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-backpack me-1"></i>優惠券背包
+        </a>
+        <a asp-area="Store" asp-controller="CouponTransactions" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-receipt me-1"></i>優惠券流水
+        </a>
+    </div>
 }
 
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center justify-content-between gap-3">
+                <div>
+                    <div class="text-secondary mb-1">規則總數</div>
+                    <div class="h2 mb-0">@records.Count</div>
+                </div>
+                <div class="text-primary fs-1">
+                    <i class="ti ti-ticket"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center justify-content-between gap-3">
+                <div>
+                    <div class="text-secondary mb-1">啟用中</div>
+                    <div class="h2 mb-0 text-success">@activeCount</div>
+                </div>
+                <div class="text-success fs-1">
+                    <i class="ti ti-circle-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center justify-content-between gap-3">
+                <div>
+                    <div class="text-secondary mb-1">已停用</div>
+                    <div class="h2 mb-0 text-secondary">@inactiveCount</div>
+                </div>
+                <div class="text-secondary fs-1">
+                    <i class="ti ti-ban"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card qmah-list-card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">優惠券規則</h2>
+            <div class="card-subtitle">停用規則不會刪除既有會員券或訂單紀錄。</div>
+        </div>
+    </div>
     <div class="table-responsive">
         <table class="table table-vcenter table-hover card-table qmah-crud-table">
             <thead>
                 <tr>
-                    <th>代碼</th><th>名稱</th><th>折扣</th><th>最低消費</th><th>有效期間</th><th>狀態</th>
-                    <th class="qmah-action-cell qmah-actions--2">操作</th>
+                    <th>代碼</th>
+                    <th>名稱</th>
+                    <th>折扣</th>
+                    <th>最低消費</th>
+                    <th>有效期間</th>
+                    <th>狀態</th>
+                    <th class="w-1 text-center pe-3 pe-md-4">操作</th>
                 </tr>
             </thead>
             <tbody>
-            @if (!Model.Any())
-            {
-                <tr><td colspan="7"><div class="empty qmah-empty-state"><div class="empty-icon"><i class="ti ti-ticket-off"></i></div><p class="empty-title">目前沒有優惠券資料</p><p class="empty-subtitle text-secondary">建立優惠券後，會在這裡維護折扣與有效期間。</p></div></td></tr>
-            }
-            else
-            {
-                @foreach (var item in Model)
+                @if (records.Count == 0)
                 {
                     <tr>
-                        <td><code>@item.Code</code></td>
-                        <td class="fw-semibold">@item.Name</td>
-                        <td>@AdminDisplayLabels.DiscountType(item.DiscountType) · @item.DiscountValue.ToString("0.##")</td>
-                        <td>@item.MinimumAmount.ToString("C0")</td>
-                        <td class="text-secondary text-nowrap">@item.StartAt.ToString("yyyy-MM-dd")<br />至 @item.EndAt.ToString("yyyy-MM-dd")</td>
-                        <td><span class="badge @(item.IsActive ? "bg-green-lt" : "bg-secondary-lt")">@(item.IsActive ? "啟用中" : "已停用")</span></td>
-                        <td class="qmah-action-cell qmah-actions--2">
-                            <div class="qmah-table-actions">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">編輯</a>
-                                <form asp-action="ToggleStatus" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-danger" : "btn-success")">@(item.IsActive ? "停用" : "啟用")</button>
-                                </form>
+                        <td colspan="7">
+                            <div class="empty qmah-empty-state">
+                                <div class="empty-icon"><i class="ti ti-ticket-off"></i></div>
+                                <p class="empty-title">目前沒有優惠券規則</p>
+                                <p class="empty-subtitle text-secondary">建立規則後，會在這裡維護折扣與有效期間。</p>
                             </div>
                         </td>
                     </tr>
                 }
-            }
+                else
+                {
+                    @foreach (var item in records)
+                    {
+                        <tr>
+                            <td><code>@item.Code</code></td>
+                            <td class="fw-semibold">@item.Name</td>
+                            <td>@AdminDisplayLabels.DiscountType(item.DiscountType) · @item.DiscountValue.ToString("0.##")</td>
+                            <td>@item.MinimumAmount.ToString("C0")</td>
+                            <td class="text-secondary text-nowrap">
+                                @item.StartAt.ToString("yyyy-MM-dd")<br />至 @item.EndAt.ToString("yyyy-MM-dd")
+                            </td>
+                            <td>
+                                <span class="badge @(item.IsActive ? "bg-green-lt" : "bg-secondary-lt")">
+                                    @(item.IsActive ? "啟用中" : "已停用")
+                                </span>
+                            </td>
+                            <td class="text-center pe-3 pe-md-4">
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary px-3">
+                                        <i class="ti ti-edit me-1"></i>編輯
+                                    </a>
+                                    <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm px-3 @(item.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                                            @(item.IsActive ? "停用" : "啟用")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
     </div>

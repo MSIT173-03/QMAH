@@ -2,89 +2,32 @@
 
 @{
     ViewData["Title"] = "圖鑑管理總覽";
-    ViewData["AdminDescription"] = "維護文物主資料、分類、年代、鑰匙與會員解鎖紀錄。";
+    ViewData["AdminDescription"] = "維護文物主資料、鑰匙、會員背包與解鎖紀錄。";
 }
 
 @section PageActions {
-    <a asp-area="Catalog" asp-controller="Artifact" asp-action="Index" class="btn btn-primary">
-        <i class="ti ti-building-monument me-1"></i>查看文物
-    </a>
-    <a asp-area="Catalog" asp-controller="Key" asp-action="Index" class="btn btn-outline-secondary">
-        <i class="ti ti-key me-1"></i>管理鑰匙
-    </a>
+    <a asp-area="Catalog" asp-controller="Artifact" asp-action="Index" class="btn btn-primary"><i class="ti ti-building-monument me-1"></i>查看文物</a>
+    <a asp-area="Catalog" asp-controller="Key" asp-action="Index" class="btn btn-secondary"><i class="ti ti-key me-1"></i>管理鑰匙</a>
 }
 
 <div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-5 qmah-dashboard-metrics">
-    <div class="col">
-        <div class="card qmah-metric-card">
-            <div class="card-body">
-                <span class="qmah-metric-label">文物總數</span>
-                <strong class="qmah-metric-value">@Model.ArtifactCount</strong>
-                <span class="qmah-metric-note">已啟用 @Model.ActiveArtifactCount 件</span>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card qmah-metric-card">
-            <div class="card-body">
-                <span class="qmah-metric-label">分類</span>
-                <strong class="qmah-metric-value">@Model.CategoryCount</strong>
-                <span class="qmah-metric-note">可供篩選與導覽</span>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card qmah-metric-card">
-            <div class="card-body">
-                <span class="qmah-metric-label">年代區間</span>
-                <strong class="qmah-metric-value">@Model.EraBucketCount</strong>
-                <span class="qmah-metric-note">圖鑑與題庫共用</span>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card qmah-metric-card">
-            <div class="card-body">
-                <span class="qmah-metric-label">鑰匙規則</span>
-                <strong class="qmah-metric-value">@Model.KeyDefinitionCount</strong>
-                <span class="qmah-metric-note">圖鑑解鎖設定</span>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card qmah-metric-card">
-            <div class="card-body">
-                <span class="qmah-metric-label">解鎖紀錄</span>
-                <strong class="qmah-metric-value">@Model.UnlockCount</strong>
-                <span class="qmah-metric-note">會員鑑定進度</span>
-            </div>
-        </div>
-    </div>
+    <div class="col"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">文物總數</span><strong class="qmah-metric-value">@Model.ArtifactCount</strong><span class="qmah-metric-note">已啟用 @Model.ActiveArtifactCount 件</span></div></div></div>
+    <div class="col"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">分類</span><strong class="qmah-metric-value">@Model.CategoryCount</strong><span class="qmah-metric-note">圖鑑分類</span></div></div></div>
+    <div class="col"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">年代</span><strong class="qmah-metric-value">@Model.EraBucketCount</strong><span class="qmah-metric-note">年代區間</span></div></div></div>
+    <div class="col"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">鑰匙規則</span><strong class="qmah-metric-value">@Model.KeyDefinitionCount</strong><span class="qmah-metric-note">解鎖設定</span></div></div></div>
+    <div class="col"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">解鎖紀錄</span><strong class="qmah-metric-value">@Model.UnlockCount</strong><span class="qmah-metric-note">會員進度</span></div></div></div>
 </div>
 
 <div class="row row-cards">
     <div class="col-12 col-lg-7">
         <div class="card h-100">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">圖鑑工作區</h2>
-                    <div class="text-secondary">維護共同文物資料，讓遊戲題庫與商城商品能沿用同一個 Artifact。</div>
-                </div>
-            </div>
+            <div class="card-header"><div><h2 class="card-title">圖鑑工作區</h2><div class="text-secondary">依用途進入各項圖鑑管理功能。</div></div></div>
             <div class="card-body">
                 <div class="qmah-quick-grid">
-                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Artifact" asp-action="Index">
-                        <span class="avatar bg-primary-lt"><i class="ti ti-building-monument"></i></span>
-                        <span><strong>文物總覽</strong><small>搜尋、篩選與調整啟用狀態</small></span>
-                    </a>
-                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Key" asp-action="Index">
-                        <span class="avatar bg-azure-lt"><i class="ti ti-key"></i></span>
-                        <span><strong>鑰匙總覽</strong><small>管理解鎖規則與 Scope</small></span>
-                    </a>
-                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="KeyBackpack" asp-action="Index">
-                        <span class="avatar bg-green-lt"><i class="ti ti-backpack"></i></span>
-                        <span><strong>鑰匙背包總覽</strong><small>查看會員鑰匙餘額</small></span>
-                    </a>
+                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Artifact" asp-action="Index"><span class="avatar bg-blue-lt"><i class="ti ti-building-monument"></i></span><span><strong>文物總覽</strong><small>搜尋、篩選與調整啟用狀態</small></span></a>
+                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="Key" asp-action="Index"><span class="avatar bg-azure-lt"><i class="ti ti-key"></i></span><span><strong>鑰匙總覽</strong><small>管理解鎖規則與適用範圍</small></span></a>
+                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="KeyBackpack" asp-action="Index"><span class="avatar bg-green-lt"><i class="ti ti-backpack"></i></span><span><strong>鑰匙背包</strong><small>查看與調整會員鑰匙餘額</small></span></a>
+                    <a class="qmah-quick-link" asp-area="Catalog" asp-controller="KeyTransactions" asp-action="Index"><span class="avatar bg-orange-lt"><i class="ti ti-history"></i></span><span><strong>鑰匙流水</strong><small>追蹤發放、調整與消耗紀錄</small></span></a>
                 </div>
             </div>
         </div>
@@ -106,32 +49,5 @@
                 </div>
             }
         </div>
-    </div>
-</div>
-
-<div class="row row-cards mt-1">
-    <div class="col-12 col-lg-4">
-        <div class="card h-100"><div class="card-header"><div><h2 class="card-title">分類分布</h2><div class="card-subtitle">文物數量與啟用狀態</div></div></div><div class="list-group list-group-flush">
-            @foreach (var item in Model.CategoryBreakdown)
-            {
-                <div class="list-group-item d-flex justify-content-between align-items-center gap-3"><span>@item.Name</span><span class="text-secondary small">@item.ActiveCount / @item.Count 件啟用</span></div>
-            }
-        </div></div>
-    </div>
-    <div class="col-12 col-lg-4">
-        <div class="card h-100"><div class="card-header"><div><h2 class="card-title">年代分布</h2><div class="card-subtitle">目前收錄的年代區間</div></div></div><div class="list-group list-group-flush">
-            @foreach (var item in Model.EraBreakdown)
-            {
-                <div class="list-group-item d-flex justify-content-between align-items-center gap-3"><span>@item.Name</span><span class="text-secondary small">@item.Count 件</span></div>
-            }
-        </div></div>
-    </div>
-    <div class="col-12 col-lg-4">
-        <div class="card h-100"><div class="card-header"><div><h2 class="card-title">鑰匙規則分布</h2><div class="card-subtitle">依解鎖範圍整理</div></div></div><div class="list-group list-group-flush">
-            @foreach (var item in Model.KeyScopeBreakdown)
-            {
-                <div class="list-group-item d-flex justify-content-between align-items-center gap-3"><span>@(item.Name switch { "CATEGORY" => "分類鑰匙", "ERA" => "年代鑰匙", "UNIVERSAL" => "萬用鑰匙", "NORMAL" => "一般鑰匙", _ => item.Name })</span><span class="text-secondary small">@item.ActiveCount / @item.Count 啟用</span></div>
-            }
-        </div></div>
     </div>
 </div>

@@ -20,9 +20,11 @@
     <div class="card-header">
         <div>
             <h2 class="card-title">文物資料篩選</h2>
-            <div class="text-secondary">以名稱、館藏編號、分類或年代快速縮小清單。</div>
+            <div class="d-flex flex-wrap align-items-center gap-2 text-secondary">
+                <span>以名稱、館藏編號、分類或年代快速縮小清單。</span>
+                <span class="badge bg-blue-lt qmah-filter-count"><i class="ti ti-list-check me-1"></i>@records.Count 筆結果</span>
+            </div>
         </div>
-        <span class="badge bg-blue-lt qmah-filter-count"><i class="ti ti-list-check me-1"></i>@records.Count 筆結果</span>
     </div>
     <div class="card-body">
         <form asp-action="Index" method="get">

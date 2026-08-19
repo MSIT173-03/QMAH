@@ -26,7 +26,7 @@
 </div>
 
 <div class="card qmah-filter-panel mb-3">
-    <div class="card-header align-items-start gap-3"><div><h2 class="card-title">會員篩選</h2><div class="text-secondary small">依帳號、角色或狀態縮小清單範圍。</div></div><span class="badge bg-blue-lt">符合 @totalCount 筆</span></div>
+    <div class="card-header"><div><h2 class="card-title">會員篩選</h2><div class="d-flex flex-wrap align-items-center gap-2 text-secondary small"><span>依帳號、角色或狀態縮小清單範圍。</span><span class="badge bg-blue-lt">符合 @totalCount 筆</span></div></div></div>
     <div class="card-body"><form method="get" asp-action="Index"><div class="row g-3 align-items-end">
         <div class="col-12 col-lg-5"><label class="form-label" for="memberKeyword">帳號關鍵字</label><input id="memberKeyword" type="text" name="keyword" value="@ViewBag.Keyword" class="form-control" placeholder="Email 或會員帳號" /></div>
         <div class="col-12 col-md-6 col-lg-2"><label class="form-label" for="memberRole">角色</label><select id="memberRole" name="role" class="form-select"><option value="">全部角色</option><option value="Admin" selected="@(ViewBag.Role == "Admin" ? "selected" : null)">管理員</option><option value="User" selected="@(ViewBag.Role == "User" ? "selected" : null)">一般會員</option></select></div>
