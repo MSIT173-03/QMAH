@@ -43,7 +43,8 @@
             <table class="table table-vcenter table-hover card-table qmah-crud-table">
                 <thead>
                     <tr>
-                        <th>鑰匙</th>
+                        <th>名稱</th>
+                        <th>代號</th>
                         <th>適用範圍</th>
                         <th>分類</th>
                         <th>年代</th>
@@ -55,10 +56,8 @@
                     @foreach (var item in records)
                     {
                         <tr>
-                            <td>
-                                <div class="fw-semibold">@item.Name</div>
-                                <div class="text-secondary small">@item.Code</div>
-                            </td>
+                            <td><div class="fw-semibold">@item.Name</div></td>
+                            <td><code class="text-secondary">@item.Code</code></td>
                             <td><span class="badge bg-blue-lt">@AdminDisplayLabels.Scope(item.ScopeType)</span></td>
                             <td>@(item.Category?.Name ?? "全域")</td>
                             <td>@(item.EraBucket?.Name ?? "全域")</td>

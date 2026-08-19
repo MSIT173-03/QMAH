@@ -60,6 +60,13 @@
                         </select>
                         <span asp-validation-for="EraBucketId" class="text-danger"></span>
                     </div>
+                    <div class="col-12">
+                        <label class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <span class="form-check-label"><i class="ti ti-toggle-right me-1"></i>啟用這項鑰匙規則</span>
+                        </label>
+                        <div class="form-hint">停用後不會刪除既有背包或交易紀錄，之後仍可重新啟用。</div>
+                    </div>
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
