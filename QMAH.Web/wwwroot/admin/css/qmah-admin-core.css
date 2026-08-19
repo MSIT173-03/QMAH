@@ -616,6 +616,15 @@ body {
 .qmah-status--danger { color: var(--qmah-danger); }
 .qmah-status--info { color: var(--qmah-info); }
 
+.qmah-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.5rem;
+  white-space: nowrap;
+  text-align: center;
+}
+
 @media (max-width: 575.98px) {
   .qmah-dashboard-intro {
     align-items: stretch;

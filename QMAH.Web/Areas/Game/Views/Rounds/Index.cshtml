@@ -19,7 +19,7 @@
         <div class="col-6 col-lg-2"><label class="form-label" for="status">狀態</label><select class="form-select" id="status" name="status" asp-items="GameCodeLists.ToSelectList(GameCodeLists.RoundStatuses, Model.Status, true)"></select></div>
         <div class="col-6 col-lg-2"><label class="form-label" for="sort">排序</label><select class="form-select" id="sort" name="sort"><option value="started" selected="@(Model.Sort == "started")">最近開始</option><option value="room" selected="@(Model.Sort == "room")">房間</option><option value="round" selected="@(Model.Sort == "round")">回合號碼</option><option value="status" selected="@(Model.Sort == "status")">狀態</option><option value="answers" selected="@(Model.Sort == "answers")">作答數量</option></select></div>
         <div class="col-6 col-lg-1"><label class="form-label" for="pageSize">每頁</label><select class="form-select" id="pageSize" name="pageSize">@foreach (var size in GameCodeLists.PageSizes) { <option value="@size" selected="@(Model.PageSize == size)">@size</option> }</select></div>
-        <div class="col-12 col-lg-auto game-admin-filter-actions"><div class="btn-list"><button class="btn btn-primary" type="submit">搜尋</button><a class="btn btn-outline-secondary" asp-action="Index">清除</a></div></div>
+        <div class="col-12 col-lg-auto game-admin-filter-actions"><div class="btn-list"><button class="btn btn-primary" type="submit"><i class="ti ti-search me-1"></i>搜尋</button><a class="btn btn-outline-secondary" asp-action="Index"><i class="ti ti-refresh me-1"></i>清除</a></div></div>
     </div></div>
 </form>
 

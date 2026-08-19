@@ -30,7 +30,7 @@
             <h2 class="card-title">背包資料篩選</h2>
             <div class="text-secondary">先選擇一名會員，再查看該會員持有的鑰匙。</div>
         </div>
-        <span class="badge bg-green-lt">@records.Count 筆紀錄</span>
+        <span class="badge bg-green-lt qmah-filter-count"><i class="ti ti-key me-1"></i>@records.Count 筆紀錄</span>
     </div>
     <div class="card-body">
         <form asp-action="Index" method="get">
@@ -38,7 +38,7 @@
                 @if (!hasSelectedUser)
                 {
                     <div class="col-12 col-lg-9">
-                        <label class="form-label" for="memberKeyword">搜尋會員</label>
+                        <label class="form-label" for="memberKeyword"><i class="ti ti-user-search me-1"></i>搜尋會員</label>
                         <input class="form-control" id="memberKeyword" name="memberKeyword" value="@memberKeyword" placeholder="會員編號或暱稱" />
                     </div>
                 }
@@ -58,7 +58,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="ti ti-search me-1"></i>搜尋
                     </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
+                    <a asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-refresh me-1"></i>清除</a>
                 </div>
             </div>
         </form>
