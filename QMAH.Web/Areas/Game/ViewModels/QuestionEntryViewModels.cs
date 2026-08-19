@@ -31,6 +31,8 @@ public class QuestionEntryListItemViewModel
 
     public required string EraName { get; init; }
 
+    public string? SizeText { get; init; }
+
     public bool IsEnabled { get; init; }
 
     public byte Difficulty { get; init; }

@@ -340,6 +340,7 @@ body {
 .qmah-crud-table .qmah-col-ref, .game-admin-table .qmah-col-ref { width: 13%; }
 .qmah-crud-table .qmah-col-category, .game-admin-table .qmah-col-category { width: 10%; }
 .qmah-crud-table .qmah-col-era, .game-admin-table .qmah-col-era { width: 11%; }
+.qmah-crud-table .qmah-col-size, .game-admin-table .qmah-col-size { width: 14%; }
 .qmah-crud-table .qmah-col-actions, .game-admin-table .qmah-col-actions { width: 12rem; min-width: 12rem; }
 .qmah-crud-table td, .qmah-crud-table th, .game-admin-table td, .game-admin-table th { text-align: start; }
 .qmah-crud-table th:last-child, .game-admin-table th:last-child, .qmah-crud-table td:last-child, .game-admin-table td:last-child { width: 12rem; min-width: 12rem; text-align: center; white-space: nowrap; }

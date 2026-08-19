@@ -75,14 +75,14 @@
     {
         <div class="table-responsive">
             <table class="table table-vcenter table-hover card-table qmah-crud-table">
-                <colgroup><col class="qmah-col-name" /><col class="qmah-col-ref" /><col class="qmah-col-category" /><col class="qmah-col-era" /><col class="qmah-col-creator" /><col class="qmah-col-license" /><col class="qmah-col-status" /><col class="qmah-col-actions" /></colgroup>
+                <colgroup><col class="qmah-col-name" /><col class="qmah-col-ref" /><col class="qmah-col-category" /><col class="qmah-col-era" /><col class="qmah-col-size" /><col class="qmah-col-license" /><col class="qmah-col-status" /><col class="qmah-col-actions" /></colgroup>
                 <thead>
                     <tr>
                         <th>名稱</th>
                         <th>館藏編號</th>
                         <th>分類</th>
                         <th>年代</th>
-                        <th>創作者</th>
+                        <th>尺寸</th>
                         <th>授權</th>
                         <th>狀態</th>
                         <th class="text-end">操作</th>
@@ -109,7 +109,7 @@
                                     <div class="text-secondary small">@item.EraTextOriginal</div>
                                 }
                             </td>
-                            <td>@(string.IsNullOrWhiteSpace(item.CreatorDisplay) ? "未標示" : item.CreatorDisplay)</td>
+                            <td>@(string.IsNullOrWhiteSpace(item.SizeText) ? "未標示" : item.SizeText)</td>
                             <td>
                                 <span class="badge bg-secondary-lt">@(string.IsNullOrWhiteSpace(item.LicenseCode) ? "未標示" : item.LicenseCode)</span>
                             </td>
