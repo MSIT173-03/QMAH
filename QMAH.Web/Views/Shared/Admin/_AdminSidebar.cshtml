@@ -71,6 +71,7 @@
                             <a class="nav-link @(isCurrentController ? "active" : null)"
                                asp-area="@currentArea" asp-controller="@item.Controller" asp-action="Index"
                                aria-current="@(isCurrentController ? "page" : null)" title="@item.Label">
+                                <span class="nav-link-icon"><partial name="Admin/_Icon" model="@item.Controller" /></span>
                                 <span class="nav-link-title">@item.Label</span>
                             </a>
                         </li>

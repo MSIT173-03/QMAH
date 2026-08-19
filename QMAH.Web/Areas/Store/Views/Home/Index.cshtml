@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "商城管理總覽";
-    ViewData["AdminDescription"] = "管理商品、庫存、訂單、付款與折價券。";
+    ViewData["AdminDescription"] = "管理商品、庫存、訂單、付款與優惠券。";
 }
 
 @section PageActions {
@@ -14,7 +14,7 @@
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">商品</span><strong class="qmah-metric-value">@Model.ProductCount</strong><span class="qmah-metric-note">上架 @Model.ActiveProductCount 件</span></div></div></div>
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">低庫存</span><strong class="qmah-metric-value">@Model.LowStockProductCount</strong><span class="qmah-metric-note">啟用商品庫存 ≤ 5</span></div></div></div>
     <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">訂單</span><strong class="qmah-metric-value">@Model.OrderCount</strong><span class="qmah-metric-note">待處理 @Model.PendingOrderCount 筆</span></div></div></div>
-    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">付款成功</span><strong class="qmah-metric-value">@Model.SuccessfulPaymentCount</strong><span class="qmah-metric-note">折價券定義 @Model.CouponCount 組</span></div></div></div>
+    <div class="col-12 col-sm-6 col-xl-3"><div class="card qmah-metric-card"><div class="card-body"><span class="qmah-metric-label">付款成功</span><strong class="qmah-metric-value">@Model.SuccessfulPaymentCount</strong><span class="qmah-metric-note">優惠券定義 @Model.CouponCount 組</span></div></div></div>
 </div>
 
 <div class="row row-cards mt-3 mb-3">
@@ -48,7 +48,7 @@
                 <div class="qmah-quick-grid">
                     <a class="qmah-quick-link" asp-area="Store" asp-controller="Product" asp-action="Index"><span class="avatar bg-blue-lt"><i class="ti ti-package"></i></span><span><strong>商品管理</strong><small>上架狀態、價格與庫存</small></span></a>
                     <a class="qmah-quick-link" asp-area="Store" asp-controller="Order" asp-action="Index"><span class="avatar bg-green-lt"><i class="ti ti-receipt"></i></span><span><strong>訂單管理</strong><small>付款、出貨與取消紀錄</small></span></a>
-                    <a class="qmah-quick-link" asp-area="Store" asp-controller="Coupon" asp-action="Index"><span class="avatar bg-orange-lt"><i class="ti ti-ticket"></i></span><span><strong>折價券</strong><small>查看目前優惠券定義</small></span></a>
+                    <a class="qmah-quick-link" asp-area="Store" asp-controller="Coupon" asp-action="Index"><span class="avatar bg-orange-lt"><i class="ti ti-ticket"></i></span><span><strong>優惠券</strong><small>查看目前優惠券定義</small></span></a>
                 </div>
             </div>
         </div>
