@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.AspNetCore.Authorization;
-
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.User.ViewModels;
+using QMAH.Web.Data;
 using QMAH.Web.Models.Entities;
 using QMAH.Web.Models.Identity;
-using QMAH.Web.Data;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
@@ -17,6 +16,7 @@ public class AccountController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly QmahDbContext _context;
+
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
@@ -28,9 +28,12 @@ public class AccountController : Controller
     }
 
     [HttpGet("/Account/Login")]
-    public IActionResult Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(
+        string? returnUrl = null,
+        CancellationToken cancellationToken = default)
     {
         ViewBag.ReturnUrl = returnUrl;
+        await LoadLoginArtifactImagesAsync(cancellationToken);
 
         return View();
     }
@@ -39,12 +42,14 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
         LoginViewModel model,
-        string? returnUrl = null)
+        string? returnUrl = null,
+        CancellationToken cancellationToken = default)
     {
         ViewBag.ReturnUrl = returnUrl;
 
         if (!ModelState.IsValid)
         {
+            await LoadLoginArtifactImagesAsync(cancellationToken);
             return View(model);
         }
 
@@ -56,6 +61,7 @@ public class AccountController : Controller
                 string.Empty,
                 "Email 或密碼錯誤");
 
+            await LoadLoginArtifactImagesAsync(cancellationToken);
             return View(model);
         }
 
@@ -65,6 +71,7 @@ public class AccountController : Controller
                 string.Empty,
                 "此帳號目前已停權");
 
+            await LoadLoginArtifactImagesAsync(cancellationToken);
             return View(model);
         }
 
@@ -80,6 +87,7 @@ public class AccountController : Controller
                 string.Empty,
                 "Email 或密碼錯誤");
 
+            await LoadLoginArtifactImagesAsync(cancellationToken);
             return View(model);
         }
 
@@ -120,6 +128,7 @@ public class AccountController : Controller
     {
         return View();
     }
+
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
@@ -228,5 +237,29 @@ public class AccountController : Controller
         }
 
         return RedirectToAction(nameof(Login));
+    }
+
+    private async Task LoadLoginArtifactImagesAsync(CancellationToken cancellationToken)
+    {
+        var images = await _context.ArtifactQuestionEntries
+            .AsNoTracking()
+            .Where(entry => entry.IsEnabled && entry.Artifact.IsActive)
+            .Select(entry => entry.Artifact.ThumbnailPath ?? entry.Artifact.PrimaryImagePath)
+            .Where(path => path != null && path != string.Empty)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var imageArray = images
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => path!)
+            .ToArray();
+
+        for (var i = imageArray.Length - 1; i > 0; i--)
+        {
+            var j = Random.Shared.Next(i + 1);
+            (imageArray[i], imageArray[j]) = (imageArray[j], imageArray[i]);
+        }
+
+        ViewData["LoginArtifactImages"] = imageArray;
     }
 }

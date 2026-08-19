@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f5f7f8" />
+    <meta name="theme-color" content="#f3f6f4" data-qmah-theme-color />
     <title>@(ViewData["Title"] ?? "管理員登入")｜清明鑑定屋 QMAH</title>
     <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" />
     <script>
@@ -26,9 +26,17 @@
 </head>
 <body class="qmah-auth-body">
     <a class="qmah-skip-link" href="#auth-main">跳至登入表單</a>
-    <button type="button" class="qmah-auth-theme-toggle" data-qmah-theme-toggle aria-pressed="false">
-        <span data-qmah-theme-label>切換深色</span>
+    <div class="qmah-theme-wash" data-qmah-theme-wash aria-hidden="true"></div>
+
+    <button type="button" class="qmah-auth-theme-toggle" data-qmah-theme-toggle aria-label="切換深色模式" aria-pressed="false">
+        <span class="qmah-auth-theme-icon qmah-auth-theme-icon--moon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20.4 15.3A8.5 8.5 0 0 1 8.7 3.6 8.5 8.5 0 1 0 20.4 15.3Z" /></svg>
+        </span>
+        <span class="qmah-auth-theme-icon qmah-auth-theme-icon--sun" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" /></svg>
+        </span>
     </button>
+
     <main id="auth-main" class="qmah-auth-main">
         @RenderBody()
     </main>
@@ -39,21 +47,75 @@
         (() => {
             const root = document.documentElement;
             const toggle = document.querySelector("[data-qmah-theme-toggle]");
-            const label = toggle?.querySelector("[data-qmah-theme-label]");
+            const wash = document.querySelector("[data-qmah-theme-wash]");
+            const themeColor = document.querySelector("[data-qmah-theme-color]");
+            const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+            const themeStorageKey = "qmah-admin-theme";
+            let switching = false;
+
             const sync = () => {
                 const isDark = root.dataset.bsTheme === "dark";
                 toggle?.setAttribute("aria-pressed", String(isDark));
                 toggle?.setAttribute("aria-label", isDark ? "切換淺色模式" : "切換深色模式");
-                if (label) label.textContent = isDark ? "切換淺色" : "切換深色";
+                themeColor?.setAttribute("content", isDark ? "#101b1f" : "#f3f6f4");
+            };
+
+            const applyTheme = (theme, persist = true) => {
+                root.dataset.bsTheme = theme;
+                root.style.colorScheme = theme;
+                if (persist) localStorage.setItem(themeStorageKey, theme);
+                sync();
+            };
+
+            const switchTheme = async (theme, persist = true) => {
+                if (switching) return;
+
+                if (!wash || reduceMotion.matches) {
+                    applyTheme(theme, persist);
+                    return;
+                }
+
+                switching = true;
+                toggle?.setAttribute("disabled", "");
+                wash.style.backgroundColor = theme === "dark" ? "#101b1f" : "#f3f6f4";
+
+                try {
+                    const cover = wash.animate(
+                        [{ opacity: 0 }, { opacity: 0.94 }],
+                        { duration: 420, easing: "cubic-bezier(.4, 0, .2, 1)", fill: "forwards" });
+
+                    await cover.finished;
+                    wash.style.opacity = "0.94";
+                    cover.cancel();
+                    applyTheme(theme, persist);
+
+                    const reveal = wash.animate(
+                        [{ opacity: 0.94 }, { opacity: 0 }],
+                        { duration: 720, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "forwards" });
+
+                    await reveal.finished;
+                } catch {
+                    applyTheme(theme, persist);
+                    wash.style.opacity = "0";
+                } finally {
+                    wash.getAnimations().forEach(animation => animation.cancel());
+                    wash.style.opacity = "0";
+                    toggle?.removeAttribute("disabled");
+                    switching = false;
+                }
             };
 
             toggle?.addEventListener("click", () => {
-                const next = root.dataset.bsTheme === "dark" ? "light" : "dark";
-                root.dataset.bsTheme = next;
-                root.style.colorScheme = next;
-                localStorage.setItem("qmah-admin-theme", next);
-                sync();
+                const nextTheme = root.dataset.bsTheme === "dark" ? "light" : "dark";
+                void switchTheme(nextTheme);
             });
+
+            window.addEventListener("storage", (event) => {
+                if (event.key !== themeStorageKey || (event.newValue !== "dark" && event.newValue !== "light")) return;
+                if (event.newValue === root.dataset.bsTheme) return;
+                void switchTheme(event.newValue, false);
+            });
+
             sync();
         })();
     </script>

@@ -45,8 +45,11 @@ builder.Services.AddSingleton<AdminNavigationService>();
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    // Identity 會把登入狀態放在受 Data Protection 保護的 HttpOnly Cookie。
+    // Identity 登入狀態由受 Data Protection 保護的 HttpOnly Cookie 保存。
     options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.ExpireTimeSpan = TimeSpan.FromDays(14);
     options.SlidingExpiration = true;
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/User/Account/Logout";
