@@ -1,0 +1,962 @@
+/* 後台共用視覺 */
+.qmah-admin {
+  --qmah-canvas: #f3f6f4;
+  --qmah-surface: #ffffff;
+  --qmah-surface-raised: #ffffff;
+  --qmah-surface-soft: #f7f9f8;
+  --qmah-surface-muted: #edf2f0;
+  --qmah-ink: #1d2b2e;
+  --qmah-ink-soft: #56686b;
+  --qmah-ink-faint: #839194;
+  --qmah-line: #dbe3e0;
+  --qmah-line-soft: #e9eeec;
+  --qmah-primary: #3d6c6f;
+  --qmah-primary-hover: #315b5e;
+  --qmah-primary-soft: #e7efed;
+  --qmah-primary-soft-hover: #dce8e5;
+  --qmah-success: #347357;
+  --qmah-warning: #886421;
+  --qmah-danger: #a54a40;
+  --qmah-info: #396b78;
+  --qmah-focus: rgba(61, 108, 111, .2);
+  --qmah-shadow-sm: 0 1px 2px rgba(23, 40, 43, .035);
+  --qmah-shadow-popover: 0 16px 38px rgba(23, 40, 43, .12);
+
+  --tblr-body-bg: var(--qmah-canvas);
+  --tblr-body-color: var(--qmah-ink);
+  --tblr-card-bg: var(--qmah-surface);
+  --tblr-card-border-color: var(--qmah-line);
+  --tblr-border-color: var(--qmah-line);
+  --tblr-primary: var(--qmah-primary);
+  --tblr-primary-rgb: 61, 108, 111;
+  --tblr-link-color: var(--qmah-primary);
+  --tblr-link-hover-color: var(--qmah-primary-hover);
+
+  background: var(--qmah-canvas);
+  color: var(--qmah-ink);
+}
+
+html[data-bs-theme="dark"] .qmah-admin {
+  --qmah-canvas: #10191c;
+  --qmah-surface: #182427;
+  --qmah-surface-raised: #1b292c;
+  --qmah-surface-soft: #1c2a2d;
+  --qmah-surface-muted: #233438;
+  --qmah-ink: #eef3f1;
+  --qmah-ink-soft: #bdc9c6;
+  --qmah-ink-faint: #859794;
+  --qmah-line: rgba(176, 202, 195, .12);
+  --qmah-line-soft: rgba(176, 202, 195, .075);
+  --qmah-primary: #8fb7b1;
+  --qmah-primary-hover: #a9cbc5;
+  --qmah-primary-soft: #213735;
+  --qmah-primary-soft-hover: #29423f;
+  --qmah-success: #82b99b;
+  --qmah-warning: #d1aa69;
+  --qmah-danger: #db8378;
+  --qmah-info: #84b4c0;
+  --qmah-focus: rgba(143, 183, 177, .22);
+  --qmah-shadow-sm: 0 1px 2px rgba(0, 0, 0, .12);
+  --qmah-shadow-popover: 0 18px 44px rgba(0, 0, 0, .3);
+
+  --tblr-body-bg: var(--qmah-canvas);
+  --tblr-body-color: var(--qmah-ink);
+  --tblr-card-bg: var(--qmah-surface);
+  --tblr-card-border-color: var(--qmah-line);
+  --tblr-border-color: var(--qmah-line);
+  --tblr-primary: var(--qmah-primary);
+  --tblr-primary-rgb: 143, 183, 177;
+  --tblr-link-color: var(--qmah-primary);
+  --tblr-link-hover-color: var(--qmah-primary-hover);
+}
+
+.qmah-admin .page,
+.qmah-admin .page-wrapper,
+.qmah-admin .qmah-admin-main {
+  background: var(--qmah-canvas);
+}
+
+.qmah-admin .page-wrapper {
+  min-height: 100dvh;
+}
+
+/* 明暗切換只動畫單一覆蓋層 */
+.qmah-theme-wash {
+  position: fixed;
+  z-index: 1080;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: #f3f6f4;
+  will-change: opacity;
+  contain: strict;
+}
+
+/* Topbar */
+.qmah-admin .page > .qmah-topbar {
+  min-height: 3.65rem;
+  border-bottom: 1px solid var(--qmah-line) !important;
+  background: color-mix(in srgb, var(--qmah-surface) 92%, var(--qmah-canvas) 8%) !important;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.qmah-admin .page > .qmah-topbar .container-xl {
+  min-height: 3.65rem;
+}
+
+.qmah-admin .qmah-location {
+  gap: .5rem;
+  color: var(--qmah-ink-faint);
+  font-size: .78rem;
+}
+
+.qmah-admin .qmah-location strong {
+  color: var(--qmah-ink-soft);
+  font-weight: 650;
+}
+
+.qmah-admin .qmah-location__divider {
+  color: var(--qmah-line);
+}
+
+.qmah-admin .qmah-sidebar-toggle,
+.qmah-admin .qmah-theme-toggle,
+.qmah-admin .qmah-account {
+  border-color: transparent;
+  background: transparent;
+  color: var(--qmah-ink-soft);
+  box-shadow: none;
+}
+
+.qmah-admin .qmah-sidebar-toggle:hover,
+.qmah-admin .qmah-theme-toggle:hover,
+.qmah-admin .qmah-account:hover,
+.qmah-admin .qmah-account[aria-expanded="true"] {
+  border-color: var(--qmah-line);
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-ink);
+  transform: none;
+}
+
+.qmah-admin .qmah-theme-toggle {
+  position: relative;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 7px;
+}
+
+.qmah-admin .qmah-theme-icon {
+  position: absolute;
+  display: grid;
+  width: 1.05rem;
+  height: 1.05rem;
+  place-items: center;
+  transition:
+    opacity 340ms cubic-bezier(.16, 1, .3, 1),
+    transform 560ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.qmah-admin .qmah-theme-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.qmah-admin .qmah-theme-icon--sun {
+  opacity: 0;
+  transform: rotate(-90deg) scale(.6);
+}
+
+.qmah-admin .qmah-theme-icon--moon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+html[data-bs-theme="dark"] .qmah-admin .qmah-theme-icon--sun {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+html[data-bs-theme="dark"] .qmah-admin .qmah-theme-icon--moon {
+  opacity: 0;
+  transform: rotate(90deg) scale(.6);
+}
+
+.qmah-admin .qmah-account {
+  min-height: 2.4rem;
+  padding: .3rem .4rem;
+}
+
+.qmah-admin .qmah-account .avatar {
+  background: var(--qmah-primary-soft);
+  color: var(--qmah-primary-hover);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qmah-primary) 18%, var(--qmah-line));
+}
+
+.qmah-admin .qmah-account:hover .avatar {
+  transform: none;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qmah-primary) 30%, var(--qmah-line));
+}
+
+.qmah-admin .dropdown-menu {
+  border-color: var(--qmah-line);
+  border-radius: 9px;
+  background: var(--qmah-surface-raised);
+  box-shadow: var(--qmah-shadow-popover);
+}
+
+.qmah-admin .dropdown-menu .dropdown-item:hover,
+.qmah-admin .dropdown-menu .dropdown-item:focus {
+  background: var(--qmah-surface-muted);
+  color: var(--qmah-ink);
+  transform: none;
+}
+
+/* Sidebar */
+.qmah-admin .navbar-vertical {
+  --qmah-sidebar-bg: #f8faf9;
+  --qmah-sidebar-surface: #edf2f0;
+  --qmah-sidebar-border: var(--qmah-line);
+  --qmah-sidebar-ink: #40575b;
+  --qmah-sidebar-ink-muted: #7d8d90;
+  --qmah-sidebar-icon: #617c80;
+  --qmah-sidebar-active-bg: #e3ece9;
+  --qmah-sidebar-active-ink: #274c50;
+
+  background: var(--qmah-sidebar-bg) !important;
+  border-right-color: var(--qmah-sidebar-border);
+}
+
+html[data-bs-theme="dark"] .qmah-admin .navbar-vertical {
+  --qmah-sidebar-bg: #132124;
+  --qmah-sidebar-surface: #1b2c2f;
+  --qmah-sidebar-border: rgba(176, 202, 195, .11);
+  --qmah-sidebar-ink: #bdcbc8;
+  --qmah-sidebar-ink-muted: #81938f;
+  --qmah-sidebar-icon: #89a7a2;
+  --qmah-sidebar-active-bg: #203633;
+  --qmah-sidebar-active-ink: #eef5f3;
+}
+
+.qmah-admin .navbar-vertical .navbar-brand {
+  min-height: 4.75rem;
+  border-bottom-color: var(--qmah-sidebar-border);
+}
+
+.qmah-admin .navbar-vertical .navbar-nav .nav-link {
+  min-height: 2.55rem;
+  margin: .08rem .7rem;
+  padding: .6rem .72rem;
+  border-radius: 7px;
+  font-size: .85rem;
+  font-weight: 580;
+}
+
+.qmah-admin .navbar-vertical .navbar-nav .nav-link:hover,
+.qmah-admin .navbar-vertical .navbar-nav .nav-link:focus-visible {
+  background: var(--qmah-sidebar-surface);
+  transform: none;
+}
+
+.qmah-admin .navbar-vertical .navbar-nav .nav-link:hover .nav-link-icon,
+.qmah-admin .navbar-vertical .navbar-nav .nav-link:focus-visible .nav-link-icon {
+  transform: none;
+}
+
+.qmah-admin .navbar-vertical .navbar-nav .nav-link.active,
+.qmah-admin .navbar-vertical .navbar-nav .nav-link[aria-current="page"] {
+  background: var(--qmah-sidebar-active-bg);
+  color: var(--qmah-sidebar-active-ink);
+  font-weight: 650;
+}
+
+.qmah-admin .navbar-vertical .navbar-nav .nav-link::before {
+  top: .58rem;
+  bottom: .58rem;
+  width: 2px;
+}
+
+.qmah-admin .navbar-vertical .navbar-nav .nav-link:hover::before,
+.qmah-admin .navbar-vertical .navbar-nav .nav-link:focus-visible::before,
+.qmah-admin .navbar-vertical .navbar-nav .nav-link.active::before,
+.qmah-admin .navbar-vertical .navbar-nav .nav-link[aria-current="page"]::before {
+  top: .54rem;
+  bottom: .54rem;
+  width: 2px;
+}
+
+.qmah-admin .qmah-sidebar-section-label {
+  padding-top: .9rem;
+  color: var(--qmah-sidebar-ink-muted);
+  font-size: .65rem;
+  letter-spacing: .07em;
+}
+
+.qmah-admin .qmah-sidebar-footer {
+  border-top-color: var(--qmah-sidebar-border);
+}
+
+/* Page heading */
+.qmah-admin .page-header {
+  padding-top: clamp(1.4rem, 2vw, 1.95rem);
+  padding-bottom: 1rem;
+}
+
+.qmah-admin .page-title {
+  margin: 0;
+  color: var(--qmah-ink);
+  font-size: clamp(1.45rem, 1.3rem + .4vw, 1.8rem);
+  font-weight: 720;
+  letter-spacing: -.025em;
+  line-height: 1.25;
+}
+
+.qmah-admin .qmah-page-description {
+  max-width: 68ch;
+  margin: .38rem 0 0;
+  color: var(--qmah-ink-soft);
+  font-size: .85rem;
+  line-height: 1.55;
+}
+
+.qmah-admin .page-body {
+  padding-bottom: clamp(2.2rem, 4vw, 3.6rem);
+}
+
+.qmah-admin .qmah-page-actions > .qmah-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+/* Card system */
+.qmah-admin .card {
+  border: 1px solid var(--qmah-line);
+  border-radius: 9px;
+  background: var(--qmah-surface);
+  box-shadow: var(--qmah-shadow-sm);
+}
+
+.qmah-admin .page-body .card:not(.qmah-metric-card):hover {
+  border-color: var(--qmah-line);
+}
+
+.qmah-admin .card-header {
+  min-height: 3.55rem;
+  padding: .88rem 1.05rem;
+  border-bottom-color: var(--qmah-line-soft);
+  background: transparent;
+}
+
+.qmah-admin .card-body {
+  padding: 1.05rem;
+}
+
+.qmah-admin .card-footer {
+  padding: .8rem 1.05rem;
+  border-top-color: var(--qmah-line-soft);
+  background: color-mix(in srgb, var(--qmah-surface-soft) 55%, var(--qmah-surface) 45%);
+}
+
+.qmah-admin .card-title {
+  margin: 0;
+  color: var(--qmah-ink);
+  font-size: .97rem;
+  font-weight: 680;
+  letter-spacing: -.01em;
+}
+
+.qmah-admin .card-subtitle,
+.qmah-admin .text-secondary {
+  color: var(--qmah-ink-soft) !important;
+}
+
+.qmah-admin .text-muted {
+  color: var(--qmah-ink-faint) !important;
+}
+
+html[data-bs-theme="dark"] .qmah-admin .card {
+  border-color: var(--qmah-line);
+  box-shadow: none;
+}
+
+/* Filters */
+.qmah-admin .qmah-filter-panel,
+.qmah-admin form.card.game-admin-filter,
+.qmah-admin form.card[class*="filter"] {
+  border-color: color-mix(in srgb, var(--qmah-line) 82%, var(--qmah-primary) 18%);
+  background: var(--qmah-surface-soft);
+  box-shadow: none;
+}
+
+.qmah-admin .qmah-filter-panel .card-header {
+  min-height: auto;
+  padding-bottom: .5rem;
+  border-bottom: 0;
+}
+
+.qmah-admin .qmah-filter-panel .card-body,
+.qmah-admin form.card.game-admin-filter .card-body {
+  padding-top: .62rem;
+}
+
+.qmah-admin .page-body form[method="get"] .row,
+.qmah-admin .page-body form[method="get"] > .row {
+  flex-wrap: wrap !important;
+  row-gap: .85rem;
+}
+
+.qmah-admin .page-body form[method="get"] .btn-list,
+.qmah-admin .page-body form[method="get"] .qmah-actions,
+.qmah-admin .page-body form[method="get"] .filter-actions,
+.qmah-admin .page-body form[method="get"] > .row > .d-flex {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.qmah-admin .page-body form[method="get"] .btn-outline-secondary {
+  border-color: var(--qmah-line);
+  background: var(--qmah-surface);
+  color: var(--qmah-ink-soft);
+}
+
+.qmah-admin .page-body form[method="get"] .btn-outline-secondary:hover {
+  border-color: color-mix(in srgb, var(--qmah-primary) 36%, var(--qmah-line));
+  background: var(--qmah-primary-soft);
+  color: var(--qmah-primary-hover);
+}
+
+/* Form controls */
+.qmah-admin .form-label {
+  margin-bottom: .36rem;
+  color: var(--qmah-ink-soft);
+  font-size: .78rem;
+  font-weight: 650;
+}
+
+.qmah-admin .form-control,
+.qmah-admin .form-select {
+  min-height: 2.5rem;
+  border-color: var(--qmah-line);
+  border-radius: 7px;
+  background-color: var(--qmah-surface-raised);
+  color: var(--qmah-ink);
+  box-shadow: none;
+  font-size: .87rem;
+}
+
+.qmah-admin .form-control::placeholder {
+  color: var(--qmah-ink-faint);
+  opacity: .78;
+}
+
+.qmah-admin .form-control:hover,
+.qmah-admin .form-select:hover {
+  border-color: color-mix(in srgb, var(--qmah-primary) 28%, var(--qmah-line));
+}
+
+.qmah-admin .form-control:focus,
+.qmah-admin .form-select:focus {
+  border-color: color-mix(in srgb, var(--qmah-primary) 70%, var(--qmah-line));
+  box-shadow: 0 0 0 .2rem var(--qmah-focus);
+  transform: none;
+}
+
+.qmah-admin .form-check-input {
+  border-color: color-mix(in srgb, var(--qmah-ink-soft) 42%, var(--qmah-line));
+  background-color: var(--qmah-surface);
+}
+
+.qmah-admin .form-check-input:checked {
+  border-color: var(--qmah-primary);
+  background-color: var(--qmah-primary);
+}
+
+/* Buttons */
+.qmah-admin .btn {
+  min-height: 2.3rem;
+  border-radius: 7px;
+  box-shadow: none;
+  font-weight: 620;
+}
+
+.qmah-admin .btn-sm {
+  min-height: 2rem;
+  padding: .31rem .62rem;
+  border-radius: 6px;
+  font-size: .78rem;
+}
+
+.qmah-admin .btn-primary {
+  border-color: var(--qmah-primary);
+  background: var(--qmah-primary);
+  color: #fff;
+}
+
+html[data-bs-theme="dark"] .qmah-admin .btn-primary {
+  color: #102225;
+}
+
+.qmah-admin .btn-primary:hover,
+.qmah-admin .btn-primary:focus {
+  border-color: var(--qmah-primary-hover);
+  background: var(--qmah-primary-hover);
+}
+
+.qmah-admin .qmah-actions .btn-outline-secondary,
+.qmah-admin .qmah-form-actions .btn-outline-secondary,
+.qmah-admin .btn-outline-secondary {
+  border-color: var(--qmah-line);
+  background: var(--qmah-surface);
+  color: var(--qmah-ink-soft);
+}
+
+.qmah-admin .qmah-actions .btn-outline-secondary:hover,
+.qmah-admin .qmah-form-actions .btn-outline-secondary:hover,
+.qmah-admin .btn-outline-secondary:hover {
+  border-color: color-mix(in srgb, var(--qmah-primary) 34%, var(--qmah-line));
+  background: var(--qmah-primary-soft);
+  color: var(--qmah-primary-hover);
+}
+
+/* Tables */
+.qmah-admin .qmah-list-card {
+  overflow: hidden;
+}
+
+.qmah-admin .table {
+  margin-bottom: 0;
+  color: var(--qmah-ink);
+  --tblr-table-border-color: var(--qmah-line-soft);
+}
+
+.qmah-admin .table > :not(caption) > * > * {
+  padding: .76rem .88rem;
+  border-bottom-color: var(--qmah-line-soft);
+}
+
+.qmah-admin .table thead th,
+.qmah-admin .qmah-crud-table thead th,
+.qmah-admin .game-admin-table thead th {
+  border-bottom: 1px solid var(--qmah-line);
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-ink-soft);
+  font-size: .71rem;
+  font-weight: 700;
+  letter-spacing: .012em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.qmah-admin .table tbody td {
+  color: var(--qmah-ink);
+  font-size: .85rem;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+.qmah-admin .table-hover > tbody > tr:hover > * {
+  --tblr-table-bg-state: color-mix(in srgb, var(--qmah-primary) 4%, var(--qmah-surface));
+  color: var(--qmah-ink);
+}
+
+html[data-bs-theme="dark"] .qmah-admin .table thead th,
+html[data-bs-theme="dark"] .qmah-admin .qmah-crud-table thead th,
+html[data-bs-theme="dark"] .qmah-admin .game-admin-table thead th {
+  background: #1d2b2e;
+}
+
+html[data-bs-theme="dark"] .qmah-admin .table-hover > tbody > tr:hover > * {
+  --tblr-table-bg-state: #1d2d30;
+}
+
+.qmah-admin .table code {
+  padding: .08rem .28rem;
+  border: 1px solid var(--qmah-line-soft);
+  border-radius: 4px;
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-ink-soft);
+  font-size: .76rem;
+}
+
+.qmah-admin .qmah-table-thumbnail {
+  width: 2.65rem !important;
+  height: 2.65rem !important;
+  max-width: 2.65rem !important;
+  padding: 2px;
+  border: 1px solid var(--qmah-line);
+  border-radius: 7px;
+  background: var(--qmah-surface-soft);
+  object-fit: contain;
+}
+
+/* 排序欄 hover */
+.qmah-admin .qmah-sortable-header:hover,
+.qmah-admin .qmah-sortable-header:focus-visible,
+.qmah-admin .table thead th:has(> a.link-secondary):hover,
+.qmah-admin .table thead th:has(> a.link-secondary):focus-within {
+  background: var(--qmah-primary) !important;
+  color: #fff !important;
+}
+
+.qmah-admin .qmah-sortable-header:hover *,
+.qmah-admin .qmah-sortable-header:focus-visible *,
+.qmah-admin .table thead th:has(> a.link-secondary):hover > a,
+.qmah-admin .table thead th:has(> a.link-secondary):hover > a i,
+.qmah-admin .table thead th:has(> a.link-secondary):focus-within > a,
+.qmah-admin .table thead th:has(> a.link-secondary):focus-within > a i {
+  color: #fff !important;
+}
+
+/* Badge */
+.qmah-admin .qmah-crud-table td .badge,
+.qmah-admin .game-admin-table td .badge,
+.qmah-admin .table td .badge,
+.qmah-admin .badge {
+  padding: .28rem .46rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  box-shadow: none;
+  font-size: .71rem;
+  font-weight: 650;
+}
+
+.qmah-admin tr:hover .badge,
+.qmah-admin a:hover .badge {
+  transform: none;
+}
+
+/* Dashboard */
+.qmah-admin .qmah-dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  margin-bottom: 1.15rem !important;
+  overflow: hidden;
+  border: 1px solid var(--qmah-line);
+  border-radius: 10px;
+  background: var(--qmah-surface);
+}
+
+.qmah-admin .qmah-dashboard-metrics > .col {
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+
+.qmah-admin .qmah-dashboard-metrics .qmah-metric-card {
+  border: 0;
+  border-right: 1px solid var(--qmah-line-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.qmah-admin .qmah-dashboard-metrics > .col:last-child .qmah-metric-card {
+  border-right: 0;
+}
+
+.qmah-admin .qmah-dashboard-metrics .card-body {
+  min-height: 6.15rem;
+  padding: 1rem 1.05rem;
+}
+
+.qmah-admin .qmah-metric-label {
+  display: block;
+  color: var(--qmah-ink-soft);
+  font-size: .74rem;
+  font-weight: 650;
+}
+
+.qmah-admin .qmah-metric-value {
+  display: block;
+  margin-top: .25rem;
+  color: var(--qmah-ink);
+  font-size: 1.65rem;
+  font-weight: 730;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+}
+
+.qmah-admin .qmah-metric-note {
+  display: block;
+  margin-top: .24rem;
+  color: var(--qmah-ink-faint);
+  font-size: .69rem;
+  line-height: 1.4;
+}
+
+.qmah-admin .qmah-dashboard-primary {
+  margin-bottom: 1.15rem;
+}
+
+.qmah-admin .qmah-dashboard-primary > [class*="col-"] > .card {
+  height: 100%;
+}
+
+.qmah-admin .qmah-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+}
+
+.qmah-admin .qmah-quick-link {
+  position: relative;
+  display: grid;
+  min-height: 4.7rem;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  gap: .8rem;
+  align-items: center;
+  padding: .8rem .85rem;
+  border: 1px solid var(--qmah-line-soft);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--qmah-ink);
+  text-decoration: none;
+}
+
+.qmah-admin .qmah-quick-link::after {
+  color: var(--qmah-ink-faint);
+  content: "›";
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.qmah-admin .qmah-quick-link:hover,
+.qmah-admin .qmah-quick-link:focus-visible {
+  border-color: color-mix(in srgb, var(--qmah-primary) 34%, var(--qmah-line));
+  background: var(--qmah-primary-soft);
+  color: var(--qmah-ink);
+}
+
+.qmah-admin .qmah-quick-link .avatar {
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid color-mix(in srgb, var(--qmah-primary) 16%, var(--qmah-line));
+  border-radius: 7px;
+  background: var(--qmah-primary-soft) !important;
+  color: var(--qmah-primary-hover) !important;
+}
+
+.qmah-admin .qmah-quick-link strong {
+  display: block;
+  color: var(--qmah-ink);
+  font-size: .84rem;
+  font-weight: 670;
+}
+
+.qmah-admin .qmah-quick-link small {
+  display: block;
+  margin-top: .18rem;
+  color: var(--qmah-ink-faint);
+  font-size: .69rem;
+  line-height: 1.4;
+}
+
+.qmah-admin .qmah-status-list .list-group-item,
+.qmah-admin .qmah-data-list .list-group-item {
+  min-height: 3.2rem;
+  padding: .72rem 1rem !important;
+  border-color: var(--qmah-line-soft);
+  background: transparent;
+  color: var(--qmah-ink-soft);
+  font-size: .82rem;
+}
+
+.qmah-admin .qmah-status-list .list-group-item strong,
+.qmah-admin .qmah-data-list .list-group-item strong {
+  color: var(--qmah-ink);
+  font-size: .9rem;
+}
+
+.qmah-admin .qmah-status-list .list-group-item-action:hover,
+.qmah-admin .qmah-data-list .list-group-item-action:hover {
+  padding-left: 1rem;
+  background: var(--qmah-surface-soft);
+}
+
+.qmah-admin .qmah-dashboard-data {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  margin-bottom: 1.15rem;
+  border: 1px solid var(--qmah-line);
+  border-radius: 10px;
+  background: var(--qmah-surface);
+}
+
+.qmah-admin .qmah-dashboard-data > .card {
+  border: 0;
+  border-right: 1px solid var(--qmah-line-soft);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.qmah-admin .qmah-dashboard-data > .card:last-child {
+  border-right: 0;
+}
+
+.qmah-admin .qmah-dashboard-data .card-header {
+  min-height: 3.4rem;
+}
+
+.qmah-admin .qmah-dashboard-shortcuts {
+  border-color: var(--qmah-line);
+}
+
+.qmah-admin .qmah-dashboard-shortcuts .qmah-quick-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+/* General motion cleanup */
+.qmah-admin .page-body .card,
+.qmah-admin .page-body .badge,
+.qmah-admin .page-body .form-control,
+.qmah-admin .page-body .form-select,
+.qmah-admin .navbar-vertical .navbar-nav .nav-link,
+.qmah-admin .navbar-vertical .navbar-nav .nav-link-icon {
+  transform: none;
+}
+
+.qmah-admin .page-body .card,
+.qmah-admin .page-body .badge {
+  transition:
+    border-color .14s ease,
+    background-color .14s ease,
+    color .14s ease,
+    box-shadow .14s ease;
+}
+
+.qmah-admin .qmah-admin-footer {
+  padding-top: .75rem;
+  padding-bottom: 1rem;
+  color: var(--qmah-ink-faint);
+  font-size: .7rem;
+}
+
+/* RWD */
+@media (max-width: 1199.98px) {
+  .qmah-admin .qmah-dashboard-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .qmah-admin .qmah-dashboard-metrics > .col:nth-child(3) .qmah-metric-card {
+    border-right: 0;
+  }
+
+  .qmah-admin .qmah-dashboard-metrics > .col:nth-child(-n+3) .qmah-metric-card {
+    border-bottom: 1px solid var(--qmah-line-soft);
+  }
+
+  .qmah-admin .qmah-dashboard-shortcuts .qmah-quick-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .qmah-admin .qmah-page-actions {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  .qmah-admin .qmah-page-actions > .qmah-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .qmah-admin .page-wrapper > :where(main, .footer) .container-xl,
+  .qmah-admin .qmah-topbar .container-xl {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .qmah-admin .qmah-dashboard-data {
+    grid-template-columns: 1fr;
+  }
+
+  .qmah-admin .qmah-dashboard-data > .card {
+    border-right: 0;
+    border-bottom: 1px solid var(--qmah-line-soft);
+  }
+
+  .qmah-admin .qmah-dashboard-data > .card:last-child {
+    border-bottom: 0;
+  }
+
+  .qmah-admin .qmah-quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qmah-admin .qmah-dashboard-shortcuts .qmah-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qmah-admin .qmah-actions,
+  .qmah-admin .qmah-form-actions,
+  .qmah-admin .qmah-crud-toolbar {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .qmah-admin .page-title {
+    font-size: 1.34rem;
+  }
+
+  .qmah-admin .qmah-page-description {
+    font-size: .8rem;
+  }
+
+  .qmah-admin .qmah-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qmah-admin .qmah-dashboard-metrics > .col .qmah-metric-card {
+    border-right: 1px solid var(--qmah-line-soft);
+    border-bottom: 1px solid var(--qmah-line-soft);
+  }
+
+  .qmah-admin .qmah-dashboard-metrics > .col:nth-child(2n) .qmah-metric-card {
+    border-right: 0;
+  }
+
+  .qmah-admin .qmah-dashboard-metrics > .col:last-child .qmah-metric-card {
+    border-bottom: 0;
+  }
+
+  .qmah-admin .qmah-dashboard-shortcuts .qmah-quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qmah-admin .qmah-account__text {
+    display: none;
+  }
+
+  .qmah-admin .form-control,
+  .qmah-admin .form-select {
+    min-height: 2.65rem;
+    font-size: .9rem;
+  }
+
+  .qmah-admin .qmah-admin-footer {
+    padding-bottom: calc(.9rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qmah-admin *,
+  .qmah-admin *::before,
+  .qmah-admin *::after {
+    scroll-behavior: auto !important;
+  }
+}

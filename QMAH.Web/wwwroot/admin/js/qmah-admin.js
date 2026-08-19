@@ -3,11 +3,15 @@
 
     const root = document.documentElement;
     const toggle = document.querySelector("[data-qmah-theme-toggle]");
-    const label = toggle?.querySelector("[data-qmah-theme-label]");
+    const wash = document.querySelector("[data-qmah-theme-wash]");
+    const themeColor = document.querySelector("[data-qmah-theme-color]");
     const sidebarToggle = document.querySelector("[data-qmah-sidebar-toggle]");
     const mobileSidebarToggle = document.querySelector("[data-qmah-mobile-sidebar-toggle]");
     const mobileSidebar = document.querySelector("#admin-sidebar-menu");
     const mobileSidebarBackdrop = document.querySelector("[data-qmah-sidebar-backdrop]");
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    const themeStorageKey = "qmah-admin-theme";
+    let switchingTheme = false;
 
     document.addEventListener("click", (event) => {
         const trigger = event.target.closest("[data-qmah-image-preview]");
@@ -15,85 +19,82 @@
         if (trigger && target) target.src = trigger.dataset.qmahImagePreview;
     });
 
-    const themeSwitchingClass = "qmah-theme-switching";
+    function syncThemeUi() {
+        const isDark = root.dataset.bsTheme === "dark";
+        toggle?.setAttribute("aria-pressed", String(isDark));
+        toggle?.setAttribute("aria-label", isDark ? "切換淺色模式" : "切換深色模式");
+        themeColor?.setAttribute("content", isDark ? "#10191c" : "#f3f6f4");
+    }
 
-    function applyTheme(theme) {
-        const isDark = theme === "dark";
+    function applyTheme(theme, persist = true) {
         root.dataset.bsTheme = theme;
         root.style.colorScheme = theme;
-        localStorage.setItem("qmah-admin-theme", theme);
 
-        if (toggle) {
-            toggle.setAttribute("aria-pressed", String(isDark));
-            toggle.setAttribute("aria-label", `切換為${isDark ? "淺色" : "深色"}模式`);
+        if (persist) {
+            localStorage.setItem(themeStorageKey, theme);
         }
 
-        if (label) {
-            label.textContent = isDark ? "淺色" : "深色";
-        }
+        syncThemeUi();
     }
 
-    applyTheme(root.dataset.bsTheme === "dark" ? "dark" : "light");
+    async function switchTheme(theme, persist = true) {
+        if (switchingTheme) return;
 
-    async function switchTheme(nextTheme) {
-        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-        if (!document.startViewTransition || reduceMotion) {
-            applyTheme(nextTheme);
+        if (!wash || reduceMotion.matches) {
+            applyTheme(theme, persist);
             return;
         }
 
-        const rect = toggle.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top + rect.height / 2;
-        const radius = Math.hypot(
-            Math.max(x, window.innerWidth - x),
-            Math.max(y, window.innerHeight - y));
-        const switchingToDark = nextTheme === "dark";
-
-        root.dataset.qmahThemeTransition = switchingToDark ? "to-dark" : "to-light";
-        root.classList.add(themeSwitchingClass);
+        switchingTheme = true;
+        toggle?.setAttribute("disabled", "");
+        wash.style.backgroundColor = theme === "dark" ? "#10191c" : "#f3f6f4";
 
         try {
-            const transition = document.startViewTransition(() => applyTheme(nextTheme));
-            await transition.ready;
-
-            const reveal = root.animate(
+            const cover = wash.animate(
+                [{ opacity: 0 }, { opacity: .90 }],
                 {
-                    clipPath: switchingToDark
-                        ? [
-                            `circle(${radius}px at ${x}px ${y}px)`,
-                            `circle(0px at ${x}px ${y}px)`
-                        ]
-                        : [
-                            `circle(0px at ${x}px ${y}px)`,
-                            `circle(${radius}px at ${x}px ${y}px)`
-                        ]
-                },
-                {
-                    duration: 720,
+                    duration: 360,
                     easing: "cubic-bezier(.4, 0, .2, 1)",
-                    fill: "both",
-                    pseudoElement: switchingToDark
-                        ? "::view-transition-old(root)"
-                        : "::view-transition-new(root)"
+                    fill: "forwards"
                 });
 
-            await Promise.allSettled([transition.finished, reveal.finished]);
+            await cover.finished;
+            wash.style.opacity = ".90";
+            cover.cancel();
+
+            applyTheme(theme, persist);
+
+            const reveal = wash.animate(
+                [{ opacity: .90 }, { opacity: 0 }],
+                {
+                    duration: 640,
+                    easing: "cubic-bezier(.16, 1, .3, 1)",
+                    fill: "forwards"
+                });
+
+            await reveal.finished;
         } catch {
-            applyTheme(nextTheme);
+            applyTheme(theme, persist);
         } finally {
-            delete root.dataset.qmahThemeTransition;
-            root.classList.remove(themeSwitchingClass);
+            wash?.getAnimations().forEach(animation => animation.cancel());
+            if (wash) wash.style.opacity = "0";
+            toggle?.removeAttribute("disabled");
+            switchingTheme = false;
         }
     }
 
-    toggle?.addEventListener("click", () => {
-        if (root.classList.contains(themeSwitchingClass)) {
-            return;
-        }
+    applyTheme(root.dataset.bsTheme === "dark" ? "dark" : "light", false);
 
-        void switchTheme(root.dataset.bsTheme === "dark" ? "light" : "dark");
+    toggle?.addEventListener("click", () => {
+        const nextTheme = root.dataset.bsTheme === "dark" ? "light" : "dark";
+        void switchTheme(nextTheme);
+    });
+
+    window.addEventListener("storage", (event) => {
+        if (event.key !== themeStorageKey) return;
+        if (event.newValue !== "dark" && event.newValue !== "light") return;
+        if (event.newValue === root.dataset.bsTheme) return;
+        void switchTheme(event.newValue, false);
     });
 
     function applySidebar(collapsed) {
