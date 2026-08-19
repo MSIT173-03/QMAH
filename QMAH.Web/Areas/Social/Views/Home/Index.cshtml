@@ -1,3 +1,5 @@
+@using QMAH.Web.Infrastructure.AdminNavigation
+@inject AdminNavigationService AdminNavigation
 @model QMAH.Web.Areas.Social.Models.SocialDashboardViewModel
 
 @{
@@ -5,105 +7,102 @@
     ViewData["AdminDescription"] = "集中掌握社群內容、活動、檢舉與公告的處理狀態。";
     var canManagePosts = User.IsInRole("Admin") || User.IsInRole("ContentModerator");
     var canManageEvents = User.IsInRole("Admin") || User.IsInRole("EventModerator");
+
+    var workspaceItems = AdminNavigation.GetAreaItems("Social")
+        .Where(item =>
+            ((item.Controller != "SocialPostAdmin" && item.Controller != "SocialReportAdmin") || canManagePosts) &&
+            (item.Controller != "SocialEventAdmin" || canManageEvents))
+        .ToArray();
+
+    string WorkspaceDescription(string controller) => controller switch
+    {
+        "SocialPostAdmin" => "依板塊、狀態與日期處理貼文",
+        "SocialReportAdmin" => "處理與追蹤檢舉紀錄",
+        "SocialEventAdmin" => "建立、編輯與審核活動",
+        _ => $"進入{controller}管理"
+    };
 }
 
 @section PageActions {
-    <div class="d-flex flex-wrap gap-2">
-        @if (canManagePosts)
-        {
-            <a asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" class="btn btn-primary">
-                <i class="ti ti-file-pencil me-1"></i>貼文處理
-            </a>
-        }
-        @if (canManageEvents)
-        {
-            <a asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index" class="btn btn-outline-secondary">
-                <i class="ti ti-calendar-check me-1"></i>活動管理
-            </a>
-        }
-    </div>
+    @if (canManagePosts)
+    {
+        <a asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" class="btn btn-primary">
+            <i class="ti ti-file-text me-1"></i>貼文處理
+        </a>
+    }
 }
 
-<div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-4 qmah-dashboard-metrics mb-3">
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">已發布貼文</span><strong class="qmah-metric-value">@Model.PublishedPostCount</strong><span class="qmah-metric-note">目前公開內容</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">留言總量</span><strong class="qmah-metric-value">@Model.CommentCount</strong><span class="qmah-metric-note">貼文互動資料</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">待處理檢舉</span><strong class="qmah-metric-value">@Model.PendingReportCount</strong><span class="qmah-metric-note">需要內容審核</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">待審活動</span><strong class="qmah-metric-value">@Model.PendingEventCount</strong><span class="qmah-metric-note">已發布 @Model.PublishedEventCount 場</span></div></div></div>
-</div>
+<div class="qmah-area-overview">
+    <section class="qmah-area-metrics qmah-area-metrics--4" aria-label="社群資料摘要">
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-file-text"></i></span><div><span class="qmah-area-metric__label">已發布貼文</span><strong class="qmah-area-metric__value">@Model.PublishedPostCount</strong><span class="qmah-area-metric__note">目前公開內容</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-message-circle"></i></span><div><span class="qmah-area-metric__label">留言總量</span><strong class="qmah-area-metric__value">@Model.CommentCount</strong><span class="qmah-area-metric__note">貼文互動資料</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-message-2-exclamation"></i></span><div><span class="qmah-area-metric__label">待處理檢舉</span><strong class="qmah-area-metric__value">@Model.PendingReportCount</strong><span class="qmah-area-metric__note">需要內容審核</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-calendar-event"></i></span><div><span class="qmah-area-metric__label">待審活動</span><strong class="qmah-area-metric__value">@Model.PendingEventCount</strong><span class="qmah-area-metric__note">已發布 @Model.PublishedEventCount 場</span></div></article>
+    </section>
 
-<div class="row row-cards mb-3">
-    <div class="col-12 col-lg-5">
-        <div class="card h-100">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title mb-1">社群工作區</h2>
-                    <div class="card-subtitle">依照權限進入相應的社群管理作業。</div>
-                </div>
-            </div>
+    <div class="qmah-area-overview-grid">
+        <section class="card qmah-area-card qmah-area-workbench">
+            <div class="card-header"><div><h2 class="card-title mb-1">社群工作區</h2><div class="card-subtitle">依照權限進入相應的社群管理作業。</div></div></div>
             <div class="card-body">
-                <div class="qmah-quick-grid">
-                    @if (canManagePosts)
+                <div class="qmah-area-tile-grid">
+                    @foreach (var item in workspaceItems)
                     {
-                        <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index"><span class="avatar bg-blue-lt"><i class="ti ti-file-pencil"></i></span><span><strong>貼文內容處理</strong><small>依板塊、狀態、關鍵字與日期篩選</small></span></a>
-                        <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index"><span class="avatar bg-red-lt"><i class="ti ti-shield-alert"></i></span><span><strong>檢舉管理</strong><small>處理與追蹤檢舉紀錄</small></span></a>
-                    }
-                    @if (canManageEvents)
-                    {
-                        <a class="qmah-quick-link" asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index"><span class="avatar bg-green-lt"><i class="ti ti-calendar-check"></i></span><span><strong>活動管理</strong><small>建立、編輯與審核活動</small></span></a>
+                        <a class="qmah-area-action"
+                           asp-area="Social"
+                           asp-controller="@item.Controller"
+                           asp-action="Index">
+                            <span class="qmah-area-action__icon">
+                                <partial name="Admin/_Icon" model="@item.Controller" />
+                            </span>
+                            <span>
+                                <strong>@item.Label</strong>
+                                <small>@WorkspaceDescription(item.Controller)</small>
+                            </span>
+                            <i class="ti ti-chevron-right qmah-area-action__arrow" aria-hidden="true"></i>
+                        </a>
                     }
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="col-12 col-lg-7">
-        <div class="card h-100">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title mb-1">最近貼文</h2>
-                    <div class="card-subtitle">最近建立的社群貼文資料。</div>
-                </div>
-            </div>
-            <div class="list-group list-group-flush">
+        <section class="card qmah-area-card">
+            <div class="card-header"><div><h2 class="card-title mb-1">最近貼文</h2><div class="card-subtitle">最近建立的社群貼文資料。</div></div></div>
+            <div class="list-group list-group-flush qmah-area-list">
                 @if (Model.RecentPosts.Count == 0)
                 {
-                    <div class="empty py-5"><p class="empty-title">目前沒有貼文資料</p></div>
+                    <div class="empty py-5"><div class="empty-icon"><i class="ti ti-inbox"></i></div><p class="empty-title">目前沒有貼文資料</p></div>
                 }
                 else
                 {
                     @foreach (var post in Model.RecentPosts)
                     {
-                        <a class="list-group-item list-group-item-action py-3" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" asp-route-keyword="@post.Title">
+                        <a class="list-group-item list-group-item-action" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" asp-route-keyword="@post.Title">
                             <div class="d-flex justify-content-between gap-3"><strong class="text-truncate">@post.Title</strong><span class="badge bg-secondary-lt">@AdminDisplayLabels.Board(post.BoardCode)</span></div>
                             <small class="text-secondary">@post.CreatedAt.ToString("yyyy/MM/dd HH:mm") · 進入內容處理</small>
                         </a>
                     }
                 }
             </div>
-        </div>
+        </section>
     </div>
-</div>
 
-<div class="row row-cards">
-    <div class="col-12 col-lg-6">
-        <div class="card h-100">
+    <div class="qmah-area-detail-grid qmah-area-detail-grid--2">
+        <section class="card qmah-area-card">
             <div class="card-header"><div><h2 class="card-title mb-1">內容狀態</h2><div class="card-subtitle">目前內容與檢舉的處理摘要。</div></div></div>
-            <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index"><span>已發布貼文</span><strong>@Model.PublishedPostCount</strong></a>
-                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index"><span>待處理檢舉</span><strong class="@(Model.PendingReportCount > 0 ? "text-danger" : "text-success")">@Model.PendingReportCount</strong></a>
-                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3 py-3" asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index"><span>已發布活動</span><strong>@Model.PublishedEventCount</strong></a>
+            <div class="list-group list-group-flush qmah-area-list">
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index"><span>已發布貼文</span><strong>@Model.PublishedPostCount</strong></a>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index"><span>待處理檢舉</span><strong class="@(Model.PendingReportCount > 0 ? "text-danger" : "text-success")">@Model.PendingReportCount</strong></a>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3" asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Index"><span>已發布活動</span><strong>@Model.PublishedEventCount</strong></a>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="col-12 col-lg-6">
-        <div class="card h-100">
+        <section class="card qmah-area-card">
             <div class="card-header"><div><h2 class="card-title mb-1">社群活動摘要</h2><div class="card-subtitle">留言、活動與公告的目前狀態。</div></div></div>
-            <div class="list-group list-group-flush">
-                <div class="list-group-item d-flex align-items-center justify-content-between gap-3 py-3"><span>留言總量</span><strong>@Model.CommentCount</strong></div>
-                <div class="list-group-item d-flex align-items-center justify-content-between gap-3 py-3"><span>待審活動</span><strong class="@(Model.PendingEventCount > 0 ? "text-warning" : "text-success")">@Model.PendingEventCount</strong></div>
-                <div class="list-group-item d-flex align-items-center justify-content-between gap-3 py-3"><span>已發布公告</span><strong>@Model.PublishedAnnouncementCount</strong></div>
+            <div class="list-group list-group-flush qmah-area-list">
+                <div class="list-group-item d-flex align-items-center justify-content-between gap-3"><span>留言總量</span><strong>@Model.CommentCount</strong></div>
+                <div class="list-group-item d-flex align-items-center justify-content-between gap-3"><span>待審活動</span><strong class="@(Model.PendingEventCount > 0 ? "text-warning" : "text-success")">@Model.PendingEventCount</strong></div>
+                <div class="list-group-item d-flex align-items-center justify-content-between gap-3"><span>已發布公告</span><strong>@Model.PublishedAnnouncementCount</strong></div>
             </div>
-        </div>
+        </section>
     </div>
 </div>

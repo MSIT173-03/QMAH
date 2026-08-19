@@ -1,62 +1,68 @@
+@using QMAH.Web.Infrastructure.AdminNavigation
+@inject AdminNavigationService AdminNavigation
 @model QMAH.Web.Areas.User.ViewModels.HomeDashboardViewModel
 
 @{
     ViewData["Title"] = "會員總覽";
     ViewData["AdminDescription"] = "集中掌握會員帳號、角色、個人資料、成就與點數狀態。";
+
+    var workspaceItems = AdminNavigation.GetAreaItems("User");
+
+    string WorkspaceDescription(string controller) => controller switch
+    {
+        "Members" => "狀態、角色與會員帳號管理",
+        "Profile" => "查看與維護會員個人資料",
+        "Achievements" => "建立與維護成就條件",
+        "PointBackpack" => "查看與調整會員點數餘額",
+        "PointTransactions" => "追蹤會員點數異動紀錄",
+        _ => "進入此管理功能"
+    };
 }
 
 @section PageActions {
-    <div class="d-flex flex-wrap gap-2">
-        <a asp-area="User" asp-controller="Members" asp-action="Index" class="btn btn-primary">
-            <i class="ti ti-users me-1"></i>會員帳號
-        </a>
-        <a asp-area="User" asp-controller="Achievements" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="ti ti-award me-1"></i>成就設定
-        </a>
-        <a asp-area="User" asp-controller="PointTransactions" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="ti ti-coin me-1"></i>點數流水
-        </a>
-    </div>
+    <a asp-area="User" asp-controller="Members" asp-action="Index" class="btn btn-primary">
+        <i class="ti ti-user-cog me-1"></i>會員帳號
+    </a>
 }
 
-<div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-4 qmah-dashboard-metrics mb-3">
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">會員總數</span><strong class="qmah-metric-value">@Model.TotalMembers</strong><span class="qmah-metric-note">全部 Identity 帳號</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">近 30 天新增</span><strong class="qmah-metric-value">@Model.NewMembers</strong><span class="qmah-metric-note">最近建立的帳號</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">停權帳號</span><strong class="qmah-metric-value">@Model.BannedMembers</strong><span class="qmah-metric-note">需要後台處理</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">成就定義</span><strong class="qmah-metric-value">@Model.Achievements.Count</strong><span class="qmah-metric-note">目前成就設定摘要</span></div></div></div>
-</div>
+<div class="qmah-area-overview">
+    <section class="qmah-area-metrics qmah-area-metrics--4" aria-label="會員資料摘要">
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-users"></i></span><div><span class="qmah-area-metric__label">會員總數</span><strong class="qmah-area-metric__value">@Model.TotalMembers</strong><span class="qmah-area-metric__note">全部 Identity 帳號</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-user-plus"></i></span><div><span class="qmah-area-metric__label">近 30 天新增</span><strong class="qmah-area-metric__value">@Model.NewMembers</strong><span class="qmah-area-metric__note">最近建立的帳號</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-user-off"></i></span><div><span class="qmah-area-metric__label">停權帳號</span><strong class="qmah-area-metric__value">@Model.BannedMembers</strong><span class="qmah-area-metric__note">需要後台處理</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-award"></i></span><div><span class="qmah-area-metric__label">成就定義</span><strong class="qmah-area-metric__value">@Model.Achievements.Count</strong><span class="qmah-area-metric__note">目前成就設定摘要</span></div></article>
+    </section>
 
-<div class="row row-cards mb-3">
-    <div class="col-12 col-lg-5">
-        <div class="card h-100">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title mb-1">會員工作區</h2>
-                    <div class="card-subtitle">依用途進入會員相關管理功能。</div>
-                </div>
-            </div>
+    <div class="qmah-area-overview-grid">
+        <section class="card qmah-area-card qmah-area-workbench">
+            <div class="card-header"><div><h2 class="card-title mb-1">會員工作區</h2><div class="card-subtitle">依用途進入會員相關管理功能。</div></div></div>
             <div class="card-body">
-                <div class="qmah-quick-grid">
-                    <a class="qmah-quick-link" asp-area="User" asp-controller="Members" asp-action="Index"><span class="avatar bg-blue-lt"><i class="ti ti-user-cog"></i></span><span><strong>會員帳號</strong><small>狀態、角色、地址與成就</small></span></a>
-                    <a class="qmah-quick-link" asp-area="User" asp-controller="Achievements" asp-action="Index"><span class="avatar bg-yellow-lt"><i class="ti ti-award"></i></span><span><strong>成就設定</strong><small>建立與維護成就條件</small></span></a>
-                    <a class="qmah-quick-link" asp-area="User" asp-controller="PointTransactions" asp-action="Index"><span class="avatar bg-green-lt"><i class="ti ti-coin"></i></span><span><strong>點數流水</strong><small>查看與調整會員點數</small></span></a>
+                <div class="qmah-area-tile-grid">
+                    @foreach (var item in workspaceItems)
+                    {
+                        <a class="qmah-area-action"
+                           asp-area="User"
+                           asp-controller="@item.Controller"
+                           asp-action="Index">
+                            <span class="qmah-area-action__icon">
+                                <partial name="Admin/_Icon" model="@item.Controller" />
+                            </span>
+                            <span>
+                                <strong>@item.Label</strong>
+                                <small>@WorkspaceDescription(item.Controller)</small>
+                            </span>
+                            <i class="ti ti-chevron-right qmah-area-action__arrow" aria-hidden="true"></i>
+                        </a>
+                    }
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="col-12 col-lg-7">
-        <div class="card h-100">
+        <section class="card qmah-area-card">
             <div class="card-header">
-                <div>
-                    <h2 class="card-title mb-1">最近會員</h2>
-                    <div class="card-subtitle">依建立時間顯示最近會員帳號。</div>
-                </div>
-                <div class="card-actions">
-                    <a asp-area="User" asp-controller="Members" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a>
-                </div>
+                <div><h2 class="card-title mb-1">最近會員</h2><div class="card-subtitle">依建立時間顯示最近會員帳號。</div></div>
+                <div class="card-actions"><a asp-area="User" asp-controller="Members" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a></div>
             </div>
-
             <div class="table-responsive">
                 <table class="table table-vcenter table-hover card-table qmah-crud-table">
                     <thead><tr><th>帳號</th><th>Email</th><th>狀態</th><th>建立時間</th><th class="w-1"></th></tr></thead>
@@ -81,20 +87,13 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
     </div>
-</div>
 
-<div class="row row-cards">
-    <div class="col-12 col-lg-7">
-        <div class="card h-100">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title mb-1">最近會員活動</h2>
-                    <div class="card-subtitle">最近會員個人資料與社群活動摘要。</div>
-                </div>
-            </div>
-            <div class="list-group list-group-flush">
+    <div class="qmah-area-detail-grid qmah-area-detail-grid--2">
+        <section class="card qmah-area-card">
+            <div class="card-header"><div><h2 class="card-title mb-1">最近會員活動</h2><div class="card-subtitle">最近會員個人資料與社群活動摘要。</div></div></div>
+            <div class="list-group list-group-flush qmah-area-list">
             @if (Model.ProfileActivities.Count == 0)
             {
                 <div class="empty py-5"><p class="empty-title">目前沒有會員活動資料</p></div>
@@ -110,19 +109,12 @@
                 }
             }
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="col-12 col-lg-5">
-        <div class="card h-100">
+        <section class="card qmah-area-card">
             <div class="card-header">
-                <div>
-                    <h2 class="card-title mb-1">最近點數異動</h2>
-                    <div class="card-subtitle">最近會員點數增加與扣除紀錄。</div>
-                </div>
-                <div class="card-actions">
-                    <a asp-area="User" asp-controller="PointTransactions" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a>
-                </div>
+                <div><h2 class="card-title mb-1">最近點數異動</h2><div class="card-subtitle">最近會員點數增加與扣除紀錄。</div></div>
+                <div class="card-actions"><a asp-area="User" asp-controller="PointTransactions" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a></div>
             </div>
             <div class="table-responsive">
                 <table class="table table-vcenter card-table qmah-crud-table">
@@ -139,6 +131,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
     </div>
 </div>

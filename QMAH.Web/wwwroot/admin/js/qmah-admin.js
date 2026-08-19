@@ -16,14 +16,16 @@
     document.addEventListener("click", (event) => {
         const trigger = event.target.closest("[data-qmah-image-preview]");
         const target = document.querySelector("[data-qmah-image-preview-target]");
-        if (trigger && target) target.src = trigger.dataset.qmahImagePreview;
+        if (trigger && target) {
+            target.src = trigger.dataset.qmahImagePreview;
+        }
     });
 
     function syncThemeUi() {
         const isDark = root.dataset.bsTheme === "dark";
         toggle?.setAttribute("aria-pressed", String(isDark));
         toggle?.setAttribute("aria-label", isDark ? "切換淺色模式" : "切換深色模式");
-        themeColor?.setAttribute("content", isDark ? "#10191c" : "#f3f6f4");
+        themeColor?.setAttribute("content", isDark ? "#151c1f" : "#f3f6f4");
     }
 
     function applyTheme(theme, persist = true) {
@@ -37,37 +39,65 @@
         syncThemeUi();
     }
 
-    async function switchTheme(theme, persist = true) {
-        if (switchingTheme) return;
+    function getThemeWashGeometry() {
+        const rect = toggle?.getBoundingClientRect();
+        const size = 48;
+        const centerX = rect ? rect.left + rect.width / 2 : window.innerWidth - 40;
+        const centerY = rect ? rect.top + rect.height / 2 : 32;
+        const farthestX = Math.max(centerX, window.innerWidth - centerX);
+        const farthestY = Math.max(centerY, window.innerHeight - centerY);
+        const radius = Math.hypot(farthestX, farthestY);
+        const scale = Math.max(1, radius / (size / 2) * 1.06);
 
-        if (!wash || reduceMotion.matches) {
+        return {
+            x: centerX - size / 2,
+            y: centerY - size / 2,
+            scale
+        };
+    }
+
+    async function switchTheme(theme, persist = true) {
+        if (switchingTheme) {
+            return;
+        }
+
+        if (!wash || reduceMotion.matches || !toggle) {
             applyTheme(theme, persist);
             return;
         }
 
         switchingTheme = true;
-        toggle?.setAttribute("disabled", "");
-        wash.style.backgroundColor = theme === "dark" ? "#10191c" : "#f3f6f4";
+        toggle.disabled = true;
+
+        const geometry = getThemeWashGeometry();
+        const origin = `translate3d(${geometry.x}px, ${geometry.y}px, 0)`;
+        wash.style.opacity = "1";
 
         try {
             const cover = wash.animate(
-                [{ opacity: 0 }, { opacity: .90 }],
+                [
+                    { transform: `${origin} scale(.02)` },
+                    { transform: `${origin} scale(${geometry.scale})` }
+                ],
                 {
-                    duration: 360,
-                    easing: "cubic-bezier(.4, 0, .2, 1)",
+                    duration: 430,
+                    easing: "cubic-bezier(.55, .02, .3, 1)",
                     fill: "forwards"
                 });
 
             await cover.finished;
-            wash.style.opacity = ".90";
             cover.cancel();
+            wash.style.transform = `${origin} scale(${geometry.scale})`;
 
             applyTheme(theme, persist);
 
             const reveal = wash.animate(
-                [{ opacity: .90 }, { opacity: 0 }],
+                [
+                    { transform: `${origin} scale(${geometry.scale})` },
+                    { transform: `${origin} scale(.02)` }
+                ],
                 {
-                    duration: 640,
+                    duration: 610,
                     easing: "cubic-bezier(.16, 1, .3, 1)",
                     fill: "forwards"
                 });
@@ -76,9 +106,10 @@
         } catch {
             applyTheme(theme, persist);
         } finally {
-            wash?.getAnimations().forEach(animation => animation.cancel());
-            if (wash) wash.style.opacity = "0";
-            toggle?.removeAttribute("disabled");
+            wash.getAnimations().forEach((animation) => animation.cancel());
+            wash.style.opacity = "0";
+            wash.style.transform = "translate3d(0, 0, 0) scale(.02)";
+            toggle.disabled = false;
             switchingTheme = false;
         }
     }
@@ -156,6 +187,20 @@
         link.addEventListener("click", () => applyMobileSidebar(false));
     });
 
+    document.querySelectorAll(".qmah-sidebar-subnav .nav-link").forEach((link) => {
+        const press = () => {
+            link.classList.add("qmah-nav-press");
+            window.setTimeout(() => link.classList.remove("qmah-nav-press"), 160);
+        };
+
+        link.addEventListener("pointerdown", press, { passive: true });
+        link.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                press();
+            }
+        });
+    });
+
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
             applyMobileSidebar(false);
@@ -199,7 +244,6 @@
     });
 })();
 
-/* 共用列表排序 */
 (() => {
     "use strict";
 
@@ -236,28 +280,16 @@
     }
 
     function createSortIcon(direction) {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("fill", "none");
-        svg.setAttribute("stroke", "currentColor");
-        svg.setAttribute("stroke-linecap", "round");
-        svg.setAttribute("stroke-linejoin", "round");
-        svg.setAttribute("aria-hidden", "true");
-        svg.classList.add("icon", "qmah-sort-icon");
-
-        const paths = direction === "asc"
-            ? ["M12 5l0 14", "M18 11l-6 -6", "M6 11l6 -6"]
-            : direction === "desc"
-                ? ["M12 5l0 14", "M18 13l-6 6", "M6 13l6 6"]
-                : ["M3 9l4 -4l4 4", "M7 5l0 14", "M21 15l-4 4l-4 -4", "M17 19l0 -14"];
-
-        paths.forEach((d) => {
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("d", d);
-            svg.append(path);
-        });
-
-        return svg;
+        const icon = document.createElement("i");
+        icon.className = `ti ${
+            direction === "asc"
+                ? "ti-sort-ascending-2"
+                : direction === "desc"
+                    ? "ti-sort-descending-2"
+                    : "ti-arrows-sort"
+        } qmah-sort-icon`;
+        icon.setAttribute("aria-hidden", "true");
+        return icon;
     }
 
     function setSortIcon(header, direction) {
@@ -265,7 +297,12 @@
 
         const oldIcon = header.querySelector(".qmah-sort-icon");
         const icon = createSortIcon(direction);
-        oldIcon?.replaceWith(icon);
+
+        if (oldIcon) {
+            oldIcon.replaceWith(icon);
+        } else {
+            header.append(icon);
+        }
 
         header.setAttribute(
             "aria-sort",

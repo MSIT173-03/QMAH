@@ -1,7 +1,22 @@
+@using QMAH.Web.Infrastructure.AdminNavigation
+@inject AdminNavigationService AdminNavigation
 @model GameDashboardViewModel
 @{
     ViewData["Title"] = "遊戲總覽";
     ViewData["AdminDescription"] = "集中掌握題庫供應、房間狀態、玩家活動與遊戲紀錄。";
+
+    var workspaceItems = AdminNavigation.GetAreaItems("Game");
+
+    string WorkspaceDescription(string controller) => controller switch
+    {
+        "QuestionEntries" => "管理題型、難度與啟用狀態",
+        "Rooms" => "查看房間生命週期與玩家數",
+        "Players" => "查看連線與加入房間狀態",
+        "Rounds" => "集中查看回合、作答與投票紀錄",
+        "Answers" => "查看玩家作答紀錄",
+        "Votes" => "查看玩家投票紀錄",
+        _ => "進入此管理功能"
+    };
     var maxDifficultyCount = Model.DifficultyDistribution.Count == 0
         ? 1
         : Model.DifficultyDistribution.Max(x => x.Count);
@@ -12,58 +27,53 @@
 }
 
 @section PageActions {
-    <div class="d-flex flex-wrap gap-2">
-        <a class="btn btn-primary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
-            <i class="ti ti-books me-1"></i>題庫管理
-        </a>
-        <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Rooms" asp-action="Create">
-            <i class="ti ti-plus me-1"></i>建立房間
-        </a>
-    </div>
+    <a class="btn btn-primary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
+        <i class="ti ti-list-check me-1"></i>題庫管理
+    </a>
 }
 
-<div class="row row-cards row-cols-1 row-cols-sm-2 row-cols-xl-5 qmah-dashboard-metrics mb-3">
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">啟用題目</span><strong class="qmah-metric-value">@Model.EnabledQuestionCount</strong><span class="qmah-metric-note">題庫共 @Model.TotalQuestionCount 題</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">進行中房間</span><strong class="qmah-metric-value">@Model.PlayingRoomCount</strong><span class="qmah-metric-note">等待中 @Model.WaitingRoomCount 間</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">在線玩家</span><strong class="qmah-metric-value">@Model.OnlinePlayerCount</strong><span class="qmah-metric-note">房內即時連線狀態</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">已完成房間</span><strong class="qmah-metric-value">@Model.CompletedRoomCount</strong><span class="qmah-metric-note">已結束的遊戲場次</span></div></div></div>
-    <div class="col"><div class="card qmah-metric-card h-100"><div class="card-body"><span class="qmah-metric-label">遊戲紀錄</span><strong class="qmah-metric-value">@Model.RoundCount</strong><span class="qmah-metric-note">作答 @Model.AnswerCount · 投票 @Model.VoteCount</span></div></div></div>
-</div>
+<div class="qmah-area-overview">
+    <section class="qmah-area-metrics qmah-area-metrics--5" aria-label="遊戲資料摘要">
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-list-check"></i></span><div><span class="qmah-area-metric__label">啟用題目</span><strong class="qmah-area-metric__value">@Model.EnabledQuestionCount</strong><span class="qmah-area-metric__note">題庫共 @Model.TotalQuestionCount 題</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-door"></i></span><div><span class="qmah-area-metric__label">進行中房間</span><strong class="qmah-area-metric__value">@Model.PlayingRoomCount</strong><span class="qmah-area-metric__note">等待中 @Model.WaitingRoomCount 間</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-users"></i></span><div><span class="qmah-area-metric__label">在線玩家</span><strong class="qmah-area-metric__value">@Model.OnlinePlayerCount</strong><span class="qmah-area-metric__note">房內即時連線狀態</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-circle-check"></i></span><div><span class="qmah-area-metric__label">已完成房間</span><strong class="qmah-area-metric__value">@Model.CompletedRoomCount</strong><span class="qmah-area-metric__note">已結束的遊戲場次</span></div></article>
+        <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-history"></i></span><div><span class="qmah-area-metric__label">遊戲紀錄</span><strong class="qmah-area-metric__value">@Model.RoundCount</strong><span class="qmah-area-metric__note">作答 @Model.AnswerCount · 投票 @Model.VoteCount</span></div></article>
+    </section>
 
-<div class="row row-cards mb-3">
-    <div class="col-12 col-lg-5">
-        <div class="card h-100">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title mb-1">遊戲工作區</h2>
-                    <div class="card-subtitle">依管理功能與歷史紀錄進入各項作業。</div>
-                </div>
-            </div>
+    <div class="qmah-area-overview-grid">
+        <section class="card qmah-area-card qmah-area-workbench">
+            <div class="card-header"><div><h2 class="card-title mb-1">遊戲工作區</h2><div class="card-subtitle">依管理功能與歷史紀錄進入各項作業。</div></div></div>
             <div class="card-body">
-                <div class="qmah-quick-grid">
-                    <a class="qmah-quick-link" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index"><span class="avatar bg-primary-lt"><i class="ti ti-books"></i></span><span><strong>題庫管理</strong><small>管理題型、難度與啟用狀態</small></span></a>
-                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Rooms" asp-action="Index"><span class="avatar bg-blue-lt"><i class="ti ti-door"></i></span><span><strong>房間管理</strong><small>查看房間生命週期與玩家數</small></span></a>
-                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Players" asp-action="Index"><span class="avatar bg-green-lt"><i class="ti ti-users"></i></span><span><strong>玩家活動</strong><small>查看連線與加入房間狀態</small></span></a>
-                    <a class="qmah-quick-link" asp-area="Game" asp-controller="Rounds" asp-action="Index"><span class="avatar bg-purple-lt"><i class="ti ti-history"></i></span><span><strong>遊戲紀錄</strong><small>集中查看回合、作答與投票紀錄</small></span></a>
+                <div class="qmah-area-tile-grid">
+                    @foreach (var item in workspaceItems)
+                    {
+                        <a class="qmah-area-action"
+                           asp-area="Game"
+                           asp-controller="@item.Controller"
+                           asp-action="Index">
+                            <span class="qmah-area-action__icon">
+                                <partial name="Admin/_Icon" model="@item.Controller" />
+                            </span>
+                            <span>
+                                <strong>@item.Label</strong>
+                                <small>@WorkspaceDescription(item.Controller)</small>
+                            </span>
+                            <i class="ti ti-chevron-right qmah-area-action__arrow" aria-hidden="true"></i>
+                        </a>
+                    }
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="col-12 col-lg-7">
-        <div class="card h-100">
+        <section class="card qmah-area-card">
             <div class="card-header">
-                <div>
-                    <h2 class="card-title mb-1">最近房間</h2>
-                    <div class="card-subtitle">依建立時間顯示最近的房間活動。</div>
-                </div>
-                <div class="card-actions">
-                    <a asp-area="Game" asp-controller="Rooms" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a>
-                </div>
+                <div><h2 class="card-title mb-1">最近房間</h2><div class="card-subtitle">依建立時間顯示最近的房間活動。</div></div>
+                <div class="card-actions"><a asp-area="Game" asp-controller="Rooms" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a></div>
             </div>
             @if (Model.RecentRooms.Count == 0)
             {
-                <div class="empty py-5"><p class="empty-title">目前沒有房間資料</p><p class="empty-subtitle text-secondary">建立第一個房間後會顯示在這裡。</p></div>
+                <div class="empty py-5"><div class="empty-icon"><i class="ti ti-inbox"></i></div><p class="empty-title">目前沒有房間資料</p><p class="empty-subtitle text-secondary">建立第一個房間後會顯示在這裡。</p></div>
             }
             else
             {
@@ -86,13 +96,11 @@
                     </table>
                 </div>
             }
-        </div>
+        </section>
     </div>
-</div>
 
-<div class="row row-cards">
-    <div class="col-12 col-lg-4">
-        <div class="card h-100">
+    <div class="qmah-area-detail-grid qmah-area-detail-grid--3">
+        <section class="card qmah-area-card">
             <div class="card-header"><div><h2 class="card-title mb-1">題庫難度</h2><div class="card-subtitle">目前題庫設定的難度分布。</div></div></div>
             @if (Model.DifficultyDistribution.Count == 0)
             {
@@ -110,13 +118,11 @@
                     }
                 </div>
             }
-        </div>
-    </div>
+        </section>
 
-    <div class="col-12 col-lg-4">
-        <div class="card h-100">
+        <section class="card qmah-area-card">
             <div class="card-header"><div><h2 class="card-title mb-1">最近回合</h2><div class="card-subtitle">依開始時間顯示最近的回合。</div></div></div>
-            <div class="list-group list-group-flush">
+            <div class="list-group list-group-flush qmah-area-list">
             @if (Model.RecentRounds.Count == 0)
             {
                 <div class="empty py-5"><p class="empty-title">尚無回合紀錄</p></div>
@@ -132,13 +138,11 @@
                 }
             }
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="col-12 col-lg-4">
-        <div class="card h-100">
+        <section class="card qmah-area-card">
             <div class="card-header"><div><h2 class="card-title mb-1">最近玩家活動</h2><div class="card-subtitle">依加入時間顯示最近的玩家活動。</div></div></div>
-            <div class="list-group list-group-flush">
+            <div class="list-group list-group-flush qmah-area-list">
             @if (Model.RecentPlayers.Count == 0)
             {
                 <div class="empty py-5"><p class="empty-title">尚無玩家紀錄</p></div>
@@ -154,6 +158,6 @@
                 }
             }
             </div>
-        </div>
+        </section>
     </div>
 </div>
