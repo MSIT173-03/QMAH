@@ -11,7 +11,7 @@ namespace QMAH.Web.Areas.Game.Controllers;
 
 [Area("Game")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-[AdminNavigation("玩家", order: 30)]
+[AdminNavigation("玩家活動", order: 30)]
 public sealed class PlayersController(QmahDbContext db) : Controller
 {
     public async Task<IActionResult> Index(

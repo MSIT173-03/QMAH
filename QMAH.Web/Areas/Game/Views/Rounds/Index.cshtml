@@ -4,7 +4,14 @@
     ViewData["AdminDescription"] = "依房間、文物與遊戲階段檢視每一回合的時間與紀錄數量。";
 }
 @section Styles { <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" /> }
-@section PageActions { <a class="btn btn-primary" asp-action="Create"><i class="ti ti-plus me-1"></i>建立回合資料</a> }
+@section PageActions {
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" asp-action="Create"><i class="ti ti-plus me-1"></i>建立回合資料</a>
+        <a class="btn btn-secondary" asp-area="Game" asp-controller="Rounds" asp-action="Index"><i class="ti ti-rotate-clockwise me-1"></i>回合紀錄</a>
+        <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Answers" asp-action="Index"><i class="ti ti-message-2 me-1"></i>作答紀錄</a>
+        <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Votes" asp-action="Index"><i class="ti ti-checklist me-1"></i>投票紀錄</a>
+    </div>
+}
 
 <form method="get" class="card mb-3 game-admin-filter"><div class="card-body"><div class="row g-3 align-items-end">
     <div class="col-12 col-lg-3"><label class="form-label" for="search">關鍵字</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="房間、文物名稱或編號" autocomplete="off" /></div>
