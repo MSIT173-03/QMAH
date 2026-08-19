@@ -105,9 +105,18 @@ body {
 .qmah-table-actions,
 .qmah-form-actions {
   flex-direction: row;
-  flex-wrap: wrap;
-  row-gap: 0.5rem;
-  column-gap: 0.5rem;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.qmah-actions > :where(.btn, a, button, form),
+.qmah-table-actions > :where(.btn, a, button, form),
+.qmah-form-actions > :where(.btn, a, button, form) {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 /* 管理操作的次級按鈕採實心樣式，和主要操作並列呈現。 */
@@ -552,7 +561,7 @@ body {
   }
 
   .qmah-actions > :where(.btn, a, button) {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
   }
 }
 
