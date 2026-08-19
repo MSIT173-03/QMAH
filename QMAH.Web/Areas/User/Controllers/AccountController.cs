@@ -241,25 +241,33 @@ public class AccountController : Controller
 
     private async Task LoadLoginArtifactImagesAsync(CancellationToken cancellationToken)
     {
-        var images = await _context.ArtifactQuestionEntries
-            .AsNoTracking()
-            .Where(entry => entry.IsEnabled && entry.Artifact.IsActive)
-            .Select(entry => entry.Artifact.ThumbnailPath ?? entry.Artifact.PrimaryImagePath)
-            .Where(path => path != null && path != string.Empty)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-
-        var imageArray = images
-            .Where(path => !string.IsNullOrWhiteSpace(path))
-            .Select(path => path!)
-            .ToArray();
-
-        for (var i = imageArray.Length - 1; i > 0; i--)
+        try
         {
-            var j = Random.Shared.Next(i + 1);
-            (imageArray[i], imageArray[j]) = (imageArray[j], imageArray[i]);
-        }
+            var images = await _context.ArtifactQuestionEntries
+                .AsNoTracking()
+                .Where(entry => entry.IsEnabled && entry.Artifact.IsActive)
+                .Select(entry => entry.Artifact.ThumbnailPath ?? entry.Artifact.PrimaryImagePath)
+                .Where(path => path != null && path != string.Empty)
+                .Distinct()
+                .ToListAsync(cancellationToken);
 
-        ViewData["LoginArtifactImages"] = imageArray;
+            var imageArray = images
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => path!)
+                .ToArray();
+
+            for (var i = imageArray.Length - 1; i > 0; i--)
+            {
+                var j = Random.Shared.Next(i + 1);
+                (imageArray[i], imageArray[j]) = (imageArray[j], imageArray[i]);
+            }
+
+            ViewData["LoginArtifactImages"] = imageArray;
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            ViewData["LoginArtifactImages"] = Array.Empty<string>();
+        }
     }
 }
