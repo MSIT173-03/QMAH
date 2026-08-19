@@ -175,3 +175,48 @@
         });
     });
 })();
+
+// 共用管理清單排序：不改動既有查詢與 CRUD，只重新排列目前頁面的資料列。
+(() => {
+    const tables = document.querySelectorAll("table.qmah-crud-table, table.game-admin-table");
+    tables.forEach((table) => {
+        const headers = table.querySelectorAll("thead th");
+        const body = table.querySelector("tbody");
+        if (!body || !headers.length) return;
+
+        headers.forEach((header, index) => {
+            const label = header.textContent.trim();
+            if (!label || label === "操作" || label === "處理" || header.classList.contains("w-1")) return;
+            header.classList.add("qmah-sortable-header");
+            header.setAttribute("role", "button");
+            header.setAttribute("tabindex", "0");
+            header.setAttribute("title", `依${label}排序`);
+            const icon = document.createElement("i");
+            icon.className = "ti ti-selector qmah-sort-icon ms-1";
+            icon.setAttribute("aria-hidden", "true");
+            header.append(icon);
+
+            const sort = () => {
+                const ascending = header.dataset.sortDirection !== "asc";
+                headers.forEach((item) => {
+                    item.dataset.sortDirection = "";
+                    const oldIcon = item.querySelector(".qmah-sort-icon");
+                    if (oldIcon) oldIcon.className = "ti ti-selector qmah-sort-icon ms-1";
+                });
+                header.dataset.sortDirection = ascending ? "asc" : "desc";
+                icon.className = `ti ti-chevron-${ascending ? "up" : "down"} qmah-sort-icon ms-1`;
+                [...body.querySelectorAll(":scope > tr")]
+                    .sort((a, b) => {
+                        const left = a.cells[index]?.textContent.trim() ?? "";
+                        const right = b.cells[index]?.textContent.trim() ?? "";
+                        return left.localeCompare(right, "zh-Hant", { numeric: true, sensitivity: "base" }) * (ascending ? 1 : -1);
+                    })
+                    .forEach((row) => body.append(row));
+            };
+            header.addEventListener("click", sort);
+            header.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") { event.preventDefault(); sort(); }
+            });
+        });
+    });
+})();

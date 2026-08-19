@@ -643,6 +643,23 @@ body {
   text-align: center;
 }
 
+.qmah-sortable-header {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.qmah-sortable-header:hover,
+.qmah-sortable-header:focus-visible {
+  color: var(--qmah-primary);
+}
+
+.qmah-sort-icon {
+  color: var(--qmah-ink-faint);
+  font-size: 0.9rem;
+  vertical-align: -0.1rem;
+}
+
 @media (max-width: 575.98px) {
   .qmah-dashboard-intro {
     align-items: stretch;
