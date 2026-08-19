@@ -178,6 +178,23 @@
 
 // 共用管理清單排序：不改動既有查詢與 CRUD，只重新排列目前頁面的資料列。
 (() => {
+    // 可持續擴充的管理清單排序規則；未列出的值會回到一般繁中排序。
+    const sortRules = {
+        era: ["史前", "夏", "商", "周", "春秋", "戰國", "秦", "漢", "三國", "晉", "南北朝", "隋", "唐", "五代", "宋", "遼", "金", "元", "明", "清", "民國", "近代", "現代"],
+        category: []
+    };
+    const getSortValue = (header, value) => {
+        const label = header.textContent.trim();
+        if (label.includes("年代")) {
+            const index = sortRules.era.findIndex((term) => value.includes(term));
+            return `${String(index < 0 ? 999 : index).padStart(3, "0")}-${value}`;
+        }
+        if (label.includes("分類")) {
+            const index = sortRules.category.indexOf(value);
+            return `${String(index < 0 ? 999 : index).padStart(3, "0")}-${value}`;
+        }
+        return value;
+    };
     const tables = document.querySelectorAll("table.qmah-crud-table, table.game-admin-table");
     tables.forEach((table) => {
         const headers = table.querySelectorAll("thead th");
@@ -207,8 +224,8 @@
                 icon.className = `ti ti-chevron-${ascending ? "up" : "down"} qmah-sort-icon ms-1`;
                 [...body.querySelectorAll(":scope > tr")]
                     .sort((a, b) => {
-                        const left = a.cells[index]?.textContent.trim() ?? "";
-                        const right = b.cells[index]?.textContent.trim() ?? "";
+                        const left = getSortValue(header, a.cells[index]?.textContent.trim() ?? "");
+                        const right = getSortValue(header, b.cells[index]?.textContent.trim() ?? "");
                         return left.localeCompare(right, "zh-Hant", { numeric: true, sensitivity: "base" }) * (ascending ? 1 : -1);
                     })
                     .forEach((row) => body.append(row));
