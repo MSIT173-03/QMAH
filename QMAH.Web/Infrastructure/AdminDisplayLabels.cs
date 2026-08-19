@@ -45,7 +45,7 @@ public static class AdminDisplayLabels
         "NORMAL" => "一般鑰匙",
         "CATEGORY" => "分類鑰匙",
         "ERA" => "年代鑰匙",
-        "UNIVERSAL" => "通用鑰匙",
+        "UNIVERSAL" => "萬用鑰匙",
         "GLOBAL" => "全域鑰匙",
         _ => value ?? "未設定"
     };

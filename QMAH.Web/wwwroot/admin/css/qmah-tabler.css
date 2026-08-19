@@ -729,7 +729,7 @@ form.qmah-is-submitting button[type="submit"] {
   }
 
   .page > .navbar-vertical {
-    position: relative;
+    position: sticky;
     top: auto;
     right: auto;
     bottom: auto;
@@ -743,6 +743,8 @@ form.qmah-is-submitting button[type="submit"] {
     border-right: 0;
     border-bottom: 1px solid var(--qmah-sidebar-border);
   }
+
+  .page > .navbar-vertical { top: 0; }
 
   .navbar-vertical > .container-fluid {
     position: relative;

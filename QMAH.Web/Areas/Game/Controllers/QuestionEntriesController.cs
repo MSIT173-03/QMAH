@@ -79,6 +79,7 @@ public sealed class QuestionEntriesController(QmahDbContext db) : Controller
                 ArtifactName = x.Artifact.Name,
                 CategoryName = x.Artifact.Category.Name,
                 EraName = x.Artifact.EraBucket.Name,
+                SizeText = x.Artifact.SizeText,
                 IsEnabled = x.IsEnabled,
                 Difficulty = x.Difficulty,
                 QuestionTemplateCode = x.QuestionTemplateCode,

@@ -103,6 +103,7 @@ body {
 /* 次級操作維持一致高度、間距與窄版換行。 */
 .qmah-actions,
 .qmah-table-actions,
+.game-admin-cell-actions,
 .qmah-form-actions {
   flex-direction: row;
   flex-wrap: nowrap;
@@ -122,6 +123,7 @@ body {
 /* 管理操作的次級按鈕採實心樣式，和主要操作並列呈現。 */
 .qmah-actions .btn-outline-secondary,
 .qmah-table-actions .btn-outline-secondary,
+.game-admin-cell-actions .btn-outline-secondary,
 .qmah-form-actions .btn-outline-secondary {
   border-color: var(--qmah-primary);
   background: var(--qmah-primary);
@@ -130,6 +132,7 @@ body {
 
 .qmah-actions .btn-outline-secondary:hover,
 .qmah-table-actions .btn-outline-secondary:hover,
+.game-admin-cell-actions .btn-outline-secondary:hover,
 .qmah-form-actions .btn-outline-secondary:hover {
   border-color: var(--qmah-primary-hover);
   background: var(--qmah-primary-hover);
@@ -137,6 +140,12 @@ body {
 }
 
 .qmah-table-actions .btn-outline-danger {
+  color: #fff;
+}
+
+.game-admin-cell-actions .btn-outline-danger {
+  border-color: var(--tblr-danger, #d63939);
+  background: var(--tblr-danger, #d63939);
   color: #fff;
 }
 
@@ -327,6 +336,25 @@ body {
   min-width: 42rem;
 }
 
+.qmah-crud-table .qmah-col-name, .game-admin-table .qmah-col-name { width: 23%; }
+.qmah-crud-table .qmah-col-ref, .game-admin-table .qmah-col-ref { width: 13%; }
+.qmah-crud-table .qmah-col-category, .game-admin-table .qmah-col-category { width: 10%; }
+.qmah-crud-table .qmah-col-era, .game-admin-table .qmah-col-era { width: 11%; }
+.qmah-crud-table .qmah-col-size, .game-admin-table .qmah-col-size { width: 14%; }
+.qmah-crud-table .qmah-col-actions, .game-admin-table .qmah-col-actions { width: 12rem; min-width: 12rem; }
+.qmah-crud-table td, .qmah-crud-table th, .game-admin-table td, .game-admin-table th { text-align: start; }
+.qmah-crud-table th:last-child, .game-admin-table th:last-child, .qmah-crud-table td:last-child, .game-admin-table td:last-child { width: 12rem; min-width: 12rem; text-align: center; white-space: nowrap; }
+.qmah-table-thumbnail { display: block; width: 2.5rem !important; height: 2.5rem !important; object-fit: contain; max-width: 2.5rem !important; border-radius: 0.45rem; }
+.qmah-table-thumbnail + * { max-width: 100%; }
+.qmah-edit-image { display: block; width: 7rem; height: 7rem; max-width: 100%; margin: 0 auto; object-fit: contain; cursor: zoom-in; }
+.qmah-image-preview { display: block; width: auto; max-width: 100%; max-height: 75vh; margin: 0 auto; object-fit: contain; }
+.qmah-crud-table td .badge, .game-admin-table td .badge { padding: 0; background: transparent !important; border: 0; border-radius: 0; }
+.qmah-table-actions .btn, .game-admin-cell-actions .btn { display: inline-flex; min-width: 4.5rem; align-items: center; justify-content: center; text-align: center; }
+.qmah-crud-table .qmah-table-actions { width: 100%; justify-content: center; }
+.qmah-table-actions .btn:disabled, .game-admin-cell-actions .btn:disabled { color: var(--tblr-secondary); background: var(--tblr-bg-surface-secondary); border-color: var(--tblr-border-color); opacity: 0.7; cursor: not-allowed; }
+.qmah-crud-table td:first-child > .d-flex { min-width: 0; }
+.qmah-crud-table td:first-child .text-truncate, .game-admin-table td:first-child a { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .qmah-crud-table th:last-child,
 .qmah-crud-table td:last-child {
   width: 1%;
@@ -340,6 +368,21 @@ body {
   justify-content: flex-end;
   white-space: nowrap;
 }
+
+.game-admin-cell-actions {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.page-body .table th:last-child,
+.page-body .table td:last-child {
+  width: 18rem;
+  min-width: 18rem;
+  text-align: center;
+}
+.page-body .table td:has(.qmah-actions--four),
+.page-body .table th:has(+ td .qmah-actions--four) { width: 24rem; min-width: 24rem; }
 
 .qmah-table-actions form {
   display: inline-flex;
@@ -642,6 +685,10 @@ body {
   white-space: nowrap;
   text-align: center;
 }
+
+.page-header, .card-header { align-items: center; }
+.page-header .page-title, .card-header .card-title, .qmah-form-section-title { line-height: 1.25; }
+.qmah-dashboard-title { text-align: center; }
 
 .qmah-sortable-header {
   cursor: pointer;
