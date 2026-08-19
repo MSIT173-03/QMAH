@@ -103,7 +103,7 @@
                         <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
                         <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>
-                            <div class="qmah-table-actions">
+                            <div class="qmah-table-actions qmah-actions--four">
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
                                 <form asp-action="ReviewReport" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()

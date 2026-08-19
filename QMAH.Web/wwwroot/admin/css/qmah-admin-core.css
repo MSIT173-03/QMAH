@@ -376,10 +376,12 @@ body {
 
 .page-body .table th:last-child,
 .page-body .table td:last-child {
-  width: 24rem;
-  min-width: 24rem;
+  width: 18rem;
+  min-width: 18rem;
   text-align: center;
 }
+.page-body .table td:has(.qmah-actions--four),
+.page-body .table th:has(+ td .qmah-actions--four) { width: 24rem; min-width: 24rem; }
 
 .qmah-table-actions form {
   display: inline-flex;
