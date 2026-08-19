@@ -77,9 +77,11 @@
             <table class="table table-vcenter table-hover card-table qmah-crud-table">
                 <thead>
                     <tr>
-                        <th>文物</th>
+                        <th>名稱</th>
+                        <th>館藏編號</th>
                         <th>分類</th>
                         <th>年代</th>
+                        <th>創作者</th>
                         <th>授權</th>
                         <th>狀態</th>
                         <th class="text-end">操作</th>
@@ -94,12 +96,10 @@
                                     <span class="avatar avatar-lg">
                                         <img src="@(item.ThumbnailPath ?? item.PrimaryImagePath)" alt="" loading="lazy" />
                                     </span>
-                                    <div class="min-width-0">
-                                        <div class="fw-semibold text-truncate" title="@item.Name">@item.Name</div>
-                                        <div class="text-secondary small">@item.ArtifactRef</div>
-                                    </div>
+                                    <div class="fw-semibold text-truncate" title="@item.Name">@item.Name</div>
                                 </div>
                             </td>
+                            <td><code class="text-secondary">@item.ArtifactRef</code></td>
                             <td>@(item.Category?.Name ?? "未分類")</td>
                             <td>
                                 <div>@(item.EraBucket?.Name ?? "未標示")</div>
@@ -108,6 +108,7 @@
                                     <div class="text-secondary small">@item.EraTextOriginal</div>
                                 }
                             </td>
+                            <td>@(string.IsNullOrWhiteSpace(item.CreatorDisplay) ? "未標示" : item.CreatorDisplay)</td>
                             <td>
                                 <span class="badge bg-secondary-lt">@(string.IsNullOrWhiteSpace(item.LicenseCode) ? "未標示" : item.LicenseCode)</span>
                             </td>
