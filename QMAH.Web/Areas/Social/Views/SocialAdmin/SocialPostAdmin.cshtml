@@ -24,8 +24,8 @@
         <span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span>
     </div>
     <div class="card-body">
-        <form method="get" asp-action="Index">
-            <div class="row g-3 align-items-end">
+        <form method="get" asp-action="Index" class="qmah-post-filter">
+            <div class="row g-3 align-items-end qmah-post-filter-row">
                 <div class="col-12 col-lg-4">
                     <label asp-for="Keyword" class="form-label">關鍵字</label>
                     <input asp-for="Keyword" class="form-control" placeholder="搜尋標題或內文" />
@@ -57,11 +57,11 @@
                     <label asp-for="To" class="form-label">建立日迄</label>
                     <input asp-for="To" type="date" class="form-control" />
                 </div>
-                <div class="col-12 d-flex gap-2">
+                <div class="col-12 d-flex gap-2 qmah-post-filter-actions">
                     <button type="submit" class="btn btn-primary">
                         <i class="ti ti-filter me-1"></i>套用篩選
                     </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">清除條件</a>
+                    <a asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-refresh me-1"></i>清除條件</a>
                 </div>
             </div>
         </form>

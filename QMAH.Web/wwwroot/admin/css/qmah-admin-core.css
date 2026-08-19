@@ -212,6 +212,24 @@ body {
   min-width: 4.5rem;
 }
 
+/* 貼文篩選欄位依內容保留寬度，避免板塊、狀態與日期控制項被壓縮。 */
+.qmah-post-filter-row > :nth-child(1) { min-width: 15rem; }
+.qmah-post-filter-row > :nth-child(2),
+.qmah-post-filter-row > :nth-child(3) { min-width: 10rem; }
+.qmah-post-filter-row > :nth-child(4),
+.qmah-post-filter-row > :nth-child(5) { min-width: 10rem; }
+.qmah-post-filter-actions { flex: 0 0 auto; white-space: nowrap; }
+
+@media (min-width: 992px) {
+  .qmah-post-filter-row { flex-wrap: wrap !important; }
+  .qmah-post-filter-row > :nth-child(1) { flex: 1 1 16rem; }
+  .qmah-post-filter-row > :nth-child(2),
+  .qmah-post-filter-row > :nth-child(3),
+  .qmah-post-filter-row > :nth-child(4),
+  .qmah-post-filter-row > :nth-child(5) { flex: 1 1 10rem; }
+  .qmah-post-filter-actions { width: auto; }
+}
+
 /* 桌面版讓欄位有彈性收縮，避免篩選操作被擠到第二行；窄版才進行重排。 */
 @media (min-width: 992px) {
   .page-body form[method="get"] > .row,
