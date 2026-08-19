@@ -105,30 +105,18 @@
                         <td>
                             <div class="qmah-table-actions">
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
-                                @if (item.Status == "PENDING")
-                                {
-                                    <form asp-action="ReviewReport" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="reportId" value="@item.Id" />
-                                        <input type="hidden" name="status" value="RESOLVED" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">核准並下架</button>
-                                    </form>
-                                    <form asp-action="ReviewReport" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="reportId" value="@item.Id" />
-                                        <input type="hidden" name="status" value="REJECTED" />
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">駁回</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form asp-action="ReviewReport" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="reportId" value="@item.Id" />
-                                        <input type="hidden" name="status" value="PENDING" />
-                                        <button type="submit" class="btn btn-sm btn-outline-warning">重新審核</button>
-                                    </form>
-                                }
+                                <form asp-action="ReviewReport" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="reportId" value="@item.Id" />
+                                    <input type="hidden" name="status" value="@(item.Status == "PENDING" ? "RESOLVED" : "PENDING")" />
+                                    @if (item.Status == "PENDING") { <button type="submit" class="btn btn-sm btn-outline-danger">核准並下架</button> } else { <button type="submit" class="btn btn-sm btn-outline-warning">重新審核</button> }
+                                </form>
+                                <form asp-action="ReviewReport" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="reportId" value="@item.Id" />
+                                    <input type="hidden" name="status" value="REJECTED" />
+                                    @if (item.Status == "PENDING") { <button type="submit" class="btn btn-sm btn-outline-secondary">駁回</button> } else { <button type="button" class="btn btn-sm btn-outline-secondary" disabled>駁回</button> }
+                                </form>
                                 <form asp-action="Delete" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@item.Id" />

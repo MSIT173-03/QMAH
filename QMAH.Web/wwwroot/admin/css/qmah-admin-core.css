@@ -376,8 +376,8 @@ body {
 
 .page-body .table th:last-child,
 .page-body .table td:last-child {
-  width: 18rem;
-  min-width: 18rem;
+  width: 24rem;
+  min-width: 24rem;
   text-align: center;
 }
 
