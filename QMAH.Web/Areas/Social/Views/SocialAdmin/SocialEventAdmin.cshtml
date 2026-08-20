@@ -29,25 +29,32 @@
 </div>
 
 <div class="card qmah-list-card"><div class="table-responsive"><table class="table table-vcenter table-hover card-table qmah-crud-table">
-    <thead><tr><th>活動</th><th>時間／地點</th><th>審核</th><th>發布</th><th>建立時間</th><th class="qmah-action-cell qmah-actions--4">操作</th></tr></thead>
+    <thead><tr><th>類型</th><th>活動</th><th>地點</th><th>時間</th><th>審核</th><th>發布</th><th>建立時間</th><th class="qmah-action-cell qmah-actions--4">操作</th></tr></thead>
     <tbody>
-    @if (Model.Events.Count == 0) { <tr><td colspan="6" class="text-center text-secondary py-5">目前沒有符合條件的活動。</td></tr> }
+    @if (Model.Events.Count == 0) { <tr><td colspan="8" class="text-center text-secondary py-5">目前沒有符合條件的活動。</td></tr> }
     else
     {
         @foreach (var item in Model.Events)
         {
             var reviewClass = item.Status switch { "APPROVED" => "bg-green-lt", "REJECTED" => "bg-red-lt", _ => "bg-yellow-lt" };
             var publishClass = item.PublishStatus switch { "PUBLISHED" => "bg-green-lt", "CANCELLED" => "bg-red-lt", _ => "bg-secondary-lt" };
+            var eventTypeLabel = item.EventType switch
+            {
+                "OFFICIAL" => "官方活動",
+                "PLAYER" => "玩家活動",
+                _ => item.EventType
+            };
             <tr>
-                <td><div class="fw-semibold">@item.Title</div><div class="text-secondary small">@item.EventType · @item.Description</div></td>
-                <td class="text-secondary text-nowrap">@item.StartAt.ToString("yyyy-MM-dd HH:mm")<br /><span class="small">至 @item.EndAt.ToString("yyyy-MM-dd HH:mm") · @(item.Location ?? "未設定地點")</span></td>
+                <td><span class="badge bg-secondary-lt">@eventTypeLabel</span></td>
+                <td><div class="fw-semibold">@item.Title</div><div class="text-secondary small">@item.Description</div></td>
+                <td>@(string.IsNullOrWhiteSpace(item.Location) ? "未設定地點" : item.Location)</td>
+                <td class="text-secondary text-nowrap">@item.StartAt.ToString("yyyy-MM-dd HH:mm")<br /><span class="small">至 @item.EndAt.ToString("yyyy-MM-dd HH:mm")</span></td>
                 <td><span class="badge @reviewClass">@AdminDisplayLabels.ReviewStatus(item.Status)</span></td>
                 <td><span class="badge @publishClass">@AdminDisplayLabels.PublishStatus(item.PublishStatus)</span></td>
                 <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                 <td class="qmah-action-cell qmah-actions--4">
                     <div class="qmah-table-actions">
                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
-
                         @if (item.Status != "APPROVED")
                         {
                             <form asp-action="ReviewEvent" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="status" value="APPROVED" /><button type="submit" class="btn btn-sm btn-outline-success">核准</button></form>
@@ -56,7 +63,6 @@
                         {
                             <button type="button" class="btn btn-sm btn-outline-success" disabled>核准</button>
                         }
-
                         @if (item.Status != "REJECTED")
                         {
                             <form asp-action="ReviewEvent" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="status" value="REJECTED" /><button type="submit" class="btn btn-sm btn-outline-warning">駁回</button></form>
@@ -65,7 +71,6 @@
                         {
                             <button type="button" class="btn btn-sm btn-outline-warning" disabled>駁回</button>
                         }
-
                         @if (item.PublishStatus == "CANCELLED")
                         {
                             <form asp-action="SetPublishStatus" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="status" value="DRAFT" /><button type="submit" class="btn btn-sm btn-outline-success">恢復</button></form>
