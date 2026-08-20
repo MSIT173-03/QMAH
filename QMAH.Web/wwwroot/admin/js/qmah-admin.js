@@ -550,7 +550,73 @@
                 }
 
                 cell.dataset.qmahMobileLabel = label;
+
+                const header = headers[index];
+                const sortable = header?.classList.contains("qmah-sortable-header")
+                    && !["操作", "處理", "圖片", "預設排序", "排序"].includes(label)
+                    && !cell.querySelector("a, button, input, select, textarea, form, [data-qmah-image-preview]");
+
+                if (sortable) {
+                    cell.classList.add("qmah-mobile-sortable-cell");
+                    cell.dataset.qmahMobileSortIndex = String(index);
+                    cell.setAttribute("role", "button");
+                    cell.setAttribute("tabindex", "0");
+                    cell.setAttribute("title", `依${label}排序`);
+                }
             });
+        });
+
+        async function requestMobileSort(cell) {
+            if (!window.matchMedia("(max-width: 767.98px)").matches) {
+                return;
+            }
+
+            const index = Number.parseInt(cell.dataset.qmahMobileSortIndex || "", 10);
+            const header = headers[index];
+
+            if (!header) {
+                return;
+            }
+
+            const label = cell.dataset.qmahMobileLabel || "此欄位";
+            const confirmed = await window.qmahConfirm({
+                title: "排序清單",
+                message: `要依「${label}」排序嗎？`,
+                confirmText: "排序",
+                danger: false,
+                icon: "ti-arrows-sort"
+            });
+
+            if (confirmed) {
+                header.click();
+            }
+        }
+
+        table.addEventListener("click", (event) => {
+            const cell = event.target.closest(".qmah-mobile-sortable-cell");
+            if (!cell || !table.contains(cell)) {
+                return;
+            }
+
+            if (event.target.closest("a, button, input, select, textarea, form, [data-qmah-image-preview]")) {
+                return;
+            }
+
+            void requestMobileSort(cell);
+        });
+
+        table.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") {
+                return;
+            }
+
+            const cell = event.target.closest(".qmah-mobile-sortable-cell");
+            if (!cell || !table.contains(cell)) {
+                return;
+            }
+
+            event.preventDefault();
+            void requestMobileSort(cell);
         });
     });
 })();
@@ -561,7 +627,7 @@
 
     const destructivePattern = /(刪除|移除|停用|停權|下架|取消|隱藏|封鎖|撤銷|清除)/;
     const inlineConfirmPattern = /(?:window\.)?confirm\s*\(\s*(['"])(.*?)\1\s*\)/i;
-    let activeRequest = null;
+    let pendingResolve = null;
 
     function normalizeConfirmTriggers() {
         document.querySelectorAll("[onclick]").forEach((element) => {
@@ -575,102 +641,118 @@
     }
 
     function ensureDialog() {
-        let modal = document.querySelector("[data-qmah-confirm-modal]");
-        if (modal) return modal;
+        let dialog = document.querySelector("[data-qmah-confirm-dialog]");
+        if (dialog) return dialog;
 
-        modal = document.createElement("div");
-        modal.className = "modal fade qmah-confirm-modal";
-        modal.tabIndex = -1;
-        modal.setAttribute("aria-hidden", "true");
-        modal.dataset.qmahConfirmModal = "";
-        modal.innerHTML = `
-            <div class="modal-dialog modal-dialog-centered qmah-confirm-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <div class="qmah-confirm-icon" aria-hidden="true">
-                            <i class="ti ti-alert-triangle"></i>
-                        </div>
-                        <div>
-                            <h2 class="modal-title fs-4" data-qmah-confirm-title>確認操作</h2>
-                        </div>
-                        <button type="button"
-                                class="btn-close ms-auto"
-                                data-bs-dismiss="modal"
-                                aria-label="關閉"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="qmah-confirm-message mb-0" data-qmah-confirm-message></p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button"
-                                class="btn btn-outline-secondary"
-                                data-bs-dismiss="modal">
-                            取消
-                        </button>
-                        <button type="button"
-                                class="btn btn-danger"
-                                data-qmah-confirm-accept>
-                            確定
-                        </button>
-                    </div>
+        dialog = document.createElement("dialog");
+        dialog.className = "qmah-native-dialog";
+        dialog.dataset.qmahConfirmDialog = "";
+        dialog.innerHTML = `
+            <div class="qmah-native-dialog__panel">
+                <div class="qmah-native-dialog__header">
+                    <span class="qmah-native-dialog__icon" data-qmah-dialog-icon aria-hidden="true">
+                        <i class="ti ti-alert-triangle"></i>
+                    </span>
+                    <h2 class="qmah-native-dialog__title" data-qmah-dialog-title>確認操作</h2>
+                    <button type="button"
+                            class="btn-close ms-auto"
+                            data-qmah-dialog-cancel
+                            aria-label="關閉"></button>
+                </div>
+                <div class="qmah-native-dialog__body">
+                    <p class="qmah-native-dialog__message mb-0" data-qmah-dialog-message></p>
+                </div>
+                <div class="qmah-native-dialog__footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-qmah-dialog-cancel>
+                        取消
+                    </button>
+                    <button type="button"
+                            class="btn btn-danger"
+                            data-qmah-dialog-confirm>
+                        確定
+                    </button>
                 </div>
             </div>`;
 
-        document.body.append(modal);
+        document.body.append(dialog);
 
-        modal.querySelector("[data-qmah-confirm-accept]")?.addEventListener("click", () => {
-            if (!activeRequest) return;
+        const settle = (value) => {
+            const resolve = pendingResolve;
+            pendingResolve = null;
 
-            const request = activeRequest;
-            activeRequest = null;
-
-            bootstrap.Modal.getOrCreateInstance(modal).hide();
-
-            if (request.type === "submit") {
-                request.form.dataset.qmahConfirmPending = "true";
-                request.form.requestSubmit(request.submitter || undefined);
-                delete request.form.dataset.qmahConfirmPending;
-                return;
+            if (dialog.open) {
+                dialog.close();
             }
 
-            if (request.type === "navigate") {
-                window.location.assign(request.href);
-                return;
-            }
+            resolve?.(value);
+        };
 
-            if (request.type === "click") {
-                request.element.dataset.qmahConfirmBypass = "true";
-                request.element.click();
-                delete request.element.dataset.qmahConfirmBypass;
+        dialog.querySelectorAll("[data-qmah-dialog-cancel]").forEach((button) => {
+            button.addEventListener("click", () => settle(false));
+        });
+
+        dialog.querySelector("[data-qmah-dialog-confirm]")?.addEventListener("click", () => {
+            settle(true);
+        });
+
+        dialog.addEventListener("cancel", (event) => {
+            event.preventDefault();
+            settle(false);
+        });
+
+        dialog.addEventListener("click", (event) => {
+            if (event.target === dialog) {
+                settle(false);
             }
         });
 
-        modal.addEventListener("hidden.bs.modal", () => {
-            activeRequest = null;
+        return dialog;
+    }
+
+    window.qmahConfirm = ({
+        title = "確認操作",
+        message,
+        confirmText = "確定",
+        danger = true,
+        icon = "ti-alert-triangle"
+    }) => {
+        if (!message) {
+            return Promise.resolve(false);
+        }
+
+        if (!("HTMLDialogElement" in window)) {
+            return Promise.resolve(window.confirm(message));
+        }
+
+        const dialog = ensureDialog();
+        const confirmButton = dialog.querySelector("[data-qmah-dialog-confirm]");
+        const iconBox = dialog.querySelector("[data-qmah-dialog-icon]");
+        const iconElement = iconBox?.querySelector("i");
+
+        dialog.querySelector("[data-qmah-dialog-title]").textContent = title;
+        dialog.querySelector("[data-qmah-dialog-message]").textContent = message;
+        confirmButton.textContent = confirmText;
+
+        confirmButton.classList.toggle("btn-danger", danger);
+        confirmButton.classList.toggle("btn-primary", !danger);
+        iconBox?.classList.toggle("qmah-native-dialog__icon--danger", danger);
+
+        if (iconElement) {
+            iconElement.className = `ti ${icon}`;
+        }
+
+        if (dialog.open) {
+            dialog.close();
+        }
+
+        return new Promise((resolve) => {
+            pendingResolve = resolve;
+            dialog.showModal();
+            confirmButton.focus();
         });
-
-        return modal;
-    }
-
-    function showConfirm({ message, title = "確認操作", request, destructive = true }) {
-        const modal = ensureDialog();
-        const confirmButton = modal.querySelector("[data-qmah-confirm-accept]");
-        const icon = modal.querySelector(".qmah-confirm-icon");
-
-        modal.querySelector("[data-qmah-confirm-title]").textContent = title;
-        modal.querySelector("[data-qmah-confirm-message]").textContent = message;
-
-        confirmButton.classList.toggle("btn-danger", destructive);
-        confirmButton.classList.toggle("btn-primary", !destructive);
-        icon.classList.toggle("qmah-confirm-icon--danger", destructive);
-
-        activeRequest = request;
-        bootstrap.Modal.getOrCreateInstance(modal, {
-            backdrop: "static",
-            keyboard: true,
-            focus: true
-        }).show();
-    }
+    };
 
     function getMessage(trigger) {
         const explicit = trigger.dataset.qmahConfirm?.trim();
@@ -682,15 +764,16 @@
 
     normalizeConfirmTriggers();
 
-    document.addEventListener("click", (event) => {
+    document.addEventListener("click", async (event) => {
         const trigger = event.target.closest("[data-qmah-confirm], .btn-danger, .btn-outline-danger");
-        if (!trigger || trigger.dataset.qmahConfirmBypass === "true") return;
+        if (!trigger || trigger.dataset.qmahConfirmBypass === "true" || trigger.disabled) {
+            return;
+        }
 
         const form = trigger.closest("form");
         const isSubmitter = form
-            && (trigger.matches('button:not([type]), button[type="submit"], input[type="submit"]'));
+            && trigger.matches('button:not([type]), button[type="submit"], input[type="submit"]');
 
-        // 沒有 data-confirm 的危險連結只有在真正會執行動作時才接管。
         if (!trigger.dataset.qmahConfirm
             && !isSubmitter
             && !trigger.matches("a[href]")) {
@@ -698,45 +781,44 @@
         }
 
         event.preventDefault();
-        event.stopImmediatePropagation();
 
         const message = getMessage(trigger);
         const destructive = trigger.classList.contains("btn-danger")
             || trigger.classList.contains("btn-outline-danger")
             || destructivePattern.test(message);
 
+        const confirmed = await window.qmahConfirm({
+            title: "確認操作",
+            message,
+            confirmText: "確定",
+            danger: destructive
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         if (isSubmitter) {
-            showConfirm({
-                message,
-                destructive,
-                request: {
-                    type: "submit",
-                    form,
-                    submitter: trigger
-                }
-            });
+            form.dataset.qmahConfirmPending = "true";
+
+            try {
+                form.requestSubmit(trigger);
+            } finally {
+                window.setTimeout(() => {
+                    delete form.dataset.qmahConfirmPending;
+                }, 0);
+            }
+
             return;
         }
 
         if (trigger.matches("a[href]")) {
-            showConfirm({
-                message,
-                destructive,
-                request: {
-                    type: "navigate",
-                    href: trigger.href
-                }
-            });
+            window.location.assign(trigger.href);
             return;
         }
 
-        showConfirm({
-            message,
-            destructive,
-            request: {
-                type: "click",
-                element: trigger
-            }
-        });
+        trigger.dataset.qmahConfirmBypass = "true";
+        trigger.click();
+        delete trigger.dataset.qmahConfirmBypass;
     }, true);
 })();

@@ -1833,13 +1833,22 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--dark {
 }
 
 
-/* 共用操作確認框：取代瀏覽器原生 confirm。 */
-.qmah-confirm-modal .modal-dialog {
+/* 共用確認框：使用原生 dialog，不依賴 Bootstrap Modal JS。 */
+.qmah-native-dialog {
   width: min(26rem, calc(100vw - 2rem));
-  margin-inline: auto;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--qmah-ink);
 }
 
-.qmah-confirm-modal .modal-content {
+.qmah-native-dialog::backdrop {
+  background: rgba(16, 28, 32, .42);
+}
+
+.qmah-native-dialog__panel {
   overflow: hidden;
   border: 1px solid var(--qmah-line);
   border-radius: 12px;
@@ -1847,19 +1856,32 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--dark {
   box-shadow: 0 18px 48px rgba(20, 38, 43, .18);
 }
 
-.qmah-confirm-modal .modal-header {
+.qmah-native-dialog__header {
   display: flex;
-  gap: .75rem;
+  gap: .72rem;
   align-items: center;
-  padding: 1rem 1.05rem .75rem;
-  border-bottom: 0;
+  padding: 1rem 1.05rem .72rem;
 }
 
-.qmah-confirm-modal .modal-body {
-  padding: .15rem 1.05rem 1rem;
+.qmah-native-dialog__title {
+  margin: 0;
+  color: var(--qmah-ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
-.qmah-confirm-modal .modal-footer {
+.qmah-native-dialog__body {
+  padding: .1rem 1.05rem 1rem;
+}
+
+.qmah-native-dialog__message {
+  color: var(--qmah-ink-soft);
+  font-size: .94rem;
+  line-height: 1.6;
+}
+
+.qmah-native-dialog__footer {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .6rem;
@@ -1867,15 +1889,15 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--dark {
   border-top: 1px solid var(--qmah-line-soft);
 }
 
-.qmah-confirm-modal .modal-footer .btn {
+.qmah-native-dialog__footer .btn {
   width: 100%;
   min-height: 2.6rem;
   margin: 0;
 }
 
-.qmah-confirm-icon {
+.qmah-native-dialog__icon {
   display: inline-grid;
-  flex: 0 0 auto;
+  flex: 0 0 2.35rem;
   width: 2.35rem;
   height: 2.35rem;
   place-items: center;
@@ -1885,40 +1907,51 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--dark {
   font-size: 1.15rem;
 }
 
-.qmah-confirm-icon--danger {
+.qmah-native-dialog__icon--danger {
   background: rgba(214, 57, 57, .1);
   color: var(--tblr-danger, #d63939);
 }
 
-.qmah-confirm-message {
-  color: var(--qmah-ink-soft);
-  font-size: .94rem;
-  line-height: 1.6;
-}
-
-html[data-bs-theme="dark"] .qmah-confirm-modal .modal-content {
+html[data-bs-theme="dark"] .qmah-native-dialog__panel {
   box-shadow: 0 20px 54px rgba(0, 0, 0, .34);
 }
 
-@media (max-width: 575.98px) {
-  .qmah-confirm-modal .modal-dialog {
-    width: calc(100vw - 1.25rem);
-    margin: .625rem auto;
+/* 手機卡片的可排序欄位：點擊後先詢問，不直接誤觸排序。 */
+@media (max-width: 767.98px) {
+  .qmah-admin table.qmah-mobile-list td.qmah-mobile-sortable-cell {
+    cursor: pointer;
+    touch-action: manipulation;
   }
 
-  .qmah-confirm-modal .modal-content {
+  .qmah-admin table.qmah-mobile-list td.qmah-mobile-sortable-cell::before {
+    content: attr(data-qmah-mobile-label) " ↕";
+    color: var(--qmah-area-accent);
+  }
+
+  .qmah-admin table.qmah-mobile-list td.qmah-mobile-sortable-cell:active {
+    background: var(--qmah-area-soft) !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .qmah-native-dialog {
+    width: calc(100vw - 1.25rem);
     border-radius: 11px;
   }
 
-  .qmah-confirm-modal .modal-header {
+  .qmah-native-dialog__panel {
+    border-radius: 11px;
+  }
+
+  .qmah-native-dialog__header {
     padding: .9rem .9rem .65rem;
   }
 
-  .qmah-confirm-modal .modal-body {
+  .qmah-native-dialog__body {
     padding: .1rem .9rem .85rem;
   }
 
-  .qmah-confirm-modal .modal-footer {
+  .qmah-native-dialog__footer {
     padding: .75rem .9rem .9rem;
   }
 }
