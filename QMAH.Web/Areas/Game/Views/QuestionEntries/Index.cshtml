@@ -86,7 +86,15 @@
                         <td data-label="預設排序" class="text-center">
                             @if (!string.IsNullOrWhiteSpace(item.ImagePath))
                             {
-                                <span class="avatar avatar-lg"><img class="qmah-table-thumbnail" src="@item.ImagePath" alt="" loading="lazy" /></span>
+                                <span class="avatar avatar-lg">
+                                    <a href="@item.ImagePath"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#qmah-image-preview"
+                                       data-qmah-image-preview="@item.ImagePath"
+                                       aria-label="預覽 @item.ArtifactName 圖片">
+                                        <img class="qmah-table-thumbnail" src="@item.ImagePath" alt="" loading="lazy" />
+                                    </a>
+                                </span>
                             }
                             else
                             {
@@ -116,4 +124,18 @@
         </div>
         <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-categoryCode="@Model.CategoryCode" asp-route-difficulty="@Model.Difficulty" asp-route-isEnabled="@Model.IsEnabled" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-categoryCode="@Model.CategoryCode" asp-route-difficulty="@Model.Difficulty" asp-route-isEnabled="@Model.IsEnabled" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
     }
+</div>
+
+<div class="modal fade" id="qmah-image-preview" tabindex="-1" aria-labelledby="qmah-image-preview-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="qmah-image-preview-title">圖片預覽</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img class="qmah-image-preview" data-qmah-image-preview-target alt="題庫文物大圖" />
+            </div>
+        </div>
+    </div>
 </div>

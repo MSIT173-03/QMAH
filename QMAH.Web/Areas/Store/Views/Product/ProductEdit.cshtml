@@ -77,9 +77,28 @@
                                 <span asp-validation-for="SizeText" class="text-danger"></span>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label asp-for="PrimaryImagePath" class="form-label"></label>
-                                <input asp-for="PrimaryImagePath" class="form-control" />
+                                <label asp-for="PrimaryImagePath" class="form-label">主圖片路徑</label>
+                                <input asp-for="PrimaryImagePath" class="form-control" type="text" data-product-image-path />
                                 <span asp-validation-for="PrimaryImagePath" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <div class="card bg-body-tertiary mb-0">
+                                    <div class="card-header py-2">
+                                        <h4 class="card-title mb-0">圖片預覽</h4>
+                                    </div>
+                                    <div class="card-body text-center py-3">
+                                        <img src="@Model.PrimaryImagePath"
+                                             alt="@Model.Name"
+                                             class="qmah-edit-image rounded"
+                                             data-product-image-preview
+                                             hidden="@string.IsNullOrWhiteSpace(Model.PrimaryImagePath)" />
+                                        <div class="text-secondary py-4"
+                                             data-product-image-empty
+                                             hidden="@(!string.IsNullOrWhiteSpace(Model.PrimaryImagePath))">
+                                            <i class="ti ti-photo-off me-1"></i>尚無圖片
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label asp-for="SourceUrl" class="form-label"></label>
@@ -107,4 +126,30 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const input = document.querySelector("[data-product-image-path]");
+            const preview = document.querySelector("[data-product-image-preview]");
+            const empty = document.querySelector("[data-product-image-empty]");
+
+            if (!input || !preview || !empty) return;
+
+            const updatePreview = () => {
+                const path = input.value.trim();
+
+                if (!path) {
+                    preview.removeAttribute("src");
+                    preview.hidden = true;
+                    empty.hidden = false;
+                    return;
+                }
+
+                preview.src = path;
+                preview.hidden = false;
+                empty.hidden = true;
+            };
+
+            input.addEventListener("input", updatePreview);
+        })();
+    </script>
 }

@@ -55,9 +55,15 @@
                             <td class="text-center">
                                 @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                                 {
-                                    <a asp-action="GetProduct" asp-route-id="@item.Id" aria-label="查看 @item.Name">
-                                        <img class="qmah-table-thumbnail" src="@item.ImageUrl" alt="" loading="lazy" />
-                                    </a>
+                                    <span class="avatar avatar-lg">
+                                        <a href="@item.ImageUrl"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#qmah-image-preview"
+                                           data-qmah-image-preview="@item.ImageUrl"
+                                           aria-label="預覽 @item.Name 圖片">
+                                            <img class="qmah-table-thumbnail" src="@item.ImageUrl" alt="" loading="lazy" />
+                                        </a>
+                                    </span>
                                 }
                                 else
                                 {
@@ -91,5 +97,19 @@
                 }
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="modal fade" id="qmah-image-preview" tabindex="-1" aria-labelledby="qmah-image-preview-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="qmah-image-preview-title">圖片預覽</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img class="qmah-image-preview" data-qmah-image-preview-target alt="商品大圖" />
+            </div>
+        </div>
     </div>
 </div>
