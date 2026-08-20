@@ -70,6 +70,20 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// 使用者離開頁面造成的 request cancellation 屬正常中止，不當成伺服器錯誤。
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next(context);
+    }
+    catch (OperationCanceledException)
+        when (context.RequestAborted.IsCancellationRequested)
+    {
+        // 瀏覽器已中止 request，不需要再產生錯誤頁或延長查詢 timeout。
+    }
+});
+
 app.UseHttpsRedirection();
 app.UseRouting();
 
