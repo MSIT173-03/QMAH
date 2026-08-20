@@ -42,19 +42,24 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="ScopeType" class="form-label">適用範圍</label>
-                        <input asp-for="ScopeType" class="form-control" placeholder="例如：CATEGORY、ERA 或 GLOBAL" />
+                        <select asp-for="ScopeType" class="form-select" id="scopeType">
+                            <option value="NORMAL">一般鑰匙</option>
+                            <option value="CATEGORY">分類鑰匙</option>
+                            <option value="ERA">年代鑰匙</option>
+                            <option value="UNIVERSAL">萬用鑰匙</option>
+                        </select>
                         <span asp-validation-for="ScopeType" class="text-danger"></span>
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="CategoryId" class="form-label">分類</label>
-                        <select asp-for="CategoryId" asp-items="ViewBag.ArtifactCategoryList" class="form-select">
+                        <select asp-for="CategoryId" asp-items="ViewBag.ArtifactCategoryList" class="form-select" id="categoryId">
                             <option value="">不限定分類</option>
                         </select>
                         <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="EraBucketId" class="form-label">年代</label>
-                        <select asp-for="EraBucketId" asp-items="ViewBag.EraBucketList" class="form-select">
+                        <select asp-for="EraBucketId" asp-items="ViewBag.EraBucketList" class="form-select" id="eraBucketId">
                             <option value="">不限定年代</option>
                         </select>
                         <span asp-validation-for="EraBucketId" class="text-danger"></span>
@@ -78,7 +83,7 @@
             <div class="card-body">
                 <span class="qmah-status qmah-status--info">設定提示</span>
                 <h2 class="card-title mt-3">先決定解鎖範圍</h2>
-                <p class="text-secondary mb-0">Scope 會決定鑰匙套用到全域、特定分類或特定年代；分類與年代留空時，代表不限制該條件。</p>
+                <p class="text-secondary mb-0">分類鑰匙只能指定分類，年代鑰匙只能指定年代，一般與萬用鑰匙不需要額外條件。</p>
             </div>
         </div>
     </div>
@@ -86,4 +91,28 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script>
+        (() => {
+            const scopeType = document.getElementById("scopeType");
+            const categoryId = document.getElementById("categoryId");
+            const eraBucketId = document.getElementById("eraBucketId");
+
+            if (!scopeType || !categoryId || !eraBucketId) return;
+
+            const syncScope = () => {
+                const isCategory = scopeType.value === "CATEGORY";
+                const isEra = scopeType.value === "ERA";
+
+                categoryId.disabled = !isCategory;
+                eraBucketId.disabled = !isEra;
+
+                if (!isCategory) categoryId.value = "";
+                if (!isEra) eraBucketId.value = "";
+            };
+
+            scopeType.addEventListener("change", syncScope);
+            syncScope();
+        })();
+    </script>
 }

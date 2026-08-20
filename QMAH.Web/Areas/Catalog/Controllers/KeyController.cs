@@ -44,12 +44,27 @@ public class KeyController : Controller
     public ActionResult Create(Guid eraBucketId, Guid categoryId)
     {
         data(eraBucketId, categoryId);
-        return View();
+        return View(new KeyDefinition
+        {
+            ScopeType = "NORMAL",
+            IsActive = true
+        });
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public ActionResult Create(KeyDefinition kd, Guid eraBucketId, Guid categoryId)
     {
+        NormalizeScope(kd);
+
+        var errorMessage = ValidateKey(kd);
+        if (errorMessage != null)
+        {
+            ViewBag.ErrorMessage = errorMessage;
+            data(kd.EraBucketId, kd.CategoryId);
+            return View(kd);
+        }
+
         try
         {
             kd.Id = Guid.NewGuid();
@@ -59,13 +74,14 @@ public class KeyController : Controller
         }
         catch (DbUpdateException)
         {
-            ViewBag.ErrorMessage = "選填資料與所選Scope type不同。";
+            ViewBag.ErrorMessage = "儲存失敗，請確認鑰匙代碼沒有重複，且解鎖範圍符合設定。";
             data(kd.EraBucketId, kd.CategoryId);
             return View(kd);
         }
         catch (Exception)
         {
             ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
+            data(kd.EraBucketId, kd.CategoryId);
             return View(kd);
         }
     }
@@ -117,6 +133,7 @@ public class KeyController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult Edit(KeyDefinition kd, Guid eraBucketId, Guid categoryId)
     {
         var k = _db.KeyDefinitions.FirstOrDefault(t => t.Id == kd.Id);
@@ -124,6 +141,16 @@ public class KeyController : Controller
         if (k == null)
         {
             return Content("Id 不存在");
+        }
+
+        NormalizeScope(kd);
+
+        var errorMessage = ValidateKey(kd, kd.Id);
+        if (errorMessage != null)
+        {
+            ViewBag.ErrorMessage = errorMessage;
+            data(kd.EraBucketId, kd.CategoryId);
+            return View(kd);
         }
 
         try
@@ -138,17 +165,83 @@ public class KeyController : Controller
         }
         catch (DbUpdateException)
         {
-            ViewBag.ErrorMessage = "選填資料與所選Scope type不同。";
+            ViewBag.ErrorMessage = "儲存失敗，請確認鑰匙代碼沒有重複，且解鎖範圍符合設定。";
             data(kd.EraBucketId, kd.CategoryId);
             return View(kd);
         }
         catch (Exception)
         {
             ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
+            data(kd.EraBucketId, kd.CategoryId);
             return View(kd);
         }
 
         return RedirectToAction("Index");
+    }
+
+    private void NormalizeScope(KeyDefinition kd)
+    {
+        kd.ScopeType = kd.ScopeType?.Trim().ToUpperInvariant() ?? string.Empty;
+
+        if (kd.ScopeType == "CATEGORY")
+        {
+            kd.EraBucketId = null;
+        }
+        else if (kd.ScopeType == "ERA")
+        {
+            kd.CategoryId = null;
+        }
+        else if (kd.ScopeType == "NORMAL" || kd.ScopeType == "UNIVERSAL")
+        {
+            kd.CategoryId = null;
+            kd.EraBucketId = null;
+        }
+    }
+
+    private string? ValidateKey(KeyDefinition kd, Guid? currentId = null)
+    {
+        if (kd.ScopeType != "NORMAL" &&
+            kd.ScopeType != "CATEGORY" &&
+            kd.ScopeType != "ERA" &&
+            kd.ScopeType != "UNIVERSAL")
+        {
+            return "請選擇有效的鑰匙類型。";
+        }
+
+        if (kd.ScopeType == "CATEGORY" && kd.CategoryId == null)
+        {
+            return "分類鑰匙一定要選分類。";
+        }
+
+        if (kd.ScopeType == "ERA" && kd.EraBucketId == null)
+        {
+            return "年代鑰匙一定要選年代。";
+        }
+
+        var others = _db.KeyDefinitions
+            .AsNoTracking()
+            .Where(t => currentId == null || t.Id != currentId);
+
+        if (others.Any(t => t.Code == kd.Code))
+        {
+            return "鑰匙代碼已經存在。";
+        }
+
+        var scopeExists = kd.ScopeType switch
+        {
+            "NORMAL" => others.Any(t => t.ScopeType == "NORMAL"),
+            "UNIVERSAL" => others.Any(t => t.ScopeType == "UNIVERSAL"),
+            "CATEGORY" => others.Any(t => t.ScopeType == "CATEGORY" && t.CategoryId == kd.CategoryId),
+            "ERA" => others.Any(t => t.ScopeType == "ERA" && t.EraBucketId == kd.EraBucketId),
+            _ => false
+        };
+
+        if (scopeExists)
+        {
+            return "這個解鎖範圍已經有鑰匙規則，請直接編輯或重新啟用原本的規則。";
+        }
+
+        return null;
     }
 
     private void data(Guid? eraBucketId, Guid? categoryId)

@@ -40,7 +40,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="ScopeType" class="form-label">適用範圍</label>
-                        <select asp-for="ScopeType" class="form-select">
+                        <select asp-for="ScopeType" class="form-select" id="scopeType">
                             <option value="NORMAL">一般鑰匙</option>
                             <option value="CATEGORY">分類鑰匙</option>
                             <option value="ERA">年代鑰匙</option>
@@ -49,13 +49,13 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="CategoryId" class="form-label">分類</label>
-                        <select asp-for="CategoryId" asp-items="ViewBag.ArtifactCategoryList" class="form-select">
+                        <select asp-for="CategoryId" asp-items="ViewBag.ArtifactCategoryList" class="form-select" id="categoryId">
                             <option value="">不限定分類</option>
                         </select>
                     </div>
                     <div class="col-12 col-md-6">
                         <label asp-for="EraBucketId" class="form-label">年代</label>
-                        <select asp-for="EraBucketId" asp-items="ViewBag.EraBucketList" class="form-select">
+                        <select asp-for="EraBucketId" asp-items="ViewBag.EraBucketList" class="form-select" id="eraBucketId">
                             <option value="">不限定年代</option>
                         </select>
                     </div>
@@ -92,4 +92,30 @@
     </div>
 </div>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (() => {
+            const scopeType = document.getElementById("scopeType");
+            const categoryId = document.getElementById("categoryId");
+            const eraBucketId = document.getElementById("eraBucketId");
+
+            if (!scopeType || !categoryId || !eraBucketId) return;
+
+            const syncScope = () => {
+                const isCategory = scopeType.value === "CATEGORY";
+                const isEra = scopeType.value === "ERA";
+
+                categoryId.disabled = !isCategory;
+                eraBucketId.disabled = !isEra;
+
+                if (!isCategory) categoryId.value = "";
+                if (!isEra) eraBucketId.value = "";
+            };
+
+            scopeType.addEventListener("change", syncScope);
+            syncScope();
+        })();
+    </script>
+}
