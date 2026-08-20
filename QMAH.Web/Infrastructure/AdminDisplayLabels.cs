@@ -26,6 +26,10 @@ public static class AdminDisplayLabels
         "WAITING" => "等待中",
         "PLAYING" => "進行中",
         "COMPLETED" => "已完成",
+        "SHIPPED" => "已寄送",
+        "FULFILLING" => "撿貨中",
+        "PAID" => "已付款",
+        "PENDING_PAYMENT" => "待付款",
         _ => value ?? "未設定"
     };
 
