@@ -24,22 +24,24 @@ public sealed class HomeController(QmahDbContext db) : Controller
             UnlockCount = await db.ArtifactUnlocks.CountAsync(cancellationToken),
             CategoryBreakdown = await db.Artifacts
                 .AsNoTracking()
-                .GroupBy(x => x.Category.Name)
+                .GroupBy(x => new { x.Category.Id, x.Category.Name })
                 .OrderByDescending(x => x.Count())
                 .Select(x => new CatalogBreakdownItemViewModel
                 {
-                    Name = x.Key,
+                    Id = x.Key.Id,
+                    Name = x.Key.Name,
                     Count = x.Count(),
                     ActiveCount = x.Count(item => item.IsActive)
                 })
                 .ToListAsync(cancellationToken),
             EraBreakdown = await db.Artifacts
                 .AsNoTracking()
-                .GroupBy(x => x.EraBucket.Name)
+                .GroupBy(x => new { x.EraBucket.Id, x.EraBucket.Name })
                 .OrderByDescending(x => x.Count())
                 .Select(x => new CatalogBreakdownItemViewModel
                 {
-                    Name = x.Key,
+                    Id = x.Key.Id,
+                    Name = x.Key.Name,
                     Count = x.Count(),
                     ActiveCount = x.Count(item => item.IsActive)
                 })
@@ -61,6 +63,7 @@ public sealed class HomeController(QmahDbContext db) : Controller
                 .Take(8)
                 .Select(x => new CatalogRecentUnlockViewModel
                 {
+                    ArtifactRef = x.Artifact.ArtifactRef,
                     ArtifactName = x.Artifact.Name,
                     UnlockMethod = x.UnlockMethod,
                     UnlockedAt = x.UnlockedAt

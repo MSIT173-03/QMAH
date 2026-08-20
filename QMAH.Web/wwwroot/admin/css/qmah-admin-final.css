@@ -1406,3 +1406,76 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--dark {
     border-right: 0;
   }
 }
+
+
+/* 總覽頁操作補強：擴大可點擊區域並確保 100% 縮放可完整閱讀。 */
+.qmah-admin .qmah-area-metric--link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .14s ease, border-color .14s ease;
+}
+
+.qmah-admin .qmah-area-metric--link:hover,
+.qmah-admin .qmah-area-metric--link:focus-visible {
+  background: color-mix(in srgb, var(--qmah-area-soft) 48%, var(--qmah-surface));
+  color: inherit;
+}
+
+.qmah-admin .qmah-area-metric--link:focus-visible {
+  outline: 3px solid var(--qmah-area-focus);
+  outline-offset: -3px;
+}
+
+.qmah-admin .qmah-area-metric__note,
+.qmah-admin .qmah-area-action strong,
+.qmah-admin .qmah-area-action small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.qmah-admin .qmah-area-action {
+  min-height: 5.15rem;
+}
+
+.qmah-admin .qmah-area-list .qmah-area-list-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.qmah-admin .qmah-area-list .qmah-area-list-link:hover,
+.qmah-admin .qmah-area-list .qmah-area-list-link:focus-visible {
+  background: var(--qmah-surface-soft);
+  color: inherit;
+}
+
+/* 一般筆電寬度優先給文字空間，不要求使用者縮到 90%。 */
+@media (min-width: 1200px) and (max-width: 1599.98px) {
+  .qmah-admin .qmah-area-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qmah-admin .qmah-area-workbench .card-body {
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+  .qmah-admin .qmah-area-metrics--5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .qmah-admin .qmah-area-metrics--5 .qmah-area-metric {
+    border-bottom: 1px solid var(--qmah-line-soft);
+  }
+
+  .qmah-admin .qmah-area-metrics--5 .qmah-area-metric:nth-child(3n) {
+    border-right: 0;
+  }
+
+  .qmah-admin .qmah-area-metrics--5 .qmah-area-metric:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}

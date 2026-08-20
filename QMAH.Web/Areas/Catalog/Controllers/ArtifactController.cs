@@ -103,7 +103,12 @@ public class ArtifactController : Controller
     [ValidateAntiForgeryToken]
     public ActionResult Delete(Guid? id)
     {
-        var artifact = _db.Artifacts.FirstOrDefault(item => item.Id == id);
+        var artifact = _db.Artifacts
+            .AsNoTracking()
+            .Include(item => item.ArtifactQuestionEntry)
+            .Include(item => item.ArtifactUnlocks)
+            .FirstOrDefault(item => item.Id == id);
+
         if (artifact == null)
         {
             return Content("Id 不存在");

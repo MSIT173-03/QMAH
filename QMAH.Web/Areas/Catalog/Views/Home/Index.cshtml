@@ -27,22 +27,30 @@
 
 <div class="qmah-area-overview">
     <section class="qmah-area-metrics qmah-area-metrics--5" aria-label="圖鑑資料摘要">
-        <article class="qmah-area-metric">
+        <a class="qmah-area-metric qmah-area-metric--link"
+           asp-area="Catalog" asp-controller="Artifact" asp-action="Index">
             <span class="qmah-area-metric__icon"><i class="ti ti-photo"></i></span>
             <div><span class="qmah-area-metric__label">文物總數</span><strong class="qmah-area-metric__value">@Model.ArtifactCount</strong><span class="qmah-area-metric__note">已啟用 @Model.ActiveArtifactCount 件</span></div>
-        </article>
-        <article class="qmah-area-metric">
+        </a>
+
+        <a class="qmah-area-metric qmah-area-metric--link"
+           asp-area="Catalog" asp-controller="Artifact" asp-action="Index">
             <span class="qmah-area-metric__icon"><i class="ti ti-category"></i></span>
-            <div><span class="qmah-area-metric__label">分類數量</span><strong class="qmah-area-metric__value">@Model.CategoryCount</strong><span class="qmah-area-metric__note">目前圖鑑分類</span></div>
-        </article>
-        <article class="qmah-area-metric">
+            <div><span class="qmah-area-metric__label">分類數量</span><strong class="qmah-area-metric__value">@Model.CategoryCount</strong><span class="qmah-area-metric__note">查看各分類文物</span></div>
+        </a>
+
+        <a class="qmah-area-metric qmah-area-metric--link"
+           asp-area="Catalog" asp-controller="Artifact" asp-action="Index">
             <span class="qmah-area-metric__icon"><i class="ti ti-clock"></i></span>
-            <div><span class="qmah-area-metric__label">年代區間</span><strong class="qmah-area-metric__value">@Model.EraBucketCount</strong><span class="qmah-area-metric__note">目前年代設定</span></div>
-        </article>
-        <article class="qmah-area-metric">
+            <div><span class="qmah-area-metric__label">年代區間</span><strong class="qmah-area-metric__value">@Model.EraBucketCount</strong><span class="qmah-area-metric__note">查看各年代文物</span></div>
+        </a>
+
+        <a class="qmah-area-metric qmah-area-metric--link"
+           asp-area="Catalog" asp-controller="Key" asp-action="Index">
             <span class="qmah-area-metric__icon"><i class="ti ti-key"></i></span>
             <div><span class="qmah-area-metric__label">鑰匙規則</span><strong class="qmah-area-metric__value">@Model.KeyDefinitionCount</strong><span class="qmah-area-metric__note">圖鑑解鎖設定</span></div>
-        </article>
+        </a>
+
         <article class="qmah-area-metric">
             <span class="qmah-area-metric__icon"><i class="ti ti-lock-open"></i></span>
             <div><span class="qmah-area-metric__label">解鎖紀錄</span><strong class="qmah-area-metric__value">@Model.UnlockCount</strong><span class="qmah-area-metric__note">會員圖鑑進度</span></div>
@@ -83,7 +91,7 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title mb-1">最近解鎖</h2>
-                    <div class="card-subtitle">會員最近取得的圖鑑進度。</div>
+                    <div class="card-subtitle">會員最近取得的圖鑑進度，點選可直接找到該文物。</div>
                 </div>
             </div>
             @if (Model.RecentUnlocks.Count == 0)
@@ -99,13 +107,15 @@
                 <div class="list-group list-group-flush qmah-area-list">
                     @foreach (var item in Model.RecentUnlocks)
                     {
-                        <div class="list-group-item">
+                        <a class="list-group-item list-group-item-action qmah-area-list-link"
+                           asp-area="Catalog" asp-controller="Artifact" asp-action="Index"
+                           asp-route-txtKeyword="@item.ArtifactRef">
                             <div class="d-flex justify-content-between gap-3">
                                 <strong>@item.ArtifactName</strong>
                                 <span class="badge bg-blue-lt">@(item.UnlockMethod switch { "KEY" => "鑰匙", "GAME" => "遊戲", _ => item.UnlockMethod })</span>
                             </div>
                             <div class="text-secondary small mt-1">@item.UnlockedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div>
-                        </div>
+                        </a>
                     }
                 </div>
             }
@@ -114,7 +124,7 @@
 
     <div class="qmah-area-detail-grid qmah-area-detail-grid--3">
         <section class="card qmah-area-card">
-            <div class="card-header"><div><h2 class="card-title mb-1">分類分布</h2><div class="card-subtitle">各分類的文物數量與啟用狀態。</div></div></div>
+            <div class="card-header"><div><h2 class="card-title mb-1">分類分布</h2><div class="card-subtitle">點選分類直接篩選該分類文物。</div></div></div>
             @if (Model.CategoryBreakdown.Count == 0)
             {
                 <div class="empty py-5"><p class="empty-title">目前沒有分類資料</p></div>
@@ -124,17 +134,19 @@
                 <div class="list-group list-group-flush qmah-area-list">
                     @foreach (var item in Model.CategoryBreakdown)
                     {
-                        <div class="list-group-item d-flex align-items-center justify-content-between gap-3">
+                        <a class="list-group-item list-group-item-action qmah-area-list-link d-flex align-items-center justify-content-between gap-3"
+                           asp-area="Catalog" asp-controller="Artifact" asp-action="Index"
+                           asp-route-categoryId="@item.Id">
                             <div><div class="fw-semibold">@item.Name</div><div class="text-secondary small">已啟用 @item.ActiveCount 件</div></div>
                             <span class="badge bg-blue-lt">@item.Count 件</span>
-                        </div>
+                        </a>
                     }
                 </div>
             }
         </section>
 
         <section class="card qmah-area-card">
-            <div class="card-header"><div><h2 class="card-title mb-1">年代分布</h2><div class="card-subtitle">各年代區間的文物數量與啟用狀態。</div></div></div>
+            <div class="card-header"><div><h2 class="card-title mb-1">年代分布</h2><div class="card-subtitle">點選年代直接篩選該年代文物。</div></div></div>
             @if (Model.EraBreakdown.Count == 0)
             {
                 <div class="empty py-5"><p class="empty-title">目前沒有年代資料</p></div>
@@ -144,17 +156,19 @@
                 <div class="list-group list-group-flush qmah-area-list">
                     @foreach (var item in Model.EraBreakdown)
                     {
-                        <div class="list-group-item d-flex align-items-center justify-content-between gap-3">
+                        <a class="list-group-item list-group-item-action qmah-area-list-link d-flex align-items-center justify-content-between gap-3"
+                           asp-area="Catalog" asp-controller="Artifact" asp-action="Index"
+                           asp-route-eraBucketId="@item.Id">
                             <div><div class="fw-semibold">@item.Name</div><div class="text-secondary small">已啟用 @item.ActiveCount 件</div></div>
                             <span class="badge bg-secondary-lt">@item.Count 件</span>
-                        </div>
+                        </a>
                     }
                 </div>
             }
         </section>
 
         <section class="card qmah-area-card">
-            <div class="card-header"><div><h2 class="card-title mb-1">鑰匙範圍</h2><div class="card-subtitle">依適用範圍整理目前的鑰匙規則。</div></div></div>
+            <div class="card-header"><div><h2 class="card-title mb-1">鑰匙範圍</h2><div class="card-subtitle">點選範圍直接前往鑰匙規則。</div></div></div>
             @if (Model.KeyScopeBreakdown.Count == 0)
             {
                 <div class="empty py-5"><p class="empty-title">目前沒有鑰匙規則</p></div>
@@ -173,10 +187,11 @@
                             _ => item.Name
                         };
 
-                        <div class="list-group-item d-flex align-items-center justify-content-between gap-3">
+                        <a class="list-group-item list-group-item-action qmah-area-list-link d-flex align-items-center justify-content-between gap-3"
+                           asp-area="Catalog" asp-controller="Key" asp-action="Index">
                             <div><div class="fw-semibold">@scopeLabel</div><div class="text-secondary small">已啟用 @item.ActiveCount 條</div></div>
                             <span class="badge bg-green-lt">@item.Count 條</span>
-                        </div>
+                        </a>
                     }
                 </div>
             }

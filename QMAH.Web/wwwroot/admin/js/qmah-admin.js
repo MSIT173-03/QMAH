@@ -5,7 +5,7 @@
     const toggle = document.querySelector("[data-qmah-theme-toggle]");
     const themeColor = document.querySelector("[data-qmah-theme-color]");
     const sidebarToggle = document.querySelector("[data-qmah-sidebar-toggle]");
-    const mobileSidebarToggle = document.querySelector("[data-qmah-mobile-sidebar-toggle]");
+    const mobileSidebarToggles = [...document.querySelectorAll("[data-qmah-mobile-sidebar-toggle]")];
     const mobileSidebar = document.querySelector("#admin-sidebar-menu");
     const mobileSidebarBackdrop = document.querySelector("[data-qmah-sidebar-backdrop]");
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -170,7 +170,7 @@
     }
 
     function applyMobileSidebar(open) {
-        if (!mobileSidebar || !mobileSidebarToggle || !mobileSidebarBackdrop) {
+        if (!mobileSidebar || mobileSidebarToggles.length === 0 || !mobileSidebarBackdrop) {
             return;
         }
 
@@ -184,16 +184,20 @@
 
         mobileSidebar.classList.toggle("show", open);
         mobileSidebar.setAttribute("aria-hidden", String(!open));
-        mobileSidebarToggle.setAttribute("aria-expanded", String(open));
-        mobileSidebarToggle.setAttribute("aria-label", open ? "關閉側邊導覽" : "開啟側邊導覽");
+        mobileSidebarToggles.forEach((button) => {
+            button.setAttribute("aria-expanded", String(open));
+            button.setAttribute("aria-label", open ? "關閉側邊導覽" : "開啟側邊導覽");
+        });
         mobileSidebarBackdrop.classList.toggle("is-visible", open);
         document.body.classList.toggle("qmah-sidebar-open", open);
     }
 
     applyMobileSidebar(false);
 
-    mobileSidebarToggle?.addEventListener("click", () => {
-        applyMobileSidebar(!mobileSidebar?.classList.contains("show"));
+    mobileSidebarToggles.forEach((button) => {
+        button.addEventListener("click", () => {
+            applyMobileSidebar(!mobileSidebar?.classList.contains("show"));
+        });
     });
 
     mobileSidebarBackdrop?.addEventListener("click", () => applyMobileSidebar(false));

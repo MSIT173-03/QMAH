@@ -3,8 +3,7 @@
 }
 
 .qmah-editor-preview {
-  position: sticky;
-  top: 5rem;
+  position: static;
   overflow: hidden;
   border-color: var(--qmah-line);
 }
@@ -71,10 +70,6 @@
 }
 
 @media (max-width: 1199.98px) {
-  .qmah-editor-preview {
-    position: static;
-  }
-
   .qmah-editor-preview__stage {
     min-height: 20rem;
   }

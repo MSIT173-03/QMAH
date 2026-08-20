@@ -4,6 +4,14 @@
     ViewData["Title"] = "文物編輯";
     ViewData["AdminDescription"] = "維護文物主資料、來源授權、圖片與啟用狀態。";
     var previewPath = Model.PrimaryImagePath ?? Model.ThumbnailPath;
+    var questionTemplateLabel = Model.ArtifactQuestionEntry?.QuestionTemplateCode switch
+    {
+        "GENERAL" => "一般鑑定",
+        "ERA" => "年代判讀",
+        "CATEGORY" => "分類判讀",
+        null => null,
+        var code => code
+    };
 }
 
 @section Styles {
@@ -190,7 +198,22 @@
                 <div class="datagrid mt-3">
                     <div class="datagrid-item">
                         <div class="datagrid-title">題庫關聯</div>
-                        <div class="datagrid-content">@(Model.ArtifactQuestionEntry is null ? "未建立" : "已建立")</div>
+                        <div class="datagrid-content">
+                            @if (Model.ArtifactQuestionEntry is null)
+                            {
+                                <span>未建立</span>
+                            }
+                            else
+                            {
+                                <a asp-area="Game"
+                                   asp-controller="QuestionEntries"
+                                   asp-action="Index"
+                                   asp-route-search="@Model.ArtifactRef"
+                                   class="text-decoration-none">
+                                    已建立 · 難度 @Model.ArtifactQuestionEntry.Difficulty · @questionTemplateLabel
+                                </a>
+                            }
+                        </div>
                     </div>
 
                     <div class="datagrid-item">
