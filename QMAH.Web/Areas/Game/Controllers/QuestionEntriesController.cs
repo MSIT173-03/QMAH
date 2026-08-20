@@ -228,6 +228,7 @@ public sealed class QuestionEntriesController(QmahDbContext db) : Controller
                 ArtifactId = x.ArtifactId,
                 ArtifactRef = x.Artifact.ArtifactRef,
                 ArtifactName = x.Artifact.Name,
+                ImagePath = x.Artifact.PrimaryImagePath ?? x.Artifact.ThumbnailPath,
                 IsEnabled = x.IsEnabled,
                 Difficulty = x.Difficulty,
                 QuestionTemplateCode = x.QuestionTemplateCode
@@ -267,6 +268,7 @@ public sealed class QuestionEntriesController(QmahDbContext db) : Controller
         model.ArtifactId = entity.ArtifactId;
         model.ArtifactRef = entity.Artifact.ArtifactRef;
         model.ArtifactName = entity.Artifact.Name;
+        model.ImagePath = entity.Artifact.PrimaryImagePath ?? entity.Artifact.ThumbnailPath;
 
         if (!ModelState.IsValid)
         {

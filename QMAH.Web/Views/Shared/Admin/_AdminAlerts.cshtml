@@ -1,19 +1,94 @@
 @{
     var alerts = new[]
     {
-        (Message: TempData["Success"] as string ?? TempData["SuccessMessage"] as string, ClassName: "alert-success", Role: "status"),
-        (Message: TempData["Info"] as string, ClassName: "alert-info", Role: "status"),
-        (Message: TempData["Warning"] as string, ClassName: "alert-warning", Role: "alert"),
-        (Message: TempData["Error"] as string ?? TempData["ErrorMessage"] as string, ClassName: "alert-danger", Role: "alert")
-    };
-}
-@foreach (var alert in alerts)
-{
-    if (!string.IsNullOrWhiteSpace(alert.Message))
-    {
-        <div class="alert @alert.ClassName alert-dismissible" role="@alert.Role">
-            <div>@alert.Message</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="關閉訊息"></button>
-        </div>
+        new { Message = TempData["Success"] as string, Tone = "success", Title = "完成", Icon = "ti-circle-check", Role = "status", Autohide = true },
+        new { Message = TempData["SuccessMessage"] as string, Tone = "success", Title = "完成", Icon = "ti-circle-check", Role = "status", Autohide = true },
+        new { Message = TempData["Info"] as string, Tone = "info", Title = "資訊", Icon = "ti-info-circle", Role = "status", Autohide = true },
+        new { Message = TempData["Warning"] as string, Tone = "warning", Title = "提醒", Icon = "ti-alert-triangle", Role = "alert", Autohide = false },
+        new { Message = TempData["Error"] as string, Tone = "danger", Title = "操作失敗", Icon = "ti-alert-circle", Role = "alert", Autohide = false },
+        new { Message = TempData["ErrorMessage"] as string, Tone = "danger", Title = "操作失敗", Icon = "ti-alert-circle", Role = "alert", Autohide = false },
+        new { Message = TempData["StatusError"] as string, Tone = "danger", Title = "操作失敗", Icon = "ti-alert-circle", Role = "alert", Autohide = false },
+        new { Message = TempData["AddressError"] as string, Tone = "danger", Title = "操作失敗", Icon = "ti-alert-circle", Role = "alert", Autohide = false }
     }
+    .Where(alert => !string.IsNullOrWhiteSpace(alert.Message))
+    .GroupBy(alert => alert.Message)
+    .Select(group => group.First())
+    .ToList();
+}
+
+@if (alerts.Count > 0)
+{
+    <!-- 手機維持一般訊息，不用浮動 Toast 擋住內容。 -->
+    <div class="d-md-none">
+        @foreach (var alert in alerts)
+        {
+            <div class="alert alert-@alert.Tone alert-dismissible" role="@alert.Role">
+                <div class="d-flex gap-2 align-items-start">
+                    <i class="ti @alert.Icon mt-1" aria-hidden="true"></i>
+                    <div>
+                        <strong class="d-block mb-1">@alert.Title</strong>
+                        <span>@alert.Message</span>
+                    </div>
+                </div>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="關閉訊息"></button>
+            </div>
+        }
+    </div>
+
+    <!-- 平板橫向與桌面使用輕量 Toast。 -->
+    <div class="toast-container position-fixed end-0 p-3 d-none d-md-flex flex-column"
+         style="top: 3.75rem; z-index: 1095; width: min(24rem, calc(100vw - 2rem));"
+         aria-live="polite"
+         aria-atomic="true">
+        @foreach (var alert in alerts)
+        {
+            <div class="toast show border-0 shadow-sm mb-2"
+                 role="@alert.Role"
+                 data-qmah-toast
+                 data-qmah-autohide="@alert.Autohide.ToString().ToLowerInvariant()"
+                 data-qmah-delay="2300">
+                <div class="toast-header border-bottom-0">
+                    <span class="me-2 text-@alert.Tone" aria-hidden="true">
+                        <i class="ti @alert.Icon"></i>
+                    </span>
+                    <strong class="me-auto">@alert.Title</strong>
+                    <button type="button"
+                            class="btn-close"
+                            data-qmah-toast-close
+                            aria-label="關閉訊息"></button>
+                </div>
+                <div class="toast-body pt-1">@alert.Message</div>
+            </div>
+        }
+    </div>
+
+    <script>
+        (() => {
+            document.querySelectorAll("[data-qmah-toast]").forEach((toast) => {
+                const dismiss = () => {
+                    if (!toast.isConnected || toast.dataset.qmahLeaving === "true") {
+                        return;
+                    }
+
+                    toast.dataset.qmahLeaving = "true";
+                    toast.style.transition = "opacity 150ms ease, transform 150ms ease";
+                    toast.style.opacity = "0";
+                    toast.style.transform = "translateX(.5rem)";
+
+                    window.setTimeout(() => toast.remove(), 160);
+                };
+
+                toast.querySelector("[data-qmah-toast-close]")
+                    ?.addEventListener("click", dismiss);
+
+                if (toast.dataset.qmahAutohide === "true") {
+                    const delay = Number.parseInt(toast.dataset.qmahDelay ?? "2300", 10);
+                    window.setTimeout(dismiss, Number.isFinite(delay) ? delay : 2300);
+                }
+            });
+        })();
+    </script>
 }

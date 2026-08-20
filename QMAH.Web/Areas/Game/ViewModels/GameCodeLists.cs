@@ -4,7 +4,7 @@ namespace QMAH.Web.Areas.Game.ViewModels;
 
 public static class GameCodeLists
 {
-    public static readonly IReadOnlyList<int> PageSizes = [20, 50, 100];
+    public static readonly IReadOnlyList<int> PageSizes = [10, 20, 50, 100];
 
     public static readonly IReadOnlyDictionary<string, string> RoomStatuses =
         new Dictionary<string, string>
@@ -82,7 +82,7 @@ public static class GameCodeLists
         source.TryGetValue(code, out var label) ? label : code;
 
     public static int NormalizePageSize(int pageSize) =>
-        PageSizes.Contains(pageSize) ? pageSize : PageSizes[0];
+        PageSizes.Contains(pageSize) ? pageSize : 20;
 
     public static string StatusBadgeClass(string code) => code switch
     {

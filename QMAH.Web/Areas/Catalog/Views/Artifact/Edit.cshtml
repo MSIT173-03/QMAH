@@ -3,6 +3,11 @@
 @{
     ViewData["Title"] = "文物編輯";
     ViewData["AdminDescription"] = "維護文物主資料、來源授權、圖片與啟用狀態。";
+    var previewPath = Model.PrimaryImagePath ?? Model.ThumbnailPath;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/admin/css/qmah-editor-preview.css" asp-append-version="true" />
 }
 
 @section PageActions {
@@ -11,8 +16,8 @@
     </a>
 }
 
-<div class="row row-cards">
-    <div class="col-12 col-xl-8">
+<div class="row row-cards qmah-editor-grid">
+    <div class="col-12 col-xl-7">
         <form asp-action="Edit" method="post" class="card qmah-form-card">
             <div class="card-header">
                 <div>
@@ -20,20 +25,24 @@
                     <div class="text-secondary">標示的欄位會同步供題庫、遊戲與商城使用。</div>
                 </div>
             </div>
+
             <div class="card-body">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 <input type="hidden" asp-for="Id" />
+
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <label asp-for="Name" class="form-label">文物名稱</label>
                         <input asp-for="Name" class="form-control" />
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
+
                     <div class="col-12 col-md-6">
                         <label asp-for="ArtifactRef" class="form-label">館藏編號</label>
                         <input asp-for="ArtifactRef" class="form-control" />
                         <span asp-validation-for="ArtifactRef" class="text-danger"></span>
                     </div>
+
                     <div class="col-12 col-md-6">
                         <label asp-for="CategoryId" class="form-label">分類</label>
                         <select asp-for="CategoryId" asp-items="ViewBag.ArtifactCategoryList" class="form-select">
@@ -41,6 +50,7 @@
                         </select>
                         <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
+
                     <div class="col-12 col-md-6">
                         <label asp-for="EraBucketId" class="form-label">年代區間</label>
                         <select asp-for="EraBucketId" asp-items="ViewBag.EraBucketList" class="form-select">
@@ -48,57 +58,80 @@
                         </select>
                         <span asp-validation-for="EraBucketId" class="text-danger"></span>
                     </div>
+
                     <div class="col-12 col-md-6">
                         <label asp-for="EraTextOriginal" class="form-label">原始年代文字</label>
                         <input asp-for="EraTextOriginal" class="form-control" placeholder="保留來源所載文字" />
                         <span asp-validation-for="EraTextOriginal" class="text-danger"></span>
                     </div>
+
                     <div class="col-12 col-md-6">
                         <label asp-for="CreatorDisplay" class="form-label">作者／製作者</label>
                         <input asp-for="CreatorDisplay" class="form-control" placeholder="未提供可留空" />
                         <span asp-validation-for="CreatorDisplay" class="text-danger"></span>
                     </div>
+
                     <div class="col-12">
                         <label asp-for="Description" class="form-label">文物說明</label>
-                        <textarea asp-for="Description" class="form-control" rows="5" placeholder="請輸入文物說明"></textarea>
+                        <textarea asp-for="Description"
+                                  class="form-control"
+                                  rows="5"
+                                  placeholder="請輸入文物說明"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
+
                     <div class="col-12">
                         <label asp-for="SizeText" class="form-label">尺寸文字</label>
-                        <input asp-for="SizeText" class="form-control" placeholder="例如：長 5.5 公分・寬 3.8 公分・高 2.4 公分" />
+                        <input asp-for="SizeText"
+                               class="form-control"
+                               placeholder="例如：長 5.5 公分・寬 3.8 公分・高 2.4 公分" />
                         <span asp-validation-for="SizeText" class="text-danger"></span>
                     </div>
+
                     <div class="col-12">
                         <h3 class="qmah-form-section-title border-bottom pb-2 mb-0">來源與授權</h3>
                     </div>
+
                     <div class="col-12">
                         <label asp-for="SourceUrl" class="form-label">來源網址</label>
                         <input asp-for="SourceUrl" class="form-control" type="url" placeholder="https://..." />
                         <span asp-validation-for="SourceUrl" class="text-danger"></span>
                     </div>
+
                     <div class="col-12 col-md-6">
                         <label asp-for="LicenseCode" class="form-label">授權代碼</label>
                         <input asp-for="LicenseCode" class="form-control" />
                         <span asp-validation-for="LicenseCode" class="text-danger"></span>
                     </div>
+
                     <div class="col-12 col-md-6">
                         <label asp-for="AttributionText" class="form-label">來源文字說明</label>
                         <input asp-for="AttributionText" class="form-control" />
                         <span asp-validation-for="AttributionText" class="text-danger"></span>
                     </div>
+
                     <div class="col-12">
                         <h3 class="qmah-form-section-title border-bottom pb-2 mb-0">圖片與狀態</h3>
                     </div>
+
                     <div class="col-12">
                         <label asp-for="PrimaryImagePath" class="form-label">主要圖片路徑</label>
-                        <input asp-for="PrimaryImagePath" class="form-control" type="text" />
+                        <input asp-for="PrimaryImagePath"
+                               class="form-control"
+                               type="text"
+                               data-artifact-primary-image />
                         <span asp-validation-for="PrimaryImagePath" class="text-danger"></span>
                     </div>
+
                     <div class="col-12">
                         <label asp-for="ThumbnailPath" class="form-label">縮圖路徑</label>
-                        <input asp-for="ThumbnailPath" class="form-control" type="text" />
+                        <input asp-for="ThumbnailPath"
+                               class="form-control"
+                               type="text"
+                               data-artifact-thumbnail-image />
                         <span asp-validation-for="ThumbnailPath" class="text-danger"></span>
                     </div>
+
                     <div class="col-12">
                         <label class="form-check form-switch">
                             <input asp-for="IsActive" class="form-check-input" />
@@ -107,44 +140,120 @@
                     </div>
                 </div>
             </div>
+
             <div class="card-footer d-flex justify-content-end gap-2">
                 <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
-                <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>儲存文物</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy me-1"></i>儲存文物
+                </button>
             </div>
         </form>
     </div>
-    <div class="col-12 col-xl-4">
-        <div class="card mb-3">
-            <div class="card-header"><h2 class="card-title">目前圖片</h2></div>
-            <div class="card-body text-center qmah-detail-section">
-                @if (!string.IsNullOrWhiteSpace(Model.PrimaryImagePath) || !string.IsNullOrWhiteSpace(Model.ThumbnailPath))
-                {
-                    <a href="@(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? Model.ThumbnailPath : Model.PrimaryImagePath)" data-bs-toggle="modal" data-bs-target="#qmah-image-preview"><img src="@(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? Model.ThumbnailPath : Model.PrimaryImagePath)" alt="@Model.Name" class="qmah-edit-image rounded" /></a>
-                }
-                else
-                {
-                    <div class="empty py-4">
-                        <div class="empty-icon"><i class="ti ti-photo-off"></i></div>
-                        <p class="empty-title">尚無圖片</p>
-                    </div>
-                }
+
+    <div class="col-12 col-xl-5">
+        <div class="card qmah-editor-preview mb-3">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">文物圖片</h2>
+                    <div class="card-subtitle">主要圖片優先，未設定時使用縮圖。</div>
+                </div>
+            </div>
+
+            <div class="qmah-editor-preview__stage">
+                <img src="@previewPath"
+                     alt="@Model.Name"
+                     class="qmah-editor-preview__image"
+                     data-artifact-image-preview
+                     hidden="@string.IsNullOrWhiteSpace(previewPath)" />
+
+                <div class="qmah-editor-preview__empty"
+                     data-artifact-image-empty
+                     hidden="@(!string.IsNullOrWhiteSpace(previewPath))">
+                    <i class="ti ti-photo-off"></i>
+                    <span>尚無可預覽圖片</span>
+                </div>
+            </div>
+
+            <div class="qmah-editor-preview__meta">
+                <span class="qmah-editor-preview__headline">@Model.Name</span>
+                <span class="qmah-editor-preview__path"
+                      data-artifact-image-path>
+                    @(string.IsNullOrWhiteSpace(previewPath) ? "尚未設定圖片路徑" : previewPath)
+                </span>
             </div>
         </div>
+
         <div class="card qmah-dashboard-note">
             <div class="card-body">
                 <span class="qmah-status qmah-status--info">關聯資訊</span>
+
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item"><div class="datagrid-title">題庫關聯</div><div class="datagrid-content">@(Model.ArtifactQuestionEntry is null ? "未建立" : "已建立")</div></div>
-                    <div class="datagrid-item"><div class="datagrid-title">解鎖紀錄</div><div class="datagrid-content">@Model.ArtifactUnlocks.Count 筆</div></div>
-                    <div class="datagrid-item"><div class="datagrid-title">目前狀態</div><div class="datagrid-content">@(Model.IsActive ? "啟用" : "停用")</div></div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">題庫關聯</div>
+                        <div class="datagrid-content">@(Model.ArtifactQuestionEntry is null ? "未建立" : "已建立")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">解鎖紀錄</div>
+                        <div class="datagrid-content">@Model.ArtifactUnlocks.Count 筆</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">目前狀態</div>
+                        <div class="datagrid-content">@(Model.IsActive ? "啟用" : "停用")</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="qmah-image-preview" tabindex="-1" aria-labelledby="qmah-image-preview-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="qmah-image-preview-title">圖片預覽</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button></div><div class="modal-body text-center"><img class="qmah-image-preview" src="@(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? Model.ThumbnailPath : Model.PrimaryImagePath)" alt="@Model.Name" /></div></div></div></div>
-
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script>
+        (() => {
+            const primary = document.querySelector("[data-artifact-primary-image]");
+            const thumbnail = document.querySelector("[data-artifact-thumbnail-image]");
+            const preview = document.querySelector("[data-artifact-image-preview]");
+            const empty = document.querySelector("[data-artifact-image-empty]");
+            const pathLabel = document.querySelector("[data-artifact-image-path]");
+
+            if (!primary || !thumbnail || !preview || !empty || !pathLabel) {
+                return;
+            }
+
+            const showEmpty = (text) => {
+                preview.hidden = true;
+                empty.hidden = false;
+                empty.querySelector("span").textContent = text;
+            };
+
+            const updatePreview = () => {
+                const path = primary.value.trim() || thumbnail.value.trim();
+                pathLabel.textContent = path || "尚未設定圖片路徑";
+
+                if (!path) {
+                    preview.removeAttribute("src");
+                    showEmpty("尚無可預覽圖片");
+                    return;
+                }
+
+                preview.src = path;
+                preview.hidden = false;
+                empty.hidden = true;
+            };
+
+            preview.addEventListener("error", () => showEmpty("圖片無法載入"));
+            preview.addEventListener("load", () => {
+                if (primary.value.trim() || thumbnail.value.trim()) {
+                    preview.hidden = false;
+                    empty.hidden = true;
+                }
+            });
+
+            primary.addEventListener("input", updatePreview);
+            thumbnail.addEventListener("input", updatePreview);
+        })();
+    </script>
 }

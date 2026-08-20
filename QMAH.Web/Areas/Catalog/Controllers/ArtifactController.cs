@@ -12,7 +12,6 @@ using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
-
 [Area("Catalog")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [AdminNavigation("文物總覽", order: 10)]
@@ -25,121 +24,97 @@ public class ArtifactController : Controller
         _db = db;
     }
 
-
     public async Task<IActionResult> Index(
         C_KeywordViewModel vm,
         Guid? eraBucketId,
         Guid? categoryId,
         string? sortDirection,
-        CancellationToken cancellationToken)
+        int page = 1,
+        int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
-        IEnumerable<Artifact> datas_art = [];
+        page = Math.Max(1, page);
+        pageSize = NormalizePageSize(pageSize);
+        vm.txtKeyword = vm.txtKeyword?.Trim();
 
         var isDescending = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
 
-        var artifactsQuery = _db.Artifacts
+        var query = _db.Artifacts
             .AsNoTracking()
             .Include(artifact => artifact.Category)
-            .Include(artifact => artifact.EraBucket);
+            .Include(artifact => artifact.EraBucket)
+            .AsQueryable();
 
-        var artifacts = await (isDescending
-                ? artifactsQuery.OrderByDescending(artifact => artifact.Id)
-                : artifactsQuery.OrderBy(artifact => artifact.Id))
+        if (!string.IsNullOrWhiteSpace(vm.txtKeyword))
+        {
+            query = query.Where(artifact =>
+                artifact.Name.Contains(vm.txtKeyword) ||
+                artifact.ArtifactRef.Contains(vm.txtKeyword) ||
+                (artifact.EraTextOriginal != null && artifact.EraTextOriginal.Contains(vm.txtKeyword)));
+        }
+
+        if (eraBucketId.HasValue)
+        {
+            query = query.Where(artifact => artifact.EraBucketId == eraBucketId.Value);
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(artifact => artifact.CategoryId == categoryId.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
+        page = Math.Min(page, totalPages);
+
+        query = isDescending
+            ? query.OrderByDescending(artifact => artifact.Id)
+            : query.OrderBy(artifact => artifact.Id);
+
+        var artifacts = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-
         var eraBuckets = await _db.EraBuckets
-           .OrderBy(e => e.Name)
-           .ToListAsync();
+            .AsNoTracking()
+            .OrderBy(era => era.Name)
+            .ToListAsync(cancellationToken);
 
+        var categories = await _db.ArtifactCategories
+            .AsNoTracking()
+            .OrderBy(category => category.Name)
+            .ToListAsync(cancellationToken);
 
-        var category = await _db.ArtifactCategories
-           .OrderBy(e => e.Name)
-           .ToListAsync();
-
-        ViewBag.ArtifactCategoryList = new SelectList(category, "Id", "Name", categoryId);
+        ViewBag.ArtifactCategoryList = new SelectList(categories, "Id", "Name", categoryId);
         ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", eraBucketId);
-
-        if (string.IsNullOrEmpty(vm.txtKeyword) && eraBucketId == null && categoryId == null)
-        {
-            datas_art = from t in artifacts
-                        select t;
-        }
-        else
-        {
-            if (!string.IsNullOrEmpty(vm.txtKeyword) && eraBucketId != null && categoryId != null)
-            {
-                datas_art = artifacts.Where(t => t.EraBucketId == eraBucketId
-                && t.CategoryId == categoryId
-                && (t.Name.Contains(vm.txtKeyword)
-                || t.EraTextOriginal?.Contains(vm.txtKeyword) == true
-                || t.ArtifactRef.Contains(vm.txtKeyword)));
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(vm.txtKeyword) && eraBucketId != null)
-                {
-                    datas_art = artifacts.Where(t => t.EraBucketId == eraBucketId
-                    && (t.Name.Contains(vm.txtKeyword)
-                    || t.EraTextOriginal?.Contains(vm.txtKeyword) == true
-                    || t.ArtifactRef.Contains(vm.txtKeyword)));
-                }
-
-                else if (!string.IsNullOrEmpty(vm.txtKeyword) && categoryId != null)
-                {
-                    datas_art = artifacts.Where(t => t.CategoryId == categoryId
-                    && (t.Name.Contains(vm.txtKeyword)
-                    || t.EraTextOriginal?.Contains(vm.txtKeyword) == true
-                    || t.ArtifactRef.Contains(vm.txtKeyword)));
-                }
-                else if (categoryId != null && eraBucketId != null)
-                {
-                    datas_art = artifacts.Where(t => t.CategoryId == categoryId
-                    && t.EraBucketId == eraBucketId);
-                }
-                else
-                {
-                    if (eraBucketId != null)
-                    {
-                        datas_art = artifacts.Where(t => t.EraBucketId == eraBucketId);
-                    }
-                    if (vm.txtKeyword != null)
-                    {
-                        datas_art = artifacts.Where(t => t.Name.Contains(vm.txtKeyword)
-                        || t.EraTextOriginal?.Contains(vm.txtKeyword) == true
-                        || t.ArtifactRef.Contains(vm.txtKeyword));
-                    }
-                    if (categoryId != null)
-                    {
-                        datas_art = artifacts.Where(t => t.CategoryId == categoryId);
-                    }
-                }
-            }
-        }
         ViewBag.SelectedCategory = categoryId;
         ViewBag.SelectedEraBucketId = eraBucketId;
         ViewBag.SortDirection = isDescending ? "desc" : "asc";
-        return View(datas_art);
-    }
+        ViewBag.Page = page;
+        ViewBag.PageSize = pageSize;
+        ViewBag.TotalCount = totalCount;
+        ViewBag.TotalPages = totalPages;
 
+        return View(artifacts);
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public ActionResult Delete(Guid? id)
     {
-        var a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
-        if (a != null)
-        {
-            a.IsActive = false;
-            _db.SaveChanges();
-        }
-        else
+        var artifact = _db.Artifacts.FirstOrDefault(item => item.Id == id);
+        if (artifact == null)
         {
             return Content("Id 不存在");
         }
+
+        artifact.IsActive = false;
+        _db.SaveChanges();
+        TempData["Success"] = "文物已停用。";
+
         return RedirectToAction(nameof(Index));
     }
-
 
     public ActionResult Edit(Guid? id, Guid eraBucketId, Guid categoryId)
     {
@@ -147,56 +122,61 @@ public class ArtifactController : Controller
         {
             return Content("Id 不存在");
         }
-        else
+
+        var eraBuckets = _db.EraBuckets
+            .OrderBy(era => era.Name)
+            .ToList();
+
+        var categories = _db.ArtifactCategories
+            .OrderBy(category => category.Name)
+            .ToList();
+
+        var artifact = _db.Artifacts.FirstOrDefault(item => item.Id == id);
+        if (artifact == null)
         {
-            var eraBuckets = _db.EraBuckets
-                .OrderBy(e => e.Name)
-                .ToList();
-
-
-            var category = _db.ArtifactCategories
-                    .OrderBy(e => e.Name)
-                    .ToList();
-
-            var a = _db.Artifacts.FirstOrDefault(t => t.Id == id);
-            if (a == null) return Content("Id 不存在");
-
-            ViewBag.ArtifactCategoryList = new SelectList(category, "Id", "Name", a.CategoryId);
-            ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", a.EraBucketId);
-            return View(a);
+            return Content("Id 不存在");
         }
-    }
 
+        ViewBag.ArtifactCategoryList = new SelectList(categories, "Id", "Name", artifact.CategoryId);
+        ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", artifact.EraBucketId);
+
+        return View(artifact);
+    }
 
     [HttpPost]
     public ActionResult Edit(Artifact af, Guid eraBucketId, Guid categoryId)
     {
-        var a = _db.Artifacts.FirstOrDefault(t => t.Id == af.Id);
-        if (a == null)
+        var artifact = _db.Artifacts.FirstOrDefault(item => item.Id == af.Id);
+        if (artifact == null)
         {
             return Content("Id 不存在");
         }
-        else
+
+        if (!string.IsNullOrWhiteSpace(af.PrimaryImagePath))
         {
-            if (!string.IsNullOrWhiteSpace(af.PrimaryImagePath))
-            {
-                a.PrimaryImagePath = af.PrimaryImagePath;
-            }
-            a.ThumbnailPath = af.ThumbnailPath;
-            a.ArtifactRef = af.ArtifactRef;
-            a.Name = af.Name;
-            a.CategoryId = af.CategoryId;
-            a.EraBucketId = af.EraBucketId;
-            a.EraTextOriginal = af.EraTextOriginal;
-            a.CreatorDisplay = af.CreatorDisplay;
-            a.Description = af.Description;
-            a.SourceUrl = af.SourceUrl;
-            a.LicenseCode = af.LicenseCode;
-            a.AttributionText = af.AttributionText;
-            a.SizeText = af.SizeText;
-            a.IsActive = af.IsActive;
-            _db.SaveChanges();
+            artifact.PrimaryImagePath = af.PrimaryImagePath;
         }
-        return RedirectToAction("Index");
+
+        artifact.ThumbnailPath = af.ThumbnailPath;
+        artifact.ArtifactRef = af.ArtifactRef;
+        artifact.Name = af.Name;
+        artifact.CategoryId = af.CategoryId;
+        artifact.EraBucketId = af.EraBucketId;
+        artifact.EraTextOriginal = af.EraTextOriginal;
+        artifact.CreatorDisplay = af.CreatorDisplay;
+        artifact.Description = af.Description;
+        artifact.SourceUrl = af.SourceUrl;
+        artifact.LicenseCode = af.LicenseCode;
+        artifact.AttributionText = af.AttributionText;
+        artifact.SizeText = af.SizeText;
+        artifact.IsActive = af.IsActive;
+
+        _db.SaveChanges();
+        TempData["Success"] = "文物資料已更新。";
+
+        return RedirectToAction(nameof(Index));
     }
+
+    private static int NormalizePageSize(int pageSize) =>
+        pageSize is 10 or 20 or 50 or 100 ? pageSize : 20;
 }

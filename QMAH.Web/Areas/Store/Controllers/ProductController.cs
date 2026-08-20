@@ -25,45 +25,85 @@ public class ProductController : Controller
     [HttpGet]
     [HttpGet("Index")]
     public async Task<IActionResult> Index(
-        int page = 0,
+        string? search,
+        string? sort,
+        string? direction,
+        int page = 1,
         int rows = 20,
         CancellationToken cancellationToken = default)
     {
-        if (rows <= 0)
-        {
-            rows = 20;
-        }
-
-        var totalCount = await db.Products.CountAsync(cancellationToken);
-        if (page < 0 || totalCount < page * rows)
-        {
-            return View(new List<ProductSimplefyListItem>());
-        }
+        page = Math.Max(1, page);
+        rows = NormalizePageSize(rows);
+        search = search?.Trim();
+        sort = NormalizeSort(sort);
+        direction = string.Equals(direction, "desc", StringComparison.OrdinalIgnoreCase)
+            ? "desc"
+            : "asc";
 
         var query =
             from product in db.Products.AsNoTracking()
             join category in db.ArtifactCategories.AsNoTracking()
                 on product.CategoryCode equals category.Code into categoryGroup
             from category in categoryGroup.DefaultIfEmpty()
-            orderby product.IsActive descending, product.Name
-            select new ProductSimplefyListItem
+            select new
             {
-                Id = product.Id,
-                Name = product.Name,
-                Category = category != null ? category.Name : product.CategoryCode,
-                Price = product.Price,
-                Stock = product.Stock,
-                ImageUrl = product.PrimaryImagePath ?? string.Empty,
-                IsActive = product.IsActive
+                Product = product,
+                CategoryName = category != null ? category.Name : product.CategoryCode,
+                ArtifactName = product.Artifact != null ? product.Artifact.Name : null
             };
 
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(item =>
+                item.Product.Name.Contains(search) ||
+                (item.Product.ExternalRef != null && item.Product.ExternalRef.Contains(search)) ||
+                item.Product.CategoryCode.Contains(search) ||
+                item.CategoryName.Contains(search) ||
+                (item.ArtifactName != null && item.ArtifactName.Contains(search)));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)rows));
+        page = Math.Min(page, totalPages);
+
+        query = (sort, direction) switch
+        {
+            ("name", "desc") => query.OrderByDescending(item => item.Product.Name),
+            ("name", _) => query.OrderBy(item => item.Product.Name),
+            ("category", "desc") => query.OrderByDescending(item => item.CategoryName).ThenBy(item => item.Product.Name),
+            ("category", _) => query.OrderBy(item => item.CategoryName).ThenBy(item => item.Product.Name),
+            ("price", "desc") => query.OrderByDescending(item => item.Product.Price).ThenBy(item => item.Product.Name),
+            ("price", _) => query.OrderBy(item => item.Product.Price).ThenBy(item => item.Product.Name),
+            ("stock", "desc") => query.OrderByDescending(item => item.Product.Stock).ThenBy(item => item.Product.Name),
+            ("stock", _) => query.OrderBy(item => item.Product.Stock).ThenBy(item => item.Product.Name),
+            ("status", "desc") => query.OrderByDescending(item => item.Product.IsActive).ThenBy(item => item.Product.Name),
+            ("status", _) => query.OrderBy(item => item.Product.IsActive).ThenBy(item => item.Product.Name),
+            _ => query.OrderByDescending(item => item.Product.IsActive).ThenBy(item => item.Product.Name)
+        };
+
         var data = await query
-            .Skip(page * rows)
+            .Skip((page - 1) * rows)
             .Take(rows)
+            .Select(item => new ProductSimplefyListItem
+            {
+                Id = item.Product.Id,
+                Name = item.Product.Name,
+                Category = item.CategoryName,
+                Price = item.Product.Price,
+                Stock = item.Product.Stock,
+                ImageUrl = item.Product.PrimaryImagePath ?? string.Empty,
+                IsActive = item.Product.IsActive
+            })
             .ToListAsync(cancellationToken);
 
+        ViewData["Search"] = search;
+        ViewData["Sort"] = sort;
+        ViewData["Direction"] = direction;
         ViewData["Page"] = page;
         ViewData["Rows"] = rows;
+        ViewData["TotalCount"] = totalCount;
+        ViewData["TotalPages"] = totalPages;
+
         return View(data);
     }
 
@@ -194,7 +234,14 @@ public class ProductController : Controller
 
     [HttpPost("ToggleStatus")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleStatus(Guid id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> ToggleStatus(
+        Guid id,
+        string? search,
+        string? sort,
+        string? direction,
+        int page = 1,
+        int rows = 20,
+        CancellationToken cancellationToken = default)
     {
         var product = await db.Products.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (product is null)
@@ -209,9 +256,16 @@ public class ProductController : Controller
         TempData["SuccessMessage"] = product.IsActive
             ? "商品已重新上架。"
             : "商品已下架，既有訂單資料不受影響。";
-        return RedirectToAction(nameof(Index));
-    }
 
+        return RedirectToAction(nameof(Index), new
+        {
+            search,
+            sort,
+            direction,
+            page,
+            rows
+        });
+    }
 
     private async Task LoadProductOptionsAsync(
         string? categoryCode,
@@ -252,6 +306,15 @@ public class ProductController : Controller
         PrimaryImagePath = product.PrimaryImagePath,
         SourceUrl = product.SourceUrl,
         IsActive = product.IsActive
+    };
+
+    private static int NormalizePageSize(int rows) =>
+        rows is 10 or 20 or 50 or 100 ? rows : 20;
+
+    private static string NormalizeSort(string? sort) => sort?.Trim().ToLowerInvariant() switch
+    {
+        "name" or "category" or "price" or "stock" or "status" => sort.Trim().ToLowerInvariant(),
+        _ => "default"
     };
 
     private static string? NullIfWhiteSpace(string? value) =>

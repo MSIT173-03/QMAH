@@ -4,14 +4,22 @@
 @{
     ViewData["Title"] = "文物總覽";
     ViewData["AdminDescription"] = "搜尋、篩選並維護圖鑑中的文物主資料。";
-    var keyword = Context.Request.Query["txtKeyword"].ToString();
+
+    var keyword = ViewContext.HttpContext.Request.Query["txtKeyword"].ToString();
     var records = Model?.ToList() ?? [];
     var sortDirection = (ViewBag.SortDirection as string) == "desc" ? "desc" : "asc";
     var nextSortDirection = sortDirection == "asc" ? "desc" : "asc";
+    var currentPage = Convert.ToInt32(ViewBag.Page ?? 1);
+    var pageSize = Convert.ToInt32(ViewBag.PageSize ?? 20);
+    var totalCount = Convert.ToInt32(ViewBag.TotalCount ?? records.Count);
+    var totalPages = Convert.ToInt32(ViewBag.TotalPages ?? 1);
 }
 
 @section PageActions {
-    <a asp-area="Catalog" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+    <a asp-area="Catalog"
+       asp-controller="Home"
+       asp-action="Index"
+       class="btn btn-outline-secondary">
         <i class="ti ti-layout-dashboard me-1"></i>圖鑑管理總覽
     </a>
 }
@@ -22,35 +30,65 @@
             <h2 class="card-title">文物資料篩選</h2>
             <div class="d-flex flex-wrap align-items-center gap-2 text-secondary">
                 <span>以名稱、館藏編號、分類或年代快速縮小清單。</span>
-                <span class="badge bg-blue-lt qmah-filter-count"><i class="ti ti-list-check me-1"></i>@records.Count 筆結果</span>
+                <span class="badge bg-blue-lt qmah-filter-count">
+                    <i class="ti ti-list-check me-1"></i>@totalCount 筆結果
+                </span>
             </div>
         </div>
     </div>
+
     <div class="card-body">
         <form asp-action="Index" method="get">
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-xl-4">
                     <label class="form-label" for="keyword">關鍵字</label>
-                    <input class="form-control" id="keyword" name="txtKeyword" value="@keyword"
+                    <input class="form-control"
+                           id="keyword"
+                           name="txtKeyword"
+                           value="@keyword"
                            placeholder="文物名稱、館藏編號或年代文字" />
                 </div>
-                <div class="col-12 col-md-6 col-xl-3">
+
+                <div class="col-12 col-md-6 col-xl-2">
                     <label class="form-label" for="categoryId">分類</label>
-                    <select class="form-select" id="categoryId" name="categoryId" asp-items="ViewBag.ArtifactCategoryList">
+                    <select class="form-select"
+                            id="categoryId"
+                            name="categoryId"
+                            asp-items="ViewBag.ArtifactCategoryList">
                         <option value="">全部分類</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-6 col-xl-3">
+
+                <div class="col-12 col-md-6 col-xl-2">
                     <label class="form-label" for="eraBucketId">年代</label>
-                    <select class="form-select" id="eraBucketId" name="eraBucketId" asp-items="ViewBag.EraBucketList">
+                    <select class="form-select"
+                            id="eraBucketId"
+                            name="eraBucketId"
+                            asp-items="ViewBag.EraBucketList">
                         <option value="">全部年代</option>
                     </select>
                 </div>
+
+                <div class="col-6 col-xl-2">
+                    <label class="form-label" for="pageSize">每頁筆數</label>
+                    <select class="form-select"
+                            id="pageSize"
+                            name="pageSize"
+                            onchange="this.form.submit()">
+                        @foreach (var size in new[] { 10, 20, 50, 100 })
+                        {
+                            <option value="@size" selected="@(pageSize == size)">@size</option>
+                        }
+                    </select>
+                </div>
+
                 <input type="hidden" name="sortDirection" value="@sortDirection" />
+
                 <div class="col-12 col-xl-2 qmah-actions">
                     <button type="submit" class="btn btn-primary" title="搜尋">
                         <i class="ti ti-search me-1"></i>搜尋
                     </button>
+
                     <a asp-action="Index" class="btn btn-outline-secondary" title="清除篩選">
                         <i class="ti ti-refresh me-1"></i>清除
                     </a>
@@ -95,6 +133,8 @@
                     <tr>
                         <th class="text-center">
                             <a asp-action="Index"
+                               asp-route-page="1"
+                               asp-route-pageSize="@pageSize"
                                asp-route-txtKeyword="@keyword"
                                asp-route-categoryId="@ViewBag.SelectedCategory"
                                asp-route-eraBucketId="@ViewBag.SelectedEraBucketId"
@@ -120,6 +160,7 @@
                     {
                         var thumbnailPath = item.ThumbnailPath ?? item.PrimaryImagePath;
                         var previewPath = item.PrimaryImagePath ?? item.ThumbnailPath;
+
                         <tr>
                             <td class="text-center">
                                 @if (!string.IsNullOrWhiteSpace(thumbnailPath))
@@ -130,7 +171,10 @@
                                            data-bs-target="#qmah-image-preview"
                                            data-qmah-image-preview="@previewPath"
                                            aria-label="查看 @item.Name 大圖">
-                                            <img class="qmah-table-thumbnail" src="@thumbnailPath" alt="" loading="lazy" />
+                                            <img class="qmah-table-thumbnail"
+                                                 src="@thumbnailPath"
+                                                 alt=""
+                                                 loading="lazy" />
                                         </a>
                                     </span>
                                 }
@@ -139,6 +183,7 @@
                                     <span class="avatar avatar-lg"><i class="ti ti-photo-off"></i></span>
                                 }
                             </td>
+
                             <td>
                                 <div class="fw-semibold text-truncate" title="@item.Name">@item.Name</div>
                             </td>
@@ -153,7 +198,9 @@
                             </td>
                             <td>@(string.IsNullOrWhiteSpace(item.SizeText) ? "未標示" : item.SizeText)</td>
                             <td>
-                                <span class="badge bg-secondary-lt">@(string.IsNullOrWhiteSpace(item.LicenseCode) ? "未標示" : item.LicenseCode)</span>
+                                <span class="badge bg-secondary-lt">
+                                    @(string.IsNullOrWhiteSpace(item.LicenseCode) ? "未標示" : item.LicenseCode)
+                                </span>
                             </td>
                             <td>
                                 @if (item.IsActive)
@@ -167,15 +214,19 @@
                             </td>
                             <td class="qmah-action-cell qmah-actions--2">
                                 <div class="qmah-table-actions">
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">
+                                    <a asp-action="Edit"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-primary">
                                         <i class="ti ti-edit me-1"></i>編輯
                                     </a>
+
                                     @if (item.IsActive)
                                     {
                                         <form asp-action="Delete" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@item.Id" />
-                                            <button type="submit" class="btn btn-sm btn-danger"
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger"
                                                     onclick="return confirm('確定要停用這筆文物嗎？')">
                                                 <i class="ti ti-ban me-1"></i>停用
                                             </button>
@@ -183,7 +234,9 @@
                                     }
                                     else
                                     {
-                                        <button type="button" class="btn btn-sm btn-secondary" disabled><i class="ti ti-ban me-1"></i>已停用</button>
+                                        <button type="button" class="btn btn-sm btn-secondary" disabled>
+                                            <i class="ti ti-ban me-1"></i>已停用
+                                        </button>
                                     }
                                 </div>
                             </td>
@@ -192,9 +245,57 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span class="text-secondary">
+                第 @currentPage / @totalPages 頁，共 @totalCount 筆
+            </span>
+
+            <ul class="pagination m-0">
+                <li class="page-item @(currentPage <= 1 ? "disabled" : null)">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@(currentPage - 1)"
+                       asp-route-pageSize="@pageSize"
+                       asp-route-txtKeyword="@keyword"
+                       asp-route-categoryId="@ViewBag.SelectedCategory"
+                       asp-route-eraBucketId="@ViewBag.SelectedEraBucketId"
+                       asp-route-sortDirection="@sortDirection">
+                        上一頁
+                    </a>
+                </li>
+
+                <li class="page-item disabled">
+                    <span class="page-link">@currentPage</span>
+                </li>
+
+                <li class="page-item @(currentPage >= totalPages ? "disabled" : null)">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@(currentPage + 1)"
+                       asp-route-pageSize="@pageSize"
+                       asp-route-txtKeyword="@keyword"
+                       asp-route-categoryId="@ViewBag.SelectedCategory"
+                       asp-route-eraBucketId="@ViewBag.SelectedEraBucketId"
+                       asp-route-sortDirection="@sortDirection">
+                        下一頁
+                    </a>
+                </li>
+            </ul>
+        </div>
     }
 </div>
 
 <div class="modal fade" id="qmah-image-preview" tabindex="-1" aria-labelledby="qmah-image-preview-title" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="qmah-image-preview-title">圖片預覽</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button></div><div class="modal-body text-center"><img class="qmah-image-preview" data-qmah-image-preview-target alt="文物大圖" /></div></div></div>
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="qmah-image-preview-title">圖片預覽</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img class="qmah-image-preview" data-qmah-image-preview-target alt="文物大圖" />
+            </div>
+        </div>
+    </div>
 </div>

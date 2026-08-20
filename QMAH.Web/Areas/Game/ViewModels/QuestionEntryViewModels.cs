@@ -59,6 +59,8 @@ public sealed class QuestionEntryEditViewModel
 
     public string ArtifactName { get; set; } = string.Empty;
 
+    public string? ImagePath { get; set; }
+
     [Display(Name = "是否啟用")]
     public bool IsEnabled { get; set; }
 

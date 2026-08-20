@@ -47,6 +47,59 @@
     <link rel="stylesheet" href="~/admin/css/qmah-admin-polish.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-area-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-final.css" asp-append-version="true" />
+
+    <style>
+        .qmah-admin .qmah-detail-section[id] {
+            scroll-margin-top: 5rem;
+        }
+
+        .qmah-back-to-top {
+            position: fixed;
+            z-index: 1040;
+            right: 1rem;
+            bottom: 1rem;
+            display: inline-grid;
+            width: 2.65rem;
+            height: 2.65rem;
+            place-items: center;
+            border: 1px solid var(--qmah-line);
+            border-radius: 50%;
+            background: var(--qmah-surface-raised);
+            color: var(--qmah-ink-soft);
+            box-shadow: var(--qmah-shadow-sm);
+            opacity: .94;
+            transition: opacity 150ms ease, transform 150ms ease, border-color 150ms ease;
+        }
+
+        .qmah-back-to-top:hover,
+        .qmah-back-to-top:focus-visible {
+            border-color: var(--qmah-area-accent);
+            color: var(--qmah-area-accent);
+            transform: translateY(-2px);
+        }
+
+        .qmah-back-to-top[hidden] {
+            display: none;
+        }
+
+        @@media (max-width: 767.98px) {
+            .qmah-back-to-top {
+                right: .75rem;
+                bottom: .75rem;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .qmah-back-to-top {
+                transition: none;
+            }
+
+            .qmah-back-to-top:hover,
+            .qmah-back-to-top:focus-visible {
+                transform: none;
+            }
+        }
+    </style>
 </head>
 <body class="qmah-admin qmah-area-@areaKey" data-qmah-area="@areaKey">
     <a class="qmah-skip-link" href="#admin-main">跳至主要內容</a>
@@ -112,9 +165,89 @@
         </div>
     </div>
 
+    <button type="button"
+            class="qmah-back-to-top d-print-none"
+            data-qmah-back-to-top
+            aria-label="回到頁面頂端"
+            title="回到頂端"
+            hidden>
+        <i class="ti ti-arrow-up" aria-hidden="true"></i>
+    </button>
+
     <script src="~/admin/vendor/tabler/tabler.min.js"></script>
     <script src="~/admin/js/qmah-admin.js" asp-append-version="true"></script>
     <script src="~/admin/js/qmah-interactions.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        (() => {
+            const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+            const backToTop = document.querySelector("[data-qmah-back-to-top]");
+
+            const syncBackToTop = () => {
+                if (backToTop) {
+                    backToTop.hidden = window.scrollY < 640;
+                }
+            };
+
+            syncBackToTop();
+            window.addEventListener("scroll", syncBackToTop, { passive: true });
+
+            backToTop?.addEventListener("click", () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: reduceMotion.matches ? "auto" : "smooth"
+                });
+            });
+
+            document.querySelectorAll('.qmah-detail-nav a[href^="#"]').forEach((link) => {
+                link.addEventListener("click", (event) => {
+                    const selector = link.getAttribute("href");
+                    const target = selector ? document.querySelector(selector) : null;
+                    if (!target) return;
+
+                    event.preventDefault();
+                    target.scrollIntoView({
+                        behavior: reduceMotion.matches ? "auto" : "smooth",
+                        block: "start"
+                    });
+                    history.replaceState(null, "", selector);
+                });
+            });
+
+            const editableSelector = [
+                'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([readonly]):not([disabled])',
+                'textarea:not([readonly]):not([disabled])',
+                'select:not([disabled])'
+            ].join(",");
+
+            const dirtyForms = new Set();
+
+            document.querySelectorAll('form[method="post"]').forEach((form) => {
+                if (!form.querySelector(editableSelector)) {
+                    return;
+                }
+
+                const markDirty = () => dirtyForms.add(form);
+                form.addEventListener("input", markDirty);
+                form.addEventListener("change", markDirty);
+
+                form.addEventListener("submit", (event) => {
+                    if (!event.defaultPrevented) {
+                        dirtyForms.delete(form);
+                    }
+                });
+            });
+
+            window.addEventListener("beforeunload", (event) => {
+                if (dirtyForms.size === 0) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.returnValue = "";
+            });
+        })();
+    </script>
 </body>
 </html>

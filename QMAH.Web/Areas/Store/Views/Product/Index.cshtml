@@ -2,7 +2,15 @@
 
 @{
     ViewData["Title"] = "商品管理";
-    ViewData["AdminDescription"] = "維持既有商品資料模型，提供商品建立、編輯與上下架處理。";
+    ViewData["AdminDescription"] = "維護商品內容、庫存與上下架狀態。";
+
+    var search = ViewData["Search"]?.ToString() ?? string.Empty;
+    var sort = ViewData["Sort"]?.ToString() ?? "default";
+    var direction = ViewData["Direction"]?.ToString() == "desc" ? "desc" : "asc";
+    var currentPage = Convert.ToInt32(ViewData["Page"] ?? 1);
+    var rows = Convert.ToInt32(ViewData["Rows"] ?? 20);
+    var totalCount = Convert.ToInt32(ViewData["TotalCount"] ?? 0);
+    var totalPages = Convert.ToInt32(ViewData["TotalPages"] ?? 1);
 }
 
 @section PageActions {
@@ -11,26 +19,82 @@
     </a>
 }
 
-@{
-    var viewData = new ViewDataDictionary(ViewData)
-    {
-        { "Controller", "Product" },
-        { "Action", "Index" }
-    };
-}
-<partial name="OptionSetListPage" view-data="viewData" />
+<div class="card qmah-filter-panel mb-3">
+    <div class="card-body">
+        <form method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-4">
+                    <label class="form-label" for="search">搜尋商品</label>
+                    <input id="search"
+                           name="search"
+                           value="@search"
+                           class="form-control"
+                           placeholder="商品名稱、分類、關聯文物或外部編號" />
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <label class="form-label" for="sort">排序</label>
+                    <select id="sort" name="sort" class="form-select">
+                        <option value="default" selected="@(sort == "default")">預設排序</option>
+                        <option value="name" selected="@(sort == "name")">商品名稱</option>
+                        <option value="category" selected="@(sort == "category")">分類</option>
+                        <option value="price" selected="@(sort == "price")">價格</option>
+                        <option value="stock" selected="@(sort == "stock")">庫存</option>
+                        <option value="status" selected="@(sort == "status")">狀態</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <label class="form-label" for="direction">方向</label>
+                    <select id="direction" name="direction" class="form-select">
+                        <option value="asc" selected="@(direction == "asc")">由小到大</option>
+                        <option value="desc" selected="@(direction == "desc")">由大到小</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <label class="form-label" for="rows">每頁筆數</label>
+                    <select id="rows" name="rows" class="form-select" onchange="this.form.submit()">
+                        @foreach (var size in new[] { 10, 20, 50, 100 })
+                        {
+                            <option value="@size" selected="@(rows == size)">@size</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-lg-2">
+                    <div class="qmah-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-search me-1"></i>套用
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="ti ti-refresh me-1"></i>清除
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 <div class="card qmah-list-card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">商品清單</h2>
+            <div class="card-subtitle">共 @totalCount 筆</div>
+        </div>
+    </div>
+
     <div class="table-responsive">
         <table class="table table-vcenter table-hover card-table qmah-crud-table">
             <thead>
                 <tr>
-                    <th class="text-center">圖片</th>
-                    <th>商品名稱</th>
-                    <th>分類</th>
-                    <th>價格</th>
-                    <th>庫存</th>
-                    <th>狀態</th>
+                    <th class="text-center qmah-no-sort">圖片</th>
+                    <th data-sort-key="name">商品名稱</th>
+                    <th data-sort-key="category">分類</th>
+                    <th data-sort-key="price" data-sort-default-direction="desc">價格</th>
+                    <th data-sort-key="stock" data-sort-default-direction="desc">庫存</th>
+                    <th data-sort-key="status" data-sort-default-direction="desc">狀態</th>
                     <th class="qmah-action-cell qmah-actions--3">操作</th>
                 </tr>
             </thead>
@@ -41,8 +105,8 @@
                         <td colspan="7">
                             <div class="empty qmah-empty-state">
                                 <div class="empty-icon"><i class="ti ti-package-off"></i></div>
-                                <p class="empty-title">目前沒有商品資料</p>
-                                <p class="empty-subtitle text-secondary">建立商品後，會在這裡管理上下架狀態與庫存。</p>
+                                <p class="empty-title">找不到符合條件的商品</p>
+                                <p class="empty-subtitle text-secondary">請調整搜尋或排序條件後再試一次。</p>
                             </div>
                         </td>
                     </tr>
@@ -61,32 +125,53 @@
                                            data-bs-target="#qmah-image-preview"
                                            data-qmah-image-preview="@item.ImageUrl"
                                            aria-label="預覽 @item.Name 圖片">
-                                            <img class="qmah-table-thumbnail" src="@item.ImageUrl" alt="" loading="lazy" />
+                                            <img class="qmah-table-thumbnail"
+                                                 src="@item.ImageUrl"
+                                                 alt=""
+                                                 loading="lazy"
+                                                 onerror="this.closest('.avatar').innerHTML='<i class=&quot;ti ti-photo-off&quot;></i>';" />
                                         </a>
                                     </span>
                                 }
                                 else
                                 {
-                                    <span class="avatar"><i class="ti ti-photo-off"></i></span>
+                                    <span class="avatar avatar-lg"><i class="ti ti-photo-off"></i></span>
                                 }
                             </td>
                             <td class="fw-semibold">@item.Name</td>
                             <td><span class="badge bg-blue-lt">@item.Category</span></td>
-                            <td>@item.Price.ToString("C0")</td>
-                            <td>@item.Stock</td>
-                            <td>
+                            <td data-sort-value="@item.Price">@item.Price.ToString("C0")</td>
+                            <td data-sort-value="@item.Stock">@item.Stock</td>
+                            <td data-sort-value="@(item.IsActive ? 1 : 0)">
                                 <span class="badge @(item.IsActive ? "bg-green-lt" : "bg-secondary-lt")">
                                     @(item.IsActive ? "上架中" : "已下架")
                                 </span>
                             </td>
                             <td class="qmah-action-cell qmah-actions--3">
                                 <div class="qmah-table-actions">
-                                    <a asp-action="GetProduct" asp-route-id="@item.Id" class="btn btn-sm"><i class="ti ti-eye me-1"></i>查看</a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm"><i class="ti ti-edit me-1"></i>編輯</a>
+                                    <a asp-action="GetProduct"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm">
+                                        <i class="ti ti-eye me-1"></i>查看
+                                    </a>
+
+                                    <a asp-action="Edit"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm">
+                                        <i class="ti ti-edit me-1"></i>編輯
+                                    </a>
+
                                     <form asp-action="ToggleStatus" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
-                                        <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-warning" : "btn-success")">
+                                        <input type="hidden" name="search" value="@search" />
+                                        <input type="hidden" name="sort" value="@sort" />
+                                        <input type="hidden" name="direction" value="@direction" />
+                                        <input type="hidden" name="page" value="@currentPage" />
+                                        <input type="hidden" name="rows" value="@rows" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm @(item.IsActive ? "btn-warning" : "btn-success")">
                                             <i class="ti @(item.IsActive ? "ti-eye-off" : "ti-eye") me-1"></i>@(item.IsActive ? "下架" : "上架")
                                         </button>
                                     </form>
@@ -97,6 +182,42 @@
                 }
             </tbody>
         </table>
+    </div>
+
+    <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="text-secondary">
+            第 @currentPage / @totalPages 頁，共 @totalCount 筆
+        </span>
+
+        <ul class="pagination m-0">
+            <li class="page-item @(currentPage <= 1 ? "disabled" : null)">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-search="@search"
+                   asp-route-sort="@sort"
+                   asp-route-direction="@direction"
+                   asp-route-page="@(currentPage - 1)"
+                   asp-route-rows="@rows">
+                    上一頁
+                </a>
+            </li>
+
+            <li class="page-item disabled">
+                <span class="page-link">@currentPage</span>
+            </li>
+
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : null)">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-search="@search"
+                   asp-route-sort="@sort"
+                   asp-route-direction="@direction"
+                   asp-route-page="@(currentPage + 1)"
+                   asp-route-rows="@rows">
+                    下一頁
+                </a>
+            </li>
+        </ul>
     </div>
 </div>
 

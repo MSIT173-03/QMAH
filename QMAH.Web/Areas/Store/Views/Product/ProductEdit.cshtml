@@ -6,119 +6,157 @@
     ViewData["AdminDescription"] = "維護商品內容、關聯文物、庫存與上架狀態。";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/admin/css/qmah-editor-preview.css" asp-append-version="true" />
+}
+
 @section PageActions {
     <a asp-action="Index" class="btn btn-outline-secondary">
         <i class="ti ti-arrow-left me-1"></i>返回商品管理
     </a>
 }
 
-<div class="row justify-content-center">
-    <div class="col-12 col-xl-9">
-        <div class="card qmah-form-card">
+<div class="row row-cards qmah-editor-grid">
+    <div class="col-12 col-xl-7">
+        <form asp-action="@(isEdit ? "Edit" : "Create")"
+              asp-route-id="@(isEdit ? Model.Id : null)"
+              method="post"
+              class="card qmah-form-card">
+            <input asp-for="Id" type="hidden" />
+
             <div class="card-header">
                 <h2 class="card-title">@(isEdit ? "商品資料" : "建立商品")</h2>
             </div>
+
             <div class="card-body">
-                <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.Id : null)" method="post">
-                    <input asp-for="Id" type="hidden" />
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                    <section class="qmah-form-section">
-                        <h3 class="qmah-form-section-title">商品資料</h3>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <label asp-for="Name" class="form-label"></label>
-                                <input asp-for="Name" class="form-control" />
-                                <span asp-validation-for="Name" class="text-danger"></span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label asp-for="CategoryCode" class="form-label"></label>
-                                <select asp-for="CategoryCode" asp-items="ViewBag.Categories" class="form-select">
-                                    <option value="">請選擇商品分類</option>
-                                </select>
-                                <span asp-validation-for="CategoryCode" class="text-danger"></span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label asp-for="Price" class="form-label"></label>
-                                <input asp-for="Price" class="form-control" inputmode="decimal" />
-                                <span asp-validation-for="Price" class="text-danger"></span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label asp-for="Stock" class="form-label"></label>
-                                <input asp-for="Stock" class="form-control" />
-                                <span asp-validation-for="Stock" class="text-danger"></span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label asp-for="ArtifactId" class="form-label"></label>
-                                <select asp-for="ArtifactId" asp-items="ViewBag.Artifacts" class="form-select">
-                                    <option value="">不關聯文物</option>
-                                </select>
-                                <span asp-validation-for="ArtifactId" class="text-danger"></span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label asp-for="ExternalRef" class="form-label"></label>
-                                <input asp-for="ExternalRef" class="form-control" />
-                                <span asp-validation-for="ExternalRef" class="text-danger"></span>
-                            </div>
-                            <div class="col-12">
-                                <label asp-for="Description" class="form-label"></label>
-                                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-                                <span asp-validation-for="Description" class="text-danger"></span>
-                            </div>
+                <section class="qmah-form-section">
+                    <h3 class="qmah-form-section-title">商品資料</h3>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
                         </div>
-                    </section>
 
-                    <section class="qmah-form-section">
-                        <h3 class="qmah-form-section-title">展示與上架設定</h3>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <label asp-for="SizeText" class="form-label"></label>
-                                <input asp-for="SizeText" class="form-control" />
-                                <span asp-validation-for="SizeText" class="text-danger"></span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label asp-for="PrimaryImagePath" class="form-label">主圖片路徑</label>
-                                <input asp-for="PrimaryImagePath" class="form-control" type="text" data-product-image-path />
-                                <span asp-validation-for="PrimaryImagePath" class="text-danger"></span>
-                            </div>
-                            <div class="col-12">
-                                <div class="card bg-body-tertiary mb-0">
-                                    <div class="card-header py-2">
-                                        <h4 class="card-title mb-0">圖片預覽</h4>
-                                    </div>
-                                    <div class="card-body text-center py-3">
-                                        <img src="@Model.PrimaryImagePath"
-                                             alt="@Model.Name"
-                                             class="qmah-edit-image rounded"
-                                             data-product-image-preview
-                                             hidden="@string.IsNullOrWhiteSpace(Model.PrimaryImagePath)" />
-                                        <div class="text-secondary py-4"
-                                             data-product-image-empty
-                                             hidden="@(!string.IsNullOrWhiteSpace(Model.PrimaryImagePath))">
-                                            <i class="ti ti-photo-off me-1"></i>尚無圖片
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <label asp-for="SourceUrl" class="form-label"></label>
-                                <input asp-for="SourceUrl" class="form-control" />
-                                <span asp-validation-for="SourceUrl" class="text-danger"></span>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-check form-switch">
-                                    <input asp-for="IsActive" class="form-check-input" />
-                                    <span class="form-check-label">上架此商品</span>
-                                </label>
-                            </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="CategoryCode" class="form-label"></label>
+                            <select asp-for="CategoryCode" asp-items="ViewBag.Categories" class="form-select">
+                                <option value="">請選擇商品分類</option>
+                            </select>
+                            <span asp-validation-for="CategoryCode" class="text-danger"></span>
                         </div>
-                    </section>
 
-                    <div class="qmah-form-actions">
-                        <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
-                        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>儲存</button>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Price" class="form-label"></label>
+                            <input asp-for="Price" class="form-control" inputmode="decimal" />
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Stock" class="form-label"></label>
+                            <input asp-for="Stock" class="form-control" />
+                            <span asp-validation-for="Stock" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ArtifactId" class="form-label"></label>
+                            <select asp-for="ArtifactId" asp-items="ViewBag.Artifacts" class="form-select">
+                                <option value="">不關聯文物</option>
+                            </select>
+                            <span asp-validation-for="ArtifactId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ExternalRef" class="form-label"></label>
+                            <input asp-for="ExternalRef" class="form-control" />
+                            <span asp-validation-for="ExternalRef" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
                     </div>
-                </form>
+                </section>
+
+                <section class="qmah-form-section">
+                    <h3 class="qmah-form-section-title">展示與上架設定</h3>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="SizeText" class="form-label"></label>
+                            <input asp-for="SizeText" class="form-control" />
+                            <span asp-validation-for="SizeText" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="PrimaryImagePath" class="form-label">主圖片路徑</label>
+                            <input asp-for="PrimaryImagePath"
+                                   class="form-control"
+                                   type="text"
+                                   data-editor-image-path />
+                            <span asp-validation-for="PrimaryImagePath" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="SourceUrl" class="form-label"></label>
+                            <input asp-for="SourceUrl" class="form-control" />
+                            <span asp-validation-for="SourceUrl" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <span class="form-check-label">上架此商品</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy me-1"></i>儲存
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <div class="card qmah-editor-preview">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">商品圖片</h2>
+                    <div class="card-subtitle">輸入路徑後會立即更新預覽。</div>
+                </div>
+            </div>
+
+            <div class="qmah-editor-preview__stage">
+                <img src="@Model.PrimaryImagePath"
+                     alt="@Model.Name"
+                     class="qmah-editor-preview__image"
+                     data-editor-image-preview
+                     hidden="@string.IsNullOrWhiteSpace(Model.PrimaryImagePath)" />
+
+                <div class="qmah-editor-preview__empty"
+                     data-editor-image-empty
+                     hidden="@(!string.IsNullOrWhiteSpace(Model.PrimaryImagePath))">
+                    <i class="ti ti-photo-off"></i>
+                    <span>尚無可預覽圖片</span>
+                </div>
+            </div>
+
+            <div class="qmah-editor-preview__meta">
+                <span class="qmah-editor-preview__label">目前圖片路徑</span>
+                <span class="qmah-editor-preview__path"
+                      data-editor-image-path-label>
+                    @(string.IsNullOrWhiteSpace(Model.PrimaryImagePath) ? "尚未設定" : Model.PrimaryImagePath)
+                </span>
             </div>
         </div>
     </div>
@@ -126,21 +164,31 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
     <script>
         (() => {
-            const input = document.querySelector("[data-product-image-path]");
-            const preview = document.querySelector("[data-product-image-preview]");
-            const empty = document.querySelector("[data-product-image-empty]");
+            const input = document.querySelector("[data-editor-image-path]");
+            const preview = document.querySelector("[data-editor-image-preview]");
+            const empty = document.querySelector("[data-editor-image-empty]");
+            const pathLabel = document.querySelector("[data-editor-image-path-label]");
 
-            if (!input || !preview || !empty) return;
+            if (!input || !preview || !empty || !pathLabel) {
+                return;
+            }
+
+            const showEmpty = (text) => {
+                preview.hidden = true;
+                empty.hidden = false;
+                empty.querySelector("span").textContent = text;
+            };
 
             const updatePreview = () => {
                 const path = input.value.trim();
+                pathLabel.textContent = path || "尚未設定";
 
                 if (!path) {
                     preview.removeAttribute("src");
-                    preview.hidden = true;
-                    empty.hidden = false;
+                    showEmpty("尚無可預覽圖片");
                     return;
                 }
 
@@ -148,6 +196,14 @@
                 preview.hidden = false;
                 empty.hidden = true;
             };
+
+            preview.addEventListener("error", () => showEmpty("圖片無法載入"));
+            preview.addEventListener("load", () => {
+                if (input.value.trim()) {
+                    preview.hidden = false;
+                    empty.hidden = true;
+                }
+            });
 
             input.addEventListener("input", updatePreview);
         })();

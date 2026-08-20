@@ -1,4 +1,5 @@
 @model QuestionEntryEditViewModel
+
 @{
     ViewData["Title"] = $"編輯題庫：{Model.ArtifactName}";
     ViewData["AdminDescription"] = "只修改 Game 題庫設定，不變更圖鑑文物主檔。";
@@ -6,12 +7,112 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-editor-preview.css" asp-append-version="true" />
 }
 
-<form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="card">
-    <input asp-for="Id" type="hidden" /><input asp-for="ArtifactId" type="hidden" />
-    <div class="card-header"><div><h2 class="card-title mb-1">@Model.ArtifactName</h2><div class="card-subtitle"><code>@Model.ArtifactRef</code></div></div></div>
-    <div class="card-body"><div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div><div class="row g-3"><div class="col-md-6"><label asp-for="Difficulty" class="form-label"></label><input asp-for="Difficulty" class="form-control" min="1" max="5" /><span asp-validation-for="Difficulty" class="text-danger"></span></div><div class="col-md-6"><label asp-for="QuestionTemplateCode" class="form-label"></label><select asp-for="QuestionTemplateCode" asp-items="GameCodeLists.ToSelectList(GameCodeLists.QuestionTemplates, Model.QuestionTemplateCode)" class="form-select"></select><span asp-validation-for="QuestionTemplateCode" class="text-danger"></span></div><div class="col-12"><label class="form-check"><input asp-for="IsEnabled" class="form-check-input" /><span class="form-check-label">啟用這件文物的題庫設定</span></label></div></div></div>
-    <div class="card-footer d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">取消</a><button class="btn btn-primary" type="submit">儲存變更</button></div>
-</form>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section PageActions {
+    <a class="btn btn-outline-secondary"
+       asp-action="Details"
+       asp-route-id="@Model.Id">
+        <i class="ti ti-arrow-left me-1"></i>返回題庫詳細資料
+    </a>
+}
+
+<div class="row row-cards qmah-editor-grid">
+    <div class="col-12 col-xl-7">
+        <form asp-action="Edit"
+              asp-route-id="@Model.Id"
+              method="post"
+              class="card qmah-form-card">
+            <input asp-for="Id" type="hidden" />
+            <input asp-for="ArtifactId" type="hidden" />
+
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">@Model.ArtifactName</h2>
+                    <div class="card-subtitle"><code>@Model.ArtifactRef</code></div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Difficulty" class="form-label"></label>
+                        <input asp-for="Difficulty" class="form-control" min="1" max="5" />
+                        <span asp-validation-for="Difficulty" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="QuestionTemplateCode" class="form-label"></label>
+                        <select asp-for="QuestionTemplateCode"
+                                asp-items="GameCodeLists.ToSelectList(GameCodeLists.QuestionTemplates, Model.QuestionTemplateCode)"
+                                class="form-select"></select>
+                        <span asp-validation-for="QuestionTemplateCode" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-check form-switch">
+                            <input asp-for="IsEnabled" class="form-check-input" />
+                            <span class="form-check-label">啟用這件文物的題庫設定</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary"
+                   asp-action="Details"
+                   asp-route-id="@Model.Id">
+                    取消
+                </a>
+                <button class="btn btn-primary" type="submit">
+                    <i class="ti ti-device-floppy me-1"></i>儲存變更
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <div class="card qmah-editor-preview">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title mb-1">題庫文物</h2>
+                    <div class="card-subtitle">圖片沿用圖鑑文物主檔。</div>
+                </div>
+            </div>
+
+            <div class="qmah-editor-preview__stage">
+                @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
+                {
+                    <img src="@Model.ImagePath"
+                         alt="@Model.ArtifactName"
+                         class="qmah-editor-preview__image"
+                         onerror="this.hidden=true; this.nextElementSibling.hidden=false;" />
+
+                    <div class="qmah-editor-preview__empty" hidden>
+                        <i class="ti ti-photo-off"></i>
+                        <span>圖片無法載入</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="qmah-editor-preview__empty">
+                        <i class="ti ti-photo-off"></i>
+                        <span>這件文物尚未設定圖片</span>
+                    </div>
+                }
+            </div>
+
+            <div class="qmah-editor-preview__meta">
+                <span class="qmah-editor-preview__headline">@Model.ArtifactName</span>
+                <span class="qmah-editor-preview__path">@Model.ArtifactRef</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
