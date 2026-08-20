@@ -89,14 +89,13 @@
                     <div class="col-12">
                         <h3 class="qmah-form-section-title border-bottom pb-2 mb-0">圖片與狀態</h3>
                     </div>
-                    <div class="col-12">
-                        <label asp-for="PrimaryImagePath" class="form-label">主要圖片網址</label>
-                        <input asp-for="PrimaryImagePath" class="form-control" type="url" />
-                        <span asp-validation-for="PrimaryImagePath" class="text-danger"></span>
-                    </div>
+                    <label asp-for="PrimaryImagePath" class="form-label">主要圖片路徑</label>
+                    <input asp-for="PrimaryImagePath" class="form-control" type="text"
+                    placeholder="/media/catalog/enamel/故琺000873N000000000/display.jpg" />
+                    <span asp-validation-for="PrimaryImagePath" class="text-danger"></span>
                     <div class="col-12">
                         <label asp-for="ThumbnailPath" class="form-label">縮圖網址</label>
-                        <input asp-for="ThumbnailPath" class="form-control" type="url" />
+                        <input asp-for="ThumbnailPath" class="form-control" type="text" />
                         <span asp-validation-for="ThumbnailPath" class="text-danger"></span>
                     </div>
                     <div class="col-12">
