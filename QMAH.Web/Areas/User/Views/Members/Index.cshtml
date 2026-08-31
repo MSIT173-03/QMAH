@@ -50,7 +50,7 @@
             {
                 <tr>
                     <td><div class="fw-semibold">@(string.IsNullOrWhiteSpace(item.Nickname) ? "未設定暱稱" : item.Nickname)</div><div class="text-secondary small">@item.User.Email</div></td>
-                    <td><span class="badge bg-blue-lt">@(item.Role == "Admin" ? "管理員" : "一般會員")</span></td>
+                    <td><span class="badge bg-blue-lt">@AdminDisplayLabels.Role(item.Role)</span></td>
                     <td><span class="badge @(item.User.EmailConfirmed ? "bg-green-lt" : "bg-yellow-lt")">@(item.User.EmailConfirmed ? "已驗證" : "未驗證")</span></td>
                     <td class="text-nowrap">@item.PointBalance</td>
                     <td><span class="badge @(item.User.Status == "ACTIVE" ? "bg-green-lt" : item.User.Status == "BANNED" ? "bg-red-lt" : "bg-secondary-lt")">@AdminDisplayLabels.Status(item.User.Status)</span></td>

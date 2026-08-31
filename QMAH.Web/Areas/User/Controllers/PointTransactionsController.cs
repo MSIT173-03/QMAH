@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 
 using QMAH.Web.Areas.User.ViewModels;
-using QMAH.Web.Data;
+using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Areas.User.Controllers;
 

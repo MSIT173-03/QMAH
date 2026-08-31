@@ -7,6 +7,8 @@
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Location { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
         public DateTime StartAt { get; set; }
         public DateTime EndAt { get; set; }
         public string Status { get; set; } = "PENDING"; // PENDING, APPROVED, REJECTED

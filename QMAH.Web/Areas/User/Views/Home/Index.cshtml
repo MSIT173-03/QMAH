@@ -125,7 +125,7 @@
                         <tr>
                             <td class="text-secondary text-nowrap">@item.CreatedAt.ToLocalTime().ToString("MM/dd HH:mm")</td>
                             <td class="@(item.Amount >= 0 ? "text-success" : "text-danger")">@(item.Amount >= 0 ? "+" : "")@item.Amount</td>
-                            <td>@item.Reason</td>
+                            <td>@AdminDisplayLabels.PointReason(item.Reason)</td>
                         </tr>
                     }
                     </tbody>

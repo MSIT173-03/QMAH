@@ -1,4 +1,7 @@
-/* 共用收尾樣式 */
+/*
+ * 後台共用收尾層：在既有 Tabler 與共用骨架之後，統一頁首、側欄、卡片、表格與 RWD 細節。
+ * 這裡適合修正全站最後的樣式優先順序，不適合放單一功能頁面的資料或路由樣式。
+ */
 .qmah-admin {
   --qmah-area-accent: #3d6c6f;
   --qmah-area-accent-hover: #315b5e;
@@ -145,29 +148,53 @@ html[data-bs-theme="dark"] .qmah-admin .table-hover > tbody > tr:hover > * {
   --tblr-table-bg-state: #233034;
 }
 
-/* 主題切換的白光只動畫 transform，不重繪內容。 */
-.qmah-theme-wash {
-  position: fixed;
-  z-index: 2000;
-  inset: auto;
-  top: 0;
-  right: auto;
-  bottom: auto;
-  left: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  opacity: 0;
-  pointer-events: none;
-  background: rgba(255, 255, 255, .72);
-  box-shadow: 0 0 24px 10px rgba(255, 255, 255, .22);
-  transform: translate3d(0, 0, 0) scale(.02);
-  transform-origin: center;
-  will-change: transform;
-  contain: layout paint style;
+/* 頁首與文字大小。 */
+.qmah-admin .page-header {
+  position: relative;
+  isolation: isolate;
 }
 
-/* 頁首與文字大小。 */
+/* 頁首沿用區域色做成展廳光帶，建立「進入一個管理展區」的第一個視覺訊號。 */
+.qmah-admin .page-header::before {
+  position: absolute;
+  top: 0;
+  left: clamp(1rem, 4vw, 3.5rem);
+  width: min(34rem, 42vw);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--qmah-area-accent) 86%, var(--qmah-bronze)),
+    transparent
+  );
+  content: "";
+  opacity: .9;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: qmah-gallery-rule-in 760ms 80ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.qmah-admin .page-header::after {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  width: min(32rem, 42vw);
+  height: 100%;
+  background:
+    radial-gradient(24rem 8rem at 82% 15%, color-mix(in srgb, var(--qmah-area-soft) 78%, transparent), transparent 72%),
+    linear-gradient(135deg, transparent 42%, color-mix(in srgb, var(--qmah-area-soft) 28%, transparent) 42% 57%, transparent 57%);
+  content: "";
+  opacity: .82;
+  pointer-events: none;
+}
+
+.qmah-admin .page-header > .container-xl {
+  position: relative;
+  z-index: 1;
+}
+
 .qmah-admin .page-title {
   display: flex;
   gap: .72rem;
@@ -191,6 +218,7 @@ html[data-bs-theme="dark"] .qmah-admin .table-hover > tbody > tr:hover > * {
   background: var(--qmah-area-soft);
   color: var(--qmah-area-accent);
   font-size: 1.15rem;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--qmah-area-accent) 7%, transparent);
 }
 
 .qmah-admin .qmah-page-description {
@@ -229,7 +257,7 @@ html[data-bs-theme="dark"] .qmah-admin .table-hover > tbody > tr:hover > * {
   font-size: .89rem;
 }
 
-/* Topbar 與帳號選單。 */
+/* 頁面頂端工具列與帳號操作區。 */
 .qmah-admin .qmah-theme-toggle,
 .qmah-admin .qmah-sidebar-toggle {
   width: 2.35rem;
@@ -663,13 +691,13 @@ html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboa
   color: #fff !important;
 }
 
-/* 讓一般 card 不因 hover 像展示網站一樣跳動。 */
-.qmah-admin .page-body .card {
-  transform: none !important;
+/* 讓資料卡片維持穩定；可點擊的營運卡片保留自己的 hover 回饋。 */
+.qmah-admin .page-body .card:not(.qmah-metric-card):not(.qmah-operations-kpi--link):not(.qmah-operations-summary-card--link) {
+  transform: none;
 }
 
-.qmah-admin .page-body .card:hover {
-  transform: none !important;
+.qmah-admin .page-body .card:not(.qmah-metric-card):not(.qmah-operations-kpi--link):not(.qmah-operations-summary-card--link):hover {
+  transform: none;
 }
 
 /* 大螢幕保留可讀行長，800×600 則優先保留內容空間。 */
@@ -839,15 +867,31 @@ html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboa
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .qmah-theme-wash,
   .qmah-area-action,
   .qmah-account__chevron {
     transition: none !important;
   }
+
+  .qmah-admin .page-header::before {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes qmah-gallery-rule-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  to {
+    opacity: .9;
+    transform: scaleX(1);
+  }
 }
 
 
-/* Area active state 只用識別色提示，不改變共用側欄結構。 */
+/* Area 目前狀態只用識別色提示，不改變共用側欄結構。 */
 .qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .navbar-vertical .navbar-nav .nav-link.active,
 .qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) .navbar-vertical .navbar-nav .nav-link[aria-current="page"] {
   background: color-mix(in srgb, var(--qmah-area-soft) 86%, var(--qmah-surface));
@@ -895,7 +939,6 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-area-action:focus-visible {
       width 240ms cubic-bezier(.22, 1, .36, 1),
       border-color 160ms ease,
       background-color 160ms ease;
-    will-change: width;
   }
 
   .qmah-admin .page-wrapper {
@@ -1095,20 +1138,6 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--light {
 html[data-bs-theme="dark"] .qmah-admin .qmah-brand-logo--dark,
 html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--dark {
   display: block !important;
-}
-
-/* 主題切換只讓一道光圈通過畫面，內容全程保持可見。 */
-.qmah-theme-wash {
-  width: 48px;
-  height: 48px;
-  border: .35px solid rgba(255, 255, 255, .92);
-  border-radius: 50%;
-  background: transparent !important;
-  box-shadow:
-    0 0 10px 2px rgba(255, 255, 255, .36),
-    0 0 24px 8px rgba(255, 255, 255, .12);
-  opacity: 0;
-  mix-blend-mode: screen;
 }
 
 /* 手機／平板只保留一條 topbar；sidebar 本體只作為 drawer。 */
@@ -1654,7 +1683,7 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--dark {
 
   /*
    * qmah-admin-actions.css 在桌面為 action cell 指定 7 / 12.5 / 18 / 23.5rem。
-   * 手機卡片一定要把那組 authoritative 固定寬度完整清掉，
+   * 手機卡片一定要把那組固定欄寬規則完整清掉，
    * 否則整個操作區只剩左側約 12.5rem 可用，按鈕就會被硬擠在左邊。
    */
   .qmah-admin .page-body .table.qmah-mobile-list td.qmah-action-cell.qmah-actions--1:last-child,
@@ -1804,7 +1833,7 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-mobile-brand-logo--dark {
   }
 }
 
-/* 題庫桌面欄寬：優先讓館藏編號完整顯示。 */
+/* 題庫桌面欄寬：優先讓故宮編號完整顯示。 */
 @media (min-width: 768px) {
   .game-admin-table .qmah-col-ref {
     width: 13.5rem;

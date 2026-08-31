@@ -1,3 +1,7 @@
+/*
+ * 公開頁面共用樣式：處理公開頁的基礎字體、導覽列、首頁內容、系統入口卡片與 Footer。
+ * 後台頁面使用 Admin Layout 的分層 CSS；不要在這裡覆蓋 qmah-admin 內頁規則。
+ */
 html {
   font-size: 14px;
 }
@@ -21,7 +25,7 @@ body {
   margin: 0;
   color: #23343a;
   background: #f5f7f8;
-  font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  font-family: var(--qmah-font-ui, "QMAH Plus Jakarta", "QMAH Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif);
 }
 
 .qmah-public-header {

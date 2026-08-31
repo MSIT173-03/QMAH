@@ -1,0 +1,496 @@
+/*
+ * 營運中心的頁面專屬層：先看同一區間的概觀，再進入單一指標的圖表與完整明細。
+ * 共用控制項、焦點框與動態請改 qmah-admin-system.css；這裡只處理營運卡片與圖表版面。
+ */
+.qmah-admin .qmah-operations-kpi,
+.qmah-admin .qmah-operations-summary-card {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 可點擊的統計卡片沿用一般卡片尺寸，只在互動時抬升，讓使用者知道可以進入明細。 */
+.qmah-admin .qmah-operations-kpi--link,
+.qmah-admin .qmah-operations-summary-card--link {
+  position: relative;
+  isolation: isolate;
+}
+
+/* 統計卡片用細線模擬展簽邊緣；它只標示可進入明細，不搶走數值的閱讀優先級。 */
+.qmah-admin .qmah-operations-kpi--link::before,
+.qmah-admin .qmah-operations-summary-card--link::before {
+  position: absolute;
+  top: 0;
+  right: 1rem;
+  left: 1rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--qmah-area-accent), transparent);
+  content: "";
+  opacity: .48;
+  transform: scaleX(.35);
+  transform-origin: center;
+  transition: opacity var(--qmah-motion-standard), transform var(--qmah-motion-standard);
+}
+
+.qmah-admin .qmah-operations-kpi--link:hover,
+.qmah-admin .qmah-operations-kpi--link:focus-visible,
+.qmah-admin .qmah-operations-summary-card--link:hover,
+.qmah-admin .qmah-operations-summary-card--link:focus-visible {
+  border-color: color-mix(in srgb, var(--qmah-area-accent) 54%, var(--qmah-line));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--qmah-area-accent) 13%, transparent);
+  transform: translateY(-2px);
+}
+
+.qmah-admin .qmah-operations-kpi--link:hover::before,
+.qmah-admin .qmah-operations-kpi--link:focus-visible::before,
+.qmah-admin .qmah-operations-summary-card--link:hover::before,
+.qmah-admin .qmah-operations-summary-card--link:focus-visible::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* 可展開的逐日資料使用同一個摘要標題樣式，避免頁面在 Razor 內寫固定 cursor。 */
+.qmah-admin .qmah-collapsible-summary {
+  cursor: pointer;
+}
+
+/* 稽核頁的補充說明與篩選器放在同一張卡片，讓管理者知道紀錄範圍與隱私界線。 */
+.qmah-admin .qmah-audit-note {
+  display: flex;
+  align-items: flex-start;
+  gap: .55rem;
+  padding: .75rem .85rem;
+  border: 1px solid color-mix(in srgb, var(--qmah-area-accent) 22%, var(--qmah-line));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--qmah-area-soft) 54%, var(--qmah-surface));
+  color: var(--qmah-ink-soft);
+  font-size: .8rem;
+  line-height: 1.55;
+}
+
+.qmah-admin .qmah-audit-note i {
+  flex: 0 0 auto;
+  margin-top: .1rem;
+  color: var(--qmah-area-accent);
+  font-size: 1rem;
+}
+
+/* 圖庫列表的預覽與檔名欄固定最小寬度，讓長檔名只在自己的欄位截斷。 */
+.qmah-admin .qmah-media-preview-cell {
+  width: 4.75rem;
+  min-width: 4.75rem;
+}
+
+.qmah-admin .qmah-media-filename {
+  max-width: 13.75rem;
+}
+
+/* 圖表以兩欄呈現，卡片內容太窄時由後面的 RWD 規則改成單欄。 */
+.qmah-admin .qmah-operations-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+/* 整張圖表卡片都是明細入口，保留完整鍵盤焦點範圍，不只讓右下角文字可點。 */
+.qmah-admin .qmah-operations-chart-link {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
+  animation: qmah-chart-arrival 520ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.qmah-admin .qmah-operations-chart-link:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.qmah-admin .qmah-operations-chart-link:hover .qmah-chart-panel,
+.qmah-admin .qmah-operations-chart-link:focus-visible .qmah-chart-panel {
+  border-color: color-mix(in srgb, var(--qmah-area-accent) 54%, var(--qmah-line));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--qmah-area-accent) 13%, transparent);
+}
+
+.qmah-admin .qmah-operations-chart-link:focus-visible {
+  outline: 3px solid var(--qmah-focus);
+  outline-offset: 3px;
+}
+
+/* 「查看明細」只負責文字位置與箭頭動態，路由由 Razor 連結決定。 */
+.qmah-admin .qmah-operations-chart-link__action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .35rem;
+  margin: -.55rem 1rem .9rem;
+  color: var(--qmah-area-accent);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.qmah-admin .qmah-operations-chart-link__action i {
+  transition: transform var(--qmah-motion-fast);
+}
+
+.qmah-admin .qmah-operations-chart-link:hover .qmah-operations-chart-link__action i,
+.qmah-admin .qmah-operations-chart-link:focus-visible .qmah-operations-chart-link__action i {
+  transform: translate(.15rem, -.15rem);
+}
+
+/* 圖表外框與標題區共用同一個容器，避免圖表和其他後台卡片看起來像不同產品。 */
+.qmah-admin .qmah-chart-panel {
+  min-width: 0;
+  height: 100%;
+  border: 1px solid var(--qmah-line);
+  border-radius: 12px;
+  background: var(--qmah-surface);
+  transition: border-color var(--qmah-motion-standard), box-shadow var(--qmah-motion-standard);
+}
+
+/* 標題、說明與資料區間提示保持固定階層，長標題可以換行而不撐破卡片。 */
+.qmah-admin .qmah-chart-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.05rem .35rem;
+}
+
+.qmah-admin .qmah-chart-panel__title {
+  margin: 0;
+  color: var(--qmah-ink);
+  font-size: 1rem;
+  font-weight: 720;
+  letter-spacing: -.015em;
+}
+
+.qmah-admin .qmah-chart-panel__description {
+  max-width: 62ch;
+  margin: .28rem 0 0;
+  color: var(--qmah-ink-soft);
+  font-size: .8rem;
+  line-height: 1.5;
+}
+
+.qmah-admin .qmah-chart-panel__hint {
+  flex: 0 0 auto;
+  padding: .25rem .5rem;
+  border-radius: 999px;
+  background: var(--qmah-area-soft);
+  color: var(--qmah-area-accent);
+  font-size: .72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 橫向捲動只套在圖表資料區，窄螢幕仍能看完整日期與數值，不壓縮成不可讀的圖。 */
+.qmah-admin .qmah-chart-scroll {
+  overflow-x: auto;
+  padding: .1rem 1rem 0;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+/* SVG 由 Razor 產生資料點；CSS 只負責線條、座標文字與圖例，不處理統計計算。 */
+.qmah-admin .qmah-chart {
+  display: block;
+  width: 100%;
+  min-width: 34rem;
+  height: auto;
+  color: var(--qmah-ink-faint);
+}
+
+.qmah-admin .qmah-chart__grid line {
+  stroke: var(--qmah-line-soft);
+  stroke-width: 1;
+}
+
+.qmah-admin .qmah-chart__grid text,
+.qmah-admin .qmah-chart__axis text {
+  fill: currentColor;
+  font-family: var(--qmah-font-ui);
+  font-size: 10px;
+}
+
+.qmah-admin .qmah-chart__axis line {
+  stroke: var(--qmah-line);
+  stroke-width: 1;
+}
+
+/* 不同序列使用固定線型與色彩，讓黑白列印或色弱情境仍能靠線型區分。 */
+.qmah-admin .qmah-chart__line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: opacity var(--qmah-motion-fast), stroke-width var(--qmah-motion-fast);
+}
+
+.qmah-admin .qmah-chart__line--1 {
+  stroke: var(--qmah-chart-1);
+}
+
+.qmah-admin .qmah-chart__line--2 {
+  stroke: var(--qmah-chart-2);
+  stroke-dasharray: 8 5;
+}
+
+.qmah-admin .qmah-chart__line--3 {
+  stroke: var(--qmah-chart-3);
+  stroke-dasharray: 3 4;
+}
+
+.qmah-admin .qmah-chart__line--4 {
+  stroke: var(--qmah-chart-4);
+  stroke-dasharray: 12 4 2 4;
+}
+
+.qmah-admin .qmah-chart-panel:hover .qmah-chart__line,
+.qmah-admin .qmah-chart-panel:focus-within .qmah-chart__line {
+  opacity: .7;
+}
+
+.qmah-admin .qmah-chart-panel:hover .qmah-chart__line:hover,
+.qmah-admin .qmah-chart-panel:focus-within .qmah-chart__line:focus {
+  opacity: 1;
+  stroke-width: 4;
+}
+
+/* 資料點與圖例使用相同序列色，方便從圖上回查到下方完整資料表。 */
+.qmah-admin .qmah-chart__point {
+  fill: var(--qmah-surface);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.qmah-admin .qmah-chart__point--1 {
+  stroke: var(--qmah-chart-1);
+}
+
+.qmah-admin .qmah-chart__point--2 {
+  stroke: var(--qmah-chart-2);
+}
+
+.qmah-admin .qmah-chart__point--3 {
+  stroke: var(--qmah-chart-3);
+}
+
+.qmah-admin .qmah-chart__point--4 {
+  stroke: var(--qmah-chart-4);
+}
+
+/* 圖例允許換行，避免多條序列在窄畫面互相重疊。 */
+.qmah-admin .qmah-chart-panel__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem 1rem;
+  padding: .15rem 1.05rem 1rem;
+  color: var(--qmah-ink-soft);
+  font-size: .76rem;
+}
+
+.qmah-admin .qmah-chart-panel__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.qmah-admin .qmah-chart__legend-swatch {
+  display: inline-block;
+  width: .7rem;
+  height: .18rem;
+  border-radius: 999px;
+  background: var(--qmah-chart-1);
+}
+
+.qmah-admin .qmah-chart__legend-swatch--2 {
+  background: var(--qmah-chart-2);
+}
+
+.qmah-admin .qmah-chart__legend-swatch--3 {
+  background: var(--qmah-chart-3);
+}
+
+.qmah-admin .qmah-chart__legend-swatch--4 {
+  background: var(--qmah-chart-4);
+}
+
+/* 沒有資料時保留明確結果狀態，不用空白圖表讓人誤以為載入失敗。 */
+.qmah-admin .qmah-chart-empty {
+  display: flex;
+  min-height: 11rem;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  padding: 1.5rem;
+  color: var(--qmah-ink-soft);
+  text-align: center;
+}
+
+.qmah-admin .qmah-chart-empty i {
+  color: var(--qmah-area-accent);
+  font-size: 1.35rem;
+}
+
+/* 明細頁沿用圖表卡片，但把外層邊框交給明細區，形成連續的閱讀區塊。 */
+.qmah-admin .qmah-operations-detail-chart {
+  padding: .35rem;
+}
+
+.qmah-admin .qmah-operations-detail-chart .qmah-chart-panel {
+  border: 0;
+  box-shadow: none;
+}
+
+/* 明細標題、期間與說明在桌面版並排；窄畫面再改成直向，避免操作按鈕被推到看不到。 */
+.qmah-admin .qmah-detail-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--qmah-line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--qmah-area-soft) 45%, var(--qmah-surface));
+}
+
+.qmah-admin .qmah-detail-intro__title {
+  margin: 0;
+  color: var(--qmah-ink);
+  font-size: 1.35rem;
+  font-weight: 730;
+  letter-spacing: -.025em;
+}
+
+.qmah-admin .qmah-detail-intro__description {
+  max-width: 68ch;
+  margin: .4rem 0 0;
+  color: var(--qmah-ink-soft);
+  line-height: 1.55;
+}
+
+.qmah-admin .qmah-detail-intro__range {
+  display: grid;
+  gap: .15rem;
+  flex: 0 0 auto;
+  min-width: 12rem;
+  color: var(--qmah-ink-soft);
+  font-size: .76rem;
+}
+
+.qmah-admin .qmah-detail-intro__range strong {
+  color: var(--qmah-ink);
+  font-size: .9rem;
+}
+
+.qmah-admin .qmah-detail-intro__range small {
+  color: var(--qmah-ink-faint);
+}
+
+/* 明細摘要只呈現目前篩選區間的結果，數值計算與格式由 ViewModel 負責。 */
+.qmah-admin .qmah-operations-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: .75rem;
+}
+
+.qmah-admin .qmah-operations-summary__item {
+  display: grid;
+  gap: .2rem;
+  min-width: 0;
+  padding: .85rem 1rem;
+  border: 1px solid var(--qmah-line);
+  border-radius: 10px;
+  background: var(--qmah-surface);
+}
+
+.qmah-admin .qmah-operations-summary__item span {
+  color: var(--qmah-ink-soft);
+  font-size: .78rem;
+}
+
+.qmah-admin .qmah-operations-summary__item strong {
+  color: var(--qmah-area-accent);
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -.02em;
+}
+
+.qmah-admin .qmah-operations-summary__item small {
+  color: var(--qmah-ink-faint);
+  font-size: .72rem;
+}
+
+/* 中等寬度以下圖表改單欄，明細標題改直向；資料仍保持可捲動與可操作。 */
+@media (max-width: 991.98px) {
+  .qmah-admin .qmah-operations-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qmah-admin .qmah-detail-intro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .8rem;
+  }
+
+  .qmah-admin .qmah-detail-intro__range {
+    min-width: 0;
+  }
+}
+
+/* 手機版縮小標題區間距，圖表保留最低寬度以免日期標籤互相蓋住。 */
+@media (max-width: 575.98px) {
+  .qmah-admin .qmah-chart-panel__header {
+    flex-direction: column;
+    gap: .45rem;
+  }
+
+  .qmah-admin .qmah-chart-panel__hint {
+    align-self: flex-start;
+  }
+
+  .qmah-admin .qmah-chart {
+    min-width: 30rem;
+  }
+
+}
+
+/* 減少動態時保留可讀的 hover/focus 狀態，只移除卡片位移與圖表線條淡出。 */
+@media (prefers-reduced-motion: reduce) {
+  .qmah-admin .qmah-operations-kpi--link:hover,
+  .qmah-admin .qmah-operations-kpi--link:focus-visible,
+  .qmah-admin .qmah-operations-summary-card--link:hover,
+  .qmah-admin .qmah-operations-summary-card--link:focus-visible {
+    transform: none;
+  }
+
+  .qmah-admin .qmah-chart-panel:hover .qmah-chart__line,
+  .qmah-admin .qmah-chart-panel:focus-within .qmah-chart__line {
+    opacity: 1;
+  }
+
+  .qmah-admin .qmah-operations-chart-link {
+    animation: none;
+  }
+
+  .qmah-admin .qmah-operations-kpi--link::before,
+  .qmah-admin .qmah-operations-summary-card--link::before {
+    transition: none;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes qmah-chart-arrival {
+  from {
+    opacity: 0;
+    transform: translateY(.55rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

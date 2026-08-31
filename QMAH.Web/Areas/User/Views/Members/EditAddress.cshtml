@@ -1,70 +1,63 @@
-﻿@model QMAH.Web.Areas.User.ViewModels.UserAddressEditViewModel
+@model QMAH.Web.Areas.User.ViewModels.UserAddressEditViewModel
 
 @{
     ViewData["Title"] = "編輯地址";
+    ViewData["AdminDescription"] = "更新會員的收件資訊與預設地址設定。";
 }
 
-<h1>編輯地址</h1>
-
-<form asp-action="EditAddress" method="post">
-    @Html.AntiForgeryToken()
-
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="UserId" />
-    <input type="hidden" asp-for="RowVersion" />
-
-    <div asp-validation-summary="ModelOnly"
-         class="text-danger mb-3"></div>
-
-    <div class="mb-3">
-        <label asp-for="AddressLabel" class="form-label">地址標籤</label>
-        <input asp-for="AddressLabel" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="RecipientName" class="form-label">收件人</label>
-        <input asp-for="RecipientName" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="RecipientPhone" class="form-label">電話</label>
-        <input asp-for="RecipientPhone" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="PostalCode" class="form-label">郵遞區號</label>
-        <input asp-for="PostalCode" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="City" class="form-label">縣市</label>
-        <input asp-for="City" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="District" class="form-label">區域</label>
-        <input asp-for="District" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="AddressLine" class="form-label">詳細地址</label>
-        <input asp-for="AddressLine" class="form-control" />
-    </div>
-
-    <div class="form-check mb-3">
-        <input asp-for="IsDefault" class="form-check-input" />
-        <label asp-for="IsDefault" class="form-check-label">
-            設為預設地址
-        </label>
-    </div>
-
-    <button type="submit" class="btn btn-primary">
-        儲存
-    </button>
-
-    <a asp-action="Details"
-       asp-route-id="@Model.UserId"
-       class="btn btn-secondary">
-        返回會員資料
+@section PageActions {
+    <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回會員資料
     </a>
-</form>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+        <div class="card qmah-form-card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">編輯收件地址</h2>
+                    <div class="text-secondary small">調整地址內容後，既有訂單不會受到影響。</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form asp-action="EditAddress" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="UserId" />
+                    <input type="hidden" asp-for="RowVersion" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">收件人資訊</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6"><label asp-for="AddressLabel" class="form-label">地址標籤</label><input asp-for="AddressLabel" class="form-control" /><span asp-validation-for="AddressLabel" class="text-danger"></span></div>
+                            <div class="col-12 col-md-6"><label asp-for="RecipientName" class="form-label">收件人</label><input asp-for="RecipientName" class="form-control" /><span asp-validation-for="RecipientName" class="text-danger"></span></div>
+                            <div class="col-12 col-md-6"><label asp-for="RecipientPhone" class="form-label">電話</label><input asp-for="RecipientPhone" class="form-control" inputmode="tel" /><span asp-validation-for="RecipientPhone" class="text-danger"></span></div>
+                            <div class="col-12 col-md-6"><label asp-for="PostalCode" class="form-label">郵遞區號</label><input asp-for="PostalCode" class="form-control" inputmode="numeric" /></div>
+                        </div>
+                    </section>
+
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">地址內容</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6"><label asp-for="City" class="form-label">縣市</label><input asp-for="City" class="form-control" /></div>
+                            <div class="col-12 col-md-6"><label asp-for="District" class="form-label">區域</label><input asp-for="District" class="form-control" /></div>
+                            <div class="col-12"><label asp-for="AddressLine" class="form-label">詳細地址</label><input asp-for="AddressLine" class="form-control" /><span asp-validation-for="AddressLine" class="text-danger"></span></div>
+                        </div>
+                    </section>
+
+                    <div class="form-check mb-0"><input asp-for="IsDefault" class="form-check-input" /><label asp-for="IsDefault" class="form-check-label">設為預設地址</label></div>
+                    <div class="qmah-form-actions">
+                        <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>儲存地址</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

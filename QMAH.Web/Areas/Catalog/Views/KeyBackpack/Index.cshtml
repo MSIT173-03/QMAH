@@ -86,12 +86,12 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-vcenter table-hover card-table qmah-crud-table">
+            <table class="table table-vcenter table-hover card-table qmah-crud-table qmah-backpack-table">
                 <colgroup>
-                    <col style="width: 44%;" />
-                    <col style="width: 18%;" />
-                    <col style="width: 23%;" />
-                    <col style="width: 15%;" />
+                    <col class="qmah-col-owner" />
+                    <col class="qmah-col-type" />
+                    <col class="qmah-col-count" />
+                    <col class="qmah-col-actions" />
                 </colgroup>
                 <thead>
                     <tr>
@@ -131,9 +131,6 @@
                                         @(string.IsNullOrWhiteSpace(owner.Nickname)
                                             ? "未命名會員"
                                             : owner.Nickname)
-                                    </div>
-                                    <div class="text-secondary small text-break">
-                                        @owner.UserId
                                     </div>
                                 </td>
                                 <td>@owner.KeyTypeCount</td>

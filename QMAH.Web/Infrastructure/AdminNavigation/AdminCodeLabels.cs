@@ -9,7 +9,7 @@ public static class AdminCodeLabels
         "ERA" => "年代鑰匙",
         "UNIVERSAL" => "萬用鑰匙",
         null or "" => "未設定",
-        _ => value
+        _ => "其他範圍"
     };
 
     public static string AchievementCondition(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -20,7 +20,7 @@ public static class AdminCodeLabels
         "GAME_PLAY_COUNT" => "遊戲參與數",
         "ARTIFACT_UNLOCK_COUNT" => "圖鑑解鎖數",
         null or "" => "未設定",
-        _ => value
+        _ => "其他條件"
     };
 
     public static string CouponStatus(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -29,7 +29,7 @@ public static class AdminCodeLabels
         "USED" => "已使用",
         "EXPIRED" => "已過期",
         null or "" => "未設定",
-        _ => value
+        _ => "其他狀態"
     };
 
     public static string KeyTransactionReason(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -40,7 +40,7 @@ public static class AdminCodeLabels
         "GAME_REWARD" => "遊戲獎勵",
         "UNLOCK" => "解鎖消耗",
         null or "" => "未註明",
-        _ => value
+        _ => "其他原因"
     };
 
     public static string ReferenceType(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -51,13 +51,13 @@ public static class AdminCodeLabels
         "ORDER" => "訂單",
         "SHOWCASE" => "展示資料",
         null or "" => "—",
-        _ => value
+        _ => "其他來源"
     };
 
     public static string PointReason(string? value) => value?.Trim().ToUpperInvariant() switch
     {
         "FIXTURE_GRANT" => "測試資料發放",
         null or "" => "未註明",
-        _ => value
+        _ => "其他原因"
     };
 }

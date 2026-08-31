@@ -1,0 +1,17 @@
+{
+  "/api": {
+    "target": "https://localhost:7249",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/openapi": {
+    "target": "https://localhost:7249",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/scalar": {
+    "target": "https://localhost:7249",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

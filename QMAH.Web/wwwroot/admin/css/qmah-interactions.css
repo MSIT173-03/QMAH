@@ -1,4 +1,7 @@
-/* 共用互動 */
+/*
+ * 後台共用互動層：統一 hover、focus、按下、主題切換、側欄與登入頁的回饋手感。
+ * 這裡只處理視覺狀態與過渡；資料送出、導覽與表單鎖定由 qmah-interactions.js 負責。
+ */
 .navbar-vertical .navbar-brand,
 .navbar-vertical .navbar-nav .nav-link,
 .navbar-vertical .navbar-nav .nav-link-icon,
@@ -153,7 +156,7 @@
   transform: scale(.98);
 }
 
-/* 登入頁 */
+/* 登入頁的欄位與操作回饋。 */
 .qmah-auth-brand,
 .qmah-auth-panel {
   animation: qmah-auth-enter .42s ease-out both;

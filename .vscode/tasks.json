@@ -1,0 +1,83 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "QMAH API（https）",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/QMAH.Api/QMAH.Api.csproj",
+        "--launch-profile",
+        "https"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "qmah-api",
+        "pattern": {
+          "regexp": ".*"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "Now listening on: https://localhost:7249"
+        }
+      }
+    },
+    {
+      "label": "QMAH 安裝 VS Code 擴充套件",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/tools/Install-VSCodeExtensions.ps1"
+      ],
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "QMAH Angular 前台",
+      "type": "process",
+      "command": "npm.cmd",
+      "args": ["start"],
+      "options": {
+        "cwd": "${workspaceFolder}/QMAH.Client"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "qmah-angular",
+        "pattern": {
+          "regexp": ".*"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "(localhost:4200|Local:)"
+        }
+      }
+    },
+    {
+      "label": "QMAH 建置 API",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/QMAH.Api/QMAH.Api.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "QMAH 前台（API＋Angular）",
+      "dependsOn": ["QMAH API（https）", "QMAH Angular 前台"],
+      "dependsOrder": "parallel"
+    }
+  ]
+}

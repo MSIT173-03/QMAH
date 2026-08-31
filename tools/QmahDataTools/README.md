@@ -13,7 +13,7 @@
 | `ArtifactProductGenerator` | 由授權文物產生對應的縮小複製品商品、尺寸、文案與示意價格 |
 | `NpmDataImporter` | 8 類文物資料包預檢與安全匯入 |
 | `NpmDataWorkbench` | Windows GUI，執行估算、整理與匯入前檢查 |
-| `QmahDatabaseRelease` | 匯出完整 SQL、還原 backup、schema／data parity 與 EF 模型驗證 |
+| `QmahDatabaseRelease` | 匯出完整 SQL、還原 backup、schema／data parity、EF 模型驗證與本機展示資料產生 |
 | `Export-ReferenceDatabase.ps1` | 資料庫整合者使用的單一 Release pipeline 入口 |
 
 各工具的資料來源與操作細節，請查看同層的工具 README
@@ -23,15 +23,15 @@
 只有資料庫整合者需要執行這支 PowerShell：
 
 ```powershell
-.\tools\QmahDataTools\Export-ReferenceDatabase.ps1 -Version 0.3.0
+.\tools\QmahDataTools\Export-ReferenceDatabase.ps1 -Version 0.6.0
 ```
 
 它會從同一個 canonical/reference SQL Server database 產生並驗證：
 
 ```text
 database/QMAH.sql
-QMAH-0.3.0.sql
-QMAH-0.3.0.bak
+QMAH-0.6.0.sql
+QMAH-0.6.0.bak
 SHA256SUMS.txt
 ```
 
@@ -68,5 +68,7 @@ dotnet build QMAH.sln --configuration Release
 ```
 
 `QmahDatabaseRelease` 已加入 `QMAH.sln`，會跟網站一起由本機與 GitHub Actions 建置
+
+它的 `generate-showcase-data` 命令會讀取目前資料庫中的展示會員、文物與縮小複製品商品，產生與實際資料互相連結的社群貼文、留言、訂單、訂單明細、付款紀錄與商品評價。社群文章使用大量固定順序的獨立素材，並以穩定識別碼更新；不靠亂數拼接句子，也不循環重用預設展示範圍內的文章，因此重跑時不會把文章、文物或活動配錯。商品評價會連到真實商品與會員，並由 API 提供公開摘要及目前會員自己的維護操作。命令不會刪除其他資料；資料庫整合者完成這些資料後，必須用 `Export-ReferenceDatabase.ps1` 產生一份可直接還原的完整 `.bak`／`.sql`。一般組員不需要在還原後執行本命令；完整流程與實際快照數量請看 [`docs/15-local-showcase-and-credentials.md`](../../docs/15-local-showcase-and-credentials.md) 與 [`docs/02-development-data.md`](../../docs/02-development-data.md)。
 
 工具輸出、raw、快取、log、bin、obj、大型執行檔與資料庫檔案不進 Repository

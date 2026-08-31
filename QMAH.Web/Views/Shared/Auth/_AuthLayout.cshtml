@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#f3f6f4" data-qmah-theme-color />
     <title>@(ViewData["Title"] ?? "管理員登入")｜清明鑑定屋 QMAH</title>
     <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/admin/css/qmah-fonts.css" asp-append-version="true" />
     <script>
         (() => {
             const root = document.documentElement;
@@ -41,6 +42,7 @@
         @RenderBody()
     </main>
 
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/admin/vendor/tabler/tabler.min.js"></script>
     <script src="~/admin/js/qmah-interactions.js" asp-append-version="true"></script>
     <script>

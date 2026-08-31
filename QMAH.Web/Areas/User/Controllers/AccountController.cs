@@ -1,16 +1,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.User.ViewModels;
-using QMAH.Web.Data;
-using QMAH.Web.Models.Entities;
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
 [Area("User")]
+[EnableRateLimiting("auth")]
 public class AccountController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -79,7 +81,7 @@ public class AccountController : Controller
             user,
             model.Password,
             model.RememberMe,
-            lockoutOnFailure: false);
+            lockoutOnFailure: true);
 
         if (!result.Succeeded)
         {

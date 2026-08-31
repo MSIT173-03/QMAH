@@ -182,7 +182,7 @@ public partial class MainWindow : Window
             "--products", products,
             "--media-root", media,
             "--artifact-per-category", "32",
-            "--max-products", "48"
+            "--max-products", "256"
         };
         if (apply)
         {

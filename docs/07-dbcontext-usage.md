@@ -95,7 +95,7 @@ while (await reader.ReadAsync(cancellationToken))
 
 ### 外鍵與 Navigation Property
 
-`QmahDbContext` 已對應資料庫中的 57 個外鍵。常用關聯可以直接在 LINQ 中使用，例如訂單會員、貼文作者、貼文文物、遊戲回合文物與解鎖來源：
+`QmahDbContext` 已對應資料庫中的 63 個外鍵。常用關聯可以直接在 LINQ 中使用，例如訂單會員、貼文作者、貼文文物、遊戲回合文物與解鎖來源：
 
 ```csharp
 var posts = await _db.SocialPosts
@@ -176,7 +176,7 @@ Entity 只在 Controller／Service 與 EF Core 之間使用。View 一律使用�
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
-using QMAH.Web.Data;
+using QMAH.Infrastructure.Data;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
@@ -322,11 +322,11 @@ public async Task<IActionResult> Index(CancellationToken cancellationToken)
 下列 ViewModel 都是範例型別，不是框架自動提供的類別。使用前要在所屬 Area 建立對應檔案。以圖鑑清單為例，可建立：
 
 ```text
-QMAH.Web/Areas/Catalog/ViewModels/ArtifactListItemViewModel.cs
+QMAH.Web/Areas/Catalog/ViewModel/ArtifactListItemViewModel.cs
 ```
 
 ```csharp
-namespace QMAH.Web.Areas.Catalog.ViewModels;
+namespace QMAH.Web.Areas.Catalog.ViewModel;
 
 public sealed class ArtifactListItemViewModel
 {
@@ -345,7 +345,7 @@ public sealed class ArtifactListItemViewModel
 Controller 檔案要加入：
 
 ```csharp
-using QMAH.Web.Areas.Catalog.ViewModels;
+using QMAH.Web.Areas.Catalog.ViewModel;
 ```
 
 查詢時直接投影成 ViewModel，只取畫面需要的欄位：
@@ -411,12 +411,12 @@ public async Task<IActionResult> Details(Guid id, CancellationToken cancellation
 
 POST Action 只接收畫面允許修改的欄位。價格、庫存、會員 Id、狀態、建立時間與外鍵是否合法，都要由後端重新確認。
 
-先在 `QMAH.Web/Areas/Catalog/ViewModels/CreateCategoryViewModel.cs` 建立輸入模型：
+先在 `QMAH.Web/Areas/Catalog/ViewModel/CreateCategoryViewModel.cs` 建立輸入模型：
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace QMAH.Web.Areas.Catalog.ViewModels;
+namespace QMAH.Web.Areas.Catalog.ViewModel;
 
 public sealed class CreateCategoryViewModel
 {
@@ -430,7 +430,7 @@ public sealed class CreateCategoryViewModel
 }
 ```
 
-Controller 加入 `using QMAH.Web.Areas.Catalog.ViewModels;`，再建立 POST Action：
+Controller 加入 `using QMAH.Web.Areas.Catalog.ViewModel;`，再建立 POST Action：
 
 ```csharp
 [HttpPost]
@@ -545,7 +545,7 @@ public async Task<IActionResult> Edit(
 
 ## 同時修改同一筆資料
 
-目前有 `RowVersion` 的資料表共有 9 張：
+目前有 `RowVersion` 的資料表共有 10 張：
 
 - 會員資料：`user.UserProfiles`、`user.UserAddresses`、`user.Achievements`、`user.UserAchievements`
 - 遊戲資料：`game.GamePlayers`、`game.GameRooms`、`game.GameRounds`、`game.RoundAnswers`、`game.Votes`
@@ -562,7 +562,7 @@ public async Task<IActionResult> Edit(
 
 遇到衝突時不要直接覆蓋資料庫。顯示「資料已被其他人修改，請重新確認」並重新載入最新內容，讓使用者決定是否再次送出。
 
-以下是會員修改自己資料時的完整並行衝突處理寫法。ViewModel 的 `RowVersion` 必須是 8 bytes 的 `byte[]`，不可改成自行產生的 Guid 或時間：
+會員修改自己的資料時，可以用下列方式處理並行衝突。ViewModel 的 `RowVersion` 必須是 8 bytes 的 `byte[]`，不可改成自行產生的 Guid 或時間：
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -771,7 +771,7 @@ Database.EnsureCreated();
 
 ### `Invalid object name` 或找不到資料表
 
-通常代表連到錯誤資料庫，或尚未還原參考 `.bak`／執行完整 `database/QMAH.sql`。先確認連線字串中的 Server 與 Database，再到 SSMS 檢查 `catalog`、`game`、`social`、`store`、`user` schema。
+通常代表連到錯誤資料庫，或尚未還原參考 `.bak`／執行完整 `database/QMAH.sql`。先確認連線字串中的 Server 與 Database，再到 SSMS 檢查 `admin`、`catalog`、`game`、`social`、`store`、`user` schema。
 
 ### 查詢回傳重複資料
 
@@ -797,4 +797,4 @@ Database.EnsureCreated();
 - Identity 由 `UserManager`、`RoleManager`、`SignInManager` 操作。
 - 沒有加入 Migration、`EnsureCreated()` 或程式端建表。
 
-完整 `DbSet`、關聯與欄位對照請查看 [`QmahDbContext.cs`](../QMAH.Web/Data/QmahDbContext.cs) 與 [`Models/Entities`](../QMAH.Web/Models/Entities/)。
+完整 `DbSet`、關聯與欄位對照請查看 [`QmahDbContext.cs`](../QMAH.Infrastructure/Data/QmahDbContext.cs) 與 [`Models/Entities`](../QMAH.Infrastructure/Models/Entities/)。

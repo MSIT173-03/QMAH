@@ -21,6 +21,14 @@ public sealed class EventEditViewModel
     [Display(Name = "活動地點")]
     public string? Location { get; set; }
 
+    [Display(Name = "緯度")]
+    [Range(typeof(decimal), "-90", "90", ErrorMessage = "緯度必須介於 -90 到 90 之間")]
+    public decimal? Latitude { get; set; }
+
+    [Display(Name = "經度")]
+    [Range(typeof(decimal), "-180", "180", ErrorMessage = "經度必須介於 -180 到 180 之間")]
+    public decimal? Longitude { get; set; }
+
     [Required(ErrorMessage = "請輸入開始時間")]
     [Display(Name = "開始時間")]
     public DateTime StartAt { get; set; } = DateTime.Now.AddHours(1);
@@ -39,4 +47,17 @@ public sealed class EventEditViewModel
     [StringLength(500, ErrorMessage = "審核備註不能超過 500 字")]
     [Display(Name = "審核備註")]
     public string? ReviewNote { get; set; }
+
+    [Required(ErrorMessage = "請選擇活動貼文內容方式")]
+    [RegularExpression("TEMPLATE|CUSTOM", ErrorMessage = "活動貼文內容方式無效")]
+    [Display(Name = "活動貼文內容")]
+    public string PostContentMode { get; set; } = "TEMPLATE";
+
+    [StringLength(150, ErrorMessage = "活動貼文標題不能超過 150 字")]
+    [Display(Name = "自訂活動貼文標題")]
+    public string? PostTitle { get; set; }
+
+    [StringLength(4000, ErrorMessage = "活動貼文內文不能超過 4000 字")]
+    [Display(Name = "自訂活動貼文內文")]
+    public string? PostContent { get; set; }
 }

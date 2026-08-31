@@ -13,7 +13,7 @@
     </div>
 }
 
-<form method="get" class="card mb-3 game-admin-filter"><div class="card-body"><div class="row g-3 align-items-end">
+<form method="get" class="card qmah-filter-panel mb-3 game-admin-filter"><div class="card-body"><div class="row g-3 align-items-end">
     <div class="col-12 col-lg-4"><label class="form-label" for="search">關鍵字</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="內容、玩家或房間" autocomplete="off" /></div>
     <div class="col-sm-6 col-lg-3"><label class="form-label" for="roundId">回合</label><select class="form-select" id="roundId" name="roundId" asp-items="ViewBag.Rounds"><option value="">全部回合</option></select></div>
     <div class="col-sm-6 col-lg-2"><label class="form-label" for="answerType">作答類型</label><select id="answerType" name="answerType" asp-items="GameCodeLists.ToSelectList(GameCodeLists.AnswerTypes, Model.AnswerType, true)" class="form-select"></select></div>
@@ -34,5 +34,5 @@
         }
         </tbody>
     </table></div>
-    <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-3"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁</span><div class="btn-list">@if (Model.Results.HasPreviousPage) { <a class="btn btn-sm btn-outline-secondary" asp-route-page="@(Model.Results.Page - 1)" asp-route-search="@Model.Search" asp-route-roundId="@Model.RoundId" asp-route-answerType="@Model.AnswerType" asp-route-sort="@Model.Sort" asp-route-pageSize="@Model.PageSize">上一頁</a> } @if (Model.Results.HasNextPage) { <a class="btn btn-sm btn-outline-secondary" asp-route-page="@(Model.Results.Page + 1)" asp-route-search="@Model.Search" asp-route-roundId="@Model.RoundId" asp-route-answerType="@Model.AnswerType" asp-route-sort="@Model.Sort" asp-route-pageSize="@Model.PageSize">下一頁</a> }</div></div>
+<div class="card-footer qmah-card-footer qmah-card-footer--split"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁</span><div class="btn-list">@if (Model.Results.HasPreviousPage) { <a class="btn btn-sm btn-outline-secondary" asp-route-page="@(Model.Results.Page - 1)" asp-route-search="@Model.Search" asp-route-roundId="@Model.RoundId" asp-route-answerType="@Model.AnswerType" asp-route-sort="@Model.Sort" asp-route-pageSize="@Model.PageSize">上一頁</a> } @if (Model.Results.HasNextPage) { <a class="btn btn-sm btn-outline-secondary" asp-route-page="@(Model.Results.Page + 1)" asp-route-search="@Model.Search" asp-route-roundId="@Model.RoundId" asp-route-answerType="@Model.AnswerType" asp-route-sort="@Model.Sort" asp-route-pageSize="@Model.PageSize">下一頁</a> }</div></div>
 </div>

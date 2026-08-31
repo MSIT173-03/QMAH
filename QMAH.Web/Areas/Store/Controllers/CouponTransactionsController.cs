@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Store.ViewModels;
-using QMAH.Web.Data;
+using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 
 namespace QMAH.Web.Areas.Store.Controllers;

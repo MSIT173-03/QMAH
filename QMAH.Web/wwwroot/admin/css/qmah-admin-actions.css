@@ -1,11 +1,14 @@
-/* QMAH admin management/action columns — authoritative, loaded last */
+/*
+ * 後台資料表的操作欄位層：統一欄寬、按鈕格線與查看／編輯／成功／提醒／刪除的色彩。
+ * 這份檔案集中處理資料表的操作欄；改按鈕數量時先調整 qmah-actions--1～4，其他版型不要在頁面內另寫欄寬。
+ */
 :root {
   --qmah-action-gap: .5rem;
   --qmah-action-button-width: 5rem;
   --qmah-action-button-height: 2.5rem;
 }
 
-/* Every management column uses an explicit width based on its maximum button count. */
+/* 每個操作欄依按鈕數量使用固定寬度，避免表頭與資料列在不同頁面互相錯位。 */
 .page-body .table th.qmah-action-cell.qmah-actions--1:last-child,
 .page-body .table td.qmah-action-cell.qmah-actions--1:last-child {
   width: 7rem !important; min-width: 7rem !important; max-width: 7rem !important;
@@ -32,7 +35,7 @@ td.qmah-action-cell {
   white-space: nowrap !important;
 }
 
-/* The button group fills the same inner width as the header cell. */
+/* 按鈕群組填滿操作欄內寬，讓同一列的按鈕平均分配、容易掃讀。 */
 .qmah-action-cell > .qmah-table-actions,
 .qmah-action-cell.game-admin-cell-actions > .qmah-table-actions {
   display: grid !important;
@@ -74,8 +77,7 @@ td.qmah-action-cell {
   white-space: nowrap !important;
 }
 
-/* One shared color language:
-   view/edit = teal, positive = green, warning = orange, destructive = red. */
+/* 操作語意固定使用同一套色彩：查看／編輯為藍綠色、成功為綠色、提醒為橘色、破壞性操作為紅色。 */
 .qmah-table-actions .btn-info,
 .qmah-table-actions .btn-primary,
 .qmah-table-actions .btn-outline-secondary {
@@ -102,7 +104,7 @@ td.qmah-action-cell {
   color: #fff !important;
 }
 
-/* Disabled actions always keep the same slot and are visibly grey. */
+/* 停用按鈕仍保留原本位置，但以灰色和禁止游標明確表示目前不能操作。 */
 .qmah-table-actions .btn:disabled,
 .qmah-table-actions .btn.disabled {
   border-color: #d8e0e5 !important;
@@ -113,13 +115,13 @@ td.qmah-action-cell {
   pointer-events: none !important;
 }
 
-/* Older Social groups that carry their count on the group itself. */
+/* 舊社群頁把按鈕數量放在群組本身，這裡保留相容規則，不要求組員立刻重寫 markup。 */
 .qmah-table-actions.qmah-actions--one { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
 .qmah-table-actions.qmah-actions--two { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 .qmah-table-actions.qmah-actions--three { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 .qmah-table-actions.qmah-actions--four { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
 
-/* Do not let game.css turn the action <td> into a flex item on desktop. */
+/* 桌面版不可讓 game.css 把操作欄的 td 變成 flex，否則表格欄寬會失去對齊。 */
 @media (min-width: 768px) {
   .game-admin-table td.qmah-action-cell {
     display: table-cell !important;

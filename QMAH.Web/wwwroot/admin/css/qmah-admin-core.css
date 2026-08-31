@@ -1,3 +1,7 @@
+/*
+ * 後台共用骨架：集中管理色彩變數、字體、表單、列表、分頁與總覽頁的基本排版。
+ * 這裡改的是跨 Area 的預設；營運中心圖表、導覽與 Footer 分別放在專屬分層檔案。
+ */
 :root {
   --qmah-porcelain: #f5f7f8;
   --qmah-surface: #ffffff;
@@ -24,7 +28,9 @@
   --qmah-radius-lg: 12px;
   --qmah-shadow-sm: 0 1px 2px rgba(23, 42, 51, 0.06);
   --qmah-shadow-md: 0 10px 28px rgba(23, 42, 51, 0.12);
-  --qmah-font-ui: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  /* Plus Jakarta Sans 讓英數介面更有辨識度；繁中與標題各自回到本地 Noto 字體。 */
+  --qmah-font-ui: "QMAH Plus Jakarta", "QMAH Noto Sans TC", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  --qmah-font-display: "QMAH Source Serif 4", "QMAH Noto Serif TC", "QMAH Noto Sans TC", "Noto Serif TC", "Microsoft JhengHei", serif;
 }
 
 html,
@@ -100,17 +106,20 @@ body {
   align-items: center;
 }
 
-/* 次級操作維持一致高度、間距與窄版換行。 */
-.qmah-actions,
+/* 列表操作需要橫向保留按鈕；一般操作與表單操作則依容器寬度自然換行。 */
 .qmah-table-actions,
-.game-admin-cell-actions,
-.qmah-form-actions {
+.game-admin-cell-actions {
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 0.5rem;
   align-items: center;
   overflow-x: auto;
   scrollbar-width: thin;
+}
+
+.qmah-form-actions {
+  flex-wrap: wrap;
+  overflow: visible;
 }
 
 .qmah-actions > :where(.btn, a, button, form),
@@ -441,9 +450,35 @@ body {
   gap: 0.5rem;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: wrap;
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--qmah-line-soft);
+}
+
+/* 卡片底部統一承接分頁與主要操作，避免每個頁面各自拼接 flex 樣式。 */
+.qmah-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.85rem clamp(1rem, 2vw, 1.5rem);
+  border-top: 1px solid var(--qmah-line-soft);
+}
+
+.qmah-card-footer--split {
+  justify-content: space-between;
+}
+
+.qmah-card-footer > form {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.qmah-card-footer > :where(.btn, a, button, form) {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .qmah-detail-nav {
@@ -722,7 +757,25 @@ body {
   }
 
   .qmah-actions > :where(.btn, a, button) {
-    flex: 0 0 auto;
+    flex: 1 1 auto;
+  }
+
+  /* 篩選器的操作列在手機上回到可換行布局，不用左右滑才能送出表單。 */
+  .page-body form[method="get"] .qmah-actions {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .qmah-card-footer,
+  .qmah-card-footer--split {
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .qmah-card-footer > :where(.btn, a, button),
+  .qmah-card-footer > form,
+  .qmah-card-footer > form > .btn {
+    width: 100%;
   }
 }
 

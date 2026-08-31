@@ -1,6 +1,6 @@
 # NpmShopSampleCollector
 
-以低頻率、有限並行與可追蹤分類讀取故宮商城公開頁面，整理成 QMAH 商城的展示樣本。工具不建立資料庫、不繞過 robots.txt，也不把來源網站的即時庫存當成專題庫存。
+以低頻率、有限並行與可追蹤分類讀取故宮商城公開頁面，整理成 QMAH 商城的來源研究樣本。工具不建立資料庫、不繞過 robots.txt，也不把來源網站的即時庫存當成專題庫存。目前正式參考資料的 256 件商城商品由 `ArtifactProductGenerator` 依 QMAH 文物產生；本工具不是正式商品數量或商品圖片的來源。
 
 ## 快速使用
 
@@ -10,10 +10,10 @@
 .\NpmShopSampleCollector.exe --help
 .\NpmShopSampleCollector.exe --discover-structure --settings .\sample-settings.json --source-catalog .\shop-source-catalog.json
 .\NpmShopSampleCollector.exe --estimate-only --settings .\sample-settings.json --source-categories ZC523,ZC524
-.\NpmShopSampleCollector.exe --count 48 --delay-ms 600 --cooldown-every 30 --cooldown-ms 10000 --max-pages 3 --settings .\sample-settings.json --output .\output\products --media-root .\output\media
+.\NpmShopSampleCollector.exe --count 60 --delay-ms 600 --cooldown-every 30 --cooldown-ms 10000 --max-pages 3 --settings .\sample-settings.json --output .\output\products --media-root .\output\media
 ```
 
-省略 `--source-categories` 會依設定檔使用全部已核定的商城入口；若只指定 `ZC523,ZC524`，只適合做小量連線測試，不能當成 48 筆正式收集。
+省略 `--source-categories` 會依設定檔使用全部已核定的商城入口；若只指定 `ZC523,ZC524`，只適合做小量連線測試。上述 `60` 是這個舊來源收集器的示範目標，不是 QMAH 正式資料量。
 
 預設輸出是工作區 `_工具輸出/products` 與 `_工具輸出/media`，可用 `QMAH_TOOL_OUTPUT`、`--output` 或 `--media-root` 覆寫。要離線重整既有資料：
 
@@ -38,7 +38,7 @@
 
 ```text
 --settings <json>              節流、排除詞、入口與分類設定
---count <數量>                 商品總目標，正式預設至少 48
+--count <數量>                 此次來源收集的商品目標，預設 60
 --source-categories <代碼>     實際商城入口分類（不是 DB 分類）
 --categories <代碼>            正式 store.Products 分類映射
 --delay-ms <毫秒>              每次請求最低間隔
@@ -54,7 +54,7 @@
 --readable <none|csv|html|both> 是否額外產生人類閱讀版
 ```
 
-設定檔的 `targetTotal`、`categories`、`sourceEntries`、`excludeTerms`、`imageRequired`、`missingImagePolicy`、`maxConcurrentRequests` 與 `maxPages` 共同決定收集上限。每個來源映射分類目前預留最多 16 筆，讓正式目標 48 筆不會被單一分類上限卡住；這不是資料庫分類數量限制。若分類上限加總不足，`autoExpandCategoryMaximum=true` 會記錄調整；來源真的不足時只回報 `targetGap`，不複製或虛構商品。
+設定檔的 `targetTotal`、`categories`、`sourceEntries`、`excludeTerms`、`imageRequired`、`missingImagePolicy`、`maxConcurrentRequests` 與 `maxPages` 共同決定收集上限。每個來源映射分類目前預留最多 16 筆，讓來源收集目標不會被單一分類上限卡住；這不是資料庫分類數量限制。若分類上限加總不足，`autoExpandCategoryMaximum=true` 會記錄調整；來源真的不足時只回報 `targetGap`，不複製或虛構商品。
 
 工具會排除期刊、雜誌、訂閱品、停售／缺貨、缺圖、重複與價格不明商品。正式收集遵守 robots.txt、429／5xx 退避與有限並行；預設間隔為 600ms，每 30 次請求冷卻 10 秒。
 
@@ -79,4 +79,4 @@
 
 ## 送進 QMAH 前
 
-`NpmDataImporter` 會先檢查至少 48 筆商品、圖片與來源欄位、`ExternalRef` 重複以及 SQL Server Schema 是否已存在。第一次不帶 `--apply` 只產生 `PROFILE` 與 `APPROVAL_TOKEN`；確認同一份資料後才可加上 `--apply`。匯入預設只新增、重複略過，不覆蓋營運中的 `Stock`。
+`NpmDataImporter` 會檢查匯入資料中的商品數量、圖片與來源欄位、`ExternalRef` 重複以及 SQL Server Schema 是否已存在；它不存在固定的最少商品筆數門檻。第一次不帶 `--apply` 只產生 `PROFILE` 與 `APPROVAL_TOKEN`；確認同一份資料後才可加上 `--apply`。匯入預設只新增、重複略過，不覆蓋營運中的 `Stock`。

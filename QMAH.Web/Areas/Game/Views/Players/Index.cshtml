@@ -6,7 +6,7 @@
 @section Styles { <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" /> }
 @section PageActions { <a class="btn btn-primary" asp-action="Create"><i class="ti ti-plus me-1"></i>建立玩家資料</a> }
 
-<form method="get" class="card mb-3 game-admin-filter"><div class="card-body"><div class="row g-3 align-items-end">
+<form method="get" class="card qmah-filter-panel mb-3 game-admin-filter"><div class="card-body"><div class="row g-3 align-items-end">
     <div class="col-12 col-lg-4"><label class="form-label" for="search">關鍵字</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="玩家、帳號、Email 或房間代碼" autocomplete="off" /></div>
     <div class="col-6 col-lg-2"><label class="form-label" for="connectionStatus">連線狀態</label><select class="form-select" id="connectionStatus" name="connectionStatus" asp-items="GameCodeLists.ToSelectList(GameCodeLists.ConnectionStatuses, Model.ConnectionStatus, true)"></select></div>
     <div class="col-6 col-lg-2"><label class="form-label" for="sort">排序</label><select class="form-select" id="sort" name="sort"><option value="joined" selected="@(Model.Sort == "joined")">最近加入</option><option value="name" selected="@(Model.Sort == "name")">玩家名稱</option><option value="room" selected="@(Model.Sort == "room")">房間</option><option value="status" selected="@(Model.Sort == "status")">連線狀態</option><option value="seat" selected="@(Model.Sort == "seat")">座位</option></select></div>
@@ -39,6 +39,6 @@
             }
             </tbody>
         </table></div>
-        <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-connectionStatus="@Model.ConnectionStatus" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-connectionStatus="@Model.ConnectionStatus" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
+<div class="card-footer qmah-card-footer qmah-card-footer--split"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-connectionStatus="@Model.ConnectionStatus" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-connectionStatus="@Model.ConnectionStatus" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
     }
 </div>

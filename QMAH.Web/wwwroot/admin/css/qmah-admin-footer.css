@@ -1,0 +1,75 @@
+/*
+ * 後台 Footer 的共用結構：保留產品識別、必要導覽與專題展示說明。
+ * 內容文字與連結由 _AdminLayout.cshtml 提供，這裡只調整排列、間距與小螢幕行為。
+ */
+.qmah-admin .qmah-admin-footer {
+  margin-top: auto;
+  padding: 1rem 0 1.35rem;
+  border-top: 1px solid var(--qmah-line-soft);
+  background: color-mix(in srgb, var(--qmah-surface-soft) 44%, var(--qmah-porcelain));
+  color: var(--qmah-ink-faint);
+  font-size: .78rem;
+}
+
+/* 桌面版讓識別資訊與連結同列，空間不足時仍可自然換行。 */
+.qmah-admin .qmah-admin-footer__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .55rem 1.5rem;
+  align-items: center;
+}
+
+/* 產品名稱與用途說明保持同一組資訊，不額外製造裝飾性標語。 */
+.qmah-admin .qmah-admin-footer__identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .75rem;
+  align-items: baseline;
+}
+
+.qmah-admin .qmah-admin-footer__identity strong {
+  color: var(--qmah-ink-soft);
+  font-weight: 700;
+}
+
+/* Footer 連結沿用後台焦點與區域色，滑入時只增加底線，不改變版面高度。 */
+.qmah-admin .qmah-admin-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .8rem;
+  justify-content: flex-end;
+}
+
+.qmah-admin .qmah-admin-footer__links a {
+  color: var(--qmah-ink-soft);
+  text-decoration: none;
+}
+
+.qmah-admin .qmah-admin-footer__links a:hover,
+.qmah-admin .qmah-admin-footer__links a:focus-visible {
+  color: var(--qmah-area-accent);
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+
+/* 展示用途與版權資訊獨立放在下一列，避免和操作導覽混在一起。 */
+.qmah-admin .qmah-admin-footer__meta {
+  grid-column: 1 / -1;
+  color: var(--qmah-ink-faint);
+}
+
+/* 手機版改成單欄並靠左排列，避免窄畫面把連結擠成難以點擊的一行。 */
+@media (max-width: 575.98px) {
+  .qmah-admin .qmah-admin-footer__inner {
+    grid-template-columns: 1fr;
+    gap: .7rem;
+  }
+
+  .qmah-admin .qmah-admin-footer__links {
+    justify-content: flex-start;
+  }
+
+  .qmah-admin .qmah-admin-footer__meta {
+    grid-column: auto;
+  }
+}

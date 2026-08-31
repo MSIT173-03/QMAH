@@ -1,0 +1,256 @@
+/*
+ * 所有後台頁面共用的基礎層：控制尺寸、色彩角色、焦點框、控制項狀態與通用動態。
+ * 修改這裡會一起影響各管理區；單一頁面的差異請放在該頁面的專屬 CSS。
+ */
+.qmah-admin {
+  --qmah-motion-fast: 160ms cubic-bezier(.22, 1, .36, 1);
+  --qmah-motion-standard: 210ms cubic-bezier(.22, 1, .36, 1);
+  --qmah-control-height: 2.75rem;
+  --qmah-chart-1: var(--qmah-area-accent);
+  --qmah-chart-2: #3973a6;
+  --qmah-chart-3: #a0711f;
+  --qmah-chart-4: #b4574a;
+  --qmah-surface-raised: #ffffff;
+}
+
+/* 深色模式只替換共用圖表色與浮起表面，不讓各頁面各自維護一套色票。 */
+html[data-bs-theme="dark"] .qmah-admin {
+  --qmah-chart-2: #84b6e3;
+  --qmah-chart-3: #e0b565;
+  --qmah-chart-4: #e28e7e;
+  --qmah-surface-raised: #202b2e;
+}
+
+/* 卡片共用外觀；focus-within 讓表單焦點進入卡片時，整個操作區仍清楚可辨。 */
+.qmah-admin .card {
+  border-radius: 12px;
+  transition:
+    border-color var(--qmah-motion-standard),
+    box-shadow var(--qmah-motion-standard),
+    background-color var(--qmah-motion-standard);
+}
+
+.qmah-admin .card:focus-within {
+  border-color: color-mix(in srgb, var(--qmah-area-accent) 48%, var(--qmah-line));
+  box-shadow: 0 0 0 3px var(--qmah-focus);
+}
+
+/* 所有可操作控制項共用相同的過渡時間，維持不同管理區一致的點擊手感。 */
+.qmah-admin :where(.btn, .form-control, .form-select, .form-check-input, .dropdown-item, .page-link) {
+  transition:
+    border-color var(--qmah-motion-fast),
+    background-color var(--qmah-motion-fast),
+    box-shadow var(--qmah-motion-fast),
+    color var(--qmah-motion-fast),
+    transform var(--qmah-motion-fast);
+}
+
+/* 按鈕的基本尺寸、圓角與按下位移；要調整全站按鈕手感，從這裡改。 */
+.qmah-admin .btn {
+  min-height: var(--qmah-control-height);
+  border-radius: 9px;
+  font-weight: 650;
+}
+
+.qmah-admin .btn-sm {
+  min-height: 2.4rem;
+  border-radius: 8px;
+}
+
+.qmah-admin .btn:active:not(:disabled),
+.qmah-admin .btn.active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* 停用狀態要看得出來也不能誤點，這裡不處理各頁面自己的原因文字。 */
+.qmah-admin .btn:disabled,
+.qmah-admin .btn.disabled,
+.qmah-admin [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: .58;
+  transform: none;
+}
+
+/* 輸入框與下拉選單共用高度、邊框和焦點樣式，頁面只需負責欄位排列。 */
+.qmah-admin :where(.form-control, .form-select) {
+  min-height: var(--qmah-control-height);
+  border-radius: 9px;
+  border-color: var(--qmah-line);
+  background-color: var(--qmah-surface);
+  color: var(--qmah-ink);
+}
+
+.qmah-admin :where(.form-control, .form-select):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--qmah-area-accent) 42%, var(--qmah-line));
+}
+
+.qmah-admin :where(.form-control, .form-select):focus {
+  border-color: var(--qmah-area-accent);
+  box-shadow: 0 0 0 3px var(--qmah-focus);
+}
+
+.qmah-admin .form-control::placeholder {
+  color: var(--qmah-ink-faint);
+  opacity: 1;
+}
+
+/* 驗證失敗統一用紅色邊框與外框提示，欄位旁的錯誤文字由頁面提供。 */
+.qmah-admin :where(input, select, textarea)[aria-invalid="true"] {
+  border-color: var(--qmah-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--qmah-danger) 22%, transparent);
+}
+
+/* 鍵盤操作的可見焦點不能被背景吃掉，所有互動元素在這裡維持同一個規則。 */
+.qmah-admin :where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--qmah-focus);
+  outline-offset: 2px;
+}
+
+/* 固定尺寸的共用小元件集中在這裡，Razor 只需要使用語意 class，不必再寫 inline style。 */
+.qmah-admin .qmah-account-avatar-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qmah-admin .qmah-member-avatar--detail {
+  width: 6.25rem;
+  height: 6.25rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* 編輯頁的預覽卡片與表單保持同高，內容不足時也不會讓左右欄跳動。 */
+.qmah-admin .qmah-form-preview {
+  min-height: 100%;
+  border-color: var(--qmah-line);
+  background: var(--qmah-surface-soft) !important;
+}
+
+.qmah-admin .qmah-toast-container {
+  top: 3.75rem;
+  z-index: 1095;
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+/* 表格只在滑入資料列時改變背景，不改文字顏色，避免狀態徽章失去辨識度。 */
+.qmah-admin .table-hover > tbody > tr {
+  transition: background-color var(--qmah-motion-fast);
+}
+
+.qmah-admin .table-hover > tbody > tr:hover > * {
+  color: inherit;
+}
+
+/* 分頁與下拉選單維持足夠的點擊面積，滑鼠與觸控都能穩定操作。 */
+.qmah-admin .page-link {
+  min-width: 2.65rem;
+  min-height: 2.65rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.qmah-admin .dropdown-item {
+  min-height: 2.65rem;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  border-radius: 7px;
+}
+
+.qmah-admin .dropdown-item:active {
+  transform: translateY(1px);
+}
+
+/* 空資料、回到頂端與載入狀態是共用結果狀態；內容文字與資料來源仍由各頁面提供。 */
+.qmah-admin .empty {
+  min-height: 10rem;
+  padding: 2rem 1.25rem;
+}
+
+.qmah-admin .qmah-detail-section[id] {
+  scroll-margin-top: 5rem;
+}
+
+.qmah-admin .qmah-back-to-top {
+  position: fixed;
+  z-index: 1040;
+  right: 1rem;
+  bottom: 1rem;
+  display: inline-grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--qmah-line);
+  border-radius: 50%;
+  background: var(--qmah-surface-raised);
+  color: var(--qmah-ink-soft);
+  box-shadow: var(--qmah-shadow-sm);
+  opacity: .96;
+  transition:
+    border-color var(--qmah-motion-fast),
+    color var(--qmah-motion-fast),
+    opacity var(--qmah-motion-fast),
+    transform var(--qmah-motion-fast);
+}
+
+.qmah-admin .qmah-back-to-top:hover,
+.qmah-admin .qmah-back-to-top:focus-visible {
+  border-color: var(--qmah-area-accent);
+  color: var(--qmah-area-accent);
+  transform: translateY(-2px);
+}
+
+.qmah-admin .qmah-back-to-top:active {
+  transform: translateY(0);
+}
+
+.qmah-admin .qmah-back-to-top[hidden] {
+  display: none;
+}
+
+/* 資料尚未完成時鎖住重複操作，並用游標與透明度告知正在處理。 */
+.qmah-admin .qmah-is-loading,
+.qmah-admin [aria-busy="true"] {
+  cursor: progress;
+}
+
+.qmah-admin .qmah-is-loading {
+  pointer-events: none;
+  opacity: .7;
+}
+
+/* 粗指標裝置把小按鈕放大到一般控制項高度，降低手機誤觸機率。 */
+@media (pointer: coarse) {
+  .qmah-admin .btn-sm {
+    min-height: var(--qmah-control-height);
+  }
+
+  .qmah-admin .qmah-back-to-top {
+    right: .75rem;
+    bottom: max(.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* 使用者要求減少動態時，保留顏色與焦點等資訊，只移除位移、動畫與平滑捲動。 */
+@media (prefers-reduced-motion: reduce) {
+  .qmah-admin *,
+  .qmah-admin *::before,
+  .qmah-admin *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .qmah-admin .btn:active:not(:disabled),
+  .qmah-admin .btn.active:not(:disabled),
+  .qmah-admin .dropdown-item:active,
+  .qmah-admin .qmah-back-to-top:hover,
+  .qmah-admin .qmah-back-to-top:focus-visible {
+    transform: none;
+  }
+}

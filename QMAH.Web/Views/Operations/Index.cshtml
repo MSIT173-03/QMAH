@@ -1,0 +1,243 @@
+@model QMAH.Web.Models.OperationsDashboardViewModel
+
+@{
+    ViewData["Title"] = "營運中心";
+    ViewData["AdminDescription"] = "集中查看會員、營收、遊戲、社群、活動與圖庫的長期資料；統計依資料庫紀錄計算，不代表即時在線人數。";
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+    var rangeDays = (Model.To - Model.From).Days + 1;
+    var isPresetRange = rangeDays is 7 or 30 or 90 or 180 or 365;
+}
+
+@section PageActions {
+    <a asp-action="AuditLogs" class="btn btn-outline-secondary"><i class="ti ti-history me-1"></i>稽核紀錄</a>
+    <a asp-action="Media" class="btn btn-outline-secondary"><i class="ti ti-photo me-1"></i>圖庫管理</a>
+}
+
+<div class="card qmah-filter-panel mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label for="days" class="form-label">快速範圍</label>
+                <select id="days" name="days" class="form-select">
+                    <option value="7" selected="@(rangeDays == 7 ? "selected" : null)">最近 7 天</option>
+                    <option value="30" selected="@(rangeDays == 30 ? "selected" : null)">最近 30 天</option>
+                    <option value="90" selected="@(rangeDays == 90 ? "selected" : null)">最近 90 天</option>
+                    <option value="180" selected="@(rangeDays == 180 ? "selected" : null)">最近 180 天</option>
+                    <option value="365" selected="@(rangeDays == 365 ? "selected" : null)">最近 365 天</option>
+                    <option value="" selected="@(!isPresetRange ? "selected" : null)">自訂日期區間</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label for="from" class="form-label">開始日期</label>
+                <input id="from" name="from" type="date" class="form-control" value="@Model.From.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label for="to" class="form-label">結束日期</label>
+                <input id="to" name="to" type="date" class="form-control" value="@Model.To.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-filter me-1"></i>更新統計</button>
+            </div>
+        </form>
+        <div class="form-hint mt-2">目前顯示 @Model.From.ToString("yyyy/MM/dd") 至 @Model.To.ToString("yyyy/MM/dd")，最多保留一年逐日資料。</div>
+    </div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-sm-6 col-xl-2">
+        <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="members" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看會員成長明細">
+            <div class="card-body"><div class="text-secondary">期末會員數</div><div class="h1 mb-1">@Model.MemberCountAtEnd</div><div class="small text-secondary">區間結束前仍保留的帳號</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="members" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看會員成長明細">
+            <div class="card-body"><div class="text-secondary">新增會員</div><div class="h1 mb-1">@Model.NewMemberCount</div><div class="small text-secondary">選定期間建立帳號</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="revenue" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看營收明細">
+            <div class="card-body"><div class="text-secondary">已付款營收</div><div class="h1 mb-1">@Model.PaidRevenue.ToString("C0")</div><div class="small text-secondary">@Model.PaidOrderCount 筆已付款訂單</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="revenue" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看營收明細">
+            <div class="card-body"><div class="text-secondary">平均付款金額</div><div class="h1 mb-1">@Model.AverageOrderAmount.ToString("C0")</div><div class="small text-secondary">只依已付款訂單計算</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="game" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看遊戲使用明細">
+            <div class="card-body"><div class="text-secondary">遊戲不重複會員</div><div class="h1 mb-1">@Model.UniqueGameUserCount</div><div class="small text-secondary">共 @Model.GamePlayerJoinCount 次加入</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
+        <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="events" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看活動參與明細">
+            <div class="card-body"><div class="text-secondary">活動報名</div><div class="h1 mb-1">@Model.EventRegistrationCount</div><div class="small text-secondary">@Model.EventCount 場活動建立紀錄</div></div>
+        </a>
+    </div>
+</div>
+
+<div class="qmah-operations-chart-grid mb-3" aria-label="營運趨勢圖表">
+    @foreach (var chart in Model.Charts)
+    {
+        var metric = chart.Id.Contains("revenue", StringComparison.OrdinalIgnoreCase) ? "revenue" : "activity";
+        <a class="qmah-operations-chart-link" asp-action="Details" asp-route-metric="@metric" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看@chart.Title明細">
+            <partial name="Admin/_OperationsTrendChart" model="@chart" />
+            <span class="qmah-operations-chart-link__action">查看每日明細與匯出 <i class="ti ti-arrow-up-right" aria-hidden="true"></i></span>
+        </a>
+    }
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-md-6 col-xl-3">
+        <a class="card h-100 qmah-operations-summary-card qmah-operations-summary-card--link" asp-action="Details" asp-route-metric="orders" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看訂單明細">
+            <div class="card-body"><div class="text-secondary">訂單建立</div><div class="h2 mb-1">@Model.CreatedOrderCount 筆</div><div class="small text-secondary">其中 @Model.CancelledOrderCount 筆已取消</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <a class="card h-100 qmah-operations-summary-card qmah-operations-summary-card--link" asp-action="Details" asp-route-metric="game" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看遊戲使用明細">
+            <div class="card-body"><div class="text-secondary">遊戲內容</div><div class="h2 mb-1">@Model.GameRoomCount 房／@Model.GameRoundCount 回合</div><div class="small text-secondary">共 @Model.GameAnswerCount 筆作答紀錄</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <a class="card h-100 qmah-operations-summary-card qmah-operations-summary-card--link" asp-action="Details" asp-route-metric="social" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看社群互動明細">
+            <div class="card-body"><div class="text-secondary">社群互動</div><div class="h2 mb-1">@Model.SocialPostCount 篇貼文</div><div class="small text-secondary">共 @Model.SocialCommentCount 則留言</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <a class="card h-100 qmah-operations-summary-card qmah-operations-summary-card--link" asp-action="Details" asp-route-metric="media" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看社群圖片明細">
+            <div class="card-body"><div class="text-secondary">社群圖片</div><div class="h2 mb-1">@Model.MediaAssetCount 張</div><div class="small text-secondary">官方文物圖鑑圖片不列入此項</div></div>
+        </a>
+    </div>
+</div>
+
+<div class="card qmah-list-card mb-3">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title mb-1">月份彙總</h2>
+            <div class="card-subtitle">長期查看時以月份整理，適合比較營收、會員成長與各功能使用量。</div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table">
+            <thead>
+                <tr><th>月份</th><th>新增會員</th><th>已付款訂單</th><th class="text-end">營收</th><th>遊戲加入</th><th>不重複會員</th><th>貼文／留言</th><th>活動／報名</th><th>社群圖片</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model.MonthlyTrend.AsEnumerable().Reverse())
+            {
+                <tr>
+                    <td class="text-nowrap">@item.Month.ToString("yyyy 年 MM 月")</td>
+                    <td>@item.NewMemberCount</td>
+                    <td>@item.PaidOrderCount</td>
+                    <td class="text-end">@item.Revenue.ToString("C0")</td>
+                    <td>@item.GameJoinCount</td>
+                    <td>@item.UniqueGameUserCount</td>
+                    <td>@item.PostCount／@item.CommentCount</td>
+                    <td>@item.EventCount／@item.EventRegistrationCount</td>
+                    <td>@item.MediaAssetCount</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-lg-4">
+        <div class="card qmah-list-card h-100">
+            <div class="card-header"><h2 class="card-title">商城訂單狀態</h2></div>
+            <div class="list-group list-group-flush">
+            @foreach (var item in Model.OrderStatusBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between"><span>@item.Label</span><strong>@item.Count</strong></div>
+            }
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card qmah-list-card h-100">
+            <div class="card-header"><h2 class="card-title">遊戲房間與作答</h2></div>
+            <div class="list-group list-group-flush">
+            @foreach (var item in Model.GameRoomStatusBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between"><span>房間：@item.Label</span><strong>@item.Count</strong></div>
+            }
+            @foreach (var item in Model.AnswerTypeBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between"><span>作答：@item.Label</span><strong>@item.Count</strong></div>
+            }
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card qmah-list-card h-100">
+            <div class="card-header"><h2 class="card-title">社群貼文</h2></div>
+            <div class="list-group list-group-flush">
+            @foreach (var item in Model.SocialPostBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between"><span>貼文：@item.Label</span><strong>@item.Count</strong></div>
+            }
+            @foreach (var item in Model.SocialPublisherBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between"><span>發布者：@item.Label</span><strong>@item.Count</strong></div>
+            }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-lg-7">
+        <div class="card qmah-list-card h-100">
+            <div class="card-header"><h2 class="card-title">活動狀態</h2></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-4"><div class="text-secondary small mb-2">活動類型</div>@foreach (var item in Model.EventTypeBreakdown) { <div class="d-flex justify-content-between mb-2"><span>@item.Label</span><strong>@item.Count</strong></div> }</div>
+                    <div class="col-12 col-md-4"><div class="text-secondary small mb-2">審核狀態</div>@foreach (var item in Model.EventReviewBreakdown) { <div class="d-flex justify-content-between mb-2"><span>@item.Label</span><strong>@item.Count</strong></div> }</div>
+                    <div class="col-12 col-md-4"><div class="text-secondary small mb-2">發布狀態</div>@foreach (var item in Model.EventPublishBreakdown) { <div class="d-flex justify-content-between mb-2"><span>@item.Label</span><strong>@item.Count</strong></div> }</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="card qmah-list-card h-100">
+            <div class="card-header"><h2 class="card-title">社群圖片狀態</h2></div>
+            <div class="list-group list-group-flush">
+            @foreach (var item in Model.MediaBreakdown)
+            {
+                <div class="list-group-item d-flex justify-content-between"><span>@item.Label</span><strong>@item.Count</strong></div>
+            }
+            </div>
+        </div>
+    </div>
+</div>
+
+<details class="card qmah-list-card mb-3" open>
+<summary class="card-header qmah-collapsible-summary"><div><h2 class="card-title mb-1">逐日營收與會員</h2><div class="card-subtitle">可用來追查單日變化；沒有資料的日期也會保留，方便看出連續期間。</div></div></summary>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead><tr><th>日期</th><th>新增會員</th><th>已付款訂單</th><th class="text-end">營收</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.RevenueTrend.AsEnumerable().Reverse())
+            {
+                <tr><td>@item.Date.ToString("yyyy/MM/dd")</td><td>@item.NewMemberCount</td><td>@item.OrderCount</td><td class="text-end">@item.Revenue.ToString("C0")</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</details>
+
+<details class="card qmah-list-card mb-3">
+<summary class="card-header qmah-collapsible-summary"><div><h2 class="card-title mb-1">逐日功能活動</h2><div class="card-subtitle">遊戲加入數是加入紀錄，不等同即時在線人數；其餘欄位同樣依建立或發生時間統計。</div></div></summary>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead><tr><th>日期</th><th>遊戲加入</th><th>房間</th><th>回合</th><th>作答</th><th>貼文</th><th>留言</th><th>活動</th><th>報名</th><th>圖片</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.ActivityTrend.AsEnumerable().Reverse())
+            {
+                <tr><td>@item.Date.ToString("yyyy/MM/dd")</td><td>@item.PlayerJoinCount</td><td>@item.RoomCount</td><td>@item.RoundCount</td><td>@item.AnswerCount</td><td>@item.PostCount</td><td>@item.CommentCount</td><td>@item.EventCount</td><td>@item.EventRegistrationCount</td><td>@item.MediaAssetCount</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</details>

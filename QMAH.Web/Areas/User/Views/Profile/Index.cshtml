@@ -4,13 +4,7 @@
     ViewData["Title"] = "我的個人資料";
     ViewData["AdminDescription"] = "查看與維護個人資料、會員資訊、收件地址與近期點數紀錄。";
 
-    var visibilityLabel = Model.Profile.Visibility switch
-    {
-        "PUBLIC" => "公開",
-        "FRIENDS" => "僅好友",
-        "PRIVATE" => "不公開",
-        _ => Model.Profile.Visibility
-    };
+    var visibilityLabel = AdminDisplayLabels.Visibility(Model.Profile.Visibility);
 }
 
 @section PageActions {
@@ -263,7 +257,7 @@
                                     <span class="text-danger fw-bold">@item.Amount</span>
                                 }
                             </td>
-                            <td>@item.Reason</td>
+                            <td>@AdminDisplayLabels.PointReason(item.Reason)</td>
                             <td>
                                 @if (string.IsNullOrWhiteSpace(item.ReferenceType))
                                 {
@@ -271,7 +265,7 @@
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary-lt">@item.ReferenceType</span>
+                                    <span class="badge bg-secondary-lt">@AdminDisplayLabels.PointReferenceType(item.ReferenceType)</span>
                                 }
                             </td>
                         </tr>

@@ -74,7 +74,7 @@ Pull → 修改 → 本機驗證 → Commit → Push → Pull Request → develo
 4. Commit、Push 自己的 feature branch。
 5. 建立 `feature/<area> → develop` 的 Pull Request。
 
-期中或期末展示前，建立 `develop → main` Pull Request 留下展示版本紀錄；確認 Build 通過後即可合併，不要求人工核准。
+展示前，建立 `develop → main` Pull Request 留下展示版本紀錄；確認 Build 通過後即可合併，不要求人工核准。
 
 ## Visual Studio：保留自己的修改並同步最新 main
 
@@ -145,7 +145,7 @@ PR 要寫清楚：
 - 是否影響 Schema、資料或圖片。
 - 尚未完成或已知限制。
 
-建立 PR 後，GitHub Actions 會自動執行：
+需要驗證時，由有權限的組員在 GitHub Actions 手動執行 `Build`；建立 PR 不會自動啟動工作流程：
 
 ```powershell
 dotnet restore QMAH.sln --locked-mode
@@ -159,8 +159,8 @@ dotnet build QMAH.sln --no-restore --configuration Release
 下列檔案會同時影響多個模組：
 
 - `QMAH.Web/Program.cs`
-- `QMAH.Web/Data/`
-- `QMAH.Web/Models/Entities/` 與 `Models/Identity/`
+- `QMAH.Infrastructure/Data/`
+- `QMAH.Infrastructure/Models/Entities/` 與 `QMAH.Infrastructure/Models/Identity/`
 - `database/`
 - `QMAH.Web/Views/Shared/`
 - `QMAH.Web/wwwroot/css/site.css` 與 `wwwroot/js/site.js`

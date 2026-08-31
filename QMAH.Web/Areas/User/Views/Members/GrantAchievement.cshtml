@@ -1,46 +1,56 @@
-﻿@model QMAH.Web.Areas.User.ViewModels.GrantAchievementViewModel
+@model QMAH.Web.Areas.User.ViewModels.GrantAchievementViewModel
 
 @{
     ViewData["Title"] = "授予成就";
+    ViewData["AdminDescription"] = "替會員補發已符合條件的成就，並保留取得紀錄。";
 }
 
-<h1>授予成就</h1>
-
-<p>
-    會員：@Model.Email
-</p>
-
-<form asp-action="GrantAchievement" method="post">
-    @Html.AntiForgeryToken()
-
-    <input type="hidden" asp-for="UserId" />
-
-    <div asp-validation-summary="ModelOnly"
-         class="text-danger mb-3"></div>
-
-    <div class="mb-3">
-        <label asp-for="AchievementId"
-               class="form-label">
-            選擇成就
-        </label>
-
-        <select asp-for="AchievementId"
-                asp-items="Model.AvailableAchievements"
-                class="form-select">
-            <option value="">請選擇成就</option>
-        </select>
-        <span asp-validation-for="AchievementId"
-              class="text-danger"></span>
-    </div>
-
-    <button type="submit"
-            class="btn btn-primary">
-        授予成就
-    </button>
-
-    <a asp-action="Details"
-       asp-route-id="@Model.UserId"
-       class="btn btn-secondary">
-        返回會員資料
+@section PageActions {
+    <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回會員資料
     </a>
-</form>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7 col-xl-6">
+        <div class="card qmah-form-card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">授予成就</h2>
+                    <div class="text-secondary small">會員：@Model.Email</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form asp-action="GrantAchievement" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="UserId" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">成就內容</h3>
+                        <div class="mb-3">
+                            <label asp-for="AchievementId" class="form-label">選擇成就</label>
+                            <select asp-for="AchievementId" asp-items="Model.AvailableAchievements" class="form-select">
+                                <option value="">請選擇成就</option>
+                            </select>
+                            <span asp-validation-for="AchievementId" class="text-danger"></span>
+                        </div>
+                        <p class="form-hint mb-0">已取得的成就無法重複授予。</p>
+                    </section>
+
+                    <div class="qmah-form-actions">
+                        <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-award me-1"></i>授予成就
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

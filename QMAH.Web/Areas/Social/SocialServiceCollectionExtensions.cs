@@ -19,11 +19,11 @@ namespace QMAH.Web.Areas.Social
                 options.AddPolicy("Policy.SocialAdmin.Access", policy =>
                     policy.RequireRole("Admin", "AnnouncementEditor", "ContentModerator", "EventModerator"));
 
-                // 2. 官方公告管理權限 (Admin 超級管理員 + 公告小編)
-                options.AddPolicy("Policy.Social.ManageAnnouncements", policy =>
-                    policy.RequireRole("Admin", "AnnouncementEditor"));
+                // 2. 貼文管理權限；公告也是貼文的一種，公告小編可管理官方公告。
+                options.AddPolicy("Policy.Social.ManagePosts", policy =>
+                    policy.RequireRole("Admin", "AnnouncementEditor", "ContentModerator"));
 
-                // 3. 社群內容審核與貼文管理權限 (Admin 超級管理員 + 內容審核員)
+                // 3. 社群內容審核與留言、檢舉管理權限 (Admin 超級管理員 + 內容審核員)
                 options.AddPolicy("Policy.Social.ManageReports", policy =>
                     policy.RequireRole("Admin", "ContentModerator"));
 

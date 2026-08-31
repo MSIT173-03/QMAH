@@ -5,8 +5,8 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
-using QMAH.Web.Data;
-using QMAH.Web.Models.Entities;
+using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Models.Entities;
 
 const string Notice = "本頁商品為 MSIT173 課程專題的虛擬展示資料，使用國立故宮博物院開放資料圖像建立對應的縮小複製品，僅供系統功能測試與課堂發表，不提供訂購、付款或實際販售。商品尺寸依公開資料換算為原作的一半；來源標示待測量或未提供時不自行推測。";
 
@@ -56,8 +56,16 @@ try
     }
 
     var selected = SelectBalanced(artifacts, options.Count, options.Seed);
+    var repeatedArtifactNames = selected
+        .GroupBy(artifact => artifact.Name.Trim(), StringComparer.OrdinalIgnoreCase)
+        .Where(group => group.Count() > 1)
+        .Select(group => group.Key)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
     var products = selected
-        .Select(artifact => CreateProduct(artifact, options))
+        .Select(artifact => CreateProduct(
+            artifact,
+            options,
+            repeatedArtifactNames.Contains(artifact.Name.Trim())))
         .OrderBy(product => product.CategoryCode, StringComparer.Ordinal)
         .ThenBy(product => product.Name, StringComparer.Ordinal)
         .ToList();
@@ -229,7 +237,10 @@ static List<Artifact> SelectBalanced(IReadOnlyCollection<Artifact> artifacts, in
     return selected;
 }
 
-static ProductOutput CreateProduct(Artifact artifact, Options options)
+static ProductOutput CreateProduct(
+    Artifact artifact,
+    Options options,
+    bool includeArtifactReference)
 {
     var midpointYear = EraMidpoint(artifact.EraBucket, options.ReferenceYear);
     var ageYears = Math.Max(0, options.ReferenceYear - midpointYear);
@@ -255,11 +266,15 @@ static ProductOutput CreateProduct(Artifact artifact, Options options)
         ? artifact.EraBucket.Name.Trim()
         : artifact.EraTextOriginal.Trim();
 
+    var productName = $"{artifact.Name}－縮小複製品";
+    if (includeArtifactReference)
+        productName += $"（故宮編號：{artifact.ArtifactRef}）";
+
     return new ProductOutput(
         StableGuid(externalRef),
         artifact.Id,
         externalRef,
-        Trim($"{artifact.Name}－縮小複製品", 200),
+        Trim(productName, 200),
         artifact.Category.Code,
         $"{marketingCopy.Text}\n\n商品資訊：\n分類：{artifact.Category.Name}\n年代：{eraText}\n商品尺寸：{replicaSize}\n原作尺寸：{originalSize}\n\n{Notice}\n\n圖像姓名標示：\n{attribution}\n\n原文物說明：\n{originalDescription}",
         replicaSize,

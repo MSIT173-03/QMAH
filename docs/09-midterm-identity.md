@@ -1,19 +1,18 @@
-# 期中 Identity 與會員資料管理
+# Identity 與會員資料管理
 
-期中專題製作範圍以五個 Area 的 CRUD 後台為主。Identity 負責登入身分、後台存取權限，以及程式取得目前使用者的標準方式
+QMAH 以五個 Area 的 CRUD 後台為主，並已預留獨立 API 使用的相同 Identity 資料。Identity 負責登入身分、後台存取權限，以及程式取得目前使用者的標準方式。
 
-## 期中專題製作範圍
+## 目前專題製作範圍
 
 - 各 Area 完成所屬後台 CRUD
 - 會員管理可查看帳號，並新增、查詢、修改與刪除 `UserProfiles`、`UserAddresses` 等會員業務資料
 - Email、鎖定狀態與角色等 Identity 資料透過 `UserManager`、`RoleManager` 操作
 - 後台需要授權時，Controller 可取得目前登入者的 `UserId`
+- API 使用相同的 Identity 與 Cookie，但以 HTTP 401／403 回應，不將登入頁 HTML 當成 JSON 回傳
 
-共用後台的登入頁、登出按鈕、Cookie 設定與 `Admin` 授權可在最後整合階段集中完成。各 Area 開發期間不必各自建立一套登入流程，但 Controller 與 View 不得假設任意 `UserId`，也不得直接修改 Identity 系統表。
+共用後台的登入頁、登出按鈕、Cookie 設定與 `Admin` 授權已集中在主機設定與 User Area。各 Area 不建立各自的登入流程；Controller 與 View 不得假設任意 `UserId`，也不得直接修改 Identity 系統表。API 已提供註冊、登入、登出與開發環境密碼重設流程；正式寄信服務仍要在決定供應商後接上，不能把展示用寄信實作當成正式通知服務。
 
-登入整合延後不影響會員 CRUD。會員 Area 仍需完成帳號清單、會員資料與地址等管理功能，並使用本文件規定的 Identity API 與 `QmahDbContext` 分工。
-
-期中專題不包含公開註冊、Email 驗證、忘記密碼、寄信、雙因素驗證、第三方登入、Claim／Token 管理介面與複雜角色編輯器。這些功能可沿用既有 Identity 結構擴充，不需要預先新增資料表
+目前兩個主機都使用 Identity lockout：連續 5 次登入失敗會鎖定 15 分鐘；登入端點另外依來源 IP 進行每分鐘 12 次的固定視窗限流。管理員停用會員時會更新 Security Stamp，讓既有登入 Cookie 在下一次 request 失效。這些規則由主機共用設定維護，前台只需要正確處理 401、403 與 429。
 
 ## 帳號資料分成兩種
 
@@ -30,7 +29,7 @@
 
 `Program.cs` 已完成 Identity DI、角色授權服務、唯一 Email 規則，以及登入、登出與拒絕存取路徑：
 
-- `/User/Account/Login`
+- `/Account/Login`
 - `/User/Account/Logout`
 - `/User/Account/AccessDenied`
 
@@ -56,21 +55,11 @@ Microsoft 建議瀏覽器網站使用 Cookie，因為瀏覽器會自動處理 Co
 
 `AddIdentity<ApplicationUser, IdentityRole<Guid>>()` 已包含目前 QMAH 使用的 Identity 與角色服務。`[Authorize(Roles = "Admin")]` 的角色名稱需要和資料庫中的角色完全一致，`Admin` 與 `admin` 不視為同一個角色
 
-## 另開空白 MVC 專案測試 Identity
+## 不要為 QMAH 另外建立 Identity 專案
 
-如果只是想先看 Microsoft 範本的完整流程，可以在 Visual Studio 建立：
+QMAH 已經有 `QmahDbContext`、`ApplicationUser`、SQL Server Store 與登入流程。前台開發準備階段不需要另開 MVC 測試專案，也不需要為了驗證登入再建立另一個資料庫、Context 或 Migration。
 
-1. 選擇 **ASP.NET Core Web 應用程式（模型-視圖-控制器）**
-2. 驗證類型選 **個別帳戶（Individual Accounts）**
-3. 建立專案後再依範本執行資料庫初始化
-
-也可以使用 CLI：
-
-```powershell
-dotnet new mvc -au Individual -uld -o IdentityMvcSample
-```
-
-這個測試專案會有自己的 `ApplicationDbContext` 與 Identity 設定，只用來了解官方範本。不要把它的 Context、Migration 或 Identity 類別直接複製回 QMAH
+若只是想閱讀 Microsoft 範本的完整流程，直接參考本節前方的官方 Identity 文件即可。任何外部練習專案都不屬於 QMAH Repository；不要把它的 Context、Migration 或 Identity 類別複製回 QMAH。
 
 ## 已存在 QMAH 專案時的 Identity Scaffolding
 
@@ -81,7 +70,7 @@ QMAH 已經有 `QmahDbContext`、`ApplicationUser`、SQL Server Store 與 Identi
 3. 只選真正需要的頁面，例如 Login、Logout 或 AccessDenied
 4. 產生後檢查差異，確認沒有重複註冊 Identity、改動既有 Schema 或加入不需要的 Migration
 
-官方 Identity Scaffolding 通常會產生 Razor Pages。若採用這條路線，必須依產生結果加入 `AddRazorPages()` 與 `MapRazorPages()`；目前 QMAH 的期中範例採用 MVC `AccountController` 與 View，不要把兩種路由寫法混在同一個登入流程
+官方 Identity Scaffolding 通常會產生 Razor Pages。若採用這條路線，必須依產生結果加入 `AddRazorPages()` 與 `MapRazorPages()`；目前 QMAH 採用 MVC `AccountController` 與 View，不要把兩種路由寫法混在同一個登入流程
 
 QMAH 目前已安裝 `Microsoft.AspNetCore.Identity.EntityFrameworkCore`、`Microsoft.EntityFrameworkCore.SqlServer`、`Microsoft.EntityFrameworkCore.Design`、`Microsoft.EntityFrameworkCore.Tools` 與 `Microsoft.VisualStudio.Web.CodeGeneration.Design`。一般開發不需要重複安裝，版本以 `QMAH.Web.csproj` 和 `packages.lock.json` 為準
 
@@ -89,7 +78,7 @@ QMAH 目前已安裝 `Microsoft.AspNetCore.Identity.EntityFrameworkCore`、`Micr
 
 ## 參考資料庫帳號
 
-Release 參考資料庫包含 8 個教學帳號與 `Admin`、`User` 兩個角色
+Release 參考資料庫的展示初始化工具會建立 24 個會員與 `Admin`、`User` 兩個角色。展示會員的公開顯示名稱使用 `Demo Admin`、`Demo Member 01`、`Demo Catalog` 等用途名稱，不對應真實人物，也不使用班級成員姓名。以下列出最常用的 8 個情境帳號；完整帳密由工具輸出到 Repository 外，不放進版本控制。
 
 | 帳號 | 角色 | 用途 |
 | --- | --- | --- |
@@ -102,7 +91,7 @@ Release 參考資料庫包含 8 個教學帳號與 `Admin`、`User` 兩個角色
 | `player-a@qmah.local` | `User` | 遊戲玩家情境 |
 | `player-b@qmah.local` | `User` | 遊戲玩家情境 |
 
-`admin@qmah.local` 保留密碼 `QmahDemo2026!`；其餘教學帳號改用各自不同的密碼。完整明文清單只放在 repository 外的 `QMAH-demo-accounts.txt`，不納入版本控制。若網站部署到可由外部連線的環境，必須先更換這些展示用密碼。
+`QmahDatabaseRelease seed-showcase-users` 每次執行都會替 24 個展示帳號重新產生不重複的隨機密碼，再透過 Identity API 設定。完整帳密只會輸出到 Repository 上一層的 `QMAH.DemoCredentials.local.csv` 與同層備份檔，不會硬寫在程式碼或資料腳本裡。若網站部署到可由外部連線的環境，仍須先更換所有展示密碼。
 
 ## Login ViewModel
 
@@ -139,7 +128,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using QMAH.Web.Areas.User.ViewModels;
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
@@ -273,7 +262,7 @@ public class SocialPostsController : Controller
 public class ContentReportsController : Controller
 ```
 
-期中先使用 `Admin` 與 `User` 就夠。不要為每個 Area 建立一個角色，除非團隊真的要展示不同管理員權限。只在 View 隱藏按鈕不算授權，Controller 仍要使用 `[Authorize]`
+目前使用 `Admin` 與 `User` 就夠。不要為每個 Area 建立一個角色，除非團隊真的要展示不同管理員權限。只在 View 隱藏按鈕不算授權，Controller 仍要使用 `[Authorize]`
 
 ## 取得目前登入者
 
@@ -303,15 +292,15 @@ public async Task<IActionResult> MyProfile()
 
 不要讓表單自行決定「目前使用者」的 UserId，也不要用 Email、暱稱或畫面文字當外鍵
 
-## 會員 CRUD 的期中範圍
+## 會員 CRUD 範圍
 
 - 帳號清單：使用 `_userManager.Users.AsNoTracking()` 查詢 Email 與鎖定狀態
 - Profile 詳情與編輯：使用 `_db.UserProfiles`
 - 地址 CRUD：使用 `_db.UserAddresses`
 - 角色顯示：使用 `_userManager.GetRolesAsync(user)`
-- 帳號停用：需要時使用 Identity lockout API，不直接刪除帳號
+- 帳號停用：使用 Identity lockout API 或既有帳號狀態流程，不直接刪除帳號
 
-期中不做「建立密碼雜湊」「直接編輯角色關聯表」「顯示 PasswordHash」等功能
+不做「建立密碼雜湊」「直接編輯角色關聯表」「顯示 PasswordHash」等功能。API 的註冊與重設密碼同樣必須經過 `UserManager`。
 
 ## 完成後測試
 
@@ -322,4 +311,4 @@ public async Task<IActionResult> MyProfile()
 5. 登出使用 POST，登出後不能回到受保護頁面
 6. `returnUrl` 只接受站內網址
 
-第三方登入留到後續階段，請看[第三方登入預留方式](external-login.md)
+第三方登入仍未啟用，資料庫保留標準 Identity 對應即可；確定供應商後再依[第三方登入預留方式](external-login.md)加入。

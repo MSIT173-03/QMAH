@@ -42,7 +42,7 @@
 
 專案已內建 Tabler 1.4.0，並完成共用側邊欄、頂部工具列、QMAH 配色、明暗模式與手機版導覽。一般功能開發不需要安裝 Node.js，也不需要另外下載 Tabler。
 
-共用後台介面已經完成。`QMAH.Web/Areas/_ViewStart.cshtml` 仍保留一般網站的 `_Layout.cshtml`，五個後台 Area 則各自由 `Views/_ViewStart.cshtml` 覆寫為 `_AdminLayout.cshtml`，避免影響其他 Area。
+共用後台介面已經完成。`QMAH.Web/Views/_ViewStart.cshtml` 與 `QMAH.Web/Areas/_ViewStart.cshtml` 會將後台頁面導向 `Views/Shared/Admin/_AdminLayout.cshtml`；五個 Area 與根目錄的營運中心共用同一套後台版型。
 
 完成 Layout 設定後，側邊欄、頂部工具列與明暗模式會由共用介面提供，不應在個別 Area 重複實作。功能負責人仍需實作所負責系統的資料表、查詢表單、編輯表單與業務流程。
 
@@ -241,7 +241,7 @@ GET 查詢應把條件放在網址中，重新整理或分享網址時才不會�
 ### 資料表
 
 ```cshtml
-@model IReadOnlyList<QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryListItemViewModel>
+@model IReadOnlyList<QMAH.Web.Areas.Catalog.ViewModel.ArtifactCategoryListItemViewModel>
 
 <div class="card">
     <div class="card-header">
@@ -289,7 +289,7 @@ GET 查詢應把條件放在網址中，重新整理或分享網址時才不會�
 ### 編輯表單
 
 ```cshtml
-@model QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryFormViewModel
+@model QMAH.Web.Areas.Catalog.ViewModel.ArtifactCategoryFormViewModel
 
 <form asp-action="Edit" method="post" class="card">
     <div class="card-header">
@@ -435,7 +435,7 @@ return RedirectToAction(nameof(Index));
 
 - 請勿重新實作 Sidebar、Navbar、頁首、頁尾或明暗模式。
 - 請勿在 View 內再次載入 Bootstrap 或 Tabler。
-- 請勿使用 CDN 版本的 Tabler。
+- 不要在個別 View 另載 Tabler CDN；目前共用 Layout 只載入固定版本的 icon font CDN，其他 Tabler 核心資產使用 Repository 內的檔案。
 - 請勿修改 `tabler.min.css` 或 `tabler.min.js`。
 - 若只需調整單一元件，請勿複製整份 Tabler CSS。
 - Area 業務樣式不應寫入共用後台 CSS。

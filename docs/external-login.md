@@ -2,7 +2,7 @@
 
 QMAH 已使用 ASP.NET Core Identity，不需要為 Google、Microsoft 或其他第三方登入預先新增資料表。
 
-目前的帳號密碼登入、登出與角色限制見[期中 Identity 實作](09-midterm-identity.md)。本文件只說明日後加入第三方登入時的資料庫與設定界線。
+目前的帳號密碼登入、登出與角色限制見[Identity 與會員資料管理](09-midterm-identity.md)。本文件只說明日後加入第三方登入時的資料庫與設定界線。
 
 標準 Identity 結構中的 `user.AspNetUserLogins` 會保存外部登入來源、第三方帳號識別碼與 QMAH `UserId` 的對應。`user.AspNetUsers` 仍是會員主資料，`user.UserProfiles` 仍保存網站內使用的暱稱、頭像與自我介紹。Entity 不需要加入 `GoogleId`、`MicrosoftId` 之類的專用欄位。
 

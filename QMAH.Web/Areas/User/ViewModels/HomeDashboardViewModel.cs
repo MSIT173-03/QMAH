@@ -1,5 +1,5 @@
-﻿using QMAH.Web.Models.Entities;
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Areas.User.ViewModels;
 

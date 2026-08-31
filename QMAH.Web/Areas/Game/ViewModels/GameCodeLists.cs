@@ -79,7 +79,7 @@ public static class GameCodeLists
     }
 
     public static string Label(IReadOnlyDictionary<string, string> source, string code) =>
-        source.TryGetValue(code, out var label) ? label : code;
+        source.TryGetValue(code, out var label) ? label : "其他選項";
 
     public static int NormalizePageSize(int pageSize) =>
         PageSizes.Contains(pageSize) ? pageSize : 20;

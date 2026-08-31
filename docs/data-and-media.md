@@ -79,7 +79,7 @@ store.Products.PrimaryImagePath
 
 示意價格由 `tools/QmahDataTools/ArtifactProductGenerator` 產生，預設自動使用全部合格文物，也可設定商品數量、最低價格、最高價格與 seed。價格依年代久遠程度、分類製作複雜度及固定 seed 變化值加權；同一組資料與參數會得到相同結果，方便重建測試資料。價格是課程測試資料，不是文物鑑價。
 
-商品 `CategoryCode` 與文物分類相同，`ArtifactId` 是一對一連結的唯一外鍵，`ExternalRef` 為 `artifact-{ArtifactRef}`。未來圖鑑詳細頁可直接用 ArtifactId 查到唯一 Product，加入前往商城對應商品的按鈕，不需要名稱比對或第二份圖片。
+商品 `CategoryCode` 與文物分類相同，`ArtifactId` 是一對一連結的唯一外鍵，`ExternalRef` 為 `artifact-{ArtifactRef}`。`ArtifactRef` 對應匯入資料中的故宮編號；前台圖鑑詳細頁可直接用 `ArtifactId` 查到唯一 Product，加入前往商城對應商品的按鈕，不需要名稱比對或第二份圖片。
 
 舊的 `NpmShopSampleCollector` 只保留作為來源網站分類與結構研究工具，不再提供正式專題商品、圖片或售價。
 

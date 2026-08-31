@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-using QMAH.Web.Models.Entities;
+using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Web.Areas.Store.ViewModels;
 

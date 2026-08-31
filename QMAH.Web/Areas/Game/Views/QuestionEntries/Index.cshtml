@@ -12,9 +12,9 @@
 
 @section PageActions { <a class="btn btn-primary" asp-action="Create"><i class="ti ti-plus me-1"></i>新增題庫設定</a> }
 
-<form method="get" class="card mb-3 game-admin-filter">
+<form method="get" class="card qmah-filter-panel mb-3 game-admin-filter">
     <div class="card-body"><div class="row g-3 align-items-end">
-        <div class="col-12 col-lg-3"><label class="form-label" for="search">關鍵字</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="文物名稱或編號" autocomplete="off" /></div>
+<div class="col-12 col-lg-3"><label class="form-label" for="search">關鍵字</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="文物名稱或故宮編號" autocomplete="off" /></div>
         <div class="col-6 col-lg-2"><label class="form-label" for="categoryCode">分類</label><select class="form-select" id="categoryCode" name="categoryCode" asp-items="ViewBag.Categories"><option value="">全部分類</option></select></div>
         <div class="col-6 col-lg-1"><label class="form-label" for="difficulty">難度</label><select class="form-select" id="difficulty" name="difficulty"><option value="">全部</option>@for (byte i = 1; i <= 5; i++) { <option value="@i" selected="@(Model.Difficulty == i)">@i</option> }</select></div>
         <div class="col-6 col-lg-1"><label class="form-label" for="isEnabled">狀態</label><select class="form-select" id="isEnabled" name="isEnabled"><option value="">全部</option><option value="true" selected="@(Model.IsEnabled == true)">啟用</option><option value="false" selected="@(Model.IsEnabled == false)">停用</option></select></div>
@@ -24,7 +24,7 @@
     </div></div>
 </form>
 
-<div class="card">
+<div class="card qmah-list-card">
     <div class="card-header"><div><h2 class="card-title mb-1">題庫清單</h2><div class="card-subtitle">共 @Model.Results.TotalCount 筆</div></div></div>
     @if (Model.Results.Items.Count == 0)
     {
@@ -35,7 +35,7 @@
         <div class="table-responsive">
             <table class="table table-vcenter table-hover card-table game-admin-table">
                 <colgroup>
-                    <col style="width: 7rem;" />
+                    <col class="qmah-col-thumbnail" />
                     <col class="qmah-col-name" />
                     <col class="qmah-col-ref" />
                     <col class="qmah-col-category" />
@@ -45,7 +45,7 @@
                     <col class="qmah-col-difficulty" />
                     <col class="qmah-col-status" />
                     <col class="qmah-col-updated" />
-                    <col style="width: 15rem; min-width: 15rem;" />
+                    <col class="qmah-col-question-actions" />
                 </colgroup>
                 <thead>
                     <tr>
@@ -68,7 +68,7 @@
                             </a>
                         </th>
                         <th>文物名稱</th>
-                        <th>館藏編號</th>
+<th>故宮編號</th>
                         <th>分類</th>
                         <th>年代</th>
                         <th>尺寸</th>
@@ -102,7 +102,7 @@
                             }
                         </td>
                         <td data-label="文物名稱"><a class="fw-bold" asp-action="Details" asp-route-id="@item.Id">@item.ArtifactName</a></td>
-                        <td data-label="館藏編號"><code>@item.ArtifactRef</code></td>
+<td data-label="故宮編號"><code>@item.ArtifactRef</code></td>
                         <td data-label="分類">@item.CategoryName</td>
                         <td data-label="年代">@item.EraName</td>
                         <td data-label="尺寸">@(string.IsNullOrWhiteSpace(item.SizeText) ? "未標示" : item.SizeText)</td>
@@ -122,7 +122,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-categoryCode="@Model.CategoryCode" asp-route-difficulty="@Model.Difficulty" asp-route-isEnabled="@Model.IsEnabled" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-categoryCode="@Model.CategoryCode" asp-route-difficulty="@Model.Difficulty" asp-route-isEnabled="@Model.IsEnabled" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
+<div class="card-footer qmah-card-footer qmah-card-footer--split"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-categoryCode="@Model.CategoryCode" asp-route-difficulty="@Model.Difficulty" asp-route-isEnabled="@Model.IsEnabled" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-categoryCode="@Model.CategoryCode" asp-route-difficulty="@Model.Difficulty" asp-route-isEnabled="@Model.IsEnabled" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
     }
 </div>
 

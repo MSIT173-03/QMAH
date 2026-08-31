@@ -755,7 +755,7 @@ static partial class ArtifactPipeline
         {
             var path = Path.Combine(previewDirectory, "文物資料預覽.csv");
             var builder = new StringBuilder();
-            builder.AppendLine(string.Join(',', new[] { "文物編號", "名稱", "類型", "原始年代", "分類年代", "說明", "展示圖路徑", "縮圖路徑", "來源網址", "圖鑑與題庫" }.Select(CsvValue)));
+builder.AppendLine(string.Join(',', new[] { "故宮編號", "名稱", "類型", "原始年代", "分類年代", "說明", "展示圖路徑", "縮圖路徑", "來源網址", "圖鑑與題庫" }.Select(CsvValue)));
             foreach (var record in records)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -773,7 +773,7 @@ static partial class ArtifactPipeline
         if (options.ReadableFormat is "html" or "both")
         {
             var path = Path.Combine(previewDirectory, "文物資料預覽.html");
-            var html = new StringBuilder("<!doctype html><html lang=\"zh-Hant\"><meta charset=\"utf-8\"><title>文物資料預覽</title><style>body{font-family:system-ui,Microsoft JhengHei,sans-serif;background:#f6f3ee;color:#2c2926;margin:32px}h1{font-size:28px}table{border-collapse:collapse;background:white;width:100%}th,td{border:1px solid #d8d0c8;padding:9px;text-align:left;vertical-align:top}th{background:#eee6dc;white-space:nowrap}td:nth-child(6){min-width:280px;line-height:1.6}a{color:#7a3f32}</style><h1>文物資料預覽</h1><p>這是方便人工檢查的版本，不是網站正式資料庫的替代品</p><table><thead><tr><th>文物編號</th><th>名稱</th><th>類型</th><th>原始年代</th><th>分類年代</th><th>說明</th><th>展示圖路徑</th><th>來源</th></tr></thead><tbody>");
+var html = new StringBuilder("<!doctype html><html lang=\"zh-Hant\"><meta charset=\"utf-8\"><title>文物資料預覽</title><style>body{font-family:system-ui,Microsoft JhengHei,sans-serif;background:#f6f3ee;color:#2c2926;margin:32px}h1{font-size:28px}table{border-collapse:collapse;background:white;width:100%}th,td{border:1px solid #d8d0c8;padding:9px;text-align:left;vertical-align:top}th{background:#eee6dc;white-space:nowrap}td:nth-child(6){min-width:280px;line-height:1.6}a{color:#7a3f32}</style><h1>文物資料預覽</h1><p>這是方便人工檢查的版本，不是網站正式資料庫的替代品</p><table><thead><tr><th>故宮編號</th><th>名稱</th><th>類型</th><th>原始年代</th><th>分類年代</th><th>說明</th><th>展示圖路徑</th><th>來源</th></tr></thead><tbody>");
             foreach (var record in records)
             {
                 cancellationToken.ThrowIfCancellationRequested();

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-using QMAH.Web.Data;
+using QMAH.Infrastructure.Data;
 
 namespace QMAH.Web.Controllers;
 

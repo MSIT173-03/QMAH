@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Social.Models;
-using QMAH.Web.Data;
+using QMAH.Infrastructure.Data;
 
 namespace QMAH.Web.Areas.Social.Controllers
 {
@@ -27,8 +27,8 @@ namespace QMAH.Web.Areas.Social.Controllers
                 PublishedEventCount = await db.Events.CountAsync(
                     item => item.ReviewStatus == "APPROVED" && item.PublishStatus == "PUBLISHED",
                     cancellationToken),
-                PublishedAnnouncementCount = await db.OfficialAnnouncements.CountAsync(
-                    item => item.Status == "PUBLISHED",
+                PublishedAnnouncementCount = await db.SocialPosts.CountAsync(
+                    post => post.Status == "PUBLISHED" && post.PostType == "ANNOUNCEMENT",
                     cancellationToken),
                 RecentPosts = await db.SocialPosts
                     .AsNoTracking()
@@ -45,7 +45,7 @@ namespace QMAH.Web.Areas.Social.Controllers
                     .ToListAsync(cancellationToken)
             };
 
-            ViewData["AdminDescription"] = "貼文、活動、公告與檢舉處理的共同工作台。";
+            ViewData["AdminDescription"] = "貼文、活動與檢舉處理的共同工作台；公告以貼文類型管理。";
             return View(model);
         }
     }

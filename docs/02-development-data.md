@@ -13,82 +13,91 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 - SQL Server Schema、索引、外鍵與 CHECK constraint
 - 256 件文物、256 筆題庫設定與 256 件對應商城商品
 - 各 Area 用於清單、詳情、關聯與狀態畫面的代表性測試資料
-- Identity 帳號、角色與會員資料
+- Identity 帳號、角色與會員資料；後台稽核與社群媒體資料表結構
 
-## 2. 目前參考資料庫內容
+## 2. Release 共同資料內容
 
-以下數量以目前 Release 的 `.bak`／`.sql` 同源 snapshot 為準。`dbo.sysdiagrams` 是 SSMS 使用的系統表，不列入 QMAH 業務資料表數量。
+以下數量以目前共同 Release `.bak`／`.sql` 同源的完整資料庫快照為準。這就是每位組員還原後取得的共同資料，已包含社群、商城、遊戲與營運頁面需要的展示情境，不需要再執行任何增量資料工具。`generate-showcase-data` 仍可由資料庫整合者在建立下一份快照前，或由個人在隔離資料庫中重建資料；它的批次參數不代表另一個 Release，也不代表組員還原後要再補上的數量。`dbo.sysdiagrams` 是 SSMS 使用的系統表，不列入 QMAH 業務資料表數量。
 
-### 2.1 五個 Schema
+### 2.1 共用 Schema
 
 | Schema | 主要內容 | 目前資料概況 |
 | --- | --- | --- |
-| `catalog` | 文物、分類、年代、鑰匙、解鎖 | 8 類、13 個年代桶、256 件文物與鑰匙情境 |
-| `game` | 題庫設定、房間、玩家、回合、作答、投票 | 256 筆題庫設定、10 個房間、19 位玩家與一組完整遊戲流程 |
-| `social` | 貼文、留言、檢舉、公告、活動、報名、通知 | 49 筆貼文、49 筆留言與管理情境 |
-| `store` | 商品、購物車、優惠券、訂單、付款、點數 | 256 件商品與 12 組訂單／付款紀錄 |
-| `user` | Identity、Profile、地址、成就 | 8 個帳號、2 個角色、8 筆 Profile 與會員情境 |
+| `admin` | 後台稽核操作 | 目前 1 筆；網站執行後由後台操作持續累積 |
+| `catalog` | 文物、分類、年代、鑰匙、解鎖 | 8 類、12 個年代桶、256 件文物、23 筆鑰匙規則與相關流水 |
+| `game` | 題庫設定、房間、玩家、回合、作答、投票 | 256 筆題庫設定、8 個房間、16 筆玩家紀錄與 20 個回合 |
+| `social` | 貼文（含官方公告類型）、留言、檢舉、活動、報名、通知、社群媒體 | 336 篇貼文、768 筆留言、3 筆檢舉、7 個活動與 5 筆報名；圖片依實際上傳累積 |
+| `store` | 商品、購物車、優惠券、訂單、付款、點數 | 256 件商品、208 組訂單／付款紀錄、12 張優惠券與 96 筆商品評價 |
+| `user` | Identity、Profile、地址、成就 | 24 個帳號、2 個角色、24 筆 Profile 與會員情境 |
 
 ### 2.2 Catalog
 
 | 資料表 | 筆數 | 用途 |
 | --- | ---: | --- |
 | `ArtifactCategories` | 8 | 正式文物分類 |
-| `EraBuckets` | 13 | 篩選與出題使用的年代區間 |
+| `EraBuckets` | 12 | 篩選與出題使用的年代區間 |
 | `Artifacts` | 256 | 文物主資料、尺寸、圖片、來源與授權 |
-| `KeyDefinitions` | 1 | 鑰匙規則情境 |
-| `UserKeyBalances` | 1 | 會員鑰匙餘額情境 |
-| `KeyTransactions` | 1 | 鑰匙異動流水情境 |
-| `ArtifactUnlocks` | 1 | 文物解鎖情境 |
+| `KeyDefinitions` | 23 | 鑰匙規則與作用範圍 |
+| `UserKeyBalances` | 49 | 會員鑰匙餘額情境 |
+| `KeyTransactions` | 49 | 鑰匙異動流水情境 |
+| `ArtifactUnlocks` | 0 | 尚未建立解鎖紀錄；功能啟用後由實際行為產生 |
 
 ### 2.3 Game
 
 | 資料表 | 筆數 | 用途 |
 | --- | ---: | --- |
 | `ArtifactQuestionEntries` | 256 | 每件文物的題型、難度與啟用設定 |
-| `GameRooms` | 10 | 3 筆 `WAITING`、2 筆 `PLAYING`、3 筆 `COMPLETED`、2 筆 `CANCELLED` |
-| `GamePlayers` | 19 | 8 位 `ONLINE`、1 位 `OFFLINE`、10 位 `LEFT`，可測試玩家與連線狀態清單 |
-| `GameRounds` | 1 | 已建立的回合 |
-| `RoundAnswers` | 2 | 玩家作答 |
-| `Votes` | 1 | 玩家投票 |
+| `GameRooms` | 8 | `WAITING`、`PLAYING`、`COMPLETED`、`CANCELLED` 各 2 筆 |
+| `GamePlayers` | 16 | 7 位 `ONLINE`、1 位 `OFFLINE`、8 位 `LEFT`，可測試玩家與連線狀態清單 |
+| `GameRounds` | 20 | 1 個 `ANSWERING`、1 個 `VOTING`、18 個 `REVEALED` 回合 |
+| `RoundAnswers` | 36 | 不同回合與玩家的作答內容 |
+| `Votes` | 36 | 玩家對作答的投票紀錄 |
 
 ### 2.4 Social
 
 | 資料表 | 筆數 | 用途 |
 | --- | ---: | --- |
-| `SocialPosts` | 49 | 41 筆 `PUBLISHED`、4 筆 `HIDDEN`、4 筆 `DELETED` |
-| `SocialComments` | 49 | 貼文留言與清單測試 |
-| `ContentReports` | 1 | `PENDING` 檢舉 |
-| `OfficialAnnouncements` | 1 | 官方公告 |
-| `Events` | 1 | 活動 |
-| `EventRegistrations` | 1 | 活動報名 |
-| `UserNotifications` | 1 | 站內通知 |
+| `SocialPosts` | 336 | 320 筆 `PUBLISHED`、10 筆 `HIDDEN`、6 筆 `DELETED` |
+| `SocialComments` | 768 | 不同貼文的主留言與回覆，保留父子討論脈絡 |
+| `ContentReports` | 3 | 2 筆 `PENDING` 與 1 筆 `RESOLVED` 檢舉 |
+| `OfficialAnnouncements` | 0 | 新公告使用 `SocialPosts` 的公告貼文類型；舊表僅保留結構相容性 |
+| `Events` | 7 | 涵蓋待審核、已通過、未通過、草稿、已發布與已取消情境 |
+| `EventRegistrations` | 5 | 不同活動的報名與出席情境 |
+| `UserNotifications` | 0 | 尚未建立通知；功能啟用後由實際事件產生 |
+| `MediaAssets` | 0 起 | 社群上傳圖片的中繼資料；官方文物圖鑑圖片不列入此表 |
 
-### 2.5 Store
+### 2.5 Admin
+
+| 資料表 | 筆數 | 用途 |
+| --- | ---: | --- |
+| `AuditLogs` | 1 筆起，由後台操作累積 | 管理操作的時間、操作者、目標與結果；不保存密碼、Cookie、Token 或 request body |
+
+### 2.6 Store
 
 | 資料表 | 筆數 | 用途 |
 | --- | ---: | --- |
 | `Products` | 256 | 與文物一對一的縮小複製品商品 |
-| `CartItems` | 1 | 購物車情境 |
-| `CouponDefinitions` | 1 | 優惠券定義 |
-| `UserCoupons` | 1 | `AVAILABLE` 會員優惠券 |
-| `StoreOrders` | 12 | 六種訂單狀態各 2 筆，可測試付款、備貨、出貨、完成與取消清單 |
-| `OrderDetails` | 12 | 每張訂單各一筆成交品名、單價與數量快照 |
-| `Payments` | 12 | 2 筆 `PENDING`、8 筆 `PAID`、2 筆 `FAILED` |
-| `PointBalances` | 1 | 會員點數餘額 |
-| `PointTransactions` | 1 | 點數異動流水 |
+| `ProductReviews` | 96 | 88 筆 `PUBLISHED`、5 筆 `HIDDEN`、3 筆 `DELETED`；公開摘要只計入已發布評價 |
+| `CartItems` | 0 | 尚未建立購物車內容；功能啟用後由會員操作產生 |
+| `CouponDefinitions` | 12 | 優惠券定義 |
+| `UserCoupons` | 9 | 會員可用、已使用與已過期優惠券情境 |
+| `StoreOrders` | 208 | 涵蓋六種訂單狀態：30 筆取消、38 筆完成、35 筆備貨、39 筆已付款、31 筆待付款、35 筆已出貨 |
+| `OrderDetails` | 298 | 多商品訂單的成交品名、單價與數量快照 |
+| `Payments` | 208 | 31 筆 `PENDING`、147 筆 `PAID`、30 筆 `FAILED` |
+| `PointBalances` | 5 | 會員點數餘額 |
+| `PointTransactions` | 8 | 點數異動流水 |
 
-### 2.6 User 與 Identity
+### 2.7 User 與 Identity
 
 | 資料表 | 筆數 | 用途 |
 | --- | ---: | --- |
-| `AspNetUsers` | 8 | Identity 帳號 |
+| `AspNetUsers` | 24 | 8 個主要情境帳號與 16 個展示會員 |
 | `AspNetRoles` | 2 | `Admin`、`User` |
-| `AspNetUserRoles` | 8 | 帳號與角色對應 |
-| `UserProfiles` | 8 | 暱稱與會員公開資料 |
-| `UserAddresses` | 1 | 地址情境 |
-| `Achievements` | 1 | 成就定義 |
-| `UserAchievements` | 1 | 會員取得成就情境 |
+| `AspNetUserRoles` | 24 | 帳號與角色對應 |
+| `UserProfiles` | 24 | 每個展示帳號都有自然的暱稱、簡介與公開範圍 |
+| `UserAddresses` | 3 | 不同收件用途的地址情境；不使用真實個資 |
+| `Achievements` | 12 | 展示成就 |
+| `UserAchievements` | 10 | 會員取得成就情境 |
 | `AspNetRoleClaims` | 0 | 尚未建立角色 Claim |
 | `AspNetUserClaims` | 0 | 尚未建立會員 Claim |
 | `AspNetUserLogins` | 0 | 第三方登入尚未啟用 |
@@ -131,7 +140,7 @@ catalog.Artifacts.Id
 | Social | `Events.ReviewStatus` | `PENDING`（待審核）、`APPROVED`（已通過）、`REJECTED`（未通過） |
 | Social | `Events.PublishStatus` | `DRAFT`（草稿）、`PUBLISHED`（已發布）、`CANCELLED`（已取消） |
 | Social | `EventRegistrations.Status` | `REGISTERED`（已報名）、`ATTENDED`（已出席）、`CANCELLED`（已取消） |
-| Social | `OfficialAnnouncements.Status` | `DRAFT`（草稿）、`PUBLISHED`（已發布）、`ARCHIVED`（已封存） |
+| Social | `OfficialAnnouncements.Status` | `DRAFT`（草稿）、`PUBLISHED`（已發布）、`ARCHIVED`（已封存；僅相容舊資料） |
 | Store | `StoreOrders.Status` | `PENDING_PAYMENT`（待付款）、`PAID`（已付款）、`FULFILLING`（備貨中）、`SHIPPED`（已出貨）、`COMPLETED`（已完成）、`CANCELLED`（已取消） |
 | Store | `Payments.Status` | `PENDING`（處理中）、`PAID`（付款成功）、`FAILED`（付款失敗）、`CANCELLED`（已取消） |
 | Store | `CouponDefinitions.DiscountType` | `PERCENT`（百分比折扣）、`FIXED`（固定金額折抵） |
@@ -141,12 +150,14 @@ catalog.Artifacts.Id
 
 訂單使用 `PENDING_PAYMENT`，因為訂單後續還會進入備貨、出貨等階段；付款紀錄位於 `Payments`，`PENDING` 已能表示該筆交易尚未取得結果。
 
-## 5. 可以直接建立的本機測試資料
+## 5. 資料工具（只供維護完整快照或個人資料庫使用）
+
+一般組員不需要執行本節。還原最新 Release 的單一 `.bak`，或執行同源的完整 `database/QMAH.sql` 後，已經包含本文件前段列出的完整共同資料，可以直接開始開發；本節的命令只由資料庫整合者在產生下一份完整 snapshot 前使用，或供個人在隔離資料庫中重建展示情境。
 
 以下資料可以在自己的 LocalDB 建立、修改與刪除：
 
 - Game：房間、玩家、回合、作答、投票
-- Social：貼文、留言、公告、活動、報名、通知、檢舉
+- Social：貼文、留言、公告貼文、活動、報名、通知、檢舉、社群媒體
 - Store：購物車、折價券、訂單、付款、點數
 - User：Profile、地址、通知、成就
 - Catalog：分類管理頁需要的測試分類、鑰匙與解鎖紀錄
@@ -155,7 +166,28 @@ catalog.Artifacts.Id
 
 共同資料已涵蓋所有房間狀態、所有訂單狀態，以及付款的 `PENDING`、`PAID`、`FAILED`。個人開發仍可在自己的 LocalDB 增加資料，但不需要為了測試基本清單與篩選重新準備這些狀態。
 
-若資料庫已有正式文物與 Identity 資料，但缺少共同展示情境，可執行 [`database/seed-showcase-data.sql`](../database/seed-showcase-data.sql)。腳本會補入社群貼文與留言、遊戲房間與玩家、商城訂單與付款，不會改 Schema，也不會由網站啟動流程自動執行。各區段都有防重複條件，可安全地再次執行。
+資料庫整合者若要重建下一份完整 snapshot，先在隔離的 canonical database 使用 `QmahDatabaseRelease seed-showcase-users` 建立或更新 24 個展示帳號，再使用資料工具產生與文物、商品及會員互相連結的內容。完成後必須重新執行 `Export-ReferenceDatabase.ps1`，讓產物回到單一完整 `.bak`／`.sql`；不可把這些命令列為組員還原後的步驟：
+
+```powershell
+dotnet run --project .\tools\QmahDataTools\QmahDatabaseRelease\QmahDatabaseRelease.csproj -- `
+  generate-showcase-data `
+  --connection "Server=(localdb)\MSSQLLocalDB;Database=QMAH;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=False" `
+  --post-count 288 `
+  --order-count 160 `
+  --seed 173
+```
+
+工具預設會在隔離資料庫產生一批 288 篇不同主題的貼文：約 96 篇文物專題、41 篇鑑定遊戲交流、112 篇一般社群內容、7 篇由實際活動資料建立的活動貼文，以及 32 篇官方公告。每篇貼文至少有兩筆留言，每三篇再增加一筆回覆，共 672 筆展示留言；另有 160 筆只使用文物縮小複製品的訂單與 96 筆商品評價。文物專題只取部分文物，遊戲貼文也只有部分回合會連到文物，因此不會讓 256 件文物看起來全部都被安排過討論。社群文章依固定順序取用獨立素材，不以亂數拼接句子或循環重用相同文章；文章、文物、活動、商品與會員關係仍由實際外鍵維持。`--post-count`、`--order-count` 與 `--seed` 可以在維護者或個人資料庫調整；相同參數會更新同一批工具資料，不會任意產生重複資料。這些數字是工具批次數量，最後快照的總數以本節前段的實際資料表統計為準；命令不建立 Schema、不執行 Migration，也不刪除非工具產生的資料。
+
+資料庫整合者若要在隔離資料庫補齊活動、檢舉、成就、優惠券及會員管理情境，才執行 [`database/seed-admin-showcase-data.sql`](../database/seed-admin-showcase-data.sql)。原本的 [`database/seed-showcase-data.sql`](../database/seed-showcase-data.sql) 保留為固定 SQL 的相容性補充；使用資料工具建立豐富展示資料時，不需要再執行它，避免同一批本機內容重複增加。一般組員還原完整快照後不需要執行這兩份腳本。
+
+PowerShell 或 SSMS 以 UTF-8 執行腳本時，建議使用：
+
+```powershell
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d QMAH -E -f 65001 -b -r1 -i .\database\seed-admin-showcase-data.sql
+```
+
+目前 Release 的 `.bak` 與 `database/QMAH.sql` 已包含 256 件文物、題庫、商品，以及本文件前段列出的社群、商城、遊戲與營運展示資料。展示資料工具與相容性腳本只用於維護者產生下一份完整快照或個人隔離資料庫，不是組員還原後的增量步驟，也不是文物匯入工具的替代品。
 
 ## 6. 訂單與付款規則
 

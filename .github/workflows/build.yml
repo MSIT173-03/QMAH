@@ -1,10 +1,6 @@
 name: Build
 
 on:
-  pull_request:
-    branches:
-      - main
-      - develop
   workflow_dispatch:
 
 permissions:
@@ -32,3 +28,44 @@ jobs:
 
       - name: Build
         run: dotnet build QMAH.sln --no-restore --configuration Release
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: QMAH.Client/package-lock.json
+
+      - name: Restore frontend dependencies
+        run: npm ci
+        working-directory: QMAH.Client
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: QMAH.Client
+
+      - name: Run existing frontend unit checks
+        run: npm test -- --watch=false
+        working-directory: QMAH.Client
+
+      - name: Restore data tools
+        shell: pwsh
+        run: |
+          $toolProjects = Get-ChildItem tools -Filter *.csproj -Recurse
+          foreach ($project in $toolProjects) {
+            dotnet restore $project.FullName --locked-mode
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+
+      - name: Build data tools
+        shell: pwsh
+        run: |
+          $toolProjects = Get-ChildItem tools -Filter *.csproj -Recurse
+          foreach ($project in $toolProjects) {
+            dotnet build $project.FullName --no-restore --configuration Release
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }

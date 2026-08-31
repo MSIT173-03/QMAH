@@ -5,7 +5,7 @@
 }
 @section Styles { <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" /> }
 
-<form asp-action="Create" method="post" class="card">
+<form asp-action="Create" method="post" class="card qmah-form-card">
     <div class="card-header"><h2 class="card-title">玩家資料</h2></div>
     <div class="card-body">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
@@ -20,6 +20,6 @@
             <div class="col-12"><label class="form-check"><input asp-for="IsReady" class="form-check-input" /><span class="form-check-label">玩家已準備</span></label></div>
         </div>
     </div>
-    <div class="card-footer d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" asp-action="Index">取消</a><button class="btn btn-primary" type="submit">建立玩家</button></div>
+<div class="card-footer qmah-card-footer"><a class="btn btn-outline-secondary" asp-action="Index">取消</a><button class="btn btn-primary" type="submit">建立玩家</button></div>
 </form>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

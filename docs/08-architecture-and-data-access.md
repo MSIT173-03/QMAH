@@ -1,177 +1,133 @@
 # 架構與資料存取規則
 
-這裡規定五個 Area 共用 SQL Server、EF Core 與 ASP.NET Core Identity 時的資料存取界線。
+QMAH 是一個共用 SQL Server 與 Identity 的專題，包含 Razor 後台、獨立 REST API、Angular 前台骨架與資料處理工具。拆分的目的只是讓責任清楚、方便雙啟動，不是把同一份資料模型複製成多套。
 
-## 目前採用的做法
-
-```text
-Razor View ⇄ ViewModel ⇄ Controller ⇄ [Service] ⇄ QmahDbContext ⇄ SQL Server
-```
-
-方括號表示 Service 依功能需要加入，不是每個 CRUD 的固定層。
-
-- `ViewModel`：畫面顯示或表單輸入的資料，只放該頁需要的欄位
-- `Controller`：處理路由、授權、ModelState、HTTP 回應與頁面導向
-- `Service`：封裝跨表交易、外部服務、長流程或多處共用規則
-- `QmahDbContext`：EF Core 存取 SQL Server 的共同入口，每個 HTTP request 一份
-- `Entity`：資料表對照，只在 Controller／未來的 Service 與 EF Core 之間使用
-
-QMAH 不採「每張表一個 Wrapper」、Generic Repository 或「每張表一個 Service」。EF Core 已提供查詢、Change Tracking 與交易；單表 CRUD 再包一層只會增加轉換與除錯位置。
-
-## 與課堂單層 MVC 範例的差異
-
-一般課堂範例可能把全站的 `Controllers`、`Models`、`ViewModels`、`Views` 都放在專案根目錄。這適合單一功能範例；QMAH 則以五個 Area 讓組員分工，但不代表所有 C# Model 都要跟著搬進 Area
+## 目前的資料流
 
 ```text
-課堂單層範例                     QMAH
-Controllers/                     Areas/<Area>/Controllers/
-Models/                           Models/Entities/、Models/Identity/
-ViewModels/                       Areas/<Area>/ViewModels/
-Views/                            Areas/<Area>/Views/
-DbContext 放在 Models/            Data/QmahDbContext.cs
+Razor 後台 ─┐
+REST API ───┼─> QMAH.Infrastructure ─> QmahDbContext ─> SQL Server
+匯入工具 ──┘
 ```
 
-QMAH 的 DB-first Entity、Identity Model 與 `QmahDbContext` 是共用資料契約，保留在 Area 外面。各 Area 分開的是畫面與流程：Controller、ViewModel、View、Area 專用前端檔案，以及真正需要時才建立的 Service
+Angular 前台目前只有 CLI 產生的空骨架，之後透過 `QMAH.Api` 的 JSON 契約取資料。Razor 後台與 API 使用不同主機與連接埠，但必須指向同一個資料庫，不可各自建立 Entity、Identity 或第二套 Schema。
 
-Entity 技術上可以放在其他資料夾，只要 namespace 與編譯引用正確，ASP.NET Core MVC 和 EF Core 仍能使用。但 QMAH 不建議搬移或在 Area 複製 Entity，因為同一個 Entity 可能被多個 Area 關聯查詢，DB-first 對照也包含分散於共用 partial 檔案的 navigation properties。搬移只會增加 namespace、DbContext、關聯與重新 Scaffold 對照時的維護成本
+## 專案責任
 
-另一個差異是 QMAH 已在 `Program.cs` 以 DI 註冊 scoped `QmahDbContext`。Controller 必須透過建構式注入，不沿用教學範例中每個 Action 自行 `new DbContext()` 的寫法
-
-## Controller 什麼時候直接用 DbContext
-
-單一資料表的列表、詳情、新增、修改與刪除，可由 Controller 直接注入 `QmahDbContext`。
-
-```text
-Catalog 分類管理
-  → CategoriesController
-  → _db.ArtifactCategories
-  → SQL Server
-```
-
-ASP.NET Core MVC 的官方 EF Core 教學也會在 Controller 注入 DbContext。這適合目前的單表 CRUD，但不是所有規模專案的唯一標準。流程開始跨表、連接外部服務或需要重用時，再加入 Service。
-
-## Service 什麼時候才建立
-
-目前沒有必須在功能開發前預建的 Service。Service 應由具體流程決定名稱、輸入、輸出與交易範圍。
-
-等下面這些功能真的開始做，而且流程本身已經值得獨立閱讀與測試時，再建立對應 Service：
-
-| 功能完成後才考慮的 Service | 為什麼需要 |
-| --- | --- |
-| 文物上架／下架同步 | 要一起調整圖鑑、題庫與商城的可用狀態；流程確定且需要重用時，再依實際責任命名 Service |
-| 結帳 | 同時建立訂單、明細、扣庫存、折價券與點數資料 |
-| 付款回呼 | 同時更新付款、訂單與可能的庫存或通知 |
-| 遊戲回合結算 | 同時處理答案、投票、獎勵、鑰匙、解鎖與成就 |
-
-符合下列任一條件時即可建立 Service，不必等到出現第二個 Controller：
-
-- 一次操作需在同一交易更新多張表
-- 狀態判斷、失敗處理或回復流程已不適合留在 Action
-- 需要呼叫金流、Email、檔案儲存或其他外部服務
-- 同一規則會由 Controller、背景工作或 API 共用
-- 需要不啟動 MVC 就能獨立測試流程
-
-短小且容易閱讀的單表 CRUD 保留在 Controller。不要預先建立沒有呼叫點的介面、Service 或方法。
-
-目前不預先建立文物上下架 Service。真正開始做同步上下架時，先用同一個 scoped `QmahDbContext` 完成查詢、規則檢查與儲存；流程變長、出現第二個呼叫點或需要單元測試時，再依實際責任命名並抽出 Service。
-
-## Entity、ViewModel、DTO 與 Wrapper
-
-| 類別 | 何時建立 | 不該做什麼 |
+| 專案 | 責任 | 不放什麼 |
 | --- | --- | --- |
-| Entity | 已有，對照 SQL Server 資料表 | 不直接拿來接收 POST 表單或回傳 Razor View |
-| ViewModel | 每個 Razor 頁面需要資料或表單時 | 不放資料庫追蹤或商業流程 |
-| DTO | 真的開 JSON API、匯入匯出或第三方介接時 | 不取代 Razor ViewModel |
+| `QMAH.Infrastructure` | DB-first Entity、Identity Model、`QmahDbContext`、跨主機共用流程與匯入核心 | HTTP Controller、Razor View、Angular 元件 |
+| `QMAH.Web` | Tabler／Bootstrap Razor 後台、五個 Area、後台登入與管理操作 | API DTO、第二份 Entity、Angular 頁面 |
+| `QMAH.Api` | `/api/v1` REST Controller、DTO、ProblemDetails、Cookie 驗證與開發文件入口 | Razor View、前台頁面、第二個 DbContext |
+| `QMAH.Client` | Angular 21.2.22 前台骨架、路由與之後的 API 呼叫 | 目前不放任何功能頁面 |
+| `tools/QmahDataTools` | 產生、預檢、匯入與匯出資料；可重現且可在命令列驗證 | 網站啟動時自動執行、資料庫 Migration |
 
-ViewModel 代表一個畫面的輸入或輸出。建立 Edit 頁時，只放 Edit 頁允許顯示或修改的欄位。它不需要與 Entity 一對一，也不需要為資料表所有欄位建立屬性。
-
-如果 `ProductWrapper.Name` 只是讀寫內部 `Product.Name`，Controller 仍要先從 `_db.Products` 取得 Entity，再建立 Wrapper，畫面又要轉成 ViewModel。這種 Wrapper 沒有減少任何查詢、驗證或 mapping，反而形成 `Entity → Wrapper → ViewModel`，因此不納入專案。
-
-只有類別真的需要保護一組不能被繞過的行為，而且無法合理放在既有 Entity、ViewModel 或 Service 時，才考慮 Domain Model 或 Wrapper。例如必須把第三方套件的物件轉成固定介面，但第三方類別本身不能修改；或舊系統物件必須維持相容，同時需要在外層統一新行為。QMAH 的一般 CRUD、跨表結帳與 JSON API 都不符合這個條件：CRUD 直接用 DbContext，結帳使用具體 Service，API 使用 DTO。
-
-不預先建立空的 `ViewModels` 資料夾。第一個頁面開始實作時，在該 Area 建立實際使用的 ViewModel。
-
-## Area 功能完成後的檔案樣貌
-
-正式 Repository 目前只保留五個 Area 的起始結構，不預先放空 Controller、ViewModel、Service 或 View。以下以 Catalog 的「文物管理」為例，說明功能逐步完成後合理的檔案位置：
+## 檔案放置
 
 ```text
+QMAH.Infrastructure/
+├─ Data/QmahDbContext.cs
+├─ Models/Entities/                  # SQL Server DB-first Entity
+├─ Models/Identity/                   # ApplicationUser 與 Identity 對照
+├─ Infrastructure/CatalogImport/     # 文物／題庫／商城匯入核心
+└─ Services/Social/                  # 活動與社群貼文共用同步流程
+
+QMAH.Api/
+├─ Controllers/V1/                   # API Controller 與 DTO
+└─ Infrastructure/                   # API 主機專用的驗證、媒體儲存設定
+
 QMAH.Web/
-├─ Data/
-│  └─ QmahDbContext.cs                 # 全站共用，不放在 Area
-├─ Models/
-│  ├─ Entities/
-│  │  └─ Artifact.cs                   # DB-first Entity，全站共用，不複製到 Area
-│  ├─ Identity/
-│  │  └─ ApplicationUser.cs            # ASP.NET Core Identity 使用者
-│  └─ (Api)/                           # 日後真的開 JSON API 才建立 DTO
-├─ Areas/
-│  └─ Catalog/
-│     ├─ Controllers/
-│     │  └─ ArtifactController.cs      # 路由、HTTP、ModelState、頁面導向
-│     ├─ ViewModels/
-│     │  ├─ ArtifactListItemViewModel.cs # Index 每列需要的欄位
-│     │  ├─ ArtifactEditViewModel.cs     # Create／Edit 允許輸入的欄位與表單驗證
-│     │  └─ ArtifactDetailsViewModel.cs  # Details 需要的欄位與關聯顯示資料
-│     ├─ (Services)/
-│     │  └─ ArtifactAvailabilityService.cs # 只有真正出現跨表同步流程時才建立
-│     └─ Views/
-│        └─ Artifacts/
-│           ├─ Index.cshtml
-│           ├─ Details.cshtml
-│           ├─ Create.cshtml
-│           ├─ Edit.cshtml
-│           └─ (_ArtifactForm.cshtml)    # Create／Edit 欄位重複時才抽 Partial View
-└─ wwwroot/
-   ├─ (css/areas/catalog.css)            # 只有 Catalog 確實需要的樣式
-   └─ (js/areas/catalog.js)              # 只有 Catalog 確實需要的前端行為
+├─ Areas/<Area>/Controllers/         # 五個 Area 的後台 Controller
+├─ Areas/Catalog/ViewModel/          # Catalog 既有的 Area ViewModel
+├─ Areas/Game/ViewModels/            # Game 既有的 Area ViewModel
+├─ Areas/Social/Models/              # Social 既有的 Area ViewModel
+├─ Areas/Store/ViewModels/            # Store 既有的 Area ViewModel
+├─ Areas/User/ViewModels/             # User 既有的 Area ViewModel
+├─ Controllers/OperationsController.cs
+├─ Infrastructure/                   # 後台顯示文字、稽核 Filter
+├─ Models/                           # 根後台 ViewModel
+└─ Views/                            # 根後台與共用 Layout
+
+QMAH.Client/src/app/
+├─ app.config.ts
+├─ app.routes.ts                     # 目前為空，尚未開始前台頁面
+└─ app.ts
 ```
 
-同一個 Entity 不需要對應一個固定名稱的 ViewModel。畫面需要什麼資料，就建立什麼 ViewModel；例如列表、編輯與詳細頁通常需要不同欄位。Razor View 與新增／修改表單都使用 ViewModel，不把資料庫 Entity 當成畫面契約。
+DB-first Entity 不搬進 Area，也不複製到 API。某個 Entity 同時被社群、商城或遊戲關聯使用時，仍以 `QMAH.Infrastructure.Models.Entities` 的同一份類別為準。
 
-`Services` 與 `Models/Api` 都是「出現實際需求後再建立」的資料夾。這樣從檔案結構即可看出功能目前是否已有跨表流程或 API，而不會留下名稱存在但沒有責任的空類別。
+各 Area 的 ViewModel 資料夾名稱保留既有專案慣例；新增檔案時沿用所屬 Area 的現有位置，不要只為了統一資料夾名稱而搬動整個 Area。
 
-## 資料庫規則放在哪裡
+## Controller、ViewModel 與 DTO
 
-| 規則 | 放置位置 |
+```text
+Razor View ⇄ Area ViewModel ⇄ QMAH.Web Controller ⇄ QmahDbContext
+Angular    ⇄ DTO            ⇄ QMAH.Api Controller ⇄ QmahDbContext
+```
+
+- Razor ViewModel 只放該頁需要顯示或接收的欄位；表單不直接以 Entity 綁定。
+- API DTO 是前台可依賴的 JSON 契約，不回傳 `PasswordHash`、Token、內部玩家識別值或不必要的資料庫欄位。Angular 21.2.22 骨架已配置 `/api/v1` 相對路徑、Cookie credentials 與 `XSRF-TOKEN-API`／`X-XSRF-TOKEN` 對應；前台開始製作時直接沿用這個邊界。
+- Controller 負責路由、授權、ModelState、ProblemDetails／頁面導向與輸入邊界。
+- `QmahDbContext` 由 DI 注入，每個 request 使用 scoped context；不要在 Action 內自行 `new` DbContext。
+- 避免建立只轉接一個屬性的 Wrapper、Generic Repository 或每張表一個 Service。EF Core 已提供查詢、追蹤與交易能力。
+
+API Controller 使用資源名稱命名，例如 `CatalogController`、`SocialController`、`MeController`、`StoreOrdersController`。`MeController` 只代表目前登入者這個資源，不取代其他資源 Controller；新增功能應依資源責任命名，不把所有 Endpoint 塞進單一 Controller。
+
+## 什麼時候建立 Service
+
+單表清單、詳情與簡單 CRUD 可以直接由 Controller 使用 `QmahDbContext`。只有出現下列情況才建立用途明確的 Service：
+
+- 同一個操作要在交易中更新多張表。
+- 狀態轉移、失敗復原或重複規則已經不適合留在 Action。
+- API、Razor 後台與匯入工具需要共用同一套規則。
+- 需要呼叫檔案系統、外部 HTTP、付款或寄信服務。
+- 流程需要在不啟動 MVC 的情況下單獨測試。
+
+目前的活動建立流程由 `EventSocialPostSynchronizer` 共用，因為活動與活動貼文必須維持一致；文物匯入由 `QMAH.Infrastructure/Infrastructure/CatalogImport` 共用，因為後台與 CLI 必須得到相同的預檢、同步與冪等結果。除此之外，不預先建立空介面或空 Service。
+
+## 資料邊界
+
+文物、題庫與商城商品是三種不同責任：
+
+- `catalog.Artifacts` 保存來源、授權、分類、年代與圖鑑資料。
+- `game.ArtifactQuestionEntries` 保存題庫難度、題型與是否可出題；題庫同步預設開啟。
+- `store.Products` 保存商品文案、價格、庫存與營運狀態；是否同步商城由匯入者明確選擇。
+
+三者以 `ArtifactId` 關聯，但不把商城欄位塞進文物，也不讓匯入覆蓋人工庫存與上架狀態。文物圖鑑的官方圖片維持既有結構與公開規則；社群上傳圖片則是另一個 `social.MediaAssets` 資料邊界，不能混用。
+
+公告不是獨立的編輯流程，而是 `social.SocialPosts` 的特殊貼文類型；活動仍是 `social.Events` 的獨立資料，核准／發布後可同步產生一篇活動貼文。舊 `social.OfficialAnnouncements` 僅為既有資料相容保留，新功能不再新增另一套公告來源。
+
+## Identity 與安全邊界
+
+- `ApplicationUser`、角色、密碼、Claim、Login 與 Token 使用 ASP.NET Core Identity API。
+- Profile、地址、通知、成就等 QMAH 業務資料使用 `QmahDbContext`。
+- 後台與 API 使用 Cookie 驗證；API 的 unsafe request 仍需 Anti-forgery token。
+- Controller 與 API 都必須重新檢查授權、外鍵、狀態、數量與擁有者，不只依賴畫面隱藏按鈕。
+- Razor 預設 HTML encode；不對使用者輸入使用 `Html.Raw()`。
+- 上傳檔案要檢查大小、檔案簽章、路徑邊界與資料庫關聯；原始檔名只作顯示，不直接當儲存路徑。
+- 稽核紀錄只保存操作者、目標、時間與結果，不保存密碼、Cookie、Token 或完整 request body。
+
+## DB-first 變更流程
+
+QMAH 不使用 EF Migration、不呼叫 `EnsureCreated()` 或 `Migrate()`。資料表、欄位、索引、外鍵、CHECK constraint 與預設值以 SQL Server 為準。
+
+1. 先說明資料表與既有 Area 的影響。
+2. 在 SQL Server 與 `database/Schema.sql` 定案結構。
+3. 以工具產生或核對 DB-first Entity 與 `QmahDbContext`，暫存輸出放在工作區外。
+4. 同步更新共用流程、API DTO／文件與必要的展示資料。
+5. 遠端版本若有 Schema 或資料契約變更，要求以最新版完整 `.bak` 或 `database/QMAH.sql` 乾淨重建資料庫；快照應已包含該版本共同資料，不要求組員自行增量匯入。不可讓網站啟動時偷偷建表或修改既有 Schema。
+6. 重新執行 schema、資料列、EF model 與完整 SQL snapshot 的驗證。
+
+課堂 Scaffold 或 DB-first 工具只負責產生起始碼與對照結果。產生後仍要檢查 namespace、Identity 關聯、ViewModel、授權、Anti-forgery、狀態規則與空資料畫面，不能把產生結果直接視為完成。
+
+## 開發時的簡單判斷
+
+| 情況 | 做法 |
 | --- | --- |
-| 必填、外鍵、唯一值、資料型別、合法狀態值 | SQL Server Schema 與 `database/Schema.sql` |
-| 表單必填、長度、格式與友善錯誤訊息 | ViewModel 的 Data Annotations；真的出現大量可重用條件時再統一選擇驗證工具 |
-| 需要查資料才能判斷的流程規則 | 短小單表規則放 Controller；跨表、長流程、外部服務或重用規則放 Service |
-| 密碼、角色、登入、Token | ASP.NET Core Identity API |
+| 單表後台清單／編輯 | Area Controller + ViewModel + `QmahDbContext` |
+| 跨表同步或交易 | 具體名稱的 Service + 一個明確交易範圍 |
+| 前台讀寫 JSON | `QMAH.Api` 的 resource Controller + DTO |
+| 文物批次資料 | 先用資料工具產生／預檢，再由後台或 CLI 套用 |
+| 尚未確定的未來需求 | 先保留清楚的資料欄位與 API 邊界，不先建立空模組 |
 
-`QmahDbContext.CheckConstraints.cs` 已不保留。資料庫已經真正執行 CHECK constraint，而 QMAH 不用 EF Migration；再在 Fluent mapping 寫一次同樣規則不會多一層保護，只會讓 Schema 修改時多一份要同步。
-
-## Entity 與 DbContext 怎麼產生
-
-QMAH 是 DB-first。SQL Server Schema 定案後，使用 EF Core Scaffold 產生暫存對照，確認 Entity、欄位、索引與關聯有沒有落差。`QmahDbContext` 本身已保留必要 XML 註解，也在 `OnModelCreating` 先呼叫 `base.OnModelCreating(modelBuilder)`，讓 Identity 的標準 mapping 先建立，再加上 QMAH 的 schema 對照。
-
-目前 `Models/Entities` 中有 33 個資料表 Entity 檔案，屬性與基礎 Navigation Property 來自 SQL Server Scaffold 對照，不是依畫面需求自行猜出來的類別。這些 Entity 的用途只有三項：代表資料列、保存外鍵值、提供 EF Core 關聯導覽；不放表單欄位、畫面文字或 Controller 流程。
-
-另外兩個 `partial` 檔案處理 Scaffold 無法直接完成的整合差異：
-
-- `ApplicationUserNavigations.cs`：把各資料表的 `UserId` 外鍵連到現有 `ApplicationUser`，避免再產生一套 `AspNetUser` POCO
-- `RelationshipNavigations.cs`：補上文物、回合、解鎖與社群貼文之間可直接查詢的反向關聯
-
-`Models/Identity/ApplicationUser.Relationships.cs` 則保存 Identity 使用者連到各 Area 的反向集合。這三個檔案不代表新資料表，也不會新增欄位；它們只是把 SQL Server 已存在的外鍵完整呈現在 C# 模型中。
-
-```powershell
-dotnet tool restore
-dotnet ef dbcontext scaffold "<connection string>" Microsoft.EntityFrameworkCore.SqlServer --no-onconfiguring
-```
-
-不要把 Scaffold 直接覆蓋到 Repository。原因是 QMAH 使用 ASP.NET Core Identity：原始 Scaffold 會另外產生 `AspNetUser`、`AspNetRole` 等 POCO，和既有的 `ApplicationUser`、`IdentityRole<Guid>` 重複。
-
-正確做法是以 Scaffold 結果當作資料庫對照基準，保留 ASP.NET Core Identity 的標準類別，再把必要的 QMAH 關聯對應回 `QmahDbContext`。這不是手寫猜 Entity；是先由資料庫產生，再處理 Identity 這個框架必要的整合差異。
-
-Scaffold 核對輸出只放工作區 `_工具輸出`，不納入 Repository。
-
-## Area 開發檢查項目
-
-1. 看 Schema／Diagram，確認主鍵、外鍵、唯一限制與 CHECK constraint
-2. 在自己的 `Areas/<Area>/ViewModels` 建立該頁需要的 ViewModel
-3. Controller 注入 `QmahDbContext`，先做唯讀列表與詳情
-4. 再做表單 POST，使用 ViewModel、`ModelState`、Anti-forgery 與 Post/Redirect/Get
-5. 跨表交易、長流程、外部服務、重用規則或獨立測試需求出現時新增 Service
-
-完整範例請看[從清單到完整 CRUD](05-crud-tutorial.md)、[Visual Studio Scaffold 操作教學](06-scaffolding-guide.md)與[QmahDbContext 使用手冊](07-dbcontext-usage.md)。
+這樣可以保留課堂專案容易理解的 Controller／ViewModel 寫法，同時讓 API、匯入工具與資料層在前台開始製作後不必重新複製或搬遷。

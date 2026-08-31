@@ -1,8 +1,8 @@
-# Razor 與前端開發手冊
+# Razor 後台與前台銜接手冊
 
-QMAH 的畫面使用 Razor View、HTML、CSS、Bootstrap、JavaScript、jQuery 與 ASP.NET Core Model Validation。
+目前可操作的管理畫面使用 Razor View、HTML、CSS、Bootstrap、JavaScript、jQuery 與 ASP.NET Core Model Validation，位於 `QMAH.Web`。Angular 前台另位於 `QMAH.Client`，目前只保留 CLI 產生的骨架，不在本文件開始製作前台頁面。
 
-前端函式庫已放在 `QMAH.Web/wwwroot/lib`，Clone 後不需要再透過 npm、LibMan 或 CDN 下載。日常開發以 Visual Studio、瀏覽器與 Hot Reload 為主。
+Razor 後台的 Bootstrap、jQuery、驗證套件與 Tabler 核心資產已放在 `QMAH.Web/wwwroot/lib`，Clone 後不需要再透過 npm 或 LibMan 下載。共用 Layout 另載入固定版本的 Tabler icon font CDN；沒有外網時核心版面仍可使用，但圖示字型可能無法顯示。不要再加入第二份前端函式庫或改用未固定版本的 CDN。Angular 的 npm 依賴與 API 呼叫方式請看 [`12-frontend-start-guide.md`](12-frontend-start-guide.md) 與 [`13-rest-api.md`](13-rest-api.md)。
 
 ## 共用前端版本
 
@@ -10,19 +10,17 @@ QMAH 的畫面使用 Razor View、HTML、CSS、Bootstrap、JavaScript、jQuery �
 | --- | ---: | --- |
 | Bootstrap | 5.3.8 | Grid、排版、表單與互動元件 |
 | jQuery | 3.7.1 | 簡單 DOM 操作、事件與 AJAX |
-| jQuery Validation | 1.22.1 | 用戶端欄位驗證 |
+| jQuery Validation | 1.22.1 | 使用者端欄位驗證 |
 | jQuery Validation Unobtrusive | 4.0.0 | 將 ASP.NET Core 驗證規則接到 jQuery Validation |
 
-共用版型 [`_Layout.cshtml`](../QMAH.Web/Views/Shared/_Layout.cshtml) 已載入：
+共用後台版型 [`_AdminLayout.cshtml`](../QMAH.Web/Views/Shared/Admin/_AdminLayout.cshtml) 已載入：
 
-- Bootstrap CSS。
-- `site.css` 與 Razor scoped CSS。
-- jQuery。
-- 包含 Popper 的 `bootstrap.bundle.min.js`。
-- `site.js`。
+- Tabler、Bootstrap、後台共用 CSS。
+- jQuery 與後台 JavaScript。
+- 防錯誤、主題、導覽與共用互動腳本。
 - 選用的 `Styles` 與 `Scripts` section。
 
-頁面不需要重複載入這些共用檔案。
+後台 Area View 不需要重複載入這些共用檔案；Angular 元件則使用自己的 `angular.json` 與 npm bundle，不與 Razor Layout 混用。
 
 ## View 放置位置
 
@@ -65,7 +63,7 @@ Controller 必須有正確的 `[Area("Catalog")]`，導覽連結則明確指定 
 
 ## 共用版型與 section
 
-所有一般頁面使用共用 `_Layout.cshtml`。頁面標題寫入 `ViewData`：
+所有後台頁面使用共用 `_AdminLayout.cshtml`。頁面標題寫入 `ViewData`：
 
 ```cshtml
 @{
@@ -92,7 +90,7 @@ Controller 必須有正確的 `[Area("Catalog")]`，導覽連結則明確指定 
 }
 ```
 
-`asp-append-version="true"` 會在網址加入內容雜湊，檔案更新後可避免瀏覽器繼續使用舊快取。
+`asp-append-version="true"` 會在網址加入內容雜湊，檔案更新後可避免瀏覽器繼續使用舊快取。後台字體放在 `wwwroot/fonts`，以 WOFF2 本地載入；Web 專案也會在傳輸時壓縮 CSS、JavaScript、HTML、JSON 與 SVG。CSS 仍依責任拆檔，方便維護，不需要為了傳輸而在原始碼合併。
 
 ## CSS 分工
 
@@ -104,6 +102,8 @@ Controller 必須有正確的 `[Area("Catalog")]`，導覽連結則明確指定 
 | `wwwroot/css/areas/catalog.css` | 圖鑑 Area 專用樣式 |
 | `wwwroot/css/areas/user.css` | 會員 Area 專用樣式 |
 | `wwwroot/css/areas/store.css` | 商城 Area 專用樣式 |
+| `wwwroot/admin/css/qmah-fonts.css` | 後台本地字體與字體角色 |
+| `wwwroot/admin/css/qmah-admin-typography.css` | 後台文字尺寸、階層與閱讀行高 |
 | `*.cshtml.css` | 與單一 Razor View／元件緊密相關的 scoped CSS |
 
 某個 Area 的頁面樣式不要整批塞進 `site.css`。只有兩個以上模組確定共用、命名與行為也一致時，才提升為全站樣式。
@@ -177,7 +177,7 @@ Razor 預設會進行 HTML 編碼，直接使用 `@Model.Name` 即可。
 }
 ```
 
-用戶端驗證只改善操作體驗，不能取代後端驗證。價格、庫存、UserId、角色、付款狀態、遊戲狀態與外鍵都要由 Controller 重新檢查。
+使用者端驗證只改善操作體驗，不能取代後端驗證。價格、庫存、UserId、角色、付款狀態、遊戲狀態與外鍵都要由 Controller 重新檢查。
 
 > **微軟官方做法：** MVC 的 Form Tag Helper 會為 POST 表單產生防偽 Token，Controller 仍需驗證請求；前端驗證不能取代伺服器端的資料與授權檢查。[Prevent Cross-Site Request Forgery attacks](https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0)
 
@@ -222,7 +222,7 @@ Area JavaScript 不要修改其他 Area 的 DOM，也不要把整頁資料複製
 
 ## 圖片與靜態檔案
 
-正式文物圖片位於：
+正式文物圖鑑圖片位於：
 
 ```text
 QMAH.Web/wwwroot/media/catalog/{categoryCode}/{artifactRef}/
@@ -248,6 +248,10 @@ QMAH.Web/wwwroot/media/catalog/{categoryCode}/{artifactRef}/
 - 以 CSS 控制顯示尺寸，不用上傳超大圖再靠瀏覽器縮小。
 - 圖片失效時顯示替代狀態，不把來源網址直接當網站圖片網址。
 - 不把 Base64 圖片、下載快取或 raw 素材放進 Razor／JavaScript。
+
+文物圖鑑圖片與社群上傳圖片是兩個不同的資料邊界。圖鑑素材維持既有分類／故宮編號資料夾與來源授權規則，不套用社群媒體的管理狀態。社群上傳圖片由 `social.MediaAssets` 保存檔案中繼資料，檔案使用簡單的永久流水號與副檔名，平面放在共用媒體根目錄；後台或 API 透過受控 Endpoint 讀取，不能直接當成公開靜態檔案。
+
+社群圖片的預覽與下架由後台「營運中心 → 圖庫管理」處理。`OriginalFileName` 只作畫面顯示，不能直接拼成檔案路徑；上傳仍需驗證檔案大小、簽章、Content-Type、路徑邊界與貼文關聯。測試上傳檔案只留在本機，不要提交到 Repository。
 
 ## 響應式與可用性
 
@@ -297,7 +301,7 @@ wwwroot/js/areas/store.js
 
 ### 圖片在本機正常，其他人看不到
 
-檢查資料庫是否存了本機絕對路徑，或圖片檔沒有加入 Repository。正式路徑必須以 `/media/` 開頭，實體檔案位於 `wwwroot/media`。
+檢查資料庫是否存了本機絕對路徑，或圖片檔沒有加入 Repository。文物圖鑑正式路徑必須以 `/media/catalog/` 開頭，實體檔案位於 `wwwroot/media/catalog`；社群圖片則由 API／後台受控 Endpoint 提供，不能把本機上傳檔直接當公開靜態資源。
 
 ## 完成功能前檢查
 

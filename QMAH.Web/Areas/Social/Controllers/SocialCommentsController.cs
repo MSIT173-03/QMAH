@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Social.Models;
 using QMAH.Web.Areas.Social.Services;
-using QMAH.Web.Data;
-using QMAH.Web.Models.Entities;
+using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Web.Areas.Social.Controllers;
 
