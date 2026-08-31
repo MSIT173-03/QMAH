@@ -133,6 +133,15 @@
   background: var(--qmah-area-soft);
 }
 
+.qmah-admin .qmah-media-avatar-item__body {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .35rem;
+}
+
 .qmah-admin .qmah-media-avatar-item span {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -431,6 +440,51 @@
   letter-spacing: -.025em;
 }
 
+.qmah-admin .qmah-media-avatar-item__body .btn {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+/* 營運資料在背景查詢時先保留穩定版位，完成後直接替換內容，不讓畫面高度跳動 */
+.qmah-admin .qmah-operations-loading {
+  display: grid;
+  gap: 1rem;
+}
+
+.qmah-admin .qmah-operations-loading__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.qmah-admin .qmah-operations-loading__block {
+  min-height: 7rem;
+  border: 1px solid var(--qmah-line-soft);
+  border-radius: var(--qmah-radius-card, 12px);
+  background: linear-gradient(100deg, var(--qmah-surface) 35%, var(--qmah-area-soft) 50%, var(--qmah-surface) 65%);
+  background-size: 220% 100%;
+  animation: qmah-operations-loading 1.4s ease-in-out infinite;
+}
+
+.qmah-admin .qmah-operations-loading__block--kpi {
+  min-height: 8.5rem;
+}
+
+.qmah-admin .qmah-operations-loading__block--chart {
+  min-height: 22rem;
+}
+
+.qmah-admin .qmah-operations-dashboard .text-secondary,
+.qmah-admin .qmah-operations-dashboard .card-subtitle,
+.qmah-admin .qmah-operations-dashboard .form-hint {
+  color: var(--qmah-ink-soft) !important;
+}
+
+@keyframes qmah-operations-loading {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
 .qmah-admin .qmah-detail-intro__description {
   max-width: 68ch;
   margin: .4rem 0 0;
@@ -535,6 +589,10 @@
     grid-template-columns: 1fr;
   }
 
+  .qmah-admin .qmah-operations-loading__row {
+    grid-template-columns: 1fr;
+  }
+
 }
 
 /* 減少動態時保留可讀的 hover/focus 狀態，只移除卡片位移與圖表線條淡出。 */
@@ -555,5 +613,9 @@
   .qmah-admin .qmah-operations-summary-card--link::before {
     transition: none;
     transform: scaleX(1);
+  }
+
+  .qmah-admin .qmah-operations-loading__block {
+    animation: none;
   }
 }

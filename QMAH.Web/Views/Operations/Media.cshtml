@@ -6,6 +6,8 @@
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
     var start = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
     var end = Math.Min(Model.Page * Model.PageSize, Model.TotalCount);
+    var avatarStart = Model.AvatarTotalCount == 0 ? 0 : ((Model.AvatarPage - 1) * Model.AvatarPageSize) + 1;
+    var avatarEnd = Math.Min(Model.AvatarPage * Model.AvatarPageSize, Model.AvatarTotalCount);
 }
 
 @section PageActions {
@@ -20,9 +22,18 @@
 <div class="card qmah-filter-panel mb-3">
     <div class="card-body">
         <form method="get" asp-action="Media" class="row g-3 align-items-end">
-            <div class="col-12 col-lg-5">
+            <div class="col-12 col-lg-4">
                 <label asp-for="Keyword" class="form-label">搜尋圖片</label>
-                <input asp-for="Keyword" class="form-control" placeholder="原始檔名或替代文字" />
+                <input asp-for="Keyword" class="form-control" placeholder="檔名、替代文字、上傳者或貼文" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <label asp-for="Source" class="form-label">圖片用途</label>
+                <select asp-for="Source" class="form-select">
+                    <option value="">全部社群圖片</option>
+                    <option value="POST">貼文內文圖片</option>
+                    <option value="EVENT">活動公告附圖</option>
+                    <option value="UNLINKED">未關聯圖片</option>
+                </select>
             </div>
             <div class="col-12 col-sm-6 col-lg-2">
                 <label asp-for="Status" class="form-label">顯示狀態</label>
@@ -34,16 +45,24 @@
                 </select>
             </div>
             <div class="col-12 col-sm-6 col-lg-2">
+                <label asp-for="Sort" class="form-label">排序方式</label>
+                <select asp-for="Sort" class="form-select">
+                    <option value="NEWEST">最新上傳</option>
+                    <option value="OLDEST">最早上傳</option>
+                    <option value="SEQUENCE">圖片編號</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-1">
                 <label asp-for="PageSize" class="form-label">每頁筆數</label>
                 <select asp-for="PageSize" class="form-select">
-                    @foreach (var size in new[] { 10, 20, 50, 100 })
+                    @foreach (var size in new[] { 10, 20, 30, 50, 100 })
                     {
                         <option value="@size">@size</option>
                     }
                 </select>
             </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-filter me-1"></i>套用篩選</button>
+            <div class="col-12 col-lg-1">
+                <button type="submit" class="btn btn-primary w-100" title="套用篩選"><i class="ti ti-filter" aria-hidden="true"></i><span class="visually-hidden">套用篩選</span></button>
             </div>
         </form>
     </div>
@@ -81,10 +100,20 @@
                             {
                                 <div><i class="ti ti-user-circle me-1" aria-hidden="true"></i>會員頭貼：@item.AvatarOwnerName</div>
                             }
-                            @if (item.PostId.HasValue)
+                            @if (item.EventId.HasValue)
                             {
                                 <div>
-                                    <i class="ti ti-message-circle me-1" aria-hidden="true"></i>貼文：
+                                    <i class="ti ti-calendar-event me-1" aria-hidden="true"></i>活動公告附圖：
+                                    <a asp-area="Social" asp-controller="SocialEventAdmin" asp-action="Edit" asp-route-id="@item.EventId">
+                                        @(string.IsNullOrWhiteSpace(item.EventTitle) ? "已關聯活動" : item.EventTitle)
+                                    </a>
+                                </div>
+                                <div class="small text-secondary">透過活動同步貼文關聯</div>
+                            }
+                            else if (item.PostId.HasValue)
+                            {
+                                <div>
+                                    <i class="ti ti-message-circle me-1" aria-hidden="true"></i>貼文內文圖片：
                                     <a asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Edit" asp-route-id="@item.PostId">
                                         @(string.IsNullOrWhiteSpace(item.PostTitle) ? "已關聯貼文" : item.PostTitle)
                                     </a>
@@ -143,9 +172,9 @@
         {
             <nav aria-label="圖片清單分頁">
                 <ul class="pagination m-0">
-                    <li class="page-item @(Model.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Media" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-keyword="@Model.Keyword" asp-route-status="@Model.Status">上一頁</a></li>
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Media" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-keyword="@Model.Keyword" asp-route-status="@Model.Status" asp-route-source="@Model.Source" asp-route-sort="@Model.Sort">上一頁</a></li>
                     <li class="page-item disabled"><span class="page-link">第 @Model.Page / @Model.TotalPages 頁</span></li>
-                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Media" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-keyword="@Model.Keyword" asp-route-status="@Model.Status">下一頁</a></li>
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Media" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-keyword="@Model.Keyword" asp-route-status="@Model.Status" asp-route-source="@Model.Source" asp-route-sort="@Model.Sort">下一頁</a></li>
                 </ul>
             </nav>
         }
@@ -158,9 +187,43 @@
             <h2 id="avatar-index-title" class="card-title mb-1">會員頭貼索引</h2>
             <p class="text-secondary mb-0">顯示目前由系統管理的會員頭貼，方便確認檔案用途與擁有者。</p>
         </div>
-        <span class="badge bg-secondary-lt">@Model.AvatarItems.Count 位會員</span>
+        <span class="badge bg-secondary-lt">@Model.AvatarTotalCount 位會員</span>
     </div>
     <div class="card-body">
+        <form method="get" asp-action="Media" class="row g-3 align-items-end mb-4">
+            <input type="hidden" name="keyword" value="@Model.Keyword" />
+            <input type="hidden" name="status" value="@Model.Status" />
+            <input type="hidden" name="source" value="@Model.Source" />
+            <input type="hidden" name="sort" value="@Model.Sort" />
+            <input type="hidden" name="page" value="@Model.Page" />
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
+            <input type="hidden" name="avatarPage" value="1" />
+            <div class="col-12 col-lg-5">
+                <label asp-for="AvatarKeyword" class="form-label">搜尋會員頭貼</label>
+                <input asp-for="AvatarKeyword" class="form-control" placeholder="輸入會員暱稱" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label asp-for="AvatarSort" class="form-label">頭貼排序</label>
+                <select asp-for="AvatarSort" class="form-select">
+                    <option value="NAME">依暱稱</option>
+                    <option value="NEWEST">最近更新</option>
+                    <option value="OLDEST">最早更新</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <label asp-for="AvatarPageSize" class="form-label">每頁筆數</label>
+                <select asp-for="AvatarPageSize" class="form-select">
+                    @foreach (var size in new[] { 10, 20, 30, 50, 100 })
+                    {
+                        <option value="@size">@size</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-lg-2">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="ti ti-search me-1" aria-hidden="true"></i>套用</button>
+            </div>
+        </form>
+        <div class="small text-secondary mb-3">顯示第 @avatarStart～@avatarEnd 筆，共 @Model.AvatarTotalCount 位會員</div>
         @if (Model.AvatarItems.Count == 0)
         {
             <div class="qmah-empty-state"><i class="ti ti-user-off" aria-hidden="true"></i><span>目前沒有可顯示的會員頭貼。</span></div>
@@ -172,9 +235,25 @@
                 {
                     <div class="qmah-media-avatar-item">
                         <img src="@avatar.AvatarPath" alt="@avatar.OwnerName 的會員頭貼" loading="lazy" decoding="async" />
-                        <span>@avatar.OwnerName</span>
+                        <div class="qmah-media-avatar-item__body">
+                            <span>@avatar.OwnerName</span>
+                            <a asp-area="User" asp-controller="Members" asp-action="Edit" asp-route-id="@avatar.UserId" class="btn btn-sm btn-outline-primary">編輯頭貼</a>
+                        </div>
                     </div>
                 }
+            </div>
+        }
+        @if (Model.AvatarTotalPages > 1)
+        {
+            <div class="qmah-card-footer qmah-card-footer--split mt-4">
+                <span class="text-secondary">第 @Model.AvatarPage / @Model.AvatarTotalPages 頁</span>
+                <nav aria-label="會員頭貼索引分頁">
+                    <ul class="pagination m-0">
+                        <li class="page-item @(Model.AvatarPage <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Media" asp-route-page="@Model.Page" asp-route-pageSize="@Model.PageSize" asp-route-keyword="@Model.Keyword" asp-route-status="@Model.Status" asp-route-source="@Model.Source" asp-route-sort="@Model.Sort" asp-route-avatarKeyword="@Model.AvatarKeyword" asp-route-avatarSort="@Model.AvatarSort" asp-route-avatarPage="@(Model.AvatarPage - 1)" asp-route-avatarPageSize="@Model.AvatarPageSize">上一頁</a></li>
+                        <li class="page-item disabled"><span class="page-link">@Model.AvatarPage / @Model.AvatarTotalPages</span></li>
+                        <li class="page-item @(Model.AvatarPage >= Model.AvatarTotalPages ? "disabled" : null)"><a class="page-link" asp-action="Media" asp-route-page="@Model.Page" asp-route-pageSize="@Model.PageSize" asp-route-keyword="@Model.Keyword" asp-route-status="@Model.Status" asp-route-source="@Model.Source" asp-route-sort="@Model.Sort" asp-route-avatarKeyword="@Model.AvatarKeyword" asp-route-avatarSort="@Model.AvatarSort" asp-route-avatarPage="@(Model.AvatarPage + 1)" asp-route-avatarPageSize="@Model.AvatarPageSize">下一頁</a></li>
+                    </ul>
+                </nav>
             </div>
         }
     </div>

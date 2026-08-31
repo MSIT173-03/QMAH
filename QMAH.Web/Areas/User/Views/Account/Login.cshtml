@@ -102,11 +102,10 @@
 
                                         <figure class="qmah-auth-artifact qmah-auth-artifact--@sizeClass qmah-auth-artifact--@tiltClass qmah-auth-artifact--@raiseClass qmah-auth-artifact--@spacingClass">
                                             <img src="@imagePath"
-                                                 data-qmah-artifact-slot="@((ribbonIndex + itemIndex * ribbonCount) % artifactImages.Length)"
                                                  data-qmah-artifact-image
                                                  alt=""
                                                  decoding="async"
-                                                 loading="@(repeat == 0 ? "eager" : "lazy")"
+                                                 loading="eager"
                                                  fetchpriority="low" />
                                         </figure>
                                     }
@@ -213,48 +212,38 @@
             const page = document.querySelector(".qmah-auth-page");
             const wall = document.querySelector(".qmah-auth-editorial-wall");
 
-            // 圖片保留版位，完成解碼後再短暫顯影，避免慢速載入像逐張播放
-            document.querySelectorAll("[data-qmah-artifact-image]").forEach((image) => {
-                const frame = image.closest(".qmah-auth-artifact");
-                const markLoaded = () => frame?.classList.add("qmah-auth-artifact--loaded");
-                const markFailed = () => frame?.classList.add("qmah-auth-artifact--failed");
-
-                image.addEventListener("load", markLoaded, { once: true });
-                image.addEventListener("error", markFailed, { once: true });
-                if (image.complete) {
-                    image.naturalWidth > 0 ? markLoaded() : markFailed();
-                }
-            });
-
-            // 只保留少量可見版位，依序替換下一批本機縮圖，讓整個館藏都能輪到且不一次載入全部圖片
+            // 只在畫面外預載下一張，確認仍在畫面外後才替換，避免圖片牆在眼前斷裂
             if (wall) {
                 const artifactPool = JSON.parse(wall.dataset.qmahArtifactPool || "[]");
-                const slotMap = new Map();
-                wall.querySelectorAll("[data-qmah-artifact-image]").forEach((image) => {
-                    const slot = image.dataset.qmahArtifactSlot;
-                    if (!slotMap.has(slot)) slotMap.set(slot, []);
-                    slotMap.get(slot).push(image);
-                });
-
-                const slots = [...slotMap.values()];
-                let nextArtifactIndex = slots.length;
+                const images = [...wall.querySelectorAll("[data-qmah-artifact-image]")];
+                let nextArtifactIndex = 24;
 
                 const showNextArtifact = () => {
-                    if (document.hidden || artifactPool.length <= slots.length || slots.length === 0) return;
+                    if (document.hidden || artifactPool.length <= images.length) return;
 
-                    const images = slots[nextArtifactIndex % slots.length];
+                    const sceneBounds = scene?.getBoundingClientRect();
+                    if (!sceneBounds) return;
+
+                    const target = images.find((image) => {
+                        const bounds = image.getBoundingClientRect();
+                        return bounds.right < sceneBounds.left || bounds.left > sceneBounds.right;
+                    });
+                    if (!target) return;
+
                     const imagePath = artifactPool[nextArtifactIndex % artifactPool.length];
                     nextArtifactIndex += 1;
                     const preload = new Image();
                     preload.decoding = "async";
-                    preload.onload = () => images.forEach((image) => {
-                        image.src = imagePath;
-                        image.closest(".qmah-auth-artifact")?.classList.add("qmah-auth-artifact--loaded");
-                    });
+                    preload.onload = () => {
+                        const bounds = target.getBoundingClientRect();
+                        if (bounds.right < sceneBounds.left || bounds.left > sceneBounds.right) {
+                            target.src = imagePath;
+                        }
+                    };
                     preload.src = imagePath;
                 };
 
-                window.setInterval(showNextArtifact, 900);
+                window.setInterval(showNextArtifact, 700);
             }
 
             // 先完成登入表單，再讓照片牆進入動畫合成

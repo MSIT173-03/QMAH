@@ -19,13 +19,40 @@ public sealed class OperationsController(
     IConfiguration configuration) : Controller
 {
     private static readonly HashSet<string> MediaStatuses = ["ACTIVE", "HIDDEN", "DELETED"];
+    private static readonly HashSet<string> MediaSources = ["POST", "EVENT", "UNLINKED"];
+    private static readonly HashSet<string> MediaSorts = ["NEWEST", "OLDEST", "SEQUENCE"];
+    private static readonly HashSet<string> AvatarSorts = ["NAME", "NEWEST", "OLDEST"];
 
-    // 總覽先只取必要欄位，再由程式補齊沒有資料的日期
-    // 這樣圖表會連續，也不需要另外建立日期表
+    // 先回傳總覽版型，讓瀏覽器可以立即顯示篩選器與頁面結構
+    // 統計資料再由同頁的 MVC 片段載入，不讓大量查詢卡住整個後台導覽
     [HttpGet]
-    public async Task<IActionResult> Index(
+    public IActionResult Index(OperationsFilterViewModel filter)
+    {
+        var (from, toInclusive, _) = NormalizeDateRange(filter);
+
+        ViewData["Title"] = "營運中心";
+        ViewData["AdminDescription"] = "依日期範圍查看會員、營收、遊戲、社群、活動與社群媒體的長期資料；這裡是資料庫統計，不是即時監控。";
+        return View(new OperationsDashboardViewModel
+        {
+            From = from,
+            To = toInclusive
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DashboardData(
         OperationsFilterViewModel filter,
         CancellationToken cancellationToken = default)
+    {
+        var model = await BuildDashboardAsync(filter, cancellationToken);
+        return PartialView("_OperationsDashboardContent", model);
+    }
+
+    // 總覽只取必要欄位，再由程式補齊沒有資料的日期
+    // 這樣圖表會連續，也不需要另外建立日期表
+    private async Task<OperationsDashboardViewModel> BuildDashboardAsync(
+        OperationsFilterViewModel filter,
+        CancellationToken cancellationToken)
     {
         var (from, toInclusive, toExclusive) = NormalizeDateRange(filter);
 
@@ -259,9 +286,7 @@ public sealed class OperationsController(
             MediaBreakdown = BuildBreakdown(mediaRows.Select(media => media.Status), AdminDisplayLabels.Status)
         };
 
-        ViewData["Title"] = "營運中心";
-        ViewData["AdminDescription"] = "依日期範圍查看會員、營收、遊戲、社群、活動與社群媒體的長期資料；這裡是資料庫統計，不是即時監控。";
-        return View(model);
+        return model;
     }
 
     // 明細頁沿用總覽的日期規則，並提供完整序列與資料點
@@ -419,26 +444,48 @@ public sealed class OperationsController(
     {
         filter.Keyword = string.IsNullOrWhiteSpace(filter.Keyword) ? null : filter.Keyword.Trim();
         filter.Status = string.IsNullOrWhiteSpace(filter.Status) ? null : filter.Status.Trim().ToUpperInvariant();
+        filter.Source = NormalizeMediaSource(filter.Source);
+        filter.Sort = NormalizeMediaSort(filter.Sort);
         filter.PageSize = Math.Clamp(filter.PageSize, 10, 100);
         filter.Page = Math.Max(1, filter.Page);
+        filter.AvatarKeyword = string.IsNullOrWhiteSpace(filter.AvatarKeyword) ? null : filter.AvatarKeyword.Trim();
+        filter.AvatarSort = NormalizeAvatarSort(filter.AvatarSort);
+        filter.AvatarPageSize = Math.Clamp(filter.AvatarPageSize, 10, 100);
+        filter.AvatarPage = Math.Max(1, filter.AvatarPage);
 
         var query = db.MediaAssets.AsNoTracking();
         if (filter.Keyword is not null)
         {
             query = query.Where(asset =>
                 asset.OriginalFileName.Contains(filter.Keyword)
-                || (asset.AltText != null && asset.AltText.Contains(filter.Keyword)));
+                || (asset.AltText != null && asset.AltText.Contains(filter.Keyword))
+                || db.UserProfiles.Any(profile => profile.UserId == asset.OwnerUserId && profile.Nickname.Contains(filter.Keyword))
+                || db.SocialPosts.Any(post => post.Id == asset.PostId
+                    && (post.Title.Contains(filter.Keyword) || post.Content.Contains(filter.Keyword))));
         }
         if (filter.Status is not null && MediaStatuses.Contains(filter.Status))
             query = query.Where(asset => asset.Status == filter.Status);
+        if (filter.Source == "POST")
+            query = query.Where(asset => asset.PostId.HasValue
+                && db.SocialPosts.Any(post => post.Id == asset.PostId && !post.EventId.HasValue));
+        else if (filter.Source == "EVENT")
+            query = query.Where(asset => asset.PostId.HasValue
+                && db.SocialPosts.Any(post => post.Id == asset.PostId && post.EventId.HasValue));
+        else if (filter.Source == "UNLINKED")
+            query = query.Where(asset => !asset.PostId.HasValue);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var totalPages = totalCount == 0 ? 0 : (int)Math.Ceiling(totalCount / (double)filter.PageSize);
         filter.Page = totalPages == 0 ? 1 : Math.Min(filter.Page, totalPages);
 
-        var media = await query
-            .OrderByDescending(asset => asset.CreatedAt)
-            .ThenByDescending(asset => asset.SequenceNo)
+        IOrderedQueryable<MediaAsset> orderedQuery = filter.Sort switch
+        {
+            "OLDEST" => query.OrderBy(asset => asset.CreatedAt).ThenBy(asset => asset.SequenceNo),
+            "SEQUENCE" => query.OrderByDescending(asset => asset.SequenceNo),
+            _ => query.OrderByDescending(asset => asset.CreatedAt).ThenByDescending(asset => asset.SequenceNo)
+        };
+
+        var media = await orderedQuery
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .Select(asset => new MediaAdminItemViewModel
@@ -459,6 +506,14 @@ public sealed class OperationsController(
                     .Where(post => post.Id == asset.PostId)
                     .Select(post => post.Title)
                     .FirstOrDefault(),
+                EventId = db.SocialPosts
+                    .Where(post => post.Id == asset.PostId)
+                    .Select(post => post.EventId)
+                    .FirstOrDefault(),
+                EventTitle = db.SocialPosts
+                    .Where(post => post.Id == asset.PostId && post.EventId.HasValue)
+                    .Select(post => post.Event!.Title)
+                    .FirstOrDefault(),
                 PostAuthorName = db.SocialPosts
                     .Where(post => post.Id == asset.PostId)
                     .Join(
@@ -475,10 +530,30 @@ public sealed class OperationsController(
             })
             .ToListAsync(cancellationToken);
 
-        filter.AvatarItems = await db.UserProfiles
+        var avatarQuery = db.UserProfiles
             .AsNoTracking()
-            .Where(profile => profile.AvatarPath != null && profile.AvatarPath != "")
-            .OrderBy(profile => profile.Nickname)
+            .Where(profile => profile.AvatarPath != null && profile.AvatarPath != "");
+        if (filter.AvatarKeyword is not null)
+            avatarQuery = avatarQuery.Where(profile => profile.Nickname.Contains(filter.AvatarKeyword));
+
+        filter.AvatarTotalCount = await avatarQuery.CountAsync(cancellationToken);
+        filter.AvatarTotalPages = filter.AvatarTotalCount == 0
+            ? 0
+            : (int)Math.Ceiling(filter.AvatarTotalCount / (double)filter.AvatarPageSize);
+        filter.AvatarPage = filter.AvatarTotalPages == 0
+            ? 1
+            : Math.Min(filter.AvatarPage, filter.AvatarTotalPages);
+
+        IOrderedQueryable<UserProfile> orderedAvatars = filter.AvatarSort switch
+        {
+            "NEWEST" => avatarQuery.OrderByDescending(profile => profile.UpdatedAt).ThenBy(profile => profile.Nickname),
+            "OLDEST" => avatarQuery.OrderBy(profile => profile.UpdatedAt).ThenBy(profile => profile.Nickname),
+            _ => avatarQuery.OrderBy(profile => profile.Nickname).ThenBy(profile => profile.UserId)
+        };
+
+        filter.AvatarItems = await orderedAvatars
+            .Skip((filter.AvatarPage - 1) * filter.AvatarPageSize)
+            .Take(filter.AvatarPageSize)
             .Select(profile => new AvatarAdminItemViewModel
             {
                 UserId = profile.UserId,
@@ -879,6 +954,24 @@ public sealed class OperationsController(
         "media" => "media",
         _ => "revenue"
     };
+
+    private static string? NormalizeMediaSource(string? source)
+    {
+        var normalized = source?.Trim().ToUpperInvariant();
+        return normalized is not null && MediaSources.Contains(normalized) ? normalized : null;
+    }
+
+    private static string NormalizeMediaSort(string? sort)
+    {
+        var normalized = sort?.Trim().ToUpperInvariant();
+        return normalized is not null && MediaSorts.Contains(normalized) ? normalized : "NEWEST";
+    }
+
+    private static string NormalizeAvatarSort(string? sort)
+    {
+        var normalized = sort?.Trim().ToUpperInvariant();
+        return normalized is not null && AvatarSorts.Contains(normalized) ? normalized : "NAME";
+    }
 
     private static string? NormalizeAuditArea(string? area) => area?.Trim().ToUpperInvariant() switch
     {

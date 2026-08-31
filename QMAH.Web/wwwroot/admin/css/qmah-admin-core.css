@@ -777,7 +777,6 @@ body {
 
 .qmah-sortable-header {
   cursor: pointer;
-  user-select: none;
   white-space: nowrap;
 }
 
