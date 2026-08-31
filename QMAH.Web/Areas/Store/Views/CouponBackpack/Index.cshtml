@@ -81,12 +81,12 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-vcenter table-hover card-table qmah-crud-table">
+            <table class="table table-vcenter table-hover card-table qmah-crud-table qmah-backpack-table">
                 <colgroup>
-                    <col style="width: 44%;" />
-                    <col style="width: 18%;" />
-                    <col style="width: 23%;" />
-                    <col style="width: 15%;" />
+                    <col class="qmah-col-owner" />
+                    <col class="qmah-col-type" />
+                    <col class="qmah-col-count" />
+                    <col class="qmah-col-actions" />
                 </colgroup>
                 <thead>
                     <tr>
@@ -153,7 +153,7 @@
 }
 else
 {
-    <div class="card mb-3">
+    <div class="card qmah-form-card mb-3">
         <div class="card-header">
             <div>
                 <h2 class="card-title">

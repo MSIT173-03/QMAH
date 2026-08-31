@@ -30,7 +30,7 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title mb-1">@Model.ArtifactName</h2>
-                    <div class="card-subtitle"><code>@Model.ArtifactRef</code></div>
+                    <div class="card-subtitle">故宮編號 <code>@Model.ArtifactRef</code></div>
                 </div>
             </div>
 
@@ -61,7 +61,7 @@
                 </div>
             </div>
 
-            <div class="card-footer d-flex justify-content-end gap-2">
+<div class="card-footer qmah-card-footer">
                 <a class="btn btn-outline-secondary"
                    asp-action="Details"
                    asp-route-id="@Model.Id">
@@ -107,7 +107,7 @@
 
             <div class="qmah-editor-preview__meta">
                 <span class="qmah-editor-preview__headline">@Model.ArtifactName</span>
-                <span class="qmah-editor-preview__path">@Model.ArtifactRef</span>
+                <span class="qmah-editor-preview__path">故宮編號 @Model.ArtifactRef</span>
             </div>
         </div>
     </div>

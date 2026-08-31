@@ -1,0 +1,127 @@
+/*
+ * 後台側欄的導覽階層：母功能後面立刻接子功能，所有管理區使用相同的縮排與選取狀態。
+ * 這裡只負責導覽排列與狀態，不決定有哪些頁面；頁面清單請改 _AdminSidebar.cshtml。
+ */
+.qmah-admin .qmah-sidebar-groups {
+  gap: .18rem;
+}
+
+.qmah-admin .qmah-nav-group {
+  min-width: 0;
+}
+
+.qmah-admin .qmah-nav-group > .nav-link {
+  margin-bottom: .1rem;
+}
+
+/* 母功能選取時加上區域底色，讓目前所在的大分類與子頁面同時可辨識。 */
+.qmah-admin .qmah-nav-group.is-active > .nav-link {
+  background: color-mix(in srgb, var(--qmah-area-soft) 72%, var(--qmah-sidebar-bg));
+  color: var(--qmah-area-accent);
+}
+
+/* 子功能固定緊接在母功能下方；非目前管理區先收合，避免長導覽把後半段推到視窗外。 */
+.qmah-admin .qmah-sidebar-subnav {
+  display: none;
+  flex-direction: column;
+  gap: .1rem;
+  list-style: none;
+  margin: .08rem .75rem .48rem 1.4rem;
+  padding: .22rem 0 .25rem 1rem;
+  border-inline-start: 1px solid color-mix(in srgb, var(--qmah-sidebar-border) 88%, var(--qmah-area-accent));
+}
+
+/* 只展開目前所在的管理區，讓所有母功能都留在視線內；進入其他管理區後，子功能仍會緊接在該母功能下方。 */
+.qmah-admin .qmah-nav-group.is-active > .qmah-sidebar-subnav {
+  display: flex;
+  animation: qmah-subnav-in 220ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.qmah-admin .qmah-sidebar-subnav li {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* 子功能的高度與文字密度保持一致，新增頁面時不需要自行調整每一列。 */
+.qmah-admin .qmah-sidebar-subnav .nav-link {
+  min-height: 2.35rem;
+  margin: 0;
+  padding: .45rem .62rem;
+  border-radius: 8px;
+  color: var(--qmah-sidebar-ink-muted);
+  font-size: .81rem;
+  font-weight: 560;
+}
+
+.qmah-admin .qmah-sidebar-subnav .nav-link .nav-link-icon {
+  width: 1.35rem;
+  min-width: 1.35rem;
+  margin-inline-end: .36rem;
+  color: var(--qmah-sidebar-icon);
+}
+
+/* 滑入、鍵盤焦點與目前頁面使用不同層級的背景，目前頁面不只依賴顏色提示。 */
+.qmah-admin .qmah-sidebar-subnav .nav-link:hover,
+.qmah-admin .qmah-sidebar-subnav .nav-link:focus-visible {
+  background: color-mix(in srgb, var(--qmah-sidebar-surface) 72%, var(--qmah-area-soft));
+  color: var(--qmah-sidebar-ink);
+}
+
+.qmah-admin .qmah-sidebar-subnav .nav-link.active,
+.qmah-admin .qmah-sidebar-subnav .nav-link[aria-current="page"] {
+  background: var(--qmah-sidebar-active-bg);
+  color: var(--qmah-sidebar-active-ink);
+  font-weight: 700;
+}
+
+.qmah-admin .qmah-sidebar-subnav .nav-link.active .nav-link-icon,
+.qmah-admin .qmah-sidebar-subnav .nav-link[aria-current="page"] .nav-link-icon {
+  color: var(--qmah-area-accent);
+}
+
+/* 側欄收合後只保留圖示與必要點擊面積，展開時仍沿用同一份子選單結構。 */
+html[data-qmah-sidebar="collapsed"] .qmah-admin .qmah-sidebar-subnav {
+  margin-inline: .5rem;
+  padding-inline-start: 0;
+  border-inline-start: 0;
+}
+
+html[data-qmah-sidebar="collapsed"] .qmah-admin .qmah-sidebar-subnav .nav-link {
+  justify-content: center;
+  padding-inline: .5rem;
+}
+
+html[data-qmah-sidebar="collapsed"] .qmah-admin .qmah-sidebar-subnav .nav-link .nav-link-icon {
+  margin-inline-end: 0;
+}
+
+/* 平板寬度以下側欄會轉為抽屜，子選單只縮小外距，不改變功能順序。 */
+@media (max-width: 1199.98px) {
+  .qmah-admin .qmah-sidebar-subnav {
+    margin-inline-start: 1.15rem;
+  }
+}
+
+/* 減少動態時保留選取顏色與階層，只取消子選單的過渡效果。 */
+@media (prefers-reduced-motion: reduce) {
+  .qmah-admin .qmah-sidebar-subnav .nav-link {
+    transition: none;
+  }
+
+  .qmah-admin .qmah-nav-group.is-active > .qmah-sidebar-subnav {
+    animation: none;
+  }
+}
+
+@keyframes qmah-subnav-in {
+  from {
+    opacity: 0;
+    transform: translateY(-.3rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

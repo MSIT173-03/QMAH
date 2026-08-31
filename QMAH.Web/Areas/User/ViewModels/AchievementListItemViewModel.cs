@@ -1,4 +1,4 @@
-﻿using QMAH.Web.Models.Entities;
+using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Web.Areas.User.ViewModels;
 

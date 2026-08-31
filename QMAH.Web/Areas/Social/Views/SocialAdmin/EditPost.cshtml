@@ -1,14 +1,16 @@
+@using QMAH.Web.Areas.Social.Models
 @model QMAH.Web.Areas.Social.Models.PostCreateViewModel
 
 @{
     var isCreate = ViewData["IsCreate"] is true;
     ViewData["Title"] = isCreate ? "新增社群貼文" : "編輯社群貼文";
     ViewData["AdminDescription"] = isCreate
-        ? "先選擇板塊，再由管理者建立貼文。"
-        : "修正板塊、標題、內容或關聯文物，保留原作者與建立時間。";
+        ? "選擇貼文類型與專案分類，再建立一般貼文或公告貼文。"
+        : "修正分類、內容、關聯文物或地點；活動貼文請從活動管理編輯。";
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
     var postId = ViewData["PostId"];
     var boardCodes = ViewData["BoardCodes"] as IReadOnlyList<string> ?? ["GENERAL"];
+    var artifactOptions = ViewData["ArtifactOptions"] as IReadOnlyList<PostArtifactOption> ?? [];
 }
 
 @section PageActions {
@@ -18,48 +20,86 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-12 col-xl-8">
-        <div class="card">
+    <div class="col-12 col-xl-9">
+        <div class="card qmah-form-card">
             <div class="card-header">
                 <h2 class="card-title">@(isCreate ? "新增貼文" : "貼文內容")</h2>
             </div>
             <div class="card-body">
                 <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@(isCreate ? null : postId)" method="post">
+                    @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="BoardCode" class="form-label"></label>
-                        <select asp-for="BoardCode" class="form-select">
-                            @foreach (var boardCode in boardCodes)
-                            {
-                                <option value="@boardCode">@boardCode</option>
-                            }
-                        </select>
-                        <span asp-validation-for="BoardCode" class="text-danger"></span>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="PostType" class="form-label"></label>
+                            <select asp-for="PostType" class="form-select">
+                                <option value="POST">一般貼文</option>
+                                <option value="ANNOUNCEMENT">公告貼文</option>
+                            </select>
+                            <div class="form-hint">公告仍是貼文的一種；具備官方發布權限時會標示為官方公告。</div>
+                            <span asp-validation-for="PostType" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label asp-for="BoardCode" class="form-label"></label>
+                            <select asp-for="BoardCode" class="form-select">
+                                @foreach (var boardCode in boardCodes)
+                                {
+                                    <option value="@boardCode">@AdminDisplayLabels.Board(boardCode)</option>
+                                }
+                            </select>
+                            <span asp-validation-for="BoardCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Title" class="form-label"></label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Content" class="form-label"></label>
+                            <textarea asp-for="Content" class="form-control" rows="10"></textarea>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ArtifactId" class="form-label"></label>
+                            <select asp-for="ArtifactId" class="form-select">
+                                <option value="">不連結文物</option>
+                                @foreach (var artifact in artifactOptions)
+                                {
+                                    <option value="@artifact.Id">@artifact.ArtifactRef｜@artifact.Name</option>
+                                }
+                            </select>
+                            <div class="form-hint">選擇後，前台可直接從貼文開啟對應文物資料。</div>
+                            <span asp-validation-for="ArtifactId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="LocationName" class="form-label"></label>
+                            <input asp-for="LocationName" class="form-control" placeholder="可手動輸入地點或地址" />
+                            <span asp-validation-for="LocationName" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Latitude" class="form-label"></label>
+                            <input asp-for="Latitude" class="form-control" type="number" step="0.000001" placeholder="可留白" />
+                            <span asp-validation-for="Latitude" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Longitude" class="form-label"></label>
+                            <input asp-for="Longitude" class="form-control" type="number" step="0.000001" placeholder="可留白" />
+                            <span asp-validation-for="Longitude" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-hint">地點可以只填文字；前台接上地圖後，也可以把點選位置轉成這兩個座標。</div>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Title" class="form-label"></label>
-                        <input asp-for="Title" class="form-control" />
-                        <span asp-validation-for="Title" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Content" class="form-label"></label>
-                        <textarea asp-for="Content" class="form-control" rows="10"></textarea>
-                        <span asp-validation-for="Content" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-4">
-                        <label asp-for="ArtifactId" class="form-label"></label>
-                        <input asp-for="ArtifactId" class="form-control" />
-                        <span asp-validation-for="ArtifactId" class="text-danger"></span>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2">
+                    <div class="d-flex justify-content-end gap-2 mt-4">
                         <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="ti ti-device-floppy me-1"></i>@(isCreate ? "新增貼文" : "儲存修改")
+                            <i class="ti ti-device-floppy me-1"></i>@(isCreate ? "發布貼文" : "儲存修改")
                         </button>
                     </div>
                 </form>

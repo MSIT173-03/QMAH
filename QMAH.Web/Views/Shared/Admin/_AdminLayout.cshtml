@@ -7,6 +7,10 @@
         "social" => "social",
         "store" => "store",
         "user" => "user",
+        _ when string.Equals(
+            ViewContext.RouteData.Values["controller"]?.ToString(),
+            "Operations",
+            StringComparison.OrdinalIgnoreCase) => "operations",
         _ => "dashboard"
     };
 }
@@ -18,6 +22,8 @@
     <meta name="theme-color" content="#f3f6f4" data-qmah-theme-color />
     <title>@ViewData["Title"]｜清明鑑定屋後台</title>
     <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="stylesheet" href="~/admin/css/qmah-fonts.css" asp-append-version="true" />
 
     <script>
         (() => {
@@ -47,64 +53,14 @@
     <link rel="stylesheet" href="~/admin/css/qmah-admin-polish.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-area-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-final.css" asp-append-version="true" />
-
-    <style>
-        .qmah-admin .qmah-detail-section[id] {
-            scroll-margin-top: 5rem;
-        }
-
-        .qmah-back-to-top {
-            position: fixed;
-            z-index: 1040;
-            right: 1rem;
-            bottom: 1rem;
-            display: inline-grid;
-            width: 2.65rem;
-            height: 2.65rem;
-            place-items: center;
-            border: 1px solid var(--qmah-line);
-            border-radius: 50%;
-            background: var(--qmah-surface-raised);
-            color: var(--qmah-ink-soft);
-            box-shadow: var(--qmah-shadow-sm);
-            opacity: .94;
-            transition: opacity 150ms ease, transform 150ms ease, border-color 150ms ease;
-        }
-
-        .qmah-back-to-top:hover,
-        .qmah-back-to-top:focus-visible {
-            border-color: var(--qmah-area-accent);
-            color: var(--qmah-area-accent);
-            transform: translateY(-2px);
-        }
-
-        .qmah-back-to-top[hidden] {
-            display: none;
-        }
-
-        @@media (max-width: 767.98px) {
-            .qmah-back-to-top {
-                right: .75rem;
-                bottom: .75rem;
-            }
-        }
-
-        @@media (prefers-reduced-motion: reduce) {
-            .qmah-back-to-top {
-                transition: none;
-            }
-
-            .qmah-back-to-top:hover,
-            .qmah-back-to-top:focus-visible {
-                transform: none;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="~/admin/css/qmah-admin-system.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-admin-navigation.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-admin-footer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-operations.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-admin-typography.css" asp-append-version="true" />
 </head>
 <body class="qmah-admin qmah-area-@areaKey" data-qmah-area="@areaKey">
     <a class="qmah-skip-link" href="#admin-main">跳至主要內容</a>
-    <div class="qmah-theme-wash" data-qmah-theme-wash aria-hidden="true"></div>
-
     <div class="page qmah-admin-shell">
         <partial name="Admin/_AdminSidebar" />
         <partial name="Admin/_AdminNavbar" />
@@ -159,7 +115,17 @@
 
             <footer class="footer footer-transparent d-print-none qmah-admin-footer">
                 <div class="container-xl">
-                    <div class="text-center">清明鑑定屋 QMAH · 內容管理後台</div>
+                    <div class="qmah-admin-footer__inner">
+                        <div class="qmah-admin-footer__identity">
+                            <strong>清明鑑定屋 QMAH</strong>
+                            <span>文物典藏與互動學習平台</span>
+                        </div>
+                        <nav class="qmah-admin-footer__links" aria-label="頁尾導覽">
+                            <a asp-area="" asp-controller="Home" asp-action="Index">管理總覽</a>
+                            <a asp-area="" asp-controller="Operations" asp-action="Index">營運中心</a>
+                        </nav>
+                        <div class="qmah-admin-footer__meta">© @DateTime.Now.Year QMAH 專題團隊 · 僅供專題展示與開發使用</div>
+                    </div>
                 </div>
             </footer>
         </div>
@@ -174,6 +140,7 @@
         <i class="ti ti-arrow-up" aria-hidden="true"></i>
     </button>
 
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/admin/vendor/tabler/tabler.min.js"></script>
     <script src="~/admin/js/qmah-admin.js" asp-append-version="true"></script>
     <script src="~/admin/js/qmah-interactions.js" asp-append-version="true"></script>

@@ -1,5 +1,5 @@
 @using System.Linq
-@model IEnumerable<QMAH.Web.Models.Entities.Artifact>
+@model IEnumerable<QMAH.Infrastructure.Models.Entities.Artifact>
 
 @{
     ViewData["Title"] = "文物總覽";
@@ -29,7 +29,7 @@
         <div>
             <h2 class="card-title">文物資料篩選</h2>
             <div class="d-flex flex-wrap align-items-center gap-2 text-secondary">
-                <span>以名稱、館藏編號、分類或年代快速縮小清單。</span>
+                <span>以名稱、故宮編號、分類或年代快速縮小清單。</span>
                 <span class="badge bg-blue-lt qmah-filter-count">
                     <i class="ti ti-list-check me-1"></i>@totalCount 筆結果
                 </span>
@@ -46,7 +46,7 @@
                            id="keyword"
                            name="txtKeyword"
                            value="@keyword"
-                           placeholder="文物名稱、館藏編號或年代文字" />
+                    placeholder="文物名稱、故宮編號或年代文字" />
                 </div>
 
                 <div class="col-12 col-md-6 col-xl-2">
@@ -119,7 +119,7 @@
         <div class="table-responsive">
             <table class="table table-vcenter table-hover card-table qmah-crud-table">
                 <colgroup>
-                    <col style="width: 7rem;" />
+                    <col class="qmah-col-thumbnail" />
                     <col class="qmah-col-name" />
                     <col class="qmah-col-ref" />
                     <col class="qmah-col-category" />
@@ -146,7 +146,7 @@
                             </a>
                         </th>
                         <th>名稱</th>
-                        <th>館藏編號</th>
+                        <th>故宮編號</th>
                         <th>分類</th>
                         <th>年代</th>
                         <th>尺寸</th>
@@ -246,7 +246,7 @@
             </table>
         </div>
 
-        <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
+<div class="card-footer qmah-card-footer qmah-card-footer--split">
             <span class="text-secondary">
                 第 @currentPage / @totalPages 頁，共 @totalCount 筆
             </span>

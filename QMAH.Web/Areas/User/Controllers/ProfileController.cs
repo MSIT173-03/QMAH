@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2010.Excel;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.User.ViewModels;
-using QMAH.Web.Data;
+using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
-using QMAH.Web.Models.Entities;
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Areas.User.Controllers;
 

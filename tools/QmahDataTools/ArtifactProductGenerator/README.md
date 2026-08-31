@@ -75,7 +75,7 @@ dotnet run --project .\ArtifactProductGenerator -- `
 
 `--count all` 會自動使用全部合格文物，讓圖鑑與商城維持一對一。若只想建立較小的測試集，也可以指定整數；工具會在 8 類之間平均選取。
 
-商品 `CategoryCode` 與文物分類代碼相同，`ArtifactId` 是直接連到文物的唯一外鍵。`ExternalRef` 仍固定為 `artifact-{ArtifactRef}`，只供資料交換與查重使用。期末若要在圖鑑詳細頁加入「查看縮小複製品」按鈕，可直接用 ArtifactId 找到唯一商品，不必拆字串、比對名稱或重複圖片欄位。
+商品 `CategoryCode` 與文物分類代碼相同，`ArtifactId` 是直接連到文物的唯一外鍵。`ExternalRef` 仍固定為 `artifact-{ArtifactRef}`，只供資料交換與查重使用。前台若要在圖鑑詳細頁加入「查看縮小複製品」按鈕，可直接用 `ArtifactId` 找到唯一商品，不必拆字串、比對名稱或重複圖片欄位。
 
 ## 售價規則
 

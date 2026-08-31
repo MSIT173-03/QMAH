@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "點數流水";
+    ViewData["AdminDescription"] = "查看會員點數的增加、扣除與來源紀錄；每筆流水都保留時間與原因。";
     int currentPage = ViewBag.CurrentPage;
     int totalPages = ViewBag.TotalPages;
     int totalCount = ViewBag.TotalCount;
@@ -116,7 +117,7 @@
                             </td>
 
                             <td>@item.Transaction.Reason</td>
-                            <td><span class="badge bg-secondary-lt">@item.Transaction.ReferenceType</span></td>
+                            <td><span class="badge bg-secondary-lt">@AdminDisplayLabels.PointReferenceType(item.Transaction.ReferenceType)</span></td>
                         </tr>
                     }
                 }

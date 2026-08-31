@@ -1,4 +1,4 @@
-@model QMAH.Web.Models.Entities.Artifact
+@model QMAH.Infrastructure.Models.Entities.Artifact
 
 @{
     ViewData["Title"] = "文物編輯";
@@ -46,7 +46,7 @@
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <label asp-for="ArtifactRef" class="form-label">館藏編號</label>
+                <label asp-for="ArtifactRef" class="form-label">故宮編號</label>
                         <input asp-for="ArtifactRef" class="form-control" />
                         <span asp-validation-for="ArtifactRef" class="text-danger"></span>
                     </div>
@@ -149,7 +149,7 @@
                 </div>
             </div>
 
-            <div class="card-footer d-flex justify-content-end gap-2">
+<div class="card-footer qmah-card-footer">
                 <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
                 <button type="submit" class="btn btn-primary">
                     <i class="ti ti-device-floppy me-1"></i>儲存文物

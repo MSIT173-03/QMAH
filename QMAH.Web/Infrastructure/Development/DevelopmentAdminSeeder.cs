@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Infrastructure.Development;
 

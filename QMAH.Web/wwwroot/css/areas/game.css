@@ -1,4 +1,4 @@
-/* Game 後台資料管理樣式，沿用共用 Admin Layout 與 Tabler 元件。 */
+/* 遊戲管理區專用樣式：沿用共用 Admin Layout 與 Tabler 元件，只補遊戲資料表的必要差異。 */
 .game-admin-filter .form-label {
     font-size: 0.78rem;
     font-weight: 700;

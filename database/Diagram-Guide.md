@@ -10,6 +10,7 @@ Diagram_Game
 Diagram_User
 Diagram_Social
 Diagram_Store
+Diagram_Admin
 ```
 
 目前不維護共用的 `Diagram_All` 或模組 Diagram。需要看資料表關聯時，請在自己的 SSMS 使用 **New Database Diagram** 建立；不要用 SQL／CLI 預先建立空白圖表，SSMS 需要自己的版面定義。使用 **Add Table...** 加入既有資料表即可，不要使用 **New Table**，避免意外修改 Schema。
@@ -21,10 +22,11 @@ Diagram_Store
 | `Diagram_User` | 11 | `user.Achievements`、`user.AspNetRoleClaims`、`user.AspNetRoles`、`user.AspNetUserClaims`、`user.AspNetUserLogins`、`user.AspNetUserRoles`、`user.AspNetUsers`、`user.AspNetUserTokens`、`user.UserAchievements`、`user.UserAddresses`、`user.UserProfiles` |
 | `Diagram_Catalog` | 7 | `catalog.ArtifactCategories`、`catalog.Artifacts`、`catalog.ArtifactUnlocks`、`catalog.EraBuckets`、`catalog.KeyDefinitions`、`catalog.KeyTransactions`、`catalog.UserKeyBalances` |
 | `Diagram_Game` | 6 | `game.ArtifactQuestionEntries`、`game.GamePlayers`、`game.GameRooms`、`game.GameRounds`、`game.RoundAnswers`、`game.Votes` |
-| `Diagram_Social` | 7 | `social.ContentReports`、`social.EventRegistrations`、`social.Events`、`social.OfficialAnnouncements`、`social.SocialComments`、`social.SocialPosts`、`social.UserNotifications` |
-| `Diagram_Store` | 9 | `store.CartItems`、`store.CouponDefinitions`、`store.OrderDetails`、`store.Payments`、`store.PointBalances`、`store.PointTransactions`、`store.Products`、`store.StoreOrders`、`store.UserCoupons` |
+| `Diagram_Social` | 8 | `social.ContentReports`、`social.EventRegistrations`、`social.Events`、`social.OfficialAnnouncements`、`social.SocialComments`、`social.SocialPosts`、`social.UserNotifications`、`social.MediaAssets` |
+| `Diagram_Store` | 10 | `store.CartItems`、`store.CouponDefinitions`、`store.OrderDetails`、`store.Payments`、`store.PointBalances`、`store.PointTransactions`、`store.ProductReviews`、`store.Products`、`store.StoreOrders`、`store.UserCoupons` |
+| `Diagram_Admin` | 1 | `admin.AuditLogs` |
 
-五組合計 40 張業務／Identity 資料表。上表只是依 Area 分組的選取清單，不代表資料庫內已經存在同名 Diagram。
+六組合計 43 張業務／Identity 資料表。上表只是依功能分組的選取清單，不代表資料庫內已經存在同名 Diagram。
 
 ## 閱讀方式
 

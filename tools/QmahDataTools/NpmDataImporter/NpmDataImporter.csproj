@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\QMAH.Web\QMAH.Web.csproj" />
-    <None Update="era-buckets.json" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\..\..\QMAH.Infrastructure\QMAH.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

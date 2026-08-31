@@ -5,20 +5,18 @@
     ViewData["AdminDescription"] = "檢視訂單、付款與取消紀錄；訂單明細不提供任意刪除，避免破壞交易歷史。";
 }
 
-@{
-    var viewData = new ViewDataDictionary(ViewData)
-    {
-        { "Controller", "Order" },
-        { "Action", "Index" }
-    };
+@section Styles {
+    <link rel="stylesheet" href="~/admin/css/qmah-datatables.css" asp-append-version="true" />
 }
-<partial name="OptionSetListPage" view-data="viewData" />
 
 <div class="card qmah-list-card">
     <div class="table-responsive">
-        <table class="table table-vcenter table-hover card-table qmah-crud-table">
+        <table id="store-orders-table"
+               class="table table-vcenter table-hover card-table qmah-crud-table"
+               data-ajax-url="@Url.Action("Data", "Order", new { area = "Store" })">
             <thead>
                 <tr>
+                    <th>訂單編號</th>
                     <th>會員</th>
                     <th>狀態</th>
                     <th>商品數量</th>
@@ -35,13 +33,14 @@
             <tbody>
                 @if (!Model.Any())
                 {
-                    <tr><td colspan="11" class="text-center text-secondary py-5">目前沒有訂單資料。</td></tr>
+                    <tr><td colspan="12" class="text-center text-secondary py-5">目前沒有訂單資料。</td></tr>
                 }
                 else
                 {
                     @foreach (var item in Model)
                     {
                         <tr>
+                            <td><code>@item.OrderNo</code></td>
                             <td class="fw-semibold">@item.UserName</td>
                             <td><span class="badge bg-secondary-lt">@AdminDisplayLabels.Status(item.Status)</span></td>
                             <td>@item.ItemsCount</td>
@@ -64,3 +63,64 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/admin/vendor/datatables/dataTables.min.js"></script>
+    <script>
+        (() => {
+            const tableElement = document.getElementById("store-orders-table");
+            if (!tableElement || typeof DataTable === "undefined") return;
+
+            new DataTable(tableElement, {
+                processing: true,
+                serverSide: true,
+                pageLength: 20,
+                lengthMenu: [10, 20, 50, 100],
+                order: [[8, "desc"]],
+                ajax: {
+                    url: tableElement.dataset.ajaxUrl,
+                    dataSrc: "data"
+                },
+                columns: [
+                    { data: "orderNo" },
+                    { data: "userName" },
+                    { data: "status" },
+                    { data: "itemsCount" },
+                    { data: "subtotal" },
+                    { data: "discountAmount" },
+                    { data: "pointsUsed" },
+                    { data: "totalAmount" },
+                    { data: "createdAt" },
+                    { data: "paidAt" },
+                    { data: "cancelledAt" },
+                    {
+                        data: "actionUrl",
+                        orderable: false,
+                        searchable: false,
+                        render: (url, type) => type === "display"
+                            ? `<a class="btn btn-sm btn-info" href="${escapeHtml(url)}">查看</a>`
+                            : url
+                    }
+                ],
+                language: {
+                    processing: "讀取中……",
+                    search: "搜尋：",
+                    lengthMenu: "每頁顯示 _MENU_ 筆",
+                    info: "第 _START_–_END_ 筆，共 _TOTAL_ 筆",
+                    infoEmpty: "目前沒有資料",
+                    zeroRecords: "找不到符合條件的訂單",
+                    paginate: { first: "第一頁", last: "最後一頁", next: "下一頁", previous: "上一頁" }
+                }
+            });
+
+            function escapeHtml(value) {
+                return String(value ?? "")
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#039;");
+            }
+        })();
+    </script>
+}

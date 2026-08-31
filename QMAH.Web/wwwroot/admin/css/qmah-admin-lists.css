@@ -1,12 +1,14 @@
-/* QMAH admin list/table consistency overrides.
-   Loaded after qmah-admin-core.css and qmah-tabler.css on purpose. */
+/*
+ * 後台列表與資料表的相容收斂層：統一欄位對齊、操作欄、篩選列、詳細頁與手機捲動方式。
+ * 這份檔案在 qmah-admin-core.css 和 qmah-tabler.css 後載入，專門修正既有頁面的共同差異。
+ */
 
 :root {
   --qmah-action-gap: .375rem;
   --qmah-action-btn-min: 4.75rem;
 }
 
-/* Do not force every last column to 18rem. Each list owns its action width. */
+/* 不把所有最後一欄硬塞成 18rem，各列表依實際操作按鈕數量決定寬度。 */
 .page-body .table th:last-child,
 .page-body .table td:last-child,
 .qmah-crud-table th:last-child,
@@ -64,7 +66,7 @@
   white-space: nowrap;
 }
 
-/* Make table actions visually legible instead of a row of pale outlines. */
+/* 操作按鈕使用清楚的實心語意色，不讓一排淡色外框看起來像未完成的功能。 */
 .qmah-table-actions .btn-outline-secondary,
 .game-admin-cell-actions .btn-outline-secondary,
 .qmah-action-buttons .btn-outline-secondary,
@@ -127,7 +129,7 @@
   pointer-events: none;
 }
 
-/* List headers align with their data instead of inheriting odd end alignment. */
+/* 列表表頭與資料欄維持相同對齊，不沿用舊版造成的奇怪靠右排列。 */
 .qmah-crud-table thead th,
 .game-admin-table thead th {
   vertical-align: middle;
@@ -140,7 +142,7 @@
   padding-left: 1rem;
 }
 
-/* Question bank: protect fields that were becoming one-character-wide. */
+/* 題庫欄位保留最低寬度，避免長文字被壓縮成只剩一個字。 */
 .game-admin-table .qmah-col-type { width: 9rem; min-width: 9rem; }
 .game-admin-table .qmah-col-difficulty { width: 4.5rem; min-width: 4.5rem; }
 .game-admin-table .qmah-col-status { width: 5.5rem; min-width: 5.5rem; }
@@ -148,10 +150,28 @@
 .game-admin-table td[data-label="題型"] { min-width: 9rem; }
 .game-admin-table td[data-label="更新時間"] { min-width: 10.5rem; }
 
-/* Backpack tables use member identity as one coherent cell. */
+/* 需要固定預覽欄的資料表只掛上語意 class，固定寬度集中在這裡維護。 */
+.qmah-admin .qmah-crud-table .qmah-col-thumbnail {
+  width: 7rem;
+  min-width: 7rem;
+}
+
+/* 題庫操作按鈕較多，單獨保留寬度，避免按鈕在桌面版互相擠壓。 */
+.qmah-admin .game-admin-table .qmah-col-question-actions {
+  width: 15rem;
+  min-width: 15rem;
+}
+
+/* 背包資料表把會員識別資訊視為同一個欄位，避免姓名與編號被拆得難以閱讀。 */
 .qmah-member-cell {
   min-width: 14rem;
 }
+
+/* 鑰匙、優惠券與點數背包使用同一組四欄比例，避免每個 Area 自訂一套表格寬度。 */
+.qmah-admin .qmah-backpack-table .qmah-col-owner { width: 44%; }
+.qmah-admin .qmah-backpack-table .qmah-col-type { width: 18%; }
+.qmah-admin .qmah-backpack-table .qmah-col-count { width: 23%; }
+.qmah-admin .qmah-backpack-table .qmah-col-actions { width: 15%; }
 .qmah-member-id {
   margin-top: .2rem;
   color: var(--qmah-ink-faint);
@@ -170,7 +190,7 @@
 }
 .qmah-backpack-summary strong { color: var(--qmah-ink); }
 
-/* Mobile: keep actions horizontal and scroll only the table, not the buttons inside a cell. */
+/* 手機版讓操作按鈕維持橫向，捲動交給整張表格，不把同一格的按鈕拆成多行。 */
 @media (max-width: 767.98px) {
   .qmah-action-cell.qmah-actions--1,
   .qmah-action-cell.qmah-actions--2,
@@ -187,7 +207,7 @@
 }
 
 
-/* Legacy Game markup used display:flex on the <td> itself, which breaks desktop table geometry. */
+/* 舊版 Game markup 曾把 display:flex 放在 td 上，會破壞桌面表格的欄位幾何。 */
 @media (min-width: 768px) {
   td.game-admin-cell-actions {
     display: table-cell !important;
@@ -195,8 +215,8 @@
   }
 }
 
-/* Older CRUD pages may place buttons directly in the last cell instead of qmah-table-actions.
-   Keep those pages visually consistent without requiring a per-page rewrite. */
+/* 舊 CRUD 頁面可能把按鈕直接放在最後一格，而不是使用 qmah-table-actions。
+   這裡補上共同對齊規則，讓既有頁面不必為了外觀全部重寫。 */
 .qmah-crud-table td:last-child > .btn,
 .qmah-crud-table td:last-child > form,
 .qmah-crud-table td:last-child > form > .btn {
@@ -243,7 +263,7 @@
 }
 
 
-/* Semantic CRUD action colors. The list stylesheet is loaded after area styles. */
+/* CRUD 操作使用固定語意色；本檔案晚於各 Area 樣式載入，用來收斂最後結果。 */
 .qmah-action-cell .btn-info,
 .qmah-action-buttons .btn-info,
 .game-admin-cell-actions .btn-info {
@@ -264,12 +284,12 @@
   pointer-events: none;
 }
 
-/* Area-specific CSS used to right-align Game actions; keep all CRUD rows centered. */
+/* 個別 Area 曾把 Game 操作靠右，這裡統一所有 CRUD 資料列的操作區置中。 */
 .game-admin-table td.game-admin-cell-actions .btn-list {
   justify-content: center !important;
 }
 
-/* Page-level neutral navigation stays neutral, not primary-colored. */
+/* 頁面層級的返回與分頁導覽維持中性色，不搶走主要操作的主色。 */
 .page-header .qmah-actions .btn-secondary,
 .qmah-form-actions .btn-secondary,
 .card-footer .btn-secondary {
@@ -277,7 +297,7 @@
 }
 
 
-/* CRUD detail pages */
+/* CRUD 詳細頁的共同排列。 */
 .qmah-product-detail-image {
   display: block;
   width: 100%;
@@ -292,13 +312,13 @@
   line-height: 1.7;
 }
 
-/* PageActions can contain forms; keep them aligned like links/buttons. */
+/* PageActions 可能包含表單，仍要和連結、按鈕使用相同的對齊方式。 */
 .page-header .qmah-actions > form {
   display: inline-flex;
   margin: 0;
 }
 
-/* Disabled destructive controls keep their position without looking actionable. */
+/* 停用的破壞性操作保留原位，但不能看起來像仍可點擊。 */
 .page-header .qmah-actions .btn:disabled,
 .card-footer .btn:disabled {
   border-color: var(--qmah-line) !important;
@@ -308,7 +328,7 @@
   cursor: not-allowed;
 }
 
-/* Restore Game's mobile label/value layout after the desktop action-cell overrides. */
+/* 桌面操作欄規則後，手機版恢復 Game 的標籤／值分行閱讀方式。 */
 @media (max-width: 767.98px) {
   .game-admin-table td.game-admin-cell-actions {
     display: grid !important;
@@ -339,7 +359,7 @@
   --qmah-action-slot: 4.75rem;
 }
 
-/* Never let the older "last column" rules decide management-column width. */
+/* 不讓較早的「最後一欄」規則覆蓋管理操作欄的實際寬度。 */
 .page-body .table th:last-child,
 .page-body .table td:last-child,
 .qmah-crud-table th:last-child,
@@ -350,7 +370,7 @@
   min-width: 0 !important;
 }
 
-/* Header and body use exactly the same box geometry. */
+/* 表頭與資料列使用完全相同的盒模型，避免按鈕欄上下錯位。 */
 .qmah-action-cell {
   vertical-align: middle !important;
   text-align: center !important;
@@ -364,7 +384,7 @@
 .qmah-action-cell.qmah-actions--3 { width: 17.25rem !important; min-width: 17.25rem !important; }
 .qmah-action-cell.qmah-actions--4 { width: 22.5rem !important; min-width: 22.5rem !important; }
 
-/* Social's word-form aliases. */
+/* 社群頁使用文字型數量別名時的相容規則。 */
 .qmah-table-actions.qmah-actions--one {
   grid-template-columns: repeat(1, var(--qmah-action-slot));
 }
@@ -378,7 +398,7 @@
   grid-template-columns: repeat(4, var(--qmah-action-slot));
 }
 
-/* Parent numeric slot counts used by the other Areas. */
+/* 其他 Area 使用數字表示操作按鈕數量時的共用規則。 */
 .qmah-action-cell.qmah-actions--1 :is(.qmah-table-actions, .qmah-action-buttons, .btn-list) {
   grid-template-columns: repeat(1, var(--qmah-action-slot));
 }
@@ -406,7 +426,7 @@
   overflow: visible !important;
 }
 
-/* Legacy Social groups without an explicit numeric parent still stay compact. */
+/* 舊社群頁沒有明確數字父層時，操作群組仍維持緊湊排列。 */
 .qmah-table-actions:not(.qmah-actions--one):not(.qmah-actions--two):not(.qmah-actions--three):not(.qmah-actions--four) {
   grid-auto-flow: column;
   grid-auto-columns: var(--qmah-action-slot);
@@ -450,7 +470,7 @@
   white-space: nowrap;
 }
 
-/* Match the visually successful Report-management palette. */
+/* 沿用檢舉管理頁已驗證清楚的操作色彩配置。 */
 .qmah-table-actions .btn-outline-secondary,
 .qmah-action-buttons .btn-outline-secondary,
 .game-admin-cell-actions .btn-outline-secondary {
@@ -495,7 +515,7 @@
   pointer-events: none;
 }
 
-/* The table itself owns horizontal overflow on small screens; slots do not reflow per row. */
+/* 小螢幕由整張表格負責橫向捲動，單列按鈕不各自重新換行。 */
 @media (max-width: 767.98px) {
   .qmah-action-cell.qmah-actions--1 { width: 6.75rem !important; min-width: 6.75rem !important; }
   .qmah-action-cell.qmah-actions--2 { width: 12rem !important; min-width: 12rem !important; }

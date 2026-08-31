@@ -1,4 +1,5 @@
-﻿@model QMAH.Web.Areas.User.ViewModels.MemberDetailsViewModel
+@using System.Linq
+@model QMAH.Web.Areas.User.ViewModels.MemberDetailsViewModel
 
 @{
     ViewData["Title"] = "會員詳細資料";
@@ -57,7 +58,7 @@
                             }
                             else
                             {
-                                @string.Join(", ", Model.Roles)
+                                @string.Join("、", Model.Roles.Select(QMAH.Web.Infrastructure.AdminDisplayLabels.Role))
                             }
                         </div>
                     </div>
@@ -67,11 +68,11 @@
                         <div>
                             @if (Model.User.Status == "ACTIVE")
                             {
-                                <span class="badge bg-success">ACTIVE</span>
+                                <span class="badge bg-success">@AdminDisplayLabels.Status(Model.User.Status)</span>
                             }
                             else if (Model.User.Status == "BANNED")
                             {
-                                <span class="badge bg-danger">BANNED</span>
+                                <span class="badge bg-danger">@AdminDisplayLabels.Status(Model.User.Status)</span>
                             }
                             else
                             {
@@ -197,7 +198,7 @@
                                 }
                                 else
                                 {
-                                    <span>@Model.Profile.Visibility</span>
+                                    <span>@AdminDisplayLabels.Visibility(Model.Profile.Visibility)</span>
                                 }
                             </div>
                         </div>
@@ -218,7 +219,7 @@
                             {
                                 <img src="@Model.Profile.AvatarPath"
                                      alt="會員頭像"
-                                     style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;" />
+                                 class="qmah-member-avatar--detail" />
                             }
                             else
                             {
@@ -498,8 +499,8 @@
                                         </span>
                                     }
                                 </td>
-                                <td>@item.Reason</td>
-                                <td>@item.ReferenceType</td>
+                                <td>@AdminDisplayLabels.PointReason(item.Reason)</td>
+                                <td>@AdminDisplayLabels.PointReferenceType(item.ReferenceType)</td>
                             </tr>
                         }
                     </tbody>

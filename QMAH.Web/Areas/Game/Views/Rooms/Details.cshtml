@@ -33,22 +33,22 @@
 }
 
 <div class="row row-cards mb-3">
-    <div class="col-md-6 col-xl-3"><div class="card card-sm h-100"><div class="card-body"><div class="text-secondary">目前狀態</div><div class="mt-2"><span class="badge @GameCodeLists.StatusBadgeClass(Model.Status)">@GameCodeLists.Label(GameCodeLists.RoomStatuses, Model.Status)</span></div></div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card card-sm h-100"><div class="card-body"><div class="text-secondary">玩家</div><div class="game-admin-stat-value">@Model.PlayerCount <span class="text-secondary fs-4">/ @Model.MaxPlayers</span></div><div class="small text-secondary">房內玩家數</div></div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card card-sm h-100"><div class="card-body"><div class="text-secondary">回合進度</div><div class="game-admin-stat-value">@Model.CurrentRoundNo <span class="text-secondary fs-4">/ @Model.TotalRounds</span></div><div class="small text-secondary">已建立 @Model.RoundCount 個回合</div></div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card card-sm h-100"><div class="card-body"><div class="text-secondary">可見範圍</div><div class="mt-2"><span class="badge @GameCodeLists.StatusBadgeClass(Model.Visibility)">@GameCodeLists.Label(GameCodeLists.Visibilities, Model.Visibility)</span></div><div class="small text-secondary mt-2">房間代碼 <code>@Model.RoomCode</code></div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card qmah-detail-section card-sm h-100"><div class="card-body"><div class="text-secondary">目前狀態</div><div class="mt-2"><span class="badge @GameCodeLists.StatusBadgeClass(Model.Status)">@GameCodeLists.Label(GameCodeLists.RoomStatuses, Model.Status)</span></div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card qmah-detail-section card-sm h-100"><div class="card-body"><div class="text-secondary">玩家</div><div class="game-admin-stat-value">@Model.PlayerCount <span class="text-secondary fs-4">/ @Model.MaxPlayers</span></div><div class="small text-secondary">房內玩家數</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card qmah-detail-section card-sm h-100"><div class="card-body"><div class="text-secondary">回合進度</div><div class="game-admin-stat-value">@Model.CurrentRoundNo <span class="text-secondary fs-4">/ @Model.TotalRounds</span></div><div class="small text-secondary">已建立 @Model.RoundCount 個回合</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card qmah-detail-section card-sm h-100"><div class="card-body"><div class="text-secondary">可見範圍</div><div class="mt-2"><span class="badge @GameCodeLists.StatusBadgeClass(Model.Visibility)">@GameCodeLists.Label(GameCodeLists.Visibilities, Model.Visibility)</span></div><div class="small text-secondary mt-2">房間代碼 <code>@Model.RoomCode</code></div></div></div></div>
 </div>
 
 <div class="row row-cards mb-3">
     <div class="col-lg-6">
-        <div class="card h-100"><div class="card-header"><h2 class="card-title">房間設定</h2></div><div class="card-body"><dl class="game-admin-definition"><div><dt>作答時間</dt><dd>@Model.AnswerSeconds 秒</dd></div><div><dt>投票時間</dt><dd>@Model.VotingSeconds 秒</dd></div><div><dt>限定分類</dt><dd>@(Model.CategoryFilterName ?? (Model.CategoryFilterCode is null ? "不限分類" : Model.CategoryFilterCode))</dd></div><div><dt>限定年代</dt><dd>@(Model.EraBucketFilterName ?? (Model.EraBucketFilterCode is null ? "不限年代" : Model.EraBucketFilterCode))</dd></div><div><dt>狀態版本</dt><dd>@Model.StateVersion</dd></div></dl></div></div>
+        <div class="card qmah-detail-section h-100"><div class="card-header"><h2 class="card-title">房間設定</h2></div><div class="card-body"><dl class="game-admin-definition"><div><dt>作答時間</dt><dd>@Model.AnswerSeconds 秒</dd></div><div><dt>投票時間</dt><dd>@Model.VotingSeconds 秒</dd></div><div><dt>限定分類</dt><dd>@(Model.CategoryFilterName ?? (Model.CategoryFilterCode is null ? "不限分類" : Model.CategoryFilterCode))</dd></div><div><dt>限定年代</dt><dd>@(Model.EraBucketFilterName ?? (Model.EraBucketFilterCode is null ? "不限年代" : Model.EraBucketFilterCode))</dd></div><div><dt>狀態版本</dt><dd>@Model.StateVersion</dd></div></dl></div></div>
     </div>
     <div class="col-lg-6">
-        <div class="card h-100"><div class="card-header"><h2 class="card-title">時間紀錄</h2></div><div class="card-body"><dl class="game-admin-definition"><div><dt>建立</dt><dd>@Model.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</dd></div><div><dt>開始</dt><dd>@(Model.StartedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未開始")</dd></div><div><dt>結束</dt><dd>@(Model.EndedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未結束")</dd></div><div><dt>完成</dt><dd>@(Model.CompletedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未完成")</dd></div></dl></div></div>
+        <div class="card qmah-detail-section h-100"><div class="card-header"><h2 class="card-title">時間紀錄</h2></div><div class="card-body"><dl class="game-admin-definition"><div><dt>建立</dt><dd>@Model.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</dd></div><div><dt>開始</dt><dd>@(Model.StartedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未開始")</dd></div><div><dt>結束</dt><dd>@(Model.EndedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未結束")</dd></div><div><dt>完成</dt><dd>@(Model.CompletedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ?? "尚未完成")</dd></div></dl></div></div>
     </div>
 </div>
 
-<div class="card mb-3">
+<div class="card qmah-list-card mb-3">
     <div class="card-header">
         <div><h2 class="card-title mb-1">玩家</h2><div class="card-subtitle">@Model.Players.Count 位</div></div>
         <div class="card-actions"><a class="btn btn-sm btn-primary" asp-area="Game" asp-controller="Players" asp-action="Create" asp-route-roomId="@Model.Id">建立玩家</a><a class="btn btn-sm btn-secondary" asp-area="Game" asp-controller="Players" asp-action="Index" asp-route-search="@Model.RoomCode">查看清單</a></div>
@@ -80,7 +80,7 @@
     }
 </div>
 
-<div class="card">
+<div class="card qmah-list-card">
     <div class="card-header">
         <div><h2 class="card-title mb-1">回合</h2><div class="card-subtitle">@Model.Rounds.Count 個</div></div>
         <div class="card-actions"><a class="btn btn-sm btn-primary" asp-area="Game" asp-controller="Rounds" asp-action="Create" asp-route-roomId="@Model.Id">建立回合</a><a class="btn btn-sm btn-secondary" asp-area="Game" asp-controller="Rounds" asp-action="Index" asp-route-roomId="@Model.Id">查看清單</a></div>
@@ -112,7 +112,7 @@
     }
 </div>
 
-<div class="card border-danger mt-3">
+<div class="card qmah-detail-section border-danger mt-3">
     <div class="card-header"><h2 class="card-title text-danger">危險操作</h2></div>
     <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div class="text-secondary">一般刪除受到歷史資料保護；只有確定這是可捨棄資料時才使用強制刪除。</div>

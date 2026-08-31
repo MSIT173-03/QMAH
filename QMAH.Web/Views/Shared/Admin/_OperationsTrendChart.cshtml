@@ -1,0 +1,115 @@
+@using System.Globalization
+@using System.Net
+@model QMAH.Web.Models.OperationsChartViewModel
+
+@{
+    var titleId = $"{Model.Id}-title";
+    var descriptionId = $"{Model.Id}-description";
+    var width = 760d;
+    var height = 250d;
+    var plotLeft = 58d;
+    var plotRight = 18d;
+    var plotTop = 18d;
+    var plotBottom = 42d;
+    var plotWidth = width - plotLeft - plotRight;
+    var plotHeight = height - plotTop - plotBottom;
+    var pointCount = Model.Labels.Count;
+    var maxValue = Model.Series
+        .SelectMany(series => series.Values)
+        .DefaultIfEmpty(0m)
+        .Max();
+    var axisMax = maxValue <= 0m ? 1m : Math.Ceiling(maxValue * 1.1m);
+    var hasData = maxValue > 0m;
+    var labelStep = Math.Max(1, (int)Math.Ceiling(pointCount / 8d));
+    var firstFormat = Model.Series.FirstOrDefault()?.ValueFormat ?? "number";
+
+    double X(int index) => pointCount <= 1
+        ? plotLeft + plotWidth / 2
+        : plotLeft + (plotWidth * index / (pointCount - 1));
+
+    double Y(decimal value) => plotTop + plotHeight - (double)(value / axisMax) * plotHeight;
+
+    string FormatValue(decimal value, string valueFormat) => valueFormat == "currency"
+        ? value.ToString("C0")
+        : value.ToString("N0", CultureInfo.CurrentCulture);
+
+    string PolylinePoints(IReadOnlyList<decimal> values) => string.Join(
+        " ",
+        values.Select((value, index) =>
+            $"{X(index).ToString("0.##", CultureInfo.InvariantCulture)},{Y(value).ToString("0.##", CultureInfo.InvariantCulture)}"));
+
+    string SvgText(double x, double y, string anchor, string value) =>
+        $"<text x=\"{x.ToString("0.##", CultureInfo.InvariantCulture)}\" y=\"{y.ToString("0.##", CultureInfo.InvariantCulture)}\" text-anchor=\"{WebUtility.HtmlEncode(anchor)}\">{WebUtility.HtmlEncode(value)}</text>";
+}
+
+<div class="qmah-chart-panel" aria-describedby="@descriptionId">
+    <div class="qmah-chart-panel__header">
+        <div>
+            <h2 id="@titleId" class="qmah-chart-panel__title">@Model.Title</h2>
+            <p id="@descriptionId" class="qmah-chart-panel__description">@Model.Description</p>
+        </div>
+        <span class="qmah-chart-panel__hint">@pointCount 個資料點</span>
+    </div>
+
+    @if (!hasData)
+    {
+        <div class="qmah-chart-empty" role="status">
+            <i class="ti ti-chart-line-off" aria-hidden="true"></i>
+            <span>這段期間沒有可繪製的資料，仍可從下方明細表核對區間。</span>
+        </div>
+    }
+    else
+    {
+        <div class="qmah-chart-scroll" tabindex="0" aria-label="@Model.Title，可水平捲動查看圖表">
+            <svg class="qmah-chart" viewBox="0 0 @width @height" role="img" aria-labelledby="@titleId @descriptionId">
+                <g class="qmah-chart__grid" aria-hidden="true">
+                    @for (var gridIndex = 0; gridIndex <= 4; gridIndex++)
+                    {
+                        var gridValue = axisMax * (4 - gridIndex) / 4m;
+                        var gridY = plotTop + plotHeight * gridIndex / 4d;
+                        <line x1="@plotLeft" x2="@(plotLeft + plotWidth)" y1="@gridY" y2="@gridY"></line>
+                        @Html.Raw(SvgText(plotLeft - 10, gridY + 4, "end", FormatValue(gridValue, firstFormat)))
+                    }
+                </g>
+                <g class="qmah-chart__axis" aria-hidden="true">
+                    <line x1="@plotLeft" x2="@(plotLeft + plotWidth)" y1="@(plotTop + plotHeight)" y2="@(plotTop + plotHeight)"></line>
+                    @for (var labelIndex = 0; labelIndex < Model.Labels.Count; labelIndex++)
+                    {
+                        if (labelIndex % labelStep != 0 && labelIndex != Model.Labels.Count - 1)
+                        {
+                            continue;
+                        }
+
+                        @Html.Raw(SvgText(X(labelIndex), height - 12, "middle", Model.Labels[labelIndex]))
+                    }
+                </g>
+                @for (var seriesIndex = 0; seriesIndex < Model.Series.Count; seriesIndex++)
+                {
+                    var series = Model.Series[seriesIndex];
+                    <polyline class="qmah-chart__line qmah-chart__line--@(seriesIndex % 4 + 1)" points="@PolylinePoints(series.Values)"></polyline>
+                    @if (pointCount <= 31)
+                    {
+                        @for (var pointIndex = 0; pointIndex < series.Values.Count; pointIndex++)
+                        {
+                            var pointValue = series.Values[pointIndex];
+                            <circle class="qmah-chart__point qmah-chart__point--@(seriesIndex % 4 + 1)"
+                                    cx="@X(pointIndex)"
+                                    cy="@Y(pointValue)"
+                                    r="3">
+                                <title>@series.Label · @Model.Labels[pointIndex] · @FormatValue(pointValue, series.ValueFormat)</title>
+                            </circle>
+                        }
+                    }
+                }
+            </svg>
+        </div>
+    }
+
+    <div class="qmah-chart-panel__legend" aria-label="圖例">
+        @for (var seriesIndex = 0; seriesIndex < Model.Series.Count; seriesIndex++)
+        {
+            var series = Model.Series[seriesIndex];
+            <span><i class="qmah-chart__legend-swatch qmah-chart__legend-swatch--@(seriesIndex % 4 + 1)" aria-hidden="true"></i>@series.Label</span>
+        }
+    </div>
+</div>

@@ -1,0 +1,24 @@
+[
+  {
+    "Name": "QMAH 後端（API＋Razor）",
+    "Projects": [
+      {
+        "Path": "QMAH.Api\\QMAH.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "QMAH.Web\\QMAH.Web.csproj",
+        "Action": "Start"
+      }
+    ]
+  },
+  {
+    "Name": "QMAH API",
+    "Projects": [
+      {
+        "Path": "QMAH.Api\\QMAH.Api.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

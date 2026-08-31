@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization; //登入權限
+using Microsoft.AspNetCore.Authorization; //登入權限
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.User.ViewModels;
-using QMAH.Web.Data;
+using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
-using QMAH.Web.Models.Entities;
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
@@ -351,6 +351,8 @@ public class MembersController : Controller
         }
 
         member.UpdatedAt = DateTime.UtcNow;
+        // 狀態變更要立即讓既有登入 cookie 失效，避免停權會員繼續使用已建立的工作階段。
+        member.SecurityStamp = Guid.NewGuid().ToString("N");
 
         var result = await _userManager.UpdateAsync(member);
 

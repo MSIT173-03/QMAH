@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using QMAH.Web.Areas.Social.Services;
-using QMAH.Web.Data;
-using QMAH.Web.Models.Entities;
+using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Models.Entities;
 using QMAH.Web.Areas.Social.Models;
 
 namespace QMAH.Web.Areas.Social.Controllers;

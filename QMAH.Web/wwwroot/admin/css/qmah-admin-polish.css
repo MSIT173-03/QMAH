@@ -1,4 +1,7 @@
-/* 後台共用視覺 */
+/*
+ * 後台共用視覺層：把 Tabler 預設元件收斂成 QMAH 的表面、字級、表格、卡片與總覽排版。
+ * 這裡處理全站共用的視覺語言；營運中心的圖表與側欄階層請改各自的後續分層檔案。
+ */
 .qmah-admin {
   --qmah-canvas: #f3f6f4;
   --qmah-surface: #ffffff;
@@ -92,7 +95,7 @@ html[data-bs-theme="dark"] .qmah-admin {
   contain: strict;
 }
 
-/* Topbar */
+/* 頁面頂端工具列與帳號操作區。 */
 .qmah-admin .page > .qmah-topbar {
   min-height: 3.65rem;
   border-bottom: 1px solid var(--qmah-line) !important;
@@ -222,7 +225,7 @@ html[data-bs-theme="dark"] .qmah-admin .qmah-theme-icon--moon {
   transform: none;
 }
 
-/* Sidebar */
+/* 側欄與管理區導覽。 */
 .qmah-admin .navbar-vertical {
   --qmah-sidebar-bg: #f8faf9;
   --qmah-sidebar-surface: #edf2f0;
@@ -306,7 +309,7 @@ html[data-bs-theme="dark"] .qmah-admin .navbar-vertical {
   border-top-color: var(--qmah-sidebar-border);
 }
 
-/* Page heading */
+/* 頁面標題與說明文字。 */
 .qmah-admin .page-header {
   padding-top: clamp(1.4rem, 2vw, 1.95rem);
   padding-bottom: 1rem;
@@ -339,7 +342,7 @@ html[data-bs-theme="dark"] .qmah-admin .navbar-vertical {
   overflow: visible;
 }
 
-/* Card system */
+/* 卡片共用外觀。 */
 .qmah-admin .card {
   border: 1px solid var(--qmah-line);
   border-radius: 9px;
@@ -390,7 +393,7 @@ html[data-bs-theme="dark"] .qmah-admin .card {
   box-shadow: none;
 }
 
-/* Filters */
+/* 篩選表單。 */
 .qmah-admin .qmah-filter-panel,
 .qmah-admin form.card.game-admin-filter,
 .qmah-admin form.card[class*="filter"] {
@@ -436,7 +439,7 @@ html[data-bs-theme="dark"] .qmah-admin .card {
   color: var(--qmah-primary-hover);
 }
 
-/* Form controls */
+/* 表單控制項。 */
 .qmah-admin .form-label {
   margin-bottom: .36rem;
   color: var(--qmah-ink-soft);
@@ -482,7 +485,7 @@ html[data-bs-theme="dark"] .qmah-admin .card {
   background-color: var(--qmah-primary);
 }
 
-/* Buttons */
+/* 按鈕。 */
 .qmah-admin .btn {
   min-height: 2.3rem;
   border-radius: 7px;
@@ -529,7 +532,7 @@ html[data-bs-theme="dark"] .qmah-admin .btn-primary {
   color: var(--qmah-primary-hover);
 }
 
-/* Tables */
+/* 資料表。 */
 .qmah-admin .qmah-list-card {
   overflow: hidden;
 }
@@ -618,7 +621,7 @@ html[data-bs-theme="dark"] .qmah-admin .table-hover > tbody > tr:hover > * {
   color: #fff !important;
 }
 
-/* Badge */
+/* 狀態徽章。 */
 .qmah-admin .qmah-crud-table td .badge,
 .qmah-admin .game-admin-table td .badge,
 .qmah-admin .table td .badge,
@@ -636,7 +639,7 @@ html[data-bs-theme="dark"] .qmah-admin .table-hover > tbody > tr:hover > * {
   transform: none;
 }
 
-/* Dashboard */
+/* 管理總覽。 */
 .qmah-admin .qmah-dashboard-metrics {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -818,7 +821,7 @@ html[data-bs-theme="dark"] .qmah-admin .table-hover > tbody > tr:hover > * {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-/* General motion cleanup */
+/* 共用動態收斂：避免一般資料卡片像展示網站一樣跳動。 */
 .qmah-admin .page-body .card,
 .qmah-admin .page-body .badge,
 .qmah-admin .page-body .form-control,
@@ -844,7 +847,7 @@ html[data-bs-theme="dark"] .qmah-admin .table-hover > tbody > tr:hover > * {
   font-size: .7rem;
 }
 
-/* RWD */
+/* RWD：依可用寬度重新排列內容。 */
 @media (max-width: 1199.98px) {
   .qmah-admin .qmah-dashboard-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));

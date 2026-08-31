@@ -1,4 +1,4 @@
-@model QMAH.Web.Models.Entities.Product
+@model QMAH.Infrastructure.Models.Entities.Product
 
 @{
     ViewData["Title"] = "商品詳細資料";
@@ -44,7 +44,7 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title">@Model.Name</h2>
-                    <div class="text-secondary">@(string.IsNullOrWhiteSpace(Model.ExternalRef) ? "未設定外部編號" : Model.ExternalRef)</div>
+                                    <div class="text-secondary">@(string.IsNullOrWhiteSpace(Model.ExternalRef) ? "尚未設定商品編號" : Model.ExternalRef)</div>
                 </div>
                 <span class="badge @(Model.IsActive ? "bg-green-lt" : "bg-secondary-lt")">@(Model.IsActive ? "上架中" : "已下架")</span>
             </div>

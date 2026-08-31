@@ -1,0 +1,148 @@
+/*
+ * 後台文字系統：集中定義字體角色、尺寸階層與閱讀行高。
+ * 要調整全站文字，先改這裡；頁面專屬檔案只在確實有語意差異時覆寫。
+ */
+.qmah-admin {
+  --qmah-type-body: 0.9375rem;
+  --qmah-type-control: 0.9375rem;
+  --qmah-type-label: 0.8125rem;
+  --qmah-type-caption: 0.75rem;
+  --qmah-type-nav: 0.9rem;
+  --qmah-type-subnav: 0.825rem;
+  --qmah-type-card: 1rem;
+  --qmah-type-section: 1.16rem;
+  --qmah-type-page: clamp(1.65rem, 1.45rem + 0.48vw, 2rem);
+  --qmah-leading-tight: 1.2;
+  --qmah-leading-copy: 1.62;
+  font-family: var(--qmah-font-ui);
+  font-size: var(--qmah-type-body);
+  line-height: var(--qmah-leading-copy);
+}
+
+/* 文字階層由語意角色決定，不靠各頁面自行拼接 fs-* 數字。 */
+.qmah-admin :where(button, input, select, textarea) {
+  font-family: var(--qmah-font-ui);
+}
+
+.qmah-admin :where(h1, h2, h3, h4, h5, h6) {
+  text-wrap: balance;
+}
+
+.qmah-admin .page-title,
+.qmah-admin .qmah-dashboard-title {
+  font-family: var(--qmah-font-display);
+  font-size: var(--qmah-type-page);
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: var(--qmah-leading-tight);
+}
+
+.qmah-admin .qmah-dashboard-title {
+  font-size: clamp(1.7rem, 1.42rem + 0.7vw, 2.2rem);
+}
+
+.qmah-admin .qmah-page-description,
+.qmah-admin .qmah-dashboard-lede,
+.qmah-admin .qmah-detail-intro__description {
+  font-size: 0.9rem;
+  line-height: var(--qmah-leading-copy);
+}
+
+.qmah-admin .card-title,
+.qmah-admin .qmah-form-section-title,
+.qmah-admin .qmah-chart-panel__title {
+  font-family: var(--qmah-font-ui);
+  font-size: var(--qmah-type-card);
+  font-weight: 700;
+  letter-spacing: -0.006em;
+  line-height: 1.35;
+}
+
+.qmah-admin .qmah-detail-intro__title {
+  font-family: var(--qmah-font-display);
+  font-size: var(--qmah-type-section);
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.3;
+}
+
+.qmah-admin .form-label {
+  font-size: var(--qmah-type-label);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.qmah-admin :where(.form-control, .form-select, textarea, .btn) {
+  font-size: var(--qmah-type-control);
+  line-height: 1.35;
+}
+
+.qmah-admin .navbar-vertical .navbar-nav .nav-link {
+  font-size: var(--qmah-type-nav);
+  line-height: 1.35;
+}
+
+.qmah-admin .qmah-sidebar-subnav .nav-link {
+  font-size: var(--qmah-type-subnav);
+  line-height: 1.35;
+}
+
+.qmah-admin .qmah-sidebar-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  line-height: 1.4;
+}
+
+.qmah-admin .table thead th {
+  font-size: var(--qmah-type-caption);
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 1.35;
+}
+
+.qmah-admin .table tbody td {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.qmah-admin :where(.qmah-metric-value, .qmah-area-metric__value, .qmah-operations-summary__item strong) {
+  font-family: var(--qmah-font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+.qmah-admin :where(.qmah-metric-label, .qmah-metric-note, .qmah-area-metric__label) {
+  font-size: var(--qmah-type-label);
+  line-height: 1.4;
+}
+
+.qmah-admin :where(.qmah-metric-note, .qmah-area-metric__note) {
+  font-size: var(--qmah-type-caption);
+}
+
+.qmah-admin :where(.qmah-chart-panel__description, .qmah-audit-note, .qmah-detail-intro__range) {
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.qmah-admin :where(.qmah-chart-panel__hint, .qmah-status, .qmah-filter-count) {
+  font-size: var(--qmah-type-caption);
+  line-height: 1.35;
+}
+
+/* 英數資料使用等寬數字，表格與營運圖表在不同數值間不會左右跳動。 */
+.qmah-admin :where(.qmah-metric-value, .qmah-area-metric__value, .qmah-operations-summary__item strong, .qmah-chart-panel) {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 575.98px) {
+  .qmah-admin {
+    --qmah-type-body: 0.9375rem;
+    --qmah-type-nav: 0.875rem;
+    --qmah-type-subnav: 0.8125rem;
+  }
+
+  .qmah-admin .page-title {
+    font-size: clamp(1.55rem, 7vw, 1.85rem);
+  }
+}

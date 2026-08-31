@@ -1,0 +1,204 @@
+@model QMAH.Web.Areas.Catalog.ViewModel.CatalogImportViewModel
+
+@{
+    ViewData["Title"] = "文物資料匯入";
+    ViewData["AdminDescription"] = "先檢查故宮資料，再匯入文物；題庫預設同步，商城商品由管理員決定。";
+    var preview = Model.Preview;
+}
+
+@section PageActions {
+    <a asp-area="Catalog" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回圖鑑總覽
+    </a>
+}
+
+<div class="row row-cards">
+    <div class="col-12 col-xl-7">
+        <form asp-action="Preview" method="post" enctype="multipart/form-data" class="card qmah-form-card">
+            @Html.AntiForgeryToken()
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">上傳資料包</h2>
+                    <div class="text-secondary">支援資料工具產生的文物資料包與圖片資產 ZIP。</div>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="ti ti-alert-circle me-1"></i>@Model.ErrorMessage
+                    </div>
+                }
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="artifactsFile">文物資料包 <span class="text-danger">*</span></label>
+                    <input class="form-control" id="artifactsFile" name="artifactsFile" type="file" accept=".json,application/json" required />
+                    <div class="form-hint">請使用已完成年代與圖片品質檢查的文物資料包。</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="productsFile">商城商品資料包（可選）</label>
+                    <input class="form-control" id="productsFile" name="productsFile" type="file" accept=".json,application/json" />
+                    <div class="form-hint">勾選商城同步但未提供此檔時，系統會依新增文物建立展示商品，不覆蓋既有商品。</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="mediaArchive">圖片資產 ZIP（可選）</label>
+                    <input class="form-control" id="mediaArchive" name="mediaArchive" type="file" accept=".zip,application/zip" />
+                    <div class="form-hint">ZIP 內保留 media 根目錄以下的相對路徑；若資料包有圖片，請一併提供。</div>
+                </div>
+
+                <div class="border rounded p-3 mb-3">
+                    <label class="form-label" for="npmSourceDataset">官方來源連線檢查</label>
+                    <div class="input-group">
+                        <select class="form-select" id="npmSourceDataset">
+                            <option value="bronzes">銅器</option>
+                            <option value="ceramics">陶瓷</option>
+                            <option value="jades">玉器</option>
+                            <option value="enamelWares">琺瑯器</option>
+                            <option value="lacquerWares">漆器</option>
+                            <option value="coins">錢幣</option>
+                            <option value="carvings">雕刻</option>
+                            <option value="paintings">繪畫</option>
+                        </select>
+                        <button type="button"
+                                class="btn btn-outline-primary"
+                                id="npmSourceCheck"
+                                data-source-preview-url="@Url.Action("SourcePreview", "Import", new { area = "Catalog" })">
+                            檢查來源
+                        </button>
+                    </div>
+                    <div id="npmSourceResult" class="form-hint mt-2" role="status">
+                        這一步只讀取故宮官方資料，不會寫入資料庫；正式匯入仍以工具產生的資料包為準。
+                    </div>
+                </div>
+
+                <div class="border rounded p-3 bg-light-subtle">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" id="syncQuestionBank" name="syncQuestionBank" value="true" type="checkbox" checked />
+                        <input name="syncQuestionBank" value="false" type="hidden" />
+                        <label class="form-check-label" for="syncQuestionBank">
+                            <strong>同步題庫（預設開啟）</strong>
+                            <span class="d-block text-secondary small">新增文物會一併加入題庫；只有特殊資料包才取消。</span>
+                        </label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" id="syncShop" name="syncShop" value="true" type="checkbox" />
+                        <input name="syncShop" value="false" type="hidden" />
+                        <label class="form-check-label" for="syncShop">
+                            <strong>同步商城商品</strong>
+                            <span class="d-block text-secondary small">不勾選時只匯入文物與題庫，不讀取或建立商品。</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+<div class="card-footer qmah-card-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-search me-1"></i>預檢資料包
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <div class="card qmah-dashboard-note">
+            <div class="card-header">
+                <h2 class="card-title">匯入原則</h2>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>只接受已通過資料品質檢查的文物資料。</li>
+                        <li>相同的故宮編號或商品編號會判定為既有資料，不會覆蓋既有圖片與人工調整。</li>
+                    <li>分類與年代必須能對應既有規則；無法確認的資料會在預檢時排除。</li>
+                    <li>資料庫與圖片會用同一個確認碼完成匯入，任一階段失敗都不會留下半套資料。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (preview is not null)
+{
+    <div class="card mt-4 qmah-list-card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">預檢結果</h2>
+                <div class="text-secondary">確認筆數與警告後，才會執行正式匯入。</div>
+            </div>
+            <span class="badge bg-blue-lt">確認碼 @preview.ApprovalToken</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <tbody>
+                    <tr><th>文物候選</th><td>@preview.ArtifactCandidateCount</td><th>新增／更新／不變</th><td>@preview.NewArtifactCount / @preview.UpdatedArtifactCount / @preview.UnchangedArtifactCount</td></tr>
+                    <tr><th>題庫入口</th><td>@preview.NewQuestionEntryCount 筆新增</td><th>既有題庫</th><td>@preview.ExistingQuestionEntryCount 筆</td></tr>
+                    <tr><th>商城商品</th><td>@preview.ProductCandidateCount</td><th>新增／更新／不變</th><td>@preview.NewProductCount / @preview.UpdatedProductCount / @preview.UnchangedProductCount</td></tr>
+                    <tr><th>排除資料</th><td>@preview.InvalidArtifactCount 筆文物欄位無效</td><th>分類或對應不完整</th><td>@preview.UnmappedArtifactCount 筆文物／@preview.InvalidProductCount 筆商品欄位無效／@preview.UnmappedProductCount 筆商品</td></tr>
+                </tbody>
+            </table>
+        </div>
+        @if (preview.MissingCategories.Count > 0 || preview.Warnings.Count > 0)
+        {
+            <div class="card-body">
+                @if (preview.MissingCategories.Count > 0)
+                {
+                    <div class="alert alert-warning" role="alert">
+                        固定基準尚缺分類：@string.Join("、", preview.MissingCategories)
+                    </div>
+                }
+                @foreach (var warning in preview.Warnings)
+                {
+                    <div class="text-secondary small mb-1"><i class="ti ti-alert-triangle me-1"></i>@warning</div>
+                }
+            </div>
+        }
+<div class="card-footer qmah-card-footer qmah-card-footer--split">
+            <div class="text-secondary small">
+                題庫同步：@(preview.SyncQuestionBank ? "開啟" : "關閉")；商城同步：@(preview.SyncShop ? "開啟" : "關閉")
+            </div>
+            <form asp-action="Import" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="stageId" value="@Model.StageId" />
+                <input type="hidden" name="approvalToken" value="@Model.ApprovalToken" />
+                <button type="submit" class="btn btn-success" onclick="return confirm('確認依預檢結果匯入資料嗎？')">
+                    <i class="ti ti-database-import me-1"></i>確認匯入
+                </button>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const button = document.getElementById("npmSourceCheck");
+            const dataset = document.getElementById("npmSourceDataset");
+            const result = document.getElementById("npmSourceResult");
+            if (!button || !dataset || !result) return;
+
+            button.addEventListener("click", async () => {
+                button.disabled = true;
+                result.textContent = "正在讀取故宮官方資料集……";
+                try {
+                    const url = new URL(button.dataset.sourcePreviewUrl, window.location.origin);
+                    url.searchParams.set("dataset", dataset.value);
+                    const response = await fetch(url, {
+                        headers: { "Accept": "application/json" },
+                        credentials: "same-origin"
+                    });
+                    const body = await response.json();
+                    if (!response.ok) throw new Error(body.detail || body.title || "來源檢查失敗。");
+                    const names = (body.preview || [])
+                        .map(item => item.name || item.identifier || "未命名")
+                        .join("、");
+                    result.textContent = `來源可連線：${body.categoryName} 共 ${body.count} 筆。${names ? ` 範例：${names}` : ""}`;
+                } catch (error) {
+                    result.textContent = error instanceof Error ? error.message : "來源檢查失敗。";
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        })();
+    </script>
+}

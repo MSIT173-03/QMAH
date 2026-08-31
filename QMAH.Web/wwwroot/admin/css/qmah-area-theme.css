@@ -1,4 +1,7 @@
-/* 五大 Area 共用識別色；版型與元件仍維持同一套後台系統。 */
+/*
+ * 五大管理區的識別色層：只讓目前區域容易辨認，不改變共用版型與元件行為。
+ * 要調整全站基本色請改 qmah-admin-core.css；要調整單一區域色彩請改本檔案對應的 data-qmah-area。
+ */
 .qmah-admin {
   --qmah-area-accent: #3d6c6f;
   --qmah-area-accent-hover: #315b5e;

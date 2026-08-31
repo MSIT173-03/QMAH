@@ -1,0 +1,53 @@
+/*
+ * 後台字體來源：全部以本地 WOFF2 載入，避免登入與管理頁依賴第三方字體服務。
+ * Plus Jakarta Sans 負責英數與控制介面；Noto Sans TC 負責繁中正文；
+ * Source Serif 4 與 Noto Serif TC 只用在展示標題，讓展覽感集中在需要被看見的地方。
+ * 字型檔是依專案目前的介面與展示資料做子集化；遇到未收錄字元時會自然回到系統字體。
+ */
+@font-face {
+  font-family: "QMAH Plus Jakarta";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/qmah-plus-jakarta-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "QMAH Plus Jakarta";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/qmah-plus-jakarta-bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "QMAH Noto Sans TC";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/qmah-noto-sans-tc-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "QMAH Noto Sans TC";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/qmah-noto-sans-tc-bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "QMAH Source Serif 4";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/qmah-source-serif-4-bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "QMAH Noto Serif TC";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/qmah-noto-serif-tc-bold.woff2") format("woff2");
+}

@@ -1,14 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-using QMAH.Web.Models.Entities;
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Areas.Store.ViewModels;
 
 public class OrderSimplefyListItem(StoreOrder order, ApplicationUser user, List<OrderDetail> items)
 {
-    [Display(Name = "訂單編號")]
+    [Display(Name = "資料識別碼")]
     public Guid Id { get; } = order.Id;
+    [Display(Name = "訂單編號")]
+    public string OrderNo { get; } = order.OrderNo;
     [Display(Name = "下訂會員編號")]
     public Guid UserId { get; } = user.Id;
     [Display(Name = "下訂會員名稱")]

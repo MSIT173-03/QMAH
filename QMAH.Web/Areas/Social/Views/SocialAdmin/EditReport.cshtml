@@ -14,7 +14,7 @@
 
 <div class="row justify-content-center">
     <div class="col-12 col-xl-8">
-        <div class="card">
+        <div class="card qmah-form-card">
             <div class="card-header"><h2 class="card-title">@(isCreate ? "檢舉資料" : "編輯檢舉資料")</h2></div>
             <div class="card-body">
                 <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@(isCreate ? null : reportId)" method="post">

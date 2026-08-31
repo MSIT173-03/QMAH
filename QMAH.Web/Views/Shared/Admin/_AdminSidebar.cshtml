@@ -3,9 +3,18 @@
 @{
     var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var isAccountPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase);
     var isDashboard = (string.IsNullOrWhiteSpace(currentArea) && currentController == "Home") || isAccountPage;
-    var areaItems = AdminNavigation.GetAreaItems(currentArea);
+    var isOperations = string.IsNullOrWhiteSpace(currentArea) && string.Equals(currentController, "Operations", StringComparison.OrdinalIgnoreCase);
+    var isOperationsSummary = isOperations
+        && !string.Equals(currentAction, "AuditLogs", StringComparison.OrdinalIgnoreCase)
+        && !string.Equals(currentAction, "Media", StringComparison.OrdinalIgnoreCase);
+    var catalogItems = AdminNavigation.GetAreaItems("Catalog");
+    var gameItems = AdminNavigation.GetAreaItems("Game");
+    var socialItems = AdminNavigation.GetAreaItems("Social");
+    var storeItems = AdminNavigation.GetAreaItems("Store");
+    var userItems = AdminNavigation.GetAreaItems("User");
 }
 <aside class="navbar navbar-vertical navbar-expand-xl" aria-label="後台主要導覽">
     <div class="container-fluid">
@@ -18,69 +27,106 @@
             <img class="qmah-brand-logo qmah-brand-logo--dark" src="~/images/brand/qmah-logo-dark.svg" alt="" />
         </a>
         <div class="collapse navbar-collapse" id="admin-sidebar-menu" aria-hidden="true">
-            <ul class="navbar-nav pt-lg-2">
-                <li class="nav-item">
+            <ul class="navbar-nav pt-lg-2 qmah-sidebar-groups">
+                <li class="nav-item qmah-nav-group">
                     <a class="nav-link @(isDashboard ? "active" : null)" asp-area="" asp-controller="Home" asp-action="Index" title="總覽"
                        aria-current="@(isDashboard ? "page" : null)">
                         <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("dashboard")" /></span>
                         <span class="nav-link-title">總覽</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link @(currentArea == "Catalog" ? "active" : null)" asp-area="Catalog" asp-controller="Home" asp-action="Index" title="圖鑑管理"
-                       aria-current="@(currentArea == "Catalog" ? "page" : null)">
+
+                <li class="nav-item qmah-nav-group @(isOperations ? "is-active" : null)">
+                    <a class="nav-link @(isOperations ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="Index" title="營運中心"
+                       aria-current="@(isOperations ? "page" : null)">
+                        <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("operations")" /></span>
+                        <span class="nav-link-title">營運中心</span>
+                    </a>
+                    <ul class="qmah-sidebar-subnav" aria-label="營運中心子功能">
+                        <li><a class="nav-link @(isOperationsSummary ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="Index"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("operations")" /></span><span class="nav-link-title">營運摘要</span></a></li>
+                        <li><a class="nav-link @(isOperations && string.Equals(currentAction, "AuditLogs", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="AuditLogs"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("audit")" /></span><span class="nav-link-title">稽核紀錄</span></a></li>
+                        <li><a class="nav-link @(isOperations && string.Equals(currentAction, "Media", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="Media"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("media")" /></span><span class="nav-link-title">圖庫管理</span></a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item qmah-nav-group @(string.Equals(currentArea, "Catalog", StringComparison.OrdinalIgnoreCase) ? "is-active" : null)">
+                    <a class="nav-link @(string.Equals(currentArea, "Catalog", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="Catalog" asp-controller="Home" asp-action="Index" title="圖鑑管理"
+                       aria-current="@(string.Equals(currentArea, "Catalog", StringComparison.OrdinalIgnoreCase) ? "page" : null)">
                         <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("catalog")" /></span>
                         <span class="nav-link-title">圖鑑管理</span>
                     </a>
+                    <ul class="qmah-sidebar-subnav" aria-label="圖鑑管理子功能">
+                        @foreach (var item in catalogItems)
+                        {
+                            var isCurrent = string.Equals(currentArea, "Catalog", StringComparison.OrdinalIgnoreCase) && string.Equals(currentController, item.Controller, StringComparison.OrdinalIgnoreCase);
+                            <li><a class="nav-link @(isCurrent ? "active" : null)" asp-area="Catalog" asp-controller="@item.Controller" asp-action="Index" aria-current="@(isCurrent ? "page" : null)" title="@item.Label"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@item.Controller" /></span><span class="nav-link-title">@item.Label</span></a></li>
+                        }
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link @(currentArea == "Game" ? "active" : null)" asp-area="Game" asp-controller="Home" asp-action="Index" title="遊戲管理"
-                       aria-current="@(currentArea == "Game" ? "page" : null)">
+
+                <li class="nav-item qmah-nav-group @(string.Equals(currentArea, "Game", StringComparison.OrdinalIgnoreCase) ? "is-active" : null)">
+                    <a class="nav-link @(string.Equals(currentArea, "Game", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="Game" asp-controller="Home" asp-action="Index" title="遊戲管理"
+                       aria-current="@(string.Equals(currentArea, "Game", StringComparison.OrdinalIgnoreCase) ? "page" : null)">
                         <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("game")" /></span>
                         <span class="nav-link-title">遊戲管理</span>
                     </a>
+                    <ul class="qmah-sidebar-subnav" aria-label="遊戲管理子功能">
+                        @foreach (var item in gameItems)
+                        {
+                            var isCurrent = string.Equals(currentArea, "Game", StringComparison.OrdinalIgnoreCase) && string.Equals(currentController, item.Controller, StringComparison.OrdinalIgnoreCase);
+                            <li><a class="nav-link @(isCurrent ? "active" : null)" asp-area="Game" asp-controller="@item.Controller" asp-action="Index" aria-current="@(isCurrent ? "page" : null)" title="@item.Label"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@item.Controller" /></span><span class="nav-link-title">@item.Label</span></a></li>
+                        }
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link @(currentArea == "Social" ? "active" : null)" asp-area="Social" asp-controller="Home" asp-action="Index" title="社群管理"
-                       aria-current="@(currentArea == "Social" ? "page" : null)">
+
+                <li class="nav-item qmah-nav-group @(string.Equals(currentArea, "Social", StringComparison.OrdinalIgnoreCase) ? "is-active" : null)">
+                    <a class="nav-link @(string.Equals(currentArea, "Social", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="Social" asp-controller="Home" asp-action="Index" title="社群管理"
+                       aria-current="@(string.Equals(currentArea, "Social", StringComparison.OrdinalIgnoreCase) ? "page" : null)">
                         <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("social")" /></span>
                         <span class="nav-link-title">社群管理</span>
                     </a>
+                    <ul class="qmah-sidebar-subnav" aria-label="社群管理子功能">
+                        @foreach (var item in socialItems)
+                        {
+                            var isCurrent = string.Equals(currentArea, "Social", StringComparison.OrdinalIgnoreCase) && string.Equals(currentController, item.Controller, StringComparison.OrdinalIgnoreCase);
+                            <li><a class="nav-link @(isCurrent ? "active" : null)" asp-area="Social" asp-controller="@item.Controller" asp-action="Index" aria-current="@(isCurrent ? "page" : null)" title="@item.Label"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@item.Controller" /></span><span class="nav-link-title">@item.Label</span></a></li>
+                        }
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link @(currentArea == "Store" ? "active" : null)" asp-area="Store" asp-controller="Home" asp-action="Index" title="商城管理"
-                       aria-current="@(currentArea == "Store" ? "page" : null)">
+
+                <li class="nav-item qmah-nav-group @(string.Equals(currentArea, "Store", StringComparison.OrdinalIgnoreCase) ? "is-active" : null)">
+                    <a class="nav-link @(string.Equals(currentArea, "Store", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="Store" asp-controller="Home" asp-action="Index" title="商城管理"
+                       aria-current="@(string.Equals(currentArea, "Store", StringComparison.OrdinalIgnoreCase) ? "page" : null)">
                         <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("store")" /></span>
                         <span class="nav-link-title">商城管理</span>
                     </a>
+                    <ul class="qmah-sidebar-subnav" aria-label="商城管理子功能">
+                        @foreach (var item in storeItems)
+                        {
+                            var isCurrent = string.Equals(currentArea, "Store", StringComparison.OrdinalIgnoreCase) && string.Equals(currentController, item.Controller, StringComparison.OrdinalIgnoreCase);
+                            <li><a class="nav-link @(isCurrent ? "active" : null)" asp-area="Store" asp-controller="@item.Controller" asp-action="Index" aria-current="@(isCurrent ? "page" : null)" title="@item.Label"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@item.Controller" /></span><span class="nav-link-title">@item.Label</span></a></li>
+                        }
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link @(currentArea == "User" && !isAccountPage ? "active" : null)" asp-area="User" asp-controller="Home" asp-action="Index" title="會員管理"
-                       aria-current="@(currentArea == "User" && !isAccountPage ? "page" : null)">
+
+                <li class="nav-item qmah-nav-group @(string.Equals(currentArea, "User", StringComparison.OrdinalIgnoreCase) && !isAccountPage ? "is-active" : null)">
+                    <a class="nav-link @(string.Equals(currentArea, "User", StringComparison.OrdinalIgnoreCase) && !isAccountPage ? "active" : null)" asp-area="User" asp-controller="Home" asp-action="Index" title="會員管理"
+                       aria-current="@(string.Equals(currentArea, "User", StringComparison.OrdinalIgnoreCase) && !isAccountPage ? "page" : null)">
                         <span class="nav-link-icon"><partial name="Admin/_Icon" model="@("user")" /></span>
                         <span class="nav-link-title">會員管理</span>
                     </a>
+                    <ul class="qmah-sidebar-subnav" aria-label="會員管理子功能">
+                        @foreach (var item in userItems)
+                        {
+                            var isCurrent = string.Equals(currentArea, "User", StringComparison.OrdinalIgnoreCase) && string.Equals(currentController, item.Controller, StringComparison.OrdinalIgnoreCase);
+                            <li><a class="nav-link @(isCurrent ? "active" : null)" asp-area="User" asp-controller="@item.Controller" asp-action="Index" aria-current="@(isCurrent ? "page" : null)" title="@item.Label"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@item.Controller" /></span><span class="nav-link-title">@item.Label</span></a></li>
+                        }
+                    </ul>
                 </li>
-                @if (areaItems.Count > 0)
-                {
-                    <li class="nav-item qmah-sidebar-section-label"><span>功能選單</span></li>
-                    @foreach (var item in areaItems)
-                    {
-                        var isCurrentController = string.Equals(currentController, item.Controller, StringComparison.OrdinalIgnoreCase);
-                        <li class="nav-item qmah-sidebar-subnav">
-                            <a class="nav-link @(isCurrentController ? "active" : null)"
-                               asp-area="@currentArea" asp-controller="@item.Controller" asp-action="Index"
-                               aria-current="@(isCurrentController ? "page" : null)" title="@item.Label">
-                                <span class="nav-link-icon"><partial name="Admin/_Icon" model="@item.Controller" /></span>
-                                <span class="nav-link-title">@item.Label</span>
-                            </a>
-                        </li>
-                    }
-                }
             </ul>
             <div class="qmah-sidebar-footer mt-auto">
-                <span>QMAH</span>
-                <strong>內容管理後台</strong>
+                <span>清明鑑定屋</span>
+                <strong>典藏營運中心</strong>
             </div>
         </div>
     </div>

@@ -1,0 +1,63 @@
+/*
+ * DataTables 的後台表格外觀層：只整理搜尋、筆數選擇、分頁與工具列的間距。
+ * 資料查詢、分頁邏輯與欄位內容由頁面和伺服器處理；不要在這裡改表格資料行為。
+ */
+.qmah-admin .dt-container {
+    padding: 1rem;
+}
+
+/* 桌面版把工具列的控制項對齊在同一列，讓搜尋和筆數選擇容易找到。 */
+.qmah-admin .dt-layout-row {
+    align-items: center;
+    gap: .75rem;
+}
+
+/* DataTables 產生的輸入框與下拉選單套用後台共用邊框和表面色。 */
+.qmah-admin .dt-search input,
+.qmah-admin .dt-length select {
+    min-height: 2.25rem;
+    border: 1px solid var(--qmah-line);
+    border-radius: .375rem;
+    background: var(--qmah-surface-raised);
+    color: var(--qmah-ink);
+}
+
+.qmah-admin .dt-search input {
+    margin-left: .4rem;
+    padding: .35rem .6rem;
+}
+
+.qmah-admin .dt-length select {
+    margin: 0 .35rem;
+    padding: .35rem 1.8rem .35rem .6rem;
+}
+
+/* 分頁按鈕維持足夠的點擊面積，當前頁與滑入狀態使用管理區色彩。 */
+.qmah-admin .dt-paging .dt-paging-button {
+    border: 1px solid var(--qmah-line);
+    border-radius: .375rem;
+    background: var(--qmah-surface-raised);
+    color: var(--qmah-ink-soft) !important;
+}
+
+.qmah-admin .dt-paging .dt-paging-button.current,
+.qmah-admin .dt-paging .dt-paging-button:hover {
+    border-color: var(--qmah-area-accent);
+    background: var(--qmah-area-accent);
+    color: #fff !important;
+}
+
+/* 手機版把工具列改成直向排列，避免搜尋框和分頁互相擠壓。 */
+@media (max-width: 767.98px) {
+    .qmah-admin .dt-layout-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .qmah-admin .dt-search,
+    .qmah-admin .dt-length,
+    .qmah-admin .dt-info,
+    .qmah-admin .dt-paging {
+        text-align: left;
+    }
+}

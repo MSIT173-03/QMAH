@@ -1,0 +1,108 @@
+@using System.Globalization
+@model QMAH.Web.Models.OperationsMetricDetailsViewModel
+
+@{
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] ??= "營運統計明細";
+    ViewData["AdminDescription"] ??= "依選定指標查看趨勢圖、摘要數值與完整逐日資料，並可匯出目前區間。";
+    var rangeDays = (Model.To - Model.From).Days + 1;
+    var isPresetRange = rangeDays is 7 or 30 or 90 or 180 or 365;
+}
+
+@section PageActions {
+    <a asp-action="Index" asp-route-from="@Model.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" asp-route-to="@Model.To.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回營運概觀</a>
+    <a asp-action="Export" asp-route-metric="@Model.MetricCode" asp-route-from="@Model.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" asp-route-to="@Model.To.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="btn btn-primary"><i class="ti ti-download me-1"></i>匯出 CSV</a>
+}
+
+<div class="qmah-detail-intro">
+    <div>
+        <h2 class="qmah-detail-intro__title">@Model.MetricLabel</h2>
+        <p class="qmah-detail-intro__description">@Model.MetricDescription</p>
+    </div>
+    <div class="qmah-detail-intro__range">
+        <span>目前區間</span>
+        <strong>@Model.From.ToString("yyyy/MM/dd") – @Model.To.ToString("yyyy/MM/dd")</strong>
+        <small>@Model.GranularityLabel · @Model.Points.Count 個資料點</small>
+    </div>
+</div>
+
+<div class="card qmah-filter-panel mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="Details" class="row g-3 align-items-end">
+            <input type="hidden" name="metric" value="@Model.MetricCode" />
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label for="details-days" class="form-label">快速範圍</label>
+                <select id="details-days" name="days" class="form-select">
+                    <option value="7" selected="@(rangeDays == 7 ? "selected" : null)">最近 7 天</option>
+                    <option value="30" selected="@(rangeDays == 30 ? "selected" : null)">最近 30 天</option>
+                    <option value="90" selected="@(rangeDays == 90 ? "selected" : null)">最近 90 天</option>
+                    <option value="180" selected="@(rangeDays == 180 ? "selected" : null)">最近 180 天</option>
+                    <option value="365" selected="@(rangeDays == 365 ? "selected" : null)">最近 365 天</option>
+                    <option value="" selected="@(!isPresetRange ? "selected" : null)">自訂日期區間</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label for="details-from" class="form-label">開始日期</label>
+                <input id="details-from" name="from" type="date" class="form-control" value="@Model.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label for="details-to" class="form-label">結束日期</label>
+                <input id="details-to" name="to" type="date" class="form-control" value="@Model.To.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-refresh me-1"></i>更新統計</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="qmah-operations-summary mb-3" aria-label="統計摘要">
+    @foreach (var summary in Model.Summaries)
+    {
+        <article class="qmah-operations-summary__item">
+            <span>@summary.Label</span>
+            <strong>@(summary.ValueFormat == "currency" ? summary.Value.ToString("C0") : summary.Value.ToString("N0"))</strong>
+            <small>選定期間合計</small>
+        </article>
+    }
+</div>
+
+<div class="card qmah-list-card qmah-operations-detail-chart mb-3">
+    <partial name="Admin/_OperationsTrendChart" model="@Model.Chart" />
+</div>
+
+<div class="card qmah-list-card">
+    <div class="card-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div>
+            <h2 class="card-title mb-1">@(Model.MetricLabel)逐日明細</h2>
+            <p class="card-subtitle mb-0">保留完整資料列，匯出檔案也使用相同區間與欄位。</p>
+        </div>
+        <span class="badge bg-secondary-lt">共 @Model.Points.Count 天</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table qmah-crud-table">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    @foreach (var series in Model.Series)
+                    {
+                        <th class="text-end">@series.Label</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var point in Model.Points.AsEnumerable().Reverse())
+            {
+                <tr>
+                    <td class="text-nowrap">@point.Date.ToString("yyyy/MM/dd")</td>
+                    @for (var index = 0; index < Model.Series.Count; index++)
+                    {
+                        var value = point.Values[index];
+                        <td class="text-end">@(Model.Series[index].ValueFormat == "currency" ? value.ToString("C0") : value.ToString("N0"))</td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -183,7 +183,7 @@
                                     <Button Grid.Row="3" Grid.Column="2" Content="選擇檔案" Click="BrowseProductImportButton_Click" />
                                     <TextBlock Grid.Row="4" Text="確認碼" FontWeight="SemiBold" />
                                     <TextBox Grid.Row="4" Grid.Column="1" x:Name="ImportApprovalTokenBox" ToolTip="按預檢後會自動帶入；資料內容改變就必須重新預檢。" />
-                                    <TextBlock Grid.Row="5" Grid.Column="1" Text="固定門檻：8 類文物各 32 筆、48 筆商品；既有 ExternalRef／ArtifactRef 只會略過，不會覆寫。" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Grid.Row="5" Grid.Column="1" Text="參考資料量：8 類文物各 32 筆、商品最多 256 筆；既有 ExternalRef／ArtifactRef 只會略過，不會覆寫。" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
                                 </Grid>
                                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                                     <Button x:Name="PrecheckImportButton" Content="預檢資料與重複項目" MinWidth="170" Click="PrecheckImportButton_Click" />

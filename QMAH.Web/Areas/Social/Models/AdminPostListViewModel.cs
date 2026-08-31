@@ -6,6 +6,9 @@
         public string Title { get; set; } = string.Empty;
         public string AuthorName { get; set; } = string.Empty;
         public string BoardCode { get; set; } = string.Empty;
+        public string PostType { get; set; } = "POST";
+        public string PublisherType { get; set; } = "COMMUNITY";
+        public Guid? EventId { get; set; }
         public string Status { get; set; } = "NORMAL"; // NORMAL, HIDDEN, DELETED
         public int CommentCount { get; set; }
         public DateTime CreatedAt { get; set; }

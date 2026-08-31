@@ -1,6 +1,6 @@
 # 後台開發起點
 
-後台功能從這裡開始。依序確認資料表、路由、ViewModel、授權與 CRUD，再依自己的 Area 延伸。
+後台功能從這裡開始。依序確認資料表、路由、ViewModel、授權與 CRUD，再依自己的 Area 延伸。Razor 後台位於 `QMAH.Web`；前台要使用的 JSON 契約位於獨立的 `QMAH.Api`，兩者共用 `QMAH.Infrastructure`。
 
 若還不熟悉 List、Controller、ViewModel、Razor 表單與完整 CRUD 的連接方式，先照[從清單到完整 CRUD](05-crud-tutorial.md)做一次，再回來依自己的資料表調整。
 
@@ -9,16 +9,16 @@
 ## 開始前
 
 1. 還原最新 Release 附帶的 `QMAH-<version>.bak`，或完整執行 `database/QMAH.sql`。
-2. 開啟 `QMAH.sln`，確認網站可啟動。
+2. 開啟 `QMAH.sln`，確認 `QMAH.Web` 與 `QMAH.Api` 至少各自可以啟動；Visual Studio 也可以選 `QMAH 後端（API＋Razor）` 一次啟動兩者。
 3. 切到自己負責的 `feature/*` 分支並先 Pull。
-4. 先閱讀 `QMAH.Web/Data/QmahDbContext.cs` 中本 Area 的 DbSet 與 mapping。
+4. 先閱讀 `QMAH.Infrastructure/Data/QmahDbContext.cs` 中本 Area 的 DbSet 與 mapping；遠端版本更新後，依 [`database/README.md`](../database/README.md) 用最新版完整快照重新建立資料庫，不直接修改舊資料庫，也不需要自行增量匯入。
 5. 用 SSMS Diagram 確認主鍵、外鍵、唯一索引、可否為 `NULL` 與 `rowversion`。
 
 資料庫已存在，不需要建表或建立 Migration。
 
-Identity 的資料表、服務註冊與標準 API 已備妥，但正式登入／登出頁、帳號選單、角色或 Policy 及後台 `[Authorize]` 仍待 User Area 完成。其他 Area 可以先做唯讀頁面；開始提供寫入功能前，必須接上共同授權規則。
+Identity 的資料表、服務註冊、MVC 登入／登出頁、角色授權與後台 `[Authorize]` 已整合完成。新增或修改後台功能時，仍必須沿用共同授權規則；API 則使用自己的 Cookie 驗證與 HTTP 狀態碼，不把 Razor ViewModel 當成 API 契約。
 
-正式 Repository 保留共同基礎與各 Area 的空白起始結構。各 Area 依既有 Entity 與 `QmahDbContext` 建立功能；Visual Studio Scaffold 用於產生起始碼，產生後仍需完成 ViewModel、授權、驗證與流程調整。
+正式 Repository 保留共同基礎與各 Area 的既有功能。各 Area 依 `QMAH.Infrastructure` 的 Entity 與 `QmahDbContext` 建立功能；Visual Studio Scaffold 用於產生起始碼，產生後仍需完成 ViewModel、授權、驗證與流程調整。需要跨主機共用的文物匯入規則已集中在 Infrastructure，避免 Web 與 API 各自維護一份。
 
 ## 檔案放置位置
 
@@ -27,7 +27,7 @@ Identity 的資料表、服務註冊與標準 API 已備妥，但正式登入／
 ```text
 QMAH.Web/Areas/Catalog/
 ├─ Controllers/ArtifactController.cs
-├─ ViewModels/ArtifactEditViewModel.cs
+├─ ViewModel/ArtifactEditViewModel.cs
 └─ Views/Artifact/
    ├─ Index.cshtml
    ├─ Details.cshtml
@@ -43,13 +43,13 @@ QMAH.Web/Areas/Catalog/
 
 ## 五個 Area 的最低 CRUD 範圍
 
-下表定義期中後台至少應提供的管理功能。實體刪除只適用於沒有外鍵、交易或歷史用途的測試資料；其他資料使用停用、隱藏、取消或封存狀態。
+下表定義目前後台應提供的管理功能。實體刪除只適用於沒有外鍵、交易或歷史用途的測試資料；其他資料使用停用、隱藏、取消或封存狀態。
 
 | Area | 最低清單與詳細頁 | 新增與修改 | 刪除或狀態操作 |
 | --- | --- | --- | --- |
 | `Catalog` | 文物、分類、年代、題庫設定 | 新增與修改文物基本資料、分類及年代；維護題庫啟用與難度 | 未被使用的測試分類可刪除；正式文物使用啟用／停用，不刪除已連結商品或題庫的文物 |
 | `Game` | 房間、玩家、回合、作答、投票 | 建立房間與回合；修改尚未開始的房間設定 | 等待中的測試房間可取消；已完成房間、回合、作答與投票保留歷史，不做實體刪除 |
-| `Social` | 貼文、留言、檢舉、公告、活動與報名 | 新增與修改公告、活動；管理貼文、留言與檢舉處理結果 | 貼文與留言使用隱藏／刪除狀態；已有報名的活動不直接刪除 |
+| `Social` | 貼文（含官方公告類型）、留言、檢舉、活動與報名 | 新增與修改貼文、活動；管理留言與檢舉處理結果 | 貼文與留言使用隱藏／刪除狀態；已有報名的活動不直接刪除 |
 | `User` | Identity 帳號、Profile、地址、成就與會員成就 | 使用 Identity API 維護 Email、鎖定與角色；使用 DbContext CRUD Profile、地址與成就資料 | 帳號使用鎖定或停用；密碼、角色與 Token 不直接修改資料表；未被使用的地址或測試成就可依外鍵規則刪除 |
 | `Store` | 商品、購物車、優惠券、訂單、付款與點數 | 新增與修改商品、庫存、優惠券；訂單與付款提供詳細頁與合法狀態操作 | 商品使用上架／下架；訂單、明細、付款與點數流水保留歷史，不做實體刪除 |
 
@@ -147,7 +147,7 @@ public async Task<IActionResult> Create(
 - 目前登入者使用 `UserManager<ApplicationUser>` 取得，不解析顯示名稱代替 UserId。
 - 點數、庫存、訂單、付款或遊戲結算若同時更新多張表，使用同一個 scoped DbContext 與交易。
 
-完整程式範例見[QmahDbContext 使用方式](07-dbcontext-usage.md)。Identity 的期中製作範圍見[期中 Identity 實作](09-midterm-identity.md)。
+完整程式範例見[QmahDbContext 使用方式](07-dbcontext-usage.md)。Identity 的目前實作範圍見[Identity 與會員資料管理](09-midterm-identity.md)。
 
 ## Scaffold 的正確用途
 

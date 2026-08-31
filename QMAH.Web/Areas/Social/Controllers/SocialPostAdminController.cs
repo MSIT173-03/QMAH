@@ -2,20 +2,25 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Models.Entities;
 using QMAH.Web.Areas.Social.Models;
 using QMAH.Web.Areas.Social.Services;
-using QMAH.Web.Data;
+using QMAH.Web.Infrastructure;
 using QMAH.Web.Infrastructure.AdminNavigation;
-using QMAH.Web.Models.Entities;
 
 namespace QMAH.Web.Areas.Social.Controllers;
 
 [Area("Social")]
 [AdminNavigation("貼文處理", 30)]
-[Authorize(Policy = "Policy.Social.ManageReports")]
-public class SocialPostAdminController : Controller
+[Authorize(Policy = "Policy.Social.ManagePosts")]
+public sealed class SocialPostAdminController : Controller
 {
+    private const int AdminPageSize = 20;
     private static readonly HashSet<string> AllowedStatuses = ["PUBLISHED", "HIDDEN", "DELETED"];
+    private static readonly HashSet<string> AllowedPostTypes = ["POST", "ANNOUNCEMENT"];
+    private static readonly string[] StandardBoardCodes =
+        ["GENERAL", "CATALOG", "DISCOVERY", "REVIEW", "QUESTION", "GUIDE"];
 
     private readonly QmahDbContext _context;
     private readonly ICurrentUserService _currentUserService;
@@ -31,6 +36,7 @@ public class SocialPostAdminController : Controller
     {
         ViewData["IsCreate"] = true;
         ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
+        ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
         return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", new PostCreateViewModel());
     }
 
@@ -40,29 +46,41 @@ public class SocialPostAdminController : Controller
         PostCreateViewModel model,
         CancellationToken cancellationToken = default)
     {
+        ValidateModel(model);
+        await ValidateArtifactAsync(model, cancellationToken);
         if (!ModelState.IsValid)
         {
             ViewData["IsCreate"] = true;
             ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
+            ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
             return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", model);
         }
 
         var now = DateTime.UtcNow;
+        var postType = NormalizePostType(model.PostType);
         _context.SocialPosts.Add(new SocialPost
         {
             Id = Guid.NewGuid(),
             BoardCode = NormalizeBoardCode(model.BoardCode),
             UserId = _currentUserService.GetCurrentUserId(),
             ArtifactId = model.ArtifactId,
+            PostType = postType,
+            PublisherType = GetPublisherType(postType),
+            ContentMode = "CUSTOM",
             Title = model.Title.Trim(),
             Content = model.Content.Trim(),
+            LocationName = NormalizeText(model.LocationName),
+            Latitude = model.Latitude,
+            Longitude = model.Longitude,
             Status = "PUBLISHED",
             CreatedAt = now,
             UpdatedAt = now
         });
 
         await _context.SaveChangesAsync(cancellationToken);
-        TempData["SuccessMessage"] = "貼文已新增至指定板塊。";
+        TempData["SuccessMessage"] = postType == "ANNOUNCEMENT"
+            ? "公告貼文已發布至指定分類。"
+            : "一般貼文已發布至指定分類。";
         return RedirectToAction(nameof(Index));
     }
 
@@ -72,8 +90,11 @@ public class SocialPostAdminController : Controller
         [FromQuery] SocialPostAdminPageViewModel filter,
         CancellationToken cancellationToken = default)
     {
+        filter.Page = Math.Max(1, filter.Page);
+        filter.PageSize = AdminPageSize;
         filter.Keyword = string.IsNullOrWhiteSpace(filter.Keyword) ? null : filter.Keyword.Trim();
-        filter.BoardCode = string.IsNullOrWhiteSpace(filter.BoardCode) ? null : filter.BoardCode.Trim();
+        filter.BoardCode = string.IsNullOrWhiteSpace(filter.BoardCode) ? null : filter.BoardCode.Trim().ToUpperInvariant();
+        filter.PostType = string.IsNullOrWhiteSpace(filter.PostType) ? null : NormalizePostType(filter.PostType);
         filter.Status = string.IsNullOrWhiteSpace(filter.Status) ? null : filter.Status.Trim().ToUpperInvariant();
 
         var query = _context.SocialPosts.AsNoTracking();
@@ -81,13 +102,18 @@ public class SocialPostAdminController : Controller
         if (filter.Keyword is not null)
         {
             query = query.Where(post =>
-                post.Title.Contains(filter.Keyword) ||
-                post.Content.Contains(filter.Keyword));
+                post.Title.Contains(filter.Keyword)
+                || post.Content.Contains(filter.Keyword));
         }
 
         if (filter.BoardCode is not null)
         {
             query = query.Where(post => post.BoardCode == filter.BoardCode);
+        }
+
+        if (filter.PostType is not null && AllowedPostTypes.Contains(filter.PostType))
+        {
+            query = query.Where(post => post.PostType == filter.PostType);
         }
 
         if (filter.Status is not null && AllowedStatuses.Contains(filter.Status))
@@ -106,13 +132,11 @@ public class SocialPostAdminController : Controller
             query = query.Where(post => post.CreatedAt < exclusiveEnd);
         }
 
-        var boardCodes = await _context.SocialPosts
-            .AsNoTracking()
-            .Select(post => post.BoardCode)
-            .Distinct()
-            .OrderBy(boardCode => boardCode)
-            .ToListAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)filter.PageSize));
+        filter.Page = Math.Min(filter.Page, totalPages);
 
+        var boardCodes = await LoadBoardCodes(cancellationToken);
         var posts = await query
             .OrderByDescending(post => post.CreatedAt)
             .Select(post => new AdminPostListViewModel
@@ -124,25 +148,31 @@ public class SocialPostAdminController : Controller
                     .Select(profile => profile.Nickname)
                     .FirstOrDefault() ?? "未設定暱稱",
                 BoardCode = post.BoardCode,
+                PostType = post.PostType,
+                PublisherType = post.PublisherType,
+                EventId = post.EventId,
                 Status = post.Status,
                 CommentCount = post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
                 CreatedAt = post.CreatedAt
             })
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
             .ToListAsync(cancellationToken);
 
-        var model = new SocialPostAdminPageViewModel
+        return View("~/Areas/Social/Views/SocialAdmin/SocialPostAdmin.cshtml", new SocialPostAdminPageViewModel
         {
             Keyword = filter.Keyword,
             BoardCode = filter.BoardCode,
+            PostType = filter.PostType,
             Status = filter.Status,
             From = filter.From,
             To = filter.To,
-            TotalCount = posts.Count,
+            Page = filter.Page,
+            PageSize = filter.PageSize,
+            TotalCount = totalCount,
             BoardCodes = boardCodes,
             Posts = posts
-        };
-
-        return View("~/Areas/Social/Views/SocialAdmin/SocialPostAdmin.cshtml", model);
+        });
     }
 
     public Task<IActionResult> Index(
@@ -161,14 +191,27 @@ public class SocialPostAdminController : Controller
             return NotFound();
         }
 
+        if (post.EventId.HasValue)
+        {
+            return RedirectToAction(
+                "Edit",
+                "SocialEventAdmin",
+                new { area = "Social", id = post.EventId.Value });
+        }
+
         ViewData["PostId"] = post.Id;
         ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
+        ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
         return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", new PostCreateViewModel
         {
+            PostType = NormalizePostType(post.PostType),
             BoardCode = post.BoardCode,
             Title = post.Title,
             Content = post.Content,
-            ArtifactId = post.ArtifactId
+            ArtifactId = post.ArtifactId,
+            LocationName = post.LocationName,
+            Latitude = post.Latitude,
+            Longitude = post.Longitude
         });
     }
 
@@ -179,23 +222,40 @@ public class SocialPostAdminController : Controller
         PostCreateViewModel model,
         CancellationToken cancellationToken = default)
     {
-        if (!ModelState.IsValid)
-        {
-            ViewData["PostId"] = id;
-            ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
-            return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", model);
-        }
-
-        var post = await _context.SocialPosts.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        var post = await _context.SocialPosts
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (post is null)
         {
             return NotFound();
         }
 
+        if (post.EventId.HasValue)
+        {
+            TempData["ErrorMessage"] = "活動貼文請從活動管理編輯，避免活動資料與貼文內容不同步。";
+            return RedirectToAction(nameof(Index));
+        }
+
+        ValidateModel(model);
+        await ValidateArtifactAsync(model, cancellationToken);
+        if (!ModelState.IsValid)
+        {
+            ViewData["PostId"] = id;
+            ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
+            ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
+            return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", model);
+        }
+
+        var postType = NormalizePostType(model.PostType);
         post.BoardCode = NormalizeBoardCode(model.BoardCode);
+        post.PostType = postType;
+        post.PublisherType = GetPublisherType(postType);
+        post.ContentMode = "CUSTOM";
         post.Title = model.Title.Trim();
         post.Content = model.Content.Trim();
         post.ArtifactId = model.ArtifactId;
+        post.LocationName = NormalizeText(model.LocationName);
+        post.Latitude = model.Latitude;
+        post.Longitude = model.Longitude;
         post.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -223,11 +283,17 @@ public class SocialPostAdminController : Controller
             return NotFound();
         }
 
+        if (post.EventId.HasValue)
+        {
+            TempData["ErrorMessage"] = "活動貼文的可見狀態請從活動管理處理。";
+            return RedirectToAction(nameof(Index));
+        }
+
         post.Status = status;
         post.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
 
-        TempData["SuccessMessage"] = $"貼文狀態已更新為：{status}。";
+        TempData["SuccessMessage"] = $"貼文狀態已更新為：{AdminDisplayLabels.Status(status)}。";
         return RedirectToAction(nameof(Index));
     }
 
@@ -241,21 +307,71 @@ public class SocialPostAdminController : Controller
 
     private async Task<List<string>> LoadBoardCodes(CancellationToken cancellationToken)
     {
-        var boardCodes = await _context.SocialPosts
+        var existingCodes = await _context.SocialPosts
             .AsNoTracking()
             .Select(post => post.BoardCode)
             .Distinct()
-            .OrderBy(boardCode => boardCode)
             .ToListAsync(cancellationToken);
 
-        if (!boardCodes.Contains("GENERAL"))
+        return StandardBoardCodes
+            .Concat(existingCodes)
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Select(code => code.Trim().ToUpperInvariant())
+            .Distinct()
+            .ToList();
+    }
+
+    private async Task ValidateArtifactAsync(PostCreateViewModel model, CancellationToken cancellationToken)
+    {
+        if (model.ArtifactId.HasValue
+            && !await _context.Artifacts.AnyAsync(
+                artifact => artifact.Id == model.ArtifactId.Value && artifact.IsActive,
+                cancellationToken))
         {
-            boardCodes.Insert(0, "GENERAL");
+            ModelState.AddModelError(nameof(model.ArtifactId), "找不到可關聯的啟用文物。");
+        }
+    }
+
+    private async Task<List<PostArtifactOption>> LoadArtifactOptions(CancellationToken cancellationToken)
+    {
+        return await _context.Artifacts
+            .AsNoTracking()
+            .Where(artifact => artifact.IsActive)
+            .OrderBy(artifact => artifact.ArtifactRef)
+            .Select(artifact => new PostArtifactOption(
+                artifact.Id,
+                artifact.ArtifactRef,
+                artifact.Name))
+            .Take(512)
+            .ToListAsync(cancellationToken);
+    }
+
+    private void ValidateModel(PostCreateViewModel model)
+    {
+        var postType = NormalizePostType(model.PostType);
+        if (!AllowedPostTypes.Contains(postType))
+        {
+            ModelState.AddModelError(nameof(model.PostType), "請選擇一般貼文或公告貼文。");
         }
 
-        return boardCodes;
+        if (model.Latitude.HasValue != model.Longitude.HasValue)
+        {
+            ModelState.AddModelError(nameof(model.Latitude), "地點座標必須同時填寫緯度與經度；也可以兩者都留白。");
+        }
     }
+
+    private string GetPublisherType(string postType) =>
+        postType == "ANNOUNCEMENT"
+            && (User.IsInRole("Admin") || User.IsInRole("AnnouncementEditor"))
+            ? "OFFICIAL"
+            : "COMMUNITY";
+
+    private static string NormalizePostType(string? postType) =>
+        string.IsNullOrWhiteSpace(postType) ? "POST" : postType.Trim().ToUpperInvariant();
 
     private static string NormalizeBoardCode(string? boardCode) =>
         string.IsNullOrWhiteSpace(boardCode) ? "GENERAL" : boardCode.Trim().ToUpperInvariant();
+
+    private static string? NormalizeText(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

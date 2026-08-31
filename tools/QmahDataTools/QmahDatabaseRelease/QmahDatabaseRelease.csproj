@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="181.36.0" />
-    <ProjectReference Include="..\..\..\QMAH.Web\QMAH.Web.csproj" />
+    <ProjectReference Include="..\..\..\QMAH.Infrastructure\QMAH.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

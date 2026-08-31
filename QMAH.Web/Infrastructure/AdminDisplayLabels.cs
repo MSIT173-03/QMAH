@@ -30,18 +30,43 @@ public static class AdminDisplayLabels
         "FULFILLING" => "撿貨中",
         "PAID" => "已付款",
         "PENDING_PAYMENT" => "待付款",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他狀態"
     };
 
     public static string Board(string? value) => value?.Trim().ToUpperInvariant() switch
     {
         "GENERAL" => "綜合交流",
-        "CATALOG" => "圖鑑研究",
+        "CATALOG" => "文物討論",
         "GAME" => "鑑定遊戲",
         "EVENTS" => "活動消息",
+        "EVENT" => "活動",
         "DISCOVERY" => "探索發現",
         "REVIEW" => "鑑賞心得",
-        _ => value ?? "未分類"
+        "QUESTION" => "問題求助",
+        "GUIDE" => "研究筆記",
+        _ => string.IsNullOrWhiteSpace(value) ? "未分類" : "其他分類"
+    };
+
+    public static string PostType(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "POST" => "一般貼文",
+        "ANNOUNCEMENT" => "公告貼文",
+        "EVENT" => "活動貼文",
+        _ => "其他貼文類型"
+    };
+
+    public static string PublisherType(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "OFFICIAL" => "官方發布",
+        "COMMUNITY" => "社群發布",
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他發布者"
+    };
+
+    public static string Role(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "ADMIN" => "管理員",
+        "USER" => "一般會員",
+        _ => "其他角色"
     };
 
     public static string Scope(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -51,7 +76,7 @@ public static class AdminDisplayLabels
         "ERA" => "年代鑰匙",
         "UNIVERSAL" => "萬用鑰匙",
         "GLOBAL" => "全域鑰匙",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他範圍"
     };
 
     public static string ConditionType(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -63,14 +88,14 @@ public static class AdminDisplayLabels
         "GAME_PLAY_COUNT" => "遊戲參與次數",
         "EVENT_JOIN_COUNT" => "參加活動數",
         "POINT_TOTAL" => "累積點數",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他條件"
     };
 
     public static string EventType(string? value) => value?.Trim().ToUpperInvariant() switch
     {
         "OFFICIAL" => "官方活動",
         "PLAYER" => "玩家活動",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他活動類型"
     };
 
     public static string ReviewStatus(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -78,7 +103,7 @@ public static class AdminDisplayLabels
         "PENDING" => "待審核",
         "APPROVED" => "已核准",
         "REJECTED" => "已駁回",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他審核狀態"
     };
 
     public static string PublishStatus(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -86,14 +111,56 @@ public static class AdminDisplayLabels
         "DRAFT" => "草稿",
         "PUBLISHED" => "已發布",
         "CANCELLED" => "已取消",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他發布狀態"
     };
+
+    public static string AnswerType(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "FACTUAL_REASONING" => "史實推理",
+        "PLAUSIBLE_FICTION" => "合理推演",
+        "CREATIVE_TALE" => "創意故事",
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他作答類型"
+    };
+
+    public static string AuditTarget(string? area, string? controller, string? action) =>
+        (area?.Trim().ToUpperInvariant(), controller?.Trim(), action?.Trim()) switch
+        {
+            ("SOCIAL", "SocialEventAdmin", "Create") => "建立社群活動",
+            ("SOCIAL", "SocialEventAdmin", "Edit") => "修改社群活動",
+            ("SOCIAL", "SocialEventAdmin", "ReviewEvent") => "審核社群活動",
+            ("SOCIAL", "SocialEventAdmin", "SetPublishStatus") => "變更活動發布狀態",
+            ("SOCIAL", "SocialEventAdmin", "Delete") => "取消社群活動",
+            ("SOCIAL", "SocialPostAdmin", "Create") => "建立社群貼文",
+            ("SOCIAL", "SocialPostAdmin", "Edit") => "修改社群貼文",
+            ("SOCIAL", "SocialPostAdmin", "SetPostStatus") => "變更貼文顯示狀態",
+            ("CATALOG", _, _) => "圖鑑管理",
+            ("GAME", _, _) => "遊戲管理",
+            ("SOCIAL", _, _) => "社群管理",
+            ("STORE", _, _) => "商城管理",
+            ("USER", _, _) => "會員管理",
+            (_, "Operations", "SetMediaStatus") => "變更圖片顯示狀態",
+            (_, _, _) => "後台資料管理"
+        };
+
+    public static string AuditArea(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "ROOT" => "營運中心",
+        "CATALOG" => "圖鑑管理",
+        "GAME" => "遊戲管理",
+        "SOCIAL" => "社群管理",
+        "STORE" => "商城管理",
+        "USER" => "會員管理",
+        _ => "其他管理"
+    };
+
+    public static string AuditResult(int statusCode) =>
+        statusCode is >= 200 and < 400 ? "完成" : "未完成";
 
     public static string TargetType(string? value) => value?.Trim().ToUpperInvariant() switch
     {
         "POST" => "貼文",
         "COMMENT" => "留言",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他目標類型"
     };
 
     public static string ReportReason(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -104,14 +171,14 @@ public static class AdminDisplayLabels
         "MISINFORMATION" => "錯誤資訊",
         "COPYRIGHT" => "著作權問題",
         "OTHER" => "其他",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他檢舉理由"
     };
 
     public static string DiscountType(string? value) => value?.Trim().ToUpperInvariant() switch
     {
         "FIXED" => "折抵金額",
         "PERCENT" => "折扣百分比",
-        _ => value ?? "未設定"
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他折扣類型"
     };
 
     public static string Visibility(string? value) => value?.Trim().ToUpperInvariant() switch
@@ -119,6 +186,27 @@ public static class AdminDisplayLabels
         "PUBLIC" => "公開",
         "FRIENDS" => "僅限好友",
         "PRIVATE" => "私人",
-        _ => value ?? "未設定"
+        _ => "其他範圍"
+    };
+
+    public static string PointReferenceType(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "SHOWCASE" => "展示資料",
+        "ORDER" => "訂單回饋",
+        "GAME" => "遊戲獎勵",
+        "EVENT" => "活動回饋",
+        "ACHIEVEMENT" => "成就獎勵",
+        _ => "其他異動"
+    };
+
+    public static string PointReason(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "FIXTURE_GRANT" => "展示資料發放",
+        "ADMIN_ADJUST" => "後台調整",
+        "ORDER_REWARD" => "訂單回饋",
+        "GAME_REWARD" => "遊戲獎勵",
+        "EVENT_REWARD" => "活動回饋",
+        "ACHIEVEMENT_REWARD" => "成就獎勵",
+        _ => string.IsNullOrWhiteSpace(value) ? "未註明" : "其他原因"
     };
 }

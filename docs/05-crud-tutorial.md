@@ -21,19 +21,19 @@
 ```text
 QMAH.Web/Areas/Catalog/
 ├─ Controllers/ArtifactCategoryController.cs
-├─ ViewModels/ArtifactCategoryViewModels.cs
+├─ ViewModel/ArtifactCategoryViewModels.cs
 └─ Views/ArtifactCategory/
    └─ Index.cshtml
 ```
 
 ### 1. 建立清單 ViewModel
 
-`Areas/Catalog/ViewModels/ArtifactCategoryViewModels.cs`
+`Areas/Catalog/ViewModel/ArtifactCategoryViewModels.cs`
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace QMAH.Web.Areas.Catalog.ViewModels;
+namespace QMAH.Web.Areas.Catalog.ViewModel;
 
 public sealed class ArtifactCategoryListItemViewModel
 {
@@ -78,9 +78,9 @@ Entity 對應資料表，ViewModel 對應畫面。清單只需要 4 個欄位，
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QMAH.Web.Areas.Catalog.ViewModels;
-using QMAH.Web.Data;
-using QMAH.Web.Models.Entities;
+using QMAH.Web.Areas.Catalog.ViewModel;
+using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
@@ -139,7 +139,7 @@ public sealed class ArtifactCategoryController : Controller
 `Areas/Catalog/Views/ArtifactCategory/Index.cshtml`
 
 ```cshtml
-@model IReadOnlyList<QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryListItemViewModel>
+@model IReadOnlyList<QMAH.Web.Areas.Catalog.ViewModel.ArtifactCategoryListItemViewModel>
 
 @{
     ViewData["Title"] = "文物分類管理";
@@ -424,7 +424,7 @@ Create 與 Edit 欄位相同，可使用 Partial 避免複製兩份 HTML
 `Areas/Catalog/Views/ArtifactCategory/_Form.cshtml`
 
 ```cshtml
-@model QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryFormViewModel
+@model QMAH.Web.Areas.Catalog.ViewModel.ArtifactCategoryFormViewModel
 
 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -444,7 +444,7 @@ Create 與 Edit 欄位相同，可使用 Partial 避免複製兩份 HTML
 `Create.cshtml`
 
 ```cshtml
-@model QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryFormViewModel
+@model QMAH.Web.Areas.Catalog.ViewModel.ArtifactCategoryFormViewModel
 
 @{ ViewData["Title"] = "新增文物分類"; }
 
@@ -464,7 +464,7 @@ Create 與 Edit 欄位相同，可使用 Partial 避免複製兩份 HTML
 `Edit.cshtml`
 
 ```cshtml
-@model QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryFormViewModel
+@model QMAH.Web.Areas.Catalog.ViewModel.ArtifactCategoryFormViewModel
 
 @{ ViewData["Title"] = "編輯文物分類"; }
 

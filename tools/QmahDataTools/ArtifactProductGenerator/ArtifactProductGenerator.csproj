@@ -7,6 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\QMAH.Web\QMAH.Web.csproj" />
+    <ProjectReference Include="..\..\..\QMAH.Infrastructure\QMAH.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

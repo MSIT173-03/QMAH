@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="~/css/areas/game.css" asp-append-version="true" />
 }
 
-<div class="card border-danger">
+<div class="card border-danger qmah-form-card">
     <div class="card-header"><h2 class="card-title text-danger">確認刪除題庫設定</h2></div>
-    <div class="card-body"><p>確定要刪除 <strong>@Model.ArtifactName</strong>（<code>@Model.ArtifactRef</code>）的題庫設定嗎？</p><p class="text-secondary mb-0">文物主檔仍會保留，之後可以重新建立題庫設定。</p></div>
-    <div class="card-footer d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">取消</a><form asp-action="Delete" asp-route-id="@Model.Id" method="post"><button class="btn btn-danger" type="submit">確認刪除</button></form></div>
+    <div class="card-body"><p>確定要刪除 <strong>@Model.ArtifactName</strong>（故宮編號 <code>@Model.ArtifactRef</code>）的題庫設定嗎？</p><p class="text-secondary mb-0">文物主檔仍會保留，之後可以重新建立題庫設定。</p></div>
+<div class="card-footer qmah-card-footer"><a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">取消</a><form asp-action="Delete" asp-route-id="@Model.Id" method="post"><button class="btn btn-danger" type="submit">確認刪除</button></form></div>
 </div>

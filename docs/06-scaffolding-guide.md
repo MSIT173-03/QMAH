@@ -10,7 +10,7 @@ Scaffold 會根據 Entity 與 `QmahDbContext` 產生 MVC Controller 和 Razor Vi
 2. 用 Visual Studio 開啟 `QMAH.sln`
 3. 確認啟動專案是 `QMAH.Web`
 4. 先執行一次 **Build Solution**，確認沒有錯誤
-5. 確認要管理的 Entity 已存在於 `QMAH.Web/Models/Entities`
+5. 確認要管理的 Entity 已存在於 `QMAH.Infrastructure/Models/Entities`
 6. 確認 `QmahDbContext` 有對應的 `DbSet<TEntity>`
 
 專案已安裝 `Microsoft.VisualStudio.Web.CodeGeneration.Design`，一般情況不需要再安裝 NuGet 套件
@@ -27,9 +27,9 @@ Visual Studio 的 Add View／Scaffold 並不是按照檔案所在資料夾尋找
 `partial class`、nullable property、navigation property 或 DB-first Entity 都不會因為其身分而無法出現在 Model 選單。`Models/Entities` 位於 Area 外面也不是限制，不需要把 Entity 搬進各 Area：
 
 ```text
-QMAH.Web/Models/Entities/ArtifactCategory.cs
+QMAH.Infrastructure/Models/Entities/ArtifactCategory.cs
 QMAH.Web/Areas/Catalog/Controllers/ArtifactCategoryController.cs
-QMAH.Web/Areas/Catalog/ViewModels/ArtifactCategoryFormViewModel.cs
+QMAH.Web/Areas/Catalog/ViewModel/ArtifactCategoryFormViewModel.cs
 QMAH.Web/Areas/Catalog/Views/ArtifactCategory/Create.cshtml
 ```
 
@@ -166,13 +166,13 @@ QMAH 使用 ASP.NET Core MVC。新增畫面時要選 **Razor View**，不是 **R
 手動新增 View 時，檔名必須對應 Action，例如 `Index()` 預設尋找 `Index.cshtml`。View 的第一行以 `@model` 指定 ViewModel：
 
 ```cshtml
-@model IReadOnlyList<QMAH.Web.Areas.Catalog.ViewModels.ArtifactCategoryListItemViewModel>
+@model IReadOnlyList<QMAH.Web.Areas.Catalog.ViewModel.ArtifactCategoryListItemViewModel>
 ```
 
 `Views/_ViewImports.cshtml` 只套用在根 `Views` 目錄，不會向旁邊的 `Areas` 目錄繼承。QMAH 的 Area Views 會套用 `Areas/_ViewImports.cshtml`。因此 Area View 可以直接使用完整型別名稱；若同一個 Area 有很多 ViewModel，也可以在該 Area 的 `Views/_ViewImports.cshtml` 加入自己的 namespace：
 
 ```cshtml
-@using QMAH.Web.Areas.Catalog.ViewModels
+@using QMAH.Web.Areas.Catalog.ViewModel
 ```
 
 這只影響 Razor 內能否省略 namespace，不影響 Visual Studio 的 Model class 選單，也不需要把 `.cs` 搬進 Views 或 Area 才能使用
@@ -194,8 +194,8 @@ dotnet aspnet-codegenerator `
   --project .\QMAH.Web\QMAH.Web.csproj `
   controller `
   --controllerName ArtifactCategoryController `
-  --model QMAH.Web.Models.Entities.ArtifactCategory `
-  --dataContext QMAH.Web.Data.QmahDbContext `
+  --model QMAH.Infrastructure.Models.Entities.ArtifactCategory `
+  --dataContext QMAH.Infrastructure.Data.QmahDbContext `
   --relativeFolderPath Areas\Catalog\Controllers `
   --controllerNamespace QMAH.Web.Areas.Catalog.Controllers `
   --useAsyncActions `
@@ -231,7 +231,7 @@ Controller 必須有正確 namespace 與 `[Area]`
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QMAH.Web.Data;
+using QMAH.Infrastructure.Data;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
@@ -313,7 +313,7 @@ Scaffold 產生的 POST 通常已包含 `[ValidateAntiForgeryToken]`。專案也
 
 ### 5. 補授權
 
-期中後台至少要求登入，管理頁再限制 `Admin`：
+目前後台至少要求登入，管理頁再限制 `Admin`：
 
 ```csharp
 [Authorize(Roles = "Admin")]
@@ -328,7 +328,7 @@ public class ArtifactCategoryController : Controller
 適合先產生骨架：
 
 - 文物分類、年代桶等單表維護
-- 商品、公告、活動的基本清單與表單
+- 商品、貼文（含官方公告類型）、活動的基本清單與表單
 - Profile、地址等欄位明確的 CRUD
 
 不適合直接把 Scaffold 結果當完成品：
@@ -364,7 +364,7 @@ QMAH 使用 ASP.NET Core Identity，因此 EF Core Reverse Engineering 產生的
 
 如果 Build 已成功但選單仍是舊內容，關閉 Add View 視窗後 Rebuild；仍無效時再關閉 Visual Studio、刪除 `QMAH.Web/bin` 與 `QMAH.Web/obj`、重新開啟並 Build。不要先搬 Entity、修改 namespace、建立第二個 DbContext 或重裝整批套件
 
-部分 Visual Studio 版本的 Model class 欄位只能選擇下拉項目，部分版本可輸入文字搜尋，但不保證接受尚未列出的完整型別名稱。最可靠的方式仍是讓型別成功編譯後重新開啟視窗；命令列 Scaffold 則可使用完整型別名稱，例如 `QMAH.Web.Models.Entities.ArtifactCategory`
+部分 Visual Studio 版本的 Model class 欄位只能選擇下拉項目，部分版本可輸入文字搜尋，但不保證接受尚未列出的完整型別名稱。最可靠的方式仍是讓型別成功編譯後重新開啟視窗；命令列 Scaffold 則可使用完整型別名稱，例如 `QMAH.Infrastructure.Models.Entities.ArtifactCategory`
 
 ### 直接選 Entity 後出現奇怪輸入欄位
 

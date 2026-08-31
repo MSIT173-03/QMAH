@@ -11,7 +11,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 
-using QMAH.Web.Data;
+using QMAH.DataTools;
+using QMAH.Infrastructure.Data;
 
 return await DatabaseReleaseProgram.RunAsync(args);
 
@@ -27,6 +28,13 @@ internal static class DatabaseReleaseProgram
             {
                 PrintUsage();
                 return 2;
+            }
+
+            if (args.Skip(1).Any(argument =>
+                    string.Equals(argument, "--help", StringComparison.OrdinalIgnoreCase)))
+            {
+                PrintUsage();
+                return 0;
             }
 
             var command = args[0].ToLowerInvariant();
@@ -61,6 +69,27 @@ internal static class DatabaseReleaseProgram
                         Require(options, "database"),
                         Require(options, "data-directory"));
                     break;
+                case "reset-password":
+                    await IdentityCommands.ResetPasswordAsync(
+                        Require(options, "connection"),
+                        Require(options, "email"),
+                        options.GetValueOrDefault("password"),
+                        options.GetValueOrDefault("credentials"),
+                        options.GetValueOrDefault("backup"));
+                    break;
+                case "seed-showcase-users":
+                    await IdentityCommands.SeedShowcaseUsersAsync(
+                        Require(options, "connection"),
+                        options.GetValueOrDefault("credentials"),
+                        options.GetValueOrDefault("backup"));
+                    break;
+                case "generate-showcase-data":
+                    await ShowcaseDataCommands.GenerateAsync(
+                        Require(options, "connection"),
+                        ParseIntOption(options, "post-count", 288, 1, 512),
+                        ParseIntOption(options, "order-count", 160, 1, 512),
+                        ParseIntOption(options, "seed", 173, 0, int.MaxValue));
+                    break;
                 default:
                     throw new ArgumentException($"Unknown command: {command}");
             }
@@ -90,10 +119,21 @@ internal static class DatabaseReleaseProgram
             .OrderBy(table => table.Schema, StringComparer.Ordinal)
             .ThenBy(table => table.Name, StringComparer.Ordinal)
             .ToArray();
+        var sequences = database.Sequences.Cast<Sequence>()
+            .OrderBy(sequence => sequence.Schema, StringComparer.Ordinal)
+            .ThenBy(sequence => sequence.Name, StringComparer.Ordinal)
+            .ToArray();
 
         var builder = new StringBuilder(1024 * 1024);
         AppendHeader(builder, databaseName, database.Collation);
-        AppendSchemas(builder, tables);
+        AppendSchemas(builder, tables.Select(table => table.Schema).Concat(sequences.Select(sequence => sequence.Schema)));
+
+        AppendSection(builder, "SEQUENCES");
+        var sequenceOptions = CreateScriptingOptions();
+        foreach (var sequence in sequences)
+        {
+            AppendScript(builder, sequence.Script(sequenceOptions));
+        }
 
         var tableOptions = CreateScriptingOptions();
         tableOptions.DriPrimaryKey = true;
@@ -232,10 +272,10 @@ internal static class DatabaseReleaseProgram
         builder.AppendLine("GO");
     }
 
-    private static void AppendSchemas(StringBuilder builder, IEnumerable<Table> tables)
+    private static void AppendSchemas(StringBuilder builder, IEnumerable<string> schemaNames)
     {
         AppendSection(builder, "SCHEMAS");
-        foreach (var schema in tables.Select(table => table.Schema)
+        foreach (var schema in schemaNames
                      .Where(schema => !schema.Equals("dbo", StringComparison.OrdinalIgnoreCase))
                      .Distinct(StringComparer.Ordinal)
                      .OrderBy(schema => schema, StringComparer.Ordinal))
@@ -813,6 +853,26 @@ internal static class DatabaseReleaseProgram
             ? value
             : throw new ArgumentException($"Missing --{name}.");
 
+    private static int ParseIntOption(
+        IReadOnlyDictionary<string, string> options,
+        string name,
+        int defaultValue,
+        int minimum,
+        int maximum)
+    {
+        if (!options.TryGetValue(name, out var value) || string.IsNullOrWhiteSpace(value))
+            return defaultValue;
+
+        if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            || parsed < minimum
+            || parsed > maximum)
+        {
+            throw new ArgumentException($"--{name} 必須是 {minimum} 到 {maximum} 的整數。");
+        }
+
+        return parsed;
+    }
+
     private static void PrintUsage()
     {
         Console.WriteLine("QmahDatabaseRelease commands:");
@@ -821,6 +881,9 @@ internal static class DatabaseReleaseProgram
         Console.WriteLine("  validate-ef --connection <connection>");
         Console.WriteLine("  scan-data --connection <connection> [--report <path>]");
         Console.WriteLine("  restore-backup --connection <master connection> --backup <path> --database <name> --data-directory <path>");
+        Console.WriteLine("  reset-password --connection <connection> --email <email> [--password <password>] [--credentials <path>] [--backup <path>]");
+        Console.WriteLine("  seed-showcase-users --connection <connection> [--credentials <path>] [--backup <path>]");
+        Console.WriteLine("  generate-showcase-data --connection <connection> [--post-count <1-512>] [--order-count <1-512>] [--seed <number>]");
     }
 
     private sealed record DatabaseSnapshot(

@@ -13,7 +13,7 @@
     </div>
 }
 
-<form method="get" class="card mb-3 game-admin-filter">
+<form method="get" class="card qmah-filter-panel mb-3 game-admin-filter">
     <div class="card-body">
         <div class="row g-3 align-items-end">
             <div class="col-12 col-lg-3">
@@ -81,6 +81,6 @@
             }
             </tbody>
         </table></div>
-        <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-roomId="@Model.RoomId" asp-route-status="@Model.Status" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-roomId="@Model.RoomId" asp-route-status="@Model.Status" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
+        <div class="card-footer qmah-card-footer qmah-card-footer--split"><span class="text-secondary">第 @Model.Results.Page / @Model.Results.TotalPages 頁，共 @Model.Results.TotalCount 筆</span><ul class="pagination m-0">@if (Model.Results.HasPreviousPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-roomId="@Model.RoomId" asp-route-status="@Model.Status" asp-route-sort="@Model.Sort">上一頁</a></li> } @if (Model.Results.HasNextPage) { <li class="page-item"><a class="page-link" asp-route-page="@(Model.Results.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search" asp-route-roomId="@Model.RoomId" asp-route-status="@Model.Status" asp-route-sort="@Model.Sort">下一頁</a></li> }</ul></div>
     }
 </div>

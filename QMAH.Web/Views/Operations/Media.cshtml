@@ -1,0 +1,127 @@
+@model QMAH.Web.Models.MediaAdminFilterViewModel
+
+@{
+    ViewData["Title"] = "圖庫管理";
+    ViewData["AdminDescription"] = "查看社群上傳圖片、預覽內容並處理顯示狀態；圖片檔案透過管理權限受控讀取。";
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+    var start = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
+    var end = Math.Min(Model.Page * Model.PageSize, Model.TotalCount);
+}
+
+@section PageActions {
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-chart-dots-3 me-1"></i>返回營運中心</a>
+    <a asp-action="AuditLogs" class="btn btn-outline-secondary"><i class="ti ti-history me-1"></i>稽核紀錄</a>
+}
+
+<div class="card qmah-filter-panel mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="Media" class="row g-3 align-items-end">
+            <div class="col-12 col-lg-6">
+                <label asp-for="Keyword" class="form-label">搜尋圖片</label>
+                <input asp-for="Keyword" class="form-control" placeholder="原始檔名或替代文字" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label asp-for="Status" class="form-label">顯示狀態</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="">全部狀態</option>
+                    <option value="ACTIVE">可使用</option>
+                    <option value="HIDDEN">已隱藏</option>
+                    <option value="DELETED">已刪除</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-filter me-1"></i>套用篩選</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card qmah-list-card">
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table">
+            <thead><tr><th>預覽</th><th>圖片編號</th><th>檔案資訊</th><th>上傳者</th><th>關聯內容</th><th>狀態</th><th>操作</th></tr></thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-secondary py-5">目前沒有符合條件的圖片。</td></tr>
+            }
+            else
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td class="qmah-media-preview-cell">
+                            @if (item.Status != "DELETED")
+                            {
+                                <img src="@Url.Action("MediaContent", "Operations", new { id = item.Id })" class="avatar avatar-md object-cover" alt="@(item.AltText ?? "社群圖片")" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span class="avatar avatar-md bg-secondary-lt"><i class="ti ti-photo-off" aria-hidden="true"></i></span>
+                            }
+                        </td>
+                        <td><span class="fw-semibold">@item.SequenceNo</span><div class="small text-secondary">@item.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</div></td>
+                        <td><div class="text-truncate qmah-media-filename" title="@item.OriginalFileName">@item.OriginalFileName</div><div class="small text-secondary">@FormatFileSize(item.FileSize)</div></td>
+                        <td>@item.OwnerName</td>
+                        <td>@(item.PostId.HasValue ? "已連結貼文" : "尚未連結貼文")</td>
+                        <td><span class="badge bg-secondary-lt">@AdminDisplayLabels.Status(item.Status)</span></td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                @if (item.Status != "ACTIVE")
+                                {
+                                    <form asp-action="SetMediaStatus" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="status" value="ACTIVE" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success" @(item.Status == "DELETED" ? "disabled" : null)>恢復顯示</button>
+                                    </form>
+                                }
+                                @if (item.Status == "ACTIVE")
+                                {
+                                    <form asp-action="SetMediaStatus" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="status" value="HIDDEN" />
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">暫時隱藏</button>
+                                    </form>
+                                }
+                                @if (item.Status != "DELETED")
+                                {
+                                    <form asp-action="SetMediaStatus" method="post" onsubmit="return confirm('確定要將這張圖片標記為已刪除嗎？');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="status" value="DELETED" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">標記刪除</button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+<div class="card-footer qmah-card-footer qmah-card-footer--split">
+        <span class="text-secondary">顯示第 @start～@end 筆，共 @Model.TotalCount 筆</span>
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="圖片清單分頁">
+                <ul class="pagination m-0">
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Media" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-keyword="@Model.Keyword" asp-route-status="@Model.Status">上一頁</a></li>
+                    <li class="page-item disabled"><span class="page-link">第 @Model.Page / @Model.TotalPages 頁</span></li>
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Media" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-keyword="@Model.Keyword" asp-route-status="@Model.Status">下一頁</a></li>
+                </ul>
+            </nav>
+        }
+    </div>
+</div>
+
+@functions {
+    private static string FormatFileSize(long bytes) => bytes switch
+    {
+        >= 1024 * 1024 => $"{bytes / (1024d * 1024d):0.##} MB",
+        >= 1024 => $"{bytes / 1024d:0.##} KB",
+        _ => $"{bytes} bytes"
+    };
+}

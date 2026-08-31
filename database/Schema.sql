@@ -15,6 +15,8 @@ BEGIN TRANSACTION;
 
     IF SCHEMA_ID(N'social') IS NULL EXEC(N'CREATE SCHEMA [social];');
 
+    IF SCHEMA_ID(N'admin') IS NULL EXEC(N'CREATE SCHEMA [admin];');
+
     CREATE TABLE [user].[Achievements] (
         [Id] uniqueidentifier NOT NULL,
         [Code] nvarchar(80) NOT NULL,
@@ -90,6 +92,25 @@ BEGIN TRANSACTION;
         CONSTRAINT [CK_AspNetUsers_UpdatedAt] CHECK (([UpdatedAt]>=[CreatedAt]))
     );
 
+    CREATE TABLE [admin].[AuditLogs] (
+        [Id] bigint NOT NULL IDENTITY(1,1),
+        [ActorUserId] uniqueidentifier NULL,
+        [Area] nvarchar(40) NOT NULL,
+        [Controller] nvarchar(100) NOT NULL,
+        [Action] nvarchar(100) NOT NULL,
+        [HttpMethod] nvarchar(10) NOT NULL,
+        [RequestPath] nvarchar(400) NOT NULL,
+        [ResultStatusCode] int NOT NULL,
+        [Detail] nvarchar(500) NULL,
+        [OccurredAt] datetime2(3) NOT NULL CONSTRAINT [DF_AuditLogs_OccurredAt] DEFAULT ((sysutcdatetime())),
+        CONSTRAINT [PK_AuditLogs] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_AuditLogs_ResultStatusCode] CHECK (([ResultStatusCode]>=(100) AND [ResultStatusCode]<=(599))),
+        CONSTRAINT [FK_AuditLogs_ActorUser] FOREIGN KEY ([ActorUserId]) REFERENCES [user].[AspNetUsers] ([Id])
+    );
+
+    CREATE INDEX [IX_AuditLogs_OccurredAt] ON [admin].[AuditLogs] ([OccurredAt] DESC);
+    CREATE INDEX [IX_AuditLogs_ActorUserId] ON [admin].[AuditLogs] ([ActorUserId], [OccurredAt] DESC);
+
     CREATE TABLE [social].[ContentReports] (
         [Id] uniqueidentifier NOT NULL,
         [ReporterUserId] uniqueidentifier NOT NULL,
@@ -140,6 +161,8 @@ BEGIN TRANSACTION;
         [Title] nvarchar(150) NOT NULL,
         [Content] nvarchar(max) NOT NULL,
         [Location] nvarchar(200) NULL,
+        [Latitude] decimal(9,6) NULL,
+        [Longitude] decimal(9,6) NULL,
         [StartAt] datetime2(3) NOT NULL,
         [EndAt] datetime2(3) NOT NULL,
         [RegistrationEndAt] datetime2(3) NULL,
@@ -152,7 +175,10 @@ BEGIN TRANSACTION;
         [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_Events_Created] DEFAULT ((sysutcdatetime())),
         CONSTRAINT [PK_Events] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_Events_Capacity] CHECK (([Capacity] IS NULL OR [Capacity]>(0))),
+        CONSTRAINT [CK_Events_Coordinates] CHECK ((([Latitude] IS NULL AND [Longitude] IS NULL) OR ([Latitude] IS NOT NULL AND [Longitude] IS NOT NULL))),
         CONSTRAINT [CK_Events_Dates] CHECK (([EndAt]>[StartAt] AND ([RegistrationEndAt] IS NULL OR [RegistrationEndAt]<=[StartAt]))),
+        CONSTRAINT [CK_Events_Latitude] CHECK (([Latitude] IS NULL OR ([Latitude]>=(-90) AND [Latitude]<=(90)))),
+        CONSTRAINT [CK_Events_Longitude] CHECK (([Longitude] IS NULL OR ([Longitude]>=(-180) AND [Longitude]<=(180)))),
         CONSTRAINT [CK_Events_Publish] CHECK (([PublishStatus]=N'CANCELLED' OR [PublishStatus]=N'PUBLISHED' OR [PublishStatus]=N'DRAFT')),
         CONSTRAINT [CK_Events_Review] CHECK (([ReviewStatus]=N'REJECTED' OR [ReviewStatus]=N'APPROVED' OR [ReviewStatus]=N'PENDING')),
         CONSTRAINT [CK_Events_Type] CHECK (([EventType]=N'PLAYER' OR [EventType]=N'OFFICIAL'))
@@ -251,20 +277,82 @@ BEGIN TRANSACTION;
         CONSTRAINT [CK_Products_Stock] CHECK (([Stock]>=(0)))
     );
 
+    CREATE TABLE [store].[ProductReviews] (
+        [Id] uniqueidentifier NOT NULL,
+        [ProductId] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [Rating] tinyint NOT NULL,
+        [Content] nvarchar(1000) NOT NULL,
+        [Status] nvarchar(20) NOT NULL CONSTRAINT [DF_ProductReviews_Status] DEFAULT N'PUBLISHED',
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_ProductReviews_CreatedAt] DEFAULT ((sysutcdatetime())),
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_ProductReviews_UpdatedAt] DEFAULT ((sysutcdatetime())),
+        [RowVersion] rowversion NOT NULL,
+        CONSTRAINT [PK_ProductReviews] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_ProductReviews_Rating] CHECK (([Rating]>=(1) AND [Rating]<=(5))),
+        CONSTRAINT [CK_ProductReviews_Content_NotBlank] CHECK ((len(ltrim(rtrim([Content])))>(0))),
+        CONSTRAINT [CK_ProductReviews_Status] CHECK (([Status]=N'DELETED' OR [Status]=N'HIDDEN' OR [Status]=N'PUBLISHED')),
+        CONSTRAINT [CK_ProductReviews_UpdatedAt] CHECK (([UpdatedAt]>=[CreatedAt])),
+        CONSTRAINT [FK_ProductReviews_Product] FOREIGN KEY ([ProductId]) REFERENCES [store].[Products] ([Id]),
+        CONSTRAINT [FK_ProductReviews_User] FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id])
+    );
+
     CREATE TABLE [social].[SocialPosts] (
         [Id] uniqueidentifier NOT NULL,
         [BoardCode] nvarchar(30) NOT NULL,
         [UserId] uniqueidentifier NOT NULL,
         [ArtifactId] uniqueidentifier NULL,
+        [EventId] uniqueidentifier NULL,
+        [PostType] nvarchar(20) NOT NULL CONSTRAINT [DF_SocialPosts_PostType] DEFAULT N'POST',
+        [PublisherType] nvarchar(20) NOT NULL CONSTRAINT [DF_SocialPosts_PublisherType] DEFAULT N'COMMUNITY',
+        [ContentMode] nvarchar(20) NOT NULL CONSTRAINT [DF_SocialPosts_ContentMode] DEFAULT N'CUSTOM',
         [Title] nvarchar(150) NOT NULL,
         [Content] nvarchar(max) NOT NULL,
+        [LocationName] nvarchar(200) NULL,
+        [Latitude] decimal(9,6) NULL,
+        [Longitude] decimal(9,6) NULL,
         [Status] nvarchar(20) NOT NULL CONSTRAINT [DF_SocialPosts_Status] DEFAULT N'PUBLISHED',
         [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_SocialPosts_Created] DEFAULT ((sysutcdatetime())),
         [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_SocialPosts_Updated] DEFAULT ((sysutcdatetime())),
         CONSTRAINT [PK_SocialPosts] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_SocialPosts_BoardCode] CHECK ((len(ltrim(rtrim([BoardCode])))>(0))),
-        CONSTRAINT [CK_SocialPosts_Status] CHECK (([Status]=N'DELETED' OR [Status]=N'HIDDEN' OR [Status]=N'PUBLISHED'))
+        CONSTRAINT [CK_SocialPosts_Coordinates] CHECK ((([Latitude] IS NULL AND [Longitude] IS NULL) OR ([Latitude] IS NOT NULL AND [Longitude] IS NOT NULL))),
+        CONSTRAINT [CK_SocialPosts_Latitude] CHECK (([Latitude] IS NULL OR ([Latitude]>=(-90) AND [Latitude]<=(90)))),
+        CONSTRAINT [CK_SocialPosts_Longitude] CHECK (([Longitude] IS NULL OR ([Longitude]>=(-180) AND [Longitude]<=(180)))),
+        CONSTRAINT [CK_SocialPosts_PostType] CHECK (([PostType]=N'POST' OR [PostType]=N'ANNOUNCEMENT' OR [PostType]=N'EVENT')),
+        CONSTRAINT [CK_SocialPosts_PublisherType] CHECK (([PublisherType]=N'COMMUNITY' OR [PublisherType]=N'OFFICIAL')),
+        CONSTRAINT [CK_SocialPosts_ContentMode] CHECK (([ContentMode]=N'TEMPLATE' OR [ContentMode]=N'CUSTOM')),
+        CONSTRAINT [CK_SocialPosts_Status] CHECK (([Status]=N'DELETED' OR [Status]=N'HIDDEN' OR [Status]=N'PUBLISHED')),
+        CONSTRAINT [FK_SocialPosts_Event] FOREIGN KEY ([EventId]) REFERENCES [social].[Events] ([Id])
     );
+
+    CREATE SEQUENCE [social].[MediaAssetSequence]
+        AS bigint
+        START WITH 1
+        INCREMENT BY 1;
+
+    CREATE TABLE [social].[MediaAssets] (
+        [Id] uniqueidentifier NOT NULL,
+        [SequenceNo] bigint NOT NULL CONSTRAINT [DF_MediaAssets_SequenceNo] DEFAULT (NEXT VALUE FOR [social].[MediaAssetSequence]),
+        [OwnerUserId] uniqueidentifier NOT NULL,
+        [PostId] uniqueidentifier NULL,
+        [OriginalFileName] nvarchar(260) NOT NULL,
+        [StoredPath] nvarchar(500) NOT NULL,
+        [ContentType] nvarchar(100) NOT NULL,
+        [FileSize] bigint NOT NULL,
+        [AltText] nvarchar(200) NULL,
+        [Status] nvarchar(20) NOT NULL CONSTRAINT [DF_MediaAssets_Status] DEFAULT N'ACTIVE',
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_MediaAssets_CreatedAt] DEFAULT ((sysutcdatetime())),
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_MediaAssets_UpdatedAt] DEFAULT ((sysutcdatetime())),
+        CONSTRAINT [PK_MediaAssets] PRIMARY KEY ([Id]),
+        CONSTRAINT [UQ_MediaAssets_SequenceNo] UNIQUE ([SequenceNo]),
+        CONSTRAINT [CK_MediaAssets_FileSize] CHECK (([FileSize]>(0) AND [FileSize]<=(8388608))),
+        CONSTRAINT [CK_MediaAssets_Status] CHECK (([Status]=N'ACTIVE' OR [Status]=N'HIDDEN' OR [Status]=N'DELETED')),
+        CONSTRAINT [FK_MediaAssets_OwnerUser] FOREIGN KEY ([OwnerUserId]) REFERENCES [user].[AspNetUsers] ([Id]),
+        CONSTRAINT [FK_MediaAssets_Post] FOREIGN KEY ([PostId]) REFERENCES [social].[SocialPosts] ([Id])
+    );
+
+    CREATE INDEX [IX_MediaAssets_Post_Status] ON [social].[MediaAssets] ([PostId], [Status], [CreatedAt]);
+    CREATE INDEX [IX_MediaAssets_Owner_Status] ON [social].[MediaAssets] ([OwnerUserId], [Status], [CreatedAt] DESC);
 
     CREATE TABLE [social].[UserNotifications] (
         [Id] uniqueidentifier NOT NULL,
@@ -346,12 +434,17 @@ BEGIN TRANSACTION;
         [City] nvarchar(80) NULL,
         [District] nvarchar(80) NULL,
         [AddressLine] nvarchar(300) NOT NULL,
+        [Latitude] decimal(9,6) NULL,
+        [Longitude] decimal(9,6) NULL,
         [IsDefault] bit NOT NULL,
         [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_UserAddresses_CreatedAt] DEFAULT ((sysutcdatetime())),
         [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_UserAddresses_UpdatedAt] DEFAULT ((sysutcdatetime())),
         [RowVersion] rowversion NOT NULL,
         CONSTRAINT [PK_UserAddresses] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_UserAddresses_Address_NotBlank] CHECK ((len(ltrim(rtrim([AddressLine])))>(0))),
+        CONSTRAINT [CK_UserAddresses_Coordinates] CHECK ((([Latitude] IS NULL AND [Longitude] IS NULL) OR ([Latitude] IS NOT NULL AND [Longitude] IS NOT NULL))),
+        CONSTRAINT [CK_UserAddresses_Latitude] CHECK (([Latitude] IS NULL OR ([Latitude]>=(-90) AND [Latitude]<=(90)))),
+        CONSTRAINT [CK_UserAddresses_Longitude] CHECK (([Longitude] IS NULL OR ([Longitude]>=(-180) AND [Longitude]<=(180)))),
         CONSTRAINT [CK_UserAddresses_Label_NotBlank] CHECK ((len(ltrim(rtrim([AddressLabel])))>(0))),
         CONSTRAINT [CK_UserAddresses_Name_NotBlank] CHECK ((len(ltrim(rtrim([RecipientName])))>(0))),
         CONSTRAINT [CK_UserAddresses_Phone_NotBlank] CHECK ((len(ltrim(rtrim([RecipientPhone])))>(0))),
@@ -795,6 +888,8 @@ BEGIN TRANSACTION;
 
     CREATE INDEX [IX_OfficialAnnouncements_CreatedByUserId] ON [social].[OfficialAnnouncements] ([CreatedByUserId]);
 
+    CREATE UNIQUE INDEX [UQ_SocialPosts_EventId] ON [social].[SocialPosts] ([EventId]) WHERE [EventId] IS NOT NULL;
+
     CREATE INDEX [IX_OrderDetails_ProductId] ON [store].[OrderDetails] ([ProductId]);
 
     CREATE UNIQUE INDEX [UQ_OrderDetails_OrderProduct] ON [store].[OrderDetails] ([OrderId], [ProductId]);
@@ -804,6 +899,10 @@ BEGIN TRANSACTION;
     CREATE UNIQUE INDEX [UQ_Payments_Order] ON [store].[Payments] ([OrderId]);
 
     CREATE INDEX [IX_PointTransactions_Member] ON [store].[PointTransactions] ([UserId], [CreatedAt] DESC);
+
+    CREATE INDEX [IX_ProductReviews_Product_Status_Created] ON [store].[ProductReviews] ([ProductId], [Status], [CreatedAt] DESC);
+
+    CREATE UNIQUE INDEX [UX_ProductReviews_Product_User] ON [store].[ProductReviews] ([ProductId], [UserId]);
 
     EXEC(N'CREATE UNIQUE INDEX [UX_Products_ExternalRef] ON [store].[Products] ([ExternalRef]) WHERE ([ExternalRef] IS NOT NULL)');
 

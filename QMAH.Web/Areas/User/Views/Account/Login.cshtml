@@ -126,7 +126,7 @@
                 <header class="qmah-auth-heading">
                     <p class="qmah-auth-kicker">管理後台</p>
                     <h1 id="auth-title">登入</h1>
-                    <p class="qmah-auth-description">使用管理員帳號繼續。</p>
+                    <p class="qmah-auth-description">管理文物典藏、社群內容與互動學習。</p>
                 </header>
 
                 <form asp-area="User" asp-controller="Account" asp-action="Login" method="post" class="qmah-auth-form" data-qmah-auth-form>
@@ -134,26 +134,38 @@
                     <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger qmah-auth-validation" role="alert" aria-live="assertive"></div>
 
-                    <div class="qmah-auth-field">
-                        <label asp-for="Email" class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" autocomplete="username" inputmode="email" aria-describedby="email-error" />
-                        <span id="email-error" asp-validation-for="Email" class="text-danger" aria-live="polite"></span>
-                    </div>
-
-                    <div class="qmah-auth-field">
-                        <label asp-for="Password" class="form-label">Password</label>
-                        <div class="qmah-password-control">
-                            <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" aria-describedby="password-error" />
-                            <button type="button" class="qmah-password-toggle" data-qmah-password-toggle aria-controls="Password" aria-pressed="false" aria-label="顯示密碼">
-                                <span class="qmah-password-icon qmah-password-icon--show" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6s9.5 6 9.5 6s-3.5 6-9.5 6s-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="2.6" /></svg>
-                                </span>
-                                <span class="qmah-password-icon qmah-password-icon--hide" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24"><path d="m3 3 18 18" /><path d="M10.6 6.1A9.8 9.8 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-2.4 3.2M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3-.5M9.9 9.9a3 3 0 0 0 4.2 4.2" /></svg>
-                                </span>
-                            </button>
+                    <div class="qmah-auth-form-fields">
+                        <div class="qmah-auth-field">
+                            <label asp-for="Email" class="form-label">電子郵件</label>
+                            <div class="qmah-auth-input-shell">
+                                <svg class="qmah-auth-input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3.5" y="5" width="17" height="14" rx="2" />
+                                    <path d="m4.5 6.5 7.5 6 7.5-6" />
+                                </svg>
+                                <input asp-for="Email" class="form-control" autocomplete="username" inputmode="email" aria-describedby="email-error" />
+                            </div>
+                            <span id="email-error" asp-validation-for="Email" class="text-danger" aria-live="polite"></span>
                         </div>
-                        <span id="password-error" asp-validation-for="Password" class="text-danger" aria-live="polite"></span>
+
+                        <div class="qmah-auth-field">
+                            <label asp-for="Password" class="form-label">密碼</label>
+                            <div class="qmah-password-control qmah-auth-input-shell">
+                                <svg class="qmah-auth-input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="10" rx="2" />
+                                    <path d="M8 10V7.5a4 4 0 0 1 8 0V10M12 14v2" />
+                                </svg>
+                                <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" aria-describedby="password-error" />
+                                <button type="button" class="qmah-password-toggle" data-qmah-password-toggle aria-controls="Password" aria-pressed="false" aria-label="顯示密碼">
+                                    <span class="qmah-password-icon qmah-password-icon--show" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6s9.5 6 9.5 6s-3.5 6-9.5 6s-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="2.6" /></svg>
+                                    </span>
+                                    <span class="qmah-password-icon qmah-password-icon--hide" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="m3 3 18 18" /><path d="M10.6 6.1A9.8 9.8 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-2.4 3.2M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3-.5M9.9 9.9a3 3 0 0 0 4.2 4.2" /></svg>
+                                    </span>
+                                </button>
+                            </div>
+                            <span id="password-error" asp-validation-for="Password" class="text-danger" aria-live="polite"></span>
+                        </div>
                     </div>
 
                     <div class="qmah-auth-form-meta">
@@ -175,8 +187,8 @@
             </div>
 
             <footer class="qmah-auth-access-footer" aria-hidden="true">
-                <span>清明鑑定屋內容管理系統</span>
-                <span>QMAH</span>
+                <span>清明鑑定屋</span>
+                <strong>典藏營運中心</strong>
             </footer>
         </div>
     </aside>

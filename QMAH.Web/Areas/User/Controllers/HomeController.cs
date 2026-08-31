@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.User.ViewModels;
-using QMAH.Web.Data;
-using QMAH.Web.Models.Identity;
+using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Models.Identity;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
