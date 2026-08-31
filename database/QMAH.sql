@@ -4724,6 +4724,28 @@ INSERT INTO [user].[UserProfiles] ([UserId], [Nickname], [AvatarPath], [Bio], [V
     ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'Demo Admin', N'/images/avatars/flat-icon-design/panda.png', N'負責整理專題展示環境與後台資料。', N'PUBLIC', CONVERT(datetime2(3), '2026-05-03T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:55.9960000', 126));
 GO
 
+-- 故宮來源回傳無圖佔位圖，基準資料改用同類且可正常展示的文物，保留既有關聯識別碼
+UPDATE [catalog].[Artifacts]
+SET [ArtifactRef] = N'故畫003886N000000000',
+    [Name] = N'冬圃含韶 冊',
+    [EraTextOriginal] = N'清',
+    [Description] = N'紙本冊頁，裝訂屬「經摺裝」方式，據《書畫裝池之美》記載，因此法最早被使用於裝裱佛經，又稱「梵夾裝」。前後以木質幀，封面書「冬圃含韶」。共有十二頁，繪有各式不同花卉，有梅花、薔薇、茶花、蘭花、水仙等，姿態各異，競相爭妍。末頁花卉圖左下側書「臣 董誥敬繪」，鈐印「臣」、「誥」。',
+    [SizeText] = N'長13.85公分 寬10.8公分',
+    [PrimaryImagePath] = N'/media/catalog/painting/故畫003886N000000000/display.jpg',
+    [ThumbnailPath] = N'/media/catalog/painting/故畫003886N000000000/thumbnail.jpg',
+    [SourceUrl] = N'https://digitalarchive.npm.gov.tw/Collection/Detail/62049?dep=U',
+    [AttributionText] = N'冬圃含韶 冊 國立故宮博物院，臺北，CC BY 4.0 @ www.npm.gov.tw'
+WHERE [Id] = '8cc1c6e4-c021-465c-2336-581c4a40354b';
+
+UPDATE [store].[Products]
+SET [ExternalRef] = N'artifact-故畫003886N000000000',
+    [Name] = N'冬圃含韶 冊－縮小複製品',
+    [Description] = N'一冊花卉畫頁，讓人可以從構圖與花木姿態慢慢讀出清代冊頁的節奏。這件「冬圃含韶 冊」縮小複製品，把董誥筆下的清雅景致帶進日常展示空間。' + NCHAR(10) + NCHAR(10) + N'商品資訊：' + NCHAR(10) + N'分類：繪畫' + NCHAR(10) + N'年代：清' + NCHAR(10) + N'商品尺寸：長 6.925 公分、寬 5.4 公分' + NCHAR(10) + N'原作尺寸：長13.85公分 寬10.8公分' + NCHAR(10) + NCHAR(10) + N'本頁商品為 MSIT173 課程專題的虛擬展示資料，使用國立故宮博物院開放資料圖像建立對應的縮小複製品，僅供系統功能測試與課堂發表，不提供訂購、付款或實際販售。商品尺寸依公開資料換算為原作的一半；來源標示待測量或未提供時不自行推測。' + NCHAR(10) + NCHAR(10) + N'圖像姓名標示：' + NCHAR(10) + N'冬圃含韶 冊 國立故宮博物院，臺北，CC BY 4.0 @ www.npm.gov.tw' + NCHAR(10) + NCHAR(10) + N'原文物說明：' + NCHAR(10) + N'紙本冊頁，裝訂屬「經摺裝」方式，據《書畫裝池之美》記載，因此法最早被使用於裝裱佛經，又稱「梵夾裝」。前後以木質幀，封面書「冬圃含韶」。共有十二頁，繪有各式不同花卉，有梅花、薔薇、茶花、蘭花、水仙等，姿態各異，競相爭妍。末頁花卉圖左下側書「臣 董誥敬繪」，鈐印「臣」、「誥」。',
+    [SizeText] = N'長 6.925 公分、寬 5.4 公分',
+    [PrimaryImagePath] = N'/media/catalog/painting/故畫003886N000000000/display.jpg',
+    [SourceUrl] = N'https://digitalarchive.npm.gov.tw/Collection/Detail/62049?dep=U'
+WHERE [Id] = '605f9fe1-c761-624e-fd89-77149e0a6752';
+
 -- INDEXES
 CREATE NONCLUSTERED INDEX [IX_AuditLogs_ActorUserId] ON [admin].[AuditLogs]
 (
