@@ -69,6 +69,10 @@ dotnet build QMAH.sln --configuration Release
 
 `QmahDatabaseRelease` 已加入 `QMAH.sln`，會跟網站一起由本機與 GitHub Actions 建置
 
+### 展示帳密
+
+Repository 根目錄的 `QMAH.DemoCredentials.csv` 是可提交的空白密碼範本。需要重建展示會員時，先複製成根目錄的 `QMAH.DemoCredentials.local.csv`，再填妥全部 24 筆 Password；工具會自動在同一位置建立 `QMAH.DemoCredentials.local.backup.csv`。缺少檔案、帳號或密碼時會直接停止，不會自動產生密碼。這兩個 `.local` 檔案已排除在 Git 外；也可以用 `--credentials` 與 `--backup` 明確指定其他本機路徑。
+
 它的 `generate-showcase-data` 命令會讀取目前資料庫中的展示會員、文物與縮小複製品商品，產生與實際資料互相連結的社群貼文、留言、訂單、訂單明細、付款紀錄與商品評價。社群文章使用大量固定順序的獨立素材，並以穩定識別碼更新；不靠亂數拼接句子，也不循環重用預設展示範圍內的文章，因此重跑時不會把文章、文物或活動配錯。商品評價會連到真實商品與會員，並由 API 提供公開摘要及目前會員自己的維護操作。命令不會刪除其他資料；資料庫整合者完成這些資料後，必須用 `Export-ReferenceDatabase.ps1` 產生一份可直接還原的完整 `.bak`／`.sql`。一般組員不需要在還原後執行本命令；完整流程與實際快照數量請看 [`docs/15-local-showcase-and-credentials.md`](../../docs/15-local-showcase-and-credentials.md) 與 [`docs/02-development-data.md`](../../docs/02-development-data.md)。
 
 工具輸出、raw、快取、log、bin、obj、大型執行檔與資料庫檔案不進 Repository

@@ -21,6 +21,12 @@ public class UserAddressCreateViewModel
 
     public string? District { get; set; }
 
+    [Range(typeof(decimal), "-90", "90", ErrorMessage = "緯度必須介於 -90 到 90 之間。")]
+    public decimal? Latitude { get; set; }
+
+    [Range(typeof(decimal), "-180", "180", ErrorMessage = "經度必須介於 -180 到 180 之間。")]
+    public decimal? Longitude { get; set; }
+
     [Required(ErrorMessage = "請輸入詳細地址。")]
     public string AddressLine { get; set; } = "";
 

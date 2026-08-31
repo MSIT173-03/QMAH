@@ -85,25 +85,83 @@
   max-width: 13.75rem;
 }
 
+/* 地點欄位保留完整名稱與地圖入口，長地址只在自己的欄位換行 */
+.qmah-admin .qmah-location-cell__name {
+  max-width: 16rem;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.qmah-admin [data-qmah-map-link] {
+  white-space: nowrap;
+}
+
+/* 圖庫關聯同時顯示貼文與頭貼擁有者，長文字只在關聯欄位換行 */
+.qmah-admin .qmah-media-relation {
+  min-width: 14rem;
+  max-width: 24rem;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+/* 頭貼索引使用固定最小欄寬，桌面好掃描，手機也不會擠成直欄 */
+.qmah-admin .qmah-media-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: .65rem;
+}
+
+.qmah-admin .qmah-media-avatar-item {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .65rem;
+  padding: .55rem .65rem;
+  border: 1px solid var(--qmah-line-soft);
+  border-radius: 10px;
+  background: var(--qmah-surface);
+}
+
+/* 頭貼固定在自己的圖片盒子內，避免素材比例撐開卡片 */
+.qmah-admin .qmah-media-avatar-item img {
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--qmah-line);
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--qmah-area-soft);
+}
+
+.qmah-admin .qmah-media-avatar-item span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--qmah-ink-soft);
+  font-size: .8rem;
+  font-weight: 650;
+}
+
 /* 圖表以兩欄呈現，卡片內容太窄時由後面的 RWD 規則改成單欄。 */
 .qmah-admin .qmah-operations-chart-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+  min-width: 0;
+}
+
+.qmah-admin .qmah-operations-chart-grid > * {
+  min-width: 0;
 }
 
 /* 整張圖表卡片都是明細入口，保留完整鍵盤焦點範圍，不只讓右下角文字可點。 */
 .qmah-admin .qmah-operations-chart-link {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   min-width: 0;
   color: inherit;
   text-decoration: none;
   border-radius: 12px;
-  animation: qmah-chart-arrival 520ms cubic-bezier(.16, 1, .3, 1) both;
-}
-
-.qmah-admin .qmah-operations-chart-link:nth-child(2) {
-  animation-delay: 80ms;
 }
 
 .qmah-admin .qmah-operations-chart-link:hover .qmah-chart-panel,
@@ -123,7 +181,8 @@
   align-items: center;
   justify-content: flex-end;
   gap: .35rem;
-  margin: -.55rem 1rem .9rem;
+  min-height: 1.25rem;
+  margin: .2rem 1rem .9rem;
   color: var(--qmah-area-accent);
   font-size: .78rem;
   font-weight: 700;
@@ -140,8 +199,12 @@
 
 /* 圖表外框與標題區共用同一個容器，避免圖表和其他後台卡片看起來像不同產品。 */
 .qmah-admin .qmah-chart-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   min-width: 0;
-  height: 100%;
+  max-width: 100%;
+  overflow: hidden;
   border: 1px solid var(--qmah-line);
   border-radius: 12px;
   background: var(--qmah-surface);
@@ -186,8 +249,11 @@
 
 /* 橫向捲動只套在圖表資料區，窄螢幕仍能看完整日期與數值，不壓縮成不可讀的圖。 */
 .qmah-admin .qmah-chart-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: 100%;
   overflow-x: auto;
-  padding: .1rem 1rem 0;
+  padding: .1rem 1rem .35rem;
   overscroll-behavior-inline: contain;
   scrollbar-width: thin;
 }
@@ -198,6 +264,7 @@
   width: 100%;
   min-width: 34rem;
   height: auto;
+  overflow: visible;
   color: var(--qmah-ink-faint);
 }
 
@@ -225,7 +292,7 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  transition: opacity var(--qmah-motion-fast), stroke-width var(--qmah-motion-fast);
+  transition: opacity var(--qmah-motion-fast);
 }
 
 .qmah-admin .qmah-chart__line--1 {
@@ -255,7 +322,6 @@
 .qmah-admin .qmah-chart-panel:hover .qmah-chart__line:hover,
 .qmah-admin .qmah-chart-panel:focus-within .qmah-chart__line:focus {
   opacity: 1;
-  stroke-width: 4;
 }
 
 /* 資料點與圖例使用相同序列色，方便從圖上回查到下方完整資料表。 */
@@ -456,6 +522,19 @@
     min-width: 30rem;
   }
 
+  .qmah-admin .qmah-location-cell__name {
+    max-width: 13rem;
+  }
+
+  .qmah-admin .qmah-media-relation {
+    min-width: 12rem;
+    max-width: 18rem;
+  }
+
+  .qmah-admin .qmah-media-avatar-grid {
+    grid-template-columns: 1fr;
+  }
+
 }
 
 /* 減少動態時保留可讀的 hover/focus 狀態，只移除卡片位移與圖表線條淡出。 */
@@ -472,25 +551,9 @@
     opacity: 1;
   }
 
-  .qmah-admin .qmah-operations-chart-link {
-    animation: none;
-  }
-
   .qmah-admin .qmah-operations-kpi--link::before,
   .qmah-admin .qmah-operations-summary-card--link::before {
     transition: none;
     transform: scaleX(1);
-  }
-}
-
-@keyframes qmah-chart-arrival {
-  from {
-    opacity: 0;
-    transform: translateY(.55rem);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }

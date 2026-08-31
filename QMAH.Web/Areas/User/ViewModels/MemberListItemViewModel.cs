@@ -10,4 +10,5 @@ public class MemberListItemViewModel
 
     public int PointBalance { get; set; }
     public string? Nickname { get; set; }
+    public string? AvatarPath { get; set; }
 }

@@ -1,3 +1,4 @@
+@using System.Globalization
 @model QMAH.Web.Areas.Social.Models.EventAdminPageViewModel
 
 @{
@@ -21,9 +22,10 @@
             </div>
         </div>
     </div>
-    <div class="card-body"><form method="get" asp-action="Index"><div class="row g-3 align-items-end">
+    <div class="card-body"><form method="get" asp-action="Index"><div class="row g-3 align-items-end qmah-post-filter-row">
         <div class="col-12 col-md-5"><label class="form-label" for="reviewStatus">審核狀態</label><select class="form-select" id="reviewStatus" name="reviewStatus"><option value="">全部審核狀態</option><option value="PENDING" selected="@(Model.ReviewStatus == "PENDING" ? "selected" : null)">待審核</option><option value="APPROVED" selected="@(Model.ReviewStatus == "APPROVED" ? "selected" : null)">已核准</option><option value="REJECTED" selected="@(Model.ReviewStatus == "REJECTED" ? "selected" : null)">已駁回</option></select></div>
         <div class="col-12 col-md-5"><label class="form-label" for="publishStatus">發布狀態</label><select class="form-select" id="publishStatus" name="publishStatus"><option value="">全部發布狀態</option><option value="DRAFT" selected="@(Model.PublishStatus == "DRAFT" ? "selected" : null)">草稿</option><option value="PUBLISHED" selected="@(Model.PublishStatus == "PUBLISHED" ? "selected" : null)">已發布</option><option value="CANCELLED" selected="@(Model.PublishStatus == "CANCELLED" ? "selected" : null)">已刪除／取消</option></select></div>
+        <div class="col-12 col-md-2"><label class="form-label" for="pageSize">每頁筆數</label><select class="form-select" id="pageSize" name="pageSize">@foreach (var size in new[] { 10, 20, 50, 100 }) { <option value="@size" selected="@(Model.PageSize == size)">@size</option> }</select></div>
         <div class="col-12 col-md-2"><div class="qmah-actions"><button type="submit" class="btn btn-primary"><i class="ti ti-filter me-1"></i>套用</button><a asp-action="Index" class="btn btn-outline-secondary">清除</a></div></div>
     </div></form></div>
 </div>
@@ -47,7 +49,26 @@
             <tr>
                 <td><span class="badge bg-secondary-lt">@eventTypeLabel</span></td>
                 <td><div class="fw-semibold">@item.Title</div><div class="text-secondary small">@item.Description</div></td>
-                <td>@(string.IsNullOrWhiteSpace(item.Location) ? "未設定地點" : item.Location)</td>
+                <td>
+                    @if (string.IsNullOrWhiteSpace(item.Location))
+                    {
+                        <span class="text-secondary">未設定地點</span>
+                    }
+                    else
+                    {
+                        <div class="qmah-location-cell__name">@item.Location</div>
+                    }
+                    <a class="btn btn-sm btn-outline-secondary mt-1"
+                       data-qmah-map-link
+                       data-qmah-map-location="@item.Location"
+                       data-qmah-map-latitude="@item.Latitude?.ToString(CultureInfo.InvariantCulture)"
+                       data-qmah-map-longitude="@item.Longitude?.ToString(CultureInfo.InvariantCulture)"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       hidden>
+                        <i class="ti ti-map-pin me-1" aria-hidden="true"></i>查看地圖
+                    </a>
+                </td>
                 <td class="text-secondary text-nowrap">@item.StartAt.ToString("yyyy-MM-dd HH:mm")<br /><span class="small">至 @item.EndAt.ToString("yyyy-MM-dd HH:mm")</span></td>
                 <td><span class="badge @reviewClass">@AdminDisplayLabels.ReviewStatus(item.Status)</span></td>
                 <td><span class="badge @publishClass">@AdminDisplayLabels.PublishStatus(item.PublishStatus)</span></td>
@@ -85,4 +106,4 @@
         }
     }
     </tbody>
-</table></div></div>
+</table></div><div class="card-footer qmah-card-footer qmah-card-footer--split"><span class="text-secondary">第 @Model.Page / @Model.TotalPages 頁，共 @Model.TotalCount 筆</span><ul class="pagination m-0"><li class="page-item @(Model.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-reviewStatus="@Model.ReviewStatus" asp-route-publishStatus="@Model.PublishStatus">上一頁</a></li><li class="page-item disabled"><span class="page-link">@Model.Page / @Model.TotalPages</span></li><li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)"><a class="page-link" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-reviewStatus="@Model.ReviewStatus" asp-route-publishStatus="@Model.PublishStatus">下一頁</a></li></ul></div></div>

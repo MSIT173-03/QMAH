@@ -14,6 +14,7 @@ public sealed class CatalogImportService(QmahDbContext db)
     public static readonly IReadOnlyList<string> SupportedCategoryCodes =
     ["BRONZE", "CERAMIC", "JADE", "ENAMEL", "LACQUER", "COIN", "CARVING", "PAINTING"];
 
+    // 預檢與正式匯入共用同一份計畫，確認碼會綁定資料內容與同步選項
     public async Task<CatalogImportPreview> PreviewAsync(
         CatalogImportRequest request,
         CancellationToken cancellationToken = default)
@@ -22,6 +23,7 @@ public sealed class CatalogImportService(QmahDbContext db)
         return plan.ToPreview(request.SyncShop, request.SyncQuestionBank);
     }
 
+    // 正式匯入先驗證預檢確認碼，再一起處理檔案與資料庫
     public async Task<CatalogImportResult> ImportAsync(
         CatalogImportRequest request,
         string approvalToken,
@@ -57,6 +59,7 @@ public sealed class CatalogImportService(QmahDbContext db)
         var copiedAssets = new List<string>();
         var committed = false;
 
+        // 檔案不屬於資料庫交易，失敗時要刪掉已複製檔案，避免留下孤兒檔
         try
         {
             CopyAssets(request.MediaRootPath, assets, copiedAssets);
@@ -206,6 +209,7 @@ public sealed class CatalogImportService(QmahDbContext db)
         var allProducts = request.SyncShop ? request.Products ?? [] : [];
         var eraDefinitions = LoadEraDefinitions();
 
+        // 文物編號是匯入去重鍵，資料包內重複時直接停止
         var duplicateArtifact = allArtifacts
             .Where(row => !string.IsNullOrWhiteSpace(row.ArtifactRef))
             .GroupBy(row => row.ArtifactRef.Trim(), StringComparer.OrdinalIgnoreCase)
@@ -836,6 +840,7 @@ public sealed class CatalogImportService(QmahDbContext db)
             Path.Combine(Directory.GetCurrentDirectory(), "QMAH.Web", "Infrastructure", "CatalogImport", "era-buckets.json"),
             Path.Combine(Directory.GetCurrentDirectory(), "tools", "QmahDataTools", "NpmDataImporter", "era-buckets.json")
         };
+        // 依序支援工具輸出、Web 執行檔與專案根目錄，方便 Visual Studio 和命令列使用
         var path = candidates.FirstOrDefault(File.Exists)
             ?? throw new FileNotFoundException("找不到 era-buckets.json，停止匯入。", candidates[0]);
         var rows = JsonSerializer.Deserialize<List<EraDefinition>>(
@@ -877,6 +882,7 @@ public sealed class CatalogImportService(QmahDbContext db)
     private static short? ToShort(int? value) =>
         value is >= short.MinValue and <= short.MaxValue ? (short)value : null;
 
+    // 固定識別值讓相同 ArtifactRef 重跑匯入時仍對應同一筆資料
     private static Guid StableGuid(string value)
     {
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(value));
@@ -886,6 +892,7 @@ public sealed class CatalogImportService(QmahDbContext db)
     private static int StableNumber(string value) =>
         BitConverter.ToInt32(SHA256.HashData(Encoding.UTF8.GetBytes(value)), 0) & int.MaxValue;
 
+    // 公開路徑維持固定層級，實體路徑仍會先經過檔案根目錄檢查
     public static string PublicAssetPath(string domain, string category, string key, string fileName) =>
         $"/media/{domain}/{category.ToLowerInvariant()}/{key}/{fileName}";
 

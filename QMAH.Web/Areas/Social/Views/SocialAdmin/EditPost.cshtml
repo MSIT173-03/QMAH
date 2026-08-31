@@ -92,7 +92,19 @@
                             <span asp-validation-for="Longitude" class="text-danger"></span>
                         </div>
                         <div class="col-12">
-                            <div class="form-hint">地點可以只填文字；前台接上地圖後，也可以把點選位置轉成這兩個座標。</div>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <div class="form-hint">地點可以只填文字；若有座標，地圖會直接定位到這個位置。</div>
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   data-qmah-map-link
+                                   data-qmah-map-location-input="#LocationName"
+                                   data-qmah-map-latitude-input="#Latitude"
+                                   data-qmah-map-longitude-input="#Longitude"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   hidden>
+                                    <i class="ti ti-map-pin me-1" aria-hidden="true"></i>在地圖查看位置
+                                </a>
+                            </div>
                         </div>
                     </div>
 

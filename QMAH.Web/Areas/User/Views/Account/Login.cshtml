@@ -100,8 +100,8 @@
                                             <img src="@imagePath"
                                                  alt=""
                                                  decoding="async"
-                                                 loading="@(repeat == 0 ? "eager" : "lazy")"
-                                                 fetchpriority="low" />
+                                                 loading="@(repeat == 0 && ribbonIndex == 0 && itemIndex == 0 ? "eager" : "lazy")"
+                                                 fetchpriority="@(repeat == 0 && ribbonIndex == 0 && itemIndex == 0 ? "high" : "low")" />
                                         </figure>
                                     }
                                 </div>
@@ -203,6 +203,14 @@
             const toggle = document.querySelector("[data-qmah-password-toggle]");
             const submit = document.querySelector("[data-qmah-auth-submit]");
             const submitLabel = submit?.querySelector("[data-qmah-submit-label]");
+            const scene = document.querySelector(".qmah-auth-scene");
+
+            if (scene && "IntersectionObserver" in window) {
+                const sceneObserver = new IntersectionObserver(([entry]) => {
+                    scene.classList.toggle("qmah-auth-scene--offscreen", !entry.isIntersecting);
+                }, { threshold: 0.01 });
+                sceneObserver.observe(scene);
+            }
 
             toggle?.addEventListener("click", () => {
                 if (!password) return;

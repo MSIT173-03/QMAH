@@ -29,6 +29,10 @@ public static class IdentityCommands
             throw new ArgumentException("--email 必須是有效的 Email。", nameof(email));
         }
 
+        var password = string.IsNullOrWhiteSpace(requestedPassword)
+            ? RequireStoredPassword(LoadShowcasePasswords(credentialsPath, backupPath), normalizedEmail)
+            : requestedPassword!;
+
         await using var provider = BuildIdentityProvider(connection);
         using var scope = provider.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -36,8 +40,6 @@ public static class IdentityCommands
         var user = await userManager.FindByEmailAsync(normalizedEmail)
             ?? throw new InvalidOperationException($"找不到會員：{normalizedEmail}");
 
-        var generated = string.IsNullOrWhiteSpace(requestedPassword);
-        var password = generated ? GeneratePassword() : requestedPassword!;
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         var result = await userManager.ResetPasswordAsync(user, token, password);
         if (!result.Succeeded)
@@ -53,8 +55,6 @@ public static class IdentityCommands
         UpdateCredentialFiles(credential, credentialsPath, backupPath);
 
         Console.WriteLine($"PASSWORD_RESET|email:{normalizedEmail}");
-        if (generated)
-            Console.WriteLine($"NEW_PASSWORD|{password}");
         Console.WriteLine($"CREDENTIALS|{ResolveCredentialsPath(credentialsPath)}");
         Console.WriteLine($"CREDENTIALS_BACKUP|{ResolveBackupPath(backupPath)}");
     }
@@ -64,6 +64,10 @@ public static class IdentityCommands
         string? credentialsPath,
         string? backupPath)
     {
+        var savedPasswords = LoadShowcasePasswords(credentialsPath, backupPath);
+        EnsureShowcasePasswords(savedPasswords);
+
+        // 展示資料以 Email 識別，存在就更新，不存在才新增，重跑不會複製會員
         await using var provider = BuildIdentityProvider(connection);
         using var scope = provider.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -73,16 +77,16 @@ public static class IdentityCommands
         await EnsureRoleAsync(roleManager, "User");
 
         var credentials = new List<DemoCredential>(ShowcaseUsers.Count);
-        var generatedPasswords = new HashSet<string>(StringComparer.Ordinal);
+        var seededUsers = new List<ShowcaseSeededUser>(ShowcaseUsers.Count);
         var added = 0;
         var updated = 0;
         var baseDate = DateTime.UtcNow.Date;
         await using var transaction = await db.Database.BeginTransactionAsync();
 
-        foreach (var seed in ShowcaseUsers)
+        foreach (var (seed, index) in ShowcaseUsers.Select((seed, index) => (seed, index)))
         {
-            // 展示帳號固定，密碼則在每次建立快照時重新產生，避免憑證進入版本控制。
-            var password = GenerateUniquePassword(generatedPasswords);
+            // 展示密碼一律從外部憑證檔讀取
+            var password = savedPasswords[seed.Email];
             var user = await userManager.FindByEmailAsync(seed.Email);
             if (user is null)
             {
@@ -105,6 +109,7 @@ public static class IdentityCommands
                 {
                     UserId = user.Id,
                     Nickname = seed.DisplayName,
+                    AvatarPath = ShowcaseAvatarPaths[index],
                     Visibility = "PUBLIC",
                     Bio = seed.Bio,
                     CreatedAt = createdAt,
@@ -128,6 +133,7 @@ public static class IdentityCommands
                     {
                         UserId = user.Id,
                         Nickname = seed.DisplayName,
+                        AvatarPath = ShowcaseAvatarPaths[index],
                         Visibility = "PUBLIC",
                         Bio = seed.Bio,
                         CreatedAt = user.CreatedAt,
@@ -137,6 +143,7 @@ public static class IdentityCommands
                 else
                 {
                     profile.Nickname = seed.DisplayName;
+                    profile.AvatarPath = ShowcaseAvatarPaths[index];
                     profile.Visibility = "PUBLIC";
                     profile.Bio = seed.Bio;
                     profile.UpdatedAt = DateTime.UtcNow;
@@ -156,8 +163,11 @@ public static class IdentityCommands
                 user.Email ?? seed.Email,
                 password,
                 seed.Role));
+            seededUsers.Add(new ShowcaseSeededUser(user, seed, index));
         }
 
+        await EnsureShowcaseAddressesAsync(db, seededUsers);
+        await EnsureShowcaseAchievementsAsync(db, seededUsers);
         await db.SaveChangesAsync();
         await transaction.CommitAsync();
 
@@ -355,59 +365,237 @@ public static class IdentityCommands
 
     private static string ResolveCredentialsPath(string? path) =>
         Path.GetFullPath(string.IsNullOrWhiteSpace(path)
-            ? Path.Combine(Directory.GetCurrentDirectory(), "QMAH.DemoCredentials.local.csv")
+            ? Path.Combine(ResolveRepositoryRoot(), "QMAH.DemoCredentials.local.csv")
             : path);
 
-    private static string ResolveBackupPath(string? path)
-    {
-        if (!string.IsNullOrWhiteSpace(path))
-            return Path.GetFullPath(path);
+    private static string ResolveBackupPath(string? path) =>
+        Path.GetFullPath(string.IsNullOrWhiteSpace(path)
+            ? Path.Combine(ResolveRepositoryRoot(), "QMAH.DemoCredentials.local.backup.csv")
+            : path);
 
-        var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        if (string.IsNullOrWhiteSpace(documents))
-            throw new InvalidOperationException("找不到 Windows Documents 資料夾，無法建立帳密備份。");
-        return Path.Combine(documents, "QMAH", "QMAH.DemoCredentials.csv");
-    }
-
-    private static string GeneratePassword()
+    private static string ResolveRepositoryRoot()
     {
-        const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-        const string lower = "abcdefghijkmnopqrstuvwxyz";
-        const string digits = "23456789";
-        const string symbols = "!#$%+-_";
-        var characters = new List<char>
+        // 預設從 Repository 根目錄讀取，方便 VS 與命令列共用同一份設定
+        var startPaths = new[]
         {
-            Pick(upper),
-            Pick(lower),
-            Pick(digits),
-            Pick(symbols)
+            Directory.GetCurrentDirectory(),
+            AppContext.BaseDirectory
         };
-        var all = upper + lower + digits + symbols;
-        while (characters.Count < 16)
-            characters.Add(Pick(all));
-        for (var index = characters.Count - 1; index > 0; index--)
-        {
-            var swap = RandomNumberGenerator.GetInt32(index + 1);
-            (characters[index], characters[swap]) = (characters[swap], characters[index]);
-        }
-        return new string(characters.ToArray());
 
-        static char Pick(string source) => source[RandomNumberGenerator.GetInt32(source.Length)];
+        foreach (var startPath in startPaths)
+        {
+            var directory = new DirectoryInfo(Path.GetFullPath(startPath));
+            while (directory is not null)
+            {
+                if (File.Exists(Path.Combine(directory.FullName, "QMAH.sln")))
+                    return directory.FullName;
+
+                directory = directory.Parent;
+            }
+        }
+
+        throw new InvalidOperationException(
+            "找不到 QMAH Repository 根目錄，請明確指定 --credentials 與 --backup。 ");
     }
 
-    private static string GenerateUniquePassword(ISet<string> generatedPasswords)
+    private static string ResolveLegacyRepositoryParent()
     {
-        string password;
-        do
-        {
-            password = GeneratePassword();
-        }
-        while (!generatedPasswords.Add(password));
+        var parent = Directory.GetParent(ResolveRepositoryRoot())?.FullName;
+        return parent
+            ?? throw new InvalidOperationException("找不到 Repository 上一層，無法讀取舊版帳密檔。 ");
+    }
 
-        return password;
+    private static Dictionary<string, string> LoadShowcasePasswords(
+        string? credentialsPath,
+        string? backupPath)
+    {
+        var candidatePaths = new[]
+            {
+                ResolveCredentialsPath(credentialsPath),
+                ResolveBackupPath(backupPath)
+            }
+            .Concat(string.IsNullOrWhiteSpace(credentialsPath) && string.IsNullOrWhiteSpace(backupPath)
+                ? new[]
+                {
+                    Path.Combine(ResolveLegacyRepositoryParent(), "QMAH.DemoCredentials.local.csv"),
+                    Path.Combine(ResolveLegacyRepositoryParent(), "QMAH.DemoCredentials.local.backup.csv")
+                }
+                : Array.Empty<string>())
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var path in candidatePaths)
+        {
+            if (!File.Exists(path))
+                continue;
+
+            return ReadCredentialFile(path)
+                .Where(item => !string.IsNullOrWhiteSpace(item.Email))
+                .GroupBy(item => item.Email, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Last().Password,
+                    StringComparer.OrdinalIgnoreCase);
+        }
+
+        throw new FileNotFoundException(
+            "找不到展示帳密檔，請將根目錄的 QMAH.DemoCredentials.csv 複製為 QMAH.DemoCredentials.local.csv，填入所有 Password 後再執行。 ");
+    }
+
+    private static void EnsureShowcasePasswords(
+        IReadOnlyDictionary<string, string> passwords)
+    {
+        var incomplete = ShowcaseUsers
+            .Where(seed => !passwords.TryGetValue(seed.Email, out var password)
+                || string.IsNullOrWhiteSpace(password))
+            .Select(seed => seed.Email)
+            .ToArray();
+        if (incomplete.Length == 0)
+            return;
+
+        throw new InvalidDataException(
+            $"展示帳密檔缺少或留白的 Password：{string.Join(", ", incomplete)}。請填妥後再執行，不會自動產生密碼。 ");
+    }
+
+    private static string RequireStoredPassword(
+        IReadOnlyDictionary<string, string> passwords,
+        string email)
+    {
+        if (passwords.TryGetValue(email, out var password)
+            && !string.IsNullOrWhiteSpace(password))
+            return password;
+
+        throw new InvalidDataException(
+            $"帳密檔缺少或留白的 Password：{email}。請填妥後再執行，或明確傳入 --password。 ");
+    }
+
+    private static async Task EnsureShowcaseAddressesAsync(
+        QmahDbContext db,
+        IReadOnlyList<ShowcaseSeededUser> seededUsers)
+    {
+        // 每位展示會員維持一筆預設地址，管理員使用資展國際，其餘使用台北捷運站資料
+        var userIds = seededUsers.Select(item => item.User.Id).ToArray();
+        var addresses = await db.UserAddresses
+            .Where(address => userIds.Contains(address.UserId))
+            .ToListAsync();
+
+        foreach (var item in seededUsers)
+        {
+            var addressSeed = item.Index == 0
+                ? ShowcaseAdminAddress
+                : TaipeiMetroAddresses[(item.Index - 1) % TaipeiMetroAddresses.Count];
+            // 優先沿用既有地址，避免展示批次每次重跑都新增一筆
+            var address = addresses
+                .Where(candidate => candidate.UserId == item.User.Id)
+                .OrderByDescending(candidate => candidate.IsDefault)
+                .ThenBy(candidate => candidate.CreatedAt)
+                .FirstOrDefault();
+
+            if (address is null)
+            {
+                address = new UserAddress
+                {
+                    Id = StableGuid($"showcase-address:{item.Seed.Email}"),
+                    UserId = item.User.Id,
+                    CreatedAt = item.User.CreatedAt
+                };
+                db.UserAddresses.Add(address);
+            }
+
+            foreach (var other in addresses.Where(candidate => candidate.UserId == item.User.Id))
+                other.IsDefault = false;
+
+            address.AddressLabel = item.Index == 0 ? "專題展示據點" : "常用地點";
+            address.RecipientName = item.Seed.DisplayName;
+            address.RecipientPhone = addressSeed.Phone;
+            address.PostalCode = addressSeed.PostalCode;
+            address.City = addressSeed.City;
+            address.District = addressSeed.District;
+            address.AddressLine = addressSeed.AddressLine;
+            address.Latitude = addressSeed.Latitude;
+            address.Longitude = addressSeed.Longitude;
+            address.IsDefault = true;
+            address.UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    private static async Task EnsureShowcaseAchievementsAsync(
+        QmahDbContext db,
+        IReadOnlyList<ShowcaseSeededUser> seededUsers)
+    {
+        // 只補缺少的成就，固定識別值讓展示批次可以重跑
+        var achievements = await db.Achievements
+            .AsNoTracking()
+            .Where(achievement => achievement.Status == "ACTIVE")
+            .OrderBy(achievement => achievement.Code)
+            .ToListAsync();
+        if (achievements.Count == 0)
+            return;
+
+        var userIds = seededUsers.Select(item => item.User.Id).ToArray();
+        var existing = await db.UserAchievements
+            .Where(item => userIds.Contains(item.UserId))
+            .ToListAsync();
+        var existingKeys = existing
+            .Select(item => $"{item.UserId:N}:{item.AchievementId:N}")
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var now = DateTime.UtcNow;
+
+        foreach (var item in seededUsers)
+        {
+            var achievementCount = Math.Min(1 + item.Index % 3, achievements.Count);
+            var availableDays = Math.Max(0, (now.Date - item.User.CreatedAt.Date).Days);
+            for (var offset = 0; offset < achievementCount; offset++)
+            {
+                var achievement = achievements[(item.Index * 2 + offset) % achievements.Count];
+                var key = $"{item.User.Id:N}:{achievement.Id:N}";
+                if (!existingKeys.Add(key))
+                    continue;
+
+                var achievedAt = item.User.CreatedAt.Date
+                    .AddDays(Math.Min(availableDays, 2 + item.Index + offset))
+                    .AddHours(9 + offset);
+                if (achievedAt >= now)
+                    achievedAt = now.AddMinutes(-1);
+
+                var isDisplayed = offset == 0 || item.Index % 4 == 0;
+                DateTime? displayedAt = isDisplayed
+                    ? (achievedAt.AddMinutes(30) < now ? achievedAt.AddMinutes(30) : now)
+                    : null;
+                db.UserAchievements.Add(new UserAchievement
+                {
+                    Id = StableGuid($"showcase-achievement:{item.Seed.Email}:{achievement.Code}"),
+                    UserId = item.User.Id,
+                    AchievementId = achievement.Id,
+                    AchievedAt = achievedAt,
+                    IsDisplayed = isDisplayed,
+                    DisplayedAt = displayedAt
+                });
+            }
+        }
+    }
+
+    private static Guid StableGuid(string value)
+    {
+        // 不另建流水號表，固定文字雜湊會產生相同 Guid，重跑時能辨識同一筆資料
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
+        return new Guid(bytes.AsSpan(0, 16));
     }
 
     private sealed record DemoCredential(string DisplayName, string Email, string Password, string Role);
+
+    private sealed record ShowcaseSeededUser(
+        ApplicationUser User,
+        ShowcaseUserSeed Seed,
+        int Index);
+
+    private sealed record ShowcaseAddressSeed(
+        string PostalCode,
+        string City,
+        string District,
+        string AddressLine,
+        decimal Latitude,
+        decimal Longitude,
+        string Phone);
 
     private sealed record ShowcaseUserSeed(
         string DisplayName,
@@ -442,5 +630,58 @@ public static class IdentityCommands
         new("Demo Member 16", "demo.member16@qmah.test", "User", 4, "喜歡研究不同材質在光線下的差異。"),
         new("Demo Member 17", "demo.member17@qmah.test", "User", 2, "期待在遊戲房間裡認識更多同好。"),
         new("Demo Member 18", "demo.member18@qmah.test", "User", 1, "把第一次參與的活動心得留在社群裡。")
+    ];
+
+    // 路徑順序要和 ShowcaseUsers 一一對齊，調整名單時也要同步調整頭貼
+    private static readonly IReadOnlyList<string> ShowcaseAvatarPaths =
+    [
+        "/images/avatars/flat-icon-design/panda.png",
+        "/images/avatars/flat-icon-design/deer.png",
+        "/images/avatars/flat-icon-design/monkey.png",
+        "/images/avatars/flat-icon-design/duck.png",
+        "/images/avatars/flat-icon-design/lion.png",
+        "/images/avatars/flat-icon-design/cat.png",
+        "/images/avatars/flat-icon-design/dog.png",
+        "/images/avatars/flat-icon-design/bird.png",
+        "/images/avatars/flat-icon-design/tanuki.png",
+        "/images/avatars/flat-icon-design/wolf.png",
+        "/images/avatars/flat-icon-design/hippo.png",
+        "/images/avatars/flat-icon-design/fox.png",
+        "/images/avatars/flat-icon-design/buffalo.png",
+        "/images/avatars/flat-icon-design/chicken.png",
+        "/images/avatars/flat-icon-design/bull.png",
+        "/images/avatars/flat-icon-design/seal.png",
+        "/images/avatars/flat-icon-design/ladybug.png",
+        "/images/avatars/flat-icon-design/goldfish.png",
+        "/images/avatars/flat-icon-design/koala.png",
+        "/images/avatars/flat-icon-design/bear.png",
+        "/images/avatars/flat-icon-design/pig.png",
+        "/images/avatars/flat-icon-design/elephant.png",
+        "/images/avatars/flat-icon-design/giraffe.png",
+        "/images/avatars/flat-icon-design/cow.png"
+    ];
+
+    private static readonly ShowcaseAddressSeed ShowcaseAdminAddress =
+        new("106", "臺北市", "大安區", "復興南路一段 390 號 2 樓", 25.041122m, 121.543493m, "02-6631-6588");
+
+    private static readonly IReadOnlyList<ShowcaseAddressSeed> TaipeiMetroAddresses =
+    [
+        new("100009", "臺北市", "中正區", "忠孝西路 1 段 49 號", 25.047825m, 121.517081m, "02-2181-2345"),
+        new("106084", "臺北市", "大安區", "忠孝東路 3 段 302 號", 25.041778m, 121.544022m, "02-2181-2345"),
+        new("106097", "臺北市", "大安區", "信義路 4 段 2 號", 25.033303m, 121.543531m, "02-2181-2345"),
+        new("105020", "臺北市", "松山區", "南京東路 3 段 253 號", 25.051856m, 121.544098m, "02-2181-2345"),
+        new("100005", "臺北市", "中正區", "寶慶路 32 之 1 號 B1", 25.042169m, 121.508276m, "02-2181-2345"),
+        new("106007", "臺北市", "大安區", "信義路 2 段 166 號 B1", 25.033327m, 121.528049m, "02-2181-2345"),
+        new("100207", "臺北市", "中正區", "羅斯福路 1 段 8 之 1 號 B1", 25.032729m, 121.518270m, "02-2181-2345"),
+        new("100046", "臺北市", "中正區", "羅斯福路 4 段 64 之 1 號 B1", 25.014392m, 121.534027m, "02-2181-2345"),
+        new("100024", "臺北市", "中正區", "忠孝東路 1 段 58 號 B1", 25.044739m, 121.523177m, "02-2181-2345"),
+        new("103014", "臺北市", "大同區", "南京西路 16 號", 25.052009m, 121.520175m, "02-2181-2345"),
+        new("106083", "臺北市", "大安區", "新生南路 1 段 67 號", 25.042452m, 121.532472m, "02-2181-2345"),
+        new("106101", "臺北市", "大安區", "復興南路 2 段 235 號", 25.026050m, 121.543521m, "02-2181-2345"),
+        new("106057", "臺北市", "大安區", "忠孝東路 4 段 182 號", 25.041841m, 121.551013m, "02-2181-2345"),
+        new("110054", "臺北市", "信義區", "忠孝東路 4 段 400 號", 25.041746m, 121.560228m, "02-2181-2345"),
+        new("110060", "臺北市", "信義區", "忠孝東路 5 段 2 號", 25.040858m, 121.565908m, "02-2181-2345"),
+        new("100043", "臺北市", "中正區", "羅斯福路 3 段 126 之 5 號 B1", 25.020112m, 121.528215m, "02-2181-2345"),
+        new("116060", "臺北市", "文山區", "羅斯福路 5 段 214 號", 24.999030m, 121.539326m, "02-2181-2345")
     ];
 }

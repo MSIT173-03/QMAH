@@ -20,27 +20,27 @@ public class AchievementsController : Controller
         _context = context;
     }
 
-    public IActionResult Index()
+    // 成就與獲得人數分開查詢，再用字典合併，避免每列重新計算
+    public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
-        var achievements = _context.Achievements
+        var achievements = await _context.Achievements
             .AsNoTracking()
             .OrderBy(x => x.Name)
-            .ToList();
-
-        var result = new List<AchievementListItemViewModel>();
-
-        foreach (var achievement in achievements)
-        {
-            var earnedCount = _context.UserAchievements
-                .AsNoTracking()
-                .Count(x => x.AchievementId == achievement.Id);
-
-            result.Add(new AchievementListItemViewModel
+            .ToListAsync(cancellationToken);
+        var achievementIds = achievements.Select(achievement => achievement.Id).ToArray();
+        var earnedCounts = await _context.UserAchievements
+            .AsNoTracking()
+            .Where(item => achievementIds.Contains(item.AchievementId))
+            .GroupBy(item => item.AchievementId)
+            .Select(group => new { group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.Key, item => item.Count, cancellationToken);
+        var result = achievements
+            .Select(achievement => new AchievementListItemViewModel
             {
                 Achievement = achievement,
-                EarnedCount = earnedCount
-            });
-        }
+                EarnedCount = earnedCounts.GetValueOrDefault(achievement.Id)
+            })
+            .ToList();
 
         return View(result);
     }

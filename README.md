@@ -74,6 +74,18 @@ Angular 目前固定在 21.2.22。課堂要求使用 Angular 21，因此保留�
 
 若 Visual Studio、LocalDB、NuGet 或 Scaffold 尚未準備好，請先看[開發環境與共用套件](docs/01-development-environment.md)
 
+### 常見啟動問題：431 Request Header Fields Too Large
+
+如果瀏覽器開啟 `https://localhost:7039` 時顯示 `431 Request Header Fields Too Large`，通常是瀏覽器保留了舊版或重複的 `localhost` Cookie，並非 NuGet 還原或專案載入失敗。Web 與 API 現在使用不同的固定 Cookie 名稱，啟動後會清除已知的舊版 QMAH／ASP.NET Core 登入與 Anti-forgery Cookie；只要標頭仍在 Kestrel 可接收的有限範圍內，這個清理會自動完成，不需要刪除資料庫內容。
+
+如果瀏覽器在 request 尚未進入應用程式前就再次回傳 431，代表 Cookie 已超過伺服器可解析的上限，中介軟體沒有機會送出刪除指令。此時請先關閉本機網站分頁，再從網址列左側的鎖頭開啟網站資料設定，清除 `localhost` 的 Cookie 與網站資料後重新啟動；也可以先用無痕視窗確認登入頁是否恢復正常。清除後本機登入狀態會消失，需要重新登入，但不會刪除資料庫內容。
+
+Cookie 不包含連接埠，因此請清除 `localhost` 的網站資料，不要只尋找 `7039`。若仍無法開啟，請確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 Visual Studio 的 `QMAH 後端（API＋Razor）` 設定。
+
+### 本機展示帳密
+
+若要在自己的資料庫重建展示會員，先把根目錄的 `QMAH.DemoCredentials.csv` 複製成 `QMAH.DemoCredentials.local.csv`，再填妥所有 Password 欄位。展示資料工具會優先讀取這份根目錄檔案，並在同一位置建立備份；缺少帳號或留白密碼時會直接停止，絕不自動產生隨機密碼。`.local.csv` 與備份檔已排除在 Git 外，請不要提交。完整命令與帳號用途請看[本機展示與帳號](docs/15-local-showcase-and-credentials.md)。
+
 ## 開發前先知道
 
 ### SQL Server 是結構基準
@@ -170,6 +182,7 @@ QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 
 ```text
 QMAH/
 ├─ QMAH.sln
+├─ QMAH.DemoCredentials.csv      展示帳密空白範本
 ├─ QMAH.Api/                    REST API 主機
 ├─ QMAH.Infrastructure/         DB-first Entity、DbContext 與匯入核心
 ├─ QMAH.Web/

@@ -13,6 +13,7 @@ using QMAH.Api.Infrastructure.Media;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 var cookieSecurePolicy = builder.Environment.IsDevelopment()
@@ -23,6 +24,8 @@ builder.Configuration.AddJsonFile(
     "appsettings.Local.json",
     optional: true,
     reloadOnChange: true);
+
+// 本機設定檔只存開發環境的連線字串與 CORS 來源，不把個人差異寫進共用設定
 
 var configuredMediaRoot = builder.Configuration["Media:RootPath"]
     ?? Path.Combine("..", "QMAH.Web", "wwwroot", "media");
@@ -67,6 +70,8 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 });
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+
+// CORS 只允許設定檔列出的前端來源，使用 Cookie 時也不能使用萬用字元
 builder.Services.AddCors(options =>
 {
     var allowedOrigins = builder.Configuration
@@ -92,6 +97,8 @@ builder.Services.AddDbContext<QmahDbContext>(options =>
         ?? throw new InvalidOperationException(
             "Connection string 'QmahDatabase' was not found."));
 });
+
+// API 與 Web 共用會員資料表，但使用獨立 Cookie 名稱避免雙啟動互相覆蓋登入狀態
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     {
@@ -112,6 +119,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPasswordResetEmailSender, PasswordResetEmailSender>();
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
+
+// 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -148,6 +157,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // 同一個 localhost 可能先後啟動多個版本，保留有限上限讓舊 Cookie 有機會被清理
+    options.Limits.MaxRequestHeadersTotalSize = 64 * 1024;
+});
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -158,8 +173,15 @@ if (!app.Environment.IsDevelopment())
 
 app.UseResponseCompression();
 app.UseHttpsRedirection();
+
+// API 先完成路由與限流，再清除舊 Cookie，最後才進入 CORS、驗證與 controller
 app.UseRouting();
 app.UseRateLimiter();
+app.UseQmahCookieRecovery(
+    ".QMAH.Web.Auth",
+    ".QMAH.Web.Antiforgery",
+    ".QMAH.Api.Auth",
+    ".QMAH.Api.Antiforgery");
 app.UseCors("AngularClient");
 app.UseAuthentication();
 app.UseAuthorization();

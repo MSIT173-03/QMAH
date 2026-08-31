@@ -60,6 +60,7 @@ html[data-bs-theme="dark"] .qmah-auth-body {
   min-width: 0;
   overflow: hidden;
   isolation: isolate;
+  contain: layout paint;
   background-color: var(--qmah-auth-scene-bg);
   background-image:
     repeating-linear-gradient(0deg,
@@ -159,6 +160,11 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
   will-change: transform;
 }
 
+/* 手機捲到表單時暫停展牆動畫，避免背景持續佔用主執行緒 */
+.qmah-auth-scene--offscreen .qmah-auth-ribbon-track {
+  animation-play-state: paused;
+}
+
 .qmah-auth-ribbon--left .qmah-auth-ribbon-track {
   animation: qmah-auth-ribbon-left var(--qmah-ribbon-duration, 165s) linear infinite;
 }
@@ -195,16 +201,6 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
   margin-right: clamp(-0.18rem, -0.15vw, -0.08rem);
 }
 
-.qmah-auth-artifact::after {
-  position: absolute;
-  z-index: -1;
-  inset: 8% 8% -6%;
-  border-radius: 10px;
-  background: rgba(24, 46, 45, 0.16);
-  filter: blur(26px);
-  content: "";
-}
-
 .qmah-auth-artifact img {
   display: block;
   width: 100%;
@@ -217,22 +213,6 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
   box-shadow:
     0 1px 1px rgba(20, 38, 43, 0.04),
     0 14px 30px rgba(20, 38, 43, 0.105);
-}
-
-.qmah-auth-ribbon--1 .qmah-auth-artifact img {
-  filter: saturate(0.89) brightness(0.985) contrast(1.01);
-}
-
-.qmah-auth-ribbon--2 .qmah-auth-artifact img {
-  filter: saturate(0.99) contrast(1.015);
-}
-
-.qmah-auth-ribbon--3 .qmah-auth-artifact img {
-  filter: saturate(0.93) brightness(0.99) contrast(1.01);
-}
-
-.qmah-auth-ribbon--4 .qmah-auth-artifact img {
-  filter: saturate(0.97) contrast(1.01);
 }
 
 .qmah-auth-artifact--small {

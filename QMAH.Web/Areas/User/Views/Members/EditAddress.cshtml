@@ -44,6 +44,14 @@
                             <div class="col-12 col-md-6"><label asp-for="City" class="form-label">縣市</label><input asp-for="City" class="form-control" /></div>
                             <div class="col-12 col-md-6"><label asp-for="District" class="form-label">區域</label><input asp-for="District" class="form-control" /></div>
                             <div class="col-12"><label asp-for="AddressLine" class="form-label">詳細地址</label><input asp-for="AddressLine" class="form-control" /><span asp-validation-for="AddressLine" class="text-danger"></span></div>
+                            <div class="col-12 col-md-6"><label asp-for="Latitude" class="form-label">緯度</label><input asp-for="Latitude" class="form-control" type="number" step="0.000001" placeholder="可留白" /><span asp-validation-for="Latitude" class="text-danger"></span></div>
+                            <div class="col-12 col-md-6"><label asp-for="Longitude" class="form-label">經度</label><input asp-for="Longitude" class="form-control" type="number" step="0.000001" placeholder="可留白" /><span asp-validation-for="Longitude" class="text-danger"></span></div>
+                            <div class="col-12">
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <div class="form-hint">地址可手動輸入；填入成對座標後可直接開啟地圖定位。</div>
+                                    <a class="btn btn-sm btn-outline-secondary" data-qmah-map-link data-qmah-map-location-input="#PostalCode,#City,#District,#AddressLine" data-qmah-map-latitude-input="#Latitude" data-qmah-map-longitude-input="#Longitude" target="_blank" rel="noopener noreferrer" hidden><i class="ti ti-map-pin me-1" aria-hidden="true"></i>在地圖查看位置</a>
+                                </div>
+                            </div>
                         </div>
                     </section>
 

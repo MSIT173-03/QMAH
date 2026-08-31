@@ -1,6 +1,6 @@
 # Identity 與會員資料管理
 
-QMAH 以五個 Area 的 CRUD 後台為主，並已預留獨立 API 使用的相同 Identity 資料。Identity 負責登入身分、後台存取權限，以及程式取得目前使用者的標準方式。
+QMAH 以五個 Area 的 CRUD 後台為主，並已預留獨立 API 使用相同的 Identity 資料。Identity 負責登入身分、後台存取權限，以及程式取得目前使用者的標準方式。
 
 ## 目前專題製作範圍
 
@@ -8,11 +8,13 @@ QMAH 以五個 Area 的 CRUD 後台為主，並已預留獨立 API 使用的相�
 - 會員管理可查看帳號，並新增、查詢、修改與刪除 `UserProfiles`、`UserAddresses` 等會員業務資料
 - Email、鎖定狀態與角色等 Identity 資料透過 `UserManager`、`RoleManager` 操作
 - 後台需要授權時，Controller 可取得目前登入者的 `UserId`
-- API 使用相同的 Identity 與 Cookie，但以 HTTP 401／403 回應，不將登入頁 HTML 當成 JSON 回傳
+- API 使用相同的 Identity 資料與授權規則，但使用獨立的 Cookie，並以 HTTP 401／403 回應，不將登入頁 HTML 當成 JSON 回傳
 
-共用後台的登入頁、登出按鈕、Cookie 設定與 `Admin` 授權已集中在主機設定與 User Area。各 Area 不建立各自的登入流程；Controller 與 View 不得假設任意 `UserId`，也不得直接修改 Identity 系統表。API 已提供註冊、登入、登出與開發環境密碼重設流程；正式寄信服務仍要在決定供應商後接上，不能把展示用寄信實作當成正式通知服務。
+共用後台的登入頁、登出按鈕、Cookie 設定與 `Admin` 授權已集中在 Web 主機設定與 User Area。各 Area 不建立各自的登入流程；Controller 與 View 不得假設任意 `UserId`，也不得直接修改 Identity 系統表。API 已提供註冊、登入、登出與開發環境密碼重設流程；正式寄信服務仍要在決定供應商後接上，不能把展示用寄信實作當成正式通知服務。
 
 目前兩個主機都使用 Identity lockout：連續 5 次登入失敗會鎖定 15 分鐘；登入端點另外依來源 IP 進行每分鐘 12 次的固定視窗限流。管理員停用會員時會更新 Security Stamp，讓既有登入 Cookie 在下一次 request 失效。這些規則由主機共用設定維護，前台只需要正確處理 401、403 與 429。
+
+Web 登入 Cookie 名稱為 `.QMAH.Web.Auth`，API 登入 Cookie 名稱為 `.QMAH.Api.Auth`；兩個主機的 Anti-forgery Cookie 也各自使用 `.QMAH.Web.Antiforgery` 與 `.QMAH.Api.Antiforgery`。主機啟動後會清除已知的舊版 QMAH／ASP.NET Core Cookie，降低在本機切換版本時累積過大 request header 的機會；這是 Cookie 清理機制，不代表可以無限制放大伺服器的標頭上限。
 
 ## 帳號資料分成兩種
 
@@ -91,7 +93,7 @@ Release 參考資料庫的展示初始化工具會建立 24 個會員與 `Admin`
 | `player-a@qmah.local` | `User` | 遊戲玩家情境 |
 | `player-b@qmah.local` | `User` | 遊戲玩家情境 |
 
-`QmahDatabaseRelease seed-showcase-users` 每次執行都會替 24 個展示帳號重新產生不重複的隨機密碼，再透過 Identity API 設定。完整帳密只會輸出到 Repository 上一層的 `QMAH.DemoCredentials.local.csv` 與同層備份檔，不會硬寫在程式碼或資料腳本裡。若網站部署到可由外部連線的環境，仍須先更換所有展示密碼。
+`QmahDatabaseRelease seed-showcase-users` 會讀取 Repository 根目錄的 `QMAH.DemoCredentials.local.csv`，並將備份寫到同一位置。根目錄的 `QMAH.DemoCredentials.csv` 是可提交的空白密碼範本；若檔案不存在，或任一展示帳號的 Password 留白，工具會直接停止，不會自動產生密碼。完整帳密不會硬寫在程式碼或資料腳本裡；若網站部署到可由外部連線的環境，仍須先更換所有展示密碼。
 
 ## Login ViewModel
 

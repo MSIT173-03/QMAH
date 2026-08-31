@@ -15,14 +15,13 @@
     };
 }
 <!doctype html>
-<html lang="zh-Hant" data-bs-theme="light">
+<html lang="zh-Hant" data-bs-theme="light" class="qmah-preload">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f3f6f4" data-qmah-theme-color />
     <title>@ViewData["Title"]｜清明鑑定屋後台</title>
     <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="stylesheet" href="~/admin/css/qmah-fonts.css" asp-append-version="true" />
 
     <script>
@@ -43,10 +42,9 @@
     </script>
 
     <link rel="stylesheet" href="~/admin/vendor/tabler/tabler.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/icons-webfont@3.46.0/dist/tabler-icons.min.css" />
+    <link rel="stylesheet" href="~/admin/vendor/tabler-icons/tabler-icons.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-core.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-tabler.css" asp-append-version="true" />
-    @await RenderSectionAsync("Styles", required: false)
     <link rel="stylesheet" href="~/admin/css/qmah-admin-lists.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-actions.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-interactions.css" asp-append-version="true" />
@@ -56,10 +54,18 @@
     <link rel="stylesheet" href="~/admin/css/qmah-admin-system.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-navigation.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-footer.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/admin/css/qmah-operations.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-typography.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+    <style>
+        /* 等共用與頁面樣式完成後才顯示，避免切頁時短暫露出未套版內容 */
+        html.qmah-preload body { visibility: hidden; }
+        html.qmah-preload { background: #f3f6f4; }
+    </style>
+    <noscript><style>html.qmah-preload body { visibility: visible; }</style></noscript>
+    <script>document.documentElement.classList.remove("qmah-preload");</script>
 </head>
 <body class="qmah-admin qmah-area-@areaKey" data-qmah-area="@areaKey">
+    <div class="qmah-theme-wash" data-qmah-theme-wash aria-hidden="true"></div>
     <a class="qmah-skip-link" href="#admin-main">跳至主要內容</a>
     <div class="page qmah-admin-shell">
         <partial name="Admin/_AdminSidebar" />

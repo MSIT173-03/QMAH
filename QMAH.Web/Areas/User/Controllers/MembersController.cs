@@ -16,6 +16,7 @@ namespace QMAH.Web.Areas.User.Controllers;
 [AdminNavigation("會員帳號", 10)]
 public class MembersController : Controller
 {
+    private static readonly int[] PageSizes = [10, 20, 50, 100];
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly QmahDbContext _context;
@@ -33,22 +34,28 @@ public class MembersController : Controller
         _roleManager = roleManager;
     }
 
+    // 先查會員基本資料，再批次補上個人資料、點數與角色，避免每列各打一次 Identity 查詢
     public async Task<IActionResult> Index(
     string? keyword,
     string? role,
     string? status,
-    int page = 1)
+    int page = 1,
+    int pageSize = 10,
+    CancellationToken cancellationToken = default)
     {
-        int pageSize = 5;
+        pageSize = PageSizes.Contains(pageSize) ? pageSize : 10;
+        // 避免 page 小於 1
+        page = Math.Max(1, page);
+        keyword = string.IsNullOrWhiteSpace(keyword) ? null : keyword.Trim();
+        role = string.IsNullOrWhiteSpace(role) ? null : role.Trim();
+        status = string.IsNullOrWhiteSpace(status) ? null : status.Trim().ToUpperInvariant();
 
         // 先查帳號
-        var query = _userManager.Users.AsQueryable();
+        var query = _userManager.Users.AsNoTracking();
 
         // 關鍵字搜尋
-        if (!string.IsNullOrWhiteSpace(keyword))
+        if (keyword is not null)
         {
-            keyword = keyword.Trim();
-
             query = query.Where(x =>
                 (x.Email != null && x.Email.Contains(keyword)) ||
                 (x.UserName != null && x.UserName.Contains(keyword))
@@ -56,59 +63,72 @@ public class MembersController : Controller
         }
 
         // 狀態篩選
-        if (!string.IsNullOrWhiteSpace(status))
+        if (status is not null)
         {
             query = query.Where(x => x.Status == status);
         }
 
-        var users = query
+        var users = await query
             .OrderBy(x => x.Email)
-            .ToList();
+            .ToListAsync(cancellationToken);
+
+        var userIds = users.Select(user => user.Id).ToArray();
+        // 三份附加資料一次載入後用字典對照，避免列表常見的 N+1 查詢
+        var profiles = await _context.UserProfiles
+            .AsNoTracking()
+            .Where(profile => userIds.Contains(profile.UserId))
+            .ToDictionaryAsync(profile => profile.UserId, cancellationToken);
+        var pointBalances = await _context.PointBalances
+            .AsNoTracking()
+            .Where(balance => userIds.Contains(balance.UserId))
+            .ToDictionaryAsync(balance => balance.UserId, cancellationToken);
+        var roleRows = await (
+            from userRole in _context.UserRoles.AsNoTracking()
+            join roleEntity in _context.Roles.AsNoTracking()
+                on userRole.RoleId equals roleEntity.Id
+            where userIds.Contains(userRole.UserId)
+            select new { userRole.UserId, Role = roleEntity.Name }
+        ).ToListAsync(cancellationToken);
+        var rolesByUser = roleRows
+            .GroupBy(row => row.UserId)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Select(row => row.Role)
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Cast<string>()
+                    .ToList());
 
         // 先組合 User + Role + Point
-        var allMembers = new List<MemberListItemViewModel>();
+        var allMembers = users
+            .Select(user =>
+            {
+                var userRole = rolesByUser.TryGetValue(user.Id, out var roles)
+                    ? roles.FirstOrDefault(value => value == "Admin") ?? roles.FirstOrDefault() ?? "Member"
+                    : "Member";
+                profiles.TryGetValue(user.Id, out var profile);
+                pointBalances.TryGetValue(user.Id, out var pointBalance);
 
-        foreach (var user in users)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-            var userRole = roles.FirstOrDefault() ?? "Member";
-
+                return new MemberListItemViewModel
+                {
+                    User = user,
+                    Role = userRole,
+                    PointBalance = pointBalance?.Balance ?? 0,
+                    Nickname = profile?.Nickname,
+                    AvatarPath = profile?.AvatarPath
+                };
+            })
             // 角色篩選
-            if (!string.IsNullOrWhiteSpace(role) &&
-                userRole != role)
-            {
-                continue;
-            }
-
-            var pointBalance = _context.PointBalances
-                .AsNoTracking()
-                .SingleOrDefault(x => x.UserId == user.Id);
-
-            var profile = _context.UserProfiles
-                .AsNoTracking()
-                .SingleOrDefault(x => x.UserId == user.Id);
-
-            allMembers.Add(new MemberListItemViewModel
-            {
-                User = user,
-                Role = userRole,
-                PointBalance = pointBalance?.Balance ?? 0,
-                Nickname = profile?.Nickname
-            });
-        }
+            .Where(member => role is null || member.Role == role)
+            .ToList();
 
         // 角色也篩完之後，才算總筆數
+        // 先補齊角色名稱再篩選，總筆數才會和畫面結果一致
         int totalCount = allMembers.Count;
 
         int totalPages = (int)Math.Ceiling(
             totalCount / (double)pageSize
         );
-
-        // 避免 page 小於 1
-        if (page < 1)
-        {
-            page = 1;
-        }
 
         // 避免超過最後一頁
         if (totalPages > 0 && page > totalPages)
@@ -117,6 +137,7 @@ public class MembersController : Controller
         }
 
         // 最後才分頁
+        // 最後才分頁，避免角色篩選因頁面大小漏掉會員
         var members = allMembers
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -134,18 +155,14 @@ public class MembersController : Controller
         ViewBag.TotalPages = totalPages;
 
         // 上方統計卡
-        var allUsers = _userManager.Users;
-
-        ViewBag.TotalMembers = allUsers.Count();
-
+        // 統計卡代表全體會員，不跟目前頁面的筆數混在一起
         var now = DateTime.UtcNow;
         var thirtyDaysAgo = now.AddDays(-30);
-
-        ViewBag.NewMembers = allUsers
-            .Count(x => x.CreatedAt >= thirtyDaysAgo);
-
-        ViewBag.BannedMembers = allUsers
-            .Count(x => x.Status == "BANNED");
+        ViewBag.TotalMembers = await _userManager.Users.CountAsync(cancellationToken);
+        ViewBag.NewMembers = await _userManager.Users
+            .CountAsync(x => x.CreatedAt >= thirtyDaysAgo, cancellationToken);
+        ViewBag.BannedMembers = await _userManager.Users
+            .CountAsync(x => x.Status == "BANNED", cancellationToken);
 
         return View(members);
     }
@@ -684,6 +701,8 @@ public class MembersController : Controller
             PostalCode = address.PostalCode,
             City = address.City,
             District = address.District,
+            Latitude = address.Latitude,
+            Longitude = address.Longitude,
             AddressLine = address.AddressLine,
             IsDefault = address.IsDefault,
             RowVersion = address.RowVersion
@@ -697,6 +716,11 @@ public class MembersController : Controller
     Guid id,
     UserAddressEditViewModel model)
     {
+        if (model.Latitude.HasValue != model.Longitude.HasValue)
+        {
+            ModelState.AddModelError(nameof(model.Latitude), "地點座標必須同時填寫緯度與經度；也可以兩者都留白。");
+        }
+
         if (id != model.Id)
         {
             return BadRequest();
@@ -758,6 +782,8 @@ public class MembersController : Controller
             address.PostalCode = model.PostalCode?.Trim();
             address.City = model.City?.Trim();
             address.District = model.District?.Trim();
+            address.Latitude = model.Latitude;
+            address.Longitude = model.Longitude;
             address.AddressLine = model.AddressLine.Trim();
             address.IsDefault = model.IsDefault;
             address.UpdatedAt = DateTime.UtcNow;
@@ -823,6 +849,11 @@ public class MembersController : Controller
     public async Task<IActionResult> CreateAddress(
     UserAddressCreateViewModel model)
     {
+        if (model.Latitude.HasValue != model.Longitude.HasValue)
+        {
+            ModelState.AddModelError(nameof(model.Latitude), "地點座標必須同時填寫緯度與經度；也可以兩者都留白。");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -868,6 +899,8 @@ public class MembersController : Controller
                 PostalCode = model.PostalCode?.Trim(),
                 City = model.City?.Trim(),
                 District = model.District?.Trim(),
+                Latitude = model.Latitude,
+                Longitude = model.Longitude,
                 AddressLine = model.AddressLine.Trim(),
                 IsDefault = model.IsDefault,
                 CreatedAt = DateTime.UtcNow,

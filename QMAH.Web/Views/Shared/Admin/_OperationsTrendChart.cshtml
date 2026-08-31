@@ -5,12 +5,13 @@
 @{
     var titleId = $"{Model.Id}-title";
     var descriptionId = $"{Model.Id}-description";
-    var width = 760d;
-    var height = 250d;
-    var plotLeft = 58d;
-    var plotRight = 18d;
-    var plotTop = 18d;
-    var plotBottom = 42d;
+    // 保留座標文字與日期的安全邊界，避免 SVG 在窄容器或放大文字時被裁掉
+    var width = 800d;
+    var height = 280d;
+    var plotLeft = 82d;
+    var plotRight = 36d;
+    var plotTop = 26d;
+    var plotBottom = 58d;
     var plotWidth = width - plotLeft - plotRight;
     var plotHeight = height - plotTop - plotBottom;
     var pointCount = Model.Labels.Count;
@@ -61,7 +62,7 @@
     else
     {
         <div class="qmah-chart-scroll" tabindex="0" aria-label="@Model.Title，可水平捲動查看圖表">
-            <svg class="qmah-chart" viewBox="0 0 @width @height" role="img" aria-labelledby="@titleId @descriptionId">
+            <svg class="qmah-chart" viewBox="0 0 @width @height" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="@titleId @descriptionId">
                 <g class="qmah-chart__grid" aria-hidden="true">
                     @for (var gridIndex = 0; gridIndex <= 4; gridIndex++)
                     {

@@ -15,6 +15,7 @@ namespace QMAH.Web.Areas.Social.Controllers;
 [Authorize(Policy = "Policy.Social.ManageReports")]
 public sealed class SocialReportAdminController : Controller
 {
+    private static readonly int[] PageSizes = [10, 20, 50, 100];
     private static readonly HashSet<string> AllowedStatuses = ["PENDING", "RESOLVED", "REJECTED"];
     private static readonly HashSet<string> AllowedTargetTypes = ["POST", "COMMENT"];
 
@@ -41,6 +42,8 @@ public sealed class SocialReportAdminController : Controller
         filter.Status = Normalize(filter.Status);
         filter.TargetType = Normalize(filter.TargetType);
         filter.Keyword = string.IsNullOrWhiteSpace(filter.Keyword) ? null : filter.Keyword.Trim();
+        filter.Page = Math.Max(1, filter.Page);
+        filter.PageSize = PageSizes.Contains(filter.PageSize) ? filter.PageSize : 20;
 
         var query = _context.ContentReports.AsNoTracking();
         if (filter.Status is not null && AllowedStatuses.Contains(filter.Status))
@@ -61,6 +64,10 @@ public sealed class SocialReportAdminController : Controller
                 (report.Resolution != null && report.Resolution.Contains(filter.Keyword)));
         }
 
+        // 貼文、留言與檢舉人名稱在同一個投影查出，避免每筆檢舉再發一次查詢
+        var totalCount = await query.CountAsync(cancellationToken);
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)filter.PageSize));
+        filter.Page = Math.Min(filter.Page, totalPages);
         var reports = await query
             .OrderByDescending(report => report.CreatedAt)
             .Select(report => new ReportListViewModel
@@ -85,6 +92,8 @@ public sealed class SocialReportAdminController : Controller
                 ReviewedAt = report.ReviewedAt,
                 CreatedAt = report.CreatedAt
             })
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
             .ToListAsync(cancellationToken);
 
         return View("~/Areas/Social/Views/SocialAdmin/SocialReportAdmin.cshtml", new ReportAdminPageViewModel
@@ -92,7 +101,9 @@ public sealed class SocialReportAdminController : Controller
             Status = filter.Status,
             TargetType = filter.TargetType,
             Keyword = filter.Keyword,
-            TotalCount = reports.Count,
+            Page = filter.Page,
+            PageSize = filter.PageSize,
+            TotalCount = totalCount,
             Reports = reports
         });
     }
@@ -245,6 +256,7 @@ public sealed class SocialReportAdminController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // 檢舉目標必須存在，否則管理者會看到無法處理的孤兒紀錄
     private async Task ValidateTarget(ReportEditViewModel model, CancellationToken cancellationToken)
     {
         model.TargetType = NormalizeTargetType(model.TargetType);
@@ -259,6 +271,7 @@ public sealed class SocialReportAdminController : Controller
         }
     }
 
+    // 檢舉判定為成立時只隱藏目標，不刪除原始資料，方便稽核與追查
     private async Task HideTarget(string targetType, Guid targetId, CancellationToken cancellationToken)
     {
         if (targetType == "POST")

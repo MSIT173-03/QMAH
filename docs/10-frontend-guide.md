@@ -2,7 +2,7 @@
 
 目前可操作的管理畫面使用 Razor View、HTML、CSS、Bootstrap、JavaScript、jQuery 與 ASP.NET Core Model Validation，位於 `QMAH.Web`。Angular 前台另位於 `QMAH.Client`，目前只保留 CLI 產生的骨架，不在本文件開始製作前台頁面。
 
-Razor 後台的 Bootstrap、jQuery、驗證套件與 Tabler 核心資產已放在 `QMAH.Web/wwwroot/lib`，Clone 後不需要再透過 npm 或 LibMan 下載。共用 Layout 另載入固定版本的 Tabler icon font CDN；沒有外網時核心版面仍可使用，但圖示字型可能無法顯示。不要再加入第二份前端函式庫或改用未固定版本的 CDN。Angular 的 npm 依賴與 API 呼叫方式請看 [`12-frontend-start-guide.md`](12-frontend-start-guide.md) 與 [`13-rest-api.md`](13-rest-api.md)。
+Razor 後台的 Bootstrap、jQuery 與驗證套件已放在 `QMAH.Web/wwwroot/lib`，Tabler icon font 與後台所需的 Tabler 資產則放在 `QMAH.Web/wwwroot/admin/vendor`，Clone 後不需要再透過 npm、LibMan 或外部 CDN 下載。共用 Layout 使用 Repository 內固定版本的檔案，沒有外網時也能維持核心版面與圖示。不要再加入第二份前端函式庫或未固定版本的 CDN。Angular 的 npm 依賴與 API 呼叫方式請看 [`12-frontend-start-guide.md`](12-frontend-start-guide.md) 與 [`13-rest-api.md`](13-rest-api.md)。
 
 ## 共用前端版本
 

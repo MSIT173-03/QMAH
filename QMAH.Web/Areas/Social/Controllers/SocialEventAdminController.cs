@@ -16,6 +16,7 @@ namespace QMAH.Web.Areas.Social.Controllers;
 [Authorize(Policy = "Policy.Social.ManageEvents")]
 public sealed class SocialEventAdminController : Controller
 {
+    private static readonly int[] PageSizes = [10, 20, 50, 100];
     private static readonly HashSet<string> ReviewStatuses = ["PENDING", "APPROVED", "REJECTED"];
     private static readonly HashSet<string> PublishStatuses = ["DRAFT", "PUBLISHED", "CANCELLED"];
     private static readonly HashSet<string> EventTypes = ["OFFICIAL", "PLAYER"];
@@ -33,17 +34,24 @@ public sealed class SocialEventAdminController : Controller
     public Task<IActionResult> Index(
         string? reviewStatus = null,
         string? publishStatus = null,
+        int page = 1,
+        int pageSize = 20,
         CancellationToken cancellationToken = default) =>
-        Events(reviewStatus, publishStatus, cancellationToken);
+        Events(reviewStatus, publishStatus, page, pageSize, cancellationToken);
 
     [HttpGet]
     public async Task<IActionResult> Events(
         string? reviewStatus = null,
         string? publishStatus = null,
+        int page = 1,
+        int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
+        // 列表只取本頁欄位，篩選、計數與分頁交給資料庫處理
         reviewStatus = NormalizeStatus(reviewStatus);
         publishStatus = NormalizeStatus(publishStatus);
+        page = Math.Max(1, page);
+        pageSize = PageSizes.Contains(pageSize) ? pageSize : 20;
 
         var query = _context.Events.AsNoTracking();
         if (reviewStatus is not null && ReviewStatuses.Contains(reviewStatus))
@@ -56,6 +64,9 @@ public sealed class SocialEventAdminController : Controller
             query = query.Where(item => item.PublishStatus == publishStatus);
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
+        page = Math.Min(page, totalPages);
         var events = await query
             .OrderByDescending(item => item.CreatedAt)
             .Select(item => new EventListViewModel
@@ -74,13 +85,17 @@ public sealed class SocialEventAdminController : Controller
                 ReviewNote = item.ReviewNote,
                 CreatedAt = item.CreatedAt
             })
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
 
         return View("~/Areas/Social/Views/SocialAdmin/SocialEventAdmin.cshtml", new EventAdminPageViewModel
         {
             ReviewStatus = reviewStatus,
             PublishStatus = publishStatus,
-            TotalCount = events.Count,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
             Events = events
         });
     }
@@ -124,6 +139,7 @@ public sealed class SocialEventAdminController : Controller
             ReviewNote = NormalizeText(model.ReviewNote),
             CreatedAt = now
         };
+        // 活動建立時一併建立隱藏的社群貼文，審核通過後再由同步器公開
         var socialPost = EventSocialPostSynchronizer.Create(
             eventData,
             creatorUserId,
@@ -242,6 +258,7 @@ public sealed class SocialEventAdminController : Controller
         item.ReviewNote = NormalizeText(reviewNote);
         item.ReviewedByUserId = _currentUserService.GetCurrentUserId();
         item.ReviewedAt = DateTime.UtcNow;
+        // 通過審核就預設發布，退回或待審核則維持草稿
         item.PublishStatus = status == "APPROVED" ? "PUBLISHED" : "DRAFT";
 
         await SyncLinkedSocialPostAsync(item, cancellationToken: cancellationToken);
@@ -344,6 +361,7 @@ public sealed class SocialEventAdminController : Controller
         EventEditViewModel? editModel = null,
         CancellationToken cancellationToken = default)
     {
+        // 每個活動都要有一個社群入口，狀態變更也要同步到同一篇貼文
         var now = DateTime.UtcNow;
         var socialPost = eventData.SocialPost
             ?? await _context.SocialPosts
@@ -352,6 +370,7 @@ public sealed class SocialEventAdminController : Controller
 
         if (socialPost is null)
         {
+            // 舊資料沒有活動貼文時在這裡補建，不要求人工補資料
             socialPost = EventSocialPostSynchronizer.Create(
                 eventData,
                 creatorUserId,
@@ -364,6 +383,7 @@ public sealed class SocialEventAdminController : Controller
         }
         else if (editModel is not null)
         {
+            // 從活動編輯頁儲存時，依表單更新模板或自訂內容
             EventSocialPostSynchronizer.ApplyContent(
                 socialPost,
                 eventData,
@@ -373,6 +393,7 @@ public sealed class SocialEventAdminController : Controller
         }
         else if (socialPost.ContentMode == EventSocialPostSynchronizer.TemplateMode)
         {
+            // 沒有重新編輯貼文時，模板只跟著活動欄位更新
             EventSocialPostSynchronizer.ApplyContent(
                 socialPost,
                 eventData,

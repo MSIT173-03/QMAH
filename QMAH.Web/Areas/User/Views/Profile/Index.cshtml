@@ -1,3 +1,4 @@
+@using System.Globalization
 @model QMAH.Web.Areas.User.ViewModels.ProfileIndexViewModel
 
 @{
@@ -169,12 +170,23 @@
                 <tbody>
                     @foreach (var address in Model.Addresses)
                     {
+                        var addressText = string.Join(" ", new[] { address.PostalCode, address.City, address.District, address.AddressLine }.Where(value => !string.IsNullOrWhiteSpace(value)));
                         <tr>
                             <td class="fw-semibold">@address.AddressLabel</td>
                             <td>@address.RecipientName</td>
                             <td class="text-nowrap">@address.RecipientPhone</td>
                             <td>
-                                @address.PostalCode @address.City@address.District@address.AddressLine
+                                <div>@addressText</div>
+                                <a class="btn btn-sm btn-outline-secondary mt-1"
+                                   data-qmah-map-link
+                                   data-qmah-map-location="@addressText"
+                                   data-qmah-map-latitude="@address.Latitude?.ToString(CultureInfo.InvariantCulture)"
+                                   data-qmah-map-longitude="@address.Longitude?.ToString(CultureInfo.InvariantCulture)"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   hidden>
+                                    <i class="ti ti-map-pin me-1" aria-hidden="true"></i>查看地圖
+                                </a>
                             </td>
                             <td>
                                 @if (address.IsDefault)

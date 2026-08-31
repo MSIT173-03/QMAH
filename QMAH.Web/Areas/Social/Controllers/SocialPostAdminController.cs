@@ -16,7 +16,7 @@ namespace QMAH.Web.Areas.Social.Controllers;
 [Authorize(Policy = "Policy.Social.ManagePosts")]
 public sealed class SocialPostAdminController : Controller
 {
-    private const int AdminPageSize = 20;
+    private static readonly int[] PageSizes = [10, 20, 50, 100];
     private static readonly HashSet<string> AllowedStatuses = ["PUBLISHED", "HIDDEN", "DELETED"];
     private static readonly HashSet<string> AllowedPostTypes = ["POST", "ANNOUNCEMENT"];
     private static readonly string[] StandardBoardCodes =
@@ -34,6 +34,7 @@ public sealed class SocialPostAdminController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
     {
+        // 表單只載入必要的分類與啟用文物，避免把管理資料整批送進頁面
         ViewData["IsCreate"] = true;
         ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
         ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
@@ -84,6 +85,7 @@ public sealed class SocialPostAdminController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // 列表在資料庫完成篩選、計數、排序與分頁，只投影本頁需要的欄位
     // GET: /Social/SocialPostAdmin/Posts
     [HttpGet]
     public async Task<IActionResult> Posts(
@@ -91,7 +93,7 @@ public sealed class SocialPostAdminController : Controller
         CancellationToken cancellationToken = default)
     {
         filter.Page = Math.Max(1, filter.Page);
-        filter.PageSize = AdminPageSize;
+        filter.PageSize = PageSizes.Contains(filter.PageSize) ? filter.PageSize : 20;
         filter.Keyword = string.IsNullOrWhiteSpace(filter.Keyword) ? null : filter.Keyword.Trim();
         filter.BoardCode = string.IsNullOrWhiteSpace(filter.BoardCode) ? null : filter.BoardCode.Trim().ToUpperInvariant();
         filter.PostType = string.IsNullOrWhiteSpace(filter.PostType) ? null : NormalizePostType(filter.PostType);
@@ -151,6 +153,9 @@ public sealed class SocialPostAdminController : Controller
                 PostType = post.PostType,
                 PublisherType = post.PublisherType,
                 EventId = post.EventId,
+                LocationName = post.LocationName,
+                Latitude = post.Latitude,
+                Longitude = post.Longitude,
                 Status = post.Status,
                 CommentCount = post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
                 CreatedAt = post.CreatedAt
@@ -307,6 +312,7 @@ public sealed class SocialPostAdminController : Controller
 
     private async Task<List<string>> LoadBoardCodes(CancellationToken cancellationToken)
     {
+        // 固定分類和資料庫既有分類合併，舊貼文仍能被找到
         var existingCodes = await _context.SocialPosts
             .AsNoTracking()
             .Select(post => post.BoardCode)
@@ -334,6 +340,7 @@ public sealed class SocialPostAdminController : Controller
 
     private async Task<List<PostArtifactOption>> LoadArtifactOptions(CancellationToken cancellationToken)
     {
+        // 下拉選單只提供啟用文物，避免新貼文連到已下架資料
         return await _context.Artifacts
             .AsNoTracking()
             .Where(artifact => artifact.IsActive)
@@ -342,6 +349,7 @@ public sealed class SocialPostAdminController : Controller
                 artifact.Id,
                 artifact.ArtifactRef,
                 artifact.Name))
+            // 限制下拉選單大小，避免管理表單一次載入過多選項
             .Take(512)
             .ToListAsync(cancellationToken);
     }
@@ -360,6 +368,7 @@ public sealed class SocialPostAdminController : Controller
         }
     }
 
+    // 公告只有具備管理權限的發布者才算官方公告，其餘仍標記為社群公告
     private string GetPublisherType(string postType) =>
         postType == "ANNOUNCEMENT"
             && (User.IsInRole("Admin") || User.IsInRole("AnnouncementEditor"))

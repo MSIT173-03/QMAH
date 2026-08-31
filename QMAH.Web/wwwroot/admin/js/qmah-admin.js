@@ -4,6 +4,7 @@
     const root = document.documentElement;
     const toggle = document.querySelector("[data-qmah-theme-toggle]");
     const themeColor = document.querySelector("[data-qmah-theme-color]");
+    const themeWash = document.querySelector("[data-qmah-theme-wash]");
     const sidebarToggle = document.querySelector("[data-qmah-sidebar-toggle]");
     const mobileSidebarToggles = [...document.querySelectorAll("[data-qmah-mobile-sidebar-toggle]")];
     const mobileSidebar = document.querySelector("#admin-sidebar-menu");
@@ -82,8 +83,13 @@
         }
 
         try {
+            const washAnimation = themeWash && !reduceMotion.matches
+                ? playThemeWash()
+                : null;
+
             if (!canUseThemeViewTransition()) {
                 applyTheme(theme, persist);
+                await washAnimation;
                 return;
             }
 
@@ -127,6 +133,7 @@
 
             await animation.finished;
             await transition.finished;
+            await washAnimation;
         } catch {
             if (root.dataset.bsTheme !== theme) {
                 applyTheme(theme, persist);
@@ -141,6 +148,26 @@
 
             switchingTheme = false;
         }
+    }
+
+    function playThemeWash() {
+        const rect = toggle?.getBoundingClientRect();
+        const x = rect ? rect.left + rect.width / 2 : window.innerWidth - 40;
+        const y = rect ? rect.top + rect.height / 2 : 32;
+        const radius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y));
+        const point = `circle(0px at ${x}px ${y}px)`;
+        const full = `circle(${radius}px at ${x}px ${y}px)`;
+
+        return themeWash.animate(
+            [
+                { opacity: 0, clipPath: point },
+                { opacity: .32, clipPath: full, offset: .45 },
+                { opacity: 0, clipPath: point }
+            ],
+            { duration: 520, easing: "cubic-bezier(.16, 1, .3, 1)" }
+        ).finished;
     }
 
     applyTheme(root.dataset.bsTheme === "dark" ? "dark" : "light", false);
@@ -266,10 +293,86 @@
             }
         });
     });
+
+    // 地點仍可手動輸入，只有點擊地圖連結時才開啟 OpenStreetMap
+    function readMapField(link, selectorName, fallbackValue) {
+        const selector = link.dataset[selectorName];
+        if (!selector) return fallbackValue || "";
+
+        try {
+            // 表單選擇器可以列出多個欄位，地址會依序合併
+            const values = [...document.querySelectorAll(selector)]
+                .map((field) => field.value?.trim())
+                .filter(Boolean);
+            return values.join(" ") || fallbackValue || "";
+        } catch {
+            return fallbackValue || "";
+        }
+    }
+
+    function updateMapLink(link) {
+        const location = readMapField(link, "qmahMapLocationInput", link.dataset.qmahMapLocation);
+        const latitudeText = readMapField(link, "qmahMapLatitudeInput", link.dataset.qmahMapLatitude);
+        const longitudeText = readMapField(link, "qmahMapLongitudeInput", link.dataset.qmahMapLongitude);
+        const latitude = Number(latitudeText);
+        const longitude = Number(longitudeText);
+        // 空白座標不能轉成 0，避免尚未選址時誤開啟赤道地圖
+        const hasCoordinates = latitudeText.length > 0
+            && longitudeText.length > 0
+            && Number.isFinite(latitude)
+            && Number.isFinite(longitude)
+            && latitude >= -90
+            && latitude <= 90
+            && longitude >= -180
+            && longitude <= 180;
+
+        if (!location && !hasCoordinates) {
+            link.hidden = true;
+            link.removeAttribute("href");
+            return;
+        }
+
+        const encodedLocation = encodeURIComponent(location);
+        link.href = hasCoordinates
+            ? `https://www.openstreetmap.org/?mlat=${latitude.toFixed(6)}&mlon=${longitude.toFixed(6)}#map=17/${latitude.toFixed(6)}/${longitude.toFixed(6)}`
+            : `https://www.openstreetmap.org/search?query=${encodedLocation}`;
+        link.hidden = false;
+    }
+
+    const mapLinks = [...document.querySelectorAll("[data-qmah-map-link]")];
+    mapLinks.forEach(updateMapLink);
+
+    document.addEventListener("input", (event) => {
+        const form = event.target.closest("form");
+        if (!form) return;
+        form.querySelectorAll("[data-qmah-map-link]").forEach(updateMapLink);
+    });
+
+    document.addEventListener("change", (event) => {
+        const form = event.target.closest("form");
+        if (!form) return;
+        form.querySelectorAll("[data-qmah-map-link]").forEach(updateMapLink);
+    });
 })();
 
 (() => {
     "use strict";
+
+    // 長列表上下各放一次分頁，管理者不必捲回頁面底端
+    document.querySelectorAll(".qmah-list-card").forEach((card) => {
+        const footer = card.querySelector(":scope > .qmah-card-footer");
+        const table = card.querySelector(":scope > .table-responsive");
+
+        if (!footer || !table || !footer.querySelector(".pagination")) {
+            return;
+        }
+
+        // 分頁是伺服器產生的連結，複製一份到表格上方不會多一套狀態
+        const topFooter = footer.cloneNode(true);
+        topFooter.classList.add("qmah-card-footer--top");
+        topFooter.querySelector("nav")?.setAttribute("aria-label", "頁首分頁");
+        table.before(topFooter);
+    });
 
     const tableSelector = "table.qmah-crud-table, table.game-admin-table";
     const skipLabels = new Set(["操作", "處理"]);
@@ -367,6 +470,7 @@
         });
     }
 
+    // 沒有 data-sort-key 的欄位只排序目前已載入的列，完整排序由伺服器欄位負責
     function sortCurrentPage(table, header, columnIndex) {
         const body = table.querySelector("tbody");
         if (!body) return;

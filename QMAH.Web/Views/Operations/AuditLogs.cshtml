@@ -13,6 +13,10 @@
     <a asp-action="Media" class="btn btn-outline-secondary"><i class="ti ti-photo me-1"></i>圖庫管理</a>
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/admin/css/qmah-operations.css" asp-append-version="true" />
+}
+
 <div class="card qmah-filter-panel mb-3">
     <div class="card-body">
         <form method="get" asp-action="AuditLogs" class="row g-3 align-items-end">

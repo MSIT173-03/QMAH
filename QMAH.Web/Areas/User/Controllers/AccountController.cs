@@ -243,6 +243,7 @@ public class AccountController : Controller
 
     private async Task LoadLoginArtifactImagesAsync(CancellationToken cancellationToken)
     {
+        // 先取少量固定候選路徑，再在記憶體打散，避免登入頁查詢與圖片載入過重
         try
         {
             var images = await _context.ArtifactQuestionEntries
@@ -251,6 +252,8 @@ public class AccountController : Controller
                 .Select(entry => entry.Artifact.ThumbnailPath ?? entry.Artifact.PrimaryImagePath)
                 .Where(path => path != null && path != string.Empty)
                 .Distinct()
+                .OrderBy(path => path)
+                .Take(24)
                 .ToListAsync(cancellationToken);
 
             var imageArray = images

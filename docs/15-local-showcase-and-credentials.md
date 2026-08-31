@@ -11,11 +11,11 @@ QMAH 的展示資料用來讓五個後台 Area、營運中心、API 與之後的
 一般組員不需要在還原最新 `.bak` 或 `database/QMAH.sql` 後執行以下命令。只有資料庫整合者要在隔離資料庫重建下一份完整 snapshot，或個人明確要調整自己的展示資料時，才依序執行：
 
 ```powershell
+Copy-Item .\QMAH.DemoCredentials.csv .\QMAH.DemoCredentials.local.csv
+
 dotnet run --project .\tools\QmahDataTools\QmahDatabaseRelease\QmahDatabaseRelease.csproj -- `
   seed-showcase-users `
-  --connection "Server=(localdb)\MSSQLLocalDB;Database=QMAH;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=False" `
-  --credentials "..\QMAH.DemoCredentials.local.csv" `
-  --backup "..\QMAH.DemoCredentials.local.backup.csv"
+  --connection "Server=(localdb)\MSSQLLocalDB;Database=QMAH;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=False"
 ```
 
 接著用同一支資料工具產生社群與商城展示資料：
@@ -53,14 +53,14 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d QMAH -E -f 65001 -b -r1 -i .\database\seed
 
 ## 展示帳號
 
-`seed-showcase-users` 會建立或更新 24 個本機展示會員、`Admin` 與 `User` 角色，並輸出：
+`seed-showcase-users` 會建立或更新 24 個本機展示會員、`Admin` 與 `User` 角色，預設讀取 Repository 根目錄的 `QMAH.DemoCredentials.local.csv`，並在同一位置建立 `QMAH.DemoCredentials.local.backup.csv`：
 
 展示會員的公開顯示名稱刻意使用 `Demo Admin`、`Demo Member 01`、`Demo Catalog` 等英文用途名稱，不對應真實人物；功能性 Email 與角色仍維持固定，方便組員依情境登入。
 
-- Repository 上一層的 `QMAH.DemoCredentials.local.csv`
-- Repository 上一層的 `QMAH.DemoCredentials.local.backup.csv` 備份
+- Repository 根目錄的 `QMAH.DemoCredentials.local.csv`
+- Repository 根目錄的 `QMAH.DemoCredentials.local.backup.csv` 備份
 
-Repository 只列出最常用的帳號用途，不保存明文密碼。完整展示批次建立時，工具會為 24 個帳號重新產生不重複的隨機密碼，並把結果寫到 Repository 外的憑證檔：
+根目錄的 `QMAH.DemoCredentials.csv` 是可提交的空白密碼範本；請先複製成 `.local.csv`，再填妥 24 個帳號的 Password。工具找不到檔案，或發現任何帳號的 Password 留白時會直接停止，不會自動產生密碼。`.local.csv` 與備份檔已列入 `.gitignore`，不應提交到 Repository。明確傳入 `--credentials` 與 `--backup` 時，仍可使用其他本機路徑；為相容既有設定，根目錄沒有檔案時也會檢查 Repository 上一層的舊版位置：
 
 | 帳號 | 用途 |
 | --- | --- |
@@ -78,12 +78,10 @@ Repository 只列出最常用的帳號用途，不保存明文密碼。完整展
 dotnet run --project .\tools\QmahDataTools\QmahDatabaseRelease\QmahDatabaseRelease.csproj -- `
   reset-password `
   --connection "Server=(localdb)\MSSQLLocalDB;Database=QMAH;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=False" `
-  --email admin@qmah.local `
-  --credentials "..\QMAH.DemoCredentials.local.csv" `
-  --backup "..\QMAH.DemoCredentials.local.backup.csv"
+  --email admin@qmah.local
 ```
 
-不指定 `--password` 時會產生隨機密碼並寫入指定的工作區外憑證檔。不要把 CSV、密碼、Cookie、Token 或含有個人資料的本機 log 加入 Git；若改在可由外部連線的主機展示，先替換所有展示密碼。
+不指定 `--password` 時，單一帳號重設工具會讀取根目錄本機憑證檔中該帳號的 Password；找不到或留白時會直接提示補齊，不會產生隨機密碼。需要更換密碼時，請明確傳入 `--password`，工具會同步更新本機憑證檔。不要把 CSV、密碼、Cookie、Token 或含有個人資料的本機 log 加入 Git；若改在可由外部連線的主機展示，先替換所有展示密碼。
 
 ## 啟動展示
 

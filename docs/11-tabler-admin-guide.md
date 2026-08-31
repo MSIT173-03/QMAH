@@ -435,7 +435,7 @@ return RedirectToAction(nameof(Index));
 
 - 請勿重新實作 Sidebar、Navbar、頁首、頁尾或明暗模式。
 - 請勿在 View 內再次載入 Bootstrap 或 Tabler。
-- 不要在個別 View 另載 Tabler CDN；目前共用 Layout 只載入固定版本的 icon font CDN，其他 Tabler 核心資產使用 Repository 內的檔案。
+- 不要在個別 View 另載 Tabler CDN；目前共用 Layout 只引用 Repository 內固定版本的 Tabler CSS、JavaScript 與 icon font。
 - 請勿修改 `tabler.min.css` 或 `tabler.min.js`。
 - 若只需調整單一元件，請勿複製整份 Tabler CSS。
 - Area 業務樣式不應寫入共用後台 CSS。

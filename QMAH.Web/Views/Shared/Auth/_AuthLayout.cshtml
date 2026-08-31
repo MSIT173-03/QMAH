@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant" data-bs-theme="light">
+<html lang="zh-Hant" data-bs-theme="light" class="qmah-preload">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -24,6 +24,13 @@
     <link rel="stylesheet" href="~/admin/css/qmah-auth.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-interactions.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
+    <style>
+        /* 等登入頁樣式完成後才顯示，避免先看到未套版內容 */
+        html.qmah-preload body { visibility: hidden; }
+        html.qmah-preload { background: #f3f6f4; }
+    </style>
+    <noscript><style>html.qmah-preload body { visibility: visible; }</style></noscript>
+    <script>document.documentElement.classList.remove("qmah-preload");</script>
 </head>
 <body class="qmah-auth-body">
     <a class="qmah-skip-link" href="#auth-main">跳至登入表單</a>

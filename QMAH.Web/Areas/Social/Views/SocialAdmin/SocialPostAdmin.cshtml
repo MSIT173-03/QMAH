@@ -25,12 +25,12 @@
     </div>
     <div class="card-body">
         <form method="get" asp-action="Index">
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-lg-4">
+            <div class="row g-3 align-items-end qmah-post-filter-row">
+                <div class="col-12 col-lg-4 qmah-filter-field qmah-filter-field--keyword">
                     <label asp-for="Keyword" class="form-label">關鍵字</label>
                     <input asp-for="Keyword" class="form-control" placeholder="搜尋標題或內文" />
                 </div>
-                <div class="col-12 col-sm-6 col-lg-2">
+                <div class="col-12 col-sm-6 col-lg-2 qmah-filter-field">
                     <label asp-for="PostType" class="form-label">貼文類型</label>
                     <select asp-for="PostType" class="form-select">
                         <option value="">全部類型</option>
@@ -40,7 +40,7 @@
                         }
                     </select>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-2">
+                <div class="col-12 col-sm-6 col-lg-2 qmah-filter-field">
                     <label asp-for="BoardCode" class="form-label">貼文分類</label>
                     <select asp-for="BoardCode" class="form-select">
                         <option value="">全部分類</option>
@@ -50,7 +50,7 @@
                         }
                     </select>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-2">
+                <div class="col-12 col-sm-6 col-lg-2 qmah-filter-field">
                     <label asp-for="Status" class="form-label">狀態</label>
                     <select asp-for="Status" class="form-select">
                         <option value="">全部狀態</option>
@@ -59,15 +59,24 @@
                         <option value="DELETED">已下架</option>
                     </select>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-2">
+                <div class="col-12 col-sm-6 col-lg-2 qmah-filter-field">
+                    <label asp-for="PageSize" class="form-label">每頁筆數</label>
+                    <select asp-for="PageSize" class="form-select">
+                        @foreach (var size in new[] { 10, 20, 50, 100 })
+                        {
+                            <option value="@size">@size</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-2 qmah-filter-field">
                     <label asp-for="From" class="form-label">建立日起</label>
                     <input asp-for="From" type="date" class="form-control" />
                 </div>
-                <div class="col-12 col-sm-6 col-lg-2">
+                <div class="col-12 col-sm-6 col-lg-2 qmah-filter-field">
                     <label asp-for="To" class="form-label">建立日迄</label>
                     <input asp-for="To" type="date" class="form-control" />
                 </div>
-                <div class="col-12 d-flex gap-2">
+                <div class="col-12 d-flex gap-2 qmah-post-filter-actions">
                     <button type="submit" class="btn btn-primary"><i class="ti ti-filter me-1"></i>套用篩選</button>
                     <a asp-action="Index" class="btn btn-outline-secondary"><i class="ti ti-refresh me-1"></i>清除條件</a>
                 </div>
@@ -86,6 +95,7 @@
                     <th>分類</th>
                     <th>標題</th>
                     <th>作者</th>
+                    <th>地點</th>
                     <th>留言</th>
                     <th>狀態</th>
                     <th>建立時間</th>
@@ -95,7 +105,7 @@
             <tbody>
             @if (Model.Posts.Count == 0)
             {
-                <tr><td colspan="8" class="text-center text-secondary py-5">找不到符合條件的貼文。</td></tr>
+                <tr><td colspan="9" class="text-center text-secondary py-5">找不到符合條件的貼文。</td></tr>
             }
             else
             {
@@ -128,6 +138,26 @@
                             }
                         </td>
                         <td class="text-secondary">@item.AuthorName</td>
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(item.LocationName))
+                            {
+                                <span class="text-secondary">未設定地點</span>
+                            }
+                            else
+                            {
+                                <div class="qmah-location-cell__name">@item.LocationName</div>
+                            }
+                            <a class="btn btn-sm btn-outline-secondary mt-1"
+                               data-qmah-map-link
+                               data-qmah-map-location="@item.LocationName"
+                               data-qmah-map-latitude="@item.Latitude?.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                               data-qmah-map-longitude="@item.Longitude?.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               hidden>
+                                <i class="ti ti-map-pin me-1" aria-hidden="true"></i>查看地圖
+                            </a>
+                        </td>
                         <td>@item.CommentCount</td>
                         <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
                         <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
@@ -174,6 +204,7 @@
                            asp-route-boardCode="@Model.BoardCode"
                            asp-route-postType="@Model.PostType"
                            asp-route-status="@Model.Status"
+                           asp-route-pageSize="@Model.PageSize"
                            asp-route-from="@Model.From?.ToString("yyyy-MM-dd")"
                            asp-route-to="@Model.To?.ToString("yyyy-MM-dd")">上一頁</a>
                     }
@@ -193,6 +224,7 @@
                            asp-route-boardCode="@Model.BoardCode"
                            asp-route-postType="@Model.PostType"
                            asp-route-status="@Model.Status"
+                           asp-route-pageSize="@Model.PageSize"
                            asp-route-from="@Model.From?.ToString("yyyy-MM-dd")"
                            asp-route-to="@Model.To?.ToString("yyyy-MM-dd")">下一頁</a>
                     }

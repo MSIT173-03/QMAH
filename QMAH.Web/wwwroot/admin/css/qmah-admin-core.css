@@ -190,6 +190,31 @@ body {
   row-gap: 1rem;
 }
 
+/* 長列表上下都放分頁，窄螢幕讓操作列自然換行 */
+.qmah-card-footer--top {
+  border-top: 0;
+  border-bottom: 1px solid var(--qmah-line);
+  background: var(--qmah-surface-soft);
+}
+
+.qmah-card-footer .pagination {
+  gap: .25rem;
+}
+
+.qmah-card-footer .page-link {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--qmah-radius-sm);
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.qmah-card-footer .page-link:hover,
+.qmah-card-footer .page-link:focus-visible {
+  transform: translateY(-1px);
+}
+
 .page-body form[method="get"] .btn-list,
 .page-body form[method="get"] .qmah-actions,
 .page-body form[method="get"] .filter-actions,
@@ -526,6 +551,31 @@ body {
   border: 1px solid var(--qmah-line);
   border-radius: 50%;
   object-fit: cover;
+}
+
+/* 會員列表讓頭貼與暱稱並排，長暱稱只在自己的欄位換行 */
+.qmah-member-list-cell {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  min-width: 12rem;
+}
+
+.qmah-member-list-avatar {
+  flex: 0 0 2.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--qmah-line);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.qmah-member-list-avatar--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-ink-soft);
 }
 
 @media (max-width: 767.98px) {

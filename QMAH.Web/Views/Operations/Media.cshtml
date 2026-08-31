@@ -13,20 +13,33 @@
     <a asp-action="AuditLogs" class="btn btn-outline-secondary"><i class="ti ti-history me-1"></i>稽核紀錄</a>
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/admin/css/qmah-operations.css" asp-append-version="true" />
+}
+
 <div class="card qmah-filter-panel mb-3">
     <div class="card-body">
         <form method="get" asp-action="Media" class="row g-3 align-items-end">
-            <div class="col-12 col-lg-6">
+            <div class="col-12 col-lg-5">
                 <label asp-for="Keyword" class="form-label">搜尋圖片</label>
                 <input asp-for="Keyword" class="form-control" placeholder="原始檔名或替代文字" />
             </div>
-            <div class="col-12 col-sm-6 col-lg-3">
+            <div class="col-12 col-sm-6 col-lg-2">
                 <label asp-for="Status" class="form-label">顯示狀態</label>
                 <select asp-for="Status" class="form-select">
                     <option value="">全部狀態</option>
                     <option value="ACTIVE">可使用</option>
                     <option value="HIDDEN">已隱藏</option>
                     <option value="DELETED">已刪除</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <label asp-for="PageSize" class="form-label">每頁筆數</label>
+                <select asp-for="PageSize" class="form-select">
+                    @foreach (var size in new[] { 10, 20, 50, 100 })
+                    {
+                        <option value="@size">@size</option>
+                    }
                 </select>
             </div>
             <div class="col-12 col-sm-6 col-lg-3">
@@ -38,7 +51,7 @@
 
 <div class="card qmah-list-card">
     <div class="table-responsive">
-        <table class="table table-vcenter table-hover card-table">
+        <table class="table table-vcenter table-hover card-table qmah-crud-table">
             <thead><tr><th>預覽</th><th>圖片編號</th><th>檔案資訊</th><th>上傳者</th><th>關聯內容</th><th>狀態</th><th>操作</th></tr></thead>
             <tbody>
             @if (Model.Items.Count == 0)
@@ -63,7 +76,29 @@
                         <td><span class="fw-semibold">@item.SequenceNo</span><div class="small text-secondary">@item.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</div></td>
                         <td><div class="text-truncate qmah-media-filename" title="@item.OriginalFileName">@item.OriginalFileName</div><div class="small text-secondary">@FormatFileSize(item.FileSize)</div></td>
                         <td>@item.OwnerName</td>
-                        <td>@(item.PostId.HasValue ? "已連結貼文" : "尚未連結貼文")</td>
+                        <td class="qmah-media-relation">
+                            @if (!string.IsNullOrWhiteSpace(item.AvatarOwnerName))
+                            {
+                                <div><i class="ti ti-user-circle me-1" aria-hidden="true"></i>會員頭貼：@item.AvatarOwnerName</div>
+                            }
+                            @if (item.PostId.HasValue)
+                            {
+                                <div>
+                                    <i class="ti ti-message-circle me-1" aria-hidden="true"></i>貼文：
+                                    <a asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Edit" asp-route-id="@item.PostId">
+                                        @(string.IsNullOrWhiteSpace(item.PostTitle) ? "已關聯貼文" : item.PostTitle)
+                                    </a>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(item.PostAuthorName))
+                                {
+                                    <div class="small text-secondary">發布者：@item.PostAuthorName</div>
+                                }
+                            }
+                            @if (!item.PostId.HasValue && string.IsNullOrWhiteSpace(item.AvatarOwnerName))
+                            {
+                                <span class="text-secondary">尚未關聯貼文或頭貼</span>
+                            }
+                        </td>
                         <td><span class="badge bg-secondary-lt">@AdminDisplayLabels.Status(item.Status)</span></td>
                         <td>
                             <div class="d-flex flex-wrap gap-1">
@@ -116,6 +151,34 @@
         }
     </div>
 </div>
+
+<section class="card qmah-list-card mt-3" aria-labelledby="avatar-index-title">
+    <div class="card-header">
+        <div>
+            <h2 id="avatar-index-title" class="card-title mb-1">會員頭貼索引</h2>
+            <p class="text-secondary mb-0">顯示目前由系統管理的會員頭貼，方便確認檔案用途與擁有者。</p>
+        </div>
+        <span class="badge bg-secondary-lt">@Model.AvatarItems.Count 位會員</span>
+    </div>
+    <div class="card-body">
+        @if (Model.AvatarItems.Count == 0)
+        {
+            <div class="qmah-empty-state"><i class="ti ti-user-off" aria-hidden="true"></i><span>目前沒有可顯示的會員頭貼。</span></div>
+        }
+        else
+        {
+            <div class="qmah-media-avatar-grid">
+                @foreach (var avatar in Model.AvatarItems)
+                {
+                    <div class="qmah-media-avatar-item">
+                        <img src="@avatar.AvatarPath" alt="@avatar.OwnerName 的會員頭貼" loading="lazy" decoding="async" />
+                        <span>@avatar.OwnerName</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
 
 @functions {
     private static string FormatFileSize(long bytes) => bytes switch

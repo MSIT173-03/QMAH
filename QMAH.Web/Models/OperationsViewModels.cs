@@ -237,6 +237,8 @@ public sealed class MediaAdminFilterViewModel
     public int TotalPages { get; set; }
 
     public IReadOnlyList<MediaAdminItemViewModel> Items { get; set; } = [];
+
+    public IReadOnlyList<AvatarAdminItemViewModel> AvatarItems { get; set; } = [];
 }
 
 public sealed class MediaAdminItemViewModel
@@ -259,5 +261,20 @@ public sealed class MediaAdminItemViewModel
 
     public Guid? PostId { get; init; }
 
+    public string? PostTitle { get; init; }
+
+    public string? PostAuthorName { get; init; }
+
+    public string? AvatarOwnerName { get; init; }
+
     public DateTime CreatedAt { get; init; }
+}
+
+public sealed class AvatarAdminItemViewModel
+{
+    public Guid UserId { get; init; }
+
+    public string OwnerName { get; init; } = string.Empty;
+
+    public string AvatarPath { get; init; } = string.Empty;
 }

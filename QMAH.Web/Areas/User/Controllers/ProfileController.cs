@@ -289,6 +289,11 @@ public class ProfileController : Controller
             return Challenge();
         }
 
+        if (model.Latitude.HasValue != model.Longitude.HasValue)
+        {
+            ModelState.AddModelError(nameof(model.Latitude), "地點座標必須同時填寫緯度與經度；也可以兩者都留白。");
+        }
+
         // 不相信表單傳來的 UserId
         model.UserId = user.Id;
 
@@ -335,6 +340,8 @@ public class ProfileController : Controller
                 PostalCode = model.PostalCode?.Trim(),
                 City = model.City?.Trim(),
                 District = model.District?.Trim(),
+                Latitude = model.Latitude,
+                Longitude = model.Longitude,
                 AddressLine = model.AddressLine.Trim(),
                 IsDefault = model.IsDefault,
 
@@ -389,6 +396,8 @@ public class ProfileController : Controller
             PostalCode = address.PostalCode,
             City = address.City,
             District = address.District,
+            Latitude = address.Latitude,
+            Longitude = address.Longitude,
             AddressLine = address.AddressLine,
             IsDefault = address.IsDefault,
             RowVersion = address.RowVersion
@@ -407,6 +416,11 @@ public class ProfileController : Controller
         if (user == null)
         {
             return Challenge();
+        }
+
+        if (model.Latitude.HasValue != model.Longitude.HasValue)
+        {
+            ModelState.AddModelError(nameof(model.Latitude), "地點座標必須同時填寫緯度與經度；也可以兩者都留白。");
         }
 
         if (id != model.Id)
@@ -472,6 +486,8 @@ public class ProfileController : Controller
             address.PostalCode = model.PostalCode?.Trim();
             address.City = model.City?.Trim();
             address.District = model.District?.Trim();
+            address.Latitude = model.Latitude;
+            address.Longitude = model.Longitude;
             address.AddressLine = model.AddressLine.Trim();
             address.IsDefault = model.IsDefault;
             address.UpdatedAt = DateTime.UtcNow;

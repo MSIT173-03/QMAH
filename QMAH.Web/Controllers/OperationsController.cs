@@ -20,6 +20,8 @@ public sealed class OperationsController(
 {
     private static readonly HashSet<string> MediaStatuses = ["ACTIVE", "HIDDEN", "DELETED"];
 
+    // 總覽先只取必要欄位，再由程式補齊沒有資料的日期
+    // 這樣圖表會連續，也不需要另外建立日期表
     [HttpGet]
     public async Task<IActionResult> Index(
         OperationsFilterViewModel filter,
@@ -27,6 +29,7 @@ public sealed class OperationsController(
     {
         var (from, toInclusive, toExclusive) = NormalizeDateRange(filter);
 
+        // 只取圖表需要的欄位，分組與補零放在 C#，避免資料庫對複合 GroupBy 的翻譯差異
         var orderRows = await db.StoreOrders
             .AsNoTracking()
             .Where(order => order.CreatedAt >= from && order.CreatedAt < toExclusive)
@@ -201,6 +204,7 @@ public sealed class OperationsController(
             .GroupBy(media => MonthStart(media.CreatedAt))
             .ToDictionary(group => group.Key, group => group.Count());
         var monthlyTrend = new List<OperationsMonthSummary>();
+        // 月份也補齊沒有資料的區間，長期圖表才不會斷軸
         for (var month = firstMonth; month <= lastMonth; month = month.AddMonths(1))
         {
             paidOrdersByMonth.TryGetValue(month, out var monthlyOrders);
@@ -260,6 +264,7 @@ public sealed class OperationsController(
         return View(model);
     }
 
+    // 明細頁沿用總覽的日期規則，並提供完整序列與資料點
     [HttpGet]
     public async Task<IActionResult> Details(
         string? metric,
@@ -279,6 +284,7 @@ public sealed class OperationsController(
         return View(model);
     }
 
+    // 匯出沿用明細頁的查詢結果，避免畫面與檔案的統計口徑不同
     [HttpGet]
     public async Task<IActionResult> Export(
         string? metric,
@@ -294,6 +300,7 @@ public sealed class OperationsController(
             cancellationToken);
 
         var csv = new StringBuilder();
+        // UTF-8 BOM 讓 Excel 開啟繁中 CSV 時能正確辨識編碼
         csv.Append('\uFEFF');
         csv.Append(EscapeCsv("日期"));
         foreach (var series in model.Series)
@@ -323,6 +330,7 @@ public sealed class OperationsController(
             fileName);
     }
 
+    // 先在資料庫篩選與分頁，再只補查當頁的操作者名稱
     [HttpGet]
     public async Task<IActionResult> AuditLogs(
         AuditLogFilterViewModel filter,
@@ -331,7 +339,7 @@ public sealed class OperationsController(
         filter.Keyword = string.IsNullOrWhiteSpace(filter.Keyword) ? null : filter.Keyword.Trim();
         filter.AreaCode = NormalizeAuditArea(filter.AreaCode);
         filter.StatusCode = filter.StatusCode is >= 100 and <= 599 ? filter.StatusCode : null;
-        filter.PageSize = Math.Clamp(filter.PageSize, 10, 100);
+        filter.PageSize = filter.PageSize is 10 or 20 or 50 or 100 ? filter.PageSize : 20;
         filter.Page = Math.Max(1, filter.Page);
 
         var query = db.AuditLogs.AsNoTracking();
@@ -403,6 +411,7 @@ public sealed class OperationsController(
         return View(filter);
     }
 
+    // 媒體清單只查畫面需要的欄位，關聯顯示名稱而不是儲存路徑
     [HttpGet]
     public async Task<IActionResult> Media(
         MediaAdminFilterViewModel filter,
@@ -446,7 +455,35 @@ public sealed class OperationsController(
                     .Select(profile => profile.Nickname)
                     .FirstOrDefault() ?? "未設定暱稱",
                 PostId = asset.PostId,
+                PostTitle = db.SocialPosts
+                    .Where(post => post.Id == asset.PostId)
+                    .Select(post => post.Title)
+                    .FirstOrDefault(),
+                PostAuthorName = db.SocialPosts
+                    .Where(post => post.Id == asset.PostId)
+                    .Join(
+                        db.UserProfiles,
+                        post => post.UserId,
+                        profile => profile.UserId,
+                        (_, profile) => profile.Nickname)
+                    .FirstOrDefault(),
+                AvatarOwnerName = db.UserProfiles
+                    .Where(profile => profile.AvatarPath == asset.StoredPath)
+                    .Select(profile => profile.Nickname)
+                    .FirstOrDefault(),
                 CreatedAt = asset.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        filter.AvatarItems = await db.UserProfiles
+            .AsNoTracking()
+            .Where(profile => profile.AvatarPath != null && profile.AvatarPath != "")
+            .OrderBy(profile => profile.Nickname)
+            .Select(profile => new AvatarAdminItemViewModel
+            {
+                UserId = profile.UserId,
+                OwnerName = profile.Nickname,
+                AvatarPath = profile.AvatarPath!
             })
             .ToListAsync(cancellationToken);
 
@@ -527,6 +564,7 @@ public sealed class OperationsController(
         return RedirectToAction(nameof(Media));
     }
 
+    // 明細依指標只查需要的時間欄位，日期軸由程式補齊，沒有事件的日子顯示 0
     private async Task<OperationsMetricDetailsViewModel> BuildMetricDetailsAsync(
         string? metric,
         DateTime from,
@@ -540,10 +578,12 @@ public sealed class OperationsController(
         var dates = Enumerable.Range(0, (toInclusive - from).Days + 1)
             .Select(offset => from.AddDays(offset))
             .ToArray();
+        // 先建立完整日期軸，查不到的日期保留 0，不讓折線圖把空白誤解成缺資料
         var valuesByDate = dates.ToDictionary(date => date, _ => new decimal[series.Count]);
 
         void AddValue(DateTime timestamp, int seriesIndex, decimal value)
         {
+            // 查詢結果只會累加到目前日期範圍，範圍外資料直接忽略
             if (valuesByDate.TryGetValue(timestamp.Date, out var values))
                 values[seriesIndex] += value;
         }
@@ -748,6 +788,7 @@ public sealed class OperationsController(
         };
     }
 
+    // 總覽只放兩張摘要圖，完整序列與匯出入口留在明細頁
     private static IReadOnlyList<OperationsChartViewModel> BuildDashboardCharts(
         IReadOnlyList<OperationsMonthSummary> months)
     {
@@ -826,6 +867,7 @@ public sealed class OperationsController(
         _ => ("營收", "依付款完成時間統計；下方保留每日明細，方便對照訂單紀錄。")
     };
 
+    // 指標代碼只接受已知值，其他輸入回到營收，避免網址參數造成不一致
     private static string NormalizeMetric(string? metric) => metric?.Trim().ToLowerInvariant() switch
     {
         "members" => "members",
@@ -854,6 +896,7 @@ public sealed class OperationsController(
             ? $"\"{value.Replace("\"", "\"\"")}\""
             : value;
 
+    // 媒體檔案只能落在設定的根目錄，先解析完整路徑再防止路徑穿越
     private string ResolveMediaPath(string relativePath)
     {
         var configuredRoot = configuration["Media:RootPath"] ?? "wwwroot/media";
@@ -869,6 +912,7 @@ public sealed class OperationsController(
         return fullPath;
     }
 
+    // 狀態代碼先轉成人看得懂的文字再計數，UI 不需要知道資料庫內部值
     private static IReadOnlyList<OperationsBreakdown> BuildBreakdown(
         IEnumerable<string?> values,
         Func<string?, string> formatter)
@@ -896,6 +940,7 @@ public sealed class OperationsController(
 
     private static DateTime MonthStart(DateTime value) => new(value.Year, value.Month, 1);
 
+    // 所有營運查詢共用半開區間 [from, toExclusive)，避免漏算最後一天
     private static (DateTime From, DateTime ToInclusive, DateTime ToExclusive) NormalizeDateRange(
         OperationsFilterViewModel filter)
     {
