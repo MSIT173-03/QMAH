@@ -2,8 +2,68 @@
  * 登入與身分驗證頁專用樣式：分開處理展示區、登入表單、主題切換與小螢幕排列。
  * 管理後台內頁不會使用這些選擇器；要改內頁控制項請使用共用 Admin CSS。
  */
+/* 登入頁只載入精簡字型，避免把整套後台中文字型帶進首屏 */
+@font-face {
+  font-family: "QMAH Auth UI";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url("https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yw.woff2") format("woff2"),
+    url("/fonts/qmah-plus-jakarta-regular.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "QMAH Auth UI";
+  font-style: normal;
+  font-weight: 700 800;
+  font-display: swap;
+  src:
+    url("https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yw.woff2") format("woff2"),
+    url("/fonts/qmah-plus-jakarta-bold.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "QMAH Auth CJK";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/qmah-auth-noto-sans-tc-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "QMAH Auth CJK";
+  font-style: normal;
+  font-weight: 700 800;
+  font-display: swap;
+  src: url("/fonts/qmah-auth-noto-sans-tc-bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "QMAH Auth Display";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    url("https://fonts.gstatic.com/s/sourceserif4/v14/vEFy2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6OAVIJmeUDygwjivBtnhtdDg.woff2") format("woff2"),
+    url("/fonts/qmah-source-serif-4-bold.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "QMAH Auth Display CJK";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/qmah-auth-noto-serif-tc-bold.woff2") format("woff2");
+}
+
 .qmah-auth-body {
-  --qmah-auth-scene-bg: #e8efeb;
+  --qmah-font-ui: "QMAH Auth UI", "QMAH Auth CJK", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  --qmah-font-display: "QMAH Auth Display", "QMAH Auth Display CJK", "QMAH Auth CJK", "Microsoft JhengHei", serif;
+  --qmah-auth-scene-bg: #d8e3dc;
   --qmah-auth-access-bg: #f7f9f7;
   --qmah-auth-access-surface: #ffffff;
   --qmah-auth-ink: #14262a;
@@ -25,6 +85,39 @@
 .qmah-auth-body,
 .qmah-auth-body :where(button, input, select, textarea) {
   font-family: var(--qmah-font-ui);
+}
+
+.qmah-auth-body *,
+.qmah-auth-body *::before,
+.qmah-auth-body *::after {
+  box-sizing: border-box;
+}
+
+.qmah-auth-body :where(button, input, select, textarea) {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.qmah-auth-body button {
+  cursor: pointer;
+}
+
+.qmah-auth-body img,
+.qmah-auth-body svg {
+  vertical-align: middle;
+}
+
+.qmah-auth-body .visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 
 html[data-bs-theme="dark"] .qmah-auth-body {
@@ -63,11 +156,9 @@ html[data-bs-theme="dark"] .qmah-auth-body {
   contain: layout paint;
   background-color: var(--qmah-auth-scene-bg);
   background-image:
-    repeating-linear-gradient(0deg,
-      rgba(255, 255, 255, 0.012) 0,
-      rgba(255, 255, 255, 0.012) 1px,
-      rgba(22, 44, 45, 0.008) 1px,
-      rgba(22, 44, 45, 0.008) 2px);
+    radial-gradient(42rem 32rem at 18% 12%, rgba(255, 250, 232, 0.46), transparent 64%),
+    radial-gradient(44rem 36rem at 92% 86%, rgba(60, 106, 95, 0.20), transparent 72%),
+    linear-gradient(125deg, #d3e0d8 0%, #e7e8df 50%, #cbdcd3 100%);
   box-shadow: inset -1px 0 var(--qmah-auth-border-soft);
 }
 
@@ -83,10 +174,9 @@ html[data-bs-theme="dark"] .qmah-auth-body {
 /* 淺色展場光。 */
 .qmah-auth-scene::before {
   background:
-    radial-gradient(58rem 42rem at 18% 14%, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.54) 24%, rgba(255, 255, 255, 0) 64%),
-    radial-gradient(48rem 34rem at 78% 74%, rgba(153, 181, 169, 0.24) 0%, rgba(153, 181, 169, 0) 66%),
-    linear-gradient(118deg, rgba(255, 255, 255, 0.18) 0 23%, transparent 23% 72%, rgba(111, 148, 140, 0.055) 72% 100%);
-  opacity: 1;
+    radial-gradient(44rem 34rem at 16% 8%, rgba(255, 252, 240, 0.62) 0%, rgba(255, 252, 240, 0.18) 36%, transparent 74%),
+    linear-gradient(118deg, rgba(255, 255, 255, 0.10) 0 22%, transparent 22% 74%, rgba(119, 83, 52, 0.05) 74% 100%);
+  opacity: 0.92;
 }
 
 /* 深色展櫃光，以 opacity 與淺色層交叉淡入，切換時不碰 ribbon transform。 */
@@ -157,7 +247,6 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
   width: max-content;
   min-width: 100%;
   align-items: center;
-  will-change: transform;
 }
 
 /* 手機捲到表單時暫停展牆動畫，避免背景持續佔用主執行緒 */
@@ -166,11 +255,22 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
 }
 
 .qmah-auth-ribbon--left .qmah-auth-ribbon-track {
-  animation: qmah-auth-ribbon-left var(--qmah-ribbon-duration, 165s) linear infinite;
+  transform: translate3d(0, 0, 0);
 }
 
 .qmah-auth-ribbon--right .qmah-auth-ribbon-track {
   transform: translate3d(-50%, 0, 0);
+}
+
+.qmah-auth-page--motion-ready .qmah-auth-ribbon-track {
+  will-change: transform;
+}
+
+.qmah-auth-page--motion-ready .qmah-auth-ribbon--left .qmah-auth-ribbon-track {
+  animation: qmah-auth-ribbon-left var(--qmah-ribbon-duration, 165s) linear infinite;
+}
+
+.qmah-auth-page--motion-ready .qmah-auth-ribbon--right .qmah-auth-ribbon-track {
   animation: qmah-auth-ribbon-right var(--qmah-ribbon-duration, 165s) linear infinite;
 }
 
@@ -193,6 +293,14 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
   transform-origin: center;
 }
 
+/* 圖片尚未解碼時保留淡色展籤底，完成後只做一次輕微淡入 */
+.qmah-auth-artifact {
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(219, 231, 224, 0.46)),
+    var(--qmah-auth-scene-bg);
+}
+
 .qmah-auth-artifact--space-wide {
   margin-right: clamp(1rem, 1.6vw, 1.9rem);
 }
@@ -210,9 +318,19 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
   border: 1px solid rgba(255, 255, 255, 0.34);
   border-radius: 2px;
   background: transparent;
+  opacity: 0.86;
   box-shadow:
     0 1px 1px rgba(20, 38, 43, 0.04),
     0 14px 30px rgba(20, 38, 43, 0.105);
+  transition: opacity 260ms ease;
+}
+
+.qmah-auth-artifact--loaded img {
+  opacity: 1;
+}
+
+.qmah-auth-artifact--failed img {
+  visibility: hidden;
 }
 
 .qmah-auth-artifact--small {
@@ -415,6 +533,44 @@ html[data-bs-theme="dark"] .qmah-auth-logo--dark {
   gap: 1rem;
 }
 
+.qmah-auth-body .form-check {
+  display: flex;
+  min-height: 1.5rem;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.qmah-auth-body .form-check-input {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  margin: 0;
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--qmah-auth-ink) 46%, transparent);
+  border-radius: 0.3rem;
+  background-color: transparent;
+  vertical-align: middle;
+}
+
+.qmah-auth-body .form-check-input:checked {
+  border-color: var(--qmah-auth-primary);
+  background-color: var(--qmah-auth-primary);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m3 8 3 3 7-7'/%3e%3c/svg%3e");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 0.8rem 0.8rem;
+}
+
+.qmah-auth-body .form-check-input:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--qmah-auth-primary) 22%, transparent);
+  outline-offset: 2px;
+}
+
+.qmah-auth-body .form-check-label {
+  min-width: 0;
+  line-height: 1.35;
+}
+
 .qmah-auth-form-fields {
   display: grid;
   gap: 0.95rem;
@@ -602,6 +758,7 @@ html[data-bs-theme="dark"] .qmah-auth-form .form-control:focus {
 .qmah-auth-field .text-danger {
   display: block;
   margin-top: 0.38rem;
+  color: var(--qmah-danger);
   font-size: 0.75rem;
 }
 
@@ -723,8 +880,13 @@ html[data-bs-theme="dark"] .qmah-auth-remember .form-check-input {
 
 .qmah-auth-validation {
   margin: 0;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--qmah-danger) 26%, transparent);
   border-radius: 0.62rem;
+  background-color: color-mix(in srgb, var(--qmah-danger) 8%, var(--qmah-auth-access-surface));
+  color: var(--qmah-danger);
   font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 .qmah-auth-validation:empty {

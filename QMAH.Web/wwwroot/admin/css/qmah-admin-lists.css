@@ -540,7 +540,6 @@
 .qmah-sortable-header {
   position: relative;
   cursor: pointer;
-  user-select: none;
   transition:
     background-color .18s ease,
     color .18s ease,

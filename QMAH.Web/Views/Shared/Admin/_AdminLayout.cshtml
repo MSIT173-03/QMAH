@@ -15,7 +15,7 @@
     };
 }
 <!doctype html>
-<html lang="zh-Hant" data-bs-theme="light" class="qmah-preload">
+<html lang="zh-Hant" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -56,13 +56,6 @@
     <link rel="stylesheet" href="~/admin/css/qmah-admin-footer.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-typography.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
-    <style>
-        /* 等共用與頁面樣式完成後才顯示，避免切頁時短暫露出未套版內容 */
-        html.qmah-preload body { visibility: hidden; }
-        html.qmah-preload { background: #f3f6f4; }
-    </style>
-    <noscript><style>html.qmah-preload body { visibility: visible; }</style></noscript>
-    <script>document.documentElement.classList.remove("qmah-preload");</script>
 </head>
 <body class="qmah-admin qmah-area-@areaKey" data-qmah-area="@areaKey">
     <div class="qmah-theme-wash" data-qmah-theme-wash aria-hidden="true"></div>

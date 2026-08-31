@@ -5,7 +5,7 @@
     ViewData["Title"] = "管理員登入";
 
     var rawArtifactImages = ViewData["LoginArtifactImages"] as string[] ?? Array.Empty<string>();
-    var artifactImages = rawArtifactImages
+    var artifactPool = rawArtifactImages
         .Where(path => !string.IsNullOrWhiteSpace(path))
         .Select(path =>
         {
@@ -16,6 +16,10 @@
         })
         .Where(path => !string.IsNullOrWhiteSpace(path))
         .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    var artifactImages = artifactPool
+        .Take(24)
         .ToArray();
 
     var ribbonCount = artifactImages.Length switch
@@ -34,7 +38,7 @@
     <section class="qmah-auth-scene" aria-label="清明鑑定屋文物典藏牆">
         @if (artifactImages.Length > 0)
         {
-            <div class="qmah-auth-editorial-wall" aria-hidden="true">
+            <div class="qmah-auth-editorial-wall" aria-hidden="true" data-qmah-artifact-pool="@System.Text.Json.JsonSerializer.Serialize(artifactPool)">
                 @for (var ribbonIndex = 0; ribbonIndex < ribbonRows.Length; ribbonIndex++)
                 {
                     var ribbonItems = ribbonRows[ribbonIndex];
@@ -45,9 +49,9 @@
 
                     var direction = ribbonIndex % 2 == 0 ? "left" : "right";
                     var durationSeconds = Math.Clamp(
-                        (int)Math.Round(ribbonItems.Length * 9.2 + 82 + ribbonIndex * 8),
-                        138,
-                        265);
+                        (int)Math.Round(ribbonItems.Length * 1.6 + 14 + ribbonIndex * 2),
+                        23,
+                        38);
                     var tilt = ribbonIndex switch
                     {
                         0 => "-0.62deg",
@@ -98,10 +102,11 @@
 
                                         <figure class="qmah-auth-artifact qmah-auth-artifact--@sizeClass qmah-auth-artifact--@tiltClass qmah-auth-artifact--@raiseClass qmah-auth-artifact--@spacingClass">
                                             <img src="@imagePath"
+                                                 data-qmah-artifact-image
                                                  alt=""
                                                  decoding="async"
-                                                 loading="@(repeat == 0 && ribbonIndex == 0 && itemIndex == 0 ? "eager" : "lazy")"
-                                                 fetchpriority="@(repeat == 0 && ribbonIndex == 0 && itemIndex == 0 ? "high" : "low")" />
+                                                 loading="eager"
+                                                 fetchpriority="low" />
                                         </figure>
                                     }
                                 </div>
@@ -204,6 +209,52 @@
             const submit = document.querySelector("[data-qmah-auth-submit]");
             const submitLabel = submit?.querySelector("[data-qmah-submit-label]");
             const scene = document.querySelector(".qmah-auth-scene");
+            const page = document.querySelector(".qmah-auth-page");
+            const wall = document.querySelector(".qmah-auth-editorial-wall");
+
+            // 只在畫面外預載下一張，確認仍在畫面外後才替換，避免圖片牆在眼前斷裂
+            if (wall) {
+                const artifactPool = JSON.parse(wall.dataset.qmahArtifactPool || "[]");
+                const images = [...wall.querySelectorAll("[data-qmah-artifact-image]")];
+                let nextArtifactIndex = 24;
+
+                const showNextArtifact = () => {
+                    if (document.hidden || artifactPool.length <= images.length) return;
+
+                    const sceneBounds = scene?.getBoundingClientRect();
+                    if (!sceneBounds) return;
+
+                    const target = images.find((image) => {
+                        const bounds = image.getBoundingClientRect();
+                        return bounds.right < sceneBounds.left || bounds.left > sceneBounds.right;
+                    });
+                    if (!target) return;
+
+                    const imagePath = artifactPool[nextArtifactIndex % artifactPool.length];
+                    nextArtifactIndex += 1;
+                    const preload = new Image();
+                    preload.decoding = "async";
+                    preload.onload = () => {
+                        const bounds = target.getBoundingClientRect();
+                        if (bounds.right < sceneBounds.left || bounds.left > sceneBounds.right) {
+                            target.src = imagePath;
+                        }
+                    };
+                    preload.src = imagePath;
+                };
+
+                window.setInterval(showNextArtifact, 700);
+            }
+
+            // 先完成登入表單，再讓照片牆進入動畫合成
+            if (page && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                const enableMotion = () => page.classList.add("qmah-auth-page--motion-ready");
+                if ("requestIdleCallback" in window) {
+                    window.requestIdleCallback(enableMotion, { timeout: 900 });
+                } else {
+                    window.setTimeout(enableMotion, 240);
+                }
+            }
 
             if (scene && "IntersectionObserver" in window) {
                 const sceneObserver = new IntersectionObserver(([entry]) => {

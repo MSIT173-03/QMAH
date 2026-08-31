@@ -226,6 +226,10 @@ public sealed class MediaAdminFilterViewModel
 
     public string? Status { get; set; }
 
+    public string? Source { get; set; }
+
+    public string Sort { get; set; } = "NEWEST";
+
     [Range(1, int.MaxValue)]
     public int Page { get; set; } = 1;
 
@@ -235,6 +239,20 @@ public sealed class MediaAdminFilterViewModel
     public int TotalCount { get; set; }
 
     public int TotalPages { get; set; }
+
+    public string? AvatarKeyword { get; set; }
+
+    public string AvatarSort { get; set; } = "NAME";
+
+    [Range(1, int.MaxValue)]
+    public int AvatarPage { get; set; } = 1;
+
+    [Range(10, 100)]
+    public int AvatarPageSize { get; set; } = 20;
+
+    public int AvatarTotalCount { get; set; }
+
+    public int AvatarTotalPages { get; set; }
 
     public IReadOnlyList<MediaAdminItemViewModel> Items { get; set; } = [];
 
@@ -262,6 +280,10 @@ public sealed class MediaAdminItemViewModel
     public Guid? PostId { get; init; }
 
     public string? PostTitle { get; init; }
+
+    public Guid? EventId { get; init; }
+
+    public string? EventTitle { get; init; }
 
     public string? PostAuthorName { get; init; }
 

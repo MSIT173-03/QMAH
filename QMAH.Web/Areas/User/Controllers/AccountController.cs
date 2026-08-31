@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -18,15 +19,18 @@ public class AccountController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly QmahDbContext _context;
+    private readonly IWebHostEnvironment _environment;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        QmahDbContext context)
+        QmahDbContext context,
+        IWebHostEnvironment environment)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
+        _environment = environment;
     }
 
     [HttpGet("/Account/Login")]
@@ -35,7 +39,7 @@ public class AccountController : Controller
         CancellationToken cancellationToken = default)
     {
         ViewBag.ReturnUrl = returnUrl;
-        await LoadLoginArtifactImagesAsync(cancellationToken);
+        LoadLoginArtifactImages(cancellationToken);
 
         return View();
     }
@@ -51,7 +55,7 @@ public class AccountController : Controller
 
         if (!ModelState.IsValid)
         {
-            await LoadLoginArtifactImagesAsync(cancellationToken);
+            LoadLoginArtifactImages(cancellationToken);
             return View(model);
         }
 
@@ -63,7 +67,7 @@ public class AccountController : Controller
                 string.Empty,
                 "Email 或密碼錯誤");
 
-            await LoadLoginArtifactImagesAsync(cancellationToken);
+            LoadLoginArtifactImages(cancellationToken);
             return View(model);
         }
 
@@ -73,7 +77,7 @@ public class AccountController : Controller
                 string.Empty,
                 "此帳號目前已停權");
 
-            await LoadLoginArtifactImagesAsync(cancellationToken);
+            LoadLoginArtifactImages(cancellationToken);
             return View(model);
         }
 
@@ -89,7 +93,7 @@ public class AccountController : Controller
                 string.Empty,
                 "Email 或密碼錯誤");
 
-            await LoadLoginArtifactImagesAsync(cancellationToken);
+            LoadLoginArtifactImages(cancellationToken);
             return View(model);
         }
 
@@ -241,37 +245,39 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login));
     }
 
-    private async Task LoadLoginArtifactImagesAsync(CancellationToken cancellationToken)
+    private void LoadLoginArtifactImages(CancellationToken cancellationToken)
     {
-        // 先取少量固定候選路徑，再在記憶體打散，避免登入頁查詢與圖片載入過重
+        // 登入頁的裝飾圖片不應等待資料庫連線，直接從已匯入的靜態縮圖挑選
         try
         {
-            var images = await _context.ArtifactQuestionEntries
-                .AsNoTracking()
-                .Where(entry => entry.IsEnabled && entry.Artifact.IsActive)
-                .Select(entry => entry.Artifact.ThumbnailPath ?? entry.Artifact.PrimaryImagePath)
-                .Where(path => path != null && path != string.Empty)
-                .Distinct()
-                .OrderBy(path => path)
-                .Take(24)
-                .ToListAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
 
-            var imageArray = images
-                .Where(path => !string.IsNullOrWhiteSpace(path))
-                .Select(path => path!)
+            var webRoot = _environment.WebRootPath;
+            var catalogRoot = Path.Combine(webRoot, "media", "catalog");
+            var images = Directory
+                .EnumerateFiles(catalogRoot, "thumbnail.jpg", SearchOption.AllDirectories)
+                .OrderBy(_ => Random.Shared.Next())
+                .Take(24)
+                .Select(file => "/" + Path.GetRelativePath(webRoot, file)
+                    .Replace(Path.DirectorySeparatorChar, '/')
+                    .Replace(Path.AltDirectorySeparatorChar, '/'))
                 .ToArray();
 
-            for (var i = imageArray.Length - 1; i > 0; i--)
-            {
-                var j = Random.Shared.Next(i + 1);
-                (imageArray[i], imageArray[j]) = (imageArray[j], imageArray[i]);
-            }
-
-            ViewData["LoginArtifactImages"] = imageArray;
+            ViewData["LoginArtifactImages"] = images;
         }
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
+            ViewData["LoginArtifactImages"] = Array.Empty<string>();
+        }
+        catch (IOException)
+        {
+            // 裝飾圖片讀取失敗時仍要讓登入表單正常出現
+            ViewData["LoginArtifactImages"] = Array.Empty<string>();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // 裝飾圖片沒有權限時仍要讓登入表單正常出現
             ViewData["LoginArtifactImages"] = Array.Empty<string>();
         }
     }
