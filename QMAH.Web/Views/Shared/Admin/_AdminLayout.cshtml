@@ -15,13 +15,20 @@
     };
 }
 <!doctype html>
-<html lang="zh-Hant" data-bs-theme="light">
+<html lang="zh-Hant" data-bs-theme="light" class="qmah-styles-pending">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f3f6f4" data-qmah-theme-color />
     <title>@ViewData["Title"]｜清明鑑定屋後台</title>
-    <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="~/images/brand/qmah-favicon.svg" type="image/svg+xml" asp-append-version="true" />
+    <style>
+        /* 樣式尚未完成時先保留背景，避免短暫顯示未套版的後台內容 */
+        html.qmah-styles-pending { background: #f3f6f4; }
+        html[data-bs-theme="dark"].qmah-styles-pending { background: #151c1f; }
+        html.qmah-styles-pending body { visibility: hidden; }
+    </style>
+    <noscript><style>html.qmah-styles-pending body { visibility: visible; }</style></noscript>
     <link rel="stylesheet" href="~/admin/css/qmah-fonts.css" asp-append-version="true" />
 
     <script>
@@ -41,7 +48,7 @@
         })();
     </script>
 
-    <link rel="stylesheet" href="~/admin/vendor/tabler/tabler.min.css" />
+    <link rel="stylesheet" href="~/admin/vendor/tabler/tabler.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/vendor/tabler-icons/tabler-icons.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-core.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-tabler.css" asp-append-version="true" />
@@ -139,8 +146,9 @@
         <i class="ti ti-arrow-up" aria-hidden="true"></i>
     </button>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/admin/vendor/tabler/tabler.min.js"></script>
+    <script>document.documentElement.classList.remove("qmah-styles-pending");</script>
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/admin/vendor/tabler/tabler.min.js" asp-append-version="true"></script>
     <script src="~/admin/js/qmah-admin.js" asp-append-version="true"></script>
     <script src="~/admin/js/qmah-interactions.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
