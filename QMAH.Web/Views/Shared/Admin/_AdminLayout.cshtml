@@ -34,7 +34,14 @@
     <script>
         (() => {
             const root = document.documentElement;
-            const savedTheme = localStorage.getItem("qmah-admin-theme");
+            let savedTheme = null;
+            let savedSidebar = null;
+            try {
+                savedTheme = localStorage.getItem("qmah-admin-theme");
+                savedSidebar = localStorage.getItem("qmah-admin-sidebar");
+            } catch {
+                // 儲存空間被瀏覽器封鎖時仍使用系統偏好，不阻止頁面載入。
+            }
             const theme = savedTheme === "dark" || savedTheme === "light"
                 ? savedTheme
                 : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -42,7 +49,7 @@
             root.dataset.bsTheme = theme;
             root.style.colorScheme = theme;
 
-            if (localStorage.getItem("qmah-admin-sidebar") === "collapsed") {
+            if (savedSidebar === "collapsed") {
                 root.dataset.qmahSidebar = "collapsed";
             }
         })();
@@ -62,10 +69,10 @@
     <link rel="stylesheet" href="~/admin/css/qmah-admin-navigation.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-footer.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-typography.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-image-preview.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="qmah-admin qmah-area-@areaKey" data-qmah-area="@areaKey">
-    <div class="qmah-theme-wash" data-qmah-theme-wash aria-hidden="true"></div>
     <a class="qmah-skip-link" href="#admin-main">跳至主要內容</a>
     <div class="page qmah-admin-shell">
         <partial name="Admin/_AdminSidebar" />

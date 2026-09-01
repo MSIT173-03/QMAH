@@ -18,6 +18,7 @@ public sealed class SocialMediaController(
 
     [Authorize]
     [HttpPost]
+    [Consumes("multipart/form-data")]
     [RequestSizeLimit(MaxFileSize + (64 * 1024))]
     [RequestFormLimits(MultipartBodyLengthLimit = MaxFileSize + (64 * 1024))]
     public async Task<ActionResult<SocialMediaDto>> Upload(

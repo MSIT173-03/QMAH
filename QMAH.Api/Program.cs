@@ -8,9 +8,11 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
+using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Security;
@@ -26,6 +28,9 @@ builder.Configuration.AddJsonFile(
     reloadOnChange: true);
 
 // 本機設定檔只存開發環境的連線字串與 CORS 來源，不把個人差異寫進共用設定
+var qmahDatabaseResolution = await QmahDatabaseConnectionResolver.ResolveAsync(
+    builder.Configuration.GetConnectionString("QmahDatabase"),
+    builder.Configuration.GetValue("QmahDatabaseDiscovery:Enabled", true));
 
 var configuredMediaRoot = builder.Configuration["Media:RootPath"]
     ?? Path.Combine("..", "QMAH.Web", "wwwroot", "media");
@@ -33,6 +38,10 @@ var mediaRoot = Path.IsPathRooted(configuredMediaRoot)
     ? Path.GetFullPath(configuredMediaRoot)
     : Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, configuredMediaRoot));
 builder.Services.Configure<MediaStorageOptions>(options => options.RootPath = mediaRoot);
+builder.Services
+    .AddOptions<MediaDeliveryOptions>()
+    .Bind(builder.Configuration.GetSection(MediaDeliveryOptions.SectionName));
+builder.Services.AddSingleton<QmahMediaUrlResolver>();
 
 // 使用 MVC 的 controller services 以提供內建 Anti-forgery filter；API 本身不建立 Razor View。
 builder.Services.AddControllersWithViews(options =>
@@ -69,7 +78,17 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest;
 });
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
+var openApiOptions = builder.Configuration
+    .GetSection("OpenApi")
+    .Get<QmahOpenApiOptions>() ?? new QmahOpenApiOptions();
+builder.Services.AddOpenApi(options =>
+{
+    var transformer = new QmahOpenApiSecurityTransformer(
+        ".QMAH.Api.Auth",
+        openApiOptions);
+    options.AddDocumentTransformer(transformer);
+    options.AddOperationTransformer(transformer);
+});
 
 // CORS 只允許設定檔列出的前端來源，使用 Cookie 時也不能使用萬用字元
 builder.Services.AddCors(options =>
@@ -93,9 +112,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<QmahDbContext>(options =>
 {
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("QmahDatabase")
-        ?? throw new InvalidOperationException(
-            "Connection string 'QmahDatabase' was not found."));
+        qmahDatabaseResolution.ConnectionString,
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 2,
+            maxRetryDelay: TimeSpan.FromSeconds(1),
+            errorNumbersToAdd: null));
 });
 
 // API 與 Web 共用會員資料表，但使用獨立 Cookie 名稱避免雙啟動互相覆蓋登入狀態
@@ -148,12 +169,28 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Events.OnRedirectToLogin = context =>
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return Task.CompletedTask;
+        return context.Response.WriteAsJsonAsync(
+            new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "尚未登入或登入狀態已失效",
+                Detail = "此 API 需要有效的會員登入狀態。"
+            },
+            options: null,
+            contentType: "application/problem+json");
     };
     options.Events.OnRedirectToAccessDenied = context =>
     {
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        return Task.CompletedTask;
+        return context.Response.WriteAsJsonAsync(
+            new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "沒有執行此操作的權限",
+                Detail = "目前登入帳號沒有使用此 API 的權限。"
+            },
+            options: null,
+            contentType: "application/problem+json");
     };
 });
 
@@ -164,6 +201,26 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+
+if (qmahDatabaseResolution.FoundTargets.Count > 1)
+{
+    app.Logger.LogWarning(
+        "本機找到多個 QMAH 資料庫，依優先順序使用 {SelectedTarget}；候選：{FoundTargets}",
+        qmahDatabaseResolution.Target,
+        string.Join(", ", qmahDatabaseResolution.FoundTargets));
+}
+else if (qmahDatabaseResolution.UsedAutomaticDiscovery)
+{
+    app.Logger.LogInformation(
+        "已自動找到 QMAH 資料庫：{SelectedTarget}",
+        qmahDatabaseResolution.Target);
+}
+else
+{
+    app.Logger.LogInformation(
+        "QMAH 資料庫目前目標：{SelectedTarget}",
+        qmahDatabaseResolution.Target);
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -187,10 +244,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || openApiOptions.Enabled)
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    if (app.Environment.IsDevelopment() || openApiOptions.ScalarEnabled)
+        app.MapScalarApiReference();
 }
 
 app.Run();

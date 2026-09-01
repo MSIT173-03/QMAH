@@ -6,13 +6,17 @@
     var preview = Model.Preview;
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/areas/catalog.css" asp-append-version="true" />
+}
+
 @section PageActions {
     <a asp-area="Catalog" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
         <i class="ti ti-arrow-left me-1"></i>返回圖鑑總覽
     </a>
 }
 
-<div class="row row-cards">
+<div class="row row-cards qmah-import-page">
     <div class="col-12 col-xl-7">
         <form asp-action="Preview" method="post" enctype="multipart/form-data" class="card qmah-form-card">
             @Html.AntiForgeryToken()
@@ -120,7 +124,7 @@
 
 @if (preview is not null)
 {
-    <div class="card mt-4 qmah-list-card">
+    <div class="card mt-4 qmah-list-card qmah-import-preview-card">
         <div class="card-header">
             <div>
                 <h2 class="card-title">預檢結果</h2>
@@ -129,7 +133,7 @@
             <span class="badge bg-blue-lt">確認碼 @preview.ApprovalToken</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table qmah-import-summary-table">
                 <tbody>
                     <tr><th>文物候選</th><td>@preview.ArtifactCandidateCount</td><th>新增／更新／不變</th><td>@preview.NewArtifactCount / @preview.UpdatedArtifactCount / @preview.UnchangedArtifactCount</td></tr>
                     <tr><th>題庫入口</th><td>@preview.NewQuestionEntryCount 筆新增</td><th>既有題庫</th><td>@preview.ExistingQuestionEntryCount 筆</td></tr>
@@ -177,26 +181,46 @@
             const result = document.getElementById("npmSourceResult");
             if (!button || !dataset || !result) return;
 
+            let activeRequest = null;
+
             button.addEventListener("click", async () => {
+                if (button.disabled) return;
+
+                activeRequest?.abort();
+                const controller = typeof AbortController === "function"
+                    ? new AbortController()
+                    : null;
+                activeRequest = controller;
+                const timeoutId = window.setTimeout(() => controller?.abort(), 15000);
                 button.disabled = true;
+                dataset.disabled = true;
+                button.setAttribute("aria-busy", "true");
                 result.textContent = "正在讀取故宮官方資料集……";
                 try {
                     const url = new URL(button.dataset.sourcePreviewUrl, window.location.origin);
                     url.searchParams.set("dataset", dataset.value);
-                    const response = await fetch(url, {
+                    const options = {
                         headers: { "Accept": "application/json" },
                         credentials: "same-origin"
-                    });
-                    const body = await response.json();
+                    };
+                    if (controller) options.signal = controller.signal;
+                    const response = await fetch(url, options);
+                    const body = await response.json().catch(() => ({}));
                     if (!response.ok) throw new Error(body.detail || body.title || "來源檢查失敗。");
-                    const names = (body.preview || [])
+                    const names = (Array.isArray(body.preview) ? body.preview : [])
                         .map(item => item.name || item.identifier || "未命名")
                         .join("、");
                     result.textContent = `來源可連線：${body.categoryName} 共 ${body.count} 筆。${names ? ` 範例：${names}` : ""}`;
                 } catch (error) {
-                    result.textContent = error instanceof Error ? error.message : "來源檢查失敗。";
+                    result.textContent = error?.name === "AbortError"
+                        ? "來源檢查逾時或已取消，請確認網路後再試。"
+                        : error instanceof Error ? error.message : "來源檢查失敗。";
                 } finally {
+                    window.clearTimeout(timeoutId);
+                    if (activeRequest === controller) activeRequest = null;
                     button.disabled = false;
+                    dataset.disabled = false;
+                    button.removeAttribute("aria-busy");
                 }
             });
         })();

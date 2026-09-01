@@ -29,6 +29,11 @@ public class QuestionEntryListItemViewModel
 
     public string? ImagePath { get; init; }
 
+    /// <summary>
+    /// 原始大圖路徑；清單與頁面本身只載入 ImagePath，避免大圖拖慢首屏。
+    /// </summary>
+    public string? FullImagePath { get; init; }
+
     public required string CategoryName { get; init; }
 
     public required string EraName { get; init; }

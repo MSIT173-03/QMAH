@@ -4,20 +4,157 @@
     const root = document.documentElement;
     const toggle = document.querySelector("[data-qmah-theme-toggle]");
     const themeColor = document.querySelector("[data-qmah-theme-color]");
-    const themeWash = document.querySelector("[data-qmah-theme-wash]");
     const sidebarToggle = document.querySelector("[data-qmah-sidebar-toggle]");
     const mobileSidebarToggles = [...document.querySelectorAll("[data-qmah-mobile-sidebar-toggle]")];
     const mobileSidebar = document.querySelector("#admin-sidebar-menu");
     const mobileSidebarBackdrop = document.querySelector("[data-qmah-sidebar-backdrop]");
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
     const themeStorageKey = "qmah-admin-theme";
-    let switchingTheme = false;
+    let themeTransitionPromise = null;
+    let pendingThemeRequest = null;
+
+    const imagePreviewModal = document.querySelector("[data-qmah-image-preview-modal]");
+    const imagePreviewTarget = document.querySelector("[data-qmah-image-preview-target]");
+    const imagePreviewViewport = document.querySelector("[data-qmah-image-preview-viewport]");
+    const imagePreviewStatus = document.querySelector("[data-qmah-image-preview-status]");
+    const imagePreviewLevel = document.querySelector("[data-qmah-image-preview-level]");
+    const imagePreviewOpen = document.querySelector("[data-qmah-image-preview-open]");
+    const imagePreviewCaption = document.querySelector("[data-qmah-image-preview-caption]");
+    const imageZoomSteps = [1, 1.5, 2, 3, 4];
+    const minimumImageZoom = imageZoomSteps[0];
+    const maximumImageZoom = imageZoomSteps[imageZoomSteps.length - 1];
+    let imageZoom = 1;
+
+    function readStorage(key) {
+        try {
+            return window.localStorage.getItem(key);
+        } catch {
+            return null;
+        }
+    }
+
+    function writeStorage(key, value) {
+        try {
+            window.localStorage.setItem(key, value);
+        } catch {
+            // 瀏覽器封鎖儲存空間時，偏好只維持到本頁，不應讓後台腳本中止。
+        }
+    }
+
+    function setImageZoom(nextZoom) {
+        if (!imagePreviewTarget) return;
+
+        const safeZoom = Number.isFinite(nextZoom) ? nextZoom : minimumImageZoom;
+        const nearestStep = imageZoomSteps.reduce((closest, step) =>
+            Math.abs(step - safeZoom) < Math.abs(closest - safeZoom) ? step : closest,
+            imageZoomSteps[0]);
+
+        imageZoom = nearestStep;
+        imagePreviewTarget.style.setProperty("--qmah-image-preview-scale", String(imageZoom));
+        imagePreviewTarget.classList.toggle("is-zoomed", imageZoom > 1);
+
+        if (imagePreviewLevel) {
+            imagePreviewLevel.textContent = `${Math.round(imageZoom * 100)}%`;
+        }
+
+        document.querySelector("[data-qmah-image-zoom-out]")?.toggleAttribute("disabled", imageZoom <= minimumImageZoom);
+        document.querySelector("[data-qmah-image-zoom-in]")?.toggleAttribute("disabled", imageZoom >= maximumImageZoom);
+    }
+
+    function updateImagePreview(trigger) {
+        const source = trigger?.dataset.qmahImagePreview?.trim();
+        if (!source || !imagePreviewTarget) return;
+
+        const label = trigger.dataset.qmahImagePreviewAlt
+            || trigger.getAttribute("aria-label")
+            || "圖片大圖";
+
+        imagePreviewTarget.hidden = false;
+        imagePreviewTarget.alt = label;
+        imagePreviewTarget.src = source;
+        imagePreviewTarget.classList.remove("is-zoomed");
+        imagePreviewTarget.style.removeProperty("transform");
+        if (imagePreviewStatus) {
+            imagePreviewStatus.hidden = false;
+            imagePreviewStatus.textContent = "正在載入圖片……";
+        }
+        if (imagePreviewOpen) {
+            imagePreviewOpen.href = source;
+            imagePreviewOpen.hidden = false;
+        }
+        if (imagePreviewCaption) {
+            imagePreviewCaption.textContent = label.replace(/^預覽\s*/u, "");
+        }
+        setImageZoom(1);
+    }
 
     document.addEventListener("click", (event) => {
-        const trigger = event.target.closest("[data-qmah-image-preview]");
-        const target = document.querySelector("[data-qmah-image-preview-target]");
-        if (trigger && target) {
-            target.src = trigger.dataset.qmahImagePreview;
+        const target = event.target instanceof Element ? event.target : null;
+        const trigger = target?.closest("[data-qmah-image-preview]");
+        if (trigger) {
+            updateImagePreview(trigger);
+            if (trigger.matches("a[href]")) {
+                event.preventDefault();
+            }
+            return;
+        }
+
+        if (target?.closest("[data-qmah-image-zoom-in]")) {
+            setImageZoom(imageZoom + 0.5);
+        } else if (target?.closest("[data-qmah-image-zoom-out]")) {
+            setImageZoom(imageZoom - 0.5);
+        } else if (target?.closest("[data-qmah-image-zoom-reset]")) {
+            setImageZoom(1);
+        }
+    });
+
+    imagePreviewTarget?.addEventListener("load", () => {
+        if (imagePreviewStatus) {
+            imagePreviewStatus.hidden = true;
+        }
+        imagePreviewTarget.hidden = false;
+    });
+
+    imagePreviewTarget?.addEventListener("error", () => {
+        imagePreviewTarget.hidden = true;
+        if (imagePreviewStatus) {
+            imagePreviewStatus.hidden = false;
+            imagePreviewStatus.textContent = "圖片無法載入，請確認圖片路徑或重新整理。";
+        }
+    });
+
+    imagePreviewTarget?.addEventListener("click", () => {
+        setImageZoom(imageZoom >= maximumImageZoom ? minimumImageZoom : imageZoom + 0.5);
+    });
+
+    imagePreviewModal?.addEventListener("shown.bs.modal", () => {
+        imagePreviewViewport?.focus({ preventScroll: true });
+    });
+
+    imagePreviewViewport?.addEventListener("keydown", (event) => {
+        if (event.key === "+" || event.key === "=") {
+            event.preventDefault();
+            setImageZoom(imageZoom + 0.5);
+        } else if (event.key === "-") {
+            event.preventDefault();
+            setImageZoom(imageZoom - 0.5);
+        } else if (event.key === "0") {
+            event.preventDefault();
+            setImageZoom(1);
+        }
+    });
+
+    imagePreviewModal?.addEventListener("hidden.bs.modal", () => {
+        setImageZoom(1);
+        imagePreviewTarget?.setAttribute("hidden", "hidden");
+        imagePreviewTarget?.removeAttribute("src");
+        if (imagePreviewStatus) {
+            imagePreviewStatus.hidden = true;
+            imagePreviewStatus.textContent = "";
+        }
+        if (imagePreviewOpen) {
+            imagePreviewOpen.hidden = true;
+            imagePreviewOpen.removeAttribute("href");
         }
     });
 
@@ -33,141 +170,144 @@
         root.style.colorScheme = theme;
 
         if (persist) {
-            localStorage.setItem(themeStorageKey, theme);
+            writeStorage(themeStorageKey, theme);
         }
 
         syncThemeUi();
     }
 
     function getThemeTransitionGeometry() {
+        const visualViewport = window.visualViewport;
+        const viewportWidth = Number.isFinite(visualViewport?.width) && visualViewport.width > 0
+            ? visualViewport.width
+            : (Number.isFinite(window.innerWidth) && window.innerWidth > 0
+                ? window.innerWidth
+                : Math.max(1, document.documentElement.clientWidth || 1));
+        const viewportHeight = Number.isFinite(visualViewport?.height) && visualViewport.height > 0
+            ? visualViewport.height
+            : (Number.isFinite(window.innerHeight) && window.innerHeight > 0
+                ? window.innerHeight
+                : Math.max(1, document.documentElement.clientHeight || 1));
         const rect = toggle?.getBoundingClientRect();
-
-        const x = rect
-            ? rect.left + rect.width / 2
-            : window.innerWidth - 40;
-
-        const y = rect
-            ? rect.top + rect.height / 2
-            : 32;
-
-        const radius = Math.hypot(
-            Math.max(x, window.innerWidth - x),
-            Math.max(y, window.innerHeight - y));
+        const hasUsableRect = rect
+            && Number.isFinite(rect.left)
+            && Number.isFinite(rect.top)
+            && Number.isFinite(rect.width)
+            && Number.isFinite(rect.height)
+            && rect.width > 0
+            && rect.height > 0;
+        const rawX = hasUsableRect ? rect.left + rect.width / 2 : viewportWidth - 40;
+        const rawY = hasUsableRect ? rect.top + rect.height / 2 : 32;
+        const x = Math.min(viewportWidth, Math.max(0, Number.isFinite(rawX) ? rawX : viewportWidth / 2));
+        const y = Math.min(viewportHeight, Math.max(0, Number.isFinite(rawY) ? rawY : viewportHeight / 2));
+        const radius = Math.max(1, Math.hypot(
+            Math.max(x, viewportWidth - x),
+            Math.max(y, viewportHeight - y)));
 
         return { x, y, radius };
     }
 
-    function canUseThemeViewTransition() {
-        if (reduceMotion.matches || !document.startViewTransition) {
-            return false;
-        }
-
-        // Chromium 對長頁或窄螢幕做 root snapshot 較容易增加 renderer / GPU 壓力。
-        // 這些情況直接切換主題，優先確保展示穩定。
-        const isNarrowViewport = window.matchMedia("(max-width: 1199.98px)").matches;
-        const isLongPage = document.documentElement.scrollHeight > window.innerHeight * 4;
-        const lowMemoryDevice = Number.isFinite(navigator.deviceMemory) && navigator.deviceMemory <= 4;
-
-        return !isNarrowViewport && !isLongPage && !lowMemoryDevice;
+    function setThemeTransitionGeometry() {
+        const geometry = getThemeTransitionGeometry();
+        root.style.setProperty("--qmah-theme-x", `${geometry.x}px`);
+        root.style.setProperty("--qmah-theme-y", `${geometry.y}px`);
+        root.style.setProperty("--qmah-theme-radius", `${geometry.radius}px`);
     }
 
-    async function switchTheme(theme, persist = true) {
-        if (switchingTheme) {
-            return;
+    function cleanupThemeTransition(transitionClass, previousToggleTransitionName) {
+        root.classList.remove(transitionClass);
+        root.style.removeProperty("--qmah-theme-x");
+        root.style.removeProperty("--qmah-theme-y");
+        root.style.removeProperty("--qmah-theme-radius");
+
+        if (!toggle) return;
+        if (previousToggleTransitionName) {
+            toggle.style.setProperty("view-transition-name", previousToggleTransitionName);
+        } else {
+            toggle.style.removeProperty("view-transition-name");
+        }
+    }
+
+    function runThemeTransition(theme, persist) {
+        if (reduceMotion.matches || typeof document.startViewTransition !== "function") {
+            applyTheme(theme, persist);
+            return Promise.resolve();
         }
 
-        switchingTheme = true;
+        const transitionClass = `qmah-theme-transition--${theme}`;
+        const previousToggleTransitionName = toggle?.style.getPropertyValue("view-transition-name") || "";
+        setThemeTransitionGeometry();
+        root.classList.add(transitionClass);
+        toggle?.style.setProperty("view-transition-name", "qmah-theme-toggle");
+
+        let transition;
+        try {
+            transition = document.startViewTransition(() => applyTheme(theme, persist));
+        } catch {
+            cleanupThemeTransition(transitionClass, previousToggleTransitionName);
+            applyTheme(theme, persist);
+            return Promise.resolve();
+        }
+
+        return Promise.resolve(transition?.finished)
+            .catch(() => {
+                // View Transition 是增強效果；即使動畫建立失敗，也要保留已完成的主題切換。
+            })
+            .then(() => {
+                if (root.dataset.bsTheme !== theme) {
+                    applyTheme(theme, persist);
+                }
+            })
+            .finally(() => cleanupThemeTransition(transitionClass, previousToggleTransitionName));
+    }
+
+    function switchTheme(theme, persist = true) {
+        if (theme !== "dark" && theme !== "light") {
+            return Promise.resolve();
+        }
+
+        pendingThemeRequest = { theme, persist };
+        if (themeTransitionPromise) {
+            return themeTransitionPromise;
+        }
 
         if (toggle) {
-            toggle.disabled = true;
+            toggle.setAttribute("aria-busy", "true");
         }
 
-        try {
-            const washAnimation = themeWash && !reduceMotion.matches
-                ? playThemeWash()
-                : null;
+        let lastThemeRequest = null;
+        themeTransitionPromise = (async () => {
+            while (pendingThemeRequest) {
+                const request = pendingThemeRequest;
+                pendingThemeRequest = null;
+                lastThemeRequest = request;
 
-            if (!canUseThemeViewTransition()) {
-                applyTheme(theme, persist);
-                await washAnimation;
-                return;
+                if (request.theme === root.dataset.bsTheme) {
+                    continue;
+                }
+
+                // 使用原生 View Transition 的單一快照；快速連點只保留最後意圖，
+                // 不會並發建立多個 transition，也不會把按鈕鎖住。
+                await runThemeTransition(request.theme, request.persist);
             }
-
-            const isDark = theme === "dark";
-            const { x, y, radius } = getThemeTransitionGeometry();
-
-            root.dataset.qmahThemeTransition =
-                isDark ? "to-dark" : "to-light";
-
-            root.classList.add("qmah-theme-switching");
-
-            const transition = document.startViewTransition(() => {
-                applyTheme(theme, persist);
-            });
-
-            await transition.ready;
-
-            const full = `circle(${radius}px at ${x}px ${y}px)`;
-            const point = `circle(0px at ${x}px ${y}px)`;
-
-            const animation = root.animate(
-                isDark
-                    ? [
-                        { clipPath: full },
-                        { clipPath: point }
-                    ]
-                    : [
-                        { clipPath: point },
-                        { clipPath: full }
-                    ],
-                {
-                    duration: isDark ? 360 : 420,
-                    easing: isDark
-                        ? "cubic-bezier(.4, 0, .2, 1)"
-                        : "cubic-bezier(.16, 1, .3, 1)",
-                    fill: "both",
-                    pseudoElement: isDark
-                        ? "::view-transition-old(root)"
-                        : "::view-transition-new(root)"
-                });
-
-            await animation.finished;
-            await transition.finished;
-            await washAnimation;
-        } catch {
-            if (root.dataset.bsTheme !== theme) {
-                applyTheme(theme, persist);
+        })().catch(() => {
+            const fallbackRequest = pendingThemeRequest || lastThemeRequest;
+            pendingThemeRequest = null;
+            if (fallbackRequest && fallbackRequest.theme !== root.dataset.bsTheme) {
+                applyTheme(fallbackRequest.theme, fallbackRequest.persist);
             }
-        } finally {
-            delete root.dataset.qmahThemeTransition;
-            root.classList.remove("qmah-theme-switching");
-
+        }).finally(() => {
             if (toggle) {
-                toggle.disabled = false;
+                toggle.removeAttribute("aria-busy");
             }
 
-            switchingTheme = false;
-        }
-    }
+            themeTransitionPromise = null;
+            if (pendingThemeRequest) {
+                void switchTheme(pendingThemeRequest.theme, pendingThemeRequest.persist);
+            }
+        });
 
-    function playThemeWash() {
-        const rect = toggle?.getBoundingClientRect();
-        const x = rect ? rect.left + rect.width / 2 : window.innerWidth - 40;
-        const y = rect ? rect.top + rect.height / 2 : 32;
-        const radius = Math.hypot(
-            Math.max(x, window.innerWidth - x),
-            Math.max(y, window.innerHeight - y));
-        const point = `circle(0px at ${x}px ${y}px)`;
-        const full = `circle(${radius}px at ${x}px ${y}px)`;
-
-        return themeWash.animate(
-            [
-                { opacity: 0, clipPath: point },
-                { opacity: .32, clipPath: full, offset: .45 },
-                { opacity: 0, clipPath: point }
-            ],
-            { duration: 520, easing: "cubic-bezier(.16, 1, .3, 1)" }
-        ).finished;
+        return themeTransitionPromise;
     }
 
     applyTheme(root.dataset.bsTheme === "dark" ? "dark" : "light", false);
@@ -191,7 +331,7 @@
             delete root.dataset.qmahSidebar;
         }
 
-        localStorage.setItem("qmah-admin-sidebar", collapsed ? "collapsed" : "expanded");
+        writeStorage("qmah-admin-sidebar", collapsed ? "collapsed" : "expanded");
 
         if (sidebarToggle) {
             sidebarToggle.setAttribute("aria-expanded", String(!collapsed));

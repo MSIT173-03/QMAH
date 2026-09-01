@@ -6,6 +6,16 @@
   align-items: start;
 }
 
+.qmah-editor-grid > [class*="col-"] {
+  display: flex;
+  min-width: 0;
+}
+
+.qmah-editor-grid .card {
+  width: 100%;
+  min-width: 0;
+}
+
 .qmah-editor-preview {
   position: static;
   overflow: hidden;
@@ -13,6 +23,7 @@
 }
 
 .qmah-editor-preview__stage {
+  position: relative;
   display: grid;
   min-height: 25rem;
   place-items: center;
@@ -28,6 +39,34 @@
   object-fit: contain;
   border-radius: 10px;
   box-shadow: var(--qmah-shadow-sm);
+}
+
+.qmah-editor-preview__zoom {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  gap: .35rem;
+  align-items: center;
+  padding: .45rem .7rem;
+  border: 1px solid color-mix(in srgb, var(--qmah-line) 75%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--qmah-surface) 90%, transparent);
+  color: var(--qmah-ink-soft);
+  font-size: .76rem;
+  font-weight: 700;
+  cursor: zoom-in;
+  z-index: 1;
+}
+
+.qmah-editor-preview__zoom:hover {
+  border-color: var(--qmah-primary);
+  color: var(--qmah-primary-hover);
+}
+
+.qmah-editor-preview__zoom:focus-visible {
+  outline: 3px solid var(--qmah-focus);
+  outline-offset: 2px;
 }
 
 .qmah-editor-preview__empty {

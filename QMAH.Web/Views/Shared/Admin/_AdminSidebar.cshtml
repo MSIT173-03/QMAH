@@ -43,7 +43,7 @@
                         <span class="nav-link-title">營運中心</span>
                     </a>
                     <ul class="qmah-sidebar-subnav" aria-label="營運中心子功能">
-                        <li><a class="nav-link @(isOperationsSummary ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="Index"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("operations")" /></span><span class="nav-link-title">營運摘要</span></a></li>
+                        <li><a class="nav-link @(isOperationsSummary ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="Index"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("operations-summary")" /></span><span class="nav-link-title">營運摘要</span></a></li>
                         <li><a class="nav-link @(isOperations && string.Equals(currentAction, "AuditLogs", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="AuditLogs"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("audit")" /></span><span class="nav-link-title">稽核紀錄</span></a></li>
                         <li><a class="nav-link @(isOperations && string.Equals(currentAction, "Media", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="Media"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("media")" /></span><span class="nav-link-title">圖庫管理</span></a></li>
                     </ul>

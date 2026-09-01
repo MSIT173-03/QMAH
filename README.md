@@ -163,6 +163,8 @@ QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 
 | 13 | 查閱 REST API、DTO、分頁與驗證規則 | [REST API 契約](docs/13-rest-api.md) |
 | 14 | 操作管理員文物資料匯入與同步 | [文物資料匯入](docs/14-catalog-import.md) |
 | 15 | 建立本機展示資料與管理測試帳號 | [本機展示資料與帳號](docs/15-local-showcase-and-credentials.md) |
+| 16 | 查閱 API 專業用語與文件文字規範 | [API 名詞表](docs/16-api-glossary.md) |
+| 17 | 管理本機圖片、物件儲存與 CDN 交付 | [媒體交付設定](docs/17-media-delivery.md) |
 
 參考文件：
 
@@ -193,7 +195,7 @@ QMAH/
 │  └─ wwwroot/                   樣式、腳本、套件、圖片與品牌素材
 ├─ QMAH.Client/                  Angular 21.2.22 前台（獨立啟動）
 ├─ database/                     QMAH.sql、Schema.sql、seed 腳本與 Diagram 說明
-├─ docs/                         01–15 核心開發文件；其餘為參考與選用文件
+├─ docs/                         01–17 核心開發與交付文件；其餘為參考與選用文件
 ├─ tools/QmahDataTools/          可重現的資料處理工具
 ├─ CONTRIBUTING.md               協作規則
 └─ README.md

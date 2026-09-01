@@ -1,0 +1,116 @@
+/* 共用圖片檢視器：縮圖先在視窗內完整呈現，放大後才允許平移與捲動。 */
+.qmah-image-preview-modal .modal-content {
+  overflow: hidden;
+  border-color: var(--qmah-line);
+  border-radius: 14px;
+  background: var(--qmah-surface);
+}
+
+.qmah-image-preview-modal .modal-header {
+  gap: 1rem;
+}
+
+.qmah-image-preview__caption {
+  overflow: hidden;
+  max-width: 65ch;
+  color: var(--qmah-ink-faint);
+  font-size: .76rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qmah-image-preview__body {
+  display: grid;
+  gap: .75rem;
+  padding: .85rem;
+}
+
+.qmah-image-preview__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  align-items: center;
+}
+
+.qmah-image-preview__toolbar .btn {
+  min-width: 2.45rem;
+}
+
+.qmah-image-preview__level {
+  min-width: 3.75rem;
+  color: var(--qmah-ink-soft);
+  font-size: .78rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.qmah-image-preview__viewport {
+  display: grid;
+  min-height: min(58vh, 36rem);
+  max-height: calc(100vh - 12rem);
+  place-items: center;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: clamp(.5rem, 2vw, 1.25rem);
+  border: 1px solid var(--qmah-line-soft);
+  border-radius: 10px;
+  background: var(--qmah-surface-soft);
+  background: color-mix(in srgb, var(--qmah-surface-soft) 86%, var(--qmah-canvas, var(--qmah-surface-soft)));
+}
+
+.qmah-image-preview__viewport:focus-visible {
+  outline: 3px solid var(--qmah-focus);
+  outline-offset: 2px;
+}
+
+.qmah-image-preview {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: min(64vh, 42rem);
+  height: auto;
+  object-fit: contain;
+  transform: scale(var(--qmah-image-preview-scale, 1));
+  transform-origin: center;
+  cursor: zoom-in;
+  user-select: none;
+  transition: transform 180ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.qmah-image-preview.is-zoomed {
+  cursor: grab;
+}
+
+.qmah-image-preview.is-zoomed:active {
+  cursor: grabbing;
+}
+
+.qmah-image-preview__status {
+  margin: 0;
+  color: var(--qmah-ink-soft);
+  font-size: .8rem;
+  text-align: center;
+}
+
+@media (max-width: 575.98px) {
+  .qmah-image-preview__body {
+    padding: .65rem;
+  }
+
+  .qmah-image-preview__viewport {
+    min-height: min(52vh, 26rem);
+    max-height: calc(100vh - 10rem);
+  }
+
+  .qmah-image-preview__toolbar [data-qmah-image-preview-open] {
+    width: 100%;
+    margin-inline-start: 0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qmah-image-preview {
+    transition: none;
+  }
+}

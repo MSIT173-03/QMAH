@@ -2,11 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 
 namespace QMAH.Api.Controllers.V1;
 
 [Route("api/v1/catalog")]
-public sealed class CatalogController(QmahDbContext db) : ApiControllerBase
+public sealed class CatalogController(
+    QmahDbContext db,
+    QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
     [HttpGet("artifacts")]
     public async Task<ActionResult<ApiPage<ArtifactListItemDto>>> GetArtifacts(
@@ -52,7 +55,17 @@ public sealed class CatalogController(QmahDbContext db) : ApiControllerBase
                 artifact.ArtifactQuestionEntry != null,
                 artifact.Product != null));
 
-        return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
+        var result = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
+        // 原本直接回傳資料庫中的 ThumbnailPath；棄用原因：資料庫保存的是邏輯路徑，CDN 模式必須由共用解析器補上公開來源。
+        return Ok(result with
+        {
+            Items = result.Items
+                .Select(item => item with
+                {
+                    ThumbnailPath = mediaUrlResolver.Resolve(item.ThumbnailPath)
+                })
+                .ToList()
+        });
     }
 
     [HttpGet("artifacts/{id:guid}")]
@@ -84,9 +97,15 @@ public sealed class CatalogController(QmahDbContext db) : ApiControllerBase
                 item.Product != null))
             .SingleOrDefaultAsync(cancellationToken);
 
-        return artifact is null
-            ? MissingResource("找不到文物", "這筆文物不存在或目前未啟用。")
-            : Ok(artifact);
+        if (artifact is null)
+            return MissingResource("找不到文物", "這筆文物不存在或目前未啟用。");
+
+        // 原本直接回傳 PrimaryImagePath／ThumbnailPath；棄用原因：前台部署位置可能改為 CDN，不能把資料庫路徑當成完整公開網址。
+        return Ok(artifact with
+        {
+            PrimaryImagePath = mediaUrlResolver.Resolve(artifact.PrimaryImagePath) ?? artifact.PrimaryImagePath,
+            ThumbnailPath = mediaUrlResolver.Resolve(artifact.ThumbnailPath)
+        });
     }
 
     [HttpGet("categories")]
