@@ -200,21 +200,9 @@ app.Use(async (context, next) =>
     }
 });
 
-// 順序先建立路由，再限流與清理 Cookie，最後才驗證登入身分
 app.UseHttpsRedirection();
-app.UseRouting();
-app.UseRateLimiter();
-app.UseQmahCookieRecovery(
-    ".QMAH.Web.Auth",
-    ".QMAH.Web.Antiforgery",
-    ".QMAH.Api.Auth",
-    ".QMAH.Api.Antiforgery");
 
-app.UseAuthentication();
-app.UseAuthorization();
-
-// 只公開專案內可安全展示的靜態資產，社群圖片仍由受控 endpoint 提供
-// 圖鑑與商城素材是專案內的官方展示資產；社群上傳媒體仍只能由受控 endpoint 提供。
+// 圖鑑與商城素材可公開展示，社群上傳媒體仍只能由受控 endpoint 提供
 app.Use(async (context, next) =>
 {
     if (context.Request.Path.StartsWithSegments("/media")
@@ -227,6 +215,35 @@ app.Use(async (context, next) =>
 
     await next(context);
 });
+
+if (app.Environment.IsDevelopment())
+{
+    // 後台資產網址帶有內容版本，檔案異動後會自動換網址
+    // 開發環境也允許瀏覽器重用相同版本，避免每次切頁重新下載整套樣式
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        OnPrepareResponse = context =>
+        {
+            var cacheControl = context.Context.Request.Query.ContainsKey("v")
+                ? "public,max-age=31536000,immutable"
+                : "public,max-age=3600,must-revalidate";
+
+            context.Context.Response.Headers.CacheControl = cacheControl;
+        }
+    });
+}
+
+// 靜態資產處理完成後才進入路由、Cookie 與登入驗證
+app.UseRouting();
+app.UseRateLimiter();
+app.UseQmahCookieRecovery(
+    ".QMAH.Web.Auth",
+    ".QMAH.Web.Antiforgery",
+    ".QMAH.Api.Auth",
+    ".QMAH.Api.Antiforgery");
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapStaticAssets();
 
