@@ -1,4 +1,5 @@
 @using Microsoft.EntityFrameworkCore
+@using QMAH.Infrastructure.Data
 @inject QMAH.Infrastructure.Data.QmahDbContext DbContext
 
 @{
@@ -16,11 +17,19 @@
 
     if (Guid.TryParse(userIdValue, out var currentUserId))
     {
-        avatarPath = await DbContext.UserProfiles
-            .AsNoTracking()
-            .Where(profile => profile.UserId == currentUserId)
-            .Select(profile => profile.AvatarPath)
-            .SingleOrDefaultAsync();
+        try
+        {
+            avatarPath = await DbContext.UserProfiles
+                .AsNoTracking()
+                .Where(profile => profile.UserId == currentUserId)
+                .Select(profile => profile.AvatarPath)
+                .FirstOrDefaultAsync();
+        }
+        catch (Exception exception) when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception))
+        {
+            // 頭像只是工具列的裝飾；資料庫短暫中斷時保留首字母，不能讓整個後台版面失效。
+            avatarPath = null;
+        }
     }
 
     var currentArea = ViewContext.RouteData.Values["area"]?.ToString();

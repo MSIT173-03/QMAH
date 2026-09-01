@@ -24,11 +24,15 @@ QMAH API 位於獨立的 `QMAH.Api` 專案，所有版本化 Endpoint 以 `/api/
 
 | 狀態 | 意義 |
 | ---: | --- |
+| 201 | 已建立新資源，回應包含建立結果 |
+| 202 | 已接受要求並進入後續處理，不代表處理已完成 |
+| 204 | 操作成功且沒有回應內容 |
 | 400 | 輸入格式、欄位或流程條件不符合 |
 | 401 | 尚未登入或登入狀態失效 |
 | 403 | 已登入但沒有該操作權限 |
 | 404 | 找不到資源或資源目前不可見 |
 | 409 | 與既有資料衝突，例如 Email 已存在 |
+| 413 | 上傳內容超過端點允許的大小 |
 | 500／503 | 服務或外部資料來源暫時失敗 |
 
 畫面顯示 `title` 與 `detail` 的友善內容，不要把 Controller 名稱、資料表名稱、例外堆疊或內部路徑直接展示給使用者。
@@ -70,10 +74,10 @@ QMAH API 位於獨立的 `QMAH.Api` 專案，所有版本化 Endpoint 以 `/api/
 | GET | `/api/v1/catalog/eras` | 年代篩選 |
 | GET | `/api/v1/store/products` | `q`、`categoryCode`、`artifactId`、`page`、`pageSize`；只回傳上架商品 |
 | GET | `/api/v1/store/products/{id}` | 商品詳情與對應文物 |
-| GET | `/api/v1/store/products/{id}/reviews` | 公開評價分頁、平均星等與評價總數；只計入已發布內容 |
-| GET | `/api/v1/store/products/{id}/reviews/me` | 登入後取得目前會員對該商品的評價 |
-| PUT | `/api/v1/store/products/{id}/reviews/me` | 登入後新增或修改目前會員的 1 至 5 星評價與短文 |
-| DELETE | `/api/v1/store/products/{id}/reviews/me` | 登入後刪除目前會員自己的評價；採軟刪除，不影響其他會員的內容 |
+| GET | `/api/v1/store/products/{productId}/reviews` | 公開評價分頁、平均星等與評價總數；只計入已發布內容 |
+| GET | `/api/v1/store/products/{productId}/reviews/me` | 登入後取得目前會員對該商品的評價 |
+| PUT | `/api/v1/store/products/{productId}/reviews/me` | 登入後新增或修改目前會員的 1 至 5 星評價與短文 |
+| DELETE | `/api/v1/store/products/{productId}/reviews/me` | 登入後刪除目前會員自己的評價；採軟刪除，不影響其他會員的內容 |
 
 Code 是資料契約，不是直接給使用者看的文案；前台應以 metadata 的 Label 呈現。文物圖片與商品圖片使用既有 `/media/catalog/` 路徑及其來源授權資料。
 
@@ -99,7 +103,7 @@ Code 是資料契約，不是直接給使用者看的文案；前台應以 metad
 
 | Method | Path | 權限／用途 |
 | --- | --- | --- |
-| POST | `/api/v1/social/media` | 登入後上傳圖片，限制大小與檔案簽章 |
+| POST | `/api/v1/social/media` | 登入後以 `multipart/form-data` 上傳；`file` 為必填 binary 圖片、`altText` 為選填替代文字；支援 JPEG／PNG／GIF／WebP，最大 8 MB，超過回傳 413 |
 | GET | `/api/v1/social/media/{id}/content` | 公開已發布貼文的可用圖片；擁有者可預覽尚未關聯圖片 |
 | DELETE | `/api/v1/social/media/{id}` | 圖片擁有者軟刪除自己的圖片 |
 
@@ -115,7 +119,7 @@ Code 是資料契約，不是直接給使用者看的文案；前台應以 metad
 | POST | `/api/v1/game/rooms/{id}/join` | 登入後加入房間 |
 | POST | `/api/v1/game/rounds/{id}/answers` | 回答中的回合送出答案 |
 | POST | `/api/v1/game/rounds/{id}/votes` | 投票中的回合送出投票 |
-| GET | `/api/v1/game/rounds/{id}` | 回合與答案詳情 |
+| GET | `/api/v1/game/rounds/{id}` | 登入後取得回合與答案詳情 |
 | GET | `/api/v1/game/rooms/{id}/history` | 房間的回合歷程、每回合答案／票數／勝者與整場排行榜 |
 
 遊戲 API 不把內部 `PlayerKey` 回傳給前台；使用 DTO 的玩家 Id、顯示名稱與狀態即可。答案類型與房間狀態需使用 metadata／API 文件中的允許值，不要在畫面散落自行定義的字串。
@@ -126,14 +130,24 @@ Code 是資料契約，不是直接給使用者看的文案；前台應以 metad
 
 | Method | Path | 用途 |
 | --- | --- | --- |
-| GET／PUT | `/api/v1/me`、`/api/v1/me/profile` | 取得／更新目前 Profile |
-| GET | `/api/v1/me/orders`、`/api/v1/me/orders/{id}` | 目前帳號的訂單與明細 |
+| GET | `/api/v1/me` | 取得目前會員資料 |
+| PUT | `/api/v1/me/profile` | 更新目前會員 Profile |
+| GET | `/api/v1/me/orders` | 查詢目前會員訂單 |
+| GET | `/api/v1/me/orders/{id}` | 取得目前會員訂單明細 |
 | GET | `/api/v1/me/coupons` | 目前帳號的優惠券 |
 | GET | `/api/v1/me/posts` | 目前帳號自己的貼文 |
 | GET | `/api/v1/me/achievements` | 目前帳號的成就 |
-| GET／POST／PUT／DELETE | `/api/v1/me/cart...` | 購物車查詢與數量維護 |
-| GET／POST／PUT／DELETE | `/api/v1/me/addresses...` | 地址查詢、建立、修改、刪除與設為預設 |
-| GET／POST | `/api/v1/me/notifications...` | 通知查詢與標記已讀 |
+| GET | `/api/v1/me/cart` | 取得購物車 |
+| POST | `/api/v1/me/cart` | 加入購物車商品 |
+| PUT | `/api/v1/me/cart/{productId}` | 更新購物車商品數量 |
+| DELETE | `/api/v1/me/cart/{productId}` | 移除購物車商品 |
+| GET | `/api/v1/me/addresses` | 查詢地址 |
+| POST | `/api/v1/me/addresses` | 建立地址 |
+| PUT | `/api/v1/me/addresses/{id}` | 修改地址 |
+| DELETE | `/api/v1/me/addresses/{id}` | 刪除地址 |
+| POST | `/api/v1/me/addresses/{id}/default` | 設為預設地址 |
+| GET | `/api/v1/me/notifications` | 查詢通知 |
+| POST | `/api/v1/me/notifications/{id}/read` | 標記通知已讀 |
 | POST | `/api/v1/store/orders` | 依目前帳號購物車資料建立訂單 |
 | POST | `/api/v1/store/orders/{id}/cancel` | 取消目前帳號仍可取消的訂單 |
 

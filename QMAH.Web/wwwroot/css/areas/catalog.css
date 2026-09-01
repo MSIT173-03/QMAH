@@ -1,1 +1,147 @@
 /* 圖鑑區專用樣式：只放圖鑑欄位與元件的差異，版面骨架仍由公開頁或後台共用 CSS 提供。 */
+
+.qmah-import-page,
+.qmah-import-page > [class*="col-"] {
+    min-width: 0;
+}
+
+.qmah-import-page .card,
+.qmah-import-preview-card,
+.qmah-import-page .card-header > *,
+.qmah-import-preview-card .card-header > *,
+.qmah-import-page .card-body,
+.qmah-import-preview-card .card-body,
+.qmah-import-page .card-footer {
+    min-width: 0;
+}
+
+.qmah-import-page .card-header,
+.qmah-import-preview-card .card-header {
+    gap: 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.qmah-import-page .form-control,
+.qmah-import-page .form-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.qmah-import-page input[type="file"] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.qmah-import-page .input-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .5rem;
+}
+
+.qmah-import-page .input-group > .form-select,
+.qmah-import-page .input-group > .btn {
+    width: 100%;
+    min-width: 0;
+    border-radius: var(--qmah-radius-sm);
+}
+
+.qmah-import-page .input-group > .form-select {
+    z-index: auto;
+}
+
+.qmah-import-page .qmah-card-footer--split,
+.qmah-import-preview-card .qmah-card-footer--split {
+    gap: .9rem 1.25rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.qmah-import-page .qmah-card-footer--split > form,
+.qmah-import-preview-card .qmah-card-footer--split > form {
+    margin-inline-start: auto;
+}
+
+.qmah-import-page .qmah-card-footer--split .btn,
+.qmah-import-preview-card .qmah-card-footer--split .btn {
+    white-space: nowrap;
+}
+
+.qmah-import-summary-table {
+    --tblr-table-border-color: var(--qmah-line-soft);
+    table-layout: fixed;
+}
+
+.qmah-import-summary-table th,
+.qmah-import-summary-table td {
+    overflow-wrap: anywhere;
+    vertical-align: top;
+}
+
+.qmah-import-summary-table th {
+    width: 17%;
+    color: var(--qmah-ink-soft);
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.qmah-import-summary-table td {
+    width: 33%;
+    font-variant-numeric: tabular-nums;
+}
+
+.qmah-import-page .alert,
+.qmah-import-preview-card .alert,
+.qmah-import-page .form-hint,
+.qmah-import-page li {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 575.98px) {
+    .qmah-import-page .input-group {
+        grid-template-columns: 1fr;
+    }
+
+    .qmah-import-page .qmah-card-footer--split > form,
+    .qmah-import-preview-card .qmah-card-footer--split > form {
+        width: 100%;
+        margin-inline-start: 0;
+    }
+
+    .qmah-import-page .qmah-card-footer--split > form .btn,
+    .qmah-import-preview-card .qmah-card-footer--split > form .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .qmah-import-summary-table,
+    .qmah-import-summary-table tbody,
+    .qmah-import-summary-table tr {
+        display: block;
+        width: 100%;
+    }
+
+    .qmah-import-summary-table tr {
+        display: grid;
+        grid-template-columns: minmax(7rem, .75fr) minmax(0, 1.25fr);
+        border-bottom: 1px solid var(--qmah-line-soft);
+    }
+
+    .qmah-import-summary-table tr:last-child {
+        border-bottom: 0;
+    }
+
+    .qmah-import-summary-table th,
+    .qmah-import-summary-table td {
+        display: block;
+        width: auto;
+        padding: .7rem 1rem;
+        border: 0;
+    }
+
+    .qmah-import-summary-table th {
+        background: var(--qmah-surface-soft);
+    }
+}

@@ -1,1 +1,97 @@
 /* 商城區專用樣式：只放商品、訂單與優惠券的必要差異，不另立一套後台排版。 */
+
+.store-admin-detail-grid > [class*="col-"] {
+    min-width: 0;
+}
+
+.store-admin-editor-grid .qmah-form-card,
+.store-admin-editor-grid .qmah-editor-preview {
+    border-color: var(--qmah-line);
+    box-shadow: var(--qmah-shadow-sm);
+}
+
+.store-admin-editor-grid .qmah-form-card .card-header,
+.store-admin-editor-grid .qmah-editor-preview .card-header {
+    background: color-mix(in srgb, var(--qmah-surface) 90%, var(--qmah-primary) 10%);
+}
+
+.store-admin-detail-grid .card,
+.store-admin-detail-grid .card-body {
+    min-width: 0;
+}
+
+.store-admin-detail-media {
+    min-height: min(34rem, 62vh);
+    padding: clamp(1rem, 3vw, 2rem);
+    background: var(--qmah-surface-soft);
+}
+
+.qmah-product-detail-trigger {
+    position: relative;
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    min-height: 20rem;
+    place-items: center;
+    padding: 1rem;
+    border: 1px solid var(--qmah-line);
+    border-radius: var(--qmah-radius);
+    background: var(--qmah-surface);
+    color: inherit;
+    cursor: zoom-in;
+}
+
+.qmah-product-detail-trigger:focus-visible {
+    outline: 3px solid var(--qmah-focus);
+    outline-offset: 3px;
+}
+
+.qmah-product-detail-trigger:hover .qmah-product-detail-zoom-hint {
+    color: var(--qmah-primary-hover);
+}
+
+.qmah-product-detail-image {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: min(54vh, 36rem);
+    object-fit: contain;
+}
+
+.qmah-product-detail-zoom-hint {
+    position: absolute;
+    right: .8rem;
+    bottom: .8rem;
+    display: inline-flex;
+    gap: .3rem;
+    align-items: center;
+    padding: .35rem .55rem;
+    border: 1px solid color-mix(in srgb, var(--qmah-line) 75%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--qmah-surface) 90%, transparent);
+    color: var(--qmah-ink-soft);
+    font-size: .72rem;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.store-admin-detail-grid .qmah-detail-copy {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    line-height: 1.75;
+}
+
+@media (max-width: 767.98px) {
+    .store-admin-detail-media {
+        min-height: 20rem;
+    }
+
+    .qmah-product-detail-trigger {
+        min-height: 17rem;
+    }
+
+    .qmah-product-detail-image {
+        max-height: min(52vh, 30rem);
+    }
+}

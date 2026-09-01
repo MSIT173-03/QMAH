@@ -199,6 +199,20 @@
     </aside>
 </div>
 
+@if (ViewData["DatabaseWarning"] is string databaseWarning)
+{
+    <dialog class="qmah-database-dialog" open aria-labelledby="qmah-database-dialog-title" aria-describedby="qmah-database-dialog-description">
+        <div class="qmah-database-dialog__body">
+            <p class="qmah-auth-kicker">系統連線問題</p>
+            <h2 id="qmah-database-dialog-title">資料庫無法連線</h2>
+            <p id="qmah-database-dialog-description">@databaseWarning</p>
+            <form method="dialog">
+                <button type="submit" class="btn btn-primary qmah-database-dialog__close">關閉</button>
+            </form>
+        </div>
+    </dialog>
+}
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>

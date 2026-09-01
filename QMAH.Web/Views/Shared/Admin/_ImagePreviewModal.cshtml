@@ -1,0 +1,51 @@
+@model string
+
+<div class="modal fade qmah-image-preview-modal"
+     id="qmah-image-preview"
+     data-qmah-image-preview-modal
+     tabindex="-1"
+     aria-labelledby="qmah-image-preview-title"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="min-w-0">
+                    <h2 class="modal-title fs-5" id="qmah-image-preview-title">圖片預覽</h2>
+                    <div class="qmah-image-preview__caption" data-qmah-image-preview-caption>@Model</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body qmah-image-preview__body">
+                <div class="qmah-image-preview__toolbar" role="toolbar" aria-label="圖片檢視工具">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-qmah-image-zoom-out aria-label="縮小" title="縮小">
+                        <i class="ti ti-zoom-out" aria-hidden="true"></i>
+                    </button>
+                    <output class="qmah-image-preview__level" data-qmah-image-preview-level aria-live="polite">100%</output>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-qmah-image-zoom-reset>重設</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-qmah-image-zoom-in aria-label="放大" title="放大">
+                        <i class="ti ti-zoom-in" aria-hidden="true"></i>
+                    </button>
+                    <a class="btn btn-sm btn-primary ms-auto"
+                       data-qmah-image-preview-open
+                       href="#"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       hidden>
+                        <i class="ti ti-external-link me-1" aria-hidden="true"></i>開啟原圖
+                    </a>
+                </div>
+                <div class="qmah-image-preview__viewport"
+                     data-qmah-image-preview-viewport
+                     tabindex="0"
+                     role="region"
+                     aria-label="圖片檢視區，使用加號、減號或 0 調整大小">
+                    <img class="qmah-image-preview"
+                         data-qmah-image-preview-target
+                         alt="@Model"
+                         hidden />
+                </div>
+                <p class="qmah-image-preview__status" data-qmah-image-preview-status role="status" hidden></p>
+            </div>
+        </div>
+    </div>
+</div>

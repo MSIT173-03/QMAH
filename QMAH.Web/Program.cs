@@ -29,6 +29,9 @@ builder.Configuration.AddJsonFile(
     reloadOnChange: true);
 
 // 本機設定檔只存開發環境的連線字串與展示選項，不進版本控制
+var qmahDatabaseResolution = await QmahDatabaseConnectionResolver.ResolveAsync(
+    builder.Configuration.GetConnectionString("QmahDatabase"),
+    builder.Configuration.GetValue("QmahDatabaseDiscovery:Enabled", true));
 
 builder.Services.AddControllersWithViews(options =>
 {
@@ -69,9 +72,11 @@ builder.Services.AddAntiforgery(options =>
 builder.Services.AddDbContext<QmahDbContext>(options =>
 {
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("QmahDatabase")
-        ?? throw new InvalidOperationException(
-            "Connection string 'QmahDatabase' was not found."));
+        qmahDatabaseResolution.ConnectionString,
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 2,
+            maxRetryDelay: TimeSpan.FromSeconds(1),
+            errorNumbersToAdd: null));
 });
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
@@ -172,11 +177,43 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+
+if (qmahDatabaseResolution.FoundTargets.Count > 1)
+{
+    app.Logger.LogWarning(
+        "本機找到多個 QMAH 資料庫，依優先順序使用 {SelectedTarget}；候選：{FoundTargets}",
+        qmahDatabaseResolution.Target,
+        string.Join(", ", qmahDatabaseResolution.FoundTargets));
+}
+else if (qmahDatabaseResolution.UsedAutomaticDiscovery)
+{
+    app.Logger.LogInformation(
+        "已自動找到 QMAH 資料庫：{SelectedTarget}",
+        qmahDatabaseResolution.Target);
+}
+else
+{
+    app.Logger.LogInformation(
+        "QMAH 資料庫目前目標：{SelectedTarget}",
+        qmahDatabaseResolution.Target);
+}
+
 if (app.Environment.IsDevelopment())
 {
-    await DevelopmentAdminSeeder.ResetDevelopmentPasswordsAsync(
-        app.Services,
-        builder.Configuration);
+    try
+    {
+        await DevelopmentAdminSeeder.ResetDevelopmentPasswordsAsync(
+            app.Services,
+            builder.Configuration);
+    }
+    catch (Exception exception)
+        when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception))
+    {
+        app.Logger.LogWarning(
+            exception,
+            "開發用帳號密碼初始化時無法連線資料庫；登入頁會顯示資料庫警告。目標：{DatabaseTarget}",
+            qmahDatabaseResolution.Target);
+    }
 }
 
 if (!app.Environment.IsDevelopment())
@@ -197,6 +234,57 @@ app.Use(async (context, next) =>
         when (context.RequestAborted.IsCancellationRequested)
     {
         // 瀏覽器已中止 request，不需要再產生錯誤頁或延長查詢 timeout。
+    }
+    catch (Exception exception)
+        when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception)
+            && !context.RequestAborted.IsCancellationRequested)
+    {
+        app.Logger.LogError(
+            exception,
+            "後台 request 無法連線到 QMAH 資料庫。目標：{DatabaseTarget}",
+            qmahDatabaseResolution.Target);
+
+        if (context.Response.HasStarted)
+        {
+            throw;
+        }
+
+        context.Response.Clear();
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        context.Response.ContentType = "text/html; charset=utf-8";
+        context.Response.Headers.CacheControl = "no-store";
+
+        var acceptsJson = context.Request.Headers.Accept.Any(value =>
+            value?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true);
+        if (context.Request.Path.StartsWithSegments("/api") || acceptsJson)
+        {
+            context.Response.ContentType = "application/json; charset=utf-8";
+            await context.Response.WriteAsJsonAsync(new
+            {
+                title = "資料庫無法連線",
+                detail = "QMAH 資料庫目前無法連線，請確認 SQL Server 或 LocalDB 已啟動後再試。"
+            });
+            return;
+        }
+
+        var returnUrl = System.Net.WebUtility.HtmlEncode(
+            $"{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}");
+        var databaseTarget = System.Net.WebUtility.HtmlEncode(qmahDatabaseResolution.Target);
+        var html = $$"""
+            <!doctype html>
+            <html lang="zh-Hant">
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>資料庫無法連線｜QMAH</title></head>
+            <body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#f3f6f4;color:#24343b;font-family:system-ui,-apple-system,'Segoe UI',sans-serif">
+              <dialog open style="width:min(34rem,calc(100% - 2rem));border:1px solid #d7e1e5;border-radius:16px;padding:2rem;box-shadow:0 18px 50px #24343b22">
+                <p style="margin:0 0 .5rem;color:#b65c4e;font-weight:700">系統連線問題</p>
+                <h1 style="margin:.25rem 0 1rem;font-size:1.6rem">資料庫無法連線</h1>
+                <p style="line-height:1.7">目前無法連到 QMAH 資料庫（{{databaseTarget}}）。請確認 SQL Server／LocalDB 已啟動，或稍後重新載入。</p>
+                <p><a href="{{returnUrl}}" style="display:inline-block;padding:.7rem 1rem;border-radius:8px;background:#3f6f86;color:#fff;text-decoration:none">重新載入</a></p>
+              </dialog>
+            </body>
+            </html>
+            """;
+        await context.Response.WriteAsync(html);
     }
 });
 

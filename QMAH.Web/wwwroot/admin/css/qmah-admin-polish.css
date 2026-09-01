@@ -83,18 +83,6 @@ html[data-bs-theme="dark"] .qmah-admin {
   min-height: 100dvh;
 }
 
-/* 明暗切換只動畫單一覆蓋層 */
-.qmah-theme-wash {
-  position: fixed;
-  z-index: 1080;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  background: #f3f6f4;
-  will-change: opacity;
-  contain: strict;
-}
-
 /* 頁面頂端工具列與帳號操作區。 */
 .qmah-admin .page > .qmah-topbar {
   min-height: 3.65rem;

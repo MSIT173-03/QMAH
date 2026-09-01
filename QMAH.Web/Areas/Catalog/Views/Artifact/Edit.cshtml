@@ -15,6 +15,7 @@
 }
 
 @section Styles {
+    <link rel="stylesheet" href="~/css/areas/catalog.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-editor-preview.css" asp-append-version="true" />
 }
 
@@ -174,6 +175,18 @@
                      data-artifact-image-preview
                      hidden="@string.IsNullOrWhiteSpace(previewPath)" />
 
+                <button type="button"
+                        class="qmah-editor-preview__zoom"
+                        data-artifact-image-trigger
+                        data-bs-toggle="modal"
+                        data-bs-target="#qmah-image-preview"
+                        data-qmah-image-preview="@previewPath"
+                        data-qmah-image-preview-alt="@Model.Name"
+                        aria-label="查看 @Model.Name 原圖"
+                        hidden="@string.IsNullOrWhiteSpace(previewPath)">
+                    <i class="ti ti-zoom-in" aria-hidden="true"></i>查看大圖
+                </button>
+
                 <div class="qmah-editor-preview__empty"
                      data-artifact-image-empty
                      hidden="@(!string.IsNullOrWhiteSpace(previewPath))">
@@ -231,6 +244,8 @@
     </div>
 </div>
 
+<partial name="Admin/_ImagePreviewModal" model="@("文物大圖")" />
+
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 
@@ -239,15 +254,17 @@
             const primary = document.querySelector("[data-artifact-primary-image]");
             const thumbnail = document.querySelector("[data-artifact-thumbnail-image]");
             const preview = document.querySelector("[data-artifact-image-preview]");
+            const trigger = document.querySelector("[data-artifact-image-trigger]");
             const empty = document.querySelector("[data-artifact-image-empty]");
             const pathLabel = document.querySelector("[data-artifact-image-path]");
 
-            if (!primary || !thumbnail || !preview || !empty || !pathLabel) {
+            if (!primary || !thumbnail || !preview || !trigger || !empty || !pathLabel) {
                 return;
             }
 
             const showEmpty = (text) => {
                 preview.hidden = true;
+                trigger.hidden = true;
                 empty.hidden = false;
                 empty.querySelector("span").textContent = text;
             };
@@ -264,6 +281,8 @@
 
                 preview.src = path;
                 preview.hidden = false;
+                trigger.dataset.qmahImagePreview = path;
+                trigger.hidden = false;
                 empty.hidden = true;
             };
 
@@ -271,6 +290,7 @@
             preview.addEventListener("load", () => {
                 if (primary.value.trim() || thumbnail.value.trim()) {
                     preview.hidden = false;
+                    trigger.hidden = false;
                     empty.hidden = true;
                 }
             });

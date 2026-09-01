@@ -7,6 +7,7 @@
 }
 
 @section Styles {
+    <link rel="stylesheet" href="~/css/areas/store.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-editor-preview.css" asp-append-version="true" />
 }
 
@@ -16,7 +17,7 @@
     </a>
 }
 
-<div class="row row-cards qmah-editor-grid">
+<div class="row row-cards qmah-editor-grid store-admin-editor-grid">
     <div class="col-12 col-xl-7">
         <form asp-action="@(isEdit ? "Edit" : "Create")"
               asp-route-id="@(isEdit ? Model.Id : null)"
@@ -143,6 +144,18 @@
                      data-editor-image-preview
                      hidden="@string.IsNullOrWhiteSpace(Model.PrimaryImagePath)" />
 
+                <button type="button"
+                        class="qmah-editor-preview__zoom"
+                        data-editor-image-trigger
+                        data-bs-toggle="modal"
+                        data-bs-target="#qmah-image-preview"
+                        data-qmah-image-preview="@Model.PrimaryImagePath"
+                        data-qmah-image-preview-alt="@Model.Name"
+                        aria-label="查看 @Model.Name 原圖"
+                        hidden="@string.IsNullOrWhiteSpace(Model.PrimaryImagePath)">
+                    <i class="ti ti-zoom-in" aria-hidden="true"></i>查看大圖
+                </button>
+
                 <div class="qmah-editor-preview__empty"
                      data-editor-image-empty
                      hidden="@(!string.IsNullOrWhiteSpace(Model.PrimaryImagePath))">
@@ -162,6 +175,8 @@
     </div>
 </div>
 
+<partial name="Admin/_ImagePreviewModal" model="@("商品大圖")" />
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
@@ -169,15 +184,17 @@
         (() => {
             const input = document.querySelector("[data-editor-image-path]");
             const preview = document.querySelector("[data-editor-image-preview]");
+            const trigger = document.querySelector("[data-editor-image-trigger]");
             const empty = document.querySelector("[data-editor-image-empty]");
             const pathLabel = document.querySelector("[data-editor-image-path-label]");
 
-            if (!input || !preview || !empty || !pathLabel) {
+            if (!input || !preview || !trigger || !empty || !pathLabel) {
                 return;
             }
 
             const showEmpty = (text) => {
                 preview.hidden = true;
+                trigger.hidden = true;
                 empty.hidden = false;
                 empty.querySelector("span").textContent = text;
             };
@@ -194,6 +211,8 @@
 
                 preview.src = path;
                 preview.hidden = false;
+                trigger.dataset.qmahImagePreview = path;
+                trigger.hidden = false;
                 empty.hidden = true;
             };
 
@@ -201,6 +220,7 @@
             preview.addEventListener("load", () => {
                 if (input.value.trim()) {
                     preview.hidden = false;
+                    trigger.hidden = false;
                     empty.hidden = true;
                 }
             });

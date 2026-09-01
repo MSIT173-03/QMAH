@@ -893,6 +893,42 @@ html[data-bs-theme="dark"] .qmah-auth-remember .form-check-input {
   display: none;
 }
 
+.qmah-database-dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 0;
+  color: var(--qmah-ink, #173237);
+  background: var(--qmah-surface, #fff);
+  border: 0;
+  border-radius: 1rem;
+  box-shadow: 0 1.5rem 4rem rgb(21 43 46 / 24%);
+}
+
+.qmah-database-dialog::backdrop {
+  background: rgb(16 35 37 / 48%);
+  backdrop-filter: blur(0.2rem);
+}
+
+.qmah-database-dialog__body {
+  padding: 1.5rem;
+}
+
+.qmah-database-dialog h2 {
+  margin: 0.2rem 0 0.7rem;
+  font-size: clamp(1.35rem, 2vw, 1.7rem);
+}
+
+.qmah-database-dialog p:not(.qmah-auth-kicker) {
+  margin: 0;
+  color: var(--qmah-muted, #63777a);
+  line-height: 1.7;
+}
+
+.qmah-database-dialog__close {
+  width: 100%;
+  margin-top: 1.25rem;
+}
+
 .qmah-auth-access-footer {
   display: flex;
   align-items: center;
@@ -911,17 +947,6 @@ html[data-bs-theme="dark"] .qmah-auth-remember .form-check-input {
   color: var(--qmah-auth-ink);
   font-size: 0.68rem;
   font-weight: 760;
-}
-
-.qmah-theme-wash {
-  position: fixed;
-  z-index: 95;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  background: #f3f6f4;
-  will-change: opacity;
-  contain: strict;
 }
 
 /* 主題切換屬於右側產品區，不做成脫離內容的漂浮工具。 */

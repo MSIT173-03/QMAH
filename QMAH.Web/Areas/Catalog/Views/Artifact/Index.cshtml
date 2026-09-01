@@ -170,6 +170,7 @@
                                            data-bs-toggle="modal"
                                            data-bs-target="#qmah-image-preview"
                                            data-qmah-image-preview="@previewPath"
+                                           data-qmah-image-preview-alt="@item.Name"
                                            aria-label="查看 @item.Name 大圖">
                                             <img class="qmah-table-thumbnail"
                                                  src="@thumbnailPath"
@@ -286,16 +287,4 @@
     }
 </div>
 
-<div class="modal fade" id="qmah-image-preview" tabindex="-1" aria-labelledby="qmah-image-preview-title" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title fs-5" id="qmah-image-preview-title">圖片預覽</h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img class="qmah-image-preview" data-qmah-image-preview-target alt="文物大圖" />
-            </div>
-        </div>
-    </div>
-</div>
+<partial name="Admin/_ImagePreviewModal" model="@("文物大圖")" />

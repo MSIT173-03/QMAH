@@ -6,6 +6,10 @@
     var categoryName = ViewBag.CategoryName as string ?? Model.CategoryCode;
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/areas/store.css" asp-append-version="true" />
+}
+
 @section PageActions {
     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
         <i class="ti ti-edit me-1"></i>編輯商品
@@ -22,14 +26,29 @@
     </a>
 }
 
-<div class="row row-cards">
+<div class="row row-cards store-admin-detail-grid">
     <div class="col-12 col-lg-4">
         <div class="card h-100">
             <div class="card-header"><h2 class="card-title">商品圖片</h2></div>
-            <div class="card-body d-flex align-items-center justify-content-center">
+            <div class="card-body d-flex align-items-center justify-content-center store-admin-detail-media">
                 @if (!string.IsNullOrWhiteSpace(Model.PrimaryImagePath))
                 {
-                    <img src="@Model.PrimaryImagePath" alt="@Model.Name" class="qmah-product-detail-image" />
+                    <button type="button"
+                            class="qmah-product-detail-trigger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#qmah-image-preview"
+                            data-qmah-image-preview="@Model.PrimaryImagePath"
+                            data-qmah-image-preview-alt="@Model.Name"
+                            aria-label="查看 @Model.Name 原圖">
+                        <img src="@Model.PrimaryImagePath"
+                             alt="@Model.Name"
+                             class="qmah-product-detail-image"
+                             loading="eager"
+                             decoding="async" />
+                        <span class="qmah-product-detail-zoom-hint">
+                            <i class="ti ti-zoom-in" aria-hidden="true"></i>查看大圖
+                        </span>
+                    </button>
                 }
                 else
                 {
@@ -75,3 +94,5 @@
         </div>
     </div>
 </div>
+
+<partial name="Admin/_ImagePreviewModal" model="@("商品大圖")" />

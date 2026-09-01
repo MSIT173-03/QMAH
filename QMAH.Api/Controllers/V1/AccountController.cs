@@ -22,7 +22,8 @@ public sealed class AccountController(
     SignInManager<ApplicationUser> signInManager,
     QmahDbContext db,
     IPasswordResetEmailSender emailSender,
-    IConfiguration configuration) : ApiControllerBase
+    IConfiguration configuration,
+    ILogger<AccountController> logger) : ApiControllerBase
 {
     [AllowAnonymous]
     [HttpGet("antiforgery-token")]
@@ -57,29 +58,58 @@ public sealed class AccountController(
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        var user = await userManager.FindByEmailAsync(request.Email.Trim());
-        if (user is null || user.Status != "ACTIVE")
-            return Unauthorized(new ProblemDetails
-            {
-                Status = StatusCodes.Status401Unauthorized,
-                Title = "登入失敗",
-                Detail = "Email 或密碼錯誤。"
-            });
+        try
+        {
+            if (!await db.Database.CanConnectAsync(cancellationToken))
+                return DatabaseUnavailable();
 
-        var result = await signInManager.PasswordSignInAsync(
-            user,
-            request.Password,
-            request.RememberMe,
-            lockoutOnFailure: true);
-        if (!result.Succeeded)
-            return Unauthorized(new ProblemDetails
-            {
-                Status = StatusCodes.Status401Unauthorized,
-                Title = "登入失敗",
-                Detail = "Email 或密碼錯誤。"
-            });
+            var user = await userManager.FindByEmailAsync(request.Email.Trim());
+            if (user is null || user.Status != "ACTIVE")
+                return Unauthorized(new ProblemDetails
+                {
+                    Status = StatusCodes.Status401Unauthorized,
+                    Title = "登入失敗",
+                    Detail = "Email 或密碼錯誤。"
+                });
 
-        return NoContent();
+            var result = await signInManager.PasswordSignInAsync(
+                user,
+                request.Password,
+                request.RememberMe,
+                lockoutOnFailure: true);
+            if (!result.Succeeded)
+                return Unauthorized(new ProblemDetails
+                {
+                    Status = StatusCodes.Status401Unauthorized,
+                    Title = "登入失敗",
+                    Detail = "Email 或密碼錯誤。"
+                });
+
+            return NoContent();
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+            when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception))
+        {
+            logger.LogError(
+                exception,
+                "API 登入時無法連線到 QMAH 資料庫。目標：{DatabaseTarget}",
+                QmahDatabaseDiagnostics.GetTarget(db));
+
+            return DatabaseUnavailable();
+        }
+    }
+
+    private ActionResult DatabaseUnavailable()
+    {
+        return Problem(
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "資料庫無法連線",
+            detail: $"目前無法連線到 QMAH 資料庫（{QmahDatabaseDiagnostics.GetTarget(db)}）。請確認 LocalDB／SQL Server instance 與 QMAH 資料庫已啟動並完成還原。");
     }
 
     [Authorize]

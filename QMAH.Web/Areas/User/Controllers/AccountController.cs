@@ -20,17 +20,20 @@ public class AccountController : Controller
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly QmahDbContext _context;
     private readonly IWebHostEnvironment _environment;
+    private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         QmahDbContext context,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        ILogger<AccountController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
         _environment = environment;
+        _logger = logger;
     }
 
     [HttpGet("/Account/Login")]
@@ -39,9 +42,15 @@ public class AccountController : Controller
         CancellationToken cancellationToken = default)
     {
         ViewBag.ReturnUrl = returnUrl;
+
+        if (!await CanConnectToDatabaseAsync(cancellationToken))
+        {
+            AddDatabaseUnavailableError();
+        }
+
         LoadLoginArtifactImages(cancellationToken);
 
-        return View();
+        return View(new LoginViewModel());
     }
 
     [HttpPost("/Account/Login")]
@@ -59,58 +68,81 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var user = await _userManager.FindByEmailAsync(model.Email);
-
-        if (user == null)
+        if (!await CanConnectToDatabaseAsync(cancellationToken))
         {
-            ModelState.AddModelError(
-                string.Empty,
-                "Email 或密碼錯誤");
-
-            LoadLoginArtifactImages(cancellationToken);
-            return View(model);
+            return DatabaseUnavailableView(model, cancellationToken);
         }
 
-        if (user.Status != "ACTIVE")
+        try
         {
-            ModelState.AddModelError(
-                string.Empty,
-                "此帳號目前已停權");
+            var user = await _userManager.FindByEmailAsync(model.Email);
 
-            LoadLoginArtifactImages(cancellationToken);
-            return View(model);
+            if (user == null)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Email 或密碼錯誤");
+
+                LoadLoginArtifactImages(cancellationToken);
+                return View(model);
+            }
+
+            if (user.Status != "ACTIVE")
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "此帳號目前已停權");
+
+                LoadLoginArtifactImages(cancellationToken);
+                return View(model);
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(
+                user,
+                model.Password,
+                model.RememberMe,
+                lockoutOnFailure: true);
+
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Email 或密碼錯誤");
+
+                LoadLoginArtifactImages(cancellationToken);
+                return View(model);
+            }
+
+            // 管理員 → 後台首頁
+            if (!await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                // 本專案目前只有管理後台，不提供一般會員前台。
+                await _signInManager.SignOutAsync();
+                return RedirectToAction(nameof(AccessDenied));
+            }
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            return RedirectToAction("Index", "Home", new { area = "" });
         }
-
-        var result = await _signInManager.PasswordSignInAsync(
-            user,
-            model.Password,
-            model.RememberMe,
-            lockoutOnFailure: true);
-
-        if (!result.Succeeded)
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
         {
-            ModelState.AddModelError(
-                string.Empty,
-                "Email 或密碼錯誤");
-
-            LoadLoginArtifactImages(cancellationToken);
-            return View(model);
+            throw;
         }
-
-        // 管理員 → 後台首頁
-        if (!await _userManager.IsInRoleAsync(user, "Admin"))
+        catch (Exception exception)
+            when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception))
         {
-            // 本專案目前只有管理後台，不提供一般會員前台。
-            await _signInManager.SignOutAsync();
-            return RedirectToAction(nameof(AccessDenied));
-        }
+            _logger.LogError(
+                exception,
+                "登入時無法連線到 QMAH 資料庫。目標：{DatabaseTarget}",
+                QmahDatabaseDiagnostics.GetTarget(_context));
 
-        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-        {
-            return LocalRedirect(returnUrl);
+            return DatabaseUnavailableView(model, cancellationToken);
         }
-
-        return RedirectToAction("Index", "Home", new { area = "" });
     }
 
     [HttpPost]
@@ -253,7 +285,20 @@ public class AccountController : Controller
             cancellationToken.ThrowIfCancellationRequested();
 
             var webRoot = _environment.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRoot))
+            {
+                // 以 DLL 直接啟動或靜態檔案尚未部署時，沒有 WebRoot 也不應阻斷登入頁。
+                ViewData["LoginArtifactImages"] = Array.Empty<string>();
+                return;
+            }
+
             var catalogRoot = Path.Combine(webRoot, "media", "catalog");
+            if (!Directory.Exists(catalogRoot))
+            {
+                ViewData["LoginArtifactImages"] = Array.Empty<string>();
+                return;
+            }
+
             var images = Directory
                 .EnumerateFiles(catalogRoot, "thumbnail.jpg", SearchOption.AllDirectories)
                 .OrderBy(_ => Random.Shared.Next())
@@ -280,5 +325,57 @@ public class AccountController : Controller
             // 裝飾圖片沒有權限時仍要讓登入表單正常出現
             ViewData["LoginArtifactImages"] = Array.Empty<string>();
         }
+    }
+
+    private async Task<bool> CanConnectToDatabaseAsync(
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var canConnect = await _context.Database.CanConnectAsync(cancellationToken);
+
+            if (!canConnect)
+            {
+                _logger.LogWarning(
+                    "QMAH 登入頁無法連線到資料庫。目標：{DatabaseTarget}",
+                    QmahDatabaseDiagnostics.GetTarget(_context));
+            }
+
+            return canConnect;
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "QMAH 登入頁檢查資料庫時發生連線錯誤。目標：{DatabaseTarget}",
+                QmahDatabaseDiagnostics.GetTarget(_context));
+
+            return false;
+        }
+    }
+
+    private void AddDatabaseUnavailableError()
+    {
+        var message =
+            $"資料庫無法連線（{QmahDatabaseDiagnostics.GetTarget(_context)}）。請確認該 SQL Server instance 中已還原 QMAH，或檢查 QMAH.Web/appsettings.Local.json。";
+
+        ViewData["DatabaseWarning"] = message;
+        ModelState.AddModelError(
+            string.Empty,
+            message);
+    }
+
+    private IActionResult DatabaseUnavailableView(
+        LoginViewModel model,
+        CancellationToken cancellationToken)
+    {
+        AddDatabaseUnavailableError();
+        LoadLoginArtifactImages(cancellationToken);
+        return View(model);
     }
 }

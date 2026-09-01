@@ -18,7 +18,7 @@
     </a>
 }
 
-<div class="row row-cards qmah-editor-grid">
+<div class="row row-cards qmah-editor-grid game-admin-editor-grid">
     <div class="col-12 col-xl-7">
         <form asp-action="Edit"
               asp-route-id="@Model.Id"
@@ -84,25 +84,28 @@
             </div>
 
             <div class="qmah-editor-preview__stage">
-                @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
-                {
-                    <img src="@Model.ImagePath"
-                         alt="@Model.ArtifactName"
-                         class="qmah-editor-preview__image"
-                         onerror="this.hidden=true; this.nextElementSibling.hidden=false;" />
+                <img src="@Model.ImagePath"
+                     alt="@Model.ArtifactName"
+                     class="qmah-editor-preview__image"
+                     data-editor-image-preview
+                     hidden="@string.IsNullOrWhiteSpace(Model.ImagePath)" />
 
-                    <div class="qmah-editor-preview__empty" hidden>
-                        <i class="ti ti-photo-off"></i>
-                        <span>圖片無法載入</span>
-                    </div>
-                }
-                else
-                {
-                    <div class="qmah-editor-preview__empty">
-                        <i class="ti ti-photo-off"></i>
-                        <span>這件文物尚未設定圖片</span>
-                    </div>
-                }
+                <button type="button"
+                        class="qmah-editor-preview__zoom"
+                        data-editor-image-trigger
+                        data-bs-toggle="modal"
+                        data-bs-target="#qmah-image-preview"
+                        data-qmah-image-preview="@Model.ImagePath"
+                        data-qmah-image-preview-alt="@Model.ArtifactName"
+                        aria-label="查看 @Model.ArtifactName 原圖"
+                        hidden="@string.IsNullOrWhiteSpace(Model.ImagePath)">
+                    <i class="ti ti-zoom-in" aria-hidden="true"></i>查看大圖
+                </button>
+
+                <div class="qmah-editor-preview__empty" data-editor-image-empty hidden="@(!string.IsNullOrWhiteSpace(Model.ImagePath))">
+                    <i class="ti ti-photo-off"></i>
+                    <span>@(string.IsNullOrWhiteSpace(Model.ImagePath) ? "這件文物尚未設定圖片" : "圖片無法載入")</span>
+                </div>
             </div>
 
             <div class="qmah-editor-preview__meta">
@@ -113,6 +116,30 @@
     </div>
 </div>
 
+<partial name="Admin/_ImagePreviewModal" model="@("題庫文物大圖")" />
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (() => {
+            const image = document.querySelector("[data-editor-image-preview]");
+            const trigger = document.querySelector("[data-editor-image-trigger]");
+            const empty = document.querySelector("[data-editor-image-empty]");
+            if (!image || !trigger || !empty) return;
+
+            image.addEventListener("error", () => {
+                image.hidden = true;
+                trigger.hidden = true;
+                empty.hidden = false;
+                empty.querySelector("span").textContent = "圖片無法載入";
+            });
+
+            image.addEventListener("load", () => {
+                image.hidden = false;
+                trigger.hidden = false;
+                empty.hidden = true;
+            });
+        })();
+    </script>
 }

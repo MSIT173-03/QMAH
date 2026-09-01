@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = $"題庫設定：{Model.ArtifactName}";
     ViewData["AdminDescription"] = "查看題庫設定與對應的文物資訊。文物主檔仍由圖鑑管理負責。";
+    var imagePath = Model.ImagePath;
+    var fullImagePath = Model.FullImagePath ?? imagePath;
 }
 
 @section Styles {
@@ -25,9 +27,23 @@
             </div>
             <div class="card-body game-admin-media">
                 <div class="game-admin-media-frame">
-                    @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
+                    @if (!string.IsNullOrWhiteSpace(imagePath))
                     {
-                        <img src="@Model.ImagePath" alt="@Model.ArtifactName" />
+                        <button type="button"
+                                class="game-admin-media-trigger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#qmah-image-preview"
+                                data-qmah-image-preview="@fullImagePath"
+                                data-qmah-image-preview-alt="@Model.ArtifactName"
+                                aria-label="查看 @Model.ArtifactName 原圖">
+                            <img src="@imagePath"
+                                 alt="@Model.ArtifactName"
+                                 loading="lazy"
+                                 decoding="async" />
+                            <span class="game-admin-media-zoom-hint">
+                                <i class="ti ti-zoom-in" aria-hidden="true"></i>查看大圖
+                            </span>
+                        </button>
                     }
                     else
                     {
@@ -65,3 +81,5 @@
         </div>
     </div>
 </div>
+
+<partial name="Admin/_ImagePreviewModal" model="@("題庫文物大圖")" />

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
+using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
 using QMAH.Infrastructure.Data;
@@ -26,6 +27,9 @@ builder.Configuration.AddJsonFile(
     reloadOnChange: true);
 
 // 本機設定檔只存開發環境的連線字串與 CORS 來源，不把個人差異寫進共用設定
+var qmahDatabaseResolution = await QmahDatabaseConnectionResolver.ResolveAsync(
+    builder.Configuration.GetConnectionString("QmahDatabase"),
+    builder.Configuration.GetValue("QmahDatabaseDiscovery:Enabled", true));
 
 var configuredMediaRoot = builder.Configuration["Media:RootPath"]
     ?? Path.Combine("..", "QMAH.Web", "wwwroot", "media");
@@ -69,7 +73,17 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest;
 });
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
+var openApiOptions = builder.Configuration
+    .GetSection("OpenApi")
+    .Get<QmahOpenApiOptions>() ?? new QmahOpenApiOptions();
+builder.Services.AddOpenApi(options =>
+{
+    var transformer = new QmahOpenApiSecurityTransformer(
+        ".QMAH.Api.Identity",
+        openApiOptions);
+    options.AddDocumentTransformer(transformer);
+    options.AddOperationTransformer(transformer);
+});
 
 // CORS 只允許設定檔列出的前端來源，使用 Cookie 時也不能使用萬用字元
 builder.Services.AddCors(options =>
@@ -93,9 +107,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<QmahDbContext>(options =>
 {
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("QmahDatabase")
-        ?? throw new InvalidOperationException(
-            "Connection string 'QmahDatabase' was not found."));
+        qmahDatabaseResolution.ConnectionString,
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 2,
+            maxRetryDelay: TimeSpan.FromSeconds(1),
+            errorNumbersToAdd: null));
 });
 
 // API 與 Web 共用會員資料表，但使用獨立 Cookie 名稱避免雙啟動互相覆蓋登入狀態
@@ -164,6 +180,26 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+
+if (qmahDatabaseResolution.FoundTargets.Count > 1)
+{
+    app.Logger.LogWarning(
+        "本機找到多個 QMAH 資料庫，依優先順序使用 {SelectedTarget}；候選：{FoundTargets}",
+        qmahDatabaseResolution.Target,
+        string.Join(", ", qmahDatabaseResolution.FoundTargets));
+}
+else if (qmahDatabaseResolution.UsedAutomaticDiscovery)
+{
+    app.Logger.LogInformation(
+        "已自動找到 QMAH 資料庫：{SelectedTarget}",
+        qmahDatabaseResolution.Target);
+}
+else
+{
+    app.Logger.LogInformation(
+        "QMAH 資料庫目前目標：{SelectedTarget}",
+        qmahDatabaseResolution.Target);
+}
 
 if (!app.Environment.IsDevelopment())
 {
