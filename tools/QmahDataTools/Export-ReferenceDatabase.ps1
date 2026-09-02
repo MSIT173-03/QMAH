@@ -17,7 +17,11 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $workspaceRoot = (Resolve-Path (Join-Path $repoRoot "..")).Path
 $toolProject = Join-Path $PSScriptRoot "QmahDatabaseRelease\QmahDatabaseRelease.csproj"
 $webProject = Join-Path $repoRoot "QMAH.Web\QMAH.Web.csproj"
-$repositorySql = Join-Path $repoRoot "database\QMAH.sql"
+$databaseRepoRoot = Join-Path $repoRoot "..\QMAH-Database"
+$repositorySql = Join-Path $databaseRepoRoot "QMAH.sql"
+if (-not (Test-Path -LiteralPath $repositorySql -PathType Leaf)) {
+    throw "QMAH-Database sibling repository was not found. Place it beside QMAH before exporting a reference database."
+}
 $normalizedVersion = $Version.TrimStart('v')
 
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
