@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
 
@@ -13,7 +14,8 @@ namespace QMAH.Api.Controllers.V1;
 [Route("api/v1/me")]
 public sealed class MeController(
     QmahDbContext db,
-    UserManager<ApplicationUser> userManager) : ApiControllerBase
+    UserManager<ApplicationUser> userManager,
+    QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<MeDto>> GetMe(CancellationToken cancellationToken = default)
@@ -49,7 +51,7 @@ public sealed class MeController(
             user.CreatedAt,
             profile?.Bio,
             profile?.Visibility ?? "PRIVATE",
-            profile?.AvatarPath));
+            mediaUrlResolver.Resolve(profile?.AvatarPath)));
     }
 
     [HttpPut("profile")]
@@ -234,7 +236,13 @@ public sealed class MeController(
                 item.IsDisplayed,
                 item.DisplayedAt))
             .ToListAsync(cancellationToken);
-        return Ok(achievements);
+        // 原本直接回傳 Achievement.IconPath；棄用原因：成就圖示也必須跟隨本機或 CDN 的部署設定。
+        return Ok(achievements
+            .Select(item => item with
+            {
+                IconPath = mediaUrlResolver.Resolve(item.IconPath)
+            })
+            .ToList());
     }
 
     [HttpGet("cart")]
@@ -580,7 +588,7 @@ public sealed class MeController(
         Guid userId,
         CancellationToken cancellationToken)
     {
-        return await db.CartItems
+        var items = await db.CartItems
             .AsNoTracking()
             .Where(item => item.UserId == userId)
             .OrderBy(item => item.AddedAt)
@@ -595,6 +603,14 @@ public sealed class MeController(
                 item.Product.Price * item.Quantity,
                 item.AddedAt))
             .ToListAsync(cancellationToken);
+
+        // 原本直接回傳商品 PrimaryImagePath；棄用原因：購物車回應同樣需要支援 CDN 圖片來源。
+        return items
+            .Select(item => item with
+            {
+                PrimaryImagePath = mediaUrlResolver.Resolve(item.PrimaryImagePath)
+            })
+            .ToList();
     }
 
     private async Task<ActionResult<CartItemDto>> UpsertCartItemAsync(
@@ -632,11 +648,12 @@ public sealed class MeController(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        // 原本直接回傳 product.PrimaryImagePath；棄用原因：新增或更新購物車時也要套用相同媒體網址規則。
         return Ok(new CartItemDto(
             cartItem.Id,
             cartItem.ProductId,
             product.Name,
-            product.PrimaryImagePath,
+            mediaUrlResolver.Resolve(product.PrimaryImagePath),
             product.Price,
             cartItem.Quantity,
             product.Stock,

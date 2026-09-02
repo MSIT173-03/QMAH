@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace QMAH.Api.Controllers.V1;
 
 [ApiController]
+// [Produces("application/json")] // 棄用：全域限制會讓 ProblemDetails 無法使用標準 media type。
 [AutoValidateAntiforgeryToken]
-[Produces("application/json")]
 public abstract class ApiControllerBase : ControllerBase
 {
     protected bool TryGetCurrentUserId(out Guid userId) =>

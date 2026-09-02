@@ -1,6 +1,6 @@
 # Angular 前台開發起點
 
-`QMAH.Client` 是前台的獨立 Angular 21.2.22 起始專案。目前只完成可編譯的 standalone 應用程式、Router、HttpClient、環境設定與 API proxy，沒有新增任何前台頁面或前台業務流程。
+`QMAH.Client` 是前台的獨立 Angular 21.2.22 起始專案。目前已完成可編譯的 standalone 應用程式、Router、HttpClient、環境設定與 API proxy，後續功能可直接沿用這個分層起點。
 
 ## 固定版本
 
@@ -61,7 +61,7 @@ Razor 後台若要一起看，另行啟動 `QMAH.Web` 的 `https` 設定即可�
 5. API 寫入前先取得 Anti-forgery Cookie，所有瀏覽器請求保留 Cookie credentials。
 6. 同時處理載入中、空資料、401／403、ValidationProblemDetails、網路錯誤與窄螢幕版面。
 
-目前 `app.routes.ts` 是空陣列是刻意保留的骨架狀態。不要為了看起來有頁面而新增假畫面、假資料或把 Razor View 複製到 Angular。
+`app.routes.ts` 是前台功能路由的集中入口；新增功能時依頁面責任建立 lazy loading 路由，並讓畫面資料來自 REST API 契約。
 
 ## Cookie 與 Anti-forgery
 

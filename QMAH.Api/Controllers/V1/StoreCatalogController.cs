@@ -2,11 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 
 namespace QMAH.Api.Controllers.V1;
 
 [Route("api/v1/store")]
-public sealed class StoreCatalogController(QmahDbContext db) : ApiControllerBase
+public sealed class StoreCatalogController(
+    QmahDbContext db,
+    QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
     [HttpGet("products")]
     public async Task<ActionResult<ApiPage<ProductListItemDto>>> GetProducts(
@@ -48,7 +51,17 @@ public sealed class StoreCatalogController(QmahDbContext db) : ApiControllerBase
                 product.PrimaryImagePath,
                 product.IsActive));
 
-        return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
+        var result = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
+        // 原本直接回傳資料庫中的 PrimaryImagePath；棄用原因：CDN 模式需要統一轉換公開圖片網址。
+        return Ok(result with
+        {
+            Items = result.Items
+                .Select(item => item with
+                {
+                    PrimaryImagePath = mediaUrlResolver.Resolve(item.PrimaryImagePath)
+                })
+                .ToList()
+        });
     }
 
     [HttpGet("products/{id:guid}")]
@@ -81,8 +94,13 @@ public sealed class StoreCatalogController(QmahDbContext db) : ApiControllerBase
                 item.ProductReviews.Count(review => review.Status == "PUBLISHED")))
             .SingleOrDefaultAsync(cancellationToken);
 
-        return product is null
-            ? MissingResource("找不到商品", "這件商品不存在或目前未上架。")
-            : Ok(product);
+        if (product is null)
+            return MissingResource("找不到商品", "這件商品不存在或目前未上架。");
+
+        // 原本直接回傳 PrimaryImagePath；棄用原因：資料庫只保存邏輯路徑，公開來源由部署設定決定。
+        return Ok(product with
+        {
+            PrimaryImagePath = mediaUrlResolver.Resolve(product.PrimaryImagePath)
+        });
     }
 }

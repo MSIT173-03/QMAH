@@ -16,6 +16,7 @@ using QMAH.Web.Infrastructure.Audit;
 using QMAH.Infrastructure.CatalogImport;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,11 @@ builder.Configuration.AddJsonFile(
     "appsettings.Local.json",
     optional: true,
     reloadOnChange: true);
+
+builder.Services
+    .AddOptions<MediaDeliveryOptions>()
+    .Bind(builder.Configuration.GetSection(MediaDeliveryOptions.SectionName));
+builder.Services.AddSingleton<QmahMediaUrlResolver>();
 
 // 本機設定檔只存開發環境的連線字串與展示選項，不進版本控制
 var qmahDatabaseResolution = await QmahDatabaseConnectionResolver.ResolveAsync(

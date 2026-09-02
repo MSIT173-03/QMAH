@@ -12,6 +12,7 @@ using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Security;
@@ -37,6 +38,10 @@ var mediaRoot = Path.IsPathRooted(configuredMediaRoot)
     ? Path.GetFullPath(configuredMediaRoot)
     : Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, configuredMediaRoot));
 builder.Services.Configure<MediaStorageOptions>(options => options.RootPath = mediaRoot);
+builder.Services
+    .AddOptions<MediaDeliveryOptions>()
+    .Bind(builder.Configuration.GetSection(MediaDeliveryOptions.SectionName));
+builder.Services.AddSingleton<QmahMediaUrlResolver>();
 
 // 使用 MVC 的 controller services 以提供內建 Anti-forgery filter；API 本身不建立 Razor View。
 builder.Services.AddControllersWithViews(options =>
@@ -79,7 +84,7 @@ var openApiOptions = builder.Configuration
 builder.Services.AddOpenApi(options =>
 {
     var transformer = new QmahOpenApiSecurityTransformer(
-        ".QMAH.Api.Identity",
+        ".QMAH.Api.Auth",
         openApiOptions);
     options.AddDocumentTransformer(transformer);
     options.AddOperationTransformer(transformer);
@@ -164,12 +169,28 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Events.OnRedirectToLogin = context =>
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return Task.CompletedTask;
+        return context.Response.WriteAsJsonAsync(
+            new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "尚未登入或登入狀態已失效",
+                Detail = "此 API 需要有效的會員登入狀態。"
+            },
+            options: null,
+            contentType: "application/problem+json");
     };
     options.Events.OnRedirectToAccessDenied = context =>
     {
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        return Task.CompletedTask;
+        return context.Response.WriteAsJsonAsync(
+            new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "沒有執行此操作的權限",
+                Detail = "目前登入帳號沒有使用此 API 的權限。"
+            },
+            options: null,
+            contentType: "application/problem+json");
     };
 });
 
@@ -223,10 +244,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || openApiOptions.Enabled)
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    if (app.Environment.IsDevelopment() || openApiOptions.ScalarEnabled)
+        app.MapScalarApiReference();
 }
 
 app.Run();
