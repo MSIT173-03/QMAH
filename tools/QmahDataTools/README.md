@@ -23,15 +23,15 @@
 只有資料庫整合者需要執行這支 PowerShell：
 
 ```powershell
-.\tools\QmahDataTools\Export-ReferenceDatabase.ps1 -Version 0.6.0
+.\tools\QmahDataTools\Export-ReferenceDatabase.ps1 -Version 0.7.0
 ```
 
 它會從同一個 canonical/reference SQL Server database 產生並驗證：
 
 ```text
 database/QMAH.sql
-QMAH-0.6.0.sql
-QMAH-0.6.0.bak
+QMAH-0.7.0.sql
+QMAH-0.7.0.bak
 SHA256SUMS.txt
 ```
 

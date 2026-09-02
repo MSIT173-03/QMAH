@@ -121,7 +121,7 @@ _工具輸出/reference-database/<version>/
 
 ## 目前版本的定位
 
-目前的 `database/QMAH.sql` 將在本輪資料庫驗證後更新為 `0.7.0` reference database snapshot，包含目前已確認的共同展示資料與後台功能資料。GitHub Release 發布時，Release 的 `.bak` 與 `.sql` 必須沿用同一次匯出的快照；它仍不宣稱已涵蓋尚未實作的前台功能資料。
+目前的 `database/QMAH.sql` 是 `0.7.0` reference database snapshot，包含目前已確認的共同展示資料與後台功能資料。GitHub Release 發布時，Release 的 `.bak` 與 `.sql` 必須沿用同一次匯出的快照；它仍不宣稱已涵蓋尚未實作的前台功能資料。
 
 其他 Area 合併新的 table、column、index、foreign key、constraint、Identity 初始化或共同資料後，不需要重寫工具，只需：
 
