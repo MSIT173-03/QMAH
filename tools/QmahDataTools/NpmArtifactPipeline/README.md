@@ -1,14 +1,16 @@
 # NpmArtifactPipeline
 
-把故宮數位典藏 Open API 整理成「圖鑑與遊戲共用」的文物資料包。工具只負責讀取來源、下載圖片、判讀年代與產生檢查檔；不連線 SQL Server，也不直接寫入網站資料庫。
+工具從故宮數位典藏 Open API 產生圖鑑與遊戲共用的文物資料包。
+
+它只讀取來源、下載圖片、判讀年代與產生檢查檔；不連線 SQL Server，也不直接寫入網站資料庫。
 
 ## 固定規則
 
-1. **正式基準是 8 類**，圖鑑和遊戲使用同一份分類與同一筆文物主檔。
-2. **圖片要能讓玩家猜**：保留主體清楚、具材質或造形辨識度的資料；資料缺圖、主體不清或年代無法可靠判讀時，不進題庫。
-3. **SQL Server 優先**：資料庫 Schema／`database/Schema.sql` 是結構契約，Entity 與 `QmahDbContext` 只做對照。這個工具產生的 `*.upsert.sql` 僅供核對，不取代正式 DB 變更流程。
+1. 正式基準固定為 8 類，圖鑑和遊戲使用同一份分類與同一筆文物主檔。
+2. 進入題庫的圖片必須主體清楚，且具備可辨識的材質或造形；缺圖、主體不清或年代無法可靠判讀時，不進題庫。
+3. 資料庫 Schema／`database/Schema.sql` 是結構契約，Entity 與 `QmahDbContext` 只做對照。工具產生的 `*.upsert.sql` 僅供核對，不取代正式 DB 變更流程。
 
-直接雙擊 `NpmArtifactPipeline.exe` 且沒有參數時會立即結束，不會自行執行。請從命令列帶參數，或由 `NpmDataWorkbench.exe` 的文物頁呼叫。
+雙擊沒有參數的 `NpmArtifactPipeline.exe` 會立即結束，不會執行流程。使用命令列帶入參數，或由 `NpmDataWorkbench.exe` 的文物頁呼叫。
 
 ## 正式 8 類
 
@@ -23,9 +25,13 @@
 | `CARVING` | 雕刻 | `carvings` | 立體造形與材質明顯，資料量可支撐擴充 |
 | `PAINTING` | 繪畫 | `paintings` | 題材、構圖與畫面風格能提供視覺線索 |
 
-這 8 類是目前專題的固定基準，不因單次 API 缺漏而臨時換類。16 個來源端點仍會保留在目錄中，另外 8 類只作可用量與品質審核：文具、雜項、織品、絲繡、法書、法帖、拓片、成扇。法書／成扇的完整年代資料比例過低，文具與拓片等類別也較難讓一般玩家只靠圖片猜出穩定答案，因此不納入正式題庫基準。
+這 8 類是目前專題的固定基準，不因單次 API 缺漏而換類。
 
-後續資料量增加到 2～3 倍時，只替換同一類中的單筆資料，不改分類代碼。8 類各 32 筆是匯入最低門檻，正式展示可再擴充到每類 40 筆以上，總量自然由 256 筆往上增加。
+16 個來源端點仍保留在目錄中；另外 8 類只作可用量與品質審核：文具、雜項、織品、絲繡、法書、法帖、拓片、成扇。法書／成扇的年代資料完整度較低，文具與拓片等類別也較難只靠圖片判斷穩定答案，因此不納入正式題庫基準。
+
+後續資料量增加到 2～3 倍時，只替換同一類中的單筆資料，不改分類代碼。
+
+8 類各 32 筆是匯入最低門檻。正式展示可再擴充到每類 40 筆以上，總量自然由 256 筆往上增加。
 
 ## 常用指令
 
@@ -38,7 +44,9 @@
 
 `--estimate-only` 只讀取 16 個 API 陣列筆數，不建立 output、不下載圖片。若預設連線路徑逾時，工具會使用 IPv4 連線；仍失敗時請看 `ESTIMATE_FAILED`，不要以其他分類硬湊數量。
 
-指定單類數量時，參數名使用資料集檔名：`--bronze`、`--ceramic`、`--jade`、`--enamel`、`--lacquer`、`--coins`、`--carvings`、`--painting`。`--per-dataset` 只會套用到正式 8 類；`--all-categories` 另輸出 8 個保留來源類別，僅供人工審核。
+指定單類數量時，參數名使用資料集檔名：`--bronze`、`--ceramic`、`--jade`、`--enamel`、`--lacquer`、`--coins`、`--carvings`、`--painting`。
+
+`--per-dataset` 只會套用到正式 8 類；`--all-categories` 另輸出 8 個保留來源類別，僅供人工審核。
 
 ## 來源與品質規則
 
@@ -74,7 +82,9 @@ raw、processed、preview、快取、log、bin、obj 與大量圖片不得放進
 
 ## 與 SQL Server 的關係
 
-目前採 SQL Server DB-first：先以 SQL／ERD 確認 Schema，再讓 Entity 與 `QmahDbContext` 對照。`database/Schema.sql` 用來檢查空白資料庫應得到的第一版結構；Repository 不使用 EF Migration。匯入器的正確順序是「資料包預檢 → 人工確認 → 在已建立的 QMAH 資料庫執行匯入」，本工具本身不建立資料庫。
+目前採 SQL Server DB-first：先以 SQL／ERD 確認 Schema，再讓 Entity 與 `QmahDbContext` 對照。
+
+`database/Schema.sql` 用來檢查空白資料庫應得到的第一版結構；Repository 不使用 EF Migration。匯入器的正確順序是「資料包預檢 → 人工確認 → 在已建立的 QMAH 資料庫執行匯入」，本工具本身不建立資料庫。
 
 正式表只涉及：
 

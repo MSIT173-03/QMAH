@@ -1,6 +1,6 @@
 # NpmDataImporter
 
-`NpmDataImporter` 是已標準化文物資料包的命令列預檢與匯入工具。一般網站開發不需要執行它；管理員日常匯入應優先使用後台的「文物匯入」，命令列工具則適合批次資料、CI 前的檢查與重現問題。
+`NpmDataImporter` 是已標準化文物資料包的命令列預檢與匯入工具。一般網站開發不需要執行；管理員日常匯入使用後台的「文物匯入」，命令列工具用於批次資料、CI 前檢查與問題重現。
 
 匯入核心位於 `QMAH.Infrastructure/Infrastructure/CatalogImport/`，因此後台、命令列工具與其他主機使用同一套驗證、同步與冪等規則。工具只接受已存在的 QMAH SQL Server Schema，不建立資料庫、不建立資料表、不執行 EF Migration，也不覆蓋既有圖片。
 
@@ -22,7 +22,7 @@ dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj 
   --media-root C:\path\to\QMAH\QMAH.Web\wwwroot\media
 ```
 
-完整 256 件資料包可省略數量參數，會使用預設值。若只想檢查文物與題庫，不讀取商品資料：
+完整 256 件資料包可省略數量參數，使用預設值。只檢查文物與題庫、不讀取商品資料時：
 
 ```powershell
 dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj -- `
@@ -32,7 +32,7 @@ dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj 
   --skip-products
 ```
 
-若只要做小量流程驗證，可以明確降低上限；這是測試選項，不會改變正式資料包的數量：
+小量流程驗證可明確降低上限；這是測試選項，不會改變正式資料包的數量：
 
 ```powershell
 dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj -- `
