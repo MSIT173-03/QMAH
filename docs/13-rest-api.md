@@ -219,6 +219,41 @@ Code（系統代碼）是資料契約，不是直接給使用者看的文案；�
 
 「目前會員」由登入 Cookie（瀏覽器保存的登入狀態）決定，request body（請求本文，送出的 JSON 內容）不含切換其他 `UserId`（會員識別碼）的欄位。地址支援手動輸入，座標欄位可完全留白或成對提供。
 
+### 經濟、進程與社群加碼
+
+以下 Endpoint（API 可呼叫的路徑）是前台接手鑑定點數、鑰匙、優惠券、成就稱號與遊戲獎勵時使用的契約。除公開的活動加碼查詢外，都需要登入；寫入操作仍須先取得 Anti-forgery（防偽請求驗證）Cookie 與 token（驗證用的暫時字串）。
+
+| Method | Path | 權限 | 用途與主要欄位 |
+| --- | --- | --- | --- |
+| GET | `/api/v1/me/economy` | 登入後 | 取得鑑定點數、鑰匙進度、各類鑰匙餘額、每把鑰匙的可解鎖文物數量與目前兌換規則 |
+| GET | `/api/v1/me/keys/exchange-rules` | 登入後 | 取得目前仍有可解鎖文物的鑰匙兌換規則 |
+| POST | `/api/v1/me/keys/{keyCode}/unlock` | 登入後 | 使用一把鑰匙解鎖文物；只有 `UNIVERSAL` 可在 body 傳 `ArtifactId`，其他類型由伺服器抽選 |
+| POST | `/api/v1/me/keys/exchange` | 登入後 | 傳送 `RuleId` 與 `Units`，依資料庫規則交換鑰匙 |
+| POST | `/api/v1/me/keys/{keyCode}/recycle` | 登入後 | 傳送 `Amount`，只回收已沒有可解鎖文物的鑰匙並取得鑑定點數 |
+| GET | `/api/v1/me/coupons/exchange-options` | 登入後 | 取得點數兌換券的成本、折扣、最低消費、有效天數與使用期間 |
+| POST | `/api/v1/me/coupons/redeem` | 登入後 | 傳送 `CouponDefinitionId`，扣除鑑定點數並建立一張獨立的會員優惠券 |
+| GET | `/api/v1/me/title` | 登入後 | 取得目前配戴的單一成就稱號，未配戴時回傳 `null` |
+| PUT | `/api/v1/me/title` | 登入後 | 傳送 `UserAchievementId` 設定稱號；傳送 `null` 清除配戴狀態 |
+| GET | `/api/v1/me/daily-activity` | 登入後 | 依每日登入歷史即時計算最後登入日、累積天數、連續天數、最高連續天數與登入率 |
+| POST | `/api/v1/me/daily-activity/login` | 登入後 | 由會員前台明確記錄當日登入；同日重複呼叫只增加活動次數，不增加登入天數 |
+| GET | `/api/v1/game/modes` | 登入後 | 取得四種 Mini Game（小遊戲）模式、設定與評級門檻 |
+| POST | `/api/v1/game/attempts` | 登入後 | 傳送 `ModeCode` 開始一次嘗試；伺服器決定文物池、難度、Seed（結果重現用的隨機種子）與設定，成功回傳 `201` |
+| POST | `/api/v1/game/attempts/{id}/complete` | 登入後 | 傳送原始分數與結果資料；伺服器重新計算標準化分數、評級、點數與鑰匙進度 |
+| POST | `/api/v1/game/rooms/{id}/reward` | 登入後 | 結算多人主遊戲獎勵；同一會員同一房間不可重複領取 |
+| GET | `/api/v1/social/events/{eventId}/reward-policy` | 公開 | 取得活動的每位參與者加碼、有效期間與目前發放狀態；沒有規則時回傳 `null` |
+| PUT | `/api/v1/social/events/{eventId}/reward-policy` | 活動發起人／Admin | 設定玩家活動或官方活動的點數、鑰匙加碼與有效期間 |
+| GET | `/api/v1/game/invitations` | 登入後 | 取得目前會員收到的私人房間邀請 |
+| GET | `/api/v1/game/rooms/{roomId}/invitations` | 房間發起人 | 取得該私人房間送出的邀請與處理結果 |
+| POST | `/api/v1/game/rooms/{roomId}/invitations` | 房間發起人 | 傳送 `InviteeUserId` 與選填 `Message` 建立邀請；不預扣資產 |
+| POST | `/api/v1/game/invitations/{invitationId}/response` | 被邀請會員 | 傳送 `Decision`（`ACCEPT` 或 `DECLINE`）回應邀請，接受後才嘗試發放加碼 |
+| POST | `/api/v1/game/invitations/{invitationId}/cancel` | 邀請發起人 | 取消尚未回應的邀請，歷史資料保留 |
+| GET | `/api/v1/game/rooms/{roomId}/reward-policy` | 房間參與者 | 取得私人房間加碼規則與剩餘額度 |
+| PUT | `/api/v1/game/rooms/{roomId}/reward-policy` | 房間發起人 | 設定每位參與者的點數／鑰匙加碼與會員總預算；兩種加碼皆為 0 時停用 |
+
+這組資產操作成功通常回傳 `200 OK`（成功並回傳資料）；開始 Mini Game 建立嘗試回傳 `201 Created`（已建立資源）。欄位錯誤或業務條件不符回傳 `400`，未登入回傳 `401`，不是資源擁有者或沒有角色權限回傳 `403`，找不到文物、規則、房間或邀請回傳 `404`，餘額、候選文物、重複領取或目前狀態不允許時回傳 `409`。所有失敗均使用 `ProblemDetails`（標準錯誤回應格式）或 `ValidationProblemDetails`（欄位驗證錯誤格式）。
+
+鑑定點數、鑰匙與優惠券的異動資料是資產歷史的主要來源。`admin.AuditLogs` 不記錄每個 API 讀取或 request body（請求本文），目前只由 Web（Razor 管理後台）的具權限非 GET 管理寫入操作留下必要 metadata（操作時間、操作者、區域、路徑與結果）；點數、鑰匙、優惠券和批次活動則分別以自己的流水或批次主檔查帳。這樣可以查單一會員與活動影響範圍，也不會因前台輪詢而無限制增加稽核資料。
+
 ### 管理摘要
 
 | Method | Path | 權限 | 用途 |

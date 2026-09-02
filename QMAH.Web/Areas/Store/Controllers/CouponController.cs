@@ -52,6 +52,8 @@ public class CouponController : Controller
             ModelState.AddModelError(nameof(model.EndAt), "結束時間必須晚於開始時間。");
         }
 
+        await ValidateCouponDefinitionAsync(model, cancellationToken);
+
         if (!ModelState.IsValid)
         {
             return View("CouponEdit", model);
@@ -63,6 +65,9 @@ public class CouponController : Controller
             Code = model.Code,
             Name = model.Name,
             DiscountType = model.DiscountType,
+            AcquisitionType = model.AcquisitionType,
+            PointCost = model.PointCost,
+            ValidityDays = model.ValidityDays,
             DiscountValue = model.DiscountValue,
             MinimumAmount = model.MinimumAmount,
             StartAt = model.StartAt,
@@ -103,6 +108,8 @@ public class CouponController : Controller
             ModelState.AddModelError(nameof(model.EndAt), "結束時間必須晚於開始時間。");
         }
 
+        await ValidateCouponDefinitionAsync(model, cancellationToken, id);
+
         if (!ModelState.IsValid)
         {
             return View("CouponEdit", model);
@@ -117,6 +124,9 @@ public class CouponController : Controller
         coupon.Code = model.Code;
         coupon.Name = model.Name;
         coupon.DiscountType = model.DiscountType;
+        coupon.AcquisitionType = model.AcquisitionType;
+        coupon.PointCost = model.PointCost;
+        coupon.ValidityDays = model.ValidityDays;
         coupon.DiscountValue = model.DiscountValue;
         coupon.MinimumAmount = model.MinimumAmount;
         coupon.StartAt = model.StartAt;
@@ -146,9 +156,49 @@ public class CouponController : Controller
 
     private static void Normalize(CouponEditViewModel model)
     {
-        model.Code = model.Code.Trim().ToUpperInvariant();
-        model.Name = model.Name.Trim();
-        model.DiscountType = model.DiscountType.Trim().ToUpperInvariant();
+        model.Code = model.Code?.Trim().ToUpperInvariant() ?? "";
+        model.Name = model.Name?.Trim() ?? "";
+        model.DiscountType = model.DiscountType?.Trim().ToUpperInvariant() ?? "";
+        model.AcquisitionType = model.AcquisitionType?.Trim().ToUpperInvariant() ?? "";
+
+        if (model.AcquisitionType == "ADMIN_GRANT")
+        {
+            model.PointCost = null;
+        }
+    }
+
+    private async Task ValidateCouponDefinitionAsync(
+        CouponEditViewModel model,
+        CancellationToken cancellationToken,
+        Guid? editingId = null)
+    {
+        if (model.AcquisitionType is not ("POINT_EXCHANGE" or "ADMIN_GRANT"))
+        {
+            ModelState.AddModelError(nameof(model.AcquisitionType), "取得方式必須是點數兌換或管理員發放。");
+        }
+
+        if (model.AcquisitionType == "POINT_EXCHANGE" && (!model.PointCost.HasValue || model.PointCost.Value <= 0))
+        {
+            ModelState.AddModelError(nameof(model.PointCost), "點數兌換券必須設定大於 0 的點數成本。");
+        }
+
+        if (model.AcquisitionType == "ADMIN_GRANT" && model.PointCost.HasValue)
+        {
+            ModelState.AddModelError(nameof(model.PointCost), "管理員發放券不應設定點數成本。");
+        }
+
+        if (model.DiscountType == "PERCENT" && model.DiscountValue > 100)
+        {
+            ModelState.AddModelError(nameof(model.DiscountValue), "百分比折扣不可超過 100%。");
+        }
+
+        var duplicateCode = await db.CouponDefinitions
+            .AsNoTracking()
+            .AnyAsync(item => item.Code == model.Code && (!editingId.HasValue || item.Id != editingId.Value), cancellationToken);
+        if (duplicateCode)
+        {
+            ModelState.AddModelError(nameof(model.Code), "優惠券代碼已存在，請改用其他代碼。");
+        }
     }
 
     private static CouponEditViewModel ToEditModel(CouponDefinition coupon) => new()
@@ -157,6 +207,9 @@ public class CouponController : Controller
         Code = coupon.Code,
         Name = coupon.Name,
         DiscountType = coupon.DiscountType,
+        AcquisitionType = coupon.AcquisitionType,
+        PointCost = coupon.PointCost,
+        ValidityDays = coupon.ValidityDays,
         DiscountValue = coupon.DiscountValue,
         MinimumAmount = coupon.MinimumAmount,
         StartAt = coupon.StartAt,

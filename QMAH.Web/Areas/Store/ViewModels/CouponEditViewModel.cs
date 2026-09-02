@@ -21,6 +21,19 @@ public sealed class CouponEditViewModel
     [Display(Name = "折扣類型")]
     public string DiscountType { get; set; } = "FIXED";
 
+    [Required(ErrorMessage = "請選擇取得方式")]
+    [StringLength(30)]
+    [Display(Name = "取得方式")]
+    public string AcquisitionType { get; set; } = "ADMIN_GRANT";
+
+    [Range(1, 999999999, ErrorMessage = "點數兌換成本必須大於 0")]
+    [Display(Name = "點數兌換成本")]
+    public int? PointCost { get; set; }
+
+    [Range(1, 3650, ErrorMessage = "有效天數必須介於 1 到 3650 天")]
+    [Display(Name = "發放後有效天數")]
+    public int ValidityDays { get; set; } = 365;
+
     [Range(0, 999999999, ErrorMessage = "折扣值不可小於 0")]
     [Display(Name = "折扣值")]
     public decimal DiscountValue { get; set; }

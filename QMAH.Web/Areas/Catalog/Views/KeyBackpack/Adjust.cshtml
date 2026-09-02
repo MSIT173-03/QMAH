@@ -1,0 +1,78 @@
+@model QMAH.Web.Areas.Catalog.ViewModel.KeyAdjustViewModel
+
+@{
+    ViewData["Title"] = "調整會員鑰匙";
+    ViewData["AdminDescription"] = "以增加或扣除方式調整鑰匙；每次異動都會保留原因與流水紀錄。";
+}
+
+@section PageActions {
+    <a asp-action="Index" asp-route-userId="@Model.UserId" class="btn btn-outline-secondary">
+        <i class="ti ti-arrow-left me-1"></i>返回鑰匙背包
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card qmah-form-card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">鑰匙異動</h2>
+                    <div class="text-secondary">正數增加、負數扣除；目前餘額由伺服器在送出時重新確認。</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form asp-action="Adjust" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="UserId" type="hidden" />
+                    <input asp-for="KeyDefinitionId" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">目前狀態</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">會員</label>
+                                <input value="@Model.MemberName" class="form-control" readonly />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">鑰匙</label>
+                                <input value="@Model.KeyName (@Model.KeyCode)" class="form-control" readonly />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="CurrentBalance" class="form-label">目前餘額</label>
+                                <input asp-for="CurrentBalance" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">異動內容</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-5">
+                                <label asp-for="Amount" class="form-label">調整數量</label>
+                                <input asp-for="Amount" class="form-control" inputmode="numeric" placeholder="例如：2 或 -1" />
+                                <span asp-validation-for="Amount" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-7">
+                                <label asp-for="Reason" class="form-label">調整原因</label>
+                                <input asp-for="Reason" class="form-control" placeholder="例如：活動補發或資料更正" />
+                                <span asp-validation-for="Reason" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="qmah-form-actions">
+                        <a asp-action="Index" asp-route-userId="@Model.UserId" class="btn btn-outline-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-key me-1"></i>確認異動
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

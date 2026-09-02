@@ -25,7 +25,8 @@ DECLARE @StoreUserId uniqueidentifier = (SELECT TOP (1) [Id] FROM [user].[AspNet
 DECLARE @PlayerAUserId uniqueidentifier = (SELECT TOP (1) [Id] FROM [user].[AspNetUsers] WHERE [Email] = N'player-a@qmah.local');
 DECLARE @PlayerBUserId uniqueidentifier = (SELECT TOP (1) [Id] FROM [user].[AspNetUsers] WHERE [Email] = N'player-b@qmah.local');
 
-IF @AdminUserId IS NULL OR @UserId IS NULL
+IF @AdminUserId IS NULL OR @UserId IS NULL OR @CatalogUserId IS NULL OR @GameUserId IS NULL
+    OR @SocialUserId IS NULL OR @StoreUserId IS NULL OR @PlayerAUserId IS NULL OR @PlayerBUserId IS NULL
     THROW 50002, '需要先有基本會員資料才能建立後台展示資料', 1;
 
 BEGIN TRY
@@ -56,22 +57,22 @@ BEGIN TRY
             WHEN N'QMAH-FIX-0003' THEN N'Demo Catalog 收'
             ELSE orderData.[RecipientName] END,
         orderData.[RecipientPhone] = CASE orderData.[OrderNo]
-            WHEN N'QMAH-FIX-0001' THEN N'0900001001'
-            WHEN N'QMAH-FIX-0002' THEN N'0900001002'
-            WHEN N'QMAH-FIX-0003' THEN N'0900001003'
+            WHEN N'QMAH-FIX-0001' THEN N'0912-638-417'
+            WHEN N'QMAH-FIX-0002' THEN N'0921-745-306'
+            WHEN N'QMAH-FIX-0003' THEN N'0935-284-619'
             ELSE orderData.[RecipientPhone] END,
         orderData.[ShippingAddressLine] = CASE orderData.[OrderNo]
-            WHEN N'QMAH-FIX-0001' THEN N'重慶南路一段 20 號'
-            WHEN N'QMAH-FIX-0002' THEN N'公益路 88 號 3 樓'
-            WHEN N'QMAH-FIX-0003' THEN N'復興南路一段 100 號'
+            WHEN N'QMAH-FIX-0001' THEN N'重慶南路一段 20 號 4 樓'
+            WHEN N'QMAH-FIX-0002' THEN N'公益路 88 號 3 樓之 1'
+            WHEN N'QMAH-FIX-0003' THEN N'復興南路一段 100 號 6 樓'
             ELSE orderData.[ShippingAddressLine] END
     FROM [store].[StoreOrders] AS orderData
     WHERE orderData.[OrderNo] IN (N'QMAH-FIX-0001', N'QMAH-FIX-0002', N'QMAH-FIX-0003');
 
     UPDATE addressData
     SET addressData.[RecipientName] = N'Demo Store Editor 收',
-        addressData.[RecipientPhone] = N'0900001004',
-        addressData.[AddressLine] = N'重慶南路一段 20 號'
+        addressData.[RecipientPhone] = N'0912-638-417',
+        addressData.[AddressLine] = N'重慶南路一段 20 號 4 樓'
     FROM [user].[UserAddresses] AS addressData
     INNER JOIN [user].[AspNetUsers] AS member ON member.[Id] = addressData.[UserId]
     WHERE member.[Email] = N'store@qmah.local'
@@ -113,7 +114,7 @@ BEGIN TRY
         ('9104E01E-BD06-48BD-8124-B2538B3EDBCA', N'KEY-ERA-MING', N'明代解鎖鑰匙', N'ERA', NULL, N'MING', 1),
         ('7A59FC2A-447D-4696-BD23-BC102AF137C2', N'KEY-UNIVERSAL', N'萬能鑰匙', N'UNIVERSAL', NULL, NULL, 1),
         ('4151AED3-AD2F-4F2E-82C9-BED4632B89D2', N'KEY-ERA-QING', N'清代解鎖鑰匙', N'ERA', NULL, N'QING', 1),
-        ('0086AE0C-B8E5-4123-8044-C3326E2953E8', N'KEY-NORMAL', N'一般鑰匙', N'NORMAL', NULL, NULL, 0),
+        ('0086AE0C-B8E5-4123-8044-C3326E2953E8', N'KEY-NORMAL', N'一般鑰匙', N'NORMAL', NULL, NULL, 1),
         ('B022EB08-061C-44F6-8A93-C8F88E43F8A1', N'KEY-ERA-WARRING_STATES', N'戰國時代解鎖鑰匙', N'ERA', NULL, N'WARRING_STATES', 1),
         ('ED5C2044-FCCE-405F-AED6-E9526F603DBE', N'KEY-CATEGORY-COIN', N'錢幣類解鎖鑰匙', N'CATEGORY', N'COIN', NULL, 1),
         ('4210DDB4-A9EE-4424-89F8-EF9633322866', N'KEY-CATEGORY-PAINTING', N'繪畫類解鎖鑰匙', N'CATEGORY', N'PAINTING', NULL, 1),
@@ -137,6 +138,47 @@ BEGIN TRY
     LEFT JOIN [catalog].[ArtifactCategories] c ON c.[Code] = s.[CategoryCode]
     LEFT JOIN [catalog].[EraBuckets] e ON e.[Code] = s.[EraCode]
     WHERE NOT EXISTS (SELECT 1 FROM [catalog].[KeyDefinitions] k WHERE k.[Code] = s.[Code]);
+
+    UPDATE keyData
+       SET [RecyclePointValue] = CASE [ScopeType]
+            WHEN N'NORMAL' THEN 2
+            WHEN N'CATEGORY' THEN 3
+            WHEN N'ERA' THEN 5
+            WHEN N'UNIVERSAL' THEN 6
+            ELSE [RecyclePointValue]
+           END
+      FROM [catalog].[KeyDefinitions] keyData
+     WHERE keyData.[Code] IN (SELECT [Code] FROM @KeyDefinitionSeeds)
+       AND keyData.[RecyclePointValue] = 0;
+
+    /* patch 先於展示資料執行時，當下可能還沒有 NORMAL 鑰匙；這裡補建資料化兌換規則。 */
+    DECLARE @SeedNormalKeyId uniqueidentifier =
+        (SELECT TOP (1) [Id]
+           FROM [catalog].[KeyDefinitions]
+          WHERE [Code] = N'KEY-NORMAL' AND [IsActive] = 1);
+    IF @SeedNormalKeyId IS NOT NULL
+    BEGIN
+        INSERT INTO [catalog].[KeyExchangeRules]
+            ([Id], [SourceKeyDefinitionId], [SourceAmount], [TargetKeyDefinitionId], [TargetAmount], [SortOrder], [IsActive], [Description])
+        SELECT NEWID(), @SeedNormalKeyId,
+               CASE target.[ScopeType] WHEN N'CATEGORY' THEN 2 WHEN N'ERA' THEN 3 ELSE 4 END,
+               target.[Id], 1,
+               CASE target.[ScopeType] WHEN N'CATEGORY' THEN 10 WHEN N'ERA' THEN 20 ELSE 30 END,
+               1,
+               CASE target.[ScopeType] WHEN N'CATEGORY' THEN N'兩把一般鑰匙兌換一把分類鑰匙'
+                    WHEN N'ERA' THEN N'三把一般鑰匙兌換一把年代鑰匙'
+                    ELSE N'四把一般鑰匙兌換一把萬能鑰匙' END
+          FROM [catalog].[KeyDefinitions] target
+         WHERE target.[IsActive] = 1
+           AND target.[ScopeType] IN (N'CATEGORY', N'ERA', N'UNIVERSAL')
+           AND NOT EXISTS
+           (
+               SELECT 1
+                 FROM [catalog].[KeyExchangeRules] existingRule
+                WHERE existingRule.[SourceKeyDefinitionId] = @SeedNormalKeyId
+                  AND existingRule.[TargetKeyDefinitionId] = target.[Id]
+           );
+    END;
 
     DECLARE @KeyGrants TABLE
     (
@@ -202,7 +244,15 @@ BEGIN TRY
     FROM [catalog].[UserKeyBalances] b
     INNER JOIN [user].[AspNetUsers] u ON u.[Id] = b.[UserId]
     INNER JOIN [catalog].[KeyDefinitions] k ON k.[Id] = b.[KeyDefinitionId]
-    INNER JOIN @KeyGrants g ON g.[Email] = u.[Email] AND g.[KeyCode] = k.[Code];
+    INNER JOIN @KeyGrants g ON g.[Email] = u.[Email] AND g.[KeyCode] = k.[Code]
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [catalog].[KeyTransactions] existingGrant
+        WHERE existingGrant.[UserId] = b.[UserId]
+          AND existingGrant.[KeyDefinitionId] = b.[KeyDefinitionId]
+          AND existingGrant.[ReferenceType] = N'SHOWCASE_GRANT'
+    );
 
     INSERT INTO [catalog].[UserKeyBalances] ([UserId], [KeyDefinitionId], [Balance], [UpdatedAt])
     SELECT u.[Id], k.[Id], g.[Balance], @Now
@@ -267,13 +317,13 @@ BEGIN TRY
     INSERT INTO @EventSeeds
         ([Title], [EventType], [OrganizerUserId], [Content], [Location], [Latitude], [Longitude], [StartDays], [DurationHours], [RegistrationDays], [Capacity], [ReviewStatus], [PublishStatus], [ReviewNote], [ReviewedByUserId])
     VALUES
-        (N'青銅器紋飾讀圖工作坊', N'OFFICIAL', @CatalogUserId, N'本場從幾何紋、動物紋與器身轉折開始，帶著參加者練習把「看見的線條」和「對紋飾的推測」分開記錄。前半段會以完整影像建立觀看順序，後半段再放大器口、腹部與底部的局部，對照鑄造痕跡、構圖節奏與容易被光線掩蓋的細節。參加者不需要先熟悉專有名詞，只要帶著一個想查證的問題即可。', N'國立故宮博物院正館｜文獻導讀室', 25.102400, 121.548500, 5, 3, 2, 24, N'APPROVED', N'PUBLISHED', N'活動內容與報名資訊已確認。', @AdminUserId),
-        (N'週末館藏導讀：從器形看年代', N'OFFICIAL', @CatalogUserId, N'本次導讀挑選三件不同時期的器物，先從通高、口徑、腹部比例與器足觀察整體形制，再回到材質、紋飾和來源欄位交叉比對。講者會示範如何保留年代原文與不確定範圍，也會安排一段讓參加者把自己的第一印象改寫成可以回查的觀察筆記，適合第一次使用圖鑑或想練習慢慢看作品的參加者。', N'國立故宮博物院南部院區（故宮南院）｜多功能展廳', 23.470900, 120.294100, 12, 2, 9, 40, N'APPROVED', N'PUBLISHED', N'已完成場次與講者資料確認。', @AdminUserId),
-        (N'玩家交流：我第一次看懂的細節', N'PLAYER', @PlayerAUserId, N'這是一場由玩家帶路的交流，大家可以分享自己在圖鑑裡第一次真正看懂的細節，也可以帶著曾經猜錯的作品來討論。流程會先用五分鐘說明作品名稱與資料來源，再交換辨識方法、查找過程和仍然沒有答案的問題；不要求每個人得出相同結論，重點是讓其他會員知道你的觀察從哪裡開始。', N'社群線上交流室', NULL, NULL, 18, 2, 16, 16, N'APPROVED', N'PUBLISHED', N'符合玩家交流活動規範。', @AdminUserId),
-        (N'夜間文物猜謎會', N'PLAYER', @PlayerBUserId, N'活動會以局部圖像、簡短提示卡和分組討論進行三個回合；每回合先讓大家寫下看到的線索，再逐步開放材質、器形或來源提示。揭曉後不只公布答案，也會一起回看哪些判斷有圖鑑資料支持、哪些只是當下的直覺。適合想用輕鬆方式練習觀察，又願意把推理過程說出來的玩家。', N'清明鑑定屋｜二樓活動室', NULL, NULL, 25, 2, 22, 30, N'PENDING', N'DRAFT', NULL, NULL),
-        (N'古典色彩與保存觀察', N'OFFICIAL', @CatalogUserId, N'本場會從常見顏料、釉色與表面保存狀態切入，帶領參加者比較色彩變化在辨識上的幫助與限制。除了看作品本身，也會討論拍攝光線、反光、修復痕跡和螢幕顯示可能造成的誤判，最後將一段過度肯定的描述改寫成保留證據範圍的觀察筆記。活動結束後可回到圖鑑繼續查找相關作品。', N'國立故宮博物院南部院區（故宮南院）｜教育展廳', 23.470900, 120.294100, -5, 3, -12, 18, N'APPROVED', N'CANCELLED', N'因場地維護取消本場活動，後續將另行公告。', @AdminUserId),
-        (N'玩家提案：我的地方文物小旅行', N'PLAYER', @PlayerAUserId, N'這個提案想從地方博物館、歷史建築與沿線街區開始，分享一條可以實際走訪的文物小旅行。發起人預計整理交通方式、開放時間、建議停留長度、照片來源與每一站想觀察的問題，也歡迎其他會員補充自己的路線。正式成團前會先確認活動流程、集合方式與可公開使用的資料來源。', N'社群線上交流室', NULL, NULL, 30, 2, 24, 20, N'REJECTED', N'DRAFT', N'目前提案缺少明確的活動流程與資料來源，請補充後重新送審。', @AdminUserId),
-        (N'小型器物的手感與比例', N'OFFICIAL', @GameUserId, N'本場從鑑定遊戲裡常見的小型器物題目延伸，先讓參加者比較不同作品的通高、口徑、器壁厚薄與可想像的拿取方式，再討論「手感」哪些可以從資料推測、哪些必須保留為想像。活動會把遊戲作答、圖鑑欄位和個人筆記放在一起回顧，練習不要只用一個醒目的特徵替作品下結論。', N'線上交流室', NULL, NULL, 8, 2, 6, 28, N'PENDING', N'DRAFT', NULL, NULL);
+        (N'青銅器紋飾讀圖工作坊', N'OFFICIAL', @CatalogUserId, N'本場從幾何紋、動物紋與器身轉折開始，帶著參加者練習把「看見的線條」和「對紋飾的推測」分開記錄。前半段會以完整影像建立觀看順序，後半段再放大器口、腹部與底部的局部，對照鑄造痕跡、構圖節奏與容易被光線掩蓋的細節。參加者不需要先熟悉專有名詞，只要帶著一個想查證的問題即可。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, 5, 3, 2, 24, N'APPROVED', N'PUBLISHED', N'活動內容與報名資訊已確認。', @AdminUserId),
+        (N'週末館藏導讀：從器形看年代', N'OFFICIAL', @CatalogUserId, N'本次導讀挑選三件不同時期的器物，先從通高、口徑、腹部比例與器足觀察整體形制，再回到材質、紋飾和來源欄位交叉比對。講者會示範如何保留年代原文與不確定範圍，也會安排一段讓參加者把自己的第一印象改寫成可以回查的觀察筆記，適合第一次使用圖鑑或想練習慢慢看作品的參加者。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, 12, 2, 9, 40, N'APPROVED', N'PUBLISHED', N'已完成場次與講者資料確認。', @AdminUserId),
+        (N'玩家交流：我第一次看懂的細節', N'PLAYER', @PlayerAUserId, N'這是一場由玩家帶路的交流，大家可以分享自己在圖鑑裡第一次真正看懂的細節，也可以帶著曾經猜錯的作品來討論。流程會先用五分鐘說明作品名稱與資料來源，再交換辨識方法、查找過程和仍然沒有答案的問題；不要求每個人得出相同結論，重點是讓其他會員知道你的觀察從哪裡開始。', N'線上活動', NULL, NULL, 18, 2, 16, 16, N'APPROVED', N'PUBLISHED', N'符合玩家交流活動規範。', @AdminUserId),
+        (N'夜間文物猜謎會', N'PLAYER', @PlayerBUserId, N'活動會以局部圖像、簡短提示卡和分組討論進行三個回合；每回合先讓大家寫下看到的線索，再逐步開放材質、器形或來源提示。揭曉後不只公布答案，也會一起回看哪些判斷有圖鑑資料支持、哪些只是當下的直覺。適合想用輕鬆方式練習觀察，又願意把推理過程說出來的玩家。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', NULL, NULL, 25, 2, 22, 30, N'PENDING', N'DRAFT', NULL, NULL),
+        (N'古典色彩與保存觀察', N'OFFICIAL', @CatalogUserId, N'本場會從常見顏料、釉色與表面保存狀態切入，帶領參加者比較色彩變化在辨識上的幫助與限制。除了看作品本身，也會討論拍攝光線、反光、修復痕跡和螢幕顯示可能造成的誤判，最後將一段過度肯定的描述改寫成保留證據範圍的觀察筆記。活動結束後可回到圖鑑繼續查找相關作品。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, -5, 3, -12, 18, N'APPROVED', N'CANCELLED', N'因場地維護取消本場活動，後續將另行公告。', @AdminUserId),
+        (N'玩家提案：我的地方文物小旅行', N'PLAYER', @PlayerAUserId, N'這個提案想從地方博物館、歷史建築與沿線街區開始，分享一條可以實際走訪的文物小旅行。發起人預計整理交通方式、開放時間、建議停留長度、照片來源與每一站想觀察的問題，也歡迎其他會員補充自己的路線。正式成團前會先確認活動流程、集合方式與可公開使用的資料來源。', N'線上活動', NULL, NULL, 30, 2, 24, 20, N'REJECTED', N'DRAFT', N'目前提案缺少明確的活動流程與資料來源，請補充後重新送審。', @AdminUserId),
+        (N'小型器物的手感與比例', N'OFFICIAL', @GameUserId, N'本場從鑑定遊戲裡常見的小型器物題目延伸，先讓參加者比較不同作品的通高、口徑、器壁厚薄與可想像的拿取方式，再討論「手感」哪些可以從資料推測、哪些必須保留為想像。活動會把遊戲作答、圖鑑欄位和個人筆記放在一起回顧，練習不要只用一個醒目的特徵替作品下結論。', N'線上活動', NULL, NULL, 8, 2, 6, 28, N'PENDING', N'DRAFT', NULL, NULL);
 
     /* 讓重跑腳本時，既有展示活動也能同步最新的地點與座標。 */
     UPDATE eventData
@@ -282,6 +332,25 @@ BEGIN TRY
         eventData.[Latitude] = seed.[Latitude],
         eventData.[Longitude] = seed.[Longitude]
     FROM [social].[Events] AS eventData
+    INNER JOIN @EventSeeds AS seed ON seed.[Title] = eventData.[Title];
+
+    /* 活動貼文沿用活動的地點資料，避免活動頁與社群入口各自保留舊房間名稱。 */
+    UPDATE postData
+    SET postData.[Content] = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+            postData.[Content],
+            N'國立故宮博物院正館｜文獻導讀室', seed.[Location]),
+            N'國立故宮博物院南部院區（故宮南院）｜多功能展廳', seed.[Location]),
+            N'國立故宮博物院南部院區（故宮南院）｜教育展廳', seed.[Location]),
+            N'清明鑑定屋｜二樓活動室', seed.[Location]),
+            N'社群線上交流室', seed.[Location]),
+            N'線上交流室', seed.[Location]),
+            N'國立故宮博物院正館', seed.[Location]),
+            N'國立故宮博物院南部院區（故宮南院）', seed.[Location]),
+        postData.[LocationName] = seed.[Location],
+        postData.[Latitude] = seed.[Latitude],
+        postData.[Longitude] = seed.[Longitude]
+    FROM [social].[SocialPosts] AS postData
+    INNER JOIN [social].[Events] AS eventData ON eventData.[Id] = postData.[EventId]
     INNER JOIN @EventSeeds AS seed ON seed.[Title] = eventData.[Title];
 
     INSERT INTO [social].[Events]
@@ -396,7 +465,7 @@ BEGIN TRY
     WHERE (s.[TargetType] = N'POST' AND p.[Id] IS NOT NULL OR s.[TargetType] = N'COMMENT' AND c.[Id] IS NOT NULL)
       AND NOT EXISTS (SELECT 1 FROM [social].[ContentReports] x WHERE x.[Detail] = s.[Detail]);
 
-    /* 成就：使用後台已支援的條件代碼，並提供不同解鎖門檻。 */
+    /* 成就：只保留目前遊戲、圖鑑與社群流程會使用的展示定義；舊代碼改為停用以保留歷史紀錄。 */
     DECLARE @AchievementSeeds TABLE
     (
         [Code] nvarchar(80) NOT NULL,
@@ -408,18 +477,44 @@ BEGIN TRY
         [Status] nvarchar(20) NOT NULL
     );
     INSERT INTO @AchievementSeeds VALUES
-        (N'SHOWCASE_ACHIEVEMENT_FIRST_POST', N'留下第一筆觀察', N'把發現寫下來', N'發布第一篇與文物觀察有關的貼文。', N'POST_COUNT', 1, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_ACTIVE_READER', N'認真讀者', N'每則留言都有線索', N'在社群中留下五則有內容的留言。', N'COMMENT_COUNT', 5, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_CATALOG_START', N'圖鑑起步', N'打開第一件文物', N'解鎖第一件圖鑑文物，開始建立自己的收藏紀錄。', N'ARTIFACT_UNLOCK_COUNT', 1, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_CATALOG_EXPLORER', N'館藏探索者', N'走過十件文物', N'累積解鎖十件不同的圖鑑文物。', N'ARTIFACT_UNLOCK_COUNT', 10, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_GAME_PARTICIPANT', N'鑑定練習生', N'先從參加開始', N'參與三次鑑定遊戲，不論結果都能累積經驗。', N'GAME_PLAY_COUNT', 3, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_GAME_WINNER', N'眼力初成', N'答對三場鑑定', N'在鑑定遊戲中累積三場勝利。', N'GAME_WIN_COUNT', 3, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_EVENT_VISITOR', N'活動常客', N'在現場遇見同好', N'完成三次活動報名並參與交流。', N'EVENT_JOIN_COUNT', 3, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_POINT_COLLECTOR', N'點數收藏家', N'把每次互動留下來', N'累積取得一千點會員點數。', N'POINT_TOTAL', 1000, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_CAREFUL_READER', N'細節觀察家', N'放大才看見的線索', N'完成二十五件文物的解鎖紀錄。', N'ARTIFACT_UNLOCK_COUNT', 25, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_EVENT_HOST', N'交流發起人', N'讓討論有一個開始', N'建立一場玩家活動並完成審核。', N'EVENT_JOIN_COUNT', 1, N'ACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_QUIET_ARCHIVE', N'資料整理員', N'把線索慢慢收好', N'累積發布十篇貼文，整理個人的觀察脈絡。', N'POST_COUNT', 10, N'INACTIVE'),
-        (N'SHOWCASE_ACHIEVEMENT_GAME_MASTER', N'鑑定老手', N'穩定找出答案', N'在鑑定遊戲中累積十場勝利。', N'GAME_WIN_COUNT', 10, N'ACTIVE');
+        (N'SHOWCASE_ACHIEVEMENT_CATALOG_START', N'圖鑑起步', N'初見藏品', N'解鎖第一件啟用中的圖鑑文物。', N'ARTIFACT_UNLOCK_COUNT', 1, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_CATALOG_EXPLORER', N'館藏尋跡', N'循線而讀', N'累積解鎖十件不同的啟用文物。', N'ARTIFACT_UNLOCK_COUNT', 10, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_CATALOG_DEEP_READER', N'細讀成章', N'明辨細節', N'累積解鎖二十五件不同的啟用文物。', N'ARTIFACT_UNLOCK_COUNT', 25, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_CATALOG_CATEGORY_COMPLETE', N'一門專精', N'分類觀察者', N'完成一個目前仍有啟用文物的分類。', N'CATEGORY_COMPLETE_COUNT', 1, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_CATALOG_ERA_COMPLETE', N'縱覽古今', N'年代尋蹤者', N'完成一個目前仍有啟用文物的年代範圍。', N'ERA_COMPLETE_COUNT', 1, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_CATALOG_COMPLETE', N'全藏鑑定人', N'藏中有數', N'圖鑑完成率達到百分之百；完成率依目前啟用文物即時計算。', N'CATALOG_COMPLETION_PERCENT', 100, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_GAME_PARTICIPANT', N'多人遊戲入門', N'同場觀察者', N'完成三場多人主遊戲。', N'GAME_COMPLETE_COUNT', 3, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_GAME_PERFORMER', N'回合觀察者', N'讀票知勢', N'在多人主遊戲中累積十個勝出回合。', N'GAME_ROUND_WIN_COUNT', 10, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_GAME_REGULAR', N'持續參與', N'穩定入場', N'完成十場多人主遊戲。', N'GAME_COMPLETE_COUNT', 10, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_DAILY_LOGIN_START', N'每日到訪', N'持續到訪者', N'累積一天成功登入紀錄。', N'DAILY_LOGIN_COUNT', 1, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_DAILY_LOGIN_STREAK', N'連續七日', N'日積月累', N'連續七天成功登入；連續天數由共用每日活動紀錄計算。', N'DAILY_LOGIN_STREAK', 7, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_MINIGAME_DETAIL', N'細節追蹤', N'細節尋跡者', N'完成三次 DETAIL_LOCATOR 細節追蹤。', N'MINIGAME_DETAIL_LOCATOR_COUNT', 3, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_MINIGAME_PUZZLE', N'拼圖復原', N'復原巧手', N'完成三次 ARTIFACT_PUZZLE 館藏拼圖。', N'MINIGAME_ARTIFACT_PUZZLE_COUNT', 3, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_MINIGAME_MEMORY', N'館藏翻牌', N'過目不忘', N'完成三次 MEMORY_MATCH 館藏翻牌。', N'MINIGAME_MEMORY_MATCH_COUNT', 3, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_MINIGAME_STRIP', N'長卷復位', N'理線成形', N'完成三次 STRIP_RESTORE 長卷復位。', N'MINIGAME_STRIP_RESTORE_COUNT', 3, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_MINIGAME_S_GRADE', N'高分辨識', N'目光如炬', N'在 Mini Game 中取得五次 S 等級。', N'MINIGAME_GRADE_S_COUNT', 5, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_SOCIAL_FIRST_POST', N'留下第一筆觀察', N'把發現寫下來', N'發布第一篇與文物觀察有關的貼文。', N'POST_COUNT', 1, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_SOCIAL_ACTIVE_READER', N'認真讀者', N'每則留言都有線索', N'在社群中留下五則有內容的留言。', N'COMMENT_COUNT', 5, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_EVENT_VISITOR', N'活動常客', N'在交流現場見面', N'完成三次活動報名並參與交流。', N'EVENT_JOIN_COUNT', 3, N'ACTIVE'),
+        (N'SHOWCASE_ACHIEVEMENT_EVENT_HOST', N'交流發起人', N'讓討論有一個開始', N'建立一場玩家活動並完成審核。', N'EVENT_HOST_COUNT', 1, N'ACTIVE');
+
+    UPDATE achievement
+       SET [Status] = N'INACTIVE',
+           [UpdatedAt] = @Now
+      FROM [user].[Achievements] AS achievement
+     WHERE achievement.[Code] LIKE N'SHOWCASE_ACHIEVEMENT_%'
+       AND NOT EXISTS (SELECT 1 FROM @AchievementSeeds seed WHERE seed.[Code] = achievement.[Code]);
+
+    UPDATE achievement
+       SET [Name] = seed.[Name],
+           [Title] = seed.[Title],
+           [Description] = seed.[Description],
+           [ConditionType] = seed.[ConditionType],
+           [ThresholdValue] = seed.[ThresholdValue],
+           [Status] = seed.[Status],
+           [UpdatedAt] = @Now
+      FROM [user].[Achievements] AS achievement
+      INNER JOIN @AchievementSeeds AS seed ON seed.[Code] = achievement.[Code];
 
     INSERT INTO [user].[Achievements]
     ([Id], [Code], [Name], [Title], [Description], [IconPath], [ConditionType], [ThresholdValue], [Status], [CreatedAt], [UpdatedAt])
@@ -427,18 +522,85 @@ BEGIN TRY
     FROM @AchievementSeeds s
     WHERE NOT EXISTS (SELECT 1 FROM [user].[Achievements] a WHERE a.[Code] = s.[Code]);
 
+    /* 每日登入資料放在 common schema；固定日期讓重跑不會每天新增一批展示紀錄。 */
+    DECLARE @DailyActivitySeeds TABLE
+    (
+        [Email] nvarchar(256) NOT NULL,
+        [ActivityDate] date NOT NULL,
+        [OccurrenceCount] int NOT NULL,
+        [FirstHour] int NOT NULL,
+        [LastHour] int NOT NULL
+    );
+    INSERT INTO @DailyActivitySeeds VALUES
+        (N'admin@qmah.local', N'2026-08-20', 2, 9, 16),
+        (N'admin@qmah.local', N'2026-08-27', 1, 8, 8),
+        (N'user@qmah.local', N'2026-08-29', 2, 9, 18),
+        (N'user@qmah.local', N'2026-08-31', 1, 10, 10),
+        (N'catalog@qmah.local', N'2026-08-22', 1, 8, 8),
+        (N'catalog@qmah.local', N'2026-08-23', 1, 8, 8),
+        (N'catalog@qmah.local', N'2026-08-24', 1, 8, 8),
+        (N'catalog@qmah.local', N'2026-08-25', 1, 8, 8),
+        (N'catalog@qmah.local', N'2026-08-26', 1, 9, 9),
+        (N'catalog@qmah.local', N'2026-08-27', 1, 9, 9),
+        (N'catalog@qmah.local', N'2026-08-28', 2, 9, 20),
+        (N'catalog@qmah.local', N'2026-08-29', 1, 9, 9),
+        (N'catalog@qmah.local', N'2026-08-30', 1, 10, 10),
+        (N'catalog@qmah.local', N'2026-08-31', 1, 10, 10),
+        (N'game@qmah.local', N'2026-08-25', 1, 19, 19),
+        (N'game@qmah.local', N'2026-08-29', 2, 18, 22),
+        (N'social@qmah.local', N'2026-08-27', 1, 11, 11),
+        (N'social@qmah.local', N'2026-08-31', 1, 14, 14),
+        (N'store@qmah.local', N'2026-08-18', 1, 10, 10),
+        (N'store@qmah.local', N'2026-08-30', 1, 15, 15),
+        (N'player-a@qmah.local', N'2026-08-24', 1, 20, 20),
+        (N'player-a@qmah.local', N'2026-08-25', 1, 20, 20),
+        (N'player-a@qmah.local', N'2026-08-26', 1, 20, 20),
+        (N'player-a@qmah.local', N'2026-08-27', 1, 21, 21),
+        (N'player-a@qmah.local', N'2026-08-28', 2, 19, 23),
+        (N'player-a@qmah.local', N'2026-08-29', 1, 19, 19),
+        (N'player-a@qmah.local', N'2026-08-30', 1, 20, 20),
+        (N'player-a@qmah.local', N'2026-08-31', 1, 20, 20),
+        (N'player-b@qmah.local', N'2026-08-23', 1, 15, 15),
+        (N'player-b@qmah.local', N'2026-08-25', 1, 15, 15),
+        (N'player-b@qmah.local', N'2026-08-28', 1, 16, 16),
+        (N'player-b@qmah.local', N'2026-08-30', 1, 16, 16);
+
+    INSERT INTO [common].[DailyMemberActivities]
+        ([Id], [UserId], [ActivityType], [ActivityDate], [OccurrenceCount], [FirstOccurredAt], [LastOccurredAt], [CreatedAt], [UpdatedAt])
+    SELECT NEWID(), member.[Id], N'LOGIN', seed.[ActivityDate], seed.[OccurrenceCount],
+           DATEADD(HOUR, seed.[FirstHour], CONVERT(datetime2(3), seed.[ActivityDate])),
+           DATEADD(HOUR, seed.[LastHour], CONVERT(datetime2(3), seed.[ActivityDate])),
+           DATEADD(HOUR, seed.[FirstHour], CONVERT(datetime2(3), seed.[ActivityDate])),
+           DATEADD(HOUR, seed.[LastHour], CONVERT(datetime2(3), seed.[ActivityDate]))
+    FROM @DailyActivitySeeds seed
+    INNER JOIN [user].[AspNetUsers] member ON member.[Email] = seed.[Email]
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [common].[DailyMemberActivities] existing
+        WHERE existing.[UserId] = member.[Id]
+          AND existing.[ActivityType] = N'LOGIN'
+          AND existing.[ActivityDate] = seed.[ActivityDate]
+    );
+
     DECLARE @AchievementAwards TABLE ([Email] nvarchar(256), [Code] nvarchar(80), [DaysAgo] int, [IsDisplayed] bit);
     INSERT INTO @AchievementAwards VALUES
-        (N'user@qmah.local', N'SHOWCASE_ACHIEVEMENT_FIRST_POST', 30, 1),
+        (N'user@qmah.local', N'SHOWCASE_ACHIEVEMENT_SOCIAL_FIRST_POST', 30, 1),
         (N'user@qmah.local', N'SHOWCASE_ACHIEVEMENT_CATALOG_START', 28, 1),
         (N'user@qmah.local', N'SHOWCASE_ACHIEVEMENT_EVENT_VISITOR', 12, 0),
         (N'player-a@qmah.local', N'SHOWCASE_ACHIEVEMENT_GAME_PARTICIPANT', 20, 1),
-        (N'player-a@qmah.local', N'SHOWCASE_ACHIEVEMENT_GAME_WINNER', 9, 1),
-        (N'player-a@qmah.local', N'SHOWCASE_ACHIEVEMENT_POINT_COLLECTOR', 3, 0),
-        (N'player-b@qmah.local', N'SHOWCASE_ACHIEVEMENT_ACTIVE_READER', 15, 1),
+        (N'player-a@qmah.local', N'SHOWCASE_ACHIEVEMENT_GAME_PERFORMER', 9, 1),
+        (N'player-a@qmah.local', N'SHOWCASE_ACHIEVEMENT_DAILY_LOGIN_START', 9, 0),
+        (N'player-a@qmah.local', N'SHOWCASE_ACHIEVEMENT_DAILY_LOGIN_STREAK', 7, 1),
+        (N'player-a@qmah.local', N'SHOWCASE_ACHIEVEMENT_MINIGAME_PUZZLE', 3, 0),
+        (N'player-b@qmah.local', N'SHOWCASE_ACHIEVEMENT_SOCIAL_ACTIVE_READER', 15, 1),
         (N'player-b@qmah.local', N'SHOWCASE_ACHIEVEMENT_CATALOG_EXPLORER', 7, 1),
         (N'social@qmah.local', N'SHOWCASE_ACHIEVEMENT_EVENT_HOST', 5, 0),
-        (N'catalog@qmah.local', N'SHOWCASE_ACHIEVEMENT_CAREFUL_READER', 40, 1);
+        (N'catalog@qmah.local', N'SHOWCASE_ACHIEVEMENT_CATALOG_DEEP_READER', 40, 1),
+        (N'catalog@qmah.local', N'SHOWCASE_ACHIEVEMENT_CATALOG_CATEGORY_COMPLETE', 36, 0),
+        (N'catalog@qmah.local', N'SHOWCASE_ACHIEVEMENT_DAILY_LOGIN_START', 10, 0),
+        (N'catalog@qmah.local', N'SHOWCASE_ACHIEVEMENT_DAILY_LOGIN_STREAK', 7, 0),
+        (N'game@qmah.local', N'SHOWCASE_ACHIEVEMENT_MINIGAME_DETAIL', 18, 1);
 
     INSERT INTO [user].[UserAchievements] ([Id], [UserId], [AchievementId], [AchievedAt], [IsDisplayed], [DisplayedAt])
     SELECT NEWID(), u.[Id], a.[Id], DATEADD(DAY, -w.[DaysAgo], @Now), w.[IsDisplayed],
@@ -456,6 +618,9 @@ BEGIN TRY
     (
         [Code] nvarchar(50) NOT NULL,
         [Name] nvarchar(100) NOT NULL,
+        [AcquisitionType] nvarchar(30) NOT NULL DEFAULT (N'ADMIN_GRANT'),
+        [PointCost] int NULL,
+        [ValidityDays] int NOT NULL DEFAULT (365),
         [DiscountType] nvarchar(20) NOT NULL,
         [DiscountValue] decimal(12,2) NOT NULL,
         [MinimumAmount] decimal(12,2) NOT NULL,
@@ -463,7 +628,9 @@ BEGIN TRY
         [EndDays] int NOT NULL,
         [IsActive] bit NOT NULL
     );
-    INSERT INTO @CouponSeeds VALUES
+    INSERT INTO @CouponSeeds
+        ([Code], [Name], [DiscountType], [DiscountValue], [MinimumAmount], [StartDays], [EndDays], [IsActive])
+    VALUES
         (N'SHOWCASE_COUPON_WELCOME', N'新會員圖鑑禮', N'FIXED', 80, 500, -20, 35, 1),
         (N'SHOWCASE_COUPON_CATALOG10', N'圖鑑研究折扣', N'PERCENT', 10, 300, -5, 12, 1),
         (N'SHOWCASE_COUPON_EVENT150', N'活動同好回饋', N'FIXED', 150, 900, -2, 28, 1),
@@ -478,53 +645,124 @@ BEGIN TRY
         (N'SHOWCASE_COUPON_LAST50', N'展期最後回饋', N'FIXED', 50, 350, -100, -3, 0);
 
     INSERT INTO [store].[CouponDefinitions]
-    ([Id], [Code], [Name], [DiscountType], [DiscountValue], [MinimumAmount], [StartAt], [EndAt], [IsActive])
-    SELECT NEWID(), s.[Code], s.[Name], s.[DiscountType], s.[DiscountValue], s.[MinimumAmount], DATEADD(DAY, s.[StartDays], @Now), DATEADD(DAY, s.[EndDays], @Now), s.[IsActive]
+    ([Id], [Code], [Name], [DiscountType], [AcquisitionType], [PointCost], [ValidityDays], [DiscountValue], [MinimumAmount], [StartAt], [EndAt], [IsActive])
+    SELECT NEWID(), s.[Code], s.[Name], s.[DiscountType], s.[AcquisitionType], s.[PointCost], s.[ValidityDays], s.[DiscountValue], s.[MinimumAmount], DATEADD(DAY, s.[StartDays], @Now), DATEADD(DAY, s.[EndDays], @Now), s.[IsActive]
     FROM @CouponSeeds s
     WHERE NOT EXISTS (SELECT 1 FROM [store].[CouponDefinitions] c WHERE c.[Code] = s.[Code]);
+
+    /* 常駐點數兌換券是產品基準資料；只在代碼不存在時補入，不覆蓋管理員後續調整。 */
+    INSERT INTO [store].[CouponDefinitions]
+    ([Id], [Code], [Name], [DiscountType], [AcquisitionType], [PointCost], [ValidityDays], [DiscountValue], [MinimumAmount], [StartAt], [EndAt], [IsActive])
+    SELECT NEWID(), seed.[Code], seed.[Name], N'FIXED', N'POINT_EXCHANGE', seed.[PointCost], 365, seed.[DiscountValue], seed.[MinimumAmount], DATEFROMPARTS(YEAR(@Now), 1, 1), DATEFROMPARTS(2099, 12, 31), 1
+    FROM (VALUES
+        (N'POINT_EXCHANGE_100_50', N'鑑定點數兌換 50 元券', 100, CONVERT(decimal(12,2), 50), CONVERT(decimal(12,2), 500)),
+        (N'POINT_EXCHANGE_250_150', N'鑑定點數兌換 150 元券', 250, CONVERT(decimal(12,2), 150), CONVERT(decimal(12,2), 1000)),
+        (N'POINT_EXCHANGE_500_350', N'鑑定點數兌換 350 元券', 500, CONVERT(decimal(12,2), 350), CONVERT(decimal(12,2), 2000)),
+        (N'POINT_EXCHANGE_50_20', N'鑑定點數兌換 20 元券', 50, CONVERT(decimal(12,2), 20), CONVERT(decimal(12,2), 200)),
+        (N'POINT_EXCHANGE_750_600', N'鑑定點數兌換 600 元券', 750, CONVERT(decimal(12,2), 600), CONVERT(decimal(12,2), 3000))
+    ) AS seed([Code], [Name], [PointCost], [DiscountValue], [MinimumAmount])
+    WHERE NOT EXISTS (SELECT 1 FROM [store].[CouponDefinitions] c WHERE c.[Code] = seed.[Code]);
+
+    /* 舊版展示資料可能使用預設期限；重跑時依 IssuedAt 修正，確保 EXPIRED 的日期也一致。 */
+    UPDATE coupon
+       SET [ExpiresAt] = DATEADD(DAY, definition.[ValidityDays], coupon.[IssuedAt])
+      FROM [store].[UserCoupons] coupon
+      INNER JOIN [store].[CouponDefinitions] definition ON definition.[Id] = coupon.[CouponDefinitionId]
+     WHERE definition.[Code] LIKE N'SHOWCASE_COUPON_%';
+
+    UPDATE coupon
+       SET [ExpiresAt] = DATEADD(DAY, -1, @Now)
+      FROM [store].[UserCoupons] coupon
+     WHERE coupon.[Status] = N'EXPIRED'
+       AND coupon.[ExpiresAt] >= @Now;
 
     DECLARE @UserCouponSeeds TABLE ([Email] nvarchar(256), [Code] nvarchar(50), [Status] nvarchar(20), [DaysAgo] int);
     INSERT INTO @UserCouponSeeds VALUES
         (N'user@qmah.local', N'SHOWCASE_COUPON_WELCOME', N'AVAILABLE', 4),
         (N'user@qmah.local', N'SHOWCASE_COUPON_MEMBER300', N'USED', 6),
         (N'player-a@qmah.local', N'SHOWCASE_COUPON_GAME100', N'AVAILABLE', 3),
-        (N'player-a@qmah.local', N'SHOWCASE_COUPON_ARCHIVE200', N'EXPIRED', 70),
+        (N'player-a@qmah.local', N'SHOWCASE_COUPON_ARCHIVE200', N'EXPIRED', 400),
         (N'player-b@qmah.local', N'SHOWCASE_COUPON_CATALOG10', N'USED', 11),
         (N'player-b@qmah.local', N'SHOWCASE_COUPON_REPAIR12', N'AVAILABLE', 1),
         (N'catalog@qmah.local', N'SHOWCASE_COUPON_RESEARCH8', N'AVAILABLE', 8),
         (N'social@qmah.local', N'SHOWCASE_COUPON_EVENT150', N'USED', 14),
-        (N'game@qmah.local', N'SHOWCASE_COUPON_SMALL5', N'EXPIRED', 45);
+        (N'game@qmah.local', N'SHOWCASE_COUPON_SMALL5', N'EXPIRED', 380);
 
-    INSERT INTO [store].[UserCoupons] ([Id], [UserId], [CouponDefinitionId], [Status], [IssuedAt], [UsedAt])
-    SELECT NEWID(), u.[Id], c.[Id], s.[Status], DATEADD(DAY, -s.[DaysAgo], @Now),
-           CASE WHEN s.[Status] = N'USED' THEN DATEADD(DAY, -s.[DaysAgo] + 1, @Now) ELSE NULL END
+    INSERT INTO [store].[UserCoupons] ([Id], [UserId], [CouponDefinitionId], [Status], [IssuedAt], [ExpiresAt], [UsedAt], [IssuedByAdminUserId], [IssueReason])
+    SELECT NEWID(), u.[Id], c.[Id], s.[Status], issue.[IssuedAt], DATEADD(DAY, c.[ValidityDays], issue.[IssuedAt]),
+           CASE WHEN s.[Status] = N'USED' THEN DATEADD(DAY, -s.[DaysAgo] + 1, @Now) ELSE NULL END,
+           @AdminUserId, N'後台展示資料的會員情境'
     FROM @UserCouponSeeds s
     INNER JOIN [user].[AspNetUsers] u ON u.[Email] = s.[Email]
     INNER JOIN [store].[CouponDefinitions] c ON c.[Code] = s.[Code]
+    CROSS APPLY (VALUES (DATEADD(DAY, -s.[DaysAgo], @Now))) AS issue([IssuedAt])
     WHERE NOT EXISTS
     (
         SELECT 1 FROM [store].[UserCoupons] x WHERE x.[UserId] = u.[Id] AND x.[CouponDefinitionId] = c.[Id]
     );
 
+    /* 活動券會重複取得；以固定原因與狀態作為展示識別，保留 AVAILABLE／USED／EXPIRED 歷史。 */
+    DECLARE @ActivityCouponSeeds TABLE
+    (
+        [Email] nvarchar(256) NOT NULL,
+        [Code] nvarchar(50) NOT NULL,
+        [Status] nvarchar(20) NOT NULL,
+        [IssuedDaysAgo] int NOT NULL,
+        [UsedDaysAgo] int NULL,
+        [IssueReason] nvarchar(200) NOT NULL
+    );
+    INSERT INTO @ActivityCouponSeeds VALUES
+        (N'user@qmah.local', N'SHOWCASE_COUPON_EVENT150', N'AVAILABLE', 2, NULL, N'活動批次：秋季觀察週'),
+        (N'user@qmah.local', N'SHOWCASE_COUPON_CATALOG10', N'USED', 18, 11, N'活動批次：八月館藏導讀'),
+        (N'player-a@qmah.local', N'SHOWCASE_COUPON_GAME100', N'USED', 32, 21, N'活動批次：多人遊戲週'),
+        (N'player-b@qmah.local', N'SHOWCASE_COUPON_AUTUMN15', N'EXPIRED', 400, NULL, N'活動批次：春季館藏日'),
+        (N'catalog@qmah.local', N'SHOWCASE_COUPON_REPAIR12', N'AVAILABLE', 4, NULL, N'活動批次：保存觀察工作坊'),
+        (N'social@qmah.local', N'SHOWCASE_COUPON_EVENT150', N'AVAILABLE', 1, NULL, N'活動批次：社群主持回饋');
+
+    INSERT INTO [store].[UserCoupons]
+        ([Id], [UserId], [CouponDefinitionId], [Status], [IssuedAt], [ExpiresAt], [UsedAt], [IssuedByAdminUserId], [IssueReason])
+    SELECT NEWID(), member.[Id], definition.[Id], seed.[Status], issue.[IssuedAt],
+           DATEADD(DAY, definition.[ValidityDays], issue.[IssuedAt]),
+           CASE WHEN seed.[Status] = N'USED' AND seed.[UsedDaysAgo] IS NOT NULL
+                THEN DATEADD(DAY, -seed.[UsedDaysAgo], @Now) ELSE NULL END,
+           @AdminUserId, seed.[IssueReason]
+      FROM @ActivityCouponSeeds seed
+      INNER JOIN [user].[AspNetUsers] member ON member.[Email] = seed.[Email]
+      INNER JOIN [store].[CouponDefinitions] definition ON definition.[Code] = seed.[Code]
+      CROSS APPLY (VALUES (DATEADD(DAY, -seed.[IssuedDaysAgo], @Now))) issue([IssuedAt])
+     WHERE NOT EXISTS
+     (
+         SELECT 1
+           FROM [store].[UserCoupons] existing
+          WHERE existing.[UserId] = member.[Id]
+            AND existing.[CouponDefinitionId] = definition.[Id]
+            AND existing.[Status] = seed.[Status]
+            AND existing.[IssueReason] = seed.[IssueReason]
+     );
+
     /* 會員摘要資料：只補沒有資料的會員，不覆蓋組員原本的內容。 */
     INSERT INTO [user].[UserProfiles] ([UserId], [Nickname], [AvatarPath], [Bio], [Visibility], [CreatedAt], [UpdatedAt])
     SELECT u.[Id], v.[Nickname], NULL, v.[Bio], v.[Visibility], DATEADD(DAY, -50, @Now), @Now
     FROM (VALUES
-        (N'user@qmah.local', N'Demo Member 01', N'喜歡從器形與材質開始認識文物。', N'PUBLIC'),
-        (N'player-a@qmah.local', N'Demo Player 01', N'把每次遊戲都當成一次觀察練習。', N'PUBLIC'),
-        (N'player-b@qmah.local', N'Demo Player 02', N'記錄在博物館裡遇到的細節。', N'FRIENDS'),
-        (N'catalog@qmah.local', N'Demo Catalog', N'整理館藏資料，也歡迎大家提供不同角度的觀察。', N'PUBLIC'),
-        (N'social@qmah.local', N'Demo Social Editor', N'協助大家找到適合交流的主題與活動。', N'PUBLIC')
+        (N'user@qmah.local', N'Demo Member 01', N'喜歡從器形與材質開始認識文物，會把看展時的問題整理成簡短筆記。', N'PUBLIC'),
+        (N'player-a@qmah.local', N'Demo Player 01', N'把每次遊戲都當成一次觀察練習，習慣在揭曉後回看自己的判斷。', N'PUBLIC'),
+        (N'player-b@qmah.local', N'Demo Player 02', N'記錄在博物館裡遇到的細節，也會整理適合和朋友一起看的作品。', N'FRIENDS'),
+        (N'catalog@qmah.local', N'Demo Catalog', N'整理館藏資料，會把來源、尺寸與年代範圍放在一起比對。', N'PUBLIC'),
+        (N'social@qmah.local', N'Demo Social Editor', N'協助大家找到適合交流的主題與活動，平時也留意討論脈絡。', N'PUBLIC')
     ) v([Email], [Nickname], [Bio], [Visibility])
     INNER JOIN [user].[AspNetUsers] u ON u.[Email] = v.[Email]
     WHERE NOT EXISTS (SELECT 1 FROM [user].[UserProfiles] p WHERE p.[UserId] = u.[Id]);
 
     INSERT INTO [user].[UserAddresses] ([Id], [UserId], [AddressLabel], [RecipientName], [RecipientPhone], [PostalCode], [City], [District], [AddressLine], [IsDefault], [CreatedAt], [UpdatedAt])
-    SELECT NEWID(), u.[Id], a.[AddressLabel], a.[RecipientName], a.[RecipientPhone], a.[PostalCode], a.[City], a.[District], a.[AddressLine], a.[IsDefault], DATEADD(DAY, -30, @Now), @Now
+    SELECT NEWID(), u.[Id], a.[AddressLabel], a.[RecipientName], a.[RecipientPhone], a.[PostalCode], a.[City], a.[District], a.[AddressLine],
+           CASE WHEN a.[IsDefault] = 1 AND NOT EXISTS
+                (SELECT 1 FROM [user].[UserAddresses] existingDefault WHERE existingDefault.[UserId] = u.[Id] AND existingDefault.[IsDefault] = 1)
+                THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END,
+           DATEADD(DAY, -30, @Now), @Now
     FROM (VALUES
-        (N'user@qmah.local', N'住家', N'Demo Member 01', N'0912-345-678', N'106', N'臺北市', N'大安區', N'復興南路一段 100 號', CAST(1 AS bit)),
-        (N'player-a@qmah.local', N'工作室', N'Demo Player 01', N'0922-456-789', N'400', N'臺中市', N'西區', N'公益路 88 號 3 樓', CAST(1 AS bit)),
-        (N'catalog@qmah.local', N'辦公室', N'Demo Catalog', N'0933-567-890', N'100', N'臺北市', N'中正區', N'重慶南路一段 20 號', CAST(1 AS bit))
+        (N'user@qmah.local', N'住家', N'Demo Member 01', N'0912-345-678', N'106', N'臺北市', N'大安區', N'復興南路一段 100 號 7 樓', CAST(1 AS bit)),
+        (N'player-a@qmah.local', N'工作室', N'Demo Player 01', N'0922-456-789', N'400', N'臺中市', N'西區', N'公益路 88 號 3 樓之 1', CAST(1 AS bit)),
+        (N'catalog@qmah.local', N'辦公室', N'Demo Catalog', N'0933-567-890', N'100', N'臺北市', N'中正區', N'重慶南路一段 20 號 4 樓', CAST(1 AS bit))
     ) a([Email], [AddressLabel], [RecipientName], [RecipientPhone], [PostalCode], [City], [District], [AddressLine], [IsDefault])
     INNER JOIN [user].[AspNetUsers] u ON u.[Email] = a.[Email]
     WHERE NOT EXISTS
@@ -565,6 +803,321 @@ BEGIN TRY
         SELECT 1 FROM [store].[PointTransactions] x
         WHERE x.[UserId] = u.[Id] AND x.[Amount] = p.[Amount] AND x.[Reason] = p.[Reason] AND x.[ReferenceType] = p.[ReferenceType]
     );
+
+    /* 將既有展示餘額與完整點數流水對齊；只建立一次校正流水，不覆蓋之後的實際操作。 */
+    DECLARE @PointReconciliationAmounts TABLE ([UserId] uniqueidentifier NOT NULL, [Amount] int NOT NULL);
+    ;WITH ShowcaseTargets AS
+    (
+        SELECT u.[Id] AS [UserId], targetData.[Balance] AS [TargetBalance]
+        FROM (VALUES
+            (N'user@qmah.local', 680),
+            (N'player-a@qmah.local', 1280),
+            (N'player-b@qmah.local', 420),
+            (N'catalog@qmah.local', 2050),
+            (N'social@qmah.local', 760)
+        ) targetData([Email], [Balance])
+        INNER JOIN [user].[AspNetUsers] u ON u.[Email] = targetData.[Email]
+    ), LedgerTotals AS
+    (
+        SELECT target.[UserId], target.[TargetBalance],
+               COALESCE(SUM(transactionData.[Amount]), 0) AS [LedgerBalance]
+        FROM ShowcaseTargets target
+        LEFT JOIN [store].[PointTransactions] transactionData ON transactionData.[UserId] = target.[UserId]
+        GROUP BY target.[UserId], target.[TargetBalance]
+    )
+    INSERT INTO [store].[PointTransactions]
+        ([Id], [UserId], [Amount], [Reason], [ReferenceType], [ReferenceId], [CreatedAt])
+    OUTPUT inserted.[UserId], inserted.[Amount] INTO @PointReconciliationAmounts ([UserId], [Amount])
+    SELECT NEWID(), totals.[UserId], totals.[TargetBalance] - totals.[LedgerBalance],
+           N'展示資料餘額校正', N'SHOWCASE_RECONCILIATION', NULL, DATEADD(DAY, -1, @Now)
+    FROM LedgerTotals totals
+    WHERE totals.[TargetBalance] <> totals.[LedgerBalance]
+      AND NOT EXISTS
+      (
+          SELECT 1 FROM [store].[PointTransactions] marker
+          WHERE marker.[UserId] = totals.[UserId]
+            AND marker.[ReferenceType] = N'SHOWCASE_RECONCILIATION'
+      );
+
+    UPDATE balance
+       SET balance.[Balance] = balance.[Balance] + totals.[Amount],
+           balance.[UpdatedAt] = @Now
+      FROM [store].[PointBalances] balance
+      INNER JOIN
+      (
+          SELECT [UserId], SUM([Amount]) AS [Amount]
+          FROM @PointReconciliationAmounts
+          GROUP BY [UserId]
+       ) totals ON totals.[UserId] = balance.[UserId];
+
+    /*
+       跨系統展示：同一套加碼服務同時涵蓋官方活動與會員私人房間。
+       私人房間用有限預算示範「點數可先發完、鑰匙更早用完」；官方活動則不扣管理員個人資產。
+       下列識別碼只用於展示資料重跑，實際 API 建立資料時仍會使用新的 Guid。
+    */
+    DECLARE @PrivateRoomId uniqueidentifier =
+        (SELECT TOP (1) [Id] FROM [game].[GameRooms] WHERE [RoomCode] = N'QMAH-RWD-01');
+    IF @PrivateRoomId IS NULL
+        SET @PrivateRoomId = 'D0A10000-0000-0000-0000-000000000001';
+
+    IF NOT EXISTS (SELECT 1 FROM [game].[GameRooms] WHERE [Id] = @PrivateRoomId)
+    BEGIN
+        INSERT INTO [game].[GameRooms]
+            ([Id], [RoomCode], [Status], [Visibility], [PasswordHash], [MaxPlayers], [TotalRounds], [AnswerSeconds], [VotingSeconds], [CategoryFilterCode], [EraBucketFilterCode], [CurrentRoundNo], [StateVersion], [CreatedAt])
+        VALUES
+            (@PrivateRoomId, N'QMAH-RWD-01', N'WAITING', N'PRIVATE',
+             N'AQAAAAIAAYagAAAAEIqgTxDKKra9ApnTty5rZ8lsAzI/pMMpqLcOHnmEJ8euNTeLkUcnYCpTbuH5Z9Sexw==',
+             6, 3, 120, 60, N'CERAMIC', NULL, 0, 1, DATEADD(DAY, -5, @Now));
+    END;
+
+    DECLARE @RoomPlayerSeeds TABLE
+    (
+        [Email] nvarchar(256) NOT NULL,
+        [PlayerKey] nvarchar(80) NOT NULL,
+        [DisplayName] nvarchar(80) NOT NULL,
+        [Role] nvarchar(20) NOT NULL,
+        [SeatNo] tinyint NOT NULL,
+        [JoinedDaysAgo] int NOT NULL
+    );
+    INSERT INTO @RoomPlayerSeeds VALUES
+        (N'player-a@qmah.local', N'rwd-host', N'Demo Player 01', N'HOST', 1, 5),
+        (N'user@qmah.local', N'rwd-member-01', N'Demo Member 01', N'PLAYER', 2, 2),
+        (N'player-b@qmah.local', N'rwd-member-02', N'Demo Player 02', N'PLAYER', 3, 1);
+
+    INSERT INTO [game].[GamePlayers]
+        ([Id], [RoomId], [UserId], [PlayerKey], [DisplayName], [Role], [IsReady], [SeatNo], [JoinedAt], [ConnectionStatus], [LastSeenAt])
+    SELECT NEWID(), @PrivateRoomId, member.[Id], seed.[PlayerKey], seed.[DisplayName], seed.[Role],
+           CASE WHEN seed.[Role] = N'HOST' THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END,
+           seed.[SeatNo], DATEADD(DAY, -seed.[JoinedDaysAgo], @Now), N'ONLINE', DATEADD(HOUR, -1, @Now)
+      FROM @RoomPlayerSeeds seed
+      INNER JOIN [user].[AspNetUsers] member ON member.[Email] = seed.[Email]
+     WHERE NOT EXISTS
+     (
+         SELECT 1 FROM [game].[GamePlayers] existing
+          WHERE existing.[RoomId] = @PrivateRoomId AND existing.[UserId] = member.[Id]
+     );
+
+    DECLARE @MemberCampaignId uniqueidentifier =
+        (SELECT TOP (1) [Id] FROM [admin].[CommunityRewardCampaigns] WHERE [GameRoomId] = @PrivateRoomId);
+    IF @MemberCampaignId IS NULL
+        SET @MemberCampaignId = 'D0A20000-0000-0000-0000-000000000001';
+    DECLARE @NormalKeyDefinitionId uniqueidentifier =
+        (SELECT TOP (1) [Id] FROM [catalog].[KeyDefinitions] WHERE [Code] = N'KEY-NORMAL');
+    IF @NormalKeyDefinitionId IS NULL
+        THROW 50004, '私人房間展示資料缺少 KEY-NORMAL', 1;
+
+    IF NOT EXISTS (SELECT 1 FROM [admin].[CommunityRewardCampaigns] WHERE [Id] = @MemberCampaignId)
+    BEGIN
+        INSERT INTO [admin].[CommunityRewardCampaigns]
+            ([Id], [TargetType], [GameRoomId], [OwnerUserId], [SponsorType], [BudgetMode], [PointPerRecipient], [KeyDefinitionId], [KeyPerRecipient], [PointBudget], [PointIssued], [KeyBudget], [KeyIssued], [ValidFrom], [ValidUntil], [IsActive], [CreatedAt], [UpdatedAt])
+        VALUES
+            (@MemberCampaignId, N'GAME_ROOM', @PrivateRoomId, @PlayerAUserId, N'MEMBER', N'LIMITED',
+             20, @NormalKeyDefinitionId, 1, 40, 40, 1, 1,
+             DATEADD(DAY, -4, @Now), DATEADD(DAY, 3, @Now), 1,
+             DATEADD(DAY, -4, @Now), DATEADD(DAY, -1, @Now));
+    END;
+
+    DECLARE @OfficialEventId uniqueidentifier =
+        (SELECT TOP (1) [Id] FROM [social].[Events] WHERE [Title] = N'週末館藏導讀：從器形看年代');
+    IF @OfficialEventId IS NULL
+        THROW 50005, '官方活動展示資料不存在', 1;
+    DECLARE @OfficialCampaignId uniqueidentifier =
+        (SELECT TOP (1) [Id] FROM [admin].[CommunityRewardCampaigns] WHERE [EventId] = @OfficialEventId);
+    IF @OfficialCampaignId IS NULL
+        SET @OfficialCampaignId = 'D0A30000-0000-0000-0000-000000000001';
+
+    IF NOT EXISTS (SELECT 1 FROM [admin].[CommunityRewardCampaigns] WHERE [Id] = @OfficialCampaignId)
+    BEGIN
+        INSERT INTO [admin].[CommunityRewardCampaigns]
+            ([Id], [TargetType], [EventId], [OwnerUserId], [SponsorType], [BudgetMode], [PointPerRecipient], [KeyPerRecipient], [PointBudget], [PointIssued], [KeyBudget], [KeyIssued], [ValidFrom], [ValidUntil], [IsActive], [CreatedAt], [UpdatedAt])
+        VALUES
+            (@OfficialCampaignId, N'EVENT', @OfficialEventId, @AdminUserId, N'OFFICIAL', N'UNLIMITED',
+             30, 0, 0, 90, 0, 0,
+             DATEADD(DAY, -14, @Now), DATEADD(DAY, 7, @Now), 1,
+             DATEADD(DAY, -14, @Now), DATEADD(DAY, -1, @Now));
+    END;
+
+    /* 官方活動保留三位實際參與者；報名資料與獎勵流水以報名主鍵互相對應。 */
+    DECLARE @OfficialRegistrationSeeds TABLE ([Email] nvarchar(256) NOT NULL);
+    INSERT INTO @OfficialRegistrationSeeds VALUES
+        (N'user@qmah.local'), (N'player-b@qmah.local'), (N'catalog@qmah.local');
+
+    INSERT INTO [social].[EventRegistrations] ([Id], [EventId], [UserId], [Status], [RegisteredAt])
+    SELECT NEWID(), @OfficialEventId, member.[Id], N'ATTENDED', DATEADD(DAY, -2, @Now)
+      FROM @OfficialRegistrationSeeds seed
+      INNER JOIN [user].[AspNetUsers] member ON member.[Email] = seed.[Email]
+     WHERE NOT EXISTS
+     (
+         SELECT 1 FROM [social].[EventRegistrations] existing
+          WHERE existing.[EventId] = @OfficialEventId AND existing.[UserId] = member.[Id]
+     );
+
+    UPDATE registration
+       SET [Status] = N'ATTENDED'
+      FROM [social].[EventRegistrations] registration
+     WHERE registration.[EventId] = @OfficialEventId
+       AND registration.[UserId] IN
+           (SELECT member.[Id]
+              FROM @OfficialRegistrationSeeds seed
+              INNER JOIN [user].[AspNetUsers] member ON member.[Email] = seed.[Email]);
+
+    DECLARE @OfficialPointDeltas TABLE ([UserId] uniqueidentifier NOT NULL, [Amount] int NOT NULL);
+    INSERT INTO [store].[PointTransactions]
+        ([Id], [UserId], [Amount], [Reason], [ReferenceType], [ReferenceId], [CreatedAt])
+    OUTPUT inserted.[UserId], inserted.[Amount] INTO @OfficialPointDeltas ([UserId], [Amount])
+    SELECT NEWID(), registration.[UserId], 30, N'官方活動參與加碼', N'COMMUNITY_REWARD', registration.[Id], DATEADD(DAY, -1, @Now)
+      FROM [social].[EventRegistrations] registration
+     WHERE registration.[EventId] = @OfficialEventId
+       AND registration.[Status] = N'ATTENDED'
+       AND registration.[RewardGrantedAt] IS NULL
+       AND NOT EXISTS
+       (
+           SELECT 1 FROM [store].[PointTransactions] existing
+            WHERE existing.[UserId] = registration.[UserId]
+              AND existing.[ReferenceType] = N'COMMUNITY_REWARD'
+              AND existing.[ReferenceId] = registration.[Id]
+       );
+
+    INSERT INTO [store].[PointBalances] ([UserId], [Balance], [UpdatedAt])
+    SELECT delta.[UserId], 0, @Now
+      FROM (SELECT DISTINCT [UserId] FROM @OfficialPointDeltas) delta
+     WHERE NOT EXISTS
+     (
+         SELECT 1 FROM [store].[PointBalances] existing WHERE existing.[UserId] = delta.[UserId]
+     );
+    UPDATE balance
+       SET [Balance] = [Balance] + delta.[Amount], [UpdatedAt] = @Now
+      FROM [store].[PointBalances] balance
+      INNER JOIN
+      (
+          SELECT [UserId], SUM([Amount]) AS [Amount]
+            FROM @OfficialPointDeltas
+           GROUP BY [UserId]
+      ) delta ON delta.[UserId] = balance.[UserId];
+
+    UPDATE registration
+       SET [RewardCampaignId] = @OfficialCampaignId,
+           [RewardPointAmount] = 30,
+           [RewardKeyDefinitionId] = NULL,
+           [RewardKeyAmount] = 0,
+           [RewardGrantedAt] = COALESCE([RewardGrantedAt], DATEADD(DAY, -1, @Now))
+      FROM [social].[EventRegistrations] registration
+     WHERE registration.[EventId] = @OfficialEventId
+       AND registration.[Status] = N'ATTENDED'
+       AND registration.[UserId] IN
+           (SELECT member.[Id]
+              FROM @OfficialRegistrationSeeds seed
+              INNER JOIN [user].[AspNetUsers] member ON member.[Email] = seed.[Email]);
+
+    /* 私人房間的兩筆接受邀請各發 20 點，但只有第一筆仍有 1 把 NORMAL 可供轉移。 */
+    DECLARE @RoomRewardSeeds TABLE
+    (
+        [InvitationId] uniqueidentifier NOT NULL,
+        [RecipientUserId] uniqueidentifier NOT NULL,
+        [PointAmount] int NOT NULL,
+        [KeyAmount] int NOT NULL
+    );
+    INSERT INTO @RoomRewardSeeds VALUES
+        ('D0A40000-0000-0000-0000-000000000001', @UserId, 20, 1),
+        ('D0A40000-0000-0000-0000-000000000002', @PlayerBUserId, 20, 0);
+
+    INSERT INTO [game].[GameRoomInvitations]
+        ([Id], [RoomId], [InviterUserId], [InviteeUserId], [Status], [Message], [RewardPointAmount], [RewardCampaignId], [RewardKeyDefinitionId], [RewardKeyAmount], [RewardGrantedAt], [CreatedAt], [RespondedAt])
+    SELECT seed.[InvitationId], @PrivateRoomId, @PlayerAUserId, seed.[RecipientUserId], N'ACCEPTED',
+           CASE WHEN seed.[KeyAmount] > 0 THEN N'這場房間會提供一點入場加碼，先到先得。' ELSE N'點數加碼仍在預算內，歡迎一起觀察。' END,
+           seed.[PointAmount], @MemberCampaignId,
+           CASE WHEN seed.[KeyAmount] > 0 THEN @NormalKeyDefinitionId ELSE NULL END,
+           seed.[KeyAmount], DATEADD(DAY, -2, @Now), DATEADD(DAY, -4, @Now), DATEADD(DAY, -2, @Now)
+      FROM @RoomRewardSeeds seed
+     WHERE NOT EXISTS (SELECT 1 FROM [game].[GameRoomInvitations] existing WHERE existing.[Id] = seed.[InvitationId]);
+
+    IF NOT EXISTS (SELECT 1 FROM [game].[GameRoomInvitations] WHERE [Id] = 'D0A40000-0000-0000-0000-000000000003')
+    BEGIN
+        INSERT INTO [game].[GameRoomInvitations]
+            ([Id], [RoomId], [InviterUserId], [InviteeUserId], [Status], [Message], [RewardPointAmount], [CreatedAt], [RespondedAt])
+        VALUES
+            ('D0A40000-0000-0000-0000-000000000003', @PrivateRoomId, @PlayerAUserId, @CatalogUserId, N'DECLINED', N'這次先保留邀請紀錄，之後再約時間。', 0, DATEADD(DAY, -3, @Now), DATEADD(DAY, -2, @Now));
+    END;
+
+    DECLARE @RoomPointDeltas TABLE ([UserId] uniqueidentifier NOT NULL, [Amount] int NOT NULL);
+    INSERT INTO [store].[PointTransactions]
+        ([Id], [UserId], [Amount], [Reason], [ReferenceType], [ReferenceId], [CreatedAt])
+    OUTPUT inserted.[UserId], inserted.[Amount] INTO @RoomPointDeltas ([UserId], [Amount])
+    SELECT NEWID(), movement.[UserId], movement.[Amount], movement.[Reason], N'COMMUNITY_REWARD', movement.[InvitationId], DATEADD(DAY, -2, @Now)
+      FROM @RoomRewardSeeds seed
+      CROSS APPLY
+      (
+          SELECT @PlayerAUserId AS [UserId], -seed.[PointAmount] AS [Amount], N'私人房間加碼支出' AS [Reason], seed.[InvitationId]
+          UNION ALL
+          SELECT seed.[RecipientUserId], seed.[PointAmount], N'私人房間參與加碼', seed.[InvitationId]
+      ) movement
+     WHERE seed.[PointAmount] > 0
+       AND NOT EXISTS
+       (
+           SELECT 1 FROM [store].[PointTransactions] existing
+            WHERE existing.[UserId] = movement.[UserId]
+              AND existing.[ReferenceType] = N'COMMUNITY_REWARD'
+              AND existing.[ReferenceId] = movement.[InvitationId]
+              AND existing.[Amount] = movement.[Amount]
+       );
+
+    UPDATE balance
+       SET [Balance] = [Balance] + delta.[Amount], [UpdatedAt] = @Now
+      FROM [store].[PointBalances] balance
+      INNER JOIN
+      (
+          SELECT [UserId], SUM([Amount]) AS [Amount]
+            FROM @RoomPointDeltas
+           GROUP BY [UserId]
+      ) delta ON delta.[UserId] = balance.[UserId];
+
+    DECLARE @RoomKeyDeltas TABLE ([UserId] uniqueidentifier NOT NULL, [Amount] int NOT NULL);
+    INSERT INTO [catalog].[KeyTransactions]
+        ([Id], [UserId], [KeyDefinitionId], [Amount], [Reason], [ReferenceType], [ReferenceId], [CreatedAt])
+    OUTPUT inserted.[UserId], inserted.[Amount] INTO @RoomKeyDeltas ([UserId], [Amount])
+    SELECT NEWID(), movement.[UserId], @NormalKeyDefinitionId, movement.[Amount], movement.[Reason], N'COMMUNITY_REWARD', seed.[InvitationId], DATEADD(DAY, -2, @Now)
+      FROM @RoomRewardSeeds seed
+      CROSS APPLY
+      (
+          SELECT @PlayerAUserId AS [UserId], -seed.[KeyAmount] AS [Amount], N'私人房間加碼支出' AS [Reason]
+          UNION ALL
+          SELECT seed.[RecipientUserId], seed.[KeyAmount], N'私人房間參與加碼'
+      ) movement
+     WHERE seed.[KeyAmount] > 0
+       AND NOT EXISTS
+       (
+           SELECT 1 FROM [catalog].[KeyTransactions] existing
+            WHERE existing.[UserId] = movement.[UserId]
+              AND existing.[KeyDefinitionId] = @NormalKeyDefinitionId
+              AND existing.[ReferenceType] = N'COMMUNITY_REWARD'
+              AND existing.[ReferenceId] = seed.[InvitationId]
+              AND existing.[Amount] = movement.[Amount]
+       );
+
+    UPDATE balance
+       SET [Balance] = [Balance] + delta.[Amount], [UpdatedAt] = @Now
+      FROM [catalog].[UserKeyBalances] balance
+      INNER JOIN
+      (
+          SELECT [UserId], SUM([Amount]) AS [Amount]
+            FROM @RoomKeyDeltas
+           GROUP BY [UserId]
+      ) delta ON delta.[UserId] = balance.[UserId]
+             AND balance.[KeyDefinitionId] = @NormalKeyDefinitionId;
+
+    UPDATE invitation
+       SET [RewardCampaignId] = @MemberCampaignId,
+           [RewardPointAmount] = seed.[PointAmount],
+           [RewardKeyDefinitionId] = CASE WHEN seed.[KeyAmount] > 0 THEN @NormalKeyDefinitionId ELSE NULL END,
+           [RewardKeyAmount] = seed.[KeyAmount],
+           [RewardGrantedAt] = COALESCE([RewardGrantedAt], DATEADD(DAY, -2, @Now))
+      FROM [game].[GameRoomInvitations] invitation
+      INNER JOIN @RoomRewardSeeds seed ON seed.[InvitationId] = invitation.[Id];
+
+    UPDATE campaign
+       SET [PointIssued] = 40, [KeyIssued] = 1, [UpdatedAt] = @Now
+      FROM [admin].[CommunityRewardCampaigns] campaign
+     WHERE campaign.[Id] = @MemberCampaignId;
 
     COMMIT TRANSACTION;
 END TRY

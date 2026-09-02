@@ -64,6 +64,12 @@
                         </select>
                         <span asp-validation-for="EraBucketId" class="text-danger"></span>
                     </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="RecyclePointValue" class="form-label">無用途時回收鑑定點數</label>
+                        <input asp-for="RecyclePointValue" class="form-control" type="number" min="0" />
+                        <div class="form-hint">只有該會員已沒有這把鑰匙可解鎖的文物時，才能回收。</div>
+                        <span asp-validation-for="RecyclePointValue" class="text-danger"></span>
+                    </div>
                     <div class="col-12">
                         <label class="form-check form-switch">
                             <input asp-for="IsActive" class="form-check-input" />

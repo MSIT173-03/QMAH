@@ -110,7 +110,37 @@ internal static class QmahOpenApiSchemaCatalog
                 ("visibility", "Visibility（個人資料可見範圍）；使用 PUBLIC、FRIENDS 或 PRIVATE")),
             ["UpsertCartItemRequest"] = Fields(
                 ("productId", "ProductId（商品資源識別碼）"),
-                ("quantity", "Quantity（購物車商品數量）；範圍為 1 至 99"))
+                ("quantity", "Quantity（購物車商品數量）；範圍為 1 至 99")),
+            ["UnlockArtifactRequest"] = Fields(
+                ("artifactId", "ArtifactId（文物資源識別碼）；只有 UNIVERSAL 鑰匙可提供，其他鑰匙會由伺服器選擇文物")),
+            ["ExchangeKeyRequest"] = Fields(
+                ("ruleId", "RuleId（鑰匙兌換規則資源識別碼）；必須是目前啟用的規則"),
+                ("units", "Units（要執行的規則倍數）；範圍為 1 至 100")),
+            ["RecycleKeyRequest"] = Fields(
+                ("amount", "Amount（要回收的鑰匙數量）；範圍為 1 至 100，且該鑰匙對會員必須已無可解鎖文物")),
+            ["RedeemCouponRequest"] = Fields(
+                ("couponDefinitionId", "CouponDefinitionId（優惠券定義資源識別碼）；必須是可由鑑定點數兌換的啟用定義")),
+            ["SetEquippedTitleRequest"] = Fields(
+                ("userAchievementId", "UserAchievementId（會員成就取得紀錄識別碼）；只能選擇本人已取得的成就，送 null 可清除配戴稱號")),
+            ["StartMiniGameRequest"] = Fields(
+                ("modeCode", "ModeCode（Mini Game 模式系統代碼）；使用 DETAIL_LOCATOR、ARTIFACT_PUZZLE、MEMORY_MATCH 或 STRIP_RESTORE")),
+            ["CompleteMiniGameRequest"] = Fields(
+                ("rawScore", "RawScore（原始分數）；目前契約接受 0 至 100，等級由伺服器依模式設定計算"),
+                ("rawResultJson", "RawResultJson（原始結果 JSON）；可選，供模式專用驗證擴充，最多 4000 個字元")),
+            ["CreateGameRoomInvitationRequest"] = Fields(
+                ("inviteeUserId", "InviteeUserId（受邀會員資源識別碼）；必須是啟用中的其他會員"),
+                ("message", "Message（邀請訊息）；可省略，最多 300 個字元")),
+            ["RespondGameRoomInvitationRequest"] = Fields(
+                ("decision", "Decision（邀請回應）；使用 ACCEPT 或 DECLINE"),
+                ("displayName", "DisplayName（加入房間時的顯示名稱）；可省略，預設使用會員暱稱")),
+            ["ConfigureCommunityRewardRequest"] = Fields(
+                ("pointPerRecipient", "PointPerRecipient（每位參與者的鑑定點數加碼）"),
+                ("keyDefinitionId", "KeyDefinitionId（加碼鑰匙定義資源識別碼）；沒有鑰匙加碼時可省略"),
+                ("keyPerRecipient", "KeyPerRecipient（每位參與者的鑰匙加碼數量）"),
+                ("pointBudget", "PointBudget（會員活動點數總預算）；官方活動不使用"),
+                ("keyBudget", "KeyBudget（會員活動鑰匙總預算）；官方活動不使用"),
+                ("validFrom", "ValidFrom（加碼開始時間）；省略時使用目前 UTC 時間"),
+                ("validUntil", "ValidUntil（加碼結束時間）；省略時使用開始時間後七天"))
         };
 
     public static void Apply(OpenApiDocument document)

@@ -1,0 +1,323 @@
+@using QMAH.Web.Infrastructure.AdminNavigation
+@model QMAH.Web.Models.EconomyBatchPageViewModel
+
+@{
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+    var roles = ViewBag.BatchRoles as IEnumerable<string> ?? [];
+    var hasPreview = Model.HasPreview;
+
+    string AssetLabel(string value) => value switch
+    {
+        "POINT" => "鑑定點數",
+        "COUPON" => "優惠券",
+        _ => value
+    };
+    string OperationLabel(string value) => value switch
+    {
+        "ADD" => "增加",
+        "DEDUCT" => "扣除／撤銷",
+        _ => value
+    };
+    string BatchStatusLabel(string value) => value switch
+    {
+        "COMPLETED" => "已完成",
+        "FAILED" => "未執行",
+        "EMPTY" => "無符合對象",
+        "PROCESSING" => "處理中",
+        _ => value
+    };
+}
+
+@section PageActions {
+    <div class="qmah-actions d-flex flex-wrap gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-chart-dots-3 me-1"></i>返回營運摘要
+        </a>
+        <a asp-action="AuditLogs" class="btn btn-outline-secondary">
+            <i class="ti ti-file-search me-1"></i>稽核紀錄
+        </a>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.ExecutionError))
+{
+    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+        <i class="ti ti-alert-circle fs-2"></i>
+        <div>
+            <strong>批次資產活動未完成</strong>
+            <div>@Model.ExecutionError</div>
+        </div>
+    </div>
+}
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-xl-8">
+        <div class="card qmah-form-card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">建立批次資產活動</h2>
+                    <div class="card-subtitle">適用於活動補發、客服補償或資料更正；逐人調整仍可從各自的背包進入。</div>
+                </div>
+                <span class="qmah-operations-batch-mark"><i class="ti ti-users-group" aria-hidden="true"></i>批次作業</span>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info qmah-operations-batch-note" role="note">
+                    <i class="ti ti-shield-check" aria-hidden="true"></i>
+                    <span>執行時會重新套用下方條件。點數會逐位會員寫入流水；優惠券會逐張保留發放或撤銷紀錄，整批不會只完成一部分。</span>
+                </div>
+
+                <form asp-action="PreviewEconomyBatch" method="post" class="qmah-batch-form">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">異動內容</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label asp-for="AssetType" class="form-label">資產種類</label>
+                                <select asp-for="AssetType" class="form-select" data-batch-asset-type>
+                                    <option value="POINT">鑑定點數</option>
+                                    <option value="COUPON">優惠券</option>
+                                </select>
+                                <span asp-validation-for="AssetType" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label asp-for="Operation" class="form-label">異動方向</label>
+                                <select asp-for="Operation" class="form-select">
+                                    <option value="ADD">增加</option>
+                                    <option value="DEDUCT">扣除／撤銷</option>
+                                </select>
+                                <span asp-validation-for="Operation" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label asp-for="UnitAmount" class="form-label">每位會員數量</label>
+                                <input asp-for="UnitAmount" class="form-control" inputmode="numeric" min="1" />
+                                <span asp-validation-for="UnitAmount" class="text-danger"></span>
+                            </div>
+                            <div class="col-12" data-batch-coupon-field>
+                                <label asp-for="CouponDefinitionId" class="form-label">優惠券定義</label>
+                                <select asp-for="CouponDefinitionId" asp-items="ViewBag.BatchCouponDefinitions" class="form-select">
+                                    <option value="">請選擇優惠券</option>
+                                </select>
+                                <div class="form-hint">批次發放只使用管理員發放型優惠券；撤銷也會保留原券的歷史紀錄。</div>
+                                <span asp-validation-for="CouponDefinitionId" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Reason" class="form-label">活動／異動原因</label>
+                                <textarea asp-for="Reason" class="form-control" rows="2" maxlength="200" required placeholder="例如：2026 春季館藏活動完成獎勵、客服補償或資料更正"></textarea>
+                                <span asp-validation-for="Reason" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="qmah-form-section">
+                        <h3 class="qmah-form-section-title">會員條件</h3>
+                        <div class="form-hint mb-3">不填的條件不限制；預設只選取啟用中的會員。點數最低／最高是目前帳戶餘額，沒有餘額紀錄的會員視為 0。</div>
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-5">
+                                <label asp-for="Keyword" class="form-label">會員搜尋</label>
+                                <input asp-for="Keyword" class="form-control" placeholder="暱稱、Email 或帳號" />
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <label asp-for="Role" class="form-label">會員角色</label>
+                                <select asp-for="Role" class="form-select">
+                                    <option value="">全部角色</option>
+                                    @foreach (var role in roles)
+                                    {
+                                        <option value="@role">@AdminDisplayLabels.Role(role)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label asp-for="Status" class="form-label">會員狀態</label>
+                                <select asp-for="Status" class="form-select">
+                                    <option value="ACTIVE">啟用中</option>
+                                    <option value="BANNED">已停權</option>
+                                    <option value="DELETED">已刪除</option>
+                                    <option value="">全部狀態</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="CreatedFrom" class="form-label">會員建立日期起</label>
+                                <input asp-for="CreatedFrom" class="form-control" type="date" />
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="CreatedTo" class="form-label">會員建立日期迄</label>
+                                <input asp-for="CreatedTo" class="form-control" type="date" />
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="MinPointBalance" class="form-label">目前點數最低</label>
+                                <input asp-for="MinPointBalance" class="form-control" inputmode="numeric" placeholder="例如：100" />
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="MaxPointBalance" class="form-label">目前點數最高</label>
+                                <input asp-for="MaxPointBalance" class="form-control" inputmode="numeric" placeholder="例如：999" />
+                            </div>
+                        </div>
+                    </section>
+
+                    @if (hasPreview)
+                    {
+                        <div class="form-check qmah-batch-confirm">
+                            <input asp-for="Confirm" class="form-check-input" />
+                            <label asp-for="Confirm" class="form-check-label">我已確認下方會員範圍，執行後每位會員都會留下逐筆異動紀錄</label>
+                            <span asp-validation-for="Confirm" class="text-danger d-block"></span>
+                        </div>
+                    }
+
+                    <div class="qmah-form-actions">
+                        <button type="submit" class="btn btn-outline-primary" formaction="@Url.Action("PreviewEconomyBatch", "Operations")">
+                            <i class="ti ti-search me-1"></i>預覽符合會員
+                        </button>
+                        @if (hasPreview)
+                        {
+                            <button type="submit" class="btn btn-primary" formaction="@Url.Action("ExecuteEconomyBatch", "Operations")">
+                                <i class="ti ti-player-play me-1"></i>確認並執行批次
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card qmah-list-card h-100 qmah-batch-preview-panel">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">本次對象預覽</h2>
+                    <div class="card-subtitle">預覽只查詢資料，不會改變會員資產。</div>
+                </div>
+                @if (hasPreview)
+                {
+                    <span class="badge bg-teal-lt">已預覽</span>
+                }
+            </div>
+            @if (!hasPreview)
+            {
+                <div class="card-body qmah-batch-preview-empty">
+                    <i class="ti ti-users-search" aria-hidden="true"></i>
+                    <p>填妥異動內容與會員條件後，先預覽符合對象。</p>
+                </div>
+            }
+            else
+            {
+                <div class="card-body">
+                    <div class="qmah-batch-preview-count">
+                        <span>符合條件會員</span>
+                        <strong>@Model.PreviewCount.ToString("N0")</strong>
+                    </div>
+                    <div class="small text-secondary mb-3">
+                        @AssetLabel(Model.AssetType) · @OperationLabel(Model.Operation) · 每位 @Model.UnitAmount.ToString("N0")
+                        @if (!string.IsNullOrWhiteSpace(Model.PreviewCouponName))
+                        {
+                            <span> · @Model.PreviewCouponName</span>
+                        }
+                    </div>
+                    @if (Model.PreviewMembers.Count == 0)
+                    {
+                        <div class="empty py-3">
+                            <div class="empty-icon"><i class="ti ti-user-off"></i></div>
+                            <p class="empty-title">沒有符合條件的會員</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-vcenter qmah-batch-preview-table">
+                                <thead><tr><th>會員</th><th>狀態</th></tr></thead>
+                                <tbody>
+                                @foreach (var member in Model.PreviewMembers)
+                                {
+                                    <tr>
+                                        <td><div class="fw-semibold">@member.DisplayName</div><div class="small text-secondary">@member.Email</div></td>
+                                        <td>@AdminDisplayLabels.Status(member.Status)</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (Model.PreviewCount > Model.PreviewMembers.Count)
+                        {
+                            <div class="form-hint mt-2">僅列出前 @Model.PreviewMembers.Count 位；執行時會依條件處理全部 @Model.PreviewCount 位。</div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="card qmah-list-card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">最近批次活動</h2>
+            <div class="card-subtitle">主檔保留原因、篩選條件快照、操作者與實際異動量；逐筆明細可從點數或優惠券流水追查。</div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table qmah-crud-table qmah-batch-history-table">
+            <thead>
+                <tr><th>時間</th><th>資產／方向</th><th>對象</th><th>實際異動</th><th>原因</th><th>操作者</th><th>狀態</th></tr>
+            </thead>
+            <tbody>
+            @if (Model.RecentBatches.Count == 0)
+            {
+                <tr><td colspan="7"><div class="empty py-5"><div class="empty-icon"><i class="ti ti-history"></i></div><p class="empty-title">目前還沒有批次活動</p></div></td></tr>
+            }
+            else
+            {
+                @foreach (var batch in Model.RecentBatches)
+                {
+                    <tr>
+                        <td class="text-nowrap">@batch.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                        <td>
+                            <div class="fw-semibold">@AssetLabel(batch.AssetType) · @OperationLabel(batch.Operation)</div>
+                            @if (!string.IsNullOrWhiteSpace(batch.CouponName))
+                            {
+                                <div class="small text-secondary">@batch.CouponName · 每位 @batch.UnitAmount</div>
+                            }
+                            else
+                            {
+                                <div class="small text-secondary">每位 @batch.UnitAmount.ToString("N0")</div>
+                            }
+                        </td>
+                        <td>@batch.TargetCount.ToString("N0") 位<br /><span class="small text-secondary">成功 @batch.SucceededCount · 失敗 @batch.FailedCount</span></td>
+                        <td class="text-nowrap">@batch.AffectedAssetCount.ToString("N0")</td>
+                        <td class="qmah-batch-reason">@batch.Reason</td>
+                        <td class="text-nowrap">@batch.AdminName</td>
+                        <td><span class="badge @(batch.Status == "COMPLETED" ? "bg-green-lt" : batch.Status == "FAILED" ? "bg-red-lt" : "bg-secondary-lt")">@BatchStatusLabel(batch.Status)</span></td>
+                    </tr>
+                    @if (!string.IsNullOrWhiteSpace(batch.FailureReason))
+                    {
+                        <tr class="qmah-batch-history-error"><td></td><td colspan="6"><i class="ti ti-alert-triangle me-1"></i>@batch.FailureReason</td></tr>
+                    }
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/admin/css/qmah-operations.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const asset = document.querySelector("[data-batch-asset-type]");
+            const couponField = document.querySelector("[data-batch-coupon-field]");
+            if (!asset || !couponField) return;
+
+            const syncCouponField = () => {
+                const visible = asset.value === "COUPON";
+                couponField.hidden = !visible;
+                couponField.querySelector("select")?.toggleAttribute("required", visible);
+            };
+            asset.addEventListener("change", syncCouponField);
+            syncCouponField();
+        })();
+    </script>
+}

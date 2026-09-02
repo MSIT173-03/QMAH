@@ -14,6 +14,9 @@ public partial class ApplicationUser
     public ICollection<Event> OrganizedEvents { get; } = [];
     public ICollection<Event> ReviewedEvents { get; } = [];
     public ICollection<EventRegistration> EventRegistrations { get; } = [];
+    public ICollection<GameRoomInvitation> SentGameRoomInvitations { get; } = [];
+    public ICollection<GameRoomInvitation> ReceivedGameRoomInvitations { get; } = [];
+    public ICollection<CommunityRewardCampaign> OwnedRewardCampaigns { get; } = [];
     public ICollection<GamePlayer> GamePlayers { get; } = [];
     public ICollection<KeyTransaction> KeyTransactions { get; } = [];
     public ICollection<OfficialAnnouncement> OfficialAnnouncements { get; } = [];
@@ -25,5 +28,10 @@ public partial class ApplicationUser
     public ICollection<StoreOrder> StoreOrders { get; } = [];
     public ICollection<UserCoupon> Coupons { get; } = [];
     public ICollection<UserKeyBalance> KeyBalances { get; } = [];
+    public ICollection<KeyProgressTransaction> KeyProgressTransactions { get; } = [];
+    public KeyProgressBalance? KeyProgressBalance { get; set; }
+    public ICollection<MiniGameAttempt> MiniGameAttempts { get; } = [];
+    public ICollection<EconomyAdjustmentBatch> EconomyAdjustmentBatches { get; } = [];
+    public ICollection<DailyMemberActivity> DailyMemberActivities { get; } = [];
     public ICollection<UserNotification> Notifications { get; } = [];
 }

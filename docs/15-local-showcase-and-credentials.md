@@ -32,7 +32,7 @@ dotnet run --project .\tools\QmahDataTools\QmahDatabaseRelease\QmahDatabaseRelea
 最後才在 SSMS 或 `sqlcmd` 執行後台專用情境：
 
 ```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d QMAH -E -f 65001 -b -r1 -i .\database\seed-admin-showcase-data.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d QMAH -E -b -r1 -i .\database\seed-admin-showcase-data.sql
 ```
 
 資料工具會管理一批 288 篇不同主題的貼文、672 筆留言、160 筆訂單與 96 筆商品評價；貼文大約分成 96 篇文物專題、41 篇鑑定遊戲交流、112 篇一般社群內容、7 篇實際活動貼文與 32 篇官方公告。每篇貼文至少有兩筆留言，每三篇再加入一筆回覆；社群文章採固定順序的獨立素材，不會因亂數重新拼接成對不上的內容。只有部分貼文連到文物，避免把所有館藏都安排成有人討論；每筆訂單至少有一項與文物直接關聯的縮小複製品，訂單明細保留成交時的商品名稱與單價快照，商品評價也會使用實際的縮小複製品與關聯文物。相同參數可以安全重跑，工具只更新自己產生的資料，不會刪除其他資料；這些是工具批次數量，不是還原後要補上的數量，完整 snapshot 的實際總數以 [`02-development-data.md`](02-development-data.md) 為準。

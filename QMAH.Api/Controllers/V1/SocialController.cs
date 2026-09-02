@@ -4,12 +4,15 @@ using Microsoft.AspNetCore.Mvc;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Services.Economy;
 using QMAH.Infrastructure.Services.Social;
 
 namespace QMAH.Api.Controllers.V1;
 
 [Route("api/v1/social")]
-public sealed class SocialController(QmahDbContext db) : ApiControllerBase
+public sealed class SocialController(
+    QmahDbContext db,
+    CommunityRewardService communityRewardService) : ApiControllerBase
 {
     [HttpGet("posts")]
     [AllowAnonymous]
@@ -346,6 +349,11 @@ public sealed class SocialController(QmahDbContext db) : ApiControllerBase
             registration.RegisteredAt = DateTime.UtcNow;
         }
 
+        // 報名先完成，再由共用加碼服務依活動類型、有效期間與預算結算一次；
+        // 沒有加碼或額度／發起人庫存不足時，服務只記錄 0，不會阻止正常報名。
+        await communityRewardService.GrantEventRegistrationAsync(
+            registration,
+            cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return Ok(ToEventDetails(eventData));
     }

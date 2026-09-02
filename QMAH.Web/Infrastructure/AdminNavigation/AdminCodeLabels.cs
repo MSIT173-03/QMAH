@@ -17,8 +17,20 @@ public static class AdminCodeLabels
         "POST_COUNT" => "發布貼文數",
         "COMMENT_COUNT" => "留言數",
         "EVENT_JOIN_COUNT" => "活動參與數",
+        "EVENT_HOST_COUNT" => "建立活動數",
         "GAME_PLAY_COUNT" => "遊戲參與數",
+        "GAME_COMPLETE_COUNT" => "多人遊戲完成場數",
+        "GAME_ROUND_WIN_COUNT" => "多人遊戲勝出回合數",
+        "GAME_WIN_COUNT" => "遊戲勝場數（相容）",
         "ARTIFACT_UNLOCK_COUNT" => "圖鑑解鎖數",
+        "CATEGORY_COMPLETE_COUNT" => "完成分類數",
+        "ERA_COMPLETE_COUNT" => "完成年代範圍數",
+        "CATALOG_COMPLETION_PERCENT" => "圖鑑完成率",
+        "MINIGAME_DETAIL_LOCATOR_COUNT" => "細節追蹤完成次數",
+        "MINIGAME_ARTIFACT_PUZZLE_COUNT" => "館藏拼圖完成次數",
+        "MINIGAME_MEMORY_MATCH_COUNT" => "館藏翻牌完成次數",
+        "MINIGAME_STRIP_RESTORE_COUNT" => "長卷復位完成次數",
+        "MINIGAME_GRADE_S_COUNT" => "Mini Game S 等級次數",
         null or "" => "未設定",
         _ => "其他條件"
     };
@@ -28,6 +40,7 @@ public static class AdminCodeLabels
         "AVAILABLE" => "可使用",
         "USED" => "已使用",
         "EXPIRED" => "已過期",
+        "REVOKED" => "已撤銷",
         null or "" => "未設定",
         _ => "其他狀態"
     };

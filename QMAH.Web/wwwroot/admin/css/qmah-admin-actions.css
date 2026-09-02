@@ -127,3 +127,9 @@ td.qmah-action-cell {
     display: table-cell !important;
   }
 }
+.qmah-admin .qmah-coupon-action-column {
+  /* 優惠券背包沒有載入營運頁 CSS，欄寬放在全域後台 action 樣式避免表格跑版。 */
+  width: 17rem !important;
+  min-width: 17rem !important;
+  max-width: 17rem !important;
+}

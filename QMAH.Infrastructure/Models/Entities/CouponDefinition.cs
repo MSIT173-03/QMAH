@@ -13,6 +13,12 @@ public partial class CouponDefinition
 
     public string DiscountType { get; set; } = null!;
 
+    public string AcquisitionType { get; set; } = null!;
+
+    public int? PointCost { get; set; }
+
+    public int ValidityDays { get; set; }
+
     public decimal DiscountValue { get; set; }
 
     public decimal MinimumAmount { get; set; }

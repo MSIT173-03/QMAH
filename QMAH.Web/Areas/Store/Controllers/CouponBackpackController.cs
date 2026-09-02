@@ -1,18 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Store.ViewModels;
 using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Web.Areas.Store.Controllers;
 
 [Area("Store")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [AdminNavigation("優惠券背包", 40)]
-public sealed class CouponBackpackController(QmahDbContext db) : Controller
+public sealed class CouponBackpackController(
+    QmahDbContext db,
+    EconomyService economyService,
+    UserManager<ApplicationUser> userManager) : Controller
 {
     public async Task<IActionResult> Index(
         Guid? userId,
@@ -59,6 +65,9 @@ public sealed class CouponBackpackController(QmahDbContext db) : Controller
             return View(Array.Empty<CouponBackpackItemViewModel>());
         }
 
+        // 只同步目前選取會員的過期券，讓管理畫面與會員端共用同一套生命週期規則。
+        await economyService.SyncExpiredCouponsAsync(userId.Value, cancellationToken);
+
         var items = await (
             from coupon in db.UserCoupons.AsNoTracking()
             join definition in db.CouponDefinitions.AsNoTracking()
@@ -83,7 +92,11 @@ public sealed class CouponBackpackController(QmahDbContext db) : Controller
                 CouponCode = definition.Code,
                 Status = coupon.Status,
                 IssuedAt = coupon.IssuedAt,
-                UsedAt = coupon.UsedAt
+                ExpiresAt = coupon.ExpiresAt,
+                UsedAt = coupon.UsedAt,
+                RevokedAt = coupon.RevokedAt,
+                IssueReason = coupon.IssueReason,
+                RevokeReason = coupon.RevokeReason
             })
             .ToListAsync(cancellationToken);
 
@@ -114,7 +127,7 @@ public sealed class CouponBackpackController(QmahDbContext db) : Controller
         ViewBag.CouponDefinitions = new SelectList(
             await db.CouponDefinitions
                 .AsNoTracking()
-                .Where(x => x.IsActive)
+                .Where(x => x.IsActive && x.AcquisitionType == "ADMIN_GRANT")
                 .OrderBy(x => x.Name)
                 .ToListAsync(cancellationToken),
             "Id",
@@ -128,27 +141,24 @@ public sealed class CouponBackpackController(QmahDbContext db) : Controller
     public async Task<IActionResult> Grant(
         Guid userId,
         Guid couponDefinitionId,
+        string reason,
         CancellationToken cancellationToken)
     {
-        var exists = await db.CouponDefinitions.AnyAsync(
-            x => x.Id == couponDefinitionId && x.IsActive,
+        var admin = await userManager.GetUserAsync(User);
+        if (admin is null)
+            return Forbid();
+
+        var result = await economyService.GrantCouponAsync(
+            admin.Id,
+            userId,
+            couponDefinitionId,
+            reason,
             cancellationToken);
-
-        if (!exists)
+        if (!result.Succeeded)
         {
-            return BadRequest("優惠券不存在或已停用。");
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "優惠券發放失敗。";
+            return RedirectToAction(nameof(Index), new { userId });
         }
-
-        db.UserCoupons.Add(new UserCoupon
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            CouponDefinitionId = couponDefinitionId,
-            Status = "AVAILABLE",
-            IssuedAt = DateTime.UtcNow
-        });
-
-        await db.SaveChangesAsync(cancellationToken);
 
         TempData["SuccessMessage"] = "優惠券已發放。";
 
@@ -159,6 +169,7 @@ public sealed class CouponBackpackController(QmahDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Remove(
         Guid id,
+        string reason,
         CancellationToken cancellationToken)
     {
         var coupon = await db.UserCoupons
@@ -171,19 +182,24 @@ public sealed class CouponBackpackController(QmahDbContext db) : Controller
             return NotFound();
         }
 
-        if (coupon.Status != "AVAILABLE")
-        {
-            TempData["ErrorMessage"] =
-                "只有尚未使用的優惠券可以直接移除。";
+        var admin = await userManager.GetUserAsync(User);
+        if (admin is null)
+            return Forbid();
 
+        var result = await economyService.RevokeCouponAsync(
+            admin.Id,
+            id,
+            reason,
+            cancellationToken);
+        if (!result.Succeeded)
+        {
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "優惠券撤銷失敗。";
             return RedirectToAction(
                 nameof(Index),
                 new { userId = coupon.UserId });
         }
 
-        db.UserCoupons.Remove(coupon);
-
-        await db.SaveChangesAsync(cancellationToken);
+        TempData["SuccessMessage"] = "優惠券已撤銷，原紀錄仍保留。";
 
         return RedirectToAction(
             nameof(Index),

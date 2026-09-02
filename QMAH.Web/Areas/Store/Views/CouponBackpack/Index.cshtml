@@ -25,6 +25,9 @@
         <a asp-area="Store" asp-controller="CouponBackpack" asp-action="Index" class="btn btn-secondary">
             <i class="ti ti-backpack me-1"></i>優惠券背包
         </a>
+        <a asp-area="" asp-controller="Operations" asp-action="EconomyBatches" class="btn btn-outline-secondary">
+            <i class="ti ti-users-group me-1"></i>批次資產活動
+        </a>
         <a asp-area="Store" asp-controller="CouponTransactions" asp-action="Index" class="btn btn-outline-secondary">
             <i class="ti ti-receipt me-1"></i>優惠券流水
         </a>
@@ -188,6 +191,11 @@ else
                         </select>
                     </div>
 
+                    <div class="col-12 col-lg-5">
+                        <label class="form-label" for="grant-reason">發放原因</label>
+                        <input id="grant-reason" name="reason" class="form-control" maxlength="200" required placeholder="例如：活動補發、客服補償" />
+                    </div>
+
                     <div class="col-auto">
                         <button class="btn btn-success">
                             <i class="ti ti-ticket me-1"></i>發放
@@ -206,8 +214,9 @@ else
                         <th>優惠券</th>
                         <th>狀態</th>
                         <th>發放時間</th>
-                        <th>使用時間</th>
-                        <th class="qmah-action-cell qmah-actions--1 text-center pe-3 pe-md-4">
+                        <th>有效期限</th>
+                        <th>使用／撤銷時間</th>
+                        <th class="qmah-action-cell qmah-actions--1 text-center pe-3 pe-md-4 qmah-coupon-action-column">
                             操作
                         </th>
                     </tr>
@@ -217,7 +226,7 @@ else
                     @if (!records.Any())
                     {
                         <tr>
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="empty qmah-empty-state">
                                     <div class="empty-icon">
                                         <i class="ti ti-ticket-off"></i>
@@ -255,26 +264,39 @@ else
                                 </td>
 
                                 <td class="text-secondary text-nowrap">
-                                    @(item.UsedAt?
+                                    @item.ExpiresAt
                                         .ToLocalTime()
-                                        .ToString("yyyy/MM/dd HH:mm") ?? "—")
+                                        .ToString("yyyy/MM/dd HH:mm")
                                 </td>
 
-                                <td class="qmah-action-cell qmah-actions--1 text-center pe-3 pe-md-4">
+                                <td class="text-secondary text-nowrap">
+                                    @(item.UsedAt?
+                                        .ToLocalTime()
+                                        .ToString("yyyy/MM/dd HH:mm")
+                                        ?? item.RevokedAt?
+                                            .ToLocalTime()
+                                            .ToString("yyyy/MM/dd HH:mm")
+                                        ?? "—")
+                                </td>
+
+                                <td class="qmah-action-cell qmah-actions--1 qmah-coupon-action-column text-center pe-3 pe-md-4">
                                     <div class="qmah-table-actions justify-content-center">
                                         @if (removable)
                                         {
                                             <form asp-action="Remove"
                                                   method="post"
-                                                  onsubmit="return confirm('確定移除這張尚未使用的優惠券嗎？');">
+                                                  class="d-flex flex-wrap justify-content-center gap-2"
+                                                  onsubmit="return confirm('確定撤銷這張尚未使用的優惠券嗎？撤銷後仍會保留歷史紀錄。');">
                                                 @Html.AntiForgeryToken()
 
                                                 <input type="hidden"
                                                        name="id"
                                                        value="@item.Id" />
 
-                                                <button class="btn btn-sm btn-outline-danger px-3">
-                                                    移除
+                                                <input name="reason" class="form-control form-control-sm" maxlength="200" required placeholder="撤銷原因" aria-label="撤銷原因" />
+
+                                                <button class="btn btn-sm btn-outline-danger px-3" type="submit">
+                                                    撤銷
                                                 </button>
                                             </form>
                                         }
@@ -282,7 +304,7 @@ else
                                         {
                                             <button class="btn btn-sm btn-outline-danger px-3"
                                                     disabled>
-                                                移除
+                                                不可撤銷
                                             </button>
                                         }
                                     </div>

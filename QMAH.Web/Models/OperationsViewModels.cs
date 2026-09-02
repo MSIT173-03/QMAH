@@ -37,6 +37,10 @@ public sealed class OperationsDashboardViewModel
 
     public int MemberCountAtEnd { get; init; }
 
+    public int LoginMemberCount { get; init; }
+
+    public decimal LoginRatePercent { get; init; }
+
     public int GameRoomCount { get; init; }
 
     public int GameRoundCount { get; init; }
@@ -53,9 +57,39 @@ public sealed class OperationsDashboardViewModel
 
     public int MediaAssetCount { get; init; }
 
+    public int PointTransactionCount { get; init; }
+
+    public int PointIncrease { get; init; }
+
+    public int PointDecrease { get; init; }
+
+    public int PointNetChange { get; init; }
+
+    public int KeyTransactionCount { get; init; }
+
+    public int KeyIncrease { get; init; }
+
+    public int KeyDecrease { get; init; }
+
+    public int KeyNetChange { get; init; }
+
+    public int KeyProgressTransactionCount { get; init; }
+
+    public int EconomyBatchCount { get; init; }
+    public int EconomyBatchTargetCount { get; init; }
+    public int EconomyBatchSuccessCount { get; init; }
+    public int EconomyBatchFailureCount { get; init; }
+    public long EconomyBatchPointIncrease { get; init; }
+    public long EconomyBatchPointDecrease { get; init; }
+    public long EconomyBatchCouponGrantCount { get; init; }
+    public long EconomyBatchCouponRevokeCount { get; init; }
+
     public IReadOnlyList<OperationsRevenueDay> RevenueTrend { get; init; } = [];
 
     public IReadOnlyList<OperationsActivityDay> ActivityTrend { get; init; } = [];
+
+    public IReadOnlyList<OperationsEconomyDay> EconomyTrend { get; init; } = [];
+    public IReadOnlyList<OperationsEconomyBatchDay> EconomyBatchTrend { get; init; } = [];
 
     public IReadOnlyList<OperationsMonthSummary> MonthlyTrend { get; init; } = [];
 
@@ -96,7 +130,30 @@ public sealed record OperationsActivityDay(
     int CommentCount,
     int EventCount,
     int EventRegistrationCount,
-    int MediaAssetCount);
+    int MediaAssetCount,
+    int LoginMemberCount);
+
+public sealed record OperationsEconomyDay(
+    DateTime Date,
+    int PointIncrease,
+    int PointDecrease,
+    int PointNetChange,
+    int KeyIncrease,
+    int KeyDecrease,
+    int KeyNetChange,
+    int KeyProgressIncrease,
+    int KeyProgressConversion);
+
+public sealed record OperationsEconomyBatchDay(
+    DateTime Date,
+    int BatchCount,
+    int TargetCount,
+    int SuccessCount,
+    int FailureCount,
+    long PointIncrease,
+    long PointDecrease,
+    long CouponGrantCount,
+    long CouponRevokeCount);
 
 public sealed record OperationsMonthSummary(
     DateTime Month,
@@ -109,7 +166,8 @@ public sealed record OperationsMonthSummary(
     int CommentCount,
     int EventCount,
     int EventRegistrationCount,
-    int MediaAssetCount);
+    int MediaAssetCount,
+    int LoginMemberCount);
 
 public sealed record OperationsBreakdown(
     string Label,

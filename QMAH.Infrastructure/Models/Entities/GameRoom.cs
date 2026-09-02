@@ -43,5 +43,9 @@ public partial class GameRoom
 
     public virtual ICollection<GamePlayer> GamePlayers { get; set; } = new List<GamePlayer>();
 
+    public virtual ICollection<GameRoomInvitation> Invitations { get; set; } = new List<GameRoomInvitation>();
+
+    public virtual ICollection<CommunityRewardCampaign> RewardCampaigns { get; set; } = new List<CommunityRewardCampaign>();
+
     public virtual ICollection<GameRound> GameRounds { get; set; } = new List<GameRound>();
 }

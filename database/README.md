@@ -34,11 +34,13 @@ Release 也會附上同一次匯出的 `QMAH-<version>.sql`，內容與 Reposito
 
 ## Release 更新：以最新版完整快照乾淨重建
 
-Repository 不提供也不支援將舊版 `QMAH` 原地更新的資料庫腳本。當 Release 更新 Schema、Entity、題庫／商城資料或匯入規則時，最新版的 `.bak` 與 `database/QMAH.sql` 應該已經是同一份完整快照；一般組員只需要用最新版檔案乾淨還原，不需要自行做增量補資料：
+正式交付仍以最新版 `.bak` 與 `database/QMAH.sql` 作為完整快照；一般組員只需要用最新版檔案乾淨還原，不需要自行做增量補資料。現有開發資料庫若要保留測試資料，可使用 [`patch-20260902-backend-ready.sql`](patch-20260902-backend-ready.sql) 將本輪後台經濟、鑰匙、優惠券與 Mini Game 契約補到既有 `QMAH`，但這支腳本只適合資料庫整合者或隔離的開發資料庫，不取代完整快照，也不應套用到不確定名稱的資料庫：
 
 1. 先備份需要保留的個人測試資料，關閉 `QMAH.Web` 與 `QMAH.Api`。
 2. 將本機舊版 `QMAH` 移除或改用新的資料庫名稱，再擇一還原最新版 Release `.bak` 或完整執行同版本 `QMAH.sql`。
 3. 直接啟動網站，確認資料筆數、Schema、Web 與 API 都與版本說明一致；不需要再執行 `Schema.sql`、seed、`NpmDataImporter` 或其他展示資料命令。
+
+增量腳本執行完成後，仍應重新產生下一版完整快照；需要交付給組員的資料庫不得依賴多支 patch 逐一補齊。
 
 每次遠端版本發布都必須在 Release 說明明確標示「需要以最新版完整檔案重新建立資料庫」、快照版本與資料內容。不要把舊資料庫直接交給新程式，也不要由網站啟動時自動建表或修改 Schema；個人測試資料要自行匯出後再選擇性匯回。`NpmDataImporter`、展示資料工具與 seed 只在資料庫整合者建立下一份 canonical snapshot 前使用，完成驗證後才把結果放進新的 `.bak` 與 `.sql`。
 
@@ -50,6 +52,7 @@ Repository 不提供也不支援將舊版 `QMAH` 原地更新的資料庫腳本�
 | `QMAH-<version>.sql` | Release 對應的完整文字版快照 | 僅作 Release Asset |
 | `QMAH-<version>.bak` | SQL Server 快速還原用的二進位快照 | 僅作 Release Asset |
 | `Schema.sql` | Schema 結構審核與 DB-first 對照來源 | 是 |
+| `patch-20260902-backend-ready.sql` | 將本輪後台功能補到既有開發資料庫的限定增量腳本 | 是 |
 | `seed-showcase-data.sql` | 固定 SQL 展示資料的相容性補充；不是一般組員還原後的步驟 | 是 |
 
 Git 可以保存 `.bak`，但無法對二進位內容提供有意義的逐行差異，因此 `.bak` 不作為唯一版本紀錄
@@ -92,7 +95,7 @@ SSMS 建立的 `dbo.sysdiagrams` 與 Diagram stored procedures 不屬於 QMAH �
 需要產生新的 Release 時，在 Repository 根目錄執行：
 
 ```powershell
-.\tools\QmahDataTools\Export-ReferenceDatabase.ps1 -Version 0.6.0
+.\tools\QmahDataTools\Export-ReferenceDatabase.ps1 -Version 0.7.0
 ```
 
 工具會依序完成：
@@ -118,7 +121,7 @@ _工具輸出/reference-database/<version>/
 
 ## 目前版本的定位
 
-目前的 `database/QMAH.sql` 與本機驗證輸出的 `0.6.0` 快照是同一份完整 reference database snapshot，包含目前已確認的共同展示資料。GitHub Release 發布時，Release 的 `.bak` 與 `.sql` 必須沿用這份快照；它仍不宣稱已涵蓋尚未實作的前台功能資料。
+目前的 `database/QMAH.sql` 將在本輪資料庫驗證後更新為 `0.7.0` reference database snapshot，包含目前已確認的共同展示資料與後台功能資料。GitHub Release 發布時，Release 的 `.bak` 與 `.sql` 必須沿用同一次匯出的快照；它仍不宣稱已涵蓋尚未實作的前台功能資料。
 
 其他 Area 合併新的 table、column、index、foreign key、constraint、Identity 初始化或共同資料後，不需要重寫工具，只需：
 

@@ -8,8 +8,11 @@
     var isDashboard = (string.IsNullOrWhiteSpace(currentArea) && currentController == "Home") || isAccountPage;
     var isOperations = string.IsNullOrWhiteSpace(currentArea) && string.Equals(currentController, "Operations", StringComparison.OrdinalIgnoreCase);
     var isOperationsSummary = isOperations
-        && !string.Equals(currentAction, "AuditLogs", StringComparison.OrdinalIgnoreCase)
-        && !string.Equals(currentAction, "Media", StringComparison.OrdinalIgnoreCase);
+        && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+    var isOperationsBatch = isOperations
+        && (string.Equals(currentAction, "EconomyBatches", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(currentAction, "PreviewEconomyBatch", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(currentAction, "ExecuteEconomyBatch", StringComparison.OrdinalIgnoreCase));
     var catalogItems = AdminNavigation.GetAreaItems("Catalog");
     var gameItems = AdminNavigation.GetAreaItems("Game");
     var socialItems = AdminNavigation.GetAreaItems("Social");
@@ -44,6 +47,7 @@
                     </a>
                     <ul class="qmah-sidebar-subnav" aria-label="營運中心子功能">
                         <li><a class="nav-link @(isOperationsSummary ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="Index"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("operations-summary")" /></span><span class="nav-link-title">營運摘要</span></a></li>
+                        <li><a class="nav-link @(isOperationsBatch ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="EconomyBatches"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("economy-batch")" /></span><span class="nav-link-title">資產活動</span></a></li>
                         <li><a class="nav-link @(isOperations && string.Equals(currentAction, "AuditLogs", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="AuditLogs"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("audit")" /></span><span class="nav-link-title">稽核紀錄</span></a></li>
                         <li><a class="nav-link @(isOperations && string.Equals(currentAction, "Media", StringComparison.OrdinalIgnoreCase) ? "active" : null)" asp-area="" asp-controller="Operations" asp-action="Media"><span class="nav-link-icon"><partial name="Admin/_Icon" model="@("media")" /></span><span class="nav-link-title">圖庫管理</span></a></li>
                     </ul>

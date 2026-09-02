@@ -18,6 +18,7 @@ using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Security;
+using QMAH.Infrastructure.Services.Economy;
 
 var builder = WebApplication.CreateBuilder(args);
 var cookieSecurePolicy = builder.Environment.IsDevelopment()
@@ -122,6 +123,11 @@ builder.Services.AddSingleton<AdminNavigationService>();
 builder.Services.AddScoped<AdminAuditLogFilter>();
 builder.Services.AddScoped<CatalogImportService>();
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
+// EconomyService 負責會員單筆經濟規則；MiniGameService 負責四種玩法共用的開始、結算與獎勵契約。
+// 批次資產作業另外保留活動主檔與篩選快照，讓營運中心能統計活動事件，且不取代逐會員帳本。
+builder.Services.AddScoped<EconomyService>();
+builder.Services.AddScoped<MiniGameService>();
+builder.Services.AddScoped<BulkEconomyService>();
 
 // 登入端點使用固定視窗限流，避免錯誤密碼嘗試拖慢其他後台頁面
 builder.Services.AddRateLimiter(options =>

@@ -43,6 +43,20 @@
                                 <span asp-validation-for="DiscountType" class="text-danger"></span>
                             </div>
                             <div class="col-12 col-md-4">
+                                <label asp-for="AcquisitionType" class="form-label"></label>
+                                <select asp-for="AcquisitionType" class="form-select" data-coupon-acquisition>
+                                    <option value="ADMIN_GRANT">管理員發放</option>
+                                    <option value="POINT_EXCHANGE">鑑定點數兌換</option>
+                                </select>
+                                <span asp-validation-for="AcquisitionType" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-4" data-coupon-point-cost-field>
+                                <label asp-for="PointCost" class="form-label"></label>
+                                <input asp-for="PointCost" class="form-control" type="number" min="1" inputmode="numeric" />
+                                <div class="form-hint">只有點數兌換券需要填寫。</div>
+                                <span asp-validation-for="PointCost" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-4">
                                 <label asp-for="DiscountValue" class="form-label"></label>
                                 <input asp-for="DiscountValue" class="form-control" inputmode="decimal" />
                                 <span asp-validation-for="DiscountValue" class="text-danger"></span>
@@ -68,6 +82,12 @@
                                 <input asp-for="EndAt" type="datetime-local" class="form-control" />
                                 <span asp-validation-for="EndAt" class="text-danger"></span>
                             </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="ValidityDays" class="form-label"></label>
+                                <input asp-for="ValidityDays" class="form-control" type="number" min="1" max="3650" inputmode="numeric" />
+                                <div class="form-hint">每次發放都從發放時間重新計算，不使用規則建立時間。</div>
+                                <span asp-validation-for="ValidityDays" class="text-danger"></span>
+                            </div>
                             <div class="col-12">
                                 <label class="form-check">
                                     <input asp-for="IsActive" class="form-check-input" />
@@ -91,4 +111,21 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const acquisition = document.querySelector('[data-coupon-acquisition]');
+            const pointCostField = document.querySelector('[data-coupon-point-cost-field]');
+            const pointCost = pointCostField?.querySelector('input');
+            if (!acquisition || !pointCostField || !pointCost) return;
+
+            const refresh = () => {
+                const isPointExchange = acquisition.value === 'POINT_EXCHANGE';
+                pointCostField.hidden = !isPointExchange;
+                pointCost.required = isPointExchange;
+            };
+
+            acquisition.addEventListener('change', refresh);
+            refresh();
+        })();
+    </script>
 }

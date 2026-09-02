@@ -17,6 +17,8 @@ BEGIN TRANSACTION;
 
     IF SCHEMA_ID(N'admin') IS NULL EXEC(N'CREATE SCHEMA [admin];');
 
+    IF SCHEMA_ID(N'common') IS NULL EXEC(N'CREATE SCHEMA [common];');
+
     CREATE TABLE [user].[Achievements] (
         [Id] uniqueidentifier NOT NULL,
         [Code] nvarchar(80) NOT NULL,
@@ -92,6 +94,29 @@ BEGIN TRANSACTION;
         CONSTRAINT [CK_AspNetUsers_UpdatedAt] CHECK (([UpdatedAt]>=[CreatedAt]))
     );
 
+    CREATE TABLE [common].[DailyMemberActivities] (
+        [Id] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [ActivityType] nvarchar(20) NOT NULL,
+        [ActivityDate] date NOT NULL,
+        [OccurrenceCount] int NOT NULL CONSTRAINT [DF_DailyMemberActivities_OccurrenceCount] DEFAULT ((1)),
+        [FirstOccurredAt] datetime2(3) NOT NULL,
+        [LastOccurredAt] datetime2(3) NOT NULL,
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_DailyMemberActivities_CreatedAt] DEFAULT ((sysutcdatetime())),
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_DailyMemberActivities_UpdatedAt] DEFAULT ((sysutcdatetime())),
+        [RowVersion] rowversion NOT NULL,
+        CONSTRAINT [PK_DailyMemberActivities] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_DailyMemberActivities_Type] CHECK (([ActivityType]=N'CHECK_IN' OR [ActivityType]=N'LOGIN')),
+        CONSTRAINT [CK_DailyMemberActivities_OccurrenceCount] CHECK (([OccurrenceCount]>(0))),
+        CONSTRAINT [CK_DailyMemberActivities_Times] CHECK (([LastOccurredAt]>=[FirstOccurredAt] AND [UpdatedAt]>=[CreatedAt])),
+        CONSTRAINT [FK_DailyMemberActivities_User] FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id])
+    );
+
+    CREATE UNIQUE INDEX [UX_DailyMemberActivities_User_Type_Date]
+        ON [common].[DailyMemberActivities] ([UserId], [ActivityType], [ActivityDate]);
+    CREATE INDEX [IX_DailyMemberActivities_Type_Date_User]
+        ON [common].[DailyMemberActivities] ([ActivityType], [ActivityDate], [UserId]);
+
     CREATE TABLE [admin].[AuditLogs] (
         [Id] bigint NOT NULL IDENTITY(1,1),
         [ActorUserId] uniqueidentifier NULL,
@@ -133,6 +158,9 @@ BEGIN TRANSACTION;
         [Code] nvarchar(50) NOT NULL,
         [Name] nvarchar(100) NOT NULL,
         [DiscountType] nvarchar(20) NOT NULL,
+        [AcquisitionType] nvarchar(30) NOT NULL CONSTRAINT [DF_CouponDefinitions_AcquisitionType] DEFAULT N'ADMIN_GRANT',
+        [PointCost] int NULL,
+        [ValidityDays] int NOT NULL CONSTRAINT [DF_CouponDefinitions_ValidityDays] DEFAULT ((365)),
         [DiscountValue] decimal(12,2) NOT NULL,
         [MinimumAmount] decimal(12,2) NOT NULL,
         [StartAt] datetime2(3) NOT NULL,
@@ -140,8 +168,11 @@ BEGIN TRANSACTION;
         [IsActive] bit NOT NULL CONSTRAINT [DF_Coupons_Active] DEFAULT CAST(1 AS bit),
         CONSTRAINT [PK_CouponDefinitions] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_Coupons_Dates] CHECK (([EndAt]>[StartAt])),
+        CONSTRAINT [CK_CouponDefinitions_Acquisition] CHECK (([AcquisitionType]=N'POINT_EXCHANGE' OR [AcquisitionType]=N'ADMIN_GRANT')),
+        CONSTRAINT [CK_CouponDefinitions_PointCost] CHECK ((([AcquisitionType]=N'ADMIN_GRANT' AND [PointCost] IS NULL) OR ([AcquisitionType]=N'POINT_EXCHANGE' AND [PointCost]>(0)))),
         CONSTRAINT [CK_Coupons_Type] CHECK (([DiscountType]=N'PERCENT' OR [DiscountType]=N'FIXED')),
-        CONSTRAINT [CK_Coupons_Value] CHECK (([DiscountValue]>(0) AND ([DiscountType]<>N'PERCENT' OR [DiscountValue]<=(100))))
+        CONSTRAINT [CK_Coupons_Value] CHECK (([DiscountValue]>(0) AND ([DiscountType]<>N'PERCENT' OR [DiscountValue]<=(100)))),
+        CONSTRAINT [CK_CouponDefinitions_ValidityDays] CHECK (([ValidityDays]>(0)))
     );
 
     CREATE TABLE [catalog].[EraBuckets] (
@@ -474,9 +505,17 @@ BEGIN TRANSACTION;
         [CouponDefinitionId] uniqueidentifier NOT NULL,
         [Status] nvarchar(20) NOT NULL CONSTRAINT [DF_UserCoupons_Status] DEFAULT N'AVAILABLE',
         [IssuedAt] datetime2(3) NOT NULL CONSTRAINT [DF_UserCoupons_Issued] DEFAULT ((sysutcdatetime())),
+        [ExpiresAt] datetime2(3) NOT NULL CONSTRAINT [DF_UserCoupons_ExpiresAt] DEFAULT (dateadd(day,(365),sysutcdatetime())),
         [UsedAt] datetime2(3) NULL,
+        [IssuedByAdminUserId] uniqueidentifier NULL,
+        [IssueReason] nvarchar(200) NULL,
+        [RevokedAt] datetime2(3) NULL,
+        [RevokedByAdminUserId] uniqueidentifier NULL,
+        [RevokeReason] nvarchar(200) NULL,
+        [GrantBatchId] uniqueidentifier NULL,
+        [RevokeBatchId] uniqueidentifier NULL,
         CONSTRAINT [PK_UserCoupons] PRIMARY KEY ([Id]),
-        CONSTRAINT [CK_UserCoupons_Status] CHECK (([Status]=N'EXPIRED' OR [Status]=N'USED' OR [Status]=N'AVAILABLE')),
+        CONSTRAINT [CK_UserCoupons_Status] CHECK (([Status]=N'REVOKED' OR [Status]=N'EXPIRED' OR [Status]=N'USED' OR [Status]=N'AVAILABLE')),
         CONSTRAINT [FK_UserCoupons_Definition] FOREIGN KEY ([CouponDefinitionId]) REFERENCES [store].[CouponDefinitions] ([Id])
     );
 
@@ -509,8 +548,10 @@ BEGIN TRANSACTION;
         [CategoryId] uniqueidentifier NULL,
         [EraBucketId] uniqueidentifier NULL,
         [IsActive] bit NOT NULL CONSTRAINT [DF_KeyDefinitions_Active] DEFAULT CAST(1 AS bit),
+        [RecyclePointValue] int NOT NULL CONSTRAINT [DF_KeyDefinitions_RecyclePointValue] DEFAULT ((0)),
         CONSTRAINT [PK_KeyDefinitions] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_KeyDefinitions_Scope] CHECK (([ScopeType]=N'NORMAL' AND [CategoryId] IS NULL AND [EraBucketId] IS NULL OR [ScopeType]=N'CATEGORY' AND [CategoryId] IS NOT NULL AND [EraBucketId] IS NULL OR [ScopeType]=N'ERA' AND [CategoryId] IS NULL AND [EraBucketId] IS NOT NULL OR [ScopeType]=N'UNIVERSAL' AND [CategoryId] IS NULL AND [EraBucketId] IS NULL)),
+        CONSTRAINT [CK_KeyDefinitions_RecyclePointValue] CHECK (([RecyclePointValue]>=(0))),
         CONSTRAINT [FK_KeyDefinitions_Category] FOREIGN KEY ([CategoryId]) REFERENCES [catalog].[ArtifactCategories] ([Id]),
         CONSTRAINT [FK_KeyDefinitions_Era] FOREIGN KEY ([EraBucketId]) REFERENCES [catalog].[EraBuckets] ([Id])
     );
@@ -521,8 +562,14 @@ BEGIN TRANSACTION;
         [UserId] uniqueidentifier NOT NULL,
         [Status] nvarchar(20) NOT NULL CONSTRAINT [DF_EventRegistrations_Status] DEFAULT N'REGISTERED',
         [RegisteredAt] datetime2(3) NOT NULL CONSTRAINT [DF_EventRegistrations_At] DEFAULT ((sysutcdatetime())),
+        [RewardPointAmount] int NOT NULL CONSTRAINT [DF_EventRegistrations_RewardPointAmount] DEFAULT ((0)),
+        [RewardCampaignId] uniqueidentifier NULL,
+        [RewardKeyDefinitionId] uniqueidentifier NULL,
+        [RewardKeyAmount] int NOT NULL CONSTRAINT [DF_EventRegistrations_RewardKeyAmount] DEFAULT ((0)),
+        [RewardGrantedAt] datetime2(3) NULL,
         CONSTRAINT [PK_EventRegistrations] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_EventRegistrations_Status] CHECK (([Status]=N'ATTENDED' OR [Status]=N'CANCELLED' OR [Status]=N'REGISTERED')),
+        CONSTRAINT [CK_EventRegistrations_RewardAmounts] CHECK (([RewardPointAmount]>=(0) AND [RewardKeyAmount]>=(0) AND (([RewardKeyAmount]=(0) AND [RewardKeyDefinitionId] IS NULL) OR ([RewardKeyAmount]>(0) AND [RewardKeyDefinitionId] IS NOT NULL)))),
         CONSTRAINT [FK_EventRegistrations_Event] FOREIGN KEY ([EventId]) REFERENCES [social].[Events] ([Id])
     );
 
@@ -725,6 +772,242 @@ BEGIN TRANSACTION;
         CONSTRAINT [FK_Votes_RoundAnswers_AnswerId] FOREIGN KEY ([AnswerId]) REFERENCES [game].[RoundAnswers] ([Id])
     );
 
+    /* 跨 Area 的活動調整只保存批次主檔；實際點數與優惠券明細仍寫入原有流水表。 */
+    CREATE TABLE [admin].[EconomyAdjustmentBatches] (
+        [Id] uniqueidentifier NOT NULL,
+        [AssetType] nvarchar(20) NOT NULL,
+        [Operation] nvarchar(20) NOT NULL,
+        [UnitAmount] int NOT NULL,
+        [CouponDefinitionId] uniqueidentifier NULL,
+        [FilterJson] nvarchar(max) NOT NULL,
+        [Reason] nvarchar(200) NOT NULL,
+        [CreatedByAdminUserId] uniqueidentifier NOT NULL,
+        [Status] nvarchar(20) NOT NULL,
+        [TargetCount] int NOT NULL,
+        [SucceededCount] int NOT NULL,
+        [FailedCount] int NOT NULL,
+        [AffectedAssetCount] bigint NOT NULL,
+        [FailureReason] nvarchar(500) NULL,
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_EconomyAdjustmentBatches_Created] DEFAULT ((sysutcdatetime())),
+        [CompletedAt] datetime2(3) NULL,
+        CONSTRAINT [PK_EconomyAdjustmentBatches] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_EconomyAdjustmentBatches_AssetType] CHECK (([AssetType]=N'COUPON' OR [AssetType]=N'POINT')),
+        CONSTRAINT [CK_EconomyAdjustmentBatches_Operation] CHECK (([Operation]=N'ADD' OR [Operation]=N'DEDUCT')),
+        CONSTRAINT [CK_EconomyAdjustmentBatches_Status] CHECK (([Status]=N'EMPTY' OR [Status]=N'FAILED' OR [Status]=N'COMPLETED' OR [Status]=N'PROCESSING')),
+        CONSTRAINT [CK_EconomyAdjustmentBatches_Amounts] CHECK (([UnitAmount]>(0) AND [TargetCount]>=(0) AND [SucceededCount]>=(0) AND [FailedCount]>=(0) AND [AffectedAssetCount]>=(0))),
+        CONSTRAINT [FK_EconomyAdjustmentBatches_CouponDefinition] FOREIGN KEY ([CouponDefinitionId]) REFERENCES [store].[CouponDefinitions] ([Id]),
+        CONSTRAINT [FK_EconomyAdjustmentBatches_AdminUser] FOREIGN KEY ([CreatedByAdminUserId]) REFERENCES [user].[AspNetUsers] ([Id])
+    );
+
+    /* 官方活動與會員私人房間共用的加碼規則。 */
+    CREATE TABLE [admin].[CommunityRewardCampaigns] (
+        [Id] uniqueidentifier NOT NULL,
+        [TargetType] nvarchar(20) NOT NULL,
+        [EventId] uniqueidentifier NULL,
+        [GameRoomId] uniqueidentifier NULL,
+        [OwnerUserId] uniqueidentifier NOT NULL,
+        [SponsorType] nvarchar(20) NOT NULL,
+        [BudgetMode] nvarchar(20) NOT NULL,
+        [PointPerRecipient] int NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_PointPerRecipient] DEFAULT ((0)),
+        [KeyDefinitionId] uniqueidentifier NULL,
+        [KeyPerRecipient] int NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_KeyPerRecipient] DEFAULT ((0)),
+        [PointBudget] int NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_PointBudget] DEFAULT ((0)),
+        [PointIssued] int NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_PointIssued] DEFAULT ((0)),
+        [KeyBudget] int NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_KeyBudget] DEFAULT ((0)),
+        [KeyIssued] int NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_KeyIssued] DEFAULT ((0)),
+        [ValidFrom] datetime2(3) NOT NULL,
+        [ValidUntil] datetime2(3) NOT NULL,
+        [IsActive] bit NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_Active] DEFAULT CAST(1 AS bit),
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_Created] DEFAULT ((sysutcdatetime())),
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_CommunityRewardCampaigns_Updated] DEFAULT ((sysutcdatetime())),
+        [RowVersion] rowversion NOT NULL,
+        CONSTRAINT [PK_CommunityRewardCampaigns] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_CommunityRewardCampaigns_Target] CHECK ((([TargetType]=N'EVENT' AND [EventId] IS NOT NULL AND [GameRoomId] IS NULL) OR ([TargetType]=N'GAME_ROOM' AND [EventId] IS NULL AND [GameRoomId] IS NOT NULL))),
+        CONSTRAINT [CK_CommunityRewardCampaigns_Sponsor] CHECK ((([SponsorType]=N'MEMBER' AND [BudgetMode]=N'LIMITED') OR ([SponsorType]=N'OFFICIAL' AND [BudgetMode]=N'UNLIMITED'))),
+        CONSTRAINT [CK_CommunityRewardCampaigns_Amounts] CHECK (([PointPerRecipient]>=(0) AND [KeyPerRecipient]>=(0) AND [PointBudget]>=(0) AND [PointIssued]>=(0) AND [KeyBudget]>=(0) AND [KeyIssued]>=(0) AND ([BudgetMode]=N'UNLIMITED' OR ([PointIssued]<=[PointBudget] AND [KeyIssued]<=[KeyBudget])) AND (([KeyPerRecipient]=(0) AND [KeyDefinitionId] IS NULL) OR ([KeyPerRecipient]>(0) AND [KeyDefinitionId] IS NOT NULL)))),
+        CONSTRAINT [CK_CommunityRewardCampaigns_Time] CHECK (([ValidUntil]>[ValidFrom] AND [UpdatedAt]>=[CreatedAt])),
+        CONSTRAINT [FK_CommunityRewardCampaigns_Event] FOREIGN KEY ([EventId]) REFERENCES [social].[Events] ([Id]),
+        CONSTRAINT [FK_CommunityRewardCampaigns_GameRoom] FOREIGN KEY ([GameRoomId]) REFERENCES [game].[GameRooms] ([Id]),
+        CONSTRAINT [FK_CommunityRewardCampaigns_OwnerUser] FOREIGN KEY ([OwnerUserId]) REFERENCES [user].[AspNetUsers] ([Id]),
+        CONSTRAINT [FK_CommunityRewardCampaigns_KeyDefinition] FOREIGN KEY ([KeyDefinitionId]) REFERENCES [catalog].[KeyDefinitions] ([Id])
+    );
+
+    CREATE UNIQUE INDEX [UX_CommunityRewardCampaigns_Event]
+        ON [admin].[CommunityRewardCampaigns] ([EventId]) WHERE ([EventId] IS NOT NULL);
+    CREATE UNIQUE INDEX [UX_CommunityRewardCampaigns_GameRoom]
+        ON [admin].[CommunityRewardCampaigns] ([GameRoomId]) WHERE ([GameRoomId] IS NOT NULL);
+    CREATE INDEX [IX_CommunityRewardCampaigns_ActiveWindow]
+        ON [admin].[CommunityRewardCampaigns] ([IsActive], [ValidFrom], [ValidUntil]);
+
+    CREATE TABLE [game].[GameRoomInvitations] (
+        [Id] uniqueidentifier NOT NULL,
+        [RoomId] uniqueidentifier NOT NULL,
+        [InviterUserId] uniqueidentifier NOT NULL,
+        [InviteeUserId] uniqueidentifier NOT NULL,
+        [Status] nvarchar(20) NOT NULL CONSTRAINT [DF_GameRoomInvitations_Status] DEFAULT N'PENDING',
+        [Message] nvarchar(300) NULL,
+        [RewardPointAmount] int NOT NULL CONSTRAINT [DF_GameRoomInvitations_RewardPointAmount] DEFAULT ((0)),
+        [RewardCampaignId] uniqueidentifier NULL,
+        [RewardKeyDefinitionId] uniqueidentifier NULL,
+        [RewardKeyAmount] int NOT NULL CONSTRAINT [DF_GameRoomInvitations_RewardKeyAmount] DEFAULT ((0)),
+        [RewardGrantedAt] datetime2(3) NULL,
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_GameRoomInvitations_Created] DEFAULT ((sysutcdatetime())),
+        [RespondedAt] datetime2(3) NULL,
+        [RowVersion] rowversion NOT NULL,
+        CONSTRAINT [PK_GameRoomInvitations] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_GameRoomInvitations_Status] CHECK (([Status]=N'CANCELLED' OR [Status]=N'DECLINED' OR [Status]=N'EXPIRED' OR [Status]=N'ACCEPTED' OR [Status]=N'PENDING')),
+        CONSTRAINT [CK_GameRoomInvitations_NotSelf] CHECK (([InviterUserId]<>[InviteeUserId])),
+        CONSTRAINT [CK_GameRoomInvitations_RewardAmounts] CHECK (([RewardPointAmount]>=(0) AND [RewardKeyAmount]>=(0) AND (([RewardKeyAmount]=(0) AND [RewardKeyDefinitionId] IS NULL) OR ([RewardKeyAmount]>(0) AND [RewardKeyDefinitionId] IS NOT NULL)))),
+        CONSTRAINT [FK_GameRoomInvitations_Room] FOREIGN KEY ([RoomId]) REFERENCES [game].[GameRooms] ([Id]),
+        CONSTRAINT [FK_GameRoomInvitations_InviterUser] FOREIGN KEY ([InviterUserId]) REFERENCES [user].[AspNetUsers] ([Id]),
+        CONSTRAINT [FK_GameRoomInvitations_InviteeUser] FOREIGN KEY ([InviteeUserId]) REFERENCES [user].[AspNetUsers] ([Id]),
+        CONSTRAINT [FK_GameRoomInvitations_RewardCampaign] FOREIGN KEY ([RewardCampaignId]) REFERENCES [admin].[CommunityRewardCampaigns] ([Id]),
+        CONSTRAINT [FK_GameRoomInvitations_RewardKeyDefinition] FOREIGN KEY ([RewardKeyDefinitionId]) REFERENCES [catalog].[KeyDefinitions] ([Id])
+    );
+
+    CREATE INDEX [IX_GameRoomInvitations_Invitee_Status_CreatedAt]
+        ON [game].[GameRoomInvitations] ([InviteeUserId], [Status], [CreatedAt] DESC);
+    CREATE INDEX [IX_GameRoomInvitations_Room_CreatedAt]
+        ON [game].[GameRoomInvitations] ([RoomId], [CreatedAt] DESC);
+    CREATE UNIQUE INDEX [UX_GameRoomInvitations_Pending]
+        ON [game].[GameRoomInvitations] ([RoomId], [InviteeUserId]) WHERE ([Status]=N'PENDING');
+
+    CREATE TABLE [game].[GameEconomySettings] (
+        [Id] tinyint NOT NULL,
+        [MinimumPointReward] int NOT NULL,
+        [MaximumPointReward] int NOT NULL,
+        [BasePointReward] int NOT NULL,
+        [MaximumVoteBonus] int NOT NULL,
+        [MaximumWinBonus] int NOT NULL,
+        [CompletedNormalKey] int NOT NULL,
+        [ExcellentExtraNormalKey] int NOT NULL,
+        [ExcellentThreshold] int NOT NULL,
+        [DailyMiniGameRewardLimit] int NOT NULL,
+        [KeyProgressToNormalKey] int NOT NULL,
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_GameEconomySettings_Updated] DEFAULT ((sysutcdatetime())),
+        [RowVersion] rowversion NOT NULL,
+        CONSTRAINT [PK_GameEconomySettings] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_GameEconomySettings_Values] CHECK (([MinimumPointReward]>=(0) AND [MaximumPointReward]>=[MinimumPointReward] AND [BasePointReward]>=(0) AND [MaximumVoteBonus]>=(0) AND [MaximumWinBonus]>=(0) AND [CompletedNormalKey]>=(0) AND [ExcellentExtraNormalKey]>=(0) AND [ExcellentThreshold] BETWEEN 0 AND 100 AND [DailyMiniGameRewardLimit]>=(0) AND [KeyProgressToNormalKey]>(0)))
+    );
+
+    CREATE TABLE [game].[GameModeDefinitions] (
+        [Id] uniqueidentifier NOT NULL,
+        [Code] nvarchar(40) NOT NULL,
+        [Name] nvarchar(100) NOT NULL,
+        [Description] nvarchar(500) NOT NULL,
+        [ConfigJson] nvarchar(max) NULL,
+        [IsActive] bit NOT NULL CONSTRAINT [DF_GameModeDefinitions_Active] DEFAULT CAST(1 AS bit),
+        [GradeBThreshold] int NOT NULL,
+        [GradeAThreshold] int NOT NULL,
+        [GradeSThreshold] int NOT NULL,
+        [FailPointReward] int NOT NULL,
+        [FailKeyProgressReward] int NOT NULL,
+        [BPointReward] int NOT NULL,
+        [BKeyProgressReward] int NOT NULL,
+        [APointReward] int NOT NULL,
+        [AKeyProgressReward] int NOT NULL,
+        [SPointReward] int NOT NULL,
+        [SKeyProgressReward] int NOT NULL,
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_GameModeDefinitions_Created] DEFAULT ((sysutcdatetime())),
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_GameModeDefinitions_Updated] DEFAULT ((sysutcdatetime())),
+        [RowVersion] rowversion NOT NULL,
+        CONSTRAINT [PK_GameModeDefinitions] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_GameModeDefinitions_Thresholds] CHECK (([GradeBThreshold] BETWEEN 0 AND 100 AND [GradeAThreshold] BETWEEN [GradeBThreshold] AND 100 AND [GradeSThreshold] BETWEEN [GradeAThreshold] AND 100)),
+        CONSTRAINT [CK_GameModeDefinitions_Rewards] CHECK (([FailPointReward]>=(0) AND [FailKeyProgressReward]>=(0) AND [BPointReward]>=(0) AND [BKeyProgressReward]>=(0) AND [APointReward]>=(0) AND [AKeyProgressReward]>=(0) AND [SPointReward]>=(0) AND [SKeyProgressReward]>=(0)))
+    );
+    CREATE UNIQUE INDEX [UX_GameModeDefinitions_Code] ON [game].[GameModeDefinitions] ([Code]);
+    CREATE INDEX [IX_GameModeDefinitions_Active_Code] ON [game].[GameModeDefinitions] ([IsActive], [Code]);
+
+    CREATE TABLE [game].[MiniGameAttempts] (
+        [Id] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [GameModeDefinitionId] uniqueidentifier NOT NULL,
+        [ArtifactId] uniqueidentifier NULL,
+        [ArtifactPoolJson] nvarchar(max) NULL,
+        [Difficulty] nvarchar(30) NOT NULL,
+        [Seed] nvarchar(128) NOT NULL,
+        [ConfigJson] nvarchar(max) NULL,
+        [Status] nvarchar(20) NOT NULL CONSTRAINT [DF_MiniGameAttempts_Status] DEFAULT N'STARTED',
+        [RawScore] int NULL,
+        [RawResultJson] nvarchar(max) NULL,
+        [NormalizedScore] int NULL,
+        [Grade] nvarchar(2) NULL,
+        [PointReward] int NOT NULL,
+        [KeyProgressReward] int NOT NULL,
+        [RewardAttemptNo] int NULL,
+        [RewardGranted] bit NOT NULL,
+        [StartedAt] datetime2(3) NOT NULL CONSTRAINT [DF_MiniGameAttempts_Started] DEFAULT ((sysutcdatetime())),
+        [CompletedAt] datetime2(3) NULL,
+        [RowVersion] rowversion NOT NULL,
+        CONSTRAINT [PK_MiniGameAttempts] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_MiniGameAttempts_Status] CHECK (([Status]=N'EXPIRED' OR [Status]=N'COMPLETED' OR [Status]=N'STARTED')),
+        CONSTRAINT [CK_MiniGameAttempts_Score] CHECK (([RawScore] IS NULL OR [RawScore] BETWEEN 0 AND 100) AND ([NormalizedScore] IS NULL OR [NormalizedScore] BETWEEN 0 AND 100)),
+        CONSTRAINT [CK_MiniGameAttempts_Reward] CHECK (([PointReward]>=(0) AND [KeyProgressReward]>=(0))),
+        CONSTRAINT [FK_MiniGameAttempts_Mode] FOREIGN KEY ([GameModeDefinitionId]) REFERENCES [game].[GameModeDefinitions] ([Id]),
+        CONSTRAINT [FK_MiniGameAttempts_Artifact] FOREIGN KEY ([ArtifactId]) REFERENCES [catalog].[Artifacts] ([Id]),
+        CONSTRAINT [FK_MiniGameAttempts_User] FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id])
+    );
+    CREATE INDEX [IX_MiniGameAttempts_User_StartedAt] ON [game].[MiniGameAttempts] ([UserId], [StartedAt] DESC);
+    CREATE INDEX [IX_MiniGameAttempts_User_Mode_Status] ON [game].[MiniGameAttempts] ([UserId], [GameModeDefinitionId], [Status]);
+
+    CREATE TABLE [catalog].[KeyExchangeRules] (
+        [Id] uniqueidentifier NOT NULL,
+        [SourceKeyDefinitionId] uniqueidentifier NOT NULL,
+        [SourceAmount] int NOT NULL,
+        [TargetKeyDefinitionId] uniqueidentifier NOT NULL,
+        [TargetAmount] int NOT NULL,
+        [SortOrder] int NOT NULL,
+        [IsActive] bit NOT NULL CONSTRAINT [DF_KeyExchangeRules_Active] DEFAULT CAST(1 AS bit),
+        [Description] nvarchar(300) NULL,
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_KeyExchangeRules_Created] DEFAULT ((sysutcdatetime())),
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_KeyExchangeRules_Updated] DEFAULT ((sysutcdatetime())),
+        [RowVersion] rowversion NOT NULL,
+        CONSTRAINT [PK_KeyExchangeRules] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_KeyExchangeRules_Amounts] CHECK (([SourceAmount]>(0) AND [TargetAmount]>(0))),
+        CONSTRAINT [FK_KeyExchangeRules_SourceKey] FOREIGN KEY ([SourceKeyDefinitionId]) REFERENCES [catalog].[KeyDefinitions] ([Id]),
+        CONSTRAINT [FK_KeyExchangeRules_TargetKey] FOREIGN KEY ([TargetKeyDefinitionId]) REFERENCES [catalog].[KeyDefinitions] ([Id])
+    );
+    CREATE UNIQUE INDEX [UX_KeyExchangeRules_Source_Target]
+        ON [catalog].[KeyExchangeRules] ([SourceKeyDefinitionId], [TargetKeyDefinitionId]);
+    CREATE INDEX [IX_KeyExchangeRules_Active_SortOrder]
+        ON [catalog].[KeyExchangeRules] ([IsActive], [SortOrder]);
+
+    CREATE TABLE [catalog].[KeyProgressBalances] (
+        [UserId] uniqueidentifier NOT NULL,
+        [Balance] int NOT NULL,
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_KeyProgressBalances_Updated] DEFAULT ((sysutcdatetime())),
+        CONSTRAINT [PK_KeyProgressBalances] PRIMARY KEY ([UserId]),
+        CONSTRAINT [CK_KeyProgressBalances_NonNegative] CHECK (([Balance]>=(0))),
+        CONSTRAINT [FK_KeyProgressBalances_User] FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id])
+    );
+
+    CREATE TABLE [catalog].[KeyProgressTransactions] (
+        [Id] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [Amount] int NOT NULL,
+        [Reason] nvarchar(40) NOT NULL,
+        [ReferenceType] nvarchar(40) NULL,
+        [ReferenceId] uniqueidentifier NULL,
+        [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_KeyProgressTransactions_Created] DEFAULT ((sysutcdatetime())),
+        CONSTRAINT [PK_KeyProgressTransactions] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_KeyProgressTransactions_Amount] CHECK (([Amount]<>(0))),
+        CONSTRAINT [FK_KeyProgressTransactions_User] FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id])
+    );
+    CREATE INDEX [IX_KeyProgressTransactions_User]
+        ON [catalog].[KeyProgressTransactions] ([UserId], [CreatedAt] DESC);
+
+    CREATE TABLE [user].[EquippedTitles] (
+        [UserId] uniqueidentifier NOT NULL,
+        [UserAchievementId] uniqueidentifier NOT NULL,
+        [EquippedAt] datetime2(3) NOT NULL CONSTRAINT [DF_EquippedTitles_Equipped] DEFAULT ((sysutcdatetime())),
+        [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_EquippedTitles_Updated] DEFAULT ((sysutcdatetime())),
+        CONSTRAINT [PK_EquippedTitles] PRIMARY KEY ([UserId]),
+        CONSTRAINT [FK_EquippedTitles_User] FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id]),
+        CONSTRAINT [FK_EquippedTitles_UserAchievement] FOREIGN KEY ([UserAchievementId]) REFERENCES [user].[UserAchievements] ([Id])
+    );
+    CREATE UNIQUE INDEX [UX_EquippedTitles_UserAchievement]
+        ON [user].[EquippedTitles] ([UserAchievementId]);
+
     ALTER TABLE [store].[Products] ADD CONSTRAINT [FK_Products_Artifact]
         FOREIGN KEY ([ArtifactId]) REFERENCES [catalog].[Artifacts] ([Id]);
 
@@ -793,6 +1076,24 @@ BEGIN TRANSACTION;
 
     ALTER TABLE [store].[UserCoupons] ADD CONSTRAINT [FK_UserCoupons_User]
         FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id]);
+
+    ALTER TABLE [store].[UserCoupons] ADD CONSTRAINT [FK_UserCoupons_IssuedByAdminUser]
+        FOREIGN KEY ([IssuedByAdminUserId]) REFERENCES [user].[AspNetUsers] ([Id]);
+
+    ALTER TABLE [store].[UserCoupons] ADD CONSTRAINT [FK_UserCoupons_RevokedByAdminUser]
+        FOREIGN KEY ([RevokedByAdminUserId]) REFERENCES [user].[AspNetUsers] ([Id]);
+
+    ALTER TABLE [store].[UserCoupons] ADD CONSTRAINT [FK_UserCoupons_GrantBatch]
+        FOREIGN KEY ([GrantBatchId]) REFERENCES [admin].[EconomyAdjustmentBatches] ([Id]);
+
+    ALTER TABLE [store].[UserCoupons] ADD CONSTRAINT [FK_UserCoupons_RevokeBatch]
+        FOREIGN KEY ([RevokeBatchId]) REFERENCES [admin].[EconomyAdjustmentBatches] ([Id]);
+
+    ALTER TABLE [social].[EventRegistrations] ADD CONSTRAINT [FK_EventRegistrations_RewardCampaign]
+        FOREIGN KEY ([RewardCampaignId]) REFERENCES [admin].[CommunityRewardCampaigns] ([Id]);
+
+    ALTER TABLE [social].[EventRegistrations] ADD CONSTRAINT [FK_EventRegistrations_RewardKeyDefinition]
+        FOREIGN KEY ([RewardKeyDefinitionId]) REFERENCES [catalog].[KeyDefinitions] ([Id]);
 
     CREATE INDEX [IX_Achievements_Condition_Threshold] ON [user].[Achievements] ([Status], [ConditionType], [ThresholdValue]);
 
@@ -942,7 +1243,11 @@ BEGIN TRANSACTION;
 
     CREATE INDEX [IX_UserCoupons_CouponDefinitionId] ON [store].[UserCoupons] ([CouponDefinitionId]);
 
-    CREATE UNIQUE INDEX [UQ_UserCoupons_UserCoupon] ON [store].[UserCoupons] ([UserId], [CouponDefinitionId]);
+    CREATE INDEX [IX_UserCoupons_User_Status_ExpiresAt]
+        ON [store].[UserCoupons] ([UserId], [Status], [ExpiresAt]);
+
+    CREATE INDEX [IX_UserCoupons_Definition_IssuedAt]
+        ON [store].[UserCoupons] ([CouponDefinitionId], [IssuedAt] DESC);
 
     CREATE INDEX [IX_UserKeyBalances_KeyDefinitionId] ON [catalog].[UserKeyBalances] ([KeyDefinitionId]);
 

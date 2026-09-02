@@ -47,7 +47,8 @@ public class KeyController : Controller
         return View(new KeyDefinition
         {
             ScopeType = "NORMAL",
-            IsActive = true
+            IsActive = true,
+            RecyclePointValue = 0
         });
     }
 
@@ -161,6 +162,7 @@ public class KeyController : Controller
             k.CategoryId = kd.CategoryId;
             k.EraBucketId = kd.EraBucketId;
             k.IsActive = kd.IsActive;
+            k.RecyclePointValue = kd.RecyclePointValue;
             _db.SaveChanges();
         }
         catch (DbUpdateException)
@@ -206,6 +208,11 @@ public class KeyController : Controller
             kd.ScopeType != "UNIVERSAL")
         {
             return "請選擇有效的鑰匙類型。";
+        }
+
+        if (kd.RecyclePointValue < 0)
+        {
+            return "回收鑑定點數不可小於 0。";
         }
 
         if (kd.ScopeType == "CATEGORY" && kd.CategoryId == null)

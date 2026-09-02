@@ -23,7 +23,7 @@ QMAH 是 **Qing Ming Appraisal House（清明鑑定屋）** 的縮寫
 
 網站以文物圖像為共同核心，讓使用者查看圖鑑、參與多人鑑定遊戲、交流觀察，並瀏覽文物衍生的縮小複製品商品。五個 Area 位於同一個 Solution，共用一個 `QMAH` SQL Server 資料庫、ASP.NET Core Identity 與網站基礎
 
-這個 Repository 是五人共同開發的整合基線，已整理到可以開始製作 Angular 前台的狀態。目前已備妥：
+這個 Repository 是五人共同開發的整合專案，後端、管理後台、資料庫與 API 契約已整理成可供各功能模組接續開發的狀態。目前已備妥：
 
 - SQL Server Schema、Entity 對照與 `QmahDbContext`
 - ASP.NET Core Identity 資料表、Cookie 登入與角色授權
@@ -165,6 +165,9 @@ QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 
 | 15 | 建立本機展示資料與管理測試帳號 | [本機展示資料與帳號](docs/15-local-showcase-and-credentials.md) |
 | 16 | 查閱 API 專業用語與文件文字規範 | [API 名詞表](docs/16-api-glossary.md) |
 | 17 | 管理本機圖片、物件儲存與 CDN 交付 | [媒體交付設定](docs/17-media-delivery.md) |
+| 18 | 了解地址欄位與前台地圖服務的簡單串接 | [地點與地圖串接說明](docs/18-map-integration.md) |
+| 19 | 了解近期後端、後台、資料庫與文件增量 | [期中基準後的開發進度](docs/19-progress-since-midterm.md) |
+| 20 | 查閱鑑定點數、鑰匙、Mini Game、優惠券與稱號規則 | [經濟與進程基準](docs/economy-progression.md) |
 
 參考文件：
 
@@ -195,7 +198,7 @@ QMAH/
 │  └─ wwwroot/                   樣式、腳本、套件、圖片與品牌素材
 ├─ QMAH.Client/                  Angular 21.2.22 前台（獨立啟動）
 ├─ database/                     QMAH.sql、Schema.sql、seed 腳本與 Diagram 說明
-├─ docs/                         01–17 核心開發與交付文件；其餘為參考與選用文件
+├─ docs/                         核心開發、API、資料庫、媒體與交付文件
 ├─ tools/QmahDataTools/          可重現的資料處理工具
 ├─ CONTRIBUTING.md               協作規則
 └─ README.md

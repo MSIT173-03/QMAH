@@ -7,16 +7,22 @@ using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Services.Common;
+using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Api.Controllers.V1;
 
+/// <summary>提供目前登入會員的個人資料、訂單、優惠券、社群與地址 API。</summary>
 [Authorize]
 [Route("api/v1/me")]
 public sealed class MeController(
     QmahDbContext db,
     UserManager<ApplicationUser> userManager,
-    QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
+    QmahMediaUrlResolver mediaUrlResolver,
+    EconomyService economyService,
+    DailyActivityService dailyActivityService) : ApiControllerBase
 {
+    /// <summary>取得目前登入會員的基本資料、角色與鑑定點數。</summary>
     [HttpGet]
     public async Task<ActionResult<MeDto>> GetMe(CancellationToken cancellationToken = default)
     {
@@ -54,6 +60,44 @@ public sealed class MeController(
             mediaUrlResolver.Resolve(profile?.AvatarPath)));
     }
 
+    /// <summary>依歷史登入資料即時計算目前會員的累積天數、連續天數與登入率。</summary>
+    [HttpGet("daily-activity")]
+    public async Task<ActionResult<DailyActivityDto>> GetDailyActivity(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var summary = await dailyActivityService.GetLoginSummaryAsync(userId, cancellationToken);
+        return Ok(new DailyActivityDto(
+            summary.LastLoginDate,
+            summary.HasLoggedInToday,
+            summary.TotalLoginDays,
+            summary.CurrentLoginStreak,
+            summary.LongestLoginStreak,
+            summary.LifetimeLoginRate));
+    }
+
+    /// <summary>記錄目前會員一次前台登入活動，並回傳重新計算的登入進度。</summary>
+    /// <remarks>此端點由未來會員前台在登入完成後明確呼叫；營運後台登入不會自動觸發。</remarks>
+    [HttpPost("daily-activity/login")]
+    public async Task<ActionResult<DailyActivityDto>> RecordDailyLogin(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var summary = await dailyActivityService.RecordLoginAsync(userId, cancellationToken);
+        return Ok(new DailyActivityDto(
+            summary.LastLoginDate,
+            summary.HasLoggedInToday,
+            summary.TotalLoginDays,
+            summary.CurrentLoginStreak,
+            summary.LongestLoginStreak,
+            summary.LifetimeLoginRate));
+    }
+
+    /// <summary>更新目前登入會員的暱稱、自介與個人資料可見性。</summary>
     [HttpPut("profile")]
     public async Task<ActionResult<MeDto>> UpdateProfile(
         UpdateProfileRequest request,
@@ -95,6 +139,7 @@ public sealed class MeController(
         return await GetMe(cancellationToken);
     }
 
+    /// <summary>分頁取得目前登入會員的訂單摘要。</summary>
     [HttpGet("orders")]
     public async Task<ActionResult<ApiPage<OrderDto>>> GetOrders(
         int page = 1,
@@ -126,6 +171,7 @@ public sealed class MeController(
             totalPages));
     }
 
+    /// <summary>取得目前登入會員所屬的一筆訂單詳情。</summary>
     [HttpGet("orders/{id:guid}")]
     public async Task<ActionResult<OrderDto>> GetOrder(
         Guid id,
@@ -144,12 +190,14 @@ public sealed class MeController(
             : Ok(ToOrderDto(order));
     }
 
+    /// <summary>取得目前登入會員的優惠券、期限與生命週期狀態。</summary>
     [HttpGet("coupons")]
     public async Task<ActionResult<IReadOnlyList<CouponDto>>> GetCoupons(
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var userId))
             return Unauthorized();
+        await economyService.SyncExpiredCouponsAsync(userId, cancellationToken);
         var now = DateTime.UtcNow;
         var coupons = await db.UserCoupons
             .AsNoTracking()
@@ -159,22 +207,28 @@ public sealed class MeController(
                 coupon.Id,
                 coupon.CouponDefinition.Code,
                 coupon.CouponDefinition.Name,
+                coupon.CouponDefinition.AcquisitionType,
+                coupon.CouponDefinition.PointCost,
                 coupon.CouponDefinition.DiscountType,
                 coupon.CouponDefinition.DiscountValue,
                 coupon.CouponDefinition.MinimumAmount,
                 coupon.CouponDefinition.StartAt,
                 coupon.CouponDefinition.EndAt,
                 coupon.Status == "AVAILABLE"
+                    && coupon.ExpiresAt > now
                     && coupon.CouponDefinition.IsActive
                     && coupon.CouponDefinition.StartAt <= now
-                    && coupon.CouponDefinition.EndAt >= now
+                    && coupon.CouponDefinition.EndAt > now
                     ? "AVAILABLE"
                     : coupon.Status,
-                coupon.IssuedAt))
+                coupon.IssuedAt,
+                coupon.ExpiresAt,
+                coupon.UsedAt))
             .ToListAsync(cancellationToken);
         return Ok(coupons);
     }
 
+    /// <summary>分頁取得目前登入會員建立的社群貼文。</summary>
     [HttpGet("posts")]
     public async Task<ActionResult<ApiPage<SocialPostListItemDto>>> GetPosts(
         int page = 1,
@@ -211,6 +265,7 @@ public sealed class MeController(
         return Ok(await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken));
     }
 
+    /// <summary>取得目前登入會員已取得且仍啟用的成就。</summary>
     [HttpGet("achievements")]
     public async Task<ActionResult<IReadOnlyList<UserAchievementDto>>> GetAchievements(
         CancellationToken cancellationToken = default)
@@ -245,6 +300,7 @@ public sealed class MeController(
             .ToList());
     }
 
+    /// <summary>取得目前登入會員的購物車內容。</summary>
     [HttpGet("cart")]
     public async Task<ActionResult<IReadOnlyList<CartItemDto>>> GetCart(
         CancellationToken cancellationToken = default)
@@ -255,6 +311,7 @@ public sealed class MeController(
         return Ok(await GetCartItemsAsync(userId, cancellationToken));
     }
 
+    /// <summary>新增商品或更新購物車中的商品數量。</summary>
     [HttpPost("cart")]
     public async Task<ActionResult<CartItemDto>> AddCartItem(
         UpsertCartItemRequest request,
@@ -268,6 +325,7 @@ public sealed class MeController(
         return await UpsertCartItemAsync(userId, request.ProductId, request.Quantity, cancellationToken);
     }
 
+    /// <summary>更新目前登入會員購物車中指定商品的數量。</summary>
     [HttpPut("cart/{productId:guid}")]
     public async Task<ActionResult<CartItemDto>> UpdateCartItem(
         Guid productId,
@@ -284,6 +342,7 @@ public sealed class MeController(
         return await UpsertCartItemAsync(userId, productId, request.Quantity, cancellationToken);
     }
 
+    /// <summary>移除目前登入會員購物車中的指定商品。</summary>
     [HttpDelete("cart/{productId:guid}")]
     public async Task<IActionResult> RemoveCartItem(
         Guid productId,
@@ -302,6 +361,7 @@ public sealed class MeController(
         return NoContent();
     }
 
+    /// <summary>取得目前登入會員保存的地址與可選座標。</summary>
     [HttpGet("addresses")]
     public async Task<ActionResult<IReadOnlyList<UserAddressDto>>> GetAddresses(
         CancellationToken cancellationToken = default)
@@ -348,6 +408,7 @@ public sealed class MeController(
             address.UpdatedAt)).ToList());
     }
 
+    /// <summary>新增目前登入會員的收件地址。</summary>
     [HttpPost("addresses")]
     public async Task<ActionResult<UserAddressDto>> CreateAddress(
         UpsertUserAddressRequest request,
@@ -397,6 +458,7 @@ public sealed class MeController(
         return CreatedAtAction(nameof(GetAddresses), null, ToAddressDto(address));
     }
 
+    /// <summary>更新目前登入會員的一筆收件地址。</summary>
     [HttpPut("addresses/{id:guid}")]
     public async Task<ActionResult<UserAddressDto>> UpdateAddress(
         Guid id,
@@ -445,6 +507,7 @@ public sealed class MeController(
         return Ok(ToAddressDto(address));
     }
 
+    /// <summary>刪除目前登入會員的一筆收件地址。</summary>
     [HttpDelete("addresses/{id:guid}")]
     public async Task<IActionResult> DeleteAddress(Guid id, CancellationToken cancellationToken = default)
     {
@@ -476,6 +539,7 @@ public sealed class MeController(
         return NoContent();
     }
 
+    /// <summary>將目前登入會員的一筆地址設為預設地址。</summary>
     [HttpPost("addresses/{id:guid}/default")]
     public async Task<ActionResult<UserAddressDto>> SetDefaultAddress(
         Guid id,
@@ -496,6 +560,7 @@ public sealed class MeController(
         return Ok(ToAddressDto(address));
     }
 
+    /// <summary>分頁取得目前登入會員的通知。</summary>
     [HttpGet("notifications")]
     public async Task<ActionResult<ApiPage<NotificationDto>>> GetNotifications(
         int page = 1,
@@ -519,6 +584,7 @@ public sealed class MeController(
         return Ok(await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken));
     }
 
+    /// <summary>將目前登入會員的一筆通知標記為已讀。</summary>
     [HttpPost("notifications/{id:guid}/read")]
     public async Task<IActionResult> MarkNotificationRead(
         Guid id,

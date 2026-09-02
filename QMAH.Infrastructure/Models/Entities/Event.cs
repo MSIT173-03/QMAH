@@ -43,5 +43,7 @@ public partial class Event
 
     public virtual ICollection<EventRegistration> EventRegistrations { get; set; } = new List<EventRegistration>();
 
+    public virtual ICollection<CommunityRewardCampaign> RewardCampaigns { get; set; } = new List<CommunityRewardCampaign>();
+
     public virtual SocialPost? SocialPost { get; set; }
 }

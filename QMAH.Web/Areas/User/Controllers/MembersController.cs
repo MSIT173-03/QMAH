@@ -8,6 +8,7 @@ using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
@@ -21,17 +22,20 @@ public class MembersController : Controller
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly QmahDbContext _context;
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+    private readonly EconomyService _economyService;
 
     public MembersController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         QmahDbContext context,
-        RoleManager<IdentityRole<Guid>> roleManager)
+        RoleManager<IdentityRole<Guid>> roleManager,
+        EconomyService economyService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
         _roleManager = roleManager;
+        _economyService = economyService;
     }
 
     // 先查會員基本資料，再批次補上個人資料、點數與角色，避免每列各打一次 Identity 查詢
@@ -207,6 +211,7 @@ public class MembersController : Controller
             .Where(x => x.UserId == id)
             .OrderByDescending(x => x.AchievedAt)
             .ToListAsync();
+        var equippedTitle = await _economyService.GetEquippedTitleAsync(id);
 
         var model = new MemberDetailsViewModel
         {
@@ -214,12 +219,30 @@ public class MembersController : Controller
             Profile = profile,
             Addresses = addresses,
             Achievements = achievements,
+            EquippedTitle = equippedTitle,
             PointTransactions = pointTransactions,
             CurrentBalance = pointBalance?.Balance ?? 0,
             Roles = roles.ToList()
         };
 
         return View(model);
+    }
+
+    /// <summary>設定或清除會員目前配戴的成就稱號，只能選擇該會員已取得的成就。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetEquippedTitle(
+        Guid id,
+        Guid? userAchievementId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await _userManager.Users.AnyAsync(user => user.Id == id, cancellationToken))
+            return NotFound();
+
+        var result = await _economyService.SetEquippedTitleAsync(id, userAchievementId, cancellationToken);
+        TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] =
+            result.Succeeded ? "會員配戴稱號已更新。" : result.ErrorMessage ?? "會員配戴稱號更新失敗。";
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpGet]
@@ -576,7 +599,8 @@ public class MembersController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AdjustPoints(
     Guid id,
-    PointAdjustViewModel model)
+    PointAdjustViewModel model,
+    CancellationToken cancellationToken = default)
     {
         // 防止網址 id 跟表單 UserId 不一致
         if (id != model.UserId)
@@ -592,88 +616,33 @@ public class MembersController : Controller
             return NotFound();
         }
 
-        // 後端重新取得目前點數
-        var pointBalance = await _context.PointBalances
-            .SingleOrDefaultAsync(x => x.UserId == id);
-
-        if (pointBalance == null)
-        {
-            pointBalance = new PointBalance
-            {
-                UserId = id,
-                Balance = 0,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.PointBalances.Add(pointBalance);
-        }
-
-        // 不允許輸入 0
-        if (model.Amount == 0)
-        {
-            ModelState.AddModelError(
-                nameof(model.Amount),
-                "調整點數不能為 0。"
-            );
-        }
-
-        // 不允許扣成負數
-        if (pointBalance.Balance + model.Amount < 0)
-        {
-            ModelState.AddModelError(
-                nameof(model.Amount),
-                "會員點數不足，不能扣成負數。"
-            );
-        }
-
-        // 原因不能空白
-        if (string.IsNullOrWhiteSpace(model.Reason))
-        {
-            ModelState.AddModelError(
-                nameof(model.Reason),
-                "請輸入調整原因。"
-            );
-        }
-
         if (!ModelState.IsValid)
         {
             model.Email = user.Email ?? "";
-            model.CurrentBalance = pointBalance.Balance;
+            model.CurrentBalance = await _context.PointBalances
+                .Where(balance => balance.UserId == id)
+                .Select(balance => (int?)balance.Balance)
+                .SingleOrDefaultAsync(cancellationToken) ?? 0;
 
             return View(model);
         }
 
-        // 同時處理餘額 + 流水
-        await using var transaction =
-            await _context.Database.BeginTransactionAsync();
-
-        try
+        // 原本此處直接更新 PointBalance；現改由 EconomyService 以同一交易寫入餘額與 PointTransaction。
+        var result = await _economyService.AdjustPointsAsync(
+            id,
+            model.Amount,
+            model.Reason,
+            cancellationToken: cancellationToken);
+        if (!result.Succeeded)
         {
-            // 1. 更新目前餘額
-            pointBalance.Balance += model.Amount;
-            pointBalance.UpdatedAt = DateTime.UtcNow;
-
-            // 2. 新增一筆點數流水
-            var pointTransaction = new PointTransaction
-            {
-                Id = Guid.NewGuid(),
-                UserId = id,
-                Amount = model.Amount,
-                Reason = model.Reason.Trim(),
-                ReferenceType = "ADMIN_ADJUSTMENT",
-                ReferenceId = null,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.PointTransactions.Add(pointTransaction);
-
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
+            ModelState.AddModelError("", result.ErrorMessage ?? "點數異動未完成。" );
+            model.Email = user.Email ?? "";
+            model.CurrentBalance = await _context.PointBalances
+                .AsNoTracking()
+                .Where(balance => balance.UserId == id)
+                .Select(balance => (int?)balance.Balance)
+                .SingleOrDefaultAsync(cancellationToken) ?? 0;
+            return View(model);
         }
 
         return RedirectToAction(nameof(Details), new { id });

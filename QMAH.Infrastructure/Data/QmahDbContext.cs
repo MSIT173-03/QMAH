@@ -46,6 +46,12 @@ public partial class QmahDbContext
 
     public virtual DbSet<EraBucket> EraBuckets { get; set; }
 
+    public virtual DbSet<EconomyAdjustmentBatch> EconomyAdjustmentBatches { get; set; }
+
+    public virtual DbSet<CommunityRewardCampaign> CommunityRewardCampaigns { get; set; }
+
+    public virtual DbSet<DailyMemberActivity> DailyMemberActivities { get; set; }
+
     public virtual DbSet<Event> Events { get; set; }
 
     public virtual DbSet<EventRegistration> EventRegistrations { get; set; }
@@ -54,11 +60,25 @@ public partial class QmahDbContext
 
     public virtual DbSet<GameRoom> GameRooms { get; set; }
 
+    public virtual DbSet<GameRoomInvitation> GameRoomInvitations { get; set; }
+
     public virtual DbSet<GameRound> GameRounds { get; set; }
+
+    public virtual DbSet<GameEconomySetting> GameEconomySettings { get; set; }
+
+    public virtual DbSet<GameModeDefinition> GameModeDefinitions { get; set; }
+
+    public virtual DbSet<MiniGameAttempt> MiniGameAttempts { get; set; }
 
     public virtual DbSet<KeyDefinition> KeyDefinitions { get; set; }
 
+    public virtual DbSet<KeyExchangeRule> KeyExchangeRules { get; set; }
+
     public virtual DbSet<KeyTransaction> KeyTransactions { get; set; }
+
+    public virtual DbSet<KeyProgressBalance> KeyProgressBalances { get; set; }
+
+    public virtual DbSet<KeyProgressTransaction> KeyProgressTransactions { get; set; }
 
     public virtual DbSet<OfficialAnnouncement> OfficialAnnouncements { get; set; }
 
@@ -85,6 +105,8 @@ public partial class QmahDbContext
     public virtual DbSet<StoreOrder> StoreOrders { get; set; }
 
     public virtual DbSet<UserAchievement> UserAchievements { get; set; }
+
+    public virtual DbSet<UserEquippedTitle> UserEquippedTitles { get; set; }
 
     public virtual DbSet<UserAddress> UserAddresses { get; set; }
 
@@ -318,12 +340,14 @@ public partial class QmahDbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.AcquisitionType).HasMaxLength(30).HasDefaultValue("ADMIN_GRANT", "DF_CouponDefinitions_AcquisitionType");
             entity.Property(e => e.DiscountType).HasMaxLength(20);
             entity.Property(e => e.DiscountValue).HasColumnType("decimal(12, 2)");
             entity.Property(e => e.EndAt).HasPrecision(3);
             entity.Property(e => e.IsActive).HasDefaultValue(true, "DF_Coupons_Active");
             entity.Property(e => e.MinimumAmount).HasColumnType("decimal(12, 2)");
             entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.ValidityDays).HasDefaultValue(365, "DF_CouponDefinitions_ValidityDays");
             entity.Property(e => e.StartAt).HasPrecision(3);
         });
 
@@ -336,6 +360,126 @@ public partial class QmahDbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Code).HasMaxLength(40);
             entity.Property(e => e.Name).HasMaxLength(80);
+        });
+
+        modelBuilder.Entity<EconomyAdjustmentBatch>(entity =>
+        {
+            entity.ToTable("EconomyAdjustmentBatches", "admin");
+            entity.HasIndex(e => new { e.CreatedAt, e.AssetType, e.Operation }, "IX_EconomyAdjustmentBatches_Created_Asset_Operation").IsDescending(true, false, false);
+            entity.HasIndex(e => e.Status, "IX_EconomyAdjustmentBatches_Status");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AssetType).HasMaxLength(20);
+            entity.Property(e => e.Operation).HasMaxLength(20);
+            entity.Property(e => e.FilterJson).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Reason).HasMaxLength(200);
+            entity.Property(e => e.Status).HasMaxLength(20);
+            entity.Property(e => e.FailureReason).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_EconomyAdjustmentBatches_Created");
+            entity.Property(e => e.CompletedAt).HasPrecision(3);
+
+            entity.HasOne(e => e.CouponDefinition)
+                .WithMany()
+                .HasForeignKey(e => e.CouponDefinitionId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_EconomyAdjustmentBatches_CouponDefinition");
+            entity.HasOne<ApplicationUser>()
+                .WithMany(p => p.EconomyAdjustmentBatches)
+                .HasForeignKey(e => e.CreatedByAdminUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_EconomyAdjustmentBatches_AdminUser");
+        });
+
+        modelBuilder.Entity<CommunityRewardCampaign>(entity =>
+        {
+            // 加碼規則是跨社群、遊戲與經濟領域共用的設定，集中放在 admin schema，
+            // 由共用 Service 統一結算，避免各系統各自維護一套扣款規則。
+            entity.ToTable("CommunityRewardCampaigns", "admin");
+
+            entity.HasIndex(e => e.EventId, "UX_CommunityRewardCampaigns_Event")
+                .IsUnique()
+                .HasFilter("([EventId] IS NOT NULL)");
+            entity.HasIndex(e => e.GameRoomId, "UX_CommunityRewardCampaigns_GameRoom")
+                .IsUnique()
+                .HasFilter("([GameRoomId] IS NOT NULL)");
+            entity.HasIndex(e => new { e.IsActive, e.ValidFrom, e.ValidUntil }, "IX_CommunityRewardCampaigns_ActiveWindow");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.TargetType).HasMaxLength(20);
+            entity.Property(e => e.SponsorType).HasMaxLength(20);
+            entity.Property(e => e.BudgetMode).HasMaxLength(20);
+            entity.Property(e => e.PointPerRecipient).HasDefaultValue(0, "DF_CommunityRewardCampaigns_PointPerRecipient");
+            entity.Property(e => e.KeyPerRecipient).HasDefaultValue(0, "DF_CommunityRewardCampaigns_KeyPerRecipient");
+            entity.Property(e => e.PointBudget).HasDefaultValue(0, "DF_CommunityRewardCampaigns_PointBudget");
+            entity.Property(e => e.PointIssued).HasDefaultValue(0, "DF_CommunityRewardCampaigns_PointIssued");
+            entity.Property(e => e.KeyBudget).HasDefaultValue(0, "DF_CommunityRewardCampaigns_KeyBudget");
+            entity.Property(e => e.KeyIssued).HasDefaultValue(0, "DF_CommunityRewardCampaigns_KeyIssued");
+            entity.Property(e => e.ValidFrom).HasPrecision(3);
+            entity.Property(e => e.ValidUntil).HasPrecision(3);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_CommunityRewardCampaigns_Created");
+            entity.Property(e => e.UpdatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_CommunityRewardCampaigns_Updated");
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+
+            entity.HasOne(e => e.Event)
+                .WithMany(e => e.RewardCampaigns)
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_CommunityRewardCampaigns_Event");
+            entity.HasOne(e => e.GameRoom)
+                .WithMany(e => e.RewardCampaigns)
+                .HasForeignKey(e => e.GameRoomId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_CommunityRewardCampaigns_GameRoom");
+            entity.HasOne<ApplicationUser>()
+                .WithMany(e => e.OwnedRewardCampaigns)
+                .HasForeignKey(e => e.OwnerUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_CommunityRewardCampaigns_OwnerUser");
+            entity.HasOne(e => e.KeyDefinition)
+                .WithMany(e => e.RewardCampaigns)
+                .HasForeignKey(e => e.KeyDefinitionId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_CommunityRewardCampaigns_KeyDefinition");
+        });
+
+        modelBuilder.Entity<DailyMemberActivity>(entity =>
+        {
+            // 每日登入／簽到是跨系統的會員活動，不歸在社群、遊戲或商城任何一張業務表。
+            // 這裡保存最小必要的每日歷史事實；累積天數與登入率由服務查詢時即時計算。
+            entity.ToTable("DailyMemberActivities", "common");
+
+            entity.HasIndex(e => new { e.UserId, e.ActivityType, e.ActivityDate },
+                "UX_DailyMemberActivities_User_Type_Date").IsUnique();
+            entity.HasIndex(e => new { e.ActivityType, e.ActivityDate, e.UserId },
+                "IX_DailyMemberActivities_Type_Date_User");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ActivityType).HasMaxLength(20);
+            entity.Property(e => e.ActivityDate).HasColumnType("date");
+            entity.Property(e => e.OccurrenceCount).HasDefaultValue(1, "DF_DailyMemberActivities_OccurrenceCount");
+            entity.Property(e => e.FirstOccurredAt).HasPrecision(3);
+            entity.Property(e => e.LastOccurredAt).HasPrecision(3);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_DailyMemberActivities_CreatedAt");
+            entity.Property(e => e.UpdatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_DailyMemberActivities_UpdatedAt");
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.DailyMemberActivities)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_DailyMemberActivities_User");
         });
 
         modelBuilder.Entity<Event>(entity =>
@@ -393,6 +537,9 @@ public partial class QmahDbContext
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("REGISTERED", "DF_EventRegistrations_Status");
+            entity.Property(e => e.RewardPointAmount).HasDefaultValue(0, "DF_EventRegistrations_RewardPointAmount");
+            entity.Property(e => e.RewardKeyAmount).HasDefaultValue(0, "DF_EventRegistrations_RewardKeyAmount");
+            entity.Property(e => e.RewardGrantedAt).HasPrecision(3);
 
             entity.HasOne(d => d.Event).WithMany(p => p.EventRegistrations)
                 .HasForeignKey(d => d.EventId)
@@ -403,6 +550,17 @@ public partial class QmahDbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_EventRegistrations_User");
+
+            entity.HasOne(d => d.RewardCampaign)
+                .WithMany(p => p.EventRegistrations)
+                .HasForeignKey(d => d.RewardCampaignId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_EventRegistrations_RewardCampaign");
+            entity.HasOne(d => d.RewardKeyDefinition)
+                .WithMany(p => p.RewardRegistrations)
+                .HasForeignKey(d => d.RewardKeyDefinitionId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_EventRegistrations_RewardKeyDefinition");
         });
 
         modelBuilder.Entity<GamePlayer>(entity =>
@@ -495,6 +653,59 @@ public partial class QmahDbContext
             entity.Property(e => e.VotingSeconds).HasDefaultValue((short)60, "DF_GameRooms_VotingSeconds");
         });
 
+        modelBuilder.Entity<GameRoomInvitation>(entity =>
+        {
+            entity.ToTable("GameRoomInvitations", "game");
+
+            entity.HasIndex(e => new { e.InviteeUserId, e.Status, e.CreatedAt }, "IX_GameRoomInvitations_Invitee_Status_CreatedAt")
+                .IsDescending(false, false, true);
+            entity.HasIndex(e => new { e.RoomId, e.CreatedAt }, "IX_GameRoomInvitations_Room_CreatedAt")
+                .IsDescending(false, true);
+            entity.HasIndex(e => new { e.RoomId, e.InviteeUserId }, "UX_GameRoomInvitations_Pending")
+                .IsUnique()
+                .HasFilter("([Status]=N'PENDING')");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("PENDING", "DF_GameRoomInvitations_Status");
+            entity.Property(e => e.Message).HasMaxLength(300);
+            entity.Property(e => e.RewardPointAmount).HasDefaultValue(0, "DF_GameRoomInvitations_RewardPointAmount");
+            entity.Property(e => e.RewardKeyAmount).HasDefaultValue(0, "DF_GameRoomInvitations_RewardKeyAmount");
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_GameRoomInvitations_Created");
+            entity.Property(e => e.RespondedAt).HasPrecision(3);
+            entity.Property(e => e.RewardGrantedAt).HasPrecision(3);
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+
+            entity.HasOne(e => e.Room)
+                .WithMany(e => e.Invitations)
+                .HasForeignKey(e => e.RoomId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_GameRoomInvitations_Room");
+            entity.HasOne(e => e.InviterUser)
+                .WithMany(e => e.SentGameRoomInvitations)
+                .HasForeignKey(e => e.InviterUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_GameRoomInvitations_InviterUser");
+            entity.HasOne(e => e.InviteeUser)
+                .WithMany(e => e.ReceivedGameRoomInvitations)
+                .HasForeignKey(e => e.InviteeUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_GameRoomInvitations_InviteeUser");
+            entity.HasOne(e => e.RewardCampaign)
+                .WithMany(e => e.GameRoomInvitations)
+                .HasForeignKey(e => e.RewardCampaignId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_GameRoomInvitations_RewardCampaign");
+            entity.HasOne(e => e.RewardKeyDefinition)
+                .WithMany(e => e.RewardInvitations)
+                .HasForeignKey(e => e.RewardKeyDefinitionId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_GameRoomInvitations_RewardKeyDefinition");
+        });
+
         modelBuilder.Entity<GameRound>(entity =>
         {
             entity.ToTable("GameRounds", "game");
@@ -527,6 +738,78 @@ public partial class QmahDbContext
                 .HasConstraintName("FK_GameRounds_Artifact");
         });
 
+        modelBuilder.Entity<GameEconomySetting>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("GameEconomySettings", "game");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.UpdatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_GameEconomySettings_Updated");
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+        });
+
+        modelBuilder.Entity<GameModeDefinition>(entity =>
+        {
+            entity.ToTable("GameModeDefinitions", "game");
+            entity.HasIndex(e => e.Code, "UX_GameModeDefinitions_Code").IsUnique();
+            entity.HasIndex(e => new { e.IsActive, e.Code }, "IX_GameModeDefinitions_Active_Code");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Code).HasMaxLength(40);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.ConfigJson).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.IsActive).HasDefaultValue(true, "DF_GameModeDefinitions_Active");
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_GameModeDefinitions_Created");
+            entity.Property(e => e.UpdatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_GameModeDefinitions_Updated");
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+        });
+
+        modelBuilder.Entity<MiniGameAttempt>(entity =>
+        {
+            entity.ToTable("MiniGameAttempts", "game");
+            entity.HasIndex(e => new { e.UserId, e.StartedAt }, "IX_MiniGameAttempts_User_StartedAt").IsDescending(false, true);
+            entity.HasIndex(e => new { e.UserId, e.GameModeDefinitionId, e.Status }, "IX_MiniGameAttempts_User_Mode_Status");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ArtifactPoolJson).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.ConfigJson).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.RawResultJson).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Difficulty).HasMaxLength(30);
+            entity.Property(e => e.Seed).HasMaxLength(128);
+            entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("STARTED", "DF_MiniGameAttempts_Status");
+            entity.Property(e => e.Grade).HasMaxLength(2);
+            entity.Property(e => e.StartedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_MiniGameAttempts_Started");
+            entity.Property(e => e.CompletedAt).HasPrecision(3);
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+
+            entity.HasOne(d => d.GameModeDefinition).WithMany(p => p.Attempts)
+                .HasForeignKey(d => d.GameModeDefinitionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MiniGameAttempts_Mode");
+
+            entity.HasOne(d => d.Artifact).WithMany()
+                .HasForeignKey(d => d.ArtifactId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_MiniGameAttempts_Artifact");
+
+            entity.HasOne<ApplicationUser>().WithMany(p => p.MiniGameAttempts)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_MiniGameAttempts_User");
+        });
+
         modelBuilder.Entity<KeyDefinition>(entity =>
         {
             entity.ToTable("KeyDefinitions", "catalog");
@@ -537,6 +820,7 @@ public partial class QmahDbContext
             entity.Property(e => e.Code).HasMaxLength(50);
             entity.Property(e => e.IsActive).HasDefaultValue(true, "DF_KeyDefinitions_Active");
             entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.RecyclePointValue).HasDefaultValue(0, "DF_KeyDefinitions_RecyclePointValue");
             entity.Property(e => e.ScopeType).HasMaxLength(20);
 
             entity.HasOne(d => d.Category).WithMany(p => p.KeyDefinitions)
@@ -546,6 +830,34 @@ public partial class QmahDbContext
             entity.HasOne(d => d.EraBucket).WithMany(p => p.KeyDefinitions)
                 .HasForeignKey(d => d.EraBucketId)
                 .HasConstraintName("FK_KeyDefinitions_Era");
+        });
+
+        modelBuilder.Entity<KeyExchangeRule>(entity =>
+        {
+            entity.ToTable("KeyExchangeRules", "catalog");
+            entity.HasIndex(e => new { e.IsActive, e.SortOrder }, "IX_KeyExchangeRules_Active_SortOrder");
+            entity.HasIndex(e => new { e.SourceKeyDefinitionId, e.TargetKeyDefinitionId }, "UX_KeyExchangeRules_Source_Target").IsUnique();
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Description).HasMaxLength(300);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_KeyExchangeRules_Created");
+            entity.Property(e => e.UpdatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_KeyExchangeRules_Updated");
+            entity.Property(e => e.IsActive).HasDefaultValue(true, "DF_KeyExchangeRules_Active");
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+
+            entity.HasOne(d => d.SourceKeyDefinition).WithMany(p => p.SourceExchangeRules)
+                .HasForeignKey(d => d.SourceKeyDefinitionId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_KeyExchangeRules_SourceKey");
+            entity.HasOne(d => d.TargetKeyDefinition).WithMany(p => p.TargetExchangeRules)
+                .HasForeignKey(d => d.TargetKeyDefinitionId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_KeyExchangeRules_TargetKey");
         });
 
         modelBuilder.Entity<KeyTransaction>(entity =>
@@ -570,6 +882,36 @@ public partial class QmahDbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_KeyTransactions_User");
+        });
+
+        modelBuilder.Entity<KeyProgressBalance>(entity =>
+        {
+            entity.HasKey(e => e.UserId);
+            entity.ToTable("KeyProgressBalances", "catalog");
+            entity.Property(e => e.UserId).ValueGeneratedNever();
+            entity.Property(e => e.UpdatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_KeyProgressBalances_Updated");
+            entity.HasOne<ApplicationUser>().WithOne(p => p.KeyProgressBalance)
+                .HasForeignKey<KeyProgressBalance>(d => d.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_KeyProgressBalances_User");
+        });
+
+        modelBuilder.Entity<KeyProgressTransaction>(entity =>
+        {
+            entity.ToTable("KeyProgressTransactions", "catalog");
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt }, "IX_KeyProgressTransactions_User").IsDescending(false, true);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Reason).HasMaxLength(40);
+            entity.Property(e => e.ReferenceType).HasMaxLength(40);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_KeyProgressTransactions_Created");
+            entity.HasOne<ApplicationUser>().WithMany(p => p.KeyProgressTransactions)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_KeyProgressTransactions_User");
         });
 
         modelBuilder.Entity<OfficialAnnouncement>(entity =>
@@ -956,6 +1298,28 @@ public partial class QmahDbContext
                 .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
+        modelBuilder.Entity<UserEquippedTitle>(entity =>
+        {
+            entity.HasKey(e => e.UserId);
+            entity.ToTable("EquippedTitles", "user");
+            entity.HasIndex(e => e.UserAchievementId, "UX_EquippedTitles_UserAchievement").IsUnique();
+            entity.Property(e => e.UserId).ValueGeneratedNever();
+            entity.Property(e => e.EquippedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_EquippedTitles_Equipped");
+            entity.Property(e => e.UpdatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_EquippedTitles_Updated");
+            entity.HasOne(d => d.UserAchievement).WithMany()
+                .HasForeignKey(d => d.UserAchievementId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_EquippedTitles_UserAchievement");
+            entity.HasOne<ApplicationUser>().WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_EquippedTitles_User");
+        });
+
         modelBuilder.Entity<UserAddress>(entity =>
         {
             entity.ToTable("UserAddresses", "user");
@@ -991,16 +1355,25 @@ public partial class QmahDbContext
         {
             entity.ToTable("UserCoupons", "store");
 
-            entity.HasIndex(e => new { e.UserId, e.CouponDefinitionId }, "UQ_UserCoupons_UserCoupon").IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.Status, e.ExpiresAt }, "IX_UserCoupons_User_Status_ExpiresAt");
+            entity.HasIndex(e => new { e.CouponDefinitionId, e.IssuedAt }, "IX_UserCoupons_Definition_IssuedAt").IsDescending(false, true);
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.IssuedAt)
                 .HasPrecision(3)
                 .HasDefaultValueSql("(sysutcdatetime())", "DF_UserCoupons_Issued");
+            entity.Property(e => e.ExpiresAt).HasPrecision(3);
+            entity.Property(e => e.IssuedByAdminUserId);
+            entity.Property(e => e.GrantBatchId);
+            entity.Property(e => e.IssueReason).HasMaxLength(200);
+            entity.Property(e => e.RevokeReason).HasMaxLength(200);
+            entity.Property(e => e.RevokedByAdminUserId);
+            entity.Property(e => e.RevokeBatchId);
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("AVAILABLE", "DF_UserCoupons_Status");
             entity.Property(e => e.UsedAt).HasPrecision(3);
+            entity.Property(e => e.RevokedAt).HasPrecision(3);
 
             entity.HasOne(d => d.CouponDefinition).WithMany(p => p.UserCoupons)
                 .HasForeignKey(d => d.CouponDefinitionId)
@@ -1011,6 +1384,27 @@ public partial class QmahDbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_UserCoupons_User");
+
+            // 發放與撤銷者保留外鍵，讓稽核資料能追溯到管理員；兩條關聯都禁止連鎖刪除，避免刪除帳號時改變優惠券歷史。
+            entity.HasOne<ApplicationUser>().WithMany()
+                .HasForeignKey(d => d.IssuedByAdminUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_UserCoupons_IssuedByAdminUser");
+            entity.HasOne<ApplicationUser>().WithMany()
+                .HasForeignKey(d => d.RevokedByAdminUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_UserCoupons_RevokedByAdminUser");
+
+            entity.HasOne<EconomyAdjustmentBatch>()
+                .WithMany()
+                .HasForeignKey(d => d.GrantBatchId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_UserCoupons_GrantBatch");
+            entity.HasOne<EconomyAdjustmentBatch>()
+                .WithMany()
+                .HasForeignKey(d => d.RevokeBatchId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_UserCoupons_RevokeBatch");
         });
 
         modelBuilder.Entity<UserKeyBalance>(entity =>
@@ -1147,6 +1541,12 @@ public partial class QmahDbContext
                 .HasForeignKey(achievement => achievement.UserId)
                 .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_UserAchievements_AspNetUsers_UserId");
+
+            entity.HasMany(user => user.DailyMemberActivities)
+                .WithOne(activity => activity.User)
+                .HasForeignKey(activity => activity.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_DailyMemberActivities_User");
         });
 
         modelBuilder.Entity<IdentityRole<Guid>>().ToTable("AspNetRoles", "user");

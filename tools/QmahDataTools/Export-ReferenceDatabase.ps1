@@ -16,6 +16,7 @@ Set-StrictMode -Version Latest
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $workspaceRoot = (Resolve-Path (Join-Path $repoRoot "..")).Path
 $toolProject = Join-Path $PSScriptRoot "QmahDatabaseRelease\QmahDatabaseRelease.csproj"
+$webProject = Join-Path $repoRoot "QMAH.Web\QMAH.Web.csproj"
 $repositorySql = Join-Path $repoRoot "database\QMAH.sql"
 $normalizedVersion = $Version.TrimStart('v')
 
@@ -50,6 +51,40 @@ $sqlcmd = (Get-Command sqlcmd -ErrorAction Stop).Source
 $sqllocaldb = (Get-Command sqllocaldb -ErrorAction Stop).Source
 $webProcess = $null
 $localDbCreated = $false
+
+function Resolve-LocalDbServer([string]$Server) {
+    if ($Server -notmatch '^\(localdb\)\\(?<Instance>[^\\]+)$') {
+        return $Server
+    }
+
+    $instanceName = $Matches.Instance
+    $info = & $sqllocaldb info $instanceName
+    if ($LASTEXITCODE -ne 0) {
+        throw "LocalDB instance '$instanceName' could not be inspected."
+    }
+
+    $pipeLine = $info | Select-String -SimpleMatch 'Instance pipe name:'
+    $pipe = if ($pipeLine) { ($pipeLine.Line -split ':', 2)[1].Trim() } else { $null }
+    if ([string]::IsNullOrWhiteSpace($pipe)) {
+        & $sqllocaldb start $instanceName | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "LocalDB instance '$instanceName' could not be started."
+        }
+
+        $info = & $sqllocaldb info $instanceName
+        $pipeLine = $info | Select-String -SimpleMatch 'Instance pipe name:'
+        $pipe = if ($pipeLine) { ($pipeLine.Line -split ':', 2)[1].Trim() } else { $null }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($pipe)) {
+        throw "LocalDB instance '$instanceName' did not expose a named pipe."
+    }
+
+    return $pipe
+}
+
+$ServerInstance = Resolve-LocalDbServer $ServerInstance
+$sourceConnection = "Server=$ServerInstance;Database=$Database;Trusted_Connection=True;TrustServerCertificate=True"
 
 function ConvertTo-SqlIdentifier([string]$Value) {
     return "[" + $Value.Replace("]", "]]") + "]"
@@ -144,10 +179,14 @@ try {
     New-Item -ItemType Directory -Path $workDirectory -Force | Out-Null
     New-Item -ItemType Directory -Path $databaseFilesDirectory -Force | Out-Null
 
-    Write-Host "[1/10] Building the release tool"
+    Write-Host "[1/10] Building the release tool and Web startup target"
     & dotnet build $toolProject --configuration Release
     if ($LASTEXITCODE -ne 0) {
         throw "Release tool build failed."
+    }
+    & dotnet build $webProject --configuration Release --no-restore
+    if ($LASTEXITCODE -ne 0) {
+        throw "QMAH.Web release build failed."
     }
 
     Write-Host "[2/10] Checking the canonical database"
@@ -162,6 +201,11 @@ try {
     $localDbCreated = $true
     & $sqllocaldb start $localDbInstance | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Could not start temporary LocalDB instance." }
+
+    $releaseServer = Resolve-LocalDbServer "(localdb)\$localDbInstance"
+    $releaseMasterConnection = "Server=$releaseServer;Database=master;Trusted_Connection=True;TrustServerCertificate=True"
+    $releaseConnection = "Server=$releaseServer;Database=$Database;Trusted_Connection=True;TrustServerCertificate=True"
+    $validationConnection = "Server=$releaseServer;Database=$validationDatabase;Trusted_Connection=True;TrustServerCertificate=True"
 
     Invoke-ReleaseTool @(
         "restore-backup", "--connection", $releaseMasterConnection,
@@ -202,7 +246,8 @@ DROP TABLE IF EXISTS [dbo].[sysdiagrams];
 
     Write-Host "[7/10] Rebuilding a new database from the SQL file only"
     New-ValidationScript $releaseSql $validationSql $validationDatabase
-    & $sqlcmd -b -S $releaseServer -d master -f 65001 -i $validationSql
+    # 新版 sqlcmd 不再接受舊版的 -f 參數；完整 SQL 已由 exporter 以 UTF-8 無 BOM 輸出。
+    & $sqlcmd -b -S $releaseServer -d master -i $validationSql
     if ($LASTEXITCODE -ne 0) {
         throw "The full SQL file could not rebuild a clean database."
     }

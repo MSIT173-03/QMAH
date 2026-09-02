@@ -10,6 +10,7 @@ using QMAH.Web.Areas.Catalog.ViewModel;
 using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
@@ -19,10 +20,12 @@ namespace QMAH.Web.Areas.Catalog.Controllers;
 public class KeyBackPackController : Controller
 {
     private readonly QmahDbContext _db;
+    private readonly EconomyService _economyService;
 
-    public KeyBackPackController(QmahDbContext db)
+    public KeyBackPackController(QmahDbContext db, EconomyService economyService)
     {
         _db = db;
+        _economyService = economyService;
     }
 
     public async Task<ActionResult> Index(
@@ -98,98 +101,30 @@ public class KeyBackPackController : Controller
 
     public ActionResult Create(Guid userId, Guid keydefinitionId)
     {
-        data(userId, keydefinitionId);
-        ViewBag.ReturnUserId = userId;
-        return View();
+        return RedirectToAction(nameof(Adjust), new { userId, keyDefinitionId = keydefinitionId });
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public ActionResult Create(UserKeyBalance ukb, Guid userId, Guid keydefinitionId)
     {
-        try
-        {
-            data(userId, keydefinitionId);
-            ViewBag.ReturnUserId = userId;
-
-            var existing = _db.UserKeyBalances
-                .FirstOrDefault(x =>
-                    x.UserId == userId &&
-                    x.KeyDefinitionId == keydefinitionId);
-
-            if (existing == null)
-            {
-                ukb.UpdatedAt = DateTime.Now;
-                _db.UserKeyBalances.Add(ukb);
-            }
-            else
-            {
-                existing.Balance += ukb.Balance;
-                existing.UpdatedAt = DateTime.Now;
-                _db.UserKeyBalances.Update(existing);
-            }
-
-            _db.SaveChanges();
-
-            return RedirectToAction("Index", new { userId });
-        }
-        catch (InvalidOperationException ex)
-            when (ex.Message.Contains("is unknown when attempting to save changes"))
-        {
-            ViewBag.ErrorMessage = "請勿空值";
-            ViewBag.ReturnUserId = userId;
-            return View(ukb);
-        }
-        catch (DbUpdateException)
-        {
-            ViewBag.ErrorMessage = "未知異常，請重試";
-            ViewBag.ReturnUserId = userId;
-            return View(ukb);
-        }
+        // 原本 Create 會直接寫入 UserKeyBalance；現改由 Adjust Service 建立交易紀錄，避免後台改餘額卻沒有流水。
+        return BadRequest("請改用含調整原因的鑰匙異動頁面。");
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public ActionResult Delete(Guid? userId, Guid? keydefinitionId)
     {
-        UserKeyBalance? ukb = _db.UserKeyBalances
-            .FirstOrDefault(t =>
-                t.UserId == userId &&
-                t.KeyDefinitionId == keydefinitionId);
-
-        if (ukb != null)
-        {
-            _db.UserKeyBalances.Remove(ukb);
-            _db.SaveChanges();
-        }
-        else
-        {
-            return Content("Id 不存在");
-        }
-
-        return RedirectToAction("Index", new { userId });
+        // UserKeyBalance 是目前餘額，不是可刪除的歷史紀錄；正常後台不提供物理刪除入口。
+        return BadRequest("鑰匙餘額不可直接刪除，請使用含原因的扣除操作。");
     }
 
     public ActionResult Edit(Guid? userId, Guid? keydefinitionId)
     {
-        if (userId == null || keydefinitionId == null)
-        {
-            return Content("Id 不存在");
-        }
-
-        UserKeyBalance? kd = _db.UserKeyBalances
-            .FirstOrDefault(t =>
-                t.UserId == userId &&
-                t.KeyDefinitionId == keydefinitionId);
-
-        if (kd == null)
-        {
-            return Content("Id 不存在");
-        }
-
-        data(userId, keydefinitionId);
-        ViewBag.ReturnUserId = userId;
-
-        return View(kd);
+        return userId.HasValue && keydefinitionId.HasValue
+            ? RedirectToAction(nameof(Adjust), new { userId, keyDefinitionId = keydefinitionId })
+            : BadRequest("缺少會員或鑰匙識別碼。");
     }
 
     [HttpPost]
@@ -198,44 +133,91 @@ public class KeyBackPackController : Controller
         Guid? userId,
         Guid? keydefinitionId)
     {
-        if (userId == null || keydefinitionId == null)
+        // 原本 Edit 允許任意覆寫 Balance；現保留舊路由但拒絕直接寫入，避免繞過交易與非負數檢查。
+        return BadRequest("鑰匙餘額不可直接覆寫，請使用含原因的增減操作。");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Adjust(
+        Guid userId,
+        Guid keyDefinitionId,
+        CancellationToken cancellationToken = default)
+    {
+        var model = await BuildAdjustModelAsync(userId, keyDefinitionId, cancellationToken);
+        return model is null ? NotFound() : View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Adjust(
+        KeyAdjustViewModel model,
+        CancellationToken cancellationToken = default)
+    {
+        var current = await BuildAdjustModelAsync(model.UserId, model.KeyDefinitionId, cancellationToken);
+        if (current is null)
+            return NotFound();
+
+        if (!ModelState.IsValid || model.Amount == 0)
         {
-            return Content("Id 不存在");
+            if (model.Amount == 0)
+                ModelState.AddModelError(nameof(model.Amount), "調整數量不可為 0。");
+            CopyDisplayFields(current, model);
+            return View(model);
         }
 
-        UserKeyBalance? u = _db.UserKeyBalances
-            .FirstOrDefault(t =>
-                t.UserId == userId &&
-                t.KeyDefinitionId == keydefinitionId);
-
-        if (u == null)
+        var result = await _economyService.AdjustKeysAsync(
+            model.UserId,
+            model.KeyDefinitionId,
+            model.Amount,
+            model.Reason,
+            cancellationToken: cancellationToken);
+        if (!result.Succeeded)
         {
-            return Content("Id 不存在");
+            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "鑰匙異動失敗。");
+            CopyDisplayFields(current, model);
+            return View(model);
         }
 
-        try
-        {
-            u.UserId = ukb.UserId;
-            u.KeyDefinitionId = ukb.KeyDefinitionId;
-            u.Balance = ukb.Balance;
-            u.UpdatedAt = DateTime.Now;
-            _db.SaveChanges();
-        }
-        catch (InvalidOperationException ex)
-            when (ex.Message.Contains("is unknown when attempting to save changes"))
-        {
-            ViewBag.ErrorMessage = "請勿空值";
-            ViewBag.ReturnUserId = userId;
-            return View(ukb);
-        }
-        catch (DbUpdateException)
-        {
-            ViewBag.ErrorMessage = "未知異常，請重試";
-            ViewBag.ReturnUserId = userId;
-            return View(ukb);
-        }
+        TempData["SuccessMessage"] = "鑰匙餘額已調整，並已留下鑰匙流水。";
+        return RedirectToAction(nameof(Index), new { userId = model.UserId });
+    }
 
-        return RedirectToAction("Index", new { userId = ukb.UserId });
+    private async Task<KeyAdjustViewModel?> BuildAdjustModelAsync(
+        Guid userId,
+        Guid keyDefinitionId,
+        CancellationToken cancellationToken)
+    {
+        var row = await (
+            from user in _db.Users.AsNoTracking()
+            join profile in _db.UserProfiles.AsNoTracking()
+                on user.Id equals profile.UserId into profiles
+            from profile in profiles.DefaultIfEmpty()
+            join key in _db.KeyDefinitions.AsNoTracking()
+                on keyDefinitionId equals key.Id
+            join balance in _db.UserKeyBalances.AsNoTracking()
+                on new { UserId = user.Id, KeyDefinitionId = key.Id }
+                equals new { balance.UserId, balance.KeyDefinitionId } into balances
+            from balance in balances.DefaultIfEmpty()
+            where user.Id == userId && key.IsActive
+            select new KeyAdjustViewModel
+            {
+                UserId = user.Id,
+                KeyDefinitionId = key.Id,
+                MemberName = profile != null && profile.Nickname != null ? profile.Nickname : user.Email ?? "未命名會員",
+                KeyName = key.Name,
+                KeyCode = key.Code,
+                CurrentBalance = balance == null ? 0 : balance.Balance
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        return row;
+    }
+
+    private static void CopyDisplayFields(KeyAdjustViewModel source, KeyAdjustViewModel target)
+    {
+        target.MemberName = source.MemberName;
+        target.KeyName = source.KeyName;
+        target.KeyCode = source.KeyCode;
+        target.CurrentBalance = source.CurrentBalance;
     }
 
     private void data(Guid? userId, Guid? keydefinitionId)

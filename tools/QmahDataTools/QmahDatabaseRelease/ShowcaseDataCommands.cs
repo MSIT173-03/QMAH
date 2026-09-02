@@ -255,8 +255,8 @@ public static class ShowcaseDataCommands
 
     private static readonly IReadOnlyList<ShowcaseLocation> Locations =
     [
-        new("國立故宮博物院正館", 25.1024m, 121.5485m),
-        new("國立故宮博物院南部院區（故宮南院）", 23.4709m, 120.2941m),
+        new("國立故宮博物院｜臺北市士林區至善路二段221號", 25.1024m, 121.5485m),
+        new("國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號", 23.4709m, 120.2941m),
         new("國立臺灣博物館", 25.0375m, 121.5151m),
         new("臺南市美術館二館", 22.9974m, 120.1981m),
         new("國立臺灣歷史博物館", 23.0577m, 120.2421m),
@@ -1700,7 +1700,7 @@ public static class ShowcaseDataCommands
     {
         var eventType = eventData.EventType == "OFFICIAL" ? "官方活動" : "會員活動";
         var start = eventData.StartAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture);
-        var location = string.IsNullOrWhiteSpace(eventData.Location) ? "線上或待公布" : eventData.Location.Trim();
+        var location = string.IsNullOrWhiteSpace(eventData.Location) ? "線上活動" : eventData.Location.Trim();
         var content = $"這篇貼文對應活動資料「{eventData.Title}」，活動性質為{eventType}。活動時間是 {start}，地點為「{location}」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。\n\n{NormalizeWhitespace(eventData.Content)}\n\n有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。";
 
         return new GeneratedPostDraft(

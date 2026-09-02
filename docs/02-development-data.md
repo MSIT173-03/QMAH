@@ -23,11 +23,11 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 
 | Schema | 主要內容 | 目前資料概況 |
 | --- | --- | --- |
-| `admin` | 後台稽核操作 | 目前 1 筆；網站執行後由後台操作持續累積 |
-| `catalog` | 文物、分類、年代、鑰匙、解鎖 | 8 類、12 個年代桶、256 件文物、23 筆鑰匙規則與相關流水 |
-| `game` | 題庫設定、房間、玩家、回合、作答、投票 | 256 筆題庫設定、8 個房間、16 筆玩家紀錄與 20 個回合 |
-| `social` | 貼文（含官方公告類型）、留言、檢舉、活動、報名、通知、社群媒體 | 336 篇貼文、768 筆留言、3 筆檢舉、7 個活動與 5 筆報名；圖片依實際上傳累積 |
-| `store` | 商品、購物車、優惠券、訂單、付款、點數 | 256 件商品、208 組訂單／付款紀錄、12 張優惠券與 96 筆商品評價 |
+| `admin` | 後台稽核操作與批次資產活動 | 1 筆稽核紀錄、2 筆官方／會員加碼規則；批次資產活動目前尚未執行 |
+| `catalog` | 文物、分類、年代、鑰匙、解鎖 | 8 類、12 個年代桶、256 件文物、20 筆鑰匙兌換規則與相關流水 |
+| `game` | 題庫設定、房間、玩家、回合、作答、投票與 Mini Game 契約 | 256 筆題庫設定、9 個房間、19 筆玩家紀錄、20 個回合與 4 個 Mini Game 模式 |
+| `social` | 貼文（含官方公告類型）、留言、檢舉、活動、報名、通知、社群媒體 | 336 篇貼文、768 篇留言、3 筆檢舉、7 個活動與 7 筆報名；圖片依實際上傳累積 |
+| `store` | 商品、購物車、優惠券、訂單、付款、點數 | 256 件商品、208 組訂單／付款紀錄、17 張優惠券定義與 96 筆商品評價 |
 | `user` | Identity、Profile、地址、成就 | 24 個帳號、2 個角色、24 筆 Profile 與會員情境 |
 
 ### 2.2 Catalog
@@ -39,7 +39,10 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | `Artifacts` | 256 | 文物主資料、尺寸、圖片、來源與授權 |
 | `KeyDefinitions` | 23 | 鑰匙規則與作用範圍 |
 | `UserKeyBalances` | 49 | 會員鑰匙餘額情境 |
-| `KeyTransactions` | 49 | 鑰匙異動流水情境 |
+| `KeyTransactions` | 51 | 鑰匙異動流水情境 |
+| `KeyProgressBalances` | 0 | Mini Game 累積鑰匙進度餘額；首次產生進度時建立 |
+| `KeyProgressTransactions` | 0 | Mini Game 鑰匙進度與轉換一般鑰匙的流水 |
+| `KeyExchangeRules` | 20 | 後台可調整的來源／目標鑰匙兌換規則 |
 | `ArtifactUnlocks` | 0 | 尚未建立解鎖紀錄；功能啟用後由實際行為產生 |
 
 ### 2.3 Game
@@ -47,11 +50,15 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | 資料表 | 筆數 | 用途 |
 | --- | ---: | --- |
 | `ArtifactQuestionEntries` | 256 | 每件文物的題型、難度與啟用設定 |
-| `GameRooms` | 8 | `WAITING`、`PLAYING`、`COMPLETED`、`CANCELLED` 各 2 筆 |
-| `GamePlayers` | 16 | 7 位 `ONLINE`、1 位 `OFFLINE`、8 位 `LEFT`，可測試玩家與連線狀態清單 |
+| `GameRooms` | 9 | 3 筆 `WAITING`、2 筆 `PLAYING`、2 筆 `COMPLETED`、2 筆 `CANCELLED` |
+| `GamePlayers` | 19 | 10 位 `ONLINE`、1 位 `OFFLINE`、8 位 `LEFT`，可測試玩家與連線狀態清單 |
 | `GameRounds` | 20 | 1 個 `ANSWERING`、1 個 `VOTING`、18 個 `REVEALED` 回合 |
 | `RoundAnswers` | 36 | 不同回合與玩家的作答內容 |
 | `Votes` | 36 | 玩家對作答的投票紀錄 |
+| `GameRoomInvitations` | 3 | 私人房間邀請與接受、拒絕情境 |
+| `GameEconomySettings` | 1 | 多人主遊戲與 Mini Game 共用的經濟設定 |
+| `GameModeDefinitions` | 4 | `DETAIL_LOCATOR`、`ARTIFACT_PUZZLE`、`MEMORY_MATCH`、`STRIP_RESTORE` |
+| `MiniGameAttempts` | 0 | Mini Game 開始與結算後由實際操作產生 |
 
 ### 2.4 Social
 
@@ -62,7 +69,7 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | `ContentReports` | 3 | 2 筆 `PENDING` 與 1 筆 `RESOLVED` 檢舉 |
 | `OfficialAnnouncements` | 0 | 新公告使用 `SocialPosts` 的公告貼文類型；舊表僅保留結構相容性 |
 | `Events` | 7 | 涵蓋待審核、已通過、未通過、草稿、已發布與已取消情境 |
-| `EventRegistrations` | 5 | 不同活動的報名與出席情境 |
+| `EventRegistrations` | 7 | 4 筆 `REGISTERED`、3 筆 `ATTENDED` 報名與出席情境 |
 | `UserNotifications` | 0 | 尚未建立通知；功能啟用後由實際事件產生 |
 | `MediaAssets` | 0 起 | 社群上傳圖片的中繼資料；官方文物圖鑑圖片不列入此表 |
 
@@ -71,6 +78,8 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | 資料表 | 筆數 | 用途 |
 | --- | ---: | --- |
 | `AuditLogs` | 1 筆起，由後台操作累積 | 管理操作的時間、操作者、目標與結果；不保存密碼、Cookie、Token 或 request body |
+| `EconomyAdjustmentBatches` | 0 | 批次點數／優惠券活動；執行批次後保存篩選條件與結果 |
+| `CommunityRewardCampaigns` | 2 | 官方活動與會員私人房間的參與加碼規則 |
 
 ### 2.6 Store
 
@@ -79,13 +88,13 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | `Products` | 256 | 與文物一對一的縮小複製品商品 |
 | `ProductReviews` | 96 | 88 筆 `PUBLISHED`、5 筆 `HIDDEN`、3 筆 `DELETED`；公開摘要只計入已發布評價 |
 | `CartItems` | 0 | 尚未建立購物車內容；功能啟用後由會員操作產生 |
-| `CouponDefinitions` | 12 | 優惠券定義 |
-| `UserCoupons` | 9 | 會員可用、已使用與已過期優惠券情境 |
+| `CouponDefinitions` | 17 | 5 張常駐點數兌換券，以及 12 張管理員發放展示券 |
+| `UserCoupons` | 15 | 7 張可用、5 張已使用與 3 張已過期優惠券情境 |
 | `StoreOrders` | 208 | 涵蓋六種訂單狀態：30 筆取消、38 筆完成、35 筆備貨、39 筆已付款、31 筆待付款、35 筆已出貨 |
 | `OrderDetails` | 298 | 多商品訂單的成交品名、單價與數量快照 |
 | `Payments` | 208 | 31 筆 `PENDING`、147 筆 `PAID`、30 筆 `FAILED` |
 | `PointBalances` | 5 | 會員點數餘額 |
-| `PointTransactions` | 8 | 點數異動流水 |
+| `PointTransactions` | 20 | 點數異動流水 |
 
 ### 2.7 User 與 Identity
 
@@ -95,9 +104,10 @@ QMAH 只有一份共同資料庫設計。每位成員在本機還原自己的 `Q
 | `AspNetRoles` | 2 | `Admin`、`User` |
 | `AspNetUserRoles` | 24 | 帳號與角色對應 |
 | `UserProfiles` | 24 | 每個展示帳號都有自然的暱稱、簡介與公開範圍 |
-| `UserAddresses` | 3 | 不同收件用途的地址情境；不使用真實個資 |
-| `Achievements` | 12 | 展示成就 |
-| `UserAchievements` | 10 | 會員取得成就情境 |
+| `UserAddresses` | 27 | 不同收件用途的地址情境；不使用真實個資 |
+| `Achievements` | 20 個啟用中、7 個停用 | 圖鑑、多人遊戲、Mini Game、社群與活動成就 |
+| `UserAchievements` | 68 | 會員取得成就情境 |
+| `DailyMemberActivities` | 目前展示會員的每日登入歷史 | 每位會員每天最多一列；登入天數、連續天數與登入率由歷史資料即時計算 |
 | `AspNetRoleClaims` | 0 | 尚未建立角色 Claim |
 | `AspNetUserClaims` | 0 | 尚未建立會員 Claim |
 | `AspNetUserLogins` | 0 | 第三方登入尚未啟用 |
@@ -144,11 +154,14 @@ catalog.Artifacts.Id
 | Store | `StoreOrders.Status` | `PENDING_PAYMENT`（待付款）、`PAID`（已付款）、`FULFILLING`（備貨中）、`SHIPPED`（已出貨）、`COMPLETED`（已完成）、`CANCELLED`（已取消） |
 | Store | `Payments.Status` | `PENDING`（處理中）、`PAID`（付款成功）、`FAILED`（付款失敗）、`CANCELLED`（已取消） |
 | Store | `CouponDefinitions.DiscountType` | `PERCENT`（百分比折扣）、`FIXED`（固定金額折抵） |
-| Store | `UserCoupons.Status` | `AVAILABLE`（可使用）、`USED`（已使用）、`EXPIRED`（已過期） |
+| Store | `CouponDefinitions.AcquisitionType` | `POINT_EXCHANGE`（鑑定點數兌換）、`ADMIN_GRANT`（管理員發放） |
+| Store | `UserCoupons.Status` | `AVAILABLE`（可使用）、`USED`（已使用）、`EXPIRED`（已過期）、`REVOKED`（已撤銷） |
 | User | `AspNetUsers.Status` | `ACTIVE`（正常）、`DISABLED`（停用）、`BANNED`（停權） |
 | User | `Achievements.Status` | `ACTIVE`（啟用）、`INACTIVE`（停用） |
 
 訂單使用 `PENDING_PAYMENT`，因為訂單後續還會進入備貨、出貨等階段；付款紀錄位於 `Payments`，`PENDING` 已能表示該筆交易尚未取得結果。
+
+成就展示資料目前保留 20 個啟用中的定義，門檻使用圖鑑與實際遊戲資料計算；早期只描述「答對幾場」或重複點數獎勵的展示定義會標記為 `INACTIVE`，不刪除既有會員取得紀錄。常駐點數兌換券目前有 50／100／250／500／750 鑑定點數的兌換選項，折扣與最低消費以 `CouponDefinitions` 為準，預設有效天數為 365 天，仍可由後台調整。
 
 ## 5. 資料工具（只供維護完整快照或個人資料庫使用）
 
@@ -184,7 +197,7 @@ dotnet run --project .\tools\QmahDataTools\QmahDatabaseRelease\QmahDatabaseRelea
 PowerShell 或 SSMS 以 UTF-8 執行腳本時，建議使用：
 
 ```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d QMAH -E -f 65001 -b -r1 -i .\database\seed-admin-showcase-data.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d QMAH -E -b -r1 -i .\database\seed-admin-showcase-data.sql
 ```
 
 目前 Release 的 `.bak` 與 `database/QMAH.sql` 已包含 256 件文物、題庫、商品，以及本文件前段列出的社群、商城、遊戲與營運展示資料。展示資料工具與相容性腳本只用於維護者產生下一份完整快照或個人隔離資料庫，不是組員還原後的增量步驟，也不是文物匯入工具的替代品。

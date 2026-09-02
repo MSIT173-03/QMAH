@@ -366,6 +366,32 @@
         </a>
     </div>
 
+    <div class="card-body border-bottom">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <div class="text-secondary small">目前配戴稱號</div>
+                <strong>@(Model.EquippedTitle?.Title ?? "未配戴")</strong>
+                @if (Model.EquippedTitle is not null)
+                {
+                    <div class="text-secondary small">來自成就：@Model.EquippedTitle.AchievementName</div>
+                }
+            </div>
+            <form asp-action="SetEquippedTitle" method="post" class="d-flex flex-wrap align-items-center gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.User.Id" />
+                <label class="visually-hidden" for="equipped-title-select">選擇配戴稱號</label>
+                <select id="equipped-title-select" name="userAchievementId" class="form-select" aria-label="選擇配戴稱號">
+                    <option value="">不配戴稱號</option>
+                    @foreach (var achievement in Model.Achievements.Where(item => !string.IsNullOrWhiteSpace(item.Achievement.Title)))
+                    {
+                        <option value="@achievement.Id" selected="@(Model.EquippedTitle?.UserAchievementId == achievement.Id ? "selected" : null)">@achievement.Achievement.Title · @achievement.Achievement.Name</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-outline-primary"><i class="ti ti-id-badge me-1"></i>更新配戴</button>
+            </form>
+        </div>
+    </div>
+
     <div class="card-body p-0">
         @if (Model.Achievements.Count == 0)
         {

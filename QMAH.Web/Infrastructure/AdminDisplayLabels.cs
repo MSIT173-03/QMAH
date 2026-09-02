@@ -21,6 +21,7 @@ public static class AdminDisplayLabels
         "AVAILABLE" => "可使用",
         "USED" => "已使用",
         "EXPIRED" => "已過期",
+        "REVOKED" => "已撤銷",
         "BANNED" => "已停權",
         "DISABLED" => "已停用",
         "WAITING" => "等待中",
@@ -84,9 +85,20 @@ public static class AdminDisplayLabels
         "POST_COUNT" => "發布貼文數",
         "COMMENT_COUNT" => "留言數",
         "ARTIFACT_UNLOCK_COUNT" => "解鎖文物數",
+        "CATEGORY_COMPLETE_COUNT" => "完成分類數",
+        "ERA_COMPLETE_COUNT" => "完成年代範圍數",
+        "CATALOG_COMPLETION_PERCENT" => "圖鑑完成率",
         "GAME_WIN_COUNT" => "遊戲勝場數",
         "GAME_PLAY_COUNT" => "遊戲參與次數",
+        "GAME_COMPLETE_COUNT" => "多人遊戲完成場數",
+        "GAME_ROUND_WIN_COUNT" => "多人遊戲勝出回合數",
+        "MINIGAME_DETAIL_LOCATOR_COUNT" => "細節追蹤完成次數",
+        "MINIGAME_ARTIFACT_PUZZLE_COUNT" => "館藏拼圖完成次數",
+        "MINIGAME_MEMORY_MATCH_COUNT" => "館藏翻牌完成次數",
+        "MINIGAME_STRIP_RESTORE_COUNT" => "長卷復位完成次數",
+        "MINIGAME_GRADE_S_COUNT" => "Mini Game S 等級次數",
         "EVENT_JOIN_COUNT" => "參加活動數",
+        "EVENT_HOST_COUNT" => "建立活動數",
         "POINT_TOTAL" => "累積點數",
         _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他條件"
     };
@@ -179,6 +191,13 @@ public static class AdminDisplayLabels
         "FIXED" => "折抵金額",
         "PERCENT" => "折扣百分比",
         _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他折扣類型"
+    };
+
+    public static string CouponAcquisitionType(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "POINT_EXCHANGE" => "點數兌換",
+        "ADMIN_GRANT" => "管理員發放",
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他取得方式"
     };
 
     public static string Visibility(string? value) => value?.Trim().ToUpperInvariant() switch

@@ -261,7 +261,14 @@ public sealed class QmahOpenApiSecurityTransformer(
             {
                 ("Catalog.GetArtifact", "id") => "文物 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("Game.GetRoom", "id") or ("Game.GetRoomHistory", "id") or ("Game.JoinRoom", "id") => "遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
-                ("Game.GetRound", "id") or ("Game.SubmitAnswer", "id") or ("Game.SubmitVote", "id") => "遊戲回合 Id（資源識別碼），GUID（全域唯一識別碼）格式",
+                 ("Game.GetRound", "id") or ("Game.SubmitAnswer", "id") or ("Game.SubmitVote", "id") => "遊戲回合 Id（資源識別碼），GUID（全域唯一識別碼）格式",
+                 ("GameRoomInvitations.GetSentInvitations", "roomId") or ("GameRoomInvitations.CreateInvitation", "roomId") or
+                     ("GameRoomInvitations.GetRoomRewardPolicy", "roomId") or ("GameRoomInvitations.ConfigureRoomRewardPolicy", "roomId") => "私人遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
+                 ("GameRoomInvitations.RespondInvitation", "invitationId") or ("GameRoomInvitations.CancelInvitation", "invitationId") => "房間邀請 Id（資源識別碼），GUID（全域唯一識別碼）格式",
+                 ("CommunityReward.GetEventRewardPolicy", "eventId") or ("CommunityReward.ConfigureEventRewardPolicy", "eventId") => "活動 Id（資源識別碼），GUID（全域唯一識別碼）格式",
+                ("Economy.UnlockArtifact", "keyCode") or ("Economy.RecycleKey", "keyCode") => "鑰匙 code（系統代碼），例如 NORMAL、CATEGORY、ERA 或 UNIVERSAL",
+                ("MiniGame.CompleteAttempt", "id") => "Mini Game 嘗試 Id（資源識別碼），GUID（全域唯一識別碼）格式",
+                ("MiniGame.RewardMainGame", "id") => "多人遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("Social.GetPost", "id") => "社群貼文 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("Social.GetEvent", "id") or ("Social.RegisterEvent", "id") or ("Social.CancelEventRegistration", "id") => "活動 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("Social.CreateComment", "postId") => "要留言的社群貼文 Id（資源識別碼），GUID（全域唯一識別碼）格式",
@@ -316,7 +323,18 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Game.CreateRoom"] = "request body（請求本文，送出的 JSON 內容）：包含 `Visibility`（房間可見範圍）、玩家顯示名稱與回合規則",
             ["Game.JoinRoom"] = "request body（請求本文，送出的 JSON 內容）：包含 `DisplayName`（遊戲中顯示名稱）與選填 `Password`（私人房間密碼）",
             ["Game.SubmitAnswer"] = "request body（請求本文，送出的 JSON 內容）：包含 `AnswerType`（答案類型系統代碼）與 `Text`（玩家送出的答案文字）",
-            ["Game.SubmitVote"] = "request body（請求本文，送出的 JSON 內容）：包含 `AnswerId`（答案資源識別碼）與 `Count`（投票數量）",
+             ["Game.SubmitVote"] = "request body（請求本文，送出的 JSON 內容）：包含 `AnswerId`（答案資源識別碼）與 `Count`（投票數量）",
+             ["GameRoomInvitations.CreateInvitation"] = "request body（請求本文，送出的 JSON 內容）：包含 `InviteeUserId`（受邀會員資源識別碼）與選填 `Message`（邀請訊息）",
+             ["GameRoomInvitations.RespondInvitation"] = "request body（請求本文，送出的 JSON 內容）：包含 `Decision`（ACCEPT 或 DECLINE）與選填 `DisplayName`（加入房間時的顯示名稱）",
+             ["GameRoomInvitations.ConfigureRoomRewardPolicy"] = "request body（請求本文，送出的 JSON 內容）：包含每位參與者的點數／鑰匙加碼、會員總預算與有效期間；兩種加碼皆為 0 可停用規則",
+             ["CommunityReward.ConfigureEventRewardPolicy"] = "request body（請求本文，送出的 JSON 內容）：包含每位參與者的點數／鑰匙加碼與有效期間；官方活動不使用會員預算欄位",
+            ["Economy.UnlockArtifact"] = "request body（請求本文，送出的 JSON 內容）：UNIVERSAL 鑰匙可包含 `ArtifactId`（文物資源識別碼），其他鑰匙不應指定",
+            ["Economy.ExchangeKeys"] = "request body（請求本文，送出的 JSON 內容）：包含 `RuleId`（兌換規則資源識別碼）與 `Units`（規則倍數）",
+            ["Economy.RecycleKey"] = "request body（請求本文，送出的 JSON 內容）：包含 `Amount`（回收鑰匙數量）",
+            ["Economy.RedeemCoupon"] = "request body（請求本文，送出的 JSON 內容）：包含 `CouponDefinitionId`（優惠券定義資源識別碼）",
+            ["Economy.SetEquippedTitle"] = "request body（請求本文，送出的 JSON 內容）：包含選填 `UserAchievementId`（會員成就取得紀錄識別碼）；送 null 清除配戴稱號",
+            ["MiniGame.StartAttempt"] = "request body（請求本文，送出的 JSON 內容）：包含 `ModeCode`（Mini Game 模式系統代碼）",
+            ["MiniGame.CompleteAttempt"] = "request body（請求本文，送出的 JSON 內容）：包含 `RawScore`（原始分數）與選填 `RawResultJson`（原始結果 JSON）",
             ["Me.UpdateProfile"] = "request body（請求本文，送出的 JSON 內容）：包含 `Nickname`（會員顯示名稱）、`Bio`（會員自我介紹）與 `Visibility`（個人資料可見範圍）",
             ["Me.AddCartItem"] = "request body（請求本文，送出的 JSON 內容）：包含 `ProductId`（商品資源識別碼）與 `Quantity`（購買數量）",
             ["Me.UpdateCartItem"] = "request body（請求本文，送出的 JSON 內容）：包含 `Quantity`（購物車商品數量）",
@@ -379,7 +397,18 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Game.SubmitAnswer"] = "已建立目前回合的作答資料",
             ["Game.SubmitVote"] = "已接受目前回合的投票處理",
             ["Game.GetRound"] = "回傳遊戲回合題目、作答、投票與結算資料",
+            ["GameRoomInvitations.GetReceivedInvitations"] = "回傳目前會員收到的私人房間邀請",
+            ["GameRoomInvitations.GetSentInvitations"] = "回傳指定私人房間送出的邀請紀錄",
+            ["GameRoomInvitations.CreateInvitation"] = "已建立私人房間邀請",
+            ["GameRoomInvitations.RespondInvitation"] = "已更新邀請回應與房間加入結果",
+            ["GameRoomInvitations.CancelInvitation"] = "已取消待處理房間邀請",
+            ["GameRoomInvitations.GetRoomRewardPolicy"] = "回傳私人房間加碼規則與剩餘額度",
+            ["GameRoomInvitations.ConfigureRoomRewardPolicy"] = "回傳更新後的私人房間加碼規則",
+            ["CommunityReward.GetEventRewardPolicy"] = "回傳活動加碼規則與有效期間",
+            ["CommunityReward.ConfigureEventRewardPolicy"] = "回傳更新後的活動加碼規則",
             ["Me.GetMe"] = "回傳目前會員的帳號、Profile（會員資料）與角色資訊",
+            ["Me.GetDailyActivity"] = "回傳目前會員的每日登入與連續登入摘要",
+            ["Me.RecordDailyLogin"] = "由會員前台明確記錄一次每日登入活動",
             ["Me.UpdateProfile"] = "回傳更新後的會員 Profile（會員資料）",
             ["Me.GetOrders"] = "回傳目前會員的訂單分頁清單",
             ["Me.GetOrder"] = "回傳目前會員指定訂單的完整明細",
@@ -398,7 +427,20 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Me.GetNotifications"] = "回傳目前會員的通知分頁清單",
             ["Me.MarkNotificationRead"] = "已標記通知為已讀，不回傳 response body（回應本文）",
             ["StoreOrders.CreateOrder"] = "已建立商城訂單，並回傳訂單資料",
-            ["StoreOrders.CancelOrder"] = "已取消商城訂單，不回傳 response body（回應本文）"
+            ["StoreOrders.CancelOrder"] = "已取消商城訂單，不回傳 response body（回應本文）",
+            ["Economy.GetEconomy"] = "回傳會員鑑定點數、鑰匙進度、鑰匙餘額與動態可解鎖數量",
+            ["Economy.GetKeyExchangeRules"] = "回傳目前可執行的鑰匙兌換規則",
+            ["Economy.UnlockArtifact"] = "回傳鑰匙使用結果、解鎖文物與剩餘可解鎖數量",
+            ["Economy.ExchangeKeys"] = "回傳來源與目標鑰匙的兌換結果",
+            ["Economy.RecycleKey"] = "回傳回收鑰匙數量、取得點數與剩餘可解鎖數量",
+            ["Economy.GetCouponExchangeOptions"] = "回傳可由鑑定點數兌換的優惠券選項",
+            ["Economy.RedeemCoupon"] = "回傳新建立的會員優惠券與有效期限",
+            ["Economy.GetEquippedTitle"] = "回傳目前會員配戴的成就稱號，尚未配戴時為 null",
+            ["Economy.SetEquippedTitle"] = "回傳更新後的配戴稱號，清除時為 null",
+            ["MiniGame.GetModes"] = "回傳啟用的 Mini Game 模式與評級設定",
+            ["MiniGame.StartAttempt"] = "已建立 Mini Game 嘗試，並回傳伺服器選定的素材與設定",
+            ["MiniGame.CompleteAttempt"] = "回傳伺服器計算的分數、等級、點數與鑰匙進度獎勵",
+            ["MiniGame.RewardMainGame"] = "回傳多人主遊戲的點數、一般鑰匙與表現結算"
         };
 
     private static string GetSuccessResponseDescription(string operationKey, string statusCode) =>
@@ -426,6 +468,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["SocialMedia.Upload"] = "201", ["SocialMedia.Delete"] = "204",
             ["StoreOrders.CreateOrder"] = "201", ["StoreOrders.CancelOrder"] = "204",
             ["StoreReviews.DeleteMyReview"] = "204"
+            , ["MiniGame.StartAttempt"] = "201"
         };
 
     private static readonly IReadOnlySet<string> ConflictOperations =
@@ -436,6 +479,12 @@ public sealed class QmahOpenApiSecurityTransformer(
             "Social.CreateComment", "Social.CreateReport", "Me.AddCartItem", "Me.UpdateCartItem",
             "Me.CreateAddress", "Me.UpdateAddress", "Me.SetDefaultAddress", "StoreOrders.CreateOrder",
             "StoreOrders.CancelOrder", "StoreReviews.UpsertMyReview"
+            , "Economy.UnlockArtifact", "Economy.ExchangeKeys", "Economy.RecycleKey",
+            "Economy.RedeemCoupon", "Economy.SetEquippedTitle", "MiniGame.StartAttempt",
+            "MiniGame.CompleteAttempt", "MiniGame.RewardMainGame"
+            , "GameRoomInvitations.CreateInvitation", "GameRoomInvitations.RespondInvitation",
+            "GameRoomInvitations.CancelInvitation", "GameRoomInvitations.ConfigureRoomRewardPolicy",
+            "CommunityReward.ConfigureEventRewardPolicy"
         };
 
     private static void ConfigureMediaUpload(OpenApiOperation operation, OpenApiDocument document)

@@ -434,65 +434,6 @@
         });
     });
 
-    // 地點仍可手動輸入，只有點擊地圖連結時才開啟 OpenStreetMap
-    function readMapField(link, selectorName, fallbackValue) {
-        const selector = link.dataset[selectorName];
-        if (!selector) return fallbackValue || "";
-
-        try {
-            // 表單選擇器可以列出多個欄位，地址會依序合併
-            const values = [...document.querySelectorAll(selector)]
-                .map((field) => field.value?.trim())
-                .filter(Boolean);
-            return values.join(" ") || fallbackValue || "";
-        } catch {
-            return fallbackValue || "";
-        }
-    }
-
-    function updateMapLink(link) {
-        const location = readMapField(link, "qmahMapLocationInput", link.dataset.qmahMapLocation);
-        const latitudeText = readMapField(link, "qmahMapLatitudeInput", link.dataset.qmahMapLatitude);
-        const longitudeText = readMapField(link, "qmahMapLongitudeInput", link.dataset.qmahMapLongitude);
-        const latitude = Number(latitudeText);
-        const longitude = Number(longitudeText);
-        // 空白座標不能轉成 0，避免尚未選址時誤開啟赤道地圖
-        const hasCoordinates = latitudeText.length > 0
-            && longitudeText.length > 0
-            && Number.isFinite(latitude)
-            && Number.isFinite(longitude)
-            && latitude >= -90
-            && latitude <= 90
-            && longitude >= -180
-            && longitude <= 180;
-
-        if (!location && !hasCoordinates) {
-            link.hidden = true;
-            link.removeAttribute("href");
-            return;
-        }
-
-        const encodedLocation = encodeURIComponent(location);
-        link.href = hasCoordinates
-            ? `https://www.openstreetmap.org/?mlat=${latitude.toFixed(6)}&mlon=${longitude.toFixed(6)}#map=17/${latitude.toFixed(6)}/${longitude.toFixed(6)}`
-            : `https://www.openstreetmap.org/search?query=${encodedLocation}`;
-        link.hidden = false;
-    }
-
-    const mapLinks = [...document.querySelectorAll("[data-qmah-map-link]")];
-    mapLinks.forEach(updateMapLink);
-
-    document.addEventListener("input", (event) => {
-        const form = event.target.closest("form");
-        if (!form) return;
-        form.querySelectorAll("[data-qmah-map-link]").forEach(updateMapLink);
-    });
-
-    document.addEventListener("change", (event) => {
-        const form = event.target.closest("form");
-        if (!form) return;
-        form.querySelectorAll("[data-qmah-map-link]").forEach(updateMapLink);
-    });
 })();
 
 (() => {

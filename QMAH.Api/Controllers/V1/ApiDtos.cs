@@ -494,13 +494,17 @@ public sealed record CouponDto(
     Guid Id,
     string Code,
     string Name,
+    string AcquisitionType,
+    int? PointCost,
     string DiscountType,
     decimal DiscountValue,
     decimal MinimumAmount,
     DateTime StartAt,
     DateTime EndAt,
     string Status,
-    DateTime IssuedAt);
+    DateTime IssuedAt,
+    DateTime ExpiresAt,
+    DateTime? UsedAt);
 
 public sealed class CreateOrderItemRequest
 {
@@ -591,6 +595,7 @@ public sealed class UpdateProfileRequest
     public string Visibility { get; set; } = "PRIVATE";
 }
 
+/// <summary>會員已取得的一筆成就與成就稱號資料。</summary>
 public sealed record UserAchievementDto(
     Guid Id,
     Guid AchievementId,

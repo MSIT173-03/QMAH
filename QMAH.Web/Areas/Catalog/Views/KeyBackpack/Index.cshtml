@@ -18,20 +18,20 @@
 
 @section PageActions {
     <div class="qmah-actions d-flex flex-wrap gap-2">
-        @if (selectedUserId.HasValue)
-        {
-            <a asp-action="Create" asp-route-userId="@selectedUserId" class="btn btn-primary">
-                <i class="ti ti-plus me-1"></i>新增背包紀錄
-            </a>
-        }
         <a asp-area="Catalog" asp-controller="Key" asp-action="Index" class="btn btn-outline-secondary">
             <i class="ti ti-key me-1"></i>鑰匙規則
         </a>
         <a asp-area="Catalog" asp-controller="KeyBackpack" asp-action="Index" class="btn btn-secondary">
             <i class="ti ti-backpack me-1"></i>鑰匙背包
         </a>
+        <a asp-area="Catalog" asp-controller="KeyExchange" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="ti ti-arrows-exchange me-1"></i>鑰匙兌換
+        </a>
         <a asp-area="Catalog" asp-controller="KeyTransactions" asp-action="Index" class="btn btn-outline-secondary">
             <i class="ti ti-receipt me-1"></i>鑰匙流水
+        </a>
+        <a asp-area="" asp-controller="Operations" asp-action="EconomyBatches" class="btn btn-outline-secondary">
+            <i class="ti ti-users-group me-1"></i>批次資產活動
         </a>
     </div>
 }
@@ -179,7 +179,7 @@ else
                     目前沒有背包紀錄
                 </p>
                 <p class="empty-subtitle text-secondary">
-                    可新增鑰匙背包紀錄。
+                    目前沒有鑰匙餘額；請從會員詳情或既有鑰匙列進入有原因的異動操作。
                 </p>
             </div>
         }
@@ -223,32 +223,12 @@ else
 
                                 <td class="text-center pe-3 pe-md-4">
                                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                                        <a asp-action="Edit"
+                                        <a asp-action="Adjust"
                                            asp-route-userId="@item.UserKeyBalance.UserId"
-                                           asp-route-keydefinitionId="@item.UserKeyBalance.KeyDefinitionId"
+                                           asp-route-keyDefinitionId="@item.UserKeyBalance.KeyDefinitionId"
                                            class="btn btn-sm btn-outline-secondary px-3">
-                                            <i class="ti ti-edit me-1"></i>編輯
+                                            <i class="ti ti-adjustments me-1"></i>調整
                                         </a>
-
-                                        <form asp-action="Delete"
-                                              method="post"
-                                              class="d-inline">
-                                            @Html.AntiForgeryToken()
-
-                                            <input type="hidden"
-                                                   name="userId"
-                                                   value="@item.UserKeyBalance.UserId" />
-
-                                            <input type="hidden"
-                                                   name="keydefinitionId"
-                                                   value="@item.UserKeyBalance.KeyDefinitionId" />
-
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-outline-danger px-3"
-                                                    onclick="return confirm('確定要刪除此筆背包紀錄嗎？')">
-                                                <i class="ti ti-trash me-1"></i>刪除
-                                            </button>
-                                        </form>
                                     </div>
                                 </td>
                             </tr>

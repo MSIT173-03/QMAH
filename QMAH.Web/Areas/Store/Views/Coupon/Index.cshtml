@@ -81,6 +81,7 @@
                 <tr>
                     <th>代碼</th>
                     <th>名稱</th>
+                    <th>取得方式</th>
                     <th>折扣</th>
                     <th>最低消費</th>
                     <th>有效期間</th>
@@ -92,7 +93,7 @@
                 @if (records.Count == 0)
                 {
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="empty qmah-empty-state">
                                 <div class="empty-icon"><i class="ti ti-ticket-off"></i></div>
                                 <p class="empty-title">目前沒有優惠券規則</p>
@@ -108,6 +109,11 @@
                         <tr>
                             <td><code>@item.Code</code></td>
                             <td class="fw-semibold">@item.Name</td>
+                            <td>
+                                <span class="badge @(item.AcquisitionType == "POINT_EXCHANGE" ? "bg-blue-lt" : "bg-secondary-lt")">
+                                    @(item.AcquisitionType == "POINT_EXCHANGE" ? $"點數兌換（{item.PointCost:N0} 點）" : "管理員發放")
+                                </span>
+                            </td>
                             <td>@AdminDisplayLabels.DiscountType(item.DiscountType) · @item.DiscountValue.ToString("0.##")</td>
                             <td>@item.MinimumAmount.ToString("C0")</td>
                             <td class="text-secondary text-nowrap">

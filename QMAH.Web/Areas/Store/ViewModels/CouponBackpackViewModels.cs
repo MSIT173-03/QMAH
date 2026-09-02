@@ -18,5 +18,9 @@ public sealed class CouponBackpackItemViewModel
     public string CouponCode { get; init; } = string.Empty;
     public string Status { get; init; } = string.Empty;
     public DateTime IssuedAt { get; init; }
+    public DateTime ExpiresAt { get; init; }
     public DateTime? UsedAt { get; init; }
+    public DateTime? RevokedAt { get; init; }
+    public string? IssueReason { get; init; }
+    public string? RevokeReason { get; init; }
 }

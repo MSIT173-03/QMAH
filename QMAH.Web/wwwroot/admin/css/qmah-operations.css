@@ -619,3 +619,153 @@
     animation: none;
   }
 }
+
+/* 批次資產活動沿用營運中心的線條、色彩與卡片密度；這些規則只處理新頁面的資訊階層。 */
+.qmah-admin .qmah-operations-batch-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .3rem .55rem;
+  border-radius: 999px;
+  background: var(--qmah-area-soft);
+  color: var(--qmah-area-accent);
+  font-size: .74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.qmah-admin .qmah-operations-batch-note {
+  display: flex;
+  align-items: flex-start;
+  gap: .55rem;
+  margin-bottom: 1.1rem;
+  border-color: color-mix(in srgb, var(--qmah-area-accent) 24%, var(--qmah-line));
+  background: color-mix(in srgb, var(--qmah-area-soft) 58%, var(--qmah-surface));
+  color: var(--qmah-ink-soft);
+  line-height: 1.55;
+}
+
+.qmah-admin .qmah-operations-batch-note i {
+  flex: 0 0 auto;
+  margin-top: .1rem;
+  color: var(--qmah-area-accent);
+}
+
+.qmah-admin .qmah-batch-confirm {
+  margin: 0 0 1rem;
+  padding: .8rem .9rem;
+  border: 1px solid color-mix(in srgb, var(--qmah-area-accent) 30%, var(--qmah-line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--qmah-area-soft) 42%, var(--qmah-surface));
+}
+
+.qmah-admin .qmah-batch-preview-panel {
+  overflow: hidden;
+}
+
+.qmah-admin .qmah-batch-preview-count {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+  padding-bottom: .8rem;
+  border-bottom: 1px solid var(--qmah-line-soft);
+  color: var(--qmah-ink-soft);
+}
+
+.qmah-admin .qmah-batch-preview-count strong {
+  color: var(--qmah-area-accent);
+  font-size: 2rem;
+  font-weight: 760;
+  letter-spacing: -.035em;
+}
+
+.qmah-admin .qmah-batch-preview-empty {
+  display: grid;
+  min-height: 14rem;
+  place-items: center;
+  align-content: center;
+  gap: .6rem;
+  padding: 1.5rem;
+  color: var(--qmah-ink-soft);
+  text-align: center;
+}
+
+.qmah-admin .qmah-batch-preview-empty i {
+  color: var(--qmah-area-accent);
+  font-size: 2rem;
+}
+
+.qmah-admin .qmah-batch-preview-empty p {
+  max-width: 25ch;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.qmah-admin .qmah-batch-preview-table {
+  margin-bottom: 0;
+}
+
+.qmah-admin .qmah-batch-preview-table td,
+.qmah-admin .qmah-batch-preview-table th {
+  padding-inline: .25rem;
+}
+
+.qmah-admin .qmah-batch-history-table .qmah-batch-reason {
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.qmah-admin .qmah-batch-history-error td {
+  color: var(--qmah-danger, #b42318);
+  font-size: .78rem;
+}
+
+/* 活動統計以一個連續區塊呈現，讓批次事件與日常會員指標在視覺上保持不同責任。 */
+.qmah-admin .qmah-operations-batch-highlight {
+  border-color: color-mix(in srgb, var(--qmah-area-accent) 30%, var(--qmah-line));
+}
+
+.qmah-admin .qmah-operations-batch-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.qmah-admin .qmah-operations-batch-metrics > div {
+  display: grid;
+  min-width: 0;
+  gap: .22rem;
+  padding: .75rem .8rem;
+  border-left: 2px solid color-mix(in srgb, var(--qmah-area-accent) 50%, var(--qmah-line));
+  background: color-mix(in srgb, var(--qmah-area-soft) 38%, var(--qmah-surface));
+}
+
+.qmah-admin .qmah-operations-batch-metrics span,
+.qmah-admin .qmah-operations-batch-metrics small {
+  color: var(--qmah-ink-soft);
+  font-size: .74rem;
+}
+
+.qmah-admin .qmah-operations-batch-metrics strong {
+  overflow-wrap: anywhere;
+  color: var(--qmah-ink);
+  font-size: 1.15rem;
+  font-weight: 760;
+  letter-spacing: -.02em;
+}
+
+@media (max-width: 575.98px) {
+  .qmah-admin .qmah-operations-batch-mark {
+    align-self: flex-start;
+  }
+
+  .qmah-admin .qmah-batch-history-table .qmah-batch-reason {
+    min-width: 12rem;
+  }
+
+  .qmah-admin .qmah-operations-batch-metrics {
+    grid-template-columns: 1fr;
+  }
+}

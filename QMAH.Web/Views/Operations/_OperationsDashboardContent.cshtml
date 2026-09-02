@@ -12,6 +12,11 @@
         </a>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
+        <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="login" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看會員登入明細">
+            <div class="card-body"><div class="text-secondary">會員登入率</div><div class="h1 mb-1">@Model.LoginRatePercent.ToString("0.0")%</div><div class="small text-secondary">@Model.LoginMemberCount 位／期末 @Model.MemberCountAtEnd 位</div></div>
+        </a>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-2">
         <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="revenue" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看營收明細">
             <div class="card-body"><div class="text-secondary">已付款營收</div><div class="h1 mb-1">@Model.PaidRevenue.ToString("C0")</div><div class="small text-secondary">@Model.PaidOrderCount 筆已付款訂單</div></div>
         </a>
@@ -30,6 +35,32 @@
         <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="events" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看活動參與明細">
             <div class="card-body"><div class="text-secondary">活動報名</div><div class="h1 mb-1">@Model.EventRegistrationCount</div><div class="small text-secondary">@Model.EventCount 場活動建立紀錄</div></div>
         </a>
+    </div>
+</div>
+
+<div class="card qmah-list-card qmah-operations-batch-highlight mb-3">
+    <div class="card-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div>
+            <h2 class="card-title mb-1">活動／特殊原因資產異動</h2>
+            <div class="card-subtitle">只統計有批次主檔的作業；日常遊戲獎勵與逐人操作仍可在完整帳本明細中分開追查。</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="Details" asp-route-metric="asset-events" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" class="btn btn-sm btn-outline-primary">
+                <i class="ti ti-chart-line me-1"></i>查看逐日統計
+            </a>
+            <a asp-action="EconomyBatches" class="btn btn-sm btn-primary">
+                <i class="ti ti-users-group me-1"></i>批次資產活動
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="qmah-operations-batch-metrics" aria-label="批次資產活動摘要">
+            <div><span>批次事件</span><strong>@Model.EconomyBatchCount.ToString("N0")</strong><small>含未完成作業</small></div>
+            <div><span>符合條件會員</span><strong>@Model.EconomyBatchTargetCount.ToString("N0")</strong><small>依每次篩選計算</small></div>
+            <div><span>點數增加／扣除</span><strong>@Model.EconomyBatchPointIncrease.ToString("N0")／@Model.EconomyBatchPointDecrease.ToString("N0")</strong><small>實際完成的鑑定點數</small></div>
+            <div><span>優惠券發放／撤銷</span><strong>@Model.EconomyBatchCouponGrantCount.ToString("N0")／@Model.EconomyBatchCouponRevokeCount.ToString("N0")</strong><small>實際完成的券數</small></div>
+            <div><span>未成功會員</span><strong>@Model.EconomyBatchFailureCount.ToString("N0")</strong><small>全有或全無批次不會部分提交</small></div>
+        </div>
     </div>
 </div>
 
@@ -77,7 +108,7 @@
     <div class="table-responsive">
         <table class="table table-vcenter table-hover card-table">
             <thead>
-                <tr><th>月份</th><th>新增會員</th><th>已付款訂單</th><th class="text-end">營收</th><th>遊戲加入</th><th>不重複會員</th><th>貼文／留言</th><th>活動／報名</th><th>社群圖片</th></tr>
+                <tr><th>月份</th><th>新增會員</th><th>登入會員</th><th>已付款訂單</th><th class="text-end">營收</th><th>遊戲加入</th><th>不重複會員</th><th>貼文／留言</th><th>活動／報名</th><th>社群圖片</th></tr>
             </thead>
             <tbody>
             @foreach (var item in Model.MonthlyTrend.AsEnumerable().Reverse())
@@ -85,6 +116,7 @@
                 <tr>
                     <td class="text-nowrap">@item.Month.ToString("yyyy 年 MM 月")</td>
                     <td>@item.NewMemberCount</td>
+                    <td>@item.LoginMemberCount</td>
                     <td>@item.PaidOrderCount</td>
                     <td class="text-end">@item.Revenue.ToString("C0")</td>
                     <td>@item.GameJoinCount</td>
@@ -188,11 +220,33 @@
 <summary class="card-header qmah-collapsible-summary"><div><h2 class="card-title mb-1">逐日功能活動</h2><div class="card-subtitle">遊戲加入數是加入紀錄，不等同即時在線人數；其餘欄位同樣依建立或發生時間統計。</div></div></summary>
     <div class="table-responsive">
         <table class="table table-vcenter card-table">
-            <thead><tr><th>日期</th><th>遊戲加入</th><th>房間</th><th>回合</th><th>作答</th><th>貼文</th><th>留言</th><th>活動</th><th>報名</th><th>圖片</th></tr></thead>
+            <thead><tr><th>日期</th><th>登入會員</th><th>遊戲加入</th><th>房間</th><th>回合</th><th>作答</th><th>貼文</th><th>留言</th><th>活動</th><th>報名</th><th>圖片</th></tr></thead>
             <tbody>
             @foreach (var item in Model.ActivityTrend.AsEnumerable().Reverse())
             {
-                <tr><td>@item.Date.ToString("yyyy/MM/dd")</td><td>@item.PlayerJoinCount</td><td>@item.RoomCount</td><td>@item.RoundCount</td><td>@item.AnswerCount</td><td>@item.PostCount</td><td>@item.CommentCount</td><td>@item.EventCount</td><td>@item.EventRegistrationCount</td><td>@item.MediaAssetCount</td></tr>
+                <tr><td>@item.Date.ToString("yyyy/MM/dd")</td><td>@item.LoginMemberCount</td><td>@item.PlayerJoinCount</td><td>@item.RoomCount</td><td>@item.RoundCount</td><td>@item.AnswerCount</td><td>@item.PostCount</td><td>@item.CommentCount</td><td>@item.EventCount</td><td>@item.EventRegistrationCount</td><td>@item.MediaAssetCount</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</details>
+
+<details class="card qmah-list-card mb-3">
+<summary class="card-header qmah-collapsible-summary"><div><h2 class="card-title mb-1">逐日活動資產異動</h2><div class="card-subtitle">以批次主檔統計活動或特殊原因作業；會員日常個人交易不會混入這個區塊。</div></div></summary>
+    <div class="table-responsive">
+        <table class="table table-vcenter table-hover card-table">
+            <thead><tr><th>日期</th><th>批次</th><th>符合會員</th><th>成功／失敗會員</th><th>點數增加／扣除</th><th>優惠券發放／撤銷</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.EconomyBatchTrend.AsEnumerable().Reverse())
+            {
+                <tr>
+                    <td class="text-nowrap">@item.Date.ToString("yyyy/MM/dd")</td>
+                    <td>@item.BatchCount.ToString("N0")</td>
+                    <td>@item.TargetCount.ToString("N0")</td>
+                    <td>@item.SuccessCount.ToString("N0")／@item.FailureCount.ToString("N0")</td>
+                    <td>@item.PointIncrease.ToString("N0")／@item.PointDecrease.ToString("N0")</td>
+                    <td>@item.CouponGrantCount.ToString("N0")／@item.CouponRevokeCount.ToString("N0")</td>
+                </tr>
             }
             </tbody>
         </table>

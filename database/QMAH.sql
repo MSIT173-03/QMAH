@@ -16,6 +16,8 @@ CREATE SCHEMA [admin] AUTHORIZATION [dbo];
 GO
 CREATE SCHEMA [catalog] AUTHORIZATION [dbo];
 GO
+CREATE SCHEMA [common] AUTHORIZATION [dbo];
+GO
 CREATE SCHEMA [game] AUTHORIZATION [dbo];
 GO
 CREATE SCHEMA [social] AUTHORIZATION [dbo];
@@ -60,6 +62,116 @@ GO
 ALTER TABLE [admin].[AuditLogs]  WITH CHECK ADD  CONSTRAINT [CK_AuditLogs_ResultStatusCode] CHECK  (([ResultStatusCode]>=(100) AND [ResultStatusCode]<=(599)))
 GO
 ALTER TABLE [admin].[AuditLogs] CHECK CONSTRAINT [CK_AuditLogs_ResultStatusCode]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [admin].[CommunityRewardCampaigns](
+	[Id] [uniqueidentifier] NOT NULL,
+	[TargetType] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[EventId] [uniqueidentifier] NULL,
+	[GameRoomId] [uniqueidentifier] NULL,
+	[OwnerUserId] [uniqueidentifier] NOT NULL,
+	[SponsorType] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[BudgetMode] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[PointPerRecipient] [int] NOT NULL,
+	[KeyDefinitionId] [uniqueidentifier] NULL,
+	[KeyPerRecipient] [int] NOT NULL,
+	[PointBudget] [int] NOT NULL,
+	[PointIssued] [int] NOT NULL,
+	[KeyBudget] [int] NOT NULL,
+	[KeyIssued] [int] NOT NULL,
+	[ValidFrom] [datetime2](3) NOT NULL,
+	[ValidUntil] [datetime2](3) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedAt] [datetime2](3) NOT NULL,
+	[UpdatedAt] [datetime2](3) NOT NULL,
+	[RowVersion] [timestamp] NOT NULL,
+ CONSTRAINT [PK_CommunityRewardCampaigns] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_PointPerRecipient]  DEFAULT ((0)) FOR [PointPerRecipient]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_KeyPerRecipient]  DEFAULT ((0)) FOR [KeyPerRecipient]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_PointBudget]  DEFAULT ((0)) FOR [PointBudget]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_PointIssued]  DEFAULT ((0)) FOR [PointIssued]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_KeyBudget]  DEFAULT ((0)) FOR [KeyBudget]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_KeyIssued]  DEFAULT ((0)) FOR [KeyIssued]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_Active]  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_Created]  DEFAULT (sysutcdatetime()) FOR [CreatedAt]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] ADD  CONSTRAINT [DF_CommunityRewardCampaigns_Updated]  DEFAULT (sysutcdatetime()) FOR [UpdatedAt]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns]  WITH CHECK ADD  CONSTRAINT [CK_CommunityRewardCampaigns_Amounts] CHECK  (([PointPerRecipient]>=(0) AND [KeyPerRecipient]>=(0) AND [PointBudget]>=(0) AND [PointIssued]>=(0) AND [KeyBudget]>=(0) AND [KeyIssued]>=(0) AND ([BudgetMode]=N'UNLIMITED' OR [PointIssued]<=[PointBudget] AND [KeyIssued]<=[KeyBudget]) AND ([KeyPerRecipient]=(0) AND [KeyDefinitionId] IS NULL OR [KeyPerRecipient]>(0) AND [KeyDefinitionId] IS NOT NULL)))
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] CHECK CONSTRAINT [CK_CommunityRewardCampaigns_Amounts]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns]  WITH CHECK ADD  CONSTRAINT [CK_CommunityRewardCampaigns_Sponsor] CHECK  (([SponsorType]=N'MEMBER' AND [BudgetMode]=N'LIMITED' OR [SponsorType]=N'OFFICIAL' AND [BudgetMode]=N'UNLIMITED'))
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] CHECK CONSTRAINT [CK_CommunityRewardCampaigns_Sponsor]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns]  WITH CHECK ADD  CONSTRAINT [CK_CommunityRewardCampaigns_Target] CHECK  (([TargetType]=N'EVENT' AND [EventId] IS NOT NULL AND [GameRoomId] IS NULL OR [TargetType]=N'GAME_ROOM' AND [EventId] IS NULL AND [GameRoomId] IS NOT NULL))
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] CHECK CONSTRAINT [CK_CommunityRewardCampaigns_Target]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns]  WITH CHECK ADD  CONSTRAINT [CK_CommunityRewardCampaigns_Time] CHECK  (([ValidUntil]>[ValidFrom] AND [UpdatedAt]>=[CreatedAt]))
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] CHECK CONSTRAINT [CK_CommunityRewardCampaigns_Time]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [admin].[EconomyAdjustmentBatches](
+	[Id] [uniqueidentifier] NOT NULL,
+	[AssetType] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[Operation] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[UnitAmount] [int] NOT NULL,
+	[CouponDefinitionId] [uniqueidentifier] NULL,
+	[FilterJson] [nvarchar](max) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[Reason] [nvarchar](200) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[CreatedByAdminUserId] [uniqueidentifier] NOT NULL,
+	[Status] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[TargetCount] [int] NOT NULL,
+	[SucceededCount] [int] NOT NULL,
+	[FailedCount] [int] NOT NULL,
+	[AffectedAssetCount] [bigint] NOT NULL,
+	[FailureReason] [nvarchar](500) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[CreatedAt] [datetime2](3) NOT NULL,
+	[CompletedAt] [datetime2](3) NULL,
+ CONSTRAINT [PK_EconomyAdjustmentBatches] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches] ADD  CONSTRAINT [DF_EconomyAdjustmentBatches_Created]  DEFAULT (sysutcdatetime()) FOR [CreatedAt]
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches]  WITH CHECK ADD  CONSTRAINT [CK_EconomyAdjustmentBatches_Amounts] CHECK  (([UnitAmount]>(0) AND [TargetCount]>=(0) AND [SucceededCount]>=(0) AND [FailedCount]>=(0) AND [AffectedAssetCount]>=(0)))
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches] CHECK CONSTRAINT [CK_EconomyAdjustmentBatches_Amounts]
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches]  WITH CHECK ADD  CONSTRAINT [CK_EconomyAdjustmentBatches_AssetType] CHECK  (([AssetType]=N'COUPON' OR [AssetType]=N'POINT'))
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches] CHECK CONSTRAINT [CK_EconomyAdjustmentBatches_AssetType]
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches]  WITH CHECK ADD  CONSTRAINT [CK_EconomyAdjustmentBatches_Operation] CHECK  (([Operation]=N'DEDUCT' OR [Operation]=N'ADD'))
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches] CHECK CONSTRAINT [CK_EconomyAdjustmentBatches_Operation]
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches]  WITH CHECK ADD  CONSTRAINT [CK_EconomyAdjustmentBatches_Status] CHECK  (([Status]=N'EMPTY' OR [Status]=N'FAILED' OR [Status]=N'COMPLETED' OR [Status]=N'PROCESSING'))
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches] CHECK CONSTRAINT [CK_EconomyAdjustmentBatches_Status]
 GO
 SET ANSI_NULLS ON
 GO
@@ -159,6 +271,7 @@ CREATE TABLE [catalog].[KeyDefinitions](
 	[CategoryId] [uniqueidentifier] NULL,
 	[EraBucketId] [uniqueidentifier] NULL,
 	[IsActive] [bit] NOT NULL,
+	[RecyclePointValue] [int] NOT NULL,
  CONSTRAINT [PK_KeyDefinitions] PRIMARY KEY CLUSTERED
 (
 	[Id] ASC
@@ -167,9 +280,91 @@ CREATE TABLE [catalog].[KeyDefinitions](
 GO
 ALTER TABLE [catalog].[KeyDefinitions] ADD  CONSTRAINT [DF_KeyDefinitions_Active]  DEFAULT (CONVERT([bit],(1))) FOR [IsActive]
 GO
+ALTER TABLE [catalog].[KeyDefinitions] ADD  CONSTRAINT [DF_KeyDefinitions_RecyclePointValue]  DEFAULT ((0)) FOR [RecyclePointValue]
+GO
+ALTER TABLE [catalog].[KeyDefinitions]  WITH CHECK ADD  CONSTRAINT [CK_KeyDefinitions_RecyclePointValue] CHECK  (([RecyclePointValue]>=(0)))
+GO
+ALTER TABLE [catalog].[KeyDefinitions] CHECK CONSTRAINT [CK_KeyDefinitions_RecyclePointValue]
+GO
 ALTER TABLE [catalog].[KeyDefinitions]  WITH CHECK ADD  CONSTRAINT [CK_KeyDefinitions_Scope] CHECK  (([ScopeType]=N'NORMAL' AND [CategoryId] IS NULL AND [EraBucketId] IS NULL OR [ScopeType]=N'CATEGORY' AND [CategoryId] IS NOT NULL AND [EraBucketId] IS NULL OR [ScopeType]=N'ERA' AND [CategoryId] IS NULL AND [EraBucketId] IS NOT NULL OR [ScopeType]=N'UNIVERSAL' AND [CategoryId] IS NULL AND [EraBucketId] IS NULL))
 GO
 ALTER TABLE [catalog].[KeyDefinitions] CHECK CONSTRAINT [CK_KeyDefinitions_Scope]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [catalog].[KeyExchangeRules](
+	[Id] [uniqueidentifier] NOT NULL,
+	[SourceKeyDefinitionId] [uniqueidentifier] NOT NULL,
+	[SourceAmount] [int] NOT NULL,
+	[TargetKeyDefinitionId] [uniqueidentifier] NOT NULL,
+	[TargetAmount] [int] NOT NULL,
+	[SortOrder] [int] NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[Description] [nvarchar](300) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[CreatedAt] [datetime2](3) NOT NULL,
+	[UpdatedAt] [datetime2](3) NOT NULL,
+	[RowVersion] [timestamp] NOT NULL,
+ CONSTRAINT [PK_KeyExchangeRules] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [catalog].[KeyExchangeRules] ADD  CONSTRAINT [DF_KeyExchangeRules_Active]  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [catalog].[KeyExchangeRules] ADD  CONSTRAINT [DF_KeyExchangeRules_Created]  DEFAULT (sysutcdatetime()) FOR [CreatedAt]
+GO
+ALTER TABLE [catalog].[KeyExchangeRules] ADD  CONSTRAINT [DF_KeyExchangeRules_Updated]  DEFAULT (sysutcdatetime()) FOR [UpdatedAt]
+GO
+ALTER TABLE [catalog].[KeyExchangeRules]  WITH CHECK ADD  CONSTRAINT [CK_KeyExchangeRules_Amounts] CHECK  (([SourceAmount]>(0) AND [TargetAmount]>(0)))
+GO
+ALTER TABLE [catalog].[KeyExchangeRules] CHECK CONSTRAINT [CK_KeyExchangeRules_Amounts]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [catalog].[KeyProgressBalances](
+	[UserId] [uniqueidentifier] NOT NULL,
+	[Balance] [int] NOT NULL,
+	[UpdatedAt] [datetime2](3) NOT NULL,
+ CONSTRAINT [PK_KeyProgressBalances] PRIMARY KEY CLUSTERED
+(
+	[UserId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [catalog].[KeyProgressBalances] ADD  CONSTRAINT [DF_KeyProgressBalances_Updated]  DEFAULT (sysutcdatetime()) FOR [UpdatedAt]
+GO
+ALTER TABLE [catalog].[KeyProgressBalances]  WITH CHECK ADD  CONSTRAINT [CK_KeyProgressBalances_NonNegative] CHECK  (([Balance]>=(0)))
+GO
+ALTER TABLE [catalog].[KeyProgressBalances] CHECK CONSTRAINT [CK_KeyProgressBalances_NonNegative]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [catalog].[KeyProgressTransactions](
+	[Id] [uniqueidentifier] NOT NULL,
+	[UserId] [uniqueidentifier] NOT NULL,
+	[Amount] [int] NOT NULL,
+	[Reason] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[ReferenceType] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[ReferenceId] [uniqueidentifier] NULL,
+	[CreatedAt] [datetime2](3) NOT NULL,
+ CONSTRAINT [PK_KeyProgressTransactions] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [catalog].[KeyProgressTransactions] ADD  CONSTRAINT [DF_KeyProgressTransactions_Created]  DEFAULT (sysutcdatetime()) FOR [CreatedAt]
+GO
+ALTER TABLE [catalog].[KeyProgressTransactions]  WITH CHECK ADD  CONSTRAINT [CK_KeyProgressTransactions_Amount] CHECK  (([Amount]<>(0)))
+GO
+ALTER TABLE [catalog].[KeyProgressTransactions] CHECK CONSTRAINT [CK_KeyProgressTransactions_Amount]
 GO
 SET ANSI_NULLS ON
 GO
@@ -222,6 +417,45 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+CREATE TABLE [common].[DailyMemberActivities](
+	[Id] [uniqueidentifier] NOT NULL,
+	[UserId] [uniqueidentifier] NOT NULL,
+	[ActivityType] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[ActivityDate] [date] NOT NULL,
+	[OccurrenceCount] [int] NOT NULL,
+	[FirstOccurredAt] [datetime2](3) NOT NULL,
+	[LastOccurredAt] [datetime2](3) NOT NULL,
+	[CreatedAt] [datetime2](3) NOT NULL,
+	[UpdatedAt] [datetime2](3) NOT NULL,
+	[RowVersion] [timestamp] NOT NULL,
+ CONSTRAINT [PK_DailyMemberActivities] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [common].[DailyMemberActivities] ADD  CONSTRAINT [DF_DailyMemberActivities_OccurrenceCount]  DEFAULT ((1)) FOR [OccurrenceCount]
+GO
+ALTER TABLE [common].[DailyMemberActivities] ADD  CONSTRAINT [DF_DailyMemberActivities_CreatedAt]  DEFAULT (sysutcdatetime()) FOR [CreatedAt]
+GO
+ALTER TABLE [common].[DailyMemberActivities] ADD  CONSTRAINT [DF_DailyMemberActivities_UpdatedAt]  DEFAULT (sysutcdatetime()) FOR [UpdatedAt]
+GO
+ALTER TABLE [common].[DailyMemberActivities]  WITH CHECK ADD  CONSTRAINT [CK_DailyMemberActivities_OccurrenceCount] CHECK  (([OccurrenceCount]>(0)))
+GO
+ALTER TABLE [common].[DailyMemberActivities] CHECK CONSTRAINT [CK_DailyMemberActivities_OccurrenceCount]
+GO
+ALTER TABLE [common].[DailyMemberActivities]  WITH CHECK ADD  CONSTRAINT [CK_DailyMemberActivities_Times] CHECK  (([LastOccurredAt]>=[FirstOccurredAt] AND [UpdatedAt]>=[CreatedAt]))
+GO
+ALTER TABLE [common].[DailyMemberActivities] CHECK CONSTRAINT [CK_DailyMemberActivities_Times]
+GO
+ALTER TABLE [common].[DailyMemberActivities]  WITH CHECK ADD  CONSTRAINT [CK_DailyMemberActivities_Type] CHECK  (([ActivityType]=N'CHECK_IN' OR [ActivityType]=N'LOGIN'))
+GO
+ALTER TABLE [common].[DailyMemberActivities] CHECK CONSTRAINT [CK_DailyMemberActivities_Type]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 CREATE TABLE [game].[ArtifactQuestionEntries](
 	[Id] [uniqueidentifier] NOT NULL,
 	[ArtifactId] [uniqueidentifier] NOT NULL,
@@ -249,6 +483,81 @@ GO
 ALTER TABLE [game].[ArtifactQuestionEntries]  WITH CHECK ADD  CONSTRAINT [CK_ArtifactQuestionEntries_Difficulty] CHECK  (([Difficulty]>=(1) AND [Difficulty]<=(5)))
 GO
 ALTER TABLE [game].[ArtifactQuestionEntries] CHECK CONSTRAINT [CK_ArtifactQuestionEntries_Difficulty]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [game].[GameEconomySettings](
+	[Id] [tinyint] NOT NULL,
+	[MinimumPointReward] [int] NOT NULL,
+	[MaximumPointReward] [int] NOT NULL,
+	[BasePointReward] [int] NOT NULL,
+	[MaximumVoteBonus] [int] NOT NULL,
+	[MaximumWinBonus] [int] NOT NULL,
+	[CompletedNormalKey] [int] NOT NULL,
+	[ExcellentExtraNormalKey] [int] NOT NULL,
+	[ExcellentThreshold] [int] NOT NULL,
+	[DailyMiniGameRewardLimit] [int] NOT NULL,
+	[KeyProgressToNormalKey] [int] NOT NULL,
+	[UpdatedAt] [datetime2](3) NOT NULL,
+	[RowVersion] [timestamp] NOT NULL,
+ CONSTRAINT [PK_GameEconomySettings] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [game].[GameEconomySettings] ADD  CONSTRAINT [DF_GameEconomySettings_Updated]  DEFAULT (sysutcdatetime()) FOR [UpdatedAt]
+GO
+ALTER TABLE [game].[GameEconomySettings]  WITH CHECK ADD  CONSTRAINT [CK_GameEconomySettings_Values] CHECK  (([MinimumPointReward]>=(0) AND [MaximumPointReward]>=[MinimumPointReward] AND [BasePointReward]>=(0) AND [MaximumVoteBonus]>=(0) AND [MaximumWinBonus]>=(0) AND [CompletedNormalKey]>=(0) AND [ExcellentExtraNormalKey]>=(0) AND ([ExcellentThreshold]>=(0) AND [ExcellentThreshold]<=(100)) AND [DailyMiniGameRewardLimit]>=(0) AND [KeyProgressToNormalKey]>(0)))
+GO
+ALTER TABLE [game].[GameEconomySettings] CHECK CONSTRAINT [CK_GameEconomySettings_Values]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [game].[GameModeDefinitions](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Code] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[Name] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[Description] [nvarchar](500) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[ConfigJson] [nvarchar](max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[IsActive] [bit] NOT NULL,
+	[GradeBThreshold] [int] NOT NULL,
+	[GradeAThreshold] [int] NOT NULL,
+	[GradeSThreshold] [int] NOT NULL,
+	[FailPointReward] [int] NOT NULL,
+	[FailKeyProgressReward] [int] NOT NULL,
+	[BPointReward] [int] NOT NULL,
+	[BKeyProgressReward] [int] NOT NULL,
+	[APointReward] [int] NOT NULL,
+	[AKeyProgressReward] [int] NOT NULL,
+	[SPointReward] [int] NOT NULL,
+	[SKeyProgressReward] [int] NOT NULL,
+	[CreatedAt] [datetime2](3) NOT NULL,
+	[UpdatedAt] [datetime2](3) NOT NULL,
+	[RowVersion] [timestamp] NOT NULL,
+ CONSTRAINT [PK_GameModeDefinitions] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [game].[GameModeDefinitions] ADD  CONSTRAINT [DF_GameModeDefinitions_Active]  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [game].[GameModeDefinitions] ADD  CONSTRAINT [DF_GameModeDefinitions_Created]  DEFAULT (sysutcdatetime()) FOR [CreatedAt]
+GO
+ALTER TABLE [game].[GameModeDefinitions] ADD  CONSTRAINT [DF_GameModeDefinitions_Updated]  DEFAULT (sysutcdatetime()) FOR [UpdatedAt]
+GO
+ALTER TABLE [game].[GameModeDefinitions]  WITH CHECK ADD  CONSTRAINT [CK_GameModeDefinitions_Rewards] CHECK  (([FailPointReward]>=(0) AND [FailKeyProgressReward]>=(0) AND [BPointReward]>=(0) AND [BKeyProgressReward]>=(0) AND [APointReward]>=(0) AND [AKeyProgressReward]>=(0) AND [SPointReward]>=(0) AND [SKeyProgressReward]>=(0)))
+GO
+ALTER TABLE [game].[GameModeDefinitions] CHECK CONSTRAINT [CK_GameModeDefinitions_Rewards]
+GO
+ALTER TABLE [game].[GameModeDefinitions]  WITH CHECK ADD  CONSTRAINT [CK_GameModeDefinitions_Thresholds] CHECK  (([GradeBThreshold]>=(0) AND [GradeBThreshold]<=(100) AND ([GradeAThreshold]>=[GradeBThreshold] AND [GradeAThreshold]<=(100)) AND ([GradeSThreshold]>=[GradeAThreshold] AND [GradeSThreshold]<=(100))))
+GO
+ALTER TABLE [game].[GameModeDefinitions] CHECK CONSTRAINT [CK_GameModeDefinitions_Thresholds]
 GO
 SET ANSI_NULLS ON
 GO
@@ -307,6 +616,51 @@ GO
 ALTER TABLE [game].[GamePlayers]  WITH CHECK ADD  CONSTRAINT [CK_GamePlayers_SeatNo] CHECK  (([SeatNo] IS NULL OR [SeatNo]>=(1) AND [SeatNo]<=(10)))
 GO
 ALTER TABLE [game].[GamePlayers] CHECK CONSTRAINT [CK_GamePlayers_SeatNo]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [game].[GameRoomInvitations](
+	[Id] [uniqueidentifier] NOT NULL,
+	[RoomId] [uniqueidentifier] NOT NULL,
+	[InviterUserId] [uniqueidentifier] NOT NULL,
+	[InviteeUserId] [uniqueidentifier] NOT NULL,
+	[Status] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[Message] [nvarchar](300) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[RewardPointAmount] [int] NOT NULL,
+	[RewardCampaignId] [uniqueidentifier] NULL,
+	[RewardKeyDefinitionId] [uniqueidentifier] NULL,
+	[RewardKeyAmount] [int] NOT NULL,
+	[RewardGrantedAt] [datetime2](3) NULL,
+	[CreatedAt] [datetime2](3) NOT NULL,
+	[RespondedAt] [datetime2](3) NULL,
+	[RowVersion] [timestamp] NOT NULL,
+ CONSTRAINT [PK_GameRoomInvitations] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [game].[GameRoomInvitations] ADD  CONSTRAINT [DF_GameRoomInvitations_Status]  DEFAULT (N'PENDING') FOR [Status]
+GO
+ALTER TABLE [game].[GameRoomInvitations] ADD  CONSTRAINT [DF_GameRoomInvitations_RewardPointAmount]  DEFAULT ((0)) FOR [RewardPointAmount]
+GO
+ALTER TABLE [game].[GameRoomInvitations] ADD  CONSTRAINT [DF_GameRoomInvitations_RewardKeyAmount]  DEFAULT ((0)) FOR [RewardKeyAmount]
+GO
+ALTER TABLE [game].[GameRoomInvitations] ADD  CONSTRAINT [DF_GameRoomInvitations_Created]  DEFAULT (sysutcdatetime()) FOR [CreatedAt]
+GO
+ALTER TABLE [game].[GameRoomInvitations]  WITH CHECK ADD  CONSTRAINT [CK_GameRoomInvitations_NotSelf] CHECK  (([InviterUserId]<>[InviteeUserId]))
+GO
+ALTER TABLE [game].[GameRoomInvitations] CHECK CONSTRAINT [CK_GameRoomInvitations_NotSelf]
+GO
+ALTER TABLE [game].[GameRoomInvitations]  WITH CHECK ADD  CONSTRAINT [CK_GameRoomInvitations_RewardAmounts] CHECK  (([RewardPointAmount]>=(0) AND [RewardKeyAmount]>=(0) AND ([RewardKeyAmount]=(0) AND [RewardKeyDefinitionId] IS NULL OR [RewardKeyAmount]>(0) AND [RewardKeyDefinitionId] IS NOT NULL)))
+GO
+ALTER TABLE [game].[GameRoomInvitations] CHECK CONSTRAINT [CK_GameRoomInvitations_RewardAmounts]
+GO
+ALTER TABLE [game].[GameRoomInvitations]  WITH CHECK ADD  CONSTRAINT [CK_GameRoomInvitations_Status] CHECK  (([Status]=N'CANCELLED' OR [Status]=N'EXPIRED' OR [Status]=N'DECLINED' OR [Status]=N'ACCEPTED' OR [Status]=N'PENDING'))
+GO
+ALTER TABLE [game].[GameRoomInvitations] CHECK CONSTRAINT [CK_GameRoomInvitations_Status]
 GO
 SET ANSI_NULLS ON
 GO
@@ -458,6 +812,53 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+CREATE TABLE [game].[MiniGameAttempts](
+	[Id] [uniqueidentifier] NOT NULL,
+	[UserId] [uniqueidentifier] NOT NULL,
+	[GameModeDefinitionId] [uniqueidentifier] NOT NULL,
+	[ArtifactId] [uniqueidentifier] NULL,
+	[ArtifactPoolJson] [nvarchar](max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[Difficulty] [nvarchar](30) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[Seed] [nvarchar](128) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[ConfigJson] [nvarchar](max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[Status] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[RawScore] [int] NULL,
+	[RawResultJson] [nvarchar](max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[NormalizedScore] [int] NULL,
+	[Grade] [nvarchar](2) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[PointReward] [int] NOT NULL,
+	[KeyProgressReward] [int] NOT NULL,
+	[RewardAttemptNo] [int] NULL,
+	[RewardGranted] [bit] NOT NULL,
+	[StartedAt] [datetime2](3) NOT NULL,
+	[CompletedAt] [datetime2](3) NULL,
+	[RowVersion] [timestamp] NOT NULL,
+ CONSTRAINT [PK_MiniGameAttempts] PRIMARY KEY CLUSTERED
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [game].[MiniGameAttempts] ADD  CONSTRAINT [DF_MiniGameAttempts_Status]  DEFAULT (N'STARTED') FOR [Status]
+GO
+ALTER TABLE [game].[MiniGameAttempts] ADD  CONSTRAINT [DF_MiniGameAttempts_Started]  DEFAULT (sysutcdatetime()) FOR [StartedAt]
+GO
+ALTER TABLE [game].[MiniGameAttempts]  WITH CHECK ADD  CONSTRAINT [CK_MiniGameAttempts_Reward] CHECK  (([PointReward]>=(0) AND [KeyProgressReward]>=(0)))
+GO
+ALTER TABLE [game].[MiniGameAttempts] CHECK CONSTRAINT [CK_MiniGameAttempts_Reward]
+GO
+ALTER TABLE [game].[MiniGameAttempts]  WITH CHECK ADD  CONSTRAINT [CK_MiniGameAttempts_Score] CHECK  ((([RawScore] IS NULL OR [RawScore]>=(0) AND [RawScore]<=(100)) AND ([NormalizedScore] IS NULL OR [NormalizedScore]>=(0) AND [NormalizedScore]<=(100))))
+GO
+ALTER TABLE [game].[MiniGameAttempts] CHECK CONSTRAINT [CK_MiniGameAttempts_Score]
+GO
+ALTER TABLE [game].[MiniGameAttempts]  WITH CHECK ADD  CONSTRAINT [CK_MiniGameAttempts_Status] CHECK  (([Status]=N'EXPIRED' OR [Status]=N'COMPLETED' OR [Status]=N'STARTED'))
+GO
+ALTER TABLE [game].[MiniGameAttempts] CHECK CONSTRAINT [CK_MiniGameAttempts_Status]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 CREATE TABLE [game].[RoundAnswers](
 	[Id] [uniqueidentifier] NOT NULL,
 	[RoundId] [uniqueidentifier] NOT NULL,
@@ -550,6 +951,11 @@ CREATE TABLE [social].[EventRegistrations](
 	[UserId] [uniqueidentifier] NOT NULL,
 	[Status] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	[RegisteredAt] [datetime2](3) NOT NULL,
+	[RewardPointAmount] [int] NOT NULL,
+	[RewardCampaignId] [uniqueidentifier] NULL,
+	[RewardKeyDefinitionId] [uniqueidentifier] NULL,
+	[RewardKeyAmount] [int] NOT NULL,
+	[RewardGrantedAt] [datetime2](3) NULL,
  CONSTRAINT [PK_EventRegistrations] PRIMARY KEY CLUSTERED
 (
 	[Id] ASC
@@ -559,6 +965,14 @@ GO
 ALTER TABLE [social].[EventRegistrations] ADD  CONSTRAINT [DF_EventRegistrations_Status]  DEFAULT (N'REGISTERED') FOR [Status]
 GO
 ALTER TABLE [social].[EventRegistrations] ADD  CONSTRAINT [DF_EventRegistrations_At]  DEFAULT (sysutcdatetime()) FOR [RegisteredAt]
+GO
+ALTER TABLE [social].[EventRegistrations] ADD  CONSTRAINT [DF_EventRegistrations_RewardPointAmount]  DEFAULT ((0)) FOR [RewardPointAmount]
+GO
+ALTER TABLE [social].[EventRegistrations] ADD  CONSTRAINT [DF_EventRegistrations_RewardKeyAmount]  DEFAULT ((0)) FOR [RewardKeyAmount]
+GO
+ALTER TABLE [social].[EventRegistrations]  WITH CHECK ADD  CONSTRAINT [CK_EventRegistrations_RewardAmounts] CHECK  (([RewardPointAmount]>=(0) AND [RewardKeyAmount]>=(0) AND ([RewardKeyAmount]=(0) AND [RewardKeyDefinitionId] IS NULL OR [RewardKeyAmount]>(0) AND [RewardKeyDefinitionId] IS NOT NULL)))
+GO
+ALTER TABLE [social].[EventRegistrations] CHECK CONSTRAINT [CK_EventRegistrations_RewardAmounts]
 GO
 ALTER TABLE [social].[EventRegistrations]  WITH CHECK ADD  CONSTRAINT [CK_EventRegistrations_Status] CHECK  (([Status]=N'ATTENDED' OR [Status]=N'CANCELLED' OR [Status]=N'REGISTERED'))
 GO
@@ -865,6 +1279,9 @@ CREATE TABLE [store].[CouponDefinitions](
 	[StartAt] [datetime2](3) NOT NULL,
 	[EndAt] [datetime2](3) NOT NULL,
 	[IsActive] [bit] NOT NULL,
+	[AcquisitionType] [nvarchar](30) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[PointCost] [int] NULL,
+	[ValidityDays] [int] NOT NULL,
  CONSTRAINT [PK_CouponDefinitions] PRIMARY KEY CLUSTERED
 (
 	[Id] ASC
@@ -872,6 +1289,22 @@ CREATE TABLE [store].[CouponDefinitions](
 )
 GO
 ALTER TABLE [store].[CouponDefinitions] ADD  CONSTRAINT [DF_Coupons_Active]  DEFAULT (CONVERT([bit],(1))) FOR [IsActive]
+GO
+ALTER TABLE [store].[CouponDefinitions] ADD  CONSTRAINT [DF_CouponDefinitions_AcquisitionType]  DEFAULT (N'ADMIN_GRANT') FOR [AcquisitionType]
+GO
+ALTER TABLE [store].[CouponDefinitions] ADD  CONSTRAINT [DF_CouponDefinitions_ValidityDays]  DEFAULT ((365)) FOR [ValidityDays]
+GO
+ALTER TABLE [store].[CouponDefinitions]  WITH CHECK ADD  CONSTRAINT [CK_CouponDefinitions_Acquisition] CHECK  (([AcquisitionType]=N'ADMIN_GRANT' OR [AcquisitionType]=N'POINT_EXCHANGE'))
+GO
+ALTER TABLE [store].[CouponDefinitions] CHECK CONSTRAINT [CK_CouponDefinitions_Acquisition]
+GO
+ALTER TABLE [store].[CouponDefinitions]  WITH CHECK ADD  CONSTRAINT [CK_CouponDefinitions_PointCost] CHECK  (([AcquisitionType]=N'ADMIN_GRANT' AND [PointCost] IS NULL OR [AcquisitionType]=N'POINT_EXCHANGE' AND [PointCost]>(0)))
+GO
+ALTER TABLE [store].[CouponDefinitions] CHECK CONSTRAINT [CK_CouponDefinitions_PointCost]
+GO
+ALTER TABLE [store].[CouponDefinitions]  WITH CHECK ADD  CONSTRAINT [CK_CouponDefinitions_ValidityDays] CHECK  (([ValidityDays]>(0)))
+GO
+ALTER TABLE [store].[CouponDefinitions] CHECK CONSTRAINT [CK_CouponDefinitions_ValidityDays]
 GO
 ALTER TABLE [store].[CouponDefinitions]  WITH CHECK ADD  CONSTRAINT [CK_Coupons_Dates] CHECK  (([EndAt]>[StartAt]))
 GO
@@ -1118,6 +1551,14 @@ CREATE TABLE [store].[UserCoupons](
 	[Status] [nvarchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	[IssuedAt] [datetime2](3) NOT NULL,
 	[UsedAt] [datetime2](3) NULL,
+	[ExpiresAt] [datetime2](3) NOT NULL,
+	[IssuedByAdminUserId] [uniqueidentifier] NULL,
+	[IssueReason] [nvarchar](200) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[RevokedAt] [datetime2](3) NULL,
+	[RevokedByAdminUserId] [uniqueidentifier] NULL,
+	[RevokeReason] [nvarchar](200) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[GrantBatchId] [uniqueidentifier] NULL,
+	[RevokeBatchId] [uniqueidentifier] NULL,
  CONSTRAINT [PK_UserCoupons] PRIMARY KEY CLUSTERED
 (
 	[Id] ASC
@@ -1128,7 +1569,9 @@ ALTER TABLE [store].[UserCoupons] ADD  CONSTRAINT [DF_UserCoupons_Status]  DEFAU
 GO
 ALTER TABLE [store].[UserCoupons] ADD  CONSTRAINT [DF_UserCoupons_Issued]  DEFAULT (sysutcdatetime()) FOR [IssuedAt]
 GO
-ALTER TABLE [store].[UserCoupons]  WITH CHECK ADD  CONSTRAINT [CK_UserCoupons_Status] CHECK  (([Status]=N'EXPIRED' OR [Status]=N'USED' OR [Status]=N'AVAILABLE'))
+ALTER TABLE [store].[UserCoupons] ADD  CONSTRAINT [DF_UserCoupons_ExpiresAt]  DEFAULT (dateadd(day,(365),sysutcdatetime())) FOR [ExpiresAt]
+GO
+ALTER TABLE [store].[UserCoupons]  WITH CHECK ADD  CONSTRAINT [CK_UserCoupons_Status] CHECK  (([Status]=N'REVOKED' OR [Status]=N'EXPIRED' OR [Status]=N'USED' OR [Status]=N'AVAILABLE'))
 GO
 ALTER TABLE [store].[UserCoupons] CHECK CONSTRAINT [CK_UserCoupons_Status]
 GO
@@ -1332,6 +1775,25 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+CREATE TABLE [user].[EquippedTitles](
+	[UserId] [uniqueidentifier] NOT NULL,
+	[UserAchievementId] [uniqueidentifier] NOT NULL,
+	[EquippedAt] [datetime2](3) NOT NULL,
+	[UpdatedAt] [datetime2](3) NOT NULL,
+ CONSTRAINT [PK_EquippedTitles] PRIMARY KEY CLUSTERED
+(
+	[UserId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+)
+GO
+ALTER TABLE [user].[EquippedTitles] ADD  CONSTRAINT [DF_EquippedTitles_Equipped]  DEFAULT (sysutcdatetime()) FOR [EquippedAt]
+GO
+ALTER TABLE [user].[EquippedTitles] ADD  CONSTRAINT [DF_EquippedTitles_Updated]  DEFAULT (sysutcdatetime()) FOR [UpdatedAt]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 CREATE TABLE [user].[UserAchievements](
 	[Id] [uniqueidentifier] NOT NULL,
 	[UserId] [uniqueidentifier] NOT NULL,
@@ -1458,6 +1920,11 @@ SET IDENTITY_INSERT [admin].[AuditLogs] ON;
 INSERT INTO [admin].[AuditLogs] ([Id], [ActorUserId], [Area], [Controller], [Action], [HttpMethod], [RequestPath], [ResultStatusCode], [Detail], [OccurredAt]) VALUES
     (1, '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'Store', N'Product', N'ToggleStatus', N'POST', N'/store/product/ToggleStatus', 200, N'管理操作完成', CONVERT(datetime2(3), '2026-08-31T12:16:27.9810000', 126));
 SET IDENTITY_INSERT [admin].[AuditLogs] OFF;
+GO
+-- admin.CommunityRewardCampaigns
+INSERT INTO [admin].[CommunityRewardCampaigns] ([Id], [TargetType], [EventId], [GameRoomId], [OwnerUserId], [SponsorType], [BudgetMode], [PointPerRecipient], [KeyDefinitionId], [KeyPerRecipient], [PointBudget], [PointIssued], [KeyBudget], [KeyIssued], [ValidFrom], [ValidUntil], [IsActive], [CreatedAt], [UpdatedAt]) VALUES
+    ('d0a20000-0000-0000-0000-000000000001', N'GAME_ROOM', NULL, 'd0a10000-0000-0000-0000-000000000001', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'MEMBER', N'LIMITED', 20, '0086ae0c-b8e5-4123-8044-c3326e2953e8', 1, 40, 40, 1, 1, CONVERT(datetime2(3), '2026-08-29T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-09-05T07:04:45.6870000', 126), 1, CONVERT(datetime2(3), '2026-08-29T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-09-02T07:21:39.2330000', 126)),
+    ('d0a30000-0000-0000-0000-000000000001', N'EVENT', '59879d31-aa46-4839-b3e1-e8ed8023a44c', NULL, '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'OFFICIAL', N'UNLIMITED', 30, NULL, 0, 0, 90, 0, 0, CONVERT(datetime2(3), '2026-08-19T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-09-09T07:04:45.6870000', 126), 1, CONVERT(datetime2(3), '2026-08-19T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126));
 GO
 -- catalog.ArtifactCategories
 INSERT INTO [catalog].[ArtifactCategories] ([Id], [Code], [Name]) VALUES
@@ -1746,30 +2213,53 @@ INSERT INTO [catalog].[EraBuckets] ([Id], [Code], [Name], [StartYear], [EndYear]
     ('eb297c65-bbaf-0a53-93cc-f574c8d5faa6', N'SONG', N'宋', 960, 1279);
 GO
 -- catalog.KeyDefinitions
-INSERT INTO [catalog].[KeyDefinitions] ([Id], [Code], [Name], [ScopeType], [CategoryId], [EraBucketId], [IsActive]) VALUES
-    ('7eb482df-4424-4f4b-815e-19a0c32fcb03', N'KEY-CATEGORY-JADE', N'玉器類解鎖鑰匙', N'CATEGORY', 'c7e58cc2-4a5c-9a45-828b-57650534e3bf', NULL, 1),
-    ('080a1e6e-8699-4cae-abbe-1fa6ad089b0a', N'KEY-ERA-YUAN', N'元代解鎖鑰匙', N'ERA', NULL, 'f2a78063-931b-9926-749c-324377d136c7', 1),
-    ('6629d8ab-e0ac-4a7d-87b7-2796e7445545', N'KEY-ERA-HAN', N'漢代解鎖鑰匙', N'ERA', NULL, '47c4962a-a731-0787-3ea9-4aaf1cc59e07', 1),
-    ('53947c08-ac6c-4f0d-a2cb-2a62b2188a6f', N'KEY-CATEGORY-CERAMIC', N'陶瓷類解鎖鑰匙', N'CATEGORY', '9611dce4-97c7-26b6-0248-7cb003d17c3d', NULL, 1),
-    ('c0416075-b472-eeaa-d50f-3d6c38387b71', N'FIXTURE-NORMAL', N'一般解鎖鑰匙（停用）', N'NORMAL', NULL, NULL, 0),
-    ('31c6847e-f26f-46d8-af0d-4091c639fea5', N'KEY-ERA-WESTERN_XIA', N'西夏時代解鎖鑰匙', N'ERA', NULL, '537eb4b8-f69a-7ca3-e137-f528e2c7b0a3', 0),
-    ('5b95b67b-22c6-4197-969c-426d82706a54', N'KEY-CATEGORY-CARVING', N'雕刻類解鎖鑰匙', N'CATEGORY', '4aa6ad59-8ede-1076-3507-38fb519f20c2', NULL, 1),
-    ('085bdf22-f48a-4db3-ba08-4dbff728105e', N'KEY-CATEGORY-BRONZE', N'銅器類解鎖鑰匙', N'CATEGORY', '35ce74f7-c31a-3a07-0cbd-91f42656d869', NULL, 1),
-    ('bbbfc0b7-9ba9-4ff8-a70f-586579176ee5', N'KEY-ERA-JAPAN_MEIJI', N'日本明治時代解鎖鑰匙', N'ERA', NULL, '4feb18c3-ce05-4ccd-4a62-237658459e77', 1),
-    ('55de4b72-2f61-454f-a2d7-7071c51e3a65', N'KEY-ERA-TANG', N'唐代解鎖鑰匙', N'ERA', NULL, 'bd2e592c-cade-9ae8-aefb-2d163480cf07', 1),
-    ('31f956b9-f0e8-43d2-b132-73b9b65a6a28', N'KEY-ERA-SONG', N'宋代解鎖鑰匙', N'ERA', NULL, 'eb297c65-bbaf-0a53-93cc-f574c8d5faa6', 1),
-    ('3c8cee82-7167-4993-a2c6-7636c2629784', N'KEY-ERA-SPRING_AUTUMN', N'春秋時代解鎖鑰匙', N'ERA', NULL, '925e3b9e-8ff0-62fa-ea9a-58afbdd68019', 1),
-    ('43dbfb41-3d4f-4d12-85ab-a13d195f8a6e', N'KEY-ERA-ZHOU', N'周代解鎖鑰匙', N'ERA', NULL, 'ca8136fd-d414-902c-3f23-189593397b2d', 1),
-    ('1b373ca6-9675-4e5b-b7f6-a3bec491babe', N'KEY-CATEGORY-ENAMEL', N'琺瑯器類解鎖鑰匙', N'CATEGORY', '824b8d54-541c-1b21-e56c-a5d807800f18', NULL, 1),
-    ('9104e01e-bd06-48bd-8124-b2538b3edbca', N'KEY-ERA-MING', N'明代解鎖鑰匙', N'ERA', NULL, '3a237183-839a-f3b2-be8c-b1aa2c1a24a3', 1),
-    ('7a59fc2a-447d-4696-bd23-bc102af137c2', N'KEY-UNIVERSAL', N'萬能鑰匙', N'UNIVERSAL', NULL, NULL, 1),
-    ('4151aed3-ad2f-4f2e-82c9-bed4632b89d2', N'KEY-ERA-QING', N'清代解鎖鑰匙', N'ERA', NULL, '57b870a3-e96c-6914-4510-51b5753b8f06', 1),
-    ('0086ae0c-b8e5-4123-8044-c3326e2953e8', N'KEY-NORMAL', N'一般鑰匙', N'NORMAL', NULL, NULL, 0),
-    ('b022eb08-061c-44f6-8a93-c8f88e43f8a1', N'KEY-ERA-WARRING_STATES', N'戰國時代解鎖鑰匙', N'ERA', NULL, '5d31b868-259b-75b6-d3a1-f55ae47915c8', 1),
-    ('ed5c2044-fcce-405f-aed6-e9526f603dbe', N'KEY-CATEGORY-COIN', N'錢幣類解鎖鑰匙', N'CATEGORY', '2c5c80d7-6c3a-219f-835a-511d5ec59a23', NULL, 1),
-    ('4210ddb4-a9ee-4424-89f8-ef9633322866', N'KEY-CATEGORY-PAINTING', N'繪畫類解鎖鑰匙', N'CATEGORY', 'ec78c074-e905-9285-7894-321d57e98275', NULL, 1),
-    ('059e7bca-48e8-484a-b5d5-fb38976f9e9b', N'KEY-CATEGORY-LACQUER', N'漆器類解鎖鑰匙', N'CATEGORY', '4cf4b18a-96d6-5bd9-0b5e-46890a39f8f8', NULL, 1),
-    ('96d7978b-f625-4d87-bb1a-fd95cdadb2cd', N'KEY-ERA-JAPAN_TAISHO', N'日本大正時代解鎖鑰匙', N'ERA', NULL, '11ec6247-6d3d-1c84-46c0-511d7d4f8c9d', 1);
+INSERT INTO [catalog].[KeyDefinitions] ([Id], [Code], [Name], [ScopeType], [CategoryId], [EraBucketId], [IsActive], [RecyclePointValue]) VALUES
+    ('7eb482df-4424-4f4b-815e-19a0c32fcb03', N'KEY-CATEGORY-JADE', N'玉器類解鎖鑰匙', N'CATEGORY', 'c7e58cc2-4a5c-9a45-828b-57650534e3bf', NULL, 1, 3),
+    ('080a1e6e-8699-4cae-abbe-1fa6ad089b0a', N'KEY-ERA-YUAN', N'元代解鎖鑰匙', N'ERA', NULL, 'f2a78063-931b-9926-749c-324377d136c7', 1, 5),
+    ('6629d8ab-e0ac-4a7d-87b7-2796e7445545', N'KEY-ERA-HAN', N'漢代解鎖鑰匙', N'ERA', NULL, '47c4962a-a731-0787-3ea9-4aaf1cc59e07', 1, 5),
+    ('53947c08-ac6c-4f0d-a2cb-2a62b2188a6f', N'KEY-CATEGORY-CERAMIC', N'陶瓷類解鎖鑰匙', N'CATEGORY', '9611dce4-97c7-26b6-0248-7cb003d17c3d', NULL, 1, 3),
+    ('c0416075-b472-eeaa-d50f-3d6c38387b71', N'FIXTURE-NORMAL', N'一般解鎖鑰匙（停用）', N'NORMAL', NULL, NULL, 0, 2),
+    ('31c6847e-f26f-46d8-af0d-4091c639fea5', N'KEY-ERA-WESTERN_XIA', N'西夏時代解鎖鑰匙', N'ERA', NULL, '537eb4b8-f69a-7ca3-e137-f528e2c7b0a3', 0, 5),
+    ('5b95b67b-22c6-4197-969c-426d82706a54', N'KEY-CATEGORY-CARVING', N'雕刻類解鎖鑰匙', N'CATEGORY', '4aa6ad59-8ede-1076-3507-38fb519f20c2', NULL, 1, 3),
+    ('085bdf22-f48a-4db3-ba08-4dbff728105e', N'KEY-CATEGORY-BRONZE', N'銅器類解鎖鑰匙', N'CATEGORY', '35ce74f7-c31a-3a07-0cbd-91f42656d869', NULL, 1, 3),
+    ('bbbfc0b7-9ba9-4ff8-a70f-586579176ee5', N'KEY-ERA-JAPAN_MEIJI', N'日本明治時代解鎖鑰匙', N'ERA', NULL, '4feb18c3-ce05-4ccd-4a62-237658459e77', 1, 5),
+    ('55de4b72-2f61-454f-a2d7-7071c51e3a65', N'KEY-ERA-TANG', N'唐代解鎖鑰匙', N'ERA', NULL, 'bd2e592c-cade-9ae8-aefb-2d163480cf07', 1, 5),
+    ('31f956b9-f0e8-43d2-b132-73b9b65a6a28', N'KEY-ERA-SONG', N'宋代解鎖鑰匙', N'ERA', NULL, 'eb297c65-bbaf-0a53-93cc-f574c8d5faa6', 1, 5),
+    ('3c8cee82-7167-4993-a2c6-7636c2629784', N'KEY-ERA-SPRING_AUTUMN', N'春秋時代解鎖鑰匙', N'ERA', NULL, '925e3b9e-8ff0-62fa-ea9a-58afbdd68019', 1, 5),
+    ('43dbfb41-3d4f-4d12-85ab-a13d195f8a6e', N'KEY-ERA-ZHOU', N'周代解鎖鑰匙', N'ERA', NULL, 'ca8136fd-d414-902c-3f23-189593397b2d', 1, 5),
+    ('1b373ca6-9675-4e5b-b7f6-a3bec491babe', N'KEY-CATEGORY-ENAMEL', N'琺瑯器類解鎖鑰匙', N'CATEGORY', '824b8d54-541c-1b21-e56c-a5d807800f18', NULL, 1, 3),
+    ('9104e01e-bd06-48bd-8124-b2538b3edbca', N'KEY-ERA-MING', N'明代解鎖鑰匙', N'ERA', NULL, '3a237183-839a-f3b2-be8c-b1aa2c1a24a3', 1, 5),
+    ('7a59fc2a-447d-4696-bd23-bc102af137c2', N'KEY-UNIVERSAL', N'萬能鑰匙', N'UNIVERSAL', NULL, NULL, 1, 6),
+    ('4151aed3-ad2f-4f2e-82c9-bed4632b89d2', N'KEY-ERA-QING', N'清代解鎖鑰匙', N'ERA', NULL, '57b870a3-e96c-6914-4510-51b5753b8f06', 1, 5),
+    ('0086ae0c-b8e5-4123-8044-c3326e2953e8', N'KEY-NORMAL', N'一般鑰匙', N'NORMAL', NULL, NULL, 1, 2),
+    ('b022eb08-061c-44f6-8a93-c8f88e43f8a1', N'KEY-ERA-WARRING_STATES', N'戰國時代解鎖鑰匙', N'ERA', NULL, '5d31b868-259b-75b6-d3a1-f55ae47915c8', 1, 5),
+    ('ed5c2044-fcce-405f-aed6-e9526f603dbe', N'KEY-CATEGORY-COIN', N'錢幣類解鎖鑰匙', N'CATEGORY', '2c5c80d7-6c3a-219f-835a-511d5ec59a23', NULL, 1, 3),
+    ('4210ddb4-a9ee-4424-89f8-ef9633322866', N'KEY-CATEGORY-PAINTING', N'繪畫類解鎖鑰匙', N'CATEGORY', 'ec78c074-e905-9285-7894-321d57e98275', NULL, 1, 3),
+    ('059e7bca-48e8-484a-b5d5-fb38976f9e9b', N'KEY-CATEGORY-LACQUER', N'漆器類解鎖鑰匙', N'CATEGORY', '4cf4b18a-96d6-5bd9-0b5e-46890a39f8f8', NULL, 1, 3),
+    ('96d7978b-f625-4d87-bb1a-fd95cdadb2cd', N'KEY-ERA-JAPAN_TAISHO', N'日本大正時代解鎖鑰匙', N'ERA', NULL, '11ec6247-6d3d-1c84-46c0-511d7d4f8c9d', 1, 5);
+GO
+-- catalog.KeyExchangeRules
+INSERT INTO [catalog].[KeyExchangeRules] ([Id], [SourceKeyDefinitionId], [SourceAmount], [TargetKeyDefinitionId], [TargetAmount], [SortOrder], [IsActive], [Description], [CreatedAt], [UpdatedAt]) VALUES
+    ('bf3eb01c-cdca-41aa-aa85-164aeb16dbfa', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '55de4b72-2f61-454f-a2d7-7071c51e3a65', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('19a656a1-39dc-4d3d-a945-1ae02b58a4a6', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 4, '7a59fc2a-447d-4696-bd23-bc102af137c2', 1, 30, 1, N'四把 NORMAL 兌換一把萬能鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('b25bcff8-6b79-400d-9daf-2685e4116371', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '080a1e6e-8699-4cae-abbe-1fa6ad089b0a', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('4a5ae909-7e7e-44de-94ff-609812017806', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '3c8cee82-7167-4993-a2c6-7636c2629784', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('29f139bf-e810-4420-8dd7-70c7432b20ee', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '31f956b9-f0e8-43d2-b132-73b9b65a6a28', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('d6ef56c9-0fb3-4de8-b197-78b77e5c328d', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, 'bbbfc0b7-9ba9-4ff8-a70f-586579176ee5', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('0232cd8e-a064-4311-bb73-815c359b0980', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, '4210ddb4-a9ee-4424-89f8-ef9633322866', 1, 10, 1, N'兩把 NORMAL 兌換一把分類鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('2dfee71b-0dd9-47ff-9e7a-822a6e6e1ff6', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '6629d8ab-e0ac-4a7d-87b7-2796e7445545', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('2b81c1e5-be45-4e90-8441-834905bba9f4', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, '085bdf22-f48a-4db3-ba08-4dbff728105e', 1, 10, 1, N'兩把 NORMAL 兌換一把分類鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('876eae4a-1b9f-4b28-b3aa-8c5db6475ec7', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '43dbfb41-3d4f-4d12-85ab-a13d195f8a6e', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('e79f7d9a-c297-41b7-8a03-8d8f34e51ebb', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '96d7978b-f625-4d87-bb1a-fd95cdadb2cd', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('272cece5-641a-494c-a5b4-90ac5ecb2974', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '4151aed3-ad2f-4f2e-82c9-bed4632b89d2', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('f92871cc-cfe9-4027-930e-a0726533007c', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, 'ed5c2044-fcce-405f-aed6-e9526f603dbe', 1, 10, 1, N'兩把 NORMAL 兌換一把分類鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('b4d4b534-bbdd-4d84-84e7-a93d9666c725', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, '9104e01e-bd06-48bd-8124-b2538b3edbca', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('711af937-6f2e-4189-af6e-aacfa19d5daf', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, '1b373ca6-9675-4e5b-b7f6-a3bec491babe', 1, 10, 1, N'兩把 NORMAL 兌換一把分類鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('14c51fb8-b8df-4f41-853b-b35ca870ff68', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, 'b022eb08-061c-44f6-8a93-c8f88e43f8a1', 1, 20, 1, N'三把 NORMAL 兌換一把年代鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('cc3480f3-de92-4b90-a3ab-bbfd549defdb', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, '059e7bca-48e8-484a-b5d5-fb38976f9e9b', 1, 10, 1, N'兩把 NORMAL 兌換一把分類鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('e12695f4-bd18-4dd3-8353-bcd4f838d4f3', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, '5b95b67b-22c6-4197-969c-426d82706a54', 1, 10, 1, N'兩把 NORMAL 兌換一把分類鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('47d7205a-68a3-4b8f-adbe-cc8504fd7234', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, '7eb482df-4424-4f4b-815e-19a0c32fcb03', 1, 10, 1, N'兩把 NORMAL 兌換一把分類鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126)),
+    ('341ef695-4618-4372-bc18-e46b5412331e', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, '53947c08-ac6c-4f0d-a2cb-2a62b2188a6f', 1, 10, 1, N'兩把 NORMAL 兌換一把分類鑰匙', CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0020000', 126));
 GO
 -- catalog.KeyTransactions
 INSERT INTO [catalog].[KeyTransactions] ([Id], [UserId], [KeyDefinitionId], [Amount], [Reason], [ReferenceType], [ReferenceId], [CreatedAt]) VALUES
@@ -1795,6 +2285,7 @@ INSERT INTO [catalog].[KeyTransactions] ([Id], [UserId], [KeyDefinitionId], [Amo
     ('3521bd23-297a-439c-ac38-45855295f2cf', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '55de4b72-2f61-454f-a2d7-7071c51e3a65', 1, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
     ('6d5fb5a6-13f4-4c72-ab09-53a8cfedaf18', 'cba35abc-b074-4d30-b5ab-3b793dd62330', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
     ('3ed14262-ae80-4ea2-aa4b-5ee61692d5b4', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '5b95b67b-22c6-4197-969c-426d82706a54', 1, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
+    ('b235b835-9aa2-4e2d-aef5-623e54fd74be', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 1, N'私人房間參與加碼', N'COMMUNITY_REWARD', 'd0a40000-0000-0000-0000-000000000001', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126)),
     ('f660279a-9f61-43ab-a070-6aa4d32fde9c', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '7a59fc2a-447d-4696-bd23-bc102af137c2', 1, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
     ('a76e604e-4f99-4372-84de-6ae7d2925883', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '53947c08-ac6c-4f0d-a2cb-2a62b2188a6f', 2, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
     ('88500950-71b6-4d5a-8f4e-6b4a64e1fd34', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '9104e01e-bd06-48bd-8124-b2538b3edbca', 1, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
@@ -1820,60 +2311,96 @@ INSERT INTO [catalog].[KeyTransactions] ([Id], [UserId], [KeyDefinitionId], [Amo
     ('71c9a8fe-b1a1-48bd-b568-d372c033ddf0', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', '9104e01e-bd06-48bd-8124-b2538b3edbca', 2, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
     ('41e4975f-9663-4091-9149-e935b74d876a', 'cba35abc-b074-4d30-b5ab-3b793dd62330', '1b373ca6-9675-4e5b-b7f6-a3bec491babe', 1, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
     ('62c0cc60-97d8-4114-a0e4-ef32ffc3f83b', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 1, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
+    ('7119a1c4-6b4a-486b-9791-f7533164b6c4', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '0086ae0c-b8e5-4123-8044-c3326e2953e8', -1, N'私人房間加碼支出', N'COMMUNITY_REWARD', 'd0a40000-0000-0000-0000-000000000001', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126)),
     ('c0fa6782-5679-46b9-b97b-f95154ac0e64', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '7a59fc2a-447d-4696-bd23-bc102af137c2', 2, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126)),
     ('2ef6c705-df37-4a6e-a92e-f963c3e579af', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, N'ADMIN_GRANT', N'SHOWCASE_GRANT', NULL, CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126));
 GO
 -- catalog.UserKeyBalances
 INSERT INTO [catalog].[UserKeyBalances] ([UserId], [KeyDefinitionId], [Balance], [UpdatedAt]) VALUES
-    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '080a1e6e-8699-4cae-abbe-1fa6ad089b0a', 3, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '53947c08-ac6c-4f0d-a2cb-2a62b2188a6f', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '31c6847e-f26f-46d8-af0d-4091c639fea5', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '7a59fc2a-447d-4696-bd23-bc102af137c2', 3, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '059e7bca-48e8-484a-b5d5-fb38976f9e9b', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '085bdf22-f48a-4db3-ba08-4dbff728105e', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('cba35abc-b074-4d30-b5ab-3b793dd62330', 'bbbfc0b7-9ba9-4ff8-a70f-586579176ee5', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '1b373ca6-9675-4e5b-b7f6-a3bec491babe', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '9104e01e-bd06-48bd-8124-b2538b3edbca', 3, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '7a59fc2a-447d-4696-bd23-bc102af137c2', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '53947c08-ac6c-4f0d-a2cb-2a62b2188a6f', 3, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '55de4b72-2f61-454f-a2d7-7071c51e3a65', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '31f956b9-f0e8-43d2-b132-73b9b65a6a28', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '1b373ca6-9675-4e5b-b7f6-a3bec491babe', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '7a59fc2a-447d-4696-bd23-bc102af137c2', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 5, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '55de4b72-2f61-454f-a2d7-7071c51e3a65', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '43dbfb41-3d4f-4d12-85ab-a13d195f8a6e', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '7a59fc2a-447d-4696-bd23-bc102af137c2', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 'ed5c2044-fcce-405f-aed6-e9526f603dbe', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '059e7bca-48e8-484a-b5d5-fb38976f9e9b', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '96d7978b-f625-4d87-bb1a-fd95cdadb2cd', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '080a1e6e-8699-4cae-abbe-1fa6ad089b0a', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '085bdf22-f48a-4db3-ba08-4dbff728105e', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '9104e01e-bd06-48bd-8124-b2538b3edbca', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '7a59fc2a-447d-4696-bd23-bc102af137c2', 4, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', 'ed5c2044-fcce-405f-aed6-e9526f603dbe', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '7eb482df-4424-4f4b-815e-19a0c32fcb03', 4, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '6629d8ab-e0ac-4a7d-87b7-2796e7445545', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '5b95b67b-22c6-4197-969c-426d82706a54', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '7a59fc2a-447d-4696-bd23-bc102af137c2', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', 'b022eb08-061c-44f6-8a93-c8f88e43f8a1', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '31f956b9-f0e8-43d2-b132-73b9b65a6a28', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '3c8cee82-7167-4993-a2c6-7636c2629784', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '7a59fc2a-447d-4696-bd23-bc102af137c2', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '4151aed3-ad2f-4f2e-82c9-bed4632b89d2', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 4, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '4210ddb4-a9ee-4424-89f8-ef9633322866', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '7eb482df-4424-4f4b-815e-19a0c32fcb03', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '6629d8ab-e0ac-4a7d-87b7-2796e7445545', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '085bdf22-f48a-4db3-ba08-4dbff728105e', 2, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '9104e01e-bd06-48bd-8124-b2538b3edbca', 1, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '7a59fc2a-447d-4696-bd23-bc102af137c2', 5, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126)),
-    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, CONVERT(datetime2(3), '2026-08-31T15:57:19.5770000', 126));
+    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '080a1e6e-8699-4cae-abbe-1fa6ad089b0a', 3, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '53947c08-ac6c-4f0d-a2cb-2a62b2188a6f', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '31c6847e-f26f-46d8-af0d-4091c639fea5', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '7a59fc2a-447d-4696-bd23-bc102af137c2', 3, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '059e7bca-48e8-484a-b5d5-fb38976f9e9b', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '085bdf22-f48a-4db3-ba08-4dbff728105e', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('cba35abc-b074-4d30-b5ab-3b793dd62330', 'bbbfc0b7-9ba9-4ff8-a70f-586579176ee5', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '1b373ca6-9675-4e5b-b7f6-a3bec491babe', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '9104e01e-bd06-48bd-8124-b2538b3edbca', 3, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '7a59fc2a-447d-4696-bd23-bc102af137c2', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('cba35abc-b074-4d30-b5ab-3b793dd62330', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '53947c08-ac6c-4f0d-a2cb-2a62b2188a6f', 3, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '55de4b72-2f61-454f-a2d7-7071c51e3a65', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '31f956b9-f0e8-43d2-b132-73b9b65a6a28', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '1b373ca6-9675-4e5b-b7f6-a3bec491babe', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '7a59fc2a-447d-4696-bd23-bc102af137c2', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 5, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '55de4b72-2f61-454f-a2d7-7071c51e3a65', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '43dbfb41-3d4f-4d12-85ab-a13d195f8a6e', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '7a59fc2a-447d-4696-bd23-bc102af137c2', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, CONVERT(datetime2(3), '2026-09-02T07:04:45.6870000', 126)),
+    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 'ed5c2044-fcce-405f-aed6-e9526f603dbe', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '059e7bca-48e8-484a-b5d5-fb38976f9e9b', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '96d7978b-f625-4d87-bb1a-fd95cdadb2cd', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '080a1e6e-8699-4cae-abbe-1fa6ad089b0a', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '085bdf22-f48a-4db3-ba08-4dbff728105e', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '9104e01e-bd06-48bd-8124-b2538b3edbca', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '7a59fc2a-447d-4696-bd23-bc102af137c2', 4, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4134ddc4-ca89-4180-ac72-bbe0f42ab285', 'ed5c2044-fcce-405f-aed6-e9526f603dbe', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '7eb482df-4424-4f4b-815e-19a0c32fcb03', 4, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '6629d8ab-e0ac-4a7d-87b7-2796e7445545', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '5b95b67b-22c6-4197-969c-426d82706a54', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '7a59fc2a-447d-4696-bd23-bc102af137c2', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 0, CONVERT(datetime2(3), '2026-09-02T07:04:45.6870000', 126)),
+    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', 'b022eb08-061c-44f6-8a93-c8f88e43f8a1', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '31f956b9-f0e8-43d2-b132-73b9b65a6a28', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '3c8cee82-7167-4993-a2c6-7636c2629784', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '7a59fc2a-447d-4696-bd23-bc102af137c2', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '4151aed3-ad2f-4f2e-82c9-bed4632b89d2', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 4, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', '4210ddb4-a9ee-4424-89f8-ef9633322866', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '7eb482df-4424-4f4b-815e-19a0c32fcb03', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '6629d8ab-e0ac-4a7d-87b7-2796e7445545', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '085bdf22-f48a-4db3-ba08-4dbff728105e', 2, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '9104e01e-bd06-48bd-8124-b2538b3edbca', 1, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '7a59fc2a-447d-4696-bd23-bc102af137c2', 5, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 3, CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126));
+GO
+-- common.DailyMemberActivities
+INSERT INTO [common].[DailyMemberActivities] ([Id], [UserId], [ActivityType], [ActivityDate], [OccurrenceCount], [FirstOccurredAt], [LastOccurredAt], [CreatedAt], [UpdatedAt]) VALUES
+    ('689cd55d-e034-42e5-b412-0d665c36999e', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'LOGIN', CONVERT(date, '2026-08-24', 23), 1, CONVERT(datetime2(3), '2026-08-24T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-24T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-24T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-24T20:00:00.0000000', 126)),
+    ('43dd5d29-386b-42db-aa4f-0ed9240b0994', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-31', 23), 1, CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126)),
+    ('43f6618c-87fe-410f-a16b-1b80c751c2e7', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'LOGIN', CONVERT(date, '2026-08-20', 23), 2, CONVERT(datetime2(3), '2026-08-20T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-20T16:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-20T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-20T16:00:00.0000000', 126)),
+    ('780f9dfc-a492-47a2-aa1f-1fe0d87bdf5c', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'LOGIN', CONVERT(date, '2026-08-26', 23), 1, CONVERT(datetime2(3), '2026-08-26T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-26T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-26T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-26T20:00:00.0000000', 126)),
+    ('c189d0bb-78f0-4df9-8fd3-23d62e9c9efa', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'LOGIN', CONVERT(date, '2026-08-25', 23), 1, CONVERT(datetime2(3), '2026-08-25T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T15:00:00.0000000', 126)),
+    ('96c7c4b8-e2db-4bb2-824a-27fc30faf6bd', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'LOGIN', CONVERT(date, '2026-08-25', 23), 1, CONVERT(datetime2(3), '2026-08-25T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T20:00:00.0000000', 126)),
+    ('458d9731-9bca-4c89-b50c-2b73ffadbb6c', '9b40d125-cd86-4ee1-9a12-f954c52610fb', N'LOGIN', CONVERT(date, '2026-08-27', 23), 1, CONVERT(datetime2(3), '2026-08-27T11:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T11:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T11:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T11:00:00.0000000', 126)),
+    ('8b3877be-08b8-4a69-976e-4c1c62799b68', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-22', 23), 1, CONVERT(datetime2(3), '2026-08-22T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-22T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-22T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-22T08:00:00.0000000', 126)),
+    ('10f3a336-4152-48e6-b5b4-55178dd024f9', 'cba35abc-b074-4d30-b5ab-3b793dd62330', N'LOGIN', CONVERT(date, '2026-08-18', 23), 1, CONVERT(datetime2(3), '2026-08-18T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-18T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-18T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-18T10:00:00.0000000', 126)),
+    ('7d1b1b77-3985-4fa5-80c5-57d99b3db65d', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'LOGIN', CONVERT(date, '2026-08-28', 23), 1, CONVERT(datetime2(3), '2026-08-28T16:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T16:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T16:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T16:00:00.0000000', 126)),
+    ('0b0a440e-d1f5-4e44-b884-68e164d5309d', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'LOGIN', CONVERT(date, '2026-08-29', 23), 2, CONVERT(datetime2(3), '2026-08-29T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T18:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T18:00:00.0000000', 126)),
+    ('151eaf62-3fdd-4442-a163-7a9eccf61c9d', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'LOGIN', CONVERT(date, '2026-08-31', 23), 1, CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126)),
+    ('e3b4f5a4-ccda-4733-aa74-8bf8e1b864a4', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-30', 23), 1, CONVERT(datetime2(3), '2026-08-30T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T10:00:00.0000000', 126)),
+    ('25ea8015-2bf5-4b19-be47-91fae651e2af', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-27', 23), 1, CONVERT(datetime2(3), '2026-08-27T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T09:00:00.0000000', 126)),
+    ('ba016053-bfe6-414b-a2ef-94bca01bcb35', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-26', 23), 1, CONVERT(datetime2(3), '2026-08-26T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-26T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-26T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-26T09:00:00.0000000', 126)),
+    ('1d864d73-4971-447a-887a-95414cea9ac2', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', N'LOGIN', CONVERT(date, '2026-08-29', 23), 2, CONVERT(datetime2(3), '2026-08-29T18:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T22:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T18:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T22:00:00.0000000', 126)),
+    ('ef813388-ff60-41f9-9b74-9923163ec4b9', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'LOGIN', CONVERT(date, '2026-08-29', 23), 1, CONVERT(datetime2(3), '2026-08-29T19:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T19:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T19:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T19:00:00.0000000', 126)),
+    ('e8c5ca78-7147-4d5b-b0d3-99d4932efc2a', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'LOGIN', CONVERT(date, '2026-08-23', 23), 1, CONVERT(datetime2(3), '2026-08-23T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-23T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-23T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-23T15:00:00.0000000', 126)),
+    ('78b36a90-1b58-4d86-94db-a1558395692c', 'cba35abc-b074-4d30-b5ab-3b793dd62330', N'LOGIN', CONVERT(date, '2026-08-30', 23), 1, CONVERT(datetime2(3), '2026-08-30T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T15:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T15:00:00.0000000', 126)),
+    ('ec009a60-1eb3-4a9c-af29-a3bc9957e2e0', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-29', 23), 1, CONVERT(datetime2(3), '2026-08-29T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-29T09:00:00.0000000', 126)),
+    ('a6df5dc5-2468-4584-970a-bbf8e0a8bef2', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-28', 23), 2, CONVERT(datetime2(3), '2026-08-28T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T20:00:00.0000000', 126)),
+    ('de12d68f-6c3c-466e-90ad-be35f31773f7', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'LOGIN', CONVERT(date, '2026-08-30', 23), 1, CONVERT(datetime2(3), '2026-08-30T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T20:00:00.0000000', 126)),
+    ('afad28ad-55be-4131-82e3-c833d25ec8e4', '9b40d125-cd86-4ee1-9a12-f954c52610fb', N'LOGIN', CONVERT(date, '2026-08-31', 23), 1, CONVERT(datetime2(3), '2026-08-31T14:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T14:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T14:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T14:00:00.0000000', 126)),
+    ('0baf5804-828f-4b8d-b719-ccfda71c45d2', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-24', 23), 1, CONVERT(datetime2(3), '2026-08-24T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-24T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-24T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-24T08:00:00.0000000', 126)),
+    ('83f5e06b-08dc-4496-a7da-d7e1e87b141d', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'LOGIN', CONVERT(date, '2026-08-27', 23), 1, CONVERT(datetime2(3), '2026-08-27T21:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T21:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T21:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T21:00:00.0000000', 126)),
+    ('45e2518c-9916-4367-962f-de97289d5d49', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', N'LOGIN', CONVERT(date, '2026-08-25', 23), 1, CONVERT(datetime2(3), '2026-08-25T19:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T19:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T19:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T19:00:00.0000000', 126)),
+    ('5fffbb8f-1a82-4dc5-854c-f0b28b2e6afa', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'LOGIN', CONVERT(date, '2026-08-31', 23), 1, CONVERT(datetime2(3), '2026-08-31T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T20:00:00.0000000', 126)),
+    ('d1172b3f-6c48-4eb0-849d-f1f26004e86c', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'LOGIN', CONVERT(date, '2026-08-27', 23), 1, CONVERT(datetime2(3), '2026-08-27T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-27T08:00:00.0000000', 126)),
+    ('e87b8538-81c9-471d-9997-f7704659d469', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-23', 23), 1, CONVERT(datetime2(3), '2026-08-23T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-23T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-23T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-23T08:00:00.0000000', 126)),
+    ('14e5da10-3a77-4da2-8f8a-fbeba5fb8e66', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'LOGIN', CONVERT(date, '2026-08-30', 23), 1, CONVERT(datetime2(3), '2026-08-30T16:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T16:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T16:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-30T16:00:00.0000000', 126)),
+    ('6a44cd32-9441-4ba3-ad0d-fc889c629d45', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'LOGIN', CONVERT(date, '2026-08-25', 23), 1, CONVERT(datetime2(3), '2026-08-25T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-25T08:00:00.0000000', 126)),
+    ('825694be-c518-4d74-b62b-fcdf89483fe2', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'LOGIN', CONVERT(date, '2026-08-28', 23), 2, CONVERT(datetime2(3), '2026-08-28T19:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T23:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T19:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T23:00:00.0000000', 126));
 GO
 -- game.ArtifactQuestionEntries
 INSERT INTO [game].[ArtifactQuestionEntries] ([Id], [ArtifactId], [IsEnabled], [Difficulty], [QuestionTemplateCode], [CreatedAt], [UpdatedAt]) VALUES
@@ -2135,27 +2662,48 @@ INSERT INTO [game].[ArtifactQuestionEntries] ([Id], [ArtifactId], [IsEnabled], [
     ('884da75d-bbe3-169d-b08a-fef552f06ac4', 'dc8cdf9e-1358-5f99-427c-bcaef2922575', 1, 1, N'GENERAL', CONVERT(datetime2(3), '2026-08-31T07:54:17.3900000', 126), CONVERT(datetime2(3), '2026-08-31T07:54:17.3900000', 126)),
     ('a4cf09db-45d3-d724-ad03-ff7b95e91150', 'ad397695-963b-f128-72e8-a98037372c7a', 1, 1, N'GENERAL', CONVERT(datetime2(3), '2026-08-31T07:54:17.3900000', 126), CONVERT(datetime2(3), '2026-08-31T07:54:17.3900000', 126));
 GO
+-- game.GameEconomySettings
+INSERT INTO [game].[GameEconomySettings] ([Id], [MinimumPointReward], [MaximumPointReward], [BasePointReward], [MaximumVoteBonus], [MaximumWinBonus], [CompletedNormalKey], [ExcellentExtraNormalKey], [ExcellentThreshold], [DailyMiniGameRewardLimit], [KeyProgressToNormalKey], [UpdatedAt]) VALUES
+    (1, 8, 20, 8, 8, 4, 1, 1, 80, 5, 100, CONVERT(datetime2(3), '2026-09-02T05:24:58.9940000', 126));
+GO
+-- game.GameModeDefinitions
+INSERT INTO [game].[GameModeDefinitions] ([Id], [Code], [Name], [Description], [ConfigJson], [IsActive], [GradeBThreshold], [GradeAThreshold], [GradeSThreshold], [FailPointReward], [FailKeyProgressReward], [BPointReward], [BKeyProgressReward], [APointReward], [AKeyProgressReward], [SPointReward], [SKeyProgressReward], [CreatedAt], [UpdatedAt]) VALUES
+    ('d15e1d36-9b43-4de8-9d7b-2d4f2b5f6f01', N'DETAIL_LOCATOR', N'細節追跡', N'從文物影像局部線索回到完整圖像中找出對應位置。', N'{"selection":"region","source":"artifact-image"}', 1, 60, 80, 95, 0, 0, 1, 3, 2, 6, 3, 10, CONVERT(datetime2(3), '2026-09-02T05:24:59.0090000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0090000', 126)),
+    ('d15e1d36-9b43-4de8-9d7b-2d4f2b5f6f02', N'ARTIFACT_PUZZLE', N'館藏拼圖', N'將文物影像切片後重新排列，完成完整影像。', N'{"pieces":"configurable-grid","source":"artifact-image"}', 1, 60, 80, 95, 0, 0, 1, 3, 2, 6, 3, 10, CONVERT(datetime2(3), '2026-09-02T05:24:59.0090000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0090000', 126)),
+    ('d15e1d36-9b43-4de8-9d7b-2d4f2b5f6f03', N'MEMORY_MATCH', N'館藏翻牌', N'從多件文物影像中翻牌並配對相同館藏。', N'{"pairs":"configurable","source":"artifact-image"}', 1, 60, 80, 95, 0, 0, 1, 3, 2, 6, 3, 10, CONVERT(datetime2(3), '2026-09-02T05:24:59.0090000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0090000', 126)),
+    ('d15e1d36-9b43-4de8-9d7b-2d4f2b5f6f04', N'STRIP_RESTORE', N'長卷復位', N'將長幅文物影像切成條帶後重新排序。', N'{"orientation":"configurable","source":"artifact-image"}', 1, 60, 80, 95, 0, 0, 1, 3, 2, 6, 3, 10, CONVERT(datetime2(3), '2026-09-02T05:24:59.0090000', 126), CONVERT(datetime2(3), '2026-09-02T05:24:59.0090000', 126));
+GO
 -- game.GamePlayers
 INSERT INTO [game].[GamePlayers] ([Id], [RoomId], [UserId], [PlayerKey], [DisplayName], [Role], [IsReady], [SeatNo], [JoinedAt], [ConnectionStatus], [LastSeenAt], [DisconnectedAt], [ReconnectDeadlineAt], [LeftAt]) VALUES
     ('4d561e0d-d909-4262-9eed-01921ce3e2df', '6f7bb8d2-2197-4840-a0ee-de05c77f6b14', 'f43ee0b6-a28d-47c1-a5e2-32fa9060383c', N'player-SHOW302', N'陳承恩', N'PLAYER', 0, 2, CONVERT(datetime2(3), '2026-08-30T07:57:25.1230000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-08-30T08:22:25.1230000', 126), NULL, NULL, NULL),
     ('cbd8aac9-0a86-4db4-b21c-0c824f2d456b', 'fb6d7b80-e4da-4795-bde8-1645d90a3504', '32090e80-8d61-4801-b480-a6358f7a9e37', N'host-SHOW306', N'葉凱旋', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-25T07:56:25.1230000', 126), N'LEFT', CONVERT(datetime2(3), '2026-08-25T08:24:25.1230000', 126), NULL, NULL, CONVERT(datetime2(3), '2026-08-25T08:24:25.1230000', 126)),
     ('39500e1b-13f4-4860-8828-0fed4a1cc114', 'f5059877-c2bd-402d-b312-a7f2a387a09e', '9b40d125-cd86-4ee1-9a12-f954c52610fb', N'player-SHOW308', N'社群小編', N'PLAYER', 1, 2, CONVERT(datetime2(3), '2026-08-23T07:57:25.1230000', 126), N'LEFT', CONVERT(datetime2(3), '2026-08-23T08:22:25.1230000', 126), NULL, NULL, CONVERT(datetime2(3), '2026-08-23T08:22:25.1230000', 126)),
+    ('7ede7c4a-8735-4edd-b109-3b8fcbc94568', 'd0a10000-0000-0000-0000-000000000001', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'rwd-host', N'Demo Player 01', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-28T07:04:45.6870000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-09-02T06:04:45.6870000', 126), NULL, NULL, NULL),
     ('adb8aafc-f0c3-4b6f-80e7-3d1065f018f5', '7d8046df-07f7-4909-86a2-be350542eafd', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'host-SHOW301', N'系統管理員', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-31T07:56:25.1230000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-08-31T08:24:25.1230000', 126), NULL, NULL, NULL),
     ('8fcd9fc6-bb32-4dbb-91b8-4e5db3ad5a9f', 'fb6d7b80-e4da-4795-bde8-1645d90a3504', '869ef3e0-f8cd-428c-aae4-48a75e23861a', N'player-SHOW306', N'高佩珊', N'PLAYER', 1, 2, CONVERT(datetime2(3), '2026-08-25T07:57:25.1230000', 126), N'LEFT', CONVERT(datetime2(3), '2026-08-25T08:22:25.1230000', 126), NULL, NULL, CONVERT(datetime2(3), '2026-08-25T08:22:25.1230000', 126)),
     ('97620e70-3928-4702-800f-50b6b8cf0f94', 'd659188f-054d-41b0-b99a-efcb5b84c31e', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'host-SHOW303', N'圖鑑編輯室', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-30T07:56:25.1230000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-08-30T08:24:25.1230000', 126), NULL, NULL, NULL),
     ('22c453df-dde1-44dc-9da3-59ec6882f930', '8004d438-211b-44ac-bbb5-9c3db0ca1e65', '4f79ced2-639d-419a-ad7e-d8027c56eceb', N'player-SHOW307', N'沈若琳', N'PLAYER', 1, 2, CONVERT(datetime2(3), '2026-08-28T07:57:25.1230000', 126), N'LEFT', CONVERT(datetime2(3), '2026-08-28T08:22:25.1230000', 126), NULL, NULL, CONVERT(datetime2(3), '2026-08-28T08:22:25.1230000', 126)),
     ('5189e7e2-3dbe-45de-838e-5bf6370a6a8e', '805c109b-34f4-4665-bb95-2e24a437852d', 'e635f9ed-ff31-45e2-91da-dfdf518bd009', N'player-SHOW304', N'郭家欣', N'PLAYER', 1, 2, CONVERT(datetime2(3), '2026-08-29T07:57:25.1230000', 126), N'OFFLINE', CONVERT(datetime2(3), '2026-08-29T08:22:25.1230000', 126), CONVERT(datetime2(3), '2026-08-29T08:22:25.1230000', 126), CONVERT(datetime2(3), '2026-08-29T08:24:25.1230000', 126), NULL),
     ('bfb7cc43-234f-408d-9713-7d9940925112', '805c109b-34f4-4665-bb95-2e24a437852d', '9b7f2427-e62e-4229-82c3-36b1dcdd1882', N'host-SHOW304', N'吳浩然', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-29T07:56:25.1230000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-08-29T08:24:25.1230000', 126), NULL, NULL, NULL),
+    ('502b5b3a-01bc-4dd2-8281-7deb2235c977', 'd0a10000-0000-0000-0000-000000000001', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'rwd-member-01', N'Demo Member 01', N'PLAYER', 0, 2, CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-09-02T06:04:45.6870000', 126), NULL, NULL, NULL),
     ('bfac4c45-2685-4971-92e6-addb12a3de46', 'e5a0077b-be3b-428e-a44a-ca9b90c10c51', 'd3964b0b-0c94-4c5a-b925-9bcf806c614e', N'player-SHOW305', N'蔡俊豪', N'PLAYER', 1, 2, CONVERT(datetime2(3), '2026-08-27T07:57:25.1230000', 126), N'LEFT', CONVERT(datetime2(3), '2026-08-27T08:22:25.1230000', 126), NULL, NULL, CONVERT(datetime2(3), '2026-08-27T08:22:25.1230000', 126)),
     ('6585a9c9-e258-4883-842f-ae1d8e95af2b', '6f7bb8d2-2197-4840-a0ee-de05c77f6b14', '7881ef5d-547d-4d08-b71d-a48be2000a35', N'host-SHOW302', N'周博宇', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-30T07:56:25.1230000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-08-30T08:24:25.1230000', 126), NULL, NULL, NULL),
     ('687de74e-8caf-41d9-afe9-ba2c95acace1', '7d8046df-07f7-4909-86a2-be350542eafd', 'db7f8c59-6471-4604-a85c-ebc59c02fc6c', N'player-SHOW301', N'何安琪', N'PLAYER', 0, 2, CONVERT(datetime2(3), '2026-08-31T07:57:25.1230000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-08-31T08:22:25.1230000', 126), NULL, NULL, NULL),
     ('9cb24351-1269-4767-ba66-bb3da2331e68', 'f5059877-c2bd-402d-b312-a7f2a387a09e', '59538e0b-3f85-46d0-93d6-cccb9df12831', N'host-SHOW308', N'林若晴', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-23T07:56:25.1230000', 126), N'LEFT', CONVERT(datetime2(3), '2026-08-23T08:24:25.1230000', 126), NULL, NULL, CONVERT(datetime2(3), '2026-08-23T08:24:25.1230000', 126)),
     ('d2fa0269-7bef-4262-9962-bfcda692d83f', 'd659188f-054d-41b0-b99a-efcb5b84c31e', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', N'player-SHOW303', N'遊戲主持人', N'PLAYER', 1, 2, CONVERT(datetime2(3), '2026-08-30T07:57:25.1230000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-08-30T08:22:25.1230000', 126), NULL, NULL, NULL),
+    ('40f76396-b9ea-42ff-947e-d6bd0a47e886', 'd0a10000-0000-0000-0000-000000000001', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'rwd-member-02', N'Demo Player 02', N'PLAYER', 0, 3, CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126), N'ONLINE', CONVERT(datetime2(3), '2026-09-02T06:04:45.6870000', 126), NULL, NULL, NULL),
     ('62e509a9-821e-4393-8cca-e2bfdaf59e01', '8004d438-211b-44ac-bbb5-9c3db0ca1e65', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'host-SHOW307', N'拾光玩家', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-28T07:56:25.1230000', 126), N'LEFT', CONVERT(datetime2(3), '2026-08-28T08:24:25.1230000', 126), NULL, NULL, CONVERT(datetime2(3), '2026-08-28T08:24:25.1230000', 126)),
     ('4e7f0b7e-7172-403a-bd41-e98cedc075d1', 'e5a0077b-be3b-428e-a44a-ca9b90c10c51', 'ca5024a2-a0be-4204-8ec9-235368b494a9', N'host-SHOW305', N'許靜宜', N'HOST', 1, 1, CONVERT(datetime2(3), '2026-08-27T07:56:25.1230000', 126), N'LEFT', CONVERT(datetime2(3), '2026-08-27T08:24:25.1230000', 126), NULL, NULL, CONVERT(datetime2(3), '2026-08-27T08:24:25.1230000', 126));
 GO
+-- game.GameRoomInvitations
+INSERT INTO [game].[GameRoomInvitations] ([Id], [RoomId], [InviterUserId], [InviteeUserId], [Status], [Message], [RewardPointAmount], [RewardCampaignId], [RewardKeyDefinitionId], [RewardKeyAmount], [RewardGrantedAt], [CreatedAt], [RespondedAt]) VALUES
+    ('d0a40000-0000-0000-0000-000000000001', 'd0a10000-0000-0000-0000-000000000001', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'ACCEPTED', N'這場房間會提供一點入場加碼，先到先得。', 20, 'd0a20000-0000-0000-0000-000000000001', '0086ae0c-b8e5-4123-8044-c3326e2953e8', 1, CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-08-29T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126)),
+    ('d0a40000-0000-0000-0000-000000000002', 'd0a10000-0000-0000-0000-000000000001', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'ACCEPTED', N'點數加碼仍在預算內，歡迎一起觀察。', 20, 'd0a20000-0000-0000-0000-000000000001', NULL, 0, CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-08-29T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126)),
+    ('d0a40000-0000-0000-0000-000000000003', 'd0a10000-0000-0000-0000-000000000001', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'DECLINED', N'這次先保留邀請紀錄，之後再約時間。', 0, NULL, NULL, 0, NULL, CONVERT(datetime2(3), '2026-08-30T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126));
+GO
 -- game.GameRooms
 INSERT INTO [game].[GameRooms] ([Id], [RoomCode], [Status], [Visibility], [PasswordHash], [MaxPlayers], [TotalRounds], [AnswerSeconds], [VotingSeconds], [CategoryFilterCode], [EraBucketFilterCode], [CurrentRoundNo], [StateVersion], [CreatedAt], [StartedAt], [EndedAt], [CompletedAt]) VALUES
+    ('d0a10000-0000-0000-0000-000000000001', N'QMAH-RWD-01', N'WAITING', N'PRIVATE', N'AQAAAAIAAYagAAAAEIqgTxDKKra9ApnTty5rZ8lsAzI/pMMpqLcOHnmEJ8euNTeLkUcnYCpTbuH5Z9Sexw==', 6, 3, 120, 60, N'CERAMIC', NULL, 0, 1, CONVERT(datetime2(3), '2026-08-28T07:04:45.6870000', 126), NULL, NULL, NULL),
     ('fb6d7b80-e4da-4795-bde8-1645d90a3504', N'SHOW306', N'COMPLETED', N'PUBLIC', NULL, 6, 2, 120, 60, NULL, NULL, 2, 3, CONVERT(datetime2(3), '2026-08-25T07:54:25.1230000', 126), CONVERT(datetime2(3), '2026-08-25T07:59:25.1230000', 126), CONVERT(datetime2(3), '2026-08-25T08:29:25.1230000', 126), CONVERT(datetime2(3), '2026-08-25T08:29:25.1230000', 126)),
     ('805c109b-34f4-4665-bb95-2e24a437852d', N'SHOW304', N'PLAYING', N'PUBLIC', NULL, 8, 5, 120, 60, NULL, NULL, 5, 6, CONVERT(datetime2(3), '2026-08-29T07:54:25.1230000', 126), CONVERT(datetime2(3), '2026-08-29T07:59:25.1230000', 126), NULL, NULL),
     ('8004d438-211b-44ac-bbb5-9c3db0ca1e65', N'SHOW307', N'CANCELLED', N'PUBLIC', NULL, 5, 3, 120, 60, NULL, NULL, 3, 4, CONVERT(datetime2(3), '2026-08-28T07:54:25.1230000', 126), CONVERT(datetime2(3), '2026-08-28T07:59:25.1230000', 126), CONVERT(datetime2(3), '2026-08-28T08:29:25.1230000', 126), CONVERT(datetime2(3), '2026-08-28T08:29:25.1230000', 126)),
@@ -2273,22 +2821,24 @@ INSERT INTO [social].[ContentReports] ([Id], [ReporterUserId], [TargetType], [Ta
     ('f645e774-ffcd-4952-b25a-8b83e73be3a0', '9b40d125-cd86-4ee1-9a12-f954c52610fb', N'COMMENT', '09872a2a-1501-4db7-be8c-fce10296ea6f', N'HARASSMENT', N'留言語氣帶有針對個人的嘲諷，請檢查前後文並確認是否需要處理。', N'PENDING', NULL, NULL, NULL, CONVERT(datetime2(3), '2026-08-19T07:56:22.6770000', 126));
 GO
 -- social.EventRegistrations
-INSERT INTO [social].[EventRegistrations] ([Id], [EventId], [UserId], [Status], [RegisteredAt]) VALUES
-    ('f76e6a68-6670-4230-a82e-0550f009b280', '59879d31-aa46-4839-b3e1-e8ed8023a44c', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'ATTENDED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126)),
-    ('f7483aee-a7c8-4823-8eb0-2623df07fef7', '2298c774-f78d-41d4-bda4-8c869da33fa1', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'REGISTERED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126)),
-    ('845f7fce-9d25-4df7-814f-329c0bfbe393', 'ae880904-f729-4dff-8698-d3335f57776b', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'REGISTERED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126)),
-    ('977a87ed-cb8b-4128-b94e-6090429c1722', '3f2bf0ea-aa9c-402c-96cf-cd308225b8dc', '9b40d125-cd86-4ee1-9a12-f954c52610fb', N'REGISTERED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126)),
-    ('efdb7edc-fd2f-4352-8188-e57be0dd1173', '2298c774-f78d-41d4-bda4-8c869da33fa1', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'REGISTERED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126));
+INSERT INTO [social].[EventRegistrations] ([Id], [EventId], [UserId], [Status], [RegisteredAt], [RewardPointAmount], [RewardCampaignId], [RewardKeyDefinitionId], [RewardKeyAmount], [RewardGrantedAt]) VALUES
+    ('f76e6a68-6670-4230-a82e-0550f009b280', '59879d31-aa46-4839-b3e1-e8ed8023a44c', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'ATTENDED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), 30, 'd0a30000-0000-0000-0000-000000000001', NULL, 0, CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
+    ('f7483aee-a7c8-4823-8eb0-2623df07fef7', '2298c774-f78d-41d4-bda4-8c869da33fa1', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'REGISTERED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), 0, NULL, NULL, 0, NULL),
+    ('845f7fce-9d25-4df7-814f-329c0bfbe393', 'ae880904-f729-4dff-8698-d3335f57776b', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'REGISTERED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), 0, NULL, NULL, 0, NULL),
+    ('977a87ed-cb8b-4128-b94e-6090429c1722', '3f2bf0ea-aa9c-402c-96cf-cd308225b8dc', '9b40d125-cd86-4ee1-9a12-f954c52610fb', N'REGISTERED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), 0, NULL, NULL, 0, NULL),
+    ('fe87449b-3aee-4aef-b30c-7fc5ed465d5a', '59879d31-aa46-4839-b3e1-e8ed8023a44c', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'ATTENDED', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126), 30, 'd0a30000-0000-0000-0000-000000000001', NULL, 0, CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
+    ('4146db2c-9a31-4dba-bdf7-c7b78fc44072', '59879d31-aa46-4839-b3e1-e8ed8023a44c', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'ATTENDED', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126), 30, 'd0a30000-0000-0000-0000-000000000001', NULL, 0, CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
+    ('efdb7edc-fd2f-4352-8188-e57be0dd1173', '2298c774-f78d-41d4-bda4-8c869da33fa1', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'REGISTERED', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), 0, NULL, NULL, 0, NULL);
 GO
 -- social.Events
 INSERT INTO [social].[Events] ([Id], [EventType], [OrganizerUserId], [Title], [Content], [Location], [Latitude], [Longitude], [StartAt], [EndAt], [RegistrationEndAt], [Capacity], [ReviewStatus], [PublishStatus], [ReviewNote], [ReviewedByUserId], [ReviewedAt], [CreatedAt]) VALUES
-    ('2298c774-f78d-41d4-bda4-8c869da33fa1', N'OFFICIAL', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'青銅器紋飾讀圖工作坊', N'本場從幾何紋、動物紋與器身轉折開始，帶著參加者練習把「看見的線條」和「對紋飾的推測」分開記錄。前半段會以完整影像建立觀看順序，後半段再放大器口、腹部與底部的局部，對照鑄造痕跡、構圖節奏與容易被光線掩蓋的細節。參加者不需要先熟悉專有名詞，只要帶著一個想查證的問題即可。', N'國立故宮博物院正館｜文獻導讀室', 25.102400, 121.548500, CONVERT(datetime2(3), '2026-09-05T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-05T10:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:56:22.6770000', 126), 24, N'APPROVED', N'PUBLISHED', N'活動內容與報名資訊已確認。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-09-03T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126)),
-    ('3f2bf0ea-aa9c-402c-96cf-cd308225b8dc', N'PLAYER', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'夜間文物猜謎會', N'活動會以局部圖像、簡短提示卡和分組討論進行三個回合；每回合先讓大家寫下看到的線索，再逐步開放材質、器形或來源提示。揭曉後不只公布答案，也會一起回看哪些判斷有圖鑑資料支持、哪些只是當下的直覺。適合想用輕鬆方式練習觀察，又願意把推理過程說出來的玩家。', N'清明鑑定屋｜二樓活動室', NULL, NULL, CONVERT(datetime2(3), '2026-09-25T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-25T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-22T07:56:22.6770000', 126), 30, N'PENDING', N'DRAFT', NULL, NULL, NULL, CONVERT(datetime2(3), '2026-09-15T07:56:22.6770000', 126)),
-    ('ae880904-f729-4dff-8698-d3335f57776b', N'PLAYER', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'玩家交流：我第一次看懂的細節', N'這是一場由玩家帶路的交流，大家可以分享自己在圖鑑裡第一次真正看懂的細節，也可以帶著曾經猜錯的作品來討論。流程會先用五分鐘說明作品名稱與資料來源，再交換辨識方法、查找過程和仍然沒有答案的問題；不要求每個人得出相同結論，重點是讓其他會員知道你的觀察從哪裡開始。', N'社群線上交流室', NULL, NULL, CONVERT(datetime2(3), '2026-09-18T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-18T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-16T07:56:22.6770000', 126), 16, N'APPROVED', N'PUBLISHED', N'符合玩家交流活動規範。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-09-16T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-08T07:56:22.6770000', 126)),
-    ('59879d31-aa46-4839-b3e1-e8ed8023a44c', N'OFFICIAL', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'週末館藏導讀：從器形看年代', N'本次導讀挑選三件不同時期的器物，先從通高、口徑、腹部比例與器足觀察整體形制，再回到材質、紋飾和來源欄位交叉比對。講者會示範如何保留年代原文與不確定範圍，也會安排一段讓參加者把自己的第一印象改寫成可以回查的觀察筆記，適合第一次使用圖鑑或想練習慢慢看作品的參加者。', N'國立故宮博物院南部院區（故宮南院）｜多功能展廳', 23.470900, 120.294100, CONVERT(datetime2(3), '2026-09-12T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-12T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-09T07:56:22.6770000', 126), 40, N'APPROVED', N'PUBLISHED', N'已完成場次與講者資料確認。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-09-10T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:56:22.6770000', 126)),
-    ('8d293743-c9a1-4478-9611-f00eb65253b0', N'PLAYER', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'玩家提案：我的地方文物小旅行', N'這個提案想從地方博物館、歷史建築與沿線街區開始，分享一條可以實際走訪的文物小旅行。發起人預計整理交通方式、開放時間、建議停留長度、照片來源與每一站想觀察的問題，也歡迎其他會員補充自己的路線。正式成團前會先確認活動流程、集合方式與可公開使用的資料來源。', N'社群線上交流室', NULL, NULL, CONVERT(datetime2(3), '2026-09-30T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-30T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-24T07:56:22.6770000', 126), 20, N'REJECTED', N'DRAFT', N'目前提案缺少明確的活動流程與資料來源，請補充後重新送審。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-09-28T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-20T07:56:22.6770000', 126)),
-    ('be150dd2-6067-41be-8d99-f03a80a51964', N'OFFICIAL', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'古典色彩與保存觀察', N'本場會從常見顏料、釉色與表面保存狀態切入，帶領參加者比較色彩變化在辨識上的幫助與限制。除了看作品本身，也會討論拍攝光線、反光、修復痕跡和螢幕顯示可能造成的誤判，最後將一段過度肯定的描述改寫成保留證據範圍的觀察筆記。活動結束後可回到圖鑑繼續查找相關作品。', N'國立故宮博物院南部院區（故宮南院）｜教育展廳', 23.470900, 120.294100, CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-26T10:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-19T07:56:22.6770000', 126), 18, N'APPROVED', N'CANCELLED', N'因場地維護取消本場活動，後續將另行公告。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-08-24T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-16T07:56:22.6770000', 126)),
-    ('b096b0a3-d410-4ad3-906a-f4f5f3c0b791', N'OFFICIAL', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', N'小型器物的手感與比例', N'本場從鑑定遊戲裡常見的小型器物題目延伸，先讓參加者比較不同作品的通高、口徑、器壁厚薄與可想像的拿取方式，再討論「手感」哪些可以從資料推測、哪些必須保留為想像。活動會把遊戲作答、圖鑑欄位和個人筆記放在一起回顧，練習不要只用一個醒目的特徵替作品下結論。', N'線上交流室', NULL, NULL, CONVERT(datetime2(3), '2026-09-08T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-08T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-06T07:56:22.6770000', 126), 28, N'PENDING', N'DRAFT', NULL, NULL, NULL, CONVERT(datetime2(3), '2026-08-29T07:56:22.6770000', 126));
+    ('2298c774-f78d-41d4-bda4-8c869da33fa1', N'OFFICIAL', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'青銅器紋飾讀圖工作坊', N'本場從幾何紋、動物紋與器身轉折開始，帶著參加者練習把「看見的線條」和「對紋飾的推測」分開記錄。前半段會以完整影像建立觀看順序，後半段再放大器口、腹部與底部的局部，對照鑄造痕跡、構圖節奏與容易被光線掩蓋的細節。參加者不需要先熟悉專有名詞，只要帶著一個想查證的問題即可。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, CONVERT(datetime2(3), '2026-09-05T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-05T10:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:56:22.6770000', 126), 24, N'APPROVED', N'PUBLISHED', N'活動內容與報名資訊已確認。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-09-03T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126)),
+    ('3f2bf0ea-aa9c-402c-96cf-cd308225b8dc', N'PLAYER', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', N'夜間文物猜謎會', N'活動會以局部圖像、簡短提示卡和分組討論進行三個回合；每回合先讓大家寫下看到的線索，再逐步開放材質、器形或來源提示。揭曉後不只公布答案，也會一起回看哪些判斷有圖鑑資料支持、哪些只是當下的直覺。適合想用輕鬆方式練習觀察，又願意把推理過程說出來的玩家。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', NULL, NULL, CONVERT(datetime2(3), '2026-09-25T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-25T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-22T07:56:22.6770000', 126), 30, N'PENDING', N'DRAFT', NULL, NULL, NULL, CONVERT(datetime2(3), '2026-09-15T07:56:22.6770000', 126)),
+    ('ae880904-f729-4dff-8698-d3335f57776b', N'PLAYER', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'玩家交流：我第一次看懂的細節', N'這是一場由玩家帶路的交流，大家可以分享自己在圖鑑裡第一次真正看懂的細節，也可以帶著曾經猜錯的作品來討論。流程會先用五分鐘說明作品名稱與資料來源，再交換辨識方法、查找過程和仍然沒有答案的問題；不要求每個人得出相同結論，重點是讓其他會員知道你的觀察從哪裡開始。', N'線上活動', NULL, NULL, CONVERT(datetime2(3), '2026-09-18T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-18T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-16T07:56:22.6770000', 126), 16, N'APPROVED', N'PUBLISHED', N'符合玩家交流活動規範。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-09-16T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-08T07:56:22.6770000', 126)),
+    ('59879d31-aa46-4839-b3e1-e8ed8023a44c', N'OFFICIAL', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'週末館藏導讀：從器形看年代', N'本次導讀挑選三件不同時期的器物，先從通高、口徑、腹部比例與器足觀察整體形制，再回到材質、紋飾和來源欄位交叉比對。講者會示範如何保留年代原文與不確定範圍，也會安排一段讓參加者把自己的第一印象改寫成可以回查的觀察筆記，適合第一次使用圖鑑或想練習慢慢看作品的參加者。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, CONVERT(datetime2(3), '2026-09-12T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-12T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-09T07:56:22.6770000', 126), 40, N'APPROVED', N'PUBLISHED', N'已完成場次與講者資料確認。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-09-10T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:56:22.6770000', 126)),
+    ('8d293743-c9a1-4478-9611-f00eb65253b0', N'PLAYER', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'玩家提案：我的地方文物小旅行', N'這個提案想從地方博物館、歷史建築與沿線街區開始，分享一條可以實際走訪的文物小旅行。發起人預計整理交通方式、開放時間、建議停留長度、照片來源與每一站想觀察的問題，也歡迎其他會員補充自己的路線。正式成團前會先確認活動流程、集合方式與可公開使用的資料來源。', N'線上活動', NULL, NULL, CONVERT(datetime2(3), '2026-09-30T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-30T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-24T07:56:22.6770000', 126), 20, N'REJECTED', N'DRAFT', N'目前提案缺少明確的活動流程與資料來源，請補充後重新送審。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-09-28T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-20T07:56:22.6770000', 126)),
+    ('be150dd2-6067-41be-8d99-f03a80a51964', N'OFFICIAL', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'古典色彩與保存觀察', N'本場會從常見顏料、釉色與表面保存狀態切入，帶領參加者比較色彩變化在辨識上的幫助與限制。除了看作品本身，也會討論拍攝光線、反光、修復痕跡和螢幕顯示可能造成的誤判，最後將一段過度肯定的描述改寫成保留證據範圍的觀察筆記。活動結束後可回到圖鑑繼續查找相關作品。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-26T10:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-19T07:56:22.6770000', 126), 18, N'APPROVED', N'CANCELLED', N'因場地維護取消本場活動，後續將另行公告。', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', CONVERT(datetime2(3), '2026-08-24T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-16T07:56:22.6770000', 126)),
+    ('b096b0a3-d410-4ad3-906a-f4f5f3c0b791', N'OFFICIAL', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', N'小型器物的手感與比例', N'本場從鑑定遊戲裡常見的小型器物題目延伸，先讓參加者比較不同作品的通高、口徑、器壁厚薄與可想像的拿取方式，再討論「手感」哪些可以從資料推測、哪些必須保留為想像。活動會把遊戲作答、圖鑑欄位和個人筆記放在一起回顧，練習不要只用一個醒目的特徵替作品下結論。', N'線上活動', NULL, NULL, CONVERT(datetime2(3), '2026-09-08T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-08T09:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-06T07:56:22.6770000', 126), 28, N'PENDING', N'DRAFT', NULL, NULL, NULL, CONVERT(datetime2(3), '2026-08-29T07:56:22.6770000', 126));
 GO
 -- social.SocialComments
 INSERT INTO [social].[SocialComments] ([Id], [PostId], [ParentCommentId], [UserId], [Content], [Status], [CreatedAt], [UpdatedAt]) VALUES
@@ -3080,7 +3630,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('11e0df85-fa91-f950-909a-06fc245383b7', N'GAME', 'ca5024a2-a0be-4204-8ec9-235368b494a9', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'SHOW303｜2026/08/30 16:03｜第 127 篇回顧：同一個答案，為什麼玩家會有不同路徑', N'我想從「SHOW303」的第 2 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/30 16:03，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'不同玩家從同一張圖得到不同假設並不奇怪；只要能說明觀察位置與資料依據，差異就能變成很好的討論起點。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'若要讓討論延續到社群，我會把不同答案的理由整理出來，再連回對應的圖鑑欄位，而不是只公布一個結果。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-05T07:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-05T08:08:00.0000000', 126)),
     ('740a70c3-4443-a258-985d-074a5756ceef', N'CATALOG', 'ca5024a2-a0be-4204-8ec9-235368b494a9', 'dd9f9eb2-b226-dff5-428b-0d754bec2efb', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'看明人畫扇（亨）　冊　明宋旭暮雲春樹不能跳過底部與接地面', N'這次整理「明人畫扇（亨）　冊　明宋旭暮雲春樹」時，我先從「器底線索」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「繪畫」、年代「明神宗萬曆三十年（1602）」、尺寸「15.2 × 46.9 公分」。原始說明提到：宋旭（西元一五二五－一六○五年以後）字石門、初暘。後為僧，法名祖賢，又號天池髮僧、景而居士。嘉興人（一作湖州）博宗內外典，通禪理。善山水，兼長人物，萬曆間名重海內。師沈周，巨幅大障，頗有氣勢。喜用八分書款，萬曆三十三年，年八十一，猶在人世。 平視河山，丘陵起伏，山光雲影，浮躍於眼前，寫暮色四合，用水墨渲染水天，橋上朱欄與寺廟紅牆，配以石綠點染樹葉，復令人於暮色漸垂中，有一分春日盎然生機，湧於心胸。本幅為「明人畫扇－亨」冊第十開。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立臺灣博物館', 25.037500, 121.515100, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-08T04:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-08T04:46:00.0000000', 126)),
     ('e19dac07-3b68-4214-beb7-07591daf5b91', N'CATALOG', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '16cd5d7b-27db-4ce6-9c70-101063761f30', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'陶器胎土顏色可以提供哪些線索', N'胎土顏色很受燒成氣氛、表面處理與照片白平衡影響，因此我不會只靠一張圖片判斷產地。若能同時看到斷面、器底和完整尺寸，再搭配來源資料，觀察才比較有機會形成可驗證的假設。', NULL, NULL, NULL, N'DELETED', CONVERT(datetime2(3), '2026-08-30T12:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:35:25.0750000', 126)),
-    ('eab2d40a-bef9-1f55-859a-07aa6af2ba6e', N'DISCOVERY', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 'eab8c5a9-2bdf-ce63-ef4d-0ba95bc42043', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'保存紀錄如何改變我對琉璃珠的理解', N'這次整理「琉璃珠」時，我先從「保存狀態」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「陶瓷」、年代「戰國」、尺寸「高 1.6 公分、外徑 1.6 公分、孔徑 0.5 公分」。原始說明提到：綠色半透明球形珠，胎體薄，中有穿孔，外壁嵌同色澤半透明眼珠狀紋飾，外框呈米黃色。湖南長沙瀏城橋戰國墓曾出土類似綠地三十眼琉璃珠。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院正館', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-20T04:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-20T04:29:00.0000000', 126)),
+    ('eab2d40a-bef9-1f55-859a-07aa6af2ba6e', N'DISCOVERY', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 'eab8c5a9-2bdf-ce63-ef4d-0ba95bc42043', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'保存紀錄如何改變我對琉璃珠的理解', N'這次整理「琉璃珠」時，我先從「保存狀態」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「陶瓷」、年代「戰國」、尺寸「高 1.6 公分、外徑 1.6 公分、孔徑 0.5 公分」。原始說明提到：綠色半透明球形珠，胎體薄，中有穿孔，外壁嵌同色澤半透明眼珠狀紋飾，外框呈米黃色。湖南長沙瀏城橋戰國墓曾出土類似綠地三十眼琉璃珠。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-20T04:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-20T04:29:00.0000000', 126)),
     ('4f0d7d8c-b954-4028-beb5-0984652f37ab', N'REVIEW', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'畫面人物比例與時代風格', N'畫中人物的身形、服飾和活動位置會一起影響畫面的時代感，但單一細節容易受到畫家個人習慣干擾。我會先找幾個可以比較的構圖，再把人物比例和題跋、設色以及裝裱資料放在同一份筆記裡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T09:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:32:25.0750000', 126)),
     ('14e42ffb-d213-cf58-8d15-0ae418fe9b01', N'EVENTS', '32090e80-8d61-4801-b480-a6358f7a9e37', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'活動結束後大家交換筆記，才發現漏看的細節可以拼回來', N'活動結束後我們沒有只拍合照，而是各自分享今天記下的細節。有人補上作品背面的觀察，有人記得講者提到的來源，合在一起後才形成比較完整的回顧，也讓我知道下次該把注意力放在哪裡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-13T01:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-13T02:21:00.0000000', 126)),
     ('9f47713d-723b-f35b-8c54-0b6aae60d620', N'GAME', 'f43ee0b6-a28d-47c1-a5e2-32fa9060383c', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'SHOW308｜2026/08/23 16:07｜第 139 篇回顧：同一個答案，為什麼玩家會有不同路徑', N'我想從「SHOW308」的第 3 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/23 16:07，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'不同玩家從同一張圖得到不同假設並不奇怪；只要能說明觀察位置與資料依據，差異就能變成很好的討論起點。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'若要讓討論延續到社群，我會把不同答案的理由整理出來，再連回對應的圖鑑欄位，而不是只公布一個結果。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-05T07:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-05T08:20:00.0000000', 126)),
@@ -3089,10 +3639,10 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('45bf26ab-2a8c-4a29-bd71-0e123f2557b5', N'GENERAL', '59538e0b-3f85-46d0-93d6-cccb9df12831', '5551ac30-d066-c638-2241-0c7aba184e70', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'展場說明和圖鑑描述怎麼交叉看', N'展場文字通常很適合快速建立脈絡，圖鑑則會補上尺寸、來源與研究資訊。遇到兩邊用詞不完全相同時，我會先確認它們是否在談不同層次的事情，再把能確定的內容和仍待查證的部分分欄記下來。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T15:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:38:25.0750000', 126)),
     ('4ff84663-d2ec-f951-af33-0e32502896f8', N'GAME', '9b40d125-cd86-4ee1-9a12-f954c52610fb', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'回合揭曉後回到圖鑑，才知道我漏掉的是哪個欄位', N'看到答案公布時，我只覺得自己猜錯了一個年代，回到圖鑑逐項比對後才發現真正漏掉的是作品分類。把回合記錄和正式資料放在一起看，比只記住誰答對更能幫助我下一次判斷。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-15T04:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-15T05:00:00.0000000', 126)),
     ('9650e3ed-7db4-4bcd-a9a8-0f48ea39e74f', N'DISCOVERY', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', 'd014ce98-0450-f3a4-739e-0994d9d7627e', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'木雕刀痕留下的製作線索', N'木雕表面有幾段方向一致的刀痕，轉折處則留下較細的修整痕跡。這些細節未必能直接判定作者或年代，但可以協助我們理解製作流程，也能提醒自己不要只用題材名稱替作品下判斷。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T18:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:41:25.0750000', 126)),
-    ('2ddd2974-9a67-a951-83f9-0fffde0b4d4e', N'EVENTS', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'活動報名成功後，我會先把時間和到場方式寫進行事曆', N'報名成功不代表到場就不會出錯，我會把活動開始、報到、交通和入口一起放進行事曆，也把活動頁的文字地址留著。地圖適合確認路線，文字則能在手機訊號不好時派上用場。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院正館」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院正館', 25.102400, 121.548500, N'HIDDEN', CONVERT(datetime2(3), '2026-08-08T06:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-08T06:33:00.0000000', 126)),
+    ('2ddd2974-9a67-a951-83f9-0fffde0b4d4e', N'EVENTS', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'活動報名成功後，我會先把時間和到場方式寫進行事曆', N'報名成功不代表到場就不會出錯，我會把活動開始、報到、交通和入口一起放進行事曆，也把活動頁的文字地址留著。地圖適合確認路線，文字則能在手機訊號不好時派上用場。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院｜臺北市士林區至善路二段221號」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'HIDDEN', CONVERT(datetime2(3), '2026-08-08T06:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-08T06:33:00.0000000', 126)),
     ('d235b0f5-b447-9f5e-9a23-10b5a7b6e3c9', N'GAME', 'd3964b0b-0c94-4c5a-b925-9bcf806c614e', '5551ac30-d066-c638-2241-0c7aba184e70', NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'SHOW307｜2026/08/28 16:03｜第 105 篇回顧：同一個答案，為什麼玩家會有不同路徑', N'我想從「SHOW307」的第 2 回合整理玩家如何在有限時間內閱讀「掐絲琺瑯香插」的圖像線索，再把觀察寫成可以被其他人理解的答案。這筆紀錄開始於 2026/08/28 16:03，目前回合狀態是「揭曉階段」。這篇談的是遊戲中的判斷過程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'對應的文物可以回到圖鑑查看分類、年代與來源；不同玩家從同一張圖得到不同假設並不奇怪；只要能說明觀察位置與資料依據，差異就能變成很好的討論起點。 這樣玩家可以先在遊戲裡提出假設，結束後再用正式資料檢查哪些部分有根據、哪些只是當下的直覺。' + NCHAR(10) + NCHAR(10) + N'若要讓討論延續到社群，我會把不同答案的理由整理出來，再連回對應的圖鑑欄位，而不是只公布一個結果。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-20T09:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-20T09:46:00.0000000', 126)),
-    ('3d4909a7-84e7-0854-973a-10b9c500cbcb', N'GENERAL', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 'b2450c9d-90a9-6b14-4c7c-d465f928383d', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我如何把明文徵明蕉池積雪　軸放回它的時代背景', N'這次整理「明文徵明蕉池積雪　軸」時，我先從「收藏脈絡」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「繪畫」、年代「明世宗嘉靖十一年（1532）」、尺寸「64.4 × 26.9 公分」。原始說明提到：文徵明（西元年一四七○－一五五九）江蘇長洲人，文信公後裔。初名壁，字徵明，後以字行，更字徵仲，號停雲生、衡山。畫師沈周，書畫雙絕，為明四大家之一。文氏享年九十，高齡健碩，猶孜孜於書畫，故作品傳世頗多。本幅畫蕉石盆景，幅上題詠甚多，道出畫題來源。如就畫賞畫，綠蕉白石古盆，相映成趣，彌覺可愛。款署壬辰（一五三二）亦脫境之筆。本幅為黃君璧先生捐贈。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院正館', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-14T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-14T09:26:00.0000000', 126)),
-    ('a2d89324-a129-5b52-8ccc-10de96a2b4e2', N'CATALOG', 'db7f8c59-6471-4604-a85c-ebc59c02fc6c', 'a4cdff05-f863-5891-24a6-ffd70d7afaea', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'玉鴛鴦的紋飾在轉角處有什麼變化', N'這次整理「玉鴛鴦」時，我先從「紋飾細節」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「玉器」、年代「南宋」、尺寸「高 3.1 公分」。原始說明提到：玉質，局部染褐沁。利用天然外形與顏色琢成一鴛鴦，首頂鑿一穿孔，鳥周身飾細膩之羽毛紋飾。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院正館', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-01T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-01T00:30:00.0000000', 126)),
+    ('3d4909a7-84e7-0854-973a-10b9c500cbcb', N'GENERAL', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 'b2450c9d-90a9-6b14-4c7c-d465f928383d', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我如何把明文徵明蕉池積雪　軸放回它的時代背景', N'這次整理「明文徵明蕉池積雪　軸」時，我先從「收藏脈絡」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「繪畫」、年代「明世宗嘉靖十一年（1532）」、尺寸「64.4 × 26.9 公分」。原始說明提到：文徵明（西元年一四七○－一五五九）江蘇長洲人，文信公後裔。初名壁，字徵明，後以字行，更字徵仲，號停雲生、衡山。畫師沈周，書畫雙絕，為明四大家之一。文氏享年九十，高齡健碩，猶孜孜於書畫，故作品傳世頗多。本幅畫蕉石盆景，幅上題詠甚多，道出畫題來源。如就畫賞畫，綠蕉白石古盆，相映成趣，彌覺可愛。款署壬辰（一五三二）亦脫境之筆。本幅為黃君璧先生捐贈。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-14T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-14T09:26:00.0000000', 126)),
+    ('a2d89324-a129-5b52-8ccc-10de96a2b4e2', N'CATALOG', 'db7f8c59-6471-4604-a85c-ebc59c02fc6c', 'a4cdff05-f863-5891-24a6-ffd70d7afaea', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'玉鴛鴦的紋飾在轉角處有什麼變化', N'這次整理「玉鴛鴦」時，我先從「紋飾細節」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「玉器」、年代「南宋」、尺寸「高 3.1 公分」。原始說明提到：玉質，局部染褐沁。利用天然外形與顏色琢成一鴛鴦，首頂鑿一穿孔，鳥周身飾細膩之羽毛紋飾。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-01T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-01T00:30:00.0000000', 126)),
     ('1a392d57-63fa-5f50-ac4e-116223db436b', N'DISCOVERY', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 'cf210e63-ba5d-484e-0fa7-4406fef50f0a', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'保存紀錄如何改變我對日本 20世紀富岡鐵齋牧童騎牛圖 軸的理解', N'這次整理「日本 20世紀富岡鐵齋牧童騎牛圖 軸」時，我先從「保存狀態」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「繪畫」、年代「日本大正時代14年（1925）1月」、尺寸「官方資料未提供」。原始說明提到：富岡鉄斎死後的作品被記載為「大正十四年一月/九十叟鐵齋」。橋本独山在外箱墨書「遺墨」、書寫的時間則是「時過初夏」，表示箱書是在鉄斎死後寫的，從緣由書可得知寸紅堂主委託独山寫了箱書。富岡鉄斎近年的研究顯示，大正13年(1924)起，初秋左右的作品開始用九十歲的落款。鉄斎死於12月31日除夕，12月上旬左右痼疾的膽石症發病，中旬一度轉好，年底卻又複發。31日中午，病床上雖可談話但下午突然去世。本作品的紀年「大正十四年一月九十叟」，推估為大正13年9月到12月上旬左右製作，可視為鉄斎最晚年的作品。相較於其他畫作，本作品…' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-30T11:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-30T11:36:00.0000000', 126)),
     ('d0f8799f-9cd6-ab5e-a0c1-11edbd57f145', N'CATALOG', 'e635f9ed-ff31-45e2-91da-dfdf518bd009', '9cb9e880-9ee8-b70f-b41e-b5e65e94c401', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'看蟠虺乳丁紋鼎不能跳過底部與接地面', N'這次整理「蟠虺乳丁紋鼎」時，我先從「器底線索」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「銅器」、年代「戰國」、尺寸「通高 31.7 公分、徑 27.8 公分、蓋徑 29.0 公分」。原始說明提到：附蓋圓鼎，器蓋中心有一圓捉手。子母口，雙附耳，深腹，三蹄足。雙耳微外撇，蓋、腹、耳皆飾蟠虺紋與乳丁紋。器蓋捉手外緣及腹部中央有一圈繩紋，腹下近足處有一周淺刻三角紋。器底、器足有範線。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-04-29T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-04-29T09:51:00.0000000', 126)),
     ('28802886-ee50-765c-9af9-12f6fab055c1', N'GENERAL', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'社群互動提醒：留言請回應具體觀察與問題', N'為了讓圖鑑、社群、遊戲與商城的展示資料可以互相對照，近期整理時會優先保留文物的原始名稱、來源、年代文字與尺寸記錄。需要推測的內容請另外標示，不會把暫時假設直接改成確定答案。' + NCHAR(10) + NCHAR(10) + N'目前這批展示資料共安排 288 篇不同主題的內容，社群貼文會盡可能連回實際文物；商城訂單則只會使用與文物有直接關聯的縮小複製品商品。若發現欄位需要補充，請在貼文中說明可以回查的依據。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「社群互動提醒：留言請回應具體觀察與問題」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-04-09T07:00:00.0000000', 126), CONVERT(datetime2(3), '2026-04-09T08:10:00.0000000', 126)),
@@ -3107,7 +3657,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('29dc1f1c-bc26-0e57-a06d-1a70540f2e53', N'GENERAL', '4f79ced2-639d-419a-ad7e-d8027c56eceb', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'高雄歷史博物館的一段說明，我讀了兩次才記住', N'在高雄市立歷史博物館看到一段不長的說明，第一次讀只留下大概的印象，走到下一個展櫃才發現自己其實沒有看懂。回頭再讀時，我把人名、地點和物件分開記，終於比較能說出它在講什麼。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-10T07:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-10T08:32:00.0000000', 126)),
     ('ad94c088-402c-4959-ba42-1aa4dc633384', N'CATALOG', '59538e0b-3f85-46d0-93d6-cccb9df12831', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'自然科學博物館裡的一個形狀，讓我想到文物的比例', N'去國立自然科學博物館看展時，注意到一個展示標本的比例關係，回家後竟然一直拿它和圖鑑裡的器形比較。兩者當然不是同一類東西，但把寬度、厚度和觀看距離拆開來想，讓我比較能理解尺寸資料。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「臺南市美術館二館」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'臺南市美術館二館', 22.997400, 120.198100, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-18T06:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-18T07:31:00.0000000', 126)),
     ('203d0aa2-f8ff-855d-a2d9-1beef7a518bd', N'GUIDE', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 'd9ee3113-ed70-29ec-3019-d662b69cffb2', NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'把陶編鐘的資料分成可見與待查兩層｜故宮編號：贈瓷000453N000000000', N'我把「陶編鐘」的整理分成三層：先留下影像中確定看見的細節，再保留來源提供的原始文字，最後才補上自己的問題與待查方向。這個順序可以避免摘要寫得太順，卻把原本的不確定性藏掉。' + NCHAR(10) + NCHAR(10) + N'這件文物目前的分類是「陶瓷」，年代欄位保留為「春秋」，尺寸欄位為「待測量」。原始說明摘要如下：陶鐘，器型仿青銅器編鐘，方鈕，鐘身有二十四枚，上下緣塗白陶衣。' + NCHAR(10) + NCHAR(10) + N'之後如果找到新的研究資料，我會直接回到相對應的欄位更新，不把新的推測覆蓋掉原本的來源紀錄。也歡迎大家分享自己整理文物時會保留的欄位。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-04T06:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-04T06:19:00.0000000', 126)),
-    ('e5ec322b-cc72-b551-a643-1d661af17f1d', N'QUESTION', 'ce13b79f-7f78-40e1-af3b-8b20a85c610b', '1bd4e875-d5e6-4bc6-d325-072521c79756', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我對剔紅雲龍紋碗保留的一個判讀問題', N'整理「剔紅雲龍紋碗」時，我先把目前能直接從圖像與圖鑑欄位確認的內容分開記下來，再標出仍需要來源或同類作品才能確認的部分。這樣做的好處是，討論不會因為一句過度肯定的描述而失去可以修正的空間。' + NCHAR(10) + NCHAR(10) + N'目前資料記載：分類為「漆器」，年代原文為「清 乾隆」，尺寸為「高 7.4 公分、口徑 20.8 公分、足徑 9.0 公分」。原始說明提到：雕漆碗，通體雕紅、綠色漆。敞口，弧形壁，圈足。器身雕龍三對穿梭雲氣之間，綠漆地雕天文錦地，口緣與圈足各飾弦紋、回紋。器內與底髹黑色光漆，碗底有填金楷款「大清乾隆年製」。與雕漆碗托(故漆307)成組。' + NCHAR(10) + NCHAR(10) + N'我想請大家一起看的，是「資料判讀」這個角度。若有不同解讀，也希望能指出對應的影像位置、欄位或參考來源，讓後續比較可以回到同一份資料。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-13T04:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-13T05:10:00.0000000', 126)),
+    ('e5ec322b-cc72-b551-a643-1d661af17f1d', N'QUESTION', 'ce13b79f-7f78-40e1-af3b-8b20a85c610b', '1bd4e875-d5e6-4bc6-d325-072521c79756', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我對剔紅雲龍紋碗保留的一個判讀問題', N'整理「剔紅雲龍紋碗」時，我先把目前能直接從圖像與圖鑑欄位確認的內容分開記下來，再標出仍需要來源或同類作品才能確認的部分。這樣做的好處是，討論不會因為一句過度肯定的描述而失去可以修正的空間。' + NCHAR(10) + NCHAR(10) + N'目前資料記載：分類為「漆器」，年代原文為「清 乾隆」，尺寸為「高 7.4 公分、口徑 20.8 公分、足徑 9.0 公分」。原始說明提到：雕漆碗，通體雕紅、綠色漆。敞口，弧形壁，圈足。器身雕龍三對穿梭雲氣之間，綠漆地雕天文錦地，口緣與圈足各飾弦紋、回紋。器內與底髹黑色光漆，碗底有填金楷款「大清乾隆年製」。與雕漆碗托(故漆307)成組。' + NCHAR(10) + NCHAR(10) + N'我想請大家一起看的，是「資料判讀」這個角度。若有不同解讀，也希望能指出對應的影像位置、欄位或參考來源，讓後續比較可以回到同一份資料。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-13T04:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-13T05:10:00.0000000', 126)),
     ('3c90a2d0-4f0a-48e7-a0d6-1eb974298912', N'DISCOVERY', '2d049534-161d-4862-971f-e410d2ac9162', 'eb3d79b7-0009-6e91-d173-113badf28224', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'玉璧孔徑與比例的觀察', N'比較幾件玉璧時，我發現孔徑和外緣比例會改變作品的視覺重量。這不一定直接對應年代，但可以先作為分類和比較的起點；若再加入厚度、邊緣加工與穿繫痕跡，筆記會更完整。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T11:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:34:25.0750000', 126)),
     ('8803166b-65dc-2d57-88cc-1f1257d4f858', N'GAME', 'f43ee0b6-a28d-47c1-a5e2-32fa9060383c', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'SHOW305｜2026/08/27 16:07｜第 137 篇回顧：回合結束後，我會怎麼檢查自己的判斷', N'我想從「SHOW305」的第 3 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/27 16:07，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'回合結束後，最值得回看的不只是答對或答錯，而是自己在什麼時候改變判斷，以及改變的理由是否留得下來。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'這樣的回顧也適合保留成個人學習紀錄，讓玩家看到自己長期在哪一類題目上容易過早下結論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-21T05:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-21T06:18:00.0000000', 126)),
     ('100d75fa-5130-5552-b90e-1f29cbb3ca69', N'GENERAL', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', 'f992545a-3a40-7132-bc2e-e9e9c2d06284', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'骨雕鸞鳳綬帶板的來源與流傳資料值得一起看', N'這次整理「骨雕鸞鳳綬帶板」時，我先從「收藏脈絡」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「雕刻」、年代「宋至元」、尺寸「長 15.3 公分、寬 6.2 公分、厚 1.9 公分」。原始說明提到：長方形，四隅與中央凹入，每一邊亦內弧，兩面周邊皆起寬棱，一面中央浮雕壽石，左右各浮雕一鸞或一鳳翔於牡丹花叢中；另一面在中央分界成左右各一方形，各雕一綬帶鳥翔於牡丹花叢中，鸞鳳與綬帶鳥皆首尾相錯地面像器中央。此器兩面皆浮雕紋飾，原可能是他器之嵌件。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-12T03:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-12T03:45:00.0000000', 126)),
@@ -3123,7 +3673,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('b0e73362-0d5d-4563-9954-25bd7db8b895', N'CATALOG', '4f79ced2-639d-419a-ad7e-d8027c56eceb', '4aff0a71-a14e-12ee-915a-0bf21874ff1a', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'紋飾對稱不代表每一筆都一樣', N'對稱紋樣給人的整體感很整齊，但放大後仍能看到左右筆勢和間距有些不同。這種差異可能和手工製作、模印方式或後續修整有關，我想把相同位置的細節截圖整理起來，再和其他器物比較。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T16:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:39:25.0750000', 126)),
     ('b503f16a-c24e-1456-bb98-25e756991c7f', N'GENERAL', 'd3964b0b-0c94-4c5a-b925-9bcf806c614e', '48f0adc5-1bc7-a30c-32ed-06c117e3f553', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'從一個不熟的名稱開始查，最後找到一條自己的閱讀路線', N'一開始只是被一個不熟悉的名稱吸引，沿著分類、年代和來源往下看，途中又遇到幾件相關作品。最後沒有得到一個很大的結論，卻整理出一條自己下次還走得回去的閱讀路線。' + NCHAR(10) + NCHAR(10) + N'文中提到的作品可以回到圖鑑「熙寧元寶」核對；分類是「錢幣」，年代資料則保留「北宋」的原始範圍。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-04-01T01:00:00.0000000', 126), CONVERT(datetime2(3), '2026-04-01T01:33:00.0000000', 126)),
     ('5666bffc-a20f-0456-9149-25f6ab1d67b1', N'GAME', '59538e0b-3f85-46d0-93d6-cccb9df12831', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'SHOW305｜2026/08/27 16:07｜第 121 篇回顧：從SHOW305的一回合看提示怎麼安排', N'我想從「SHOW305」的第 3 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/27 16:07，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'我會先把題目提供的線索分成影像、文字與比較方向，再決定哪些資訊足以支持目前的猜測。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'下一次我想測試先給完整圖像、後補文字提示，看看玩家是否能更自然地說明自己的觀察。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-18T01:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-18T02:02:00.0000000', 126)),
-    ('4f8a78c4-6f64-0b51-b03f-263fb34f311a', N'CATALOG', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', '89e97f27-85ff-f9a3-aa05-ade9834a0b28', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'不要只記住顏色：加彩灰陶馬的表面細節', N'這次整理「加彩灰陶馬」時，我先從「紋飾細節」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「陶瓷」、年代「東漢」、尺寸「長 103.0 公分、高 85.0 公分」。原始說明提到：陶馬，體型短小。長臉，骨棱分明，眉脊高聳，鼻翼奮張，圓目，張嘴吐舌作喘息狀。粗頸寬胸，平背圓臀，腕粗蹄闊，雙耳高聳。額前鬃毛成束，後腦馬鬃披頸，剪短豎起。尾作弧形上翹，末端打結。四足穩立，矯健有力。肌肉結實，呈現漢代駿馬的體態。塑者捕捉馬在停歇喘息的瞬間，活潑生動。馬匹原為赭紅色，局部尚留白色粉底及朱彩。 陶馬為漢代事死如事生概念下的陪葬品，大量出現在四川、河南、河北等地。本作品與四川樂山崖墓東漢墓出土的陶馬造型類似。由墓葬出現狀態觀察，此類體態優美的馬匹可為坐騎、軺車乘馬，也盛裝作儀隊用馬。據說是健步如飛的汗血…' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院正館', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-19T08:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-19T08:21:00.0000000', 126)),
+    ('4f8a78c4-6f64-0b51-b03f-263fb34f311a', N'CATALOG', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', '89e97f27-85ff-f9a3-aa05-ade9834a0b28', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'不要只記住顏色：加彩灰陶馬的表面細節', N'這次整理「加彩灰陶馬」時，我先從「紋飾細節」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「陶瓷」、年代「東漢」、尺寸「長 103.0 公分、高 85.0 公分」。原始說明提到：陶馬，體型短小。長臉，骨棱分明，眉脊高聳，鼻翼奮張，圓目，張嘴吐舌作喘息狀。粗頸寬胸，平背圓臀，腕粗蹄闊，雙耳高聳。額前鬃毛成束，後腦馬鬃披頸，剪短豎起。尾作弧形上翹，末端打結。四足穩立，矯健有力。肌肉結實，呈現漢代駿馬的體態。塑者捕捉馬在停歇喘息的瞬間，活潑生動。馬匹原為赭紅色，局部尚留白色粉底及朱彩。 陶馬為漢代事死如事生概念下的陪葬品，大量出現在四川、河南、河北等地。本作品與四川樂山崖墓東漢墓出土的陶馬造型類似。由墓葬出現狀態觀察，此類體態優美的馬匹可為坐騎、軺車乘馬，也盛裝作儀隊用馬。據說是健步如飛的汗血…' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-19T08:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-19T08:21:00.0000000', 126)),
     ('d48912ac-2afc-b152-b22b-27f61e1a30ee', N'EVENTS', '4f79ced2-639d-419a-ad7e-d8027c56eceb', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'如果要去南院參加活動，我會把集合位置先記成文字', N'上次到南院時花了一點時間找入口，所以這次看到活動資訊先把館區、入口和報到時間抄在行程裡。地圖能幫我確認大方向，但真正到場前，我還是會保留清楚的文字位置和交通備註。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-02-10T04:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-10T04:48:00.0000000', 126)),
     ('3b7d060d-2e5f-215d-8519-28248ff20e32', N'GENERAL', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', '625ebb2b-f11b-f9cb-7e58-1b1ab97f3561', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'從元郭畀寫高使君意　軸開始建立文物閱讀習慣', N'這次整理「元郭畀寫高使君意　軸」時，我先從「第一次認識」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「繪畫」、年代「元順帝至元五年（1339）」、尺寸「81.5 × 30.6 公分」。原始說明提到：郭畀（一二八○—一三三五）字天鍚，號雲山，江蘇丹徒人，官至江浙行省辟充掾史。工書畫，書法出入趙孟頫，山水師法米芾，又善竹木窠石。 此圖寫溪畔坡石高松，遠山寺宇，雲烟繚繞。山石用淡墨大筆渲染，加濃墨橫點提醒，雲烟鈎繪輪廓，這些都是從米家雲山變化來的。紀年己卯為至元五年（一三三九），時郭畀已歿，故應為後人的仿作。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-06T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-06T10:27:00.0000000', 126)),
     ('64f8c086-0382-5752-b335-29797ae8aa5a', N'GAME', '32090e80-8d61-4801-b480-a6358f7a9e37', 'dc8cdf9e-1358-5f99-427c-bcaef2922575', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'投票階段最難的不是選答案，而是先讀完別人的理由', N'以前進入投票就只看哪個答案寫得最像故事，這次刻意先讀每個人的理由，再回頭對照題目提供的線索。最後投的仍然不是我最喜歡的文字，而是我覺得比較能回到圖鑑資料的那一個。' + NCHAR(10) + NCHAR(10) + N'文中提到的作品可以回到圖鑑「玉蠶」核對；分類是「玉器」，年代資料則保留「商晚期至西周早期」的原始範圍。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-27T02:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-27T02:58:00.0000000', 126)),
@@ -3137,7 +3687,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('5ff8899d-ef40-4d77-bc91-32d3ebbb310c', N'DISCOVERY', 'ce13b79f-7f78-40e1-af3b-8b20a85c610b', 'a7a789f5-1e12-6773-c616-2ba2b121a133', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'一件文物適合拆成哪些觀察問題', N'我會把一件文物拆成器形、材質、紋飾、尺寸、來源與保存六個方向，再依資料完整程度調整問題。這樣做不是要把作品切碎，而是讓每個判斷都有對應線索，之後和其他會員交流時也比較容易指出彼此討論的是哪一部分。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-29T08:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:07:25.0750000', 126)),
     ('0505b324-fab5-434a-baba-33690ee981cc', N'REVIEW', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', 'f5911751-ac21-670c-2891-2acd6fe948e0', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'看見熟悉紋樣後如何避免先入為主', N'看到熟悉紋樣時，很容易立刻聯想到某個朝代或用途。我現在會先把可見形狀、位置和比例記下來，等查完來源與同類作品後再補充解釋，刻意把第一印象和查證結果分開，反而更能看出自己原本忽略了什麼。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-29T09:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:08:25.0750000', 126)),
     ('d5fdc9fc-e1a9-4405-8945-34cdfa4e13f0', N'CATALOG', '7881ef5d-547d-4d08-b71d-a48be2000a35', '4e5b0daa-9f1b-9915-50a0-18d7e2edda40', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'青花線條粗細與筆觸速度', N'青花線條有些段落厚重、有些段落很輕，除了筆壓之外，也可能和顏料含水量、繪製速度及燒成後的暈散有關。把線條放大觀察時，我會同時保留完整器物照片，避免局部細節脫離整體構圖。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T04:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:27:25.0750000', 126)),
-    ('a1ad6926-cf76-665b-8308-3537d2d8a71f', N'EVENTS', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', NULL, 'b096b0a3-d410-4ad3-906a-f4f5f3c0b791', N'EVENT', N'OFFICIAL', N'TEMPLATE', N'小型器物的手感與比例', N'這篇貼文對應活動資料「小型器物的手感與比例」，活動性質為官方活動。活動時間是 2026/09/08 15:56，地點為「線上交流室」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'本場從鑑定遊戲裡常見的小型器物題目延伸，先讓參加者比較不同作品的通高、口徑、器壁厚薄與可想像的拿取方式，再討論「手感」哪些可以從資料推測、哪些必須保留為想像。活動會把遊戲作答、圖鑑欄位和個人筆記放在一起回顧，練習不要只用一個醒目的特徵替作品下結論。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'線上交流室', NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-02T03:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-02T03:40:00.0000000', 126)),
+    ('a1ad6926-cf76-665b-8308-3537d2d8a71f', N'EVENTS', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', NULL, 'b096b0a3-d410-4ad3-906a-f4f5f3c0b791', N'EVENT', N'OFFICIAL', N'TEMPLATE', N'小型器物的手感與比例', N'這篇貼文對應活動資料「小型器物的手感與比例」，活動性質為官方活動。活動時間是 2026/09/08 15:56，地點為「線上活動」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'本場從鑑定遊戲裡常見的小型器物題目延伸，先讓參加者比較不同作品的通高、口徑、器壁厚薄與可想像的拿取方式，再討論「手感」哪些可以從資料推測、哪些必須保留為想像。活動會把遊戲作答、圖鑑欄位和個人筆記放在一起回顧，練習不要只用一個醒目的特徵替作品下結論。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'線上活動', NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-02T03:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-02T03:40:00.0000000', 126)),
     ('096e76cc-e69b-43d4-a2ea-36a7e4c2b349', N'DISCOVERY', '7881ef5d-547d-4d08-b71d-a48be2000a35', 'ab0fd8e3-04ed-c5b8-51be-040763090373', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'玉器打磨痕跡與年代判讀', N'這件玉器的邊緣看起來很平順，但放大之後仍能看到細小的磨製方向。我想請教大家在判讀這類痕跡時，通常會先和器形比較，還是先找同時期作品的加工方式？', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-31T04:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:51:25.0750000', 126)),
     ('cbb72090-d608-fa5f-9e47-3702d68d4b9e', N'CATALOG', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 'acaf0758-d52c-6957-4c83-f64cfaff540e', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'玉器穿孔的位置，讓我開始想像它原本怎麼被拿取', N'這件玉器最先吸引我的是穿孔的位置，而不是表面的顏色。我試著從孔的方向和器物厚度思考它可能如何被固定或攜帶，但目前只把這些列為問題，還不把想像寫成確定用途。' + NCHAR(10) + NCHAR(10) + N'文中提到的作品可以回到圖鑑「汝窯 青瓷碟「丙蔡」銘」核對；分類是「陶瓷」，年代資料則保留「北宋」的原始範圍。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-04-11T03:00:00.0000000', 126), CONVERT(datetime2(3), '2026-04-11T03:23:00.0000000', 126)),
     ('9ece1da9-d8d8-4ee8-a604-37111ad920dc', N'GENERAL', '2d049534-161d-4862-971f-e410d2ac9162', 'a5e3a537-5c6d-6637-ad9c-27f0a8cd9c4b', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'圖鑑來源與授權標示的差別', N'來源網址回答資料從哪裡來，授權標示則說明影像或文字可以如何使用，兩者在整理資料時都不能省略。這次匯入資料我特別把原始網址、授權代碼與出處文字分開留存，日後前台展示時才不會把它們混成一個模糊的欄位。', NULL, NULL, NULL, N'DELETED', CONVERT(datetime2(3), '2026-08-29T11:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:10:25.0750000', 126)),
@@ -3159,7 +3709,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('d1deccc5-7c13-1753-911c-49e3d6cce797', N'CATALOG', '2d049534-161d-4862-971f-e410d2ac9162', 'bcd2c835-b050-c74b-9a7f-5ae8dc7de0c6', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'為什麼我把提梁銗鏤的器底放到最後核對', N'這次整理「提梁銗鏤」時，我先從「器底線索」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「銅器」、年代「西漢」、尺寸「通高 18.8 口徑 8.2 公分」。原始說明提到：器身圓鼓，圜底，三足作熊形，有提樑，呈雙龍形。器蓋有三獸形紐，取下倒置，可作容器使用。器內有殘存碎骨，與器身朽聯一塊。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-10T07:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-10T07:25:00.0000000', 126)),
     ('bc2923c8-aac3-435b-aff6-4a37e5449d72', N'DISCOVERY', 'e635f9ed-ff31-45e2-91da-dfdf518bd009', 'd177ebf2-0dab-43be-66e8-b8cb15e3e1db', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'照片裡的陰影差點讓我誤判表面狀態', N'整理參觀照片時，我差點把一塊深色陰影當成作品本身的紋理，直到換一張角度比較平的影像才發現那是燈光造成的。現在寫心得會順手標註拍攝方向，不再把單張照片的效果直接當成原貌。' + NCHAR(10) + NCHAR(10) + N'文中提到的作品可以回到圖鑑「骨雕填彩管」核對；分類是「雕刻」，年代資料則保留「西漢」的原始範圍。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-21T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-21T10:18:00.0000000', 126)),
     ('76deb729-4eed-9c55-8a34-4ba73bfc548f', N'GENERAL', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'回家讀一年前的筆記，發現自己現在會先看以前忽略的欄位', N'整理舊筆記時看到一年前的自己只寫了顏色和喜好，現在卻會先找尺寸、來源和觀看角度。作品沒有變，是我的閱讀方式變了；把這些差異留下來，對長期累積很有成就感。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-05T02:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-05T03:22:00.0000000', 126)),
-    ('1d699322-79bb-6f58-997d-4c98371c4851', N'GENERAL', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'朋友說他只看得懂畫面，我請他先說自己看見的地方', N'朋友常說自己不懂文物，我請他不要先想答案，只描述畫面裡最先看到的顏色、形狀和方向。等他說完，我們再一起看資料，原來不需要先懂所有名詞，也可以從觀察開始聊天。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區（故宮南院）」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-04T06:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-04T07:14:00.0000000', 126)),
+    ('1d699322-79bb-6f58-997d-4c98371c4851', N'GENERAL', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'朋友說他只看得懂畫面，我請他先說自己看見的地方', N'朋友常說自己不懂文物，我請他不要先想答案，只描述畫面裡最先看到的顏色、形狀和方向。等他說完，我們再一起看資料，原來不需要先懂所有名詞，也可以從觀察開始聊天。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-04T06:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-04T07:14:00.0000000', 126)),
     ('167cae10-41b9-5155-b105-4d8d3a951232', N'GUIDE', '9b40d125-cd86-4ee1-9a12-f954c52610fb', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把專有名詞換成自己的話，再附回原本的詞', N'碰到不熟的名詞時，我先用自己能理解的句子記錄，再在後面附上資料中的原詞。這樣回頭看時不會只剩一串背過的名稱，也能在需要查來源時準確找到原本使用的說法。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-08T04:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-08T04:36:00.0000000', 126)),
     ('d7743337-7329-c15f-a4c4-5016c00cae44', N'GAME', 'ca5024a2-a0be-4204-8ec9-235368b494a9', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW305｜2026/08/27 16:03｜第 122 篇回顧：把遊戲紀錄整理成下一次的學習筆記', N'我想從「SHOW305」的第 2 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/27 16:03，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'把一場遊戲留下的作答、投票和揭曉結果放在一起，才能看出下一次要複習的是知識、閱讀順序，還是時間分配。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'這些資料不需要被包裝成正式研究結論，但可以作為下一次出題、調整提示和設計新手教學的實際依據。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-10T02:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-10T03:03:00.0000000', 126)),
     ('61fc1876-ce51-7352-8051-503d30b0645d', N'EVENTS', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'第一次參加文物導讀，我最意外的是大家先不急著猜答案', N'導讀一開始沒有直接公布作品背景，而是請大家先說自己看見了什麼。我原本以為這樣會拖慢進度，結果每個人注意到的地方都不同，輪到我發言時也比較敢把還沒想清楚的部分說出來。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-02-26T02:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-26T02:46:00.0000000', 126)),
@@ -3172,23 +3722,23 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('24b5acc5-c266-ff5a-965e-56e9b1ca6a5f', N'GUIDE', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'商城資料通知：商品名稱與對應文物保持關聯', N'社群討論歡迎從器形、材質、紋飾、保存、來源與觀看經驗切入。長文請用段落說明觀察順序，並在引用外部資料時留下出處；若只是個人推測，也請用容易辨識的語氣說明。' + NCHAR(10) + NCHAR(10) + N'後續前台可以沿用這些分類、文物關聯、地點欄位與官方發布狀態，讓使用者既能手動輸入內容，也能在需要時直接從地圖或文物資料開始建立貼文。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「商城資料通知：商品名稱與對應文物保持關聯」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-04-06T03:00:00.0000000', 126), CONVERT(datetime2(3), '2026-04-06T04:06:00.0000000', 126)),
     ('e182a176-93d2-945c-9ab9-577d3ae99d54', N'EVENTS', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'我喜歡活動先讓參加者觀察，再把背景資料放到後面', N'這次活動的安排是先看作品、再聽背景，對我來說比一開始先講完整年代更容易記住。因為已經有自己的觀察，後面聽到資料時會知道它在回答哪一個疑問，不會只剩下一串名詞。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-18T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-18T08:23:00.0000000', 126)),
     ('513c3332-5a08-9d5e-a2f9-59ad7bf1a0d1', N'GAME', 'a1c4407f-acee-4abe-a702-e164fb399b2e', '2ec43a92-b738-b38b-9e7d-0dc2524145c6', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW308｜2026/08/23 15:59｜第 111 篇回顧：把遊戲紀錄整理成下一次的學習筆記', N'我想從「SHOW308」的第 1 回合整理玩家如何在有限時間內閱讀「剔紅六瓣花式盒」的圖像線索，再把觀察寫成可以被其他人理解的答案。這筆紀錄開始於 2026/08/23 15:59，目前回合狀態是「揭曉階段」。這篇談的是遊戲中的判斷過程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'對應的文物可以回到圖鑑查看分類、年代與來源；把一場遊戲留下的作答、投票和揭曉結果放在一起，才能看出下一次要複習的是知識、閱讀順序，還是時間分配。 這樣玩家可以先在遊戲裡提出假設，結束後再用正式資料檢查哪些部分有根據、哪些只是當下的直覺。' + NCHAR(10) + NCHAR(10) + N'這些資料不需要被包裝成正式研究結論，但可以作為下一次出題、調整提示和設計新手教學的實際依據。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-28T03:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-28T03:52:00.0000000', 126)),
-    ('a331b6d4-cc7e-2b5d-abdb-5a26bd4f1775', N'REVIEW', '2d049534-161d-4862-971f-e410d2ac9162', '9bfaadd1-12b4-bbff-00b0-fa0d90b800ea', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'如果把熙寧元寶放進展示櫃，我會怎麼安排光線｜故宮編號：購錢004741N000000000', N'第一次看到「熙寧元寶」時，我的注意力先被整體輪廓吸引，後來才把視線移到邊緣、表面與容易被縮圖省略的細節。這種先看整體、再回到局部的順序，讓我比較不會把一個拍攝角度當成作品的完整樣貌。' + NCHAR(10) + NCHAR(10) + N'圖鑑資料顯示它屬於「錢幣」，年代原文為「北宋」，尺寸是「待測量」。原始說明中可以直接回查的內容是：銅質。方孔圓錢，正面有篆書：「熙寧元寶」四字，背面無文。' + NCHAR(10) + NCHAR(10) + N'如果要把這件作品放在展示或討論情境裡，我會把目前能確認的資料和自己的觀看感受分開標示；這樣既保留第一印象，也不會把感想誤當成考證結果。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-23T08:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-23T08:33:00.0000000', 126)),
+    ('a331b6d4-cc7e-2b5d-abdb-5a26bd4f1775', N'REVIEW', '2d049534-161d-4862-971f-e410d2ac9162', '9bfaadd1-12b4-bbff-00b0-fa0d90b800ea', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'如果把熙寧元寶放進展示櫃，我會怎麼安排光線｜故宮編號：購錢004741N000000000', N'第一次看到「熙寧元寶」時，我的注意力先被整體輪廓吸引，後來才把視線移到邊緣、表面與容易被縮圖省略的細節。這種先看整體、再回到局部的順序，讓我比較不會把一個拍攝角度當成作品的完整樣貌。' + NCHAR(10) + NCHAR(10) + N'圖鑑資料顯示它屬於「錢幣」，年代原文為「北宋」，尺寸是「待測量」。原始說明中可以直接回查的內容是：銅質。方孔圓錢，正面有篆書：「熙寧元寶」四字，背面無文。' + NCHAR(10) + NCHAR(10) + N'如果要把這件作品放在展示或討論情境裡，我會把目前能確認的資料和自己的觀看感受分開標示；這樣既保留第一印象，也不會把感想誤當成考證結果。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-23T08:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-23T08:33:00.0000000', 126)),
     ('4d462992-53bb-4cd7-9f56-5a484fb0a0d0', N'REVIEW', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'畫作裝裱邊界能不能當線索', N'裝裱邊界和畫心的比例會影響觀看，也可能反映後來的收藏與修整歷程。不過裝裱不一定和作品創作年代相同，我會把它當作流傳資訊的一部分，和題跋、印記以及保存紀錄分開判讀。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T01:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:24:25.0750000', 126)),
     ('004d0574-ce45-bd5d-9113-5a4c7b3fe787', N'GAME', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', 'eb3d79b7-0009-6e91-d173-113badf28224', NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'SHOW305｜2026/08/27 16:07｜第 138 篇回顧：同一個答案，為什麼玩家會有不同路徑', N'我想從「SHOW305」的第 3 回合整理玩家如何在有限時間內閱讀「白瓷印花獅戲圖蔗段式洗」的圖像線索，再把觀察寫成可以被其他人理解的答案。這筆紀錄開始於 2026/08/27 16:07，目前回合狀態是「揭曉階段」。這篇談的是遊戲中的判斷過程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'對應的文物可以回到圖鑑查看分類、年代與來源；不同玩家從同一張圖得到不同假設並不奇怪；只要能說明觀察位置與資料依據，差異就能變成很好的討論起點。 這樣玩家可以先在遊戲裡提出假設，結束後再用正式資料檢查哪些部分有根據、哪些只是當下的直覺。' + NCHAR(10) + NCHAR(10) + N'若要讓討論延續到社群，我會把不同答案的理由整理出來，再連回對應的圖鑑欄位，而不是只公布一個結果。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-13T06:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-13T07:19:00.0000000', 126)),
     ('088fa901-f9d0-5c51-978b-5b43fbd43acd', N'GAME', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我在遊戲裡最常犯的錯，是把相似名稱當成相同作品', N'幾次回合後發現自己常因名稱很像就直接選答案，等揭曉才知道圖像和分類並不相同。現在看到熟悉字樣，反而會先核對編號與影像，這個習慣也慢慢帶回平常查圖鑑的時候。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-17T00:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-17T01:20:00.0000000', 126)),
     ('31226900-0ca7-f558-8b63-5b9ca7296cea', N'REVIEW', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', '9d51cb6c-3684-81de-050a-ee5f7f4b7fa8', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'小型複製品最適合放在我每天會讀資料的地方', N'我試過把複製品收進櫃子，也試過放在客廳最顯眼的位置，最後覺得書桌旁最好。每天讀到相關資料時抬頭就能看到它，卻不會因為太醒目而把作品本身變成背景。' + NCHAR(10) + NCHAR(10) + N'文中提到的作品可以回到圖鑑「剔紅花卉長頸瓶」核對；分類是「漆器」，年代資料則保留「明 永樂」的原始範圍。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-09-13T01:00:00.0000000', 126), CONVERT(datetime2(3), '2025-09-13T02:33:00.0000000', 126)),
     ('8fee36f0-3461-f957-98d8-5cbaeac06eb6', N'DISCOVERY', '32090e80-8d61-4801-b480-a6358f7a9e37', '36af0548-9550-f01e-6ef4-225669b2c943', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'剔紅雲龍紋碗托的資料精度能支持到哪裡', N'這次整理「剔紅雲龍紋碗托」時，我先從「來源查證」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「漆器」、年代「清 乾隆」、尺寸「高 16.1 公分、口徑 20.8 公分、足徑 9.0 公分」。原始說明提到：雕漆碗托，色硃紅。器作高圈足葵花式六瓣托盤，上接中空無底圓形碗。碗以天文錦地為地，上雕穿雲龍紋，托座內外與圈足則滿飾雲紋，碗與托盤口緣、圈足皆飾回紋一周。圈足內有填金楷款「大清乾隆年製」、「仁」。碗托與雕漆碗(故漆306)成組。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-17T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-17T10:28:00.0000000', 126)),
-    ('ce53d1e7-13b4-7e56-a2d3-5d94a930888a', N'GENERAL', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'和朋友各自介紹同一個展區，才知道我們看到的完全不同', N'我和朋友在同一個展區各挑一件作品介紹，結果一個人記得表面顏色，另一個人記得作品旁的來源說明。這種差異沒有誰對誰錯，反而提醒我們分享時最好說明自己是從哪個角度開始看的。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區（故宮南院）」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-02-07T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-07T00:44:00.0000000', 126)),
+    ('ce53d1e7-13b4-7e56-a2d3-5d94a930888a', N'GENERAL', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'和朋友各自介紹同一個展區，才知道我們看到的完全不同', N'我和朋友在同一個展區各挑一件作品介紹，結果一個人記得表面顏色，另一個人記得作品旁的來源說明。這種差異沒有誰對誰錯，反而提醒我們分享時最好說明自己是從哪個角度開始看的。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-02-07T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-07T00:44:00.0000000', 126)),
     ('4dfd73d0-5299-a95e-986b-5de0438795e0', N'GUIDE', '4f79ced2-639d-419a-ad7e-d8027c56eceb', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'把交通、入口和想看的作品放在同一張行程表，實際走起來安心很多', N'以前只記展館名稱，到了現場才開始找入口和展廳，時間常被消耗掉。現在會把交通方式、入口、開館時間和想看的作品一起寫進行程表，地圖負責確認方向，文字負責讓我到場後不慌張。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立臺灣歷史博物館」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立臺灣歷史博物館', 23.057700, 120.242100, N'PUBLISHED', CONVERT(datetime2(3), '2025-09-21T00:00:00.0000000', 126), CONVERT(datetime2(3), '2025-09-21T01:32:00.0000000', 126)),
-    ('3a08099f-6a1f-515b-8121-5e5b0cba3851', N'GAME', 'ca5024a2-a0be-4204-8ec9-235368b494a9', '3ad1a361-d308-49c7-0fb2-05f341b9bb41', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW306｜2026/08/25 16:03｜第 108 篇回顧：把遊戲紀錄整理成下一次的學習筆記', N'我想從「SHOW306」的第 2 回合整理玩家如何在有限時間內閱讀「鍑甑」的圖像線索，再把觀察寫成可以被其他人理解的答案。這筆紀錄開始於 2026/08/25 16:03，目前回合狀態是「揭曉階段」。這篇談的是遊戲中的判斷過程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'對應的文物可以回到圖鑑查看分類、年代與來源；把一場遊戲留下的作答、投票和揭曉結果放在一起，才能看出下一次要複習的是知識、閱讀順序，還是時間分配。 這樣玩家可以先在遊戲裡提出假設，結束後再用正式資料檢查哪些部分有根據、哪些只是當下的直覺。' + NCHAR(10) + NCHAR(10) + N'這些資料不需要被包裝成正式研究結論，但可以作為下一次出題、調整提示和設計新手教學的實際依據。', N'國立故宮博物院正館', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-09-26T00:00:00.0000000', 126), CONVERT(datetime2(3), '2025-09-26T00:49:00.0000000', 126)),
+    ('3a08099f-6a1f-515b-8121-5e5b0cba3851', N'GAME', 'ca5024a2-a0be-4204-8ec9-235368b494a9', '3ad1a361-d308-49c7-0fb2-05f341b9bb41', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW306｜2026/08/25 16:03｜第 108 篇回顧：把遊戲紀錄整理成下一次的學習筆記', N'我想從「SHOW306」的第 2 回合整理玩家如何在有限時間內閱讀「鍑甑」的圖像線索，再把觀察寫成可以被其他人理解的答案。這筆紀錄開始於 2026/08/25 16:03，目前回合狀態是「揭曉階段」。這篇談的是遊戲中的判斷過程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'對應的文物可以回到圖鑑查看分類、年代與來源；把一場遊戲留下的作答、投票和揭曉結果放在一起，才能看出下一次要複習的是知識、閱讀順序，還是時間分配。 這樣玩家可以先在遊戲裡提出假設，結束後再用正式資料檢查哪些部分有根據、哪些只是當下的直覺。' + NCHAR(10) + NCHAR(10) + N'這些資料不需要被包裝成正式研究結論，但可以作為下一次出題、調整提示和設計新手教學的實際依據。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-09-26T00:00:00.0000000', 126), CONVERT(datetime2(3), '2025-09-26T00:49:00.0000000', 126)),
     ('cb31c93c-8d6c-2757-a688-5ed1e297af34', N'QUESTION', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '984e8e92-556b-8ded-32a1-a98c73639533', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'比較剔紅螭紋方盒時，我不再只看顏色', N'整理「剔紅螭紋方盒」時，我先把目前能直接從圖像與圖鑑欄位確認的內容分開記下來，再標出仍需要來源或同類作品才能確認的部分。這樣做的好處是，討論不會因為一句過度肯定的描述而失去可以修正的空間。' + NCHAR(10) + NCHAR(10) + N'目前資料記載：分類為「漆器」，年代原文為「清 乾隆」，尺寸為「長 29.6 公分、寬 19.9 公分、高 10.1 公分」。原始說明提到：剔紅盒，色暗紅。長方形盒，罩式蓋，淺直壁，平底下有四小足。蓋面與側面雕飾拐子龍，餘地滿飾斜方朵花錦地，每折邊為回紋一道。器內與底髹黑色光漆，蓋內有填金楷款「蟠龍寶盒」，底款「大清乾隆年製」現多剝落。' + NCHAR(10) + NCHAR(10) + N'我想請大家一起看的，是「同類比較」這個角度。若有不同解讀，也希望能指出對應的影像位置、欄位或參考來源，讓後續比較可以回到同一份資料。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-25T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-25T09:27:00.0000000', 126)),
     ('6110e474-c87e-d353-9a3e-5f48621ae8bc', N'CATALOG', 'a1c4407f-acee-4abe-a702-e164fb399b2e', 'da539ef7-9b85-a1b3-efcb-0566138fe085', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'重新看畫花卉 冊的器口與腹部轉折', N'這次整理「畫花卉 冊」時，我先從「器形觀察」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「繪畫」、年代「清 乾隆」、尺寸「長 21.6 公分、寬 12.0 公分」。原始說明提到：紙本冊頁，梵夾式，八開，前後空白各二開。內繪設色芙蓉、牡丹、牽牛、菊花等各式花卉。末款署「臣汪承霈恭繪」，並鈐「臣」、「霈」白文雙連章。汪為清乾隆時舉人，以繪人物、花卉見長。本件與十件玉飾共收於一雕波濤百獸剔紅漆盒。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-04-21T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-04-21T10:52:00.0000000', 126)),
-    ('29d65881-629a-4555-9047-60e9ff87e4eb', N'EVENTS', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', NULL, '8d293743-c9a1-4478-9611-f00eb65253b0', N'EVENT', N'COMMUNITY', N'TEMPLATE', N'玩家提案：我的地方文物小旅行', N'這篇貼文對應活動資料「玩家提案：我的地方文物小旅行」，活動性質為會員活動。活動時間是 2026/09/30 15:56，地點為「社群線上交流室」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'這個提案想從地方博物館、歷史建築與沿線街區開始，分享一條可以實際走訪的文物小旅行。發起人預計整理交通方式、開放時間、建議停留長度、照片來源與每一站想觀察的問題，也歡迎其他會員補充自己的路線。正式成團前會先確認活動流程、集合方式與可公開使用的資料來源。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'社群線上交流室', NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-01T07:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-01T07:44:00.0000000', 126)),
+    ('29d65881-629a-4555-9047-60e9ff87e4eb', N'EVENTS', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', NULL, '8d293743-c9a1-4478-9611-f00eb65253b0', N'EVENT', N'COMMUNITY', N'TEMPLATE', N'玩家提案：我的地方文物小旅行', N'這篇貼文對應活動資料「玩家提案：我的地方文物小旅行」，活動性質為會員活動。活動時間是 2026/09/30 15:56，地點為「線上活動」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'這個提案想從地方博物館、歷史建築與沿線街區開始，分享一條可以實際走訪的文物小旅行。發起人預計整理交通方式、開放時間、建議停留長度、照片來源與每一站想觀察的問題，也歡迎其他會員補充自己的路線。正式成團前會先確認活動流程、集合方式與可公開使用的資料來源。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'線上活動', NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-01T07:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-01T07:44:00.0000000', 126)),
     ('97d58bb3-005c-7354-9b87-6111e417f478', N'EVENTS', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'帶第一次看展的朋友參加活動，時間安排要留鬆一點', N'朋友第一次參加文物活動，我沒有把前後行程排得太滿，讓他可以在每個展櫃前停下來問問題。講者講到專有名詞時，我們就先用自己的話記下來，回家再一起找正式資料，整體比較不會有壓力。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-09T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-09T08:52:00.0000000', 126)),
     ('2391f330-6ee0-3e5b-872d-653180ed3782', N'DISCOVERY', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', '7d23aa54-a0fd-2467-7c3c-3141cb5ef82f', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'定窯 白瓷印花牡丹犀牛望月圖盤的材質感可以從哪裡確認', N'這次整理「定窯 白瓷印花牡丹犀牛望月圖盤」時，我先從「材質與工藝」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「陶瓷」、年代「金至元」、尺寸「高 5.1 公分、口徑 25.6 公分、底徑 10.6 公分」。原始說明提到：侈口大盤，淺弧壁，矮圈足，口鑲銅稜釦。盤內口沿下弦紋二道。盤壁印纏枝牡丹花，花葉繁密無隙地。底心寬圓，以回紋為邊，中印犀牛望月圖，水波洶湧，犀臥坐水渚，星月爭輝。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'臺南市美術館二館', 22.997400, 120.198100, N'PUBLISHED', CONVERT(datetime2(3), '2026-04-11T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-04-11T09:02:00.0000000', 126)),
     ('e7f9abb7-a746-1e5e-b7d1-653e421383e6', N'GAME', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW304｜2026/08/31 13:44｜第 130 篇回顧：讓新手也能參與的遊戲提示應該多明確', N'我想從「SHOW304」的第 5 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/31 13:44，目前狀態是「投票階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'對第一次參加的人來說，提示需要能讓人逐步靠近答案，卻不能直接把答案寫在提示裡，這個平衡比增加題數更重要。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'題目說明也可以補上作答規則與剩餘時間，讓玩家把注意力放在推理，而不是猜系統下一步會怎麼做。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-12T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-12T11:11:00.0000000', 126)),
     ('a875e167-b5b9-c459-a152-65e82d465121', N'REVIEW', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', 'acfdce2f-4128-f720-ca18-e8d62f1e90bf', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'日本錢幣適合從正面還是側面開始看｜故宮編號：贈錢001272N000000000', N'第一次看到「日本錢幣」時，我的注意力先被整體輪廓吸引，後來才把視線移到邊緣、表面與容易被縮圖省略的細節。這種先看整體、再回到局部的順序，讓我比較不會把一個拍攝角度當成作品的完整樣貌。' + NCHAR(10) + NCHAR(10) + N'圖鑑資料顯示它屬於「錢幣」，年代原文為「日本 明治時代」，尺寸是「待測量」。原始說明中可以直接回查的內容是：圓錢，正面楷書：「大日本明治九年」「1 SEN」；背面「一錢」「百枚換一圓」。正面中央有草葉紋飾，背面文字被圍繞在花草紋中。' + NCHAR(10) + NCHAR(10) + N'如果要把這件作品放在展示或討論情境裡，我會把目前能確認的資料和自己的觀看感受分開標示；這樣既保留第一印象，也不會把感想誤當成考證結果。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-02-02T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-02T11:28:00.0000000', 126)),
-    ('6d8e91fb-7aea-a155-b18c-66a953722756', N'EVENTS', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, '2298c774-f78d-41d4-bda4-8c869da33fa1', N'EVENT', N'OFFICIAL', N'TEMPLATE', N'青銅器紋飾讀圖工作坊', N'這篇貼文對應活動資料「青銅器紋飾讀圖工作坊」，活動性質為官方活動。活動時間是 2026/09/05 15:56，地點為「國立故宮博物院正館｜文獻導讀室」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'本場從幾何紋、動物紋與器身轉折開始，帶著參加者練習把「看見的線條」和「對紋飾的推測」分開記錄。前半段會以完整影像建立觀看順序，後半段再放大器口、腹部與底部的局部，對照鑄造痕跡、構圖節奏與容易被光線掩蓋的細節。參加者不需要先熟悉專有名詞，只要帶著一個想查證的問題即可。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'國立故宮博物院正館｜文獻導讀室', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-10T02:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-10T02:39:00.0000000', 126)),
+    ('6d8e91fb-7aea-a155-b18c-66a953722756', N'EVENTS', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, '2298c774-f78d-41d4-bda4-8c869da33fa1', N'EVENT', N'OFFICIAL', N'TEMPLATE', N'青銅器紋飾讀圖工作坊', N'這篇貼文對應活動資料「青銅器紋飾讀圖工作坊」，活動性質為官方活動。活動時間是 2026/09/05 15:56，地點為「國立故宮博物院｜臺北市士林區至善路二段221號」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'本場從幾何紋、動物紋與器身轉折開始，帶著參加者練習把「看見的線條」和「對紋飾的推測」分開記錄。前半段會以完整影像建立觀看順序，後半段再放大器口、腹部與底部的局部，對照鑄造痕跡、構圖節奏與容易被光線掩蓋的細節。參加者不需要先熟悉專有名詞，只要帶著一個想查證的問題即可。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-10T02:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-10T02:39:00.0000000', 126)),
     ('7ecaf2c0-5ed4-4354-a7e1-691cb80d7ffa', N'GAME', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'昨晚鑑定遊戲那題，我太早被一個顏色帶走了', N'遊戲開始時我先看到表面的顏色，就很快把答案往某個年代靠，後來才發現器形和尺寸根本沒有跟著支持這個猜測。揭曉後回到圖鑑，我把自己最早下結論的那一步寫下來，下一次想先忍住幾秒再看完整資料。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-28T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-28T10:54:00.0000000', 126)),
     ('f703fc12-2b60-df5b-b30b-6951a987236b', N'REVIEW', '4f79ced2-639d-419a-ad7e-d8027c56eceb', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'商品到了才發現，原作尺寸和展示比例很值得一起聊', N'拆箱時第一個感覺不是像不像，而是它的比例讓我重新想起原作資料裡的長寬高。把模型、商品說明和圖鑑放在同一張桌上看，才知道縮小之後哪些輪廓保留下來，哪些細節本來就不可能完整呈現。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-25T11:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-25T12:07:00.0000000', 126)),
     ('d3f42779-61da-b05f-b001-6bf003180140', N'REVIEW', 'ce13b79f-7f78-40e1-af3b-8b20a85c610b', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'買之前我先比較展示尺寸，沒有只看商品主圖', N'下單前我把幾件想買的縮小複製品尺寸寫在紙上，順便量了書架可用的深度。最後選的不是主圖最吸引我的那件，而是能和現有展示位置相處得最好、也最想回頭讀原作資料的那一件。', NULL, NULL, NULL, N'HIDDEN', CONVERT(datetime2(3), '2025-12-09T01:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-09T02:09:00.0000000', 126)),
@@ -3214,9 +3764,9 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('4fa62152-1b17-d650-abdc-75386b6af1ba', N'GUIDE', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '4e5b0daa-9f1b-9915-50a0-18d7e2edda40', NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'從牙帶扣開始練習可回查的文物筆記', N'我把「牙帶扣」的整理分成三層：先留下影像中確定看見的細節，再保留來源提供的原始文字，最後才補上自己的問題與待查方向。這個順序可以避免摘要寫得太順，卻把原本的不確定性藏掉。' + NCHAR(10) + NCHAR(10) + N'這件文物目前的分類是「雕刻」，年代欄位保留為「東漢至六朝」，尺寸欄位為「長 2.8 公分、寬 2.2 公分、厚 0.6 公分」。原始說明摘要如下：長方形一端較寬而圓弧，中央較突而寬，左右各有一長形孔，突而寬的部位正中凹下，可容一活動扣針；側視之，左右可見二小孔，以容插榫。此件形似今日腰帶頭，器表除銜接腰帶部位外，餘皆陰刻短線紋，並填紅彩為飾。' + NCHAR(10) + NCHAR(10) + N'之後如果找到新的研究資料，我會直接回到相對應的欄位更新，不把新的推測覆蓋掉原本的來源紀錄。也歡迎大家分享自己整理文物時會保留的欄位。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-29T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-29T09:39:00.0000000', 126)),
     ('35f12591-378c-3953-a8d3-76bd96b2c8a6', N'GAME', '9b7f2427-e62e-4229-82c3-36b1dcdd1882', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW303｜2026/08/30 15:59｜第 109 篇回顧：玩家在鑑定遊戲裡最容易忽略的線索', N'我想從「SHOW303」的第 1 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/30 15:59，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'如果玩家只看到一個醒目的顏色或紋樣就急著作答，很容易忽略器形、尺寸與影像角度帶來的限制。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'如果有其他玩家一起回顧，我會請大家指出各自最早注意到的線索，再比較哪些線索真的能回到圖鑑資料。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-09-18T01:00:00.0000000', 126), CONVERT(datetime2(3), '2025-09-18T01:50:00.0000000', 126)),
     ('9e49ba45-d0fd-0c55-a3f0-7706dc2f8e3d', N'DISCOVERY', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', '40f99a83-202e-2c62-d602-41a096079040', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'從龍泉釉器底改件鼻煙碟的表面狀態猜工藝，哪些地方要保留', N'這次整理「龍泉釉器底改件鼻煙碟」時，我先從「材質與工藝」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「陶瓷」、年代「明 宣德」、尺寸「高 1.3 公分、徑 5.0 公分」。原始說明提到：瓷煙碟，碟面以青花書「大明宣德年製」二行六字楷書，外施青釉，碟緣露胎，應是取本院藏〈明 宣德 仿龍泉蓮瓣形折腰碟〉一類器心書款之器改製而成，附編織袋方便攜用。原貯於永壽宮，經比對可能是《宣統二年二月十四日立 鼻煙壺帳》中的一批。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-26T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-26T11:04:00.0000000', 126)),
-    ('b99e3803-3253-6455-96ab-77b8f1de85cf', N'DISCOVERY', '9b7f2427-e62e-4229-82c3-36b1dcdd1882', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'看不清楚的局部先不要猜，是我最近最需要提醒自己的事', N'照片解析度不夠時，我以前會用相近作品的印象把空白補起來，結果越寫越肯定。最近改成直接標示看不清楚，並記下需要哪個角度或來源才能繼續，文字少一點卻更可靠。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院正館」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院正館', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-04T06:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-04T07:26:00.0000000', 126)),
+    ('b99e3803-3253-6455-96ab-77b8f1de85cf', N'DISCOVERY', '9b7f2427-e62e-4229-82c3-36b1dcdd1882', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'看不清楚的局部先不要猜，是我最近最需要提醒自己的事', N'照片解析度不夠時，我以前會用相近作品的印象把空白補起來，結果越寫越肯定。最近改成直接標示看不清楚，並記下需要哪個角度或來源才能繼續，文字少一點卻更可靠。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院｜臺北市士林區至善路二段221號」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-04T06:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-04T07:26:00.0000000', 126)),
     ('dc987966-47e3-4d52-ad70-78767115ad54', N'CATALOG', '7881ef5d-547d-4d08-b71d-a48be2000a35', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'把尺寸資料換成日常物品後，作品突然變得很具體', N'只看幾公分的數字時，我對大小沒有太多感覺，後來拿家裡的杯子和書本比了一下，才知道自己原本想像得太大。這個小練習不能推定作品用途，但很適合先校正觀看時的尺度。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-13T11:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-13T11:19:00.0000000', 126)),
-    ('9ea8e551-198b-4d56-b533-7913228b0277', N'CATALOG', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', 'e43a397e-9704-5244-b8ed-fd4c1a62ccba', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'銅胎畫琺瑯西洋人物圖鼻煙壺的紋飾在轉角處有什麼變化｜故宮編號：故琺000899N000000000', N'這次整理「銅胎畫琺瑯西洋人物圖鼻煙壺」時，我先從「紋飾細節」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「琺瑯器」、年代「清 乾隆」、尺寸「寬 3.9 公分、高 5.0 公分」。原始說明提到：扁壺綠地彩繪纏枝卷草花果紋，雙面開光內繪戲鳥西洋人物，底有楷書「乾隆年製」黑款，有粉色雕花料蓋與牙匙。應為廣琺瑯。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-22T00:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-22T00:25:00.0000000', 126)),
+    ('9ea8e551-198b-4d56-b533-7913228b0277', N'CATALOG', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', 'e43a397e-9704-5244-b8ed-fd4c1a62ccba', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'銅胎畫琺瑯西洋人物圖鼻煙壺的紋飾在轉角處有什麼變化｜故宮編號：故琺000899N000000000', N'這次整理「銅胎畫琺瑯西洋人物圖鼻煙壺」時，我先從「紋飾細節」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「琺瑯器」、年代「清 乾隆」、尺寸「寬 3.9 公分、高 5.0 公分」。原始說明提到：扁壺綠地彩繪纏枝卷草花果紋，雙面開光內繪戲鳥西洋人物，底有楷書「乾隆年製」黑款，有粉色雕花料蓋與牙匙。應為廣琺瑯。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-22T00:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-22T00:25:00.0000000', 126)),
     ('5c1a1f26-3672-f85f-9825-7933b41d1cc9', N'GENERAL', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', '9cb9e880-9ee8-b70f-b41e-b5e65e94c401', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把想買、想讀和想再看分成三張清單，決定事情清楚很多', N'以前看到喜歡的作品就同時加入購物車和收藏清單，最後常忘記自己究竟想做什麼。現在分成想買、想深入閱讀、想再到現場看三類，過一段時間回來仍然知道每一筆清單的理由。' + NCHAR(10) + NCHAR(10) + N'文中提到的作品可以回到圖鑑「蟠虺乳丁紋鼎」核對；分類是「銅器」，年代資料則保留「戰國」的原始範圍。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立自然科學博物館」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立自然科學博物館', 24.157500, 120.665900, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-23T08:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-23T09:28:00.0000000', 126)),
     ('1f599675-88e2-5552-8e92-7aafb6d83eca', N'DISCOVERY', '2d049534-161d-4862-971f-e410d2ac9162', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我回頭查了參觀時記下的資料，才發現自己抄錯一個字', N'整理紙本筆記時，發現自己把一個名稱抄成了很像的另一個字，幸好還留著展櫃照片可以回頭核對。現在只要寫到不熟的名稱，就會把影像、原文和自己的轉寫一起保留，不再只依賴記憶。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-11T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-11T08:40:00.0000000', 126)),
     ('fefaa39d-ee8d-e056-9dd2-7c02ea0ed28d', N'GAME', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把每回合的最早線索和最後答案分開記，才看得出判斷怎麼改變', N'回合結束後只記正確答案，很快就會忘記自己一開始為什麼那樣猜。現在會留下最早看到的線索、改變判斷的原因和最後答案，幾次累積後，自己的推理習慣變得很清楚。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-10T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-10T09:24:00.0000000', 126)),
@@ -3238,7 +3788,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('15990f0e-ed52-6c55-bc7c-84885240c33f', N'CATALOG', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 'c038c991-4476-7dc0-bdc2-d60290d75f1c', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'小件文物也需要看比例：政和通寶', N'這次整理「政和通寶」時，我先從「尺寸比例」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「錢幣」、年代「北宋」、尺寸「待測量」。原始說明提到：銅質。方孔圓錢，正面有篆書：「政和通寶」四字，背面無文。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立臺灣歷史博物館', 23.057700, 120.242100, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-16T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-16T09:14:00.0000000', 126)),
     ('c98e2c54-9c5e-4e85-affa-8760898fb173', N'CATALOG', '9b7f2427-e62e-4229-82c3-36b1dcdd1882', '0eace746-cadb-7abc-1d26-1d35e696cead', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'金工表面細紋的方向', N'金屬表面的細紋有些沿著器身走，有些則集中在轉折與接合位置。這種分布可能和製作、拋磨或長期使用有關，我會先記下方向與位置，再找有相似工藝的作品作為對照，避免過早連結到單一技法。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T00:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:23:25.0750000', 126)),
     ('f38ab8b5-c20c-2d54-86f8-88772fdb412f', N'QUESTION', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', '327eeab1-bbb1-e08d-f5fd-d9696bb2b062', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'關於蠔山瓷碗，哪些是資料、哪些是推測', N'整理「蠔山瓷碗」時，我先把目前能直接從圖像與圖鑑欄位確認的內容分開記下來，再標出仍需要來源或同類作品才能確認的部分。這樣做的好處是，討論不會因為一句過度肯定的描述而失去可以修正的空間。' + NCHAR(10) + NCHAR(10) + N'目前資料記載：分類為「陶瓷」，年代原文為「南宋」，尺寸為「碗徑 15.5 公分」。原始說明提到：由生蠔殼與一侈口平底碗組成，碗全器施青釉，內壁有流釉痕跡，嵌於蠔殼口上，利用蠔殼的不規則邊緣固定；附有三足木座一只，以樹根雕琢而成，保留原有外形，僅於足部有明顯定形修飾的痕跡。蠔殼可以側邊方向置於木座上。' + NCHAR(10) + NCHAR(10) + N'我想請大家一起看的，是「資料判讀」這個角度。若有不同解讀，也希望能指出對應的影像位置、欄位或參考來源，讓後續比較可以回到同一份資料。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-15T07:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-15T07:49:00.0000000', 126)),
-    ('00d36a2a-039f-ea5d-9de0-896df2a75b43', N'CATALOG', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '93aa4889-2d7c-2d28-a7b2-bbacf5f536f8', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'漆琴的通高和口徑要一起讀', N'這次整理「漆琴」時，我先從「尺寸比例」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「漆器」、年代「清 乾隆」、尺寸「長 21.0 公分、寬 3.0 公分、高 2.1 公分」。原始說明提到：仲尼式琴，玉軫，玉足，黑漆面微有傷。琴內納音處中央凸起，龍池、鳳沼皆長方形，造形簡單素雅。琴底項部刻「乾隆年製」款，內填白料。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-22T00:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-22T00:37:00.0000000', 126)),
+    ('00d36a2a-039f-ea5d-9de0-896df2a75b43', N'CATALOG', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '93aa4889-2d7c-2d28-a7b2-bbacf5f536f8', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'漆琴的通高和口徑要一起讀', N'這次整理「漆琴」時，我先從「尺寸比例」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「漆器」、年代「清 乾隆」、尺寸「長 21.0 公分、寬 3.0 公分、高 2.1 公分」。原始說明提到：仲尼式琴，玉軫，玉足，黑漆面微有傷。琴內納音處中央凸起，龍池、鳳沼皆長方形，造形簡單素雅。琴底項部刻「乾隆年製」款，內填白料。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-22T00:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-22T00:37:00.0000000', 126)),
     ('d77528f6-bfc8-f056-ad1d-8993c57a3b79', N'GUIDE', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 'fd6c5acc-ebb7-b46a-7edf-c9fe33558ff1', NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'牙雕小豚的查證紀錄不要只剩一句摘要｜故宮編號：贈雕000117N000000000', N'我把「牙雕小豚」的整理分成三層：先留下影像中確定看見的細節，再保留來源提供的原始文字，最後才補上自己的問題與待查方向。這個順序可以避免摘要寫得太順，卻把原本的不確定性藏掉。' + NCHAR(10) + NCHAR(10) + N'這件文物目前的分類是「雕刻」，年代欄位保留為「戰國至六朝」，尺寸欄位為「長 1.9 公分、高 1.2 公分」。原始說明摘要如下：立雕小豚，體小而雕工圓熟，動物身軀與面龐較寫實，器呈黃色。類似雕工簡拙的小動物，從漢墓至六朝墓葬中皆曾見，其質材不限於牙或骨。從器物的雕刻風格看來，或可早至戰國。' + NCHAR(10) + NCHAR(10) + N'之後如果找到新的研究資料，我會直接回到相對應的欄位更新，不把新的推測覆蓋掉原本的來源紀錄。也歡迎大家分享自己整理文物時會保留的欄位。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-18T11:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-18T12:05:00.0000000', 126)),
     ('0dac00e0-709a-495b-9aa2-8a5e3fcbc83c', N'REVIEW', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', '9ad97a6c-f002-c4ca-0ab3-9daed07c470d', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'玉劍璏的背景留白會影響什麼｜故宮編號：故玉006597N000000000', N'第一次看到「玉劍璏」時，我的注意力先被整體輪廓吸引，後來才把視線移到邊緣、表面與容易被縮圖省略的細節。這種先看整體、再回到局部的順序，讓我比較不會把一個拍攝角度當成作品的完整樣貌。' + NCHAR(10) + NCHAR(10) + N'圖鑑資料顯示它屬於「玉器」，年代原文為「南宋至明」，尺寸是「長 3.4 公分、寬 1.1 公分」。原始說明中可以直接回查的內容是：玉質，全器琢成一玉劍璏，器表光素無紋。' + NCHAR(10) + NCHAR(10) + N'如果要把這件作品放在展示或討論情境裡，我會把目前能確認的資料和自己的觀看感受分開標示；這樣既保留第一印象，也不會把感想誤當成考證結果。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-08T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-08T10:15:00.0000000', 126)),
     ('35c176d2-9824-a357-920a-8ad174b2d62c', N'DISCOVERY', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 'd3370eec-d084-62ce-2cc9-b13e1fb5f77c', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把竹雕零件的目前狀態拆成哪些欄位｜故宮編號：贈雕000291N000000000', N'這次整理「竹雕零件」時，我先從「保存狀態」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「雕刻」、年代「西漢至六朝」、尺寸「長 4.8 公分、徑 1.2-1.5 公分」。原始說明提到：竹雕零件，器呈長橢圓椎形，乃取竹近根部實心部份雕成。器之窄面淺刻一動物面與身軀，似一昆蟲，身軀陰刻點紋與弧線，並或填黑彩、或填紅彩為飾；頭之上方向上生出兩觸鬚。頭下方鑿一孔，器側穿一大方孔，尾端亦有一孔，又用一小塊竹材填塞。此器可能為某種器物之配件，目前功能不明，俟考。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-02-28T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-28T11:16:00.0000000', 126)),
@@ -3286,7 +3836,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('7ef07f6d-5680-d05e-a950-a1305fd1b4f6', N'GAME', 'a1c4407f-acee-4abe-a702-e164fb399b2e', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW303｜2026/08/31 15:49｜第 124 篇回顧：讓新手也能參與的遊戲提示應該多明確', N'我想從「SHOW303」的第 3 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/31 15:49，目前狀態是「作答階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'對第一次參加的人來說，提示需要能讓人逐步靠近答案，卻不能直接把答案寫在提示裡，這個平衡比增加題數更重要。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'題目說明也可以補上作答規則與剩餘時間，讓玩家把注意力放在推理，而不是猜系統下一步會怎麼做。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-25T04:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-25T05:05:00.0000000', 126)),
     ('a516868f-b544-b95f-a620-a14626870609', N'REVIEW', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '4d81716c-1255-e2b9-fb58-367ab986c61c', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'把玉羊的影像條件也放進筆記', N'第一次看到「玉羊」時，我的注意力先被整體輪廓吸引，後來才把視線移到邊緣、表面與容易被縮圖省略的細節。這種先看整體、再回到局部的順序，讓我比較不會把一個拍攝角度當成作品的完整樣貌。' + NCHAR(10) + NCHAR(10) + N'圖鑑資料顯示它屬於「玉器」，年代原文為「遼或北宋」，尺寸是「長 3.7 公分、寬 1.6 公分、高 3.2 公分；木座長 3.7 公分、寬 2.1 公分、高 0.7 公分、連座高 3.8 公分」。原始說明中可以直接回查的內容是：本器為玉羊，玉質，帶黃絲沁，器表油潤有光澤。體態壯碩，呈跪姿，羊角向內螺旋，嘴微張，羊眼為桯具鑽磨而成，腹部橫穿一圓孔，類似本器之圓雕動物可見於遼陳國公主墓出土馬形玉飾。本器由題材、跪踞形式、桯具使用方式，穿孔所顯現的使用功能，屬遼或北宋作品。本器附紫檀木座，存放在院藏「紫檀雕蟠龍方盒百什件」（故雜877）中。' + NCHAR(10) + NCHAR(10) + N'如果要把這件作品放在展示或討論情境裡，我會把目前能確認的資料和自己的觀看感受分開標示；這樣既保留第一印象，也不會把感想誤當成考證結果。', N'國立臺灣博物館', 25.037500, 121.515100, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-10T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-10T00:54:00.0000000', 126)),
     ('327c9375-99b1-4a76-b60a-a3db8498320b', N'CATALOG', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 'dd9f9eb2-b226-dff5-428b-0d754bec2efb', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'從器蓋與器身的接合找用途', N'器蓋和器身的接合處常常能看出開合頻率、密合程度與受力方式。這件作品的邊緣有些磨耗，讓我開始思考它原本是否需要經常取放內容物，而不是只把它當成一件靜態的造型作品。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T14:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:37:25.0750000', 126)),
-    ('ff832d1b-b0f0-fe5f-9928-a3f667ae4606', N'EVENTS', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, '59879d31-aa46-4839-b3e1-e8ed8023a44c', N'EVENT', N'OFFICIAL', N'TEMPLATE', N'週末館藏導讀：從器形看年代', N'這篇貼文對應活動資料「週末館藏導讀：從器形看年代」，活動性質為官方活動。活動時間是 2026/09/12 15:56，地點為「國立故宮博物院南部院區（故宮南院）｜多功能展廳」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'本次導讀挑選三件不同時期的器物，先從通高、口徑、腹部比例與器足觀察整體形制，再回到材質、紋飾和來源欄位交叉比對。講者會示範如何保留年代原文與不確定範圍，也會安排一段讓參加者把自己的第一印象改寫成可以回查的觀察筆記，適合第一次使用圖鑑或想練習慢慢看作品的參加者。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'國立故宮博物院南部院區（故宮南院）｜多功能展廳', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-25T04:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-25T04:41:00.0000000', 126)),
+    ('ff832d1b-b0f0-fe5f-9928-a3f667ae4606', N'EVENTS', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, '59879d31-aa46-4839-b3e1-e8ed8023a44c', N'EVENT', N'OFFICIAL', N'TEMPLATE', N'週末館藏導讀：從器形看年代', N'這篇貼文對應活動資料「週末館藏導讀：從器形看年代」，活動性質為官方活動。活動時間是 2026/09/12 15:56，地點為「國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'本次導讀挑選三件不同時期的器物，先從通高、口徑、腹部比例與器足觀察整體形制，再回到材質、紋飾和來源欄位交叉比對。講者會示範如何保留年代原文與不確定範圍，也會安排一段讓參加者把自己的第一印象改寫成可以回查的觀察筆記，適合第一次使用圖鑑或想練習慢慢看作品的參加者。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-25T04:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-25T04:41:00.0000000', 126)),
     ('92550b00-7385-6253-b0d5-a4f699030f74', N'GUIDE', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'館藏觀察主題：先看完整構圖再放大局部', N'社群討論歡迎從器形、材質、紋飾、保存、來源與觀看經驗切入。長文請用段落說明觀察順序，並在引用外部資料時留下出處；若只是個人推測，也請用容易辨識的語氣說明。' + NCHAR(10) + NCHAR(10) + N'後續前台可以沿用這些分類、文物關聯、地點欄位與官方發布狀態，讓使用者既能手動輸入內容，也能在需要時直接從地圖或文物資料開始建立貼文。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「館藏觀察主題：先看完整構圖再放大局部」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-14T02:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-14T02:53:00.0000000', 126)),
     ('c1c78b14-670a-8253-b8e8-a95474e2278f', N'GAME', 'ce13b79f-7f78-40e1-af3b-8b20a85c610b', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW307｜2026/08/28 16:03｜第 110 篇回顧：把遊戲紀錄整理成下一次的學習筆記', N'我想從「SHOW307」的第 2 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/28 16:03，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'把一場遊戲留下的作答、投票和揭曉結果放在一起，才能看出下一次要複習的是知識、閱讀順序，還是時間分配。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'這些資料不需要被包裝成正式研究結論，但可以作為下一次出題、調整提示和設計新手教學的實際依據。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-09-10T02:00:00.0000000', 126), CONVERT(datetime2(3), '2025-09-10T02:51:00.0000000', 126)),
     ('ac484caf-fd99-f95a-b7d5-aa0929a466f7', N'GUIDE', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'本季導讀主題：從看見的細節開始理解文物', N'社群討論歡迎從器形、材質、紋飾、保存、來源與觀看經驗切入。長文請用段落說明觀察順序，並在引用外部資料時留下出處；若只是個人推測，也請用容易辨識的語氣說明。' + NCHAR(10) + NCHAR(10) + N'後續前台可以沿用這些分類、文物關聯、地點欄位與官方發布狀態，讓使用者既能手動輸入內容，也能在需要時直接從地圖或文物資料開始建立貼文。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「本季導讀主題：從看見的細節開始理解文物」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-24T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-24T10:12:00.0000000', 126)),
@@ -3303,7 +3853,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('3811dae2-32eb-4051-9737-b2ec49d19208', N'QUESTION', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我想請教大家，遇到兩種來源說法時通常會先保留哪一種', N'整理一件作品時看到兩個來源對年代的說法不完全相同，我先把原文和查閱時間都留著，沒有自行選一個看起來順的版本。想請教大家遇到這種情況時，會先比較哪些條件，讓後續查證有可以延伸的方向。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-12T05:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-12T06:25:00.0000000', 126)),
     ('e4a9e219-acb8-4d9a-866e-b3791266c236', N'DISCOVERY', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '657a9dc5-9e58-1a81-0ac9-24d9159750d1', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'比較同類文物時我會做的三個記號', N'我通常先記器形比例，再記表面工藝，最後記來源與保存狀況，三項分開看比較容易找到差異。若把所有印象混成一句話，之後回頭比較時很難知道差異究竟來自製作、年代，還是照片與保存條件。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-29T12:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:11:25.0750000', 126)),
     ('d217b548-ddb4-a451-9e00-b3a0c1770d2b', N'CATALOG', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '7834bcf0-1403-d85f-2ef1-171ec38cfc3a', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'從剔彩春壽寶盒的輪廓看第一個視線落點｜故宮編號：故漆000336N000000000', N'這次整理「剔彩春壽寶盒」時，我先從「器形觀察」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「漆器」、年代「清 乾隆」、尺寸「通高 11.3 公分、口徑 30.4 公分、底徑 23.1 公分」。原始說明提到：雕漆盒，器蓋同形，子母口、淺壁、平底，附平頂蓋，器表以剔彩為飾，漆層厚。蓋面中央飾「春」字，內有圓圈開光一壽星，兩側為雙龍，下飾聚寶盆，霞光四出，分層剔出各樣色彩，蓋緣與器腹均開光山水人物。器內壁髹黑漆，底面黑漆，有填金刻款「大清乾隆年製」六字三行楷款。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-31T05:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-31T05:47:00.0000000', 126)),
-    ('721a2f8b-d99f-4453-8dcb-b58d3f3b235d', N'GUIDE', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我現在會把現場筆記和回家查到的內容分成兩欄', N'以前參觀時想到什麼就全部寫在同一頁，回家後常常分不清哪些是展場原文、哪些是自己的猜測。最近改成左邊記當下看到的內容，右邊再補查證結果，雖然慢一點，但回頭修改時清楚很多。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區（故宮南院）」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-05T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-05T00:20:00.0000000', 126)),
+    ('721a2f8b-d99f-4453-8dcb-b58d3f3b235d', N'GUIDE', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我現在會把現場筆記和回家查到的內容分成兩欄', N'以前參觀時想到什麼就全部寫在同一頁，回家後常常分不清哪些是展場原文、哪些是自己的猜測。最近改成左邊記當下看到的內容，右邊再補查證結果，雖然慢一點，但回頭修改時清楚很多。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-05-05T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-05T00:20:00.0000000', 126)),
     ('839934e8-5fe0-3d59-bd82-b6581bb31d6a', N'GAME', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把三次答錯的原因整理成一張自己的練習表', N'連續三次答錯後，我沒有只記住正確答案，而是把錯誤分成看漏細節、把相似作品混在一起，以及時間不夠三類。現在再遇到題目時，會先檢查是哪一種狀況，練習起來比一直背答案有效。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-12T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-12T00:56:00.0000000', 126)),
     ('2d3d2f77-3376-0a5f-a98c-b6af9c57ff32', N'GAME', 'ce13b79f-7f78-40e1-af3b-8b20a85c610b', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'遊戲中的錯誤答案，也可以變成下一次看展的提醒', N'這次答錯不是因為完全沒看見線索，而是只記住其中一個，忽略了其他條件。回合結束後我把這個錯誤寫在參觀清單旁，下次遇到相近作品時提醒自己先做完整比較，而不是只找熟悉的地方。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-15T09:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-15T10:29:00.0000000', 126)),
     ('ca138c5a-471d-4b01-8735-b6fa8f7f4147', N'GENERAL', 'cba35abc-b074-4d30-b5ab-3b793dd62330', '851b0c60-2f89-fbae-3088-24a19feb1486', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'文物年代欄位的範圍怎麼閱讀', N'年代欄位有時是朝代，有時會細到某個時期或世紀，不能把不同精度的資料當成同一種答案。我的做法是保留原始寫法，另外記錄可以比較的起訖範圍，閱讀不同資料來源時才不會誤以為精度完全一致。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-29T13:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:12:25.0750000', 126)),
@@ -3311,7 +3861,7 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('4e794bf5-5fe3-be50-a800-b80f32f475b5', N'CATALOG', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '7e96b045-34db-5e14-a54d-3968f920ae24', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'龍氏神人畫象紋鏡的比例為什麼值得單獨記錄', N'這次整理「龍氏神人畫象紋鏡」時，我先從「器形觀察」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「銅器」、年代「東漢」、尺寸「直徑 19.1 公分」。原始說明提到：圓鏡，半球鈕，連珠紋鈕座。鏡背飾人物及動物，間以蔓華紋。外環銘文26字：「龍氏作竟隹平且好，明天日月世之保，上有仙人不知老，渴飲玉泉。」鏡緣有三角形紋及卷雲紋。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-09T01:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-09T02:31:00.0000000', 126)),
     ('60fc0e82-5886-4059-9b4a-b8b900ef8e76', N'GENERAL', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'資料品質提醒：尺寸未提供時不自行補猜', N'這次展示資料會同時保留可讀的內容與可以追查的關聯：文物連到題庫，文物也可對應商城縮小複製品；會員、貼文、留言、訂單與活動則依實際外鍵互相連結。' + NCHAR(10) + NCHAR(10) + N'如果資料目前不足以支持單一年份、精確用途或材質判斷，會保留原始範圍並寫明待查原因。這是為了讓展示內容看起來完整時，仍然不超過來源能證明的程度。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「資料品質提醒：尺寸未提供時不自行補猜」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-06T03:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-06T03:54:00.0000000', 126)),
     ('442e6783-adb0-0c54-901f-b901ebc8bec2', N'GENERAL', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'交流規範公告：引用研究資料時請保留出處', N'為了讓圖鑑、社群、遊戲與商城的展示資料可以互相對照，近期整理時會優先保留文物的原始名稱、來源、年代文字與尺寸記錄。需要推測的內容請另外標示，不會把暫時假設直接改成確定答案。' + NCHAR(10) + NCHAR(10) + N'目前這批展示資料共安排 288 篇不同主題的內容，社群貼文會盡可能連回實際文物；商城訂單則只會使用與文物有直接關聯的縮小複製品商品。若發現欄位需要補充，請在貼文中說明可以回查的依據。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「交流規範公告：引用研究資料時請保留出處」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'DELETED', CONVERT(datetime2(3), '2026-05-29T04:00:00.0000000', 126), CONVERT(datetime2(3), '2026-05-29T04:55:00.0000000', 126)),
-    ('110ba9fe-ecf7-fb5a-8dfa-be5c80a1f714', N'GUIDE', '7881ef5d-547d-4d08-b71d-a48be2000a35', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把一篇長說明拆成名稱、觀察、來源和疑問四段來讀', N'面對很長的作品說明時，我以前常讀到中間就忘記開頭。最近先分成名稱與基本資料、自己直接看見的內容、來源提供的內容，以及還想確認的疑問，讀完後比較能保留整體脈絡。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區（故宮南院）」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-26T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-26T00:39:00.0000000', 126)),
+    ('110ba9fe-ecf7-fb5a-8dfa-be5c80a1f714', N'GUIDE', '7881ef5d-547d-4d08-b71d-a48be2000a35', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把一篇長說明拆成名稱、觀察、來源和疑問四段來讀', N'面對很長的作品說明時，我以前常讀到中間就忘記開頭。最近先分成名稱與基本資料、自己直接看見的內容、來源提供的內容，以及還想確認的疑問，讀完後比較能保留整體脈絡。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-26T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-26T00:39:00.0000000', 126)),
     ('035c641c-6eb0-8d58-a828-bf1a8f28a540', N'GAME', 'd3964b0b-0c94-4c5a-b925-9bcf806c614e', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我現在會把遊戲結果當成回到圖鑑的入口，而不是最後答案', N'遊戲的結果很有趣，但真正讓我想繼續的是答案和自己理由之間的落差。回合結束後我會點回相關圖鑑，把哪些線索有支持、哪些只是猜測標出來，這樣每次遊玩都能留下可回看的東西。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-16T05:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-16T05:32:00.0000000', 126)),
     ('3b7782c7-9f12-9e52-8e79-c00a93da1152', N'GUIDE', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'人多的時候我會先看小展廳，再把主展區留到後面', N'熱門展區人多時，我先去看旁邊的小展廳，讓自己有時間熟悉展覽主題。等人潮稍微散開再回主展區，視線比較不會一直被旁邊的走動打斷，也能把前面看到的內容拿來比較。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-26T07:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-26T08:15:00.0000000', 126)),
     ('840a6468-34fa-5f58-8609-c0bf1aa6545d', N'GAME', 'e635f9ed-ff31-45e2-91da-dfdf518bd009', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我喜歡玩家寫出不確定的地方，討論才不會變成背答案', N'這一回合有玩家直接寫出自己不確定的線索，反而讓後續討論比較容易開始。大家可以針對那個疑問補資料，而不是只在揭曉後說早就知道；對新手來說，這種回顧氣氛更願意留下來玩。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-07T05:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-07T06:01:00.0000000', 126)),
@@ -3357,25 +3907,25 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('8b59b538-806e-0752-b4f1-d8dcc5f67b43', N'GENERAL', '869ef3e0-f8cd-428c-aae4-48a75e23861a', '657a9dc5-9e58-1a81-0ac9-24d9159750d1', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'陪長輩看展時，我們從生活用途開始聊比較自然', N'長輩不熟悉分類和年代，我沒有先講一串專有名詞，而是問他覺得這件東西拿起來、放在哪裡會怎樣。聊完生活感受後，再回到作品資料看尺寸和材質，對方反而主動問起來源。' + NCHAR(10) + NCHAR(10) + N'文中提到的作品可以回到圖鑑「銅胎畫琺瑯花卉紋小瓶」核對；分類是「琺瑯器」，年代資料則保留「清 乾隆」的原始範圍。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-07T05:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-07T06:13:00.0000000', 126)),
     ('ac06a04a-27a8-d85d-9d5c-d8f0f01a6e25', N'EVENTS', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'這場活動讓我改掉只拍主展品的習慣', N'以前參加活動只會拍講者介紹的主展品，這次特別把展櫃標示、觀看角度和旁邊的比較作品也記下來。回家整理時才發現，那些看似不是主角的影像，反而幫我理解講解中的差異。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-02-05T09:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-05T09:53:00.0000000', 126)),
     ('42a295ae-4128-49c6-a46a-d9144c7a1fbe', N'GENERAL', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', '7834bcf0-1403-d85f-2ef1-171ec38cfc3a', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'文物照片裡的陰影會誤導什麼', N'陰影會讓淺浮雕看起來更深，也可能把器身的自然弧度誤認成裂痕或接縫。現在我會先觀察光源方向，再用多張照片互相印證；如果仍然無法確認，就在筆記裡明確標成待查，而不是補上一個看似完整的答案。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T07:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:30:25.0750000', 126)),
-    ('183a9578-d069-3853-98e0-d943e72da8c8', N'GUIDE', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '860a384d-d357-3410-f914-f28e9a1ef096', NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'用固定順序閱讀元符通寶的圖鑑資料｜故宮編號：購錢005404N000000000', N'我把「元符通寶」的整理分成三層：先留下影像中確定看見的細節，再保留來源提供的原始文字，最後才補上自己的問題與待查方向。這個順序可以避免摘要寫得太順，卻把原本的不確定性藏掉。' + NCHAR(10) + NCHAR(10) + N'這件文物目前的分類是「錢幣」，年代欄位保留為「北宋」，尺寸欄位為「待測量」。原始說明摘要如下：銅質。方孔圓錢，正面有楷書：「元符通寶」四字，背面無文。' + NCHAR(10) + NCHAR(10) + N'之後如果找到新的研究資料，我會直接回到相對應的欄位更新，不把新的推測覆蓋掉原本的來源紀錄。也歡迎大家分享自己整理文物時會保留的欄位。', N'國立故宮博物院正館', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-16T04:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-16T05:34:00.0000000', 126)),
+    ('183a9578-d069-3853-98e0-d943e72da8c8', N'GUIDE', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', '860a384d-d357-3410-f914-f28e9a1ef096', NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'用固定順序閱讀元符通寶的圖鑑資料｜故宮編號：購錢005404N000000000', N'我把「元符通寶」的整理分成三層：先留下影像中確定看見的細節，再保留來源提供的原始文字，最後才補上自己的問題與待查方向。這個順序可以避免摘要寫得太順，卻把原本的不確定性藏掉。' + NCHAR(10) + NCHAR(10) + N'這件文物目前的分類是「錢幣」，年代欄位保留為「北宋」，尺寸欄位為「待測量」。原始說明摘要如下：銅質。方孔圓錢，正面有楷書：「元符通寶」四字，背面無文。' + NCHAR(10) + NCHAR(10) + N'之後如果找到新的研究資料，我會直接回到相對應的欄位更新，不把新的推測覆蓋掉原本的來源紀錄。也歡迎大家分享自己整理文物時會保留的欄位。', N'國立故宮博物院｜臺北市士林區至善路二段221號', 25.102400, 121.548500, N'PUBLISHED', CONVERT(datetime2(3), '2025-12-16T04:00:00.0000000', 126), CONVERT(datetime2(3), '2025-12-16T05:34:00.0000000', 126)),
     ('070e57ad-a159-c15b-8a0c-d9c640bf5d42', N'DISCOVERY', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我開始把保存造成的可能變化和原本工藝分開討論', N'看見表面斑痕時，現在不會立刻把它算成製作痕跡，而是先列出保存、修復和拍攝條件幾種可能。這樣雖然文章少了一句斬釘截鐵的結論，但後續查證時保留的空間更大。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-07T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-07T10:37:00.0000000', 126)),
-    ('db96fb71-6c59-3053-bd5c-dc00cf2ec1ed', N'EVENTS', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, 'be150dd2-6067-41be-8d99-f03a80a51964', N'EVENT', N'OFFICIAL', N'TEMPLATE', N'古典色彩與保存觀察', N'這篇貼文對應活動資料「古典色彩與保存觀察」，活動性質為官方活動。活動時間是 2026/08/26 15:56，地點為「國立故宮博物院南部院區（故宮南院）｜教育展廳」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'本場會從常見顏料、釉色與表面保存狀態切入，帶領參加者比較色彩變化在辨識上的幫助與限制。除了看作品本身，也會討論拍攝光線、反光、修復痕跡和螢幕顯示可能造成的誤判，最後將一段過度肯定的描述改寫成保留證據範圍的觀察筆記。活動結束後可回到圖鑑繼續查找相關作品。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'國立故宮博物院南部院區（故宮南院）｜教育展廳', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-14T01:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-14T01:38:00.0000000', 126)),
+    ('db96fb71-6c59-3053-bd5c-dc00cf2ec1ed', N'EVENTS', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, 'be150dd2-6067-41be-8d99-f03a80a51964', N'EVENT', N'OFFICIAL', N'TEMPLATE', N'古典色彩與保存觀察', N'這篇貼文對應活動資料「古典色彩與保存觀察」，活動性質為官方活動。活動時間是 2026/08/26 15:56，地點為「國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'本場會從常見顏料、釉色與表面保存狀態切入，帶領參加者比較色彩變化在辨識上的幫助與限制。除了看作品本身，也會討論拍攝光線、反光、修復痕跡和螢幕顯示可能造成的誤判，最後將一段過度肯定的描述改寫成保留證據範圍的觀察筆記。活動結束後可回到圖鑑繼續查找相關作品。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-14T01:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-14T01:38:00.0000000', 126)),
     ('d0f6fd1e-832b-905a-8e76-dd630ab7ebda', N'GENERAL', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 'a2e3deef-e43f-d5b5-6abd-da057a566f95', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'銅胎掐絲琺瑯喜字三足爐提醒我不要忽略哪些普通欄位', N'這次整理「銅胎掐絲琺瑯喜字三足爐」時，我先從「閱讀心得」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「琺瑯器」、年代「清 乾隆」、尺寸「高 12.45 公分、口徑 10.6 公分」。原始說明提到：鍍金圓口，深直壁微斂，作內捲式几式座，座下接四如意形足。全器為綠地，以掐絲技法於外壁飾滿各式纏枝花葉紋，其間平均飾四紅色「喜」字，字上飾金色曲線紋並帶金邊框。器底露金屬胎，雙方框內陰刻「乾隆年製」。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-01-25T11:00:00.0000000', 126), CONVERT(datetime2(3), '2026-01-25T12:29:00.0000000', 126)),
     ('178f5461-211c-bb57-8cec-de3143601048', N'GAME', '7881ef5d-547d-4d08-b71d-a48be2000a35', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'SHOW304｜2026/08/29 16:11｜第 125 篇回顧：讓新手也能參與的遊戲提示應該多明確', N'我想從「SHOW304」的第 4 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/29 16:11，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'對第一次參加的人來說，提示需要能讓人逐步靠近答案，卻不能直接把答案寫在提示裡，這個平衡比增加題數更重要。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'題目說明也可以補上作答規則與剩餘時間，讓玩家把注意力放在推理，而不是猜系統下一步會怎麼做。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-17T05:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-17T06:06:00.0000000', 126)),
     ('1e94da63-9d89-478e-b23c-dedf418b2e98', N'CATALOG', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 'fdaaf858-d1da-b190-1d1e-244654c7ffa4', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'從器身弧度理解握持方式', N'器身弧度和把手、口沿的距離，會改變手部施力與傾倒方向。即使沒有完整的使用文獻，也能先從尺寸、重心與磨耗位置提出問題，再找同類作品和考古資料交叉比對，讓推測有清楚的來由。', NULL, NULL, NULL, N'HIDDEN', CONVERT(datetime2(3), '2026-08-29T14:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:13:25.0750000', 126)),
     ('72be8307-3176-a85a-98dd-df00d2df4428', N'CATALOG', 'cba35abc-b074-4d30-b5ab-3b793dd62330', '246b42e5-b1a7-7f25-6abd-d836006a151b', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'為什麼我把剔紅雲龍紋小櫃多寶格的器底放到最後核對', N'這次整理「剔紅雲龍紋小櫃多寶格」時，我先從「器底線索」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「漆器」、年代「明 嘉靖」、尺寸「長 48.4 公分、寬 34.1 公分、高 41.2 公分」。原始說明提到：清宮利用明代嘉靖朝的漆櫃作為多寶格，櫃體分為四層，每一層分別有一、二、三、四個抽屜，屜內清宮另製木屜格層，存放的文物以清代製品為主。內容包含清墨12 件、明清小玉器41件、書法小冊3件、清代瓷器6件、西洋鐘錶琺瑯7件、清代小畫卷及畫冊8件、明清漆盒6件、銅器3件以及玻璃、蜜蠟、檀香等的文具，如印石、水盛、紙鎮等22件，包含嘉靖剔紅雲龍紋小櫃總共109件。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', N'國立自然科學博物館', 24.157500, 120.665900, N'PUBLISHED', CONVERT(datetime2(3), '2026-02-12T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-12T01:18:00.0000000', 126)),
     ('5f19f084-97ac-9359-b211-dfb86964f3aa', N'DISCOVERY', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', '8e051dc6-49f6-b31b-b24a-9cd7d1701367', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'第一次看嵌金銀雲紋壺，我會先從哪裡開始', N'第一次看到「嵌金銀雲紋壺」時，我的注意力先被整體輪廓吸引，後來才把視線移到邊緣、表面與容易被縮圖省略的細節。這種先看整體、再回到局部的順序，讓我比較不會把一個拍攝角度當成作品的完整樣貌。' + NCHAR(10) + NCHAR(10) + N'圖鑑資料顯示它屬於「銅器」，年代原文為「南宋至明」，尺寸是「高 45.7 公分」。原始說明中可以直接回查的內容是：本器紋飾以簡化的獸帶紋為主，填以回紋地。由上至下，第一道為三角紋，第二、三道為獸帶紋。三角紋及獸帶紋以紅銅片鑲嵌。口沿及圈足上也有銀絲嵌的心形紋、螺形紋及三角紋。兩側有鋪首銜環為飾。本件器物是乾隆三十四年(1769)頒賜國子監的「周笵十器」之一，名之為「周雷紋壺」。' + NCHAR(10) + NCHAR(10) + N'如果要把這件作品放在展示或討論情境裡，我會把目前能確認的資料和自己的觀看感受分開標示；這樣既保留第一印象，也不會把感想誤當成考證結果。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-21T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-21T10:40:00.0000000', 126)),
     ('24c5c71c-90e1-a856-bffa-e13efd4c318a', N'CATALOG', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'把照片裁成局部前，我會先把完整構圖留一份', N'整理局部細節時，裁切圖片很容易讓人忘記它原本在作品哪個位置。我現在一定先保存完整影像，再另存局部，並在檔名或筆記寫上方向；之後回看時才不會把細節和整體脈絡拆開。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-31T02:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T03:34:00.0000000', 126)),
-    ('94d48c6b-46b3-fc5f-9ff1-e1475252c442', N'EVENTS', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', NULL, '3f2bf0ea-aa9c-402c-96cf-cd308225b8dc', N'EVENT', N'COMMUNITY', N'TEMPLATE', N'夜間文物猜謎會', N'這篇貼文對應活動資料「夜間文物猜謎會」，活動性質為會員活動。活動時間是 2026/09/25 15:56，地點為「清明鑑定屋｜二樓活動室」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'活動會以局部圖像、簡短提示卡和分組討論進行三個回合；每回合先讓大家寫下看到的線索，再逐步開放材質、器形或來源提示。揭曉後不只公布答案，也會一起回看哪些判斷有圖鑑資料支持、哪些只是當下的直覺。適合想用輕鬆方式練習觀察，又願意把推理過程說出來的玩家。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'清明鑑定屋｜二樓活動室', NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-09T06:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-09T06:43:00.0000000', 126)),
+    ('94d48c6b-46b3-fc5f-9ff1-e1475252c442', N'EVENTS', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', NULL, '3f2bf0ea-aa9c-402c-96cf-cd308225b8dc', N'EVENT', N'COMMUNITY', N'TEMPLATE', N'夜間文物猜謎會', N'這篇貼文對應活動資料「夜間文物猜謎會」，活動性質為會員活動。活動時間是 2026/09/25 15:56，地點為「國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'活動會以局部圖像、簡短提示卡和分組討論進行三個回合；每回合先讓大家寫下看到的線索，再逐步開放材質、器形或來源提示。揭曉後不只公布答案，也會一起回看哪些判斷有圖鑑資料支持、哪些只是當下的直覺。適合想用輕鬆方式練習觀察，又願意把推理過程說出來的玩家。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-09T06:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-09T06:43:00.0000000', 126)),
     ('05cfe420-8a78-c65d-b748-e20257219e0b', N'REVIEW', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'如果只剩一分鐘，我會先看完整輪廓再選一個局部', N'今天時間不夠，不能像平常一樣慢慢停留，我先從完整輪廓和作品名稱開始，再挑一個最想放大的局部。這個順序讓我至少保留整體印象，離開後也知道要從哪裡回查。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-05T02:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-05T02:29:00.0000000', 126)),
     ('9f43f2c9-fb5e-7c5f-b87f-e2766178558b', N'GENERAL', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'資料更新通知：修訂內容請保留查證依據', N'這次展示資料會同時保留可讀的內容與可以追查的關聯：文物連到題庫，文物也可對應商城縮小複製品；會員、貼文、留言、訂單與活動則依實際外鍵互相連結。' + NCHAR(10) + NCHAR(10) + N'如果資料目前不足以支持單一年份、精確用途或材質判斷，會保留原始範圍並寫明待查原因。這是為了讓展示內容看起來完整時，仍然不超過來源能證明的程度。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「資料更新通知：修訂內容請保留查證依據」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-04-01T08:00:00.0000000', 126), CONVERT(datetime2(3), '2026-04-01T09:11:00.0000000', 126)),
     ('e994f3c0-6108-7f5a-8d04-e44a586b3756', N'GAME', 'e635f9ed-ff31-45e2-91da-dfdf518bd009', NULL, NULL, N'POST', N'COMMUNITY', N'TEMPLATE', N'SHOW307｜2026/08/28 16:07｜第 112 篇回顧：回合結束後，我會怎麼檢查自己的判斷', N'我想從「SHOW307」的第 3 回合整理玩家如何在有限時間內讀提示、比較選項，再決定要不要把想法寫成答案。這筆紀錄開始於 2026/08/28 16:07，目前狀態是「揭曉階段」。這篇談的是遊戲流程，不把勝負結果當成文物研究的唯一依據。' + NCHAR(10) + NCHAR(10) + N'回合結束後，最值得回看的不只是答對或答錯，而是自己在什麼時候改變判斷，以及改變的理由是否留得下來。 對新手來說，我覺得最重要的是先說明自己看見的線索，再補上仍不確定的地方，讓其他玩家可以針對推理過程回應。' + NCHAR(10) + NCHAR(10) + N'這樣的回顧也適合保留成個人學習紀錄，讓玩家看到自己長期在哪一類題目上容易過早下結論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-09-29T04:00:00.0000000', 126), CONVERT(datetime2(3), '2025-09-29T04:53:00.0000000', 126)),
     ('2803559c-8f46-4c4b-af07-e585f3fa6bd6', N'REVIEW', 'd3964b0b-0c94-4c5a-b925-9bcf806c614e', '1bd4e875-d5e6-4bc6-d325-072521c79756', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'花鳥畫裡的枝葉層次', N'我注意到畫面前景的枝葉筆觸比較厚，遠處則用較輕的墨色帶過，這種差異讓視線自然落到鳥的位置。若只截取局部看，很難感受到整體安排，所以我會先看完整構圖再討論某一筆的特色。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T21:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:44:25.0750000', 126)),
-    ('7946422e-26a7-d758-b0bb-e6189569171a', N'EVENTS', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', NULL, 'ae880904-f729-4dff-8698-d3335f57776b', N'EVENT', N'COMMUNITY', N'TEMPLATE', N'玩家交流：我第一次看懂的細節', N'這篇貼文對應活動資料「玩家交流：我第一次看懂的細節」，活動性質為會員活動。活動時間是 2026/09/18 15:56，地點為「社群線上交流室」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'這是一場由玩家帶路的交流，大家可以分享自己在圖鑑裡第一次真正看懂的細節，也可以帶著曾經猜錯的作品來討論。流程會先用五分鐘說明作品名稱與資料來源，再交換辨識方法、查找過程和仍然沒有答案的問題；不要求每個人得出相同結論，重點是讓其他會員知道你的觀察從哪裡開始。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'社群線上交流室', NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-17T05:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-17T05:42:00.0000000', 126)),
+    ('7946422e-26a7-d758-b0bb-e6189569171a', N'EVENTS', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', NULL, 'ae880904-f729-4dff-8698-d3335f57776b', N'EVENT', N'COMMUNITY', N'TEMPLATE', N'玩家交流：我第一次看懂的細節', N'這篇貼文對應活動資料「玩家交流：我第一次看懂的細節」，活動性質為會員活動。活動時間是 2026/09/18 15:56，地點為「線上活動」。活動內容、審核與報名狀態仍以活動資料為準，貼文提供的是社群閱讀入口。' + NCHAR(10) + NCHAR(10) + N'這是一場由玩家帶路的交流，大家可以分享自己在圖鑑裡第一次真正看懂的細節，也可以帶著曾經猜錯的作品來討論。流程會先用五分鐘說明作品名稱與資料來源，再交換辨識方法、查找過程和仍然沒有答案的問題；不要求每個人得出相同結論，重點是讓其他會員知道你的觀察從哪裡開始。' + NCHAR(10) + NCHAR(10) + N'有興趣的會員可以先查看活動時間、名額與報名截止日，再決定是否參加；管理者若要修改流程，請回到活動管理處理，避免只改貼文文字造成兩邊資訊不一致。', N'線上活動', NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-10-17T05:00:00.0000000', 126), CONVERT(datetime2(3), '2025-10-17T05:42:00.0000000', 126)),
     ('fd648d2a-10cf-6c5e-b615-e782146f0d28', N'CATALOG', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', 'acaf0758-d52c-6957-4c83-f64cfaff540e', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'小件文物也需要看比例：汝窯 青瓷碟「丙蔡」銘', N'這次整理「汝窯 青瓷碟「丙蔡」銘」時，我先從「尺寸比例」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「陶瓷」、年代「北宋」、尺寸「高 1.5 公分、深 1.2 公分、口徑 10.9 公分、底徑 8.2 公分」。原始說明提到：圓口，淺壁，平底無足。胎質較薄，滿釉支燒，通體施青釉，釉色粉青微泛綠。底面三枚支燒點沿邊排佈，正背兩面滿佈開片，中心後刻「蔡」、「丙」兩字。與之相似的器形，亦見於河南省寶豐縣清涼寺窯址出土的標本。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-10T07:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-10T07:37:00.0000000', 126)),
     ('a8e96f12-b78c-e054-85b5-e7989fdf7a96', N'GENERAL', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 'dcdaf8de-cae8-9170-52a9-b73b6cf6aaf4', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把這次沒看懂的地方留在文章最後，當成下一次再訪的理由', N'離開前還有一個局部看不清楚，我沒有硬湊出結論，而是把它寫在文章最後，連同下次想找的角度一起留下。這樣下次再到館裡，不會只重複走過，而是有一個明確的回來理由。' + NCHAR(10) + NCHAR(10) + N'文中提到的作品可以回到圖鑑「戧金彩漆葵式盤」核對；分類是「漆器」，年代資料則保留「明 嘉靖」的原始範圍。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-10T02:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-10T02:41:00.0000000', 126)),
     ('5f3d2dc5-3749-1e52-9196-e7b49dbba2c1', N'GENERAL', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'官方內容說明：公告會以官方貼文形式呈現', N'這次展示資料會同時保留可讀的內容與可以追查的關聯：文物連到題庫，文物也可對應商城縮小複製品；會員、貼文、留言、訂單與活動則依實際外鍵互相連結。' + NCHAR(10) + NCHAR(10) + N'如果資料目前不足以支持單一年份、精確用途或材質判斷，會保留原始範圍並寫明待查原因。這是為了讓展示內容看起來完整時，仍然不超過來源能證明的程度。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「官方內容說明：公告會以官方貼文形式呈現」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-03-16T10:00:00.0000000', 126), CONVERT(datetime2(3), '2026-03-16T11:13:00.0000000', 126)),
-    ('52eaa6f7-d47f-c454-ad8c-e7eccd00cd11', N'DISCOVERY', 'a1c4407f-acee-4abe-a702-e164fb399b2e', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'表面的光澤很吸引人，但我先把它當成需要確認的現象', N'看到很亮的表面時，我以前會直接聯想到材質或製作方式，現在先寫成光澤明顯，再找不同光線和來源資料核對。把看到的現象和原因分開，反而更容易邀請別人補充。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區（故宮南院）」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區（故宮南院）', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-21T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-21T00:27:00.0000000', 126)),
+    ('52eaa6f7-d47f-c454-ad8c-e7eccd00cd11', N'DISCOVERY', 'a1c4407f-acee-4abe-a702-e164fb399b2e', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'表面的光澤很吸引人，但我先把它當成需要確認的現象', N'看到很亮的表面時，我以前會直接聯想到材質或製作方式，現在先寫成光澤明顯，再找不同光線和來源資料核對。把看到的現象和原因分開，反而更容易邀請別人補充。' + NCHAR(10) + NCHAR(10) + N'這次參觀地點記為「國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號」；地圖適合確認相對位置，入口、樓層和交通仍以文字說明為準。', N'國立故宮博物院南部院區｜嘉義縣太保市故宮大道888號', 23.470900, 120.294100, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-21T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-21T00:27:00.0000000', 126)),
     ('47c16671-4778-8f5c-8270-e8a17afb2180', N'GENERAL', '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', NULL, NULL, N'ANNOUNCEMENT', N'OFFICIAL', N'TEMPLATE', N'圖鑑使用通知：原始尺寸與縮小品資料分開呈現', N'為了讓圖鑑、社群、遊戲與商城的展示資料可以互相對照，近期整理時會優先保留文物的原始名稱、來源、年代文字與尺寸記錄。需要推測的內容請另外標示，不會把暫時假設直接改成確定答案。' + NCHAR(10) + NCHAR(10) + N'目前這批展示資料共安排 288 篇不同主題的內容，社群貼文會盡可能連回實際文物；商城訂單則只會使用與文物有直接關聯的縮小複製品商品。若發現欄位需要補充，請在貼文中說明可以回查的依據。' + NCHAR(10) + NCHAR(10) + N'本則公告聚焦「圖鑑使用通知：原始尺寸與縮小品資料分開呈現」，方便之後從社群分類回看相關脈絡。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-06-08T06:00:00.0000000', 126), CONVERT(datetime2(3), '2026-06-08T06:45:00.0000000', 126)),
     ('2ceb079e-c635-795e-9936-e8ddf550dff0', N'CATALOG', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 'a2daa79a-cd43-3060-cad3-abaa1db4da19', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'用尺寸資料想像熙寧元寶的實際大小｜故宮編號：購錢004789N000000000', N'這次整理「熙寧元寶」時，我先從「尺寸比例」切入，再回頭對照完整影像、尺寸和來源欄位。單看一個醒目的紋樣或顏色，很容易把局部印象放大；把不同資訊放在一起，才比較看得出哪些是穩定線索，哪些只是拍攝或保存造成的效果。' + NCHAR(10) + NCHAR(10) + N'目前圖鑑記載：分類「錢幣」、年代「北宋」、尺寸「待測量」。原始說明提到：銅質。方孔圓錢，正面有楷書：「熙寧元寶」四字，背面無文。' + NCHAR(10) + NCHAR(10) + N'我把這篇當成可以繼續補充的觀察筆記，不急著替作品下最後結論。若大家有相近作品或不同角度的資料，歡迎直接對照討論。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-07-20T02:00:00.0000000', 126), CONVERT(datetime2(3), '2026-07-20T02:32:00.0000000', 126)),
     ('73062ddd-3943-a351-a665-e969fc457a5b', N'REVIEW', '4f79ced2-639d-419a-ad7e-d8027c56eceb', NULL, NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'我把縮小複製品當成提醒，不把它當成原作的替代品', N'桌上的模型會讓我想起曾經看過的作品，但每次查資料時我仍然回到原作影像、尺寸和來源。對我來說它比較像一個閱讀提醒，提醒自己還有一件作品值得再看，而不是拿來代替博物館的觀看經驗。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2025-11-23T03:00:00.0000000', 126), CONVERT(datetime2(3), '2025-11-23T04:11:00.0000000', 126)),
@@ -3405,19 +3955,24 @@ INSERT INTO [social].[SocialPosts] ([Id], [BoardCode], [UserId], [ArtifactId], [
     ('f7fe4e85-c1e1-49eb-9518-ff7987c19b85', N'CATALOG', 'f43ee0b6-a28d-47c1-a5e2-32fa9060383c', 'd94926f5-2f37-3e4b-20b4-1af21af02557', NULL, N'POST', N'COMMUNITY', N'CUSTOM', N'陶瓷器口沿的修整痕', N'口沿的厚薄、圓整程度和局部修整痕，可以幫助我們理解成形與後續加工的過程。這些痕跡要搭配器身比例一起看才有意義，單獨放大某一段，反而可能把自然的製作差異看成異常。', NULL, NULL, NULL, N'PUBLISHED', CONVERT(datetime2(3), '2026-08-30T02:54:25.0750000', 126), CONVERT(datetime2(3), '2026-08-31T07:25:25.0750000', 126));
 GO
 -- store.CouponDefinitions
-INSERT INTO [store].[CouponDefinitions] ([Id], [Code], [Name], [DiscountType], [DiscountValue], [MinimumAmount], [StartAt], [EndAt], [IsActive]) VALUES
-    ('3623e61a-775c-4e09-a143-4dbaf365532c', N'SHOWCASE_COUPON_LAST50', N'展期最後回饋', N'FIXED', 50.00, 350.00, CONVERT(datetime2(3), '2026-05-23T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), 0),
-    ('0ccbfb9c-4594-4e37-a0af-5534c6351aee', N'SHOWCASE_COUPON_REPAIR12', N'修復主題優惠', N'PERCENT', 12.00, 1500.00, CONVERT(datetime2(3), '2026-09-15T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-10-30T07:56:22.6770000', 126), 1),
-    ('3e79eefb-2d52-4a06-b773-7d944ddf90ea', N'SHOWCASE_COUPON_MEMBER300', N'會員日收藏券', N'FIXED', 300.00, 2200.00, CONVERT(datetime2(3), '2026-08-23T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-03T07:56:22.6770000', 126), 1),
-    ('8970a43a-0591-41f7-9415-8bc1bade9926', N'SHOWCASE_COUPON_ARCHIVE200', N'典藏專題回饋', N'FIXED', 200.00, 1800.00, CONVERT(datetime2(3), '2026-06-17T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-11T07:56:22.6770000', 126), 0),
-    ('f0edda86-a2e3-4b9b-b8a1-b934e4d89c64', N'SHOWCASE_COUPON_SMALL5', N'小額入門折扣', N'PERCENT', 5.00, 200.00, CONVERT(datetime2(3), '2026-07-22T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-10T07:56:22.6770000', 126), 0),
-    ('704ce662-3fc9-42e0-a2bd-bf584fd3f9ab', N'SHOWCASE_COUPON_EVENT150', N'活動同好回饋', N'FIXED', 150.00, 900.00, CONVERT(datetime2(3), '2026-08-29T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-28T07:56:22.6770000', 126), 1),
-    ('264e36cf-2892-455b-9e91-d7181200fa83', N'SHOWCASE_COUPON_GAME100', N'鑑定遊戲獎勵', N'FIXED', 100.00, 700.00, CONVERT(datetime2(3), '2026-08-21T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-20T07:56:22.6770000', 126), 1),
-    ('3dcd27c7-9b32-442f-8e02-d71f7a7437e6', N'SHOWCASE_COUPON_AUTUMN15', N'秋日收藏優惠', N'PERCENT', 15.00, 1200.00, CONVERT(datetime2(3), '2026-09-07T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-10-15T07:56:22.6770000', 126), 1),
-    ('f65c8bbc-c5b8-4def-b3eb-d752dc593707', N'SHOWCASE_COUPON_RESEARCH8', N'研究資料小折扣', N'PERCENT', 8.00, 600.00, CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-11-29T07:56:22.6770000', 126), 0),
-    ('27070c6a-1561-41ff-8761-ea4036529b92', N'SHOWCASE_COUPON_WINTER20', N'冬季預約優惠', N'PERCENT', 20.00, 2500.00, CONVERT(datetime2(3), '2026-10-30T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-12-29T07:56:22.6770000', 126), 1),
-    ('082c778d-b665-44c6-b3a4-ea8ab831c3eb', N'SHOWCASE_COUPON_CATALOG10', N'圖鑑研究折扣', N'PERCENT', 10.00, 300.00, CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-12T07:56:22.6770000', 126), 1),
-    ('019bddd6-f19e-4798-a3d6-fa6cff4dba22', N'SHOWCASE_COUPON_WELCOME', N'新會員圖鑑禮', N'FIXED', 80.00, 500.00, CONVERT(datetime2(3), '2026-08-11T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-10-05T07:56:22.6770000', 126), 1);
+INSERT INTO [store].[CouponDefinitions] ([Id], [Code], [Name], [DiscountType], [DiscountValue], [MinimumAmount], [StartAt], [EndAt], [IsActive], [AcquisitionType], [PointCost], [ValidityDays]) VALUES
+    ('ddf1b257-a677-437d-9a3f-18568765c985', N'POINT_EXCHANGE_750_600', N'鑑定點數兌換 600 元券', N'FIXED', 600.00, 3000.00, CONVERT(datetime2(3), '2026-01-01T00:00:00.0000000', 126), CONVERT(datetime2(3), '2099-12-31T00:00:00.0000000', 126), 1, N'POINT_EXCHANGE', 750, 365),
+    ('000bb326-eea9-46e6-84db-1d6a03241e53', N'POINT_EXCHANGE_250_150', N'鑑定點數兌換 150 元券', N'FIXED', 150.00, 1000.00, CONVERT(datetime2(3), '2026-01-01T00:00:00.0000000', 126), CONVERT(datetime2(3), '2099-12-31T00:00:00.0000000', 126), 1, N'POINT_EXCHANGE', 250, 365),
+    ('3623e61a-775c-4e09-a143-4dbaf365532c', N'SHOWCASE_COUPON_LAST50', N'展期最後回饋', N'FIXED', 50.00, 350.00, CONVERT(datetime2(3), '2026-05-23T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), 0, N'ADMIN_GRANT', NULL, 365),
+    ('0ccbfb9c-4594-4e37-a0af-5534c6351aee', N'SHOWCASE_COUPON_REPAIR12', N'修復主題優惠', N'PERCENT', 12.00, 1500.00, CONVERT(datetime2(3), '2026-09-15T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-10-30T07:56:22.6770000', 126), 1, N'ADMIN_GRANT', NULL, 365),
+    ('3e79eefb-2d52-4a06-b773-7d944ddf90ea', N'SHOWCASE_COUPON_MEMBER300', N'會員日收藏券', N'FIXED', 300.00, 2200.00, CONVERT(datetime2(3), '2026-08-23T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-03T07:56:22.6770000', 126), 1, N'ADMIN_GRANT', NULL, 365),
+    ('8970a43a-0591-41f7-9415-8bc1bade9926', N'SHOWCASE_COUPON_ARCHIVE200', N'典藏專題回饋', N'FIXED', 200.00, 1800.00, CONVERT(datetime2(3), '2026-06-17T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-11T07:56:22.6770000', 126), 0, N'ADMIN_GRANT', NULL, 365),
+    ('79851630-62e4-4414-be24-9b90af7984ea', N'POINT_EXCHANGE_100_50', N'鑑定點數兌換 50 元券', N'FIXED', 50.00, 500.00, CONVERT(datetime2(3), '2026-01-01T00:00:00.0000000', 126), CONVERT(datetime2(3), '2099-12-31T00:00:00.0000000', 126), 1, N'POINT_EXCHANGE', 100, 365),
+    ('83bca654-e0fc-4ee5-899f-9cd6d8a7911e', N'POINT_EXCHANGE_500_350', N'鑑定點數兌換 350 元券', N'FIXED', 350.00, 2000.00, CONVERT(datetime2(3), '2026-01-01T00:00:00.0000000', 126), CONVERT(datetime2(3), '2099-12-31T00:00:00.0000000', 126), 1, N'POINT_EXCHANGE', 500, 365),
+    ('f0edda86-a2e3-4b9b-b8a1-b934e4d89c64', N'SHOWCASE_COUPON_SMALL5', N'小額入門折扣', N'PERCENT', 5.00, 200.00, CONVERT(datetime2(3), '2026-07-22T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-10T07:56:22.6770000', 126), 0, N'ADMIN_GRANT', NULL, 365),
+    ('704ce662-3fc9-42e0-a2bd-bf584fd3f9ab', N'SHOWCASE_COUPON_EVENT150', N'活動同好回饋', N'FIXED', 150.00, 900.00, CONVERT(datetime2(3), '2026-08-29T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-28T07:56:22.6770000', 126), 1, N'ADMIN_GRANT', NULL, 365),
+    ('264e36cf-2892-455b-9e91-d7181200fa83', N'SHOWCASE_COUPON_GAME100', N'鑑定遊戲獎勵', N'FIXED', 100.00, 700.00, CONVERT(datetime2(3), '2026-08-21T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-20T07:56:22.6770000', 126), 1, N'ADMIN_GRANT', NULL, 365),
+    ('3dcd27c7-9b32-442f-8e02-d71f7a7437e6', N'SHOWCASE_COUPON_AUTUMN15', N'秋日收藏優惠', N'PERCENT', 15.00, 1200.00, CONVERT(datetime2(3), '2026-09-07T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-10-15T07:56:22.6770000', 126), 1, N'ADMIN_GRANT', NULL, 365),
+    ('f65c8bbc-c5b8-4def-b3eb-d752dc593707', N'SHOWCASE_COUPON_RESEARCH8', N'研究資料小折扣', N'PERCENT', 8.00, 600.00, CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-11-29T07:56:22.6770000', 126), 0, N'ADMIN_GRANT', NULL, 365),
+    ('27070c6a-1561-41ff-8761-ea4036529b92', N'SHOWCASE_COUPON_WINTER20', N'冬季預約優惠', N'PERCENT', 20.00, 2500.00, CONVERT(datetime2(3), '2026-10-30T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-12-29T07:56:22.6770000', 126), 1, N'ADMIN_GRANT', NULL, 365),
+    ('082c778d-b665-44c6-b3a4-ea8ab831c3eb', N'SHOWCASE_COUPON_CATALOG10', N'圖鑑研究折扣', N'PERCENT', 10.00, 300.00, CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-12T07:56:22.6770000', 126), 1, N'ADMIN_GRANT', NULL, 365),
+    ('e4db1c8a-12a7-47ec-9f31-ee86fa09b8ae', N'POINT_EXCHANGE_50_20', N'鑑定點數兌換 20 元券', N'FIXED', 20.00, 200.00, CONVERT(datetime2(3), '2026-01-01T00:00:00.0000000', 126), CONVERT(datetime2(3), '2099-12-31T00:00:00.0000000', 126), 1, N'POINT_EXCHANGE', 50, 365),
+    ('019bddd6-f19e-4798-a3d6-fa6cff4dba22', N'SHOWCASE_COUPON_WELCOME', N'新會員圖鑑禮', N'FIXED', 80.00, 500.00, CONVERT(datetime2(3), '2026-08-11T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-10-05T07:56:22.6770000', 126), 1, N'ADMIN_GRANT', NULL, 365);
 GO
 -- store.OrderDetails
 INSERT INTO [store].[OrderDetails] ([Id], [OrderId], [ProductId], [ProductNameSnapshot], [UnitPrice], [Quantity], [LineTotal]) VALUES
@@ -3935,20 +4490,32 @@ INSERT INTO [store].[Payments] ([Id], [OrderId], [MerchantTradeNo], [EcpayTradeN
 GO
 -- store.PointBalances
 INSERT INTO [store].[PointBalances] ([UserId], [Balance], [UpdatedAt]) VALUES
-    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 420, CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', 2050, CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 680, CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', 1280, CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', 760, CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126));
+    ('11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 820, CONVERT(datetime2(3), '2026-09-02T07:04:45.6870000', 126)),
+    ('1b6805e8-d50c-40c3-8f9b-5c73ef467249', 3130, CONVERT(datetime2(3), '2026-09-02T07:04:45.6870000', 126)),
+    ('5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 1030, CONVERT(datetime2(3), '2026-09-02T07:04:45.6870000', 126)),
+    ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', 1280, CONVERT(datetime2(3), '2026-09-02T07:21:39.2330000', 126)),
+    ('9b40d125-cd86-4ee1-9a12-f954c52610fb', 1220, CONVERT(datetime2(3), '2026-09-02T07:04:45.6870000', 126));
 GO
 -- store.PointTransactions
 INSERT INTO [store].[PointTransactions] ([Id], [UserId], [Amount], [Reason], [ReferenceType], [ReferenceId], [CreatedAt]) VALUES
     ('1766659d-8720-41ea-a3cc-1e75193f7acb', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 1000, N'完成館藏整理', N'SHOWCASE', NULL, CONVERT(datetime2(3), '2026-07-22T07:56:22.6770000', 126)),
     ('8a4b545f-0dac-4a57-b95d-283870bfd767', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', 780, N'遊戲連勝獎勵', N'SHOWCASE', NULL, CONVERT(datetime2(3), '2026-08-22T07:56:22.6770000', 126)),
     ('63172ee3-3f0e-4c6e-ab02-2fb48e5fcbfd', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 150, N'發布研究貼文', N'SHOWCASE', NULL, CONVERT(datetime2(3), '2026-08-16T07:56:22.6770000', 126)),
+    ('7ec9bb08-b54f-4aa9-81d0-485283e62cb7', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', 40, N'展示資料餘額校正', N'SHOWCASE_RECONCILIATION', NULL, CONVERT(datetime2(3), '2026-09-01T07:21:39.2330000', 126)),
+    ('6f572c39-4d4e-4f01-ad10-4af397e9ffec', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 30, N'官方活動參與加碼', N'COMMUNITY_REWARD', 'f76e6a68-6670-4230-a82e-0550f009b280', CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
+    ('2daf1473-4726-4407-baa6-537678675584', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', -20, N'私人房間加碼支出', N'COMMUNITY_REWARD', 'd0a40000-0000-0000-0000-000000000001', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126)),
+    ('8f097bad-2c5b-4b4c-9965-5598876429db', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 20, N'私人房間參與加碼', N'COMMUNITY_REWARD', 'd0a40000-0000-0000-0000-000000000002', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126)),
     ('076b6796-4364-442a-b172-572261eb6f91', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 120, N'完成會員資料', N'SHOWCASE', NULL, CONVERT(datetime2(3), '2026-08-01T07:56:22.6770000', 126)),
+    ('852ecf77-c98c-4029-a0ea-5791084f27c5', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 350, N'展示資料餘額校正', N'SHOWCASE_RECONCILIATION', NULL, CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
     ('f88f1c72-167c-4d0f-86b7-6547ec29e4d3', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', -80, N'兌換活動優惠券', N'SHOWCASE', NULL, CONVERT(datetime2(3), '2026-08-20T07:56:22.6770000', 126)),
+    ('04c97eae-5c0a-4f77-be33-7dfd944b3270', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 300, N'展示資料餘額校正', N'SHOWCASE_RECONCILIATION', NULL, CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
+    ('4ee7266b-5731-4404-a943-8416e4aabedc', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 30, N'官方活動參與加碼', N'COMMUNITY_REWARD', '4146db2c-9a31-4dba-bdf7-c7b78fc44072', CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
+    ('5b2db010-5063-4ac3-a80a-88e0516ec852', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', -20, N'私人房間加碼支出', N'COMMUNITY_REWARD', 'd0a40000-0000-0000-0000-000000000002', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126)),
+    ('b477ab7a-470c-4bf2-ae9e-95653f833c7a', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 460, N'展示資料餘額校正', N'SHOWCASE_RECONCILIATION', NULL, CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
+    ('e1ea669e-0841-4f6d-89ce-99af10c1da7d', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 30, N'官方活動參與加碼', N'COMMUNITY_REWARD', 'fe87449b-3aee-4aef-b30c-7fc5ed465d5a', CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
     ('f140c357-b166-4e60-a082-a4702b1f4a9b', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 260, N'參加社群活動', N'SHOWCASE', NULL, CONVERT(datetime2(3), '2026-08-19T07:56:22.6770000', 126)),
+    ('1faf3d2c-47d4-487b-8ab2-b1a1bd2064ad', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 20, N'私人房間參與加碼', N'COMMUNITY_REWARD', 'd0a40000-0000-0000-0000-000000000001', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126)),
+    ('464de804-cfec-4d32-9d8a-c10beb3bddef', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 1050, N'展示資料餘額校正', N'SHOWCASE_RECONCILIATION', NULL, CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126)),
     ('a15b6c61-8b1c-4560-a2f3-dfe046372d1b', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 300, N'協助活動交流', N'SHOWCASE', NULL, CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126)),
     ('e22dbb6a-2603-4efa-950b-f07f7622960b', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', 500, N'完成鑑定遊戲', N'SHOWCASE', NULL, CONVERT(datetime2(3), '2026-08-11T07:56:22.6770000', 126));
 GO
@@ -4524,31 +5091,52 @@ INSERT INTO [store].[StoreOrders] ([Id], [OrderNo], [UserId], [UserCouponId], [S
     ('42a220b5-016e-335c-a2a7-ff4d48f21b4a', N'QMAH-GEN-0130', 'ca5024a2-a0be-4204-8ec9-235368b494a9', NULL, N'SHIPPED', 3280.00, 0.00, 0, 3280.00, N'Demo Member 15 收', N'0988017810', N'600', N'嘉義市', N'東區', N'文化路 275 號', CONVERT(datetime2(3), '2026-02-21T20:00:00.0000000', 126), CONVERT(datetime2(3), '2026-02-21T20:05:00.0000000', 126), NULL);
 GO
 -- store.UserCoupons
-INSERT INTO [store].[UserCoupons] ([Id], [UserId], [CouponDefinitionId], [Status], [IssuedAt], [UsedAt]) VALUES
-    ('3339b47c-f194-4666-a2da-1bcfcc34adeb', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '8970a43a-0591-41f7-9415-8bc1bade9926', N'EXPIRED', CONVERT(datetime2(3), '2026-06-22T07:56:22.6770000', 126), NULL),
-    ('767e6cbb-585b-45b8-a063-4ba78d432411', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '264e36cf-2892-455b-9e91-d7181200fa83', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), NULL),
-    ('8f72416f-358b-4779-a197-80b10f5dc915', '9b40d125-cd86-4ee1-9a12-f954c52610fb', '704ce662-3fc9-42e0-a2bd-bf584fd3f9ab', N'USED', CONVERT(datetime2(3), '2026-08-17T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-18T07:56:22.6770000', 126)),
-    ('466e7e2f-e858-4848-bd30-8776cfc3751d', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', 'f0edda86-a2e3-4b9b-b8a1-b934e4d89c64', N'EXPIRED', CONVERT(datetime2(3), '2026-07-17T07:56:22.6770000', 126), NULL),
-    ('41eb2a8f-e00e-4a7f-81d6-92ba45af7527', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '019bddd6-f19e-4798-a3d6-fa6cff4dba22', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-27T07:56:22.6770000', 126), NULL),
-    ('4af962b6-2288-4d2f-8d0b-c5dc90ac6cec', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '082c778d-b665-44c6-b3a4-ea8ab831c3eb', N'USED', CONVERT(datetime2(3), '2026-08-20T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-21T07:56:22.6770000', 126)),
-    ('f9830a66-0459-483d-9764-c924ba4b1178', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 'f65c8bbc-c5b8-4def-b3eb-d752dc593707', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-23T07:56:22.6770000', 126), NULL),
-    ('f53e4ac5-326c-4407-8f81-d403f384dab5', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '0ccbfb9c-4594-4e37-a0af-5534c6351aee', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126), NULL),
-    ('dd48baa8-0b87-4400-a457-f28d25d81f1f', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '3e79eefb-2d52-4a06-b773-7d944ddf90ea', N'USED', CONVERT(datetime2(3), '2026-08-25T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126));
+INSERT INTO [store].[UserCoupons] ([Id], [UserId], [CouponDefinitionId], [Status], [IssuedAt], [UsedAt], [ExpiresAt], [IssuedByAdminUserId], [IssueReason], [RevokedAt], [RevokedByAdminUserId], [RevokeReason], [GrantBatchId], [RevokeBatchId]) VALUES
+    ('3339b47c-f194-4666-a2da-1bcfcc34adeb', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '8970a43a-0591-41f7-9415-8bc1bade9926', N'EXPIRED', CONVERT(datetime2(3), '2026-06-22T07:56:22.6770000', 126), NULL, CONVERT(datetime2(3), '2026-09-01T07:21:39.2330000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('77081f8a-7765-45ee-b425-46fda048b94e', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '264e36cf-2892-455b-9e91-d7181200fa83', N'USED', CONVERT(datetime2(3), '2026-08-01T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-08-12T07:04:45.6870000', 126), CONVERT(datetime2(3), '2027-08-01T07:04:45.6870000', 126), '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'活動批次：多人遊戲週', NULL, NULL, NULL, NULL, NULL),
+    ('767e6cbb-585b-45b8-a063-4ba78d432411', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '264e36cf-2892-455b-9e91-d7181200fa83', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-28T07:56:22.6770000', 126), NULL, CONVERT(datetime2(3), '2027-08-28T07:56:22.6770000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('d322b4ab-ef35-4a22-9f0f-590490404374', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '704ce662-3fc9-42e0-a2bd-bf584fd3f9ab', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-31T07:04:45.6870000', 126), NULL, CONVERT(datetime2(3), '2027-08-31T07:04:45.6870000', 126), '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'活動批次：秋季觀察週', NULL, NULL, NULL, NULL, NULL),
+    ('d91be69f-8f57-4474-9243-695e9a17ace7', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', '0ccbfb9c-4594-4e37-a0af-5534c6351aee', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-29T07:04:45.6870000', 126), NULL, CONVERT(datetime2(3), '2027-08-29T07:04:45.6870000', 126), '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'活動批次：保存觀察工作坊', NULL, NULL, NULL, NULL, NULL),
+    ('8f72416f-358b-4779-a197-80b10f5dc915', '9b40d125-cd86-4ee1-9a12-f954c52610fb', '704ce662-3fc9-42e0-a2bd-bf584fd3f9ab', N'USED', CONVERT(datetime2(3), '2026-08-17T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-18T07:56:22.6770000', 126), CONVERT(datetime2(3), '2027-08-17T07:56:22.6770000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('fcead29d-9956-4472-bc95-84f4ea101720', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '3dcd27c7-9b32-442f-8e02-d71f7a7437e6', N'EXPIRED', CONVERT(datetime2(3), '2025-07-29T07:04:45.6870000', 126), NULL, CONVERT(datetime2(3), '2026-07-29T07:04:45.6870000', 126), '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'活動批次：春季館藏日', NULL, NULL, NULL, NULL, NULL),
+    ('466e7e2f-e858-4848-bd30-8776cfc3751d', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', 'f0edda86-a2e3-4b9b-b8a1-b934e4d89c64', N'EXPIRED', CONVERT(datetime2(3), '2026-07-17T07:56:22.6770000', 126), NULL, CONVERT(datetime2(3), '2026-09-01T07:21:39.2330000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('41eb2a8f-e00e-4a7f-81d6-92ba45af7527', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '019bddd6-f19e-4798-a3d6-fa6cff4dba22', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-27T07:56:22.6770000', 126), NULL, CONVERT(datetime2(3), '2027-08-27T07:56:22.6770000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('1052f708-fc96-47af-96aa-97a5546d9f06', '9b40d125-cd86-4ee1-9a12-f954c52610fb', '704ce662-3fc9-42e0-a2bd-bf584fd3f9ab', N'AVAILABLE', CONVERT(datetime2(3), '2026-09-01T07:04:45.6870000', 126), NULL, CONVERT(datetime2(3), '2027-09-01T07:04:45.6870000', 126), '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'活動批次：社群主持回饋', NULL, NULL, NULL, NULL, NULL),
+    ('34d53473-5eb9-4be1-a3d4-b46bbc155530', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '082c778d-b665-44c6-b3a4-ea8ab831c3eb', N'USED', CONVERT(datetime2(3), '2026-08-15T07:04:45.6870000', 126), CONVERT(datetime2(3), '2026-08-22T07:04:45.6870000', 126), CONVERT(datetime2(3), '2027-08-15T07:04:45.6870000', 126), '4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'活動批次：八月館藏導讀', NULL, NULL, NULL, NULL, NULL),
+    ('4af962b6-2288-4d2f-8d0b-c5dc90ac6cec', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '082c778d-b665-44c6-b3a4-ea8ab831c3eb', N'USED', CONVERT(datetime2(3), '2026-08-20T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-21T07:56:22.6770000', 126), CONVERT(datetime2(3), '2027-08-20T07:56:22.6770000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('f9830a66-0459-483d-9764-c924ba4b1178', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 'f65c8bbc-c5b8-4def-b3eb-d752dc593707', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-23T07:56:22.6770000', 126), NULL, CONVERT(datetime2(3), '2027-08-23T07:56:22.6770000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('f53e4ac5-326c-4407-8f81-d403f384dab5', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '0ccbfb9c-4594-4e37-a0af-5534c6351aee', N'AVAILABLE', CONVERT(datetime2(3), '2026-08-30T07:56:22.6770000', 126), NULL, CONVERT(datetime2(3), '2027-08-30T07:56:22.6770000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('dd48baa8-0b87-4400-a457-f28d25d81f1f', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '3e79eefb-2d52-4a06-b773-7d944ddf90ea', N'USED', CONVERT(datetime2(3), '2026-08-25T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126), CONVERT(datetime2(3), '2027-08-25T07:56:22.6770000', 126), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 GO
 -- user.Achievements
 INSERT INTO [user].[Achievements] ([Id], [Code], [Name], [Title], [Description], [IconPath], [ConditionType], [ThresholdValue], [Status], [CreatedAt], [UpdatedAt]) VALUES
-    ('bc0c1969-641a-4d5f-a3e7-0c2698663b5b', N'SHOWCASE_ACHIEVEMENT_CAREFUL_READER', N'細節觀察家', N'放大才看見的線索', N'完成二十五件文物的解鎖紀錄。', NULL, N'ARTIFACT_UNLOCK_COUNT', 25, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('5436cfd7-fae6-4f38-80a1-26f647e8b9c1', N'SHOWCASE_ACHIEVEMENT_CATALOG_START', N'圖鑑起步', N'打開第一件文物', N'解鎖第一件圖鑑文物，開始建立自己的收藏紀錄。', NULL, N'ARTIFACT_UNLOCK_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('66570da0-f1d9-4a6a-b5c0-4293b25aa7c7', N'SHOWCASE_ACHIEVEMENT_POINT_COLLECTOR', N'點數收藏家', N'把每次互動留下來', N'累積取得一千點會員點數。', NULL, N'POINT_TOTAL', 1000, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('ccf39844-04dc-441d-9840-684f066bf23b', N'SHOWCASE_ACHIEVEMENT_EVENT_VISITOR', N'活動常客', N'在現場遇見同好', N'完成三次活動報名並參與交流。', NULL, N'EVENT_JOIN_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('46b08b28-fad9-4392-9868-7c4cd8950556', N'SHOWCASE_ACHIEVEMENT_QUIET_ARCHIVE', N'資料整理員', N'把線索慢慢收好', N'累積發布十篇貼文，整理個人的觀察脈絡。', NULL, N'POST_COUNT', 10, N'INACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('5b336dc7-41f5-439d-8409-80a4ffdb932c', N'SHOWCASE_ACHIEVEMENT_FIRST_POST', N'留下第一筆觀察', N'把發現寫下來', N'發布第一篇與文物觀察有關的貼文。', NULL, N'POST_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('37a50685-053f-4ed3-8b31-882e5a5babd4', N'SHOWCASE_ACHIEVEMENT_GAME_WINNER', N'眼力初成', N'答對三場鑑定', N'在鑑定遊戲中累積三場勝利。', NULL, N'GAME_WIN_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('e4b5b6a3-26a5-4639-a07c-99ff36a5acce', N'SHOWCASE_ACHIEVEMENT_GAME_MASTER', N'鑑定老手', N'穩定找出答案', N'在鑑定遊戲中累積十場勝利。', NULL, N'GAME_WIN_COUNT', 10, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('842dbd3f-19ee-49d3-8329-b55a58331bd0', N'SHOWCASE_ACHIEVEMENT_GAME_PARTICIPANT', N'鑑定練習生', N'先從參加開始', N'參與三次鑑定遊戲，不論結果都能累積經驗。', NULL, N'GAME_PLAY_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('8d49fed7-35b5-4492-8335-cf28415aab62', N'SHOWCASE_ACHIEVEMENT_CATALOG_EXPLORER', N'館藏探索者', N'走過十件文物', N'累積解鎖十件不同的圖鑑文物。', NULL, N'ARTIFACT_UNLOCK_COUNT', 10, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('87d46c1a-7e63-4dec-b178-d5890cd128ec', N'SHOWCASE_ACHIEVEMENT_ACTIVE_READER', N'認真讀者', N'每則留言都有線索', N'在社群中留下五則有內容的留言。', NULL, N'COMMENT_COUNT', 5, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126)),
-    ('b711c617-5a85-42fa-9777-de47d314f9f5', N'SHOWCASE_ACHIEVEMENT_EVENT_HOST', N'交流發起人', N'讓討論有一個開始', N'建立一場玩家活動並完成審核。', NULL, N'EVENT_JOIN_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T07:56:22.6770000', 126));
+    ('881ec4ae-2215-4e42-ad2a-02a248aac891', N'SHOWCASE_ACHIEVEMENT_MINIGAME_MEMORY', N'館藏翻牌', N'過目不忘', N'完成三次 MEMORY_MATCH 館藏翻牌。', NULL, N'MINIGAME_MEMORY_MATCH_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('bc0c1969-641a-4d5f-a3e7-0c2698663b5b', N'SHOWCASE_ACHIEVEMENT_CAREFUL_READER', N'細節觀察家', N'放大才看見的線索', N'完成二十五件文物的解鎖紀錄。', NULL, N'ARTIFACT_UNLOCK_COUNT', 25, N'INACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('40953c03-1ebc-48f7-af86-19900c0b6970', N'SHOWCASE_ACHIEVEMENT_GAME_REGULAR', N'持續參與', N'穩定入場', N'完成十場多人主遊戲。', NULL, N'GAME_COMPLETE_COUNT', 10, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('5f590498-720a-425b-a65f-1ae84bbcc670', N'SHOWCASE_ACHIEVEMENT_DAILY_LOGIN_START', N'每日到訪', N'持續到訪者', N'累積一天成功登入紀錄。', NULL, N'DAILY_LOGIN_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T07:04:45.3580000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('a91cec8f-dffa-4740-84c3-1da17245b697', N'SHOWCASE_ACHIEVEMENT_MINIGAME_DETAIL', N'細節追蹤', N'細節尋跡者', N'完成三次 DETAIL_LOCATOR 細節追蹤。', NULL, N'MINIGAME_DETAIL_LOCATOR_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('5436cfd7-fae6-4f38-80a1-26f647e8b9c1', N'SHOWCASE_ACHIEVEMENT_CATALOG_START', N'圖鑑起步', N'初見藏品', N'解鎖第一件啟用中的圖鑑文物。', NULL, N'ARTIFACT_UNLOCK_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('ec033950-6b4a-45e1-baf5-2e3a57c52331', N'SHOWCASE_ACHIEVEMENT_MINIGAME_STRIP', N'長卷復位', N'理線成形', N'完成三次 STRIP_RESTORE 長卷復位。', NULL, N'MINIGAME_STRIP_RESTORE_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('25abd787-faf2-4b1e-bc67-3231486affe2', N'SHOWCASE_ACHIEVEMENT_SOCIAL_FIRST_POST', N'留下第一筆觀察', N'把發現寫下來', N'發布第一篇與文物觀察有關的貼文。', NULL, N'POST_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('66570da0-f1d9-4a6a-b5c0-4293b25aa7c7', N'SHOWCASE_ACHIEVEMENT_POINT_COLLECTOR', N'點數收藏家', N'把每次互動留下來', N'累積取得一千點會員點數。', NULL, N'POINT_TOTAL', 1000, N'INACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('ee01f488-0fed-4c9e-b146-4b463591ee33', N'SHOWCASE_ACHIEVEMENT_CATALOG_DEEP_READER', N'細讀成章', N'明辨細節', N'累積解鎖二十五件不同的啟用文物。', NULL, N'ARTIFACT_UNLOCK_COUNT', 25, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('8c8ed809-12da-4639-aaa1-5d9970f8dc58', N'SHOWCASE_ACHIEVEMENT_GAME_PERFORMER', N'回合觀察者', N'讀票知勢', N'在多人主遊戲中累積十個勝出回合。', NULL, N'GAME_ROUND_WIN_COUNT', 10, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('445682f0-0a0f-4b4b-869a-631398805b2c', N'SHOWCASE_ACHIEVEMENT_CATALOG_COMPLETE', N'全藏鑑定人', N'藏中有數', N'圖鑑完成率達到百分之百；完成率依目前啟用文物即時計算。', NULL, N'CATALOG_COMPLETION_PERCENT', 100, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('ccf39844-04dc-441d-9840-684f066bf23b', N'SHOWCASE_ACHIEVEMENT_EVENT_VISITOR', N'活動常客', N'在交流現場見面', N'完成三次活動報名並參與交流。', NULL, N'EVENT_JOIN_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('331defdf-14b3-4fb6-a727-78498cbbe42f', N'SHOWCASE_ACHIEVEMENT_CATALOG_CATEGORY_COMPLETE', N'一門專精', N'分類觀察者', N'完成一個目前仍有啟用文物的分類。', NULL, N'CATEGORY_COMPLETE_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('46b08b28-fad9-4392-9868-7c4cd8950556', N'SHOWCASE_ACHIEVEMENT_QUIET_ARCHIVE', N'資料整理員', N'把線索慢慢收好', N'累積發布十篇貼文，整理個人的觀察脈絡。', NULL, N'POST_COUNT', 10, N'INACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('afc96cd0-9a2a-4d70-9893-80904fa725b1', N'SHOWCASE_ACHIEVEMENT_MINIGAME_PUZZLE', N'拼圖復原', N'復原巧手', N'完成三次 ARTIFACT_PUZZLE 館藏拼圖。', NULL, N'MINIGAME_ARTIFACT_PUZZLE_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('5b336dc7-41f5-439d-8409-80a4ffdb932c', N'SHOWCASE_ACHIEVEMENT_FIRST_POST', N'留下第一筆觀察', N'把發現寫下來', N'發布第一篇與文物觀察有關的貼文。', NULL, N'POST_COUNT', 1, N'INACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('37a50685-053f-4ed3-8b31-882e5a5babd4', N'SHOWCASE_ACHIEVEMENT_GAME_WINNER', N'眼力初成', N'答對三場鑑定', N'在鑑定遊戲中累積三場勝利。', NULL, N'GAME_WIN_COUNT', 3, N'INACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('e4b5b6a3-26a5-4639-a07c-99ff36a5acce', N'SHOWCASE_ACHIEVEMENT_GAME_MASTER', N'鑑定老手', N'穩定找出答案', N'在鑑定遊戲中累積十場勝利。', NULL, N'GAME_WIN_COUNT', 10, N'INACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('79d44fba-c4a4-4024-ada9-9d42a1e7aa0e', N'SHOWCASE_ACHIEVEMENT_SOCIAL_ACTIVE_READER', N'認真讀者', N'每則留言都有線索', N'在社群中留下五則有內容的留言。', NULL, N'COMMENT_COUNT', 5, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('786fea4f-ce93-4563-9a64-a493cbd98afc', N'SHOWCASE_ACHIEVEMENT_MINIGAME_S_GRADE', N'高分辨識', N'目光如炬', N'在 Mini Game 中取得五次 S 等級。', NULL, N'MINIGAME_GRADE_S_COUNT', 5, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('2d2f6699-61f7-48d3-9815-ac26833205db', N'SHOWCASE_ACHIEVEMENT_CATALOG_ERA_COMPLETE', N'縱覽古今', N'年代尋蹤者', N'完成一個目前仍有啟用文物的年代範圍。', NULL, N'ERA_COMPLETE_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T05:53:38.5740000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('842dbd3f-19ee-49d3-8329-b55a58331bd0', N'SHOWCASE_ACHIEVEMENT_GAME_PARTICIPANT', N'多人遊戲入門', N'同場觀察者', N'完成三場多人主遊戲。', NULL, N'GAME_COMPLETE_COUNT', 3, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('610dc3be-1af1-4bbd-b6e8-cab20b05e3ff', N'SHOWCASE_ACHIEVEMENT_DAILY_LOGIN_STREAK', N'連續七日', N'日積月累', N'連續七天成功登入；連續天數由共用每日活動紀錄計算。', NULL, N'DAILY_LOGIN_STREAK', 7, N'ACTIVE', CONVERT(datetime2(3), '2026-09-02T07:04:45.3580000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('8d49fed7-35b5-4492-8335-cf28415aab62', N'SHOWCASE_ACHIEVEMENT_CATALOG_EXPLORER', N'館藏尋跡', N'循線而讀', N'累積解鎖十件不同的啟用文物。', NULL, N'ARTIFACT_UNLOCK_COUNT', 10, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('87d46c1a-7e63-4dec-b178-d5890cd128ec', N'SHOWCASE_ACHIEVEMENT_ACTIVE_READER', N'認真讀者', N'每則留言都有線索', N'在社群中留下五則有內容的留言。', NULL, N'COMMENT_COUNT', 5, N'INACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126)),
+    ('b711c617-5a85-42fa-9777-de47d314f9f5', N'SHOWCASE_ACHIEVEMENT_EVENT_HOST', N'交流發起人', N'讓討論有一個開始', N'建立一場玩家活動並完成審核。', NULL, N'EVENT_HOST_COUNT', 1, N'ACTIVE', CONVERT(datetime2(3), '2026-07-02T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-09-02T07:22:44.1870000', 126));
 GO
 -- user.AspNetRoles
 INSERT INTO [user].[AspNetRoles] ([Id], [Name], [NormalizedName], [ConcurrencyStamp]) VALUES
@@ -4607,18 +5195,21 @@ INSERT INTO [user].[AspNetUsers] ([Id], [Status], [CreatedAt], [UpdatedAt], [Use
     ('15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'ACTIVE', CONVERT(datetime2(3), '2026-07-10T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:56.2920000', 126), N'player-a@qmah.local', N'PLAYER-A@QMAH.LOCAL', N'player-a@qmah.local', N'PLAYER-A@QMAH.LOCAL', 1, N'AQAAAAIAAYagAAAAEK1CwElSlH+h7cyrnl5Jbq6bquaF8xFO62zyCBzK6adfBi1Xm1eGco6kdJWo3XBk1A==', N'IQFNI7EPGOOIRIMLIHBJYUKKFUVZCQI3', N'f4843f91-6084-47f1-b9da-dc17464804d6', NULL, 0, 0, NULL, 1, 0),
     ('db7f8c59-6471-4604-a85c-ebc59c02fc6c', N'ACTIVE', CONVERT(datetime2(3), '2026-08-23T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:56.9630000', 126), N'demo.member14@qmah.test', N'DEMO.MEMBER14@QMAH.TEST', N'demo.member14@qmah.test', N'DEMO.MEMBER14@QMAH.TEST', 1, N'AQAAAAIAAYagAAAAEGfFxwJGkkUE2tlSSgYnnTNaw9wpPVPIVJFH3+X23Dey3XOgedtyS2vCVNUQEj/M3Q==', N'CWT4OU6THKLYCAOOTWIPQ7DT6SKHJDTS', N'91d9de8d-2b48-4fc9-809b-28763188722a', NULL, 0, 0, NULL, 1, 0),
     ('9b40d125-cd86-4ee1-9a12-f954c52610fb', N'ACTIVE', CONVERT(datetime2(3), '2026-06-22T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:56.1980000', 126), N'social@qmah.local', N'SOCIAL@QMAH.LOCAL', N'social@qmah.local', N'SOCIAL@QMAH.LOCAL', 1, N'AQAAAAIAAYagAAAAEIhCDtWjZoaP3nsJOQHcFDVrcuZrU6/aFaRwtwXZHLNvKfI5PK3Kn15I584Q0TX3BQ==', N'5AUJ5UBOHV2C3W7WYADJRO6OTYRWFPL7', N'55d26fa3-5900-4f5c-9b9d-b2b0c8959d73', NULL, 0, 0, NULL, 1, 0),
-    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'ACTIVE', CONVERT(datetime2(3), '2026-05-03T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:55.7940000', 126), N'admin@qmah.local', N'ADMIN@QMAH.LOCAL', N'admin@qmah.local', N'ADMIN@QMAH.LOCAL', 1, N'AQAAAAIAAYagAAAAEFP/XFcfVu+73rYLhJq73Ku8qwaRrzKSUm8m3sgnNIqmI1ZGXAqR0tsV8NU+r8l91w==', N'CIZJDHRFH6H4YKB2ENVJU4BER43HQG6C', N'1129bdd2-0128-4bf1-a1ef-8b6571dd7678', NULL, 0, 0, NULL, 1, 0);
+    ('4d18c9d4-d3a3-46f2-86a9-ff75cbf49487', N'ACTIVE', CONVERT(datetime2(3), '2026-05-03T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:55.7940000', 126), N'admin@qmah.local', N'ADMIN@QMAH.LOCAL', N'admin@qmah.local', N'ADMIN@QMAH.LOCAL', 1, N'AQAAAAIAAYagAAAAEFP/XFcfVu+73rYLhJq73Ku8qwaRrzKSUm8m3sgnNIqmI1ZGXAqR0tsV8NU+r8l91w==', N'CIZJDHRFH6H4YKB2ENVJU4BER43HQG6C', N'2c27a71e-9dbe-4be1-bfaf-26f3a0d51846', NULL, 0, 0, NULL, 1, 2);
 GO
 -- user.UserAchievements
 INSERT INTO [user].[UserAchievements] ([Id], [UserId], [AchievementId], [AchievedAt], [IsDisplayed], [DisplayedAt]) VALUES
     ('66c6f878-4dfe-f5d0-c0b3-043219bd0c52', '2d049534-161d-4862-971f-e410d2ac9162', '66570da0-f1d9-4a6a-b5c0-4293b25aa7c7', CONVERT(datetime2(3), '2026-08-09T10:00:00.0000000', 126), 0, NULL),
     ('f344c1d8-21e8-c82a-9afa-048909737440', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', '87d46c1a-7e63-4dec-b178-d5890cd128ec', CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T10:30:00.0000000', 126)),
     ('434773d3-8d4b-afb3-b683-05426db6e8fb', '59538e0b-3f85-46d0-93d6-cccb9df12831', '5b336dc7-41f5-439d-8409-80a4ffdb932c', CONVERT(datetime2(3), '2026-07-31T10:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-07-31T10:30:00.0000000', 126)),
+    ('18aeeedc-fa22-4767-ac22-07fa47135db4', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', '79d44fba-c4a4-4024-ada9-9d42a1e7aa0e', CONVERT(datetime2(3), '2026-08-18T05:55:20.4070000', 126), 1, CONVERT(datetime2(3), '2026-08-19T05:55:20.4070000', 126)),
     ('5283b536-f713-3d4a-2cba-088e24c85e6d', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', '8d49fed7-35b5-4492-8335-cf28415aab62', CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), 0, NULL),
     ('fe8b7b18-4733-fa3e-786e-19ef3902f25b', 'ca5024a2-a0be-4204-8ec9-235368b494a9', '37a50685-053f-4ed3-8b31-882e5a5babd4', CONVERT(datetime2(3), '2026-08-31T11:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T11:30:00.0000000', 126)),
+    ('8fcaf113-cc51-4c56-b870-1ba7f2ba1602', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', '5f590498-720a-425b-a65f-1ae84bbcc670', CONVERT(datetime2(3), '2026-08-23T07:04:45.6870000', 126), 0, NULL),
     ('f6ae706e-9005-0d36-3152-1db2c8d8cd14', 'ca5024a2-a0be-4204-8ec9-235368b494a9', '842dbd3f-19ee-49d3-8329-b55a58331bd0', CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T10:30:00.0000000', 126)),
     ('0614d1cc-0175-8192-8bbc-25b6385f8861', 'db7f8c59-6471-4604-a85c-ebc59c02fc6c', '5b336dc7-41f5-439d-8409-80a4ffdb932c', CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), 0, NULL),
     ('b1f5d2dc-1d67-fc35-f9e9-2642172331d4', '59538e0b-3f85-46d0-93d6-cccb9df12831', 'e4b5b6a3-26a5-4639-a07c-99ff36a5acce', CONVERT(datetime2(3), '2026-08-01T11:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-01T11:30:00.0000000', 126)),
+    ('11e8f6f8-444b-4735-abfc-2d97590006d9', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', '610dc3be-1af1-4bbd-b6e8-cab20b05e3ff', CONVERT(datetime2(3), '2026-08-26T07:04:45.6870000', 126), 0, NULL),
     ('aa1c251f-964c-417c-4372-317385c87166', '869ef3e0-f8cd-428c-aae4-48a75e23861a', '842dbd3f-19ee-49d3-8329-b55a58331bd0', CONVERT(datetime2(3), '2026-08-30T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-30T09:30:00.0000000', 126)),
     ('22b512ab-7751-8640-51d4-32c994fae570', '9b7f2427-e62e-4229-82c3-36b1dcdd1882', '5b336dc7-41f5-439d-8409-80a4ffdb932c', CONVERT(datetime2(3), '2026-08-26T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-26T09:30:00.0000000', 126)),
     ('6ef18ed3-1510-c3fe-e4ba-3431b4b4e094', '32090e80-8d61-4801-b480-a6358f7a9e37', 'b711c617-5a85-42fa-9777-de47d314f9f5', CONVERT(datetime2(3), '2026-08-31T11:00:00.0000000', 126), 0, NULL),
@@ -4631,27 +5222,35 @@ INSERT INTO [user].[UserAchievements] ([Id], [UserId], [AchievementId], [Achieve
     ('091cfdb9-60d9-357e-239c-3f2b0d014ded', 'e635f9ed-ff31-45e2-91da-dfdf518bd009', '8d49fed7-35b5-4492-8335-cf28415aab62', CONVERT(datetime2(3), '2026-08-17T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-17T09:30:00.0000000', 126)),
     ('1f26cedd-dc0a-5866-1bba-4bab4ef47167', 'cba35abc-b074-4d30-b5ab-3b793dd62330', 'bc0c1969-641a-4d5f-a3e7-0c2698663b5b', CONVERT(datetime2(3), '2026-07-07T11:00:00.0000000', 126), 0, NULL),
     ('69860d4d-72d2-4bdc-bac2-4f630e84eb0a', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '5436cfd7-fae6-4f38-80a1-26f647e8b9c1', CONVERT(datetime2(3), '2026-08-03T07:56:22.6770000', 126), 1, CONVERT(datetime2(3), '2026-08-04T07:56:22.6770000', 126)),
+    ('adc297ad-4611-4cf9-95b6-50adfe9c9b1b', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', 'afc96cd0-9a2a-4d70-9893-80904fa725b1', CONVERT(datetime2(3), '2026-08-30T05:55:20.4070000', 126), 0, NULL),
     ('6ce40b42-ab33-d8ec-3485-54ec64602e2a', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', '5436cfd7-fae6-4f38-80a1-26f647e8b9c1', CONVERT(datetime2(3), '2026-08-31T11:00:00.0000000', 126), 0, NULL),
     ('89c8e8bc-8279-bffc-f642-585807422ade', 'f43ee0b6-a28d-47c1-a5e2-32fa9060383c', 'bc0c1969-641a-4d5f-a3e7-0c2698663b5b', CONVERT(datetime2(3), '2026-08-14T10:00:00.0000000', 126), 0, NULL),
     ('714270e0-819d-724c-3ed5-5882d4abc607', '9b40d125-cd86-4ee1-9a12-f954c52610fb', '37a50685-053f-4ed3-8b31-882e5a5babd4', CONVERT(datetime2(3), '2026-06-29T10:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-06-29T10:30:00.0000000', 126)),
     ('d38efd93-f753-4a85-8ed4-5d2bca8779f3', '9b40d125-cd86-4ee1-9a12-f954c52610fb', 'b711c617-5a85-42fa-9777-de47d314f9f5', CONVERT(datetime2(3), '2026-08-26T07:56:22.6770000', 126), 0, NULL),
     ('36698f59-a668-d0f9-1b10-5d930423e2b7', 'ca5024a2-a0be-4204-8ec9-235368b494a9', 'e4b5b6a3-26a5-4639-a07c-99ff36a5acce', CONVERT(datetime2(3), '2026-08-31T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T09:30:00.0000000', 126)),
     ('9245b21b-d19d-d4c1-8761-5f2913eecef8', 'a1c4407f-acee-4abe-a702-e164fb399b2e', '5436cfd7-fae6-4f38-80a1-26f647e8b9c1', CONVERT(datetime2(3), '2026-08-31T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T09:30:00.0000000', 126)),
+    ('dde79608-f75e-4d20-b621-624bc3a9c198', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', 'a91cec8f-dffa-4740-84c3-1da17245b697', CONVERT(datetime2(3), '2026-08-15T05:55:20.4070000', 126), 1, CONVERT(datetime2(3), '2026-08-16T05:55:20.4070000', 126)),
     ('bce66c07-e3ac-9ada-d401-6335f3d1d455', '4f79ced2-639d-419a-ad7e-d8027c56eceb', 'bc0c1969-641a-4d5f-a3e7-0c2698663b5b', CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), 0, NULL),
+    ('ef0e9e94-5c81-4663-8a62-63cf626698a2', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '610dc3be-1af1-4bbd-b6e8-cab20b05e3ff', CONVERT(datetime2(3), '2026-08-26T07:04:45.6870000', 126), 1, CONVERT(datetime2(3), '2026-08-27T07:04:45.6870000', 126)),
     ('801360a8-73bf-40de-baf0-69f4732a3b5a', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '37a50685-053f-4ed3-8b31-882e5a5babd4', CONVERT(datetime2(3), '2026-08-22T07:56:22.6770000', 126), 1, CONVERT(datetime2(3), '2026-08-23T07:56:22.6770000', 126)),
+    ('c58c67bd-17be-4e4c-bac1-6b9fa61870f1', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '8c8ed809-12da-4639-aaa1-5d9970f8dc58', CONVERT(datetime2(3), '2026-08-24T05:55:20.4070000', 126), 1, CONVERT(datetime2(3), '2026-08-25T05:55:20.4070000', 126)),
+    ('798020b7-cde1-495d-b12f-71b00bb2a7b9', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', '331defdf-14b3-4fb6-a727-78498cbbe42f', CONVERT(datetime2(3), '2026-07-28T05:55:20.4070000', 126), 0, NULL),
     ('dca43988-b712-384e-2a24-80b871116a63', '11ffd7dd-c9e5-4d05-b726-2b60a56cf118', 'b711c617-5a85-42fa-9777-de47d314f9f5', CONVERT(datetime2(3), '2026-07-28T10:00:00.0000000', 126), 0, NULL),
     ('3ab26477-6a99-6d81-8f1a-8155264d48e9', '2d049534-161d-4862-971f-e410d2ac9162', '37a50685-053f-4ed3-8b31-882e5a5babd4', CONVERT(datetime2(3), '2026-08-08T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-08T09:30:00.0000000', 126)),
     ('617da9dc-7b49-4e25-36e4-8695f52d6452', 'f43ee0b6-a28d-47c1-a5e2-32fa9060383c', '87d46c1a-7e63-4dec-b178-d5890cd128ec', CONVERT(datetime2(3), '2026-08-13T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-13T09:30:00.0000000', 126)),
+    ('fef15ff2-8aee-44bd-86d9-87db82e4d3df', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', 'ee01f488-0fed-4c9e-b146-4b463591ee33', CONVERT(datetime2(3), '2026-07-24T05:55:20.4070000', 126), 1, CONVERT(datetime2(3), '2026-07-25T05:55:20.4070000', 126)),
     ('f2fd70d9-f72c-8bce-847e-8d1bac865824', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', '5b336dc7-41f5-439d-8409-80a4ffdb932c', CONVERT(datetime2(3), '2026-06-10T11:00:00.0000000', 126), 0, NULL),
     ('782312e8-970b-f6c9-3bbd-922d7b6652bd', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '8d49fed7-35b5-4492-8335-cf28415aab62', CONVERT(datetime2(3), '2026-05-31T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-05-31T09:30:00.0000000', 126)),
     ('21e07346-8208-ef8a-4aac-95b339a30c1f', 'f43ee0b6-a28d-47c1-a5e2-32fa9060383c', '8d49fed7-35b5-4492-8335-cf28415aab62', CONVERT(datetime2(3), '2026-08-15T11:00:00.0000000', 126), 0, NULL),
     ('d9aed668-ebd0-a79b-cb9f-95fdd8003e63', '4f79ced2-639d-419a-ad7e-d8027c56eceb', '87d46c1a-7e63-4dec-b178-d5890cd128ec', CONVERT(datetime2(3), '2026-08-31T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T09:30:00.0000000', 126)),
     ('080652f7-fd35-df8d-b8fc-9684a165d391', '4134ddc4-ca89-4180-ac72-bbe0f42ab285', '5b336dc7-41f5-439d-8409-80a4ffdb932c', CONVERT(datetime2(3), '2026-06-19T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-06-19T09:30:00.0000000', 126)),
+    ('5cd434ff-048a-4ed3-a1da-a64841310dbb', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '5f590498-720a-425b-a65f-1ae84bbcc670', CONVERT(datetime2(3), '2026-08-24T07:04:45.6870000', 126), 0, NULL),
     ('c6244d96-10f7-5f86-6fbd-b26926922861', '32090e80-8d61-4801-b480-a6358f7a9e37', '5436cfd7-fae6-4f38-80a1-26f647e8b9c1', CONVERT(datetime2(3), '2026-08-31T10:00:00.0000000', 126), 0, NULL),
     ('d20528ca-de24-b59e-4536-b750a1cb7fc4', 'cba35abc-b074-4d30-b5ab-3b793dd62330', '87d46c1a-7e63-4dec-b178-d5890cd128ec', CONVERT(datetime2(3), '2026-07-06T10:00:00.0000000', 126), 0, NULL),
     ('0ade217c-9c3f-df59-85b1-b84451ce3cc6', '43cf06a1-6472-4a3a-8334-6a5bf08879c7', 'bc0c1969-641a-4d5f-a3e7-0c2698663b5b', CONVERT(datetime2(3), '2026-08-31T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T09:30:00.0000000', 126)),
     ('b623c519-2f01-dea6-15d5-b8eb8ed1b6e4', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', 'bc0c1969-641a-4d5f-a3e7-0c2698663b5b', CONVERT(datetime2(3), '2026-07-18T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-07-18T09:30:00.0000000', 126)),
     ('24505c07-0fe4-4018-ab4b-bbae44781490', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', 'ccf39844-04dc-441d-9840-684f066bf23b', CONVERT(datetime2(3), '2026-08-19T07:56:22.6770000', 126), 0, NULL),
+    ('d5ca176c-bc85-426e-85b2-be2ad555787c', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', '25abd787-faf2-4b1e-bc67-3231486affe2', CONVERT(datetime2(3), '2026-08-03T05:55:20.4070000', 126), 1, CONVERT(datetime2(3), '2026-08-04T05:55:20.4070000', 126)),
     ('030e2fda-9744-40db-1a80-c218070b5d42', '32090e80-8d61-4801-b480-a6358f7a9e37', '8d49fed7-35b5-4492-8335-cf28415aab62', CONVERT(datetime2(3), '2026-08-31T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T09:30:00.0000000', 126)),
     ('7736662d-8fce-5c23-4406-c6196f57ba0c', 'd3964b0b-0c94-4c5a-b925-9bcf806c614e', '37a50685-053f-4ed3-8b31-882e5a5babd4', CONVERT(datetime2(3), '2026-08-31T09:00:00.0000000', 126), 1, CONVERT(datetime2(3), '2026-08-31T09:30:00.0000000', 126)),
     ('06ad0391-0d38-4368-94c6-c9bdecc2cb8c', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', '842dbd3f-19ee-49d3-8329-b55a58331bd0', CONVERT(datetime2(3), '2026-08-11T07:56:22.6770000', 126), 1, CONVERT(datetime2(3), '2026-08-12T07:56:22.6770000', 126)),
@@ -4680,9 +5279,12 @@ INSERT INTO [user].[UserAddresses] ([Id], [UserId], [AddressLabel], [RecipientNa
     ('3b94e9bb-2010-b476-538c-3aead13afe6b', '6cf3715d-4dac-4aeb-bbe8-0eb31d9b7d70', N'常用地點', N'Demo Member 11', N'02-2181-2345', N'100043', N'臺北市', N'中正區', N'羅斯福路 3 段 126 之 5 號 B1', 25.020112, 121.528215, 1, CONVERT(datetime2(3), '2026-08-16T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
     ('8ed5db11-48c3-0b86-cf73-4861adbff910', '2d049534-161d-4862-971f-e410d2ac9162', N'常用地點', N'Demo Member 05', N'02-2181-2345', N'103014', N'臺北市', N'大同區', N'南京西路 16 號', 25.052009, 121.520175, 1, CONVERT(datetime2(3), '2026-07-27T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
     ('490706cd-fd55-4d74-abe1-49534e9c62f5', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'常用地點', N'Demo Member 01', N'02-2181-2345', N'100009', N'臺北市', N'中正區', N'忠孝西路 1 段 49 號', 25.047825, 121.517081, 1, CONVERT(datetime2(3), '2026-08-01T07:56:22.6770000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
+    ('2b96a858-96be-460a-81b2-4c6fe0e3a374', '15888b26-680c-4ba2-9e86-e5c8a6388fa6', N'工作室', N'Demo Player 01', N'0922-456-789', N'400', N'臺中市', N'西區', N'公益路 88 號 3 樓', NULL, NULL, 0, CONVERT(datetime2(3), '2026-08-03T05:55:20.4070000', 126), CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
+    ('0e497f8b-461e-418c-a9ac-4d600b0fa7de', '1b6805e8-d50c-40c3-8f9b-5c73ef467249', N'辦公室', N'Demo Catalog', N'0933-567-890', N'100', N'臺北市', N'中正區', N'重慶南路一段 20 號', NULL, NULL, 0, CONVERT(datetime2(3), '2026-08-03T05:55:20.4070000', 126), CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
     ('7a80808a-29b6-b9b4-9b80-58d230563983', 'ca5024a2-a0be-4204-8ec9-235368b494a9', N'常用地點', N'Demo Member 15', N'02-2181-2345', N'106097', N'臺北市', N'大安區', N'信義路 4 段 2 號', 25.033303, 121.543531, 1, CONVERT(datetime2(3), '2026-08-25T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
     ('e7980dfc-1137-17b2-4b03-6242ac7a9f08', 'd3964b0b-0c94-4c5a-b925-9bcf806c614e', N'常用地點', N'Demo Member 16', N'02-2181-2345', N'105020', N'臺北市', N'松山區', N'南京東路 3 段 253 號', 25.051856, 121.544098, 1, CONVERT(datetime2(3), '2026-08-27T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
     ('f0093c08-b5f7-6f07-f991-67e2aa9c7a36', '4f79ced2-639d-419a-ad7e-d8027c56eceb', N'常用地點', N'Demo Member 17', N'02-2181-2345', N'100005', N'臺北市', N'中正區', N'寶慶路 32 之 1 號 B1', 25.042169, 121.508276, 1, CONVERT(datetime2(3), '2026-08-29T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
+    ('0c24be5c-4f73-489c-9240-70f4e49902b8', '5d5ef6cb-7ee7-4ed0-ad20-7b42e666af70', N'住家', N'Demo Member 01', N'0912-345-678', N'106', N'臺北市', N'大安區', N'復興南路一段 100 號', NULL, NULL, 0, CONVERT(datetime2(3), '2026-08-03T05:55:20.4070000', 126), CONVERT(datetime2(3), '2026-09-02T05:55:20.4070000', 126)),
     ('2215f467-4080-edeb-8ebb-73524bcd0826', '869ef3e0-f8cd-428c-aae4-48a75e23861a', N'常用地點', N'Demo Member 10', N'02-2181-2345', N'110060', N'臺北市', N'信義區', N'忠孝東路 5 段 2 號', 25.040858, 121.565908, 1, CONVERT(datetime2(3), '2026-08-13T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
     ('6d9ad3db-222d-5c98-9ff2-935b15472d34', '59538e0b-3f85-46d0-93d6-cccb9df12831', N'常用地點', N'Demo Member 03', N'02-2181-2345', N'100046', N'臺北市', N'中正區', N'羅斯福路 4 段 64 之 1 號 B1', 25.014392, 121.534027, 1, CONVERT(datetime2(3), '2026-07-20T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
     ('c39f2628-df86-cef5-8597-94694dcb045c', '9b7f2427-e62e-4229-82c3-36b1dcdd1882', N'常用地點', N'Demo Member 09', N'02-2181-2345', N'110054', N'臺北市', N'信義區', N'忠孝東路 4 段 400 號', 25.041746, 121.560228, 1, CONVERT(datetime2(3), '2026-08-10T00:00:00.0000000', 126), CONVERT(datetime2(3), '2026-08-31T19:04:57.2570000', 126)),
@@ -4734,6 +5336,43 @@ GO
 CREATE NONCLUSTERED INDEX [IX_AuditLogs_OccurredAt] ON [admin].[AuditLogs]
 (
 	[OccurredAt] DESC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+CREATE NONCLUSTERED INDEX [IX_CommunityRewardCampaigns_ActiveWindow] ON [admin].[CommunityRewardCampaigns]
+(
+	[IsActive] ASC,
+	[ValidFrom] ASC,
+	[ValidUntil] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UX_CommunityRewardCampaigns_Event] ON [admin].[CommunityRewardCampaigns]
+(
+	[EventId] ASC
+)
+WHERE ([EventId] IS NOT NULL)
+WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UX_CommunityRewardCampaigns_GameRoom] ON [admin].[CommunityRewardCampaigns]
+(
+	[GameRoomId] ASC
+)
+WHERE ([GameRoomId] IS NOT NULL)
+WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+SET ANSI_PADDING ON
+GO
+CREATE NONCLUSTERED INDEX [IX_EconomyAdjustmentBatches_Created_Asset_Operation] ON [admin].[EconomyAdjustmentBatches]
+(
+	[CreatedAt] DESC,
+	[AssetType] ASC,
+	[Operation] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+SET ANSI_PADDING ON
+GO
+CREATE NONCLUSTERED INDEX [IX_EconomyAdjustmentBatches_Status] ON [admin].[EconomyAdjustmentBatches]
+(
+	[Status] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
 SET ANSI_PADDING ON
@@ -4806,6 +5445,24 @@ CREATE UNIQUE NONCLUSTERED INDEX [UQ_KeyDefinitions_Code] ON [catalog].[KeyDefin
 	[Code] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
+CREATE NONCLUSTERED INDEX [IX_KeyExchangeRules_Active_SortOrder] ON [catalog].[KeyExchangeRules]
+(
+	[IsActive] ASC,
+	[SortOrder] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UX_KeyExchangeRules_Source_Target] ON [catalog].[KeyExchangeRules]
+(
+	[SourceKeyDefinitionId] ASC,
+	[TargetKeyDefinitionId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+CREATE NONCLUSTERED INDEX [IX_KeyProgressTransactions_User] ON [catalog].[KeyProgressTransactions]
+(
+	[UserId] ASC,
+	[CreatedAt] DESC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
 CREATE NONCLUSTERED INDEX [IX_KeyTransactions_KeyDefinitionId] ON [catalog].[KeyTransactions]
 (
 	[KeyDefinitionId] ASC
@@ -4822,9 +5479,42 @@ CREATE NONCLUSTERED INDEX [IX_UserKeyBalances_KeyDefinitionId] ON [catalog].[Use
 	[KeyDefinitionId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
+SET ANSI_PADDING ON
+GO
+CREATE NONCLUSTERED INDEX [IX_DailyMemberActivities_Type_Date_User] ON [common].[DailyMemberActivities]
+(
+	[ActivityType] ASC,
+	[ActivityDate] ASC,
+	[UserId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+SET ANSI_PADDING ON
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UX_DailyMemberActivities_User_Type_Date] ON [common].[DailyMemberActivities]
+(
+	[UserId] ASC,
+	[ActivityType] ASC,
+	[ActivityDate] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
 CREATE UNIQUE NONCLUSTERED INDEX [UQ_ArtifactQuestionEntries_Artifact] ON [game].[ArtifactQuestionEntries]
 (
 	[ArtifactId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+SET ANSI_PADDING ON
+GO
+CREATE NONCLUSTERED INDEX [IX_GameModeDefinitions_Active_Code] ON [game].[GameModeDefinitions]
+(
+	[IsActive] ASC,
+	[Code] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+SET ANSI_PADDING ON
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UX_GameModeDefinitions_Code] ON [game].[GameModeDefinitions]
+(
+	[Code] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
 SET ANSI_PADDING ON
@@ -4877,6 +5567,29 @@ WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNOR
 GO
 SET ANSI_PADDING ON
 GO
+CREATE NONCLUSTERED INDEX [IX_GameRoomInvitations_Invitee_Status_CreatedAt] ON [game].[GameRoomInvitations]
+(
+	[InviteeUserId] ASC,
+	[Status] ASC,
+	[CreatedAt] DESC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+CREATE NONCLUSTERED INDEX [IX_GameRoomInvitations_Room_CreatedAt] ON [game].[GameRoomInvitations]
+(
+	[RoomId] ASC,
+	[CreatedAt] DESC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UX_GameRoomInvitations_Pending] ON [game].[GameRoomInvitations]
+(
+	[RoomId] ASC,
+	[InviteeUserId] ASC
+)
+WHERE ([Status]=N'PENDING')
+WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+SET ANSI_PADDING ON
+GO
 CREATE NONCLUSTERED INDEX [IX_GameRooms_PublicLobby] ON [game].[GameRooms]
 (
 	[Status] ASC,
@@ -4909,6 +5622,21 @@ CREATE UNIQUE NONCLUSTERED INDEX [UX_GameRounds_Room_RoundNumber] ON [game].[Gam
 	[RoomId] ASC,
 	[RoundNumber] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+SET ANSI_PADDING ON
+GO
+CREATE NONCLUSTERED INDEX [IX_MiniGameAttempts_User_Mode_Status] ON [game].[MiniGameAttempts]
+(
+	[UserId] ASC,
+	[GameModeDefinitionId] ASC,
+	[Status] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+CREATE NONCLUSTERED INDEX [IX_MiniGameAttempts_User_StartedAt] ON [game].[MiniGameAttempts]
+(
+	[UserId] ASC,
+	[StartedAt] DESC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
 CREATE NONCLUSTERED INDEX [IX_RoundAnswers_GamePlayerId] ON [game].[RoundAnswers]
 (
@@ -5159,11 +5887,20 @@ CREATE NONCLUSTERED INDEX [IX_UserCoupons_CouponDefinitionId] ON [store].[UserCo
 	[CouponDefinitionId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UQ_UserCoupons_UserCoupon] ON [store].[UserCoupons]
+CREATE NONCLUSTERED INDEX [IX_UserCoupons_Definition_IssuedAt] ON [store].[UserCoupons]
+(
+	[CouponDefinitionId] ASC,
+	[IssuedAt] DESC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
+SET ANSI_PADDING ON
+GO
+CREATE NONCLUSTERED INDEX [IX_UserCoupons_User_Status_ExpiresAt] ON [store].[UserCoupons]
 (
 	[UserId] ASC,
-	[CouponDefinitionId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+	[Status] ASC,
+	[ExpiresAt] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
 SET ANSI_PADDING ON
 GO
@@ -5234,6 +5971,11 @@ CREATE UNIQUE NONCLUSTERED INDEX [UserNameIndex] ON [user].[AspNetUsers]
 WHERE ([NormalizedUserName] IS NOT NULL)
 WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
+CREATE UNIQUE NONCLUSTERED INDEX [UX_EquippedTitles_UserAchievement] ON [user].[EquippedTitles]
+(
+	[UserAchievementId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+GO
 CREATE NONCLUSTERED INDEX [IX_UserAchievements_Achievement_Member] ON [user].[UserAchievements]
 (
 	[AchievementId] ASC,
@@ -5273,6 +6015,36 @@ ALTER TABLE [admin].[AuditLogs]  WITH CHECK ADD  CONSTRAINT [FK_AuditLogs_ActorU
 REFERENCES [user].[AspNetUsers] ([Id])
 GO
 ALTER TABLE [admin].[AuditLogs] CHECK CONSTRAINT [FK_AuditLogs_ActorUser]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns]  WITH CHECK ADD  CONSTRAINT [FK_CommunityRewardCampaigns_Event] FOREIGN KEY([EventId])
+REFERENCES [social].[Events] ([Id])
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] CHECK CONSTRAINT [FK_CommunityRewardCampaigns_Event]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns]  WITH CHECK ADD  CONSTRAINT [FK_CommunityRewardCampaigns_GameRoom] FOREIGN KEY([GameRoomId])
+REFERENCES [game].[GameRooms] ([Id])
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] CHECK CONSTRAINT [FK_CommunityRewardCampaigns_GameRoom]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns]  WITH CHECK ADD  CONSTRAINT [FK_CommunityRewardCampaigns_KeyDefinition] FOREIGN KEY([KeyDefinitionId])
+REFERENCES [catalog].[KeyDefinitions] ([Id])
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] CHECK CONSTRAINT [FK_CommunityRewardCampaigns_KeyDefinition]
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns]  WITH CHECK ADD  CONSTRAINT [FK_CommunityRewardCampaigns_OwnerUser] FOREIGN KEY([OwnerUserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [admin].[CommunityRewardCampaigns] CHECK CONSTRAINT [FK_CommunityRewardCampaigns_OwnerUser]
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches]  WITH CHECK ADD  CONSTRAINT [FK_EconomyAdjustmentBatches_AdminUser] FOREIGN KEY([CreatedByAdminUserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches] CHECK CONSTRAINT [FK_EconomyAdjustmentBatches_AdminUser]
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches]  WITH CHECK ADD  CONSTRAINT [FK_EconomyAdjustmentBatches_CouponDefinition] FOREIGN KEY([CouponDefinitionId])
+REFERENCES [store].[CouponDefinitions] ([Id])
+GO
+ALTER TABLE [admin].[EconomyAdjustmentBatches] CHECK CONSTRAINT [FK_EconomyAdjustmentBatches_CouponDefinition]
 GO
 ALTER TABLE [catalog].[ArtifactUnlocks]  WITH CHECK ADD  CONSTRAINT [FK_ArtifactUnlocks_Artifact] FOREIGN KEY([ArtifactId])
 REFERENCES [catalog].[Artifacts] ([Id])
@@ -5314,6 +6086,26 @@ REFERENCES [catalog].[EraBuckets] ([Id])
 GO
 ALTER TABLE [catalog].[KeyDefinitions] CHECK CONSTRAINT [FK_KeyDefinitions_Era]
 GO
+ALTER TABLE [catalog].[KeyExchangeRules]  WITH CHECK ADD  CONSTRAINT [FK_KeyExchangeRules_SourceKey] FOREIGN KEY([SourceKeyDefinitionId])
+REFERENCES [catalog].[KeyDefinitions] ([Id])
+GO
+ALTER TABLE [catalog].[KeyExchangeRules] CHECK CONSTRAINT [FK_KeyExchangeRules_SourceKey]
+GO
+ALTER TABLE [catalog].[KeyExchangeRules]  WITH CHECK ADD  CONSTRAINT [FK_KeyExchangeRules_TargetKey] FOREIGN KEY([TargetKeyDefinitionId])
+REFERENCES [catalog].[KeyDefinitions] ([Id])
+GO
+ALTER TABLE [catalog].[KeyExchangeRules] CHECK CONSTRAINT [FK_KeyExchangeRules_TargetKey]
+GO
+ALTER TABLE [catalog].[KeyProgressBalances]  WITH CHECK ADD  CONSTRAINT [FK_KeyProgressBalances_User] FOREIGN KEY([UserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [catalog].[KeyProgressBalances] CHECK CONSTRAINT [FK_KeyProgressBalances_User]
+GO
+ALTER TABLE [catalog].[KeyProgressTransactions]  WITH CHECK ADD  CONSTRAINT [FK_KeyProgressTransactions_User] FOREIGN KEY([UserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [catalog].[KeyProgressTransactions] CHECK CONSTRAINT [FK_KeyProgressTransactions_User]
+GO
 ALTER TABLE [catalog].[KeyTransactions]  WITH CHECK ADD  CONSTRAINT [FK_KeyTransactions_Key] FOREIGN KEY([KeyDefinitionId])
 REFERENCES [catalog].[KeyDefinitions] ([Id])
 GO
@@ -5334,6 +6126,11 @@ REFERENCES [user].[AspNetUsers] ([Id])
 GO
 ALTER TABLE [catalog].[UserKeyBalances] CHECK CONSTRAINT [FK_UserKeyBalances_User]
 GO
+ALTER TABLE [common].[DailyMemberActivities]  WITH CHECK ADD  CONSTRAINT [FK_DailyMemberActivities_User] FOREIGN KEY([UserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [common].[DailyMemberActivities] CHECK CONSTRAINT [FK_DailyMemberActivities_User]
+GO
 ALTER TABLE [game].[ArtifactQuestionEntries]  WITH CHECK ADD  CONSTRAINT [FK_ArtifactQuestionEntries_Artifact] FOREIGN KEY([ArtifactId])
 REFERENCES [catalog].[Artifacts] ([Id])
 GO
@@ -5349,6 +6146,31 @@ REFERENCES [user].[AspNetUsers] ([Id])
 GO
 ALTER TABLE [game].[GamePlayers] CHECK CONSTRAINT [FK_GamePlayers_User]
 GO
+ALTER TABLE [game].[GameRoomInvitations]  WITH CHECK ADD  CONSTRAINT [FK_GameRoomInvitations_InviteeUser] FOREIGN KEY([InviteeUserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [game].[GameRoomInvitations] CHECK CONSTRAINT [FK_GameRoomInvitations_InviteeUser]
+GO
+ALTER TABLE [game].[GameRoomInvitations]  WITH CHECK ADD  CONSTRAINT [FK_GameRoomInvitations_InviterUser] FOREIGN KEY([InviterUserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [game].[GameRoomInvitations] CHECK CONSTRAINT [FK_GameRoomInvitations_InviterUser]
+GO
+ALTER TABLE [game].[GameRoomInvitations]  WITH CHECK ADD  CONSTRAINT [FK_GameRoomInvitations_RewardCampaign] FOREIGN KEY([RewardCampaignId])
+REFERENCES [admin].[CommunityRewardCampaigns] ([Id])
+GO
+ALTER TABLE [game].[GameRoomInvitations] CHECK CONSTRAINT [FK_GameRoomInvitations_RewardCampaign]
+GO
+ALTER TABLE [game].[GameRoomInvitations]  WITH CHECK ADD  CONSTRAINT [FK_GameRoomInvitations_RewardKeyDefinition] FOREIGN KEY([RewardKeyDefinitionId])
+REFERENCES [catalog].[KeyDefinitions] ([Id])
+GO
+ALTER TABLE [game].[GameRoomInvitations] CHECK CONSTRAINT [FK_GameRoomInvitations_RewardKeyDefinition]
+GO
+ALTER TABLE [game].[GameRoomInvitations]  WITH CHECK ADD  CONSTRAINT [FK_GameRoomInvitations_Room] FOREIGN KEY([RoomId])
+REFERENCES [game].[GameRooms] ([Id])
+GO
+ALTER TABLE [game].[GameRoomInvitations] CHECK CONSTRAINT [FK_GameRoomInvitations_Room]
+GO
 ALTER TABLE [game].[GameRounds]  WITH CHECK ADD  CONSTRAINT [FK_GameRounds_Artifact] FOREIGN KEY([ArtifactId])
 REFERENCES [catalog].[Artifacts] ([Id])
 GO
@@ -5358,6 +6180,21 @@ ALTER TABLE [game].[GameRounds]  WITH CHECK ADD  CONSTRAINT [FK_GameRounds_GameR
 REFERENCES [game].[GameRooms] ([Id])
 GO
 ALTER TABLE [game].[GameRounds] CHECK CONSTRAINT [FK_GameRounds_GameRooms_RoomId]
+GO
+ALTER TABLE [game].[MiniGameAttempts]  WITH CHECK ADD  CONSTRAINT [FK_MiniGameAttempts_Artifact] FOREIGN KEY([ArtifactId])
+REFERENCES [catalog].[Artifacts] ([Id])
+GO
+ALTER TABLE [game].[MiniGameAttempts] CHECK CONSTRAINT [FK_MiniGameAttempts_Artifact]
+GO
+ALTER TABLE [game].[MiniGameAttempts]  WITH CHECK ADD  CONSTRAINT [FK_MiniGameAttempts_Mode] FOREIGN KEY([GameModeDefinitionId])
+REFERENCES [game].[GameModeDefinitions] ([Id])
+GO
+ALTER TABLE [game].[MiniGameAttempts] CHECK CONSTRAINT [FK_MiniGameAttempts_Mode]
+GO
+ALTER TABLE [game].[MiniGameAttempts]  WITH CHECK ADD  CONSTRAINT [FK_MiniGameAttempts_User] FOREIGN KEY([UserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [game].[MiniGameAttempts] CHECK CONSTRAINT [FK_MiniGameAttempts_User]
 GO
 ALTER TABLE [game].[RoundAnswers]  WITH CHECK ADD  CONSTRAINT [FK_RoundAnswers_GamePlayers_GamePlayerId] FOREIGN KEY([GamePlayerId])
 REFERENCES [game].[GamePlayers] ([Id])
@@ -5398,6 +6235,16 @@ ALTER TABLE [social].[EventRegistrations]  WITH CHECK ADD  CONSTRAINT [FK_EventR
 REFERENCES [social].[Events] ([Id])
 GO
 ALTER TABLE [social].[EventRegistrations] CHECK CONSTRAINT [FK_EventRegistrations_Event]
+GO
+ALTER TABLE [social].[EventRegistrations]  WITH CHECK ADD  CONSTRAINT [FK_EventRegistrations_RewardCampaign] FOREIGN KEY([RewardCampaignId])
+REFERENCES [admin].[CommunityRewardCampaigns] ([Id])
+GO
+ALTER TABLE [social].[EventRegistrations] CHECK CONSTRAINT [FK_EventRegistrations_RewardCampaign]
+GO
+ALTER TABLE [social].[EventRegistrations]  WITH CHECK ADD  CONSTRAINT [FK_EventRegistrations_RewardKeyDefinition] FOREIGN KEY([RewardKeyDefinitionId])
+REFERENCES [catalog].[KeyDefinitions] ([Id])
+GO
+ALTER TABLE [social].[EventRegistrations] CHECK CONSTRAINT [FK_EventRegistrations_RewardKeyDefinition]
 GO
 ALTER TABLE [social].[EventRegistrations]  WITH CHECK ADD  CONSTRAINT [FK_EventRegistrations_User] FOREIGN KEY([UserId])
 REFERENCES [user].[AspNetUsers] ([Id])
@@ -5529,6 +6376,26 @@ REFERENCES [store].[CouponDefinitions] ([Id])
 GO
 ALTER TABLE [store].[UserCoupons] CHECK CONSTRAINT [FK_UserCoupons_Definition]
 GO
+ALTER TABLE [store].[UserCoupons]  WITH CHECK ADD  CONSTRAINT [FK_UserCoupons_GrantBatch] FOREIGN KEY([GrantBatchId])
+REFERENCES [admin].[EconomyAdjustmentBatches] ([Id])
+GO
+ALTER TABLE [store].[UserCoupons] CHECK CONSTRAINT [FK_UserCoupons_GrantBatch]
+GO
+ALTER TABLE [store].[UserCoupons]  WITH CHECK ADD  CONSTRAINT [FK_UserCoupons_IssuedByAdminUser] FOREIGN KEY([IssuedByAdminUserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [store].[UserCoupons] CHECK CONSTRAINT [FK_UserCoupons_IssuedByAdminUser]
+GO
+ALTER TABLE [store].[UserCoupons]  WITH CHECK ADD  CONSTRAINT [FK_UserCoupons_RevokeBatch] FOREIGN KEY([RevokeBatchId])
+REFERENCES [admin].[EconomyAdjustmentBatches] ([Id])
+GO
+ALTER TABLE [store].[UserCoupons] CHECK CONSTRAINT [FK_UserCoupons_RevokeBatch]
+GO
+ALTER TABLE [store].[UserCoupons]  WITH CHECK ADD  CONSTRAINT [FK_UserCoupons_RevokedByAdminUser] FOREIGN KEY([RevokedByAdminUserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [store].[UserCoupons] CHECK CONSTRAINT [FK_UserCoupons_RevokedByAdminUser]
+GO
 ALTER TABLE [store].[UserCoupons]  WITH CHECK ADD  CONSTRAINT [FK_UserCoupons_User] FOREIGN KEY([UserId])
 REFERENCES [user].[AspNetUsers] ([Id])
 GO
@@ -5569,6 +6436,16 @@ REFERENCES [user].[AspNetUsers] ([Id])
 ON DELETE CASCADE
 GO
 ALTER TABLE [user].[AspNetUserTokens] CHECK CONSTRAINT [FK_AspNetUserTokens_AspNetUsers_UserId]
+GO
+ALTER TABLE [user].[EquippedTitles]  WITH CHECK ADD  CONSTRAINT [FK_EquippedTitles_User] FOREIGN KEY([UserId])
+REFERENCES [user].[AspNetUsers] ([Id])
+GO
+ALTER TABLE [user].[EquippedTitles] CHECK CONSTRAINT [FK_EquippedTitles_User]
+GO
+ALTER TABLE [user].[EquippedTitles]  WITH CHECK ADD  CONSTRAINT [FK_EquippedTitles_UserAchievement] FOREIGN KEY([UserAchievementId])
+REFERENCES [user].[UserAchievements] ([Id])
+GO
+ALTER TABLE [user].[EquippedTitles] CHECK CONSTRAINT [FK_EquippedTitles_UserAchievement]
 GO
 ALTER TABLE [user].[UserAchievements]  WITH CHECK ADD  CONSTRAINT [FK_UserAchievements_Achievements_AchievementId] FOREIGN KEY([AchievementId])
 REFERENCES [user].[Achievements] ([Id])

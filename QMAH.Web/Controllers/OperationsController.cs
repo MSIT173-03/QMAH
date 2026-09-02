@@ -2,11 +2,15 @@ using System.Globalization;
 using System.Text;
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Services.Economy;
 using QMAH.Web.Infrastructure;
 using QMAH.Web.Models;
 
@@ -16,7 +20,9 @@ namespace QMAH.Web.Controllers;
 public sealed class OperationsController(
     QmahDbContext db,
     IWebHostEnvironment environment,
-    IConfiguration configuration) : Controller
+    IConfiguration configuration,
+    BulkEconomyService bulkEconomyService,
+    UserManager<ApplicationUser> userManager) : Controller
 {
     private static readonly HashSet<string> MediaStatuses = ["ACTIVE", "HIDDEN", "DELETED"];
     private static readonly HashSet<string> MediaSources = ["POST", "EVENT", "UNLINKED"];
@@ -39,6 +45,77 @@ public sealed class OperationsController(
         });
     }
 
+    /// <summary>顯示批次資產活動；這裡處理活動性異動，不取代各背包的逐人操作。</summary>
+    [HttpGet]
+    public async Task<IActionResult> EconomyBatches(CancellationToken cancellationToken = default)
+    {
+        var model = new EconomyBatchPageViewModel();
+        await PopulateEconomyBatchPageAsync(model, cancellationToken);
+        return View(model);
+    }
+
+    /// <summary>先依表單條件查詢會員，讓管理員確認對象後再執行批次異動。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PreviewEconomyBatch(
+        EconomyBatchPageViewModel model,
+        CancellationToken cancellationToken = default)
+    {
+        if (ModelState.IsValid)
+        {
+            var preview = await bulkEconomyService.PreviewAsync(
+                model.ToRequest(),
+                cancellationToken);
+            model.ApplyPreview(preview);
+        }
+        else
+        {
+            model.ExecutionError = "請先修正表單中的欄位。";
+        }
+
+        await PopulateEconomyBatchPageAsync(model, cancellationToken);
+        return View("EconomyBatches", model);
+    }
+
+    /// <summary>重新套用條件後，以全有或全無方式執行批次資產異動。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ExecuteEconomyBatch(
+        EconomyBatchPageViewModel model,
+        CancellationToken cancellationToken = default)
+    {
+        if (!model.Confirm)
+            ModelState.AddModelError(nameof(model.Confirm), "請確認已檢查符合條件的會員範圍。" );
+
+        var admin = await userManager.GetUserAsync(User);
+        if (admin is null)
+            return Forbid();
+
+        if (!ModelState.IsValid)
+        {
+            model.ExecutionError = "請先修正表單中的欄位。";
+            await PopulateEconomyBatchPageAsync(model, cancellationToken);
+            return View("EconomyBatches", model);
+        }
+
+        var result = await bulkEconomyService.ExecuteAsync(
+            admin.Id,
+            model.ToRequest(),
+            cancellationToken);
+        if (result.Status == "COMPLETED")
+        {
+            TempData["SuccessMessage"] = $"批次資產活動完成：影響 {result.TargetCount:N0} 位會員，共異動 {result.AffectedAssetCount:N0} 項資產。";
+            return RedirectToAction(nameof(EconomyBatches));
+        }
+
+        model.HasPreview = false;
+        model.PreviewCount = 0;
+        model.PreviewMembers = [];
+        model.ExecutionError = result.Error ?? "批次資產活動未完成。";
+        await PopulateEconomyBatchPageAsync(model, cancellationToken);
+        return View("EconomyBatches", model);
+    }
+
     [HttpGet]
     public async Task<IActionResult> DashboardData(
         OperationsFilterViewModel filter,
@@ -46,6 +123,39 @@ public sealed class OperationsController(
     {
         var model = await BuildDashboardAsync(filter, cancellationToken);
         return PartialView("_OperationsDashboardContent", model);
+    }
+
+    private async Task PopulateEconomyBatchPageAsync(
+        EconomyBatchPageViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var definitions = await db.CouponDefinitions
+            .AsNoTracking()
+            .Where(definition => definition.AcquisitionType == "ADMIN_GRANT")
+            .OrderByDescending(definition => definition.IsActive)
+            .ThenBy(definition => definition.Name)
+            .Select(definition => new
+            {
+                definition.Id,
+                Label = definition.Name + (definition.IsActive ? "" : "（已停用，僅供查詢歷史）")
+            })
+            .ToListAsync(cancellationToken);
+        ViewBag.BatchCouponDefinitions = new SelectList(
+            definitions,
+            "Id",
+            "Label",
+            model.CouponDefinitionId);
+        ViewBag.BatchRoles = await db.Roles
+            .AsNoTracking()
+            .Where(role => role.Name != null)
+            .OrderBy(role => role.Name)
+            .Select(role => role.Name!)
+            .ToListAsync(cancellationToken);
+        model.RecentBatches = (await bulkEconomyService.GetRecentBatchesAsync(40, cancellationToken))
+            .Select(EconomyBatchListItemViewModel.From)
+            .ToList();
+        ViewData["Title"] = "資產活動";
+        ViewData["AdminDescription"] = "以會員條件批次增加或扣除鑑定點數、優惠券；每位會員仍會留下可回查的逐筆紀錄。";
     }
 
     // 總覽只取必要欄位，再由程式補齊沒有資料的日期
@@ -77,6 +187,16 @@ public sealed class OperationsController(
         var memberCountAtEnd = await db.Users
             .AsNoTracking()
             .CountAsync(user => user.CreatedAt < toExclusive && user.Status != "DELETED", cancellationToken);
+        // 登入率使用每日登入歷史計算區間內的不重複會員數，不建立額外的月統計快照。
+        var loginActivityFrom = DateOnly.FromDateTime(from);
+        var loginActivityTo = DateOnly.FromDateTime(toInclusive);
+        var loginRows = await db.DailyMemberActivities
+            .AsNoTracking()
+            .Where(activity => activity.ActivityType == "LOGIN"
+                && activity.ActivityDate >= loginActivityFrom
+                && activity.ActivityDate <= loginActivityTo)
+            .Select(activity => new { activity.ActivityDate, activity.UserId })
+            .ToListAsync(cancellationToken);
 
         var gamePlayerRows = await db.GamePlayers
             .AsNoTracking()
@@ -130,6 +250,38 @@ public sealed class OperationsController(
             .Where(asset => asset.CreatedAt >= from && asset.CreatedAt < toExclusive)
             .Select(asset => new { asset.CreatedAt, asset.Status })
             .ToListAsync(cancellationToken);
+        // Point、Key 與 KeyProgress 的交易表是資產帳本；增加與扣除都保留，營運統計只讀帳本，不自行重算餘額。
+        var pointTransactionRows = await db.PointTransactions
+            .AsNoTracking()
+            .Where(transaction => transaction.CreatedAt >= from && transaction.CreatedAt < toExclusive)
+            .Select(transaction => new { transaction.CreatedAt, transaction.Amount })
+            .ToListAsync(cancellationToken);
+        var keyTransactionRows = await db.KeyTransactions
+            .AsNoTracking()
+            .Where(transaction => transaction.CreatedAt >= from && transaction.CreatedAt < toExclusive)
+            .Select(transaction => new { transaction.CreatedAt, transaction.Amount })
+            .ToListAsync(cancellationToken);
+        var keyProgressTransactionRows = await db.KeyProgressTransactions
+            .AsNoTracking()
+            .Where(transaction => transaction.CreatedAt >= from && transaction.CreatedAt < toExclusive)
+            .Select(transaction => new { transaction.CreatedAt, transaction.Amount })
+            .ToListAsync(cancellationToken);
+        // 批次主檔代表活動或特殊原因作業；這裡不把日常遊戲獎勵混入活動統計，並保留失敗批次供稽核。
+        var economyBatchRows = await db.EconomyAdjustmentBatches
+            .AsNoTracking()
+            .Where(batch => batch.CreatedAt >= from && batch.CreatedAt < toExclusive)
+            .Select(batch => new
+            {
+                batch.CreatedAt,
+                batch.AssetType,
+                batch.Operation,
+                batch.Status,
+                batch.TargetCount,
+                batch.SucceededCount,
+                batch.FailedCount,
+                batch.AffectedAssetCount
+            })
+            .ToListAsync(cancellationToken);
 
         var revenueByDate = paidOrders
             .GroupBy(order => order.PaidAt!.Value.Date)
@@ -141,6 +293,9 @@ public sealed class OperationsController(
         var membersByDate = memberRows
             .GroupBy(member => member.CreatedAt.Date)
             .ToDictionary(group => group.Key, group => group.Count());
+        var loginsByDate = loginRows
+            .GroupBy(login => login.ActivityDate.ToDateTime(TimeOnly.MinValue).Date)
+            .ToDictionary(group => group.Key, group => group.Select(item => item.UserId).Distinct().Count());
         var playersByDate = gamePlayerRows
             .GroupBy(player => player.JoinedAt.Date)
             .ToDictionary(group => group.Key, group => group.Count());
@@ -168,6 +323,28 @@ public sealed class OperationsController(
         var mediaByDate = mediaRows
             .GroupBy(media => media.CreatedAt.Date)
             .ToDictionary(group => group.Key, group => group.Count());
+        var pointTransactionsByDate = pointTransactionRows
+            .GroupBy(transaction => transaction.CreatedAt.Date)
+            .ToDictionary(group => group.Key, group => SummarizeAmounts(group.Select(item => item.Amount)));
+        var keyTransactionsByDate = keyTransactionRows
+            .GroupBy(transaction => transaction.CreatedAt.Date)
+            .ToDictionary(group => group.Key, group => SummarizeAmounts(group.Select(item => item.Amount)));
+        var keyProgressTransactionsByDate = keyProgressTransactionRows
+            .GroupBy(transaction => transaction.CreatedAt.Date)
+            .ToDictionary(group => group.Key, group => SummarizeAmounts(group.Select(item => item.Amount)));
+        var economyBatchesByDate = economyBatchRows
+            .GroupBy(batch => batch.CreatedAt.Date)
+            .ToDictionary(group => group.Key, group => new
+            {
+                BatchCount = group.Count(),
+                TargetCount = group.Sum(item => item.TargetCount),
+                SuccessCount = group.Sum(item => item.SucceededCount),
+                FailureCount = group.Sum(item => item.FailedCount),
+                PointIncrease = group.Where(item => item.Status == "COMPLETED" && item.AssetType == "POINT" && item.Operation == "ADD").Sum(item => item.AffectedAssetCount),
+                PointDecrease = group.Where(item => item.Status == "COMPLETED" && item.AssetType == "POINT" && item.Operation == "DEDUCT").Sum(item => item.AffectedAssetCount),
+                CouponGrantCount = group.Where(item => item.Status == "COMPLETED" && item.AssetType == "COUPON" && item.Operation == "ADD").Sum(item => item.AffectedAssetCount),
+                CouponRevokeCount = group.Where(item => item.Status == "COMPLETED" && item.AssetType == "COUPON" && item.Operation == "DEDUCT").Sum(item => item.AffectedAssetCount)
+            });
 
         var dateCount = (toInclusive - from).Days + 1;
         var revenueTrend = Enumerable.Range(0, dateCount)
@@ -193,7 +370,44 @@ public sealed class OperationsController(
                     commentsByDate.GetValueOrDefault(date),
                     eventsByDate.GetValueOrDefault(date),
                     registrationsByDate.GetValueOrDefault(date),
-                    mediaByDate.GetValueOrDefault(date));
+                    mediaByDate.GetValueOrDefault(date),
+                    loginsByDate.GetValueOrDefault(date));
+            })
+            .ToList();
+        var economyTrend = Enumerable.Range(0, dateCount)
+            .Select(offset =>
+            {
+                var date = from.AddDays(offset);
+                pointTransactionsByDate.TryGetValue(date, out var points);
+                keyTransactionsByDate.TryGetValue(date, out var keys);
+                keyProgressTransactionsByDate.TryGetValue(date, out var progress);
+                return new OperationsEconomyDay(
+                    date,
+                    points.Increase,
+                    points.Decrease,
+                    points.Net,
+                    keys.Increase,
+                    keys.Decrease,
+                    keys.Net,
+                    progress.Increase,
+                    Math.Abs(progress.Decrease));
+            })
+            .ToList();
+        var economyBatchTrend = Enumerable.Range(0, dateCount)
+            .Select(offset =>
+            {
+                var date = from.AddDays(offset);
+                economyBatchesByDate.TryGetValue(date, out var batches);
+                return new OperationsEconomyBatchDay(
+                    date,
+                    batches?.BatchCount ?? 0,
+                    batches?.TargetCount ?? 0,
+                    batches?.SuccessCount ?? 0,
+                    batches?.FailureCount ?? 0,
+                    batches?.PointIncrease ?? 0,
+                    batches?.PointDecrease ?? 0,
+                    batches?.CouponGrantCount ?? 0,
+                    batches?.CouponRevokeCount ?? 0);
             })
             .ToList();
 
@@ -230,6 +444,9 @@ public sealed class OperationsController(
         var mediaByMonth = mediaRows
             .GroupBy(media => MonthStart(media.CreatedAt))
             .ToDictionary(group => group.Key, group => group.Count());
+        var loginsByMonth = loginRows
+            .GroupBy(login => MonthStart(login.ActivityDate.ToDateTime(TimeOnly.MinValue)))
+            .ToDictionary(group => group.Key, group => group.Select(item => item.UserId).Distinct().Count());
         var monthlyTrend = new List<OperationsMonthSummary>();
         // 月份也補齊沒有資料的區間，長期圖表才不會斷軸
         for (var month = firstMonth; month <= lastMonth; month = month.AddMonths(1))
@@ -246,10 +463,15 @@ public sealed class OperationsController(
                 commentsByMonth.GetValueOrDefault(month),
                 eventsByMonth.GetValueOrDefault(month),
                 registrationsByMonth.GetValueOrDefault(month),
-                mediaByMonth.GetValueOrDefault(month)));
+                mediaByMonth.GetValueOrDefault(month),
+                loginsByMonth.GetValueOrDefault(month)));
         }
 
         var paidRevenue = paidOrders.Sum(order => order.TotalAmount);
+        var loginMemberCount = loginRows.Select(item => item.UserId).Distinct().Count();
+        var loginRatePercent = memberCountAtEnd == 0
+            ? 0m
+            : Math.Round(loginMemberCount * 100m / memberCountAtEnd, 1, MidpointRounding.AwayFromZero);
         var model = new OperationsDashboardViewModel
         {
             From = from,
@@ -263,6 +485,8 @@ public sealed class OperationsController(
             UniqueGameUserCount = gamePlayerRows.Select(player => player.UserId).Distinct().Count(),
             NewMemberCount = memberRows.Count,
             MemberCountAtEnd = memberCountAtEnd,
+            LoginMemberCount = loginMemberCount,
+            LoginRatePercent = loginRatePercent,
             GameRoomCount = roomRows.Count,
             GameRoundCount = roundRows.Count,
             GameAnswerCount = answerRows.Count,
@@ -271,8 +495,35 @@ public sealed class OperationsController(
             EventCount = eventRows.Count,
             EventRegistrationCount = registrationRows.Count,
             MediaAssetCount = mediaRows.Count,
+            PointTransactionCount = pointTransactionRows.Count,
+            PointIncrease = pointTransactionRows.Where(item => item.Amount > 0).Sum(item => item.Amount),
+            PointDecrease = pointTransactionRows.Where(item => item.Amount < 0).Sum(item => Math.Abs(item.Amount)),
+            PointNetChange = pointTransactionRows.Sum(item => item.Amount),
+            KeyTransactionCount = keyTransactionRows.Count,
+            KeyIncrease = keyTransactionRows.Where(item => item.Amount > 0).Sum(item => item.Amount),
+            KeyDecrease = keyTransactionRows.Where(item => item.Amount < 0).Sum(item => Math.Abs(item.Amount)),
+            KeyNetChange = keyTransactionRows.Sum(item => item.Amount),
+            KeyProgressTransactionCount = keyProgressTransactionRows.Count,
+            EconomyBatchCount = economyBatchRows.Count,
+            EconomyBatchTargetCount = economyBatchRows.Sum(item => item.TargetCount),
+            EconomyBatchSuccessCount = economyBatchRows.Sum(item => item.SucceededCount),
+            EconomyBatchFailureCount = economyBatchRows.Sum(item => item.FailedCount),
+            EconomyBatchPointIncrease = economyBatchRows
+                .Where(item => item.Status == "COMPLETED" && item.AssetType == "POINT" && item.Operation == "ADD")
+                .Sum(item => item.AffectedAssetCount),
+            EconomyBatchPointDecrease = economyBatchRows
+                .Where(item => item.Status == "COMPLETED" && item.AssetType == "POINT" && item.Operation == "DEDUCT")
+                .Sum(item => item.AffectedAssetCount),
+            EconomyBatchCouponGrantCount = economyBatchRows
+                .Where(item => item.Status == "COMPLETED" && item.AssetType == "COUPON" && item.Operation == "ADD")
+                .Sum(item => item.AffectedAssetCount),
+            EconomyBatchCouponRevokeCount = economyBatchRows
+                .Where(item => item.Status == "COMPLETED" && item.AssetType == "COUPON" && item.Operation == "DEDUCT")
+                .Sum(item => item.AffectedAssetCount),
             RevenueTrend = revenueTrend,
             ActivityTrend = activityTrend,
+            EconomyTrend = economyTrend,
+            EconomyBatchTrend = economyBatchTrend,
             MonthlyTrend = monthlyTrend,
             Charts = BuildDashboardCharts(monthlyTrend),
             OrderStatusBreakdown = BuildBreakdown(orderRows.Select(order => order.Status), AdminDisplayLabels.Status),
@@ -287,6 +538,15 @@ public sealed class OperationsController(
         };
 
         return model;
+    }
+
+    private static (int Increase, int Decrease, int Net) SummarizeAmounts(IEnumerable<int> amounts)
+    {
+        var values = amounts.ToArray();
+        return (
+            values.Where(amount => amount > 0).Sum(),
+            values.Where(amount => amount < 0).Sum(amount => Math.Abs(amount)),
+            values.Sum());
     }
 
     // 明細頁沿用總覽的日期規則，並提供完整序列與資料點
@@ -689,6 +949,24 @@ public sealed class OperationsController(
                     AddValue(row, 0, 1);
                 break;
             }
+            case "login":
+            {
+                var activityFrom = DateOnly.FromDateTime(from);
+                var activityTo = DateOnly.FromDateTime(toInclusive);
+                var rows = await db.DailyMemberActivities
+                    .AsNoTracking()
+                    .Where(activity => activity.ActivityType == "LOGIN"
+                        && activity.ActivityDate >= activityFrom
+                        && activity.ActivityDate <= activityTo)
+                    .Select(activity => new { activity.ActivityDate, activity.UserId })
+                    .ToListAsync(cancellationToken);
+                foreach (var group in rows.GroupBy(row => row.ActivityDate))
+                {
+                    var uniqueMembers = group.Select(row => row.UserId).Distinct().Count();
+                    AddValue(group.Key.ToDateTime(TimeOnly.MinValue), 0, uniqueMembers);
+                }
+                break;
+            }
             case "orders":
             {
                 var rows = await db.StoreOrders
@@ -823,6 +1101,86 @@ public sealed class OperationsController(
                     AddValue(row, 0, 1);
                 break;
             }
+            case "economy":
+            {
+                var pointRows = await db.PointTransactions
+                    .AsNoTracking()
+                    .Where(transaction => transaction.CreatedAt >= from && transaction.CreatedAt < toExclusive)
+                    .Select(transaction => new { transaction.CreatedAt, transaction.Amount })
+                    .ToListAsync(cancellationToken);
+                foreach (var row in pointRows)
+                {
+                    if (row.Amount > 0)
+                        AddValue(row.CreatedAt, 0, row.Amount);
+                    else if (row.Amount < 0)
+                        AddValue(row.CreatedAt, 1, Math.Abs((decimal)row.Amount));
+                    AddValue(row.CreatedAt, 2, row.Amount);
+                }
+
+                var keyRows = await db.KeyTransactions
+                    .AsNoTracking()
+                    .Where(transaction => transaction.CreatedAt >= from && transaction.CreatedAt < toExclusive)
+                    .Select(transaction => new { transaction.CreatedAt, transaction.Amount })
+                    .ToListAsync(cancellationToken);
+                foreach (var row in keyRows)
+                {
+                    if (row.Amount > 0)
+                        AddValue(row.CreatedAt, 3, row.Amount);
+                    else if (row.Amount < 0)
+                        AddValue(row.CreatedAt, 4, Math.Abs((decimal)row.Amount));
+                    AddValue(row.CreatedAt, 5, row.Amount);
+                }
+
+                var progressRows = await db.KeyProgressTransactions
+                    .AsNoTracking()
+                    .Where(transaction => transaction.CreatedAt >= from && transaction.CreatedAt < toExclusive)
+                    .Select(transaction => new { transaction.CreatedAt, transaction.Amount })
+                    .ToListAsync(cancellationToken);
+                foreach (var row in progressRows)
+                {
+                    if (row.Amount > 0)
+                        AddValue(row.CreatedAt, 6, row.Amount);
+                    else if (row.Amount < 0)
+                        AddValue(row.CreatedAt, 7, Math.Abs((decimal)row.Amount));
+                }
+                break;
+            }
+            case "asset-events":
+            {
+                var rows = await db.EconomyAdjustmentBatches
+                    .AsNoTracking()
+                    .Where(batch => batch.CreatedAt >= from && batch.CreatedAt < toExclusive)
+                    .Select(batch => new
+                    {
+                        batch.CreatedAt,
+                        batch.AssetType,
+                        batch.Operation,
+                        batch.Status,
+                        batch.TargetCount,
+                        batch.SucceededCount,
+                        batch.FailedCount,
+                        batch.AffectedAssetCount
+                    })
+                    .ToListAsync(cancellationToken);
+                foreach (var row in rows)
+                {
+                    AddValue(row.CreatedAt, 0, 1);
+                    AddValue(row.CreatedAt, 1, row.TargetCount);
+                    AddValue(row.CreatedAt, 2, row.SucceededCount);
+                    AddValue(row.CreatedAt, 3, row.FailedCount);
+                    if (row.Status != "COMPLETED")
+                        continue;
+                    if (row.AssetType == "POINT" && row.Operation == "ADD")
+                        AddValue(row.CreatedAt, 4, row.AffectedAssetCount);
+                    else if (row.AssetType == "POINT" && row.Operation == "DEDUCT")
+                        AddValue(row.CreatedAt, 5, row.AffectedAssetCount);
+                    else if (row.AssetType == "COUPON" && row.Operation == "ADD")
+                        AddValue(row.CreatedAt, 6, row.AffectedAssetCount);
+                    else if (row.AssetType == "COUPON" && row.Operation == "DEDUCT")
+                        AddValue(row.CreatedAt, 7, row.AffectedAssetCount);
+                }
+                break;
+            }
         }
 
         var points = dates
@@ -908,6 +1266,7 @@ public sealed class OperationsController(
     {
         "revenue" => [new("已付款營收", "currency")],
         "members" => [new("新增會員", "number")],
+        "login" => [new("每日登入會員數", "number")],
         "orders" => [new("建立訂單", "number"), new("完成付款", "number")],
         "game" =>
         [
@@ -926,6 +1285,28 @@ public sealed class OperationsController(
         "social" => [new("貼文", "number"), new("留言", "number")],
         "events" => [new("活動建立", "number"), new("活動報名", "number")],
         "media" => [new("社群圖片", "number")],
+        "economy" =>
+        [
+            new("鑑定點數增加", "number"),
+            new("鑑定點數扣除", "number"),
+            new("鑑定點數淨變化", "number"),
+            new("鑰匙增加", "number"),
+            new("鑰匙扣除", "number"),
+            new("鑰匙淨變化", "number"),
+            new("鑰匙進度增加", "number"),
+            new("鑰匙進度轉換", "number")
+        ],
+        "asset-events" =>
+        [
+            new("批次事件", "number"),
+            new("符合條件會員", "number"),
+            new("成功會員", "number"),
+            new("失敗會員", "number"),
+            new("點數增加", "number"),
+            new("點數扣除", "number"),
+            new("優惠券發放", "number"),
+            new("優惠券撤銷", "number")
+        ],
         _ => [new("已付款營收", "currency")]
     };
 
@@ -933,12 +1314,15 @@ public sealed class OperationsController(
     {
         "revenue" => ("營收", "依付款完成時間統計；下方保留每日明細，方便對照訂單紀錄。"),
         "members" => ("會員成長", "依帳號建立時間統計新增會員，不代表同期間的活躍人數。"),
+        "login" => ("會員登入", "依每日登入歷史計算不重複會員數；總覽的登入率為選定期間曾登入會員數除以期末會員數。"),
         "orders" => ("訂單", "以訂單建立與付款完成兩條序列並列，協助比較交易流程的時間差。"),
         "game" => ("遊戲使用", "依玩家加入、房間建立、回合開始與作答紀錄統計，這些是歷史事件，不是即時在線人數。"),
         "activity" => ("主要功能使用", "以新增會員、遊戲加入、社群貼文與活動報名並列，方便比較不同功能的使用變化。"),
         "social" => ("社群互動", "依貼文與留言建立時間統計，活動貼文也會計入社群內容。"),
         "events" => ("活動參與", "依活動建立與報名時間統計，方便查看活動供給與參與變化。"),
         "media" => ("社群圖片", "只統計社群上傳的圖片資產，官方文物圖鑑圖片不列入。"),
+        "economy" => ("經濟異動", "依點數、鑰匙與鑰匙進度交易帳本統計增加、扣除與淨變化；每筆後台調整與系統獎勵都會保留在明細中。"),
+        "asset-events" => ("資產活動", "只統計有批次主檔的活動或特殊原因作業；可查看對象人數、成功與失敗數，以及實際增加或扣除的點數與優惠券。"),
         _ => ("營收", "依付款完成時間統計；下方保留每日明細，方便對照訂單紀錄。")
     };
 
@@ -946,12 +1330,15 @@ public sealed class OperationsController(
     private static string NormalizeMetric(string? metric) => metric?.Trim().ToLowerInvariant() switch
     {
         "members" => "members",
+        "login" => "login",
         "orders" => "orders",
         "game" => "game",
         "activity" => "activity",
         "social" => "social",
         "events" => "events",
         "media" => "media",
+        "economy" => "economy",
+        "asset-events" => "asset-events",
         _ => "revenue"
     };
 
