@@ -42,7 +42,7 @@
 .\NpmArtifactPipeline.exe --bronze 32 --ceramic 32 --jade 32 --enamel 32 --lacquer 32 --coins 32 --carvings 32 --painting 32 --output .\output\current --media-root .\output\media
 ```
 
-`--estimate-only` 只讀取 16 個 API 陣列筆數，不建立 output、不下載圖片。若預設連線路徑逾時，工具會使用 IPv4 連線；仍失敗時請看 `ESTIMATE_FAILED`，不要以其他分類硬湊數量。
+`--estimate-only` 只讀取 16 個 API 陣列筆數，不建立 output、不下載圖片。若預設連線路徑逾時，工具會使用 IPv4 連線；仍失敗時查看 `ESTIMATE_FAILED`，不以其他分類填補數量。
 
 指定單類數量時，參數名使用資料集檔名：`--bronze`、`--ceramic`、`--jade`、`--enamel`、`--lacquer`、`--coins`、`--carvings`、`--painting`。
 
@@ -102,4 +102,4 @@ raw、processed、preview、快取、log、bin、obj 與大量圖片不得放進
 - `quality-report.json`：缺圖、缺欄位、年代信心度與排除原因。
 - `manifest.json`：本次參數、來源與輸出位置。
 
-API 暫時沒有回應時先停止增加請求量，確認端點、IPv4 路徑與節流設定；不要把失敗類別改成另一個類別，也不要臆造年代。
+API 暫時沒有回應時停止增加請求量，確認端點、IPv4 路徑與節流設定；失敗類別不改成另一個類別，年代不臆造。

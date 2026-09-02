@@ -19,7 +19,7 @@
 
 上述 `60` 是這個舊來源收集器的示範目標，不是 QMAH 正式資料量。
 
-預設輸出是工作區 `_工具輸出/products` 與 `_工具輸出/media`，可用 `QMAH_TOOL_OUTPUT`、`--output` 或 `--media-root` 覆寫。要離線重整既有資料：
+預設輸出是工作區 `_工具輸出/products` 與 `_工具輸出/media`，可用 `QMAH_TOOL_OUTPUT`、`--output` 或 `--media-root` 覆寫。離線重整既有資料時：
 
 線上執行預設會對商城根頁做一次有上限的分類探測。發現新入口時，結果另存到 `_工具輸出/NpmShopSampleCollector/source-categories.auto.json`，不會自動修改 SQL Server 或正式分類設定。
 

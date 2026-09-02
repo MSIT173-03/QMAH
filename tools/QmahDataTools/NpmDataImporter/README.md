@@ -12,7 +12,7 @@
 
 ## 使用方式
 
-先準備一份由 `NpmArtifactPipeline` 或既有資料處理流程產出的文物 JSON。圖片來源欄位以 `/media/...` 網站路徑表示時，`--media-root` 要指向實體的 `wwwroot\media` 資料夾：
+準備一份由 `NpmArtifactPipeline` 或既有資料處理流程產出的文物 JSON。圖片來源欄位以 `/media/...` 網站路徑表示時，`--media-root` 指向實體的 `wwwroot\media` 資料夾：
 
 ```powershell
 dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj -- `
@@ -63,7 +63,7 @@ dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj 
 - 勾選商城同步時，商品資料必須通過分類、價格、庫存、圖片與文物關聯檢查；後台沒有提供商品檔時，會依合格文物建立可停用的展示商品。
 - 相同故宮編號或商品編號會被辨識為既有資料。來源文字、分類、年代、授權與價格等來源欄位可更新；圖片、庫存與人工上架狀態不由匯入覆蓋。
 - 第二次使用相同資料包會顯示 `unchanged`，不會重複建立文物、題庫、商品或複製圖片。
-- 來源網址、授權代碼、姓名標示與原始資料快照必須隨資料包保留；年代無法可靠對應時列為無法對應，不自行猜測。
+- 來源網址、授權代碼、姓名標示與原始資料快照必須隨資料包保留；年代無法可靠對應時列為無法對應，不猜測。
 - 圖片先複製並驗證路徑，資料庫交易成功後才算完成；資料庫失敗時會清理本次已複製的新增資產。
 
 若資料庫不存在、Schema 不完整、圖片缺少、路徑不安全或資料包內容在預檢後被修改，工具會停止，不會建立資料庫或補表。
@@ -85,4 +85,4 @@ dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj 
 - `ArtifactProductGenerator`：依既有文物產生 256 件展示商品資料；不覆蓋已存在的商品營運欄位。
 - `NpmShopSampleCollector`：舊商城來源的相容性收集工具，不作為目前文物主檔與商品同步的必要步驟。
 
-各工具輸出建議放在工作區外或 `_工具輸出`，不要把 raw JSON、下載快取、帳密 CSV 或測試資產提交到 Repository。
+各工具輸出放在工作區外或 `_工具輸出`；raw JSON、下載快取、帳密 CSV 或測試資產不提交到 Repository。

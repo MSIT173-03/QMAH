@@ -61,7 +61,7 @@ Angular 官方版本相容表把 21.0、21.1 與 21.2 放在相同的 Node.js、
 
 | Repository | 責任 |
 | --- | --- |
-| [QMAH](https://github.com/MSIT173-03/QMAH) | 產品程式、`Schema.sql`、`VERSION`、開發工具與最小入口文件 |
+| [QMAH](https://github.com/MSIT173-03/QMAH) | 產品程式、`Schema.sql`、`database/VERSION`、開發工具與最小入口文件 |
 | [QMAH-Docs](https://github.com/MSIT173-03/QMAH-Docs) | 繁體中文開發文件與 VitePress 文件站來源 |
 | [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database) | 可直接還原的完整 SQL Server Snapshot、manifest 與版本歷史 |
 | [QMAH-Docs 文件站](https://msit173-03.github.io/QMAH-Docs/) | 以 QMAH-Docs 同一批 Markdown 建置的搜尋與側欄介面 |
@@ -78,7 +78,7 @@ Angular 官方版本相容表把 21.0、21.1 與 21.2 放在相同的 Node.js、
 
 Clone 後開啟 `QMAH.sln`。若本機缺少工作負載，Visual Studio 會依 `.vsconfig` 顯示提示。
 
-Visual Studio 2022 不是本專案文件的優先版本。使用其他相容 IDE 時，仍以 Solution、`.csproj`、`.vscode` 與鎖定檔的實際結果為準。
+Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前方案的相容開發環境。使用其他相容 IDE 時，仍以 Solution、`.csproj`、`.vscode` 與鎖定檔的實際結果為準。
 
 官方環境參考：
 
@@ -97,7 +97,7 @@ Visual Studio 2022 不是本專案文件的優先版本。使用其他相容 IDE
 
 QMAH 主 Repository 的 Release 目前只保留版本導覽，不再提供 SQL／BAK 資產。完整的還原資料、資料表數量、狀態值與展示資料規則見 [QMAH-Docs 開發資料文件](https://msit173-03.github.io/QMAH-Docs/getting-started/development-data.html)。
 
-不需要先執行 `database/Schema.sql`、Migration、Patch 或 Seed。網站啟動時不會建立資料庫、建表、覆寫資料或套用 Migration；完整 Snapshot 已包含目前共同資料。
+不需先執行 `database/Schema.sql`、Migration、Patch 或 Seed。網站啟動時不會建立資料庫、建表、覆寫資料或套用 Migration；完整 Snapshot 已包含目前共同資料。
 
 ### 3. 啟動後端
 
@@ -168,19 +168,19 @@ npm start
 
 ### 431 Request Header Fields Too Large
 
-如果瀏覽器開啟 `https://localhost:7039` 時顯示 `431 Request Header Fields Too Large`，通常是瀏覽器保留了舊版或重複的 `localhost` Cookie，不是 NuGet 還原或專案載入失敗。
+若瀏覽器開啟 `https://localhost:7039` 時顯示 `431 Request Header Fields Too Large`，通常是瀏覽器保留了舊版或重複的 `localhost` Cookie，不是 NuGet 還原或專案載入失敗。
 
 Web 與 API 使用不同的固定 Cookie 名稱，啟動後會清除已知的舊版 QMAH／ASP.NET Core 登入與 Anti-forgery Cookie。只要標頭仍在 Kestrel 可接收的有限範圍內，清理會自動完成，不需要刪除資料庫內容。
 
-如果 request 尚未進入應用程式前就再次回傳 431，代表 Cookie 已超過伺服器可解析的上限。請先關閉本機網站分頁，再從網址列左側的鎖頭開啟網站資料設定，清除 `localhost` 的 Cookie 與網站資料後重新啟動；也可以先用無痕視窗確認登入頁是否恢復正常。清除後本機登入狀態會消失，需要重新登入，但不會刪除資料庫內容。
+若 request 尚未進入應用程式前就再次回傳 431，代表 Cookie 已超過伺服器可解析的上限。關閉本機網站分頁，再從網址列左側的鎖頭開啟網站資料設定，清除 `localhost` 的 Cookie 與網站資料後重新啟動；也可用無痕視窗確認登入頁是否恢復正常。清除後本機登入狀態會消失，需重新登入，但不會刪除資料庫內容。
 
-Cookie 不包含連接埠，因此要清除 `localhost` 的網站資料，不要只尋找 `7039`。若仍無法開啟，請確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 `QMAH 後端主機與管理後台（API＋Razor）`。
+Cookie 不包含連接埠，因此清除 `localhost` 的網站資料時，不只尋找 `7039`。若仍無法開啟，確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 `QMAH 後端主機與管理後台（API＋Razor）`。
 
 ### 無法連線或找不到資料表
 
 先確認資料庫名稱為 `QMAH`，再在 SSMS 查看實際連線的 instance 是否存在且為 `ONLINE`。啟動記錄會列出 `QmahDatabaseConnectionResolver` 的候選與選用結果；`(localdb)\MSSQLLocalDB` 只是候選之一。
 
-若只有空資料庫，請重新使用 QMAH-Database 的完整 `QMAH.sql` 或同版本 `.bak`，不需要以 Patch 或 Seed 補資料。
+若只有空資料庫，重新使用 QMAH-Database 的完整 `QMAH.sql` 或同版本 `.bak`；不以 Patch 或 Seed 補資料。
 
 ### HTTPS 憑證警告
 
@@ -206,7 +206,7 @@ Cookie 不包含連接埠，因此要清除 `localhost` 的網站資料，不要
 
 密碼只存在 Repository 外的未提交 credentials 檔案或密碼管理工具。忘記密碼時，使用 `reset-password` 只重設指定的隔離資料庫。
 
-不要把密碼、Cookie、Token 或本機 log 放進 Git。完整命令見 [資料工具參考](https://msit173-03.github.io/QMAH-Docs/reference/data-tools.html)。
+密碼、Cookie、Token 或本機 log 不放進 Git。完整命令見 [資料工具參考](https://msit173-03.github.io/QMAH-Docs/reference/data-tools.html)。
 
 ## 開發前的資料與程式界線
 
@@ -218,7 +218,7 @@ Cookie 不包含連接埠，因此要清除 `localhost` 的網站資料，不要
 SQL Server Schema → Entity／Fluent mapping → QmahDbContext → Controller／Service → ViewModel → View
 ```
 
-不要使用 `Database.Migrate()`、`EnsureCreated()` 或新增 EF Migration，也不要只修改 Entity。
+不使用 `Database.Migrate()`、`EnsureCreated()` 或新增 EF Migration，也不只修改 Entity。
 
 需要變更 Schema 時，必須同步檢查 SQL、Entity、DbContext、文件與 QMAH-Database Snapshot。
 
@@ -246,15 +246,15 @@ Angular 不直接連資料庫，也不依賴管理後台的 ViewModel；前台�
 
 | Area | 負責內容 | 起始網址 |
 | --- | --- | --- |
-| `Game` | 房間、玩家、回合、選題、作答、投票 | `/Game` |
 | `Catalog` | 文物、分類、年代、題庫設定、鑰匙、解鎖 | `/Catalog` |
+| `Game` | 房間、玩家、回合、選題、作答、投票 | `/Game` |
 | `Social` | 貼文（含官方公告類型）、留言、檢舉、活動、通知 | `/Social` |
 | `User` | Identity 帳號、個人資料、地址、會員紀錄 | `/User` |
 | `Store` | 商品、購物車、折價券、訂單、付款、點數、庫存 | `/Store` |
 
 各 Area 共用同一個資料庫，但只維護對應的畫面與流程。
 
-讀取其他系統資料時，先確認資料責任與歷史紀錄是否允許變更，再決定唯讀查詢或建立明確的跨表 Service。詳細資料界線見 [Area 責任與資料界線](https://msit173-03.github.io/QMAH-Docs/architecture/area-boundaries.html)。
+讀取其他系統資料時，確認資料責任與歷史紀錄是否允許變更，再決定唯讀查詢或建立明確的跨表 Service。詳細資料界線見 [Area 責任與資料界線](https://msit173-03.github.io/QMAH-Docs/architecture/area-boundaries.html)。
 
 ## 文物、題庫與商城商品
 
@@ -280,16 +280,16 @@ Angular 不直接連資料庫，也不依賴管理後台的 ViewModel；前台�
 
 正式開發文件保留在 [QMAH-Docs Repository](https://github.com/MSIT173-03/QMAH-Docs)。同一批 Markdown 由 [VitePress 文件站](https://msit173-03.github.io/QMAH-Docs/) 建置。
 
-首頁提供完整循序路線與六個快速查詢頁：
+首頁提供完整循序路線與六個快速查詢頁，固定順序為 Shared、Catalog、Game、Social、User、Store：
 
 | 快速頁 | 直接進入 |
 | --- | --- |
+| Shared | [共用基礎](https://msit173-03.github.io/QMAH-Docs/quick-reference/shared.html) |
 | Catalog | [圖鑑與文物](https://msit173-03.github.io/QMAH-Docs/quick-reference/catalog.html) |
 | Game | [遊戲與作答](https://msit173-03.github.io/QMAH-Docs/quick-reference/game.html) |
 | Social | [社群與活動](https://msit173-03.github.io/QMAH-Docs/quick-reference/social.html) |
 | User | [會員與 Identity](https://msit173-03.github.io/QMAH-Docs/quick-reference/user.html) |
 | Store | [商城與訂單](https://msit173-03.github.io/QMAH-Docs/quick-reference/store.html) |
-| Shared | [共用基礎](https://msit173-03.github.io/QMAH-Docs/quick-reference/shared.html) |
 
 查閱順序：
 
@@ -297,8 +297,9 @@ Angular 不直接連資料庫，也不依賴管理後台的 ViewModel；前台�
 2. [開發資料與本機展示](https://msit173-03.github.io/QMAH-Docs/getting-started/development-data.html)
 3. [系統架構總覽](https://msit173-03.github.io/QMAH-Docs/architecture/system-overview.html)
 4. [Area 責任與資料界線](https://msit173-03.github.io/QMAH-Docs/architecture/area-boundaries.html)
-5. 依系統快速頁進入前端、管理後台、功能與 API 正規文件。
-6. 需要精確欄位、HTTP 行為、工具參數或版本交付規則時，查閱 [參考文件](https://msit173-03.github.io/QMAH-Docs/reference/rest-api.html)。
+5. [資料表參考](https://msit173-03.github.io/QMAH-Docs/architecture/database-reference.html) 與 [資料存取與 DB-first](https://msit173-03.github.io/QMAH-Docs/architecture/data-access.html)
+6. 依系統快速頁進入前端、管理後台、功能與 API 正規文件。
+7. 需要精確欄位、HTTP 行為、工具參數或版本交付規則時，查閱 [參考文件](https://msit173-03.github.io/QMAH-Docs/reference/rest-api.html)。
 
 ## Repository 內入口
 
@@ -355,7 +356,7 @@ feature/<area> → Pull Request → develop → Pull Request → main
 
 五個 Area 分支都已建立，可依 GitHub 權限直接 Push。功能變更不直接修改 `main` 或 `develop`；整合共同分支時建立 PR 留下變更紀錄。
 
-`main` 禁止 force push 與刪除。不要把 `.bak`、bin、obj、log、快取、raw output、`.mdf`、`.ldf` 或大型執行檔提交進 Repository。
+`main` 禁止 force push 與刪除。`.bak`、bin、obj、log、快取、raw output、`.mdf`、`.ldf` 或大型執行檔不提交進 Repository。
 
 ## 教育用途與素材權利聲明
 
@@ -363,4 +364,4 @@ feature/<area> → Pull Request → develop → Pull Request → main
 
 文物資料與圖像取自國立故宮博物院 Open Data／典藏資料檢索系統中明確標示的開放內容，依各資料頁所載 CC0 或 CC BY 4.0 條款使用。需要姓名標示的素材，資料庫保存作品名稱、來源網址、授權代碼與 `AttributionText`。
 
-本專題不使用來源商城商品圖片或即時售價。商城展示資料由已授權文物資料產生，不代表國立故宮博物院官方商品、實際製造品或市場售價。若素材權利標示、使用範圍或來源資訊需要補正，請透過 Repository Issue 聯繫。
+本專題不使用來源商城商品圖片或即時售價。商城展示資料由已授權文物資料產生，不代表國立故宮博物院官方商品、實際製造品或市場售價。素材權利標示、使用範圍或來源資訊需要補正時，透過 Repository Issue 聯繫。
