@@ -1,6 +1,6 @@
 # QMAH 文件入口
 
-[QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [開發文件](https://msit173-03.github.io/QMAH-Docs/) ｜ [開發資料庫](https://github.com/MSIT173-03/QMAH-Database)
+[QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Docs 專案](https://github.com/MSIT173-03/QMAH-Docs) ｜ [QMAH-Database 專案](https://github.com/MSIT173-03/QMAH-Database) ｜ [QMAH-Docs 文件站](https://msit173-03.github.io/QMAH-Docs/)
 
 正式文件已集中在 [QMAH-Docs](https://msit173-03.github.io/QMAH-Docs/)。本檔只保留 Repository 內的路標，避免在產品程式 Repository 維護第二套完整文件。
 

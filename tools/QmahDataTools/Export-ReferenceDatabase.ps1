@@ -7,6 +7,10 @@ param(
     [string]$ServerInstance = "(localdb)\MSSQLLocalDB",
     [string]$Database = "QMAH",
     [string]$OutputDirectory,
+    [string]$RepositorySqlPath,
+    [string]$DatabaseRepositoryPath,
+    [ValidatePattern('^[^\\/:*?"<>|]+$')]
+    [string]$RepositorySqlFileName = "QMAH.sql",
     [switch]$KeepTemporaryResources
 )
 
@@ -17,10 +21,58 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $workspaceRoot = (Resolve-Path (Join-Path $repoRoot "..")).Path
 $toolProject = Join-Path $PSScriptRoot "QmahDatabaseRelease\QmahDatabaseRelease.csproj"
 $webProject = Join-Path $repoRoot "QMAH.Web\QMAH.Web.csproj"
-$databaseRepoRoot = Join-Path $repoRoot "..\QMAH-Database"
-$repositorySql = Join-Path $databaseRepoRoot "QMAH.sql"
-if (-not (Test-Path -LiteralPath $repositorySql -PathType Leaf)) {
-    throw "QMAH-Database sibling repository was not found. Place it beside QMAH before exporting a reference database."
+$repositorySqlPathWasProvided = $PSBoundParameters.ContainsKey("RepositorySqlPath")
+$databaseRepositoryPathWasProvided = $PSBoundParameters.ContainsKey("DatabaseRepositoryPath")
+$repositorySqlFileNameWasProvided = $PSBoundParameters.ContainsKey("RepositorySqlFileName")
+
+if ($repositorySqlPathWasProvided -and
+    ($databaseRepositoryPathWasProvided -or $repositorySqlFileNameWasProvided)) {
+    throw "Use RepositorySqlPath by itself, or combine DatabaseRepositoryPath with RepositorySqlFileName."
+}
+
+if ($repositorySqlPathWasProvided) {
+    if ([string]::IsNullOrWhiteSpace($RepositorySqlPath) -or
+        $RepositorySqlPath -match '[\\/]$' -or
+        $RepositorySqlPath.TrimEnd([char[]]@(' ', '.')) -ne $RepositorySqlPath) {
+        throw "RepositorySqlPath must identify a file path, not a directory or a path with a trailing dot or space."
+    }
+
+    $repositorySqlLeaf = Split-Path -Leaf $RepositorySqlPath
+    if ($repositorySqlLeaf -in @('.', '..') -or
+        $repositorySqlLeaf.TrimEnd([char[]]@(' ', '.')) -ne $repositorySqlLeaf) {
+        throw "RepositorySqlPath must identify a file path with a valid file name."
+    }
+
+    $repositorySql = [IO.Path]::GetFullPath($RepositorySqlPath)
+    if (Test-Path -LiteralPath $repositorySql -PathType Container) {
+        throw "RepositorySqlPath must identify a file path, not a directory: $repositorySql"
+    }
+    $databaseRepoRoot = Split-Path -Parent $repositorySql
+} else {
+    if ([string]::IsNullOrWhiteSpace($DatabaseRepositoryPath)) {
+        $databaseRepoRoot = Join-Path $repoRoot "..\QMAH-Database"
+    } else {
+        $databaseRepoRoot = [IO.Path]::GetFullPath($DatabaseRepositoryPath)
+    }
+
+    if ([string]::IsNullOrWhiteSpace($RepositorySqlFileName) -or
+        $RepositorySqlFileName -in @('.', '..') -or
+        $RepositorySqlFileName.TrimEnd([char[]]@(' ', '.')) -ne $RepositorySqlFileName -or
+        [IO.Path]::GetFileName($RepositorySqlFileName) -ne $RepositorySqlFileName) {
+        throw "RepositorySqlFileName must be one file name without path traversal, dot segments, or trailing dots or spaces."
+    }
+
+    $repositorySql = [IO.Path]::GetFullPath((Join-Path $databaseRepoRoot $RepositorySqlFileName))
+}
+
+$databaseRepoRoot = [IO.Path]::GetFullPath($databaseRepoRoot)
+$repositorySqlParent = [IO.Path]::GetFullPath((Split-Path -Parent $repositorySql))
+if (-not [StringComparer]::OrdinalIgnoreCase.Equals($repositorySqlParent, $databaseRepoRoot)) {
+    throw "The Snapshot file must remain directly under the selected output directory: $databaseRepoRoot"
+}
+
+if (-not (Test-Path -LiteralPath $databaseRepoRoot -PathType Container)) {
+    throw "The Snapshot output directory was not found: $databaseRepoRoot. Use -RepositorySqlPath or -DatabaseRepositoryPath to select an existing location."
 }
 $normalizedVersion = $Version.TrimStart('v')
 
