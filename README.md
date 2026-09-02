@@ -23,21 +23,21 @@ QMAH 是 **Qing Ming Appraisal House（清明鑑定屋）** 的縮寫
 
 網站以文物圖像為共同核心，讓使用者查看圖鑑、參與多人鑑定遊戲、交流觀察，並瀏覽文物衍生的縮小複製品商品。五個 Area 位於同一個 Solution，共用一個 `QMAH` SQL Server 資料庫、ASP.NET Core Identity 與網站基礎
 
-這個 Repository 是五人共同開發的整合專案，後端、管理後台、資料庫與 API 契約已整理成可供各功能模組接續開發的狀態。目前已備妥：
+這個 Repository 是五人共同開發的整合專案，後端、前端、使用者前台、管理後台、資料庫與 API 契約已整理成可供期末使用者前台功能接續開發的狀態。目前已備妥：
 
 - SQL Server Schema、Entity 對照與 `QmahDbContext`
 - ASP.NET Core Identity 資料表、Cookie 登入與角色授權
 - 256 件文物、256 筆題庫設定、256 件對應商城商品，以及各 Area 可直接使用的共同資料
 - 8 個文物分類、網站圖片、資料處理工具，以及可用 `.sql` 或 `.bak` 取得的參考資料庫
-- Game、Catalog、Social、User、Store 五個 Area 的既有 Razor 後台與可延伸的管理頁
+- Game、Catalog、Social、User、Store 五個 Area 的既有 Razor 前端管理後台與可延伸的管理頁
 - `/api/v1/*` REST API、DTO、分頁、ProblemDetails、Cookie 驗證與開發用 OpenAPI／Scalar
 - 管理員可使用的文物資料 Preview → Import 流程；題庫預設同步，商城同步由管理員選擇
-- `QMAH.Client` Angular 21.2.22 前台骨架、API proxy、VS Code 擴充套件自動安裝設定與前台交接文件
+- `QMAH.Client` Angular 21.2.22 前端使用者前台開發入口、API proxy、VS Code 擴充套件自動安裝設定與期末前端使用者前台交接文件
 - DB-first、資料存取、前端、展示資料、匯入工具與 Git 協作文件
 
-目前的工作重點是以既有 API 與資料契約開始製作前台畫面；Razor 後台仍可獨立維護，正式金流與完整多人遊戲互動則依各 Area 的既有範圍持續擴充。
+目前的工作重點是以既有後端 API 與資料契約製作 Angular 前端使用者前台畫面；Razor 前端管理後台仍可獨立維護，正式金流與完整多人遊戲互動則依各 Area 的既有範圍持續擴充。
 
-Angular 目前固定在 21.2.22。課堂要求使用 Angular 21，因此保留同一個 major version；原本的 21.1.3 相依樹在本機安全檢查會列出漏洞，升到 21.2.22 後已通過 `npm audit --audit-level=high`。這次只更新 Angular 21 內的修補與次版本，不升到 22，既有 standalone、Router、HttpClient 與 SCSS 寫法不需要改寫。版本與 Node／TypeScript 相容範圍請看[前台開發起點](docs/12-frontend-start-guide.md)。
+Angular 目前固定在 21.2.22。課堂要求使用 Angular 21，因此保留同一個 major version；原本的 21.1.3 相依樹在本機安全檢查會列出漏洞，升到 21.2.22 後已通過 `npm audit --audit-level=high`。這次只更新 Angular 21 內的修補與次版本，不升到 22，既有 standalone、Router、HttpClient 與 SCSS 寫法不需要改寫。版本與 Node／TypeScript 相容範圍請看[Angular 前端的使用者前台開發起點](docs/12-frontend-start-guide.md)。
 
 ## 開始開發
 
@@ -56,9 +56,9 @@ Angular 目前固定在 21.2.22。課堂要求使用 Angular 21，因此保留�
 完成其中一種方式後：
 
 4. 用 Visual Studio 開啟 `QMAH.sln`，等待 NuGet 自動還原。
-5. 在啟動設定選擇 `QMAH 後端（API＋Razor）`，按 `F5`；Razor 後台使用 `https://localhost:7039`，REST API 使用 `https://localhost:7249`。
-6. 若使用 VS Code，可開啟 Repository 根目錄，在 **Run and Debug** 選 `QMAH 前台開發（API＋Angular）`；它會啟動 API 與 Angular。只修改 Razor 後台時，也可以直接使用 `QMAH.Web` 的 `https` 啟動設定。
-7. 需要手動啟動 Angular 前台時，在另一個終端機執行：
+5. 在啟動設定選擇 `QMAH 後端主機與管理後台（API＋Razor）`，按 `F5`；Razor 前端管理後台使用 `https://localhost:7039`，REST API 使用 `https://localhost:7249`。
+6. 若使用 VS Code，可開啟 Repository 根目錄，在 **Run and Debug** 選 `QMAH 使用者前台開發（API 後端＋Angular 前端）`；它會啟動後端 API 與 Angular 前端。只修改 Razor 前端管理後台時，也可以直接使用 `QMAH.Web` 的 `https` 啟動設定。
+7. 需要手動啟動 Angular 前端使用者前台時，在另一個終端機執行：
 
    ```powershell
    cd QMAH.Client
@@ -66,7 +66,7 @@ Angular 目前固定在 21.2.22。課堂要求使用 Angular 21，因此保留�
    npm start
    ```
 
-   瀏覽器開啟 `http://localhost:4200/`；前台的 `/api`、`/openapi` 與 `/scalar` 會透過 `proxy.conf.json` 轉送到 `https://localhost:7249`。
+   瀏覽器開啟 `http://localhost:4200/`；Angular 前端的 `/api`、`/openapi` 與 `/scalar` 會透過 `proxy.conf.json` 轉送到後端 API `https://localhost:7249`。
 
 `.bak` 與 `.sql` 包含該版本 reference database 的資料表、索引、外鍵、Identity，以及目前完整的共同展示資料；目前快照已包含 336 篇貼文、768 筆留言、208 筆訂單、298 筆訂單明細與 96 筆商品評價。組員完成其中一種還原後即可開始開發，不需要再執行 Schema、seed、資料匯入或展示資料工具。`QmahDatabaseRelease generate-showcase-data` 與 seed 腳本只由資料庫整合者在產生下一份完整快照前使用，或供個人隔離資料庫重建展示情境；它們不是組員還原後的增量步驟。SSMS Diagram 不屬於資料庫契約，也不包含在 Release 還原內容內。
 
@@ -80,7 +80,7 @@ Angular 目前固定在 21.2.22。課堂要求使用 Angular 21，因此保留�
 
 如果瀏覽器在 request 尚未進入應用程式前就再次回傳 431，代表 Cookie 已超過伺服器可解析的上限，中介軟體沒有機會送出刪除指令。此時請先關閉本機網站分頁，再從網址列左側的鎖頭開啟網站資料設定，清除 `localhost` 的 Cookie 與網站資料後重新啟動；也可以先用無痕視窗確認登入頁是否恢復正常。清除後本機登入狀態會消失，需要重新登入，但不會刪除資料庫內容。
 
-Cookie 不包含連接埠，因此請清除 `localhost` 的網站資料，不要只尋找 `7039`。若仍無法開啟，請確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 Visual Studio 的 `QMAH 後端（API＋Razor）` 設定。
+Cookie 不包含連接埠，因此請清除 `localhost` 的網站資料，不要只尋找 `7039`。若仍無法開啟，請確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 Visual Studio 的 `QMAH 後端主機與管理後台（API＋Razor）` 設定。
 
 ### 本機展示帳密
 
@@ -112,9 +112,9 @@ Controller 透過建構式取得 scoped `QmahDbContext`，不要自行建立 SQL
 
 QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 能封裝 Entity 本身無法表達、而且必須集中維護的行為時才建立；單純轉送屬性只會增加轉換與除錯位置。完整界線請看[架構與資料存取規則](docs/08-architecture-and-data-access.md)
 
-### 後端與前台的專案邊界
+### 後端、前端與前台／後台的專案邊界
 
-目前採三個可獨立啟動的應用程式與一個共用資料層：`QMAH.Web` 專注 Razor 後台，`QMAH.Api` 提供 `/api/v1/*`，`QMAH.Client` 提供 Angular 前台；`QMAH.Infrastructure` 集中 DB-first Entity、`QmahDbContext` 與匯入核心，避免兩個主機各自維護一份資料模型。API 與 Angular 透過 `QMAH.Client/proxy.conf.json` 連接，Visual Studio 的 `.slnLaunch` 已預設同時啟動 API 與 Razor 後台，VS Code 工作區則提供 API＋Angular 的複合啟動。這個邊界保留共用資料庫與 Cookie／Identity 契約，同時讓 API 能獨立部署與測試。
+目前採三個可獨立啟動的應用程式與一個共用資料層：`QMAH.Web` 是包含 Razor 前端管理後台的 ASP.NET Core 後端主機，`QMAH.Api` 提供 `/api/v1/*` 後端 API，`QMAH.Client` 是 Angular 前端使用者前台；`QMAH.Infrastructure` 集中 DB-first Entity、`QmahDbContext` 與匯入核心，避免兩個後端主機各自維護一份資料模型。API 與 Angular 前端透過 `QMAH.Client/proxy.conf.json` 連接，Visual Studio 的 `.slnLaunch` 已預設同時啟動後端 API 與 Razor 前端管理後台，VS Code 工作區則提供後端 API＋Angular 前端的複合啟動。這個邊界保留共用資料庫與 Cookie／Identity 契約，同時讓 API 能獨立部署與測試。
 
 ## 五個 Area
 
@@ -151,23 +151,24 @@ QMAH 不採「每張表一個 Wrapper」或 Generic Repository。只有 Wrapper 
 | 01 | 準備 Visual Studio、LocalDB、NuGet 與 Hot Reload | [開發環境與共用套件](docs/01-development-environment.md) |
 | 02 | 查看共同資料、測試資料、資料表筆數與狀態值 | [開發資料與參考資料庫](docs/02-development-data.md) |
 | 03 | 確認五個 Area 的責任、資料與開發界線 | [Area 開發檢查](docs/03-area-development-checklist.md) |
-| 04 | 了解後台功能的開發順序 | [後台開發起點](docs/04-backend-start-guide.md) |
+| 04 | 了解管理後台功能的開發順序 | [管理後台開發起點](docs/04-backend-start-guide.md) |
 | 05 | 從 List 完成 Details、Create、Edit、Delete | [從清單到完整 CRUD](docs/05-crud-tutorial.md) |
 | 06 | 使用 Visual Studio 或 CLI 產生 CRUD 起始檔案 | [Scaffold 操作教學](docs/06-scaffolding-guide.md) |
 | 07 | 使用 `QmahDbContext` 查詢、新增、修改、刪除與交易 | [QmahDbContext 使用方式](docs/07-dbcontext-usage.md) |
 | 08 | 判斷 Entity、ViewModel、DTO、Service 與 Wrapper 的界線 | [架構與資料存取規則](docs/08-architecture-and-data-access.md) |
 | 09 | 實作 Identity 登入、登出、角色與會員 CRUD | [Identity 與會員資料管理](docs/09-midterm-identity.md) |
 | 10 | 撰寫 Razor、表單、CSS、JavaScript 與響應式畫面 | [Razor 與前端開發](docs/10-frontend-guide.md) |
-| 11 | 使用 Tabler 共用骨架與元件製作各系統後台頁面 | [Tabler 後台實作指南](docs/11-tabler-admin-guide.md) |
-| 12 | 啟動 Angular 前台與開始串接 API | [前台開發起點](docs/12-frontend-start-guide.md) |
+| 11 | 使用 Tabler 共用骨架與元件製作各系統管理後台頁面 | [Tabler 管理後台實作指南](docs/11-tabler-admin-guide.md) |
+| 12 | 啟動 Angular 前端使用者前台與開始串接 API | [Angular 前端的使用者前台開發起點](docs/12-frontend-start-guide.md) |
 | 13 | 查閱 REST API、DTO、分頁與驗證規則 | [REST API 契約](docs/13-rest-api.md) |
 | 14 | 操作管理員文物資料匯入與同步 | [文物資料匯入](docs/14-catalog-import.md) |
 | 15 | 建立本機展示資料與管理測試帳號 | [本機展示資料與帳號](docs/15-local-showcase-and-credentials.md) |
 | 16 | 查閱 API 專業用語與文件文字規範 | [API 名詞表](docs/16-api-glossary.md) |
 | 17 | 管理本機圖片、物件儲存與 CDN 交付 | [媒體交付設定](docs/17-media-delivery.md) |
-| 18 | 了解地址欄位與前台地圖服務的簡單串接 | [地點與地圖串接說明](docs/18-map-integration.md) |
-| 19 | 了解近期後端、後台、資料庫與文件增量 | [期中基準後的開發進度](docs/19-progress-since-midterm.md) |
+| 18 | 了解地址欄位與使用者前台地圖服務的簡單串接 | [地點與地圖串接說明](docs/18-map-integration.md) |
+| 19 | 了解近期後端、前端、管理後台、資料庫與文件增量 | [期中基準後的開發進度](docs/19-progress-since-midterm.md) |
 | 20 | 查閱鑑定點數、鑰匙、Mini Game、優惠券與稱號規則 | [經濟與進程基準](docs/economy-progression.md) |
+| 21 | 依固定順序開始使用者前台功能、驗證與資料串接 | [期末前端使用者前台開發交接](docs/20-final-frontend-handoff.md) |
 
 參考文件：
 
@@ -192,11 +193,11 @@ QMAH/
 ├─ QMAH.Infrastructure/         DB-first Entity、DbContext 與匯入核心
 ├─ QMAH.Web/
 │  ├─ Areas/                     五個功能模組
-│  ├─ Controllers/               Razor 後台與共用網站頁面
-│  ├─ Models/                    後台 ViewModel
+│  ├─ Controllers/               管理後台使用的後端 Controller 與共用網站頁面
+│  ├─ Models/                    管理後台 ViewModel
 │  ├─ Views/                     共用 Razor View
 │  └─ wwwroot/                   樣式、腳本、套件、圖片與品牌素材
-├─ QMAH.Client/                  Angular 21.2.22 前台（獨立啟動）
+├─ QMAH.Client/                  Angular 21.2.22 前端使用者前台（獨立啟動）
 ├─ database/                     QMAH.sql、Schema.sql、seed 腳本與 Diagram 說明
 ├─ docs/                         核心開發、API、資料庫、媒體與交付文件
 ├─ tools/QmahDataTools/          可重現的資料處理工具

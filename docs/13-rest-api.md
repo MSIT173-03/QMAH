@@ -2,7 +2,7 @@
 
 QMAH API（應用程式介面）位於獨立的 `QMAH.Api` 專案，所有版本化 Endpoint（API 可呼叫的路徑）以 `/api/v1` 開頭。API 與 Razor（ASP.NET Core 的伺服器端頁面技術）後台共用 `QMAH.Infrastructure`、Identity（登入與會員驗證元件）與 SQL Server（資料庫服務），不複製 Entity（資料庫對應模型）或建立第二個資料庫。
 
-開發環境 API：`https://localhost:7249`。Development（開發環境）才提供 `/openapi/v1.json` 與 `/scalar/v1`；前台平常透過 Angular proxy（前端開發伺服器的轉送設定）使用相對路徑 `/api/v1`。
+開發環境 API：`https://localhost:7249`。Development（開發環境）才提供 `/openapi/v1.json` 與 `/scalar/v1`；Angular 前端使用者前台平常透過 proxy（前端開發伺服器的轉送設定）使用相對路徑 `/api/v1`。
 
 ## API 文件與測試頁面
 
@@ -29,9 +29,9 @@ API 開發與測試流程如下：
 GUI 啟動方式如下：
 
 - Visual Studio 開啟 `QMAH.sln` 後，使用啟動設定選擇 `QMAH API`，即可單獨啟動 API。
-- Visual Studio 選擇 `QMAH 後端（API＋Razor）`，即可同時啟動 `QMAH.Api` 與 `QMAH.Web`。
+- Visual Studio 選擇 `QMAH 後端主機與管理後台（API＋Razor）`，即可同時啟動 `QMAH.Api` 與 `QMAH.Web`。
 - Visual Studio 的 API 啟動設定使用 `https` profile（啟動設定檔），網址為 `https://localhost:7249`；HTTP profile（啟動設定檔）的網址為 `http://localhost:5147`。
-- VS Code 開啟 Run and Debug（執行與除錯介面）面板後，可選擇 `QMAH API（https）` 單獨啟動 API、選擇 `QMAH Angular 前台` 單獨啟動 Angular，或選擇 `QMAH 前台開發（API＋Angular）` 同時啟動兩者。
+- VS Code 開啟 Run and Debug（執行與除錯介面）面板後，可選擇 `QMAH API（https）` 單獨啟動後端 API、選擇 `QMAH Angular 前端使用者前台` 單獨啟動 Angular 前端，或選擇 `QMAH 使用者前台開發（API 後端＋Angular 前端）` 同時啟動兩者。
 
 以上 GUI（圖形化介面）設定分別由 `QMAH.slnLaunch`、`QMAH.Api/Properties/launchSettings.json` 與 `.vscode/launch.json` 管理，團隊成員不需要自行建立啟動設定。
 
@@ -112,7 +112,7 @@ Controller 負責 HTTP 行為與授權，DTO（API 對外傳輸的資料格式�
 | 登入後寫入 | 遊戲建立／加入／作答／投票、建立活動／貼文／留言／檢舉、圖片與訂單 |
 | 管理員 | `/api/v1/admin/dashboard` |
 
-登入成功後 API 以 Cookie（瀏覽器保存的小型資料）保存狀態，不回傳自製 JWT（JSON Web Token，另一種登入權杖格式）。Angular request（前端發出的 HTTP 請求）保留 credentials（是否攜帶 Cookie 的請求設定）；直接跨來源呼叫時，來源列在 API 的 `Cors:AllowedOrigins`，CORS policy（跨來源規則集合）只接受列出的明確來源。
+登入成功後後端 API 以 Cookie（瀏覽器保存的小型資料）保存狀態，不回傳自製 JWT（JSON Web Token，另一種登入權杖格式）。Angular request（前端發出的 HTTP 請求）保留 credentials（是否攜帶 Cookie 的請求設定）；直接跨來源呼叫時，來源列在 API 的 `Cors:AllowedOrigins`，CORS policy（跨來源規則集合）只接受列出的明確來源。
 
 所有 POST、PUT、DELETE 先呼叫 `GET /api/v1/account/antiforgery-token`，再帶 `X-XSRF-TOKEN` Header（HTTP 標頭）。GET 不需要 Anti-forgery（防偽請求驗證）token（驗證用的暫時字串）。
 
@@ -221,7 +221,7 @@ Code（系統代碼）是資料契約，不是直接給使用者看的文案；�
 
 ### 經濟、進程與社群加碼
 
-以下 Endpoint（API 可呼叫的路徑）是前台接手鑑定點數、鑰匙、優惠券、成就稱號與遊戲獎勵時使用的契約。除公開的活動加碼查詢外，都需要登入；寫入操作仍須先取得 Anti-forgery（防偽請求驗證）Cookie 與 token（驗證用的暫時字串）。
+以下 Endpoint（API 可呼叫的路徑）是 Angular 前端使用者前台接手鑑定點數、鑰匙、優惠券、成就稱號與遊戲獎勵時使用的契約。除公開的活動加碼查詢外，都需要登入；寫入操作仍須先取得 Anti-forgery（防偽請求驗證）Cookie 與 token（驗證用的暫時字串）。
 
 | Method | Path | 權限 | 用途與主要欄位 |
 | --- | --- | --- | --- |
@@ -262,7 +262,7 @@ Code（系統代碼）是資料契約，不是直接給使用者看的文案；�
 
 逐日／逐月營運檢視由 Razor（ASP.NET Core 的伺服器端頁面技術）後台的「營運中心」提供，統計查詢維持單一資料邊界；其他管理端需求沿用相同的管理摘要資料契約。
 
-## 前台使用原則
+## 前端使用者前台呼叫原則
 
 - 先使用 DTO（API 對外傳輸的資料格式）與 metadata（供前端使用的選項資料），不直接依賴 Entity（資料庫對應模型）或資料庫欄位名稱。
 - 所有清單保留 loading、空資料、分頁與錯誤狀態。

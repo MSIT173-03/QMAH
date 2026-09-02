@@ -12,7 +12,7 @@ QMAH 以五個 Area 的 CRUD 後台為主，並已預留獨立 API 使用相同�
 
 共用後台的登入頁、登出按鈕、Cookie 設定與 `Admin` 授權已集中在 Web 主機設定與 User Area。各 Area 不建立各自的登入流程；Controller 與 View 不得假設任意 `UserId`，也不得直接修改 Identity 系統表。API 已提供註冊、登入、登出與開發環境密碼重設流程；正式寄信服務仍要在決定供應商後接上，不能把展示用寄信實作當成正式通知服務。
 
-目前兩個主機都使用 Identity lockout：連續 5 次登入失敗會鎖定 15 分鐘；登入端點另外依來源 IP 進行每分鐘 12 次的固定視窗限流。管理員停用會員時會更新 Security Stamp，讓既有登入 Cookie 在下一次 request 失效。這些規則由主機共用設定維護，前台只需要正確處理 401、403 與 429。
+目前兩個主機都使用 Identity lockout：連續 5 次登入失敗會鎖定 15 分鐘；登入端點另外依來源 IP 進行每分鐘 12 次的固定視窗限流。管理員停用會員時會更新 Security Stamp，讓既有登入 Cookie 在下一次 request 失效。這些規則由主機共用設定維護，Angular 前端使用者前台只需要正確處理 401、403 與 429。
 
 Web 登入 Cookie 名稱為 `.QMAH.Web.Auth`，API 登入 Cookie 名稱為 `.QMAH.Api.Auth`；兩個主機的 Anti-forgery Cookie 也各自使用 `.QMAH.Web.Antiforgery` 與 `.QMAH.Api.Antiforgery`。主機啟動後會清除已知的舊版 QMAH／ASP.NET Core Cookie，降低在本機切換版本時累積過大 request header 的機會；這是 Cookie 清理機制，不代表可以無限制放大伺服器的標頭上限。
 
@@ -59,7 +59,7 @@ Microsoft 建議瀏覽器網站使用 Cookie，因為瀏覽器會自動處理 Co
 
 ## 不要為 QMAH 另外建立 Identity 專案
 
-QMAH 已經有 `QmahDbContext`、`ApplicationUser`、SQL Server Store 與登入流程。前台開發準備階段不需要另開 MVC 測試專案，也不需要為了驗證登入再建立另一個資料庫、Context 或 Migration。
+QMAH 已經有 `QmahDbContext`、`ApplicationUser`、SQL Server Store 與登入流程。Angular 前端使用者前台可直接沿用這組後端登入契約，不需要另開 MVC 測試專案，也不需要為了驗證登入再建立另一個資料庫、Context 或 Migration。
 
 若只是想閱讀 Microsoft 範本的完整流程，直接參考本節前方的官方 Identity 文件即可。任何外部練習專案都不屬於 QMAH Repository；不要把它的 Context、Migration 或 Identity 類別複製回 QMAH。
 

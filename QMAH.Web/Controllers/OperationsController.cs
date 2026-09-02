@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
+using QMAH.Web.Areas.Game.ViewModels;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
@@ -528,7 +529,11 @@ public sealed class OperationsController(
             Charts = BuildDashboardCharts(monthlyTrend),
             OrderStatusBreakdown = BuildBreakdown(orderRows.Select(order => order.Status), AdminDisplayLabels.Status),
             GameRoomStatusBreakdown = BuildBreakdown(roomRows.Select(room => room.Status), AdminDisplayLabels.Status),
-            AnswerTypeBreakdown = BuildBreakdown(answerRows.Select(answer => answer.AnswerType), AdminDisplayLabels.AnswerType),
+            // 作答類型是既定資料契約；即使選定期間沒有某一類資料，營運中心仍顯示 0，避免誤認為該類型不存在。
+            AnswerTypeBreakdown = BuildBreakdown(
+                answerRows.Select(answer => answer.AnswerType),
+                AdminDisplayLabels.AnswerType,
+                GameCodeLists.AnswerTypes.Keys),
             SocialPostBreakdown = BuildBreakdown(postRows.Select(post => post.PostType), AdminDisplayLabels.PostType),
             SocialPublisherBreakdown = BuildBreakdown(postRows.Select(post => post.PublisherType), AdminDisplayLabels.PublisherType),
             EventTypeBreakdown = BuildBreakdown(eventRows.Select(eventData => eventData.EventType), AdminDisplayLabels.EventType),
@@ -1395,14 +1400,26 @@ public sealed class OperationsController(
     // 狀態代碼先轉成人看得懂的文字再計數，UI 不需要知道資料庫內部值
     private static IReadOnlyList<OperationsBreakdown> BuildBreakdown(
         IEnumerable<string?> values,
-        Func<string?, string> formatter)
+        Func<string?, string> formatter,
+        IEnumerable<string>? knownValues = null)
     {
-        return values
+        var counts = values
             .Select(value => ToDisplayLabel(value, formatter))
             .GroupBy(label => label)
-            .OrderByDescending(group => group.Count())
-            .ThenBy(group => group.Key)
-            .Select(group => new OperationsBreakdown(group.Key, group.Count()))
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+
+        if (knownValues is not null)
+        {
+            foreach (var knownValue in knownValues)
+            {
+                counts.TryAdd(ToDisplayLabel(knownValue, formatter), 0);
+            }
+        }
+
+        return counts
+            .OrderByDescending(item => item.Value)
+            .ThenBy(item => item.Key)
+            .Select(item => new OperationsBreakdown(item.Key, item.Value))
             .ToList();
     }
 

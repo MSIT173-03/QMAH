@@ -1,4 +1,4 @@
 import { Routes } from '@angular/router';
 
-// Feature routes will be added here as the Angular user-facing application grows.
+// 前台功能依責任建立 lazy loading route，統一由此集中管理。
 export const routes: Routes = [];

@@ -1,6 +1,6 @@
 [
   {
-    "Name": "QMAH 後端（API＋Razor）",
+    "Name": "QMAH 後端主機與管理後台（API＋Razor）",
     "Projects": [
       {
         "Path": "QMAH.Api\\QMAH.Api.csproj",

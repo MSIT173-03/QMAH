@@ -42,7 +42,7 @@
       }
     },
     {
-      "label": "QMAH Angular 前台",
+      "label": "QMAH Angular 前端使用者前台",
       "type": "process",
       "command": "npm.cmd",
       "args": ["start"],
@@ -75,8 +75,8 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "QMAH 前台（API＋Angular）",
-      "dependsOn": ["QMAH API（https）", "QMAH Angular 前台"],
+      "label": "QMAH 使用者前台（API 後端＋Angular 前端）",
+      "dependsOn": ["QMAH API（https）", "QMAH Angular 前端使用者前台"],
       "dependsOrder": "parallel"
     }
   ]

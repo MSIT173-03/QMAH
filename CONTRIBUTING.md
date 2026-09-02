@@ -1,6 +1,6 @@
 # QMAH 協作規則
 
-本專案採單一 .NET Solution，包含 Razor MVC 後台、獨立 REST API、五個 Area、Angular 前台骨架與共用 SQL Server 資料庫。資料庫採 DB-first：SQL Server Schema 是資料契約，Entity 與 `QmahDbContext` 依資料庫對照；Repository 不使用 EF Migration。
+本專案採單一 .NET Solution，包含 ASP.NET Core 後端主機、Razor 前端管理後台、獨立 REST API、五個 Area、Angular 前端使用者前台與共用 SQL Server 資料庫。資料庫採 DB-first：SQL Server Schema 是資料契約，Entity 與 `QmahDbContext` 依資料庫對照；Repository 不使用 EF Migration。
 
 ## 開始前
 
@@ -8,7 +8,7 @@
 2. 以最新遠端內容重新 Clone 或更新本機工作目錄。
 3. 從最新 Release 還原 `QMAH-<version>.bak`，或在 SSMS 執行 `database/QMAH.sql`；再於 `appsettings.Local.json` 設定自己的資料庫連線。
 4. 開啟 `QMAH.sln`，切到自己的 Area 分支，按 **F5** 確認網站可啟動。
-5. 依序閱讀 README、`docs/01-development-environment.md`、`docs/02-development-data.md`、`docs/03-area-development-checklist.md`、`docs/04-backend-start-guide.md`、`docs/07-dbcontext-usage.md`、`docs/10-frontend-guide.md`、`docs/11-tabler-admin-guide.md`、`docs/12-frontend-start-guide.md`、`docs/13-rest-api.md`、`docs/14-catalog-import.md`、`docs/15-local-showcase-and-credentials.md` 與所負責 Area 的資料表關係。
+5. 依序閱讀 README、`docs/01-development-environment.md`、`docs/02-development-data.md`、`docs/03-area-development-checklist.md`、`docs/04-backend-start-guide.md`、`docs/07-dbcontext-usage.md`、`docs/10-frontend-guide.md`、`docs/11-tabler-admin-guide.md`、`docs/12-frontend-start-guide.md`、`docs/13-rest-api.md`、`docs/14-catalog-import.md`、`docs/15-local-showcase-and-credentials.md`、`docs/20-final-frontend-handoff.md` 與所負責 Area 的資料表關係。
 
 一般功能開發不需要命令列，也不需要建立資料表。
 

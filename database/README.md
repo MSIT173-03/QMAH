@@ -1,6 +1,6 @@
 # QMAH 資料庫還原與版本管理
 
-QMAH 採 SQL Server DB-first。Razor 後台、REST API、匯入工具與 Angular 前台共用同一個資料庫契約。
+QMAH 採 SQL Server DB-first。Razor 前端管理後台、REST API、匯入工具與 Angular 前端使用者前台共用同一個資料庫契約。
 
 資料庫 Schema 是資料契約，Entity 與 `QmahDbContext` 只負責對照 SQL Server，不使用 EF Migration，也不建立 `__EFMigrationsHistory`
 

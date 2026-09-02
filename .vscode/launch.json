@@ -15,7 +15,7 @@
       }
     },
     {
-      "name": "QMAH Angular 前台",
+      "name": "QMAH Angular 前端使用者前台",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm start",
@@ -24,8 +24,8 @@
   ],
   "compounds": [
     {
-      "name": "QMAH 前台開發（API＋Angular）",
-      "configurations": ["QMAH API（https）", "QMAH Angular 前台"]
+      "name": "QMAH 使用者前台開發（API 後端＋Angular 前端）",
+      "configurations": ["QMAH API（https）", "QMAH Angular 前端使用者前台"]
     }
   ]
 }

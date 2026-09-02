@@ -1,6 +1,6 @@
-# 後台開發起點
+# Razor 前端管理後台開發起點
 
-後台功能從這裡開始。依序確認資料表、路由、ViewModel、授權與 CRUD，再依自己的 Area 延伸。Razor 後台位於 `QMAH.Web`；前台要使用的 JSON 契約位於獨立的 `QMAH.Api`，兩者共用 `QMAH.Infrastructure`。
+管理後台功能從這裡開始。依序確認資料表、路由、ViewModel、授權與 CRUD，再依自己的 Area 延伸。Razor 前端管理後台位於 `QMAH.Web`；Angular 前端使用者前台使用的 JSON 契約位於獨立的 `QMAH.Api`，兩者共用 `QMAH.Infrastructure`。
 
 若還不熟悉 List、Controller、ViewModel、Razor 表單與完整 CRUD 的連接方式，先照[從清單到完整 CRUD](05-crud-tutorial.md)做一次，再回來依自己的資料表調整。
 
@@ -9,7 +9,7 @@
 ## 開始前
 
 1. 還原最新 Release 附帶的 `QMAH-<version>.bak`，或完整執行 `database/QMAH.sql`。
-2. 開啟 `QMAH.sln`，確認 `QMAH.Web` 與 `QMAH.Api` 至少各自可以啟動；Visual Studio 也可以選 `QMAH 後端（API＋Razor）` 一次啟動兩者。
+2. 開啟 `QMAH.sln`，確認 `QMAH.Web` 與 `QMAH.Api` 至少各自可以啟動；Visual Studio 也可以選 `QMAH 後端主機與管理後台（API＋Razor）` 一次啟動兩者。
 3. 切到自己負責的 `feature/*` 分支並先 Pull。
 4. 先閱讀 `QMAH.Infrastructure/Data/QmahDbContext.cs` 中本 Area 的 DbSet 與 mapping；遠端版本更新後，依 [`database/README.md`](../database/README.md) 用最新版完整快照重新建立資料庫，不直接修改舊資料庫，也不需要自行增量匯入。
 5. 用 SSMS Diagram 確認主鍵、外鍵、唯一索引、可否為 `NULL` 與 `rowversion`。

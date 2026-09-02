@@ -4,16 +4,16 @@
 
 ## 專案結構與啟動方式
 
-QMAH 從單一後台程式整理成共用資料層加上三個可獨立啟動的主機：
+QMAH 從單一 ASP.NET Core 主機整理成後端共用層加上三個可獨立啟動的主機：
 
 - `QMAH.Infrastructure` 集中 DB-first（以資料庫結構為準）的 Entity、`QmahDbContext`、媒體網址解析、共用進程規則與資料匯入核心
-- `QMAH.Web` 維護 ASP.NET Core MVC 與 Razor 的管理後台
-- `QMAH.Api` 提供版本化的 `/api/v1/*` REST API（以 HTTP 資源路徑提供資料與操作的 API）
-- `QMAH.Client` 提供 Angular 21.2.22 的前台開發起點，目前保留 standalone、Router、HttpClient、環境設定與 proxy
+- `QMAH.Web` 是包含 Razor 前端管理後台的 ASP.NET Core 後端主機
+- `QMAH.Api` 提供版本化的 `/api/v1/*` 後端 REST API（以 HTTP 資源路徑提供資料與操作的 API）
+- `QMAH.Client` 提供 Angular 21.2.22 前端使用者前台的開發起點，目前保留 standalone、Router、HttpClient、環境設定與 proxy
 
-Visual Studio、VS Code 與命令列都已經有對應的啟動方式。API 與 Web 共用 SQL Server、ASP.NET Core Identity 與資料層；前台透過 API 契約取用資料。
+Visual Studio、VS Code 與命令列都已經有對應的啟動方式。API 與 Web 共用 SQL Server、ASP.NET Core Identity 與資料層；Angular 前端使用者前台透過後端 API 契約取用資料。
 
-## 後台與五個 Area
+## Razor 前端管理後台與五個 Area
 
 後台導入共用的 Tabler（管理介面元件與樣式）骨架，包含側欄、頁首、登入狀態、深淺色模式、響應式列表、排序、分頁、圖片大圖預覽與操作回饋。Game、Catalog、Social、User、Store 五個 Area 都已放入共同導覽與各自的管理入口。
 
@@ -27,11 +27,11 @@ Visual Studio、VS Code 與命令列都已經有對應的啟動方式。API 與 
 - 商品、訂單、優惠券定義、會員優惠券背包與優惠券流水
 - 營運中心的跨 Area 摘要、逐日明細、媒體索引與稽核紀錄
 
-活動、貼文、會員地址與可共用地址欄位目前使用簡單的地圖連結串接。後台保存地點文字與選填的成對座標，再由共用原生 JavaScript 開啟 OpenStreetMap 查看或搜尋，不保存圖磚資料或地圖服務識別碼。前台沿用同一組 API 欄位的方式記錄於[地點與地圖串接說明](18-map-integration.md)。
+活動、貼文、會員地址與可共用地址欄位目前使用簡單的地圖連結串接。管理後台保存地點文字與選填的成對座標，再由共用原生 JavaScript 開啟 OpenStreetMap 查看或搜尋，不保存圖磚資料或地圖服務識別碼。Angular 前端使用者前台沿用同一組 API 欄位的方式記錄於[地點與地圖串接說明](18-map-integration.md)。
 
 ## API 與文件契約
 
-API 已加入共用的 `ApiControllerBase`、分頁回應、ProblemDetails（RFC 7807 標準錯誤回應格式）、Cookie 驗證、Anti-forgery（防偽請求驗證）與登入狀態處理。API 的 DTO（API 對外傳輸的資料格式）不直接暴露 Entity，前台使用的資料欄位由各 Controller 明確組合。
+API 已加入共用的 `ApiControllerBase`、分頁回應、ProblemDetails（RFC 7807 標準錯誤回應格式）、Cookie 驗證、Anti-forgery（防偽請求驗證）與登入狀態處理。API 的 DTO（API 對外傳輸的資料格式）不直接暴露 Entity，Angular 前端使用者前台使用的資料欄位由各 Controller 明確組合。
 
 目前可使用的 API 範圍涵蓋：
 
@@ -60,12 +60,12 @@ OpenAPI（API 的標準契約格式）與 Scalar（互動式 API 文件頁面）
 
 目前本機預設固定使用 `Media:DeliveryMode=Local`。資料庫只保存 `/media/...` 與 `/uploads/...` 邏輯路徑，未來切換 CDN 時由網址解析器與檔案同步流程處理，不需要批次改寫資料庫。
 
-## 經濟系統與前台預留契約
+## 經濟系統與使用者前台契約
 
-在既有 PointBalance、PointTransaction、KeyDefinitions、UserKeyBalances、KeyTransactions、ArtifactUnlocks、CouponDefinition、UserCoupon 與 UserAchievement 的基礎上，現階段已整理出前台之後會使用的規則邊界：
+在既有 PointBalance、PointTransaction、KeyDefinitions、UserKeyBalances、KeyTransactions、ArtifactUnlocks、CouponDefinition、UserCoupon 與 UserAchievement 的基礎上，現階段已整理出 Angular 前端使用者前台會使用的規則邊界：
 
 - 鑑定點數與四種鑰匙沿用既有資產資料表
-- NORMAL、CATEGORY、ERA 由伺服器決定候選與隨機結果，UNIVERSAL 才接受前台指定文物
+- NORMAL、CATEGORY、ERA 由伺服器決定候選與隨機結果，UNIVERSAL 才接受使用者前台指定文物
 - 鑰匙兌換比例、鑰匙回收點數、多人遊戲獎勵與 Mini Game 獎勵集中成可調設定
 - Mini Game 使用共用的 mode、attempt、config、result 與 reward 紀錄，不為每種玩法建立另一張獨立 Attempt 表
 - 鑰匙進度採累積方式，達到後台設定的門檻才轉成一般鑰匙；獎勵回應會同時提供點數與進度結果
@@ -92,8 +92,8 @@ OpenAPI（API 的標準契約格式）與 Scalar（互動式 API 文件頁面）
 
 文件也補齊了：
 
-- API、前台、資料庫、圖片交付與啟動流程
+- 後端 API、Angular 前端使用者前台、資料庫、圖片交付與啟動流程
 - OpenAPI 名詞與每個條目可獨立閱讀的說明方式
 - 本機展示帳號、SQL／`.bak` 還原與 Release 資料庫流程
-- 前台透過 API 使用地圖、圖片、登入與錯誤回應的接手說明
+- Angular 前端使用者前台透過後端 API 使用地圖、圖片、登入與錯誤回應的接手說明
 - 本文件記錄的期中基準後功能增量

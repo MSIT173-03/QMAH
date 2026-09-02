@@ -1,6 +1,6 @@
 # 開發環境與共用套件
 
-這裡集中說明 QMAH 的開發環境、資料庫還原、NuGet 套件、雙主機啟動、Hot Reload、Angular 前台與 CRUD Scaffold。
+這裡集中說明 QMAH 的開發環境、資料庫還原、NuGet 套件、雙主機啟動、Hot Reload、Angular 前端使用者前台與 CRUD Scaffold。
 
 完成資料庫還原後，可直接用 Visual Studio 開啟方案並按 `F5`，不需要先執行命令列。
 
@@ -18,11 +18,11 @@
 | jQuery                         |    3.7.1 | 既有 Razor 表單與簡單互動                |
 | jQuery Validation              |   1.22.1 | 使用者端欄位驗證                         |
 | jQuery Validation Unobtrusive  |    4.0.0 | ASP.NET Core Model Validation 的前端橋接 |
-| Angular、Angular CLI、Angular Build | 21.2.22 | 前台骨架與前台建置                       |
+| Angular、Angular CLI、Angular Build | 21.2.22 | Angular 前端開發骨架與建置                       |
 | Node.js                        | 見 `QMAH.Client/package.json` | Angular CLI 執行環境；支援 20.19.0 以上的 20.x、22.12.0 以上的 22.x，或 24.0.0 以上 |
 | npm                            |   11.16.0 | Angular 依賴安裝；`packageManager` 固定此版本 |
-| TypeScript                     |    5.9.3 | Angular 前台型別檢查                     |
-| RxJS                           |    7.8.2 | Angular 前台非同步資料流                 |
+| TypeScript                     |    5.9.3 | Angular 前端型別檢查                     |
+| RxJS                           |    7.8.2 | Angular 前端非同步資料流                 |
 
 [`global.json`](../global.json) 固定 .NET SDK 基準為 10.0.301，並允許 `latestFeature` 以前進到同一個 .NET 10 的較新功能帶；因此本機若已安裝較新的相容 SDK，`dotnet --version` 可能顯示 10.0.400。這不會改變 Target Framework 或 NuGet 鎖定結果。[`.vsconfig`](../.vsconfig) 指定 Visual Studio 的 **ASP.NET and web development** 工作負載。
 
@@ -61,16 +61,16 @@ Clone Repository 後開啟 `QMAH.sln`。若本機缺少工作負載，Visual Stu
 
 ## 啟動網站與 API
 
-QMAH 把 Razor 後台與 REST API 分成兩個可獨立啟動的 ASP.NET Core 主機；兩者共用 `QMAH.Infrastructure`、Identity 與 SQL Server，不需要複製 Entity 或建立第二套資料庫。
+QMAH 把 Razor 前端管理後台與 REST API 分成兩個可獨立啟動的 ASP.NET Core 後端主機；兩者共用 `QMAH.Infrastructure`、Identity 與 SQL Server，不需要複製 Entity 或建立第二套資料庫。
 
 | 主機／設定 | 用途 | HTTPS／HTTP 網址 |
 | --- | --- | --- |
-| `QMAH.Web` 的 `https`／`http` | Razor 後台與五個 Area | `https://localhost:7039`／`http://localhost:5183` |
+| `QMAH.Web` 的 `https`／`http` | Razor 前端管理後台與五個 Area | `https://localhost:7039`／`http://localhost:5183` |
 | `QMAH.Api` 的 `https`／`http` | `/api/v1/*`、OpenAPI 與 Scalar | `https://localhost:7249`／`http://localhost:5147` |
 
-Visual Studio 開啟 `QMAH.sln` 後，可在啟動設定選擇 `QMAH 後端（API＋Razor）` 一次啟動兩個後端；若只要檢查 API，選 `QMAH API`。`.slnLaunch` 是便利設定，較舊的 Visual Studio 若不顯示它，仍可分別以兩個專案的 `https` 設定啟動。
+Visual Studio 開啟 `QMAH.sln` 後，可在啟動設定選擇 `QMAH 後端主機與管理後台（API＋Razor）` 一次啟動後端 API 與 Razor 前端管理後台；若只要檢查 API，選 `QMAH API`。`.slnLaunch` 是便利設定，較舊的 Visual Studio 若不顯示它，仍可分別以兩個專案的 `https` 設定啟動。
 
-VS Code 開啟 Repository 根目錄後，在 **Run and Debug** 選 `QMAH 前台開發（API＋Angular）`。若只使用 Razor 後台，可直接執行 `QMAH.Web`；若只使用 API，可執行 `QMAH.Api`。根目錄 `.vscode/tasks.json` 也提供不依賴除錯器的 `dotnet run` 工作。
+VS Code 開啟 Repository 根目錄後，在 **Run and Debug** 選 `QMAH 使用者前台開發（API 後端＋Angular 前端）`。若只使用 Razor 前端管理後台，可直接執行 `QMAH.Web`；若只使用後端 API，可執行 `QMAH.Api`。根目錄 `.vscode/tasks.json` 也提供不依賴除錯器的 `dotnet run` 工作。
 
 不使用 IDE 時，開兩個終端機即可：
 
@@ -79,7 +79,7 @@ dotnet run --project .\QMAH.Api\QMAH.Api.csproj --launch-profile https
 dotnet run --project .\QMAH.Web\QMAH.Web.csproj --launch-profile https
 ```
 
-Angular 前台的啟動方式與 Node 相容版本見 [`12-frontend-start-guide.md`](12-frontend-start-guide.md)。
+Angular 前端使用者前台的啟動方式與 Node 相容版本見 [`12-frontend-start-guide.md`](12-frontend-start-guide.md)。
 
 網站啟動時不會建立資料庫、不會建表、不會塞測試資料，也不會套用 Migration。若缺少必要 Schema，請先確認是否已還原正確的 Release `.bak`，或完整執行 `database/QMAH.sql`。
 
@@ -149,7 +149,7 @@ dotnet restore QMAH.sln --locked-mode
 
 ## Visual Studio CRUD Scaffold
 
-單一資料表的後台 CRUD 可由 Visual Studio 產生起始碼：
+單一資料表的管理後台 CRUD 可由 Visual Studio 產生起始碼：
 
 1. 在目標 Area 的 `Controllers` 資料夾按右鍵。
 2. 選 **新增** → **新增 Scaffold 項目**。
@@ -267,7 +267,7 @@ dotnet tool restore
 - Visual Studio 使用正確工作負載與 .NET SDK。
 - SSMS 已還原 `QMAH`，六個 schema 都存在。
 - `QMAH.Web`、`QMAH.Api` 的 `https` 或 `http` 至少各有一種可以啟動。
-- API 能以明確 CORS 來源接受 Angular 前台請求。
+- 後端 API 能以明確 CORS 來源接受 Angular 前端使用者前台請求。
 - `QMAH.Client` 已以 `npm ci` 還原 Angular 21.2.22，且 `npm audit --audit-level=high` 沒有高風險漏洞。
 - 五個 Area 首頁可以開啟。
 - NuGet 沒有未還原警告。

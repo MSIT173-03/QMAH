@@ -1,6 +1,6 @@
-# Angular 前台開發起點
+# Angular 前端的使用者前台開發起點
 
-`QMAH.Client` 是前台的獨立 Angular 21.2.22 起始專案。目前已完成可編譯的 standalone 應用程式、Router、HttpClient、環境設定與 API proxy，後續功能可直接沿用這個分層起點。
+`QMAH.Client` 是期末使用者前台的獨立 Angular 21.2.22 前端開發入口。目前已完成可編譯的 standalone 應用程式、Router、HttpClient、環境設定與 API proxy，功能開發順序與資料串接方式集中整理在[期末前端使用者前台開發交接](20-final-frontend-handoff.md)。
 
 ## 固定版本
 
@@ -31,7 +31,7 @@ npm ci
 
 ## 啟動 API 與 Angular
 
-前台開發需要 API 主機。可在 Visual Studio 使用雙啟動設定，也可在 VS Code 根目錄的 **Run and Debug** 選擇 `QMAH 前台開發（API＋Angular）`。命令列方式如下：
+使用者前台開發需要後端 API 主機。可在 Visual Studio 使用雙啟動設定，也可在 VS Code 根目錄的 **Run and Debug** 選擇 `QMAH 使用者前台開發（API 後端＋Angular 前端）`。命令列方式如下：
 
 終端機一：
 
@@ -46,11 +46,11 @@ Set-Location .\QMAH.Client
 npm start
 ```
 
-瀏覽器網址為 `http://localhost:4200/`。`proxy.conf.json` 會把 `/api`、`/openapi` 與 `/scalar` 轉到 `https://localhost:7249`；前台程式使用 `/api/v1`，不要把 API 連接埠寫死在 component。
+瀏覽器網址為 `http://localhost:4200/`。`proxy.conf.json` 會把 `/api`、`/openapi` 與 `/scalar` 轉到後端 API `https://localhost:7249`；Angular 前端程式使用 `/api/v1`，不要把 API 連接埠寫死在 component。
 
-Razor 後台若要一起看，另行啟動 `QMAH.Web` 的 `https` 設定即可。三個主機共用同一個 SQL Server 資料庫，網站啟動不會自動建表或塞資料。
+Razor 前端管理後台若要一起看，另行啟動 `QMAH.Web` 的 `https` 設定即可。後端 API、Razor 前端管理後台與 Angular 前端共用同一個 SQL Server 資料庫，應用程式啟動不會自動建表或塞資料。
 
-## 建立第一個前台功能
+## 建立第一個使用者前台功能
 
 開始實作時依序處理：
 
@@ -61,11 +61,11 @@ Razor 後台若要一起看，另行啟動 `QMAH.Web` 的 `https` 設定即可�
 5. API 寫入前先取得 Anti-forgery Cookie，所有瀏覽器請求保留 Cookie credentials。
 6. 同時處理載入中、空資料、401／403、ValidationProblemDetails、網路錯誤與窄螢幕版面。
 
-`app.routes.ts` 是前台功能路由的集中入口；新增功能時依頁面責任建立 lazy loading 路由，並讓畫面資料來自 REST API 契約。
+`app.routes.ts` 是 Angular 前端使用者前台功能路由的集中入口；新增功能時依頁面責任建立 lazy loading 路由，並讓畫面資料來自後端 REST API 契約。
 
 ## Cookie 與 Anti-forgery
 
-API 使用 HttpOnly Cookie 保存登入狀態，不把密碼或自製 JWT 放在 localStorage。前台使用 `HttpClient` 時應保留 credentials；若直接呼叫 API origin，也要確認 CORS 來源在 API 設定中明確列出。
+API 使用 HttpOnly Cookie 保存登入狀態，不把密碼或自製 JWT 放在 localStorage。Angular 前端使用 `HttpClient` 時應保留 credentials；若直接呼叫 API origin，也要確認 CORS 來源在後端 API 設定中明確列出。
 
 第一次進行 POST、PUT 或 DELETE 前呼叫：
 

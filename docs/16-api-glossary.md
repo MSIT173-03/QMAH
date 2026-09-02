@@ -9,6 +9,19 @@
 3. 程式欄位名稱、路徑、允許值與 HTTP 方法保留原文；原文後補充其用途或資料意義。
 4. `summary` 保持短句；需要解釋的內容放在 `description`、參數說明或 Schema（資料欄位格式）中。
 
+## 後端、前端與前台／後台
+
+這四個詞分別描述技術層與使用情境，文件中不互相替代：
+
+| 詞 | 定義 | QMAH 對應 |
+| --- | --- | --- |
+| 後端（backend） | 在伺服器端執行 API、Service、驗證、資料存取與檔案處理的程式 | `QMAH.Api`、`QMAH.Infrastructure`，以及 `QMAH.Web` 的 Controller 與 Service |
+| 前端（frontend） | 與使用者瀏覽器互動的畫面、元件、樣式與瀏覽器端程式 | `QMAH.Client` 的 Angular，以及 `QMAH.Web` 的 Razor、HTML、CSS 與 JavaScript |
+| 前台（front office） | 一般訪客與會員使用的產品介面 | `QMAH.Client` Angular 前端所呈現的使用者前台 |
+| 後台（back office） | 管理員、內容編輯與營運人員使用的管理介面 | `QMAH.Web` Razor 前端所呈現的管理後台 |
+
+`QMAH.Web` 同時包含後端主機程式與 Razor 前端管理後台；`QMAH.Api` 是後端 API 主機；`QMAH.Client` 是前端使用者前台。啟動設定名稱若同時啟動多個主機，會直接標示 API 後端、Razor 管理後台與 Angular 使用者前台。
+
 ## 共通術語
 
 | 術語 | 文件中的統一寫法 | 說明 |

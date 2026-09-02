@@ -1,6 +1,6 @@
 # 架構與資料存取規則
 
-QMAH 是一個共用 SQL Server 與 Identity 的專題，包含 Razor 後台、獨立 REST API、Angular 前台骨架與資料處理工具。拆分的目的只是讓責任清楚、方便雙啟動，不是把同一份資料模型複製成多套。
+QMAH 是一個共用 SQL Server 與 Identity 的專題，包含後端共用層、Razor 前端管理後台、獨立 REST API、Angular 前端使用者前台與資料處理工具。拆分的目的是讓技術責任清楚、方便雙啟動，不是把同一份資料模型複製成多套。
 
 ## 目前的資料流
 
@@ -10,17 +10,17 @@ REST API ───┼─> QMAH.Infrastructure ─> QmahDbContext ─> SQL Server
 匯入工具 ──┘
 ```
 
-Angular 前台目前只有 CLI 產生的空骨架，之後透過 `QMAH.Api` 的 JSON 契約取資料。Razor 後台與 API 使用不同主機與連接埠，但必須指向同一個資料庫，不可各自建立 Entity、Identity 或第二套 Schema。
+Angular 前端使用者前台以 `QMAH.Client` 作為期末畫面開發入口，透過 `QMAH.Api` 後端 API 的 JSON 契約取資料。Razor 前端管理後台與 API 使用不同主機與連接埠，但必須指向同一個資料庫，不可各自建立 Entity、Identity 或第二套 Schema。
 
-## 專案責任
+## 專案責任與協作界線
 
-| 專案 | 責任 | 不放什麼 |
+| 專案 | 責任 | 協作界線 |
 | --- | --- | --- |
-| `QMAH.Infrastructure` | DB-first Entity、Identity Model、`QmahDbContext`、跨主機共用流程與匯入核心 | HTTP Controller、Razor View、Angular 元件 |
-| `QMAH.Web` | Tabler／Bootstrap Razor 後台、五個 Area、後台登入與管理操作 | API DTO、第二份 Entity、Angular 頁面 |
-| `QMAH.Api` | `/api/v1` REST Controller、DTO、ProblemDetails、Cookie 驗證與開發文件入口 | Razor View、前台頁面、第二個 DbContext |
-| `QMAH.Client` | Angular 21.2.22 前台骨架、路由與之後的 API 呼叫 | 目前不放任何功能頁面 |
-| `tools/QmahDataTools` | 產生、預檢、匯入與匯出資料；可重現且可在命令列驗證 | 網站啟動時自動執行、資料庫 Migration |
+| `QMAH.Infrastructure` | 後端共用的 DB-first Entity、Identity Model、`QmahDbContext`、跨主機流程與匯入核心 | 供 API 後端、Razor 後台主機與資料工具共用規則 |
+| `QMAH.Web` | ASP.NET Core 後端主機內的 Razor 前端管理後台、五個 Area、後台登入與管理操作 | 管理頁面使用自己的 ViewModel 與共用 Layout |
+| `QMAH.Api` | ASP.NET Core 後端主機、`/api/v1` REST Controller、DTO、ProblemDetails、Cookie 驗證與開發文件入口 | 供 Angular 前端使用者前台與其他 client 以 JSON 契約呼叫 |
+| `QMAH.Client` | Angular 21.2.22 前端使用者前台、路由、API 呼叫與畫面功能 | 透過 API DTO 取得資料，沿用共用驗證與媒體網址規則 |
+| `tools/QmahDataTools` | 產生、預檢、匯入與匯出資料；可重現且可在命令列驗證 | 供開發與資料整合流程建立可直接使用的資料庫 |
 
 ## 檔案放置
 
@@ -50,7 +50,7 @@ QMAH.Web/
 
 QMAH.Client/src/app/
 ├─ app.config.ts
-├─ app.routes.ts                     # 目前為空，尚未開始前台頁面
+├─ app.routes.ts                     # 前台功能路由集中入口
 └─ app.ts
 ```
 
@@ -66,7 +66,7 @@ Angular    ⇄ DTO            ⇄ QMAH.Api Controller ⇄ QmahDbContext
 ```
 
 - Razor ViewModel 只放該頁需要顯示或接收的欄位；表單不直接以 Entity 綁定。
-- API DTO 是前台可依賴的 JSON 契約，不回傳 `PasswordHash`、Token、內部玩家識別值或不必要的資料庫欄位。Angular 21.2.22 骨架已配置 `/api/v1` 相對路徑、Cookie credentials 與 `XSRF-TOKEN-API`／`X-XSRF-TOKEN` 對應；前台開始製作時直接沿用這個邊界。
+- API DTO 是前端使用者前台可依賴的 JSON 契約，不回傳 `PasswordHash`、Token、內部玩家識別值或不必要的資料庫欄位。Angular 21.2.22 開發入口已配置 `/api/v1` 相對路徑、Cookie credentials 與 `XSRF-TOKEN-API`／`X-XSRF-TOKEN` 對應；前端畫面開始製作時直接沿用這個邊界。
 - Controller 負責路由、授權、ModelState、ProblemDetails／頁面導向與輸入邊界。
 - `QmahDbContext` 由 DI 注入，每個 request 使用 scoped context；不要在 Action 內自行 `new` DbContext。
 - 避免建立只轉接一個屬性的 Wrapper、Generic Repository 或每張表一個 Service。EF Core 已提供查詢、追蹤與交易能力。
@@ -126,7 +126,7 @@ QMAH 不使用 EF Migration、不呼叫 `EnsureCreated()` 或 `Migrate()`。資�
 | --- | --- |
 | 單表後台清單／編輯 | Area Controller + ViewModel + `QmahDbContext` |
 | 跨表同步或交易 | 具體名稱的 Service + 一個明確交易範圍 |
-| 前台讀寫 JSON | `QMAH.Api` 的 resource Controller + DTO |
+| 前端使用者前台讀寫 JSON | `QMAH.Api` 的 resource Controller + DTO |
 | 文物批次資料 | 先用資料工具產生／預檢，再由後台或 CLI 套用 |
 | 尚未確定的未來需求 | 先保留清楚的資料欄位與 API 邊界，不先建立空模組 |
 
