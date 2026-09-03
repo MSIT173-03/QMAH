@@ -91,8 +91,8 @@ static partial class ArtifactPipeline
         var datasetStats = new List<DatasetRunStats>();
         var failures = new List<PipelineFailure>();
         var totalRequested = options.OfflineInput is null
-            ? options.Datasets.Sum(x => x.RequestedCount)
-            : 0;
+            ? options.Datasets.Sum(x => (long)x.RequestedCount)
+            : 0L;
         var completed = 0;
         var fatalFailure = false;
 
@@ -104,9 +104,9 @@ static partial class ArtifactPipeline
         {
             var offline = await OfflineInput.LoadAsync(options.OfflineInput, cancellationToken);
             // 離線模式是重整既有資料，不是重新套用線上抓取數量；進度總量要以實際輸入資料計算。
-            totalRequested = offline.Records.Count(record =>
+            totalRequested = offline.Records.LongCount(record =>
                 options.Datasets.Any(dataset => dataset.Matches(record)));
-            totalRequested = Math.Max(1, totalRequested);
+            totalRequested = Math.Max(1L, totalRequested);
             foreach (var dataset in options.Datasets)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -189,15 +189,20 @@ static partial class ArtifactPipeline
 
                     var sourceRows = JsonSerializer.Deserialize<List<NpmSourceRow>>(rawJson, JsonDefaults.Source)
                         ?? throw new InvalidDataException("來源 API 不是文物陣列格式。 ");
-                    var ranked = sourceRows
+                    var eligibleRows = sourceRows
                         .Where(IsQuestionReadySource)
-                        .OrderByDescending(CompletenessScore)
                         .ToList();
-                    var candidateCount = Math.Min(
-                        ranked.Count,
-                        dataset.RequestedCount + Math.Max(20, dataset.RequestedCount / 4));
-                    var candidates = SelectEraDiverse(ranked, candidateCount);
-                    Console.WriteLine($"SELECT|{dataset.Code}|source={sourceRows.Count}|candidates={candidates.Count}|requested={dataset.RequestedCount}");
+                    var candidateBuffer = Math.Max(20, dataset.RequestedCount / 4);
+                    var candidateCount = dataset.RequestedCount == 0
+                        ? 0
+                        : (int)Math.Min(
+                            (long)eligibleRows.Count,
+                            (long)dataset.RequestedCount + candidateBuffer);
+                    var orderedRows = OrderEligibleRows(eligibleRows, options.SelectionMode, options.Seed, dataset.Code);
+                    var candidates = options.SelectionMode == "sequential"
+                        ? orderedRows.Take(candidateCount).ToList()
+                        : SelectEraDiverse(orderedRows, candidateCount);
+                    Console.WriteLine($"SELECT|{dataset.Code}|mode={options.SelectionMode}|seed={options.Seed}|source={sourceRows.Count}|question-ready={eligibleRows.Count}|candidates={candidates.Count}|requested={dataset.RequestedCount}");
 
                     var processed = await ProcessOnlineRowsAsync(
                         dataset, candidates, dataset.RequestedCount, options, http, qualityRows, failures, cancellationToken);
@@ -495,7 +500,7 @@ static partial class ArtifactPipeline
     {
         return new
         {
-            requestedCount = options.Datasets.Sum(dataset => dataset.RequestedCount),
+            requestedCount = options.Datasets.Sum(dataset => (long)dataset.RequestedCount),
             sourceRowCount = datasetStats.Sum(dataset => dataset.SourceRowCount),
             selectedCount = datasetStats.Sum(dataset => dataset.SelectedCount),
             outputRecordCount = records.Count,
@@ -507,7 +512,7 @@ static partial class ArtifactPipeline
         };
     }
 
-    private static void WriteProgress(Dataset dataset, int completed, int total, int selected)
+    private static void WriteProgress(Dataset dataset, int completed, long total, int selected)
     {
         var percent = total <= 0 ? 100 : Math.Clamp((int)Math.Round(completed * 100d / total), 0, 100);
         Console.WriteLine($"PROGRESS|{dataset.Code}|{percent}|selected={selected}|completed={completed}|total={total}");
@@ -563,6 +568,39 @@ static partial class ArtifactPipeline
         return selected;
     }
 
+    private static IReadOnlyList<NpmSourceRow> OrderEligibleRows(
+        IReadOnlyList<NpmSourceRow> rows,
+        string selectionMode,
+        int seed,
+        string datasetCode) => selectionMode switch
+        {
+            "sequential" => rows
+                .OrderBy(row => SequentialIdentifierKey(row.Identifier).Prefix, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(row => SequentialIdentifierKey(row.Identifier).Number)
+                .ThenBy(row => SequentialIdentifierKey(row.Identifier).Original, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            "random" => rows
+                .OrderBy(row => StableNumber($"selection:{seed}:{datasetCode}:{row.Identifier}"))
+                .ThenBy(row => row.Identifier, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            _ => rows
+                .OrderByDescending(CompletenessScore)
+                .ThenBy(row => row.Identifier, StringComparer.OrdinalIgnoreCase)
+                .ToList()
+        };
+
+    private static (string Prefix, long Number, string Original) SequentialIdentifierKey(string identifier)
+    {
+        var match = Regex.Match(identifier.Trim(), @"^(.*?)(\d+)$");
+        if (!match.Success)
+            return (identifier.Trim(), long.MaxValue, identifier.Trim());
+
+        var number = long.TryParse(match.Groups[2].Value, out var parsed)
+            ? parsed
+            : long.MaxValue;
+        return (match.Groups[1].Value, number, identifier.Trim());
+    }
+
     private static IReadOnlyList<string> MissingFields(NpmSourceRow source, MediaPaths media)
     {
         var missing = new List<string>();
@@ -611,6 +649,15 @@ static partial class ArtifactPipeline
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"npm-artifact:{value.Trim()}"));
         return new Guid(bytes[..16]);
+    }
+
+    private static ulong StableNumber(string value)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
+        ulong result = 0;
+        for (var index = 0; index < 8; index++)
+            result = (result << 8) | bytes[index];
+        return result;
     }
 
     private static string NormalizeMediaPath(string? value, string mediaRoot)
@@ -969,6 +1016,8 @@ sealed record PipelineOptions(
     string MediaRoot,
     int PerDataset,
     IReadOnlyDictionary<string, int> Counts,
+    int Seed,
+    string SelectionMode,
     bool DownloadImages,
     string? OfflineInput,
     bool ShowHelp,
@@ -985,14 +1034,14 @@ sealed record PipelineOptions(
         new("CERAMIC", "陶瓷", "ceramics", "ceramic", true),
         new("JADE", "玉器", "jades", "jade", true),
         new("ENAMEL", "琺瑯器", "enamelWares", "enamel", true),
-        new("CARVING", "雕刻", "carvings", "carvings", true),
         new("LACQUER", "漆器", "lacquerWares", "lacquer", true),
         new("COIN", "錢幣", "coins", "coins", true),
+        new("CARVING", "雕刻", "carvings", "carvings", true),
+        new("PAINTING", "繪畫", "paintings", "painting", true),
         new("STUDIO_IMPLEMENT", "文具", "studioImplements", "studio-implements", false),
         new("MISCELLANEOUS", "雜項", "miscellaneousObjects", "miscellaneous", false),
         new("TEXTILE", "織品", "textiles", "textiles", false),
         new("EMBROIDERY", "絲繡", "tapestriesAndEmbroideries", "embroideries", false),
-        new("PAINTING", "繪畫", "paintings", "painting", true),
         new("CALLIGRAPHY", "法書", "calligraphicWorks", "calligraphy", false),
         new("CALLIGRAPHIC_MODEL", "法帖", "calligraphicModelBooks", "calligraphic-models", false),
         new("RUBBING", "拓片", "rubbings", "rubbings", false),
@@ -1022,13 +1071,15 @@ sealed record PipelineOptions(
           NpmArtifactPipeline.exe --offline --offline-input <既有 output 資料夾或 artifacts.import.json> --output <output>
 
         參數：
-          --per-dataset <0..300>       8 個期中正式類別的共同數量（預設 10；先少量驗證再增加）
-          --bronze/--ceramic/--jade/--enamel/--lacquer/--studio-implements/--miscellaneous/--embroideries/--painting/--calligraphy/--calligraphic-models/--coins/--textiles/--rubbings/--fans/--carvings <0..300>
+          --per-dataset <非負整數>      8 個期中正式類別的共同數量（預設 10；來源資料本身會形成實際上限）
+          --bronze/--ceramic/--jade/--enamel/--lacquer/--studio-implements/--miscellaneous/--embroideries/--painting/--calligraphy/--calligraphic-models/--coins/--textiles/--rubbings/--fans/--carvings <非負整數>
           --output <path>              輸出根目錄
           --media-root <path>          圖片實體根目錄
           --no-images                  不下載圖片，圖片欄位輸出空字串並列入 quality report
           --offline                    不連線，從既有匯入 JSON 重新輸出
           --offline-input <path>       離線輸入檔案或 output 資料夾
+          --selection-mode <diverse|random|sequential>  選取順序：欄位與年代多樣性、固定 seed 隨機、來源編號順序（預設 diverse）
+          --seed <非負整數>             random 模式使用的固定 seed（預設 173）
           --estimate-only              只讀取 16 個 API 陣列筆數，不寫入 output、不下載圖片
           --all-categories             另外包含 8 個保留來源類別；僅供人工資料審核，不改變正式分類
           --verify-era-rules            執行內建年代規則回歸案例，不連線、不寫入 output
@@ -1054,6 +1105,8 @@ sealed record PipelineOptions(
             Path.Combine(defaultOutputRoot, "current")));
         var mediaRoot = Path.GetFullPath(ReadString(args, "--media-root",
             Path.Combine(defaultOutputRoot, "media")));
+        var seed = ReadInt(args, "--seed", 173);
+        var selectionMode = NormalizeSelectionMode(ReadString(args, "--selection-mode", "diverse"));
         var readableFormat = NormalizeReadableFormat(ReadString(args, "--readable", "none"));
         var offlineValue = ReadOptionalString(args, "--offline-input");
         var offlineInput = offlineValue is null
@@ -1068,13 +1121,15 @@ sealed record PipelineOptions(
         }
 
         var estimateOnly = HasFlag(args, "--estimate-only");
-        return new PipelineOptions(output, mediaRoot, perDataset, counts, downloadImages, offlineInput, showHelp, readableFormat, estimateOnly, HasFlag(args, "--verify-era-rules"), HasFlag(args, "--all-categories"));
+        return new PipelineOptions(output, mediaRoot, perDataset, counts, seed, selectionMode, downloadImages, offlineInput, showHelp, readableFormat, estimateOnly, HasFlag(args, "--verify-era-rules"), HasFlag(args, "--all-categories"));
     }
 
     public object ToManifestParameters() => new
     {
         perDataset = PerDataset,
         counts = Counts.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase),
+        seed = Seed,
+        selectionMode = SelectionMode,
         outputDirectory = Path.GetFileName(Path.TrimEndingDirectorySeparator(OutputDirectory)),
         mediaRoot = Path.GetRelativePath(
             Path.GetDirectoryName(OutputDirectory) ?? Environment.CurrentDirectory,
@@ -1132,7 +1187,9 @@ sealed record PipelineOptions(
             if (index < 0) continue;
             if (index + 1 >= args.Length || !int.TryParse(args[index + 1], out var value))
                 throw new ArgumentException($"參數 {name} 需要整數。 ");
-            return Math.Clamp(value, 0, 300);
+            if (value < 0)
+                throw new ArgumentException($"參數 {names[0]} 不可為負數。");
+            return value;
         }
         return null;
     }
@@ -1154,6 +1211,14 @@ sealed record PipelineOptions(
         "html" => "html",
         "both" => "both",
         _ => "none"
+    };
+
+    private static string NormalizeSelectionMode(string value) => value.Trim().ToLowerInvariant() switch
+    {
+        "diverse" or "quality" => "diverse",
+        "random" or "shuffle" => "random",
+        "sequential" or "sequence" or "ordered" => "sequential",
+        _ => throw new ArgumentException("--selection-mode 必須是 diverse、random 或 sequential。")
     };
 
     private sealed record DatasetDefinition(string Code, string DisplayName, string ApiName, string FileName, bool IncludedInMidterm);

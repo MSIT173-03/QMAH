@@ -6,7 +6,7 @@
 
 ## 正式資料量與小量驗證
 
-目前參考資料包是 8 個分類、每類 32 件，共 256 件文物；題庫同步與商城商品也各有 256 筆。CLI 預設以完整基準量檢查：每類最多 32 件、商品最多 256 件。上限是篩選上限，不是資料庫硬限制；需要處理不同批次時可以明確指定參數。
+目前參考資料包是 8 個分類、每類 32 件，共 256 件文物；題庫同步與商城商品也各有 256 筆。這只是目前 Snapshot 的基準批次。CLI 預設沿用該批次的篩選量，但 `--artifact-per-category` 與 `--max-products` 接受正整數，實際可處理量由輸入 JSON 的資料筆數與品質檢查決定，沒有另外的固定件數上限。
 
 `--skip-products` 是刻意保留的小量文物／題庫驗證模式，不代表正式匯入只能處理少量資料。後台 UI 不設每類 32 件的 CLI 篩選，會依上傳資料包預檢後處理所有合格項目。
 
@@ -42,6 +42,22 @@ dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj 
   --skip-products `
   --artifact-per-category 1
 ```
+
+如果收集資料高於目前基準，匯入器的兩個篩選值需要依資料包實際筆數調整。以下以目前基準的參數格式示範；擴充資料時將數值換成預檢輸出所需的每類數量與商品總數：
+
+```powershell
+dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj -- `
+  --project C:\path\to\QMAH `
+  --artifacts C:\path\to\artifacts.import.json `
+  --products C:\path\to\products.import.json `
+  --media-root C:\path\to\QMAH\QMAH.Web\wwwroot\media `
+  --artifact-per-category 32 `
+  --max-products 256
+```
+
+`--artifact-per-category` 和 `--max-products` 的有效範圍是正 Int32；`--skip-products` 可只驗證文物與題庫。匯入器仍會執行 Schema、唯一鍵、圖片路徑、授權與題庫條件檢查，數量放寬不會跳過品質驗證。數量大於輸入資料可用量時，不會補造文物或商品。
+
+`NpmDataWorkbench` 的文物頁會即時計算 8 類的總目標；匯入頁的每類文物上限與商品上限則另外輸入，避免把來源收集量誤當成匯入量。來源可用資料不足或品質檢查未通過時，實際寫入量仍會低於設定值。
 
 ## 預檢與正式套用
 
@@ -82,7 +98,7 @@ dotnet run --project tools\QmahDataTools\NpmDataImporter\NpmDataImporter.csproj 
 ## 相關工具
 
 - `NpmArtifactPipeline`：抓取、整理、年代標準化、圖片下載與產出文物匯入包。
-- `ArtifactProductGenerator`：依既有文物產生 256 件展示商品資料；不覆蓋已存在的商品營運欄位。
+- `ArtifactProductGenerator`：依既有文物產生一對一展示商品資料；`--count all` 使用全部合格文物，不覆蓋已存在的商品營運欄位。
 - `NpmShopSampleCollector`：舊商城來源的相容性收集工具，不作為目前文物主檔與商品同步的必要步驟。
 
 各工具輸出放在工作區外或 `_工具輸出`；raw JSON、下載快取、帳密 CSV 或測試資產不提交到 Repository。

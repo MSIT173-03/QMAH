@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private readonly string _toolsRoot;
     private readonly string _sourceToolsRoot;
     private readonly ObservableCollection<ShopCategoryOption> _shopCategories = [];
+    private readonly Dictionary<string, int> _artifactSourceCounts = new(StringComparer.OrdinalIgnoreCase);
     private Process? _runningProcess;
     private CancellationTokenSource? _processCancellation;
 
@@ -43,12 +44,14 @@ public partial class MainWindow : Window
         ShopMaxPagesBox.Text = "3";
         ArtifactReadableBox.SelectedIndex = 0;
         ShopReadableBox.SelectedIndex = 0;
+        LoadDefaultArtifactPreset();
         ShopCategoriesList.ItemsSource = _shopCategories;
         LoadShopCategories();
         LoadCatalogStatus();
         AppendLog($"工作根目錄：{_toolsRoot}");
         AppendLog($"工具設定來源：{_sourceToolsRoot}");
         AppendLog("GUI 已就緒。建議先按「偵測 API 筆數」或「偵測所選分類商品量」。");
+        UpdateArtifactTargetTotal();
     }
 
     private void BrowseOutputButton_Click(object sender, RoutedEventArgs e) => BrowseFolder(OutputPathBox, "選擇文物輸出資料夾");
@@ -79,6 +82,8 @@ public partial class MainWindow : Window
     {
         try
         {
+            _artifactSourceCounts.Clear();
+            ArtifactSourceLimitText.Text = "正在取得八類來源筆數";
             var args = new List<string> { "--estimate-only" };
             await RunProcessAsync(CreateToolStartInfo(PipelinePathBox.Text, args), "文物 API 偵測");
         }
@@ -104,6 +109,8 @@ public partial class MainWindow : Window
                 "--coins", ReadCount(CoinsCountBox, "錢幣"),
                 "--output", Path.Combine(OutputPathBox.Text.Trim(), "current"),
                 "--media-root", MediaPathBox.Text.Trim(),
+                "--selection-mode", SelectedArtifactSelectionMode(),
+                "--seed", ReadNonNegativeInt(ArtifactSeedBox, "文物固定 seed", int.MaxValue),
                 "--readable", SelectedReadable(ArtifactReadableBox)
             };
             if (DownloadImagesCheckBox.IsChecked != true)
@@ -116,6 +123,132 @@ public partial class MainWindow : Window
             ShowWarning($"文物設定或啟動失敗：{ex.Message}");
         }
     }
+
+    private void ArtifactCountBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateArtifactTargetTotal();
+
+    private void LoadArtifactPresetButton_Click(object sender, RoutedEventArgs e) => LoadDefaultArtifactPreset(true);
+
+    private void LoadDefaultArtifactPreset(bool showWarningOnFailure = false)
+    {
+        try
+        {
+            var presetPath = Path.Combine(AppContext.BaseDirectory, "presets", "default-1-256.json");
+            if (!File.Exists(presetPath))
+                throw new FileNotFoundException("找不到預設檔", presetPath);
+
+            var preset = JsonSerializer.Deserialize<ArtifactWorkbenchPreset>(
+                File.ReadAllText(presetPath),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (preset is null)
+                throw new InvalidOperationException("預設檔內容為空。");
+
+            foreach (var input in ArtifactCountInputs())
+            {
+                if (!preset.ArtifactCounts.TryGetValue(input.Code, out var count) || count < 0)
+                    throw new InvalidOperationException($"預設檔缺少 {input.Code} 的非負整數目標。");
+                input.Box.Text = count.ToString();
+            }
+
+            SelectComboBoxTag(ArtifactSelectionModeBox, preset.SelectionMode, "選取模式");
+            if (preset.Seed < 0)
+                throw new InvalidOperationException("預設檔的 seed 不得為負數。");
+            ArtifactSeedBox.Text = preset.Seed.ToString();
+            SelectComboBoxTag(ArtifactReadableBox, preset.Readable, "人類可讀預覽格式");
+            DownloadImagesCheckBox.IsChecked = preset.DownloadImages;
+            if (preset.ImportArtifactPerCategory < 1 || preset.ImportMaxProducts < 1)
+                throw new InvalidOperationException("預設檔的匯入上限必須是正整數。");
+            ArtifactPerCategoryBox.Text = preset.ImportArtifactPerCategory.ToString();
+            MaxProductsBox.Text = preset.ImportMaxProducts.ToString();
+            ArtifactSourceLimitText.Text = $"已載入{preset.Name}：{ArtifactCountBoxes().Sum(box => int.Parse(box.Text)):N0} 件";
+            UpdateArtifactTargetTotal();
+
+            if (showWarningOnFailure)
+                AppendLog($"已載入{preset.Name}：{preset.Description}");
+        }
+        catch (Exception ex)
+        {
+            SetArtifactCounts(32);
+            ArtifactSelectionModeBox.SelectedIndex = 0;
+            ArtifactSeedBox.Text = "173";
+            ArtifactReadableBox.SelectedIndex = 0;
+            DownloadImagesCheckBox.IsChecked = true;
+            ArtifactPerCategoryBox.Text = "32";
+            MaxProductsBox.Text = "256";
+            ArtifactSourceLimitText.Text = "預設 1 無法載入，已使用內建 256 件基準";
+            if (showWarningOnFailure)
+                ShowWarning($"無法載入預設 1：{ex.Message}");
+        }
+    }
+
+    private static void SelectComboBoxTag(ComboBox comboBox, string tag, string label)
+    {
+        var item = comboBox.Items
+            .OfType<ComboBoxItem>()
+            .FirstOrDefault(candidate => string.Equals(candidate.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase));
+        if (item is null)
+            throw new InvalidOperationException($"{label}「{tag}」不存在。");
+        comboBox.SelectedItem = item;
+    }
+
+    private void SetArtifactBaselineButton_Click(object sender, RoutedEventArgs e) => SetArtifactCounts(32);
+
+    private void SetArtifactSourceLimitButton_Click(object sender, RoutedEventArgs e)
+    {
+        var inputs = ArtifactCountInputs().ToArray();
+        if (inputs.Any(input => !_artifactSourceCounts.ContainsKey(input.Code)))
+        {
+            ShowWarning("請先按「偵測 API 筆數」，取得八個正式分類的來源筆數。來源筆數是原始資料上限，最後可匯入筆數仍會受欄位、年代與圖片品質規則影響。");
+            return;
+        }
+
+        foreach (var input in inputs)
+            input.Box.Text = _artifactSourceCounts[input.Code].ToString();
+
+        ArtifactSourceLimitText.Text = "已套用最近一次偵測的八類原始筆數";
+        UpdateArtifactTargetTotal();
+    }
+
+    private void SetArtifactCounts(int count)
+    {
+        foreach (var box in ArtifactCountBoxes())
+            box.Text = count.ToString();
+        UpdateArtifactTargetTotal();
+    }
+
+    private void UpdateArtifactTargetTotal()
+    {
+        if (ArtifactTargetTotalText is null)
+            return;
+
+        var total = ArtifactCountBoxes()
+            .Select(box => int.TryParse(box.Text.Trim(), out var value) && value >= 0 ? (long)value : 0L)
+            .Sum();
+        ArtifactTargetTotalText.Text = $"{total:N0} 件";
+    }
+
+    private IEnumerable<(string Code, TextBox Box)> ArtifactCountInputs() =>
+    [
+        ("BRONZE", BronzeCountBox),
+        ("CERAMIC", CeramicCountBox),
+        ("JADE", JadeCountBox),
+        ("ENAMEL", EnamelCountBox),
+        ("LACQUER", LacquerCountBox),
+        ("COIN", CoinsCountBox),
+        ("CARVING", CarvingCountBox),
+        ("PAINTING", PaintingCountBox)
+    ];
+
+    private IEnumerable<TextBox> ArtifactCountBoxes() =>
+    [
+        BronzeCountBox,
+        CeramicCountBox,
+        JadeCountBox,
+        EnamelCountBox,
+        LacquerCountBox,
+        CoinsCountBox,
+        CarvingCountBox,
+        PaintingCountBox
+    ];
 
     private async void VerifyEraRulesButton_Click(object sender, RoutedEventArgs e)
     {
@@ -181,8 +314,8 @@ public partial class MainWindow : Window
             "--artifacts", artifacts,
             "--products", products,
             "--media-root", media,
-            "--artifact-per-category", "32",
-            "--max-products", "256"
+            "--artifact-per-category", ReadBoundedInt(ArtifactPerCategoryBox, "每類文物匯入上限", 1, int.MaxValue),
+            "--max-products", ReadBoundedInt(MaxProductsBox, "商品匯入上限", 1, int.MaxValue)
         };
         if (apply)
         {
@@ -381,9 +514,17 @@ public partial class MainWindow : Window
         if (total.Success && int.TryParse(total.Groups[1].Value, out var count))
         {
             if (line.Contains("|ARTIFACT|", StringComparison.Ordinal))
-                ArtifactEstimateText.Text = $"API 合計 {count:N0} 筆";
+                ArtifactEstimateText.Text = $"API 原始資料合計 {count:N0} 筆";
             else
                 ShopEstimateText.Text = $"所選分類約 {count:N0} 個商品連結";
+        }
+
+        var datasetEstimate = Regex.Match(line, @"^ESTIMATE\|(?<code>[^|]+)\|available=(?<count>\d+)\|");
+        if (datasetEstimate.Success
+            && int.TryParse(datasetEstimate.Groups["count"].Value, out var available))
+        {
+            _artifactSourceCounts[datasetEstimate.Groups["code"].Value] = available;
+            ArtifactSourceLimitText.Text = $"已取得 {_artifactSourceCounts.Count}/8 類來源筆數";
         }
 
         var approval = Regex.Match(line, @"^APPROVAL_TOKEN\|([A-Fa-f0-9]+)$");
@@ -624,8 +765,15 @@ public partial class MainWindow : Window
 
     private static string ReadCount(TextBox box, string label)
     {
-        if (!int.TryParse(box.Text.Trim(), out var value) || value is < 0 or > 300)
-            throw new InvalidOperationException($"{label}數量必須是 0 到 300 的整數。");
+        if (!int.TryParse(box.Text.Trim(), out var value) || value < 0)
+            throw new InvalidOperationException($"{label}數量必須是 0 到 {int.MaxValue:N0} 的整數；實際可處理數量由來源資料筆數決定。");
+        return value.ToString();
+    }
+
+    private static string ReadBoundedInt(TextBox box, string label, int minimum, int maximum)
+    {
+        if (!int.TryParse(box.Text.Trim(), out var value) || value < minimum || value > maximum)
+            throw new InvalidOperationException($"{label}必須是 {minimum:N0} 到 {maximum:N0} 的整數。");
         return value.ToString();
     }
 
@@ -657,6 +805,9 @@ public partial class MainWindow : Window
 
     private static string SelectedReadable(ComboBox combo) =>
         (combo.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "none";
+
+    private string SelectedArtifactSelectionMode() =>
+        (ArtifactSelectionModeBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "diverse";
 
     private static void AddOptional(List<string> args, string name, string value)
     {

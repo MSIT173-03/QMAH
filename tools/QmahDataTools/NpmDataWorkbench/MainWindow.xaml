@@ -44,41 +44,50 @@
                     <StackPanel>
                         <GroupBox Header="文物擷取條件">
                             <StackPanel>
-                                <TextBlock Text="每類數量（0 表示略過；來源共 16 類，本期中固定採用 8 類可看圖猜測的文物）" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                <TextBlock Text="每類目標數量（0 表示略過；來源共 16 類，本期中固定採用 8 類可看圖辨識的文物）" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8" />
                                 <UniformGrid Columns="5" Rows="2" Margin="0,0,0,12">
                                     <StackPanel Margin="0,0,12,8">
                                         <TextBlock Text="銅器（BRONZE）" />
-                                        <TextBox x:Name="BronzeCountBox" Text="10" />
+                                        <TextBox x:Name="BronzeCountBox" Text="32" TextChanged="ArtifactCountBox_TextChanged" />
                                     </StackPanel>
                                     <StackPanel Margin="0,0,12,8">
                                         <TextBlock Text="陶瓷（CERAMIC）" />
-                                        <TextBox x:Name="CeramicCountBox" Text="10" />
+                                        <TextBox x:Name="CeramicCountBox" Text="32" TextChanged="ArtifactCountBox_TextChanged" />
                                     </StackPanel>
                                     <StackPanel Margin="0,0,12,8">
                                         <TextBlock Text="玉器（JADE）" />
-                                        <TextBox x:Name="JadeCountBox" Text="10" />
+                                        <TextBox x:Name="JadeCountBox" Text="32" TextChanged="ArtifactCountBox_TextChanged" />
                                     </StackPanel>
                                     <StackPanel Margin="0,0,12,8">
                                         <TextBlock Text="琺瑯器（ENAMEL）" />
-                                        <TextBox x:Name="EnamelCountBox" Text="10" />
+                                        <TextBox x:Name="EnamelCountBox" Text="32" TextChanged="ArtifactCountBox_TextChanged" />
                                     </StackPanel>
                                     <StackPanel Margin="0,0,12,8">
                                         <TextBlock Text="漆器（LACQUER）" />
-                                        <TextBox x:Name="LacquerCountBox" Text="10" />
+                                        <TextBox x:Name="LacquerCountBox" Text="32" TextChanged="ArtifactCountBox_TextChanged" />
                                     </StackPanel>
                                     <StackPanel Margin="0,0,12,0">
                                         <TextBlock Text="錢幣（COIN）" />
-                                        <TextBox x:Name="CoinsCountBox" Text="10" />
+                                        <TextBox x:Name="CoinsCountBox" Text="32" TextChanged="ArtifactCountBox_TextChanged" />
                                     </StackPanel>
                                     <StackPanel Margin="0,0,12,0">
                                         <TextBlock Text="雕刻（CARVING）" />
-                                        <TextBox x:Name="CarvingCountBox" Text="10" />
+                                        <TextBox x:Name="CarvingCountBox" Text="32" TextChanged="ArtifactCountBox_TextChanged" />
                                     </StackPanel>
                                     <StackPanel Margin="0,0,12,0">
                                         <TextBlock Text="繪畫（PAINTING）" />
-                                        <TextBox x:Name="PaintingCountBox" Text="10" />
+                                        <TextBox x:Name="PaintingCountBox" Text="32" TextChanged="ArtifactCountBox_TextChanged" />
                                     </StackPanel>
                                 </UniformGrid>
+                                <WrapPanel Margin="0,0,0,12">
+                                    <TextBlock Text="目前總目標" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ArtifactTargetTotalText" Text="256 件" Margin="8,0,14,0" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+                                    <TextBlock Text="256 件是目前參考資料包基準，不是來源上限；先按「偵測 API 筆數」，再可套用八類各自的原始資料筆數。" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                    <Button Content="載入預設 1" Click="LoadArtifactPresetButton_Click" ToolTip="載入版本控制中的 256 件預設；不含路徑、帳密或其他機密資料。" />
+                                    <Button Content="套用 256 件基準" Click="SetArtifactBaselineButton_Click" />
+                                    <Button Content="套用來源可用上限" Click="SetArtifactSourceLimitButton_Click" />
+                                    <TextBlock x:Name="ArtifactSourceLimitText" Text="尚未偵測來源筆數" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                </WrapPanel>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -87,6 +96,7 @@
                                         <ColumnDefinition Width="96" />
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
@@ -113,9 +123,19 @@
                                     <TextBlock Grid.Row="4" Text="離線重整輸入（選填）" FontWeight="SemiBold" />
                                     <TextBox Grid.Row="4" Grid.Column="1" x:Name="ArtifactOfflineInputBox" ToolTip="既有 artifacts.import.json 或 output 資料夾；不連線，重新套用最新年代規則。" />
                                     <Button Grid.Row="4" Grid.Column="2" Content="選擇檔案" Click="BrowseArtifactOfflineInputButton_Click" />
+                                    <TextBlock Grid.Row="5" Text="選取模式／seed" FontWeight="SemiBold" />
+                                    <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                                        <ComboBox x:Name="ArtifactSelectionModeBox" Width="210" SelectedIndex="0">
+                                            <ComboBoxItem Content="多樣性優先（預設）" Tag="diverse" />
+                                            <ComboBoxItem Content="固定 seed 隨機" Tag="random" />
+                                            <ComboBoxItem Content="來源編號順序" Tag="sequential" />
+                                        </ComboBox>
+                                        <TextBlock Text="固定 seed" VerticalAlignment="Center" Margin="16,0,8,0" />
+                                        <TextBox x:Name="ArtifactSeedBox" Text="173" Width="110" />
+                                    </StackPanel>
                                 </Grid>
                                 <Border Margin="0,10,0,0" Padding="12,10" Background="{StaticResource AccentLightBrush}" CornerRadius="7">
-                                    <TextBlock Text="預設輸出為工具根目錄 output\current；圖片為 output\media。估算只呼叫 API、只寫日誌，不建立任何 output。"
+                                    <TextBlock Text="預設輸出為工具根目錄 output\current；圖片為 output\media。多樣性優先先依欄位完整度排序，再輪替年代；固定 seed 隨機可重現同一批次；來源編號順序適合觀察連續編號資料。估算只呼叫 API、只寫日誌，不建立任何 output。"
                                                Foreground="{StaticResource NavyBrush}" TextWrapping="Wrap" />
                                 </Border>
                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
@@ -168,6 +188,7 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <TextBlock Grid.Row="0" Text="Importer 專案／執行檔" FontWeight="SemiBold" />
                                     <TextBox Grid.Row="0" Grid.Column="1" x:Name="ImporterPathBox" />
@@ -183,7 +204,13 @@
                                     <Button Grid.Row="3" Grid.Column="2" Content="選擇檔案" Click="BrowseProductImportButton_Click" />
                                     <TextBlock Grid.Row="4" Text="確認碼" FontWeight="SemiBold" />
                                     <TextBox Grid.Row="4" Grid.Column="1" x:Name="ImportApprovalTokenBox" ToolTip="按預檢後會自動帶入；資料內容改變就必須重新預檢。" />
-                                    <TextBlock Grid.Row="5" Grid.Column="1" Text="參考資料量：8 類文物各 32 筆、商品最多 256 筆；既有 ExternalRef／ArtifactRef 只會略過，不會覆寫。" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Grid.Row="5" Text="匯入篩選上限" FontWeight="SemiBold" />
+                                    <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                                        <TextBox x:Name="ArtifactPerCategoryBox" Text="32" Width="120" HorizontalContentAlignment="Right" />
+                                        <TextBlock Text="每類文物；商品上限" Margin="12,0,8,0" VerticalAlignment="Center" />
+                                        <TextBox x:Name="MaxProductsBox" Text="256" Width="120" HorizontalContentAlignment="Right" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Row="6" Grid.Column="1" Text="256 件是目前參考資料包基準，不是來源抓取上限；匯入上限可設為來源實際筆數。既有 ExternalRef／ArtifactRef 只會略過，不會覆寫。" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
                                 </Grid>
                                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                                     <Button x:Name="PrecheckImportButton" Content="預檢資料與重複項目" MinWidth="170" Click="PrecheckImportButton_Click" />

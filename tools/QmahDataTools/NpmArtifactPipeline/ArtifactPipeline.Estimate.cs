@@ -21,7 +21,8 @@ static partial class ArtifactPipeline
             {
                 var rawJson = await http.GetStringAsync($"{apiRoot}/{dataset.ApiName}.json", cancellationToken);
                 var rows = JsonSerializer.Deserialize<List<NpmSourceRow>>(rawJson, JsonDefaults.Source) ?? [];
-                Console.WriteLine($"ESTIMATE|{dataset.Code}|available={rows.Count}|api={dataset.ApiName}");
+                var questionReady = rows.Count(IsQuestionReadySource);
+                Console.WriteLine($"ESTIMATE|{dataset.Code}|available={rows.Count}|question-ready={questionReady}|api={dataset.ApiName}");
                 estimates.Add((dataset.Code, rows.Count));
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

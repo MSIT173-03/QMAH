@@ -31,7 +31,36 @@
 
 後續資料量增加到 2～3 倍時，只替換同一類中的單筆資料，不改分類代碼。
 
-8 類各 32 筆是匯入最低門檻。正式展示可再擴充到每類 40 筆以上，總量自然由 256 筆往上增加。
+8 類各 32 筆是目前參考資料包的基準，不是抓取上限。每類目標數量可設為非負 Int32；來源 API 的原始筆數與通過欄位、圖片、年代規則的候選筆數，才是本次收集的實際上限。先執行 `--estimate-only`，再依輸出的 `available`（原始筆數）與 `question-ready`（初步可出題候選）決定各類目標。
+
+## 可達上限與實際產量
+
+工具的數量欄位沒有再加固定件數封頂；256 只代表目前 Snapshot 的參考批次。可達上限要分三層看：
+
+| 層級 | 工具可接受的範圍 | 實際限制 |
+| --- | ---: | --- |
+| 每類收集目標 | `0`～`2,147,483,647`（非負 Int32） | `0` 代表略過；API 原始資料與連線、節流、磁碟空間會先成為實際限制 |
+| `available` | 每次 `--estimate-only` 回應的來源原始筆數 | 只代表該次 API 可見的原始資料量，會隨來源更新而變動 |
+| `question-ready` | 每次估算後通過初步欄位、圖片與年代規則的候選筆數 | 不會大於 `available`；缺欄位、缺圖、年代無法自動判讀或品質不合格時會減少 |
+| 最終輸出 | 不超過各類目標與可用候選 | 圖片下載失敗、授權標示、重複檢查與完整匯入預檢仍可能使數量低於目標 |
+
+本次驗證於 2026-09-03 取得的來源觀測值如下，僅代表該次 API 回應：
+
+| 分類 | `available` 原始筆數 | `question-ready` 初步候選 |
+| --- | ---: | ---: |
+| BRONZE | 6,238 | 1,355 |
+| CERAMIC | 25,631 | 9,563 |
+| JADE | 13,501 | 1,153 |
+| ENAMEL | 2,523 | 1,120 |
+| LACQUER | 764 | 157 |
+| COIN | 6,953 | 5,081 |
+| CARVING | 670 | 159 |
+| PAINTING | 18,142 | 419 |
+| 合計 | 74,422 | 19,007 |
+
+資料來源會變動；再次建立資料包前仍須重新執行 `--estimate-only`，不可把上表數字視為永久上限。
+
+因此「抓到來源上限」只應理解為把目標設成最近一次估算的 `available`；若需求是建立可直接出題的資料包，應以 `question-ready` 和 `quality-report.json` 為依據。`--all-categories` 會另外處理 8 個保留來源類別，不會改變正式 8 類的分類契約。
 
 ## 常用指令
 
@@ -40,13 +69,38 @@
 .\NpmArtifactPipeline.exe --estimate-only
 .\NpmArtifactPipeline.exe --per-dataset 1 --output .\output\smoke --media-root .\output\media
 .\NpmArtifactPipeline.exe --bronze 32 --ceramic 32 --jade 32 --enamel 32 --lacquer 32 --coins 32 --carvings 32 --painting 32 --output .\output\current --media-root .\output\media
+.\NpmArtifactPipeline.exe --per-dataset 64 --selection-mode random --seed 173 --readable both --output .\output\random --media-root .\output\media
+.\NpmArtifactPipeline.exe --per-dataset 64 --selection-mode sequential --output .\output\sequential --media-root .\output\media
 ```
 
 `--estimate-only` 只讀取 16 個 API 陣列筆數，不建立 output、不下載圖片。若預設連線路徑逾時，工具會使用 IPv4 連線；仍失敗時查看 `ESTIMATE_FAILED`，不以其他分類填補數量。
 
 指定單類數量時，參數名使用資料集檔名：`--bronze`、`--ceramic`、`--jade`、`--enamel`、`--lacquer`、`--coins`、`--carvings`、`--painting`。
 
+## 取樣模式
+
+| 模式 | 選取方式 | 可重現性與適用情境 |
+| --- | --- | --- |
+| `diverse`（預設） | 先按必要欄位完整度排序，再以年代桶輪流取樣 | 結果穩定，適合建立一般參考資料包 |
+| `random` | 以 `seed + 分類代碼 + 來源編號` 產生穩定排序，再以年代桶輪流取樣 | 相同 seed 會得到相同順序；更換 seed 可取得不同樣本，適合比較多樣性 |
+| `sequential` | 依來源編號的前綴與尾端數字排序 | 方便檢查編號連續性；缺欄位、缺圖或年代需人工確認的資料仍會被排除 |
+
+`random` 不是每次執行都變動的不可追查亂數；seed 會寫入 `manifest.json`。`sequential` 也不保證最後輸出編號完全連續，因為品質規則和圖片下載失敗會造成缺號。收集時會先準備略多於目標量的候選，讓下載失敗時仍有機會達到目標，但不會突破來源與品質可用量。
+
 `--per-dataset` 只會套用到正式 8 類；`--all-categories` 另輸出 8 個保留來源類別，僅供人工審核。
+
+每類也可以單獨指定，個別參數會覆蓋 `--per-dataset`：
+
+```powershell
+.\NpmArtifactPipeline.exe --per-dataset 32 `
+  --ceramic 80 `
+  --jade 64 `
+  --painting 48 `
+  --output .\output\custom `
+  --media-root .\output\media
+```
+
+GUI 的「文物資料」頁提供相同的 8 個數量欄位，並以「目前總目標」顯示合計。「套用 256 件基準」只代表目前 Snapshot 的參考批次；「套用來源可用上限」會把最近一次估算的八類 `available` 原始筆數填入欄位。線上收集仍應先執行 `--estimate-only`，再依品質報告和圖片下載結果調整目標量。
 
 ## 來源與品質規則
 

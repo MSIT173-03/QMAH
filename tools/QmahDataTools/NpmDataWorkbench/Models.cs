@@ -3,6 +3,19 @@ using System.Runtime.CompilerServices;
 
 namespace NpmDataWorkbench;
 
+public sealed class ArtifactWorkbenchPreset
+{
+    public string Name { get; init; } = "預設 1";
+    public string Description { get; init; } = "八類各 32 件的 256 件參考資料包設定。";
+    public Dictionary<string, int> ArtifactCounts { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+    public string SelectionMode { get; init; } = "diverse";
+    public int Seed { get; init; } = 173;
+    public string Readable { get; init; } = "none";
+    public bool DownloadImages { get; init; } = true;
+    public int ImportArtifactPerCategory { get; init; } = 32;
+    public int ImportMaxProducts { get; init; } = 256;
+}
+
 public sealed class ShopCategoryOption : INotifyPropertyChanged
 {
     private bool _isSelected;

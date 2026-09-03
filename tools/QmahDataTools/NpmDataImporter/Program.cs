@@ -85,7 +85,7 @@ sealed record ImportOptions(
     bool Help)
 {
     public static string HelpText =>
-        "NpmDataImporter --project <QMAH root|QMAH.Web> --artifacts <json> --media-root <wwwroot\\media> [--products <json>] [--artifact-per-category 32] [--max-products 256 | --skip-products] [--no-question-bank] [--apply --approve <預檢確認碼>]";
+        "NpmDataImporter --project <QMAH root|QMAH.Web> --artifacts <json> --media-root <wwwroot\\media> [--products <json>] [--artifact-per-category <正整數>] [--max-products <正整數> | --skip-products] [--no-question-bank] [--apply --approve <預檢確認碼>]";
 
     public static ImportOptions Parse(string[] arguments)
     {
@@ -107,7 +107,7 @@ sealed record ImportOptions(
 
         static int Number(string value, int fallback) =>
             int.TryParse(value, out var parsed) && parsed >= 1
-                ? Math.Min(parsed, 1000)
+                ? parsed
                 : fallback;
 
         var project = Value("--project", "--qmah-root");

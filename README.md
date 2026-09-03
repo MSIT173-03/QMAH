@@ -307,7 +307,7 @@ Angular 不直接連資料庫，也不依賴管理後台的 ViewModel；前台�
 - [文件入口](docs/README.md)
 - [貢獻與協作規則](CONTRIBUTING.md)
 - [資料工具入口](tools/QmahDataTools/README.md)
-- [QmahDatabaseRelease 工具說明](tools/QmahDataTools/QmahDatabaseRelease/README.md)
+- [QMAH-Database 測試資料工具與 Snapshot](https://github.com/MSIT173-03/QMAH-Database/tree/main/tools/QmahDataTools)
 - [QMAH-Docs 官方參考索引](https://msit173-03.github.io/QMAH-Docs/reference/official-references.html)
 
 ## Repository 結構
@@ -331,7 +331,7 @@ QMAH/
 │  ├─ Schema.sql                   DB-first 結構契約
 │  └─ VERSION                      相容 Snapshot tag
 ├─ docs/README.md                  文件 Repository 路標
-├─ tools/QmahDataTools/            可重現的資料處理工具
+├─ tools/QmahDataTools/            共用的文物／商城資料處理工具
 ├─ CONTRIBUTING.md                 協作規則
 └─ README.md
 ```
