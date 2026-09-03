@@ -87,7 +87,7 @@ Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前�
 
 ### 2. 建立本機 QMAH 資料庫
 
-目前相容的完整 Snapshot 是 QMAH-Database tag `db-v0.7.0` 的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.7.0/QMAH.sql)。
+目前相容的完整 Snapshot 是 [QMAH-Database db-v0.7.0 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.7.0) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.7.0/QMAH.sql)。
 
 也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.7.0/QMAH.sql)。
 
@@ -95,7 +95,7 @@ Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前�
 
 若另有同一版本且已驗證的 `.bak`，可以在 SSMS 使用 **Restore Database...** 還原。
 
-QMAH 主 Repository 的 Release 目前只保留版本導覽，不再提供 SQL／BAK 資產。完整的還原資料、資料表數量、狀態值與展示資料規則見 [QMAH-Docs 開發資料文件](https://msit173-03.github.io/QMAH-Docs/getting-started/development-data.html)。
+QMAH 主 Repository 的 Release 目前只保留版本導覽，不再提供 SQL／BAK 資產；下載請使用上述 QMAH-Database Release。完整的還原資料、資料表數量、狀態值與展示資料規則見 [QMAH-Docs 開發資料文件](https://msit173-03.github.io/QMAH-Docs/getting-started/development-data.html)。
 
 不需先執行 `database/Schema.sql`、Migration、Patch 或 Seed。網站啟動時不會建立資料庫、建表、覆寫資料或套用 Migration；完整 Snapshot 已包含目前共同資料。
 
