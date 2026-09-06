@@ -26,6 +26,8 @@ public sealed class KeyTransactionsController(QmahDbContext db) : Controller
             join profile in db.UserProfiles.AsNoTracking() on tx.UserId equals profile.UserId into profiles
             from profile in profiles.DefaultIfEmpty()
             join key in db.KeyDefinitions.AsNoTracking() on tx.KeyDefinitionId equals key.Id
+            join admin in db.Users.AsNoTracking() on tx.CreatedByAdminUserId equals (Guid?)admin.Id into admins
+            from admin in admins.DefaultIfEmpty()
             select new KeyTransactionListItemViewModel
             {
                 Id = tx.Id,
@@ -37,17 +39,22 @@ public sealed class KeyTransactionsController(QmahDbContext db) : Controller
                 Delta = tx.Amount,
                 Reason = tx.Reason,
                 ReferenceType = tx.ReferenceType ?? string.Empty,
+                AdminUserId = tx.CreatedByAdminUserId,
+                AdminEmail = admin != null ? admin.Email ?? string.Empty : string.Empty,
                 CreatedAt = tx.CreatedAt
             };
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
+            var hasAdminUserId = Guid.TryParse(keyword, out var adminUserId);
             query = query.Where(x =>
                 x.MemberName.Contains(keyword) ||
                 x.Email.Contains(keyword) ||
                 x.KeyName.Contains(keyword) ||
                 x.KeyCode.Contains(keyword) ||
-                x.Reason.Contains(keyword));
+                x.Reason.Contains(keyword) ||
+                x.AdminEmail.Contains(keyword) ||
+                (hasAdminUserId && x.AdminUserId == adminUserId));
         }
 
         if (direction == "increase")

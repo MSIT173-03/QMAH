@@ -283,6 +283,7 @@ BEGIN TRANSACTION;
         [Reason] nvarchar(40) NOT NULL,
         [ReferenceType] nvarchar(40) NULL,
         [ReferenceId] uniqueidentifier NULL,
+        [CreatedByAdminUserId] uniqueidentifier NULL,
         [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_PointTransactions_Created] DEFAULT ((sysutcdatetime())),
         CONSTRAINT [PK_PointTransactions] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_PointTransactions_Amount] CHECK (([Amount]<>(0)))
@@ -1023,6 +1024,9 @@ BEGIN TRANSACTION;
     ALTER TABLE [catalog].[KeyTransactions] ADD CONSTRAINT [FK_KeyTransactions_User]
         FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id]);
 
+    ALTER TABLE [catalog].[KeyTransactions] ADD CONSTRAINT [FK_KeyTransactions_AdminUser]
+        FOREIGN KEY ([CreatedByAdminUserId]) REFERENCES [user].[AspNetUsers] ([Id]);
+
     ALTER TABLE [catalog].[UserKeyBalances] ADD CONSTRAINT [FK_UserKeyBalances_User]
         FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id]);
 
@@ -1186,6 +1190,8 @@ BEGIN TRANSACTION;
     CREATE INDEX [IX_KeyTransactions_KeyDefinitionId] ON [catalog].[KeyTransactions] ([KeyDefinitionId]);
 
     CREATE INDEX [IX_KeyTransactions_User] ON [catalog].[KeyTransactions] ([UserId], [CreatedAt] DESC);
+
+    CREATE INDEX [IX_KeyTransactions_AdminUser] ON [catalog].[KeyTransactions] ([CreatedByAdminUserId], [CreatedAt] DESC);
 
     CREATE INDEX [IX_OfficialAnnouncements_CreatedByUserId] ON [social].[OfficialAnnouncements] ([CreatedByUserId]);
 

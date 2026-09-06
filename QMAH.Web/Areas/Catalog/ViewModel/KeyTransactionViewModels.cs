@@ -11,5 +11,7 @@ public sealed class KeyTransactionListItemViewModel
     public int Delta { get; init; }
     public string Reason { get; init; } = string.Empty;
     public string ReferenceType { get; init; } = string.Empty;
+    public Guid? AdminUserId { get; init; }
+    public string AdminEmail { get; init; } = string.Empty;
     public DateTime CreatedAt { get; init; }
 }

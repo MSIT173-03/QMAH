@@ -19,6 +19,7 @@ public partial class ApplicationUser
     public ICollection<CommunityRewardCampaign> OwnedRewardCampaigns { get; } = [];
     public ICollection<GamePlayer> GamePlayers { get; } = [];
     public ICollection<KeyTransaction> KeyTransactions { get; } = [];
+    public ICollection<KeyTransaction> CreatedKeyTransactions { get; } = [];
     public ICollection<OfficialAnnouncement> OfficialAnnouncements { get; } = [];
     public PointBalance? PointBalance { get; set; }
     public ICollection<PointTransaction> PointTransactions { get; } = [];

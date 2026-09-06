@@ -80,13 +80,14 @@
                     <th>異動</th>
                     <th>原因</th>
                     <th>類型</th>
+                    <th>操作者</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <div class="empty qmah-empty-state">
                                 <div class="empty-icon"><i class="ti ti-receipt-off"></i></div>
                                 <p class="empty-title">目前沒有符合條件的紀錄</p>
@@ -124,6 +125,17 @@
                             </td>
                             <td>@AdminCodeLabels.KeyTransactionReason(item.Reason)</td>
                             <td><span class="badge bg-secondary-lt">@AdminCodeLabels.ReferenceType(item.ReferenceType)</span></td>
+                            <td>
+                                @if (item.AdminUserId.HasValue)
+                                {
+                                    <div class="fw-semibold">@(string.IsNullOrWhiteSpace(item.AdminEmail) ? "管理員" : item.AdminEmail)</div>
+                                    <code>@item.AdminUserId</code>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">系統</span>
+                                }
+                            </td>
                         </tr>
                     }
                 }

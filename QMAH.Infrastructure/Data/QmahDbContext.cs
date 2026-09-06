@@ -865,6 +865,7 @@ public partial class QmahDbContext
             entity.ToTable("KeyTransactions", "catalog");
 
             entity.HasIndex(e => new { e.UserId, e.CreatedAt }, "IX_KeyTransactions_User").IsDescending(false, true);
+            entity.HasIndex(e => new { e.CreatedByAdminUserId, e.CreatedAt }, "IX_KeyTransactions_AdminUser").IsDescending(false, true);
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt)
@@ -882,6 +883,11 @@ public partial class QmahDbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_KeyTransactions_User");
+
+            entity.HasOne(d => d.CreatedByAdminUser).WithMany(p => p.CreatedKeyTransactions)
+                .HasForeignKey(d => d.CreatedByAdminUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_KeyTransactions_AdminUser");
         });
 
         modelBuilder.Entity<KeyProgressBalance>(entity =>

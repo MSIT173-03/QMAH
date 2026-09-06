@@ -4,12 +4,14 @@ using DocumentFormat.OpenXml.Vml.Spreadsheet;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Catalog.ViewModel;
 using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
@@ -21,11 +23,16 @@ public class KeyBackPackController : Controller
 {
     private readonly QmahDbContext _db;
     private readonly EconomyService _economyService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public KeyBackPackController(QmahDbContext db, EconomyService economyService)
+    public KeyBackPackController(
+        QmahDbContext db,
+        EconomyService economyService,
+        UserManager<ApplicationUser> userManager)
     {
         _db = db;
         _economyService = economyService;
+        _userManager = userManager;
     }
 
     public async Task<ActionResult> Index(
@@ -165,7 +172,12 @@ public class KeyBackPackController : Controller
             return View(model);
         }
 
+        var admin = await _userManager.GetUserAsync(User);
+        if (admin is null)
+            return Forbid();
+
         var result = await _economyService.AdjustKeysAsync(
+            admin.Id,
             model.UserId,
             model.KeyDefinitionId,
             model.Amount,
