@@ -3,40 +3,47 @@
 <div class="row row-cards mb-3">
     <div class="col-12 col-sm-6 col-xl-2">
         <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="members" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看會員成長明細">
-            <div class="card-body"><div class="text-secondary">期末會員數</div><div class="h1 mb-1">@Model.MemberCountAtEnd</div><div class="small text-secondary">區間結束前仍保留的帳號</div></div>
-        </a>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-2">
-        <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="members" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看會員成長明細">
-            <div class="card-body"><div class="text-secondary">新增會員</div><div class="h1 mb-1">@Model.NewMemberCount</div><div class="small text-secondary">選定期間建立帳號</div></div>
+            <div class="card-body"><div class="text-secondary">會員總數</div><div class="h1 mb-1">@Model.MemberCountAtEnd.ToString("N0")</div><div class="small text-secondary">期間新增 @Model.NewMemberCount.ToString("N0") 位會員</div></div>
         </a>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="login" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看會員登入明細">
-            <div class="card-body"><div class="text-secondary">會員登入率</div><div class="h1 mb-1">@Model.LoginRatePercent.ToString("0.0")%</div><div class="small text-secondary">@Model.LoginMemberCount 位／期末 @Model.MemberCountAtEnd 位</div></div>
+            <div class="card-body"><div class="text-secondary">期間會員登入率</div><div class="h1 mb-1">@Model.LoginRatePercent.ToString("0.0")%</div><div class="small text-secondary">期間登入 @Model.LoginMemberCount.ToString("N0") 位會員</div></div>
         </a>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="revenue" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看營收明細">
-            <div class="card-body"><div class="text-secondary">已付款營收</div><div class="h1 mb-1">@Model.PaidRevenue.ToString("C0")</div><div class="small text-secondary">@Model.PaidOrderCount 筆已付款訂單</div></div>
+            <div class="card-body"><div class="text-secondary">已付款營收</div><div class="h1 mb-1">@Model.PaidRevenue.ToString("C0")</div><div class="small text-secondary">期間付款 @Model.PaidOrderCount.ToString("N0") 筆訂單</div></div>
         </a>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="revenue" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看營收明細">
-            <div class="card-body"><div class="text-secondary">平均付款金額</div><div class="h1 mb-1">@Model.AverageOrderAmount.ToString("C0")</div><div class="small text-secondary">只依已付款訂單計算</div></div>
+            <div class="card-body"><div class="text-secondary">平均付款金額</div><div class="h1 mb-1">@Model.AverageOrderAmount.ToString("C0")</div><div class="small text-secondary">每筆已付款訂單的平均金額</div></div>
         </a>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="game" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看遊戲使用明細">
-            <div class="card-body"><div class="text-secondary">遊戲不重複會員</div><div class="h1 mb-1">@Model.UniqueGameUserCount</div><div class="small text-secondary">共 @Model.GamePlayerJoinCount 次加入</div></div>
+            <div class="card-body"><div class="text-secondary">遊戲不重複會員</div><div class="h1 mb-1">@Model.UniqueGameUserCount</div><div class="small text-secondary">期間加入 @Model.GamePlayerJoinCount.ToString("N0") 人次</div></div>
         </a>
     </div>
     <div class="col-12 col-sm-6 col-xl-2">
         <a class="card h-100 qmah-operations-kpi qmah-operations-kpi--link" asp-action="Details" asp-route-metric="events" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看活動參與明細">
-            <div class="card-body"><div class="text-secondary">活動報名</div><div class="h1 mb-1">@Model.EventRegistrationCount</div><div class="small text-secondary">@Model.EventCount 場活動建立紀錄</div></div>
+            <div class="card-body"><div class="text-secondary">活動報名</div><div class="h1 mb-1">@Model.EventRegistrationCount</div><div class="small text-secondary">期間建立 @Model.EventCount.ToString("N0") 場活動</div></div>
         </a>
     </div>
 </div>
+
+<details class="mb-3">
+    <summary class="text-secondary">統計說明與計算方式</summary>
+    <dl class="row mt-3 mb-0">
+        <dt class="col-md-3">統計範圍</dt><dd class="col-md-9">數值依選定日期範圍更新。會員總數採截至結束日期建立、查詢時未刪除的帳號數，並非歷史帳號狀態快照。</dd>
+        <dt class="col-md-3">會員登入率</dt><dd class="col-md-9">期間有登入活動紀錄的不重複會員數 ÷ 會員總數 × 100%。同一會員跨日只計一次，後台登入不計入；前台須呼叫登入活動 API 留下紀錄。</dd>
+        <dt class="col-md-3">營收與平均金額</dt><dd class="col-md-9">依付款日期計入營收，不受訂單建立日期限制。平均付款金額＝已付款營收 ÷ 已付款訂單數。</dd>
+        <dt class="col-md-3">遊戲與活動</dt><dd class="col-md-9">遊戲會員依加入紀錄去重，加入人次可重複。活動建立與報名依各自建立日期計算，並非同一批活動的轉換率。</dd>
+        <dt class="col-md-3">社群圖片</dt><dd class="col-md-9">只計社群上傳的圖片資產，不含官方文物圖鑑圖片。</dd>
+        <dt class="col-md-3">批次資產活動</dt><dd class="col-md-9">各批次分別計算對象與未成功人次，同一會員可重複計入。資產增減只計已完成批次，不含日常獎勵與逐人調整。</dd>
+    </dl>
+</details>
 
 <div class="card qmah-list-card qmah-operations-batch-highlight mb-3">
     <div class="card-header d-flex flex-wrap align-items-start justify-content-between gap-3">
@@ -59,7 +66,7 @@
             <div><span>符合條件會員</span><strong>@Model.EconomyBatchTargetCount.ToString("N0")</strong><small>依每次篩選計算</small></div>
             <div><span>點數增加／扣除</span><strong>@Model.EconomyBatchPointIncrease.ToString("N0")／@Model.EconomyBatchPointDecrease.ToString("N0")</strong><small>實際完成的鑑定點數</small></div>
             <div><span>優惠券發放／撤銷</span><strong>@Model.EconomyBatchCouponGrantCount.ToString("N0")／@Model.EconomyBatchCouponRevokeCount.ToString("N0")</strong><small>實際完成的券數</small></div>
-            <div><span>未成功會員</span><strong>@Model.EconomyBatchFailureCount.ToString("N0")</strong><small>全有或全無批次不會部分提交</small></div>
+            <div><span>未成功會員</span><strong>@Model.EconomyBatchFailureCount.ToString("N0")</strong><small>各批次未成功人次</small></div>
         </div>
     </div>
 </div>
@@ -93,7 +100,7 @@
     </div>
     <div class="col-12 col-md-6 col-xl-3">
         <a class="card h-100 qmah-operations-summary-card qmah-operations-summary-card--link" asp-action="Details" asp-route-metric="media" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" aria-label="查看社群圖片明細">
-            <div class="card-body"><div class="text-secondary">社群圖片</div><div class="h2 mb-1">@Model.MediaAssetCount 張</div><div class="small text-secondary">官方文物圖鑑圖片不列入此項</div></div>
+            <div class="card-body"><div class="text-secondary">社群圖片</div><div class="h2 mb-1">@Model.MediaAssetCount 張</div><div class="small text-secondary">期間新增的社群上傳圖片</div></div>
         </a>
     </div>
 </div>

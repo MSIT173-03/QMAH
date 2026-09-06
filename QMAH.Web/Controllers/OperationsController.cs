@@ -174,11 +174,15 @@ public sealed class OperationsController(
             .Select(order => new { order.CreatedAt, order.PaidAt, order.TotalAmount, order.Status })
             .ToListAsync(cancellationToken);
 
-        var paidOrders = orderRows
+        // 原本從期間內建立的訂單篩選付款，會漏掉較早建立、期間內才付款的訂單
+        // 改為獨立依付款時間查詢，訂單建立數仍沿用上方原有查詢
+        var paidOrders = await db.StoreOrders
+            .AsNoTracking()
             .Where(order => order.PaidAt.HasValue
                 && order.PaidAt.Value >= from
                 && order.PaidAt.Value < toExclusive)
-            .ToList();
+            .Select(order => new { order.CreatedAt, order.PaidAt, order.TotalAmount, order.Status })
+            .ToListAsync(cancellationToken);
 
         var memberRows = await db.Users
             .AsNoTracking()
@@ -1319,7 +1323,7 @@ public sealed class OperationsController(
     {
         "revenue" => ("營收", "依付款完成時間統計；下方保留每日明細，方便對照訂單紀錄。"),
         "members" => ("會員成長", "依帳號建立時間統計新增會員，不代表同期間的活躍人數。"),
-        "login" => ("會員登入", "依每日登入歷史計算不重複會員數；總覽的登入率為選定期間曾登入會員數除以期末會員數。"),
+        "login" => ("會員登入", "總覽登入率＝選定期間有 LOGIN 紀錄的不重複會員數 ÷ 結束日期前建立且目前未刪除的會員總數 × 100%。同一會員跨日登入仍只計一次；每日明細則各日去重，不可直接相加當作期間人數。紀錄由會員前台呼叫登入活動 API 建立，管理後台登入不計入；沒有紀錄不一定代表未曾完成驗證登入。"),
         "orders" => ("訂單", "以訂單建立與付款完成兩條序列並列，協助比較交易流程的時間差。"),
         "game" => ("遊戲使用", "依玩家加入、房間建立、回合開始與作答紀錄統計，這些是歷史事件，不是即時在線人數。"),
         "activity" => ("主要功能使用", "以新增會員、遊戲加入、社群貼文與活動報名並列，方便比較不同功能的使用變化。"),
