@@ -6,7 +6,11 @@
     ViewData["Title"] ??= "營運統計明細";
     ViewData["AdminDescription"] ??= "依選定指標查看趨勢圖、摘要數值與完整逐日資料，並可匯出目前區間。";
     var rangeDays = (Model.To - Model.From).Days + 1;
-    var isPresetRange = rangeDays is 7 or 30 or 90 or 180 or 365;
+    var isPresetRange = rangeDays is 7 or 30 or 90 or 365;
+    var currentPage = (int)ViewBag.CurrentPage;
+    var pageSize = (int)ViewBag.PageSize;
+    var totalPages = (int)ViewBag.TotalPages;
+    var visiblePoints = Model.Points.AsEnumerable().Reverse().Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
 }
 
 @section PageActions {
@@ -38,10 +42,9 @@
                 <label for="details-days" class="form-label">快速範圍</label>
                 <select id="details-days" name="days" class="form-select">
                     <option value="7" selected="@(rangeDays == 7 ? "selected" : null)">最近 7 天</option>
-                    <option value="30" selected="@(rangeDays == 30 ? "selected" : null)">最近 30 天</option>
-                    <option value="90" selected="@(rangeDays == 90 ? "selected" : null)">最近 90 天</option>
-                    <option value="180" selected="@(rangeDays == 180 ? "selected" : null)">最近 180 天</option>
-                    <option value="365" selected="@(rangeDays == 365 ? "selected" : null)">最近 365 天</option>
+                    <option value="30" selected="@(rangeDays == 30 ? "selected" : null)">最近 1 個月</option>
+                    <option value="90" selected="@(rangeDays == 90 ? "selected" : null)">最近 1 季</option>
+                    <option value="365" selected="@(rangeDays == 365 ? "selected" : null)">最近 1 年</option>
                     <option value="" selected="@(!isPresetRange ? "selected" : null)">自訂日期區間</option>
                 </select>
             </div>
@@ -81,7 +84,16 @@
             <h2 class="card-title mb-1">@(Model.MetricLabel)逐日明細</h2>
             <p class="card-subtitle mb-0">保留完整資料列，匯出檔案也使用相同區間與欄位。</p>
         </div>
-        <span class="badge bg-secondary-lt">共 @Model.Points.Count 天</span>
+        <div class="d-flex align-items-center gap-2">
+            <label for="details-page-size" class="text-secondary small">每頁</label>
+            <select id="details-page-size" class="form-select form-select-sm w-auto" aria-label="每頁顯示筆數">
+                @foreach (var size in new[] { 15, 30, 60, 100 })
+                {
+                    <option value="@size" selected="@(pageSize == size)">@size 筆</option>
+                }
+            </select>
+            <span class="badge bg-secondary-lt">共 @Model.Points.Count 天</span>
+        </div>
     </div>
     <div class="table-responsive">
         <table class="table table-vcenter table-hover card-table qmah-crud-table">
@@ -95,7 +107,7 @@
                 </tr>
             </thead>
             <tbody>
-            @foreach (var point in Model.Points.AsEnumerable().Reverse())
+            @foreach (var point in visiblePoints)
             {
                 <tr>
                     <td class="text-nowrap">@point.Date.ToString("yyyy/MM/dd")</td>
@@ -109,4 +121,37 @@
             </tbody>
         </table>
     </div>
+    @if (totalPages > 1)
+    {
+        <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="text-secondary">第 @currentPage／@totalPages 頁</span>
+            <div class="btn-list" role="navigation" aria-label="逐日明細分頁">
+                <a class="btn btn-sm btn-outline-secondary @(currentPage == 1 ? "disabled" : null)" asp-action="Details" asp-route-metric="@Model.MetricCode" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" asp-route-page="@(currentPage - 1)" asp-route-pageSize="@pageSize" aria-disabled="@(currentPage == 1)">上一頁</a>
+                <a class="btn btn-sm btn-outline-secondary @(currentPage == totalPages ? "disabled" : null)" asp-action="Details" asp-route-metric="@Model.MetricCode" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")" asp-route-page="@(currentPage + 1)" asp-route-pageSize="@pageSize" aria-disabled="@(currentPage == totalPages)">下一頁</a>
+            </div>
+        </div>
+    }
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const preset = document.querySelector("#details-days");
+            const dateInputs = [document.querySelector("#details-from"), document.querySelector("#details-to")];
+            const pageSize = document.querySelector("#details-page-size");
+
+            dateInputs.forEach((input) => {
+                ["input", "change"].forEach((eventName) => input?.addEventListener(eventName, () => {
+                    if (preset) preset.value = "";
+                }));
+            });
+
+            pageSize?.addEventListener("change", () => {
+                const url = new URL(window.location.href);
+                url.searchParams.set("pageSize", pageSize.value);
+                url.searchParams.set("page", "1");
+                window.location.assign(url);
+            });
+        })();
+    </script>
+}

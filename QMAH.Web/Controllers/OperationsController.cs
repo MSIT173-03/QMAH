@@ -563,6 +563,8 @@ public sealed class OperationsController(
     public async Task<IActionResult> Details(
         string? metric,
         OperationsFilterViewModel filter,
+        int page = 1,
+        int pageSize = 30,
         CancellationToken cancellationToken = default)
     {
         var (from, toInclusive, toExclusive) = NormalizeDateRange(filter);
@@ -575,6 +577,11 @@ public sealed class OperationsController(
 
         ViewData["Title"] = $"{model.MetricLabel}明細";
         ViewData["AdminDescription"] = model.MetricDescription;
+        pageSize = pageSize is 15 or 30 or 60 or 100 ? pageSize : 30;
+        var totalPages = Math.Max(1, (int)Math.Ceiling(model.Points.Count / (double)pageSize));
+        ViewBag.CurrentPage = Math.Clamp(page, 1, totalPages);
+        ViewBag.PageSize = pageSize;
+        ViewBag.TotalPages = totalPages;
         return View(model);
     }
 

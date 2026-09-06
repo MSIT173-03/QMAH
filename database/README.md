@@ -6,6 +6,7 @@
 
 - [`Schema.sql`](Schema.sql)：可 review 的資料庫結構契約，供 SQL Server 與 EF Core Scaffold 對照。
 - [`VERSION`](VERSION)：QMAH 主專案目前配合的完整 Snapshot 版本。
+- [`upgrades/0.7.0-to-0.8.0.sql`](upgrades/0.7.0-to-0.8.0.sql)：保留既有資料，將 `db-v0.7.0` 升級至 `db-v0.8.0`。
 
 完整結構、共同資料、Identity、後台展示資料與版本歷史集中在 [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database)。從該 Repository 取得 `QMAH.sql`，在本機還原成 `QMAH` 資料庫；這裡不提供增量 Patch 或 Seed。
 

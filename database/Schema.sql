@@ -1075,6 +1075,9 @@ BEGIN TRANSACTION;
     ALTER TABLE [store].[PointTransactions] ADD CONSTRAINT [FK_PointTransactions_User]
         FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id]);
 
+    ALTER TABLE [store].[PointTransactions] ADD CONSTRAINT [FK_PointTransactions_AdminUser]
+        FOREIGN KEY ([CreatedByAdminUserId]) REFERENCES [user].[AspNetUsers] ([Id]);
+
     ALTER TABLE [store].[StoreOrders] ADD CONSTRAINT [FK_StoreOrders_User]
         FOREIGN KEY ([UserId]) REFERENCES [user].[AspNetUsers] ([Id]);
 
@@ -1207,6 +1210,8 @@ BEGIN TRANSACTION;
 
     CREATE INDEX [IX_PointTransactions_Member] ON [store].[PointTransactions] ([UserId], [CreatedAt] DESC);
 
+    CREATE INDEX [IX_PointTransactions_AdminUser] ON [store].[PointTransactions] ([CreatedByAdminUserId], [CreatedAt] DESC);
+
     CREATE INDEX [IX_ProductReviews_Product_Status_Created] ON [store].[ProductReviews] ([ProductId], [Status], [CreatedAt] DESC);
 
     CREATE UNIQUE INDEX [UX_ProductReviews_Product_User] ON [store].[ProductReviews] ([ProductId], [UserId]);
@@ -1254,6 +1259,12 @@ BEGIN TRANSACTION;
 
     CREATE INDEX [IX_UserCoupons_Definition_IssuedAt]
         ON [store].[UserCoupons] ([CouponDefinitionId], [IssuedAt] DESC);
+
+    CREATE INDEX [IX_UserCoupons_IssuedByAdmin]
+        ON [store].[UserCoupons] ([IssuedByAdminUserId], [IssuedAt] DESC);
+
+    CREATE INDEX [IX_UserCoupons_RevokedByAdmin]
+        ON [store].[UserCoupons] ([RevokedByAdminUserId], [RevokedAt] DESC);
 
     CREATE INDEX [IX_UserKeyBalances_KeyDefinitionId] ON [catalog].[UserKeyBalances] ([KeyDefinitionId]);
 

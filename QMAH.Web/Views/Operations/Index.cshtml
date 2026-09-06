@@ -5,7 +5,7 @@
     ViewData["AdminDescription"] = "集中查看會員、營收、遊戲、社群、活動與圖庫的長期資料；統計依資料庫紀錄計算，不代表即時在線人數。";
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
     var rangeDays = (Model.To - Model.From).Days + 1;
-    var isPresetRange = rangeDays is 7 or 30 or 90 or 180 or 365;
+    var isPresetRange = rangeDays is 7 or 30 or 90 or 365;
 }
 
 @section PageActions {
@@ -21,10 +21,9 @@
                     <label for="days" class="form-label">快速範圍</label>
                     <select id="days" name="days" class="form-select">
                         <option value="7" selected="@(rangeDays == 7 ? "selected" : null)">最近 7 天</option>
-                        <option value="30" selected="@(rangeDays == 30 ? "selected" : null)">最近 30 天</option>
-                        <option value="90" selected="@(rangeDays == 90 ? "selected" : null)">最近 90 天</option>
-                        <option value="180" selected="@(rangeDays == 180 ? "selected" : null)">最近 180 天</option>
-                        <option value="365" selected="@(rangeDays == 365 ? "selected" : null)">最近 365 天</option>
+                        <option value="30" selected="@(rangeDays == 30 ? "selected" : null)">最近 1 個月</option>
+                        <option value="90" selected="@(rangeDays == 90 ? "selected" : null)">最近 1 季</option>
+                        <option value="365" selected="@(rangeDays == 365 ? "selected" : null)">最近 1 年</option>
                         <option value="" selected="@(!isPresetRange ? "selected" : null)">自訂日期區間</option>
                     </select>
                 </div>
@@ -120,9 +119,11 @@
                 }
             }
 
-            [from, to].forEach((input) => input?.addEventListener("change", () => {
-                if (preset) preset.value = "";
-            }));
+            [from, to].forEach((input) => {
+                ["input", "change"].forEach((eventName) => input?.addEventListener(eventName, () => {
+                    if (preset) preset.value = "";
+                }));
+            });
 
             form.addEventListener("submit", (event) => {
                 event.preventDefault();

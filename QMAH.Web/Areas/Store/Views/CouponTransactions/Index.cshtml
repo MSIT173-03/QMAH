@@ -43,7 +43,7 @@
                            name="keyword"
                            value="@ViewBag.Keyword"
                            class="form-control"
-                           placeholder="搜尋會員、優惠券名稱或代碼" />
+                           placeholder="搜尋會員、管理員、優惠券或代碼" />
                 </div>
 
                 <div class="col-md-3">
@@ -52,6 +52,7 @@
                         <option value="AVAILABLE" selected="@(ViewBag.Status == "AVAILABLE")">可使用</option>
                         <option value="USED" selected="@(ViewBag.Status == "USED")">已使用</option>
                         <option value="EXPIRED" selected="@(ViewBag.Status == "EXPIRED")">已過期</option>
+                        <option value="REVOKED" selected="@(ViewBag.Status == "REVOKED")">已撤銷</option>
                     </select>
                 </div>
 
@@ -83,13 +84,15 @@
                     <th>優惠券</th>
                     <th>狀態</th>
                     <th>使用時間</th>
+                    <th>發放資訊</th>
+                    <th>撤銷資訊</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="5">
+                        <td colspan="7">
                             <div class="empty qmah-empty-state">
                                 <div class="empty-icon"><i class="ti ti-receipt-off"></i></div>
                                 <p class="empty-title">目前沒有符合條件的紀錄</p>
@@ -123,6 +126,36 @@
                             </td>
                             <td class="text-secondary text-nowrap">
                                 @(item.UsedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")
+                            </td>
+                            <td>
+                                <div>@(item.IssuedByAdminUserId.HasValue ? item.IssuedByAdminEmail : "系統／會員兌換")</div>
+                                @if (item.IssuedByAdminUserId.HasValue)
+                                {
+                                    <code>@item.IssuedByAdminUserId</code>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(item.IssueReason))
+                                {
+                                    <div class="text-secondary small">@item.IssueReason</div>
+                                }
+                            </td>
+                            <td>
+                                @if (item.RevokedAt.HasValue)
+                                {
+                                    <div>@(item.RevokedByAdminUserId.HasValue ? item.RevokedByAdminEmail : "系統")</div>
+                                    @if (item.RevokedByAdminUserId.HasValue)
+                                    {
+                                        <code>@item.RevokedByAdminUserId</code>
+                                    }
+                                    <div class="text-secondary small">@item.RevokedAt.Value.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div>
+                                    @if (!string.IsNullOrWhiteSpace(item.RevokeReason))
+                                    {
+                                        <div class="text-secondary small">@item.RevokeReason</div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">—</span>
+                                }
                             </td>
                         </tr>
                     }

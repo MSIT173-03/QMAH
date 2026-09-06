@@ -48,12 +48,15 @@ public class PointTransactionsController : Controller
                     x.Email.Contains(keyword))
                 .Select(x => x.Id)
                 .ToList();
+            var hasAdminUserId = Guid.TryParse(keyword, out var adminUserId);
 
             query = query.Where(x =>
                 x.Reason.Contains(keyword) ||
                 (x.ReferenceType != null &&
                  x.ReferenceType.Contains(keyword)) ||
-                matchedUserIds.Contains(x.UserId)
+                matchedUserIds.Contains(x.UserId) ||
+                (x.CreatedByAdminUserId.HasValue && matchedUserIds.Contains(x.CreatedByAdminUserId.Value)) ||
+                (hasAdminUserId && x.CreatedByAdminUserId == adminUserId)
             );
         }
 
@@ -93,7 +96,9 @@ public class PointTransactionsController : Controller
 
         // 一次取得這批流水涉及的會員
         var userIds = transactions
-            .Select(x => x.UserId)
+            .SelectMany(x => x.CreatedByAdminUserId.HasValue
+                ? new[] { x.UserId, x.CreatedByAdminUserId.Value }
+                : new[] { x.UserId })
             .Distinct()
             .ToList();
 
@@ -114,7 +119,11 @@ public class PointTransactionsController : Controller
                     x.UserId,
                     out var email)
                         ? email
-                        : "找不到會員"
+                        : "找不到會員",
+                AdminUserId = x.CreatedByAdminUserId,
+                AdminEmail = x.CreatedByAdminUserId.HasValue && users.TryGetValue(x.CreatedByAdminUserId.Value, out var adminEmail)
+                    ? adminEmail
+                    : ""
             })
             .ToList();
 

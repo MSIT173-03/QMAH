@@ -37,6 +37,12 @@ public class CouponTransactionsController : Controller
             join profile in _context.UserProfiles.AsNoTracking()
                 on coupon.UserId equals profile.UserId into profiles
             from profile in profiles.DefaultIfEmpty()
+            join issuingAdmin in _context.Users.AsNoTracking()
+                on coupon.IssuedByAdminUserId equals (Guid?)issuingAdmin.Id into issuingAdmins
+            from issuingAdmin in issuingAdmins.DefaultIfEmpty()
+            join revokingAdmin in _context.Users.AsNoTracking()
+                on coupon.RevokedByAdminUserId equals (Guid?)revokingAdmin.Id into revokingAdmins
+            from revokingAdmin in revokingAdmins.DefaultIfEmpty()
             select new CouponTransactionListItemViewModel
             {
                 Id = coupon.Id,
@@ -47,16 +53,28 @@ public class CouponTransactionsController : Controller
                 CouponCode = definition.Code,
                 Status = coupon.Status,
                 IssuedAt = coupon.IssuedAt,
-                UsedAt = coupon.UsedAt
+                UsedAt = coupon.UsedAt,
+                IssuedByAdminUserId = coupon.IssuedByAdminUserId,
+                IssuedByAdminEmail = issuingAdmin != null ? issuingAdmin.Email ?? "" : "",
+                IssueReason = coupon.IssueReason,
+                RevokedAt = coupon.RevokedAt,
+                RevokedByAdminUserId = coupon.RevokedByAdminUserId,
+                RevokedByAdminEmail = revokingAdmin != null ? revokingAdmin.Email ?? "" : "",
+                RevokeReason = coupon.RevokeReason
             };
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
+            var hasAdminUserId = Guid.TryParse(keyword, out var adminUserId);
             query = query.Where(x =>
                 x.Email.Contains(keyword) ||
                 (x.Nickname != null && x.Nickname.Contains(keyword)) ||
                 x.CouponName.Contains(keyword) ||
-                x.CouponCode.Contains(keyword));
+                x.CouponCode.Contains(keyword) ||
+                x.IssuedByAdminEmail.Contains(keyword) ||
+                x.RevokedByAdminEmail.Contains(keyword) ||
+                (hasAdminUserId &&
+                    (x.IssuedByAdminUserId == adminUserId || x.RevokedByAdminUserId == adminUserId)));
         }
 
         if (!string.IsNullOrWhiteSpace(status))

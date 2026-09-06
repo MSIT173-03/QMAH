@@ -11,4 +11,11 @@ public class CouponTransactionListItemViewModel
     public string Status { get; set; } = "";
     public DateTime IssuedAt { get; set; }
     public DateTime? UsedAt { get; set; }
+    public Guid? IssuedByAdminUserId { get; set; }
+    public string IssuedByAdminEmail { get; set; } = "";
+    public string? IssueReason { get; set; }
+    public DateTime? RevokedAt { get; set; }
+    public Guid? RevokedByAdminUserId { get; set; }
+    public string RevokedByAdminEmail { get; set; } = "";
+    public string? RevokeReason { get; set; }
 }

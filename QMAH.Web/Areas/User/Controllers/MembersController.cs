@@ -628,7 +628,12 @@ public class MembersController : Controller
         }
 
         // 原本此處直接更新 PointBalance；現改由 EconomyService 以同一交易寫入餘額與 PointTransaction。
+        var admin = await _userManager.GetUserAsync(User);
+        if (admin is null)
+            return Forbid();
+
         var result = await _economyService.AdjustPointsAsync(
+            admin.Id,
             id,
             model.Amount,
             model.Reason,
