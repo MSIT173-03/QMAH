@@ -15,7 +15,8 @@ public sealed record QmahDatabaseResolution(
 /// 依設定檔優先順序辨識真正包含 QMAH 的本機 SQL Server instance。
 /// </summary>
 /// <remarks>
-/// 自動搜尋只檢查本機候選 instance 的 sys.databases，不會掃描網路或自動附加 mdf／還原 bak。
+/// 自動搜尋會確認本機候選 instance 的 QMAH 為 ONLINE 且具備目前程式需要的必要資料表，
+/// 不會掃描網路或自動附加 mdf／還原 bak。
 /// 是否啟用由 QmahDatabaseDiscovery:Enabled 控制，讓部署環境可以明確關閉 fallback。
 /// </remarks>
 public static class QmahDatabaseConnectionResolver
@@ -108,6 +109,8 @@ public static class QmahDatabaseConnectionResolver
             await connection.OpenAsync(cancellationToken);
 
             await using var command = connection.CreateCommand();
+            // 只有同名且 ONLINE 的資料庫仍可能是舊快照；目前 Web 會查詢每日活動表，
+            // 因此把必要資料表一起納入可用性判斷，避免啟動後才因 schema 不完整而中斷。
             command.CommandText = """
                 SELECT CASE WHEN EXISTS
                 (
@@ -115,6 +118,15 @@ public static class QmahDatabaseConnectionResolver
                     FROM sys.databases
                     WHERE name = N'QMAH'
                       AND state_desc = N'ONLINE'
+                      AND EXISTS
+                      (
+                          SELECT 1
+                          FROM QMAH.sys.tables AS tables
+                          INNER JOIN QMAH.sys.schemas AS schemas
+                              ON schemas.schema_id = tables.schema_id
+                          WHERE schemas.name = N'common'
+                            AND tables.name = N'DailyMemberActivities'
+                      )
                 ) THEN 1 ELSE 0 END;
                 """;
 
