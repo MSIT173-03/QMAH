@@ -682,6 +682,7 @@ BEGIN TRANSACTION;
         [ReferenceType] nvarchar(40) NULL,
         [ReferenceId] uniqueidentifier NULL,
         [CreatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_KeyTransactions_Created] DEFAULT ((sysutcdatetime())),
+        [CreatedByAdminUserId] uniqueidentifier NULL,
         CONSTRAINT [PK_KeyTransactions] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_KeyTransactions_Amount] CHECK (([Amount]<>(0))),
         CONSTRAINT [FK_KeyTransactions_Key] FOREIGN KEY ([KeyDefinitionId]) REFERENCES [catalog].[KeyDefinitions] ([Id])
