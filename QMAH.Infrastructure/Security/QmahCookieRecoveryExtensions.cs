@@ -9,6 +9,8 @@ namespace QMAH.Infrastructure.Security;
 /// <remarks>
 /// 這段只處理通過 Kestrel 標頭檢查並進入 ASP.NET Core pipeline 的 request
 /// 超過上限的 request 仍需由瀏覽器清除一次
+/// Web 與 API 都會呼叫此 extension，並把目前仍有效的 Cookie 名稱傳入排除清單。
+/// 若日後更名驗證 Cookie，需同時更新 LegacyCookiePrefixes 與兩個 Program.cs 的 currentCookieNames。
 /// </remarks>
 public static class QmahCookieRecoveryExtensions
 {
@@ -33,6 +35,7 @@ public static class QmahCookieRecoveryExtensions
 
         return app.Use(async (context, next) =>
         {
+            // 只從實際 request 找出舊名稱，避免每個回應都送出一長串無效的 Set-Cookie。
             var staleNames = context.Request.Cookies.Keys
                 .Where(name => IsLegacyCookie(name) && !currentNames.Contains(name))
                 .Distinct(StringComparer.OrdinalIgnoreCase)

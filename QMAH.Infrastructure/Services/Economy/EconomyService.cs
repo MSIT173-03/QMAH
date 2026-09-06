@@ -10,6 +10,10 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// <summary>
 /// 集中處理鑑定點數、鑰匙、鑰匙進度、優惠券與配戴稱號的交易邊界。
 /// </summary>
+/// <remarks>
+/// Economy API、Mini Game、會員管理、鑰匙背包與優惠券背包共用本服務。
+/// 新增會改變會員資產的流程時，應在此服務或同層領域服務同時更新 Balance 與 Transaction，Controller 不直接改餘額。
+/// </remarks>
 public sealed class EconomyService(QmahDbContext db)
 {
     /// <summary>讀取會員目前的鑑定點數、鑰匙、解鎖候選數與可用兌換規則。</summary>

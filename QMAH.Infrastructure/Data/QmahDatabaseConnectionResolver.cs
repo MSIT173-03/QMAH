@@ -18,6 +18,7 @@ public sealed record QmahDatabaseResolution(
 /// 自動搜尋會確認本機候選 instance 的 QMAH 為 ONLINE 且具備目前程式需要的必要資料表，
 /// 不會掃描網路或自動附加 mdf／還原 bak。
 /// 是否啟用由 QmahDatabaseDiscovery:Enabled 控制，讓部署環境可以明確關閉 fallback。
+/// Web 與 API 的 Program.cs 都在註冊 DbContext 前呼叫本元件，確保兩個 host 使用相同的選擇規則。
 /// </remarks>
 public static class QmahDatabaseConnectionResolver
 {
@@ -40,6 +41,7 @@ public static class QmahDatabaseConnectionResolver
                 FoundTargets: Array.Empty<string>());
         }
 
+        // configured 永遠排第一；自動探索是備援，不會在設定可用時擅自改連線目標。
         var candidates = new List<ConnectionCandidate>();
         if (configured is not null)
         {
@@ -60,6 +62,7 @@ public static class QmahDatabaseConnectionResolver
         var foundTargets = new List<string>();
         ConnectionCandidate? selected = null;
 
+        // 仍檢查所有候選，以便 FoundTargets 告知同一台電腦是否存在多套 QMAH；實際使用第一個通過驗證的候選。
         foreach (var candidate in candidates)
         {
             cancellationToken.ThrowIfCancellationRequested();

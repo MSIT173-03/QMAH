@@ -5,6 +5,10 @@ namespace QMAH.Infrastructure.Media;
 /// <summary>
 /// 將資料庫保存的邏輯媒體路徑轉成目前部署環境可使用的網址。
 /// </summary>
+/// <remarks>
+/// Catalog、商城與 Mini Game API 用它輸出圖片網址，Razor 後台則由 MediaUrlTagHelper 呼叫。
+/// 新功能應保存 /media 或 /uploads 開頭的邏輯路徑，顯示時才 Resolve；不要將 localhost 或 CDN 網域寫入資料表。
+/// </remarks>
 public sealed class QmahMediaUrlResolver(IOptions<MediaDeliveryOptions> options)
 {
     private static readonly string[] PublicLogicalRoots = ["/media", "/uploads"];
@@ -38,6 +42,7 @@ public sealed class QmahMediaUrlResolver(IOptions<MediaDeliveryOptions> options)
         else if (!normalizedPath.StartsWith("/", StringComparison.Ordinal))
             normalizedPath = $"/{normalizedPath}";
 
+        // Local 模式直接回傳站內路徑；只有已列為公開且 CDN 設定完整的路徑才改寫網域。
         if (!IsPublicLogicalPath(normalizedPath) || !TryGetCdnBaseUrl(out var baseUrl))
             return normalizedPath;
 

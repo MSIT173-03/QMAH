@@ -20,6 +20,8 @@ using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
 
 var builder = WebApplication.CreateBuilder(args);
+// ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
+// Local 檔最後加入，因此只要檔案存在就具有最高優先權，方便每位組員覆寫連線與前台來源；部署環境不應放置此檔。
 var cookieSecurePolicy = builder.Environment.IsDevelopment()
     ? CookieSecurePolicy.SameAsRequest
     : CookieSecurePolicy.Always;
@@ -29,7 +31,8 @@ builder.Configuration.AddJsonFile(
     optional: true,
     reloadOnChange: true);
 
-// 本機設定檔只存開發環境的連線字串與 CORS 來源，不把個人差異寫進共用設定
+// 先嘗試設定檔指定的連線；失敗時才依 resolver 的候選順序尋找本機名稱為 QMAH 的 SQL Server／LocalDB。
+// 其他需要直接存取資料庫的 host 應重用 resolver，避免 Web、API 與工具程式各自猜測不同 instance。
 var qmahDatabaseResolution = await QmahDatabaseConnectionResolver.ResolveAsync(
     builder.Configuration.GetConnectionString("QmahDatabase"),
     builder.Configuration.GetValue("QmahDatabaseDiscovery:Enabled", true));
@@ -43,6 +46,8 @@ builder.Services.Configure<MediaStorageOptions>(options => options.RootPath = me
 builder.Services
     .AddOptions<MediaDeliveryOptions>()
     .Bind(builder.Configuration.GetSection(MediaDeliveryOptions.SectionName));
+// 儲存路徑與公開網址刻意分開：檔案可先留在本機，公開網址則能由設定切換為 CDN。
+// Controller 只保存相對 media key，回傳 DTO 時交由 resolver 產生網址，日後搬移檔案不必逐筆改資料庫。
 builder.Services.AddSingleton<QmahMediaUrlResolver>();
 
 // 使用 MVC 的 controller services 以提供內建 Anti-forgery filter；API 本身不建立 Razor View。
@@ -80,6 +85,8 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest;
 });
 builder.Services.AddProblemDetails();
+// OpenAPI transformer 集中補上 Cookie security scheme 與各 operation 的安全需求。
+// 新增 API 時仍應提供量身訂作的 summary／description；共用安全 metadata 不應散落在每個 Controller 重複維護。
 var openApiOptions = builder.Configuration
     .GetSection("OpenApi")
     .Get<QmahOpenApiOptions>() ?? new QmahOpenApiOptions();
@@ -92,7 +99,8 @@ builder.Services.AddOpenApi(options =>
     options.AddOperationTransformer(transformer);
 });
 
-// CORS 只允許設定檔列出的前端來源，使用 Cookie 時也不能使用萬用字元
+// CORS 只允許設定檔列出的前端來源，使用 Cookie 時也不能使用萬用字元。
+// 新增 Angular 開發埠、Azure 網站或 CDN 網域時修改 Cors:AllowedOrigins 即可，不需改動此處程式碼。
 builder.Services.AddCors(options =>
 {
     var allowedOrigins = builder.Configuration
@@ -113,6 +121,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddDbContext<QmahDbContext>(options =>
 {
+    // Retry 僅處理短暫 SQL 錯誤；Service 若自行開 transaction，必須以 execution strategy 包住完整交易，確保不會只重做部分帳本異動。
     options.UseSqlServer(
         qmahDatabaseResolution.ConnectionString,
         sqlOptions => sqlOptions.EnableRetryOnFailure(
@@ -142,6 +151,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPasswordResetEmailSender, PasswordResetEmailSender>();
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
+// 使用 DbContext、目前會員或 request 資訊的服務採 Scoped；只有確定無狀態且 thread-safe 的元件才可註冊 Singleton。
+// 新增跨系統規則時放進 Infrastructure service，Controller 只負責輸入驗證與 HTTP response，Web 後台也能重用同一套規則。
 // API 與管理後台共用經濟領域服務；交易帳本與 Mini Game 獎勵在服務層保持一致。
 builder.Services.AddScoped<EconomyService>();
 builder.Services.AddScoped<MiniGameService>();
@@ -211,6 +222,8 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
+// 連線解析只選擇既有資料庫，不會自動建立或套用 migration；正式 Schema 仍由版本化 SQL 控制。
+// 多個候選同時存在時記錄實際採用目標，方便核對 SSMS 與應用程式是否正在查看同一套 QMAH。
 if (qmahDatabaseResolution.FoundTargets.Count > 1)
 {
     app.Logger.LogWarning(
@@ -240,7 +253,8 @@ if (!app.Environment.IsDevelopment())
 app.UseResponseCompression();
 app.UseHttpsRedirection();
 
-// API 先完成路由與限流，再清除舊 Cookie，最後才進入 CORS、驗證與 controller
+// 順序不可任意交換：先選路由與限流，再套 CORS，接著建立登入身分並執行授權，最後才進 Controller。
+// 需要讀取 User／Role 的新 middleware 放在 Authentication 後；需要讓瀏覽器看見錯誤回應的 middleware 也必須受 CORS 包覆。
 app.UseRouting();
 app.UseRateLimiter();
 app.UseQmahCookieRecovery(
@@ -255,6 +269,8 @@ app.MapControllers();
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)
 {
+    // 本機預設提供 OpenAPI 與 Scalar 測試頁；其他環境必須由設定明確開啟，避免無意公開內部契約介面。
+    // 新增 API 後可在此頁直接確認 route、request body、response 與登入需求是否正確產生。
     app.MapOpenApi();
     if (app.Environment.IsDevelopment() || openApiOptions.ScalarEnabled)
         app.MapScalarApiReference();

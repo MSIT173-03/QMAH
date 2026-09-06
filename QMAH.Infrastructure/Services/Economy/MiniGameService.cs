@@ -11,6 +11,10 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// <summary>
 /// 提供四種 Mini Game 共用的開始、驗證、評分與獎勵流程。
 /// </summary>
+/// <remarks>
+/// MiniGameController 是目前的 HTTP 入口，EconomyService 提供共用經濟設定與資產規則。
+/// 新增玩法通常只需新增 GameModeDefinition 與對應的結果驗證／計分策略；Attempt、每日獎勵上限與流水仍沿用此流程。
+/// </remarks>
 public sealed class MiniGameService(QmahDbContext db, EconomyService economyService)
 {
     /// <summary>取得所有啟用中的 Mini Game 模式及其評分門檻。</summary>

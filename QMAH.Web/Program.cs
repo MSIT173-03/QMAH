@@ -21,6 +21,8 @@ using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Economy;
 
 var builder = WebApplication.CreateBuilder(args);
+// ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
+// Local 檔最後加入，因此只要檔案存在就具有最高優先權，適合保存每位組員不同的資料庫位置；部署環境不應放置此檔。
 var cookieSecurePolicy = builder.Environment.IsDevelopment()
     ? CookieSecurePolicy.SameAsRequest
     : CookieSecurePolicy.Always;
@@ -33,9 +35,12 @@ builder.Configuration.AddJsonFile(
 builder.Services
     .AddOptions<MediaDeliveryOptions>()
     .Bind(builder.Configuration.GetSection(MediaDeliveryOptions.SectionName));
+// 頁面與 API 都應透過 resolver 產生圖片網址，不自行串接 /media 或 CDN 網域。
+// 未來切換 CDN 時只需改 MediaDelivery 設定；新增其他共用檔案類型時也沿用同一入口。
 builder.Services.AddSingleton<QmahMediaUrlResolver>();
 
-// 本機設定檔只存開發環境的連線字串與展示選項，不進版本控制
+// 先嘗試設定檔指定的連線；失敗時才依 resolver 的候選順序尋找本機名稱為 QMAH 的 SQL Server／LocalDB。
+// 新增背景工作或工具程式若也要支援本機自動探索，應重用 resolver，不要各自維護另一份伺服器清單。
 var qmahDatabaseResolution = await QmahDatabaseConnectionResolver.ResolveAsync(
     builder.Configuration.GetConnectionString("QmahDatabase"),
     builder.Configuration.GetValue("QmahDatabaseDiscovery:Enabled", true));
@@ -75,7 +80,8 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "X-XSRF-TOKEN";
 });
 
-// 每個 request 各自取得 DbContext，避免應用程式啟動時先連線資料庫
+// DbContext 採 Scoped lifetime，每個 request 共用一個追蹤範圍，離開 request 後即釋放。
+// EnableRetryOnFailure 只重試可恢復的連線錯誤；需要手動 transaction 的服務仍須用 EF execution strategy 包住整個交易，避免只重跑一半。
 builder.Services.AddDbContext<QmahDbContext>(options =>
 {
     options.UseSqlServer(
@@ -123,6 +129,8 @@ builder.Services.AddSingleton<AdminNavigationService>();
 builder.Services.AddScoped<AdminAuditLogFilter>();
 builder.Services.AddScoped<CatalogImportService>();
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
+// 新增功能時，無狀態且可跨 request 共用的元件才使用 Singleton；會使用 DbContext 或目前會員資料的服務一律使用 Scoped。
+// 跨系統規則放在 Infrastructure service，再由 Controller 呼叫，避免管理後台與未來前台 API 各自複製判斷。
 // EconomyService 負責會員單筆經濟規則；MiniGameService 負責四種玩法共用的開始、結算與獎勵契約。
 // 批次資產作業另外保留活動主檔與篩選快照，讓營運中心能統計活動事件，且不取代逐會員帳本。
 builder.Services.AddScoped<EconomyService>();
@@ -190,6 +198,8 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
+// ResolveAsync 只選出可用目標，不在啟動時建立或升級資料庫；Schema 仍由版本化 SQL 管理。
+// 多個候選同時存在時留下警告，避免組員在 SSMS 與應用程式看到不同的 QMAH 而誤判資料遺失。
 if (qmahDatabaseResolution.FoundTargets.Count > 1)
 {
     app.Logger.LogWarning(
@@ -234,7 +244,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// 使用者離開頁面造成的 request cancellation 屬正常中止，不當成伺服器錯誤。
+// 此段包住後續 middleware：使用者離開頁面造成的 cancellation 視為正常中止，資料庫故障則轉成可辨識的 503。
+// 若新增全域錯誤轉譯，應放在這一層處理；領域驗證失敗仍由 Controller／Service 回傳 400 或 409，不應偽裝成資料庫錯誤。
 app.UseResponseCompression();
 app.Use(async (context, next) =>
 {
@@ -333,7 +344,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// 靜態資產處理完成後才進入路由、Cookie 與登入驗證
+// Middleware 順序會影響功能：先配對路由與限流，再修復舊 Cookie，最後建立使用者身分並檢查授權。
+// 新增需要 User 或 Role 的 middleware 必須放在 UseAuthentication 之後；Authorization 永遠不能早於 Authentication。
 app.UseRouting();
 app.UseRateLimiter();
 app.UseQmahCookieRecovery(
@@ -345,6 +357,7 @@ app.UseQmahCookieRecovery(
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Areas route 必須先於一般 route，否則後台區域可能被當成一般 Controller；新增 Area 不需要再註冊獨立路由。
 app.MapStaticAssets();
 
 app.MapControllerRoute(
