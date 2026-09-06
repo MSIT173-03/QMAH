@@ -105,6 +105,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         string? rawResultJson,
         CancellationToken cancellationToken = default)
     {
+        // 目前只檢查分數範圍與結果格式；新增玩法時仍須加入操作紀錄驗證，不能視為完整防作弊。
         if (rawScore is < 0 or > 100)
             return EconomyResult<MiniGameCompleteView>.Invalid("rawScore 必須介於 0 至 100；分數由伺服器重新驗證。");
         if (!string.IsNullOrWhiteSpace(rawResultJson))
@@ -135,6 +136,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             return EconomyResult<MiniGameCompleteView>.NotFound("找不到目前會員的 Mini Game Attempt。");
         if (attempt.Status == "COMPLETED")
         {
+            // 網路重送時回傳既有成績並標示已完成；這個分支不再次寫入獎勵或流水。
             var currentProgress = await db.KeyProgressBalances
                 .AsNoTracking()
                 .Where(item => item.UserId == userId)

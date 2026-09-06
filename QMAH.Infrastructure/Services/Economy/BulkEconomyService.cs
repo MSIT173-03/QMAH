@@ -24,6 +24,7 @@ public sealed class BulkEconomyService(QmahDbContext db)
     private const int MaxPointAmountPerMember = 1_000_000;
     private const int MaxCouponAmountPerMember = 100;
 
+    // 批次目前只支援點數與折價券；增加類型時須同步預覽、驗證、寫入與流水，不能只加選項。
     private static readonly HashSet<string> AssetTypes = ["POINT", "COUPON"];
     private static readonly HashSet<string> Operations = ["ADD", "DEDUCT"];
 

@@ -681,6 +681,7 @@ public sealed class EconomyService(QmahDbContext db)
         var achievement = await db.UserAchievements
             .Include(item => item.Achievement)
             .SingleOrDefaultAsync(
+                // 外鍵只保證取得紀錄存在；必須一起核對會員，避免配戴他人取得的稱號。
                 item => item.Id == userAchievementId.Value && item.UserId == userId,
                 cancellationToken);
         if (achievement is null)

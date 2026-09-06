@@ -163,7 +163,8 @@ public sealed class EconomyController(EconomyService economyService) : ApiContro
         if (!TryGetCurrentUserId(out var userId))
             return Unauthorized();
         var title = await economyService.GetEquippedTitleAsync(userId, cancellationToken);
-        return Ok(title is null ? null : ToTitleDto(title));
+        // 原本 Ok(null) 可能由 MVC 轉為 204；使用 JsonResult 固定回傳契約要求的 200 與 JSON null。
+        return new JsonResult(title is null ? null : ToTitleDto(title));
     }
 
     /// <summary>設定或清除目前會員配戴的成就稱號。</summary>
@@ -182,7 +183,8 @@ public sealed class EconomyController(EconomyService economyService) : ApiContro
             cancellationToken);
         if (!result.Succeeded)
             return ToFailure(result);
-        return Ok(result.Value is null ? null : ToTitleDto(result.Value));
+        // 清除稱號仍回傳 JSON null，讓前台能沿用與查詢相同的回應解析方式。
+        return new JsonResult(result.Value is null ? null : ToTitleDto(result.Value));
     }
 
     private ActionResult ToFailure<T>(EconomyResult<T> result) => result.ErrorCode switch
