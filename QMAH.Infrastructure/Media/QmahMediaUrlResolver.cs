@@ -30,7 +30,12 @@ public sealed class QmahMediaUrlResolver(IOptions<MediaDeliveryOptions> options)
             return value;
 
         var normalizedPath = value.Replace('\\', '/');
-        if (!normalizedPath.StartsWith("/", StringComparison.Ordinal))
+        // Razor 的 ~/ 代表應用程式根目錄；若直接當成一般相對路徑，瀏覽器會請求錯誤的 /~/ 路徑。
+        if (normalizedPath.Equals("~", StringComparison.Ordinal))
+            normalizedPath = "/";
+        else if (normalizedPath.StartsWith("~/", StringComparison.Ordinal))
+            normalizedPath = normalizedPath[1..];
+        else if (!normalizedPath.StartsWith("/", StringComparison.Ordinal))
             normalizedPath = $"/{normalizedPath}";
 
         if (!IsPublicLogicalPath(normalizedPath) || !TryGetCdnBaseUrl(out var baseUrl))
