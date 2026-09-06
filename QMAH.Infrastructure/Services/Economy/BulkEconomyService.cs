@@ -85,6 +85,25 @@ public sealed class BulkEconomyService(QmahDbContext db)
         BulkEconomyRequest request,
         CancellationToken cancellationToken = default)
     {
+        // 同一次呼叫固定批次 ID；提交成功但連線中斷時，可讀回已提交結果，避免重新發放整批資產。
+        var batchId = Guid.NewGuid();
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async retryCancellationToken =>
+        {
+            db.ChangeTracker.Clear();
+            var committed = await db.EconomyAdjustmentBatches.AsNoTracking()
+                .SingleOrDefaultAsync(item => item.Id == batchId, retryCancellationToken);
+            if (committed is not null)
+                return BulkEconomyResult.From(committed);
+            return await ExecuteCoreAsync(adminUserId, request, batchId, retryCancellationToken);
+        }, cancellationToken);
+    }
+
+    private async Task<BulkEconomyResult> ExecuteCoreAsync(
+        Guid adminUserId,
+        BulkEconomyRequest request,
+        Guid batchId,
+        CancellationToken cancellationToken)
+    {
         var normalized = NormalizeRequest(request);
         var validationError = await ValidateRequestAsync(normalized, cancellationToken);
         if (validationError is not null)
@@ -102,7 +121,7 @@ public sealed class BulkEconomyService(QmahDbContext db)
 
         var batch = new EconomyAdjustmentBatch
         {
-            Id = Guid.NewGuid(),
+            Id = batchId,
             AssetType = normalized.AssetType,
             Operation = normalized.Operation,
             UnitAmount = normalized.UnitAmount,

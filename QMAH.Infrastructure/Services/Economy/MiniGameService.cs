@@ -105,6 +105,22 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         string? rawResultJson,
         CancellationToken cancellationToken = default)
     {
+        // 整筆交易一起重試；清除失敗嘗試的追蹤狀態，再依 Attempt 是否已完成判斷是否曾成功提交。
+        // 已完成分支只讀取既有獎勵，不會再次發放。
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async retryCancellationToken =>
+        {
+            db.ChangeTracker.Clear();
+            return await CompleteAttemptCoreAsync(userId, attemptId, rawScore, rawResultJson, retryCancellationToken);
+        }, cancellationToken);
+    }
+
+    private async Task<EconomyResult<MiniGameCompleteView>> CompleteAttemptCoreAsync(
+        Guid userId,
+        Guid attemptId,
+        int rawScore,
+        string? rawResultJson,
+        CancellationToken cancellationToken)
+    {
         // 目前只檢查分數範圍與結果格式；新增玩法時仍須加入操作紀錄驗證，不能視為完整防作弊。
         if (rawScore is < 0 or > 100)
             return EconomyResult<MiniGameCompleteView>.Invalid("rawScore 必須介於 0 至 100；分數由伺服器重新驗證。");
