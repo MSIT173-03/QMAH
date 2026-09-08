@@ -35,21 +35,38 @@
                 }
                 <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-5">
-                        <label class="form-label" for="dataset">文物類別</label>
-                        <select class="form-select" id="dataset" name="dataset" required>
-                            <option value="bronzes">銅器</option>
-                            <option value="ceramics">陶瓷</option>
-                            <option value="jades">玉器</option>
-                            <option value="enamelWares">琺瑯器</option>
-                            <option value="lacquerWares">漆器</option>
-                            <option value="coins">錢幣</option>
-                            <option value="carvings">雕刻</option>
-                            <option value="paintings">繪畫</option>
-                        </select>
+                <fieldset class="mb-3">
+                    <legend class="form-label">文物類別</legend>
+                    <div class="row g-2">
+                        @foreach (var category in new[]
+                        {
+                            (Value: "bronzes", Label: "銅器"),
+                            (Value: "ceramics", Label: "陶瓷"),
+                            (Value: "jades", Label: "玉器"),
+                            (Value: "enamelWares", Label: "琺瑯器"),
+                            (Value: "lacquerWares", Label: "漆器"),
+                            (Value: "coins", Label: "錢幣"),
+                            (Value: "carvings", Label: "雕刻"),
+                            (Value: "paintings", Label: "繪畫")
+                        })
+                        {
+                            <div class="col-6 col-md-3">
+                                <label class="form-check">
+                                    <input class="form-check-input"
+                                           name="datasets"
+                                           type="checkbox"
+                                           value="@category.Value"
+                                           checked="@(category.Value == "bronzes")" />
+                                    <span class="form-check-label">@category.Label</span>
+                                </label>
+                            </div>
+                        }
                     </div>
-                    <div class="col-md-4">
+                    <div class="form-hint">直接勾選要一起匯入的類別。</div>
+                </fieldset>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
                         <label class="form-label" for="mode">資料範圍</label>
                         <select class="form-select" id="mode" name="mode">
                             <option value="both">新增與既有更新</option>
@@ -57,9 +74,16 @@
                             <option value="update">只檢查既有文物</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label" for="maxItems">每類最多筆數</label>
-                        <input class="form-control" id="maxItems" name="maxItems" type="number" min="1" max="100" value="32" required />
+                    <div class="col-md-6">
+                        <label class="form-label" for="maxItems">每個類別最多取幾筆</label>
+                        <select class="form-select" id="maxItems" name="maxItems">
+                            <option value="10">10 筆</option>
+                            <option value="20">20 筆</option>
+                            <option value="32" selected>32 筆</option>
+                            <option value="50">50 筆</option>
+                            <option value="100">100 筆</option>
+                        </select>
+                        <div class="form-hint">這個上限會分別套用到每個勾選的類別。</div>
                     </div>
                 </div>
 

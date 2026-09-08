@@ -73,7 +73,7 @@ public sealed class ImportController(
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PreviewSource(
-        string? dataset,
+        string[]? datasets,
         string mode = "both",
         int maxItems = 32,
         bool syncShop = false,
@@ -87,12 +87,30 @@ public sealed class ImportController(
 
         try
         {
-            var artifacts = await npmCatalogSourceService.PrepareAsync(
-                dataset ?? "",
-                mode,
-                maxItems,
-                mediaDirectory,
-                cancellationToken);
+            var selectedDatasets = (datasets ?? [])
+                .Where(dataset => !string.IsNullOrWhiteSpace(dataset))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            if (selectedDatasets.Length == 0)
+                throw new InvalidDataException("請至少選擇一個文物類別。");
+
+            var artifacts = new List<CatalogArtifactImportRow>();
+            foreach (var dataset in selectedDatasets)
+            {
+                artifacts.AddRange(await npmCatalogSourceService.PrepareAsync(
+                    dataset,
+                    mode,
+                    maxItems,
+                    mediaDirectory,
+                    cancellationToken));
+            }
+            artifacts = artifacts
+                .GroupBy(artifact => artifact.ArtifactRef, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .ToList();
+            if (artifacts.Count == 0)
+                throw new InvalidDataException("所選類別目前沒有符合資料範圍與品質規則的文物。");
+
             await using (var artifactsStream = System.IO.File.Create(Path.Combine(stageDirectory, "artifacts.json")))
             {
                 await JsonSerializer.SerializeAsync(

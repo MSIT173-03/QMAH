@@ -59,17 +59,17 @@ public sealed class NpmCatalogSourceService(
                 .Select(row => row.ArtifactRef)
                 .ToListAsync(cancellationToken))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var newRows = candidates.Where(row => !existingRefs.Contains(row.ArtifactRef)).Take(maxItems);
-        var updateRows = candidates.Where(row => existingRefs.Contains(row.ArtifactRef)).Take(maxItems);
+        var newRows = candidates.Where(row => !existingRefs.Contains(row.ArtifactRef));
+        var updateRows = candidates.Where(row => existingRefs.Contains(row.ArtifactRef));
         var selected = normalizedMode switch
         {
-            "new" => newRows.ToList(),
-            "update" => updateRows.ToList(),
-            _ => newRows.Concat(updateRows).ToList()
+            "new" => newRows.Take(maxItems).ToList(),
+            "update" => updateRows.Take(maxItems).ToList(),
+            _ => newRows.Concat(updateRows).Take(maxItems).ToList()
         };
 
         if (selected.Count == 0)
-            throw new InvalidDataException("官方來源目前沒有符合所選模式與品質規則的資料。 ");
+            return [];
 
         var prepared = new List<CatalogArtifactImportRow>(selected.Count);
         foreach (var row in selected)
@@ -108,7 +108,7 @@ public sealed class NpmCatalogSourceService(
         }
 
         if (prepared.Count == 0)
-            throw new InvalidDataException("符合條件的新資料圖片皆無法下載，請稍後再試。 ");
+            return [];
 
         return prepared;
     }
