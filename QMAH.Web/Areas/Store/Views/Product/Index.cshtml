@@ -124,8 +124,8 @@
                                            data-bs-toggle="modal"
                                            data-bs-target="#qmah-image-preview"
                                            data-qmah-image-preview="@item.ImageUrl"
-                                           data-qmah-image-preview-alt="@item.Name"
-                                           aria-label="預覽 @item.Name 圖片">
+                                           data-qmah-image-preview-alt="@item.DisplayLabel"
+                                           aria-label="預覽 @item.DisplayLabel 圖片">
                                             <img class="qmah-table-thumbnail"
                                                  src="@item.ImageUrl"
                                                  alt=""
@@ -139,7 +139,7 @@
                                     <span class="avatar avatar-lg"><i class="ti ti-photo-off"></i></span>
                                 }
                             </td>
-                            <td class="fw-semibold">@item.Name</td>
+                            <td class="fw-semibold">@item.DisplayLabel</td>
                             <td><span class="badge bg-blue-lt">@item.Category</span></td>
                             <td data-sort-value="@item.Price">@item.Price.ToString("C0")</td>
                             <td data-sort-value="@item.Stock">@item.Stock</td>

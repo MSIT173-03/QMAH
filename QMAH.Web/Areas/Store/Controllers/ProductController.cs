@@ -68,17 +68,17 @@ public class ProductController : Controller
 
         query = (sort, direction) switch
         {
-            ("name", "desc") => query.OrderByDescending(item => item.Product.Name),
-            ("name", _) => query.OrderBy(item => item.Product.Name),
-            ("category", "desc") => query.OrderByDescending(item => item.CategoryName).ThenBy(item => item.Product.Name),
-            ("category", _) => query.OrderBy(item => item.CategoryName).ThenBy(item => item.Product.Name),
-            ("price", "desc") => query.OrderByDescending(item => item.Product.Price).ThenBy(item => item.Product.Name),
-            ("price", _) => query.OrderBy(item => item.Product.Price).ThenBy(item => item.Product.Name),
-            ("stock", "desc") => query.OrderByDescending(item => item.Product.Stock).ThenBy(item => item.Product.Name),
-            ("stock", _) => query.OrderBy(item => item.Product.Stock).ThenBy(item => item.Product.Name),
-            ("status", "desc") => query.OrderByDescending(item => item.Product.IsActive).ThenBy(item => item.Product.Name),
-            ("status", _) => query.OrderBy(item => item.Product.IsActive).ThenBy(item => item.Product.Name),
-            _ => query.OrderByDescending(item => item.Product.IsActive).ThenBy(item => item.Product.Name)
+            ("name", "desc") => query.OrderByDescending(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("name", _) => query.OrderBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("category", "desc") => query.OrderByDescending(item => item.CategoryName).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("category", _) => query.OrderBy(item => item.CategoryName).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("price", "desc") => query.OrderByDescending(item => item.Product.Price).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("price", _) => query.OrderBy(item => item.Product.Price).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("stock", "desc") => query.OrderByDescending(item => item.Product.Stock).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("stock", _) => query.OrderBy(item => item.Product.Stock).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("status", "desc") => query.OrderByDescending(item => item.Product.IsActive).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            ("status", _) => query.OrderBy(item => item.Product.IsActive).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id),
+            _ => query.OrderByDescending(item => item.Product.IsActive).ThenBy(item => item.Product.Name).ThenBy(item => item.Product.Id)
         };
 
         var data = await query
@@ -95,6 +95,24 @@ public class ProductController : Controller
                 IsActive = item.Product.IsActive
             })
             .ToListAsync(cancellationToken);
+
+        var duplicateProducts = await db.Products
+            .AsNoTracking()
+            .Where(product => product.Name.Contains("（故宮編號："))
+            .Select(product => new { product.Id, product.Name, product.ExternalRef })
+            .ToListAsync(cancellationToken);
+        var duplicateNumbers = duplicateProducts
+            .GroupBy(product => ProductSimplefyListItem.GetDisplayName(product.Name), StringComparer.Ordinal)
+            .SelectMany(group => group
+                .OrderBy(product => product.ExternalRef, StringComparer.Ordinal)
+                .ThenBy(product => product.Id)
+                .Select((product, index) => new { product.Id, Number = index + 1 }))
+            .ToDictionary(product => product.Id, product => product.Number);
+        foreach (var item in data)
+        {
+            if (duplicateNumbers.TryGetValue(item.Id, out var number))
+                item.DuplicateNumber = number;
+        }
 
         ViewData["Search"] = search;
         ViewData["Sort"] = sort;
