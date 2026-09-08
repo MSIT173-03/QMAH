@@ -104,9 +104,6 @@ public class ArtifactController : Controller
     public ActionResult Delete(Guid? id)
     {
         var artifact = _db.Artifacts
-            .AsNoTracking()
-            .Include(item => item.ArtifactQuestionEntry)
-            .Include(item => item.ArtifactUnlocks)
             .FirstOrDefault(item => item.Id == id);
 
         if (artifact == null)

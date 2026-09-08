@@ -56,35 +56,41 @@ public class KeyController : Controller
     [ValidateAntiForgeryToken]
     public ActionResult Create(KeyDefinition kd, Guid eraBucketId, Guid categoryId)
     {
-        NormalizeScope(kd);
+        return _db.Database.CreateExecutionStrategy().Execute<ActionResult>(() =>
+        {
+            _db.ChangeTracker.Clear();
+            using var transaction = _db.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            NormalizeScope(kd);
 
-        var errorMessage = ValidateKey(kd);
-        if (errorMessage != null)
-        {
-            ViewBag.ErrorMessage = errorMessage;
-            data(kd.EraBucketId, kd.CategoryId);
-            return View(kd);
-        }
+            var errorMessage = ValidateKey(kd);
+            if (errorMessage != null)
+            {
+                ViewBag.ErrorMessage = errorMessage;
+                data(kd.EraBucketId, kd.CategoryId);
+                return View(kd);
+            }
 
-        try
-        {
-            kd.Id = Guid.NewGuid();
-            _db.KeyDefinitions.Add(kd);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
-        }
-        catch (DbUpdateException)
-        {
-            ViewBag.ErrorMessage = "儲存失敗，請確認鑰匙代碼沒有重複，且解鎖範圍符合設定。";
-            data(kd.EraBucketId, kd.CategoryId);
-            return View(kd);
-        }
-        catch (Exception)
-        {
-            ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
-            data(kd.EraBucketId, kd.CategoryId);
-            return View(kd);
-        }
+            try
+            {
+                kd.Id = Guid.NewGuid();
+                _db.KeyDefinitions.Add(kd);
+                _db.SaveChanges();
+                transaction.Commit();
+                return RedirectToAction("Index");
+            }
+            catch (DbUpdateException)
+            {
+                ViewBag.ErrorMessage = "儲存失敗，請確認鑰匙代碼沒有重複，且解鎖範圍符合設定。";
+                data(kd.EraBucketId, kd.CategoryId);
+                return View(kd);
+            }
+            catch (Exception)
+            {
+                ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
+                data(kd.EraBucketId, kd.CategoryId);
+                return View(kd);
+            }
+        });
     }
 
     [HttpPost]
@@ -109,13 +115,28 @@ public class KeyController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleActive(Guid id, CancellationToken cancellationToken)
     {
-        var key = await _db.KeyDefinitions.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
-        if (key == null) return NotFound();
+        bool? nextIsActive = null;
+        return await _db.Database.CreateExecutionStrategy().ExecuteAsync<IActionResult>(async () =>
+        {
+            _db.ChangeTracker.Clear();
+            await using var transaction = await _db.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken);
+            var key = await _db.KeyDefinitions.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+            if (key == null) return NotFound();
 
-        key.IsActive = !key.IsActive;
-        await _db.SaveChangesAsync(cancellationToken);
+            nextIsActive ??= !key.IsActive;
+            key.IsActive = nextIsActive.Value;
+            if (key.IsActive)
+            {
+                var errorMessage = ValidateKey(key, key.Id);
+                if (errorMessage != null) return Conflict(errorMessage);
+            }
 
-        return RedirectToAction(nameof(Index));
+            await _db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return RedirectToAction(nameof(Index));
+        });
     }
 
     public ActionResult Edit(Guid? id, Guid eraBucketId, Guid categoryId)
@@ -137,52 +158,59 @@ public class KeyController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Edit(KeyDefinition kd, Guid eraBucketId, Guid categoryId)
     {
-        var k = _db.KeyDefinitions.FirstOrDefault(t => t.Id == kd.Id);
-
-        if (k == null)
+        return _db.Database.CreateExecutionStrategy().Execute<IActionResult>(() =>
         {
-            return Content("Id 不存在");
-        }
+            _db.ChangeTracker.Clear();
+            using var transaction = _db.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            var k = _db.KeyDefinitions.FirstOrDefault(t => t.Id == kd.Id);
 
-        NormalizeScope(kd);
+            if (k == null)
+            {
+                return Content("Id 不存在");
+            }
 
-        var errorMessage = ValidateKey(kd, kd.Id);
-        if (errorMessage != null)
-        {
-            ViewBag.ErrorMessage = errorMessage;
-            data(kd.EraBucketId, kd.CategoryId);
-            return View(kd);
-        }
+            NormalizeScope(kd);
 
-        try
-        {
-            k.Name = kd.Name;
-            k.Code = kd.Code;
-            k.ScopeType = kd.ScopeType;
-            k.CategoryId = kd.CategoryId;
-            k.EraBucketId = kd.EraBucketId;
-            k.IsActive = kd.IsActive;
-            k.RecyclePointValue = kd.RecyclePointValue;
-            _db.SaveChanges();
-        }
-        catch (DbUpdateException)
-        {
-            ViewBag.ErrorMessage = "儲存失敗，請確認鑰匙代碼沒有重複，且解鎖範圍符合設定。";
-            data(kd.EraBucketId, kd.CategoryId);
-            return View(kd);
-        }
-        catch (Exception)
-        {
-            ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
-            data(kd.EraBucketId, kd.CategoryId);
-            return View(kd);
-        }
+            var errorMessage = ValidateKey(kd, kd.Id);
+            if (errorMessage != null)
+            {
+                ViewBag.ErrorMessage = errorMessage;
+                data(kd.EraBucketId, kd.CategoryId);
+                return View(kd);
+            }
 
-        return RedirectToAction("Index");
+            try
+            {
+                k.Name = kd.Name;
+                k.Code = kd.Code;
+                k.ScopeType = kd.ScopeType;
+                k.CategoryId = kd.CategoryId;
+                k.EraBucketId = kd.EraBucketId;
+                k.IsActive = kd.IsActive;
+                k.RecyclePointValue = kd.RecyclePointValue;
+                _db.SaveChanges();
+                transaction.Commit();
+            }
+            catch (DbUpdateException)
+            {
+                ViewBag.ErrorMessage = "儲存失敗，請確認鑰匙代碼沒有重複，且解鎖範圍符合設定。";
+                data(kd.EraBucketId, kd.CategoryId);
+                return View(kd);
+            }
+            catch (Exception)
+            {
+                ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
+                data(kd.EraBucketId, kd.CategoryId);
+                return View(kd);
+            }
+
+            return RedirectToAction("Index");
+        });
     }
 
     private void NormalizeScope(KeyDefinition kd)
     {
+        kd.Code = kd.Code?.Trim() ?? string.Empty;
         kd.ScopeType = kd.ScopeType?.Trim().ToUpperInvariant() ?? string.Empty;
 
         if (kd.ScopeType == "CATEGORY")
@@ -202,6 +230,13 @@ public class KeyController : Controller
 
     private string? ValidateKey(KeyDefinition kd, Guid? currentId = null)
     {
+        if ((string.Equals(kd.Code, "NORMAL", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(kd.Code, "KEY-NORMAL", StringComparison.OrdinalIgnoreCase)) &&
+            kd.ScopeType != "NORMAL")
+        {
+            return "一般鑰匙代碼必須使用 NORMAL 解鎖範圍。";
+        }
+
         if (kd.ScopeType != "NORMAL" &&
             kd.ScopeType != "CATEGORY" &&
             kd.ScopeType != "ERA" &&
@@ -236,7 +271,8 @@ public class KeyController : Controller
 
         var scopeExists = kd.ScopeType switch
         {
-            "NORMAL" => others.Any(t => t.ScopeType == "NORMAL"),
+            "NORMAL" => kd.IsActive && others.Any(t => t.IsActive &&
+                (t.ScopeType == "NORMAL" || t.Code == "NORMAL" || t.Code == "KEY-NORMAL")),
             "UNIVERSAL" => others.Any(t => t.ScopeType == "UNIVERSAL"),
             "CATEGORY" => others.Any(t => t.ScopeType == "CATEGORY" && t.CategoryId == kd.CategoryId),
             "ERA" => others.Any(t => t.ScopeType == "ERA" && t.EraBucketId == kd.EraBucketId),

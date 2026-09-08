@@ -411,26 +411,44 @@
         .addEventListener("change", () => applyMobileSidebar(false));
 
     document.querySelectorAll('form[method="post"], form:not([method])').forEach((form) => {
-        form.addEventListener("submit", (event) => {
-            if (form.dataset.qmahConfirmPending === "true") {
-                return;
-            }
+        let pendingSubmission;
+        let restoreSubmitter = () => {};
+        const resetBusy = () => {
+            pendingSubmission = undefined;
+            form.classList.remove("qmah-is-submitting");
+            form.removeAttribute("aria-busy");
+            restoreSubmitter();
+        };
+        window.addEventListener("pageshow", resetBusy);
 
-            if (form.classList.contains("qmah-is-submitting")) {
+        form.addEventListener("submit", (event) => {
+            if (form.classList.contains("qmah-is-submitting") ||
+                (pendingSubmission && !pendingSubmission.defaultPrevented)) {
                 event.preventDefault();
                 return;
             }
 
-            form.classList.add("qmah-is-submitting");
-            form.setAttribute("aria-busy", "true");
+            const submitter = event.submitter;
+            pendingSubmission = event;
+            // Wait until synchronous confirmation and custom/AJAX handlers have canceled or accepted submission.
+            window.setTimeout(() => {
+                if (event.defaultPrevented || pendingSubmission !== event) return;
 
-            const submitter = event.submitter
-                || form.querySelector('button[type="submit"], input[type="submit"]');
-
-            if (submitter && !submitter.disabled) {
-                submitter.disabled = true;
-                submitter.textContent = "處理中…";
-            }
+                form.classList.add("qmah-is-submitting");
+                form.setAttribute("aria-busy", "true");
+                if (submitter && !submitter.disabled) {
+                    const isInput = submitter instanceof HTMLInputElement;
+                    const original = isInput ? submitter.value : submitter.innerHTML;
+                    restoreSubmitter = () => {
+                        submitter.disabled = false;
+                        if (isInput) submitter.value = original;
+                        else submitter.innerHTML = original;
+                    };
+                    submitter.disabled = true;
+                    if (isInput) submitter.value = "處理中…";
+                    else submitter.textContent = "處理中…";
+                }
+            }, 0);
         });
     });
 

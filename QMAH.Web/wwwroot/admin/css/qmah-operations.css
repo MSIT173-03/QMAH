@@ -652,11 +652,23 @@
 }
 
 .qmah-admin .qmah-batch-confirm {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .25rem .6rem;
   margin: 0 0 1rem;
   padding: .8rem .9rem;
   border: 1px solid color-mix(in srgb, var(--qmah-area-accent) 30%, var(--qmah-line));
   border-radius: 10px;
   background: color-mix(in srgb, var(--qmah-area-soft) 42%, var(--qmah-surface));
+}
+
+.qmah-admin .qmah-batch-confirm .form-check-input {
+  float: none;
+  margin: .2rem 0 0;
+}
+
+.qmah-admin .qmah-batch-confirm [data-valmsg-for] {
+  grid-column: 2;
 }
 
 .qmah-admin .qmah-batch-preview-panel {
