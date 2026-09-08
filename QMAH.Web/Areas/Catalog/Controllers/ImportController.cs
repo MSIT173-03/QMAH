@@ -35,6 +35,8 @@ public sealed class ImportController(
     [HttpGet]
     public async Task<IActionResult> SourcePreview(
         string? dataset,
+        string? query,
+        int page = 1,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(dataset))
@@ -43,12 +45,20 @@ public sealed class ImportController(
         try
         {
             var rows = await npmOpenDataClient.GetDatasetAsync(dataset, cancellationToken);
+            var keyword = query?.Trim();
+            var filtered = rows.Where(row => string.IsNullOrEmpty(keyword)
+                || $"{row.Identifier} {row.Name} {row.Category} {row.Era}".Contains(keyword, StringComparison.OrdinalIgnoreCase)).ToList();
+            var pages = Math.Max(1, (int)Math.Ceiling(filtered.Count / 20d));
+            page = Math.Clamp(page, 1, pages);
             return Json(new
             {
                 dataset,
                 categoryName = NpmOpenDataClient.GetDatasetDisplayName(dataset),
                 count = rows.Count,
-                preview = rows.Take(5).Select(row => new
+                matchedCount = filtered.Count,
+                page,
+                pages,
+                preview = filtered.Skip((page - 1) * 20).Take(20).Select(row => new
                 {
                     row.Identifier,
                     row.Name,
@@ -66,7 +76,7 @@ public sealed class ImportController(
         {
             return StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
-                new { title = "故宮來源暫時無法連線", detail = "請稍後再試；正式匯入仍須先由資料工具完成正規化與圖片品質檢查。" });
+                new { title = "故宮來源暫時無法連線", detail = "請稍後重新查詢。" });
         }
     }
 
@@ -132,6 +142,7 @@ public sealed class ImportController(
             return View("Index", new CatalogImportViewModel
             {
                 Preview = preview,
+                Artifacts = package.Artifacts,
                 StageId = stageId,
                 ApprovalToken = preview.ApprovalToken
             });
@@ -206,6 +217,7 @@ public sealed class ImportController(
             return View("Index", new CatalogImportViewModel
             {
                 Preview = preview,
+                Artifacts = package.Artifacts,
                 StageId = stageId,
                 ApprovalToken = preview.ApprovalToken
             });
