@@ -128,6 +128,7 @@ builder.Services.AddSocialAuthorizationPolicies();
 builder.Services.AddSingleton<AdminNavigationService>();
 builder.Services.AddScoped<AdminAuditLogFilter>();
 builder.Services.AddScoped<CatalogImportService>();
+builder.Services.AddScoped<NpmCatalogSourceService>();
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
 // 新增功能時，無狀態且可跨 request 共用的元件才使用 Singleton；會使用 DbContext 或目前會員資料的服務一律使用 Scoped。
 // 跨系統規則放在 Infrastructure service，再由 Controller 呼叫，避免管理後台與未來前台 API 各自複製判斷。

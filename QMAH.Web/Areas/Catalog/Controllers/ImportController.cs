@@ -18,7 +18,8 @@ namespace QMAH.Web.Areas.Catalog.Controllers;
 public sealed class ImportController(
     CatalogImportService importService,
     IWebHostEnvironment environment,
-    NpmOpenDataClient npmOpenDataClient) : Controller
+    NpmOpenDataClient npmOpenDataClient,
+    NpmCatalogSourceService npmCatalogSourceService) : Controller
 {
     private const long MaxJsonFileBytes = 32L * 1024 * 1024;
     private const long MaxArchiveBytes = 256L * 1024 * 1024;
@@ -66,6 +67,71 @@ public sealed class ImportController(
             return StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
                 new { title = "故宮來源暫時無法連線", detail = "請稍後再試；正式匯入仍須先由資料工具完成正規化與圖片品質檢查。" });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PreviewSource(
+        string? dataset,
+        string mode = "both",
+        int maxItems = 32,
+        bool syncShop = false,
+        bool syncQuestionBank = true,
+        CancellationToken cancellationToken = default)
+    {
+        var stageId = Guid.NewGuid().ToString("N");
+        var stageDirectory = GetStageDirectory(stageId);
+        var mediaDirectory = Path.Combine(stageDirectory, "media");
+        Directory.CreateDirectory(mediaDirectory);
+
+        try
+        {
+            var artifacts = await npmCatalogSourceService.PrepareAsync(
+                dataset ?? "",
+                mode,
+                maxItems,
+                mediaDirectory,
+                cancellationToken);
+            await using (var artifactsStream = System.IO.File.Create(Path.Combine(stageDirectory, "artifacts.json")))
+            {
+                await JsonSerializer.SerializeAsync(
+                    artifactsStream,
+                    artifacts,
+                    cancellationToken: cancellationToken);
+            }
+            await SaveStageAsync(
+                stageDirectory,
+                new ImportStage(syncShop, syncQuestionBank, DateTime.UtcNow),
+                cancellationToken);
+
+            var package = await CatalogImportPackage.LoadFilesAsync(
+                Path.Combine(stageDirectory, "artifacts.json"),
+                null,
+                cancellationToken);
+            var request = CreateRequest(stageDirectory, package, syncShop, syncQuestionBank);
+            var preview = await importService.PreviewAsync(request, cancellationToken);
+            return View("Index", new CatalogImportViewModel
+            {
+                Preview = preview,
+                StageId = stageId,
+                ApprovalToken = preview.ApprovalToken
+            });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            DeleteStage(stageDirectory);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            DeleteStage(stageDirectory);
+            return View("Index", new CatalogImportViewModel
+            {
+                ErrorMessage = exception is HttpRequestException
+                    ? "故宮官方來源暫時無法連線，請稍後再試。"
+                    : ToUserMessage(exception)
+            });
         }
     }
 

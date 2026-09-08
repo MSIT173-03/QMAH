@@ -229,7 +229,7 @@
     }
 
     function runThemeTransition(theme, persist) {
-        if (reduceMotion.matches || typeof document.startViewTransition !== "function") {
+        if (typeof document.startViewTransition !== "function") {
             applyTheme(theme, persist);
             return Promise.resolve();
         }

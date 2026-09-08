@@ -8,6 +8,7 @@ namespace QMAH.Infrastructure.CatalogImport;
 /// </summary>
 public sealed class NpmOpenDataClient(HttpClient httpClient)
 {
+    private const long MaxImageBytes = 20L * 1024 * 1024;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -61,6 +62,54 @@ public sealed class NpmOpenDataClient(HttpClient httpClient)
                    JsonOptions,
                    cancellationToken)
                ?? [];
+    }
+
+    public async Task DownloadImageAsync(
+        string sourceUrl,
+        string destinationPath,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Uri.TryCreate(sourceUrl, UriKind.Absolute, out var source)
+            || source.Scheme != Uri.UriSchemeHttps
+            || !source.Host.Equals("digitalarchive.npm.gov.tw", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException("故宮圖片網址不符合允許的來源。");
+        }
+
+        using var response = await httpClient.GetAsync(
+            source,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        if (response.Content.Headers.ContentLength is > MaxImageBytes
+            || response.Content.Headers.ContentType?.MediaType?.StartsWith("image/", StringComparison.OrdinalIgnoreCase) != true)
+        {
+            throw new InvalidDataException("故宮圖片格式或大小不符合匯入規則。");
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+        await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var output = new FileStream(
+            destinationPath,
+            FileMode.CreateNew,
+            FileAccess.Write,
+            FileShare.None,
+            64 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+        var buffer = new byte[64 * 1024];
+        long total = 0;
+        while (true)
+        {
+            var read = await input.ReadAsync(buffer, cancellationToken);
+            if (read == 0)
+                break;
+            total += read;
+            if (total > MaxImageBytes)
+                throw new InvalidDataException("故宮圖片大小超過 20 MB。");
+            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+        }
     }
 }
 

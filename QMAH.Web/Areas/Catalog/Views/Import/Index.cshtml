@@ -18,12 +18,12 @@
 
 <div class="row row-cards qmah-import-page">
     <div class="col-12 col-xl-7">
-        <form asp-action="Preview" method="post" enctype="multipart/form-data" class="card qmah-form-card">
+        <form asp-action="PreviewSource" method="post" class="card qmah-form-card mb-4">
             @Html.AntiForgeryToken()
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">上傳資料包</h2>
-                    <div class="text-secondary">支援資料工具產生的文物資料包與圖片資產 ZIP。</div>
+                    <h2 class="card-title">從故宮官方資料匯入</h2>
+                    <div class="text-secondary">系統會下載官方資料與圖片，並先顯示新增、更新與排除筆數。</div>
                 </div>
             </div>
             <div class="card-body">
@@ -35,6 +35,69 @@
                 }
                 <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
+                <div class="row g-3 mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label" for="dataset">文物類別</label>
+                        <select class="form-select" id="dataset" name="dataset" required>
+                            <option value="bronzes">銅器</option>
+                            <option value="ceramics">陶瓷</option>
+                            <option value="jades">玉器</option>
+                            <option value="enamelWares">琺瑯器</option>
+                            <option value="lacquerWares">漆器</option>
+                            <option value="coins">錢幣</option>
+                            <option value="carvings">雕刻</option>
+                            <option value="paintings">繪畫</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="mode">資料範圍</label>
+                        <select class="form-select" id="mode" name="mode">
+                            <option value="both">新增與既有更新</option>
+                            <option value="new">只取新增文物</option>
+                            <option value="update">只檢查既有文物</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="maxItems">每類最多筆數</label>
+                        <input class="form-control" id="maxItems" name="maxItems" type="number" min="1" max="100" value="32" required />
+                    </div>
+                </div>
+
+                <div class="border rounded p-3 bg-light-subtle">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" id="sourceSyncQuestionBank" name="syncQuestionBank" value="true" type="checkbox" checked />
+                        <input name="syncQuestionBank" value="false" type="hidden" />
+                        <label class="form-check-label" for="sourceSyncQuestionBank">
+                            <strong>同步題庫（預設開啟）</strong>
+                            <span class="d-block text-secondary small">新增文物會一併加入題庫。</span>
+                        </label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" id="sourceSyncShop" name="syncShop" value="true" type="checkbox" />
+                        <input name="syncShop" value="false" type="hidden" />
+                        <label class="form-check-label" for="sourceSyncShop">
+                            <strong>同步商城商品</strong>
+                            <span class="d-block text-secondary small">為新增文物建立展示商品；既有商品保留人工調整。</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer qmah-card-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-cloud-download me-1"></i>下載並預檢
+                </button>
+            </div>
+        </form>
+
+        <form asp-action="Preview" method="post" enctype="multipart/form-data" class="card qmah-form-card">
+            @Html.AntiForgeryToken()
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">進階：上傳資料包</h2>
+                    <div class="text-secondary">需要匯入自行整理的資料時，可上傳 JSON 與圖片資產 ZIP。</div>
+                </div>
+            </div>
+            <div class="card-body">
                 <div class="mb-3">
                     <label class="form-label" for="artifactsFile">文物資料包 <span class="text-danger">*</span></label>
                     <input class="form-control" id="artifactsFile" name="artifactsFile" type="file" accept=".json,application/json" required />
@@ -51,31 +114,6 @@
                     <label class="form-label" for="mediaArchive">圖片資產 ZIP（可選）</label>
                     <input class="form-control" id="mediaArchive" name="mediaArchive" type="file" accept=".zip,application/zip" />
                     <div class="form-hint">ZIP 內保留 media 根目錄以下的相對路徑；若資料包有圖片，請一併提供。</div>
-                </div>
-
-                <div class="border rounded p-3 mb-3">
-                    <label class="form-label" for="npmSourceDataset">官方來源連線檢查</label>
-                    <div class="input-group">
-                        <select class="form-select" id="npmSourceDataset">
-                            <option value="bronzes">銅器</option>
-                            <option value="ceramics">陶瓷</option>
-                            <option value="jades">玉器</option>
-                            <option value="enamelWares">琺瑯器</option>
-                            <option value="lacquerWares">漆器</option>
-                            <option value="coins">錢幣</option>
-                            <option value="carvings">雕刻</option>
-                            <option value="paintings">繪畫</option>
-                        </select>
-                        <button type="button"
-                                class="btn btn-outline-primary"
-                                id="npmSourceCheck"
-                                data-source-preview-url="@Url.Action("SourcePreview", "Import", new { area = "Catalog" })">
-                            檢查來源
-                        </button>
-                    </div>
-                    <div id="npmSourceResult" class="form-hint mt-2" role="status">
-                        這一步只讀取故宮官方資料，不會寫入資料庫；正式匯入仍以工具產生的資料包為準。
-                    </div>
                 </div>
 
                 <div class="border rounded p-3 bg-light-subtle">
@@ -97,7 +135,7 @@
                     </div>
                 </div>
             </div>
-<div class="card-footer qmah-card-footer">
+            <div class="card-footer qmah-card-footer">
                 <button type="submit" class="btn btn-primary">
                     <i class="ti ti-search me-1"></i>預檢資料包
                 </button>
@@ -113,7 +151,7 @@
             <div class="card-body">
                 <ul class="mb-0">
                     <li>只接受已通過資料品質檢查的文物資料。</li>
-                        <li>相同的故宮編號或商品編號會判定為既有資料，不會覆蓋既有圖片與人工調整。</li>
+                    <li>相同的故宮編號或商品編號會判定為既有資料，不會覆蓋既有圖片與人工調整。</li>
                     <li>分類與年代必須能對應既有規則；無法確認的資料會在預檢時排除。</li>
                     <li>資料庫與圖片會用同一個確認碼完成匯入，任一階段失敗都不會留下半套資料。</li>
                 </ul>
@@ -157,7 +195,7 @@
                 }
             </div>
         }
-<div class="card-footer qmah-card-footer qmah-card-footer--split">
+        <div class="card-footer qmah-card-footer qmah-card-footer--split">
             <div class="text-secondary small">
                 題庫同步：@(preview.SyncQuestionBank ? "開啟" : "關閉")；商城同步：@(preview.SyncShop ? "開啟" : "關閉")
             </div>
@@ -171,58 +209,4 @@
             </form>
         </div>
     </div>
-}
-
-@section Scripts {
-    <script>
-        (() => {
-            const button = document.getElementById("npmSourceCheck");
-            const dataset = document.getElementById("npmSourceDataset");
-            const result = document.getElementById("npmSourceResult");
-            if (!button || !dataset || !result) return;
-
-            let activeRequest = null;
-
-            button.addEventListener("click", async () => {
-                if (button.disabled) return;
-
-                activeRequest?.abort();
-                const controller = typeof AbortController === "function"
-                    ? new AbortController()
-                    : null;
-                activeRequest = controller;
-                const timeoutId = window.setTimeout(() => controller?.abort(), 15000);
-                button.disabled = true;
-                dataset.disabled = true;
-                button.setAttribute("aria-busy", "true");
-                result.textContent = "正在讀取故宮官方資料集……";
-                try {
-                    const url = new URL(button.dataset.sourcePreviewUrl, window.location.origin);
-                    url.searchParams.set("dataset", dataset.value);
-                    const options = {
-                        headers: { "Accept": "application/json" },
-                        credentials: "same-origin"
-                    };
-                    if (controller) options.signal = controller.signal;
-                    const response = await fetch(url, options);
-                    const body = await response.json().catch(() => ({}));
-                    if (!response.ok) throw new Error(body.detail || body.title || "來源檢查失敗。");
-                    const names = (Array.isArray(body.preview) ? body.preview : [])
-                        .map(item => item.name || item.identifier || "未命名")
-                        .join("、");
-                    result.textContent = `來源可連線：${body.categoryName} 共 ${body.count} 筆。${names ? ` 範例：${names}` : ""}`;
-                } catch (error) {
-                    result.textContent = error?.name === "AbortError"
-                        ? "來源檢查逾時或已取消，請確認網路後再試。"
-                        : error instanceof Error ? error.message : "來源檢查失敗。";
-                } finally {
-                    window.clearTimeout(timeoutId);
-                    if (activeRequest === controller) activeRequest = null;
-                    button.disabled = false;
-                    dataset.disabled = false;
-                    button.removeAttribute("aria-busy");
-                }
-            });
-        })();
-    </script>
 }
