@@ -17,6 +17,10 @@
   <img src="https://img.shields.io/badge/SQL%20Server-DB--first-315E55" alt="SQL Server DB-first">
 </p>
 
+## 目前正式 Release
+
+目前 QMAH 主程式正式版本是 [`v0.9.0`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.0)。完整資料庫下載請使用 [QMAH-Database `db-v0.9.0` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.0)，其中提供 `QMAH.sql`、`QMAH-0.9.0.bak`、`0.8.0-to-0.9.0.sql` 與 `SHA256SUMS.txt`。
+
 ## 專案簡介
 
 「清明鑑定屋」是 QMAH 的既有專案名稱，名稱來源為《清明上河圖》。
