@@ -108,7 +108,7 @@
                                 <select asp-for="CouponDefinitionId" asp-items="ViewBag.BatchCouponDefinitions" class="form-select">
                                     <option value="">請選擇優惠券</option>
                                 </select>
-                                <div class="form-hint">批次發放只使用管理員發放型優惠券；撤銷也會保留原券的歷史紀錄。</div>
+                                <div class="form-hint">選項會顯示折扣、最低消費與有效天數。發放只使用啟用中的管理員發放型優惠券；撤銷會保留原券歷史。</div>
                                 <span asp-validation-for="CouponDefinitionId" class="text-danger"></span>
                             </div>
                             <div class="col-12">
@@ -124,7 +124,7 @@
                         @if (Model.TargetUserId.HasValue)
                         {
                             <div class="alert alert-secondary mb-0" role="note">
-                                <i class="ti ti-user-check me-1" aria-hidden="true"></i>
+                                <i class="ti ti-user me-1" aria-hidden="true"></i>
                                 指定會員：<strong>@(targetMemberName ?? Model.TargetUserId.ToString())</strong>
                             </div>
                         }

@@ -148,14 +148,13 @@ public sealed class OperationsController(
             .Where(definition => definition.AcquisitionType == "ADMIN_GRANT")
             .OrderByDescending(definition => definition.IsActive)
             .ThenBy(definition => definition.Name)
-            .Select(definition => new
-            {
-                definition.Id,
-                Label = definition.Name + (definition.IsActive ? "" : "（已停用，僅供查詢歷史）")
-            })
             .ToListAsync(cancellationToken);
         ViewBag.BatchCouponDefinitions = new SelectList(
-            definitions,
+            definitions.Select(definition => new
+            {
+                definition.Id,
+                Label = BuildCouponDefinitionLabel(definition)
+            }),
             "Id",
             "Label",
             model.CouponDefinitionId);
@@ -182,6 +181,18 @@ public sealed class OperationsController(
             .ToList();
         ViewData["Title"] = "資產活動";
         ViewData["AdminDescription"] = "以會員條件批次增加或扣除鑑定點數、優惠券；每位會員仍會留下可回查的逐筆紀錄。";
+    }
+
+    private static string BuildCouponDefinitionLabel(CouponDefinition definition)
+    {
+        var discount = definition.DiscountType == "PERCENT"
+            ? $"折抵 {definition.DiscountValue:0.##}%"
+            : $"折抵 NT${definition.DiscountValue:0.##}";
+        var minimum = definition.MinimumAmount > 0
+            ? $"滿 NT${definition.MinimumAmount:0.##}"
+            : "無最低消費";
+        var status = definition.IsActive ? "" : "｜已停用，僅可撤銷";
+        return $"{definition.Name}｜{discount}｜{minimum}｜發放後 {definition.ValidityDays} 天{status}";
     }
 
     // 總覽只取必要欄位，再由程式補齊沒有資料的日期
