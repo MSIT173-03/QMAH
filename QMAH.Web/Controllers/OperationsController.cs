@@ -46,11 +46,20 @@ public sealed class OperationsController(
         });
     }
 
-    /// <summary>顯示批次資產活動；這裡處理活動性異動，不取代各背包的逐人操作。</summary>
+    /// <summary>顯示批次或指定會員的資產異動頁面。</summary>
     [HttpGet]
-    public async Task<IActionResult> EconomyBatches(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> EconomyBatches(
+        Guid? targetUserId,
+        string? assetType,
+        CancellationToken cancellationToken = default)
     {
-        var model = new EconomyBatchPageViewModel();
+        var model = new EconomyBatchPageViewModel
+        {
+            TargetUserId = targetUserId,
+            AssetType = string.Equals(assetType, "COUPON", StringComparison.OrdinalIgnoreCase)
+                ? "COUPON"
+                : "POINT"
+        };
         await PopulateEconomyBatchPageAsync(model, cancellationToken);
         return View(model);
     }
@@ -106,7 +115,11 @@ public sealed class OperationsController(
         if (result.Status == "COMPLETED")
         {
             TempData["SuccessMessage"] = $"批次資產活動完成：影響 {result.TargetCount:N0} 位會員，共異動 {result.AffectedAssetCount:N0} 項資產。";
-            return RedirectToAction(nameof(EconomyBatches));
+            return RedirectToAction(nameof(EconomyBatches), new
+            {
+                targetUserId = model.TargetUserId,
+                assetType = model.AssetType
+            });
         }
 
         model.HasPreview = false;
@@ -152,6 +165,18 @@ public sealed class OperationsController(
             .OrderBy(role => role.Name)
             .Select(role => role.Name!)
             .ToListAsync(cancellationToken);
+        ViewBag.TargetMemberName = model.TargetUserId.HasValue
+            ? await (
+                from user in db.Users.AsNoTracking()
+                join profile in db.UserProfiles.AsNoTracking()
+                    on user.Id equals profile.UserId into profiles
+                from profile in profiles.DefaultIfEmpty()
+                where user.Id == model.TargetUserId.Value
+                select profile == null || string.IsNullOrWhiteSpace(profile.Nickname)
+                    ? user.Email ?? user.UserName ?? "未命名會員"
+                    : profile.Nickname)
+                .SingleOrDefaultAsync(cancellationToken)
+            : null;
         model.RecentBatches = (await bulkEconomyService.GetRecentBatchesAsync(40, cancellationToken))
             .Select(EconomyBatchListItemViewModel.From)
             .ToList();

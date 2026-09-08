@@ -9,6 +9,8 @@ namespace QMAH.Web.Models;
 /// </summary>
 public sealed class EconomyBatchPageViewModel
 {
+    public Guid? TargetUserId { get; set; }
+
     [Required]
     public string AssetType { get; set; } = "POINT";
 
@@ -73,7 +75,8 @@ public sealed class EconomyBatchPageViewModel
             CreatedFrom,
             CreatedTo,
             MinPointBalance,
-            MaxPointBalance));
+            MaxPointBalance,
+            TargetUserId));
 
     public void ApplyPreview(BulkEconomyPreview preview)
     {

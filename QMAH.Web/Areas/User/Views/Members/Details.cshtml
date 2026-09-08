@@ -91,12 +91,12 @@
 
                     <div class="col-md-6">
                         <div class="text-muted small">註冊時間</div>
-                        <div>@Model.User.CreatedAt</div>
+                        <div>@Model.User.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="text-muted small">最後更新</div>
-                        <div>@Model.User.UpdatedAt</div>
+                        <div>@Model.User.UpdatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div>
                     </div>
                 </div>
 
@@ -230,12 +230,12 @@
 
                         <div class="col-md-6">
                             <div class="text-muted small">Profile 建立時間</div>
-                            <div>@Model.Profile.CreatedAt</div>
+                            <div>@Model.Profile.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="text-muted small">Profile 最後更新</div>
-                            <div>@Model.Profile.UpdatedAt</div>
+                            <div>@Model.Profile.UpdatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</div>
                         </div>
                     </div>
                 }
@@ -423,7 +423,7 @@
                             <tr>
                                 <td>@item.Achievement.Name</td>
                                 <td>@item.Achievement.Title</td>
-                                <td>@item.AchievedAt</td>
+                                <td>@item.AchievedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
                                 <td>
                                     @if (item.IsDisplayed)
                                     {
@@ -437,7 +437,7 @@
                                 <td>
                                     @if (item.DisplayedAt.HasValue)
                                     {
-                                        @item.DisplayedAt.Value
+                                        @item.DisplayedAt.Value.ToLocalTime().ToString("yyyy/MM/dd HH:mm")
                                     }
                                     else
                                     {
@@ -485,8 +485,11 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <strong>點數異動紀錄</strong>
 
-        <a asp-action="AdjustPoints"
-           asp-route-id="@Model.User.Id"
+        <a asp-area=""
+           asp-controller="Operations"
+           asp-action="EconomyBatches"
+           asp-route-targetUserId="@Model.User.Id"
+           asp-route-assetType="POINT"
            class="btn btn-sm btn-warning">
             調整點數
         </a>
@@ -519,7 +522,7 @@
                         @foreach (var item in Model.PointTransactions)
                         {
                             <tr>
-                                <td>@item.CreatedAt</td>
+                                <td>@item.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
                                 <td>
                                     @if (item.Amount > 0)
                                     {

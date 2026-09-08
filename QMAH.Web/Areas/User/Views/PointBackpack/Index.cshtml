@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "點數背包";
-    ViewData["AdminDescription"] = "查看各會員目前持有的點數餘額，並進入既有點數調整功能。";
+    ViewData["AdminDescription"] = "查看各會員目前持有的點數餘額，並從資產活動進行異動。";
 
     int currentPage = ViewBag.CurrentPage;
     int totalPages = ViewBag.TotalPages;
@@ -110,10 +110,11 @@
                             </td>
                             <td class="text-center pe-4">
                                 <div class="qmah-table-actions justify-content-center">
-                                    <a asp-area="User"
-                                       asp-controller="Members"
-                                       asp-action="AdjustPoints"
-                                       asp-route-id="@item.UserId"
+                                    <a asp-area=""
+                                       asp-controller="Operations"
+                                       asp-action="EconomyBatches"
+                                       asp-route-targetUserId="@item.UserId"
+                                       asp-route-assetType="POINT"
                                        class="btn btn-sm btn-primary px-3">
                                         調整點數
                                     </a>

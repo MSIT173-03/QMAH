@@ -458,6 +458,9 @@ public sealed class BulkEconomyService(QmahDbContext db)
         IQueryable<ApplicationUser> query,
         BulkMemberFilter filter)
     {
+        if (filter.UserId.HasValue)
+            return query.Where(user => user.Id == filter.UserId.Value);
+
         if (filter.Keyword is not null)
         {
             query = query.Where(user =>
@@ -476,9 +479,15 @@ public sealed class BulkEconomyService(QmahDbContext db)
         if (filter.Status is not null)
             query = query.Where(user => user.Status == filter.Status);
         if (filter.CreatedFrom.HasValue)
-            query = query.Where(user => user.CreatedAt >= filter.CreatedFrom.Value);
+        {
+            var createdFromUtc = TaipeiDateToUtc(filter.CreatedFrom.Value);
+            query = query.Where(user => user.CreatedAt >= createdFromUtc);
+        }
         if (filter.CreatedTo.HasValue)
-            query = query.Where(user => user.CreatedAt < filter.CreatedTo.Value.AddDays(1));
+        {
+            var createdToUtc = TaipeiDateToUtc(filter.CreatedTo.Value.AddDays(1));
+            query = query.Where(user => user.CreatedAt < createdToUtc);
+        }
 
         if (filter.MinPointBalance.HasValue)
         {
@@ -498,6 +507,9 @@ public sealed class BulkEconomyService(QmahDbContext db)
 
         return query;
     }
+
+    private static DateTime TaipeiDateToUtc(DateTime value) =>
+        DateTime.SpecifyKind(value.Date.AddHours(-8), DateTimeKind.Utc);
 }
 
 /// <summary>批次會員條件會完整寫入主檔，供日後稽核時重現當時的選取範圍。</summary>
@@ -508,7 +520,8 @@ public sealed record BulkMemberFilter(
     DateTime? CreatedFrom = null,
     DateTime? CreatedTo = null,
     int? MinPointBalance = null,
-    int? MaxPointBalance = null);
+    int? MaxPointBalance = null,
+    Guid? UserId = null);
 
 /// <summary>批次資產作業的輸入；UnitAmount 是每位符合條件會員的異動數量。</summary>
 public sealed record BulkEconomyRequest(

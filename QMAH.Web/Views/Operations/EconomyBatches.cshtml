@@ -4,6 +4,7 @@
 @{
     Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
     var roles = ViewBag.BatchRoles as IEnumerable<string> ?? [];
+    var targetMemberName = ViewBag.TargetMemberName as string;
     var hasPreview = Model.HasPreview;
 
     string AssetLabel(string value) => value switch
@@ -56,7 +57,7 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title">建立批次資產活動</h2>
-                    <div class="card-subtitle">適用於活動補發、客服補償或資料更正；逐人調整仍可從各自的背包進入。</div>
+                    <div class="card-subtitle">適用於活動補發、客服補償或資料更正；可處理指定會員或依條件選取多位會員。</div>
                 </div>
                 <span class="qmah-operations-batch-mark"><i class="ti ti-arrows-exchange" aria-hidden="true"></i>批次作業</span>
             </div>
@@ -68,6 +69,7 @@
 
                 <form asp-action="PreviewEconomyBatch" method="post" class="qmah-batch-form">
                     @Html.AntiForgeryToken()
+                    <input asp-for="TargetUserId" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                     <section class="qmah-form-section">
@@ -112,8 +114,17 @@
 
                     <section class="qmah-form-section">
                         <h3 class="qmah-form-section-title">會員條件</h3>
-                        <div class="form-hint mb-3">不填的條件不限制；預設只選取啟用中的會員。點數最低／最高是目前帳戶餘額，沒有餘額紀錄的會員視為 0。</div>
-                        <div class="row g-3">
+                        @if (Model.TargetUserId.HasValue)
+                        {
+                            <div class="alert alert-secondary mb-0" role="note">
+                                <i class="ti ti-user-check me-1" aria-hidden="true"></i>
+                                指定會員：<strong>@(targetMemberName ?? Model.TargetUserId.ToString())</strong>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-hint mb-3">不填的條件不限制；預設只選取啟用中的會員。點數最低／最高是目前帳戶餘額，沒有餘額紀錄的會員視為 0。</div>
+                            <div class="row g-3">
                             <div class="col-12 col-lg-5">
                                 <label asp-for="Keyword" class="form-label">會員搜尋</label>
                                 <input asp-for="Keyword" class="form-control" placeholder="暱稱、Email 或帳號" />
@@ -153,7 +164,8 @@
                                 <label asp-for="MaxPointBalance" class="form-label">目前點數最高</label>
                                 <input asp-for="MaxPointBalance" class="form-control" inputmode="numeric" placeholder="例如：999" />
                             </div>
-                        </div>
+                            </div>
+                        }
                     </section>
 
                     @if (hasPreview)

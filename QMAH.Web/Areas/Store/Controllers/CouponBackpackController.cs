@@ -1,13 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Store.ViewModels;
 using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
-using QMAH.Infrastructure.Models.Entities;
-using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Web.Areas.Store.Controllers;
@@ -17,8 +13,7 @@ namespace QMAH.Web.Areas.Store.Controllers;
 [AdminNavigation("優惠券背包", 40)]
 public sealed class CouponBackpackController(
     QmahDbContext db,
-    EconomyService economyService,
-    UserManager<ApplicationUser> userManager) : Controller
+    EconomyService economyService) : Controller
 {
     public async Task<IActionResult> Index(
         Guid? userId,
@@ -124,85 +119,6 @@ public sealed class CouponBackpackController(
         ViewBag.SelectedUserId = userId.Value;
         ViewBag.SelectedMemberName = selectedUser.MemberName;
 
-        ViewBag.CouponDefinitions = new SelectList(
-            await db.CouponDefinitions
-                .AsNoTracking()
-                .Where(x => x.IsActive && x.AcquisitionType == "ADMIN_GRANT")
-                .OrderBy(x => x.Name)
-                .ToListAsync(cancellationToken),
-            "Id",
-            "Name");
-
         return View(items);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Grant(
-        Guid userId,
-        Guid couponDefinitionId,
-        string reason,
-        CancellationToken cancellationToken)
-    {
-        var admin = await userManager.GetUserAsync(User);
-        if (admin is null)
-            return Forbid();
-
-        var result = await economyService.GrantCouponAsync(
-            admin.Id,
-            userId,
-            couponDefinitionId,
-            reason,
-            cancellationToken);
-        if (!result.Succeeded)
-        {
-            TempData["ErrorMessage"] = result.ErrorMessage ?? "優惠券發放失敗。";
-            return RedirectToAction(nameof(Index), new { userId });
-        }
-
-        TempData["SuccessMessage"] = "優惠券已發放。";
-
-        return RedirectToAction(nameof(Index), new { userId });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Remove(
-        Guid id,
-        string reason,
-        CancellationToken cancellationToken)
-    {
-        var coupon = await db.UserCoupons
-            .SingleOrDefaultAsync(
-                x => x.Id == id,
-                cancellationToken);
-
-        if (coupon is null)
-        {
-            return NotFound();
-        }
-
-        var admin = await userManager.GetUserAsync(User);
-        if (admin is null)
-            return Forbid();
-
-        var result = await economyService.RevokeCouponAsync(
-            admin.Id,
-            id,
-            reason,
-            cancellationToken);
-        if (!result.Succeeded)
-        {
-            TempData["ErrorMessage"] = result.ErrorMessage ?? "優惠券撤銷失敗。";
-            return RedirectToAction(
-                nameof(Index),
-                new { userId = coupon.UserId });
-        }
-
-        TempData["SuccessMessage"] = "優惠券已撤銷，原紀錄仍保留。";
-
-        return RedirectToAction(
-            nameof(Index),
-            new { userId = coupon.UserId });
     }
 }

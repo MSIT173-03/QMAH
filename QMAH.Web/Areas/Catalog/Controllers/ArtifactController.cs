@@ -101,7 +101,7 @@ public class ArtifactController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public ActionResult Delete(Guid? id)
+    public ActionResult ToggleActive(Guid? id)
     {
         var artifact = _db.Artifacts
             .FirstOrDefault(item => item.Id == id);
@@ -111,9 +111,9 @@ public class ArtifactController : Controller
             return Content("Id 不存在");
         }
 
-        artifact.IsActive = false;
+        artifact.IsActive = !artifact.IsActive;
         _db.SaveChanges();
-        TempData["Success"] = "文物已停用。";
+        TempData["Success"] = artifact.IsActive ? "文物已啟用。" : "文物已停用。";
 
         return RedirectToAction(nameof(Index));
     }
