@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml"><img src="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main" alt="Build"></a>
-  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.8.0"><img src="https://img.shields.io/badge/database-db--v0.8.0-315E55" alt="Database snapshot db-v0.8.0"></a>
+  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.9.0"><img src="https://img.shields.io/badge/database-db--v0.9.0-315E55" alt="Database snapshot db-v0.9.0"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4" alt=".NET 10">
   <img src="https://img.shields.io/badge/SQL%20Server-DB--first-315E55" alt="SQL Server DB-first">
 </p>
@@ -87,9 +87,9 @@ Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前�
 
 ### 2. 建立本機 QMAH 資料庫
 
-目前相容的完整 Snapshot 是 [QMAH-Database db-v0.8.0 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.8.0) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.8.0/QMAH.sql)。
+目前相容的完整 Snapshot 是 [QMAH-Database db-v0.9.0 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.0) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.9.0/QMAH.sql)。
 
-也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.8.0/QMAH.sql)。既有 `db-v0.7.0` 資料庫可執行 [`database/upgrades/0.7.0-to-0.8.0.sql`](database/upgrades/0.7.0-to-0.8.0.sql) 保留資料升級。
+也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.9.0/QMAH.sql)。既有 `db-v0.8.0` 資料庫可執行 [`database/upgrades/0.8.0-to-0.9.0.sql`](database/upgrades/0.8.0-to-0.9.0.sql) 保留資料升級。
 
 在 SSMS 連線到可用的本機 SQL Server instance，完整執行 SQL，資料庫名稱使用 `QMAH`。
 
