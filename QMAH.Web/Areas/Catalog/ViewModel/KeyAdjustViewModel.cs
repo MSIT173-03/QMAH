@@ -19,8 +19,13 @@ public sealed class KeyAdjustViewModel
 
     public int CurrentBalance { get; set; }
 
-    [Range(-1000000, 1000000, ErrorMessage = "調整數量超出允許範圍")]
-    public int Amount { get; set; }
+    public bool IsKeyActive { get; set; }
+
+    [Required]
+    public string Operation { get; set; } = "ADD";
+
+    [Range(1, 1000000, ErrorMessage = "調整數量必須介於 1 至 1,000,000")]
+    public int UnitAmount { get; set; } = 1;
 
     [Required(ErrorMessage = "請輸入調整原因")]
     [StringLength(40, ErrorMessage = "調整原因不可超過 40 個字元")]

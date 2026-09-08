@@ -19,6 +19,13 @@
         "DEDUCT" => "扣除／撤銷",
         _ => value
     };
+    string OperationOptionLabel(string assetType, string operation) => (assetType, operation) switch
+    {
+        ("COUPON", "ADD") => "發放",
+        ("COUPON", "DEDUCT") => "撤銷",
+        (_, "ADD") => "增加",
+        _ => "扣除"
+    };
     string BatchStatusLabel(string value) => value switch
     {
         "COMPLETED" => "已完成",
@@ -86,8 +93,8 @@
                             <div class="col-12 col-md-4">
                                 <label asp-for="Operation" class="form-label">異動方向</label>
                                 <select asp-for="Operation" class="form-select">
-                                    <option value="ADD">增加</option>
-                                    <option value="DEDUCT">扣除／撤銷</option>
+                                    <option value="ADD" data-batch-operation-add>@OperationOptionLabel(Model.AssetType, "ADD")</option>
+                                    <option value="DEDUCT" data-batch-operation-deduct>@OperationOptionLabel(Model.AssetType, "DEDUCT")</option>
                                 </select>
                                 <span asp-validation-for="Operation" class="text-danger"></span>
                             </div>
@@ -321,12 +328,16 @@
         (() => {
             const asset = document.querySelector("[data-batch-asset-type]");
             const couponField = document.querySelector("[data-batch-coupon-field]");
+            const addOption = document.querySelector("[data-batch-operation-add]");
+            const deductOption = document.querySelector("[data-batch-operation-deduct]");
             if (!asset || !couponField) return;
 
             const syncCouponField = () => {
                 const visible = asset.value === "COUPON";
                 couponField.hidden = !visible;
                 couponField.querySelector("select")?.toggleAttribute("required", visible);
+                if (addOption) addOption.textContent = visible ? "發放" : "增加";
+                if (deductOption) deductOption.textContent = visible ? "撤銷" : "扣除";
             };
             asset.addEventListener("change", syncCouponField);
             syncCouponField();

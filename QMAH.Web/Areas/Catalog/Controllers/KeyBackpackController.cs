@@ -1,16 +1,10 @@
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Vml.Spreadsheet;
-
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Catalog.ViewModel;
 using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
-using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Services.Economy;
 
@@ -45,17 +39,21 @@ public class KeyBackPackController : Controller
         if (!userId.HasValue)
         {
             var ownerRows = await (
-                from u in _db.UserProfiles.AsNoTracking()
-                join b in _db.UserKeyBalances.AsNoTracking()
-                    on u.UserId equals b.UserId into balances
+                from user in _db.Users.AsNoTracking()
+                join profile in _db.UserProfiles.AsNoTracking()
+                    on user.Id equals profile.UserId into profiles
+                from profile in profiles.DefaultIfEmpty()
+                join balance in _db.UserKeyBalances.AsNoTracking()
+                    on user.Id equals balance.UserId into balances
                 select new UserKeyOwnerSummaryViewModel
                 {
-                    UserId = u.UserId,
-                    Nickname = u.Nickname,
+                    UserId = user.Id,
+                    Nickname = profile == null ? null : profile.Nickname,
+                    Email = user.Email,
                     KeyTypeCount = balances.Count(),
                     TotalBalance = balances.Sum(x => (int?)x.Balance) ?? 0
                 })
-                .OrderBy(x => x.Nickname)
+                .OrderBy(x => x.Nickname ?? x.Email)
                 .ToListAsync(cancellationToken);
 
             if (!string.IsNullOrWhiteSpace(vm.txtKeyword))
@@ -63,6 +61,9 @@ public class KeyBackPackController : Controller
                 ownerRows = ownerRows
                     .Where(x =>
                         (x.Nickname ?? "").Contains(
+                            vm.txtKeyword,
+                            StringComparison.OrdinalIgnoreCase) ||
+                        (x.Email ?? "").Contains(
                             vm.txtKeyword,
                             StringComparison.OrdinalIgnoreCase) ||
                         x.UserId.ToString().Contains(
@@ -77,71 +78,45 @@ public class KeyBackPackController : Controller
             return View(Array.Empty<UserKeyBalanceViewModel>());
         }
 
-        var ukb = await _db.UserKeyBalances
-            .AsNoTracking()
-            .Include(x => x.KeyDefinition)
-            .Where(x => x.UserId == userId.Value)
-            .OrderBy(x => x.KeyDefinition.Name)
+        var member = await (
+            from user in _db.Users.AsNoTracking()
+            join profile in _db.UserProfiles.AsNoTracking()
+                on user.Id equals profile.UserId into profiles
+            from profile in profiles.DefaultIfEmpty()
+            where user.Id == userId.Value
+            select new
+            {
+                Name = profile == null || string.IsNullOrWhiteSpace(profile.Nickname)
+                    ? user.Email ?? "未命名會員"
+                    : profile.Nickname
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (member is null)
+            return NotFound();
+
+        var records = await (
+            from key in _db.KeyDefinitions.AsNoTracking()
+            join balance in _db.UserKeyBalances.AsNoTracking().Where(item => item.UserId == userId.Value)
+                on key.Id equals balance.KeyDefinitionId into balances
+            from balance in balances.DefaultIfEmpty()
+            where key.IsActive || balance != null
+            orderby key.IsActive descending, key.Name
+            select new UserKeyBalanceViewModel
+            {
+                UserId = userId.Value,
+                KeyDefinitionId = key.Id,
+                KeyName = key.Name,
+                KeyCode = key.Code,
+                IsActive = key.IsActive,
+                Balance = balance == null ? 0 : balance.Balance,
+                UpdatedAt = balance == null ? null : balance.UpdatedAt
+            })
             .ToListAsync(cancellationToken);
 
-        var profile = await _db.UserProfiles
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                x => x.UserId == userId.Value,
-                cancellationToken);
-
-        var nickname = profile?.Nickname ?? "未命名會員";
-
-        var datas_ukb = ukb
-            .Select(x => new UserKeyBalanceViewModel
-            {
-                UserKeyBalance = x,
-                Nickname = nickname
-            })
-            .ToList();
-
         ViewBag.SelectedUserId = userId.Value;
-        ViewBag.SelectedNickname = nickname;
+        ViewBag.SelectedNickname = member.Name;
 
-        return View(datas_ukb);
-    }
-
-    public ActionResult Create(Guid userId, Guid keydefinitionId)
-    {
-        return RedirectToAction(nameof(Adjust), new { userId, keyDefinitionId = keydefinitionId });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public ActionResult Create(UserKeyBalance ukb, Guid userId, Guid keydefinitionId)
-    {
-        // 原本 Create 會直接寫入 UserKeyBalance；現改由 Adjust Service 建立交易紀錄，避免後台改餘額卻沒有流水。
-        return BadRequest("請改用含調整原因的鑰匙異動頁面。");
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public ActionResult Delete(Guid? userId, Guid? keydefinitionId)
-    {
-        // UserKeyBalance 是目前餘額，不是可刪除的歷史紀錄；正常後台不提供物理刪除入口。
-        return BadRequest("鑰匙餘額不可直接刪除，請使用含原因的扣除操作。");
-    }
-
-    public ActionResult Edit(Guid? userId, Guid? keydefinitionId)
-    {
-        return userId.HasValue && keydefinitionId.HasValue
-            ? RedirectToAction(nameof(Adjust), new { userId, keyDefinitionId = keydefinitionId })
-            : BadRequest("缺少會員或鑰匙識別碼。");
-    }
-
-    [HttpPost]
-    public ActionResult Edit(
-        UserKeyBalance ukb,
-        Guid? userId,
-        Guid? keydefinitionId)
-    {
-        // 原本 Edit 允許任意覆寫 Balance；現保留舊路由但拒絕直接寫入，避免繞過交易與非負數檢查。
-        return BadRequest("鑰匙餘額不可直接覆寫，請使用含原因的增減操作。");
+        return View(records);
     }
 
     [HttpGet]
@@ -164,10 +139,14 @@ public class KeyBackPackController : Controller
         if (current is null)
             return NotFound();
 
-        if (!ModelState.IsValid || model.Amount == 0)
+        model.Operation = model.Operation?.Trim().ToUpperInvariant() ?? "";
+        if (model.Operation is not ("ADD" or "DEDUCT"))
+            ModelState.AddModelError(nameof(model.Operation), "請選擇增加或扣除。");
+        if (!current.IsKeyActive && model.Operation == "ADD")
+            ModelState.AddModelError(nameof(model.Operation), "已停用的鑰匙只能扣除，不能新增。");
+
+        if (!ModelState.IsValid)
         {
-            if (model.Amount == 0)
-                ModelState.AddModelError(nameof(model.Amount), "調整數量不可為 0。");
             CopyDisplayFields(current, model);
             return View(model);
         }
@@ -180,7 +159,7 @@ public class KeyBackPackController : Controller
             admin.Id,
             model.UserId,
             model.KeyDefinitionId,
-            model.Amount,
+            model.Operation == "ADD" ? model.UnitAmount : -model.UnitAmount,
             model.Reason,
             cancellationToken: cancellationToken);
         if (!result.Succeeded)
@@ -210,7 +189,7 @@ public class KeyBackPackController : Controller
                 on new { UserId = user.Id, KeyDefinitionId = key.Id }
                 equals new { balance.UserId, balance.KeyDefinitionId } into balances
             from balance in balances.DefaultIfEmpty()
-            where user.Id == userId && key.IsActive
+            where user.Id == userId
             select new KeyAdjustViewModel
             {
                 UserId = user.Id,
@@ -218,7 +197,8 @@ public class KeyBackPackController : Controller
                 MemberName = profile != null && profile.Nickname != null ? profile.Nickname : user.Email ?? "未命名會員",
                 KeyName = key.Name,
                 KeyCode = key.Code,
-                CurrentBalance = balance == null ? 0 : balance.Balance
+                CurrentBalance = balance == null ? 0 : balance.Balance,
+                IsKeyActive = key.IsActive
             })
             .FirstOrDefaultAsync(cancellationToken);
         return row;
@@ -230,22 +210,6 @@ public class KeyBackPackController : Controller
         target.KeyName = source.KeyName;
         target.KeyCode = source.KeyCode;
         target.CurrentBalance = source.CurrentBalance;
-    }
-
-    private void data(Guid? userId, Guid? keydefinitionId)
-    {
-        var uid = _db.UserProfiles
-            .OrderBy(e => e.UserId)
-            .ToList();
-
-        var kdid = _db.KeyDefinitions
-            .OrderBy(e => e.Id)
-            .ToList();
-
-        ViewBag.UserProfileList =
-            new SelectList(uid, "UserId", "Nickname", userId);
-
-        ViewBag.KeyDefinitionList =
-            new SelectList(kdid, "Id", "Name", keydefinitionId);
+        target.IsKeyActive = source.IsKeyActive;
     }
 }

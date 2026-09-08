@@ -17,7 +17,7 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title">鑰匙異動</h2>
-                    <div class="text-secondary">正數增加、負數扣除；目前餘額由伺服器在送出時重新確認。</div>
+                    <div class="text-secondary">選擇增加或扣除；目前餘額由伺服器在送出時重新確認。</div>
                 </div>
             </div>
             <div class="card-body">
@@ -48,12 +48,23 @@
                     <section class="qmah-form-section">
                         <h3 class="qmah-form-section-title">異動內容</h3>
                         <div class="row g-3">
-                            <div class="col-12 col-md-5">
-                                <label asp-for="Amount" class="form-label">調整數量</label>
-                                <input asp-for="Amount" class="form-control" inputmode="numeric" placeholder="例如：2 或 -1" />
-                                <span asp-validation-for="Amount" class="text-danger"></span>
+                            <div class="col-12 col-md-4">
+                                <label asp-for="Operation" class="form-label">異動方向</label>
+                                <select asp-for="Operation" class="form-select">
+                                    @if (Model.IsKeyActive)
+                                    {
+                                        <option value="ADD">增加</option>
+                                    }
+                                    <option value="DEDUCT">扣除</option>
+                                </select>
+                                <span asp-validation-for="Operation" class="text-danger"></span>
                             </div>
-                            <div class="col-12 col-md-7">
+                            <div class="col-12 col-md-3">
+                                <label asp-for="UnitAmount" class="form-label">數量</label>
+                                <input asp-for="UnitAmount" class="form-control" inputmode="numeric" min="1" />
+                                <span asp-validation-for="UnitAmount" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-5">
                                 <label asp-for="Reason" class="form-label">調整原因</label>
                                 <input asp-for="Reason" class="form-control" placeholder="例如：活動補發或資料更正" />
                                 <span asp-validation-for="Reason" class="text-danger"></span>

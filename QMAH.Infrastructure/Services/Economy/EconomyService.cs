@@ -438,9 +438,11 @@ public sealed class EconomyService(QmahDbContext db)
                 IsolationLevel.Serializable,
                 retryCancellationToken);
             var key = await db.KeyDefinitions
-                .SingleOrDefaultAsync(item => item.Id == keyDefinitionId && item.IsActive, retryCancellationToken);
+                .SingleOrDefaultAsync(item => item.Id == keyDefinitionId, retryCancellationToken);
             if (key is null)
-                return EconomyResult<BalanceAdjustmentView>.NotFound("找不到啟用中的鑰匙定義。");
+                return EconomyResult<BalanceAdjustmentView>.NotFound("找不到鑰匙定義。");
+            if (amount > 0 && !key.IsActive)
+                return EconomyResult<BalanceAdjustmentView>.Conflict("已停用的鑰匙只能扣除，不能新增。");
             var balance = await GetOrCreateKeyBalanceAsync(userId, keyDefinitionId, retryCancellationToken);
             var nextBalance = balance.Balance + (long)amount;
             if (nextBalance < 0 || nextBalance > int.MaxValue)

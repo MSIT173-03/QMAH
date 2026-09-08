@@ -42,7 +42,7 @@
         <div class="card-header">
             <div>
                 <h2 class="card-title">查詢會員背包</h2>
-                <div class="card-subtitle">依會員暱稱或會員編號搜尋。</div>
+                    <div class="card-subtitle">依會員暱稱、Email 或會員編號搜尋。</div>
             </div>
         </div>
 
@@ -56,7 +56,7 @@
                                name="txtKeyword"
                                value="@ViewBag.Keyword"
                                class="form-control"
-                               placeholder="搜尋會員暱稱或會員編號" />
+                               placeholder="搜尋會員暱稱、Email 或會員編號" />
                     </div>
 
                     <div class="col-md-3 d-flex align-items-end gap-2">
@@ -129,9 +129,13 @@
                                 <td>
                                     <div class="fw-semibold">
                                         @(string.IsNullOrWhiteSpace(owner.Nickname)
-                                            ? "未命名會員"
+                                            ? owner.Email ?? "未命名會員"
                                             : owner.Nickname)
                                     </div>
+                                    @if (!string.IsNullOrWhiteSpace(owner.Nickname))
+                                    {
+                                        <div class="text-secondary small">@owner.Email</div>
+                                    }
                                 </td>
                                 <td>@owner.KeyTypeCount</td>
                                 <td class="text-success fw-bold">
@@ -159,7 +163,7 @@ else
             <div>
                 <h2 class="card-title">@selectedNickname 的鑰匙背包</h2>
                 <div class="card-subtitle">
-                    共 @records.Count 筆背包紀錄
+                    共 @records.Count 種可操作鑰匙
                 </div>
             </div>
 
@@ -179,7 +183,7 @@ else
                     目前沒有背包紀錄
                 </p>
                 <p class="empty-subtitle text-secondary">
-                    目前沒有鑰匙餘額；請從會員詳情或既有鑰匙列進入有原因的異動操作。
+                    目前沒有可操作的鑰匙定義。
                 </p>
             </div>
         }
@@ -202,32 +206,36 @@ else
                             <tr>
                                 <td>
                                     <div class="fw-semibold">
-                                        @item.UserKeyBalance.KeyDefinition.Name
+                                        @item.KeyName
                                     </div>
                                     <div class="text-secondary small">
-                                        @item.UserKeyBalance.KeyDefinition.Code
+                                        @item.KeyCode
+                                        @if (!item.IsActive)
+                                        {
+                                            <span class="badge bg-secondary-lt ms-1">已停用，只可扣除</span>
+                                        }
                                     </div>
                                 </td>
 
                                 <td>
-                                    <span class="badge @(item.UserKeyBalance.Balance > 0
+                                    <span class="badge @(item.Balance > 0
                                         ? "bg-green-lt"
                                         : "bg-secondary-lt")">
-                                        @item.UserKeyBalance.Balance
+                                        @item.Balance
                                     </span>
                                 </td>
 
                                 <td>
-                                    @item.UserKeyBalance.UpdatedAt.ToString("yyyy/MM/dd HH:mm")
+                                    @(item.UpdatedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "尚無異動")
                                 </td>
 
                                 <td class="text-center pe-3 pe-md-4">
                                     <div class="d-flex flex-wrap justify-content-center gap-2">
                                         <a asp-action="Adjust"
-                                           asp-route-userId="@item.UserKeyBalance.UserId"
-                                           asp-route-keyDefinitionId="@item.UserKeyBalance.KeyDefinitionId"
+                                           asp-route-userId="@item.UserId"
+                                           asp-route-keyDefinitionId="@item.KeyDefinitionId"
                                            class="btn btn-sm btn-outline-secondary px-3">
-                                            <i class="ti ti-adjustments me-1"></i>調整
+                                            <i class="ti ti-adjustments me-1"></i>@(item.Balance == 0 ? "新增" : "調整")
                                         </a>
                                     </div>
                                 </td>
