@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QMAH.Infrastructure", "QMAH
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QMAH.Api", "QMAH.Api\QMAH.Api.csproj", "{EFE864AE-F807-4B11-98E3-2B94E0D274C1}"
 EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "QMAH.Client", "QMAH.Client\QMAH.Client.esproj", "{232E08BC-22E3-4EB0-8C1B-95E2A2180BFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,10 +57,14 @@ Global
 		{EFE864AE-F807-4B11-98E3-2B94E0D274C1}.Release|x64.Build.0 = Release|Any CPU
 		{EFE864AE-F807-4B11-98E3-2B94E0D274C1}.Release|x86.ActiveCfg = Release|Any CPU
 		{EFE864AE-F807-4B11-98E3-2B94E0D274C1}.Release|x86.Build.0 = Release|Any CPU
+		{232E08BC-22E3-4EB0-8C1B-95E2A2180BFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{232E08BC-22E3-4EB0-8C1B-95E2A2180BFD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{232E08BC-22E3-4EB0-8C1B-95E2A2180BFD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{232E08BC-22E3-4EB0-8C1B-95E2A2180BFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{232E08BC-22E3-4EB0-8C1B-95E2A2180BFD}.Release|x64.ActiveCfg = Release|Any CPU
+		{232E08BC-22E3-4EB0-8C1B-95E2A2180BFD}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal
