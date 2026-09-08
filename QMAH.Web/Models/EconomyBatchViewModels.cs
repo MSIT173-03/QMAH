@@ -11,6 +11,10 @@ public sealed class EconomyBatchPageViewModel
 {
     public Guid? TargetUserId { get; set; }
 
+    public bool IsInline { get; set; }
+
+    public string? ReturnUrl { get; set; }
+
     [Required]
     public string AssetType { get; set; } = "POINT";
 

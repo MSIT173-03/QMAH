@@ -487,9 +487,11 @@
 
         <a asp-area=""
            asp-controller="Operations"
-           asp-action="EconomyBatches"
+           asp-action="EconomyAdjustmentPanel"
            asp-route-targetUserId="@Model.User.Id"
            asp-route-assetType="POINT"
+           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+           data-economy-panel-url
            class="btn btn-sm btn-warning">
             調整點數
         </a>

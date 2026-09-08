@@ -60,7 +60,7 @@
                         <div class="qmah-table-actions">
                             <a asp-action="Details" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-secondary">詳細</a>
                             <a asp-action="Edit" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
-                            <a asp-area="" asp-controller="Operations" asp-action="EconomyBatches" asp-route-targetUserId="@item.User.Id" asp-route-assetType="POINT" class="btn btn-sm btn-outline-warning">點數</a>
+                            <a asp-area="" asp-controller="Operations" asp-action="EconomyAdjustmentPanel" asp-route-targetUserId="@item.User.Id" asp-route-assetType="POINT" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" data-economy-panel-url class="btn btn-sm btn-outline-warning">點數</a>
                             @if (item.User.Status == "ACTIVE")
                             {
                                 <form asp-action="ChangeStatus" asp-route-id="@item.User.Id" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要停權這個會員嗎？')">停權</button></form>

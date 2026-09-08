@@ -64,6 +64,38 @@ public sealed class OperationsController(
         return View(model);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> EconomyAdjustmentPanel(
+        Guid targetUserId,
+        string? assetType,
+        string? returnUrl,
+        CancellationToken cancellationToken = default)
+    {
+        if (!string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectToAction(nameof(EconomyBatches), new
+            {
+                targetUserId,
+                assetType
+            });
+        }
+
+        var model = new EconomyBatchPageViewModel
+        {
+            TargetUserId = targetUserId,
+            IsInline = true,
+            ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Action(nameof(EconomyBatches)),
+            AssetType = string.Equals(assetType, "COUPON", StringComparison.OrdinalIgnoreCase)
+                ? "COUPON"
+                : "POINT",
+            UnitAmount = 1
+        };
+        await PopulateEconomyBatchPageAsync(model, cancellationToken);
+        if (ViewBag.TargetMemberName is null)
+            return NotFound();
+        return PartialView("_EconomyAdjustmentPanel", model);
+    }
+
     /// <summary>先依表單條件查詢會員，讓管理員確認對象後再執行批次異動。</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -71,6 +103,9 @@ public sealed class OperationsController(
         EconomyBatchPageViewModel model,
         CancellationToken cancellationToken = default)
     {
+        if (model.IsInline && !model.TargetUserId.HasValue)
+            ModelState.AddModelError(nameof(model.TargetUserId), "原地異動必須指定一位會員。");
+
         if (ModelState.IsValid)
         {
             var preview = await bulkEconomyService.PreviewAsync(
@@ -84,6 +119,8 @@ public sealed class OperationsController(
         }
 
         await PopulateEconomyBatchPageAsync(model, cancellationToken);
+        if (model.IsInline)
+            return PartialView("_EconomyAdjustmentPanel", model);
         return View("EconomyBatches", model);
     }
 
@@ -94,6 +131,8 @@ public sealed class OperationsController(
         EconomyBatchPageViewModel model,
         CancellationToken cancellationToken = default)
     {
+        if (model.IsInline && !model.TargetUserId.HasValue)
+            ModelState.AddModelError(nameof(model.TargetUserId), "原地異動必須指定一位會員。");
         if (!model.Confirm)
             ModelState.AddModelError(nameof(model.Confirm), "請確認已檢查符合條件的會員範圍。" );
 
@@ -105,6 +144,8 @@ public sealed class OperationsController(
         {
             model.ExecutionError = "請先修正表單中的欄位。";
             await PopulateEconomyBatchPageAsync(model, cancellationToken);
+            if (model.IsInline)
+                return PartialView("_EconomyAdjustmentPanel", model);
             return View("EconomyBatches", model);
         }
 
@@ -114,7 +155,11 @@ public sealed class OperationsController(
             cancellationToken);
         if (result.Status == "COMPLETED")
         {
-            TempData["SuccessMessage"] = $"批次資產活動完成：影響 {result.TargetCount:N0} 位會員，共異動 {result.AffectedAssetCount:N0} 項資產。";
+            TempData["SuccessMessage"] = model.IsInline
+                ? $"資產異動完成，共異動 {result.AffectedAssetCount:N0} 項資產。"
+                : $"批次資產活動完成：影響 {result.TargetCount:N0} 位會員，共異動 {result.AffectedAssetCount:N0} 項資產。";
+            if (model.IsInline && Url.IsLocalUrl(model.ReturnUrl))
+                return Redirect(model.ReturnUrl);
             return RedirectToAction(nameof(EconomyBatches), new
             {
                 targetUserId = model.TargetUserId,
@@ -127,6 +172,8 @@ public sealed class OperationsController(
         model.PreviewMembers = [];
         model.ExecutionError = result.Error ?? "批次資產活動未完成。";
         await PopulateEconomyBatchPageAsync(model, cancellationToken);
+        if (model.IsInline)
+            return PartialView("_EconomyAdjustmentPanel", model);
         return View("EconomyBatches", model);
     }
 
