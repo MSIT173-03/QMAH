@@ -6,6 +6,88 @@
     let page = 1;
     let lastQuery;
     let loading = false;
+    const importForm = document.getElementById('source-import');
+    // 僅保存此分頁工作階段的篩選設定，不保存檔案、確認碼或匯入狀態。
+    const settingsKey = 'qmah-catalog-import-settings';
+    const settings = [...importForm.querySelectorAll('input:not([type="hidden"]), select, textarea')];
+    try {
+        const saved = JSON.parse(sessionStorage.getItem(settingsKey) || 'null');
+        if (saved) settings.forEach(input => {
+            const value = saved[input.id || `${input.name}:${input.value}`];
+            if (value === undefined) return;
+            if (input.type === 'checkbox') input.checked = value;
+            else input.value = value;
+        });
+    } catch { /* Storage may be disabled. */ }
+    function saveSettings() {
+        try {
+            sessionStorage.setItem(settingsKey, JSON.stringify(Object.fromEntries(settings.map(input =>
+                [input.id || `${input.name}:${input.value}`, input.type === 'checkbox' ? input.checked : input.value]))));
+        } catch { /* Import remains usable without storage. */ }
+    }
+    importForm.addEventListener('change', saveSettings);
+    importForm.addEventListener('submit', event => {
+        if (!importForm.querySelector('[name="datasets"]:checked')) {
+            event.preventDefault();
+            const first = importForm.querySelector('[name="datasets"]');
+            first.setCustomValidity('請至少選擇一個文物類別。');
+            first.reportValidity();
+            first.setCustomValidity('');
+        }
+        saveSettings();
+    });
+    document.getElementById('source-counts').addEventListener('click', async event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        const countStatus = document.getElementById('counts-status');
+        countStatus.textContent = '正在查詢各類別筆數…';
+        const body = document.getElementById('counts-rows');
+        body.replaceChildren();
+        document.getElementById('counts-results').hidden = false;
+        const categories = [...document.getElementById('browse-dataset').options];
+        let failures = 0;
+        // 各類別獨立回報結果，單一官方端點失敗不遮蔽其他類別；此流程只讀取資料。
+        await Promise.all(categories.map(async category => {
+            const row = body.insertRow();
+            row.insertCell().textContent = category.text;
+            const cells = Array.from({ length: 4 }, () => row.insertCell());
+            cells.forEach(cell => { cell.textContent = '查詢中…'; });
+            const actions = row.insertCell();
+            try {
+                const params = new URLSearchParams({ dataset: category.value, countsOnly: 'true' });
+                const response = await fetch(`${form.action}?${params}`, { headers: { Accept: 'application/json' } });
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                [data.count, data.uniqueCount, data.importedCount, data.pendingCount].forEach((value, index) => { cells[index].textContent = value; });
+                for (const [label, action] of [
+                    ['瀏覽', () => {
+                        document.getElementById('browse-dataset').value = category.value;
+                        document.getElementById('browse-query').value = '';
+                        form.requestSubmit();
+                    }],
+                    ['接續新增', () => {
+                        importForm.querySelectorAll('[name="datasets"]').forEach(input => { input.checked = input.value === category.value; });
+                        document.getElementById('mode').value = 'new';
+                        ['source-from', 'source-to', 'source-identifiers'].forEach(id => { document.getElementById(id).value = ''; });
+                        saveSettings();
+                        document.getElementById('maxItems').focus();
+                    }]
+                ]) {
+                    const control = document.createElement('button');
+                    control.type = 'button';
+                    control.className = 'btn btn-sm btn-outline-primary me-2';
+                    control.textContent = label;
+                    control.addEventListener('click', action);
+                    actions.append(control);
+                }
+            } catch {
+                failures++;
+                cells.forEach(cell => { cell.textContent = '無法取得'; });
+            }
+        }));
+        countStatus.textContent = failures ? `${failures} 個類別查詢失敗，可再次查詢。` : '各類別筆數查詢完成，未修改任何資料。';
+        button.disabled = false;
+    });
     async function search(targetPage, query) {
         if (loading) return;
         loading = true;

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using QMAH.Infrastructure.Data;
 
 using QMAH.Web.Areas.Catalog.ViewModel;
 using QMAH.Web.Infrastructure.AdminNavigation;
@@ -19,7 +21,8 @@ public sealed class ImportController(
     CatalogImportService importService,
     IWebHostEnvironment environment,
     NpmOpenDataClient npmOpenDataClient,
-    NpmCatalogSourceService npmCatalogSourceService) : Controller
+    NpmCatalogSourceService npmCatalogSourceService,
+    QmahDbContext db) : Controller
 {
     private const long MaxJsonFileBytes = 32L * 1024 * 1024;
     private const long MaxArchiveBytes = 256L * 1024 * 1024;
@@ -37,6 +40,7 @@ public sealed class ImportController(
         string? dataset,
         string? query,
         int page = 1,
+        bool countsOnly = false,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(dataset))
@@ -45,6 +49,11 @@ public sealed class ImportController(
         try
         {
             var rows = await npmOpenDataClient.GetDatasetAsync(dataset, cancellationToken);
+            var existingRefs = (await db.Artifacts.AsNoTracking().Select(row => row.ArtifactRef).ToListAsync(cancellationToken))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            // 原始 API 可能重複或缺少編號；只用唯一有效編號計算已有／待匯入，並保留原始筆數供核對。
+            var sourceRefs = rows.Select(row => row.Identifier?.Trim()).Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             var keyword = query?.Trim();
             var filtered = rows.Where(row => string.IsNullOrEmpty(keyword)
                 || $"{row.Identifier} {row.Name} {row.Category} {row.Era}".Contains(keyword, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -55,10 +64,13 @@ public sealed class ImportController(
                 dataset,
                 categoryName = NpmOpenDataClient.GetDatasetDisplayName(dataset),
                 count = rows.Count,
+                uniqueCount = sourceRefs.Count,
+                importedCount = sourceRefs.Count(value => existingRefs.Contains(value!)),
+                pendingCount = sourceRefs.Count(value => !existingRefs.Contains(value!)),
                 matchedCount = filtered.Count,
                 page,
                 pages,
-                preview = filtered.Skip((page - 1) * 20).Take(20).Select(row => new
+                preview = filtered.Skip((page - 1) * 20).Take(countsOnly ? 0 : 20).Select(row => new
                 {
                     row.Identifier,
                     row.Name,
@@ -84,10 +96,14 @@ public sealed class ImportController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PreviewSource(
         string[]? datasets,
-        string mode = "both",
+        string mode = "new",
         int maxItems = 32,
         bool syncShop = false,
         bool syncQuestionBank = true,
+        string order = "asc",
+        string? fromRef = null,
+        string? toRef = null,
+        string? identifiers = null,
         CancellationToken cancellationToken = default)
     {
         var stageId = Guid.NewGuid().ToString("N");
@@ -112,7 +128,7 @@ public sealed class ImportController(
                     mode,
                     maxItems,
                     mediaDirectory,
-                    cancellationToken));
+                    cancellationToken, order, fromRef, toRef, identifiers));
             }
             artifacts = artifacts
                 .GroupBy(artifact => artifact.ArtifactRef, StringComparer.OrdinalIgnoreCase)

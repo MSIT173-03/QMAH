@@ -33,7 +33,11 @@ public sealed class NpmCatalogSourceService(
         string mode,
         int maxItems,
         string mediaRoot,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string order = "asc",
+        string? fromRef = null,
+        string? toRef = null,
+        string? identifiers = null)
     {
         if (!NpmOpenDataClient.SupportedDatasets.TryGetValue(dataset, out var categoryCode))
             throw new InvalidDataException("請選擇有效的故宮資料集。");
@@ -43,6 +47,13 @@ public sealed class NpmCatalogSourceService(
         var normalizedMode = mode?.Trim().ToLowerInvariant();
         if (normalizedMode is not ("new" or "update" or "both"))
             throw new InvalidDataException("請選擇新增、更新或兩者都處理。 ");
+        if (order is not ("asc" or "desc"))
+            throw new InvalidDataException("請選擇有效的編號排序。");
+        if (!string.IsNullOrWhiteSpace(fromRef) && !string.IsNullOrWhiteSpace(toRef)
+            && StringComparer.OrdinalIgnoreCase.Compare(fromRef.Trim(), toRef.Trim()) > 0)
+            throw new InvalidDataException("起始編號不可大於結束編號。");
+        var requestedRefs = (identifiers ?? "").Split(['\r', '\n', ',', '，', ';', '；'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var sourceRows = await npmClient.GetDatasetAsync(dataset, cancellationToken);
         var candidates = sourceRows
@@ -59,14 +70,18 @@ public sealed class NpmCatalogSourceService(
                 .Select(row => row.ArtifactRef)
                 .ToListAsync(cancellationToken))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var newRows = candidates.Where(row => !existingRefs.Contains(row.ArtifactRef));
-        var updateRows = candidates.Where(row => existingRefs.Contains(row.ArtifactRef));
-        var selected = normalizedMode switch
-        {
-            "new" => newRows.Take(maxItems).ToList(),
-            "update" => updateRows.Take(maxItems).ToList(),
-            _ => newRows.Concat(updateRows).Take(maxItems).ToList()
-        };
+        // 每次以資料庫現況排除既有編號，讓新增模式自然接續，無須儲存容易失準的分頁游標。
+        // 範圍與指定清單取交集；先篩選再排序、限量，避免既有資料占用新增配額。
+        var eligible = candidates.Where(row =>
+            (normalizedMode == "both" || existingRefs.Contains(row.ArtifactRef) == (normalizedMode == "update"))
+            && (string.IsNullOrWhiteSpace(fromRef) || StringComparer.OrdinalIgnoreCase.Compare(row.ArtifactRef, fromRef.Trim()) >= 0)
+            && (string.IsNullOrWhiteSpace(toRef) || StringComparer.OrdinalIgnoreCase.Compare(row.ArtifactRef, toRef.Trim()) <= 0)
+            && (requestedRefs.Count == 0 || requestedRefs.Contains(row.ArtifactRef)));
+        // 故宮編號含文字前綴，統一採不區分大小寫的文字排序，與起訖範圍比較一致。
+        var selected = (order == "desc"
+                ? eligible.OrderByDescending(row => row.ArtifactRef, StringComparer.OrdinalIgnoreCase)
+                : eligible.OrderBy(row => row.ArtifactRef, StringComparer.OrdinalIgnoreCase))
+            .Take(maxItems).ToList();
 
         if (selected.Count == 0)
             return [];
