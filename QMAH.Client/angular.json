@@ -10,7 +10,7 @@
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
-          "style": "none"
+          "style": "scss"
         }
       },
       "root": "",
@@ -30,7 +30,8 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "inlineStyleLanguage": "scss"
           },
           "configurations": {
             "production": {
