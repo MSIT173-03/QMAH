@@ -1,0 +1,102 @@
+<div class="min-h-screen flex items-center justify-center bg-base-200 px-4">
+  <div class="card w-full max-w-md bg-base-100 shadow-xl">
+    <div class="card-body">
+
+      <h1 class="card-title text-2xl justify-center mb-4">
+        會員登入
+      </h1>
+
+      <form
+        [formGroup]="form"
+        (ngSubmit)="login()"
+        class="space-y-4"
+      >
+
+        <div>
+          <label class="label">
+            <span class="label-text">Email</span>
+          </label>
+
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="請輸入 Email"
+            class="input input-bordered w-full"
+          />
+
+          @if (
+            form.controls.email.touched &&
+            form.controls.email.hasError('required')
+          ) {
+            <p class="text-error text-sm mt-1">
+              請輸入 Email
+            </p>
+          }
+
+          @if (
+            form.controls.email.touched &&
+            form.controls.email.hasError('email')
+          ) {
+            <p class="text-error text-sm mt-1">
+              Email 格式不正確
+            </p>
+          }
+        </div>
+
+        <div>
+          <label class="label">
+            <span class="label-text">密碼</span>
+          </label>
+
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="請輸入密碼"
+            class="input input-bordered w-full"
+          />
+
+          @if (
+            form.controls.password.touched &&
+            form.controls.password.hasError('required')
+          ) {
+            <p class="text-error text-sm mt-1">
+              請輸入密碼
+            </p>
+          }
+        </div>
+
+        <label class="label cursor-pointer justify-start gap-3">
+          <input
+            type="checkbox"
+            formControlName="rememberMe"
+            class="checkbox checkbox-primary"
+          />
+          <span class="label-text">
+            記住我
+          </span>
+        </label>
+
+        @if (errorMessage) {
+          <div class="alert alert-error">
+            {{ errorMessage }}
+          </div>
+        }
+
+        <button
+          type="submit"
+          class="btn btn-primary w-full"
+          [disabled]="loading"
+        >
+          @if (loading) {
+            <span class="loading loading-spinner loading-sm"></span>
+            登入中
+          } @else {
+            登入
+          }
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+</div>
