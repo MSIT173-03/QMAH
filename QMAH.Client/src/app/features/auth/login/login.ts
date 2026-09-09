@@ -67,7 +67,7 @@ export class Login {
     ).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/']);
+        this.router.navigate(['/member']);
       },
       error: (error) => {
         this.loading = false;
