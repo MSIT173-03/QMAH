@@ -177,9 +177,11 @@ else
             <div class="text-secondary">發放或撤銷優惠券會統一保留資產活動主檔與逐張紀錄。</div>
             <a asp-area=""
                asp-controller="Operations"
-               asp-action="EconomyBatches"
+               asp-action="EconomyAdjustmentPanel"
                asp-route-targetUserId="@selectedUserId"
                asp-route-assetType="COUPON"
+               asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+               data-economy-panel-url
                class="btn btn-success">
                 <i class="ti ti-arrows-exchange me-1"></i>異動優惠券
             </a>

@@ -153,6 +153,12 @@
         <i class="ti ti-arrow-up" aria-hidden="true"></i>
     </button>
 
+    <div class="modal modal-blur fade" id="economy-adjustment-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content" data-economy-panel-content></div>
+        </div>
+    </div>
+
     <script>document.documentElement.classList.remove("qmah-styles-pending");</script>
     <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
     <script src="~/admin/vendor/tabler/tabler.min.js" asp-append-version="true"></script>
@@ -195,6 +201,52 @@
                     });
                     history.replaceState(null, "", selector);
                 });
+            });
+
+            const economyModalElement = document.getElementById("economy-adjustment-modal");
+            const economyPanelContent = economyModalElement?.querySelector("[data-economy-panel-content]");
+            const economyModal = economyModalElement && window.bootstrap
+                ? new bootstrap.Modal(economyModalElement)
+                : null;
+
+            document.addEventListener("click", async (event) => {
+                const trigger = event.target.closest("[data-economy-panel-url]");
+                if (!trigger || !economyModal || !economyPanelContent) return;
+                event.preventDefault();
+                economyPanelContent.innerHTML = '<div class="modal-body py-5 text-center"><span class="spinner-border" aria-hidden="true"></span><div class="mt-3">載入異動資料…</div></div>';
+                economyModal.show();
+                try {
+                    const response = await fetch(trigger.dataset.economyPanelUrl || trigger.href, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+                    economyPanelContent.innerHTML = response.ok
+                        ? await response.text()
+                        : '<div class="modal-body"><div class="alert alert-danger mb-0">無法載入異動資料，請稍後再試。</div></div>';
+                } catch {
+                    economyPanelContent.innerHTML = '<div class="modal-body"><div class="alert alert-danger mb-0">網路連線中斷，請關閉後再試一次。</div></div>';
+                }
+            });
+
+            economyPanelContent?.addEventListener("submit", async (event) => {
+                const form = event.target.closest("[data-economy-panel-form]");
+                if (!form) return;
+                event.preventDefault();
+                const submitter = event.submitter;
+                const action = submitter?.getAttribute("formaction") || form.action;
+                submitter?.setAttribute("disabled", "disabled");
+                try {
+                    const response = await fetch(action, {
+                        method: "POST",
+                        body: new FormData(form),
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    });
+                    if (response.redirected) {
+                        window.location.assign(response.url);
+                        return;
+                    }
+                    economyPanelContent.innerHTML = await response.text();
+                } catch {
+                    submitter?.removeAttribute("disabled");
+                    form.querySelector(".modal-body")?.insertAdjacentHTML("afterbegin", '<div class="alert alert-danger">網路連線中斷，資料尚未送出，請再試一次。</div>');
+                }
             });
 
             const editableSelector = [

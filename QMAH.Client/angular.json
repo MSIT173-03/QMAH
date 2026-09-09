@@ -22,7 +22,6 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
@@ -30,8 +29,9 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
-            ]
+              "src/styles.css"
+            ],
+            "inlineStyleLanguage": "scss"
           },
           "configurations": {
             "production": {

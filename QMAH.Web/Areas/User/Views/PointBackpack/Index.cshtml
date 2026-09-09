@@ -112,9 +112,11 @@
                                 <div class="qmah-table-actions justify-content-center">
                                     <a asp-area=""
                                        asp-controller="Operations"
-                                       asp-action="EconomyBatches"
+                                       asp-action="EconomyAdjustmentPanel"
                                        asp-route-targetUserId="@item.UserId"
                                        asp-route-assetType="POINT"
+                                       asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                       data-economy-panel-url
                                        class="btn btn-sm btn-primary px-3">
                                         調整點數
                                     </a>

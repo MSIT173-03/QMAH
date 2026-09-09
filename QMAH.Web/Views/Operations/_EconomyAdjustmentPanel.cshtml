@@ -1,0 +1,80 @@
+@model QMAH.Web.Models.EconomyBatchPageViewModel
+@{
+    var memberName = ViewBag.TargetMemberName as string ?? "指定會員";
+    var isCoupon = Model.AssetType == "COUPON";
+}
+
+<div class="modal-header">
+    <div>
+        <h2 class="modal-title">@(isCoupon ? "異動優惠券" : "調整鑑定點數")</h2>
+        <div class="text-secondary mt-1"><i class="ti ti-user me-1" aria-hidden="true"></i>@memberName</div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+</div>
+<form asp-controller="Operations" asp-action="PreviewEconomyBatch" method="post" data-economy-panel-form>
+    @Html.AntiForgeryToken()
+    <input asp-for="TargetUserId" type="hidden" />
+    <input asp-for="AssetType" type="hidden" />
+    <input asp-for="IsInline" type="hidden" />
+    <input asp-for="ReturnUrl" type="hidden" />
+    <div class="modal-body">
+        @if (!string.IsNullOrWhiteSpace(Model.ExecutionError))
+        {
+            <div class="alert alert-danger" role="alert">@Model.ExecutionError</div>
+        }
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="row g-3">
+            <div class="col-12 col-sm-6">
+                <label asp-for="Operation" class="form-label">異動方向</label>
+                <select asp-for="Operation" class="form-select">
+                    <option value="ADD">@(isCoupon ? "發放" : "增加")</option>
+                    <option value="DEDUCT">@(isCoupon ? "撤銷" : "扣除")</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6">
+                <label asp-for="UnitAmount" class="form-label">數量</label>
+                <input asp-for="UnitAmount" class="form-control" type="number" min="1" />
+                <span asp-validation-for="UnitAmount" class="text-danger"></span>
+            </div>
+            @if (isCoupon)
+            {
+                <div class="col-12">
+                    <label asp-for="CouponDefinitionId" class="form-label">優惠券</label>
+                    <select asp-for="CouponDefinitionId" asp-items="ViewBag.BatchCouponDefinitions" class="form-select" required>
+                        <option value="">請選擇優惠券</option>
+                    </select>
+                    <div class="form-hint">直接顯示折扣、最低消費與有效天數；撤銷時會先處理最早發放且仍可使用的券。</div>
+                </div>
+            }
+            <div class="col-12">
+                <label asp-for="Reason" class="form-label">異動原因</label>
+                <textarea asp-for="Reason" class="form-control" rows="2" maxlength="200" required></textarea>
+                <span asp-validation-for="Reason" class="text-danger"></span>
+            </div>
+        </div>
+
+        @if (Model.HasPreview)
+        {
+            <div class="alert alert-info mt-3 mb-0" role="status">
+                已確認對象：<strong>@Model.PreviewCount 位</strong>。執行時會重新驗證餘額與可用券數量，整筆成功或整筆不執行。
+            </div>
+            <div class="form-check mt-3">
+                <input asp-for="Confirm" class="form-check-input" />
+                <label asp-for="Confirm" class="form-check-label">我已確認本次異動內容</label>
+                <span asp-validation-for="Confirm" class="text-danger d-block"></span>
+            </div>
+        }
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="submit" class="btn btn-outline-primary" formaction="@Url.Action("PreviewEconomyBatch", "Operations")">
+            <i class="ti ti-search me-1"></i>預覽
+        </button>
+        @if (Model.HasPreview)
+        {
+            <button type="submit" class="btn btn-primary" formaction="@Url.Action("ExecuteEconomyBatch", "Operations")">
+                <i class="ti ti-check me-1"></i>確認執行
+            </button>
+        }
+    </div>
+</form>

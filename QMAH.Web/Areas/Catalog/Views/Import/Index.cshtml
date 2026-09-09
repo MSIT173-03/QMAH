@@ -11,14 +11,43 @@
 }
 
 @section PageActions {
+    <a asp-area="Catalog" asp-controller="Artifact" asp-action="Index" class="btn btn-outline-primary">查詢已匯入文物</a>
     <a asp-area="Catalog" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
-        <i class="ti ti-arrow-left me-1"></i>返回圖鑑總覽
+        返回圖鑑總覽
     </a>
 }
 
+<section class="card mb-4" aria-labelledby="source-title">
+    <div class="card-body">
+        <h2 id="source-title" class="card-title">查詢故宮原始資料</h2>
+        <p class="text-secondary">依名稱、故宮編號或年代查詢，不會匯入或修改資料。要查詢本站內容，請使用「查詢已匯入文物」。</p>
+        <button id="source-counts" type="button" class="btn btn-outline-primary mb-3">查詢全部類別筆數</button>
+        <div id="counts-status" role="status" aria-live="polite"></div>
+        <div id="counts-results" class="table-responsive mb-3" hidden>
+            <table class="table"><thead><tr><th>類別</th><th>API 原始筆數</th><th>不重複編號</th><th>本站已有</th><th>尚未匯入</th><th>操作</th></tr></thead><tbody id="counts-rows"></tbody></table>
+            <p class="text-secondary small">尚未匯入依故宮編號比對，不代表全部可匯入；年代、欄位與圖片仍須通過預檢。</p>
+        </div>
+        <form id="source-search" action="@Url.Action("SourcePreview")" class="row g-2 align-items-end">
+            <div class="col-sm-3"><label for="browse-dataset" class="form-label">文物類別</label><select id="browse-dataset" name="dataset" class="form-select">
+                @foreach (var category in QMAH.Infrastructure.CatalogImport.NpmOpenDataClient.DatasetDisplayNames)
+                {
+                    <option value="@category.Key">@category.Value</option>
+                }
+            </select></div>
+            <div class="col-sm-6"><label for="browse-query" class="form-label">關鍵字</label><input id="browse-query" name="query" type="search" class="form-control" placeholder="名稱、故宮編號或年代；留空查詢全部" /></div>
+            <div class="col-sm-3"><button class="btn btn-primary" type="submit">查詢資料</button></div>
+        </form>
+        <p id="source-status" class="text-secondary mt-3 mb-0" role="status" aria-live="polite">選擇類別後按「查詢資料」，即可瀏覽官方內容。</p>
+    </div>
+    <div id="source-results" class="table-responsive" hidden><table class="table table-vcenter card-table"><thead><tr><th>文物名稱</th><th>故宮編號</th><th>年代</th><th>來源</th></tr></thead><tbody id="source-rows"></tbody></table></div>
+    <div id="source-pagination" class="card-footer" hidden>
+        <button type="button" id="source-prev" class="btn btn-outline-secondary">上一頁</button><span id="source-page"></span><button type="button" id="source-next" class="btn btn-outline-secondary">下一頁</button>
+    </div>
+</section>
+
 <div class="row row-cards qmah-import-page">
-    <div class="col-12 col-xl-7">
-        <form asp-action="PreviewSource" method="post" class="card qmah-form-card mb-4">
+    <div class="col-12">
+        <form id="source-import" asp-action="PreviewSource" method="post" class="card qmah-form-card mb-4">
             @Html.AntiForgeryToken()
             <div class="card-header">
                 <div>
@@ -30,7 +59,7 @@
                 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
                 {
                     <div class="alert alert-danger" role="alert">
-                        <i class="ti ti-alert-circle me-1"></i>@Model.ErrorMessage
+                        @Model.ErrorMessage
                     </div>
                 }
                 <div asp-validation-summary="All" class="text-danger mb-3"></div>
@@ -69,23 +98,29 @@
                     <div class="col-md-6">
                         <label class="form-label" for="mode">資料範圍</label>
                         <select class="form-select" id="mode" name="mode">
+                            <option value="new">接續新增（自動略過本站已有編號）</option>
                             <option value="both">新增與既有更新</option>
-                            <option value="new">只取新增文物</option>
                             <option value="update">只檢查既有文物</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="maxItems">每個類別最多取幾筆</label>
-                        <select class="form-select" id="maxItems" name="maxItems">
-                            <option value="10">10 筆</option>
-                            <option value="20">20 筆</option>
-                            <option value="32" selected>32 筆</option>
-                            <option value="50">50 筆</option>
-                            <option value="100">100 筆</option>
-                        </select>
-                        <div class="form-hint">這個上限會分別套用到每個勾選的類別。</div>
+                        <input class="form-control" id="maxItems" name="maxItems" type="number" min="1" max="100" value="32" required />
+                        <div class="form-hint">可自訂 1–100 筆，分別套用到每個類別；分批預覽避免一次下載過多圖片。</div>
                     </div>
                 </div>
+
+                <fieldset class="mb-3">
+                    <legend class="form-label">選取順序與編號範圍</legend>
+                    <div class="row g-3">
+                        <div class="col-md-4"><label for="source-order" class="form-label">編號排序</label><select id="source-order" name="order" class="form-select"><option value="asc">編號由小到大</option><option value="desc">編號由大到小</option></select></div>
+                        <div class="col-md-4"><label for="source-from" class="form-label">起始故宮編號（含）</label><input id="source-from" name="fromRef" class="form-control" placeholder="留空不限" /></div>
+                        <div class="col-md-4"><label for="source-to" class="form-label">結束故宮編號（含）</label><input id="source-to" name="toRef" class="form-control" placeholder="留空不限" /></div>
+                    </div>
+                    <label for="source-identifiers" class="form-label mt-3">指定故宮編號（可選）</label>
+                    <textarea id="source-identifiers" name="identifiers" rows="2" class="form-control" placeholder="每行一個完整編號，或以逗號分隔；留空依範圍選取"></textarea>
+                    <p class="form-hint">先依模式與編號篩選，再依編號文字順序選取每類上限筆數。接續新增每次會略過已成功匯入的編號，補入下一批；不會更改故宮原始編號或本站 ID。</p>
+                </fieldset>
 
                 <div class="border rounded p-3 bg-light-subtle">
                     <div class="form-check form-switch mb-3">
@@ -108,11 +143,13 @@
             </div>
             <div class="card-footer qmah-card-footer">
                 <button type="submit" class="btn btn-primary">
-                    <i class="ti ti-cloud-download me-1"></i>下載並預檢
+                    產生本次匯入預覽
                 </button>
             </div>
         </form>
 
+        <details class="mb-4">
+        <summary class="btn btn-outline-secondary mb-3">進階匯入：上傳 JSON 與圖片 ZIP</summary>
         <form asp-action="Preview" method="post" enctype="multipart/form-data" class="card qmah-form-card">
             @Html.AntiForgeryToken()
             <div class="card-header">
@@ -161,13 +198,16 @@
             </div>
             <div class="card-footer qmah-card-footer">
                 <button type="submit" class="btn btn-primary">
-                    <i class="ti ti-search me-1"></i>預檢資料包
+                    預檢資料包
                 </button>
             </div>
         </form>
+        </details>
     </div>
 
-    <div class="col-12 col-xl-5">
+    <div class="col-12">
+        <details>
+        <summary class="text-secondary mb-2">查看匯入規則與資料保護方式</summary>
         <div class="card qmah-dashboard-note">
             <div class="card-header">
                 <h2 class="card-title">匯入原則</h2>
@@ -181,19 +221,29 @@
                 </ul>
             </div>
         </div>
+        </details>
     </div>
 </div>
 
 @if (preview is not null)
 {
-    <div class="card mt-4 qmah-list-card qmah-import-preview-card">
+    <div id="import-preview" tabindex="-1" class="card mt-4 qmah-list-card qmah-import-preview-card">
         <div class="card-header">
             <div>
                 <h2 class="card-title">預檢結果</h2>
                 <div class="text-secondary">確認筆數與警告後，才會執行正式匯入。</div>
             </div>
-            <span class="badge bg-blue-lt">確認碼 @preview.ApprovalToken</span>
         </div>
+        <details class="card-body">
+            <summary>查看本次候選文物（@Model.Artifacts.Count 件）</summary>
+            <p class="text-secondary mt-2">以下為送入預檢的內容；實際新增、更新與排除數量以預檢結果為準。</p>
+            <div class="table-responsive"><table class="table"><thead><tr><th>文物名稱</th><th>故宮編號</th></tr></thead><tbody>
+                @foreach (var artifact in Model.Artifacts)
+                {
+                    <tr><td>@artifact.Name</td><td>@artifact.ArtifactRef</td></tr>
+                }
+            </tbody></table></div>
+        </details>
         <div class="table-responsive">
             <table class="table table-vcenter card-table qmah-import-summary-table">
                 <tbody>
@@ -215,7 +265,7 @@
                 }
                 @foreach (var warning in preview.Warnings)
                 {
-                    <div class="text-secondary small mb-1"><i class="ti ti-alert-triangle me-1"></i>@warning</div>
+                    <div class="text-secondary small mb-1">@warning</div>
                 }
             </div>
         }
@@ -228,9 +278,13 @@
                 <input type="hidden" name="stageId" value="@Model.StageId" />
                 <input type="hidden" name="approvalToken" value="@Model.ApprovalToken" />
                 <button type="submit" class="btn btn-success" onclick="return confirm('確認依預檢結果匯入資料嗎？')">
-                    <i class="ti ti-database-import me-1"></i>確認匯入
+                    確認匯入
                 </button>
             </form>
         </div>
     </div>
+}
+
+@section Scripts {
+    <script src="~/js/areas/catalog-import.js" asp-append-version="true"></script>
 }
