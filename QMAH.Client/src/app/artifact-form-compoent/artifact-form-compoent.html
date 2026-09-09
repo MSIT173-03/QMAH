@@ -1,0 +1,80 @@
+<div class="modal-backdrop" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <h3>{{ isEditMode ? '編輯文物' : '新增文物' }}</h3>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <div class="field">
+        <label>文物編號 *</label>
+        <input type="text" formControlName="artifactRef" />
+        <span class="field-error" *ngIf="form.get('artifactRef')?.touched && form.get('artifactRef')?.invalid">
+          此欄位為必填
+        </span>
+      </div>
+
+      <div class="field">
+        <label>名稱 *</label>
+        <input type="text" formControlName="name" />
+        <span class="field-error" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">
+          此欄位為必填
+        </span>
+      </div>
+
+      <div class="field">
+        <label>分類代碼 *</label>
+        <select formControlName="categoryCode">
+          <option value="">請選擇</option>
+          <option value="JADE">玉器</option>
+          <option value="BRONZE">銅器</option>
+          <option value="PAINTING">繪畫</option>
+          <option value="COIN">錢幣</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>分類名稱 *</label>
+        <input type="text" formControlName="categoryName" />
+      </div>
+
+      <div class="field">
+        <label>朝代代碼 *</label>
+        <input type="text" formControlName="eraCode" />
+      </div>
+
+      <div class="field">
+        <label>朝代名稱 *</label>
+        <input type="text" formControlName="eraName" />
+      </div>
+
+      <div class="field">
+        <label>縮圖路徑</label>
+        <input type="text" formControlName="thumbnailPath" />
+      </div>
+
+      <div class="field checkbox">
+        <label>
+          <input type="checkbox" formControlName="hasQuestionEntry" />
+          有問答條目
+        </label>
+      </div>
+
+      <div class="field checkbox">
+        <label>
+          <input type="checkbox" formControlName="hasShopProduct" />
+          有商店商品
+        </label>
+      </div>
+
+      <div class="form-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+      <div class="form-actions">
+        <button type="button" (click)="onCancel()" [disabled]="submitting">取消</button>
+        <button type="submit" [disabled]="submitting">
+          {{ submitting ? '儲存中...' : '儲存' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

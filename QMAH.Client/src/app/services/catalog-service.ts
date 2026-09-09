@@ -7,7 +7,7 @@ import { catchError, Observable, throwError } from 'rxjs';
   providedIn: 'root',
 })
 export class CatalogService {
-  private apiUrl = 'https://your-api.com/api/artifacts';
+  private apiUrl = 'https://localhost:7249/api/v1/catalog/artifacts';
 
   constructor(private http: HttpClient) {}
 

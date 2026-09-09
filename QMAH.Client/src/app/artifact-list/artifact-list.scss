@@ -1,0 +1,49 @@
+/* artifact-list.component.css */
+.artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.artifact-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.thumbnail {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+.artifact-info { padding: 12px; }
+.tag {
+  display: inline-block;
+  background: #f0f0f0;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  margin-right: 4px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+}
+.danger { color: #c0392b; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.field-error { color: #c0392b; font-size: 12px; }
