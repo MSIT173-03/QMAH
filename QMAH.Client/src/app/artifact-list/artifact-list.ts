@@ -54,7 +54,7 @@ export class ArtifactList implements OnInit {
   }
 
   getImageUrl(path: string): string {
-    return `${this.baseImageUrl}${path}`;
+    return path;
   }
 
   goToPage(page: number): void {
