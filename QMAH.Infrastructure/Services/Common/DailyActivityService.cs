@@ -22,48 +22,64 @@ public sealed class DailyActivityService(QmahDbContext db)
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        var now = DateTime.UtcNow;
-        var today = DateOnly.FromDateTime(now);
-        var activity = await db.DailyMemberActivities
-            .SingleOrDefaultAsync(
-                item => item.UserId == userId
-                    && item.ActivityType == LoginActivityType
-                    && item.ActivityDate == today,
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
                 cancellationToken);
 
-        if (activity is null)
-        {
-            db.DailyMemberActivities.Add(new DailyMemberActivity
+            var now = DateTime.UtcNow;
+            var today = DateOnly.FromDateTime(now);
+
+            var activity = await db.DailyMemberActivities
+                .SingleOrDefaultAsync(
+                    item => item.UserId == userId
+                        && item.ActivityType == LoginActivityType
+                        && item.ActivityDate == today,
+                    cancellationToken);
+
+            if (activity is null)
             {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                ActivityType = LoginActivityType,
-                ActivityDate = today,
-                OccurrenceCount = 1,
-                FirstOccurredAt = now,
-                LastOccurredAt = now,
-                CreatedAt = now,
-                UpdatedAt = now
-            });
-        }
-        else
-        {
-            // 同一天只更新歷史事實的次數與最後時間，不增加累積登入天數。
-            activity.OccurrenceCount = checked(activity.OccurrenceCount + 1);
-            activity.LastOccurredAt = now;
-            activity.UpdatedAt = now;
-        }
+                db.DailyMemberActivities.Add(new DailyMemberActivity
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    ActivityType = LoginActivityType,
+                    ActivityDate = today,
+                    OccurrenceCount = 1,
+                    FirstOccurredAt = now,
+                    LastOccurredAt = now,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+            }
+            else
+            {
+                // 同一天只更新歷史事實的次數與最後時間，不增加累積登入天數。
+                activity.OccurrenceCount =
+                    checked(activity.OccurrenceCount + 1);
 
-        await db.SaveChangesAsync(cancellationToken);
-        await EnsureLoginAchievementsAsync(userId, now, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+                activity.LastOccurredAt = now;
+                activity.UpdatedAt = now;
+            }
 
-        return await GetLoginSummaryAsync(userId, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+
+            await EnsureLoginAchievementsAsync(
+                userId,
+                now,
+                cancellationToken);
+
+            await db.SaveChangesAsync(cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+        });
+
+        return await GetLoginSummaryAsync(
+            userId,
+            cancellationToken);
     }
 
     /// <summary>依會員的登入歷史即時計算每日登入進度。</summary>
@@ -72,13 +88,22 @@ public sealed class DailyActivityService(QmahDbContext db)
         CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var dates = await GetLoginDatesAsync(userId, today, cancellationToken);
+
+        var dates = await GetLoginDatesAsync(
+            userId,
+            today,
+            cancellationToken);
+
         var memberCreatedAt = await db.Users
             .AsNoTracking()
             .Where(user => user.Id == userId)
             .Select(user => (DateTime?)user.CreatedAt)
             .SingleOrDefaultAsync(cancellationToken);
-        var metrics = CalculateMetrics(dates, today, memberCreatedAt);
+
+        var metrics = CalculateMetrics(
+            dates,
+            today,
+            memberCreatedAt);
 
         return new DailyActivitySummary(
             dates.Count == 0 ? null : dates[^1],
@@ -96,7 +121,8 @@ public sealed class DailyActivityService(QmahDbContext db)
     {
         return await db.DailyMemberActivities
             .AsNoTracking()
-            .Where(item => item.UserId == userId
+            .Where(item =>
+                item.UserId == userId
                 && item.ActivityType == LoginActivityType
                 && item.ActivityDate <= throughDate)
             .OrderBy(item => item.ActivityDate)
@@ -110,34 +136,60 @@ public sealed class DailyActivityService(QmahDbContext db)
         CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(now);
-        var dates = await GetLoginDatesAsync(userId, today, cancellationToken);
+
+        var dates = await GetLoginDatesAsync(
+            userId,
+            today,
+            cancellationToken);
+
         if (dates.Count == 0)
             return;
 
-        var metrics = CalculateMetrics(dates, today, memberCreatedAt: null);
+        var metrics = CalculateMetrics(
+            dates,
+            today,
+            memberCreatedAt: null);
+
         var definitions = await db.Achievements
-            .Where(item => item.Status == "ACTIVE"
-                && (item.ConditionType == "DAILY_LOGIN_COUNT"
-                    || item.ConditionType == "DAILY_LOGIN_STREAK"))
+            .Where(item =>
+                item.Status == "ACTIVE"
+                && (
+                    item.ConditionType == "DAILY_LOGIN_COUNT"
+                    || item.ConditionType == "DAILY_LOGIN_STREAK"
+                ))
             .ToListAsync(cancellationToken);
+
         if (definitions.Count == 0)
             return;
 
-        var achievementIds = definitions.Select(item => item.Id).ToList();
+        var achievementIds = definitions
+            .Select(item => item.Id)
+            .ToList();
+
         var earned = await db.UserAchievements
-            .Where(item => item.UserId == userId && achievementIds.Contains(item.AchievementId))
+            .Where(item =>
+                item.UserId == userId
+                && achievementIds.Contains(item.AchievementId))
             .Select(item => item.AchievementId)
             .ToHashSetAsync(cancellationToken);
 
         foreach (var definition in definitions)
         {
-            var progress = definition.ConditionType == "DAILY_LOGIN_STREAK"
-                ? metrics.CurrentLoginStreak
-                : metrics.TotalLoginDays;
-            if (progress < definition.ThresholdValue || earned.Contains(definition.Id))
-                continue;
+            var progress =
+                definition.ConditionType == "DAILY_LOGIN_STREAK"
+                    ? metrics.CurrentLoginStreak
+                    : metrics.TotalLoginDays;
 
-            // 登入成就只留下取得紀錄，不發鑑定點數、鑰匙或優惠券，避免 Prestige 反向形成經濟循環。
+            if (
+                progress < definition.ThresholdValue
+                || earned.Contains(definition.Id)
+            )
+            {
+                continue;
+            }
+
+            // 登入成就只留下取得紀錄，不發鑑定點數、鑰匙或優惠券，
+            // 避免 Prestige 反向形成經濟循環。
             db.UserAchievements.Add(new UserAchievement
             {
                 Id = Guid.NewGuid(),
@@ -160,28 +212,49 @@ public sealed class DailyActivityService(QmahDbContext db)
         var longestStreak = 0;
         var trailingStreak = 0;
         DateOnly? previousDate = null;
+
         foreach (var date in dates)
         {
-            trailingStreak = previousDate.HasValue && previousDate.Value.AddDays(1) == date
-                ? trailingStreak + 1
-                : 1;
-            longestStreak = Math.Max(longestStreak, trailingStreak);
+            trailingStreak =
+                previousDate.HasValue
+                && previousDate.Value.AddDays(1) == date
+                    ? trailingStreak + 1
+                    : 1;
+
+            longestStreak = Math.Max(
+                longestStreak,
+                trailingStreak);
+
             previousDate = date;
         }
 
-        var currentStreak = dates[^1] >= today.AddDays(-1)
-            ? trailingStreak
-            : 0;
-        var startDate = memberCreatedAt.HasValue
-            ? DateOnly.FromDateTime(memberCreatedAt.Value)
-            : dates[0];
-        var eligibleDays = Math.Max(1, today.DayNumber - startDate.DayNumber + 1);
+        var currentStreak =
+            dates[^1] >= today.AddDays(-1)
+                ? trailingStreak
+                : 0;
+
+        var startDate =
+            memberCreatedAt.HasValue
+                ? DateOnly.FromDateTime(memberCreatedAt.Value)
+                : dates[0];
+
+        var eligibleDays = Math.Max(
+            1,
+            today.DayNumber - startDate.DayNumber + 1);
+
         var loginRate = Math.Clamp(
-            Math.Round(dates.Count / (decimal)eligibleDays, 4, MidpointRounding.AwayFromZero),
+            Math.Round(
+                dates.Count / (decimal)eligibleDays,
+                4,
+                MidpointRounding.AwayFromZero),
             0m,
             1m);
 
-        return new LoginMetrics(dates.Count, currentStreak, longestStreak, loginRate);
+        return new LoginMetrics(
+            dates.Count,
+            currentStreak,
+            longestStreak,
+            loginRate);
     }
 
     private sealed record LoginMetrics(
