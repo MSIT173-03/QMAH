@@ -1,0 +1,49 @@
+<div class="drawer min-h-screen bg-base-200">
+  <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+
+  <div class="drawer-content flex flex-col">
+    <!-- Navbar -->
+    <div class="w-full navbar bg-base-100 shadow-md">
+      <div class="flex-none">
+        <label for="my-drawer" class="btn btn-square btn-ghost drawer-button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </label>
+      </div>
+      <div class="flex-1 px-2 mx-2 text-xl font-bold">QMAH Social Platform Testbed</div>
+      <div class="flex-none gap-2">
+        <span class="badge badge-primary">目前身份: {{ auth.currentUser().name }}</span>
+      </div>
+    </div>
+
+    <!-- 內容區域 -->
+    <div class="p-6">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <!-- 側邊選單 -->
+  <div class="drawer-side z-20">
+    <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <ul class="menu p-4 w-80 min-h-full bg-base-100 text-base-content space-y-2">
+      <li class="menu-title">🎮 前台玩家專區</li>
+      <li><a routerLink="/social/posts">貼文廣場 (GET /posts)</a></li>
+      <li><a routerLink="/social/posts">活動總覽 (GET /events)</a></li>
+
+      <div class="divider"></div>
+
+      <li class="menu-title text-error">🛡️ 後台管理專區</li>
+      <li><a routerLink="/admin/events" [class.disabled]="!auth.isAdmin()">活動審核 (PUT /admin/events)</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- 開發者測試面板 -->
+<div class="fixed bottom-4 right-4 z-50 card bg-neutral text-neutral-content shadow-2xl p-4 border border-primary">
+  <h3 class="font-bold text-sm mb-2 text-primary">🧪 開發者切換面板</h3>
+  <div class="flex gap-2">
+    <button class="btn btn-xs btn-outline btn-accent" (click)="switch('User')">切換一般玩家</button>
+    <button class="btn btn-xs btn-error" (click)="switch('Admin')">切換管理員</button>
+  </div>
+</div>

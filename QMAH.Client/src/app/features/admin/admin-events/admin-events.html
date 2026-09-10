@@ -1,0 +1,29 @@
+<h1 class="text-2xl font-bold mb-6 text-error">後台：活動審核管理 (AdminEventsController)</h1>
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
+  <table class="table w-full">
+    <thead>
+      <tr>
+        <th>活動名稱</th>
+        <th>發起人</th>
+        <th>活動時間</th>
+        <th>當前狀態</th>
+        <th>審核操作 (PUT /admin/events/:id/review)</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (event of pendingEvents; track event.id) {
+        <tr>
+          <td class="font-bold">{{ event.title }}</td>
+          <td>{{ event.organizer }}</td>
+          <td>{{ event.startAt }}</td>
+          <td><span class="badge badge-warning">{{ event.status }}</span></td>
+          <td class="space-x-2">
+            <button class="btn btn-xs btn-success text-white" (click)="review(event.id, 'APPROVED')">通過</button>
+            <button class="btn btn-xs btn-error text-white" (click)="review(event.id, 'REJECTED')">退件</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

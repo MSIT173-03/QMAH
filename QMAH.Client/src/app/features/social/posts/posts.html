@@ -1,0 +1,45 @@
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">社群貼文牆</h1>
+  <button class="btn btn-primary" onclick="create_post_modal.showModal()">+ 發布貼文</button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  @for (post of posts; track post.id) {
+  <div class="card bg-base-100 shadow-xl border border-base-300">
+    <div class="card-body">
+      <div class="flex justify-between">
+        <span class="badge badge-secondary">{{ post.boardCode }}</span>
+        <span class="text-xs text-gray-500">{{ post.createdAt }}</span>
+      </div>
+      <h2 class="card-title">{{ post.title }}</h2>
+      <p>{{ post.content }}</p>
+      <div class="card-actions justify-end mt-4">
+        <button class="btn btn-sm btn-ghost" (click)="report(post.id)">🚩 檢舉</button>
+        <button class="btn btn-sm btn-outline btn-primary">💬 留言 ({{ post.commentCount || 0 }})</button>
+      </div>
+    </div>
+  </div>
+  } @empty {
+  <div class="col-span-2 text-center py-10 text-gray-400">目前 DB 尚無貼文資料或 API 未回應</div>
+  }
+</div>
+
+<dialog id="create_post_modal" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">發布新貼文</h3>
+    <div class="form-control gap-3">
+      <input type="text" placeholder="標題" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
+      <select class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
+        <option value="GENERAL">綜合討論區</option>
+        <option value="EVENT">活動看板</option>
+      </select>
+      <textarea class="textarea textarea-bordered h-24" placeholder="分享些內容..." [(ngModel)]="newPost.content"></textarea>
+    </div>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn btn-ghost">取消</button>
+        <button class="btn btn-primary" (click)="submitPost()">送出發布</button>
+      </form>
+    </div>
+  </div>
+</dialog>

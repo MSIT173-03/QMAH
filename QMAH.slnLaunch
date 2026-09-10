@@ -7,7 +7,7 @@
         "Action": "Start"
       },
       {
-        "Path": "QMAH.Web\\QMAH.Web.csproj",
+        "Path": "QMAH.Client\\QMAH.Client.esproj",
         "Action": "Start"
       }
     ]

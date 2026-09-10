@@ -1,4 +1,18 @@
 import { Routes } from '@angular/router';
+import { LayoutComponent } from './shared/components/layout/layout';
 
-// 前台功能依責任建立 lazy loading route，統一由此集中管理。
-export const routes: Routes = [];
+import { PostsComponent } from './features/social/posts/posts';
+import { AdminEventsComponent } from './features/admin/admin-events/admin-events';
+
+export const routes: Routes = [
+  {
+    path: '',
+    component: LayoutComponent,
+    children: [
+      { path: '', redirectTo: 'social/posts', pathMatch: 'full' },
+      { path: 'social/posts', component: PostsComponent },
+      { path: 'admin/events', component: AdminEventsComponent },
+    ]
+  },
+  { path: '**', redirectTo: '' }
+];
