@@ -38,7 +38,11 @@ public sealed class GameController(
 
         var projected = query
             .OrderByDescending(room => room.CreatedAt)
-            .ThenBy(room => room.RoomCode)
+            .ThenBy(room => room.TotalRounds)
+            .ThenBy(room => room.MaxPlayers)
+            .ThenBy(room => room.AnswerSeconds)
+            .ThenBy(room => room.VotingSeconds)
+            .ThenBy(room => room.Id)
             .Select(room => new GameRoomListItemDto(
                 room.Id,
                 room.RoomCode,
