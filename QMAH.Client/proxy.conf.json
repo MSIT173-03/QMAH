@@ -14,12 +14,12 @@
     "secure": false,
     "changeOrigin": true
   },
-    "/media": {
+  "/media": {
     "target": "https://localhost:7039",
     "secure": false,
     "changeOrigin": true
   },
-    "/uploads": {
+  "/uploads": {
     "target": "https://localhost:7039",
     "secure": false,
     "changeOrigin": true
