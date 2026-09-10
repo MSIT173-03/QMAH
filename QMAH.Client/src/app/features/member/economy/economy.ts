@@ -1,6 +1,15 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+
+import {
+  BackToMember
+} from '../../../shared/back-to-member/back-to-member';
 
 interface EconomyKey {
   id: string;
@@ -23,13 +32,17 @@ interface EconomyResponse {
 
 @Component({
   selector: 'app-economy',
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    BackToMember
+  ],
   templateUrl: './economy.html',
   styleUrl: './economy.scss'
 })
 export class Economy implements OnInit {
 
   economy: EconomyResponse | null = null;
+
   loading = true;
   errorMessage = '';
 
@@ -43,27 +56,44 @@ export class Economy implements OnInit {
   }
 
   private loadEconomy(): void {
+
     this.loading = true;
     this.errorMessage = '';
 
-    this.http.get<EconomyResponse>('/api/v1/me/economy')
+    this.http
+      .get<EconomyResponse>(
+        '/api/v1/me/economy'
+      )
       .subscribe({
-        next: (data) => {
-          console.log('economy:', data);
+
+        next: (data: EconomyResponse) => {
+
+          console.log(
+            'economy:',
+            data
+          );
 
           this.economy = data;
           this.loading = false;
 
           this.cdr.detectChanges();
         },
-        error: (error) => {
-          console.error('economy error:', error);
 
-          this.errorMessage = '讀取點數與鑰匙資料失敗';
+        error: (error) => {
+
+          console.error(
+            'economy error:',
+            error
+          );
+
+          this.errorMessage =
+            '讀取點數與鑰匙資料失敗';
+
           this.loading = false;
 
           this.cdr.detectChanges();
         }
+
       });
   }
 }

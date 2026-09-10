@@ -2,13 +2,16 @@
 
   <div class="max-w-4xl mx-auto">
 
+    <!-- 共用：返回會員中心 -->
+    <app-back-to-member></app-back-to-member>
+
     @if (loading) {
 
       <div class="flex justify-center p-10">
         <span class="loading loading-spinner loading-lg"></span>
       </div>
 
-    } @else if (errorMessage) {
+    } @else if (errorMessage && !profile) {
 
       <div class="alert alert-error">
         {{ errorMessage }}
@@ -17,24 +20,62 @@
     } @else if (profile) {
 
       <div class="card bg-base-100 shadow-xl">
+
         <div class="card-body">
 
-          <h1 class="card-title text-2xl mb-6">
-            個人資料
-          </h1>
+          <!-- 標題 -->
+          <div class="flex justify-between items-center mb-6">
 
+            <div>
+              <h1 class="card-title text-2xl">
+                編輯我的個人資料
+              </h1>
+
+              <p class="text-sm text-base-content/60 mt-2">
+                更新暱稱、自我介紹、頭像與公開範圍。
+              </p>
+            </div>
+
+            @if (!editing) {
+
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                (click)="startEdit()"
+              >
+                編輯資料
+              </button>
+
+            }
+
+          </div>
+
+          <!-- 頭像 + 基本資料 -->
           <div class="flex items-center gap-6 mb-6">
 
-            <div class="avatar">
-              <div class="w-24 rounded-full">
-                <img
-                  [src]="profile.avatarPath || '/images/default-avatar.png'"
-                  alt="會員頭像"
-                />
+            <div class="avatar placeholder">
+
+              <div
+                class="
+                  bg-primary
+                  text-primary-content
+                  w-24
+                  h-24
+                  rounded-full
+                  flex
+                  items-center
+                  justify-center
+                "
+              >
+                <span class="text-3xl font-bold">
+                  {{ profile.displayName.charAt(0).toUpperCase() }}
+                </span>
               </div>
+
             </div>
 
             <div>
+
               <h2 class="text-xl font-bold">
                 {{ profile.displayName }}
               </h2>
@@ -42,57 +83,207 @@
               <p class="text-base-content/60">
                 {{ profile.email }}
               </p>
+
             </div>
 
           </div>
 
           <div class="divider"></div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          @if (!editing) {
 
-            <div>
-              <div class="text-sm text-base-content/60">暱稱</div>
-              <div class="font-medium">
-                {{ profile.displayName }}
+            <!-- 檢視模式 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div>
+                <div class="text-sm text-base-content/60">
+                  暱稱
+                </div>
+
+                <div class="font-medium">
+                  {{ profile.displayName }}
+                </div>
               </div>
-            </div>
 
-            <div>
-              <div class="text-sm text-base-content/60">帳號狀態</div>
-              <div class="font-medium">
-                {{ profile.status }}
+              <div>
+                <div class="text-sm text-base-content/60">
+                  帳號狀態
+                </div>
+
+                <div class="font-medium">
+                  {{ profile.status }}
+                </div>
               </div>
-            </div>
 
-            <div>
-              <div class="text-sm text-base-content/60">公開範圍</div>
-              <div class="font-medium">
-                {{ profile.visibility }}
+              <div>
+                <div class="text-sm text-base-content/60">
+                  公開範圍
+                </div>
+
+                <div class="font-medium">
+
+                  @if (profile.visibility === 'PUBLIC') {
+                    公開
+                  } @else if (profile.visibility === 'FRIENDS') {
+                    好友可見
+                  } @else if (profile.visibility === 'PRIVATE') {
+                    不公開
+                  } @else {
+                    {{ profile.visibility }}
+                  }
+
+                </div>
               </div>
-            </div>
 
-            <div>
-              <div class="text-sm text-base-content/60">點數</div>
-              <div class="font-medium">
-                {{ profile.pointBalance }}
+              <div>
+                <div class="text-sm text-base-content/60">
+                  點數
+                </div>
+
+                <div class="font-medium">
+                  {{ profile.pointBalance }}
+                </div>
               </div>
+
             </div>
 
-          </div>
+            <div class="divider"></div>
 
-          <div class="divider"></div>
+            <!-- 自我介紹 -->
+            <div>
 
-          <div>
-            <div class="text-sm text-base-content/60 mb-2">
-              自我介紹
+              <div class="text-sm text-base-content/60 mb-2">
+                自我介紹
+              </div>
+
+              <p>
+                {{ profile.bio || '尚未填寫自我介紹' }}
+              </p>
+
             </div>
 
-            <p>
-              {{ profile.bio || '尚未填寫自我介紹' }}
-            </p>
-          </div>
+          } @else {
+
+            <!-- 編輯模式 -->
+            <div class="space-y-5">
+
+              <div>
+
+                <label class="label">
+                  <span class="label-text font-medium">
+                    暱稱
+                  </span>
+                </label>
+
+                <input
+                  type="text"
+                  class="input input-bordered w-full"
+                  [(ngModel)]="formData.nickname"
+                >
+
+              </div>
+
+              <div>
+
+                <label class="label">
+                  <span class="label-text font-medium">
+                    公開範圍
+                  </span>
+                </label>
+
+                <select
+                  class="select select-bordered w-full"
+                  [(ngModel)]="formData.visibility"
+                >
+                  <option value="PUBLIC">
+                    公開
+                  </option>
+
+                  <option value="FRIENDS">
+                    好友可見
+                  </option>
+
+                  <option value="PRIVATE">
+                    不公開
+                  </option>
+                </select>
+
+              </div>
+
+              <div>
+
+                <label class="label">
+                  <span class="label-text font-medium">
+                    自我介紹
+                  </span>
+                </label>
+
+                <textarea
+                  class="textarea textarea-bordered w-full min-h-32"
+                  [(ngModel)]="formData.bio"
+                  placeholder="輸入自我介紹"
+                ></textarea>
+
+              </div>
+
+              <div class="flex gap-3">
+
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="saveProfile()"
+                  [disabled]="saving"
+                >
+
+                  @if (saving) {
+
+                    <span
+                      class="loading loading-spinner loading-sm"
+                    ></span>
+
+                    儲存中...
+
+                  } @else {
+
+                    儲存修改
+
+                  }
+
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  (click)="cancelEdit()"
+                  [disabled]="saving"
+                >
+                  取消
+                </button>
+
+              </div>
+
+            </div>
+
+          }
+
+          @if (errorMessage) {
+
+            <div class="alert alert-error mt-6">
+              {{ errorMessage }}
+            </div>
+
+          }
+
+          @if (successMessage) {
+
+            <div class="alert alert-success mt-6">
+              {{ successMessage }}
+            </div>
+
+          }
 
         </div>
+
       </div>
 
     }
