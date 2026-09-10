@@ -9,9 +9,9 @@ import { catchError, Observable, throwError } from 'rxjs';
 export class CatalogService {
   private apiUrl = 'https://localhost:7249/api/v1/catalog/artifacts';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  // ========== 讀取（Read）==========
+  // ========== 文物讀取（Read）==========
 
   /** 取得分頁列表 */
   getArtifacts(page: number = 1, pageSize: number = 20): Observable<CatalogListResponse> {
@@ -30,6 +30,10 @@ export class CatalogService {
       catchError(this.handleError)
     );
   }
+
+
+  // ========== 解鎖文物 ==========
+
 
   // ========== 新增（Create）==========
 

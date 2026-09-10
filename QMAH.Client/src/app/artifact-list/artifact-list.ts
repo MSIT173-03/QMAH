@@ -3,12 +3,11 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CatalogService } from '../services/catalog-service';
 import { CatalogModel } from '../models/catalog-model';
-import { ArtifactFormComponent } from '../artifact-form-compoent/artifact-form-compoent';
 
 @Component({
   selector: 'app-artifact-list',
   standalone: true,
-  imports: [CommonModule, ArtifactFormComponent],
+  imports: [CommonModule],
   templateUrl: './artifact-list.html',
   styleUrl: './artifact-list.scss'
 })
@@ -19,7 +18,7 @@ export class ArtifactList implements OnInit {
   errorMsg = signal('');
 
   currentPage = signal(1);
-  pageSize = 20;
+  pageSize = 12;
   totalPages = signal(1);
   totalCount = signal(0);
 
@@ -31,7 +30,7 @@ export class ArtifactList implements OnInit {
 
   private baseImageUrl = 'https://localhost:7249/api/v1/catalog/artifacts';
 
-  constructor(private catalogService: CatalogService) {}
+  constructor(private catalogService: CatalogService) { }
 
   ngOnInit(): void {
     this.loadArtifacts();
@@ -54,7 +53,7 @@ export class ArtifactList implements OnInit {
   }
 
   getImageUrl(path: string): string {
-    return `${this.baseImageUrl}${path}`;
+    return path;
   }
 
   goToPage(page: number): void {
@@ -80,20 +79,6 @@ export class ArtifactList implements OnInit {
 
   onFormCancelled(): void {
     this.showForm.set(false);
-  }
-
-  onDeleteClick(catalogModel: CatalogModel): void {
-    const confirmed = confirm(`確定要刪除「${catalogModel.name}」嗎？此動作無法復原。`);
-    if (!confirmed) return;
-
-    this.catalogService.deleteArtifact(catalogModel.id).subscribe({
-      next: () => {
-        this.loadArtifacts();
-      },
-      error: (err) => {
-        alert('刪除失敗：' + err.message);
-      }
-    });
   }
 
   trackByArtifactId(index: number, item: CatalogModel): string {

@@ -1,6 +1,6 @@
 export interface CatalogModel {
 
-// 內層：單一文物物件
+  // 內層：單一文物物件
   id: string;                  // UUID 格式字串，非 number
   artifactRef: string;         // 文物編號，如 "故玉009113N000000000"
   name: string;                // 文物名稱

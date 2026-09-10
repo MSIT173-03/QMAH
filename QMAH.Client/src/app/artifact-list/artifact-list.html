@@ -1,48 +1,67 @@
 <!-- artifact-list.html -->
-<div class="page-header">
-  <h2>文物典藏管理（共 {{ totalCount() }} 筆）</h2>
-  <button (click)="onAddClick()">+ 新增文物</button>
-</div>
+<div class="artifact-page">
 
-<div *ngIf="loading()" class="loading">載入中...</div>
-
-<div *ngIf="errorMsg()" class="error">{{ errorMsg() }}</div>
-
-<div class="artifact-grid" *ngIf="!loading() && !errorMsg()">
-  <div class="artifact-card" *ngFor="let item of catalogModel(); trackBy: trackByArtifactId">
-    <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
-
-    <div class="artifact-info">
-      <h3>{{ item.name }}</h3>
-      <p class="ref">{{ item.artifactRef }}</p>
-      <p>
-        <span class="tag">{{ item.categoryName }}</span>
-        <span class="tag">{{ item.eraName }}</span>
-      </p>
-      <p class="badges">
-        <span *ngIf="item.hasQuestionEntry" class="badge">有問答</span>
-        <span *ngIf="item.hasShopProduct" class="badge">有商品</span>
-      </p>
+  <div class="page-header">
+    <div class="page-header__bar">
+      <h2 class="page-header__title">圖鑑</h2>
     </div>
-
-    <div class="actions">
-      <button (click)="onEditClick(item)">編輯</button>
-      <button (click)="onDeleteClick(item)" class="danger">刪除</button>
+    <div class="page-header__meta" *ngIf="!loading() && !errorMsg()">
+      <span class="result-count">共 <strong>{{ totalCount() }}</strong> 筆</span>
+      <span class="result-page" *ngIf="totalPages() > 1">第 {{ currentPage() }} 頁 / 共 {{ totalPages() }} 頁</span>
     </div>
   </div>
 
-  <div *ngIf="isEmpty()" class="empty">目前沒有資料</div>
-</div>
+  <div *ngIf="loading()" class="state state--loading">
+    <span class="spinner"></span>載入中...
+  </div>
 
-<div class="pagination" *ngIf="!loading() && totalPages() > 1">
-  <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1">上一頁</button>
-  <span>第 {{ currentPage() }} / {{ totalPages() }} 頁</span>
-  <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()">下一頁</button>
-</div>
+  <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
 
-<app-artifact-form
-  *ngIf="showForm()"
-  [catalogModel]="editingArtifact()"
-  (saved)="onFormSaved()"
-  (cancelled)="onFormCancelled()"
-></app-artifact-form>
+  <div class="artifact-grid" *ngIf="!loading() && !errorMsg()">
+    <div
+      class="artifact-card"
+      *ngFor="let item of catalogModel(); trackBy: trackByArtifactId"
+    >
+      <div class="artifact-card__media">
+        <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
+      </div>
+
+      <div class="artifact-card__info">
+        <p class="ref">No. {{ item.artifactRef }}</p>
+        <h3 class="name">{{ item.name }}</h3>
+        <div class="tags">
+          <span class="tag tag--category">{{ item.categoryName }}</span>
+          <span class="tag tag--era">{{ item.eraName }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isEmpty()" class="empty">
+      <p class="empty__title">目前沒有資料</p>
+      <p class="empty__desc">請調整搜尋條件後再試一次</p>
+    </div>
+  </div>
+
+  <nav class="pagination" *ngIf="!loading() && totalPages() > 1" aria-label="分頁">
+    <button
+      type="button"
+      class="pagination__btn pagination__btn--prev"
+      (click)="goToPage(currentPage() - 1)"
+      [disabled]="currentPage() === 1"
+    >
+      上一頁
+    </button>
+
+    <span class="pagination__current">第 {{ currentPage() }} / {{ totalPages() }} 頁</span>
+
+    <button
+      type="button"
+      class="pagination__btn pagination__btn--next"
+      (click)="goToPage(currentPage() + 1)"
+      [disabled]="currentPage() === totalPages()"
+    >
+      下一頁
+    </button>
+  </nav>
+
+</div>
