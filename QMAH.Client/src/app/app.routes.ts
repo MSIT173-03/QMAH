@@ -41,6 +41,14 @@ export const routes: Routes = [
   loadComponent: () =>
     import('./features/user/achievements/achievements')
       .then(m => m.Achievements)
+},
+
+{
+  path: 'member/daily-activity',
+  canActivate: [authGuard],
+  loadComponent: () =>
+    import('./features/user/daily-activity/daily-activity')
+      .then(m => m.DailyActivity)
 }
 
 ];
