@@ -1,0 +1,175 @@
+<main class="game-notebook" [class.has-selection]="selectedRoomId">
+  <header class="game-masthead">
+    <a routerLink="/" class="brand-link" aria-label="回到清明鑑定屋">
+      <img src="/assets/brand/qmah-logo.svg" alt="清明鑑定屋" />
+    </a>
+    @if (isDemo) { <span class="demo-mark">預覽模式 · 僅供查看</span> }
+  </header>
+
+  <nav class="mode-bookmarks" aria-label="遊戲模式">
+    <a routerLink="/game" class="bookmark is-active" aria-current="page"><small>線上</small>多人鑑定</a>
+    <a routerLink="/game/minigames" class="bookmark"><small>單人</small>小遊戲</a>
+  </nav>
+
+  <section class="lobby-hero" aria-labelledby="lobby-hero-title">
+    <div class="lobby-hero-copy">
+      <h1 id="lobby-hero-title">看見細節，<br />也看穿答案。</h1>
+      <p>和朋友一起觀察同一件館藏。寫下判斷、投票，再揭開真正的故事。</p>
+      @if (!isDemo) { <button type="button" class="hero-create" (click)="toggleCreateForm()">建立一間房</button> }
+    </div>
+    <figure class="lobby-artwork">
+      <img src="/assets/game/ceramic-square-vase.jpg" alt="墨地素三彩四季花鳥瓷方瓶" />
+      <figcaption><span>本局觀察</span><strong>一切從細節開始</strong></figcaption>
+    </figure>
+    <p class="lobby-rule" aria-hidden="true">OBSERVE · ANSWER · VOTE</p>
+  </section>
+
+  @if (error) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span></div> }
+  @if (success) { <div class="notice notice-success" role="status"><span>{{ success }}</span></div> }
+
+  <section class="notebook-spread" [attr.aria-busy]="loading">
+    <article class="index-page" aria-labelledby="rooms-title">
+      <header class="page-heading">
+        <div>
+          <h2 id="rooms-title">開放中的房間</h2>
+          <p>{{ roomListDescription() }}</p>
+        </div>
+      </header>
+
+      <div class="lookup-bar">
+        <button type="button" class="filter-trigger" [class.is-active]="showFilter" (click)="showFilter = !showFilter" [attr.aria-expanded]="showFilter">篩選：{{ roomStatus === 'WAITING' ? '可加入' : statusText(roomStatus === 'RECENT' ? 'COMPLETED' : roomStatus) }}</button>
+        @if (showFilter) {
+          <section class="filter-note" aria-label="篩選條件">
+            <header><strong>選擇房間狀態</strong><button type="button" (click)="showFilter = false" aria-label="關閉篩選">×</button></header>
+            <p>切換狀態即可查看不同房間。</p>
+            <button type="button" [attr.aria-pressed]="isRoomStatusActive('WAITING')" (click)="setRoomStatus('WAITING')">可加入</button>
+            <button type="button" [attr.aria-pressed]="isRoomStatusActive('PLAYING')" (click)="setRoomStatus('PLAYING')">進行中</button>
+            <button type="button" [attr.aria-pressed]="isRoomStatusActive('RECENT')" (click)="setRoomStatus('RECENT')">最近完成</button>
+          </section>
+        }
+      </div>
+
+      <div class="status-tabs" aria-label="房間狀態">
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('WAITING')" [class.is-active]="isRoomStatusActive('WAITING')" (click)="setRoomStatus('WAITING')">可加入</button>
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('PLAYING')" [class.is-active]="isRoomStatusActive('PLAYING')" (click)="setRoomStatus('PLAYING')">進行中</button>
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('RECENT')" [class.is-active]="isRoomStatusActive('RECENT')" (click)="setRoomStatus('RECENT')">最近完成</button>
+        <span>{{ rooms ? rooms.totalCount + ' 間' : '讀取中' }}</span>
+      </div>
+
+      <div class="ledger" role="list">
+        @if (rooms === null && loading) {
+          @for (slot of loadingRows; track slot) { <div class="ledger-skeleton" aria-hidden="true"><i></i><i></i><i></i></div> }
+        }
+        @else if (rooms && rooms.items.length === 0) {
+          <section class="empty-state">
+            <h2>目前沒有符合條件的房間</h2>
+            @if (isDemo) {
+              <p>預覽資料在這個狀態下沒有房間可供查看。</p>
+            } @else {
+              <p>請切換房間狀態，或建立新的鑑定房間。</p>
+              <button type="button" (click)="setRoomStatus('WAITING')">查看可加入房間</button>
+              <button type="button" (click)="showCreateForm = true">建立房間</button>
+            }
+          </section>
+        }
+        @else if (rooms) {
+          @for (room of rooms.items; track room.id) {
+            <div role="listitem">
+              <button type="button" class="room-row" [class.is-selected]="selectedRoomId === room.id" (click)="selectRoom(room)" [attr.aria-pressed]="selectedRoomId === room.id">
+                <span class="room-code">{{ room.roomCode }}</span>
+                <span class="room-facts"><b>{{ room.totalRounds }} 回合</b><span>{{ visibilityText(room.visibility) }}</span></span>
+                <span class="room-occupancy"><b>{{ room.playerCount }} / {{ room.maxPlayers }}</b><i><i [style.width.%]="occupancy(room)"></i></i></span>
+                <span class="room-status" [attr.data-status]="room.status">{{ statusText(room.status) }}</span>
+                <span class="row-arrow" aria-hidden="true">›</span>
+              </button>
+            </div>
+          }
+        }
+      </div>
+
+      @if (rooms && rooms.totalPages > 1) {
+        <nav class="folio-pagination" aria-label="房間清單分頁">
+          <button type="button" aria-label="上一頁" (click)="loadRooms(rooms.page - 1)" [disabled]="rooms.page <= 1">‹</button>
+          @for (page of pageNumbers(); track page) { <button type="button" (click)="loadRooms(page)" [class.is-current]="page === rooms.page" [attr.aria-current]="page === rooms.page ? 'page' : null">{{ page }}</button> }
+          <button type="button" aria-label="下一頁" (click)="loadRooms(rooms.page + 1)" [disabled]="rooms.page >= rooms.totalPages">›</button>
+        </nav>
+      }
+    </article>
+
+    <aside class="notes-page" aria-live="polite">
+      <span class="page-edge">房間資訊</span>
+      @if (detailLoading) {
+        <div class="notes-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>
+      }
+      @else if (currentRoom(); as room) {
+        <header class="room-notes-heading">
+          <div class="room-code-heading">
+            <div><span class="room-code-label">房間代碼</span><h2>{{ room.roomCode }}</h2></div>
+            <div class="room-share-actions">
+              <button type="button" class="copy-room-code" (click)="copyRoomCode(room.roomCode)" aria-label="複製房間代碼">複製</button>
+              <button type="button" class="copy-room-code" (click)="openRoomQr(room)" aria-label="顯示房間 QR 碼">QR 碼</button>
+            </div>
+          </div>
+          <button type="button" class="mobile-detail-close" (click)="clearSelection()" aria-label="關閉房間資訊">×</button>
+          <span [attr.data-status]="room.status">{{ statusText(room.status) }}</span>
+        </header>
+        <dl class="room-record">
+          <div><dt>分類</dt><dd>{{ categoryText(room.categoryFilterCode) }}</dd></div>
+          <div><dt>年代</dt><dd>{{ eraText(room.eraBucketFilterCode) }}</dd></div>
+          <div><dt>回合</dt><dd>{{ room.totalRounds }}</dd></div>
+          <div><dt>作答時間</dt><dd>{{ room.answerSeconds }} 秒</dd></div>
+        </dl>
+        <section class="participant-record">
+          <header><h3>席位</h3><span>{{ room.playerCount ?? room.players.length }} / {{ room.maxPlayers }}</span></header>
+          @if (isDemo) {
+            <p class="margin-note">預覽模式只供查看，不能加入房間。</p>
+          } @else {
+            <ol>
+              @for (player of room.players; track player.id) { <li><b>{{ (player.seatNo || 0).toString().padStart(2, '0') }}</b><span>{{ player.displayName }}</span><small>{{ playerStateText(player) }}</small></li> }
+              @for (slot of openSlots(room); track slot) { <li class="vacant"><b>{{ (room.players.length + slot + 1).toString().padStart(2, '0') }}</b><span>空位</span><small>可加入</small></li> }
+            </ol>
+          }
+        </section>
+        @if (!isDemo && game.canJoinRoom(room)) {
+          <form #joinFormRef="ngForm" class="join-note" (ngSubmit)="joinRoom()" novalidate>
+            <label>遊戲顯示名稱<input name="joinDisplayName" [(ngModel)]="joinForm.displayName" maxlength="80" required /></label>
+            @if (room.visibility === 'PRIVATE') { <label>房間密碼<input name="joinPassword" type="password" [(ngModel)]="joinForm.password" required /></label> }
+            <button type="submit" [disabled]="joining || joinFormRef.invalid">{{ joining ? '加入中…' : '加入房間' }}</button>
+          </form>
+        } @else if (!isDemo) { <p class="margin-note">這間房目前不能加入，請選擇可加入的房間。</p> }
+      }
+      @else {
+        <section class="empty-notes"><h2>選一間房查看資訊</h2><p>這裡會顯示房間設定、席位與加入方式。</p></section>
+      }
+    </aside>
+  </section>
+
+  @if (qrRoom; as room) {
+    <div class="qr-backdrop" (click)="closeRoomQr()"></div>
+    <section #qrDialog class="qr-sheet" role="dialog" aria-modal="true" aria-labelledby="qr-title" tabindex="-1">
+      <header><div><p>分享房間</p><h2 id="qr-title">掃描取得房間代碼</h2></div><button type="button" (click)="closeRoomQr()" aria-label="關閉 QR 碼">×</button></header>
+      <div class="qr-frame"><qrcode [qrdata]="room.roomCode" [width]="220" [elementType]="'svg'" [errorCorrectionLevel]="'M'" [alt]="'房間代碼 ' + room.roomCode" [ariaLabel]="'房間代碼 ' + room.roomCode"></qrcode></div>
+      <code>{{ room.roomCode }}</code>
+      <p>掃描後可直接複製這組代碼，再貼給要加入的玩家。</p>
+      <button type="button" class="qr-copy" (click)="copyRoomCode(room.roomCode)">複製房間代碼</button>
+    </section>
+  }
+
+  @if (showCreateForm) {
+    <div class="sheet-backdrop" (click)="toggleCreateForm()"></div>
+    <section #createDialog class="insert-sheet" role="dialog" aria-modal="true" aria-labelledby="create-title" tabindex="-1">
+      <header><div><h2 id="create-title">建立鑑定房間</h2></div><button type="button" (click)="toggleCreateForm()" aria-label="關閉">×</button></header>
+      <form #createFormRef="ngForm" (ngSubmit)="createRoom()">
+        <label>顯示名稱<input name="createDisplayName" [(ngModel)]="createForm.displayName" maxlength="80" required /></label>
+        <div class="form-columns">
+          <label>房間類型<select name="createVisibility" [(ngModel)]="createForm.visibility"><option value="PUBLIC">公開房間</option><option value="PRIVATE">私人房間</option></select></label>
+          <label>玩家上限<input name="createMaxPlayers" type="number" [(ngModel)]="createForm.maxPlayers" min="3" max="10" required /></label>
+          <label>回合數<input name="createTotalRounds" type="number" [(ngModel)]="createForm.totalRounds" min="1" max="5" required /></label>
+          <label>每回合作答時間<input name="createAnswerSeconds" type="number" [(ngModel)]="createForm.answerSeconds" min="30" max="300" required /></label>
+        </div>
+        @if (createForm.visibility === 'PRIVATE') { <label>房間密碼<input name="createPassword" type="password" [(ngModel)]="createForm.password" required /></label> }
+        <footer><span>建立後會回到房間列表。</span><button type="submit" [disabled]="creating || createFormRef.invalid">{{ creating ? '建立中…' : '建立房間' }}</button></footer>
+      </form>
+    </section>
+  }
+</main>
