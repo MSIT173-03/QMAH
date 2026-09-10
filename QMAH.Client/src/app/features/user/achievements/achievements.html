@@ -1,0 +1,161 @@
+<div class="achievements-page">
+
+  <div class="page-header">
+    <div>
+      <h1>成就與稱號</h1>
+      <p>查看已取得的成就與目前展示中的稱號。</p>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="state-box">
+      載入中...
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="state-box error">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!loading && !errorMessage && achievements.length === 0) {
+
+    <div class="empty-state">
+      <div class="empty-icon">🏆</div>
+
+      <h2>目前還沒有取得任何成就</h2>
+
+      <p>
+        完成指定條件後，取得的成就與稱號會顯示在這裡。
+      </p>
+    </div>
+
+  }
+
+  @if (achievements.length > 0) {
+
+    <section class="summary-section">
+
+      <div class="summary-card">
+        <div class="summary-icon">🏆</div>
+
+        <div>
+          <span class="summary-label">
+            已取得成就
+          </span>
+
+          <div class="summary-value">
+            {{ achievements.length }}
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon">✨</div>
+
+        <div>
+          <span class="summary-label">
+            展示中稱號
+          </span>
+
+          <div class="summary-value title-value">
+            @for (achievement of achievements; track achievement.id) {
+              @if (achievement.isDisplayed) {
+                {{ achievement.title }}
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="achievement-section">
+
+      <div class="section-title">
+
+        <div>
+          <h2>我的成就</h2>
+          <p>目前已取得的成就與對應稱號</p>
+        </div>
+
+        <span class="achievement-count">
+          {{ achievements.length }} 個
+        </span>
+
+      </div>
+
+      <div class="achievement-grid">
+
+        @for (achievement of achievements; track achievement.id) {
+
+          <div
+            class="achievement-card"
+            [class.displayed]="achievement.isDisplayed"
+          >
+
+            <div class="achievement-card-header">
+
+              <div class="achievement-icon">
+                🏆
+              </div>
+
+              @if (achievement.isDisplayed) {
+                <span class="display-badge">
+                  展示中
+                </span>
+              }
+
+            </div>
+
+            <h3>
+              {{ achievement.name }}
+            </h3>
+
+            <div class="title">
+              {{ achievement.title }}
+            </div>
+
+            @if (achievement.description) {
+              <p class="description">
+                {{ achievement.description }}
+              </p>
+            }
+
+            <div class="achievement-info">
+
+              <div>
+                <span>條件類型</span>
+                <strong>
+                  {{ achievement.conditionType }}
+                </strong>
+              </div>
+
+              <div>
+                <span>達成門檻</span>
+                <strong>
+                  {{ achievement.thresholdValue }}
+                </strong>
+              </div>
+
+              <div>
+                <span>達成時間</span>
+                <strong>
+                  {{ achievement.achievedAt | date:'yyyy/MM/dd' }}
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        }
+
+      </div>
+
+    </section>
+
+  }
+
+</div>

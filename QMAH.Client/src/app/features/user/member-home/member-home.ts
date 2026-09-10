@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-
+import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-member-home',
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './member-home.html',
   styleUrl: './member-home.scss'
 })
@@ -22,7 +21,6 @@ export class MemberHome {
   logout(): void {
     this.loggingOut = true;
 
-    // 先重新取得 Antiforgery Token
     this.http.get(
       `${environment.apiBaseUrl}/account/antiforgery-token`
     ).subscribe({

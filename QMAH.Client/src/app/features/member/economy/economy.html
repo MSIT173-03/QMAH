@@ -1,0 +1,104 @@
+<div class="economy-page">
+
+  <div class="page-header">
+    <div>
+      <h1>點數與鑰匙</h1>
+      <p>查看你的鑑定點數、鑰匙進度與持有鑰匙。</p>
+    </div>
+  </div>
+  @if (loading) {
+    <div class="state-box">
+      載入中...
+    </div>
+  }
+  @if (errorMessage) {
+    <div class="state-box error">
+      {{ errorMessage }}
+    </div>
+  }
+  @if (economy) {
+    <!-- 上方資產摘要 -->
+    <section class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-icon">✦</div>
+
+        <div>
+          <span class="summary-label">鑑定點數</span>
+          <div class="summary-value">
+            {{ economy.pointBalance }}
+          </div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">🔑</div>
+        <div class="progress-content">
+          <span class="summary-label">鑰匙進度</span>
+          <div class="summary-value progress-value">
+            {{ economy.keyProgressBalance }}
+            /
+            {{ economy.keyProgressToNormalKey }}
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="
+                economy.keyProgressToNormalKey > 0
+                  ? (economy.keyProgressBalance / economy.keyProgressToNormalKey) * 100
+                  : 0
+              ">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- 鑰匙 -->
+    <section class="keys-section">
+      <div class="section-title">
+        <div>
+          <h2>我的鑰匙</h2>
+          <p>目前持有的各類文物解鎖鑰匙</p>
+        </div>
+        <span class="key-count">
+          {{ economy.keys.length }} 種
+        </span>
+      </div>
+
+
+      <div class="key-grid">
+        @for (key of economy.keys; track key.id) {
+          <div
+            class="key-card"
+            [class.empty]="key.balance === 0">
+            <div class="key-card-header">
+              <div class="key-icon">
+                🔑
+              </div>
+              <span
+                class="balance-badge"
+                [class.has-key]="key.balance > 0">
+                × {{ key.balance }}
+              </span>
+            </div>
+            <h3>{{ key.name }}</h3>
+            <div class="key-info">
+              <div>
+                <span>持有數量</span>
+                <strong>{{ key.balance }}</strong>
+              </div>
+              <div>
+                <span>可解鎖文物</span>
+                <strong>{{ key.eligibleArtifactCount }}</strong>
+              </div>
+              <div>
+                <span>回收點數</span>
+                <strong>{{ key.recyclePointValue }}</strong>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

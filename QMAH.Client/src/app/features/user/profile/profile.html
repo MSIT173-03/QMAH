@@ -1,0 +1,102 @@
+<div class="min-h-screen bg-base-200 p-6">
+
+  <div class="max-w-4xl mx-auto">
+
+    @if (loading) {
+
+      <div class="flex justify-center p-10">
+        <span class="loading loading-spinner loading-lg"></span>
+      </div>
+
+    } @else if (errorMessage) {
+
+      <div class="alert alert-error">
+        {{ errorMessage }}
+      </div>
+
+    } @else if (profile) {
+
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+
+          <h1 class="card-title text-2xl mb-6">
+            個人資料
+          </h1>
+
+          <div class="flex items-center gap-6 mb-6">
+
+            <div class="avatar">
+              <div class="w-24 rounded-full">
+                <img
+                  [src]="profile.avatarPath || '/images/default-avatar.png'"
+                  alt="會員頭像"
+                />
+              </div>
+            </div>
+
+            <div>
+              <h2 class="text-xl font-bold">
+                {{ profile.displayName }}
+              </h2>
+
+              <p class="text-base-content/60">
+                {{ profile.email }}
+              </p>
+            </div>
+
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div>
+              <div class="text-sm text-base-content/60">暱稱</div>
+              <div class="font-medium">
+                {{ profile.displayName }}
+              </div>
+            </div>
+
+            <div>
+              <div class="text-sm text-base-content/60">帳號狀態</div>
+              <div class="font-medium">
+                {{ profile.status }}
+              </div>
+            </div>
+
+            <div>
+              <div class="text-sm text-base-content/60">公開範圍</div>
+              <div class="font-medium">
+                {{ profile.visibility }}
+              </div>
+            </div>
+
+            <div>
+              <div class="text-sm text-base-content/60">點數</div>
+              <div class="font-medium">
+                {{ profile.pointBalance }}
+              </div>
+            </div>
+
+          </div>
+
+          <div class="divider"></div>
+
+          <div>
+            <div class="text-sm text-base-content/60 mb-2">
+              自我介紹
+            </div>
+
+            <p>
+              {{ profile.bio || '尚未填寫自我介紹' }}
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+    }
+
+  </div>
+
+</div>

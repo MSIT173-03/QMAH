@@ -1,0 +1,16 @@
+.card {
+  height: 100%;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-body p {
+  flex-grow: 1;
+}
+
+.card-actions {
+  margin-top: auto;
+}
