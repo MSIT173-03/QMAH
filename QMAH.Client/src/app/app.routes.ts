@@ -13,6 +13,11 @@ export const routes: Routes = [
       import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
   },
   {
+    path: 'game/room/:roomId',
+    loadComponent: () =>
+      import('./game/game-room.component').then(({ GameRoomComponent }) => GameRoomComponent)
+  },
+  {
     path: 'game',
     loadComponent: () =>
       import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
