@@ -145,14 +145,7 @@
   </section>
 
   @if (qrRoom; as room) {
-    <div class="qr-backdrop" (click)="closeRoomQr()"></div>
-    <section #qrDialog class="qr-sheet" role="dialog" aria-modal="true" aria-labelledby="qr-title" tabindex="-1">
-      <header><div><p>分享房間</p><h2 id="qr-title">掃描取得房間代碼</h2></div><button type="button" (click)="closeRoomQr()" aria-label="關閉 QR 碼">×</button></header>
-      <div class="qr-frame"><qrcode [qrdata]="room.roomCode" [width]="220" [elementType]="'svg'" [errorCorrectionLevel]="'M'" [alt]="'房間代碼 ' + room.roomCode" [ariaLabel]="'房間代碼 ' + room.roomCode"></qrcode></div>
-      <code>{{ room.roomCode }}</code>
-      <p>掃描後可直接複製這組代碼，再貼給要加入的玩家。</p>
-      <button type="button" class="qr-copy" (click)="copyRoomCode(room.roomCode)">複製房間代碼</button>
-    </section>
+    <app-game-room-qr-dialog [room]="room" (close)="closeRoomQr()" (copy)="copyRoomCode($event)" />
   }
 
   @if (showCreateForm) {
@@ -168,7 +161,7 @@
           <label>每回合作答時間<input name="createAnswerSeconds" type="number" [(ngModel)]="createForm.answerSeconds" min="30" max="300" required /></label>
         </div>
         @if (createForm.visibility === 'PRIVATE') { <label>房間密碼<input name="createPassword" type="password" [(ngModel)]="createForm.password" required /></label> }
-        <footer><span>建立後會回到房間列表。</span><button type="submit" [disabled]="creating || createFormRef.invalid">{{ creating ? '建立中…' : '建立房間' }}</button></footer>
+        <footer><span>建立後會直接進入房間。</span><button type="submit" [disabled]="creating || createFormRef.invalid">{{ creating ? '建立中…' : '建立房間' }}</button></footer>
       </form>
     </section>
   }

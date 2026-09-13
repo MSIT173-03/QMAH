@@ -1,17 +1,18 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, Subscription, finalize } from 'rxjs';
-import { QRCodeComponent } from 'angularx-qrcode';
 
 import { ApiPage, CreateGameRoomRequest, GameRoomDetails, GameRoomFilterStatus, GameRoomListItem, JoinGameRoomRequest } from './game.models';
+import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameService } from './game.service';
 
 type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, QRCodeComponent],
+  imports: [FormsModule, RouterLink, GameRoomQrDialogComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })
@@ -19,6 +20,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   readonly game = inject(GameService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   private routeSubscription?: Subscription;
 
   createForm: CreateGameRoomRequest = this.game.roomDefaults();
@@ -40,7 +42,6 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   readonly pageSize = 20;
   isDemo = false;
   qrRoom: Pick<GameRoomListItem, 'id' | 'roomCode'> | null = null;
-  @ViewChild('qrDialog') private qrDialog?: ElementRef<HTMLElement>;
   @ViewChild('createDialog') private createDialog?: ElementRef<HTMLElement>;
 
   ngOnInit(): void {
@@ -81,14 +82,26 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   isRoomStatusActive(status: LobbyStatus): boolean { return this.roomStatus === status; }
 
   selectRoom(room: GameRoomListItem): void {
-    this.selectedRoomId = room.id; this.errorTitle = '房間詳細資料目前無法取得'; this.success = ''; this.error = '';
+    this.selectedRoomId = room.id; this.errorTitle = '目前無法載入房間資訊'; this.success = ''; this.error = '';
     if (this.isDemo) {
       this.demoRoom = this.makeDemoDetail(room);
       this.revealMobileDetails();
       return;
     }
     this.game.clearState(); this.detailLoading = true;
-    this.game.getRoom(room.id).pipe(finalize(() => (this.detailLoading = false))).subscribe({ next: () => this.revealMobileDetails(), error: (error: unknown) => (this.error = this.game.errorMessage(error)) });
+    this.game.getRoom(room.id).pipe(finalize(() => {
+      this.detailLoading = false;
+      this.changeDetector.markForCheck();
+    })).subscribe({
+      next: () => {
+        this.revealMobileDetails();
+        this.changeDetector.markForCheck();
+      },
+      error: (error: unknown) => {
+        this.error = this.game.errorMessage(error);
+        this.changeDetector.markForCheck();
+      }
+    });
   }
 
   currentRoom(): GameRoomDetails | null { return this.demoRoom ?? this.game.currentRoom(); }
@@ -105,13 +118,23 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     if (this.isDemo) {
       this.showCreateForm = false;
       this.errorTitle = 'Demo 預覽模式';
-      this.error = '這些房間是測試資料，不能建立或加入。請回到正式入口操作。';
+      this.error = '這些是預覽房間，無法建立或加入。請返回多人房間大廳。';
       return;
     }
     this.creating = true; this.errorTitle = '房間建立失敗'; this.error = ''; this.success = '';
-    this.game.createRoom(this.createForm).pipe(finalize(() => (this.creating = false))).subscribe({
-      next: (room) => { this.showCreateForm = false; this.selectedRoomId = room.id; this.success = '房間已建立。複製房間代碼分享給朋友，就可以一起開始。'; this.loadRooms(this.rooms?.page ?? 1, false); },
-      error: (error: unknown) => (this.error = this.game.errorMessage(error))
+    this.game.createRoom(this.createForm).pipe(finalize(() => {
+      this.creating = false;
+      this.changeDetector.markForCheck();
+    })).subscribe({
+      next: (room) => {
+        this.showCreateForm = false;
+        const hostId = room.players.find((player) => player.role === 'HOST')?.id;
+        this.enterRoom(room.id, hostId);
+      },
+      error: (error: unknown) => {
+        this.showRoomActionError(error, '房間建立失敗');
+        this.changeDetector.markForCheck();
+      }
     });
   }
 
@@ -119,15 +142,58 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     const room = this.currentRoom(); if (!room) return;
     if (this.isDemo) {
       this.errorTitle = 'Demo 預覽模式';
-      this.error = '這些房間是測試資料，不能加入。請回到正式入口操作。';
+      this.error = '這些是預覽房間，無法加入。請返回多人房間大廳。';
       return;
     }
     this.joining = true; this.errorTitle = '加入房間失敗'; this.error = ''; this.success = '';
-    this.game.joinRoom(room.id, this.joinForm).pipe(finalize(() => (this.joining = false))).subscribe({
-      next: () => { this.success = '已加入房間。等待房主開始這一局。'; this.loadRooms(this.rooms?.page ?? 1, false); },
-      error: (error: unknown) => (this.error = this.game.errorMessage(error))
+    const previousPlayerIds = new Set(room.players.map((player) => player.id));
+    this.game.joinRoom(room.id, this.joinForm).pipe(finalize(() => {
+      this.joining = false;
+      this.changeDetector.markForCheck();
+    })).subscribe({
+      next: (joinedRoom) => {
+        const addedPlayers = joinedRoom.players.filter((player) => !previousPlayerIds.has(player.id));
+        const sameNamePlayers = addedPlayers.filter(
+          (player) => player.displayName === this.joinForm.displayName.trim()
+        );
+        const playerId = sameNamePlayers.length === 1
+          ? sameNamePlayers[0].id
+          : addedPlayers.length === 1
+            ? addedPlayers[0].id
+            : this.readRememberedPlayerId(room.id);
+        this.enterRoom(joinedRoom.id, playerId);
+      },
+      error: (error: unknown) => {
+        this.showRoomActionError(error, '加入房間失敗');
+        this.changeDetector.markForCheck();
+      }
     });
   }
+
+  private enterRoom(roomId: string, playerId?: string): void {
+    if (playerId) {
+      try { sessionStorage.setItem(this.playerStorageKey(roomId), playerId); } catch { /* Storage can be disabled. */ }
+    }
+    void this.router.navigate(['/game/room', roomId], {
+      state: playerId ? { playerId } : undefined
+    });
+  }
+
+  private showRoomActionError(error: unknown, fallbackTitle: string): void {
+    if (error instanceof HttpErrorResponse && error.status === 401) {
+      this.errorTitle = '請先登入';
+      this.error = '請先登入會員，再建立或加入房間。';
+      return;
+    }
+    this.errorTitle = fallbackTitle;
+    this.error = this.game.errorMessage(error);
+  }
+
+  private readRememberedPlayerId(roomId: string): string | undefined {
+    try { return sessionStorage.getItem(this.playerStorageKey(roomId)) ?? undefined; } catch { return undefined; }
+  }
+
+  private playerStorageKey(roomId: string): string { return `qmah-game-player:${roomId}`; }
 
   copyRoomCode(roomCode: string): void {
     if (!roomCode) return;
@@ -139,16 +205,17 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     void navigator.clipboard.writeText(roomCode).then(() => {
       this.error = '';
       this.success = '房間代碼已複製。';
+      this.changeDetector.markForCheck();
     }).catch(() => {
       this.errorTitle = '無法複製房間代碼';
       this.error = '請直接選取房間代碼後複製。';
+      this.changeDetector.markForCheck();
     });
   }
 
   openRoomQr(room: Pick<GameRoomListItem, 'id' | 'roomCode'>): void {
     this.qrRoom = room;
     this.error = '';
-    this.focusDialog(() => this.qrDialog);
   }
 
   closeRoomQr(): void { this.qrRoom = null; }
@@ -183,7 +250,20 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   pageNumbers(): number[] { if (!this.rooms) return []; const start = Math.max(1, Math.min(this.rooms.page - 1, this.rooms.totalPages - 2)); return Array.from({ length: Math.min(3, this.rooms.totalPages) }, (_, index) => start + index); }
 
   private run<T>(request: Observable<T>, assign: (value: T) => void): void {
-    this.loading = true; request.pipe(finalize(() => (this.loading = false))).subscribe({ next: assign, error: (error: unknown) => (this.error = this.game.errorMessage(error)) });
+    this.loading = true;
+    request.pipe(finalize(() => {
+      this.loading = false;
+      this.changeDetector.markForCheck();
+    })).subscribe({
+      next: (value) => {
+        assign(value);
+        this.changeDetector.markForCheck();
+      },
+      error: (error: unknown) => {
+        this.error = this.game.errorMessage(error);
+        this.changeDetector.markForCheck();
+      }
+    });
   }
 
   private focusDialog(getDialog: () => ElementRef<HTMLElement> | undefined): void {
