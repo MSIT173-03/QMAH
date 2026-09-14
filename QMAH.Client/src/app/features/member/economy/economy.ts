@@ -30,6 +30,13 @@ interface EconomyResponse {
   keys: EconomyKey[];
 }
 
+type KeyFilter =
+  | 'ALL'
+  | 'NORMAL'
+  | 'CATEGORY'
+  | 'ERA'
+  | 'UNIVERSAL';
+
 @Component({
   selector: 'app-economy',
   imports: [
@@ -46,6 +53,8 @@ export class Economy implements OnInit {
   loading = true;
   errorMessage = '';
 
+  selectedFilter: KeyFilter = 'ALL';
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef
@@ -53,6 +62,40 @@ export class Economy implements OnInit {
 
   ngOnInit(): void {
     this.loadEconomy();
+  }
+
+  get filteredKeys(): EconomyKey[] {
+
+    if (!this.economy) {
+      return [];
+    }
+
+    if (this.selectedFilter === 'ALL') {
+      return this.economy.keys;
+    }
+
+    return this.economy.keys.filter(
+      key => key.scopeType === this.selectedFilter
+    );
+  }
+
+  setFilter(filter: KeyFilter): void {
+    this.selectedFilter = filter;
+  }
+
+  getFilterCount(filter: KeyFilter): number {
+
+    if (!this.economy) {
+      return 0;
+    }
+
+    if (filter === 'ALL') {
+      return this.economy.keys.length;
+    }
+
+    return this.economy.keys.filter(
+      key => key.scopeType === filter
+    ).length;
   }
 
   private loadEconomy(): void {

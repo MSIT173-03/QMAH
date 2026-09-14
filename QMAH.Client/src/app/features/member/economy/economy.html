@@ -10,24 +10,23 @@
   </div>
 
   @if (loading) {
-
     <div class="state-box">
       載入中...
     </div>
-
   }
 
   @if (errorMessage) {
-
     <div class="state-box error">
       {{ errorMessage }}
     </div>
-
   }
 
   @if (economy) {
 
+    <!-- ===================== -->
     <!-- 上方資產摘要 -->
+    <!-- ===================== -->
+
     <section class="summary-grid">
 
       <div class="summary-card">
@@ -67,7 +66,6 @@
           </div>
 
           <div class="progress-bar">
-
             <div
               class="progress-fill"
               [style.width.%]="
@@ -77,7 +75,6 @@
               "
             >
             </div>
-
           </div>
 
         </div>
@@ -86,7 +83,10 @@
 
     </section>
 
-    <!-- 鑰匙 -->
+    <!-- ===================== -->
+    <!-- 鑰匙區 -->
+    <!-- ===================== -->
+
     <section class="keys-section">
 
       <div class="section-title">
@@ -102,13 +102,81 @@
 
       </div>
 
+      <div class="filter-bar">
+
+  <button
+    type="button"
+    class="filter-button"
+    [class.active]="selectedFilter === 'ALL'"
+    (click)="setFilter('ALL')"
+  >
+    全部
+    <span>
+      {{ getFilterCount('ALL') }}
+    </span>
+  </button>
+
+  <button
+    type="button"
+    class="filter-button"
+    [class.active]="selectedFilter === 'NORMAL'"
+    (click)="setFilter('NORMAL')"
+  >
+    一般
+    <span>
+      {{ getFilterCount('NORMAL') }}
+    </span>
+  </button>
+
+  <button
+    type="button"
+    class="filter-button"
+    [class.active]="selectedFilter === 'CATEGORY'"
+    (click)="setFilter('CATEGORY')"
+  >
+    分類
+    <span>
+      {{ getFilterCount('CATEGORY') }}
+    </span>
+  </button>
+
+  <button
+    type="button"
+    class="filter-button"
+    [class.active]="selectedFilter === 'ERA'"
+    (click)="setFilter('ERA')"
+  >
+    年代
+    <span>
+      {{ getFilterCount('ERA') }}
+    </span>
+  </button>
+
+  <button
+    type="button"
+    class="filter-button"
+    [class.active]="selectedFilter === 'UNIVERSAL'"
+    (click)="setFilter('UNIVERSAL')"
+  >
+    萬能
+    <span>
+      {{ getFilterCount('UNIVERSAL') }}
+    </span>
+  </button>
+
+</div>
+
       <div class="key-grid">
 
-        @for (key of economy.keys; track key.id) {
+        @for (key of filteredKeys; track key.id) {
 
           <div
             class="key-card"
             [class.empty]="key.balance === 0"
+            [class.normal-key]="key.scopeType === 'NORMAL'"
+            [class.category-key]="key.scopeType === 'CATEGORY'"
+            [class.era-key]="key.scopeType === 'ERA'"
+            [class.universal-key]="key.scopeType === 'UNIVERSAL'"
           >
 
             <div class="key-card-header">
@@ -117,12 +185,40 @@
                 🔑
               </div>
 
-              <span
-                class="balance-badge"
-                [class.has-key]="key.balance > 0"
-              >
-                × {{ key.balance }}
-              </span>
+              <div class="key-card-badges">
+
+                <span class="scope-badge">
+
+                  @switch (key.scopeType) {
+
+                    @case ('NORMAL') {
+                      一般
+                    }
+
+                    @case ('CATEGORY') {
+                      分類
+                    }
+
+                    @case ('ERA') {
+                      年代
+                    }
+
+                    @case ('UNIVERSAL') {
+                      萬能
+                    }
+
+                  }
+
+                </span>
+
+                <span
+                  class="balance-badge"
+                  [class.has-key]="key.balance > 0"
+                >
+                  × {{ key.balance }}
+                </span>
+
+              </div>
 
             </div>
 
@@ -133,9 +229,7 @@
             <div class="key-info">
 
               <div>
-                <span>
-                  持有數量
-                </span>
+                <span>持有數量</span>
 
                 <strong>
                   {{ key.balance }}
@@ -143,9 +237,7 @@
               </div>
 
               <div>
-                <span>
-                  可解鎖文物
-                </span>
+                <span>可解鎖文物</span>
 
                 <strong>
                   {{ key.eligibleArtifactCount }}
@@ -153,9 +245,7 @@
               </div>
 
               <div>
-                <span>
-                  回收點數
-                </span>
+                <span>回收點數</span>
 
                 <strong>
                   {{ key.recyclePointValue }}

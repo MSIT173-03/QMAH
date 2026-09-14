@@ -59,4 +59,45 @@ export const routes: Routes = [
         .then(m => m.Addresses)
   },
 
+  {
+    path: 'member/coupons',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/user/coupons/coupons')
+        .then(m => m.Coupons)
+  },
+
+  {
+    path: 'member/notifications',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/user/notifications/notifications')
+        .then(m => m.Notifications)
+  },
+
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./features/auth/register/register')
+        .then(m => m.Register)
+  },
+
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password')
+        .then(m => m.ForgotPassword)
+  },
+
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import(
+        './features/auth/reset-password/reset-password'
+      )
+        .then(
+          m => m.ResetPassword
+        )
+  },
+
 ];

@@ -1,6 +1,15 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+
+import {
+  BackToMember
+} from '../../../shared/back-to-member/back-to-member';
 
 interface Achievement {
   id: string;
@@ -19,13 +28,17 @@ interface Achievement {
 
 @Component({
   selector: 'app-achievements',
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    BackToMember
+  ],
   templateUrl: './achievements.html',
   styleUrl: './achievements.scss',
 })
 export class Achievements implements OnInit {
 
   achievements: Achievement[] = [];
+
   loading = true;
   errorMessage = '';
 
@@ -38,28 +51,66 @@ export class Achievements implements OnInit {
     this.loadAchievements();
   }
 
+  get displayedAchievement(): Achievement | null {
+    return this.achievements.find(
+      achievement => achievement.isDisplayed
+    ) ?? null;
+  }
+
+  getConditionTypeLabel(conditionType: string): string {
+
+    switch (conditionType) {
+
+      case 'DAILY_LOGIN_COUNT':
+        return '累積登入天數';
+
+      case 'CONSECUTIVE_LOGIN_COUNT':
+        return '連續登入天數';
+
+      default:
+        return conditionType;
+    }
+  }
+
   private loadAchievements(): void {
+
     this.loading = true;
     this.errorMessage = '';
 
-    this.http.get<Achievement[]>('/api/v1/me/achievements')
+    this.http
+      .get<Achievement[]>(
+        '/api/v1/me/achievements'
+      )
       .subscribe({
-        next: (data) => {
-          console.log('achievements:', data);
+
+        next: (data: Achievement[]) => {
+
+          console.log(
+            'achievements:',
+            data
+          );
 
           this.achievements = data;
           this.loading = false;
 
           this.cdr.detectChanges();
         },
-        error: (error) => {
-          console.error('achievements error:', error);
 
-          this.errorMessage = '讀取成就資料失敗';
+        error: (error) => {
+
+          console.error(
+            'achievements error:',
+            error
+          );
+
+          this.errorMessage =
+            '讀取成就資料失敗';
+
           this.loading = false;
 
           this.cdr.detectChanges();
         }
+
       });
   }
 }

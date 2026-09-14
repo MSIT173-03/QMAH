@@ -1,22 +1,46 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
-import { UserApi } from '../user-api';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit
+} from '@angular/core';
+
+import {
+  CommonModule
+} from '@angular/common';
+
+import {
+  FormsModule
+} from '@angular/forms';
+
+import {
+  HttpErrorResponse
+} from '@angular/common/http';
+
+import {
+  RouterLink
+} from '@angular/router';
+
+import {
+  UserApi
+} from '../user-api';
 
 import {
   MemberAddress,
   UpsertUserAddressRequest
 } from '../user.models';
 
+import { BackToMember } from '../../../shared/back-to-member/back-to-member';
+
+
 @Component({
   selector: 'app-addresses',
+
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink
+    BackToMember
   ],
+
   templateUrl: './addresses.html',
   styleUrl: './addresses.scss',
 })
@@ -35,56 +59,183 @@ export class Addresses implements OnInit {
 
   editingId: string | null = null;
 
+  showForm = false;
+
+
   formData: UpsertUserAddressRequest = {
+
     addressLabel: '',
+
     recipientName: '',
+
     recipientPhone: '',
+
     postalCode: null,
+
     city: null,
+
     district: null,
+
     addressLine: '',
+
     latitude: null,
+
     longitude: null,
+
     isDefault: false
   };
+
 
   constructor(
     private userApi: UserApi,
     private cdr: ChangeDetectorRef
   ) { }
 
+
   ngOnInit(): void {
+
     this.loadAddresses();
+
   }
+
+
+  // ===============================
+  // 預設地址
+  // ===============================
+
+  get defaultAddress():
+    MemberAddress | null {
+
+    return this.addresses.find(
+      address => address.isDefault
+    ) ?? null;
+
+  }
+
+
+  // ===============================
+  // 其他地址
+  // ===============================
+
+  get otherAddresses():
+    MemberAddress[] {
+
+    return this.addresses.filter(
+      address => !address.isDefault
+    );
+
+  }
+
+
+  // ===============================
+  // 開啟新增表單
+  // ===============================
+
+  openAddForm(): void {
+
+    this.editingId = null;
+
+    this.resetForm();
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.showForm = true;
+
+    setTimeout(() => {
+
+      document
+        .getElementById('address-form')
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+    }, 50);
+
+  }
+
+
+  // ===============================
+  // 關閉表單
+  // ===============================
+
+  closeForm(): void {
+
+    if (this.saving) {
+      return;
+    }
+
+    this.showForm = false;
+
+    this.editingId = null;
+
+    this.resetForm();
+
+    this.errorMessage = '';
+
+  }
+
+
+  // ===============================
+  // 取得地址
+  // ===============================
 
   private loadAddresses(): void {
 
     this.loading = true;
+
     this.errorMessage = '';
 
-    this.userApi.getAddresses()
-      .subscribe({
-        next: (data: MemberAddress[]) => {
 
-          console.log('addresses:', data);
+    this.userApi
+      .getAddresses()
+      .subscribe({
+
+        next: (
+          data: MemberAddress[]
+        ) => {
+
+          console.log(
+            'addresses:',
+            data
+          );
 
           this.addresses = data;
+
           this.loading = false;
 
           this.cdr.detectChanges();
+
         },
 
-        error: (error: HttpErrorResponse) => {
 
-          console.error('addresses error:', error);
+        error: (
+          error: HttpErrorResponse
+        ) => {
 
-          this.errorMessage = '讀取地址資料失敗';
+          console.error(
+            'addresses error:',
+            error
+          );
+
+          this.errorMessage =
+            '讀取地址資料失敗';
+
           this.loading = false;
 
           this.cdr.detectChanges();
+
         }
+
       });
+
   }
+
+
+  // ===============================
+  // 儲存
+  // ===============================
 
   saveAddress(): void {
 
@@ -94,20 +245,29 @@ export class Addresses implements OnInit {
       !this.formData.recipientPhone.trim() ||
       !this.formData.addressLine.trim()
     ) {
+
       this.errorMessage =
         '請填寫地址標籤、收件人、電話與詳細地址';
 
       return;
+
     }
+
 
     if (this.saving) {
       return;
     }
 
+
     this.saving = true;
 
     this.errorMessage = '';
     this.successMessage = '';
+
+
+    // ===============================
+    // 修改
+    // ===============================
 
     if (this.editingId) {
 
@@ -118,7 +278,9 @@ export class Addresses implements OnInit {
         )
         .subscribe({
 
-          next: (data: MemberAddress) => {
+          next: (
+            data: MemberAddress
+          ) => {
 
             console.log(
               'update address success:',
@@ -130,14 +292,22 @@ export class Addresses implements OnInit {
             this.successMessage =
               '修改地址成功';
 
-            this.cancelEdit();
+            this.showForm = false;
+
+            this.editingId = null;
+
+            this.resetForm();
 
             this.loadAddresses();
 
             this.cdr.detectChanges();
+
           },
 
-          error: (error: HttpErrorResponse) => {
+
+          error: (
+            error: HttpErrorResponse
+          ) => {
 
             console.error(
               'update address error:',
@@ -152,17 +322,28 @@ export class Addresses implements OnInit {
             );
 
             this.cdr.detectChanges();
+
           }
 
         });
 
-    } else {
+    }
+
+    // ===============================
+    // 新增
+    // ===============================
+
+    else {
 
       this.userApi
-        .createAddress(this.formData)
+        .createAddress(
+          this.formData
+        )
         .subscribe({
 
-          next: (data: MemberAddress) => {
+          next: (
+            data: MemberAddress
+          ) => {
 
             console.log(
               'create address success:',
@@ -174,14 +355,20 @@ export class Addresses implements OnInit {
             this.successMessage =
               '新增地址成功';
 
+            this.showForm = false;
+
             this.resetForm();
 
             this.loadAddresses();
 
             this.cdr.detectChanges();
+
           },
 
-          error: (error: HttpErrorResponse) => {
+
+          error: (
+            error: HttpErrorResponse
+          ) => {
 
             console.error(
               'create address error:',
@@ -196,20 +383,33 @@ export class Addresses implements OnInit {
             );
 
             this.cdr.detectChanges();
+
           }
 
         });
+
     }
+
   }
 
-  editAddress(address: MemberAddress): void {
+
+  // ===============================
+  // 修改地址
+  // ===============================
+
+  editAddress(
+    address: MemberAddress
+  ): void {
 
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.editingId = address.id;
+    this.editingId =
+      address.id;
+
 
     this.formData = {
+
       addressLabel:
         address.addressLabel,
 
@@ -239,42 +439,73 @@ export class Addresses implements OnInit {
 
       isDefault:
         address.isDefault
+
     };
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+
+    this.showForm = true;
+
+
+    setTimeout(() => {
+
+      document
+        .getElementById('address-form')
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+    }, 50);
+
   }
+
+
+  // ===============================
+  // 取消修改
+  // ===============================
 
   cancelEdit(): void {
 
-    this.editingId = null;
+    this.closeForm();
 
-    this.resetForm();
   }
 
-  deleteAddress(address: MemberAddress): void {
+
+  // ===============================
+  // 刪除
+  // ===============================
+
+  deleteAddress(
+    address: MemberAddress
+  ): void {
 
     if (this.deletingId) {
       return;
     }
 
-    const confirmed = confirm(
-      `確定要刪除「${address.addressLabel}」嗎？`
-    );
+
+    const confirmed =
+      confirm(
+        `確定要刪除「${address.addressLabel}」嗎？`
+      );
+
 
     if (!confirmed) {
       return;
     }
 
+
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.deletingId = address.id;
+    this.deletingId =
+      address.id;
+
 
     this.userApi
-      .deleteAddress(address.id)
+      .deleteAddress(
+        address.id
+      )
       .subscribe({
 
         next: () => {
@@ -289,16 +520,31 @@ export class Addresses implements OnInit {
           this.successMessage =
             '刪除地址成功';
 
-          if (this.editingId === address.id) {
-            this.cancelEdit();
+
+          if (
+            this.editingId ===
+            address.id
+          ) {
+
+            this.showForm = false;
+
+            this.editingId = null;
+
+            this.resetForm();
+
           }
+
 
           this.loadAddresses();
 
           this.cdr.detectChanges();
+
         },
 
-        error: (error: HttpErrorResponse) => {
+
+        error: (
+          error: HttpErrorResponse
+        ) => {
 
           console.error(
             'delete address error:',
@@ -313,10 +559,17 @@ export class Addresses implements OnInit {
           );
 
           this.cdr.detectChanges();
+
         }
 
       });
+
   }
+
+
+  // ===============================
+  // 設定預設地址
+  // ===============================
 
   setDefaultAddress(
     address: MemberAddress
@@ -329,16 +582,23 @@ export class Addresses implements OnInit {
       return;
     }
 
+
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.defaultingId = address.id;
+    this.defaultingId =
+      address.id;
+
 
     this.userApi
-      .setDefaultAddress(address.id)
+      .setDefaultAddress(
+        address.id
+      )
       .subscribe({
 
-        next: (data: MemberAddress) => {
+        next: (
+          data: MemberAddress
+        ) => {
 
           console.log(
             'set default address success:',
@@ -353,9 +613,13 @@ export class Addresses implements OnInit {
           this.loadAddresses();
 
           this.cdr.detectChanges();
+
         },
 
-        error: (error: HttpErrorResponse) => {
+
+        error: (
+          error: HttpErrorResponse
+        ) => {
 
           console.error(
             'set default address error:',
@@ -370,26 +634,50 @@ export class Addresses implements OnInit {
           );
 
           this.cdr.detectChanges();
+
         }
 
       });
+
   }
+
+
+  // ===============================
+  // 重設表單
+  // ===============================
 
   private resetForm(): void {
 
     this.formData = {
+
       addressLabel: '',
+
       recipientName: '',
+
       recipientPhone: '',
+
       postalCode: null,
+
       city: null,
+
       district: null,
+
       addressLine: '',
+
       latitude: null,
+
       longitude: null,
+
       isDefault: false
+
     };
+
   }
+
+
+  // ===============================
+  // Error
+  // ===============================
 
   private handleError(
     error: HttpErrorResponse,
@@ -401,30 +689,51 @@ export class Addresses implements OnInit {
       this.errorMessage =
         '地址資料格式不正確';
 
-    } else if (error.status === 401) {
+    }
+
+    else if (
+      error.status === 401
+    ) {
 
       this.errorMessage =
         '登入狀態已失效，請重新登入';
 
-    } else if (error.status === 403) {
+    }
+
+    else if (
+      error.status === 403
+    ) {
 
       this.errorMessage =
         '目前帳號沒有操作權限';
 
-    } else if (error.status === 404) {
+    }
+
+    else if (
+      error.status === 404
+    ) {
 
       this.errorMessage =
         '找不到這筆地址資料';
 
-    } else if (error.status === 409) {
+    }
+
+    else if (
+      error.status === 409
+    ) {
 
       this.errorMessage =
         '目前操作發生衝突，請重新整理後再試';
 
-    } else {
+    }
+
+    else {
 
       this.errorMessage =
         defaultMessage;
+
     }
+
   }
+
 }

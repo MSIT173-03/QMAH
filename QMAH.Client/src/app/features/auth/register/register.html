@@ -1,0 +1,359 @@
+<div class="register-page">
+
+  <div class="register-card">
+
+    <div class="register-header">
+
+      <div class="register-icon">
+        👤
+      </div>
+
+      <h1>
+        建立會員帳號
+      </h1>
+
+      <p>
+        註冊 QMAH 會員，開始使用會員功能。
+      </p>
+
+    </div>
+
+    <form
+      [formGroup]="registerForm"
+      (ngSubmit)="register()"
+    >
+
+      <!-- ===================== -->
+      <!-- Email -->
+      <!-- ===================== -->
+
+      <div class="form-group">
+
+        <label for="email">
+          Email
+        </label>
+
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="例如：member@example.com"
+          autocomplete="email"
+        />
+
+        @if (
+          registerForm.get('email')?.touched &&
+          registerForm.get('email')?.hasError('required')
+        ) {
+          <div class="field-error">
+            請輸入 Email
+          </div>
+        }
+
+        @if (
+          registerForm.get('email')?.touched &&
+          registerForm.get('email')?.hasError('email')
+        ) {
+          <div class="field-error">
+            Email 格式不正確
+          </div>
+        }
+
+      </div>
+
+      <!-- ===================== -->
+      <!-- 暱稱 -->
+      <!-- ===================== -->
+
+      <div class="form-group">
+
+        <label for="nickname">
+          暱稱
+        </label>
+
+        <input
+          id="nickname"
+          type="text"
+          formControlName="nickname"
+          placeholder="輸入你的會員暱稱"
+          autocomplete="nickname"
+        />
+
+        @if (
+          registerForm.get('nickname')?.touched &&
+          registerForm.get('nickname')?.hasError('required')
+        ) {
+          <div class="field-error">
+            請輸入暱稱
+          </div>
+        }
+
+        @if (
+          registerForm.get('nickname')?.touched &&
+          registerForm.get('nickname')?.hasError('maxlength')
+        ) {
+          <div class="field-error">
+            暱稱長度過長
+          </div>
+        }
+
+      </div>
+
+      <!-- ===================== -->
+      <!-- 密碼 -->
+      <!-- ===================== -->
+
+      <div class="form-group">
+
+        <label for="password">
+          密碼
+        </label>
+
+        <div
+          class="password-wrapper"
+          [class.is-valid]="passwordValid"
+        >
+
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="請輸入密碼"
+            autocomplete="new-password"
+          />
+
+          <!-- 密碼正確 -->
+          @if (passwordValid) {
+
+            <span
+              class="password-valid-icon"
+              aria-label="密碼格式正確"
+              title="密碼格式正確"
+            >
+              ✓
+            </span>
+
+          }
+
+          <!-- 顯示 / 隱藏密碼 -->
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePassword()"
+            [attr.aria-label]="
+              showPassword
+                ? '隱藏密碼'
+                : '顯示密碼'
+            "
+            [attr.title]="
+              showPassword
+                ? '隱藏密碼'
+                : '顯示密碼'
+            "
+          >
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+
+        </div>
+
+        <!--
+          有輸入密碼，而且尚未全部符合時，
+          才顯示密碼規則
+        -->
+
+        @if (
+          passwordValue.length > 0 &&
+          !passwordValid
+        ) {
+
+          <div class="password-rules">
+
+            <p
+              class="password-rule"
+              [class.valid]="hasMinLength"
+            >
+              <span>
+                {{ hasMinLength ? '✓' : '○' }}
+              </span>
+
+              至少 8 個字元
+            </p>
+
+            <p
+              class="password-rule"
+              [class.valid]="hasUppercase"
+            >
+              <span>
+                {{ hasUppercase ? '✓' : '○' }}
+              </span>
+
+              至少 1 個大寫英文
+            </p>
+
+            <p
+              class="password-rule"
+              [class.valid]="hasLowercase"
+            >
+              <span>
+                {{ hasLowercase ? '✓' : '○' }}
+              </span>
+
+              至少 1 個小寫英文
+            </p>
+
+            <p
+              class="password-rule"
+              [class.valid]="hasNumber"
+            >
+              <span>
+                {{ hasNumber ? '✓' : '○' }}
+              </span>
+
+              至少 1 個數字
+            </p>
+
+            <p
+              class="password-rule"
+              [class.valid]="hasSpecialCharacter"
+            >
+              <span>
+                {{ hasSpecialCharacter ? '✓' : '○' }}
+              </span>
+
+              至少 1 個特殊符號
+            </p>
+
+          </div>
+
+        }
+
+      </div>
+
+      <!-- ===================== -->
+      <!-- 確認密碼 -->
+      <!-- ===================== -->
+
+      <div class="form-group">
+
+        <label for="confirmPassword">
+          確認密碼
+        </label>
+
+        <div
+          class="password-wrapper"
+          [class.is-valid]="passwordsMatch"
+        >
+
+          <input
+            id="confirmPassword"
+            [type]="
+              showConfirmPassword
+                ? 'text'
+                : 'password'
+            "
+            formControlName="confirmPassword"
+            placeholder="再輸入一次密碼"
+            autocomplete="new-password"
+          />
+
+          <!-- 確認密碼一致 -->
+          @if (passwordsMatch) {
+
+            <span
+              class="password-valid-icon"
+              aria-label="兩次密碼一致"
+              title="兩次密碼一致"
+            >
+              ✓
+            </span>
+
+          }
+
+          <!-- 顯示 / 隱藏確認密碼 -->
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="toggleConfirmPassword()"
+            [attr.aria-label]="
+              showConfirmPassword
+                ? '隱藏確認密碼'
+                : '顯示確認密碼'
+            "
+            [attr.title]="
+              showConfirmPassword
+                ? '隱藏確認密碼'
+                : '顯示確認密碼'
+            "
+          >
+            {{
+              showConfirmPassword
+                ? '🙈'
+                : '👁️'
+            }}
+          </button>
+
+        </div>
+
+        <!-- 有輸入確認密碼，但兩次不同 -->
+        @if (
+          confirmPasswordValue.length > 0 &&
+          !passwordsMatch
+        ) {
+
+          <div class="password-match error">
+            ✕ 兩次輸入的密碼不一致
+          </div>
+
+        }
+
+      </div>
+
+      <!-- ===================== -->
+      <!-- 後端錯誤 -->
+      <!-- ===================== -->
+
+      @if (errorMessage) {
+
+        <div class="error-box">
+          {{ errorMessage }}
+        </div>
+
+      }
+
+      <!-- ===================== -->
+      <!-- 註冊 -->
+      <!-- ===================== -->
+
+      <button
+        type="submit"
+        class="register-button"
+        [disabled]="submitting"
+      >
+
+        @if (submitting) {
+
+          註冊中...
+
+        } @else {
+
+          建立帳號
+
+        }
+
+      </button>
+
+    </form>
+
+    <div class="login-link">
+
+      已經有會員帳號？
+
+      <a routerLink="/login">
+        返回登入
+      </a>
+
+    </div>
+
+  </div>
+
+</div>

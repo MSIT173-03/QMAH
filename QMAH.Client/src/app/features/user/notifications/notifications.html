@@ -1,0 +1,220 @@
+<div class="notifications-page">
+
+  <app-back-to-member></app-back-to-member>
+
+  <div class="page-header">
+
+    <div>
+      <h1>
+        我的通知
+      </h1>
+
+      <p>
+        查看系統通知與目前的已讀狀態。
+      </p>
+    </div>
+
+  </div>
+
+  @if (loading) {
+
+    <div class="state-box">
+      載入中...
+    </div>
+
+  }
+
+  @if (errorMessage) {
+
+    <div class="state-box error">
+      {{ errorMessage }}
+    </div>
+
+  }
+
+  @if (
+    !loading &&
+    !errorMessage &&
+    notifications.length === 0
+  ) {
+
+    <div class="empty-state">
+
+      <div class="empty-icon">
+        🔔
+      </div>
+
+      <h2>
+        目前沒有通知
+      </h2>
+
+      <p>
+        有新的系統通知時，會顯示在這裡。
+      </p>
+
+    </div>
+
+  }
+
+  @if (notifications.length > 0) {
+
+    <section class="summary-section">
+
+      <div class="summary-card">
+
+        <span class="summary-label">
+          本頁通知
+        </span>
+
+        <strong>
+          {{ notifications.length }}
+        </strong>
+
+      </div>
+
+      <div class="summary-card">
+
+        <span class="summary-label">
+          未讀
+        </span>
+
+        <strong>
+          {{ unreadCount }}
+        </strong>
+
+      </div>
+
+      <div class="summary-card">
+
+        <span class="summary-label">
+          已讀
+        </span>
+
+        <strong>
+          {{ readCount }}
+        </strong>
+
+      </div>
+
+      <div class="summary-card">
+
+        <span class="summary-label">
+          全部通知
+        </span>
+
+        <strong>
+          {{ totalCount }}
+        </strong>
+
+      </div>
+
+    </section>
+
+    <section class="notification-section">
+
+      <div class="section-title">
+
+        <div>
+
+          <h2>
+            通知列表
+          </h2>
+
+          <p>
+            點擊未讀通知可將它標記為已讀
+          </p>
+
+        </div>
+
+        <span class="notification-count">
+          {{ totalCount }} 則
+        </span>
+
+      </div>
+
+      <div class="notification-list">
+
+        @for (
+          notification of notifications;
+          track notification.id
+        ) {
+
+          <article
+            class="notification-card"
+            [class.unread]="!notification.isRead"
+            (click)="markAsRead(notification)"
+          >
+
+            <div class="notification-icon">
+
+              @if (notification.isRead) {
+                ✓
+              } @else {
+                🔔
+              }
+
+            </div>
+
+            <div class="notification-content">
+
+              <div class="notification-top">
+
+                <h3>
+                  {{ notification.title }}
+                </h3>
+
+                <span
+                  class="status-badge"
+                  [class.unread-badge]="!notification.isRead"
+                >
+                  {{ notification.isRead ? '已讀' : '未讀' }}
+                </span>
+
+              </div>
+
+              <p>
+                {{ notification.content }}
+              </p>
+
+              <div class="notification-meta">
+
+                <span>
+                  建立時間：
+                  {{ notification.createdAt | date:'yyyy/MM/dd HH:mm' }}
+                </span>
+
+                @if (notification.readAt) {
+
+                  <span>
+                    已讀時間：
+                    {{ notification.readAt | date:'yyyy/MM/dd HH:mm' }}
+                  </span>
+
+                }
+
+              </div>
+
+              @if (
+                !notification.isRead &&
+                readingId === notification.id
+              ) {
+
+                <div class="reading-text">
+                  標記已讀中...
+                </div>
+
+              }
+
+            </div>
+
+          </article>
+
+        }
+
+      </div>
+
+    </section>
+
+  }
+
+</div>

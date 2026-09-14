@@ -71,6 +71,10 @@
   font-size: 20px;
 }
 
+.no-title {
+  color: #111827;
+}
+
 .achievement-section {
   padding: 28px;
   background: white;
@@ -106,12 +110,12 @@
 
 .achievement-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
 }
 
 .achievement-card {
-  padding: 20px;
+  padding: 22px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
@@ -180,25 +184,29 @@
 
 .achievement-info {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: 1.4fr 0.8fr 1fr;
+  gap: 14px;
   padding-top: 14px;
   border-top: 1px solid #f0f0f0;
 
   div {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
+    min-width: 0;
   }
 
   span {
     color: #9ca3af;
     font-size: 12px;
+    white-space: nowrap;
   }
 
   strong {
+    color: #111827;
     font-size: 13px;
-    word-break: break-word;
+    font-weight: 700;
+    white-space: nowrap;
   }
 }
 
@@ -237,7 +245,6 @@
 }
 
 @media (max-width: 700px) {
-
   .achievements-page {
     padding: 24px 16px;
   }
@@ -254,4 +261,13 @@
     grid-template-columns: 1fr;
   }
 
+  .achievement-info {
+    grid-template-columns: 1fr;
+    gap: 12px;
+
+    strong,
+    span {
+      white-space: normal;
+    }
+  }
 }

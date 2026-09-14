@@ -5,17 +5,17 @@ import {
 } from '@angular/core';
 
 import {
-  HttpClient,
-  HttpErrorResponse
-} from '@angular/common/http';
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 
-import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
+import { environment } from '../../../../environments/environment';
 import { BackToMember } from '../../../shared/back-to-member/back-to-member';
-
-import {
-  environment
-} from '../../../../environments/environment';
 
 interface MemberProfile {
   id: string;
@@ -39,7 +39,8 @@ interface UpdateProfileRequest {
 @Component({
   selector: 'app-profile',
   imports: [
-    FormsModule,
+    CommonModule,
+    ReactiveFormsModule,
     BackToMember
   ],
   templateUrl: './profile.html',
@@ -49,29 +50,59 @@ export class Profile implements OnInit {
 
   profile: MemberProfile | null = null;
 
+  profileForm: FormGroup;
+
   loading = true;
   saving = false;
-  editing = false;
+
+  editMode = false;
 
   errorMessage = '';
   successMessage = '';
 
-  formData: UpdateProfileRequest = {
-    nickname: '',
-    bio: null,
-    visibility: 'PRIVATE'
-  };
-
   constructor(
     private http: HttpClient,
+    private fb: FormBuilder,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) {
+
+    this.profileForm = this.fb.group({
+
+      nickname: [
+        '',
+        [
+          Validators.required,
+          Validators.maxLength(50)
+        ]
+      ],
+
+      bio: [
+        '',
+        [
+          Validators.maxLength(500)
+        ]
+      ],
+
+      visibility: [
+        'PRIVATE',
+        [
+          Validators.required
+        ]
+      ]
+
+    });
+
+  }
 
   ngOnInit(): void {
     this.loadProfile();
   }
 
-  private loadProfile(): void {
+  // =========================
+  // 載入會員資料
+  // =========================
+
+  loadProfile(): void {
 
     this.loading = true;
     this.errorMessage = '';
@@ -82,38 +113,52 @@ export class Profile implements OnInit {
       )
       .subscribe({
 
-        next: (data: MemberProfile) => {
-
-          console.log(
-            '會員資料：',
-            data
-          );
+        next: (data) => {
 
           this.profile = data;
+
+          this.profileForm.patchValue({
+
+            nickname:
+              data.displayName ?? '',
+
+            bio:
+              data.bio ?? '',
+
+            visibility:
+              data.visibility ?? 'PRIVATE'
+
+          });
+
           this.loading = false;
 
           this.cdr.detectChanges();
+
         },
 
-        error: (error: HttpErrorResponse) => {
+        error: (error) => {
 
           console.error(
-            '取得會員資料失敗：',
+            'load profile error:',
             error
           );
 
-          this.profile = null;
-
-          this.errorMessage =
-            '無法取得會員資料';
-
           this.loading = false;
 
+          this.errorMessage =
+            '會員資料載入失敗。';
+
           this.cdr.detectChanges();
+
         }
 
       });
+
   }
+
+  // =========================
+  // 開始編輯
+  // =========================
 
   startEdit(): void {
 
@@ -121,84 +166,117 @@ export class Profile implements OnInit {
       return;
     }
 
-    this.errorMessage = '';
     this.successMessage = '';
+    this.errorMessage = '';
 
-    this.formData = {
-      nickname: this.profile.displayName,
-      bio: this.profile.bio,
-      visibility: this.profile.visibility
-    };
+    this.profileForm.patchValue({
 
-    this.editing = true;
+      nickname:
+        this.profile.displayName ?? '',
 
-    this.cdr.detectChanges();
+      bio:
+        this.profile.bio ?? '',
+
+      visibility:
+        this.profile.visibility ?? 'PRIVATE'
+
+    });
+
+    this.editMode = true;
+
   }
+
+  // =========================
+  // 取消編輯
+  // =========================
 
   cancelEdit(): void {
 
-    this.editing = false;
+    this.editMode = false;
 
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.cdr.detectChanges();
+    if (!this.profile) {
+      return;
+    }
+
+    this.profileForm.patchValue({
+
+      nickname:
+        this.profile.displayName ?? '',
+
+      bio:
+        this.profile.bio ?? '',
+
+      visibility:
+        this.profile.visibility ?? 'PRIVATE'
+
+    });
+
   }
+
+  // =========================
+  // 儲存會員資料
+  // =========================
 
   saveProfile(): void {
 
-    if (this.saving) {
-      return;
-    }
-
-    if (!this.formData.nickname.trim()) {
-      this.errorMessage = '暱稱不可為空白';
-      return;
-    }
-
-    this.saving = true;
-
     this.errorMessage = '';
     this.successMessage = '';
 
+    if (this.profileForm.invalid) {
+
+      this.profileForm.markAllAsTouched();
+
+      return;
+    }
+
     const request: UpdateProfileRequest = {
-      nickname: this.formData.nickname.trim(),
+
+      nickname:
+        this.profileForm.value.nickname.trim(),
+
       bio:
-        this.formData.bio?.trim()
-          ? this.formData.bio.trim()
+        this.profileForm.value.bio?.trim()
+          ? this.profileForm.value.bio.trim()
           : null,
-      visibility: this.formData.visibility
+
+      visibility:
+        this.profileForm.value.visibility
+
     };
 
+    this.saving = true;
+
     this.http
-      .put<MemberProfile>(
+      .put(
         `${environment.apiBaseUrl}/me/profile`,
-        request
+        request,
+        {
+          responseType: 'text'
+        }
       )
       .subscribe({
 
-        next: (data: MemberProfile) => {
-
-          console.log(
-            '更新會員資料成功：',
-            data
-          );
-
-          this.profile = data;
+        next: () => {
 
           this.saving = false;
-          this.editing = false;
+
+          this.editMode = false;
 
           this.successMessage =
-            '個人資料更新成功';
+            '會員資料已更新。';
 
-          this.cdr.detectChanges();
+          // 更新完重新抓一次最新資料
+          this.reloadAfterSave();
+
         },
 
-        error: (error: HttpErrorResponse) => {
+        error: (error) => {
 
           console.error(
-            '更新會員資料失敗：',
+            'update profile error:',
             error
           );
 
@@ -207,27 +285,131 @@ export class Profile implements OnInit {
           if (error.status === 400) {
 
             this.errorMessage =
-              '資料格式不正確';
+              '資料格式不正確，請重新確認。';
 
           } else if (error.status === 401) {
 
             this.errorMessage =
-              '登入狀態已失效';
-
-          } else if (error.status === 403) {
-
-            this.errorMessage =
-              '目前帳號沒有修改權限';
+              '登入狀態已失效，請重新登入。';
 
           } else {
 
             this.errorMessage =
-              '更新個人資料失敗';
+              '會員資料更新失敗，請稍後再試。';
+
           }
 
           this.cdr.detectChanges();
+
         }
 
       });
+
   }
+
+  private reloadAfterSave(): void {
+
+    this.http
+      .get<MemberProfile>(
+        `${environment.apiBaseUrl}/me`
+      )
+      .subscribe({
+
+        next: (data) => {
+
+          this.profile = data;
+
+          this.profileForm.patchValue({
+
+            nickname:
+              data.displayName ?? '',
+
+            bio:
+              data.bio ?? '',
+
+            visibility:
+              data.visibility ?? 'PRIVATE'
+
+          });
+
+          this.cdr.detectChanges();
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'reload profile error:',
+            error
+          );
+
+          this.cdr.detectChanges();
+
+        }
+
+      });
+
+  }
+
+  // =========================
+  // 顯示用
+  // =========================
+
+  getInitial(): string {
+
+    const name =
+      this.profile?.displayName?.trim();
+
+    if (!name) {
+      return '?';
+    }
+
+    return name.charAt(0).toUpperCase();
+
+  }
+
+  getVisibilityText(
+    visibility: string
+  ): string {
+
+    switch (visibility) {
+
+      case 'PUBLIC':
+        return '公開';
+
+      case 'FRIENDS':
+        return '僅好友';
+
+      case 'PRIVATE':
+        return '不公開';
+
+      default:
+        return visibility;
+
+    }
+
+  }
+
+  getStatusText(
+    status: string
+  ): string {
+
+    switch (status) {
+
+      case 'ACTIVE':
+        return '正常';
+
+      case 'SUSPENDED':
+        return '停權';
+
+      case 'DISABLED':
+        return '停用';
+
+      default:
+        return status;
+
+    }
+
+  }
+
 }

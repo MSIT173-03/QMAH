@@ -1,278 +1,699 @@
 <div class="address-page">
-<div class="top-actions">
-  <a
-    routerLink="/member"
-    class="back-button"
-  >
-    <span class="back-icon">←</span>
-    返回會員中心
-  </a>
-</div>
+
+  <!-- =============================== -->
+  <!-- 返回會員中心 -->
+  <!-- =============================== -->
+
+<app-back-to-member></app-back-to-member>
+
+
+  <!-- =============================== -->
+  <!-- Header -->
+  <!-- =============================== -->
 
   <div class="page-header">
+
     <div>
+      <span class="page-eyebrow">
+        SHIPPING ADDRESS
+      </span>
+
       <h1>我的地址</h1>
-      <p>管理你的收件地址與預設地址</p>
+
+      <p>
+        管理你的收件地址與預設配送地址
+      </p>
     </div>
+
+
+    <button
+      type="button"
+      class="add-address-button"
+      (click)="openAddForm()"
+    >
+      <span>＋</span>
+      新增地址
+    </button>
+
   </div>
 
-  <section class="form-card">
 
-    <div class="section-title">
+  <!-- =============================== -->
+  <!-- 摘要 -->
+  <!-- =============================== -->
+
+  <section class="summary-grid">
+
+    <div class="summary-card">
+
+      <div class="summary-icon purple">
+        📍
+      </div>
+
       <div>
-        @if (editingId) {
-          <h2>修改地址</h2>
-          <p>更新目前選取的地址資料</p>
+        <span>已儲存地址</span>
+
+        <strong>
+          {{ addresses.length }}
+          <small>筆</small>
+        </strong>
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-icon green">
+        ✓
+      </div>
+
+      <div>
+        <span>預設配送地址</span>
+
+        @if (defaultAddress) {
+
+          <strong class="summary-status success">
+            已設定
+          </strong>
+
         } @else {
-          <h2>新增地址</h2>
-          <p>建立新的收件地址</p>
+
+          <strong class="summary-status muted">
+            尚未設定
+          </strong>
+
         }
       </div>
-    </div>
-
-    <div class="form-grid">
-
-<div class="form-group">
-  <label>地址標籤</label>
-  <input
-    type="text"
-    [(ngModel)]="formData.addressLabel"
-    placeholder="例如：台北辦公室、展示據點"
-  >
-</div>
-
-<div class="form-group">
-  <label>收件人</label>
-  <input
-    type="text"
-    [(ngModel)]="formData.recipientName"
-    placeholder="例如：王小明"
-  >
-</div>
-
-<div class="form-group">
-  <label>電話</label>
-  <input
-    type="text"
-    [(ngModel)]="formData.recipientPhone"
-    placeholder="例如：02-2345-6789"
-  >
-</div>
-
-<div class="form-group">
-  <label>郵遞區號</label>
-  <input
-    type="text"
-    [(ngModel)]="formData.postalCode"
-    placeholder="例如：106"
-  >
-</div>
-
-<div class="form-group">
-  <label>縣市</label>
-  <input
-    type="text"
-    [(ngModel)]="formData.city"
-    placeholder="例如：臺北市"
-  >
-</div>
-
-<div class="form-group">
-  <label>行政區</label>
-  <input
-    type="text"
-    [(ngModel)]="formData.district"
-    placeholder="例如：大安區"
-  >
-</div>
-
-<div class="form-group full-width">
-  <label>詳細地址</label>
-  <input
-    type="text"
-    [(ngModel)]="formData.addressLine"
-    placeholder="例如：復興南路一段 390 號 2 樓"
-  >
-</div>
 
     </div>
-
-    <label class="default-checkbox">
-      <input
-        type="checkbox"
-        [(ngModel)]="formData.isDefault"
-      >
-      <span>設為預設地址</span>
-    </label>
-
-    <div class="form-actions">
-
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="saveAddress()"
-        [disabled]="saving"
-      >
-        @if (saving) {
-          儲存中...
-        } @else if (editingId) {
-          儲存修改
-        } @else {
-          新增地址
-        }
-      </button>
-
-      @if (editingId) {
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="cancelEdit()"
-          [disabled]="saving"
-        >
-          取消修改
-        </button>
-      }
-
-    </div>
-
-    @if (errorMessage) {
-      <div class="message error-message">
-        {{ errorMessage }}
-      </div>
-    }
-
-    @if (successMessage) {
-      <div class="message success-message">
-        {{ successMessage }}
-      </div>
-    }
 
   </section>
 
-  <section class="address-section">
 
-    <div class="section-title">
-      <div>
-        <h2>地址清單</h2>
-        <p>目前共有 {{ addresses.length }} 筆地址</p>
-      </div>
+  <!-- =============================== -->
+  <!-- 訊息 -->
+  <!-- =============================== -->
+
+  @if (errorMessage) {
+
+    <div class="message error-message">
+
+      <span>!</span>
+
+      {{ errorMessage }}
+
     </div>
 
-    @if (loading) {
-      <div class="empty-state">
-        載入中...
-      </div>
-    }
+  }
 
-    @if (!loading && addresses.length === 0) {
-      <div class="empty-state">
-        目前沒有地址資料
-      </div>
-    }
 
-    <div class="address-grid">
+  @if (successMessage) {
 
-      @for (address of addresses; track address.id) {
+    <div class="message success-message">
 
-        <article
-          class="address-card"
-          [class.default-card]="address.isDefault"
-        >
+      <span>✓</span>
 
-          <div class="card-header">
+      {{ successMessage }}
 
-            <div class="address-title-row">
+    </div>
 
-              <h3>
-                {{ address.addressLabel }}
-              </h3>
+  }
 
-              @if (address.isDefault) {
-                <span class="default-badge">
-                  預設
-                </span>
-              }
 
-            </div>
+  <!-- =============================== -->
+  <!-- 新增 / 修改地址 -->
+  <!-- =============================== -->
 
+  @if (showForm) {
+
+    <section
+      class="form-card"
+      id="address-form"
+    >
+
+      <div class="form-header">
+
+        <div class="form-title">
+
+          <div class="form-title-icon">
+            @if (editingId) {
+              ✏️
+            } @else {
+              ＋
+            }
           </div>
 
-          <div class="address-info">
+          <div>
 
-            <div class="info-row">
-              <span class="info-label">收件人</span>
-              <span class="info-value">
-                {{ address.recipientName }}
-              </span>
-            </div>
+            @if (editingId) {
 
-            <div class="info-row">
-              <span class="info-label">電話</span>
-              <span class="info-value">
-                {{ address.recipientPhone }}
-              </span>
-            </div>
+              <h2>修改地址</h2>
 
-            <div class="info-row address-row">
-              <span class="info-label">地址</span>
-              <span class="info-value">
-                {{ address.postalCode }}
-                {{ address.city }}
-                {{ address.district }}
-                {{ address.addressLine }}
-              </span>
-            </div>
+              <p>
+                更新目前選取的收件地址
+              </p>
 
-          </div>
+            } @else {
 
-          <div class="card-actions">
+              <h2>新增地址</h2>
 
-            <button
-              type="button"
-              class="btn btn-outline"
-              (click)="editAddress(address)"
-            >
-              修改
-            </button>
-
-            @if (!address.isDefault) {
-
-              <button
-                type="button"
-                class="btn btn-default"
-                (click)="setDefaultAddress(address)"
-                [disabled]="defaultingId === address.id"
-              >
-                @if (defaultingId === address.id) {
-                  設定中...
-                } @else {
-                  設為預設
-                }
-              </button>
+              <p>
+                建立新的配送與收件地址
+              </p>
 
             }
 
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="closeForm()"
+          [disabled]="saving"
+          title="關閉"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="form-grid">
+
+        <div class="form-group">
+
+          <label>
+            地址標籤
+            <span>*</span>
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="formData.addressLabel"
+            placeholder="例如：住家、台北辦公室"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            收件人
+            <span>*</span>
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="formData.recipientName"
+            placeholder="例如：王小明"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            聯絡電話
+            <span>*</span>
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="formData.recipientPhone"
+            placeholder="例如：0912-345-678"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            郵遞區號
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="formData.postalCode"
+            placeholder="例如：106"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            縣市
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="formData.city"
+            placeholder="例如：臺北市"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            行政區
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="formData.district"
+            placeholder="例如：大安區"
+          >
+
+        </div>
+
+
+        <div class="form-group full-width">
+
+          <label>
+            詳細地址
+            <span>*</span>
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="formData.addressLine"
+            placeholder="例如：復興南路一段 390 號 2 樓"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="default-option">
+
+        <label>
+
+          <input
+            type="checkbox"
+            [(ngModel)]="formData.isDefault"
+          >
+
+          <span class="checkbox-ui"></span>
+
+          <div>
+
+            <strong>
+              設為預設配送地址
+            </strong>
+
+            <p>
+              結帳時將優先使用這個地址
+            </p>
+
+          </div>
+
+        </label>
+
+      </div>
+
+
+      <div class="form-actions">
+
+        <button
+          type="button"
+          class="btn primary-button"
+          (click)="saveAddress()"
+          [disabled]="saving"
+        >
+
+          @if (saving) {
+
+            <span class="button-spinner"></span>
+            儲存中...
+
+          } @else if (editingId) {
+
+            ✓ 儲存修改
+
+          } @else {
+
+            ＋ 新增地址
+
+          }
+
+        </button>
+
+
+        <button
+          type="button"
+          class="btn cancel-button"
+          (click)="closeForm()"
+          [disabled]="saving"
+        >
+          取消
+        </button>
+
+      </div>
+
+    </section>
+
+  }
+
+
+  <!-- =============================== -->
+  <!-- Loading -->
+  <!-- =============================== -->
+
+  @if (loading) {
+
+    <div class="loading-card">
+
+      <div class="loading-spinner"></div>
+
+      <span>
+        正在讀取地址...
+      </span>
+
+    </div>
+
+  }
+
+
+  @if (!loading) {
+
+
+    <!-- =============================== -->
+    <!-- 預設地址 -->
+    <!-- =============================== -->
+
+    @if (defaultAddress) {
+
+      <section class="address-section">
+
+        <div class="section-heading">
+
+          <div>
+
+            <span class="section-eyebrow">
+              DEFAULT ADDRESS
+            </span>
+
+            <h2>
+              預設配送地址
+            </h2>
+
+          </div>
+
+        </div>
+
+
+        <article class="default-address-card">
+
+          <div class="default-card-decoration"></div>
+
+
+          <div class="address-card-top">
+
+            <div class="address-card-title">
+
+              <div class="address-icon">
+                🏠
+              </div>
+
+
+              <div>
+
+                <div class="address-name-row">
+
+                  <h3>
+                    {{ defaultAddress.addressLabel }}
+                  </h3>
+
+                  <span class="default-badge">
+                    ✓ 預設
+                  </span>
+
+                </div>
+
+
+                <span class="recipient">
+                  {{ defaultAddress.recipientName }}
+                  ·
+                  {{ defaultAddress.recipientPhone }}
+                </span>
+
+              </div>
+
+            </div>
+
+
             <button
               type="button"
-              class="btn btn-danger"
-              (click)="deleteAddress(address)"
-              [disabled]="deletingId === address.id"
+              class="edit-icon-button"
+              (click)="editAddress(defaultAddress)"
             >
-              @if (deletingId === address.id) {
+              ✏️ 修改
+            </button>
+
+          </div>
+
+
+          <div class="main-address">
+
+            <span class="pin">
+              📍
+            </span>
+
+            <div>
+
+              <span class="postal">
+                {{ defaultAddress.postalCode }}
+              </span>
+
+              <strong>
+                {{ defaultAddress.city }}
+                {{ defaultAddress.district }}
+                {{ defaultAddress.addressLine }}
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="default-card-footer">
+
+            <span class="delivery-note">
+              ✓ 結帳時將優先使用此地址
+            </span>
+
+
+            <button
+              type="button"
+              class="text-danger-button"
+              (click)="deleteAddress(defaultAddress)"
+              [disabled]="deletingId === defaultAddress.id"
+            >
+
+              @if (deletingId === defaultAddress.id) {
                 刪除中...
               } @else {
-                刪除
+                刪除地址
               }
+
             </button>
 
           </div>
 
         </article>
 
+      </section>
+
+    }
+
+
+    <!-- =============================== -->
+    <!-- 其他地址 -->
+    <!-- =============================== -->
+
+    <section class="address-section">
+
+      <div class="section-heading">
+
+        <div>
+
+          <span class="section-eyebrow">
+            SAVED ADDRESSES
+          </span>
+
+          <h2>
+            其他地址
+          </h2>
+
+          <p>
+            目前共有 {{ otherAddresses.length }} 筆其他地址
+          </p>
+
+        </div>
+
+      </div>
+
+
+      @if (otherAddresses.length === 0) {
+
+        <div class="empty-state">
+
+          <div class="empty-icon">
+            📭
+          </div>
+
+          <h3>
+            目前沒有其他地址
+          </h3>
+
+          <p>
+            新增其他常用的收件地址，結帳時會更方便。
+          </p>
+
+          <button
+            type="button"
+            class="empty-add-button"
+            (click)="openAddForm()"
+          >
+            ＋ 新增地址
+          </button>
+
+        </div>
+
+      } @else {
+
+        <div class="address-grid">
+
+          @for (
+            address of otherAddresses;
+            track address.id
+          ) {
+
+            <article class="address-card">
+
+              <div class="address-card-top">
+
+                <div class="address-card-title">
+
+                  <div class="small-address-icon">
+                    📍
+                  </div>
+
+                  <div>
+
+                    <h3>
+                      {{ address.addressLabel }}
+                    </h3>
+
+                    <span class="recipient">
+                      {{ address.recipientName }}
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div class="address-details">
+
+                <div class="detail-row">
+
+                  <span>
+                    電話
+                  </span>
+
+                  <strong>
+                    {{ address.recipientPhone }}
+                  </strong>
+
+                </div>
+
+
+                <div class="detail-row address-detail">
+
+                  <span>
+                    地址
+                  </span>
+
+                  <strong>
+                    {{ address.postalCode }}
+                    {{ address.city }}
+                    {{ address.district }}
+                    {{ address.addressLine }}
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              <div class="address-card-actions">
+
+                <button
+                  type="button"
+                  class="card-action edit"
+                  (click)="editAddress(address)"
+                >
+                  修改
+                </button>
+
+
+                <button
+                  type="button"
+                  class="card-action default"
+                  (click)="setDefaultAddress(address)"
+                  [disabled]="defaultingId === address.id"
+                >
+
+                  @if (defaultingId === address.id) {
+                    設定中...
+                  } @else {
+                    設為預設
+                  }
+
+                </button>
+
+
+                <button
+                  type="button"
+                  class="card-action delete"
+                  (click)="deleteAddress(address)"
+                  [disabled]="deletingId === address.id"
+                >
+
+                  @if (deletingId === address.id) {
+                    刪除中...
+                  } @else {
+                    刪除
+                  }
+
+                </button>
+
+              </div>
+
+            </article>
+
+          }
+
+        </div>
+
       }
 
-    </div>
+    </section>
 
-  </section>
+  }
 
 </div>

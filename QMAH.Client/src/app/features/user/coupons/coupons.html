@@ -1,0 +1,602 @@
+<div class="coupons-page">
+
+  <app-back-to-member></app-back-to-member>
+
+
+  <!-- =============================== -->
+  <!-- Header -->
+  <!-- =============================== -->
+
+  <div class="page-header">
+
+    <div>
+
+      <span class="page-eyebrow">
+        MY COUPONS
+      </span>
+
+      <h1>
+        我的優惠券
+      </h1>
+
+      <p>
+        查看目前持有的優惠券、使用狀態與有效期限。
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- =============================== -->
+  <!-- Loading -->
+  <!-- =============================== -->
+
+  @if (loading) {
+
+    <div class="state-box">
+
+      <div class="loading-spinner"></div>
+
+      正在讀取優惠券...
+
+    </div>
+
+  }
+
+
+  <!-- =============================== -->
+  <!-- Error -->
+  <!-- =============================== -->
+
+  @if (errorMessage) {
+
+    <div class="state-box error">
+
+      <span>!</span>
+
+      {{ errorMessage }}
+
+    </div>
+
+  }
+
+
+  <!-- =============================== -->
+  <!-- Empty -->
+  <!-- =============================== -->
+
+  @if (
+    !loading &&
+    !errorMessage &&
+    coupons.length === 0
+  ) {
+
+    <div class="empty-state">
+
+      <div class="empty-icon">
+        🎟️
+      </div>
+
+      <h2>
+        目前沒有優惠券
+      </h2>
+
+      <p>
+        取得優惠券後，會顯示在這裡。
+      </p>
+
+    </div>
+
+  }
+
+
+  @if (
+    !loading &&
+    coupons.length > 0
+  ) {
+
+
+    <!-- =============================== -->
+    <!-- Summary / Filter -->
+    <!-- =============================== -->
+
+    <section class="summary-section">
+
+      <button
+        type="button"
+        class="summary-card all-card"
+        [class.active]="selectedStatus === 'ALL'"
+        (click)="selectStatus('ALL')"
+      >
+
+        <div class="summary-icon">
+          🎟️
+        </div>
+
+        <div>
+
+          <span class="summary-label">
+            全部優惠券
+          </span>
+
+          <strong>
+            {{ coupons.length }}
+          </strong>
+
+        </div>
+
+        <span class="filter-arrow">
+          →
+        </span>
+
+      </button>
+
+
+      <button
+        type="button"
+        class="summary-card available-card"
+        [class.active]="selectedStatus === 'AVAILABLE'"
+        (click)="selectStatus('AVAILABLE')"
+      >
+
+        <div class="summary-icon">
+          ✓
+        </div>
+
+        <div>
+
+          <span class="summary-label">
+            可使用
+          </span>
+
+          <strong>
+            {{ availableCount }}
+          </strong>
+
+        </div>
+
+        <span class="filter-arrow">
+          →
+        </span>
+
+      </button>
+
+
+      <button
+        type="button"
+        class="summary-card used-card"
+        [class.active]="selectedStatus === 'USED'"
+        (click)="selectStatus('USED')"
+      >
+
+        <div class="summary-icon">
+          ✓
+        </div>
+
+        <div>
+
+          <span class="summary-label">
+            已使用
+          </span>
+
+          <strong>
+            {{ usedCount }}
+          </strong>
+
+        </div>
+
+        <span class="filter-arrow">
+          →
+        </span>
+
+      </button>
+
+
+      <button
+        type="button"
+        class="summary-card expired-card"
+        [class.active]="selectedStatus === 'EXPIRED'"
+        (click)="selectStatus('EXPIRED')"
+      >
+
+        <div class="summary-icon">
+          ⏱
+        </div>
+
+        <div>
+
+          <span class="summary-label">
+            已過期
+          </span>
+
+          <strong>
+            {{ expiredCount }}
+          </strong>
+
+        </div>
+
+        <span class="filter-arrow">
+          →
+        </span>
+
+      </button>
+
+    </section>
+
+
+    <!-- =============================== -->
+    <!-- Coupon Section -->
+    <!-- =============================== -->
+
+    <section class="coupon-section">
+
+      <div class="section-title">
+
+        <div>
+
+          <span class="section-eyebrow">
+            COUPON WALLET
+          </span>
+
+          <h2>
+            {{ selectedStatusLabel }}
+          </h2>
+
+          <p>
+            每張優惠券皆有獨立的使用條件與有效期限。
+          </p>
+
+        </div>
+
+
+        <span class="coupon-count">
+
+          {{ filteredCoupons.length }}
+
+          張
+
+        </span>
+
+      </div>
+
+
+      <!-- =============================== -->
+      <!-- 篩選後無資料 -->
+      <!-- =============================== -->
+
+      @if (
+        filteredCoupons.length === 0
+      ) {
+
+        <div class="filter-empty">
+
+          <div>
+            🎫
+          </div>
+
+          <strong>
+            此分類目前沒有優惠券
+          </strong>
+
+          <span>
+            可以切換其他狀態查看。
+          </span>
+
+        </div>
+
+      }
+
+
+      <!-- =============================== -->
+      <!-- Coupon Grid -->
+      <!-- =============================== -->
+
+      <div class="coupon-grid">
+
+        @for (
+          coupon of filteredCoupons;
+          track coupon.id
+        ) {
+
+          <article
+            class="coupon-ticket"
+            [class.available]="coupon.status === 'AVAILABLE'"
+            [class.used]="coupon.status === 'USED'"
+            [class.expired]="coupon.status === 'EXPIRED'"
+            [class.revoked]="coupon.status === 'REVOKED'"
+          >
+
+
+            <!-- 左缺口 -->
+            <div class="ticket-notch notch-left"></div>
+
+            <!-- 右缺口 -->
+            <div class="ticket-notch notch-right"></div>
+
+
+            <!-- =============================== -->
+            <!-- 上半部 -->
+            <!-- =============================== -->
+
+            <div class="ticket-main">
+
+
+              <div class="ticket-top">
+
+                <div class="coupon-brand">
+
+                  <div class="coupon-icon">
+                    🎟️
+                  </div>
+
+                  <span>
+                    QMAH COUPON
+                  </span>
+
+                </div>
+
+
+                <div class="status-area">
+
+                  @if (
+                    isExpiringSoon(coupon)
+                  ) {
+
+                    <span class="expire-soon">
+
+                      🔥
+
+                      剩
+                      {{ getRemainingDays(coupon) }}
+                      天
+
+                    </span>
+
+                  }
+
+
+                  <span
+                    class="status-badge"
+                    [class.available]="coupon.status === 'AVAILABLE'"
+                    [class.used]="coupon.status === 'USED'"
+                    [class.expired]="coupon.status === 'EXPIRED'"
+                    [class.revoked]="coupon.status === 'REVOKED'"
+                  >
+
+                    {{ getStatusLabel(coupon.status) }}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div class="coupon-code">
+
+                {{ coupon.code }}
+
+              </div>
+
+
+              <h3>
+
+                {{ coupon.name }}
+
+              </h3>
+
+
+              <div class="discount-value">
+
+                {{ getDiscountLabel(coupon) }}
+
+              </div>
+
+
+              <div class="minimum-chip">
+
+                {{ getMinimumLabel(coupon) }}
+
+              </div>
+
+            </div>
+
+
+            <!-- =============================== -->
+            <!-- 虛線 -->
+            <!-- =============================== -->
+
+            <div class="ticket-divider">
+
+              <span></span>
+
+            </div>
+
+
+            <!-- =============================== -->
+            <!-- 下半部 -->
+            <!-- =============================== -->
+
+            <div class="ticket-details">
+
+
+              <div class="detail-item">
+
+                <span>
+                  取得方式
+                </span>
+
+                <strong>
+
+                  {{
+                    getAcquisitionTypeLabel(
+                      coupon.acquisitionType
+                    )
+                  }}
+
+                </strong>
+
+              </div>
+
+
+              @if (
+                coupon.pointCost !== null
+              ) {
+
+                <div class="detail-item">
+
+                  <span>
+                    兌換點數
+                  </span>
+
+                  <strong>
+
+                    {{ coupon.pointCost }} 點
+
+                  </strong>
+
+                </div>
+
+              }
+
+
+              <div class="detail-item">
+
+                <span>
+                  發放日期
+                </span>
+
+                <strong>
+
+                  {{
+                    coupon.issuedAt
+                    | date:'yyyy/MM/dd'
+                  }}
+
+                </strong>
+
+              </div>
+
+
+              <div
+                class="detail-item expiry-item"
+                [class.warning]="isExpiringSoon(coupon)"
+              >
+
+                <span>
+                  有效期限
+                </span>
+
+                <strong>
+
+                  {{
+                    coupon.expiresAt
+                    | date:'yyyy/MM/dd'
+                  }}
+
+                </strong>
+
+              </div>
+
+
+              @if (
+                coupon.usedAt
+              ) {
+
+                <div class="detail-item">
+
+                  <span>
+                    使用日期
+                  </span>
+
+                  <strong>
+
+                    {{
+                      coupon.usedAt
+                      | date:'yyyy/MM/dd'
+                    }}
+
+                  </strong>
+
+                </div>
+
+              }
+
+            </div>
+
+
+            <!-- =============================== -->
+            <!-- Bottom -->
+            <!-- =============================== -->
+
+            <div class="ticket-footer">
+
+              @if (
+                coupon.status === 'AVAILABLE'
+              ) {
+
+                <span class="usable-text">
+
+                  <span class="usable-dot"></span>
+
+                  此優惠券目前可使用
+
+                </span>
+
+              }
+
+              @else if (
+                coupon.status === 'USED'
+              ) {
+
+                <span class="inactive-text">
+
+                  ✓ 已完成使用
+
+                </span>
+
+              }
+
+              @else if (
+                coupon.status === 'EXPIRED'
+              ) {
+
+                <span class="inactive-text">
+
+                  ⏱ 此優惠券已過期
+
+                </span>
+
+              }
+
+              @else {
+
+                <span class="inactive-text">
+
+                  此優惠券目前無法使用
+
+                </span>
+
+              }
+
+
+              <span class="ticket-id">
+
+                #{{ coupon.id.slice(0, 8) }}
+
+              </span>
+
+            </div>
+
+          </article>
+
+        }
+
+      </div>
+
+    </section>
+
+  }
+
+</div>

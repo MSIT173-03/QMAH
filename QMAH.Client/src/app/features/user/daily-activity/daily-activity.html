@@ -1,53 +1,154 @@
 <div class="daily-page">
 
+  <app-back-to-member></app-back-to-member>
+
+  <!-- =============================== -->
+  <!-- 頁面標題 -->
+  <!-- =============================== -->
+
   <div class="page-header">
-    <div>
-      <h1>每日登入</h1>
-      <p>記錄每日登入，查看累積天數與連續登入進度。</p>
+
+    <div class="page-title-row">
+
+      <div>
+        <h1>每日登入</h1>
+
+        <p>
+          每天回來看看，累積你的登入紀錄與連續登入天數。
+        </p>
+      </div>
+
+      @if (dailyActivity?.hasLoggedInToday) {
+
+        <div class="today-status">
+          <span class="today-status-dot"></span>
+          今日任務完成
+        </div>
+
+      }
+
     </div>
+
   </div>
 
+
+  <!-- =============================== -->
+  <!-- 載入中 -->
+  <!-- =============================== -->
+
   @if (loading) {
+
     <div class="state-box">
-      載入中...
+
+      <div class="loading-spinner"></div>
+
+      載入登入紀錄中...
+
     </div>
+
   }
 
+
+  <!-- =============================== -->
+  <!-- 錯誤訊息 -->
+  <!-- =============================== -->
+
   @if (errorMessage) {
+
     <div class="state-box error">
       {{ errorMessage }}
     </div>
+
   }
+
+
+  <!-- =============================== -->
+  <!-- 主要內容 -->
+  <!-- =============================== -->
 
   @if (dailyActivity) {
 
-    <!-- 今日登入 -->
+
+    <!-- =============================== -->
+    <!-- 今日登入 Hero -->
+    <!-- =============================== -->
+
     <section
-      class="checkin-card"
+      class="checkin-hero"
       [class.completed]="dailyActivity.hasLoggedInToday"
     >
 
-      <div class="checkin-content">
+      <div class="hero-decoration decoration-one"></div>
+      <div class="hero-decoration decoration-two"></div>
 
-        <div class="checkin-icon">
-          @if (dailyActivity.hasLoggedInToday) {
-            ✓
-          } @else {
-            📅
-          }
+
+      @if (dailyActivity.hasLoggedInToday) {
+
+        <div class="shine"></div>
+
+        <div class="success-particles" aria-hidden="true">
+          <span>✦</span>
+          <span>✦</span>
+          <span>✦</span>
         </div>
 
-        <div>
+      }
+
+
+      <div class="checkin-main">
+
+        <div class="checkin-icon">
+
           @if (dailyActivity.hasLoggedInToday) {
-            <h2>今日已完成登入</h2>
-            <p>今天的登入紀錄已經完成，明天記得再回來。</p>
+
+            <span class="check-icon">
+              ✓
+            </span>
+
           } @else {
-            <h2>今天還沒簽到</h2>
-            <p>完成今日登入紀錄，累積你的登入天數。</p>
+
+            <span>
+              📅
+            </span>
+
           }
+
+        </div>
+
+
+        <div class="checkin-copy">
+
+          <span class="eyebrow">
+            DAILY CHECK-IN
+          </span>
+
+
+          @if (dailyActivity.hasLoggedInToday) {
+
+            <h2>
+              今日登入完成！
+            </h2>
+
+            <p>
+              今天的登入紀錄已經保存，明天記得再回來。
+            </p>
+
+          } @else {
+
+            <h2>
+              今天還沒登入
+            </h2>
+
+            <p>
+              完成今日登入，繼續累積你的登入紀錄。
+            </p>
+
+          }
+
         </div>
 
       </div>
+
 
       @if (!dailyActivity.hasLoggedInToday) {
 
@@ -57,120 +158,512 @@
           (click)="loginToday()"
           [disabled]="loggingIn"
         >
+
           @if (loggingIn) {
+
+            <span class="button-spinner"></span>
+
             紀錄中...
+
           } @else {
+
+            <span class="button-icon">
+              ✓
+            </span>
+
             今日簽到
+
           }
+
         </button>
 
       } @else {
 
         <div class="completed-badge">
-          ✓ 已完成
+
+          <span class="badge-check">
+            ✓
+          </span>
+
+          已完成
+
         </div>
 
       }
 
     </section>
 
+
+    <!-- =============================== -->
+    <!-- 成功訊息 -->
+    <!-- =============================== -->
+
     @if (successMessage) {
+
       <div class="success-message">
-        ✓ {{ successMessage }}
+
+        <span>
+          🎉
+        </span>
+
+        <div>
+
+          <strong>
+            簽到成功
+          </strong>
+
+          <p>
+            {{ successMessage }}
+          </p>
+
+        </div>
+
       </div>
+
     }
 
-    <!-- 登入統計 -->
-    <section class="stats-section">
 
-      <div class="section-title">
-        <div>
-          <h2>登入統計</h2>
-          <p>你的每日登入活動紀錄</p>
-        </div>
-      </div>
+    <!-- =============================== -->
+    <!-- 目前連續登入 -->
+    <!-- =============================== -->
 
-      <div class="stats-grid">
+    <section class="streak-card">
 
-        <div class="stat-card">
-          <div class="stat-icon">📆</div>
+      <div class="streak-left">
 
-          <span class="stat-label">
-            累積登入
+        <div class="fire-orb">
+
+          <span class="fire-icon">
+            🔥
           </span>
 
-          <div class="stat-value">
-            {{ dailyActivity.totalLoginDays }}
-            <small>天</small>
-          </div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-icon">🔥</div>
 
-          <span class="stat-label">
+        <div>
+
+          <span class="streak-label">
             目前連續登入
           </span>
 
-          <div class="stat-value">
-            {{ dailyActivity.currentLoginStreak }}
-            <small>天</small>
+          <div class="streak-value">
+
+            <strong>
+              {{ dailyActivity.currentLoginStreak }}
+            </strong>
+
+            <span>
+              天
+            </span>
+
           </div>
+
+
+          @if (dailyActivity.currentLoginStreak > 0) {
+
+            <p class="streak-message">
+              保持這個節奏，明天也記得回來！
+            </p>
+
+          } @else {
+
+            <p class="streak-message">
+              今天就從第一天開始累積吧。
+            </p>
+
+          }
+
         </div>
 
-        <div class="stat-card">
-          <div class="stat-icon">🏆</div>
+      </div>
 
-          <span class="stat-label">
-            最長連續登入
+
+      <div class="streak-side">
+
+        <div class="mini-stat">
+
+          <span>
+            最長紀錄
           </span>
 
-          <div class="stat-value">
-            {{ dailyActivity.longestLoginStreak }}
-            <small>天</small>
-          </div>
+          <strong>
+            {{ dailyActivity.longestLoginStreak }} 天
+          </strong>
+
         </div>
 
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
 
-          <span class="stat-label">
-            歷史登入率
+        <div class="mini-stat">
+
+          <span>
+            累積登入
           </span>
 
-          <div class="stat-value">
-            {{ dailyActivity.lifetimeLoginRate * 100 | number:'1.1-1' }}
-            <small>%</small>
-          </div>
+          <strong>
+            {{ dailyActivity.totalLoginDays }} 天
+          </strong>
+
         </div>
 
       </div>
 
     </section>
 
-    <!-- 最後登入 -->
-    <section class="last-login">
 
-      <div>
-        <span>最後登入日期</span>
+    <!-- =============================== -->
+    <!-- 7 日連續登入 -->
+    <!-- =============================== -->
 
-        <strong>
-          @if (dailyActivity.lastLoginDate) {
-            {{ dailyActivity.lastLoginDate | date:'yyyy/MM/dd' }}
-          } @else {
-            尚無登入紀錄
-          }
-        </strong>
+    <section class="weekly-checkin">
+
+      <div class="weekly-header">
+
+        <div>
+
+          <span class="section-eyebrow">
+            LOGIN STREAK
+          </span>
+
+          <h2>
+            7 日連續登入
+          </h2>
+
+          <p>
+            每天回來登入，維持你的連續登入紀錄。
+          </p>
+
+        </div>
+
+
+        <div class="weekly-progress-text">
+          {{ dailyActivity.currentLoginStreak }} 天連續
+        </div>
+
       </div>
 
-      <div class="status">
-        @if (dailyActivity.hasLoggedInToday) {
-          <span class="status-dot active"></span>
-          今日已登入
-        } @else {
-          <span class="status-dot"></span>
-          今日尚未登入
+
+      <div class="weekly-track">
+
+        <div class="track-line"></div>
+
+
+        @for (item of streakDays; track item.day) {
+
+          <div
+            class="day-item"
+            [class.completed]="item.completed"
+            [class.current]="item.current"
+            [class.reward]="item.reward"
+          >
+
+            <div class="day-circle">
+
+              @if (item.completed) {
+
+                <span class="day-check">
+                  ✓
+                </span>
+
+              } @else if (item.reward) {
+
+                <span class="gift-icon">
+                  🎁
+                </span>
+
+              } @else {
+
+                <span class="day-number">
+                  {{ item.day }}
+                </span>
+
+              }
+
+            </div>
+
+
+            <div class="day-copy">
+
+              <strong>
+                Day {{ item.day }}
+              </strong>
+
+
+              @if (item.current) {
+
+                <span class="today-label">
+                  今天
+                </span>
+
+              } @else if (item.completed) {
+
+                <span>
+                  已完成
+                </span>
+
+              } @else if (item.reward) {
+
+                <span>
+                  第 7 天
+                </span>
+
+              } @else {
+
+                <span>
+                  待登入
+                </span>
+
+              }
+
+            </div>
+
+          </div>
+
         }
+
+      </div>
+
+
+      <div class="weekly-footer">
+
+        <div class="weekly-tip">
+
+          <span>
+            🔥
+          </span>
+
+          <div>
+
+            <strong>
+              保持連續登入
+            </strong>
+
+            <p>
+              目前已連續登入
+              {{ dailyActivity.currentLoginStreak }}
+              天。
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="weekly-legend">
+
+          <span>
+
+            <i class="legend-dot completed-dot"></i>
+
+            已完成
+
+          </span>
+
+
+          <span>
+
+            <i class="legend-dot today-dot"></i>
+
+            今天
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =============================== -->
+    <!-- 登入統計 -->
+    <!-- =============================== -->
+
+    <section class="stats-section">
+
+      <div class="section-title">
+
+        <div>
+
+          <span class="section-eyebrow">
+            ACTIVITY
+          </span>
+
+          <h2>
+            登入統計
+          </h2>
+
+          <p>
+            你的每日登入活動紀錄
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="stats-grid">
+
+        <div class="stat-card stat-one">
+
+          <div class="stat-icon calendar-icon">
+            📆
+          </div>
+
+          <span class="stat-label">
+            累積登入
+          </span>
+
+          <div class="stat-value">
+
+            {{ dailyActivity.totalLoginDays }}
+
+            <small>
+              天
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat-card stat-two highlight">
+
+          <div class="stat-icon fire-stat">
+            🔥
+          </div>
+
+          <span class="stat-label">
+            目前連續登入
+          </span>
+
+          <div class="stat-value">
+
+            {{ dailyActivity.currentLoginStreak }}
+
+            <small>
+              天
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat-card stat-three">
+
+          <div class="stat-icon trophy-icon">
+            🏆
+          </div>
+
+          <span class="stat-label">
+            最長連續登入
+          </span>
+
+          <div class="stat-value">
+
+            {{ dailyActivity.longestLoginStreak }}
+
+            <small>
+              天
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat-card stat-four">
+
+          <div class="stat-icon chart-icon">
+            📊
+          </div>
+
+          <span class="stat-label">
+            歷史登入率
+          </span>
+
+          <div class="stat-value">
+
+            {{
+              dailyActivity.lifetimeLoginRate * 100
+              | number:'1.1-1'
+            }}
+
+            <small>
+              %
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =============================== -->
+    <!-- 最後登入 -->
+    <!-- =============================== -->
+
+    <section class="last-login">
+
+      <div class="last-login-left">
+
+        <div class="last-login-icon">
+          🕒
+        </div>
+
+
+        <div>
+
+          <span>
+            最後登入日期
+          </span>
+
+          <strong>
+
+            @if (dailyActivity.lastLoginDate) {
+
+              {{
+                dailyActivity.lastLoginDate
+                | date:'yyyy/MM/dd'
+              }}
+
+            } @else {
+
+              尚無登入紀錄
+
+            }
+
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="status"
+        [class.active-status]="dailyActivity.hasLoggedInToday"
+      >
+
+        <span
+          class="status-dot"
+          [class.active]="dailyActivity.hasLoggedInToday"
+        ></span>
+
+
+        @if (dailyActivity.hasLoggedInToday) {
+
+          今日已登入
+
+        } @else {
+
+          今日尚未登入
+
+        }
+
       </div>
 
     </section>

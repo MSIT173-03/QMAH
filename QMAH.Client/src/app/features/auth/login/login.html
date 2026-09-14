@@ -12,6 +12,7 @@
         class="space-y-4"
       >
 
+        <!-- Email -->
         <div>
           <label class="label">
             <span class="label-text">Email</span>
@@ -21,6 +22,7 @@
             type="email"
             formControlName="email"
             placeholder="請輸入 Email"
+            autocomplete="email"
             class="input input-bordered w-full"
           />
 
@@ -43,6 +45,7 @@
           }
         </div>
 
+        <!-- 密碼 -->
         <div>
           <label class="label">
             <span class="label-text">密碼</span>
@@ -52,6 +55,7 @@
             type="password"
             formControlName="password"
             placeholder="請輸入密碼"
+            autocomplete="current-password"
             class="input input-bordered w-full"
           />
 
@@ -63,25 +67,39 @@
               請輸入密碼
             </p>
           }
+
+          <!-- 忘記密碼 -->
+          <div class="text-right mt-2">
+            <a
+              routerLink="/forgot-password"
+              class="link link-primary text-sm"
+            >
+              忘記密碼？
+            </a>
+          </div>
         </div>
 
+        <!-- 記住我 -->
         <label class="label cursor-pointer justify-start gap-3">
           <input
             type="checkbox"
             formControlName="rememberMe"
             class="checkbox checkbox-primary"
           />
+
           <span class="label-text">
             記住我
           </span>
         </label>
 
+        <!-- 錯誤訊息 -->
         @if (errorMessage) {
           <div class="alert alert-error">
             {{ errorMessage }}
           </div>
         }
 
+        <!-- 登入 -->
         <button
           type="submit"
           class="btn btn-primary w-full"
@@ -96,6 +114,24 @@
         </button>
 
       </form>
+
+      <!-- 註冊 -->
+      <div class="divider">
+        或
+      </div>
+
+      <div class="text-center text-sm">
+        <span class="text-base-content/60">
+          還沒有會員帳號？
+        </span>
+
+        <a
+          routerLink="/register"
+          class="link link-primary font-semibold ml-1"ng 
+        >
+          建立帳號
+        </a>
+      </div>
 
     </div>
   </div>
