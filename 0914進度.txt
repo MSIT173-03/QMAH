@@ -1,0 +1,2004 @@
+ ▐▛███▛█   Claude Code v2.1.270
+▝▜██████▀  Sonnet 5 · Claude Pro
+  ▝▝ ▝▝    ~\source\repos\QMAH
+
+
+> /init                                                                         
+
+  Searched for 4 patterns, read 15 files, listed 4 directories (ctrl+o to expand)
+
+● No dedicated .NET test project exists yet. I have enough to write the
+  CLAUDE.md now.
+
+● Write(CLAUDE.md)
+  ⎿  Wrote 69 lines to CLAUDE.md
+      1 # CLAUDE.md
+      3 This file provides guidance to Claude Code (claude.ai/code) when 
+        working with code in this repository.
+      5 ## Project
+      7 QMAH（清明鑑定屋）is a course project (MSIT173-03): an ASP.NET Co
+        re + Angular + SQL Server (DB-first) web app centered on a shared
+        cial, User, Store) sharing one `QMAH` database, one ASP.NET Core 
+        Identity store, and shared media paths/data-access rules. Not for
+        n artifact media.
+      9 ## Solution layout
+     … +138 lines (ctrl+o to expand)
+
+● Created CLAUDE.md at the repo root. Summary of what it covers:
+
+  - Project shape: ASP.NET Core (API + Razor admin) + Angular 21 + SQL Server
+    DB-first, five shared Areas (Catalog/Game/Social/User/Store).
+  - Solution layout: what lives in each of QMAH.Api, QMAH.Web,
+    QMAH.Infrastructure, QMAH.Client, database/, tools/.
+  - The DB-first data flow and the non-obvious architectural rules that span
+    multiple files: no EF migrations, shared QmahDatabaseConnectionResolver for
+    local DB discovery, independent auth cookies per host, shared Scoped
+    cross-Area services, the ArtifactId-linked Artifact/Question/Product tables,
+    and the media-key/URL-resolver indirection.
+  - Commands: build/run for both hosts, Angular dev/build/test, data-tools
+    build, and what CI actually runs (noting there's no .NET test project yet).
+  - Local DB setup notes (no auto-seed/migrate, how to pin a connection string).
+  - Conventions: commit message format, branch flow, gitignore-worthy files, and
+    a pointer to the external QMAH-Docs repo as the real documentation source.
+
+✻ Baked for 1m 1s · done 上午10:30
+
+> 在這個專案中我只負責social相關的api，Qmah.web裡的檔案已不再使用，我想要先檢查 
+  social相關 api的功能是否重複或衝突，然後讓QMAH.client的前端能呼叫它們         
+
+  Searched for 7 patterns, read 16 files, ran 4 shell commands (ctrl+o to expand)
+
+● Remote Control not started here · another Claude Code on this machine 
+  (started 14m ago) already has Remote Control for this conversation, so
+  this terminal can't see your sessions on other machines and they 
+  can't reach it · run /remote-control to move it to this terminal
+
+> 剛剛那個問題你分析完了嗎？麻煩把結論告訴我                                    
+
+● 分析完了，結論整理如下（依嚴重度排序）：
+
+  1. 路由本身沒有衝突
+
+  SocialController(api/v1/social/*)、SocialMediaController(api/v1/social/media/*
+  )、SocialNotificationsController(api/v1/notifications)、以及藏在
+  SocialEventsController.cs/SocialReportsController.cs 裡的
+  AdminEventsController(api/v1/admin/events)、AdminReportsController(api/v1/admi
+  n/reports)——五個路徑前綴互不重疊，也沒有兩個 controller
+  做同一件事。沒有你擔心的「重複實作」問題。
+
+  2. 真正的功能缺陷：活動審核通過後不會真的公開（bug，不是重複）
+
+  - SocialController.GetEvents/GetEvent 只回傳 ReviewStatus=="APPROVED" && 
+    PublishStatus=="PUBLISHED" 的活動。
+  - 但現在唯一的審核端點 AdminEventsController.ReviewEvent（PUT 
+    api/v1/admin/events/{id}/review）只更新了 ReviewStatus，完全沒碰
+    PublishStatus。
+  - 對照已棄用的 QMAH.Web/Areas/Social/Controllers/SocialEventAdminController.Re
+    viewEvent，舊版有關鍵一行：item.PublishStatus = status == "APPROVED" ? 
+    "PUBLISHED" : "DRAFT";——這行邏輯在搬到 API（commit f21d548）時被漏掉了。
+  - 結果：現在用 API 審核活動「通過」之後，活動永遠不會出現在公開清單，因為 
+    PublishStatus 卡死在 DRAFT。
+
+  3. 死代碼：通知服務沒接上
+
+  SocialNotificationService/INotificationService（namespace
+  還用了跟其他檔案不同的 QMAH.Application.Services）完全沒有在 Program.cs
+  註冊、也沒有任何 controller 呼叫它。實際上：
+  - AdminEventsController.ReviewEvent 自己手動 new UserNotification{...} 塞進
+    DbContext，繞過了這個 service。
+  - AdminReportsController.ReviewReport 處理檢舉完全沒有發通知。
+
+  4. 命名/慣例不一致
+
+  SocialEventsController.cs（內容其實是
+  AdminEventsController）、SocialReportsController.cs（內容其實是
+  AdminReportsController）檔名跟類別名不符；這三個 admin/notification controller
+  用 QMAH.API.*（大寫 API），跟專案其餘 controller 的 QMAH.Api.Controllers.V1
+  風格不同，也沒繼承 ApiControllerBase（自己重新宣告 [ApiController]、自己手刻
+  ClaimTypes.NameIdentifier 解析）。
+
+  5. Angular 現有程式碼是對不上/打不通的
+
+  - posts.ts 把 GET /api/v1/social/posts 回應直接當 Post[]
+    用，但實際回傳是分頁包裝 ApiPage<SocialPostListItemDto>（多一層
+    items），現在這支基本上抓不到資料。
+  - admin-events.ts 打 GET 
+    /api/v1/admin/events/pending——這個端點不存在，AdminEventsController 只有 PUT
+    {id}/review，一定 404。
+  - 更根本的問題：AuthService 目前純粹是前端 mock（假 signal、假
+    token），從沒呼叫過 POST /api/v1/account/login 或 GET 
+    /api/v1/account/antiforgery-token。所以任何需要登入 + X-XSRF-TOKEN
+    的寫入端點（發文、留言、報名、檢舉）現在測都測不了。
+
+  ---
+
+  要接著做「讓前端能呼叫」之前，我建議先請你拍板兩件事：
+
+  1. PublishStatus 那個 bug 要不要順手修？（在你負責的 social API
+     範圍內，不修的話活動審核功能是壞的）
+  2. 通知死代碼：要接上共用 service，還是乾脆刪掉、保留 AdminEventsController
+     現在的土砲寫法？
+
+✻ Churned for 52s · done 上午10:49
+
+● Remote Control not started here · another Claude Code on this machine 
+  (started 24m ago) already has Remote Control for this conversation, so
+  this terminal can't see your sessions on other machines and they 
+  can't reach it · run /remote-control to move it to this terminal
+
+> 1先修掉，2的兩個方案差別在哪?                                                 
+
+● 兩個方案的差別：
+
+  方案 A：接上共用 service
+  - 在 Program.cs 註冊 AddScoped<INotificationService, 
+    SocialNotificationService>()
+  - AdminEventsController.ReviewEvent 改成注入 INotificationService，呼叫
+    SendNotificationAsync(...) 取代現在手動 new UserNotification{...}
+  - 順便幫 AdminReportsController.ReviewReport
+    補上通知（目前檢舉處理完全沒通知任何人——可以通知被檢舉內容的作者被下架，或通
+    知檢舉人處理結果，看你要哪種語意）
+  - 好處：以後任何地方要發站內通知都是一行
+    SendNotificationAsync(...)，行為統一；也修掉「檢舉處理沒通知」這個空缺
+  - 代價：多動兩個 controller + Program.cs，範圍比較大；還要順手把這個 service
+    的 namespace（QMAH.Application.Services）改成跟專案慣例一致（例如挪到
+    QMAH.Api.Infrastructure 或比照其他 controller
+    檔案風格），否則等於留著一個新的不一致命名
+
+  方案 B：直接刪掉沒用到的 service
+  - 刪除 SocialNotificationService.cs，AdminEventsController 維持現在手動塞
+    UserNotification 的寫法不變，AdminReportsController
+    也維持現在「檢舉處理完不發通知」的行為不變
+  - 好處：改動最小、風險最低，不影響現有已經在跑的邏輯
+  - 代價：檢舉處理仍然不會通知任何人（這其實是一個功能缺口，只是方案 B
+    選擇先不補），而且以後如果又要在別處發通知，還是得像 AdminEventsController
+    一樣手刻一次
+
+  我會建議方案
+  A（比較乾淨、順便補上檢舉通知的缺口），但如果你想先求穩、範圍越小越好，方案 B
+  也合理。你要哪個？
+
+  ---
+
+  現在先修 #1（PublishStatus 沒同步）。
+
+  Searched for 1 pattern, read 2 files (ctrl+o to expand)
+
+● Update(QMAH.Api\Controllers\V1\SocialEventsController.cs)
+  ⎿  Added 23 lines, removed 8 lines
+       4  
+       5  using QMAH.Infrastructure.Data;
+       6  using QMAH.Infrastructure.Models.Entities;
+       7 +using QMAH.Infrastructure.Services.Social;                     
+       8  
+       9  using System.Security.Claims;
+      10  
+     ...
+      15  [Authorize(Roles = "Admin")]
+      16  public class AdminEventsController : ControllerBase
+      17  {
+      18 +    private static readonly HashSet<string> ReviewStatuses = ["
+         +APPROVED", "REJECTED"];                                        
+      19 +                                                               
+      20      private readonly QmahDbContext _dbContext;
+      21  
+      22      public AdminEventsController(QmahDbContext dbContext)
+     ...
+      33      [HttpPut("{id}/review")]
+      34      public async Task<IActionResult> ReviewEvent(Guid id, [From
+          Body] ReviewEventDto dto)
+      35      {
+      36 +        var reviewStatus = dto.ReviewStatus?.Trim().ToUpperInva
+         +riant();                                                       
+      37 +        if (reviewStatus is null || !ReviewStatuses.Contains(re
+         +viewStatus))                                                   
+      38 +            return BadRequest(new { message = "ReviewStatus 只 
+         +能是 APPROVED 或 REJECTED。" });                               
+      39 +                                                               
+      40          var currentUserId = Guid.Parse(User.FindFirstValue(Clai
+          mTypes.NameIdentifier)!);
+      41  
+      42          var eventItem = await _dbContext.Events
+      43              .Include(e => e.OrganizerUser)
+      44 +            .Include(e => e.SocialPost)                        
+      45              .FirstOrDefaultAsync(e => e.Id == id);
+      46  
+      47          if (eventItem == null)
+      48              return NotFound(new { message = "找不到該活動" });
+      49  
+      42 -        eventItem.ReviewStatus = dto.ReviewStatus;             
+      43 -        eventItem.ReviewNote = dto.ReviewNote;                 
+      50 +        var now = DateTime.UtcNow;                             
+      51 +        eventItem.ReviewStatus = reviewStatus;                 
+      52 +        eventItem.ReviewNote = string.IsNullOrWhiteSpace(dto.Re
+         +viewNote) ? null : dto.ReviewNote.Trim();                      
+      53          eventItem.ReviewedByUserId = currentUserId;
+      45 -        eventItem.ReviewedAt = DateTime.UtcNow;                
+      54 +        eventItem.ReviewedAt = now;                            
+      55 +        // 通過審核就同步發布，退回則維持草稿，避免活動卡在「已
+         +核准但看不到」的狀態。                                         
+      56 +        eventItem.PublishStatus = reviewStatus == "APPROVED" ? 
+         +"PUBLISHED" : "DRAFT";                                         
+      57  
+      58 +        // 活動連結的社群貼文要跟著審核/發布狀態一起同步，否則 
+         +貼文會一直停在 HIDDEN。                                        
+      59 +        if (eventItem.SocialPost is not null)                  
+      60 +            EventSocialPostSynchronizer.SyncPublication(eventIt
+         +em.SocialPost, eventItem, now);                                
+      61 +                                                               
+      62          // 當審核通過時，同步發送通知給活動建立者
+      63          if (eventItem.OrganizerUserId.HasValue)
+      64          {
+     ...
+      66              {
+      67                  Id = Guid.NewGuid(),
+      68                  UserId = eventItem.OrganizerUserId.Value,
+      54 -                Title = dto.ReviewStatus == "APPROVED" ? "活動 
+         -審核通過" : "活動審核未通過",                                  
+      55 -                Content = dto.ReviewStatus == "APPROVED"       
+      69 +                Title = reviewStatus == "APPROVED" ? "活動審核 
+         +通過" : "活動審核未通過",                                      
+      70 +                Content = reviewStatus == "APPROVED"           
+      71                      ? $"您發起的活動「{eventItem.Title}」已審核
+          通過！"
+      57 -                    : $"您發起的活動「{eventItem.Title}」未通過
+         -審核。原因：{dto.ReviewNote}",                                 
+      72 +                    : $"您發起的活動「{eventItem.Title}」未通過
+         +審核。原因：{eventItem.ReviewNote}",                           
+      73                  TargetUrl = $"/events/{eventItem.Id}",
+      74                  IsRead = false,
+      60 -                CreatedAt = DateTime.UtcNow                    
+      75 +                CreatedAt = now                                
+      76              };
+      77              _dbContext.UserNotifications.Add(notification);
+      78          }
+      79  
+      80          await _dbContext.SaveChangesAsync();
+      66 -        return Ok(new { message = "活動審核完成", eventItem.Id,
+         - eventItem.ReviewStatus });                                    
+      81 +        return Ok(new { message = "活動審核完成", eventItem.Id,
+         + eventItem.ReviewStatus, eventItem.PublishStatus });           
+      82      }
+      83  }
+      84   No newline at end of file
+
+● Now let me verify it builds.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Build 成功。
+
+  已修好的部分
+
+  AdminEventsController.ReviewEvent（PUT 
+  /api/v1/admin/events/{id}/review）現在會：
+
+  1. 驗證 ReviewStatus，只接受
+     APPROVED/REJECTED（原本沒驗證，任何字串都會直接寫進 DB）
+  2. 同步 PublishStatus：通過就 PUBLISHED，退回就 DRAFT（補回原本 Web
+     版本有、搬到 API 時漏掉的邏輯）
+  3. 同步連結的社群貼文狀態：改用
+     EventSocialPostSynchronizer.SyncPublication（跟舊 Web controller
+     用的是同一個共用靜態方法），否則就算 PublishStatus
+     對了，活動貼文也還是會卡在 HIDDEN 進不了動態
+  4. 回應多回傳 PublishStatus，方便前端確認實際結果
+
+  現在活動審核通過後，會真的出現在 GetEvents/GetEvent，也會出現在
+  GetPosts（postType=EVENT）。
+
+  ---
+
+  還沒動的是你要決定的 #2（通知 service 方案
+  A/B）——決定好我再繼續。接下來要不要我也先看一下 #4 提到的命名/namespace
+  不一致（SocialEventsController.cs↔AdminEventsController、SocialReportsControll
+  er.cs↔AdminReportsController）要不要順手整理，還是先跳到前端串接？
+
+✻ Sautéed for 1m 10s · done 上午11:03
+
+● Remote Control not started here · another Claude Code on this machine 
+  (started 34m ago) already has Remote Control for this conversation, so
+  this terminal can't see your sessions on other machines and they 
+  can't reach it · run /remote-control to move it to this terminal
+
+> 2的部分先選A方案，4你要改的話檔名開頭我想保留Social，這樣我在看專案目錄的時候 
+  能比較好找到自己負責的部分                                                    
+
+  Searched for 2 patterns, read 1 file, ran 4 shell commands (ctrl+o to expand)
+
+● Good, clean again. Now let me make the actual file changes.
+
+● Write(QMAH.Infrastructure\Services\Social\SocialNotificationService.cs)
+  ⎿  Wrote 35 lines to
+     QMAH.Infrastructure\Services\Social\SocialNotificationService.cs
+      1 using QMAH.Infrastructure.Data;
+      2 using QMAH.Infrastructure.Models.Entities;
+      3 
+      4 namespace QMAH.Infrastructure.Services.Social;
+      5 
+      7 {
+      8     Task SendNotificationAsync(Guid userId, string title, string 
+        content, string? targetUrl = null, CancellationToken cancellation
+        Token = default);
+      9 }
+     … +30 lines (ctrl+o to expand)
+
+● Update(QMAH.Infrastructure\Services\Social\SocialNotificationService.cs)
+  ⎿  Added 7 lines, removed 11 lines
+       5  
+       6  public interface INotificationService
+       7  {
+       8 -    Task SendNotificationAsync(Guid userId, string title, strin
+         -g content, string? targetUrl = null, CancellationToken cancella
+         -tionToken = default);                                          
+       8 +    /// <summary>                                              
+       9 +    /// 建立一筆站內通知並加入目前 DbContext 的追蹤清單。      
+      10 +    /// 不會呼叫 SaveChangesAsync：由呼叫端在同一次 request 的 
+         +SaveChangesAsync 一併寫入，                                    
+      11 +    /// 確保通知與觸發通知的異動（審核、檢舉處理等）在同一個交 
+         +易內一起成功或一起失敗。                                       
+      12 +    /// </summary>                                             
+      13 +    void QueueNotification(Guid userId, string title, string co
+         +ntent, string? targetUrl = null);                              
+      14  }
+      15  
+      16  public sealed class SocialNotificationService(QmahDbContext db)
+           : INotificationService
+      17  {
+      13 -    public async Task SendNotificationAsync(                   
+      14 -        Guid userId,                                           
+      15 -        string title,                                          
+      16 -        string content,                                        
+      17 -        string? targetUrl = null,                              
+      18 -        CancellationToken cancellationToken = default)         
+      18 +    public void QueueNotification(Guid userId, string title, st
+         +ring content, string? targetUrl = null)                        
+      19      {
+      20          db.UserNotifications.Add(new UserNotification
+      21          {
+     ...
+      27              IsRead = false,
+      28              CreatedAt = DateTime.UtcNow
+      29          });
+      30 -                                                               
+      31 -        // Controller 已經在同一個 SaveChangesAsync 內一併寫入 
+         -審核／檢舉結果；                                               
+      32 -        // 這裡多存一次是為了讓只想發通知、不需要其他變更的呼叫
+         -端也能直接完成寫入。                                           
+      33 -        await db.SaveChangesAsync(cancellationToken);          
+      30      }
+      31  }
+
+● Now delete the old file and register the service in Program.cs.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(QMAH.Api\Program.cs)
+  ⎿  Added 1 line
+      18  using QMAH.Infrastructure.Security;
+      19  using QMAH.Infrastructure.Services.Common;
+      20  using QMAH.Infrastructure.Services.Economy;
+      21 +using QMAH.Infrastructure.Services.Social;                     
+      22  
+      23  var builder = WebApplication.CreateBuilder(args);
+      24  // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數
+          。
+
+● Update(QMAH.Api\Program.cs)
+  ⎿  Added 2 lines
+      161  builder.Services.AddScoped<CommunityRewardService>();
+      162  builder.Services.AddScoped<GameRoomInvitationService>();
+      163  builder.Services.AddScoped<DailyActivityService>();
+      164 +// Social 站內通知：活動審核、檢舉處理等共用同一套排隊寫入方式
+          +，由各自的 SaveChangesAsync 一併提交。                        
+      165 +builder.Services.AddScoped<INotificationService, SocialNotific
+          +ationService>();                                              
+      166  
+      167  // 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
+      168  builder.Services.AddRateLimiter(options =>
+● Write(QMAH.Api\Controllers\V1\SocialEventsAdminController.cs)
+  ⎿  Wrote 65 lines to
+     QMAH.Api\Controllers\V1\SocialEventsAdminController.cs
+       1 using Microsoft.AspNetCore.Authorization;
+       2 using Microsoft.AspNetCore.Mvc;
+       3 using Microsoft.EntityFrameworkCore;
+       4 
+       5 using QMAH.Infrastructure.Data;
+       6 using QMAH.Infrastructure.Services.Social;
+       7 
+       8 namespace QMAH.Api.Controllers.V1;
+       9 
+      10 [Route("api/v1/admin/events")]
+     … +73 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(QMAH.Api\Controllers\V1\SocialReportsAdminController.cs)
+  ⎿  Wrote 100 lines to
+     QMAH.Api\Controllers\V1\SocialReportsAdminController.cs
+       1 using Microsoft.AspNetCore.Authorization;
+       2 using Microsoft.AspNetCore.Mvc;
+       3 using Microsoft.EntityFrameworkCore;
+       4 
+       5 using QMAH.Infrastructure.Data;
+       6 using QMAH.Infrastructure.Services.Social;
+       7 
+       8 namespace QMAH.Api.Controllers.V1;
+       9 
+      10 [Route("api/v1/admin/reports")]
+     … +114 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now fix SocialNotificationsController.cs's namespace/style inconsistency (file
+  name is already fine):
+
+● Update(QMAH.Api\Controllers\V1\SocialNotificationsController.cs)
+  ⎿  Added 19 lines, removed 23 lines
+       1  using Microsoft.AspNetCore.Authorization;
+       2  using Microsoft.AspNetCore.Mvc;
+       3  using Microsoft.EntityFrameworkCore;
+       4 +                                                               
+       5  using QMAH.Infrastructure.Data;
+       5 -using System.Security.Claims;                                  
+       6  
+       7 -namespace QMAH.API.Controllers.Client;                         
+       7 +namespace QMAH.Api.Controllers.V1;                             
+       8  
+       9 -[ApiController]                                                
+       9  [Route("api/v1/notifications")]
+      10  [Authorize]
+      12 -public class SocialNotificationsController : ControllerBase    
+      11 +public sealed class SocialNotificationsController(QmahDbContext
+         + db) : ApiControllerBase                                       
+      12  {
+      14 -    private readonly QmahDbContext _dbContext;                 
+      15 -                                                               
+      16 -    public SocialNotificationsController(QmahDbContext dbContex
+         -t)                                                             
+      17 -    {                                                          
+      18 -        _dbContext = dbContext;                                
+      19 -    }                                                          
+      20 -                                                               
+      13      // GET /api/v1/notifications
+      14      [HttpGet]
+      23 -    public async Task<IActionResult> GetMyNotifications([FromQu
+         -ery] bool? unreadOnly = false)                                 
+      15 +    public async Task<IActionResult> GetMyNotifications([FromQu
+         +ery] bool? unreadOnly = false, CancellationToken cancellationTo
+         +ken = default)                                                 
+      16      {
+      25 -        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.
+         -NameIdentifier)!);                                             
+      17 +        if (!TryGetCurrentUserId(out var userId))              
+      18 +            return Unauthorized();                             
+      19  
+      27 -        var query = _dbContext.UserNotifications               
+      20 +        var query = db.UserNotifications                       
+      21 +            .AsNoTracking()                                    
+      22              .Where(n => n.UserId == userId);
+      23  
+      24          if (unreadOnly == true)
+     ...
+      36                  n.CreatedAt,
+      37                  n.ReadAt
+      38              })
+      45 -            .ToListAsync();                                    
+      39 +            .ToListAsync(cancellationToken);                   
+      40  
+      41          return Ok(list);
+      42      }
+      43  
+      50 -    // 標示單筆或全部已讀 API (可選擴充)                       
+      51 -    [HttpPut("{id}/read")]                                     
+      52 -    public async Task<IActionResult> MarkAsRead(Guid id)       
+      44 +    // 標示單筆已讀                                            
+      45 +    [HttpPut("{id:guid}/read")]                                
+      46 +    public async Task<IActionResult> MarkAsRead(Guid id, Cancel
+         +lationToken cancellationToken = default)                       
+      47      {
+      54 -        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.
+         -NameIdentifier)!);                                             
+      55 -        var notification = await _dbContext.UserNotifications  
+      56 -            .FirstOrDefaultAsync(n => n.Id == id && n.UserId ==
+         - userId);                                                      
+      48 +        if (!TryGetCurrentUserId(out var userId))              
+      49 +            return Unauthorized();                             
+      50  
+      58 -        if (notification == null) return NotFound();           
+      51 +        var notification = await db.UserNotifications          
+      52 +            .SingleOrDefaultAsync(n => n.Id == id && n.UserId =
+         += userId, cancellationToken);                                  
+      53 +        if (notification is null)                              
+      54 +            return MissingResource("找不到通知", "這則通知不存 
+         +在或不屬於目前帳號。");                                        
+      55  
+      56          notification.IsRead = true;
+      57          notification.ReadAt = DateTime.UtcNow;
+      62 -        await _dbContext.SaveChangesAsync();                   
+      58 +        await db.SaveChangesAsync(cancellationToken);          
+      59  
+      60          return Ok(new { message = "已標示為已讀" });
+      61      }
+
+● Now let's build to verify everything compiles.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Build 成功。也順手確認一下 QMAH.Web 沒有引用到我改掉的舊
+  namespace（保險起見，雖然你說已經不用了）：
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 沒有殘留引用。整理一下這輪做了什麼：
+
+  完成的變更
+
+  #2 通知 service（方案 A）
+  - SocialNotificationService/INotificationService 搬到
+    QMAH.Infrastructure/Services/Social/SocialNotificationService.cs（跟同域的
+    EventSocialPostSynchronizer 放一起），namespace 改成
+    QMAH.Infrastructure.Services.Social
+  - 介面改成 QueueNotification(...)（不在 service 內部呼叫
+    SaveChangesAsync），理由：讓通知跟觸發它的審核/檢舉異動落在同一個 controller
+    的同一次 SaveChangesAsync，避免「通知寫進去了但審核本身失敗」這種資料不一致
+  - 在 QMAH.Api/Program.cs 註冊 AddScoped<INotificationService, 
+    SocialNotificationService>()
+  - SocialEventsAdminController.ReviewEvent 改用
+    notificationService.QueueNotification(...)
+  - 順手補上 SocialReportsAdminController.ReviewReport 
+    原本完全沒有的通知：檢舉處理完會通知檢舉人結果
+
+  #4 檔名／命名（保留 Social 開頭）
+  - SocialEventsController.cs → SocialEventsAdminController.cs，class 改名
+    SocialEventsAdminController
+  - SocialReportsController.cs → SocialReportsAdminController.cs，class 改名
+    SocialReportsAdminController
+  - 兩者 namespace 從不一致的 QMAH.API.Controllers.Admin 改成專案慣用的
+    QMAH.Api.Controllers.V1，並改成繼承 ApiControllerBase（拿掉自己手刻的
+    Guid.Parse(User.FindFirstValue(...)!)，改用安全的 TryGetCurrentUserId）
+  - SocialNotificationsController.cs 檔名不動，只修
+    namespace（QMAH.API.Controllers.Client → QMAH.Api.Controllers.V1）跟改用
+    ApiControllerBase
+
+  額外揪出並修掉一個新 bug：SocialReportsAdminController（原
+  AdminReportsController）的 UpdateReportDto.Status 註解寫的是 RESOLVED, 
+  DISMISSED，但資料庫 CK_ContentReports_Status 只允許
+  PENDING/RESOLVED/REJECTED——DISMISSED
+  根本不存在。原本這個端點完全沒驗證輸入，前端如果真的送 DISMISSED 會直接讓 SQL
+  CHECK constraint 炸掉、丟 500。現在已加上驗證，錯誤輸入會回乾淨的 400。
+
+  Build 全過，沒有警告或錯誤。
+
+  ---
+
+  接下來要繼續處理你最初要的「讓 QMAH.Client 前端能呼叫這些
+  API」了嗎？我建議的順序是：先把 Angular 的登入 + antiforgery-token
+  流程接起來（不然任何寫入型 API 都測不了），再照實際 DTO 形狀重寫
+  posts.ts/admin-events.ts，並新增事件、通知、檢舉、留言、上傳圖片對應的
+  service。要開始嗎？
+
+✻ Cooked for 2m 35s · done 上午11:16
+
+> 好，按你說的流程開始，但我們的小組有個人已經在專門寫關於會員登入的部分了，這  
+  會影響到他嗎?                                                                 
+
+● 不會碰到他，只要我把範圍劃清楚：
+
+  我不會動的檔案（登入相關，屬於他負責的部分）：
+  - core/services/auth.ts（目前的 mock AuthService）
+  - app.config.ts（裡面的 XSRF/credentials interceptor
+    已經是通用基礎設施，本來就對的，不需要改，也不是登入邏輯本身）
+  - 任何 POST /api/v1/account/login、antiforgery-token
+    相關的呼叫邏輯——這些屬於「會員登入」流程的一部分，讓他自己接
+
+  我只會動的範圍：
+  - features/social/**（既有的 posts.ts、admin-events.ts 兩支元件）
+  - 新增一個獨立的 Social API service 檔案（例如 core/services/social.ts 或
+    features/social/social-api.service.ts，用不會跟他撞名的檔名）
+  - app.routes.ts 頂多是新增（不是改寫）社群相關的路由項目
+
+  技術上為什麼不會互相干擾：
+  - app.config.ts 裡的 apiCredentialsInterceptor 已經對所有打到
+    environment.apiBaseUrl 的請求自動加上 withCredentials + XSRF
+    header，這是全域套用的，我的 Social API
+    呼叫會直接吃到這層，不需要另外處理登入
+  - 我要串的社群 GET 端點（貼文列表、活動列表、公告）本來就是
+    [AllowAnonymous]，不需要登入就能測
+  - 需要登入才能測的部分（發文、留言、檢舉、報名活動）：在他的登入流程還沒接上
+    Angular 之前，我會直接用瀏覽器透過 ng serve 的 proxy 手動呼叫 POST 
+    /api/v1/account/login 來建立 cookie session 測試，不會去改 AuthService
+    或幫他先接登入 UI——避免我們同時改同一批檔案
+
+  先看一下目前的路由結構確認要接哪裡：
+
+  Read 2 files (ctrl+o to expand)
+
+● 還需要補一個東西：前端 admin-events.ts 打的 GET /api/v1/admin/events/pending
+  一直是不存在的端點（之前稽核時發現的），而 admin/reports 的 GET 目前是直接把
+  EF entity 序列化回傳（沒有走這專案慣用的 DTO
+  模式，可能有循環參照風險）。這兩個都在你負責的 social
+  範圍內，我一併補上再串前端。
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(QMAH.Api\Controllers\V1\ApiDtos.cs)
+  ⎿  Added 26 lines
+      199      Guid? EventId,
+      200      DateTime CreatedAt);
+      201  
+      202 +public sealed record AdminEventListItemDto(                   
+      203 +    Guid Id,                                                  
+      204 +    string EventType,                                         
+      205 +    Guid? OrganizerUserId,                                    
+      206 +    string? OrganizerDisplayName,                             
+      207 +    string Title,                                             
+      208 +    DateTime StartAt,                                         
+      209 +    DateTime EndAt,                                           
+      210 +    string ReviewStatus,                                      
+      211 +    string PublishStatus,                                     
+      212 +    string? ReviewNote,                                       
+      213 +    DateTime CreatedAt);                                      
+      214 +                                                              
+      215 +public sealed record AdminContentReportDto(                   
+      216 +    Guid Id,                                                  
+      217 +    string TargetType,                                        
+      218 +    Guid TargetId,                                            
+      219 +    string Reason,                                            
+      220 +    string? Detail,                                           
+      221 +    string Status,                                            
+      222 +    string? Resolution,                                       
+      223 +    Guid ReporterUserId,                                      
+      224 +    string? ReporterDisplayName,                              
+      225 +    DateTime CreatedAt,                                       
+      226 +    DateTime? ReviewedAt);                                    
+      227 +                                                              
+      228  public sealed record GameRoomListItemDto(
+      229      Guid Id,
+      230      string RoomCode,
+
+● Now add the GET list endpoint to SocialEventsAdminController and rework
+  SocialReportsAdminController.GetReports to use the DTO + paging:
+
+● Update(QMAH.Api\Controllers\V1\SocialEventsAdminController.cs)
+  ⎿  Added 36 lines
+      14      INotificationService notificationService) : ApiControllerBa
+          se
+      15  {
+      16      private static readonly HashSet<string> ReviewStatuses = ["
+          APPROVED", "REJECTED"];
+      17 +    private static readonly HashSet<string> AllReviewStatuses =
+         + ["PENDING", "APPROVED", "REJECTED"];                          
+      18  
+      19      public sealed class ReviewEventDto
+      20      {
+     ...
+      22          public string? ReviewNote { get; set; }
+      23      }
+      24  
+      25 +    // GET /api/v1/admin/events?reviewStatus=PENDING           
+      26 +    [HttpGet]                                                  
+      27 +    public async Task<ActionResult<ApiPage<AdminEventListItemDt
+         +o>>> GetEvents(                                                
+      28 +        string? reviewStatus = "PENDING",                      
+      29 +        int page = 1,                                          
+      30 +        int pageSize = 20,                                     
+      31 +        CancellationToken cancellationToken = default)         
+      32 +    {                                                          
+      33 +        var normalizedStatus = string.IsNullOrWhiteSpace(review
+         +Status) ? null : reviewStatus.Trim().ToUpperInvariant();       
+      34 +                                                               
+      35 +        var query = db.Events.AsNoTracking();                  
+      36 +        if (normalizedStatus is not null && AllReviewStatuses.C
+         +ontains(normalizedStatus))                                     
+      37 +            query = query.Where(item => item.ReviewStatus == no
+         +rmalizedStatus);                                               
+      38 +                                                               
+      39 +        var projected = query                                  
+      40 +            .OrderByDescending(item => item.CreatedAt)         
+      41 +            .Select(item => new AdminEventListItemDto(         
+      42 +                item.Id,                                       
+      43 +                item.EventType,                                
+      44 +                item.OrganizerUserId,                          
+      45 +                db.UserProfiles                                
+      46 +                    .Where(profile => profile.UserId == item.Or
+         +ganizerUserId)                                                 
+      47 +                    .Select(profile => profile.Nickname)       
+      48 +                    .FirstOrDefault(),                         
+      49 +                item.Title,                                    
+      50 +                item.StartAt,                                  
+      51 +                item.EndAt,                                    
+      52 +                item.ReviewStatus,                             
+      53 +                item.PublishStatus,                            
+      54 +                item.ReviewNote,                               
+      55 +                item.CreatedAt));                              
+      56 +                                                               
+      57 +        return Ok(await ApiPaging.ToPageAsync(projected, page, 
+         +pageSize, cancellationToken));                                 
+      58 +    }                                                          
+      59 +                                                               
+      60      [HttpPut("{id:guid}/review")]
+      61      public async Task<IActionResult> ReviewEvent(Guid id, [From
+          Body] ReviewEventDto dto, CancellationToken cancellationToken =
+           default)
+      62      {
+
+● Update(QMAH.Api\Controllers\V1\SocialReportsAdminController.cs)
+  ⎿  Added 24 lines, removed 3 lines
+      26  
+      27      // 取得檢舉列表
+      28      [HttpGet]
+      29 -    public async Task<IActionResult> GetReports([FromQuery] str
+         -ing? status = "PENDING", CancellationToken cancellationToken = 
+         -default)                                                       
+      29 +    public async Task<ActionResult<ApiPage<AdminContentReportDt
+         +o>>> GetReports(                                               
+      30 +        string? status = "PENDING",                            
+      31 +        int page = 1,                                          
+      32 +        int pageSize = 20,                                     
+      33 +        CancellationToken cancellationToken = default)         
+      34      {
+      35          var query = db.ContentReports.AsNoTracking();
+      36  
+     ...
+      38          if (normalizedStatus is not null && ReportStatuses.Cont
+          ains(normalizedStatus))
+      39              query = query.Where(r => r.Status == normalizedStat
+          us);
+      40  
+      37 -        var reports = await query.OrderByDescending(r => r.Crea
+         -tedAt).ToListAsync(cancellationToken);                         
+      38 -        return Ok(reports);                                    
+      41 +        var projected = query                                  
+      42 +            .OrderByDescending(r => r.CreatedAt)               
+      43 +            .Select(r => new AdminContentReportDto(            
+      44 +                r.Id,                                          
+      45 +                r.TargetType,                                  
+      46 +                r.TargetId,                                    
+      47 +                r.Reason,                                      
+      48 +                r.Detail,                                      
+      49 +                r.Status,                                      
+      50 +                r.Resolution,                                  
+      51 +                r.ReporterUserId,                              
+      52 +                db.UserProfiles                                
+      53 +                    .Where(profile => profile.UserId == r.Repor
+         +terUserId)                                                     
+      54 +                    .Select(profile => profile.Nickname)       
+      55 +                    .FirstOrDefault(),                         
+      56 +                r.CreatedAt,                                   
+      57 +                r.ReviewedAt));                                
+      58 +                                                               
+      59 +        return Ok(await ApiPaging.ToPageAsync(projected, page, 
+         +pageSize, cancellationToken));                                 
+      60      }
+      61  
+      62      // 審核檢舉並處理違規內容
+
+  Searched for 1 pattern, read 3 files, ran 1 shell command (ctrl+o to expand)
+
+● Write(QMAH.Client\src\app\core\services\social-api.ts)
+  ⎿  Wrote 353 lines to QMAH.Client\src\app\core\services\social-api.ts
+       1 import { HttpClient, HttpParams } from '@angular/common/http';
+       2 import { Injectable, inject } from '@angular/core';
+       3 import { Observable } from 'rxjs';
+       4 
+       5 import { environment } from '../../../environments/environment';
+       7 // 分頁包裝，對應 QMAH.Api 的 ApiPage<T>（QMAH.Api/Controllers/V
+         1/ApiPaging.cs）
+       8 export interface ApiPage<T> {
+       9   items: T[];
+      10   page: number;
+     … +378 lines (ctrl+o to expand)
+
+● Write(QMAH.Client\src\app\features\social\posts\posts.ts)
+  ⎿  Added 19 lines, removed 28 lines
+       1 -import { Component, inject, OnInit } from '@angular/core';     
+       1 +import { Component, OnInit, inject } from '@angular/core';     
+       2  import { CommonModule } from '@angular/common';
+       3  import { FormsModule } from '@angular/forms';
+       4 -import { HttpClient } from '@angular/common/http';             
+       4  
+       6 -export interface Post {                                        
+       7 -  id: string;                                                  
+       8 -  title: string;                                               
+       9 -  content: string;                                             
+      10 -  boardCode: string;                                           
+      11 -  commentCount?: number;                                       
+      12 -  createdAt?: string;                                          
+      13 -}                                                              
+       5 +import { CreateSocialPostRequest, SocialApiService, SocialPostL
+         +istItem } from '../../../core/services/social-api';            
+       6  
+       7  @Component({
+       8    selector: 'app-posts',
+     ...
+      12    styleUrl: './posts.scss'
+      13  })
+      14  export class PostsComponent implements OnInit {
+      23 -  private http = inject(HttpClient);                           
+      15 +  private socialApi = inject(SocialApiService);                
+      16  
+      25 -  // 清空 Mock 資料，由 DB 填入                                
+      26 -  posts: Post[] = [];                                          
+      27 -  newPost = { title: '', boardCode: 'GENERAL', content: '' };  
+      17 +  posts: SocialPostListItem[] = [];                            
+      18 +  totalCount = 0;                                              
+      19 +  newPost: CreateSocialPostRequest = { postType: 'POST', boardC
+         +ode: 'GENERAL', title: '', content: '' };                      
+      20  
+      21    ngOnInit(): void {
+      22      this.loadPosts();
+      23    }
+      24  
+      33 -  // 1. 發送 GET 請求向 DB 取資料                              
+      25 +  // GET /api/v1/social/posts（AllowAnonymous，回傳 ApiPage<Soc
+         +ialPostListItemDto>）                                          
+      26    loadPosts(): void {
+      35 -    this.http.get<Post[]>('/api/v1/social/posts').subscribe({  
+      36 -      next: (data) => {                                        
+      37 -        this.posts = data;                                     
+      38 -        console.log('成功從 DB 取得貼文:', data);              
+      27 +    this.socialApi.getPosts({ pageSize: 20 }).subscribe({      
+      28 +      next: (page) => {                                        
+      29 +        this.posts = page.items;                               
+      30 +        this.totalCount = page.totalCount;                     
+      31        },
+      32        error: (err) => console.error('取得貼文失敗:', err)
+      33      });
+      34    }
+      35  
+      44 -  // 2. 發送 POST 新增貼文                                     
+      36 +  // POST /api/v1/social/posts（需要登入 + XSRF token）        
+      37    submitPost(): void {
+      46 -    this.http.post('/api/v1/social/posts', this.newPost).subscr
+         -ibe({                                                          
+      38 +    this.socialApi.createPost(this.newPost).subscribe({        
+      39        next: () => {
+      40          alert('貼文發布成功！');
+      49 -        this.newPost = { title: '', boardCode: 'GENERAL', conte
+         -nt: '' };                                                      
+      50 -        this.loadPosts(); // 重新整理列表                      
+      41 +        this.newPost = { postType: 'POST', boardCode: 'GENERAL'
+         +, title: '', content: '' };                                    
+      42 +        this.loadPosts();                                      
+      43        },
+      52 -      error: (err) => console.error('發布貼文失敗:', err)      
+      44 +      error: (err) => console.error('發布貼文失敗（請確認已登入
+         +）:', err)                                                     
+      45      });
+      46    }
+      47  
+      56 -  // 3. 發送 POST 檢舉                                         
+      48    report(id: string): void {
+      58 -    this.http.post('/api/v1/social/reports', { targetType: 'POS
+         -T', targetId: id }).subscribe({                                
+      59 -      next: () => alert(`已成功檢舉 Post #${id}`),             
+      60 -      error: (err) => console.error('檢舉失敗:', err)          
+      49 +    this.socialApi.createReport({ targetType: 'POST', targetId:
+         + id, reason: '使用者檢舉' }).subscribe({                       
+      50 +      next: () => alert(`已成功檢舉貼文 #${id}`),              
+      51 +      error: (err) => console.error('檢舉失敗（請確認已登入）:'
+         +, err)                                                         
+      52      });
+      53    }
+      54  }
+
+● Update(QMAH.Client\src\app\features\social\posts\posts.html)
+  ⎿  Added 1 line, removed 1 line
+      12          <span class="text-xs text-gray-500">{{ post.createdAt }
+          }</span>
+      13        </div>
+      14        <h2 class="card-title">{{ post.title }}</h2>
+      15 -      <p>{{ post.content }}</p>                                
+      15 +      <p>{{ post.contentPreview }}</p>                         
+      16        <div class="card-actions justify-end mt-4">
+      17          <button class="btn btn-sm btn-ghost" (click)="report(po
+          st.id)">🚩 檢舉</button>
+      18          <button class="btn btn-sm btn-outline btn-primary">💬 
+          留言 ({{ post.commentCount || 0 }})</button>
+
+● Now rewrite admin-events.ts against the real (now-added) endpoints, and update
+  its template:
+
+● Write(QMAH.Client\src\app\features\admin\admin-events\admin-events.ts)
+  ⎿  Added 11 lines, removed 22 lines
+       1 -import { Component, inject, OnInit } from '@angular/core';     
+       1 +import { Component, OnInit, inject } from '@angular/core';     
+       2  import { CommonModule } from '@angular/common';
+       3 -import { HttpClient } from '@angular/common/http';             
+       3  
+       5 -export interface EventItem {                                   
+       6 -  id: string;                                                  
+       7 -  title: string;                                               
+       8 -  organizer: string;                                           
+       9 -  startAt: string;                                             
+      10 -  status: string;                                              
+      11 -}                                                              
+       4 +import { AdminEventListItem, SocialApiService } from '../../../
+         +core/services/social-api';                                     
+       5  
+       6  @Component({
+       7    selector: 'app-admin-events',
+     ...
+      11    styleUrl: './admin-events.scss'
+      12  })
+      13  export class AdminEventsComponent implements OnInit {
+      21 -  private http = inject(HttpClient);                           
+      14 +  private socialApi = inject(SocialApiService);                
+      15  
+      23 -  // 清空 Mock 資料，由 DB 填入                                
+      24 -  pendingEvents: EventItem[] = [];                             
+      16 +  pendingEvents: AdminEventListItem[] = [];                    
+      17  
+      18    ngOnInit(): void {
+      19      this.loadPendingEvents();
+      20    }
+      21  
+      30 -  // 1. 發送 GET 取待審核活動                                  
+      22 +  // GET /api/v1/admin/events?reviewStatus=PENDING（需要 Admin 
+         +角色）                                                         
+      23    loadPendingEvents(): void {
+      32 -    this.http.get<EventItem[]>('/api/v1/admin/events/pending').
+         -subscribe({                                                    
+      33 -      next: (data) => {                                        
+      34 -        this.pendingEvents = data;                             
+      35 -        console.log('成功從 DB 取得待審核活動:', data);        
+      36 -      },                                                       
+      37 -      error: (err) => console.error('取得活動失敗:', err)      
+      24 +    this.socialApi.getAdminEvents({ reviewStatus: 'PENDING', pa
+         +geSize: 50 }).subscribe({                                      
+      25 +      next: (page) => (this.pendingEvents = page.items),       
+      26 +      error: (err) => console.error('取得待審核活動失敗（請確認
+         +已用管理員登入）:', err)                                       
+      27      });
+      28    }
+      29  
+      41 -  // 2. 發送 PUT 審核活動                                      
+      30 +  // PUT /api/v1/admin/events/:id/review                       
+      31    review(id: string, status: 'APPROVED' | 'REJECTED'): void {
+      43 -    this.http.put(`/api/v1/admin/events/${id}/review`, { review
+         -Status: status }).subscribe({                                  
+      32 +    this.socialApi.reviewEvent(id, { reviewStatus: status }).su
+         +bscribe({                                                      
+      33        next: () => {
+      34          alert(`活動 ${id} 已成功審核為：${status}`);
+      46 -        this.loadPendingEvents(); // 重新整理列表              
+      35 +        this.loadPendingEvents();                              
+      36        },
+      37        error: (err) => console.error('審核失敗:', err)
+      38      });
+
+● Update(QMAH.Client\src\app\features\admin\admin-events\admin-events.html)
+  ⎿  Added 5 lines, removed 3 lines
+      1 -<h1 class="text-2xl font-bold mb-6 text-error">後台：活動審核管 
+        -理 (AdminEventsController)</h1>                                 
+      1 +<h1 class="text-2xl font-bold mb-6 text-error">後台：活動審核管 
+        +理</h1>                                                         
+      2  
+      3  <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
+      4    <table class="table w-full">
+     ...
+      15        @for (event of pendingEvents; track event.id) {
+      16          <tr>
+      17            <td class="font-bold">{{ event.title }}</td>
+      18 -          <td>{{ event.organizer }}</td>                       
+      18 +          <td>{{ event.organizerDisplayName || '未設定暱稱' }}<
+         +/td>                                                           
+      19            <td>{{ event.startAt }}</td>
+      20 -          <td><span class="badge badge-warning">{{ event.status
+         - }}</span></td>                                                
+      20 +          <td><span class="badge badge-warning">{{ event.review
+         +Status }}</span></td>                                          
+      21            <td class="space-x-2">
+      22              <button class="btn btn-xs btn-success text-white" (
+          click)="review(event.id, 'APPROVED')">通過</button>
+      23              <button class="btn btn-xs btn-error text-white" (cl
+          ick)="review(event.id, 'REJECTED')">退件</button>
+      24            </td>
+      25          </tr>
+      26 +      } @empty {                                               
+      27 +        <tr><td colspan="5" class="text-center py-10 text-gray-
+         +400">目前沒有待審核活動</td></tr>                              
+      28        }
+      29      </tbody>
+      30    </table>
+
+● Now let's check the existing spec files, since I changed the components'
+  constructors/dependencies:
+  Read 5 files, ran 1 shell command (ctrl+o to expand)
+
+● posts.spec.ts/admin-events.spec.ts 也是我改的元件的測試，順手修正（它們原本連
+  import 的類別名稱都是錯的，這是既有問題不是我造成的，但既然我動了這兩支元件就
+  一起修好）：
+
+● Write(QMAH.Client\src\app\features\social\posts\posts.spec.ts)
+  ⎿  Added 61 lines, removed 9 lines
+       1  import { ComponentFixture, TestBed } from '@angular/core/testin
+          g';
+       2 +import { provideHttpClient } from '@angular/common/http';      
+       3 +import { HttpTestingController, provideHttpClientTesting } from
+         + '@angular/common/http/testing';                               
+       4  
+       3 -import { Posts } from './posts';                               
+       5 +import { PostsComponent } from './posts';                      
+       6  
+       5 -describe('Posts', () => {                                      
+       6 -  let component: Posts;                                        
+       7 -  let fixture: ComponentFixture<Posts>;                        
+       7 +describe('PostsComponent', () => {                             
+       8 +  let component: PostsComponent;                               
+       9 +  let fixture: ComponentFixture<PostsComponent>;               
+      10 +  let httpMock: HttpTestingController;                         
+      11  
+      12    beforeEach(async () => {
+      13      await TestBed.configureTestingModule({
+      11 -      imports: [Posts]                                         
+      12 -    })                                                         
+      13 -    .compileComponents();                                      
+      14 +      imports: [PostsComponent],                               
+      15 +      providers: [provideHttpClient(), provideHttpClientTesting
+         +()]                                                            
+      16 +    }).compileComponents();                                    
+      17  
+      15 -    fixture = TestBed.createComponent(Posts);                  
+      18 +    fixture = TestBed.createComponent(PostsComponent);         
+      19      component = fixture.componentInstance;
+      17 -    await fixture.whenStable();                                
+      20 +    httpMock = TestBed.inject(HttpTestingController);          
+      21    });
+      22  
+      23 +  afterEach(() => {                                            
+      24 +    httpMock.verify();                                         
+      25 +  });                                                          
+      26 +                                                               
+      27    it('should create', () => {
+      28 +    fixture.detectChanges();                                   
+      29 +    httpMock.expectOne((req) => req.url.endsWith('/social/posts
+         +')).flush({                                                    
+      30 +      items: [],                                               
+      31 +      page: 1,                                                 
+      32 +      pageSize: 20,                                            
+      33 +      totalCount: 0,                                           
+      34 +      totalPages: 0                                            
+      35 +    });                                                        
+      36      expect(component).toBeTruthy();
+      37    });
+      38 +                                                               
+      39 +  it('loads posts from the API on init', () => {               
+      40 +    fixture.detectChanges();                                   
+      41 +                                                               
+      42 +    const req = httpMock.expectOne((r) => r.url.endsWith('/soci
+         +al/posts'));                                                   
+      43 +    expect(req.request.method).toBe('GET');                    
+      44 +    req.flush({                                                
+      45 +      items: [                                                 
+      46 +        {                                                      
+      47 +          id: '11111111-1111-1111-1111-111111111111',          
+      48 +          boardCode: 'GENERAL',                                
+      49 +          userId: '22222222-2222-2222-2222-222222222222',      
+      50 +          displayName: '測試會員',                             
+      51 +          artifactId: null,                                    
+      52 +          eventId: null,                                       
+      53 +          postType: 'POST',                                    
+      54 +          publisherType: 'COMMUNITY',                          
+      55 +          title: '測試貼文',                                   
+      56 +          contentPreview: '內容預覽',                          
+      57 +          commentCount: 0,                                     
+      58 +          mediaCount: 0,                                       
+      59 +          locationName: null,                                  
+      60 +          latitude: null,                                      
+      61 +          longitude: null,                                     
+      62 +          createdAt: '2026-01-01T00:00:00Z',                   
+      63 +          updatedAt: '2026-01-01T00:00:00Z'                    
+      64 +        }                                                      
+      65 +      ],                                                       
+      66 +      page: 1,                                                 
+      67 +      pageSize: 20,                                            
+      68 +      totalCount: 1,                                           
+      69 +      totalPages: 1                                            
+      70 +    });                                                        
+      71 +                                                               
+      72 +    expect(component.posts.length).toBe(1);                    
+      73 +    expect(component.posts[0].title).toBe('測試貼文');         
+      74 +  });                                                          
+      75  });
+
+● Write(QMAH.Client\src\app\features\admin\admin-events\admin-events.spec.ts)
+  ⎿  Added 56 lines, removed 9 lines
+       1  import { ComponentFixture, TestBed } from '@angular/core/testin
+          g';
+       2 +import { provideHttpClient } from '@angular/common/http';      
+       3 +import { HttpTestingController, provideHttpClientTesting } from
+         + '@angular/common/http/testing';                               
+       4  
+       3 -import { AdminEvents } from './admin-events';                  
+       5 +import { AdminEventsComponent } from './admin-events';         
+       6  
+       5 -describe('AdminEvents', () => {                                
+       6 -  let component: AdminEvents;                                  
+       7 -  let fixture: ComponentFixture<AdminEvents>;                  
+       7 +describe('AdminEventsComponent', () => {                       
+       8 +  let component: AdminEventsComponent;                         
+       9 +  let fixture: ComponentFixture<AdminEventsComponent>;         
+      10 +  let httpMock: HttpTestingController;                         
+      11  
+      12    beforeEach(async () => {
+      13      await TestBed.configureTestingModule({
+      11 -      imports: [AdminEvents]                                   
+      12 -    })                                                         
+      13 -    .compileComponents();                                      
+      14 +      imports: [AdminEventsComponent],                         
+      15 +      providers: [provideHttpClient(), provideHttpClientTesting
+         +()]                                                            
+      16 +    }).compileComponents();                                    
+      17  
+      15 -    fixture = TestBed.createComponent(AdminEvents);            
+      18 +    fixture = TestBed.createComponent(AdminEventsComponent);   
+      19      component = fixture.componentInstance;
+      17 -    await fixture.whenStable();                                
+      20 +    httpMock = TestBed.inject(HttpTestingController);          
+      21    });
+      22  
+      23 +  afterEach(() => {                                            
+      24 +    httpMock.verify();                                         
+      25 +  });                                                          
+      26 +                                                               
+      27    it('should create', () => {
+      28 +    fixture.detectChanges();                                   
+      29 +    httpMock.expectOne((req) => req.url.endsWith('/admin/events
+         +')).flush({                                                    
+      30 +      items: [],                                               
+      31 +      page: 1,                                                 
+      32 +      pageSize: 50,                                            
+      33 +      totalCount: 0,                                           
+      34 +      totalPages: 0                                            
+      35 +    });                                                        
+      36      expect(component).toBeTruthy();
+      37    });
+      38 +                                                               
+      39 +  it('loads pending events from the API on init', () => {      
+      40 +    fixture.detectChanges();                                   
+      41 +                                                               
+      42 +    const req = httpMock.expectOne((r) => r.url.endsWith('/admi
+         +n/events'));                                                   
+      43 +    expect(req.request.method).toBe('GET');                    
+      44 +    expect(req.request.params.get('reviewStatus')).toBe('PENDIN
+         +G');                                                           
+      45 +    req.flush({                                                
+      46 +      items: [                                                 
+      47 +        {                                                      
+      48 +          id: '11111111-1111-1111-1111-111111111111',          
+      49 +          eventType: 'PLAYER',                                 
+      50 +          organizerUserId: '22222222-2222-2222-2222-22222222222
+         +2',                                                            
+      51 +          organizerDisplayName: '測試發起人',                  
+      52 +          title: '測試活動',                                   
+      53 +          startAt: '2026-01-01T00:00:00Z',                     
+      54 +          endAt: '2026-01-01T02:00:00Z',                       
+      55 +          reviewStatus: 'PENDING',                             
+      56 +          publishStatus: 'DRAFT',                              
+      57 +          reviewNote: null,                                    
+      58 +          createdAt: '2026-01-01T00:00:00Z'                    
+      59 +        }                                                      
+      60 +      ],                                                       
+      61 +      page: 1,                                                 
+      62 +      pageSize: 50,                                            
+      63 +      totalCount: 1,                                           
+      64 +      totalPages: 1                                            
+      65 +    });                                                        
+      66 +                                                               
+      67 +    expect(component.pendingEvents.length).toBe(1);            
+      68 +    expect(component.pendingEvents[0].title).toBe('測試活動'); 
+      69 +  });                                                          
+      70  });
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● npm run build 成功。前端的部分完成了，整理總結：
+
+  這輪做的事
+
+  後端（在你負責的 Social API 範圍內補齊，才有東西可讓前端串）
+  - SocialEventsAdminController 新增 GET 
+    /api/v1/admin/events?reviewStatus=PENDING（之前前端打的 .../events/pending
+    根本不存在，現在是真的能列出待審活動）
+  - SocialReportsAdminController.GetReports 從直接回傳 EF entity 改成回傳
+    ApiPage<AdminContentReportDto>（分頁 + 含檢舉人暱稱），跟專案其他 API 的 DTO
+    慣例一致
+  - ApiDtos.cs 新增 AdminEventListItemDto、AdminContentReportDto
+
+  前端
+  - 新增 core/services/social-api.ts：統一的 SocialApiService，涵蓋貼文/留言/活
+    動/公告/檢舉/媒體上傳/通知/後台審核，型別對齊實際 DTO（含 ApiPage<T>
+    分頁包裝）
+  - 沒有動 app.config.ts——裡面已經有的 XSRF/credentials interceptor 直接套用到新
+    service，不用重複處理
+  - 重寫 posts.ts：改用 SocialApiService，正確解開 ApiPage
+    分頁（原本把整包當陣列用，抓不到資料的 bug 修掉了），posts.html 的
+    post.content 改成 post.contentPreview（列表 API 本來就只回預覽）
+  - 重寫 admin-events.ts：改打真正存在的 GET 
+    /api/v1/admin/events，admin-events.html 欄位對應到
+    organizerDisplayName/reviewStatus
+  - 兩支元件的 .spec.ts 原本 import 的類別名稱就是錯的（import { Posts } from 
+    './posts' 但檔案實際 export 的是 PostsComponent），順手修正並補上
+    HttpClientTesting + 一個實際驗證資料流的測試
+
+  沒有動、且會影響到你「讓前端能呼叫」的兩個既有問題（都是我改之前就壞的）
+  - core/services/auth.ts／auth.spec.ts：spec 裡 import { Auth } from 
+    './auth'，但檔案 export 的是
+    AuthService——這個我沒碰，因為是你隊友負責的登入部分
+  - shared/components/layout/layout.spec.ts：這個檔案內容根本是誤貼了元件原始碼
+    進去（styleUrl: './layout.css'，檔案不存在），不是真正的測試——不屬於 social
+    或登入，我也沒動
+
+  這兩個問題會擋住整個 npm test：Angular
+  的測試建置是一次性整包編譯，只要任何一支 .spec.ts 有 TypeScript
+  錯誤，全部測試都跑不起來。我驗證過：修完我的兩支之後，npm test 剩下的錯誤只剩
+  auth.spec.ts 和 layout.spec.ts 這兩個——這代表 CI
+  現在會失敗，但不是因為我的改動，是既有問題。npm run 
+  build（正式建置，不含測試）我跑過了，是成功的。
+
+  建議你提醒隊友修一下 auth.spec.ts 的 import（改成
+  AuthService），layout.spec.ts
+  那個大概也需要有人清一下——這兩個都不在我們剛剛談好的範圍內，我沒有動它們。
+
+  要不要我現在也把
+  admin/reports（檢舉審核）那頁的前端補上，還是先到這裡讓你去跑一次本機測試？
+
+✻ Cooked for 4m 54s · done 上午11:24
+
+> auth跟 layout我們先修一個不影響自己的版本，admin/reports也補上                
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(QMAH.Client\src\app\core\services\auth.spec.ts)
+  ⎿  Added 4 lines, removed 4 lines
+       1  import { TestBed } from '@angular/core/testing';
+       2  
+       3 -import { Auth } from './auth';                                 
+       3 +import { AuthService } from './auth';                          
+       4  
+       5 -describe('Auth', () => {                                       
+       6 -  let service: Auth;                                           
+       5 +describe('AuthService', () => {                                
+       6 +  let service: AuthService;                                    
+       7  
+       8    beforeEach(() => {
+       9      TestBed.configureTestingModule({});
+      10 -    service = TestBed.inject(Auth);                            
+      10 +    service = TestBed.inject(AuthService);                     
+      11    });
+      12  
+      13    it('should be created', () => {
+
+● Write(QMAH.Client\src\app\shared\components\layout\layout.spec.ts)
+  ⎿  Added 22 lines, removed 20 lines
+       1 -import { Component, inject } from '@angular/core';             
+       2 -import { RouterOutlet, RouterLink } from '@angular/router';    
+       3 -import { AuthService, UserRole } from '../../../core/services/a
+         -uth';                                                          
+       1 +import { ComponentFixture, TestBed } from '@angular/core/testin
+         +g';                                                            
+       2 +import { provideRouter } from '@angular/router';               
+       3  
+       5 -@Component({                                                   
+       6 -  selector: 'app-layout',                                      
+       7 -  standalone: true,                                            
+       8 -  imports: [RouterOutlet, RouterLink],                         
+       9 -  templateUrl: './layout.html',                                
+      10 -  styleUrl: './layout.css'                                     
+      11 -})                                                             
+      12 -export class LayoutComponent {                                 
+      13 -  auth = inject(AuthService);                                  
+       4 +import { LayoutComponent } from './layout';                    
+       5  
+      15 -  switch(role: 'User' | 'Admin') {                             
+      16 -    const userMap: Record<string, UserRole> = {                
+      17 -      User: { name: '一般玩家 (Alice)', role: 'User', token: 'u
+         -ser-token' },                                                  
+      18 -      Admin: { name: '系統管理員 (Admin)', role: 'Admin', token
+         -: 'admin-token' }                                              
+      19 -    };                                                         
+      20 -    this.auth.switchUser(userMap[role]);                       
+      21 -  }                                                            
+      22 -}                                                              
+       6 +describe('LayoutComponent', () => {                            
+       7 +  let component: LayoutComponent;                              
+       8 +  let fixture: ComponentFixture<LayoutComponent>;              
+       9 +                                                               
+      10 +  beforeEach(async () => {                                     
+      11 +    await TestBed.configureTestingModule({                     
+      12 +      imports: [LayoutComponent],                              
+      13 +      providers: [provideRouter([])]                           
+      14 +    }).compileComponents();                                    
+      15 +                                                               
+      16 +    fixture = TestBed.createComponent(LayoutComponent);        
+      17 +    component = fixture.componentInstance;                     
+      18 +    fixture.detectChanges();                                   
+      19 +  });                                                          
+      20 +                                                               
+      21 +  it('should create', () => {                                  
+      22 +    expect(component).toBeTruthy();                            
+      23 +  });                                                          
+      24 +});                                                            
+
+● Now let's run the full test suite to confirm everything is unblocked:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 5 test files / 8 tests pass now. 只改了兩支
+  .spec.ts（測試檔本身），auth.ts／layout.ts
+  的實際邏輯完全沒動，不會跟隊友衝突。
+
+  ---
+
+  現在補 admin/reports（檢舉審核）前端頁面。
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Write(QMAH.Client\src\app\features\admin\admin-reports\admin-reports.ts)
+  ⎿  Wrote 51 lines to
+     QMAH.Client\src\app\features\admin\admin-reports\admin-reports.ts
+       1 import { Component, OnInit, inject } from '@angular/core';
+       2 import { CommonModule } from '@angular/common';
+       3 
+       4 import { AdminContentReport, SocialApiService } from '../../../c
+         ore/services/social-api';
+       6 @Component({
+       7   selector: 'app-admin-reports',
+       8   standalone: true,
+       9   imports: [CommonModule],
+      10   templateUrl: './admin-reports.html',
+     … +46 lines (ctrl+o to expand)
+
+● Write(QMAH.Client\src\app\features\admin\admin-reports\admin-reports.html)
+  ⎿  Wrote 33 lines to
+     QMAH.Client\src\app\features\admin\admin-reports\admin-reports.html
+       1 <h1 class="text-2xl font-bold mb-6 text-error">後台：檢舉審核管
+         理</h1>
+       2 
+       3 <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
+       4   <table class="table w-full">
+       6       <tr>
+       7         <th>檢舉類型</th>
+       8         <th>檢舉人</th>
+       9         <th>理由</th>
+      10         <th>詳細說明</th>
+     … +29 lines (ctrl+o to expand)
+
+● Write(QMAH.Client\src\app\features\admin\admin-reports\admin-reports.scss)
+  ⎿  Wrote 1 line to
+     QMAH.Client\src\app\features\admin\admin-reports\admin-reports.scss
+      1 (No content)
+
+● Write(QMAH.Client\src\app\features\admin\admin-reports\admin-reports.spec.ts)
+  ⎿  Wrote 70 lines to
+     QMAH.Client\src\app\features\admin\admin-reports\admin-reports.spec.ts
+       1 import { ComponentFixture, TestBed } from '@angular/core/testing
+         ';
+       2 import { provideHttpClient } from '@angular/common/http';
+         '@angular/common/http/testing';
+       4 
+       5 import { AdminReportsComponent } from './admin-reports';
+       6 
+       8   let component: AdminReportsComponent;
+       9   let fixture: ComponentFixture<AdminReportsComponent>;
+      10   let httpMock: HttpTestingController;
+     … +63 lines (ctrl+o to expand)
+
+● Now wire the route and add a nav link (additive one-liner in layout.html):
+
+● Update(QMAH.Client\src\app\app.routes.ts)
+  ⎿  Added 2 lines
+      3  
+      4  import { PostsComponent } from './features/social/posts/posts';
+      5  import { AdminEventsComponent } from './features/admin/admin-eve
+         nts/admin-events';
+      6 +import { AdminReportsComponent } from './features/admin/admin-re
+        +ports/admin-reports';                                           
+      7  
+      8  export const routes: Routes = [
+      9    {
+     ...
+      13        { path: '', redirectTo: 'social/posts', pathMatch: 'full'
+           },
+      14        { path: 'social/posts', component: PostsComponent },
+      15        { path: 'admin/events', component: AdminEventsComponent }
+          ,
+      16 +      { path: 'admin/reports', component: AdminReportsComponent
+         + },                                                            
+      17      ]
+      18    },
+      19    { path: '**', redirectTo: '' }
+
+● Update(QMAH.Client\src\app\shared\components\layout\layout.html)
+  ⎿  Added 1 line
+      35  
+      36        <li class="menu-title text-error">🛡️ 後台管理專區</li>
+      37        <li><a routerLink="/admin/events" [class.disabled]="!auth
+          .isAdmin()">活動審核 (PUT /admin/events)</a></li>
+      38 +      <li><a routerLink="/admin/reports" [class.disabled]="!aut
+         +h.isAdmin()">檢舉審核 (PUT /admin/reports)</a></li>            
+      39      </ul>
+      40    </div>
+      41  </div>
+
+● Now build + test everything to confirm it's all green:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Build 跟測試都過了（6 個測試檔、10 個測試全綠）。最後也重新 build
+  一次後端確認沒有漏掉東西：
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 總結
+
+  測試修復（只碰 .spec.ts，不動 auth.ts/layout.ts 本身）
+  - auth.spec.ts：import 改成正確的 AuthService
+  - layout.spec.ts：原本內容其實是誤貼的元件原始碼（連 .css
+    都指到不存在的檔案），改成正常的 smoke test（provideRouter([]) +
+    LayoutComponent）
+
+  新增：檢舉審核後台頁面
+  - features/admin/admin-reports/：admin-reports.ts/.html/.scss/.spec.ts
+    - 列表打 GET /api/v1/admin/reports?status=PENDING
+    - 「確認違規並隱藏」→ PUT /admin/reports/:id，body { status: 'RESOLVED', 
+      contentAction: 'HIDDEN' }
+    - 「駁回」→ { status: 'REJECTED' }
+  - app.routes.ts 加了一行 admin/reports 路由
+  - layout.html 側邊選單加一行連結（只加一行，沒動其他內容）
+
+  全部驗證過：
+  - dotnet build QMAH.sln 成功
+  - npm run build 成功
+  - npm test -- --watch=false：6 個測試檔、10 個測試全過
+
+  到這裡，Social 相關的 API 稽核、bug 修復、通知服務整併、命名整理，以及 Angular
+  前端（貼文牆、活動審核、檢舉審核）都已經串起來且驗證過建置/測試。剩下需要你們
+  team做的是：隊友的會員登入 UI 接上之後，才能實際測試需要登入的寫入型端點（發文
+  、留言、檢舉、活動報名/審核）。
+
+✻ Baked for 1m 45s · done 上午11:34
+
+> 你建議我們該怎麼測試這個專案?在vs2026上面設定兩個啟動專案嗎?                  
+
+  Read 4 files, listed 1 directory (ctrl+o to expand)
+● Answer: 是的，VS2026 的 Multiple Startup Projects
+  是對的方向——而且好消息是專案裡已經有一個現成設定可以直接用。
+
+  用 VS2026 測試的具體做法
+
+  打開 QMAH.sln，右上角的啟動設定下拉選單裡已經有 QMAH.slnLaunch
+  定義好的選項，選 「QMAH 後端主機與管理後台（API＋Razor）」 按
+  F5，實際上會同時啟動：
+  - QMAH.Api（https://localhost:7249）
+  - QMAH.Client（Angular，透過 .esproj 的 npm start）
+
+  ⚠️ 但這個名字有點誤導——它的名稱寫「API＋Razor」，但 QMAH.slnLaunch
+  裡實際列的專案是 QMAH.Api + QMAH.Client，根本沒有 
+  QMAH.Web。對你來說這其實是好事（因為 Web 已經不用了，這個 preset
+  剛好就是你要的 Api+Angular 組合），只是名字容易讓人誤會還在啟動 Razor
+  後台。要不要我順手把這個名字改成比較準確的（例如「QMAH API＋Angular
+  使用者前台」）？這只是改 QMAH.slnLaunch
+  裡的一個字串，風險很低，但畢竟是全組共用的方案設定，我想先問過你。
+
+  測試流程：
+  1. 確認本機 QMAH 資料庫已還原好（README 的步驟）
+  2. F5 啟動上面那個 profile → API 和 Angular dev server 都會起來
+  3. 瀏覽器開 http://localhost:4200，不要開 7249 —— Angular 的 dev server
+     proxy（proxy.conf.json）會把 /api 轉給 7249，這樣 cookie 才會落在 4200 這個
+     origin，跟 Angular 的 withCredentials/XSRF 設定一致
+  4. 匿名可讀的端點（貼文列表、活動列表、公告）現在應該直接能動，可以先從
+     social/posts 頁面驗證
+
+  需要登入才能測的部分（發文、留言、檢舉、活動報名、後台審核）：在隊友的真實登入
+  UI 接上 Angular 之前，有兩個選擇：
+  - 快一點：直接用 https://localhost:7249/scalar 開 API 內建的 Scalar
+    文件頁，對著 POST /api/v1/account/login（README 有列展示帳密，例如
+    admin@qmah.local
+    測後台審核）跑一次，之後同一瀏覽器分頁測其他端點——這樣能繞過
+    Angular，單獨驗證後端邏輯對不對
+  - 完整一點：等隊友把真的登入串進 Angular 後，直接在 localhost:4200 走完整流程
+
+  另外要提的：目前完全沒有自動化的後端測試
+
+  CLAUDE.md 裡也記著這件事——目前 solution 沒有任何 .NET Test 專案，Social API
+  的正確性現在完全靠你手動測。如果你想要「以後改了 code
+  能自動抓回歸」而不是每次都手動點，可以考慮之後加一個 QMAH.Api.Tests（用
+  WebApplicationFactory 對著測試 DB
+  跑整合測試）。這是比較大的決定，我沒有先動，你要的話我們可以另外討論怎麼設計。
+
+  要我先把 QMAH.slnLaunch 那個名字改掉嗎？
+
+✻ Crunched for 1m 2s · done 上午11:44
+
+> 我做到第4步之後顯示無法連線，我已經確認是4200了                               
+
+● 讓我實際確認一下 4200 這邊到底有沒有真的啟動起來。
+
+  Read 1 file, ran 5 shell commands (ctrl+o to expand)
+
+● npm start 直接手動跑起來完全沒問題，4200 有正常監聽（PID
+  9640）。這代表前端程式碼本身沒問題，問題出在 VS2026 到底有沒有真的把 Angular
+  專案啟動起來。我先把 API 也用同樣方式起一份來對照：
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● 兩邊直接手動啟動都完全正常——API 在 https://localhost:7249 監聽，也自動找到本機
+  (localdb)\MSSQLLocalDB;Database=QMAH；Angular 在 http://localhost:4200
+  監聽。兩個服務現在都已經在你機器上跑起來了，你可以直接去 http://localhost:4200
+  測，應該就能連上了。
+
+  所以問題不是程式碼，是 VS2026 那次沒有真的把兩個專案都啟動起來。想確認一下：
+
+  1. 你是從 VS 上排按鈕旁邊的下拉選單，明確選了 「QMAH 
+     後端主機與管理後台（API＋Razor）」 這個 launch profile 再按 F5／▶️
+     的嗎？還是直接按了 F5（用的是之前殘留的預設單一啟動專案，例如只啟動了
+     QMAH.Web 或只啟動了某一個專案)？.slnLaunch 定義的是「多專案」設定檔，VS
+     不會自動幫你選，要在下拉選單裡手動點一次。
+  2. 按下去之後，VS 有沒有跳出兩個輸出視窗（一個是 API 的主控台，一個是 Node/npm
+     的輸出）？如果只看到一個，就代表 Angular 那個專案沒被啟動。
+
+  你可以先照你原本的流程重試一次，順便看一下上面兩點；如果還是連不上，把 VS
+  的「輸出」視窗（下拉選單選「Node.js」或對應的 QMAH.Client 頻道）貼給我，我再幫
+  你看實際錯誤訊息。在那之前，你現在就可以先用我剛開的這兩個服務（4200 +
+  7249）開始測。
+
+✻ Cogitated for 1m 47s · done 上午11:59
+
+> 這次跑的時候出現這個例外:System.IO.IOException: 'Failed to bind to address    
+  https://127.0.0.1:7249: address already in use.'                              
+
+● 對，是我剛剛為了診斷手動起的那個 API 背景程序還占用著 7249，跟 VS
+  這次要啟動的衝突了。我把它關掉。
+
+● Stop Task
+  ⎿  cd "C:\Users\User\source\repos\QMAH" && dotnet run --project
+     QMAH.Api/QMAH.Api.csproj --launch-profile https 2>&1 · stopped
+
+● Stop Task
+  ⎿  cd "C:\Users\User\source\repos\QMAH\QMAH.Client" && npm start 2>&1 ·
+     stopped
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 7249 已經釋放了，但 4200 那個 node 行程（npm start
+  產生的子行程）沒有真的被殺掉，我手動清一下：
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Port 4200/7249 都已經沒有 LISTENING 狀態了（剩下的都是
+  TIME_WAIT，是舊連線自然消退，不影響重新綁定）。清乾淨了。
+
+  這次連不上的原因
+
+  不是 VS2026 設定錯，是我自己為了幫你診斷，手動在背景起了一份 API（占用
+  7249）。你後來從 VS2026 啟動時，VS 也想綁 7249，就撞上了 address already in 
+  use。跟你 VS 的設定完全無關——這證實了你 VS2026 的 multi-startup
+  設定其實是對的，第一次「無法連線」很可能只是單純没選對 launch profile
+  或沒等編譯完成。
+
+  現在麻烦你直接回到 VS2026 重新按一次 F5（用「QMAH
+  後端主機與管理後台（API＋Razor）」這個 profile），port
+  都乾淨了，應該就能正常啟動、瀏覽器開 http://localhost:4200 就能連上。
+
+✻ Sautéed for 24s · done 下午12:02
+
+> 還是不行，還有甚麼方法能試                                                    
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 讓我檢查一個很常見但 netstat/tasklist 看不到的 Windows 問題——Hyper-V/WSL
+  保留的動態連接埠範圍，有時候會讓某個
+  port「明明沒有任何程序在用」卻還是綁不上去：
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 我這邊查過了：目前沒有任何 dotnet.exe/node.exe 在跑，4200/7249/5147/5183/7039
+  都完全沒有人在監聽，也不是 Windows 那種常見的「Hyper-V/WSL
+  保留連接埠」問題（我查了 netsh interface ipv4 show excludedportrange，7249
+  不在保留範圍內）。所以就系統層面來說，環境是乾淨的。
+
+  會出現在「乾淨環境」下還是失敗，通常是這幾種情況：
+
+  1. VS 的偵錯工作階段沒有真的停乾淨——因為第一次的行程是我從外部用 taskkill
+     殺掉的，不是透過 VS 的「停止偵錯」按鈕結束的，VS 內部可能還記著上一個工作階
+     段的狀態，導致這次「F5」其實沒有真的重新啟動、或是又疊了一份。建議：在 VS
+     裡按一次停止偵錯（方形停止鈕），然後完全關閉 Visual 
+     Studio，再重新開啟方案、重新選 profile、按 F5。
+  2. 方案屬性裡同時設定了兩套啟動邏輯——去確認一下：滑鼠右鍵點方案
+     →「屬性」→「通用屬性」→「啟動專案」，看看是不是也選了「多個啟動專案」而且
+     QMAH.Api 被設成 Start（這樣就會跟 .slnLaunch 的 profile
+     疊加，變成同時啟動兩份 API，自己打自己）。如果有，把它改回「單一啟動專案」
+     或清空，只靠上排下拉選單選 .slnLaunch 的 profile 來啟動。
+
+  最直接的方法：先不要靠 VS2026 的多專案啟動，改用專案本來就準備好的、我已經驗證
+  過確實可行的兩終端機做法（README 也是這樣寫的）：
+
+  # 終端機 1
+  dotnet run --project .\QMAH.Api\QMAH.Api.csproj --launch-profile https
+
+  # 終端機 2
+  cd QMAH.Client
+  npm start
+
+  這樣你可以先不被 VS 的啟動設定卡住，直接開始測 Social API + Angular。VS2026
+  那邊的問題我們可以之後再慢慢查——如果你想繼續查，麻煩貼一下這次跳出來的完整錯誤
+  訊息（確認是不是還是同一句 address already in use，還是變成別的錯誤了）。
+
+✻ Worked for 1m 5s · done 下午12:56
+
+> 可以用兩個終端機跑，但結束之後再用ide執行會拋出跟剛才一樣的例外，然後跑出來的 
+  前端只能顯示部分貼文，代處理活動和檢舉沒辦法查看，也無法查看留言              
+
+● 先處理連續兩件事：VS 那邊的 port
+  問題，跟前端「看不到待審清單/看不到留言」是兩個不同的原因。我先查 port
+  現在的狀態。
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● 抓到了——QMAH.Api.exe（PID 25420）跟一個 node.exe（PID 19812）是你手動測試那次
+  留下的孤兒行程，父行程（dotnet.exe/終端機）已經關掉了，但實際在監聽 port
+  的子行程沒有一起被結束掉，所以一直佔著 7249/5147/4200，VS 再啟動當然會撞。這是
+  Windows 上滿常見的狀況：直接關掉終端機視窗，不一定會把 dotnet run
+  實際產生的子行程（QMAH.Api.exe）一起殺掉，要用 Ctrl+C
+  等它印出「正在關閉」才是乾淨結束。
+
+  先清掉這兩個孤兒行程：
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Port 問題確認是孤兒行程造成的，已清乾淨，現在 VS
+  應該可以正常啟動了。以後結束測試時記得用終端機視窗裡按 Ctrl+C
+  等它印出關閉訊息，不要直接叉掉視窗——dotnet run 實際在跑的是子行程
+  QMAH.Api.exe，直接關視窗常常不會一起帶走它。
+
+  再看「待審清單看不到、留言也看不到」這兩個，原因不一樣：
+
+  待審活動／檢舉看不到 —— 預期中的狀況，不是 bug
+
+  GET /api/v1/admin/events、GET /api/v1/admin/reports 都掛了 [Authorize(Roles = 
+  "Admin")]。現在 Angular
+  這邊還沒有真的登入流程（隊友的部分還沒接上，AuthService
+  目前是假資料），所以打這兩支 API 一定拿到 401。我的元件目前只有
+  console.error(...)，畫面上不會顯示任何錯誤，就直接變成空清單——看起來像「壞掉」
+  但其實是「沒登入」。你可以打開瀏覽器開發者工具的 Network 分頁，重新整理
+  /admin/events 頁面，應該會看到那兩支請求回 401，可以確認一下是不是這個狀況。
+
+  這部分要嘛等隊友登入接好，要嘛我可以先加一個只用於開發測試、不影響 auth.ts
+  的暫時登入小工具（直接呼叫已經存在的 POST /api/v1/account/login，用 README
+  的展示帳密 admin@qmah.local 之類），讓你現在就能測到需要登入的功能。要我加嗎？
+
+  留言看不到 —— 這個是我漏做的部分
+
+  目前貼文列表用的是 GET /api/v1/social/posts，這支只回列表用的
+  DTO（標題、預覽、留言數），不含實際留言內容。要看留言要另外呼叫 GET 
+  /api/v1/social/posts/{id}（貼文詳情，裡面才有 comments
+  陣列）。我當初只顧著把列表串起來，posts.html 上的「💬 留言」按鈕根本沒接
+  (click) 事件——這是我漏掉的功能，不是後端問題。我現在可以幫你補一個貼文詳情頁（
+  顯示完整內容、留言列表、留言表單）。
+
+  「貼文只能顯示部分」我猜是同一類問題：目前 loadPosts() 固定抓 pageSize: 
+  20，沒有分頁/載入更多的按鈕，超過 20 篇就看不到後面的。
+
+  要我現在把留言詳情頁跟分頁/載入更多一起補上嗎？測試登入小工具也可以一起加。
+
+✻ Cogitated for 1m 31s · done 下午1:09
+
+> 我這次直接用ide跑又變回無法連線了，你覺得這會是前端的問題嗎?你需要我檢查網頁  
+  的console或者啟動專案設定的偵錯欄位嗎?                                        
+
+● 我先直接查一下現在系統上到底有沒有東西真的在跑——這樣能幫我們縮小範圍，不用你先
+  猜。
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● 查到重要線索了——這次不是 port 衝突。目前狀態：
+
+  - QMAH.Api.exe（PID 13472）有正常listening在 127.0.0.1:7249 / 5147 →
+    後端這次是有成功啟動的
+  - node.exe（PID 26464）行程本身有在跑，但完全沒有 listen 在 
+    4200，它綁定的是兩個隨機高位 port（53163、53213），且都是跟另一個本機 port
+    的 ESTABLISHED 連線
+
+  這組隨機 port + ESTABLISHED 迴圈連線的樣子，看起來不像 ng serve 本身的 dev
+  server，比較像是 VS 對 Node 
+  專案掛偵錯器（debugger）用的內部通訊管道——也就是說，VS 這次可能只把 debugger
+  attach 上去了，但 ng serve 實際的建置/監聽可能還沒跑完、卡住了，或是在 VS
+  幫你包的偵錯環境下失敗了，導致 4200 從頭到尾沒被綁定。
+
+  回答你的問題：
+
+  這次看起來確實是前端（Angular / VS 啟動 QMAH.Client 這個 
+  .esproj）這邊沒起來，不是後端問題。
+
+  網頁 console 幫不上忙——因為如果 4200
+  沒人監聽，瀏覽器連頁面都載入不了，不會有任何 JS 在跑，console
+  自然是空的，先不用看。
+
+  真正有用的是這兩個，麻煩你檢查一下：
+
+  1. VS 的「輸出」視窗（Output window）：上面的下拉選單切到 QMAH.Client
+     或「Node.js」那個頻道，把裡面完整內容貼給我——重點是看 npm start/ng serve
+     到底有沒有跑到 Application bundle generation complete 跟 Local: 
+     http://localhost:4200/ 這幾行，還是中途就停住或報錯了。
+  2. QMAH.Client 專案的偵錯設定：對 QMAH.Client 專案按右鍵
+     →「屬性」，看一下裡面關於啟動命令/偵錯的欄位（.esproj 通常是 StartupCommand
+     npm start）有沒有被改動過，或是不是選到了非預設的設定檔。
+
+  你把這兩個資訊給我，我再判斷是「還在編譯只是要等」還是「VS 的 JS 專案偵錯跟 ng
+  serve 衝突了」。
+
+✻ Sautéed for 1m 6s · done 下午1:15
+
+> QMAH.Api.exe' (CoreCLR: DefaultDomain): 已載入 'C:\Program                    
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Private.CoreLib.dll' 
+  。已略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。        
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Users\User\source\repos\QMAH\QMA 
+  H.Api\bin\Debug\net10.0\QMAH.Api.dll'。已載入符號。                           
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Runtime.dll'。已略過 
+  載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。                
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'c:\program files\microsoft visual   
+  studio\18\community\common7\ide\extensions\microsoft\managedprojectsystem\Hot 
+  Reload\net6.0\Microsoft.AspNetCore.Watch.BrowserRefresh.dll'。已略過載入符號  
+  。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。                        
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'c:\program files\microsoft visual   
+  studio\18\community\common7\ide\extensions\microsoft\managedprojectsystem\Hot 
+  Reload\net10.0\Microsoft.Extensions.DotNetDeltaApplier.dll'。已略過載入符號。 
+  模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。                          
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Linq.dll'。已略過載  
+  入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。                  
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Runtime.Loader.dll'  
+  。已略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。        
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Console.dll'。已略過 
+  載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。                
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Private.Uri.dll'。已 
+  略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。            
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.IO.Pipes.dll'。已略  
+  過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。              
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Collections.dll'。已 
+  略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。            
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Runtime.InteropServi 
+  ces.dll'。已略過載入符號。模組已最佳化，並已啟用 [Just My Code]               
+  偵錯工具選項。                                                                
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Collections.Concurre 
+  nt.dll'。已略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。 
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Threading.dll'。已略 
+  過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。              
+  QMAH.Api.exe' (CoreCL                                                         
+  ──── (168 lines hidden) ───────────────────────────────────────────────────── 
+  載入 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Run 
+  time.Extensions.dll'。已略過載入符號。模組已最佳化，並已啟用 [Just My Code]   
+  偵錯工具選項。                                                                
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.12\Microsoft.Extensions.Val 
+  idation.dll'。已略過載入符號。模組已最佳化，並已啟用 [Just My Code]           
+  偵錯工具選項。                                                                
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'Anonymously Hosted DynamicMethods   
+  Assembly'。                                                                   
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.12\Microsoft.AspNetCore.Dia 
+  gnostics.Abstractions.dll'。已略過載入符號。模組已最佳化，並已啟用 [Just My   
+  Code] 偵錯工具選項。                                                          
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Collections.NonGener 
+  ic.dll'。已略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。 
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Runtime.Intrinsics.d 
+  ll'。已略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。     
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Net.Security.dll'。  
+  已略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。          
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Formats.Asn1.dll'。  
+  已略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。          
+  Microsoft.Hosting.Lifetime: Information: Now listening on:                    
+  https://localhost:7249                                                        
+  Microsoft.Hosting.Lifetime: Information: Now listening on:                    
+  http://localhost:5147                                                         
+  Microsoft.Hosting.Lifetime: Information: Application started. Press Ctrl+C to 
+  shut down.                                                                    
+  Microsoft.Hosting.Lifetime: Information: Hosting environment: Development     
+  Microsoft.Hosting.Lifetime: Information: Content root path:                   
+  C:\Users\User\source\repos\QMAH\QMAH.Api                                      
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.NETCore.App\10.0.12\System.Collections.Immutabl 
+  e.dll'。已略過載入符號。模組已最佳化，並已啟用 [Just My Code] 偵錯工具選項。  
+  QMAH.Api.exe' (CoreCLR: clrhost): 已載入 'C:\Program                          
+  Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.12\Microsoft.AspNetCore.Web 
+  Utilities.dll'。已略過載入符號。模組已最佳化，並已啟用 [Just My Code]         
+  偵錯工具選項。                                                                
+  '.NET TP Wait' (13032) 執行緒以返回碼 0 (0x0) 結束。                          
+  '.NET TP Worker' (21080) 執行緒以返回碼 0 (0x0) 結束。                        
+  '.NET TP Worker' (25420) 執行緒以返回碼 0 (0x0) 結束。                        
+  '.NET TP Worker' (8708) 執行緒以返回碼 0 (0x0) 結束。                         
+  '.NET TP Worker' (19360) 執行緒以返回碼 0 (0x0) 結束。                        
+  '.NET TP Worker' (21224) 執行緒以返回碼 0 (0x0) 結束。                        
+  '.NET TP Worker' (16732) 執行緒以返回碼 0 (0x0) 結束。                        
+  '.NET TP Worker' (24596) 執行緒以返回碼 0 (0x0) 結束。                        
+  '.NET TP Worker' (20252) 執行緒以返回碼 0 (0x0) 結束。這個嗎?啟動命令只有npm  
+  start                                                                         
+● 分析你貼的這份 log：這是 API（QMAH.Api.exe）的 .NET 
+  偵錯輸出，不是前端的。而且好消息是——這份 log 顯示 API 這次完全正常啟動：
+
+  QMAH.Api: Information: 已自動找到 QMAH
+  資料庫：(localdb)\MSSQLLocalDB;Database=QMAH
+  Microsoft.Hosting.Lifetime: Information: Now listening on:
+  https://localhost:7249
+  Microsoft.Hosting.Lifetime: Information: Now listening on:
+  http://localhost:5147
+  Microsoft.Hosting.Lifetime: Information: Application started. Press Ctrl+C to
+  shut down.
+
+  中間那幾行 Microsoft.Data.SqlClient.SqlException 不用擔心——那是
+  QmahDatabaseConnectionResolver 依序嘗試候選連線（先試設定值、再試 .、再試其他
+  LocalDB instance...）時，沒開的那些候選連線失敗所丟出的例外，VS
+  偵錯器預設會把「有被接住的例外」也印出來（first-chance exception），最後找到
+  (localdb)\MSSQLLocalDB 成功接上，跟我剛才用 netstat 查到 QMAH.Api.exe 正常監聽
+  7249 的結果完全吻合。API 這次沒問題，這不是你要找的錯誤來源。
+
+  「啟動命令只有 npm start」——這個也確認了，QMAH.Client 的 esproj
+  設定本身沒有被改壞，是正常的預設值。
+
+  問題還是卡在前端那次真正的執行輸出，但你剛剛貼的是 .NET 那份，不是 Node
+  的。麻煩幫我切到正確的來源：
+
+  1. 打開 VS 底部的「輸出」視窗（View → Output，或 Ctrl+Alt+O）
+  2. 視窗最上面有個「顯示輸出來源」下拉選單，目前應該是選在「.NET Core
+     主控台偵錯」（就是你剛貼的那份）
+  3. 把它切到跟 QMAH.Client / Node.js 相關的那個選項（名稱可能是「Node.js
+     主控台偵錯」或直接寫 QMAH.Client）
+  4. 把那個分頁完整的內容貼給我
+
+  我要看的是這裡面有沒有出現 Application bundle generation complete 和 Local: 
+  http://localhost:4200/
+  這兩行——如果編譯過程中途就停住或報錯，那就是真正卡住的地方。
+
+✻ Worked for 42s · done 下午1:23
+
+> 我的輸出來源沒有你提到的選項，剛剛貼給你的上面只寫"偵錯"                      
+
+● 其實不用在 VS 裡找了——剛剛你貼的那份 log 裡有一行線索：
+
+  Verbose logs are written to:
+  C:\Users\User\AppData\Local\Temp\visualstudio-js-debugger.txt
+
+  這是 VS 的 JS 偵錯器自己寫的詳細記錄檔，我直接讀這個檔案看看。
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Found it, and it's freshly written (13:28). Let me read the tail of it —
+  that's where the actual npm start output and any errors will be.
+
+  Read 1 file, searched memories (ctrl+o to expand)
+
+● 證實了：這份 log 完全是「瀏覽器端 CDP 偵錯」的往來記錄，VS
+  開的瀏覽器分頁確實有正確指向 http://localhost:4200/（不是網址設錯），但從
+  1789362693到 1789363701（跨了約 17
+  分鐘，中間應該是你手動重整了好幾次）每一次都是 
+  net::ERR_CONNECTION_REFUSED——代表整段時間 4200 這個 port
+  根本沒有任何東西在監聽。
+
+  而且這份記錄檔裡完全沒有出現任何 npm/ng serve
+  子行程被啟動的痕跡，只有「開瀏覽器 + 掛 JS 偵錯器」這件事。合理推測：VS2026 
+  這次的多重啟動，實際上只把瀏覽器跟 JS 偵錯器叫起來了，npm start（也就是 ng 
+  serve）這個子行程可能根本沒被成功啟動、或啟動了但沒被這份 log 記錄下來。
+
+  結合我們這幾輪的觀察：
+  - API 這邊透過 VS 啟動，每次都成功
+  - Angular 這邊透過 VS 的 .esproj
+    啟動，已經連續好幾次出現不同形式的失敗（完全沒起、或起了但沒綁 port）
+  - 手動在終端機 npm start，每次都成功、秒開
+
+  這個組合（Angular 21 + esbuild + VS2026 新版 JavaScript Project
+  System）目前看起來不太穩定，比較像是 VS2026
+  這個功能本身還不夠成熟，不是你程式碼的問題，我也不太建議再花時間跟它耗下去。
+
+  建議：Angular 這半邊乾脆別靠 VS2026 啟動
+
+  - API：繼續用 VS2026 開（或 dotnet run），這部分一直很穩
+  - Angular：固定用終端機手動 npm start（或用 repo 裡已經寫好的 VS Code compound
+    launch config「QMAH 使用者前台開發（API 後端＋Angular
+    前端）」，那個走的是完全不同的啟動機制，不經過 VS 的 JS 偵錯器）
+
+  這樣兩邊都是用「已經驗證過會成功」的方式啟動，不用再賭 VS2026
+  這次會不會正常。之後如果 VS 更新版本讓這功能穩定了，再切回去也不遲。
+
+  要不要我先確認一下你現在機器上的狀態乾不乾淨（有沒有殘留行程），讓你可以直接照
+  這個方式重新啟動一次？
+
+✻ Cogitated for 1m 34s · done 下午1:30
+
+> 好，repo裡的那個要怎麼用?                                                     
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● 還留著上次 VS2026 啟動的殘留行程（QMAH.Api.exe PID 13472 佔著
+  7249/5147，還有一個沒真的服務 4200 的 node.exe），先清掉：
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 乾淨了。這個 compound launch 是給 VS Code（不是 VS2026）用的，跟 VS2026 的
+  .esproj JS 偵錯器是完全不同的機制——它是直接開一個終端機跑 npm 
+  start，你看得到即時輸出，也不會有前一輪那種「debugger 連上瀏覽器但沒人在跑 dev
+  server」的問題。步驟：
+
+  用法
+
+  1. 用 VS Code（不是 Visual Studio）打開整個 repo 資料夾：VS Code → 檔案 →
+     開啟資料夾 → 選 C:\Users\User\source\repos\QMAH（要開整個根目錄，不是某個子
+     專案，這樣才會讀到 .vscode/）
+  2. 第一次開啟這個資料夾時，tasks.json 裡有個 runOn: folderOpen 的工作會自動幫
+     你裝好需要的擴充套件（ms-dotnettools.csdevkit、ms-dotnettools.csharp
+     這兩個是讓 C#
+     偵錯能動的關鍵）。如果跳出安裝提示，讓它跑完，可能需要重新載入視窗一次。
+  3. 左側點「執行和偵錯」圖示（或 Ctrl+Shift+D）
+  4. 最上面的下拉選單選 「QMAH 使用者前台開發（API 後端＋Angular 前端）」
+  5. 按綠色播放鍵（或 F5）
+
+  這會同時做兩件事：
+  - 跑 dotnet build（Debug）→ 用偵錯模式啟動 QMAH.Api，https://localhost:7249
+  - 開一個整合終端機執行 npm start（ng serve），http://localhost:4200
+
+  6. 底下會分別看到兩個輸出面板/終端機，等到看到：
+     - API 那邊出現 Now listening on: https://localhost:7249
+     - Angular 那邊出現 Local: http://localhost:4200/
+
+     兩個都出現才算真的準備好（跟你剛才貼的 log 格式很像，你已經會認這兩行了）
+  7. 手動開瀏覽器到 http://localhost:4200
+
+  結束時：VS Code 的「執行和偵錯」面板上按停止（方塊圖示）會停掉 API
+  那個偵錯工作階段；Angular 那個是跑在終端機裡的 npm start，直接在該終端機視窗按
+  Ctrl+C 結束，跟之前提醒的一樣——不要直接叉掉整個 VS Code
+  視窗，不然容易又留下孤兒行程。
+
+✻ Worked for 33s · done 下午1:33
+
+● Remote Control not started here · another Claude Code on this machine 
+  (started 3h ago) already has Remote Control for this conversation, so 
+  this terminal can't see your sessions on other machines and they can't
+  reach it · run /remote-control to move it to this terminal
+
+> 基本上就是vs2026跟vs code分開執行嗎?                                          
+
+● 不完全是「兩個 IDE 同時開著各做各的」，比較精確的講法是：每個服務只能有一個地
+  方負責啟動它，不能兩邊同時搶著開同一個。
+
+  實際上比較乾淨的用法是二選一：
+
+  選項 A（建議，最簡單）：整套都交給 VS Code
+  - 用 VS Code 開 repo，按那個 compound launch，一次把 API + Angular 都啟動好
+  - VS2026 這次就完全不用開來啟動任何東西
+  - 這是目前唯一「兩個服務一次啟動、而且穩定會成功」的方式
+
+  選項 B：你還是想用 VS2026 寫/偵錯 C# 的話
+  - VS2026 只負責啟動 QMAH.Api（選單選單一專案的「QMAH API」，不要選那個會拉
+    Angular 進來、一直不穩的多專案 profile）
+  - Angular 另外用一個純終端機（或 VS Code，但這時候 VS Code
+    只是拿來開終端機，不用它的 compound launch）手動 npm start
+  - 這樣 C# 程式碼的中斷點、IntelliSense 都還是在 VS2026 裡用，Angular
+    就單純被晾在旁邊一直跑著
+
+  兩種選項都只是「決定 API 跟 Angular 各自由誰啟動一次」，重點是同一個服務不要同
+  時被兩個地方啟動——這正是我們前面一直在抓的問題根源：VS2026
+  又想啟動一份、終端機/VS Code 又留著一份沒關乾淨，兩邊搶同一個 port 就炸了。
+
+  如果你不是特別需要在 VS2026 裡偵錯 C#，我會建議直接用選項
+  A，最省事、也最不容易再踩到同樣的坑。
+
+✻ Churned for 21s · done 下午1:44
+
+● Remote Control not started here · another Claude Code on this machine 
+  (started 3h ago) already has Remote Control for this conversation, so 
+  this terminal can't see your sessions on other machines and they can't
+  reach it · run /remote-control to move it to this terminal

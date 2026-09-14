@@ -1,0 +1,33 @@
+<h1 class="text-2xl font-bold mb-6 text-error">後台：檢舉審核管理</h1>
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
+  <table class="table w-full">
+    <thead>
+      <tr>
+        <th>檢舉類型</th>
+        <th>檢舉人</th>
+        <th>理由</th>
+        <th>詳細說明</th>
+        <th>送出時間</th>
+        <th>審核操作 (PUT /admin/reports/:id)</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (report of pendingReports; track report.id) {
+        <tr>
+          <td><span class="badge badge-secondary">{{ report.targetType }}</span></td>
+          <td>{{ report.reporterDisplayName || '未設定暱稱' }}</td>
+          <td class="font-bold">{{ report.reason }}</td>
+          <td>{{ report.detail || '—' }}</td>
+          <td class="text-xs text-gray-500">{{ report.createdAt }}</td>
+          <td class="space-x-2">
+            <button class="btn btn-xs btn-error text-white" (click)="resolveAndHide(report.id)">確認違規並隱藏</button>
+            <button class="btn btn-xs btn-ghost" (click)="reject(report.id)">駁回</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="6" class="text-center py-10 text-gray-400">目前沒有待處理檢舉</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

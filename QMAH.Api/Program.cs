@@ -18,6 +18,7 @@ using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
+using QMAH.Infrastructure.Services.Social;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
@@ -160,6 +161,8 @@ builder.Services.AddScoped<MiniGameService>();
 builder.Services.AddScoped<CommunityRewardService>();
 builder.Services.AddScoped<GameRoomInvitationService>();
 builder.Services.AddScoped<DailyActivityService>();
+// Social 站內通知：活動審核、檢舉處理等共用同一套排隊寫入方式，由各自的 SaveChangesAsync 一併提交。
+builder.Services.AddScoped<INotificationService, SocialNotificationService>();
 
 // 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
 builder.Services.AddRateLimiter(options =>

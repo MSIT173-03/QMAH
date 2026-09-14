@@ -1,16 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 
-export interface Post {
-  id: string;
-  title: string;
-  content: string;
-  boardCode: string;
-  commentCount?: number;
-  createdAt?: string;
-}
+import { CreateSocialPostRequest, SocialApiService, SocialPostListItem } from '../../../core/services/social-api';
 
 @Component({
   selector: 'app-posts',
@@ -20,44 +12,43 @@ export interface Post {
   styleUrl: './posts.scss'
 })
 export class PostsComponent implements OnInit {
-  private http = inject(HttpClient);
+  private socialApi = inject(SocialApiService);
 
-  // 清空 Mock 資料，由 DB 填入
-  posts: Post[] = [];
-  newPost = { title: '', boardCode: 'GENERAL', content: '' };
+  posts: SocialPostListItem[] = [];
+  totalCount = 0;
+  newPost: CreateSocialPostRequest = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '' };
 
   ngOnInit(): void {
     this.loadPosts();
   }
 
-  // 1. 發送 GET 請求向 DB 取資料
+  // GET /api/v1/social/posts（AllowAnonymous，回傳 ApiPage<SocialPostListItemDto>）
   loadPosts(): void {
-    this.http.get<Post[]>('/api/v1/social/posts').subscribe({
-      next: (data) => {
-        this.posts = data;
-        console.log('成功從 DB 取得貼文:', data);
+    this.socialApi.getPosts({ pageSize: 20 }).subscribe({
+      next: (page) => {
+        this.posts = page.items;
+        this.totalCount = page.totalCount;
       },
       error: (err) => console.error('取得貼文失敗:', err)
     });
   }
 
-  // 2. 發送 POST 新增貼文
+  // POST /api/v1/social/posts（需要登入 + XSRF token）
   submitPost(): void {
-    this.http.post('/api/v1/social/posts', this.newPost).subscribe({
+    this.socialApi.createPost(this.newPost).subscribe({
       next: () => {
         alert('貼文發布成功！');
-        this.newPost = { title: '', boardCode: 'GENERAL', content: '' };
-        this.loadPosts(); // 重新整理列表
+        this.newPost = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '' };
+        this.loadPosts();
       },
-      error: (err) => console.error('發布貼文失敗:', err)
+      error: (err) => console.error('發布貼文失敗（請確認已登入）:', err)
     });
   }
 
-  // 3. 發送 POST 檢舉
   report(id: string): void {
-    this.http.post('/api/v1/social/reports', { targetType: 'POST', targetId: id }).subscribe({
-      next: () => alert(`已成功檢舉 Post #${id}`),
-      error: (err) => console.error('檢舉失敗:', err)
+    this.socialApi.createReport({ targetType: 'POST', targetId: id, reason: '使用者檢舉' }).subscribe({
+      next: () => alert(`已成功檢舉貼文 #${id}`),
+      error: (err) => console.error('檢舉失敗（請確認已登入）:', err)
     });
   }
 }

@@ -1,22 +1,24 @@
-import { Component, inject } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
-import { AuthService, UserRole } from '../../../core/services/auth';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
-@Component({
-  selector: 'app-layout',
-  standalone: true,
-  imports: [RouterOutlet, RouterLink],
-  templateUrl: './layout.html',
-  styleUrl: './layout.css'
-})
-export class LayoutComponent {
-  auth = inject(AuthService);
+import { LayoutComponent } from './layout';
 
-  switch(role: 'User' | 'Admin') {
-    const userMap: Record<string, UserRole> = {
-      User: { name: '一般玩家 (Alice)', role: 'User', token: 'user-token' },
-      Admin: { name: '系統管理員 (Admin)', role: 'Admin', token: 'admin-token' }
-    };
-    this.auth.switchUser(userMap[role]);
-  }
-}
+describe('LayoutComponent', () => {
+  let component: LayoutComponent;
+  let fixture: ComponentFixture<LayoutComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [LayoutComponent],
+      providers: [provideRouter([])]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(LayoutComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});

@@ -12,7 +12,7 @@
         <span class="text-xs text-gray-500">{{ post.createdAt }}</span>
       </div>
       <h2 class="card-title">{{ post.title }}</h2>
-      <p>{{ post.content }}</p>
+      <p>{{ post.contentPreview }}</p>
       <div class="card-actions justify-end mt-4">
         <button class="btn btn-sm btn-ghost" (click)="report(post.id)">🚩 檢舉</button>
         <button class="btn btn-sm btn-outline btn-primary">💬 留言 ({{ post.commentCount || 0 }})</button>
