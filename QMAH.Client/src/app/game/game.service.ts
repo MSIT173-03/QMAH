@@ -113,6 +113,38 @@ export class GameService {
     ).pipe(tap((room) => this.roomState.set(room)));
   }
 
+  setReady(roomId: string, isReady: boolean): Observable<GameRoomDetails> {
+    return this.mutate(() => this.http.post<GameRoomDetails>(
+      `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/ready`,
+      { isReady }
+    )).pipe(tap((room) => this.roomState.set(room)));
+  }
+
+  startRoom(roomId: string): Observable<GameRoomDetails> {
+    return this.mutate(() => this.http.post<GameRoomDetails>(
+      `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/start`,
+      null
+    )).pipe(tap((room) => this.roomState.set(room)));
+  }
+
+  leaveRoom(roomId: string): Observable<void> {
+    return this.mutate(() => this.http.post<void>(
+      `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/leave`,
+      null
+    )).pipe(tap(() => {
+      if (this.roomState()?.id === roomId) this.roomState.set(null);
+      this.roundState.set(null);
+      this.historyState.set(null);
+    }));
+  }
+
+  heartbeat(roomId: string): Observable<void> {
+    return this.mutate(() => this.http.post<void>(
+      `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/heartbeat`,
+      null
+    ));
+  }
+
   /** 讀取回合詳細資料並更新目前回合快照。 */
   getRound(roundId: string): Observable<GameRoundDetails> {
     return this.http
@@ -321,8 +353,8 @@ export class GameService {
   private validateSubmitVoteRequest(request: SubmitVoteRequest): string[] {
     const errors: string[] = [];
     if (!request.answerId) errors.push('投票目標不可空白。');
-    if (!Number.isInteger(request.count) || request.count < 1 || request.count > 5) {
-      errors.push('票數必須介於 1 至 5 票。');
+    if (!Number.isInteger(request.count) || request.count < 1 || request.count > 3) {
+      errors.push('票數必須介於 1 至 3 票。');
     }
     return errors;
   }

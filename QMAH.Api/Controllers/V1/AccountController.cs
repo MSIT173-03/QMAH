@@ -49,6 +49,29 @@ public sealed class AccountController(
         return NoContent();
     }
 
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<AccountSessionDto>> GetCurrentSession(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var user = await db.Users.AsNoTracking()
+            .Where(item => item.Id == userId && item.Status == "ACTIVE")
+            .Select(item => new { item.Email })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (user?.Email is null)
+            return Unauthorized();
+
+        var nickname = await db.UserProfiles.AsNoTracking()
+            .Where(profile => profile.UserId == userId)
+            .Select(profile => profile.Nickname)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return Ok(new AccountSessionDto(userId, user.Email, nickname));
+    }
+
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult> Login(

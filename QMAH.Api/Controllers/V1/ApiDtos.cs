@@ -36,6 +36,8 @@ public sealed record ArtifactDetailsDto(
 
 public sealed record CodeLabelDto(Guid Id, string Code, string Name);
 
+public sealed record AccountSessionDto(Guid UserId, string Email, string? Nickname);
+
 public sealed record ProductListItemDto(
     Guid Id,
     Guid? ArtifactId,
@@ -229,6 +231,7 @@ public sealed record GameRoomDetailsDto(
     string? CategoryFilterCode,
     string? EraBucketFilterCode,
     byte CurrentRoundNo,
+    Guid? CurrentPlayerId,
     IReadOnlyList<GamePlayerDto> Players,
     DateTime CreatedAt,
     DateTime? StartedAt,
@@ -248,6 +251,8 @@ public sealed record GameAnswerDto(
 public sealed record GameRoundDetailsDto(
     Guid Id,
     Guid RoomId,
+    Guid CurrentPlayerId,
+    IReadOnlyList<Guid> VotedAnswerIds,
     Guid ArtifactId,
     string ArtifactName,
     int RoundNumber,
@@ -332,6 +337,11 @@ public sealed class JoinGameRoomRequest
     public string? Password { get; set; }
 }
 
+public sealed class SetGamePlayerReadyRequest
+{
+    public bool IsReady { get; set; }
+}
+
 public sealed class SubmitAnswerRequest
 {
     [Required, StringLength(32)]
@@ -346,7 +356,7 @@ public sealed class SubmitVoteRequest
     [Required]
     public Guid AnswerId { get; set; }
 
-    [Range(1, 5)]
+    [Range(1, 3)]
     public int Count { get; set; } = 1;
 }
 

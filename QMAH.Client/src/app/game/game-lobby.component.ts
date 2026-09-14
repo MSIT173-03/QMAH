@@ -128,8 +128,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     })).subscribe({
       next: (room) => {
         this.showCreateForm = false;
-        const hostId = room.players.find((player) => player.role === 'HOST')?.id;
-        this.enterRoom(room.id, hostId);
+        this.enterRoom(room.id);
       },
       error: (error: unknown) => {
         this.showRoomActionError(error, '房間建立失敗');
@@ -146,22 +145,12 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       return;
     }
     this.joining = true; this.errorTitle = '加入房間失敗'; this.error = ''; this.success = '';
-    const previousPlayerIds = new Set(room.players.map((player) => player.id));
     this.game.joinRoom(room.id, this.joinForm).pipe(finalize(() => {
       this.joining = false;
       this.changeDetector.markForCheck();
     })).subscribe({
       next: (joinedRoom) => {
-        const addedPlayers = joinedRoom.players.filter((player) => !previousPlayerIds.has(player.id));
-        const sameNamePlayers = addedPlayers.filter(
-          (player) => player.displayName === this.joinForm.displayName.trim()
-        );
-        const playerId = sameNamePlayers.length === 1
-          ? sameNamePlayers[0].id
-          : addedPlayers.length === 1
-            ? addedPlayers[0].id
-            : this.readRememberedPlayerId(room.id);
-        this.enterRoom(joinedRoom.id, playerId);
+        this.enterRoom(joinedRoom.id);
       },
       error: (error: unknown) => {
         this.showRoomActionError(error, '加入房間失敗');
@@ -170,13 +159,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     });
   }
 
-  private enterRoom(roomId: string, playerId?: string): void {
-    if (playerId) {
-      try { sessionStorage.setItem(this.playerStorageKey(roomId), playerId); } catch { /* Storage can be disabled. */ }
-    }
-    void this.router.navigate(['/game/room', roomId], {
-      state: playerId ? { playerId } : undefined
-    });
+  private enterRoom(roomId: string): void {
+    void this.router.navigate(['/game/room', roomId]);
   }
 
   private showRoomActionError(error: unknown, fallbackTitle: string): void {
@@ -188,12 +172,6 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.errorTitle = fallbackTitle;
     this.error = this.game.errorMessage(error);
   }
-
-  private readRememberedPlayerId(roomId: string): string | undefined {
-    try { return sessionStorage.getItem(this.playerStorageKey(roomId)) ?? undefined; } catch { return undefined; }
-  }
-
-  private playerStorageKey(roomId: string): string { return `qmah-game-player:${roomId}`; }
 
   copyRoomCode(roomCode: string): void {
     if (!roomCode) return;
@@ -289,6 +267,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   private makeDemoDetail(room: GameRoomListItem): GameRoomDetails {
     return {
       ...room, answerSeconds: 90, votingSeconds: 60, categoryFilterCode: room.playerCount % 2 ? 'CERAMIC' : 'PAINTING', eraBucketFilterCode: room.playerCount % 2 ? 'QING' : 'MING', currentRoundNo: 0,
+      currentPlayerId: null,
       players: [],
       startedAt: null, endedAt: null
     };

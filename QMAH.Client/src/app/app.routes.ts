@@ -3,6 +3,11 @@ import { Routes } from '@angular/router';
 // 前台功能依責任建立 lazy loading route，測試入口獨立掛載，不改變正式首頁行為。
 export const routes: Routes = [
   {
+    path: 'game/account',
+    loadComponent: () =>
+      import('./game/game-account.component').then(({ GameAccountComponent }) => GameAccountComponent)
+  },
+  {
     path: 'game/minigames',
     loadComponent: () =>
       import('./game/game-training.component').then(({ GameTrainingComponent }) => GameTrainingComponent)

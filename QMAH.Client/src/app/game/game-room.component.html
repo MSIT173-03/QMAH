@@ -68,8 +68,8 @@
 
         <section class="leave-note" aria-label="返回大廳說明">
           <strong>返回大廳</strong>
-          <p>目前還不能真正離開房間。返回大廳只會離開這個頁面，你的席位仍會保留。</p>
-          <a routerLink="/game">前往多人房間大廳</a>
+          <p>離開後會釋出座位；遊戲開始後，將無法重新加入這一場。</p>
+          <button type="button" (click)="leaveRoom()" [disabled]="leaving">{{ leaving ? '送出中…' : '離開房間並返回大廳' }}</button>
         </section>
       </aside>
 
@@ -79,8 +79,16 @@
             <p class="eyebrow">READY ROOM</p>
             <div class="waiting-emblem" aria-hidden="true">等</div>
             <h2>等待房間開始</h2>
-            <p>玩家名單和房間狀態會自動更新。目前還不能在這裡開局，因為準備與開始遊戲的功能尚未提供。</p>
+            <p>玩家名單會自動更新。所有玩家準備好後，由房主開始遊戲。</p>
             <div class="waiting-facts"><span>{{ currentRoom.players.length }} 位玩家</span><span>{{ currentRoom.totalRounds }} 回合</span><span>房間代碼 {{ currentRoom.roomCode }}</span></div>
+            @if (currentPlayer(); as player) {
+              <div class="waiting-actions">
+                <button type="button" class="ready-toggle" [attr.aria-pressed]="player.isReady" [disabled]="lobbyActionBusy" (click)="setReady()">{{ lobbyActionBusy ? '送出中…' : player.isReady ? '取消準備' : '準備好了' }}</button>
+                @if (player.role === 'HOST') {
+                  <button type="button" class="start-game" [disabled]="lobbyActionBusy || !canStartRoom()" (click)="startGame()">{{ lobbyActionBusy ? '送出中…' : '開始遊戲' }}</button>
+                }
+              </div>
+            }
           </article>
         } @else if (currentRoom.status === 'COMPLETED') {
           <app-game-room-results
@@ -125,7 +133,7 @@
               </section>
             } @else if (currentRound.status === 'VOTING') {
               <section class="phase-content" aria-labelledby="vote-title">
-                <div class="phase-copy"><p class="eyebrow">READ · VOTE</p><h3 id="vote-title">選出最有說服力的回答</h3><p>自己的回答不能投；每次可投 1 到 5 票。</p></div>
+                <div class="phase-copy"><p class="eyebrow">READ · VOTE</p><h3 id="vote-title">選出最有說服力的回答</h3><p>自己的回答不能投；每次可投 1 到 3 票。</p></div>
                 <label class="vote-count-label" for="vote-count">每次投幾票
                   <select id="vote-count" name="voteCount" [(ngModel)]="voteCount">
                     @for (count of voteOptions; track count) { <option [ngValue]="count">{{ count }} 票</option> }

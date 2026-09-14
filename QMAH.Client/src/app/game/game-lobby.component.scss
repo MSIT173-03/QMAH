@@ -46,6 +46,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   font-weight: 700;
   letter-spacing: .08em;
 }
+.account-link { margin-left: auto; color: var(--jade); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
+.notice-error a { color: var(--jade); font-weight: 700; text-underline-offset: 4px; }
 
 .mode-bookmarks {
   display: flex;

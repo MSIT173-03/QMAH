@@ -4,6 +4,7 @@
       <img src="/assets/brand/qmah-logo.svg" alt="清明鑑定屋" />
     </a>
     @if (isDemo) { <span class="demo-mark">預覽模式 · 僅供查看</span> }
+    @if (!isDemo) { <a class="account-link" routerLink="/game/account">登入遊戲帳號</a> }
   </header>
 
   <nav class="mode-bookmarks" aria-label="遊戲模式">
@@ -24,7 +25,7 @@
     <p class="lobby-rule" aria-hidden="true">OBSERVE · ANSWER · VOTE</p>
   </section>
 
-  @if (error) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span></div> }
+  @if (error) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span>@if (errorTitle === '請先登入') { <a routerLink="/game/account">登入遊戲帳號</a> }</div> }
   @if (success) { <div class="notice notice-success" role="status"><span>{{ success }}</span></div> }
 
   <section class="notebook-spread" [attr.aria-busy]="loading">

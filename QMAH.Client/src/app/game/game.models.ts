@@ -45,6 +45,7 @@ export interface GameRoomDetails {
   categoryFilterCode: string | null;
   eraBucketFilterCode: string | null;
   currentRoundNo: number;
+  currentPlayerId: string | null;
   playerCount?: number;
   players: GamePlayer[];
   createdAt: string;
@@ -67,6 +68,8 @@ export interface GameAnswer {
 export interface GameRoundDetails {
   id: string;
   roomId: string;
+  currentPlayerId: string;
+  votedAnswerIds: string[];
   artifactId: string;
   artifactName: string;
   roundNumber: number;

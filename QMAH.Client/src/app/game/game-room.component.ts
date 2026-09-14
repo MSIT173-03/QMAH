@@ -45,6 +45,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private readonly changeDetector = inject(ChangeDetectorRef);
   private pollSubscription?: Subscription;
   private clockSubscription?: Subscription;
+  private heartbeatSubscription?: Subscription;
 
   roomId = '';
   room: GameRoomDetails | null = null;
@@ -63,13 +64,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   now = Date.now();
   submittingAnswer = false;
   votingForAnswerId = '';
+  lobbyActionBusy = false;
+  leaving = false;
   rewarding = false;
   reward: MainGameReward | null = null;
   votedAnswerIds = new Set<string>();
   private lastRoundId = '';
   private submittedRoundId = '';
 
-  readonly voteOptions = [1, 2, 3, 4, 5];
+  readonly voteOptions = [1, 2, 3];
   readonly answerTypes: { value: GameAnswerType; label: string; hint: string }[] = [
     { value: 'FACTUAL_REASONING', label: '根據線索推理', hint: '提出你認為合理的真實解釋。' },
     { value: 'PLAUSIBLE_FICTION', label: '看似可信的猜想', hint: '試著寫一個有說服力的說法。' },
@@ -82,20 +85,26 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       void this.router.navigate(['/game']);
       return;
     }
-    this.restorePlayerId();
     this.pollSubscription = timer(0, 5000)
       .pipe(exhaustMap(() => this.loadSnapshot()))
       .subscribe((snapshot) => {
+        const playerChanged = this.currentPlayerId !== (snapshot.room.currentPlayerId ?? '');
+        this.currentPlayerId = snapshot.round?.currentPlayerId ?? snapshot.room.currentPlayerId ?? '';
         this.room = snapshot.room;
         this.history = snapshot.history;
         this.round = snapshot.round;
         this.refreshError = '';
-        if (this.round?.id !== this.lastRoundId) {
+        if (playerChanged || this.round?.id !== this.lastRoundId) {
           this.lastRoundId = this.round?.id ?? '';
           this.restoreVotedAnswers();
         }
         this.changeDetector.markForCheck();
       });
+    this.heartbeatSubscription = timer(15000, 15000)
+      .pipe(exhaustMap(() => this.currentPlayerId
+        ? this.game.heartbeat(this.roomId).pipe(catchError(() => EMPTY))
+        : EMPTY))
+      .subscribe();
     this.clockSubscription = timer(0, 1000).subscribe(() => {
       this.now = Date.now();
       this.changeDetector.markForCheck();
@@ -105,6 +114,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.pollSubscription?.unsubscribe();
     this.clockSubscription?.unsubscribe();
+    this.heartbeatSubscription?.unsubscribe();
   }
 
   statusText(status: GameRoomDetails['status']): string {
@@ -121,8 +131,75 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   playerStateText(player: GameRoomDetails['players'][number]): string {
-    if (player.role === 'HOST') return '房主';
-    return player.connectionStatus === 'ONLINE' ? '在線' : '暫離';
+    if (player.connectionStatus !== 'ONLINE') return '暫離';
+    const readiness = player.isReady ? '已準備' : '尚未準備';
+    return player.role === 'HOST' ? `房主・${readiness}` : readiness;
+  }
+
+  canStartRoom(): boolean {
+    if (!this.room || !this.currentPlayer()) return false;
+    return this.currentPlayer()?.role === 'HOST'
+      && this.room.players.length >= 2
+      && this.room.players.every((player) => player.connectionStatus === 'ONLINE' && player.isReady);
+  }
+
+  currentPlayer(): GameRoomDetails['players'][number] | null {
+    return this.room?.players.find((player) => player.id === this.currentPlayerId) ?? null;
+  }
+
+  setReady(): void {
+    const player = this.currentPlayer();
+    if (!this.room || this.room.status !== 'WAITING' || !player || this.lobbyActionBusy) return;
+    this.actionError = '';
+    this.lobbyActionBusy = true;
+    this.game.setReady(this.room.id, !player.isReady).pipe(finalize(() => {
+      this.lobbyActionBusy = false;
+      this.changeDetector.markForCheck();
+    })).subscribe({
+      next: (room) => {
+        this.room = room;
+        this.changeDetector.markForCheck();
+      },
+      error: (error: unknown) => {
+        this.actionError = this.game.errorMessage(error);
+        this.changeDetector.markForCheck();
+      }
+    });
+  }
+
+  startGame(): void {
+    if (!this.room || this.lobbyActionBusy || !this.canStartRoom()) return;
+    this.actionError = '';
+    this.lobbyActionBusy = true;
+    this.game.startRoom(this.room.id).pipe(finalize(() => {
+      this.lobbyActionBusy = false;
+      this.changeDetector.markForCheck();
+    })).subscribe({
+      next: (room) => {
+        this.room = room;
+        this.changeDetector.markForCheck();
+      },
+      error: (error: unknown) => {
+        this.actionError = this.game.errorMessage(error);
+        this.changeDetector.markForCheck();
+      }
+    });
+  }
+
+  leaveRoom(): void {
+    if (!this.room || this.leaving) return;
+    this.actionError = '';
+    this.leaving = true;
+    this.game.leaveRoom(this.room.id).pipe(finalize(() => {
+      this.leaving = false;
+      this.changeDetector.markForCheck();
+    })).subscribe({
+      next: () => void this.router.navigate(['/game']),
+      error: (error: unknown) => {
+        this.actionError = this.game.errorMessage(error);
+        this.changeDetector.markForCheck();
+      }
+    });
   }
 
   seatText(seatNo: number | null): string {
@@ -161,14 +238,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   canVoteFor(answer: GameAnswer): boolean {
-    return !!this.round
+    return !!this.currentPlayerId
+      && !!this.round
       && this.game.canVote(this.round, this.now)
       && !this.isOwnAnswer(answer)
       && !this.votedAnswerIds.has(answer.id);
   }
 
   submitAnswer(): void {
-    if (!this.round || !this.game.canAnswer(this.round, this.now) || this.hasSubmittedAnswer()) return;
+    if (!this.currentPlayerId || !this.round || !this.game.canAnswer(this.round, this.now) || this.hasSubmittedAnswer()) return;
     this.actionError = '';
     this.actionMessage = '';
     this.submittingAnswer = true;
@@ -180,7 +258,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (answer) => {
           this.currentPlayerId = answer.gamePlayerId;
-          this.rememberPlayerId();
           this.submittedRoundId = this.round?.id ?? '';
           this.answerText = '';
           this.changeDetector.markForCheck();
@@ -205,7 +282,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.votedAnswerIds.add(answer.id);
-          this.rememberVotedAnswers();
           this.actionMessage = `已投給「${answer.playerDisplayName}」的回答。`;
           this.changeDetector.markForCheck();
         },
@@ -277,47 +353,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     );
   }
 
-  private restorePlayerId(): void {
-    const navigationId = this.router.getCurrentNavigation()?.extras.state?.['playerId'];
-    if (typeof navigationId === 'string' && navigationId) {
-      this.currentPlayerId = navigationId;
-      this.rememberPlayerId();
-      return;
-    }
-    try {
-      this.currentPlayerId = sessionStorage.getItem(this.playerStorageKey()) ?? '';
-    } catch {
-      this.currentPlayerId = '';
-    }
-  }
-
-  private rememberPlayerId(): void {
-    if (!this.currentPlayerId) return;
-    try { sessionStorage.setItem(this.playerStorageKey(), this.currentPlayerId); } catch { /* Storage can be disabled. */ }
-  }
-
   private restoreVotedAnswers(): void {
-    this.votedAnswerIds = new Set<string>();
-    if (!this.currentPlayerId || !this.round) return;
-    try {
-      const saved = JSON.parse(sessionStorage.getItem(this.voteStorageKey()) ?? '[]') as unknown;
-      if (Array.isArray(saved)) {
-        this.votedAnswerIds = new Set(saved.filter((item): item is string => typeof item === 'string'));
-      }
-    } catch {
-      this.votedAnswerIds = new Set<string>();
-    }
-  }
-
-  private rememberVotedAnswers(): void {
-    if (!this.currentPlayerId || !this.round) return;
-    try {
-      sessionStorage.setItem(this.voteStorageKey(), JSON.stringify([...this.votedAnswerIds]));
-    } catch { /* Storage can be disabled. */ }
-  }
-
-  private playerStorageKey(): string { return `qmah-game-player:${this.roomId}`; }
-  private voteStorageKey(): string {
-    return `qmah-game-votes:${this.roomId}:${this.currentPlayerId}:${this.round?.id ?? ''}`;
+    this.votedAnswerIds = new Set(this.round?.votedAnswerIds ?? []);
   }
 }

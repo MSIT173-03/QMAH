@@ -11,6 +11,7 @@ using Scalar.AspNetCore;
 using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
+using QMAH.Api.Services;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -18,6 +19,7 @@ using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
+using QMAH.Infrastructure.Services.Game;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
@@ -160,6 +162,8 @@ builder.Services.AddScoped<MiniGameService>();
 builder.Services.AddScoped<CommunityRewardService>();
 builder.Services.AddScoped<GameRoomInvitationService>();
 builder.Services.AddScoped<DailyActivityService>();
+builder.Services.AddScoped<GameRoomLifecycleService>();
+builder.Services.AddHostedService<GameRoomLifecycleWorker>();
 
 // 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
 builder.Services.AddRateLimiter(options =>

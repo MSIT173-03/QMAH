@@ -5,13 +5,15 @@ using Microsoft.AspNetCore.Mvc;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Services.Game;
 
 namespace QMAH.Api.Controllers.V1;
 
 [Route("api/v1/game")]
 public sealed class GameController(
     QmahDbContext db,
-    IPasswordHasher<GameRoom> passwordHasher) : ApiControllerBase
+    IPasswordHasher<GameRoom> passwordHasher,
+    GameRoomLifecycleService gameRoomLifecycleService) : ApiControllerBase
 {
     [AllowAnonymous]
     [HttpGet("rooms")]
@@ -50,7 +52,7 @@ public sealed class GameController(
                 room.Visibility,
                 room.MaxPlayers,
                 room.TotalRounds,
-                room.GamePlayers.Count,
+                room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"),
                 room.CreatedAt));
 
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
@@ -76,7 +78,8 @@ public sealed class GameController(
             return MissingResource("找不到遊戲房間", "私人房間只對參與者開放。");
         }
 
-        return Ok(ToRoomDto(room));
+        Guid? currentUserId = TryGetCurrentUserId(out var viewerId) ? viewerId : null;
+        return Ok(ToRoomDto(room, currentUserId));
     }
 
     [AllowAnonymous]
@@ -195,7 +198,7 @@ public sealed class GameController(
 
         db.GameRooms.Add(room);
         await db.SaveChangesAsync(cancellationToken);
-        return CreatedAtAction(nameof(GetRoom), new { id = room.Id }, ToRoomDto(room));
+        return CreatedAtAction(nameof(GetRoom), new { id = room.Id }, ToRoomDto(room, userId));
     }
 
     [Authorize]
@@ -209,56 +212,72 @@ public sealed class GameController(
             return Unauthorized();
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
-        if (!await IsActiveUserAsync(userId, cancellationToken))
-            return Forbid();
+        var result = await gameRoomLifecycleService.JoinAsync(
+            id,
+            userId,
+            request.DisplayName,
+            request.Password,
+            cancellationToken);
+        if (!result.Succeeded)
+            return MutationFailure(result.Status);
+        return Ok(ToRoomDto(result.Room!, userId));
+    }
 
-        var room = await db.GameRooms
-            .Include(item => item.GamePlayers)
-            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
-        if (room is null || room.Status == "CANCELLED")
-            return MissingResource("找不到遊戲房間", "這個房間不存在或已取消。");
-        var existingPlayer = room.GamePlayers.FirstOrDefault(player => player.UserId == userId);
-        if (existingPlayer is not null)
-            return Ok(ToRoomDto(room));
-        if (room.Status != "WAITING")
-            return InvalidWorkflow("房間目前不可加入", "只有等待中的房間可以加入。");
-        if (room.GamePlayers.Count >= room.MaxPlayers)
-            return InvalidWorkflow("房間已額滿", "請選擇其他等待中的房間。");
-        if (room.Visibility == "PRIVATE")
-        {
-            var verification = passwordHasher.VerifyHashedPassword(
-                room,
-                room.PasswordHash ?? "",
-                request.Password ?? "");
-            if (verification == PasswordVerificationResult.Failed)
-                return Problem(statusCode: StatusCodes.Status403Forbidden, title: "房間密碼錯誤", detail: "無法加入私人房間。");
-        }
+    [Authorize]
+    [HttpPost("rooms/{id:guid}/ready")]
+    public async Task<ActionResult<GameRoomDetailsDto>> SetReady(
+        Guid id,
+        SetGamePlayerReadyRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
 
-        var usedSeats = room.GamePlayers
-            .Where(player => player.SeatNo.HasValue)
-            .Select(player => player.SeatNo!.Value)
-            .ToHashSet();
-        var seat = Enumerable.Range(1, room.MaxPlayers)
-            .Select(value => (byte)value)
-            .First(value => !usedSeats.Contains(value));
-        var now = DateTime.UtcNow;
-        room.GamePlayers.Add(new GamePlayer
-        {
-            Id = Guid.NewGuid(),
-            RoomId = room.Id,
-            UserId = userId,
-            PlayerKey = $"api-player-{room.Id:N}-{userId:N}",
-            DisplayName = request.DisplayName.Trim(),
-            Role = "PLAYER",
-            IsReady = false,
-            SeatNo = seat,
-            JoinedAt = now,
-            ConnectionStatus = "ONLINE",
-            LastSeenAt = now
-        });
-        room.StateVersion++;
-        await db.SaveChangesAsync(cancellationToken);
-        return Ok(ToRoomDto(room));
+        var result = await gameRoomLifecycleService.SetReadyAsync(id, userId, request.IsReady, cancellationToken);
+        if (!result.Succeeded)
+            return MutationFailure(result.Status);
+        return Ok(ToRoomDto(result.Room!, userId));
+    }
+
+    [Authorize]
+    [HttpPost("rooms/{id:guid}/start")]
+    public async Task<ActionResult<GameRoomDetailsDto>> StartRoom(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var result = await gameRoomLifecycleService.StartAsync(id, userId, cancellationToken);
+        if (!result.Succeeded)
+            return MutationFailure(result.Status);
+        return Ok(ToRoomDto(result.Room!, userId));
+    }
+
+    [Authorize]
+    [HttpPost("rooms/{id:guid}/leave")]
+    public async Task<ActionResult> LeaveRoom(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var result = await gameRoomLifecycleService.LeaveAsync(id, userId, cancellationToken);
+        if (!result.Succeeded)
+            return MutationFailure(result.Status);
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpPost("rooms/{id:guid}/heartbeat")]
+    public async Task<ActionResult> Heartbeat(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var result = await gameRoomLifecycleService.HeartbeatAsync(id, userId, cancellationToken);
+        if (!result.Succeeded)
+            return MutationFailure(result.Status);
+        return NoContent();
     }
 
     [Authorize]
@@ -394,16 +413,19 @@ public sealed class GameController(
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (round is null)
             return MissingResource("找不到遊戲回合", "這個回合不存在。");
-        if (round.Room.Visibility == "PRIVATE"
-            && (!TryGetCurrentUserId(out var userId)
-                || !await db.GamePlayers.AnyAsync(
-                    player => player.RoomId == round.RoomId && player.UserId == userId,
-                    cancellationToken)))
-        {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        var player = round.Room.GamePlayers.SingleOrDefault(item =>
+            item.UserId == userId && item.ConnectionStatus != "LEFT");
+        if (player is null)
             return Forbid();
-        }
 
-        return Ok(ToRoundDetailsDto(round));
+        var votedAnswerIds = await db.Votes.AsNoTracking()
+            .Where(vote => vote.RoundId == id && vote.VoterGamePlayerId == player.Id)
+            .Select(vote => vote.AnswerId)
+            .ToListAsync(cancellationToken);
+
+        return Ok(ToRoundDetailsDto(round, player.Id, votedAnswerIds));
     }
 
     private async Task<bool> IsActiveUserAsync(Guid userId, CancellationToken cancellationToken) =>
@@ -421,7 +443,7 @@ public sealed class GameController(
         throw new InvalidOperationException("目前無法產生唯一的房間代碼，請稍後再試。");
     }
 
-    private static GameRoomDetailsDto ToRoomDto(GameRoom room) => new(
+    private static GameRoomDetailsDto ToRoomDto(GameRoom room, Guid? currentUserId = null) => new(
         room.Id,
         room.RoomCode,
         room.Status,
@@ -433,7 +455,12 @@ public sealed class GameController(
         room.CategoryFilterCode,
         room.EraBucketFilterCode,
         room.CurrentRoundNo,
+        currentUserId.HasValue
+            ? room.GamePlayers.FirstOrDefault(player =>
+                player.UserId == currentUserId.Value && player.ConnectionStatus != "LEFT")?.Id
+            : null,
         room.GamePlayers
+            .Where(player => player.ConnectionStatus != "LEFT")
             .OrderBy(player => player.SeatNo)
             .ThenBy(player => player.JoinedAt)
             .Select(player => new GamePlayerDto(
@@ -448,13 +475,18 @@ public sealed class GameController(
         room.StartedAt,
         room.EndedAt);
 
-    private static GameRoundDetailsDto ToRoundDetailsDto(GameRound round)
+    private static GameRoundDetailsDto ToRoundDetailsDto(
+        GameRound round,
+        Guid currentPlayerId,
+        IReadOnlyList<Guid> votedAnswerIds)
     {
         var answerRows = BuildRankedAnswers(round);
         var winner = GetWinner(answerRows, round.IsSettled);
         return new GameRoundDetailsDto(
             round.Id,
             round.RoomId,
+            currentPlayerId,
+            votedAnswerIds,
             round.ArtifactId,
             round.Artifact.Name,
             round.RoundNumber,
@@ -464,7 +496,7 @@ public sealed class GameController(
             round.AnswerDeadlineAt,
             round.VotingDeadlineAt,
             round.SettledAt,
-            round.Room.GamePlayers.Count,
+            round.Room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"),
             answerRows.Sum(row => row.VoteCount),
             winner?.Answer.Id,
             winner?.Answer.GamePlayer.DisplayName,
@@ -565,4 +597,11 @@ public sealed class GameController(
 
     private static string? NormalizeOptionalCode(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToUpperInvariant();
+
+    private ActionResult MutationFailure(GameRoomMutationStatus status) => status switch
+    {
+        GameRoomMutationStatus.NotFound => NotFound(),
+        GameRoomMutationStatus.Forbidden => Forbid(),
+        _ => Conflict()
+    };
 }
