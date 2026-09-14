@@ -1,0 +1,58 @@
+:host {
+  --color-line-mid: #dbe1e1;
+
+  display: block;
+}
+
+/* ===============================
+   頁面主體版位（各區塊內容已拆分至個別元件）
+   =============================== */
+
+.list-main {
+  padding-top: 16px;
+  padding-bottom: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 左側篩選側欄 + 右側商品區 */
+.list-body {
+  display: grid;
+  grid-template-columns: minmax(0, 218px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* ===============================
+   標題列右側的排序／顯示模式切換
+   （投影至 app-page-title-row，故樣式定義於本頁）
+   =============================== */
+
+.tab-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 推擠至標題列最右側 */
+.section-meta {
+  margin-left: auto;
+}
+
+/* 排序與顯示模式之間的分隔線 */
+.pill-divider {
+  width: 1px;
+  background: var(--color-line-mid);
+  margin: 0 4px;
+}
+
+/* ===============================
+   橫列清單版面
+   =============================== */
+
+.product-row-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

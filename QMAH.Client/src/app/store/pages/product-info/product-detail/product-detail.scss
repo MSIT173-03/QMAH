@@ -1,0 +1,44 @@
+:host {
+  --color-body: #3f5259;
+  --color-faint: #7e8c91;
+  --color-line: #e3e7e6;
+  --color-line-soft: #eff2f1;
+  --color-swatch: #edf0f0;
+
+  /* 由 .section-block 直接成為說明／評價格線的項目 */
+  display: contents;
+}
+
+.detail-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--color-body);
+}
+
+.detail-image {
+  aspect-ratio: 16 / 9;
+  background: var(--color-swatch);
+  border: 1px solid var(--color-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-faint);
+}
+
+.detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-body);
+}
+
+.detail-row {
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid var(--color-line-soft);
+  padding-top: 8px;
+}

@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+/* ===============================
+   頁面主體版位（各區塊內容已拆分至個別元件）
+   =============================== */
+
+.checkout-main {
+  padding-top: 16px;
+  padding-bottom: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 左側結帳資訊、右側訂單摘要 */
+.checkout-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  gap: 20px;
+  align-items: start;
+}
+
+/* 左側各面板直向排列 */
+.checkout-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

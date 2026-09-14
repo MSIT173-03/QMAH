@@ -1,0 +1,47 @@
+<!-- 收件資訊：短欄位雙欄排列，地址與備註各佔一整列 -->
+<app-panel>
+  <!-- 面板標題列，右側為帶入會員個人資料的按鈕 -->
+  <app-section-head [title]="title" [tag]="tag" headingLevel="h2" variant="panel">
+    <button type="button" class="fill-btn" [class.fill-btn--filled]="filled()" (click)="fill.emit()">
+      {{ fillLabel() }}
+    </button>
+  </app-section-head>
+
+  <!-- 姓名／電話／信箱／統編：欄寬不足時自動換行 -->
+  <div class="field-grid">
+    @for (f of gridFields; track f.field) {
+      <label class="field">
+        {{ f.label }}
+        <input
+          class="field-input"
+          [value]="form()[f.field]"
+          [placeholder]="f.placeholder"
+          (input)="onInput(f.field, $event)"
+        />
+      </label>
+    }
+  </div>
+
+  <!-- 收件地址：內容較長，獨佔一整列 -->
+  <label class="field">
+    {{ addrField.label }}
+    <input
+      class="field-input"
+      [value]="form()[addrField.field]"
+      [placeholder]="addrField.placeholder"
+      (input)="onInput(addrField.field, $event)"
+    />
+  </label>
+
+  <!-- 給客服的備註：兩行高的多行輸入 -->
+  <label class="field">
+    {{ noteField.label }}
+    <textarea
+      class="field-input field-textarea"
+      rows="2"
+      [value]="form()[noteField.field]"
+      [placeholder]="noteField.placeholder"
+      (input)="onInput(noteField.field, $event)"
+    ></textarea>
+  </label>
+</app-panel>

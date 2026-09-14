@@ -1,0 +1,11 @@
+<!-- 通用面板容器，依 variant 套用不同外觀樣式 -->
+<div
+  class="panel"
+  [class.panel--accent]="variant() === 'accent'"
+  [class.panel--filter]="variant() === 'filter'"
+  [class.panel--note]="variant() === 'note'"
+  [class.panel--size]="variant() === 'size'"
+>
+  <!-- 供外部投影面板內容 -->
+  <ng-content></ng-content>
+</div>

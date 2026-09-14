@@ -1,0 +1,63 @@
+<!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
+<app-promobar [announcements]="announcements()" [points]="points()" [coupons]="coupons()" />
+
+<!-- 網站頁首：品牌 Logo、搜尋框、分類導覽與購物車入口 -->
+<app-site-header>
+  <app-search-bar [compact]="true" [(value)]="searchQuery" (search)="onSearch($event)" />
+  <app-header-actions [links]="navLinks">
+    <app-cart-link [href]="cartHref" [count]="cartCount()" />
+  </app-header-actions>
+</app-site-header>
+
+<main class="container product-main">
+  @if (item(); as product) {
+
+  <!-- 麵包屑導覽：首頁 / 器類 / 商品名稱 -->
+  <app-breadcrumb [items]="breadcrumbItems()" />
+
+  <!-- 商品主視覺：左側商品圖庫、右側商品資訊與購買操作 -->
+  <section class="product-hero-section">
+    <app-product-gallery [name]="product.name" [views]="galleryViews()" />
+    <app-product-summary
+      [brand]="product.brand"
+      [name]="product.name"
+      [rating]="product.rating"
+      [reviews]="product.reviewCount"
+      [sold]="product.soldCount"
+      [price]="product.dealPrice"
+      [was]="was()"
+      [material]="product.material"
+      [source]="product.source"
+      [shipping]="product.shippingNote"
+      [dims]="product.dimensions"
+      [condition]="product.condition"
+      [sizeNote]="sizeNote()"
+      (addToCart)="onAddToCart($event)"
+      (buyNow)="onBuyNow($event)"
+    />
+  </section>
+
+  <!-- 商品說明與評價並排 -->
+  <section class="product-hero-section">
+    <app-product-detail [intro]="product.description" [rows]="policies()" />
+    <app-product-reviews
+      [rating]="product.rating"
+      [reviewCount]="product.reviewCount"
+      [reviews]="reviews()"
+      [filterCounts]="reviewCounts()"
+      [filterIndex]="reviewFilter()"
+      (filterChange)="reviewFilter.set($event)"
+    />
+  </section>
+
+  <!-- 同類推薦 -->
+  <app-related-products [items]="related()" (addToCart)="onAddRelated($event)" />
+  } @else if (item() === null) {
+  <!-- 查無此商品 -->
+  <app-empty-state title="找不到這件商品" desc="商品可能已下架，或網址有誤。" ctaLabel="回到商品列表" [ctaHref]="productsPath"
+    size="lg" />
+  }
+</main>
+
+<!-- 頁尾：簡版，僅顯示版權列 -->
+<app-site-footer />

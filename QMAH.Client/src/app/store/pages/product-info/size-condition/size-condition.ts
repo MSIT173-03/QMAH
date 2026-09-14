@@ -1,0 +1,25 @@
+import { Component, input } from '@angular/core';
+import { Panel } from '../../../component/panel/panel';
+
+/** 商品頁 SIZE & CONDITION 面板：尺寸、商品狀態與量測說明 */
+@Component({
+  selector: 'app-size-condition',
+  imports: [Panel],
+  templateUrl: './size-condition.html',
+  styleUrls: [
+    './size-condition.scss',
+  ],
+})
+export class SizeCondition {
+  /** 尺寸／規格說明 */
+  dims = input('');
+  /** 商品狀態說明 */
+  condition = input('');
+  /** 尺寸量測說明（佔位資料，正式應由商品說明設定提供） */
+  note = input('');
+
+  /** 以下為面板的固定版面文字 */
+  protected readonly panelLabel = 'SIZE & CONDITION';
+  protected readonly dimsLabel = '尺寸';
+  protected readonly conditionLabel = '狀態';
+}

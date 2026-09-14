@@ -1,0 +1,22 @@
+<!-- 商品列表頁篩選側欄：捲動時固定於視窗上方 -->
+<aside class="filter-sidebar">
+
+  <!-- 分類篩選 -->
+  <app-panel variant="filter">
+    <span class="label-tag label-tag--loose">{{ categoryLabel }}</span>
+    <app-category-list [items]="categories()" (pick)="categoryPick.emit($event)" />
+  </app-panel>
+
+  <!-- 價格區間篩選 -->
+  <app-panel variant="filter">
+    <span class="label-tag label-tag--loose">{{ priceLabel }}</span>
+    <app-pill-group variant="band" layout="column" [options]="bandOptions()" (select)="bandPick.emit($event)" />
+  </app-panel>
+
+  <!-- 其他篩選：折扣開關與清除全部 -->
+  <app-panel variant="filter">
+    <span class="label-tag label-tag--loose">{{ filterLabel }}</span>
+    <app-pill-group variant="filter" layout="column" [options]="dealOptions()" (select)="dealToggle.emit()" />
+    <button type="button" class="filter-reset" (click)="reset.emit()">{{ resetLabel }}</button>
+  </app-panel>
+</aside>

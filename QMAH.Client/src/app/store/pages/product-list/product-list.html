@@ -1,0 +1,64 @@
+<!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
+<app-promobar [announcements]="announcements()" [points]="points()" [coupons]="coupons()" />
+
+<!-- 網站頁首：品牌 Logo、搜尋框與購物車入口 -->
+<app-site-header variant="list">
+  <!-- 站內搜尋框（列表頁精簡版：不顯示熱門搜尋與建議下拉） -->
+  <app-search-bar [compact]="true" [(value)]="searchInput" (search)="onSearch($event)" />
+  <!-- 購物車入口，顯示目前購物車件數 -->
+  <app-cart-link [href]="cartHref" [count]="cartCount()" />
+</app-site-header>
+
+<main class="container list-main">
+
+  <!-- 麵包屑導覽 -->
+  <app-breadcrumb [items]="breadcrumbItems()" />
+
+  <!-- 頁面標題列：標題、件數，右側為排序與顯示模式切換 -->
+  <app-page-title-row [title]="heading()" [count]="countLabel()">
+    <div class="tab-row section-meta">
+      <!-- 排序方式 -->
+      <app-pill-group variant="wide" layout="tabs" [options]="sortOptions()" (select)="onSortPick($event)" />
+      <div class="pill-divider"></div>
+      <!-- 顯示模式（卡片／列表） -->
+      <app-pill-group variant="mono" layout="tabs" [options]="modeOptions()" (select)="onModePick($event)" />
+    </div>
+  </app-page-title-row>
+
+  <div class="list-body">
+
+    <!-- 左側篩選側欄：器類、價格區間、折扣篩選 -->
+    <app-filter-sidebar [categories]="categoryItems()" [bands]="bandLabels" [activeBand]="bandIndex()"
+      [dealOnly]="dealOnly()" (categoryPick)="onCategoryPick($event)" (bandPick)="onBandPick($event)"
+      (dealToggle)="onDealToggle()" (reset)="onReset()" />
+
+    <!-- 右側商品區：依顯示模式切換卡片格狀或橫列清單，無結果時顯示空狀態 -->
+    <div class="section-block">
+      @if (isEmpty()) {
+      <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" ctaMode="button"
+        (ctaClick)="onReset()" />
+      } @else if (isGridMode()) {
+      <!-- 卡片格狀顯示 -->
+      <div class="card-grid">
+        @for (item of items(); track item.id) {
+        <app-product-card variant="list" [id]="item.id" [badge]="item.cat" badgeVariant="teal" [brand]="item.brand"
+          [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
+          (onAddToCart)="onAddToCart(item.id)" />
+        }
+      </div>
+      } @else {
+      <!-- 橫列清單顯示 -->
+      <div class="product-row-list">
+        @for (item of items(); track item.id) {
+        <app-product-row [id]="item.id" [brand]="item.brand" [cat]="item.cat" [name]="item.name" [source]="item.source"
+          [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
+          (onAddToCart)="onAddToCart(item.id)" />
+        }
+      </div>
+      }
+    </div>
+  </div>
+</main>
+
+<!-- 頁尾：簡版，僅顯示版權列 -->
+<app-site-footer />

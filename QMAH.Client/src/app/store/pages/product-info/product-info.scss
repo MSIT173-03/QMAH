@@ -1,0 +1,23 @@
+:host {
+  display: block;
+}
+
+/* ===============================
+   頁面主體版位（各區塊內容已拆分至個別元件）
+   =============================== */
+
+.product-main {
+  padding-top: 16px;
+  padding-bottom: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* 左右兩欄版位：商品主視覺（圖庫 + 商品資訊）與商品說明 + 評價共用 */
+.product-hero-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}

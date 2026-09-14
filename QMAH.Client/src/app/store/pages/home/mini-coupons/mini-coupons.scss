@@ -1,0 +1,42 @@
+:host {
+  display: contents;
+}
+
+.coupon-mini-label {
+  color: var(--color-teal);
+}
+
+.coupon-mini-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px dashed #dde3e2;
+  padding-top: 8px;
+}
+
+.coupon-mini-off {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+.coupon-mini-cond {
+  font-size: 12px;
+  color: var(--color-muted);
+  flex: 1;
+}
+
+.coupon-mini-btn {
+  border: 1px solid var(--color-ink);
+  border-radius: 2px;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #fff;
+  color: var(--color-ink);
+  transition: background 160ms, border-color 160ms, color 160ms;
+
+  &--taken {
+    background: var(--color-ink);
+    color: #fff;
+  }
+}

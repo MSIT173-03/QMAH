@@ -1,0 +1,23 @@
+<!-- 區塊／面板標題列容器 -->
+<div
+  class="head"
+  [class.head--section]="variant() === 'section'"
+  [class.head--panel]="variant() === 'panel'"
+  [class.head--wrap]="wrap()"
+>
+  <!-- 依 headingLevel 決定標題使用的 heading 標籤 -->
+  @switch (headingLevel()) {
+    @case ('h2') {
+      <h2 class="section-title">{{ title() }}</h2>
+    }
+    @default {
+      <h3 class="section-title">{{ title() }}</h3>
+    }
+  }
+  <!-- 標題旁標籤，無值時不顯示 -->
+  @if (tag()) {
+    <span class="label-tag">{{ tag() }}</span>
+  }
+  <!-- 供外部投影額外內容（例如操作按鈕） -->
+  <ng-content></ng-content>
+</div>

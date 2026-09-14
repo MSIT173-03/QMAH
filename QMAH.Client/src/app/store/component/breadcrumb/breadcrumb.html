@@ -1,0 +1,13 @@
+<!-- 麵包屑導覽列 -->
+<div class="breadcrumb">
+  @for (item of items(); track $index; let last = $last) {
+    @if (last) {
+      <!-- 最後一項為目前頁面，不可點擊 -->
+      <span class="breadcrumb-current">{{ item.label }}</span>
+    } @else {
+      <!-- 前面項目為可點擊連結，並附上分隔線 -->
+      <a [href]="item.href ?? '#'" class="breadcrumb-link">{{ item.label }}</a>
+      <span>/</span>
+    }
+  }
+</div>

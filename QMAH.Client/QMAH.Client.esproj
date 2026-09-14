@@ -3,4 +3,7 @@
     <StartupCommand>npm start</StartupCommand>
     <BuildCommand>npm run build</BuildCommand>
   </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="src\app\store\" />
+  </ItemGroup>
 </Project>

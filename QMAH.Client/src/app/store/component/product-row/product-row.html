@@ -1,0 +1,27 @@
+<!-- 商品橫列（列表顯示模式的單一商品版位） -->
+<div class="product-row">
+  <!-- 商品縮圖，連結至商品頁 -->
+  <a [href]="href()" class="product-row-thumb">{{ slotLabel }}</a>
+
+  <!-- 商品資訊：品牌與器類、名稱、出處說明、尺寸與評價 -->
+  <div class="product-row-info">
+    <span class="meta-brand meta-brand--sm">{{ brand() }} · {{ cat() }}</span>
+    <a [href]="href()" class="product-row-title">{{ name() }}</a>
+    <span class="product-row-source">{{ source() }}</span>
+    <div class="product-row-meta">
+      <span><span class="product-card-star">★</span> {{ getRating() }} · {{ getReviews() }}</span>
+    </div>
+  </div>
+
+  <!-- 右側：價格、折扣標籤與加入購物車按鈕 -->
+  <div class="product-row-aside">
+    <div class="product-row-price-row">
+      <span class="product-row-price" [class.text-accent]="hasDeal()">${{ getPrice() }}</span>
+      @if (getWas(); as was) {
+      <span class="product-card-was">${{ was }}</span>
+      }
+    </div>
+    <span class="product-card-tag" [class.product-card-tag--deal]="hasDeal()">{{ getTag() }}</span>
+    <button type="button" class="product-row-buy" (click)="onAddToCart.emit()">{{ addCartLabel }}</button>
+  </div>
+</div>

@@ -1,0 +1,36 @@
+:host {
+  --color-line: #e3e7e6;
+  --color-line-mid: #dbe1e1;
+  --color-ink: #22343d;
+
+  display: contents;
+}
+
+.panel {
+  border: 1px solid var(--color-line);
+  background: #fff;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &--accent {
+    border-color: var(--color-ink);
+  }
+
+  &--filter {
+    padding: 14px 16px;
+    gap: 9px;
+  }
+
+  &--note {
+    padding: 14px 16px;
+    gap: 8px;
+  }
+
+  &--size {
+    padding: 14px 16px;
+    gap: 10px;
+    border-color: var(--color-line-mid);
+  }
+}

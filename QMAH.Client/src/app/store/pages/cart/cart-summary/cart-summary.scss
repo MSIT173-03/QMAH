@@ -1,0 +1,63 @@
+:host {
+  --color-ink: #22343d;
+  --color-ink-deep: #193c38;
+  --color-line: #e3e7e6;
+  --color-body: #3f5259;
+  --color-accent: #ad594a;
+
+  display: block;
+}
+
+/* .label-tag、.font-mono、.text-accent、.btn-solid 基礎樣式已在全站共用樣式（src/styles.scss）中定義 */
+
+.hero-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sticky-92 {
+  position: sticky;
+  top: 92px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--color-body);
+}
+
+
+.summary-note {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-body);
+}
+
+.summary-total-row {
+  border-top: 1px solid var(--color-line);
+  padding-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.summary-total-label {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink-deep);
+}
+
+.summary-total-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 24px;
+  color: var(--color-ink);
+}
+
+.btn-solid--full {
+  padding: 13px 0;
+  letter-spacing: 0.14em;
+  text-align: center;
+}

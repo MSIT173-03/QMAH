@@ -1,0 +1,10 @@
+<!-- 流程步驟指示器：已完成步驟為深色、目前步驟為強調色，其餘為淺色 -->
+<div class="step-indicator">
+  @for (item of items(); track item.label; let last = $last) {
+    <span [class.step-done]="item.done" [class.step-current]="item.current">{{ item.label }}</span>
+    <!-- 步驟之間的分隔線，最後一步之後不再顯示 -->
+    @if (!last) {
+      <span class="step-dash">—</span>
+    }
+  }
+</div>

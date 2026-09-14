@@ -1,0 +1,15 @@
+<!-- 熱銷排行：可依分類分頁切換，最多顯示 10 件商品 -->
+<section class="section-block">
+  <app-section-head title="熱銷排行" tag="RANKING · 24H" [wrap]="true">
+    <div class="section-meta">
+      <app-pill-group [options]="tabOptions()" (select)="pickTab($event)" />
+    </div>
+  </app-section-head>
+  <div class="card-grid">
+    @for (item of rankingItems(); track item.id) {
+    <app-product-card [id]="item.id" [badge]="item.badge" [badgeVariant]="item.badgeVariant" [brand]="item.brand"
+      [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
+      [sold]="item.sold" (onAddToCart)="addToCart.emit(item.id)" />
+    }
+  </div>
+</section>

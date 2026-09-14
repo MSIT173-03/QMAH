@@ -1,0 +1,124 @@
+:host {
+  --color-muted: #6d7b80;
+  --color-line: #e3e7e6;
+  --color-line-soft: #eff2f1;
+  --color-line-split: #cdd6d6;
+  --color-ink: #22343d;
+  --color-accent: #ad594a;
+
+  display: block;
+}
+
+.promobar {
+  border-bottom: 1px solid var(--color-line);
+  background: #fff;
+}
+
+.promobar-row {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 7px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
+
+.promobar-sep {
+  color: var(--color-line-split);
+}
+
+.promobar-actions {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.promobar-link {
+  color: var(--color-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}
+
+.promobar-accent {
+  color: var(--color-accent);
+}
+
+.coupon-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.coupon-panel {
+  position: absolute;
+  top: 22px;
+  right: 0;
+  z-index: 60;
+  width: 268px;
+  background: #fff;
+  border: 1px solid var(--color-ink);
+  box-shadow: 0 14px 30px rgba(34, 52, 61, 0.12);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coupon-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--color-line-soft);
+  text-decoration: none;
+  transition: border-color 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+}
+
+.coupon-panel-amount {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  color: var(--color-accent);
+  min-width: 52px;
+}
+
+.coupon-panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: 'Noto Sans TC', sans-serif;
+  letter-spacing: 0;
+}
+
+.coupon-panel-title {
+  font-size: 12px;
+  color: var(--color-ink);
+}
+
+.coupon-panel-meta {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.coupon-panel-manage {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 12px;
+  color: var(--color-muted);
+  text-align: center;
+  letter-spacing: 0;
+  text-decoration: none;
+}

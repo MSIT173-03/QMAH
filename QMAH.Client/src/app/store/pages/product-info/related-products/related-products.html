@@ -1,0 +1,10 @@
+<!-- 同類推薦：商品卡片格狀清單 -->
+<section class="section-block">
+  <app-section-head headingLevel="h2" [title]="title" [tag]="tag" />
+  <div class="card-grid">
+    @for (item of items(); track item.id) {
+    <app-product-card variant="list" [id]="item.id" [brand]="item.brand" [name]="item.name" [price]="item.price"
+      [was]="item.was" [rating]="item.rating" [reviews]="item.reviews" (onAddToCart)="addToCart.emit(item.id)" />
+    }
+  </div>
+</section>

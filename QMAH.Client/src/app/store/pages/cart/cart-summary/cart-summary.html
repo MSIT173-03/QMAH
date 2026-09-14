@@ -1,0 +1,21 @@
+<!-- 購物車側欄：訂單金額摘要與售後服務說明 -->
+<div class="hero-sidebar sticky-92">
+  <app-panel variant="accent">
+    <span class="label-tag label-tag--loose">{{ summaryLabel }}</span>
+    <div class="summary-row"><span>{{ subtotalLabel }}</span><span class="font-mono">{{ getSubtotal() }}</span></div>
+    <div class="summary-row"><span>{{ savingsLabel }}</span><span class="font-mono text-accent">{{ getSavings() }}</span></div>
+    <div class="summary-row"><span>{{ shippingLabel }}</span><span class="font-mono">{{ getShipping() }}</span></div>
+    <span class="summary-note">{{ getShipNote() }}</span>
+    <div class="summary-total-row">
+      <span class="summary-total-label">{{ totalLabel }}</span>
+      <span class="summary-total-value">{{ getTotal() }}</span>
+    </div>
+    <!-- 前往結帳 -->
+    <a [href]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
+  </app-panel>
+
+  <app-panel variant="note">
+    <span class="label-tag label-tag--loose">{{ serviceLabel }}</span>
+    <span class="summary-note">{{ serviceNote }}</span>
+  </app-panel>
+</div>

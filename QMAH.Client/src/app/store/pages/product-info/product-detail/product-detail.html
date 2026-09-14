@@ -1,0 +1,20 @@
+<!-- 商品說明區塊 -->
+<section class="section-block">
+  <app-section-head headingLevel="h2" [title]="title" [tag]="tag" />
+
+  <!-- 說明段落：商品出處說明 + 共通敘述 -->
+  <p class="detail-text">{{ intro() }}</p>
+
+  <!-- 商品說明圖版位 -->
+  <div class="detail-image">{{ imageSlot }}</div>
+
+  <!-- 補充條列：保養、退換、鑑定 -->
+  <div class="detail-list">
+    @for (row of rows(); track row.label) {
+      <div class="detail-row">
+        <span class="spec-label spec-label--wide">{{ row.label }}</span>
+        <span class="spec-value">{{ row.text }}</span>
+      </div>
+    }
+  </div>
+</section>

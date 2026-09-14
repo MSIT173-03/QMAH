@@ -1,0 +1,42 @@
+<!-- 結帳頁側欄：訂單商品、金額明細與送出訂單 -->
+<div class="hero-sidebar sticky-92">
+  <app-panel variant="accent">
+    <span class="label-tag label-tag--loose">{{ summaryTag }}</span>
+
+    <!-- 訂單商品逐行列出：名稱、數量與小計 -->
+    @for (line of lineRows(); track line.id) {
+      <div class="summary-line">
+        <span class="summary-line-name">{{ line.name }}</span>
+        <span class="summary-line-qty">×{{ line.qty }}</span>
+        <span class="summary-line-total">{{ line.total }}</span>
+      </div>
+    }
+
+    <!-- 金額明細：小計、各項折抵與運費 -->
+    <div class="summary-block">
+      <div class="summary-row"><span>{{ subtotalRowLabel }}</span><span class="font-mono">{{ subtotalLabel() }}</span></div>
+      <div class="summary-row"><span>{{ itemDiscountRowLabel }}</span><span class="font-mono text-accent">{{ itemDiscountLabel() }}</span></div>
+      <div class="summary-row"><span>{{ couponRowLabel }}</span><span class="font-mono text-accent">{{ couponCutLabel() }}</span></div>
+      <div class="summary-row"><span>{{ pointRowLabel }}</span><span class="font-mono text-accent">{{ pointCutLabel() }}</span></div>
+      <div class="summary-row"><span>{{ shipRowLabel() }}</span><span class="font-mono">{{ shipFeeLabel() }}</span></div>
+    </div>
+
+    <!-- 應付總額 -->
+    <div class="summary-total-row summary-total-row--strong">
+      <span class="summary-total-label">{{ totalRowLabel }}</span>
+      <span class="summary-total-value">{{ totalLabel() }}</span>
+    </div>
+
+    <!-- 本次訂單可回饋的點數 -->
+    <span class="summary-earn">回饋點數 +{{ earnLabel() }}</span>
+
+    <button type="button" class="btn-solid btn-solid--full" (click)="submitOrder.emit()">{{ submitLabel() }}</button>
+
+    <!-- 必填欄位未填妥時的補填提示 -->
+    @if (showMissing()) {
+      <span class="field-warning">{{ missingNote }}</span>
+    }
+
+    <a [href]="backHref" class="summary-back-link">{{ backLabel }}</a>
+  </app-panel>
+</div>

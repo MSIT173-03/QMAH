@@ -1,0 +1,40 @@
+:host {
+  display: contents;
+}
+
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.brand-card {
+  border: 1px solid var(--color-line-soft);
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+}
+
+.brand-en {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--color-ink);
+}
+
+.brand-zh {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.brand-deal {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-accent);
+}

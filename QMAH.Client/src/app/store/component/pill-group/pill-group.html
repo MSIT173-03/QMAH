@@ -1,0 +1,24 @@
+<!-- 藥丸狀選項按鈕群組 -->
+<div
+  class="pill-row"
+  [class.pill-row--tabs]="layout() === 'tabs'"
+  [class.pill-row--column]="layout() === 'column'"
+>
+  @for (option of options(); track option.label; let i = $index) {
+    <!-- 單一選項按鈕，樣式依 variant 與 active 狀態變化 -->
+    <button
+      type="button"
+      class="pill"
+      [class.pill--wide]="variant() === 'wide'"
+      [class.pill--mono]="variant() === 'mono'"
+      [class.pill--band]="variant() === 'band'"
+      [class.pill--filter]="variant() === 'filter'"
+      [class.pill--review]="variant() === 'review'"
+      [class.pill--pay]="variant() === 'pay'"
+      [class.pill--point]="variant() === 'point'"
+      [class.pill--active]="option.active"
+      [attr.title]="option.title ?? null"
+      (click)="select.emit(i)"
+    >{{ option.label }}</button>
+  }
+</div>

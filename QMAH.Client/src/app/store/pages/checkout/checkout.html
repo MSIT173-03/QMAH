@@ -1,0 +1,74 @@
+<!-- 頁首：品牌 Logo 與結帳流程步驟指示器 -->
+<app-site-header variant="wrap">
+  <app-step-indicator [steps]="steps" [current]="stepIndex" />
+</app-site-header>
+
+<main class="container checkout-main">
+
+  <!-- 麵包屑導覽 -->
+  <app-breadcrumb [items]="breadcrumbItems" />
+
+  <!-- 頁面標題列 -->
+  <app-page-title-row title="結帳" tag="CHECKOUT" [link]="profileLink" />
+
+  <!-- 左側為結帳資訊面板，右側為訂單摘要 -->
+  <div class="checkout-body">
+
+    <div class="checkout-fields">
+      <!-- 收件資訊 -->
+      <app-recipient-form
+        [form]="form()"
+        [filled]="filled()"
+        (fieldChange)="onFieldChange($event)"
+        (fill)="onFill()"
+      />
+
+      <!-- 配送與付款 -->
+      <app-delivery-options
+        [shippings]="shippings()"
+        [selectedShipping]="shipIndex()"
+        [payments]="payments()"
+        [selectedPayment]="payIndex()"
+        (shippingSelect)="shipIndex.set($event)"
+        (paymentSelect)="payIndex.set($event)"
+      />
+
+      <!-- 折價券（id 供個人頁面等外部連結錨定） -->
+      <app-coupon-picker
+        id="coupons"
+        [coupons]="coupons()"
+        [payable]="payable()"
+        [selected]="couponIndex()"
+        (select)="couponIndex.set($event)"
+      />
+
+      <!-- 購物點數（id 供個人頁面等外部連結錨定） -->
+      <app-point-picker
+        id="points"
+        [balance]="pointBalance()"
+        [payable]="payable()"
+        [mode]="pointMode()"
+        [customPoints]="customPoints()"
+        (modeChange)="pointMode.set($event)"
+        (customPointsChange)="customPoints.set($event)"
+      />
+    </div>
+
+    <!-- 訂單摘要與送出訂單 -->
+    <app-checkout-summary
+      [lines]="lines()"
+      [couponCut]="couponCut()"
+      [pointCut]="pointCut()"
+      [shipName]="shipName()"
+      [shipFee]="shipFee()"
+      [submitted]="submitted()"
+      [valid]="valid()"
+      [placed]="order() !== null"
+      [earnRate]="earnRate()"
+      (submitOrder)="onSubmit()"
+    />
+  </div>
+</main>
+
+<!-- 頁尾：簡版，僅顯示版權列 -->
+<app-site-footer />

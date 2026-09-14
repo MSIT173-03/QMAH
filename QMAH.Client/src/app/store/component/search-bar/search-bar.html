@@ -1,0 +1,32 @@
+<!-- 搜尋列外層容器 -->
+<div class="search-wrap" [class.search-wrap--list]="compact()">
+  <!-- 輸入框與搜尋按鈕：不論 compact 與否，尺寸固定一致 -->
+  <div class="search-box">
+    <input class="search-input" type="text" [placeholder]="placeholder()" [value]="value()" (input)="onInput($event)"
+      (focus)="onFocus()" (blur)="onBlur()" (keydown.enter)="submit()" />
+    <button type="button" class="search-submit" (click)="submit()">搜尋</button>
+  </div>
+
+  <!-- 熱門搜尋連結：非精簡版且有資料時顯示 -->
+  @if (!compact() && hotLinks().length > 0) {
+  <div class="search-hot">
+    <span class="search-hot-label">{{ hotLabel }}</span>
+    @for (link of hotLinks(); track $index) {
+    @let url = productListPath + "?q=" + link.label;
+    <a [href]="url" class="search-hot-link">{{ link.label }}</a>
+    }
+  </div>
+  }
+
+  <!-- 建議下拉清單：聚焦且有輸入內容時顯示 -->
+  @if (showSuggest()) {
+  <div class="search-suggest">
+    @for (suggestion of suggestions(); track suggestion.name) {
+    <div class="search-suggest-item" (click)="pickSuggestion(suggestion)">
+      <span>{{ suggestion.name }}</span>
+      <span class="search-suggest-count">{{ suggestion.count }}</span>
+    </div>
+    }
+  </div>
+  }
+</div>

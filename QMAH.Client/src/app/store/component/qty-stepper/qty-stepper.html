@@ -1,0 +1,19 @@
+<!-- 數量增減器 -->
+<div class="qty-stepper">
+  <!-- 減少數量按鈕 -->
+  <button
+    type="button"
+    class="qty-btn"
+    [class.qty-btn--sm]="size() === 'sm'"
+    (click)="dec()"
+  >−</button>
+  <!-- 目前數量顯示 -->
+  <span class="qty-value" [class.qty-value--sm]="size() === 'sm'">{{ value() }}</span>
+  <!-- 增加數量按鈕 -->
+  <button
+    type="button"
+    class="qty-btn"
+    [class.qty-btn--sm]="size() === 'sm'"
+    (click)="inc()"
+  >＋</button>
+</div>

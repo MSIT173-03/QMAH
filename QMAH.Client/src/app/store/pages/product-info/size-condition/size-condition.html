@@ -1,0 +1,19 @@
+<!-- SIZE & CONDITION 面板：尺寸與商品狀態 -->
+<app-panel variant="size">
+  <span class="label-tag label-tag--loose">{{ panelLabel }}</span>
+
+  <!-- 尺寸：以 mono 字體呈現量測數值 -->
+  <div class="spec-row spec-row--sm">
+    <span class="spec-label">{{ dimsLabel }}</span>
+    <span class="spec-value spec-value--mono text-sm spec-value--dims">{{ dims() }}</span>
+  </div>
+
+  <!-- 商品狀態說明 -->
+  <div class="spec-row spec-row--sm">
+    <span class="spec-label">{{ conditionLabel }}</span>
+    <span class="spec-value spec-value--condition">{{ condition() }}</span>
+  </div>
+
+  <!-- 量測誤差與「待測量」的補充說明 -->
+  <span class="size-note">{{ note() }}</span>
+</app-panel>

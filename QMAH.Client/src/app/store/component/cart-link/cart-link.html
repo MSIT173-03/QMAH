@@ -1,0 +1,5 @@
+<!-- 購物車連結，右側徽章顯示商品數量 -->
+<a class="cart-link" [class.cart-link--hero]="hero()" (click)="onClick()">
+  <span>購物車</span>
+  <span class="cart-badge">{{ count() }}</span>
+</a>

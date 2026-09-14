@@ -1,0 +1,40 @@
+<!-- 商品資訊欄 -->
+<div class="product-info">
+  <!-- 品牌 -->
+  <span class="label-tag label-tag--loose">{{ brand() }}</span>
+  <!-- 商品名稱 -->
+  <h1 class="product-title">{{ name() }}</h1>
+
+  <!-- 評價摘要：評分、評論數與已售件數 -->
+  <div class="product-rating-row">
+    <span class="product-card-star">★</span><span>{{ getRating() }}</span><span
+      class="product-card-split">|</span><span>{{ getReviews() }}</span><span
+      class="product-card-split">|</span><span>{{ getSold() }} {{ soldSuffix }}</span>
+  </div>
+
+  <!-- 價格列：售價、原價劃線價與折扣標籤 -->
+  <div class="product-price-row">
+    <span class="product-price" [class.text-accent]="hasDeal()">${{ getPrice() }}</span>
+    @if (getWas(); as was) {
+      <span class="product-card-was">${{ was }}</span>
+    }
+    <span class="product-card-tag product-card-tag--lg" [class.product-card-tag--deal]="hasDeal()">{{ getTag() }}</span>
+  </div>
+
+  <!-- 規格說明：材質、考據出處與出貨方式 -->
+  <div class="spec-list">
+    <div class="spec-row"><span class="spec-label">{{ materialLabel }}</span><span class="spec-value">{{ material() }}</span></div>
+    <div class="spec-row"><span class="spec-label">{{ sourceLabel }}</span><span class="spec-value">{{ source() }}</span></div>
+    <div class="spec-row"><span class="spec-label">{{ shippingLabel }}</span><span class="spec-value">{{ shipping() }}</span></div>
+  </div>
+
+  <!-- 尺寸與商品狀態面板 -->
+  <app-size-condition [dims]="dims() ?? ''" [condition]="condition()" [note]="sizeNote()" />
+
+  <!-- 購買操作：數量增減、加入購物車與直接購買 -->
+  <div class="product-actions">
+    <app-qty-stepper [(value)]="qty" />
+    <button type="button" class="btn-outline btn-outline--flex" (click)="onAdd()">{{ addCartLabel }}</button>
+    <button type="button" class="btn-solid btn-solid--flex" (click)="onBuyNow()">{{ buyNowLabel }}</button>
+  </div>
+</div>

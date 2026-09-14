@@ -1,0 +1,57 @@
+<!-- 商品卡片外層容器 -->
+<div class="product-card">
+  <!-- 點擊整張卡片（圖片＋內容）導向商品頁 -->
+  <a [href]="href()" class="product-card-link">
+
+    <!-- 商品圖片區：有 coverImage 時顯示實際圖片，否則顯示佔位符 -->
+    <div class="product-card-cover">
+      @if (coverImage()) {
+        <img class="product-card-image" [src]="coverImage()" [alt]="name()" />
+      } @else {
+        <span class="product-card-slot" [class.product-card-slot--faint]="isFaintSlot()">{{ slotLabel }}</span>
+      }
+
+      <!-- 角標（例如排名序號、器類），無 badge 時不顯示 -->
+      @if (badge()) {
+        <span class="product-card-badge" [class.product-card-badge--teal]="badgeVariant() === 'teal'">{{ badge() }}</span>
+      }
+    </div>
+
+    <!-- 商品文字資訊區 -->
+    <div class="product-card-body">
+      @if (brand()) {
+        <span class="product-card-brand">{{ brand() }}</span>
+      }
+      <span class="product-card-name">{{ name() }}</span>
+
+      @if (isCompact()) {
+        <!-- 精簡版：僅顯示價格 -->
+        <span class="product-card-price push-bottom" [class.text-accent]="hasDeal()">${{ getPrice() }}</span>
+      } @else {
+        <!-- 完整版：價格列、評分與評論數、次要說明 -->
+        <div class="product-card-price-row">
+          <span class="product-card-price" [class.text-accent]="hasDeal()">${{ getPrice() }}</span>
+          @if (getWas(); as was) {
+            <span class="product-card-was">${{ was }}</span>
+          }
+          <span class="product-card-tag" [class.product-card-tag--deal]="hasDeal()">{{ getTag() }}</span>
+        </div>
+
+        <div class="product-card-rating">
+          <span class="product-card-star">★</span><span>{{ getRating() }}</span><span
+            class="product-card-split">|</span><span>{{ getReviews() }}</span>
+        </div>
+
+        <!-- 次要說明：尺寸規格或已售數量 -->
+        @if (getMeta(); as meta) {
+          <span class="product-card-sold">{{ meta }}</span>
+        }
+      }
+    </div>
+  </a>
+
+  <!-- 加入購物車按鈕區 -->
+  <div class="product-card-cta">
+    <button type="button" class="product-card-buy" (click)="onAddToCart.emit()">{{ addCartLabel }}</button>
+  </div>
+</div>

@@ -1,0 +1,49 @@
+:host {
+  --color-ink: #22343d;
+  --color-ink-deep: #193c38;
+  --color-teal: #4e8097;
+
+  display: block;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+
+  &--section {
+    border-bottom: 1px solid var(--color-ink);
+    padding-bottom: 8px;
+  }
+
+  &--panel {
+    gap: 10px;
+  }
+
+  &--wrap {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+}
+
+.section-title {
+  margin: 0;
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 600;
+  color: var(--color-ink-deep);
+
+  .head--section & {
+    font-size: 18px;
+  }
+
+  .head--panel & {
+    font-size: 18px;
+  }
+}
+
+.label-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--color-teal);
+}

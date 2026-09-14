@@ -1,0 +1,25 @@
+:host {
+  --color-ink: #22343d;
+  --color-body: #3f5259;
+  --color-muted: #6d7b80;
+
+  display: contents;
+}
+
+/* .panel--size、.label-tag、.spec-row 系列樣式已在全站共用樣式（src/styles.scss）與 app-panel 中定義 */
+
+.spec-value--dims {
+  line-height: 1.7;
+  color: var(--color-ink);
+}
+
+.spec-value--condition {
+  line-height: 1.7;
+  color: var(--color-body);
+}
+
+.size-note {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-muted);
+}

@@ -1,0 +1,30 @@
+:host {
+  --color-muted: #6d7b80;
+  --color-accent: #ad594a;
+
+  /* 讓 aside 直接成為外層版面格線的項目 */
+  display: contents;
+}
+
+.filter-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* 92px 為頁首高度，捲動時側欄固定於頁首下方 */
+  position: sticky;
+  top: 92px;
+}
+
+.filter-reset {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  font-size: 12px;
+  color: var(--color-muted);
+  transition: color 160ms;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}

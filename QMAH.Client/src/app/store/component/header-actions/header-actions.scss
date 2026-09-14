@@ -1,0 +1,21 @@
+:host {
+  --color-nav: #2f4149;
+
+  /* 由 .hdr-actions 直接成為頁首列的 flex 項目，才能以 margin-left: auto 推擠至最右側 */
+  display: contents;
+}
+
+.hdr-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 12px;
+  color: var(--color-nav);
+}
