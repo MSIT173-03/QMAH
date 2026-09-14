@@ -1,4 +1,5 @@
 import { Component, computed, input, signal } from '@angular/core';
+import { StoreLink } from '../../shared/store-link';
 import { Coupon } from '../../api/api.models';
 import { formatDateMD, formatMoney } from '../../shared/format';
 
@@ -8,7 +9,7 @@ import { formatDateMD, formatMoney } from '../../shared/format';
  */
 @Component({
   selector: 'app-promobar',
-  imports: [],
+  imports: [StoreLink],
   templateUrl: './promobar.html',
   styleUrls: [
     './promobar.scss',

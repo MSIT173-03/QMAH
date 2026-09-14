@@ -1,4 +1,6 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, input } from '@angular/core';
+import { StoreLink } from '../../shared/store-link';
 
 export interface FooterLink {
   label: string;
@@ -16,7 +18,7 @@ export interface FooterColumn {
  */
 @Component({
   selector: 'app-site-footer',
-  imports: [],
+  imports: [StoreLink, NgTemplateOutlet],
   templateUrl: './site-footer.html',
   styleUrls: [
     './site-footer.scss',

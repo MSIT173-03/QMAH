@@ -1,7 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
-import { SectionHead } from '../../../component/section-head/section-head';
-import { PillGroup, PillOption } from '../../../component/pill-group/pill-group';
+import { SectionHead, PillGroup, PillOption } from '../../../component';
 import { Review } from '../../../api/api.models';
+import { formatNumber } from '../../../shared/format';
 import { REVIEW_FILTERS } from '../product-info.data';
 
 /** 星等上限，用於把星等換算成實心／空心星號字串 */
@@ -57,7 +57,7 @@ export class ProductReviews {
   /** 評分顯示字串，固定一位小數 */
   protected getRating = computed(() => this.rating().toFixed(1));
   /** 評論數顯示字串（千分位） */
-  protected getReviewCount = computed(() => `${this.reviewCount().toLocaleString('en-US')} 則評論`);
+  protected getReviewCount = computed(() => `${formatNumber(this.reviewCount())} 則評論`);
 
   /** 篩選按鈕選項，括號內為各條件的則數，選取狀態由 filterIndex 推導 */
   protected filterOptions = computed<PillOption[]>(() =>

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { apiUrl, toParams } from './http';
+import { Observable } from 'rxjs';
+import { apiUrl, getField, toParams } from './http';
 import {
   Brand,
   Coupon,
@@ -21,9 +21,7 @@ export class HomeApi {
 
   /** GET /home/hero-slides：主視覺輪播 */
   getHeroSlides(): Observable<HeroSlide[]> {
-    return this.http
-      .get<{ slides: HeroSlide[] }>(apiUrl('/home/hero-slides'))
-      .pipe(map((res) => res.slides));
+    return getField(this.http, apiUrl('/home/hero-slides'), 'slides');
   }
 
   /** GET /home/flash-sale：限時特賣 */
@@ -33,14 +31,12 @@ export class HomeApi {
 
   /** GET /brands：品牌館 */
   getBrands(): Observable<Brand[]> {
-    return this.http.get<{ brands: Brand[] }>(apiUrl('/brands')).pipe(map((res) => res.brands));
+    return getField(this.http, apiUrl('/brands'), 'brands');
   }
 
   /** GET /rankings：熱銷排行，依名次排列 */
   getRankings(query: RankingQuery = {}): Observable<Product[]> {
-    return this.http
-      .get<{ items: Product[] }>(apiUrl('/rankings'), { params: toParams(query) })
-      .pipe(map((res) => res.items));
+    return getField(this.http, apiUrl('/rankings'), 'items', query);
   }
 
   /** GET /recommendations：為你推薦（分頁，供「載入更多」逐頁取得） */
@@ -52,8 +48,6 @@ export class HomeApi {
 
   /** GET /coupons/claimable：可領取的折價券 */
   getClaimableCoupons(): Observable<Coupon[]> {
-    return this.http
-      .get<{ coupons: Coupon[] }>(apiUrl('/coupons/claimable'))
-      .pipe(map((res) => res.coupons));
+    return getField(this.http, apiUrl('/coupons/claimable'), 'coupons');
   }
 }

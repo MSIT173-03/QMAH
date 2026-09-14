@@ -52,13 +52,6 @@
 
 /* 與 product-card 元件共用的品牌樣式，因元件樣式為各自封裝，此處另行宣告一份
    （.product-card-star 已改由全站共用樣式提供） */
-.product-card-brand {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  color: var(--color-teal);
-}
-
 .news-name {
   font-size: 14px;
 }

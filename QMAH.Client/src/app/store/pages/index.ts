@@ -1,5 +1,0 @@
-export { Home } from "./home/home"
-export { Cart } from "./cart/cart"
-export { Checkout } from "./checkout/checkout"
-export { ProductInfo } from "./product-info/product-info"
-export { ProductList } from "./product-list/product-list"

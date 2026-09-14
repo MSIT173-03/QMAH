@@ -1,8 +1,8 @@
-import { Product, ProductSort } from '../../api/api.models';
+import { ProductSort } from '../../api/api.models';
 
 /**
- * 商品列表頁的頁面選項定義（排序、價格區間、顯示模式）與商品顯示資料換算。
- * 商品與器類清單由 API 取得（見 src/app/api）；排序與價格區間在此只定義
+ * 商品列表頁的頁面選項定義（排序、價格區間、顯示模式）。
+ * 商品與器類清單由 API 取得（見 store/api）；排序與價格區間在此只定義
  * 選項文字與對應的查詢參數，實際的篩選與排序由後端執行。
  */
 
@@ -67,48 +67,11 @@ export const VIEW_HEADINGS: Record<string, string> = {
   exhibit: '特展聯名',
 };
 
-/** 由網址 view 參數對應的預設排序索引（未列出者使用預設排序） */
-export const VIEW_DEFAULT_SORT: Record<string, number> = {
-  new: 4,
-  exhibit: 3,
+/** 由網址 view 參數對應的預設排序方式（未列出者使用 SORT_OPTIONS 第一項） */
+export const VIEW_DEFAULT_SORT: Record<string, ProductSort> = {
+  new: 'new',
+  exhibit: 'reviews',
 };
 
 /** 不限器類時的標示文字，同時用於分類清單第一項與未指定條件時的頁面標題 */
 export const ALL_PRODUCTS_LABEL = '全部商品';
-
-/* ===============================
-   換算工具
-   =============================== */
-
-/** 供列表卡片與列表橫列共用的商品顯示資料 */
-export interface ListItemData {
-  id: string;
-  /** 器類名稱，卡片顯示為角標、橫列顯示於品牌之後 */
-  cat: string;
-  brand: string;
-  name: string;
-  /** 折扣後售價 */
-  price: number;
-  /** 折扣前原價，無折扣時為 null（不顯示劃線價，亦代表無折扣） */
-  was: number | null;
-  rating: number;
-  reviews: number;
-  dims: string;
-  source: string;
-}
-
-/** 依商品資料換算成列表顯示資料 */
-export function toListItemData(product: Product): ListItemData {
-  return {
-    id: product.id,
-    cat: product.category,
-    brand: product.brand,
-    name: product.name,
-    price: product.dealPrice,
-    was: product.discountRate > 0 ? product.price : null,
-    rating: product.rating,
-    reviews: product.reviewCount,
-    dims: product.dimensions,
-    source: product.source,
-  };
-}

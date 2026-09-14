@@ -6,3 +6,13 @@ export const PRODUCT_LIST_PATH = '/store/products';
 export const CART_PATH = '/store/cart';
 /** 結帳頁路徑 */
 export const CHECKOUT_PATH = '/store/checkout';
+
+/** 商品頁路徑 */
+export function productPath(id: string): string {
+  return `/store/product/${encodeURIComponent(id)}`;
+}
+
+/** 商品列表頁的搜尋結果路徑 */
+export function searchPath(keyword: string): string {
+  return `${PRODUCT_LIST_PATH}?q=${encodeURIComponent(keyword)}`;
+}

@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { StoreLink } from '../../shared/store-link';
 
 export interface BreadcrumbItem {
   label: string;
@@ -10,7 +11,7 @@ export interface BreadcrumbItem {
  */
 @Component({
   selector: 'app-breadcrumb',
-  imports: [],
+  imports: [StoreLink],
   templateUrl: './breadcrumb.html',
   styleUrls: [
     './breadcrumb.scss',

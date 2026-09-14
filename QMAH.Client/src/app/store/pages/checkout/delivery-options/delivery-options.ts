@@ -1,9 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
-import { Panel } from '../../../component/panel/panel';
-import { SectionHead } from '../../../component/section-head/section-head';
-import { PillGroup, PillOption } from '../../../component/pill-group/pill-group';
+import { Panel, SectionHead, PillGroup, PillOption } from '../../../component';
 import { ShippingOption } from '../../../api/api.models';
-import { formatMoney } from '../../../shared/format';
+import { formatShippingFee } from '../../../shared/format';
 
 /**
  * 結帳頁的配送與付款面板。
@@ -36,7 +34,7 @@ export class DeliveryOptions {
   protected shippingButtons = computed(() =>
     this.shippings().map((option, i) => ({
       name: option.name,
-      fee: option.fee === 0 ? this.freeShippingLabel : formatMoney(option.fee),
+      fee: formatShippingFee(option.fee),
       active: i === this.selectedShipping(),
     })),
   );
@@ -49,5 +47,4 @@ export class DeliveryOptions {
   /** 以下為固定的版面文字 */
   protected readonly title = '配送與付款';
   protected readonly tag = 'DELIVERY';
-  private readonly freeShippingLabel = '免運';
 }

@@ -1,23 +1,20 @@
 import { Component, computed, inject, output } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 import { map } from 'rxjs';
-import { Panel } from '../../../component/panel/panel';
-import { SectionHead } from '../../../component/section-head/section-head';
-import { CatalogApi } from '../../../api/catalog.api';
-import { formatDateMD, formatMoney } from '../../../shared/format';
+import { Panel, SectionHead } from '../../../component';
+import { CatalogApi } from '../../../api';
+import { formatDateMD } from '../../../shared/format';
 import { PRODUCT_LIST_PATH } from '../../../shared/paths';
-import { toCardData } from '../home.data';
+import { formatRating, formatReviews, toPriceView, toProductView } from '../../../shared/product-view';
+import { StoreLink } from '../../../shared/store-link';
 
 /** 新品上架顯示的商品數量 */
 const NEW_ARRIVAL_COUNT = 4;
-/** 無折扣商品的標籤文字 */
-const STANDARD_TAG_LABEL = '定價商品';
 
 /** 首頁「新品上架」面板：橫列式商品清單 */
 @Component({
   selector: 'app-new-arrivals',
-  imports: [Panel, SectionHead, RouterLink],
+  imports: [Panel, SectionHead, StoreLink],
   templateUrl: './new-arrivals.html',
   styleUrls: [
     './new-arrivals.scss',
@@ -28,8 +25,7 @@ export class NewArrivals {
   addToCart = output<string>();
 
   /** 「更多 →」連結網址：商品列表頁，並套用「新品上架」入口（預設以由新到舊排序） */
-  protected readonly moreHref = PRODUCT_LIST_PATH;
-  protected readonly moreQueryParams = { view: 'new' };
+  protected readonly moreHref = `${PRODUCT_LIST_PATH}?view=new`;
 
   /** 最新上架的商品，依上架日期由新到舊排列 */
   private readonly products = toSignal(
@@ -45,18 +41,18 @@ export class NewArrivals {
    */
   protected items = computed(() =>
     this.products().map((product) => {
-      const card = toCardData(product, 'NEW');
-      const was = card.was;
+      const view = toProductView(product);
+      const price = toPriceView(view.price, view.was);
       return {
-        id: card.id,
-        brand: card.brand,
-        name: card.name,
+        id: view.id,
+        brand: view.brand,
+        name: view.name,
         /** 是否為折扣商品，決定價格與標籤是否使用強調色 */
-        hasDeal: was !== null,
-        priceText: formatMoney(card.price),
-        tagText: was === null ? STANDARD_TAG_LABEL : `-${Math.round((1 - card.price / was) * 100)}%`,
-        ratingText: card.rating.toFixed(1),
-        reviewsText: `${card.reviews.toLocaleString('en-US')} 則評論`,
+        hasDeal: price.hasDeal,
+        priceText: price.price,
+        tagText: price.tag,
+        ratingText: formatRating(view.rating),
+        reviewsText: formatReviews(view.reviews),
       };
     }),
   );

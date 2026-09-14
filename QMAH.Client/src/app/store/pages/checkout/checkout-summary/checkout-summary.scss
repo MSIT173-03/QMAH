@@ -1,28 +1,8 @@
 :host {
-  --color-ink: #22343d;
-  --color-ink-deep: #193c38;
-  --color-body: #3f5259;
-  --color-muted: #6d7b80;
-  --color-line: #e3e7e6;
-  --color-line-soft: #eff2f1;
-  --color-accent: #ad594a;
-
   display: block;
 }
 
-/* .label-tag、.font-mono、.text-accent、.btn-solid 已在全站共用樣式（src/styles.scss）中定義 */
-
-/* 側欄容器：捲動時固定於頁首下方 */
-.hero-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.sticky-92 {
-  position: sticky;
-  top: 92px;
-}
+/* .label-tag、.font-mono、.text-accent、.btn-solid、.summary-row 系列與側欄容器樣式已在全站共用樣式（shared/styles.scss）中定義 */
 
 /* 訂單商品行：名稱佔滿剩餘寬度，數量與小計靠右 */
 .summary-line {
@@ -60,38 +40,9 @@
   gap: 7px;
 }
 
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--color-body);
-}
-
-/* 應付總額列 */
-.summary-total-row {
-  border-top: 1px solid var(--color-line);
-  padding-top: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-
-  /* 結帳頁的總額列以深色分隔線強調 */
-  &--strong {
-    border-top-color: var(--color-ink);
-  }
-}
-
-.summary-total-label {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-ink-deep);
-}
-
-.summary-total-value {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 24px;
-  color: var(--color-ink);
+/* 結帳頁的應付總額列以深色分隔線強調 */
+.summary-total-row--strong {
+  border-top-color: var(--color-ink);
 }
 
 /* 回饋點數說明 */
@@ -100,12 +51,6 @@
   font-size: 10px;
   letter-spacing: 0.08em;
   color: var(--color-muted);
-}
-
-.btn-solid--full {
-  padding: 13px 0;
-  letter-spacing: 0.14em;
-  text-align: center;
 }
 
 /* 必填欄位未填妥的提示 */

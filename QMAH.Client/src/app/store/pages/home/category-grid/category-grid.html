@@ -3,7 +3,7 @@
   <app-section-head title="分類入口" tag="CATEGORIES" />
   <div class="cat-grid">
     @for (cat of categories(); track cat.name) {
-      <a [routerLink]="productsPath" [queryParams]="{ cat: cat.name }" class="cat-card">
+      <a [storeLink]="cat.link" class="cat-card">
         <div class="cat-icon">ICON</div>
         <span class="text-sm">{{ cat.name }}</span>
         <span class="cat-count">{{ cat.count }} 件</span>

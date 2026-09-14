@@ -1,7 +1,7 @@
 <!-- 新品上架：橫列式商品清單 -->
 <app-panel>
   <app-section-head variant="panel" title="新品上架" [tag]="tagText()">
-    <a class="section-more" [routerLink]="moreHref" [queryParams]="moreQueryParams">更多 →</a>
+    <a class="section-more" [storeLink]="moreHref">更多 →</a>
   </app-section-head>
   <div class="news-list">
     @for (item of items(); track item.id) {

@@ -3,6 +3,8 @@ import {
   CheckoutOptions,
   Coupon,
   FlashSale,
+  OrderQuote,
+  OrderQuoteRequest,
   OrderRequest,
   OrderResult,
   Page,
@@ -274,8 +276,30 @@ export function listSuggestions(params: HttpParams) {
    購物車
    =============================== */
 
+/** 購物車內的型錄紀錄與數量，依型錄順序排列 */
+function cartLines() {
+  return CATALOG.filter((record) => cartQuantities.has(record.id)).map((record) => ({
+    record,
+    qty: cartQuantities.get(record.id) ?? 0,
+  }));
+}
+
+/** 購物車商品金額：折扣前小計與折扣後應付商品金額 */
+function cartItemTotals(lines: ReturnType<typeof cartLines>) {
+  return {
+    subtotal: lines.reduce((sum, { record, qty }) => sum + record.price * qty, 0),
+    itemsPayable: lines.reduce((sum, { record, qty }) => sum + dealPrice(record) * qty, 0),
+  };
+}
+
+/** 購物車頁的免運判斷：應付商品金額為 0（購物車為空）視同已達門檻 */
+function reachesFreeShipping(itemsPayable: number): boolean {
+  return itemsPayable === 0 || itemsPayable >= FREE_SHIPPING_THRESHOLD;
+}
+
 function buildCart(): ShoppingCart {
-  const items = CATALOG.filter((record) => cartQuantities.has(record.id)).map((record) => ({
+  const lines = cartLines();
+  const items = lines.map(({ record, qty }) => ({
     productId: record.id,
     brand: record.brand,
     category: record.cat,
@@ -283,12 +307,26 @@ function buildCart(): ShoppingCart {
     dimensions: record.dims,
     price: dealPrice(record),
     originalPrice: record.off > 0 ? record.price : null,
-    qty: cartQuantities.get(record.id) ?? 0,
+    qty,
+    lineTotal: dealPrice(record) * qty,
   }));
   const addons = CATALOG.filter((record) => !cartQuantities.has(record.id))
     .slice(0, ADDON_LIMIT)
     .map(toProduct);
-  return { items, addons };
+
+  // 購物車頁以預設配送方式（第一項）試算運費
+  const { subtotal, itemsPayable } = cartItemTotals(lines);
+  const freeShipping = reachesFreeShipping(itemsPayable);
+  const shippingFee = freeShipping ? 0 : SHIPPING_OPTIONS[0].fee;
+  const amounts = {
+    subtotal,
+    itemDiscount: subtotal - itemsPayable,
+    shippingFee,
+    payable: itemsPayable + shippingFee,
+    freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+    freeShippingShortfall: freeShipping ? 0 : FREE_SHIPPING_THRESHOLD - itemsPayable,
+  };
+  return { items, addons, amounts };
 }
 
 function requireQty(qty: unknown): number {
@@ -355,35 +393,34 @@ function applyCoupon(coupon: Coupon | null, payable: number) {
   return { discount: 0, freeShipping: true };
 }
 
-/** 送出訂單：不採用前端試算的金額，依購物車、折價券與點數規則重新計算，成立後清空購物車 */
-export function createOrder(body: unknown): OrderResult {
-  const order = body as OrderRequest;
-  const { recipient } = order;
-  if (![recipient?.name, recipient?.phone, recipient?.address].every((value) => value?.trim())) {
-    throw new MockApiError(400, '收件人姓名、電話與地址為必填');
-  }
-  const lines = CATALOG.filter((record) => cartQuantities.has(record.id));
-  if (lines.length === 0) throw new MockApiError(400, '購物車是空的');
-
-  const shipping = SHIPPING_OPTIONS.find((option) => option.id === order.shippingOptionId);
+/** 依購物車、配送方式、折價券與點數規則計算訂單金額（試算與送出訂單共用） */
+function quoteOrder(request: OrderQuoteRequest): OrderQuote {
+  const shipping = SHIPPING_OPTIONS.find((option) => option.id === request.shippingOptionId);
   if (!shipping) throw new MockApiError(400, '無效的配送方式');
-  if (!PAYMENT_OPTIONS.some((option) => option.id === order.paymentOptionId)) {
-    throw new MockApiError(400, '無效的付款方式');
-  }
-  const coupon = order.couponId === null ? null : MEMBER_COUPONS.find((item) => item.id === order.couponId);
+  const coupon = request.couponId === null ? null : MEMBER_COUPONS.find((item) => item.id === request.couponId);
   if (coupon === undefined) throw new MockApiError(400, '無效的折價券');
 
-  const qtyOf = (record: CatalogRecord) => cartQuantities.get(record.id) ?? 0;
-  const subtotal = lines.reduce((sum, record) => sum + record.price * qtyOf(record), 0);
-  const itemsPayable = lines.reduce((sum, record) => sum + dealPrice(record) * qtyOf(record), 0);
+  const lines = cartLines();
+  const { subtotal, itemsPayable } = cartItemTotals(lines);
   const cut = applyCoupon(coupon, itemsPayable);
   const shippingFee = cut.freeShipping || itemsPayable >= FREE_SHIPPING_THRESHOLD ? 0 : shipping.fee;
-  const pointsUsed = Math.min(Math.max(0, Math.floor(order.usePoints || 0)), MEMBER.pointBalance, itemsPayable);
+  const pointCap = Math.min(MEMBER.pointBalance, itemsPayable);
+  const pointsUsed = Math.min(Math.max(0, Math.floor(request.usePoints || 0)), pointCap);
   const payable = Math.max(0, itemsPayable - cut.discount - pointsUsed + shippingFee);
 
-  cartQuantities.clear();
   return {
-    orderId: `od-${Date.now()}`,
+    lines: lines.map(({ record, qty }) => ({
+      productId: record.id,
+      name: record.name,
+      qty,
+      lineTotal: dealPrice(record) * qty,
+    })),
+    shippingOptions: SHIPPING_OPTIONS.map((option) => ({
+      ...option,
+      fee: itemsPayable >= FREE_SHIPPING_THRESHOLD ? 0 : option.fee,
+    })),
+    usableCouponIds: MEMBER_COUPONS.filter((item) => itemsPayable >= item.min).map((item) => item.id),
+    pointCap,
     subtotal,
     itemDiscount: subtotal - itemsPayable,
     shippingFee,
@@ -391,6 +428,37 @@ export function createOrder(body: unknown): OrderResult {
     pointsUsed,
     payable,
     pointsEarned: Math.round(payable * POINT_EARN_RATE),
+  };
+}
+
+/** 試算訂單金額：不成立訂單、不清空購物車 */
+export function getOrderQuote(body: unknown): OrderQuote {
+  return quoteOrder(body as OrderQuoteRequest);
+}
+
+/** 送出訂單：不採用前端顯示的金額，依購物車、折價券與點數規則重新計算，成立後清空購物車 */
+export function createOrder(body: unknown): OrderResult {
+  const order = body as OrderRequest;
+  const { recipient } = order;
+  if (![recipient?.name, recipient?.phone, recipient?.address].every((value) => value?.trim())) {
+    throw new MockApiError(400, '收件人姓名、電話與地址為必填');
+  }
+  if (cartQuantities.size === 0) throw new MockApiError(400, '購物車是空的');
+  if (!PAYMENT_OPTIONS.some((option) => option.id === order.paymentOptionId)) {
+    throw new MockApiError(400, '無效的付款方式');
+  }
+
+  const quote = quoteOrder(order);
+  cartQuantities.clear();
+  return {
+    orderId: `od-${Date.now()}`,
+    subtotal: quote.subtotal,
+    itemDiscount: quote.itemDiscount,
+    shippingFee: quote.shippingFee,
+    couponDiscount: quote.couponDiscount,
+    pointsUsed: quote.pointsUsed,
+    payable: quote.payable,
+    pointsEarned: quote.pointsEarned,
   };
 }
 

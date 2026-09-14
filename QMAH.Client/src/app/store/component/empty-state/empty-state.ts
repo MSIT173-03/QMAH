@@ -1,11 +1,12 @@
 import { Component, input, output } from '@angular/core';
+import { StoreLink } from '../../shared/store-link';
 
 /**
  * 空狀態顯示元件：用於清單無資料時的提示畫面，顯示標題與說明文字，並可搭配連結或按鈕呈現行動呼籲。
  */
 @Component({
   selector: 'app-empty-state',
-  imports: [],
+  imports: [StoreLink],
   templateUrl: './empty-state.html',
   styleUrls: [
     './empty-state.scss',

@@ -1,9 +1,4 @@
 :host {
-  --color-ink: #22343d;
-  --color-ink-deep: #193c38;
-  --color-muted: #6d7b80;
-  --color-teal: #4e8097;
-
   display: block;
 }
 
@@ -22,13 +17,6 @@
   font-size: 24px;
   font-weight: 700;
   color: var(--color-ink-deep);
-}
-
-.label-tag {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: var(--color-teal);
 }
 
 .page-title-count {

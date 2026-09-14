@@ -12,8 +12,7 @@
   <div class="search-hot">
     <span class="search-hot-label">{{ hotLabel }}</span>
     @for (link of hotLinks(); track $index) {
-    @let url = productListPath + "?q=" + link.label;
-    <a [href]="url" class="search-hot-link">{{ link.label }}</a>
+    <a [storeLink]="searchPath(link.label)" class="search-hot-link">{{ link.label }}</a>
     }
   </div>
   }

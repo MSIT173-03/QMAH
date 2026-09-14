@@ -13,6 +13,6 @@
   <ng-content></ng-content>
   <!-- 右側連結（例如「繼續選購 →」），無值時不顯示 -->
   @if (link(); as l) {
-    <a [href]="l.href" class="page-title-link">{{ l.label }}</a>
+    <a [storeLink]="l.href" class="page-title-link">{{ l.label }}</a>
   }
 </div>

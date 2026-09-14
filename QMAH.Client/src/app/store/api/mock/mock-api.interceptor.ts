@@ -7,13 +7,13 @@ import {
   withInterceptors,
 } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
-import { environment } from "../index"
+import { STORE_API_BASE } from '../http';
 import * as handlers from './mock-handlers';
 
 /** 單一假 API 路由：method 與路徑皆相符時，由 handle 產生回應內容 */
 interface MockRoute {
   method: string;
-  /** 相對於 environment.apiBaseUrl 的路徑；擷取群組依序傳入 handle 的 segments */
+  /** 相對於 STORE_API_BASE 的路徑；擷取群組依序傳入 handle 的 segments */
   path: RegExp;
   handle: (segments: string[], params: HttpParams, body: unknown) => unknown;
   /** 成功時的 HTTP 狀態碼，預設 200 */
@@ -21,40 +21,39 @@ interface MockRoute {
 }
 
 const ROUTES: MockRoute[] = [
-  { method: 'GET', path: /^\/store\/categories$/, handle: () => handlers.listCategories() },
-  { method: 'GET', path: /^\/store\/products$/, handle: (_, params) => handlers.listProducts(params) },
-  { method: 'GET', path: /^\/store\/products\/([^/]+)$/, handle: ([id]) => handlers.getProduct(id) },
-  { method: 'GET', path: /^\/store\/products\/([^/]+)\/related$/, handle: ([id], params) => handlers.listRelated(id, params) },
-  { method: 'GET', path: /^\/store\/products\/([^/]+)\/reviews$/, handle: ([id], params) => handlers.listReviews(id, params) },
-  { method: 'GET', path: /^\/store\/home\/hero-slides$/, handle: () => handlers.listHeroSlides() },
-  { method: 'GET', path: /^\/store\/home\/flash-sale$/, handle: () => handlers.getFlashSale() },
-  { method: 'GET', path: /^\/store\/brands$/, handle: () => handlers.listBrands() },
-  { method: 'GET', path: /^\/store\/rankings$/, handle: (_, params) => handlers.listRankings(params) },
-  { method: 'GET', path: /^\/store\/recommendations$/, handle: (_, params) => handlers.listRecommendations(params) },
-  { method: 'GET', path: /^\/store\/coupons\/claimable$/, handle: () => handlers.listClaimableCoupons() },
-  { method: 'GET', path: /^\/store\/search\/hot-links$/, handle: () => handlers.listHotLinks() },
-  { method: 'GET', path: /^\/store\/search\/suggestions$/, handle: (_, params) => handlers.listSuggestions(params) },
-  { method: 'GET', path: /^\/store\/cart$/, handle: () => handlers.getCart() },
-  { method: 'POST', path: /^\/store\/cart\/items$/, handle: (_, __, body) => handlers.addCartItem(body) },
-  { method: 'PATCH', path: /^\/store\/cart\/items\/([^/]+)$/, handle: ([id], __, body) => handlers.updateCartItem(id, body) },
-  { method: 'DELETE', path: /^\/store\/cart\/items\/([^/]+)$/, handle: ([id]) => handlers.removeCartItem(id) },
-  { method: 'GET', path: /^\/store\/member\/profile$/, handle: () => handlers.getMemberProfile() },
-  { method: 'GET', path: /^\/store\/member\/coupons$/, handle: () => handlers.listMemberCoupons() },
-  { method: 'GET', path: /^\/store\/checkout\/options$/, handle: () => handlers.getCheckoutOptions() },
-  { method: 'POST', path: /^\/store\/orders$/, handle: (_, __, body) => handlers.createOrder(body), status: 201 },
-  { method: 'GET', path: /^\/store\/site\/config$/, handle: () => handlers.getSiteConfig() },
+  { method: 'GET', path: /^\/categories$/, handle: () => handlers.listCategories() },
+  { method: 'GET', path: /^\/products$/, handle: (_, params) => handlers.listProducts(params) },
+  { method: 'GET', path: /^\/products\/([^/]+)$/, handle: ([id]) => handlers.getProduct(id) },
+  { method: 'GET', path: /^\/products\/([^/]+)\/related$/, handle: ([id], params) => handlers.listRelated(id, params) },
+  { method: 'GET', path: /^\/products\/([^/]+)\/reviews$/, handle: ([id], params) => handlers.listReviews(id, params) },
+  { method: 'GET', path: /^\/home\/hero-slides$/, handle: () => handlers.listHeroSlides() },
+  { method: 'GET', path: /^\/home\/flash-sale$/, handle: () => handlers.getFlashSale() },
+  { method: 'GET', path: /^\/brands$/, handle: () => handlers.listBrands() },
+  { method: 'GET', path: /^\/rankings$/, handle: (_, params) => handlers.listRankings(params) },
+  { method: 'GET', path: /^\/recommendations$/, handle: (_, params) => handlers.listRecommendations(params) },
+  { method: 'GET', path: /^\/coupons\/claimable$/, handle: () => handlers.listClaimableCoupons() },
+  { method: 'GET', path: /^\/search\/hot-links$/, handle: () => handlers.listHotLinks() },
+  { method: 'GET', path: /^\/search\/suggestions$/, handle: (_, params) => handlers.listSuggestions(params) },
+  { method: 'GET', path: /^\/cart$/, handle: () => handlers.getCart() },
+  { method: 'POST', path: /^\/cart\/items$/, handle: (_, __, body) => handlers.addCartItem(body) },
+  { method: 'PATCH', path: /^\/cart\/items\/([^/]+)$/, handle: ([id], __, body) => handlers.updateCartItem(id, body) },
+  { method: 'DELETE', path: /^\/cart\/items\/([^/]+)$/, handle: ([id]) => handlers.removeCartItem(id) },
+  { method: 'GET', path: /^\/member\/profile$/, handle: () => handlers.getMemberProfile() },
+  { method: 'GET', path: /^\/member\/coupons$/, handle: () => handlers.listMemberCoupons() },
+  { method: 'GET', path: /^\/checkout\/options$/, handle: () => handlers.getCheckoutOptions() },
+  { method: 'POST', path: /^\/checkout\/quote$/, handle: (_, __, body) => handlers.getOrderQuote(body) },
+  { method: 'POST', path: /^\/orders$/, handle: (_, __, body) => handlers.createOrder(body), status: 201 },
+  { method: 'GET', path: /^\/site\/config$/, handle: () => handlers.getSiteConfig() },
 ];
 
 /**
- * 假 API 攔截器：攔下所有送往 environment.apiBaseUrl 的請求，不實際發送，
+ * 假 API 攔截器：攔下所有送往 STORE_API_BASE（environment.apiBaseUrl + /store）的請求，不實際發送，
  * 改由 mock-handlers 依請求參數產生測試資料。後端 API 完成後，自 app.config 移除即改打真實 API。
- *
- * 修改為只攔截送往 baseUrl/store 的請求
  */
 export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!request.url.startsWith(environment.apiBaseUrl + "/store")) return next(request);
+  if (!request.url.startsWith(STORE_API_BASE)) return next(request);
 
-  const path = request.url.slice(environment.apiBaseUrl.length);
+  const path = request.url.slice(STORE_API_BASE.length);
   for (const route of ROUTES) {
     const match = route.method === request.method ? route.path.exec(path) : null;
     if (!match) continue;

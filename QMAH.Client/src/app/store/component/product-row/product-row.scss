@@ -1,13 +1,4 @@
 :host {
-  --color-ink: #22343d;
-  --color-body: #3f5259;
-  --color-muted: #6d7b80;
-  --color-faint: #7e8c91;
-  --color-line: #e3e7e6;
-  --color-swatch: #edf0f0;
-  --color-accent: #ad594a;
-  --color-teal: #4e8097;
-
   display: contents;
 }
 
@@ -70,7 +61,9 @@
   line-height: 1.45;
   color: var(--color-ink);
   text-decoration: none;
-  text-wrap: pretty;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 
   &:hover {
     color: var(--color-accent);

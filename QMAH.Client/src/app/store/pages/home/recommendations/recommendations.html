@@ -5,8 +5,8 @@
     @for (item of items(); track item.id) {
     <app-product-card [id]="item.id" [badge]="item.badge" [badgeVariant]="item.badgeVariant" [brand]="item.brand"
       [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
-      [sold]="item.sold" (onAddToCart)="onAddToCart.emit(item.id)" />
+      [sold]="item.sold" (addToCart)="addToCart.emit(item.id)" />
     }
   </div>
-  <button type="button" class="load-more-btn" (click)="onRequireMore.emit()">載入更多</button>
+  <button type="button" class="load-more-btn" (click)="requireMore.emit()">載入更多</button>
 </section>

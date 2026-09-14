@@ -25,7 +25,7 @@
 
       <!-- 配送與付款 -->
       <app-delivery-options
-        [shippings]="shippings()"
+        [shippings]="quote()?.shippingOptions ?? []"
         [selectedShipping]="shipIndex()"
         [payments]="payments()"
         [selectedPayment]="payIndex()"
@@ -37,7 +37,7 @@
       <app-coupon-picker
         id="coupons"
         [coupons]="coupons()"
-        [payable]="payable()"
+        [usableIds]="quote()?.usableCouponIds ?? []"
         [selected]="couponIndex()"
         (select)="couponIndex.set($event)"
       />
@@ -46,7 +46,8 @@
       <app-point-picker
         id="points"
         [balance]="pointBalance()"
-        [payable]="payable()"
+        [cap]="quote()?.pointCap ?? 0"
+        [used]="quote()?.pointsUsed ?? 0"
         [mode]="pointMode()"
         [customPoints]="customPoints()"
         (modeChange)="pointMode.set($event)"
@@ -56,15 +57,11 @@
 
     <!-- 訂單摘要與送出訂單 -->
     <app-checkout-summary
-      [lines]="lines()"
-      [couponCut]="couponCut()"
-      [pointCut]="pointCut()"
+      [quote]="quote()"
       [shipName]="shipName()"
-      [shipFee]="shipFee()"
       [submitted]="submitted()"
       [valid]="valid()"
       [placed]="order() !== null"
-      [earnRate]="earnRate()"
       (submitOrder)="onSubmit()"
     />
   </div>

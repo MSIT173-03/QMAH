@@ -214,6 +214,24 @@ export interface CartItem {
   /** 折扣前原價，無折扣時為 null */
   originalPrice: number | null;
   qty: number;
+  /** 此品項小計（折扣後單價 × 數量） */
+  lineTotal: number;
+}
+
+/** 購物車金額摘要（以預設配送方式試算運費） */
+export interface CartAmounts {
+  /** 商品小計（折扣前） */
+  subtotal: number;
+  /** 商品折扣 */
+  itemDiscount: number;
+  /** 預設配送方式的運費，已達免運門檻或購物車為空時為 0 */
+  shippingFee: number;
+  /** 應付總額 */
+  payable: number;
+  /** 滿額免運門檻 */
+  freeShippingThreshold: number;
+  /** 距離免運門檻還差的金額，已達門檻時為 0 */
+  freeShippingShortfall: number;
 }
 
 /** 購物車內容 */
@@ -222,6 +240,8 @@ export interface ShoppingCart {
   items: CartItem[];
   /** 「再加購」推薦商品，不含購物車內已有的商品 */
   addons: Product[];
+  /** 金額摘要 */
+  amounts: CartAmounts;
 }
 
 /* ===============================
@@ -297,20 +317,23 @@ export interface CheckoutOptions {
   pointEarnRate: number;
 }
 
-/** 送出訂單的請求內容；訂單商品取目前登入者的購物車 */
-export interface OrderRequest {
-  recipient: Recipient;
+/** 訂單試算的請求內容；訂單商品取目前登入者的購物車 */
+export interface OrderQuoteRequest {
   shippingOptionId: string;
-  paymentOptionId: string;
   /** 選用的折價券，未選用時為 null */
   couponId: string | null;
-  /** 欲折抵的點數 */
+  /** 欲折抵的點數，後端會夾在 0 與可折抵上限之間 */
   usePoints: number;
 }
 
-/** 訂單結果；金額皆由後端重新計算，為最終依據 */
-export interface OrderResult {
-  orderId: string;
+/** 送出訂單的請求內容 */
+export interface OrderRequest extends OrderQuoteRequest {
+  recipient: Recipient;
+  paymentOptionId: string;
+}
+
+/** 訂單金額明細 */
+export interface OrderAmounts {
   /** 商品小計（折扣前） */
   subtotal: number;
   /** 商品折扣 */
@@ -321,6 +344,31 @@ export interface OrderResult {
   /** 應付總額 */
   payable: number;
   pointsEarned: number;
+}
+
+/** 訂單試算的商品行 */
+export interface OrderQuoteLine {
+  productId: string;
+  name: string;
+  qty: number;
+  /** 此品項小計（折扣後單價 × 數量） */
+  lineTotal: number;
+}
+
+/** 訂單試算結果，供結帳頁下單前預覽 */
+export interface OrderQuote extends OrderAmounts {
+  lines: OrderQuoteLine[];
+  /** 各配送方式在本次訂單適用的運費（已套用免運門檻，不含免運券） */
+  shippingOptions: ShippingOption[];
+  /** 已達使用門檻的會員折價券 ID */
+  usableCouponIds: string[];
+  /** 本次可折抵點數上限（持有點數與應付商品金額取小者） */
+  pointCap: number;
+}
+
+/** 訂單結果；金額皆由後端重新計算，為最終依據 */
+export interface OrderResult extends OrderAmounts {
+  orderId: string;
 }
 
 /* ===============================

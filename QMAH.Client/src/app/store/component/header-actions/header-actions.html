@@ -4,7 +4,7 @@
   @if (links().length > 0) {
     <div class="nav-links">
       @for (link of links(); track link.label) {
-        <a [href]="link.href">{{ link.label }}</a>
+        <a [storeLink]="link.href">{{ link.label }}</a>
       }
     </div>
   }

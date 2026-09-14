@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Panel } from '../../../component/panel/panel';
-import { HomeApi } from '../../../api/home.api';
+import { Panel } from '../../../component';
+import { HomeApi } from '../../../api';
 
 /** 首頁側欄的迷你折價券面板：可點擊領取，領取後按鈕樣式與文字改變 */
 @Component({

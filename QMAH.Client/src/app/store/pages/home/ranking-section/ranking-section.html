@@ -9,7 +9,7 @@
     @for (item of rankingItems(); track item.id) {
     <app-product-card [id]="item.id" [badge]="item.badge" [badgeVariant]="item.badgeVariant" [brand]="item.brand"
       [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
-      [sold]="item.sold" (onAddToCart)="addToCart.emit(item.id)" />
+      [sold]="item.sold" (addToCart)="addToCart.emit(item.id)" />
     }
   </div>
 </section>

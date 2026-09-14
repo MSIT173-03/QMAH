@@ -1,44 +1,32 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { SiteHeader } from '../../component/site-header/site-header';
-import { StepIndicator } from '../../component/step-indicator/step-indicator';
-import { Breadcrumb, BreadcrumbItem } from '../../component/breadcrumb/breadcrumb';
-import { PageTitleRow } from '../../component/page-title-row/page-title-row';
-import { SiteFooter } from '../../component/site-footer/site-footer';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { EMPTY, catchError, filter, switchMap } from 'rxjs';
+import { SiteHeader, StepIndicator, Breadcrumb, BreadcrumbItem, PageTitleRow, SiteFooter } from '../../component';
+import { CheckoutApi, MemberApi } from '../../api';
+import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
+import { CART_PATH, HOME_PATH } from '../../shared/paths';
 import { RecipientForm } from './recipient-form/recipient-form';
 import { DeliveryOptions } from './delivery-options/delivery-options';
 import { CouponPicker } from './coupon-picker/coupon-picker';
 import { PointPicker } from './point-picker/point-picker';
 import { CheckoutSummary } from './checkout-summary/checkout-summary';
-import { CartApi } from '../../api/cart.api';
-import { CheckoutApi } from '../../api/checkout.api';
-import { MemberApi } from '../../api/member.api';
-import { OrderResult } from '../../api/api.models';
 import {
   CHECKOUT_STEPS,
   CHECKOUT_STEP_INDEX,
-  CheckoutForm,
-  CheckoutFormField,
-  EMPTY_CHECKOUT_FORM,
+  EMPTY_RECIPIENT,
   NO_COUPON,
   PointMode,
-  couponDiscount,
-  couponFreesShipping,
-  formToRecipient,
-  isCheckoutFormValid,
-  pointCap,
-  profileToForm,
-  resolveUsedPoints,
-  sumPayable,
-  toCheckoutLineData,
+  RecipientField,
+  isRecipientValid,
+  requestedPoints,
+  toRecipient,
 } from './checkout.data';
-import { CART_PATH, HOME_PATH } from '../../shared/paths';
 
 /**
  * 結帳頁面。
- * 各面板皆為顯示元件，結帳過程的狀態（收件資訊、配送、付款、折價券、點數）
- * 統一由本頁面持有，並在此試算各子元件無法自行推導的跨區塊金額（運費與折抵）；
- * 送出訂單時由後端重新計算，試算結果僅供下單前預覽。
+ * 各面板皆為顯示元件，結帳過程的狀態（收件資訊、配送、付款、折價券、點數）統一由本頁面持有；
+ * 選項變動時向後端試算訂單金額（POST /checkout/quote），各面板與訂單摘要只顯示試算結果，
+ * 前端不自行計算任何金額。
  */
 @Component({
   selector: 'app-checkout',
@@ -80,9 +68,7 @@ export class Checkout {
      API 資料
      =============================== */
 
-  /** 購物車內容（訂單商品） */
-  private readonly cart = toSignal(inject(CartApi).getCart());
-  /** 配送／付款方式、免運門檻與點數回饋比例 */
+  /** 配送／付款方式 */
   private readonly options = toSignal(this.checkoutApi.getOptions());
   /** 會員資料（帶入收件資訊、持有點數） */
   private readonly profile = toSignal(this.memberApi.getProfile());
@@ -92,15 +78,13 @@ export class Checkout {
   protected payments = computed(() => this.options()?.paymentOptions.map((option) => option.name) ?? []);
   /** 會員持有點數 */
   protected pointBalance = computed(() => this.profile()?.pointBalance ?? 0);
-  /** 訂單完成後回饋的點數比例 */
-  protected earnRate = computed(() => this.options()?.pointEarnRate ?? 0);
 
   /* ===============================
      結帳過程狀態
      =============================== */
 
   /** 收件資訊表單內容 */
-  protected form = signal<CheckoutForm>({ ...EMPTY_CHECKOUT_FORM });
+  protected form = signal<Recipient>({ ...EMPTY_RECIPIENT });
   /** 是否已按下「帶入個人資料」 */
   protected filled = signal(false);
   /** 選取的配送方式索引 */
@@ -119,57 +103,41 @@ export class Checkout {
   protected order = signal<OrderResult | null>(null);
 
   /* ===============================
-     訂單金額試算
+     訂單金額試算（後端）
      =============================== */
 
-  /** 訂單商品行，由購物車內容換算而成 */
-  protected lines = computed(() => (this.cart()?.items ?? []).map(toCheckoutLineData));
-
-  /** 應付商品金額（折扣後），免運門檻、折價券門檻與點數上限皆以此為準 */
-  protected payable = computed(() => sumPayable(this.lines()));
-
-  /** 各配送方式在本次訂單適用的運費：達免運門檻時一律免運 */
-  protected shippings = computed(() => {
+  /** 目前選項對應的試算請求；選項尚未載入或訂單已成立（購物車已清空）時為 null，不再試算 */
+  private quoteRequest = computed<OrderQuoteRequest | null>(() => {
     const options = this.options();
-    if (!options) return [];
-    const free = this.payable() >= options.freeShippingThreshold;
-    return options.shippingOptions.map((option) => ({ ...option, fee: free ? 0 : option.fee }));
+    if (!options || this.order()) return null;
+    return {
+      shippingOptionId: options.shippingOptions[this.shipIndex()].id,
+      couponId: this.coupons()[this.couponIndex()]?.id ?? null,
+      usePoints: requestedPoints(this.pointMode(), this.customPoints(), this.pointBalance()),
+    };
   });
 
-  /** 目前選用的折價券，未選用時為 null */
-  private coupon = computed(() =>
-    this.couponIndex() === NO_COUPON ? null : (this.coupons()[this.couponIndex()] ?? null),
-  );
-
-  /** 折價券折抵金額 */
-  protected couponCut = computed(() => couponDiscount(this.coupon(), this.payable()));
-
-  /** 選用的配送方式，選項尚未載入時為 null */
-  private shipping = computed(() => this.shippings()[this.shipIndex()] ?? null);
-
-  /** 本次運費：選用免運券時一律為 0 */
-  protected shipFee = computed(() => {
-    const shipping = this.shipping();
-    return !shipping || couponFreesShipping(this.coupon(), this.payable()) ? 0 : shipping.fee;
-  });
-
-  /** 點數折抵金額（與 app-point-picker 共用同一組換算規則） */
-  protected pointCut = computed(() =>
-    resolveUsedPoints(this.pointMode(), this.customPoints(), pointCap(this.pointBalance(), this.payable())),
+  /** 後端試算結果；選項變動時重新試算，試算失敗時保留上一次的結果 */
+  protected quote = toSignal(
+    toObservable(this.quoteRequest).pipe(
+      filter((request): request is OrderQuoteRequest => request !== null),
+      switchMap((request) => this.checkoutApi.getQuote(request).pipe(catchError(() => EMPTY))),
+    ),
+    { initialValue: null },
   );
 
   /** 選用的配送方式名稱，供訂單摘要的運費列顯示 */
-  protected shipName = computed(() => this.shipping()?.name ?? '');
+  protected shipName = computed(() => this.options()?.shippingOptions[this.shipIndex()]?.name ?? '');
 
   /** 收件資訊必填欄位是否皆已填妥 */
-  protected valid = computed(() => isCheckoutFormValid(this.form()));
+  protected valid = computed(() => isRecipientValid(this.form()));
 
   /* ===============================
      使用者操作
      =============================== */
 
   /** 更新收件資訊的單一欄位 */
-  protected onFieldChange({ field, value }: { field: CheckoutFormField; value: string }): void {
+  protected onFieldChange({ field, value }: { field: RecipientField; value: string }): void {
     this.form.update((form) => ({ ...form, [field]: value }));
   }
 
@@ -177,7 +145,7 @@ export class Checkout {
   protected onFill(): void {
     const profile = this.profile();
     if (!profile) return;
-    this.form.set(profileToForm(profile));
+    this.form.set(toRecipient(profile));
     this.filled.set(true);
   }
 
@@ -185,14 +153,13 @@ export class Checkout {
   protected onSubmit(): void {
     this.submitted.set(true);
     const options = this.options();
-    if (!this.valid() || !options || this.order()) return;
+    const request = this.quoteRequest();
+    if (!this.valid() || !options || !request) return;
     this.checkoutApi
       .createOrder({
-        recipient: formToRecipient(this.form()),
-        shippingOptionId: options.shippingOptions[this.shipIndex()].id,
+        ...request,
+        recipient: this.form(),
         paymentOptionId: options.paymentOptions[this.payIndex()].id,
-        couponId: this.coupon()?.id ?? null,
-        usePoints: this.pointCut(),
       })
       .subscribe((order) => this.order.set(order));
   }

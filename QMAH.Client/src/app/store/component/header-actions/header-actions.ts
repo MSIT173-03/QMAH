@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { StoreLink } from '../../shared/store-link';
 
 /** 頁首導覽連結 */
 export interface HeaderNavLink {
@@ -13,7 +14,7 @@ export interface HeaderNavLink {
  */
 @Component({
   selector: 'app-header-actions',
-  imports: [],
+  imports: [StoreLink],
   templateUrl: './header-actions.html',
   styleUrls: [
     './header-actions.scss',

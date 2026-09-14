@@ -1,13 +1,8 @@
 <!-- 網站頁首：固定於頁面頂端，左側品牌 Logo，其餘內容由外部投影 -->
 <header class="site-header">
-  <div
-    class="site-header-row"
-    [class.site-header-row--hero]="variant() === 'hero'"
-    [class.site-header-row--list]="variant() === 'list'"
-    [class.site-header-row--wrap]="variant() === 'wrap'"
-  >
+  <div class="site-header-row" [class]="variant() === 'default' ? '' : 'site-header-row--' + variant()">
     <!-- 品牌 Logo，點擊回首頁 -->
-    <a [href]="homeHref" class="brand-logo">
+    <a [storeLink]="homeHref" class="brand-logo">
       <img [src]="logoSrc" [alt]="logoAlt" class="brand-logo-img" />
     </a>
 

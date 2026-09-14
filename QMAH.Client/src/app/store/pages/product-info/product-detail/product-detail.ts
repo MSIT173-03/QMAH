@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { SectionHead } from '../../../component/section-head/section-head';
+import { SectionHead } from '../../../component';
 import { ProductPolicy } from '../../../api/api.models';
 
 /** 商品頁「商品說明」區塊：說明段落、說明圖與保養／退換／鑑定條列 */

@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { StoreLink } from '../../shared/store-link';
 import { HOME_PATH } from '../../shared/paths';
 
 /**
@@ -7,7 +8,7 @@ import { HOME_PATH } from '../../shared/paths';
  */
 @Component({
   selector: 'app-site-header',
-  imports: [],
+  imports: [StoreLink],
   templateUrl: './site-header.html',
   styleUrls: [
     './site-header.scss',

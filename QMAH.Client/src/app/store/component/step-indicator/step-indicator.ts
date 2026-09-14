@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { pad } from '../../shared/format';
 
 /**
  * 流程步驟指示器（例如結帳流程的「01 購物車 — 02 結帳 — 03 完成」）。
@@ -21,7 +22,7 @@ export class StepIndicator {
   /** 顯示用步驟資料：補上兩位數序號並標記已完成／進行中 */
   protected items = computed(() =>
     this.steps().map((label, i) => ({
-      label: `${String(i + 1).padStart(2, '0')} ${label}`,
+      label: `${pad(i + 1)} ${label}`,
       done: i < this.current(),
       current: i === this.current(),
     })),

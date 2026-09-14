@@ -1,12 +1,11 @@
 import { Component, computed, input, output } from '@angular/core';
-import { Panel } from '../../../component/panel/panel';
-import { SectionHead } from '../../../component/section-head/section-head';
+import { Panel, SectionHead } from '../../../component';
 import { Coupon } from '../../../api/api.models';
 import { NO_COUPON } from '../checkout.data';
 
 /**
  * 結帳頁的折價券面板。
- * 是否達到使用門檻、可用張數與狀態文字皆由折價券清單與應付金額推導；
+ * 是否達到使用門檻由後端的訂單試算結果提供，可用張數與狀態文字由此推導；
  * 點選時只會發出「有效」的新選擇（再次點選已選用者代表取消，未達門檻者不觸發）。
  */
 @Component({
@@ -20,8 +19,8 @@ import { NO_COUPON } from '../checkout.data';
 export class CouponPicker {
   /** 會員可選用的折價券清單 */
   coupons = input<Coupon[]>([]);
-  /** 目前應付商品金額，用於判斷各折價券是否達到使用門檻 */
-  payable = input(0);
+  /** 已達使用門檻的折價券 ID（後端試算） */
+  usableIds = input<string[]>([]);
   /** 目前選用的折價券索引，NO_COUPON 代表未選用 */
   selected = input(NO_COUPON);
 
@@ -31,7 +30,7 @@ export class CouponPicker {
   /** 折價券列的顯示資料：是否可用、是否已選用與右側狀態文字 */
   protected rows = computed(() =>
     this.coupons().map((coupon, i) => {
-      const usable = this.payable() >= coupon.min;
+      const usable = this.usableIds().includes(coupon.id);
       const active = i === this.selected();
       return {
         off: coupon.off,

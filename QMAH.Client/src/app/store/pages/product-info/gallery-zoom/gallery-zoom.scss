@@ -1,7 +1,4 @@
 :host {
-  --color-muted-2: #5c6b71;
-  --color-placeholder: #9aa6aa;
-
   /* 覆蓋層為 position: fixed，元件本身不應在版面中佔位（未開啟時亦不佔格線位置） */
   display: contents;
 }

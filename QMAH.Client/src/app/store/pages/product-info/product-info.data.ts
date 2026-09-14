@@ -1,8 +1,8 @@
-import { Product, ReviewPage, ReviewQuery } from '../../api/api.models';
+import { ReviewPage, ReviewQuery } from '../../api/api.models';
 
 /**
  * 商品頁的頁面選項定義與商品顯示資料換算。
- * 商品、評價、同類推薦與商品說明文案皆由 API 取得（見 src/app/api）；
+ * 商品、評價、同類推薦與商品說明文案皆由 API 取得（見 store/api）；
  * 評價篩選在此只定義按鈕文字、對應的查詢參數與則數取法，實際篩選由後端執行。
  */
 
@@ -39,33 +39,3 @@ export const REVIEW_FILTERS: ReviewFilter[] = [
   },
   { label: '附照片', query: { hasPhoto: true }, count: (page) => page.photoCount },
 ];
-
-/* ===============================
-   換算工具
-   =============================== */
-
-/** 供同類推薦卡片顯示用的商品資料 */
-export interface RelatedItemData {
-  id: string;
-  brand: string;
-  name: string;
-  /** 折扣後售價 */
-  price: number;
-  /** 折扣前原價，無折扣時為 null（不顯示劃線價，亦代表無折扣） */
-  was: number | null;
-  rating: number;
-  reviews: number;
-}
-
-/** 依商品資料換算成同類推薦卡片資料 */
-export function toRelatedItemData(product: Product): RelatedItemData {
-  return {
-    id: product.id,
-    brand: product.brand,
-    name: product.name,
-    price: product.dealPrice,
-    was: product.discountRate > 0 ? product.price : null,
-    rating: product.rating,
-    reviews: product.reviewCount,
-  };
-}

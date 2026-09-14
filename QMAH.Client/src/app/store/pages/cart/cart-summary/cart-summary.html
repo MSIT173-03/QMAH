@@ -11,7 +11,7 @@
       <span class="summary-total-value">{{ getTotal() }}</span>
     </div>
     <!-- 前往結帳 -->
-    <a [href]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
+    <a [storeLink]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
   </app-panel>
 
   <app-panel variant="note">

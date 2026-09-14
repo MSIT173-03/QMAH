@@ -1,11 +1,12 @@
 import { Component, input } from '@angular/core';
+import { StoreLink } from '../../shared/store-link';
 
 /**
  * 頁面標題列：顯示頁面標題，並可選擇性搭配標籤、統計數字或附加連結，用於各頁面頂部。
  */
 @Component({
   selector: 'app-page-title-row',
-  imports: [],
+  imports: [StoreLink],
   templateUrl: './page-title-row.html',
   styleUrls: [
     './page-title-row.scss',

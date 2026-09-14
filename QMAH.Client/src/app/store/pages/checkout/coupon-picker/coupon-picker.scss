@@ -1,15 +1,10 @@
 :host {
-  --color-ink: #22343d;
-  --color-muted: #6d7b80;
-  --color-line-mid: #dbe1e1;
-  --color-placeholder: #9aa6aa;
-  --color-accent: #ad594a;
   --color-shade: #f2f5f4;
 
   display: block;
 }
 
-/* .text-sm、.section-more 已在全站共用樣式（src/styles.scss）中定義 */
+/* .text-sm、.section-more 已在全站共用樣式（shared/styles.scss）中定義 */
 
 .coupon-row {
   border: 1px solid var(--color-line-mid);

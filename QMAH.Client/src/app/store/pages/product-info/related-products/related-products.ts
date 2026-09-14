@@ -1,7 +1,6 @@
 import { Component, input, output } from '@angular/core';
-import { SectionHead } from '../../../component/section-head/section-head';
-import { ProductCard } from '../../../component/product-card/product-card';
-import { RelatedItemData } from '../product-info.data';
+import { SectionHead, ProductCard } from '../../../component';
+import { ProductViewData } from '../../../shared/product-view';
 
 /**
  * 商品頁「同類推薦」區塊：以商品卡片格狀列出同器類的其他商品。
@@ -20,7 +19,7 @@ import { RelatedItemData } from '../product-info.data';
 })
 export class RelatedProducts {
   /** 同類推薦商品清單 */
-  items = input<RelatedItemData[]>([]);
+  items = input<ProductViewData[]>([]);
 
   /** 以下為區塊的固定版面文字 */
   protected readonly title = '同類推薦';

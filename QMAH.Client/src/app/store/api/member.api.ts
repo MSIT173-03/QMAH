@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { apiUrl } from './http';
+import { Observable } from 'rxjs';
+import { apiUrl, getField } from './http';
 import { Coupon, MemberProfile } from './api.models';
 
 /** 會員 API */
@@ -16,8 +16,6 @@ export class MemberApi {
 
   /** GET /member/coupons：持有的折價券 */
   getCoupons(): Observable<Coupon[]> {
-    return this.http
-      .get<{ coupons: Coupon[] }>(apiUrl('/member/coupons'))
-      .pipe(map((res) => res.coupons));
+    return getField(this.http, apiUrl('/member/coupons'), 'coupons');
   }
 }

@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { Panel } from '../../../component/panel/panel';
+import { Panel } from '../../../component';
 
 /** 商品頁 SIZE & CONDITION 面板：尺寸、商品狀態與量測說明 */
 @Component({

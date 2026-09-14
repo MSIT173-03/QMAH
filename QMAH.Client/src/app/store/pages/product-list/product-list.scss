@@ -1,6 +1,4 @@
 :host {
-  --color-line-mid: #dbe1e1;
-
   display: block;
 }
 
@@ -33,11 +31,6 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-}
-
-/* 推擠至標題列最右側 */
-.section-meta {
-  margin-left: auto;
 }
 
 /* 排序與顯示模式之間的分隔線 */

@@ -1,7 +1,7 @@
 <!-- 網站頁尾：simple 版僅顯示版權列，full 版另含品牌與連結欄位 -->
 <footer class="site-footer">
-  <!-- 品牌介紹與連結欄位，僅 full 版顯示 -->
   @if (variant() === 'full') {
+    <!-- 品牌介紹與連結欄位，僅 full 版顯示 -->
     <div class="footer-cols">
       <div class="footer-brand">
         <img [src]="logoSrc" [alt]="logoAlt" class="brand-logo-img brand-logo-img--lg self-start" />
@@ -11,29 +11,26 @@
         <div class="footer-col">
           <span class="label-tag">{{ col.title }}</span>
           @for (link of col.links; track link.label) {
-            <a [href]="link.href" class="footer-col-link">{{ link.label }}</a>
+            <a [storeLink]="link.href" class="footer-col-link">{{ link.label }}</a>
           }
         </div>
       }
     </div>
-  }
 
-  <!-- 版權列：full 版與 simple 版共用內容，僅外層樣式不同 -->
-  @if (variant() === 'full') {
     <div class="footer-bottom">
-      <div class="footer-bottom-row">
-        <span>{{ copyright }}</span>
-        <a [href]="privacyHref" class="footer-link">隱私權政策</a>
-        <a [href]="termsHref" class="footer-link">服務條款</a>
-        <span class="footer-note">{{ serviceNote }}</span>
-      </div>
+      <ng-container [ngTemplateOutlet]="bottomRow" [ngTemplateOutletContext]="{ simple: false }" />
     </div>
   } @else {
-    <div class="footer-bottom-row footer-bottom-row--simple">
-      <span>{{ copyright }}</span>
-      <a [href]="privacyHref" class="footer-link">隱私權政策</a>
-      <a [href]="termsHref" class="footer-link">服務條款</a>
-      <span class="footer-note">{{ serviceNote }}</span>
-    </div>
+    <ng-container [ngTemplateOutlet]="bottomRow" [ngTemplateOutletContext]="{ simple: true }" />
   }
 </footer>
+
+<!-- 版權列：full 版與 simple 版共用內容，僅外層樣式不同 -->
+<ng-template #bottomRow let-simple="simple">
+  <div class="footer-bottom-row" [class.footer-bottom-row--simple]="simple">
+    <span>{{ copyright }}</span>
+    <a [storeLink]="privacyHref" class="footer-link">隱私權政策</a>
+    <a [storeLink]="termsHref" class="footer-link">服務條款</a>
+    <span class="footer-note">{{ serviceNote }}</span>
+  </div>
+</ng-template>

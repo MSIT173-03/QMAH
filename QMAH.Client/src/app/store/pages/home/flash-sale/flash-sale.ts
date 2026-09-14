@@ -1,9 +1,9 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Panel } from '../../../component/panel/panel';
-import { HomeApi } from '../../../api/home.api';
-import { formatMoney } from '../../../shared/format';
-import { pad } from '../home.data';
+import { interval, map } from 'rxjs';
+import { Panel } from '../../../component';
+import { HomeApi } from '../../../api';
+import { formatMoney, pad } from '../../../shared/format';
 
 /** 首頁側欄的限時特賣面板：倒數計時搭配特賣品項清單 */
 @Component({
@@ -14,7 +14,7 @@ import { pad } from '../home.data';
     './flash-sale.scss',
   ],
 })
-export class FlashSale implements OnInit, OnDestroy {
+export class FlashSale {
   /** 限時特賣資料（結束時間與品項） */
   private readonly sale = toSignal(inject(HomeApi).getFlashSale());
 
@@ -29,8 +29,8 @@ export class FlashSale implements OnInit, OnDestroy {
     })),
   );
 
-  /** 目前時間，每秒更新一次以驅動倒數計時 */
-  private now = signal(Date.now());
+  /** 目前時間，每秒更新一次以驅動倒數計時（元件銷毀時自動停止） */
+  private now = toSignal(interval(1000).pipe(map(() => Date.now())), { initialValue: Date.now() });
   /** 距離特賣結束的剩餘秒數 */
   private remainingSecs = computed(() => {
     const endsAt = this.sale()?.endsAt;
@@ -44,14 +44,4 @@ export class FlashSale implements OnInit, OnDestroy {
     const s = secs % 60;
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
   });
-  /** 倒數計時計時器 */
-  private countdownTimer?: ReturnType<typeof setInterval>;
-
-  ngOnInit(): void {
-    this.countdownTimer = setInterval(() => this.now.set(Date.now()), 1000);
-  }
-
-  ngOnDestroy(): void {
-    clearInterval(this.countdownTimer);
-  }
 }

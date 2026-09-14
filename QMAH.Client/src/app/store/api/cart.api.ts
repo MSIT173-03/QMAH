@@ -21,13 +21,11 @@ export class CartApi {
 
   /** PATCH /cart/items/{productId}：修改數量 */
   updateItem(productId: string, qty: number): Observable<ShoppingCart> {
-    return this.http.patch<ShoppingCart>(apiUrl(`/cart/items/${encodeURIComponent(productId)}`), {
-      qty,
-    });
+    return this.http.patch<ShoppingCart>(apiUrl`/cart/items/${productId}`, { qty });
   }
 
   /** DELETE /cart/items/{productId}：移除品項 */
   removeItem(productId: string): Observable<ShoppingCart> {
-    return this.http.delete<ShoppingCart>(apiUrl(`/cart/items/${encodeURIComponent(productId)}`));
+    return this.http.delete<ShoppingCart>(apiUrl`/cart/items/${productId}`);
   }
 }

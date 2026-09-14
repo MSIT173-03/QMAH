@@ -12,6 +12,6 @@
     >{{ ctaLabel() }}</button>
   } @else {
     <!-- 行動按鈕（例如「開始選購」），連結網址由外部指定 -->
-    <a [href]="ctaHref()" class="empty-state-cta" [class.empty-state-cta--wide]="size() === 'lg'">{{ ctaLabel() }}</a>
+    <a [storeLink]="ctaHref()" class="empty-state-cta" [class.empty-state-cta--wide]="size() === 'lg'">{{ ctaLabel() }}</a>
   }
 </div>

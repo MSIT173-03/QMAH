@@ -1,10 +1,5 @@
 <!-- 區塊／面板標題列容器 -->
-<div
-  class="head"
-  [class.head--section]="variant() === 'section'"
-  [class.head--panel]="variant() === 'panel'"
-  [class.head--wrap]="wrap()"
->
+<div class="head" [class]="'head--' + variant()" [class.head--wrap]="wrap()">
   <!-- 依 headingLevel 決定標題使用的 heading 標籤 -->
   @switch (headingLevel()) {
     @case ('h2') {

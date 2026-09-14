@@ -1,11 +1,11 @@
 import { Component, computed, inject, output, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
-import { SectionHead } from '../../../component/section-head/section-head';
-import { PillGroup, PillOption } from '../../../component/pill-group/pill-group';
-import { ProductCard } from '../../../component/product-card/product-card';
-import { HomeApi } from '../../../api/home.api';
-import { RANKING_TABS, pad, toCardData } from '../home.data';
+import { SectionHead, PillGroup, PillOption, ProductCard } from '../../../component';
+import { HomeApi } from '../../../api';
+import { pad } from '../../../shared/format';
+import { toProductView } from '../../../shared/product-view';
+import { BadgedProductView, RANKING_TABS } from '../home.data';
 
 /** 熱銷排行最多顯示的商品數量 */
 const RANKING_LIMIT = 10;
@@ -39,7 +39,9 @@ export class RankingSection {
       switchMap((tab) =>
         this.homeApi.getRankings({ cat: tab === 0 ? undefined : this.tabs[tab], limit: RANKING_LIMIT }),
       ),
-      map((items) => items.map((item, i) => toCardData(item, `#${pad(i + 1)}`))),
+      map((items): BadgedProductView[] =>
+        items.map((item, i) => ({ ...toProductView(item), badge: `#${pad(i + 1)}`, badgeVariant: 'ink' })),
+      ),
     ),
     { initialValue: [] },
   );

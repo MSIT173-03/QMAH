@@ -1,9 +1,4 @@
 :host {
-  --color-ink: #22343d;
-  --color-muted: #6d7b80;
-  --color-line-split: #cdd6d6;
-  --color-accent: #ad594a;
-
   /* 讓 .step-indicator 直接成為頁首列的 flex 子項，margin-left: auto 才能推擠至右側 */
   display: contents;
 }

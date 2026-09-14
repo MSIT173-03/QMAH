@@ -1,13 +1,11 @@
 import { Component, computed, input, output } from '@angular/core';
-import { Panel } from '../../../component/panel/panel';
-import { SectionHead } from '../../../component/section-head/section-head';
-import { PillGroup, PillOption } from '../../../component/pill-group/pill-group';
-import { PointMode, POINT_MODES, pointCap, resolveUsedPoints } from '../checkout.data';
+import { Panel, SectionHead, PillGroup, PillOption } from '../../../component';
+import { formatNumber } from '../../../shared/format';
+import { PointMode, POINT_MODES } from '../checkout.data';
 
 /**
  * 結帳頁的購物點數折抵面板。
- * 可折抵上限與實際折抵點數皆由持有點數、應付金額與折抵方式推導，
- * 不需由頁面另外傳入（頁面以同一組 checkout.data 的純函式換算總額）。
+ * 可折抵上限與實際折抵點數皆來自後端的訂單試算結果，本元件只負責顯示與回報折抵方式、自訂點數。
  */
 @Component({
   selector: 'app-point-picker',
@@ -20,8 +18,10 @@ import { PointMode, POINT_MODES, pointCap, resolveUsedPoints } from '../checkout
 export class PointPicker {
   /** 會員目前持有的點數 */
   balance = input(0);
-  /** 目前應付商品金額，與持有點數取小者即為本次折抵上限 */
-  payable = input(0);
+  /** 本次可折抵點數上限（後端試算） */
+  cap = input(0);
+  /** 實際折抵點數（後端試算） */
+  used = input(0);
   /** 目前的折抵方式 */
   mode = input<PointMode>('none');
   /** 自訂折抵的輸入內容（僅含數字字元） */
@@ -32,10 +32,6 @@ export class PointPicker {
   /** 自訂折抵數量變更時觸發，帶出濾除非數字後的內容 */
   customPointsChange = output<string>();
 
-  /** 本次可折抵上限：持有點數與應付金額取小者 */
-  protected cap = computed(() => pointCap(this.balance(), this.payable()));
-  /** 依折抵方式換算的實際折抵點數 */
-  protected used = computed(() => resolveUsedPoints(this.mode(), this.customPoints(), this.cap()));
   /** 是否顯示自訂折抵輸入列 */
   protected showCustom = computed(() => this.mode() === 'custom');
 
@@ -45,11 +41,11 @@ export class PointPicker {
   );
 
   /** 持有點數顯示文字 */
-  protected balanceLabel = computed(() => this.balance().toLocaleString('en-US'));
+  protected balanceLabel = computed(() => formatNumber(this.balance()));
   /** 可折抵上限顯示文字 */
-  protected capLabel = computed(() => this.cap().toLocaleString('en-US'));
+  protected capLabel = computed(() => formatNumber(this.cap()));
   /** 實際折抵點數顯示文字 */
-  protected usedLabel = computed(() => this.used().toLocaleString('en-US'));
+  protected usedLabel = computed(() => formatNumber(this.used()));
 
   /** 以下為固定的版面文字 */
   protected readonly title = '購物點數';
@@ -74,9 +70,9 @@ export class PointPicker {
   private modeLabel(mode: PointMode): string {
     if (mode === 'none') return '不使用';
     if (mode === 'custom') return '自訂數量';
-    // 持有點數不足以折抵全部應付金額時，改標示可折抵的應付金額
-    return this.balance() <= this.payable()
+    // 上限等於持有點數代表點數可全額折抵；否則上限即為應付商品金額，改標示可折抵的應付金額
+    return this.cap() === this.balance()
       ? `點數全額 ${this.balanceLabel()} 點`
-      : `折抵應付金額 ${this.payable().toLocaleString('en-US')} 點`;
+      : `折抵應付金額 ${this.capLabel()} 點`;
   }
 }

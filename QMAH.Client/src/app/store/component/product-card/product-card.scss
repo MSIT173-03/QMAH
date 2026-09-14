@@ -1,13 +1,4 @@
 :host {
-  --color-ink: #22343d;
-  --color-muted: #6d7b80;
-  --color-placeholder: #9aa6aa;
-  --color-faint: #7e8c91;
-  --color-line: #e3e7e6;
-  --color-swatch: #edf0f0;
-  --color-accent: #ad594a;
-  --color-teal: #4e8097;
-
   display: contents;
 }
 
@@ -80,13 +71,6 @@
   flex-direction: column;
   gap: 6px;
   flex: 1;
-}
-
-.product-card-brand {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  color: var(--color-teal);
 }
 
 .product-card-name {

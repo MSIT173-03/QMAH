@@ -11,18 +11,18 @@
 
     <!-- 右側快捷連結：訂單、個人頁面、點數、折價券 -->
     <div class="promobar-actions">
-      <a [href]="ordersHref()" class="promobar-link">訂單查詢</a>
-      <a [href]="profileHref()" class="promobar-link">個人頁面</a>
-      <a [href]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
+      <a [storeLink]="ordersHref()" class="promobar-link">訂單查詢</a>
+      <a [storeLink]="profileHref()" class="promobar-link">個人頁面</a>
+      <a [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
 
       <!-- 折價券連結，滑鼠移入時展開懸浮面板 -->
       <div class="coupon-trigger" (mouseenter)="open.set(true)" (mouseleave)="open.set(false)">
-        <a [href]="couponsHref()" class="promobar-link">折價券 <span class="promobar-accent">{{ coupons().length }}</span> 張</a>
+        <a [storeLink]="couponsHref()" class="promobar-link">折價券 <span class="promobar-accent">{{ coupons().length }}</span> 張</a>
         @if (open()) {
           <!-- 折價券懸浮面板：列出可用折價券並提供管理入口 -->
           <div class="coupon-panel">
             @for (coupon of couponRows(); track coupon.title) {
-              <a [href]="couponsHref()" class="coupon-panel-item">
+              <a [storeLink]="couponsHref()" class="coupon-panel-item">
                 <span class="coupon-panel-amount">{{ coupon.off }}</span>
                 <span class="coupon-panel-body">
                   <span class="coupon-panel-title">{{ coupon.title }}</span>
@@ -30,7 +30,7 @@
                 </span>
               </a>
             }
-            <a [href]="manageCouponsHref()" class="coupon-panel-manage">管理所有折價券 →</a>
+            <a [storeLink]="manageCouponsHref()" class="coupon-panel-manage">管理所有折價券 →</a>
           </div>
         }
       </div>

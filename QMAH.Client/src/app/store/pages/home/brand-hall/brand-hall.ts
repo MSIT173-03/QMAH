@@ -1,8 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Panel } from '../../../component/panel/panel';
-import { SectionHead } from '../../../component/section-head/section-head';
-import { HomeApi } from '../../../api/home.api';
+import { Panel, SectionHead } from '../../../component';
+import { HomeApi } from '../../../api';
 
 /** 首頁「品牌館」面板：品牌卡片格狀排列 */
 @Component({

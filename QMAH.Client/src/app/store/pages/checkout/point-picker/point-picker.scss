@@ -1,12 +1,8 @@
 :host {
-  --color-ink: #22343d;
-  --color-muted: #6d7b80;
-  --color-line-mid: #dbe1e1;
-
   display: block;
 }
 
-/* .font-mono、.text-sm、.text-ink、.section-more 已在全站共用樣式（src/styles.scss）中定義 */
+/* .font-mono、.text-sm、.text-ink、.section-more 已在全站共用樣式（shared/styles.scss）中定義 */
 
 /* 持有點數的數字，以等寬字體與較深文字色強調 */
 .balance-value {
@@ -38,9 +34,3 @@
   }
 }
 
-/* 面板底部的規則說明文字 */
-.size-note {
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--color-muted);
-}

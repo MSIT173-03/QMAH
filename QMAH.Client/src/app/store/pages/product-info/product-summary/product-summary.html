@@ -7,18 +7,19 @@
 
   <!-- 評價摘要：評分、評論數與已售件數 -->
   <div class="product-rating-row">
-    <span class="product-card-star">★</span><span>{{ getRating() }}</span><span
-      class="product-card-split">|</span><span>{{ getReviews() }}</span><span
-      class="product-card-split">|</span><span>{{ getSold() }} {{ soldSuffix }}</span>
+    <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
+      class="product-card-split">|</span><span>{{ reviewsText() }}</span><span
+      class="product-card-split">|</span><span>{{ soldText() }} {{ soldSuffix }}</span>
   </div>
 
   <!-- 價格列：售價、原價劃線價與折扣標籤 -->
+  @let pv = priceView();
   <div class="product-price-row">
-    <span class="product-price" [class.text-accent]="hasDeal()">${{ getPrice() }}</span>
-    @if (getWas(); as was) {
-      <span class="product-card-was">${{ was }}</span>
+    <span class="product-price" [class.text-accent]="pv.hasDeal">{{ pv.price }}</span>
+    @if (pv.was) {
+      <span class="product-card-was">{{ pv.was }}</span>
     }
-    <span class="product-card-tag product-card-tag--lg" [class.product-card-tag--deal]="hasDeal()">{{ getTag() }}</span>
+    <span class="product-card-tag product-card-tag--lg" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
   </div>
 
   <!-- 規格說明：材質、考據出處與出貨方式 -->
@@ -29,7 +30,7 @@
   </div>
 
   <!-- 尺寸與商品狀態面板 -->
-  <app-size-condition [dims]="dims() ?? ''" [condition]="condition()" [note]="sizeNote()" />
+  <app-size-condition [dims]="dims()" [condition]="condition()" [note]="sizeNote()" />
 
   <!-- 購買操作：數量增減、加入購物車與直接購買 -->
   <div class="product-actions">

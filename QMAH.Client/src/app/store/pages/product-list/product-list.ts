@@ -17,23 +17,21 @@ import {
   ProductCard,
   ProductRow,
   EmptyState,
-  SiteFooter
-} from "../../component"
-
-import { CartApi, CatalogApi, MemberApi, SiteApi } from "../../api"
-
-import { ProductQuery, ShoppingCart } from '../../api/api.models';
+  SiteFooter,
+} from '../../component';
+import { CatalogApi } from '../../api';
+import { ProductQuery } from '../../api/api.models';
 import { CART_PATH, HOME_PATH } from '../../shared/paths';
+import { injectCartState, injectSiteData } from '../../shared/page-state';
+import { ProductViewData, toProductView } from '../../shared/product-view';
 import {
   ALL_PRODUCTS_LABEL,
   DISPLAY_MODES,
   DisplayModeKey,
-  ListItemData,
   PRICE_BANDS,
   SORT_OPTIONS,
   VIEW_DEFAULT_SORT,
   VIEW_HEADINGS,
-  toListItemData,
 } from './product-list.data';
 
 /**
@@ -69,15 +67,14 @@ function orEmpty(value: string | undefined): string {
   ],
   templateUrl: './product-list.html',
   styleUrls: [
-    './product-list.scss'],
+    './product-list.scss',
+  ],
 })
 export class ProductList {
+  private readonly catalogApi = inject(CatalogApi);
+
   /** 購物車入口連結 */
   protected readonly cartHref = CART_PATH;
-
-  private readonly catalogApi = inject(CatalogApi);
-  private readonly cartApi = inject(CartApi);
-  private readonly memberApi = inject(MemberApi);
 
   /* ===============================
      網址查詢字串（由 router 的 component input binding 帶入）
@@ -107,7 +104,10 @@ export class ProductList {
   /** 目前的主題入口，只影響頁面標題；清除篩選後歸零 */
   protected viewKey = linkedSignal(() => this.view());
   /** 目前的排序方式索引，預設值依主題入口而定（例如新品上架預設為最新上架） */
-  protected sortIndex = linkedSignal(() => VIEW_DEFAULT_SORT[this.view()] ?? 0);
+  protected sortIndex = linkedSignal(() => {
+    const key = VIEW_DEFAULT_SORT[this.view()];
+    return key ? SORT_OPTIONS.findIndex((option) => option.key === key) : 0;
+  });
   /** 是否只顯示折扣商品，由限時特賣入口進來時預設開啟 */
   protected dealOnly = linkedSignal(() => this.viewKey() === 'deal');
 
@@ -115,23 +115,15 @@ export class ProductList {
   protected bandIndex = signal(0);
   /** 目前的顯示模式（卡片格狀／橫列清單） */
   protected mode = signal<DisplayModeKey>('grid');
-  /** 購物車內容，取得後與加入購物車時更新 */
-  private readonly cart = signal<ShoppingCart | null>(null);
-  /** 購物車件數 */
-  protected cartCount = computed(() => this.cart()?.items.reduce((sum, item) => sum + item.qty, 0) ?? 0);
+  /** 購物車狀態（件數顯示於頁首） */
+  protected readonly cart = injectCartState();
 
   /* ===============================
      固定版面文字與外部資料
      =============================== */
 
-  private readonly siteConfig = toSignal(inject(SiteApi).getConfig());
-  private readonly profile = toSignal(this.memberApi.getProfile());
-  /** 頂部公告列的公告文字 */
-  protected announcements = computed(() => this.siteConfig()?.promoAnnouncements ?? []);
-  /** 頂部公告列顯示的會員點數 */
-  protected points = computed(() => (this.profile()?.pointBalance ?? 0).toLocaleString('en-US'));
-  /** 頂部公告列的折價券清單 */
-  protected readonly coupons = toSignal(this.memberApi.getCoupons(), { initialValue: [] });
+  /** 全站設定與頂部公告列資料 */
+  protected readonly site = injectSiteData();
   /** 器類清單（含各器類商品件數） */
   private readonly categories = toSignal(this.catalogApi.getCategories(), { initialValue: [] });
   /** 價格區間選項文字 */
@@ -163,7 +155,7 @@ export class ProductList {
   );
 
   /** 供卡片與橫列共用的商品顯示資料 */
-  protected items = computed<ListItemData[]>(() => (this.result()?.items ?? []).map(toListItemData));
+  protected items = computed<ProductViewData[]>(() => (this.result()?.items ?? []).map(toProductView));
   /** 是否已載入且沒有任何符合條件的商品 */
   protected isEmpty = computed(() => this.result() !== undefined && this.items().length === 0);
   /** 是否使用卡片格狀顯示（有商品時才需判斷） */
@@ -217,10 +209,6 @@ export class ProductList {
     ];
   });
 
-  constructor() {
-    this.cartApi.getCart().subscribe((cart) => this.cart.set(cart));
-  }
-
   /* ===============================
      使用者操作
      =============================== */
@@ -236,19 +224,9 @@ export class ProductList {
     this.category.set(index === 0 ? '' : this.categories()[index - 1].name);
   }
 
-  /** 切換價格區間篩選 */
-  protected onBandPick(index: number): void {
-    this.bandIndex.set(index);
-  }
-
   /** 切換「只看折扣商品」 */
   protected onDealToggle(): void {
     this.dealOnly.update((only) => !only);
-  }
-
-  /** 切換排序方式 */
-  protected onSortPick(index: number): void {
-    this.sortIndex.set(index);
   }
 
   /** 切換顯示模式 */
@@ -268,6 +246,6 @@ export class ProductList {
 
   /** 加入購物車：數量 1 */
   protected onAddToCart(productId: string): void {
-    this.cartApi.addItem(productId, 1).subscribe((cart) => this.cart.set(cart));
+    this.cart.add(productId);
   }
 }

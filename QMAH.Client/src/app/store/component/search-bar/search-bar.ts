@@ -1,6 +1,6 @@
 import { Component, computed, input, model, output, signal } from '@angular/core';
-
-import { PRODUCT_LIST_PATH } from "../../shared/paths"
+import { searchPath } from '../../shared/paths';
+import { StoreLink } from '../../shared/store-link';
 
 export interface SearchHotLink {
   label: string;
@@ -18,7 +18,7 @@ export interface SearchSuggestion {
  */
 @Component({
   selector: 'app-search-bar',
-  imports: [],
+  imports: [StoreLink],
   templateUrl: './search-bar.html',
   styleUrls: [
     './search-bar.scss',
@@ -37,7 +37,8 @@ export class SearchBar {
   hotLinks = input<SearchHotLink[]>([]);
   /** 建議下拉清單資料 */
   suggestions = input<SearchSuggestion[]>([]);
-  protected readonly productListPath = PRODUCT_LIST_PATH
+  /** 熱門搜尋連結的網址：商品列表頁並帶上關鍵字 */
+  protected readonly searchPath = searchPath;
 
   /** 搜尋框目前輸入值（雙向綁定） */
   value = model('');

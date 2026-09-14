@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { apiUrl, toParams } from './http';
+import { Observable } from 'rxjs';
+import { apiUrl, getField, toParams } from './http';
 import {
   Category,
   Page,
@@ -19,9 +19,7 @@ export class CatalogApi {
 
   /** GET /categories：器類清單 */
   getCategories(): Observable<Category[]> {
-    return this.http
-      .get<{ categories: Category[] }>(apiUrl('/categories'))
-      .pipe(map((res) => res.categories));
+    return getField(this.http, apiUrl('/categories'), 'categories');
   }
 
   /** GET /products：商品清單（篩選、排序、分頁） */
@@ -31,22 +29,16 @@ export class CatalogApi {
 
   /** GET /products/{id}：商品詳情，查無商品時回應 404 */
   getProduct(id: string): Observable<ProductDetail> {
-    return this.http.get<ProductDetail>(apiUrl(`/products/${encodeURIComponent(id)}`));
+    return this.http.get<ProductDetail>(apiUrl`/products/${id}`);
   }
 
   /** GET /products/{id}/related：同類推薦（同器類優先，不足以其他器類補齊） */
   getRelated(id: string, limit?: number): Observable<Product[]> {
-    return this.http
-      .get<{ items: Product[] }>(apiUrl(`/products/${encodeURIComponent(id)}/related`), {
-        params: toParams({ limit }),
-      })
-      .pipe(map((res) => res.items));
+    return getField(this.http, apiUrl`/products/${id}/related`, 'items', { limit });
   }
 
   /** GET /products/{id}/reviews：商品評價（篩選、分頁，附各星等統計） */
   getReviews(id: string, query: ReviewQuery = {}): Observable<ReviewPage> {
-    return this.http.get<ReviewPage>(apiUrl(`/products/${encodeURIComponent(id)}/reviews`), {
-      params: toParams(query),
-    });
+    return this.http.get<ReviewPage>(apiUrl`/products/${id}/reviews`, { params: toParams(query) });
   }
 }
