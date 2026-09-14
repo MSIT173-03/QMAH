@@ -36,12 +36,12 @@ describe('AdminEventsComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('loads pending events from the API on init', () => {
+  it('loads all events (no filter) from the API on init', () => {
     fixture.detectChanges();
 
     const req = httpMock.expectOne((r) => r.url.endsWith('/admin/events'));
     expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('reviewStatus')).toBe('PENDING');
+    expect(req.request.params.has('reviewStatus')).toBe(false);
     req.flush({
       items: [
         {
@@ -64,7 +64,27 @@ describe('AdminEventsComponent', () => {
       totalPages: 1
     });
 
-    expect(component.pendingEvents.length).toBe(1);
-    expect(component.pendingEvents[0].title).toBe('測試活動');
+    expect(component.events.length).toBe(1);
+    expect(component.events[0].title).toBe('測試活動');
+  });
+
+  it('applies filters when searching', () => {
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith('/admin/events')).flush({
+      items: [],
+      page: 1,
+      pageSize: 50,
+      totalCount: 0,
+      totalPages: 0
+    });
+
+    component.filterReviewStatus = 'APPROVED';
+    component.filterKeyword = '測試';
+    component.loadEvents();
+
+    const req = httpMock.expectOne((r) => r.url.endsWith('/admin/events'));
+    expect(req.request.params.get('reviewStatus')).toBe('APPROVED');
+    expect(req.request.params.get('q')).toBe('測試');
+    req.flush({ items: [], page: 1, pageSize: 50, totalCount: 0, totalPages: 0 });
   });
 });

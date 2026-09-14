@@ -1,32 +1,97 @@
 <h1 class="text-2xl font-bold mb-6 text-error">後台：檢舉審核管理</h1>
 
+<div class="flex flex-wrap gap-2 mb-4 items-end">
+  <label class="form-control">
+    <span class="label-text text-xs">狀態</span>
+    <select class="select select-bordered select-sm" [(ngModel)]="filterStatus" (change)="loadReports()">
+      <option value="">全部</option>
+      <option value="PENDING">待處理</option>
+      <option value="RESOLVED">已處理</option>
+      <option value="REJECTED">已駁回</option>
+    </select>
+  </label>
+  <label class="form-control flex-1 min-w-40">
+    <span class="label-text text-xs">關鍵字（理由／說明）</span>
+    <input
+      type="text"
+      class="input input-bordered input-sm w-full"
+      [(ngModel)]="filterKeyword"
+      (keyup.enter)="loadReports()"
+      placeholder="搜尋..."
+    />
+  </label>
+  <button class="btn btn-sm btn-primary" (click)="loadReports()">搜尋</button>
+  <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
+  <span class="text-xs text-gray-500 self-center">共 {{ totalCount }} 筆</span>
+</div>
+
+@if (loadError) {
+  <div class="alert alert-error mb-4">{{ loadError }}</div>
+}
+@if (actionError) {
+  <div class="alert alert-warning mb-4">{{ actionError }}</div>
+}
+
 <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
   <table class="table w-full">
     <thead>
       <tr>
         <th>檢舉類型</th>
+        <th>被檢舉內容</th>
         <th>檢舉人</th>
         <th>理由</th>
         <th>詳細說明</th>
+        <th>狀態</th>
         <th>送出時間</th>
-        <th>審核操作 (PUT /admin/reports/:id)</th>
+        <th>操作</th>
       </tr>
     </thead>
     <tbody>
-      @for (report of pendingReports; track report.id) {
+      @for (report of reports; track report.id) {
         <tr>
           <td><span class="badge badge-secondary">{{ report.targetType }}</span></td>
+          <td class="max-w-80">
+            @if (report.targetTitle) {
+              <div class="font-bold truncate" [title]="report.targetTitle">{{ report.targetTitle }}</div>
+            }
+            <div class="text-sm truncate" [title]="report.targetContent || ''">{{ report.targetContent || '（內容已不存在）' }}</div>
+            @if (report.targetStatus) {
+              <span
+                class="badge badge-xs mt-1"
+                [class.badge-success]="report.targetStatus === 'PUBLISHED'"
+                [class.badge-warning]="report.targetStatus === 'HIDDEN'"
+                [class.badge-error]="report.targetStatus === 'DELETED'"
+              >
+                目前內容狀態：{{ report.targetStatus }}
+              </span>
+            }
+          </td>
           <td>{{ report.reporterDisplayName || '未設定暱稱' }}</td>
           <td class="font-bold">{{ report.reason }}</td>
           <td>{{ report.detail || '—' }}</td>
+          <td><span class="badge badge-ghost">{{ report.status }}</span></td>
           <td class="text-xs text-gray-500">{{ report.createdAt }}</td>
           <td class="space-x-2">
-            <button class="btn btn-xs btn-error text-white" (click)="resolveAndHide(report.id)">確認違規並隱藏</button>
-            <button class="btn btn-xs btn-ghost" (click)="reject(report.id)">駁回</button>
+            @if (report.status === 'PENDING') {
+              <button
+                class="btn btn-xs btn-error text-white"
+                [disabled]="actionPendingId === report.id"
+                (click)="resolveAndHide(report.id)"
+              >
+                確認違規並隱藏
+              </button>
+              <button
+                class="btn btn-xs btn-ghost"
+                [disabled]="actionPendingId === report.id"
+                (click)="reject(report.id)"
+              >
+                駁回
+              </button>
+            }
           </td>
         </tr>
       } @empty {
-        <tr><td colspan="6" class="text-center py-10 text-gray-400">目前沒有待處理檢舉</td></tr>
+        <tr><td colspan="8" class="text-center py-10 text-gray-400">沒有符合條件的檢舉</td></tr>
       }
     </tbody>
   </table>

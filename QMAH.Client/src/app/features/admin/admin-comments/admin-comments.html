@@ -1,0 +1,101 @@
+<h1 class="text-2xl font-bold mb-6 text-error">後台：留言管理</h1>
+
+<div class="flex flex-wrap gap-2 mb-4 items-end">
+  <label class="form-control">
+    <span class="label-text text-xs">狀態</span>
+    <select class="select select-bordered select-sm" [(ngModel)]="filterStatus" (change)="loadComments()">
+      <option value="">全部</option>
+      <option value="PUBLISHED">已發布</option>
+      <option value="HIDDEN">已隱藏</option>
+      <option value="DELETED">已刪除</option>
+    </select>
+  </label>
+  <label class="form-control flex-1 min-w-40">
+    <span class="label-text text-xs">關鍵字（內容）</span>
+    <input
+      type="text"
+      class="input input-bordered input-sm w-full"
+      [(ngModel)]="filterKeyword"
+      (keyup.enter)="loadComments()"
+      placeholder="搜尋..."
+    />
+  </label>
+  <button class="btn btn-sm btn-primary" (click)="loadComments()">搜尋</button>
+  <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
+  <span class="text-xs text-gray-500 self-center">共 {{ totalCount }} 筆</span>
+</div>
+
+@if (loadError) {
+  <div class="alert alert-error mb-4">{{ loadError }}</div>
+}
+@if (actionError) {
+  <div class="alert alert-warning mb-4">{{ actionError }}</div>
+}
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
+  <table class="table w-full">
+    <thead>
+      <tr>
+        <th>內容</th>
+        <th>所屬貼文</th>
+        <th>留言者</th>
+        <th>狀態</th>
+        <th>時間</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (comment of comments; track comment.id) {
+        <tr>
+          <td class="max-w-80 truncate" [title]="comment.content">
+            {{ comment.parentCommentId ? '↳ ' : '' }}{{ comment.content }}
+          </td>
+          <td class="max-w-40 truncate" [title]="comment.postTitle">{{ comment.postTitle }}</td>
+          <td>{{ comment.displayName || '未設定暱稱' }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-success]="comment.status === 'PUBLISHED'"
+              [class.badge-warning]="comment.status === 'HIDDEN'"
+              [class.badge-error]="comment.status === 'DELETED'"
+            >
+              {{ comment.status }}
+            </span>
+          </td>
+          <td class="text-xs text-gray-500">{{ comment.createdAt }}</td>
+          <td class="space-x-1">
+            @if (comment.status !== 'PUBLISHED') {
+              <button
+                class="btn btn-xs btn-success text-white"
+                [disabled]="actionPendingId === comment.id"
+                (click)="setStatus(comment.id, 'PUBLISHED')"
+              >
+                還原
+              </button>
+            }
+            @if (comment.status !== 'HIDDEN') {
+              <button
+                class="btn btn-xs btn-warning"
+                [disabled]="actionPendingId === comment.id"
+                (click)="setStatus(comment.id, 'HIDDEN')"
+              >
+                隱藏
+              </button>
+            }
+            @if (comment.status !== 'DELETED') {
+              <button
+                class="btn btn-xs btn-error text-white"
+                [disabled]="actionPendingId === comment.id"
+                (click)="setStatus(comment.id, 'DELETED')"
+              >
+                刪除
+              </button>
+            }
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="6" class="text-center py-10 text-gray-400">沒有符合條件的留言</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

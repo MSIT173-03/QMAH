@@ -1,4 +1,45 @@
-<h1 class="text-2xl font-bold mb-6 text-error">後台：活動審核管理</h1>
+<h1 class="text-2xl font-bold mb-6 text-error">後台：活動管理</h1>
+
+<div class="flex flex-wrap gap-2 mb-4 items-end">
+  <label class="form-control">
+    <span class="label-text text-xs">審核狀態</span>
+    <select class="select select-bordered select-sm" [(ngModel)]="filterReviewStatus" (change)="loadEvents()">
+      <option value="">全部</option>
+      <option value="PENDING">待審核</option>
+      <option value="APPROVED">已核准</option>
+      <option value="REJECTED">已退件</option>
+    </select>
+  </label>
+  <label class="form-control">
+    <span class="label-text text-xs">發布狀態</span>
+    <select class="select select-bordered select-sm" [(ngModel)]="filterPublishStatus" (change)="loadEvents()">
+      <option value="">全部</option>
+      <option value="DRAFT">草稿</option>
+      <option value="PUBLISHED">已發布</option>
+      <option value="CANCELLED">已取消</option>
+    </select>
+  </label>
+  <label class="form-control flex-1 min-w-40">
+    <span class="label-text text-xs">關鍵字（標題／內容）</span>
+    <input
+      type="text"
+      class="input input-bordered input-sm w-full"
+      [(ngModel)]="filterKeyword"
+      (keyup.enter)="loadEvents()"
+      placeholder="搜尋..."
+    />
+  </label>
+  <button class="btn btn-sm btn-primary" (click)="loadEvents()">搜尋</button>
+  <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
+  <span class="text-xs text-gray-500 self-center">共 {{ totalCount }} 筆</span>
+</div>
+
+@if (loadError) {
+  <div class="alert alert-error mb-4">{{ loadError }}</div>
+}
+@if (actionError) {
+  <div class="alert alert-warning mb-4">{{ actionError }}</div>
+}
 
 <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
   <table class="table w-full">
@@ -7,24 +48,59 @@
         <th>活動名稱</th>
         <th>發起人</th>
         <th>活動時間</th>
-        <th>當前狀態</th>
-        <th>審核操作 (PUT /admin/events/:id/review)</th>
+        <th>審核狀態</th>
+        <th>發布狀態</th>
+        <th>操作</th>
       </tr>
     </thead>
     <tbody>
-      @for (event of pendingEvents; track event.id) {
+      @for (event of events; track event.id) {
         <tr>
           <td class="font-bold">{{ event.title }}</td>
           <td>{{ event.organizerDisplayName || '未設定暱稱' }}</td>
           <td>{{ event.startAt }}</td>
           <td><span class="badge badge-warning">{{ event.reviewStatus }}</span></td>
-          <td class="space-x-2">
-            <button class="btn btn-xs btn-success text-white" (click)="review(event.id, 'APPROVED')">通過</button>
-            <button class="btn btn-xs btn-error text-white" (click)="review(event.id, 'REJECTED')">退件</button>
+          <td><span class="badge badge-ghost">{{ event.publishStatus }}</span></td>
+          <td class="space-x-1">
+            @if (event.reviewStatus === 'PENDING') {
+              <button
+                class="btn btn-xs btn-success text-white"
+                [disabled]="actionPendingId === event.id"
+                (click)="review(event.id, 'APPROVED')"
+              >
+                通過
+              </button>
+              <button
+                class="btn btn-xs btn-error text-white"
+                [disabled]="actionPendingId === event.id"
+                (click)="review(event.id, 'REJECTED')"
+              >
+                退件
+              </button>
+            } @else if (event.reviewStatus === 'APPROVED') {
+              @if (event.publishStatus !== 'PUBLISHED') {
+                <button
+                  class="btn btn-xs btn-success text-white"
+                  [disabled]="actionPendingId === event.id"
+                  (click)="setPublishStatus(event.id, 'PUBLISHED')"
+                >
+                  發布
+                </button>
+              }
+              @if (event.publishStatus !== 'CANCELLED') {
+                <button
+                  class="btn btn-xs btn-error text-white"
+                  [disabled]="actionPendingId === event.id"
+                  (click)="setPublishStatus(event.id, 'CANCELLED')"
+                >
+                  取消活動
+                </button>
+              }
+            }
           </td>
         </tr>
       } @empty {
-        <tr><td colspan="5" class="text-center py-10 text-gray-400">目前沒有待審核活動</td></tr>
+        <tr><td colspan="6" class="text-center py-10 text-gray-400">沒有符合條件的活動</td></tr>
       }
     </tbody>
   </table>

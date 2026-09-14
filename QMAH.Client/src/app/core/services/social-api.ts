@@ -136,6 +136,33 @@ export interface AdminEventListItem {
   createdAt: string;
 }
 
+export interface AdminPostListItem {
+  id: string;
+  boardCode: string;
+  userId: string;
+  displayName: string | null;
+  postType: string;
+  publisherType: string;
+  title: string;
+  contentPreview: string;
+  status: 'PUBLISHED' | 'HIDDEN' | 'DELETED';
+  commentCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminCommentListItem {
+  id: string;
+  postId: string;
+  postTitle: string;
+  parentCommentId: string | null;
+  userId: string;
+  displayName: string | null;
+  content: string;
+  status: 'PUBLISHED' | 'HIDDEN' | 'DELETED';
+  createdAt: string;
+}
+
 export interface AdminContentReport {
   id: string;
   targetType: 'POST' | 'COMMENT';
@@ -148,6 +175,10 @@ export interface AdminContentReport {
   reporterDisplayName: string | null;
   createdAt: string;
   reviewedAt: string | null;
+  // 被檢舉的貼文/留言內容；貼文才有 targetTitle，留言恆為 null
+  targetTitle: string | null;
+  targetContent: string | null;
+  targetStatus: string | null;
 }
 
 export interface CreateSocialPostRequest {
@@ -199,6 +230,14 @@ export interface ReviewReportRequest {
   status: 'PENDING' | 'RESOLVED' | 'REJECTED';
   resolution?: string | null;
   contentAction?: 'HIDDEN' | 'DELETED' | null;
+}
+
+export interface SetEventPublishStatusRequest {
+  publishStatus: 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
+}
+
+export interface UpdateContentStatusRequest {
+  status: 'PUBLISHED' | 'HIDDEN' | 'DELETED';
 }
 
 // 對應 QMAH.Api 的 Social 相關端點（SocialController／SocialMediaController／
@@ -302,10 +341,12 @@ export class SocialApiService {
     return this.http.put<{ message: string }>(`${this.notificationsBase}/${id}/read`, {});
   }
 
-  // ---- 後台：活動審核 ----
+  // ---- 後台：活動管理 ----
 
   getAdminEvents(params: {
     reviewStatus?: string;
+    publishStatus?: string;
+    q?: string;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<AdminEventListItem>> {
@@ -326,10 +367,59 @@ export class SocialApiService {
     );
   }
 
+  setEventPublishStatus(id: string, request: SetEventPublishStatusRequest): Observable<{
+    message: string;
+    id: string;
+    publishStatus: string;
+  }> {
+    return this.http.put<{ message: string; id: string; publishStatus: string }>(
+      `${this.adminBase}/events/${id}/publish-status`,
+      request
+    );
+  }
+
+  // ---- 後台：貼文管理 ----
+
+  getAdminPosts(params: {
+    status?: string;
+    boardCode?: string;
+    postType?: string;
+    q?: string;
+    page?: number;
+    pageSize?: number;
+  } = {}): Observable<ApiPage<AdminPostListItem>> {
+    return this.http.get<ApiPage<AdminPostListItem>>(`${this.adminBase}/posts`, {
+      params: this.toHttpParams(params)
+    });
+  }
+
+  updatePostStatus(id: string, request: UpdateContentStatusRequest): Observable<{ message: string; id: string; status: string }> {
+    return this.http.put<{ message: string; id: string; status: string }>(`${this.adminBase}/posts/${id}/status`, request);
+  }
+
+  // ---- 後台：留言管理 ----
+
+  getAdminComments(params: {
+    status?: string;
+    postId?: string;
+    q?: string;
+    page?: number;
+    pageSize?: number;
+  } = {}): Observable<ApiPage<AdminCommentListItem>> {
+    return this.http.get<ApiPage<AdminCommentListItem>>(`${this.adminBase}/comments`, {
+      params: this.toHttpParams(params)
+    });
+  }
+
+  updateCommentStatus(id: string, request: UpdateContentStatusRequest): Observable<{ message: string; id: string; status: string }> {
+    return this.http.put<{ message: string; id: string; status: string }>(`${this.adminBase}/comments/${id}/status`, request);
+  }
+
   // ---- 後台：檢舉審核 ----
 
   getAdminReports(params: {
     status?: string;
+    q?: string;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<AdminContentReport>> {

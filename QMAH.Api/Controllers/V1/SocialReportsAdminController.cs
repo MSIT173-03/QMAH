@@ -28,6 +28,7 @@ public sealed class SocialReportsAdminController(
     [HttpGet]
     public async Task<ActionResult<ApiPage<AdminContentReportDto>>> GetReports(
         string? status = "PENDING",
+        string? q = null,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -38,6 +39,11 @@ public sealed class SocialReportsAdminController(
         if (normalizedStatus is not null && ReportStatuses.Contains(normalizedStatus))
             query = query.Where(r => r.Status == normalizedStatus);
 
+        var keyword = q?.Trim();
+        if (!string.IsNullOrWhiteSpace(keyword))
+            query = query.Where(r => r.Reason.Contains(keyword) || (r.Detail != null && r.Detail.Contains(keyword)));
+
+        // 貼文、留言的標題／內容跟檢舉人名稱在同一個投影查出，避免每筆檢舉再發一次查詢
         var projected = query
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new AdminContentReportDto(
@@ -54,7 +60,16 @@ public sealed class SocialReportsAdminController(
                     .Select(profile => profile.Nickname)
                     .FirstOrDefault(),
                 r.CreatedAt,
-                r.ReviewedAt));
+                r.ReviewedAt,
+                r.TargetType == "POST"
+                    ? db.SocialPosts.Where(post => post.Id == r.TargetId).Select(post => post.Title).FirstOrDefault()
+                    : null,
+                r.TargetType == "POST"
+                    ? (db.SocialPosts.Where(post => post.Id == r.TargetId).Select(post => post.Content).FirstOrDefault() ?? "（內容已不存在）")
+                    : (db.SocialComments.Where(comment => comment.Id == r.TargetId).Select(comment => comment.Content).FirstOrDefault() ?? "（內容已不存在）"),
+                r.TargetType == "POST"
+                    ? db.SocialPosts.Where(post => post.Id == r.TargetId).Select(post => post.Status).FirstOrDefault()
+                    : db.SocialComments.Where(comment => comment.Id == r.TargetId).Select(comment => comment.Status).FirstOrDefault()));
 
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
     }

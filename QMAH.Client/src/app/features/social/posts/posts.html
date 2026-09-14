@@ -3,6 +3,10 @@
   <button class="btn btn-primary" onclick="create_post_modal.showModal()">+ 發布貼文</button>
 </div>
 
+@if (loadError) {
+  <div class="alert alert-error mb-4">{{ loadError }}</div>
+}
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   @for (post of posts; track post.id) {
   <div class="card bg-base-100 shadow-xl border border-base-300">
@@ -11,11 +15,15 @@
         <span class="badge badge-secondary">{{ post.boardCode }}</span>
         <span class="text-xs text-gray-500">{{ post.createdAt }}</span>
       </div>
-      <h2 class="card-title">{{ post.title }}</h2>
+      <h2 class="card-title">
+        <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
+      </h2>
       <p>{{ post.contentPreview }}</p>
       <div class="card-actions justify-end mt-4">
         <button class="btn btn-sm btn-ghost" (click)="report(post.id)">🚩 檢舉</button>
-        <button class="btn btn-sm btn-outline btn-primary">💬 留言 ({{ post.commentCount || 0 }})</button>
+        <a class="btn btn-sm btn-outline btn-primary" [routerLink]="['/social/posts', post.id]">
+          💬 留言 ({{ post.commentCount || 0 }})
+        </a>
       </div>
     </div>
   </div>
@@ -27,6 +35,9 @@
 <dialog id="create_post_modal" class="modal">
   <div class="modal-box">
     <h3 class="font-bold text-lg mb-4">發布新貼文</h3>
+    @if (createError) {
+      <div class="alert alert-warning mb-3">{{ createError }}</div>
+    }
     <div class="form-control gap-3">
       <input type="text" placeholder="標題" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
       <select class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
@@ -37,8 +48,8 @@
     </div>
     <div class="modal-action">
       <form method="dialog">
-        <button class="btn btn-ghost">取消</button>
-        <button class="btn btn-primary" (click)="submitPost()">送出發布</button>
+        <button type="button" class="btn btn-ghost" onclick="create_post_modal.close()">取消</button>
+        <button type="button" class="btn btn-primary" (click)="submitPost()">送出發布</button>
       </form>
     </div>
   </div>

@@ -55,7 +55,10 @@ describe('AdminReportsComponent', () => {
           reporterUserId: '33333333-3333-3333-3333-333333333333',
           reporterDisplayName: '測試檢舉人',
           createdAt: '2026-01-01T00:00:00Z',
-          reviewedAt: null
+          reviewedAt: null,
+          targetTitle: '被檢舉的貼文標題',
+          targetContent: '被檢舉的貼文內容',
+          targetStatus: 'PUBLISHED'
         }
       ],
       page: 1,
@@ -64,7 +67,25 @@ describe('AdminReportsComponent', () => {
       totalPages: 1
     });
 
-    expect(component.pendingReports.length).toBe(1);
-    expect(component.pendingReports[0].reason).toBe('不當內容');
+    expect(component.reports.length).toBe(1);
+    expect(component.reports[0].reason).toBe('不當內容');
+  });
+
+  it('applies keyword filter when searching', () => {
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith('/admin/reports')).flush({
+      items: [],
+      page: 1,
+      pageSize: 50,
+      totalCount: 0,
+      totalPages: 0
+    });
+
+    component.filterKeyword = '垃圾訊息';
+    component.loadReports();
+
+    const req = httpMock.expectOne((r) => r.url.endsWith('/admin/reports'));
+    expect(req.request.params.get('q')).toBe('垃圾訊息');
+    req.flush({ items: [], page: 1, pageSize: 50, totalCount: 0, totalPages: 0 });
   });
 });

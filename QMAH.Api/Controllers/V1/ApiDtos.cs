@@ -212,6 +212,31 @@ public sealed record AdminEventListItemDto(
     string? ReviewNote,
     DateTime CreatedAt);
 
+public sealed record AdminPostListItemDto(
+    Guid Id,
+    string BoardCode,
+    Guid UserId,
+    string? DisplayName,
+    string PostType,
+    string PublisherType,
+    string Title,
+    string ContentPreview,
+    string Status,
+    int CommentCount,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
+
+public sealed record AdminCommentListItemDto(
+    Guid Id,
+    Guid PostId,
+    string PostTitle,
+    Guid? ParentCommentId,
+    Guid UserId,
+    string? DisplayName,
+    string Content,
+    string Status,
+    DateTime CreatedAt);
+
 public sealed record AdminContentReportDto(
     Guid Id,
     string TargetType,
@@ -223,7 +248,10 @@ public sealed record AdminContentReportDto(
     Guid ReporterUserId,
     string? ReporterDisplayName,
     DateTime CreatedAt,
-    DateTime? ReviewedAt);
+    DateTime? ReviewedAt,
+    string? TargetTitle,
+    string? TargetContent,
+    string? TargetStatus);
 
 public sealed record GameRoomListItemDto(
     Guid Id,

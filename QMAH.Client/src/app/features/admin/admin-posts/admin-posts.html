@@ -1,0 +1,122 @@
+<h1 class="text-2xl font-bold mb-6 text-error">後台：貼文管理</h1>
+
+<div class="flex flex-wrap gap-2 mb-4 items-end">
+  <label class="form-control">
+    <span class="label-text text-xs">狀態</span>
+    <select class="select select-bordered select-sm" [(ngModel)]="filterStatus" (change)="loadPosts()">
+      <option value="">全部</option>
+      <option value="PUBLISHED">已發布</option>
+      <option value="HIDDEN">已隱藏</option>
+      <option value="DELETED">已刪除</option>
+    </select>
+  </label>
+  <label class="form-control">
+    <span class="label-text text-xs">貼文類型</span>
+    <select class="select select-bordered select-sm" [(ngModel)]="filterPostType" (change)="loadPosts()">
+      <option value="">全部</option>
+      <option value="POST">一般貼文</option>
+      <option value="ANNOUNCEMENT">公告</option>
+      <option value="EVENT">活動</option>
+    </select>
+  </label>
+  <label class="form-control">
+    <span class="label-text text-xs">看板代碼</span>
+    <input
+      type="text"
+      class="input input-bordered input-sm w-28"
+      [(ngModel)]="filterBoardCode"
+      (keyup.enter)="loadPosts()"
+      placeholder="GENERAL"
+    />
+  </label>
+  <label class="form-control flex-1 min-w-40">
+    <span class="label-text text-xs">關鍵字（標題／內容）</span>
+    <input
+      type="text"
+      class="input input-bordered input-sm w-full"
+      [(ngModel)]="filterKeyword"
+      (keyup.enter)="loadPosts()"
+      placeholder="搜尋..."
+    />
+  </label>
+  <button class="btn btn-sm btn-primary" (click)="loadPosts()">搜尋</button>
+  <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
+  <span class="text-xs text-gray-500 self-center">共 {{ totalCount }} 筆</span>
+</div>
+
+@if (loadError) {
+  <div class="alert alert-error mb-4">{{ loadError }}</div>
+}
+@if (actionError) {
+  <div class="alert alert-warning mb-4">{{ actionError }}</div>
+}
+
+<div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
+  <table class="table w-full">
+    <thead>
+      <tr>
+        <th>標題</th>
+        <th>看板</th>
+        <th>類型</th>
+        <th>作者</th>
+        <th>留言數</th>
+        <th>狀態</th>
+        <th>發布時間</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (post of posts; track post.id) {
+        <tr>
+          <td class="font-bold max-w-64 truncate" [title]="post.contentPreview">{{ post.title || '（無標題）' }}</td>
+          <td>{{ post.boardCode }}</td>
+          <td><span class="badge badge-ghost">{{ post.postType }}</span></td>
+          <td>{{ post.displayName || '未設定暱稱' }}</td>
+          <td>{{ post.commentCount }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-success]="post.status === 'PUBLISHED'"
+              [class.badge-warning]="post.status === 'HIDDEN'"
+              [class.badge-error]="post.status === 'DELETED'"
+            >
+              {{ post.status }}
+            </span>
+          </td>
+          <td class="text-xs text-gray-500">{{ post.createdAt }}</td>
+          <td class="space-x-1">
+            @if (post.status !== 'PUBLISHED') {
+              <button
+                class="btn btn-xs btn-success text-white"
+                [disabled]="actionPendingId === post.id"
+                (click)="setStatus(post.id, 'PUBLISHED')"
+              >
+                還原
+              </button>
+            }
+            @if (post.status !== 'HIDDEN') {
+              <button
+                class="btn btn-xs btn-warning"
+                [disabled]="actionPendingId === post.id"
+                (click)="setStatus(post.id, 'HIDDEN')"
+              >
+                隱藏
+              </button>
+            }
+            @if (post.status !== 'DELETED') {
+              <button
+                class="btn btn-xs btn-error text-white"
+                [disabled]="actionPendingId === post.id"
+                (click)="setStatus(post.id, 'DELETED')"
+              >
+                刪除
+              </button>
+            }
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="8" class="text-center py-10 text-gray-400">沒有符合條件的貼文</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

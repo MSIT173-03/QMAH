@@ -15,6 +15,7 @@ public sealed class SocialEventsAdminController(
 {
     private static readonly HashSet<string> ReviewStatuses = ["APPROVED", "REJECTED"];
     private static readonly HashSet<string> AllReviewStatuses = ["PENDING", "APPROVED", "REJECTED"];
+    private static readonly HashSet<string> AllPublishStatuses = ["DRAFT", "PUBLISHED", "CANCELLED"];
 
     public sealed class ReviewEventDto
     {
@@ -22,19 +23,34 @@ public sealed class SocialEventsAdminController(
         public string? ReviewNote { get; set; }
     }
 
-    // GET /api/v1/admin/events?reviewStatus=PENDING
+    public sealed class SetPublishStatusDto
+    {
+        public string PublishStatus { get; set; } = null!; // DRAFT, PUBLISHED, CANCELLED
+    }
+
+    // GET /api/v1/admin/events?reviewStatus=&publishStatus=&q=（三個都不帶就回傳全部活動）
     [HttpGet]
     public async Task<ActionResult<ApiPage<AdminEventListItemDto>>> GetEvents(
-        string? reviewStatus = "PENDING",
+        string? reviewStatus,
+        string? publishStatus,
+        string? q,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var normalizedStatus = string.IsNullOrWhiteSpace(reviewStatus) ? null : reviewStatus.Trim().ToUpperInvariant();
-
         var query = db.Events.AsNoTracking();
-        if (normalizedStatus is not null && AllReviewStatuses.Contains(normalizedStatus))
-            query = query.Where(item => item.ReviewStatus == normalizedStatus);
+
+        var normalizedReviewStatus = string.IsNullOrWhiteSpace(reviewStatus) ? null : reviewStatus.Trim().ToUpperInvariant();
+        if (normalizedReviewStatus is not null && AllReviewStatuses.Contains(normalizedReviewStatus))
+            query = query.Where(item => item.ReviewStatus == normalizedReviewStatus);
+
+        var normalizedPublishStatus = string.IsNullOrWhiteSpace(publishStatus) ? null : publishStatus.Trim().ToUpperInvariant();
+        if (normalizedPublishStatus is not null && AllPublishStatuses.Contains(normalizedPublishStatus))
+            query = query.Where(item => item.PublishStatus == normalizedPublishStatus);
+
+        var keyword = q?.Trim();
+        if (!string.IsNullOrWhiteSpace(keyword))
+            query = query.Where(item => item.Title.Contains(keyword) || item.Content.Contains(keyword));
 
         var projected = query
             .OrderByDescending(item => item.CreatedAt)
@@ -97,5 +113,30 @@ public sealed class SocialEventsAdminController(
 
         await db.SaveChangesAsync(cancellationToken);
         return Ok(new { message = "活動審核完成", eventItem.Id, eventItem.ReviewStatus, eventItem.PublishStatus });
+    }
+
+    // 審核通過後，管理員可以直接切換發布狀態（例如活動辦完要下架、或先前取消後想恢復草稿）。
+    [HttpPut("{id:guid}/publish-status")]
+    public async Task<IActionResult> SetPublishStatus(Guid id, [FromBody] SetPublishStatusDto dto, CancellationToken cancellationToken = default)
+    {
+        var publishStatus = dto.PublishStatus?.Trim().ToUpperInvariant();
+        if (publishStatus is null || !AllPublishStatuses.Contains(publishStatus))
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "發布狀態無效", detail: "PublishStatus 只能是 DRAFT、PUBLISHED 或 CANCELLED。");
+
+        var eventItem = await db.Events
+            .Include(e => e.SocialPost)
+            .SingleOrDefaultAsync(e => e.Id == id, cancellationToken);
+        if (eventItem is null)
+            return MissingResource("找不到活動", "這場活動不存在。");
+
+        if (publishStatus == "PUBLISHED" && eventItem.ReviewStatus != "APPROVED")
+            return InvalidWorkflow("尚未審核通過", "只有審核通過的活動才能發布。");
+
+        eventItem.PublishStatus = publishStatus;
+        if (eventItem.SocialPost is not null)
+            EventSocialPostSynchronizer.SyncPublication(eventItem.SocialPost, eventItem, DateTime.UtcNow);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok(new { message = "活動發布狀態已更新", eventItem.Id, eventItem.PublishStatus });
     }
 }

@@ -27,7 +27,9 @@ public sealed class AccountController(
 {
     [AllowAnonymous]
     [HttpGet("antiforgery-token")]
-    public IActionResult GetAntiforgeryToken([FromServices] IAntiforgery antiforgery)
+    public IActionResult GetAntiforgeryToken(
+        [FromServices] IAntiforgery antiforgery,
+        [FromServices] IWebHostEnvironment environment)
     {
         var tokens = antiforgery.GetAndStoreTokens(HttpContext);
         if (string.IsNullOrWhiteSpace(tokens.RequestToken))
@@ -35,13 +37,16 @@ public sealed class AccountController(
 
         // Angular 需要讀取 request token，再以 X-XSRF-TOKEN header 送回 API。
         // 不直接把 ASP.NET Core 內部 cookie token 暴露給前端。
+        // 開發環境固定不要求 Secure：QMAH.Api 一律以 https 執行，但透過 Angular dev server 的
+        // proxy 轉送時瀏覽器端看到的是 http，Request.IsHttps 判斷的是 Kestrel 收到的請求（永遠
+        // 是 https），Secure cookie 在該情境下無法穩定送回，登入狀態會不穩定地遺失。
         Response.Cookies.Append(
             "XSRF-TOKEN-API",
             tokens.RequestToken,
             new CookieOptions
             {
                 HttpOnly = false,
-                Secure = Request.IsHttps,
+                Secure = !environment.IsDevelopment(),
                 SameSite = SameSiteMode.Lax,
                 Path = "/",
                 IsEssential = true
