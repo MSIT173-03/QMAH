@@ -7,3 +7,4 @@ export const routes: Routes = [
     loadComponent: () => import('./artifact-list/artifact-list').then(m => m.ArtifactList)
   },
 ]
+

@@ -6,8 +6,13 @@
       <h2 class="page-header__title">圖鑑</h2>
     </div>
     <div class="page-header__meta" *ngIf="!loading() && !errorMsg()">
-      <span class="result-count">共 <strong>{{ totalCount() }}</strong> 筆</span>
-      <span class="result-page" *ngIf="totalPages() > 1">第 {{ currentPage() }} 頁 / 共 {{ totalPages() }} 頁</span>
+      <span class="result-count">
+        共 <strong>{{ totalCount() }}</strong> 筆・已解鎖 <strong>{{ unlockedCount() }}</strong>
+      </span>
+      <div class="page-header__right">
+        <span class="key-badge">🔑 <strong>{{ keys() }}</strong></span>
+        <span class="result-page" *ngIf="totalPages() > 1">第 {{ currentPage() }} 頁 / 共 {{ totalPages() }} 頁</span>
+      </div>
     </div>
   </div>
 
@@ -20,15 +25,19 @@
   <div class="artifact-grid" *ngIf="!loading() && !errorMsg()">
     <div
       class="artifact-card"
+      [class.locked]="!item.unlocked"
+      [class.unlocked]="item.unlocked"
       *ngFor="let item of catalogModel(); trackBy: trackByArtifactId"
+      (click)="openCard(item.id)"
     >
       <div class="artifact-card__media">
         <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
+        <span class="lock-badge" *ngIf="!item.unlocked">🔒</span>
       </div>
 
       <div class="artifact-card__info">
         <p class="ref">No. {{ item.artifactRef }}</p>
-        <h3 class="name">{{ item.name }}</h3>
+        <h3 class="name">{{ item.unlocked ? item.name : '？？？' }}</h3>
         <div class="tags">
           <span class="tag tag--category">{{ item.categoryName }}</span>
           <span class="tag tag--era">{{ item.eraName }}</span>
@@ -63,5 +72,143 @@
       下一頁
     </button>
   </nav>
+
+  <!-- ========== 以下併入原 artifact-unlock.html：放大檢視／解鎖確認／鑑賞流水 ========== -->
+
+  <div class="overlay" [class.open]="isOverlayOpen()" (click)="onOverlayClick($event)">
+    <div class="stage" [class.with-info]="infoOpen() && focusedItem()?.unlocked" *ngIf="focusedItem() as item">
+
+      <div class="focus-card" [class.unlocked]="item.unlocked">
+        <span class="num">{{ item.artifactRef }}</span>
+        <span class="category-tag">{{ item.categoryName }}</span>
+        <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="focus-thumbnail" />
+        <div class="label">
+          <span class="name">{{ item.unlocked ? item.name : '？？？' }}</span>
+          <span class="rarity">{{ item.unlocked ? item.rarity : '尚未解鎖' }}</span>
+        </div>
+      </div>
+
+      <div class="focus-actions">
+        <ng-container *ngIf="item.unlocked; else lockedActions">
+          <button type="button" class="action-btn info-btn" [class.active]="infoOpen()" (click)="toggleInfo()">
+            {{ infoOpen() ? '✕ 關閉' : 'ℹ️ info' }}
+          </button>
+          <div class="hint">點擊空白處返回圖鑑</div>
+        </ng-container>
+        <ng-template #lockedActions>
+          <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">🔓 解鎖</button>
+          <div class="hint">需消耗 {{ keyCost(item) }} 把鑰匙解鎖</div>
+        </ng-template>
+      </div>
+
+      <div class="info-panel" *ngIf="item.unlocked">
+        <div class="info-panel__inner">
+          <span class="num">{{ item.artifactRef }}</span>
+          <h3>{{ item.name }}</h3>
+
+          <div class="field">
+            <span class="field-label">文物統一編號</span>
+            <span class="field-value">{{ item.unifiedNumber }}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">作品號</span>
+            <span class="field-value">{{ item.workNumber }}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">品名</span>
+            <span class="field-value">{{ item.title }}</span>
+            <span class="field-value field-value--en" *ngIf="item.titleEn">{{ item.titleEn }}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">分類</span>
+            <span class="field-value">{{ item.categoryName }}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">作者</span>
+            <span class="field-value">{{ item.authorName }}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">創作時間</span>
+            <span class="field-value">{{ item.creationPeriod }}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">數量</span>
+            <span class="field-value">{{ item.quantity }}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">解鎖日期</span>
+            <span class="field-value field-value--muted">
+              {{ item.unlockedAt ? (item.unlockedAt | date:'yyyy/MM/dd HH:mm') : '（尚無解鎖紀錄）' }}
+            </span>
+          </div>
+          <div class="field">
+            <span class="field-label">玩家回答鑑賞</span>
+            <button type="button" class="field-action" (click)="onAppreciationClick(item)">前往鑑賞回答</button>
+          </div>
+          <div class="field">
+            <span class="field-label">來源</span>
+            <a
+              *ngIf="item.sourceUrl; else noSource"
+              class="field-link"
+              [href]="item.sourceUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >前往故宮典藏頁面</a>
+            <ng-template #noSource>
+              <span class="field-value field-value--muted">尚無來源資料</span>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div
+    class="confirm-overlay"
+    [class.open]="confirmTarget() !== null"
+    (click)="onConfirmOverlayClick($event)"
+  >
+    <div class="confirm-dialog" *ngIf="confirmTarget() as target">
+      <span class="key-icon">🔑</span>
+      <h3>解鎖確認</h3>
+      <p>使用 <strong>{{ confirmCost() }}</strong> 把鑰匙解鎖「{{ target.artifactRef }}」的紀錄？</p>
+      <p class="have">
+        目前持有：<strong>{{ keys() }}</strong> 把
+        <span class="warn" *ngIf="confirmInsufficient()">（鑰匙不足）</span>
+      </p>
+      <div class="confirm-actions">
+        <button type="button" class="action-btn cancel-btn" (click)="cancelUnlockConfirm()">取消</button>
+        <button
+          type="button"
+          class="action-btn unlock-btn confirm-btn"
+          [disabled]="confirmInsufficient()"
+          (click)="confirmUnlock()"
+        >
+          確認解鎖
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="debug-toolbar">
+    <button
+      type="button"
+      class="debug-btn"
+      [class.active]="debugAllUnlocked()"
+      (click)="toggleDebugUnlockAll()"
+    >
+      {{ debugAllUnlocked() ? '🐞 還原真實解鎖狀態' : '🐞 全部解鎖 (Debug)' }}
+    </button>
+    <button type="button" class="debug-btn" (click)="toggleLedger()">🧾 解鎖流水 (Debug)</button>
+  </div>
+  <div class="ledger-panel" [class.open]="ledgerOpen()">
+    <h4>ArtifactUnlocks 流水紀錄（本次連線期間由 API 回應累積，非完整歷史）</h4>
+    <div *ngIf="ledgerDescending().length === 0" class="ledger-empty">目前尚無解鎖紀錄</div>
+    <div class="ledger-row" *ngFor="let rec of ledgerDescending()">
+      <span class="tag">{{ rec.unlockMethod }}</span>{{ itemByArtifactId(rec.artifactId)?.name ?? rec.artifactId.slice(0, 8) }}<br />
+      artifactId: {{ rec.artifactId.slice(0, 8) }}… · {{ rec.unlockedAt | date:'yyyy/MM/dd HH:mm' }}
+    </div>
+  </div>
 
 </div>
