@@ -1,3 +1,6 @@
+/* artifact-list.scss */
+/* 已併入原 artifact-unlock.scss 的放大檢視／解鎖／鑑賞流水樣式，版面主體維持 artifact-list 原本設計。 */
+
 .artifact-page {
   --ink: #1c2b4a;
   --ink-soft: #5b6b8c;
@@ -233,7 +236,7 @@
 
 .name {
   margin: 0 0 10px;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1.4;
   color: var(--ink);
@@ -292,42 +295,86 @@
   color: var(--ink-soft);
 }
 
-/* ---------- pagination ---------- */
+/* ---------- search bar ---------- */
 
-.pagination {
+.search-bar {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 36px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 28px;
 }
 
-.pagination__btn {
-  border: 1px solid var(--blue);
-  background: #ffffff;
+.search-input {
+  flex: 1 1 240px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: var(--ink-soft);
+}
+
+.search-input:focus,
+.search-select:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.search-select {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ---------- 年代分區 ---------- */
+
+.era-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.era-section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--line);
+}
+
+.era-section__title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
   color: var(--blue-deep);
+  letter-spacing: 0.06em;
+}
+
+.era-section__more {
+  border: none;
+  background: none;
+  padding: 0;
   font-size: 13px;
   font-weight: 700;
-  padding: 8px 18px;
-  border-radius: 999px;
+  color: var(--blue);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.pagination__btn:hover:not(:disabled) {
-  background: var(--blue);
-  color: #ffffff;
-}
-
-.pagination__btn:disabled {
-  border-color: var(--line);
-  color: #b7bfd1;
-  cursor: not-allowed;
-}
-
-.pagination__current {
-  font-size: 13px;
-  color: var(--ink-soft);
+.era-section__more:hover {
+  color: var(--blue-deep);
+  text-decoration: underline;
 }
 
 /* ================================================================
@@ -451,14 +498,6 @@
   color: var(--on-dark);
   height: auto;
   -webkit-line-clamp: unset;
-}
-
-.focus-card .label .rarity {
-  display: block;
-  margin-top: 3px;
-  font-size: 11px;
-  color: var(--on-dark-accent);
-  letter-spacing: 0.08em;
 }
 
 .focus-actions {
@@ -587,6 +626,8 @@
 }
 
 .field .field-value--muted { color: var(--ink-soft); }
+
+.field .field-value--error { color: var(--red); }
 
 .field-action {
   display: inline-block;

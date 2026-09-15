@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { CatalogModel, CatalogListResponse } from '../models/catalog-model';
+import { CatalogModel, CatalogListResponse, CatalogDetailModel } from '../models/catalog-model';
 import { catchError, Observable, throwError } from 'rxjs';
 
 @Injectable({
@@ -13,7 +13,7 @@ export class CatalogService {
 
   // ========== 文物讀取（Read）==========
 
-  /** 取得分頁列表 */
+  /** 取得分頁列表（僅基本欄位，元素型別是 CatalogModel，不含鑑賞細節） */
   getArtifacts(page: number = 1, pageSize: number = 20): Observable<CatalogListResponse> {
     const params = new HttpParams()
       .set('page', page.toString())
@@ -24,15 +24,23 @@ export class CatalogService {
     );
   }
 
-  /** 取得單一文物詳細資料 */
-  getArtifactById(id: string): Observable<CatalogModel> {
-    return this.http.get<CatalogModel>(`${this.apiUrl}/${id}`).pipe(
+  /**
+   * 取得單一文物「完整」詳細資料。
+   * 回傳型別是 CatalogDetailModel，不是 CatalogModel——
+   * 這支 API 實際上多回傳了 description / sizeText / primaryImagePath /
+   * eraTextOriginal / creatorDisplay / licenseCode / attributionText 等
+   * 清單 API 沒有的欄位。
+   */
+  getArtifactById(id: string): Observable<CatalogDetailModel> {
+    return this.http.get<CatalogDetailModel>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
 
 
   // ========== 解鎖文物 ==========
+  // 解鎖相關 API 改由 ArtifactUnlockService 負責（見 artifact-unlock-service.ts），
+  // 這裡不重複定義。
 
 
   // ========== 新增（Create）==========

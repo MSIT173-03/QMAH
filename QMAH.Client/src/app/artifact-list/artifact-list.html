@@ -11,9 +11,26 @@
       </span>
       <div class="page-header__right">
         <span class="key-badge">🔑 <strong>{{ keys() }}</strong></span>
-        <span class="result-page" *ngIf="totalPages() > 1">第 {{ currentPage() }} 頁 / 共 {{ totalPages() }} 頁</span>
       </div>
     </div>
+  </div>
+
+  <div class="search-bar" *ngIf="!loading() && !errorMsg()">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="搜尋編號／名稱／年代／分類"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+    />
+    <select class="search-select" [ngModel]="selectedEra()" (ngModelChange)="selectedEra.set($event)">
+      <option value="">全部年代</option>
+      <option *ngFor="let era of eraOptions()" [value]="era">{{ era }}</option>
+    </select>
+    <select class="search-select" [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)">
+      <option value="">全部分類</option>
+      <option *ngFor="let category of categoryOptions()" [value]="category">{{ category }}</option>
+    </select>
   </div>
 
   <div *ngIf="loading()" class="state state--loading">
@@ -22,28 +39,44 @@
 
   <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
 
-  <div class="artifact-grid" *ngIf="!loading() && !errorMsg()">
-    <div
-      class="artifact-card"
-      [class.locked]="!item.unlocked"
-      [class.unlocked]="item.unlocked"
-      *ngFor="let item of catalogModel(); trackBy: trackByArtifactId"
-      (click)="openCard(item.id)"
-    >
-      <div class="artifact-card__media">
-        <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
-        <span class="lock-badge" *ngIf="!item.unlocked">🔒</span>
+  <div class="era-sections" *ngIf="!loading() && !errorMsg()">
+    <section class="era-section" *ngFor="let group of eraGroups(); trackBy: trackByEraName">
+      <div class="era-section__header">
+        <h3 class="era-section__title">{{ group.eraName }}</h3>
+        <button
+          type="button"
+          class="era-section__more"
+          *ngIf="group.items.length > 5"
+          (click)="toggleEraExpand(group.eraName)"
+        >
+          {{ isEraExpanded(group.eraName) ? '收合－' : '更多文物+' }}
+        </button>
       </div>
 
-      <div class="artifact-card__info">
-        <p class="ref">No. {{ item.artifactRef }}</p>
-        <h3 class="name">{{ item.unlocked ? item.name : '？？？' }}</h3>
-        <div class="tags">
-          <span class="tag tag--category">{{ item.categoryName }}</span>
-          <span class="tag tag--era">{{ item.eraName }}</span>
+      <div class="artifact-grid">
+        <div
+          class="artifact-card"
+          [class.locked]="!item.unlocked"
+          [class.unlocked]="item.unlocked"
+          *ngFor="let item of visibleItemsForEra(group); trackBy: trackByArtifactId"
+          (click)="openCard(item.id)"
+        >
+          <div class="artifact-card__media">
+            <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
+            <span class="lock-badge" *ngIf="!item.unlocked">🔒</span>
+          </div>
+
+          <div class="artifact-card__info">
+            <p class="ref">No. {{ item.artifactRef }}</p>
+            <h3 class="name">{{ item.unlocked ? item.name : '？？？' }}</h3>
+            <div class="tags">
+              <span class="tag tag--category">{{ item.categoryName }}</span>
+              <span class="tag tag--era">{{ item.eraName }}</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
     <div *ngIf="isEmpty()" class="empty">
       <p class="empty__title">目前沒有資料</p>
@@ -51,27 +84,7 @@
     </div>
   </div>
 
-  <nav class="pagination" *ngIf="!loading() && totalPages() > 1" aria-label="分頁">
-    <button
-      type="button"
-      class="pagination__btn pagination__btn--prev"
-      (click)="goToPage(currentPage() - 1)"
-      [disabled]="currentPage() === 1"
-    >
-      上一頁
-    </button>
-
-    <span class="pagination__current">第 {{ currentPage() }} / {{ totalPages() }} 頁</span>
-
-    <button
-      type="button"
-      class="pagination__btn pagination__btn--next"
-      (click)="goToPage(currentPage() + 1)"
-      [disabled]="currentPage() === totalPages()"
-    >
-      下一頁
-    </button>
-  </nav>
+  <!-- 版面已改成年代分區＋展開，原本「上一頁／下一頁」的分頁 nav 不再需要 -->
 
   <!-- ========== 以下併入原 artifact-unlock.html：放大檢視／解鎖確認／鑑賞流水 ========== -->
 
@@ -81,10 +94,9 @@
       <div class="focus-card" [class.unlocked]="item.unlocked">
         <span class="num">{{ item.artifactRef }}</span>
         <span class="category-tag">{{ item.categoryName }}</span>
-        <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="focus-thumbnail" />
+        <img [src]="getImageUrl(focusedImagePath(item))" [alt]="item.name" class="focus-thumbnail" />
         <div class="label">
           <span class="name">{{ item.unlocked ? item.name : '？？？' }}</span>
-          <span class="rarity">{{ item.unlocked ? item.rarity : '尚未解鎖' }}</span>
         </div>
       </div>
 
@@ -106,58 +118,63 @@
           <span class="num">{{ item.artifactRef }}</span>
           <h3>{{ item.name }}</h3>
 
-          <div class="field">
-            <span class="field-label">文物統一編號</span>
-            <span class="field-value">{{ item.unifiedNumber }}</span>
+          <div class="field" *ngIf="focusedDetailLoading()">
+            <span class="field-value field-value--muted"><span class="spinner"></span>載入鑑賞資料中...</span>
           </div>
-          <div class="field">
-            <span class="field-label">作品號</span>
-            <span class="field-value">{{ item.workNumber }}</span>
+
+          <div class="field" *ngIf="focusedDetailError()">
+            <span class="field-value field-value--error">{{ focusedDetailError() }}</span>
           </div>
-          <div class="field">
-            <span class="field-label">品名</span>
-            <span class="field-value">{{ item.title }}</span>
-            <span class="field-value field-value--en" *ngIf="item.titleEn">{{ item.titleEn }}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">分類</span>
-            <span class="field-value">{{ item.categoryName }}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">作者</span>
-            <span class="field-value">{{ item.authorName }}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">創作時間</span>
-            <span class="field-value">{{ item.creationPeriod }}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">數量</span>
-            <span class="field-value">{{ item.quantity }}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">解鎖日期</span>
-            <span class="field-value field-value--muted">
-              {{ item.unlockedAt ? (item.unlockedAt | date:'yyyy/MM/dd HH:mm') : '（尚無解鎖紀錄）' }}
-            </span>
-          </div>
-          <div class="field">
-            <span class="field-label">玩家回答鑑賞</span>
-            <button type="button" class="field-action" (click)="onAppreciationClick(item)">前往鑑賞回答</button>
-          </div>
-          <div class="field">
-            <span class="field-label">來源</span>
-            <a
-              *ngIf="item.sourceUrl; else noSource"
-              class="field-link"
-              [href]="item.sourceUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-            >前往故宮典藏頁面</a>
-            <ng-template #noSource>
-              <span class="field-value field-value--muted">尚無來源資料</span>
-            </ng-template>
-          </div>
+
+          <ng-container *ngIf="focusedCardEntry() as detail">
+            <div class="field">
+              <span class="field-label">分類</span>
+              <span class="field-value">{{ item.categoryName }}</span>
+            </div>
+            <div class="field">
+              <span class="field-label">年代</span>
+              <span class="field-value">{{ detail.eraTextOriginal || item.eraName }}</span>
+            </div>
+            <div class="field">
+              <span class="field-label">作者／製作者</span>
+              <span class="field-value">{{ detail.creatorDisplay || '未詳' }}</span>
+            </div>
+            <div class="field">
+              <span class="field-label">尺寸</span>
+              <span class="field-value">{{ detail.sizeText }}</span>
+            </div>
+            <div class="field">
+              <span class="field-label">說明</span>
+              <span class="field-value">{{ detail.description }}</span>
+            </div>
+            <div class="field">
+              <span class="field-label">解鎖日期</span>
+              <span class="field-value field-value--muted">
+                {{ item.unlockedAt ? (item.unlockedAt | date:'yyyy/MM/dd HH:mm') : '（尚無解鎖紀錄）' }}
+              </span>
+            </div>
+            <div class="field">
+              <span class="field-label">玩家回答鑑賞</span>
+              <button type="button" class="field-action" (click)="onAppreciationClick(detail)">前往鑑賞回答</button>
+            </div>
+            <div class="field">
+              <span class="field-label">來源</span>
+              <a
+                *ngIf="detail.sourceUrl; else noSource"
+                class="field-link"
+                [href]="detail.sourceUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往故宮典藏頁面</a>
+              <ng-template #noSource>
+                <span class="field-value field-value--muted">尚無來源資料</span>
+              </ng-template>
+            </div>
+            <div class="field" *ngIf="detail.attributionText">
+              <span class="field-label">授權／署名</span>
+              <span class="field-value field-value--muted">{{ detail.attributionText }}</span>
+            </div>
+          </ng-container>
         </div>
       </div>
 
