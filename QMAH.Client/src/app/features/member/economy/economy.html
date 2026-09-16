@@ -1,0 +1,394 @@
+<div class="economy-page">
+
+  <app-back-to-member></app-back-to-member>
+
+
+  <!-- ===================== -->
+  <!-- 頁面標題 -->
+  <!-- ===================== -->
+
+  <div class="page-header">
+
+    <h1>
+      點數與鑰匙
+    </h1>
+
+    <p>
+      查看你的鑑定點數、鑰匙進度與持有鑰匙。
+    </p>
+
+  </div>
+
+
+  <!-- ===================== -->
+  <!-- Loading -->
+  <!-- ===================== -->
+
+  @if (loading) {
+
+    <div class="state-box">
+      載入中...
+    </div>
+
+  }
+
+
+  <!-- ===================== -->
+  <!-- Error -->
+  <!-- ===================== -->
+
+  @if (errorMessage) {
+
+    <div class="state-box error">
+      {{ errorMessage }}
+    </div>
+
+  }
+
+
+  @if (economy) {
+
+
+    <!-- ===================== -->
+    <!-- 資產摘要 -->
+    <!-- ===================== -->
+
+    <section class="summary-grid">
+
+
+      <!-- 鑑定點數 -->
+
+      <div class="summary-card">
+
+        <div class="summary-icon">
+          ✦
+        </div>
+
+        <div>
+
+          <span class="summary-label">
+            鑑定點數
+          </span>
+
+          <div class="summary-value">
+            {{ economy.pointBalance }}
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- 一般鑰匙累積進度 -->
+
+      <div class="summary-card">
+
+        <div class="summary-icon">
+          🔑
+        </div>
+
+        <div class="progress-content">
+
+          <span class="summary-label">
+            一般鑰匙累積進度
+          </span>
+
+
+          <div class="summary-value progress-value">
+
+            {{ economy.keyProgressBalance }}
+
+            /
+
+            {{ economy.keyProgressToNormalKey }}
+
+          </div>
+
+
+          <div class="progress-bar">
+
+            <div
+              class="progress-fill"
+              [style.width.%]="keyProgressPercent"
+            >
+            </div>
+
+          </div>
+
+
+          <div class="progress-hint">
+
+            @if (remainingKeyProgress > 0) {
+
+              再累積
+
+              <strong>
+                {{ remainingKeyProgress }}
+              </strong>
+
+              點即可獲得 1 把一般鑰匙
+
+            } @else {
+
+              已達成一般鑰匙累積門檻
+
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ===================== -->
+    <!-- 我的鑰匙 -->
+    <!-- ===================== -->
+
+    <section class="keys-section">
+
+
+      <div class="section-title">
+
+        <div>
+
+          <h2>
+            我的鑰匙
+          </h2>
+
+          <p>
+            查看目前持有的各類文物鑰匙
+          </p>
+
+        </div>
+
+
+        <span class="key-count">
+          {{ economy.keys.length }} 種
+        </span>
+
+      </div>
+
+
+
+      <!-- ===================== -->
+      <!-- 篩選 -->
+      <!-- ===================== -->
+
+      <div class="filter-bar">
+
+
+        <button
+          type="button"
+          class="filter-button"
+          [class.active]="selectedFilter === 'ALL'"
+          (click)="setFilter('ALL')"
+        >
+
+          全部
+
+          <span>
+            {{ getFilterCount('ALL') }}
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="filter-button"
+          [class.active]="selectedFilter === 'NORMAL'"
+          (click)="setFilter('NORMAL')"
+        >
+
+          一般
+
+          <span>
+            {{ getFilterCount('NORMAL') }}
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="filter-button"
+          [class.active]="selectedFilter === 'CATEGORY'"
+          (click)="setFilter('CATEGORY')"
+        >
+
+          分類
+
+          <span>
+            {{ getFilterCount('CATEGORY') }}
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="filter-button"
+          [class.active]="selectedFilter === 'ERA'"
+          (click)="setFilter('ERA')"
+        >
+
+          年代
+
+          <span>
+            {{ getFilterCount('ERA') }}
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="filter-button"
+          [class.active]="selectedFilter === 'UNIVERSAL'"
+          (click)="setFilter('UNIVERSAL')"
+        >
+
+          萬能
+
+          <span>
+            {{ getFilterCount('UNIVERSAL') }}
+          </span>
+
+        </button>
+
+      </div>
+
+
+
+      <!-- ===================== -->
+      <!-- 鑰匙卡片 -->
+      <!-- ===================== -->
+
+      <div class="key-grid">
+
+
+        @for (key of filteredKeys; track key.id) {
+
+          <div
+            class="key-card"
+            [class.empty]="key.balance === 0"
+            [class.normal-key]="key.scopeType === 'NORMAL'"
+            [class.category-key]="key.scopeType === 'CATEGORY'"
+            [class.era-key]="key.scopeType === 'ERA'"
+            [class.universal-key]="key.scopeType === 'UNIVERSAL'"
+          >
+
+
+            <div class="key-card-header">
+
+
+              <div class="key-icon">
+                🔑
+              </div>
+
+
+              <div class="key-card-badges">
+
+
+                <span class="scope-badge">
+
+                  @switch (key.scopeType) {
+
+                    @case ('NORMAL') {
+                      一般
+                    }
+
+                    @case ('CATEGORY') {
+                      分類
+                    }
+
+                    @case ('ERA') {
+                      年代
+                    }
+
+                    @case ('UNIVERSAL') {
+                      萬能
+                    }
+
+                  }
+
+                </span>
+
+
+                <span
+                  class="balance-badge"
+                  [class.has-key]="key.balance > 0"
+                >
+
+                  × {{ key.balance }}
+
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <h3>
+              {{ key.name }}
+            </h3>
+
+
+            <div class="key-info">
+
+
+              <div>
+
+                <span>
+                  持有數量
+                </span>
+
+                <strong>
+                  {{ key.balance }}
+                </strong>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  可解鎖文物
+                </span>
+
+                <strong>
+                  {{ key.eligibleArtifactCount }}
+                </strong>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  回收點數
+                </span>
+
+                <strong>
+                  {{ key.recyclePointValue }}
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        }
+
+      </div>
+
+    </section>
+
+  }
+
+</div>

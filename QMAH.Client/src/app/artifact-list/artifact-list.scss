@@ -26,6 +26,12 @@
   color: var(--ink);
 }
 
+.bac{
+  background-color: #f4f6fb ;
+}
+
+
+
 /* ---------- header ---------- */
 
 .page-header {
@@ -37,6 +43,7 @@
   padding: 22px 20px;
   position: relative;
   overflow: hidden;
+  border-radius: 10px;
 }
 
 .page-header__bar::after {
