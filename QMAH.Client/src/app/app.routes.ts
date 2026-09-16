@@ -1,6 +1,7 @@
+import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
 
-// 前台功能依責任建立 lazy loading route，測試入口獨立掛載，不改變正式首頁行為。
+// 正式流程維持單一入口；展示與 API 測試頁只在開發模式載入，避免進入正式路由。
 export const routes: Routes = [
   {
     path: 'game/account',
@@ -8,12 +9,17 @@ export const routes: Routes = [
       import('./game/game-account.component').then(({ GameAccountComponent }) => GameAccountComponent)
   },
   {
+    path: 'game/training',
+    loadComponent: () =>
+      import('./game/game-training.component').then(({ GameTrainingComponent }) => GameTrainingComponent)
+  },
+  {
     path: 'game/minigames',
     loadComponent: () =>
       import('./game/game-training.component').then(({ GameTrainingComponent }) => GameTrainingComponent)
   },
   {
-    path: 'game/demo',
+    path: 'game/rooms',
     loadComponent: () =>
       import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
   },
@@ -27,9 +33,18 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
   },
-  {
-    path: 'game/test',
-    loadComponent: () =>
-      import('./game/game-test.component').then(({ GameTestComponent }) => GameTestComponent)
-  }
+  ...(isDevMode()
+    ? [
+        {
+          path: 'game/demo',
+          loadComponent: () =>
+            import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
+        },
+        {
+          path: 'game/test',
+          loadComponent: () =>
+            import('./game/game-test.component').then(({ GameTestComponent }) => GameTestComponent)
+        }
+      ]
+    : [])
 ];

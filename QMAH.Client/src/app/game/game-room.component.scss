@@ -94,6 +94,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 .phase-clock strong { font: 700 26px/1.2 ui-monospace, "Cascadia Mono", monospace; font-variant-numeric: tabular-nums; }
 .phase-clock.is-expired { color: var(--cinnabar); }
 .artifact-card { display: flex; align-items: center; gap: 18px; margin: 22px 0 0; padding: 20px; background: #edf0e9; }
+.artifact-card img { flex: none; width: 132px; height: 132px; object-fit: contain; background: var(--paper); border: 1px solid rgba(28, 43, 54, .12); }
 .artifact-mark { display: grid; place-items: center; flex: none; width: 54px; height: 54px; border: 1px solid rgba(178, 141, 79, .55); color: var(--bronze); font: 600 22px "QMAH Noto Serif TC", "Noto Serif TC", serif; }
 .artifact-card p { margin: 0; color: var(--muted); font-size: 12px; }
 .artifact-card h3 { margin: 2px 0; font: 600 20px/1.4 "QMAH Noto Serif TC", "Noto Serif TC", "PMingLiU", serif; }
@@ -162,6 +163,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
   .phase-clock strong { font-size: 22px; }
   .paper-card { padding: 20px 17px; }
   .artifact-card { align-items: flex-start; gap: 12px; }
+  .artifact-card img { width: 92px; height: 92px; }
   .artifact-mark { width: 44px; height: 44px; }
   .artifact-card h3 { font-size: 17px; }
   .vote-count-label { align-items: flex-start; flex-direction: column; gap: 6px; }

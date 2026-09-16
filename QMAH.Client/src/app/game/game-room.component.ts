@@ -8,7 +8,6 @@ import {
   catchError,
   exhaustMap,
   finalize,
-  forkJoin,
   map,
   of,
   switchMap,
@@ -28,7 +27,7 @@ import { GameService } from './game.service';
 
 interface RoomSnapshot {
   room: GameRoomDetails;
-  history: GameRoomHistory;
+  history: GameRoomHistory | null;
   round: GameRoundDetails | null;
 }
 
@@ -68,6 +67,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   leaving = false;
   rewarding = false;
   reward: MainGameReward | null = null;
+  artifactImageUnavailable = false;
   votedAnswerIds = new Set<string>();
   private lastRoundId = '';
   private submittedRoundId = '';
@@ -96,6 +96,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         this.refreshError = '';
         if (playerChanged || this.round?.id !== this.lastRoundId) {
           this.lastRoundId = this.round?.id ?? '';
+          this.artifactImageUnavailable = false;
           this.restoreVotedAnswers();
         }
         this.changeDetector.markForCheck();
@@ -320,24 +321,23 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private loadSnapshot(): Observable<RoomSnapshot> {
     this.loading = !this.room;
     this.refreshing = true;
-    return forkJoin({
-      room: this.game.getRoom(this.roomId),
-      history: this.game.getRoomHistory(this.roomId)
-    }).pipe(
-      switchMap(({ room, history }): Observable<RoomSnapshot> => {
-        const currentRound = room.status === 'PLAYING'
-          ? history.rounds.find((item) => item.roundNumber === room.currentRoundNo)
-          : undefined;
-        if (!currentRound) {
+    return this.game.getRoom(this.roomId).pipe(
+      switchMap((room): Observable<RoomSnapshot> => {
+        if (room.status === 'COMPLETED') {
+          return this.game.getRoomHistory(this.roomId).pipe(
+            map((history): RoomSnapshot => ({ room, history, round: null }))
+          );
+        }
+        if (room.status !== 'PLAYING' || !room.currentRoundId) {
           this.roundLoadError = '';
-          return of({ room, history, round: null });
+          return of({ room, history: null, round: null });
         }
         this.roundLoadError = '';
-        return this.game.getRound(currentRound.id).pipe(
-          map((round): RoomSnapshot => ({ room, history, round })),
+        return this.game.getRound(room.currentRoundId).pipe(
+          map((round): RoomSnapshot => ({ room, history: null, round })),
           catchError((error: unknown) => {
             this.roundLoadError = this.game.errorMessage(error);
-            return of({ room, history, round: null });
+            return of({ room, history: null, round: null });
           })
         );
       }),

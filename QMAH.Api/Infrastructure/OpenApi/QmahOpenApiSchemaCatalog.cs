@@ -125,8 +125,8 @@ internal static class QmahOpenApiSchemaCatalog
             ["StartMiniGameRequest"] = Fields(
                 ("modeCode", "ModeCode（Mini Game 模式系統代碼）；使用 DETAIL_LOCATOR、ARTIFACT_PUZZLE、MEMORY_MATCH 或 STRIP_RESTORE")),
             ["CompleteMiniGameRequest"] = Fields(
-                ("rawScore", "RawScore（原始分數）；目前契約接受 0 至 100，等級由伺服器依模式設定計算"),
-                ("rawResultJson", "RawResultJson（原始結果 JSON）；可選，供模式專用驗證擴充，最多 4000 個字元")),
+                ("rawScore", "RawScore（原始分數）；前端盤面計算值，伺服器會依 Attempt 重算並比對，範圍為 0 至 100"),
+                ("rawResultJson", "RawResultJson（原始結果 JSON）；必要，供伺服器依模式重算分數，最多 4000 個字元")),
             ["CreateGameRoomInvitationRequest"] = Fields(
                 ("inviteeUserId", "InviteeUserId（受邀會員資源識別碼）；必須是啟用中的其他會員"),
                 ("message", "Message（邀請訊息）；可省略，最多 300 個字元")),

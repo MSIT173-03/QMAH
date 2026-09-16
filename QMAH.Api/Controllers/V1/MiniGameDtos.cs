@@ -42,14 +42,14 @@ public sealed class StartMiniGameRequest
     public string ModeCode { get; set; } = "";
 }
 
-/// <summary>完成 Mini Game 時送出的原始分數與可供伺服器驗證的結果資料。</summary>
+/// <summary>完成 Mini Game 時送出的原始分數與供伺服器重算的結果資料。</summary>
 public sealed class CompleteMiniGameRequest
 {
     [Range(0, 100)]
     public int RawScore { get; set; }
 
-    // 與服務的長度上限一致，讓請求驗證及 OpenAPI 同時呈現限制；JSON 格式仍由服務檢查。
-    [StringLength(4000)]
+    // 與服務的長度上限一致；內容格式與玩法欄位由服務檢查。
+    [Required, StringLength(4000)]
     public string? RawResultJson { get; set; }
 }
 

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Services.Game;
 
@@ -13,7 +14,8 @@ namespace QMAH.Api.Controllers.V1;
 public sealed class GameController(
     QmahDbContext db,
     IPasswordHasher<GameRoom> passwordHasher,
-    GameRoomLifecycleService gameRoomLifecycleService) : ApiControllerBase
+    GameRoomLifecycleService gameRoomLifecycleService,
+    QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
     [AllowAnonymous]
     [HttpGet("rooms")]
@@ -67,6 +69,7 @@ public sealed class GameController(
         var room = await db.GameRooms
             .AsNoTracking()
             .Include(item => item.GamePlayers)
+            .Include(item => item.GameRounds)
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (room is null || room.Status == "CANCELLED")
             return MissingResource("找不到遊戲房間", "這個房間不存在或已取消。");
@@ -108,6 +111,13 @@ public sealed class GameController(
                 || !room.GamePlayers.Any(player => player.UserId == userId)))
         {
             return MissingResource("找不到遊戲房間", "私人房間只對參與者開放。");
+        }
+
+        if (room.Status == "PLAYING"
+            && (!TryGetCurrentUserId(out var viewerId)
+                || !room.GamePlayers.Any(player => player.UserId == viewerId && player.ConnectionStatus != "LEFT")))
+        {
+            return MissingResource("找不到遊戲房間", "遊戲進行中只對參與者開放回合紀錄。");
         }
 
         var rounds = room.GameRounds
@@ -425,7 +435,7 @@ public sealed class GameController(
             .Select(vote => vote.AnswerId)
             .ToListAsync(cancellationToken);
 
-        return Ok(ToRoundDetailsDto(round, player.Id, votedAnswerIds));
+        return Ok(ToRoundDetailsDto(round, player.Id, votedAnswerIds, mediaUrlResolver));
     }
 
     private async Task<bool> IsActiveUserAsync(Guid userId, CancellationToken cancellationToken) =>
@@ -455,6 +465,10 @@ public sealed class GameController(
         room.CategoryFilterCode,
         room.EraBucketFilterCode,
         room.CurrentRoundNo,
+        room.GameRounds
+            .Where(round => round.RoundNumber == room.CurrentRoundNo)
+            .Select(round => (Guid?)round.Id)
+            .FirstOrDefault(),
         currentUserId.HasValue
             ? room.GamePlayers.FirstOrDefault(player =>
                 player.UserId == currentUserId.Value && player.ConnectionStatus != "LEFT")?.Id
@@ -478,9 +492,12 @@ public sealed class GameController(
     private static GameRoundDetailsDto ToRoundDetailsDto(
         GameRound round,
         Guid currentPlayerId,
-        IReadOnlyList<Guid> votedAnswerIds)
+        IReadOnlyList<Guid> votedAnswerIds,
+        QmahMediaUrlResolver mediaUrlResolver)
     {
         var answerRows = BuildRankedAnswers(round);
+        if (round.Status == "ANSWERING")
+            answerRows = answerRows.Where(row => row.Answer.GamePlayerId == currentPlayerId).ToList();
         var winner = GetWinner(answerRows, round.IsSettled);
         return new GameRoundDetailsDto(
             round.Id,
@@ -489,6 +506,8 @@ public sealed class GameController(
             votedAnswerIds,
             round.ArtifactId,
             round.Artifact.Name,
+            mediaUrlResolver.Resolve(round.Artifact.PrimaryImagePath),
+            mediaUrlResolver.Resolve(round.Artifact.ThumbnailPath),
             round.RoundNumber,
             round.Status,
             round.IsSettled,

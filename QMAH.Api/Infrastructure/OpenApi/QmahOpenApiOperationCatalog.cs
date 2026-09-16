@@ -74,7 +74,7 @@ internal static class QmahOpenApiOperationCatalog
 
             ["MiniGame.GetModes"] = ("查詢 Mini Game 模式", "需要登入，回傳目前啟用的四種 Mini Game backend contract（後端契約）：`DETAIL_LOCATOR`、`ARTIFACT_PUZZLE`、`MEMORY_MATCH` 與 `STRIP_RESTORE`。資料包含模式設定、評級門檻與供前端建立遊戲流程所需的設定 JSON。"),
             ["MiniGame.StartAttempt"] = ("開始 Mini Game 回合", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `ModeCode` 建立一次伺服器決定的遊戲嘗試。伺服器選擇啟用文物、文物池、難度、seed（隨機種子）與模式設定，成功回傳 `201 Created`（已建立資源）與前端所需素材。"),
-            ["MiniGame.CompleteAttempt"] = ("完成 Mini Game 回合", "需要登入，依 path parameter（路徑參數）`id` 與 request body（請求本文，送出的 JSON 內容）送出原始分數及選填結果資料。伺服器驗證分數、依模式門檻計算標準化分數與等級，再依目前經濟設定給予鑑定點數與鑰匙進度；重複送出同一回合不會重複發放經濟獎勵。"),
+            ["MiniGame.CompleteAttempt"] = ("完成 Mini Game 回合", "需要登入，依 path parameter（路徑參數）`id` 與 request body（請求本文，送出的 JSON 內容）送出結果資料。伺服器依 Attempt 與結果盤面重算分數、等級與經濟獎勵；重複送出同一回合不會重複發放經濟獎勵。"),
             ["MiniGame.RewardMainGame"] = ("結算多人主遊戲獎勵", "需要登入，依 path parameter（路徑參數）`id` 結算目前會員已完成的多人主遊戲。伺服器依回合勝負與投票表現計算鑑定點數及一般鑰匙，並以交易識別避免同一場遊戲重複領取；成功回傳實際獎勵與表現摘要。"),
 
             ["Me.GetMe"] = ("取得目前會員", "需要登入，依 Identity Cookie（登入狀態 Cookie）的會員識別取得目前會員、Profile（會員資料）、角色、點數與帳號狀態。會員識別由登入狀態決定，回應不接受 request body（請求本文，送出的 JSON 內容）或 query string（查詢參數）指定其他 `UserId`（會員識別碼）。"),

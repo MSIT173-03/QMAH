@@ -209,7 +209,7 @@ export class GameService {
   ): Observable<MiniGameComplete> {
     const normalized = {
       rawScore: Math.trunc(request.rawScore),
-      rawResultJson: request.rawResultJson?.trim() || null
+      rawResultJson: request.rawResultJson.trim()
     };
     const errors = this.validateCompleteMiniGameRequest(normalized);
     if (errors.length > 0) return this.invalid(errors);
@@ -369,18 +369,18 @@ export class GameService {
     if (!Number.isInteger(request.rawScore) || request.rawScore < 0 || request.rawScore > 100) {
       errors.push('Mini Game 分數必須介於 0 至 100。');
     }
-    if (request.rawResultJson) {
-      if (request.rawResultJson.length > 4000) {
-        errors.push('Mini Game 結果資料不可超過 4000 個字元。');
-      } else {
-        try {
-          const parsed: unknown = JSON.parse(request.rawResultJson);
-          if (parsed === null || typeof parsed !== 'object') {
-            errors.push('Mini Game 結果資料必須是 JSON 物件或陣列。');
-          }
-        } catch {
-          errors.push('Mini Game 結果資料不是有效的 JSON。');
+    if (!request.rawResultJson) {
+      errors.push('Mini Game 結果資料不可空白。');
+    } else if (request.rawResultJson.length > 4000) {
+      errors.push('Mini Game 結果資料不可超過 4000 個字元。');
+    } else {
+      try {
+        const parsed: unknown = JSON.parse(request.rawResultJson);
+        if (parsed === null || Array.isArray(parsed) || typeof parsed !== 'object') {
+          errors.push('Mini Game 結果資料必須是 JSON 物件。');
         }
+      } catch {
+        errors.push('Mini Game 結果資料不是有效的 JSON。');
       }
     }
     return errors;

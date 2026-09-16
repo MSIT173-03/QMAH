@@ -334,7 +334,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Economy.RedeemCoupon"] = "request body（請求本文，送出的 JSON 內容）：包含 `CouponDefinitionId`（優惠券定義資源識別碼）",
             ["Economy.SetEquippedTitle"] = "request body（請求本文，送出的 JSON 內容）：包含選填 `UserAchievementId`（會員成就取得紀錄識別碼）；送 null 清除配戴稱號",
             ["MiniGame.StartAttempt"] = "request body（請求本文，送出的 JSON 內容）：包含 `ModeCode`（Mini Game 模式系統代碼）",
-            ["MiniGame.CompleteAttempt"] = "request body（請求本文，送出的 JSON 內容）：包含 `RawScore`（原始分數）與選填 `RawResultJson`（原始結果 JSON）",
+            ["MiniGame.CompleteAttempt"] = "request body（請求本文，送出的 JSON 內容）：包含 `RawScore`（原始分數）與 `RawResultJson`（原始結果 JSON）",
             ["Me.UpdateProfile"] = "request body（請求本文，送出的 JSON 內容）：包含 `Nickname`（會員顯示名稱）、`Bio`（會員自我介紹）與 `Visibility`（個人資料可見範圍）",
             ["Me.AddCartItem"] = "request body（請求本文，送出的 JSON 內容）：包含 `ProductId`（商品資源識別碼）與 `Quantity`（購買數量）",
             ["Me.UpdateCartItem"] = "request body（請求本文，送出的 JSON 內容）：包含 `Quantity`（購物車商品數量）",

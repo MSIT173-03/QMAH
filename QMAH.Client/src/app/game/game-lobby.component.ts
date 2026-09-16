@@ -267,6 +267,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   private makeDemoDetail(room: GameRoomListItem): GameRoomDetails {
     return {
       ...room, answerSeconds: 90, votingSeconds: 60, categoryFilterCode: room.playerCount % 2 ? 'CERAMIC' : 'PAINTING', eraBucketFilterCode: room.playerCount % 2 ? 'QING' : 'MING', currentRoundNo: 0,
+      currentRoundId: null,
       currentPlayerId: null,
       players: [],
       startedAt: null, endedAt: null

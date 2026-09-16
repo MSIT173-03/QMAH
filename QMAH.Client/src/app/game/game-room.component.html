@@ -107,7 +107,11 @@
               </div>
             </header>
             <section class="artifact-card" aria-label="本回合館藏">
-              <span class="artifact-mark" aria-hidden="true">藏</span>
+              @if (!artifactImageUnavailable && (currentRound.primaryImagePath || currentRound.thumbnailPath)) {
+                <img [src]="currentRound.primaryImagePath || currentRound.thumbnailPath" [alt]="currentRound.artifactName" (error)="artifactImageUnavailable = true" />
+              } @else {
+                <span class="artifact-mark" aria-hidden="true">藏</span>
+              }
               <div><p>本回合觀察</p><h3>{{ currentRound.artifactName }}</h3></div>
             </section>
 

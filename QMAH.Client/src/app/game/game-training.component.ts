@@ -39,7 +39,7 @@ interface GuideStep {
       </header>
       <nav class="bookmarks" aria-label="遊戲模式">
         <a routerLink="/game"><small>線上</small>多人鑑定</a>
-        <a routerLink="/game/minigames" aria-current="page" class="active"><small>單人</small>小遊戲</a>
+        <a routerLink="/game/training" aria-current="page" class="active"><small>單人</small>小遊戲</a>
       </nav>
 
       <section class="chapter" aria-labelledby="training-title">

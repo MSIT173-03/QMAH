@@ -45,6 +45,7 @@ export interface GameRoomDetails {
   categoryFilterCode: string | null;
   eraBucketFilterCode: string | null;
   currentRoundNo: number;
+  currentRoundId: string | null;
   currentPlayerId: string | null;
   playerCount?: number;
   players: GamePlayer[];
@@ -72,6 +73,8 @@ export interface GameRoundDetails {
   votedAnswerIds: string[];
   artifactId: string;
   artifactName: string;
+  primaryImagePath: string | null;
+  thumbnailPath: string | null;
   roundNumber: number;
   status: GameRoundStatus;
   isSettled: boolean;
@@ -185,7 +188,7 @@ export interface StartMiniGameRequest {
 
 export interface CompleteMiniGameRequest {
   rawScore: number;
-  rawResultJson?: string | null;
+  rawResultJson: string;
 }
 
 export interface MiniGameComplete {
