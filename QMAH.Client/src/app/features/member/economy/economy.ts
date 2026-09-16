@@ -11,6 +11,7 @@ import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
 
+
 interface EconomyKey {
   id: string;
   code: string;
@@ -23,12 +24,16 @@ interface EconomyKey {
   recyclePointValue: number;
 }
 
+
 interface EconomyResponse {
   pointBalance: number;
+
   keyProgressBalance: number;
   keyProgressToNormalKey: number;
+
   keys: EconomyKey[];
 }
+
 
 type KeyFilter =
   | 'ALL'
@@ -37,12 +42,15 @@ type KeyFilter =
   | 'ERA'
   | 'UNIVERSAL';
 
+
 @Component({
   selector: 'app-economy',
+
   imports: [
     CommonModule,
     BackToMember
   ],
+
   templateUrl: './economy.html',
   styleUrl: './economy.scss'
 })
@@ -55,14 +63,65 @@ export class Economy implements OnInit {
 
   selectedFilter: KeyFilter = 'ALL';
 
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef
   ) { }
 
+
   ngOnInit(): void {
     this.loadEconomy();
   }
+
+
+  // ===============================
+  // 一般鑰匙累積進度
+  // ===============================
+
+  get keyProgressPercent(): number {
+
+    if (!this.economy) {
+      return 0;
+    }
+
+    const balance =
+      this.economy.keyProgressBalance;
+
+    const target =
+      this.economy.keyProgressToNormalKey;
+
+    if (target <= 0) {
+      return 0;
+    }
+
+    return Math.min(
+      Math.max(
+        (balance / target) * 100,
+        0
+      ),
+      100
+    );
+  }
+
+
+  get remainingKeyProgress(): number {
+
+    if (!this.economy) {
+      return 0;
+    }
+
+    return Math.max(
+      this.economy.keyProgressToNormalKey -
+      this.economy.keyProgressBalance,
+      0
+    );
+  }
+
+
+  // ===============================
+  // 鑰匙篩選
+  // ===============================
 
   get filteredKeys(): EconomyKey[] {
 
@@ -75,13 +134,17 @@ export class Economy implements OnInit {
     }
 
     return this.economy.keys.filter(
-      key => key.scopeType === this.selectedFilter
+      key =>
+        key.scopeType ===
+        this.selectedFilter
     );
   }
+
 
   setFilter(filter: KeyFilter): void {
     this.selectedFilter = filter;
   }
+
 
   getFilterCount(filter: KeyFilter): number {
 
@@ -94,9 +157,15 @@ export class Economy implements OnInit {
     }
 
     return this.economy.keys.filter(
-      key => key.scopeType === filter
+      key =>
+        key.scopeType === filter
     ).length;
   }
+
+
+  // ===============================
+  // 讀取會員資產
+  // ===============================
 
   private loadEconomy(): void {
 
@@ -109,7 +178,7 @@ export class Economy implements OnInit {
       )
       .subscribe({
 
-        next: (data: EconomyResponse) => {
+        next: (data) => {
 
           console.log(
             'economy:',
@@ -117,10 +186,12 @@ export class Economy implements OnInit {
           );
 
           this.economy = data;
+
           this.loading = false;
 
           this.cdr.detectChanges();
         },
+
 
         error: (error) => {
 
@@ -139,4 +210,5 @@ export class Economy implements OnInit {
 
       });
   }
+
 }

@@ -1,19 +1,44 @@
 import { inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { CanActivateFn, Router } from '@angular/router';
-import { catchError, map, of } from 'rxjs';
+import {
+  CanActivateFn,
+  Router
+} from '@angular/router';
+import {
+  catchError,
+  map,
+  of
+} from 'rxjs';
 
-import { environment } from '../../../environments/environment';
+import {
+  AuthService
+} from '../auth/auth.service';
 
 export const authGuard: CanActivateFn = () => {
-  const http = inject(HttpClient);
-  const router = inject(Router);
 
-  return http.get(`${environment.apiBaseUrl}/me`).pipe(
-    map(() => true),
+  const authService =
+    inject(AuthService);
 
-    catchError(() => {
-      return of(router.createUrlTree(['/login']));
-    })
-  );
+  const router =
+    inject(Router);
+
+  return authService
+    .getCurrentUser()
+    .pipe(
+
+      map(() => true),
+
+      catchError(() => {
+
+        authService.clearSession();
+
+        return of(
+          router.createUrlTree([
+            '/login'
+          ])
+        );
+
+      })
+
+    );
+
 };

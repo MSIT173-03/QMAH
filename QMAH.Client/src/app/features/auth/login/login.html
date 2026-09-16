@@ -1,36 +1,153 @@
-<div class="min-h-screen flex items-center justify-center bg-base-200 px-4">
-  <div class="card w-full max-w-md bg-base-100 shadow-xl">
-    <div class="card-body">
+<div class="login-page">
 
-      <h1 class="card-title text-2xl justify-center mb-4">
-        會員登入
-      </h1>
+  <!-- =========================
+       左側：清明鑑定屋品牌視覺
+  ========================== -->
+  <section class="museum-side">
+
+    <!-- 背景 -->
+    <div class="museum-background"></div>
+    <div class="museum-overlay"></div>
+
+    <!-- 品牌 -->
+    <div class="brand">
+      <div class="brand-mark">Q</div>
+
+      <div>
+        <h1>清明鑑定屋</h1>
+        <p>QMAH</p>
+        <span>Quest Museum · Art · Hobby</span>
+      </div>
+    </div>
+
+    <!-- 主文案 -->
+    <div class="museum-content">
+
+      <div class="slide-tag">
+        FEATURED COLLECTION
+      </div>
+
+      <h2>
+        千年風雅<br />
+        一鑑入味
+      </h2>
+
+      <div class="title-line"></div>
+
+      <p class="museum-description">
+        從文物，看見歷史的生活滋味。
+      </p>
+
+      <div class="museum-keywords">
+        <span>探索文物</span>
+        <i></i>
+        <span>收藏珍品</span>
+        <i></i>
+        <span>遇見同好</span>
+      </div>
+
+    </div>
+
+    <!-- 輪播控制 -->
+    <div class="carousel-control">
+
+      <div class="carousel-number">
+        <strong>01</strong>
+        <span>/ 04</span>
+      </div>
+
+      <div class="carousel-progress">
+        <div class="carousel-progress-active"></div>
+      </div>
+
+      <div class="carousel-buttons">
+        <button type="button" aria-label="上一張">
+          ‹
+        </button>
+
+        <button type="button" aria-label="下一張">
+          ›
+        </button>
+      </div>
+
+    </div>
+
+    <div class="museum-footer">
+      每一件文物，都是一段動人的故事。
+    </div>
+
+  </section>
+
+
+  <!-- =========================
+       右側：登入
+  ========================== -->
+  <section class="login-side">
+
+    <div class="login-decoration"></div>
+
+    <div class="login-card">
+
+      <div class="login-header">
+        <span class="welcome-text">
+          WELCOME TO
+        </span>
+
+        <h2>清明鑑定屋</h2>
+
+        <div class="login-logo">
+          QMAH
+        </div>
+
+        <p>
+          登入你的會員帳號，開啟鑑定與收藏的旅程
+        </p>
+      </div>
+
 
       <form
         [formGroup]="form"
         (ngSubmit)="login()"
-        class="space-y-4"
+        class="login-form"
       >
 
         <!-- Email -->
-        <div>
-          <label class="label">
-            <span class="label-text">Email</span>
+        <div class="form-group">
+
+          <label for="email">
+            電子郵件
           </label>
 
-          <input
-            type="email"
-            formControlName="email"
-            placeholder="請輸入 Email"
-            autocomplete="email"
-            class="input input-bordered w-full"
-          />
+          <div
+            class="input-wrapper"
+            [class.input-error]="
+              form.controls.email.touched &&
+              (
+                form.controls.email.hasError('required') ||
+                form.controls.email.hasError('email')
+              )
+            "
+          >
+
+            <span class="input-icon">
+              ✉
+            </span>
+
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="請輸入電子郵件"
+              autocomplete="email"
+            />
+
+          </div>
 
           @if (
             form.controls.email.touched &&
             form.controls.email.hasError('required')
           ) {
-            <p class="text-error text-sm mt-1">
+            <p class="field-error">
               請輸入 Email
             </p>
           }
@@ -39,100 +156,160 @@
             form.controls.email.touched &&
             form.controls.email.hasError('email')
           ) {
-            <p class="text-error text-sm mt-1">
+            <p class="field-error">
               Email 格式不正確
             </p>
           }
+
         </div>
 
+
         <!-- 密碼 -->
-        <div>
-          <label class="label">
-            <span class="label-text">密碼</span>
+        <div class="form-group">
+
+          <label for="password">
+            密碼
           </label>
 
-          <input
-            type="password"
-            formControlName="password"
-            placeholder="請輸入密碼"
-            autocomplete="current-password"
-            class="input input-bordered w-full"
-          />
+          <div
+            class="input-wrapper"
+            [class.input-error]="
+              form.controls.password.touched &&
+              form.controls.password.hasError('required')
+            "
+          >
+
+            <span class="input-icon">
+              ♙
+            </span>
+
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              placeholder="請輸入密碼"
+              autocomplete="current-password"
+            />
+
+          </div>
 
           @if (
             form.controls.password.touched &&
             form.controls.password.hasError('required')
           ) {
-            <p class="text-error text-sm mt-1">
+            <p class="field-error">
               請輸入密碼
             </p>
           }
 
-          <!-- 忘記密碼 -->
-          <div class="text-right mt-2">
-            <a
-              routerLink="/forgot-password"
-              class="link link-primary text-sm"
-            >
-              忘記密碼？
-            </a>
-          </div>
         </div>
 
-        <!-- 記住我 -->
-        <label class="label cursor-pointer justify-start gap-3">
-          <input
-            type="checkbox"
-            formControlName="rememberMe"
-            class="checkbox checkbox-primary"
-          />
 
-          <span class="label-text">
-            記住我
-          </span>
-        </label>
+        <!-- 記住我 / 忘記密碼 -->
+        <div class="login-options">
 
-        <!-- 錯誤訊息 -->
+          <label class="remember-me">
+
+            <input
+              type="checkbox"
+              formControlName="rememberMe"
+            />
+
+            <span>
+              記住我
+            </span>
+
+          </label>
+
+          <a
+            routerLink="/forgot-password"
+            class="forgot-password"
+          >
+            忘記密碼？
+          </a>
+
+        </div>
+
+
+        <!-- API 錯誤 -->
         @if (errorMessage) {
-          <div class="alert alert-error">
+          <div class="login-error">
             {{ errorMessage }}
           </div>
         }
 
+
         <!-- 登入 -->
         <button
           type="submit"
-          class="btn btn-primary w-full"
+          class="login-button"
           [disabled]="loading"
         >
+
           @if (loading) {
-            <span class="loading loading-spinner loading-sm"></span>
-            登入中
+
+            <span class="loading-spinner"></span>
+            登入中...
+
           } @else {
-            登入
+
+            <span>登 入</span>
+            <span class="arrow">→</span>
+
           }
+
         </button>
 
       </form>
 
-      <!-- 註冊 -->
-      <div class="divider">
-        或
+
+      <!-- 分隔 -->
+      <div class="login-divider">
+        <span></span>
+        <p>或使用其他方式登入</p>
+        <span></span>
       </div>
 
-      <div class="text-center text-sm">
-        <span class="text-base-content/60">
-          還沒有會員帳號？
+
+      <!-- Google：目前先做 UI -->
+      <button
+        type="button"
+        class="google-button"
+      >
+
+        <span class="google-icon">
+          G
         </span>
 
-        <a
-          routerLink="/register"
-          class="link link-primary font-semibold ml-1"ng 
-        >
-          建立帳號
+        <span>
+          使用 Google 登入
+        </span>
+
+      </button>
+
+
+      <!-- 註冊 -->
+      <div class="register-area">
+
+        <span>
+          還沒有帳號？
+        </span>
+
+        <a routerLink="/register">
+          立即註冊
         </a>
+
       </div>
 
     </div>
-  </div>
+
+    <div class="login-footer">
+      <span>鑑古知今・連結你我</span>
+      <small>
+        DISCOVER THE PAST FOR A BRIGHTER TOMORROW
+      </small>
+    </div>
+
+  </section>
+
 </div>

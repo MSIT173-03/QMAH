@@ -5,13 +5,14 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import {
   Router,
   RouterLink
 } from '@angular/router';
 
-import { environment } from '../../../../environments/environment';
+import {
+  AuthService
+} from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -32,7 +33,7 @@ export class Login {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    private authService: AuthService,
     private router: Router
   ) {
 
@@ -61,46 +62,23 @@ export class Login {
 
   }
 
+
   login(): void {
 
     if (this.form.invalid) {
-
       this.form.markAllAsTouched();
+      return;
+    }
 
+    if (this.loading) {
       return;
     }
 
     this.loading = true;
     this.errorMessage = '';
 
-    this.http
-      .get(
-        `${environment.apiBaseUrl}/account/antiforgery-token`
-      )
-      .subscribe({
-
-        next: () => {
-          this.sendLogin();
-        },
-
-        error: () => {
-
-          this.loading = false;
-
-          this.errorMessage =
-            '無法連線到伺服器';
-
-        }
-
-      });
-
-  }
-
-  private sendLogin(): void {
-
-    this.http
-      .post(
-        `${environment.apiBaseUrl}/account/login`,
+    this.authService
+      .login(
         this.form.getRawValue()
       )
       .subscribe({

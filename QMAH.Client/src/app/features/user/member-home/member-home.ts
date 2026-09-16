@@ -1,14 +1,12 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import {
   Router,
   RouterLink
 } from '@angular/router';
 
 import {
-  environment
-} from '../../../../environments/environment';
-
+  AuthService
+} from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-member-home',
@@ -24,9 +22,8 @@ export class MemberHome {
 
   loggingOut = false;
 
-
   constructor(
-    private http: HttpClient,
+    private authService: AuthService,
     private router: Router
   ) { }
 
@@ -39,44 +36,8 @@ export class MemberHome {
 
     this.loggingOut = true;
 
-
-    this.http.get(
-      `${environment.apiBaseUrl}/account/antiforgery-token`
-    )
-      .subscribe({
-
-        next: () => {
-
-          this.sendLogout();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            '取得 antiforgery token 失敗：',
-            error
-          );
-
-          this.loggingOut = false;
-
-          alert(
-            '無法取得安全驗證資訊'
-          );
-
-        }
-
-      });
-
-  }
-
-
-  private sendLogout(): void {
-
-    this.http.post(
-      `${environment.apiBaseUrl}/account/logout`,
-      {}
-    )
+    this.authService
+      .logout()
       .subscribe({
 
         next: () => {
