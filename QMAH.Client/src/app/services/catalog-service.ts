@@ -1,19 +1,21 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { CatalogModel, CatalogListResponse, CatalogDetailModel } from '../models/catalog-model';
-import { catchError, Observable, throwError } from 'rxjs';
+import { CatalogModel, CatalogListResponse, CatalogDetailModel, CategoryModel, EraModel } from '../models/catalog-model';
+import { catchError, map, Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CatalogService {
   private apiUrl = 'https://localhost:7249/api/v1/catalog/artifacts';
+  private categoriesUrl = 'https://localhost:7249/api/v1/catalog/categories';
+  private erasUrl = 'https://localhost:7249/api/v1/catalog/eras';
 
   constructor(private http: HttpClient) { }
 
   // ========== 文物讀取（Read）==========
 
-  /** 取得分頁列表（僅基本欄位，元素型別是 CatalogModel，不含鑑賞細節） */
+  /** 取得分頁列表 */
   getArtifacts(page: number = 1, pageSize: number = 20): Observable<CatalogListResponse> {
     const params = new HttpParams()
       .set('page', page.toString())
@@ -35,6 +37,44 @@ export class CatalogService {
     return this.http.get<CatalogDetailModel>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
+  }
+
+  // ========== 分類／年代對照 ==========
+
+  /** 取得分類對照清單（id → 顯示名稱），key-list 的分類鑰匙提示要用 */
+  getCategories(): Observable<CategoryModel[]> {
+    return this.http.get<unknown>(this.categoriesUrl).pipe(
+      map((res) => this.toArray<CategoryModel>(res, 'getCategories')),
+      catchError(this.handleError)
+    );
+  }
+
+  /** 取得年代對照清單（id → 顯示名稱），key-list 的年代鑰匙提示要用 */
+  getEras(): Observable<EraModel[]> {
+    return this.http.get<unknown>(this.erasUrl).pipe(
+      map((res) => this.toArray<EraModel>(res, 'getEras')),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * ⚠️ 防呆用：還沒完全確認 categories／eras 這兩支 API 回傳的是「直接一個陣列」
+   * 還是外面包了一層（例如 { items: [...] }）。之前 key-list 懸停一直顯示 ID
+   * 而不是名稱，很可能就是猜錯這個形狀，導致對照表其實是空的、每次查詢都落到
+   * fallback（顯示原始 ID）。這裡兩種形狀都接得住，等你確認實際格式後，
+   * 可以把這個方法拿掉，直接用 http.get<CategoryModel[]>() 就好。
+   */
+  private toArray<T>(res: unknown, callerLabel: string): T[] {
+    if (Array.isArray(res)) return res;
+
+    if (res && typeof res === 'object') {
+      const obj = res as Record<string, unknown>;
+      const candidate = obj['items'] ?? obj['data'] ?? obj['results'];
+      if (Array.isArray(candidate)) return candidate as T[];
+    }
+
+    console.warn(`[CatalogService] ${callerLabel} 收到無法辨識的清單格式，視為空清單：`, res);
+    return [];
   }
 
 

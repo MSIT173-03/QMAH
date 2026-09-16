@@ -13,14 +13,20 @@
   --red: #e0393e;
   --locked: #c9cfdd;
 
+  // 標題橫幅（純標題列）的高度概估值；固定側欄／內容區的 top、margin-top、height 都要用同一個
+  // 數字才對得齊，所以抽成變數，之後如果標題區塊內容或字級改變，只要改這裡一個地方。
+  --header-h: 74px;
+
   // 放大圖底部漸層字幕疊字用色，跟整體亮色主題無關（維持可讀性）
   --on-dark: #ffffff;
   --on-dark-soft: rgba(255, 255, 255, 0.7);
   --on-dark-accent: #bcd4f7;
 
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px 48px;
+  // 標題列跟「篩選欄＋內容區」這個組合現在都改成 position:fixed，直接鎖定在視窗座標，
+  // 不再依賴 .artifact-page 自己的寬度／內距去做版面計算——這樣可以完全避開「.artifact-page
+  // 的 100% 寬度其實是相對於瀏覽器預設 body 邊界，兩者對不齊，導致左右各多一條白邊、
+  // 甚至蓋住標題列」這類問題（fixed 定位一律以視窗為準，不受任何祖先元素的邊界影響）。
+  // .artifact-page 現在主要只負責提供 CSS 變數／背景色，不再是版面計算的依據。
   background: var(--surface);
   font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
   color: var(--ink);
@@ -35,15 +41,25 @@
 /* ---------- header ---------- */
 
 .page-header {
-  margin: 0 -20px 28px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-h); // 用明確高度取代「靠 padding 撐出來的高度」，跟下面 page-body 的 top 才會完全對齊
+  z-index: 60; // 蓋在固定側欄之上，避免任何邊界重疊時被壓到下面
+  display: flex;
+  align-items: center;
+  background: var(--surface); // 標題列本身是浮在頁面最上層，補上背景避免內容從縫隙透出來
 }
 
 .page-header__bar {
+  width: 100%;
   background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 100%);
-  padding: 22px 20px;
+  padding: 18px 20px; // 水平內距改放在藍色橫幅自己身上，讓橫幅本身貼齊視窗左右邊緣，
+                      // 不再讓外層 .page-header 留出一圈跟頁面底色一樣的空白
+  box-sizing: border-box;
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
 }
 
 .page-header__bar::after {
@@ -66,21 +82,6 @@
   font-weight: 700;
   color: #ffffff;
   letter-spacing: 0.04em;
-}
-
-.page-header__meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px 0;
-  font-size: 14px;
-  color: var(--ink-soft);
-}
-
-.page-header__right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 
 .result-count strong {
@@ -106,6 +107,21 @@
   }
 }
 
+.key-badge--btn {
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.key-badge--btn:hover {
+  background: var(--surface);
+  border-color: var(--blue);
+}
+
+.key-badge--btn:active {
+  transform: translateY(1px);
+}
+
 /* ---------- state messages ---------- */
 
 .state {
@@ -113,6 +129,14 @@
   padding: 60px 0;
   font-size: 15px;
   color: var(--ink-soft);
+}
+
+.content-area__scroll > .state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .state--error {
@@ -281,7 +305,11 @@
 /* ---------- empty state ---------- */
 
 .empty {
-  grid-column: 1 / -1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 60px 20px;
   border: 1px dashed var(--line);
@@ -302,54 +330,216 @@
   color: var(--ink-soft);
 }
 
-/* ---------- search bar ---------- */
+/* ---------- 左右 1:5 版面：標題列＋篩選欄固定、只有右側文物清單會捲動 ---------- */
+/*
+  這裡改成「.page-body 本身 fixed，側欄／內容區都用 position:absolute 直接寫死
+  top:0; bottom:0」，取代前一版「.page-body 用 grid、側欄／內容區靠 height:100%
+  + grid 列自動撐滿」的做法。
 
-.search-bar {
+  原因：grid 那個版本理論上應該要讓 grid-template-rows:1fr 把唯一的那一列撐滿
+  .page-body 的完整高度，side-bar/content-area 的 height:100% 再吃到那個高度——
+  但實測下來這條「grid 列高度 → 子層 height:100% → 子層內部 flex:1」的鏈路
+  沒有確實生效，導致捲動失效、篩選欄的「文物分類」整塊被 overflow:hidden 裁掉。
+
+  現在改成：.page-body 是 position:fixed，四個方向都釘住（top 扣掉標題高度，
+  left/right/bottom 都是 0），本身就有明確的寬高。.search-sidebar／.content-area
+  都用 position:absolute（以 .page-body 為定位基準），直接寫 top:0 + bottom:0，
+  高度是「寫死撐滿」，不透過任何 grid/flex 的隱性撐高機制，也就不會再卡在
+  「理論上該撐滿、實際上沒撐滿」這個問題上。寬度一樣用 calc()，但基準是
+  .page-body 自己（本來就是視窗寬度，不是 100vw），不會有捲軸寬度算不準的疑慮。
+
+  ⚠️ top 用到的 --header-h（定義在最上面 .artifact-page）是明確的 height（見上面
+  .page-header），不是概估值，所以這裡的對齊會是精確的。
+*/
+
+.page-body {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}
+
+.search-sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0; // 上下都寫死釘住，撐滿整個左側螢幕，不會再上下留白
+  left: 20px;
+  width: calc((100% - 40px - 28px) / 6); // 100% = .page-body 自己的寬度（視窗寬度，非 100vw）
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 16px;
+  box-sizing: border-box;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 0 0 28px;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden; // 保底：真的塞不下時寧可視覺擠壓，也不要跳出捲軸
+}
+
+.content-area {
+  position: absolute;
+  top: 0;
+  bottom: 0; // 上下寫死釘住，高度不再依賴 grid/flex 的隱性撐滿
+  left: calc(20px + (100% - 40px - 28px) / 6 + 28px);
+  right: 20px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-area__meta {
+  flex: none; // 固定在頂端，不參與下面的捲動
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.content-area__scroll {
+  flex: 1;
+  min-height: 0; // flex 容器要有這行，內部的 overflow-y:auto 才會正確裁切，不會把外框撐爆
+  overflow-y: auto;
+  padding-bottom: 48px; // 捲到底時留一點呼吸空間
+  display: flex;
+  flex-direction: column;
 }
 
 .search-input {
-  flex: 1 1 240px;
+  width: 100%;
   padding: 10px 16px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: var(--card);
+  background: var(--surface);
   color: var(--ink);
   font-size: 14px;
   font-family: inherit;
+  box-sizing: border-box;
+  flex: none; // 搜尋框維持自然高度，不參與下面兩個篩選區塊的平均分配
 }
 
 .search-input::placeholder {
   color: var(--ink-soft);
 }
 
-.search-input:focus,
-.search-select:focus {
+.search-input:focus {
   outline: none;
   border-color: var(--blue);
 }
 
-.search-select {
-  flex: 0 0 auto;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--card);
+/* 年代／分類核取方塊篩選區塊：兩區平均分配側欄剩餘高度，選項多就自動排成多欄，不捲動 */
+
+.filter-group {
+  flex: 1; // 兩個篩選區塊平均分配側欄剩下的高度
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.filter-group__title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  flex: none;
+}
+
+.filter-group__options {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap; // 選項一欄放不下時，往右多開幾欄塞下全部選項，取代原本的捲軸
+  align-content: flex-start;
+  gap: 2px 10px;
+  overflow: hidden; // 保底：真的太多筆時寧可視覺擠壓，也不出現捲軸
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 8px;
+  font-size: 12.5px;
   color: var(--ink);
-  font-size: 14px;
-  font-family: inherit;
   cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.filter-option:hover {
+  background: var(--surface);
+}
+
+.filter-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--blue);
+  cursor: pointer;
+  flex: none;
+}
+
+@media (max-width: 900px) {
+  .page-header {
+    position: static;
+    height: auto;
+    padding: 0;
+  }
+
+  .page-body {
+    position: static;
+    display: block;
+    padding: 0;
+    margin-top: 24px;
+  }
+
+  .search-sidebar {
+    position: static;
+    height: auto;
+    overflow: visible;
+    margin-bottom: 24px;
+  }
+
+  .content-area {
+    position: static;
+    height: auto;
+  }
+
+  .content-area__scroll {
+    flex: none;
+    overflow-y: visible;
+    padding-bottom: 0;
+  }
+
+  .filter-group {
+    flex: none;
+  }
+
+  .filter-group__options {
+    flex: none;
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 /* ---------- 年代分區 ---------- */
 
 .era-sections {
+  flex: 1; // 撐滿 content-area 剩下的高度，不留空白
   display: flex;
   flex-direction: column;
   gap: 36px;
+}
+
+.era-section {
+  // flex-grow 由樣板依 [style.flex-grow]="visibleItemsForEra(group).length" 逐一綁定，
+  // 文物數量越多的年代區塊，分到的高度佔比就越大；這裡只設共同的排版樣式。
+  display: flex;
+  flex-direction: column;
 }
 
 .era-section__header {
@@ -401,7 +591,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease;
-  z-index: 50;
+  z-index: 70; // 要蓋過固定的標題列(60)／篩選欄(55)，打開放大檢視時兩者也要一起被蓋暗
 }
 
 .overlay.open {

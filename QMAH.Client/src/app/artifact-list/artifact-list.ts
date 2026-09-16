@@ -2,11 +2,13 @@
 import { Component, EventEmitter, Output, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 import { CatalogService } from '../services/catalog-service';
 import { ArtifactUnlockService } from '../services/artifact-unlock-service';
 import { CatalogModel, CatalogDetailModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
+import { KeyService } from '../services/key-service';
 
 /** 依年代分組後的顯示用結構（格狀列表只需要清單卡片，不含鑑賞細節） */
 interface EraGroup {
@@ -29,7 +31,7 @@ export class ArtifactList implements OnInit {
   //
   // 型別是 CompendiumCardSummary 而不是 CardEntry：格狀列表只需要清單欄位＋外皮＋解鎖狀態，
   // 不需要 description / sizeText / primaryImagePath 這類鑑賞細節——那些欄位只在使用者
-  // 點開某張卡片時才透過 getArtifactDetail() 即時抓取（見下方 focusedDetail 相關程式碼），
+  // 點開某張卡片時才透過 CatalogService.getArtifactById() 即時抓取（見下方 focusedDetail 相關程式碼），
   // 避免一次把整批文物的細節資料都打回來。
   catalogModel = signal<CompendiumCardSummary[]>([]);
   loading = signal(true);
@@ -61,35 +63,62 @@ export class ArtifactList implements OnInit {
 
   // ---- 搜尋／篩選 ----
   searchQuery = signal('');
-  selectedEra = signal(''); // 空字串代表「全部年代」
-  selectedCategory = signal(''); // 空字串代表「全部分類」
+  /** 年代／分類改成核取方塊多選，空集合代表「不篩選（全部）」 */
+  selectedEras = signal<Set<string>>(new Set());
+  selectedCategories = signal<Set<string>>(new Set());
 
-  /** 篩選用的年代下拉選項，來自「全部」文物（不受目前篩選影響），解鎖／未解鎖都算 */
+  /** 篩選用的年代核取方塊選項，來自「全部」文物（不受目前篩選影響），解鎖／未解鎖都算 */
   eraOptions = computed(() => {
     const names = new Set(this.catalogModel().map((i) => i.eraName));
     return Array.from(names).sort();
   });
 
-  /** 篩選用的分類下拉選項，同上 */
+  /** 篩選用的分類核取方塊選項，同上 */
   categoryOptions = computed(() => {
     const names = new Set(this.catalogModel().map((i) => i.categoryName));
     return Array.from(names).sort();
   });
 
+  toggleEraFilter(era: string): void {
+    this.selectedEras.update((set) => {
+      const next = new Set(set);
+      if (next.has(era)) next.delete(era); else next.add(era);
+      return next;
+    });
+  }
+
+  isEraSelected(era: string): boolean {
+    return this.selectedEras().has(era);
+  }
+
+  toggleCategoryFilter(category: string): void {
+    this.selectedCategories.update((set) => {
+      const next = new Set(set);
+      if (next.has(category)) next.delete(category); else next.add(category);
+      return next;
+    });
+  }
+
+  isCategorySelected(category: string): boolean {
+    return this.selectedCategories().has(category);
+  }
+
   /**
-   * 套用搜尋框關鍵字 + 年代／分類下拉選單後的結果。
+   * 套用搜尋框關鍵字 + 年代／分類核取方塊後的結果。
+   * 年代／分類各自是「複選、勾了哪些就顯示哪些」（同一組內是 OR），
+   * 兩組之間再取交集（AND）；都沒勾任何選項時視為不篩選（顯示全部）。
    * 關鍵字比對：編號／年代／分類一律可比對；「名字」只比對已解鎖的文物
    * （未解鎖的文物名稱是遊戲機制上的「？？？」謎底，不應該被關鍵字搜出來）。
-   * 年代／分類下拉選單本身不分解鎖狀態，兩種文物都會篩到。
+   * 年代／分類核取方塊本身不分解鎖狀態，兩種文物都會篩到。
    */
   filteredItems = computed<CompendiumCardSummary[]>(() => {
     const keyword = this.searchQuery().trim().toLowerCase();
-    const era = this.selectedEra();
-    const category = this.selectedCategory();
+    const eras = this.selectedEras();
+    const categories = this.selectedCategories();
 
     return this.catalogModel().filter((item) => {
-      if (era && item.eraName !== era) return false;
-      if (category && item.categoryName !== category) return false;
+      if (eras.size > 0 && !eras.has(item.eraName)) return false;
+      if (categories.size > 0 && !categories.has(item.categoryName)) return false;
       if (!keyword) return true;
 
       const matchesRef = item.artifactRef.toLowerCase().includes(keyword);
@@ -167,6 +196,8 @@ export class ArtifactList implements OnInit {
   constructor(
     private catalogService: CatalogService,
     private unlockService: ArtifactUnlockService,
+    private keyService: KeyService,
+    private router: Router,
   ) { }
 
   ngOnInit(): void {
@@ -207,9 +238,16 @@ export class ArtifactList implements OnInit {
     );
   }
 
+  /**
+   * 右上角顯示的鑰匙數，改成「全部鑰匙的持有數量總和」（不是鑰匙種類數）。
+   * 原本這裡打的是 ArtifactUnlockService.getKeyBalance()（一支還沒實作、
+   * 假設回傳單一數字的端點）；key-list 那邊已經確認鑰匙資料其實是從
+   * economy 這支 API 來的，所以這裡改用同一個 KeyService，跟 key-list
+   * 用的是同一份資料來源，數字才會對得起來。
+   */
   private loadKeyBalance(): void {
-    this.unlockService.getKeyBalance().subscribe({
-      next: (res) => this.keys.set(res.keys),
+    this.keyService.getKeys().subscribe({
+      next: (keys) => this.keys.set(keys.reduce((sum, key) => sum + key.balance, 0)),
       error: (err) => console.error('[ArtifactList] loadKeyBalance failed', err),
     });
   }
@@ -220,7 +258,7 @@ export class ArtifactList implements OnInit {
    *
    * 文物本身的鑑賞細節（description / sizeText / primaryImagePath...）不在這裡用假資料頂著——
    * GET /catalog/artifacts/{id} 已經是真正可用的 API 了，所以改成點開卡片時才用
-   * getArtifactDetail() 即時抓真資料（見 maybeLoadFocusedDetail()），不需要、也不該用假資料。
+   * CatalogService.getArtifactById() 即時抓真資料（見 maybeLoadFocusedDetail()），不需要、也不該用假資料。
    */
   private toCardSummary(model: CatalogModel): CompendiumCardSummary {
     const placeholderSkin: CompendiumSkin = {
@@ -343,7 +381,7 @@ export class ArtifactList implements OnInit {
 
     this.focusedDetailLoading.set(true);
     this.focusedDetailError.set('');
-    this.unlockService.getArtifactDetail(item.id).subscribe({
+    this.catalogService.getArtifactById(item.id).subscribe({
       next: (detail) => {
         this.focusedDetail.set(detail);
         this.focusedDetailLoading.set(false);
@@ -383,7 +421,7 @@ export class ArtifactList implements OnInit {
 
         // 解鎖回應本身已經是完整 CardEntry（含 ArtifactDetail），如果玩家解鎖的
         // 正是目前放大檢視中的卡片，直接拿來當作 focusedDetail，不用再多打一次
-        // getArtifactDetail()。
+        // CatalogService.getArtifactById()。
         if (this.focusedId() === result.item.id) {
           this.focusedDetail.set(result.item);
           this.focusedDetailLoading.set(false);
@@ -405,6 +443,11 @@ export class ArtifactList implements OnInit {
 
   onAppreciationClick(item: CardEntry): void {
     this.appreciationRequested.emit(item);
+  }
+
+  /** 導頁到鑰匙背包頁面；路徑要對應你 routes 裡實際設定的 path（這裡先假設是 'key-list'） */
+  onKeyBagClick(): void {
+    this.router.navigate(['/key-list']);
   }
 
   toggleLedger(): void {

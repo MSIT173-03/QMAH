@@ -6,83 +6,125 @@
     <div class="page-header__bar">
       <h2 class="page-header__title">圖鑑</h2>
     </div>
-    <div class="page-header__meta" *ngIf="!loading() && !errorMsg()">
-      <span class="result-count">
-        共 <strong>{{ totalCount() }}</strong> 筆・已解鎖 <strong>{{ unlockedCount() }}</strong>
-      </span>
-      <div class="page-header__right">
-        <span class="key-badge">🔑 <strong>{{ keys() }}</strong></span>
+  </div>
+
+  <div class="page-body">
+
+    <!-- 左側（占比 1，寬度已縮減為原本一半）：搜尋 bar + 年代／分類核取方塊，可複合式多選 -->
+    <aside class="search-sidebar" *ngIf="!loading() && !errorMsg()">
+
+      <input
+        type="text"
+        class="search-input"
+        placeholder="搜尋編號／名稱／年代／分類"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+
+      <div class="filter-group">
+        <h4 class="filter-group__title">文物年代</h4>
+        <div class="filter-group__options">
+          <label class="filter-option" *ngFor="let era of eraOptions()">
+            <input
+              type="checkbox"
+              [checked]="isEraSelected(era)"
+              (change)="toggleEraFilter(era)"
+            />
+            <span>{{ era }}</span>
+          </label>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="search-bar" *ngIf="!loading() && !errorMsg()">
-    <input
-      type="text"
-      class="search-input"
-      placeholder="搜尋編號／名稱／年代／分類"
-      [ngModel]="searchQuery()"
-      (ngModelChange)="searchQuery.set($event)"
-    />
-    <select class="search-select" [ngModel]="selectedEra()" (ngModelChange)="selectedEra.set($event)">
-      <option value="">全部年代</option>
-      <option *ngFor="let era of eraOptions()" [value]="era">{{ era }}</option>
-    </select>
-    <select class="search-select" [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)">
-      <option value="">全部分類</option>
-      <option *ngFor="let category of categoryOptions()" [value]="category">{{ category }}</option>
-    </select>
-  </div>
+      <div class="filter-group">
+        <h4 class="filter-group__title">文物分類</h4>
+        <div class="filter-group__options">
+          <label class="filter-option" *ngFor="let category of categoryOptions()">
+            <input
+              type="checkbox"
+              [checked]="isCategorySelected(category)"
+              (change)="toggleCategoryFilter(category)"
+            />
+            <span>{{ category }}</span>
+          </label>
+        </div>
+      </div>
 
-  <div *ngIf="loading()" class="state state--loading">
-    <span class="spinner"></span>載入中...
-  </div>
+    </aside>
 
-  <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
-
-  <div class="era-sections" *ngIf="!loading() && !errorMsg()">
-    <section class="era-section" *ngFor="let group of eraGroups(); trackBy: trackByEraName">
-      <div class="era-section__header">
-        <h3 class="era-section__title">{{ group.eraName }}</h3>
-        <button
-          type="button"
-          class="era-section__more"
-          *ngIf="group.items.length > 5"
-          (click)="toggleEraExpand(group.eraName)"
-        >
-          {{ isEraExpanded(group.eraName) ? '收合－' : '更多文物+' }}
+    <!-- 右側（占比 5，寬度已補齊左側縮減的部分）：維持原本的年代分區＋卡片樣式 -->
+    <div class="content-area">
+      <br/>
+      <div class="content-area__meta" *ngIf="!loading() && !errorMsg()">
+        <span class="result-count">
+          共 <strong>{{ totalCount() }}</strong> 筆・已解鎖 <strong>{{ unlockedCount() }}</strong>
+        </span>
+        <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
+          🔑 <strong>{{ keys() }}</strong>
         </button>
       </div>
 
-      <div class="artifact-grid">
-        <div
-          class="artifact-card"
-          [class.locked]="!item.unlocked"
-          [class.unlocked]="item.unlocked"
-          *ngFor="let item of visibleItemsForEra(group); trackBy: trackByArtifactId"
-          (click)="openCard(item.id)"
-        >
-          <div class="artifact-card__media">
-            <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
-            <span class="lock-badge" *ngIf="!item.unlocked">🔒</span>
-          </div>
+      <!-- 只有這個捲動容器裡的內容會捲動；上面的 content-area__meta 固定不動 -->
+      <div class="content-area__scroll">
 
-          <div class="artifact-card__info">
-            <p class="ref">No. {{ item.artifactRef }}</p>
-            <h3 class="name">{{ item.unlocked ? item.name : '？？？' }}</h3>
-            <div class="tags">
-              <span class="tag tag--category">{{ item.categoryName }}</span>
-              <span class="tag tag--era">{{ item.eraName }}</span>
+        <div *ngIf="loading()" class="state state--loading">
+          <span class="spinner"></span>載入中...
+        </div>
+
+        <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
+
+        <div class="era-sections" *ngIf="!loading() && !errorMsg()">
+          <section
+            class="era-section"
+            *ngFor="let group of eraGroups(); trackBy: trackByEraName"
+            [style.flex-grow]="visibleItemsForEra(group).length"
+          >
+            <div class="era-section__header">
+              <h3 class="era-section__title">{{ group.eraName }}</h3>
+              <button
+                type="button"
+                class="era-section__more"
+                *ngIf="group.items.length > 5"
+                (click)="toggleEraExpand(group.eraName)"
+              >
+                {{ isEraExpanded(group.eraName) ? '收合－' : '更多文物+' }}
+              </button>
             </div>
+
+            <div class="artifact-grid">
+              <div
+                class="artifact-card"
+                [class.locked]="!item.unlocked"
+                [class.unlocked]="item.unlocked"
+                *ngFor="let item of visibleItemsForEra(group); trackBy: trackByArtifactId"
+                (click)="openCard(item.id)"
+              >
+                <div class="artifact-card__media">
+                  <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
+                  <span class="lock-badge" *ngIf="!item.unlocked">🔒</span>
+                </div>
+
+                <div class="artifact-card__info">
+                  <p class="ref">No. {{ item.artifactRef }}</p>
+                  <h3 class="name">{{ item.unlocked ? item.name : '？？？' }}</h3>
+                  <div class="tags">
+                    <span class="tag tag--category">{{ item.categoryName }}</span>
+                    <span class="tag tag--era">{{ item.eraName }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div *ngIf="isEmpty()" class="empty">
+            <p class="empty__title">目前沒有資料</p>
+            <p class="empty__desc">請調整搜尋條件後再試一次</p>
           </div>
         </div>
-      </div>
-    </section>
 
-    <div *ngIf="isEmpty()" class="empty">
-      <p class="empty__title">目前沒有資料</p>
-      <p class="empty__desc">請調整搜尋條件後再試一次</p>
+      </div>
+
     </div>
+
   </div>
 
   <!-- 版面已改成年代分區＋展開，原本「上一頁／下一頁」的分頁 nav 不再需要 -->

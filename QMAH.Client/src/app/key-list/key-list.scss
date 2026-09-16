@@ -1,0 +1,337 @@
+/* key-list.scss */
+/* 色系沿用 artifact-list.scss 的變數（--ink / --ink-soft / --line / --surface / --card /
+   --blue / --blue-deep / --yellow / --red），不是 economy.scss 那組靛紫色，維持跟圖鑑頁一致。 */
+
+:host {
+  display: block;
+}
+
+.key-page {
+  --ink: #1c2b4a;
+  --ink-soft: #5b6b8c;
+  --line: #dfe4ef;
+  --surface: #f4f6fb;
+  --card: #ffffff;
+  --blue: #2a5cad;
+  --blue-deep: #163d7a;
+  --yellow: #ffcb05;
+  --red: #e0393e;
+
+  min-height: 100vh;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+  background: var(--surface);
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  color: var(--ink);
+}
+
+/* ---------- header ---------- */
+
+.page-header {
+  margin: 0 -20px 28px;
+}
+
+.page-header__bar {
+  background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 100%);
+  padding: 22px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+}
+
+.page-header__sub {
+  margin: 12px 20px 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* ---------- state messages ---------- */
+
+.state {
+  text-align: center;
+  padding: 60px 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.state--error {
+  color: var(--red);
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  border: 2px solid var(--line);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  vertical-align: -3px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- section title ---------- */
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+}
+
+.key-count {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- filter bar ---------- */
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    font-size: 11px;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: var(--blue);
+    color: var(--blue-deep);
+  }
+}
+
+.filter-button.active {
+  border-color: var(--blue);
+  background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(22, 61, 122, 0.25);
+
+  span {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+  }
+}
+
+/* ---------- key slot grid（參考遊戲道具欄樣式：一格 icon＋右下角數量＋懸停顯示詳情）---------- */
+
+.key-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 14px;
+}
+
+.key-slot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  cursor: default;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--blue);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(22, 61, 122, 0.15);
+    z-index: 5; // 讓 tooltip 蓋在旁邊的格子之上
+  }
+}
+
+/* 依鑰匙種類上色的邊框，取代原本大卡片頂部那條色條 */
+
+.key-slot.category-key {
+  border-color: color-mix(in srgb, var(--blue) 45%, var(--line));
+}
+
+.key-slot.era-key {
+  border-color: color-mix(in srgb, var(--yellow) 60%, var(--line));
+}
+
+.key-slot.universal-key {
+  border-color: color-mix(in srgb, var(--red) 45%, var(--line));
+}
+
+.key-slot__icon {
+  font-size: 28px;
+}
+
+.key-slot.empty {
+  background: var(--surface);
+
+  .key-slot__icon {
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+
+  &:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--line);
+  }
+}
+
+.key-slot__count {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  min-width: 16px;
+  padding: 1px 4px;
+  border-radius: 6px;
+  background: rgba(28, 43, 74, 0.75);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* 懸停顯示的詳情泡泡：開鎖類別＋回收點數 */
+
+.key-slot__tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  width: max-content;
+  min-width: 160px;
+  max-width: 220px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: var(--ink);
+  }
+}
+
+.key-slot:hover .key-slot__tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.key-slot__tooltip-name {
+  margin: 0 0 6px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.key-slot__tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 3px 0 0;
+
+  strong {
+    color: #ffffff;
+    font-weight: 700;
+    text-align: right;
+  }
+}
+
+/* ---------- empty state (完全沒有任何鑰匙資料時) ---------- */
+
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.empty__title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.empty__desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 480px) {
+  .key-page {
+    padding: 0 12px 40px;
+  }
+
+  .page-header {
+    margin: 0 -12px 20px;
+  }
+
+  .key-slot-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+  }
+}

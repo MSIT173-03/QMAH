@@ -1,1 +1,116 @@
-<p>key-list works!</p>
+<!-- key-list.html -->
+<div class="key-page">
+
+  <div class="page-header">
+    <div class="page-header__bar">
+      <h1 class="page-header__title">鑰匙背包</h1>
+    </div>
+    <p class="page-header__sub">查看你目前持有的各類文物鑰匙</p>
+  </div>
+
+  <div *ngIf="loading()" class="state state--loading">
+    <span class="spinner"></span>載入中...
+  </div>
+
+  <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
+
+  <ng-container *ngIf="!loading() && !errorMsg()">
+
+    <div class="section-title">
+      <h2>我的鑰匙</h2>
+      <span class="key-count">{{ totalKeyCount() }} 把</span>
+    </div>
+
+    <div class="filter-bar">
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'ALL'"
+        (click)="setFilter('ALL')"
+      >
+        全部
+        <span>{{ getFilterCount('ALL') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'NORMAL'"
+        (click)="setFilter('NORMAL')"
+      >
+        一般
+        <span>{{ getFilterCount('NORMAL') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'CATEGORY'"
+        (click)="setFilter('CATEGORY')"
+      >
+        分類
+        <span>{{ getFilterCount('CATEGORY') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'ERA'"
+        (click)="setFilter('ERA')"
+      >
+        年代
+        <span>{{ getFilterCount('ERA') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'UNIVERSAL'"
+        (click)="setFilter('UNIVERSAL')"
+      >
+        萬能
+        <span>{{ getFilterCount('UNIVERSAL') }}</span>
+      </button>
+    </div>
+
+    <div class="key-slot-grid" *ngIf="!isEmpty()">
+      <div
+        class="key-slot"
+        *ngFor="let key of filteredKeys(); trackBy: trackByKeyId"
+        [class.normal-key]="key.scopeType === 'NORMAL'"
+        [class.category-key]="key.scopeType === 'CATEGORY'"
+        [class.era-key]="key.scopeType === 'ERA'"
+        [class.universal-key]="key.scopeType === 'UNIVERSAL'"
+      >
+        <div class="key-slot__icon">🔑</div>
+        <span class="key-slot__count">{{ key.balance }}</span>
+
+        <div class="key-slot__tooltip">
+          <p class="key-slot__tooltip-name">{{ key.name }}</p>
+
+          <p class="key-slot__tooltip-row">
+            <span>開鎖類別</span>
+            <strong [ngSwitch]="key.scopeType">
+              <ng-container *ngSwitchCase="'NORMAL'">一般</ng-container>
+              <ng-container *ngSwitchCase="'UNIVERSAL'">萬能</ng-container>
+              <ng-container *ngSwitchCase="'CATEGORY'">分類（{{ getCategoryName(key.categoryId) }}）</ng-container>
+              <ng-container *ngSwitchCase="'ERA'">年代（{{ getEraName(key.eraBucketId) }}）</ng-container>
+            </strong>
+          </p>
+
+          <p class="key-slot__tooltip-row">
+            <span>回收點數</span>
+            <strong>{{ key.recyclePointValue }}</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isEmpty()" class="empty">
+      <p class="empty__title">背包裡還沒有任何鑰匙</p>
+      <p class="empty__desc">前往圖鑑解鎖文物，就有機會取得對應的鑰匙</p>
+    </div>
+
+  </ng-container>
+
+</div>

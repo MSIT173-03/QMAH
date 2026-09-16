@@ -6,6 +6,10 @@ export const routes: Routes = [
     path: 'artifact-list',
     loadComponent: () => import('./artifact-list/artifact-list').then(m => m.ArtifactList)
   },
+    {
+    path: 'key-list',
+    loadComponent: () => import('./key-list/key-list').then(m => m.KeyList)
+  },
 
   {
     path: 'login',

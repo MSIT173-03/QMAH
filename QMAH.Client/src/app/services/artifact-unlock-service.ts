@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
 import { CardEntry, ArtifactUnlockRecord, UnlockMethod, UnlockResult } from '../models/artifact-unlock-model';
-import { CatalogListResponse, CatalogDetailModel } from '../models/catalog-model';
+import { CatalogListResponse } from '../models/catalog-model';
 
 @Injectable({
   providedIn: 'root',
@@ -28,17 +28,10 @@ export class ArtifactUnlockService {
     );
   }
 
-  /**
-   * 取得單一文物的完整鑑賞細節（description / sizeText / primaryImagePath 等）。
-   * 清單 API 沒有這些欄位，必須先有 id 才能打這支：
-   * getCompendium() 拿到分頁清單 → 使用者點開某張卡片 → 用該卡片的 id 呼叫這支。
-   * 不要在拿到整頁清單後就對 20 筆逐一呼叫，避免不必要的 N+1 請求。
-   */
-  getArtifactDetail(artifactId: string): Observable<CatalogDetailModel> {
-    return this.http.get<CatalogDetailModel>(`${this.apiUrl}/${artifactId}`).pipe(
-      catchError(this.handleError)
-    );
-  }
+  // 單一文物的完整鑑賞細節（description / sizeText / primaryImagePath 等）改由
+  // CatalogService.getArtifactById() 負責——那支打的是完全同一個端點
+  // （GET /catalog/artifacts/{id}），這裡不再重複定義第二支，避免兩邊各存一份、
+  // 之後改欄位容易對不齊。呼叫端（artifact-list.ts）已經改成直接注入 CatalogService。
 
   /** 取得玩家目前持有的鑰匙數量 */
   getKeyBalance(): Observable<{ keys: number }> {
