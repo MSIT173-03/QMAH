@@ -736,7 +736,8 @@ public sealed class EconomyService(QmahDbContext db)
             return EconomyResult<GameRewardView>.NotFound("找不到遊戲房間。");
         if (room.Status != "COMPLETED")
             return EconomyResult<GameRewardView>.Conflict("遊戲尚未完成，現在不能結算獎勵。");
-        var player = room.GamePlayers.FirstOrDefault(item => item.UserId == userId && item.ConnectionStatus != "LEFT");
+        // 房間完成後離場只代表離開畫面，不應讓有效參與者失去尚未領取的一次性獎勵。
+        var player = room.GamePlayers.FirstOrDefault(item => item.UserId == userId);
         if (player is null)
             return EconomyResult<GameRewardView>.Forbidden("目前會員不是這場遊戲的有效參與者。");
 

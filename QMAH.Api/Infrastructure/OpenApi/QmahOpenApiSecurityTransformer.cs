@@ -304,6 +304,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ("Social.GetPosts", "postType") => "貼文類型：POST、ANNOUNCEMENT 或 EVENT",
             ("Social.GetPosts", "artifactId") => "關聯文物 Id（資源識別碼），GUID（全域唯一識別碼）格式",
             ("Game.GetRooms", "status") => "房間狀態：WAITING、PLAYING 或 COMPLETED；未指定時為 WAITING",
+            ("Game.GetRooms", "sort") => "房間排序：RECOMMENDED、NEARLY_FULL、NEWEST 或 OPEN_SLOTS；未指定時為 RECOMMENDED",
             _ => null
         };
     }

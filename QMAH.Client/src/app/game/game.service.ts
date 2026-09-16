@@ -14,6 +14,7 @@ import {
   GameRoomHistory,
   GameRoomListItem,
   GameRoomQuery,
+  GameRoomSort,
   GameRoundDetails,
   GameValidationError,
   JoinGameRoomRequest,
@@ -56,6 +57,7 @@ export class GameService {
       .set('page', String(this.boundedInteger(query.page, 1, 1, Number.MAX_SAFE_INTEGER)))
       .set('pageSize', String(this.boundedInteger(query.pageSize, 20, 1, 100)));
     if (query.status) params = params.set('status', query.status);
+    if (query.sort) params = params.set('sort', query.sort);
     return this.http.get<ApiPage<GameRoomListItem>>(`${this.apiUrl}/rooms`, { params });
   }
 

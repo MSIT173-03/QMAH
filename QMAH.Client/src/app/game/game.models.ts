@@ -1,6 +1,7 @@
 // 對應 /api/v1/game 的資料契約；遊戲規則判斷集中在 GameService，元件只負責呈現結果。
 export type GameRoomStatus = 'WAITING' | 'PLAYING' | 'COMPLETED' | 'CANCELLED';
 export type GameRoomFilterStatus = Exclude<GameRoomStatus, 'CANCELLED'>;
+export type GameRoomSort = 'RECOMMENDED' | 'NEARLY_FULL' | 'NEWEST' | 'OPEN_SLOTS';
 export type GameRoomVisibility = 'PUBLIC' | 'PRIVATE';
 export type GameRoundStatus = 'ANSWERING' | 'VOTING' | 'REVEALED';
 export type GameAnswerType = 'CREATIVE_TALE' | 'PLAUSIBLE_FICTION' | 'FACTUAL_REASONING';
@@ -21,6 +22,8 @@ export interface GameRoomListItem {
   maxPlayers: number;
   totalRounds: number;
   playerCount: number;
+  categoryFilterCode: string | null;
+  eraBucketFilterCode: string | null;
   createdAt: string;
 }
 
@@ -224,6 +227,7 @@ export class GameValidationError extends Error {
 
 export interface GameRoomQuery {
   status?: GameRoomFilterStatus;
+  sort?: GameRoomSort;
   page?: number;
   pageSize?: number;
 }

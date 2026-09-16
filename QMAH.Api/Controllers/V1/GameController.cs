@@ -21,6 +21,7 @@ public sealed class GameController(
     [HttpGet("rooms")]
     public async Task<ActionResult<ApiPage<GameRoomListItemDto>>> GetRooms(
         string? status,
+        string? sort,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -40,13 +41,31 @@ public sealed class GameController(
             query = query.Where(room => room.Status == "WAITING");
         }
 
-        var projected = query
-            .OrderByDescending(room => room.CreatedAt)
-            .ThenBy(room => room.TotalRounds)
-            .ThenBy(room => room.MaxPlayers)
-            .ThenBy(room => room.AnswerSeconds)
-            .ThenBy(room => room.VotingSeconds)
-            .ThenBy(room => room.Id)
+        var sortCode = sort?.Trim().ToUpperInvariant() ?? "RECOMMENDED";
+        if (sortCode is not ("RECOMMENDED" or "NEARLY_FULL" or "NEWEST" or "OPEN_SLOTS"))
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "房間排序無效", detail: "sort 只能是 RECOMMENDED、NEARLY_FULL、NEWEST 或 OPEN_SLOTS。");
+
+        var ordered = sortCode switch
+        {
+            "NEARLY_FULL" => query
+                .OrderBy(room => room.MaxPlayers - room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"))
+                .ThenByDescending(room => room.CreatedAt)
+                .ThenBy(room => room.Id),
+            "NEWEST" => query
+                .OrderByDescending(room => room.CreatedAt)
+                .ThenBy(room => room.Id),
+            "OPEN_SLOTS" => query
+                .OrderByDescending(room => room.MaxPlayers - room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"))
+                .ThenByDescending(room => room.CreatedAt)
+                .ThenBy(room => room.Id),
+            _ => query
+                .OrderByDescending(room => room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"))
+                .ThenBy(room => room.MaxPlayers - room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"))
+                .ThenByDescending(room => room.CreatedAt)
+                .ThenBy(room => room.Id)
+        };
+
+        var projected = ordered
             .Select(room => new GameRoomListItemDto(
                 room.Id,
                 room.RoomCode,
@@ -55,6 +74,8 @@ public sealed class GameController(
                 room.MaxPlayers,
                 room.TotalRounds,
                 room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"),
+                room.CategoryFilterCode,
+                room.EraBucketFilterCode,
                 room.CreatedAt));
 
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
@@ -121,6 +142,7 @@ public sealed class GameController(
         }
 
         var rounds = room.GameRounds
+            .Where(round => room.Status != "PLAYING" || round.Status != "ANSWERING")
             .OrderBy(round => round.RoundNumber)
             .Select(ToRoundSummary)
             .ToList();

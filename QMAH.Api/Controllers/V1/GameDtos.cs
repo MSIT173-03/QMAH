@@ -11,6 +11,8 @@ public sealed record GameRoomListItemDto(
     byte MaxPlayers,
     byte TotalRounds,
     int PlayerCount,
+    string? CategoryFilterCode,
+    string? EraBucketFilterCode,
     DateTime CreatedAt);
 
 public sealed record GamePlayerDto(

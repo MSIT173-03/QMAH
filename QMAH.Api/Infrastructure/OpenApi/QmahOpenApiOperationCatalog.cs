@@ -44,7 +44,7 @@ internal static class QmahOpenApiOperationCatalog
             ["SocialMedia.GetContent"] = ("讀取社群圖片", "以 path parameter（路徑參數）`id` 讀取已發布貼文使用中的圖片，或由圖片擁有者預覽尚未關聯的圖片。回應支援 HTTP range request（HTTP 分段讀取請求）；圖片不存在、已刪除或目前呼叫者無可見權限時回傳 `404`。"),
             ["SocialMedia.Delete"] = ("刪除社群圖片", "需要登入，依 path parameter（路徑參數）`id` 將目前會員擁有的社群圖片標記為刪除，保留貼文與稽核關聯。成功回傳 `204 No Content`（成功且沒有回應本文）；圖片不存在或不屬於目前會員時回傳 `404`。"),
 
-            ["Game.GetRooms"] = ("查詢遊戲房間", "以 query string（查詢參數）的 `status`、`page` 與 `pageSize` 查詢公開遊戲房間。`status` 可為 `WAITING`、`PLAYING` 或 `COMPLETED`，未指定時預設查詢 `WAITING` 房間，回應為分頁清單。"),
+            ["Game.GetRooms"] = ("查詢遊戲房間", "以 query string（查詢參數）的 `status`、`sort`、`page` 與 `pageSize` 查詢公開遊戲房間。`status` 可為 `WAITING`、`PLAYING` 或 `COMPLETED`，`sort` 可為 `RECOMMENDED`、`NEARLY_FULL`、`NEWEST` 或 `OPEN_SLOTS`；未指定時預設查詢 `WAITING` 並採推薦排序，回應為分頁清單。"),
             ["Game.GetRoom"] = ("取得遊戲房間詳情", "以 path parameter（路徑參數）`id` 取得公開房間，或取得目前會員已參與的私人房間詳情。私人房間只對參與者公開；房間不存在或已取消時回傳 `404`。"),
             ["Game.GetRoomHistory"] = ("取得遊戲房間歷程", "以 path parameter（路徑參數）`id` 取得房間的回合歷程、各回合答案與票數、勝者及整場排行榜。私人房間只對參與者公開；房間不存在或已取消時回傳 `404`。"),
             ["Game.CreateRoom"] = ("建立遊戲房間", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `Visibility`、玩家顯示名稱、回合規則與選填的分類／年代篩選建立房間。私人房間必須提供密碼，公開房間不保存密碼；成功回傳 `201 Created`（已建立資源）與房間詳情。"),

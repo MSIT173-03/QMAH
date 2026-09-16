@@ -487,6 +487,7 @@ public sealed class GameRoomLifecycleService(
                 && (room.EraBucketFilterCode == null
                     || entry.Artifact.EraBucket.Code == room.EraBucketFilterCode))
             .Select(entry => entry.ArtifactId)
+            .Distinct()
             .ToListAsync(cancellationToken);
 
     private static GameRound CreateRound(GameRoom room, Guid artifactId, int roundNumber, DateTime now)

@@ -39,6 +39,14 @@
 
       <div class="lookup-bar">
         <button type="button" class="filter-trigger" [class.is-active]="showFilter" (click)="showFilter = !showFilter" [attr.aria-expanded]="showFilter">篩選：{{ roomStatus === 'WAITING' ? '可加入' : statusText(roomStatus === 'RECENT' ? 'COMPLETED' : roomStatus) }}</button>
+        <label class="sort-control">排序
+          <select name="roomSort" [ngModel]="roomSort" (ngModelChange)="setRoomSort($event)">
+            <option value="RECOMMENDED">推薦</option>
+            <option value="NEARLY_FULL">快滿</option>
+            <option value="NEWEST">最新</option>
+            <option value="OPEN_SLOTS">空位最多</option>
+          </select>
+        </label>
         @if (showFilter) {
           <section class="filter-note" aria-label="篩選條件">
             <header><strong>選擇房間狀態</strong><button type="button" (click)="showFilter = false" aria-label="關閉篩選">×</button></header>
@@ -78,7 +86,7 @@
             <div role="listitem">
               <button type="button" class="room-row" [class.is-selected]="selectedRoomId === room.id" (click)="selectRoom(room)" [attr.aria-pressed]="selectedRoomId === room.id">
                 <span class="room-code">{{ room.roomCode }}</span>
-                <span class="room-facts"><b>{{ room.totalRounds }} 回合</b><span>{{ visibilityText(room.visibility) }}</span></span>
+                <span class="room-facts"><b>{{ room.totalRounds }} 回合</b><span>{{ categoryText(room.categoryFilterCode) }} · {{ eraText(room.eraBucketFilterCode) }}</span></span>
                 <span class="room-occupancy"><b>{{ room.playerCount }} / {{ room.maxPlayers }}</b><i><i [style.width.%]="occupancy(room)"></i></i></span>
                 <span class="room-status" [attr.data-status]="room.status">{{ statusText(room.status) }}</span>
                 <span class="row-arrow" aria-hidden="true">›</span>
@@ -117,6 +125,7 @@
         <dl class="room-record">
           <div><dt>分類</dt><dd>{{ categoryText(room.categoryFilterCode) }}</dd></div>
           <div><dt>年代</dt><dd>{{ eraText(room.eraBucketFilterCode) }}</dd></div>
+          <div><dt>房間類型</dt><dd>{{ room.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</dd></div>
           <div><dt>回合</dt><dd>{{ room.totalRounds }}</dd></div>
           <div><dt>作答時間</dt><dd>{{ room.answerSeconds }} 秒</dd></div>
         </dl>
