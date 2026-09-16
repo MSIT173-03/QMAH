@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { CreateSocialPostRequest, SocialApiService, SocialPostListItem } from '../../../core/services/social-api';
+import { CreateSocialPostRequest, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
+import { MeApiService } from '../../../core/services/me-api';
 
 @Component({
   selector: 'app-posts',
@@ -15,12 +16,21 @@ import { CreateSocialPostRequest, SocialApiService, SocialPostListItem } from '.
 })
 export class PostsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
+  private meApi = inject(MeApiService);
 
   posts: SocialPostListItem[] = [];
   totalCount = 0;
+  loading = false;
   loadError: string | null = null;
   createError: string | null = null;
-  newPost: CreateSocialPostRequest = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '' };
+  newPost: CreateSocialPostRequest = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '', mediaIds: [] };
+
+  pendingMedia: SocialMedia[] = [];
+  uploadPending = false;
+
+  get isAdmin(): boolean {
+    return this.meApi.me()?.roles.includes('Admin') ?? false;
+  }
 
   ngOnInit(): void {
     this.loadPosts();
@@ -28,17 +38,71 @@ export class PostsComponent implements OnInit {
 
   // GET /api/v1/social/posts（AllowAnonymous，回傳 ApiPage<SocialPostListItemDto>）
   loadPosts(): void {
+    this.loading = true;
     this.loadError = null;
     this.socialApi.getPosts({ pageSize: 20 }).subscribe({
       next: (page) => {
         this.posts = page.items;
         this.totalCount = page.totalCount;
+        this.loading = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.loadError = '取得貼文失敗，請稍後再試。';
         console.error('取得貼文失敗:', err);
+        this.loadError = '取得貼文失敗，請稍後再試。';
+        this.loading = false;
       }
     });
+  }
+
+  // POST /api/v1/social/media，最多附 8 張圖片；上傳完成才把 id 放進 newPost.mediaIds
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    const remainingSlots = 8 - (this.newPost.mediaIds?.length ?? 0);
+    const filesToUpload = Array.from(files).slice(0, Math.max(0, remainingSlots));
+
+    this.uploadPending = true;
+    this.createError = null;
+    let completed = 0;
+    for (const file of filesToUpload) {
+      this.socialApi.uploadMedia(file).subscribe({
+        next: (media) => {
+          this.pendingMedia.push(media);
+          this.newPost.mediaIds = [...(this.newPost.mediaIds ?? []), media.id];
+          completed += 1;
+          if (completed === filesToUpload.length) this.uploadPending = false;
+        },
+        error: (err: HttpErrorResponse) => {
+          completed += 1;
+          if (completed === filesToUpload.length) this.uploadPending = false;
+          this.createError = err.status === 401
+            ? '上傳圖片失敗：請先登入。'
+            : err.status === 413
+              ? '上傳圖片失敗：單一圖片不可超過 8 MB。'
+              : '上傳圖片失敗，請確認檔案格式是否為 JPEG／PNG／GIF／WebP。';
+          console.error('上傳圖片失敗:', err);
+        }
+      });
+    }
+    input.value = '';
+  }
+
+  removePendingMedia(media: SocialMedia): void {
+    this.socialApi.deleteMedia(media.id).subscribe({
+      next: () => this.dropPendingMedia(media.id),
+      error: (err: HttpErrorResponse) => {
+        console.error('移除圖片失敗:', err);
+        // 就算刪除 API 失敗（例如已經被刪過），也把它從草稿裡拿掉，不要卡住使用者。
+        this.dropPendingMedia(media.id);
+      }
+    });
+  }
+
+  private dropPendingMedia(mediaId: string): void {
+    this.pendingMedia = this.pendingMedia.filter((item) => item.id !== mediaId);
+    this.newPost.mediaIds = (this.newPost.mediaIds ?? []).filter((id) => id !== mediaId);
   }
 
   // POST /api/v1/social/posts（需要登入 + XSRF token）
@@ -48,7 +112,8 @@ export class PostsComponent implements OnInit {
     this.createError = null;
     this.socialApi.createPost(this.newPost).subscribe({
       next: () => {
-        this.newPost = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '' };
+        this.newPost = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '', mediaIds: [] };
+        this.pendingMedia = [];
         this.loadPosts();
         (document.getElementById('create_post_modal') as HTMLDialogElement | null)?.close();
       },

@@ -125,6 +125,7 @@ public sealed class SocialEventsAdminController(
 
         var eventItem = await db.Events
             .Include(e => e.SocialPost)
+            .Include(e => e.EventRegistrations)
             .SingleOrDefaultAsync(e => e.Id == id, cancellationToken);
         if (eventItem is null)
             return MissingResource("找不到活動", "這場活動不存在。");
@@ -132,9 +133,27 @@ public sealed class SocialEventsAdminController(
         if (publishStatus == "PUBLISHED" && eventItem.ReviewStatus != "APPROVED")
             return InvalidWorkflow("尚未審核通過", "只有審核通過的活動才能發布。");
 
+        var wasCancelled = eventItem.PublishStatus == "CANCELLED";
         eventItem.PublishStatus = publishStatus;
         if (eventItem.SocialPost is not null)
             EventSocialPostSynchronizer.SyncPublication(eventItem.SocialPost, eventItem, DateTime.UtcNow);
+
+        // 活動被取消時，通知所有還算有效報名的玩家；重複取消（本來就是 CANCELLED）不用再通知一次。
+        if (publishStatus == "CANCELLED" && !wasCancelled)
+        {
+            var registeredUserIds = eventItem.EventRegistrations
+                .Where(registration => registration.Status is "REGISTERED" or "ATTENDED")
+                .Select(registration => registration.UserId)
+                .Distinct();
+            foreach (var registeredUserId in registeredUserIds)
+            {
+                notificationService.QueueNotification(
+                    registeredUserId,
+                    "活動已取消",
+                    $"你報名的活動「{eventItem.Title}」已被取消。",
+                    $"/social/events/{eventItem.Id}");
+            }
+        }
 
         await db.SaveChangesAsync(cancellationToken);
         return Ok(new { message = "活動發布狀態已更新", eventItem.Id, eventItem.PublishStatus });

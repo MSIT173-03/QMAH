@@ -106,6 +106,7 @@ public sealed record SocialPostListItemDto(
     string ContentPreview,
     int CommentCount,
     int MediaCount,
+    string? CoverImageUrl,
     string? LocationName,
     decimal? Latitude,
     decimal? Longitude,
@@ -154,6 +155,7 @@ public sealed record EventListItemDto(
     Guid? SocialPostId,
     string EventType,
     Guid? OrganizerUserId,
+    string? OrganizerDisplayName,
     string Title,
     string Content,
     string? Location,
@@ -170,6 +172,7 @@ public sealed record SocialEventDetailsDto(
     Guid? SocialPostId,
     string EventType,
     Guid? OrganizerUserId,
+    string? OrganizerDisplayName,
     string Title,
     string Content,
     string? Location,
@@ -472,6 +475,9 @@ public sealed class CreateSocialEventRequest
 
     [StringLength(4000)]
     public string? PostContent { get; set; }
+
+    [MaxLength(8)]
+    public List<Guid> MediaIds { get; set; } = [];
 }
 
 public sealed class CreateSocialCommentRequest
@@ -480,6 +486,21 @@ public sealed class CreateSocialCommentRequest
     public string Content { get; set; } = "";
 
     public Guid? ParentCommentId { get; set; }
+}
+
+public sealed class UpdateSocialPostRequest
+{
+    [StringLength(80, MinimumLength = 1)]
+    public string Title { get; set; } = "";
+
+    [Required, StringLength(4000, MinimumLength = 1)]
+    public string Content { get; set; } = "";
+}
+
+public sealed class UpdateSocialCommentRequest
+{
+    [Required, StringLength(2000, MinimumLength = 1)]
+    public string Content { get; set; } = "";
 }
 
 public sealed class CreateContentReportRequest

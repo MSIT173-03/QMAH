@@ -26,6 +26,7 @@ export interface SocialPostListItem {
   contentPreview: string;
   commentCount: number;
   mediaCount: number;
+  coverImageUrl: string | null;
   locationName: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -78,6 +79,7 @@ export interface EventListItem {
   socialPostId: string | null;
   eventType: 'PLAYER' | 'OFFICIAL';
   organizerUserId: string | null;
+  organizerDisplayName: string | null;
   title: string;
   content: string;
   location: string | null;
@@ -110,16 +112,6 @@ export interface Announcement {
   publisherType: string;
   eventId: string | null;
   createdAt: string;
-}
-
-export interface UserNotification {
-  id: string;
-  title: string;
-  content: string;
-  targetUrl: string | null;
-  isRead: boolean;
-  createdAt: string;
-  readAt: string | null;
 }
 
 export interface AdminEventListItem {
@@ -198,6 +190,15 @@ export interface CreateSocialCommentRequest {
   parentCommentId?: string | null;
 }
 
+export interface UpdateSocialPostRequest {
+  title: string;
+  content: string;
+}
+
+export interface UpdateSocialCommentRequest {
+  content: string;
+}
+
 export interface CreateSocialEventRequest {
   eventType: 'PLAYER' | 'OFFICIAL';
   title: string;
@@ -212,6 +213,7 @@ export interface CreateSocialEventRequest {
   postContentMode?: 'TEMPLATE' | 'CUSTOM';
   postTitle?: string | null;
   postContent?: string | null;
+  mediaIds?: string[];
 }
 
 export interface CreateContentReportRequest {
@@ -249,7 +251,6 @@ export class SocialApiService {
   private http = inject(HttpClient);
   private base = `${environment.apiBaseUrl}/social`;
   private adminBase = `${environment.apiBaseUrl}/admin`;
-  private notificationsBase = `${environment.apiBaseUrl}/notifications`;
 
   // ---- 貼文 ----
 
@@ -274,8 +275,31 @@ export class SocialApiService {
     return this.http.post<SocialPostDetails>(`${this.base}/posts`, request);
   }
 
+  // 只有作者本人能改自己的貼文；活動的社群入口貼文不開放直接編輯／刪除。
+  updatePost(id: string, request: UpdateSocialPostRequest): Observable<{ message: string; id: string; title: string; content: string; updatedAt: string }> {
+    return this.http.put<{ message: string; id: string; title: string; content: string; updatedAt: string }>(
+      `${this.base}/posts/${id}`,
+      request
+    );
+  }
+
+  deletePost(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/posts/${id}`);
+  }
+
   createComment(postId: string, request: CreateSocialCommentRequest): Observable<SocialComment> {
     return this.http.post<SocialComment>(`${this.base}/posts/${postId}/comments`, request);
+  }
+
+  updateComment(id: string, request: UpdateSocialCommentRequest): Observable<{ message: string; id: string; content: string; updatedAt: string }> {
+    return this.http.put<{ message: string; id: string; content: string; updatedAt: string }>(
+      `${this.base}/comments/${id}`,
+      request
+    );
+  }
+
+  deleteComment(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/comments/${id}`);
   }
 
   // ---- 活動 ----
@@ -327,18 +351,6 @@ export class SocialApiService {
 
   deleteMedia(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/media/${id}`);
-  }
-
-  // ---- 站內通知 ----
-
-  getNotifications(unreadOnly = false): Observable<UserNotification[]> {
-    return this.http.get<UserNotification[]>(this.notificationsBase, {
-      params: this.toHttpParams({ unreadOnly })
-    });
-  }
-
-  markNotificationRead(id: string): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(`${this.notificationsBase}/${id}/read`, {});
   }
 
   // ---- 後台：活動管理 ----

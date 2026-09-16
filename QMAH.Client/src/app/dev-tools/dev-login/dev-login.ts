@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
 import { environment } from '../../../environments/environment';
+import { MeApiService } from '../../core/services/me-api';
+import { ToastService } from '../../core/services/toast';
 
 /**
  * 開發測試專用的登入小工具——直接呼叫既有的 /account/login、/account/antiforgery-token、
@@ -24,6 +26,8 @@ import { environment } from '../../../environments/environment';
 })
 export class DevLoginComponent {
   private http = inject(HttpClient);
+  private meApi = inject(MeApiService);
+  private toast = inject(ToastService);
 
   isProduction = environment.production;
 
@@ -31,6 +35,7 @@ export class DevLoginComponent {
   password = '';
   pending = false;
   message: string | null = null;
+  messageType: 'success' | 'error' | 'info' = 'info';
 
   // AccountController 繼承 ApiControllerBase，整個 controller（含 Login 本身）都套用
   // [AutoValidateAntiforgeryToken]，所以一定要先拿到 XSRF-TOKEN-API cookie 才能登入，
@@ -38,13 +43,13 @@ export class DevLoginComponent {
   // 才會在後續的 login POST 自動帶上 X-XSRF-TOKEN header。
   login(): void {
     this.pending = true;
-    this.message = null;
+    this.setMessage(null, 'info');
 
     this.http.get(`${environment.apiBaseUrl}/account/antiforgery-token`).subscribe({
       next: () => this.submitLogin(),
       error: () => {
         this.pending = false;
-        this.message = '取得 XSRF token 失敗，請確認 QMAH.Api 是否已啟動。';
+        this.setMessage('取得 XSRF token 失敗，請確認 QMAH.Api 是否已啟動。', 'error');
       }
     });
   }
@@ -54,11 +59,13 @@ export class DevLoginComponent {
     this.http.post(`${environment.apiBaseUrl}/account/logout`, {}).subscribe({
       next: () => {
         this.pending = false;
-        this.message = '已登出。';
+        this.setMessage('已登出。', 'success');
+        this.meApi.clear();
       },
       error: () => {
         this.pending = false;
-        this.message = '登出時發生錯誤，但本機登入狀態可能已清除。';
+        this.setMessage('登出時發生錯誤，但本機登入狀態可能已清除。', 'error');
+        this.meApi.clear();
       }
     });
   }
@@ -70,14 +77,23 @@ export class DevLoginComponent {
     }).subscribe({
       next: () => {
         this.pending = false;
-        this.message = `已登入：${this.email}`;
+        this.setMessage(`已登入：${this.email}`, 'success');
+        this.meApi.refresh();
       },
       error: (err: HttpErrorResponse) => {
         this.pending = false;
-        this.message = err.status === 401
-          ? '登入失敗：帳號或密碼錯誤。'
-          : '登入失敗，請確認 QMAH.Api 是否已啟動。';
+        this.setMessage(
+          err.status === 401 ? '登入失敗：帳號或密碼錯誤。' : '登入失敗，請確認 QMAH.Api 是否已啟動。',
+          'error'
+        );
       }
     });
+  }
+
+  // 錯誤額外丟一個 toast，不會因為面板字很小、視窗被彈窗擋住而被忽略掉。
+  private setMessage(text: string | null, type: 'success' | 'error' | 'info'): void {
+    this.message = text;
+    this.messageType = type;
+    if (text && type === 'error') this.toast.show(`🔧 ${text}`, 'error');
   }
 }

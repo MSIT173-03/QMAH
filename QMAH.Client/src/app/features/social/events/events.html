@@ -21,7 +21,10 @@
         <h2 class="card-title">
           <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
         </h2>
-        <p class="text-sm text-gray-500">🕒 {{ event.startAt }} ～ {{ event.endAt }}</p>
+        <p class="text-xs text-base-content/60">✍️ {{ event.organizerDisplayName || '匿名會員' }}</p>
+        <p class="text-sm text-gray-500">
+          🕒 {{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}
+        </p>
         @if (event.location) {
           <p class="text-sm">📍 {{ event.location }}</p>
         }
@@ -52,7 +55,7 @@
       <input type="text" placeholder="活動標題" class="input input-bordered w-full" [(ngModel)]="newEvent.title" />
       <textarea class="textarea textarea-bordered h-24" placeholder="活動說明..." [(ngModel)]="newEvent.content"></textarea>
       <input type="text" placeholder="地點（選填）" class="input input-bordered w-full" [(ngModel)]="newEvent.location" />
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <label class="form-control w-full">
           <span class="label-text">開始時間</span>
           <input type="datetime-local" class="input input-bordered w-full" [(ngModel)]="newEvent.startAt" />
@@ -63,11 +66,39 @@
         </label>
       </div>
       <input type="number" placeholder="名額上限（選填）" class="input input-bordered w-full" [(ngModel)]="newEvent.capacity" />
+
+      <input
+        type="file"
+        class="file-input file-input-bordered w-full"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        multiple
+        [disabled]="uploadPending || (newEvent.mediaIds?.length ?? 0) >= 8"
+        (change)="onFilesSelected($event)"
+      />
+      @if (uploadPending) {
+        <span class="text-xs text-base-content/60">圖片上傳中...</span>
+      }
+      @if (pendingMedia.length > 0) {
+        <div class="flex flex-wrap gap-2">
+          @for (media of pendingMedia; track media.id) {
+            <div class="relative">
+              <img [src]="media.url" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
+              <button
+                type="button"
+                class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
+                (click)="removePendingMedia(media)"
+              >
+                ✕
+              </button>
+            </div>
+          }
+        </div>
+      }
     </div>
     <div class="modal-action">
       <form method="dialog">
         <button type="button" class="btn btn-ghost" onclick="create_event_modal.close()">取消</button>
-        <button type="button" class="btn btn-primary" (click)="submitEvent()">送出建立</button>
+        <button type="button" class="btn btn-primary" [disabled]="uploadPending" (click)="submitEvent()">送出建立</button>
       </form>
     </div>
   </div>

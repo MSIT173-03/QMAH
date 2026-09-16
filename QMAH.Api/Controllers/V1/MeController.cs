@@ -257,6 +257,11 @@ public sealed class MeController(
                 post.Content.Length > 180 ? post.Content.Substring(0, 180) : post.Content,
                 post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
                 post.MediaAssets.Count(media => media.Status == "ACTIVE"),
+                post.MediaAssets
+                    .Where(media => media.Status == "ACTIVE")
+                    .OrderBy(media => media.CreatedAt)
+                    .Select(media => "/api/v1/social/media/" + media.Id + "/content")
+                    .FirstOrDefault(),
                 post.LocationName,
                 post.Latitude,
                 post.Longitude,

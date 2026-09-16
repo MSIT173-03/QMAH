@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { CreateSocialEventRequest, EventListItem, SocialApiService } from '../../../core/services/social-api';
+import { CreateSocialEventRequest, EventListItem, SocialApiService, SocialMedia } from '../../../core/services/social-api';
 
 @Component({
   selector: 'app-events',
@@ -25,8 +25,12 @@ export class EventsComponent implements OnInit {
     title: '',
     content: '',
     startAt: '',
-    endAt: ''
+    endAt: '',
+    mediaIds: []
   };
+
+  pendingMedia: SocialMedia[] = [];
+  uploadPending = false;
 
   ngOnInit(): void {
     this.loadEvents();
@@ -44,6 +48,56 @@ export class EventsComponent implements OnInit {
     });
   }
 
+  // POST /api/v1/social/media，最多附 8 張圖片；上傳完成才把 id 放進 newEvent.mediaIds
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    const remainingSlots = 8 - (this.newEvent.mediaIds?.length ?? 0);
+    const filesToUpload = Array.from(files).slice(0, Math.max(0, remainingSlots));
+
+    this.uploadPending = true;
+    this.createError = null;
+    let completed = 0;
+    for (const file of filesToUpload) {
+      this.socialApi.uploadMedia(file).subscribe({
+        next: (media) => {
+          this.pendingMedia.push(media);
+          this.newEvent.mediaIds = [...(this.newEvent.mediaIds ?? []), media.id];
+          completed += 1;
+          if (completed === filesToUpload.length) this.uploadPending = false;
+        },
+        error: (err: HttpErrorResponse) => {
+          completed += 1;
+          if (completed === filesToUpload.length) this.uploadPending = false;
+          this.createError = err.status === 401
+            ? '上傳圖片失敗：請先登入。'
+            : err.status === 413
+              ? '上傳圖片失敗：單一圖片不可超過 8 MB。'
+              : '上傳圖片失敗，請確認檔案格式是否為 JPEG／PNG／GIF／WebP。';
+          console.error('上傳圖片失敗:', err);
+        }
+      });
+    }
+    input.value = '';
+  }
+
+  removePendingMedia(media: SocialMedia): void {
+    this.socialApi.deleteMedia(media.id).subscribe({
+      next: () => this.dropPendingMedia(media.id),
+      error: (err: HttpErrorResponse) => {
+        console.error('移除圖片失敗:', err);
+        this.dropPendingMedia(media.id);
+      }
+    });
+  }
+
+  private dropPendingMedia(mediaId: string): void {
+    this.pendingMedia = this.pendingMedia.filter((item) => item.id !== mediaId);
+    this.newEvent.mediaIds = (this.newEvent.mediaIds ?? []).filter((id) => id !== mediaId);
+  }
+
   // POST /api/v1/social/events（需要登入；新活動要等管理員審核通過才會公開顯示）
   // 送出按鈕是 type="button"，故意不靠 <form method="dialog"> 自動關閉視窗，
   // 避免請求還沒回來、或失敗時視窗就先關掉導致看不到錯誤訊息。
@@ -51,7 +105,8 @@ export class EventsComponent implements OnInit {
     this.createError = null;
     this.socialApi.createEvent(this.newEvent).subscribe({
       next: () => {
-        this.newEvent = { eventType: 'PLAYER', title: '', content: '', startAt: '', endAt: '' };
+        this.newEvent = { eventType: 'PLAYER', title: '', content: '', startAt: '', endAt: '', mediaIds: [] };
+        this.pendingMedia = [];
         this.loadEvents();
         (document.getElementById('create_event_modal') as HTMLDialogElement | null)?.close();
         alert('活動已建立，等待管理員審核通過後才會公開顯示。');

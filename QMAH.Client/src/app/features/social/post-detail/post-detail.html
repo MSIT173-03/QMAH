@@ -1,6 +1,7 @@
-<div class="mb-4">
-  <a routerLink="/social/posts" class="btn btn-ghost btn-sm">← 返回貼文列表</a>
-</div>
+<div class="mx-auto w-full lg:w-4/5 xl:w-3/4">
+  <div class="mb-4">
+    <a routerLink="/social/posts" class="btn btn-ghost btn-sm">← 返回貼文列表</a>
+  </div>
 
 @if (loading) {
   <div class="text-center py-10 text-gray-400">載入中...</div>
@@ -11,20 +12,36 @@
     <div class="card-body">
       <div class="flex justify-between items-center">
         <span class="badge badge-secondary">{{ post.boardCode }}</span>
-        <span class="text-xs text-gray-500">{{ post.createdAt }}</span>
+        <span class="text-xs text-base-content/60">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
       </div>
-      <h2 class="card-title">{{ post.title }}</h2>
-      <p class="whitespace-pre-line">{{ post.content }}</p>
+      @if (editingPost) {
+        <div class="form-control gap-2">
+          <input type="text" class="input input-bordered w-full" [(ngModel)]="editPostTitle" placeholder="標題" />
+          <textarea class="textarea textarea-bordered h-32" [(ngModel)]="editPostContent"></textarea>
+          <div class="flex gap-2 justify-end">
+            <button class="btn btn-sm btn-ghost" (click)="cancelEditPost()">取消</button>
+            <button class="btn btn-sm btn-primary" (click)="saveEditPost()">儲存</button>
+          </div>
+        </div>
+      } @else {
+        <h2 class="card-title">{{ post.title }}</h2>
+        <p class="text-xs text-base-content/60">✍️ {{ post.displayName || '匿名會員' }}</p>
+        <p class="whitespace-pre-line">{{ post.content }}</p>
+      }
 
       @if (post.media.length > 0) {
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+        <div class="flex flex-col gap-2 mt-2">
           @for (media of post.media; track media.id) {
-            <img [src]="media.url" [alt]="media.altText || ''" class="rounded-lg object-cover w-full h-32" />
+            <img [src]="media.url" [alt]="media.altText || ''" class="rounded-lg w-full h-auto max-h-[36rem] object-contain bg-base-200" />
           }
         </div>
       }
 
       <div class="card-actions justify-end mt-4">
+        @if (isOwnPost(post) && !editingPost) {
+          <button class="btn btn-sm btn-ghost" (click)="startEditPost()">✏️ 編輯</button>
+          <button class="btn btn-sm btn-error btn-outline" (click)="deletePost()">🗑️ 刪除</button>
+        }
         <button class="btn btn-sm btn-ghost" (click)="reportPost()">🚩 檢舉貼文</button>
       </div>
     </div>
@@ -38,12 +55,26 @@
         <div class="card-body p-4">
           <div class="flex justify-between items-start">
             <span class="font-bold text-sm">{{ comment.displayName || '匿名會員' }}</span>
-            <span class="text-xs text-gray-500">{{ comment.createdAt }}</span>
+            <span class="text-xs text-gray-500">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
           </div>
-          <p>{{ comment.content }}</p>
-          <div class="card-actions justify-end">
-            <button class="btn btn-xs btn-ghost" (click)="reportComment(comment.id)">🚩 檢舉留言</button>
-          </div>
+          @if (editingCommentId === comment.id) {
+            <div class="form-control gap-2">
+              <textarea class="textarea textarea-bordered textarea-sm" [(ngModel)]="editCommentContent"></textarea>
+              <div class="flex gap-2 justify-end">
+                <button class="btn btn-xs btn-ghost" (click)="cancelEditComment()">取消</button>
+                <button class="btn btn-xs btn-primary" (click)="saveEditComment(comment.id)">儲存</button>
+              </div>
+            </div>
+          } @else {
+            <p>{{ comment.content }}</p>
+            <div class="card-actions justify-end">
+              @if (isOwnComment(comment)) {
+                <button class="btn btn-xs btn-ghost" (click)="startEditComment(comment)">✏️ 編輯</button>
+                <button class="btn btn-xs btn-error btn-outline" (click)="deleteComment(comment.id)">🗑️ 刪除</button>
+              }
+              <button class="btn btn-xs btn-ghost" (click)="reportComment(comment.id)">🚩 檢舉留言</button>
+            </div>
+          }
         </div>
       </div>
     } @empty {
@@ -63,4 +94,5 @@
     ></textarea>
     <button class="btn btn-primary self-end" (click)="submitComment()">送出留言</button>
   </div>
-}
+  }
+</div>

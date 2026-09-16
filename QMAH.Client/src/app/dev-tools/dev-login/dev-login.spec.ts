@@ -44,6 +44,20 @@ describe('DevLoginComponent', () => {
     expect(loginReq.request.method).toBe('POST');
     loginReq.flush(null);
 
+    // 登入成功後會順便呼叫 MeApiService.refresh() 讓 NavBar 同步顯示目前帳號
+    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({
+      id: '11111111-1111-1111-1111-111111111111',
+      email: 'admin@qmah.local',
+      displayName: null,
+      status: 'ACTIVE',
+      pointBalance: 0,
+      roles: ['Admin'],
+      createdAt: '2026-01-01T00:00:00Z',
+      bio: null,
+      visibility: 'PRIVATE',
+      avatarPath: null
+    });
+
     expect(component.message).toContain('已登入');
     expect(component.pending).toBe(false);
   });

@@ -251,6 +251,20 @@ else
         qmahDatabaseResolution.Target);
 }
 
+// 使用者切換頁面／重新整理時，瀏覽器會直接中止尚未完成的舊請求（例如貼文列表還沒回應就跳走）。
+// EF Core 收到這個中止會丟出 OperationCanceledException，這是正常現象、不是例外狀況，
+// 客戶端本來就不會再理會這個回應了，所以放在最外層直接吞掉，避免被當成未處理例外噴到主控台或開發例外頁。
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+    {
+    }
+});
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler();

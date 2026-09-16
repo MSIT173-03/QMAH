@@ -106,6 +106,11 @@ public sealed class SocialReportsAdminController(
                 {
                     post.Status = contentAction;
                     post.UpdatedAt = DateTime.UtcNow;
+                    notificationService.QueueNotification(
+                        post.UserId,
+                        "貼文已被處理",
+                        $"你的貼文因檢舉成立已被{(contentAction == "DELETED" ? "刪除" : "隱藏")}。",
+                        null);
                 }
             }
             else if (report.TargetType == "COMMENT")
@@ -115,6 +120,11 @@ public sealed class SocialReportsAdminController(
                 {
                     comment.Status = contentAction;
                     comment.UpdatedAt = DateTime.UtcNow;
+                    notificationService.QueueNotification(
+                        comment.UserId,
+                        "留言已被處理",
+                        $"你的留言因檢舉成立已被{(contentAction == "DELETED" ? "刪除" : "隱藏")}。",
+                        null);
                 }
             }
         }
