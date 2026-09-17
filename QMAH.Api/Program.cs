@@ -11,6 +11,7 @@ using Scalar.AspNetCore;
 using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
+using QMAH.Infrastructure.Configuration;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -30,6 +31,13 @@ builder.Configuration.AddJsonFile(
     "appsettings.Local.json",
     optional: true,
     reloadOnChange: true);
+
+builder.Services
+    .AddOptions<QmahPasswordResetOptions>()
+    .Bind(builder.Configuration.GetSection(QmahPasswordResetOptions.SectionName));
+builder.Services
+    .AddOptions<QmahMailjetOptions>()
+    .Bind(builder.Configuration.GetSection(QmahMailjetOptions.SectionName));
 
 // 先嘗試設定檔指定的連線；失敗時才依 resolver 的候選順序尋找本機名稱為 QMAH 的 SQL Server／LocalDB。
 // 其他需要直接存取資料庫的 host 應重用 resolver，避免 Web、API 與工具程式各自猜測不同 instance。
@@ -142,6 +150,21 @@ builder.Services
     })
     .AddEntityFrameworkStores<QmahDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services
+    .AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId =
+            builder.Configuration["Authentication:Google:ClientId"]
+            ?? throw new InvalidOperationException("Google ClientId 尚未設定。");
+
+        options.ClientSecret =
+            builder.Configuration["Authentication:Google:ClientSecret"]
+            ?? throw new InvalidOperationException("Google ClientSecret 尚未設定.");
+
+        options.SignInScheme = IdentityConstants.ExternalScheme;
+    });
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 {
     // 後台停用帳號後，既有登入 cookie 也要在下一次 request 失效。
@@ -149,7 +172,10 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 });
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IPasswordResetEmailSender, PasswordResetEmailSender>();
+builder.Services.AddHttpClient<IPasswordResetEmailSender, PasswordResetEmailSender>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
 // 使用 DbContext、目前會員或 request 資訊的服務採 Scoped；只有確定無狀態且 thread-safe 的元件才可註冊 Singleton。
 // 新增跨系統規則時放進 Infrastructure service，Controller 只負責輸入驗證與 HTTP response，Web 後台也能重用同一套規則。
