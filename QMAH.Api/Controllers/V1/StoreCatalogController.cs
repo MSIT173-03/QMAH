@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
+using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Api.Controllers.V1;
 
@@ -37,21 +38,40 @@ public sealed class StoreCatalogController(
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
 
-        var projected = query
+        var projects = query
             .OrderBy(product => product.Name)
-            .ThenBy(product => product.Id)
-            .Select(product => new ProductListItemDto(
-                product.Id,
-                product.ArtifactId,
-                product.ExternalRef,
-                product.Name,
-                product.CategoryCode,
-                product.Price,
-                product.Stock,
-                product.PrimaryImagePath,
-                product.IsActive));
+            .ThenBy(product => product.Id);
+        //.Select(product => new ProductListItemDto(
+        //    product.Id,
+        //    product.ArtifactId,
+        //    product.ExternalRef,
+        //    product.Name,
+        //    product.CategoryCode,
+        //    product.Price,
+        //    product.Stock,
+        //    product.PrimaryImagePath,
+        //    product.IsActive));
 
-        var result = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
+        var newProject = projects
+            .Join(db.ProductReviews, p => p.Id, r => r.ProductId, (p, r) => new { Product = p, Review = r })
+            .Where(g => g.Review.Status == "PUBLISHED")
+            .GroupBy(g => g.Product, (k, g) => new ProductListItemDto
+            (
+                k.Id,
+                k.ArtifactId,
+                k.ExternalRef,
+                k.Name,
+                k.CategoryCode,
+                k.Price,
+                k.Stock,
+                k.PrimaryImagePath,
+                k.IsActive,
+                g.Count(),
+                g.Average(g => g.Review.Rating)
+            ));
+
+        var result = await ApiPaging.ToPageAsync(newProject, page, pageSize, cancellationToken);
+
         // 原本直接回傳資料庫中的 PrimaryImagePath；棄用原因：CDN 模式需要統一轉換公開圖片網址。
         return Ok(result with
         {

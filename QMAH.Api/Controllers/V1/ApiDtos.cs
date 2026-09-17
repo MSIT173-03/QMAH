@@ -45,7 +45,9 @@ public sealed record ProductListItemDto(
     decimal Price,
     int Stock,
     string? PrimaryImagePath,
-    bool IsActive);
+    bool IsActive,
+    int ReviewCount,
+    double Rating);
 
 public sealed record ProductDetailsDto(
     Guid Id,
