@@ -65,6 +65,7 @@ internal static class QmahOpenApiOperationCatalog
             ["CommunityReward.GetEventRewardPolicy"] = ("查詢活動加碼規則", "依 path parameter（路徑參數）`eventId` 取得活動目前的參與加碼設定、有效期間與已發放量。官方活動由管理員提供，不會從管理員個人點數或鑰匙扣除；沒有設定加碼時回傳 `null`。"),
             ["CommunityReward.ConfigureEventRewardPolicy"] = ("設定活動加碼規則", "需要登入，玩家活動由發起人設定，官方活動由管理員設定。官方活動使用有效期間內的官方供應模式，不扣管理員個人資產；玩家活動則以實際發放量與發起人目前背包為上限。"),
 
+            ["KeyCandidates.GetArtifacts"] = ("查詢鑰匙可解鎖文物", "需要登入。使用鑰匙定義的 code 查目前會員候選文物，支援 q（名稱／編號）、page、pageSize。與實際解鎖共用規則，僅包含啟用且尚未解鎖、符合鑰匙分類／年代的文物；不存在或停用的鑰匙回傳 404，沒有候選回傳空分頁。餘額為零仍可預覽，不扣鑰匙也不保留候選。NORMAL 僅供預覽抽選範圍，不能指定目標；其他類型依 canSelectArtifact 選擇 artifactId 後呼叫 POST /me/keys/{keyCode}/unlock，送出時重新驗證餘額與範圍。"),
             ["KeyDefinitions.GetDefinitions"] = ("查詢鑰匙定義", "需要登入。回傳所有啟用中的鑰匙定義陣列，含 code、name、scopeType、分類／年代的 ID、code 與 name、recyclePointValue、canSelectArtifact。不含會員餘額；搭配 GET /api/v1/me/economy，依 id 或 code 對應背包。"),
             ["KeyDefinitions.GetDefinition"] = ("查詢單一鑰匙定義", "需要登入。路徑 keyCode 使用定義列表的 code，不是 scopeType。不存在或停用回傳 404。canSelectArtifact 表示允許指定範圍內文物，不代表會員持有鑰匙；使用時呼叫 POST /api/v1/me/keys/{keyCode}/unlock，指定目標送 artifactId，隨機送 {}；後端重新驗證規則及餘額。"),
             ["Economy.GetEconomy"] = ("取得會員經濟狀態", "需要登入，回傳目前會員的鑑定點數、鑰匙進度、各類鑰匙餘額、每把鑰匙目前可解鎖的文物數量，以及由資料庫啟用中的鑰匙兌換規則。可解鎖數量依目前啟用文物與會員既有解鎖紀錄即時計算，前端不應自行推算。"),
