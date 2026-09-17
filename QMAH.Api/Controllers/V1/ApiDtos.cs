@@ -44,6 +44,8 @@ public sealed record MemberArtifactUnlockDto(
     string UnlockMethod,
     Guid? GameRoundId,
     Guid? KeyTransactionId,
+    string? KeyCode,
+    string? KeyName,
     DateTime UnlockedAt);
 
 public sealed record ArtifactDetailsDto(
