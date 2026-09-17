@@ -131,6 +131,8 @@ public sealed class MemberCatalogController(
                 unlock.UnlockMethod,
                 unlock.GameRoundId,
                 unlock.KeyTransactionId,
+                unlock.KeyTransaction == null ? null : unlock.KeyTransaction.KeyDefinition.Code,
+                unlock.KeyTransaction == null ? null : unlock.KeyTransaction.KeyDefinition.Name,
                 unlock.UnlockedAt));
 
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
