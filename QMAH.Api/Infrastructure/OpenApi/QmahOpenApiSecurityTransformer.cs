@@ -268,7 +268,7 @@ public sealed class QmahOpenApiSecurityTransformer(
                      ("GameRoomInvitations.GetRoomRewardPolicy", "roomId") or ("GameRoomInvitations.ConfigureRoomRewardPolicy", "roomId") => "私人遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                  ("GameRoomInvitations.RespondInvitation", "invitationId") or ("GameRoomInvitations.CancelInvitation", "invitationId") => "房間邀請 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                  ("CommunityReward.GetEventRewardPolicy", "eventId") or ("CommunityReward.ConfigureEventRewardPolicy", "eventId") => "活動 Id（資源識別碼），GUID（全域唯一識別碼）格式",
-                ("Economy.UnlockArtifact", "keyCode") or ("Economy.RecycleKey", "keyCode") => "鑰匙 code（系統代碼），例如 NORMAL、CATEGORY、ERA 或 UNIVERSAL",
+                ("Economy.UnlockArtifact", "keyCode") or ("Economy.RecycleKey", "keyCode") => "鑰匙 code（系統代碼），例如 KEY-NORMAL、KEY-CATEGORY-JADE、KEY-ERA-MING 或 KEY-UNIVERSAL；實際值以 GET /api/v1/me/economy 回傳為準",
                 ("MiniGame.CompleteAttempt", "id") => "Mini Game 嘗試 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("MiniGame.RewardMainGame", "id") => "多人遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("Social.GetPost", "id") => "社群貼文 Id（資源識別碼），GUID（全域唯一識別碼）格式",
