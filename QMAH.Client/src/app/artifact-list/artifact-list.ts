@@ -2,13 +2,13 @@
 import { Component, EventEmitter, Output, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 import { CatalogService } from '../services/catalog-service';
-import { ArtifactUnlockService } from '../services/artifact-unlock-service';
 import { CatalogModel, CatalogDetailModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
 import { KeyService } from '../services/key-service';
+import { KeyModel } from '../models/key-model';
 
 /** 依年代分組後的顯示用結構（格狀列表只需要清單卡片，不含鑑賞細節） */
 interface EraGroup {
@@ -42,7 +42,11 @@ export class ArtifactList implements OnInit {
   editingArtifact = signal<CatalogModel | null>(null);
 
   // ---- 圖鑑放大檢視／解鎖（原 artifact-unlock.ts 併入）----
-  keys = signal(0);
+  keys = signal(0); // 全部鑰匙的持有總數，頭部徽章用
+  /** 萬能鑰匙（如果有的話）；圖鑑頁卡片上的解鎖按鈕固定用這把，不是背包那邊的一般/年代/分類鑰匙 */
+  universalKey = signal<KeyModel | null>(null);
+  /** 每次解鎖固定消耗 1 把鑰匙，不再像之前用稀有度星數當作成本 */
+  readonly unlockKeyCost = 1;
   unlockLedger = signal<ArtifactUnlockRecord[]>([]);
   unlockedCount = computed(() => this.catalogModel().filter((i) => i.unlocked).length);
 
@@ -191,13 +195,13 @@ export class ArtifactList implements OnInit {
   /** 讓外部（父層路由）接手「玩家回答鑑賞」的導頁邏輯，避免元件直接耦合 Router */
   @Output() appreciationRequested = new EventEmitter<CardEntry>();
 
-  private baseImageUrl = 'https://localhost:7249/api/v1/catalog/artifacts';
+  private baseImageUrl = 'https://localhost:7249/api/v1/me/catalog/artifacts';
 
   constructor(
     private catalogService: CatalogService,
-    private unlockService: ArtifactUnlockService,
     private keyService: KeyService,
     private router: Router,
+    private route: ActivatedRoute,
   ) { }
 
   ngOnInit(): void {
@@ -214,12 +218,28 @@ export class ArtifactList implements OnInit {
         this.catalogModel.set(models.map((model) => this.toCardSummary(model)));
         this.totalCount.set(models.length);
         this.loading.set(false);
+        this.focusFromQueryParamIfAny();
       },
       error: (err) => {
         this.errorMsg.set(err.message);
         this.loading.set(false);
       },
     });
+  }
+
+  /**
+   * 從 key-list 解鎖成功後跳轉過來時，會帶 ?focus=<artifactId> 這個 query param，
+   * 清單載入完成後如果有這個 id 就直接開啟放大檢視、聚焦在那張卡片上。
+   *
+   * ⚠️ 這裡假設本頁路由路徑是 '/'——之前 onKeyBagClick() 導去 key-list 用的是
+   * '/key-list'，這裡對稱地假設本頁是 '/'，實際上兩個路徑都還沒跟你的 routes
+   * 設定確認過。如果不對，這裡跟 key-list.ts 的 goToArtifact() 要一起改。
+   */
+  private focusFromQueryParamIfAny(): void {
+    const focusId = this.route.snapshot.queryParamMap.get('focus');
+    if (focusId && this.catalogModel().some((i) => i.id === focusId)) {
+      this.openCard(focusId);
+    }
   }
 
   /**
@@ -239,15 +259,15 @@ export class ArtifactList implements OnInit {
   }
 
   /**
-   * 右上角顯示的鑰匙數，改成「全部鑰匙的持有數量總和」（不是鑰匙種類數）。
-   * 原本這裡打的是 ArtifactUnlockService.getKeyBalance()（一支還沒實作、
-   * 假設回傳單一數字的端點）；key-list 那邊已經確認鑰匙資料其實是從
-   * economy 這支 API 來的，所以這裡改用同一個 KeyService，跟 key-list
-   * 用的是同一份資料來源，數字才會對得起來。
+   * 右上角顯示的鑰匙數是「全部鑰匙的持有數量總和」；同時把萬能鑰匙（如果有）另外存起來，
+   * 圖鑑頁卡片上的解鎖按鈕固定要用這把鑰匙，不是背包那邊任何一把一般/年代/分類鑰匙。
    */
   private loadKeyBalance(): void {
     this.keyService.getKeys().subscribe({
-      next: (keys) => this.keys.set(keys.reduce((sum, key) => sum + key.balance, 0)),
+      next: (allKeys) => {
+        this.keys.set(allKeys.reduce((sum, key) => sum + key.balance, 0));
+        this.universalKey.set(allKeys.find((key) => key.scopeType === 'UNIVERSAL') ?? null);
+      },
       error: (err) => console.error('[ArtifactList] loadKeyBalance failed', err),
     });
   }
@@ -333,12 +353,9 @@ export class ArtifactList implements OnInit {
     return this.catalogModel().find((i) => i.id === id) ?? null;
   });
 
-  confirmCost = computed(() => {
-    const item = this.confirmTarget();
-    return item ? this.keyCost(item) : 0;
-  });
+  confirmCost = computed(() => this.unlockKeyCost);
 
-  confirmInsufficient = computed(() => this.keys() < this.confirmCost());
+  confirmInsufficient = computed(() => (this.universalKey()?.balance ?? 0) < this.unlockKeyCost);
 
   ledgerDescending = computed(() => [...this.unlockLedger()].reverse());
 
@@ -393,10 +410,6 @@ export class ArtifactList implements OnInit {
     });
   }
 
-  keyCost(item: CompendiumCardSummary): number {
-    return (item.rarity.match(/★/g) ?? []).length;
-  }
-
   openUnlockConfirm(id: string): void {
     this.confirmTargetId.set(id);
   }
@@ -405,27 +418,37 @@ export class ArtifactList implements OnInit {
     this.confirmTargetId.set(null);
   }
 
+  /**
+   * 圖鑑頁卡片上的解鎖按鈕固定使用萬能鑰匙（不是背包裡任何一般/年代/分類鑰匙），
+   * 呼叫 KeyService.unlockWithKey() 並帶上 artifactId 指定要解鎖哪一張卡片。
+   *
+   * ⚠️ UnlockWithKeyResult 不像舊版 UnlockResult 會帶完整 CardEntry（含鑑賞細節），
+   * 只有 artifactId／artifactName，所以這裡只把 catalogModel 裡對應項目的 unlocked
+   * 狀態翻成 true；如果玩家解鎖的正是目前放大檢視中的卡片，另外呼叫
+   * maybeLoadFocusedDetail() 重新抓一次鑑賞細節。
+   */
   confirmUnlock(): void {
     const target = this.confirmTarget();
     if (!target) return;
     if (this.confirmInsufficient()) return;
 
-    this.unlockService.unlockByKey(target.id).subscribe({
+    const universal = this.universalKey();
+    if (!universal) return; // 沒有萬能鑰匙時按鈕本來就該是停用狀態，這裡再擋一次
+
+    this.keyService.unlockWithKey(universal.code, target.id).subscribe({
       next: (result) => {
         this.catalogModel.update((list) =>
-          list.map((i) => (i.id === result.item.id ? result.item : i))
+          list.map((i) =>
+            i.id === target.id ? { ...i, unlocked: true, unlockedAt: result.record.unlockedAt } : i
+          )
         );
-        this.keys.set(result.remainingKeys);
+        this.universalKey.update((k) => (k ? { ...k, balance: result.remainingBalance } : k));
+        this.keys.update((total) => Math.max(0, total - this.unlockKeyCost));
         this.unlockLedger.update((list) => [...list, result.record]);
         this.confirmTargetId.set(null);
 
-        // 解鎖回應本身已經是完整 CardEntry（含 ArtifactDetail），如果玩家解鎖的
-        // 正是目前放大檢視中的卡片，直接拿來當作 focusedDetail，不用再多打一次
-        // CatalogService.getArtifactById()。
-        if (this.focusedId() === result.item.id) {
-          this.focusedDetail.set(result.item);
-          this.focusedDetailLoading.set(false);
-          this.focusedDetailError.set('');
+        if (this.focusedId() === target.id) {
+          this.maybeLoadFocusedDetail();
         }
       },
       error: (err) => {

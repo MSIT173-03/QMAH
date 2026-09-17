@@ -79,8 +79,10 @@ export class CatalogService {
 
 
   // ========== 解鎖文物 ==========
-  // 解鎖相關 API 改由 ArtifactUnlockService 負責（見 artifact-unlock-service.ts），
-  // 這裡不重複定義。
+  // 解鎖相關 API 改由 KeyService.unlockWithKey() 負責（見 key-service.ts），
+  // 打的是 POST /me/keys/{keyCode}/unlock，不是這支 catalog 底下的端點，這裡不重複定義。
+  // （ArtifactUnlockService／artifact-unlock-service.ts 現在完全沒有任何呼叫者了，
+  // 可以直接從專案裡刪除。）
 
 
   // ========== 新增（Create）==========

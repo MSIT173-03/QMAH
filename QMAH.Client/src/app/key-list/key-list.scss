@@ -182,7 +182,7 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--card);
-  cursor: default;
+  cursor: pointer;
   transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
@@ -191,6 +191,10 @@
     box-shadow: 0 8px 18px rgba(22, 61, 122, 0.15);
     z-index: 5; // 讓 tooltip 蓋在旁邊的格子之上
   }
+}
+
+.key-slot.universal-key {
+  cursor: default; // 萬能鑰匙不能從背包點擊使用，改到圖鑑頁的文物卡片上用
 }
 
 /* 依鑰匙種類上色的邊框，取代原本大卡片頂部那條色條 */
@@ -209,21 +213,6 @@
 
 .key-slot__icon {
   font-size: 28px;
-}
-
-.key-slot.empty {
-  background: var(--surface);
-
-  .key-slot__icon {
-    opacity: 0.35;
-    filter: grayscale(1);
-  }
-
-  &:hover {
-    transform: none;
-    box-shadow: none;
-    border-color: var(--line);
-  }
 }
 
 .key-slot__count {
@@ -296,6 +285,128 @@
     font-weight: 700;
     text-align: right;
   }
+}
+
+.key-slot__tooltip-hint {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+/* ---------- 使用鑰匙確認視窗／解鎖結果視窗 ---------- */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 43, 74, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 100;
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.confirm-dialog {
+  width: min(320px, 88vw);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 26px 24px 22px;
+  text-align: center;
+  box-shadow: 0 24px 50px rgba(22, 61, 122, 0.25);
+  transform: translateY(6px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  .confirm-overlay.open & {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .key-icon {
+    font-size: 34px;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  p {
+    margin: 0 0 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+}
+
+.confirm-dialog .have {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-bottom: 18px;
+
+  strong { color: var(--blue-deep); }
+}
+
+.confirm-dialog .have.warn {
+  color: var(--red);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+
+  .action-btn { flex: 1; }
+}
+
+.action-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 11px 22px;
+  border-radius: 999px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+
+  &:active { transform: translateY(1px); }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.unlock-btn {
+  background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(22, 61, 122, 0.3);
+
+  &:hover:not(:disabled) { box-shadow: 0 10px 22px rgba(22, 61, 122, 0.4); }
+}
+
+.cancel-btn {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+
+  &:hover:not(:disabled) { background: var(--surface); }
 }
 
 /* ---------- empty state (完全沒有任何鑰匙資料時) ---------- */

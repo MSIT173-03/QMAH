@@ -81,6 +81,7 @@
         [class.category-key]="key.scopeType === 'CATEGORY'"
         [class.era-key]="key.scopeType === 'ERA'"
         [class.universal-key]="key.scopeType === 'UNIVERSAL'"
+        (click)="onKeySlotClick(key)"
       >
         <div class="key-slot__icon">🔑</div>
         <span class="key-slot__count">{{ key.balance }}</span>
@@ -102,6 +103,13 @@
             <span>回收點數</span>
             <strong>{{ key.recyclePointValue }}</strong>
           </p>
+
+          <p class="key-slot__tooltip-hint" *ngIf="key.scopeType === 'UNIVERSAL'; else useHint">
+            請至圖鑑頁的文物卡片上使用
+          </p>
+          <ng-template #useHint>
+            <p class="key-slot__tooltip-hint">點擊使用</p>
+          </ng-template>
         </div>
       </div>
     </div>
@@ -112,5 +120,46 @@
     </div>
 
   </ng-container>
+
+  <!-- 使用鑰匙確認視窗 -->
+  <div
+    class="confirm-overlay"
+    [class.open]="confirmTarget() !== null"
+    (click)="onConfirmOverlayClick($event)"
+  >
+    <div class="confirm-dialog" *ngIf="confirmTarget() as key">
+      <span class="key-icon">🔑</span>
+      <h3>使用鑰匙</h3>
+      <p>確定要使用「{{ key.name }}」嗎？</p>
+      <p class="have">
+        使用後將消耗 1 把，剩餘 <strong>{{ key.balance - 1 }}</strong> 把
+      </p>
+      <p class="have warn" *ngIf="unlockError()">{{ unlockError() }}</p>
+      <div class="confirm-actions">
+        <button type="button" class="action-btn cancel-btn" [disabled]="unlocking()" (click)="cancelUseKey()">取消</button>
+        <button type="button" class="action-btn unlock-btn" [disabled]="unlocking()" (click)="confirmUseKey()">
+          {{ unlocking() ? '解鎖中...' : '確定使用' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 解鎖成功結果視窗 -->
+  <div
+    class="confirm-overlay"
+    [class.open]="unlockResult() !== null"
+    (click)="onResultOverlayClick($event)"
+  >
+    <div class="confirm-dialog" *ngIf="unlockResult() as result">
+      <span class="key-icon">🎉</span>
+      <h3>解鎖成功</h3>
+      <p>你解鎖了「{{ result.artifactName }}」</p>
+      <p class="have">要現在前往圖鑑查看這件文物嗎？</p>
+      <div class="confirm-actions">
+        <button type="button" class="action-btn cancel-btn" (click)="closeUnlockResult()">稍後查看</button>
+        <button type="button" class="action-btn unlock-btn" (click)="goToArtifact()">前往查看</button>
+      </div>
+    </div>
+  </div>
 
 </div>

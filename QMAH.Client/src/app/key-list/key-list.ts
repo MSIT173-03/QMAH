@@ -1,9 +1,10 @@
 // key-list.ts
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { KeyService } from '../services/key-service';
 import { CatalogService } from '../services/catalog-service';
-import { KeyModel, KeyFilter } from '../models/key-model';
+import { KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
 
 @Component({
   selector: 'app-key-list',
@@ -33,6 +34,15 @@ export class KeyList implements OnInit {
     return this.ownedKeys().filter((key) => key.scopeType === filter);
   });
 
+  // ---- 使用鑰匙：點格子 → 確認視窗 → 呼叫解鎖 API → 結果視窗 ----
+  /** 準備使用的鑰匙（點擊後、按下確定使用前）；null 代表確認視窗關閉 */
+  confirmTarget = signal<KeyModel | null>(null);
+  /** 解鎖 API 執行中，用來讓「確定使用」按鈕顯示 loading、避免重複點擊 */
+  unlocking = signal(false);
+  /** 解鎖成功後的結果，給「解鎖了什麼文物」的提示視窗用；null 代表視窗關閉 */
+  unlockResult = signal<UnlockWithKeyResult | null>(null);
+  unlockError = signal('');
+
   // 分類／年代對照表：改用專門的 /api/v1/catalog/categories、/api/v1/catalog/eras
   // 這兩支 API 建立，取代原本「掃一頁文物清單湊對照表」的權宜做法。
   //
@@ -48,6 +58,7 @@ export class KeyList implements OnInit {
   constructor(
     private keyService: KeyService,
     private catalogService: CatalogService,
+    private router: Router,
   ) { }
 
   ngOnInit(): void {
@@ -126,5 +137,78 @@ export class KeyList implements OnInit {
 
   trackByKeyId(_index: number, key: KeyModel): string {
     return key.id;
+  }
+
+  /**
+   * 萬能鑰匙不能從背包直接使用——依需求，萬能鑰匙是在圖鑑頁「尚未解鎖」的文物卡片上，
+   * 點原有的解鎖按鈕時使用，玩家自己指定要解鎖哪一張卡片。背包這裡點萬能鑰匙格子
+   * 不開確認視窗，只顯示一個提示。
+   */
+  onKeySlotClick(key: KeyModel): void {
+    if (key.scopeType === 'UNIVERSAL') return;
+    this.confirmTarget.set(key);
+  }
+
+  cancelUseKey(): void {
+    this.confirmTarget.set(null);
+  }
+
+  onConfirmOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.cancelUseKey();
+    }
+  }
+
+  /**
+   * 確定使用一般／年代／分類鑰匙：不用帶 artifactId，後端依這把鑰匙的特性
+   * （scopeType 是 NORMAL／ERA／CATEGORY）自行從尚未解鎖的文物裡隨機挑一個
+   * （不會挑到已解鎖或重複的文物）。成功後關掉確認視窗、開「解鎖了什麼文物」的結果視窗。
+   */
+  confirmUseKey(): void {
+    const key = this.confirmTarget();
+    if (!key || this.unlocking()) return;
+
+    this.unlocking.set(true);
+    this.unlockError.set('');
+
+    this.keyService.unlockWithKey(key.code).subscribe({
+      next: (result) => {
+        this.keys.update((list) =>
+          list.map((k) => (k.id === key.id ? { ...k, balance: result.remainingBalance } : k))
+        );
+        this.unlocking.set(false);
+        this.confirmTarget.set(null);
+        this.unlockResult.set(result);
+      },
+      error: (err) => {
+        this.unlocking.set(false);
+        this.unlockError.set(err?.message ?? '解鎖失敗，請稍後再試');
+      },
+    });
+  }
+
+  closeUnlockResult(): void {
+    this.unlockResult.set(null);
+  }
+
+  onResultOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closeUnlockResult();
+    }
+  }
+
+  /**
+   * 「是否跳轉至該文物頁面」：導去圖鑑頁，並帶上 ?focus=<artifactId>，
+   * 讓那邊載入完清單後自動開啟放大檢視、聚焦在剛解鎖的那張卡片上
+   * （對應 artifact-list.ts 的 focusFromQueryParamIfAny()）。
+   *
+   * ⚠️ 路由路徑 '/' 是假設值，還沒跟你的 routes 設定確認過，如果圖鑑頁實際路徑
+   * 不是根路徑，這裡要跟著改。
+   */
+  goToArtifact(): void {
+    const result = this.unlockResult();
+    if (!result) return;
+    this.router.navigate(['/'], { queryParams: { focus: result.artifactId } });
+    this.unlockResult.set(null);
   }
 }

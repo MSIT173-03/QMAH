@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { KeyModel } from '../models/key-model';
+import { KeyModel, UnlockWithKeyRequest, UnlockWithKeyResult } from '../models/key-model';
 
 /**
  * 後端沒有單獨拆出來的「只回傳鑰匙」端點（打 /api/v1/me/keys 會 404），
@@ -31,6 +31,22 @@ export class KeyService {
       map((res) => res.keys),
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * 使用一把鑰匙進行解鎖。
+   * - 一般／年代／分類鑰匙：不用帶 artifactId，後端會隨機挑一個符合條件、尚未解鎖的文物。
+   * - 萬能鑰匙：要帶 artifactId，指定玩家在圖鑑頁選中的那個文物
+   *   （呼叫端是 artifact-list.ts 的解鎖按鈕，不是 key-list 的鑰匙格子）。
+   */
+  unlockWithKey(keyCode: string, artifactId?: string): Observable<UnlockWithKeyResult> {
+    const body: UnlockWithKeyRequest = artifactId ? { artifactId } : {};
+    return this.http
+      .post<UnlockWithKeyResult>(
+        `https://localhost:7249/api/v1/me/keys/${encodeURIComponent(keyCode)}/unlock`,
+        body
+      )
+      .pipe(catchError(this.handleError));
   }
 
   // ========== 共用錯誤處理（與 catalog-service.ts 相同寫法）==========

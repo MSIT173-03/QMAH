@@ -365,11 +365,11 @@
   position: absolute;
   top: 0;
   bottom: 0; // 上下都寫死釘住，撐滿整個左側螢幕，不會再上下留白
-  left: 20px;
+  left: 0px;
   width: calc((100% - 40px - 28px) / 6); // 100% = .page-body 自己的寬度（視窗寬度，非 100vw）
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  border-right: 1px solid var(--line);
+  // border-radius: 14px;
   padding: 18px 16px;
   box-sizing: border-box;
   display: flex;
