@@ -59,7 +59,7 @@
           共 <strong>{{ totalCount() }}</strong> 筆・已解鎖 <strong>{{ unlockedCount() }}</strong>
         </span>
         <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
-          🔑 <strong>{{ keys() }}</strong>
+          鑰匙背包🔑 <strong>{{ keys() }}</strong>
         </button>
       </div>
 
@@ -152,7 +152,7 @@
         </ng-container>
         <ng-template #lockedActions>
           <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">🔓 解鎖</button>
-          <div class="hint">需消耗 {{ keyCost(item) }} 把鑰匙解鎖</div>
+          <div class="hint">需消耗 {{ unlockKeyCost }} 把萬能鑰匙解鎖</div>
         </ng-template>
       </div>
 
@@ -232,10 +232,10 @@
     <div class="confirm-dialog" *ngIf="confirmTarget() as target">
       <span class="key-icon">🔑</span>
       <h3>解鎖確認</h3>
-      <p>使用 <strong>{{ confirmCost() }}</strong> 把鑰匙解鎖「{{ target.artifactRef }}」的紀錄？</p>
+      <p>使用 <strong>{{ confirmCost() }}</strong> 把萬能鑰匙解鎖「{{ target.artifactRef }}」的紀錄？</p>
       <p class="have">
-        目前持有：<strong>{{ keys() }}</strong> 把
-        <span class="warn" *ngIf="confirmInsufficient()">（鑰匙不足）</span>
+        目前持有：<strong>{{ universalKey()?.balance ?? 0 }}</strong> 把萬能鑰匙
+        <span class="warn" *ngIf="confirmInsufficient()">（萬能鑰匙不足）</span>
       </p>
       <div class="confirm-actions">
         <button type="button" class="action-btn cancel-btn" (click)="cancelUnlockConfirm()">取消</button>
