@@ -253,7 +253,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
 
             if (convertedNormalKeys > 0)
             {
-                // 舊資料使用 KEY-NORMAL，新資料可使用 NORMAL；兩者都代表一般鑰匙，先採新代碼以維持相容性。
+                // 目前資料庫快照使用 KEY-NORMAL；同時相容 NORMAL，若兩者皆啟用則優先 NORMAL。
                 var normalKey = await db.KeyDefinitions
                     .Where(item => item.IsActive && (item.Code == "NORMAL" || item.Code == "KEY-NORMAL"))
                     .OrderBy(item => item.Code == "NORMAL" ? 0 : 1)
