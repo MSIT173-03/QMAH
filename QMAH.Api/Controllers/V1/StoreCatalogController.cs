@@ -12,11 +12,19 @@ public sealed class StoreCatalogController(
     QmahDbContext db,
     QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
+    public enum OrderType
+    {
+        None,
+        HotSell,
+        Newer,
+        Older,
+    }
     [HttpGet("products")]
     public async Task<ActionResult<ApiPage<ProductListItemDto>>> GetProducts(
         string? q,
         string? categoryCode,
         Guid? artifactId,
+        OrderType order = OrderType.None,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -27,6 +35,7 @@ public sealed class StoreCatalogController(
         q = q?.Trim();
         categoryCode = categoryCode?.Trim().ToUpperInvariant();
 
+        // 篩選
         if (!string.IsNullOrWhiteSpace(q))
         {
             query = query.Where(product =>
@@ -37,40 +46,51 @@ public sealed class StoreCatalogController(
             query = query.Where(product => product.CategoryCode == categoryCode);
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
+        var query2 = from g in query
+                     join r in db.ProductReviews.Where(r => r.Status == "PUBLISHED") on g.Id equals r.ProductId into reviewGroup
+                     join o in db.OrderDetails on g.Id equals o.ProductId into orderGroup
+                     select new ProductListItemDto
+                     (
+                         g.Id,
+                         g.ArtifactId,
+                         g.ExternalRef,
+                         g.Name,
+                         g.CategoryCode,
+                         g.Price,
+                         g.Stock,
+                         g.PrimaryImagePath,
+                         g.CreatedAt,
+                         reviewGroup.Any() ? (decimal)reviewGroup.Average(r => r.Rating) : 0m,
+                         reviewGroup.Count(),
+                         orderGroup.Count()
+                     );
 
-        var projects = query
-            .OrderBy(product => product.Name)
-            .ThenBy(product => product.Id);
-        //.Select(product => new ProductListItemDto(
-        //    product.Id,
-        //    product.ArtifactId,
-        //    product.ExternalRef,
-        //    product.Name,
-        //    product.CategoryCode,
-        //    product.Price,
-        //    product.Stock,
-        //    product.PrimaryImagePath,
-        //    product.IsActive));
+        // 排序
+        switch (order)
+        {
+            case OrderType.None:
+                query2 = query2
+                    .OrderBy(g => g.Name)
+                    .ThenBy(g => g.Id);
+                break;
+            case OrderType.HotSell:
+                query2 = query2
+                    .OrderBy(g => g.SellCount)
+                    .ThenBy(g => g.Id);
+                break;
+            case OrderType.Newer:
+                query2 = query2
+                    .OrderBy(g => g.CreatedAt.Ticks)
+                    .ThenBy(product => product.Id);
+                break;
+            case OrderType.Older:
+                query2 = query2
+                    .OrderByDescending(g => g.CreatedAt.Ticks)
+                    .ThenBy(product => product.Id);
+                break;
+        }
 
-        var newProject = projects
-            .Join(db.ProductReviews, p => p.Id, r => r.ProductId, (p, r) => new { Product = p, Review = r })
-            .Where(g => g.Review.Status == "PUBLISHED")
-            .GroupBy(g => g.Product, (k, g) => new ProductListItemDto
-            (
-                k.Id,
-                k.ArtifactId,
-                k.ExternalRef,
-                k.Name,
-                k.CategoryCode,
-                k.Price,
-                k.Stock,
-                k.PrimaryImagePath,
-                k.IsActive,
-                g.Count(),
-                g.Average(g => g.Review.Rating)
-            ));
-
-        var result = await ApiPaging.ToPageAsync(newProject, page, pageSize, cancellationToken);
+        var result = await ApiPaging.ToPageAsync(query2, page, pageSize, cancellationToken);
 
         // 原本直接回傳資料庫中的 PrimaryImagePath；棄用原因：CDN 模式需要統一轉換公開圖片網址。
         return Ok(result with
