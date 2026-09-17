@@ -67,7 +67,7 @@ internal static class QmahOpenApiOperationCatalog
 
             ["Economy.GetEconomy"] = ("取得會員經濟狀態", "需要登入，回傳目前會員的鑑定點數、鑰匙進度、各類鑰匙餘額、每把鑰匙目前可解鎖的文物數量，以及由資料庫啟用中的鑰匙兌換規則。可解鎖數量依目前啟用文物與會員既有解鎖紀錄即時計算，前端不應自行推算。"),
             ["Economy.GetKeyExchangeRules"] = ("查詢鑰匙兌換規則", "需要登入，回傳目前啟用且目標鑰匙仍有可解鎖文物的兌換規則。每筆資料包含來源鑰匙、來源數量、目標鑰匙、目標數量與目前目標可解鎖數量；兌換比例由後台資料設定。"),
-            ["Economy.UnlockArtifact"] = ("使用鑰匙解鎖文物", "需要登入，依 path parameter（路徑參數）`keyCode` 使用一把鑰匙解鎖文物。`NORMAL` 一律由伺服器從全部候選隨機選擇；`CATEGORY` 與 `ERA` 可省略 `ArtifactId` 讓伺服器在自身分類／年代範圍抽選，也可指定範圍內文物；`UNIVERSAL` 可指定任一候選文物。沒有候選文物時不扣除鑰匙，也不建立解鎖紀錄。"),
+            ["Economy.UnlockArtifact"] = ("使用鑰匙解鎖文物", "需要登入與防偽權杖。路徑 `keyCode` 使用 GET /api/v1/me/economy 回應的 `keys[].code`，不是 `scopeType`。指定文物送出 {\"artifactId\":\"文物 GUID\"}；隨機解鎖送出 {}。`NORMAL` 不可指定文物；`CATEGORY`／`ERA` 可指定自身分類／年代內的文物，`UNIVERSAL` 可指定任一候選文物；省略目標時由伺服器依鑰匙範圍抽選。每次只消耗一把並解鎖一件，不是解鎖整個分類。200 回應仍須檢查 `unlocked`；false 表示沒有候選且未扣鑰匙。成功後重新讀取 /me/economy、/me/catalog/artifacts 與需要顯示的 /me/catalog/unlocks。逾時先查詢狀態，不自動重送消耗鑰匙的請求。"),
             ["Economy.ExchangeKeys"] = ("執行鑰匙兌換", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `RuleId` 與 `Units`，按照目前啟用的資料庫兌換規則扣除來源鑰匙並增加目標鑰匙。目標鑰匙沒有任何可解鎖文物、來源餘額不足或規則已停用時不會完成部分兌換。"),
             ["Economy.RecycleKey"] = ("回收無用途鑰匙", "需要登入，依 path parameter（路徑參數）`keyCode` 與 request body（請求本文，送出的 JSON 內容）中的 `Amount` 回收鑰匙。只有該會員使用此鑰匙已找不到任何符合範圍且尚未解鎖的啟用文物時才能回收；成功會同時留下鑰匙交易與鑑定點數交易。"),
             ["Economy.GetCouponExchangeOptions"] = ("查詢點數兌換優惠券", "需要登入，回傳目前可由鑑定點數兌換的優惠券定義、點數成本、折扣型態、折扣值、最低消費金額與有效天數。前端應直接使用這份資料顯示選項，不應寫死點數門檻或折扣數字。"),
