@@ -3,6 +3,29 @@
   <button class="btn btn-primary" onclick="create_event_modal.showModal()">+ 建立活動</button>
 </div>
 
+<div class="flex flex-wrap gap-2 mb-6 items-end">
+  <label class="form-control">
+    <span class="label-text text-xs">開始時間（起）</span>
+    <input type="date" class="input input-bordered input-sm" [(ngModel)]="filterStartAfter" (change)="loadEvents()" />
+  </label>
+  <label class="form-control">
+    <span class="label-text text-xs">開始時間（迄）</span>
+    <input type="date" class="input input-bordered input-sm" [(ngModel)]="filterStartBefore" (change)="loadEvents()" />
+  </label>
+  <label class="form-control flex-1 min-w-40">
+    <span class="label-text text-xs">關鍵字（標題／內容）</span>
+    <input
+      type="text"
+      class="input input-bordered input-sm w-full"
+      [(ngModel)]="filterKeyword"
+      (keyup.enter)="loadEvents()"
+      placeholder="搜尋..."
+    />
+  </label>
+  <button class="btn btn-sm btn-primary" (click)="loadEvents()">搜尋</button>
+  <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
+</div>
+
 @if (loadError) {
   <div class="alert alert-error mb-4">{{ loadError }}</div>
 }
@@ -103,3 +126,5 @@
     </div>
   </div>
 </dialog>
+
+<app-image-crop-modal (cropped)="onImageCropped($event)" (cancelled)="onCropCancelled()" />

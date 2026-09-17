@@ -83,6 +83,33 @@ public sealed class SocialController(
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
     }
 
+    // 標準看板清單 + 資料庫既有的看板代碼合併，讓前端的篩選選單不會漏掉舊資料用過的看板
+    // （例如 GAME），做法對齊 QMAH.Web 的 SocialPostAdminController.LoadBoardCodes。
+    private static readonly string[] StandardBoardCodes =
+        ["GENERAL", "CATALOG", "DISCOVERY", "REVIEW", "QUESTION", "GUIDE"];
+
+    [HttpGet("boards")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<string>>> GetBoardCodes(CancellationToken cancellationToken = default)
+    {
+        var existingCodes = await db.SocialPosts
+            .AsNoTracking()
+            .Where(post => post.Status == "PUBLISHED")
+            .Select(post => post.BoardCode)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var boardCodes = StandardBoardCodes
+            .Concat(existingCodes)
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Select(code => code.Trim().ToUpperInvariant())
+            .Distinct()
+            .OrderBy(code => code)
+            .ToList();
+
+        return Ok(boardCodes);
+    }
+
     [HttpGet("posts/{id:guid}")]
     [AllowAnonymous]
     public async Task<ActionResult<SocialPostDetailsDto>> GetPost(
@@ -184,13 +211,30 @@ public sealed class SocialController(
     [HttpGet("events")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiPage<EventListItemDto>>> GetEvents(
+        string? q,
+        DateTime? startAfter,
+        DateTime? startBefore,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var query = db.Events
+        var eventsQuery = db.Events
             .AsNoTracking()
-            .Where(item => item.ReviewStatus == "APPROVED" && item.PublishStatus == "PUBLISHED")
+            .Where(item => item.ReviewStatus == "APPROVED" && item.PublishStatus == "PUBLISHED");
+
+        q = q?.Trim();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            eventsQuery = eventsQuery.Where(item =>
+                item.Title.Contains(q)
+                || item.Content.Contains(q));
+        }
+        if (startAfter.HasValue)
+            eventsQuery = eventsQuery.Where(item => item.StartAt >= startAfter.Value);
+        if (startBefore.HasValue)
+            eventsQuery = eventsQuery.Where(item => item.StartAt <= startBefore.Value);
+
+        var query = eventsQuery
             .OrderBy(item => item.StartAt)
             .Select(item => new EventListItemDto(
                 item.Id,

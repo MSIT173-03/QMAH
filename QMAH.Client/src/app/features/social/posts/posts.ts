@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -6,11 +6,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreateSocialPostRequest, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
+import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
 
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent],
   templateUrl: './posts.html',
   styleUrl: './posts.scss'
 })
@@ -18,6 +19,9 @@ export class PostsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
   private meApi = inject(MeApiService);
   private cdr = inject(ChangeDetectorRef);
+
+  @ViewChild(ImageCropModalComponent) private cropModal!: ImageCropModalComponent;
+  private cropQueue: File[] = [];
 
   posts: SocialPostListItem[] = [];
   totalCount = 0;
@@ -29,11 +33,28 @@ export class PostsComponent implements OnInit {
   pendingMedia: SocialMedia[] = [];
   uploadPending = false;
 
+  boardCodes: string[] = [];
+  filterBoardCode = '';
+  filterKeyword = '';
+
   get isAdmin(): boolean {
     return this.meApi.me()?.roles.includes('Admin') ?? false;
   }
 
   ngOnInit(): void {
+    this.loadPosts();
+    this.socialApi.getBoards().subscribe({
+      next: (boards) => {
+        this.boardCodes = boards;
+        this.cdr.detectChanges();
+      },
+      error: (err: HttpErrorResponse) => console.error('取得看板清單失敗:', err)
+    });
+  }
+
+  resetFilters(): void {
+    this.filterBoardCode = '';
+    this.filterKeyword = '';
     this.loadPosts();
   }
 
@@ -41,7 +62,11 @@ export class PostsComponent implements OnInit {
   loadPosts(): void {
     this.loading = true;
     this.loadError = null;
-    this.socialApi.getPosts({ pageSize: 20 }).subscribe({
+    this.socialApi.getPosts({
+      pageSize: 20,
+      boardCode: this.filterBoardCode || undefined,
+      q: this.filterKeyword || undefined
+    }).subscribe({
       next: (page) => {
         this.posts = page.items;
         this.totalCount = page.totalCount;
@@ -57,39 +82,51 @@ export class PostsComponent implements OnInit {
     });
   }
 
-  // POST /api/v1/social/media，最多附 8 張圖片；上傳完成才把 id 放進 newPost.mediaIds
+  // 選好的圖片先逐張進裁切彈窗，裁切完（或略過裁切）才呼叫 POST /api/v1/social/media 上傳，
+  // 最多附 8 張，上傳成功才把 id 放進 newPost.mediaIds。
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files;
     if (!files || files.length === 0) return;
 
     const remainingSlots = 8 - (this.newPost.mediaIds?.length ?? 0);
-    const filesToUpload = Array.from(files).slice(0, Math.max(0, remainingSlots));
+    this.cropQueue.push(...Array.from(files).slice(0, Math.max(0, remainingSlots)));
+    input.value = '';
+    this.processNextInCropQueue();
+  }
 
+  private processNextInCropQueue(): void {
+    const next = this.cropQueue.shift();
+    if (next) this.cropModal.open(next);
+  }
+
+  onImageCropped(file: File): void {
     this.uploadPending = true;
     this.createError = null;
-    let completed = 0;
-    for (const file of filesToUpload) {
-      this.socialApi.uploadMedia(file).subscribe({
-        next: (media) => {
-          this.pendingMedia.push(media);
-          this.newPost.mediaIds = [...(this.newPost.mediaIds ?? []), media.id];
-          completed += 1;
-          if (completed === filesToUpload.length) this.uploadPending = false;
-        },
-        error: (err: HttpErrorResponse) => {
-          completed += 1;
-          if (completed === filesToUpload.length) this.uploadPending = false;
-          this.createError = err.status === 401
-            ? '上傳圖片失敗：請先登入。'
-            : err.status === 413
-              ? '上傳圖片失敗：單一圖片不可超過 8 MB。'
-              : '上傳圖片失敗，請確認檔案格式是否為 JPEG／PNG／GIF／WebP。';
-          console.error('上傳圖片失敗:', err);
-        }
-      });
-    }
-    input.value = '';
+    this.socialApi.uploadMedia(file).subscribe({
+      next: (media) => {
+        this.pendingMedia.push(media);
+        this.newPost.mediaIds = [...(this.newPost.mediaIds ?? []), media.id];
+        this.uploadPending = this.cropQueue.length > 0;
+        this.cdr.detectChanges();
+        this.processNextInCropQueue();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.uploadPending = this.cropQueue.length > 0;
+        this.createError = err.status === 401
+          ? '上傳圖片失敗：請先登入。'
+          : err.status === 413
+            ? '上傳圖片失敗：單一圖片不可超過 8 MB。'
+            : '上傳圖片失敗，請確認檔案格式是否為 JPEG／PNG／GIF／WebP。';
+        console.error('上傳圖片失敗:', err);
+        this.cdr.detectChanges();
+        this.processNextInCropQueue();
+      }
+    });
+  }
+
+  onCropCancelled(): void {
+    this.processNextInCropQueue();
   }
 
   removePendingMedia(media: SocialMedia): void {

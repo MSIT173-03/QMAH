@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: qmah --default, qmahdark --prefersdark;
+  themes: qmah --default, qmahdark;
 }
 
 /* QMAH 品牌色調：以故宮文物常見的赭石／青銅色系為主色，呼應「清明鑑定屋」的古物鑑定主題 */
@@ -47,7 +47,7 @@
 @plugin "daisyui/theme" {
   name: "qmahdark";
   default: false;
-  prefersdark: true;
+  prefersdark: false;
   color-scheme: dark;
 
   --color-base-100: oklch(23% 0.014 80);

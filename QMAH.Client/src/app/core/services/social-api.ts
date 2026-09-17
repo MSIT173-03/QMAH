@@ -304,10 +304,21 @@ export class SocialApiService {
 
   // ---- 活動 ----
 
-  getEvents(params: { page?: number; pageSize?: number } = {}): Observable<ApiPage<EventListItem>> {
+  getEvents(params: {
+    q?: string;
+    startAfter?: string;
+    startBefore?: string;
+    page?: number;
+    pageSize?: number;
+  } = {}): Observable<ApiPage<EventListItem>> {
     return this.http.get<ApiPage<EventListItem>>(`${this.base}/events`, {
       params: this.toHttpParams(params)
     });
+  }
+
+  // GET /api/v1/social/boards：標準看板清單 + 資料庫既有看板代碼合併
+  getBoards(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/boards`);
   }
 
   getEvent(id: string): Observable<SocialEventDetails> {

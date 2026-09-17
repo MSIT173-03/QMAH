@@ -4,6 +4,31 @@
     <button class="btn btn-primary" onclick="create_post_modal.showModal()">+ 發布貼文</button>
   </div>
 
+  <div class="flex flex-wrap gap-2 mb-6 items-end">
+    <label class="form-control">
+      <span class="label-text text-xs">標籤（看板）</span>
+      <select class="select select-bordered select-sm" [(ngModel)]="filterBoardCode" (change)="loadPosts()">
+        <option value="">全部</option>
+        @for (board of boardCodes; track board) {
+          <option [value]="board">{{ board }}</option>
+        }
+      </select>
+    </label>
+    <label class="form-control flex-1 min-w-40">
+      <span class="label-text text-xs">關鍵字（標題／內容）</span>
+      <input
+        type="text"
+        class="input input-bordered input-sm w-full"
+        [(ngModel)]="filterKeyword"
+        (keyup.enter)="loadPosts()"
+        placeholder="搜尋..."
+      />
+    </label>
+    <button class="btn btn-sm btn-primary" (click)="loadPosts()">搜尋</button>
+    <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
+    <span class="text-xs text-gray-500 self-center">共 {{ totalCount }} 筆</span>
+  </div>
+
   @if (loadError) {
     <div class="alert alert-error mb-4">{{ loadError }}</div>
   }
@@ -110,3 +135,5 @@
     </div>
   </div>
 </dialog>
+
+<app-image-crop-modal (cropped)="onImageCropped($event)" (cancelled)="onCropCancelled()" />
