@@ -164,7 +164,7 @@ public sealed class EconomyService(QmahDbContext db)
             UserId = userId,
             KeyDefinitionId = key.Id,
             Amount = -1,
-            Reason = $"使用{key.Name}解鎖文物",
+            Reason = "ARTIFACT_UNLOCK",
             ReferenceType = "ARTIFACT_UNLOCK",
             ReferenceId = selected.Id,
             CreatedAt = now
@@ -174,7 +174,7 @@ public sealed class EconomyService(QmahDbContext db)
             Id = Guid.NewGuid(),
             UserId = userId,
             ArtifactId = selected.Id,
-            UnlockMethod = key.Code,
+            UnlockMethod = "KEY",
             KeyTransactionId = keyTransaction.Id,
             UnlockedAt = now
         };
