@@ -1,76 +1,144 @@
 <div class="login-page">
 
-  <!-- =========================
-       左側：清明鑑定屋品牌視覺
-  ========================== -->
+  <!-- ==================================================
+       左側：清明鑑定屋文物輪播
+  =================================================== -->
   <section class="museum-side">
 
-    <!-- 背景 -->
-    <div class="museum-background"></div>
+    <!-- 背景圖片 -->
+    <div
+      class="museum-background"
+      [style.background-image]="'url(' + currentSlide.image + ')'"
+    ></div>
+
+    <!-- 深色遮罩 -->
     <div class="museum-overlay"></div>
+
 
     <!-- 品牌 -->
     <div class="brand">
-      <div class="brand-mark">Q</div>
 
-      <div>
-        <h1>清明鑑定屋</h1>
-        <span>Quest Museum · Art · Hobby</span>
+      <div class="brand-mark">
+        Q
       </div>
+
+      <div class="brand-text">
+
+        <h1>
+          清明鑑定屋
+        </h1>
+
+        <span>
+          Quest Museum · Art · Hobby
+        </span>
+
+      </div>
+
     </div>
 
-    <!-- 主文案 -->
+
+    <!-- 當前文物介紹 -->
     <div class="museum-content">
 
       <div class="slide-tag">
-        FEATURED COLLECTION
+        {{ currentSlide.tag }}
       </div>
 
       <h2>
-        千年風雅<br />
-        一鑑入味
+        {{ currentSlide.titleLine1 }}
+        <br />
+        {{ currentSlide.titleLine2 }}
       </h2>
 
       <div class="title-line"></div>
 
       <p class="museum-description">
-        從文物，看見歷史的生活滋味。
+        {{ currentSlide.description }}
       </p>
 
       <div class="museum-keywords">
-        <span>探索文物</span>
+
+        <span>
+          探索文物
+        </span>
+
         <i></i>
-        <span>收藏珍品</span>
+
+        <span>
+          收藏珍品
+        </span>
+
         <i></i>
-        <span>遇見同好</span>
+
+        <span>
+          遇見同好
+        </span>
+
       </div>
 
     </div>
+
 
     <!-- 輪播控制 -->
     <div class="carousel-control">
 
+      <!-- 目前頁數 -->
       <div class="carousel-number">
-        <strong>01</strong>
-        <span>/ 04</span>
+
+        <strong>
+          {{ (currentSlideIndex + 1).toString().padStart(2, '0') }}
+        </strong>
+
+        <span>
+          /
+          {{ slides.length.toString().padStart(2, '0') }}
+        </span>
+
       </div>
 
+
+      <!-- 進度 -->
       <div class="carousel-progress">
-        <div class="carousel-progress-active"></div>
+
+        <div
+          class="carousel-progress-active"
+          [style.width.%]="
+            ((currentSlideIndex + 1) / slides.length) * 100
+          "
+        ></div>
+
       </div>
 
-      <div class="carousel-buttons">
-        <button type="button" aria-label="上一張">
-          ‹
-        </button>
 
-        <button type="button" aria-label="下一張">
-          ›
-        </button>
-      </div>
+      <!-- 兩張以上才顯示左右按鈕 -->
+      @if (slides.length > 1) {
+
+        <div class="carousel-buttons">
+
+          <button
+            type="button"
+            aria-label="上一張"
+            (click)="previousSlide()"
+          >
+            ‹
+          </button>
+
+          <button
+            type="button"
+            aria-label="下一張"
+            (click)="nextSlide()"
+          >
+            ›
+          </button>
+
+        </div>
+
+      }
 
     </div>
 
+
+    <!-- 左下文字 -->
     <div class="museum-footer">
       每一件文物，都是一段動人的故事。
     </div>
@@ -78,43 +146,59 @@
   </section>
 
 
-  <!-- =========================
+
+  <!-- ==================================================
        右側：登入
-  ========================== -->
+  =================================================== -->
   <section class="login-side">
 
     <div class="login-decoration"></div>
 
+
     <div class="login-card">
 
+      <!-- 標題 -->
       <div class="login-header">
+
         <span class="welcome-text">
           WELCOME TO
         </span>
 
-        <h2>清明鑑定屋</h2>
+        <h2>
+          清明鑑定屋
+        </h2>
 
         <div class="login-logo">
+          QMAH
         </div>
 
         <p>
           登入你的會員帳號，開啟鑑定與收藏的旅程
         </p>
+
       </div>
 
 
+
+      <!-- ==================================================
+           登入 Form
+      =================================================== -->
       <form
         [formGroup]="form"
         (ngSubmit)="login()"
         class="login-form"
       >
 
-        <!-- Email -->
+
+        <!-- =====================
+             Email
+        ====================== -->
         <div class="form-group">
 
           <label for="email">
             電子郵件
           </label>
+
 
           <div
             class="input-wrapper"
@@ -141,33 +225,43 @@
 
           </div>
 
+
           @if (
             form.controls.email.touched &&
             form.controls.email.hasError('required')
           ) {
+
             <p class="field-error">
               請輸入 Email
             </p>
+
           }
+
 
           @if (
             form.controls.email.touched &&
             form.controls.email.hasError('email')
           ) {
+
             <p class="field-error">
               Email 格式不正確
             </p>
+
           }
 
         </div>
 
 
-        <!-- 密碼 -->
+
+        <!-- =====================
+             Password
+        ====================== -->
         <div class="form-group">
 
           <label for="password">
             密碼
           </label>
+
 
           <div
             class="input-wrapper"
@@ -178,7 +272,7 @@
           >
 
             <span class="input-icon">
-              ♙
+              🔒
             </span>
 
             <input
@@ -191,19 +285,25 @@
 
           </div>
 
+
           @if (
             form.controls.password.touched &&
             form.controls.password.hasError('required')
           ) {
+
             <p class="field-error">
               請輸入密碼
             </p>
+
           }
 
         </div>
 
 
-        <!-- 記住我 / 忘記密碼 -->
+
+        <!-- =====================
+             記住我 / 忘記密碼
+        ====================== -->
         <div class="login-options">
 
           <label class="remember-me">
@@ -219,6 +319,7 @@
 
           </label>
 
+
           <a
             routerLink="/forgot-password"
             class="forgot-password"
@@ -229,15 +330,23 @@
         </div>
 
 
-        <!-- API 錯誤 -->
+
+        <!-- =====================
+             API 錯誤
+        ====================== -->
         @if (errorMessage) {
+
           <div class="login-error">
             {{ errorMessage }}
           </div>
+
         }
 
 
-        <!-- 登入 -->
+
+        <!-- =====================
+             登入 Button
+        ====================== -->
         <button
           type="submit"
           class="login-button"
@@ -247,12 +356,20 @@
           @if (loading) {
 
             <span class="loading-spinner"></span>
-            登入中...
+
+            <span>
+              登入中...
+            </span>
 
           } @else {
 
-            <span>登 入</span>
-            <span class="arrow">→</span>
+            <span>
+              登 入
+            </span>
+
+            <span class="arrow">
+              →
+            </span>
 
           }
 
@@ -261,32 +378,46 @@
       </form>
 
 
-      <!-- 分隔 -->
+
+      <!-- ==================================================
+           其他登入方式
+      =================================================== -->
       <div class="login-divider">
+
         <span></span>
-        <p>或使用其他方式登入</p>
+
+        <p>
+          或使用其他方式登入
+        </p>
+
         <span></span>
+
       </div>
 
 
-      <!-- Google：目前先做 UI -->
-      <button
-        type="button"
-        class="google-button"
-      >
 
-        <span class="google-icon">
-          G
-        </span>
+<!-- Google 登入 -->
+<button
+  type="button"
+  class="google-button"
+  (click)="googleLogin()"
+>
 
-        <span>
-          使用 Google 登入
-        </span>
+  <span class="google-icon">
+    G
+  </span>
 
-      </button>
+  <span>
+    使用 Google 登入
+  </span>
+
+</button>
 
 
-      <!-- 註冊 -->
+
+      <!-- ==================================================
+           註冊
+      =================================================== -->
       <div class="register-area">
 
         <span>
@@ -301,11 +432,19 @@
 
     </div>
 
+
+
+    <!-- 右下角 -->
     <div class="login-footer">
-      <span>鑑古知今・連結你我</span>
+
+      <span>
+        鑑古知今・連結你我
+      </span>
+
       <small>
         DISCOVER THE PAST FOR A BRIGHTER TOMORROW
       </small>
+
     </div>
 
   </section>
