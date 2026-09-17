@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -14,6 +14,7 @@ import { AdminPostListItem, SocialApiService } from '../../../core/services/soci
 })
 export class AdminPostsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   posts: AdminPostListItem[] = [];
   totalCount = 0;
@@ -45,10 +46,12 @@ export class AdminPostsComponent implements OnInit {
         next: (page) => {
           this.posts = page.items;
           this.totalCount = page.totalCount;
+          this.cdr.detectChanges();
         },
         error: (err: HttpErrorResponse) => {
           this.loadError = this.describeError(err, '取得貼文列表');
           console.error('取得貼文列表失敗:', err);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -76,6 +79,7 @@ export class AdminPostsComponent implements OnInit {
           ? '這篇貼文是活動的社群入口，請到活動管理調整審核／發布狀態。'
           : this.describeError(err, '變更貼文狀態');
         console.error('變更貼文狀態失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -14,6 +14,7 @@ import { AdminCommentListItem, SocialApiService } from '../../../core/services/s
 })
 export class AdminCommentsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   comments: AdminCommentListItem[] = [];
   totalCount = 0;
@@ -41,10 +42,12 @@ export class AdminCommentsComponent implements OnInit {
         next: (page) => {
           this.comments = page.items;
           this.totalCount = page.totalCount;
+          this.cdr.detectChanges();
         },
         error: (err: HttpErrorResponse) => {
           this.loadError = this.describeError(err, '取得留言列表');
           console.error('取得留言列表失敗:', err);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -68,6 +71,7 @@ export class AdminCommentsComponent implements OnInit {
         this.actionPendingId = null;
         this.actionError = this.describeError(err, '變更留言狀態');
         console.error('變更留言狀態失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }

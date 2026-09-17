@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -17,6 +17,7 @@ import { MeApiService } from '../../../core/services/me-api';
 export class PostsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
   private meApi = inject(MeApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   posts: SocialPostListItem[] = [];
   totalCount = 0;
@@ -45,11 +46,13 @@ export class PostsComponent implements OnInit {
         this.posts = page.items;
         this.totalCount = page.totalCount;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
         console.error('取得貼文失敗:', err);
         this.loadError = '取得貼文失敗，請稍後再試。';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }

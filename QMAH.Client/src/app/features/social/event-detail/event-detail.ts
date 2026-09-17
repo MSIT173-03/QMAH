@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -17,6 +17,7 @@ export class EventDetailComponent implements OnChanges {
   @Input() id!: string;
 
   private socialApi = inject(SocialApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   event: SocialEventDetails | null = null;
   loading = false;
@@ -36,11 +37,13 @@ export class EventDetailComponent implements OnChanges {
       next: (event) => {
         this.event = event;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
         this.loading = false;
         this.loadError = err.status === 404 ? '這場活動不存在或目前不可參加。' : '取得活動失敗，請稍後再試。';
         console.error('取得活動詳情失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -54,11 +57,13 @@ export class EventDetailComponent implements OnChanges {
       next: (event) => {
         this.event = event;
         this.actionPending = false;
+        this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
         this.actionPending = false;
         this.actionError = err.status === 401 ? '請先登入才能報名。' : '報名失敗，請稍後再試。';
         console.error('報名失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -72,11 +77,13 @@ export class EventDetailComponent implements OnChanges {
       next: (event) => {
         this.event = event;
         this.actionPending = false;
+        this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
         this.actionPending = false;
         this.actionError = err.status === 401 ? '請先登入才能取消報名。' : '取消報名失敗，請稍後再試。';
         console.error('取消報名失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }

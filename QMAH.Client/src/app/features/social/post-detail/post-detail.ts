@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -21,6 +21,7 @@ export class PostDetailComponent implements OnChanges {
   private socialApi = inject(SocialApiService);
   private meApi = inject(MeApiService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   post: SocialPostDetails | null = null;
   loading = false;
@@ -59,11 +60,13 @@ export class PostDetailComponent implements OnChanges {
       next: (post) => {
         this.post = post;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
         console.error('取得貼文失敗:', err);
         this.loading = false;
         this.loadError = err.status === 404 ? '這篇貼文不存在或已被下架。' : '取得貼文失敗，請稍後再試。';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -93,6 +96,7 @@ export class PostDetailComponent implements OnChanges {
       error: (err: HttpErrorResponse) => {
         this.actionError = this.describeOwnershipError(err, '更新貼文');
         console.error('更新貼文失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -106,6 +110,7 @@ export class PostDetailComponent implements OnChanges {
       error: (err: HttpErrorResponse) => {
         this.actionError = this.describeOwnershipError(err, '刪除貼文');
         console.error('刪除貼文失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -132,6 +137,7 @@ export class PostDetailComponent implements OnChanges {
       error: (err: HttpErrorResponse) => {
         this.actionError = this.describeOwnershipError(err, '更新留言');
         console.error('更新留言失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -144,6 +150,7 @@ export class PostDetailComponent implements OnChanges {
       error: (err: HttpErrorResponse) => {
         this.actionError = this.describeOwnershipError(err, '刪除留言');
         console.error('刪除留言失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -160,6 +167,7 @@ export class PostDetailComponent implements OnChanges {
       error: (err: HttpErrorResponse) => {
         this.actionError = err.status === 401 ? '請先登入才能留言。' : '留言失敗，請稍後再試。';
         console.error('留言失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }

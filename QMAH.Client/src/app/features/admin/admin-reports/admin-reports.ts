@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -14,6 +14,7 @@ import { AdminContentReport, SocialApiService } from '../../../core/services/soc
 })
 export class AdminReportsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   reports: AdminContentReport[] = [];
   totalCount = 0;
@@ -41,10 +42,12 @@ export class AdminReportsComponent implements OnInit {
         next: (page) => {
           this.reports = page.items;
           this.totalCount = page.totalCount;
+          this.cdr.detectChanges();
         },
         error: (err: HttpErrorResponse) => {
           this.loadError = this.describeError(err, '取得檢舉列表');
           console.error('取得檢舉列表失敗:', err);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -68,6 +71,7 @@ export class AdminReportsComponent implements OnInit {
         this.actionPendingId = null;
         this.actionError = this.describeError(err, '處理檢舉');
         console.error('處理檢舉失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -85,6 +89,7 @@ export class AdminReportsComponent implements OnInit {
         this.actionPendingId = null;
         this.actionError = this.describeError(err, '處理檢舉');
         console.error('處理檢舉失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }

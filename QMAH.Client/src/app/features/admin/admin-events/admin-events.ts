@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -14,6 +14,7 @@ import { AdminEventListItem, SocialApiService } from '../../../core/services/soc
 })
 export class AdminEventsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   events: AdminEventListItem[] = [];
   totalCount = 0;
@@ -43,10 +44,12 @@ export class AdminEventsComponent implements OnInit {
         next: (page) => {
           this.events = page.items;
           this.totalCount = page.totalCount;
+          this.cdr.detectChanges();
         },
         error: (err: HttpErrorResponse) => {
           this.loadError = this.describeError(err, '取得活動列表');
           console.error('取得活動列表失敗:', err);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -71,6 +74,7 @@ export class AdminEventsComponent implements OnInit {
         this.actionPendingId = null;
         this.actionError = this.describeError(err, '審核活動');
         console.error('審核失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -88,6 +92,7 @@ export class AdminEventsComponent implements OnInit {
         this.actionPendingId = null;
         this.actionError = this.describeError(err, '變更發布狀態');
         console.error('變更發布狀態失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -15,6 +15,7 @@ import { CreateSocialEventRequest, EventListItem, SocialApiService, SocialMedia 
 })
 export class EventsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   events: EventListItem[] = [];
   loadError: string | null = null;
@@ -40,10 +41,14 @@ export class EventsComponent implements OnInit {
   loadEvents(): void {
     this.loadError = null;
     this.socialApi.getEvents({ pageSize: 20 }).subscribe({
-      next: (page) => (this.events = page.items),
+      next: (page) => {
+        this.events = page.items;
+        this.cdr.detectChanges();
+      },
       error: (err) => {
         this.loadError = '取得活動列表失敗，請稍後再試。';
         console.error('取得活動列表失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }
