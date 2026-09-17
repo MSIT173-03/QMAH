@@ -69,3 +69,5 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 CLAUDE.md
+.claude/launch.json
+QMAH.Client/start-dev.bat
