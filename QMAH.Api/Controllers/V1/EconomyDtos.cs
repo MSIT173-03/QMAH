@@ -11,6 +11,7 @@ public sealed record MemberEconomyDto(
     IReadOnlyList<KeyExchangeRuleDto> ExchangeRules);
 
 /// <summary>單一鑰匙在目前會員帳號中的餘額與可解鎖文物數量。</summary>
+/// <remarks>JSON 欄位 code 直接作為解鎖路徑的 keyCode，不使用 ScopeType 代替。</remarks>
 public sealed record KeyBalanceDto(
     Guid Id,
     string Code,
