@@ -1057,7 +1057,8 @@ public sealed class EconomyService(QmahDbContext db)
             .ToList();
     }
 
-    private IQueryable<Artifact> GetEligibleArtifactQuery(Guid userId, KeyDefinition key)
+    /// <summary>共用查詢與實際解鎖的候選規則；呼叫端必須先確認鑰匙啟用及登入會員。</summary>
+    public IQueryable<Artifact> GetEligibleArtifactQuery(Guid userId, KeyDefinition key)
     {
         var query = db.Artifacts
             .Where(artifact => artifact.IsActive
