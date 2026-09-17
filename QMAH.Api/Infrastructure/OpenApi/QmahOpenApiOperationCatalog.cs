@@ -16,6 +16,7 @@ internal static class QmahOpenApiOperationCatalog
             ["Account.ResetPassword"] = ("完成密碼重設", "使用 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Token` 與 `NewPassword` 驗證 password reset token（密碼重設 token，一次性密碼重設字串）並更新密碼，成功回傳 `204 No Content`（成功且沒有回應本文）。token（驗證用的暫時字串）無效、過期或新密碼不符合密碼政策時回傳 `400`。"),
 
             ["AdminDashboard.GetDashboard"] = ("取得管理儀表板摘要", "需要 `Admin` role（管理員角色）。彙整會員、文物、啟用題庫、社群、活動、遊戲、訂單、已付款營收、訂單狀態與熱門商品，並回傳最近 14 天的每日趨勢。"),
+            ["AdminCatalog.ForceUnlockArtifact"] = ("管理員強制解鎖文物", "需要 `Admin` role（管理員角色）。依 path parameter（路徑參數）中的 `userId` 與 `artifactId`，在同一資料庫交易新增 `ArtifactUnlock`，來源固定為 `ADMIN`；目標已解鎖時維持冪等，不建立第二筆，並保存管理員稽核紀錄。"),
             ["Metadata.GetMetadata"] = ("取得前台選項資料", "回傳文物分類、年代、社群板塊、貼文類型、發布者類型、活動類型、審核狀態、發布狀態與媒體狀態的 code（系統代碼）／Label（畫面顯示文字）對照，供前台表單與篩選器使用。"),
 
             ["Catalog.GetArtifacts"] = ("查詢文物清單", "以 query string（查詢參數）的 `q` 搜尋文物名稱、故宮編號或原始年代文字，並以 `categoryCode`、`eraCode`、`page` 與 `pageSize` 篩選及分頁。結果只包含 `IsActive` 的文物，回應為 `ApiPage<ArtifactListItemDto>`（標準分頁資料格式）。"),
@@ -66,7 +67,7 @@ internal static class QmahOpenApiOperationCatalog
 
             ["Economy.GetEconomy"] = ("取得會員經濟狀態", "需要登入，回傳目前會員的鑑定點數、鑰匙進度、各類鑰匙餘額、每把鑰匙目前可解鎖的文物數量，以及由資料庫啟用中的鑰匙兌換規則。可解鎖數量依目前啟用文物與會員既有解鎖紀錄即時計算，前端不應自行推算。"),
             ["Economy.GetKeyExchangeRules"] = ("查詢鑰匙兌換規則", "需要登入，回傳目前啟用且目標鑰匙仍有可解鎖文物的兌換規則。每筆資料包含來源鑰匙、來源數量、目標鑰匙、目標數量與目前目標可解鎖數量；兌換比例由後台資料設定。"),
-            ["Economy.UnlockArtifact"] = ("使用鑰匙解鎖文物", "需要登入，依 path parameter（路徑參數）`keyCode` 使用一把鑰匙解鎖文物。`NORMAL`、`CATEGORY` 與 `ERA` 由伺服器從符合條件且尚未解鎖的啟用文物中隨機選擇；只有 `UNIVERSAL` 允許在 request body（請求本文，送出的 JSON 內容）指定 `ArtifactId`。沒有候選文物時不扣除鑰匙，也不建立解鎖紀錄。"),
+            ["Economy.UnlockArtifact"] = ("使用鑰匙解鎖文物", "需要登入，依 path parameter（路徑參數）`keyCode` 使用一把鑰匙解鎖文物。`NORMAL` 一律由伺服器從全部候選隨機選擇；`CATEGORY` 與 `ERA` 可省略 `ArtifactId` 讓伺服器在自身分類／年代範圍抽選，也可指定範圍內文物；`UNIVERSAL` 可指定任一候選文物。沒有候選文物時不扣除鑰匙，也不建立解鎖紀錄。"),
             ["Economy.ExchangeKeys"] = ("執行鑰匙兌換", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `RuleId` 與 `Units`，按照目前啟用的資料庫兌換規則扣除來源鑰匙並增加目標鑰匙。目標鑰匙沒有任何可解鎖文物、來源餘額不足或規則已停用時不會完成部分兌換。"),
             ["Economy.RecycleKey"] = ("回收無用途鑰匙", "需要登入，依 path parameter（路徑參數）`keyCode` 與 request body（請求本文，送出的 JSON 內容）中的 `Amount` 回收鑰匙。只有該會員使用此鑰匙已找不到任何符合範圍且尚未解鎖的啟用文物時才能回收；成功會同時留下鑰匙交易與鑑定點數交易。"),
             ["Economy.GetCouponExchangeOptions"] = ("查詢點數兌換優惠券", "需要登入，回傳目前可由鑑定點數兌換的優惠券定義、點數成本、折扣型態、折扣值、最低消費金額與有效天數。前端應直接使用這份資料顯示選項，不應寫死點數門檻或折扣數字。"),
@@ -77,7 +78,7 @@ internal static class QmahOpenApiOperationCatalog
             ["MiniGame.GetModes"] = ("查詢 Mini Game 模式", "需要登入，回傳目前啟用的四種 Mini Game backend contract（後端契約）：`DETAIL_LOCATOR`、`ARTIFACT_PUZZLE`、`MEMORY_MATCH` 與 `STRIP_RESTORE`。資料包含模式設定、評級門檻與供前端建立遊戲流程所需的設定 JSON。"),
             ["MiniGame.StartAttempt"] = ("開始 Mini Game 回合", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `ModeCode` 建立一次伺服器決定的遊戲嘗試。伺服器選擇啟用文物、文物池、難度、seed（隨機種子）與模式設定，成功回傳 `201 Created`（已建立資源）與前端所需素材。"),
             ["MiniGame.CompleteAttempt"] = ("完成 Mini Game 回合", "需要登入，依 path parameter（路徑參數）`id` 與 request body（請求本文，送出的 JSON 內容）送出結果資料。伺服器依 Attempt 與結果盤面重算分數、等級與經濟獎勵；重複送出同一回合不會重複發放經濟獎勵。"),
-            ["MiniGame.RewardMainGame"] = ("結算多人主遊戲獎勵", "需要登入，依 path parameter（路徑參數）`id` 結算目前會員已完成的多人主遊戲。伺服器依回合勝負與投票表現計算鑑定點數及一般鑰匙，並以交易識別避免同一場遊戲重複領取；成功回傳實際獎勵與表現摘要。"),
+            ["MiniGame.RewardMainGame"] = ("結算多人主遊戲獎勵", "需要登入，依 path parameter（路徑參數）`id` 結算目前會員已完成的多人主遊戲。伺服器依回合勝負與投票表現計算鑑定點數及一般鑰匙，並在同一交易替該玩家解鎖尚未解鎖的結算回合文物，來源為 `GAME`、`GameRoundId` 指向來源回合；以交易識別避免同一場遊戲重複領取。"),
 
             ["Me.GetMe"] = ("取得目前會員", "需要登入，依 Identity Cookie（登入狀態 Cookie）的會員識別取得目前會員、Profile（會員資料）、角色、點數與帳號狀態。會員識別由登入狀態決定，回應不接受 request body（請求本文，送出的 JSON 內容）或 query string（查詢參數）指定其他 `UserId`（會員識別碼）。"),
             ["Me.GetDailyActivity"] = ("查詢每日登入進度", "需要登入，依會員的每日登入歷史即時計算最後登入日期、累積登入天數、目前與最高連續登入天數、今日是否已登入及會員存續期間登入率；不讀取預先保存的統計快照。"),

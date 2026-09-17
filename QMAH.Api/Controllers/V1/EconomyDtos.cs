@@ -34,7 +34,7 @@ public sealed record KeyExchangeRuleDto(
     int TargetEligibleArtifactCount,
     string? Description);
 
-/// <summary>使用鑰匙解鎖文物時的選填指定文物資料。</summary>
+/// <summary>使用鑰匙解鎖文物時的選填目標；CATEGORY／ERA 限定在自身範圍，NORMAL 不可指定。</summary>
 public sealed class UnlockArtifactRequest
 {
     public Guid? ArtifactId { get; set; }

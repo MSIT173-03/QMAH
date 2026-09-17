@@ -112,7 +112,7 @@ internal static class QmahOpenApiSchemaCatalog
                 ("productId", "ProductId（商品資源識別碼）"),
                 ("quantity", "Quantity（購物車商品數量）；範圍為 1 至 99")),
             ["UnlockArtifactRequest"] = Fields(
-                ("artifactId", "ArtifactId（文物資源識別碼）；只有 UNIVERSAL 鑰匙可提供，其他鑰匙會由伺服器選擇文物")),
+                ("artifactId", "ArtifactId（文物資源識別碼）；NORMAL 不可提供，CATEGORY／ERA 只能提供自身範圍內文物，UNIVERSAL 可提供任一候選文物；省略時由伺服器抽選")),
             ["ExchangeKeyRequest"] = Fields(
                 ("ruleId", "RuleId（鑰匙兌換規則資源識別碼）；必須是目前啟用的規則"),
                 ("units", "Units（要執行的規則倍數）；範圍為 1 至 100")),
