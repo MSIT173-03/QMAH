@@ -893,7 +893,7 @@ public sealed class EconomyService(QmahDbContext db)
             return EconomyResult<GameRewardView>.Conflict("主遊戲獎勵設定不可產生負數鑰匙。");
 
         var pointBalance = await GetOrCreatePointBalanceAsync(userId, cancellationToken);
-        // 舊快照使用 KEY-NORMAL，新資料使用 NORMAL；兩者都代表一般鑰匙，避免還原舊資料後無法發獎勵。
+        // 目前資料庫快照使用 KEY-NORMAL；同時相容 NORMAL，若兩者皆啟用則優先 NORMAL。
         var keyDefinition = await db.KeyDefinitions
             .Where(item => item.IsActive && (item.Code == "NORMAL" || item.Code == "KEY-NORMAL"))
             .OrderBy(item => item.Code == "NORMAL" ? 0 : 1)
