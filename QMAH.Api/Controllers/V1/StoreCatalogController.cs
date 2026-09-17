@@ -46,51 +46,59 @@ public sealed class StoreCatalogController(
             query = query.Where(product => product.CategoryCode == categoryCode);
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
-        var query2 = from g in query
-                     join r in db.ProductReviews.Where(r => r.Status == "PUBLISHED") on g.Id equals r.ProductId into reviewGroup
-                     join o in db.OrderDetails on g.Id equals o.ProductId into orderGroup
-                     select new ProductListItemDto
-                     (
-                         g.Id,
-                         g.ArtifactId,
-                         g.ExternalRef,
-                         g.Name,
-                         g.CategoryCode,
-                         g.Price,
-                         g.Stock,
-                         g.PrimaryImagePath,
-                         g.CreatedAt,
-                         reviewGroup.Any() ? (decimal)reviewGroup.Average(r => r.Rating) : 0m,
-                         reviewGroup.Count(),
-                         orderGroup.Count()
-                     );
+
+        var query2 = query.Select(g => new
+        {
+            g.Id,
+            g.ArtifactId,
+            g.ExternalRef,
+            g.Name,
+            g.CategoryCode,
+            g.Price,
+            g.Stock,
+            g.PrimaryImagePath,
+            g.CreatedAt,
+            AverageRating = db.ProductReviews
+                    .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
+                    .Average(r => (decimal?)r.Rating) ?? 0m,
+            ReviewCount = db.ProductReviews
+                    .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
+            SellCount = db.OrderDetails
+                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
+                    .Sum(o => o.Quantity)
+        });
 
         // 排序
-        switch (order)
+        var query3 = order switch
         {
-            case OrderType.None:
-                query2 = query2
-                    .OrderBy(g => g.Name)
-                    .ThenBy(g => g.Id);
-                break;
-            case OrderType.HotSell:
-                query2 = query2
-                    .OrderBy(g => g.SellCount)
-                    .ThenBy(g => g.Id);
-                break;
-            case OrderType.Newer:
-                query2 = query2
-                    .OrderBy(g => g.CreatedAt.Ticks)
-                    .ThenBy(product => product.Id);
-                break;
-            case OrderType.Older:
-                query2 = query2
-                    .OrderByDescending(g => g.CreatedAt.Ticks)
-                    .ThenBy(product => product.Id);
-                break;
-        }
+            OrderType.HotSell => query2
+                .OrderByDescending(g => g.SellCount)
+                .ThenBy(g => g.Id),
+            OrderType.Newer => query2
+                .OrderByDescending(g => g.CreatedAt)
+                .ThenBy(g => g.Id),
+            OrderType.Older => query2
+                .OrderBy(g => g.CreatedAt)
+                .ThenBy(g => g.Id),
+            _ => query2.OrderBy(g => g.Id),
+        };
 
-        var result = await ApiPaging.ToPageAsync(query2, page, pageSize, cancellationToken);
+        var res = query3.Select(g => new ProductListItemDto(
+            g.Id,
+            g.ArtifactId,
+            g.ExternalRef,
+            g.Name,
+            g.CategoryCode,
+            g.Price,
+            g.Stock,
+            g.PrimaryImagePath,
+            g.CreatedAt,
+            g.AverageRating,
+            g.ReviewCount,
+            g.SellCount
+        ));
+
+        var result = await ApiPaging.ToPageAsync(res, page, pageSize, cancellationToken);
 
         // 原本直接回傳資料庫中的 PrimaryImagePath；棄用原因：CDN 模式需要統一轉換公開圖片網址。
         return Ok(result with
