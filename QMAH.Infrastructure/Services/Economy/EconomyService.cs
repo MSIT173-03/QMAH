@@ -101,7 +101,7 @@ public sealed class EconomyService(QmahDbContext db)
         return await GetExchangeRulesAsync(userId, artifacts, unlockedIds, cancellationToken);
     }
 
-    /// <summary>依鑰匙範圍解鎖一件文物；抽選與扣除都由伺服器在同一交易中完成。</summary>
+    /// <summary>依鑰匙範圍解鎖一件文物；範圍鑰匙可指定範圍內目標，抽選與扣除都在同一交易中完成。</summary>
     public async Task<EconomyResult<ArtifactUnlockView>> UnlockArtifactAsync(
         Guid userId,
         string keyCode,
@@ -119,12 +119,11 @@ public sealed class EconomyService(QmahDbContext db)
             .SingleOrDefaultAsync(item => item.Code == keyCode && item.IsActive, cancellationToken);
         if (key is null)
             return EconomyResult<ArtifactUnlockView>.NotFound("找不到啟用中的鑰匙定義。");
-        if (key.ScopeType == "UNIVERSAL" && !artifactId.HasValue)
-            return EconomyResult<ArtifactUnlockView>.Invalid("UNIVERSAL 鑰匙必須指定要解鎖的文物。");
-        if (key.ScopeType != "UNIVERSAL" && artifactId.HasValue)
-            return EconomyResult<ArtifactUnlockView>.Invalid("只有 UNIVERSAL 鑰匙可以指定文物。");
+        if (key.ScopeType == "NORMAL" && artifactId.HasValue)
+            return EconomyResult<ArtifactUnlockView>.Invalid("NORMAL 鑰匙不能指定文物，請讓伺服器從全部候選中抽選。");
 
-        // 候選集完全由伺服器依啟用文物與會員既有解鎖紀錄建立；客戶端不能用指定 ID 影響 NORMAL、CATEGORY 或 ERA 的抽選。
+        // 候選集完全由伺服器依啟用文物、鑰匙範圍與會員既有解鎖紀錄建立。
+        // CATEGORY／ERA 可指定候選集內的文物；未指定時由伺服器抽選，不能越過鑰匙範圍。
         var candidates = await GetEligibleArtifactQuery(userId, key)
             .Select(artifact => new ArtifactCandidateView(artifact.Id, artifact.Name))
             .ToListAsync(cancellationToken);
@@ -164,7 +163,7 @@ public sealed class EconomyService(QmahDbContext db)
             UserId = userId,
             KeyDefinitionId = key.Id,
             Amount = -1,
-            Reason = $"使用{key.Name}解鎖文物",
+            Reason = "ARTIFACT_UNLOCK",
             ReferenceType = "ARTIFACT_UNLOCK",
             ReferenceId = selected.Id,
             CreatedAt = now
@@ -174,7 +173,7 @@ public sealed class EconomyService(QmahDbContext db)
             Id = Guid.NewGuid(),
             UserId = userId,
             ArtifactId = selected.Id,
-            UnlockMethod = key.Code,
+            UnlockMethod = "KEY",
             KeyTransactionId = keyTransaction.Id,
             UnlockedAt = now
         };
@@ -189,6 +188,76 @@ public sealed class EconomyService(QmahDbContext db)
             selected.Name,
             candidates.Count - 1,
             null));
+    }
+
+    /// <summary>由管理員替指定會員解鎖一件文物；重複操作維持冪等，並留下管理稽核紀錄。</summary>
+    public async Task<EconomyResult<AdminArtifactUnlockView>> ForceUnlockArtifactAsync(
+        Guid adminUserId,
+        Guid userId,
+        Guid artifactId,
+        CancellationToken cancellationToken = default)
+    {
+        if (adminUserId == Guid.Empty || userId == Guid.Empty || artifactId == Guid.Empty)
+            return EconomyResult<AdminArtifactUnlockView>.Invalid("管理員、會員與文物識別碼都必須有效。");
+
+        await using var transaction = await db.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable,
+            cancellationToken);
+        var adminExists = await db.Users
+            .AsNoTracking()
+            .AnyAsync(user => user.Id == adminUserId && user.Status == "ACTIVE", cancellationToken);
+        if (!adminExists)
+            return EconomyResult<AdminArtifactUnlockView>.Forbidden("管理員帳號不存在或未啟用。");
+
+        var targetExists = await db.Users
+            .AsNoTracking()
+            .AnyAsync(user => user.Id == userId && user.Status == "ACTIVE", cancellationToken);
+        if (!targetExists)
+            return EconomyResult<AdminArtifactUnlockView>.NotFound("找不到啟用中的目標會員。");
+
+        var artifactExists = await db.Artifacts
+            .AsNoTracking()
+            .AnyAsync(artifact => artifact.Id == artifactId && artifact.IsActive, cancellationToken);
+        if (!artifactExists)
+            return EconomyResult<AdminArtifactUnlockView>.NotFound("找不到啟用中的目標文物。");
+
+        var existing = await db.ArtifactUnlocks
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                unlock => unlock.UserId == userId && unlock.ArtifactId == artifactId,
+                cancellationToken);
+        var now = DateTime.UtcNow;
+        if (existing is not null)
+        {
+            AddAdminUnlockAudit(adminUserId, userId, artifactId, false, now);
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return EconomyResult<AdminArtifactUnlockView>.Success(new AdminArtifactUnlockView(
+                false,
+                userId,
+                artifactId,
+                existing.UnlockMethod,
+                existing.UnlockedAt));
+        }
+
+        db.ArtifactUnlocks.Add(new ArtifactUnlock
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ArtifactId = artifactId,
+            UnlockMethod = "ADMIN",
+            UnlockedAt = now
+        });
+        AddAdminUnlockAudit(adminUserId, userId, artifactId, true, now);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return EconomyResult<AdminArtifactUnlockView>.Success(new AdminArtifactUnlockView(
+            true,
+            userId,
+            artifactId,
+            "ADMIN",
+            now));
     }
 
     /// <summary>依資料庫中的兌換規則交換鑰匙，並留下來源與目標兩筆鑰匙流水。</summary>
@@ -740,6 +809,11 @@ public sealed class EconomyService(QmahDbContext db)
         if (player is null)
             return EconomyResult<GameRewardView>.Forbidden("目前會員不是這場遊戲的有效參與者。");
 
+        var settledRounds = room.GameRounds.Where(round => round.IsSettled).ToList();
+        var queuedGameUnlockCount = settledRounds.Count == 0
+            ? 0
+            : await QueueGameArtifactUnlocksAsync(userId, settledRounds, cancellationToken);
+
         var existingPointTransaction = await db.PointTransactions
             .AsNoTracking()
             .FirstOrDefaultAsync(
@@ -755,6 +829,8 @@ public sealed class EconomyService(QmahDbContext db)
                     && item.ReferenceType == "MAIN_GAME_REWARD"
                     && item.ReferenceId == player.Id)
                 .SumAsync(item => (int?)item.Amount, cancellationToken) ?? 0;
+            if (queuedGameUnlockCount > 0)
+                await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return EconomyResult<GameRewardView>.Success(new GameRewardView(
                 existingPointTransaction.Amount,
@@ -776,7 +852,6 @@ public sealed class EconomyService(QmahDbContext db)
         {
             return EconomyResult<GameRewardView>.Conflict("主遊戲經濟設定無效，請先由管理員修正。");
         }
-        var settledRounds = room.GameRounds.Where(round => round.IsSettled).ToList();
         if (settledRounds.Count == 0)
             return EconomyResult<GameRewardView>.Conflict("這場遊戲沒有可結算的回合。");
         var totalVotes = settledRounds
@@ -864,6 +939,67 @@ public sealed class EconomyService(QmahDbContext db)
             performance,
             roundsWon,
             false));
+    }
+
+    private async Task<int> QueueGameArtifactUnlocksAsync(
+        Guid userId,
+        IReadOnlyCollection<GameRound> settledRounds,
+        CancellationToken cancellationToken)
+    {
+        var roundsByArtifact = settledRounds
+            .GroupBy(round => round.ArtifactId)
+            .Select(group => group.OrderBy(round => round.RoundNumber).ThenBy(round => round.Id).First())
+            .ToList();
+        if (roundsByArtifact.Count == 0)
+            return 0;
+
+        var artifactIds = roundsByArtifact.Select(round => round.ArtifactId).ToList();
+        var alreadyUnlockedIds = await db.ArtifactUnlocks
+            .AsNoTracking()
+            .Where(unlock => unlock.UserId == userId && artifactIds.Contains(unlock.ArtifactId))
+            .Select(unlock => unlock.ArtifactId)
+            .ToHashSetAsync(cancellationToken);
+
+        var queuedCount = 0;
+        foreach (var round in roundsByArtifact)
+        {
+            if (!alreadyUnlockedIds.Add(round.ArtifactId))
+                continue;
+
+            db.ArtifactUnlocks.Add(new ArtifactUnlock
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                ArtifactId = round.ArtifactId,
+                UnlockMethod = "GAME",
+                GameRoundId = round.Id,
+                UnlockedAt = DateTime.UtcNow
+            });
+            queuedCount++;
+        }
+
+        return queuedCount;
+    }
+
+    private void AddAdminUnlockAudit(
+        Guid adminUserId,
+        Guid userId,
+        Guid artifactId,
+        bool created,
+        DateTime occurredAt)
+    {
+        db.AuditLogs.Add(new AdminAuditLog
+        {
+            ActorUserId = adminUserId,
+            Area = "Catalog",
+            Controller = "AdminCatalog",
+            Action = "ForceUnlockArtifact",
+            HttpMethod = "POST",
+            RequestPath = $"/api/v1/admin/catalog/members/{userId:D}/artifacts/{artifactId:D}/unlock",
+            ResultStatusCode = 200,
+            Detail = created ? "管理員強制解鎖文物" : "管理員強制解鎖文物；目標已存在解鎖紀錄",
+            OccurredAt = occurredAt
+        });
     }
 
     /// <summary>讀取單一主遊戲經濟設定；資料庫尚未建立設定時回傳可供本地開發使用的預設值。</summary>
@@ -1077,6 +1213,14 @@ public sealed record ArtifactUnlockView(
     string? ArtifactName,
     int RemainingEligibleArtifactCount,
     string? Message);
+
+/// <summary>管理員強制解鎖的結果；重複操作會回傳 Created = false。</summary>
+public sealed record AdminArtifactUnlockView(
+    bool Created,
+    Guid UserId,
+    Guid ArtifactId,
+    string UnlockMethod,
+    DateTime UnlockedAt);
 
 /// <summary>鑰匙兌換完成後的來源、目標與剩餘候選資訊。</summary>
 public sealed record KeyExchangeView(

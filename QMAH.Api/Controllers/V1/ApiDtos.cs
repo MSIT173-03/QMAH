@@ -14,6 +14,40 @@ public sealed record ArtifactListItemDto(
     bool HasQuestionEntry,
     bool HasShopProduct);
 
+/// <summary>目前會員圖鑑清單中的文物，以及該會員的解鎖狀態。</summary>
+public sealed record MemberArtifactListItemDto(
+    Guid Id,
+    string ArtifactRef,
+    string Name,
+    Guid CategoryId,
+    string CategoryCode,
+    string CategoryName,
+    Guid EraBucketId,
+    string EraCode,
+    string EraName,
+    string? ThumbnailPath,
+    bool HasQuestionEntry,
+    bool HasShopProduct,
+    bool IsUnlocked,
+    DateTime? UnlockedAt);
+
+/// <summary>目前會員的一筆文物解鎖歷史。</summary>
+public sealed record MemberArtifactUnlockDto(
+    Guid Id,
+    Guid ArtifactId,
+    string ArtifactRef,
+    string ArtifactName,
+    string CategoryCode,
+    string CategoryName,
+    string EraCode,
+    string EraName,
+    string UnlockMethod,
+    Guid? GameRoundId,
+    Guid? KeyTransactionId,
+    string? KeyCode,
+    string? KeyName,
+    DateTime UnlockedAt);
+
 public sealed record ArtifactDetailsDto(
     Guid Id,
     string ArtifactRef,

@@ -260,13 +260,15 @@ public sealed class QmahOpenApiSecurityTransformer(
             return (operationKey, parameter.Name) switch
             {
                 ("Catalog.GetArtifact", "id") => "文物 Id（資源識別碼），GUID（全域唯一識別碼）格式",
+                ("AdminCatalog.ForceUnlockArtifact", "userId") => "目標會員 Id（資源識別碼），GUID（全域唯一識別碼）格式",
+                ("AdminCatalog.ForceUnlockArtifact", "artifactId") => "要強制解鎖的文物 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("Game.GetRoom", "id") or ("Game.GetRoomHistory", "id") or ("Game.JoinRoom", "id") => "遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                  ("Game.GetRound", "id") or ("Game.SubmitAnswer", "id") or ("Game.SubmitVote", "id") => "遊戲回合 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                  ("GameRoomInvitations.GetSentInvitations", "roomId") or ("GameRoomInvitations.CreateInvitation", "roomId") or
                      ("GameRoomInvitations.GetRoomRewardPolicy", "roomId") or ("GameRoomInvitations.ConfigureRoomRewardPolicy", "roomId") => "私人遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                  ("GameRoomInvitations.RespondInvitation", "invitationId") or ("GameRoomInvitations.CancelInvitation", "invitationId") => "房間邀請 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                  ("CommunityReward.GetEventRewardPolicy", "eventId") or ("CommunityReward.ConfigureEventRewardPolicy", "eventId") => "活動 Id（資源識別碼），GUID（全域唯一識別碼）格式",
-                ("Economy.UnlockArtifact", "keyCode") or ("Economy.RecycleKey", "keyCode") => "鑰匙 code（系統代碼），例如 NORMAL、CATEGORY、ERA 或 UNIVERSAL",
+                ("Economy.UnlockArtifact", "keyCode") or ("Economy.RecycleKey", "keyCode") => "鑰匙 code（系統代碼），例如 KEY-NORMAL、KEY-CATEGORY-JADE、KEY-ERA-MING 或 KEY-UNIVERSAL；實際值以 GET /api/v1/me/economy 回傳為準",
                 ("MiniGame.CompleteAttempt", "id") => "Mini Game 嘗試 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("MiniGame.RewardMainGame", "id") => "多人遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("Social.GetPost", "id") => "社群貼文 Id（資源識別碼），GUID（全域唯一識別碼）格式",
@@ -296,6 +298,9 @@ public sealed class QmahOpenApiSecurityTransformer(
             ("Catalog.GetArtifacts", "q") => "搜尋文物名稱、故宮編號或原始年代文字",
             ("Catalog.GetArtifacts", "categoryCode") => "文物分類 code（系統代碼）",
             ("Catalog.GetArtifacts", "eraCode") => "文物年代 code（系統代碼）",
+            ("MemberCatalog.GetArtifacts", "q") or ("MemberCatalog.GetUnlocks", "q") => "搜尋文物名稱、故宮編號或原始年代文字",
+            ("MemberCatalog.GetArtifacts", "categoryCode") or ("MemberCatalog.GetUnlocks", "categoryCode") => "文物分類 code（系統代碼）",
+            ("MemberCatalog.GetArtifacts", "eraCode") or ("MemberCatalog.GetUnlocks", "eraCode") => "文物年代 code（系統代碼）",
             ("StoreCatalog.GetProducts", "q") => "搜尋商品名稱或 ExternalRef（外部商品編號）",
             ("StoreCatalog.GetProducts", "categoryCode") => "商品分類 code（系統代碼）",
             ("StoreCatalog.GetProducts", "artifactId") => "關聯文物 Id（資源識別碼），GUID（全域唯一識別碼）格式",
@@ -328,7 +333,7 @@ public sealed class QmahOpenApiSecurityTransformer(
              ["GameRoomInvitations.RespondInvitation"] = "request body（請求本文，送出的 JSON 內容）：包含 `Decision`（ACCEPT 或 DECLINE）與選填 `DisplayName`（加入房間時的顯示名稱）",
              ["GameRoomInvitations.ConfigureRoomRewardPolicy"] = "request body（請求本文，送出的 JSON 內容）：包含每位參與者的點數／鑰匙加碼、會員總預算與有效期間；兩種加碼皆為 0 可停用規則",
              ["CommunityReward.ConfigureEventRewardPolicy"] = "request body（請求本文，送出的 JSON 內容）：包含每位參與者的點數／鑰匙加碼與有效期間；官方活動不使用會員預算欄位",
-            ["Economy.UnlockArtifact"] = "request body（請求本文，送出的 JSON 內容）：UNIVERSAL 鑰匙可包含 `ArtifactId`（文物資源識別碼），其他鑰匙不應指定",
+            ["Economy.UnlockArtifact"] = "request body（請求本文，送出的 JSON 內容）：`NORMAL` 不可指定 `ArtifactId`；`CATEGORY`、`ERA` 可指定自身範圍內文物，`UNIVERSAL` 可指定任一候選文物；省略時由伺服器抽選",
             ["Economy.ExchangeKeys"] = "request body（請求本文，送出的 JSON 內容）：包含 `RuleId`（兌換規則資源識別碼）與 `Units`（規則倍數）",
             ["Economy.RecycleKey"] = "request body（請求本文，送出的 JSON 內容）：包含 `Amount`（回收鑰匙數量）",
             ["Economy.RedeemCoupon"] = "request body（請求本文，送出的 JSON 內容）：包含 `CouponDefinitionId`（優惠券定義資源識別碼）",
@@ -364,11 +369,14 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Account.ForgotPassword"] = "已接受密碼重設通知處理",
             ["Account.ResetPassword"] = "已更新會員密碼，不回傳 response body（回應本文）",
             ["AdminDashboard.GetDashboard"] = "回傳管理儀表板的會員、內容、訂單與營運統計",
+            ["AdminCatalog.ForceUnlockArtifact"] = "回傳管理員強制解鎖結果；已存在解鎖紀錄時 Created 為 false",
             ["Metadata.GetMetadata"] = "回傳前台表單與篩選器使用的選項資料",
             ["Catalog.GetArtifacts"] = "回傳符合條件的文物分頁清單",
             ["Catalog.GetArtifact"] = "回傳指定文物的詳情與圖片資訊",
             ["Catalog.GetCategories"] = "回傳依名稱排序的文物分類清單",
             ["Catalog.GetEras"] = "回傳依年代排序的文物年代清單",
+            ["MemberCatalog.GetArtifacts"] = "回傳目前會員圖鑑及每件文物的解鎖狀態",
+            ["MemberCatalog.GetUnlocks"] = "回傳目前會員的文物解鎖歷史",
             ["StoreCatalog.GetProducts"] = "回傳符合條件的上架商品分頁清單",
             ["StoreCatalog.GetProduct"] = "回傳指定商品的價格、庫存、圖片與評價摘要",
             ["StoreReviews.GetReviews"] = "回傳商品評價分頁清單與評價統計",
@@ -440,7 +448,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["MiniGame.GetModes"] = "回傳啟用的 Mini Game 模式與評級設定",
             ["MiniGame.StartAttempt"] = "已建立 Mini Game 嘗試，並回傳伺服器選定的素材與設定",
             ["MiniGame.CompleteAttempt"] = "回傳伺服器計算的分數、等級、點數與鑰匙進度獎勵",
-            ["MiniGame.RewardMainGame"] = "回傳多人主遊戲的點數、一般鑰匙與表現結算"
+            ["MiniGame.RewardMainGame"] = "回傳多人主遊戲的點數、一般鑰匙與表現結算；同一交易會寫入結算回合的 GAME 解鎖紀錄"
         };
 
     private static string GetSuccessResponseDescription(string operationKey, string statusCode) =>
