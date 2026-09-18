@@ -267,6 +267,27 @@ app.UseQmahCookieRecovery(
 app.UseCors("AngularClient");
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
+    var tokens = antiforgery.GetAndStoreTokens(context);
+
+    var secure = cookieSecurePolicy switch
+    {
+        CookieSecurePolicy.Always => true,
+        CookieSecurePolicy.None => false,
+        _ => context.Request.IsHttps, // SameAsRequest
+    };
+
+    context.Response.Cookies.Append("XSRF-TOKEN-API", tokens.RequestToken!, new CookieOptions
+    {
+        HttpOnly = false, // 刻意不是 HttpOnly，就是要給前端 JS 讀
+        Secure = secure,
+        SameSite = SameSiteMode.Lax,
+    });
+
+    await next(context);
+});
 app.MapControllers();
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)
