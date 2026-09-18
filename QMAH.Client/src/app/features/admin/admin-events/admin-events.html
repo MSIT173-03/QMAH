@@ -56,7 +56,9 @@
     <tbody>
       @for (event of events; track event.id) {
         <tr>
-          <td class="font-bold">{{ event.title }}</td>
+          <td class="font-bold">
+            <button type="button" class="text-left link link-hover" (click)="eventPreview.open(event.id)">{{ event.title }}</button>
+          </td>
           <td>{{ event.organizerDisplayName || '未設定暱稱' }}</td>
           <td>{{ event.startAt }}</td>
           <td><span class="badge badge-warning">{{ event.reviewStatus }}</span></td>
@@ -105,3 +107,5 @@
     </tbody>
   </table>
 </div>
+
+<app-event-preview-modal #eventPreview />

@@ -18,13 +18,15 @@ public sealed class SocialPostsAdminController(QmahDbContext db) : ApiController
         public string Status { get; set; } = null!; // PUBLISHED, HIDDEN, DELETED
     }
 
-    // GET /api/v1/admin/posts?status=&boardCode=&postType=&q=（都不帶就回傳全部貼文，不限狀態）
+    // GET /api/v1/admin/posts?status=&boardCode=&postType=&q=&from=&to=（都不帶就回傳全部貼文，不限狀態）
     [HttpGet]
     public async Task<ActionResult<ApiPage<AdminPostListItemDto>>> GetPosts(
         string? status,
         string? boardCode,
         string? postType,
         string? q,
+        DateTime? from,
+        DateTime? to,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -44,6 +46,12 @@ public sealed class SocialPostsAdminController(QmahDbContext db) : ApiController
         var keyword = q?.Trim();
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(post => post.Title.Contains(keyword) || post.Content.Contains(keyword));
+
+        if (from.HasValue)
+            query = query.Where(post => post.CreatedAt >= from.Value.Date);
+
+        if (to.HasValue)
+            query = query.Where(post => post.CreatedAt < to.Value.Date.AddDays(1));
 
         var projected = query
             .OrderByDescending(post => post.CreatedAt)

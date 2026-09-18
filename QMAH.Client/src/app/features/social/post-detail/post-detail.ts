@@ -6,11 +6,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialPostDetails } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
+import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent],
   templateUrl: './post-detail.html',
   styleUrl: './post-detail.scss'
 })
@@ -27,6 +28,7 @@ export class PostDetailComponent implements OnChanges {
   loading = false;
   loadError: string | null = null;
   actionError: string | null = null;
+  reportSuccessMessage: string | null = null;
   newComment: CreateSocialCommentRequest = { content: '' };
 
   editingPost = false;
@@ -172,23 +174,9 @@ export class PostDetailComponent implements OnChanges {
     });
   }
 
-  reportPost(): void {
-    if (!this.post) return;
-    this.submitReport('POST', this.post.id, '已成功檢舉這篇貼文');
-  }
-
-  reportComment(commentId: string): void {
-    this.submitReport('COMMENT', commentId, '已成功檢舉這則留言');
-  }
-
-  private submitReport(targetType: 'POST' | 'COMMENT', targetId: string, successMessage: string): void {
-    this.socialApi.createReport({ targetType, targetId, reason: '使用者檢舉' }).subscribe({
-      next: () => alert(successMessage),
-      error: (err: HttpErrorResponse) => {
-        console.error('檢舉失敗:', err);
-        alert(err.status === 401 ? '請先登入才能檢舉。' : '檢舉失敗，請稍後再試。');
-      }
-    });
+  onReported(): void {
+    this.reportSuccessMessage = '已送出檢舉，管理員審核後會處理。';
+    this.cdr.detectChanges();
   }
 
   private describeOwnershipError(err: HttpErrorResponse, action: string): string {

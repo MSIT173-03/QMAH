@@ -42,7 +42,7 @@
           <button class="btn btn-sm btn-ghost" (click)="startEditPost()">✏️ 編輯</button>
           <button class="btn btn-sm btn-error btn-outline" (click)="deletePost()">🗑️ 刪除</button>
         }
-        <button class="btn btn-sm btn-ghost" (click)="reportPost()">🚩 檢舉貼文</button>
+        <button class="btn btn-sm btn-ghost" (click)="reportModal.open('POST', post.id)">🚩 檢舉貼文</button>
       </div>
     </div>
   </div>
@@ -72,7 +72,7 @@
                 <button class="btn btn-xs btn-ghost" (click)="startEditComment(comment)">✏️ 編輯</button>
                 <button class="btn btn-xs btn-error btn-outline" (click)="deleteComment(comment.id)">🗑️ 刪除</button>
               }
-              <button class="btn btn-xs btn-ghost" (click)="reportComment(comment.id)">🚩 檢舉留言</button>
+              <button class="btn btn-xs btn-ghost" (click)="reportModal.open('COMMENT', comment.id)">🚩 檢舉留言</button>
             </div>
           }
         </div>
@@ -86,6 +86,10 @@
     <div class="alert alert-warning mb-3">{{ actionError }}</div>
   }
 
+  @if (reportSuccessMessage) {
+    <div class="alert alert-success mb-3">{{ reportSuccessMessage }}</div>
+  }
+
   <div class="form-control gap-2">
     <textarea
       class="textarea textarea-bordered"
@@ -96,3 +100,5 @@
   </div>
   }
 </div>
+
+<app-report-modal #reportModal (reported)="onReported()" />

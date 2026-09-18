@@ -26,12 +26,14 @@ export class AdminPostsComponent implements OnInit {
   filterBoardCode = '';
   filterPostType = '';
   filterKeyword = '';
+  filterFrom = '';
+  filterTo = '';
 
   ngOnInit(): void {
     this.loadPosts();
   }
 
-  // GET /api/v1/admin/posts?status=&boardCode=&postType=&q=（都留空就回傳全部貼文，不限狀態）
+  // GET /api/v1/admin/posts?status=&boardCode=&postType=&q=&from=&to=（都留空就回傳全部貼文，不限狀態）
   loadPosts(): void {
     this.loadError = null;
     this.socialApi
@@ -40,6 +42,8 @@ export class AdminPostsComponent implements OnInit {
         boardCode: this.filterBoardCode || undefined,
         postType: this.filterPostType || undefined,
         q: this.filterKeyword || undefined,
+        from: this.filterFrom || undefined,
+        to: this.filterTo || undefined,
         pageSize: 50
       })
       .subscribe({
@@ -61,6 +65,8 @@ export class AdminPostsComponent implements OnInit {
     this.filterBoardCode = '';
     this.filterPostType = '';
     this.filterKeyword = '';
+    this.filterFrom = '';
+    this.filterTo = '';
     this.loadPosts();
   }
 

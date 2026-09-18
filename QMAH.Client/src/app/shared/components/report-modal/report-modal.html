@@ -1,0 +1,36 @@
+<dialog #dialogEl class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">檢舉{{ targetType === 'POST' ? '貼文' : '留言' }}</h3>
+    @if (error) {
+      <div class="alert alert-warning mb-3">{{ error }}</div>
+    }
+    <div class="form-control gap-3">
+      <label class="form-control">
+        <span class="label-text">檢舉理由</span>
+        <select class="select select-bordered w-full" [(ngModel)]="reason">
+          @for (item of reasons; track item.value) {
+            <option [value]="item.value">{{ item.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="form-control">
+        <span class="label-text">詳細說明（選填）</span>
+        <textarea
+          class="textarea textarea-bordered h-24"
+          placeholder="請描述檢舉原因的細節，方便管理員審核..."
+          maxlength="1000"
+          [(ngModel)]="detail"
+        ></textarea>
+      </label>
+    </div>
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" [disabled]="submitting" (click)="close()">取消</button>
+      <button type="button" class="btn btn-primary" [disabled]="submitting" (click)="submit()">
+        @if (submitting) {
+          <span class="loading loading-spinner loading-sm"></span>
+        }
+        送出檢舉
+      </button>
+    </div>
+  </div>
+</dialog>

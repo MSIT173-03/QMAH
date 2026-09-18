@@ -90,10 +90,12 @@ export interface EventListItem {
   registrationEndAt: string | null;
   capacity: number | null;
   registrationCount: number;
+  coverImageUrl: string | null;
 }
 
 export interface SocialEventDetails extends EventListItem {
   isRegistered: boolean;
+  media: SocialMedia[];
   reviewStatus: string | null;
   publishStatus: string | null;
 }
@@ -171,6 +173,8 @@ export interface AdminContentReport {
   targetTitle: string | null;
   targetContent: string | null;
   targetStatus: string | null;
+  // 前台沒有獨立的留言詳情頁：POST 檢舉指向該貼文本身，COMMENT 檢舉指向該留言所屬的貼文
+  targetPostId: string | null;
 }
 
 export interface CreateSocialPostRequest {
@@ -408,6 +412,8 @@ export class SocialApiService {
     boardCode?: string;
     postType?: string;
     q?: string;
+    from?: string;
+    to?: string;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<AdminPostListItem>> {
@@ -426,6 +432,8 @@ export class SocialApiService {
     status?: string;
     postId?: string;
     q?: string;
+    from?: string;
+    to?: string;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<AdminCommentListItem>> {

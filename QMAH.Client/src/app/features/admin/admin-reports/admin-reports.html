@@ -51,10 +51,19 @@
         <tr>
           <td><span class="badge badge-secondary">{{ report.targetType }}</span></td>
           <td class="max-w-80">
-            @if (report.targetTitle) {
-              <div class="font-bold truncate" [title]="report.targetTitle">{{ report.targetTitle }}</div>
+            @if (report.targetPostId) {
+              <button type="button" class="text-left link link-hover w-full" (click)="postPreview.open(report.targetPostId!)">
+                @if (report.targetTitle) {
+                  <div class="font-bold truncate" [title]="report.targetTitle">{{ report.targetTitle }}</div>
+                }
+                <div class="text-sm truncate" [title]="report.targetContent || ''">{{ report.targetContent || '（內容已不存在）' }}</div>
+              </button>
+            } @else {
+              @if (report.targetTitle) {
+                <div class="font-bold truncate" [title]="report.targetTitle">{{ report.targetTitle }}</div>
+              }
+              <div class="text-sm truncate" [title]="report.targetContent || ''">{{ report.targetContent || '（內容已不存在）' }}</div>
             }
-            <div class="text-sm truncate" [title]="report.targetContent || ''">{{ report.targetContent || '（內容已不存在）' }}</div>
             @if (report.targetStatus) {
               <span
                 class="badge badge-xs mt-1"
@@ -96,3 +105,5 @@
     </tbody>
   </table>
 </div>
+
+<app-post-preview-modal #postPreview />

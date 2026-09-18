@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AdminEventListItem, SocialApiService } from '../../../core/services/social-api';
+import { EventPreviewModalComponent } from '../../../shared/components/event-preview-modal/event-preview-modal';
 
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EventPreviewModalComponent],
   templateUrl: './admin-events.html',
   styleUrl: './admin-events.scss'
 })

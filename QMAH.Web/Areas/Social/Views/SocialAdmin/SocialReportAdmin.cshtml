@@ -34,7 +34,21 @@
         {
             var statusClass = item.Status switch { "RESOLVED" => "bg-green-lt", "REJECTED" => "bg-secondary-lt", _ => "bg-yellow-lt" };
             <tr>
-                <td><span class="badge bg-blue-lt">@AdminDisplayLabels.TargetType(item.TargetType)</span><div class="fw-semibold mt-1">@item.TargetTitle</div><details class="small text-secondary mt-1"><summary>查看內容</summary><div class="qmah-content-panel mt-2 p-2">@item.TargetContent</div></details></td>
+                <td>
+                    <span class="badge bg-blue-lt">@AdminDisplayLabels.TargetType(item.TargetType)</span>
+                    <div class="fw-semibold mt-1">@item.TargetTitle</div>
+                    <button type="button"
+                            class="btn btn-sm btn-link p-0 mt-1"
+                            data-bs-toggle="modal"
+                            data-bs-target="#qmah-content-detail"
+                            data-qmah-content-detail
+                            data-qmah-content-detail-title="@(AdminDisplayLabels.TargetType(item.TargetType) + "：" + item.TargetTitle)"
+                            data-qmah-content-detail-subtitle="@($"檢舉人：{item.ReporterName} ・ 理由：{AdminDisplayLabels.ReportReason(item.Reason)} ・ {item.CreatedAt:yyyy-MM-dd HH:mm}")"
+                            data-qmah-content-detail-body="@item.TargetContent"
+                            data-qmah-content-detail-extra="@(string.IsNullOrWhiteSpace(item.Detail) ? null : $"檢舉說明：{item.Detail}")">
+                        查看內容
+                    </button>
+                </td>
                 <td><div class="text-secondary small">@item.ReporterName</div><div class="fw-semibold">@AdminDisplayLabels.ReportReason(item.Reason)</div>@if (!string.IsNullOrWhiteSpace(item.Detail)) { <div class="text-secondary small">@item.Detail</div> } @if (!string.IsNullOrWhiteSpace(item.Resolution)) { <div class="text-secondary small">處理：@item.Resolution</div> }</td>
                 <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
                 <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
@@ -80,3 +94,5 @@
         </nav>
     </div>
 </div>
+
+<partial name="Admin/_ContentDetailModal" />

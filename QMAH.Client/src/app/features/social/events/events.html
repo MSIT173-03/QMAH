@@ -33,6 +33,11 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   @for (event of events; track event.id) {
     <div class="card bg-base-100 shadow-xl border border-base-300">
+      @if (event.coverImageUrl) {
+        <figure class="max-h-56 overflow-hidden">
+          <img [src]="event.coverImageUrl" [alt]="event.title" class="w-full object-cover" />
+        </figure>
+      }
       <div class="card-body">
         <span
           class="badge w-fit"

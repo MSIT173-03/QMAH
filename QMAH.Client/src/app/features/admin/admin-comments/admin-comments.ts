@@ -24,18 +24,22 @@ export class AdminCommentsComponent implements OnInit {
 
   filterStatus = '';
   filterKeyword = '';
+  filterFrom = '';
+  filterTo = '';
 
   ngOnInit(): void {
     this.loadComments();
   }
 
-  // GET /api/v1/admin/comments?status=&q=（都留空就回傳全部留言，不限狀態）
+  // GET /api/v1/admin/comments?status=&q=&from=&to=（都留空就回傳全部留言，不限狀態）
   loadComments(): void {
     this.loadError = null;
     this.socialApi
       .getAdminComments({
         status: this.filterStatus || undefined,
         q: this.filterKeyword || undefined,
+        from: this.filterFrom || undefined,
+        to: this.filterTo || undefined,
         pageSize: 50
       })
       .subscribe({
@@ -55,6 +59,8 @@ export class AdminCommentsComponent implements OnInit {
   resetFilters(): void {
     this.filterStatus = '';
     this.filterKeyword = '';
+    this.filterFrom = '';
+    this.filterTo = '';
     this.loadComments();
   }
 

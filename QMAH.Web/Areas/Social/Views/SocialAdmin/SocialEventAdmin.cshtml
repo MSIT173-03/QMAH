@@ -48,7 +48,20 @@
             };
             <tr>
                 <td><span class="badge bg-secondary-lt">@eventTypeLabel</span></td>
-                <td><div class="fw-semibold">@item.Title</div><div class="text-secondary small">@item.Description</div></td>
+                <td>
+                    <div class="fw-semibold">@item.Title</div>
+                    <button type="button"
+                            class="btn btn-sm btn-link p-0 mt-1"
+                            data-bs-toggle="modal"
+                            data-bs-target="#qmah-content-detail"
+                            data-qmah-content-detail
+                            data-qmah-content-detail-title="@item.Title"
+                            data-qmah-content-detail-subtitle="@($"{eventTypeLabel} ・ {item.StartAt:yyyy-MM-dd HH:mm} ～ {item.EndAt:yyyy-MM-dd HH:mm}")"
+                            data-qmah-content-detail-body="@item.Description"
+                            data-qmah-content-detail-images="@string.Join(",", item.MediaUrls)">
+                        查看詳情
+                    </button>
+                </td>
                 <td>
                     @if (string.IsNullOrWhiteSpace(item.Location))
                     {
@@ -107,3 +120,5 @@
     }
     </tbody>
 </table></div><div class="card-footer qmah-card-footer qmah-card-footer--split"><span class="text-secondary">第 @Model.Page / @Model.TotalPages 頁，共 @Model.TotalCount 筆</span><ul class="pagination m-0"><li class="page-item @(Model.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-reviewStatus="@Model.ReviewStatus" asp-route-publishStatus="@Model.PublishStatus">上一頁</a></li><li class="page-item disabled"><span class="page-link">@Model.Page / @Model.TotalPages</span></li><li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)"><a class="page-link" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-reviewStatus="@Model.ReviewStatus" asp-route-publishStatus="@Model.PublishStatus">下一頁</a></li></ul></div></div>
+
+<partial name="Admin/_ContentDetailModal" />

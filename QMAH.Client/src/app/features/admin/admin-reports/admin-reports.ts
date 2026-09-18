@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AdminContentReport, SocialApiService } from '../../../core/services/social-api';
+import { PostPreviewModalComponent } from '../../../shared/components/post-preview-modal/post-preview-modal';
 
 @Component({
   selector: 'app-admin-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PostPreviewModalComponent],
   templateUrl: './admin-reports.html',
   styleUrl: './admin-reports.scss'
 })

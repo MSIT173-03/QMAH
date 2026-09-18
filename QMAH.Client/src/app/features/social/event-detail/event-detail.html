@@ -20,6 +20,14 @@
       <p class="text-xs text-base-content/60">✍️ {{ event.organizerDisplayName || '匿名會員' }}</p>
       <p class="whitespace-pre-line">{{ event.content }}</p>
 
+      @if (event.media.length > 0) {
+        <div class="flex flex-col gap-2 mt-2">
+          @for (media of event.media; track media.id) {
+            <img [src]="media.url" [alt]="media.altText || ''" class="rounded-lg w-full h-auto max-h-[36rem] object-contain bg-base-200" />
+          }
+        </div>
+      }
+
       <ul class="text-sm mt-2 space-y-1">
         <li>🕒 {{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}</li>
         @if (event.location) {
@@ -36,7 +44,7 @@
 
       @if (event.socialPostId) {
         <a class="btn btn-sm btn-ghost mt-2 w-fit" [routerLink]="['/social/posts', event.socialPostId]">
-          📷 查看活動貼文與附加圖片
+          💬 查看活動貼文與留言
         </a>
       }
 

@@ -199,7 +199,8 @@ public sealed record EventListItemDto(
     DateTime EndAt,
     DateTime? RegistrationEndAt,
     int? Capacity,
-    int RegistrationCount);
+    int RegistrationCount,
+    string? CoverImageUrl = null);
 
 public sealed record SocialEventDetailsDto(
     Guid Id,
@@ -218,6 +219,7 @@ public sealed record SocialEventDetailsDto(
     int? Capacity,
     int RegistrationCount,
     bool IsRegistered,
+    IReadOnlyList<SocialMediaDto> Media,
     string? ReviewStatus = null,
     string? PublishStatus = null);
 
@@ -288,7 +290,8 @@ public sealed record AdminContentReportDto(
     DateTime? ReviewedAt,
     string? TargetTitle,
     string? TargetContent,
-    string? TargetStatus);
+    string? TargetStatus,
+    Guid? TargetPostId);
 
 public sealed record GameRoomListItemDto(
     Guid Id,

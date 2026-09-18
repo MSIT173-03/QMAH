@@ -69,7 +69,11 @@ public sealed class SocialReportsAdminController(
                     : (db.SocialComments.Where(comment => comment.Id == r.TargetId).Select(comment => comment.Content).FirstOrDefault() ?? "（內容已不存在）"),
                 r.TargetType == "POST"
                     ? db.SocialPosts.Where(post => post.Id == r.TargetId).Select(post => post.Status).FirstOrDefault()
-                    : db.SocialComments.Where(comment => comment.Id == r.TargetId).Select(comment => comment.Status).FirstOrDefault()));
+                    : db.SocialComments.Where(comment => comment.Id == r.TargetId).Select(comment => comment.Status).FirstOrDefault(),
+                // 前台沒有獨立的留言詳情頁，留言檢舉一律導去所屬貼文的詳情頁看留言在脈絡中的樣子。
+                r.TargetType == "POST"
+                    ? r.TargetId
+                    : db.SocialComments.Where(comment => comment.Id == r.TargetId).Select(comment => (Guid?)comment.PostId).FirstOrDefault()));
 
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
     }

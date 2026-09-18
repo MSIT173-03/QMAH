@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,15 +7,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { CreateSocialPostRequest, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
+import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, ReportModalComponent],
   templateUrl: './posts.html',
   styleUrl: './posts.scss'
 })
-export class PostsComponent implements OnInit {
+export class PostsComponent implements OnInit, OnDestroy {
   private socialApi = inject(SocialApiService);
   private meApi = inject(MeApiService);
   private cdr = inject(ChangeDetectorRef);
@@ -28,6 +29,7 @@ export class PostsComponent implements OnInit {
   loading = false;
   loadError: string | null = null;
   createError: string | null = null;
+  reportSuccessMessage: string | null = null;
   newPost: CreateSocialPostRequest = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '', mediaIds: [] };
 
   pendingMedia: SocialMedia[] = [];
@@ -37,12 +39,18 @@ export class PostsComponent implements OnInit {
   filterBoardCode = '';
   filterKeyword = '';
 
+  // 貼文牆頂端的公告輪播：只取最新 5 則公告貼文，每 5 秒自動切到下一則。
+  announcements: SocialPostListItem[] = [];
+  currentAnnouncementIndex = 0;
+  private announcementTimer?: ReturnType<typeof setInterval>;
+
   get isAdmin(): boolean {
     return this.meApi.me()?.roles.includes('Admin') ?? false;
   }
 
   ngOnInit(): void {
     this.loadPosts();
+    this.loadAnnouncements();
     this.socialApi.getBoards().subscribe({
       next: (boards) => {
         this.boardCodes = boards;
@@ -50,6 +58,43 @@ export class PostsComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => console.error('取得看板清單失敗:', err)
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.announcementTimer) clearInterval(this.announcementTimer);
+  }
+
+  private loadAnnouncements(): void {
+    this.socialApi.getPosts({ postType: 'ANNOUNCEMENT', pageSize: 5 }).subscribe({
+      next: (page) => {
+        this.announcements = page.items;
+        this.currentAnnouncementIndex = 0;
+        if (this.announcementTimer) clearInterval(this.announcementTimer);
+        if (this.announcements.length > 1) {
+          this.announcementTimer = setInterval(() => this.nextAnnouncement(), 4500);
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err: HttpErrorResponse) => console.error('取得最新公告失敗:', err)
+    });
+  }
+
+  nextAnnouncement(): void {
+    if (this.announcements.length === 0) return;
+    this.currentAnnouncementIndex = (this.currentAnnouncementIndex + 1) % this.announcements.length;
+    this.cdr.detectChanges();
+  }
+
+  previousAnnouncement(): void {
+    if (this.announcements.length === 0) return;
+    this.currentAnnouncementIndex =
+      (this.currentAnnouncementIndex - 1 + this.announcements.length) % this.announcements.length;
+    this.cdr.detectChanges();
+  }
+
+  goToAnnouncement(index: number): void {
+    this.currentAnnouncementIndex = index;
+    this.cdr.detectChanges();
   }
 
   resetFilters(): void {
@@ -164,14 +209,9 @@ export class PostsComponent implements OnInit {
     });
   }
 
-  report(id: string): void {
-    this.createError = null;
-    this.socialApi.createReport({ targetType: 'POST', targetId: id, reason: '使用者檢舉' }).subscribe({
-      next: () => alert(`已成功檢舉貼文 #${id}`),
-      error: (err: HttpErrorResponse) => {
-        this.createError = err.status === 401 ? '檢舉失敗：請先登入。' : '檢舉失敗，請稍後再試。';
-        console.error('檢舉失敗:', err);
-      }
-    });
+  onReported(): void {
+    this.reportSuccessMessage = '已送出檢舉，管理員審核後會處理。';
+    this.cdr.detectChanges();
   }
+
 }

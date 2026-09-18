@@ -1,4 +1,53 @@
 <div class="mx-auto w-full lg:w-4/5 xl:w-3/4">
+  @if (announcements.length > 0) {
+    <div class="relative mb-6 rounded-2xl overflow-hidden shadow-xl border border-base-300">
+      @for (announcement of announcements; track announcement.id; let i = $index) {
+        @if (i === currentAnnouncementIndex) {
+          <a
+            [routerLink]="['/social/posts', announcement.id]"
+            class="relative flex flex-col justify-end h-56 md:h-72 bg-base-300"
+            [style.background-image]="announcement.coverImageUrl ? 'url(' + announcement.coverImageUrl + ')' : null"
+            style="background-size: cover; background-position: center;"
+          >
+            <div class="w-full bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6 text-white">
+              <span class="badge badge-warning badge-sm mb-2">📢 最新公告</span>
+              <h2 class="text-lg md:text-2xl font-bold drop-shadow">{{ announcement.title }}</h2>
+              <p class="text-sm md:text-base opacity-90 line-clamp-2">{{ announcement.contentPreview }}</p>
+            </div>
+          </a>
+        }
+      }
+      @if (announcements.length > 1) {
+        <button
+          type="button"
+          class="btn btn-circle btn-sm absolute left-2 top-1/2 -translate-y-1/2"
+          (click)="previousAnnouncement()"
+        >
+          ❮
+        </button>
+        <button
+          type="button"
+          class="btn btn-circle btn-sm absolute right-2 top-1/2 -translate-y-1/2"
+          (click)="nextAnnouncement()"
+        >
+          ❯
+        </button>
+        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+          @for (announcement of announcements; track announcement.id; let i = $index) {
+            <button
+              type="button"
+              class="w-2 h-2 rounded-full"
+              [class.bg-white]="i === currentAnnouncementIndex"
+              [class.bg-white/40]="i !== currentAnnouncementIndex"
+              (click)="goToAnnouncement(i)"
+              [attr.aria-label]="'查看第 ' + (i + 1) + ' 則公告'"
+            ></button>
+          }
+        </div>
+      }
+    </div>
+  }
+
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">社群貼文牆</h1>
     <button class="btn btn-primary" onclick="create_post_modal.showModal()">+ 發布貼文</button>
@@ -33,6 +82,10 @@
     <div class="alert alert-error mb-4">{{ loadError }}</div>
   }
 
+  @if (reportSuccessMessage) {
+    <div class="alert alert-success mb-4">{{ reportSuccessMessage }}</div>
+  }
+
   @if (loading) {
     <div class="flex justify-center py-10">
       <span class="loading loading-spinner loading-lg"></span>
@@ -65,7 +118,7 @@
           @if (post.mediaCount > 0) {
             <span class="text-xs text-base-content/60 mr-auto">📷 {{ post.mediaCount }}</span>
           }
-          <button class="btn btn-sm btn-ghost" (click)="report(post.id)">🚩 檢舉</button>
+          <button class="btn btn-sm btn-ghost" (click)="reportModal.open('POST', post.id)">🚩 檢舉</button>
           <a class="btn btn-sm btn-outline btn-primary" [routerLink]="['/social/posts', post.id]">
             💬 留言 ({{ post.commentCount || 0 }})
           </a>
@@ -137,3 +190,4 @@
 </dialog>
 
 <app-image-crop-modal (cropped)="onImageCropped($event)" (cancelled)="onCropCancelled()" />
+<app-report-modal #reportModal (reported)="onReported()" />

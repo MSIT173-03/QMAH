@@ -136,6 +136,17 @@
                             {
                                 <div class="small text-secondary mt-1">由活動資料同步</div>
                             }
+                            <button type="button"
+                                    class="btn btn-sm btn-link p-0 mt-1"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#qmah-content-detail"
+                                    data-qmah-content-detail
+                                    data-qmah-content-detail-title="@item.Title"
+                                    data-qmah-content-detail-subtitle="@($"作者：{item.AuthorName} ・ 分類：{AdminDisplayLabels.Board(item.BoardCode)} ・ {item.CreatedAt:yyyy-MM-dd HH:mm}")"
+                                    data-qmah-content-detail-body="@item.Content"
+                                    data-qmah-content-detail-images="@string.Join(",", item.MediaUrls)">
+                                查看詳情
+                            </button>
                         </td>
                         <td class="text-secondary">@item.AuthorName</td>
                         <td>
@@ -233,3 +244,5 @@
         </nav>
     </div>
 </div>
+
+<partial name="Admin/_ContentDetailModal" />

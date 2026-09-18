@@ -20,6 +20,14 @@
       placeholder="搜尋..."
     />
   </label>
+  <label class="form-control">
+    <span class="label-text text-xs">建立日起</span>
+    <input type="date" class="input input-bordered input-sm" [(ngModel)]="filterFrom" (change)="loadComments()" />
+  </label>
+  <label class="form-control">
+    <span class="label-text text-xs">建立日迄</span>
+    <input type="date" class="input input-bordered input-sm" [(ngModel)]="filterTo" (change)="loadComments()" />
+  </label>
   <button class="btn btn-sm btn-primary" (click)="loadComments()">搜尋</button>
   <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
   <span class="text-xs text-gray-500 self-center">共 {{ totalCount }} 筆</span>

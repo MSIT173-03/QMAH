@@ -18,12 +18,14 @@ public sealed class SocialCommentsAdminController(QmahDbContext db) : ApiControl
         public string Status { get; set; } = null!; // PUBLISHED, HIDDEN, DELETED
     }
 
-    // GET /api/v1/admin/comments?status=&postId=&q=（都不帶就回傳全部留言，不限狀態）
+    // GET /api/v1/admin/comments?status=&postId=&q=&from=&to=（都不帶就回傳全部留言，不限狀態）
     [HttpGet]
     public async Task<ActionResult<ApiPage<AdminCommentListItemDto>>> GetComments(
         string? status,
         Guid? postId,
         string? q,
+        DateTime? from,
+        DateTime? to,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -40,6 +42,12 @@ public sealed class SocialCommentsAdminController(QmahDbContext db) : ApiControl
         var keyword = q?.Trim();
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(comment => comment.Content.Contains(keyword));
+
+        if (from.HasValue)
+            query = query.Where(comment => comment.CreatedAt >= from.Value.Date);
+
+        if (to.HasValue)
+            query = query.Where(comment => comment.CreatedAt < to.Value.Date.AddDays(1));
 
         var projected = query
             .OrderByDescending(comment => comment.CreatedAt)

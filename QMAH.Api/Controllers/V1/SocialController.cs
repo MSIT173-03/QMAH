@@ -116,9 +116,11 @@ public sealed class SocialController(
         Guid id,
         CancellationToken cancellationToken = default)
     {
+        // Admin 可以看到已隱藏/已刪除的貼文，方便從檢舉列表點進來查看被檢舉當下的內容；一般使用者只能看已發布的貼文。
+        var isAdmin = User.IsInRole("Admin");
         var post = await db.SocialPosts
             .AsNoTracking()
-            .Where(item => item.Id == id && item.Status == "PUBLISHED")
+            .Where(item => item.Id == id && (item.Status == "PUBLISHED" || isAdmin))
             .Select(item => new
             {
                 item.Id,
@@ -255,7 +257,14 @@ public sealed class SocialController(
                 item.RegistrationEndAt,
                 item.Capacity,
                 item.EventRegistrations.Count(registration =>
-                    registration.Status == "REGISTERED" || registration.Status == "ATTENDED")));
+                    registration.Status == "REGISTERED" || registration.Status == "ATTENDED"),
+                item.SocialPost == null
+                    ? null
+                    : db.MediaAssets
+                        .Where(media => media.PostId == item.SocialPost.Id && media.Status == "ACTIVE")
+                        .OrderBy(media => media.CreatedAt)
+                        .Select(media => "/api/v1/social/media/" + media.Id + "/content")
+                        .FirstOrDefault()));
 
         return Ok(await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken));
     }
@@ -278,7 +287,8 @@ public sealed class SocialController(
             && eventData.OrganizerUserId == currentUserId;
         var isPublished = eventData.ReviewStatus == "APPROVED"
             && eventData.PublishStatus == "PUBLISHED";
-        if (!isPublished && !isOrganizer)
+        // Admin 可以看到待審核／未發布的活動，方便從活動管理列表點進來查看完整內容再決定審核結果。
+        if (!isPublished && !isOrganizer && !User.IsInRole("Admin"))
             return MissingResource("找不到活動", "這場活動不存在或目前不可參加。");
 
         return Ok(await ToEventDetailsAsync(eventData, cancellationToken));
@@ -869,6 +879,21 @@ public sealed class SocialController(
                 .FirstOrDefaultAsync(cancellationToken)
             : null;
 
+        var media = eventData.SocialPost is null
+            ? []
+            : await db.MediaAssets
+                .AsNoTracking()
+                .Where(asset => asset.PostId == eventData.SocialPost.Id && asset.Status == "ACTIVE")
+                .OrderBy(asset => asset.CreatedAt)
+                .Select(asset => new SocialMediaDto(
+                    asset.Id,
+                    BuildMediaUrl(asset.Id),
+                    asset.AltText,
+                    asset.ContentType,
+                    asset.FileSize,
+                    asset.CreatedAt))
+                .ToListAsync(cancellationToken);
+
         return new SocialEventDetailsDto(
             eventData.Id,
             eventData.SocialPost?.Id,
@@ -887,6 +912,7 @@ public sealed class SocialController(
             eventData.EventRegistrations.Count(registration =>
                 registration.Status == "REGISTERED" || registration.Status == "ATTENDED"),
             isRegistered,
+            media,
             isOrganizer ? eventData.ReviewStatus : null,
             isOrganizer ? eventData.PublishStatus : null);
     }
