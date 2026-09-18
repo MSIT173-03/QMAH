@@ -22,10 +22,10 @@ interface MockRoute {
 
 const ROUTES: MockRoute[] = [
   { method: 'GET', path: /^\/categories$/, handle: () => handlers.listCategories() },
-  { method: 'GET', path: /^\/products$/, handle: (_, params) => handlers.listProducts(params) },
-  { method: 'GET', path: /^\/products\/([^/]+)$/, handle: ([id]) => handlers.getProduct(id) },
+  // { method: 'GET', path: /^\/products$/, handle: (_, params) => handlers.listProducts(params) },
+  // { method: 'GET', path: /^\/products\/([^/]+)$/, handle: ([id]) => handlers.getProduct(id) },
   { method: 'GET', path: /^\/products\/([^/]+)\/related$/, handle: ([id], params) => handlers.listRelated(id, params) },
-  { method: 'GET', path: /^\/products\/([^/]+)\/reviews$/, handle: ([id], params) => handlers.listReviews(id, params) },
+  // { method: 'GET', path: /^\/products\/([^/]+)\/reviews$/, handle: ([id], params) => handlers.listReviews(id, params) },
   { method: 'GET', path: /^\/home\/hero-slides$/, handle: () => handlers.listHeroSlides() },
   { method: 'GET', path: /^\/home\/flash-sale$/, handle: () => handlers.getFlashSale() },
   { method: 'GET', path: /^\/brands$/, handle: () => handlers.listBrands() },
@@ -42,13 +42,14 @@ const ROUTES: MockRoute[] = [
   { method: 'GET', path: /^\/member\/coupons$/, handle: () => handlers.listMemberCoupons() },
   { method: 'GET', path: /^\/checkout\/options$/, handle: () => handlers.getCheckoutOptions() },
   { method: 'POST', path: /^\/checkout\/quote$/, handle: (_, __, body) => handlers.getOrderQuote(body) },
-  { method: 'POST', path: /^\/orders$/, handle: (_, __, body) => handlers.createOrder(body), status: 201 },
+  // { method: 'POST', path: /^\/orders$/, handle: (_, __, body) => handlers.createOrder(body), status: 201 },
   { method: 'GET', path: /^\/site\/config$/, handle: () => handlers.getSiteConfig() },
 ];
 
 /**
- * 假 API 攔截器：攔下所有送往 STORE_API_BASE（environment.apiBaseUrl + /store）的請求，不實際發送，
- * 改由 mock-handlers 依請求參數產生測試資料。後端 API 完成後，自 app.config 移除即改打真實 API。
+ * 假 API 攔截器：攔下送往 STORE_API_BASE（environment.apiBaseUrl + /store）且能比對到 ROUTES 規則的請求，
+ * 改由 mock-handlers 依請求參數產生測試資料；比對不到規則的請求則放行給真實後端。後端 API 全部完成後，
+ * 自 app.config 移除即改打真實 API。
  */
 export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   if (!request.url.startsWith(STORE_API_BASE)) return next(request);
@@ -74,7 +75,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
       );
     }
   }
-  return throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Not Found', url: request.url }));
+  return next(request);
 };
 
 /** 以假 API 提供 HttpClient，供單元測試使用 */

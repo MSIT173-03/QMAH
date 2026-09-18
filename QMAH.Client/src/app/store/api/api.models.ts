@@ -56,6 +56,8 @@ export interface Product {
   dimensions: string;
   /** 上架日期（YYYY-MM-DD） */
   listedAt: string;
+  /** 商品主圖網址，無圖片時為 null */
+  coverImage: string | null;
 }
 
 /** 商品圖片 */
@@ -79,16 +81,19 @@ export interface ProductDetail extends Product {
   images: ProductImage[];
 }
 
-/** 商品清單排序方式 */
-export type ProductSort = 'recommend' | 'price-asc' | 'price-desc' | 'reviews' | 'new';
+/**
+ * 商品清單排序方式：0 不特別排序、1 依販售數量（多到少）、2 依上架時間（舊到新）、
+ * 3 依上架時間（新到舊）、4 依售價（低到高）、5 依售價（高到低）。
+ */
+export type ProductOrder = 0 | 1 | 2 | 3 | 4 | 5;
 
-/** 商品清單查詢參數，未指定的條件不篩選；未指定 sort 時依型錄預設順序 */
+/** 商品清單查詢參數，未指定的條件不篩選；未指定 order 時依型錄預設順序 */
 export interface ProductQuery extends PageQuery {
   /** 器類名稱 */
   cat?: string;
   /** 關鍵字，比對商品名稱、品牌、器類、材質與出處說明 */
   q?: string;
-  sort?: ProductSort;
+  order?: ProductOrder;
   /** 折扣後售價下限（含） */
   priceMin?: number;
   /** 折扣後售價上限（不含） */
@@ -147,7 +152,7 @@ export interface FlashSaleItem {
   price: number;
   /** 原價 */
   originalPrice: number;
-  /** 剩餘庫存比例（0–1） */
+  /** 剩餘庫存比例（0-1） */
   stockRatio: number;
 }
 

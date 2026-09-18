@@ -9,37 +9,38 @@ import {
   OrderResult,
   Page,
   Product,
-  ProductDetail,
-  ProductSort,
   RecommendedProduct,
-  ReviewPage,
+  Review,
   ShoppingCart,
 } from '../api.models';
+import {
+  ApiProductDetail,
+  ApiProductListItem,
+  ApiProductPage,
+  ApiProductReview,
+  ApiProductReviewsResponse,
+} from '../catalog.api-dto';
 import {
   ADDON_LIMIT,
   BRANDS,
   CATALOG,
   CATEGORIES,
   CLAIMABLE_COUPONS,
-  CONDITION_MEASURED,
-  CONDITION_PENDING,
   CatalogRecord,
   DESCRIPTION_SUFFIX,
-  DIMS_PENDING,
   FLASH_SALE_ITEMS,
   FLASH_SALE_REMAINING_MS,
   FREE_SHIPPING_THRESHOLD,
-  GALLERY_VIEWS,
   HERO_SLIDES,
   HOT_SEARCH_LINKS,
   MEMBER,
   MEMBER_COUPONS,
+  MOCK_STOCK,
   PAYMENT_OPTIONS,
   POINT_EARN_RATE,
   RECOMMENDATION_ORDER,
   RECOMMENDATION_REASONS,
   REVIEWS,
-  SHIPPING_NOTE,
   SHIPPING_OPTIONS,
   SITE_CONFIG,
   SOLD_BASE,
@@ -95,17 +96,36 @@ function toProduct(record: CatalogRecord): Product {
     source: record.source,
     dimensions: record.dims,
     listedAt: record.listedAt,
+    coverImage: null,
   };
 }
 
-function toProductDetail(record: CatalogRecord): ProductDetail {
+/** CatalogRecord → 後端「商品清單」DTO（見 doc/apis.xml），供 listProducts 使用 */
+function toApiProduct(record: CatalogRecord): ApiProductListItem {
   return {
-    ...toProduct(record),
-    material: record.material,
+    id: record.id,
+    artifactId: record.id,
+    externalRef: null,
+    name: record.name,
+    categoryCode: record.cat,
+    price: record.price,
+    stock: MOCK_STOCK,
+    primaryImagePath: null,
+    isActive: true,
+  };
+}
+
+/** CatalogRecord → 後端「商品」DTO（見 doc/apis.xml），供 getProduct 使用 */
+function toApiProductDetail(record: CatalogRecord): ApiProductDetail {
+  return {
+    ...toApiProduct(record),
+    artifactRef: record.id,
+    artifactName: record.name,
     description: record.source + DESCRIPTION_SUFFIX,
-    condition: record.dims === DIMS_PENDING ? CONDITION_PENDING : CONDITION_MEASURED,
-    shippingNote: SHIPPING_NOTE,
-    images: GALLERY_VIEWS.map((view) => ({ view, url: null })),
+    sizeText: record.dims,
+    sourceUrl: null,
+    averageRating: record.rating,
+    reviewCount: record.reviews,
   };
 }
 
@@ -142,38 +162,34 @@ export function listCategories() {
   };
 }
 
-const PRODUCT_SORTERS: Record<ProductSort, (a: CatalogRecord, b: CatalogRecord) => number> = {
-  recommend: (a, b) => b.rating - a.rating,
-  'price-asc': (a, b) => dealPrice(a) - dealPrice(b),
-  'price-desc': (a, b) => dealPrice(b) - dealPrice(a),
-  reviews: (a, b) => b.reviews - a.reviews,
-  new: (a, b) => b.listedAt.localeCompare(a.listedAt),
-};
-
-export function listProducts(params: HttpParams): Page<Product> {
-  const cat = params.get('cat');
+/**
+ * GET /products：商品清單。回應為後端 DTO 格式（見 doc/apis.xml），由 CatalogApi 轉換為前端顯示用的 Product。
+ * 僅支援後端已實作的篩選條件（關鍵字、器類代碼、分頁），排序與價格區間、限折扣品等前端篩選條件後端尚未提供。
+ */
+export function listProducts(params: HttpParams): ApiProductPage {
+  const categoryCode = params.get('categoryCode');
   const keyword = params.get('q')?.trim();
-  const priceMin = numberParam(params, 'priceMin');
-  const priceMax = numberParam(params, 'priceMax');
-  const dealOnly = params.get('dealOnly') === 'true';
-  const sort = params.get('sort');
-  if (sort !== null && !(sort in PRODUCT_SORTERS)) throw new MockApiError(400, `不支援的排序方式 ${sort}`);
+  const page = numberParam(params, 'page') ?? 1;
+  const pageSize = numberParam(params, 'pageSize') ?? 20;
 
   const matched = CATALOG.filter((record) => {
-    const price = dealPrice(record);
-    if (cat && record.cat !== cat) return false;
-    if (dealOnly && record.off <= 0) return false;
-    if (priceMin !== undefined && price < priceMin) return false;
-    if (priceMax !== undefined && price >= priceMax) return false;
+    if (categoryCode && record.cat !== categoryCode) return false;
     const haystack = record.name + record.brand + record.cat + record.material + record.source;
     return !keyword || haystack.includes(keyword);
-  });
-  if (sort !== null) matched.sort(PRODUCT_SORTERS[sort as ProductSort]);
-  return paginate(matched.map(toProduct), params);
+  }).sort((a, b) => a.name.localeCompare(b.name));
+
+  return {
+    items: matched.slice((page - 1) * pageSize, page * pageSize).map(toApiProduct),
+    page,
+    pageSize,
+    totalCount: matched.length,
+    totalPages: Math.max(1, Math.ceil(matched.length / pageSize)),
+  };
 }
 
-export function getProduct(id: string): ProductDetail {
-  return toProductDetail(findRecord(id));
+/** GET /products/{id}：商品詳情，回應為後端 DTO 格式（見 doc/apis.xml），查無商品時回應 404 */
+export function getProduct(id: string): ApiProductDetail {
+  return toApiProductDetail(findRecord(id));
 }
 
 export function listRelated(id: string, params: HttpParams) {
@@ -186,22 +202,43 @@ export function listRelated(id: string, params: HttpParams) {
   return { items };
 }
 
-export function listReviews(id: string, params: HttpParams): ReviewPage {
-  findRecord(id);
-  const minStars = numberParam(params, 'minStars') ?? 1;
-  const maxStars = numberParam(params, 'maxStars') ?? 5;
-  const photoOnly = params.get('hasPhoto') === 'true';
-  const matched = REVIEWS.filter(
-    (review) => review.stars >= minStars && review.stars <= maxStars && (!photoOnly || review.hasPhoto),
-  );
+/** 假型錄的 Review → 後端「商品評論」DTO（見 doc/apis.xml），每件商品皆回傳同一組示意評論 */
+function toApiReview(review: Review, productId: string): ApiProductReview {
+  return {
+    id: review.id,
+    productId,
+    userId: review.id,
+    displayName: review.user,
+    rating: review.stars,
+    content: review.text,
+    isVerifiedPurchase: true,
+    createdAt: `${review.date}T00:00:00Z`,
+    updatedAt: `${review.date}T00:00:00Z`,
+  };
+}
 
-  const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  for (const review of REVIEWS) ratingBreakdown[review.stars as keyof typeof ratingBreakdown] += 1;
+/**
+ * GET /products/{id}/reviews：商品評論。回應為後端 DTO 格式（見 doc/apis.xml），只支援分頁，
+ * 不支援依星等／照片篩選，篩選與統計由 CatalogApi 在前端計算。
+ */
+export function listReviews(id: string, params: HttpParams): ApiProductReviewsResponse {
+  findRecord(id);
+  const page = numberParam(params, 'page') ?? 1;
+  const pageSize = numberParam(params, 'pageSize') ?? 10;
+  const items = REVIEWS.map((review) => toApiReview(review, id));
+  const averageRating = items.length
+    ? Math.round((items.reduce((sum, review) => sum + review.rating, 0) / items.length) * 10) / 10
+    : 0;
 
   return {
-    ...paginate(matched, params),
-    ratingBreakdown,
-    photoCount: REVIEWS.filter((review) => review.hasPhoto).length,
+    summary: { averageRating, reviewCount: items.length },
+    reviews: {
+      items: items.slice((page - 1) * pageSize, page * pageSize),
+      page,
+      pageSize,
+      totalCount: items.length,
+      totalPages: Math.max(1, Math.ceil(items.length / pageSize)),
+    },
   };
 }
 

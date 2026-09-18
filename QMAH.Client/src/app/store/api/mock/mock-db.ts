@@ -83,6 +83,9 @@ export const DIMS_PENDING = '待測量';
 export const SOLD_BASE = 320;
 export const SOLD_STEP = 137;
 
+/** 假 API 回應商品庫存的固定值（型錄尚無庫存欄位，對應後端 products.stock） */
+export const MOCK_STOCK = 20;
+
 /** 商品圖片的視角名稱（目前尚無實際圖片） */
 export const GALLERY_VIEWS = ['正面', '細節', '情境', '包裝'];
 
