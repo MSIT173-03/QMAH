@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap } from 'rxjs';
 
 import {
@@ -10,6 +11,7 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   PageTitleRow,
+  Pagination,
   PillGroup,
   PillOption,
   FilterSidebar,
@@ -28,9 +30,9 @@ import {
   ALL_PRODUCTS_LABEL,
   DISPLAY_MODES,
   DisplayModeKey,
+  ORDER_OPTIONS,
   PRICE_BANDS,
-  SORT_OPTIONS,
-  VIEW_DEFAULT_SORT,
+  VIEW_DEFAULT_ORDER,
   VIEW_HEADINGS,
 } from './product-list.data';
 
@@ -40,6 +42,14 @@ import {
  */
 function orEmpty(value: string | undefined): string {
   return value ?? '';
+}
+
+/**
+ * 網址查詢字串的 page 參數轉為頁碼；不存在或不是正整數時一律視為第 1 頁。
+ */
+function toPage(value: string | undefined): number {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
 /**
@@ -58,6 +68,7 @@ function orEmpty(value: string | undefined): string {
     CartLink,
     Breadcrumb,
     PageTitleRow,
+    Pagination,
     PillGroup,
     FilterSidebar,
     ProductCard,
@@ -72,6 +83,8 @@ function orEmpty(value: string | undefined): string {
 })
 export class ProductList {
   private readonly catalogApi = inject(CatalogApi);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   /** 購物車入口連結 */
   protected readonly cartHref = CART_PATH;
@@ -86,6 +99,8 @@ export class ProductList {
   cat = input('', { transform: orEmpty });
   /** 主題入口（deal 限時特賣／new 新品上架／exhibit 特展聯名） */
   view = input('', { transform: orEmpty });
+  /** 頁碼，從 1 開始；分頁切換時會同步寫回網址查詢字串 */
+  page = input(1, { transform: toPage });
 
   /* ===============================
      頁面狀態
@@ -105,11 +120,13 @@ export class ProductList {
   protected viewKey = linkedSignal(() => this.view());
   /** 目前的排序方式索引，預設值依主題入口而定（例如新品上架預設為最新上架） */
   protected sortIndex = linkedSignal(() => {
-    const key = VIEW_DEFAULT_SORT[this.view()];
-    return key ? SORT_OPTIONS.findIndex((option) => option.key === key) : 0;
+    const order = VIEW_DEFAULT_ORDER[this.view()];
+    return order !== undefined ? ORDER_OPTIONS.findIndex((option) => option.order === order) : 0;
   });
   /** 是否只顯示折扣商品，由限時特賣入口進來時預設開啟 */
   protected dealOnly = linkedSignal(() => this.viewKey() === 'deal');
+  /** 目前頁碼，初始值來自網址查詢字串；切換分頁或其他篩選條件變動時由 setPage 統一更新（含寫回網址） */
+  protected pageIndex = linkedSignal(() => this.page());
 
   /** 目前選取的價格區間索引，0 為不篩選 */
   protected bandIndex = signal(0);
@@ -143,10 +160,11 @@ export class ProductList {
     return {
       cat: this.category() || undefined,
       q: this.keyword().trim() || undefined,
-      sort: SORT_OPTIONS[this.sortIndex()].key,
+      order: ORDER_OPTIONS[this.sortIndex()].order,
       priceMin: band.min,
       priceMax: band.max,
       dealOnly: this.dealOnly() || undefined,
+      page: this.pageIndex(),
     };
   });
   /** 符合目前篩選條件並已排序的商品；undefined 代表尚在載入 */
@@ -160,6 +178,11 @@ export class ProductList {
   protected isEmpty = computed(() => this.result() !== undefined && this.items().length === 0);
   /** 是否使用卡片格狀顯示（有商品時才需判斷） */
   protected isGridMode = computed(() => this.mode() === 'grid');
+
+  /** 每頁筆數，取自 API 回應；尚未載入時沿用後端預設值 20 */
+  private pageSize = computed(() => this.result()?.pageSize ?? 20);
+  /** 總頁數，至少為 1 */
+  protected totalPages = computed(() => Math.max(1, Math.ceil((this.result()?.total ?? 0) / this.pageSize())));
 
   /** 頁面標題：優先顯示器類，其次為搜尋關鍵字，再其次為主題入口名稱 */
   protected heading = computed(() => {
@@ -183,7 +206,7 @@ export class ProductList {
 
   /** 排序選項，選取狀態由 sortIndex 推導 */
   protected sortOptions = computed<PillOption[]>(() =>
-    SORT_OPTIONS.map((option, i) => ({ label: option.label, active: i === this.sortIndex() })),
+    ORDER_OPTIONS.map((option, i) => ({ label: option.label, active: i === this.sortIndex() })),
   );
 
   /** 顯示模式切換選項，選取狀態由 mode 推導 */
@@ -195,14 +218,18 @@ export class ProductList {
     })),
   );
 
-  /** 分類篩選項目，第一項為「全部商品」；件數不受其他篩選條件影響（與設計稿一致） */
+  /**
+   * 分類篩選項目，第一項為「全部商品」；其件數改採 getProducts 回應的 totalCount
+   * （即目前篩選條件下的符合筆數），其餘器類件數則仍取自器類清單 API，不受其他篩選條件影響。
+   */
   protected categoryItems = computed<CategoryListItem[]>(() => {
     const categories = this.categories();
     const selected = this.category();
+    const allCount = this.result()?.total ?? categories.reduce((sum, item) => sum + item.productCount, 0);
     return [
       {
         name: ALL_PRODUCTS_LABEL,
-        count: categories.reduce((sum, item) => sum + item.productCount, 0),
+        count: allCount,
         active: selected === '',
       },
       ...categories.map((item) => ({ name: item.name, count: item.productCount, active: selected === item.name })),
@@ -213,20 +240,35 @@ export class ProductList {
      使用者操作
      =============================== */
 
-  /** 送出搜尋：改以關鍵字為主，同時解除器類篩選 */
+  /** 送出搜尋：改以關鍵字為主，同時解除器類篩選，並回到第 1 頁 */
   protected onSearch(keyword: string): void {
     this.keyword.set(keyword);
     this.category.set('');
+    this.setPage(1);
   }
 
-  /** 切換器類篩選（索引 0 為「全部商品」） */
+  /** 切換器類篩選（索引 0 為「全部商品」），並回到第 1 頁 */
   protected onCategoryPick(index: number): void {
     this.category.set(index === 0 ? '' : this.categories()[index - 1].name);
+    this.setPage(1);
   }
 
-  /** 切換「只看折扣商品」 */
+  /** 切換價格區間篩選，並回到第 1 頁 */
+  protected onBandPick(index: number): void {
+    this.bandIndex.set(index);
+    this.setPage(1);
+  }
+
+  /** 切換「只看折扣商品」，並回到第 1 頁 */
   protected onDealToggle(): void {
     this.dealOnly.update((only) => !only);
+    this.setPage(1);
+  }
+
+  /** 切換排序方式，並回到第 1 頁 */
+  protected onSortPick(index: number): void {
+    this.sortIndex.set(index);
+    this.setPage(1);
   }
 
   /** 切換顯示模式 */
@@ -234,7 +276,13 @@ export class ProductList {
     this.mode.set(DISPLAY_MODES[index].key);
   }
 
-  /** 清除所有篩選條件（排序方式保持不變） */
+  /** 切換分頁，並移動至頁面頂端 */
+  protected onPagePick(page: number): void {
+    this.setPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /** 清除所有篩選條件（排序方式保持不變），並回到第 1 頁 */
   protected onReset(): void {
     this.category.set('');
     this.bandIndex.set(0);
@@ -242,10 +290,24 @@ export class ProductList {
     this.searchInput.set('');
     this.keyword.set('');
     this.viewKey.set('');
+    this.setPage(1);
   }
 
   /** 加入購物車：數量 1 */
   protected onAddToCart(productId: string): void {
     this.cart.add(productId);
+  }
+
+  /**
+   * 更新目前頁碼並同步寫回網址查詢字串（page），使分頁狀態可透過網址控制、分享或重新整理後維持；
+   * 第 1 頁時省略 page 參數以維持網址簡潔。
+   */
+  private setPage(page: number): void {
+    this.pageIndex.set(page);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { page: page > 1 ? page : null },
+      queryParamsHandling: 'merge',
+    });
   }
 }

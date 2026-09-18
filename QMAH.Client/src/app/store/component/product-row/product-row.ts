@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import { productPath } from '../../shared/paths';
 import { formatRating, formatReviews, toPriceView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
@@ -18,6 +18,8 @@ import { StoreLink } from '../../shared/store-link';
 })
 export class ProductRow {
   id = input('');
+  /** 商品圖片網址，為 null 時改顯示佔位符（slotLabel） */
+  coverImage = input<string | null>(null);
   /** 品牌名稱 */
   brand = input('');
   /** 器類名稱，與品牌併排顯示於第一行 */
@@ -42,6 +44,13 @@ export class ProductRow {
   protected readonly slotLabel = '[ 商品圖 ]';
   /** 加入購物車按鈕文字 */
   protected readonly addCartLabel = '加入購物車';
+
+  /** 是否顯示佔位符，規則與 app-product-card 相同：見該元件的 showPlaceholder 說明 */
+  protected showPlaceholder = linkedSignal(() => !this.coverImage());
+  /** 圖片讀取失敗時觸發，退回無圖片的預設樣式 */
+  protected onImageError(): void {
+    this.showPlaceholder.set(true);
+  }
 
   /** 商品頁連結網址 */
   protected link = computed(() => productPath(this.id()));

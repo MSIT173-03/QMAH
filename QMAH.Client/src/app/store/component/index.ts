@@ -5,6 +5,7 @@ export { EmptyState } from './empty-state/empty-state';
 export { FilterSidebar } from './filter-sidebar/filter-sidebar';
 export { HeaderActions } from './header-actions/header-actions';
 export { PageTitleRow } from './page-title-row/page-title-row';
+export { Pagination } from './pagination/pagination';
 export { Panel } from './panel/panel';
 export { PillGroup } from './pill-group/pill-group';
 export { ProductCard } from './product-card/product-card';

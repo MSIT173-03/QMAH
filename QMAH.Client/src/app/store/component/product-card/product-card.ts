@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import { formatNumber } from '../../shared/format';
 import { productPath } from '../../shared/paths';
 import { formatRating, formatReviews, toPriceView } from '../../shared/product-view';
@@ -64,6 +64,16 @@ export class ProductCard {
   protected readonly slotLabel = '[ 商品圖 ]';
   /** 加入購物車按鈕文字 */
   protected readonly addCartLabel = '加入購物車';
+
+  /**
+   * 是否顯示佔位符：無 coverImage 時即為 true；coverImage 變動時重新從此推導，
+   * 但圖片讀取失敗（onImageError）可覆寫為 true，退回佔位符樣式。
+   */
+  protected showPlaceholder = linkedSignal(() => !this.coverImage());
+  /** 圖片讀取失敗時觸發，退回無圖片的預設樣式 */
+  protected onImageError(): void {
+    this.showPlaceholder.set(true);
+  }
 
   /** 商品頁連結網址 */
   protected link = computed(() => productPath(this.id()));

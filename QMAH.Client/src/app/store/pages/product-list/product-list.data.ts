@@ -1,4 +1,4 @@
-import { ProductSort } from '../../api/api.models';
+import { ProductOrder } from '../../api/api.models';
 
 /**
  * 商品列表頁的頁面選項定義（排序、價格區間、顯示模式）。
@@ -28,19 +28,20 @@ export const PRICE_BANDS: PriceBand[] = [
 ];
 
 /** 排序選項 */
-export interface SortOption {
+export interface OrderOption {
   label: string;
-  /** 對應商品清單 API 的 sort 參數 */
-  key: ProductSort;
+  /** 對應商品清單 API 的 order 參數 */
+  order: ProductOrder;
 }
 
 /** 排序選項清單，索引 0 為預設排序 */
-export const SORT_OPTIONS: SortOption[] = [
-  { label: '推薦排序', key: 'recommend' },
-  { label: '價格低→高', key: 'price-asc' },
-  { label: '價格高→低', key: 'price-desc' },
-  { label: '評價最多', key: 'reviews' },
-  { label: '由新到舊', key: 'new' },
+export const ORDER_OPTIONS: OrderOption[] = [
+  { label: '推薦排序', order: 0 },
+  { label: '熱銷排行', order: 1 },
+  { label: '上架：舊到新', order: 2 },
+  { label: '上架：新到舊', order: 3 },
+  { label: '價格低→高', order: 4 },
+  { label: '價格高→低', order: 5 },
 ];
 
 /** 顯示模式（卡片格狀／橫列清單） */
@@ -67,10 +68,13 @@ export const VIEW_HEADINGS: Record<string, string> = {
   exhibit: '特展聯名',
 };
 
-/** 由網址 view 參數對應的預設排序方式（未列出者使用 SORT_OPTIONS 第一項） */
-export const VIEW_DEFAULT_SORT: Record<string, ProductSort> = {
-  new: 'new',
-  exhibit: 'reviews',
+/**
+ * 由網址 view 參數對應的預設排序方式（未列出者使用 ORDER_OPTIONS 第一項）；
+ * 特展聯名原以評價最多排序，因商品清單 API 的 order 參數未提供依評價排序，改以熱銷排行代替。
+ */
+export const VIEW_DEFAULT_ORDER: Record<string, ProductOrder> = {
+  new: 3,
+  exhibit: 1,
 };
 
 /** 不限器類時的標示文字，同時用於分類清單第一項與未指定條件時的頁面標題 */

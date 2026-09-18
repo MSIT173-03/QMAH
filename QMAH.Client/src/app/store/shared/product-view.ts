@@ -19,6 +19,8 @@ export interface ProductViewData {
   dims: string;
   /** 紋樣／器型出處說明 */
   source: string;
+  /** 商品主圖網址，無圖片時為 null */
+  coverImage: string | null;
 }
 
 /** 折扣前原價，無折扣時為 null */
@@ -40,6 +42,7 @@ export function toProductView(product: Product): ProductViewData {
     sold: product.soldCount,
     dims: product.dimensions,
     source: product.source,
+    coverImage: product.coverImage,
   };
 }
 

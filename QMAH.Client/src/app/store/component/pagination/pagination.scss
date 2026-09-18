@@ -1,0 +1,39 @@
+:host {
+  display: contents;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.pagination-btn {
+  border: 1px solid var(--color-line-mid);
+  background: #fff;
+  border-radius: 2px;
+  padding: 8px 14px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--color-ink);
+  transition: background 160ms, border-color 160ms, color 160ms;
+
+  &:hover:not(:disabled) {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+    color: #fff;
+  }
+
+  &:disabled {
+    color: var(--color-faint);
+    cursor: default;
+  }
+}
+
+.pagination-status {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+}

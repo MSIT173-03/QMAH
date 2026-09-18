@@ -1,0 +1,8 @@
+<!-- 分頁切換：僅一頁時不顯示 -->
+@if (totalPages() > 1) {
+<nav class="pagination">
+  <button type="button" class="pagination-btn" [disabled]="!hasPrev()" (click)="pick.emit(page() - 1)">{{ prevLabel }}</button>
+  <span class="pagination-status">第 {{ page() }} / {{ totalPages() }} 頁</span>
+  <button type="button" class="pagination-btn" [disabled]="!hasNext()" (click)="pick.emit(page() + 1)">{{ nextLabel }}</button>
+</nav>
+}

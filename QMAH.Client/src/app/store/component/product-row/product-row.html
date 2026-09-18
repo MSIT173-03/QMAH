@@ -2,7 +2,13 @@
 @let pv = priceView();
 <div class="product-row">
   <!-- 商品縮圖，連結至商品頁 -->
-  <a [storeLink]="link()" class="product-row-thumb">{{ slotLabel }}</a>
+  <a [storeLink]="link()" class="product-row-thumb">
+    @if (!showPlaceholder()) {
+      <img class="product-row-image" [src]="coverImage()" [alt]="name()" (error)="onImageError()" />
+    } @else {
+      {{ slotLabel }}
+    }
+  </a>
 
   <!-- 商品資訊：品牌與器類、名稱、出處說明、尺寸與評價 -->
   <div class="product-row-info">

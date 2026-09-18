@@ -30,7 +30,7 @@ export class NewArrivals {
   /** 最新上架的商品，依上架日期由新到舊排列 */
   private readonly products = toSignal(
     inject(CatalogApi)
-      .getProducts({ sort: 'new', pageSize: NEW_ARRIVAL_COUNT })
+      .getProducts({ order: 3, pageSize: NEW_ARRIVAL_COUNT })
       .pipe(map((page) => page.items)),
     { initialValue: [] },
   );

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { ProductList } from './product-list';
 import { provideMockApi } from '../../api/mock/mock-api.interceptor';
@@ -10,7 +11,8 @@ describe('ProductList', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProductList],
-      providers: [provideMockApi()],
+      // ProductList 內含 routerLink 與分頁切換時更新網址查詢字串，兩者皆需要 Router／ActivatedRoute。
+      providers: [provideRouter([]), provideMockApi()],
     })
     .compileComponents();
 

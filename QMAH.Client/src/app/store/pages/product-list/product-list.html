@@ -18,7 +18,7 @@
   <app-page-title-row [title]="heading()" [count]="countLabel()">
     <div class="tab-row section-meta">
       <!-- 排序方式 -->
-      <app-pill-group variant="wide" layout="tabs" [options]="sortOptions()" (select)="sortIndex.set($event)" />
+      <app-pill-group variant="wide" layout="tabs" [options]="sortOptions()" (select)="onSortPick($event)" />
       <div class="pill-divider"></div>
       <!-- 顯示模式（卡片／列表） -->
       <app-pill-group variant="mono" layout="tabs" [options]="modeOptions()" (select)="onModePick($event)" />
@@ -29,7 +29,7 @@
 
     <!-- 左側篩選側欄：器類、價格區間、折扣篩選 -->
     <app-filter-sidebar [categories]="categoryItems()" [bands]="bandLabels" [activeBand]="bandIndex()"
-      [dealOnly]="dealOnly()" (categoryPick)="onCategoryPick($event)" (bandPick)="bandIndex.set($event)"
+      [dealOnly]="dealOnly()" (categoryPick)="onCategoryPick($event)" (bandPick)="onBandPick($event)"
       (dealToggle)="onDealToggle()" (reset)="onReset()" />
 
     <!-- 右側商品區：依顯示模式切換卡片格狀或橫列清單，無結果時顯示空狀態 -->
@@ -41,20 +41,25 @@
       <!-- 卡片格狀顯示 -->
       <div class="card-grid">
         @for (item of items(); track item.id) {
-        <app-product-card variant="list" [id]="item.id" [badge]="item.cat" badgeVariant="teal" [brand]="item.brand"
-          [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
-          (addToCart)="onAddToCart(item.id)" />
+        <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage" [badge]="item.cat"
+          badgeVariant="teal" [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
+          [rating]="item.rating" [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
         }
       </div>
       } @else {
       <!-- 橫列清單顯示 -->
       <div class="product-row-list">
         @for (item of items(); track item.id) {
-        <app-product-row [id]="item.id" [brand]="item.brand" [cat]="item.cat" [name]="item.name" [source]="item.source"
-          [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
-          (addToCart)="onAddToCart(item.id)" />
+        <app-product-row [id]="item.id" [coverImage]="item.coverImage" [brand]="item.brand" [cat]="item.cat"
+          [name]="item.name" [source]="item.source" [price]="item.price" [was]="item.was" [rating]="item.rating"
+          [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
         }
       </div>
+      }
+
+      <!-- 分頁切換 -->
+      @if (!isEmpty()) {
+      <app-pagination [page]="pageIndex()" [totalPages]="totalPages()" (pick)="onPagePick($event)" />
       }
     </div>
   </div>
