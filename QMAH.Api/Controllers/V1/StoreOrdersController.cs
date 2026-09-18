@@ -2,8 +2,8 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
@@ -14,6 +14,9 @@ namespace QMAH.Api.Controllers.V1;
 [Route("api/v1/store/orders")]
 public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
 {
+
+    private readonly record struct GroupedOrderItem(Guid ProductId, int Quantity);
+
     [HttpPost]
     public async Task<ActionResult<OrderDto>> CreateOrder(
         CreateStoreOrderRequest request,
@@ -24,23 +27,17 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (!TryGroupOrderItems(request.Items, out var groupedItems, out var err))
-            return err;
-            .GroupBy(item => item.ProductId)
-            .Select(group => new { ProductId = group.Key, Quantity = group.Sum(item => item.Quantity) })
-            .ToList();
-        if (groupedItems.Count == 0 || groupedItems.Any(item => item.Quantity is < 1 or > 99))
-            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "訂單明細無效", detail: "請提供至少一件商品，每件數量必須介於 1 到 99。");
+        if (!TryGroupOrderItems(request.Items, out var groupedItems, out var emptyErr))
+            return emptyErr;
 
         await using var transaction = await db.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
 
-        var (products, productsError) = await LoadAndValidateProductsAsync(groupedItems!, cancellationToken);
-        if (productsError is not null)
-            return productsError;
+        if (!TryLoadAndValidateProducts(groupedItems, cancellationToken, out var products, out var unvalidErr))
+            return unvalidErr;
 
-        var subtotal = groupedItems!.Sum(item => products![item.ProductId].Price * item.Quantity);
+        var subtotal = groupedItems.Sum(item => products[item.ProductId].Price * item.Quantity);
 
         var (userCoupon, discountAmount, couponError) = await ApplyCouponAsync(
             request.UserCouponId,
@@ -114,27 +111,43 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         return true;
     }
 
-    private async Task<(Dictionary<Guid, Product>? Products, ActionResult? Error)> LoadAndValidateProductsAsync(
-        List<GroupedOrderItem> groupedItems,
-        CancellationToken cancellationToken)
+    private bool TryLoadAndValidateProducts(
+        List<GroupedOrderItem> items,
+        CancellationToken cancellationToken,
+        [NotNullWhen(true)] out Dictionary<Guid, Product>? products,
+        [NotNullWhen(false)] out ActionResult? err)
     {
-        var productIds = groupedItems.Select(item => item.ProductId).ToArray();
-        var products = await db.Products
-            .Where(product => productIds.Contains(product.Id))
+        products = items
+            .Join(db.Products, i => i.ProductId, p => p.Id, (i, p) => p)
+            .ToDictionary(v => v.Id);
             .ToDictionaryAsync(product => product.Id, cancellationToken);
         if (products.Count != productIds.Length)
             return (null, MissingResource("找不到商品", "訂單中有商品不存在或已下架。"));
 
-        foreach (var item in groupedItems)
+        if (products.Count != items.Count)
         {
-            var product = products[item.ProductId];
-            if (!product.IsActive)
-                return (null, InvalidWorkflow("商品目前未上架", $"商品「{product.Name}」目前無法購買。"));
-            if (product.Stock < item.Quantity)
-                return (null, InvalidWorkflow("商品庫存不足", $"商品「{product.Name}」目前庫存不足。"));
+            err = MissingResource("找不到商品", "訂單中有商品不存在或已下架。");
+            return false;
         }
 
-        return (products, null);
+        foreach (var item in items)
+        {
+            var product = products[item.ProductId];
+
+            if (!product.IsActive)
+            {
+                err = InvalidWorkflow("商品目前未上架", $"商品「{product.Name}」目前無法購買。");
+                return false;
+            }
+            if (product.Stock < item.Quantity)
+            {
+                err = InvalidWorkflow("商品庫存不足", $"商品「{product.Name}」目前庫存不足。");
+                return false;
+            }
+        }
+
+        err = null;
+        return true;
     }
 
 
@@ -148,30 +161,29 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             return (null, 0m, null);
 
         var userCoupon = await db.UserCoupons
-                .Include(coupon => coupon.CouponDefinition)
             .SingleOrDefaultAsync(coupon => coupon.Id == userCouponId.Value
-                    && coupon.UserId == userId,
+                && coupon.UserId == userId
+                && coupon.Status == "AVAILABLE",
                     cancellationToken);
             if (userCoupon is null)
             return (null, 0m, MissingResource("找不到優惠券", "這張優惠券不存在或不屬於目前帳號。"));
 
             var definition = userCoupon.CouponDefinition;
             var now = DateTime.UtcNow;
-            if (userCoupon.Status != "AVAILABLE"
-                || !definition.IsActive
+        if (!definition.IsActive
                 || definition.StartAt > now
                 || definition.EndAt < now)
-            {
             return (null, 0m, InvalidWorkflow("優惠券不可使用", "優惠券可能已使用、過期或尚未開始。"));
-            }
-            if (subtotal < definition.MinimumAmount)
+
+        if (subtotal <= definition.MinimumAmount)
             return (null, 0m, InvalidWorkflow("未達優惠券門檻", $"訂單小計至少需要 {definition.MinimumAmount:0.##} 元。"));
 
-        var discountAmount = definition.DiscountType == "PERCENT"
-                ? subtotal * definition.DiscountValue / 100m
-                : definition.DiscountType == "FIXED"
-                    ? definition.DiscountValue
-                    : 0m;
+        var discountAmount = definition.DiscountType switch
+        {
+            "PERCENT" => subtotal * definition.DiscountValue / 100m,
+            "FIXED" => definition.DiscountValue,
+            _ => 0m
+        };
             discountAmount = Math.Clamp(
                 decimal.Round(discountAmount, 2, MidpointRounding.AwayFromZero),
                 0m,
@@ -188,11 +200,15 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         CancellationToken cancellationToken)
     {
         if (pointsUsed > subtotal - discountAmount)
-            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "點數折抵超過訂單金額", detail: "PointsUsed 不可超過折扣後的小計。");
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "點數折抵超過訂單金額",
+                detail: "PointsUsed 不可超過折扣後的小計。");
         if (pointsUsed > 0)
         {
             var balance = await db.PointBalances
                 .SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
+
             if (balance is null || balance.Balance < pointsUsed)
                 return InvalidWorkflow("點數不足", "目前點數餘額不足以折抵這筆訂單。");
         }
@@ -335,7 +351,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         var now = DateTime.UtcNow;
         order.Status = "CANCELLED";
         order.CancelledAt = now;
-        if (order.Payment is not null && order.Payment.Status is ("PENDING" or "PAID"))
+        if (order.Payment is not null && order.Payment.Status is "PENDING" or "PAID")
         {
             order.Payment.Status = "CANCELLED";
             order.Payment.CallbackReceivedAt = now;
