@@ -1,9 +1,12 @@
 <!-- key-list.html -->
-<div class="key-page">
+<div class="key-page" [class.key-page--embedded]="embedded">
 
   <div class="page-header">
     <div class="page-header__bar">
-      <h1 class="page-header__title">鑰匙背包</h1>
+      <div class="page-header__title-group">
+        <span class="page-header__icon">🏺</span>
+        <h1 class="page-header__title">鑰匙背包</h1>
+      </div>
     </div>
     <p class="page-header__sub">查看你目前持有的各類文物鑰匙</p>
   </div>
@@ -73,50 +76,48 @@
       </button>
     </div>
 
-    <div class="key-slot-grid" *ngIf="!isEmpty()">
+    <div class="key-slot-grid" #slotGrid>
       <div
         class="key-slot"
-        *ngFor="let key of filteredKeys(); trackBy: trackByKeyId"
-        [class.normal-key]="key.scopeType === 'NORMAL'"
-        [class.category-key]="key.scopeType === 'CATEGORY'"
-        [class.era-key]="key.scopeType === 'ERA'"
-        [class.universal-key]="key.scopeType === 'UNIVERSAL'"
-        (click)="onKeySlotClick(key)"
+        *ngFor="let key of displaySlots(); trackBy: trackByDisplaySlot"
+        [class.key-slot--empty]="!key"
+        [class.normal-key]="key?.scopeType === 'NORMAL'"
+        [class.category-key]="key?.scopeType === 'CATEGORY'"
+        [class.era-key]="key?.scopeType === 'ERA'"
+        [class.universal-key]="key?.scopeType === 'UNIVERSAL'"
+        (click)="key && onKeySlotClick(key)"
       >
-        <div class="key-slot__icon">🔑</div>
-        <span class="key-slot__count">{{ key.balance }}</span>
+        <ng-container *ngIf="key as k">
+          <div class="key-slot__icon">{{ keySlotIcon(k) }}</div>
+          <span class="key-slot__count">{{ k.balance }}</span>
 
-        <div class="key-slot__tooltip">
-          <p class="key-slot__tooltip-name">{{ key.name }}</p>
+          <div class="key-slot__tooltip">
+            <p class="key-slot__tooltip-name">{{ k.name }}</p>
 
-          <p class="key-slot__tooltip-row">
-            <span>開鎖類別</span>
-            <strong [ngSwitch]="key.scopeType">
-              <ng-container *ngSwitchCase="'NORMAL'">一般</ng-container>
-              <ng-container *ngSwitchCase="'UNIVERSAL'">萬能</ng-container>
-              <ng-container *ngSwitchCase="'CATEGORY'">分類（{{ getCategoryName(key.categoryId) }}）</ng-container>
-              <ng-container *ngSwitchCase="'ERA'">年代（{{ getEraName(key.eraBucketId) }}）</ng-container>
-            </strong>
-          </p>
+            <p class="key-slot__tooltip-row">
+              <span>開鎖類別</span>
+              <strong [ngSwitch]="k.scopeType">
+                <ng-container *ngSwitchCase="'NORMAL'">一般</ng-container>
+                <ng-container *ngSwitchCase="'UNIVERSAL'">萬能</ng-container>
+                <ng-container *ngSwitchCase="'CATEGORY'">分類（{{ getCategoryName(k.categoryId) }}）</ng-container>
+                <ng-container *ngSwitchCase="'ERA'">年代（{{ getEraName(k.eraBucketId) }}）</ng-container>
+              </strong>
+            </p>
 
-          <p class="key-slot__tooltip-row">
-            <span>回收點數</span>
-            <strong>{{ key.recyclePointValue }}</strong>
-          </p>
+            <p class="key-slot__tooltip-row">
+              <span>回收點數</span>
+              <strong>{{ k.recyclePointValue }}</strong>
+            </p>
 
-          <p class="key-slot__tooltip-hint" *ngIf="key.scopeType === 'UNIVERSAL'; else useHint">
-            請至圖鑑頁的文物卡片上使用
-          </p>
-          <ng-template #useHint>
-            <p class="key-slot__tooltip-hint">點擊使用</p>
-          </ng-template>
-        </div>
+            <p class="key-slot__tooltip-hint" *ngIf="k.scopeType === 'UNIVERSAL'; else useHint">
+              請至圖鑑頁的文物卡片上使用
+            </p>
+            <ng-template #useHint>
+              <p class="key-slot__tooltip-hint">點擊使用</p>
+            </ng-template>
+          </div>
+        </ng-container>
       </div>
-    </div>
-
-    <div *ngIf="isEmpty()" class="empty">
-      <p class="empty__title">背包裡還沒有任何鑰匙</p>
-      <p class="empty__desc">前往圖鑑解鎖文物，就有機會取得對應的鑰匙</p>
     </div>
 
   </ng-container>

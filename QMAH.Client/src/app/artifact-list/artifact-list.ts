@@ -9,6 +9,9 @@ import { CatalogModel, CatalogDetailModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
 import { KeyService } from '../services/key-service';
 import { KeyModel, KeyExchangeRule, costForScope } from '../models/key-model';
+// ⚠️ 路徑是假設值：假設 key-list.ts 跟 artifact-list.ts 是同一層目錄下的兄弟資料夾
+// （例如都在 components/ 底下），如果實際檔案結構不同，這行要跟著改。
+import { KeyList } from '../key-list/key-list';
 
 /** 依年代分組後的顯示用結構（格狀列表只需要清單卡片，不含鑑賞細節） */
 interface EraGroup {
@@ -19,7 +22,7 @@ interface EraGroup {
 @Component({
   selector: 'app-artifact-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, KeyList],
   templateUrl: './artifact-list.html',
   styleUrl: './artifact-list.scss'
 })
@@ -116,6 +119,13 @@ export class ArtifactList implements OnInit {
 
   isCategorySelected(category: string): boolean {
     return this.selectedCategories().has(category);
+  }
+
+  /** 清除搜尋關鍵字＋年代／分類篩選，一次全部恢復成「顯示全部」 */
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.selectedEras.set(new Set());
+    this.selectedCategories.set(new Set());
   }
 
   /**
@@ -536,9 +546,55 @@ export class ArtifactList implements OnInit {
     this.appreciationRequested.emit(item);
   }
 
-  /** 導頁到鑰匙背包頁面；路徑要對應你 routes 裡實際設定的 path（這裡先假設是 'key-list'） */
+  /**
+   * 返回會員頁面。
+   * ⚠️ 路由路徑 '/member' 是假設值，還沒跟你的 routes 設定確認過，
+   * 如果會員頁實際路徑不同，這裡要跟著改。
+   */
+  goBackToMember(): void {
+    this.router.navigate(['/member']);
+  }
+
+  /** 鑰匙背包彈出框是否開啟；不再導頁到另一個頁面，直接在同一畫面上開一個放大框 */
+  keyBagOpen = signal(false);
+
   onKeyBagClick(): void {
-    this.router.navigate(['/key-list']);
+    this.keyBagOpen.set(true);
+  }
+
+  /**
+   * 關閉鑰匙背包彈出框。玩家在裡面可能用掉了鑰匙、解鎖了文物，關閉時重新拿一次
+   * 鑰匙餘額跟解鎖狀態，不管他在裡面實際做了什麼操作，圖鑑頁資料都會是最新的
+   * ——不用逐一去追蹤彈出框裡發生的每個動作。
+   */
+  closeKeyBag(): void {
+    this.keyBagOpen.set(false);
+    this.loadKeyBalance();
+    this.loadUnlockStatus();
+  }
+
+  onKeyBagOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closeKeyBag();
+    }
+  }
+
+  /**
+   * 鑰匙背包彈出框裡按「前往查看」（KeyList embedded 模式 emit 出來的事件）：
+   * 關掉背包彈出框，直接在同一頁聚焦剛解鎖的那張卡片，不整頁導頁。
+   */
+  onArtifactFocusRequestedFromKeyBag(artifactId: string): void {
+    this.closeKeyBag();
+
+    // 樂觀地先把這張卡標成已解鎖：loadUnlockStatus() 是非同步的，如果還沒回來
+    // 就直接呼叫 openCard()，卡片可能會先短暫呈現「未解鎖」再跳成已解鎖，
+    // 這裡先手動標記避免那個閃爍；loadUnlockStatus() 完成後會再用後端真實資料覆寫回來。
+    this.catalogModel.update((list) =>
+      list.map((i) =>
+        i.id === artifactId ? { ...i, unlocked: true, unlockedAt: i.unlockedAt ?? new Date().toISOString() } : i
+      )
+    );
+    this.openCard(artifactId);
   }
 
   toggleLedger(): void {

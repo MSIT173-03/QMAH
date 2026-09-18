@@ -2,25 +2,27 @@
 /* 已併入原 artifact-unlock.scss 的放大檢視／解鎖／鑑賞流水樣式，版面主體維持 artifact-list 原本設計。 */
 
 .artifact-page {
-  --ink: #1c2b4a;
-  --ink-soft: #5b6b8c;
-  --line: #dfe4ef;
-  --surface: #f4f6fb;
-  --card: #ffffff;
-  --blue: #2a5cad;
-  --blue-deep: #163d7a;
-  --yellow: #ffcb05;
-  --red: #e0393e;
-  --locked: #c9cfdd;
+  /* 色系跟 key-list.scss 完全對齊（同一套暖色木紋＋金色滾邊），
+     兩邊變數名稱一樣，只是這裡多了幾個圖鑑頁專用的（--header-h、--on-dark...）。 */
+  --ink: #f3e4c6;
+  --ink-soft: #c9ab7c;
+  --line: #8a6a3f;
+  --surface: #241a10;
+  --card: #4a3520;
+  --blue: #e3b955;
+  --blue-deep: #a97a2c;
+  --yellow: #6fb87f;
+  --red: #d9534f;
+  --locked: #6b5842;
 
   // 標題橫幅（純標題列）的高度概估值；固定側欄／內容區的 top、margin-top、height 都要用同一個
   // 數字才對得齊，所以抽成變數，之後如果標題區塊內容或字級改變，只要改這裡一個地方。
   --header-h: 74px;
 
-  // 放大圖底部漸層字幕疊字用色，跟整體亮色主題無關（維持可讀性）
+  // 放大圖底部漸層字幕疊字用色，跟整體主題無關（維持可讀性，文字疊在照片上，不是疊在版面底色上）
   --on-dark: #ffffff;
   --on-dark-soft: rgba(255, 255, 255, 0.7);
-  --on-dark-accent: #bcd4f7;
+  --on-dark-accent: #f0d9a0;
 
   // 標題列跟「篩選欄＋內容區」這個組合現在都改成 position:fixed，直接鎖定在視窗座標，
   // 不再依賴 .artifact-page 自己的寬度／內距去做版面計算——這樣可以完全避開「.artifact-page
@@ -33,7 +35,7 @@
 }
 
 .bac{
-  background-color: #f4f6fb ;
+  background-color: #241a10; // 跟 --surface 對齊；這層是最外層包裝，換膚時容易漏改，記得一起換
 }
 
 
@@ -54,12 +56,17 @@
 
 .page-header__bar {
   width: 100%;
-  background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 100%);
+  background: linear-gradient(180deg, #6b4a28 0%, #4a3018 100%);
+  border-bottom: 3px solid var(--blue-deep);
   padding: 18px 20px; // 水平內距改放在藍色橫幅自己身上，讓橫幅本身貼齊視窗左右邊緣，
                       // 不再讓外層 .page-header 留出一圈跟頁面底色一樣的空白
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .page-header__bar::after {
@@ -71,8 +78,8 @@
   height: 140px;
   transform: translateY(-50%);
   border-radius: 50%;
-  border: 10px solid rgba(255, 255, 255, 0.08);
-  background: radial-gradient(circle at 50% 50%, rgba(255, 203, 5, 0.12) 0 30%, transparent 32%);
+  border: 10px solid rgba(255, 255, 255, 0.06);
+  background: radial-gradient(circle at 50% 50%, rgba(227, 185, 85, 0.12) 0 30%, transparent 32%);
 }
 
 .page-header__title {
@@ -80,7 +87,8 @@
   text-align: left;
   font-size: 24px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--blue);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.04em;
 }
 
@@ -181,7 +189,7 @@
 
 .artifact-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(22, 61, 122, 0.14);
+  box-shadow: 0 12px 24px rgba(20, 14, 8, 0.35);
   border-color: var(--blue);
 }
 
@@ -189,7 +197,7 @@
   position: relative;
   flex: 0 0 auto;
   height: 220px;
-  background: linear-gradient(160deg, #eef2fb 0%, #dde6f7 100%);
+  background: linear-gradient(160deg, #3a2814 0%, #241a10 100%);
 }
 
 .thumbnail {
@@ -213,7 +221,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba(28, 43, 74, 0.55);
+  background: rgba(20, 14, 8, 0.6);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -242,7 +250,7 @@
 }
 
 .badge--qa {
-  background: var(--blue);
+  background: var(--blue-deep);
 }
 
 .badge--shop {
@@ -297,9 +305,9 @@
 }
 
 .tag--era {
-  background: #fff8e1;
-  border-color: #ffe38a;
-  color: #8a6400;
+  background: rgba(111, 184, 127, 0.15);
+  border-color: var(--yellow);
+  color: var(--yellow);
 }
 
 /* ---------- empty state ---------- */
@@ -440,6 +448,14 @@
   min-height: 0;
 }
 
+/* 搜尋框→年代、年代→分類這兩處銜接都加一條簡單的分隔線 */
+.search-input + .filter-group,
+.filter-group + .filter-group {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
 .filter-group__title {
   margin: 0 0 8px;
   font-size: 13px;
@@ -469,6 +485,45 @@
   color: var(--ink);
   cursor: pointer;
   flex: 0 0 auto;
+}
+
+/* ---------- 側欄底部：清除篩選／返回會員 ---------- */
+
+.sidebar-footer {
+  flex: none; // 不參與上面兩個 .filter-group 的高度平均分配，固定貼在側欄最下方
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.sidebar-footer__btn {
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-footer__btn:hover {
+  border-color: var(--blue);
+  color: var(--ink);
+}
+
+.sidebar-footer__btn--primary {
+  border-color: var(--blue);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--blue);
+}
+
+.sidebar-footer__btn--primary:hover {
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .filter-option:hover {
@@ -583,7 +638,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(28, 43, 74, 0.5);
+  background: rgba(20, 14, 8, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -618,7 +673,7 @@
   border-radius: 20px;
   border: 1px solid var(--line);
   background: var(--card);
-  box-shadow: 0 30px 60px rgba(22, 61, 122, 0.22);
+  box-shadow: 0 30px 60px rgba(20, 14, 8, 0.45);
   transform: scale(0.9);
   opacity: 0;
   transition: transform 0.28s cubic-bezier(.2, .8, .2, 1), opacity 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
@@ -633,7 +688,30 @@
 
 .focus-card.unlocked {
   border-color: var(--blue);
-  box-shadow: 0 30px 60px rgba(22, 61, 122, 0.22), 0 0 40px -10px rgba(42, 92, 173, 0.35);
+  box-shadow: 0 30px 60px rgba(20, 14, 8, 0.45), 0 0 40px -10px rgba(227, 185, 85, 0.4);
+}
+
+/* ---------- 鑰匙背包彈出框（重用 .overlay 當 backdrop，這裡只定義框體本身）---------- */
+/* 尺寸比照你附的截圖比例：視窗大部分區域都被彈出框佔滿，但四周仍留一圈看得到背景的邊界。
+   overflow:hidden（不是 auto）：內部 key-list.scss 用 flex 撐滿這個固定高度，
+   背景色會蓋到底，不會出現捲軸、也不會露出空白。 */
+
+.key-bag-stage {
+  position: relative;
+  width: min(1600px, 84vw);
+  height: 82vh;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: 0 30px 60px rgba(20, 14, 8, 0.45);
+  transform: scale(0.94);
+  opacity: 0;
+  transition: transform 0.24s cubic-bezier(.2, .8, .2, 1), opacity 0.24s ease;
+}
+
+.overlay.open .key-bag-stage {
+  transform: scale(1);
+  opacity: 1;
 }
 
 .focus-thumbnail {
@@ -644,7 +722,7 @@
   object-fit: contain;
   padding: 28px;
   box-sizing: border-box;
-  background: linear-gradient(160deg, #eef2fb 0%, #dde6f7 100%);
+  background: linear-gradient(160deg, #3a2814 0%, #241a10 100%);
   filter: grayscale(1) opacity(0.5);
   transition: filter 0.4s ease;
 }
@@ -659,7 +737,7 @@
   left: 16px;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(28, 43, 74, 0.45);
+  background: rgba(20, 14, 8, 0.5);
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 12px;
   color: var(--on-dark);
@@ -673,7 +751,7 @@
   font-size: 11px;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(28, 43, 74, 0.45);
+  background: rgba(20, 14, 8, 0.5);
   color: var(--on-dark);
   z-index: 2;
 }
@@ -684,7 +762,7 @@
   right: 0;
   bottom: 0;
   padding: 16px 18px 18px;
-  background: linear-gradient(0deg, rgba(13, 19, 38, 0.9) 25%, transparent 100%);
+  background: linear-gradient(0deg, rgba(10, 6, 3, 0.9) 25%, transparent 100%);
   z-index: 2;
 }
 
@@ -722,15 +800,15 @@
 
 .unlock-btn {
   background: linear-gradient(135deg, var(--blue), var(--blue-deep));
-  color: #ffffff;
-  box-shadow: 0 8px 18px rgba(22, 61, 122, 0.3);
+  color: #2e2110;
+  box-shadow: 0 8px 18px rgba(20, 14, 8, 0.4);
 }
 
-.unlock-btn:hover { box-shadow: 0 10px 22px rgba(22, 61, 122, 0.4); }
+.unlock-btn:hover { box-shadow: 0 10px 22px rgba(20, 14, 8, 0.5); }
 
 .info-btn {
   background: var(--card);
-  color: var(--blue-deep);
+  color: var(--blue);
   border: 1px solid var(--line);
 }
 
@@ -738,7 +816,7 @@
 
 .info-btn.active {
   background: var(--blue);
-  color: #ffffff;
+  color: #2e2110;
   border-color: var(--blue);
 }
 
@@ -840,13 +918,13 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.field-action:hover { background: var(--blue); color: #ffffff; }
+.field-action:hover { background: var(--blue); color: #2e2110; }
 
 .field-link {
   font-size: 13px;
   color: var(--blue-deep);
   text-decoration: none;
-  border-bottom: 1px solid rgba(22, 61, 122, 0.4);
+  border-bottom: 1px solid rgba(227, 185, 85, 0.4);
   word-break: break-all;
 }
 
@@ -857,7 +935,7 @@
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(28, 43, 74, 0.45);
+  background: rgba(20, 14, 8, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -879,7 +957,7 @@
   border-radius: 18px;
   padding: 26px 24px 22px;
   text-align: center;
-  box-shadow: 0 24px 50px rgba(22, 61, 122, 0.25);
+  box-shadow: 0 24px 50px rgba(20, 14, 8, 0.5);
   transform: translateY(6px) scale(0.97);
   opacity: 0;
   transition: transform 0.2s ease, opacity 0.2s ease;
@@ -961,7 +1039,7 @@
   color: var(--ink-soft);
   font-size: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(22, 61, 122, 0.12);
+  box-shadow: 0 4px 12px rgba(20, 14, 8, 0.35);
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
@@ -986,7 +1064,7 @@
   border-radius: 14px;
   padding: 14px 16px;
   display: none;
-  box-shadow: 0 20px 40px rgba(22, 61, 122, 0.18);
+  box-shadow: 0 20px 40px rgba(20, 14, 8, 0.4);
 }
 
 .ledger-panel.open { display: block; }
@@ -1013,7 +1091,7 @@
   display: inline-block;
   padding: 1px 7px;
   border-radius: 999px;
-  background: rgba(42, 92, 173, 0.15);
+  background: rgba(227, 185, 85, 0.15);
   color: var(--blue-deep);
   margin-right: 6px;
   font-size: 10px;

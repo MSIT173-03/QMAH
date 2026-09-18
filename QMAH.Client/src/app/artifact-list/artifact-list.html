@@ -49,6 +49,11 @@
         </div>
       </div>
 
+      <div class="sidebar-footer">
+        <button type="button" class="sidebar-footer__btn" (click)="clearFilters()">清除篩選</button>
+        <button type="button" class="sidebar-footer__btn sidebar-footer__btn--primary" (click)="goBackToMember()">返回會員</button>
+      </div>
+
     </aside>
 
     <!-- 右側（占比 5，寬度已補齊左側縮減的部分）：維持原本的年代分區＋卡片樣式 -->
@@ -252,23 +257,14 @@
     </div>
   </div>
 
-  <div class="debug-toolbar">
-    <button
-      type="button"
-      class="debug-btn"
-      [class.active]="debugAllUnlocked()"
-      (click)="toggleDebugUnlockAll()"
-    >
-      {{ debugAllUnlocked() ? '🐞 還原真實解鎖狀態' : '🐞 全部解鎖 (Debug)' }}
-    </button>
-    <button type="button" class="debug-btn" (click)="toggleLedger()">🧾 解鎖流水</button>
-  </div>
-  <div class="ledger-panel" [class.open]="ledgerOpen()">
-    <h4>ArtifactUnlocks 流水紀錄（來自 GET /me/catalog/artifact/unlocks，玩家目前解鎖的完整歷史）</h4>
-    <div *ngIf="ledgerDescending().length === 0" class="ledger-empty">目前尚無解鎖紀錄</div>
-    <div class="ledger-row" *ngFor="let rec of ledgerDescending()">
-      <span class="tag">{{ rec.unlockMethod }}</span>{{ itemByArtifactId(rec.artifactId)?.name ?? rec.artifactId.slice(0, 8) }}<br />
-      artifactId: {{ rec.artifactId.slice(0, 8) }}… · {{ rec.unlockedAt | date:'yyyy/MM/dd HH:mm' }}
+  <!-- 鑰匙背包彈出框：不再導頁到另一個頁面，點「鑰匙背包」按鈕後直接在這裡開一個放大框，
+       點旁邊空白處（backdrop）或 KeyList 自己標題列右上角的 ✕ 都能關閉 -->
+  <div class="overlay" [class.open]="keyBagOpen()" (click)="onKeyBagOverlayClick($event)">
+    <div class="key-bag-stage" *ngIf="keyBagOpen()">
+      <app-key-list
+        [embedded]="true"
+        (artifactFocusRequested)="onArtifactFocusRequestedFromKeyBag($event)"
+      ></app-key-list>
     </div>
   </div>
 
