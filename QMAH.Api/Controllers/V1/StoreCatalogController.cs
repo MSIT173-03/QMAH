@@ -16,14 +16,45 @@ public sealed class StoreCatalogController(
     {
         None,
         HotSell,
-        Newer,
         Older,
+        Newer,
+        CheaperFirst,
+        PricierFirst,
     }
+
+    public enum CategoryType
+    {
+        BRONZE,
+        CARVING,
+        CERAMIC,
+        COIN,
+        ENAMEL,
+        JADE,
+        LACQUER,
+        PAINTING,
+    }
+
+    private string CategoryTypeToString(CategoryType? type) => type switch
+    {
+        CategoryType.BRONZE => "BRONZE",
+        CategoryType.CARVING => "CARVING",
+        CategoryType.CERAMIC => "CERAMIC",
+        CategoryType.COIN => "COIN",
+        CategoryType.ENAMEL => "ENAMEL",
+        CategoryType.JADE => "JADE",
+        CategoryType.LACQUER => "LACQUER",
+        CategoryType.PAINTING => "PAINTING",
+        _ => ""
+    };
+
     [HttpGet("products")]
     public async Task<ActionResult<ApiPage<ProductListItemDto>>> GetProducts(
         string? q,
         string? categoryCode,
         Guid? artifactId,
+        decimal? maxPrice,
+        decimal? minPrice,
+        CategoryType? category,
         OrderType order = OrderType.None,
         int page = 1,
         int pageSize = 20,
@@ -37,15 +68,22 @@ public sealed class StoreCatalogController(
 
         // 篩選
         if (!string.IsNullOrWhiteSpace(q))
-        {
             query = query.Where(product =>
                 product.Name.Contains(q)
                 || (product.ExternalRef != null && product.ExternalRef.Contains(q)));
-        }
+
         if (!string.IsNullOrWhiteSpace(categoryCode))
             query = query.Where(product => product.CategoryCode == categoryCode);
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
+
+        if (minPrice is not null and > 0)
+            query = query.Where(p => p.Price >= minPrice);
+        if (maxPrice is not null and > 0)
+            query = query.Where(p => p.Price < maxPrice);
+
+        if (category != null)
+            query = query.Where(p => p.CategoryCode == CategoryTypeToString(category));
 
         var query2 = query.Select(g => new
         {
@@ -74,11 +112,17 @@ public sealed class StoreCatalogController(
             OrderType.HotSell => query2
                 .OrderByDescending(g => g.SellCount)
                 .ThenBy(g => g.Id),
+            OrderType.Older => query2
+                .OrderBy(g => g.CreatedAt)
+                .ThenBy(g => g.Id),
             OrderType.Newer => query2
                 .OrderByDescending(g => g.CreatedAt)
                 .ThenBy(g => g.Id),
-            OrderType.Older => query2
-                .OrderBy(g => g.CreatedAt)
+            OrderType.CheaperFirst => query2
+                .OrderBy(g => g.Price)
+                .ThenBy(g => g.Id),
+            OrderType.PricierFirst => query2
+                .OrderByDescending(g => g.Price)
                 .ThenBy(g => g.Id),
             _ => query2.OrderBy(g => g.Id),
         };
