@@ -35,12 +35,30 @@ export interface CardEntry extends CompendiumCardSummary, CatalogDetailModel { }
 export type UnlockMethod = 'ADMIN' | 'KEY' | 'GAME';
 
 /** 對應 [catalog].[ArtifactUnlocks] 資料表結構 */
+/**
+ * 對應 GET /me/unlocks（分頁 API）回傳的 MemberArtifactUnlockDto。
+ *
+ * ⚠️ 已依後端 EconomyController.GetUnlocks() 實際程式碼修正：
+ * - 路徑是 /me/unlocks，不是先前猜的 /me/catalog/artifact/unlocks。
+ * - 這不是資料庫原始的 ArtifactUnlocks 資料列，而是已經 join 過文物、分類、
+ *   年代、使用鑰匙資訊的投影結果，也沒有 userId 欄位（這支本來就是「我自己的」
+ *   解鎖紀錄，不需要）。
+ * - keyCode／keyName 只有透過鑰匙解鎖（unlockMethod === 'KEY'）時才會有值，
+ *   ADMIN／GAME 這兩種方式沒有對應的 KeyTransaction，所以是 null。
+ */
 export interface ArtifactUnlockRecord {
-  id: string; // Id UNIQUEIDENTIFIER
-  userId: string; // UserId UNIQUEIDENTIFIER
-  artifactId: string; // ArtifactId UNIQUEIDENTIFIER
+  id: string;
+  artifactId: string;
+  artifactRef: string;
+  artifactName: string;
+  categoryCode: string;
+  categoryName: string;
+  eraCode: string;
+  eraName: string;
   unlockMethod: UnlockMethod;
   gameRoundId: string | null;
   keyTransactionId: string | null;
-  unlockedAt: string; // DATETIME2(3)，ISO 字串
+  keyCode: string | null;
+  keyName: string | null;
+  unlockedAt: string; // ISO 字串
 }

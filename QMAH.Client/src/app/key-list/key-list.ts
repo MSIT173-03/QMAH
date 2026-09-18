@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { KeyService } from '../services/key-service';
 import { CatalogService } from '../services/catalog-service';
-import { KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
+import { KeyModel, KeyFilter, KeyExchangeRule, UnlockWithKeyResult, costForScope } from '../models/key-model';
 
 @Component({
   selector: 'app-key-list',
@@ -43,6 +43,21 @@ export class KeyList implements OnInit {
   unlockResult = signal<UnlockWithKeyResult | null>(null);
   unlockError = signal('');
 
+  /** GET /me/keys/exchange-rules 回來的解鎖規則：每種鑰匙解鎖一次要消耗幾把 */
+  exchangeRules = signal<KeyExchangeRule[]>([]);
+
+  /** 目前準備使用的鑰匙，依它的 scopeType 從 exchangeRules 查出的實際消耗數量（查不到 fallback 為 1） */
+  confirmCost = computed(() => {
+    const key = this.confirmTarget();
+    return key ? costForScope(this.exchangeRules(), key.scopeType) : 0;
+  });
+
+  /** 持有數量是否不夠這次解鎖要消耗的數量（規則載入完成前一律當作 1 把，通常足夠） */
+  confirmInsufficient = computed(() => {
+    const key = this.confirmTarget();
+    return key ? key.balance < this.confirmCost() : false;
+  });
+
   // 分類／年代對照表：改用專門的 /api/v1/catalog/categories、/api/v1/catalog/eras
   // 這兩支 API 建立，取代原本「掃一頁文物清單湊對照表」的權宜做法。
   //
@@ -64,6 +79,7 @@ export class KeyList implements OnInit {
   ngOnInit(): void {
     this.loadKeys();
     this.loadCategoryEraNames();
+    this.loadExchangeRules();
   }
 
   private loadKeys(): void {
@@ -79,6 +95,14 @@ export class KeyList implements OnInit {
         this.errorMsg.set(err?.message ?? '讀取鑰匙資料失敗');
         this.loading.set(false);
       },
+    });
+  }
+
+  /** 載入解鎖規則，讓確認視窗能顯示「這把鑰匙實際要消耗幾把」，而不是永遠假設 1 把 */
+  private loadExchangeRules(): void {
+    this.keyService.getExchangeRules().subscribe({
+      next: (rules) => this.exchangeRules.set(rules),
+      error: (err) => console.error('[KeyList] loadExchangeRules failed', err),
     });
   }
 
@@ -167,18 +191,28 @@ export class KeyList implements OnInit {
   confirmUseKey(): void {
     const key = this.confirmTarget();
     if (!key || this.unlocking()) return;
+    if (this.confirmInsufficient()) return;
 
     this.unlocking.set(true);
     this.unlockError.set('');
 
     this.keyService.unlockWithKey(key.code).subscribe({
       next: (result) => {
-        this.keys.update((list) =>
-          list.map((k) => (k.id === key.id ? { ...k, balance: result.remainingBalance } : k))
-        );
+        // 後端回應沒有 remainingBalance（鑰匙剩餘數量），改成重新打 getKeys() 拿
+        // 最新、正確的持有數量，不要自己在前端用猜的方式扣減。
+        this.loadKeys();
         this.unlocking.set(false);
-        this.confirmTarget.set(null);
-        this.unlockResult.set(result);
+
+        // ⚠️「這把鑰匙目前沒有符合條件的未解鎖文物」這個情境，後端是回 HTTP 200 +
+        // unlocked: false（不會扣鑰匙），不是錯誤狀態碼，所以不能只看 HTTP 有沒有
+        // 成功就當作解鎖了——要另外檢查 result.unlocked，沒解鎖時把 message 顯示出來，
+        // 並讓確認視窗繼續開著（不開「解鎖成功」的結果視窗）。
+        if (result.unlocked) {
+          this.confirmTarget.set(null);
+          this.unlockResult.set(result);
+        } else {
+          this.unlockError.set(result.message ?? '目前沒有符合條件的文物可以解鎖。');
+        }
       },
       error: (err) => {
         this.unlocking.set(false);

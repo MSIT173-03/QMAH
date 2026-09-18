@@ -1,16 +1,16 @@
 using System.IO.Compression;
 using System.Threading.RateLimiting;
 
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore;
 
-using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
+using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -18,6 +18,8 @@ using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
+
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。

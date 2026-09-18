@@ -152,7 +152,7 @@
         </ng-container>
         <ng-template #lockedActions>
           <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">🔓 解鎖</button>
-          <div class="hint">需消耗 {{ unlockKeyCost }} 把萬能鑰匙解鎖</div>
+          <div class="hint">需消耗 {{ unlockKeyCost() }} 把萬能鑰匙解鎖</div>
         </ng-template>
       </div>
 
@@ -237,6 +237,7 @@
         目前持有：<strong>{{ universalKey()?.balance ?? 0 }}</strong> 把萬能鑰匙
         <span class="warn" *ngIf="confirmInsufficient()">（萬能鑰匙不足）</span>
       </p>
+      <p class="have warn" *ngIf="unlockError()">{{ unlockError() }}</p>
       <div class="confirm-actions">
         <button type="button" class="action-btn cancel-btn" (click)="cancelUnlockConfirm()">取消</button>
         <button
@@ -260,10 +261,10 @@
     >
       {{ debugAllUnlocked() ? '🐞 還原真實解鎖狀態' : '🐞 全部解鎖 (Debug)' }}
     </button>
-    <button type="button" class="debug-btn" (click)="toggleLedger()">🧾 解鎖流水 (Debug)</button>
+    <button type="button" class="debug-btn" (click)="toggleLedger()">🧾 解鎖流水</button>
   </div>
   <div class="ledger-panel" [class.open]="ledgerOpen()">
-    <h4>ArtifactUnlocks 流水紀錄（本次連線期間由 API 回應累積，非完整歷史）</h4>
+    <h4>ArtifactUnlocks 流水紀錄（來自 GET /me/catalog/artifact/unlocks，玩家目前解鎖的完整歷史）</h4>
     <div *ngIf="ledgerDescending().length === 0" class="ledger-empty">目前尚無解鎖紀錄</div>
     <div class="ledger-row" *ngFor="let rec of ledgerDescending()">
       <span class="tag">{{ rec.unlockMethod }}</span>{{ itemByArtifactId(rec.artifactId)?.name ?? rec.artifactId.slice(0, 8) }}<br />

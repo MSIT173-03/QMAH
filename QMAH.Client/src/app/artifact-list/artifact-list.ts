@@ -8,7 +8,7 @@ import { CatalogService } from '../services/catalog-service';
 import { CatalogModel, CatalogDetailModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
 import { KeyService } from '../services/key-service';
-import { KeyModel } from '../models/key-model';
+import { KeyModel, KeyExchangeRule, costForScope } from '../models/key-model';
 
 /** 依年代分組後的顯示用結構（格狀列表只需要清單卡片，不含鑑賞細節） */
 interface EraGroup {
@@ -45,9 +45,20 @@ export class ArtifactList implements OnInit {
   keys = signal(0); // 全部鑰匙的持有總數，頭部徽章用
   /** 萬能鑰匙（如果有的話）；圖鑑頁卡片上的解鎖按鈕固定用這把，不是背包那邊的一般/年代/分類鑰匙 */
   universalKey = signal<KeyModel | null>(null);
-  /** 每次解鎖固定消耗 1 把鑰匙，不再像之前用稀有度星數當作成本 */
-  readonly unlockKeyCost = 1;
+  /** GET /me/keys/exchange-rules 回來的解鎖規則，見 loadExchangeRules() */
+  exchangeRules = signal<KeyExchangeRule[]>([]);
+  /**
+   * 萬能鑰匙解鎖一次要消耗的數量，改成依 exchangeRules 動態算出來，不再寫死成 1。
+   * 型別是 computed 而不是普通欄位：這個專案是 zoneless change detection
+   * （見 key-list.ts 裡 categoryNameById／eraNameById 那段說明），exchangeRules
+   * 這種非同步載入回來才會有值的資料，一定要包成 signal／computed，畫面才會重新渲染，
+   * 用一般的可變欄位會出現「資料明明抓到了，畫面卻沒更新」的狀況。
+   */
+  unlockKeyCost = computed(() => costForScope(this.exchangeRules(), 'UNIVERSAL'));
+  /** 現在改由 GET /me/catalog/artifact/unlocks 載入真實流水，見 loadUnlockStatus() */
   unlockLedger = signal<ArtifactUnlockRecord[]>([]);
+  /** 解鎖確認視窗要顯示的錯誤／提示訊息（HTTP 失敗或後端 unlocked:false 時使用） */
+  unlockError = signal('');
   unlockedCount = computed(() => this.catalogModel().filter((i) => i.unlocked).length);
 
   focusedId = signal<string | null>(null);
@@ -207,6 +218,7 @@ export class ArtifactList implements OnInit {
   ngOnInit(): void {
     this.loadArtifacts();
     this.loadKeyBalance();
+    this.loadExchangeRules();
   }
 
   loadArtifacts(): void {
@@ -219,11 +231,38 @@ export class ArtifactList implements OnInit {
         this.totalCount.set(models.length);
         this.loading.set(false);
         this.focusFromQueryParamIfAny();
+        this.loadUnlockStatus();
       },
       error: (err) => {
         this.errorMsg.set(err.message);
         this.loading.set(false);
       },
+    });
+  }
+
+  /**
+   * 文物清單載入完成後，再打 GET /me/catalog/artifact/unlocks 補上真實解鎖狀態，
+   * 取代 toCardSummary() 裡 unlocked: false 的佔位假資料。
+   *
+   * 同時把這份流水拿來取代原本「本次連線期間由 API 回應累積」的除錯用 unlockLedger——
+   * 右下角的解鎖流水面板改成顯示這支 API 回傳的真實歷史紀錄，不再只是 debug 假資料；
+   * 之後玩家在畫面上實際解鎖（confirmUnlock()）時，才繼續即時 append 新的一筆上去。
+   */
+  private loadUnlockStatus(): void {
+    this.catalogService.getMyArtifactUnlocks().subscribe({
+      next: (records) => {
+        const unlockedAtByArtifactId = new Map(records.map((r) => [r.artifactId, r.unlockedAt]));
+
+        this.catalogModel.update((list) =>
+          list.map((item) => {
+            const unlockedAt = unlockedAtByArtifactId.get(item.id);
+            return unlockedAt !== undefined ? { ...item, unlocked: true, unlockedAt } : item;
+          })
+        );
+
+        this.unlockLedger.set(records);
+      },
+      error: (err) => console.error('[ArtifactList] loadUnlockStatus failed', err),
     });
   }
 
@@ -272,13 +311,24 @@ export class ArtifactList implements OnInit {
     });
   }
 
+  /** 載入解鎖規則，算出萬能鑰匙解鎖一次要消耗幾把（見 unlockKeyCost） */
+  private loadExchangeRules(): void {
+    this.keyService.getExchangeRules().subscribe({
+      next: (rules) => this.exchangeRules.set(rules),
+      error: (err) => console.error('[ArtifactList] loadExchangeRules failed', err),
+    });
+  }
+
   /**
-   * 後端目前還沒有「圖鑑遊戲外皮／解鎖狀態」的對應欄位或 API（這兩者本來就是純前端遊戲機制），
+   * 後端目前還沒有「圖鑑遊戲外皮」的對應欄位或 API（純前端遊戲機制），
    * 這裡先用暫時的預設值把 CatalogModel 補成 CompendiumCardSummary。
    *
    * 文物本身的鑑賞細節（description / sizeText / primaryImagePath...）不在這裡用假資料頂著——
    * GET /catalog/artifacts/{id} 已經是真正可用的 API 了，所以改成點開卡片時才用
    * CatalogService.getArtifactById() 即時抓真資料（見 maybeLoadFocusedDetail()），不需要、也不該用假資料。
+   *
+   * unlocked／unlockedAt 這裡一律先給預設的「未解鎖」，實際狀態由 loadUnlockStatus()
+   * 打 GET /me/catalog/artifact/unlocks 回來後再覆寫（見 loadArtifacts() 內的呼叫順序）。
    */
   private toCardSummary(model: CatalogModel): CompendiumCardSummary {
     const placeholderSkin: CompendiumSkin = {
@@ -293,7 +343,7 @@ export class ArtifactList implements OnInit {
     return {
       ...model,
       ...placeholderSkin,
-      unlocked: false, // TODO: 後端有解鎖狀態欄位後改讀真實值
+      unlocked: false,
       unlockedAt: null,
     };
   }
@@ -353,9 +403,9 @@ export class ArtifactList implements OnInit {
     return this.catalogModel().find((i) => i.id === id) ?? null;
   });
 
-  confirmCost = computed(() => this.unlockKeyCost);
+  confirmCost = computed(() => this.unlockKeyCost());
 
-  confirmInsufficient = computed(() => (this.universalKey()?.balance ?? 0) < this.unlockKeyCost);
+  confirmInsufficient = computed(() => (this.universalKey()?.balance ?? 0) < this.unlockKeyCost());
 
   ledgerDescending = computed(() => [...this.unlockLedger()].reverse());
 
@@ -411,21 +461,23 @@ export class ArtifactList implements OnInit {
   }
 
   openUnlockConfirm(id: string): void {
+    this.unlockError.set('');
     this.confirmTargetId.set(id);
   }
 
   cancelUnlockConfirm(): void {
     this.confirmTargetId.set(null);
+    this.unlockError.set('');
   }
 
   /**
    * 圖鑑頁卡片上的解鎖按鈕固定使用萬能鑰匙（不是背包裡任何一般/年代/分類鑰匙），
    * 呼叫 KeyService.unlockWithKey() 並帶上 artifactId 指定要解鎖哪一張卡片。
    *
-   * ⚠️ UnlockWithKeyResult 不像舊版 UnlockResult 會帶完整 CardEntry（含鑑賞細節），
-   * 只有 artifactId／artifactName，所以這裡只把 catalogModel 裡對應項目的 unlocked
-   * 狀態翻成 true；如果玩家解鎖的正是目前放大檢視中的卡片，另外呼叫
-   * maybeLoadFocusedDetail() 重新抓一次鑑賞細節。
+   * ⚠️ 後端實際回應（ArtifactUnlockResultDto）只有 unlocked／artifactId／artifactName／
+   * remainingEligibleArtifactCount／message，沒有完整流水紀錄，也沒有鑰匙剩餘數量，
+   * 所以這裡不從回應裡讀鑰匙餘額或流水，改成成功後重新呼叫 loadKeyBalance()／
+   * loadUnlockStatus() 跟後端要正確資料；unlockedAt 先用前端當下時間點近似。
    */
   confirmUnlock(): void {
     const target = this.confirmTarget();
@@ -435,17 +487,32 @@ export class ArtifactList implements OnInit {
     const universal = this.universalKey();
     if (!universal) return; // 沒有萬能鑰匙時按鈕本來就該是停用狀態，這裡再擋一次
 
+    this.unlockError.set('');
+
     this.keyService.unlockWithKey(universal.code, target.id).subscribe({
       next: (result) => {
+        // 鑰匙餘額改重新呼叫 loadKeyBalance() 問後端要正確數字，不用 unlockKeyCost()
+        // 在前端自己相減去猜。
+        this.loadKeyBalance();
+
+        // ⚠️「這把鑰匙目前沒有符合條件的未解鎖文物」這個情境，後端是回 HTTP 200 +
+        // unlocked: false（不會扣鑰匙），不是錯誤狀態碼，所以不能只看 HTTP 有沒有
+        // 成功就當作解鎖了——要另外檢查 result.unlocked，沒解鎖時把 message 顯示在
+        // 確認視窗裡，並讓視窗繼續開著，不去更新 catalogModel 的解鎖狀態。
+        if (!result.unlocked) {
+          this.unlockError.set(result.message ?? '目前沒有符合條件的文物可以解鎖。');
+          return;
+        }
+
+        // unlockedAt 先用前端當下時間點近似，等 loadUnlockStatus() 打
+        // GET /me/catalog/artifact/unlocks 成功後，會再用後端真實時間覆寫回來。
         this.catalogModel.update((list) =>
           list.map((i) =>
-            i.id === target.id ? { ...i, unlocked: true, unlockedAt: result.record.unlockedAt } : i
+            i.id === target.id ? { ...i, unlocked: true, unlockedAt: new Date().toISOString() } : i
           )
         );
-        this.universalKey.update((k) => (k ? { ...k, balance: result.remainingBalance } : k));
-        this.keys.update((total) => Math.max(0, total - this.unlockKeyCost));
-        this.unlockLedger.update((list) => [...list, result.record]);
         this.confirmTargetId.set(null);
+        this.loadUnlockStatus();
 
         if (this.focusedId() === target.id) {
           this.maybeLoadFocusedDetail();
@@ -454,6 +521,7 @@ export class ArtifactList implements OnInit {
       error: (err) => {
         // TODO: 依專案慣例改成 Toast / Snackbar 提示
         console.error('[ArtifactList] unlock failed', err);
+        this.unlockError.set(err?.message ?? '解鎖失敗，請稍後再試');
       },
     });
   }

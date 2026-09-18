@@ -366,6 +366,11 @@
   color: var(--red);
 }
 
+/* 巢狀在 .have 裡的警示文字（例如「數量不足」），跟 artifact-list.scss 的寫法一致 */
+.confirm-dialog .warn {
+  color: var(--red);
+}
+
 .confirm-actions {
   display: flex;
   gap: 10px;
