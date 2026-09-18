@@ -1,4 +1,5 @@
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -23,8 +24,8 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        var groupedItems = request.Items
-            .Where(item => item.ProductId != Guid.Empty)
+        if (!TryGroupOrderItems(request.Items, out var groupedItems, out var err))
+            return err;
             .GroupBy(item => item.ProductId)
             .Select(group => new { ProductId = group.Key, Quantity = group.Sum(item => item.Quantity) })
             .ToList();
@@ -34,33 +35,126 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         await using var transaction = await db.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
+
+        var (products, productsError) = await LoadAndValidateProductsAsync(groupedItems!, cancellationToken);
+        if (productsError is not null)
+            return productsError;
+
+        var subtotal = groupedItems!.Sum(item => products![item.ProductId].Price * item.Quantity);
+
+        var (userCoupon, discountAmount, couponError) = await ApplyCouponAsync(
+            request.UserCouponId,
+            userId,
+            subtotal,
+            cancellationToken);
+        if (couponError is not null)
+            return couponError;
+
+        var pointsError = await ValidatePointsUsageAsync(
+            request.PointsUsed,
+            userId,
+            subtotal,
+            discountAmount,
+            cancellationToken);
+        if (pointsError is not null)
+            return pointsError;
+
+        var order = await BuildOrderAsync(
+            request,
+            userId,
+            groupedItems!,
+            products!,
+            subtotal,
+            discountAmount,
+            userCoupon,
+            cancellationToken);
+
+        db.StoreOrders.Add(order);
+        db.Payments.Add(order.Payment!);
+        ApplyCouponRedemption(userCoupon, order.CreatedAt);
+        await ApplyPointsRedemptionAsync(userId, request.PointsUsed, order, cancellationToken);
+
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return Created(
+            $"/api/v1/me/orders/{order.Id}",
+            ToOrderDto(order));
+    }
+
+    /// <summary>
+    /// 整理並檢查訂單商品可行性。
+    /// </summary>
+    /// <param name="items"></param>
+    /// <param name="grouped"></param>
+    /// <param name="err"></param>
+    /// <returns></returns>
+    private bool TryGroupOrderItems(
+        List<CreateOrderItemRequest> items,
+        [NotNullWhen(true)] out List<GroupedOrderItem>? grouped,
+        [NotNullWhen(false)] out ActionResult? err)
+    {
+        var groupedItems = items
+           .Where(item => item.ProductId != Guid.Empty)
+           .GroupBy(item => item.ProductId)
+           .Select(group => new GroupedOrderItem(group.Key, group.Sum(item => item.Quantity)))
+           .ToList();
+        if (groupedItems.Count == 0 || groupedItems.Any(item => item.Quantity < 0))
+        {
+            grouped = null;
+            err = Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "訂單明細無效",
+                detail: "請提供至少一件商品，每件數量必須大於零。");
+            return false;
+        }
+
+        grouped = groupedItems;
+        err = null;
+        return true;
+    }
+
+    private async Task<(Dictionary<Guid, Product>? Products, ActionResult? Error)> LoadAndValidateProductsAsync(
+        List<GroupedOrderItem> groupedItems,
+        CancellationToken cancellationToken)
+    {
         var productIds = groupedItems.Select(item => item.ProductId).ToArray();
         var products = await db.Products
             .Where(product => productIds.Contains(product.Id))
             .ToDictionaryAsync(product => product.Id, cancellationToken);
         if (products.Count != productIds.Length)
-            return MissingResource("找不到商品", "訂單中有商品不存在或已下架。");
+            return (null, MissingResource("找不到商品", "訂單中有商品不存在或已下架。"));
+
         foreach (var item in groupedItems)
         {
             var product = products[item.ProductId];
             if (!product.IsActive)
-                return InvalidWorkflow("商品目前未上架", $"商品「{product.Name}」目前無法購買。");
+                return (null, InvalidWorkflow("商品目前未上架", $"商品「{product.Name}」目前無法購買。"));
             if (product.Stock < item.Quantity)
-                return InvalidWorkflow("商品庫存不足", $"商品「{product.Name}」目前庫存不足。");
+                return (null, InvalidWorkflow("商品庫存不足", $"商品「{product.Name}」目前庫存不足。"));
         }
 
-        var subtotal = groupedItems.Sum(item => products[item.ProductId].Price * item.Quantity);
-        var discountAmount = 0m;
-        UserCoupon? userCoupon = null;
-        if (request.UserCouponId.HasValue)
+        return (products, null);
+    }
+
+
+    private async Task<(UserCoupon? Coupon, decimal DiscountAmount, ActionResult? Error)> ApplyCouponAsync(
+        Guid? userCouponId,
+        Guid userId,
+        decimal subtotal,
+        CancellationToken cancellationToken)
         {
-            userCoupon = await db.UserCoupons
+        if (!userCouponId.HasValue)
+            return (null, 0m, null);
+
+        var userCoupon = await db.UserCoupons
                 .Include(coupon => coupon.CouponDefinition)
-                .SingleOrDefaultAsync(coupon => coupon.Id == request.UserCouponId.Value
+            .SingleOrDefaultAsync(coupon => coupon.Id == userCouponId.Value
                     && coupon.UserId == userId,
                     cancellationToken);
             if (userCoupon is null)
-                return MissingResource("找不到優惠券", "這張優惠券不存在或不屬於目前帳號。");
+            return (null, 0m, MissingResource("找不到優惠券", "這張優惠券不存在或不屬於目前帳號。"));
+
             var definition = userCoupon.CouponDefinition;
             var now = DateTime.UtcNow;
             if (userCoupon.Status != "AVAILABLE"
@@ -68,12 +162,12 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 || definition.StartAt > now
                 || definition.EndAt < now)
             {
-                return InvalidWorkflow("優惠券不可使用", "優惠券可能已使用、過期或尚未開始。");
+            return (null, 0m, InvalidWorkflow("優惠券不可使用", "優惠券可能已使用、過期或尚未開始。"));
             }
             if (subtotal < definition.MinimumAmount)
-                return InvalidWorkflow("未達優惠券門檻", $"訂單小計至少需要 {definition.MinimumAmount:0.##} 元。");
+            return (null, 0m, InvalidWorkflow("未達優惠券門檻", $"訂單小計至少需要 {definition.MinimumAmount:0.##} 元。"));
 
-            discountAmount = definition.DiscountType == "PERCENT"
+        var discountAmount = definition.DiscountType == "PERCENT"
                 ? subtotal * definition.DiscountValue / 100m
                 : definition.DiscountType == "FIXED"
                     ? definition.DiscountValue
@@ -82,18 +176,40 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 decimal.Round(discountAmount, 2, MidpointRounding.AwayFromZero),
                 0m,
                 subtotal);
+
+        return (userCoupon, discountAmount, null);
         }
 
-        if (request.PointsUsed > subtotal - discountAmount)
+    private async Task<ActionResult?> ValidatePointsUsageAsync(
+        int pointsUsed,
+        Guid userId,
+        decimal subtotal,
+        decimal discountAmount,
+        CancellationToken cancellationToken)
+    {
+        if (pointsUsed > subtotal - discountAmount)
             return Problem(statusCode: StatusCodes.Status400BadRequest, title: "點數折抵超過訂單金額", detail: "PointsUsed 不可超過折扣後的小計。");
-        if (request.PointsUsed > 0)
+        if (pointsUsed > 0)
         {
             var balance = await db.PointBalances
                 .SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
-            if (balance is null || balance.Balance < request.PointsUsed)
+            if (balance is null || balance.Balance < pointsUsed)
                 return InvalidWorkflow("點數不足", "目前點數餘額不足以折抵這筆訂單。");
         }
 
+        return null;
+    }
+
+    private async Task<StoreOrder> BuildOrderAsync(
+        CreateStoreOrderRequest request,
+        Guid userId,
+        List<GroupedOrderItem> groupedItems,
+        Dictionary<Guid, Product> products,
+        decimal subtotal,
+        decimal discountAmount,
+        UserCoupon? userCoupon,
+        CancellationToken cancellationToken)
+    {
         var totalAmount = decimal.Round(
             subtotal - discountAmount - request.PointsUsed,
             2,
@@ -135,7 +251,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             });
         }
 
-        var payment = new Payment
+        order.Payment = new Payment
         {
             Id = Guid.NewGuid(),
             OrderId = order.Id,
@@ -145,31 +261,44 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             PaymentType = "Credit_CreditCard",
             CreatedAt = order.CreatedAt
         };
-        order.Payment = payment;
-        db.StoreOrders.Add(order);
-        db.Payments.Add(payment);
 
-        if (userCoupon is not null)
+        return order;
+    }
+
+    private static void ApplyCouponRedemption(UserCoupon? userCoupon, DateTime redeemedAt)
         {
+        if (userCoupon is null)
+            return;
+
             userCoupon.Status = "USED";
-            userCoupon.UsedAt = order.CreatedAt;
+        userCoupon.UsedAt = redeemedAt;
         }
-        if (request.PointsUsed > 0)
+
+    private async Task ApplyPointsRedemptionAsync(
+        Guid userId,
+        int pointsUsed,
+        StoreOrder order,
+        CancellationToken cancellationToken)
         {
+        if (pointsUsed <= 0)
+            return;
+
             var balance = await db.PointBalances.SingleAsync(item => item.UserId == userId, cancellationToken);
-            balance.Balance -= request.PointsUsed;
+        balance.Balance -= pointsUsed;
             balance.UpdatedAt = order.CreatedAt;
             db.PointTransactions.Add(new PointTransaction
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                Amount = -request.PointsUsed,
+            Amount = -pointsUsed,
                 Reason = "ORDER_REDEEM",
                 ReferenceType = "ORDER",
                 ReferenceId = order.Id,
                 CreatedAt = order.CreatedAt
             });
         }
+
+    private readonly record struct GroupedOrderItem(Guid ProductId, int Quantity);
 
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
