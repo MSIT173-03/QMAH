@@ -302,6 +302,33 @@ app.Use(async (context, next) =>
     catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
     {
     }
+    catch (Exception exception)
+        when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception)
+            && !context.RequestAborted.IsCancellationRequested)
+    {
+        // integration: API 依賴資料庫的單一請求失敗時只回傳 503，不能讓例外穿透成整個 Host 的未處理錯誤。
+        // 這讓登入、型錄、遊戲與其他不依賴該次查詢的功能仍可繼續服務；資料庫恢復後也能直接重試。
+        app.Logger.LogError(
+            exception,
+            "API request 無法連線到 QMAH 資料庫。目標：{DatabaseTarget}",
+            qmahDatabaseResolution.Target);
+
+        if (context.Response.HasStarted)
+        {
+            throw;
+        }
+
+        context.Response.Clear();
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        context.Response.ContentType = "application/problem+json; charset=utf-8";
+        context.Response.Headers.CacheControl = "no-store";
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Title = "資料庫無法連線",
+            Detail = "QMAH 資料庫目前無法連線，請稍後再試。"
+        });
+    }
 });
 
 if (!app.Environment.IsDevelopment())

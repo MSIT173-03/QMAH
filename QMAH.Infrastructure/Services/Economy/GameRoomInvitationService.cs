@@ -31,12 +31,33 @@ public sealed class GameRoomInvitationService(
         if (input.InviteeUserId == inviterUserId)
             return EconomyResult<GameRoomInvitationView>.Invalid("不能邀請自己加入私人房間。");
 
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // integration: 建立邀請與「同房同會員不可重複待處理」檢查必須在同一個可重試交易內，
+        // 避免暫時性 SQL 失敗後留下重複邀請或只寫入其中一筆資料。
+        // 固定識別碼也讓 commit 後的 response 遺失／讀取失敗重試時能找回同一筆邀請。
+        var invitationId = Guid.NewGuid();
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
+        var existingInvitation = await db.GameRoomInvitations
+            .Include(item => item.Room)
+            .Include(item => item.InviterUser)
+                .ThenInclude(user => user.Profile)
+            .Include(item => item.InviteeUser)
+                .ThenInclude(user => user.Profile)
+            .Include(item => item.RewardKeyDefinition)
+            .SingleOrDefaultAsync(item => item.Id == invitationId, retryToken);
+        if (existingInvitation is not null)
+        {
+            await transaction.CommitAsync(retryToken);
+            return EconomyResult<GameRoomInvitationView>.Success(ToView(existingInvitation));
+        }
         var room = await db.GameRooms
             .Include(item => item.GamePlayers)
-            .SingleOrDefaultAsync(item => item.Id == roomId, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == roomId, retryToken);
         if (room is null || room.Status == "CANCELLED")
             return EconomyResult<GameRoomInvitationView>.NotFound("找不到可邀請的私人房間。");
         if (room.Visibility != "PRIVATE")
@@ -47,7 +68,7 @@ public sealed class GameRoomInvitationService(
             return EconomyResult<GameRoomInvitationView>.Forbidden("只有房間發起人可以發送邀請。");
         if (!await db.Users.AnyAsync(
                 user => user.Id == input.InviteeUserId && user.Status == "ACTIVE",
-                cancellationToken))
+                retryToken))
         {
             return EconomyResult<GameRoomInvitationView>.NotFound("找不到可邀請的啟用會員。");
         }
@@ -61,14 +82,14 @@ public sealed class GameRoomInvitationService(
                 invitation => invitation.RoomId == roomId
                     && invitation.InviteeUserId == input.InviteeUserId
                     && invitation.Status == "PENDING",
-                cancellationToken))
+                retryToken))
         {
             return EconomyResult<GameRoomInvitationView>.Conflict("這位會員已有一筆待處理邀請。");
         }
 
         var invitation = new GameRoomInvitation
         {
-            Id = Guid.NewGuid(),
+            Id = invitationId,
             RoomId = roomId,
             InviterUserId = inviterUserId,
             InviteeUserId = input.InviteeUserId,
@@ -77,11 +98,12 @@ public sealed class GameRoomInvitationService(
             CreatedAt = DateTime.UtcNow
         };
         db.GameRoomInvitations.Add(invitation);
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(retryToken);
+        await transaction.CommitAsync(retryToken);
 
         return EconomyResult<GameRoomInvitationView>.Success(
-            await GetRequiredViewAsync(invitation.Id, cancellationToken));
+            await GetRequiredViewAsync(invitation.Id, retryToken));
+        }, cancellationToken);
     }
 
     /// <summary>讀取目前會員收到的待處理與歷史邀請。</summary>
