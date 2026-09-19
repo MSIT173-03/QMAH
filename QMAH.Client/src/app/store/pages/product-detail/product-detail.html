@@ -1,12 +1,12 @@
 <!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
-<app-promobar [announcements]="site.announcements()" [isLoggedIn]="site.isLoggedIn()" [points]="site.points()" [coupons]="site.coupons()" />
+<app-top-bar [announcements]="site.announcements()" [isLoggedIn]="site.isLoggedIn()" [points]="site.points()" [coupons]="site.coupons()" />
 
 <!-- 網站頁首：品牌 Logo、搜尋框、分類導覽與購物車入口 -->
 <app-site-header>
   <app-search-bar [compact]="true" [(value)]="searchQuery" (search)="onSearch($event)" />
-  <app-header-actions [links]="navLinks">
+  <app-header-nav [links]="navLinks">
     <app-cart-link [href]="cartHref" [count]="cart.count()" />
-  </app-header-actions>
+  </app-header-nav>
 </app-site-header>
 
 <main class="container product-main">
@@ -39,7 +39,7 @@
 
   <!-- 商品說明與評價並排 -->
   <section class="product-hero-section">
-    <app-product-detail [intro]="product.description" [image]="product.coverImage" [rows]="policies()" />
+    <app-product-description [intro]="product.description" [image]="product.coverImage" [rows]="policies()" />
     <app-product-reviews
       [rating]="product.rating"
       [reviewCount]="product.reviewCount"

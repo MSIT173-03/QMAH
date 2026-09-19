@@ -8,14 +8,14 @@ import { formatDateMD, formatMoney } from '../../shared/format';
  * 並可展開折價券懸浮面板檢視目前可用的折價券清單。
  */
 @Component({
-  selector: 'app-promobar',
+  selector: 'app-top-bar',
   imports: [StoreLink],
-  templateUrl: './promobar.html',
+  templateUrl: './top-bar.html',
   styleUrls: [
-    './promobar.scss',
+    './top-bar.scss',
   ],
 })
-export class Promobar {
+export class TopBar {
   /** 跑馬燈公告文字清單 */
   announcements = input<string[]>([]);
 

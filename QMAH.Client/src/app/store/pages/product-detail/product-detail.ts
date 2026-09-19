@@ -4,10 +4,10 @@ import { Router } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
-  Promobar,
+  TopBar,
   SiteHeader,
   SearchBar,
-  HeaderActions,
+  HeaderNav,
   HeaderNavLink,
   CartLink,
   Breadcrumb,
@@ -22,10 +22,10 @@ import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView, wasPrice } from '../../shared/product-view';
 import { ProductGallery } from './product-gallery/product-gallery';
 import { ProductSummary } from './product-summary/product-summary';
-import { ProductDetail } from './product-detail/product-detail';
+import { ProductDescription } from './product-description/product-description';
 import { ProductReviews } from './product-reviews/product-reviews';
 import { RelatedProducts } from './related-products/related-products';
-import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
+import { RELATED_LIMIT, REVIEW_FILTERS } from './product-detail.data';
 
 /**
  * 商品詳情頁面。
@@ -34,29 +34,29 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
  * 加入購物車與直接購買皆在此呼叫 API 並以回應內容更新購物車狀態。
  */
 @Component({
-  selector: 'app-product-info',
+  selector: 'app-product-detail',
   host: { class: 'store-app' },
   imports: [
-    Promobar,
+    TopBar,
     SiteHeader,
     SearchBar,
-    HeaderActions,
+    HeaderNav,
     CartLink,
     Breadcrumb,
     EmptyState,
     SiteFooter,
     ProductGallery,
     ProductSummary,
-    ProductDetail,
+    ProductDescription,
     ProductReviews,
     RelatedProducts,
   ],
-  templateUrl: './product-info.html',
+  templateUrl: './product-detail.html',
   styleUrls: [
-    './product-info.scss',
+    './product-detail.scss',
   ],
 })
-export class ProductInfo {
+export class ProductDetailPage {
   private readonly router = inject(Router);
   private readonly catalogApi = inject(CatalogApi);
 

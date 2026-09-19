@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ProductInfo } from './product-info';
+import { ProductDetailPage } from './product-detail';
 import { provideMockApi } from '../../api/mock/mock-api.interceptor';
 
-describe('ProductInfo', () => {
-  let component: ProductInfo;
-  let fixture: ComponentFixture<ProductInfo>;
+describe('ProductDetailPage', () => {
+  let component: ProductDetailPage;
+  let fixture: ComponentFixture<ProductDetailPage>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProductInfo],
+      imports: [ProductDetailPage],
       providers: [provideMockApi()],
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ProductInfo);
+    fixture = TestBed.createComponent(ProductDetailPage);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

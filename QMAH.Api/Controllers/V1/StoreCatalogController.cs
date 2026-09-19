@@ -147,7 +147,7 @@ public sealed class StoreCatalogController(
 
     /// <summary>取得八種商品類型的數量；已登入時一併附上點數與優惠券列表。</summary>
     [HttpGet("products/info")]
-    public async Task<ActionResult<ProductInfomationDto>> GetProductInfo(
+    public async Task<ActionResult<StoreOverviewDto>> GetStoreOverview(
         CancellationToken cancellationToken = default)
     {
         var products = await db.Products
@@ -202,7 +202,7 @@ public sealed class StoreCatalogController(
             .Take(10));
 
         if (!TryGetCurrentUserId(out var userId))
-            return Ok(new ProductInfomationDto(
+            return Ok(new StoreOverviewDto(
                 categoryCounts, categoryCoverImages, false, null, null, hotProducts, newProducts, topRatedProducts, recommendedProducts));
 
         var pointBalance = await db.PointBalances
@@ -237,7 +237,7 @@ public sealed class StoreCatalogController(
                 coupon.UsedAt))
             .ToListAsync(cancellationToken);
 
-        return Ok(new ProductInfomationDto(
+        return Ok(new StoreOverviewDto(
             categoryCounts, categoryCoverImages, true, pointBalance, coupons, hotProducts, newProducts, topRatedProducts, recommendedProducts));
     }
 

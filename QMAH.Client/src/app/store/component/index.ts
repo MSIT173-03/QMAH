@@ -1,16 +1,17 @@
 export { Breadcrumb } from './breadcrumb/breadcrumb';
 export { CartLink } from './cart-link/cart-link';
 export { CategoryList } from './category-list/category-list';
+export { CompactProductList } from './compact-product-list/compact-product-list';
 export { EmptyState } from './empty-state/empty-state';
 export { FilterSidebar } from './filter-sidebar/filter-sidebar';
-export { HeaderActions } from './header-actions/header-actions';
+export { HeaderNav } from './header-nav/header-nav';
 export { PageTitleRow } from './page-title-row/page-title-row';
 export { Pagination } from './pagination/pagination';
 export { Panel } from './panel/panel';
 export { PillGroup } from './pill-group/pill-group';
 export { ProductCard } from './product-card/product-card';
 export { ProductRow } from './product-row/product-row';
-export { Promobar } from './promobar/promobar';
+export { TopBar } from './top-bar/top-bar';
 export { QtyStepper } from './qty-stepper/qty-stepper';
 export { SearchBar } from './search-bar/search-bar';
 export { SectionHead } from './section-head/section-head';
@@ -20,7 +21,7 @@ export { StepIndicator } from './step-indicator/step-indicator';
 
 export type { BreadcrumbItem } from './breadcrumb/breadcrumb';
 export type { CategoryListItem } from './category-list/category-list';
-export type { HeaderNavLink } from './header-actions/header-actions';
+export type { HeaderNavLink } from './header-nav/header-nav';
 export type { PillOption } from './pill-group/pill-group';
 export type { ProductCardBadgeVariant, ProductCardVariant } from './product-card/product-card';
 export type { SearchHotLink, SearchSuggestion } from './search-bar/search-bar';

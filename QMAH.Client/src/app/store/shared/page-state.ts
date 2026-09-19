@@ -2,7 +2,7 @@ import { computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Observable } from 'rxjs';
 import { CartApi, SiteApi } from '../api';
-import { ProductInfoService } from './product-info.service';
+import { StoreOverviewService } from './store-overview.service';
 import { ShoppingCart } from '../api/api.models';
 import { formatNumber } from './format';
 
@@ -43,22 +43,22 @@ export function injectCartState() {
  */
 export function injectSiteData() {
   const config = toSignal(inject(SiteApi).getConfig());
-  const productInfo = inject(ProductInfoService);
-  productInfo.load();
-  const info = productInfo.info;
+  const storeOverview = inject(StoreOverviewService);
+  storeOverview.load();
+  const overview = storeOverview.overview;
 
   return {
     /** 全站設定，尚未載入時為 null */
     config,
     /** 商品資訊（器類數量、會員點數與折價券、各排行榜），尚未載入時為 null */
-    info,
+    overview,
     /** 頂部公告列的公告文字 */
     announcements: computed(() => config()?.promoAnnouncements ?? []),
     /** 是否已登入；資料載入前視為未登入，避免登入狀態不明時露出會員專屬連結 */
-    isLoggedIn: computed(() => info()?.isLoggedIn ?? false),
+    isLoggedIn: computed(() => overview()?.isLoggedIn ?? false),
     /** 頂部公告列顯示的會員點數 */
-    points: computed(() => formatNumber(info()?.pointBalance ?? 0)),
+    points: computed(() => formatNumber(overview()?.pointBalance ?? 0)),
     /** 頂部公告列的折價券清單 */
-    coupons: computed(() => info()?.coupons ?? []),
+    coupons: computed(() => overview()?.coupons ?? []),
   };
 }

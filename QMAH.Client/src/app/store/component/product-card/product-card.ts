@@ -10,10 +10,10 @@ export type ProductCardBadgeVariant = 'ink' | 'teal';
 /**
  * 商品卡片版面變體。
  * default：首頁格狀卡片；
- * list：商品列表頁格狀卡片（圖片佔位文字較深）；
+ * grid：商品列表頁格狀卡片（圖片佔位文字較深）；
  * compact：僅顯示品牌／名稱／價格，用於購物車「再加購」等次要情境。
  */
-export type ProductCardVariant = 'default' | 'list' | 'compact';
+export type ProductCardVariant = 'default' | 'grid' | 'compact';
 
 /**
  * 商品卡片。

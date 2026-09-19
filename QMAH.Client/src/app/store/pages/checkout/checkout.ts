@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { EMPTY, catchError, filter, switchMap } from 'rxjs';
 import { SiteHeader, StepIndicator, Breadcrumb, BreadcrumbItem, PageTitleRow, SiteFooter } from '../../component';
 import { CheckoutApi, MemberApi } from '../../api';
-import { ProductInfoService } from '../../shared/product-info.service';
+import { StoreOverviewService } from '../../shared/store-overview.service';
 import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
 import { CART_PATH, HOME_PATH } from '../../shared/paths';
 import { RecipientForm } from './recipient-form/recipient-form';
@@ -50,20 +50,20 @@ import {
     './checkout.scss',
   ],
 })
-export class Checkout {
+export class CheckoutPage {
   private readonly checkoutApi = inject(CheckoutApi);
   private readonly memberApi = inject(MemberApi);
   private readonly router = inject(Router);
 
   /** 商品資訊中的登入狀態；資料載入完成後若未登入，直接導回首頁 */
-  private readonly productInfo = inject(ProductInfoService);
+  private readonly storeOverview = inject(StoreOverviewService);
   private readonly loginGuard = effect(() => {
-    const info = this.productInfo.info();
-    if (info && !info.isLoggedIn) this.router.navigateByUrl(HOME_PATH, { replaceUrl: true });
+    const overview = this.storeOverview.overview();
+    if (overview && !overview.isLoggedIn) this.router.navigateByUrl(HOME_PATH, { replaceUrl: true });
   });
 
   constructor() {
-    this.productInfo.load();
+    this.storeOverview.load();
   }
 
   /** 頁首的結帳流程步驟 */

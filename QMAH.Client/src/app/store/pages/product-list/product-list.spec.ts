@@ -1,22 +1,22 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { ProductList } from './product-list';
+import { ProductListPage } from './product-list';
 import { provideMockApi } from '../../api/mock/mock-api.interceptor';
 
-describe('ProductList', () => {
-  let component: ProductList;
-  let fixture: ComponentFixture<ProductList>;
+describe('ProductListPage', () => {
+  let component: ProductListPage;
+  let fixture: ComponentFixture<ProductListPage>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProductList],
-      // ProductList 內含 routerLink 與分頁切換時更新網址查詢字串，兩者皆需要 Router／ActivatedRoute。
+      imports: [ProductListPage],
+      // ProductListPage 內含 routerLink 與分頁切換時更新網址查詢字串，兩者皆需要 Router／ActivatedRoute。
       providers: [provideRouter([]), provideMockApi()],
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ProductList);
+    fixture = TestBed.createComponent(ProductListPage);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

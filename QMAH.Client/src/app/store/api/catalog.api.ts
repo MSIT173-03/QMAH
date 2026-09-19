@@ -6,20 +6,20 @@ import {
   Page,
   Product,
   ProductDetail,
-  ProductInfo,
+  StoreOverview,
   ProductQuery,
   ReviewPage,
   ReviewQuery,
 } from './api.models';
 import {
   ApiProductDetail,
-  ApiProductInfo,
+  ApiStoreOverview,
   ApiProductPage,
   ApiProductReviewsResponse,
   toCategoryCode,
   toProduct,
   toProductDetail,
-  toProductInfo,
+  toStoreOverview,
   toReviewPage,
 } from './catalog.api-dto';
 
@@ -59,8 +59,8 @@ export class CatalogApi {
   }
 
   /** GET /products/info：各器類商品數量；已登入時附上點數與可用折價券 */
-  getProductInfo(): Observable<ProductInfo> {
-    return this.http.get<ApiProductInfo>(apiUrl('/products/info')).pipe(map(toProductInfo));
+  getStoreOverview(): Observable<StoreOverview> {
+    return this.http.get<ApiStoreOverview>(apiUrl('/products/info')).pipe(map(toStoreOverview));
   }
 
   /** GET /products/{id}：商品詳情，查無商品時回應 404 */

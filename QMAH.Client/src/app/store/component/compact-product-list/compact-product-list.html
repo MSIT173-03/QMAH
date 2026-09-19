@@ -1,0 +1,37 @@
+<!-- 橫列式商品清單面板：標題列 + 橫列商品 -->
+<app-panel [attr.id]="anchorId()">
+  <app-section-head variant="panel" [title]="title()" [tag]="tag()">
+    <a class="section-more" [storeLink]="moreHref()">更多 →</a>
+  </app-section-head>
+  <div class="compact-list">
+    @for (item of items(); track item.id) {
+      <div class="compact-item">
+        <a [storeLink]="item.href" class="compact-link">
+          <div class="compact-thumb">
+            @if (item.coverImage) {
+              <img class="compact-thumb-image" [src]="item.coverImage" [alt]="item.name" />
+            } @else {
+              IMG
+            }
+          </div>
+          <div class="compact-info">
+            <span class="product-card-brand">{{ item.brand }}</span>
+            <span class="compact-name">{{ item.name }}</span>
+            <div class="compact-price-row">
+              <span class="compact-price" [class.text-accent]="item.hasDeal">{{ item.priceText }}</span>
+              <span class="compact-tag" [class.compact-tag--deal]="item.hasDeal">{{ item.tagText }}</span>
+              <span class="compact-rating">
+                @if (item.hasReviews) {
+                  <span class="product-card-star">★</span> {{ item.ratingText }} · {{ item.reviewsText }}
+                } @else {
+                  尚無評價
+                }
+              </span>
+            </div>
+          </div>
+        </a>
+        <button type="button" class="compact-add" (click)="addToCart.emit(item.id)">加入</button>
+      </div>
+    }
+  </div>
+</app-panel>

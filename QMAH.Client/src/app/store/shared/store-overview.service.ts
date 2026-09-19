@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { CatalogApi } from '../api';
-import { ProductInfo } from '../api/api.models';
+import { StoreOverview } from '../api/api.models';
 
 /**
  * 商品資訊（products/info）的共用儲存：各器類數量與封面圖、登入狀態、會員點數與折價券，以及熱銷、新品與評價排行。
@@ -8,14 +8,14 @@ import { ProductInfo } from '../api/api.models';
  * 登入狀態或會員資料可能已改變時（例如登入、登出、下單後）呼叫 refresh() 強制重新取得。
  */
 @Injectable({ providedIn: 'root' })
-export class ProductInfoService {
+export class StoreOverviewService {
   private readonly catalogApi = inject(CatalogApi);
 
-  private readonly state = signal<ProductInfo | null>(null);
+  private readonly state = signal<StoreOverview | null>(null);
   private requesting = false;
 
   /** 已保存的商品資訊，尚未取得時為 null */
-  readonly info = this.state.asReadonly();
+  readonly overview = this.state.asReadonly();
 
   /** 是否已登入；資料尚未取得前視為未登入 */
   readonly isLoggedIn = computed(() => this.state()?.isLoggedIn ?? false);
@@ -33,7 +33,7 @@ export class ProductInfoService {
   private request(): void {
     if (this.requesting) return;
     this.requesting = true;
-    this.catalogApi.getProductInfo().subscribe({
+    this.catalogApi.getStoreOverview().subscribe({
       next: (info) => {
         this.requesting = false;
         this.state.set(info);

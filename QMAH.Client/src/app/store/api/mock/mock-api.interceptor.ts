@@ -6,6 +6,7 @@ import {
   provideHttpClient,
   withInterceptors,
 } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { STORE_API_BASE } from '../http';
 import * as handlers from './mock-handlers';
@@ -74,7 +75,11 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   return next(request);
 };
 
-/** 以假 API 提供 HttpClient，供單元測試使用 */
+/**
+ * 以假 API 提供 HttpClient，供單元測試使用。
+ * 假 API 沒有涵蓋的請求（已改由真實後端提供的端點）不會送出網路請求，而是交給測試用的 HttpClient 後端擱置，
+ * 避免測試環境因連不到後端而出現 status 0 錯誤。
+ */
 export function provideMockApi() {
-  return provideHttpClient(withInterceptors([mockApiInterceptor]));
+  return [provideHttpClient(withInterceptors([mockApiInterceptor])), provideHttpClientTesting()];
 }

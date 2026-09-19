@@ -8,26 +8,26 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./store/pages/home/home').then((c) => c.Home),
+        loadComponent: () => import('./store/pages/home/home').then((c) => c.HomePage),
       },
       // 商品列表頁支援 q（關鍵字）、cat（器類）、view（主題入口）三個查詢字串參數，
       // 由 withComponentInputBinding() 直接綁定到同名的元件 input。
       {
         path: 'products',
-        loadComponent: () => import('./store/pages/product-list/product-list').then((c) => c.ProductList),
+        loadComponent: () => import('./store/pages/product-list/product-list').then((c) => c.ProductListPage),
       },
       // 商品頁以路徑參數帶入商品 ID，同樣由 withComponentInputBinding() 綁定到 id input。
       {
         path: 'product/:id',
-        loadComponent: () => import('./store/pages/product-info/product-info').then((c) => c.ProductInfo),
+        loadComponent: () => import('./store/pages/product-detail/product-detail').then((c) => c.ProductDetailPage),
       },
       {
         path: 'cart',
-        loadComponent: () => import('./store/pages/cart/cart').then((c) => c.Cart),
+        loadComponent: () => import('./store/pages/cart/cart').then((c) => c.CartPage),
       },
       {
         path: 'checkout',
-        loadComponent: () => import('./store/pages/checkout/checkout').then((c) => c.Checkout),
+        loadComponent: () => import('./store/pages/checkout/checkout').then((c) => c.CheckoutPage),
       },
     ],
   },

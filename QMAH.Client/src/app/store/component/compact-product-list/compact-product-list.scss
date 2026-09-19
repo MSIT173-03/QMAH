@@ -2,12 +2,12 @@
   display: contents;
 }
 
-.news-list {
+.compact-list {
   display: flex;
   flex-direction: column;
 }
 
-.news-item {
+.compact-item {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -19,7 +19,7 @@
   }
 }
 
-.news-link {
+.compact-link {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -29,7 +29,7 @@
   text-decoration: none;
 }
 
-.news-thumb {
+.compact-thumb {
   width: 64px;
   height: 64px;
   flex: 0 0 auto;
@@ -44,13 +44,13 @@
   overflow: hidden;
 }
 
-.news-thumb-image {
+.compact-thumb-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.news-info {
+.compact-info {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -60,28 +60,28 @@
 
 /* 與 product-card 元件共用的品牌樣式，因元件樣式為各自封裝，此處另行宣告一份
    （.product-card-star 已改由全站共用樣式提供） */
-.news-name {
+.compact-name {
   font-size: 14px;
 }
 
-.news-price-row {
+.compact-price-row {
   display: flex;
   align-items: baseline;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.news-price {
+.compact-price {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--color-ink);
 }
 
-.news-price.text-accent {
+.compact-price.text-accent {
   color: var(--color-accent);
 }
 
-.news-tag {
+.compact-tag {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   border: 1px solid var(--color-gold);
@@ -97,13 +97,13 @@
   }
 }
 
-.news-rating {
+.compact-rating {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--color-muted);
 }
 
-.news-add {
+.compact-add {
   border: 1px solid var(--color-ink);
   background: #fff;
   color: var(--color-ink);

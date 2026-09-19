@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap } from 'rxjs';
 
 import {
-  Promobar,
+  TopBar,
   SiteHeader,
   SearchBar,
   CartLink,
@@ -62,7 +62,7 @@ function toPage(value: string | undefined): number {
   selector: 'app-product-list',
   host: { class: 'store-app' },
   imports: [
-    Promobar,
+    TopBar,
     SiteHeader,
     SearchBar,
     CartLink,
@@ -81,7 +81,7 @@ function toPage(value: string | undefined): number {
     './product-list.scss',
   ],
 })
-export class ProductList {
+export class ProductListPage {
   private readonly catalogApi = inject(CatalogApi);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -143,7 +143,7 @@ export class ProductList {
   protected readonly site = injectSiteData();
   /** 器類清單（含各器類上架商品件數），來自 products/info */
   private readonly categories = computed(() =>
-    Object.entries(this.site.info()?.categoryCounts ?? {}).map(([name, productCount]) => ({ name, productCount })),
+    Object.entries(this.site.overview()?.categoryCounts ?? {}).map(([name, productCount]) => ({ name, productCount })),
   );
   /** 價格區間選項文字 */
   protected readonly bandLabels = PRICE_BANDS.map((band) => band.label);

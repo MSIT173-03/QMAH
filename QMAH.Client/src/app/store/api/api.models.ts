@@ -265,7 +265,7 @@ export interface Coupon {
 }
 
 /** 商品頁附加資訊：各器類商品數量，以及登入會員的點數與折價券 */
-export interface ProductInfo {
+export interface StoreOverview {
   /** 各器類的上架商品數量（key 為中文器類名稱） */
   categoryCounts: Record<string, number>;
   /** 各器類銷售數量最高商品的主圖網址（key 為中文器類名稱），無圖片時為 null */

@@ -112,7 +112,7 @@ public sealed record ProductDetailsDto(
 /// <param name="NewProducts">新品上架：最新上架的前 4 項商品。</param>
 /// <param name="TopRatedProducts">評價排行：平均評價最高的前 4 項商品（僅含有評論者）。</param>
 /// <param name="RecommendedProducts">為你推薦：隨機挑選的 10 項商品。</param>
-public sealed record ProductInfomationDto(
+public sealed record StoreOverviewDto(
     IReadOnlyDictionary<string, int> CategoryCounts,
     IReadOnlyDictionary<string, string?> CategoryCoverImages,
     bool IsLoggedIn,

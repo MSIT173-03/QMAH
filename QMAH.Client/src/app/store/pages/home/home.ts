@@ -3,10 +3,11 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { map, of, switchMap } from 'rxjs';
 
-import { Promobar, SearchBar, SearchSuggestion, CartLink, SiteFooter, SiteHeader } from '../../component';
+import { CompactProductList, TopBar, SearchBar, SearchSuggestion, CartLink, SiteFooter, SiteHeader } from '../../component';
 import { SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
 import { CART_PATH, PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
+import { formatDateMD } from '../../shared/format';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
@@ -16,9 +17,7 @@ import { FlashSale } from './flash-sale/flash-sale';
 import { MiniCoupons } from './mini-coupons/mini-coupons';
 import { CategoryGrid } from './category-grid/category-grid';
 import { RankingSection } from './ranking-section/ranking-section';
-import { NewArrivals } from './new-arrivals/new-arrivals';
-import { TopRated } from './top-rated/top-rated';
-import { Recommendations } from './recommendations/recommendations';
+import { RecommendationSection } from './recommendation-section/recommendation-section';
 import { BadgedProductView } from './home.data';
 
 /**
@@ -31,7 +30,7 @@ import { BadgedProductView } from './home.data';
   selector: 'app-home',
   host: { class: 'store-app' },
   imports: [
-    Promobar,
+    TopBar,
     SearchBar,
     CartLink,
     SiteFooter,
@@ -40,9 +39,8 @@ import { BadgedProductView } from './home.data';
     MiniCoupons,
     CategoryGrid,
     RankingSection,
-    NewArrivals,
-    TopRated,
-    Recommendations,
+    CompactProductList,
+    RecommendationSection,
     SiteHeader,
     StoreLink,
   ],
@@ -51,7 +49,7 @@ import { BadgedProductView } from './home.data';
     './home.scss',
   ],
 })
-export class Home {
+export class HomePage {
   private readonly router = inject(Router);
   private readonly searchApi = inject(SearchApi);
 
@@ -63,13 +61,13 @@ export class Home {
   protected readonly site = injectSiteData();
 
   /** 各器類商品數量，供分類入口區塊使用 */
-  protected readonly categoryCounts = computed(() => this.site.info()?.categoryCounts ?? {});
+  protected readonly categoryCounts = computed(() => this.site.overview()?.categoryCounts ?? {});
   /** 各器類封面圖（銷售數量最高商品的主圖） */
-  protected readonly categoryImages = computed(() => this.site.info()?.categoryCoverImages ?? {});
+  protected readonly categoryImages = computed(() => this.site.overview()?.categoryCoverImages ?? {});
   /** 熱銷排行、新品上架與評價排行的商品（來自 products/info） */
-  protected readonly hotProducts = computed(() => this.site.info()?.hotProducts ?? []);
-  protected readonly newProducts = computed(() => this.site.info()?.newProducts ?? []);
-  protected readonly topRatedProducts = computed(() => this.site.info()?.topRatedProducts ?? []);
+  protected readonly hotProducts = computed(() => this.site.overview()?.hotProducts ?? []);
+  protected readonly newProducts = computed(() => this.site.overview()?.newProducts ?? []);
+  protected readonly topRatedProducts = computed(() => this.site.overview()?.topRatedProducts ?? []);
 
   /** 搜尋框目前輸入值 */
   protected searchQuery = signal('');
@@ -90,16 +88,23 @@ export class Home {
   );
 
   /** 分類導覽列顯示用分類名稱 */
-  protected readonly categoryNames = computed(() => Object.keys(this.site.info()?.categoryCounts ?? {}));
+  protected readonly categoryNames = computed(() => Object.keys(this.site.overview()?.categoryCounts ?? {}));
   /** 分類導覽列「新品上架」與各分類的連結網址 */
   protected readonly newArrivalsPath = `${PRODUCT_LIST_PATH}?view=new`;
+  /** 「更多 →」連結：評價排行沒有專屬列表頁，先導向商品列表 */
+  protected readonly productListPath = PRODUCT_LIST_PATH;
+  /** 新品上架的標籤：清單由新到舊排列，取第一件的上架日期（MM/DD） */
+  protected readonly newArrivalsTag = computed(() => {
+    const latest = this.newProducts()[0];
+    return latest ? `NEW · ${formatDateMD(latest.listedAt)}` : 'NEW';
+  });
   protected categoryPath(name: string): string {
     return `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`;
   }
 
   /** 「為你推薦」商品卡片（來自 products/info，隨機 10 項），角標為器類 */
   protected readonly recommendedItems = computed((): BadgedProductView[] =>
-    (this.site.info()?.recommendedProducts ?? []).map((item) => ({
+    (this.site.overview()?.recommendedProducts ?? []).map((item) => ({
       ...toProductView(item),
       badge: item.category,
       badgeVariant: 'teal',

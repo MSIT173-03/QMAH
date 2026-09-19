@@ -44,7 +44,7 @@
 
   <!-- 尺寸與商品狀態面板：兩者皆無資料時不顯示 -->
   @if (dims() || condition()) {
-    <app-size-condition [dims]="dims()" [condition]="condition()" [note]="sizeNote()" />
+    <app-size-condition-panel [dims]="dims()" [condition]="condition()" [note]="sizeNote()" />
   }
 
   <!-- 購買操作：數量增減、加入購物車與直接購買 -->

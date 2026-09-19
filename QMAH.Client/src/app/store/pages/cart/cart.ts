@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 
 import {
   SiteHeader,
-  HeaderActions,
+  HeaderNav,
   HeaderNavLink,
   Breadcrumb,
   BreadcrumbItem,
@@ -12,7 +12,7 @@ import {
 } from '../../component';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
-import { ProductInfoService } from '../../shared/product-info.service';
+import { StoreOverviewService } from '../../shared/store-overview.service';
 import { toProductView } from '../../shared/product-view';
 
 import { CartLine } from './cart-line/cart-line';
@@ -32,13 +32,13 @@ const REMOVE_ANIMATION_MS = 300;
 @Component({
   selector: 'app-cart',
   host: { class: 'store-app' },
-  imports: [SiteHeader, HeaderActions, Breadcrumb, PageTitleRow, SiteFooter, EmptyState, CartLine, CartSummary, CartAddons],
+  imports: [SiteHeader, HeaderNav, Breadcrumb, PageTitleRow, SiteFooter, EmptyState, CartLine, CartSummary, CartAddons],
   templateUrl: './cart.html',
   styleUrls: [
     './cart.scss',
   ],
 })
-export class Cart {
+export class CartPage {
   /** 麵包屑導覽項目 */
   protected readonly breadcrumbItems: BreadcrumbItem[] = [{ label: '首頁', href: HOME_PATH }, { label: '購物車' }];
 
@@ -54,11 +54,11 @@ export class Cart {
   /** 購物車狀態；每次異動後以 API 回應的內容（含金額摘要）取代 */
   private readonly cartState = injectCartState();
   /** 登入狀態；資料載入前視為未登入 */
-  private readonly productInfo = inject(ProductInfoService);
-  protected readonly isLoggedIn = this.productInfo.isLoggedIn;
+  private readonly storeOverview = inject(StoreOverviewService);
+  protected readonly isLoggedIn = this.storeOverview.isLoggedIn;
 
   constructor() {
-    this.productInfo.load();
+    this.storeOverview.load();
   }
   /** 正在執行移除動畫、尚未真正從購物車移除的商品 ID */
   private leavingIds = signal<ReadonlySet<string>>(new Set());

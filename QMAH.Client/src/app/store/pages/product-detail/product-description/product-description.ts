@@ -4,14 +4,14 @@ import { ProductPolicy } from '../../../api/api.models';
 
 /** 商品頁「商品說明」區塊：說明段落、說明圖與保養／退換／鑑定條列 */
 @Component({
-  selector: 'app-product-detail',
+  selector: 'app-product-description',
   imports: [SectionHead],
-  templateUrl: './product-detail.html',
+  templateUrl: './product-description.html',
   styleUrls: [
-    './product-detail.scss',
+    './product-description.scss',
   ],
 })
-export class ProductDetail {
+export class ProductDescription {
   /** 商品說明段落 */
   intro = input('');
   /** 商品說明圖網址，未提供時不顯示說明圖 */

@@ -4,7 +4,7 @@
  * 前端顯示用欄位尚未由後端提供，由 toProduct／toProductDetail 轉換時補上預設值。
  */
 
-import { Coupon, Product, ProductDetail, ProductInfo, Review, ReviewPage, ReviewQuery } from './api.models';
+import { Coupon, Product, ProductDetail, StoreOverview, Review, ReviewPage, ReviewQuery } from './api.models';
 import { formatMoney } from '../shared/format';
 
 /**
@@ -79,7 +79,7 @@ export interface ApiCoupon {
 }
 
 /** GET /products/info 回應 */
-export interface ApiProductInfo {
+export interface ApiStoreOverview {
   categoryCounts: Record<string, number>;
   categoryCoverImages: Record<string, string | null>;
   isLoggedIn: boolean;
@@ -161,7 +161,7 @@ function toCoupon(dto: ApiCoupon): Coupon {
   };
 }
 
-export function toProductInfo(dto: ApiProductInfo): ProductInfo {
+export function toStoreOverview(dto: ApiStoreOverview): StoreOverview {
   return {
     categoryCounts: Object.fromEntries(
       Object.entries(dto.categoryCounts).map(([code, count]) => [toCategoryLabel(code), count]),

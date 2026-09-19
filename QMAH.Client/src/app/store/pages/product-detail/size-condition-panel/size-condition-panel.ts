@@ -3,14 +3,14 @@ import { Panel } from '../../../component';
 
 /** 商品頁 SIZE & CONDITION 面板：尺寸、商品狀態與量測說明 */
 @Component({
-  selector: 'app-size-condition',
+  selector: 'app-size-condition-panel',
   imports: [Panel],
-  templateUrl: './size-condition.html',
+  templateUrl: './size-condition-panel.html',
   styleUrls: [
-    './size-condition.scss',
+    './size-condition-panel.scss',
   ],
 })
-export class SizeCondition {
+export class SizeConditionPanel {
   /** 尺寸／規格說明 */
   dims = input('');
   /** 商品狀態說明 */

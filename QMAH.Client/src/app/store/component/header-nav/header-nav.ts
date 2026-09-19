@@ -13,14 +13,14 @@ export interface HeaderNavLink {
  * 投影至 app-site-header 內使用，本身只負責推擠至右側並排列這兩段內容。
  */
 @Component({
-  selector: 'app-header-actions',
+  selector: 'app-header-nav',
   imports: [StoreLink],
-  templateUrl: './header-actions.html',
+  templateUrl: './header-nav.html',
   styleUrls: [
-    './header-actions.scss',
+    './header-nav.scss',
   ],
 })
-export class HeaderActions {
+export class HeaderNav {
   /** 導覽連結清單，順序即顯示順序 */
   links = input<HeaderNavLink[]>([]);
 }

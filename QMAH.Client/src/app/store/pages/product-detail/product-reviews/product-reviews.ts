@@ -2,7 +2,7 @@ import { Component, computed, input, output } from '@angular/core';
 import { SectionHead, PillGroup, PillOption } from '../../../component';
 import { Review } from '../../../api/api.models';
 import { formatNumber } from '../../../shared/format';
-import { REVIEW_FILTERS } from '../product-info.data';
+import { REVIEW_FILTERS } from '../product-detail.data';
 
 /** 星等上限，用於把星等換算成實心／空心星號字串 */
 const MAX_STARS = 5;
