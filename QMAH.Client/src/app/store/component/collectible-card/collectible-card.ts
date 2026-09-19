@@ -60,6 +60,10 @@ export class CollectibleCard {
     // 來源影像已是正確方向，這裡只決定明信片尺寸，不擅自旋轉圖片或文字。
     return aspectRatio >= 1 ? 'landscape' : 'portrait';
   });
+  /** 方向標示與外框共用同一個自然尺寸判斷，避免文字與實際版型不一致。 */
+  protected readonly orientationLabel = computed(() =>
+    this.postcardLayout() === 'landscape' ? '橫式' : '直式',
+  );
 
   protected toggle(): void {
     this.flipped.update((value) => !value);

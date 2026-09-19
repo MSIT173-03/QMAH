@@ -34,6 +34,14 @@ export interface Category {
   productCount: number;
 }
 
+/** 商城直接引用的官方優惠活動公告；內容與社群公告相同，不另造商城文案。 */
+export interface StorePromotion {
+  id: string;
+  title: string;
+  content: string;
+  publishedAt: string;
+}
+
 /** 商品清單項目 */
 export interface Product {
   id: string;
@@ -70,6 +78,8 @@ export interface ProductImage {
 
 /** 商品詳情 */
 export interface ProductDetail extends Product {
+  /** 關聯文物原始尺寸；商品 dimensions 保留固定明信片成品尺寸。 */
+  artifactDimensions: string;
   /** 材質與工法說明 */
   material: string;
   /** 商品說明段落 */

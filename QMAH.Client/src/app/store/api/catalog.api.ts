@@ -10,15 +10,18 @@ import {
   ProductQuery,
   ReviewPage,
   ReviewQuery,
+  StorePromotion,
 } from './api.models';
 import {
   ApiProductDetail,
   ApiProductPage,
   ApiProductReviewsResponse,
+  ApiStorePromotion,
   toCategoryCode,
   toProduct,
   toProductDetail,
   toReviewPage,
+  toStorePromotion,
 } from './catalog.api-dto';
 
 
@@ -38,6 +41,15 @@ export class CatalogApi {
     return this.http.get<Category[] | { categories: Category[] }>(apiUrl('/categories')).pipe(
       map((res) => (Array.isArray(res) ? res : res.categories)),
       // 分類導覽是輔助資料；資料庫短暫失敗時保留商品頁與其他 Area，不讓 toSignal 拋出錯誤。
+      catchError(() => of([])),
+    );
+  }
+
+  /** GET /promotions：商城與社群共用的官方優惠活動公告。 */
+  getPromotions(): Observable<StorePromotion[]> {
+    return this.http.get<ApiStorePromotion[]>(apiUrl('/promotions')).pipe(
+      map((res) => res.map(toStorePromotion)),
+      // 優惠活動只是商城輔助內容；公告暫時不可用時仍保留商品瀏覽與結帳入口。
       catchError(() => of([])),
     );
   }

@@ -4,7 +4,7 @@
  * 前端顯示用欄位尚未由後端提供，由 toProduct／toProductDetail 轉換時補上預設值。
  */
 
-import { Product, ProductDetail, Review, ReviewPage, ReviewQuery } from './api.models';
+import { Product, ProductDetail, Review, ReviewPage, ReviewQuery, StorePromotion } from './api.models';
 
 /**
  * 器類代碼（categoryCode）與中文器類名稱對照表；宣告順序需與後端 StoreCatalogController.CategoryType
@@ -69,6 +69,23 @@ export interface ApiProductPage {
   totalPages: number;
 }
 
+/** GET /store/promotions：與社群公告共用的官方商城活動。 */
+export interface ApiStorePromotion {
+  id: string;
+  title: string;
+  content: string;
+  publishedAt: string;
+}
+
+export function toStorePromotion(dto: ApiStorePromotion): StorePromotion {
+  return {
+    id: dto.id,
+    title: dto.title,
+    content: dto.content,
+    publishedAt: dto.publishedAt,
+  };
+}
+
 /** GET /products/{id} 回應 */
 export interface ApiProductDetail {
   id: string;
@@ -80,6 +97,7 @@ export interface ApiProductDetail {
   categoryCode: string;
   description: string;
   sizeText: string;
+  artifactSizeText: string | null;
   price: number;
   stock: number;
   primaryImagePath: string | null;
@@ -114,6 +132,7 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
     ...toProduct(dto),
     // 詳情頁明確使用大圖，讓滿版明信片不會誤拿清單縮圖放大。
     coverImage: dto.primaryImagePath,
+    artifactDimensions: dto.artifactSizeText ?? '官方資料未提供',
     rating: dto.averageRating,
     reviewCount: dto.reviewCount,
     dimensions: dto.sizeText,

@@ -96,7 +96,7 @@ function toProduct(record: CatalogRecord): Product {
     source: record.source,
     dimensions: record.dims,
     listedAt: record.listedAt,
-    coverImage: null,
+    coverImage: record.image ?? null,
   };
 }
 
@@ -110,7 +110,7 @@ function toApiProduct(record: CatalogRecord): ApiProductListItem {
     categoryCode: record.cat,
     price: record.price,
     stock: MOCK_STOCK,
-    primaryImagePath: null,
+    primaryImagePath: record.image ?? null,
     isActive: true,
   };
 }
@@ -121,8 +121,9 @@ function toApiProductDetail(record: CatalogRecord): ApiProductDetail {
     ...toApiProduct(record),
     artifactRef: record.id,
     artifactName: record.name,
-    description: record.source + DESCRIPTION_SUFFIX,
+    description: `${record.source}${DESCRIPTION_SUFFIX}\n\n文物原始尺寸：${record.artifactDims ?? '官方資料未提供'}`,
     sizeText: record.dims,
+    artifactSizeText: record.artifactDims ?? '官方資料未提供',
     sourceUrl: null,
     averageRating: record.rating,
     reviewCount: record.reviews,

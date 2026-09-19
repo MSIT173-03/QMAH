@@ -8,11 +8,12 @@ import { CreateSocialPostRequest, SocialApiService, SocialMedia, SocialPostListI
 import { MeApiService } from '../../../core/services/me-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
+import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, ReportModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, ReportModalComponent, SocialPostContentComponent],
   templateUrl: './posts.html',
   styleUrl: './posts.scss'
 })
@@ -101,6 +102,27 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.filterBoardCode = '';
     this.filterKeyword = '';
     this.loadPosts();
+  }
+
+  // 編輯器只插入純文字標記；共用呈現元件會把小標、項目與引用轉成安全的視覺層次。
+  formatPostContent(kind: 'heading' | 'bullet' | 'quote' | 'paragraph'): void {
+    const textarea = document.querySelector('#social-post-content') as HTMLTextAreaElement | null;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.slice(start, end) || '請填寫內容';
+    const [prefix, suffix] = kind === 'heading'
+      ? ['【', '】']
+      : kind === 'bullet'
+        ? ['• ', '']
+        : kind === 'quote'
+          ? ['「', '」']
+          : ['\n', ''];
+    const formatted = kind === 'paragraph'
+      ? `${textarea.value.slice(0, start)}\n${textarea.value.slice(end)}`
+      : `${textarea.value.slice(0, start)}${selected.split('\n').map(line => prefix + line + suffix).join('\n')}${textarea.value.slice(end)}`;
+    this.newPost.content = formatted;
+    textarea.focus();
   }
 
   // GET /api/v1/social/posts（AllowAnonymous，回傳 ApiPage<SocialPostListItemDto>）

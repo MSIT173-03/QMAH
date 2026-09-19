@@ -4,7 +4,7 @@ import { CollectibleCard } from '../../../component/collectible-card/collectible
 /**
  * 商品主視覺容器。
  * 原本這裡是尚未串接真實圖片的佔位圖庫；保留 selector 與頁面插槽，
- * 只把實際呈現換成獨立的文物收藏卡，避免同一頁同時維護兩套主圖契約。
+ * 只把實際呈現換成獨立的文物明信片，避免同一頁同時維護兩套主圖契約。
  */
 @Component({
   selector: 'app-product-gallery',

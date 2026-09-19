@@ -8,6 +8,12 @@
     <span class="spec-value spec-value--mono text-sm spec-value--dims">{{ dims() }}</span>
   </div>
 
+  <!-- 原文物尺寸獨立呈現；不把原作尺寸當成商品成品尺寸。 -->
+  <div class="spec-row spec-row--sm">
+    <span class="spec-label">{{ artifactDimsLabel }}</span>
+    <span class="spec-value spec-value--mono text-sm spec-value--dims">{{ artifactDims() }}</span>
+  </div>
+
   <!-- 商品狀態說明 -->
   <div class="spec-row spec-row--sm">
     <span class="spec-label">{{ conditionLabel }}</span>

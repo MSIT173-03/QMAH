@@ -26,7 +26,7 @@
       } @else {
         <h2 class="card-title">{{ post.title }}</h2>
         <p class="text-xs text-base-content/60">✍️ {{ post.displayName || '匿名會員' }}</p>
-        <p class="whitespace-pre-line">{{ post.content }}</p>
+        <app-social-post-content [content]="post.content" />
       }
 
       @if (post.media.length > 0) {

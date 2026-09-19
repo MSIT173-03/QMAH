@@ -36,13 +36,17 @@ export interface CatalogRecord {
   source: string;
   /** 尺寸／規格說明 */
   dims: string;
+  /** 對應文物原始尺寸；商品本身一律使用固定 A6 明信片尺寸。 */
+  artifactDims?: string;
+  /** 假 API 也使用正式媒體路徑，避免詳情頁落回無圖佔位面。 */
+  image?: string;
   rating: number;
   reviews: number;
   /** 上架日期（YYYY-MM-DD） */
   listedAt: string;
 }
 
-export const CATALOG: CatalogRecord[] = [
+const SOURCE_CATALOG: CatalogRecord[] = [
   { id: 'qc-01', name: '青花纏枝紋蓋杯 220ml', brand: '窯作研究', price: 1280, off: 0.25, cat: '陶瓷', material: '景德鎮高白瓷 · 釉下青花', source: '紋樣取自院藏明永樂青花纏枝蓮紋蓋碗', dims: '高 8.2 公分、口徑 10.5 公分、足徑 8.5 公分', rating: 4.8, reviews: 214, listedAt: '2026-03-12' },
   { id: 'qc-02', name: '汝窯天青釉茶盞 對杯', brand: '窯作研究', price: 2480, off: 0, cat: '陶瓷', material: '仿汝天青釉 · 手工修坯', source: '釉色參考北宋汝窯青瓷盞', dims: '高 3.2–1.85 公分、口徑 7.45 公分、足徑 5.4 公分', rating: 4.7, reviews: 96, listedAt: '2026-09-08' },
   { id: 'qc-03', name: '唐三彩馬 桌上擺件', brand: '陶俑工坊', price: 2680, off: 0, cat: '陶瓷', material: '陶胎三彩釉 · 手工上釉', source: '原件為唐代三彩陶馬', dims: '高 24.5 公分、長 22.0 公分、座寬 9.5 公分', rating: 4.8, reviews: 61, listedAt: '2026-02-20' },
@@ -51,18 +55,52 @@ export const CATALOG: CatalogRecord[] = [
   { id: 'qc-06', name: '青銅紋香道器具五件組', brand: '香道處', price: 3280, off: 0, cat: '青銅器', material: '黃銅 · 胡桃木托盤', source: '器型參考宋代香事器具', dims: '托盤 12.5 × 28.0 公分、爐高 6.8 公分', rating: 4.9, reviews: 47, listedAt: '2026-01-22' },
   { id: 'qc-07', name: '竹雕山水紋筆筒', brand: '刻工小舍', price: 1980, off: 0.15, cat: '雕刻', material: '老竹材 · 手工浮雕', source: '刀法參考明清嘉定竹刻', dims: '高 14.2 公分、口徑 9.6 公分', rating: 4.6, reviews: 58, listedAt: '2026-03-30' },
   { id: 'qc-08', name: '木雕蓮花紋香座', brand: '刻工小舍', price: 1180, off: 0.2, cat: '雕刻', material: '檀香木 · 榫接無膠', source: '紋樣取自唐代蓮花石雕', dims: '直徑 9.8 公分、高 2.75 公分', rating: 4.4, reviews: 91, listedAt: '2026-02-08' },
-  { id: 'qc-09', name: '歷代錢幣複製紙鎮六枚組', brand: '泉譜工房', price: 1480, off: 0.25, cat: '錢幣', material: '黃銅翻鑄 · 附絨布內襯木盒', source: '錢式涵蓋半兩、五銖至光緒元寶', dims: '單枚口徑 2.3 公分、厚 1.35 公厘', rating: 4.7, reviews: 132, listedAt: '2026-05-14' },
+  { id: 'qc-09', name: '歷代錢幣紋樣', brand: '泉譜工房', price: 1480, off: 0.25, cat: '錢幣', material: '黃銅翻鑄 · 附絨布內襯木盒', source: '錢式涵蓋半兩、五銖至光緒元寶', dims: '單枚口徑 2.3 公分、厚 1.35 公厘', rating: 4.7, reviews: 132, listedAt: '2026-05-14' },
   { id: 'qc-10', name: '開元通寶紋樣黃銅書籤', brand: '泉譜工房', price: 480, off: 0, cat: '錢幣', material: '黃銅蝕刻 · 手工拋光', source: '字體取自唐開元通寶', dims: '1.75 × 7.6 公分', rating: 4.5, reviews: 204, listedAt: '2026-05-20' },
   { id: 'qc-11', name: '掐絲琺瑯纏枝紋香盒', brand: '琺瑯作', price: 3480, off: 0.1, cat: '琺瑯器', material: '銅胎掐絲 · 燒藍琺瑯', source: '紋樣取自清乾隆掐絲琺瑯器', dims: '口徑 7.45 公分、高 4.2 公分', rating: 4.9, reviews: 38, listedAt: '2026-08-30' },
   { id: 'qc-12', name: '畫琺瑯花卉紋小碟 對組', brand: '琺瑯作', price: 2280, off: 0, cat: '琺瑯器', material: '銅胎畫琺瑯 · 手繪填彩', source: '圖稿取自清畫琺瑯花卉盤', dims: '高 1.3 公分、口徑 10.5 公分、足徑 8.5 公分', rating: 4.6, reviews: 66, listedAt: '2026-06-11' },
   { id: 'qc-13', name: '玉璧紋樣白玉紙鎮', brand: '玉作齋', price: 2980, off: 0, cat: '玉器', material: '和田青白玉 · 手工琢磨', source: '器型取自漢代穀紋玉璧', dims: '直徑 8.6 公分、厚 0.9 公分', rating: 4.8, reviews: 52, listedAt: '2026-09-02' },
-  { id: 'qc-14', name: '雲紋玉佩複製項鍊', brand: '玉作齋', price: 1680, off: 0.15, cat: '玉器', material: '青玉 · 蠶絲繩結', source: '紋樣取自戰國雲紋玉佩', dims: '佩身 3.4 × 5.2 公分、繩長可調 42–56 公分', rating: 4.7, reviews: 118, listedAt: '2026-09-05' },
+  { id: 'qc-14', name: '雲紋玉佩', brand: '玉作齋', price: 1680, off: 0.15, cat: '玉器', material: '青玉 · 蠶絲繩結', source: '紋樣取自戰國雲紋玉佩', dims: '佩身 3.4 × 5.2 公分、繩長可調 42–56 公分', rating: 4.7, reviews: 118, listedAt: '2026-09-05' },
   { id: 'qc-15', name: '剔紅牡丹紋方盤', brand: '漆藝所', price: 3880, off: 0.2, cat: '漆器', material: '天然生漆 · 剔紅雕漆', source: '刀工參考明永樂剔紅漆盤', dims: '25.75 × 25.75 公分、高 2.4 公分', rating: 4.9, reviews: 44, listedAt: '2026-07-01' },
   { id: 'qc-16', name: '黑漆嵌螺鈿名片盒', brand: '漆藝所', price: 1580, off: 0, cat: '漆器', material: '木胎黑漆 · 螺鈿鑲嵌', source: '工法參考清代嵌螺鈿文具', dims: '9.8 × 6.2 公分、高 1.2 公分', rating: 4.6, reviews: 87, listedAt: '2026-06-25' },
-  { id: 'qc-17', name: '清明上河圖全卷複製 附木盒', brand: '書畫工房', price: 3880, off: 0.2, cat: '繪畫', material: '宣紙微噴 · 實木收納盒', source: '原件為北宋張擇端絹本設色長卷', dims: '25.75 × 208.8 公分', rating: 4.9, reviews: 386, listedAt: '2026-08-15' },
+  { id: 'qc-17', name: '清明上河圖全卷', brand: '書畫工房', price: 3880, off: 0.2, cat: '繪畫', material: '宣紙微噴 · 實木收納盒', source: '原件為北宋張擇端絹本設色長卷', dims: '25.75 × 208.8 公分', rating: 4.9, reviews: 386, listedAt: '2026-08-15' },
   { id: 'qc-18', name: '敦煌藻井紋樣拼圖 1000 片', brand: '紋樣製作', price: 1180, off: 0.3, cat: '繪畫', material: '灰板紙 · 消光面處理', source: '圖稿取自莫高窟窟頂藻井', dims: '完成尺寸 50.0 × 70.0 公分', rating: 4.7, reviews: 342, listedAt: '2026-08-20' },
-  { id: 'qc-19', name: '宋畫花鳥冊頁絹本複製', brand: '書畫工房', price: 2180, off: 0.1, cat: '繪畫', material: '絹本微噴 · 綾邊裝裱', source: '原件為宋人花鳥冊頁', dims: '待測量', rating: 4.6, reviews: 158, listedAt: '2026-07-10' },
+  { id: 'qc-19', name: '宋畫花鳥冊頁', brand: '書畫工房', price: 2180, off: 0.1, cat: '繪畫', material: '絹本微噴 · 綾邊裝裱', source: '原件為宋人花鳥冊頁', dims: '待測量', rating: 4.6, reviews: 158, listedAt: '2026-07-10' },
 ];
+
+/** 商品現在都是同尺寸明信片；文物原始尺寸保留在背面說明，不再把它誤當成商品尺寸。 */
+export const POSTCARD_SIZE = 'A6 明信片（148 × 105 mm）';
+const POSTCARD_MATERIAL = '220g 非塗佈卡紙 · 雙面印刷';
+const CATEGORY_IMAGES: Record<string, string> = {
+  '青銅器': '/media/catalog/bronze/中銅000001N000000000/display.jpg',
+  '雕刻': '/media/catalog/carving/中日雕000005N000000000/display.jpg',
+  '陶瓷': '/media/catalog/ceramic/中日瓷000005N000000000/display.jpg',
+  '錢幣': '/media/catalog/coin/購錢000214N000000000/display.jpg',
+  '琺瑯器': '/media/catalog/enamel/中琺000001N000000000/display.jpg',
+  '玉器': '/media/catalog/jade/中玉000001N000000000/display.jpg',
+  '漆器': '/media/catalog/lacquer/中漆000001N000000000/display.jpg',
+  '繪畫': '/media/catalog/painting/中畫00002300002/display.jpg',
+};
+
+function toPostcardName(name: string): string {
+  return `${name
+    .replace('拼圖 1000 片', '')
+    .replace(/\s+/gu, ' ')
+    .trim()}文物明信片`;
+}
+
+/**
+ * 讓保留中的小型 mock 型錄也走正式商品契約：所有卡片實體同為 A6，
+ * 只有原作尺寸與主圖內容不同；主圖方向由前端依自然寬高自動判斷橫式／直式。
+ */
+export const CATALOG: CatalogRecord[] = SOURCE_CATALOG.map((record) => ({
+  ...record,
+  name: toPostcardName(record.name),
+  artifactDims: record.dims,
+  dims: POSTCARD_SIZE,
+  material: POSTCARD_MATERIAL,
+  image: CATEGORY_IMAGES[record.cat],
+}));
 
 /** 器類（順序即各頁面分類清單的顯示順序） */
 export const CATEGORIES: { id: string; name: string }[] = [
@@ -86,21 +124,21 @@ export const SOLD_STEP = 137;
 /** 假 API 回應商品庫存的固定值（型錄尚無庫存欄位，對應後端 products.stock） */
 export const MOCK_STOCK = 20;
 
-/** 商品圖片的視角名稱（目前尚無實際圖片） */
-export const GALLERY_VIEWS = ['正面', '細節', '情境', '包裝'];
+/** 商品圖片的視角名稱；詳情頁主圖使用收藏卡，列表仍只使用靜態圖片。 */
+export const GALLERY_VIEWS = ['正面', '紙材細節', '背面', '包裝'];
 
 /** 商品出貨說明 */
-export const SHIPPING_NOTE = '下單後 2 個工作日內出貨，附授權與考據說明卡';
+export const SHIPPING_NOTE = '下單後 2 個工作日內出貨，附來源與考據說明卡';
 
 /** 商品說明段落：接在商品出處說明之後的共通敘述 */
 export const DESCRIPTION_SUFFIX =
-  '。全品項由館方授權紋樣資料庫取樣，經工坊試製與色差校對後量產；每件皆附考據說明卡，載明原件年代、館藏編號與紋樣出處。';
+  '。本商品是固定 A6 尺寸的文物明信片（148 × 105 mm），依主圖原始寬高自動選擇橫式或直式；正面呈現文物圖像，背面整理名稱、類型與來源資訊，明確與原作文物本體區隔。固定尺寸適合放入收藏冊、展示架或書桌，也能在背面寫下短訊息寄給親朋好友；實際寄送仍依當地郵務規定辦理。';
 
 /** 尺寸尚在建檔時的商品狀態說明 */
-export const CONDITION_PENDING = '全新複製品，尺寸資料尚在建檔；表面經工坊檢視無瑕，附授權與考據說明卡。';
+export const CONDITION_PENDING = '明信片資料尚在建檔；先以固定 A6 成品尺寸展示，附來源與考據說明卡。';
 /** 已完成尺寸量測的商品狀態說明 */
 export const CONDITION_MEASURED =
-  '全新複製品，手工製作故單件紋理與色澤略有差異，屬正常狀態；附授權與考據說明卡。';
+  '固定 A6 成品尺寸，紙材與印刷色澤可能因螢幕及批次略有差異，屬正常狀態；附來源與考據說明卡。';
 
 /** 商品評價示意資料（每件商品皆回傳同一組） */
 export const REVIEWS: Review[] = [
@@ -117,7 +155,7 @@ export const REVIEWS: Review[] = [
 
 export const HERO_SLIDES: HeroSlide[] = [
   { slot: '[ 主視覺 1 · 青花瓷器情境 1600×840 ]', kicker: 'SPECIAL EXHIBITION / 特展聯名', title: '青花千年\n上桌日用', desc: '館藏紋樣授權復刻，杯壺盤器 128 款，第二件 8 折。' },
-  { slot: '[ 主視覺 2 · 書畫文具平拍 1600×840 ]', kicker: 'SCROLL SERIES / 書畫系列', title: '把長卷\n收進書桌', desc: '清明上河圖全卷高精複製，附考據冊與收納木盒。' },
+  { slot: '[ 主視覺 2 · 書畫明信片平拍 1600×840 ]', kicker: 'SCROLL SERIES / 書畫系列', title: '把長卷\n收進書桌', desc: '清明上河圖文物明信片，附來源與考據說明。' },
   { slot: '[ 主視覺 3 · 藏家日 1600×840 ]', kicker: 'MEMBER DAY / 藏家日', title: '每月 8 號\n藏家專屬 9 折', desc: '入會即享鑑賞講座名額，滿額回饋 3% 購物金。' },
 ];
 
@@ -166,7 +204,7 @@ export const HOT_SEARCH_LINKS: HotSearchLink[] = [
 ];
 
 /** 搜尋建議：接在輸入關鍵字之後的字尾（示意資料，正式應比對商品名稱產生） */
-export const SUGGESTION_SUFFIXES = ['蓋杯', '器物', '拼圖', '文具', '複製畫'];
+export const SUGGESTION_SUFFIXES = ['文物明信片', '器物', '書畫', '文具', '收藏卡'];
 
 /** 搜尋建議件數的示意換算基數與級距 */
 export const SUGGESTION_COUNT_BASE = 860;

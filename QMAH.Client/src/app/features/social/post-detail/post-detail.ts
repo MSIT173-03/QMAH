@@ -7,11 +7,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialPostDetails } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
+import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent],
   templateUrl: './post-detail.html',
   styleUrl: './post-detail.scss'
 })

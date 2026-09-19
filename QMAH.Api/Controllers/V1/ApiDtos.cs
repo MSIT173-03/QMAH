@@ -99,6 +99,13 @@ public sealed record StoreCategoryDto(
     string Name,
     int ProductCount);
 
+// integration: 商城活動直接引用已發布的官方商城公告；不複製優惠券文案，也不讓前台解析自由文字。
+public sealed record StorePromotionDto(
+    Guid Id,
+    string Title,
+    string Content,
+    DateTime PublishedAt);
+
 public sealed record ProductDetailsDto(
     Guid Id,
     Guid? ArtifactId,
@@ -109,6 +116,8 @@ public sealed record ProductDetailsDto(
     string CategoryCode,
     string? Description,
     string? SizeText,
+    // 商品固定是 A6 明信片；原文物尺寸另回傳，避免前台只能顯示其中一種尺寸。
+    string? ArtifactSizeText,
     decimal Price,
     int Stock,
     string? PrimaryImagePath,

@@ -150,7 +150,20 @@
         <option value="GENERAL">綜合討論區</option>
         <option value="EVENT">活動看板</option>
       </select>
-      <textarea class="textarea textarea-bordered h-24" placeholder="分享些內容..." [(ngModel)]="newPost.content"></textarea>
+      <div class="flex flex-wrap gap-2" role="toolbar" aria-label="貼文基本排版工具">
+        <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('heading')">小標</button>
+        <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('bullet')">項目</button>
+        <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('quote')">引用</button>
+        <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('paragraph')">分段</button>
+        <span class="text-xs text-base-content/60 self-center">保留純文字，發布後會自動呈現段落層次。</span>
+      </div>
+      <textarea id="social-post-content" class="textarea textarea-bordered h-24" placeholder="分享些內容..." [(ngModel)]="newPost.content"></textarea>
+      @if (newPost.content.trim()) {
+        <div class="rounded-box border border-base-300 bg-base-200/40 p-3">
+          <span class="text-xs text-base-content/60">預覽</span>
+          <app-social-post-content [content]="newPost.content" />
+        </div>
+      }
 
       <input
         type="file"

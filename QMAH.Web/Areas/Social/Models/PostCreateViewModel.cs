@@ -5,6 +5,17 @@ namespace QMAH.Web.Areas.Social.Models
 {
 public sealed record PostArtifactOption(Guid Id, string ArtifactRef, string Name);
 
+// 後台快速插入只讀取目前有效的優惠券摘要；不把資料庫實體直接暴露給 Razor，避免編輯器依賴不必要欄位。
+public sealed record PostPromotionOption(
+    Guid Id,
+    string Name,
+    string Code,
+    string DiscountLabel,
+    string AcquisitionLabel,
+    string MinimumLabel,
+    string PeriodLabel,
+    string ValidityLabel);
+
 public class PostCreateViewModel
 {
         [Required(ErrorMessage = "請選擇貼文類型")]

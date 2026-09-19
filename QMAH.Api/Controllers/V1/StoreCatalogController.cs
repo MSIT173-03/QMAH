@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -65,6 +66,31 @@ public sealed class StoreCatalogController(
             .ToListAsync(cancellationToken);
 
         return Ok(categories);
+    }
+
+    [HttpGet("promotions")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<StorePromotionDto>>> GetPromotions(
+        CancellationToken cancellationToken = default)
+    {
+        // 商城與社群共用同一份官方商城公告，避免優惠券條件在兩個資料來源各維護一次。
+        // 公告內容只作展示；實際折扣與可用性仍由結帳流程重新驗證優惠券定義。
+        var promotions = await db.SocialPosts
+            .AsNoTracking()
+            .Where(post => post.Status == "PUBLISHED"
+                && post.PostType == "ANNOUNCEMENT"
+                && post.PublisherType == "OFFICIAL"
+                && post.BoardCode == "STORE")
+            .OrderByDescending(post => post.CreatedAt)
+            .ThenBy(post => post.Id)
+            .Select(post => new StorePromotionDto(
+                post.Id,
+                post.Title,
+                post.Content,
+                post.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        return Ok(promotions);
     }
 
     [HttpGet("products")]
@@ -194,6 +220,8 @@ public sealed class StoreCatalogController(
                 item.CategoryCode,
                 item.Description,
                 item.SizeText,
+                // 同時提供關聯文物原始尺寸；商品尺寸不再承擔兩種語意。
+                item.Artifact == null ? null : item.Artifact.SizeText,
                 item.Price,
                 item.Stock,
                 item.PrimaryImagePath,

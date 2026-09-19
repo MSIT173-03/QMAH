@@ -717,16 +717,20 @@ public sealed class CatalogImportService(QmahDbContext db)
         var externalRef = $"artifact-{artifact.ArtifactRef}";
         var variation = StableNumber($"price:{artifact.ArtifactRef}") % 7 * 50;
         // 匯入保底商品也使用收藏卡契約，避免尚未產生完整商品 JSON 時又回到舊的複製品語意。
-        const string cardSize = "A6 明信片尺寸（10.5 × 14.8 公分）";
+        const string cardSize = "A6 明信片（148 × 105 mm）";
+        const string orientationRule = "明信片方向：依主圖原始寬高自動判斷（橫式／直式）";
+        var artifactSize = string.IsNullOrWhiteSpace(artifact.SizeOriginal)
+            ? "官方資料未提供"
+            : artifact.SizeOriginal.Trim();
         var sourceDescription = string.IsNullOrWhiteSpace(artifact.DescriptionOriginal)
-            ? "以故宮開放資料文物為主題的文物收藏卡。"
+            ? "以故宮開放資料文物為主題的文物明信片。"
             : artifact.DescriptionOriginal.Trim();
         return new CatalogProductImportRow(
             StableGuid($"product:{externalRef}"),
             externalRef,
-            $"{artifact.Name.Trim()}－文物收藏卡",
+            $"{artifact.Name.Trim()}－文物明信片",
             NormalizeCode(artifact.CategoryCode),
-            $"{sourceDescription}\n\n商品尺寸：{cardSize}\n\n本商品為 QMAH 虛擬展示資料，正面使用故宮開放資料圖像、背面整理基本收藏資訊；僅供系統功能測試與課堂展示，不提供實際販售。",
+            $"{sourceDescription}\n\n商品尺寸：{cardSize}\n文物原始尺寸：{artifactSize}\n{orientationRule}\n\n本商品為 QMAH 虛擬展示資料，正面使用故宮開放資料圖像、背面整理基本收藏資訊；僅供系統功能測試與課堂展示，不提供實際販售。",
             cardSize,
             680 + variation,
             20,

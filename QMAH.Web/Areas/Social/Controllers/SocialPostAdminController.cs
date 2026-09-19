@@ -20,7 +20,7 @@ public sealed class SocialPostAdminController : Controller
     private static readonly HashSet<string> AllowedStatuses = ["PUBLISHED", "HIDDEN", "DELETED"];
     private static readonly HashSet<string> AllowedPostTypes = ["POST", "ANNOUNCEMENT"];
     private static readonly string[] StandardBoardCodes =
-        ["GENERAL", "CATALOG", "DISCOVERY", "REVIEW", "QUESTION", "GUIDE"];
+        ["GENERAL", "CATALOG", "DISCOVERY", "REVIEW", "QUESTION", "GUIDE", "STORE", "EVENTS", "GAME"];
 
     private readonly QmahDbContext _context;
     private readonly ICurrentUserService _currentUserService;
@@ -38,6 +38,7 @@ public sealed class SocialPostAdminController : Controller
         ViewData["IsCreate"] = true;
         ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
         ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
+        ViewData["PromotionOptions"] = await LoadPromotionOptions(cancellationToken);
         return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", new PostCreateViewModel());
     }
 
@@ -54,6 +55,7 @@ public sealed class SocialPostAdminController : Controller
             ViewData["IsCreate"] = true;
             ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
             ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
+            ViewData["PromotionOptions"] = await LoadPromotionOptions(cancellationToken);
             return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", model);
         }
 
@@ -213,6 +215,7 @@ public sealed class SocialPostAdminController : Controller
         ViewData["PostId"] = post.Id;
         ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
         ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
+        ViewData["PromotionOptions"] = await LoadPromotionOptions(cancellationToken);
         return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", new PostCreateViewModel
         {
             PostType = NormalizePostType(post.PostType),
@@ -253,6 +256,7 @@ public sealed class SocialPostAdminController : Controller
             ViewData["PostId"] = id;
             ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
             ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
+            ViewData["PromotionOptions"] = await LoadPromotionOptions(cancellationToken);
             return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", model);
         }
 
@@ -358,6 +362,32 @@ public sealed class SocialPostAdminController : Controller
             // 限制下拉選單大小，避免管理表單一次載入過多選項
             .Take(512)
             .ToListAsync(cancellationToken);
+    }
+
+    private async Task<List<PostPromotionOption>> LoadPromotionOptions(CancellationToken cancellationToken)
+    {
+        // 快速插入只提供現在可使用的規則；結帳仍會重新驗證優惠券，編輯器不複製交易邏輯。
+        var now = DateTime.UtcNow;
+        var definitions = await _context.CouponDefinitions
+            .AsNoTracking()
+            .Where(coupon => coupon.IsActive && coupon.EndAt > now)
+            .OrderBy(coupon => coupon.StartAt)
+            .ThenBy(coupon => coupon.Code)
+            .Take(20)
+            .ToListAsync(cancellationToken);
+
+        return definitions.Select(coupon => new PostPromotionOption(
+            coupon.Id,
+            string.IsNullOrWhiteSpace(coupon.Name) ? coupon.Code : coupon.Name,
+            coupon.Code,
+            coupon.DiscountType.Trim().ToUpperInvariant() == "PERCENT"
+                ? $"折扣 {coupon.DiscountValue:0.##}%"
+                : $"折抵 NT${coupon.DiscountValue:0.##}",
+            coupon.AcquisitionType.Trim().ToUpperInvariant() == "POINT_EXCHANGE" ? "鑑定點數兌換" : "官方發放",
+            coupon.MinimumAmount > 0 ? $"滿 NT${coupon.MinimumAmount:0.##}" : "不限金額",
+            $"{coupon.StartAt.ToLocalTime():yyyy/MM/dd}－{coupon.EndAt.ToLocalTime():yyyy/MM/dd}",
+            coupon.ValidityDays > 0 ? $"發放後 {coupon.ValidityDays} 天內有效" : "依商城規則"))
+            .ToList();
     }
 
     private void ValidateModel(PostCreateViewModel model)

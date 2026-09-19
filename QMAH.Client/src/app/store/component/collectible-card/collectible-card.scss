@@ -177,6 +177,11 @@
   white-space: nowrap;
 }
 
+.card-orientation {
+  font: 500 calc(1.8 * var(--paper-mm)) / 1.35 'Noto Serif TC', 'PMingLiU', serif;
+  letter-spacing: 0.12em;
+}
+
 .postcard-back-paper {
   color: #49483e;
   font-family: 'Noto Serif TC', 'PMingLiU', 'Songti TC', serif;

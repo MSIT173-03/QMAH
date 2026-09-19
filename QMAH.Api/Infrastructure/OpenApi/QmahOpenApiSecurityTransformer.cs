@@ -379,6 +379,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["MemberCatalog.GetArtifacts"] = "回傳目前會員圖鑑及每件文物的解鎖狀態",
             ["MemberCatalog.GetUnlocks"] = "回傳目前會員的文物解鎖歷史",
             ["StoreCatalog.GetProducts"] = "回傳符合條件的上架商品分頁清單",
+            ["StoreCatalog.GetPromotions"] = "回傳已發布的官方商城優惠公告",
             ["StoreCatalog.GetProduct"] = "回傳指定商品的價格、庫存、圖片與評價摘要",
             ["StoreReviews.GetReviews"] = "回傳商品評價分頁清單與評價統計",
             ["StoreReviews.GetMyReview"] = "回傳目前會員對指定商品的評價",

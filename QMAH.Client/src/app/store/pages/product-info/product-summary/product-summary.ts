@@ -39,6 +39,8 @@ export class ProductSummary {
   shipping = input('');
   /** 尺寸／規格說明 */
   dims = input('');
+  /** 關聯文物原始尺寸；與固定 A6 成品尺寸分開顯示。 */
+  artifactDims = input('');
   /** 商品狀態說明 */
   condition = input('');
   /** 尺寸量測說明（佔位資料，正式應由商品說明設定提供） */
