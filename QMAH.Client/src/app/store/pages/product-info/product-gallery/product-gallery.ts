@@ -19,6 +19,8 @@ export class ProductGallery {
   name = input('');
   /** 商品圖片的視角名稱清單（佔位資料，正式應為商品圖片清單） */
   views = input<string[]>([]);
+  /** 各視角對應的圖片網址（與 views 同序），無圖片時為 null 並顯示佔位文字 */
+  images = input<(string | null)[]>([]);
 
   /** 主圖覆蓋層的操作提示（固定文案） */
   protected readonly overlayLabel = '點擊放大 · 檢視細節';
@@ -27,6 +29,13 @@ export class ProductGallery {
   protected shot = signal(0);
   /** 放大檢視是否開啟 */
   protected zoomOpen = signal(false);
+
+  /** 目前視角的圖片網址 */
+  protected currentImage = computed(() => this.images()[this.shot()] ?? null);
+  /** 縮圖顯示資料：文字標籤與圖片網址 */
+  protected thumbs = computed(() =>
+    this.views().map((view, i) => ({ label: `[ ${view} ]`, url: this.images()[i] ?? null })),
+  );
 
   /** 目前視角名稱 */
   private currentView = computed(() => this.views()[this.shot()] ?? '');

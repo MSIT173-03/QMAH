@@ -33,19 +33,6 @@ public sealed class StoreCatalogController(
         PAINTING,
     }
 
-    private string CategoryTypeToString(CategoryType? type) => type switch
-    {
-        CategoryType.BRONZE => "BRONZE",
-        CategoryType.CARVING => "CARVING",
-        CategoryType.CERAMIC => "CERAMIC",
-        CategoryType.COIN => "COIN",
-        CategoryType.ENAMEL => "ENAMEL",
-        CategoryType.JADE => "JADE",
-        CategoryType.LACQUER => "LACQUER",
-        CategoryType.PAINTING => "PAINTING",
-        _ => ""
-    };
-
     [HttpGet("products")]
     public async Task<ActionResult<ApiPage<ProductListItemDto>>> GetProducts(
         string? q,
@@ -81,8 +68,11 @@ public sealed class StoreCatalogController(
         if (maxPrice is not null and > 0)
             query = query.Where(p => p.Price < maxPrice);
 
-        if (category != null)
-            query = query.Where(p => p.CategoryCode == CategoryTypeToString(category));
+        if (category is { } categoryType)
+        {
+            var code = categoryType.ToString();
+            query = query.Where(p => p.CategoryCode == code);
+        }
 
         var query2 = query.Select(g => new
         {
@@ -101,7 +91,7 @@ public sealed class StoreCatalogController(
             ReviewCount = db.ProductReviews
                     .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
             SellCount = db.OrderDetails
-                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
+                    .Where(o => o.ProductId == g.Id && o.Order.Status == "COMPLETED")
                     .Sum(o => o.Quantity)
         });
 
@@ -160,53 +150,60 @@ public sealed class StoreCatalogController(
     public async Task<ActionResult<ProductInfomationDto>> GetProductInfo(
         CancellationToken cancellationToken = default)
     {
-        var counted = await db.Products
+        var products = await db.Products
             .AsNoTracking()
             .Where(product => product.IsActive)
-            .GroupBy(product => product.CategoryCode)
-            .Select(group => new { Code = group.Key, Count = group.Count() })
-            .ToDictionaryAsync(item => item.Code, item => item.Count, cancellationToken);
-        var categoryCounts = Enum.GetNames<CategoryType>()
-            .ToDictionary(name => name, name => counted.GetValueOrDefault(name));
+            .Select(product => new ProductListItemDto(
+                product.Id,
+                product.ArtifactId,
+                product.ExternalRef,
+                product.Name,
+                product.CategoryCode,
+                product.Price,
+                product.Stock,
+                product.PrimaryImagePath,
+                product.CreatedAt,
+                product.ProductReviews
+                    .Where(review => review.Status == "PUBLISHED")
+                    .Select(review => (decimal?)review.Rating)
+                    .Average() ?? 0m,
+                product.ProductReviews.Count(review => review.Status == "PUBLISHED"),
+                product.OrderDetails
+                    .Where(detail => detail.Order.Status == "COMPLETED")
+                    .Sum(detail => detail.Quantity)))
+            .ToListAsync(cancellationToken);
 
-        var rows = db.Products
-            .AsNoTracking()
-            .Where(product => product.IsActive)
-            .Select(g => new ProductRow
-            {
-                Id = g.Id,
-                ArtifactId = g.ArtifactId,
-                ExternalRef = g.ExternalRef,
-                Name = g.Name,
-                CategoryCode = g.CategoryCode,
-                Price = g.Price,
-                Stock = g.Stock,
-                PrimaryImagePath = g.PrimaryImagePath,
-                CreatedAt = g.CreatedAt,
-                AverageRating = db.ProductReviews
-                    .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
-                    .Average(r => (decimal?)r.Rating) ?? 0m,
-                ReviewCount = db.ProductReviews
-                    .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
-                SellCount = db.OrderDetails
-                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
-                    .Sum(o => o.Quantity)
-            });
-        var hotProducts = await TakeAsync(
-            rows.OrderByDescending(g => g.SellCount).ThenBy(g => g.Id), 10, cancellationToken);
-        var newProducts = await TakeAsync(
-            rows.OrderByDescending(g => g.CreatedAt).ThenBy(g => g.Id), 4, cancellationToken);
-        var topRatedProducts = await TakeAsync(
-            rows.Where(g => g.ReviewCount > 0)
-                .OrderByDescending(g => g.AverageRating)
-                .ThenByDescending(g => g.ReviewCount)
-                .ThenBy(g => g.Id),
-            4,
-            cancellationToken);
+        var byCategory = products.ToLookup(product => product.CategoryCode);
+        var categoryCounts = Enum.GetNames<CategoryType>()
+            .ToDictionary(name => name, name => byCategory[name].Count());
+        var categoryCoverImages = Enum.GetNames<CategoryType>()
+            .ToDictionary(
+                name => name,
+                name => mediaUrlResolver.Resolve(byCategory[name]
+                    .OrderByDescending(product => product.SellCount)
+                    .ThenBy(product => product.Id)
+                    .FirstOrDefault()?.PrimaryImagePath));
+        var hotProducts = WithPublicImages(products
+            .OrderByDescending(product => product.SellCount)
+            .ThenBy(product => product.Id)
+            .Take(10));
+        var newProducts = WithPublicImages(products
+            .OrderByDescending(product => product.CreatedAt)
+            .ThenBy(product => product.Id)
+            .Take(4));
+        var topRatedProducts = WithPublicImages(products
+            .Where(product => product.ReviewCount > 0)
+            .OrderByDescending(product => product.AverageRating)
+            .ThenByDescending(product => product.ReviewCount)
+            .ThenBy(product => product.Id)
+            .Take(4));
+        var recommendedProducts = WithPublicImages(products
+            .OrderBy(_ => Random.Shared.Next())
+            .Take(10));
 
         if (!TryGetCurrentUserId(out var userId))
             return Ok(new ProductInfomationDto(
-                categoryCounts, false, null, null, hotProducts, newProducts, topRatedProducts));
+                categoryCounts, categoryCoverImages, false, null, null, hotProducts, newProducts, topRatedProducts, recommendedProducts));
 
         var pointBalance = await db.PointBalances
             .AsNoTracking()
@@ -216,7 +213,12 @@ public sealed class StoreCatalogController(
         var now = DateTime.UtcNow;
         var coupons = await db.UserCoupons
             .AsNoTracking()
-            .Where(coupon => coupon.UserId == userId && coupon.Status == "AVAILABLE")
+            .Where(coupon => coupon.UserId == userId
+                && coupon.Status == "AVAILABLE"
+                && coupon.ExpiresAt > now
+                && coupon.CouponDefinition.IsActive
+                && coupon.CouponDefinition.StartAt <= now
+                && coupon.CouponDefinition.EndAt > now)
             .OrderByDescending(coupon => coupon.IssuedAt)
             .Select(coupon => new CouponDto(
                 coupon.Id,
@@ -236,52 +238,14 @@ public sealed class StoreCatalogController(
             .ToListAsync(cancellationToken);
 
         return Ok(new ProductInfomationDto(
-            categoryCounts, true, pointBalance, coupons, hotProducts, newProducts, topRatedProducts));
+            categoryCounts, categoryCoverImages, true, pointBalance, coupons, hotProducts, newProducts, topRatedProducts, recommendedProducts));
     }
 
-    /// <summary>商品清單項目的查詢中間形狀，讓各排行榜共用同一份投影再各自排序。</summary>
-    private sealed class ProductRow
-    {
-        public Guid Id { get; init; }
-        public Guid? ArtifactId { get; init; }
-        public string? ExternalRef { get; init; }
-        public string Name { get; init; } = "";
-        public string CategoryCode { get; init; } = "";
-        public decimal Price { get; init; }
-        public int Stock { get; init; }
-        public string? PrimaryImagePath { get; init; }
-        public DateTime CreatedAt { get; init; }
-        public decimal AverageRating { get; init; }
-        public int ReviewCount { get; init; }
-        public int SellCount { get; init; }
-    }
-
-    /// <summary>取排序後前 count 筆並轉為 DTO，圖片網址統一經 CDN 解析。</summary>
-    private async Task<IReadOnlyList<ProductListItemDto>> TakeAsync(
-        IQueryable<ProductRow> ordered,
-        int count,
-        CancellationToken cancellationToken)
-    {
-        var items = await ordered
-            .Take(count)
-            .Select(g => new ProductListItemDto(
-                g.Id,
-                g.ArtifactId,
-                g.ExternalRef,
-                g.Name,
-                g.CategoryCode,
-                g.Price,
-                g.Stock,
-                g.PrimaryImagePath,
-                g.CreatedAt,
-                g.AverageRating,
-                g.ReviewCount,
-                g.SellCount))
-            .ToListAsync(cancellationToken);
-        return items
+    /// <summary>圖片網址統一經 CDN 解析後轉為清單。</summary>
+    private IReadOnlyList<ProductListItemDto> WithPublicImages(IEnumerable<ProductListItemDto> items) =>
+        items
             .Select(item => item with { PrimaryImagePath = mediaUrlResolver.Resolve(item.PrimaryImagePath) })
             .ToList();
-    }
 
     [HttpGet("products/{id:guid}")]
     public async Task<ActionResult<ProductDetailsDto>> GetProduct(
@@ -311,7 +275,7 @@ public sealed class StoreCatalogController(
                     .Select(review => (decimal?)review.Rating)
                     .Average() ?? 0m,
                 item.ProductReviews.Count(review => review.Status == "PUBLISHED")))
-            .SingleOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (product is null)
             return MissingResource("找不到商品", "這件商品不存在或目前未上架。");

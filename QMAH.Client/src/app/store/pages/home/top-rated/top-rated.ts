@@ -31,11 +31,13 @@ export class TopRated {
       const price = toPriceView(view.price, view.was);
       return {
         id: view.id,
+        coverImage: view.coverImage,
         brand: view.brand,
         name: view.name,
         hasDeal: price.hasDeal,
         priceText: price.price,
         tagText: price.tag,
+        hasReviews: view.reviews > 0,
         ratingText: formatRating(view.rating),
         reviewsText: formatReviews(view.reviews),
       };

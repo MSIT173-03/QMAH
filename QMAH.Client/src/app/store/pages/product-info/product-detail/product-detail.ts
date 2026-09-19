@@ -14,12 +14,12 @@ import { ProductPolicy } from '../../../api/api.models';
 export class ProductDetail {
   /** 商品說明段落 */
   intro = input('');
+  /** 商品說明圖網址，未提供時不顯示說明圖 */
+  image = input<string | null>(null);
   /** 商品政策條列（全站共通的保養、退換、鑑定說明） */
   rows = input<ProductPolicy[]>([]);
 
   /** 以下為區塊的固定版面文字 */
   protected readonly title = '商品說明';
   protected readonly tag = 'DETAILS';
-  /** 說明圖尚無實際圖片，先以佔位文字呈現版位 */
-  protected readonly imageSlot = '[ 商品說明圖 · 情境／細節 1600×900 ]';
 }

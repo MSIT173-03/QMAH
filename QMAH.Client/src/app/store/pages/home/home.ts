@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { map, of, switchMap } from 'rxjs';
 
 import { Promobar, SearchBar, SearchSuggestion, CartLink, SiteFooter, SiteHeader } from '../../component';
-import { CatalogApi, HomeApi, SearchApi } from '../../api';
+import { SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
 import { CART_PATH, PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
@@ -20,9 +20,6 @@ import { NewArrivals } from './new-arrivals/new-arrivals';
 import { TopRated } from './top-rated/top-rated';
 import { Recommendations } from './recommendations/recommendations';
 import { BadgedProductView } from './home.data';
-
-/** 「為你推薦」每次載入的商品數量 */
-const RECOMMEND_PAGE_SIZE = 10;
 
 /**
  * 首頁。
@@ -56,7 +53,6 @@ const RECOMMEND_PAGE_SIZE = 10;
 })
 export class Home {
   private readonly router = inject(Router);
-  private readonly homeApi = inject(HomeApi);
   private readonly searchApi = inject(SearchApi);
 
   /** 購物車狀態（件數顯示於頁首） */
@@ -68,6 +64,8 @@ export class Home {
 
   /** 各器類商品數量，供分類入口區塊使用 */
   protected readonly categoryCounts = computed(() => this.site.info()?.categoryCounts ?? {});
+  /** 各器類封面圖（銷售數量最高商品的主圖） */
+  protected readonly categoryImages = computed(() => this.site.info()?.categoryCoverImages ?? {});
   /** 熱銷排行、新品上架與評價排行的商品（來自 products/info） */
   protected readonly hotProducts = computed(() => this.site.info()?.hotProducts ?? []);
   protected readonly newProducts = computed(() => this.site.info()?.newProducts ?? []);
@@ -92,26 +90,21 @@ export class Home {
   );
 
   /** 分類導覽列顯示用分類名稱 */
-  protected readonly categoryNames = toSignal(
-    inject(CatalogApi)
-      .getCategories()
-      .pipe(map((categories) => categories.map((category) => category.name))),
-    { initialValue: [] },
-  );
+  protected readonly categoryNames = computed(() => Object.keys(this.site.info()?.categoryCounts ?? {}));
   /** 分類導覽列「新品上架」與各分類的連結網址 */
   protected readonly newArrivalsPath = `${PRODUCT_LIST_PATH}?view=new`;
   protected categoryPath(name: string): string {
     return `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`;
   }
 
-  /** 「為你推薦」已載入的商品卡片 */
-  protected recommendedItems = signal<BadgedProductView[]>([]);
-  /** 「為你推薦」已載入的頁數 */
-  private recommendPage = 0;
-
-  constructor() {
-    this.loadRecommendations();
-  }
+  /** 「為你推薦」商品卡片（來自 products/info，隨機 10 項），角標為器類 */
+  protected readonly recommendedItems = computed((): BadgedProductView[] =>
+    (this.site.info()?.recommendedProducts ?? []).map((item) => ({
+      ...toProductView(item),
+      badge: item.category,
+      badgeVariant: 'teal',
+    })),
+  );
 
   /** 加入購物車：數量 1 */
   protected onAddToCart(productId: string): void {
@@ -128,29 +121,9 @@ export class Home {
     this.onSearch(suggestion.name);
   }
 
-  /** 「載入更多」：取得下一頁推薦商品並接在清單後面 */
-  protected onRequireMore(): void {
-    this.loadRecommendations();
-  }
-
   protected onClickAllCategory() {}
 
   protected onClickSpecial() {}
 
   protected onClickOnSell() {}
-
-  /** 請求「為你推薦」的商品資料並加入目前列表。 */
-  private loadRecommendations(): void {
-    this.recommendPage += 1;
-    this.homeApi
-      .getRecommendations({ page: this.recommendPage, pageSize: RECOMMEND_PAGE_SIZE })
-      .subscribe((page) =>
-        this.recommendedItems.update((items) => [
-          ...items,
-          ...page.items.map(
-            (item): BadgedProductView => ({ ...toProductView(item), badge: item.reason, badgeVariant: 'teal' }),
-          ),
-        ]),
-      );
-  }
 }

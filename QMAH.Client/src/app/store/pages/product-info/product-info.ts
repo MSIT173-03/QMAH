@@ -118,6 +118,8 @@ export class ProductInfo {
   });
   /** 商品圖片的視角名稱清單 */
   protected galleryViews = computed(() => this.item()?.images.map((image) => image.view) ?? []);
+  /** 商品圖片網址清單（與視角同序），來自 API 的 primaryImagePath */
+  protected galleryImages = computed(() => this.item()?.images.map((image) => image.url) ?? []);
 
   /** 同類推薦清單 */
   protected related = toSignal(

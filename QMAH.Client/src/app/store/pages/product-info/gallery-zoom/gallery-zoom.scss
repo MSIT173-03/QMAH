@@ -57,6 +57,12 @@
   }
 }
 
+.zoom-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .zoom-thumbs {
   display: flex;
   gap: 8px;

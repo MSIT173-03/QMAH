@@ -3,7 +3,6 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { apiUrl, getField, toParams } from './http';
 import {
-  Category,
   Page,
   Product,
   ProductDetail,
@@ -33,11 +32,6 @@ const REVIEWS_MAX_PAGE_SIZE = 100;
 @Injectable({ providedIn: 'root' })
 export class CatalogApi {
   private readonly http = inject(HttpClient);
-
-  /** GET /categories：器類清單 */
-  getCategories(): Observable<Category[]> {
-    return getField(this.http, apiUrl('/categories'), 'categories');
-  }
 
   /**
    * GET /products：商品清單。後端支援關鍵字、器類、排序、價格區間與分頁；

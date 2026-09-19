@@ -26,14 +26,6 @@ export interface Page<T> {
    商品型錄與詳情
    =============================== */
 
-/** 器類 */
-export interface Category {
-  id: string;
-  name: string;
-  /** 此器類的商品件數 */
-  productCount: number;
-}
-
 /** 商品清單項目 */
 export interface Product {
   id: string;
@@ -163,27 +155,6 @@ export interface FlashSale {
   items: FlashSaleItem[];
 }
 
-/** 品牌館品牌 */
-export interface Brand {
-  en: string;
-  zh: string;
-  /** 品牌優惠說明 */
-  deal: string;
-}
-
-/** 熱銷排行查詢參數 */
-export interface RankingQuery {
-  /** 器類名稱，未指定時為全站排行 */
-  cat?: string;
-  limit?: number;
-}
-
-/** 推薦商品 */
-export interface RecommendedProduct extends Product {
-  /** 推薦理由，顯示為卡片角標 */
-  reason: string;
-}
-
 /* ===============================
    搜尋
    =============================== */
@@ -297,6 +268,8 @@ export interface Coupon {
 export interface ProductInfo {
   /** 各器類的上架商品數量（key 為中文器類名稱） */
   categoryCounts: Record<string, number>;
+  /** 各器類銷售數量最高商品的主圖網址（key 為中文器類名稱），無圖片時為 null */
+  categoryCoverImages: Record<string, string | null>;
   isLoggedIn: boolean;
   /** 鑑定點數；未登入時為 null */
   pointBalance: number | null;
@@ -308,6 +281,8 @@ export interface ProductInfo {
   newProducts: Product[];
   /** 評價排行：平均評價最高的前 4 項 */
   topRatedProducts: Product[];
+  /** 為你推薦：隨機挑選的 10 項 */
+  recommendedProducts: Product[];
 }
 
 /* ===============================

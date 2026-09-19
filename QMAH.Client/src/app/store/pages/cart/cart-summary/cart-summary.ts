@@ -20,6 +20,8 @@ import { StoreLink } from '../../../shared/store-link';
 export class CartSummary {
   /** 購物車金額摘要；尚未載入時為 null */
   amounts = input<CartAmounts | null>(null);
+  /** 是否可前往結帳（需已登入）；為 false 時停用結帳按鈕 */
+  canCheckout = input(false);
 
   /** 商品小計顯示文字 */
   protected getSubtotal = computed(() => formatMoney(this.amounts()?.subtotal ?? 0));
@@ -45,6 +47,7 @@ export class CartSummary {
   protected readonly shippingLabel = '運費';
   protected readonly totalLabel = '應付總額';
   protected readonly checkoutLabel = '前往結帳';
+  protected readonly loginRequiredNote = '請先登入後再結帳。';
   protected readonly checkoutHref = CHECKOUT_PATH;
   protected readonly serviceLabel = 'SERVICE';
   protected readonly serviceNote =

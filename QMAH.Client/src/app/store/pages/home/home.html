@@ -41,7 +41,7 @@
   </section>
 
   <!-- 分類入口 -->
-  <app-category-grid [counts]="categoryCounts()" />
+  <app-category-grid [counts]="categoryCounts()" [images]="categoryImages()" />
 
   <!-- 熱銷排行 -->
   <app-ranking-section [products]="hotProducts()" (addToCart)="onAddToCart($event)" />
@@ -53,8 +53,7 @@
   </section>
 
   <!-- 為你推薦 -->
-  <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)"
-    (requireMore)="onRequireMore()" />
+  <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)" />
 </main>
 
 <!-- 頁尾：完整版，含品牌介紹、連結欄位與版權列 -->

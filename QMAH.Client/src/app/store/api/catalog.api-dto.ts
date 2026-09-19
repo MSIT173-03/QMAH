@@ -81,12 +81,14 @@ export interface ApiCoupon {
 /** GET /products/info 回應 */
 export interface ApiProductInfo {
   categoryCounts: Record<string, number>;
+  categoryCoverImages: Record<string, string | null>;
   isLoggedIn: boolean;
   pointBalance: number | null;
   coupons: ApiCoupon[] | null;
   hotProducts: ApiProductListItem[];
   newProducts: ApiProductListItem[];
   topRatedProducts: ApiProductListItem[];
+  recommendedProducts: ApiProductListItem[];
 }
 
 /** GET /products/{id} 回應 */
@@ -164,12 +166,16 @@ export function toProductInfo(dto: ApiProductInfo): ProductInfo {
     categoryCounts: Object.fromEntries(
       Object.entries(dto.categoryCounts).map(([code, count]) => [toCategoryLabel(code), count]),
     ),
+    categoryCoverImages: Object.fromEntries(
+      Object.entries(dto.categoryCoverImages).map(([code, url]) => [toCategoryLabel(code), url]),
+    ),
     isLoggedIn: dto.isLoggedIn,
     pointBalance: dto.pointBalance,
     coupons: (dto.coupons ?? []).map(toCoupon),
     hotProducts: dto.hotProducts.map(toProduct),
     newProducts: dto.newProducts.map(toProduct),
     topRatedProducts: dto.topRatedProducts.map(toProduct),
+    recommendedProducts: dto.recommendedProducts.map(toProduct),
   };
 }
 

@@ -35,12 +35,14 @@ export class NewArrivals {
       const price = toPriceView(view.price, view.was);
       return {
         id: view.id,
+        coverImage: view.coverImage,
         brand: view.brand,
         name: view.name,
         /** 是否為折扣商品，決定價格與標籤是否使用強調色 */
         hasDeal: price.hasDeal,
         priceText: price.price,
         tagText: price.tag,
+        hasReviews: view.reviews > 0,
         ratingText: formatRating(view.rating),
         reviewsText: formatReviews(view.reviews),
       };

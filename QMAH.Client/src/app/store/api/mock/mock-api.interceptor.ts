@@ -21,16 +21,12 @@ interface MockRoute {
 }
 
 const ROUTES: MockRoute[] = [
-  { method: 'GET', path: /^\/categories$/, handle: () => handlers.listCategories() },
   // { method: 'GET', path: /^\/products$/, handle: (_, params) => handlers.listProducts(params) },
   // { method: 'GET', path: /^\/products\/([^/]+)$/, handle: ([id]) => handlers.getProduct(id) },
   { method: 'GET', path: /^\/products\/([^/]+)\/related$/, handle: ([id], params) => handlers.listRelated(id, params) },
   // { method: 'GET', path: /^\/products\/([^/]+)\/reviews$/, handle: ([id], params) => handlers.listReviews(id, params) },
   { method: 'GET', path: /^\/home\/hero-slides$/, handle: () => handlers.listHeroSlides() },
   { method: 'GET', path: /^\/home\/flash-sale$/, handle: () => handlers.getFlashSale() },
-  { method: 'GET', path: /^\/brands$/, handle: () => handlers.listBrands() },
-  { method: 'GET', path: /^\/rankings$/, handle: (_, params) => handlers.listRankings(params) },
-  { method: 'GET', path: /^\/recommendations$/, handle: (_, params) => handlers.listRecommendations(params) },
   { method: 'GET', path: /^\/coupons\/claimable$/, handle: () => handlers.listClaimableCoupons() },
   { method: 'GET', path: /^\/search\/hot-links$/, handle: () => handlers.listHotLinks() },
   { method: 'GET', path: /^\/search\/suggestions$/, handle: (_, params) => handlers.listSuggestions(params) },

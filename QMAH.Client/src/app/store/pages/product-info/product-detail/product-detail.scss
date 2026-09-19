@@ -11,15 +11,12 @@
 }
 
 .detail-image {
-  aspect-ratio: 16 / 9;
+  display: block;
+  width: 100%;
+  max-height: 560px;
+  object-fit: contain;
   background: var(--color-swatch);
   border: 1px solid var(--color-line);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--color-faint);
 }
 
 .detail-list {

@@ -2,7 +2,13 @@
 @if (open()) {
   <div class="zoom-modal" [class.zoom-modal--closing]="closing()" (click)="onDismiss()">
     <!-- 放大後的商品圖片 -->
-    <div class="zoom-image">{{ label() }}</div>
+    <div class="zoom-image">
+      @if (image()) {
+        <img class="zoom-image-img" [src]="image()" [alt]="label()" />
+      } @else {
+        {{ label() }}
+      }
+    </div>
 
     <!-- 縮圖切換列，點擊只切換圖片而不關閉覆蓋層 -->
     <div class="zoom-thumbs">

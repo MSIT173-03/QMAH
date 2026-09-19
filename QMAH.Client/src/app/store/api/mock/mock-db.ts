@@ -1,5 +1,4 @@
 import {
-  Brand,
   Coupon,
   HeroSlide,
   HotSearchLink,
@@ -64,18 +63,6 @@ export const CATALOG: CatalogRecord[] = [
   { id: 'qc-19', name: '宋畫花鳥冊頁絹本複製', brand: '書畫工房', price: 2180, off: 0.1, cat: '繪畫', material: '絹本微噴 · 綾邊裝裱', source: '原件為宋人花鳥冊頁', dims: '待測量', rating: 4.6, reviews: 158, listedAt: '2026-07-10' },
 ];
 
-/** 器類（順序即各頁面分類清單的顯示順序） */
-export const CATEGORIES: { id: string; name: string }[] = [
-  { id: 'bronze', name: '青銅器' },
-  { id: 'carving', name: '雕刻' },
-  { id: 'ceramic', name: '陶瓷' },
-  { id: 'coin', name: '錢幣' },
-  { id: 'enamel', name: '琺瑯器' },
-  { id: 'jade', name: '玉器' },
-  { id: 'lacquer', name: '漆器' },
-  { id: 'painting', name: '繪畫' },
-];
-
 /** 尺寸尚未建檔的商品，dims 欄位所使用的標示文字 */
 export const DIMS_PENDING = '待測量';
 
@@ -130,21 +117,6 @@ export const FLASH_SALE_ITEMS: { productId: string; stockRatio: number }[] = [
 
 /** 限時特賣距離結束的時間（每次請求重新起算） */
 export const FLASH_SALE_REMAINING_MS = (3 * 3600 + 42 * 60 + 15) * 1000;
-
-export const BRANDS: Brand[] = [
-  { en: 'QMAH SELECT', zh: '清明選物', deal: '特展聯名 8 折' },
-  { en: 'SCROLL WORKS', zh: '書畫工房', deal: '新品 9 折' },
-  { en: 'RU KILN', zh: '窯作研究', deal: '對杯免運' },
-  { en: 'SILK WORKS', zh: '織紋復刻', deal: '第二件半價' },
-  { en: 'BRONZE HALL', zh: '金石堂號', deal: '滿額送拓印卡' },
-  { en: 'INCENSE CO.', zh: '香道處', deal: '加贈香品組' },
-];
-
-/** 「為你推薦」的商品順序，未列出的商品依型錄順序接在後面（正式應由推薦演算法產生） */
-export const RECOMMENDATION_ORDER = ['qc-04', 'qc-06', 'qc-09', 'qc-03', 'qc-12', 'qc-07', 'qc-10', 'qc-05', 'qc-01', 'qc-08'];
-
-/** 依序輪流套用的推薦理由 */
-export const RECOMMENDATION_REASONS = ['近期熱門', '回購率高', '同類最低'];
 
 /** 首頁側欄可領取的折價券 */
 export const CLAIMABLE_COUPONS: Coupon[] = [

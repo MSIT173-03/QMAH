@@ -1,8 +1,5 @@
-import { Component, computed, inject, input } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { Component, computed, input } from '@angular/core';
 import { SectionHead } from '../../../component';
-import { CatalogApi } from '../../../api';
 import { PRODUCT_LIST_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
 
@@ -16,30 +13,18 @@ import { StoreLink } from '../../../shared/store-link';
   ],
 })
 export class CategoryGrid {
-  /** 各器類的上架商品數量（key 為器類名稱）；有值時優先於分類清單自帶的件數 */
+  /** 各器類的上架商品數量（key 為器類名稱，順序即顯示順序） */
   counts = input<Record<string, number>>({});
+  /** 各器類的封面圖網址（key 為器類名稱），無圖片時顯示佔位文字 */
+  images = input<Record<string, string | null>>({});
 
-  /** 分類顯示資料：分類名稱、商品件數與連結網址 */
-  private readonly baseCategories = toSignal(
-    inject(CatalogApi)
-      .getCategories()
-      .pipe(
-        map((categories) =>
-          categories.map((category) => ({
-            name: category.name,
-            count: category.productCount,
-            /** 商品列表頁並帶上對應的 cat 查詢字串 */
-            link: `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(category.name)}`,
-          })),
-        ),
-      ),
-    { initialValue: [] },
-  );
-
+  /** 分類顯示資料：分類名稱、商品件數、封面圖與連結網址（商品列表頁並帶上對應的 cat 查詢字串） */
   protected readonly categories = computed(() =>
-    this.baseCategories().map((category) => ({
-      ...category,
-      count: this.counts()[category.name] ?? category.count,
+    Object.entries(this.counts()).map(([name, count]) => ({
+      name,
+      count,
+      image: this.images()[name] ?? null,
+      link: `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`,
     })),
   );
 

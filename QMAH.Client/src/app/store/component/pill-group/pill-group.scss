@@ -79,4 +79,10 @@
       border-color: var(--color-ink);
     }
   }
+
+  /* 停用：淡化且不可點擊，hover 不改變外觀 */
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }

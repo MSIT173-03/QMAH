@@ -5,8 +5,10 @@
   <!-- 說明段落：商品出處說明 + 共通敘述 -->
   <p class="detail-text">{{ intro() }}</p>
 
-  <!-- 商品說明圖版位 -->
-  <div class="detail-image">{{ imageSlot }}</div>
+  <!-- 商品說明圖：有圖片網址才顯示 -->
+  @if (image()) {
+    <img class="detail-image" [src]="image()" [alt]="title" />
+  }
 
   <!-- 補充條列：保養、退換、鑑定 -->
   <div class="detail-list">

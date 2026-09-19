@@ -11,7 +11,12 @@
       <span class="summary-total-value">{{ getTotal() }}</span>
     </div>
     <!-- 前往結帳 -->
-    <a [storeLink]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
+    @if (canCheckout()) {
+      <a [storeLink]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
+    } @else {
+      <button type="button" class="btn-solid btn-solid--full" disabled [title]="loginRequiredNote">{{ checkoutLabel }}</button>
+      <span class="summary-note">{{ loginRequiredNote }}</span>
+    }
   </app-panel>
 
   <app-panel variant="note">

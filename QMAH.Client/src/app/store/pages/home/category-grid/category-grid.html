@@ -4,7 +4,13 @@
   <div class="cat-grid">
     @for (cat of categories(); track cat.name) {
       <a [storeLink]="cat.link" class="cat-card">
-        <div class="cat-icon">ICON</div>
+        <div class="cat-icon">
+          @if (cat.image) {
+            <img class="cat-icon-image" [src]="cat.image" [alt]="cat.name" />
+          } @else {
+            ICON
+          }
+        </div>
         <span class="text-sm">{{ cat.name }}</span>
         <span class="cat-count">{{ cat.count }} 件</span>
       </a>

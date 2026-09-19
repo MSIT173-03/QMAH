@@ -64,6 +64,8 @@ export class ProductReviews {
     REVIEW_FILTERS.map((filter, i) => ({
       label: `${filter.label}（${this.filterCounts()[i] ?? 0}）`,
       active: i === this.filterIndex(),
+      // 該條件沒有評價時停用；商品完全沒有評價時全部停用
+      disabled: this.reviewCount() === 0 || (this.filterCounts()[i] ?? 0) === 0,
     })),
   );
 

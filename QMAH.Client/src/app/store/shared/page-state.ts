@@ -1,7 +1,8 @@
 import { computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Observable } from 'rxjs';
-import { CartApi, CatalogApi, SiteApi } from '../api';
+import { CartApi, SiteApi } from '../api';
+import { ProductInfoService } from './product-info.service';
 import { ShoppingCart } from '../api/api.models';
 import { formatNumber } from './format';
 
@@ -42,12 +43,14 @@ export function injectCartState() {
  */
 export function injectSiteData() {
   const config = toSignal(inject(SiteApi).getConfig());
-  const info = toSignal(inject(CatalogApi).getProductInfo());
+  const productInfo = inject(ProductInfoService);
+  productInfo.load();
+  const info = productInfo.info;
 
   return {
-    /** 全站設定，尚未載入時為 undefined */
+    /** 全站設定，尚未載入時為 null */
     config,
-    /** 商品資訊（器類數量、會員點數與折價券、各排行榜），尚未載入時為 undefined */
+    /** 商品資訊（器類數量、會員點數與折價券、各排行榜），尚未載入時為 null */
     info,
     /** 頂部公告列的公告文字 */
     announcements: computed(() => config()?.promoAnnouncements ?? []),

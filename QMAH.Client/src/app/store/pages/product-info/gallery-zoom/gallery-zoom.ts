@@ -21,6 +21,8 @@ export class GalleryZoom {
   open = input(false);
   /** 放大後圖片的佔位文字 */
   label = input('');
+  /** 放大後圖片的網址，無圖片時顯示 label 佔位文字 */
+  image = input<string | null>(null);
   /** 縮圖按鈕文字清單 */
   thumbs = input<string[]>([]);
   /** 目前顯示的縮圖索引 */

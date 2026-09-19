@@ -16,7 +16,11 @@
     <a [storeLink]="link()" class="product-row-title">{{ name() }}</a>
     <span class="product-row-source">{{ source() }}</span>
     <div class="product-row-meta">
-      <span><span class="product-card-star">★</span> {{ ratingText() }} · {{ reviewsText() }}</span>
+      @if (reviews() > 0) {
+        <span><span class="product-card-star">★</span> {{ ratingText() }} · {{ reviewsText() }}</span>
+      } @else {
+        <span>尚無評價</span>
+      }
     </div>
   </div>
 
