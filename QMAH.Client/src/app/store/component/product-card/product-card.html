@@ -6,7 +6,8 @@
     <!-- 商品圖片區：有 coverImage 時顯示實際圖片，否則顯示佔位符 -->
     <div class="product-card-cover">
       @if (!showPlaceholder()) {
-        <img class="product-card-image" [src]="coverImage()" [alt]="name()" (error)="onImageError()" />
+        <!-- 商品列表只載入縮圖；3D／大圖只存在商品詳情，避免 512 件商品同時下載 display 圖。 -->
+        <img class="product-card-image" [src]="coverImage()" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
       } @else {
         <span class="product-card-slot" [class.product-card-slot--faint]="isFaintSlot()">{{ slotLabel }}</span>
       }

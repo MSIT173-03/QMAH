@@ -1,9 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-  OnInit
-} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 
@@ -25,15 +20,6 @@ import {
 import { environment } from '../../../../environments/environment';
 
 
-interface LoginSlide {
-  image: string;
-  tag: string;
-  titleLine1: string;
-  titleLine2: string;
-  description: string;
-}
-
-
 @Component({
   selector: 'app-login',
   imports: [
@@ -44,7 +30,7 @@ interface LoginSlide {
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })
-export class Login implements OnInit, OnDestroy {
+export class Login implements OnInit {
 
   /* =========================
      Login
@@ -59,44 +45,52 @@ export class Login implements OnInit, OnDestroy {
 
 
   /* =========================
-     Carousel
+     清明長卷主視覺
   ========================= */
 
-  currentSlideIndex = 0;
-
-  isSlideChanging = false;
-
-  private carouselTimer?: ReturnType<typeof setInterval>;
-
-  private slideChangeTimer?: ReturnType<typeof setTimeout>;
-
-
-  slides: LoginSlide[] = [
-
+  /**
+   * 這兩段是由故宮公開 IIIF 端點預先下載的高解析素材；登入頁不在執行時依賴
+   * 故宮服務，因此展示不會因第三方短暫失效而破圖。分段也避免把超寬長卷縮成
+   * 一張低清背景，4K 螢幕仍能保留畫面細節。
+   */
+  readonly scrollSegments = [
     {
-      image: '/images/login/qingming.png',
-      tag: 'TIMELESS MASTERPIECE',
-      titleLine1: '一卷清明',
-      titleLine2: '千年人間',
-      description: '走進繁華街巷，在畫卷之中遇見古人的生活。'
+      key: 'a-1',
+      source: '/images/login/real/qingming-iiif/segment-SDAAB.jpg',
+      compact: '/images/login/real/qingming-iiif/segment-SDAAB-compact.jpg',
     },
-
     {
-      image: '/images/login/meat-stone.png',
-      tag: 'STONE OR DELICACY',
-      titleLine1: '東坡有味',
-      titleLine2: '奇石成珍',
-      description: '乍看一席東坡肉，細看方知石中珍。'
-    }
+      key: 'b-1',
+      source: '/images/login/real/qingming-iiif/segment-SDAAA.jpg',
+      compact: '/images/login/real/qingming-iiif/segment-SDAAA-compact.jpg',
+    },
+    // 複製一個週期讓 CSS 位移回到起點時不會出現跳接；瀏覽器會沿用相同 URL 快取。
+    {
+      key: 'a-2',
+      source: '/images/login/real/qingming-iiif/segment-SDAAB.jpg',
+      compact: '/images/login/real/qingming-iiif/segment-SDAAB-compact.jpg',
+    },
+    {
+      key: 'b-2',
+      source: '/images/login/real/qingming-iiif/segment-SDAAA.jpg',
+      compact: '/images/login/real/qingming-iiif/segment-SDAAA-compact.jpg',
+    },
+  ] as const;
 
-  ];
+  /** 外部 IIIF 暫時不可用時仍使用本地合法文物圖，維持完整品牌視覺而非切換成陽春介面。 */
+  readonly scrollFallback = '/images/login/real/cloisonne-tripod-incense-burner.jpg';
+  readonly scrollSourceUrl = 'https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P';
+  readonly heroKicker = '清院本清明上河圖 · 高清長卷';
+  readonly heroTitle = '沿著長卷，慢慢看見人間';
+  readonly heroDescription = '登入清明鑑定屋，從一件文物開始自己的探索。';
+  scrollPaused = false;
+  scrollImageFailed = false;
 
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router,
-    private cdr: ChangeDetectorRef
+    private router: Router
   ) {
 
     this.form = this.fb.nonNullable.group({
@@ -130,191 +124,20 @@ export class Login implements OnInit, OnDestroy {
   ========================= */
 
   ngOnInit(): void {
-
-    this.startCarousel();
     this.authService.getCapabilities().subscribe((capabilities) => {
       this.googleLoginEnabled = capabilities.googleLoginEnabled;
     });
 
   }
 
-
-  ngOnDestroy(): void {
-
-    this.stopCarousel();
-
-    if (this.slideChangeTimer) {
-      clearTimeout(this.slideChangeTimer);
-    }
-
+  /** 長卷動畫可手動暫停，並由 CSS 的 reduced-motion 規則支援偏好減少動態。 */
+  toggleScroll(): void {
+    this.scrollPaused = !this.scrollPaused;
   }
 
-
-  /* =========================
-     Carousel
-  ========================= */
-
-  get currentSlide(): LoginSlide {
-
-    return this.slides[this.currentSlideIndex];
-
-  }
-
-
-  nextSlide(): void {
-
-    if (this.isSlideChanging) {
-      return;
-    }
-
-    const nextIndex =
-      (this.currentSlideIndex + 1) %
-      this.slides.length;
-
-    this.changeSlide(nextIndex);
-
-    this.restartCarousel();
-
-  }
-
-
-  previousSlide(): void {
-
-    if (this.isSlideChanging) {
-      return;
-    }
-
-    const previousIndex =
-      (
-        this.currentSlideIndex -
-        1 +
-        this.slides.length
-      ) %
-      this.slides.length;
-
-    this.changeSlide(previousIndex);
-
-    this.restartCarousel();
-
-  }
-
-
-  goToSlide(index: number): void {
-
-    if (
-      index < 0 ||
-      index >= this.slides.length ||
-      index === this.currentSlideIndex ||
-      this.isSlideChanging
-    ) {
-      return;
-    }
-
-    this.changeSlide(index);
-
-    this.restartCarousel();
-
-  }
-
-
-  /**
-   * 淡出 → 換圖 → 淡入
-   */
-  private changeSlide(index: number): void {
-
-    if (
-      this.isSlideChanging ||
-      this.slides.length <= 1
-    ) {
-      return;
-    }
-
-
-    // 先淡出
-    this.isSlideChanging = true;
-
-    this.cdr.detectChanges();
-
-
-    this.slideChangeTimer = setTimeout(() => {
-
-      // 淡出完成後換圖片與文字
-      this.currentSlideIndex = index;
-
-      this.cdr.detectChanges();
-
-
-      // 下一個 frame 再取消 class
-      // 讓新圖片有淡入效果
-      requestAnimationFrame(() => {
-
-        requestAnimationFrame(() => {
-
-          this.isSlideChanging = false;
-
-          this.cdr.detectChanges();
-
-        });
-
-      });
-
-    }, 450);
-
-  }
-
-
-  private startCarousel(): void {
-
-    this.stopCarousel();
-
-
-    if (this.slides.length <= 1) {
-      return;
-    }
-
-
-    this.carouselTimer = setInterval(() => {
-
-      if (this.isSlideChanging) {
-        return;
-      }
-
-
-      const nextIndex =
-        (this.currentSlideIndex + 1) %
-        this.slides.length;
-
-
-      this.changeSlide(nextIndex);
-
-    }, 6000);
-
-  }
-
-
-  private stopCarousel(): void {
-
-    if (!this.carouselTimer) {
-      return;
-    }
-
-
-    clearInterval(
-      this.carouselTimer
-    );
-
-
-    this.carouselTimer = undefined;
-
-  }
-
-
-  private restartCarousel(): void {
-
-    this.stopCarousel();
-
-    this.startCarousel();
-
+  /** 圖片層失敗時只切換到同頁的合法靜態主視覺，不影響登入表單與整個頁面。 */
+  handleScrollImageError(): void {
+    this.scrollImageFailed = true;
   }
 
 

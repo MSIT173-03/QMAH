@@ -1,0 +1,16 @@
+{
+  "title": "清院本清明上河圖　卷",
+  "institution": "國立故宮博物院",
+  "sourceUrl": "https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P",
+  "imageService": "https://iiifod.npm.gov.tw/iiif/2/K2A%2FK2A001110N000000000SDAAB",
+  "license": "CC BY 4.0",
+  "attribution": "清院本清明上河圖　卷。國立故宮博物院，台北，CC BY 4.0 @ www.npm.gov.tw",
+  "note": "登入頁使用故宮公開 IIIF 影像服務預先產生的高解析分段；素材僅作 QMAH 清明鑑定屋登入頁視覺，不表示故宮製作或背書 QMAH。",
+  "fallback": {
+    "file": "cloisonne-tripod-incense-burner.jpg",
+    "title": "掐絲琺瑯鼎式爐",
+    "sourceUrl": "https://digitalarchive.npm.gov.tw/Collection/Detail/53878?dep=U",
+    "license": "CC BY 4.0",
+    "attribution": "掐絲琺瑯鼎式爐。國立故宮博物院，臺北，CC BY 4.0 @ www.npm.gov.tw"
+  }
+}

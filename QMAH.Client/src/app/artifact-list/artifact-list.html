@@ -222,6 +222,21 @@
               <span class="field-label">授權／署名</span>
               <span class="field-value field-value--muted">{{ detail.attributionText }}</span>
             </div>
+            <div class="field field--discussion">
+              <span class="field-label">社群討論</span>
+              <button
+                type="button"
+                class="field-action"
+                [disabled]="discussionLoading()"
+                (click)="openDiscussion(item.id)"
+              >
+                {{ discussionLoading() ? '檢查討論中…' : '查看／建立討論' }}
+              </button>
+              <span class="field-hint">已有貼文會直接開啟；尚無貼文時會先確認並請你留下第一則留言。</span>
+              @if (discussionError() && !discussionDialogOpen()) {
+                <span class="field-value field-value--error" role="alert">{{ discussionError() }}</span>
+              }
+            </div>
           </ng-container>
         </div>
       </div>
@@ -256,6 +271,18 @@
       </div>
     </div>
   </div>
+
+  <app-artifact-discussion-dialog
+    [open]="discussionDialogOpen()"
+    [artifactName]="discussionTarget()?.name ?? ''"
+    [initialComment]="discussionInitialComment()"
+    [busy]="discussionLoading()"
+    [errorMessage]="discussionError()"
+    (commentChanged)="discussionInitialComment.set($event)"
+    (cancelled)="cancelDiscussion()"
+    (submitted)="submitDiscussion()"
+    (backdropClicked)="onDiscussionOverlayClick($event)"
+  />
 
   <!-- 鑰匙背包彈出框：不再導頁到另一個頁面，點「鑰匙背包」按鈕後直接在這裡開一個放大框，
        點旁邊空白處（backdrop）或 KeyList 自己標題列右上角的 ✕ 都能關閉 -->

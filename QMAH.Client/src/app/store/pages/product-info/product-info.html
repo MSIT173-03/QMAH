@@ -17,7 +17,13 @@
 
   <!-- 商品主視覺：左側商品圖庫、右側商品資訊與購買操作 -->
   <section class="product-hero-section">
-    <app-product-gallery [name]="product.name" [views]="galleryViews()" />
+    <app-product-gallery
+      [name]="product.name"
+      [type]="product.category"
+      [image]="product.coverImage"
+      [dimensions]="product.dimensions"
+      [description]="product.description"
+    />
     <app-product-summary
       [brand]="product.brand"
       [name]="product.name"

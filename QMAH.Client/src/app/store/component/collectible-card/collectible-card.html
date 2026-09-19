@@ -1,0 +1,55 @@
+<button
+  type="button"
+  class="card-flip-button"
+  [attr.data-layout]="postcardLayout()"
+  [attr.aria-pressed]="flipped()"
+  [attr.aria-label]="flipped() ? '翻回文物明信片正面' : '翻面查看文物明信片基本資訊'"
+  (click)="toggle()"
+>
+  <!-- 正反面共用版型與翻面軸，名稱紙帶不參與圖片裁切。 -->
+  <span class="postcard-track" [class.is-flipped]="flipped()">
+    <span class="card-face card-front" [attr.aria-hidden]="flipped()">
+      <span class="postcard-front-paper">
+        <span class="card-art" [attr.data-layout]="postcardLayout()">
+          @if (image(); as imageUrl) {
+            <img
+              [src]="imageUrl"
+              [alt]="name()"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+              (load)="handleImageLoad($event)"
+            />
+          } @else {
+            <span class="card-art-placeholder">QMAH<br />影像整理中</span>
+          }
+        </span>
+        <span class="postcard-caption">
+          <strong class="card-back-name ink-print">{{ name() }}</strong>
+          <span class="card-back-type ink-print">{{ type() }}</span>
+        </span>
+      </span>
+    </span>
+
+    <span class="card-face card-back" [attr.aria-hidden]="!flipped()">
+      <span class="postcard-back-paper">
+        <span class="postcard-back-left">
+          <!-- 尺寸與節錄只取既有資料；缺值省略，完整說明仍可於商品頁閱讀。 -->
+          @if (dimensions()) { <span class="postcard-dimensions ink-print">尺寸｜{{ dimensions() }}</span> }
+          @if (excerpt()) { <span class="postcard-description ink-print">{{ excerpt() }}</span> }
+          <img src="/images/brand/qmah-logo.svg" alt="QMAH" class="card-logo" />
+        </span>
+
+        <span class="postcard-back-divider" aria-hidden="true"></span>
+
+        <span class="postcard-back-right" aria-hidden="true">
+          <span class="postcard-stamp">貼郵票處</span>
+          <span class="postcard-address-lines">
+            <i></i><i></i><i></i>
+          </span>
+        </span>
+
+      </span>
+    </span>
+  </span>
+</button>

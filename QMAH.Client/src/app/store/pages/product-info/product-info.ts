@@ -116,9 +116,6 @@ export class ProductInfo {
     const item = this.item();
     return item ? wasPrice(item) : null;
   });
-  /** 商品圖片的視角名稱清單 */
-  protected galleryViews = computed(() => this.item()?.images.map((image) => image.view) ?? []);
-
   /** 同類推薦清單 */
   protected related = toSignal(
     toObservable(this.id).pipe(

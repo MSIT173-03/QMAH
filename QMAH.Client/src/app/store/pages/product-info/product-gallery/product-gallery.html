@@ -1,32 +1,10 @@
-<!-- 商品圖庫：主圖 + 縮圖列 -->
 <div class="gallery">
-  <!-- 主圖，點擊開啟放大檢視；滑鼠移入時顯示底部提示條 -->
-  <div class="gallery-main" (click)="zoomOpen.set(true)">
-    <span class="gallery-main-slot">{{ mainSlot() }}</span>
-    <div class="gallery-overlay">
-      <span class="gallery-overlay-label">{{ overlayLabel }}</span>
-    </div>
-  </div>
-
-  <!-- 縮圖列，點擊切換主圖顯示的視角 -->
-  <div class="gallery-thumbs">
-    @for (thumb of thumbLabels(); track $index; let i = $index) {
-      <button
-        type="button"
-        class="gallery-thumb"
-        [class.gallery-thumb--active]="i === shot()"
-        (click)="shot.set(i)"
-      >{{ thumb }}</button>
-    }
-  </div>
+  <!-- 詳情頁才啟用翻面；商品列表維持原本的靜態 ProductCard。 -->
+  <app-collectible-card
+    [name]="name()"
+    [type]="type()"
+    [image]="image()"
+    [dimensions]="dimensions()"
+    [description]="description()"
+  />
 </div>
-
-<!-- 放大檢視覆蓋層，與主圖共用同一個視角索引 -->
-<app-gallery-zoom
-  [open]="zoomOpen()"
-  [label]="zoomSlot()"
-  [thumbs]="thumbLabels()"
-  [activeIndex]="shot()"
-  (pick)="shot.set($event)"
-  (close)="zoomOpen.set(false)"
-/>

@@ -13,7 +13,8 @@ namespace QMAH.Api.Controllers.V1;
 public sealed class SocialController(
     QmahDbContext db,
     CommunityRewardService communityRewardService,
-    INotificationService notificationService) : ApiControllerBase
+    INotificationService notificationService,
+    ArtifactDiscussionService artifactDiscussionService) : ApiControllerBase
 {
     [HttpGet("posts")]
     [AllowAnonymous]
@@ -518,6 +519,39 @@ public sealed class SocialController(
                 item.CreatedAt));
 
         return Ok(await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken));
+    }
+
+    [Authorize]
+    [HttpPost("artifacts/{artifactId:guid}/discussion")]
+    public async Task<ActionResult<EnsureArtifactDiscussionResultDto>> EnsureArtifactDiscussion(
+        Guid artifactId,
+        EnsureArtifactDiscussionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        if (!await db.Users.AnyAsync(user => user.Id == userId && user.Status == "ACTIVE", cancellationToken))
+            return Forbid();
+        if (string.IsNullOrWhiteSpace(request.InitialComment))
+        {
+            ModelState.AddModelError(nameof(request.InitialComment), "請先留下第一則討論留言。");
+            return ValidationProblem(ModelState);
+        }
+
+        // 這支端點只在會員確認後呼叫；若另一位會員剛好同時建立，service 會沿用既有串並把留言接上，
+        // 讓使用者不會因競速而得到重複貼文或遺失自己已輸入的內容。
+        var result = await artifactDiscussionService.EnsureAsync(
+            artifactId,
+            userId,
+            request.InitialComment,
+            cancellationToken);
+        if (result is null)
+            return MissingResource("找不到文物", "文物不存在或目前未啟用，暫時無法建立社群討論。");
+
+        return Ok(new EnsureArtifactDiscussionResultDto(
+            result.PostId,
+            result.Created,
+            result.CommentId));
     }
 
     [Authorize]

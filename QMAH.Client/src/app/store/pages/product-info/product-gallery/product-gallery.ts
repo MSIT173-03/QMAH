@@ -1,39 +1,28 @@
-import { Component, computed, input, signal } from '@angular/core';
-import { GalleryZoom } from '../gallery-zoom/gallery-zoom';
+import { Component, input } from '@angular/core';
+import { CollectibleCard } from '../../../component/collectible-card/collectible-card';
 
 /**
- * 商品圖庫：主圖與下方縮圖列，點擊主圖可開啟放大檢視。
- * 目前顯示的視角、放大檢視是否開啟皆為本元件自己的呈現狀態，
- * 因此不由外部傳入，外部只需提供商品名稱與圖片視角清單。
+ * 商品主視覺容器。
+ * 原本這裡是尚未串接真實圖片的佔位圖庫；保留 selector 與頁面插槽，
+ * 只把實際呈現換成獨立的文物收藏卡，避免同一頁同時維護兩套主圖契約。
  */
 @Component({
   selector: 'app-product-gallery',
-  imports: [GalleryZoom],
+  imports: [CollectibleCard],
   templateUrl: './product-gallery.html',
   styleUrls: [
     './product-gallery.scss',
   ],
 })
 export class ProductGallery {
-  /** 商品名稱，組成主圖與放大檢視的佔位文字 */
+  /** 商品名稱 */
   name = input('');
-  /** 商品圖片的視角名稱清單（佔位資料，正式應為商品圖片清單） */
-  views = input<string[]>([]);
-
-  /** 主圖覆蓋層的操作提示（固定文案） */
-  protected readonly overlayLabel = '點擊放大 · 檢視細節';
-
-  /** 目前顯示的視角索引 */
-  protected shot = signal(0);
-  /** 放大檢視是否開啟 */
-  protected zoomOpen = signal(false);
-
-  /** 目前視角名稱 */
-  private currentView = computed(() => this.views()[this.shot()] ?? '');
-  /** 主圖佔位文字 */
-  protected mainSlot = computed(() => `[ ${this.currentView()} · ${this.name()} 1200×1200 ]`);
-  /** 放大檢視的圖片佔位文字 */
-  protected zoomSlot = computed(() => `[ 放大檢視 · ${this.currentView()} · ${this.name()} 2400×2400 ]`);
-  /** 縮圖按鈕文字，主圖與放大檢視共用 */
-  protected thumbLabels = computed(() => this.views().map((view) => `[ ${view} ]`));
+  /** 商品主圖，直接使用既有 Catalog API 的 primaryImagePath。 */
+  image = input<string | null>(null);
+  /** 文物類型，直接使用既有商品 category。 */
+  type = input('');
+  /** 商品卡背面的尺寸摘要。 */
+  dimensions = input('');
+  /** 背面簡述沿用既有商品資料，不新增 API。 */
+  description = input('');
 }

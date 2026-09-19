@@ -194,6 +194,16 @@ export interface CreateSocialCommentRequest {
   parentCommentId?: string | null;
 }
 
+export interface EnsureArtifactDiscussionRequest {
+  initialComment: string;
+}
+
+export interface EnsureArtifactDiscussionResult {
+  postId: string;
+  created: boolean;
+  commentId: string;
+}
+
 export interface UpdateSocialPostRequest {
   title: string;
   content: string;
@@ -277,6 +287,17 @@ export class SocialApiService {
 
   createPost(request: CreateSocialPostRequest): Observable<SocialPostDetails> {
     return this.http.post<SocialPostDetails>(`${this.base}/posts`, request);
+  }
+
+  // 圖鑑的確認視窗會把「建立貼文＋第一則留言」送成一次 API，避免只建立空貼文後留言失敗。
+  ensureArtifactDiscussion(
+    artifactId: string,
+    request: EnsureArtifactDiscussionRequest
+  ): Observable<EnsureArtifactDiscussionResult> {
+    return this.http.post<EnsureArtifactDiscussionResult>(
+      `${this.base}/artifacts/${artifactId}/discussion`,
+      request
+    );
   }
 
   // 只有作者本人能改自己的貼文；活動的社群入口貼文不開放直接編輯／刪除。

@@ -4,7 +4,8 @@
   <!-- 商品縮圖，連結至商品頁 -->
   <a [storeLink]="link()" class="product-row-thumb">
     @if (!showPlaceholder()) {
-      <img class="product-row-image" [src]="coverImage()" [alt]="name()" (error)="onImageError()" />
+      <!-- 橫列同樣使用縮圖；只有進入商品詳情才取 display 大圖。 -->
+      <img class="product-row-image" [src]="coverImage()" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
     } @else {
       {{ slotLabel }}
     }

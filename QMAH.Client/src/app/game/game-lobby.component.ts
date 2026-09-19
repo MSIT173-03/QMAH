@@ -234,7 +234,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     return { CERAMIC: '陶瓷', JADE: '玉器', PAINTING: '書畫', METAL: '金屬' }[code?.toUpperCase() ?? ''] ?? code ?? '不限';
   }
   eraText(code: string | null): string {
-    return { TANG: '唐代', SONG: '宋代', MING: '明代', QING: '清代', MODERN: '近現代' }[code?.toUpperCase() ?? ''] ?? code ?? '不限';
+    // 年代名稱由資料庫 metadata 為主；這裡保留既有 fallback，讓新增的日本江戶年代在 API 暫時不可用時仍可讀。
+    return { TANG: '唐代', SONG: '宋代', MING: '明代', QING: '清代', JAPAN_EDO: '日本江戶時代', MODERN: '近現代' }[code?.toUpperCase() ?? ''] ?? code ?? '不限';
   }
   pageNumbers(): number[] { if (!this.rooms) return []; const start = Math.max(1, Math.min(this.rooms.page - 1, this.rooms.totalPages - 2)); return Array.from({ length: Math.min(3, this.rooms.totalPages) }, (_, index) => start + index); }
 

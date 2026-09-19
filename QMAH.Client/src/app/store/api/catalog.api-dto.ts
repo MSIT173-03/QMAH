@@ -32,6 +32,14 @@ function toCategoryLabel(categoryCode: string): string {
 }
 
 /**
+ * 圖鑑資料包把同一件文物的 display／thumbnail 放在同一個目錄；
+ * 清單沿用後端既有 primaryImagePath，只替換檔名，避免為了縮圖再擴充 API 契約。
+ */
+function toCatalogThumbnail(path: string | null): string | null {
+  return path?.replace(/\/display\.jpg(?:\?.*)?$/i, '/thumbnail.jpg') ?? null;
+}
+
+/**
  * 將中文器類名稱轉為商品清單查詢 API 的 category 參數（對應後端 CategoryType enum 的數字代碼）；
  * 對照表未列出時傳回 undefined，呼叫端應改為不送出此篩選條件。
  */
@@ -96,13 +104,16 @@ export function toProduct(dto: ApiProductListItem): Product {
     source: dto.externalRef ?? '',
     dimensions: '',
     listedAt: '',
-    coverImage: dto.primaryImagePath,
+    // 清單只取 200px 縮圖；商品詳情會在 toProductDetail 還原成 600px display 圖。
+    coverImage: toCatalogThumbnail(dto.primaryImagePath),
   };
 }
 
 export function toProductDetail(dto: ApiProductDetail): ProductDetail {
   return {
     ...toProduct(dto),
+    // 詳情頁明確使用大圖，讓滿版明信片不會誤拿清單縮圖放大。
+    coverImage: dto.primaryImagePath,
     rating: dto.averageRating,
     reviewCount: dto.reviewCount,
     dimensions: dto.sizeText,

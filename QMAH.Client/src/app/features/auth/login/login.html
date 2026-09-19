@@ -1,146 +1,92 @@
 <div class="login-page">
 
   <!-- ==================================================
-       左側：清明鑑定屋文物輪播
+       左側：單一高清長卷主視覺
+       不再輪換多張 AI／文物圖，登入頁用長卷的連續觀看建立自己的節奏。
   =================================================== -->
-  <section class="museum-side">
+  <section class="museum-side" aria-labelledby="login-visual-title">
 
-    <!-- 背景圖片 -->
-    <div
-      class="museum-background"
-      [style.background-image]="'url(' + currentSlide.image + ')'"
-    ></div>
+    <div class="museum-background" aria-hidden="true"></div>
 
-    <!-- 深色遮罩 -->
-    <div class="museum-overlay"></div>
-
-
-    <!-- 品牌 -->
-    <div class="brand">
-
-      <div class="brand-mark">
-        Q
-      </div>
-
-      <div class="brand-text">
-
-        <h1>
-          清明鑑定屋
-        </h1>
-
-        <span>
-          Quest Museum · Art · Hobby
-        </span>
-
-      </div>
-
+    <div class="museum-scroll" [class.is-paused]="scrollPaused" [class.has-fallback]="scrollImageFailed">
+      @if (!scrollImageFailed) {
+        <div class="scroll-track" aria-hidden="true">
+          @for (segment of scrollSegments; track segment.key; let index = $index) {
+            <picture>
+              <source media="(max-width: 620px)" [srcset]="segment.compact" />
+              <img
+                [src]="segment.source"
+                alt=""
+                width="9997"
+                height="601"
+                [attr.loading]="index < 2 ? 'eager' : 'lazy'"
+                [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
+                decoding="async"
+                (error)="handleScrollImageError()"
+              />
+            </picture>
+          }
+        </div>
+      } @else {
+        <!-- IIIF 暫時不可用時仍保留同一個博物館視覺層，不阻斷登入流程。 -->
+        <img
+          class="scroll-fallback"
+          [src]="scrollFallback"
+          alt="故宮開放資料文物主視覺"
+        />
+      }
     </div>
 
+    <div class="museum-overlay" aria-hidden="true"></div>
 
-    <!-- 當前文物介紹 -->
+    <div class="brand">
+      <img
+        class="brand-logo"
+        src="/images/brand/qmah-logo-dark.svg"
+        alt="清明鑑定屋 QMAH"
+      />
+    </div>
+
     <div class="museum-content">
+      <div class="slide-tag">{{ heroKicker }}</div>
 
-      <div class="slide-tag">
-        {{ currentSlide.tag }}
-      </div>
-
-      <h2>
-        {{ currentSlide.titleLine1 }}
-        <br />
-        {{ currentSlide.titleLine2 }}
-      </h2>
+      <h1 id="login-visual-title">{{ heroTitle }}</h1>
 
       <div class="title-line"></div>
 
-      <p class="museum-description">
-        {{ currentSlide.description }}
-      </p>
+      <p class="museum-description">{{ heroDescription }}</p>
 
-      <div class="museum-keywords">
-
-        <span>
-          探索文物
-        </span>
-
+      <div class="museum-keywords" aria-label="清明鑑定屋特色">
+        <span>探索文物</span>
         <i></i>
-
-        <span>
-          收藏珍品
-        </span>
-
+        <span>收藏珍品</span>
         <i></i>
-
-        <span>
-          遇見同好
-        </span>
-
+        <span>遇見同好</span>
       </div>
-
     </div>
 
+    <div class="scroll-actions">
+      <button
+        type="button"
+        class="scroll-toggle"
+        [attr.aria-pressed]="scrollPaused"
+        (click)="toggleScroll()"
+      >
+        {{ scrollPaused ? '繼續欣賞長卷' : '暫停長卷移動' }}
+      </button>
 
-    <!-- 輪播控制 -->
-    <div class="carousel-control">
-
-      <!-- 目前頁數 -->
-      <div class="carousel-number">
-
-        <strong>
-          {{ (currentSlideIndex + 1).toString().padStart(2, '0') }}
-        </strong>
-
-        <span>
-          /
-          {{ slides.length.toString().padStart(2, '0') }}
-        </span>
-
-      </div>
-
-
-      <!-- 進度 -->
-      <div class="carousel-progress">
-
-        <div
-          class="carousel-progress-active"
-          [style.width.%]="
-            ((currentSlideIndex + 1) / slides.length) * 100
-          "
-        ></div>
-
-      </div>
-
-
-      <!-- 兩張以上才顯示左右按鈕 -->
-      @if (slides.length > 1) {
-
-        <div class="carousel-buttons">
-
-          <button
-            type="button"
-            aria-label="上一張"
-            (click)="previousSlide()"
-          >
-            ‹
-          </button>
-
-          <button
-            type="button"
-            aria-label="下一張"
-            (click)="nextSlide()"
-          >
-            ›
-          </button>
-
-        </div>
-
-      }
-
+      <a
+        class="scroll-source"
+        [href]="scrollSourceUrl"
+        target="_blank"
+        rel="noreferrer"
+      >
+        開啟故宮高清長卷 ↗
+      </a>
     </div>
 
-
-    <!-- 左下文字 -->
     <div class="museum-footer">
-      每一件文物，都是一段動人的故事。
+      清院本清明上河圖　卷 · 國立故宮博物院 · CC BY 4.0
     </div>
 
   </section>
@@ -164,13 +110,11 @@
           WELCOME TO
         </span>
 
-        <h2>
-          清明鑑定屋
-        </h2>
-
-        <div class="login-logo">
-          QMAH
-        </div>
+        <img
+          class="login-logo"
+          src="/images/brand/qmah-logo.svg"
+          alt="清明鑑定屋 QMAH"
+        />
 
         <p>
           登入你的會員帳號，開啟鑑定與收藏的旅程

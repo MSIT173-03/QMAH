@@ -9,6 +9,8 @@ import { CatalogModel, CatalogDetailModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
 import { KeyService } from '../services/key-service';
 import { KeyModel } from '../models/key-model';
+import { SocialApiService } from '../core/services/social-api';
+import { ArtifactDiscussionDialog } from './artifact-discussion-dialog/artifact-discussion-dialog';
 // ⚠️ 路徑是假設值：假設 key-list.ts 跟 artifact-list.ts 是同一層目錄下的兄弟資料夾
 // （例如都在 components/ 底下），如果實際檔案結構不同，這行要跟著改。
 import { KeyList } from '../key-list/key-list';
@@ -22,7 +24,7 @@ interface EraGroup {
 @Component({
   selector: 'app-artifact-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, KeyList],
+  imports: [CommonModule, FormsModule, KeyList, ArtifactDiscussionDialog],
   templateUrl: './artifact-list.html',
   styleUrl: './artifact-list.scss'
 })
@@ -70,6 +72,18 @@ export class ArtifactList implements OnInit {
   focusedDetail = signal<CatalogDetailModel | null>(null);
   focusedDetailLoading = signal(false);
   focusedDetailError = signal('');
+
+  // 社群入口採「先查詢、沒有才確認建立」的流程，不在圖鑑清單載入時大量查詢貼文，
+  // 讓 512 件文物的日常瀏覽仍維持單一型錄請求；點擊後才讀取對應討論。
+  discussionTargetId = signal<string | null>(null);
+  discussionTarget = computed<CompendiumCardSummary | null>(() => {
+    const id = this.discussionTargetId();
+    return id ? this.catalogModel().find((item) => item.id === id) ?? null : null;
+  });
+  discussionDialogOpen = computed(() => this.discussionTargetId() !== null);
+  discussionInitialComment = signal('');
+  discussionLoading = signal(false);
+  discussionError = signal('');
 
   // integration: 原分支的「全部解鎖」Debug 開關沒有正式 UI，也不應改寫真實解鎖狀態。
   // 先註解保留除錯脈絡；正式測試應使用測試資料或 API mock，不把測試捷徑帶進部署程式。
@@ -219,6 +233,7 @@ export class ArtifactList implements OnInit {
   constructor(
     private catalogService: CatalogService,
     private keyService: KeyService,
+    private socialApi: SocialApiService,
     private router: Router,
     private route: ActivatedRoute,
   ) { }
@@ -459,6 +474,78 @@ export class ArtifactList implements OnInit {
         this.focusedDetailLoading.set(false);
       },
     });
+  }
+
+  /**
+   * 先查詢已發布的一般貼文；已有討論就直接導向，沒有才讓會員確認並輸入第一則留言。
+   * 只有已解鎖文物會顯示此入口，避免社群導覽意外揭露尚未解鎖的文物名稱。
+   */
+  openDiscussion(artifactId: string): void {
+    if (this.discussionLoading()) return;
+
+    this.discussionLoading.set(true);
+    this.discussionError.set('');
+    this.socialApi.getPosts({ artifactId, postType: 'POST', page: 1, pageSize: 1 }).subscribe({
+      next: (page) => {
+        this.discussionLoading.set(false);
+        const existingPost = page.items[0];
+        if (existingPost) {
+          this.router.navigate(['/social/posts', existingPost.id]);
+          return;
+        }
+
+        this.discussionInitialComment.set('');
+        this.discussionTargetId.set(artifactId);
+      },
+      error: (error) => {
+        this.discussionLoading.set(false);
+        this.discussionError.set(this.getDiscussionErrorMessage(error));
+      },
+    });
+  }
+
+  cancelDiscussion(): void {
+    if (this.discussionLoading()) return;
+    this.discussionTargetId.set(null);
+    this.discussionInitialComment.set('');
+    this.discussionError.set('');
+  }
+
+  submitDiscussion(): void {
+    const target = this.discussionTarget();
+    const initialComment = this.discussionInitialComment().trim();
+    if (!target || this.discussionLoading()) return;
+    if (!initialComment) {
+      this.discussionError.set('請先留下第一則討論留言。');
+      return;
+    }
+
+    this.discussionLoading.set(true);
+    this.discussionError.set('');
+    this.socialApi.ensureArtifactDiscussion(target.id, { initialComment }).subscribe({
+      next: (result) => {
+        this.discussionLoading.set(false);
+        this.cancelDiscussion();
+        this.router.navigate(['/social/posts', result.postId]);
+      },
+      error: (error) => {
+        this.discussionLoading.set(false);
+        this.discussionError.set(this.getDiscussionErrorMessage(error));
+      },
+    });
+  }
+
+  onDiscussionOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.cancelDiscussion();
+    }
+  }
+
+  private getDiscussionErrorMessage(error: any): string {
+    return error?.error?.detail
+      ?? error?.error?.title
+      ?? error?.message
+      ?? '社群討論目前無法使用，請稍後再試。';
   }
 
   openUnlockConfirm(id: string): void {

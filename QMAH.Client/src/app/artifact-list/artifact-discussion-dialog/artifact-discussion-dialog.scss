@@ -1,0 +1,162 @@
+/*
+ * 獨立視窗樣式，避免把圖鑑主頁原本已接近 budget 上限的樣式再繼續膨脹。
+ * 顏色沿用圖鑑的既有 token，未來若社群負責人改成抽屜或貼文清單，只需替換此元件。
+ */
+.discussion-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 14, 8, 0.62);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.discussion-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.discussion-dialog {
+  width: min(520px, 100%);
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: 0 28px 70px rgba(20, 14, 8, 0.48);
+  transform: translateY(8px) scale(0.98);
+  transition: transform 0.2s ease;
+}
+
+.discussion-overlay.open .discussion-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.discussion-dialog__eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--blue-deep);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.discussion-dialog h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.35;
+}
+
+.discussion-dialog__intro {
+  margin: 10px 0 20px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.discussion-dialog__label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.discussion-dialog__textarea {
+  display: block;
+  width: 100%;
+  min-height: 132px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.discussion-dialog__textarea:focus {
+  border-color: var(--blue);
+  outline: 3px solid rgba(227, 185, 85, 0.24);
+}
+
+.discussion-dialog__textarea:disabled {
+  opacity: 0.66;
+}
+
+.discussion-dialog__error {
+  margin: 10px 0 0;
+  color: var(--red);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.discussion-dialog__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+.discussion-dialog__actions .action-btn {
+  min-width: 128px;
+}
+
+.action-btn {
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cancel-btn {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.cancel-btn:hover { background: var(--surface); }
+
+.discussion-submit-btn {
+  background: var(--blue-deep);
+  color: #fffdf8;
+  border: 1px solid var(--blue-deep);
+}
+
+.discussion-submit-btn:hover { background: var(--blue); color: #2e2110; }
+
+.discussion-submit-btn:disabled,
+.cancel-btn:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+
+@media (max-width: 480px) {
+  .discussion-dialog {
+    padding: 22px 18px;
+  }
+
+  .discussion-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .discussion-dialog__actions .action-btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discussion-overlay,
+  .discussion-dialog {
+    transition: none;
+  }
+}

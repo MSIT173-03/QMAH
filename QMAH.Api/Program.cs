@@ -206,6 +206,9 @@ builder.Services.AddScoped<GameRoomLifecycleService>();
 builder.Services.AddHostedService<GameRoomLifecycleWorker>();
 // Social 站內通知：活動審核、檢舉處理等共用同一套排隊寫入方式，由各自的 SaveChangesAsync 一併提交。
 builder.Services.AddScoped<INotificationService, SocialNotificationService>();
+// 圖鑑點擊社群入口需要在同一個交易中確保討論串與第一則留言，
+// 由 Infrastructure service 集中處理，避免 Controller 自己重複維護交易與通知規則。
+builder.Services.AddScoped<ArtifactDiscussionService>();
 
 // 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
 builder.Services.AddRateLimiter(options =>

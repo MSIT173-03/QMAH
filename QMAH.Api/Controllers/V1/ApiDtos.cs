@@ -392,6 +392,17 @@ public sealed class CreateSocialCommentRequest
     public Guid? ParentCommentId { get; set; }
 }
 
+public sealed class EnsureArtifactDiscussionRequest
+{
+    [Required, StringLength(2000, MinimumLength = 1)]
+    public string InitialComment { get; set; } = "";
+}
+
+public sealed record EnsureArtifactDiscussionResultDto(
+    Guid PostId,
+    bool Created,
+    Guid CommentId);
+
 public sealed class UpdateSocialPostRequest
 {
     [StringLength(80, MinimumLength = 1)]

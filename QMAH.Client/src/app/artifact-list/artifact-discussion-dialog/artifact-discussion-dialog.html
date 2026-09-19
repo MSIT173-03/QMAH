@@ -1,0 +1,46 @@
+<!--
+  目前採用「一件文物一個 canonical 討論入口」的最小可用流程：
+  會員確認後輸入第一則留言，再由 API 以同一交易建立貼文與留言。
+  TODO: 請圖鑑與社群負責人持續確認是否要改成貼文列表、主題分支或更完整的討論引導。
+-->
+<div
+  class="discussion-overlay"
+  [class.open]="open()"
+  [attr.aria-hidden]="!open()"
+  (click)="backdropClicked.emit($event)"
+>
+  @if (open()) {
+    <section
+      class="discussion-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="discussion-dialog-title"
+    >
+      <span class="discussion-dialog__eyebrow">社群討論入口</span>
+      <h3 id="discussion-dialog-title">目前還沒有「{{ artifactName() }}」的討論</h3>
+      <p class="discussion-dialog__intro">
+        要建立這件文物的討論串嗎？建立後，你的留言會成為第一則討論。
+      </p>
+      <label class="discussion-dialog__label" for="discussion-first-comment">第一則討論留言</label>
+      <textarea
+        id="discussion-first-comment"
+        class="discussion-dialog__textarea"
+        rows="5"
+        maxlength="2000"
+        placeholder="分享你的觀察、疑問或鑑賞心得…"
+        [ngModel]="initialComment()"
+        (ngModelChange)="commentChanged.emit($event)"
+        [disabled]="busy()"
+      ></textarea>
+      @if (errorMessage()) {
+        <p class="discussion-dialog__error" role="alert">{{ errorMessage() }}</p>
+      }
+      <div class="discussion-dialog__actions">
+        <button type="button" class="action-btn cancel-btn" [disabled]="busy()" (click)="cancelled.emit()">先不要</button>
+        <button type="button" class="action-btn discussion-submit-btn" [disabled]="busy()" (click)="submitted.emit()">
+          {{ busy() ? '建立中…' : '建立並發表留言' }}
+        </button>
+      </div>
+    </section>
+  }
+</div>

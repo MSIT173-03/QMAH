@@ -1,644 +1,528 @@
 :host {
   display: block;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-.login-page {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(500px, 0.85fr);
-  background: #151713;
-  overflow: hidden;
 }
 
+:root {
+  --qmah-ink: #193c38;
+  --qmah-teal: #4e8097;
+  --qmah-gold: #b99a55;
+  --qmah-paper: #f6f0e4;
+  --qmah-border: rgba(25, 60, 56, 0.16);
+}
 
-/* =========================================
-   左側 Museum
-========================================= */
+// 登入頁刻意與後台輪換牆分開：左側是一條可暫停的長卷，右側保留清楚的登入動線。
+.login-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(380px, 0.75fr);
+  min-height: 100vh;
+
+  background: var(--qmah-paper);
+  color: var(--qmah-ink);
+}
 
 .museum-side {
   position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-  color: #f7f0e5;
-  padding: 48px 56px;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(28px, 5vw, 76px);
+  background: #1d3938;
 }
 
 .museum-background {
   position: absolute;
+  z-index: -3;
   inset: 0;
-
-  /*
-    等等把圖片放進：
-    public/images/login/meat-stone.jpg
-
-    再把下面 background-image 打開
-  */
-
-  // background-image:
-  //   url('/images/login/meat-stone.jpg');
-
   background:
-    radial-gradient(
-      circle at 60% 40%,
-      #755a32 0%,
-      #403321 30%,
-      #171915 70%
-    );
+    radial-gradient(circle at 14% 18%, rgba(185, 154, 85, 0.22), transparent 32%),
+    #1d3938;
+}
 
-  background-size: cover;
-  background-position: center;
-  transform: scale(1.02);
+.museum-scroll {
+  position: absolute;
+  z-index: -1;
+  top: 39%;
+  right: 0;
+  left: 0;
+  height: clamp(190px, 35vh, 520px);
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 247, 224, 0.3);
+  border-bottom: 1px solid rgba(255, 247, 224, 0.3);
+  background: #d8c395;
+  box-shadow: 0 22px 60px rgba(9, 28, 28, 0.26);
+}
+
+.scroll-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: scroll-pan 78s linear infinite;
+  will-change: transform;
+
+  picture {
+    display: block;
+    flex: 0 0 auto;
+    height: 100%;
+  }
+
+  img {
+    display: block;
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.museum-scroll.is-paused .scroll-track {
+  animation-play-state: paused;
+}
+
+.scroll-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: sepia(0.16) saturate(0.86);
 }
 
 .museum-overlay {
   position: absolute;
+  z-index: -0;
   inset: 0;
-
-  background:
-    linear-gradient(
-      90deg,
-      rgba(12, 14, 12, 0.88) 0%,
-      rgba(12, 14, 12, 0.55) 42%,
-      rgba(12, 14, 12, 0.15) 75%
-    ),
-    linear-gradient(
-      0deg,
-      rgba(10, 12, 10, 0.75) 0%,
-      transparent 45%
-    );
+  pointer-events: none;
+  background: rgba(20, 43, 42, 0.3);
 }
 
-
-/* Brand */
+.brand,
+.museum-content,
+.scroll-actions,
+.museum-footer {
+  position: relative;
+  z-index: 1;
+}
 
 .brand {
-  position: relative;
-  z-index: 2;
-
   display: flex;
   align-items: center;
-  gap: 16px;
 }
 
-.brand-mark {
-  width: 58px;
-  height: 58px;
-
-  border: 2px solid #c7a36b;
-  border-radius: 14px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-family: Georgia, serif;
-  font-size: 32px;
-  color: #d8b77f;
-}
-
-.brand h1 {
-  margin: 0;
-
-  font-family:
-    "Noto Serif TC",
-    "Microsoft JhengHei",
-    serif;
-
-  font-size: 26px;
-  letter-spacing: 5px;
-  font-weight: 700;
-}
-
-.brand p {
-  margin: 3px 0 0;
-
-  font-family: Georgia, serif;
-  font-size: 17px;
-  letter-spacing: 6px;
-}
-
-.brand span {
+.brand-logo {
   display: block;
-  margin-top: 3px;
-
-  font-family: Georgia, serif;
-  font-size: 11px;
-  letter-spacing: 1px;
-
-  color: rgba(255, 255, 255, 0.65);
+  width: min(300px, 74%);
+  height: auto;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.14));
 }
-
-
-/* Main text */
 
 .museum-content {
-  position: relative;
-  z-index: 2;
-
+  max-width: 560px;
   margin-top: auto;
-  margin-bottom: auto;
+  padding-top: clamp(260px, 38vh, 520px);
+  color: #fffaf0;
 
-  max-width: 580px;
+  h1 {
+    max-width: 10em;
+    margin: 16px 0 0;
+    font-family: 'Noto Serif TC', 'Times New Roman', serif;
+    font-size: clamp(32px, 4.6vw, 70px);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+  }
 }
 
 .slide-tag {
-  margin-bottom: 20px;
-
+  color: #e0c982;
   font-size: 11px;
-  letter-spacing: 5px;
-
-  color: #d5b57e;
-}
-
-.museum-content h2 {
-  margin: 0;
-
-  font-family:
-    "Noto Serif TC",
-    "Microsoft JhengHei",
-    serif;
-
-  font-size: clamp(46px, 4vw, 72px);
-  line-height: 1.35;
-  letter-spacing: 8px;
-
-  text-shadow:
-    0 4px 25px rgba(0, 0, 0, 0.4);
+  font-weight: 800;
+  letter-spacing: 0.2em;
 }
 
 .title-line {
-  width: 70px;
-  height: 1px;
-
-  margin: 25px 0;
-
-  background: #c8a66d;
+  width: 76px;
+  height: 2px;
+  margin: 24px 0;
+  background: var(--qmah-gold);
 }
 
 .museum-description {
-  margin: 0 0 30px;
-
-  font-size: 18px;
-  letter-spacing: 3px;
-  line-height: 2;
-
-  color: rgba(255, 255, 255, 0.82);
+  max-width: 34em;
+  margin: 0;
+  color: rgba(255, 250, 240, 0.8);
+  font-size: clamp(14px, 1.2vw, 18px);
+  line-height: 1.8;
 }
 
 .museum-keywords {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+  color: rgba(255, 250, 240, 0.76);
+  font-size: 12px;
+  letter-spacing: 0.08em;
 
-  gap: 13px;
-
-  font-size: 13px;
-  letter-spacing: 3px;
-
-  color: rgba(255, 255, 255, 0.65);
+  i {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--qmah-gold);
+  }
 }
 
-.museum-keywords i {
-  width: 4px;
-  height: 4px;
-
-  background: #c5a36d;
-  border-radius: 50%;
-}
-
-
-/* Carousel */
-
-.carousel-control {
-  position: relative;
-  z-index: 2;
-
+.scroll-actions {
   display: flex;
   align-items: center;
-
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
 }
 
-.carousel-number {
-  min-width: 65px;
-}
-
-.carousel-number strong {
-  font-family: Georgia, serif;
-  font-size: 17px;
-  font-weight: 400;
-}
-
-.carousel-number span {
-  margin-left: 5px;
-
-  font-family: Georgia, serif;
+.scroll-toggle,
+.scroll-source {
+  min-height: 38px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 250, 240, 0.4);
+  border-radius: 999px;
+  background: rgba(19, 46, 44, 0.42);
+  color: #fffaf0;
   font-size: 12px;
-
-  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.04em;
+  text-decoration: none;
 }
 
-.carousel-progress {
-  width: 150px;
-  height: 1px;
-
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.carousel-progress-active {
-  width: 25%;
-  height: 100%;
-
-  background: #e0c08a;
-}
-
-.carousel-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.carousel-buttons button {
-  width: 38px;
-  height: 38px;
-
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-
-  font-size: 25px;
-
+.scroll-toggle {
   cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
 }
 
-.carousel-buttons button:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.5);
+.scroll-toggle:hover,
+.scroll-source:hover {
+  border-color: #e0c982;
+  background: rgba(19, 46, 44, 0.72);
 }
 
 .museum-footer {
-  position: absolute;
-
-  right: 50px;
-  bottom: 48px;
-
-  z-index: 2;
-
+  margin-top: 26px;
+  color: rgba(255, 250, 240, 0.58);
   font-size: 11px;
-  letter-spacing: 4px;
-
-  color: rgba(255, 255, 255, 0.42);
+  letter-spacing: 0.04em;
 }
-
-
-/* =========================================
-   右側 Login
-========================================= */
 
 .login-side {
   position: relative;
-
-  min-height: 100vh;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  padding: 55px;
-
-  background:
-    radial-gradient(
-      circle at 70% 25%,
-      rgba(207, 187, 151, 0.16),
-      transparent 35%
-    ),
-    #e9e4da;
+  min-width: 0;
+  padding: clamp(24px, 5vw, 76px);
+  background: var(--qmah-paper);
 }
 
 .login-decoration {
   position: absolute;
-  inset: 0;
-
-  opacity: 0.35;
-
-  background:
-    linear-gradient(
-      135deg,
-      transparent 60%,
-      rgba(91, 78, 55, 0.06)
-    );
-
+  top: 8%;
+  right: 8%;
+  width: min(260px, 34vw);
+  aspect-ratio: 1;
+  border: 1px solid rgba(185, 154, 85, 0.34);
+  border-radius: 50%;
   pointer-events: none;
 }
 
-
-/* Card */
+.login-decoration::after {
+  position: absolute;
+  inset: 15%;
+  border: 1px solid rgba(78, 128, 151, 0.22);
+  border-radius: 50%;
+  content: '';
+}
 
 .login-card {
   position: relative;
-  z-index: 2;
-
-  width: 100%;
-  max-width: 580px;
-
-  padding: 54px 55px;
-
-  border-radius: 28px;
-
-  background:
-    rgba(255, 253, 248, 0.93);
-
-  border:
-    1px solid rgba(110, 95, 70, 0.12);
-
-  box-shadow:
-    0 30px 80px rgba(37, 31, 22, 0.16);
-
-  backdrop-filter: blur(15px);
+  z-index: 1;
+  width: min(100%, 460px);
+  padding: clamp(28px, 4vw, 52px);
+  border: 1px solid var(--qmah-border);
+  border-radius: 18px;
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: 0 24px 70px rgba(25, 60, 56, 0.12);
 }
-
-
-/* Header */
 
 .login-header {
-  margin-bottom: 35px;
+  margin-bottom: 32px;
+
+  .welcome-text {
+    display: block;
+    margin-bottom: 18px;
+    color: var(--qmah-teal);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+  }
+
+  .login-logo {
+    display: block;
+    width: min(270px, 100%);
+    height: auto;
+    margin-bottom: 18px;
+  }
+
+  p {
+    margin: 0;
+    color: #5f6d6b;
+    font-size: 14px;
+    line-height: 1.7;
+  }
 }
-
-.welcome-text {
-  display: block;
-
-  margin-bottom: 8px;
-
-  font-family: Georgia, serif;
-
-  font-size: 11px;
-  letter-spacing: 6px;
-
-  color: #88765d;
-}
-
-.login-header h2 {
-  margin: 0;
-
-  font-family:
-    "Noto Serif TC",
-    "Microsoft JhengHei",
-    serif;
-
-  font-size: 40px;
-  letter-spacing: 6px;
-
-  color: #211f1a;
-}
-
-.login-logo {
-  margin-top: 4px;
-
-  font-family: Georgia, serif;
-  font-size: 20px;
-  letter-spacing: 7px;
-
-  color: #8b6e42;
-}
-
-.login-header p {
-  margin: 16px 0 0;
-
-  color: #716a60;
-
-  font-size: 14px;
-  letter-spacing: 1px;
-}
-
-
-/* Form */
 
 .login-form {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 20px;
 }
 
-.form-group label {
-  display: block;
+.form-group {
+  display: grid;
+  gap: 8px;
 
-  margin-bottom: 8px;
-
-  font-size: 14px;
-  font-weight: 600;
-
-  color: #38342d;
+  label {
+    color: var(--qmah-ink);
+    font-size: 13px;
+    font-weight: 700;
+  }
 }
 
 .input-wrapper {
-  height: 56px;
-
   display: flex;
   align-items: center;
-
-  border: 1px solid #d8d0c3;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 1px solid #cbd6d1;
   border-radius: 10px;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 
-  background: rgba(255, 255, 255, 0.7);
+  &:focus-within {
+    border-color: var(--qmah-teal);
+    box-shadow: 0 0 0 3px rgba(78, 128, 151, 0.16);
+  }
 
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
+  &.input-error {
+    border-color: #b85e55;
+  }
 
-.input-wrapper:focus-within {
-  border-color: #89704a;
-
-  background: white;
-
-  box-shadow:
-    0 0 0 3px rgba(137, 112, 74, 0.1);
-}
-
-.input-wrapper.input-error {
-  border-color: #b74b4b;
+  input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--qmah-ink);
+    font: inherit;
+  }
 }
 
 .input-icon {
-  width: 52px;
-
-  display: flex;
-  justify-content: center;
-
-  color: #80776b;
-  font-size: 18px;
-}
-
-.input-wrapper input {
-  width: 100%;
-  height: 100%;
-
-  padding-right: 16px;
-
-  border: none;
-  outline: none;
-
-  background: transparent;
-
-  color: #28251f;
-  font-size: 15px;
-}
-
-.input-wrapper input::placeholder {
-  color: #aaa298;
+  flex: 0 0 auto;
+  color: var(--qmah-teal);
+  font-size: 16px;
 }
 
 .field-error {
-  margin: 6px 0 0;
-
-  color: #b34848;
+  margin: 0;
+  color: #a23f38;
   font-size: 12px;
 }
-
-
-/* Options */
 
 .login-options {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  margin-top: -4px;
+  color: #657471;
+  font-size: 12px;
 }
 
 .remember-me {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-
-  gap: 9px;
-
+  gap: 7px;
   cursor: pointer;
 
-  color: #595248;
-  font-size: 14px;
+  input {
+    accent-color: var(--qmah-teal);
+  }
 }
 
-.remember-me input {
-  width: 17px;
-  height: 17px;
-
-  accent-color: #304c3a;
-}
-
-.forgot-password {
-  color: #8a6638;
-
-  font-size: 13px;
-
+.forgot-password,
+.register-area a {
+  color: #3d7184;
+  font-weight: 700;
   text-decoration: none;
 }
 
-.forgot-password:hover {
+.forgot-password:hover,
+.register-area a:hover {
   text-decoration: underline;
 }
 
-
-/* API Error */
-
 .login-error {
-  padding: 12px 14px;
-
+  padding: 11px 13px;
+  border: 1px solid #efc8c2;
   border-radius: 9px;
-
-  background: #fff0ef;
-
-  border: 1px solid #efc6c2;
-
-  color: #a13d35;
-
+  background: #fff5f2;
+  color: #9f3e36;
   font-size: 13px;
+  line-height: 1.5;
 }
-
-
-/* Login button */
 
 .login-button {
-  width: 100%;
-  height: 58px;
-
-  margin-top: 2px;
-
-  border: none;
-  border-radius: 10px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #1d3528,
-      #294c39
-    );
-
-  color: white;
-
-  font-family:
-    "Noto Serif TC",
-    "Microsoft JhengHei",
-    serif;
-
-  font-size: 17px;
-  letter-spacing: 5px;
-
-  cursor: pointer;
-
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
+  min-height: 52px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--qmah-ink);
+  color: #fffaf0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease;
 
-  gap: 16px;
+  &:hover:not(:disabled) {
+    background: #28564f;
+    transform: translateY(-1px);
+  }
 
-  box-shadow:
-    0 12px 25px rgba(30, 57, 42, 0.18);
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.login-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 15px 30px rgba(30, 57, 42, 0.25);
-}
-
-.login-button:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+  &:disabled {
+    opacity: 0.62;
+    cursor: wait;
+  }
 }
 
 .arrow {
-  font-size: 22px;
-  font-family: Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1;
 }
 
-
-/* Spinner */
-
 .loading-spinner {
-  width: 18px;
-  height: 18px;
-
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: white;
-
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 250, 240, 0.38);
+  border-top-color: #fffaf0;
   border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
 
-  animation: spin 0.8s linear infinite;
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 16px;
+  color: #93a09c;
+  font-size: 11px;
+
+  span {
+    flex: 1;
+    height: 1px;
+    background: #dce3df;
+  }
+
+  p {
+    margin: 0;
+    white-space: nowrap;
+  }
+}
+
+.google-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #cbd6d1;
+  border-radius: 10px;
+  background: #fff;
+  color: #3e504c;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--qmah-teal);
+    background: #f8fbfa;
+  }
+}
+
+.google-icon {
+  color: #4285f4;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.google-disabled {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed #cbd6d1;
+  border-radius: 10px;
+  color: #71807c;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.register-area {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 26px;
+  color: #71807c;
+  font-size: 12px;
+}
+
+.login-footer {
+  position: absolute;
+  right: clamp(24px, 5vw, 76px);
+  bottom: 22px;
+  left: clamp(24px, 5vw, 76px);
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  color: #7a8984;
+  font-size: 11px;
+}
+
+.login-footer small {
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(185, 154, 85, 0.62);
+  outline-offset: 3px;
+}
+
+@keyframes scroll-pan {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    // 軌道為 A→B→A→B，移動半個軌道後與起點畫面完全相同，可無縫重播。
+    transform: translate3d(-50%, 0, 0);
+  }
 }
 
 @keyframes spin {
@@ -647,281 +531,76 @@
   }
 }
 
-
-/* Divider */
-
-.login-divider {
-  margin: 28px 0 20px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 15px;
+@media (prefers-reduced-motion: reduce) {
+  .scroll-track,
+  .loading-spinner,
+  .login-button {
+    animation: none;
+    transition: none;
+  }
 }
 
-.login-divider span {
-  flex: 1;
-  height: 1px;
-
-  background: #ddd5c8;
-}
-
-.login-divider p {
-  margin: 0;
-
-  color: #92897d;
-
-  font-size: 12px;
-
-  white-space: nowrap;
-}
-
-
-/* Google */
-
-.google-button {
-  width: 100%;
-  height: 54px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 12px;
-
-  border: 1px solid #d7cfc2;
-  border-radius: 10px;
-
-  background: white;
-
-  color: #39352f;
-
-  font-size: 14px;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.google-button:hover {
-  background: #faf8f4;
-  border-color: #bcb09d;
-  transform: translateY(-1px);
-}
-
-/* integration: Google OAuth 未啟用時保留登入區高度與可讀提示，不讓停用能力留下可點擊的假按鈕。 */
-.google-disabled {
-  margin: 0;
-  color: #92897d;
-  font-size: 12px;
-  line-height: 1.6;
-  text-align: center;
-}
-
-.google-icon {
-  width: 26px;
-  height: 26px;
-
-  border-radius: 50%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-family: Arial, sans-serif;
-  font-size: 17px;
-  font-weight: 700;
-
-  color: #4285f4;
-}
-
-
-/* Register */
-
-.register-area {
-  margin-top: 28px;
-
-  display: flex;
-  justify-content: center;
-
-  gap: 7px;
-
-  font-size: 13px;
-}
-
-.register-area span {
-  color: #81796e;
-}
-
-.register-area a {
-  color: #956a31;
-
-  font-weight: 600;
-
-  text-decoration: none;
-}
-
-.register-area a:hover {
-  text-decoration: underline;
-}
-
-
-/* Bottom text */
-
-.login-footer {
-  position: absolute;
-
-  right: 55px;
-  bottom: 25px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-
-  gap: 3px;
-
-  color: rgba(62, 56, 47, 0.5);
-
-  font-size: 11px;
-  letter-spacing: 3px;
-}
-
-.login-footer small {
-  font-family: Georgia, serif;
-
-  font-size: 8px;
-  letter-spacing: 2px;
-}
-
-
-/* =========================================
-   RWD
-========================================= */
-
-@media (max-width: 1100px) {
+@media (max-width: 980px) {
+  // 小螢幕可視寬度較短，縮短週期避免長時間停留在同一段畫面。
+  .scroll-track {
+    animation-duration: 52s;
+  }
 
   .login-page {
-    grid-template-columns: 0.9fr 1.1fr;
+    grid-template-columns: 1fr;
   }
 
   .museum-side {
-    padding: 40px;
-  }
-
-  .museum-content h2 {
-    font-size: 45px;
+    min-height: 620px;
   }
 
   .login-side {
-    padding: 35px;
+    min-height: 640px;
   }
-
-  .login-card {
-    padding: 45px 40px;
-  }
-
 }
 
-
-@media (max-width: 820px) {
-
-  .login-page {
-    display: block;
-
-    background: #e9e4da;
+@media (max-width: 620px) {
+  .scroll-track {
+    animation-duration: 40s;
   }
 
   .museum-side {
-    min-height: 320px;
+    min-height: 560px;
+    padding: 28px 22px;
+  }
 
-    padding: 28px;
+  .museum-scroll {
+    top: 38%;
+    height: 210px;
   }
 
   .museum-content {
-    margin-top: 65px;
-    margin-bottom: 45px;
+    padding-top: 250px;
   }
 
-  .museum-content h2 {
-    font-size: 36px;
-  }
-
-  .museum-description,
-  .museum-keywords,
-  .museum-footer {
-    display: none;
-  }
-
-  .carousel-control {
-    margin-top: auto;
+  .museum-keywords {
+    gap: 8px;
+    font-size: 11px;
   }
 
   .login-side {
     min-height: auto;
-
-    padding: 25px 16px 45px;
+    padding: 22px 16px 54px;
   }
 
   .login-card {
-    max-width: 600px;
-
-    margin-top: -45px;
-
-    padding: 38px 28px;
-
-    border-radius: 22px;
+    padding: 28px 20px;
   }
 
   .login-footer {
-    display: none;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    flex-direction: column;
+    gap: 4px;
   }
 
-}
-
-
-@media (max-width: 480px) {
-
-  .museum-side {
-    min-height: 260px;
+  .login-footer small {
+    text-align: left;
   }
-
-  .brand h1 {
-    font-size: 20px;
-  }
-
-  .brand-mark {
-    width: 48px;
-    height: 48px;
-
-    font-size: 26px;
-  }
-
-  .museum-content {
-    margin-top: 45px;
-  }
-
-  .museum-content h2 {
-    font-size: 29px;
-    letter-spacing: 5px;
-  }
-
-  .slide-tag {
-    display: none;
-  }
-
-  .login-card {
-    padding: 32px 22px;
-  }
-
-  .login-header h2 {
-    font-size: 30px;
-  }
-
-  .login-options {
-    align-items: flex-start;
-  }
-
 }

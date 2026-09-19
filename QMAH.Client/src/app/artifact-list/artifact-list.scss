@@ -1020,6 +1020,24 @@
   cursor: not-allowed;
 }
 
+/* ---------- artifact discussion entry ---------- */
+
+.field--discussion {
+  align-items: flex-start;
+}
+
+.field-hint {
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.field-action:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+
 /* integration: 原分支的 Debug toolbar 沒有模板入口，避免把測試控制項編進正式頁面。 */
 /*
 .debug-toolbar {
@@ -1145,4 +1163,5 @@
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 14px;
   }
+
 }

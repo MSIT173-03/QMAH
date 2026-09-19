@@ -75,6 +75,8 @@ internal static class QmahOpenApiSchemaCatalog
             ["CreateSocialCommentRequest"] = Fields(
                 ("content", "Content（留言內容）；長度為 1 至 2000 個字元"),
                 ("parentCommentId", "ParentCommentId（父留言資源識別碼）；建立回覆時提供")),
+            ["EnsureArtifactDiscussionRequest"] = Fields(
+                ("initialComment", "InitialComment（建立文物討論時的第一則留言）；長度為 1 至 2000 個字元")),
             ["CreateContentReportRequest"] = Fields(
                 ("targetType", "TargetType（被檢舉內容類型系統代碼）"),
                 ("targetId", "TargetId（被檢舉內容資源識別碼）"),

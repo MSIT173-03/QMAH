@@ -84,6 +84,7 @@
   gap: 22px;
 }
 
+// 會員中心只保留原先身份區的陪襯圖，避免另增一個沒有資訊功能的版面區塊。
 .hero-art {
   position: absolute;
   z-index: 1;
@@ -109,14 +110,13 @@
       rgba(255, 255, 255, 0.04),
       rgba(255, 255, 255, 0.12)
     ),
-    url('/images/profile-qingming-banner.png');
+    url('/images/profile/qingming-scroll-profile-banner.png');
 
   background-size: cover;
   background-position: center 48%;
   background-repeat: no-repeat;
 
   filter: saturate(0.92) contrast(0.98);
-
   pointer-events: none;
 }
 
