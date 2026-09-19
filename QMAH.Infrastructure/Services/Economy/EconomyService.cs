@@ -103,18 +103,15 @@ public sealed class EconomyService(QmahDbContext db)
 
     /// <summary>依鑰匙範圍解鎖一件文物；範圍鑰匙可指定範圍內目標，抽選與扣除都在同一交易中完成。</summary>
     public async Task<EconomyResult<ArtifactUnlockView>> UnlockArtifactAsync(
-        Guid userId,
-        string keyCode,
-        Guid? artifactId,
-        CancellationToken cancellationToken = default)
+    Guid userId,
+    string keyCode,
+    Guid? artifactId,
+    CancellationToken cancellationToken = default)
     {
         keyCode = NormalizeCode(keyCode);
         if (string.IsNullOrWhiteSpace(keyCode))
             return EconomyResult<ArtifactUnlockView>.Invalid("鑰匙代碼不可為空。");
 
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
         var key = await db.KeyDefinitions
             .SingleOrDefaultAsync(item => item.Code == keyCode && item.IsActive, cancellationToken);
         if (key is null)
@@ -122,72 +119,74 @@ public sealed class EconomyService(QmahDbContext db)
         if (key.ScopeType == "NORMAL" && artifactId.HasValue)
             return EconomyResult<ArtifactUnlockView>.Invalid("NORMAL 鑰匙不能指定文物，請讓伺服器從全部候選中抽選。");
 
-        // 候選集完全由伺服器依啟用文物、鑰匙範圍與會員既有解鎖紀錄建立。
-        // CATEGORY／ERA 可指定候選集內的文物；未指定時由伺服器抽選，不能越過鑰匙範圍。
-        var candidates = await GetEligibleArtifactQuery(userId, key)
-            .Select(artifact => new ArtifactCandidateView(artifact.Id, artifact.Name))
-            .ToListAsync(cancellationToken);
-        if (candidates.Count == 0)
+        // integration: API 啟用 SQL retry 時，扣鑰匙、寫入流水與建立解鎖紀錄
+        // 必須包在同一個 execution strategy transaction 內，重試時才不會只完成其中一部分。
+        var strategy = db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
         {
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                cancellationToken);
+
+            var candidates = await GetEligibleArtifactQuery(userId, key)
+                .Select(artifact => new ArtifactCandidateView(artifact.Id, artifact.Name))
+                .ToListAsync(cancellationToken);
+            if (candidates.Count == 0)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return EconomyResult<ArtifactUnlockView>.Success(new ArtifactUnlockView(
+                    false, null, null, 0,
+                    "目前沒有符合這把鑰匙的未解鎖文物，因此沒有扣除鑰匙。"));
+            }
+
+            ArtifactCandidateView? selected;
+            if (artifactId.HasValue)
+            {
+                selected = candidates.FirstOrDefault(candidate => candidate.Id == artifactId.Value);
+                if (selected is null)
+                    return EconomyResult<ArtifactUnlockView>.Invalid("指定文物不存在、未啟用或已經解鎖。");
+            }
+            else
+            {
+                selected = candidates[Random.Shared.Next(candidates.Count)];
+            }
+
+            var balance = await GetOrCreateKeyBalanceAsync(userId, key.Id, cancellationToken);
+            if (balance.Balance < 1)
+                return EconomyResult<ArtifactUnlockView>.Conflict("鑰匙數量不足，無法解鎖文物。");
+
+            var now = DateTime.UtcNow;
+            balance.Balance--;
+            balance.UpdatedAt = now;
+            var keyTransaction = new KeyTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                KeyDefinitionId = key.Id,
+                Amount = -1,
+                Reason = "ARTIFACT_UNLOCK",
+                ReferenceType = "ARTIFACT_UNLOCK",
+                ReferenceId = selected.Id,
+                CreatedAt = now
+            };
+            var unlock = new ArtifactUnlock
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                ArtifactId = selected.Id,
+                UnlockMethod = "KEY",
+                KeyTransactionId = keyTransaction.Id,
+                UnlockedAt = now
+            };
+            db.KeyTransactions.Add(keyTransaction);
+            db.ArtifactUnlocks.Add(unlock);
+            await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+
             return EconomyResult<ArtifactUnlockView>.Success(new ArtifactUnlockView(
-                false,
-                null,
-                null,
-                0,
-                "目前沒有符合這把鑰匙的未解鎖文物，因此沒有扣除鑰匙。"));
-        }
-
-        ArtifactCandidateView? selected;
-        if (artifactId.HasValue)
-        {
-            selected = candidates.FirstOrDefault(candidate => candidate.Id == artifactId.Value);
-            if (selected is null)
-                return EconomyResult<ArtifactUnlockView>.Invalid("指定文物不存在、未啟用或已經解鎖。");
-        }
-        else
-        {
-            selected = candidates[Random.Shared.Next(candidates.Count)];
-        }
-
-        var balance = await GetOrCreateKeyBalanceAsync(userId, key.Id, cancellationToken);
-        if (balance.Balance < 1)
-            return EconomyResult<ArtifactUnlockView>.Conflict("鑰匙數量不足，無法解鎖文物。");
-
-        var now = DateTime.UtcNow;
-        balance.Balance--;
-        balance.UpdatedAt = now;
-        var keyTransaction = new KeyTransaction
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            KeyDefinitionId = key.Id,
-            Amount = -1,
-            Reason = "ARTIFACT_UNLOCK",
-            ReferenceType = "ARTIFACT_UNLOCK",
-            ReferenceId = selected.Id,
-            CreatedAt = now
-        };
-        var unlock = new ArtifactUnlock
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            ArtifactId = selected.Id,
-            UnlockMethod = "KEY",
-            KeyTransactionId = keyTransaction.Id,
-            UnlockedAt = now
-        };
-        db.KeyTransactions.Add(keyTransaction);
-        db.ArtifactUnlocks.Add(unlock);
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        return EconomyResult<ArtifactUnlockView>.Success(new ArtifactUnlockView(
-            true,
-            selected.Id,
-            selected.Name,
-            candidates.Count - 1,
-            null));
+                true, selected.Id, selected.Name, candidates.Count - 1, null));
+        });
     }
 
     /// <summary>由管理員替指定會員解鎖一件文物；重複操作維持冪等，並留下管理稽核紀錄。</summary>

@@ -1,17 +1,17 @@
 using System.IO.Compression;
 using System.Threading.RateLimiting;
 
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore;
 
-using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
 using QMAH.Infrastructure.Configuration;
+using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -19,6 +19,8 @@ using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
+
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
@@ -296,6 +298,27 @@ app.UseQmahCookieRecovery(
 app.UseCors("AngularClient");
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
+    var tokens = antiforgery.GetAndStoreTokens(context);
+
+    var secure = cookieSecurePolicy switch
+    {
+        CookieSecurePolicy.Always => true,
+        CookieSecurePolicy.None => false,
+        _ => context.Request.IsHttps, // SameAsRequest
+    };
+
+    context.Response.Cookies.Append("XSRF-TOKEN-API", tokens.RequestToken!, new CookieOptions
+    {
+        HttpOnly = false, // 刻意不是 HttpOnly，就是要給前端 JS 讀
+        Secure = secure,
+        SameSite = SameSiteMode.Lax,
+    });
+
+    await next(context);
+});
 app.MapControllers();
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)

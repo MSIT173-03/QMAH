@@ -1,0 +1,568 @@
+/* key-list.scss */
+/* 這個彈出框改成參考圖那種「木紋＋金色滾邊」的道具欄風格，跟其他頁面的藍白現代風
+   刻意區隔開——鑰匙本身就是收藏／寶物性質的道具，用這套風格反而比套用主站配色更合適。
+   所有規則沿用原本的變數名稱（--ink/--card/--blue...），只是把數值換成暖色調，
+   這樣萬一之後想再換色，只要動這裡的變數就好，不用逐一改寫每條規則。 */
+
+:host {
+  display: block;
+  // ⚠️ 這個沒設對，是「格線只佔不到 1/3 高度」的真正原因：.key-page--embedded 用
+  // height:100% 想撐滿彈出框，但它是相對「自己的父層」（也就是 :host 這個自訂
+  // 元素本身）算百分比的。:host 原本沒有明確高度，只會照內容自然收縮，導致
+  // height:100% 沒有東西可以撐、直接失效變成 auto——整個元件只長到內容需要的
+  // 高度，.key-bag-stage 那個 82vh 的框沒有被真正撐滿，格線 JS 量到的高度自然
+  // 也小很多。補上 height:100% 讓這條鏈接得起來：.key-bag-stage(82vh，有明確高度)
+  // → :host(現在也是 100%) → .key-page--embedded(100%) → .key-slot-grid(flex:1)。
+  // 獨立頁面模式不受影響：那邊的父層通常沒有明確高度，100% 一樣會照樣退回 auto。
+  height: 100%;
+}
+
+.key-page {
+  --ink: #f3e4c6;        // 主要文字（原本深藍，現在淺金色——背景變深了）
+  --ink-soft: #c9ab7c;   // 次要文字
+  --line: #8a6a3f;       // 邊框／分隔線（青銅色）
+  --surface: #241a10;    // 頁面底色（深木紋）
+  --card: #4a3520;       // 卡片／格子底色
+  --blue: #e3b955;       // 主色，現在當作「金色」用（按鈕、啟用中頁籤、hover）
+  --blue-deep: #a97a2c;  // 主色的深階
+  --yellow: #6fb87f;     // 年代鑰匙的區分色，改成翠綠色跟金色主色區隔開
+  --red: #d9534f;        // 警示／關閉鈕
+  --sapphire: #5a8fd6;   // 分類鑰匙的區分色
+  --ruby: #d65a7a;       // 萬能鑰匙的區分色（最稀有，用比金色更搶眼的色）
+  --panel-dark: #180f08; // 需要「保證是深色」的地方用這個，不要用 --ink（--ink 現在是淺色文字）
+
+  min-height: 100vh;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+  background: var(--surface);
+  background-image: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 8px);
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  color: var(--ink);
+}
+
+/* ---------- header ---------- */
+
+.page-header {
+  margin: 0 -20px 28px;
+}
+
+.page-header__bar {
+  background: linear-gradient(180deg, #6b4a28 0%, #4a3018 100%);
+  border-bottom: 3px solid var(--blue-deep);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-header__title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.page-header__icon {
+  font-size: 26px;
+  flex: none;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45));
+}
+
+.page-header__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-header__sub {
+  margin: 12px 20px 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* ---------- embedded 模式（內嵌在圖鑑頁的彈出框裡，不是獨立頁面）---------- */
+/* 外層彈出框（artifact-list.scss 的 .key-bag-stage）現在是固定大小、overflow:hidden，
+   這裡改成 flex column 撐滿那個固定高度，背景色（.key-page--embedded 自己的
+   background）鋪到彈出框的邊緣，不留任何內距——這樣底色才會填滿整個彈出框，
+   不會露出外層 .key-bag-stage 的顏色。
+
+   標題列（.page-header__bar）比照 artifact-list.scss 的「圖鑑」標題列：占滿整行、
+   貼齊左右邊緣，不留空白，只有內距是它自己內部的文字間距（padding），不是外距。
+
+   標題列「以下」的內容（副標題、篩選頁籤、格線）才需要跟彈出框邊緣保留距離，
+   統一抓 16px（在你要的 10~20px 範圍內），用各自的 margin-left/right 處理，
+   不要用整個容器的 padding——不然標題列也會被一起往內推，變成貼不到邊。 */
+
+.key-page--embedded {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: auto;
+  max-width: 100%;
+  padding: 0;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.key-page--embedded .page-header {
+  flex: none;
+  margin: 0 0 16px; // 只留下方距離（跟下面內容隔開），左右貼齊邊緣、不留空白
+}
+
+.key-page--embedded .page-header__bar {
+  border-radius: 14px 14px 0 0; // 貼齊彈出框頂部左右邊緣，只有上面兩個角要圓角
+}
+
+.key-page--embedded .page-header__sub {
+  margin: 12px 16px 0; // 副標題文字才需要跟邊緣留距離，標題列本身不用
+}
+
+/* 這幾個是互斥的「內容區塊」（loading／error／正常清單只會顯示一種），
+   都設 flex:1 撐滿剩餘高度；.state 額外置中，.key-slot-grid 維持自己的排版 */
+.key-page--embedded > .state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.key-page--embedded .section-title,
+.key-page--embedded .filter-bar {
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+.key-page--embedded .key-slot-grid {
+  flex: 1;
+  // ⚠️ 這兩行是修正無限暴衝迴圈的關鍵，不能拿掉：
+  // flex item 預設 min-height:auto，意思是「內容需要多高，這個 item 就至少要多高」。
+  // 上一版拿掉了 overflow:hidden 想解決懸停提示被切的問題，但這樣一來，格線的實際
+  // 高度就變成「由裡面有幾個 .key-slot 決定」，不再是「由 flex 配置決定」。
+  // 於是就發生了：量到高度 H → 算出格數 N → 塞進 N 個格子 → 格子把容器撐高到
+  // H'（H' > H，因為現在不裁切了）→ ResizeObserver 量到新高度 H' → 算出更多格子 N' →
+  // 容器又被撐得更高……沒有下限，全部乘上去，高度以指數成長到幾百萬 px，
+  // 瀏覽器狂噴 "ResizeObserver loop completed with undelivered notifications"。
+  // min-height:0 + overflow:hidden 讓這個 item 的高度「只由 flex 配置決定，不會被
+  // 自己的內容撐大」，之後不管塞多少格子進去，量到的高度都是同一個穩定值，
+  // 迴圈自然就斷了。代價是最左／最右兩欄格子的懸停提示泡泡又會被邊界裁掉一部分——
+  // 這個先前發現的小問題目前还在，但兩害相權，穩定性(不要讓瀏覽器暴衝當掉)
+  // 優先於這個裁切的小瑕疵，之後可以另外用「依欄位判斷提示往左或往右展開」的方式
+  // 單獨處理，不需要靠拿掉 overflow 來解決。
+  min-height: 0;
+  overflow: hidden;
+  align-content: flex-start;
+  margin: 20px 16px 16px;
+}
+
+/* ---------- state messages ---------- */
+
+.state {
+  text-align: center;
+  padding: 60px 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.state--error {
+  color: var(--red);
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  border: 2px solid var(--line);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  vertical-align: -3px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- section title ---------- */
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+}
+
+.key-count {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- filter bar（改成頁籤造型，呼應參考圖的「背包一～六」分頁）---------- */
+
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 0;
+  padding: 0 4px;
+}
+
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--ink-soft);
+    font-size: 11px;
+  }
+
+  &:hover {
+    color: var(--ink);
+    background: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.filter-button.active {
+  background: linear-gradient(180deg, #6b4a28, #4a3018);
+  border-color: var(--blue-deep);
+  color: var(--blue);
+  box-shadow: inset 0 2px 0 rgba(255, 224, 158, 0.2);
+
+  span {
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--blue);
+  }
+}
+
+/* ---------- key slot grid（參考圖的青銅道具格：圖示置中＋左下角數量）---------- */
+
+.key-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--line);
+}
+
+.key-slot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--card), rgba(0, 0, 0, 0.3));
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--blue);
+    transform: translateY(-2px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 8px 18px rgba(0, 0, 0, 0.5);
+    z-index: 5; // 讓 tooltip 蓋在旁邊的格子之上
+  }
+}
+
+.key-slot.universal-key {
+  cursor: default; // 萬能鑰匙不能從背包點擊使用，改到圖鑑頁的文物卡片上用
+}
+
+/* 依鑰匙種類上色的邊框；NORMAL 沿用預設的 --line 青銅色，不特別強調 */
+
+.key-slot.category-key {
+  border-color: var(--sapphire);
+}
+
+.key-slot.era-key {
+  border-color: var(--yellow);
+}
+
+.key-slot.universal-key {
+  border-color: var(--ruby);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 12px -2px var(--ruby);
+}
+
+.key-slot__icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+}
+
+.key-slot__count {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  min-width: 16px;
+  padding: 1px 4px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* 懸停顯示的詳情泡泡：開鎖類別＋回收點數；固定用深色底，跟主題明暗無關 */
+
+.key-slot__tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  width: max-content;
+  min-width: 160px;
+  max-width: 220px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--panel-dark);
+  border: 1px solid var(--line);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: var(--panel-dark);
+  }
+}
+
+.key-slot:hover .key-slot__tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.key-slot__tooltip-name {
+  margin: 0 0 6px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.key-slot__tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 3px 0 0;
+
+  strong {
+    color: #ffffff;
+    font-weight: 700;
+    text-align: right;
+  }
+}
+
+.key-slot__tooltip-hint {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+/* ---------- 使用鑰匙確認視窗／解鎖結果視窗 ---------- */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 6, 3, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 100;
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.confirm-dialog {
+  width: min(320px, 88vw);
+  background: linear-gradient(180deg, #5a3f24, #3a2814);
+  border: 1px solid var(--blue-deep);
+  border-radius: 18px;
+  padding: 26px 24px 22px;
+  text-align: center;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+  transform: translateY(6px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  .confirm-overlay.open & {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .key-icon {
+    font-size: 34px;
+    display: block;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--blue);
+  }
+
+  p {
+    margin: 0 0 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+}
+
+.confirm-dialog .have {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-bottom: 18px;
+
+  strong { color: var(--blue); }
+}
+
+.confirm-dialog .have.warn {
+  color: var(--red);
+}
+
+/* 巢狀在 .have 裡的警示文字（例如「數量不足」） */
+.confirm-dialog .warn {
+  color: var(--red);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+
+  .action-btn { flex: 1; }
+}
+
+.action-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 11px 22px;
+  border-radius: 999px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+
+  &:active { transform: translateY(1px); }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.unlock-btn {
+  background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+  color: #3a2814;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+
+  &:hover:not(:disabled) { box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5); }
+}
+
+.cancel-btn {
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+  border: 1px solid var(--line);
+
+  &:hover:not(:disabled) { background: rgba(0, 0, 0, 0.4); }
+}
+
+/* ---------- 空格子（背包本來就有這麼多格，只是還沒有對應的鑰匙）---------- */
+
+.key-slot--empty {
+  cursor: default;
+  background: rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.key-slot--empty:hover {
+  border-color: var(--line); // 空格不用 hover 高亮，維持原本邊框色
+  transform: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 480px) {
+  .key-page {
+    padding: 0 12px 40px;
+  }
+
+  .page-header {
+    margin: 0 -12px 20px;
+  }
+
+  .key-slot-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+  }
+}

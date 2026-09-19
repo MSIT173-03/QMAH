@@ -1,0 +1,1147 @@
+/* artifact-list.scss */
+/* 已併入原 artifact-unlock.scss 的放大檢視／解鎖／鑑賞流水樣式，版面主體維持 artifact-list 原本設計。 */
+
+.artifact-page {
+  /* 色系跟 key-list.scss 完全對齊（同一套暖色木紋＋金色滾邊），
+     兩邊變數名稱一樣，只是這裡多了幾個圖鑑頁專用的（--header-h、--on-dark...）。 */
+  --ink: #f3e4c6;
+  --ink-soft: #c9ab7c;
+  --line: #8a6a3f;
+  --surface: #241a10;
+  --card: #4a3520;
+  --blue: #e3b955;
+  --blue-deep: #a97a2c;
+  --yellow: #6fb87f;
+  --red: #d9534f;
+  --locked: #6b5842;
+
+  // 標題橫幅（純標題列）的高度概估值；固定側欄／內容區的 top、margin-top、height 都要用同一個
+  // 數字才對得齊，所以抽成變數，之後如果標題區塊內容或字級改變，只要改這裡一個地方。
+  --header-h: 74px;
+
+  // 放大圖底部漸層字幕疊字用色，跟整體主題無關（維持可讀性，文字疊在照片上，不是疊在版面底色上）
+  --on-dark: #ffffff;
+  --on-dark-soft: rgba(255, 255, 255, 0.7);
+  --on-dark-accent: #f0d9a0;
+
+  // 標題列跟「篩選欄＋內容區」這個組合現在都改成 position:fixed，直接鎖定在視窗座標，
+  // 不再依賴 .artifact-page 自己的寬度／內距去做版面計算——這樣可以完全避開「.artifact-page
+  // 的 100% 寬度其實是相對於瀏覽器預設 body 邊界，兩者對不齊，導致左右各多一條白邊、
+  // 甚至蓋住標題列」這類問題（fixed 定位一律以視窗為準，不受任何祖先元素的邊界影響）。
+  // .artifact-page 現在主要只負責提供 CSS 變數／背景色，不再是版面計算的依據。
+  background: var(--surface);
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  color: var(--ink);
+}
+
+.bac{
+  background-color: #241a10; // 跟 --surface 對齊；這層是最外層包裝，換膚時容易漏改，記得一起換
+}
+
+
+
+/* ---------- header ---------- */
+
+.page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-h); // 用明確高度取代「靠 padding 撐出來的高度」，跟下面 page-body 的 top 才會完全對齊
+  z-index: 60; // 蓋在固定側欄之上，避免任何邊界重疊時被壓到下面
+  display: flex;
+  align-items: center;
+  background: var(--surface); // 標題列本身是浮在頁面最上層，補上背景避免內容從縫隙透出來
+}
+
+.page-header__bar {
+  width: 100%;
+  background: linear-gradient(180deg, #6b4a28 0%, #4a3018 100%);
+  border-bottom: 3px solid var(--blue-deep);
+  padding: 18px 20px; // 水平內距改放在藍色橫幅自己身上，讓橫幅本身貼齊視窗左右邊緣，
+                      // 不再讓外層 .page-header 留出一圈跟頁面底色一樣的空白
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-header__bar::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  width: 140px;
+  height: 140px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  border: 10px solid rgba(255, 255, 255, 0.06);
+  background: radial-gradient(circle at 50% 50%, rgba(227, 185, 85, 0.12) 0 30%, transparent 32%);
+}
+
+.page-header__title {
+  margin: 0;
+  text-align: left;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--blue);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.04em;
+}
+
+.result-count strong {
+  color: var(--blue-deep);
+  font-size: 16px;
+  margin: 0 2px;
+}
+
+.key-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink);
+
+  strong {
+    color: var(--blue-deep);
+    font-size: 14px;
+  }
+}
+
+.key-badge--btn {
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.key-badge--btn:hover {
+  background: var(--surface);
+  border-color: var(--blue);
+}
+
+.key-badge--btn:active {
+  transform: translateY(1px);
+}
+
+/* ---------- state messages ---------- */
+
+.state {
+  text-align: center;
+  padding: 60px 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.content-area__scroll > .state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.state--error {
+  color: var(--red);
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  border: 2px solid var(--line);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  vertical-align: -3px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- grid & cards ---------- */
+
+.artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.artifact-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.artifact-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(20, 14, 8, 0.35);
+  border-color: var(--blue);
+}
+
+.artifact-card__media {
+  position: relative;
+  flex: 0 0 auto;
+  height: 220px;
+  background: linear-gradient(160deg, #3a2814 0%, #241a10 100%);
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px;
+  box-sizing: border-box;
+  filter: grayscale(1) opacity(0.5);
+  transition: filter 0.3s ease;
+}
+
+.artifact-card.unlocked .thumbnail {
+  filter: none;
+}
+
+.lock-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(20, 14, 8, 0.6);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  z-index: 2;
+}
+
+.artifact-card__badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.badge--qa {
+  background: var(--blue-deep);
+}
+
+.badge--shop {
+  background: var(--red);
+}
+
+.artifact-card__info {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.ref {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  color: var(--ink-soft);
+  letter-spacing: 0.03em;
+}
+
+.name {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+  height: calc(1.4em * 2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tags {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.tag {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--blue-deep);
+}
+
+.tag--era {
+  background: rgba(111, 184, 127, 0.15);
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+/* ---------- empty state ---------- */
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.empty__title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.empty__desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---------- 左右 1:5 版面：標題列＋篩選欄固定、只有右側文物清單會捲動 ---------- */
+/*
+  這裡改成「.page-body 本身 fixed，側欄／內容區都用 position:absolute 直接寫死
+  top:0; bottom:0」，取代前一版「.page-body 用 grid、側欄／內容區靠 height:100%
+  + grid 列自動撐滿」的做法。
+
+  原因：grid 那個版本理論上應該要讓 grid-template-rows:1fr 把唯一的那一列撐滿
+  .page-body 的完整高度，side-bar/content-area 的 height:100% 再吃到那個高度——
+  但實測下來這條「grid 列高度 → 子層 height:100% → 子層內部 flex:1」的鏈路
+  沒有確實生效，導致捲動失效、篩選欄的「文物分類」整塊被 overflow:hidden 裁掉。
+
+  現在改成：.page-body 是 position:fixed，四個方向都釘住（top 扣掉標題高度，
+  left/right/bottom 都是 0），本身就有明確的寬高。.search-sidebar／.content-area
+  都用 position:absolute（以 .page-body 為定位基準），直接寫 top:0 + bottom:0，
+  高度是「寫死撐滿」，不透過任何 grid/flex 的隱性撐高機制，也就不會再卡在
+  「理論上該撐滿、實際上沒撐滿」這個問題上。寬度一樣用 calc()，但基準是
+  .page-body 自己（本來就是視窗寬度，不是 100vw），不會有捲軸寬度算不準的疑慮。
+
+  ⚠️ top 用到的 --header-h（定義在最上面 .artifact-page）是明確的 height（見上面
+  .page-header），不是概估值，所以這裡的對齊會是精確的。
+*/
+
+.page-body {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}
+
+.search-sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0; // 上下都寫死釘住，撐滿整個左側螢幕，不會再上下留白
+  left: 0px;
+  width: calc((100% - 40px - 28px) / 6); // 100% = .page-body 自己的寬度（視窗寬度，非 100vw）
+  background: var(--card);
+  border-right: 1px solid var(--line);
+  // border-radius: 14px;
+  padding: 18px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden; // 保底：真的塞不下時寧可視覺擠壓，也不要跳出捲軸
+}
+
+.content-area {
+  position: absolute;
+  top: 0;
+  bottom: 0; // 上下寫死釘住，高度不再依賴 grid/flex 的隱性撐滿
+  left: calc(20px + (100% - 40px - 28px) / 6 + 28px);
+  right: 20px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-area__meta {
+  flex: none; // 固定在頂端，不參與下面的捲動
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.content-area__scroll {
+  flex: 1;
+  min-height: 0; // flex 容器要有這行，內部的 overflow-y:auto 才會正確裁切，不會把外框撐爆
+  overflow-y: auto;
+  padding-bottom: 48px; // 捲到底時留一點呼吸空間
+  display: flex;
+  flex-direction: column;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+  flex: none; // 搜尋框維持自然高度，不參與下面兩個篩選區塊的平均分配
+}
+
+.search-input::placeholder {
+  color: var(--ink-soft);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+/* 年代／分類核取方塊篩選區塊：兩區平均分配側欄剩餘高度，選項多就自動排成多欄，不捲動 */
+
+.filter-group {
+  flex: 1; // 兩個篩選區塊平均分配側欄剩下的高度
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 搜尋框→年代、年代→分類這兩處銜接都加一條簡單的分隔線 */
+.search-input + .filter-group,
+.filter-group + .filter-group {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.filter-group__title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  flex: none;
+}
+
+.filter-group__options {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap; // 選項一欄放不下時，往右多開幾欄塞下全部選項，取代原本的捲軸
+  align-content: flex-start;
+  gap: 2px 10px;
+  overflow: hidden; // 保底：真的太多筆時寧可視覺擠壓，也不出現捲軸
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--ink);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+/* ---------- 側欄底部：清除篩選／返回會員 ---------- */
+
+.sidebar-footer {
+  flex: none; // 不參與上面兩個 .filter-group 的高度平均分配，固定貼在側欄最下方
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.sidebar-footer__btn {
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-footer__btn:hover {
+  border-color: var(--blue);
+  color: var(--ink);
+}
+
+.sidebar-footer__btn--primary {
+  border-color: var(--blue);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--blue);
+}
+
+.sidebar-footer__btn--primary:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.filter-option:hover {
+  background: var(--surface);
+}
+
+.filter-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--blue);
+  cursor: pointer;
+  flex: none;
+}
+
+@media (max-width: 900px) {
+  .page-header {
+    position: static;
+    height: auto;
+    padding: 0;
+  }
+
+  .page-body {
+    position: static;
+    display: block;
+    padding: 0;
+    margin-top: 24px;
+  }
+
+  .search-sidebar {
+    position: static;
+    height: auto;
+    overflow: visible;
+    margin-bottom: 24px;
+  }
+
+  .content-area {
+    position: static;
+    height: auto;
+  }
+
+  .content-area__scroll {
+    flex: none;
+    overflow-y: visible;
+    padding-bottom: 0;
+  }
+
+  .filter-group {
+    flex: none;
+  }
+
+  .filter-group__options {
+    flex: none;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* ---------- 年代分區 ---------- */
+
+.era-sections {
+  flex: 1; // 撐滿 content-area 剩下的高度，不留空白
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.era-section {
+  // flex-grow 由樣板依 [style.flex-grow]="visibleItemsForEra(group).length" 逐一綁定，
+  // 文物數量越多的年代區塊，分到的高度佔比就越大；這裡只設共同的排版樣式。
+  display: flex;
+  flex-direction: column;
+}
+
+.era-section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--line);
+}
+
+.era-section__title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--blue-deep);
+  letter-spacing: 0.06em;
+}
+
+.era-section__more {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+.era-section__more:hover {
+  color: var(--blue-deep);
+  text-decoration: underline;
+}
+
+/* ================================================================
+   以下併入原 artifact-unlock.scss：放大檢視 / 解鎖確認 / 鑑賞流水
+   ================================================================ */
+
+/* ---------- overlay / focus stage ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 14, 8, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  z-index: 70; // 要蓋過固定的標題列(60)／篩選欄(55)，打開放大檢視時兩者也要一起被蓋暗
+}
+
+.overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  width: min(1080px, 95vw);
+  /* 放大圖與資訊面板共用同一組寬高，確保兩者永遠是同一個尺寸的方框 */
+  --stage-w: clamp(320px, 36vw, 460px);
+  /* 高度獨立於寬度縮放，確保欄位不需捲動就能完整顯示 */
+  --stage-h: clamp(680px, 45vw, 740px);
+}
+
+.focus-card {
+  position: relative;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: 0 30px 60px rgba(20, 14, 8, 0.45);
+  transform: scale(0.9);
+  opacity: 0;
+  transition: transform 0.28s cubic-bezier(.2, .8, .2, 1), opacity 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  overflow: hidden;
+  flex: none;
+}
+
+.overlay.open .focus-card {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.focus-card.unlocked {
+  border-color: var(--blue);
+  box-shadow: 0 30px 60px rgba(20, 14, 8, 0.45), 0 0 40px -10px rgba(227, 185, 85, 0.4);
+}
+
+/* ---------- 鑰匙背包彈出框（重用 .overlay 當 backdrop，這裡只定義框體本身）---------- */
+/* 尺寸比照你附的截圖比例：視窗大部分區域都被彈出框佔滿，但四周仍留一圈看得到背景的邊界。
+   overflow:hidden（不是 auto）：內部 key-list.scss 用 flex 撐滿這個固定高度，
+   背景色會蓋到底，不會出現捲軸、也不會露出空白。 */
+
+.key-bag-stage {
+  position: relative;
+  width: min(1600px, 84vw);
+  height: 82vh;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: 0 30px 60px rgba(20, 14, 8, 0.45);
+  transform: scale(0.94);
+  opacity: 0;
+  transition: transform 0.24s cubic-bezier(.2, .8, .2, 1), opacity 0.24s ease;
+}
+
+.overlay.open .key-bag-stage {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.focus-thumbnail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 28px;
+  box-sizing: border-box;
+  background: linear-gradient(160deg, #3a2814 0%, #241a10 100%);
+  filter: grayscale(1) opacity(0.5);
+  transition: filter 0.4s ease;
+}
+
+.focus-card.unlocked .focus-thumbnail {
+  filter: none;
+}
+
+.focus-card .num {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(20, 14, 8, 0.5);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  color: var(--on-dark);
+  z-index: 2;
+}
+
+.focus-card .category-tag {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(20, 14, 8, 0.5);
+  color: var(--on-dark);
+  z-index: 2;
+}
+
+.focus-card .label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px 18px 18px;
+  background: linear-gradient(0deg, rgba(10, 6, 3, 0.9) 25%, transparent 100%);
+  z-index: 2;
+}
+
+.focus-card .label .name {
+  display: block;
+  font-size: clamp(20px, 2.2vw, 24px);
+  font-weight: 700;
+  color: var(--on-dark);
+  height: auto;
+  -webkit-line-clamp: unset;
+}
+
+.focus-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex: none;
+}
+
+.action-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 11px 22px;
+  border-radius: 999px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.action-btn:active { transform: translateY(1px); }
+
+.unlock-btn {
+  background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+  color: #2e2110;
+  box-shadow: 0 8px 18px rgba(20, 14, 8, 0.4);
+}
+
+.unlock-btn:hover { box-shadow: 0 10px 22px rgba(20, 14, 8, 0.5); }
+
+.info-btn {
+  background: var(--card);
+  color: var(--blue);
+  border: 1px solid var(--line);
+}
+
+.info-btn:hover { background: var(--surface); }
+
+.info-btn.active {
+  background: var(--blue);
+  color: #2e2110;
+  border-color: var(--blue);
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--ink-soft);
+  max-width: 140px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ---------- info panel ---------- */
+
+.info-panel {
+  width: 0;
+  height: var(--stage-h);
+  opacity: 0;
+  overflow: hidden;
+  flex: none;
+  transition: width 0.32s cubic-bezier(.2, .8, .2, 1), opacity 0.28s ease 0.05s;
+}
+
+.stage.with-info .info-panel {
+  width: var(--stage-w);
+  opacity: 1;
+}
+
+.info-panel__inner {
+  width: var(--stage-w);
+  height: 100%;
+  box-sizing: border-box;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 22px;
+  overflow-y: auto; /* 安全備援：正常情況下欄位已可完整顯示，不需捲動 */
+}
+
+.info-panel__inner .num {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.info-panel__inner h3 {
+  margin: 4px 0 12px;
+  font-size: 19px;
+  font-weight: 700;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.field {
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.field:first-of-type { border-top: none; padding-top: 0; }
+
+.field .field-label {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
+}
+
+.field .field-value {
+  display: block;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.field .field-value--en {
+  margin-top: 2px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.field .field-value--muted { color: var(--ink-soft); }
+
+.field .field-value--error { color: var(--red); }
+
+.field-action {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--blue);
+  color: var(--blue-deep);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.field-action:hover { background: var(--blue); color: #2e2110; }
+
+.field-link {
+  font-size: 13px;
+  color: var(--blue-deep);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(227, 185, 85, 0.4);
+  word-break: break-all;
+}
+
+.field-link:hover { color: var(--blue); }
+
+/* ---------- unlock confirmation dialog ---------- */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 14, 8, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 100;
+}
+
+.confirm-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.confirm-dialog {
+  width: min(320px, 88vw);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 26px 24px 22px;
+  text-align: center;
+  box-shadow: 0 24px 50px rgba(20, 14, 8, 0.5);
+  transform: translateY(6px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.confirm-overlay.open .confirm-dialog {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.confirm-dialog .key-icon {
+  font-size: 34px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.confirm-dialog h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.confirm-dialog p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.confirm-dialog .have {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-bottom: 18px;
+}
+
+.confirm-dialog .have strong { color: var(--blue-deep); }
+
+.confirm-dialog .warn { color: var(--red); }
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.confirm-actions .action-btn { flex: 1; }
+
+.cancel-btn {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.cancel-btn:hover { background: var(--surface); }
+
+.confirm-btn:disabled {
+  background: var(--locked);
+  color: #ffffff;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ---------- debug: unlock ledger ---------- */
+
+.debug-toolbar {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 40;
+  display: flex;
+  gap: 10px;
+}
+
+.debug-btn {
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(20, 14, 8, 0.35);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.debug-btn:hover { color: var(--ink); }
+
+.debug-btn.active {
+  background: var(--blue-deep);
+  border-color: var(--blue-deep);
+  color: #ffffff;
+}
+
+.ledger-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 64px;
+  z-index: 40;
+  width: min(420px, 90vw);
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: none;
+  box-shadow: 0 20px 40px rgba(20, 14, 8, 0.4);
+}
+
+.ledger-panel.open { display: block; }
+
+.ledger-panel h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+
+.ledger-row {
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  line-height: 1.6;
+}
+
+.ledger-row:first-of-type { border-top: none; }
+
+.ledger-row .tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(227, 185, 85, 0.15);
+  color: var(--blue-deep);
+  margin-right: 6px;
+  font-size: 10px;
+}
+
+.ledger-empty {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 720px) {
+  .stage {
+    flex-direction: column;
+    gap: 18px;
+    --stage-w: min(340px, 88vw);
+  }
+
+  .info-panel,
+  .stage.with-info .info-panel {
+    width: var(--stage-w);
+    height: auto;
+    max-height: 70vh;
+  }
+
+  .info-panel__inner {
+    width: var(--stage-w);
+    height: auto;
+    max-height: 70vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .artifact-page {
+    padding: 0 12px 36px;
+  }
+
+  .page-header {
+    margin: 0 -12px 20px;
+  }
+
+  .page-header__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .artifact-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+  }
+}
