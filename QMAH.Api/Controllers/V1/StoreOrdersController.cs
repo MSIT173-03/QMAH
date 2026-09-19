@@ -120,9 +120,6 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         products = items
             .Join(db.Products, i => i.ProductId, p => p.Id, (i, p) => p)
             .ToDictionary(v => v.Id);
-            .ToDictionaryAsync(product => product.Id, cancellationToken);
-        if (products.Count != productIds.Length)
-            return (null, MissingResource("找不到商品", "訂單中有商品不存在或已下架。"));
 
         if (products.Count != items.Count)
         {
@@ -156,7 +153,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         Guid userId,
         decimal subtotal,
         CancellationToken cancellationToken)
-        {
+    {
         if (!userCouponId.HasValue)
             return (null, 0m, null);
 
@@ -165,11 +162,11 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 && coupon.UserId == userId
                 && coupon.Status == "AVAILABLE",
                     cancellationToken);
-            if (userCoupon is null)
+        if (userCoupon is null)
             return (null, 0m, MissingResource("找不到優惠券", "這張優惠券不存在或不屬於目前帳號。"));
 
-            var definition = userCoupon.CouponDefinition;
-            var now = DateTime.UtcNow;
+        var definition = userCoupon.CouponDefinition;
+        var now = DateTime.UtcNow;
         if (!definition.IsActive
                 || definition.StartAt > now
                 || definition.EndAt < now)
@@ -184,13 +181,13 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             "FIXED" => definition.DiscountValue,
             _ => 0m
         };
-            discountAmount = Math.Clamp(
-                decimal.Round(discountAmount, 2, MidpointRounding.AwayFromZero),
-                0m,
-                subtotal);
+        discountAmount = Math.Clamp(
+            decimal.Round(discountAmount, 2, MidpointRounding.AwayFromZero),
+            0m,
+            subtotal);
 
         return (userCoupon, discountAmount, null);
-        }
+    }
 
     private async Task<ActionResult?> ValidatePointsUsageAsync(
         int pointsUsed,
@@ -282,46 +279,36 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
     }
 
     private static void ApplyCouponRedemption(UserCoupon? userCoupon, DateTime redeemedAt)
-        {
+    {
         if (userCoupon is null)
             return;
 
-            userCoupon.Status = "USED";
+        userCoupon.Status = "USED";
         userCoupon.UsedAt = redeemedAt;
-        }
+    }
 
     private async Task ApplyPointsRedemptionAsync(
         Guid userId,
         int pointsUsed,
         StoreOrder order,
         CancellationToken cancellationToken)
-        {
+    {
         if (pointsUsed <= 0)
             return;
 
-            var balance = await db.PointBalances.SingleAsync(item => item.UserId == userId, cancellationToken);
+        var balance = await db.PointBalances.SingleAsync(item => item.UserId == userId, cancellationToken);
         balance.Balance -= pointsUsed;
-            balance.UpdatedAt = order.CreatedAt;
-            db.PointTransactions.Add(new PointTransaction
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
+        balance.UpdatedAt = order.CreatedAt;
+        db.PointTransactions.Add(new PointTransaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
             Amount = -pointsUsed,
-                Reason = "ORDER_REDEEM",
-                ReferenceType = "ORDER",
-                ReferenceId = order.Id,
-                CreatedAt = order.CreatedAt
-            });
-        }
-
-    private readonly record struct GroupedOrderItem(Guid ProductId, int Quantity);
-
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        return Created(
-            $"/api/v1/me/orders/{order.Id}",
-            ToOrderDto(order));
+            Reason = "ORDER_REDEEM",
+            ReferenceType = "ORDER",
+            ReferenceId = order.Id,
+            CreatedAt = order.CreatedAt
+        });
     }
 
     [HttpPost("{id:guid}/cancel")]
