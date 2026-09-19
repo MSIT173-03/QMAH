@@ -1,6 +1,6 @@
 import { Component, computed, input, signal } from '@angular/core';
 
-type PostcardLayout = 'landscape' | 'portrait' | 'square' | 'rotated';
+type PostcardLayout = 'landscape' | 'portrait';
 
 /**
  * 文物明信片主視覺。
@@ -23,12 +23,22 @@ export class CollectibleCard {
   image = input<string | null>(null);
   /** 基本尺寸資料，收藏卡背面只顯示一行摘要。 */
   dimensions = input('');
-  /** 使用既有商品說明，僅節錄而不編造文物資料。 */
+  /** 使用既有商品說明，不另行編造文物資料。 */
   description = input('');
-  protected readonly excerpt = computed(() => {
-    const text = this.description().replace(/\s+/g, ' ').trim();
-    const characters = Array.from(text);
-    return characters.length > 72 ? characters.slice(0, 72).join('') + '…' : text;
+  /** 書畫需完整保留；其他藏品可安全滿版裁切，避免新增圖片版型契約。 */
+  protected readonly preserveArtwork = computed(() => /書畫|繪畫|書法|畫冊|冊頁/u.test(this.type()));
+  protected readonly descriptionSegments = computed(() => {
+    // 明信片印刷文案不在末尾補停頓符號；只去除最後一個句號，句中標點完整保留。
+    const text = this.description().trim().replace(/[。.]$/u, '');
+    const segments: string[] = text ? [''] : [];
+
+    // 逐字累積並在標點後切段，連標點開頭或沒有標點的文字也不會遺失。
+    for (const character of text) {
+      segments[segments.length - 1] = `${segments[segments.length - 1] ?? ''}${character}`;
+      if (/[，。；！？、：,.!?;:]/u.test(character)) segments.push('');
+    }
+
+    return segments.filter(Boolean);
   });
 
   protected readonly flipped = signal(false);
@@ -47,11 +57,8 @@ export class CollectibleCard {
       return 'landscape';
     }
 
-    // 超長直幅畫作轉成橫向印刷構圖，才不會在橫式明信片中只剩一條窄圖。
-    if (aspectRatio < 0.65) return 'rotated';
-    if (aspectRatio < 0.8) return 'portrait';
-    if (aspectRatio > 1.25) return 'landscape';
-    return 'square';
+    // 來源影像已是正確方向，這裡只決定明信片尺寸，不擅自旋轉圖片或文字。
+    return aspectRatio >= 1 ? 'landscape' : 'portrait';
   });
 
   protected toggle(): void {

@@ -6,27 +6,30 @@
   [attr.aria-label]="flipped() ? '翻回文物明信片正面' : '翻面查看文物明信片基本資訊'"
   (click)="toggle()"
 >
-  <!-- 正反面共用版型與翻面軸，名稱直接疊印在影像上，不改變圖片裁切。 -->
+  <!-- 正反面共用同一個方向；只依原圖寬高切換直式／橫式，不另行旋轉圖片或文字。 -->
   <span class="postcard-track" [class.is-flipped]="flipped()">
     <span class="card-face card-front" [attr.aria-hidden]="flipped()">
       <span class="postcard-front-paper">
-        <span class="card-art" [attr.data-layout]="postcardLayout()">
-          @if (image(); as imageUrl) {
-            <img
-              [src]="imageUrl"
-              [alt]="name()"
-              loading="eager"
-              fetchpriority="high"
-              decoding="async"
-              (load)="handleImageLoad($event)"
-            />
-          } @else {
-            <span class="card-art-placeholder">QMAH<br />影像整理中</span>
-          }
-        </span>
-        <span class="postcard-caption">
-          <strong class="card-back-name ink-print">{{ name() }}</strong>
-          <span class="card-back-type ink-print">{{ type() }}</span>
+        <span class="postcard-front-content">
+          <span class="card-art">
+            @if (image(); as imageUrl) {
+              <img
+                [src]="imageUrl"
+                [alt]="name()"
+                [class.is-preserved-artwork]="preserveArtwork()"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+                (load)="handleImageLoad($event)"
+              />
+            } @else {
+              <span class="card-art-placeholder">QMAH<br />影像整理中</span>
+            }
+          </span>
+          <span class="postcard-caption">
+            <strong class="card-back-name ink-print">{{ name() }}</strong>
+            <span class="card-back-type ink-print">{{ type() }}</span>
+          </span>
         </span>
       </span>
     </span>
@@ -34,9 +37,16 @@
     <span class="card-face card-back" [attr.aria-hidden]="!flipped()">
       <span class="postcard-back-paper">
         <span class="postcard-back-left">
-          <!-- 尺寸與節錄只取既有資料；缺值省略，完整說明仍可於商品頁閱讀。 -->
+          <!-- 尺寸與說明只取既有資料；缺值省略，且說明完整保留、不以固定字數裁切。 -->
           @if (dimensions()) { <span class="postcard-dimensions ink-print">尺寸｜{{ dimensions() }}</span> }
-          @if (excerpt()) { <span class="postcard-description ink-print">{{ excerpt() }}</span> }
+          @if (descriptionSegments().length) {
+            <span class="postcard-description ink-print">
+              @for (segment of descriptionSegments(); track $index) {
+                <!-- wbr 只提供標點後的優先換行點，不會刪除或改寫原始說明。 -->
+                <span class="postcard-description-segment">{{ segment }}</span><wbr />
+              }
+            </span>
+          }
           <img src="/images/brand/qmah-logo.svg" alt="QMAH" class="card-logo" />
         </span>
 
@@ -44,6 +54,10 @@
 
         <span class="postcard-back-right" aria-hidden="true">
           <span class="postcard-stamp">貼郵票處</span>
+          <!-- 六格依中華郵政 3+3 參考比例繪製；這是可書寫的設計提示，不仿造郵資符誌。 -->
+          <span class="postcard-postcode">
+            <i></i><i></i><i></i><b>－</b><i></i><i></i><i></i>
+          </span>
           <span class="postcard-address-lines">
             <i></i><i></i><i></i>
           </span>

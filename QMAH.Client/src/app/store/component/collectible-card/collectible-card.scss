@@ -5,10 +5,22 @@
 }
 
 .card-flip-button {
+  /* 一單位代表紙面 1 mm；只縮放整張 A6，字級與間距不再受像素上下限影響。 */
+  --paper-mm: calc(100cqw / 148);
+  --front-copy-width: 28%;
+  /* Logo 統一為紙面 30 mm 寬；依 A6 方向換算，避免受資訊欄寬度二次縮放。 */
+  --logo-width: calc(30 * var(--paper-mm));
+  /* cqw 必須讀卡片外框，不讀右側文字欄；因此字級隨明信片比例走，不會因欄寬被二次縮小。 */
+  /* 名稱 4 mm、類型 2.6 mm；移除像素下限，讓整張明信片等比縮放。 */
+  --front-title-size: calc(4 * var(--paper-mm));
+  --front-type-size: calc(2.6 * var(--paper-mm));
+  --back-dimension-size: calc(2.6 * var(--paper-mm));
+  --back-description-size: calc(2.5 * var(--paper-mm));
+  --stamp-label-size: calc(2.3 * var(--paper-mm));
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 1.48;
+  aspect-ratio: 148 / 105;
   padding: 0;
   border: 0;
   background: transparent;
@@ -18,17 +30,11 @@
   container-type: inline-size;
 }
 
-.card-flip-button[data-layout='square'] {
-  aspect-ratio: 1;
-}
-
 .card-flip-button[data-layout='portrait'] {
-  aspect-ratio: 0.72;
-}
-
-/* 超長直幅先旋轉成橫向展示，讓正面影像與文字保持正常閱讀方向。 */
-.card-flip-button[data-layout='rotated'] {
-  aspect-ratio: 1.7;
+  --front-copy-width: 34%;
+  --paper-mm: calc(100cqw / 105);
+  /* A6 紙張只交換長寬；直式為 105 × 148 mm，正反兩面都保持直立。 */
+  aspect-ratio: 105 / 148;
 }
 
 .card-flip-button:focus-visible {
@@ -101,7 +107,8 @@
 .card-art {
   position: absolute;
   z-index: 0;
-  inset: 0;
+  /* 正面保留一條直向紙面欄，文字不再壓在作品明暗不一的影像上。 */
+  inset: 0 var(--front-copy-width) 0 0;
   display: block;
   background: #e6dfd0;
   container-type: size;
@@ -114,59 +121,60 @@
   object-fit: cover;
 }
 
-/* 旋轉前交換顯示寬高，直幅作品才會填滿橫式紙卡而不留下大面積空白。 */
-.card-art[data-layout='rotated'] img {
+.postcard-front-content {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100cqh;
-  height: 100cqw;
-  max-width: none;
-  transform: translate(-50%, -50%) rotate(90deg);
+  z-index: 1;
+  inset: 0;
 }
+
+/* 書畫保留完整構圖；其他藏品沿用 cover 等比裁切。 */
+.card-art img.is-preserved-artwork { object-fit: contain; }
 
 .postcard-caption {
   position: absolute;
   z-index: 5;
-  right: 6%;
-  bottom: 6%;
-  left: 6%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--front-copy-width);
   min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: 2px;
-  padding: 0;
-  background: transparent;
+  gap: calc(2 * var(--paper-mm));
+  box-sizing: border-box;
+  padding: calc(4 * var(--paper-mm));
+  border-left: 1px solid rgba(121, 118, 101, 0.28);
+  background: #f3efe4;
 }
 
 .card-back-name {
-  display: -webkit-box;
-  overflow: hidden;
+  display: block;
   margin: 0;
-  font: 700 clamp(12px, 2.8cqw, 23px) / 1.35 'Noto Serif TC', 'PMingLiU', 'Songti TC', serif;
+  max-width: 100%;
+  font: 700 var(--front-title-size) / 1.35 'Noto Serif TC', 'PMingLiU', 'Songti TC', serif;
   font-synthesis: weight;
   letter-spacing: 0.04em;
   overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  word-break: normal;
+  line-break: strict;
+  text-wrap: balance;
 }
 
-/* 正面文字直接落在作品影像旁，不使用橫幅；暗邊讓淺色與深色作品都保持清晰。 */
+/* 正面文字落在獨立紙面欄，不使用橫幅或影像陰影，讓油墨字邊在任何作品上都清楚。 */
 .postcard-caption .ink-print {
-  color: #fffdf5;
-  mix-blend-mode: normal;
-  /* 以無模糊的細描邊取代光暈，字重增加後仍保留油墨邊界，不會看起來發虛。 */
-  text-shadow: 1px 0 0 rgba(24, 28, 27, 0.72), 0 1px 0 rgba(24, 28, 27, 0.82);
-  -webkit-text-stroke: 0.28px rgba(24, 28, 27, 0.66);
-  paint-order: stroke fill;
+  color: rgba(61, 59, 49, 0.96);
+  mix-blend-mode: multiply;
+  text-shadow: 0.22px 0.18px 0 rgba(61, 59, 49, 0.2);
 }
 
 .card-back-type {
-  font: 600 clamp(9px, 1.8cqw, 15px) / 1.45 'Noto Serif TC', 'PMingLiU', serif;
+  max-width: 100%;
+  font: 600 var(--front-type-size) / 1.45 'Noto Serif TC', 'PMingLiU', serif;
   font-synthesis: weight;
   letter-spacing: 0.14em;
+  white-space: nowrap;
 }
 
 .postcard-back-paper {
@@ -177,7 +185,8 @@
 .postcard-back-left {
   position: absolute;
   z-index: 1;
-  top: 10%;
+  /* 橫式三個主群組共用 8% 上緣：尺寸文字、郵遞區號與郵票視覺對齊。 */
+  top: 8%;
   bottom: 9%;
   left: 7%;
   width: 42%;
@@ -185,7 +194,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2cqw;
+  gap: calc(3 * var(--paper-mm));
 }
 
 .postcard-dimensions,
@@ -193,34 +202,45 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  font: 400 clamp(9px, 1.8cqw, 14px) / 1.7 'Noto Serif TC', 'PMingLiU', serif;
+  font-family: 'Noto Serif TC', 'PMingLiU', serif;
   letter-spacing: 0.03em;
   overflow-wrap: anywhere;
 }
 
 .postcard-dimensions {
-  width: 100%;
-  overflow: hidden;
+  display: block;
+  font-size: var(--back-dimension-size);
+  font-weight: 600;
+  line-height: 1.55;
+  /* 尺寸是同一個量測欄位，保留數值與單位相鄰；不讓「公分」被拆成孤行。 */
   white-space: nowrap;
-  text-overflow: ellipsis;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-break: strict;
+  text-wrap: pretty;
   letter-spacing: 0.01em;
 }
 
 .postcard-description {
-  display: -webkit-box;
-  overflow: hidden;
-  /* 明信片說明是實際資料，明確允許中日韓字元與過長拉丁字串依欄寬換行。 */
+  display: block;
+  /* 先依模板插入的標點換行點斷句；單段過長時才允許保底換行，避免內容溢出紙面。 */
+  font-size: var(--back-description-size);
+  font-weight: 400;
+  line-height: 1.72;
   white-space: normal;
-  word-break: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   line-break: strict;
   text-wrap: pretty;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
+}
+
+.postcard-description-segment {
+  white-space: normal;
 }
 
 .card-logo {
   display: block;
-  width: 72%;
+  width: var(--logo-width);
   height: auto;
   margin-top: auto;
   filter: grayscale(1);
@@ -242,38 +262,77 @@
   position: absolute;
   top: 10%;
   bottom: 10%;
-  left: 54%;
+  left: 50%;
   width: 1px;
   background: rgba(121, 118, 101, 0.34);
 }
 
 .postcard-back-right {
   position: absolute;
-  inset: 10% 7% 10% 60%;
+  inset: 0;
 }
 
 .postcard-stamp {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 42.424%;
-  height: 35%;
+  top: 8%;
+  right: 3.378%;
+  /* 橫式採常見 32 × 24 mm 比例；郵票框沒有法定固定尺寸，不放大成主視覺。 */
+  width: 21.622%;
+  height: 22.857%;
   display: grid;
   place-items: center;
   box-sizing: border-box;
   border: 1px solid rgba(121, 118, 101, 0.46);
   color: rgba(76, 74, 63, 0.8);
-  font: 400 clamp(9px, 1.7cqw, 12px) / 1.5 'Noto Serif TC', 'PMingLiU', serif;
+  padding: 2%;
+  font: 500 var(--stamp-label-size) / 1.4 'Noto Serif TC', 'PMingLiU', serif;
   text-align: center;
+  text-wrap: balance;
+}
+
+.postcard-postcode {
+  position: absolute;
+  /* 郵遞區號與郵票同列，地址書寫區才有清楚的垂直閱讀順序。 */
+  top: 8%;
+  left: 54%;
+  width: 20.27%;
+  height: 6.19%;
+  display: grid;
+  /* 30 mm 總寬拆成 4/1/4/1/4/2/4/1/4/1/4，精確保留 3+3 的中央 2 mm 間距。 */
+  grid-template-columns: 4fr 1fr 4fr 1fr 4fr 2fr 4fr 1fr 4fr 1fr 4fr;
+  align-items: stretch;
+  /* 自製明信片採暖灰書寫提示，減輕框線的視覺重量，六格尺寸維持不變。 */
+  color: #938b7b;
+}
+
+.postcard-postcode i:nth-of-type(1) { grid-column: 1; }
+.postcard-postcode i:nth-of-type(2) { grid-column: 3; }
+.postcard-postcode i:nth-of-type(3) { grid-column: 5; }
+.postcard-postcode b { grid-column: 6; }
+.postcard-postcode i:nth-of-type(4) { grid-column: 7; }
+.postcard-postcode i:nth-of-type(5) { grid-column: 9; }
+.postcard-postcode i:nth-of-type(6) { grid-column: 11; }
+
+.postcard-postcode i {
+  box-sizing: border-box;
+  border: calc(0.2 * var(--paper-mm)) solid currentColor;
+}
+
+.postcard-postcode b {
+  display: grid;
+  place-items: center;
+  font: 500 calc(2 * var(--paper-mm)) / 1 serif;
 }
 
 .postcard-address-lines {
   position: absolute;
-  right: 0;
-  bottom: 14%;
-  left: 0;
+  right: 4.73%;
+  top: 37%;
+  left: 54%;
+  /* 四行固定同一行高，第一行用 top 額外留白，讓地址可直接手寫。 */
   display: grid;
-  gap: 4cqw;
+  grid-template-rows: repeat(4, calc(8 * var(--paper-mm)));
+  gap: 0;
 }
 
 .postcard-address-lines i {
@@ -281,48 +340,79 @@
   border-top: 1px solid rgba(121, 118, 101, 0.42);
 }
 
-/* 方形與直式紙卡改用上下分區，避免把說明與地址硬塞進兩條窄欄。 */
-.card-flip-button[data-layout='square'] .postcard-back-left,
-.card-flip-button[data-layout='portrait'] .postcard-back-left {
-  top: 7%;
-  right: 8%;
-  bottom: auto;
-  left: 8%;
-  width: auto;
-  height: 43%;
+/* 四行可容納郵遞區號、行政區／街道、樓層門牌與收件人，較符合實際中文地址長度。 */
+.postcard-address-lines::after {
+  display: block;
+  border-top: 1px solid rgba(121, 118, 101, 0.42);
+  content: '';
 }
 
-.card-flip-button[data-layout='square'] .postcard-back-divider,
+/* 直式郵務面先保留地址與郵票區，文物資訊縮成底部資訊帶，正反面不共用橫式排版。 */
+.card-flip-button[data-layout='portrait'] .postcard-back-left {
+  top: 74%;
+  right: 4.762%;
+  bottom: 6%;
+  left: 4.762%;
+  width: auto;
+  height: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--logo-width);
+  grid-template-rows: auto 1fr;
+  gap: calc(2 * var(--paper-mm)) calc(4 * var(--paper-mm));
+}
+
 .card-flip-button[data-layout='portrait'] .postcard-back-divider {
-  top: 55%;
-  right: 8%;
+  top: 70%;
+  right: 4.762%;
   bottom: auto;
-  left: 8%;
+  left: 4.762%;
   width: auto;
   height: 1px;
 }
 
-.card-flip-button[data-layout='square'] .postcard-back-right,
 .card-flip-button[data-layout='portrait'] .postcard-back-right {
-  inset: 61% 8% 7%;
+  inset: 0;
 }
 
-.card-flip-button[data-layout='square'] .postcard-stamp,
 .card-flip-button[data-layout='portrait'] .postcard-stamp {
-  width: 24%;
-  height: 100%;
+  top: 5%;
+  right: auto;
+  left: 4.762%;
+  /* 兩種方向共用 32 × 24 mm 視覺框；只換算紙面比例，不旋轉郵票框。 */
+  width: 30.476%;
+  height: 16.216%;
 }
 
-.card-flip-button[data-layout='square'] .postcard-address-lines,
+.card-flip-button[data-layout='portrait'] .postcard-postcode {
+  top: 5%;
+  left: 66.667%;
+  width: 28.571%;
+  height: 4.392%;
+}
+
 .card-flip-button[data-layout='portrait'] .postcard-address-lines {
-  right: 34%;
-  bottom: 12%;
-  gap: 3cqw;
+  right: 4.762%;
+  /* 地址線位於郵票框下方，首行留白與後續行高分開控制。 */
+  top: 29%;
+  /* 郵票、區號、水平線與資訊帶共用 5 mm 外界，避免左右形成階梯。 */
+  left: 4.762%;
+  bottom: auto;
 }
 
-.card-flip-button[data-layout='square'] .postcard-description,
 .card-flip-button[data-layout='portrait'] .postcard-description {
-  -webkit-line-clamp: 4;
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.card-flip-button[data-layout='portrait'] .postcard-dimensions {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.card-flip-button[data-layout='portrait'] .card-logo {
+  grid-row: 2;
+  grid-column: 2;
+  margin: auto 0 0 auto;
 }
 
 .card-art-placeholder {
