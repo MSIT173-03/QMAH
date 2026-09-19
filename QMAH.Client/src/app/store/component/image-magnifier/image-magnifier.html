@@ -1,0 +1,13 @@
+<div class="magnifier-host" [class.magnifier-host--contain]="fit() === 'contain'"
+  (pointermove)="move($event)" (pointerenter)="active.set(true)" (pointerleave)="active.set(false)">
+  @if (image(); as imageUrl) {
+    <img [src]="imageUrl" [alt]="alt()" decoding="async" (load)="onLoad($event)" />
+    <!-- 局部鏡頭跟著游標走，僅放大目前位置，不改變明信片尺寸或版面流。 -->
+    <span class="magnifier-lens" [class.is-active]="active()"
+      [style.left.%]="position().x" [style.top.%]="position().y"
+      [style.background-image]="'url(' + imageUrl + ')'"
+      [style.background-position]="positionText()"></span>
+  } @else {
+    <span class="magnifier-placeholder">目前沒有可用圖像</span>
+  }
+</div>

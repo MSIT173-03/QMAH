@@ -13,24 +13,16 @@
         <span class="postcard-front-content">
           <span class="card-art">
             @if (image(); as imageUrl) {
-              <img
-                [src]="imageUrl"
-                [alt]="name()"
-                [class.is-preserved-artwork]="preserveArtwork()"
-                loading="eager"
-                fetchpriority="high"
-                decoding="async"
-                (load)="handleImageLoad($event)"
-              />
+              <app-image-magnifier [image]="imageUrl" [alt]="name()"
+                [fit]="preserveArtwork() ? 'contain' : 'cover'" (loaded)="handleImageLoad($event)" />
             } @else {
               <span class="card-art-placeholder">QMAH<br />影像整理中</span>
             }
           </span>
-          <span class="postcard-caption">
-            <strong class="card-back-name ink-print">{{ name() }}</strong>
-            <span class="card-back-type ink-print">{{ type() }}</span>
-            <span class="card-orientation ink-print">方向｜{{ orientationLabel() }}</span>
-          </span>
+            <span class="postcard-caption">
+              <strong class="card-back-name ink-print">{{ name() }}</strong>
+              <span class="card-back-type ink-print">{{ type() }}</span>
+            </span>
         </span>
       </span>
     </span>

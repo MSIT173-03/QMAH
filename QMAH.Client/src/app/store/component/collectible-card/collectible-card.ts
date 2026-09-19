@@ -1,4 +1,5 @@
 import { Component, computed, input, signal } from '@angular/core';
+import { ImageMagnifier } from '../image-magnifier/image-magnifier';
 
 type PostcardLayout = 'landscape' | 'portrait';
 
@@ -11,6 +12,7 @@ type PostcardLayout = 'landscape' | 'portrait';
  */
 @Component({
   selector: 'app-collectible-card',
+  imports: [ImageMagnifier],
   templateUrl: './collectible-card.html',
   styleUrl: './collectible-card.scss',
 })
@@ -60,22 +62,16 @@ export class CollectibleCard {
     // 來源影像已是正確方向，這裡只決定明信片尺寸，不擅自旋轉圖片或文字。
     return aspectRatio >= 1 ? 'landscape' : 'portrait';
   });
-  /** 方向標示與外框共用同一個自然尺寸判斷，避免文字與實際版型不一致。 */
-  protected readonly orientationLabel = computed(() =>
-    this.postcardLayout() === 'landscape' ? '橫式' : '直式',
-  );
-
   protected toggle(): void {
     this.flipped.update((value) => !value);
   }
 
-  protected handleImageLoad(event: Event): void {
-    const image = event.currentTarget as HTMLImageElement | null;
-    if (!image?.naturalWidth || !image.naturalHeight) return;
+  protected handleImageLoad(size: { width: number; height: number }): void {
+    if (!size.width || !size.height) return;
 
     // 使用輸入值比對，避免瀏覽器把相對 URL 解析成絕對 URL 後讓版型一直停在預設值。
     this.loadedImageSource.set(this.image());
-    this.imageAspectRatio.set(image.naturalWidth / image.naturalHeight);
+    this.imageAspectRatio.set(size.width / size.height);
   }
 
 }

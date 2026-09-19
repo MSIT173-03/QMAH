@@ -4,7 +4,7 @@
  * 前端顯示用欄位尚未由後端提供，由 toProduct／toProductDetail 轉換時補上預設值。
  */
 
-import { Product, ProductDetail, Review, ReviewPage, ReviewQuery, StorePromotion } from './api.models';
+import { Category, Product, ProductDetail, Review, ReviewPage, ReviewQuery, StorePromotion } from './api.models';
 
 /**
  * 器類代碼（categoryCode）與中文器類名稱對照表；宣告順序需與後端 StoreCatalogController.CategoryType
@@ -26,9 +26,25 @@ const CATEGORY_CODE_BY_LABEL: Record<string, number> = Object.fromEntries(
   CATEGORIES.map(([, label], index) => [label, index]),
 );
 
+/** GET /categories 原始回應；後端的 Code 是篩選契約，Name 僅是資料庫顯示文字。 */
+export interface ApiCategory {
+  id: string;
+  code: string;
+  name: string;
+  productCount: number;
+}
+
 /** 將後端器類代碼轉為中文器類名稱，對應表未列出時直接沿用原文 */
 function toCategoryLabel(categoryCode: string): string {
   return CATEGORY_LABELS[categoryCode] ?? categoryCode;
+}
+
+/**
+ * 將分類代碼正規化為前端共用名稱；資料庫可能回傳「銅器／陶瓷器」，
+ * 但商品卡、麵包屑與篩選查詢必須共用同一組「青銅器／陶瓷」名稱。
+ */
+export function toCategory(dto: ApiCategory): Category {
+  return { id: dto.id, name: toCategoryLabel(dto.code), productCount: dto.productCount };
 }
 
 /**
@@ -127,9 +143,22 @@ export function toProduct(dto: ApiProductListItem): Product {
   };
 }
 
+/**
+ * 商品 API 的 description 仍包含商城展示用的整合文字；明信片只取最後的故宮原文物說明。
+ * 若舊資料沒有標記，才退回完整說明，避免測試資料或未完成資料被靜默清空。
+ */
+function toArtifactDescription(description: string): string {
+  const marker = '原文物說明：';
+  const markerIndex = description.lastIndexOf(marker);
+  return (markerIndex >= 0 ? description.slice(markerIndex + marker.length) : description).trim();
+}
+
 export function toProductDetail(dto: ApiProductDetail): ProductDetail {
+  const artifactDescription = toArtifactDescription(dto.description);
   return {
     ...toProduct(dto),
+    // 套組商品名稱保留在商品摘要；明信片正面改用原文物名稱，避免把販售形式印到作品標題上。
+    artifactName: dto.artifactName ?? dto.name,
     // 詳情頁明確使用大圖，讓滿版明信片不會誤拿清單縮圖放大。
     coverImage: dto.primaryImagePath,
     artifactDimensions: dto.artifactSizeText ?? '官方資料未提供',
@@ -138,7 +167,9 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
     dimensions: dto.sizeText,
     source: dto.sourceUrl ?? dto.externalRef ?? '',
     material: '',
-    description: dto.description,
+    // 商品說明保留套組段落；明信片視圖另用 artifactDescription，避免把行銷段落塞進卡片。
+    description: dto.description.trim(),
+    artifactDescription,
     condition: '',
     shippingNote: '',
     images: dto.primaryImagePath ? [{ view: '商品', url: dto.primaryImagePath }] : [],

@@ -16,7 +16,9 @@ import {
   ApiProductDetail,
   ApiProductPage,
   ApiProductReviewsResponse,
+  ApiCategory,
   ApiStorePromotion,
+  toCategory,
   toCategoryCode,
   toProduct,
   toProductDetail,
@@ -38,8 +40,8 @@ export class CatalogApi {
   getCategories(): Observable<Category[]> {
     // integration: 正式 Store API 回傳陣列，舊 mock 仍回傳 { categories }；
     // 這裡只做 response adapter，讓測試資料格式相容而不把 mock interceptor 帶入正式 runtime。
-    return this.http.get<Category[] | { categories: Category[] }>(apiUrl('/categories')).pipe(
-      map((res) => (Array.isArray(res) ? res : res.categories)),
+    return this.http.get<ApiCategory[] | { categories: ApiCategory[] }>(apiUrl('/categories')).pipe(
+      map((res) => (Array.isArray(res) ? res : res.categories).map(toCategory)),
       // 分類導覽是輔助資料；資料庫短暫失敗時保留商品頁與其他 Area，不讓 toSignal 拋出錯誤。
       catchError(() => of([])),
     );

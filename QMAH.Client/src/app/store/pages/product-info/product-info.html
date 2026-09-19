@@ -16,13 +16,14 @@
   <app-breadcrumb [items]="breadcrumbItems()" />
 
   <!-- 商品主視覺：左側商品圖庫、右側商品資訊與購買操作 -->
+  <!-- 詳情主視覺改成靜態切換：第一張是明信片正面，第二張是原文物／複製品展示圖。 -->
   <section class="product-hero-section">
     <app-product-gallery
-      [name]="product.name"
+      [name]="product.artifactName"
       [type]="product.category"
       [image]="product.coverImage"
-      [dimensions]="product.dimensions"
-      [description]="product.description"
+      [dimensions]="product.artifactDimensions"
+      [description]="product.artifactDescription"
     />
     <app-product-summary
       [brand]="product.brand"

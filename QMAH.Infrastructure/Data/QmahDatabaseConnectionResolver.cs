@@ -104,7 +104,6 @@ public static class QmahDatabaseConnectionResolver
 
             var builder = new SqlConnectionStringBuilder(connectionString)
             {
-                InitialCatalog = "master",
                 ConnectTimeout = 2
             };
 
@@ -112,24 +111,16 @@ public static class QmahDatabaseConnectionResolver
             await connection.OpenAsync(cancellationToken);
 
             await using var command = connection.CreateCommand();
-            // 只有同名且 ONLINE 的資料庫仍可能是舊快照；目前 Web 會查詢每日活動表，
-            // 因此把必要資料表一起納入可用性判斷，避免啟動後才因 schema 不完整而中斷。
+            // 直接在候選資料庫內檢查必要資料表，保留部署設定指定的資料庫名稱，避免把新快照誤判成 QMAH 舊資料庫。
             command.CommandText = """
                 SELECT CASE WHEN EXISTS
                 (
                     SELECT 1
-                    FROM sys.databases
-                    WHERE name = N'QMAH'
-                      AND state_desc = N'ONLINE'
-                      AND EXISTS
-                      (
-                          SELECT 1
-                          FROM QMAH.sys.tables AS tables
-                          INNER JOIN QMAH.sys.schemas AS schemas
-                              ON schemas.schema_id = tables.schema_id
-                          WHERE schemas.name = N'common'
-                            AND tables.name = N'DailyMemberActivities'
-                      )
+                    FROM sys.tables AS tables
+                    INNER JOIN sys.schemas AS schemas
+                        ON schemas.schema_id = tables.schema_id
+                    WHERE schemas.name = N'common'
+                      AND tables.name = N'DailyMemberActivities'
                 ) THEN 1 ELSE 0 END;
                 """;
 
@@ -340,10 +331,8 @@ public static class QmahDatabaseConnectionResolver
 
         try
         {
-            var builder = new SqlConnectionStringBuilder(connectionString)
-            {
-                InitialCatalog = "QMAH"
-            };
+            var builder = new SqlConnectionStringBuilder(connectionString);
+            // 連線字串中的 Database 是部署／本機快照的明確契約，不能強制改成 QMAH，否則會誤連到舊快照。
             return builder.ConnectionString;
         }
         catch

@@ -78,12 +78,16 @@ export interface ProductImage {
 
 /** 商品詳情 */
 export interface ProductDetail extends Product {
-  /** 關聯文物原始尺寸；商品 dimensions 保留固定明信片成品尺寸。 */
+  /** 原文物名稱；明信片正面不顯示套組後綴。 */
+  artifactName: string;
+  /** 關聯文物原始尺寸；明信片視圖只顯示這個尺寸，不重複顯示 A6。 */
   artifactDimensions: string;
   /** 材質與工法說明 */
   material: string;
-  /** 商品說明段落 */
+  /** 套組商品說明段落，保留產生器寫入的段落分隔。 */
   description: string;
+  /** 明信片／原文物視圖使用的精簡原文物說明。 */
+  artifactDescription: string;
   /** 商品狀態說明 */
   condition: string;
   /** 出貨說明 */
