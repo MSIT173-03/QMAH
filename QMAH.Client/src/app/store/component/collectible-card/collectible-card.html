@@ -6,7 +6,7 @@
   [attr.aria-label]="flipped() ? '翻回文物明信片正面' : '翻面查看文物明信片基本資訊'"
   (click)="toggle()"
 >
-  <!-- 正反面共用版型與翻面軸，名稱紙帶不參與圖片裁切。 -->
+  <!-- 正反面共用版型與翻面軸，名稱直接疊印在影像上，不改變圖片裁切。 -->
   <span class="postcard-track" [class.is-flipped]="flipped()">
     <span class="card-face card-front" [attr.aria-hidden]="flipped()">
       <span class="postcard-front-paper">
