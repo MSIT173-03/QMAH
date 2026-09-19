@@ -85,10 +85,8 @@ export class Achievements implements OnInit {
 
         next: (data: Achievement[]) => {
 
-          console.log(
-            'achievements:',
-            data
-          );
+          // integration: 成就資料只需更新畫面，原本的開發期資料輸出先註解保留脈絡。
+          // console.log('achievements:', data);
 
           this.achievements = data;
           this.loading = false;

@@ -144,7 +144,8 @@ export class KeyList implements OnInit {
     // 排程或手動呼叫變更偵測 API，理論上不會有「呼叫了但沒反應」的落差。
     effect((onCleanup) => {
       const el = this.slotGridRef()?.nativeElement;
-      console.log('[KeyList] effect 執行，slotGridRef 目前元素：', el ?? null); // ⚠️ 除錯用，確認畫面正常後可以刪掉
+      // integration: 版面計算已由既有測試驗證，暫時性 console 輸出不參與功能，先註解避免正式部署洩漏除錯資料。
+      // console.log('[KeyList] effect 執行，slotGridRef 目前元素：', el ?? null);
       if (!el) return;
 
       // 元素剛出現的當下就先算一次，不用等 ResizeObserver 自己的非同步初次回呼。
@@ -172,11 +173,11 @@ export class KeyList implements OnInit {
     const rows = Math.max(1, Math.floor((height + this.gridGap) / (actualSlotSize + this.gridGap)));
 
     this.visibleSlotCount.set(columns * rows);
-    console.log('[KeyList] 格數計算結果', { width, height, columns, rows, total: columns * rows }); // ⚠️ 除錯用，確認畫面正常後可以刪掉
+    // console.log('[KeyList] 格數計算結果', { width, height, columns, rows, total: columns * rows });
   }
 
   ngOnInit(): void {
-    console.log('[KeyList] ngOnInit 執行，開始呼叫 loadKeys()');
+    // console.log('[KeyList] ngOnInit 執行，開始呼叫 loadKeys()');
     this.loadKeys();
     this.loadCategoryEraNames();
   }
@@ -187,7 +188,7 @@ export class KeyList implements OnInit {
 
     this.keyService.getKeys().subscribe({
       next: (keys) => {
-        console.log('[KeyList] getKeys() 的 next 執行了，收到', keys.length, '把鑰匙'); // ⚠️ 除錯用，確認畫面正常後可以刪掉
+        // console.log('[KeyList] getKeys() 的 next 執行了，收到', keys.length, '把鑰匙');
         this.keys.set(keys);
         this.loading.set(false);
       },

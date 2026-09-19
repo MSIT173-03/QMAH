@@ -12,7 +12,8 @@ namespace QMAH.Api.Controllers.V1;
 [Route("api/v1/social")]
 public sealed class SocialController(
     QmahDbContext db,
-    CommunityRewardService communityRewardService) : ApiControllerBase
+    CommunityRewardService communityRewardService,
+    INotificationService notificationService) : ApiControllerBase
 {
     [HttpGet("posts")]
     [AllowAnonymous]
@@ -68,6 +69,11 @@ public sealed class SocialController(
                 post.Content.Length > 180 ? post.Content.Substring(0, 180) : post.Content,
                 post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
                 post.MediaAssets.Count(media => media.Status == "ACTIVE"),
+                post.MediaAssets
+                    .Where(media => media.Status == "ACTIVE")
+                    .OrderBy(media => media.CreatedAt)
+                    .Select(media => "/api/v1/social/media/" + media.Id + "/content")
+                    .FirstOrDefault(),
                 post.LocationName,
                 post.Latitude,
                 post.Longitude,
@@ -77,15 +83,44 @@ public sealed class SocialController(
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
     }
 
+    // 標準看板清單 + 資料庫既有的看板代碼合併，讓前端的篩選選單不會漏掉舊資料用過的看板
+    // （例如 GAME），做法對齊 QMAH.Web 的 SocialPostAdminController.LoadBoardCodes。
+    private static readonly string[] StandardBoardCodes =
+        ["GENERAL", "CATALOG", "DISCOVERY", "REVIEW", "QUESTION", "GUIDE"];
+
+    [HttpGet("boards")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<string>>> GetBoardCodes(CancellationToken cancellationToken = default)
+    {
+        var existingCodes = await db.SocialPosts
+            .AsNoTracking()
+            .Where(post => post.Status == "PUBLISHED")
+            .Select(post => post.BoardCode)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var boardCodes = StandardBoardCodes
+            .Concat(existingCodes)
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Select(code => code.Trim().ToUpperInvariant())
+            .Distinct()
+            .OrderBy(code => code)
+            .ToList();
+
+        return Ok(boardCodes);
+    }
+
     [HttpGet("posts/{id:guid}")]
     [AllowAnonymous]
     public async Task<ActionResult<SocialPostDetailsDto>> GetPost(
         Guid id,
         CancellationToken cancellationToken = default)
     {
+        // Admin 可以看到已隱藏/已刪除的貼文，方便從檢舉列表點進來查看被檢舉當下的內容；一般使用者只能看已發布的貼文。
+        var isAdmin = User.IsInRole("Admin");
         var post = await db.SocialPosts
             .AsNoTracking()
-            .Where(item => item.Id == id && item.Status == "PUBLISHED")
+            .Where(item => item.Id == id && (item.Status == "PUBLISHED" || isAdmin))
             .Select(item => new
             {
                 item.Id,
@@ -178,19 +213,40 @@ public sealed class SocialController(
     [HttpGet("events")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiPage<EventListItemDto>>> GetEvents(
+        string? q,
+        DateTime? startAfter,
+        DateTime? startBefore,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var query = db.Events
+        var eventsQuery = db.Events
             .AsNoTracking()
-            .Where(item => item.ReviewStatus == "APPROVED" && item.PublishStatus == "PUBLISHED")
+            .Where(item => item.ReviewStatus == "APPROVED" && item.PublishStatus == "PUBLISHED");
+
+        q = q?.Trim();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            eventsQuery = eventsQuery.Where(item =>
+                item.Title.Contains(q)
+                || item.Content.Contains(q));
+        }
+        if (startAfter.HasValue)
+            eventsQuery = eventsQuery.Where(item => item.StartAt >= startAfter.Value);
+        if (startBefore.HasValue)
+            eventsQuery = eventsQuery.Where(item => item.StartAt <= startBefore.Value);
+
+        var query = eventsQuery
             .OrderBy(item => item.StartAt)
             .Select(item => new EventListItemDto(
                 item.Id,
                 item.SocialPost == null ? null : item.SocialPost.Id,
                 item.EventType,
                 item.OrganizerUserId,
+                db.UserProfiles
+                    .Where(profile => profile.UserId == item.OrganizerUserId)
+                    .Select(profile => profile.Nickname)
+                    .FirstOrDefault(),
                 item.Title,
                 item.Content,
                 item.Location,
@@ -201,7 +257,14 @@ public sealed class SocialController(
                 item.RegistrationEndAt,
                 item.Capacity,
                 item.EventRegistrations.Count(registration =>
-                    registration.Status == "REGISTERED" || registration.Status == "ATTENDED")));
+                    registration.Status == "REGISTERED" || registration.Status == "ATTENDED"),
+                item.SocialPost == null
+                    ? null
+                    : db.MediaAssets
+                        .Where(media => media.PostId == item.SocialPost.Id && media.Status == "ACTIVE")
+                        .OrderBy(media => media.CreatedAt)
+                        .Select(media => "/api/v1/social/media/" + media.Id + "/content")
+                        .FirstOrDefault()));
 
         return Ok(await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken));
     }
@@ -224,10 +287,11 @@ public sealed class SocialController(
             && eventData.OrganizerUserId == currentUserId;
         var isPublished = eventData.ReviewStatus == "APPROVED"
             && eventData.PublishStatus == "PUBLISHED";
-        if (!isPublished && !isOrganizer)
+        // Admin 可以看到待審核／未發布的活動，方便從活動管理列表點進來查看完整內容再決定審核結果。
+        if (!isPublished && !isOrganizer && !User.IsInRole("Admin"))
             return MissingResource("找不到活動", "這場活動不存在或目前不可參加。");
 
-        return Ok(ToEventDetails(eventData));
+        return Ok(await ToEventDetailsAsync(eventData, cancellationToken));
     }
 
     [Authorize]
@@ -262,6 +326,23 @@ public sealed class SocialController(
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
+        var mediaIds = (request.MediaIds ?? []).Distinct().ToArray();
+        var mediaAssets = mediaIds.Length == 0
+            ? []
+            : await db.MediaAssets
+                .Where(asset => mediaIds.Contains(asset.Id)
+                    && asset.OwnerUserId == userId
+                    && asset.Status == "ACTIVE"
+                    && asset.PostId == null)
+                .ToListAsync(cancellationToken);
+        if (mediaAssets.Count != mediaIds.Length)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "圖片附件無效",
+                detail: "只能附加目前帳號擁有、尚未綁定貼文且仍可使用的圖片。請重新上傳後再試。");
+        }
+
         var now = DateTime.UtcNow;
         var eventData = new Event
         {
@@ -289,12 +370,17 @@ public sealed class SocialController(
             request.PostTitle,
             request.PostContent);
         eventData.SocialPost = socialPost;
+        foreach (var mediaAsset in mediaAssets)
+        {
+            mediaAsset.PostId = socialPost.Id;
+            mediaAsset.UpdatedAt = now;
+        }
 
         db.Events.Add(eventData);
         db.SocialPosts.Add(socialPost);
         await db.SaveChangesAsync(cancellationToken);
 
-        var result = ToEventDetails(eventData);
+        var result = await ToEventDetailsAsync(eventData, cancellationToken);
         return CreatedAtAction(nameof(GetEvent), new { id = eventData.Id }, result);
     }
 
@@ -322,6 +408,7 @@ public sealed class SocialController(
 
         var registration = eventData.EventRegistrations
             .SingleOrDefault(item => item.UserId == userId);
+        var isNewRegistration = false;
         if (registration is null)
         {
             var currentCount = eventData.EventRegistrations.Count(item =>
@@ -338,6 +425,7 @@ public sealed class SocialController(
                 RegisteredAt = DateTime.UtcNow
             };
             db.EventRegistrations.Add(registration);
+            isNewRegistration = true;
         }
         else if (registration.Status == "CANCELLED")
         {
@@ -347,6 +435,7 @@ public sealed class SocialController(
                 return InvalidWorkflow("活動已額滿", "這場活動目前沒有剩餘名額。");
             registration.Status = "REGISTERED";
             registration.RegisteredAt = DateTime.UtcNow;
+            isNewRegistration = true;
         }
 
         // 報名先完成，再由共用加碼服務依活動類型、有效期間與預算結算一次；
@@ -354,8 +443,19 @@ public sealed class SocialController(
         await communityRewardService.GrantEventRegistrationAsync(
             registration,
             cancellationToken);
+
+        // 只在真的變成「已報名」時通知一次，重複打同一支 API 不會一直發通知。
+        if (isNewRegistration)
+        {
+            notificationService.QueueNotification(
+                userId,
+                "活動報名成功",
+                $"你已成功報名活動「{eventData.Title}」。",
+                $"/social/events/{eventData.Id}");
+        }
+
         await db.SaveChangesAsync(cancellationToken);
-        return Ok(ToEventDetails(eventData));
+        return Ok(await ToEventDetailsAsync(eventData, cancellationToken));
     }
 
     [Authorize]
@@ -384,7 +484,7 @@ public sealed class SocialController(
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        return Ok(ToEventDetails(eventData));
+        return Ok(await ToEventDetailsAsync(eventData, cancellationToken));
     }
 
     [HttpGet("announcements")]
@@ -515,6 +615,60 @@ public sealed class SocialController(
             post.UpdatedAt));
     }
 
+    // 只有作者本人能改自己的貼文；活動的社群入口貼文改由活動編輯／審核流程管理，這裡不開放直接改。
+    [Authorize]
+    [HttpPut("posts/{id:guid}")]
+    public async Task<IActionResult> UpdatePost(
+        Guid id,
+        UpdateSocialPostRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        var post = await db.SocialPosts.SingleOrDefaultAsync(
+            item => item.Id == id && item.Status == "PUBLISHED",
+            cancellationToken);
+        if (post is null)
+            return MissingResource("找不到貼文", "這篇貼文不存在或目前不可編輯。");
+        if (post.UserId != userId)
+            return Forbid();
+        if (post.PostType == "EVENT")
+            return InvalidWorkflow("活動貼文不可直接編輯", "這篇貼文是活動的社群入口，請到活動編輯調整內容。");
+
+        post.Title = request.Title.Trim();
+        post.Content = request.Content.Trim();
+        post.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok(new { message = "貼文已更新", post.Id, post.Title, post.Content, post.UpdatedAt });
+    }
+
+    // 軟刪除：只把 Status 改成 DELETED，不從資料庫移除，保留稽核與留言關聯。
+    [Authorize]
+    [HttpDelete("posts/{id:guid}")]
+    public async Task<IActionResult> DeletePost(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var post = await db.SocialPosts.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (post is null)
+            return NoContent();
+        if (post.UserId != userId)
+            return Forbid();
+        if (post.PostType == "EVENT")
+            return InvalidWorkflow("活動貼文不可直接刪除", "這篇貼文是活動的社群入口，請到活動管理取消活動。");
+        if (post.Status == "DELETED")
+            return NoContent();
+
+        post.Status = "DELETED";
+        post.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
     [Authorize]
     [HttpPost("posts/{postId:guid}/comments")]
     public async Task<ActionResult<SocialCommentDto>> CreateComment(
@@ -527,12 +681,12 @@ public sealed class SocialController(
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        if (!await db.SocialPosts.AnyAsync(
-                post => post.Id == postId && post.Status == "PUBLISHED",
-                cancellationToken))
-        {
+        var post = await db.SocialPosts
+            .Where(item => item.Id == postId && item.Status == "PUBLISHED")
+            .Select(item => new { item.UserId, item.Title })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (post is null)
             return MissingResource("找不到貼文", "這篇貼文不存在或目前不可留言。");
-        }
 
         if (request.ParentCommentId.HasValue
             && !await db.SocialComments.AnyAsync(
@@ -557,6 +711,17 @@ public sealed class SocialController(
             UpdatedAt = now
         };
         db.SocialComments.Add(comment);
+
+        // 自己回覆自己的貼文不用通知自己
+        if (post.UserId != userId)
+        {
+            notificationService.QueueNotification(
+                post.UserId,
+                "貼文有新留言",
+                $"你的貼文「{post.Title}」有新的留言：{Truncate(comment.Content, 60)}",
+                $"/social/posts/{postId}");
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         return CreatedAtAction(nameof(GetPost), new { id = postId }, new SocialCommentDto(
@@ -568,6 +733,55 @@ public sealed class SocialController(
             comment.Content,
             comment.CreatedAt,
             comment.UpdatedAt));
+    }
+
+    // 只有留言作者本人能改自己的留言
+    [Authorize]
+    [HttpPut("comments/{id:guid}")]
+    public async Task<IActionResult> UpdateComment(
+        Guid id,
+        UpdateSocialCommentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        var comment = await db.SocialComments.SingleOrDefaultAsync(
+            item => item.Id == id && item.Status == "PUBLISHED",
+            cancellationToken);
+        if (comment is null)
+            return MissingResource("找不到留言", "這則留言不存在或目前不可編輯。");
+        if (comment.UserId != userId)
+            return Forbid();
+
+        comment.Content = request.Content.Trim();
+        comment.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok(new { message = "留言已更新", comment.Id, comment.Content, comment.UpdatedAt });
+    }
+
+    // 軟刪除：只把 Status 改成 DELETED，保留留言串與稽核紀錄。
+    [Authorize]
+    [HttpDelete("comments/{id:guid}")]
+    public async Task<IActionResult> DeleteComment(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var comment = await db.SocialComments.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (comment is null)
+            return NoContent();
+        if (comment.UserId != userId)
+            return Forbid();
+        if (comment.Status == "DELETED")
+            return NoContent();
+
+        comment.Status = "DELETED";
+        comment.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        return NoContent();
     }
 
     [Authorize]
@@ -585,17 +799,19 @@ public sealed class SocialController(
         if (targetType is not ("POST" or "COMMENT"))
             return Problem(statusCode: StatusCodes.Status400BadRequest, title: "檢舉類型無效", detail: "TargetType 只能是 POST 或 COMMENT。");
 
-        var targetExists = targetType switch
+        var targetOwnerUserId = targetType switch
         {
-            "POST" => await db.SocialPosts.AnyAsync(
-                post => post.Id == request.TargetId && post.Status == "PUBLISHED",
-                cancellationToken),
-            "COMMENT" => await db.SocialComments.AnyAsync(
-                comment => comment.Id == request.TargetId && comment.Status == "PUBLISHED",
-                cancellationToken),
-            _ => false
+            "POST" => await db.SocialPosts
+                .Where(post => post.Id == request.TargetId && post.Status == "PUBLISHED")
+                .Select(post => (Guid?)post.UserId)
+                .SingleOrDefaultAsync(cancellationToken),
+            "COMMENT" => await db.SocialComments
+                .Where(comment => comment.Id == request.TargetId && comment.Status == "PUBLISHED")
+                .Select(comment => (Guid?)comment.UserId)
+                .SingleOrDefaultAsync(cancellationToken),
+            _ => null
         };
-        if (!targetExists)
+        if (targetOwnerUserId is null)
             return MissingResource("找不到檢舉對象", "檢舉對象不存在或目前不可見。");
 
         if (await db.ContentReports.AnyAsync(
@@ -619,6 +835,17 @@ public sealed class SocialController(
             Status = "PENDING",
             CreatedAt = DateTime.UtcNow
         });
+
+        // 讓被檢舉內容的作者知道有人檢舉了自己的東西，審核結果之後另有通知。
+        if (targetOwnerUserId.Value != userId)
+        {
+            notificationService.QueueNotification(
+                targetOwnerUserId.Value,
+                "你的內容被檢舉了",
+                targetType == "POST" ? "你的一篇貼文被檢舉，管理員審核後會有結果通知。" : "你的一則留言被檢舉，管理員審核後會有結果通知。",
+                null);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         return Accepted();
     }
@@ -633,7 +860,10 @@ public sealed class SocialController(
 
     private static string BuildMediaUrl(Guid id) => $"/api/v1/social/media/{id:D}/content";
 
-    private SocialEventDetailsDto ToEventDetails(Event eventData)
+    private static string Truncate(string value, int maxLength) =>
+        value.Length > maxLength ? value[..maxLength] + "…" : value;
+
+    private async Task<SocialEventDetailsDto> ToEventDetailsAsync(Event eventData, CancellationToken cancellationToken)
     {
         var hasCurrentUser = TryGetCurrentUserId(out var userId);
         var isOrganizer = hasCurrentUser
@@ -642,12 +872,34 @@ public sealed class SocialController(
             && eventData.EventRegistrations.Any(registration =>
                 registration.UserId == userId
                 && (registration.Status == "REGISTERED" || registration.Status == "ATTENDED"));
+        var organizerDisplayName = eventData.OrganizerUserId.HasValue
+            ? await db.UserProfiles
+                .Where(profile => profile.UserId == eventData.OrganizerUserId.Value)
+                .Select(profile => profile.Nickname)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+
+        var media = eventData.SocialPost is null
+            ? []
+            : await db.MediaAssets
+                .AsNoTracking()
+                .Where(asset => asset.PostId == eventData.SocialPost.Id && asset.Status == "ACTIVE")
+                .OrderBy(asset => asset.CreatedAt)
+                .Select(asset => new SocialMediaDto(
+                    asset.Id,
+                    BuildMediaUrl(asset.Id),
+                    asset.AltText,
+                    asset.ContentType,
+                    asset.FileSize,
+                    asset.CreatedAt))
+                .ToListAsync(cancellationToken);
 
         return new SocialEventDetailsDto(
             eventData.Id,
             eventData.SocialPost?.Id,
             eventData.EventType,
             eventData.OrganizerUserId,
+            organizerDisplayName,
             eventData.Title,
             eventData.Content,
             eventData.Location,
@@ -660,6 +912,7 @@ public sealed class SocialController(
             eventData.EventRegistrations.Count(registration =>
                 registration.Status == "REGISTERED" || registration.Status == "ATTENDED"),
             isRegistered,
+            media,
             isOrganizer ? eventData.ReviewStatus : null,
             isOrganizer ? eventData.PublishStatus : null);
     }

@@ -1,0 +1,15 @@
+<div class="toast toast-top toast-end z-50">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div
+      role="alert"
+      class="alert cursor-pointer shadow-lg"
+      [class.alert-info]="toast.type === 'info'"
+      [class.alert-success]="toast.type === 'success'"
+      [class.alert-warning]="toast.type === 'warning'"
+      [class.alert-error]="toast.type === 'error'"
+      (click)="toastService.dismiss(toast.id)"
+    >
+      <span>{{ toast.text }}</span>
+    </div>
+  }
+</div>

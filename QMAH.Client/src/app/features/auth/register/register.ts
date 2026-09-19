@@ -293,9 +293,8 @@ export class Register {
         // 註冊成功後直接自動登入
         next: () => {
 
-          console.log(
-            'register success'
-          );
+          // integration: 註冊流程不依賴此開發期除錯輸出，先註解避免正式環境留下流程雜訊。
+          // console.log('register success');
 
           this.autoLogin(
             request.email,
@@ -384,9 +383,7 @@ export class Register {
 
         next: () => {
 
-          console.log(
-            'auto login success'
-          );
+          // console.log('auto login success');
 
           this.submitting = false;
 

@@ -1,0 +1,135 @@
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">社群活動</h1>
+  <button class="btn btn-primary" onclick="create_event_modal.showModal()">+ 建立活動</button>
+</div>
+
+<div class="flex flex-wrap gap-2 mb-6 items-end">
+  <label class="form-control">
+    <span class="label-text text-xs">開始時間（起）</span>
+    <input type="date" class="input input-bordered input-sm" [(ngModel)]="filterStartAfter" (change)="loadEvents()" />
+  </label>
+  <label class="form-control">
+    <span class="label-text text-xs">開始時間（迄）</span>
+    <input type="date" class="input input-bordered input-sm" [(ngModel)]="filterStartBefore" (change)="loadEvents()" />
+  </label>
+  <label class="form-control flex-1 min-w-40">
+    <span class="label-text text-xs">關鍵字（標題／內容）</span>
+    <input
+      type="text"
+      class="input input-bordered input-sm w-full"
+      [(ngModel)]="filterKeyword"
+      (keyup.enter)="loadEvents()"
+      placeholder="搜尋..."
+    />
+  </label>
+  <button class="btn btn-sm btn-primary" (click)="loadEvents()">搜尋</button>
+  <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
+</div>
+
+@if (loadError) {
+  <div class="alert alert-error mb-4">{{ loadError }}</div>
+}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  @for (event of events; track event.id) {
+    <div class="card bg-base-100 shadow-xl border border-base-300">
+      @if (event.coverImageUrl) {
+        <figure class="max-h-56 overflow-hidden">
+          <img [src]="event.coverImageUrl" [alt]="event.title" class="w-full object-cover" />
+        </figure>
+      }
+      <div class="card-body">
+        <span
+          class="badge w-fit"
+          [class.badge-secondary]="event.eventType === 'PLAYER'"
+          [class.badge-warning]="event.eventType === 'OFFICIAL'"
+        >
+          {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
+        </span>
+        <h2 class="card-title">
+          <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
+        </h2>
+        <p class="text-xs text-base-content/60">✍️ {{ event.organizerDisplayName || '匿名會員' }}</p>
+        <p class="text-sm text-gray-500">
+          🕒 {{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}
+        </p>
+        @if (event.location) {
+          <p class="text-sm">📍 {{ event.location }}</p>
+        }
+        <p class="text-sm">
+          報名人數：{{ event.registrationCount }}{{ event.capacity ? ' / ' + event.capacity : '' }}
+        </p>
+        <div class="card-actions justify-end mt-2">
+          <a class="btn btn-sm btn-outline btn-primary" [routerLink]="['/social/events', event.id]">查看詳情</a>
+        </div>
+      </div>
+    </div>
+  } @empty {
+    <div class="col-span-2 text-center py-10 text-gray-400">目前沒有已公開的活動</div>
+  }
+</div>
+
+<dialog id="create_event_modal" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">建立新活動</h3>
+    @if (createError) {
+      <div class="alert alert-warning mb-3">{{ createError }}</div>
+    }
+    <div class="form-control gap-3">
+      <select class="select select-bordered w-full" [(ngModel)]="newEvent.eventType">
+        <option value="PLAYER">玩家發起</option>
+        <option value="OFFICIAL">官方活動</option>
+      </select>
+      <input type="text" placeholder="活動標題" class="input input-bordered w-full" [(ngModel)]="newEvent.title" />
+      <textarea class="textarea textarea-bordered h-24" placeholder="活動說明..." [(ngModel)]="newEvent.content"></textarea>
+      <input type="text" placeholder="地點（選填）" class="input input-bordered w-full" [(ngModel)]="newEvent.location" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <label class="form-control w-full">
+          <span class="label-text">開始時間</span>
+          <input type="datetime-local" class="input input-bordered w-full" [(ngModel)]="newEvent.startAt" />
+        </label>
+        <label class="form-control w-full">
+          <span class="label-text">結束時間</span>
+          <input type="datetime-local" class="input input-bordered w-full" [(ngModel)]="newEvent.endAt" />
+        </label>
+      </div>
+      <input type="number" placeholder="名額上限（選填）" class="input input-bordered w-full" [(ngModel)]="newEvent.capacity" />
+
+      <input
+        type="file"
+        class="file-input file-input-bordered w-full"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        multiple
+        [disabled]="uploadPending || (newEvent.mediaIds?.length ?? 0) >= 8"
+        (change)="onFilesSelected($event)"
+      />
+      @if (uploadPending) {
+        <span class="text-xs text-base-content/60">圖片上傳中...</span>
+      }
+      @if (pendingMedia.length > 0) {
+        <div class="flex flex-wrap gap-2">
+          @for (media of pendingMedia; track media.id) {
+            <div class="relative">
+              <img [src]="media.url" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
+              <button
+                type="button"
+                class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
+                (click)="removePendingMedia(media)"
+              >
+                ✕
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+    <div class="modal-action">
+      <form method="dialog">
+        <button type="button" class="btn btn-ghost" onclick="create_event_modal.close()">取消</button>
+        <button type="button" class="btn btn-primary" [disabled]="uploadPending" (click)="submitEvent()">送出建立</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<app-image-crop-modal (cropped)="onImageCropped($event)" (cancelled)="onCropCancelled()" />

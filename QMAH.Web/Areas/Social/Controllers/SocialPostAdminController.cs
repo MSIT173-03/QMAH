@@ -158,7 +158,13 @@ public sealed class SocialPostAdminController : Controller
                 Longitude = post.Longitude,
                 Status = post.Status,
                 CommentCount = post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
+                Content = post.Content,
+                MediaUrls = post.MediaAssets
+                    .Where(media => media.Status == "ACTIVE")
+                    .OrderBy(media => media.CreatedAt)
+                    .Select(media => "/media/" + media.StoredPath)
+                    .ToList()
             })
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)

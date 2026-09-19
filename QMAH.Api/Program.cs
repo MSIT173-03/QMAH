@@ -23,12 +23,17 @@ using QMAH.Infrastructure.Services.Economy;
 using QMAH.Infrastructure.Services.Game;
 
 using Scalar.AspNetCore;
+using QMAH.Infrastructure.Services.Social;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
 // Local 檔最後加入，因此只要檔案存在就具有最高優先權，方便每位組員覆寫連線與前台來源；部署環境不應放置此檔。
+// 開發環境固定不要求 Secure：QMAH.Api 一律以 https launch profile 執行，但 QMAH.Client 的
+// Angular dev server（ng serve）預設是 http，透過 proxy.conf.json 轉送時瀏覽器端看到的其實是
+// http，用 SameAsRequest 會依 Kestrel 收到的 request（永遠是 https）判斷，導致 cookie 被標成
+// Secure，卻沒有穩定的辦法送回純 http 的 4200——會員登入狀態因此不穩定地遺失。
 var cookieSecurePolicy = builder.Environment.IsDevelopment()
-    ? CookieSecurePolicy.SameAsRequest
+    ? CookieSecurePolicy.None
     : CookieSecurePolicy.Always;
 
 builder.Configuration.AddJsonFile(
@@ -199,6 +204,8 @@ builder.Services.AddScoped<DailyActivityService>();
 // 不依賴前端持續輪詢，部署到不同主機時也只需沿用既有 DI 設定。
 builder.Services.AddScoped<GameRoomLifecycleService>();
 builder.Services.AddHostedService<GameRoomLifecycleWorker>();
+// Social 站內通知：活動審核、檢舉處理等共用同一套排隊寫入方式，由各自的 SaveChangesAsync 一併提交。
+builder.Services.AddScoped<INotificationService, SocialNotificationService>();
 
 // 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
 builder.Services.AddRateLimiter(options =>
@@ -282,6 +289,20 @@ else
         "QMAH 資料庫目前目標：{SelectedTarget}",
         qmahDatabaseResolution.Target);
 }
+
+// 使用者切換頁面／重新整理時，瀏覽器會直接中止尚未完成的舊請求（例如貼文列表還沒回應就跳走）。
+// EF Core 收到這個中止會丟出 OperationCanceledException，這是正常現象、不是例外狀況，
+// 客戶端本來就不會再理會這個回應了，所以放在最外層直接吞掉，避免被當成未處理例外噴到主控台或開發例外頁。
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+    {
+    }
+});
 
 if (!app.Environment.IsDevelopment())
 {

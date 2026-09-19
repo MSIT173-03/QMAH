@@ -16,6 +16,8 @@
 # .NET 編譯與測試產物
 **/bin/
 **/obj/
+# JavaScript 依賴由 package-lock.json + npm ci 重建，不進版控。
+**/node_modules/
 /artifacts/
 TestResults/
 coverage/
@@ -68,3 +70,6 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+CLAUDE.md
+.claude/launch.json
+QMAH.Client/start-dev.bat

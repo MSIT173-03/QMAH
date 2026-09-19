@@ -142,6 +142,7 @@ public sealed record SocialPostListItemDto(
     string ContentPreview,
     int CommentCount,
     int MediaCount,
+    string? CoverImageUrl,
     string? LocationName,
     decimal? Latitude,
     decimal? Longitude,
@@ -190,6 +191,7 @@ public sealed record EventListItemDto(
     Guid? SocialPostId,
     string EventType,
     Guid? OrganizerUserId,
+    string? OrganizerDisplayName,
     string Title,
     string Content,
     string? Location,
@@ -199,13 +201,15 @@ public sealed record EventListItemDto(
     DateTime EndAt,
     DateTime? RegistrationEndAt,
     int? Capacity,
-    int RegistrationCount);
+    int RegistrationCount,
+    string? CoverImageUrl = null);
 
 public sealed record SocialEventDetailsDto(
     Guid Id,
     Guid? SocialPostId,
     string EventType,
     Guid? OrganizerUserId,
+    string? OrganizerDisplayName,
     string Title,
     string Content,
     string? Location,
@@ -217,6 +221,7 @@ public sealed record SocialEventDetailsDto(
     int? Capacity,
     int RegistrationCount,
     bool IsRegistered,
+    IReadOnlyList<SocialMediaDto> Media,
     string? ReviewStatus = null,
     string? PublishStatus = null);
 
@@ -234,6 +239,61 @@ public sealed record AnnouncementDto(
     string PublisherType,
     Guid? EventId,
     DateTime CreatedAt);
+
+public sealed record AdminEventListItemDto(
+    Guid Id,
+    string EventType,
+    Guid? OrganizerUserId,
+    string? OrganizerDisplayName,
+    string Title,
+    DateTime StartAt,
+    DateTime EndAt,
+    string ReviewStatus,
+    string PublishStatus,
+    string? ReviewNote,
+    DateTime CreatedAt);
+
+public sealed record AdminPostListItemDto(
+    Guid Id,
+    string BoardCode,
+    Guid UserId,
+    string? DisplayName,
+    string PostType,
+    string PublisherType,
+    string Title,
+    string ContentPreview,
+    string Status,
+    int CommentCount,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
+
+public sealed record AdminCommentListItemDto(
+    Guid Id,
+    Guid PostId,
+    string PostTitle,
+    Guid? ParentCommentId,
+    Guid UserId,
+    string? DisplayName,
+    string Content,
+    string Status,
+    DateTime CreatedAt);
+
+public sealed record AdminContentReportDto(
+    Guid Id,
+    string TargetType,
+    Guid TargetId,
+    string Reason,
+    string? Detail,
+    string Status,
+    string? Resolution,
+    Guid ReporterUserId,
+    string? ReporterDisplayName,
+    DateTime CreatedAt,
+    DateTime? ReviewedAt,
+    string? TargetTitle,
+    string? TargetContent,
+    string? TargetStatus,
+    Guid? TargetPostId);
 
 public sealed class CreateSocialPostRequest
 {
@@ -303,6 +363,9 @@ public sealed class CreateSocialEventRequest
 
     [StringLength(4000)]
     public string? PostContent { get; set; }
+
+    [MaxLength(8)]
+    public List<Guid> MediaIds { get; set; } = [];
 }
 
 public sealed class CreateSocialCommentRequest
@@ -311,6 +374,21 @@ public sealed class CreateSocialCommentRequest
     public string Content { get; set; } = "";
 
     public Guid? ParentCommentId { get; set; }
+}
+
+public sealed class UpdateSocialPostRequest
+{
+    [StringLength(80, MinimumLength = 1)]
+    public string Title { get; set; } = "";
+
+    [Required, StringLength(4000, MinimumLength = 1)]
+    public string Content { get; set; } = "";
+}
+
+public sealed class UpdateSocialCommentRequest
+{
+    [Required, StringLength(2000, MinimumLength = 1)]
+    public string Content { get; set; } = "";
 }
 
 public sealed class CreateContentReportRequest

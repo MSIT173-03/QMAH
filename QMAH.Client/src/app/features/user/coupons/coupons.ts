@@ -392,10 +392,8 @@ export class Coupons implements OnInit {
           data: MemberCoupon[]
         ) => {
 
-          console.log(
-            'coupons:',
-            data
-          );
+          // integration: 優惠券清單不需在 console 留存，避免正式環境輸出會員資產資料。
+          // console.log('coupons:', data);
 
           this.coupons = data;
 

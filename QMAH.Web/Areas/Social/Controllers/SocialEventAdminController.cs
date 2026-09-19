@@ -83,7 +83,14 @@ public sealed class SocialEventAdminController : Controller
                 Status = item.ReviewStatus,
                 PublishStatus = item.PublishStatus,
                 ReviewNote = item.ReviewNote,
-                CreatedAt = item.CreatedAt
+                CreatedAt = item.CreatedAt,
+                MediaUrls = item.SocialPost == null
+                    ? new List<string>()
+                    : item.SocialPost.MediaAssets
+                        .Where(media => media.Status == "ACTIVE")
+                        .OrderBy(media => media.CreatedAt)
+                        .Select(media => "/media/" + media.StoredPath)
+                        .ToList()
             })
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

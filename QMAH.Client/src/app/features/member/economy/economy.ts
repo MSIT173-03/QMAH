@@ -180,10 +180,8 @@ export class Economy implements OnInit {
 
         next: (data) => {
 
-          console.log(
-            'economy:',
-            data
-          );
+          // integration: 會員資產已由畫面狀態呈現，先註解原本的資料除錯輸出，避免洩漏帳戶內容。
+          // console.log('economy:', data);
 
           this.economy = data;
 

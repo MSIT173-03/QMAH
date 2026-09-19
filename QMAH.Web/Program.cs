@@ -125,7 +125,7 @@ builder.Services.AddHttpClient<NpmOpenDataClient>(client =>
 });
 builder.Services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
 builder.Services.AddSocialAuthorizationPolicies();
-builder.Services.AddSingleton<AdminNavigationService>();
+builder.Services.AddScoped<AdminNavigationService>();
 builder.Services.AddScoped<AdminAuditLogFilter>();
 builder.Services.AddScoped<CatalogImportService>();
 builder.Services.AddScoped<NpmCatalogSourceService>();

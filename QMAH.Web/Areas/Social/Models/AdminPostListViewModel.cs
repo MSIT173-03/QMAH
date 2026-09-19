@@ -15,5 +15,7 @@
         public string Status { get; set; } = "NORMAL"; // NORMAL, HIDDEN, DELETED
         public int CommentCount { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string Content { get; set; } = string.Empty;
+        public IReadOnlyList<string> MediaUrls { get; set; } = [];
     }
 }

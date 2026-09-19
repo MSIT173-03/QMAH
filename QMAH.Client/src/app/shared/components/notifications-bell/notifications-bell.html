@@ -1,0 +1,54 @@
+@if (loggedIn) {
+  <div class="dropdown dropdown-end">
+    <div tabindex="0" role="button" class="btn btn-ghost btn-circle" (click)="load()">
+      <div class="indicator">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+        @if (unreadCount > 0) {
+          <span class="badge badge-xs badge-primary indicator-item">{{ unreadCount }}</span>
+        }
+      </div>
+    </div>
+    <div
+      tabindex="0"
+      class="dropdown-content bg-base-100 rounded-box z-10 mt-3 w-80 max-h-96 overflow-y-auto p-2 shadow-lg border border-base-300"
+    >
+      <div class="px-2 py-1 text-sm font-bold">通知</div>
+      <div class="divide-y divide-base-200">
+        @for (notification of notifications; track notification.id) {
+          @if (notification.targetUrl) {
+            <a
+              [routerLink]="notification.targetUrl"
+              class="flex flex-col items-start gap-0.5 rounded-lg p-2 text-left hover:bg-base-200"
+              [class.opacity-60]="notification.isRead"
+              (click)="markRead(notification)"
+            >
+              <span class="text-sm font-semibold">{{ notification.title }}</span>
+              <span class="text-xs text-base-content/70 line-clamp-2">{{ notification.content }}</span>
+              <span class="text-[10px] text-base-content/50">{{ notification.createdAt }}</span>
+            </a>
+          } @else {
+            <button
+              type="button"
+              class="flex w-full flex-col items-start gap-0.5 rounded-lg p-2 text-left hover:bg-base-200"
+              [class.opacity-60]="notification.isRead"
+              (click)="markRead(notification)"
+            >
+              <span class="text-sm font-semibold">{{ notification.title }}</span>
+              <span class="text-xs text-base-content/70 line-clamp-2">{{ notification.content }}</span>
+              <span class="text-[10px] text-base-content/50">{{ notification.createdAt }}</span>
+            </button>
+          }
+        } @empty {
+          <div class="px-2 py-6 text-center text-sm text-base-content/50">目前沒有通知</div>
+        }
+      </div>
+    </div>
+  </div>
+}

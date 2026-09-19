@@ -7,8 +7,9 @@
         "Action": "Start"
       },
       {
-        "Path": "QMAH.Web\\QMAH.Web.csproj",
-        "Action": "Start"
+        "Path": "QMAH.Client\\QMAH.Client.esproj",
+        "Action": "Start",
+        "DebugTarget": "ng serve"
       }
     ]
   },

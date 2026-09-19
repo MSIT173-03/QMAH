@@ -250,10 +250,8 @@ export class Notifications implements OnInit {
           data: NotificationPage
         ) => {
 
-          console.log(
-            'notifications:',
-            data
-          );
+          // integration: 通知內容可能含會員資料，不再於正式流程輸出整包回應。
+          // console.log('notifications:', data);
 
           this.notifications =
             data.items ?? [];

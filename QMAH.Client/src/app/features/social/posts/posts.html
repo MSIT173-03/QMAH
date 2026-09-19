@@ -1,0 +1,193 @@
+<div class="mx-auto w-full lg:w-4/5 xl:w-3/4">
+  @if (announcements.length > 0) {
+    <div class="relative mb-6 rounded-2xl overflow-hidden shadow-xl border border-base-300">
+      @for (announcement of announcements; track announcement.id; let i = $index) {
+        @if (i === currentAnnouncementIndex) {
+          <a
+            [routerLink]="['/social/posts', announcement.id]"
+            class="relative flex flex-col justify-end h-56 md:h-72 bg-base-300"
+            [style.background-image]="announcement.coverImageUrl ? 'url(' + announcement.coverImageUrl + ')' : null"
+            style="background-size: cover; background-position: center;"
+          >
+            <div class="w-full bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6 text-white">
+              <span class="badge badge-warning badge-sm mb-2">📢 最新公告</span>
+              <h2 class="text-lg md:text-2xl font-bold drop-shadow">{{ announcement.title }}</h2>
+              <p class="text-sm md:text-base opacity-90 line-clamp-2">{{ announcement.contentPreview }}</p>
+            </div>
+          </a>
+        }
+      }
+      @if (announcements.length > 1) {
+        <button
+          type="button"
+          class="btn btn-circle btn-sm absolute left-2 top-1/2 -translate-y-1/2"
+          (click)="previousAnnouncement()"
+        >
+          ❮
+        </button>
+        <button
+          type="button"
+          class="btn btn-circle btn-sm absolute right-2 top-1/2 -translate-y-1/2"
+          (click)="nextAnnouncement()"
+        >
+          ❯
+        </button>
+        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+          @for (announcement of announcements; track announcement.id; let i = $index) {
+            <button
+              type="button"
+              class="w-2 h-2 rounded-full"
+              [class.bg-white]="i === currentAnnouncementIndex"
+              [class.bg-white/40]="i !== currentAnnouncementIndex"
+              (click)="goToAnnouncement(i)"
+              [attr.aria-label]="'查看第 ' + (i + 1) + ' 則公告'"
+            ></button>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">社群貼文牆</h1>
+    <button class="btn btn-primary" onclick="create_post_modal.showModal()">+ 發布貼文</button>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-6 items-end">
+    <label class="form-control">
+      <span class="label-text text-xs">標籤（看板）</span>
+      <select class="select select-bordered select-sm" [(ngModel)]="filterBoardCode" (change)="loadPosts()">
+        <option value="">全部</option>
+        @for (board of boardCodes; track board) {
+          <option [value]="board">{{ board }}</option>
+        }
+      </select>
+    </label>
+    <label class="form-control flex-1 min-w-40">
+      <span class="label-text text-xs">關鍵字（標題／內容）</span>
+      <input
+        type="text"
+        class="input input-bordered input-sm w-full"
+        [(ngModel)]="filterKeyword"
+        (keyup.enter)="loadPosts()"
+        placeholder="搜尋..."
+      />
+    </label>
+    <button class="btn btn-sm btn-primary" (click)="loadPosts()">搜尋</button>
+    <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
+    <span class="text-xs text-gray-500 self-center">共 {{ totalCount }} 筆</span>
+  </div>
+
+  @if (loadError) {
+    <div class="alert alert-error mb-4">{{ loadError }}</div>
+  }
+
+  @if (reportSuccessMessage) {
+    <div class="alert alert-success mb-4">{{ reportSuccessMessage }}</div>
+  }
+
+  @if (loading) {
+    <div class="flex justify-center py-10">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+  }
+
+  <div class="flex flex-col gap-4">
+    @if (!loading) {
+    @for (post of posts; track post.id) {
+    <div class="card bg-base-100 shadow-xl border border-base-300">
+      @if (post.coverImageUrl) {
+        <figure class="max-h-80 overflow-hidden">
+          <img [src]="post.coverImageUrl" [alt]="post.title" class="w-full object-cover" />
+        </figure>
+      }
+      <div class="card-body">
+        <div class="flex justify-between">
+          <span class="badge badge-secondary">{{ post.boardCode }}</span>
+          <span class="text-xs text-base-content/60">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+        </div>
+        <h2 class="card-title">
+          <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
+          @if (post.postType === 'ANNOUNCEMENT') {
+            <span class="badge badge-warning badge-sm">公告</span>
+          }
+        </h2>
+        <p class="text-xs text-base-content/60">✍️ {{ post.displayName || '匿名會員' }}</p>
+        <p>{{ post.contentPreview }}</p>
+        <div class="card-actions justify-end mt-4 items-center">
+          @if (post.mediaCount > 0) {
+            <span class="text-xs text-base-content/60 mr-auto">📷 {{ post.mediaCount }}</span>
+          }
+          <button class="btn btn-sm btn-ghost" (click)="reportModal.open('POST', post.id)">🚩 檢舉</button>
+          <a class="btn btn-sm btn-outline btn-primary" [routerLink]="['/social/posts', post.id]">
+            💬 留言 ({{ post.commentCount || 0 }})
+          </a>
+        </div>
+      </div>
+    </div>
+    } @empty {
+    <div class="text-center py-10 text-gray-400">目前沒有貼文資料</div>
+    }
+    }
+  </div>
+</div>
+
+<dialog id="create_post_modal" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">發布新貼文</h3>
+    @if (createError) {
+      <div class="alert alert-warning mb-3">{{ createError }}</div>
+    }
+    <div class="form-control gap-3">
+      @if (isAdmin) {
+        <select class="select select-bordered w-full" [(ngModel)]="newPost.postType">
+          <option value="POST">一般貼文</option>
+          <option value="ANNOUNCEMENT">站方公告</option>
+        </select>
+      }
+      <input type="text" placeholder="標題" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
+      <select class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
+        <option value="GENERAL">綜合討論區</option>
+        <option value="EVENT">活動看板</option>
+      </select>
+      <textarea class="textarea textarea-bordered h-24" placeholder="分享些內容..." [(ngModel)]="newPost.content"></textarea>
+
+      <input
+        type="file"
+        class="file-input file-input-bordered w-full"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        multiple
+        [disabled]="uploadPending || (newPost.mediaIds?.length ?? 0) >= 8"
+        (change)="onFilesSelected($event)"
+      />
+      @if (uploadPending) {
+        <span class="text-xs text-base-content/60">圖片上傳中...</span>
+      }
+      @if (pendingMedia.length > 0) {
+        <div class="flex flex-wrap gap-2">
+          @for (media of pendingMedia; track media.id) {
+            <div class="relative">
+              <img [src]="media.url" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
+              <button
+                type="button"
+                class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
+                (click)="removePendingMedia(media)"
+              >
+                ✕
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+    <div class="modal-action">
+      <form method="dialog">
+        <button type="button" class="btn btn-ghost" onclick="create_post_modal.close()">取消</button>
+        <button type="button" class="btn btn-primary" [disabled]="uploadPending" (click)="submitPost()">送出發布</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<app-image-crop-modal (cropped)="onImageCropped($event)" (cancelled)="onCropCancelled()" />
+<app-report-modal #reportModal (reported)="onReported()" />
