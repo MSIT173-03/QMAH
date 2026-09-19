@@ -1,8 +1,9 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { map, switchMap } from 'rxjs';
+import { combineLatest, map, of, switchMap } from 'rxjs';
 import { SectionHead, PillGroup, PillOption, ProductCard } from '../../../component';
 import { HomeApi } from '../../../api';
+import { Product } from '../../../api/api.models';
 import { pad } from '../../../shared/format';
 import { toProductView } from '../../../shared/product-view';
 import { BadgedProductView, RANKING_TABS } from '../home.data';
@@ -33,11 +34,16 @@ export class RankingSection {
   protected tabOptions = computed<PillOption[]>(() =>
     this.tabs.map((name, i) => ({ label: name, active: i === this.activeTab() })),
   );
-  /** 依選取分類取得的排行商品，角標為排名序號 */
+  /** 全站熱銷排行商品（來自 products/info，販賣數量前 10 項） */
+  products = input<Product[]>([]);
+
+  /** 依選取分類取得的排行商品，角標為排名序號；「全站」直接使用 products，其餘分類另向 API 取得 */
   protected rankingItems = toSignal(
-    toObservable(this.activeTab).pipe(
-      switchMap((tab) =>
-        this.homeApi.getRankings({ cat: tab === 0 ? undefined : this.tabs[tab], limit: RANKING_LIMIT }),
+    combineLatest([toObservable(this.activeTab), toObservable(this.products)]).pipe(
+      switchMap(([tab, products]) =>
+        tab === 0
+          ? of(products)
+          : this.homeApi.getRankings({ cat: this.tabs[tab], limit: RANKING_LIMIT }),
       ),
       map((items): BadgedProductView[] =>
         items.map((item, i) => ({ ...toProductView(item), badge: `#${pad(i + 1)}`, badgeVariant: 'ink' })),

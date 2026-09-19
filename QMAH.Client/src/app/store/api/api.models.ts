@@ -302,6 +302,12 @@ export interface ProductInfo {
   pointBalance: number | null;
   /** 會員可用的折價券；未登入時為空陣列 */
   coupons: Coupon[];
+  /** 熱銷排行：販賣數量前 10 項 */
+  hotProducts: Product[];
+  /** 新品上架：最新上架的前 4 項 */
+  newProducts: Product[];
+  /** 評價排行：平均評價最高的前 4 項 */
+  topRatedProducts: Product[];
 }
 
 /* ===============================

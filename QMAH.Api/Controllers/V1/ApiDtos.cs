@@ -107,11 +107,17 @@ public sealed record ProductDetailsDto(
 /// <param name="IsLoggedIn">是否已登入。</param>
 /// <param name="PointBalance">鑑定點數；未登入時為 null。</param>
 /// <param name="Coupons">會員優惠券列表；未登入時為 null。</param>
+/// <param name="HotProducts">熱銷排行：販賣數量前 10 項商品。</param>
+/// <param name="NewProducts">新品上架：最新上架的前 4 項商品。</param>
+/// <param name="TopRatedProducts">評價排行：平均評價最高的前 4 項商品（僅含有評論者）。</param>
 public sealed record ProductInfomationDto(
     IReadOnlyDictionary<string, int> CategoryCounts,
     bool IsLoggedIn,
     int? PointBalance,
-    IReadOnlyList<CouponDto>? Coupons);
+    IReadOnlyList<CouponDto>? Coupons,
+    IReadOnlyList<ProductListItemDto> HotProducts,
+    IReadOnlyList<ProductListItemDto> NewProducts,
+    IReadOnlyList<ProductListItemDto> TopRatedProducts);
 
 public sealed record ProductReviewSummaryDto(
     decimal AverageRating,

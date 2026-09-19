@@ -1,7 +1,7 @@
 import { computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Observable } from 'rxjs';
-import { CartApi, MemberApi, SiteApi } from '../api';
+import { CartApi, CatalogApi, SiteApi } from '../api';
 import { ShoppingCart } from '../api/api.models';
 import { formatNumber } from './format';
 
@@ -41,18 +41,21 @@ export function injectCartState() {
  * 須於注入環境中呼叫（例如元件欄位初始化）。
  */
 export function injectSiteData() {
-  const memberApi = inject(MemberApi);
   const config = toSignal(inject(SiteApi).getConfig());
-  const profile = toSignal(memberApi.getProfile());
+  const info = toSignal(inject(CatalogApi).getProductInfo());
 
   return {
     /** 全站設定，尚未載入時為 undefined */
     config,
+    /** 商品資訊（器類數量、會員點數與折價券、各排行榜），尚未載入時為 undefined */
+    info,
     /** 頂部公告列的公告文字 */
     announcements: computed(() => config()?.promoAnnouncements ?? []),
+    /** 是否已登入；資料載入前視為未登入，避免登入狀態不明時露出會員專屬連結 */
+    isLoggedIn: computed(() => info()?.isLoggedIn ?? false),
     /** 頂部公告列顯示的會員點數 */
-    points: computed(() => formatNumber(profile()?.pointBalance ?? 0)),
+    points: computed(() => formatNumber(info()?.pointBalance ?? 0)),
     /** 頂部公告列的折價券清單 */
-    coupons: toSignal(memberApi.getCoupons(), { initialValue: [] }),
+    coupons: computed(() => info()?.coupons ?? []),
   };
 }

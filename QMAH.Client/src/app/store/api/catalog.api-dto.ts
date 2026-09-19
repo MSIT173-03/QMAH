@@ -51,6 +51,10 @@ export interface ApiProductListItem {
   stock: number;
   primaryImagePath: string | null;
   isActive: boolean;
+  createdAt?: string;
+  averageRating?: number;
+  reviewCount?: number;
+  sellCount?: number;
 }
 
 /** GET /products 回應 */
@@ -80,6 +84,9 @@ export interface ApiProductInfo {
   isLoggedIn: boolean;
   pointBalance: number | null;
   coupons: ApiCoupon[] | null;
+  hotProducts: ApiProductListItem[];
+  newProducts: ApiProductListItem[];
+  topRatedProducts: ApiProductListItem[];
 }
 
 /** GET /products/{id} 回應 */
@@ -111,12 +118,12 @@ export function toProduct(dto: ApiProductListItem): Product {
     price: dto.price,
     dealPrice: dto.price,
     discountRate: 0,
-    rating: 0,
-    reviewCount: 0,
-    soldCount: 0,
+    rating: dto.averageRating ?? 0,
+    reviewCount: dto.reviewCount ?? 0,
+    soldCount: dto.sellCount ?? 0,
     source: dto.externalRef ?? '',
     dimensions: '',
-    listedAt: '',
+    listedAt: dto.createdAt?.slice(0, 10) ?? '',
     coverImage: dto.primaryImagePath,
   };
 }
@@ -160,6 +167,9 @@ export function toProductInfo(dto: ApiProductInfo): ProductInfo {
     isLoggedIn: dto.isLoggedIn,
     pointBalance: dto.pointBalance,
     coupons: (dto.coupons ?? []).map(toCoupon),
+    hotProducts: dto.hotProducts.map(toProduct),
+    newProducts: dto.newProducts.map(toProduct),
+    topRatedProducts: dto.topRatedProducts.map(toProduct),
   };
 }
 

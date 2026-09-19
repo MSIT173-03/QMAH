@@ -1,5 +1,5 @@
 <!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
-<app-promobar [announcements]="site.announcements()" [isLoggedIn]="isLoggedIn()" [points]="points()" [coupons]="coupons()" />
+<app-promobar [announcements]="site.announcements()" [isLoggedIn]="site.isLoggedIn()" [points]="site.points()" [coupons]="site.coupons()" />
 
 
 <app-site-header variant="hero">
@@ -19,7 +19,7 @@
       <a href="#" class="nav-link-strong" (click)="onClickAllCategory()">全部分類</a>
       <a href="#" (click)="onClickSpecial()">特展聯名</a>
       <a href="#" (click)="onClickOnSell()">限時特賣</a>
-      <a href="#brands">品牌館</a>
+      <a href="#top-rated">評價排行</a>
       <a [storeLink]="newArrivalsPath">新品上架</a>
       @for (name of categoryNames(); track name) {
       <a [storeLink]="categoryPath(name)">{{ name }}</a>
@@ -44,12 +44,12 @@
   <app-category-grid [counts]="categoryCounts()" />
 
   <!-- 熱銷排行 -->
-  <app-ranking-section (addToCart)="onAddToCart($event)" />
+  <app-ranking-section [products]="hotProducts()" (addToCart)="onAddToCart($event)" />
 
-  <!-- 新品上架／品牌館：雙欄並排 -->
+  <!-- 新品上架／評價排行：雙欄並排 -->
   <section class="two-col-section">
-    <app-new-arrivals (addToCart)="onAddToCart($event)" />
-    <app-brand-hall />
+    <app-new-arrivals [products]="newProducts()" (addToCart)="onAddToCart($event)" />
+    <app-top-rated [products]="topRatedProducts()" (addToCart)="onAddToCart($event)" />
   </section>
 
   <!-- 為你推薦 -->

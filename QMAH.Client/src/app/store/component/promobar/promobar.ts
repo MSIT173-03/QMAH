@@ -20,7 +20,7 @@ export class Promobar {
   announcements = input<string[]>([]);
 
   /** 是否已登入；未登入時以「登入」取代個人頁面、點數與折價券 */
-  isLoggedIn = input(true);
+  isLoggedIn = input(false);
   /** 「登入」連結網址 */
   loginHref = input('#');
 

@@ -8,7 +8,6 @@ import { CatalogApi, HomeApi, SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
 import { CART_PATH, PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
-import { formatNumber } from '../../shared/format';
 import { toProductView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
 
@@ -18,7 +17,7 @@ import { MiniCoupons } from './mini-coupons/mini-coupons';
 import { CategoryGrid } from './category-grid/category-grid';
 import { RankingSection } from './ranking-section/ranking-section';
 import { NewArrivals } from './new-arrivals/new-arrivals';
-import { BrandHall } from './brand-hall/brand-hall';
+import { TopRated } from './top-rated/top-rated';
 import { Recommendations } from './recommendations/recommendations';
 import { BadgedProductView } from './home.data';
 
@@ -28,7 +27,7 @@ const RECOMMEND_PAGE_SIZE = 10;
 /**
  * 首頁。
  * 統整頁首搜尋、主視覺輪播、限時特賣、迷你折價券、分類入口、熱銷排行、
- * 新品上架、品牌館與為你推薦等各版位；購物車、搜尋建議、全站設定與會員資料
+ * 新品上架、評價排行與為你推薦等各版位；購物車、搜尋建議、全站設定與會員資料
  * 皆由本頁面向 API 取得，「為你推薦」並在此逐頁載入並累加。
  */
 @Component({
@@ -45,7 +44,7 @@ const RECOMMEND_PAGE_SIZE = 10;
     CategoryGrid,
     RankingSection,
     NewArrivals,
-    BrandHall,
+    TopRated,
     Recommendations,
     SiteHeader,
     StoreLink,
@@ -67,15 +66,12 @@ export class Home {
   /** 全站設定與會員資料，供頂部公告列與頁尾使用 */
   protected readonly site = injectSiteData();
 
-  /** 商品資訊（各器類數量、會員點數與折價券），進入頁面時取得一次 */
-  private readonly info = toSignal(inject(CatalogApi).getProductInfo());
   /** 各器類商品數量，供分類入口區塊使用 */
-  protected readonly categoryCounts = computed(() => this.info()?.categoryCounts ?? {});
-  /** 是否已登入；資料載入前視為已登入，避免「登入」連結閃現 */
-  protected readonly isLoggedIn = computed(() => this.info()?.isLoggedIn ?? true);
-  /** 頂部公告列的會員點數與折價券 */
-  protected readonly points = computed(() => formatNumber(this.info()?.pointBalance ?? 0));
-  protected readonly coupons = computed(() => this.info()?.coupons ?? []);
+  protected readonly categoryCounts = computed(() => this.site.info()?.categoryCounts ?? {});
+  /** 熱銷排行、新品上架與評價排行的商品（來自 products/info） */
+  protected readonly hotProducts = computed(() => this.site.info()?.hotProducts ?? []);
+  protected readonly newProducts = computed(() => this.site.info()?.newProducts ?? []);
+  protected readonly topRatedProducts = computed(() => this.site.info()?.topRatedProducts ?? []);
 
   /** 搜尋框目前輸入值 */
   protected searchQuery = signal('');

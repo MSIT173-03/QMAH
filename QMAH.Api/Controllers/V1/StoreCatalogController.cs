@@ -169,8 +169,44 @@ public sealed class StoreCatalogController(
         var categoryCounts = Enum.GetNames<CategoryType>()
             .ToDictionary(name => name, name => counted.GetValueOrDefault(name));
 
+        var rows = db.Products
+            .AsNoTracking()
+            .Where(product => product.IsActive)
+            .Select(g => new ProductRow
+            {
+                Id = g.Id,
+                ArtifactId = g.ArtifactId,
+                ExternalRef = g.ExternalRef,
+                Name = g.Name,
+                CategoryCode = g.CategoryCode,
+                Price = g.Price,
+                Stock = g.Stock,
+                PrimaryImagePath = g.PrimaryImagePath,
+                CreatedAt = g.CreatedAt,
+                AverageRating = db.ProductReviews
+                    .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
+                    .Average(r => (decimal?)r.Rating) ?? 0m,
+                ReviewCount = db.ProductReviews
+                    .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
+                SellCount = db.OrderDetails
+                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
+                    .Sum(o => o.Quantity)
+            });
+        var hotProducts = await TakeAsync(
+            rows.OrderByDescending(g => g.SellCount).ThenBy(g => g.Id), 10, cancellationToken);
+        var newProducts = await TakeAsync(
+            rows.OrderByDescending(g => g.CreatedAt).ThenBy(g => g.Id), 4, cancellationToken);
+        var topRatedProducts = await TakeAsync(
+            rows.Where(g => g.ReviewCount > 0)
+                .OrderByDescending(g => g.AverageRating)
+                .ThenByDescending(g => g.ReviewCount)
+                .ThenBy(g => g.Id),
+            4,
+            cancellationToken);
+
         if (!TryGetCurrentUserId(out var userId))
-            return Ok(new ProductInfomationDto(categoryCounts, false, null, null));
+            return Ok(new ProductInfomationDto(
+                categoryCounts, false, null, null, hotProducts, newProducts, topRatedProducts));
 
         var pointBalance = await db.PointBalances
             .AsNoTracking()
@@ -199,7 +235,52 @@ public sealed class StoreCatalogController(
                 coupon.UsedAt))
             .ToListAsync(cancellationToken);
 
-        return Ok(new ProductInfomationDto(categoryCounts, true, pointBalance, coupons));
+        return Ok(new ProductInfomationDto(
+            categoryCounts, true, pointBalance, coupons, hotProducts, newProducts, topRatedProducts));
+    }
+
+    /// <summary>商品清單項目的查詢中間形狀，讓各排行榜共用同一份投影再各自排序。</summary>
+    private sealed class ProductRow
+    {
+        public Guid Id { get; init; }
+        public Guid? ArtifactId { get; init; }
+        public string? ExternalRef { get; init; }
+        public string Name { get; init; } = "";
+        public string CategoryCode { get; init; } = "";
+        public decimal Price { get; init; }
+        public int Stock { get; init; }
+        public string? PrimaryImagePath { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public decimal AverageRating { get; init; }
+        public int ReviewCount { get; init; }
+        public int SellCount { get; init; }
+    }
+
+    /// <summary>取排序後前 count 筆並轉為 DTO，圖片網址統一經 CDN 解析。</summary>
+    private async Task<IReadOnlyList<ProductListItemDto>> TakeAsync(
+        IQueryable<ProductRow> ordered,
+        int count,
+        CancellationToken cancellationToken)
+    {
+        var items = await ordered
+            .Take(count)
+            .Select(g => new ProductListItemDto(
+                g.Id,
+                g.ArtifactId,
+                g.ExternalRef,
+                g.Name,
+                g.CategoryCode,
+                g.Price,
+                g.Stock,
+                g.PrimaryImagePath,
+                g.CreatedAt,
+                g.AverageRating,
+                g.ReviewCount,
+                g.SellCount))
+            .ToListAsync(cancellationToken);
+        return items
+            .Select(item => item with { PrimaryImagePath = mediaUrlResolver.Resolve(item.PrimaryImagePath) })
+            .ToList();
     }
 
     [HttpGet("products/{id:guid}")]
