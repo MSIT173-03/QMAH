@@ -554,8 +554,14 @@ public sealed class MeController(
             return MissingResource("找不到地址", "這筆地址不存在或不屬於目前帳號。");
 
         await ClearDefaultAddressesAsync(userId, address.Id, cancellationToken);
+
+        // 先將舊的預設地址取消並寫入資料庫，避免唯一索引衝突。
+        await db.SaveChangesAsync(cancellationToken);
+
         address.IsDefault = true;
         address.UpdatedAt = DateTime.UtcNow;
+
+        // 再將新的預設地址寫入資料庫。
         await db.SaveChangesAsync(cancellationToken);
         return Ok(ToAddressDto(address));
     }

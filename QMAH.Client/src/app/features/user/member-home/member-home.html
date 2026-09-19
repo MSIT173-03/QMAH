@@ -1,0 +1,556 @@
+<div class="member-page">
+
+  <!-- =============================== -->
+  <!-- Top Bar -->
+  <!-- =============================== -->
+
+  <header class="topbar">
+
+    <div class="brand">
+
+      <div class="brand-logo">
+        Q
+      </div>
+
+      <div>
+        <strong>QMAH</strong>
+        <span>MEMBER CENTER</span>
+      </div>
+
+    </div>
+
+
+    <button
+      type="button"
+      class="logout-button"
+      (click)="logout()"
+      [disabled]="loggingOut"
+    >
+
+      @if (loggingOut) {
+
+        <span class="button-spinner"></span>
+
+        登出中...
+
+      } @else {
+
+        <span>↪</span>
+        登出
+
+      }
+
+    </button>
+
+  </header>
+
+
+  <main class="member-container">
+
+    <!-- =============================== -->
+    <!-- Welcome Hero -->
+    <!-- =============================== -->
+
+    <section class="welcome-card">
+
+      <div class="welcome-decoration decoration-one"></div>
+      <div class="welcome-decoration decoration-two"></div>
+
+
+      <div class="welcome-content">
+
+        <span class="welcome-eyebrow">
+          MEMBER DASHBOARD
+        </span>
+
+        <h1>
+          歡迎回到會員中心 👋
+        </h1>
+
+        <p>
+          在這裡管理你的個人資料、會員資產、每日活動與優惠內容。
+        </p>
+
+      </div>
+
+
+      <div class="welcome-side">
+
+        <div class="member-status">
+
+          <span class="status-dot"></span>
+
+          會員服務正常
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =============================== -->
+    <!-- Account -->
+    <!-- =============================== -->
+
+    <section class="dashboard-section">
+
+      <div class="section-header">
+
+        <div>
+
+          <span class="section-eyebrow">
+            ACCOUNT
+          </span>
+
+          <h2>
+            帳戶管理
+          </h2>
+
+          <p>
+            管理你的會員基本資料與配送資訊。
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="dashboard-grid">
+
+        <!-- 個人資料 -->
+
+        <a
+          routerLink="/member/profile"
+          class="dashboard-card profile-card"
+        >
+
+          <div class="card-top">
+
+            <div class="card-icon profile-icon">
+              👤
+            </div>
+
+            <span class="card-arrow">
+              →
+            </span>
+
+          </div>
+
+
+          <div class="card-content">
+
+            <h3>
+              個人資料
+            </h3>
+
+            <p>
+              查看與修改暱稱、Email、自我介紹及公開設定。
+            </p>
+
+          </div>
+
+
+          <div class="card-footer">
+
+            <span>
+              PROFILE
+            </span>
+
+            <strong>
+              查看資料
+            </strong>
+
+          </div>
+
+        </a>
+
+
+        <!-- 地址 -->
+
+        <a
+          routerLink="/member/addresses"
+          class="dashboard-card address-card"
+        >
+
+          <div class="card-top">
+
+            <div class="card-icon address-icon">
+              📍
+            </div>
+
+            <span class="card-arrow">
+              →
+            </span>
+
+          </div>
+
+
+          <div class="card-content">
+
+            <h3>
+              我的地址
+            </h3>
+
+            <p>
+              管理收件地址、預設配送地址與常用地址。
+            </p>
+
+          </div>
+
+
+          <div class="card-footer">
+
+            <span>
+              SHIPPING
+            </span>
+
+            <strong>
+              管理地址
+            </strong>
+
+          </div>
+
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <!-- =============================== -->
+    <!-- Assets -->
+    <!-- =============================== -->
+
+    <section class="dashboard-section">
+
+      <div class="section-header">
+
+        <div>
+
+          <span class="section-eyebrow">
+            ASSETS & REWARDS
+          </span>
+
+          <h2>
+            資產與獎勵
+          </h2>
+
+          <p>
+            查看會員資產、優惠券以及解鎖的成就。
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="dashboard-grid three-columns">
+
+        <!-- 點數與鑰匙 -->
+
+        <a
+          routerLink="/member/economy"
+          class="dashboard-card economy-card featured-card"
+        >
+
+          <div class="card-top">
+
+            <div class="card-icon economy-icon">
+              💎
+            </div>
+
+            <span class="card-arrow">
+              →
+            </span>
+
+          </div>
+
+
+          <div class="card-content">
+
+            <span class="card-label">
+              MEMBER ASSETS
+            </span>
+
+            <h3>
+              點數與鑰匙
+            </h3>
+
+            <p>
+              查看鑑定點數、鑰匙進度與目前持有的各類鑰匙。
+            </p>
+
+          </div>
+
+
+          <div class="card-footer">
+
+            <span>
+              資產管理
+            </span>
+
+            <strong>
+              查看資產
+            </strong>
+
+          </div>
+
+        </a>
+
+
+        <!-- 優惠券 -->
+
+        <a
+          routerLink="/member/coupons"
+          class="dashboard-card coupon-card"
+        >
+
+          <div class="card-top">
+
+            <div class="card-icon coupon-icon">
+              🎟️
+            </div>
+
+            <span class="card-arrow">
+              →
+            </span>
+
+          </div>
+
+
+          <div class="card-content">
+
+            <h3>
+              我的優惠券
+            </h3>
+
+            <p>
+              查看目前持有的優惠券、使用狀態與有效期限。
+            </p>
+
+          </div>
+
+
+          <div class="card-footer">
+
+            <span>
+              COUPONS
+            </span>
+
+            <strong>
+              查看優惠券
+            </strong>
+
+          </div>
+
+        </a>
+
+
+        <!-- 成就 -->
+
+        <a
+          routerLink="/member/achievements"
+          class="dashboard-card achievement-card"
+        >
+
+          <div class="card-top">
+
+            <div class="card-icon achievement-icon">
+              🏆
+            </div>
+
+            <span class="card-arrow">
+              →
+            </span>
+
+          </div>
+
+
+          <div class="card-content">
+
+            <h3>
+              成就與稱號
+            </h3>
+
+            <p>
+              查看已獲得的成就以及目前展示中的會員稱號。
+            </p>
+
+          </div>
+
+
+          <div class="card-footer">
+
+            <span>
+              ACHIEVEMENTS
+            </span>
+
+            <strong>
+              查看成就
+            </strong>
+
+          </div>
+
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <!-- =============================== -->
+    <!-- Activity -->
+    <!-- =============================== -->
+
+    <section class="dashboard-section">
+
+      <div class="section-header">
+
+        <div>
+
+          <span class="section-eyebrow">
+            ACTIVITY
+          </span>
+
+          <h2>
+            會員活動
+          </h2>
+
+          <p>
+            查看每日登入進度以及會員通知。
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="dashboard-grid">
+
+        <!-- 每日登入 -->
+
+        <a
+          routerLink="/member/daily-activity"
+          class="dashboard-card daily-card activity-feature"
+        >
+
+          <div class="activity-decoration"></div>
+
+
+          <div class="card-top">
+
+            <div class="card-icon daily-icon">
+              🔥
+            </div>
+
+            <span class="card-arrow">
+              →
+            </span>
+
+          </div>
+
+
+          <div class="card-content">
+
+            <span class="card-label orange">
+              DAILY CHECK-IN
+            </span>
+
+            <h3>
+              每日登入
+            </h3>
+
+            <p>
+              每日簽到並累積登入天數，挑戰更長的連續登入紀錄。
+            </p>
+
+          </div>
+
+
+          <div class="card-footer">
+
+            <span>
+              每天回來看看
+            </span>
+
+            <strong>
+              查看進度
+            </strong>
+
+          </div>
+
+        </a>
+
+
+        <!-- 通知 -->
+
+        <a
+          routerLink="/member/notifications"
+          class="dashboard-card notification-card"
+        >
+
+          <div class="card-top">
+
+            <div class="card-icon notification-icon">
+              🔔
+            </div>
+
+            <span class="card-arrow">
+              →
+            </span>
+
+          </div>
+
+
+          <div class="card-content">
+
+            <h3>
+              我的通知
+            </h3>
+
+            <p>
+              查看系統通知、會員訊息與過往通知紀錄。
+            </p>
+
+          </div>
+
+
+          <div class="card-footer">
+
+            <span>
+              NOTIFICATIONS
+            </span>
+
+            <strong>
+              查看通知
+            </strong>
+
+          </div>
+
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <!-- =============================== -->
+    <!-- Bottom -->
+    <!-- =============================== -->
+
+    <div class="dashboard-bottom">
+
+      <span>
+        QMAH MEMBER CENTER
+      </span>
+
+      <span>
+        管理你的會員帳戶與資產
+      </span>
+
+    </div>
+
+  </main>
+
+</div>

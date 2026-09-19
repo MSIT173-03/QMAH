@@ -7,13 +7,21 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Api.Infrastructure.Identity;
+using QMAH.Infrastructure.Configuration;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
 
+//增加GOOGLE API 9/17
+using System.Security.Claims;
+
+
 namespace QMAH.Api.Controllers.V1;
+
+
 
 [Route("api/v1/account")]
 [EnableRateLimiting("auth")]
@@ -22,6 +30,7 @@ public sealed class AccountController(
     SignInManager<ApplicationUser> signInManager,
     QmahDbContext db,
     IPasswordResetEmailSender emailSender,
+    IOptions<QmahPasswordResetOptions> passwordResetOptions,
     IConfiguration configuration,
     ILogger<AccountController> logger) : ApiControllerBase
 {
@@ -103,6 +112,167 @@ public sealed class AccountController(
             return DatabaseUnavailable();
         }
     }
+
+
+    [AllowAnonymous]
+    [HttpGet("google-login")]
+    public IActionResult GoogleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"])
+            || string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]))
+        {
+            // integration: Google OAuth 未設定時只停用該入口，不影響一般 Identity 登入。
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "Google 登入目前不可用");
+        }
+
+        var redirectUrl = Url.Action(
+            nameof(GoogleCallback),
+            "Account",
+            values: null,
+            protocol: Request.Scheme);
+
+        var properties =
+            signInManager.ConfigureExternalAuthenticationProperties(
+                "Google",
+                redirectUrl);
+
+        return Challenge(properties, "Google");
+    }
+
+    [AllowAnonymous]
+    [HttpGet("google-callback")]
+    public async Task<IActionResult> GoogleCallback(
+        string? remoteError = null,
+        CancellationToken cancellationToken = default)
+    {
+        const string clientUrl = "http://localhost:4200";
+
+        if (!string.IsNullOrWhiteSpace(remoteError))
+        {
+            logger.LogWarning(
+                "Google 登入失敗。RemoteError={RemoteError}",
+                remoteError);
+
+            return Redirect($"{clientUrl}/login?googleError=1");
+        }
+
+        var info = await signInManager.GetExternalLoginInfoAsync();
+
+        if (info is null)
+            return Redirect($"{clientUrl}/login?googleError=1");
+
+        // 已經綁定過 Google → 直接登入
+        var externalResult = await signInManager.ExternalLoginSignInAsync(
+            info.LoginProvider,
+            info.ProviderKey,
+            isPersistent: true,
+            bypassTwoFactor: false);
+
+        if (externalResult.Succeeded)
+            return Redirect($"{clientUrl}/member");
+
+        // 第一次使用 Google 登入
+        var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+        if (string.IsNullOrWhiteSpace(email))
+            return Redirect($"{clientUrl}/login?googleError=1");
+
+        email = email.Trim();
+
+        var user = await userManager.FindByEmailAsync(email);
+
+        if (user is not null)
+        {
+            // 已有一般 QMAH 帳號 → 綁定 Google
+            if (user.Status != "ACTIVE")
+                return Redirect($"{clientUrl}/login?googleError=1");
+
+            var addLoginResult = await userManager.AddLoginAsync(user, info);
+
+            if (!addLoginResult.Succeeded)
+            {
+                logger.LogWarning(
+                    "Google 帳號綁定失敗。UserId={UserId}",
+                    user.Id);
+
+                return Redirect($"{clientUrl}/login?googleError=1");
+            }
+
+            await signInManager.SignInAsync(user, isPersistent: true);
+
+            return Redirect($"{clientUrl}/member");
+        }
+
+        // 完全沒有 QMAH 帳號 → 自動建立會員
+        var now = DateTime.UtcNow;
+
+        user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true,
+            Status = "ACTIVE",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        var createResult = await userManager.CreateAsync(user);
+
+        if (!createResult.Succeeded)
+        {
+            logger.LogWarning(
+                "Google 會員建立失敗。Errors={Errors}",
+                string.Join(", ", createResult.Errors.Select(x => x.Code)));
+
+            return Redirect($"{clientUrl}/login?googleError=1");
+        }
+
+        var addGoogleResult = await userManager.AddLoginAsync(user, info);
+
+        if (!addGoogleResult.Succeeded)
+        {
+            await userManager.DeleteAsync(user);
+            return Redirect($"{clientUrl}/login?googleError=1");
+        }
+
+        var nickname =
+            info.Principal.FindFirstValue(ClaimTypes.Name)
+            ?? email.Split('@')[0];
+
+        db.UserProfiles.Add(new UserProfile
+        {
+            UserId = user.Id,
+            Nickname = nickname,
+            Visibility = "PRIVATE",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        var roleResult = await userManager.AddToRoleAsync(user, "User");
+
+        if (!roleResult.Succeeded)
+        {
+            logger.LogWarning(
+                "Google 新會員加入 User 角色失敗。UserId={UserId}",
+                user.Id);
+
+            return Redirect($"{clientUrl}/login?googleError=1");
+        }
+
+        await signInManager.SignInAsync(user, isPersistent: true);
+
+        return Redirect($"{clientUrl}/member");
+    }
+
+
+
+
+
 
     private ActionResult DatabaseUnavailable()
     {
@@ -192,14 +362,34 @@ public sealed class AccountController(
         {
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
             var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-            var clientUrl = configuration["PasswordReset:ClientUrl"]
-                ?? "http://localhost:4200/reset-password";
+            var clientUrl = string.IsNullOrWhiteSpace(passwordResetOptions.Value.ClientUrl)
+                ? "http://localhost:4200/reset-password"
+                : passwordResetOptions.Value.ClientUrl;
             var resetUrl = $"{clientUrl.TrimEnd('/')}?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(encodedToken)}";
-            await emailSender.SendAsync(user.Email, resetUrl, cancellationToken);
+            try
+            {
+                await emailSender.SendAsync(user.Email, resetUrl, cancellationToken);
+            }
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                // 忘記密碼端點對所有 Email 維持相同回應，避免從郵件服務錯誤反推出帳號是否存在。
+                logger.LogError(exception, "密碼重設郵件傳送失敗。RecipientDomain={RecipientDomain}", GetEmailDomain(user.Email));
+            }
         }
 
         // 不論帳號是否存在，都回傳相同結果，避免 Email enumeration。
         return Accepted(new { message = "如果帳號存在，密碼重設指示會送到註冊信箱。" });
+    }
+
+    private static string GetEmailDomain(string email)
+    {
+        var at = email.LastIndexOf('@');
+        return at > 0 && at < email.Length - 1 ? email[(at + 1)..] : "unknown";
     }
 
     [AllowAnonymous]
