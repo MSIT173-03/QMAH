@@ -124,7 +124,7 @@ export const SOLD_STEP = 137;
 /** 假 API 回應商品庫存的固定值（型錄尚無庫存欄位，對應後端 products.stock） */
 export const MOCK_STOCK = 20;
 
-/** 商品圖片的視角名稱；詳情頁主圖使用收藏卡，列表仍只使用靜態圖片。 */
+/** 商品圖片的視角名稱；詳情頁主圖使用文物明信片，列表仍只使用靜態圖片。 */
 export const GALLERY_VIEWS = ['正面', '紙材細節', '背面', '包裝'];
 
 /** 商品出貨說明 */
@@ -204,7 +204,7 @@ export const HOT_SEARCH_LINKS: HotSearchLink[] = [
 ];
 
 /** 搜尋建議：接在輸入關鍵字之後的字尾（示意資料，正式應比對商品名稱產生） */
-export const SUGGESTION_SUFFIXES = ['文物明信片', '器物', '書畫', '文具', '收藏卡'];
+export const SUGGESTION_SUFFIXES = ['文物明信片', '器物', '書畫', '文具', '明信片'];
 
 /** 搜尋建議件數的示意換算基數與級距 */
 export const SUGGESTION_COUNT_BASE = 860;

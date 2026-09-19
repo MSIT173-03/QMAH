@@ -716,7 +716,7 @@ public sealed class CatalogImportService(QmahDbContext db)
     {
         var externalRef = $"artifact-{artifact.ArtifactRef}";
         var variation = StableNumber($"price:{artifact.ArtifactRef}") % 7 * 50;
-        // 匯入保底商品也使用收藏卡契約，避免尚未產生完整商品 JSON 時又回到舊的複製品語意。
+        // 匯入保底商品也使用文物明信片契約，避免尚未產生完整商品 JSON 時又回到舊的複製品語意。
         const string cardSize = "A6 明信片（148 × 105 mm）";
         const string orientationRule = "明信片方向：依主圖原始寬高自動判斷（橫式／直式）";
         var artifactSize = string.IsNullOrWhiteSpace(artifact.SizeOriginal)

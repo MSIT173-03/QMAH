@@ -12,7 +12,7 @@
 
 import { CatalogModel, CatalogDetailModel } from './catalog-model';
 
-/** 圖鑑卡面的遊戲化外皮（收藏卡呈現用，非文物真實資訊，目前後端沒有對應欄位，暫由前端提供） */
+/** 圖鑑卡面的遊戲化外皮（僅供遊戲呈現，非文物真實資訊，目前後端沒有對應欄位，暫由前端提供） */
 export interface CompendiumSkin {
   emoji: string;
   color: string; // 卡面主色，供 CSS 變數 --card-color 使用

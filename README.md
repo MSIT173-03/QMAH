@@ -12,14 +12,14 @@
 
 <p align="center">
   <a href="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml"><img src="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main" alt="Build"></a>
-  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.9.2"><img src="https://img.shields.io/badge/database-db--v0.9.2-315E55" alt="Database snapshot db-v0.9.2"></a>
+  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.9.3"><img src="https://img.shields.io/badge/database-db--v0.9.3-315E55" alt="Database snapshot db-v0.9.3"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4" alt=".NET 10">
   <img src="https://img.shields.io/badge/SQL%20Server-DB--first-315E55" alt="SQL Server DB-first">
 </p>
 
 ## 目前正式 Release
 
-目前 QMAH 主程式正式版本是 [`v0.9.0`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.0)。完整資料庫下載請使用 [QMAH-Database `db-v0.9.2` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.2)，其中提供與本次整合同步的 `QMAH.sql`、`QMAH-0.9.2.bak` 與 `SHA256SUMS.txt`。
+目前 QMAH 主程式正式版本是 [`v0.9.0`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.0)。完整資料庫下載請使用 [QMAH-Database `db-v0.9.3` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.3)，其中提供與本次整合同步的 `QMAH.sql`、`QMAH-0.9.3.bak` 與 `SHA256SUMS.txt`。
 
 ## 專案簡介
 
@@ -91,9 +91,9 @@ Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前�
 
 ### 2. 建立本機 QMAH 資料庫
 
-目前相容的完整 Snapshot 是 [QMAH-Database db-v0.9.2 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.2) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.9.2/QMAH.sql)。
+目前相容的完整 Snapshot 是 [QMAH-Database db-v0.9.3 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.3) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.9.3/QMAH.sql)。
 
-也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.9.2/QMAH.sql)。本版刻意替換舊 256 件展示資料，既有環境請以完整 Snapshot 還原，不使用會保留舊資料的增量腳本。
+也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.9.3/QMAH.sql)。本版刻意替換舊 256 件展示資料並同步訂單商品快照，既有環境請以完整 Snapshot 還原，不使用會保留舊資料的增量腳本。
 
 在 SSMS 連線到可用的本機 SQL Server instance，完整執行 SQL，資料庫名稱使用 `QMAH`。
 
