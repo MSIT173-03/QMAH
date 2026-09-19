@@ -1,3 +1,4 @@
+/* ui-integration: 會員深層頁保留原本表單與資訊區塊，只沿用共用前台的紙白、青綠與赭紅色階。 */
 :host {
   display: block;
 }
@@ -9,8 +10,8 @@
   background:
     linear-gradient(
       135deg,
-      #f7f8fc 0%,
-      #f2f4fb 100%
+      #f7f4ee 0%,
+      #f3f0e8 100%
     );
 }
 
@@ -27,12 +28,12 @@
 .state-card {
   padding: 36px;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 20px;
 
   background: #ffffff;
 
-  color: #6b7280;
+  color: #617176;
   text-align: center;
 
   box-shadow:
@@ -46,7 +47,7 @@
 .profile-card {
   overflow: hidden;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 24px;
 
   background: #ffffff;
@@ -138,8 +139,8 @@
   background:
     linear-gradient(
       135deg,
-      #6366f1,
-      #8b5cf6
+      #2f6f73,
+      #2f6f73
     );
 
   color: #ffffff;
@@ -172,7 +173,7 @@
   h1 {
     margin: 0;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 30px;
     font-weight: 800;
@@ -182,7 +183,7 @@
 .email {
   margin: 7px 0 11px;
 
-  color: #6b7280;
+  color: #617176;
 
   font-size: 14px;
 }
@@ -210,22 +211,22 @@
 
 .status-badge {
   background: #f3f4f6;
-  color: #6b7280;
+  color: #617176;
 
   &.active {
-    background: #dcfce7;
+    background: #e8f3ed;
     color: #15803d;
   }
 }
 
 .visibility-badge {
-  background: #eef2ff;
-  color: #4f46e5;
+  background: #e8f0ee;
+  color: #a65342;
 }
 
 .role-badge {
-  background: #f3e8ff;
-  color: #7e22ce;
+  background: #edf1ef;
+  color: #2f6f73;
 }
 
 // ===============================
@@ -243,7 +244,7 @@
   border: 1px solid #bbf7d0;
   border-radius: 12px;
 
-  background: #f0fdf4;
+  background: #e8f3ed;
 
   color: #166534;
 
@@ -290,7 +291,7 @@
   h2 {
     margin: 0 0 5px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 21px;
   }
@@ -298,7 +299,7 @@
   p {
     margin: 0;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 13px;
   }
@@ -315,9 +316,9 @@
 
   border-radius: 14px;
 
-  background: #eef2ff;
+  background: #e8f0ee;
 
-  color: #4f46e5;
+  color: #a65342;
 
   font-size: 20px;
 }
@@ -328,7 +329,7 @@
   border: 0;
   border-radius: 11px;
 
-  background: #4f46e5;
+  background: #a65342;
 
   color: #ffffff;
 
@@ -374,7 +375,7 @@
   h3 {
     margin: 0 0 17px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 16px;
   }
@@ -383,7 +384,7 @@
 .bio-text {
   margin: 0;
 
-  color: #374151;
+  color: #3f565c;
 
   font-size: 14px;
   line-height: 1.8;
@@ -394,7 +395,7 @@
 .empty-text {
   margin: 0;
 
-  color: #9ca3af;
+  color: #839093;
 
   font-size: 14px;
 }
@@ -407,19 +408,19 @@
 
   padding: 13px 0;
 
-  border-bottom: 1px solid #f0f1f4;
+  border-bottom: 1px solid #e7ecea;
 
   &:last-child {
     border-bottom: 0;
   }
 
   span {
-    color: #9ca3af;
+    color: #839093;
     font-size: 13px;
   }
 
   strong {
-    color: #374151;
+    color: #3f565c;
 
     font-size: 13px;
   }
@@ -433,8 +434,8 @@
   background:
     linear-gradient(
       135deg,
-      #4f46e5,
-      #7c3aed
+      #a65342,
+      #2f6f73
     );
 
   color: #ffffff;
@@ -475,13 +476,13 @@
 
     margin-bottom: 10px;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 12px;
   }
 
   strong {
-    color: #374151;
+    color: #3f565c;
 
     font-size: 14px;
   }
@@ -499,9 +500,9 @@
 
   border-radius: 999px;
 
-  background: #f3e8ff;
+  background: #edf1ef;
 
-  color: #7e22ce;
+  color: #2f6f73;
 
   font-size: 12px;
   font-weight: 700;
@@ -524,7 +525,7 @@
   h2 {
     margin: 0 0 5px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 22px;
   }
@@ -532,7 +533,7 @@
   p {
     margin: 0;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 13px;
   }
@@ -596,7 +597,7 @@
 
     gap: 8px;
 
-    color: #1f2937;
+    color: #27363b;
 
     font-size: 14px;
     font-weight: 700;
@@ -604,7 +605,7 @@
 }
 
 .field-icon {
-  color: #4f46e5;
+  color: #a65342;
 
   font-size: 18px;
 }
@@ -614,7 +615,7 @@
 }
 
 .counter {
-  color: #9ca3af;
+  color: #839093;
 
   font-size: 12px;
 }
@@ -635,7 +636,7 @@
 
     background: #ffffff;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 14px;
 
@@ -646,7 +647,7 @@
       box-shadow 0.2s ease;
 
     &:focus {
-      border-color: #6366f1;
+      border-color: #2f6f73;
 
       box-shadow:
         0 0 0 3px
@@ -664,7 +665,7 @@
 .field-help {
   margin: 8px 0 0;
 
-  color: #9ca3af;
+  color: #839093;
 
   font-size: 12px;
 }
@@ -684,13 +685,13 @@
 .tips-card {
   padding: 22px;
 
-  border: 1px solid #ede9fe;
+  border: 1px solid #edf1ef;
   border-radius: 18px;
 
   background:
     linear-gradient(
       180deg,
-      #faf9ff 0%,
+      #fffdf8 0%,
       #ffffff 100%
     );
 }
@@ -704,7 +705,7 @@
   h3 {
     margin: 0;
 
-    color: #4f46e5;
+    color: #a65342;
 
     font-size: 17px;
   }
@@ -718,7 +719,7 @@
   margin:
     12px 0 18px;
 
-  color: #6b7280;
+  color: #617176;
 
   font-size: 12px;
   line-height: 1.7;
@@ -736,7 +737,7 @@
   border-radius: 13px;
 
   strong {
-    color: #374151;
+    color: #3f565c;
 
     font-size: 13px;
   }
@@ -744,7 +745,7 @@
   p {
     margin: 4px 0 0;
 
-    color: #6b7280;
+    color: #617176;
 
     font-size: 11px;
     line-height: 1.5;
@@ -758,7 +759,7 @@
 }
 
 .tip-green {
-  background: #f0fdf4;
+  background: #e8f3ed;
 }
 
 .tip-blue {
@@ -807,7 +808,7 @@
 
   background: #ffffff;
 
-  color: #374151;
+  color: #3f565c;
 
   &:hover:not(:disabled) {
     background: #f9fafb;
@@ -817,7 +818,7 @@
 .save-button {
   border: 0;
 
-  background: #4f46e5;
+  background: #a65342;
 
   color: #ffffff;
 

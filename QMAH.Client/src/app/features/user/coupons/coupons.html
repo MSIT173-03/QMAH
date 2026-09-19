@@ -75,7 +75,7 @@
     <div class="empty-state">
 
       <div class="empty-icon">
-        🎟️
+        <app-qmah-icon name="ticket" />
       </div>
 
       <h2>
@@ -111,7 +111,7 @@
       >
 
         <div class="summary-icon">
-          🎟️
+          <app-qmah-icon name="ticket" />
         </div>
 
         <div>
@@ -126,9 +126,7 @@
 
         </div>
 
-        <span class="filter-arrow">
-          →
-        </span>
+        <span class="filter-arrow"><app-qmah-icon name="arrow-right" /></span>
 
       </button>
 
@@ -141,7 +139,7 @@
       >
 
         <div class="summary-icon">
-          ✓
+          <app-qmah-icon name="circle-check" />
         </div>
 
         <div>
@@ -156,9 +154,7 @@
 
         </div>
 
-        <span class="filter-arrow">
-          →
-        </span>
+        <span class="filter-arrow"><app-qmah-icon name="arrow-right" /></span>
 
       </button>
 
@@ -171,7 +167,7 @@
       >
 
         <div class="summary-icon">
-          ✓
+          <app-qmah-icon name="circle-check" />
         </div>
 
         <div>
@@ -186,9 +182,7 @@
 
         </div>
 
-        <span class="filter-arrow">
-          →
-        </span>
+        <span class="filter-arrow"><app-qmah-icon name="arrow-right" /></span>
 
       </button>
 
@@ -200,9 +194,7 @@
         (click)="selectStatus('EXPIRED')"
       >
 
-        <div class="summary-icon">
-          ⏱
-        </div>
+        <div class="summary-icon"><app-qmah-icon name="clock" /></div>
 
         <div>
 
@@ -216,9 +208,7 @@
 
         </div>
 
-        <span class="filter-arrow">
-          →
-        </span>
+        <span class="filter-arrow"><app-qmah-icon name="arrow-right" /></span>
 
       </button>
 
@@ -272,7 +262,7 @@
         <div class="filter-empty">
 
           <div>
-            🎫
+            <app-qmah-icon name="receipt" />
           </div>
 
           <strong>
@@ -327,7 +317,7 @@
                 <div class="coupon-brand">
 
                   <div class="coupon-icon">
-                    🎟️
+                    <app-qmah-icon name="ticket" />
                   </div>
 
                   <span>
@@ -345,7 +335,7 @@
 
                     <span class="expire-soon">
 
-                      🔥
+                      <app-qmah-icon name="flame" />
 
                       剩
                       {{ getRemainingDays(coupon) }}
@@ -552,7 +542,8 @@
 
                 <span class="inactive-text">
 
-                  ✓ 已完成使用
+                  <app-qmah-icon name="circle-check" />
+                  已完成使用
 
                 </span>
 

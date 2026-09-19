@@ -11,7 +11,12 @@
         <div class="footer-col">
           <span class="label-tag">{{ col.title }}</span>
           @for (link of col.links; track link.label) {
-            <a [storeLink]="link.href" class="footer-col-link">{{ link.label }}</a>
+            @if (link.href !== '#') {
+              <a [storeLink]="link.href" class="footer-col-link">{{ link.label }}</a>
+            } @else {
+              <!-- ui-integration: mock 設定中的未實作頁面保留資訊文字，不渲染成會回到頂端的假連結。 -->
+              <span class="footer-col-link footer-col-link--disabled" aria-disabled="true">{{ link.label }}</span>
+            }
           }
         </div>
       }
@@ -29,8 +34,16 @@
 <ng-template #bottomRow let-simple="simple">
   <div class="footer-bottom-row" [class.footer-bottom-row--simple]="simple">
     <span>{{ copyright }}</span>
-    <a [storeLink]="privacyHref" class="footer-link">隱私權政策</a>
-    <a [storeLink]="termsHref" class="footer-link">服務條款</a>
+    @if (privacyHref) {
+      <a [storeLink]="privacyHref" class="footer-link">隱私權政策</a>
+    } @else {
+      <span class="footer-link footer-link--disabled" aria-disabled="true">隱私權政策</span>
+    }
+    @if (termsHref) {
+      <a [storeLink]="termsHref" class="footer-link">服務條款</a>
+    } @else {
+      <span class="footer-link footer-link--disabled" aria-disabled="true">服務條款</span>
+    }
     <span class="footer-note">{{ serviceNote }}</span>
   </div>
 </ng-template>

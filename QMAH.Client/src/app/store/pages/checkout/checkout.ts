@@ -61,8 +61,8 @@ export class Checkout {
     { label: '購物車', href: CART_PATH },
     { label: '結帳' },
   ];
-  /** 頁面標題列右側連結（個人頁面尚未實作，暫用預留連結） */
-  protected readonly profileLink = { label: '管理個人資料 →', href: '#' };
+  // ui-integration: 結帳頁沿用目前已存在的會員個人資料頁，避免操作完成後落到假的預留連結。
+  protected readonly profileLink = { label: '管理個人資料 →', href: '/member/profile' };
 
   /* ===============================
      API 資料

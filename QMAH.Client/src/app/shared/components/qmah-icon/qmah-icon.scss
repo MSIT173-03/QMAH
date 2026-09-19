@@ -1,0 +1,9 @@
+/* ui-integration: 所有一般功能圖示由同一個 Lucide renderer 產生，統一尺寸與筆畫；鑰匙道具不經過這裡。 */
+:host {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  line-height: 0;
+  vertical-align: middle;
+}

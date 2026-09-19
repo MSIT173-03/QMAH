@@ -6,6 +6,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { MeApiService } from '../../core/services/me-api';
 import { ToastService } from '../../core/services/toast';
+import { QmahIconComponent } from '../../shared/components/qmah-icon/qmah-icon';
 
 /**
  * 開發測試專用的登入小工具——直接呼叫既有的 /account/login、/account/antiforgery-token、
@@ -20,7 +21,7 @@ import { ToastService } from '../../core/services/toast';
 @Component({
   selector: 'app-dev-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, QmahIconComponent],
   templateUrl: './dev-login.html',
   styleUrl: './dev-login.scss'
 })
@@ -94,6 +95,6 @@ export class DevLoginComponent {
   private setMessage(text: string | null, type: 'success' | 'error' | 'info'): void {
     this.message = text;
     this.messageType = type;
-    if (text && type === 'error') this.toast.show(`🔧 ${text}`, 'error');
+    if (text && type === 'error') this.toast.show(`開發測試：${text}`, 'error');
   }
 }

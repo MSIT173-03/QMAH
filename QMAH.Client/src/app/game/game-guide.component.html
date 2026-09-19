@@ -1,0 +1,30 @@
+<div class="game-guide">
+  <!-- ui-integration: 說明頁沿用 Game 子導覽，讓玩家可直接回到多人鑑定或切換單人玩法。 -->
+  <app-game-navigation>
+    <a class="guide-nav-back" routerLink="/game">返回多人鑑定大廳</a>
+  </app-game-navigation>
+
+  <section class="guide-heading" aria-labelledby="game-guide-title">
+    <p class="eyebrow">遊戲指南</p>
+    <h1 id="game-guide-title">先看懂，再開始玩</h1>
+    <p>把目前所在的玩法流程拆開來看；看完就能直接切到對應入口。</p>
+  </section>
+
+  <nav class="guide-tabs" aria-label="選擇玩法說明" role="tablist">
+    <button id="guide-tab-multiplayer" type="button" role="tab" aria-controls="guide-panel" [attr.aria-selected]="activeGuide() === 'multiplayer'" [class.is-active]="activeGuide() === 'multiplayer'" (click)="selectGuide('multiplayer')">
+      <span>多人鑑定</span><small>選房、作答、投票</small>
+    </button>
+    <button id="guide-tab-training" type="button" role="tab" aria-controls="guide-panel" [attr.aria-selected]="activeGuide() === 'training'" [class.is-active]="activeGuide() === 'training'" (click)="selectGuide('training')">
+      <span>單人小遊戲</span><small>挑玩法、完成短局</small>
+    </button>
+  </nav>
+
+  <section id="guide-panel" class="guide-panel" role="tabpanel" [attr.aria-labelledby]="'guide-tab-' + activeGuide()" aria-live="polite">
+    <app-game-how-to [variant]="activeGuide()" [openByDefault]="true" />
+    @if (activeGuide() === 'multiplayer') {
+      <a class="guide-panel-link" routerLink="/game">前往多人鑑定大廳</a>
+    } @else {
+      <a class="guide-panel-link" routerLink="/game/training">前往單人小遊戲</a>
+    }
+  </section>
+</div>

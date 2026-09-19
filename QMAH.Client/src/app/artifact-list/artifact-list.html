@@ -64,7 +64,8 @@
           共 <strong>{{ totalCount() }}</strong> 筆・已解鎖 <strong>{{ unlockedCount() }}</strong>
         </span>
         <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
-          鑰匙背包🔑 <strong>{{ keys() }}</strong>
+          <svg lucideKeyRound aria-hidden="true" focusable="false"></svg>
+          鑰匙背包 <strong>{{ keys() }}</strong>
         </button>
       </div>
 
@@ -104,8 +105,16 @@
                 (click)="openCard(item.id)"
               >
                 <div class="artifact-card__media">
-                  <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
-                  <span class="lock-badge" *ngIf="!item.unlocked">🔒</span>
+                  @if (item.thumbnailPath) {
+                    <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
+                  } @else {
+                    <span class="artifact-image-placeholder" aria-label="尚無文物縮圖">
+                      <svg lucideImage aria-hidden="true" focusable="false"></svg>
+                    </span>
+                  }
+                  <span class="lock-badge" *ngIf="!item.unlocked">
+                    <svg lucideLockKeyhole aria-hidden="true" focusable="false"></svg>
+                  </span>
                 </div>
 
                 <div class="artifact-card__info">
@@ -151,12 +160,21 @@
       <div class="focus-actions">
         <ng-container *ngIf="item.unlocked; else lockedActions">
           <button type="button" class="action-btn info-btn" [class.active]="infoOpen()" (click)="toggleInfo()">
-            {{ infoOpen() ? '✕ 關閉' : 'ℹ️ info' }}
+            @if (infoOpen()) {
+              <svg lucideX aria-hidden="true" focusable="false"></svg>
+              關閉
+            } @else {
+              <svg lucideInfo aria-hidden="true" focusable="false"></svg>
+              查看資料
+            }
           </button>
           <div class="hint">點擊空白處返回圖鑑</div>
         </ng-container>
         <ng-template #lockedActions>
-          <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">🔓 解鎖</button>
+          <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">
+            <svg lucideLockKeyholeOpen aria-hidden="true" focusable="false"></svg>
+            解鎖
+          </button>
           <div class="hint">需消耗 {{ unlockKeyCost() }} 把萬能鑰匙解鎖</div>
         </ng-template>
       </div>
@@ -250,7 +268,7 @@
     (click)="onConfirmOverlayClick($event)"
   >
     <div class="confirm-dialog" *ngIf="confirmTarget() as target">
-      <span class="key-icon">🔑</span>
+      <svg lucideKeyRound class="key-icon" aria-hidden="true" focusable="false"></svg>
       <h3>解鎖確認</h3>
       <p>使用 <strong>{{ confirmCost() }}</strong> 把萬能鑰匙解鎖「{{ target.artifactRef }}」的紀錄？</p>
       <p class="have">
@@ -285,7 +303,7 @@
   />
 
   <!-- 鑰匙背包彈出框：不再導頁到另一個頁面，點「鑰匙背包」按鈕後直接在這裡開一個放大框，
-       點旁邊空白處（backdrop）或 KeyList 自己標題列右上角的 ✕ 都能關閉 -->
+       點旁邊空白處（backdrop）或 KeyList 自己標題列右上角的關閉按鈕都能關閉 -->
   <div class="overlay" [class.open]="keyBagOpen()" (click)="onKeyBagOverlayClick($event)">
     <div class="key-bag-stage" *ngIf="keyBagOpen()">
       <app-key-list

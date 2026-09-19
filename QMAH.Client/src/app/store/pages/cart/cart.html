@@ -5,7 +5,7 @@
   </app-header-actions>
 </app-site-header>
 
-<main class="container cart-main">
+<div class="container cart-main">
 
   <!-- 麵包屑導覽 -->
   <app-breadcrumb [items]="breadcrumbItems" />
@@ -33,7 +33,7 @@
 
   <!-- 再加購 -->
   <app-cart-addons [items]="addons()" (addToCart)="onAddAddon($event)" />
-</main>
+</div>
 
 <!-- 頁尾：簡版，僅顯示版權列 -->
 <app-site-footer />

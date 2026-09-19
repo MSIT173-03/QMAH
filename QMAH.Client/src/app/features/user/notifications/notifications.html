@@ -105,7 +105,7 @@
     <div class="empty-state">
 
       <div class="empty-icon">
-        🔔
+        <app-qmah-icon name="bell" />
       </div>
 
       <span class="empty-eyebrow">
@@ -146,7 +146,7 @@
       >
 
         <div class="summary-icon all-icon">
-          🔔
+          <app-qmah-icon name="bell" />
         </div>
 
         <div class="summary-content">
@@ -198,7 +198,7 @@
       >
 
         <div class="summary-icon read-icon">
-          ✓
+          <app-qmah-icon name="circle-check" />
         </div>
 
         <div class="summary-content">
@@ -340,7 +340,7 @@
         <div class="filter-empty">
 
           <div>
-            ✓
+            <app-qmah-icon name="circle-check" />
           </div>
 
           <h3>
@@ -394,7 +394,7 @@
                 [class.read-icon-box]="notification.isRead"
               >
 
-                {{ getNotificationIcon(notification) }}
+                <app-qmah-icon [name]="getNotificationIcon(notification)" />
 
               </div>
 
@@ -476,9 +476,7 @@
 
                       查看詳情
 
-                      <span>
-                        →
-                      </span>
+                      <app-qmah-icon name="arrow-right" />
 
                     </button>
 
@@ -527,7 +525,7 @@
             (click)="previousPage()"
             [disabled]="!hasPreviousPage || loading"
           >
-            ←
+            <app-qmah-icon name="arrow-left" />
             上一頁
           </button>
 
@@ -560,7 +558,7 @@
             [disabled]="!hasNextPage || loading"
           >
             下一頁
-            →
+            <app-qmah-icon name="arrow-right" />
           </button>
 
         </div>

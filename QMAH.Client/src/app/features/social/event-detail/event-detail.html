@@ -1,5 +1,9 @@
+<div class="qmah-social-page">
 <div class="mb-4">
-  <a routerLink="/social/events" class="btn btn-ghost btn-sm">← 返回活動列表</a>
+  <a routerLink="/social/events" class="btn btn-ghost btn-sm social-icon-label">
+    <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
+    返回活動列表
+  </a>
 </div>
 
 @if (loading) {
@@ -17,7 +21,10 @@
         {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
       </span>
       <h2 class="card-title">{{ event.title }}</h2>
-      <p class="text-xs text-base-content/60">✍️ {{ event.organizerDisplayName || '匿名會員' }}</p>
+      <p class="text-xs text-base-content/60 social-icon-label">
+        <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+        {{ event.organizerDisplayName || '匿名會員' }}
+      </p>
       <p class="whitespace-pre-line">{{ event.content }}</p>
 
       @if (event.media.length > 0) {
@@ -29,9 +36,9 @@
       }
 
       <ul class="text-sm mt-2 space-y-1">
-        <li>🕒 {{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}</li>
+        <li class="social-icon-label"><svg lucideCalendarClock aria-hidden="true" focusable="false"></svg>{{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}</li>
         @if (event.location) {
-          <li>📍 {{ event.location }}</li>
+          <li class="social-icon-label"><svg lucideMapPin aria-hidden="true" focusable="false"></svg>{{ event.location }}</li>
         }
         @if (event.registrationEndAt) {
           <li>報名截止：{{ event.registrationEndAt | date: 'yyyy-MM-dd HH:mm' }}</li>
@@ -43,8 +50,9 @@
       </ul>
 
       @if (event.socialPostId) {
-        <a class="btn btn-sm btn-ghost mt-2 w-fit" [routerLink]="['/social/posts', event.socialPostId]">
-          💬 查看活動貼文與留言
+        <a class="btn btn-sm btn-ghost mt-2 w-fit social-icon-label" [routerLink]="['/social/posts', event.socialPostId]">
+          <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
+          查看活動貼文與留言
         </a>
       }
 
@@ -62,3 +70,4 @@
     </div>
   </div>
 }
+</div>

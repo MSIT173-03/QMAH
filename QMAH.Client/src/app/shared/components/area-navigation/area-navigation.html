@@ -1,7 +1,39 @@
-<!-- 跨 Area 導航只補入口，不改各頁原有版面與操作流程。 -->
-<nav class="area-navigation" aria-label="QMAH 主要功能">
-  <span class="area-navigation-label">前往</span>
+<!-- ui-integration: 跨 Area 導航只提供既有入口，不改各頁原有版面與操作流程。 -->
+<nav
+  class="area-navigation"
+  [class.area-navigation--desktop]="variant() === 'desktop'"
+  [class.area-navigation--mobile]="variant() === 'mobile'"
+  aria-label="QMAH 主要功能"
+>
   @for (link of links; track link.path) {
-    <a [routerLink]="link.path">{{ link.label }}</a>
+    <a
+      [routerLink]="link.path"
+      (click)="notifyItemSelected()"
+      [class.is-active]="isActive(link)"
+      [attr.aria-current]="isActive(link) ? 'page' : null"
+    >
+      @if (link.icon) { <ng-container *ngComponentOutlet="link.icon"></ng-container> }
+      <span>{{ link.label }}</span>
+    </a>
+  }
+
+  @if (variant() === 'mobile') {
+    @for (group of groups(); track group.label) {
+      <section class="area-navigation__group" [class.area-navigation__group--admin]="group.tone === 'admin'" [attr.aria-labelledby]="'navigation-group-' + group.label">
+        <h2 [id]="'navigation-group-' + group.label">{{ group.label }}</h2>
+        @for (link of group.items; track link.path) {
+          <a
+            [routerLink]="link.path"
+            (click)="notifyItemSelected()"
+            [class.is-active]="isActive(link)"
+            [attr.aria-current]="isActive(link) ? 'page' : null"
+          >
+            @if (link.icon) { <ng-container *ngComponentOutlet="link.icon"></ng-container> }
+            <span>{{ link.label }}</span>
+            @if (link.badge !== undefined) { <b class="area-navigation__badge">{{ link.badge }}</b> }
+          </a>
+        }
+      </section>
+    }
   }
 </nav>

@@ -19,6 +19,8 @@ import {
 import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import type { QmahIconName } from '../../../shared/components/qmah-icon/qmah-icon';
 
 
 interface NotificationDto {
@@ -52,7 +54,8 @@ type NotificationFilter =
 
   imports: [
     CommonModule,
-    BackToMember
+    BackToMember,
+    QmahIconComponent
   ],
 
   templateUrl: './notifications.html',
@@ -477,13 +480,13 @@ export class Notifications implements OnInit {
 
   getNotificationIcon(
     notification: NotificationDto
-  ): string {
+  ): QmahIconName {
 
     if (!notification.isRead) {
-      return '🔔';
+      return 'bell';
     }
 
-    return '✓';
+    return 'check-circle';
 
   }
 

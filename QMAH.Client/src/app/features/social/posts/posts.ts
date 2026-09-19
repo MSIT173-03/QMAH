@@ -9,11 +9,38 @@ import { MeApiService } from '../../../core/services/me-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
+import {
+  LucideChevronLeft,
+  LucideChevronRight,
+  LucideFlag,
+  LucideImage,
+  LucideMessageCircle,
+  LucideMegaphone,
+  LucidePlus,
+  LucideUserRound,
+  LucideX,
+} from '@lucide/angular';
 
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, ReportModalComponent, SocialPostContentComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ImageCropModalComponent,
+    ReportModalComponent,
+    SocialPostContentComponent,
+    LucideChevronLeft,
+    LucideChevronRight,
+    LucideFlag,
+    LucideImage,
+    LucideMessageCircle,
+    LucideMegaphone,
+    LucidePlus,
+    LucideUserRound,
+    LucideX,
+  ],
   templateUrl: './posts.html',
   styleUrl: './posts.scss'
 })

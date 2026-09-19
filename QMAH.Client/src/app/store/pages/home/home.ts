@@ -92,6 +92,7 @@ export class Home {
     { initialValue: [] },
   );
   /** 分類導覽列「新品上架」與各分類的連結網址 */
+  protected readonly productsPath = PRODUCT_LIST_PATH;
   protected readonly newArrivalsPath = `${PRODUCT_LIST_PATH}?view=new`;
   protected categoryPath(name: string): string {
     return `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`;
@@ -125,12 +126,6 @@ export class Home {
   protected onRequireMore(): void {
     this.loadRecommendations();
   }
-
-  protected onClickAllCategory() {}
-
-  protected onClickSpecial() {}
-
-  protected onClickOnSell() {}
 
   /** 請求「為你推薦」的商品資料並加入目前列表。 */
   private loadRecommendations(): void {

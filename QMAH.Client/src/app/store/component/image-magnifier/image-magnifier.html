@@ -8,6 +8,9 @@
       [style.background-image]="'url(' + imageUrl + ')'"
       [style.background-position]="positionText()"></span>
   } @else {
-    <span class="magnifier-placeholder">目前沒有可用圖像</span>
+    <span class="magnifier-placeholder">
+      <svg lucideImage aria-hidden="true" focusable="false"></svg>
+      <span>目前沒有可用圖像</span>
+    </span>
   }
 </div>

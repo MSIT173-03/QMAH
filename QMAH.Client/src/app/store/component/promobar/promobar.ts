@@ -19,19 +19,20 @@ export class Promobar {
   /** 跑馬燈公告文字清單 */
   announcements = input<string[]>([]);
 
-  /** 「訂單查詢」連結網址 */
-  ordersHref = input('#');
+  // ui-integration: 只把已有會員 route 接到商城快捷列；訂單歷史尚無前台 route，保持非連結狀態，不製造假的頁面入口。
+  /** 「訂單查詢」連結網址；尚無對應前台頁面時為 null */
+  ordersHref = input<string | null>(null);
   /** 「個人頁面」連結網址 */
-  profileHref = input('#');
+  profileHref = input('/member/profile');
   /** 「點數」連結網址 */
-  pointsHref = input('#');
+  pointsHref = input('/member/economy');
   /** 目前點數顯示文字 */
   points = input('0');
 
   /** 「折價券」連結網址 */
-  couponsHref = input('#');
+  couponsHref = input('/member/coupons');
   /** 折價券面板中「管理所有折價券」連結網址 */
-  manageCouponsHref = input('#');
+  manageCouponsHref = input('/member/coupons');
   /** 折價券清單資料 */
   coupons = input<Coupon[]>([]);
 

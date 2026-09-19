@@ -37,3 +37,10 @@
   flex-direction: column;
   gap: 12px;
 }
+
+/* ui-integration: 摘要在手機移到商品清單下方，保留既有購物車資訊架構但不讓 316px 側欄擠壓內容。 */
+@media (max-width: 800px) {
+  .cart-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

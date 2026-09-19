@@ -109,6 +109,30 @@
     gap: 24px;
   }
 
+  /* ui-integration: 商城頁首在窄螢幕改為品牌／搜尋與購物車分層，避免搜尋列把頁面撐出水平捲軸。 */
+  /* ui-integration: 720px 以前先重排商城頁首，再讓內容自行決定欄數，涵蓋常見平板直向與手機。 */
+  @media (max-width: 720px) {
+    .site-header-row {
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 12px 14px 16px;
+    }
+
+    .site-header-row--hero { padding-bottom: 18px; }
+    .site-header-row .brand-logo { flex: 0 0 100%; }
+    .site-header-row .brand-logo-img { height: 32px; }
+    .site-header-row .search-wrap { flex: 1 1 0; max-width: none; min-width: 0; }
+    .site-header-row .search-submit { padding-inline: 12px; }
+    .site-header-row .hdr-actions { margin-left: 0; gap: 8px; }
+    .nav-bar-row { gap: 12px; padding: 9px 14px; }
+    .nav-highlight { margin-left: 0; }
+
+    .sticky-92 { position: static; }
+
+    .search-box { min-height: 40px; height: auto; }
+    .search-submit { min-height: 32px; }
+  }
+
   /* 直向排列的側欄容器 */
   .hero-sidebar {
     display: flex;
@@ -245,6 +269,12 @@
     &:hover {
       background: var(--color-accent);
     }
+  }
+
+  /* ui-integration: 商城主要 CTA 保留原本造型，但把觸控高度收斂到可操作的 44px。 */
+  .btn-solid,
+  .btn-outline {
+    min-height: 44px;
   }
   /* 佔滿容器寬度的實心按鈕（訂單摘要的主要操作） */
   .btn-solid--full {

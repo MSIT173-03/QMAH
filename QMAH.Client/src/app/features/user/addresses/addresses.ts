@@ -30,6 +30,7 @@ import {
 } from '../user.models';
 
 import { BackToMember } from '../../../shared/back-to-member/back-to-member';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 
 @Component({
@@ -38,7 +39,8 @@ import { BackToMember } from '../../../shared/back-to-member/back-to-member';
   imports: [
     CommonModule,
     FormsModule,
-    BackToMember
+    BackToMember,
+    QmahIconComponent
   ],
 
   templateUrl: './addresses.html',

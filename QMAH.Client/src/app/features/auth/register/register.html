@@ -5,7 +5,7 @@
     <div class="register-header">
 
       <div class="register-icon">
-        👤
+        <app-qmah-icon name="user-plus" />
       </div>
 
       <h1>
@@ -130,7 +130,7 @@
               aria-label="密碼格式正確"
               title="密碼格式正確"
             >
-              ✓
+              <app-qmah-icon name="circle-check" />
             </span>
 
           }
@@ -151,7 +151,7 @@
                 : '顯示密碼'
             "
           >
-            {{ showPassword ? '🙈' : '👁️' }}
+            <app-qmah-icon [name]="showPassword ? 'eye-off' : 'eye'" />
           </button>
 
         </div>
@@ -173,7 +173,7 @@
               [class.valid]="hasMinLength"
             >
               <span>
-                {{ hasMinLength ? '✓' : '○' }}
+                <app-qmah-icon [name]="hasMinLength ? 'circle-check' : 'circle-alert'" size="14" />
               </span>
 
               至少 8 個字元
@@ -184,7 +184,7 @@
               [class.valid]="hasUppercase"
             >
               <span>
-                {{ hasUppercase ? '✓' : '○' }}
+                <app-qmah-icon [name]="hasUppercase ? 'circle-check' : 'circle-alert'" size="14" />
               </span>
 
               至少 1 個大寫英文
@@ -195,7 +195,7 @@
               [class.valid]="hasLowercase"
             >
               <span>
-                {{ hasLowercase ? '✓' : '○' }}
+                <app-qmah-icon [name]="hasLowercase ? 'circle-check' : 'circle-alert'" size="14" />
               </span>
 
               至少 1 個小寫英文
@@ -206,7 +206,7 @@
               [class.valid]="hasNumber"
             >
               <span>
-                {{ hasNumber ? '✓' : '○' }}
+                <app-qmah-icon [name]="hasNumber ? 'circle-check' : 'circle-alert'" size="14" />
               </span>
 
               至少 1 個數字
@@ -217,7 +217,7 @@
               [class.valid]="hasSpecialCharacter"
             >
               <span>
-                {{ hasSpecialCharacter ? '✓' : '○' }}
+                <app-qmah-icon [name]="hasSpecialCharacter ? 'circle-check' : 'circle-alert'" size="14" />
               </span>
 
               至少 1 個特殊符號
@@ -264,7 +264,7 @@
               aria-label="兩次密碼一致"
               title="兩次密碼一致"
             >
-              ✓
+              <app-qmah-icon name="circle-check" />
             </span>
 
           }
@@ -285,11 +285,7 @@
                 : '顯示確認密碼'
             "
           >
-            {{
-              showConfirmPassword
-                ? '🙈'
-                : '👁️'
-            }}
+            <app-qmah-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'" />
           </button>
 
         </div>
@@ -301,7 +297,8 @@
         ) {
 
           <div class="password-match error">
-            ✕ 兩次輸入的密碼不一致
+            <app-qmah-icon name="circle-alert" />
+            兩次輸入的密碼不一致
           </div>
 
         }

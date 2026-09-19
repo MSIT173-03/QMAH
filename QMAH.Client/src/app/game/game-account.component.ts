@@ -3,12 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize } from 'rxjs';
 
+import { GameNavigationComponent } from './game-navigation.component';
 import { GameService } from './game.service';
 import { GameAccountService } from './game-account.service';
 
 @Component({
   selector: 'app-game-account',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, GameNavigationComponent],
   templateUrl: './game-account.component.html',
   styleUrl: './game-account.component.scss'
 })

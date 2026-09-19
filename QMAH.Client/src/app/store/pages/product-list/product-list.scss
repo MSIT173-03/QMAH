@@ -49,3 +49,13 @@
   flex-direction: column;
   gap: 10px;
 }
+
+/* ui-integration: 商品篩選在手機改成上下排列，維持既有列表／卡片切換而不讓側欄擠壓內容。 */
+@media (max-width: 720px) {
+  /* ui-integration: 行動版把篩選側欄還原為正常流，避免 sticky top 值與雙層頁首重疊。 */
+  .list-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tab-row { width: 100%; }
+}

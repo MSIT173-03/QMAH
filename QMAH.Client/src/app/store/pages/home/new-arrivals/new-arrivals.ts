@@ -4,9 +4,10 @@ import { map } from 'rxjs';
 import { Panel, SectionHead } from '../../../component';
 import { CatalogApi } from '../../../api';
 import { formatDateMD } from '../../../shared/format';
-import { PRODUCT_LIST_PATH } from '../../../shared/paths';
+import { PRODUCT_LIST_PATH, productPath } from '../../../shared/paths';
 import { formatRating, formatReviews, toPriceView, toProductView } from '../../../shared/product-view';
 import { StoreLink } from '../../../shared/store-link';
+import { LucidePackageSearch } from '@lucide/angular';
 
 /** 新品上架顯示的商品數量 */
 const NEW_ARRIVAL_COUNT = 4;
@@ -14,7 +15,7 @@ const NEW_ARRIVAL_COUNT = 4;
 /** 首頁「新品上架」面板：橫列式商品清單 */
 @Component({
   selector: 'app-new-arrivals',
-  imports: [Panel, SectionHead, StoreLink],
+  imports: [Panel, SectionHead, StoreLink, LucidePackageSearch],
   templateUrl: './new-arrivals.html',
   styleUrls: [
     './new-arrivals.scss',
@@ -26,6 +27,8 @@ export class NewArrivals {
 
   /** 「更多 →」連結網址：商品列表頁，並套用「新品上架」入口（預設以由新到舊排序） */
   protected readonly moreHref = `${PRODUCT_LIST_PATH}?view=new`;
+  /** 新品列的商品詳情連結，沿用商城既有商品頁 route */
+  protected readonly productPath = productPath;
 
   /** 最新上架的商品，依上架日期由新到舊排列 */
   private readonly products = toSignal(
@@ -60,6 +63,7 @@ export class NewArrivals {
   /** 角標日期文字：清單已由新到舊排列，取第一件的上架日期（MM/DD） */
   protected tagText = computed(() => {
     const latest = this.products()[0];
-    return latest ? `NEW · ${formatDateMD(latest.listedAt)}` : 'NEW';
+    // ui-integration: 缺少上架日期時使用可讀 fallback，避免 undefined/undefined 出現在正式商城文案。
+    return latest?.listedAt ? `NEW · ${formatDateMD(latest.listedAt)}` : 'NEW · 近期上架';
   });
 }

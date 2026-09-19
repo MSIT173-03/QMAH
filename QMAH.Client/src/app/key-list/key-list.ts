@@ -16,11 +16,12 @@ import { Router } from '@angular/router';
 import { KeyService } from '../services/key-service';
 import { CatalogService } from '../services/catalog-service';
 import { KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
+import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
 
 @Component({
   selector: 'app-key-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideCircleCheckBig, LucideLibrary],
   templateUrl: './key-list.html',
   styleUrl: './key-list.scss',
 })
@@ -252,21 +253,17 @@ export class KeyList implements OnInit {
     return keys.reduce((sum, key) => sum + key.balance, 0);
   }
 
-  /** 依鑰匙類型給一個對應的圖示，讓格子除了邊框顏色外，圖示本身也能一眼分辨種類（純前端外皮，跟 CompendiumSkin 的 emoji 是同一種做法） */
   /**
-   * 依鑰匙類型決定格子要顯示的圖示。
-   * 目前四種類型統一都先用 🔑，等你之後設計好每種類型專屬的 icon
-   * （不管是換成不同 emoji，還是換成圖片路徑），**改這個方法裡對應的 case 就好**，
-   * key-list.html 呼叫端（{{ keySlotIcon(k) }}）完全不用動。
-   * key.scopeType 目前有四種：'NORMAL' | 'CATEGORY' | 'ERA' | 'UNIVERSAL'。
+   * 圖鑑鑰匙資產固定使用同一個 1:1 SVG 畫布與同一個直向母版，僅以低彩度色相
+   * 和極少量內圈符號區分適用範圍；這裡只做前端呈現對照，不改後端鑰匙契約。
    */
   keySlotIcon(key: KeyModel): string {
     switch (key.scopeType) {
-      case 'NORMAL': return '🔑';
-      case 'CATEGORY': return '🔑';
-      case 'ERA': return '🔑';
-      case 'UNIVERSAL': return '🔑';
-      default: return '🔑';
+      case 'CATEGORY': return '/assets/catalog/keys/key-category.svg';
+      case 'ERA': return '/assets/catalog/keys/key-era.svg';
+      case 'UNIVERSAL': return '/assets/catalog/keys/key-universal.svg';
+      case 'NORMAL':
+      default: return '/assets/catalog/keys/key-normal.svg';
     }
   }
 

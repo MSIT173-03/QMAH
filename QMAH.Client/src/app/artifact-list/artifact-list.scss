@@ -2,18 +2,17 @@
 /* 已併入原 artifact-unlock.scss 的放大檢視／解鎖／鑑賞流水樣式，版面主體維持 artifact-list 原本設計。 */
 
 .artifact-page {
-  /* 色系跟 key-list.scss 完全對齊（同一套暖色木紋＋金色滾邊），
-     兩邊變數名稱一樣，只是這裡多了幾個圖鑑頁專用的（--header-h、--on-dark...）。 */
-  --ink: #f3e4c6;
-  --ink-soft: #c9ab7c;
-  --line: #8a6a3f;
-  --surface: #241a10;
-  --card: #4a3520;
-  --blue: #e3b955;
-  --blue-deep: #a97a2c;
-  --yellow: #6fb87f;
+  /* ui-integration: 保留圖鑑的年代分區與放大檢視，只把深木紋主題收斂到 QMAH 共用的紙白、青綠與赭紅。 */
+  --ink: #24434a;
+  --ink-soft: #667a7d;
+  --line: #d5dfdc;
+  --surface: #f7f4ee;
+  --card: #fffdf8;
+  --blue: #a65342;
+  --blue-deep: #2f6f73;
+  --yellow: #5b8d73;
   --red: #d9534f;
-  --locked: #6b5842;
+  --locked: #b6c1bd;
 
   // 標題橫幅（純標題列）的高度概估值；固定側欄／內容區的 top、margin-top、height 都要用同一個
   // 數字才對得齊，所以抽成變數，之後如果標題區塊內容或字級改變，只要改這裡一個地方。
@@ -35,7 +34,7 @@
 }
 
 .bac{
-  background-color: #241a10; // 跟 --surface 對齊；這層是最外層包裝，換膚時容易漏改，記得一起換
+  background-color: #f7f4ee;
 }
 
 
@@ -56,8 +55,8 @@
 
 .page-header__bar {
   width: 100%;
-  background: linear-gradient(180deg, #6b4a28 0%, #4a3018 100%);
-  border-bottom: 3px solid var(--blue-deep);
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
   padding: 18px 20px; // 水平內距改放在藍色橫幅自己身上，讓橫幅本身貼齊視窗左右邊緣，
                       // 不再讓外層 .page-header 留出一圈跟頁面底色一樣的空白
   box-sizing: border-box;
@@ -87,8 +86,8 @@
   text-align: left;
   font-size: 24px;
   font-weight: 700;
-  color: var(--blue);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  color: var(--ink);
+  text-shadow: none;
   letter-spacing: 0.04em;
 }
 
@@ -116,9 +115,18 @@
 }
 
 .key-badge--btn {
+  display: inline-flex;
+  align-items: center;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.key-badge--btn svg,
+.lock-badge svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.8;
 }
 
 .key-badge--btn:hover {
@@ -198,6 +206,20 @@
   flex: 0 0 auto;
   height: 220px;
   background: linear-gradient(160deg, #3a2814 0%, #241a10 100%);
+}
+
+.artifact-image-placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--ink-soft);
+  background: var(--surface);
+}
+
+.artifact-image-placeholder svg {
+  width: 34px;
+  height: 34px;
 }
 
 .thumbnail {
@@ -784,6 +806,9 @@
 }
 
 .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: none;
   cursor: pointer;
   font-family: inherit;
@@ -836,7 +861,7 @@
   opacity: 0;
   overflow: hidden;
   flex: none;
-  transition: width 0.32s cubic-bezier(.2, .8, .2, 1), opacity 0.28s ease 0.05s;
+  transition: opacity 0.28s ease 0.05s;
 }
 
 .stage.with-info .info-panel {
@@ -969,9 +994,13 @@
 }
 
 .confirm-dialog .key-icon {
-  font-size: 34px;
+  width: 40px;
+  height: 40px;
   display: block;
   margin-bottom: 10px;
+  margin-inline: auto;
+  color: var(--blue-deep);
+  stroke-width: 1.7;
 }
 
 .confirm-dialog h3 {
@@ -1127,7 +1156,15 @@
   .stage {
     flex-direction: column;
     gap: 18px;
+    /* ui-integration: 詳情視窗在窄螢幕改成可捲動的單欄，避免固定桌面高度把操作按鈕推出 viewport。 */
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding: 12px 0;
     --stage-w: min(340px, 88vw);
+    --stage-h: min(62vh, 480px);
+    --stage-h: min(62dvh, 480px);
   }
 
   .info-panel,

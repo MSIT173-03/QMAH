@@ -11,6 +11,14 @@ import { KeyService } from '../services/key-service';
 import { KeyModel } from '../models/key-model';
 import { SocialApiService } from '../core/services/social-api';
 import { ArtifactDiscussionDialog } from './artifact-discussion-dialog/artifact-discussion-dialog';
+import {
+  LucideImage,
+  LucideInfo,
+  LucideKeyRound,
+  LucideLockKeyhole,
+  LucideLockKeyholeOpen,
+  LucideX,
+} from '@lucide/angular';
 // ⚠️ 路徑是假設值：假設 key-list.ts 跟 artifact-list.ts 是同一層目錄下的兄弟資料夾
 // （例如都在 components/ 底下），如果實際檔案結構不同，這行要跟著改。
 import { KeyList } from '../key-list/key-list';
@@ -24,7 +32,18 @@ interface EraGroup {
 @Component({
   selector: 'app-artifact-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, KeyList, ArtifactDiscussionDialog],
+  imports: [
+    CommonModule,
+    FormsModule,
+    KeyList,
+    ArtifactDiscussionDialog,
+    LucideImage,
+    LucideInfo,
+    LucideKeyRound,
+    LucideLockKeyhole,
+    LucideLockKeyholeOpen,
+    LucideX,
+  ],
   templateUrl: './artifact-list.html',
   styleUrl: './artifact-list.scss'
 })
@@ -346,7 +365,6 @@ export class ArtifactList implements OnInit {
    */
   private toCardSummary(model: CatalogModel): CompendiumCardSummary {
     const placeholderSkin: CompendiumSkin = {
-      emoji: '🖼️',
       color: '#2a5cad',
       type: model.categoryName,
       rarity: '★★☆☆☆',

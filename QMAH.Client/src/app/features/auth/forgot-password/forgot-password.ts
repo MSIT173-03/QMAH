@@ -13,13 +13,15 @@ import {
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 @Component({
   selector: 'app-forgot-password',
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
+    QmahIconComponent
   ],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.scss'

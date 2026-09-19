@@ -1,3 +1,4 @@
+/* ui-integration: 每日登入保留任務、週進度與統計區塊，只統一會員頁的背景與強調色。 */
 :host {
   display: block;
 
@@ -6,11 +7,11 @@
   background:
     linear-gradient(
       180deg,
-      #f7f8fc 0%,
-      #f3f5fa 100%
+      #f7f4ee 0%,
+      #f3f0e8 100%
     );
 
-  color: #1f2937;
+  color: #27363b;
 }
 
 
@@ -41,7 +42,7 @@
   h1 {
     margin: 0 0 8px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 30px;
     font-weight: 800;
@@ -50,7 +51,7 @@
   p {
     margin: 0;
 
-    color: #6b7280;
+    color: #617176;
 
     font-size: 15px;
   }
@@ -67,7 +68,7 @@
   border: 1px solid #bbf7d0;
   border-radius: 999px;
 
-  background: #f0fdf4;
+  background: #e8f3ed;
 
   color: #15803d;
 
@@ -116,7 +117,7 @@
     linear-gradient(
       135deg,
       #ffffff 0%,
-      #f9faff 100%
+      #fffdf8 100%
     );
 
   box-shadow:
@@ -132,9 +133,9 @@
   background:
     linear-gradient(
       135deg,
-      #f7fff9 0%,
-      #f0fdf4 55%,
-      #ecfdf5 100%
+      #f5faf7 0%,
+      #e8f3ed 55%,
+      #e8f3ed 100%
     );
 
   animation:
@@ -166,8 +167,8 @@
   background:
     linear-gradient(
       135deg,
-      #eef2ff,
-      #f5f3ff
+      #e8f0ee,
+      #edf1ef
     );
 
   font-size: 30px;
@@ -180,7 +181,7 @@
   background:
     linear-gradient(
       135deg,
-      #dcfce7,
+      #e8f3ed,
       #bbf7d0
     );
 
@@ -195,7 +196,7 @@
 
   animation:
     checkPop 0.55s
-    cubic-bezier(.34, 1.56, .64, 1)
+    cubic-bezier(.22, 1, .36, 1)
     both;
 }
 
@@ -206,7 +207,7 @@
   h2 {
     margin: 4px 0 7px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 22px;
     font-weight: 800;
@@ -215,14 +216,14 @@
   p {
     margin: 0;
 
-    color: #6b7280;
+    color: #617176;
 
     font-size: 14px;
   }
 }
 
 .eyebrow {
-  color: #6366f1;
+  color: #2f6f73;
 
   font-size: 10px;
   font-weight: 800;
@@ -391,8 +392,8 @@
   background:
     linear-gradient(
       135deg,
-      #4f46e5,
-      #6366f1
+      #a65342,
+      #2f6f73
     );
 
   color: #ffffff;
@@ -478,7 +479,7 @@
   animation:
     badgeEnter
     0.55s
-    cubic-bezier(.34, 1.56, .64, 1)
+    cubic-bezier(.22, 1, .36, 1)
     both;
 }
 
@@ -517,7 +518,7 @@
   border: 1px solid #bbf7d0;
   border-radius: 13px;
 
-  background: #f0fdf4;
+  background: #e8f3ed;
 
   color: #166534;
 
@@ -559,15 +560,15 @@
 
   padding: 27px 30px;
 
-  border: 1px solid #ede9fe;
+  border: 1px solid #edf1ef;
   border-radius: 20px;
 
   background:
     linear-gradient(
       135deg,
       #ffffff 0%,
-      #faf9ff 50%,
-      #f5f3ff 100%
+      #fffdf8 50%,
+      #edf1ef 100%
     );
 
   box-shadow:
@@ -599,8 +600,8 @@
   background:
     linear-gradient(
       135deg,
-      #fff7ed,
-      #ffedd5
+      #fbf1e9,
+      #fbf1e9
     );
 
   box-shadow:
@@ -620,7 +621,7 @@
 }
 
 .streak-label {
-  color: #6b7280;
+  color: #617176;
 
   font-size: 12px;
   font-weight: 650;
@@ -635,7 +636,7 @@
   margin: 3px 0;
 
   strong {
-    color: #111827;
+    color: #163f47;
 
     font-size: 42px;
     font-weight: 850;
@@ -650,7 +651,7 @@
   }
 
   span {
-    color: #6b7280;
+    color: #617176;
 
     font-size: 14px;
     font-weight: 650;
@@ -660,7 +661,7 @@
 .streak-message {
   margin: 7px 0 0;
 
-  color: #9ca3af;
+  color: #839093;
 
   font-size: 12px;
 }
@@ -690,13 +691,13 @@
 
     margin-bottom: 5px;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 11px;
   }
 
   strong {
-    color: #4f46e5;
+    color: #a65342;
 
     font-size: 15px;
   }
@@ -712,14 +713,14 @@
 
   padding: 30px;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 20px;
 
   background:
     linear-gradient(
       135deg,
       #ffffff 0%,
-      #fafaff 100%
+      #fffdf8 100%
     );
 
   box-shadow:
@@ -741,7 +742,7 @@
   h2 {
     margin: 4px 0 5px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 21px;
   }
@@ -749,7 +750,7 @@
   p {
     margin: 0;
 
-    color: #6b7280;
+    color: #617176;
 
     font-size: 13px;
   }
@@ -760,9 +761,9 @@
 
   border-radius: 999px;
 
-  background: #eef2ff;
+  background: #e8f0ee;
 
-  color: #4f46e5;
+  color: #a65342;
 
   font-size: 12px;
   font-weight: 700;
@@ -794,7 +795,7 @@
 
   border-radius: 999px;
 
-  background: #e5e7eb;
+  background: #d9e0dc;
 }
 
 .day-item {
@@ -823,13 +824,13 @@
 
   background: #f3f4f6;
 
-  color: #9ca3af;
+  color: #839093;
 
   font-size: 17px;
   font-weight: 750;
 
   box-shadow:
-    0 0 0 1px #e5e7eb;
+    0 0 0 1px #d9e0dc;
 
   transition:
     transform 0.25s ease,
@@ -843,14 +844,14 @@
     background:
       linear-gradient(
         135deg,
-        #6366f1,
-        #8b5cf6
+        #2f6f73,
+        #2f6f73
       );
 
     color: #ffffff;
 
     box-shadow:
-      0 0 0 1px #c7d2fe,
+      0 0 0 1px #c8d9d5,
       0 7px 18px rgba(99, 102, 241, 0.2);
   }
 
@@ -860,7 +861,7 @@
 
   .day-circle {
     box-shadow:
-      0 0 0 1px #a5b4fc,
+      0 0 0 1px #9ab9b5,
       0 0 0 7px rgba(99, 102, 241, 0.09),
       0 9px 22px rgba(99, 102, 241, 0.24);
 
@@ -877,12 +878,12 @@
     background:
       linear-gradient(
         135deg,
-        #fff7ed,
-        #ffedd5
+        #fbf1e9,
+        #fbf1e9
       );
 
     box-shadow:
-      0 0 0 1px #fed7aa;
+      0 0 0 1px #e3c8ba;
 
     font-size: 21px;
   }
@@ -893,7 +894,7 @@
   animation:
     checkPop
     0.45s
-    cubic-bezier(.34, 1.56, .64, 1)
+    cubic-bezier(.22, 1, .36, 1)
     both;
 }
 
@@ -913,13 +914,13 @@
   text-align: center;
 
   strong {
-    color: #374151;
+    color: #3f565c;
 
     font-size: 12px;
   }
 
   span {
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 10px;
   }
@@ -928,7 +929,7 @@
 .day-item.completed .day-copy {
 
   strong {
-    color: #4f46e5;
+    color: #a65342;
   }
 
 }
@@ -938,9 +939,9 @@
 
   border-radius: 999px;
 
-  background: #eef2ff;
+  background: #e8f0ee;
 
-  color: #4f46e5 !important;
+  color: #a65342 !important;
 
   font-weight: 700;
 }
@@ -954,7 +955,7 @@
 
   padding-top: 20px;
 
-  border-top: 1px solid #f0f1f4;
+  border-top: 1px solid #e7ecea;
 }
 
 .weekly-tip {
@@ -972,7 +973,7 @@
 
     margin-bottom: 2px;
 
-    color: #374151;
+    color: #3f565c;
 
     font-size: 12px;
   }
@@ -980,7 +981,7 @@
   p {
     margin: 0;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 11px;
   }
@@ -998,7 +999,7 @@
 
     gap: 5px;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 10px;
   }
@@ -1014,7 +1015,7 @@
 }
 
 .completed-dot {
-  background: #6366f1;
+  background: #2f6f73;
 }
 
 .today-dot {
@@ -1034,7 +1035,7 @@
 
   padding: 30px;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 20px;
 
   background: #ffffff;
@@ -1049,7 +1050,7 @@
   h2 {
     margin: 3px 0 5px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 21px;
   }
@@ -1057,14 +1058,14 @@
   p {
     margin: 0;
 
-    color: #6b7280;
+    color: #617176;
 
     font-size: 13px;
   }
 }
 
 .section-eyebrow {
-  color: #6366f1;
+  color: #2f6f73;
 
   font-size: 10px;
   font-weight: 800;
@@ -1131,13 +1132,13 @@
 }
 
 .stat-card.highlight {
-  border-color: #fed7aa;
+  border-color: #e3c8ba;
 
   background:
     linear-gradient(
       180deg,
       #fffdf9,
-      #fff7ed
+      #fbf1e9
     );
 }
 
@@ -1159,7 +1160,7 @@
 }
 
 .fire-stat {
-  background: #fff7ed;
+  background: #fbf1e9;
 
   animation:
     fireBounce
@@ -1167,7 +1168,7 @@
 }
 
 .trophy-icon {
-  background: #fffbeb;
+  background: #f7f0df;
 }
 
 .chart-icon {
@@ -1175,7 +1176,7 @@
 }
 
 .calendar-icon {
-  background: #eef2ff;
+  background: #e8f0ee;
 }
 
 .stat-label {
@@ -1183,13 +1184,13 @@
 
   margin-bottom: 6px;
 
-  color: #6b7280;
+  color: #617176;
 
   font-size: 12px;
 }
 
 .stat-value {
-  color: #111827;
+  color: #163f47;
 
   font-size: 29px;
   font-weight: 800;
@@ -1197,7 +1198,7 @@
   small {
     margin-left: 3px;
 
-    color: #6b7280;
+    color: #617176;
 
     font-size: 12px;
     font-weight: 500;
@@ -1218,7 +1219,7 @@
 
   padding: 20px 24px;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 16px;
 
   background: #ffffff;
@@ -1243,13 +1244,13 @@
   }
 
   span {
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 11px;
   }
 
   strong {
-    color: #1f2937;
+    color: #27363b;
 
     font-size: 15px;
   }
@@ -1276,7 +1277,7 @@
 
   gap: 8px;
 
-  color: #6b7280;
+  color: #617176;
 
   font-size: 13px;
 
@@ -1295,7 +1296,7 @@
 
   border-radius: 50%;
 
-  background: #9ca3af;
+  background: #839093;
 }
 
 .status-dot.active {
@@ -1319,12 +1320,12 @@
 
   padding: 24px;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 14px;
 
   background: #ffffff;
 
-  color: #6b7280;
+  color: #617176;
 }
 
 .state-box.error {
@@ -1339,9 +1340,9 @@
   width: 18px;
   height: 18px;
 
-  border: 2px solid #e5e7eb;
+  border: 2px solid #d9e0dc;
 
-  border-top-color: #6366f1;
+  border-top-color: #2f6f73;
 
   border-radius: 50%;
 
@@ -1632,7 +1633,7 @@
     transform: scale(1.08);
 
     box-shadow:
-      0 0 0 1px #a5b4fc,
+      0 0 0 1px #9ab9b5,
       0 0 0 6px rgba(99, 102, 241, 0.07),
       0 8px 20px rgba(99, 102, 241, 0.18);
   }
@@ -1641,7 +1642,7 @@
     transform: scale(1.14);
 
     box-shadow:
-      0 0 0 1px #818cf8,
+      0 0 0 1px #7d9c98,
       0 0 0 10px rgba(99, 102, 241, 0.05),
       0 11px 25px rgba(99, 102, 241, 0.25);
   }

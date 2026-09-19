@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { SocialApiService, SocialEventDetails } from '../../../core/services/social-api';
+import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideMapPin, LucideUserRound } from '@lucide/angular';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideMapPin, LucideUserRound],
   templateUrl: './event-detail.html',
   styleUrl: './event-detail.scss'
 })

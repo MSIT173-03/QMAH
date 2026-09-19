@@ -1,0 +1,21 @@
+<!-- ui-integration: 多人與單人共用同一個玩法說明骨架，讓玩家先理解流程再開始操作。 -->
+<details class="game-how-to" [attr.data-variant]="variant()" [open]="openByDefault()">
+  <summary>
+    <span class="game-how-to__heading">
+      <span class="game-how-to__eyebrow">{{ content().eyebrow }} · 玩法說明</span>
+      <strong>{{ content().title }}</strong>
+    </span>
+    <span class="game-how-to__toggle" aria-hidden="true"></span>
+  </summary>
+  <div class="game-how-to__body">
+    <p>{{ content().description }}</p>
+    <ol>
+      @for (step of content().steps; track step.label) {
+        <li>
+          <span>{{ step.label }}</span>
+          <div><strong>{{ step.title }}</strong><p>{{ step.description }}</p></div>
+        </li>
+      }
+    </ol>
+  </div>
+</details>

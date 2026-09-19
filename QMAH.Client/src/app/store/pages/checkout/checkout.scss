@@ -28,3 +28,10 @@
   flex-direction: column;
   gap: 12px;
 }
+
+/* ui-integration: 結帳仍是同一個先填資料、後確認金額的流程，手機只將摘要改放到表單之後。 */
+@media (max-width: 800px) {
+  .checkout-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

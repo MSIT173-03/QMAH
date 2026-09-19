@@ -1,0 +1,70 @@
+:host {
+  --guide-ink: #102f38;
+  --guide-jade: #0f534d;
+  --guide-cinnabar: #bd5748;
+  --guide-surface: #fffdf8;
+  --guide-line: #d4dad3;
+  --guide-muted: #68777a;
+  display: block;
+  min-height: 100vh;
+  color: var(--guide-ink);
+  background: #dfe8e4;
+  font: 400 16px/1.62 "QMAH Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+}
+
+.game-guide { width: min(980px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
+
+.guide-nav-back,
+.guide-panel-link {
+  color: var(--guide-jade);
+  font-size: 13px;
+  font-weight: 800;
+  text-underline-offset: 4px;
+}
+
+.guide-heading { padding: 48px 4px 26px; border-bottom: 1px solid var(--guide-line); }
+.eyebrow { margin: 0 0 7px; color: var(--guide-cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.guide-heading h1 { margin: 0; font: 700 clamp(36px, 5vw, 58px)/1.1 "Noto Serif TC", "Source Han Serif TC", Georgia, serif; letter-spacing: -.045em; }
+.guide-heading p:last-child { max-width: 42ch; margin: 14px 0 0; color: var(--guide-muted); }
+
+.guide-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.guide-tabs button {
+  display: grid;
+  gap: 2px;
+  min-height: 68px;
+  border: 1px solid var(--guide-line);
+  border-radius: 7px;
+  padding: 11px 14px;
+  color: var(--guide-muted);
+  background: rgba(255, 253, 248, .6);
+  text-align: left;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.guide-tabs button:hover { border-color: rgba(189, 87, 72, .45); transform: translateY(-1px); }
+.guide-tabs button.is-active { border-color: rgba(189, 87, 72, .62); color: var(--guide-ink); background: var(--guide-surface); box-shadow: inset 0 -3px var(--guide-cinnabar); }
+.guide-tabs button span { font-size: 16px; font-weight: 800; }
+.guide-tabs button small { color: var(--guide-muted); font-size: 11px; }
+
+.guide-panel { margin-top: 14px; }
+.guide-panel-link { display: inline-flex; margin-top: 14px; }
+
+@media (max-width: 600px) {
+  .game-guide { padding: 10px 10px 40px; }
+  .guide-heading { padding: 34px 2px 22px; }
+  .guide-heading h1 { font-size: 40px; }
+  .guide-tabs button { min-height: 62px; padding-inline: 10px; }
+  .guide-tabs button span { font-size: 14px; }
+  .guide-tabs button small { font-size: 9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-tabs button { transition: none; }
+}

@@ -6,11 +6,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreateSocialEventRequest, EventListItem, SocialApiService, SocialMedia } from '../../../core/services/social-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
+import { LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideX } from '@lucide/angular';
 
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideX],
   templateUrl: './events.html',
   styleUrl: './events.scss'
 })

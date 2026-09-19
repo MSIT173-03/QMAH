@@ -1,8 +1,5 @@
 /* key-list.scss */
-/* 這個彈出框改成參考圖那種「木紋＋金色滾邊」的道具欄風格，跟其他頁面的藍白現代風
-   刻意區隔開——鑰匙本身就是收藏／寶物性質的道具，用這套風格反而比套用主站配色更合適。
-   所有規則沿用原本的變數名稱（--ink/--card/--blue...），只是把數值換成暖色調，
-   這樣萬一之後想再換色，只要動這裡的變數就好，不用逐一改寫每條規則。 */
+/* ui-integration: 鑰匙仍保留道具欄的辨識度，但與圖鑑、Game 及 App Shell 共用同一組表面與操作色。 */
 
 :host {
   display: block;
@@ -18,25 +15,25 @@
 }
 
 .key-page {
-  --ink: #f3e4c6;        // 主要文字（原本深藍，現在淺金色——背景變深了）
-  --ink-soft: #c9ab7c;   // 次要文字
-  --line: #8a6a3f;       // 邊框／分隔線（青銅色）
-  --surface: #241a10;    // 頁面底色（深木紋）
-  --card: #4a3520;       // 卡片／格子底色
-  --blue: #e3b955;       // 主色，現在當作「金色」用（按鈕、啟用中頁籤、hover）
-  --blue-deep: #a97a2c;  // 主色的深階
-  --yellow: #6fb87f;     // 年代鑰匙的區分色，改成翠綠色跟金色主色區隔開
-  --red: #d9534f;        // 警示／關閉鈕
-  --sapphire: #5a8fd6;   // 分類鑰匙的區分色
-  --ruby: #d65a7a;       // 萬能鑰匙的區分色（最稀有，用比金色更搶眼的色）
-  --panel-dark: #180f08; // 需要「保證是深色」的地方用這個，不要用 --ink（--ink 現在是淺色文字）
+  --ink: #24434a;
+  --ink-soft: #667a7d;
+  --line: #d5dfdc;
+  --surface: #f7f4ee;
+  --card: #fffdf8;
+  --blue: #ad594a;
+  --blue-deep: #3f7777;
+  --yellow: #8c9b78;
+  --red: #a8564b;        // 警示／關閉鈕
+  --sapphire: #739ba0;   // 分類鑰匙的區分色
+  --ruby: #799984;       // 萬能鑰匙的區分色
+  --panel-dark: #24434a;
 
   min-height: 100vh;
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 20px 60px;
   background: var(--surface);
-  background-image: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 8px);
+  background-image: none;
   font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
   color: var(--ink);
 }
@@ -48,8 +45,8 @@
 }
 
 .page-header__bar {
-  background: linear-gradient(180deg, #6b4a28 0%, #4a3018 100%);
-  border-bottom: 3px solid var(--blue-deep);
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
   padding: 18px 20px;
   position: relative;
   overflow: hidden;
@@ -67,18 +64,20 @@
 }
 
 .page-header__icon {
-  font-size: 26px;
+  width: 26px;
+  height: 26px;
   flex: none;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45));
+  color: var(--blue-deep);
+  stroke-width: 1.7;
 }
 
 .page-header__title {
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--ink);
   letter-spacing: 0.04em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -240,7 +239,7 @@
   border: 1px solid var(--line);
   border-bottom: none;
   border-radius: 10px 10px 0 0;
-  background: rgba(0, 0, 0, 0.28);
+  background: var(--card);
   color: var(--ink-soft);
   font-size: 13px;
   font-weight: 700;
@@ -262,19 +261,19 @@
 
   &:hover {
     color: var(--ink);
-    background: rgba(0, 0, 0, 0.4);
+    background: #eef3f0;
   }
 }
 
 .filter-button.active {
-  background: linear-gradient(180deg, #6b4a28, #4a3018);
+  background: #e6efeb;
   border-color: var(--blue-deep);
-  color: var(--blue);
-  box-shadow: inset 0 2px 0 rgba(255, 224, 158, 0.2);
+  color: var(--blue-deep);
+  box-shadow: inset 0 -2px 0 var(--blue-deep);
 
   span {
-    background: rgba(0, 0, 0, 0.35);
-    color: var(--blue);
+    background: #d4e4df;
+    color: var(--blue-deep);
   }
 }
 
@@ -287,7 +286,7 @@
   margin-top: 24px;
   padding: 16px;
   border-radius: 14px;
-  background: rgba(0, 0, 0, 0.22);
+  background: #eef2ef;
   border: 1px solid var(--line);
 }
 
@@ -299,15 +298,15 @@
   justify-content: center;
   border: 2px solid var(--line);
   border-radius: 10px;
-  background: linear-gradient(180deg, var(--card), rgba(0, 0, 0, 0.3));
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: var(--card);
+  box-shadow: 0 4px 12px rgba(36, 67, 74, 0.08);
   cursor: pointer;
   transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
     border-color: var(--blue);
     transform: translateY(-2px);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 8px 18px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 18px rgba(36, 67, 74, 0.14);
     z-index: 5; // 讓 tooltip 蓋在旁邊的格子之上
   }
 }
@@ -328,12 +327,21 @@
 
 .key-slot.universal-key {
   border-color: var(--ruby);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 12px -2px var(--ruby);
+  box-shadow: 0 4px 14px rgba(121, 153, 132, 0.18);
 }
 
 .key-slot__icon {
-  font-size: 28px;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  width: 72%;
+  height: 72%;
+  display: grid;
+  place-items: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
 }
 
 .key-slot__count {
@@ -343,9 +351,9 @@
   min-width: 16px;
   padding: 1px 4px;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--ink);
+  background: var(--panel-dark);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
   font-size: 11px;
   font-weight: 700;
   line-height: 1.4;
@@ -441,7 +449,7 @@
 
 .confirm-dialog {
   width: min(320px, 88vw);
-  background: linear-gradient(180deg, #5a3f24, #3a2814);
+  background: var(--card);
   border: 1px solid var(--blue-deep);
   border-radius: 18px;
   padding: 26px 24px 22px;
@@ -457,10 +465,14 @@
   }
 
   .key-icon {
-    font-size: 34px;
+    width: 48px;
+    height: 48px;
     display: block;
+    object-fit: contain;
     margin-bottom: 10px;
-    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+    margin-inline: auto;
+    color: var(--blue-deep);
+    stroke-width: 1.7;
   }
 
   h3 {
@@ -523,33 +535,41 @@
 }
 
 .unlock-btn {
-  background: linear-gradient(135deg, var(--blue), var(--blue-deep));
-  color: #3a2814;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  background: var(--blue-deep);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(63, 119, 119, 0.2);
 
-  &:hover:not(:disabled) { box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5); }
+  &:hover:not(:disabled) { box-shadow: 0 10px 22px rgba(63, 119, 119, 0.28); }
 }
 
 .cancel-btn {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--card);
   color: var(--ink);
   border: 1px solid var(--line);
 
-  &:hover:not(:disabled) { background: rgba(0, 0, 0, 0.4); }
+  &:hover:not(:disabled) { background: #eef3f0; }
 }
 
 /* ---------- 空格子（背包本來就有這麼多格，只是還沒有對應的鑰匙）---------- */
 
 .key-slot--empty {
   cursor: default;
-  background: rgba(0, 0, 0, 0.15);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(36, 67, 74, 0.04);
 }
 
 .key-slot--empty:hover {
   border-color: var(--line); // 空格不用 hover 高亮，維持原本邊框色
   transform: none;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(36, 67, 74, 0.04);
+}
+
+/* ui-integration: 道具圖與動作按鈕共用低干擾的狀態變化，並尊重系統減少動態設定。 */
+@media (prefers-reduced-motion: reduce) {
+  .key-slot,
+  .confirm-overlay,
+  .confirm-dialog,
+  .action-btn { transition: none; }
 }
 
 @media (max-width: 480px) {

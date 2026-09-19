@@ -6,6 +6,7 @@ type SocialPostBlock =
 @Component({
   selector: 'app-social-post-content',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './social-post-content.scss',
   template: `
     <div class="social-post-content" aria-label="貼文內容">
       @for (block of blocks(); track $index) {
@@ -18,16 +19,6 @@ type SocialPostBlock =
         }
       }
     </div>
-  `,
-  styles: `
-    :host { display: block; }
-    .social-post-content { line-height: 1.75; overflow-wrap: anywhere; }
-    p { margin: 0 0 .45rem; white-space: pre-wrap; }
-    h3 { margin: .7rem 0 .35rem; font-size: 1rem; font-weight: 700; color: oklch(var(--p)); }
-    .bullet { padding-left: 1rem; position: relative; }
-    .bullet::before { content: '•'; position: absolute; left: 0; font-weight: 700; }
-    blockquote { margin: .5rem 0; padding: .35rem .75rem; border-radius: .35rem; background: color-mix(in oklab, currentColor 6%, transparent); color: color-mix(in oklab, currentColor 72%, transparent); }
-    .space { height: .35rem; }
   `
 })
 export class SocialPostContentComponent {

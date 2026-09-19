@@ -4,7 +4,7 @@
   <div class="page-header">
     <div class="page-header__bar">
       <div class="page-header__title-group">
-        <span class="page-header__icon">🏺</span>
+        <svg lucideLibrary class="page-header__icon" aria-hidden="true" focusable="false"></svg>
         <h1 class="page-header__title">鑰匙背包</h1>
       </div>
     </div>
@@ -88,7 +88,9 @@
         (click)="key && onKeySlotClick(key)"
       >
         <ng-container *ngIf="key as k">
-          <div class="key-slot__icon">{{ keySlotIcon(k) }}</div>
+          <div class="key-slot__icon">
+            <img [src]="keySlotIcon(k)" [alt]="k.name + '圖示'" loading="lazy" />
+          </div>
           <span class="key-slot__count">{{ k.balance }}</span>
 
           <div class="key-slot__tooltip">
@@ -129,7 +131,7 @@
     (click)="onConfirmOverlayClick($event)"
   >
     <div class="confirm-dialog" *ngIf="confirmTarget() as key">
-      <span class="key-icon">🔑</span>
+      <img class="key-icon" [src]="keySlotIcon(key)" [alt]="key.name + '圖示'" />
       <h3>使用鑰匙</h3>
       <p>確定要使用「{{ key.name }}」嗎？</p>
       <p class="have">
@@ -153,7 +155,7 @@
     (click)="onResultOverlayClick($event)"
   >
     <div class="confirm-dialog" *ngIf="unlockResult() as result">
-      <span class="key-icon">🎉</span>
+      <svg lucideCircleCheckBig class="key-icon" aria-hidden="true" focusable="false"></svg>
       <h3>解鎖成功</h3>
       <p>你解鎖了「{{ result.artifactName }}」</p>
       <p class="have">要現在前往圖鑑查看這件文物嗎？</p>

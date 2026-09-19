@@ -1,5 +1,6 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { ImageMagnifier } from '../image-magnifier/image-magnifier';
+import { LucideImage } from '@lucide/angular';
 
 type PostcardLayout = 'landscape' | 'portrait';
 
@@ -12,7 +13,7 @@ type PostcardLayout = 'landscape' | 'portrait';
  */
 @Component({
   selector: 'app-collectible-card',
-  imports: [ImageMagnifier],
+  imports: [ImageMagnifier, LucideImage],
   templateUrl: './collectible-card.html',
   styleUrl: './collectible-card.scss',
 })

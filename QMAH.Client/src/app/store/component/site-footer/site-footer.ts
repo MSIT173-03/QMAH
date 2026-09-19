@@ -37,7 +37,8 @@ export class SiteFooter {
   protected readonly logoAlt = '清明鑑定屋';
   protected readonly brandNote = '與博物館授權合作，考據為本的文物周邊選物。';
   protected readonly copyright = '© 2026 QMAH · 清明鑑定屋';
-  protected readonly privacyHref = '#';
-  protected readonly termsHref = '#';
+  // ui-integration: 尚無正式政策頁 route，先以不可互動文字呈現，避免 footer 產生假連結。
+  protected readonly privacyHref: string | null = null;
+  protected readonly termsHref: string | null = null;
   protected readonly serviceNote = '客服 0800-000-168 · 09:00–21:00';
 }

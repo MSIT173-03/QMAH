@@ -1,86 +1,121 @@
-<div class="drawer min-h-screen bg-base-200">
-  <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+<div class="app-shell">
+  <a class="app-skip-link" href="#main-content">跳至主要內容</a>
 
-  <div class="drawer-content flex flex-col">
-    <!-- Navbar -->
-    <div class="w-full navbar bg-base-100 shadow-md sticky top-0 z-30">
-      <div class="flex-none">
-        <label for="my-drawer" class="btn btn-square btn-ghost drawer-button">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </label>
+  <header class="app-header">
+    <div class="app-header__inner">
+      <button
+        type="button"
+        class="app-menu-toggle"
+        aria-label="開啟主要導覽"
+        aria-controls="mobile-navigation"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="toggleMenu()"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <a class="app-brand" routerLink="/social/posts" aria-label="回到清明鑑定屋首頁" (click)="closeMenu()">
+        <img src="/assets/brand/qmah-logo.svg" alt="清明鑑定屋 QMAH" />
+        <span class="app-brand__copy">
+          <strong>清明鑑定屋</strong>
+          <small>文物探索與互動學習</small>
+        </span>
+      </a>
+
+      <div class="app-header__navigation">
+        <app-area-navigation variant="desktop" />
       </div>
-      <div class="flex-1 min-w-0 px-2 mx-2 text-xl font-bold truncate">QMAH Social Platform Testbed</div>
-      <div class="flex-none flex items-center gap-2">
+
+      <div class="app-header__actions">
         @if (meApi.me(); as me) {
-          <span class="text-sm hidden sm:inline">{{ me.displayName || me.email }}</span>
-          @if (me.roles.includes('Admin')) {
-            <span class="badge badge-error badge-sm">Admin</span>
-          }
+          <a class="app-account" routerLink="/member" aria-label="前往會員中心" (click)="closeMenu()">
+            <span class="app-account__avatar" aria-hidden="true">{{ (me.displayName || me.email).charAt(0).toUpperCase() }}</span>
+            <span class="app-account__copy">
+              <strong>{{ me.displayName || me.email }}</strong>
+              <small>會員中心</small>
+            </span>
+          </a>
         } @else {
-          <span class="text-sm text-base-content/50 hidden sm:inline">未登入</span>
+          <a class="app-login" routerLink="/login" (click)="closeMenu()">登入</a>
         }
+
         <app-notifications-bell />
         <app-dev-login />
-        <label class="swap swap-rotate btn btn-ghost btn-circle" aria-label="切換深色模式">
+
+        <label class="app-theme-toggle" aria-label="切換深色模式">
           <input type="checkbox" value="qmahdark" class="theme-controller" />
-          <svg class="swap-off h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path
-              d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71a1,1,0,0,0-1.41,1.41Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"
-            />
+          <svg class="theme-icon theme-icon--light" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+            <path d="M12 3v2m0 14v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M3 12h2m14 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z" />
           </svg>
-          <svg class="swap-on h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path
-              d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"
-            />
+          <svg class="theme-icon theme-icon--dark" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+            <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z" />
           </svg>
         </label>
+
+        @if (meApi.me()) {
+          <button
+            type="button"
+            class="app-logout"
+            [disabled]="loggingOut()"
+            (click)="logout()"
+          >
+            {{ loggingOut() ? '登出中…' : '登出' }}
+          </button>
+        }
       </div>
     </div>
+  </header>
 
-    <!-- 內容區域 -->
-    <div class="p-6">
-      <router-outlet></router-outlet>
+  <!-- ui-integration: Mobile 只保留一個可見 drawer，Route 改變後由 LayoutComponent 自動關閉。 -->
+  <button
+    type="button"
+    class="app-mobile-backdrop"
+    [class.is-open]="menuOpen()"
+    aria-label="關閉主要導覽"
+    (click)="closeMenu()"
+  ></button>
+
+  <aside
+    id="mobile-navigation"
+    class="app-mobile-drawer"
+    [class.is-open]="menuOpen()"
+    [attr.aria-hidden]="!menuOpen()"
+  >
+    <div class="app-mobile-drawer__header">
+      <div>
+        <strong>QMAH 導覽</strong>
+        <span>探索、遊玩與交流</span>
+      </div>
+      <button type="button" class="app-icon-button" aria-label="關閉主要導覽" (click)="closeMenu()">
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
     </div>
-  </div>
 
-  <!-- 側邊選單 -->
-  <div class="drawer-side z-20">
-    <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-    <ul class="menu p-4 w-80 min-h-full bg-base-100 text-base-content space-y-2">
-      <!-- integration: Social／Admin shell 也提供五大 Area 的正式入口，避免跨頁只能依賴瀏覽器返回。 -->
-      <li><app-area-navigation /></li>
-      <div class="divider"></div>
+    <div class="app-mobile-drawer__body">
+      <p class="app-mobile-drawer__label">主要功能</p>
+      <!-- ui-integration: Mobile 主要與次級入口共用同一個泛用 renderer；不在 Shell 內硬編 Area 專屬 markup。 -->
+      <app-area-navigation variant="mobile" [groups]="mobileNavigationGroups()" (itemSelected)="closeMenu()" />
+    </div>
 
-      <li class="menu-title">🎮 前台玩家專區</li>
-      <li><a routerLink="/social/posts">貼文廣場 (GET /posts)</a></li>
-      <li><a routerLink="/social/events">活動總覽 (GET /events)</a></li>
-      <li><a routerLink="/social/announcements">站方公告 (GET /announcements)</a></li>
+    <div class="app-mobile-drawer__footer">
+      @if (meApi.me()) {
+        <button type="button" class="app-mobile-logout" [disabled]="loggingOut()" (click)="logout()">
+          {{ loggingOut() ? '登出中…' : '登出目前帳號' }}
+        </button>
+      } @else {
+        <a routerLink="/login" (click)="closeMenu()">登入會員</a>
+      }
+    </div>
+  </aside>
 
-      <div class="divider"></div>
-
-      <li class="menu-title text-error">🛡️ 後台管理專區</li>
-      <li>
-        <a routerLink="/admin/events" class="flex items-center justify-between">
-          <span>活動管理 (GET/PUT /admin/events)</span>
-          @if (adminPendingCounts.pendingEventsCount() > 0) {
-            <span class="badge badge-error badge-sm">{{ adminPendingCounts.pendingEventsCount() }}</span>
-          }
-        </a>
-      </li>
-      <li><a routerLink="/admin/posts">貼文管理 (GET/PUT /admin/posts)</a></li>
-      <li><a routerLink="/admin/comments">留言管理 (GET/PUT /admin/comments)</a></li>
-      <li>
-        <a routerLink="/admin/reports" class="flex items-center justify-between">
-          <span>檢舉審核 (GET/PUT /admin/reports)</span>
-          @if (adminPendingCounts.pendingReportsCount() > 0) {
-            <span class="badge badge-error badge-sm">{{ adminPendingCounts.pendingReportsCount() }}</span>
-          }
-        </a>
-      </li>
-    </ul>
-  </div>
+  <!-- ui-integration: App Shell 擁有唯一主要內容 landmark；子 Area 的 wrapper 僅保留原本 class 與版面，不再巢狀使用 main。 -->
+  <main id="main-content" class="app-main">
+    <router-outlet></router-outlet>
+  </main>
 </div>
 
 <app-toast-container />

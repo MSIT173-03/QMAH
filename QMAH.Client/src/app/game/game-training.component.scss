@@ -15,33 +15,26 @@
   font: 400 16px/1.62 "QMAH Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
 }
 
-.training-notebook { width: min(1200px, 100%); margin: 0 auto; padding: 20px 38px 64px; }
+.training-notebook { width: min(1200px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
 .training-notebook *, .training-notebook *::before, .training-notebook *::after { box-sizing: border-box; }
 .training-notebook button, .training-notebook input, .training-notebook select { font: inherit; }
 .training-notebook button { cursor: pointer; }
 .training-notebook button:focus-visible, .training-notebook a:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 4px; }
 
-.training-notebook .masthead { min-height: 48px; display: flex; align-items: center; border-bottom: 1px solid rgba(16, 47, 56, .22); }
-.training-notebook .masthead img { display: block; width: 148px; max-height: 38px; }
-.training-notebook .bookmarks { display: flex; gap: 22px; align-items: center; min-height: 58px; padding: 0 4px; }
-.training-notebook .bookmarks a { position: relative; display: inline-flex; align-items: baseline; gap: 9px; border: 0; padding: 14px 0 12px; color: var(--muted); background: transparent; text-decoration: none; }
-.training-notebook .bookmarks a::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; height: 3px; background: transparent; transform: scaleX(0); transform-origin: left; transition: transform 220ms ease, background 180ms ease; }
-.training-notebook .bookmarks a:hover, .training-notebook .bookmarks a.active { color: var(--ink); }
-.training-notebook .bookmarks a.active::after { background: var(--cinnabar); transform: scaleX(1); }
-.training-notebook .bookmarks small { color: var(--slate); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+/* ui-integration: 玩法頁不再重複品牌 header；共同 Game 子導覽下只保留回到大廳的上下文連結。 */
+.training-nav-back { color: var(--jade); font-size: 13px; font-weight: 800; text-decoration: none; text-underline-offset: 4px; }
+.training-nav-back:hover { color: var(--cinnabar); text-decoration: underline; }
 
 .training-notebook .chapter { min-height: 0; border: 0; padding: 0; background: transparent; box-shadow: none; }
 .training-notebook .chapter-heading { align-items: flex-end; padding: 34px 0 24px; border-bottom: 1px solid var(--line); }
 .training-notebook .chapter-heading p { margin: 0 0 7px; color: var(--cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
 .training-notebook .chapter-heading h1 { margin: 0; color: var(--ink); font-family: "Noto Serif TC", "Source Han Serif TC", Georgia, serif; font-size: clamp(34px, 4vw, 54px); font-weight: 700; letter-spacing: -.04em; }
-.training-notebook .chapter-heading a { color: var(--ink); font-weight: 800; text-decoration: none; }
-.training-notebook .chapter-heading a:hover { color: var(--cinnabar); }
 
-.training-hero { display: grid; grid-template-columns: 1fr .96fr; min-height: 318px; overflow: hidden; color: var(--porcelain); background: var(--ink); animation: training-enter 560ms cubic-bezier(.16, 1, .3, 1) both; }
+.training-hero { display: grid; grid-template-columns: 1fr .96fr; /* ui-integration: 限制 Hero 高度，讓玩法示範與主要選項維持可預期的首屏節奏。 */ height: clamp(318px, 38vw, 470px); min-height: 0; overflow: hidden; color: var(--porcelain); background: var(--ink); animation: training-enter 560ms cubic-bezier(.16, 1, .3, 1) both; }
 .training-hero-copy { display: flex; flex-direction: column; justify-content: center; padding: 42px clamp(24px, 4vw, 52px); }
 .training-hero h2 { max-width: none; margin: 0; color: var(--surface); font-family: "Noto Serif TC", Georgia, serif; font-size: clamp(42px, 4.5vw, 64px); font-weight: 700; letter-spacing: -.045em; line-height: 1.08; }
 .training-hero p { max-width: 34ch; margin: 22px 0 0; color: #d4e1dd; font-size: 16px; }
-.training-artwork { position: relative; min-height: 318px; margin: 0; overflow: hidden; border-left: 1px solid rgba(244, 241, 232, .24); }
+.training-artwork { position: relative; height: 100%; min-height: 0; margin: 0; overflow: hidden; border-left: 1px solid rgba(244, 241, 232, .24); }
 .training-artwork img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; filter: saturate(.78) contrast(1.08); transition: transform 700ms cubic-bezier(.16, 1, .3, 1); }
 .training-hero:hover .training-artwork img { transform: scale(1.045); }
 .training-artwork::after { content: ""; position: absolute; inset: 0; background: rgba(10, 37, 45, .15); pointer-events: none; }
@@ -104,15 +97,24 @@
 .training-notebook .game-prompt p, .training-notebook .game-hint { margin: 6px 0 0; color: var(--muted); }
 .training-notebook .locator-game { gap: 34px; padding-top: 28px; }
 .training-notebook .clue-image { min-height: 320px; border: 1px solid var(--line); background: #e7ece7; }
+.training-notebook .clue-image img { display: block; width: 100%; height: 100%; min-height: 320px; object-fit: contain; }
+.training-notebook .image-fallback, .training-notebook .option-image-fallback { display: grid; place-items: center; min-height: 96px; color: var(--muted); font-size: 15px; font-weight: 800; text-align: center; }
+.training-notebook .image-fallback small { font-size: 12px; font-weight: 500; }
 .training-notebook .artifact-options button { border-color: var(--line); background: var(--porcelain); }
+.training-notebook .artifact-options button img { display: block; width: 100%; height: 110px; object-fit: cover; }
 .training-notebook .artifact-options button.selected { border-color: var(--cinnabar); background: #f2e5df; box-shadow: inset 3px 0 var(--cinnabar); }
 .training-notebook .memory-card { border-color: var(--line); background: var(--ink); }
 .training-notebook .memory-card.is-open { background: var(--porcelain); }
 .training-notebook .memory-card.is-matched { border-color: var(--bronze); }
+.training-notebook .memory-card img, .training-notebook .image-tile img, .training-notebook .image-strip img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.training-notebook .memory-card .image-fallback, .training-notebook .image-tile .image-fallback, .training-notebook .image-strip .image-fallback { min-height: 0; width: 100%; height: 100%; color: var(--porcelain); }
 .training-notebook .image-tile, .training-notebook .image-strip { border-color: var(--line); }
 .training-notebook .image-tile.selected, .training-notebook .image-strip.selected { outline-color: var(--cinnabar); }
 .training-notebook .image-tile b, .training-notebook .image-strip b { background: var(--ink); }
 .training-notebook .play-footer { border-top-color: var(--line); color: var(--muted); }
+.training-notebook .play-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.training-notebook .play-footer .secondary { color: var(--ink); background: transparent; }
+.training-notebook .play-footer .secondary:hover:not(:disabled) { color: var(--surface); }
 .training-notebook .result-sheet { max-width: 640px; padding: 78px 0 28px; }
 .training-notebook .result-sheet .kicker { margin: 0 0 8px; color: var(--cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
 .training-notebook .result-sheet h2 { font-family: "Noto Serif TC", Georgia, serif; letter-spacing: -.05em; }
@@ -124,14 +126,11 @@
 
 @media (max-width: 700px) {
   .training-notebook { padding: 12px 10px 40px; }
-  .training-notebook .masthead img { width: 120px; }
-  .training-notebook .bookmarks { gap: 18px; min-height: 52px; }
-  .training-notebook .bookmarks a { flex: 1; justify-content: center; font-size: 14px; }
   .training-notebook .chapter-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
-  .training-hero { display: block; }
+  .training-hero { display: block; height: auto; }
   .training-hero-copy { min-height: 270px; padding: 36px 24px 30px; }
   .training-hero h2 { font-size: clamp(42px, 13vw, 62px); }
-  .training-artwork { min-height: 230px; border-top: 1px solid rgba(244, 241, 232, .24); border-left: 0; }
+  .training-artwork { height: 230px; min-height: 230px; border-top: 1px solid rgba(244, 241, 232, .24); border-left: 0; }
   .training-notebook .guide-step { grid-template-columns: 1fr; gap: 18px; padding: 16px; }
   .training-notebook .guide-visual { min-height: 112px; }
   .training-notebook .mode-index li { grid-template-columns: 34px 1fr; gap: 10px; }
@@ -139,6 +138,8 @@
   .training-notebook .chapter-heading h1 { font-size: 38px; }
   .training-notebook .play-sheet { padding: 20px; }
   .training-notebook .play-footer { align-items: stretch; flex-direction: column; }
+  .training-notebook .play-actions { flex-direction: column; }
+  .training-notebook .play-actions button { width: 100%; }
   .training-notebook .play-footer button { width: 100%; }
 }
 

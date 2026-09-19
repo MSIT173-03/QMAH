@@ -1,8 +1,10 @@
 import { Component, computed, input, output, signal } from '@angular/core';
+import { LucideImage } from '@lucide/angular';
 
 /** 商品詳情共用的局部放大鏡；不會放大整個商品欄位，也不建立第二份圖片資產。 */
 @Component({
   selector: 'app-image-magnifier',
+  imports: [LucideImage],
   templateUrl: './image-magnifier.html',
   styleUrl: './image-magnifier.scss',
 })

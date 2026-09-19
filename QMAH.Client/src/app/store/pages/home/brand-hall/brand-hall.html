@@ -1,15 +1,16 @@
 <!-- 品牌館：品牌卡片格狀排列，id 供頁首導覽列錨點連結使用 -->
 <app-panel id="brands">
   <app-section-head variant="panel" title="品牌館" tag="BRANDS">
-    <a href="#" class="section-more">全部品牌 →</a>
+    <!-- ui-integration: 目前只有首頁品牌展示，尚無獨立品牌列表 route，避免提供假的導覽入口。 -->
+    <span class="section-more section-more--static">合作品牌</span>
   </app-section-head>
   <div class="brand-grid">
     @for (brand of brands(); track brand.en) {
-      <a href="#" class="brand-card">
+      <div class="brand-card">
         <span class="brand-en">{{ brand.en }}</span>
         <span class="brand-zh">{{ brand.zh }}</span>
         <span class="brand-deal">{{ brand.deal }}</span>
-      </a>
+      </div>
     }
   </div>
 </app-panel>

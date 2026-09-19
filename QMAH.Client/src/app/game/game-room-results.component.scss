@@ -32,7 +32,10 @@
 .reward-panel p { margin: 0; color: var(--muted); font-size: 12px; }
 .reward-panel button { flex: none; min-height: 42px; padding: 8px 18px; border: 0; background: var(--jade); color: #fffdf8; font-size: 13px; font-weight: 700; }
 .reward-panel button:disabled { cursor: not-allowed; opacity: .55; }
-.reward-receipt { display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 10px; padding: 14px 16px; border-left: 3px solid var(--jade); background: #f4f8f4; color: var(--jade); font-size: 13px; }
+/* ui-integration: 結算提示改用完整邊界加內嵌色線，保留語意層級但避免厚重側標籤搶走內容焦點。 */
+.reward-receipt { display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 10px; padding: 14px 16px; border: 1px solid rgba(15, 83, 77, .2); box-shadow: inset 3px 0 0 var(--jade); background: #f4f8f4; color: var(--jade); font-size: 13px; }
+/* ui-integration: 結算出口採 tertiary action，讓獎勵與排行榜保有主要視覺權重。 */
+.results-back-link { display: inline-flex; min-height: 42px; align-items: center; margin-top: 18px; color: var(--jade); font-size: 13px; font-weight: 800; text-underline-offset: 4px; }
 @media (max-width: 650px) {
   .paper-card { padding: 20px 17px; }
   .result-answers li { grid-template-columns: 20px minmax(0, 1fr); }

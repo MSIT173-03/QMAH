@@ -1,6 +1,9 @@
-<div class="mx-auto w-full lg:w-4/5 xl:w-3/4">
+<div class="qmah-social-page">
   <div class="mb-4">
-    <a routerLink="/social/posts" class="btn btn-ghost btn-sm">← 返回貼文列表</a>
+    <a routerLink="/social/posts" class="btn btn-ghost btn-sm social-icon-label">
+      <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
+      返回貼文列表
+    </a>
   </div>
 
 @if (loading) {
@@ -25,7 +28,10 @@
         </div>
       } @else {
         <h2 class="card-title">{{ post.title }}</h2>
-        <p class="text-xs text-base-content/60">✍️ {{ post.displayName || '匿名會員' }}</p>
+        <p class="text-xs text-base-content/60 social-icon-label">
+          <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+          {{ post.displayName || '匿名會員' }}
+        </p>
         <app-social-post-content [content]="post.content" />
       }
 
@@ -39,15 +45,18 @@
 
       <div class="card-actions justify-end mt-4">
         @if (isOwnPost(post) && !editingPost) {
-          <button class="btn btn-sm btn-ghost" (click)="startEditPost()">✏️ 編輯</button>
-          <button class="btn btn-sm btn-error btn-outline" (click)="deletePost()">🗑️ 刪除</button>
+          <button class="btn btn-sm btn-ghost social-icon-label" (click)="startEditPost()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button>
+          <button class="btn btn-sm btn-error btn-outline social-icon-label" (click)="deletePost()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button>
         }
-        <button class="btn btn-sm btn-ghost" (click)="reportModal.open('POST', post.id)">🚩 檢舉貼文</button>
+        <button class="btn btn-sm btn-ghost social-icon-label" (click)="reportModal.open('POST', post.id)"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉貼文</button>
       </div>
     </div>
   </div>
 
-  <h3 class="text-lg font-bold mb-3">留言（{{ post.comments.length }}）</h3>
+  <h3 class="text-lg font-bold mb-3 social-icon-label">
+    <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
+    留言（{{ post.comments.length }}）
+  </h3>
 
   <div class="space-y-3 mb-6">
     @for (comment of post.comments; track comment.id) {
@@ -69,10 +78,10 @@
             <p>{{ comment.content }}</p>
             <div class="card-actions justify-end">
               @if (isOwnComment(comment)) {
-                <button class="btn btn-xs btn-ghost" (click)="startEditComment(comment)">✏️ 編輯</button>
-                <button class="btn btn-xs btn-error btn-outline" (click)="deleteComment(comment.id)">🗑️ 刪除</button>
+                <button class="btn btn-xs btn-ghost social-icon-label" (click)="startEditComment(comment)"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button>
+                <button class="btn btn-xs btn-error btn-outline social-icon-label" (click)="deleteComment(comment.id)"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button>
               }
-              <button class="btn btn-xs btn-ghost" (click)="reportModal.open('COMMENT', comment.id)">🚩 檢舉留言</button>
+              <button class="btn btn-xs btn-ghost social-icon-label" (click)="reportModal.open('COMMENT', comment.id)"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉留言</button>
             </div>
           }
         </div>

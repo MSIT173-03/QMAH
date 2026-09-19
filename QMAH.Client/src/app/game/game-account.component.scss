@@ -21,12 +21,11 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   outline-offset: 4px;
 }
 
-.account-page { width: min(960px, 100%); margin: 0 auto; padding: 20px 38px 64px; }
-.account-masthead { min-height: 48px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(16, 47, 56, .22); }
-.brand { display: inline-flex; align-items: center; }
-.brand img { display: block; width: 148px; max-height: 38px; }
+.account-page { width: min(960px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
+/* ui-integration: App Shell 與 Game 子導覽已統一品牌入口，帳號內容只處理登入狀態與表單。 */
 .back-link { color: var(--jade); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
 .account-panel { width: min(520px, 100%); margin: clamp(44px, 10vh, 100px) auto 0; padding: clamp(28px, 6vw, 48px); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 16px 36px rgba(16, 47, 56, .12); }
+.account-loading { margin: 0; color: var(--muted); }
 .account-panel h1 { margin: 0 0 24px; font-size: clamp(26px, 5vw, 36px); line-height: 1.2; letter-spacing: -.025em; overflow-wrap: anywhere; }
 .account-panel > p { margin: -10px 0 24px; color: var(--muted); }
 .account-panel form { display: grid; gap: 10px; }
@@ -39,6 +38,6 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .account-error { margin: 18px 0 0; padding: 12px 14px; color: #732f27; background: #f7e8e3; border: 1px solid #d9aaa0; border-radius: 8px; overflow-wrap: anywhere; }
 
 @media (max-width: 600px) {
-  .account-page { padding: 14px 18px 40px; }
+  .account-page { padding: 10px 18px 40px; }
   .account-panel { margin-top: 34px; }
 }

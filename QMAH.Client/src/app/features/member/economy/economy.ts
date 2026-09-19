@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 
 interface EconomyKey {
@@ -48,7 +49,8 @@ type KeyFilter =
 
   imports: [
     CommonModule,
-    BackToMember
+    BackToMember,
+    QmahIconComponent
   ],
 
   templateUrl: './economy.html',

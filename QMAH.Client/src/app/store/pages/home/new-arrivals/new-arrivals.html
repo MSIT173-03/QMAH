@@ -6,8 +6,10 @@
   <div class="news-list">
     @for (item of items(); track item.id) {
       <div class="news-item">
-        <a href="#" class="news-link">
-          <div class="news-thumb">IMG</div>
+        <a [storeLink]="productPath(item.id)" class="news-link">
+          <div class="news-thumb">
+            <svg lucidePackageSearch aria-hidden="true" focusable="false"></svg>
+          </div>
           <div class="news-info">
             <span class="product-card-brand">{{ item.brand }}</span>
             <span class="news-name">{{ item.name }}</span>

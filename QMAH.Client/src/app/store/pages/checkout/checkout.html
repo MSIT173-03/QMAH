@@ -3,7 +3,7 @@
   <app-step-indicator [steps]="steps" [current]="stepIndex" />
 </app-site-header>
 
-<main class="container checkout-main">
+<div class="container checkout-main">
 
   <!-- 麵包屑導覽 -->
   <app-breadcrumb [items]="breadcrumbItems" />
@@ -66,7 +66,7 @@
       (submitOrder)="onSubmit()"
     />
   </div>
-</main>
+</div>
 
 <!-- 頁尾：簡版，僅顯示版權列 -->
 <app-site-footer />

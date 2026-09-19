@@ -14,6 +14,18 @@
   color: var(--color-muted);
 }
 
+@media (max-width: 600px) {
+  /* ui-integration: 步驟語意保留，但允許換行，避免結帳頁在手機產生水平捲動。 */
+  .step-indicator {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+    line-height: 1.5;
+  }
+}
+
 /* 已完成的步驟 */
 .step-done {
   color: var(--color-ink);

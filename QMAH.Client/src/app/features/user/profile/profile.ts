@@ -16,6 +16,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { environment } from '../../../../environments/environment';
 import { BackToMember } from '../../../shared/back-to-member/back-to-member';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 interface MemberProfile {
   id: string;
@@ -41,7 +42,8 @@ interface UpdateProfileRequest {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    BackToMember
+    BackToMember,
+    QmahIconComponent
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
@@ -54,6 +56,7 @@ export class Profile implements OnInit {
 
   loading = true;
   saving = false;
+  avatarUnavailable = false;
 
   editMode = false;
 
@@ -116,6 +119,7 @@ export class Profile implements OnInit {
         next: (data) => {
 
           this.profile = data;
+          this.avatarUnavailable = false;
 
           this.profileForm.patchValue({
 
@@ -318,6 +322,7 @@ export class Profile implements OnInit {
         next: (data) => {
 
           this.profile = data;
+          this.avatarUnavailable = false;
 
           this.profileForm.patchValue({
 

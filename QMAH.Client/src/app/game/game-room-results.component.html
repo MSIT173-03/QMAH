@@ -1,5 +1,5 @@
 <section class="paper-card results-panel" aria-labelledby="results-title">
-  <p class="eyebrow">GAME COMPLETE</p>
+  <p class="eyebrow">遊戲結束</p>
   <h2 id="results-title">本局結算</h2>
 
   @if (history(); as completedHistory) {
@@ -12,7 +12,7 @@
               <span class="rank-number">{{ entry.rank }}</span>
               <strong>{{ entry.displayName }}</strong>
               <span class="score-total">{{ entry.score }} <small>票</small></span>
-              <span class="score-detail">{{ entry.roundsWon }} 勝 · {{ entry.roundsAnswered }} 次作答</span>
+              <span class="score-detail">勝出 {{ entry.roundsWon }} 回合 · 作答 {{ entry.roundsAnswered }} 次</span>
             </li>
           }
         </ol>
@@ -43,15 +43,15 @@
           </ol>
         </details>
       } @empty {
-        <p class="empty-copy">房間沒有回合紀錄。</p>
+        <p class="empty-copy">目前沒有回合紀錄。</p>
       }
     </div>
   }
 
   <div class="reward-panel">
-    <div><h3>多人遊戲獎勵</h3><p>本房間的多人遊戲獎勵只能領取一次。</p></div>
+    <div><h3>本局獎勵</h3><p>每間房的獎勵只能領取一次。</p></div>
     <button type="button" (click)="claimReward.emit()" [disabled]="rewarding()">
-      {{ rewarding() ? '領取中…' : reward()?.alreadyRewarded ? '查看領取結果' : '領取遊戲獎勵' }}
+      {{ rewarding() ? '領取中…' : reward()?.alreadyRewarded ? '查看獎勵結果' : '領取本局獎勵' }}
     </button>
   </div>
   @if (reward(); as receipt) {
@@ -62,4 +62,6 @@
       <span>勝出 {{ receipt.roundsWon }} 回合</span>
     </div>
   }
+  <!-- ui-integration: 結算頁的主要下一步保留既有流程出口，避免玩家只能依賴瀏覽器返回。 -->
+  <a routerLink="/game" class="results-back-link">返回多人鑑定大廳</a>
 </section>

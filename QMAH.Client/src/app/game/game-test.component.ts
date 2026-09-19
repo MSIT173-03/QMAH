@@ -1,6 +1,7 @@
 import { JsonPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 
 import {
@@ -8,20 +9,70 @@ import {
   GameRoomFilterStatus,
   GameRoomListItem,
 } from './game.models';
+import { GameNavigationComponent } from './game-navigation.component';
 import { GameService } from './game.service';
+
+interface TestRoomOption {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+}
 
 @Component({
   selector: 'app-game-test',
-  imports: [FormsModule, JsonPipe],
+  imports: [FormsModule, JsonPipe, RouterLink, GameNavigationComponent],
+  styleUrl: './game-test.component.scss',
   template: `
-    <main class="game-test-page">
-      <header>
-        <p class="eyebrow">清明鑑定屋 · 遊戲服務</p>
-        <h1>遊戲 API 測試頁</h1>
+    <div class="game-test-page">
+      <!-- ui-integration: 管理員檢查中心沿用 Game 導覽，讓正式工具有清楚入口與返回大廳的出口。 -->
+      <app-game-navigation><a routerLink="/game">返回多人鑑定大廳</a></app-game-navigation>
+      <section class="test-launcher" aria-labelledby="test-launcher-title">
+        <header>
+          <p class="eyebrow">管理員工具 · 遊戲檢查中心</p>
+          <h1 id="test-launcher-title">檢查遊戲流程與服務</h1>
+          <p class="description">用隔離測試房間檢查畫面與跳轉，也能讀取目前遊戲 API 的公開房間資料確認服務是否接通。測試流程不建立會員、房間或獎勵紀錄。</p>
+        </header>
+        <div class="test-safety-note" role="note">
+          <strong>僅限管理員</strong>
+          <span>這裡的測試玩家與獎勵都是前端隔離資料，不會影響正式玩家。</span>
+        </div>
+        <div class="test-section-heading">
+          <div>
+            <p class="eyebrow">流程預覽</p>
+            <h2>選一間測試房間</h2>
+          </div>
+          <span class="section-note">可重複進入</span>
+        </div>
+        <div class="test-room-grid">
+          @for (room of testRooms; track room.id) {
+            <article class="test-room-card">
+              <span class="test-room-code">{{ room.code }}</span>
+              <h2>{{ room.name }}</h2>
+              <p>{{ room.description }}</p>
+              <button type="button" (click)="joinTestRoom(room.id)">加入測試房間 <span aria-hidden="true">→</span></button>
+            </article>
+          }
+        </div>
+      </section>
+      <header class="diagnostics-heading">
+        <div>
+          <p class="eyebrow">只讀連線檢查</p>
+          <h2>遊戲服務狀態</h2>
+        </div>
         <p class="description">
-          這裡只讀取房間與回合資料，用來確認前台 service、登入 Cookie 與 API proxy 是否接通。
+          這項檢查代表目前前端能否用登入狀態讀取遊戲 API；它是操作層煙霧檢查，不取代伺服器本身的健康監控。
         </p>
       </header>
+
+      <section class="service-status" [class.is-checking]="serviceStatus === 'CHECKING'" [class.is-online]="serviceStatus === 'ONLINE'" [class.is-offline]="serviceStatus === 'OFFLINE'" aria-live="polite">
+        <span class="service-status__dot" aria-hidden="true"></span>
+        <div>
+          <strong>{{ serviceStatusText() }}</strong>
+          <span>{{ lastCheckedLabel }}</span>
+        </div>
+        <button type="button" (click)="loadRooms()" [disabled]="loading || serviceStatus === 'CHECKING'">{{ serviceStatus === 'CHECKING' ? '檢查中…' : '重新檢查' }}</button>
+      </section>
 
       @if (error) {
         <p class="message error" role="alert">{{ error }}</p>
@@ -92,37 +143,18 @@ import { GameService } from './game.service';
           <pre>{{ round | json }}</pre>
         }
       </section>
-    </main>
-  `,
-  styles: `
-    :host { display: block; min-height: 100vh; background: #f6f7fb; color: #1f2937; }
-    .game-test-page { box-sizing: border-box; max-width: 960px; margin: 0 auto; padding: 3rem 1.25rem; }
-    header { margin-bottom: 1.5rem; }
-    .eyebrow { margin: 0 0 .5rem; color: #64748b; font-size: .75rem; font-weight: 700; letter-spacing: .12em; }
-    h1, h2 { margin: 0; }
-    h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
-    h2 { font-size: 1.1rem; }
-    .description, .panel-heading p, .muted { color: #64748b; }
-    .description { max-width: 42rem; margin: .75rem 0 0; line-height: 1.6; }
-    .panel { margin-top: 1rem; padding: 1.25rem; border: 1px solid #dbe2ea; border-radius: .75rem; background: #fff; box-shadow: 0 8px 24px rgb(15 23 42 / 5%); }
-    .panel-heading, .summary { display: flex; align-items: center; gap: .75rem; justify-content: space-between; }
-    .panel-heading p { margin: .35rem 0 0; font-size: .9rem; }
-    label { display: grid; gap: .35rem; margin-top: 1rem; font-weight: 600; }
-    input, select { box-sizing: border-box; min-height: 2.5rem; padding: .55rem .7rem; border: 1px solid #cbd5e1; border-radius: .45rem; background: #fff; color: inherit; font: inherit; }
-    button { min-height: 2.5rem; padding: .55rem .85rem; border: 0; border-radius: .45rem; background: #1d4ed8; color: #fff; cursor: pointer; font: inherit; font-weight: 700; }
-    button:disabled { cursor: wait; opacity: .55; }
-    pre { max-height: 24rem; overflow: auto; margin: 1rem 0 0; padding: 1rem; border-radius: .45rem; background: #0f172a; color: #dbeafe; font-size: .8rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .message { margin: 1rem 0; padding: .75rem 1rem; border-radius: .45rem; background: #e0f2fe; }
-    .message.error { background: #fee2e2; color: #991b1b; }
-    .fields { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem 1rem; align-items: end; }
-    .fields label { margin-top: 0; }
-    .summary { justify-content: flex-start; flex-wrap: wrap; margin-top: 1.25rem; padding: .75rem; border-radius: .45rem; background: #eff6ff; }
-    .summary span { color: #475569; font-size: .9rem; }
-    @media (max-width: 640px) { .panel-heading, .fields { grid-template-columns: 1fr; display: grid; } .panel-heading button, .fields button { width: 100%; } }
+    </div>
   `
 })
 export class GameTestComponent {
   readonly game = inject(GameService);
+  private readonly router = inject(Router);
+
+  readonly testRooms: TestRoomOption[] = [
+    { id: 'test-room-quick', code: 'QA-快轉', name: '快速巡覽', description: '約半分鐘跑完兩回合，適合先確認主要畫面與路由出口。' },
+    { id: 'test-room-standard', code: 'QA-完整', name: '完整流程', description: '節奏較寬，方便逐步檢查作答、投票、揭曉與結算。' },
+    { id: 'test-room-replay', code: 'QA-重播', name: '重播檢查', description: '每次加入都從乾淨狀態開始，可重複檢查同一條流程。' }
+  ];
 
   roomStatus: GameRoomFilterStatus | '' = '';
   roomId = '';
@@ -130,6 +162,18 @@ export class GameTestComponent {
   rooms: ApiPage<GameRoomListItem> | null = null;
   error = '';
   loading = false;
+  serviceStatus: 'UNKNOWN' | 'CHECKING' | 'ONLINE' | 'OFFLINE' = 'UNKNOWN';
+  lastCheckedLabel = '尚未檢查';
+
+  ngOnInit(): void {
+    // ui-integration: 進入正式檢查中心即先做一次只讀連線檢查，管理員不必再猜測服務是否可用。
+    this.loadRooms();
+  }
+
+  joinTestRoom(roomId: string): void {
+    // ui-integration: 測試房間只進入前端隔離的 GameRoomComponent 狀態，不呼叫正式加入 API 或留下會員紀錄。
+    void this.router.navigate(['/game/room', roomId], { queryParams: { test: '1' } });
+  }
 
   roomStatusText(status: GameRoomListItem['status']): string {
     return { WAITING: '等待中', PLAYING: '進行中', COMPLETED: '已完成', CANCELLED: '已取消' }[status];
@@ -144,9 +188,20 @@ export class GameTestComponent {
   }
 
   loadRooms(): void {
-    this.run(this.game.getRooms({ status: this.roomStatus || undefined }), (rooms) => {
-      this.rooms = rooms;
-    });
+    this.serviceStatus = 'CHECKING';
+    this.lastCheckedLabel = '正在讀取公開房間…';
+    this.run(
+      this.game.getRooms({ status: this.roomStatus || undefined }),
+      (rooms) => {
+        this.rooms = rooms;
+        this.serviceStatus = 'ONLINE';
+        this.lastCheckedLabel = `最近檢查 ${this.currentTimeLabel()}`;
+      },
+      () => {
+        this.serviceStatus = 'OFFLINE';
+        this.lastCheckedLabel = `最近失敗 ${this.currentTimeLabel()}`;
+      }
+    );
   }
 
   loadRoom(): void {
@@ -165,12 +220,28 @@ export class GameTestComponent {
     this.run(this.game.getRound(this.roundId.trim()), () => undefined);
   }
 
-  private run<T>(request: Observable<T>, assign: (value: T) => void): void {
+  serviceStatusText(): string {
+    return {
+      UNKNOWN: '尚未檢查遊戲 API',
+      CHECKING: '正在檢查遊戲 API',
+      ONLINE: '遊戲 API 可連線',
+      OFFLINE: '遊戲 API 暫時無法連線'
+    }[this.serviceStatus];
+  }
+
+  private currentTimeLabel(): string {
+    return new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  private run<T>(request: Observable<T>, assign: (value: T) => void, onError?: () => void): void {
     this.loading = true;
     this.error = '';
     request.pipe(finalize(() => (this.loading = false))).subscribe({
       next: assign,
-      error: (error: unknown) => (this.error = this.game.errorMessage(error))
+      error: (error: unknown) => {
+        this.error = this.game.errorMessage(error);
+        onError?.();
+      }
     });
   }
 }

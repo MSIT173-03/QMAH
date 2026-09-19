@@ -1,3 +1,4 @@
+/* ui-integration: 地址頁不重排配送表單與地址卡，只收斂表面、文字與操作色，讓深層會員頁回到同一套語彙。 */
 :host {
   display: block;
 
@@ -6,11 +7,11 @@
   background:
     linear-gradient(
       180deg,
-      #f7f8fc 0%,
-      #f4f5f9 100%
+      #f7f4ee 0%,
+      #f3f0e8 100%
     );
 
-  color: #1f2937;
+  color: #27363b;
 }
 
 
@@ -44,7 +45,7 @@
 
   background: #ffffff;
 
-  color: #374151;
+  color: #3f565c;
 
   text-decoration: none;
 
@@ -63,9 +64,9 @@
   &:hover {
     transform: translateX(-2px);
 
-    border-color: #c7d2fe;
+    border-color: #c8d9d5;
 
-    color: #4f46e5;
+    color: #a65342;
   }
 }
 
@@ -86,7 +87,7 @@
   h1 {
     margin: 4px 0 7px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 30px;
     font-weight: 800;
@@ -95,7 +96,7 @@
   p {
     margin: 0;
 
-    color: #6b7280;
+    color: #617176;
 
     font-size: 14px;
   }
@@ -103,7 +104,7 @@
 
 .page-eyebrow,
 .section-eyebrow {
-  color: #6366f1;
+  color: #2f6f73;
 
   font-size: 10px;
   font-weight: 800;
@@ -126,8 +127,8 @@
   background:
     linear-gradient(
       135deg,
-      #4f46e5,
-      #6366f1
+      #a65342,
+      #2f6f73
     );
 
   color: #ffffff;
@@ -199,13 +200,13 @@
   }
 
   span {
-    color: #6b7280;
+    color: #617176;
 
     font-size: 11px;
   }
 
   strong {
-    color: #111827;
+    color: #163f47;
 
     font-size: 22px;
     font-weight: 800;
@@ -213,7 +214,7 @@
     small {
       margin-left: 2px;
 
-      color: #9ca3af;
+      color: #839093;
 
       font-size: 11px;
       font-weight: 500;
@@ -235,11 +236,11 @@
 }
 
 .summary-icon.purple {
-  background: #eef2ff;
+  background: #e8f0ee;
 }
 
 .summary-icon.green {
-  background: #ecfdf5;
+  background: #e8f3ed;
 }
 
 .summary-status {
@@ -251,7 +252,7 @@
 }
 
 .summary-status.muted {
-  color: #9ca3af;
+  color: #839093;
 }
 
 
@@ -293,7 +294,7 @@
 .success-message {
   border: 1px solid #bbf7d0;
 
-  background: #f0fdf4;
+  background: #e8f3ed;
 
   color: #166534;
 
@@ -354,7 +355,7 @@
 
   padding-bottom: 20px;
 
-  border-bottom: 1px solid #f0f1f5;
+  border-bottom: 1px solid #e7ecea;
 }
 
 .form-title {
@@ -366,7 +367,7 @@
   h2 {
     margin: 0 0 4px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 19px;
   }
@@ -374,7 +375,7 @@
   p {
     margin: 0;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 12px;
   }
@@ -390,9 +391,9 @@
 
   border-radius: 12px;
 
-  background: #eef2ff;
+  background: #e8f0ee;
 
-  color: #4f46e5;
+  color: #a65342;
 
   font-size: 18px;
   font-weight: 800;
@@ -411,7 +412,7 @@
 
   background: #f3f4f6;
 
-  color: #6b7280;
+  color: #617176;
 
   font-size: 20px;
 
@@ -444,7 +445,7 @@
   gap: 7px;
 
   label {
-    color: #374151;
+    color: #3f565c;
 
     font-size: 12px;
     font-weight: 700;
@@ -468,7 +469,7 @@
 
     background: #ffffff;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 13px;
 
@@ -481,7 +482,7 @@
     }
 
     &:focus {
-      border-color: #818cf8;
+      border-color: #7d9c98;
 
       box-shadow:
         0 0 0 3px
@@ -504,10 +505,10 @@
 
   padding: 15px 16px;
 
-  border: 1px solid #e9e7ff;
+  border: 1px solid #e8f0ee;
   border-radius: 12px;
 
-  background: #fafaff;
+  background: #fffdf8;
 
   label {
     display: flex;
@@ -527,7 +528,7 @@
 
     margin-bottom: 2px;
 
-    color: #374151;
+    color: #3f565c;
 
     font-size: 12px;
   }
@@ -535,7 +536,7 @@
   p {
     margin: 0;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 10px;
   }
@@ -558,9 +559,9 @@
 .default-option
 input:checked
 + .checkbox-ui {
-  border-color: #6366f1;
+  border-color: #2f6f73;
 
-  background: #6366f1;
+  background: #2f6f73;
 
   &::after {
     content: '✓';
@@ -623,8 +624,8 @@ input:checked
   background:
     linear-gradient(
       135deg,
-      #4f46e5,
-      #6366f1
+      #a65342,
+      #2f6f73
     );
 
   color: #ffffff;
@@ -639,7 +640,7 @@ input:checked
 
   background: #ffffff;
 
-  color: #6b7280;
+  color: #617176;
 }
 
 .button-spinner {
@@ -678,7 +679,7 @@ input:checked
   h2 {
     margin: 3px 0 4px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 19px;
   }
@@ -686,7 +687,7 @@ input:checked
   p {
     margin: 0;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 11px;
   }
@@ -704,14 +705,14 @@ input:checked
 
   overflow: hidden;
 
-  border: 1px solid #c7d2fe;
+  border: 1px solid #c8d9d5;
   border-radius: 18px;
 
   background:
     linear-gradient(
       135deg,
       #ffffff 0%,
-      #f8f7ff 100%
+      #fffdf8 100%
     );
 
   box-shadow:
@@ -757,7 +758,7 @@ input:checked
   h3 {
     margin: 0 0 4px;
 
-    color: #111827;
+    color: #163f47;
 
     font-size: 15px;
   }
@@ -773,7 +774,7 @@ input:checked
 
   border-radius: 13px;
 
-  background: #eef2ff;
+  background: #e8f0ee;
 
   font-size: 21px;
 }
@@ -808,16 +809,16 @@ input:checked
 
   border-radius: 999px;
 
-  background: #eef2ff;
+  background: #e8f0ee;
 
-  color: #4f46e5;
+  color: #a65342;
 
   font-size: 9px;
   font-weight: 750;
 }
 
 .recipient {
-  color: #6b7280;
+  color: #617176;
 
   font-size: 11px;
 }
@@ -833,7 +834,7 @@ input:checked
 
   background: #ffffff;
 
-  color: #4b5563;
+  color: #52686e;
 
   font-size: 11px;
   font-weight: 650;
@@ -845,9 +846,9 @@ input:checked
     color 0.2s ease;
 
   &:hover {
-    border-color: #a5b4fc;
+    border-color: #9ab9b5;
 
-    color: #4f46e5;
+    color: #a65342;
   }
 }
 
@@ -881,13 +882,13 @@ input:checked
   }
 
   .postal {
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 10px;
   }
 
   strong {
-    color: #374151;
+    color: #3f565c;
 
     font-size: 14px;
     line-height: 1.7;
@@ -986,13 +987,13 @@ input:checked
   padding: 7px 0;
 
   span {
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 10px;
   }
 
   strong {
-    color: #4b5563;
+    color: #52686e;
 
     font-size: 11px;
     font-weight: 550;
@@ -1013,7 +1014,7 @@ input:checked
 
   padding-top: 15px;
 
-  border-top: 1px solid #f0f1f4;
+  border-top: 1px solid #e7ecea;
 }
 
 .card-action {
@@ -1038,15 +1039,15 @@ input:checked
 
   background: #ffffff;
 
-  color: #4b5563;
+  color: #52686e;
 }
 
 .card-action.default {
-  border: 1px solid #c7d2fe;
+  border: 1px solid #c8d9d5;
 
-  background: #eef2ff;
+  background: #e8f0ee;
 
-  color: #4f46e5;
+  color: #a65342;
 }
 
 .card-action.delete {
@@ -1088,7 +1089,7 @@ input:checked
   h3 {
     margin: 5px 0 0;
 
-    color: #374151;
+    color: #3f565c;
 
     font-size: 14px;
   }
@@ -1096,7 +1097,7 @@ input:checked
   p {
     margin: 0;
 
-    color: #9ca3af;
+    color: #839093;
 
     font-size: 11px;
   }
@@ -1111,12 +1112,12 @@ input:checked
 
   padding: 8px 13px;
 
-  border: 1px solid #c7d2fe;
+  border: 1px solid #c8d9d5;
   border-radius: 9px;
 
-  background: #eef2ff;
+  background: #e8f0ee;
 
-  color: #4f46e5;
+  color: #a65342;
 
   font-size: 11px;
   font-weight: 700;
@@ -1125,7 +1126,7 @@ input:checked
 }
 
 .loading-card {
-  color: #6b7280;
+  color: #617176;
 
   font-size: 12px;
 }
@@ -1134,9 +1135,9 @@ input:checked
   width: 22px;
   height: 22px;
 
-  border: 2px solid #e5e7eb;
+  border: 2px solid #d9e0dc;
 
-  border-top-color: #6366f1;
+  border-top-color: #2f6f73;
 
   border-radius: 50%;
 

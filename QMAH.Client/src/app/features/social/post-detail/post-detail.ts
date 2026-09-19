@@ -8,11 +8,12 @@ import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialPost
 import { MeApiService } from '../../../core/services/me-api';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
+import { LucideArrowLeft, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, LucideUserRound } from '@lucide/angular';
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, LucideArrowLeft, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, LucideUserRound],
   templateUrl: './post-detail.html',
   styleUrl: './post-detail.scss'
 })

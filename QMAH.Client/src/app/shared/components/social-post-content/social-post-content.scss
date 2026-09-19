@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+/* ui-integration: 貼文內容是跨列表與詳情頁共用的閱讀元件，集中使用 SCSS，避免 inline style 與各頁規則分裂。 */
+.social-post-content {
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+p {
+  margin: 0 0 0.45rem;
+  white-space: pre-wrap;
+}
+
+h3 {
+  margin: 0.7rem 0 0.35rem;
+  color: oklch(var(--p));
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.bullet {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.bullet::before {
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  content: '•';
+}
+
+blockquote {
+  margin: 0.5rem 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.35rem;
+  background: color-mix(in oklab, currentColor 6%, transparent);
+  color: color-mix(in oklab, currentColor 72%, transparent);
+}
+
+.space {
+  height: 0.35rem;
+}

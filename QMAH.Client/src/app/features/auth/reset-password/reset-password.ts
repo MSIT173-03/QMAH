@@ -17,6 +17,7 @@ import {
   Router,
   RouterLink
 } from '@angular/router';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 interface ResetPasswordRequest {
   email: string;
@@ -30,7 +31,8 @@ interface ResetPasswordRequest {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
+    QmahIconComponent
   ],
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.scss'

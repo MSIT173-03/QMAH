@@ -87,9 +87,9 @@
         <div class="shine"></div>
 
         <div class="success-particles" aria-hidden="true">
-          <span>✦</span>
-          <span>✦</span>
-          <span>✦</span>
+          <app-qmah-icon name="sparkles" size="16" />
+          <app-qmah-icon name="sparkles" size="16" />
+          <app-qmah-icon name="sparkles" size="16" />
         </div>
 
       }
@@ -102,13 +102,13 @@
           @if (dailyActivity.hasLoggedInToday) {
 
             <span class="check-icon">
-              ✓
+              <app-qmah-icon name="circle-check" />
             </span>
 
           } @else {
 
             <span>
-              📅
+              <app-qmah-icon name="calendar" />
             </span>
 
           }
@@ -168,7 +168,7 @@
           } @else {
 
             <span class="button-icon">
-              ✓
+              <app-qmah-icon name="circle-check" />
             </span>
 
             今日簽到
@@ -182,7 +182,7 @@
         <div class="completed-badge">
 
           <span class="badge-check">
-            ✓
+            <app-qmah-icon name="circle-check" />
           </span>
 
           已完成
@@ -203,7 +203,7 @@
       <div class="success-message">
 
         <span>
-          🎉
+          <app-qmah-icon name="party-popper" />
         </span>
 
         <div>
@@ -234,7 +234,7 @@
         <div class="fire-orb">
 
           <span class="fire-icon">
-            🔥
+            <app-qmah-icon name="flame" />
           </span>
 
         </div>
@@ -361,13 +361,13 @@
               @if (item.completed) {
 
                 <span class="day-check">
-                  ✓
+                  <app-qmah-icon name="circle-check" />
                 </span>
 
               } @else if (item.reward) {
 
                 <span class="gift-icon">
-                  🎁
+                  <app-qmah-icon name="gift" />
                 </span>
 
               } @else {
@@ -428,7 +428,7 @@
         <div class="weekly-tip">
 
           <span>
-            🔥
+            <app-qmah-icon name="flame" />
           </span>
 
           <div>
@@ -506,7 +506,7 @@
         <div class="stat-card stat-one">
 
           <div class="stat-icon calendar-icon">
-            📆
+            <app-qmah-icon name="calendar" />
           </div>
 
           <span class="stat-label">
@@ -529,7 +529,7 @@
         <div class="stat-card stat-two highlight">
 
           <div class="stat-icon fire-stat">
-            🔥
+            <app-qmah-icon name="flame" />
           </div>
 
           <span class="stat-label">
@@ -552,7 +552,7 @@
         <div class="stat-card stat-three">
 
           <div class="stat-icon trophy-icon">
-            🏆
+            <app-qmah-icon name="trophy" />
           </div>
 
           <span class="stat-label">
@@ -575,7 +575,7 @@
         <div class="stat-card stat-four">
 
           <div class="stat-icon chart-icon">
-            📊
+            <app-qmah-icon name="chart-column" />
           </div>
 
           <span class="stat-label">
@@ -611,7 +611,7 @@
       <div class="last-login-left">
 
         <div class="last-login-icon">
-          🕒
+          <app-qmah-icon name="clock" />
         </div>
 
 

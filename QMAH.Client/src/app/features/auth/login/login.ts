@@ -18,6 +18,7 @@ import {
 } from '../../../core/auth/auth.service';
 
 import { environment } from '../../../../environments/environment';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 
 @Component({
@@ -25,7 +26,8 @@ import { environment } from '../../../../environments/environment';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
+    QmahIconComponent
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss'

@@ -1,54 +1,9 @@
 <div class="member-page">
 
-  <!-- =============================== -->
-  <!-- Top Bar -->
-  <!-- =============================== -->
-
-  <header class="topbar">
-
-    <div class="brand">
-
-      <div class="brand-logo">
-        Q
-      </div>
-
-      <div>
-        <strong>QMAH</strong>
-        <span>MEMBER CENTER</span>
-      </div>
-
-    </div>
+  <!-- ui-integration: 會員中心沿用原有 dashboard composition，主品牌與帳號操作由共用 App Shell 提供。 -->
 
 
-    <button
-      type="button"
-      class="logout-button"
-      (click)="logout()"
-      [disabled]="loggingOut"
-    >
-
-      @if (loggingOut) {
-
-        <span class="button-spinner"></span>
-
-        登出中...
-
-      } @else {
-
-        <span>↪</span>
-        登出
-
-      }
-
-    </button>
-
-  </header>
-
-  <!-- integration: 會員中心是登入後的主要入口，補上既有 Area 導航方便切換遊戲、社群與商城。 -->
-  <app-area-navigation />
-
-
-  <main class="member-container">
+  <div class="member-container">
 
     <!-- =============================== -->
     <!-- Welcome Hero -->
@@ -67,7 +22,7 @@
         </span>
 
         <h1>
-          歡迎回到會員中心 👋
+          歡迎回到會員中心
         </h1>
 
         <p>
@@ -131,12 +86,10 @@
           <div class="card-top">
 
             <div class="card-icon profile-icon">
-              👤
+              <app-qmah-icon name="user-round" />
             </div>
 
-            <span class="card-arrow">
-              →
-            </span>
+            <span class="card-arrow"><app-qmah-icon name="arrow-right" /></span>
 
           </div>
 
@@ -179,12 +132,10 @@
           <div class="card-top">
 
             <div class="card-icon address-icon">
-              📍
+              <app-qmah-icon name="map-pin" />
             </div>
 
-            <span class="card-arrow">
-              →
-            </span>
+            <span class="card-arrow"><app-qmah-icon name="arrow-right" /></span>
 
           </div>
 
@@ -260,12 +211,10 @@
           <div class="card-top">
 
             <div class="card-icon economy-icon">
-              💎
+              <app-qmah-icon name="gem" />
             </div>
 
-            <span class="card-arrow">
-              →
-            </span>
+            <span class="card-arrow"><app-qmah-icon name="arrow-right" /></span>
 
           </div>
 
@@ -312,12 +261,10 @@
           <div class="card-top">
 
             <div class="card-icon coupon-icon">
-              🎟️
+              <app-qmah-icon name="ticket" />
             </div>
 
-            <span class="card-arrow">
-              →
-            </span>
+            <span class="card-arrow"><app-qmah-icon name="arrow-right" /></span>
 
           </div>
 
@@ -360,12 +307,10 @@
           <div class="card-top">
 
             <div class="card-icon achievement-icon">
-              🏆
+              <app-qmah-icon name="trophy" />
             </div>
 
-            <span class="card-arrow">
-              →
-            </span>
+            <span class="card-arrow"><app-qmah-icon name="arrow-right" /></span>
 
           </div>
 
@@ -444,12 +389,10 @@
           <div class="card-top">
 
             <div class="card-icon daily-icon">
-              🔥
+              <app-qmah-icon name="flame" />
             </div>
 
-            <span class="card-arrow">
-              →
-            </span>
+            <span class="card-arrow"><app-qmah-icon name="arrow-right" /></span>
 
           </div>
 
@@ -496,12 +439,10 @@
           <div class="card-top">
 
             <div class="card-icon notification-icon">
-              🔔
+              <app-qmah-icon name="bell" />
             </div>
 
-            <span class="card-arrow">
-              →
-            </span>
+            <span class="card-arrow"><app-qmah-icon name="arrow-right" /></span>
 
           </div>
 
@@ -554,6 +495,6 @@
 
     </div>
 
-  </main>
+  </div>
 
 </div>

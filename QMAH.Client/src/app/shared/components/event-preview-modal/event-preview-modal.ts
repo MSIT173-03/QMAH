@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { SocialApiService, SocialEventDetails } from '../../../core/services/social-api';
+import { QmahIconComponent } from '../qmah-icon/qmah-icon';
 
 // 活動管理列表點「活動名稱」用的小視窗：GetEvent 已經對 Admin 開放待審核／未發布的活動，
 // 這裡直接彈窗看完整內容（含圖片），不用跳新分頁，看完關掉即可再回去審核。
 @Component({
   selector: 'app-event-preview-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, QmahIconComponent],
   templateUrl: './event-preview-modal.html'
 })
 export class EventPreviewModalComponent {

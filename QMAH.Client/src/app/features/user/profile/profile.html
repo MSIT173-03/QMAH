@@ -32,11 +32,12 @@
 
             <div class="avatar">
 
-              @if (profile.avatarPath) {
+              @if (profile.avatarPath && !avatarUnavailable) {
 
                 <img
                   [src]="profile.avatarPath"
                   alt="會員頭像"
+                  (error)="avatarUnavailable = true"
                 />
 
               } @else {
@@ -111,7 +112,8 @@
           <div class="message-wrapper">
 
             <div class="success-box">
-              ✓ {{ successMessage }}
+              <app-qmah-icon name="circle-check" />
+              {{ successMessage }}
             </div>
 
           </div>
@@ -146,7 +148,7 @@
               <div>
 
                 <span class="heading-icon">
-                  👤
+                  <app-qmah-icon name="user-round" />
                 </span>
 
                 <div>
@@ -168,7 +170,8 @@
                 class="primary-button"
                 (click)="startEdit()"
               >
-                ✎ 編輯資料
+                <app-qmah-icon name="pencil" />
+                編輯資料
               </button>
 
             </div>
@@ -348,7 +351,7 @@
             <div class="edit-heading">
 
               <div class="edit-heading-icon">
-                ✎
+                <app-qmah-icon name="pencil" />
               </div>
 
               <div>
@@ -388,7 +391,7 @@
 
                       <label for="nickname">
                         <span class="field-icon">
-                          ♙
+                          <app-qmah-icon name="user-round" />
                         </span>
 
                         暱稱
@@ -461,7 +464,7 @@
                       <label for="bio">
 
                         <span class="field-icon">
-                          ▣
+                          <app-qmah-icon name="message-circle" />
                         </span>
 
                         自我介紹
@@ -517,7 +520,7 @@
                       <label for="visibility">
 
                         <span class="field-icon">
-                          ◎
+                          <app-qmah-icon name="eye" />
                         </span>
 
                         公開範圍
@@ -566,7 +569,7 @@
                   <div class="tips-header">
 
                     <span class="tips-icon">
-                      ♧
+                      <app-qmah-icon name="sparkles" />
                     </span>
 
                     <h3>
@@ -582,7 +585,7 @@
                   <div class="tip-item tip-green">
 
                     <div class="tip-symbol">
-                      👥
+                      <app-qmah-icon name="users-round" />
                     </div>
 
                     <div>
@@ -602,7 +605,7 @@
                   <div class="tip-item tip-blue">
 
                     <div class="tip-symbol">
-                      💬
+                      <app-qmah-icon name="message-circle" />
                     </div>
 
                     <div>
@@ -622,7 +625,7 @@
                   <div class="tip-item tip-purple">
 
                     <div class="tip-symbol">
-                      🔒
+                      <app-qmah-icon name="lock-keyhole" />
                     </div>
 
                     <div>
@@ -670,7 +673,8 @@
 
                   } @else {
 
-                    ▣ 儲存變更
+                    <app-qmah-icon name="circle-check" />
+                    儲存變更
 
                   }
 

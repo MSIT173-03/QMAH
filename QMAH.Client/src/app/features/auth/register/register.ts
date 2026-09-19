@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 interface RegisterRequest {
   email: string;
@@ -28,7 +29,8 @@ interface LoginRequest {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
+    QmahIconComponent
   ],
   templateUrl: './register.html',
   styleUrl: './register.scss'

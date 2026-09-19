@@ -1,6 +1,10 @@
+<div class="qmah-social-page">
 <div class="flex justify-between items-center mb-6">
   <h1 class="text-2xl font-bold">社群活動</h1>
-  <button class="btn btn-primary" onclick="create_event_modal.showModal()">+ 建立活動</button>
+  <button class="btn btn-primary social-icon-label" onclick="create_event_modal.showModal()">
+    <svg lucidePlus aria-hidden="true" focusable="false"></svg>
+    建立活動
+  </button>
 </div>
 
 <div class="flex flex-wrap gap-2 mb-6 items-end">
@@ -49,12 +53,16 @@
         <h2 class="card-title">
           <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
         </h2>
-        <p class="text-xs text-base-content/60">✍️ {{ event.organizerDisplayName || '匿名會員' }}</p>
+        <p class="text-xs text-base-content/60 social-icon-label">
+          <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+          {{ event.organizerDisplayName || '匿名會員' }}
+        </p>
         <p class="text-sm text-gray-500">
-          🕒 {{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}
+          <span class="social-icon-label"><svg lucideCalendarClock aria-hidden="true" focusable="false"></svg>
+          {{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}</span>
         </p>
         @if (event.location) {
-          <p class="text-sm">📍 {{ event.location }}</p>
+          <p class="text-sm social-icon-label"><svg lucideMapPin aria-hidden="true" focusable="false"></svg>{{ event.location }}</p>
         }
         <p class="text-sm">
           報名人數：{{ event.registrationCount }}{{ event.capacity ? ' / ' + event.capacity : '' }}
@@ -116,7 +124,7 @@
                 class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
                 (click)="removePendingMedia(media)"
               >
-                ✕
+                <svg lucideX aria-hidden="true" focusable="false"></svg>
               </button>
             </div>
           }
@@ -133,3 +141,4 @@
 </dialog>
 
 <app-image-crop-modal (cropped)="onImageCropped($event)" (cancelled)="onCropCancelled()" />
+</div>

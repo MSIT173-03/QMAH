@@ -1,28 +1,31 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, isDevMode } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable, Subscription, finalize } from 'rxjs';
+import { Observable, Subscription, finalize, timer } from 'rxjs';
 
 import { ApiPage, CreateGameRoomRequest, GameRoomDetails, GameRoomFilterStatus, GameRoomListItem, GameRoomSort, JoinGameRoomRequest } from './game.models';
+import { GameNavigationComponent } from './game-navigation.component';
 import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameService } from './game.service';
-import { AreaNavigationComponent } from '../shared/components/area-navigation/area-navigation';
+import { MeApiService } from '../core/services/me-api';
 
 type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, GameRoomQrDialogComponent, AreaNavigationComponent],
+  imports: [FormsModule, RouterLink, GameNavigationComponent, GameRoomQrDialogComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })
 export class GameLobbyComponent implements OnInit, OnDestroy {
   readonly game = inject(GameService);
+  readonly meApi = inject(MeApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly changeDetector = inject(ChangeDetectorRef);
   private routeSubscription?: Subscription;
+  private pollSubscription?: Subscription;
 
   createForm: CreateGameRoomRequest = this.game.roomDefaults();
   joinForm: JoinGameRoomRequest = { displayName: '玩家', password: null };
@@ -32,6 +35,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   demoRoom: GameRoomDetails | null = null;
   roomSort: GameRoomSort = 'RECOMMENDED';
   loading = false;
+  refreshing = false;
   detailLoading = false;
   creating = false;
   joining = false;
@@ -43,10 +47,21 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   readonly loadingRows = [1, 2, 3, 4, 5];
   readonly pageSize = 20;
   isDemo = false;
+  // ui-integration: 大廳首次進入以找房為主，介紹橫幅預設收合；玩家仍可主動展開並由 localStorage 記住選擇。
+  heroCollapsed = true;
   qrRoom: Pick<GameRoomListItem, 'id' | 'roomCode'> | null = null;
   @ViewChild('createDialog') private createDialog?: ElementRef<HTMLElement>;
+  @ViewChild('roomDialog') private roomDialog?: ElementRef<HTMLElement>;
+
+  // ui-integration: 展示模式只對已登入管理員提供入口與標示；一般玩家不會被開發用 Demo 文案干擾。
+  readonly isAdmin = computed(() => this.meApi.me()?.roles?.includes('Admin') ?? false);
+  // ui-integration: 展示 route 仍是 development-only；正式版本改由管理員遊戲檢查中心承擔流程測試，避免產生失效入口。
+  readonly canOpenPreview = isDevMode();
+  private readonly heroStorageKey = 'qmah.game.lobby.hero-collapsed';
+  private demoRefreshCount = 0;
 
   ngOnInit(): void {
+    this.heroCollapsed = this.readHeroCollapsed();
     this.routeSubscription = this.route.queryParamMap.subscribe((params) => {
       this.isDemo = this.route.snapshot.routeConfig?.path === 'game/demo';
       const requestedStatus = params.get('status') as LobbyStatus | null;
@@ -55,9 +70,16 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       this.roomSort = requestedSort === 'NEARLY_FULL' || requestedSort === 'NEWEST' || requestedSort === 'OPEN_SLOTS' ? requestedSort : 'RECOMMENDED';
       this.loadRooms(Math.max(1, Number(params.get('page')) || 1), false);
     });
+    // ui-integration: 展示模式用與正式房間相同的刷新入口，定期重算清單快照，讓展示不會停在靜態畫面。
+    this.pollSubscription = timer(5000, 5000).subscribe(() => {
+      if (this.isDemo) this.refreshRooms();
+    });
   }
 
-  ngOnDestroy(): void { this.routeSubscription?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.routeSubscription?.unsubscribe();
+    this.pollSubscription?.unsubscribe();
+  }
 
   loadRooms(page = 1, syncUrl = true): void {
     if (syncUrl) {
@@ -65,13 +87,9 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       return;
     }
     this.errorTitle = '公開房間目前無法取得'; this.error = ''; this.selectedRoomId = ''; this.demoRoom = null;
+    this.detailLoading = false;
     if (this.isDemo) {
       this.rooms = this.demoPage(page);
-      const initialRoom = this.rooms.items[0];
-      if (initialRoom) {
-        this.selectedRoomId = initialRoom.id;
-        this.demoRoom = this.makeDemoDetail(initialRoom);
-      }
       return;
     }
     const status = this.roomStatus === 'RECENT' ? 'COMPLETED' : this.roomStatus;
@@ -91,11 +109,47 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.loadRooms(1);
   }
 
+  refreshRooms(): void {
+    if (this.loading || this.refreshing) return;
+    if (!this.rooms) {
+      this.loadRooms(1, false);
+      return;
+    }
+
+    const page = this.rooms.page;
+    this.error = '';
+    this.success = '';
+    this.refreshing = true;
+    if (this.isDemo) {
+      this.demoRefreshCount += 1;
+      this.rooms = this.demoPage(page);
+      this.syncDemoSelection();
+      this.refreshing = false;
+      this.changeDetector.markForCheck();
+      return;
+    }
+
+    const status = this.roomStatus === 'RECENT' ? 'COMPLETED' : this.roomStatus;
+    this.game.getRooms({ status, sort: this.roomSort, page, pageSize: this.pageSize }).pipe(finalize(() => {
+      this.refreshing = false;
+      this.changeDetector.markForCheck();
+    })).subscribe({
+      next: (rooms) => {
+        this.rooms = rooms;
+        this.changeDetector.markForCheck();
+      },
+      error: (error: unknown) => {
+        this.error = this.game.errorMessage(error);
+        this.changeDetector.markForCheck();
+      }
+    });
+  }
+
   selectRoom(room: GameRoomListItem): void {
     this.selectedRoomId = room.id; this.errorTitle = '目前無法載入房間資訊'; this.success = ''; this.error = '';
+    this.focusDialog(() => this.roomDialog);
     if (this.isDemo) {
       this.demoRoom = this.makeDemoDetail(room);
-      this.revealMobileDetails();
       return;
     }
     this.game.clearState(); this.detailLoading = true;
@@ -104,7 +158,6 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       this.changeDetector.markForCheck();
     })).subscribe({
       next: () => {
-        this.revealMobileDetails();
         this.changeDetector.markForCheck();
       },
       error: (error: unknown) => {
@@ -115,7 +168,29 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   }
 
   currentRoom(): GameRoomDetails | null { return this.demoRoom ?? this.game.currentRoom(); }
-  clearSelection(): void { this.selectedRoomId = ''; this.demoRoom = null; this.game.clearState(); }
+  clearSelection(): void {
+    const roomId = this.selectedRoomId;
+    this.selectedRoomId = ''; this.demoRoom = null; this.game.clearState();
+    this.restoreRoomTrigger(roomId);
+  }
+
+  toggleHero(): void {
+    this.heroCollapsed = !this.heroCollapsed;
+    try {
+      localStorage.setItem(this.heroStorageKey, String(this.heroCollapsed));
+    } catch {
+      // ui-integration: 儲存空間被瀏覽器封鎖時仍保留本次操作，不讓收合按鈕失效。
+    }
+  }
+
+  private readHeroCollapsed(): boolean {
+    try {
+      const stored = localStorage.getItem(this.heroStorageKey);
+      return stored === null ? true : stored === 'true';
+    } catch {
+      return true;
+    }
+  }
   toggleCreateForm(): void {
     this.showCreateForm = !this.showCreateForm;
     if (this.showCreateForm) {
@@ -127,8 +202,10 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   createRoom(): void {
     if (this.isDemo) {
       this.showCreateForm = false;
-      this.errorTitle = 'Demo 預覽模式';
-      this.error = '這些是預覽房間，無法建立或加入。請返回多人房間大廳。';
+      this.errorTitle = this.isAdmin() ? '預覽模式' : '房間目前僅供查看';
+      this.error = this.isAdmin()
+        ? '目前是預覽模式，不能建立房間；你可以查看內容，或返回多人鑑定大廳。'
+        : '這間房目前僅供查看，不能建立房間；請返回多人鑑定大廳。';
       return;
     }
     this.creating = true; this.errorTitle = '房間建立失敗'; this.error = ''; this.success = '';
@@ -150,8 +227,10 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   joinRoom(): void {
     const room = this.currentRoom(); if (!room) return;
     if (this.isDemo) {
-      this.errorTitle = 'Demo 預覽模式';
-      this.error = '這些是預覽房間，無法加入。請返回多人房間大廳。';
+      this.errorTitle = this.isAdmin() ? '預覽模式' : '房間目前僅供查看';
+      this.error = this.isAdmin()
+        ? '目前是預覽模式，不能加入房間；你可以查看內容，或返回多人鑑定大廳。'
+        : '這間房目前僅供查看，不能加入房間；請返回多人鑑定大廳。';
       return;
     }
     this.joining = true; this.errorTitle = '加入房間失敗'; this.error = ''; this.success = '';
@@ -176,7 +255,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   private showRoomActionError(error: unknown, fallbackTitle: string): void {
     if (error instanceof HttpErrorResponse && error.status === 401) {
       this.errorTitle = '請先登入';
-      this.error = '請先登入會員，再建立或加入房間。';
+      this.error = '請先登入遊戲帳號，再建立或加入房間。';
       return;
     }
     this.errorTitle = fallbackTitle;
@@ -212,6 +291,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   closeTransientPanel(): void {
     if (this.qrRoom) { this.closeRoomQr(); return; }
     if (this.showCreateForm) { this.showCreateForm = false; return; }
+    if (this.selectedRoomId) { this.clearSelection(); return; }
     if (this.showFilter) this.showFilter = false;
   }
 
@@ -224,7 +304,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       : this.roomStatus === 'RECENT'
         ? '最近完成的房間'
         : '目前可加入的房間';
-    return `${subject}，${this.roomSortText()}排列`;
+    return `${subject}，${this.roomSortText()}排列；點選房間開啟詳情`;
   }
   roomSortText(): string { return { RECOMMENDED: '推薦', NEARLY_FULL: '快滿', NEWEST: '最新', OPEN_SLOTS: '空位最多' }[this.roomSort]; }
   playerStateText(player: GameRoomDetails['players'][number]): string {
@@ -260,16 +340,29 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     setTimeout(() => getDialog()?.nativeElement.focus(), 0);
   }
 
-  private revealMobileDetails(): void {
-    setTimeout(() => document.querySelector<HTMLElement>('.notes-page')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 0);
+  private restoreRoomTrigger(roomId: string): void {
+    setTimeout(() => {
+      const trigger = Array.from(document.querySelectorAll<HTMLButtonElement>('.room-row'))
+        .find((button) => button.dataset['roomId'] === roomId) ?? document.querySelector<HTMLButtonElement>('.room-row');
+      trigger?.focus();
+    }, 0);
+  }
+
+  private syncDemoSelection(): void {
+    if (!this.selectedRoomId || !this.rooms) return;
+    const room = this.rooms.items.find((item) => item.id === this.selectedRoomId);
+    if (room) this.demoRoom = this.makeDemoDetail(room);
   }
 
   private demoPage(page: number): ApiPage<GameRoomListItem> {
     const all = Array.from({ length: 120 }, (_, index): GameRoomListItem => {
-      const playerCount = (index * 3 + 1) % 6 + 1;
+      const maxPlayers = 4 + index % 4;
+      const basePlayerCount = (index * 3 + 1) % 6 + 1;
+      const liveAdjustment = this.demoRefreshCount > 0 && (index + this.demoRefreshCount) % 6 === 0 ? 1 : 0;
+      const playerCount = Math.min(maxPlayers, basePlayerCount + liveAdjustment);
       const status: GameRoomListItem['status'] = index % 7 === 0 ? 'PLAYING' : index % 11 === 0 ? 'COMPLETED' : 'WAITING';
       const createdAt = new Date(Date.UTC(2026, 8, 10, 3, 0, 0) - index * 5 * 60_000).toISOString();
-      return { id: `demo-${index + 1}`, roomCode: this.demoRoomCode(index), status, visibility: index % 9 === 0 ? 'PRIVATE' : 'PUBLIC', maxPlayers: 4 + index % 4, totalRounds: index % 3 + 3, playerCount, categoryFilterCode: index % 2 ? 'CERAMIC' : 'PAINTING', eraBucketFilterCode: index % 2 ? 'QING' : 'MING', createdAt };
+      return { id: `demo-${index + 1}`, roomCode: this.demoRoomCode(index), status, visibility: index % 9 === 0 ? 'PRIVATE' : 'PUBLIC', maxPlayers, totalRounds: index % 3 + 3, playerCount, categoryFilterCode: index % 2 ? 'CERAMIC' : 'PAINTING', eraBucketFilterCode: index % 2 ? 'QING' : 'MING', createdAt };
     }).filter((room) => this.roomStatus === 'RECENT' ? room.status === 'COMPLETED' : room.status === this.roomStatus)
       .sort((left, right) => this.compareDemoRooms(left, right));
     const totalPages = Math.max(1, Math.ceil(all.length / this.pageSize)); const safePage = Math.min(page, totalPages);

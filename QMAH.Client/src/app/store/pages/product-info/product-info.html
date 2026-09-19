@@ -9,7 +9,7 @@
   </app-header-actions>
 </app-site-header>
 
-<main class="container product-main">
+<div class="container product-main">
   @if (item(); as product) {
 
   <!-- 麵包屑導覽：首頁 / 器類 / 商品名稱 -->
@@ -65,7 +65,7 @@
   <app-empty-state title="找不到這件商品" desc="商品可能已下架，或網址有誤。" ctaLabel="回到商品列表" [ctaHref]="productsPath"
     size="lg" />
   }
-</main>
+</div>
 
 <!-- 頁尾：簡版，僅顯示版權列 -->
 <app-site-footer />

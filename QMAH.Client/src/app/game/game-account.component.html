@@ -1,16 +1,16 @@
-<main class="account-page">
-  <header class="account-masthead">
-    <a class="brand" routerLink="/game" aria-label="返回多人房間大廳">
-      <img src="/assets/brand/qmah-logo.svg" alt="清明鑑定屋" />
-    </a>
-    <a class="back-link" routerLink="/game">返回多人房間大廳</a>
-  </header>
+<div class="account-page">
+  <!-- ui-integration: 遊戲帳號頁沿用共同子導覽，保留返回大廳這個明確出口。 -->
+  <app-game-navigation>
+    <a class="back-link" routerLink="/game">返回多人鑑定大廳</a>
+  </app-game-navigation>
 
   <section class="account-panel" aria-labelledby="account-title" [attr.aria-busy]="loading || busy">
-    @if (accountService.account(); as account) {
+    @if (loading) {
+      <p class="account-loading" role="status">正在確認遊戲帳號…</p>
+    } @else if (accountService.account(); as account) {
       <h1 id="account-title">目前登入：{{ account.email }}</h1>
       <p>{{ account.nickname || account.email }}</p>
-      <button type="button" (click)="logout()" [disabled]="loading || busy">{{ busy ? '送出中…' : '登出並切換帳號' }}</button>
+      <button type="button" (click)="logout()" [disabled]="loading || busy">{{ busy ? '登出中…' : '登出並切換帳號' }}</button>
     } @else {
       <h1 id="account-title">登入遊戲帳號</h1>
       <form (ngSubmit)="login()">
@@ -34,7 +34,7 @@
           required
           [disabled]="loading || busy"
         />
-        <button type="submit" [disabled]="loading || busy || !email.trim() || !password">{{ busy ? '送出中…' : '登入' }}</button>
+        <button type="submit" [disabled]="loading || busy || !email.trim() || !password">{{ busy ? '登入中…' : '登入' }}</button>
       </form>
     }
 
@@ -42,4 +42,4 @@
       <p class="account-error" role="alert">{{ error }}</p>
     }
   </section>
-</main>
+</div>

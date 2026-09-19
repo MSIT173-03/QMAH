@@ -21,3 +21,13 @@
   gap: 32px;
   align-items: start;
 }
+
+/* ui-integration: 商品詳情仍保留圖庫／資訊的桌面雙欄；窄螢幕改為先看圖、再看資訊，避免固定欄寬壓縮 CTA。 */
+@media (max-width: 800px) {
+  .product-main { gap: 28px; }
+
+  .product-hero-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}

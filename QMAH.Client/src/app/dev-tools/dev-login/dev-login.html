@@ -1,13 +1,16 @@
 @if (!isProduction) {
   <div class="dropdown dropdown-end">
     <div tabindex="0" role="button" class="btn btn-ghost btn-circle" aria-label="開發測試登入">
-      <span class="text-lg">🔧</span>
+      <app-qmah-icon name="wrench" size="18" />
     </div>
     <div
       tabindex="0"
       class="dropdown-content bg-neutral text-neutral-content rounded-box z-10 mt-3 w-72 p-4 shadow-lg border border-warning"
     >
-      <h3 class="font-bold text-sm mb-2 text-warning">🔧 開發測試登入（正式環境不會顯示）</h3>
+      <h3 class="font-bold text-sm mb-2 text-warning">
+        <app-qmah-icon name="wrench" size="15" />
+        開發測試登入（正式環境不會顯示）
+      </h3>
 
       @if (message) {
         <div

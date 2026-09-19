@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 
 interface MemberCoupon {
@@ -35,7 +36,8 @@ interface MemberCoupon {
 
   imports: [
     CommonModule,
-    BackToMember
+    BackToMember,
+    QmahIconComponent
   ],
 
   templateUrl: './coupons.html',

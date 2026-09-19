@@ -25,3 +25,8 @@
     color: var(--color-accent);
   }
 }
+
+@media (max-width: 720px) {
+  /* ui-integration: 窄螢幕由頁面順序承擔篩選，不讓側欄固定在商城頁首下方遮住商品。 */
+  .filter-sidebar { position: static; }
+}

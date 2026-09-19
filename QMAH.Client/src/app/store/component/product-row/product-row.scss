@@ -128,6 +128,7 @@
   color: var(--color-ink);
   border-radius: 2px;
   padding: 9px 20px;
+  min-height: 44px;
   font-size: 12px;
   letter-spacing: 0.1em;
   transition: background 160ms, border-color 160ms, color 160ms;
@@ -137,4 +138,18 @@
     border-color: var(--color-accent);
     color: #fff;
   }
+}
+
+@media (max-width: 600px) {
+  .product-row { gap: 12px; padding: 12px; }
+  .product-row-thumb { width: 88px; height: 88px; }
+  .product-row-title { white-space: normal; }
+  .product-row-aside {
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .product-row-price-row { justify-content: flex-start; }
 }

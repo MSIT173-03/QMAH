@@ -1,15 +1,14 @@
 import { Component, input } from '@angular/core';
 import { StoreLink } from '../../shared/store-link';
 import { HOME_PATH } from '../../shared/paths';
-import { AreaNavigationComponent } from '../../../shared/components/area-navigation/area-navigation';
 
 /**
- * 網站頁首外殼：固定於頁面頂端，左側為品牌 Logo，其餘內容（搜尋框、導覽、購物車入口等）
- * 由使用端以 ng-content 投影，因此各頁面可保留自己的頁首組合而共用同一組版面樣式。
+ * 商城頁首內容外殼：左側為品牌 Logo，其餘內容（搜尋框、分類、購物車入口等）
+ * 由使用端以 ng-content 投影；跨 Area 主導航由外層 App Shell 統一提供。
  */
 @Component({
   selector: 'app-site-header',
-  imports: [StoreLink, AreaNavigationComponent],
+  imports: [StoreLink],
   templateUrl: './site-header.html',
   styleUrls: [
     './site-header.scss',

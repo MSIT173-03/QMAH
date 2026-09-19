@@ -255,19 +255,20 @@ export class GameService {
     return room.status === 'WAITING' && room.players.length < room.maxPlayers;
   }
 
-  /** 將 API ProblemDetails 或網路錯誤轉成頁面可顯示的訊息。 */
+  /** 將服務錯誤轉成一般玩家看得懂、也能採取行動的訊息。 */
   errorMessage(error: unknown): string {
     if (!(error instanceof HttpErrorResponse)) {
-      return error instanceof Error ? error.message : '遊戲服務發生未知錯誤。';
+      return error instanceof Error ? this.humanizeError(error.message) : '遊戲服務發生未知錯誤。';
     }
     const body = error.error as Record<string, unknown> | null;
     const detail = body?.['detail'];
     const title = body?.['title'];
-    if (typeof detail === 'string' && detail) return detail;
-    if (typeof title === 'string' && title) return title;
+    // ui-integration: 遊戲頁不直接暴露 API、HTTP 或內部欄位名稱；保留可理解的服務訊息，其餘轉成玩家可採取行動的提示。
+    if (typeof detail === 'string' && detail) return this.humanizeError(detail);
+    if (typeof title === 'string' && title) return this.humanizeError(title);
     return error.status === 0
-      ? '無法連線到遊戲 API，請確認 API 服務是否已啟動。'
-      : `遊戲 API 請求失敗（HTTP ${error.status}）。`;
+      ? '目前無法連線到遊戲服務，請稍後再試。'
+      : '遊戲服務目前無法完成這項操作，請稍後再試。';
   }
 
   /** 離開測試頁或遊戲房間時清除前端快照，避免下一頁看到舊資料。 */
@@ -283,7 +284,7 @@ export class GameService {
     if (!request.displayName) errors.push('顯示名稱不可空白。');
     if (request.displayName.length > 80) errors.push('顯示名稱不可超過 80 個字元。');
     if (request.visibility !== 'PUBLIC' && request.visibility !== 'PRIVATE') {
-      errors.push('房間 visibility 必須是 PUBLIC 或 PRIVATE。');
+      errors.push('房間類型設定不正確。');
     }
     if (request.visibility === 'PRIVATE' && !request.password) errors.push('私人房間必須設定密碼。');
     if (request.visibility === 'PUBLIC' && request.password) errors.push('公開房間不可設定密碼。');
@@ -354,7 +355,7 @@ export class GameService {
 
   private validateSubmitVoteRequest(request: SubmitVoteRequest): string[] {
     const errors: string[] = [];
-    if (!request.answerId) errors.push('投票目標不可空白。');
+    if (!request.answerId) errors.push('請先選擇一個回答。');
     if (!Number.isInteger(request.count) || request.count < 1 || request.count > 3) {
       errors.push('票數必須介於 1 至 3 票。');
     }
@@ -362,30 +363,42 @@ export class GameService {
   }
 
   private validateStartMiniGameRequest(request: StartMiniGameRequest): string[] {
-    if (!request.modeCode) return ['Mini Game 模式代碼不可空白。'];
-    return request.modeCode.length > 40 ? ['Mini Game 模式代碼不可超過 40 個字元。'] : [];
+    if (!request.modeCode) return ['請選擇一個遊戲模式。'];
+    return request.modeCode.length > 40 ? ['小遊戲設定不正確。'] : [];
   }
 
   private validateCompleteMiniGameRequest(request: CompleteMiniGameRequest): string[] {
     const errors: string[] = [];
     if (!Number.isInteger(request.rawScore) || request.rawScore < 0 || request.rawScore > 100) {
-      errors.push('Mini Game 分數必須介於 0 至 100。');
+      errors.push('成績必須介於 0 至 100 分。');
     }
     if (!request.rawResultJson) {
-      errors.push('Mini Game 結果資料不可空白。');
+      errors.push('遊戲結果不可空白。');
     } else if (request.rawResultJson.length > 4000) {
-      errors.push('Mini Game 結果資料不可超過 4000 個字元。');
+      errors.push('遊戲結果太長，請重新開始。');
     } else {
       try {
         const parsed: unknown = JSON.parse(request.rawResultJson);
         if (parsed === null || Array.isArray(parsed) || typeof parsed !== 'object') {
-          errors.push('Mini Game 結果資料必須是 JSON 物件。');
+          errors.push('遊戲結果格式不正確，請重新開始。');
         }
       } catch {
-        errors.push('Mini Game 結果資料不是有效的 JSON。');
+        errors.push('遊戲結果格式不正確，請重新開始。');
       }
     }
     return errors;
+  }
+
+  private humanizeError(message: string): string {
+    const value = message.trim();
+    if (!value) return '遊戲服務目前無法完成這項操作，請稍後再試。';
+    if (/\b(api|http|status code|status)\b/i.test(value)) return '遊戲服務目前無法完成這項操作，請稍後再試。';
+    if (/找不到啟用中的 mini\s*game 模式/i.test(value)) return '目前沒有可用的單人玩法，請稍後再試。';
+    if (/沒有可供 mini\s*game 使用的啟用文物/i.test(value)) return '目前沒有可用的館藏，請稍後再試。';
+    if (/找不到目前會員的 mini\s*game attempt/i.test(value)) return '找不到這次練習，請重新開始。';
+    if (/\b(mini\s*game|visibility|modecode|rawresultjson)\b/i.test(value)) return '遊戲資料設定不正確，請重新開始。';
+    if (/\bjson\b/i.test(value)) return '遊戲結果格式不正確，請重新開始。';
+    return value;
   }
 
   private invalid<T>(messages: readonly string[]): Observable<T> {

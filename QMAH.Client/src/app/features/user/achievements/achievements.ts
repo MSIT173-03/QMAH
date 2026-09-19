@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 interface Achievement {
   id: string;
@@ -30,7 +31,8 @@ interface Achievement {
   selector: 'app-achievements',
   imports: [
     CommonModule,
-    BackToMember
+    BackToMember,
+    QmahIconComponent
   ],
   templateUrl: './achievements.html',
   styleUrl: './achievements.scss',

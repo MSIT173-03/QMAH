@@ -1,8 +1,9 @@
+/* ui-integration: 成就頁保留摘要與卡片配置，統一會員區的表面與狀態色。 */
 :host {
   display: block;
   min-height: 100vh;
-  background: #f6f7fb;
-  color: #1f2937;
+  background: #f7f4ee;
+  color: #27363b;
 }
 
 .achievements-page {
@@ -22,7 +23,7 @@
 
   p {
     margin: 0;
-    color: #6b7280;
+    color: #617176;
   }
 }
 
@@ -39,7 +40,7 @@
   gap: 18px;
   padding: 24px;
   background: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
@@ -58,7 +59,7 @@
 .summary-label {
   display: block;
   margin-bottom: 4px;
-  color: #6b7280;
+  color: #617176;
   font-size: 14px;
 }
 
@@ -72,13 +73,13 @@
 }
 
 .no-title {
-  color: #111827;
+  color: #163f47;
 }
 
 .achievement-section {
   padding: 28px;
   background: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 18px;
 }
 
@@ -95,7 +96,7 @@
 
   p {
     margin: 0;
-    color: #6b7280;
+    color: #617176;
     font-size: 14px;
   }
 }
@@ -104,7 +105,7 @@
   padding: 6px 12px;
   background: #f3f4f6;
   border-radius: 999px;
-  color: #6b7280;
+  color: #617176;
   font-size: 13px;
 }
 
@@ -117,7 +118,7 @@
 .achievement-card {
   padding: 22px;
   background: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 14px;
   transition:
     transform 0.2s ease,
@@ -126,7 +127,7 @@
 
   &:hover {
     transform: translateY(-3px);
-    border-color: #c7d2fe;
+    border-color: #c8d9d5;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
   }
 
@@ -137,8 +138,8 @@
 }
 
 .achievement-card.displayed {
-  border-color: #a5b4fc;
-  background: #fafaff;
+  border-color: #9ab9b5;
+  background: #fffdf8;
 }
 
 .achievement-card-header {
@@ -161,15 +162,15 @@
 .display-badge {
   padding: 5px 10px;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #4f46e5;
+  background: #e8f0ee;
+  color: #a65342;
   font-size: 13px;
   font-weight: 600;
 }
 
 .title {
   margin-bottom: 10px;
-  color: #6366f1;
+  color: #2f6f73;
   font-size: 14px;
   font-weight: 600;
 }
@@ -177,7 +178,7 @@
 .description {
   min-height: 42px;
   margin: 0 0 16px;
-  color: #6b7280;
+  color: #617176;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -197,13 +198,13 @@
   }
 
   span {
-    color: #9ca3af;
+    color: #839093;
     font-size: 12px;
     white-space: nowrap;
   }
 
   strong {
-    color: #111827;
+    color: #163f47;
     font-size: 13px;
     font-weight: 700;
     white-space: nowrap;
@@ -214,7 +215,7 @@
   padding: 70px 24px;
   text-align: center;
   background: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 18px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 
@@ -225,7 +226,7 @@
 
   p {
     margin: 0;
-    color: #6b7280;
+    color: #617176;
   }
 }
 
@@ -236,7 +237,7 @@
 .state-box {
   padding: 20px;
   background: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d9e0dc;
   border-radius: 12px;
 }
 

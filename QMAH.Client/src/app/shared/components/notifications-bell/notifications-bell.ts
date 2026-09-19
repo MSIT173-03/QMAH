@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { MeApiService, UserNotification } from '../../../core/services/me-api';
 import { ToastService } from '../../../core/services/toast';
+import { QmahIconComponent } from '../qmah-icon/qmah-icon';
 
 // 沒有 SignalR/WebSocket，用定時輪詢模擬「有新通知會跳出來」；20 秒對展示用途已經夠即時。
 const POLL_INTERVAL_MS = 20000;
@@ -11,7 +12,7 @@ const POLL_INTERVAL_MS = 20000;
 @Component({
   selector: 'app-notifications-bell',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, QmahIconComponent],
   templateUrl: './notifications-bell.html',
   styleUrl: './notifications-bell.scss'
 })
@@ -48,7 +49,7 @@ export class NotificationsBellComponent implements OnInit, OnDestroy {
         if (this.hasLoadedOnce) {
           for (const notification of page.items) {
             if (!this.seenIds.has(notification.id)) {
-              this.toast.show(`🔔 ${notification.title}`, 'info');
+              this.toast.show(`通知：${notification.title}`, 'info');
             }
           }
         }

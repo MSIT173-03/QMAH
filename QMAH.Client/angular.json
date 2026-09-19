@@ -32,9 +32,15 @@
               }
             ],
             "styles": [
-              "src/styles.css",
+              "src/styles.scss",
+              "src/app/features/social/social-shared.scss",
               "src/app/store/shared/styles.scss"
             ],
+            "stylePreprocessorOptions": {
+              "sass": {
+                "silenceDeprecations": ["import"]
+              }
+            },
             "inlineStyleLanguage": "scss"
           },
           "configurations": {

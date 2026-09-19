@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { SocialApiService, SocialPostDetails } from '../../../core/services/social-api';
+import { QmahIconComponent } from '../qmah-icon/qmah-icon';
 
 // 後台檢舉/審核列表點「被檢舉內容」用的小視窗：直接彈窗看原貼文（含留言、圖片），看完關掉即可，
 // 不用像 target="_blank" 那樣跳去新分頁、看完還要自己切回來。
@@ -10,7 +11,7 @@ import { SocialApiService, SocialPostDetails } from '../../../core/services/soci
 @Component({
   selector: 'app-post-preview-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, QmahIconComponent],
   templateUrl: './post-preview-modal.html'
 })
 export class PostPreviewModalComponent {

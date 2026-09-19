@@ -44,6 +44,12 @@
   text-decoration: none;
 }
 
+.footer-col-link--disabled,
+.footer-link--disabled {
+  color: var(--color-placeholder);
+  cursor: default;
+}
+
 .footer-bottom {
   border-top: 1px solid var(--color-line-soft);
 }

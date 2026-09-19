@@ -5,11 +5,12 @@ import { SectionHead } from '../../../component';
 import { CatalogApi } from '../../../api';
 import { PRODUCT_LIST_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
+import { LucideShapes } from '@lucide/angular';
 
 /** 首頁「分類入口」區塊：各分類的圖示卡片與商品件數 */
 @Component({
   selector: 'app-category-grid',
-  imports: [SectionHead, StoreLink],
+  imports: [SectionHead, StoreLink, LucideShapes],
   templateUrl: './category-grid.html',
   styleUrls: [
     './category-grid.scss',

@@ -1,16 +1,14 @@
 import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
+import { adminGameTestGuard, adminTestRoomGuard } from './core/guards/game-test-guard';
 
 // integration: User 與 Catalog 的既有頁面共用 ASP.NET Core Identity route guard，
 // 讓會員資料、圖鑑解鎖與鑰匙背包都沿用同一個登入狀態，不建立第二套前端權限判斷。
-// Game 與 Social 的正式頁面共用同一個 App Shell；展示／API 測試頁只在 development mode 登記，避免部署環境暴露測試入口。
-export const routes: Routes = [
+// 展示頁仍只在 development mode 登記；正式的遊戲檢查中心則由 Admin guard 保護，讓它能長期存在於部署版本。
+const appShellChildren: Routes = [
   {
-    path: 'login',
-    loadComponent: () => import('./features/auth/login/login').then(m => m.Login)
-  },
-  {
+    // ui-integration: 維持五個前台 Area 的既有 lazy route 與頁面組成，統一由同一個前台 App Shell 承載主導航。
     path: 'member',
     canActivate: [authGuard],
     loadComponent: () => import('./features/user/member-home/member-home').then(m => m.MemberHome)
@@ -51,18 +49,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/user/notifications/notifications').then(m => m.Notifications)
   },
   {
-    path: 'register',
-    loadComponent: () => import('./features/auth/register/register').then(m => m.Register)
-  },
-  {
-    path: 'forgot-password',
-    loadComponent: () => import('./features/auth/forgot-password/forgot-password').then(m => m.ForgotPassword)
-  },
-  {
-    path: 'reset-password',
-    loadComponent: () => import('./features/auth/reset-password/reset-password').then(m => m.ResetPassword)
-  },
-  {
     path: 'artifact-list',
     canActivate: [authGuard],
     loadComponent: () => import('./artifact-list/artifact-list').then(m => m.ArtifactList)
@@ -88,12 +74,19 @@ export const routes: Routes = [
       import('./game/game-training.component').then(({ GameTrainingComponent }) => GameTrainingComponent)
   },
   {
+    // ui-integration: 將多人與單人玩法的操作說明獨立成可切換入口，避免大廳同時承擔找房與教學內容。
+    path: 'game/how-to',
+    loadComponent: () =>
+      import('./game/game-guide.component').then(({ GameGuideComponent }) => GameGuideComponent)
+  },
+  {
     path: 'game/rooms',
     loadComponent: () =>
       import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
   },
   {
     path: 'game/room/:roomId',
+    canActivate: [adminTestRoomGuard],
     loadComponent: () =>
       import('./game/game-room.component').then(({ GameRoomComponent }) => GameRoomComponent)
   },
@@ -106,20 +99,21 @@ export const routes: Routes = [
     ? [
         {
           path: 'game/demo',
+          canActivate: [adminGameTestGuard],
           loadComponent: () =>
             import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
-        },
-        {
-          path: 'game/test',
-          loadComponent: () =>
-            import('./game/game-test.component').then(({ GameTestComponent }) => GameTestComponent)
-      }
-    ]
+        }
+      ]
     : []),
   {
+    // ui-integration: 遊戲檢查中心是正式網站的一部分，但只讓管理員進入，避免把隔離測試工具混入一般玩家流程。
+    path: 'game/test',
+    canActivate: [adminGameTestGuard],
+    loadComponent: () =>
+      import('./game/game-test.component').then(({ GameTestComponent }) => GameTestComponent)
+  },
+  {
     path: 'social',
-    // integration: App Shell 本身只服務 Social/Admin，跟著父路由延遲載入，避免殼層也佔用一般登入頁的初始 bundle。
-    loadComponent: () => import('./shared/components/layout/layout').then(m => m.LayoutComponent),
     children: [
       // integration: Social 頁面沿用既有 URL，但改成進入頁面時才載入，避免所有社群功能進入 initial bundle。
       { path: 'posts', loadComponent: () => import('./features/social/posts/posts').then(m => m.PostsComponent) },
@@ -131,7 +125,6 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    loadComponent: () => import('./shared/components/layout/layout').then(m => m.LayoutComponent),
     children: [
       // integration: 管理頁面也採 lazy loading；管理功能不會在一般使用者進入貼文牆時一併下載。
       { path: 'events', loadComponent: () => import('./features/admin/admin-events/admin-events').then(m => m.AdminEventsComponent) },
@@ -141,7 +134,7 @@ export const routes: Routes = [
     ]
   },
   {
-    // integration: Store 使用獨立父路由並維持 lazy loading，避免商城頁面與 Social/Admin 互相耦合。
+    // integration: Store 保留自己的頁面 header 與內容組成，但改由共用前台 shell 提供跨 Area 主入口。
     path: 'store',
     children: [
       {
@@ -171,4 +164,29 @@ export const routes: Routes = [
   },
   { path: '', redirectTo: 'social/posts', pathMatch: 'full' },
   { path: '**', redirectTo: 'social/posts' }
+];
+
+export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login/login').then(m => m.Login)
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./features/auth/register/register').then(m => m.Register)
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./features/auth/forgot-password/forgot-password').then(m => m.ForgotPassword)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./features/auth/reset-password/reset-password').then(m => m.ResetPassword)
+  },
+  {
+    // ui-integration: 主要前台共用同一個 App Shell；維持所有既有 URL 與 lazy children，讓 Area 切換不再更換網站骨架。
+    path: '',
+    loadComponent: () => import('./shared/components/layout/layout').then(m => m.LayoutComponent),
+    children: appShellChildren
+  }
 ];

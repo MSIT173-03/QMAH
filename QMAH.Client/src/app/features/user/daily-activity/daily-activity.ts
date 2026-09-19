@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
 import { BackToMember } from '../../../shared/back-to-member/back-to-member';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 
 interface DailyActivityResponse {
   lastLoginDate: string | null;
@@ -20,7 +21,8 @@ interface DailyActivityResponse {
 
   imports: [
     CommonModule,
-    BackToMember
+    BackToMember,
+    QmahIconComponent
   ],
 
   templateUrl: './daily-activity.html',

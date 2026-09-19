@@ -1,7 +1,9 @@
 <dialog #dialogEl class="modal">
   <div class="modal-box max-w-2xl max-h-[80vh] overflow-y-auto">
     <form method="dialog">
-      <button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" (click)="close()">✕</button>
+      <button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" (click)="close()" aria-label="關閉貼文預覽">
+        <app-qmah-icon name="x" size="16" />
+      </button>
     </form>
 
     @if (loading) {
@@ -12,7 +14,8 @@
       <span class="badge badge-secondary mb-2">{{ post.boardCode }}</span>
       <h3 class="font-bold text-lg">{{ post.title }}</h3>
       <p class="text-xs text-base-content/60 mb-2">
-        ✍️ {{ post.displayName || '匿名會員' }} ・ {{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}
+        <app-qmah-icon name="user-round" size="14" />
+        {{ post.displayName || '匿名會員' }} ・ {{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}
       </p>
       <p class="whitespace-pre-line">{{ post.content }}</p>
 

@@ -423,8 +423,15 @@
 .card-art-placeholder {
   display: grid;
   place-items: center;
+  gap: 8px;
   height: 100%;
   color: #49483e;
+
+  svg {
+    width: 28px;
+    height: 28px;
+    stroke-width: 1.5;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

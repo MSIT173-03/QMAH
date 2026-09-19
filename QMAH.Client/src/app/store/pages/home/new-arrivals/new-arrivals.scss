@@ -37,9 +37,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
   color: var(--color-placeholder);
+
+  svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 1.7;
+  }
 }
 
 .news-info {

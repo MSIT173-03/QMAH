@@ -1,0 +1,143 @@
+:host {
+  display: block;
+}
+
+/* ui-integration: Game 子導覽只負責模式切換與當前流程出口，跨 Area 導覽由 App Shell 統一擁有。 */
+/* ui-integration: 把主要玩法與說明入口收斂成同一組語意清楚的模式切換，避免玩家第一眼分不出多人、單人與教學入口。 */
+.game-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 68px;
+  border-bottom: 1px solid rgba(16, 47, 56, .22);
+}
+
+.game-navigation__switcher {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
+}
+
+.game-navigation__context {
+  display: inline-flex;
+  align-items: center;
+  color: #7a898b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  white-space: nowrap;
+}
+
+.game-navigation__links,
+.game-navigation__actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.game-navigation__links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(124px, 1fr));
+  gap: 6px;
+}
+
+.game-navigation__actions {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+a {
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 8px 12px;
+  color: #62828b;
+  text-decoration: none;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.game-navigation__link-label {
+  font-size: 14px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.game-navigation__link-description {
+  overflow: hidden;
+  max-width: 100%;
+  color: #829397;
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a:hover,
+a.is-active {
+  color: #102f38;
+}
+
+a:hover {
+  border-color: rgba(16, 47, 56, .12);
+  background: rgba(255, 253, 248, .55);
+  transform: translateY(-1px);
+}
+
+a.is-active {
+  border-color: rgba(189, 87, 72, .5);
+  background: #fffdf8;
+  box-shadow: inset 0 -3px #bd5748;
+  font-weight: 800;
+}
+
+a.is-active .game-navigation__link-description { color: #52686e; }
+
+a:focus-visible {
+  outline: 2px solid #bd5748;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .game-navigation {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+    padding: 8px 0;
+  }
+
+  .game-navigation__switcher {
+    display: grid;
+    gap: 5px;
+  }
+
+  .game-navigation__context {
+    min-height: 20px;
+    padding-inline: 2px;
+  }
+
+  .game-navigation__links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  a {
+    min-height: 56px;
+    padding: 8px 9px;
+  }
+
+  .game-navigation__link-label { font-size: 12px; }
+  .game-navigation__link-description { font-size: 9px; }
+  .game-navigation__actions { justify-content: flex-start; min-height: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a { transition: none; }
+}
