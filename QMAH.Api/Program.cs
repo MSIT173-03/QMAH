@@ -10,8 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
-using QMAH.Infrastructure.Configuration;
 using QMAH.Api.Infrastructure.OpenApi;
+using QMAH.Api.Services;
+using QMAH.Infrastructure.Configuration;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -19,6 +20,7 @@ using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
+using QMAH.Infrastructure.Services.Game;
 
 using Scalar.AspNetCore;
 
@@ -193,6 +195,10 @@ builder.Services.AddScoped<MiniGameService>();
 builder.Services.AddScoped<CommunityRewardService>();
 builder.Services.AddScoped<GameRoomInvitationService>();
 builder.Services.AddScoped<DailyActivityService>();
+// integration: 房間生命週期由背景 worker 定期推進，和 HTTP 請求共用同一個 scoped service；
+// 不依賴前端持續輪詢，部署到不同主機時也只需沿用既有 DI 設定。
+builder.Services.AddScoped<GameRoomLifecycleService>();
+builder.Services.AddHostedService<GameRoomLifecycleWorker>();
 
 // 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
 builder.Services.AddRateLimiter(options =>

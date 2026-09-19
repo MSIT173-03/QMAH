@@ -103,10 +103,10 @@ public sealed class EconomyService(QmahDbContext db)
 
     /// <summary>依鑰匙範圍解鎖一件文物；範圍鑰匙可指定範圍內目標，抽選與扣除都在同一交易中完成。</summary>
     public async Task<EconomyResult<ArtifactUnlockView>> UnlockArtifactAsync(
-    Guid userId,
-    string keyCode,
-    Guid? artifactId,
-    CancellationToken cancellationToken = default)
+        Guid userId,
+        string keyCode,
+        Guid? artifactId,
+        CancellationToken cancellationToken = default)
     {
         keyCode = NormalizeCode(keyCode);
         if (string.IsNullOrWhiteSpace(keyCode))
@@ -129,6 +129,8 @@ public sealed class EconomyService(QmahDbContext db)
                 IsolationLevel.Serializable,
                 cancellationToken);
 
+            // 候選集完全由伺服器依啟用文物、鑰匙範圍與會員既有解鎖紀錄建立。
+            // CATEGORY／ERA 可指定候選集內的文物；未指定時由伺服器抽選，不能越過鑰匙範圍。
             var candidates = await GetEligibleArtifactQuery(userId, key)
                 .Select(artifact => new ArtifactCandidateView(artifact.Id, artifact.Name))
                 .ToListAsync(cancellationToken);
@@ -804,7 +806,8 @@ public sealed class EconomyService(QmahDbContext db)
             return EconomyResult<GameRewardView>.NotFound("找不到遊戲房間。");
         if (room.Status != "COMPLETED")
             return EconomyResult<GameRewardView>.Conflict("遊戲尚未完成，現在不能結算獎勵。");
-        var player = room.GamePlayers.FirstOrDefault(item => item.UserId == userId && item.ConnectionStatus != "LEFT");
+        // 房間完成後離場只代表離開畫面，不應讓有效參與者失去尚未領取的一次性獎勵。
+        var player = room.GamePlayers.FirstOrDefault(item => item.UserId == userId);
         if (player is null)
             return EconomyResult<GameRewardView>.Forbidden("目前會員不是這場遊戲的有效參與者。");
 

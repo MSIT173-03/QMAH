@@ -121,7 +121,6 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         string? rawResultJson,
         CancellationToken cancellationToken)
     {
-        // 目前只檢查分數範圍與結果格式；新增玩法時仍須加入操作紀錄驗證，不能視為完整防作弊。
         if (rawScore is < 0 or > 100)
             return EconomyResult<MiniGameCompleteView>.Invalid("rawScore 必須介於 0 至 100；分數由伺服器重新驗證。");
         if (!string.IsNullOrWhiteSpace(rawResultJson))
@@ -131,8 +130,8 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             try
             {
                 using var parsed = JsonDocument.Parse(rawResultJson);
-                if (parsed.RootElement.ValueKind is not JsonValueKind.Object and not JsonValueKind.Array)
-                    return EconomyResult<MiniGameCompleteView>.Invalid("rawResultJson 必須是 JSON 物件或陣列。");
+                if (parsed.RootElement.ValueKind != JsonValueKind.Object)
+                    return EconomyResult<MiniGameCompleteView>.Invalid("rawResultJson 必須是 JSON 物件。");
             }
             catch (JsonException)
             {
@@ -165,6 +164,9 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             return EconomyResult<MiniGameCompleteView>.Conflict("這個 Attempt 目前不可完成。");
 
         var mode = attempt.GameModeDefinition;
+        if (!TryCalculateVerifiedScore(attempt, mode, rawScore, rawResultJson, out var verifiedRawScore, out var scoreError))
+            return EconomyResult<MiniGameCompleteView>.Invalid(scoreError!);
+        rawScore = verifiedRawScore;
         if (mode.GradeBThreshold < 0
             || mode.GradeAThreshold < mode.GradeBThreshold
             || mode.GradeSThreshold < mode.GradeAThreshold
@@ -434,6 +436,208 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         {
             return null;
         }
+    }
+
+    private static bool TryCalculateVerifiedScore(
+        MiniGameAttempt attempt,
+        GameModeDefinition mode,
+        int submittedScore,
+        string? rawResultJson,
+        out int verifiedScore,
+        out string? error)
+    {
+        // ponytail: 只驗證最終盤面，先堵住客戶端直接改分數的缺口；不記錄操作序列。
+        verifiedScore = 0;
+        error = null;
+        if (string.IsNullOrWhiteSpace(rawResultJson))
+        {
+            error = "rawResultJson 為必要欄位，請傳送完成後的遊戲盤面。";
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(rawResultJson);
+            var result = document.RootElement;
+            if (result.ValueKind != JsonValueKind.Object)
+            {
+                error = "rawResultJson 必須是 JSON 物件。";
+                return false;
+            }
+
+            if (!TryGetString(result, "modeCode", out var resultMode)
+                || !string.Equals(resultMode, mode.Code, StringComparison.OrdinalIgnoreCase))
+            {
+                error = "遊戲結果的 modeCode 與 Attempt 不一致。";
+                return false;
+            }
+
+            if (attempt.ArtifactId is not Guid artifactId
+                || !TryGetGuid(result, "artifactId", out var resultArtifactId)
+                || resultArtifactId != artifactId)
+            {
+                error = "遊戲結果的 artifactId 與 Attempt 不一致。";
+                return false;
+            }
+
+            if (!TryReadArtifactPool(attempt.ArtifactPoolJson, out var artifactPool)
+                || !artifactPool.Contains(artifactId))
+            {
+                error = "Attempt 的文物素材池資料無效。";
+                return false;
+            }
+
+            var calculatedScore = mode.Code switch
+            {
+                "DETAIL_LOCATOR" => CalculateLocatorScore(result, artifactPool, artifactId, out error),
+                "MEMORY_MATCH" => CalculateMemoryScore(result, artifactPool.Count, out error),
+                "ARTIFACT_PUZZLE" => CalculateOrderScore(result, "puzzleOrder", out error),
+                "STRIP_RESTORE" => CalculateOrderScore(result, "restoreOrder", out error),
+                _ => InvalidScore("目前沒有這個 Mini Game 模式的結果驗證規則。", out error)
+            };
+            if (calculatedScore < 0)
+                return false;
+            if (submittedScore != calculatedScore)
+            {
+                error = $"rawScore 與伺服器計算結果不一致（應為 {calculatedScore}）。";
+                return false;
+            }
+
+            verifiedScore = calculatedScore;
+            return true;
+        }
+        catch (JsonException)
+        {
+            error = "rawResultJson 不是有效的遊戲結果。";
+            return false;
+        }
+    }
+
+    private static int CalculateLocatorScore(
+        JsonElement result,
+        IReadOnlyCollection<Guid> artifactPool,
+        Guid artifactId,
+        out string? error)
+    {
+        error = null;
+        if (!TryGetGuid(result, "locatorChoice", out var choice) || !artifactPool.Contains(choice))
+            return InvalidScore("locatorChoice 必須是素材池中的文物。", out error);
+        return choice == artifactId ? 100 : 25;
+    }
+
+    private static int CalculateMemoryScore(
+        JsonElement result,
+        int artifactPoolCount,
+        out string? error)
+    {
+        error = null;
+        var expectedPairs = Math.Min(artifactPoolCount, 4);
+        if (!TryGetInt(result, "memoryPairs", out var submittedPairs)
+            || submittedPairs != expectedPairs
+            || !TryGetInt(result, "memoryMatched", out var matched)
+            || matched is < 0 || matched > expectedPairs
+            || expectedPairs == 0)
+        {
+            return InvalidScore("memoryPairs 或 memoryMatched 不符合這次 Attempt。", out error);
+        }
+        return (int)Math.Round(matched * 100d / expectedPairs, MidpointRounding.AwayFromZero);
+    }
+
+    private static int CalculateOrderScore(JsonElement result, string propertyName, out string? error)
+    {
+        error = null;
+        if (!TryGetIntArray(result, propertyName, out var order)
+            || order.Length != 4
+            || order.Distinct().Count() != 4
+            || order.Any(piece => piece is < 0 or > 3))
+        {
+            return InvalidScore($"{propertyName} 必須是 0 到 3 的完整排列。", out error);
+        }
+        var correctPieces = order.Select((piece, index) => piece == index).Count(isCorrect => isCorrect);
+        return (int)Math.Round(correctPieces * 100d / 4d, MidpointRounding.AwayFromZero);
+    }
+
+    private static int InvalidScore(string message, out string? error)
+    {
+        error = message;
+        return -1;
+    }
+
+    private static bool TryReadArtifactPool(string? json, out IReadOnlyCollection<Guid> artifactPool)
+    {
+        artifactPool = Array.Empty<Guid>();
+        if (string.IsNullOrWhiteSpace(json))
+            return false;
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<Guid[]>(json);
+            if (parsed is null || parsed.Length == 0 || parsed.Distinct().Count() != parsed.Length)
+                return false;
+            artifactPool = parsed;
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool TryGetString(JsonElement element, string propertyName, out string? value)
+    {
+        value = null;
+        return TryGetProperty(element, propertyName, out var property)
+            && property.ValueKind == JsonValueKind.String
+            && (value = property.GetString()) is not null;
+    }
+
+    private static bool TryGetGuid(JsonElement element, string propertyName, out Guid value)
+    {
+        value = Guid.Empty;
+        return TryGetProperty(element, propertyName, out var property)
+            && property.ValueKind == JsonValueKind.String
+            && property.TryGetGuid(out value);
+    }
+
+    private static bool TryGetInt(JsonElement element, string propertyName, out int value)
+    {
+        value = 0;
+        return TryGetProperty(element, propertyName, out var property)
+            && property.ValueKind == JsonValueKind.Number
+            && property.TryGetInt32(out value);
+    }
+
+    private static bool TryGetIntArray(JsonElement element, string propertyName, out int[] values)
+    {
+        values = Array.Empty<int>();
+        if (!TryGetProperty(element, propertyName, out var property)
+            || property.ValueKind != JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        var parsed = new List<int>();
+        foreach (var item in property.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.Number || !item.TryGetInt32(out var value))
+                return false;
+            parsed.Add(value);
+        }
+        values = parsed.ToArray();
+        return true;
+    }
+
+    private static bool TryGetProperty(JsonElement element, string propertyName, out JsonElement value)
+    {
+        foreach (var property in element.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+        value = default;
+        return false;
     }
 
     private sealed record ArtifactMaterialView(

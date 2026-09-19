@@ -1,0 +1,172 @@
+:host {
+  --ink: #102f38;
+  --jade: #0f534d;
+  --slate: #62828b;
+  --bronze: #b28d4f;
+  --cinnabar: #bd5748;
+  --paper: #fffdf8;
+  --line: #d4dad3;
+  --muted: #68777a;
+  display: block;
+  min-height: 100vh;
+  color: var(--ink);
+  background: #dfe8e4;
+  font: 400 16px/1.62 "QMAH Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--cinnabar);
+  outline-offset: 3px;
+}
+
+.room-shell { width: min(1320px, 100%); margin: 0 auto; padding: 20px 34px 64px; }
+.room-topbar { min-height: 50px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(16, 47, 56, .22); }
+.brand { display: inline-flex; align-items: center; }
+.brand img { display: block; width: 148px; max-height: 38px; }
+.back-link, .leave-note a { color: var(--jade); font-size: 14px; font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+
+.room-intro { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 44px 4px 28px; }
+.room-intro h1 { margin: 2px 0 4px; font: 600 clamp(30px, 4vw, 46px)/1.2 "QMAH Noto Serif TC", "Noto Serif TC", "PMingLiU", serif; letter-spacing: .04em; }
+.intro-copy, .section-copy { margin: 0; color: var(--muted); }
+.eyebrow { margin: 0; color: var(--cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.room-status { display: inline-flex; align-items: center; gap: 9px; flex: none; padding: 8px 13px; border: 1px solid var(--line); border-radius: 99px; background: rgba(255, 253, 248, .7); font-size: 13px; font-weight: 700; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bronze); }
+.room-status[data-status="PLAYING"] .status-dot { background: var(--jade); }
+.room-status[data-status="COMPLETED"] .status-dot { background: var(--slate); }
+
+.notice { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 16px; padding: 13px 16px; border-left: 3px solid; background: var(--paper); }
+.notice strong { font-size: 14px; }
+.notice span { color: var(--muted); }
+.notice.error { border-color: var(--cinnabar); }
+.notice.success { border-color: var(--jade); color: var(--jade); }
+.loading-card, .paper-card { border: 1px solid rgba(16, 47, 56, .12); background: var(--paper); box-shadow: 0 14px 38px rgba(18, 47, 51, .07); }
+.loading-card { display: flex; align-items: center; justify-content: center; gap: 14px; min-height: 280px; color: var(--muted); }
+.loading-card p { margin: 0; }
+.loading-mark { width: 22px; height: 22px; border: 2px solid var(--line); border-top-color: var(--jade); border-radius: 50%; }
+
+.room-layout { display: grid; grid-template-columns: minmax(255px, .73fr) minmax(0, 1.7fr); align-items: start; gap: 22px; }
+.room-sidebar { display: grid; gap: 16px; }
+.paper-card { padding: clamp(20px, 3vw, 34px); }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.section-heading h2 { margin: 2px 0 0; font: 600 22px/1.25 "QMAH Noto Serif TC", "Noto Serif TC", "PMingLiU", serif; }
+.room-code { padding: 4px 9px; background: #edf0e9; color: var(--jade); font-size: 12px; font-weight: 800; letter-spacing: .08em; }
+.room-facts dl { display: grid; gap: 0; margin: 18px 0 12px; }
+.room-facts dl div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(16, 47, 56, .09); }
+.room-facts dt { color: var(--muted); font-size: 13px; }
+.room-facts dd { margin: 0; font-size: 13px; font-weight: 700; text-align: right; }
+.sync-caption { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+.sync-caption span { width: 7px; height: 7px; border-radius: 50%; background: var(--slate); }
+.sync-caption span.is-active { background: var(--jade); box-shadow: 0 0 0 3px rgba(15, 83, 77, .12); }
+.seat-count { color: var(--muted); font-size: 13px; font-weight: 700; }
+.player-list { display: grid; gap: 0; margin: 15px 0 0; padding: 0; list-style: none; }
+.player-list li { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 48px; border-top: 1px solid rgba(16, 47, 56, .09); }
+.seat-number { color: var(--bronze); font-size: 12px; font-weight: 800; }
+.player-name { overflow-wrap: anywhere; font-size: 14px; font-weight: 700; }
+.player-name small, .answer-card-heading small { margin-left: 6px; color: var(--jade); font-size: 11px; font-weight: 700; }
+.player-state { color: var(--jade); font-size: 11px; }
+.player-state.is-offline { color: var(--muted); }
+.empty-players { grid-template-columns: 1fr !important; color: var(--muted); font-size: 13px; }
+.leave-note { padding: 16px 18px; border-left: 2px solid var(--bronze); background: rgba(255, 253, 248, .62); }
+.leave-note strong { font-size: 13px; }
+.leave-note p { margin: 4px 0 8px; color: var(--muted); font-size: 12px; }
+.leave-note button { padding: 0; color: var(--jade); background: transparent; border: 0; font-size: 14px; font-weight: 700; text-align: left; text-decoration: underline; text-underline-offset: 4px; }
+.leave-note button:disabled { cursor: wait; opacity: .65; }
+
+.play-area { min-width: 0; }
+.waiting-panel { min-height: 450px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.waiting-emblem { display: grid; place-items: center; width: 62px; height: 62px; margin: 24px 0 12px; border: 1px solid rgba(178, 141, 79, .55); color: var(--bronze); font: 600 26px "QMAH Noto Serif TC", "Noto Serif TC", serif; transform: rotate(45deg); }
+.waiting-panel h2 { margin: 7px 0 10px; font: 600 clamp(26px, 3vw, 36px)/1.3 "QMAH Noto Serif TC", "Noto Serif TC", "PMingLiU", serif; }
+.waiting-panel > p:not(.eyebrow) { max-width: 640px; margin: 0; color: var(--muted); }
+.waiting-facts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.waiting-facts span { padding: 6px 10px; background: #edf0e9; color: var(--jade); font-size: 12px; font-weight: 700; }
+.waiting-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.waiting-actions button { min-height: 46px; padding: 9px 16px; border: 1px solid var(--jade); color: var(--jade); background: transparent; font-weight: 700; }
+.waiting-actions .start-game { color: var(--paper); background: var(--jade); }
+.waiting-actions button:disabled { cursor: not-allowed; opacity: .55; }
+
+.round-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.round-heading h2 { margin: 2px 0 0; font: 600 28px/1.25 "QMAH Noto Serif TC", "Noto Serif TC", "PMingLiU", serif; }
+.phase-clock { display: grid; justify-items: end; gap: 1px; min-width: 96px; color: var(--jade); }
+.phase-clock span { color: var(--muted); font-size: 11px; }
+.phase-clock strong { font: 700 26px/1.2 ui-monospace, "Cascadia Mono", monospace; font-variant-numeric: tabular-nums; }
+.phase-clock.is-expired { color: var(--cinnabar); }
+.artifact-card { display: flex; align-items: center; gap: 18px; margin: 22px 0 0; padding: 20px; background: #edf0e9; }
+.artifact-card img { flex: none; width: 132px; height: 132px; object-fit: contain; background: var(--paper); border: 1px solid rgba(28, 43, 54, .12); }
+.artifact-mark { display: grid; place-items: center; flex: none; width: 54px; height: 54px; border: 1px solid rgba(178, 141, 79, .55); color: var(--bronze); font: 600 22px "QMAH Noto Serif TC", "Noto Serif TC", serif; }
+.artifact-card p { margin: 0; color: var(--muted); font-size: 12px; }
+.artifact-card h3 { margin: 2px 0; font: 600 20px/1.4 "QMAH Noto Serif TC", "Noto Serif TC", "PMingLiU", serif; }
+.artifact-card small { color: var(--slate); font-size: 11px; }
+.phase-content { margin-top: 28px; }
+.phase-copy { margin-bottom: 18px; }
+.phase-copy h3, .reveal-content h3 { margin: 3px 0 6px; font: 600 24px/1.3 "QMAH Noto Serif TC", "Noto Serif TC", "PMingLiU", serif; }
+.phase-copy p:last-child { max-width: 680px; margin: 0; color: var(--muted); font-size: 14px; }
+.answer-form { display: grid; gap: 9px; }
+.answer-form label, .vote-count-label { margin-top: 6px; font-size: 13px; font-weight: 700; }
+.answer-form select, .answer-form textarea, .vote-count-label select { width: 100%; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); }
+.answer-form select { min-height: 44px; padding: 8px 10px; }
+.answer-form textarea { min-height: 134px; padding: 11px 12px; resize: vertical; }
+.answer-form textarea::placeholder { color: #8b9692; }
+.form-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 12px; }
+.form-foot button, .reward-panel button { min-height: 42px; padding: 8px 18px; border: 0; background: var(--jade); color: #fffdf8; font-size: 13px; font-weight: 700; }
+.form-foot button:disabled, .reward-panel button:disabled { cursor: not-allowed; opacity: .55; }
+.phase-callout { margin-top: 16px; padding: 16px 18px; border-left: 3px solid var(--bronze); background: #f3f0e7; }
+.phase-callout p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+.success-callout { border-color: var(--jade); }
+.privacy-note { margin: 18px 0 0; color: var(--muted); font-size: 12px; }
+.vote-count-label { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.vote-count-label select { width: auto; min-height: 36px; padding: 4px 8px; }
+.answer-list, .result-answers { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.answer-card { padding: 17px 18px; border: 1px solid var(--line); background: #fff; }
+.answer-card.is-own { border-color: rgba(15, 83, 77, .45); background: #f4f8f4; }
+.answer-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.answer-card-heading > span { font-weight: 700; }
+.answer-card-heading > b { color: var(--jade); font-size: 12px; }
+.answer-kind { display: inline-block; margin-top: 5px; color: var(--slate); font-size: 11px; }
+.answer-body { margin: 9px 0 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.answer-card button { min-height: 35px; padding: 5px 12px; border: 1px solid var(--jade); background: transparent; color: var(--jade); font-size: 12px; font-weight: 700; }
+.answer-card button:disabled { cursor: not-allowed; opacity: .52; }
+.reveal-content > .eyebrow { margin-bottom: 4px; }
+.winner-name { display: inline-block; margin: 2px 0 8px; padding: 4px 10px; background: #edf0e9; color: var(--jade); font-size: 18px; font-weight: 800; }
+.reveal-content .section-copy { margin-bottom: 18px; }
+.result-answers li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 13px; border: 1px solid var(--line); background: #fff; }
+.result-answers li.is-winner { border-color: var(--bronze); background: #fbf7ed; }
+.result-answers li > span { color: var(--bronze); font-weight: 800; }
+.result-answers li > div strong { font-size: 13px; }
+.result-answers li > div p { margin: 3px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+.result-answers li > b { color: var(--jade); font-size: 12px; white-space: nowrap; }
+.empty-copy { margin: 10px 0; color: var(--muted); font-size: 13px; }
+
+
+@media (max-width: 850px) {
+  .room-layout { grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr); gap: 14px; }
+  .room-shell { padding-inline: 22px; }
+  .paper-card { padding: 22px; }
+  .artifact-card { padding: 15px; }
+}
+
+@media (max-width: 650px) {
+  .room-shell { padding: 14px 14px 40px; }
+  .room-topbar { min-height: 44px; }
+  .brand img { width: 124px; }
+  .back-link { font-size: 12px; }
+  .room-intro { align-items: flex-start; flex-direction: column; gap: 12px; padding: 30px 2px 20px; }
+  .room-intro h1 { font-size: 34px; }
+  .intro-copy { max-width: 36ch; font-size: 14px; }
+  .room-layout { grid-template-columns: 1fr; }
+  .room-sidebar { grid-template-columns: 1fr; }
+  .waiting-panel { min-height: 330px; }
+  .round-heading { align-items: flex-start; }
+  .round-heading h2 { font-size: 24px; }
+  .phase-clock strong { font-size: 22px; }
+  .paper-card { padding: 20px 17px; }
+  .artifact-card { align-items: flex-start; gap: 12px; }
+  .artifact-card img { width: 92px; height: 92px; }
+  .artifact-mark { width: 44px; height: 44px; }
+  .artifact-card h3 { font-size: 17px; }
+  .vote-count-label { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .result-answers li { grid-template-columns: 20px minmax(0, 1fr); }
+  .result-answers li > b { grid-column: 2; }
+}

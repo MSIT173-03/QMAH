@@ -47,7 +47,7 @@ internal static class QmahOpenApiOperationCatalog
             ["SocialMedia.GetContent"] = ("讀取社群圖片", "以 path parameter（路徑參數）`id` 讀取已發布貼文使用中的圖片，或由圖片擁有者預覽尚未關聯的圖片。回應支援 HTTP range request（HTTP 分段讀取請求）；圖片不存在、已刪除或目前呼叫者無可見權限時回傳 `404`。"),
             ["SocialMedia.Delete"] = ("刪除社群圖片", "需要登入，依 path parameter（路徑參數）`id` 將目前會員擁有的社群圖片標記為刪除，保留貼文與稽核關聯。成功回傳 `204 No Content`（成功且沒有回應本文）；圖片不存在或不屬於目前會員時回傳 `404`。"),
 
-            ["Game.GetRooms"] = ("查詢遊戲房間", "以 query string（查詢參數）的 `status`、`page` 與 `pageSize` 查詢公開遊戲房間。`status` 可為 `WAITING`、`PLAYING` 或 `COMPLETED`，未指定時預設查詢 `WAITING` 房間，回應為分頁清單。"),
+            ["Game.GetRooms"] = ("查詢遊戲房間", "以 query string（查詢參數）的 `status`、`sort`、`page` 與 `pageSize` 查詢公開遊戲房間。`status` 可為 `WAITING`、`PLAYING` 或 `COMPLETED`，`sort` 可為 `RECOMMENDED`、`NEARLY_FULL`、`NEWEST` 或 `OPEN_SLOTS`；未指定時預設查詢 `WAITING` 並採推薦排序，回應為分頁清單。"),
             ["Game.GetRoom"] = ("取得遊戲房間詳情", "以 path parameter（路徑參數）`id` 取得公開房間，或取得目前會員已參與的私人房間詳情。私人房間只對參與者公開；房間不存在或已取消時回傳 `404`。"),
             ["Game.GetRoomHistory"] = ("取得遊戲房間歷程", "以 path parameter（路徑參數）`id` 取得房間的回合歷程、各回合答案與票數、勝者及整場排行榜。私人房間只對參與者公開；房間不存在或已取消時回傳 `404`。"),
             ["Game.CreateRoom"] = ("建立遊戲房間", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `Visibility`、玩家顯示名稱、回合規則與選填的分類／年代篩選建立房間。私人房間必須提供密碼，公開房間不保存密碼；成功回傳 `201 Created`（已建立資源）與房間詳情。"),
@@ -80,7 +80,7 @@ internal static class QmahOpenApiOperationCatalog
 
             ["MiniGame.GetModes"] = ("查詢 Mini Game 模式", "需要登入，回傳目前啟用的四種 Mini Game backend contract（後端契約）：`DETAIL_LOCATOR`、`ARTIFACT_PUZZLE`、`MEMORY_MATCH` 與 `STRIP_RESTORE`。資料包含模式設定、評級門檻與供前端建立遊戲流程所需的設定 JSON。"),
             ["MiniGame.StartAttempt"] = ("開始 Mini Game 回合", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `ModeCode` 建立一次伺服器決定的遊戲嘗試。伺服器選擇啟用文物、文物池、難度、seed（隨機種子）與模式設定，成功回傳 `201 Created`（已建立資源）與前端所需素材。"),
-            ["MiniGame.CompleteAttempt"] = ("完成 Mini Game 回合", "需要登入，依 path parameter（路徑參數）`id` 與 request body（請求本文，送出的 JSON 內容）送出原始分數及選填結果資料。伺服器驗證分數、依模式門檻計算標準化分數與等級，再依目前經濟設定給予鑑定點數與鑰匙進度；重複送出同一回合不會重複發放經濟獎勵。"),
+            ["MiniGame.CompleteAttempt"] = ("完成 Mini Game 回合", "需要登入，依 path parameter（路徑參數）`id` 與 request body（請求本文，送出的 JSON 內容）送出結果資料。伺服器依 Attempt 與結果盤面重算分數、等級與經濟獎勵；重複送出同一回合不會重複發放經濟獎勵。"),
             ["MiniGame.RewardMainGame"] = ("結算多人主遊戲獎勵", "需要登入，依 path parameter（路徑參數）`id` 結算目前會員已完成的多人主遊戲。伺服器依回合勝負與投票表現計算鑑定點數及一般鑰匙，並在同一交易替該玩家解鎖尚未解鎖的結算回合文物，來源為 `GAME`、`GameRoundId` 指向來源回合；以交易識別避免同一場遊戲重複領取。"),
 
             ["Me.GetMe"] = ("取得目前會員", "需要登入，依 Identity Cookie（登入狀態 Cookie）的會員識別取得目前會員、Profile（會員資料）、角色、點數與帳號狀態。會員識別由登入狀態決定，回應不接受 request body（請求本文，送出的 JSON 內容）或 query string（查詢參數）指定其他 `UserId`（會員識別碼）。"),
