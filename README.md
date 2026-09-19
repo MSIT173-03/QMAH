@@ -12,14 +12,14 @@
 
 <p align="center">
   <a href="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml"><img src="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main" alt="Build"></a>
-  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.9.0"><img src="https://img.shields.io/badge/database-db--v0.9.0-315E55" alt="Database snapshot db-v0.9.0"></a>
+  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.9.2"><img src="https://img.shields.io/badge/database-db--v0.9.2-315E55" alt="Database snapshot db-v0.9.2"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4" alt=".NET 10">
   <img src="https://img.shields.io/badge/SQL%20Server-DB--first-315E55" alt="SQL Server DB-first">
 </p>
 
 ## 目前正式 Release
 
-目前 QMAH 主程式正式版本是 [`v0.9.0`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.0)。完整資料庫下載請使用 [QMAH-Database `db-v0.9.0` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.0)，其中提供 `QMAH.sql`、`QMAH-0.9.0.bak`、`0.8.0-to-0.9.0.sql` 與 `SHA256SUMS.txt`。
+目前 QMAH 主程式正式版本是 [`v0.9.0`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.0)。完整資料庫下載請使用 [QMAH-Database `db-v0.9.2` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.2)，其中提供與本次整合同步的 `QMAH.sql`、`QMAH-0.9.2.bak` 與 `SHA256SUMS.txt`。
 
 ## 專案簡介
 
@@ -35,7 +35,7 @@
 
 - SQL Server Schema、Entity 對照與 `QmahDbContext`。
 - ASP.NET Core Identity 資料表、Cookie 登入與角色授權。
-- 256 件文物、256 筆題庫設定、256 件對應商城商品，以及各 Area 可直接使用的共同資料。
+- 512 件文物、512 筆題庫設定、512 件對應的文物明信片商品，以及各 Area 可直接使用的共同資料。
 - 8 個文物分類、網站圖片、資料處理工具，以及由 QMAH-Database 提供的完整 SQL Snapshot。
 - Game、Catalog、Social、User、Store 五個 Area 的既有 Razor 管理後台與可延伸的管理頁。
 - `/api/v1/*` REST API、DTO、分頁、ProblemDetails、Cookie 驗證與開發用 OpenAPI／Scalar。
@@ -91,9 +91,9 @@ Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前�
 
 ### 2. 建立本機 QMAH 資料庫
 
-目前相容的完整 Snapshot 是 [QMAH-Database db-v0.9.0 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.0) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.9.0/QMAH.sql)。
+目前相容的完整 Snapshot 是 [QMAH-Database db-v0.9.2 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.2) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.9.2/QMAH.sql)。
 
-也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.9.0/QMAH.sql)。既有 `db-v0.8.0` 資料庫可執行 [`database/upgrades/0.8.0-to-0.9.0.sql`](database/upgrades/0.8.0-to-0.9.0.sql) 保留資料升級。
+也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.9.2/QMAH.sql)。本版刻意替換舊 256 件展示資料，既有環境請以完整 Snapshot 還原，不使用會保留舊資料的增量腳本。
 
 在 SSMS 連線到可用的本機 SQL Server instance，完整執行 SQL，資料庫名稱使用 `QMAH`。
 
