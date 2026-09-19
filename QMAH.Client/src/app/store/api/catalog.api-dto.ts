@@ -4,7 +4,8 @@
  * 前端顯示用欄位尚未由後端提供，由 toProduct／toProductDetail 轉換時補上預設值。
  */
 
-import { Product, ProductDetail, Review, ReviewPage, ReviewQuery } from './api.models';
+import { Coupon, Product, ProductDetail, ProductInfo, Review, ReviewPage, ReviewQuery } from './api.models';
+import { formatMoney } from '../shared/format';
 
 /**
  * 器類代碼（categoryCode）與中文器類名稱對照表；宣告順序需與後端 StoreCatalogController.CategoryType
@@ -61,6 +62,26 @@ export interface ApiProductPage {
   totalPages: number;
 }
 
+/** 後端 CouponDto：discountType 為 FIXED（折抵金額）或 PERCENT（折抵百分比，1–100） */
+export interface ApiCoupon {
+  id: string;
+  code: string;
+  name: string;
+  discountType: string;
+  discountValue: number;
+  minimumAmount: number;
+  status: string;
+  expiresAt: string;
+}
+
+/** GET /products/info 回應 */
+export interface ApiProductInfo {
+  categoryCounts: Record<string, number>;
+  isLoggedIn: boolean;
+  pointBalance: number | null;
+  coupons: ApiCoupon[] | null;
+}
+
 /** GET /products/{id} 回應 */
 export interface ApiProductDetail {
   id: string;
@@ -112,6 +133,33 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
     condition: '',
     shippingNote: '',
     images: dto.primaryImagePath ? [{ view: '商品', url: dto.primaryImagePath }] : [],
+  };
+}
+
+function toCoupon(dto: ApiCoupon): Coupon {
+  const percent = dto.discountType === 'PERCENT';
+  const fold = Math.round(100 - dto.discountValue) / 10;
+  return {
+    id: dto.id,
+    off: percent ? `${fold} 折` : formatMoney(dto.discountValue),
+    title: dto.name,
+    cond: dto.minimumAmount > 0 ? `滿 ${formatMoney(dto.minimumAmount)} 可用` : '不限金額',
+    min: dto.minimumAmount,
+    kind: percent ? 'percent' : 'amount',
+    value: percent ? dto.discountValue / 100 : dto.discountValue,
+    cap: null,
+    due: dto.expiresAt.slice(0, 10),
+  };
+}
+
+export function toProductInfo(dto: ApiProductInfo): ProductInfo {
+  return {
+    categoryCounts: Object.fromEntries(
+      Object.entries(dto.categoryCounts).map(([code, count]) => [toCategoryLabel(code), count]),
+    ),
+    isLoggedIn: dto.isLoggedIn,
+    pointBalance: dto.pointBalance,
+    coupons: (dto.coupons ?? []).map(toCoupon),
   };
 }
 

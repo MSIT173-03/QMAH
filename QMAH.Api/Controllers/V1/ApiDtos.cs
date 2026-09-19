@@ -102,6 +102,17 @@ public sealed record ProductDetailsDto(
     decimal AverageRating,
     int ReviewCount);
 
+/// <summary>商品頁所需的附加資訊：各商品類型數量，以及登入會員的點數與優惠券。</summary>
+/// <param name="CategoryCounts">八種商品類型（BRONZE…PAINTING）在架商品數量，無商品者為 0。</param>
+/// <param name="IsLoggedIn">是否已登入。</param>
+/// <param name="PointBalance">鑑定點數；未登入時為 null。</param>
+/// <param name="Coupons">會員優惠券列表；未登入時為 null。</param>
+public sealed record ProductInfomationDto(
+    IReadOnlyDictionary<string, int> CategoryCounts,
+    bool IsLoggedIn,
+    int? PointBalance,
+    IReadOnlyList<CouponDto>? Coupons);
+
 public sealed record ProductReviewSummaryDto(
     decimal AverageRating,
     int ReviewCount);

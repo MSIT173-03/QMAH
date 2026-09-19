@@ -12,6 +12,9 @@
     <!-- 右側快捷連結：訂單、個人頁面、點數、折價券 -->
     <div class="promobar-actions">
       <a [storeLink]="ordersHref()" class="promobar-link">訂單查詢</a>
+      @if (!isLoggedIn()) {
+        <a [storeLink]="loginHref()" class="promobar-link">登入</a>
+      } @else {
       <a [storeLink]="profileHref()" class="promobar-link">個人頁面</a>
       <a [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
 
@@ -34,6 +37,7 @@
           </div>
         }
       </div>
+      }
     </div>
   </div>
 </div>

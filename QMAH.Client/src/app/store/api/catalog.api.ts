@@ -7,17 +7,20 @@ import {
   Page,
   Product,
   ProductDetail,
+  ProductInfo,
   ProductQuery,
   ReviewPage,
   ReviewQuery,
 } from './api.models';
 import {
   ApiProductDetail,
+  ApiProductInfo,
   ApiProductPage,
   ApiProductReviewsResponse,
   toCategoryCode,
   toProduct,
   toProductDetail,
+  toProductInfo,
   toReviewPage,
 } from './catalog.api-dto';
 
@@ -59,6 +62,11 @@ export class CatalogApi {
         pageSize: res.pageSize,
       })),
     );
+  }
+
+  /** GET /products/info：各器類商品數量；已登入時附上點數與可用折價券 */
+  getProductInfo(): Observable<ProductInfo> {
+    return this.http.get<ApiProductInfo>(apiUrl('/products/info')).pipe(map(toProductInfo));
   }
 
   /** GET /products/{id}：商品詳情，查無商品時回應 404 */

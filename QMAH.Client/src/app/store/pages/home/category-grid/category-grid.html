@@ -1,6 +1,6 @@
 <!-- 分類入口：各分類的圖示卡片與商品件數 -->
 <section class="section-block">
-  <app-section-head title="分類入口" tag="CATEGORIES" />
+  <app-section-head title="分類入口" [tag]="tagText()" />
   <div class="cat-grid">
     @for (cat of categories(); track cat.name) {
       <a [storeLink]="cat.link" class="cat-card">

@@ -201,12 +201,8 @@ export const MEMBER_COUPONS: Coupon[] = [
 /** 「再加購」推薦的商品數量上限 */
 export const ADDON_LIMIT = 5;
 
-/** 購物車內容（商品 ID 對應數量），示意使用者先前已加入購物車的商品 */
-export const cartQuantities = new Map<string, number>([
-  ['qc-01', 1],
-  ['qc-15', 1],
-  ['qc-13', 2],
-]);
+/** 購物車內容（商品 ID 對應數量），預設為空 */
+export const cartQuantities = new Map<string, number>();
 
 export const SHIPPING_OPTIONS: ShippingOption[] = [
   { id: 'home-delivery', name: '宅配到府', fee: 120 },

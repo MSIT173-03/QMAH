@@ -293,6 +293,17 @@ export interface Coupon {
   due: string | null;
 }
 
+/** 商品頁附加資訊：各器類商品數量，以及登入會員的點數與折價券 */
+export interface ProductInfo {
+  /** 各器類的上架商品數量（key 為中文器類名稱） */
+  categoryCounts: Record<string, number>;
+  isLoggedIn: boolean;
+  /** 鑑定點數；未登入時為 null */
+  pointBalance: number | null;
+  /** 會員可用的折價券；未登入時為空陣列 */
+  coupons: Coupon[];
+}
+
 /* ===============================
    結帳與訂單
    =============================== */

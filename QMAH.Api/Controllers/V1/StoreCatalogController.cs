@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
-using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Api.Controllers.V1;
 
@@ -154,6 +153,53 @@ public sealed class StoreCatalogController(
                 })
                 .ToList()
         });
+    }
+
+    /// <summary>取得八種商品類型的數量；已登入時一併附上點數與優惠券列表。</summary>
+    [HttpGet("products/info")]
+    public async Task<ActionResult<ProductInfomationDto>> GetProductInfo(
+        CancellationToken cancellationToken = default)
+    {
+        var counted = await db.Products
+            .AsNoTracking()
+            .Where(product => product.IsActive)
+            .GroupBy(product => product.CategoryCode)
+            .Select(group => new { Code = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.Code, item => item.Count, cancellationToken);
+        var categoryCounts = Enum.GetNames<CategoryType>()
+            .ToDictionary(name => name, name => counted.GetValueOrDefault(name));
+
+        if (!TryGetCurrentUserId(out var userId))
+            return Ok(new ProductInfomationDto(categoryCounts, false, null, null));
+
+        var pointBalance = await db.PointBalances
+            .AsNoTracking()
+            .Where(balance => balance.UserId == userId)
+            .Select(balance => (int?)balance.Balance)
+            .SingleOrDefaultAsync(cancellationToken) ?? 0;
+        var now = DateTime.UtcNow;
+        var coupons = await db.UserCoupons
+            .AsNoTracking()
+            .Where(coupon => coupon.UserId == userId && coupon.Status == "AVAILABLE")
+            .OrderByDescending(coupon => coupon.IssuedAt)
+            .Select(coupon => new CouponDto(
+                coupon.Id,
+                coupon.CouponDefinition.Code,
+                coupon.CouponDefinition.Name,
+                coupon.CouponDefinition.AcquisitionType,
+                coupon.CouponDefinition.PointCost,
+                coupon.CouponDefinition.DiscountType,
+                coupon.CouponDefinition.DiscountValue,
+                coupon.CouponDefinition.MinimumAmount,
+                coupon.CouponDefinition.StartAt,
+                coupon.CouponDefinition.EndAt,
+                "AVAILABLE",
+                coupon.IssuedAt,
+                coupon.ExpiresAt,
+                coupon.UsedAt))
+            .ToListAsync(cancellationToken);
+
+        return Ok(new ProductInfomationDto(categoryCounts, true, pointBalance, coupons));
     }
 
     [HttpGet("products/{id:guid}")]

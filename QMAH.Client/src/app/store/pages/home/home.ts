@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { map, of, switchMap } from 'rxjs';
@@ -8,6 +8,7 @@ import { CatalogApi, HomeApi, SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
 import { CART_PATH, PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
+import { formatNumber } from '../../shared/format';
 import { toProductView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
 
@@ -65,6 +66,16 @@ export class Home {
 
   /** 全站設定與會員資料，供頂部公告列與頁尾使用 */
   protected readonly site = injectSiteData();
+
+  /** 商品資訊（各器類數量、會員點數與折價券），進入頁面時取得一次 */
+  private readonly info = toSignal(inject(CatalogApi).getProductInfo());
+  /** 各器類商品數量，供分類入口區塊使用 */
+  protected readonly categoryCounts = computed(() => this.info()?.categoryCounts ?? {});
+  /** 是否已登入；資料載入前視為已登入，避免「登入」連結閃現 */
+  protected readonly isLoggedIn = computed(() => this.info()?.isLoggedIn ?? true);
+  /** 頂部公告列的會員點數與折價券 */
+  protected readonly points = computed(() => formatNumber(this.info()?.pointBalance ?? 0));
+  protected readonly coupons = computed(() => this.info()?.coupons ?? []);
 
   /** 搜尋框目前輸入值 */
   protected searchQuery = signal('');

@@ -19,6 +19,11 @@ export class Promobar {
   /** 跑馬燈公告文字清單 */
   announcements = input<string[]>([]);
 
+  /** 是否已登入；未登入時以「登入」取代個人頁面、點數與折價券 */
+  isLoggedIn = input(true);
+  /** 「登入」連結網址 */
+  loginHref = input('#');
+
   /** 「訂單查詢」連結網址 */
   ordersHref = input('#');
   /** 「個人頁面」連結網址 */
