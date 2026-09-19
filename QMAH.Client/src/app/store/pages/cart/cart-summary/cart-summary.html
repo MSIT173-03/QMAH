@@ -10,8 +10,12 @@
       <span class="summary-total-label">{{ totalLabel }}</span>
       <span class="summary-total-value">{{ getTotal() }}</span>
     </div>
-    <!-- 前往結帳 -->
-    <a [storeLink]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
+    <!-- integration: checkout contract 尚未完成時只顯示停用狀態，不把使用者送進無法付款的頁面。 -->
+    @if (checkoutEnabled) {
+      <a [storeLink]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
+    } @else {
+      <button type="button" class="btn-solid btn-solid--full" disabled>{{ checkoutLabel }}</button>
+    }
   </app-panel>
 
   <app-panel variant="note">

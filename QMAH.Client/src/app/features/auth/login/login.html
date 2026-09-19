@@ -397,6 +397,7 @@
 
 
 <!-- Google 登入 -->
+@if (googleLoginEnabled) {
 <button
   type="button"
   class="google-button"
@@ -412,6 +413,10 @@
   </span>
 
 </button>
+} @else {
+  <!-- integration: OAuth secret 未設定或能力端點不可用時，只停用 Google 入口，保留一般登入。 -->
+  <p class="google-disabled" role="status">Google 登入目前未啟用，請使用一般帳號登入。</p>
+}
 
 
 

@@ -2,7 +2,9 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
   Observable,
+  catchError,
   map,
+  of,
   switchMap,
   tap
 } from 'rxjs';
@@ -26,6 +28,10 @@ export interface LoginRequest {
   email: string;
   password: string;
   rememberMe: boolean;
+}
+
+export interface AccountCapabilities {
+  googleLoginEnabled: boolean;
 }
 
 @Injectable({
@@ -67,6 +73,13 @@ export class AuthService {
 
   }
 
+  /** 讀取不含 secret 的選用登入能力；能力端點失敗時只關閉 Google，不影響密碼登入畫面。 */
+  getCapabilities(): Observable<AccountCapabilities> {
+    return this.http
+      .get<AccountCapabilities>(`${environment.apiBaseUrl}/account/capabilities`)
+      .pipe(catchError(() => of({ googleLoginEnabled: false })));
+  }
+
 
   login(
     request: LoginRequest
@@ -96,6 +109,10 @@ export class AuthService {
                   {}
                 )
               ),
+
+              // integration: Daily Activity 是登入後的附加獎勵，不是建立登入狀態的必要條件；
+              // cookie 與 /me 已成功時，即使該服務 timeout／5xx 也不能把使用者誤導回登入頁。
+              catchError(() => of(null)),
 
               map(() => user)
 

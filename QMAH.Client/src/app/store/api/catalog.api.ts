@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { apiUrl, getField, toParams } from './http';
 import {
   Category,
@@ -37,6 +37,8 @@ export class CatalogApi {
     // 這裡只做 response adapter，讓測試資料格式相容而不把 mock interceptor 帶入正式 runtime。
     return this.http.get<Category[] | { categories: Category[] }>(apiUrl('/categories')).pipe(
       map((res) => (Array.isArray(res) ? res : res.categories)),
+      // 分類導覽是輔助資料；資料庫短暫失敗時保留商品頁與其他 Area，不讓 toSignal 拋出錯誤。
+      catchError(() => of([])),
     );
   }
 
@@ -62,6 +64,8 @@ export class CatalogApi {
         page: res.page,
         pageSize: res.pageSize,
       })),
+      // 商品列表的失敗只顯示空結果；商品詳情與 Social／Game 不應被同一個 Store API 拖垮。
+      catchError(() => of({ items: [], total: 0, page: query.page ?? 1, pageSize: query.pageSize ?? 20 })),
     );
   }
 

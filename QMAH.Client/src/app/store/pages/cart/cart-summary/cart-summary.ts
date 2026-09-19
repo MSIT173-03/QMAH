@@ -44,7 +44,9 @@ export class CartSummary {
   protected readonly savingsLabel = '折扣';
   protected readonly shippingLabel = '運費';
   protected readonly totalLabel = '應付總額';
-  protected readonly checkoutLabel = '前往結帳';
+  // integration: 正式配送／付款 options 尚未存在；先保留原入口位置但停用操作，避免導向不可完成的下單流程。
+  protected readonly checkoutLabel = '結帳目前未啟用';
+  protected readonly checkoutEnabled = false;
   protected readonly checkoutHref = CHECKOUT_PATH;
   protected readonly serviceLabel = 'SERVICE';
   protected readonly serviceNote =

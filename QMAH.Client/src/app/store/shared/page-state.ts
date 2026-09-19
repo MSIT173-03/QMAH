@@ -13,18 +13,30 @@ export function injectCartState() {
   const cartApi = inject(CartApi);
   /** 購物車內容；null 代表尚在載入 */
   const cart = signal<ShoppingCart | null>(null);
+  /** 最近一次寫入失敗；保留給未來既有頁面顯示，不以空資料假裝寫入成功。 */
+  const error = signal<string | null>(null);
 
   /** 送出請求並以回應內容更新購物車，更新後執行 done */
   const apply = (request: Observable<ShoppingCart>, done?: () => void) =>
-    request.subscribe((value) => {
-      cart.set(value);
-      done?.();
+    request.subscribe({
+      next: (value) => {
+        error.set(null);
+        cart.set(value);
+        done?.();
+      },
+      error: () => {
+        // integration: 寫入失敗時維持畫面上的上一份真實購物車，並結束移除動畫；
+        // 明確接住 Observable 錯誤，避免 Angular 將單一商城操作升級成全域未處理例外。
+        error.set('購物車目前無法更新，請稍後再試。');
+        done?.();
+      },
     });
 
   apply(cartApi.getCart());
 
   return {
     cart: cart.asReadonly(),
+    error: error.asReadonly(),
     /** 購物車內商品件數 */
     count: computed(() => cart()?.items.reduce((sum, item) => sum + item.qty, 0) ?? 0),
     /** 加入購物車（預設數量 1） */

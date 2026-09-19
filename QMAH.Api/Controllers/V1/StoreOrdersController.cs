@@ -1,5 +1,7 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
+using System.Text;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +34,12 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         if (!TryGroupOrderItems(request.Items, out var groupedItems, out var emptyErr))
             return emptyErr;
 
+        var operationId = Guid.NewGuid();
+        // integration: 編號不在 execution strategy 外額外查資料庫，避免資料庫短暫故障繞過
+        // 訂單完整交易的 retry；同一 operation ID 產生穩定編號，也保留既有可讀格式。
+        var operationOrderNo = BuildOperationOrderNo(operationId);
+        var idempotencyMerchantTradeNo = BuildIdempotencyMerchantTradeNo(userId, request.IdempotencyKey);
+
         // integration: SQL retry 必須包住完整訂單流程，而不是只重試某一次查詢；
         // 否則庫存、優惠券、點數與訂單可能只完成其中一部分。每次重試先清掉上一輪追蹤狀態，
         // 再用 Serializable 重新讀取同一批商品，維持庫存與資產的一致性。
@@ -42,6 +50,25 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             await using var transaction = await db.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable,
                 retryToken);
+
+            // integration: commit 已成功但 response 遺失時，execution strategy 會再次進入 delegate；
+            // 先用 client operation key（或本次固定 operationId）找回已建立訂單，避免第二次扣庫存／點數。
+            var existingOrder = await db.StoreOrders
+                .Include(item => item.OrderDetails)
+                .Include(item => item.Payment)
+                .SingleOrDefaultAsync(item => item.UserId == userId
+                    && (item.Id == operationId
+                        || (idempotencyMerchantTradeNo != null
+                            && item.Payment != null
+                            && item.Payment.MerchantTradeNo == idempotencyMerchantTradeNo)),
+                    retryToken);
+            if (existingOrder is not null)
+            {
+                await transaction.CommitAsync(retryToken);
+                return Created(
+                    $"/api/v1/me/orders/{existingOrder.Id}",
+                    ToOrderDto(existingOrder));
+            }
 
             var (products, productError) = await LoadAndValidateProductsAsync(groupedItems, retryToken);
             if (productError is not null)
@@ -66,7 +93,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             if (pointsError is not null)
                 return pointsError;
 
-            var order = await BuildOrderAsync(
+            var order = BuildOrder(
                 request,
                 userId,
                 groupedItems,
@@ -74,7 +101,9 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 subtotal,
                 discountAmount,
                 userCoupon,
-                retryToken);
+                operationId,
+                operationOrderNo,
+                idempotencyMerchantTradeNo);
 
             db.StoreOrders.Add(order);
             // integration: 目前 API 只建立「待付款」訂單與付款紀錄，尚未綁定第三方付款 callback；
@@ -234,7 +263,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         return null;
     }
 
-    private async Task<StoreOrder> BuildOrderAsync(
+    private StoreOrder BuildOrder(
         CreateStoreOrderRequest request,
         Guid userId,
         List<GroupedOrderItem> groupedItems,
@@ -242,7 +271,9 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         decimal subtotal,
         decimal discountAmount,
         UserCoupon? userCoupon,
-        CancellationToken cancellationToken)
+        Guid orderId,
+        string orderNo,
+        string? idempotencyMerchantTradeNo)
     {
         // integration: 訂單明細保存商品名稱與單價快照，避免商品後續改名／調價造成歷史訂單變動。
         var totalAmount = decimal.Round(
@@ -251,8 +282,8 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             MidpointRounding.AwayFromZero);
         var order = new StoreOrder
         {
-            Id = Guid.NewGuid(),
-            OrderNo = await GenerateOrderNoAsync(cancellationToken),
+            Id = orderId,
+            OrderNo = orderNo,
             UserId = userId,
             UserCouponId = userCoupon?.Id,
             Status = "PENDING_PAYMENT",
@@ -290,7 +321,8 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         {
             Id = Guid.NewGuid(),
             OrderId = order.Id,
-            MerchantTradeNo = $"QMAH-{DateTime.UtcNow:yyyyMMddHHmmss}-{order.Id:N}"[..28],
+            MerchantTradeNo = idempotencyMerchantTradeNo
+                ?? $"QMAH-{order.CreatedAt:yyyyMMddHHmmss}-{order.Id:N}"[..28],
             Amount = totalAmount,
             Status = "PENDING",
             PaymentType = "Credit_CreditCard",
@@ -298,6 +330,17 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         };
 
         return order;
+    }
+
+    private static string? BuildIdempotencyMerchantTradeNo(Guid userId, string? idempotencyKey)
+    {
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+            return null;
+
+        // 既有 Payments.MerchantTradeNo 已有唯一索引；以會員與 key 雜湊映射到既有欄位，
+        // 不新增資料表或 migration，讓安全重送沿用目前資料庫契約。
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"{userId:N}:{idempotencyKey.Trim()}"));
+        return $"QMAH-{Convert.ToHexString(bytes)[..25]}";
     }
 
     private static void ApplyCouponRedemption(UserCoupon? userCoupon, DateTime redeemedAt)
@@ -359,14 +402,16 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 return MissingResource("找不到訂單", "這筆訂單不存在或不屬於目前帳號。");
             if (order.Status == "CANCELLED")
                 return NoContent();
-            if (order.Status is not ("PENDING_PAYMENT" or "PAID"))
-                return InvalidWorkflow("訂單目前不可取消", "出貨或完成後的訂單請依既有客服流程處理。");
+            // integration: 目前沒有第三方退款 callback；PAID 訂單不可由取消 API 假裝完成退款，
+            // 只允許尚未付款的訂單進入既有回補流程，避免外部金流與資料庫狀態分裂。
+            if (order.Status != "PENDING_PAYMENT")
+                return InvalidWorkflow("訂單目前不可取消", "已付款、出貨或完成後的訂單請交由退款／客服流程處理。");
 
             // integration: 取消必須在同一交易中回補庫存、優惠券與點數，避免只回復部分資產。
             var now = DateTime.UtcNow;
             order.Status = "CANCELLED";
             order.CancelledAt = now;
-            if (order.Payment is not null && order.Payment.Status is "PENDING" or "PAID")
+            if (order.Payment is not null && order.Payment.Status == "PENDING")
             {
                 order.Payment.Status = "CANCELLED";
                 order.Payment.CallbackReceivedAt = now;
@@ -406,16 +451,10 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         }, cancellationToken);
     }
 
-    private async Task<string> GenerateOrderNoAsync(CancellationToken cancellationToken)
+    private static string BuildOperationOrderNo(Guid operationId)
     {
-        for (var attempt = 0; attempt < 10; attempt++)
-        {
-            var orderNo = $"QMAH-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..28];
-            if (!await db.StoreOrders.AnyAsync(order => order.OrderNo == orderNo, cancellationToken))
-                return orderNo;
-        }
-
-        throw new InvalidOperationException("目前無法產生唯一訂單編號，請稍後再試。");
+        // operationId 已由 Guid 提供唯一性；固定取值讓 commit 結果不明時重試不會再查詢或改寫編號。
+        return $"QMAH-{DateTime.UtcNow:yyyyMMddHHmmss}-{operationId:N}"[..28];
     }
 
     private static OrderDto ToOrderDto(StoreOrder order) => new(

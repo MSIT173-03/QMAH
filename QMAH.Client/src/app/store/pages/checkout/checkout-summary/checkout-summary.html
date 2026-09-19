@@ -30,7 +30,13 @@
     <!-- 本次訂單可回饋的點數 -->
     <span class="summary-earn">回饋點數 +{{ earnLabel() }}</span>
 
-    <button type="button" class="btn-solid btn-solid--full" (click)="submitOrder.emit()">{{ submitLabel() }}</button>
+    <!-- integration: 後端尚未提供正式配送／付款選項時，明確停用下單按鈕，避免使用者以為訂單已送出。 -->
+    <button type="button" class="btn-solid btn-solid--full" [disabled]="submitDisabled()"
+      (click)="submitOrder.emit()">{{ submitLabel() }}</button>
+
+    @if (!checkoutEnabled() && !placed()) {
+      <span class="field-warning" role="status">配送與付款服務尚未啟用，請先返回購物車。</span>
+    }
 
     <!-- 必填欄位未填妥時的補填提示 -->
     @if (showMissing()) {

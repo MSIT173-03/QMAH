@@ -63,6 +63,16 @@ public sealed class AccountController(
         return NoContent();
     }
 
+    [AllowAnonymous]
+    [HttpGet("capabilities")]
+    public ActionResult<AccountCapabilitiesDto> GetCapabilities()
+    {
+        // integration: 只公開是否已設定 Google OAuth，不把 secret、client id 或 provider 細節送到前端。
+        var googleLoginEnabled = !string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"])
+            && !string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]);
+        return Ok(new AccountCapabilitiesDto(googleLoginEnabled));
+    }
+
     [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<AccountSessionDto>> GetCurrentSession(
@@ -194,7 +204,14 @@ public sealed class AccountController(
         if (info is null)
             return Redirect($"{clientUrl}/login?googleError=1");
 
-        // 已經綁定過 Google → 直接登入
+        // 已經綁定過 Google 仍要先檢查 QMAH 自訂 Status；Identity 的外部登入成功本身
+        // 不會自動判斷 ApplicationUser.Status，避免已停權會員重新取得有效 Cookie。
+        var linkedUser = await userManager.FindByLoginAsync(
+            info.LoginProvider,
+            info.ProviderKey);
+        if (linkedUser is not null && linkedUser.Status != "ACTIVE")
+            return Redirect($"{clientUrl}/login?googleError=1");
+
         var externalResult = await signInManager.ExternalLoginSignInAsync(
             info.LoginProvider,
             info.ProviderKey,
@@ -202,7 +219,19 @@ public sealed class AccountController(
             bypassTwoFactor: false);
 
         if (externalResult.Succeeded)
+        {
+            // integration: 再查一次是防止管理員在 callback 查詢與實際 sign-in 之間停用帳號；
+            // 若狀態已變更，立即清除剛建立的外部登入 Cookie，其他登入方式不受影響。
+            var signedInUser = linkedUser
+                ?? await userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            if (signedInUser is null || signedInUser.Status != "ACTIVE")
+            {
+                await signInManager.SignOutAsync();
+                return Redirect($"{clientUrl}/login?googleError=1");
+            }
+
             return Redirect($"{clientUrl}/member");
+        }
 
         // 第一次使用 Google 登入
         var email = info.Principal.FindFirstValue(ClaimTypes.Email);

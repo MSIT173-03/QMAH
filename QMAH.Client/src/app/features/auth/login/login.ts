@@ -52,6 +52,8 @@ export class Login implements OnInit, OnDestroy {
 
   loading = false;
   errorMessage = '';
+  /** API 沒有回報 OAuth 已啟用前先保持停用，避免按鈕導向明知不可用的 503。 */
+  googleLoginEnabled = false;
 
   form;
 
@@ -130,6 +132,9 @@ export class Login implements OnInit, OnDestroy {
   ngOnInit(): void {
 
     this.startCarousel();
+    this.authService.getCapabilities().subscribe((capabilities) => {
+      this.googleLoginEnabled = capabilities.googleLoginEnabled;
+    });
 
   }
 

@@ -712,6 +712,15 @@
   transform: translateY(-1px);
 }
 
+/* integration: Google OAuth 未啟用時保留登入區高度與可讀提示，不讓停用能力留下可點擊的假按鈕。 */
+.google-disabled {
+  margin: 0;
+  color: #92897d;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
 .google-icon {
   width: 26px;
   height: 26px;

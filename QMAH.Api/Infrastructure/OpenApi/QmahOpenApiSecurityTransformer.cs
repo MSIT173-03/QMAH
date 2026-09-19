@@ -346,7 +346,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Me.UpdateCartItem"] = "request body（請求本文，送出的 JSON 內容）：包含 `Quantity`（購物車商品數量）",
             ["Me.CreateAddress"] = "request body（請求本文，送出的 JSON 內容）：包含收件人、地址與選填 `Latitude`（緯度）／`Longitude`（經度）",
             ["Me.UpdateAddress"] = "request body（請求本文，送出的 JSON 內容）：包含要更新的收件人、地址與選填 `Latitude`（緯度）／`Longitude`（經度）",
-            ["StoreOrders.CreateOrder"] = "request body（請求本文，送出的 JSON 內容）：包含商品明細、優惠券、`PointsUsed`（使用點數）與配送資料"
+            ["StoreOrders.CreateOrder"] = "request body（請求本文，送出的 JSON 內容）：包含商品明細、選填 `IdempotencyKey`（同一次下單重送識別）、優惠券、`PointsUsed`（使用點數）與配送資料"
         };
 
     private static void ConfigureRequestBody(OpenApiOperation operation, string operationKey)

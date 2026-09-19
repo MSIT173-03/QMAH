@@ -96,6 +96,7 @@ internal static class QmahOpenApiSchemaCatalog
                 ("quantity", "Quantity（購買數量）；範圍為 1 至 99")),
             ["CreateStoreOrderRequest"] = Fields(
                 ("items", "Items（訂單商品清單）；至少包含一筆商品明細"),
+                ("idempotencyKey", "IdempotencyKey（同一次下單重送識別）；可省略，提供時可避免 commit 回應遺失造成重複訂單"),
                 ("userCouponId", "UserCouponId（會員優惠券資源識別碼）；可省略"),
                 ("pointsUsed", "PointsUsed（使用點數）；不可為負數"),
                 ("recipientName", "RecipientName（收件人姓名）"),

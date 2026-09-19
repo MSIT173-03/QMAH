@@ -72,6 +72,10 @@ public sealed record CodeLabelDto(Guid Id, string Code, string Name);
 
 public sealed record AccountSessionDto(Guid UserId, string Email, string? Nickname);
 
+// integration: 前端只需要知道選用登入能力是否啟用，不應取得 ClientSecret 或猜測部署設定。
+// 回傳 capability（能力旗標）可讓缺少第三方 OAuth secret 時停用單一按鈕，保留一般 Identity 登入。
+public sealed record AccountCapabilitiesDto(bool GoogleLoginEnabled);
+
 // integration: Store 商品 DTO 只暴露目前資料庫與真實 API 已有欄位；品牌、折扣與行銷欄位由前端 adapter
 // 明確補預設值，避免把 mock-only contract 假裝成後端已支援的資料。
 public sealed record ProductListItemDto(
@@ -496,6 +500,11 @@ public sealed class CreateStoreOrderRequest
 {
     [Required, MinLength(1)]
     public List<CreateOrderItemRequest> Items { get; set; } = [];
+
+    // integration: 這是同一次下單重送時使用的安全識別，不改變訂單功能；
+    // 有提供時可在 commit 回應遺失後找回原訂單，避免重複扣庫存與會員資產。
+    [StringLength(64, MinimumLength = 1)]
+    public string? IdempotencyKey { get; set; }
 
     public Guid? UserCouponId { get; set; }
 

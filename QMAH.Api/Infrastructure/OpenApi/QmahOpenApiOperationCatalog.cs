@@ -9,6 +9,7 @@ internal static class QmahOpenApiOperationCatalog
         new Dictionary<string, (string Summary, string Description)>(StringComparer.OrdinalIgnoreCase)
         {
             ["Account.GetAntiforgeryToken"] = ("取得防偽請求權杖", "在回應 Cookie（瀏覽器保存的小型資料）寫入前端執行寫入操作所需的 `XSRF-TOKEN-API`，成功回傳 `204 No Content`（成功且沒有回應本文）。response body（回應本文）不包含 token（驗證用的暫時字串）；後續 POST、PUT、DELETE 由同一 session（瀏覽器工作階段）沿用該 Cookie。"),
+            ["Account.GetCapabilities"] = ("取得登入能力狀態", "只回傳選用登入能力是否已啟用，不暴露任何第三方 OAuth secret 或 client id；前端可依 `googleLoginEnabled` 停用單一入口，密碼登入不受影響。"),
             ["Account.Login"] = ("登入會員帳號", "驗證 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Password` 與 `RememberMe`，成功建立 Identity Cookie（登入狀態 Cookie）並回傳 `204 No Content`（成功且沒有回應本文）。帳號不存在、帳號狀態不是 `ACTIVE` 或密碼不符時統一回傳 `401`，不揭露失敗欄位；QMAH 資料庫無法連線時回傳 `503`。"),
             ["Account.Logout"] = ("登出會員帳號", "驗證目前 Identity Cookie（登入狀態 Cookie）後清除登入狀態，成功回傳 `204 No Content`（成功且沒有回應本文）。"),
             ["Account.Register"] = ("註冊會員帳號", "以 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Nickname` 與 `Password` 建立會員、Profile（會員資料）及 `User` role（會員角色），成功回傳 `201 Created`（已建立資源）與新會員 `userId`（會員識別碼）。Email 已存在時回傳 `409`，不建立重複帳號。"),
