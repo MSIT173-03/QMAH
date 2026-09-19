@@ -5,6 +5,7 @@ import { MeApiService } from '../../../core/services/me-api';
 import { AdminPendingCountsService } from '../../../core/services/admin-pending-counts';
 import { NotificationsBellComponent } from '../notifications-bell/notifications-bell';
 import { ToastContainerComponent } from '../toast-container/toast-container';
+import { AreaNavigationComponent } from '../area-navigation/area-navigation';
 
 // 跟 notifications-bell 一樣沒有 SignalR/WebSocket，用定時輪詢模擬「待審核數量會即時更新」。
 const PENDING_COUNTS_POLL_INTERVAL_MS = 20000;
@@ -12,7 +13,7 @@ const PENDING_COUNTS_POLL_INTERVAL_MS = 20000;
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, DevLoginComponent, NotificationsBellComponent, ToastContainerComponent],
+  imports: [RouterOutlet, RouterLink, DevLoginComponent, NotificationsBellComponent, ToastContainerComponent, AreaNavigationComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })

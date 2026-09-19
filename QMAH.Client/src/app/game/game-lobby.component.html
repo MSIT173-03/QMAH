@@ -7,6 +7,9 @@
     @if (!isDemo) { <a class="account-link" routerLink="/game/account">登入遊戲帳號</a> }
   </header>
 
+  <!-- integration: 遊戲大廳是 Game Area 的入口，在既有 masthead 下提供跨 Area 導覽。 -->
+  <app-area-navigation />
+
   <nav class="mode-bookmarks" aria-label="遊戲模式">
     <a routerLink="/game" class="bookmark is-active" aria-current="page"><small>線上</small>多人鑑定</a>
     <a routerLink="/game/training" class="bookmark"><small>單人</small>小遊戲</a>

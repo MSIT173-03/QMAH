@@ -1,6 +1,7 @@
 import { Component, input } from '@angular/core';
 import { StoreLink } from '../../shared/store-link';
 import { HOME_PATH } from '../../shared/paths';
+import { AreaNavigationComponent } from '../../../shared/components/area-navigation/area-navigation';
 
 /**
  * 網站頁首外殼：固定於頁面頂端，左側為品牌 Logo，其餘內容（搜尋框、導覽、購物車入口等）
@@ -8,7 +9,7 @@ import { HOME_PATH } from '../../shared/paths';
  */
 @Component({
   selector: 'app-site-header',
-  imports: [StoreLink],
+  imports: [StoreLink, AreaNavigationComponent],
   templateUrl: './site-header.html',
   styleUrls: [
     './site-header.scss',

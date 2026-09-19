@@ -7,12 +7,13 @@ import { Observable, Subscription, finalize } from 'rxjs';
 import { ApiPage, CreateGameRoomRequest, GameRoomDetails, GameRoomFilterStatus, GameRoomListItem, GameRoomSort, JoinGameRoomRequest } from './game.models';
 import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameService } from './game.service';
+import { AreaNavigationComponent } from '../shared/components/area-navigation/area-navigation';
 
 type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, GameRoomQrDialogComponent],
+  imports: [FormsModule, RouterLink, GameRoomQrDialogComponent, AreaNavigationComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })

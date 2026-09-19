@@ -7,12 +7,14 @@ import {
 import {
   AuthService
 } from '../../../core/auth/auth.service';
+import { AreaNavigationComponent } from '../../../shared/components/area-navigation/area-navigation';
 
 @Component({
   selector: 'app-member-home',
 
   imports: [
-    RouterLink
+    RouterLink,
+    AreaNavigationComponent
   ],
 
   templateUrl: './member-home.html',

@@ -1,0 +1,7 @@
+<!-- 跨 Area 導航只補入口，不改各頁原有版面與操作流程。 -->
+<nav class="area-navigation" aria-label="QMAH 主要功能">
+  <span class="area-navigation-label">前往</span>
+  @for (link of links; track link.path) {
+    <a [routerLink]="link.path">{{ link.label }}</a>
+  }
+</nav>
