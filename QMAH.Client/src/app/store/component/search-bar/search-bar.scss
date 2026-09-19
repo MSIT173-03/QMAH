@@ -1,0 +1,116 @@
+:host {
+  display: contents;
+}
+
+.search-wrap {
+  flex: 1 1 auto;
+  position: relative;
+  max-width: 620px;
+
+  /* 商品列表頁：可隨頁首寬度伸縮，仍沿用與首頁相同的最大寬度 */
+  &--list {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+}
+
+/* 精簡版（compact）僅隱藏熱門搜尋與建議下拉，輸入框本身尺寸固定與完整版一致，
+   避免商品列表頁與首頁的搜尋欄位出現高度落差 */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid var(--color-ink);
+  border-radius: 2px;
+  padding: 0 8px 0 12px;
+  height: 38px;
+}
+
+.search-input {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-ink);
+}
+
+.search-submit {
+  border: 0;
+  background: var(--color-ink);
+  color: #fff;
+  border-radius: 2px;
+  padding: 0 20px;
+  height: 28px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  transition: background 160ms;
+
+  &:hover {
+    background: var(--color-accent);
+  }
+}
+
+.search-hot {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--color-faint);
+}
+
+.search-hot-label {
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+  color: var(--color-teal);
+}
+
+.search-hot-link {
+  color: var(--color-faint);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}
+
+.search-suggest {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--color-ink);
+  box-sizing: border-box;
+  box-shadow: 0 14px 30px rgba(34, 52, 61, 0.12);
+  padding: 4px;
+  z-index: 50;
+}
+
+.search-suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--color-ink);
+  cursor: pointer;
+
+  &:hover {
+    background: #f2f5f4;
+  }
+}
+
+.search-suggest-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-placeholder);
+  margin-left: auto;
+}

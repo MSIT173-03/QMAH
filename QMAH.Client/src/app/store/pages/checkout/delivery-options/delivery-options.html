@@ -1,0 +1,22 @@
+<!-- 配送與付款：上排選配送方式（附運費），下排選付款方式 -->
+<app-panel>
+  <app-section-head [title]="title" [tag]="tag" headingLevel="h2" variant="panel" />
+
+  <!-- 配送方式：名稱與運費上下兩行 -->
+  <div class="option-row">
+    @for (option of shippingButtons(); track option.name; let i = $index) {
+      <button
+        type="button"
+        class="option-btn"
+        [class.option-btn--active]="option.active"
+        (click)="shippingSelect.emit(i)"
+      >
+        <span>{{ option.name }}</span>
+        <span class="option-btn-fee">{{ option.fee }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- 付款方式 -->
+  <app-pill-group variant="pay" [options]="paymentOptions()" (select)="paymentSelect.emit($event)" />
+</app-panel>

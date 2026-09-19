@@ -6,6 +6,8 @@ using QMAH.Infrastructure.Services.Game;
 
 namespace QMAH.Api.Services;
 
+// integration: Worker 每次 tick 都建立新的 scope，避免 singleton 背景服務持有 scoped DbContext；
+// 生命週期服務因此能和一般 API request 共用相同 DI／交易邏輯。
 public sealed class GameRoomLifecycleWorker(
     IServiceScopeFactory scopeFactory,
     ILogger<GameRoomLifecycleWorker> logger) : BackgroundService

@@ -1,0 +1,115 @@
+:host {
+  display: block;
+}
+
+/* 移除商品時的離場動畫：淡出、左移並收合列高 */
+@keyframes cart-line-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 200px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-40px);
+    max-height: 0;
+  }
+}
+
+.cart-line {
+  border: 1px solid var(--color-line);
+  background: #fff;
+  padding: 14px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  &--leaving {
+    animation: cart-line-out 300ms cubic-bezier(.4, 0, .6, 1) forwards;
+    overflow: hidden;
+  }
+}
+
+.cart-line-thumb {
+  width: 96px;
+  height: 96px;
+  flex: 0 0 auto;
+  background: var(--color-swatch);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-faint);
+  text-decoration: none;
+  transition: opacity 160ms;
+
+  &:hover {
+    opacity: 0.82;
+  }
+}
+
+.cart-line-info {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* mono 品牌／分類說明列 */
+.cart-line-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--color-teal);
+}
+
+.cart-line-name {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.cart-line-dims {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+/* 價格列的排列；單價、劃線價與折扣標籤本身沿用全站共用的 .product-card-* 原子樣式 */
+.cart-line-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cart-line-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.cart-line-total {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-ink);
+}
+
+.cart-line-remove {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  color: var(--color-muted);
+  transition: color 160ms;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}

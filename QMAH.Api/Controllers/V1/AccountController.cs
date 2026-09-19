@@ -175,7 +175,10 @@ public sealed class AccountController(
         string? remoteError = null,
         CancellationToken cancellationToken = default)
     {
-        const string clientUrl = "http://localhost:4200";
+        // integration: OAuth callback 必須回到部署中的前台，不能把開發機網址寫死在 Controller；
+        // 未設定時才退回本機預設，方便開發者直接啟動專案，正式環境請由 Frontend:ClientUrl 覆寫。
+        var clientUrl = (configuration["Frontend:ClientUrl"] ?? "http://localhost:4200")
+            .TrimEnd('/');
 
         if (!string.IsNullOrWhiteSpace(remoteError))
         {

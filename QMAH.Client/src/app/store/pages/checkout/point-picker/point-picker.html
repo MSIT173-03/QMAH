@@ -1,0 +1,27 @@
+<!-- 購物點數：選擇折抵方式，選「自訂數量」時再顯示輸入列 -->
+<app-panel>
+  <!-- 面板標題列，右側顯示持有點數 -->
+  <app-section-head [title]="title" [tag]="tag" headingLevel="h2" variant="panel">
+    <span class="section-more">持有 <span class="balance-value">{{ balanceLabel() }}</span> 點</span>
+  </app-section-head>
+
+  <!-- 折抵方式：不使用／折抵至上限／自訂數量 -->
+  <app-pill-group variant="point" [options]="modeOptions()" (select)="onModePick($event)" />
+
+  <!-- 自訂折抵數量，並即時顯示夾在折抵上限內的實際折抵點數 -->
+  @if (showCustom()) {
+    <label class="field-inline">
+      {{ customLabel }}
+      <input
+        class="field-inline-input"
+        [value]="customPoints()"
+        [placeholder]="customPlaceholder"
+        (input)="onCustomInput($event)"
+      />
+      <span class="font-mono text-sm text-ink">實際折抵 {{ usedLabel() }} 點</span>
+    </label>
+  }
+
+  <!-- 折抵規則說明 -->
+  <span class="size-note">1 點折抵 NT$1；本次可折抵上限 {{ capLabel() }} 點（不超過應付金額）。</span>
+</app-panel>

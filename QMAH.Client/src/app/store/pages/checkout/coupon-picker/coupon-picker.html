@@ -1,0 +1,27 @@
+<!-- 折價券：整列為一顆按鈕，未達門檻者以淺色顯示且不可選用 -->
+<app-panel>
+  <!-- 面板標題列，右側顯示可用張數 -->
+  <app-section-head [title]="title" [tag]="tag" headingLevel="h2" variant="panel">
+    <span class="section-more">可用 {{ usableCount() }} 張</span>
+  </app-section-head>
+
+  @for (row of rows(); track row.title; let i = $index) {
+    <button
+      type="button"
+      class="coupon-row"
+      [class.coupon-row--active]="row.active"
+      [class.coupon-row--locked]="!row.usable"
+      (click)="pick(i)"
+    >
+      <!-- 折抵幅度 -->
+      <span class="coupon-row-off">{{ row.off }}</span>
+      <!-- 名稱與使用條件 -->
+      <span class="coupon-row-body">
+        <span class="text-sm coupon-row-title">{{ row.title }}</span>
+        <span class="coupon-row-cond">{{ row.cond }}</span>
+      </span>
+      <!-- 目前狀態：已選用／可使用／未達門檻 -->
+      <span class="coupon-row-state">{{ row.state }}</span>
+    </button>
+  }
+</app-panel>

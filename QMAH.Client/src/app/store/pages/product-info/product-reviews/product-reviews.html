@@ -1,0 +1,33 @@
+<!-- 評價區塊 -->
+<section class="section-block">
+  <!-- 標題列：標題、標籤與右側評分摘要 -->
+  <app-section-head headingLevel="h2" [title]="title" [tag]="tag">
+    <span class="reviews-summary section-meta">
+      <span class="product-card-star">★</span> {{ getRating() }} · {{ getReviewCount() }}
+    </span>
+  </app-section-head>
+
+  <!-- 篩選按鈕：星等與是否附照片，括號內為符合的則數 -->
+  <app-pill-group
+    variant="review"
+    layout="tabs"
+    [options]="filterOptions()"
+    (select)="filterChange.emit($event)"
+  />
+
+  <!-- 評價清單；篩選後無結果時顯示提示 -->
+  @for (review of shown(); track review.key) {
+    <div class="review-card">
+      <div class="review-meta">
+        <span class="product-card-star">{{ review.stars }}</span><span>{{ review.user }}</span><span
+          class="product-card-split">|</span><span>{{ review.date }}</span>
+        @if (review.hasPhoto) {
+          <span class="review-photo-tag">{{ photoTagLabel }}</span>
+        }
+      </div>
+      <p class="review-text">{{ review.text }}</p>
+    </div>
+  } @empty {
+    <div class="no-reviews">{{ emptyText }}</div>
+  }
+</section>

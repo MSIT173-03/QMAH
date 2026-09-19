@@ -1020,8 +1020,8 @@
   cursor: not-allowed;
 }
 
-/* ---------- debug: unlock ledger ---------- */
-
+/* integration: 原分支的 Debug toolbar 沒有模板入口，避免把測試控制項編進正式頁面。 */
+/*
 .debug-toolbar {
   position: fixed;
   right: 20px;
@@ -1050,6 +1050,7 @@
   border-color: var(--blue-deep);
   color: #ffffff;
 }
+*/
 
 .ledger-panel {
   position: fixed;

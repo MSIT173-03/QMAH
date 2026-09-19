@@ -72,6 +72,8 @@ public sealed record CodeLabelDto(Guid Id, string Code, string Name);
 
 public sealed record AccountSessionDto(Guid UserId, string Email, string? Nickname);
 
+// integration: Store 商品 DTO 只暴露目前資料庫與真實 API 已有欄位；品牌、折扣與行銷欄位由前端 adapter
+// 明確補預設值，避免把 mock-only contract 假裝成後端已支援的資料。
 public sealed record ProductListItemDto(
     Guid Id,
     Guid? ArtifactId,
@@ -81,7 +83,17 @@ public sealed record ProductListItemDto(
     decimal Price,
     int Stock,
     string? PrimaryImagePath,
-    bool IsActive);
+    DateTime CreatedAt,
+    decimal AverageRating,
+    int ReviewCount,
+    int SellCount);
+
+/// <summary>商城分類入口資料；商品件數由目前啟用中的商品即時計算。</summary>
+public sealed record StoreCategoryDto(
+    Guid Id,
+    string Code,
+    string Name,
+    int ProductCount);
 
 public sealed record ProductDetailsDto(
     Guid Id,
@@ -469,6 +481,8 @@ public sealed record CouponDto(
     DateTime ExpiresAt,
     DateTime? UsedAt);
 
+// integration: 訂單 request／response 與 persistence entity 分離；訂單明細的商品名稱、單價快照
+// 由 StoreOrdersController 建立，讓商品後續異動不會改寫歷史訂單。
 public sealed class CreateOrderItemRequest
 {
     [Required]

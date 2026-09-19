@@ -1,0 +1,17 @@
+<!-- 空狀態容器：標題、說明文字與行動按鈕 -->
+<div class="empty-state" [class.empty-state--lg]="size() === 'lg'">
+  <span class="empty-state-title">{{ title() }}</span>
+  <span class="empty-state-desc">{{ desc() }}</span>
+  @if (ctaMode() === 'button') {
+    <!-- 行動按鈕（例如「清除篩選」），在本頁執行動作 -->
+    <button
+      type="button"
+      class="empty-state-cta"
+      [class.empty-state-cta--wide]="size() === 'lg'"
+      (click)="ctaClick.emit()"
+    >{{ ctaLabel() }}</button>
+  } @else {
+    <!-- 行動按鈕（例如「開始選購」），連結網址由外部指定 -->
+    <a [storeLink]="ctaHref()" class="empty-state-cta" [class.empty-state-cta--wide]="size() === 'lg'">{{ ctaLabel() }}</a>
+  }
+</div>

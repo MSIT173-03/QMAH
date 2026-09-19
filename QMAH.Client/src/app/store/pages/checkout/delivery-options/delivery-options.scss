@@ -1,0 +1,42 @@
+:host {
+  display: block;
+}
+
+/* 配送方式按鈕列，寬度不足時自動換行 */
+.option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.option-btn {
+  border: 1px solid var(--color-line-mid);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--color-body);
+  padding: 10px 14px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  transition: border-color 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+
+  /* 目前選取的配送方式 */
+  &--active {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: #fff;
+  }
+}
+
+/* 運費金額，以等寬字體與較小字級呈現 */
+.option-btn-fee {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}

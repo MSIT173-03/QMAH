@@ -1,0 +1,28 @@
+<!-- 主視覺輪播容器 -->
+<div class="hero">
+  <!-- 輪播軌道，依目前投影片索引位移 -->
+  <div class="hero-track" [style.transform]="trackShift()">
+    @for (slide of slides(); track slide.title) {
+      <div class="hero-slide">
+        <span class="hero-slide-slot">{{ slide.slot }}</span>
+        <div class="hero-slide-body">
+          <span class="hero-kicker">{{ slide.kicker }}</span>
+          <h2 class="hero-title">{{ slide.title }}</h2>
+          <p class="hero-desc">{{ slide.desc }}</p>
+          <button type="button" class="btn-solid hero-cta">立即選購</button>
+        </div>
+      </div>
+    }
+  </div>
+  <!-- 輪播指示點，點擊可跳至指定投影片 -->
+  <div class="hero-dots">
+    @for (slide of slides(); track slide.title; let i = $index) {
+      <button
+        type="button"
+        class="hero-dot"
+        [class.hero-dot--active]="i === activeSlide()"
+        (click)="goToSlide(i)"
+      ></button>
+    }
+  </div>
+</div>

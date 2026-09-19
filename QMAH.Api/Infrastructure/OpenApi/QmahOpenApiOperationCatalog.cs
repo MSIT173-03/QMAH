@@ -25,6 +25,7 @@ internal static class QmahOpenApiOperationCatalog
             ["Catalog.GetEras"] = ("取得文物年代", "回傳文物年代桶的 `id`（資源識別碼）、`code`（系統代碼）與中文 `name`（顯示名稱），依年代起始年份及名稱排序，供圖鑑篩選器使用。"),
             ["MemberCatalog.GetArtifacts"] = ("查詢我的圖鑑", "需要登入，以 `q`、`categoryCode`、`eraCode`、`page` 與 `pageSize` 查詢啟用文物，並在每筆資料附上目前會員的 `isUnlocked` 與 `unlockedAt`。會員識別來自登入 Cookie，不接受其他 `userId`；回應為 `ApiPage<MemberArtifactListItemDto>`（標準分頁資料格式）。"),
             ["MemberCatalog.GetUnlocks"] = ("查詢我的解鎖紀錄", "需要登入，以 `q`、`categoryCode`、`eraCode`、`page` 與 `pageSize` 查詢目前會員的文物解鎖歷史，依 `unlockedAt` 最新優先排序。每筆資料包含解鎖方式、文物、分類、年代、遊戲回合與鑰匙流水參照；鑰匙來源會直接附上 `keyCode` 與 `keyName`；回應為 `ApiPage<MemberArtifactUnlockDto>`（標準分頁資料格式）。"),
+            ["StoreCatalog.GetCategories"] = ("查詢商城分類", "回傳目前分類入口與啟用中商品件數；件數由資料庫商品即時計算，避免將下架商品列入前台分類統計。"),
             ["StoreCatalog.GetProducts"] = ("查詢商品清單", "以 query string（查詢參數）的 `q`、`categoryCode`、`artifactId`、`page` 與 `pageSize` 查詢上架商品。`q` 搜尋商品名稱或 `ExternalRef`（外部商品編號），結果只包含 `IsActive` 的商品，回應為 `ApiPage<ProductListItemDto>`（標準分頁資料格式）。"),
             ["StoreCatalog.GetProduct"] = ("取得商品詳情", "以 path parameter（路徑參數）`id` 取得上架商品的價格、庫存、商品圖片、描述、尺寸、評價摘要與對應文物資料。商品不存在或未上架時回傳 `404`。"),
             ["StoreReviews.GetReviews"] = ("查詢商品評價", "以 path parameter（路徑參數）`productId` 查詢商品的已發布評價，並以 `page` 與 `pageSize` 分頁。回應同時包含平均星等與評價總數；隱藏或刪除的評價不列入統計。"),

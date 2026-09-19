@@ -1,0 +1,38 @@
+:host {
+  /* 讓各按鈕直接成為外層面板的子項，項目間距交由外層面板控制 */
+  display: contents;
+}
+
+.cat-list-item {
+  border: 0;
+  background: transparent;
+  padding: 4px 0;
+  text-align: left;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-nav);
+  transition: color 160ms;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+
+  /* 目前選取的分類 */
+  &--active {
+    font-weight: 500;
+    color: var(--color-accent);
+  }
+}
+
+.cat-list-name {
+  flex: 1;
+}
+
+.cat-list-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+}

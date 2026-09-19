@@ -1,0 +1,5 @@
+<!-- 通用面板容器，依 variant 套用不同外觀樣式 -->
+<div class="panel" [class]="variant() === 'default' ? '' : 'panel--' + variant()">
+  <!-- 供外部投影面板內容 -->
+  <ng-content></ng-content>
+</div>

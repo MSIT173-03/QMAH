@@ -27,6 +27,8 @@ public sealed class GameRoomLifecycleService(
     QmahDbContext db,
     IPasswordHasher<GameRoom> passwordHasher)
 {
+    // integration: 所有房間狀態變更與背景推進都走同一個 service；時間常數集中在此，
+    // 方便未來依部署負載調整，而不讓 Controller、Worker 各自維護一套逾時規則。
     private static readonly TimeSpan PresenceTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan ReconnectWindow = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan RevealDuration = TimeSpan.FromSeconds(8);
@@ -521,6 +523,8 @@ public sealed class GameRoomLifecycleService(
         Func<CancellationToken, Task<GameRoomMutationResult>> operation,
         CancellationToken cancellationToken)
     {
+        // integration: Serializable + execution strategy 要包住完整 mutation；
+        // 房間人數、座位與回合狀態不能在 SQL retry 時只完成一半。
         try
         {
             return await db.Database.CreateExecutionStrategy().ExecuteAsync(async retryToken =>

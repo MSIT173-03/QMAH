@@ -1,0 +1,18 @@
+:host {
+  display: block;
+}
+
+/* .label-tag、.font-mono、.text-accent、.btn-solid、.summary-row 系列與側欄容器樣式已在全站共用樣式（shared/styles.scss）中定義 */
+
+/* 「前往結帳」為 <a> 元素，全站的 a:hover 文字色規則權重高於 .btn-solid 的白字，
+   hover 時文字會被覆蓋成強調色而看不清，故在此明確覆寫維持白色 */
+.btn-solid:hover {
+  color: #fff;
+}
+
+.summary-note {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-body);
+}
+

@@ -1,0 +1,12 @@
+<!-- 分類篩選清單：每列為一個分類，左側名稱、右側件數，選取中的分類以強調色標示 -->
+@for (item of items(); track item.name; let i = $index) {
+  <button
+    type="button"
+    class="cat-list-item"
+    [class.cat-list-item--active]="item.active"
+    (click)="pick.emit(i)"
+  >
+    <span class="cat-list-name">{{ item.name }}</span>
+    <span class="cat-list-count">{{ item.count }}</span>
+  </button>
+}

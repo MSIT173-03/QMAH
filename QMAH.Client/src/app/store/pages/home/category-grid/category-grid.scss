@@ -1,0 +1,40 @@
+:host {
+  display: block;
+}
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.cat-card {
+  border: 1px solid var(--color-line);
+  background: #fff;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+}
+
+.cat-icon {
+  height: 62px;
+  background: var(--color-swatch);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-placeholder);
+}
+
+.cat-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+}

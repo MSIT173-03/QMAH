@@ -11,6 +11,8 @@ using QMAH.Infrastructure.Services.Game;
 namespace QMAH.Api.Controllers.V1;
 
 [Route("api/v1/game")]
+// integration: Controller 只負責登入／輸入與 HTTP 結果轉換；房間狀態遷移集中在
+// GameRoomLifecycleService，讓 HTTP 請求與背景 worker 使用同一套交易規則，後續部署到多台主機時也不分叉。
 public sealed class GameController(
     QmahDbContext db,
     IPasswordHasher<GameRoom> passwordHasher,

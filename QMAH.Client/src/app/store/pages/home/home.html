@@ -1,0 +1,61 @@
+<!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
+<app-promobar [announcements]="site.announcements()" [points]="site.points()" [coupons]="site.coupons()" />
+
+
+<app-site-header variant="hero">
+
+  <!-- 站內搜尋框，含熱門搜尋捷徑與輸入建議下拉 -->
+  <app-search-bar placeholder="搜尋文物周邊、紋樣、館藏聯名" [(value)]="searchQuery" [hotLinks]="hotLinks()"
+    [suggestions]="suggestions()" (search)="onSearch($event)" (suggestionPick)="onSuggestionPick($event)" />
+
+  <!-- 購物車入口，顯示目前購物車件數 -->
+  <div class="hdr-actions">
+    <app-cart-link [href]="cartPath" [count]="cart.count()" [hero]="true" />
+  </div>
+
+  <!-- 分類導覽列 -->
+  <div class="nav-bar">
+    <div class="nav-bar-row">
+      <a href="#" class="nav-link-strong" (click)="onClickAllCategory()">全部分類</a>
+      <a href="#" (click)="onClickSpecial()">特展聯名</a>
+      <a href="#" (click)="onClickOnSell()">限時特賣</a>
+      <a href="#brands">品牌館</a>
+      <a [storeLink]="newArrivalsPath">新品上架</a>
+      @for (name of categoryNames(); track name) {
+      <a [storeLink]="categoryPath(name)">{{ name }}</a>
+      }
+      <a href="#" class="nav-highlight">您好，歡迎光臨！</a>
+    </div>
+  </div>
+</app-site-header>
+
+<main class="container home-main">
+
+  <!-- 主視覺輪播與側欄（限時特賣倒數、迷你折價券） -->
+  <section class="hero-section">
+    <app-hero-carousel />
+    <div class="hero-sidebar">
+      <app-flash-sale />
+      <app-mini-coupons />
+    </div>
+  </section>
+
+  <!-- 分類入口 -->
+  <app-category-grid />
+
+  <!-- 熱銷排行 -->
+  <app-ranking-section (addToCart)="onAddToCart($event)" />
+
+  <!-- 新品上架／品牌館：雙欄並排 -->
+  <section class="two-col-section">
+    <app-new-arrivals (addToCart)="onAddToCart($event)" />
+    <app-brand-hall />
+  </section>
+
+  <!-- 為你推薦 -->
+  <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)"
+    (requireMore)="onRequireMore()" />
+</main>
+
+<!-- 頁尾：完整版，含品牌介紹、連結欄位與版權列 -->
+<app-site-footer variant="full" [columns]="site.config()?.footerColumns ?? []" />

@@ -22,6 +22,8 @@ public sealed class DailyActivityService(QmahDbContext db)
         Guid userId,
         CancellationToken cancellationToken = default)
     {
+        // integration: 登入事實、成就取得與交易提交必須放在同一個可重試交易中；
+        // SQL 暫時失敗時整段重做，避免只重做其中一次 SaveChanges 造成成就或活動資料不一致。
         var strategy = db.Database.CreateExecutionStrategy();
 
         await strategy.ExecuteAsync(async () =>

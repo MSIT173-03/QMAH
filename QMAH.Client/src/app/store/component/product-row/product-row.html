@@ -1,0 +1,34 @@
+<!-- 商品橫列（列表顯示模式的單一商品版位） -->
+@let pv = priceView();
+<div class="product-row">
+  <!-- 商品縮圖，連結至商品頁 -->
+  <a [storeLink]="link()" class="product-row-thumb">
+    @if (!showPlaceholder()) {
+      <img class="product-row-image" [src]="coverImage()" [alt]="name()" (error)="onImageError()" />
+    } @else {
+      {{ slotLabel }}
+    }
+  </a>
+
+  <!-- 商品資訊：品牌與器類、名稱、出處說明、尺寸與評價 -->
+  <div class="product-row-info">
+    <span class="meta-brand meta-brand--sm">{{ brand() }} · {{ cat() }}</span>
+    <a [storeLink]="link()" class="product-row-title">{{ name() }}</a>
+    <span class="product-row-source">{{ source() }}</span>
+    <div class="product-row-meta">
+      <span><span class="product-card-star">★</span> {{ ratingText() }} · {{ reviewsText() }}</span>
+    </div>
+  </div>
+
+  <!-- 右側：價格、折扣標籤與加入購物車按鈕 -->
+  <div class="product-row-aside">
+    <div class="product-row-price-row">
+      <span class="product-row-price" [class.text-accent]="pv.hasDeal">{{ pv.price }}</span>
+      @if (pv.was) {
+      <span class="product-card-was">{{ pv.was }}</span>
+      }
+    </div>
+    <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+    <button type="button" class="product-row-buy" (click)="addToCart.emit()">{{ addCartLabel }}</button>
+  </div>
+</div>

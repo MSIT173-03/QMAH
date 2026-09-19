@@ -3,6 +3,9 @@ import { QRCodeComponent } from 'angularx-qrcode';
 
 import { GameRoomListItem } from './game.models';
 
+// integration: qrcode 是 angularx-qrcode 目前帶入的既有 CommonJS transit dependency；
+// QR 只存在於 Game 房間的 lazy chunk，因此保留功能並在 angular.json 明確放行，
+// 避免為了消除建置警告而引入新的 QR 套件或改動房間分享契約。
 @Component({
   selector: 'app-game-room-qr-dialog',
   imports: [QRCodeComponent],

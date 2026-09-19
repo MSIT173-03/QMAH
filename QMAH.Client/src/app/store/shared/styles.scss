@@ -1,0 +1,272 @@
+/* 全站共用色彩變數與重置樣式。
+   以 .store-app 範圍限定，僅套用於 src/app/store/ 下的頁面（見各頁面根元件的
+   host: { class: 'store-app' }），不影響專案其餘頁面。
+   （色彩變數統一在此宣告，各元件的 :host 只宣告元件專屬的變數） */
+.store-app {
+  --color-ink: #22343d;
+  --color-ink-deep: #193c38;
+  --color-body: #3f5259;
+  --color-muted: #6d7b80;
+  --color-muted-2: #5c6b71;
+  --color-faint: #7e8c91;
+  --color-placeholder: #9aa6aa;
+  --color-line: #e3e7e6;
+  --color-line-soft: #eff2f1;
+  --color-line-mid: #dbe1e1;
+  --color-line-split: #cdd6d6;
+  --color-bg: #f9faf9;
+  --color-surface: #fff;
+  --color-swatch: #edf0f0;
+  --color-accent: #ad594a;
+  --color-teal: #4e8097;
+  --color-gold: #b99a55;
+  --color-gold-bg: #faf5e8;
+  --color-gold-text: #7a6427;
+  --color-good: #0f6b4f;
+  --color-nav: #2f4149;
+
+  /* 頁面重置樣式（等同原本套用於 body 的樣式，改由頁面根元件承載） */
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: 'Noto Sans TC', 'Helvetica Neue', Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+
+  * {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: var(--color-ink);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  input, textarea, select {
+    font-family: inherit;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* 版面容器：置中並限制最大寬度，供各頁面主要內容區使用 */
+  .container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* 文字工具類別 */
+  .font-mono { font-family: 'IBM Plex Mono', monospace; }
+  .text-sm { font-size: 12px; }
+  .text-accent { color: var(--color-accent); }
+  .text-ink { color: var(--color-ink); }
+
+  /* mono 字體、大寫間距的區塊／面板標籤文字 */
+  .label-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--color-teal);
+  }
+  .label-tag--loose { letter-spacing: 0.2em; }
+  .label-tag--tight { letter-spacing: 0.16em; }
+
+  /* 區塊／面板標題列右側的次要連結（例如「更多 →」） */
+  .section-more {
+    font-size: 12px;
+    color: var(--color-muted);
+    margin-left: auto;
+  }
+
+  /* 推擠至區塊／標題列最右側的附加內容（例如分頁列、評分摘要） */
+  .section-meta { margin-left: auto; }
+
+  /* 量測／折抵規則等補充說明文字 */
+  .size-note {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  /* 品牌 Logo 圖片（頁首與頁尾共用） */
+  .brand-logo-img {
+    height: 40px;
+    width: auto;
+    display: block;
+  }
+  .brand-logo-img--lg { height: 44px; }
+
+  /* 頁首右側操作區：推擠至頁首列最右側 */
+  .hdr-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  /* 直向排列的側欄容器 */
+  .hero-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* 捲動時固定於頁首下方 */
+  .sticky-92 {
+    position: sticky;
+    top: 92px;
+  }
+
+  /* ===============================
+     訂單金額摘要（購物車頁與結帳頁側欄共用）
+     =============================== */
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--color-body);
+  }
+
+  .summary-total-row {
+    border-top: 1px solid var(--color-line);
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .summary-total-label {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-ink-deep);
+  }
+
+  .summary-total-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px;
+    color: var(--color-ink);
+  }
+
+  /* 直向排列、區塊間距固定的頁面段落容器 */
+  .section-block {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* 標籤 + 內容的規格說明列（商品頁規格、尺寸面板、商品說明條列共用） */
+  .spec-row { display: flex; gap: 10px; }
+  .spec-row--sm { font-size: 12px; }
+  .spec-label {
+    width: 62px;
+    flex: 0 0 auto;
+    color: var(--color-muted);
+  }
+  .spec-label--wide { width: 78px; }
+  .spec-value { flex: 1; }
+  .spec-value--mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ===============================
+     商品價格與評分列的共用原子樣式
+     （商品卡片、商品橫列、購物車行、商品頁資訊欄皆使用同一組樣式，
+     　故定義於全站共用樣式，各元件不再各自宣告一份）
+     =============================== */
+
+  .product-card-price {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--color-ink);
+
+    &.text-accent { color: var(--color-accent); }
+  }
+
+  .product-card-was {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--color-placeholder);
+    text-decoration: line-through;
+  }
+
+  /* 設計稿的標籤無外框，僅以底色與文字色區分 */
+  .product-card-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 1px 5px;
+    border-radius: 2px;
+    color: var(--color-gold-text);
+    background: var(--color-gold-bg);
+  }
+  /* 折扣商品的標籤 */
+  .product-card-tag--deal {
+    color: #fff;
+    background: var(--color-accent);
+  }
+  /* 商品頁價格列的加大版標籤 */
+  .product-card-tag--lg { padding: 2px 7px; }
+
+  /* 品牌名稱（商品卡片與首頁新品上架共用） */
+  .product-card-brand {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--color-teal);
+  }
+
+  /* 評分星號與資訊分隔線 */
+  .product-card-star { color: var(--color-gold); }
+  .product-card-split { color: var(--color-line-split); }
+
+  /* 商品卡片格狀排列，供各頁面的商品清單區塊共用 */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+  }
+
+  /* 實心按鈕（例如主視覺 CTA） */
+  .btn-solid {
+    border: 1px solid var(--color-ink);
+    background: var(--color-ink);
+    color: #fff;
+    border-radius: 2px;
+    padding: 12px 26px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    transition: background 160ms;
+
+    &:hover {
+      background: var(--color-accent);
+    }
+  }
+  /* 佔滿容器寬度的實心按鈕（訂單摘要的主要操作） */
+  .btn-solid--full {
+    padding: 13px 0;
+    letter-spacing: 0.14em;
+    text-align: center;
+  }
+
+  /* 外框按鈕 */
+  .btn-outline {
+    border: 1px solid var(--color-ink);
+    background: #fff;
+    color: var(--color-ink);
+    border-radius: 2px;
+    padding: 11px 20px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    transition: background 160ms, border-color 160ms, color 160ms;
+
+    &:hover {
+      background: var(--color-ink);
+      color: #fff;
+    }
+  }
+}

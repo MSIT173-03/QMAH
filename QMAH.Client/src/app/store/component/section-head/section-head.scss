@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+
+  &--section {
+    border-bottom: 1px solid var(--color-ink);
+    padding-bottom: 8px;
+  }
+
+  &--panel {
+    gap: 10px;
+  }
+
+  &--wrap {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+}
+
+.section-title {
+  margin: 0;
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 600;
+  color: var(--color-ink-deep);
+
+  .head--section & {
+    font-size: 18px;
+  }
+
+  .head--panel & {
+    font-size: 18px;
+  }
+}
+

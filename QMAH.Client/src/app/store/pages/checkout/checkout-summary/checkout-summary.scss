@@ -1,0 +1,68 @@
+:host {
+  display: block;
+}
+
+/* .label-tag、.font-mono、.text-accent、.btn-solid、.summary-row 系列與側欄容器樣式已在全站共用樣式（shared/styles.scss）中定義 */
+
+/* 訂單商品行：名稱佔滿剩餘寬度，數量與小計靠右 */
+.summary-line {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  border-top: 1px solid var(--color-line-soft);
+  padding-top: 8px;
+}
+
+.summary-line-name {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-body);
+}
+
+.summary-line-qty {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--color-muted);
+}
+
+.summary-line-total {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+
+/* 金額明細區塊 */
+.summary-block {
+  border-top: 1px solid var(--color-line);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* 結帳頁的應付總額列以深色分隔線強調 */
+.summary-total-row--strong {
+  border-top-color: var(--color-ink);
+}
+
+/* 回饋點數說明 */
+.summary-earn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+/* 必填欄位未填妥的提示 */
+.field-warning {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-accent);
+}
+
+/* 返回購物車連結 */
+.summary-back-link {
+  font-size: 12px;
+  color: var(--color-muted);
+  text-align: center;
+}

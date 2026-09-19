@@ -1,0 +1,30 @@
+:host {
+  /* 讓 .step-indicator 直接成為頁首列的 flex 子項，margin-left: auto 才能推擠至右側 */
+  display: contents;
+}
+
+.step-indicator {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--color-muted);
+}
+
+/* 已完成的步驟 */
+.step-done {
+  color: var(--color-ink);
+}
+
+/* 目前所在的步驟 */
+.step-current {
+  color: var(--color-accent);
+}
+
+/* 步驟之間的分隔線 */
+.step-dash {
+  color: var(--color-line-split);
+}

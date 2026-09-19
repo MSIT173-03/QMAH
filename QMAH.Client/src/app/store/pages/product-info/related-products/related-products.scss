@@ -1,0 +1,6 @@
+:host {
+  /* 由 .section-block 直接成為頁面主體的版位項目 */
+  display: contents;
+}
+
+/* .section-block 與 .card-grid 樣式已在全站共用樣式（shared/styles.scss）中定義 */

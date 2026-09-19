@@ -1,0 +1,129 @@
+:host {
+  display: contents;
+}
+
+.product-card {
+  border: 1px solid var(--color-line);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+}
+
+.product-card-link {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-card-cover {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--color-swatch);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-card-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card-slot {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-placeholder);
+  letter-spacing: 0.1em;
+
+  &--faint {
+    color: var(--color-faint);
+  }
+}
+
+.product-card-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--color-ink);
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  padding: 3px 7px;
+
+  &--teal {
+    background: var(--color-teal);
+  }
+}
+
+.product-card-body {
+  padding: 10px 11px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.product-card-name {
+  font-size: 14px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.push-bottom {
+  margin-top: auto;
+}
+
+.product-card-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.product-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.product-card-sold {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.product-card-cta {
+  padding: 10px 11px 12px;
+}
+
+.product-card-buy {
+  width: 100%;
+  border: 1px solid var(--color-ink);
+  background: #fff;
+  color: var(--color-ink);
+  border-radius: 2px;
+  padding: 8px 0;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  transition: background 160ms, border-color 160ms, color 160ms;
+
+  &:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+  }
+}

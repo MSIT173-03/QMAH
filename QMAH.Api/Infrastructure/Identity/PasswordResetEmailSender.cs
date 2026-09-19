@@ -22,6 +22,8 @@ public sealed class PasswordResetEmailSender(
         string resetUrl,
         CancellationToken cancellationToken = default)
     {
+        // integration: 郵件服務改由 typed HttpClient 呼叫 Resend，Controller 不直接處理 HTTP；
+        // API key 只從設定讀取，連結內容不寫入一般 log，避免把密碼重設 token 洩漏到部署紀錄。
         cancellationToken.ThrowIfCancellationRequested();
 
         var apiKey = configuration["Resend:ApiKey"];

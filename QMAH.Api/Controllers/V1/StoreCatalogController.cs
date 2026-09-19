@@ -1,21 +1,81 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
+using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Api.Controllers.V1;
 
 [Route("api/v1/store")]
+// integration: Store 先接上資料庫已有的商品、評論與媒體路徑；首頁行銷 mock 沒有對應後端時不在此控制器虛構資料。
 public sealed class StoreCatalogController(
     QmahDbContext db,
     QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
+    public enum OrderType
+    {
+        None,
+        HotSell,
+        Older,
+        Newer,
+        CheaperFirst,
+        PricierFirst,
+    }
+
+    public enum CategoryType
+    {
+        BRONZE,
+        CARVING,
+        CERAMIC,
+        COIN,
+        ENAMEL,
+        JADE,
+        LACQUER,
+        PAINTING,
+    }
+
+    private string CategoryTypeToString(CategoryType? type) => type switch
+    {
+        CategoryType.BRONZE => "BRONZE",
+        CategoryType.CARVING => "CARVING",
+        CategoryType.CERAMIC => "CERAMIC",
+        CategoryType.COIN => "COIN",
+        CategoryType.ENAMEL => "ENAMEL",
+        CategoryType.JADE => "JADE",
+        CategoryType.LACQUER => "LACQUER",
+        CategoryType.PAINTING => "PAINTING",
+        _ => ""
+    };
+
+    [HttpGet("categories")]
+    public async Task<ActionResult<IReadOnlyList<StoreCategoryDto>>> GetCategories(
+        CancellationToken cancellationToken = default)
+    {
+        // integration: 分類入口是既有 Store UI 的正式資料，不再使用 mock-db 的固定件數；
+        // 件數與商品列表共用 IsActive 條件，避免下架商品仍出現在分類統計中。
+        var categories = await db.ArtifactCategories
+            .AsNoTracking()
+            .OrderBy(category => category.Name)
+            .Select(category => new StoreCategoryDto(
+                category.Id,
+                category.Code,
+                category.Name,
+                db.Products.Count(product => product.IsActive && product.CategoryCode == category.Code)))
+            .ToListAsync(cancellationToken);
+
+        return Ok(categories);
+    }
+
     [HttpGet("products")]
     public async Task<ActionResult<ApiPage<ProductListItemDto>>> GetProducts(
         string? q,
         string? categoryCode,
         Guid? artifactId,
+        decimal? maxPrice,
+        decimal? minPrice,
+        CategoryType? category,
+        OrderType order = OrderType.None,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -26,32 +86,84 @@ public sealed class StoreCatalogController(
         q = q?.Trim();
         categoryCode = categoryCode?.Trim().ToUpperInvariant();
 
+        // 篩選
         if (!string.IsNullOrWhiteSpace(q))
-        {
             query = query.Where(product =>
                 product.Name.Contains(q)
                 || (product.ExternalRef != null && product.ExternalRef.Contains(q)));
-        }
+
         if (!string.IsNullOrWhiteSpace(categoryCode))
             query = query.Where(product => product.CategoryCode == categoryCode);
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
 
-        var projected = query
-            .OrderBy(product => product.Name)
-            .ThenBy(product => product.Id)
-            .Select(product => new ProductListItemDto(
-                product.Id,
-                product.ArtifactId,
-                product.ExternalRef,
-                product.Name,
-                product.CategoryCode,
-                product.Price,
-                product.Stock,
-                product.PrimaryImagePath,
-                product.IsActive));
+        if (minPrice is not null and > 0)
+            query = query.Where(p => p.Price >= minPrice);
+        if (maxPrice is not null and > 0)
+            query = query.Where(p => p.Price < maxPrice);
 
-        var result = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
+        if (category != null)
+            query = query.Where(p => p.CategoryCode == CategoryTypeToString(category));
+
+        var query2 = query.Select(g => new
+        {
+            g.Id,
+            g.ArtifactId,
+            g.ExternalRef,
+            g.Name,
+            g.CategoryCode,
+            g.Price,
+            g.Stock,
+            g.PrimaryImagePath,
+            g.CreatedAt,
+            AverageRating = db.ProductReviews
+                    .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
+                    .Average(r => (decimal?)r.Rating) ?? 0m,
+            ReviewCount = db.ProductReviews
+                    .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
+            SellCount = db.OrderDetails
+                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
+                    .Sum(o => o.Quantity)
+        });
+
+        // 排序
+        var query3 = order switch
+        {
+            OrderType.HotSell => query2
+                .OrderByDescending(g => g.SellCount)
+                .ThenBy(g => g.Id),
+            OrderType.Older => query2
+                .OrderBy(g => g.CreatedAt)
+                .ThenBy(g => g.Id),
+            OrderType.Newer => query2
+                .OrderByDescending(g => g.CreatedAt)
+                .ThenBy(g => g.Id),
+            OrderType.CheaperFirst => query2
+                .OrderBy(g => g.Price)
+                .ThenBy(g => g.Id),
+            OrderType.PricierFirst => query2
+                .OrderByDescending(g => g.Price)
+                .ThenBy(g => g.Id),
+            _ => query2.OrderBy(g => g.Id),
+        };
+
+        var res = query3.Select(g => new ProductListItemDto(
+            g.Id,
+            g.ArtifactId,
+            g.ExternalRef,
+            g.Name,
+            g.CategoryCode,
+            g.Price,
+            g.Stock,
+            g.PrimaryImagePath,
+            g.CreatedAt,
+            g.AverageRating,
+            g.ReviewCount,
+            g.SellCount
+        ));
+
+        var result = await ApiPaging.ToPageAsync(res, page, pageSize, cancellationToken);
+
         // 原本直接回傳資料庫中的 PrimaryImagePath；棄用原因：CDN 模式需要統一轉換公開圖片網址。
         return Ok(result with
         {

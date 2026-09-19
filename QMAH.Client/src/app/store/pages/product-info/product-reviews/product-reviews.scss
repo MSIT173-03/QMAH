@@ -1,0 +1,53 @@
+:host {
+  /* 由 .section-block 直接成為說明／評價格線的項目 */
+  display: contents;
+}
+
+/* 標題列右側的評分摘要，推擠至最右側 */
+.reviews-summary {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.review-card {
+  border: 1px solid var(--color-line);
+  background: #fff;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.review-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+  flex-wrap: wrap;
+}
+
+.review-photo-tag {
+  border: 1px solid var(--color-line-mid);
+  color: var(--color-teal);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.review-text {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--color-body);
+}
+
+/* 篩選後無評價時的提示 */
+.no-reviews {
+  border: 1px dashed var(--color-line-mid);
+  padding: 22px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-muted);
+}

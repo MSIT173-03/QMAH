@@ -1,0 +1,25 @@
+:host {
+  display: block;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted-2);
+}
+
+.breadcrumb-link {
+  color: var(--color-muted-2);
+  text-decoration: none;
+
+  &:hover {
+    color: #ad594a;
+  }
+}
+
+.breadcrumb-current {
+  color: var(--color-ink);
+}

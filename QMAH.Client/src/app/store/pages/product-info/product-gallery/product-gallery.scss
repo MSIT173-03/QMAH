@@ -1,0 +1,88 @@
+:host {
+  /* 由 .gallery 直接成為商品主視覺格線的項目 */
+  display: contents;
+}
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gallery-main {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--color-swatch);
+  border: 1px solid var(--color-line);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-in;
+  transition: border-color 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+}
+
+.gallery-main-slot {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-faint);
+  letter-spacing: 0.1em;
+}
+
+/* 主圖覆蓋層：預設透明，滑鼠移入主圖時淡入 */
+.gallery-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(34, 52, 61, 0.06);
+  opacity: 0;
+  transition: opacity 160ms;
+
+  .gallery-main:hover & {
+    opacity: 1;
+  }
+}
+
+.gallery-overlay-label {
+  width: 100%;
+  background: rgba(34, 52, 61, 0.86);
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.gallery-thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.gallery-thumb {
+  aspect-ratio: 1 / 1;
+  background: var(--color-swatch);
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--color-line);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-faint);
+  transition: border-color 160ms, color 160ms;
+
+  &--active,
+  &:hover {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+  }
+}

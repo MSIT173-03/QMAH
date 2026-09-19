@@ -1,0 +1,34 @@
+<!-- 購物車單一行項目：縮圖、商品資訊、數量／小計／移除 -->
+@let pv = priceView();
+<div class="cart-line" [class.cart-line--leaving]="leaving()">
+  <!-- 商品縮圖，連結至商品頁 -->
+  <a [storeLink]="link()" class="cart-line-thumb">{{ slotLabel }}</a>
+
+  <div class="cart-line-info">
+    <!-- 品牌與器類，皆無值時不顯示 -->
+    @if (meta()) {
+      <span class="cart-line-meta">{{ meta() }}</span>
+    }
+
+    <!-- 商品名稱，連結至商品頁 -->
+    <a [storeLink]="link()" class="cart-line-name">{{ name() }}</a>
+
+    <!-- 價格列：單價、原價劃線價與折扣標籤 -->
+    <div class="cart-line-price-row">
+      <span class="product-card-price" [class.text-accent]="pv.hasDeal">{{ pv.price }}</span>
+      @if (pv.was) {
+      <span class="product-card-was">{{ pv.was }}</span>
+      }
+      <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+    </div>
+  </div>
+
+  <div class="cart-line-aside">
+    <!-- 數量增減器：可減至 0，觸發移除 -->
+    <app-qty-stepper [value]="qty()" [min]="0" size="sm" (valueChange)="qtyChange.emit($event)" />
+    <!-- 此行小計 -->
+    <span class="cart-line-total">共 {{ lineTotalText() }}</span>
+    <!-- 移除按鈕 -->
+    <button type="button" class="cart-line-remove" (click)="remove.emit()">{{ removeLabel }}</button>
+  </div>
+</div>

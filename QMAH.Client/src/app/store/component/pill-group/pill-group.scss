@@ -1,0 +1,82 @@
+:host {
+  display: contents;
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  /* 標題列的分頁列：間距較窄，與同列的分隔線、其他群組對齊 */
+  &--tabs {
+    gap: 6px;
+  }
+
+  /* 側欄篩選面板：直向排列，間距與面板內其他項目一致 */
+  &--column {
+    flex-direction: column;
+    gap: 9px;
+  }
+}
+
+.pill {
+  border: 1px solid var(--color-line-mid);
+  background: #fff;
+  color: var(--color-muted);
+  border-radius: 2px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  transition: border-color 160ms, color 160ms, background 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+
+  &--wide {
+    padding: 6px 13px;
+  }
+
+  &--mono,
+  &--band {
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.08em;
+    padding: 6px 12px;
+  }
+
+  &--band {
+    text-align: left;
+    padding: 6px 10px;
+  }
+
+  &--filter {
+    padding: 7px 10px;
+  }
+
+  &--review {
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 6px 12px;
+  }
+
+  /* 結帳頁付款方式：留白較大，未選取時文字為內文色 */
+  &--pay {
+    padding: 9px 14px;
+    color: var(--color-body);
+  }
+
+  /* 結帳頁點數折抵方式：與篩選藥丸同尺寸，數字以等寬字體呈現 */
+  &--point {
+    padding: 7px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  &--active {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: #fff;
+
+    &:hover {
+      border-color: var(--color-ink);
+    }
+  }
+}

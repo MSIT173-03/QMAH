@@ -1,0 +1,70 @@
+:host {
+  --color-shade: #f2f5f4;
+
+  display: block;
+}
+
+/* .text-sm、.section-more 已在全站共用樣式（shared/styles.scss）中定義 */
+
+.coupon-row {
+  border: 1px solid var(--color-line-mid);
+  background: #fff;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  transition: border-color 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+
+  /* 已選用：外框加深並鋪上淺灰底 */
+  &--active {
+    border-color: var(--color-ink);
+    background: var(--color-shade);
+  }
+}
+
+/* 折抵幅度：固定寬度讓各列的名稱對齊 */
+.coupon-row-off {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  min-width: 76px;
+  color: var(--color-ink);
+}
+
+.coupon-row-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.coupon-row-title {
+  color: var(--color-ink);
+}
+
+.coupon-row-cond {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.coupon-row-state {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--color-muted);
+}
+
+/* 未達使用門檻：折抵幅度與名稱轉為淺色 */
+.coupon-row--locked .coupon-row-off,
+.coupon-row--locked .coupon-row-title {
+  color: var(--color-placeholder);
+}
+
+/* 已選用：狀態文字以強調色呈現 */
+.coupon-row--active .coupon-row-state {
+  color: var(--color-accent);
+}

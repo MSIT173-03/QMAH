@@ -140,6 +140,35 @@ export const routes: Routes = [
       { path: 'comments', loadComponent: () => import('./features/admin/admin-comments/admin-comments').then(m => m.AdminCommentsComponent) }
     ]
   },
+  {
+    // integration: Store 使用獨立父路由並維持 lazy loading，避免商城頁面與 Social/Admin 互相耦合。
+    path: 'store',
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./store/pages/home/home').then((c) => c.Home),
+      },
+      // 商品列表頁支援 q（關鍵字）、cat（器類）、view（主題入口）三個查詢字串參數，
+      // 由 withComponentInputBinding() 直接綁定到同名的元件 input。
+      {
+        path: 'products',
+        loadComponent: () => import('./store/pages/product-list/product-list').then((c) => c.ProductList),
+      },
+      // 商品頁以路徑參數帶入商品 ID，同樣由 withComponentInputBinding() 綁定到 id input。
+      {
+        path: 'product/:id',
+        loadComponent: () => import('./store/pages/product-info/product-info').then((c) => c.ProductInfo),
+      },
+      {
+        path: 'cart',
+        loadComponent: () => import('./store/pages/cart/cart').then((c) => c.Cart),
+      },
+      {
+        path: 'checkout',
+        loadComponent: () => import('./store/pages/checkout/checkout').then((c) => c.Checkout),
+      },
+    ],
+  },
   { path: '', redirectTo: 'social/posts', pathMatch: 'full' },
   { path: '**', redirectTo: 'social/posts' }
 ];

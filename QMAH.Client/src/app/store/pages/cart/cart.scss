@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+/* ===============================
+   頁首投影內容（外框版面由 app-site-header 與 app-header-actions 提供）
+   =============================== */
+
+.cart-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+  flex: 0 0 auto;
+}
+
+/* ===============================
+   頁面主體版位（各區塊內容已拆分至個別元件）
+   =============================== */
+
+.cart-main {
+  padding-top: 16px;
+  padding-bottom: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cart-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 316px);
+  gap: 20px;
+  align-items: start;
+}
+
+.cart-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

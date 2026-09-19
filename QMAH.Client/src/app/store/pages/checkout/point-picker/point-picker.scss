@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+/* .font-mono、.text-sm、.text-ink、.section-more 已在全站共用樣式（shared/styles.scss）中定義 */
+
+/* 持有點數的數字，以等寬字體與較深文字色強調 */
+.balance-value {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--color-ink);
+}
+
+/* 自訂折抵：標題、輸入框與實際折抵說明同一列 */
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.field-inline-input {
+  width: 120px;
+  border: 1px solid var(--color-line-mid);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  color: var(--color-ink);
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-ink);
+  }
+}
+
