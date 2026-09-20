@@ -100,6 +100,7 @@ public sealed class StoreCatalogController(
         Guid? artifactId,
         decimal? maxPrice,
         decimal? minPrice,
+        bool? dealOnly,
         CategoryType? category,
         OrderType order = OrderType.None,
         int page = 1,
@@ -123,10 +124,16 @@ public sealed class StoreCatalogController(
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
 
+        // integration: 限時特賣只接受資料庫真正低於定價的單品特價，不以前端標籤推測。
+        if (dealOnly == true)
+            query = query.Where(product => product.SalePrice.HasValue
+                && product.SalePrice.Value > 0m
+                && product.SalePrice.Value < product.Price);
+
         if (minPrice is not null and > 0)
-            query = query.Where(p => p.Price >= minPrice);
+            query = query.Where(p => (p.SalePrice ?? p.Price) >= minPrice);
         if (maxPrice is not null and > 0)
-            query = query.Where(p => p.Price < maxPrice);
+            query = query.Where(p => (p.SalePrice ?? p.Price) < maxPrice);
 
         if (category != null)
             query = query.Where(p => p.CategoryCode == CategoryTypeToString(category));
@@ -139,6 +146,9 @@ public sealed class StoreCatalogController(
             g.Name,
             g.CategoryCode,
             g.Price,
+            SalePrice = g.SalePrice.HasValue && g.SalePrice.Value > 0m && g.SalePrice.Value < g.Price
+                ? g.SalePrice
+                : null,
             g.Stock,
             g.PrimaryImagePath,
             g.CreatedAt,
@@ -165,10 +175,10 @@ public sealed class StoreCatalogController(
                 .OrderByDescending(g => g.CreatedAt)
                 .ThenBy(g => g.Id),
             OrderType.CheaperFirst => query2
-                .OrderBy(g => g.Price)
+                .OrderBy(g => g.SalePrice ?? g.Price)
                 .ThenBy(g => g.Id),
             OrderType.PricierFirst => query2
-                .OrderByDescending(g => g.Price)
+                .OrderByDescending(g => g.SalePrice ?? g.Price)
                 .ThenBy(g => g.Id),
             _ => query2.OrderBy(g => g.Id),
         };
@@ -180,6 +190,7 @@ public sealed class StoreCatalogController(
             g.Name,
             g.CategoryCode,
             g.Price,
+            g.SalePrice,
             g.Stock,
             g.PrimaryImagePath,
             g.CreatedAt,
@@ -223,6 +234,7 @@ public sealed class StoreCatalogController(
                 // 同時提供關聯文物原始尺寸；商品尺寸不再承擔兩種語意。
                 item.Artifact == null ? null : item.Artifact.SizeText,
                 item.Price,
+                item.SalePrice,
                 item.Stock,
                 item.PrimaryImagePath,
                 item.SourceUrl,

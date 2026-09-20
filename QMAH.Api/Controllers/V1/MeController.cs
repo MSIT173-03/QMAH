@@ -674,10 +674,17 @@ public sealed class MeController(
                 item.ProductId,
                 item.Product.Name,
                 item.Product.PrimaryImagePath,
-                item.Product.Price,
+                item.Product.SalePrice.HasValue && item.Product.SalePrice.Value > 0m && item.Product.SalePrice.Value < item.Product.Price
+                    ? item.Product.SalePrice.Value
+                    : item.Product.Price,
+                item.Product.SalePrice.HasValue && item.Product.SalePrice.Value > 0m && item.Product.SalePrice.Value < item.Product.Price
+                    ? item.Product.Price
+                    : null,
                 item.Quantity,
                 item.Product.Stock,
-                item.Product.Price * item.Quantity,
+                (item.Product.SalePrice.HasValue && item.Product.SalePrice.Value > 0m && item.Product.SalePrice.Value < item.Product.Price
+                    ? item.Product.SalePrice.Value
+                    : item.Product.Price) * item.Quantity,
                 item.AddedAt))
             .ToListAsync(cancellationToken);
 
@@ -731,10 +738,11 @@ public sealed class MeController(
             cartItem.ProductId,
             product.Name,
             mediaUrlResolver.Resolve(product.PrimaryImagePath),
-            product.Price,
+            product.EffectivePrice,
+            product.SalePrice is > 0m && product.SalePrice < product.Price ? product.Price : null,
             cartItem.Quantity,
             product.Stock,
-            product.Price * cartItem.Quantity,
+            product.EffectivePrice * cartItem.Quantity,
             cartItem.AddedAt));
     }
 

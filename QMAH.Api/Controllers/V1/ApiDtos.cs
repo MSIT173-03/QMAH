@@ -85,6 +85,7 @@ public sealed record ProductListItemDto(
     string Name,
     string CategoryCode,
     decimal Price,
+    decimal? SalePrice,
     int Stock,
     string? PrimaryImagePath,
     DateTime CreatedAt,
@@ -119,6 +120,7 @@ public sealed record ProductDetailsDto(
     // 商品固定是 A6 明信片；原文物尺寸另回傳，避免前台只能顯示其中一種尺寸。
     string? ArtifactSizeText,
     decimal Price,
+    decimal? SalePrice,
     int Stock,
     string? PrimaryImagePath,
     string? SourceUrl,
@@ -622,6 +624,7 @@ public sealed record CartItemDto(
     string ProductName,
     string? PrimaryImagePath,
     decimal UnitPrice,
+    decimal? OriginalPrice,
     int Quantity,
     int AvailableStock,
     decimal LineTotal,

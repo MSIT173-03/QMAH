@@ -74,7 +74,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             if (productError is not null)
                 return productError;
 
-            var subtotal = groupedItems.Sum(item => products[item.ProductId].Price * item.Quantity);
+            var subtotal = groupedItems.Sum(item => products[item.ProductId].EffectivePrice * item.Quantity);
 
             var (userCoupon, discountAmount, couponError) = await ApplyCouponAsync(
                 request.UserCouponId,
@@ -311,9 +311,9 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 OrderId = order.Id,
                 ProductId = product.Id,
                 ProductNameSnapshot = product.Name,
-                UnitPrice = product.Price,
+                UnitPrice = product.EffectivePrice,
                 Quantity = item.Quantity,
-                LineTotal = decimal.Round(product.Price * item.Quantity, 2, MidpointRounding.AwayFromZero)
+                LineTotal = decimal.Round(product.EffectivePrice * item.Quantity, 2, MidpointRounding.AwayFromZero)
             });
         }
 

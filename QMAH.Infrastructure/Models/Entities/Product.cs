@@ -21,6 +21,13 @@ public partial class Product
 
     public decimal Price { get; set; }
 
+    /// <summary>目前有效售價；為 null 或不低於定價時即回到 Price。</summary>
+    public decimal? SalePrice { get; set; }
+
+    public decimal EffectivePrice => SalePrice is > 0m && SalePrice < Price
+        ? SalePrice.Value
+        : Price;
+
     public int Stock { get; set; }
 
     public string? PrimaryImagePath { get; set; }

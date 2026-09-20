@@ -298,6 +298,7 @@ BEGIN TRANSACTION;
         [Description] nvarchar(max) NULL,
         [SizeText] nvarchar(500) NULL,
         [Price] decimal(12,2) NOT NULL,
+        [SalePrice] decimal(12,2) NULL,
         [Stock] int NOT NULL,
         [PrimaryImagePath] nvarchar(500) NULL,
         [SourceUrl] nvarchar(1000) NULL,
@@ -306,6 +307,7 @@ BEGIN TRANSACTION;
         [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_Products_Updated] DEFAULT ((sysutcdatetime())),
         CONSTRAINT [PK_Products] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_Products_Price] CHECK (([Price]>=(0))),
+        CONSTRAINT [CK_Products_SalePrice] CHECK (([SalePrice] IS NULL OR ([SalePrice]>(0) AND [SalePrice]<[Price]))),
         CONSTRAINT [CK_Products_Stock] CHECK (([Stock]>=(0)))
     );
 
