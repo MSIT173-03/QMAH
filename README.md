@@ -19,7 +19,7 @@
 
 ## 目前正式 Release
 
-目前 QMAH 主程式正式版本是 [`v0.9.0`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.0)。完整資料庫下載請使用 [QMAH-Database `db-v0.9.3` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.3)，其中提供與本次整合同步的 `QMAH.sql`、`QMAH-0.9.3.bak` 與 `SHA256SUMS.txt`。
+目前 QMAH 主程式正式版本是 [`v0.9.3`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.3)，對應 [QMAH-Database `db-v0.9.3` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.3)。完整資料庫下載請使用 QMAH-Database Release 提供的 `QMAH.sql`、`QMAH-0.9.3.bak` 與 `SHA256SUMS.txt`。
 
 ## 專案簡介
 
