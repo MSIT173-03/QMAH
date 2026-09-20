@@ -1,0 +1,29 @@
+<footer class="site-footer">
+  <div class="footer-cols">
+    <div class="footer-brand">
+      <img [src]="logoSrc" [alt]="logoAlt" class="brand-logo-img brand-logo-img--lg self-start" />
+      <p class="footer-brand-note">{{ brandNote }}</p>
+    </div>
+
+    @for (col of columns; track col.title) {
+      <nav class="footer-col" [attr.aria-label]="col.title">
+        <h2 class="label-tag">{{ col.title }}</h2>
+        @for (link of col.links; track link.label) {
+          @if (link.external) {
+            <a class="footer-col-link" [href]="link.href" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
+          } @else {
+            <a [routerLink]="link.href" class="footer-col-link">{{ link.label }}</a>
+          }
+        }
+      </nav>
+    }
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-bottom-row">
+      <span>{{ copyright }}</span>
+      <span>文物探索與交流平台</span>
+      <a class="footer-link" [href]="githubUrl" target="_blank" rel="noopener noreferrer">聯絡我們</a>
+    </div>
+  </div>
+</footer>

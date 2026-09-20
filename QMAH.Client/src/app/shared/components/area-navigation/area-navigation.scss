@@ -86,14 +86,14 @@ svg {
 }
 
 a:hover {
-  color: var(--color-primary, #8a512e);
-  background: color-mix(in srgb, var(--color-primary, #8a512e) 8%, transparent);
+  color: var(--color-primary, var(--qmah-jade-deep));
+  background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 8%, transparent);
 }
 
 a.is-active {
-  border-color: color-mix(in srgb, var(--color-primary, #8a512e) 24%, transparent);
-  background: color-mix(in srgb, var(--color-primary, #8a512e) 12%, transparent);
-  color: var(--color-primary, #8a512e);
+  border-color: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 24%, transparent);
+  background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 12%, transparent);
+  color: var(--color-primary, var(--qmah-jade-deep));
 }
 
 a:focus-visible {

@@ -1,20 +1,20 @@
 <div class="qmah-social-page">
   @if (announcements.length > 0) {
     <!-- ui-integration: 公告保留在貼文牆入口，但以可記憶的折疊區承擔 supporting context，不再壓過貼文列表。 -->
-    <section class="social-announcements" [class.is-collapsed]="announcementCollapsed()" aria-label="站方公告">
-      <div class="social-announcements__head">
-        <div class="social-announcements__title">
+    <section class="social-announcements" [class.is-collapsed]="announcementCollapsed()" aria-labelledby="social-announcements-title">
+      <header class="social-announcements__head">
+        <h2 id="social-announcements-title" class="social-announcements__title m-0">
           <svg lucideMegaphone aria-hidden="true" focusable="false"></svg>
           <span>站方公告</span>
           <span class="social-announcements__count">{{ announcements.length }} 則</span>
-        </div>
+        </h2>
         <button
           type="button"
           class="social-announcements__toggle"
           [attr.aria-expanded]="!announcementCollapsed()"
           (click)="toggleAnnouncements()"
         >{{ announcementCollapsed() ? '展開公告' : '收合公告' }}</button>
-      </div>
+      </header>
 
       @if (announcementCollapsed()) {
         @if (announcements[currentAnnouncementIndex]; as announcement) {
@@ -68,13 +68,13 @@
     </section>
   }
 
-  <div class="social-posts-heading flex justify-between items-center mb-6">
+  <header class="social-posts-heading flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">社群貼文牆</h1>
     <button type="button" class="btn btn-primary social-icon-label" (click)="openCreatePost()">
       <svg lucidePlus aria-hidden="true" focusable="false"></svg>
       發布貼文
     </button>
-  </div>
+  </header>
 
   <div class="flex flex-wrap gap-2 mb-6 items-end">
     <label class="form-control">
@@ -120,7 +120,7 @@
   <div class="flex flex-col gap-4">
     @if (!loading) {
     @for (post of posts; track post.id) {
-    <div class="card bg-base-100 shadow-xl border border-base-300">
+    <article class="card bg-base-100 shadow-xl border border-base-300">
       @if (post.coverImageUrl) {
         <figure class="max-h-80 overflow-hidden">
           <img src="{{ post.coverImageUrl }}" [alt]="post.title" class="w-full object-cover" />
@@ -159,7 +159,7 @@
           </a>
         </div>
       </div>
-    </div>
+    </article>
     } @empty {
     <div class="text-center py-10 text-base-content/60">目前還沒有貼文</div>
     }
@@ -203,7 +203,9 @@
         </div>
       }
 
+      <label class="sr-only" for="social-post-media">貼文圖片（選填，最多 8 張）</label>
       <input
+        id="social-post-media"
         type="file"
         class="file-input file-input-bordered w-full"
         accept="image/jpeg,image/png,image/gif,image/webp"

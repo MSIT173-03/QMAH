@@ -1,39 +1,75 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 type SocialPostBlock =
-  | { kind: 'heading' | 'bullet' | 'quote' | 'paragraph' | 'space'; text: string };
+  | { kind: 'heading' | 'quote' | 'paragraph' | 'space'; text: string }
+  | { kind: 'list'; items: string[] };
 
 @Component({
   selector: 'app-social-post-content',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './social-post-content.scss',
   template: `
-    <div class="social-post-content" aria-label="貼文內容">
+    <article class="social-post-content" aria-label="貼文內容">
       @for (block of blocks(); track $index) {
         @switch (block.kind) {
           @case ('heading') { <h3>{{ block.text }}</h3> }
-          @case ('bullet') { <p class="bullet">{{ block.text }}</p> }
+          @case ('list') {
+            <ul class="bullet">
+              @for (item of block.items; track $index) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          }
           @case ('quote') { <blockquote>{{ block.text }}</blockquote> }
           @case ('space') { <div class="space" aria-hidden="true"></div> }
-          @default { <p>{{ block.text }}</p> }
+          @case ('paragraph') { <p>{{ block.text }}</p> }
         }
       }
-    </div>
+    </article>
   `
 })
 export class SocialPostContentComponent {
   // 使用純文字標記而非儲存 HTML，保留既有 API 契約，同時讓前台能安全呈現基本層次。
   content = input.required<string>();
 
-  blocks = computed<SocialPostBlock[]>(() =>
-    this.content().split('\n').map((line): SocialPostBlock => {
+  blocks = computed<SocialPostBlock[]>(() => {
+    const blocks: SocialPostBlock[] = [];
+
+    for (const line of this.content().split('\n')) {
       const text = line.trim();
-      if (!text) return { kind: 'space', text: '' };
-      if (text.startsWith('【') && text.endsWith('】')) return { kind: 'heading', text };
-      if (text.startsWith('• ')) return { kind: 'bullet', text: text.slice(2) };
-      if (text.startsWith('> ')) return { kind: 'quote', text: text.slice(2) };
-      if (text.startsWith('「') && text.endsWith('」')) return { kind: 'quote', text: text.slice(1, -1) };
-      return { kind: 'paragraph', text: line };
-    })
-  );
+      if (!text) {
+        blocks.push({ kind: 'space', text: '' });
+        continue;
+      }
+
+      if (text.startsWith('【') && text.endsWith('】')) {
+        blocks.push({ kind: 'heading', text });
+        continue;
+      }
+
+      if (text.startsWith('• ')) {
+        const lastBlock = blocks[blocks.length - 1];
+        if (lastBlock?.kind === 'list') {
+          lastBlock.items.push(text.slice(2));
+        } else {
+          blocks.push({ kind: 'list', items: [text.slice(2)] });
+        }
+        continue;
+      }
+
+      if (text.startsWith('> ')) {
+        blocks.push({ kind: 'quote', text: text.slice(2) });
+        continue;
+      }
+
+      if (text.startsWith('「') && text.endsWith('」')) {
+        blocks.push({ kind: 'quote', text: text.slice(1, -1) });
+        continue;
+      }
+
+      blocks.push({ kind: 'paragraph', text: line });
+    }
+
+    return blocks;
+  });
 }

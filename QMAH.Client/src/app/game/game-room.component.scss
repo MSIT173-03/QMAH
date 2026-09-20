@@ -95,7 +95,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 .leave-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 22px; }
 .leave-dialog-actions button { min-height: 44px; padding: 9px 14px; border: 1px solid var(--jade); font-weight: 700; }
 .leave-dialog-actions .secondary { color: var(--jade); background: transparent; }
-.leave-dialog-actions .danger { border-color: var(--cinnabar); color: #fffdf8; background: var(--cinnabar); }
+.leave-dialog-actions .danger { border-color: var(--cinnabar); color: var(--qmah-paper); background: var(--cinnabar); }
 .leave-dialog-actions button:disabled { cursor: wait; opacity: .55; }
 
 .play-area { min-width: 0; }
@@ -133,7 +133,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 .answer-form textarea { min-height: 134px; padding: 11px 12px; resize: vertical; }
 .answer-form textarea::placeholder { color: #8b9692; }
 .form-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 12px; }
-.form-foot button, .reward-panel button { min-height: 42px; padding: 8px 18px; border: 0; background: var(--jade); color: #fffdf8; font-size: 13px; font-weight: 700; }
+.form-foot button, .reward-panel button { min-height: 42px; padding: 8px 18px; border: 0; background: var(--jade); color: var(--qmah-paper); font-size: 13px; font-weight: 700; }
 .form-foot button:disabled, .reward-panel button:disabled { cursor: not-allowed; opacity: .55; }
 .phase-callout { margin-top: 16px; padding: 16px 18px; border: 1px solid rgba(178, 141, 79, .28); box-shadow: inset 3px 0 0 var(--bronze); background: #f3f0e7; }
 .phase-callout p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }

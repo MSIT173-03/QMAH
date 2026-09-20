@@ -5,29 +5,29 @@
 .store-app {
   display: block;
   min-height: 100%;
-  --color-ink: #22343d;
-  --color-ink-deep: #193c38;
-  --color-body: #3f5259;
-  --color-muted: #6d7b80;
-  --color-muted-2: #5c6b71;
-  --color-faint: #7e8c91;
-  --color-placeholder: #9aa6aa;
-  --color-line: #e3e7e6;
-  --color-line-soft: #eff2f1;
-  --color-line-mid: #dbe1e1;
-  --color-line-split: #cdd6d6;
-  --color-bg: #f9faf9;
-  --color-surface: #fff;
-  --color-swatch: #edf0f0;
-  --color-accent: #ad594a;
-  --color-teal: #4e8097;
-  --color-gold: #b99a55;
-  --color-gold-bg: #faf5e8;
-  --color-gold-text: #7a6427;
-  --color-good: #0f6b4f;
-  --color-nav: #2f4149;
-  --color-on-ink: #fff;
-  --color-on-accent: #fff;
+  --color-ink: var(--qmah-ink);
+  --color-ink-deep: var(--qmah-jade-deep);
+  --color-body: #3f5b58;
+  --color-muted: var(--qmah-muted);
+  --color-muted-2: #6d8581;
+  --color-faint: #809692;
+  --color-placeholder: #8fa39f;
+  --color-line: var(--qmah-line);
+  --color-line-soft: #e5f1ee;
+  --color-line-mid: #d5e6e1;
+  --color-line-split: #c4d8d2;
+  --color-bg: var(--qmah-page-surface);
+  --color-surface: var(--qmah-paper);
+  --color-swatch: var(--qmah-surface-muted);
+  --color-accent: var(--qmah-jade);
+  --color-teal: var(--qmah-secondary);
+  --color-gold: var(--qmah-bronze);
+  --color-gold-bg: #f5eedf;
+  --color-gold-text: #765a24;
+  --color-good: var(--qmah-jade-deep);
+  --color-nav: var(--qmah-ink);
+  --color-on-ink: var(--qmah-paper);
+  --color-on-accent: var(--qmah-paper);
   --color-shadow: rgba(34, 52, 61, 0.12);
   /* ui-integration: Store 控制項與卡片細節共用低圓角，保留既有方正視覺而避免局部漂移。 */
   --store-radius: 2px;
@@ -272,8 +272,9 @@
   /* 實心按鈕（例如主視覺 CTA） */
   .btn-solid {
     border: 1px solid var(--color-ink);
-    background: var(--color-ink);
-    color: var(--color-on-ink);
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
     border-radius: var(--store-radius);
     padding: 12px 26px;
     font-size: 12px;
@@ -281,7 +282,8 @@
     transition: background 160ms;
 
     &:hover {
-      background: var(--color-accent);
+      border-color: var(--color-ink-deep);
+      background: var(--color-ink-deep);
     }
   }
 
@@ -345,8 +347,9 @@
     transition: background 160ms, border-color 160ms, color 160ms;
 
     &:hover {
-      background: var(--color-ink);
-      color: var(--color-on-ink);
+      border-color: var(--color-teal);
+      background: var(--color-teal);
+      color: var(--color-secondary-content, var(--color-on-ink));
     }
   }
 
@@ -365,28 +368,28 @@
 /* ui-integration: 商城沿用全站 theme-controller；只替換同一組語意 token，保留首頁、列表、商品與結帳的原有構圖。 */
 :root:has(.theme-controller[value='qmahdark']:checked) .store-app,
 :root[data-theme='qmahdark'] .store-app {
-  --color-ink: #e6eeeb;
-  --color-ink-deep: #d6e6df;
-  --color-body: #c0d0cb;
-  --color-muted: #9aaba6;
-  --color-muted-2: #aabbb5;
-  --color-faint: #849691;
-  --color-placeholder: #71847e;
-  --color-line: #3a4b4b;
-  --color-line-soft: #2f3f40;
-  --color-line-mid: #4a5b59;
-  --color-line-split: #526360;
-  --color-bg: #192426;
-  --color-surface: #233032;
-  --color-swatch: #2d3b3b;
-  --color-accent: #d17a68;
-  --color-teal: #86b5b3;
-  --color-gold: #d4b779;
-  --color-gold-bg: #3f3826;
-  --color-gold-text: #e6cb84;
-  --color-good: #78c4a4;
-  --color-nav: #d4e2dd;
-  --color-on-ink: #182123;
-  --color-on-accent: #211c1a;
+  --color-ink: var(--qmah-ink);
+  --color-ink-deep: var(--qmah-jade-deep);
+  --color-body: #c4d8d2;
+  --color-muted: var(--qmah-muted);
+  --color-muted-2: #b2c8c1;
+  --color-faint: #8eaaa2;
+  --color-placeholder: #78938c;
+  --color-line: #3b5550;
+  --color-line-soft: #304844;
+  --color-line-mid: #4a635d;
+  --color-line-split: #58736c;
+  --color-bg: var(--qmah-page-surface);
+  --color-surface: var(--qmah-surface);
+  --color-swatch: var(--qmah-surface-muted);
+  --color-accent: var(--qmah-jade);
+  --color-teal: var(--qmah-secondary);
+  --color-gold: var(--qmah-bronze);
+  --color-gold-bg: #3a3527;
+  --color-gold-text: #e4ca8b;
+  --color-good: var(--qmah-jade-bright);
+  --color-nav: var(--qmah-ink);
+  --color-on-ink: var(--qmah-night);
+  --color-on-accent: var(--qmah-night);
   --color-shadow: rgba(0, 0, 0, 0.24);
 }

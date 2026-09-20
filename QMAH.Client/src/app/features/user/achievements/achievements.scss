@@ -139,7 +139,7 @@
 
 .achievement-card.displayed {
   border-color: #9ab9b5;
-  background: #fffdf8;
+  background: var(--qmah-paper);
 }
 
 .achievement-card-header {
@@ -163,14 +163,14 @@
   padding: 5px 10px;
   border-radius: 999px;
   background: #e8f0ee;
-  color: #a65342;
+  color: var(--qmah-jade);
   font-size: 13px;
   font-weight: 600;
 }
 
 .title {
   margin-bottom: 10px;
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
   font-size: 14px;
   font-weight: 600;
 }

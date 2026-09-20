@@ -47,6 +47,27 @@
   display: grid;
   grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
   gap: 12px;
+
+  /* 資料為空時折疊對應 host，避免保留無內容的 grid 欄位。 */
+  &:has(> app-hero-carousel:empty) {
+    grid-template-columns: minmax(0, 1fr);
+
+    > app-hero-carousel {
+      display: none;
+    }
+  }
+
+  &:has(> .hero-sidebar > app-flash-sale:empty):has(> .hero-sidebar > app-mini-coupons:empty) {
+    grid-template-columns: minmax(0, 1fr);
+
+    > .hero-sidebar {
+      display: none;
+    }
+  }
+
+  &:has(> app-hero-carousel:empty):has(> .hero-sidebar > app-flash-sale:empty):has(> .hero-sidebar > app-mini-coupons:empty) {
+    display: none;
+  }
 }
 
 .two-col-section {

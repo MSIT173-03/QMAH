@@ -3,7 +3,7 @@
   display: block;
   min-height: 100vh;
   --economy-bg: var(--color-base-200, #f6f0e4);
-  --economy-surface: var(--color-base-100, #fffdf8);
+  --economy-surface: var(--color-base-100, var(--qmah-paper));
   --economy-ink: var(--color-base-content, #193c38);
   --economy-muted: color-mix(in srgb, var(--economy-ink) 62%, transparent);
   --economy-soft: color-mix(in srgb, var(--economy-ink) 46%, transparent);
@@ -11,7 +11,7 @@
   --economy-teal: #4e8097;
   --economy-gold: #b99a55;
   --economy-gold-soft: color-mix(in srgb, var(--economy-gold) 12%, var(--economy-surface));
-  --economy-accent: #ad594a;
+  --economy-accent: var(--qmah-jade);
   background: var(--economy-bg);
   color: var(--economy-ink);
 }
@@ -320,7 +320,7 @@
 
   background: var(--economy-ink);
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   box-shadow:
     0 6px 16px color-mix(in srgb, var(--economy-ink) 18%, transparent);
@@ -329,7 +329,7 @@
     background:
       rgba(255, 255, 255, 0.18);
 
-    color: #ffffff;
+    color: var(--qmah-paper);
   }
 }
 

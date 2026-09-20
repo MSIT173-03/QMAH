@@ -3,19 +3,19 @@
   "assets": [
     {
       "file": "main-building.jpg",
-      "description": "國立故宮博物院北部院區正館",
+      "description": "國立故宮博物院北部院區正館秋季夜景",
       "location": "北部院區（本院）・臺北士林",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:National_Palace_Museum,_Taipei.jpg",
-      "author": "Hiàn",
-      "license": "CC0 1.0"
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:202009_%E5%9C%8B%E7%AB%8B%E6%95%85%E5%AE%AE%E5%8D%9A%E7%89%A9%E9%99%A2_%E7%A7%8B_%E5%A4%9C%E6%99%AF.jpg",
+      "author": "Tslai",
+      "license": "CC BY-SA 4.0"
     },
     {
       "file": "southern-branch.jpg",
-      "description": "國立故宮博物院南部院區主體與至美橋",
+      "description": "國立故宮博物院南部院區墨韻樓、飛白館與水景航拍",
       "location": "南部院區（南院）・嘉義太保",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Southern_Branch_of_the_National_Palace_Museum_main_building_and_zhimei_bridge.jpg",
-      "author": "B2322858",
-      "license": "公眾領域（Public domain）"
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:NPMSB_Moyun_Hall_and_Feibai_Hall.jpg",
+      "author": "雲嘉南濱海國家風景區管理處",
+      "license": "政府網站開放資料授權（需標示來源）"
     },
     {
       "file": "qingming-court/segment-01.webp",

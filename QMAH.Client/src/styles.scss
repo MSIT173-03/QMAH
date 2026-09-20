@@ -3,18 +3,30 @@
 :root {
   --qmah-font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --qmah-font-serif: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif;
-  --qmah-page-surface: #dfe8e4;
-  --qmah-surface: #fffdf8;
-  --qmah-surface-soft: #f4f1e8;
-  --qmah-surface-muted: #edf0e9;
-  --qmah-ink: #102f38;
-  --qmah-muted: #68777a;
-  --qmah-jade: #0f534d;
-  --qmah-slate: #62828b;
-  --qmah-cinnabar: #bd5748;
-  --qmah-bronze: #b28d4f;
-  --qmah-line: #d4dad3;
-  --qmah-on-dark: #fffdf8;
+  /* ui-integration: digital jade semantic scale, inspired by PANTONE 16-0228 TCX Jade Green. */
+  --qmah-paper: #f7fbf8;
+  --qmah-night: #122625;
+  --qmah-page-surface: #e4f0ed;
+  --qmah-surface: var(--qmah-paper);
+  --qmah-surface-soft: #eff7f4;
+  --qmah-surface-muted: #e5f1ee;
+  --qmah-ink: var(--qmah-night);
+  --qmah-muted: #5b7370;
+  --qmah-jade: #147d73;
+  --qmah-jade-deep: #0e5b55;
+  --qmah-jade-bright: #5e928b;
+  --qmah-jade-soft: #d9ece7;
+  --qmah-slate: #6f918c;
+  --qmah-cinnabar: #b85d50;
+  --qmah-bronze: #b99452;
+  --qmah-secondary: var(--qmah-jade-bright);
+  --qmah-secondary-content: var(--qmah-night);
+  --qmah-accent: var(--qmah-bronze);
+  --qmah-accent-content: var(--qmah-night);
+  --qmah-danger: var(--qmah-cinnabar);
+  --qmah-danger-content: var(--qmah-paper);
+  --qmah-line: #c9dcd7;
+  --qmah-on-dark: var(--qmah-paper);
 }
 
 /* ui-integration: 所有 Area 共用最小 viewport 與觸控基線，避免局部頁面把 body 撐出水平捲動。 */
@@ -29,27 +41,48 @@ body {
   overflow-x: hidden;
   font-family: var(--qmah-font-sans);
   text-rendering: optimizeLegibility;
+  line-break: strict;
+}
+
+/* ui-integration: 短標題以 balance 避免孤立短行，長段落以 pretty 保留自然閱讀節奏。 */
+:where(h1, h2, h3) {
+  text-wrap: balance;
+}
+
+:where(p, li) {
+  text-wrap: pretty;
 }
 
 /* ui-integration: App Shell 的 theme-controller 位於共用 Layout 之外層；在全域入口切換語意色，讓所有 Area 與商城共享深色背景與對比。 */
 :root:has(.theme-controller[value='qmahdark']:checked) .app-shell {
   /* ui-integration: 深色維持故宮紙墨的暖色比例，避免把所有頁面套成冷色 dashboard。 */
-  --color-surface: #29251f;
-  --color-ink: #f0e5d3;
-  --color-primary: #c98066;
-  --color-error: #e3a084;
-  --qmah-page-surface: #29251f;
-  --qmah-surface: #332d25;
-  --qmah-surface-soft: #3b342a;
-  --qmah-surface-muted: #443a2d;
-  --qmah-ink: #f0e5d3;
-  --qmah-muted: #c1b39f;
-  --qmah-jade: #aeb99b;
-  --qmah-slate: #b9ab95;
-  --qmah-cinnabar: #df977d;
-  --qmah-bronze: #d1b477;
-  --qmah-line: color-mix(in srgb, #f0e5d3 14%, transparent);
-  --qmah-on-dark: #fff7e8;
+  --color-surface: var(--qmah-surface);
+  --color-ink: var(--qmah-ink);
+  --color-primary: var(--qmah-jade);
+  --color-error: var(--qmah-danger);
+  --qmah-paper: #e9f4f0;
+  --qmah-night: #102322;
+  --qmah-page-surface: #102322;
+  --qmah-surface: #18322f;
+  --qmah-surface-soft: #21413c;
+  --qmah-surface-muted: #2a4a45;
+  --qmah-ink: #e4f2ee;
+  --qmah-muted: #a9c1bc;
+  --qmah-jade: #7bc9be;
+  --qmah-jade-deep: #99ded3;
+  --qmah-jade-bright: #7faba3;
+  --qmah-jade-soft: #2d514b;
+  --qmah-slate: #a7c8c1;
+  --qmah-cinnabar: #d78578;
+  --qmah-bronze: #d4b774;
+  --qmah-secondary: var(--qmah-jade-bright);
+  --qmah-secondary-content: var(--qmah-night);
+  --qmah-accent: var(--qmah-bronze);
+  --qmah-accent-content: var(--qmah-night);
+  --qmah-danger: var(--qmah-cinnabar);
+  --qmah-danger-content: var(--qmah-night);
+  --qmah-line: color-mix(in srgb, var(--qmah-ink) 16%, transparent);
+  --qmah-on-dark: var(--qmah-paper);
 }
 
 :root:has(.theme-controller[value='qmahdark']:checked) .app-brand img {
@@ -109,25 +142,25 @@ textarea {
   themes: qmah --default, qmahdark;
 }
 
-/* QMAH 品牌色調：以故宮文物常見的赭石／青銅色系為主色，呼應「清明鑑定屋」的古物鑑定主題 */
+/* QMAH 品牌色調：以 Jade Green 為主，Stone Green、Cedar amber 與 cinnabar 僅承擔輔助語意。 */
 @plugin "daisyui/theme" {
   name: "qmah";
   default: true;
   prefersdark: false;
   color-scheme: light;
 
-  --color-base-100: oklch(98% 0.008 80);
-  --color-base-200: oklch(95% 0.012 80);
-  --color-base-300: oklch(90% 0.018 80);
-  --color-base-content: oklch(28% 0.02 80);
-  --color-primary: oklch(52% 0.14 45);
-  --color-primary-content: oklch(98% 0.01 45);
-  --color-secondary: oklch(42% 0.06 210);
-  --color-secondary-content: oklch(98% 0.01 210);
-  --color-accent: oklch(62% 0.16 25);
-  --color-accent-content: oklch(98% 0.01 25);
-  --color-neutral: oklch(30% 0.02 80);
-  --color-neutral-content: oklch(98% 0.01 80);
+  --color-base-100: oklch(98% 0.008 170);
+  --color-base-200: oklch(95% 0.012 170);
+  --color-base-300: oklch(90% 0.018 170);
+  --color-base-content: oklch(25% 0.03 180);
+  --color-primary: oklch(52% 0.12 173);
+  --color-primary-content: oklch(98% 0.01 170);
+  --color-secondary: oklch(61% 0.06 170);
+  --color-secondary-content: oklch(24% 0.03 180);
+  --color-accent: oklch(70% 0.12 85);
+  --color-accent-content: oklch(24% 0.03 85);
+  --color-neutral: oklch(30% 0.03 180);
+  --color-neutral-content: oklch(98% 0.01 170);
   --color-info: oklch(70% 0.16 220);
   --color-info-content: oklch(20% 0.02 220);
   --color-success: oklch(62% 0.16 145);
@@ -156,18 +189,18 @@ textarea {
   prefersdark: false;
   color-scheme: dark;
 
-  --color-base-100: oklch(23% 0.014 80);
-  --color-base-200: oklch(19% 0.014 80);
-  --color-base-300: oklch(15% 0.014 80);
-  --color-base-content: oklch(92% 0.01 80);
-  --color-primary: oklch(72% 0.14 45);
-  --color-primary-content: oklch(16% 0.02 45);
-  --color-secondary: oklch(68% 0.08 210);
-  --color-secondary-content: oklch(16% 0.02 210);
-  --color-accent: oklch(74% 0.15 25);
-  --color-accent-content: oklch(16% 0.02 25);
-  --color-neutral: oklch(26% 0.02 80);
-  --color-neutral-content: oklch(92% 0.01 80);
+  --color-base-100: oklch(23% 0.02 180);
+  --color-base-200: oklch(19% 0.02 180);
+  --color-base-300: oklch(15% 0.02 180);
+  --color-base-content: oklch(92% 0.015 170);
+  --color-primary: oklch(76% 0.10 173);
+  --color-primary-content: oklch(18% 0.03 180);
+  --color-secondary: oklch(71% 0.06 170);
+  --color-secondary-content: oklch(18% 0.03 180);
+  --color-accent: oklch(78% 0.10 100);
+  --color-accent-content: oklch(20% 0.03 100);
+  --color-neutral: oklch(26% 0.03 180);
+  --color-neutral-content: oklch(92% 0.015 170);
   --color-info: oklch(75% 0.14 220);
   --color-info-content: oklch(16% 0.02 220);
   --color-success: oklch(70% 0.16 145);

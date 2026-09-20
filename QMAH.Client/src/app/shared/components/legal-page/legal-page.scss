@@ -25,7 +25,7 @@
 
 .legal-page__breadcrumb a,
 .legal-page__footer a {
-  color: var(--color-primary, #2f6f73);
+  color: var(--color-primary, var(--qmah-jade-deep));
   text-decoration: none;
 }
 
@@ -43,7 +43,7 @@
 
 .legal-page__eyebrow {
   margin: 0 0 12px;
-  color: var(--color-primary, #2f6f73);
+  color: var(--color-primary, var(--qmah-jade-deep));
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
   letter-spacing: .12em;

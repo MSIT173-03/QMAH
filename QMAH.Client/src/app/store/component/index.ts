@@ -14,7 +14,6 @@ export { Promobar } from './promobar/promobar';
 export { QtyStepper } from './qty-stepper/qty-stepper';
 export { SearchBar } from './search-bar/search-bar';
 export { SectionHead } from './section-head/section-head';
-export { SiteFooter } from './site-footer/site-footer';
 export { SiteHeader } from './site-header/site-header';
 export { StepIndicator } from './step-indicator/step-indicator';
 
@@ -24,4 +23,3 @@ export type { HeaderNavLink } from './header-actions/header-actions';
 export type { PillOption } from './pill-group/pill-group';
 export type { ProductCardBadgeVariant, ProductCardVariant } from './product-card/product-card';
 export type { SearchHotLink, SearchSuggestion } from './search-bar/search-bar';
-export type { FooterColumn, FooterLink } from './site-footer/site-footer';

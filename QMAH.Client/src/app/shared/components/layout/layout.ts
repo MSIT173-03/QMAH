@@ -16,6 +16,7 @@ import { MeApiService } from '../../../core/services/me-api';
 import { AdminPendingCountsService } from '../../../core/services/admin-pending-counts';
 import { NotificationsBellComponent } from '../notifications-bell/notifications-bell';
 import { ToastContainerComponent } from '../toast-container/toast-container';
+import { SiteFooter } from '../site-footer/site-footer';
 import { AreaNavigationComponent, NavigationGroup } from '../area-navigation/area-navigation';
 import { QmahIconComponent } from '../qmah-icon/qmah-icon';
 
@@ -25,7 +26,7 @@ const PENDING_COUNTS_POLL_INTERVAL_MS = 20000;
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, NotificationsBellComponent, ToastContainerComponent, AreaNavigationComponent, QmahIconComponent],
+  imports: [RouterOutlet, RouterLink, NotificationsBellComponent, ToastContainerComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })

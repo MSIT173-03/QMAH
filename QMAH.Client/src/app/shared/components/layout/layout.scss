@@ -4,9 +4,13 @@
 
 .app-shell {
   --app-header-height: 72px;
+  --color-surface: var(--qmah-surface);
+  --color-ink: var(--qmah-ink);
+  --color-primary: var(--qmah-jade);
+  --color-line: var(--qmah-line);
   min-height: 100vh;
-  background: var(--color-surface, #f7f4ee);
-  color: var(--color-ink, #27363b);
+  background: var(--color-surface);
+  color: var(--color-ink);
 }
 
 /* ui-integration: 前台共用 header 收斂品牌、Area 入口與帳號操作；各 Area 的內容組成仍由自己掌控。 */
@@ -75,7 +79,7 @@
 
 .app-context-navigation { display: inline-flex; align-items: center; gap: 2px; padding-left: 8px; border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
 .app-context-navigation a { min-height: 44px; display: inline-flex; align-items: center; padding: 6px 8px; border-radius: 8px; color: color-mix(in srgb, currentColor 62%, transparent); font-size: 11px; font-weight: 700; text-decoration: none; }
-.app-context-navigation a:hover, .app-context-navigation a.is-active { color: var(--color-primary, #8a512e); background: color-mix(in srgb, var(--color-primary, #8a512e) 9%, transparent); }
+.app-context-navigation a:hover, .app-context-navigation a.is-active { color: var(--color-primary, var(--qmah-jade-deep)); background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent); }
 
 .app-header__actions {
   min-width: 0;
@@ -115,9 +119,9 @@
 .app-logout:hover:not(:disabled),
 .app-mobile-logout:hover:not(:disabled),
 .app-admin-entry:hover {
-  border-color: color-mix(in srgb, var(--color-primary, #8a512e) 22%, transparent);
-  background: color-mix(in srgb, var(--color-primary, #8a512e) 9%, transparent);
-  color: var(--color-primary, #8a512e);
+  border-color: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 22%, transparent);
+  background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent);
+  color: var(--color-primary, var(--qmah-jade-deep));
 }
 
 .app-account__avatar {
@@ -127,8 +131,8 @@
   place-items: center;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-primary, #8a512e) 13%, transparent);
-  color: var(--color-primary, #8a512e);
+  background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 13%, transparent);
+  color: var(--color-primary, var(--qmah-jade-deep));
   font-size: 12px;
   font-weight: 800;
 }
@@ -264,7 +268,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--color-primary, #8a512e);
+  outline: 2px solid var(--color-primary, var(--qmah-jade-deep));
   outline-offset: 3px;
 }
 
@@ -410,8 +414,8 @@ textarea:focus-visible {
   }
 
   .app-mobile-drawer__footer a:hover {
-    background: color-mix(in srgb, var(--color-primary, #8a512e) 9%, transparent);
-    color: var(--color-primary, #8a512e);
+    background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent);
+    color: var(--color-primary, var(--qmah-jade-deep));
   }
 
   .app-mobile-drawer__footer {

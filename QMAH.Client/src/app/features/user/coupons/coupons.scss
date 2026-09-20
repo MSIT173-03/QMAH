@@ -51,7 +51,7 @@
 
 .page-eyebrow,
 .section-eyebrow {
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
 
   font-size: 10px;
   font-weight: 800;
@@ -91,7 +91,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 16px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   text-align: left;
 
@@ -137,7 +137,7 @@
   background:
     linear-gradient(
       135deg,
-      #ffffff 0%,
+      var(--qmah-paper) 0%,
       #edf1ef 100%
     );
 
@@ -189,7 +189,7 @@
 .expired-card .summary-icon {
   background: #fbf1e9;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 }
 
 
@@ -210,7 +210,7 @@
 .summary-card.active .filter-arrow {
   transform: translateX(3px);
 
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
 }
 
 
@@ -224,7 +224,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 20px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   box-shadow:
     0 8px 28px
@@ -301,7 +301,7 @@
   border: 1px solid #dfe2ea;
   border-radius: 18px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   box-shadow:
     0 7px 22px
@@ -333,9 +333,9 @@
   background:
     linear-gradient(
       145deg,
-      #ffffff 0%,
-      #ffffff 65%,
-      #fffdf8 100%
+      var(--qmah-paper) 0%,
+      var(--qmah-paper) 65%,
+      var(--qmah-paper) 100%
     );
 }
 
@@ -346,7 +346,7 @@
   background:
     linear-gradient(
       145deg,
-      #ffffff,
+      var(--qmah-paper),
       #f8f8f9
     );
 }
@@ -374,7 +374,7 @@
 
   border-radius: 50%;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   border: 1px solid #d9e0dc;
 }
@@ -536,7 +536,7 @@
 
   background: #fbf1e9;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 
   font-size: 9px;
   font-weight: 750;
@@ -587,7 +587,7 @@
 
   margin: 7px 0 10px;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 
   font-size: 31px;
   font-weight: 850;
@@ -620,7 +620,7 @@
 
   background: #edf1ef;
 
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
 
   font-size: 10px;
   font-weight: 700;
@@ -695,14 +695,14 @@
 
 
 .expiry-item strong {
-  color: #a65342;
+  color: var(--qmah-jade);
 }
 
 
 .expiry-item.warning {
 
   strong {
-    color: #a65342;
+    color: var(--qmah-jade);
   }
 
 }
@@ -840,7 +840,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 18px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   text-align: center;
 
@@ -887,7 +887,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 14px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   color: #617176;
 
@@ -914,7 +914,7 @@
 
     background: #ef4444;
 
-    color: #ffffff;
+    color: var(--qmah-paper);
 
     font-weight: 800;
   }
@@ -927,7 +927,7 @@
 
   border: 2px solid #d9e0dc;
 
-  border-top-color: #2f6f73;
+  border-top-color: var(--qmah-jade-deep);
 
   border-radius: 50%;
 

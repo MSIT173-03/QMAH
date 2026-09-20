@@ -7,7 +7,6 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   PageTitleRow,
-  SiteFooter,
   EmptyState,
 } from '../../component';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
@@ -31,7 +30,7 @@ const REMOVE_ANIMATION_MS = 300;
 @Component({
   selector: 'app-cart',
   host: { class: 'store-app' },
-  imports: [SiteHeader, HeaderActions, Breadcrumb, PageTitleRow, SiteFooter, EmptyState, CartLine, CartSummary, CartAddons],
+  imports: [SiteHeader, HeaderActions, Breadcrumb, PageTitleRow, EmptyState, CartLine, CartSummary, CartAddons],
   templateUrl: './cart.html',
   styleUrls: [
     './cart.scss',

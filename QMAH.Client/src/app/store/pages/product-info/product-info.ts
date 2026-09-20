@@ -13,7 +13,6 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   EmptyState,
-  SiteFooter,
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { Product } from '../../api/api.models';
@@ -44,7 +43,6 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
     CartLink,
     Breadcrumb,
     EmptyState,
-    SiteFooter,
     ProductGallery,
     ProductSummary,
     ProductDetail,

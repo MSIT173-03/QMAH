@@ -56,6 +56,3 @@
   <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)"
     (requireMore)="onRequireMore()" />
 </div>
-
-<!-- 頁尾：完整版，含品牌介紹、連結欄位與版權列 -->
-<app-site-footer variant="full" [columns]="site.config()?.footerColumns ?? []" />

@@ -19,7 +19,7 @@
 
   padding: 36px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   border: 1px solid #e5e7eb;
   border-radius: 20px;
@@ -96,7 +96,7 @@
     border: 1px solid #d1d5db;
     border-radius: 10px;
 
-    background: #ffffff;
+    background: var(--qmah-paper);
 
     color: #111827;
 
@@ -325,7 +325,7 @@
 
   background: #4f46e5;
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   font-size: 15px;
   font-weight: 600;

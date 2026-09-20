@@ -145,6 +145,9 @@
   <main id="main-content" class="app-main">
     <router-outlet></router-outlet>
   </main>
+
+  <!-- ui-integration: 所有 App Shell route 共用同一個 footer，首頁與深層頁都保留合理的回站入口。 -->
+  <app-site-footer />
 </div>
 
 <app-toast-container />

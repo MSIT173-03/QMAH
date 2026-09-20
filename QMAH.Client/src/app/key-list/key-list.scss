@@ -19,13 +19,13 @@
   --ink-soft: #667a7d;
   --line: #d5dfdc;
   --surface: #f7f4ee;
-  --card: #fffdf8;
-  --blue: #ad594a;
-  --blue-deep: #3f7777;
+  --card: var(--qmah-paper);
+  --blue: var(--qmah-jade);
+  --blue-deep: var(--qmah-jade);
   --yellow: #8c9b78;
-  --red: #a8564b;        // 警示／關閉鈕
-  --sapphire: #739ba0;   // 分類鑰匙的區分色
-  --ruby: #799984;       // 萬能鑰匙的區分色
+  --red: var(--qmah-cinnabar);        // 警示／關閉鈕
+  --sapphire: var(--qmah-slate);   // 分類鑰匙的區分色
+  --ruby: var(--qmah-jade-bright);       // 萬能鑰匙的區分色
   --panel-dark: #24434a;
 
   min-height: 100vh;
@@ -445,7 +445,7 @@
 
 .key-slot__tooltip-name {
   margin: 0 0 6px;
-  color: #ffffff;
+  color: var(--qmah-paper);
   font-weight: 700;
   font-size: 13px;
 }
@@ -457,7 +457,7 @@
   margin: 3px 0 0;
 
   strong {
-    color: #ffffff;
+    color: var(--qmah-paper);
     font-weight: 700;
     text-align: right;
   }

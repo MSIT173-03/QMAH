@@ -1,0 +1,133 @@
+:host {
+  display: block;
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-line, var(--qmah-line));
+  background: var(--color-surface, var(--qmah-paper));
+  color: var(--color-ink, var(--qmah-ink));
+}
+
+.footer-cols {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 36px 20px 40px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.35fr) repeat(4, minmax(130px, 1fr));
+  gap: 24px;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-logo-img {
+  display: block;
+  width: auto;
+  height: 36px;
+}
+
+.brand-logo-img--lg {
+  height: 42px;
+}
+
+.self-start {
+  align-self: flex-start;
+}
+
+.footer-brand-note {
+  margin: 10px 0 0;
+  max-width: 28ch;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--color-muted, var(--qmah-muted));
+  text-wrap: pretty;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.footer-col h2 {
+  margin: 0 0 2px;
+}
+
+.footer-col-link {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--color-nav, var(--qmah-ink));
+  text-decoration: none;
+}
+
+.footer-col-link--disabled {
+  color: var(--color-placeholder);
+  cursor: default;
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--color-line-soft, var(--qmah-line));
+}
+
+.footer-bottom-row {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  font-size: 12px;
+  color: var(--color-placeholder, var(--qmah-muted));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  align-items: center;
+}
+
+.footer-link {
+  color: var(--color-muted, var(--qmah-muted));
+  text-decoration: none;
+}
+
+@media (max-width: 1080px) {
+  .footer-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .footer-cols {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding-inline: 14px;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+
+  .footer-bottom-row {
+    padding-inline: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .footer-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-bottom-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+.footer-note {
+  margin-left: auto;
+}

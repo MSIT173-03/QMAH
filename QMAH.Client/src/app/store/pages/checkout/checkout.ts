@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { EMPTY, catchError, filter, switchMap } from 'rxjs';
-import { SiteHeader, StepIndicator, Breadcrumb, BreadcrumbItem, PageTitleRow, SiteFooter } from '../../component';
+import { SiteHeader, StepIndicator, Breadcrumb, BreadcrumbItem, PageTitleRow } from '../../component';
 import { CheckoutApi, MemberApi } from '../../api';
 import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
 import { CART_PATH, HOME_PATH } from '../../shared/paths';
@@ -36,7 +36,6 @@ import {
     StepIndicator,
     Breadcrumb,
     PageTitleRow,
-    SiteFooter,
     RecipientForm,
     DeliveryOptions,
     CouponPicker,

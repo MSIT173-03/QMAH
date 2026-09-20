@@ -21,11 +21,18 @@ h3 {
 }
 
 .bullet {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.bullet li {
   position: relative;
+  margin: 0 0 0.45rem;
   padding-left: 1rem;
 }
 
-.bullet::before {
+.bullet li::before {
   position: absolute;
   left: 0;
   font-weight: 700;

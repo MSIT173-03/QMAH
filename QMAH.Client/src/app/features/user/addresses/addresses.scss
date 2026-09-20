@@ -43,7 +43,7 @@
   border: 1px solid #e1e4ea;
   border-radius: 11px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   color: #3f565c;
 
@@ -66,7 +66,7 @@
 
     border-color: #c8d9d5;
 
-    color: #a65342;
+    color: var(--qmah-jade);
   }
 }
 
@@ -104,7 +104,7 @@
 
 .page-eyebrow,
 .section-eyebrow {
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
 
   font-size: 10px;
   font-weight: 800;
@@ -127,11 +127,11 @@
   background:
     linear-gradient(
       135deg,
-      #a65342,
-      #2f6f73
+      var(--qmah-jade),
+      var(--qmah-jade-deep)
     );
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   font-size: 13px;
   font-weight: 700;
@@ -186,7 +186,7 @@
   border: 1px solid #e6e8ef;
   border-radius: 16px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   box-shadow:
     0 6px 18px
@@ -301,7 +301,7 @@
   > span {
     background: #22c55e;
 
-    color: #ffffff;
+    color: var(--qmah-paper);
   }
 }
 
@@ -315,7 +315,7 @@
   > span {
     background: #ef4444;
 
-    color: #ffffff;
+    color: var(--qmah-paper);
   }
 }
 
@@ -332,7 +332,7 @@
   border: 1px solid #dddff0;
   border-radius: 19px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   box-shadow:
     0 10px 30px
@@ -393,7 +393,7 @@
 
   background: #e8f0ee;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 
   font-size: 18px;
   font-weight: 800;
@@ -467,7 +467,7 @@
 
     outline: none;
 
-    background: #ffffff;
+    background: var(--qmah-paper);
 
     color: #163f47;
 
@@ -508,7 +508,7 @@
   border: 1px solid #e8f0ee;
   border-radius: 12px;
 
-  background: #fffdf8;
+  background: var(--qmah-paper);
 
   label {
     display: flex;
@@ -553,15 +553,15 @@
   border: 1px solid #c7c9d1;
   border-radius: 5px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 }
 
 .default-option
 input:checked
 + .checkbox-ui {
-  border-color: #2f6f73;
+  border-color: var(--qmah-jade-deep);
 
-  background: #2f6f73;
+  background: var(--qmah-jade-deep);
 
   &::after {
     content: '✓';
@@ -574,7 +574,7 @@ input:checked
     align-items: center;
     justify-content: center;
 
-    color: #ffffff;
+    color: var(--qmah-paper);
 
     font-size: 11px;
     font-weight: 800;
@@ -624,11 +624,11 @@ input:checked
   background:
     linear-gradient(
       135deg,
-      #a65342,
-      #2f6f73
+      var(--qmah-jade),
+      var(--qmah-jade-deep)
     );
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   box-shadow:
     0 6px 15px
@@ -638,7 +638,7 @@ input:checked
 .cancel-button {
   border: 1px solid #e1e4ea;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   color: #617176;
 }
@@ -650,7 +650,7 @@ input:checked
   border:
     2px solid rgba(255, 255, 255, 0.4);
 
-  border-top-color: #ffffff;
+  border-top-color: var(--qmah-paper);
 
   border-radius: 50%;
 
@@ -711,8 +711,8 @@ input:checked
   background:
     linear-gradient(
       135deg,
-      #ffffff 0%,
-      #fffdf8 100%
+      var(--qmah-paper) 0%,
+      var(--qmah-paper) 100%
     );
 
   box-shadow:
@@ -811,7 +811,7 @@ input:checked
 
   background: #e8f0ee;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 
   font-size: 9px;
   font-weight: 750;
@@ -832,7 +832,7 @@ input:checked
   border: 1px solid #e0e2e8;
   border-radius: 9px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   color: #52686e;
 
@@ -848,7 +848,7 @@ input:checked
   &:hover {
     border-color: #9ab9b5;
 
-    color: #a65342;
+    color: var(--qmah-jade);
   }
 }
 
@@ -950,7 +950,7 @@ input:checked
   border: 1px solid #e6e8ed;
   border-radius: 16px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   box-shadow:
     0 5px 18px
@@ -1037,7 +1037,7 @@ input:checked
 .card-action.edit {
   border: 1px solid #e1e4ea;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   color: #52686e;
 }
@@ -1047,7 +1047,7 @@ input:checked
 
   background: #e8f0ee;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 }
 
 .card-action.delete {
@@ -1117,7 +1117,7 @@ input:checked
 
   background: #e8f0ee;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 
   font-size: 11px;
   font-weight: 700;
@@ -1137,7 +1137,7 @@ input:checked
 
   border: 2px solid #d9e0dc;
 
-  border-top-color: #2f6f73;
+  border-top-color: var(--qmah-jade-deep);
 
   border-radius: 50%;
 

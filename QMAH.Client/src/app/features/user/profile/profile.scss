@@ -31,7 +31,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 20px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   color: #617176;
   text-align: center;
@@ -50,7 +50,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 24px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   box-shadow:
     0 18px 50px rgba(15, 23, 42, 0.07);
@@ -71,7 +71,7 @@
 
   overflow: hidden;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
   border-bottom: 1px solid #eceef4;
 }
 
@@ -99,7 +99,7 @@
   background-image:
     linear-gradient(
       90deg,
-      #ffffff 0%,
+      var(--qmah-paper) 0%,
       rgba(255, 255, 255, 0.98) 8%,
       rgba(255, 255, 255, 0.86) 18%,
       rgba(255, 255, 255, 0.45) 34%,
@@ -133,17 +133,17 @@
 
   overflow: hidden;
 
-  border: 5px solid #ffffff;
+  border: 5px solid var(--qmah-paper);
   border-radius: 50%;
 
   background:
     linear-gradient(
       135deg,
-      #2f6f73,
-      #2f6f73
+      var(--qmah-jade-deep),
+      var(--qmah-jade-deep)
     );
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   font-size: 34px;
   font-weight: 800;
@@ -221,12 +221,12 @@
 
 .visibility-badge {
   background: #e8f0ee;
-  color: #a65342;
+  color: var(--qmah-jade);
 }
 
 .role-badge {
   background: #edf1ef;
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
 }
 
 // ===============================
@@ -318,7 +318,7 @@
 
   background: #e8f0ee;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 
   font-size: 20px;
 }
@@ -329,9 +329,9 @@
   border: 0;
   border-radius: 11px;
 
-  background: #a65342;
+  background: var(--qmah-jade);
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   font-size: 14px;
   font-weight: 650;
@@ -367,7 +367,7 @@
   border: 1px solid #e8eaf0;
   border-radius: 16px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 }
 
 .info-section {
@@ -434,11 +434,11 @@
   background:
     linear-gradient(
       135deg,
-      #a65342,
-      #2f6f73
+      var(--qmah-jade),
+      var(--qmah-jade-deep)
     );
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   box-shadow:
     0 12px 28px rgba(79, 70, 229, 0.2);
@@ -502,7 +502,7 @@
 
   background: #edf1ef;
 
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
 
   font-size: 12px;
   font-weight: 700;
@@ -574,7 +574,7 @@
   background:
     linear-gradient(
       180deg,
-      #ffffff 0%,
+      var(--qmah-paper) 0%,
       #fcfcfe 100%
     );
 
@@ -605,7 +605,7 @@
 }
 
 .field-icon {
-  color: #a65342;
+  color: var(--qmah-jade);
 
   font-size: 18px;
 }
@@ -634,7 +634,7 @@
     border: 1px solid #d1d5db;
     border-radius: 11px;
 
-    background: #ffffff;
+    background: var(--qmah-paper);
 
     color: #163f47;
 
@@ -647,7 +647,7 @@
       box-shadow 0.2s ease;
 
     &:focus {
-      border-color: #2f6f73;
+      border-color: var(--qmah-jade-deep);
 
       box-shadow:
         0 0 0 3px
@@ -691,8 +691,8 @@
   background:
     linear-gradient(
       180deg,
-      #fffdf8 0%,
-      #ffffff 100%
+      var(--qmah-paper) 0%,
+      var(--qmah-paper) 100%
     );
 }
 
@@ -705,7 +705,7 @@
   h3 {
     margin: 0;
 
-    color: #a65342;
+    color: var(--qmah-jade);
 
     font-size: 17px;
   }
@@ -806,7 +806,7 @@
 .cancel-button {
   border: 1px solid #d1d5db;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   color: #3f565c;
 
@@ -818,9 +818,9 @@
 .save-button {
   border: 0;
 
-  background: #a65342;
+  background: var(--qmah-jade);
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   box-shadow:
     0 7px 18px rgba(79, 70, 229, 0.18);

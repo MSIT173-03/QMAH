@@ -7,9 +7,9 @@
   --ink-soft: #667a7d;
   --line: #d5dfdc;
   --surface: #f7f4ee;
-  --card: #fffdf8;
-  --blue: #a65342;
-  --blue-deep: #2f6f73;
+  --card: var(--qmah-paper);
+  --blue: var(--qmah-jade);
+  --blue-deep: var(--qmah-jade-deep);
   --yellow: #5b8d73;
   --red: #d9534f;
   --locked: #b6c1bd;
@@ -19,7 +19,7 @@
   --header-h: 74px;
 
   // 放大圖底部漸層字幕疊字用色，跟整體主題無關（維持可讀性，文字疊在照片上，不是疊在版面底色上）
-  --on-dark: #ffffff;
+  --on-dark: var(--qmah-paper);
   --on-dark-soft: rgba(255, 255, 255, 0.7);
   --on-dark-accent: #f0d9a0;
 
@@ -243,7 +243,7 @@
   height: 24px;
   border-radius: 50%;
   background: rgba(20, 14, 8, 0.6);
-  color: #ffffff;
+  color: var(--qmah-paper);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,7 +265,7 @@
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 999px;
-  color: #ffffff;
+  color: var(--qmah-paper);
   letter-spacing: 0.02em;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
@@ -1046,7 +1046,7 @@
 
 .confirm-btn:disabled {
   background: var(--locked);
-  color: #ffffff;
+  color: var(--qmah-paper);
   box-shadow: none;
   cursor: not-allowed;
 }
@@ -1097,7 +1097,7 @@
 .debug-btn.active {
   background: var(--blue-deep);
   border-color: var(--blue-deep);
-  color: #ffffff;
+  color: var(--qmah-paper);
 }
 */
 

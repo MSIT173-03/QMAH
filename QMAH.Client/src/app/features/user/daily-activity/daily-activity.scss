@@ -116,8 +116,8 @@
   background:
     linear-gradient(
       135deg,
-      #ffffff 0%,
-      #fffdf8 100%
+      var(--qmah-paper) 0%,
+      var(--qmah-paper) 100%
     );
 
   box-shadow:
@@ -223,7 +223,7 @@
 }
 
 .eyebrow {
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
 
   font-size: 10px;
   font-weight: 800;
@@ -392,11 +392,11 @@
   background:
     linear-gradient(
       135deg,
-      #a65342,
-      #2f6f73
+      var(--qmah-jade),
+      var(--qmah-jade-deep)
     );
 
-  color: #ffffff;
+  color: var(--qmah-paper);
 
   font-size: 14px;
   font-weight: 700;
@@ -441,7 +441,7 @@
   border:
     2px solid rgba(255, 255, 255, 0.45);
 
-  border-top-color: #ffffff;
+  border-top-color: var(--qmah-paper);
 
   border-radius: 50%;
 
@@ -566,8 +566,8 @@
   background:
     linear-gradient(
       135deg,
-      #ffffff 0%,
-      #fffdf8 50%,
+      var(--qmah-paper) 0%,
+      var(--qmah-paper) 50%,
       #edf1ef 100%
     );
 
@@ -697,7 +697,7 @@
   }
 
   strong {
-    color: #a65342;
+    color: var(--qmah-jade);
 
     font-size: 15px;
   }
@@ -719,8 +719,8 @@
   background:
     linear-gradient(
       135deg,
-      #ffffff 0%,
-      #fffdf8 100%
+      var(--qmah-paper) 0%,
+      var(--qmah-paper) 100%
     );
 
   box-shadow:
@@ -763,7 +763,7 @@
 
   background: #e8f0ee;
 
-  color: #a65342;
+  color: var(--qmah-jade);
 
   font-size: 12px;
   font-weight: 700;
@@ -819,7 +819,7 @@
   width: 56px;
   height: 56px;
 
-  border: 3px solid #ffffff;
+  border: 3px solid var(--qmah-paper);
   border-radius: 50%;
 
   background: #f3f4f6;
@@ -844,11 +844,11 @@
     background:
       linear-gradient(
         135deg,
-        #2f6f73,
-        #2f6f73
+        var(--qmah-jade-deep),
+        var(--qmah-jade-deep)
       );
 
-    color: #ffffff;
+    color: var(--qmah-paper);
 
     box-shadow:
       0 0 0 1px #c8d9d5,
@@ -929,7 +929,7 @@
 .day-item.completed .day-copy {
 
   strong {
-    color: #a65342;
+    color: var(--qmah-jade);
   }
 
 }
@@ -941,7 +941,7 @@
 
   background: #e8f0ee;
 
-  color: #a65342 !important;
+  color: var(--qmah-jade) !important;
 
   font-weight: 700;
 }
@@ -1015,7 +1015,7 @@
 }
 
 .completed-dot {
-  background: #2f6f73;
+  background: var(--qmah-jade-deep);
 }
 
 .today-dot {
@@ -1038,7 +1038,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 20px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   box-shadow:
     0 8px 30px rgba(15, 23, 42, 0.04);
@@ -1065,7 +1065,7 @@
 }
 
 .section-eyebrow {
-  color: #2f6f73;
+  color: var(--qmah-jade-deep);
 
   font-size: 10px;
   font-weight: 800;
@@ -1095,7 +1095,7 @@
   background:
     linear-gradient(
       180deg,
-      #ffffff,
+      var(--qmah-paper),
       #fafafa
     );
 
@@ -1222,7 +1222,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 16px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   animation:
     cardEnter
@@ -1323,7 +1323,7 @@
   border: 1px solid #d9e0dc;
   border-radius: 14px;
 
-  background: #ffffff;
+  background: var(--qmah-paper);
 
   color: #617176;
 }
@@ -1342,7 +1342,7 @@
 
   border: 2px solid #d9e0dc;
 
-  border-top-color: #2f6f73;
+  border-top-color: var(--qmah-jade-deep);
 
   border-radius: 50%;
 

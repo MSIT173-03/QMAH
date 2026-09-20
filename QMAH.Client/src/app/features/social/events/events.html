@@ -1,11 +1,11 @@
 <div class="qmah-social-page">
-<div class="flex justify-between items-center mb-6">
+<header class="flex justify-between items-center mb-6">
   <h1 class="text-2xl font-bold">社群活動</h1>
   <button type="button" class="btn btn-primary social-icon-label" (click)="openCreateEvent()">
     <svg lucidePlus aria-hidden="true" focusable="false"></svg>
     建立活動
   </button>
-</div>
+</header>
 
 <div class="flex flex-wrap gap-2 mb-6 items-end">
   <label class="form-control">
@@ -36,7 +36,7 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   @for (event of events; track event.id) {
-    <div class="card bg-base-100 shadow-xl border border-base-300">
+    <article class="card bg-base-100 shadow-xl border border-base-300">
       @if (event.coverImageUrl) {
         <figure class="max-h-56 overflow-hidden">
           <img src="{{ event.coverImageUrl }}" [alt]="event.title" class="w-full object-cover" />
@@ -71,7 +71,7 @@
           <a class="btn btn-sm btn-outline btn-primary" [routerLink]="['/social/events', event.id]">查看詳情</a>
         </div>
       </div>
-    </div>
+    </article>
   } @empty {
     <div class="col-span-full text-center py-10 text-base-content/60">目前還沒有公開活動</div>
   }
@@ -103,7 +103,8 @@
       </div>
       <label class="form-control gap-1"><span class="label-text">名額上限（選填）</span><input type="number" placeholder="例如：30" class="input input-bordered w-full" [(ngModel)]="newEvent.capacity" /></label>
 
-      <label class="form-control gap-1"><span class="label-text">活動圖片（選填，最多 8 張）</span><input
+      <label class="form-control gap-1" for="social-event-media"><span class="label-text">活動圖片（選填，最多 8 張）</span><input
+        id="social-event-media"
         type="file"
         class="file-input file-input-bordered w-full"
         accept="image/jpeg,image/png,image/gif,image/webp"
