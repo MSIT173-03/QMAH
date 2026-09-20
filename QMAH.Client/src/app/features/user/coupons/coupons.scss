@@ -764,9 +764,17 @@
 
 
 .inactive-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: #839093;
 
   font-size: 9px;
+}
+
+.inactive-text app-qmah-icon {
+  width: 13px;
+  height: 13px;
 }
 
 

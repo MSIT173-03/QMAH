@@ -65,7 +65,7 @@
         <div class="refresh-actions">
           @if (isDemo) { <span class="refresh-hint"><i aria-hidden="true"></i>每 5 秒更新房間</span> }
           <button type="button" class="hero-collapse refresh-button" (click)="refreshRooms()" [disabled]="loading || refreshing" [attr.aria-busy]="refreshing">
-            <span aria-hidden="true">↻</span>{{ refreshing ? '更新中…' : '重新整理' }}
+            <app-qmah-icon name="refresh" aria-hidden="true" />{{ refreshing ? '更新中…' : '重新整理' }}
           </button>
         </div>
         @if (showFilter) {
@@ -123,7 +123,7 @@
                 <span class="room-facts"><b>{{ room.totalRounds }} 回合</b><span>{{ categoryText(room.categoryFilterCode) }} · {{ eraText(room.eraBucketFilterCode) }}</span></span>
                 <span class="room-occupancy" [attr.aria-label]="'席位 ' + room.playerCount + ' / ' + room.maxPlayers"><b>{{ room.playerCount }} / {{ room.maxPlayers }}</b><i><i [style.width.%]="occupancy(room)"></i></i></span>
                 <span class="room-status" [attr.data-status]="room.status">{{ statusText(room.status) }}</span>
-                @if (selectedRoomId === room.id) { <span class="row-selection-state">已開啟</span> } @else { <span class="row-action"><span>查看</span><span class="row-arrow" aria-hidden="true">→</span></span> }
+                @if (selectedRoomId === room.id) { <span class="row-selection-state">已開啟</span> } @else { <span class="row-action"><span>查看</span><app-qmah-icon class="row-arrow" name="arrow-right" aria-hidden="true" /></span> }
               </button>
             </div>
           }
@@ -132,9 +132,9 @@
 
       @if (rooms && rooms.totalPages > 1) {
         <nav class="folio-pagination" aria-label="房間清單分頁">
-          <button type="button" aria-label="上一頁" (click)="loadRooms(rooms.page - 1)" [disabled]="rooms.page <= 1">‹</button>
+          <button type="button" aria-label="上一頁" (click)="loadRooms(rooms.page - 1)" [disabled]="rooms.page <= 1"><app-qmah-icon name="chevron-left" aria-hidden="true" /></button>
           @for (page of pageNumbers(); track page) { <button type="button" (click)="loadRooms(page)" [class.is-current]="page === rooms.page" [attr.aria-current]="page === rooms.page ? 'page' : null">{{ page }}</button> }
-          <button type="button" aria-label="下一頁" (click)="loadRooms(rooms.page + 1)" [disabled]="rooms.page >= rooms.totalPages">›</button>
+          <button type="button" aria-label="下一頁" (click)="loadRooms(rooms.page + 1)" [disabled]="rooms.page >= rooms.totalPages"><app-qmah-icon name="chevron-right" aria-hidden="true" /></button>
         </nav>
       }
     </article>

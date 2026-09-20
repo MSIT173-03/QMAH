@@ -9,12 +9,13 @@ import { GameNavigationComponent } from './game-navigation.component';
 import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameService } from './game.service';
 import { MeApiService } from '../core/services/me-api';
+import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 
 type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, GameNavigationComponent, GameRoomQrDialogComponent],
+  imports: [FormsModule, RouterLink, GameNavigationComponent, GameRoomQrDialogComponent, QmahIconComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })

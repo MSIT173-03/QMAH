@@ -80,6 +80,17 @@
   font-size: 11px;
 }
 
+.social-announcements__view-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.social-announcements__view-link app-qmah-icon {
+  width: 14px;
+  height: 14px;
+}
+
 .social-announcements__carousel {
   position: relative;
 }

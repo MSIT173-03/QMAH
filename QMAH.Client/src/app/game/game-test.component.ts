@@ -11,6 +11,7 @@ import {
 } from './game.models';
 import { GameNavigationComponent } from './game-navigation.component';
 import { GameService } from './game.service';
+import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 
 interface TestRoomOption {
   id: string;
@@ -21,7 +22,7 @@ interface TestRoomOption {
 
 @Component({
   selector: 'app-game-test',
-  imports: [FormsModule, JsonPipe, RouterLink, GameNavigationComponent],
+  imports: [FormsModule, JsonPipe, RouterLink, GameNavigationComponent, QmahIconComponent],
   styleUrl: './game-test.component.scss',
   template: `
     <div class="game-test-page">
@@ -50,7 +51,7 @@ interface TestRoomOption {
               <span class="test-room-code">{{ room.code }}</span>
               <h2>{{ room.name }}</h2>
               <p>{{ room.description }}</p>
-              <button type="button" (click)="joinTestRoom(room.id)">加入測試房間 <span aria-hidden="true">→</span></button>
+              <button type="button" (click)="joinTestRoom(room.id)">加入測試房間 <app-qmah-icon name="arrow-right" aria-hidden="true" /></button>
             </article>
           }
         </div>

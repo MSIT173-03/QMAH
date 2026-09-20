@@ -16,6 +16,7 @@
 .test-room-card h2 { margin-top: .55rem; font-size: 1.1rem; }
 .test-room-card p { flex: 1; margin: .5rem 0 1rem; color: #64748b; font-size: .9rem; line-height: 1.55; }
 .test-room-card button { width: 100%; display: flex; justify-content: space-between; }
+.test-room-card button app-qmah-icon { width: 17px; height: 17px; }
 .diagnostics-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-top: 2rem; }
 .diagnostics-heading h2 { font-size: 1.5rem; }
 header { margin-bottom: 1.5rem; }

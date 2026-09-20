@@ -20,7 +20,7 @@
         @if (announcements[currentAnnouncementIndex]; as announcement) {
           <a class="social-announcements__collapsed-link" [routerLink]="['/social/posts', announcement.id]">
             <span>{{ announcement.title }}</span>
-            <span aria-hidden="true">查看 →</span>
+            <span class="social-announcements__view-link" aria-hidden="true">查看 <app-qmah-icon name="arrow-right" /></span>
           </a>
         }
       } @else {

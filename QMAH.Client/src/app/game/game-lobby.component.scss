@@ -145,7 +145,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sort-control select { border: 0; border-bottom: 1px solid var(--slate); padding: 6px 2px; color: var(--ink); background: transparent; font-size: 13px; }
 .refresh-hint { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .refresh-hint i { width: 7px; height: 7px; border-radius: 50%; background: var(--jade); box-shadow: 0 0 0 4px rgba(15, 83, 77, .1); }
-.refresh-button span { font-size: 18px; line-height: 1; }
+.refresh-button app-qmah-icon { width: 18px; height: 18px; }
 .refresh-button:disabled { cursor: wait; opacity: .58; }
 .filter-note { position: absolute; z-index: 4; right: 0; top: 62px; width: 260px; padding: 16px; color: var(--ink); background: var(--qmah-surface-soft); border: 1px solid var(--line); box-shadow: 0 16px 30px color-mix(in srgb, var(--ink) 18%, transparent); animation: reveal 180ms ease-out both; }
 .filter-note header { display: flex; justify-content: space-between; align-items: center; }
@@ -178,7 +178,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .room-status[data-status="PLAYING"] { color: var(--cinnabar); }
 .row-selection-state { color: var(--cinnabar); font-size: 11px; font-weight: 800; white-space: nowrap; }
 .row-action { display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; color: var(--jade); font-size: 12px; font-weight: 800; white-space: nowrap; }
-.row-arrow { color: var(--cinnabar); font-size: 17px; }
+.row-arrow { width: 17px; height: 17px; color: var(--cinnabar); }
 .ledger-skeleton { display: grid; grid-template-columns: 1.1fr .9fr .9fr; gap: 24px; padding: 21px 6px; }
 .ledger-skeleton i, .notes-skeleton i { display: block; height: 10px; background: rgba(98, 130, 139, .18); }
 .empty-state { padding: 82px 10px; }
@@ -188,6 +188,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .empty-state button + button { color: var(--qmah-on-dark); background: var(--ink); }
 .folio-pagination { display: flex; justify-content: center; gap: 4px; padding: 22px 0; }
 .folio-pagination button { min-width: 29px; border: 0; border-bottom: 2px solid transparent; padding: 4px; color: var(--muted); background: transparent; }
+.folio-pagination app-qmah-icon { width: 17px; height: 17px; }
 .folio-pagination button.is-current { border-bottom-color: var(--cinnabar); color: var(--ink); font-weight: 800; }
 
 .room-notes-heading { position: relative; padding: 0 48px 22px 0; border-bottom: 1px solid rgba(244, 241, 232, .28); }

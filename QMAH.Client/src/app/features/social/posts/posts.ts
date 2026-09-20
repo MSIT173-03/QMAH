@@ -9,6 +9,7 @@ import { MeApiService } from '../../../core/services/me-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 import {
   LucideChevronLeft,
   LucideChevronRight,
@@ -31,6 +32,7 @@ import {
     ImageCropModalComponent,
     ReportModalComponent,
     SocialPostContentComponent,
+    QmahIconComponent,
     LucideChevronLeft,
     LucideChevronRight,
     LucideFlag,

@@ -59,16 +59,7 @@ interface GuideStep {
           }
         }
         @else if (phase === 'list' && (authRequired || modes.length)) {
-          <section class="training-hero" aria-labelledby="training-hero-title">
-            <div class="training-hero-copy">
-              <h2 id="training-hero-title">挑一件館藏，<br />開始觀察。</h2>
-              <p>短局玩法從眼力、記憶到判斷，帶你熟悉館藏細節。</p>
-            </div>
-            <figure class="training-artwork">
-              <img src="/assets/game/tang-wang.jpg" alt="元趙孟頫湯王徵尹圖軸" />
-              <figcaption><span>單人練習</span><strong>先看，再下判斷</strong></figcaption>
-            </figure>
-          </section>
+          <section class="training-list" [class.is-auth-gated]="authRequired">
           @if (authRequired) {
             <section class="auth-state" aria-labelledby="auth-state-title">
               <p class="kicker">開始前</p>
@@ -79,7 +70,18 @@ interface GuideStep {
                 <button type="button" (click)="retryModes()">重新載入</button>
               </div>
             </section>
-          } @else {
+          }
+          <section class="training-hero" aria-labelledby="training-hero-title">
+            <div class="training-hero-copy">
+              <h2 id="training-hero-title">挑一件館藏，<br />開始觀察。</h2>
+              <p>短局玩法從眼力、記憶到判斷，帶你熟悉館藏細節。</p>
+            </div>
+            <figure class="training-artwork">
+              <img src="/assets/game/tang-wang.jpg" alt="元趙孟頫湯王徵尹圖軸" />
+              <figcaption><span>單人練習</span><strong>先看，再下判斷</strong></figcaption>
+            </figure>
+          </section>
+          @if (!authRequired) {
             <p class="intro">選一種玩法，完成一個小任務；完成後會立即結算並顯示成績。</p>
             <section class="guide" aria-labelledby="guide-title">
               <header class="guide-heading"><div><p class="kicker">玩法示範</p><h2 id="guide-title">三步看懂怎麼玩</h2></div><span>第 {{ demoStep + 1 }} / {{ guideSteps.length }} 步</span></header>
@@ -91,6 +93,7 @@ interface GuideStep {
             </section>
             <ol class="mode-index">@for (mode of modes; track mode.id; let index = $index) { <li><b>{{ (index + 1).toString().padStart(2, '0') }}</b><div><h2>{{ mode.name }}</h2><p>{{ mode.description }}</p></div><button type="button" (click)="start(mode)" [disabled]="starting">{{ starting ? '準備中…' : '開始練習' }}</button></li> }</ol>
           }
+          </section>
         }
         @else if (attempt; as current) {
           <section class="play-sheet" aria-live="polite">
