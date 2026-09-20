@@ -212,8 +212,9 @@ public sealed class GameRoomLifecycleService(
             if (room.Status is not ("WAITING" or "PLAYING"))
                 return Result(GameRoomMutationStatus.Conflict);
 
+            var now = DateTime.UtcNow;
             var wasWaitingHost = room.Status == "WAITING" && player.Role == "HOST";
-            MarkLeft(player, DateTime.UtcNow);
+            MarkLeft(player, now);
             room.StateVersion++;
 
             var remainingPlayers = room.GamePlayers
@@ -232,8 +233,7 @@ public sealed class GameRoomLifecycleService(
             {
                 if (room.Status == "WAITING")
                 {
-                    room.Status = "CANCELLED";
-                    room.EndedAt = DateTime.UtcNow;
+                    CancelRoom(room, now);
                 }
                 else
                 {
@@ -461,8 +461,7 @@ public sealed class GameRoomLifecycleService(
                 {
                     if (room.Status == "WAITING")
                     {
-                        room.Status = "CANCELLED";
-                        room.EndedAt = now;
+                        CancelRoom(room, now);
                     }
                     else
                     {
@@ -593,6 +592,14 @@ public sealed class GameRoomLifecycleService(
         room.EndedAt = now;
         room.CompletedAt = now;
         room.StateVersion++;
+    }
+
+    private static void CancelRoom(GameRoom room, DateTime now)
+    {
+        // game-lifecycle: 取消也是已終止狀態，兩個時間欄位一起寫入才能符合資料庫約束。
+        room.Status = "CANCELLED";
+        room.EndedAt = now;
+        room.CompletedAt = now;
     }
 
     private static void Shuffle<T>(IList<T> values)
