@@ -8,9 +8,9 @@
 
 ## Current Goal
 
-完成 User、Catalog、Game、Social、Store 五個前台 Area 的「風格統一」，不是把它們重新排成同一種頁面。這個目標允許調整頁面標題與文字層級、色彩角色、間距、卡片、表單、按鈕、狀態、共用導覽、RWD、accessibility 與使用者可見文案；每個 Area 的主要版面方向、資訊架構、內容順序、核心操作流程與特色都必須保留。任何新增或調整的互動，都以「第一次看到就知道怎麼用」為最低門檻，若視覺概念與可理解性衝突，優先簡化互動。
+目前目標是完成清明鑑定屋前台整合的全站品質收尾：以現有工作樹與既有 commits 為準，不重做已完成的登入／內容型首頁、會員點數鑰匙、圖鑑圖片來源與商城工作單元；在保留 User、Catalog、Game、Social、Store 各自主要版面方向、資訊架構、內容順序、核心操作流程與特色的前提下，完成 Social、Game 與跨 Area 的導覽、Route、typography、色彩角色、間距、按鈕、表單、卡片、狀態、RWD、accessibility 與台灣繁體中文一致性收尾。任何新增或調整的互動，都以「第一次看到就知道怎麼用」為最低門檻，若視覺概念與可理解性衝突，優先簡化互動。
 
-本輪工作單元依序為：登入頁／內容型首頁與 App Shell、User／Catalog、Game、Social、Store，最後集中做跨 Area 導覽與代表流程驗證。登入頁桌面維持畫卷主視覺加右側登入；手機先呈現品牌列與登入表單，再進入畫卷鑑賞，不使用桌面浮卡的縮小版。畫卷慢移、放大鏡、收合登入、明暗主題與真實素材仍須保留並可操作。
+登入頁桌面維持畫卷主視覺加右側登入；手機先呈現品牌列與登入表單，再進入畫卷鑑賞，不把桌面浮卡縮小套用到手機。全站採 Noto Sans TC／Noto Serif TC web font 加系統 fallback，並以共用主題 token 支援深淺模式；Game 頁面保留既有大廳、房間、練習與結算流程，不新增假功能或假資料。
 
 ### Scope Boundary：保留大方向，允許風格統一
 
@@ -20,7 +20,7 @@
 
 Game 的品質門檻同時包含 Usability 與 Modern Visual Quality：玩家第一次進入時要知道目前狀態、下一步目標、主要內容與主要操作；畫面也要具備可正式 Demo 的層級、節奏與完成度。可用性不能把 Game 做成灰色後台，視覺精緻也不能用漸層、玻璃效果或動畫掩蓋操作問題。
 
-本目標持續使用 `impeccable` 作為 UI 設計審查門檻，並用 `speak-human-tw` 審查使用者可見文案。每完成一個完整 UI 工作單元，至少要完成一次設計 critique、一次 detector／技術 audit 與代表性瀏覽器證據；集中檢查 320／390／768／1024／1440px、深淺模式、reduced motion、鍵盤焦點與主要互動，不因小修改反覆重跑整個 Repository。任何 audit 發現「看不懂、找不到、狀態互相干擾」時，下一步先減少操作與視覺噪音，再考慮增加動畫或裝飾。
+本目標持續使用 `impeccable` 作為 UI 設計審查門檻，並用 `speak-human-tw` 審查使用者可見文案。deterministic detector、source、build、tests 與 runtime 證據先回答可直接確認的問題；剩餘可縮成分類、排序、優先級、routing、review signal 或 gate 的主觀判斷，使用 Jev 做 bounded 快速分流，再由主模型與 Impeccable 處理真正的設計決策。每完成一個完整 UI 工作單元，至少要完成一次設計 critique、一次 detector／技術 audit 與代表性瀏覽器證據；集中檢查 320／390／768／1024／1440px、深淺模式、reduced motion、鍵盤焦點與主要互動，不因小修改反覆重跑整個 Repository。任何 audit 發現「看不懂、找不到、狀態互相干擾」時，下一步先減少操作與視覺噪音，再考慮增加動畫或裝飾。
 
 可見文案與品牌區另有一道不可省略的視覺 gate：逐一查看代表尺寸的實際截圖，確認繁中標題與說明不出現孤字、硬切、被 line-clamp 隱藏、貼邊或超出容器；Logo、metadata、控制項在實際背景上必須有足夠辨識度。`build`、detector 或單看 DOM box 通過，不能取代這項人工視覺確認。
 
