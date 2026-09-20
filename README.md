@@ -47,12 +47,6 @@
 
 正式金流與完整多人遊戲互動仍依各 Area 的既有範圍擴充。
 
-## 前台 UI 整合狀態
-
-截至 2026-09-20，Angular 前台的 User、Catalog、Game、Social、Store 五個系統已完成本輪 UI 整合收斂：共用 App Shell、Footer、主題狀態、字體層級、色彩語意、間距、圓角、陰影、表單與控制項基線已接回既有頁面，不改資訊架構、Route、API 或商業邏輯。
-
-這代表前端樣式已達可交付的整合狀態，不代表所有需要後端服務的流程都已在本機完成瀏覽器驗證。完整範圍、驗證結果與已知限制請見 [`FRONTEND_INTEGRATION_REPORT.md`](FRONTEND_INTEGRATION_REPORT.md) 與 [`QMAH_UI_INTEGRATION_PRINCIPLES.md`](QMAH_UI_INTEGRATION_PRINCIPLES.md)。
-
 ### Angular 21.2.22 的版本理由
 
 課程要求使用 Angular 21，因此 `QMAH.Client` 維持 Angular 21，不升到 Angular 22。
@@ -184,7 +178,7 @@ Web 與 API 使用不同的固定 Cookie 名稱，啟動後會清除已知的舊
 
 若 request 尚未進入應用程式前就再次回傳 431，代表 Cookie 已超過伺服器可解析的上限。關閉本機網站分頁，再從網址列左側的鎖頭開啟網站資料設定，清除 `localhost` 的 Cookie 與網站資料後重新啟動；也可用無痕視窗確認登入頁是否恢復正常。清除後本機登入狀態會消失，需重新登入，但不會刪除資料庫內容。
 
-Cookie 不包含連接埠，因此清除 `localhost` 的網站資料時，不只尋找 `7039`。若仍無法開啟，確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 `QMAH 後端主機與管理後台（API＋Razor）`。
+Cookie 不包含連接埠，因此清除 `localhost` 的網站資料時，不只尋找 `7039`。若仍無法開啟，確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 `QMAH 全站（API＋前台＋管理後台）` 或需要的局部服務。
 
 ### 無法連線或找不到資料表
 
