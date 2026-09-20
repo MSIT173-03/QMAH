@@ -4,7 +4,7 @@
   <!-- 商品縮圖，連結至商品頁 -->
   <a [storeLink]="link()" class="cart-line-thumb">
     @if (imageSrc(); as imageUrl) {
-      <img [src]="imageUrl" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
+      <img src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
     } @else {
       <span class="cart-line-slot">
         <app-qmah-icon name="image" [size]="20" aria-hidden="true" />

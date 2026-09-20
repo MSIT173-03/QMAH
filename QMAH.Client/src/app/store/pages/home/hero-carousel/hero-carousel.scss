@@ -5,19 +5,22 @@
 .hero {
   position: relative;
   overflow: hidden;
-  background: #eef1f0;
+  background: var(--color-swatch);
   border: 1px solid var(--color-line);
   height: 100%;
 }
 
 .hero-track {
   display: flex;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   transition: transform 600ms cubic-bezier(.4, 0, .2, 1);
 }
 
 .hero-slide {
   flex: 0 0 100%;
+  min-width: 0;
   min-height: 390px;
   isolation: isolate;
   background: var(--color-swatch);
@@ -43,7 +46,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgba(255, 253, 248, 0.16);
+  background: color-mix(in srgb, var(--color-surface) 16%, transparent);
 }
 
 .hero-slide-body {
@@ -54,8 +57,8 @@
   padding: 20px 22px 18px;
   /* ui-integration: 主視覺以細邊界界定文案層，避免厚重側線破壞圖片與文字的閱讀比例。 */
   border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-line));
-  background: rgba(255, 253, 248, 0.9);
-  box-shadow: 0 14px 30px rgba(34, 52, 61, 0.12);
+  background: color-mix(in srgb, var(--color-surface) 91%, transparent);
+  box-shadow: 0 14px 30px var(--color-shadow);
 }
 
 .hero-kicker {
@@ -74,6 +77,7 @@
   color: var(--color-ink-deep);
   text-wrap: pretty;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .hero-desc {
@@ -91,7 +95,7 @@
   max-width: 100%;
   padding: 7px 10px;
   border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-line));
-  background: rgba(255, 255, 255, 0.74);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
   color: var(--color-body);
   font-size: 12px;
 
@@ -132,7 +136,7 @@
   height: 3px;
   border: 0;
   padding: 0;
-  background: #c3ccce;
+  background: var(--color-line-mid);
 
   &--active {
     background: var(--color-ink);
@@ -156,11 +160,14 @@
   }
 
   .hero-title {
-    font-size: clamp(28px, 8vw, 36px);
+    /* ui-integration: 手機維持主視覺標題的份量，但讓中文標題以完整語意換行，不留下右側裁切或孤立短行。 */
+    font-size: clamp(26px, 7vw, 32px);
+    text-wrap: balance;
   }
 
   .hero-slide-body {
     width: min(100%, 430px);
+    min-width: 0;
     padding: 16px 17px 15px;
   }
 

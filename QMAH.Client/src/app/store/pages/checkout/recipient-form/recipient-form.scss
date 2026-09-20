@@ -9,19 +9,19 @@
   border-radius: 2px;
   padding: 8px 16px;
   font-size: 12px;
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
   transition: background 160ms, color 160ms;
 
   &--filled {
     background: var(--color-ink);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 }
 

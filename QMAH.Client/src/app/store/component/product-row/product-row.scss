@@ -4,7 +4,7 @@
 
 .product-row {
   border: 1px solid var(--color-line);
-  background: #fff;
+  background: var(--color-surface);
   padding: 14px;
   display: flex;
   gap: 16px;
@@ -124,7 +124,7 @@
 
 .product-row-buy {
   border: 1px solid var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
   border-radius: 2px;
   padding: 9px 20px;
@@ -136,7 +136,7 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 }
 

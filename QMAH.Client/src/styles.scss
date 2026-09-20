@@ -12,6 +12,22 @@ body {
   overflow-x: hidden;
 }
 
+/* ui-integration: App Shell 的 theme-controller 位於共用 Layout 之外層；在全域入口切換語意色，讓所有 Area 與商城共享深色背景與對比。 */
+:root:has(.theme-controller[value='qmahdark']:checked) .app-shell {
+  --color-surface: #192426;
+  --color-ink: #e6eeeb;
+  --color-primary: #d17a68;
+  --color-error: #e59b89;
+}
+
+:root:has(.theme-controller[value='qmahdark']:checked) .app-brand img {
+  filter: brightness(0) invert(1);
+}
+
+:root:has(.theme-controller[value='qmahdark']:checked) .store-app .brand-logo-img {
+  filter: brightness(0) invert(1);
+}
+
 button,
 a,
 input,

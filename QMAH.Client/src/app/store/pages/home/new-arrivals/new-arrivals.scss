@@ -88,7 +88,7 @@
 
   &--deal {
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-on-ink);
     background: var(--color-accent);
   }
 }
@@ -101,7 +101,7 @@
 
 .news-add {
   border: 1px solid var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
   border-radius: 2px;
   font-size: 12px;
@@ -112,6 +112,6 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 }

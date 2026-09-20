@@ -4,7 +4,7 @@
 
 .empty-state {
   border: 1px dashed var(--color-line-mid);
-  background: #fff;
+  background: var(--color-surface);
   padding: 60px 24px;
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@
 .empty-state-cta {
   margin-top: 4px;
   border: 1px solid var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
   border-radius: 2px;
   padding: 9px 22px;
@@ -42,7 +42,7 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 
   &--wide {

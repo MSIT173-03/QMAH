@@ -5,7 +5,7 @@
       @for (slide of slides(); track $index) {
         <div class="hero-slide" [class]="'hero-slide hero-slide--' + ($index % 3)" role="group"
           [attr.aria-label]="($index + 1) + ' / ' + slides().length">
-          <img class="hero-slide-image" [src]="slideImage($index)" alt="" aria-hidden="true"
+          <img class="hero-slide-image" src="{{ slideImage($index) }}" alt="" aria-hidden="true"
             [attr.loading]="$index === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="$index === 0 ? 'high' : 'low'" />
           <div class="hero-slide-body">
             <span class="hero-kicker">{{ slide.kicker }}</span>

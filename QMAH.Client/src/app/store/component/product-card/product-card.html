@@ -7,7 +7,7 @@
     <div class="product-card-cover">
       @if (imageSrc(); as imageUrl) {
         <!-- 商品列表只載入縮圖；3D／大圖只存在商品詳情，避免 512 件商品同時下載 display 圖。 -->
-        <img class="product-card-image" [src]="imageUrl" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
+        <img class="product-card-image" src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
       } @else {
         <span class="product-card-slot" [class.product-card-slot--faint]="isFaintSlot()">
           <app-qmah-icon name="image" [size]="22" aria-hidden="true" />

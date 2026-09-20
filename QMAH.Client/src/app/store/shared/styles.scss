@@ -3,6 +3,8 @@
    host: { class: 'store-app' }），不影響專案其餘頁面。
    （色彩變數統一在此宣告，各元件的 :host 只宣告元件專屬的變數） */
 .store-app {
+  display: block;
+  min-height: 100%;
   --color-ink: #22343d;
   --color-ink-deep: #193c38;
   --color-body: #3f5259;
@@ -24,6 +26,9 @@
   --color-gold-text: #7a6427;
   --color-good: #0f6b4f;
   --color-nav: #2f4149;
+  --color-on-ink: #fff;
+  --color-on-accent: #fff;
+  --color-shadow: rgba(34, 52, 61, 0.12);
 
   /* 頁面重置樣式（等同原本套用於 body 的樣式，改由頁面根元件承載） */
   background: var(--color-bg);
@@ -231,7 +236,7 @@
   }
   /* 折扣商品的標籤 */
   .product-card-tag--deal {
-    color: #fff;
+    color: var(--color-on-accent);
     background: var(--color-accent);
   }
   /* 商品頁價格列的加大版標籤 */
@@ -260,7 +265,7 @@
   .btn-solid {
     border: 1px solid var(--color-ink);
     background: var(--color-ink);
-    color: #fff;
+    color: var(--color-on-ink);
     border-radius: 2px;
     padding: 12px 26px;
     font-size: 12px;
@@ -323,7 +328,7 @@
   /* 外框按鈕 */
   .btn-outline {
     border: 1px solid var(--color-ink);
-    background: #fff;
+    background: var(--color-surface);
     color: var(--color-ink);
     border-radius: 2px;
     padding: 11px 20px;
@@ -333,7 +338,7 @@
 
     &:hover {
       background: var(--color-ink);
-      color: #fff;
+      color: var(--color-on-ink);
     }
   }
 
@@ -347,4 +352,33 @@
       animation-iteration-count: 1 !important;
     }
   }
+}
+
+/* ui-integration: 商城沿用全站 theme-controller；只替換同一組語意 token，保留首頁、列表、商品與結帳的原有構圖。 */
+:root:has(.theme-controller[value='qmahdark']:checked) .store-app,
+:root[data-theme='qmahdark'] .store-app {
+  --color-ink: #e6eeeb;
+  --color-ink-deep: #d6e6df;
+  --color-body: #c0d0cb;
+  --color-muted: #9aaba6;
+  --color-muted-2: #aabbb5;
+  --color-faint: #849691;
+  --color-placeholder: #71847e;
+  --color-line: #3a4b4b;
+  --color-line-soft: #2f3f40;
+  --color-line-mid: #4a5b59;
+  --color-line-split: #526360;
+  --color-bg: #192426;
+  --color-surface: #233032;
+  --color-swatch: #2d3b3b;
+  --color-accent: #d17a68;
+  --color-teal: #86b5b3;
+  --color-gold: #d4b779;
+  --color-gold-bg: #3f3826;
+  --color-gold-text: #e6cb84;
+  --color-good: #78c4a4;
+  --color-nav: #d4e2dd;
+  --color-on-ink: #182123;
+  --color-on-accent: #211c1a;
+  --color-shadow: rgba(0, 0, 0, 0.24);
 }

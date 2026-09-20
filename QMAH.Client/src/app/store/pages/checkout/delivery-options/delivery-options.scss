@@ -12,7 +12,7 @@
 .option-btn {
   border: 1px solid var(--color-line-mid);
   border-radius: 2px;
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-body);
   padding: 10px 14px;
   font-size: 12px;
@@ -30,7 +30,7 @@
   &--active {
     border-color: var(--color-ink);
     background: var(--color-ink);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 }
 

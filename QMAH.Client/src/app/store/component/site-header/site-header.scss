@@ -5,7 +5,7 @@
 .site-header {
   /* ui-integration: 外層 App Shell 已負責 sticky global header，商城頁首改為一般流避免雙層 sticky 遮住內容。 */
   position: relative;
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-line);
 }

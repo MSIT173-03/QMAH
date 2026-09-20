@@ -31,12 +31,12 @@
   border-radius: 2px;
   font-size: 12px;
   padding: 4px 10px;
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &--taken {
     background: var(--color-ink);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 }

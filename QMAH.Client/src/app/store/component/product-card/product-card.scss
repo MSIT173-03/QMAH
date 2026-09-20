@@ -4,7 +4,7 @@
 
 .product-card {
   border: 1px solid var(--color-line);
-  background: #fff;
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
   transition: border-color 160ms;
@@ -58,7 +58,7 @@
   top: 0;
   left: 0;
   background: var(--color-ink);
-  color: #fff;
+  color: var(--color-on-ink);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   padding: 3px 7px;
@@ -116,7 +116,7 @@
 .product-card-buy {
   width: 100%;
   border: 1px solid var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
   border-radius: 2px;
   padding: 8px 0;
@@ -128,6 +128,6 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 }

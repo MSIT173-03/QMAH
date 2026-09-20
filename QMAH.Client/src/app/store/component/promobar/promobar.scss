@@ -4,7 +4,7 @@
 
 .promobar {
   border-bottom: 1px solid var(--color-line);
-  background: #fff;
+  background: var(--color-surface);
 }
 
 .promobar-row {
@@ -64,9 +64,9 @@
   z-index: 60;
   width: 268px;
   max-width: calc(100vw - 28px);
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-ink);
-  box-shadow: 0 14px 30px rgba(34, 52, 61, 0.12);
+  box-shadow: 0 14px 30px var(--color-shadow);
   padding: 10px;
   display: flex;
   flex-direction: column;

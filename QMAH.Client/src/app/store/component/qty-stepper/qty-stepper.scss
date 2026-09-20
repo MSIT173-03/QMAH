@@ -12,7 +12,7 @@
 
 .qty-btn {
   border: 0;
-  background: #fff;
+  background: var(--color-surface);
   padding: 9px 14px;
   font-size: 14px;
   color: var(--color-ink);
@@ -20,7 +20,7 @@
 
   &:hover {
     background: var(--color-ink);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 
   &--sm {

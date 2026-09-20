@@ -12,7 +12,7 @@
 
 .pagination-btn {
   border: 1px solid var(--color-line-mid);
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 2px;
   padding: 8px 14px;
   font-size: 12px;
@@ -23,7 +23,7 @@
   &:hover:not(:disabled) {
     background: var(--color-ink);
     border-color: var(--color-ink);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 
   &:disabled {

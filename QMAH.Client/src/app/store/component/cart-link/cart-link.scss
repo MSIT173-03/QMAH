@@ -10,7 +10,7 @@
   align-items: center;
   gap: 9px;
   font-size: 12px;
-  color: #fff;
+  color: var(--color-on-ink);
   padding: 8px 15px;
   flex: 0 0 auto;
   text-decoration: none;
@@ -19,7 +19,7 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 
   &--hero {
@@ -33,7 +33,7 @@
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 2px;
   padding: 1px 6px;
 }

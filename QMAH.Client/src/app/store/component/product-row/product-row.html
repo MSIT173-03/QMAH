@@ -5,7 +5,7 @@
   <a [storeLink]="link()" class="product-row-thumb">
     @if (imageSrc(); as imageUrl) {
       <!-- 橫列同樣使用縮圖；只有進入商品詳情才取 display 大圖。 -->
-      <img class="product-row-image" [src]="imageUrl" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
+      <img class="product-row-image" src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
     } @else {
       <span class="product-row-slot"><app-qmah-icon name="image" [size]="20" aria-hidden="true" />{{ slotLabel }}</span>
     }

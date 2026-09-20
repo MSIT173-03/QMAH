@@ -8,7 +8,7 @@
           <app-collectible-card [name]="name()" [type]="type()" [image]="image()"
             [dimensions]="dimensions()" [description]="description()" />
           @if (image(); as imageUrl) {
-            <img class="orientation-probe" [src]="imageUrl" (load)="onNativeImageLoad($event)" alt="" aria-hidden="true" />
+            <img class="orientation-probe" src="{{ imageUrl }}" (load)="onNativeImageLoad($event)" alt="" aria-hidden="true" />
           }
         </div>
       </div>

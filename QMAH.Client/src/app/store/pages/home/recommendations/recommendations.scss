@@ -6,7 +6,7 @@
   align-self: center;
   margin-top: 6px;
   border: 1px solid var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
   padding: 11px 40px;
   border-radius: 2px;
@@ -17,6 +17,6 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-on-ink);
   }
 }
