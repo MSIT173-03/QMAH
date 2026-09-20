@@ -33,22 +33,23 @@ body {
 
 /* ui-integration: App Shell 的 theme-controller 位於共用 Layout 之外層；在全域入口切換語意色，讓所有 Area 與商城共享深色背景與對比。 */
 :root:has(.theme-controller[value='qmahdark']:checked) .app-shell {
-  --color-surface: #192426;
-  --color-ink: #e6eeeb;
-  --color-primary: #d17a68;
-  --color-error: #e59b89;
-  --qmah-page-surface: #192426;
-  --qmah-surface: #202d2f;
-  --qmah-surface-soft: #2a3938;
-  --qmah-surface-muted: #31413f;
-  --qmah-ink: #e6eeeb;
-  --qmah-muted: #b8c7c3;
-  --qmah-jade: #82c3b5;
-  --qmah-slate: #9fb6b8;
-  --qmah-cinnabar: #e59b89;
-  --qmah-bronze: #d8c080;
-  --qmah-line: #4b605d;
-  --qmah-on-dark: #f4f1e8;
+  /* ui-integration: 深色維持故宮紙墨的暖色比例，避免把所有頁面套成冷色 dashboard。 */
+  --color-surface: #29251f;
+  --color-ink: #f0e5d3;
+  --color-primary: #c98066;
+  --color-error: #e3a084;
+  --qmah-page-surface: #29251f;
+  --qmah-surface: #332d25;
+  --qmah-surface-soft: #3b342a;
+  --qmah-surface-muted: #443a2d;
+  --qmah-ink: #f0e5d3;
+  --qmah-muted: #c1b39f;
+  --qmah-jade: #aeb99b;
+  --qmah-slate: #b9ab95;
+  --qmah-cinnabar: #df977d;
+  --qmah-bronze: #d1b477;
+  --qmah-line: color-mix(in srgb, #f0e5d3 14%, transparent);
+  --qmah-on-dark: #fff7e8;
 }
 
 :root:has(.theme-controller[value='qmahdark']:checked) .app-brand img {

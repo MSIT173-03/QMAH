@@ -10,14 +10,11 @@
 /* ui-integration: 玩法說明預設收合成輕量入口，展開後才顯示完整步驟，避免擠壓大廳房間清單。 */
 .game-how-to {
   overflow: hidden;
-  border: 1px solid var(--how-to-line);
   background: color-mix(in srgb, var(--how-to-paper) 92%, var(--qmah-page-surface));
-  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .game-how-to[open] {
-  border-color: color-mix(in srgb, var(--how-to-jade) 35%, var(--how-to-line));
-  box-shadow: 0 10px 24px rgba(16, 47, 56, .07);
+  background: var(--how-to-paper);
 }
 
 summary {
@@ -62,8 +59,9 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
   width: 28px;
   height: 28px;
   flex: 0 0 auto;
-  border: 1px solid var(--how-to-jade);
+  border: 0;
   border-radius: 50%;
+  background: color-mix(in srgb, var(--how-to-jade) 12%, transparent);
 }
 
 .game-how-to__toggle::before,
@@ -86,7 +84,6 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
 .game-how-to[open] .game-how-to__toggle::after { transform: translate(-50%, -50%) rotate(0deg); }
 
 .game-how-to__body {
-  border-top: 1px solid var(--how-to-line);
   padding: 18px;
   color: var(--how-to-ink);
   animation: how-to-reveal 180ms ease-out both;
@@ -113,7 +110,6 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
   gap: 10px;
   min-width: 0;
   padding: 13px;
-  border: 1px solid var(--how-to-line);
   background: color-mix(in srgb, var(--how-to-paper) 70%, var(--qmah-page-surface));
 }
 

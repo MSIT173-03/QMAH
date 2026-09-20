@@ -22,7 +22,7 @@
   text-underline-offset: 4px;
 }
 
-.guide-heading { padding: 48px 4px 26px; border-bottom: 1px solid var(--guide-line); }
+.guide-heading { padding: 48px 4px 26px; }
 .eyebrow { margin: 0 0 7px; color: var(--guide-cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
 .guide-heading h1 { margin: 0; font: 700 clamp(36px, 5vw, 58px)/1.1 var(--qmah-font-serif); letter-spacing: -.045em; }
 .guide-heading p:last-child { max-width: 42ch; margin: 14px 0 0; color: var(--guide-muted); }
@@ -38,18 +38,19 @@
   display: grid;
   gap: 2px;
   min-height: 68px;
-  border: 1px solid var(--guide-line);
-  border-radius: 7px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   padding: 11px 14px;
   color: var(--guide-muted);
-  background: color-mix(in srgb, var(--guide-surface) 60%, var(--qmah-page-surface));
+  background: transparent;
   text-align: left;
   cursor: pointer;
   transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
-.guide-tabs button:hover { border-color: rgba(189, 87, 72, .45); transform: translateY(-1px); }
-.guide-tabs button.is-active { border-color: rgba(189, 87, 72, .62); color: var(--guide-ink); background: var(--guide-surface); box-shadow: inset 0 -3px var(--guide-cinnabar); }
+.guide-tabs button:hover { color: var(--guide-ink); transform: none; }
+.guide-tabs button.is-active { border-bottom-color: var(--guide-cinnabar); color: var(--guide-ink); background: transparent; box-shadow: none; }
 .guide-tabs button span { font-size: 16px; font-weight: 800; }
 .guide-tabs button small { color: var(--guide-muted); font-size: 11px; }
 

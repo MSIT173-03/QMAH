@@ -51,7 +51,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   overflow: hidden;
   color: var(--ink);
   background: var(--surface);
-  border: 1px solid rgba(16, 47, 56, .16);
 }
 
 .lobby-hero-copy {
@@ -110,7 +109,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .lobby-hero-collapsed .lobby-hero-kicker { margin: 0; }
 .lobby-hero-collapsed strong { font-family: var(--qmah-font-serif); font-size: 18px; }
 
-.lobby-artwork { height: 100%; min-height: 0; margin: 0; overflow: hidden; border-left: 1px solid rgba(244, 241, 232, .28); }
+.lobby-artwork { height: 100%; min-height: 0; margin: 0; overflow: hidden; }
 .lobby-artwork img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 50%; background: #454b49; }
 .lobby-hero.is-collapsed { display: block; height: auto; min-height: 0; overflow: visible; border: 0; background: transparent; }
 
@@ -125,16 +124,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   max-width: 1260px;
   margin: 0 auto;
   overflow: hidden;
-  border: 1px solid rgba(16, 47, 56, .26);
   background: var(--surface);
-  box-shadow: 0 22px 44px rgba(16, 47, 56, .12);
 }
 
 .index-page { min-width: 0; padding: 36px 42px 30px; }
 /* ui-integration: 詳情視窗脫離清單文件流，選房不再改變索引欄位寬度。 */
 .notes-page { position: fixed; z-index: 71; top: 50%; left: 50%; width: min(720px, calc(100vw - 40px)); max-height: calc(100dvh - 48px); overflow: auto; transform: translate(-50%, -50%); padding: 34px 36px 30px; color: var(--qmah-on-dark); background: var(--jade); border: 1px solid rgba(244, 241, 232, .42); box-shadow: 0 24px 70px rgba(10, 37, 45, .34); animation: reveal-dialog 180ms ease-out both; }
 .room-detail-backdrop { position: fixed; z-index: 70; inset: 0; background: rgba(10, 37, 45, .62); }
-.page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 26px; border-bottom: 1px solid var(--line); }
+.page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 30px; }
 .page-heading h2, .room-notes-heading h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: clamp(30px, 3vw, 44px); font-weight: 700; letter-spacing: -.035em; line-height: 1.1; }
 .page-heading p { margin: 9px 0 0; color: var(--muted); font-size: 15px; }
 .join-note button, .insert-sheet footer button { border: 1px solid var(--ink); border-radius: 3px; padding: 10px 14px; color: var(--qmah-on-dark); background: var(--ink); font-weight: 800; transition: background 180ms ease, transform 180ms ease; }
@@ -156,19 +153,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .filter-note p { color: var(--muted); font-size: 14px; }
 .filter-note > button { border: 1px solid var(--line); border-radius: 2px; padding: 5px 7px; color: var(--ink); background: transparent; font-size: 12px; }
 
-.status-tabs { display: flex; align-items: flex-end; gap: 8px; border-bottom: 1px solid var(--line); }
+.status-tabs { display: flex; align-items: flex-end; gap: 8px; }
 .status-tabs button { position: relative; min-height: 44px; border: 0; padding: 9px 12px 10px; color: var(--muted); background: transparent; font-size: 14px; }
 .status-tabs button::after { content: ""; position: absolute; right: 12px; bottom: -1px; left: 12px; height: 3px; background: transparent; transform: scaleX(0); transform-origin: left; transition: transform 180ms ease, background 180ms ease; }
 .status-tabs button.is-active { color: var(--ink); font-weight: 800; }
 .status-tabs button.is-active::after { background: var(--cinnabar); transform: scaleX(1); }
 .status-tabs span { margin-left: auto; padding: 0 4px 10px; color: var(--muted); font-size: 13px; }
 .room-ledger-head, .room-row { display: grid; grid-template-columns: minmax(145px, 1.15fr) minmax(180px, 1.25fr) minmax(116px, .8fr) minmax(72px, .6fr) 74px; align-items: center; gap: clamp(12px, 2vw, 24px); }
-.room-ledger-head { padding: 14px 6px 8px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+.room-ledger-head { padding: 14px 6px 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
 .room-ledger-head span:last-child { text-align: right; }
 .ledger { min-height: 0; overflow: auto; scrollbar-color: var(--slate) transparent; scrollbar-width: thin; }
-.room-row { width: 100%; min-height: 70px; border: 0; border-bottom: 1px solid var(--line); padding: 12px 6px; color: var(--ink); background: transparent; text-align: left; transition: background-color 160ms ease, box-shadow 160ms ease; }
+.room-row { width: 100%; min-height: 70px; border: 0; padding: 12px 6px; color: var(--ink); background: transparent; text-align: left; transition: background-color 160ms ease, color 160ms ease; }
 .room-row:hover { background: var(--qmah-surface-muted); }
-.room-row.is-selected { background: color-mix(in srgb, var(--qmah-surface-muted) 88%, var(--qmah-jade)); box-shadow: inset 4px 0 var(--cinnabar), 0 5px 14px color-mix(in srgb, var(--ink) 8%, transparent); }
+.room-row.is-selected { background: color-mix(in srgb, var(--qmah-surface-muted) 88%, var(--qmah-jade)); }
+.room-row.is-selected .room-code strong { color: var(--cinnabar); }
 .room-code { display: grid; gap: 3px; min-width: 0; }
 .room-code strong { overflow: hidden; font: 800 15px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .04em; text-overflow: ellipsis; }
 .room-code small { color: var(--muted); font-size: 12px; }
@@ -181,7 +179,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .row-selection-state { color: var(--cinnabar); font-size: 11px; font-weight: 800; white-space: nowrap; }
 .row-action { display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; color: var(--jade); font-size: 12px; font-weight: 800; white-space: nowrap; }
 .row-arrow { color: var(--cinnabar); font-size: 17px; }
-.ledger-skeleton { display: grid; grid-template-columns: 1.1fr .9fr .9fr; gap: 24px; padding: 21px 6px; border-bottom: 1px solid var(--line); }
+.ledger-skeleton { display: grid; grid-template-columns: 1.1fr .9fr .9fr; gap: 24px; padding: 21px 6px; }
 .ledger-skeleton i, .notes-skeleton i { display: block; height: 10px; background: rgba(98, 130, 139, .18); }
 .empty-state { padding: 82px 10px; }
 .empty-state h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: 27px; }
@@ -250,7 +248,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .lobby-hero-kicker { margin-bottom: 12px; }
   .lobby-hero h1 { font-size: clamp(38px, 11vw, 52px); }
   .lobby-hero-copy p:not(.lobby-hero-kicker) { margin: 16px 0 22px; font-size: 15px; }
-  .lobby-artwork { height: 230px; min-height: 230px; border-top: 1px solid rgba(244, 241, 232, .28); border-left: 0; }
+  .lobby-artwork { height: 230px; min-height: 230px; }
   .lobby-hero-collapsed { min-height: 68px; padding: 10px 12px; }
   .lobby-hero-collapsed strong { font-size: 16px; }
   .lobby-hero-collapsed .hero-collapse { min-height: 38px; padding-inline: 9px; }

@@ -45,7 +45,7 @@ interface GuideStep {
           <div><p>一個人也能玩</p><h1 id="training-title">單人小遊戲</h1></div>
         </header>
 
-        @if (error) { <div class="message error" role="alert"><strong>{{ authRequired ? '需要登入才能開始練習' : '單人小遊戲目前無法載入' }}</strong><span>{{ error }}</span>@if (authRequired) { <div class="auth-actions"><a routerLink="/login">前往登入</a><button type="button" (click)="retryModes()">重新載入</button></div> }</div> }
+        @if (error && !authRequired) { <div class="message error" role="alert"><strong>單人小遊戲目前無法載入</strong><span>{{ error }}</span><div class="auth-actions"><button type="button" (click)="retryModes()">重新載入</button></div></div> }
         @if (loading) { <div class="loading" role="status">正在載入單人小遊戲…</div> }
         @else if (phase === 'complete') {
           @if (complete; as result) {
@@ -58,8 +58,39 @@ interface GuideStep {
             </section>
           }
         }
-        @else if (authRequired && !error) {
-          <section class="auth-state" aria-labelledby="auth-state-title"><h2 id="auth-state-title">登入後即可開始練習</h2><p>登入會員帳號後，成績才會送出並保留。</p><a routerLink="/login">前往會員登入</a></section>
+        @else if (phase === 'list' && (authRequired || modes.length)) {
+          <section class="training-hero" aria-labelledby="training-hero-title">
+            <div class="training-hero-copy">
+              <h2 id="training-hero-title">挑一件館藏，<br />開始觀察。</h2>
+              <p>短局玩法從眼力、記憶到判斷，帶你熟悉館藏細節。</p>
+            </div>
+            <figure class="training-artwork">
+              <img src="/assets/game/tang-wang.jpg" alt="元趙孟頫湯王徵尹圖軸" />
+              <figcaption><span>單人練習</span><strong>先看，再下判斷</strong></figcaption>
+            </figure>
+          </section>
+          @if (authRequired) {
+            <section class="auth-state" aria-labelledby="auth-state-title">
+              <p class="kicker">開始前</p>
+              <h2 id="auth-state-title">登入後即可開始練習</h2>
+              <p>登入後會載入目前啟用的玩法，完成結果也會保留在會員紀錄。</p>
+              <div class="auth-actions">
+                <a routerLink="/login" [queryParams]="{ returnUrl: '/game/training' }">前往登入</a>
+                <button type="button" (click)="retryModes()">重新載入</button>
+              </div>
+            </section>
+          } @else {
+            <p class="intro">選一種玩法，完成一個小任務；完成後會立即結算並顯示成績。</p>
+            <section class="guide" aria-labelledby="guide-title">
+              <header class="guide-heading"><div><p class="kicker">玩法示範</p><h2 id="guide-title">三步看懂怎麼玩</h2></div><span>第 {{ demoStep + 1 }} / {{ guideSteps.length }} 步</span></header>
+              <nav class="guide-modes" aria-label="選擇示範玩法">@for (mode of modes; track mode.id) { <button type="button" [class.active]="demoModeCode === mode.code" [attr.aria-pressed]="demoModeCode === mode.code" (click)="selectGuideMode(mode.code)">{{ mode.name }}</button> }</nav>
+              <div class="guide-step">
+                <div class="guide-visual"><small>第 {{ demoStep + 1 }} 步</small><strong>{{ currentGuideStep.visual }}</strong></div>
+                <div class="guide-copy"><h3>{{ currentGuideStep.title }}</h3><p>{{ currentGuideStep.description }}</p><div class="guide-controls"><button type="button" class="secondary" (click)="previousGuideStep()" [disabled]="demoStep === 0">上一步</button><button type="button" (click)="nextGuideStep()" [disabled]="demoStep >= guideSteps.length - 1">下一步</button><button type="button" class="secondary" (click)="startGuideMode()" [disabled]="starting">開始練習</button></div></div>
+              </div>
+            </section>
+            <ol class="mode-index">@for (mode of modes; track mode.id; let index = $index) { <li><b>{{ (index + 1).toString().padStart(2, '0') }}</b><div><h2>{{ mode.name }}</h2><p>{{ mode.description }}</p></div><button type="button" (click)="start(mode)" [disabled]="starting">{{ starting ? '準備中…' : '開始練習' }}</button></li> }</ol>
+          }
         }
         @else if (attempt; as current) {
           <section class="play-sheet" aria-live="polite">
@@ -86,28 +117,6 @@ interface GuideStep {
 
             <footer class="play-footer"><span>{{ progressText }}</span><div class="play-actions"><button type="button" class="secondary" (click)="exitAttempt()" [disabled]="completing">返回玩法列表</button><button type="button" (click)="completeAttempt()" [disabled]="!canComplete || completing">{{ completing ? '送出中…' : '送出結果' }}</button></div></footer>
           </section>
-        }
-        @else if (modes.length) {
-          <section class="training-hero" aria-labelledby="training-hero-title">
-            <div class="training-hero-copy">
-              <h2 id="training-hero-title">挑一件館藏，<br />開始觀察。</h2>
-          <p>四種短局玩法，從眼力、記憶到判斷，帶你熟悉館藏細節。</p>
-            </div>
-            <figure class="training-artwork">
-              <img src="/assets/game/tang-wang.jpg" alt="元趙孟頫湯王徵尹圖軸" />
-              <figcaption><span>單人練習</span><strong>先看，再下判斷</strong></figcaption>
-            </figure>
-          </section>
-          <p class="intro">選一種玩法，完成一個小任務；完成後會立即結算並顯示成績。</p>
-          <section class="guide" aria-labelledby="guide-title">
-            <header class="guide-heading"><div><p class="kicker">玩法示範</p><h2 id="guide-title">三步看懂怎麼玩</h2></div><span>第 {{ demoStep + 1 }} / {{ guideSteps.length }} 步</span></header>
-            <nav class="guide-modes" aria-label="選擇示範玩法">@for (mode of modes; track mode.id) { <button type="button" [class.active]="demoModeCode === mode.code" [attr.aria-pressed]="demoModeCode === mode.code" (click)="selectGuideMode(mode.code)">{{ mode.name }}</button> }</nav>
-            <div class="guide-step">
-              <div class="guide-visual"><small>第 {{ demoStep + 1 }} 步</small><strong>{{ currentGuideStep.visual }}</strong></div>
-              <div class="guide-copy"><h3>{{ currentGuideStep.title }}</h3><p>{{ currentGuideStep.description }}</p><div class="guide-controls"><button type="button" class="secondary" (click)="previousGuideStep()" [disabled]="demoStep === 0">上一步</button><button type="button" (click)="nextGuideStep()" [disabled]="demoStep >= guideSteps.length - 1">下一步</button><button type="button" class="secondary" (click)="startGuideMode()" [disabled]="starting">開始練習</button></div></div>
-            </div>
-          </section>
-          <ol class="mode-index">@for (mode of modes; track mode.id; let index = $index) { <li><b>{{ (index + 1).toString().padStart(2, '0') }}</b><div><h2>{{ mode.name }}</h2><p>{{ mode.description }}</p></div><button type="button" (click)="start(mode)" [disabled]="starting">{{ starting ? '準備中…' : '開始練習' }}</button></li> }</ol>
         }
         @else if (!error) { <div class="loading">目前沒有可開始的單人小遊戲。</div> }
       </section>
