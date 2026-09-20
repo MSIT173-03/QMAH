@@ -71,7 +71,10 @@
 }
 
 .museum-topbar {
-  position: relative;
+  position: absolute;
+  top: clamp(24px, 4vw, 64px);
+  right: clamp(24px, 4vw, 64px);
+  left: clamp(24px, 4vw, 64px);
   z-index: 5;
   display: flex;
   align-items: center;
@@ -733,10 +736,27 @@ input:focus-visible {
     display: flex;
     flex-direction: column;
     overflow: visible;
+    background: var(--login-paper);
+  }
+
+  .museum-topbar {
+    position: relative;
+    inset: auto;
+    order: 1;
+    padding: 24px;
+    border-bottom: 1px solid var(--login-border);
+  }
+
+  .brand-logo {
+    filter: brightness(0.42) saturate(0.72) drop-shadow(0 2px 10px rgba(25, 60, 56, 0.18));
+  }
+
+  .museum-purpose {
+    color: var(--login-muted);
   }
 
   .login-side {
-    order: 1;
+    order: 2;
     min-height: auto;
     padding: 48px 24px 56px;
     background: var(--login-paper);
@@ -749,7 +769,7 @@ input:focus-visible {
 
   .museum-side {
     position: relative;
-    order: 2;
+    order: 3;
     inset: auto;
     min-height: 680px;
   }
@@ -760,9 +780,9 @@ input:focus-visible {
 }
 
 @media (max-width: 620px) {
-  /* ui-integration: 手機改成「畫面 → 說明 → 控制 → 登入」的單一路徑，避免所有資訊疊在畫卷上。 */
+  /* ui-integration: 手機先完成登入，再進入畫卷鑑賞，避免內容體驗壓過主任務。 */
   .museum-side {
-    order: 1;
+    order: 3;
     min-height: auto;
     padding: 0;
     overflow: visible;
@@ -793,10 +813,10 @@ input:focus-visible {
   }
 
   .museum-topbar {
-    position: absolute;
-    top: 22px;
-    right: 22px;
-    left: 22px;
+    top: auto;
+    right: auto;
+    left: auto;
+    padding: 18px 22px 14px;
     align-items: center;
     gap: 12px;
   }
@@ -971,6 +991,10 @@ input:focus-visible {
 
 :host-context([data-theme='qmahdark']) .login-page {
   background: #1e1b17;
+}
+
+:host-context([data-theme='qmahdark']) .brand-logo {
+  filter: drop-shadow(0 2px 12px rgba(7, 28, 26, 0.42));
 }
 
 :host-context([data-theme='qmahdark']) .theme-toggle {

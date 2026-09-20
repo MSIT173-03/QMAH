@@ -4,29 +4,29 @@
   [class.theme-switching--dark]="themeDirection() === 'to-dark'"
   [class.theme-switching--light]="themeDirection() === 'to-light'"
 >
-  <section class="museum-side" aria-labelledby="museum-story-title">
-    <div class="museum-topbar">
-      <img class="brand-logo" src="/images/brand/qmah-logo-dark.svg" alt="清明鑑定屋" />
-      <div class="museum-topbar__actions">
-        <span class="museum-purpose">故宮院藏・清明上河圖</span>
-        <button
-          type="button"
-          class="theme-toggle"
-          [disabled]="themeTransitioning()"
-          [attr.aria-label]="theme() === 'qmahdark' ? '切換淺色模式' : '切換深色模式'"
-          [attr.aria-pressed]="theme() === 'qmahdark'"
-          title="切換深淺模式"
-          (click)="toggleTheme()"
-        >
-          @if (theme() === 'qmahdark') {
-            <app-qmah-icon name="sun" aria-hidden="true" />
-          } @else {
-            <app-qmah-icon name="moon" aria-hidden="true" />
-          }
-        </button>
-      </div>
+  <div class="museum-topbar">
+    <img class="brand-logo" src="/images/brand/qmah-logo-dark.svg" alt="清明鑑定屋" />
+    <div class="museum-topbar__actions">
+      <span class="museum-purpose">故宮院藏・清明上河圖</span>
+      <button
+        type="button"
+        class="theme-toggle"
+        [disabled]="themeTransitioning()"
+        [attr.aria-label]="theme() === 'qmahdark' ? '切換淺色模式' : '切換深色模式'"
+        [attr.aria-pressed]="theme() === 'qmahdark'"
+        title="切換深淺模式"
+        (click)="toggleTheme()"
+      >
+        @if (theme() === 'qmahdark') {
+          <app-qmah-icon name="sun" aria-hidden="true" />
+        } @else {
+          <app-qmah-icon name="moon" aria-hidden="true" />
+        }
+      </button>
     </div>
+  </div>
 
+  <section class="museum-side" aria-labelledby="museum-story-title">
     <div class="museum-showcase">
       <div class="museum-media">
         <app-image-magnifier
