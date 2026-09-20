@@ -34,16 +34,24 @@ export class ImageMagnifier implements OnDestroy {
   protected active = signal(false);
   protected dragging = signal(false);
   protected position = signal({ x: 50, y: 50 });
-  private readonly zoom = 2.6;
+  protected readonly zoom = signal(2.6);
+  protected readonly zoomPercent = computed(() => Math.round(this.zoom() * 100));
+  private readonly defaultZoom = 2.6;
+  private readonly minZoom = 1.5;
+  private readonly maxZoom = 5;
+  private readonly zoomStep = 0.25;
   private readonly layout = signal<MagnifierLayout | null>(null);
   private observedHost: HTMLElement | null = null;
   private observedImage: HTMLImageElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private readonly activePointers = new Map<number, { x: number; y: number }>();
+  private pinchStartDistance: number | null = null;
+  private pinchStartZoom = this.zoom();
 
   protected backgroundSize = computed(() => {
     const layout = this.layout();
-    if (!layout) return '260cqw 260cqh';
-    return `${layout.imageWidth * this.zoom}px ${layout.imageHeight * this.zoom}px`;
+    if (!layout) return `${this.zoom() * 100}cqw ${this.zoom() * 100}cqh`;
+    return `${layout.imageWidth * this.zoom()}px ${layout.imageHeight * this.zoom()}px`;
   });
 
   protected backgroundPosition = computed(() => {
@@ -60,7 +68,7 @@ export class ImageMagnifier implements OnDestroy {
       Math.min(layout.imageHeight, (point.y / 100) * layout.hostHeight - layout.imageOffsetY),
     );
 
-    return `calc(50% - ${imagePointX * this.zoom}px) calc(50% - ${imagePointY * this.zoom}px)`;
+    return `calc(50% - ${imagePointX * this.zoom()}px) calc(50% - ${imagePointY * this.zoom()}px)`;
   });
 
   protected move(event: PointerEvent): void {
@@ -73,14 +81,53 @@ export class ImageMagnifier implements OnDestroy {
     this.active.set(true);
   }
 
+  protected handlePointerMove(event: PointerEvent): void {
+    const pointer = this.activePointers.get(event.pointerId);
+    if (pointer) {
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+    }
+
+    if (this.activePointers.size >= 2) {
+      const distance = this.pointerDistance();
+      if (distance && this.pinchStartDistance) {
+        this.setZoom(this.pinchStartZoom * (distance / this.pinchStartDistance));
+      }
+      return;
+    }
+
+    this.move(event);
+  }
+
+  protected adjustZoom(event: WheelEvent): void {
+    if (!this.persistentLens()) return;
+
+    event.preventDefault();
+    const direction = event.deltaY < 0 ? 1 : -1;
+    this.setZoom(this.zoom() + direction * this.zoomStep);
+  }
+
+  /** Reset only the magnification, keeping the current lens position in view. */
+  resetZoom(): void {
+    this.setZoom(this.defaultZoom);
+    this.pinchStartZoom = this.defaultZoom;
+  }
+
   // ui-integration: 共用放大鏡保留商品頁的游標操作，並補上指標拖曳，讓長幅院藏影像可在觸控與滑鼠上檢視細節。
   protected startDrag(event: PointerEvent): void {
     const host = event.currentTarget as HTMLElement;
+    this.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     host.setPointerCapture?.(event.pointerId);
     if (!this.dragging()) {
       this.dragging.set(true);
       this.draggingChange.emit(true);
     }
+    if (this.activePointers.size >= 2) {
+      this.pinchStartDistance = this.pointerDistance();
+      this.pinchStartZoom = this.zoom();
+      return;
+    }
+
     this.move(event);
   }
 
@@ -89,7 +136,17 @@ export class ImageMagnifier implements OnDestroy {
     if (host && event && host.hasPointerCapture?.(event.pointerId)) {
       host.releasePointerCapture(event.pointerId);
     }
-    if (this.dragging()) {
+    if (event) {
+      this.activePointers.delete(event.pointerId);
+    } else {
+      this.activePointers.clear();
+    }
+
+    if (this.activePointers.size < 2) {
+      this.pinchStartDistance = null;
+    }
+
+    if (this.activePointers.size === 0 && this.dragging()) {
       this.dragging.set(false);
       this.draggingChange.emit(false);
     }
@@ -103,6 +160,25 @@ export class ImageMagnifier implements OnDestroy {
     if (!this.persistentLens()) return;
 
     const step = event.shiftKey ? 10 : 4;
+    if (event.key === '+' || (event.key === '=' && event.shiftKey)) {
+      event.preventDefault();
+      this.setZoom(this.zoom() + this.zoomStep);
+      this.active.set(true);
+      return;
+    }
+    if (event.key === '-') {
+      event.preventDefault();
+      this.setZoom(this.zoom() - this.zoomStep);
+      this.active.set(true);
+      return;
+    }
+    if (event.key === '0') {
+      event.preventDefault();
+      this.resetZoom();
+      this.active.set(true);
+      return;
+    }
+
     const point = this.position();
     let x = point.x;
     let y = point.y;
@@ -139,6 +215,20 @@ export class ImageMagnifier implements OnDestroy {
 
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
+    this.activePointers.clear();
+  }
+
+  private setZoom(value: number): void {
+    const next = Math.min(this.maxZoom, Math.max(this.minZoom, value));
+    this.zoom.set(Math.round(next * 100) / 100);
+  }
+
+  private pointerDistance(): number | null {
+    const pointers = [...this.activePointers.values()];
+    if (pointers.length < 2) return null;
+
+    const [first, second] = pointers;
+    return Math.hypot(second.x - first.x, second.y - first.y);
   }
 
   private updateLayout(host = this.observedHost, image = this.observedImage): void {

@@ -80,6 +80,8 @@ export class Login implements OnInit, OnDestroy {
 
   readonly activeSegmentIndex = signal(0);
   readonly carouselPaused = signal(false);
+  readonly carouselSpeedOptions = [0.75, 1, 1.25, 1.5, 2] as const;
+  readonly carouselSpeed = signal<number>(1);
   readonly panKey = signal(0);
   readonly loginPanelOpen = signal(true);
   readonly loginPanelTransitioning = signal(false);
@@ -89,8 +91,11 @@ export class Login implements OnInit, OnDestroy {
   readonly activeSegment = computed(
     () => this.qingmingSegments[this.activeSegmentIndex()] ?? this.qingmingSegments[0],
   );
+  readonly carouselDurationMs = computed(() => Math.round(16000 / this.carouselSpeed()));
+  readonly carouselDurationCss = computed(() => `${this.carouselDurationMs()}ms`);
 
   private carouselTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly carouselSpeedStorageKey = 'qmah.login.carousel-speed';
   private carouselPausedBeforeLensDrag = false;
   private loginPanelUnlockTimer: ReturnType<typeof setTimeout> | null = null;
   private themeUnlockTimer: ReturnType<typeof setTimeout> | null = null;
@@ -113,6 +118,7 @@ export class Login implements OnInit, OnDestroy {
       this.googleLoginEnabled = capabilities.googleLoginEnabled;
     });
 
+    this.restoreCarouselSpeed();
     this.startCarousel();
   }
 
@@ -140,6 +146,17 @@ export class Login implements OnInit, OnDestroy {
 
   toggleCarousel(): void {
     this.carouselPaused.update((paused) => !paused);
+  }
+
+  setCarouselSpeed(event: Event): void {
+    const value = Number((event.target as HTMLSelectElement).value);
+    if (!this.carouselSpeedOptions.some((option) => option === value)) return;
+
+    // ui-integration: 桌面版只在既有鑑賞控制列補速度倍率；記住偏好但不改變登入流程或手機版資訊密度。
+    this.carouselSpeed.set(value);
+    this.panKey.update((key) => key + 1);
+    this.persistCarouselSpeed(value);
+    this.startCarousel();
   }
 
   handleLensDragging(isDragging: boolean): void {
@@ -288,21 +305,45 @@ export class Login implements OnInit, OnDestroy {
   }
 
   private startCarousel(): void {
+    this.stopCarousel();
     if (this.qingmingSegments.length < 2 || typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       this.carouselPaused.set(true);
       return;
     }
 
-    // 每段以 16 秒完成一次慢速平移，再切到下一段，避免高畫質影像快速閃換。
+    // 每段的基準時間是 16 秒，再依使用者選擇的倍率同步調整平移與換段節奏。
     this.carouselTimer = setInterval(() => {
       if (!this.carouselPaused()) this.nextSegment();
-    }, 16000);
+    }, this.carouselDurationMs());
   }
 
   private stopCarousel(): void {
     if (this.carouselTimer) clearInterval(this.carouselTimer);
     this.carouselTimer = null;
+  }
+
+  private restoreCarouselSpeed(): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const stored = Number(window.localStorage.getItem(this.carouselSpeedStorageKey));
+      if (this.carouselSpeedOptions.some((option) => option === stored)) {
+        this.carouselSpeed.set(stored);
+      }
+    } catch {
+      // localStorage 受瀏覽器隱私設定限制時，維持預設速度即可。
+    }
+  }
+
+  private persistCarouselSpeed(speed: number): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      window.localStorage.setItem(this.carouselSpeedStorageKey, String(speed));
+    } catch {
+      // 無法保存偏好不應影響畫卷鑑賞或登入。
+    }
   }
 
   private scheduleThemeTransitionUnlock(): void {

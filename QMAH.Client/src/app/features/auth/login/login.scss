@@ -214,7 +214,32 @@
   font-weight: 600;
 }
 
-.museum-media__hint app-qmah-icon {
+.museum-media__hint-button {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(255, 250, 240, 0.32);
+  border-radius: 50%;
+  background: rgba(8, 32, 30, 0.26);
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.museum-media__hint-button:hover,
+.museum-media__hint-button:focus-visible {
+  background: rgba(8, 32, 30, 0.52);
+  color: var(--qmah-paper);
+}
+
+.museum-media__hint-button:focus-visible {
+  outline: 2px solid var(--login-gold);
+  outline-offset: 3px;
+}
+
+.museum-media__hint-button app-qmah-icon {
   width: 16px;
   height: 16px;
 }
@@ -353,6 +378,38 @@
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   text-align: center;
+}
+
+.museum-speed-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  margin-left: 4px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 250, 240, 0.34);
+  border-radius: 10px;
+  background: rgba(21, 63, 58, 0.32);
+  color: rgba(255, 250, 240, 0.82);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.museum-speed-control select {
+  min-width: 58px;
+  min-height: 30px;
+  padding: 0 5px;
+  border: 1px solid rgba(255, 250, 240, 0.34);
+  border-radius: 6px;
+  background: rgba(8, 32, 30, 0.62);
+  color: var(--qmah-paper);
+  font: inherit;
+}
+
+.museum-speed-control select:focus-visible {
+  outline: 2px solid var(--login-gold);
+  outline-offset: 2px;
 }
 
 .museum-credit {
@@ -949,6 +1006,10 @@ input:focus-visible {
     margin: 0;
     justify-self: center;
     color: var(--login-muted);
+  }
+
+  .museum-speed-control {
+    display: none;
   }
 
   .museum-controls .icon-button {

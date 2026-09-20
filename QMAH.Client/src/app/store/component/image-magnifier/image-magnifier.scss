@@ -13,6 +13,7 @@
   container-type: size;
   touch-action: pan-y;
   cursor: crosshair;
+  overscroll-behavior: contain;
 }
 
 .magnifier-host img {
@@ -75,6 +76,22 @@
     inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 35%, transparent);
 }
 
+.magnifier-zoom-readout {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--qmah-surface-elevated) 54%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-ink) 46%, transparent);
+  color: var(--qmah-surface-elevated);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  pointer-events: none;
+}
+
 .magnifier-host.is-dragging {
   cursor: grabbing;
   touch-action: none;
@@ -86,28 +103,28 @@
  * ui-integration: 只動畫 transform，讓長幅畫卷的慢速移動以 compositor-friendly 的方式執行，避免逐幀改 object-position。
  */
 .magnifier-host--pan-forward.magnifier-host--pan-even img {
-  animation: qmah-image-pan-forward-even 16s ease-in-out both;
+  animation: qmah-image-pan-forward-even var(--magnifier-pan-duration, 16s) ease-in-out both;
   object-position: 50% 50%;
   will-change: transform;
   animation-play-state: var(--magnifier-pan-state, running);
 }
 
 .magnifier-host--pan-forward.magnifier-host--pan-odd img {
-  animation: qmah-image-pan-forward-odd 16s ease-in-out both;
+  animation: qmah-image-pan-forward-odd var(--magnifier-pan-duration, 16s) ease-in-out both;
   object-position: 50% 50%;
   will-change: transform;
   animation-play-state: var(--magnifier-pan-state, running);
 }
 
 .magnifier-host--pan-backward.magnifier-host--pan-even img {
-  animation: qmah-image-pan-backward-even 16s ease-in-out both;
+  animation: qmah-image-pan-backward-even var(--magnifier-pan-duration, 16s) ease-in-out both;
   object-position: 50% 50%;
   will-change: transform;
   animation-play-state: var(--magnifier-pan-state, running);
 }
 
 .magnifier-host--pan-backward.magnifier-host--pan-odd img {
-  animation: qmah-image-pan-backward-odd 16s ease-in-out both;
+  animation: qmah-image-pan-backward-odd var(--magnifier-pan-duration, 16s) ease-in-out both;
   object-position: 50% 50%;
   will-change: transform;
   animation-play-state: var(--magnifier-pan-state, running);

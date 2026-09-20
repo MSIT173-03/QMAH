@@ -7,11 +7,12 @@
   [class.magnifier-host--pan-paused]="panPaused()"
   [class.magnifier-host--persistent]="persistentLens()"
   [class.is-dragging]="dragging()"
-  (pointermove)="move($event)"
+  (pointermove)="handlePointerMove($event)"
   (pointerdown)="startDrag($event)"
   (pointerup)="stopDrag($event)"
   (pointercancel)="stopDrag($event)"
   (lostpointercapture)="stopDrag()"
+  (wheel)="adjustZoom($event)"
   (pointerenter)="active.set(true)"
   (pointerleave)="leave()">
   @if (image(); as imageUrl) {
@@ -22,12 +23,16 @@
       [class.is-active]="active()"
       [attr.role]="persistentLens() ? 'button' : null"
       [attr.tabindex]="persistentLens() ? 0 : null"
-      [attr.aria-label]="persistentLens() ? '放大鏡，可拖曳或用方向鍵查看畫卷細節' : null"
+      [attr.aria-label]="persistentLens() ? '放大鏡，目前 ' + zoomPercent() + '%；可拖曳、捏合、滾輪或鍵盤調整倍率，按 0 重設' : null"
+      [attr.title]="persistentLens() ? '拖曳移動畫面；捏合或滾輪調整倍率；鍵盤 0 重設' : null"
       (keydown)="moveWithKeyboard($event)"
       [style.left.%]="position().x" [style.top.%]="position().y"
       [style.background-image]="'url(' + imageUrl + ')'"
       [style.background-size]="backgroundSize()"
       [style.background-position]="backgroundPosition()"></span>
+    @if (persistentLens()) {
+      <span class="magnifier-zoom-readout" aria-live="polite">{{ zoomPercent() }}%</span>
+    }
   } @else {
     <span class="magnifier-placeholder">
       <svg lucideImage aria-hidden="true" focusable="false"></svg>

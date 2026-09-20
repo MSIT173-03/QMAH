@@ -28,8 +28,9 @@
 
   <section class="museum-side" aria-labelledby="museum-story-title">
     <div class="museum-showcase">
-      <div class="museum-media">
+      <div class="museum-media" [style.--magnifier-pan-duration]="carouselDurationCss()">
         <app-image-magnifier
+          #museumMagnifier
           class="qingming-magnifier"
           [image]="activeSegment().image"
           [alt]="activeSegment().alt"
@@ -44,7 +45,15 @@
           {{ activeSegmentIndex() + 1 }} / {{ qingmingSegments.length }}
         </span>
         <span class="museum-media__hint">
-          <app-qmah-icon name="zoom-in" aria-hidden="true" />
+          <button
+            type="button"
+            class="museum-media__hint-button"
+            aria-label="重設放大鏡倍率（260%）"
+            title="快速點兩下重設倍率"
+            (dblclick)="museumMagnifier.resetZoom(); $event.preventDefault()"
+          >
+            <app-qmah-icon name="zoom-in" aria-hidden="true" />
+          </button>
           拖曳放大鏡查看細節
         </span>
       </div>
@@ -53,7 +62,7 @@
         <h1 id="museum-story-title">沿著畫卷，看見人間百態</h1>
         <p class="museum-copy__description">
           <span>高畫質畫卷分段慢移。</span>
-          <span>抓住鏡面，查看沿岸人物與景物。</span>
+          <span>拖曳移動鏡面；電腦可用滾輪、手機可用捏合調整倍率，雙擊圖示可回到 260%。</span>
         </p>
         <div class="museum-copy__guide" aria-label="畫卷鑑賞方式">
           <span class="museum-copy__guide-item">
@@ -104,6 +113,18 @@
         <button type="button" class="icon-button" aria-label="下一段畫卷" title="下一段" (click)="nextSegment()">
           <app-qmah-icon name="chevron-right" aria-hidden="true" />
         </button>
+        <label class="museum-speed-control">
+          <span>速度</span>
+          <select
+            [value]="carouselSpeed()"
+            aria-label="畫卷自動移動速度"
+            (change)="setCarouselSpeed($event)"
+          >
+            @for (speed of carouselSpeedOptions; track speed) {
+              <option [value]="speed" [selected]="speed === carouselSpeed()">{{ speed }}x</option>
+            }
+          </select>
+        </label>
       </div>
     </div>
 
