@@ -1,6 +1,6 @@
 [
   {
-    "Name": "QMAH 後端主機與管理後台（API＋Razor）",
+    "Name": "QMAH API＋Angular 前台",
     "Projects": [
       {
         "Path": "QMAH.Api\\QMAH.Api.csproj",
@@ -23,7 +23,7 @@
     ]
   },
   {
-    "Name": "QMAH 前後台與 API",
+    "Name": "QMAH 全站（API＋前台＋管理後台）",
     "Projects": [
       {
         "Path": "QMAH.Api\\QMAH.Api.csproj",

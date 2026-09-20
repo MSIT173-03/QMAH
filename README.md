@@ -47,6 +47,12 @@
 
 正式金流與完整多人遊戲互動仍依各 Area 的既有範圍擴充。
 
+## 前台 UI 整合狀態
+
+截至 2026-09-20，Angular 前台的 User、Catalog、Game、Social、Store 五個系統已完成本輪 UI 整合收斂：共用 App Shell、Footer、主題狀態、字體層級、色彩語意、間距、圓角、陰影、表單與控制項基線已接回既有頁面，不改資訊架構、Route、API 或商業邏輯。
+
+這代表前端樣式已達可交付的整合狀態，不代表所有需要後端服務的流程都已在本機完成瀏覽器驗證。完整範圍、驗證結果與已知限制請見 [`FRONTEND_INTEGRATION_REPORT.md`](FRONTEND_INTEGRATION_REPORT.md) 與 [`QMAH_UI_INTEGRATION_PRINCIPLES.md`](QMAH_UI_INTEGRATION_PRINCIPLES.md)。
+
 ### Angular 21.2.22 的版本理由
 
 課程要求使用 Angular 21，因此 `QMAH.Client` 維持 Angular 21，不升到 Angular 22。
@@ -112,9 +118,9 @@ QMAH 有兩個 ASP.NET Core 主機：`QMAH.Web` 提供 Razor 管理後台，`QMA
 | `QMAH.Web` 的 `https`／`http` | Razor 管理後台與五個 Area | `https://localhost:7039`／`http://localhost:5183` |
 | `QMAH.Api` 的 `https`／`http` | `/api/v1/*`、OpenAPI 與 Scalar | `https://localhost:7249`／`http://localhost:5147` |
 
-Visual Studio 2026 開啟 `QMAH.sln` 後，可選擇 `QMAH 後端主機與管理後台（API＋Razor）`，一次啟動兩個後端主機。
+Visual Studio 2026 開啟 `QMAH.sln` 後，可在啟動設定選擇 `QMAH 全站（API＋前台＋管理後台）`，一次啟動 `QMAH.Api`、Angular 使用者前台與 `QMAH.Web` Razor 管理後台。啟動後可分別從 `https://localhost:7249`、`http://localhost:4200/` 與 `https://localhost:7039` 開啟。
 
-若只要檢查 API，選擇 `QMAH API`。如果 IDE 沒有顯示 `.slnLaunch` 設定，仍可分別啟動兩個專案的 `https` profile。
+若只需要 API 與 Angular 前台，選擇 `QMAH API＋Angular 前台`；若只要檢查 API，選擇 `QMAH API`。如果 IDE 沒有顯示 `.slnLaunch` 設定，仍可分別啟動兩個 ASP.NET Core 專案的 `https` profile，再依「啟動 Angular 使用者前台」的方式啟動前台。
 
 命令列啟動：
 
@@ -242,7 +248,7 @@ Controller 透過建構式取得 scoped `QmahDbContext`，不重新建立 SQL �
 
 `QMAH.Infrastructure` 集中 DB-first Entity、`QmahDbContext` 與匯入核心。API 與 Angular 透過 `QMAH.Client/proxy.conf.json` 連接。
 
-Visual Studio 的 `.slnLaunch` 預設同時啟動 API 與 Razor 管理後台，VS Code 工作區則提供 API＋Angular 的複合啟動。
+Visual Studio 的 `.slnLaunch` 提供 `QMAH 全站（API＋前台＋管理後台）` 複合啟動，也保留 API 單獨啟動與 API＋Angular 前台的選項；VS Code 工作區則提供 API＋Angular 的複合啟動。
 
 Angular 不直接連資料庫，也不依賴管理後台的 ViewModel；前台欄位、狀態、權限與錯誤回應以 [REST API 契約](https://msit173-03.github.io/QMAH-Docs/reference/rest-api.html) 為準。
 
