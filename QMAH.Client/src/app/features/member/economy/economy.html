@@ -84,7 +84,7 @@
       <div class="summary-card">
 
         <div class="summary-icon">
-          <img [src]="keyAssetPath('NORMAL')" alt="探索鑰匙圖示" loading="lazy" />
+          <img src="{{ keyAssetPath('NORMAL') }}" alt="探索鑰匙圖示" loading="lazy" />
         </div>
 
         <div class="progress-content">
@@ -292,7 +292,7 @@
 
 
               <div class="key-icon">
-                <img [src]="keyAssetPath(key.scopeType)" [alt]="keyScopeLabel(key.scopeType) + '圖示'" loading="lazy" />
+                <img src="{{ keyAssetPath(key.scopeType) }}" [alt]="keyScopeLabel(key.scopeType) + '圖示'" loading="lazy" />
               </div>
 
 
