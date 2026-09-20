@@ -1,376 +1,246 @@
-<div class="login-page">
-
-  <!-- ==================================================
-       左側：單一高畫質長卷主視覺
-       不再輪換多張 AI／文物圖，登入頁用長卷的連續觀看建立自己的節奏。
-  =================================================== -->
-  <section class="museum-side" aria-labelledby="login-visual-title">
-
-    <div class="museum-background" aria-hidden="true"></div>
-
-    <div class="museum-scroll" [class.is-paused]="scrollPaused" [class.has-fallback]="scrollImageFailed">
-      @if (!scrollImageFailed) {
-        <div class="scroll-track" aria-hidden="true">
-          @for (segment of scrollSegments; track segment.key; let index = $index) {
-            <picture>
-              <source media="(max-width: 620px)" [srcset]="segment.compact" />
-              <img
-                [src]="segment.source"
-                alt=""
-                width="9997"
-                height="601"
-                [attr.loading]="index < 2 ? 'eager' : 'lazy'"
-                [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
-                decoding="async"
-                (error)="handleScrollImageError()"
-              />
-            </picture>
+<div
+  class="login-page"
+  [class.theme-switching]="themeTransitioning()"
+  [class.theme-switching--dark]="themeDirection() === 'to-dark'"
+  [class.theme-switching--light]="themeDirection() === 'to-light'"
+>
+  <section class="museum-side" aria-labelledby="museum-story-title">
+    <div class="museum-topbar">
+      <img class="brand-logo" src="/images/brand/qmah-logo-dark.svg" alt="清明鑑定屋" />
+      <div class="museum-topbar__actions">
+        <span class="museum-purpose">故宮院藏・清明上河圖</span>
+        <button
+          type="button"
+          class="theme-toggle"
+          [disabled]="themeTransitioning()"
+          [attr.aria-label]="theme() === 'qmahdark' ? '切換淺色模式' : '切換深色模式'"
+          [attr.aria-pressed]="theme() === 'qmahdark'"
+          title="切換深淺模式"
+          (click)="toggleTheme()"
+        >
+          @if (theme() === 'qmahdark') {
+            <app-qmah-icon name="sun" aria-hidden="true" />
+          } @else {
+            <app-qmah-icon name="moon" aria-hidden="true" />
           }
-        </div>
-      } @else {
-        <!-- IIIF 暫時不可用時仍保留同一個博物館視覺層，不阻斷登入流程。 -->
-        <img
-          class="scroll-fallback"
-          [src]="scrollFallback"
-          alt="故宮開放資料文物主視覺"
-        />
-      }
-    </div>
-
-    <div class="museum-overlay" aria-hidden="true"></div>
-
-    <div class="brand">
-      <img
-        class="brand-logo"
-        src="/images/brand/qmah-logo-dark.svg"
-        alt="清明鑑定屋 QMAH"
-      />
-    </div>
-
-    <div class="museum-content">
-      <div class="slide-tag">{{ heroKicker }}</div>
-
-      <h1 id="login-visual-title">{{ heroTitle }}</h1>
-
-      <div class="title-line"></div>
-
-      <p class="museum-description">{{ heroDescription }}</p>
-
-      <div class="museum-keywords" aria-label="清明鑑定屋特色">
-        <span>看文物</span>
-        <i></i>
-        <span>玩遊戲</span>
-        <i></i>
-        <span>逛社群</span>
+        </button>
       </div>
     </div>
 
-    <div class="scroll-actions">
-      <button
-        type="button"
-        class="scroll-toggle"
-        [attr.aria-pressed]="scrollPaused"
-        (click)="toggleScroll()"
-      >
-        {{ scrollPaused ? '繼續欣賞長卷' : '暫停長卷移動' }}
-      </button>
+    <div class="museum-showcase">
+      <div class="museum-media">
+        <app-image-magnifier
+          class="qingming-magnifier"
+          [image]="activeSegment().image"
+          [alt]="activeSegment().alt"
+          [pan]="'forward'"
+          [panKey]="panKey()"
+          [panPaused]="carouselPaused()"
+          [persistentLens]="true"
+          (draggingChange)="handleLensDragging($event)"
+        />
+        <span class="museum-media__location">{{ activeSegment().location }}</span>
+        <span class="museum-media__counter" aria-live="polite">
+          {{ activeSegmentIndex() + 1 }} / {{ qingmingSegments.length }}
+        </span>
+        <span class="museum-media__hint">
+          <app-qmah-icon name="zoom-in" aria-hidden="true" />
+          拖曳放大鏡查看細節
+        </span>
+      </div>
 
-      <a
-        class="scroll-source"
-        [href]="scrollSourceUrl"
-        target="_blank"
-        rel="noreferrer"
-      >
-        查看故宮高畫質長卷 ↗
-      </a>
+      <div class="museum-copy" aria-live="polite">
+        <h1 id="museum-story-title">沿著畫卷，看見人間百態</h1>
+        <p class="museum-copy__description">
+          <span>高畫質畫卷分段慢移。</span>
+          <span>抓住鏡面，查看沿岸人物與景物。</span>
+        </p>
+        <div class="museum-copy__guide" aria-label="畫卷鑑賞方式">
+          <span class="museum-copy__guide-item">
+            <app-qmah-icon name="pause" aria-hidden="true" />
+            可暫停
+          </span>
+          <span class="museum-copy__guide-item">
+            <span class="museum-copy__guide-arrows" aria-hidden="true">
+              <app-qmah-icon name="chevron-left" />
+              <app-qmah-icon name="chevron-right" />
+            </span>
+            前後切段
+          </span>
+          <span class="museum-copy__guide-item">
+            <app-qmah-icon name="zoom-in" aria-hidden="true" />
+            拖曳看細節
+          </span>
+        </div>
+        <div class="museum-links">
+          <a class="museum-source" [href]="collectionUrl" target="_blank" rel="noreferrer">
+            故宮數位典藏資料
+          </a>
+          <a class="museum-source museum-source--muted" [href]="highResolutionSourceUrl" target="_blank" rel="noreferrer">
+            高畫質公開版本
+          </a>
+        </div>
+      </div>
+
+      <div class="museum-controls" role="toolbar" aria-label="清明上河圖鑑賞控制">
+        <button type="button" class="icon-button" aria-label="上一段畫卷" title="上一段" (click)="previousSegment()">
+          <app-qmah-icon name="chevron-left" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          class="icon-button"
+          [attr.aria-label]="carouselPaused() ? '繼續自動移動' : '暫停自動移動'"
+          [attr.aria-pressed]="carouselPaused()"
+          [title]="carouselPaused() ? '繼續自動移動' : '暫停自動移動'"
+          (click)="toggleCarousel()"
+        >
+          @if (carouselPaused()) {
+            <app-qmah-icon name="play" aria-hidden="true" />
+          } @else {
+            <app-qmah-icon name="pause" aria-hidden="true" />
+          }
+        </button>
+        <span class="museum-controls__counter">第 {{ activeSegmentIndex() + 1 }} 段</span>
+        <button type="button" class="icon-button" aria-label="下一段畫卷" title="下一段" (click)="nextSegment()">
+          <app-qmah-icon name="chevron-right" aria-hidden="true" />
+        </button>
+      </div>
     </div>
 
-    <div class="museum-footer">
-      清院本《清明上河圖》卷・國立故宮博物院・CC BY 4.0
-    </div>
-
+    <p class="museum-credit">公開領域影像；來源與授權標示收錄於專案素材資訊。</p>
   </section>
 
-
-
-  <!-- ==================================================
-       右側：登入
-  =================================================== -->
-  <section class="login-side">
-
-    <div class="login-decoration"></div>
-
-
-    <div class="login-card">
-
-      <!-- 標題 -->
-      <div class="login-header">
-
-        <span class="welcome-text">會員登入</span>
-
-        <img
-          class="login-logo"
-          src="/images/brand/qmah-logo.svg"
-          alt="清明鑑定屋 QMAH"
-        />
-
-        <p>登入後可以使用會員、圖鑑與收藏功能。</p>
-
-      </div>
-
-
-
-      <!-- ==================================================
-           登入 Form
-      =================================================== -->
-      <form
-        [formGroup]="form"
-        (ngSubmit)="login()"
-        class="login-form"
-      >
-
-
-        <!-- =====================
-             Email
-        ====================== -->
-        <div class="form-group">
-
-          <label for="email">
-            電子郵件
-          </label>
-
-
-          <div
-            class="input-wrapper"
-            [class.input-error]="
-              form.controls.email.touched &&
-              (
-                form.controls.email.hasError('required') ||
-                form.controls.email.hasError('email')
-              )
-            "
-          >
-
-            <span class="input-icon">
-              <app-qmah-icon name="mail" />
-            </span>
-
-            <input
-              id="email"
-              type="email"
-              formControlName="email"
-              placeholder="請輸入電子郵件"
-              autocomplete="email"
-            />
-
+  <section
+    class="login-side"
+    [class.is-collapsed]="!loginPanelOpen()"
+    [attr.aria-busy]="loginPanelTransitioning()"
+    aria-label="登入"
+  >
+    @if (loginPanelOpen()) {
+      <div class="login-card" id="login-panel">
+        <div class="login-header">
+          <div class="login-header__row">
+            <h2 id="login-title">登入</h2>
+            <button
+              type="button"
+              class="login-panel-toggle"
+              aria-controls="login-panel"
+              aria-expanded="true"
+              aria-label="收合登入表單"
+              title="收合登入"
+              [attr.aria-disabled]="loginPanelTransitioning()"
+              (click)="toggleLoginPanel()"
+            >
+              <app-qmah-icon name="chevron-right" aria-hidden="true" />
+            </button>
           </div>
-
-
-          @if (
-            form.controls.email.touched &&
-            form.controls.email.hasError('required')
-          ) {
-
-            <p class="field-error">
-              請輸入電子郵件
-            </p>
-
-          }
-
-
-          @if (
-            form.controls.email.touched &&
-            form.controls.email.hasError('email')
-          ) {
-
-            <p class="field-error">
-              電子郵件格式不正確
-            </p>
-
-          }
-
+          <p>繼續保存你在圖鑑裡留下的進度。</p>
         </div>
 
-
-
-        <!-- =====================
-             Password
-        ====================== -->
-        <div class="form-group">
-
-          <label for="password">
-            密碼
-          </label>
-
-
-          <div
-            class="input-wrapper"
-            [class.input-error]="
-              form.controls.password.touched &&
-              form.controls.password.hasError('required')
-            "
-          >
-
-            <span class="input-icon">
-              <app-qmah-icon name="lock-keyhole" />
-            </span>
-
-            <input
-              id="password"
-              type="password"
-              formControlName="password"
-              placeholder="請輸入密碼"
-              autocomplete="current-password"
-            />
-
+        <form [formGroup]="form" (ngSubmit)="login()" class="login-form" novalidate>
+          <div class="form-group">
+            <label for="email">電子郵件</label>
+            <div
+              class="input-wrapper"
+              [class.input-error]="form.controls.email.touched && (form.controls.email.hasError('required') || form.controls.email.hasError('email'))"
+            >
+              <span class="input-icon" aria-hidden="true"><app-qmah-icon name="mail" /></span>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="請輸入電子郵件"
+                autocomplete="email"
+                inputmode="email"
+                [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid"
+                [attr.aria-describedby]="form.controls.email.touched && form.controls.email.invalid ? 'email-error' : null"
+              />
+            </div>
+            @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+              <p class="field-error" id="email-error">請輸入電子郵件</p>
+            } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+              <p class="field-error" id="email-error">電子郵件格式不正確</p>
+            }
           </div>
 
+          <div class="form-group">
+            <label for="password">密碼</label>
+            <div
+              class="input-wrapper"
+              [class.input-error]="form.controls.password.touched && form.controls.password.hasError('required')"
+            >
+              <span class="input-icon" aria-hidden="true"><app-qmah-icon name="lock-keyhole" /></span>
+              <input
+                id="password"
+                type="password"
+                formControlName="password"
+                placeholder="請輸入密碼"
+                autocomplete="current-password"
+                [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+                [attr.aria-describedby]="form.controls.password.touched && form.controls.password.invalid ? 'password-error' : null"
+              />
+            </div>
+            @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+              <p class="field-error" id="password-error">請輸入密碼</p>
+            }
+          </div>
 
-          @if (
-            form.controls.password.touched &&
-            form.controls.password.hasError('required')
-          ) {
+          <div class="login-options">
+            <label class="remember-me">
+              <input type="checkbox" formControlName="rememberMe" />
+              <span>記住我</span>
+            </label>
+            <a routerLink="/forgot-password" class="forgot-password">忘記密碼？</a>
+          </div>
 
-            <p class="field-error">
-              請輸入密碼
-            </p>
-
+          @if (errorMessage) {
+            <div class="login-error" role="alert">{{ errorMessage }}</div>
           }
 
-        </div>
+          <button type="submit" class="login-button" [disabled]="loading" [attr.aria-busy]="loading">
+            @if (loading) {
+              <span class="loading-spinner" aria-hidden="true"></span>
+              <span>登入中…</span>
+            } @else {
+              <span>登入</span>
+              <span class="arrow" aria-hidden="true"><app-qmah-icon name="arrow-right" /></span>
+            }
+          </button>
+        </form>
 
-
-
-        <!-- =====================
-             記住我 / 忘記密碼
-        ====================== -->
-        <div class="login-options">
-
-          <label class="remember-me">
-
-            <input
-              type="checkbox"
-              formControlName="rememberMe"
-            />
-
-            <span>
-              記住我
-            </span>
-
-          </label>
-
-
-          <a
-            routerLink="/forgot-password"
-            class="forgot-password"
-          >
-            忘記密碼？
-          </a>
-
-        </div>
-
-
-
-        <!-- =====================
-             API 錯誤
-        ====================== -->
-        @if (errorMessage) {
-
-          <div class="login-error" role="alert">
-            {{ errorMessage }}
-          </div>
-
+        @if (googleLoginEnabled) {
+          <!-- ui-integration: 只有後端真正開啟 OAuth 時才呈現替代登入方式，避免顯示無法完成的假入口。 -->
+          <div class="login-divider" aria-hidden="true"><span></span><p>或使用其他方式登入</p><span></span></div>
+          <button type="button" class="google-button" (click)="googleLogin()">
+            <app-qmah-icon name="log-in" aria-hidden="true" />
+            <span>使用 Google 登入</span>
+          </button>
+        } @else {
+          <!-- ui-integration: 不把未完成的 OAuth 當成可用功能；提示只說明管理員需要補的設定。 -->
+          <p class="google-setup-note" role="status">Google 登入尚未設定，請管理員補上 Google Client ID 與 Google Client Secret。</p>
         }
 
-
-
-        <!-- =====================
-             登入 Button
-        ====================== -->
-        <button
-          type="submit"
-          class="login-button"
-          [disabled]="loading"
-          [attr.aria-busy]="loading"
-        >
-
-          @if (loading) {
-
-            <span class="loading-spinner"></span>
-
-            <span>
-              登入中…
-            </span>
-
-          } @else {
-
-            <span>
-              登入
-            </span>
-
-            <span class="arrow"><app-qmah-icon name="arrow-right" /></span>
-
-          }
-
-        </button>
-
-      </form>
-
-
-
-@if (googleLoginEnabled) {
-      <!-- ui-integration: 只有後端真正開啟 OAuth 時才呈現替代登入方式，避免顯示無法使用的假入口。 -->
-      <div class="login-divider">
-        <span></span>
-        <p>或使用其他方式登入</p>
-        <span></span>
+        <div class="register-area">
+          <span>還沒有帳號？</span>
+          <a routerLink="/register">立即註冊</a>
+        </div>
       </div>
 
+    } @else {
       <button
         type="button"
-        class="google-button"
-        (click)="googleLogin()"
+        class="login-panel-collapsed"
+        id="login-panel-collapsed"
+        aria-controls="login-panel"
+        aria-expanded="false"
+        aria-label="開啟登入"
+        title="開啟登入"
+        [attr.aria-disabled]="loginPanelTransitioning()"
+        (click)="toggleLoginPanel()"
       >
-        <app-qmah-icon name="log-in" />
-        <span>使用 Google 登入</span>
+        <app-qmah-icon name="log-in" aria-hidden="true" />
+        <span>登入</span>
       </button>
-} @else {
-      <!-- ui-integration: 不把未完成的 OAuth 當成可用功能；提示只說明管理員需要補的設定。 -->
-      <p class="google-setup-note" role="status">
-        Google 登入尚未設定，請管理員補上 Google Client ID 與 Google Client Secret。
-      </p>
-}
-
-
-
-      <!-- ==================================================
-           註冊
-      =================================================== -->
-      <div class="register-area">
-
-        <span>
-          還沒有帳號？
-        </span>
-
-        <a routerLink="/register">
-          立即註冊
-        </a>
-
-      </div>
-
-    </div>
-
-
-
-    <!-- 右下角 -->
-    <div class="login-footer">
-
-      <span>
-        從一件文物開始，慢慢探索。
-      </span>
-
-    </div>
-
+    }
   </section>
-
 </div>

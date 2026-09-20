@@ -11,6 +11,7 @@
   overflow: hidden;
   background: #e7e1d4;
   touch-action: pan-y;
+  cursor: crosshair;
 }
 
 .magnifier-host img {
@@ -18,6 +19,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: var(--magnifier-image-filter, none);
+  user-select: none;
 }
 
 .magnifier-host--contain img {
@@ -26,7 +29,7 @@
 
 .magnifier-lens {
   position: absolute;
-  width: clamp(76px, 22%, 132px);
+  width: var(--magnifier-lens-size, clamp(76px, 22%, 132px));
   aspect-ratio: 1;
   border: 2px solid rgb(255 252 242 / 92%);
   border-radius: 50%;
@@ -41,6 +44,89 @@
 
 .magnifier-lens.is-active {
   opacity: 1;
+}
+
+.magnifier-host--persistent .magnifier-lens {
+  opacity: 0.86;
+  pointer-events: auto;
+  cursor: grab;
+  outline: 0;
+}
+
+.magnifier-host--persistent .magnifier-lens:hover,
+.magnifier-host--persistent .magnifier-lens:focus-visible,
+.magnifier-host--persistent.is-dragging .magnifier-lens {
+  opacity: 1;
+  cursor: grabbing;
+}
+
+.magnifier-host--persistent .magnifier-lens:focus-visible {
+  box-shadow:
+    0 0 0 4px rgb(240 213 148 / 78%),
+    0 4px 16px rgb(30 29 24 / 28%),
+    inset 0 0 0 1px rgb(57 54 43 / 35%);
+}
+
+.magnifier-host.is-dragging {
+  cursor: grabbing;
+  touch-action: none;
+}
+
+/*
+ * 這幾組 keyframe 只在鑑賞器傳入 pan 時啟用；商品頁沒有 pan，避免共用元件改變既有節奏。
+ * 以兩個 animation name 配合 panKey 重新掛載，手動切段後仍會從頭開始。
+ * ui-integration: 只動畫 transform，讓長幅畫卷的慢速移動以 compositor-friendly 的方式執行，避免逐幀改 object-position。
+ */
+.magnifier-host--pan-forward.magnifier-host--pan-even img {
+  animation: qmah-image-pan-forward-even 16s ease-in-out both;
+  object-position: 50% 50%;
+  will-change: transform;
+  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-forward.magnifier-host--pan-odd img {
+  animation: qmah-image-pan-forward-odd 16s ease-in-out both;
+  object-position: 50% 50%;
+  will-change: transform;
+  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-backward.magnifier-host--pan-even img {
+  animation: qmah-image-pan-backward-even 16s ease-in-out both;
+  object-position: 50% 50%;
+  will-change: transform;
+  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-backward.magnifier-host--pan-odd img {
+  animation: qmah-image-pan-backward-odd 16s ease-in-out both;
+  object-position: 50% 50%;
+  will-change: transform;
+  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-paused img {
+  animation-play-state: paused !important;
+}
+
+@keyframes qmah-image-pan-forward-even {
+  from { transform: translate3d(-4%, 0, 0) scale(1.08); }
+  to { transform: translate3d(4%, 0, 0) scale(1.08); }
+}
+
+@keyframes qmah-image-pan-forward-odd {
+  from { transform: translate3d(-4%, 0, 0) scale(1.08); }
+  to { transform: translate3d(4%, 0, 0) scale(1.08); }
+}
+
+@keyframes qmah-image-pan-backward-even {
+  from { transform: translate3d(4%, 0, 0) scale(1.08); }
+  to { transform: translate3d(-4%, 0, 0) scale(1.08); }
+}
+
+@keyframes qmah-image-pan-backward-odd {
+  from { transform: translate3d(4%, 0, 0) scale(1.08); }
+  to { transform: translate3d(-4%, 0, 0) scale(1.08); }
 }
 
 .magnifier-placeholder {
@@ -61,5 +147,11 @@
 @media (prefers-reduced-motion: reduce) {
   .magnifier-lens {
     transition: none;
+  }
+
+  .magnifier-host--pan-forward img,
+  .magnifier-host--pan-backward img {
+    animation: none;
+    transform: none;
   }
 }

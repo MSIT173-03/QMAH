@@ -20,6 +20,43 @@ textarea {
   touch-action: manipulation;
 }
 
+/* ui-integration: 登入卡與收合入口共用一個命名轉場，讓面板以 shared-element 方式變形而非突然消失。 */
+::view-transition-group(login-panel-shell) {
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(login-panel-shell),
+::view-transition-new(login-panel-shell) {
+  animation-duration: 240ms;
+  animation-timing-function: ease-out;
+}
+
+::view-transition-old(login-panel-shell) {
+  animation-name: qmah-login-panel-out;
+}
+
+::view-transition-new(login-panel-shell) {
+  animation-name: qmah-login-panel-in;
+}
+
+@keyframes qmah-login-panel-out {
+  to { opacity: 0.42; }
+}
+
+@keyframes qmah-login-panel-in {
+  from { opacity: 0.42; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(login-panel-shell),
+  ::view-transition-old(login-panel-shell),
+  ::view-transition-new(login-panel-shell) {
+    animation-duration: 0ms !important;
+  }
+}
+
 @plugin "daisyui" {
   themes: qmah --default, qmahdark;
 }

@@ -1,0 +1,75 @@
+{
+  "usage": "清明鑑定屋登入頁與首頁的博物館影像；圖片以本地副本部署，避免頁面依賴外部圖片服務。",
+  "assets": [
+    {
+      "file": "main-building.jpg",
+      "description": "國立故宮博物院北部院區正館",
+      "location": "北部院區（本院）・臺北士林",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:National_Palace_Museum,_Taipei.jpg",
+      "author": "Hiàn",
+      "license": "CC0 1.0"
+    },
+    {
+      "file": "southern-branch.jpg",
+      "description": "國立故宮博物院南部院區主體與至美橋",
+      "location": "南部院區（南院）・嘉義太保",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Southern_Branch_of_the_National_Palace_Museum_main_building_and_zhimei_bridge.jpg",
+      "author": "B2322858",
+      "license": "公眾領域（Public domain）"
+    },
+    {
+      "file": "qingming-court/segment-01.webp",
+      "description": "清院本《清明上河圖》高畫質分段影像 01",
+      "location": "故宮院藏・清院本《清明上河圖》",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Along_the_River_During_the_Qingming_Festival_(Qing_Court_Version)_01.jpg",
+      "collectionUrl": "https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P",
+      "author": "清院本原作；公開版本由 Wikimedia Commons 收錄",
+      "license": "公眾領域（Public domain faithful reproduction）"
+    },
+    {
+      "file": "qingming-court/segment-06.webp",
+      "description": "清院本《清明上河圖》高畫質分段影像 06",
+      "location": "故宮院藏・清院本《清明上河圖》",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Along_the_River_During_the_Qingming_Festival_(Qing_Court_Version)_06.jpg",
+      "collectionUrl": "https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P",
+      "author": "清院本原作；公開版本由 Wikimedia Commons 收錄",
+      "license": "公眾領域（Public domain faithful reproduction）"
+    },
+    {
+      "file": "qingming-court/segment-10.webp",
+      "description": "清院本《清明上河圖》高畫質分段影像 10",
+      "location": "故宮院藏・清院本《清明上河圖》",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Along_the_River_During_the_Qingming_Festival_(Qing_Court_Version)_10.jpg",
+      "collectionUrl": "https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P",
+      "author": "清院本原作；公開版本由 Wikimedia Commons 收錄",
+      "license": "公眾領域（Public domain faithful reproduction）"
+    },
+    {
+      "file": "qingming-court/segment-14.webp",
+      "description": "清院本《清明上河圖》高畫質分段影像 14",
+      "location": "故宮院藏・清院本《清明上河圖》",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Along_the_River_During_the_Qingming_Festival_(Qing_Court_Version)_14.jpg",
+      "collectionUrl": "https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P",
+      "author": "清院本原作；公開版本由 Wikimedia Commons 收錄",
+      "license": "公眾領域（Public domain faithful reproduction）"
+    },
+    {
+      "file": "qingming-court/segment-18.webp",
+      "description": "清院本《清明上河圖》高畫質分段影像 18",
+      "location": "故宮院藏・清院本《清明上河圖》",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Along_the_River_During_the_Qingming_Festival_(Qing_Court_Version)_18.jpg",
+      "collectionUrl": "https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P",
+      "author": "清院本原作；公開版本由 Wikimedia Commons 收錄",
+      "license": "公眾領域（Public domain faithful reproduction）"
+    },
+    {
+      "file": "qingming-court/segment-22.webp",
+      "description": "清院本《清明上河圖》高畫質分段影像 22",
+      "location": "故宮院藏・清院本《清明上河圖》",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Along_the_River_During_the_Qingming_Festival_(Qing_Court_Version)_22.jpg",
+      "collectionUrl": "https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P",
+      "author": "清院本原作；公開版本由 Wikimedia Commons 收錄",
+      "license": "公眾領域（Public domain faithful reproduction）"
+    }
+  ]
+}

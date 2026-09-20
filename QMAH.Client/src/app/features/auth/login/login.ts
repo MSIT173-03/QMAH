@@ -1,235 +1,360 @@
-import { Component, OnInit } from '@angular/core';
-
-import { CommonModule } from '@angular/common';
-
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
-
-import {
-  ActivatedRoute,
-  Router,
-  RouterLink
-} from '@angular/router';
-
-import {
-  AuthService
-} from '../../../core/auth/auth.service';
-
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import { environment } from '../../../../environments/environment';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { ImageMagnifier } from '../../../store/component/image-magnifier/image-magnifier';
 
+type SiteTheme = 'qmah' | 'qmahdark';
+
+interface QingmingSegment {
+  id: string;
+  image: string;
+  alt: string;
+  location: string;
+}
 
 @Component({
   selector: 'app-login',
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    QmahIconComponent
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, QmahIconComponent, ImageMagnifier],
   templateUrl: './login.html',
-  styleUrl: './login.scss'
+  styleUrl: './login.scss',
 })
-export class Login implements OnInit {
-
-  /* =========================
-     Login
-  ========================= */
-
+export class Login implements OnInit, OnDestroy {
   loading = false;
   errorMessage = '';
-  /** API 沒有回報 OAuth 已啟用前先保持停用，避免按鈕導向明知不可用的 503。 */
+  /** API 沒有回報 OAuth 已啟用前先保持停用，避免顯示無法完成的登入入口。 */
   googleLoginEnabled = false;
 
-  form;
-
-
-  /* =========================
-     清明長卷主視覺
-  ========================= */
+  private readonly document = inject(DOCUMENT);
+  readonly form;
 
   /**
-   * 這兩段是由故宮公開 IIIF 端點預先下載的高解析素材；登入頁不在執行時依賴
-   * 故宮服務，因此展示不會因第三方短暫失效而破圖。分段也避免把超寬長卷縮成
-   * 一張低清背景，4K 螢幕仍能保留畫面細節。
+   * ui-integration: 登入頁改成清院本《清明上河圖》的分段鑑賞器；每段使用可部署的公開領域影像，
+   * 以共用放大鏡承接滑鼠與觸控拖曳，不把主視覺換成 AI 生成素材。
    */
-  readonly scrollSegments = [
+  readonly qingmingSegments: readonly QingmingSegment[] = [
     {
-      key: 'a-1',
-      source: '/images/login/real/qingming-iiif/segment-SDAAB.jpg',
-      compact: '/images/login/real/qingming-iiif/segment-SDAAB-compact.jpg',
+      id: 'segment-01',
+      image: '/images/login/museum/qingming-court/segment-01.webp',
+      alt: '清院本《清明上河圖》畫卷第 01 段的高畫質細節',
+      location: '清院本・畫卷第 01 段',
     },
     {
-      key: 'b-1',
-      source: '/images/login/real/qingming-iiif/segment-SDAAA.jpg',
-      compact: '/images/login/real/qingming-iiif/segment-SDAAA-compact.jpg',
-    },
-    // 複製一個週期讓 CSS 位移回到起點時不會出現跳接；瀏覽器會沿用相同 URL 快取。
-    {
-      key: 'a-2',
-      source: '/images/login/real/qingming-iiif/segment-SDAAB.jpg',
-      compact: '/images/login/real/qingming-iiif/segment-SDAAB-compact.jpg',
+      id: 'segment-06',
+      image: '/images/login/museum/qingming-court/segment-06.webp',
+      alt: '清院本《清明上河圖》畫卷第 06 段的高畫質細節',
+      location: '清院本・畫卷第 06 段',
     },
     {
-      key: 'b-2',
-      source: '/images/login/real/qingming-iiif/segment-SDAAA.jpg',
-      compact: '/images/login/real/qingming-iiif/segment-SDAAA-compact.jpg',
+      id: 'segment-10',
+      image: '/images/login/museum/qingming-court/segment-10.webp',
+      alt: '清院本《清明上河圖》畫卷第 10 段的高畫質細節',
+      location: '清院本・畫卷第 10 段',
     },
-  ] as const;
+    {
+      id: 'segment-14',
+      image: '/images/login/museum/qingming-court/segment-14.webp',
+      alt: '清院本《清明上河圖》畫卷第 14 段的高畫質細節',
+      location: '清院本・畫卷第 14 段',
+    },
+    {
+      id: 'segment-18',
+      image: '/images/login/museum/qingming-court/segment-18.webp',
+      alt: '清院本《清明上河圖》畫卷第 18 段的高畫質細節',
+      location: '清院本・畫卷第 18 段',
+    },
+    {
+      id: 'segment-22',
+      image: '/images/login/museum/qingming-court/segment-22.webp',
+      alt: '清院本《清明上河圖》畫卷第 22 段的高畫質細節',
+      location: '清院本・畫卷第 22 段',
+    },
+  ];
 
-  /** 外部 IIIF 暫時不可用時仍使用本地合法文物圖，維持完整品牌視覺而非切換成陽春介面。 */
-  readonly scrollFallback = '/images/login/real/cloisonne-tripod-incense-burner.jpg';
-  readonly scrollSourceUrl = 'https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P';
-  readonly heroKicker = '清院本《清明上河圖》・高畫質長卷';
-  readonly heroTitle = '沿著長卷，看見一座城的日常';
-  readonly heroDescription = '登入後可以收藏文物、解鎖圖鑑，也能和其他玩家一起遊戲。';
-  scrollPaused = false;
-  scrollImageFailed = false;
+  readonly collectionUrl = 'https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P';
+  readonly highResolutionSourceUrl =
+    'https://commons.wikimedia.org/wiki/File:Along_the_River_During_the_Qingming_Festival_(Qing_Court_Version).jpg';
 
+  readonly activeSegmentIndex = signal(0);
+  readonly carouselPaused = signal(false);
+  readonly panKey = signal(0);
+  readonly loginPanelOpen = signal(true);
+  readonly loginPanelTransitioning = signal(false);
+  readonly themeTransitioning = signal(false);
+  readonly themeDirection = signal<'to-dark' | 'to-light'>('to-dark');
+  readonly theme = signal<SiteTheme>(this.readInitialTheme());
+  readonly activeSegment = computed(
+    () => this.qingmingSegments[this.activeSegmentIndex()] ?? this.qingmingSegments[0],
+  );
+
+  private carouselTimer: ReturnType<typeof setInterval> | null = null;
+  private carouselPausedBeforeLensDrag = false;
+  private loginPanelUnlockTimer: ReturnType<typeof setTimeout> | null = null;
+  private themeUnlockTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router,
-    private route: ActivatedRoute
+    private readonly fb: FormBuilder,
+    private readonly authService: AuthService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
   ) {
-
     this.form = this.fb.nonNullable.group({
-
-      email: [
-        '',
-        [
-          Validators.required,
-          Validators.email
-        ]
-      ],
-
-      password: [
-        '',
-        [
-          Validators.required
-        ]
-      ],
-
-      rememberMe: [
-        false
-      ]
-
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required]],
+      rememberMe: [false],
     });
-
   }
 
-
-  /* =========================
-     Lifecycle
-  ========================= */
-
   ngOnInit(): void {
+    this.applyThemeAttribute(this.theme());
+
     this.authService.getCapabilities().subscribe((capabilities) => {
       this.googleLoginEnabled = capabilities.googleLoginEnabled;
     });
 
+    this.startCarousel();
   }
 
-  /** 長卷動畫可手動暫停，並由 CSS 的 reduced-motion 規則支援偏好減少動態。 */
-  toggleScroll(): void {
-    this.scrollPaused = !this.scrollPaused;
+  ngOnDestroy(): void {
+    this.stopCarousel();
+    if (this.loginPanelUnlockTimer) clearTimeout(this.loginPanelUnlockTimer);
+    if (this.themeUnlockTimer) clearTimeout(this.themeUnlockTimer);
   }
 
-  /** 圖片層失敗時只切換到同頁的合法靜態主視覺，不影響登入表單與整個頁面。 */
-  handleScrollImageError(): void {
-    this.scrollImageFailed = true;
+  selectSegment(index: number): void {
+    if (index < 0 || index >= this.qingmingSegments.length) return;
+    this.activeSegmentIndex.set(index);
+    this.panKey.update((key) => key + 1);
   }
 
+  previousSegment(): void {
+    this.selectSegment(
+      (this.activeSegmentIndex() - 1 + this.qingmingSegments.length) % this.qingmingSegments.length,
+    );
+  }
 
-  /* =========================
-     Google Login
-  ========================= */
+  nextSegment(): void {
+    this.selectSegment((this.activeSegmentIndex() + 1) % this.qingmingSegments.length);
+  }
+
+  toggleCarousel(): void {
+    this.carouselPaused.update((paused) => !paused);
+  }
+
+  handleLensDragging(isDragging: boolean): void {
+    // ui-integration: 拖曳鏡面時暫停自動平移，讓使用者能穩定觀察；放開後只回復原本的播放狀態。
+    if (isDragging) {
+      this.carouselPausedBeforeLensDrag = this.carouselPaused();
+      this.carouselPaused.set(true);
+      return;
+    }
+
+    if (!this.carouselPausedBeforeLensDrag) this.carouselPaused.set(false);
+  }
+
+  toggleLoginPanel(): void {
+    if (this.loginPanelTransitioning()) return;
+
+    const nextOpenState = !this.loginPanelOpen();
+    const view = this.document.defaultView;
+    const prefersReducedMotion = view?.matchMedia('(prefers-reduced-motion: reduce)').matches ?? false;
+    const documentWithTransition = this.document as Document & {
+      startViewTransition?: (update: () => void) => { finished: Promise<void> };
+    };
+
+    // ui-integration: 使用瀏覽器原生 shared-element 轉場，讓登入卡與收合入口保持同一個空間關係；不支援時仍直接切換。
+    if (!prefersReducedMotion && documentWithTransition.startViewTransition) {
+      this.loginPanelTransitioning.set(true);
+      try {
+        const transition = documentWithTransition.startViewTransition(() => {
+          this.loginPanelOpen.set(nextOpenState);
+        });
+        void transition.finished.catch(() => undefined);
+        this.scheduleLoginPanelTransitionUnlock();
+      } catch {
+        this.loginPanelOpen.set(nextOpenState);
+        this.scheduleLoginPanelTransitionUnlock();
+      }
+    } else {
+      this.loginPanelOpen.set(nextOpenState);
+    }
+
+    // ui-integration: 收合／展開後把焦點交給目前唯一的登入入口，避免按鈕消失後使用者迷失在背景畫面。
+    view?.setTimeout(() => {
+      const focusTarget = () => {
+        const target = this.document.querySelector<HTMLElement>(
+          nextOpenState ? '#email' : '#login-panel-collapsed',
+        );
+        target?.focus();
+      };
+      // Angular 重新建立 @if 內容需要等一個 frame；第二次嘗試讓 shared-element 轉場下的鍵盤焦點也不會落空。
+      focusTarget();
+      view.requestAnimationFrame(focusTarget);
+      if (this.loginPanelTransitioning()) {
+        // Chromium 在 shared-element overlay 存在時可能暫時把焦點留在 body；轉場結束後再確認一次。
+        view.setTimeout(focusTarget, 600);
+      }
+    }, 0);
+  }
+
+  toggleTheme(): void {
+    if (this.themeTransitioning()) return;
+
+    const nextTheme: SiteTheme = this.theme() === 'qmahdark' ? 'qmah' : 'qmahdark';
+    this.themeDirection.set(nextTheme === 'qmahdark' ? 'to-dark' : 'to-light');
+    this.themeTransitioning.set(true);
+
+    const applyTheme = () => {
+      this.applyThemeAttribute(nextTheme);
+      this.theme.set(nextTheme);
+    };
+
+    const documentWithTransition = this.document as Document & {
+      startViewTransition?: (update: () => void) => { finished: Promise<void> };
+    };
+
+    try {
+      if (documentWithTransition.startViewTransition) {
+        const transition = documentWithTransition.startViewTransition(applyTheme);
+        // ViewTransition.finished 在部分瀏覽器／快速連點狀態可能不 settle；另設固定上限，避免控制項永久鎖住。
+        void transition.finished.catch(() => undefined);
+        this.scheduleThemeTransitionUnlock();
+        return;
+      }
+    } catch {
+      // 不支援或被瀏覽器中止時，仍回到相同的原生 CSS 光暈流程。
+    }
+
+    applyTheme();
+    this.scheduleThemeTransitionUnlock();
+  }
 
   googleLogin(): void {
-
-    window.location.href =
-      `${environment.apiBaseUrl}/account/google-login`;
-
+    window.location.href = `${environment.apiBaseUrl}/account/google-login`;
   }
 
-
-  /* =========================
-     Login
-  ========================= */
-
   login(): void {
-
     if (this.form.invalid) {
-
       this.form.markAllAsTouched();
-
-      return;
-
-    }
-
-
-    if (this.loading) {
       return;
     }
 
+    if (this.loading) return;
 
     this.loading = true;
     this.errorMessage = '';
 
+    this.authService.login(this.form.getRawValue()).subscribe({
+      next: () => {
+        this.loading = false;
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        // ui-integration: 只接受站內絕對路徑，避免登入後導向外部網址；沒有目的地時先回到內容型首頁。
+        const destination = returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/home';
+        void this.router.navigateByUrl(destination);
+      },
+      error: (error) => {
+        this.loading = false;
 
-    this.authService
-      .login(
-        this.form.getRawValue()
-      )
-      .subscribe({
-
-        next: () => {
-
-          this.loading = false;
-
-          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-          // ui-integration: 只接受站內絕對路徑，避免登入後導向外部網址；沒有目的地時維持會員中心作為預設入口。
-          const destination = returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/member';
-          void this.router.navigateByUrl(destination);
-
-        },
-
-        error: (error) => {
-
-          this.loading = false;
-
-
-          if (error.status === 401) {
-
-            this.errorMessage =
-              'Email 或密碼錯誤';
-
-            return;
-
-          }
-
-
-          if (error.status === 503) {
-
-            this.errorMessage =
-              '資料庫目前無法連線';
-
-            return;
-
-          }
-
-
-          this.errorMessage =
-            '登入失敗，請稍後再試';
-
+        if (error.status === 401) {
+          this.errorMessage = '電子郵件或密碼錯誤';
+          return;
         }
 
-      });
+        if (error.status === 503) {
+          this.errorMessage = '服務目前無法連線';
+          return;
+        }
 
+        this.errorMessage = '登入失敗，請稍後再試';
+      },
+    });
   }
 
+  @HostListener('window:keydown', ['$event'])
+  handleViewerKeyboard(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input, textarea, select, button, a, [contenteditable="true"]')) return;
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      this.previousSegment();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      this.nextSegment();
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      this.toggleCarousel();
+    }
+  }
+
+  private startCarousel(): void {
+    if (this.qingmingSegments.length < 2 || typeof window === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.carouselPaused.set(true);
+      return;
+    }
+
+    // 每段以 16 秒完成一次慢速平移，再切到下一段，避免高畫質影像快速閃換。
+    this.carouselTimer = setInterval(() => {
+      if (!this.carouselPaused()) this.nextSegment();
+    }, 16000);
+  }
+
+  private stopCarousel(): void {
+    if (this.carouselTimer) clearInterval(this.carouselTimer);
+    this.carouselTimer = null;
+  }
+
+  private readInitialTheme(): SiteTheme {
+    try {
+      const storedTheme = this.document.defaultView?.localStorage.getItem('qmah-theme');
+      if (storedTheme === 'qmah' || storedTheme === 'qmahdark') return storedTheme;
+    } catch {
+      // 私密瀏覽或受限環境無法讀取儲存時，沿用目前 document theme。
+    }
+
+    return this.document.documentElement.getAttribute('data-theme') === 'qmahdark' ? 'qmahdark' : 'qmah';
+  }
+
+  private applyThemeAttribute(theme: SiteTheme): void {
+    this.document.documentElement.setAttribute('data-theme', theme);
+    try {
+      this.document.defaultView?.localStorage.setItem('qmah-theme', theme);
+    } catch {
+      // 主題切換不應因為儲存權限而失敗。
+    }
+  }
+
+  private scheduleThemeTransitionUnlock(): void {
+    if (this.themeUnlockTimer) clearTimeout(this.themeUnlockTimer);
+
+    const finish = () => {
+      this.themeUnlockTimer = null;
+      this.themeTransitioning.set(false);
+    };
+    const view = this.document.defaultView;
+    if (view) {
+      this.themeUnlockTimer = view.setTimeout(finish, 720);
+    } else {
+      finish();
+    }
+  }
+
+  private scheduleLoginPanelTransitionUnlock(): void {
+    if (this.loginPanelUnlockTimer) clearTimeout(this.loginPanelUnlockTimer);
+
+    const finish = () => {
+      this.loginPanelUnlockTimer = null;
+      this.loginPanelTransitioning.set(false);
+    };
+    const view = this.document.defaultView;
+    if (view) {
+      this.loginPanelUnlockTimer = view.setTimeout(finish, 560);
+    } else {
+      finish();
+    }
+  }
 }
