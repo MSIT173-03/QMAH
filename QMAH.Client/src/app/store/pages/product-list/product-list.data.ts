@@ -51,14 +51,15 @@ export type DisplayModeKey = 'grid' | 'list';
 export interface DisplayMode {
   key: DisplayModeKey;
   label: string;
+  icon: 'layout-grid' | 'list';
   /** 滑鼠停留提示文字 */
   title: string;
 }
 
 /** 顯示模式切換選項清單 */
 export const DISPLAY_MODES: DisplayMode[] = [
-  { key: 'grid', label: '▦ 卡片', title: '卡片顯示' },
-  { key: 'list', label: '☰ 列表', title: '列表顯示' },
+  { key: 'grid', label: '卡片', icon: 'layout-grid', title: '卡片顯示' },
+  { key: 'list', label: '列表', icon: 'list', title: '列表顯示' },
 ];
 
 /** 由網址 view 參數對應的頁面標題文字 */

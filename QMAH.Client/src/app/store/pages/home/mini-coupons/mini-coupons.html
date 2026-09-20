@@ -1,16 +1,18 @@
-<!-- 迷你折價券：可點擊領取，領取後按鈕樣式與文字改變 -->
-<app-panel>
-  <span class="label-tag label-tag--loose coupon-mini-label">COUPON</span>
-  @for (coupon of displayCoupons(); track $index; let i = $index) {
-    <div class="coupon-mini-item">
-      <span class="coupon-mini-off">{{ coupon.off }}</span>
-      <span class="coupon-mini-cond">{{ coupon.cond }}</span>
-      <button
-        type="button"
-        class="coupon-mini-btn"
-        [class.coupon-mini-btn--taken]="coupon.taken"
-        (click)="take(i)"
-      >{{ coupon.taken ? '已領取' : '領取' }}</button>
-    </div>
-  }
-</app-panel>
+@if (displayCoupons().length > 0) {
+  <!-- ui-integration: 沒有可領折價券時隱藏整個側欄面板，不用空標題暗示存在可用優惠。 -->
+  <app-panel>
+    <span class="label-tag label-tag--loose coupon-mini-label">COUPON</span>
+    @for (coupon of displayCoupons(); track $index; let i = $index) {
+      <div class="coupon-mini-item">
+        <span class="coupon-mini-off">{{ coupon.off }}</span>
+        <span class="coupon-mini-cond">{{ coupon.cond }}</span>
+        <button
+          type="button"
+          class="coupon-mini-btn"
+          [class.coupon-mini-btn--taken]="coupon.taken"
+          (click)="take(i)"
+        >{{ coupon.taken ? '已領取' : '領取' }}</button>
+      </div>
+    }
+  </app-panel>
+}

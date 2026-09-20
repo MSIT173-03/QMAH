@@ -106,6 +106,36 @@ export class Economy implements OnInit {
     );
   }
 
+  /**
+   * ui-integration: 進度條以 transform 呈現比例，避免每次資料更新都觸發 width layout
+   * 重排；保留原本的百分比計算與視覺回饋，不改變會員資產契約。
+   */
+  get keyProgressRatio(): number {
+    return this.keyProgressPercent / 100;
+  }
+
+  /**
+   * ui-integration: 以玩家任務語意取代後端 scope 名稱，讓四種鑰匙在會員與圖鑑頁
+   * 使用同一套稱呼；API enum 仍維持原值，避免牽動既有資料與解鎖流程。
+   */
+  keyScopeLabel(scopeType: string): string {
+    return {
+      NORMAL: '探索鑰匙',
+      CATEGORY: '分類鑰匙',
+      ERA: '年代鑰匙',
+      UNIVERSAL: '萬能鑰匙',
+    }[scopeType] ?? '鑰匙';
+  }
+
+  keyScopeDescription(scopeType: string): string {
+    return {
+      NORMAL: '從尚未解鎖的文物中探索一件',
+      CATEGORY: '從指定分類探索一件文物',
+      ERA: '從指定年代探索一件文物',
+      UNIVERSAL: '由你指定一件文物解鎖',
+    }[scopeType] ?? '用於解鎖圖鑑文物';
+  }
+
 
   get remainingKeyProgress(): number {
 

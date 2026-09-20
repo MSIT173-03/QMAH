@@ -222,6 +222,8 @@ export interface KeywordSuggestion {
 /** 購物車品項 */
 export interface CartItem {
   productId: string;
+  /** 商品主圖縮圖；無圖時維持 null，不拿其他商品圖片冒充。 */
+  coverImage: string | null;
   brand: string;
   /** 器類名稱 */
   category: string;

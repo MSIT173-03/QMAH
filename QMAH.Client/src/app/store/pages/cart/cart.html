@@ -13,12 +13,14 @@
   <!-- 頁面標題列 -->
   <app-page-title-row title="購物車" tag="CART" [link]="continueShoppingLink" />
 
+  @if (error(); as message) { <p class="cart-feedback" role="alert">{{ message }}</p> }
+
   @if (hasItems()) {
   <!-- 購物車有商品：左側逐行清單，右側訂單摘要 -->
   <div class="cart-body">
     <div class="cart-lines">
       @for (line of lines(); track line.id) {
-      <app-cart-line [id]="line.id" [brand]="line.brand" [cat]="line.cat" [name]="line.name" [price]="line.price"
+      <app-cart-line [id]="line.id" [coverImage]="line.coverImage" [brand]="line.brand" [cat]="line.cat" [name]="line.name" [price]="line.price"
         [was]="line.was" [qty]="line.qty" [lineTotal]="line.lineTotal" [leaving]="line.leaving"
         (qtyChange)="onQtyChange(line.id, $event)" (remove)="onRemove(line.id)" />
       }
@@ -28,7 +30,7 @@
   </div>
   } @else if (loaded()) {
   <!-- 購物車是空的 -->
-  <app-empty-state title="購物車目前是空的" desc="從器類逛起，或看看本期特展聯名的文物明信片。" ctaLabel="開始選購" ctaHref="#" size="lg" />
+  <app-empty-state title="購物車目前是空的" desc="從器類逛起，或看看本期特展聯名的文物明信片。" ctaLabel="開始選購" [ctaHref]="continueShoppingLink.href" size="lg" />
   }
 
   <!-- 再加購 -->

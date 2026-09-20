@@ -255,7 +255,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   private showRoomActionError(error: unknown, fallbackTitle: string): void {
     if (error instanceof HttpErrorResponse && error.status === 401) {
       this.errorTitle = '請先登入';
-      this.error = '請先登入遊戲帳號，再建立或加入房間。';
+      this.error = '請先登入會員帳號，再建立或加入房間。';
       return;
     }
     this.errorTitle = fallbackTitle;

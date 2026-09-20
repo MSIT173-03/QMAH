@@ -55,6 +55,7 @@
 
   /* 版面容器：置中並限制最大寬度，供各頁面主要內容區使用 */
   .container {
+    width: 100%;
     max-width: 1320px;
     margin: 0 auto;
     padding: 0 20px;
@@ -271,6 +272,42 @@
     }
   }
 
+  /* ui-integration: 商品卡片沿用原本網格語意，僅在內容壓力增加時降低欄數，不讓圖片與 CTA 被擠成不可讀的窄條。 */
+  @media (max-width: 720px) {
+    .card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .promobar-row {
+      padding-inline: 14px;
+      gap: 8px 12px;
+    }
+
+    .promobar-actions {
+      width: 100%;
+      margin-left: 0;
+      gap: 10px 14px;
+    }
+
+    .nav-bar-row {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .container {
+      padding-inline: 14px;
+    }
+  }
+
   /* ui-integration: 商城主要 CTA 保留原本造型，但把觸控高度收斂到可操作的 44px。 */
   .btn-solid,
   .btn-outline {
@@ -297,6 +334,17 @@
     &:hover {
       background: var(--color-ink);
       color: #fff;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
     }
   }
 }

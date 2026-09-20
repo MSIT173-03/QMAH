@@ -13,7 +13,7 @@ export function injectCartState() {
   const cartApi = inject(CartApi);
   /** 購物車內容；null 代表尚在載入 */
   const cart = signal<ShoppingCart | null>(null);
-  /** 最近一次寫入失敗；保留給未來既有頁面顯示，不以空資料假裝寫入成功。 */
+  /** 最近一次寫入失敗；由購物車頁直接呈現，不以空資料假裝寫入成功。 */
   const error = signal<string | null>(null);
 
   /** 送出請求並以回應內容更新購物車，更新後執行 done */

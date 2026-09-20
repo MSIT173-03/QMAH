@@ -67,6 +67,8 @@ export class Cart {
   protected hasItems = computed(() => this.lines().length > 0);
   /** 購物車件數，顯示於頁首與標題列 */
   protected count = this.cartState.count;
+  /** ui-integration: 購物車異動失敗要留在原頁面並明確告知，不讓使用者誤以為已更新。 */
+  protected error = this.cartState.error;
 
   /** 金額摘要（後端以預設配送方式試算），供 app-cart-summary 顯示 */
   protected amounts = computed(() => this.cartState.cart()?.amounts ?? null);

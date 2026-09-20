@@ -50,6 +50,10 @@
   gap: 10px;
 }
 
+.store-loading { display: grid; place-items: center; gap: 12px; min-height: 260px; border: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-muted); }
+.store-loading__mark { width: 28px; height: 28px; border: 2px solid var(--color-line-mid); border-top-color: var(--color-accent); border-radius: 50%; animation: store-spin 700ms linear infinite; }
+@keyframes store-spin { to { transform: rotate(360deg); } }
+
 /* ui-integration: 商品篩選在手機改成上下排列，維持既有列表／卡片切換而不讓側欄擠壓內容。 */
 @media (max-width: 720px) {
   /* ui-integration: 行動版把篩選側欄還原為正常流，避免 sticky top 值與雙層頁首重疊。 */

@@ -1,9 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <g stroke="#35545A" stroke-width="2" stroke-linejoin="round">
-    <circle cx="128" cy="52" r="38" fill="#9AB5A0"/>
-    <circle cx="128" cy="52" r="24" fill="#F7F4EE"/>
-    <path d="m128 41 4 7 7 4-7 4-4 7-4-7-7-4 7-4 4-7Z" fill="#E2EBDD"/>
-    <path d="M113 86h30v95h24c3 0 5 2 5 5v10h-18v8h18v12c0 3-2 5-5 5h-24v17h-30V86Z" fill="#9AB5A0"/>
+  <!-- ui-integration: UNIVERSAL 以精密的 chamfered head 與單一深靛 inset 表達最高權限，不加入奇幻符號。 -->
+  <g transform="rotate(-38 128 128)" stroke="#36545A" stroke-width="2.4" stroke-linejoin="round">
+    <path d="M101 28h54l17 17v14l-17 17h-54L84 59V45l17-17Z" fill="#C5B184" />
+    <path d="m110 38 36 0 11 11-11 20h-36L99 59V49l11-11Z" fill="#4B6077" />
+    <path d="m114 43 28 0 7 7-7 14h-28l-7-7v-7l7-7Z" fill="#61758A" stroke="none" />
+    <path d="M115 81h26v101h20v13h-16v9h16v14h-46V81Z" fill="#B9A574" />
+    <rect x="107" y="75" width="42" height="22" rx="11" fill="#7FA9AE" />
   </g>
-  <path d="M116 99v78" stroke="#CFE0D2" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+  <path d="M119 98h5v82h-5z" fill="#D7C89F" />
+  <path d="M135 96h5v89h-5z" fill="#8F7A50" opacity=".7" />
 </svg>

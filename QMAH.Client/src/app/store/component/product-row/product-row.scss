@@ -140,6 +140,12 @@
   }
 }
 
+.product-row-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 @media (max-width: 600px) {
   .product-row { gap: 12px; padding: 12px; }
   .product-row-thumb { width: 88px; height: 88px; }

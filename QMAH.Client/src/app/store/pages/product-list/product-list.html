@@ -34,7 +34,9 @@
 
     <!-- 右側商品區：依顯示模式切換卡片格狀或橫列清單，無結果時顯示空狀態 -->
     <div class="section-block">
-      @if (isEmpty()) {
+    @if (loading()) {
+      <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark" aria-hidden="true"></span><span>正在整理商品清單…</span></section>
+    } @else if (isEmpty()) {
       <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" ctaMode="button"
         (ctaClick)="onReset()" />
       } @else if (isGridMode()) {

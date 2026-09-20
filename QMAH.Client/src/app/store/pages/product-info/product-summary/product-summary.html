@@ -19,7 +19,9 @@
     @if (pv.was) {
       <span class="product-card-was">{{ pv.was }}</span>
     }
-    <span class="product-card-tag product-card-tag--lg" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+    @if (pv.tag) {
+      <span class="product-card-tag product-card-tag--lg" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+    }
   </div>
 
   <!-- 規格說明：材質、考據出處與出貨方式 -->

@@ -97,12 +97,14 @@
             </div>
 
             <div class="artifact-grid">
-              <div
+              <button
                 class="artifact-card"
+                type="button"
                 [class.locked]="!item.unlocked"
                 [class.unlocked]="item.unlocked"
                 *ngFor="let item of visibleItemsForEra(group); trackBy: trackByArtifactId"
                 (click)="openCard(item.id)"
+                [attr.aria-label]="(item.unlocked ? item.name : '尚未解鎖的文物') + '，' + item.categoryName + '，' + item.eraName"
               >
                 <div class="artifact-card__media">
                   @if (item.thumbnailPath) {
@@ -125,7 +127,7 @@
                     <span class="tag tag--era">{{ item.eraName }}</span>
                   </div>
                 </div>
-              </div>
+              </button>
             </div>
           </section>
 
@@ -145,15 +147,15 @@
 
   <!-- ========== 以下併入原 artifact-unlock.html：放大檢視／解鎖確認／鑑賞流水 ========== -->
 
-  <div class="overlay" [class.open]="isOverlayOpen()" (click)="onOverlayClick($event)">
-    <div class="stage" [class.with-info]="infoOpen() && focusedItem()?.unlocked" *ngIf="focusedItem() as item">
+  <div class="overlay" [class.open]="isOverlayOpen()" role="presentation" (click)="onOverlayClick($event)">
+    <div class="stage" [class.with-info]="infoOpen() && focusedItem()?.unlocked" *ngIf="focusedItem() as item" role="dialog" aria-modal="true" aria-labelledby="artifact-focus-title" tabindex="-1">
 
       <div class="focus-card" [class.unlocked]="item.unlocked">
         <span class="num">{{ item.artifactRef }}</span>
         <span class="category-tag">{{ item.categoryName }}</span>
         <img [src]="getImageUrl(focusedImagePath(item))" [alt]="item.name" class="focus-thumbnail" />
         <div class="label">
-          <span class="name">{{ item.unlocked ? item.name : '？？？' }}</span>
+          <span class="name" id="artifact-focus-title">{{ item.unlocked ? item.name : '尚未解鎖的文物' }}</span>
         </div>
       </div>
 
@@ -168,7 +170,7 @@
               查看資料
             }
           </button>
-          <div class="hint">點擊空白處返回圖鑑</div>
+          <button type="button" class="hint hint-button" (click)="closeOverlay()">返回圖鑑</button>
         </ng-container>
         <ng-template #lockedActions>
           <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">
@@ -267,9 +269,9 @@
     [class.open]="confirmTarget() !== null"
     (click)="onConfirmOverlayClick($event)"
   >
-    <div class="confirm-dialog" *ngIf="confirmTarget() as target">
+    <div class="confirm-dialog" *ngIf="confirmTarget() as target" role="dialog" aria-modal="true" aria-labelledby="artifact-unlock-title">
       <svg lucideKeyRound class="key-icon" aria-hidden="true" focusable="false"></svg>
-      <h3>解鎖確認</h3>
+      <h3 id="artifact-unlock-title">解鎖確認</h3>
       <p>使用 <strong>{{ confirmCost() }}</strong> 把萬能鑰匙解鎖「{{ target.artifactRef }}」的紀錄？</p>
       <p class="have">
         目前持有：<strong>{{ universalKey()?.balance ?? 0 }}</strong> 把萬能鑰匙

@@ -60,6 +60,8 @@
 
   <!-- 同類推薦 -->
   <app-related-products [items]="related()" (addToCart)="onAddRelated($event)" />
+  } @else if (item() === undefined) {
+  <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark" aria-hidden="true"></span><span>正在整理商品資料…</span></section>
   } @else if (item() === null) {
   <!-- 查無此商品 -->
   <app-empty-state title="找不到這件商品" desc="商品可能已下架，或網址有誤。" ctaLabel="回到商品列表" [ctaHref]="productsPath"

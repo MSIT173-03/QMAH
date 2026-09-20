@@ -1,0 +1,213 @@
+/* ui-integration: 公告區是貼文牆的 supporting context；桌面保留輪播，手機與收合狀態優先讓貼文進入首屏。 */
+.social-announcements {
+  position: relative;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-base-content) 12%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-base-100) 92%, var(--color-primary) 8%);
+}
+
+.social-announcements__head {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-base-content) 9%, transparent);
+}
+
+.social-announcements__title,
+.social-announcements__collapsed-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.social-announcements__title {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.social-announcements__title svg {
+  width: 17px;
+  height: 17px;
+  color: var(--color-primary);
+}
+
+.social-announcements__count {
+  color: color-mix(in srgb, currentColor 58%, transparent);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.social-announcements__toggle {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-base-content) 18%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.social-announcements__toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.social-announcements__collapsed-link {
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 8px 14px;
+  color: inherit;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.social-announcements__collapsed-link > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-announcements__collapsed-link > span:last-child {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+  font-size: 11px;
+}
+
+.social-announcements__carousel {
+  position: relative;
+}
+
+.social-announcement-slide {
+  min-height: 238px;
+  display: flex;
+  align-items: flex-end;
+  color: var(--color-base-content);
+  background: color-mix(in srgb, var(--color-base-300) 78%, var(--color-primary) 22%);
+  background-position: center;
+  background-size: cover;
+  text-decoration: none;
+}
+
+.social-announcement-slide.has-cover {
+  color: #fff;
+}
+
+.social-announcement-slide__body {
+  width: 100%;
+  padding: 24px 22px;
+  background: color-mix(in srgb, var(--color-base-100) 92%, transparent);
+}
+
+.has-cover .social-announcement-slide__body {
+  background: linear-gradient(to top, rgba(18, 27, 30, .76), transparent);
+}
+
+.social-announcement-slide h2 {
+  margin: 10px 0 5px;
+  font-size: clamp(18px, 2.5vw, 28px);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.social-announcement-slide p {
+  max-width: 72ch;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.social-announcements__prev,
+.social-announcements__next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.social-announcements__prev { left: 10px; }
+.social-announcements__next { right: 10px; }
+
+.social-announcements__dots {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.social-announcements__dots button {
+  width: 26px;
+  height: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: color-mix(in srgb, currentColor 28%, transparent);
+  cursor: pointer;
+}
+
+.social-announcements__dots button.is-active {
+  background: currentColor;
+}
+
+.social-posts-heading {
+  gap: 16px;
+}
+
+.social-posts-heading h1 {
+  margin: 0;
+  text-wrap: balance;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .social-announcements {
+    margin-bottom: 18px;
+  }
+
+  .social-announcement-slide {
+    min-height: 190px;
+  }
+
+  .social-announcement-slide__body {
+    padding: 18px 16px 28px;
+  }
+
+  .social-posts-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .social-posts-heading .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-announcements__prev,
+  .social-announcements__next {
+    transition: none;
+  }
+}

@@ -61,7 +61,7 @@
       <div class="summary-card">
 
         <div class="summary-icon">
-          ✦
+          <app-qmah-icon name="gem" />
         </div>
 
         <div>
@@ -90,7 +90,7 @@
         <div class="progress-content">
 
           <span class="summary-label">
-            一般鑰匙累積進度
+            探索鑰匙累積進度
           </span>
 
 
@@ -109,7 +109,7 @@
 
             <div
               class="progress-fill"
-              [style.width.%]="keyProgressPercent"
+              [style.transform]="'scaleX(' + keyProgressRatio + ')'"
             >
             </div>
 
@@ -126,7 +126,7 @@
                 {{ remainingKeyProgress }}
               </strong>
 
-              點即可獲得 1 把一般鑰匙
+              點即可獲得 1 把探索鑰匙
 
             } @else {
 
@@ -296,25 +296,7 @@
 
                 <span class="scope-badge">
 
-                  @switch (key.scopeType) {
-
-                    @case ('NORMAL') {
-                      一般
-                    }
-
-                    @case ('CATEGORY') {
-                      分類
-                    }
-
-                    @case ('ERA') {
-                      年代
-                    }
-
-                    @case ('UNIVERSAL') {
-                      萬能
-                    }
-
-                  }
+                  {{ keyScopeLabel(key.scopeType) }}
 
                 </span>
 
@@ -336,6 +318,10 @@
             <h3>
               {{ key.name }}
             </h3>
+
+            <p class="key-purpose">
+              {{ keyScopeDescription(key.scopeType) }}
+            </p>
 
 
             <div class="key-info">

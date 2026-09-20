@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 
 import {
+  ActivatedRoute,
   Router,
   RouterLink
 } from '@angular/router';
@@ -82,9 +83,9 @@ export class Login implements OnInit {
   /** 外部 IIIF 暫時不可用時仍使用本地合法文物圖，維持完整品牌視覺而非切換成陽春介面。 */
   readonly scrollFallback = '/images/login/real/cloisonne-tripod-incense-burner.jpg';
   readonly scrollSourceUrl = 'https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P';
-  readonly heroKicker = '清院本清明上河圖 · 高清長卷';
-  readonly heroTitle = '沿著長卷，慢慢看見人間';
-  readonly heroDescription = '登入清明鑑定屋，從一件文物開始自己的探索。';
+  readonly heroKicker = '清院本《清明上河圖》・高畫質長卷';
+  readonly heroTitle = '沿著長卷，看見一座城的日常';
+  readonly heroDescription = '登入後可以收藏文物、解鎖圖鑑，也能和其他玩家一起遊戲。';
   scrollPaused = false;
   scrollImageFailed = false;
 
@@ -92,7 +93,8 @@ export class Login implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
 
     this.form = this.fb.nonNullable.group({
@@ -189,9 +191,10 @@ export class Login implements OnInit {
 
           this.loading = false;
 
-          this.router.navigate([
-            '/member'
-          ]);
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+          // ui-integration: 只接受站內絕對路徑，避免登入後導向外部網址；沒有目的地時維持會員中心作為預設入口。
+          const destination = returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/member';
+          void this.router.navigateByUrl(destination);
 
         },
 

@@ -31,17 +31,6 @@ export class GameAccountService {
     );
   }
 
-  login(email: string, password: string): Observable<GameAccountSession | null> {
-    return this.getAntiforgeryToken().pipe(
-      switchMap(() => this.http.post<void>(`${this.accountUrl}/login`, {
-        email: email.trim(),
-        password,
-        rememberMe: false
-      })),
-      switchMap(() => this.loadCurrentAccount())
-    );
-  }
-
   logout(): Observable<void> {
     return this.getAntiforgeryToken().pipe(
       switchMap(() => this.http.post<void>(`${this.accountUrl}/logout`, null)),

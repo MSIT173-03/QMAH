@@ -1,4 +1,25 @@
 @import "tailwindcss";
+
+/* ui-integration: 所有 Area 共用最小 viewport 與觸控基線，避免局部頁面把 body 撐出水平捲動。 */
+html {
+  min-width: 320px;
+  scroll-padding-top: 76px;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
 @plugin "daisyui" {
   themes: qmah --default, qmahdark;
 }

@@ -27,7 +27,7 @@ const RECOMMEND_PAGE_SIZE = 10;
 /**
  * 首頁。
  * 統整頁首搜尋、主視覺輪播、限時特賣、迷你折價券、分類入口、熱銷排行、
- * 新品上架、品牌館與為你推薦等各版位；購物車、搜尋建議、全站設定與會員資料
+ * 新品上架、年代選藏與為你推薦等各版位；購物車、搜尋建議、全站設定與會員資料
  * 皆由本頁面向 API 取得，「為你推薦」並在此逐頁載入並累加。
  */
 @Component({
@@ -94,6 +94,8 @@ export class Home {
   /** 分類導覽列「新品上架」與各分類的連結網址 */
   protected readonly productsPath = PRODUCT_LIST_PATH;
   protected readonly newArrivalsPath = `${PRODUCT_LIST_PATH}?view=new`;
+  // ui-integration: 「年代選藏」導向既有圖鑑年代篩選，不建立不存在的商城品牌頁。
+  protected readonly eraCollectionPath = '/artifact-list';
   protected categoryPath(name: string): string {
     return `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`;
   }

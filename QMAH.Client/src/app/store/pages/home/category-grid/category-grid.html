@@ -5,7 +5,7 @@
     @for (cat of categories(); track cat.name) {
       <a [storeLink]="cat.link" class="cat-card">
         <div class="cat-icon">
-          <svg lucideShapes aria-hidden="true" focusable="false"></svg>
+          <app-qmah-icon [name]="categoryIcon(cat.name)" [size]="24" aria-hidden="true" />
         </div>
         <span class="text-sm">{{ cat.name }}</span>
         <span class="cat-count">{{ cat.count }} 件</span>

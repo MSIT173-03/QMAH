@@ -73,6 +73,10 @@
   min-width: 0;
 }
 
+.app-context-navigation { display: inline-flex; align-items: center; gap: 2px; padding-left: 8px; border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.app-context-navigation a { min-height: 32px; display: inline-flex; align-items: center; padding: 6px 8px; border-radius: 8px; color: color-mix(in srgb, currentColor 62%, transparent); font-size: 11px; font-weight: 700; text-decoration: none; }
+.app-context-navigation a:hover, .app-context-navigation a.is-active { color: var(--color-primary, #8a512e); background: color-mix(in srgb, var(--color-primary, #8a512e) 9%, transparent); }
+
 .app-header__actions {
   min-width: 0;
   display: flex;
@@ -176,13 +180,7 @@
 }
 
 .theme-icon {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.7;
+  font-size: 18px;
 }
 
 .theme-icon--dark {
@@ -220,15 +218,9 @@
   background: color-mix(in srgb, currentColor 6%, transparent);
 }
 
-.app-menu-toggle svg,
-.app-icon-button svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
+.app-menu-toggle app-qmah-icon,
+.app-icon-button app-qmah-icon {
+  font-size: 20px;
 }
 
 .app-skip-link {
@@ -278,7 +270,8 @@ textarea:focus-visible {
   }
 }
 
-@media (max-width: 899px) {
+/* ui-integration: 1040px 以下切換成同一個 drawer，避免平板寬度硬塞五個 Area 與帳號操作造成折行。 */
+@media (max-width: 1040px) {
   .app-shell {
     --app-header-height: 64px;
   }
@@ -301,13 +294,14 @@ textarea:focus-visible {
     display: none;
   }
 
+  .app-context-navigation { display: none; }
+
   .app-account {
     padding-right: 4px;
   }
 
   .app-account__copy,
-  .app-logout,
-  .app-header__actions app-dev-login {
+  .app-logout {
     display: none;
   }
 

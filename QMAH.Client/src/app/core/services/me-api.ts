@@ -36,7 +36,7 @@ export class MeApiService {
   private base = `${environment.apiBaseUrl}/me`;
 
   // 全站共用的「目前登入會員」狀態；null 表示未登入（或還沒查過）。
-  // dev-login 登入/登出後呼叫 refresh()／clear()，NavBar 等元件直接讀這個 signal 就會同步更新。
+  // 登入／登出後由呼叫端 refresh()／clear()，導覽列等元件直接讀這個 signal 就會同步更新。
   readonly me = signal<Me | null>(null);
 
   refresh(): void {

@@ -2,7 +2,16 @@
 @let pv = priceView();
 <div class="cart-line" [class.cart-line--leaving]="leaving()">
   <!-- 商品縮圖，連結至商品頁 -->
-  <a [storeLink]="link()" class="cart-line-thumb">{{ slotLabel }}</a>
+  <a [storeLink]="link()" class="cart-line-thumb">
+    @if (imageSrc(); as imageUrl) {
+      <img [src]="imageUrl" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
+    } @else {
+      <span class="cart-line-slot">
+        <app-qmah-icon name="image" [size]="20" aria-hidden="true" />
+        <span>{{ slotLabel }}</span>
+      </span>
+    }
+  </a>
 
   <div class="cart-line-info">
     <!-- 品牌與器類，皆無值時不顯示 -->
@@ -19,7 +28,9 @@
       @if (pv.was) {
       <span class="product-card-was">{{ pv.was }}</span>
       }
-      <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+      @if (pv.tag) {
+        <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+      }
     </div>
   </div>
 

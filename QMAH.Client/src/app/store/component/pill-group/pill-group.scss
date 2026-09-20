@@ -20,6 +20,9 @@
 }
 
 .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--color-line-mid);
   background: #fff;
   color: var(--color-muted);

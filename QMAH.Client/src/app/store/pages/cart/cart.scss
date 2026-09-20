@@ -38,6 +38,8 @@
   gap: 12px;
 }
 
+.cart-feedback { margin: 0; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--color-accent) 42%, var(--color-line)); background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)); color: var(--color-accent); }
+
 /* ui-integration: 摘要在手機移到商品清單下方，保留既有購物車資訊架構但不讓 316px 側欄擠壓內容。 */
 @media (max-width: 800px) {
   .cart-body {

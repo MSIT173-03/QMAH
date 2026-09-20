@@ -74,7 +74,7 @@ export const RECIPIENT_ADDR_FIELD: RecipientFieldDef = {
 /** 佔滿整列的備註欄位（多行輸入） */
 export const RECIPIENT_NOTE_FIELD: RecipientFieldDef = {
   field: 'note',
-  label: '給客服的備註（選填）',
+  label: '訂單備註（選填）',
   placeholder: '例：需要禮盒包裝、平日下午收件',
 };
 

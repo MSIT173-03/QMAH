@@ -18,9 +18,9 @@ export function formatShippingFee(fee: number): string {
   return fee === 0 ? '免運' : formatMoney(fee);
 }
 
-/** 折扣標籤：有原價時為折扣百分比（例如 -25%），無折扣時為「定價商品」 */
+/** 折扣標籤：只有實際低於原價時才產生百分比；一般商品不顯示標籤。 */
 export function formatDiscountTag(price: number, was: number | null): string {
-  return was === null ? '定價商品' : `-${Math.round((1 - price / was) * 100)}%`;
+  return was !== null && was > price ? `-${Math.round((1 - price / was) * 100)}%` : '';
 }
 
 /** 將 ISO 日期（YYYY-MM-DD）格式化為 MM/DD */

@@ -184,6 +184,12 @@
 }
 
 .artifact-card {
+  appearance: none;
+  width: 100%;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -863,6 +869,8 @@
   flex: none;
   transition: opacity 0.28s ease 0.05s;
 }
+
+.hint-button { border: 0; background: transparent; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
 .stage.with-info .info-panel {
   width: var(--stage-w);

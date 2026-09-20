@@ -1,13 +1,13 @@
 @if (loggedIn) {
   <div class="dropdown dropdown-end">
-    <div tabindex="0" role="button" class="btn btn-ghost btn-circle" (click)="load()">
+    <button type="button" class="btn btn-ghost btn-circle" aria-label="開啟通知" aria-haspopup="true" (click)="load()">
       <div class="indicator">
         <app-qmah-icon name="bell" size="20" />
         @if (unreadCount > 0) {
           <span class="badge badge-xs badge-primary indicator-item">{{ unreadCount }}</span>
         }
       </div>
-    </div>
+    </button>
     <div
       tabindex="0"
       class="dropdown-content bg-base-100 rounded-box z-10 mt-3 w-80 max-h-96 overflow-y-auto p-2 shadow-lg border border-base-300"

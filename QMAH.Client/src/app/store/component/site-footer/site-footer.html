@@ -6,6 +6,7 @@
       <div class="footer-brand">
         <img [src]="logoSrc" [alt]="logoAlt" class="brand-logo-img brand-logo-img--lg self-start" />
         <p class="footer-brand-note">{{ brandNote }}</p>
+        <a class="footer-col-link" [href]="githubUrl" target="_blank" rel="noopener noreferrer">GitHub 專案</a>
       </div>
       @for (col of columns(); track col.title) {
         <div class="footer-col">
@@ -34,16 +35,9 @@
 <ng-template #bottomRow let-simple="simple">
   <div class="footer-bottom-row" [class.footer-bottom-row--simple]="simple">
     <span>{{ copyright }}</span>
-    @if (privacyHref) {
-      <a [storeLink]="privacyHref" class="footer-link">隱私權政策</a>
-    } @else {
-      <span class="footer-link footer-link--disabled" aria-disabled="true">隱私權政策</span>
-    }
-    @if (termsHref) {
-      <a [storeLink]="termsHref" class="footer-link">服務條款</a>
-    } @else {
-      <span class="footer-link footer-link--disabled" aria-disabled="true">服務條款</span>
-    }
-    <span class="footer-note">{{ serviceNote }}</span>
+    <a [storeLink]="privacyHref" class="footer-link">隱私權政策</a>
+    <a [storeLink]="termsHref" class="footer-link">服務條款</a>
+    <!-- ui-integration: 聯絡入口只指向實際 GitHub 組織頁，不捏造客服電話或信箱。 -->
+    <a class="footer-link" [href]="githubUrl" target="_blank" rel="noopener noreferrer">聯絡我們</a>
   </div>
 </ng-template>

@@ -109,6 +109,7 @@ function toApiProduct(record: CatalogRecord): ApiProductListItem {
     name: record.name,
     categoryCode: record.cat,
     price: record.price,
+    salePrice: record.off > 0 ? dealPrice(record) : null,
     stock: MOCK_STOCK,
     primaryImagePath: record.image ?? null,
     isActive: true,
@@ -165,16 +166,18 @@ export function listCategories() {
 
 /**
  * GET /products：商品清單。回應為後端 DTO 格式（見 doc/apis.xml），由 CatalogApi 轉換為前端顯示用的 Product。
- * 僅支援後端已實作的篩選條件（關鍵字、器類代碼、分頁），排序與價格區間、限折扣品等前端篩選條件後端尚未提供。
+ * 模擬正式 API 的關鍵字、器類代碼、分頁與限折扣品篩選。
  */
 export function listProducts(params: HttpParams): ApiProductPage {
-  const categoryCode = params.get('categoryCode');
+  const categoryCode = params.get('category') ?? params.get('categoryCode');
   const keyword = params.get('q')?.trim();
+  const dealOnly = params.get('dealOnly') === 'true';
   const page = numberParam(params, 'page') ?? 1;
   const pageSize = numberParam(params, 'pageSize') ?? 20;
 
   const matched = CATALOG.filter((record) => {
     if (categoryCode && record.cat !== categoryCode) return false;
+    if (dealOnly && !(record.off > 0 && dealPrice(record) < record.price)) return false;
     const haystack = record.name + record.brand + record.cat + record.material + record.source;
     return !keyword || haystack.includes(keyword);
   }).sort((a, b) => a.name.localeCompare(b.name));
@@ -339,6 +342,7 @@ function buildCart(): ShoppingCart {
   const lines = cartLines();
   const items = lines.map(({ record, qty }) => ({
     productId: record.id,
+    coverImage: record.image ?? null,
     brand: record.brand,
     category: record.cat,
     name: record.name,

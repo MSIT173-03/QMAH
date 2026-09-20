@@ -162,6 +162,17 @@ const appShellChildren: Routes = [
       },
     ],
   },
+  {
+    // ui-integration: 政策頁與所有前台內容共用 App Shell，頁尾連結因此能保留主導航與 mobile drawer。
+    path: 'privacy-policy',
+    loadComponent: () => import('./shared/components/legal-page/legal-page').then(m => m.LegalPageComponent),
+    data: { document: 'privacy' },
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./shared/components/legal-page/legal-page').then(m => m.LegalPageComponent),
+    data: { document: 'terms' },
+  },
   { path: '', redirectTo: 'social/posts', pathMatch: 'full' },
   { path: '**', redirectTo: 'social/posts' }
 ];

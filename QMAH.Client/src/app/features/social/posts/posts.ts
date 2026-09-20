@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -70,6 +70,9 @@ export class PostsComponent implements OnInit, OnDestroy {
   // 貼文牆頂端的公告輪播：只取最新 5 則公告貼文，每 5 秒自動切到下一則。
   announcements: SocialPostListItem[] = [];
   currentAnnouncementIndex = 0;
+  /** ui-integration: 公告是 supporting context，收合偏好留在瀏覽器，避免每次進入貼文牆都推開主內容。 */
+  announcementCollapsed = signal(false);
+  private readonly announcementStorageKey = 'qmah.social.announcements.collapsed';
   private announcementTimer?: ReturnType<typeof setInterval>;
 
   get isAdmin(): boolean {
@@ -77,6 +80,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.announcementCollapsed.set(this.readAnnouncementCollapsePreference());
     this.loadPosts();
     this.loadAnnouncements();
     this.socialApi.getBoards().subscribe({
@@ -97,14 +101,37 @@ export class PostsComponent implements OnInit, OnDestroy {
       next: (page) => {
         this.announcements = page.items;
         this.currentAnnouncementIndex = 0;
-        if (this.announcementTimer) clearInterval(this.announcementTimer);
-        if (this.announcements.length > 1) {
-          this.announcementTimer = setInterval(() => this.nextAnnouncement(), 4500);
-        }
+        this.syncAnnouncementTimer();
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => console.error('取得最新公告失敗:', err)
     });
+  }
+
+  private readAnnouncementCollapsePreference(): boolean {
+    try {
+      return localStorage.getItem(this.announcementStorageKey) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  private syncAnnouncementTimer(): void {
+    if (this.announcementTimer) clearInterval(this.announcementTimer);
+    this.announcementTimer = undefined;
+    if (!this.announcementCollapsed() && this.announcements.length > 1) {
+      this.announcementTimer = setInterval(() => this.nextAnnouncement(), 4500);
+    }
+  }
+
+  toggleAnnouncements(): void {
+    this.announcementCollapsed.update((collapsed) => !collapsed);
+    try {
+      localStorage.setItem(this.announcementStorageKey, this.announcementCollapsed() ? '1' : '0');
+    } catch {
+      // 瀏覽器拒絕儲存時仍保留本次頁面操作，不讓偏好設定影響公告瀏覽。
+    }
+    this.syncAnnouncementTimer();
   }
 
   nextAnnouncement(): void {
@@ -123,6 +150,10 @@ export class PostsComponent implements OnInit, OnDestroy {
   goToAnnouncement(index: number): void {
     this.currentAnnouncementIndex = index;
     this.cdr.detectChanges();
+  }
+
+  openCreatePost(): void {
+    (document.getElementById('create_post_modal') as HTMLDialogElement | null)?.showModal();
   }
 
   resetFilters(): void {

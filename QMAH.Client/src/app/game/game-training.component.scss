@@ -95,20 +95,29 @@
 .training-notebook .difficulty { border: 1px solid var(--slate); padding: 5px 9px; color: var(--slate); font-size: 11px; font-weight: 800; letter-spacing: .1em; }
 .training-notebook .game-prompt h3 { margin: 0; font-family: "Noto Serif TC", Georgia, serif; font-size: 26px; }
 .training-notebook .game-prompt p, .training-notebook .game-hint { margin: 6px 0 0; color: var(--muted); }
-.training-notebook .locator-game { gap: 34px; padding-top: 28px; }
+.training-notebook .locator-game { display: grid; grid-template-columns: minmax(260px, .95fr) minmax(0, 1.05fr); gap: 34px; align-items: start; padding-top: 28px; }
 .training-notebook .clue-image { min-height: 320px; border: 1px solid var(--line); background: #e7ece7; }
 .training-notebook .clue-image img { display: block; width: 100%; height: 100%; min-height: 320px; object-fit: contain; }
 .training-notebook .image-fallback, .training-notebook .option-image-fallback { display: grid; place-items: center; min-height: 96px; color: var(--muted); font-size: 15px; font-weight: 800; text-align: center; }
 .training-notebook .image-fallback small { font-size: 12px; font-weight: 500; }
-.training-notebook .artifact-options button { border-color: var(--line); background: var(--porcelain); }
+.training-notebook .artifact-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+.training-notebook .artifact-options button { min-width: 0; min-height: 154px; border: 1px solid var(--line); border-radius: 8px; padding: 0 0 10px; overflow: hidden; background: var(--porcelain); text-align: left; transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease; }
+.training-notebook .artifact-options button:hover { border-color: var(--jade); transform: translateY(-2px); }
 .training-notebook .artifact-options button img { display: block; width: 100%; height: 110px; object-fit: cover; }
+.training-notebook .artifact-options button > span:last-child { display: block; padding: 8px 10px 0; font-weight: 700; }
 .training-notebook .artifact-options button.selected { border-color: var(--cinnabar); background: #f2e5df; box-shadow: inset 3px 0 var(--cinnabar); }
-.training-notebook .memory-card { border-color: var(--line); background: var(--ink); }
+.training-notebook .memory-grid { display: grid; grid-template-columns: repeat(4, minmax(72px, 1fr)); gap: 10px; margin-top: 18px; }
+.training-notebook .memory-card { min-width: 0; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 8px; border-color: var(--line); background: var(--ink); transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease; }
+.training-notebook .memory-card:hover { transform: translateY(-2px); }
 .training-notebook .memory-card.is-open { background: var(--porcelain); }
 .training-notebook .memory-card.is-matched { border-color: var(--bronze); }
 .training-notebook .memory-card img, .training-notebook .image-tile img, .training-notebook .image-strip img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .training-notebook .memory-card .image-fallback, .training-notebook .image-tile .image-fallback, .training-notebook .image-strip .image-fallback { min-height: 0; width: 100%; height: 100%; color: var(--porcelain); }
-.training-notebook .image-tile, .training-notebook .image-strip { border-color: var(--line); }
+.training-notebook .tile-grid { display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 10px; max-width: 560px; margin-top: 18px; }
+.training-notebook .strip-row { display: grid; grid-template-columns: repeat(4, minmax(100px, 1fr)); gap: 8px; margin-top: 18px; }
+.training-notebook .image-tile, .training-notebook .image-strip { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--porcelain); }
+.training-notebook .image-tile { aspect-ratio: 1; }
+.training-notebook .image-strip { aspect-ratio: 1.18; }
 .training-notebook .image-tile.selected, .training-notebook .image-strip.selected { outline-color: var(--cinnabar); }
 .training-notebook .image-tile b, .training-notebook .image-strip b { background: var(--ink); }
 .training-notebook .play-footer { border-top-color: var(--line); color: var(--muted); }
@@ -137,6 +146,10 @@
   .training-notebook .mode-index button { grid-column: 2; justify-self: start; }
   .training-notebook .chapter-heading h1 { font-size: 38px; }
   .training-notebook .play-sheet { padding: 20px; }
+  .training-notebook .locator-game { grid-template-columns: 1fr; gap: 22px; }
+  .training-notebook .clue-image, .training-notebook .clue-image img { min-height: 220px; }
+  .training-notebook .memory-grid { grid-template-columns: repeat(4, minmax(56px, 1fr)); gap: 7px; }
+  .training-notebook .strip-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .training-notebook .play-footer { align-items: stretch; flex-direction: column; }
   .training-notebook .play-actions { flex-direction: column; }
   .training-notebook .play-actions button { width: 100%; }

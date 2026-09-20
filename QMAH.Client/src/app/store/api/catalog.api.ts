@@ -68,6 +68,7 @@ export class CatalogApi {
       order: query.order,
       minPrice: query.priceMin,
       maxPrice: query.priceMax,
+      dealOnly: query.dealOnly,
       page: query.page,
       pageSize: query.pageSize,
     });

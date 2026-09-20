@@ -6,7 +6,11 @@
       <span class="breadcrumb-current">{{ item.label }}</span>
     } @else {
       <!-- 前面項目為可點擊連結，並附上分隔線 -->
-      <a [storeLink]="item.href ?? '#'" class="breadcrumb-link">{{ item.label }}</a>
+      @if (item.href; as href) {
+        <a [storeLink]="href" class="breadcrumb-link">{{ item.label }}</a>
+      } @else {
+        <span class="breadcrumb-current">{{ item.label }}</span>
+      }
       <span>/</span>
     }
   }

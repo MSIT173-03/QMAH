@@ -18,7 +18,7 @@
   </section>
 
   @if (refreshError) {
-    <div class="notice error" role="alert"><strong>房間同步失敗</strong><span>{{ refreshError }}</span>@if (needsGameAccount) { <a routerLink="/game/account">登入遊戲帳號</a> } @else { <a routerLink="/game">返回多人鑑定大廳</a> }</div>
+    <div class="notice error" role="alert"><strong>房間同步失敗</strong><span>{{ refreshError }}</span>@if (needsGameAccount) { <a routerLink="/login">前往會員登入</a> } @else { <a routerLink="/game">返回多人鑑定大廳</a> }</div>
   }
   @if (roundLoadError) {
     <div class="notice error" role="alert"><strong>回合資料無法讀取</strong><span>{{ roundLoadError }}</span></div>
@@ -124,7 +124,7 @@
                 }
               </div>
             } @else {
-              <div class="phase-callout"><strong>請先登入遊戲帳號</strong><p>登入後才能準備、作答與參與這場遊戲。</p><a routerLink="/game/account">登入遊戲帳號</a></div>
+              <div class="phase-callout"><strong>請先登入會員帳號</strong><p>登入後才能準備、作答與參與這場遊戲。</p><a routerLink="/login">前往會員登入</a></div>
             }
           </article>
         } @else if (currentRoom.status === 'COMPLETED') {

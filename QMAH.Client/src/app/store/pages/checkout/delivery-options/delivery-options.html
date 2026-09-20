@@ -9,6 +9,7 @@
         type="button"
         class="option-btn"
         [class.option-btn--active]="option.active"
+        [attr.aria-pressed]="option.active ? 'true' : 'false'"
         (click)="shippingSelect.emit(i)"
       >
         <span>{{ option.name }}</span>

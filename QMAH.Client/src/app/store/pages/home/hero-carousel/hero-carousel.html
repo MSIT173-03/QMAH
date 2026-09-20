@@ -1,28 +1,46 @@
-<!-- 主視覺輪播容器 -->
-<div class="hero">
-  <!-- 輪播軌道，依目前投影片索引位移 -->
-  <div class="hero-track" [style.transform]="trackShift()">
-    @for (slide of slides(); track slide.title) {
-      <div class="hero-slide">
-        <span class="hero-slide-slot">{{ slide.slot }}</span>
-        <div class="hero-slide-body">
-          <span class="hero-kicker">{{ slide.kicker }}</span>
-          <h2 class="hero-title">{{ slide.title }}</h2>
-          <p class="hero-desc">{{ slide.desc }}</p>
-          <button type="button" class="btn-solid hero-cta">立即選購</button>
+@if (slides().length > 0) {
+  <!-- ui-integration: 正式主視覺優先；API 暫無資料時才使用專案內素材與可驗證優惠的 fallback。 -->
+  <section class="hero" aria-label="商城主視覺輪播" aria-roledescription="carousel">
+    <div class="hero-track" [style.transform]="trackShift()">
+      @for (slide of slides(); track $index) {
+        <div class="hero-slide" [class]="'hero-slide hero-slide--' + ($index % 3)" role="group"
+          [attr.aria-label]="($index + 1) + ' / ' + slides().length">
+          <img class="hero-slide-image" [src]="slideImage($index)" alt="" aria-hidden="true"
+            [attr.loading]="$index === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="$index === 0 ? 'high' : 'low'" />
+          <div class="hero-slide-body">
+            <span class="hero-kicker">{{ slide.kicker }}</span>
+            <h2 class="hero-title">{{ slide.title }}</h2>
+            <p class="hero-desc">{{ slide.desc }}</p>
+            @if (couponForSlide($index); as coupon) {
+              <div class="hero-coupon" aria-label="目前可領優惠">
+                <strong>{{ coupon.off }}</strong>
+                <span>{{ coupon.cond }}</span>
+              </div>
+            }
+            <a [storeLink]="productsPath" class="btn-solid hero-cta">立即選購</a>
+          </div>
         </div>
+      }
+    </div>
+
+    <div class="hero-controls" aria-label="輪播控制">
+      <div class="hero-dots">
+        @for (slide of slides(); track $index; let i = $index) {
+          <button
+            type="button"
+            class="hero-dot"
+            [class.hero-dot--active]="i === activeSlide()"
+            [attr.aria-label]="'查看第 ' + (i + 1) + ' 張主視覺'"
+            [attr.aria-current]="i === activeSlide() ? 'true' : null"
+            (click)="goToSlide(i)"
+          ></button>
+        }
       </div>
-    }
-  </div>
-  <!-- 輪播指示點，點擊可跳至指定投影片 -->
-  <div class="hero-dots">
-    @for (slide of slides(); track slide.title; let i = $index) {
-      <button
-        type="button"
-        class="hero-dot"
-        [class.hero-dot--active]="i === activeSlide()"
-        (click)="goToSlide(i)"
-      ></button>
-    }
-  </div>
-</div>
+      @if (slides().length > 1) {
+        <button type="button" class="hero-play-toggle" (click)="toggleAutoplay()">
+          {{ autoplayEnabled() ? '暫停輪播' : '播放輪播' }}
+        </button>
+      }
+    </div>
+  </section>
+}

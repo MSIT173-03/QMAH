@@ -268,6 +268,28 @@ export class KeyList implements OnInit {
   }
 
   /**
+   * ui-integration: 背包格與會員資產頁共用玩家語意；保留 scopeType 作為資料判斷，
+   * 只在畫面補上「探索／分類／年代／萬能」的用途說明。
+   */
+  keyScopeLabel(scopeType: KeyModel['scopeType']): string {
+    return {
+      NORMAL: '探索鑰匙',
+      CATEGORY: '分類鑰匙',
+      ERA: '年代鑰匙',
+      UNIVERSAL: '萬能鑰匙',
+    }[scopeType];
+  }
+
+  keyScopeDescription(scopeType: KeyModel['scopeType']): string {
+    return {
+      NORMAL: '從尚未解鎖的文物中探索一件',
+      CATEGORY: '從指定分類探索一件文物',
+      ERA: '從指定年代探索一件文物',
+      UNIVERSAL: '由你指定一件文物解鎖',
+    }[scopeType];
+  }
+
+  /**
    * 萬能鑰匙不能從背包直接使用——依需求，萬能鑰匙是在圖鑑頁「尚未解鎖」的文物卡片上，
    * 點原有的解鎖按鈕時使用，玩家自己指定要解鎖哪一張卡片。背包這裡點萬能鑰匙格子
    * 不開確認視窗，只顯示一個提示。

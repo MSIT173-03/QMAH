@@ -1,41 +1,21 @@
 <div class="account-page">
-  <!-- ui-integration: 遊戲帳號頁沿用共同子導覽，保留返回大廳這個明確出口。 -->
+  <!-- ui-integration: 遊戲沿用正式會員登入；本頁只提供登入狀態與返回出口，不維護第二套登入表單。 -->
   <app-game-navigation>
     <a class="back-link" routerLink="/game">返回多人鑑定大廳</a>
   </app-game-navigation>
 
   <section class="account-panel" aria-labelledby="account-title" [attr.aria-busy]="loading || busy">
     @if (loading) {
-      <p class="account-loading" role="status">正在確認遊戲帳號…</p>
+      <p class="account-loading" role="status">正在確認會員登入狀態…</p>
     } @else if (accountService.account(); as account) {
-      <h1 id="account-title">目前登入：{{ account.email }}</h1>
+      <h1 id="account-title">目前已登入會員帳號</h1>
       <p>{{ account.nickname || account.email }}</p>
-      <button type="button" (click)="logout()" [disabled]="loading || busy">{{ busy ? '登出中…' : '登出並切換帳號' }}</button>
+      <button type="button" (click)="logout()" [disabled]="loading || busy">{{ busy ? '登出中…' : '登出會員帳號' }}</button>
     } @else {
-      <h1 id="account-title">登入遊戲帳號</h1>
-      <form (ngSubmit)="login()">
-        <label for="account-email">電子郵件</label>
-        <input
-          id="account-email"
-          name="email"
-          type="email"
-          autocomplete="username"
-          [(ngModel)]="email"
-          required
-          [disabled]="loading || busy"
-        />
-        <label for="account-password">密碼</label>
-        <input
-          id="account-password"
-          name="password"
-          type="password"
-          autocomplete="current-password"
-          [(ngModel)]="password"
-          required
-          [disabled]="loading || busy"
-        />
-        <button type="submit" [disabled]="loading || busy || !email.trim() || !password">{{ busy ? '登入中…' : '登入' }}</button>
-      </form>
+      <!-- ui-integration: 所有正式帳號與管理員共用 /login，避免玩家誤以為遊戲另有測試登入。 -->
+      <h1 id="account-title">需要登入會員帳號</h1>
+      <p>遊戲沿用清明鑑定屋的正式登入狀態；登入後即可加入房間、開始小遊戲並保留可用的遊戲紀錄。</p>
+      <a class="primary-link" routerLink="/login">前往會員登入</a>
     }
 
     @if (error) {

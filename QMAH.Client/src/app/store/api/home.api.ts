@@ -34,7 +34,7 @@ export class HomeApi {
     );
   }
 
-  /** GET /brands：品牌館 */
+      /** GET /brands：舊版品牌資料介面，前台目前改用年代選藏。 */
   getBrands(): Observable<Brand[]> {
     return getField<Brand[]>(this.http, apiUrl('/brands'), 'brands').pipe(catchError(() => of<Brand[]>([])));
   }

@@ -2,7 +2,7 @@
 <div class="search-wrap" [class.search-wrap--list]="compact()">
   <!-- 輸入框與搜尋按鈕：不論 compact 與否，尺寸固定一致 -->
   <div class="search-box">
-    <input class="search-input" type="text" [placeholder]="placeholder()" [value]="value()" (input)="onInput($event)"
+    <input class="search-input" name="store-search" autocomplete="off" aria-label="搜尋商城商品" type="search" [placeholder]="placeholder()" [value]="value()" (input)="onInput($event)"
       (focus)="onFocus()" (blur)="onBlur()" (keydown.enter)="submit()" />
     <button type="button" class="search-submit" (click)="submit()">搜尋</button>
   </div>
@@ -21,10 +21,10 @@
   @if (showSuggest()) {
   <div class="search-suggest">
     @for (suggestion of suggestions(); track suggestion.name) {
-    <div class="search-suggest-item" (click)="pickSuggestion(suggestion)">
+    <button type="button" class="search-suggest-item" (click)="pickSuggestion(suggestion)">
       <span>{{ suggestion.name }}</span>
       <span class="search-suggest-count">{{ suggestion.count }}</span>
-    </div>
+    </button>
     }
   </div>
   }

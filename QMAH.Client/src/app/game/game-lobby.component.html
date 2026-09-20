@@ -11,7 +11,7 @@
       <!-- ui-integration: 測試房間只對管理員提供一鍵入口，維持一般玩家的 Game 子導覽乾淨且不暴露開發工具。 -->
       <a class="test-room-entry" routerLink="/game/test">測試房間</a>
     }
-    @if (!isDemo) { <a class="account-link" routerLink="/game/account">登入遊戲帳號</a> }
+    @if (!isDemo) { <a class="account-link" routerLink="/login">登入會員帳號</a> }
   </app-game-navigation>
 
   <!-- ui-integration: 介紹橫幅可由玩家收合，且狀態會留在本機，避免每次回到大廳都擋住找房間。 -->
@@ -38,7 +38,7 @@
     }
   </section>
 
-  @if (error) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span>@if (errorTitle === '請先登入') { <a routerLink="/game/account">登入遊戲帳號</a> }</div> }
+  @if (error) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span>@if (errorTitle === '請先登入') { <a routerLink="/login">前往會員登入</a> }</div> }
   @if (success) { <div class="notice notice-success" role="status"><span>{{ success }}</span></div> }
 
   <section class="notebook-spread" [attr.aria-busy]="loading">

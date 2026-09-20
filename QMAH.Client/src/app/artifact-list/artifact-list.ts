@@ -258,6 +258,9 @@ export class ArtifactList implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    // ui-integration: 商城「年代選藏」使用既有圖鑑篩選，讓跨 Area 入口抵達後保留使用者選的年代脈絡。
+    const era = this.route.snapshot.queryParamMap.get('era')?.trim();
+    if (era) this.selectedEras.set(new Set([era]));
     this.loadArtifacts();
     this.loadKeyBalance();
   }

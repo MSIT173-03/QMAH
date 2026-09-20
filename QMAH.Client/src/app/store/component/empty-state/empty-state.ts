@@ -20,7 +20,7 @@ export class EmptyState {
   /** 行動按鈕文字 */
   ctaLabel = input('');
   /** 行動按鈕連結網址（ctaMode 為 link 時使用） */
-  ctaHref = input('#');
+  ctaHref = input<string | null>(null);
   /** link：導向其他頁面；button：在本頁執行動作（例如清除篩選），改以 ctaClick 通知外部 */
   ctaMode = input<'link' | 'button'>('link');
   /** 較大版型（例如購物車頁的空狀態），影響留白與按鈕間距 */

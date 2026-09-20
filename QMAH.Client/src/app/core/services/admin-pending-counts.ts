@@ -15,7 +15,7 @@ export class AdminPendingCountsService {
   readonly pendingEventsCount = signal(0);
 
   constructor() {
-    // meApi.me() 在 dev-login 登入/登出、或 LayoutComponent 呼叫 meApi.refresh() 拿到結果後才會變化，
+    // meApi.me() 在登入／登出、或 LayoutComponent 呼叫 meApi.refresh() 拿到結果後才會變化，
     // 用 effect 盯著它，一有變化（含剛登入拿到 Admin 角色）就重新查一次，不用等下一次輪詢。
     effect(() => {
       this.meApi.me();

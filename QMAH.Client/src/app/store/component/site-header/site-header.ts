@@ -20,7 +20,7 @@ export class SiteHeader {
 
   /** 品牌識別與首頁入口全站一致，不需由各頁面傳入 */
   protected readonly homeHref = HOME_PATH;
-  protected readonly logoSrc =
-    'https://raw.githubusercontent.com/MSIT173-03/QMAH/main/QMAH.Web/wwwroot/images/brand/qmah-logo.svg';
+  // ui-integration: 使用 Angular public asset 的相對根路徑，避免部署後品牌 Logo 依賴 GitHub raw 網址或開發網路。
+  protected readonly logoSrc = '/images/brand/qmah-logo.svg';
   protected readonly logoAlt = '清明鑑定屋';
 }

@@ -1,12 +1,14 @@
-<!-- 為你推薦：個人化商品清單，附載入更多按鈕 -->
-<section class="section-block">
-  <app-section-head title="為你推薦" tag="FOR YOU" />
-  <div class="card-grid">
-    @for (item of items(); track item.id) {
-    <app-product-card [id]="item.id" [badge]="item.badge" [badgeVariant]="item.badgeVariant" [brand]="item.brand"
-      [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
-      [sold]="item.sold" (addToCart)="addToCart.emit(item.id)" />
-    }
-  </div>
-  <button type="button" class="load-more-btn" (click)="requireMore.emit()">載入更多</button>
-</section>
+@if (items().length > 0) {
+  <!-- ui-integration: 個人化資料尚未回傳時不顯示空標題與無效的「載入更多」。 -->
+  <section class="section-block">
+    <app-section-head title="為你推薦" tag="FOR YOU" />
+    <div class="card-grid">
+      @for (item of items(); track item.id) {
+        <app-product-card [id]="item.id" [badge]="item.badge" [badgeVariant]="item.badgeVariant" [brand]="item.brand"
+          [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
+          [sold]="item.sold" (addToCart)="addToCart.emit(item.id)" />
+      }
+    </div>
+    <button type="button" class="load-more-btn" (click)="requireMore.emit()">載入更多</button>
+  </section>
+}

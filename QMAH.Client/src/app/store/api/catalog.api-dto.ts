@@ -51,7 +51,7 @@ export function toCategory(dto: ApiCategory): Category {
  * 圖鑑資料包把同一件文物的 display／thumbnail 放在同一個目錄；
  * 清單沿用後端既有 primaryImagePath，只替換檔名，避免為了縮圖再擴充 API 契約。
  */
-function toCatalogThumbnail(path: string | null): string | null {
+export function toCatalogThumbnail(path: string | null): string | null {
   return path?.replace(/\/display\.jpg(?:\?.*)?$/i, '/thumbnail.jpg') ?? null;
 }
 
@@ -71,6 +71,7 @@ export interface ApiProductListItem {
   name: string;
   categoryCode: string;
   price: number;
+  salePrice?: number | null;
   stock: number;
   primaryImagePath: string | null;
   isActive: boolean;
@@ -115,6 +116,7 @@ export interface ApiProductDetail {
   sizeText: string;
   artifactSizeText: string | null;
   price: number;
+  salePrice?: number | null;
   stock: number;
   primaryImagePath: string | null;
   sourceUrl: string | null;
@@ -124,14 +126,17 @@ export interface ApiProductDetail {
 }
 
 export function toProduct(dto: ApiProductListItem): Product {
+  const dealPrice = typeof dto.salePrice === 'number' && dto.salePrice > 0 && dto.salePrice < dto.price
+    ? dto.salePrice
+    : dto.price;
   return {
     id: dto.id,
     name: dto.name,
     brand: '',
     category: toCategoryLabel(dto.categoryCode),
     price: dto.price,
-    dealPrice: dto.price,
-    discountRate: 0,
+    dealPrice,
+    discountRate: dto.price > 0 ? Math.round((1 - dealPrice / dto.price) * 100) : 0,
     rating: 0,
     reviewCount: 0,
     soldCount: 0,

@@ -19,7 +19,7 @@
       <a [storeLink]="productsPath" class="nav-link-strong">全部分類</a>
       <a [storeLink]="productsPath + '?view=exhibit'">特展聯名</a>
       <a [storeLink]="productsPath + '?view=deal'">限時特賣</a>
-      <a href="#brands">品牌館</a>
+      <a [storeLink]="eraCollectionPath">年代選藏</a>
       <a [storeLink]="newArrivalsPath">新品上架</a>
       @for (name of categoryNames(); track name) {
       <a [storeLink]="categoryPath(name)">{{ name }}</a>
@@ -46,7 +46,7 @@
   <!-- 熱銷排行 -->
   <app-ranking-section (addToCart)="onAddToCart($event)" />
 
-  <!-- 新品上架／品牌館：雙欄並排 -->
+  <!-- 新品上架／年代選藏：雙欄並排，保留原首頁資訊配置但改用實際可抵達的年代入口。 -->
   <section class="two-col-section">
     <app-new-arrivals (addToCart)="onAddToCart($event)" />
     <app-brand-hall />

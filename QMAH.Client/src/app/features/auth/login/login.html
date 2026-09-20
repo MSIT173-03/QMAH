@@ -1,7 +1,7 @@
 <div class="login-page">
 
   <!-- ==================================================
-       左側：單一高清長卷主視覺
+       左側：單一高畫質長卷主視覺
        不再輪換多張 AI／文物圖，登入頁用長卷的連續觀看建立自己的節奏。
   =================================================== -->
   <section class="museum-side" aria-labelledby="login-visual-title">
@@ -57,11 +57,11 @@
       <p class="museum-description">{{ heroDescription }}</p>
 
       <div class="museum-keywords" aria-label="清明鑑定屋特色">
-        <span>探索文物</span>
+        <span>看文物</span>
         <i></i>
-        <span>收藏珍品</span>
+        <span>玩遊戲</span>
         <i></i>
-        <span>遇見同好</span>
+        <span>逛社群</span>
       </div>
     </div>
 
@@ -81,12 +81,12 @@
         target="_blank"
         rel="noreferrer"
       >
-        開啟故宮高清長卷 ↗
+        查看故宮高畫質長卷 ↗
       </a>
     </div>
 
     <div class="museum-footer">
-      清院本清明上河圖　卷 · 國立故宮博物院 · CC BY 4.0
+      清院本《清明上河圖》卷・國立故宮博物院・CC BY 4.0
     </div>
 
   </section>
@@ -106,9 +106,7 @@
       <!-- 標題 -->
       <div class="login-header">
 
-        <span class="welcome-text">
-          WELCOME TO
-        </span>
+        <span class="welcome-text">會員登入</span>
 
         <img
           class="login-logo"
@@ -116,9 +114,7 @@
           alt="清明鑑定屋 QMAH"
         />
 
-        <p>
-          登入你的會員帳號，開啟鑑定與收藏的旅程
-        </p>
+        <p>登入後可以使用會員、圖鑑與收藏功能。</p>
 
       </div>
 
@@ -176,7 +172,7 @@
           ) {
 
             <p class="field-error">
-              請輸入 Email
+              請輸入電子郵件
             </p>
 
           }
@@ -188,7 +184,7 @@
           ) {
 
             <p class="field-error">
-              Email 格式不正確
+              電子郵件格式不正確
             </p>
 
           }
@@ -280,7 +276,7 @@
         ====================== -->
         @if (errorMessage) {
 
-          <div class="login-error">
+          <div class="login-error" role="alert">
             {{ errorMessage }}
           </div>
 
@@ -295,6 +291,7 @@
           type="submit"
           class="login-button"
           [disabled]="loading"
+          [attr.aria-busy]="loading"
         >
 
           @if (loading) {
@@ -302,13 +299,13 @@
             <span class="loading-spinner"></span>
 
             <span>
-              登入中...
+              登入中…
             </span>
 
           } @else {
 
             <span>
-              登 入
+              登入
             </span>
 
             <span class="arrow"><app-qmah-icon name="arrow-right" /></span>
@@ -321,43 +318,27 @@
 
 
 
-      <!-- ==================================================
-           其他登入方式
-      =================================================== -->
+@if (googleLoginEnabled) {
+      <!-- ui-integration: 只有後端真正開啟 OAuth 時才呈現替代登入方式，避免顯示無法使用的假入口。 -->
       <div class="login-divider">
-
         <span></span>
-
-        <p>
-          或使用其他方式登入
-        </p>
-
+        <p>或使用其他方式登入</p>
         <span></span>
-
       </div>
 
-
-
-<!-- Google 登入 -->
-@if (googleLoginEnabled) {
-<button
-  type="button"
-  class="google-button"
-  (click)="googleLogin()"
->
-
-  <span class="google-icon">
-    G
-  </span>
-
-  <span>
-    使用 Google 登入
-  </span>
-
-</button>
+      <button
+        type="button"
+        class="google-button"
+        (click)="googleLogin()"
+      >
+        <app-qmah-icon name="log-in" />
+        <span>使用 Google 登入</span>
+      </button>
 } @else {
-  <!-- integration: OAuth secret 未設定或能力端點不可用時，只停用 Google 入口，保留一般登入。 -->
-  <p class="google-disabled" role="status">Google 登入目前未啟用，請使用一般帳號登入。</p>
+      <!-- ui-integration: 不把未完成的 OAuth 當成可用功能；提示只說明管理員需要補的設定。 -->
+      <p class="google-setup-note" role="status">
+        Google 登入尚未設定，請管理員補上 Google Client ID 與 Google Client Secret。
+      </p>
 }
 
 
@@ -385,12 +366,8 @@
     <div class="login-footer">
 
       <span>
-        鑑古知今・連結你我
+        從一件文物開始，慢慢探索。
       </span>
-
-      <small>
-        DISCOVER THE PAST FOR A BRIGHTER TOMORROW
-      </small>
 
     </div>
 

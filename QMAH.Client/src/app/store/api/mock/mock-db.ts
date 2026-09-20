@@ -144,9 +144,9 @@ export const CONDITION_MEASURED =
 export const REVIEWS: Review[] = [
   { id: 'rv-01', stars: 5, user: '藏家 L***n', date: '2026-08-29', hasPhoto: true, text: '紋樣印製比想像中細緻，說明卡把原件年代與館藏編號都寫清楚了，送禮很有面子。' },
   { id: 'rv-02', stars: 5, user: '藏家 C***h', date: '2026-08-14', hasPhoto: false, text: '包裝厚實，運送沒有碰傷。實物顏色比商品圖再沉穩一點，我個人更喜歡。' },
-  { id: 'rv-03', stars: 4, user: '藏家 W***y', date: '2026-07-30', hasPhoto: true, text: '品質沒問題，尺寸與頁面標示一致，只是希望出貨再快一點。客服回覆很迅速。' },
+  { id: 'rv-03', stars: 4, user: '藏家 W***y', date: '2026-07-30', hasPhoto: true, text: '品質沒問題，尺寸與頁面標示一致，只是希望出貨再快一點。' },
   { id: 'rv-04', stars: 4, user: '藏家 T***c', date: '2026-07-11', hasPhoto: false, text: '做工扎實，細部的收邊如果再修一點會更好，整體仍值得這個價格。' },
-  { id: 'rv-05', stars: 3, user: '藏家 H***j', date: '2026-06-22', hasPhoto: false, text: '紋樣還原度不錯，但我收到的那件釉面有一小處針孔，客服補寄了說明卡。' },
+  { id: 'rv-05', stars: 3, user: '藏家 H***j', date: '2026-06-22', hasPhoto: false, text: '紋樣還原度不錯，但我收到的那件釉面有一小處針孔，頁面已附上說明。' },
 ];
 
 /* ===============================
@@ -196,11 +196,11 @@ export const CLAIMABLE_COUPONS: Coupon[] = [
    =============================== */
 
 export const HOT_SEARCH_LINKS: HotSearchLink[] = [
-  { label: '青花蓋杯', href: '#' },
-  { label: '清明上河圖', href: '#' },
-  { label: '掐絲琺瑯', href: '#' },
-  { label: '黃銅書籤', href: '#' },
-  { label: '香道器具', href: '#' },
+  { label: '青花蓋杯', href: '/store/products?q=%E9%9D%92%E8%8A%B1%E8%93%8B%E6%9D%AF' },
+  { label: '清明上河圖', href: '/store/products?q=%E6%B8%85%E6%98%8E%E4%B8%8A%E6%B2%B3%E5%9C%96' },
+  { label: '掐絲琺瑯', href: '/store/products?q=%E6%8E%90%E7%B5%B2%E7%90%BA%E7%91%AF' },
+  { label: '黃銅書籤', href: '/store/products?q=%E9%BB%83%E9%8A%85%E6%9B%B8%E7%B1%A4' },
+  { label: '香道器具', href: '/store/products?q=%E9%A6%99%E9%81%93%E5%99%A8%E5%85%B7' },
 ];
 
 /** 搜尋建議：接在輸入關鍵字之後的字尾（示意資料，正式應比對商品名稱產生） */
@@ -269,9 +269,9 @@ export const POINT_EARN_RATE = 0.03;
 export const SITE_CONFIG: SiteConfig = {
   promoAnnouncements: ['滿 $1,200 免運', '30 天退換', '附考據說明卡'],
   footerColumns: [
-    { title: 'SHOP', links: [{ label: '全部分類', href: '#' }, { label: '特展聯名', href: '#' }, { label: '品牌館', href: '#' }, { label: '典藏禮盒', href: '#' }] },
-    { title: 'SERVICE', links: [{ label: '運送與付款', href: '#' }, { label: '退換貨政策', href: '#' }, { label: '保養與收藏', href: '#' }, { label: '常見問題', href: '#' }] },
-    { title: 'ABOUT', links: [{ label: '關於清明鑑定屋', href: '#' }, { label: '授權與考據', href: '#' }, { label: '實體展售點', href: '#' }, { label: '鑑賞講座', href: '#' }] },
+    { title: 'SHOP', links: [{ label: '全部分類', href: '/store/products' }, { label: '特展聯名', href: '/store/products?view=exhibit' }, { label: '限時特賣', href: '/store/products?view=deal' }, { label: '年代選藏', href: '/artifact-list' }] },
+    { title: 'EXPLORE', links: [{ label: '圖鑑與鑰匙', href: '/artifact-list' }, { label: '遊戲大廳', href: '/game' }, { label: '社群廣場', href: '/social/posts' }] },
+    { title: 'ACCOUNT', links: [{ label: '會員中心', href: '/member' }, { label: '購物車', href: '/store/cart' }] },
   ],
   productPolicies: [
     { label: '保養', text: '避免長時間日照與高溫；陶瓷與琺瑯器請勿以鋼刷清洗。' },

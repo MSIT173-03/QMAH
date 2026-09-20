@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CartItem, ShoppingCart } from './api.models';
+import { toCatalogThumbnail } from './catalog.api-dto';
 
 interface ApiCartItem {
   id: string;
@@ -10,6 +11,7 @@ interface ApiCartItem {
   productName: string;
   primaryImagePath: string | null;
   unitPrice: number;
+  originalPrice: number | null;
   quantity: number;
   availableStock: number;
   lineTotal: number;
@@ -36,14 +38,15 @@ function emptyCart(): ShoppingCart {
 function toCart(dto: ApiCartItem[]): ShoppingCart {
   const items: CartItem[] = dto.map((item) => ({
     productId: item.productId,
-    // 後端既有 CartItemDto 沒有品牌、規格與折扣欄位；adapter 以中性值保留既有頁面契約，
+    coverImage: toCatalogThumbnail(item.primaryImagePath),
+    // 後端 CartItemDto 沒有品牌與規格欄位；adapter 以中性值保留既有頁面契約，
     // 不在前端猜測商品資料，也不另外創造一組與資料庫不一致的商城 API。
     brand: '',
     category: '',
     name: item.productName,
     dimensions: '',
     price: item.unitPrice,
-    originalPrice: null,
+    originalPrice: item.originalPrice,
     qty: item.quantity,
     lineTotal: item.lineTotal,
   }));

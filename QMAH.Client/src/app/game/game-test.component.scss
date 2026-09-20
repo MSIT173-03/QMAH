@@ -4,8 +4,8 @@
 .test-launcher { margin-top: 1.5rem; padding: 1.5rem; border: 1px solid #c9d9d2; background: #f4f8f4; }
 .test-launcher header { margin-bottom: 1.25rem; }
 .test-launcher h1 { margin-top: .25rem; }
-/* ui-integration: 管理員測試提醒與 Game 其他回饋採完整邊界加內嵌色線，降低側標籤視覺噪音。 */
-.test-safety-note { display: flex; flex-wrap: wrap; gap: .4rem .75rem; align-items: baseline; margin: 1rem 0 1.5rem; padding: .75rem .9rem; border: 1px solid rgba(15, 83, 77, .2); box-shadow: inset 3px 0 0 #0f534d; background: rgba(255,255,255,.72); color: #475569; font-size: .9rem; line-height: 1.45; }
+/* ui-integration: 管理員測試提醒採低對比完整邊界，不用厚重側標籤搶走檢查內容焦點。 */
+.test-safety-note { display: flex; flex-wrap: wrap; gap: .4rem .75rem; align-items: baseline; margin: 1rem 0 1.5rem; padding: .75rem .9rem; border: 1px solid rgba(15, 83, 77, .2); background: rgba(255,255,255,.72); color: #475569; font-size: .9rem; line-height: 1.45; }
 .test-safety-note strong { color: #0f534d; }
 .test-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
 .test-section-heading .eyebrow { margin-bottom: .3rem; }

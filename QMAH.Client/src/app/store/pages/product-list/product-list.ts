@@ -172,6 +172,9 @@ export class ProductList {
     toObservable(this.query).pipe(switchMap((query) => this.catalogApi.getProducts(query))),
   );
 
+  /** ui-integration: API 尚未回應時顯示載入狀態，不把「0 件商品」誤讀成真的空清單。 */
+  protected loading = computed(() => this.result() === undefined);
+
   /** 供卡片與橫列共用的商品顯示資料 */
   protected items = computed<ProductViewData[]>(() => (this.result()?.items ?? []).map(toProductView));
   /** 是否已載入且沒有任何符合條件的商品 */
@@ -213,6 +216,7 @@ export class ProductList {
   protected modeOptions = computed<PillOption[]>(() =>
     DISPLAY_MODES.map((displayMode) => ({
       label: displayMode.label,
+      icon: displayMode.icon,
       title: displayMode.title,
       active: displayMode.key === this.mode(),
     })),
