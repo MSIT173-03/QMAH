@@ -6,7 +6,7 @@
 .nav-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
-  font-size: 12px;
+  gap: var(--qmah-space-4);
+  font-size: var(--qmah-type-label-size);
   color: var(--color-nav);
 }

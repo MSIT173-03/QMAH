@@ -5,11 +5,11 @@
 
 .step-indicator {
   display: flex;
-  gap: 10px;
+  gap: var(--qmah-space-2);
   align-items: center;
   margin-left: auto;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
+  font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.16em;
   color: var(--color-muted);
 }
@@ -21,8 +21,8 @@
     margin-left: 0;
     justify-content: flex-start;
     flex-wrap: wrap;
-    gap: 6px;
-    line-height: 1.5;
+    gap: var(--qmah-space-2);
+    line-height: var(--qmah-type-meta-leading);
   }
 }
 

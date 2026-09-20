@@ -1,14 +1,15 @@
 :host { --ink: var(--qmah-ink); --jade: var(--qmah-jade); --cinnabar: var(--qmah-cinnabar); --surface: var(--qmah-surface); --line: var(--qmah-line); --muted: var(--qmah-muted); display: contents; }
 /* ui-integration: QR dialog 與 Game create dialog 共用高於 App Shell 的 stacking context，保證 mobile 仍可關閉與複製。 */
-.qr-backdrop { position: fixed; z-index: 70; inset: 0; background: rgba(10, 37, 45, .58); }
-.qr-sheet { position: fixed; z-index: 71; top: 50%; left: 50%; display: grid; justify-items: center; width: min(360px, calc(100vw - 32px)); transform: translate(-50%, -50%); padding: 24px; border: 1px solid var(--line); color: var(--ink); background: var(--surface); box-shadow: 0 24px 60px rgba(10, 37, 45, .28); text-align: center; }
+.qr-backdrop { position: fixed; z-index: 70; inset: 0; background: color-mix(in srgb, var(--qmah-night) 58%, transparent); }
+.qr-sheet { position: fixed; z-index: 71; top: 50%; left: 50%; display: grid; justify-items: center; width: min(360px, calc(100vw - 32px)); transform: translate(-50%, -50%); padding: var(--qmah-space-6); border: 1px solid var(--qmah-border); color: var(--ink); background: var(--surface); box-shadow: var(--qmah-shadow-dialog); text-align: center; }
 .qr-sheet > header { display: flex; align-items: flex-start; justify-content: space-between; width: 100%; gap: 16px; margin-bottom: 18px; border-bottom: 1px solid var(--line); text-align: left; }
 .qr-sheet header p { margin: 0 0 4px; color: var(--cinnabar); font-size: 10px; font-weight: 800; letter-spacing: .16em; }
-.qr-sheet h2 { margin: 0 0 16px; font-family: "Noto Serif TC", Georgia, serif; font-size: 24px; }
-.qr-sheet > header button { border: 0; background: transparent; font-size: 24px; }
-.qr-frame { display: grid; place-items: center; width: 244px; height: 244px; border: 1px solid var(--line); background: #fff; }
+.qr-sheet h2 { margin: 0 0 var(--qmah-space-4); font-family: var(--qmah-font-serif); font-size: var(--qmah-type-section-title-size); line-height: var(--qmah-type-heading-leading); }
+.qr-sheet > header button { min-width: var(--qmah-control-height); min-height: var(--qmah-control-height); border: 0; background: transparent; font-size: 24px; }
+.qr-frame { display: grid; place-items: center; width: 244px; height: 244px; border: 1px solid var(--qmah-border); background: var(--qmah-surface-elevated); }
 .qr-frame qrcode { display: block; line-height: 0; }
-.qr-sheet code { margin-top: 14px; color: var(--ink); font: 800 20px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
+.qr-sheet code { margin-top: 14px; color: var(--ink); font: 800 20px/var(--qmah-type-heading-leading) "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
 .qr-sheet > p { margin: 10px 0 16px; color: var(--muted); font-size: 12px; }
-.qr-copy { border: 1px solid var(--ink); border-radius: 3px; padding: 9px 13px; color: var(--qmah-on-dark); background: var(--ink); font-weight: 800; }
-.qr-copy:hover { border-color: var(--cinnabar); background: var(--cinnabar); }
+.qr-copy { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-primary); border-radius: var(--qmah-radius-control); padding: 9px var(--qmah-button-padding-x); color: var(--qmah-primary-content); background: var(--qmah-primary); font-weight: 800; }
+.qr-copy:hover { border-color: var(--qmah-primary-hover); background: var(--qmah-primary-hover); }
+.qr-sheet button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }

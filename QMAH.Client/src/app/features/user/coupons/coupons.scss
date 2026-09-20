@@ -7,11 +7,11 @@
   background:
     linear-gradient(
       180deg,
-      #f7f4ee 0%,
-      #f3f0e8 100%
+      var(--qmah-surface) 0%,
+      var(--qmah-page-surface) 100%
     );
 
-  color: #27363b;
+  color: var(--qmah-ink);
 }
 
 
@@ -34,7 +34,7 @@
   h1 {
     margin: 4px 0 8px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 30px;
     font-weight: 800;
@@ -43,7 +43,7 @@
   p {
     margin: 0;
 
-    color: #617176;
+    color: var(--qmah-text-muted);
 
     font-size: 14px;
   }
@@ -51,7 +51,7 @@
 
 .page-eyebrow,
 .section-eyebrow {
-  color: var(--qmah-jade-deep);
+  color: var(--qmah-primary);
 
   font-size: 10px;
   font-weight: 800;
@@ -88,18 +88,16 @@
 
   overflow: hidden;
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
   border-radius: 16px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
   text-align: left;
 
   cursor: pointer;
 
-  box-shadow:
-    0 5px 18px
-    rgba(15, 23, 42, 0.035);
+  box-shadow: var(--qmah-shadow-card);
 
   transition:
     transform 0.2s ease,
@@ -110,9 +108,7 @@
   &:hover {
     transform: translateY(-3px);
 
-    box-shadow:
-      0 9px 24px
-      rgba(15, 23, 42, 0.065);
+    box-shadow: var(--qmah-shadow-card);
   }
 
   > div:nth-child(2) {
@@ -123,7 +119,7 @@
   }
 
   strong {
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 26px;
     font-weight: 800;
@@ -132,23 +128,21 @@
 
 
 .summary-card.active {
-  border-color: #9ab9b5;
+  border-color: var(--qmah-border);
 
   background:
     linear-gradient(
       135deg,
-      var(--qmah-paper) 0%,
-      #edf1ef 100%
+      var(--qmah-surface-elevated) 0%,
+      var(--qmah-surface-soft) 100%
     );
 
-  box-shadow:
-    0 8px 24px
-    rgba(99, 102, 241, 0.09);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 
 .summary-label {
-  color: #617176;
+  color: var(--qmah-text-muted);
 
   font-size: 11px;
 }
@@ -166,37 +160,37 @@
 
   border-radius: 12px;
 
-  background: #e8f0ee;
+  background: var(--qmah-surface-soft);
 
   font-size: 18px;
 }
 
 
 .available-card .summary-icon {
-  background: #e8f3ed;
+  background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
 
-  color: #16a34a;
+  color: var(--qmah-primary);
 }
 
 
 .used-card .summary-icon {
-  background: #f3f4f6;
+  background: var(--qmah-surface-muted);
 
-  color: #617176;
+  color: var(--qmah-text-muted);
 }
 
 
 .expired-card .summary-icon {
-  background: #fbf1e9;
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
 
-  color: var(--qmah-jade);
+  color: var(--qmah-primary-hover);
 }
 
 
 .filter-arrow {
   margin-left: auto;
 
-  color: #c4c7cf;
+  color: var(--qmah-text-subtle);
 
   font-size: 17px;
 
@@ -210,7 +204,7 @@
 .summary-card.active .filter-arrow {
   transform: translateX(3px);
 
-  color: var(--qmah-jade-deep);
+  color: var(--qmah-primary);
 }
 
 
@@ -221,14 +215,12 @@
 .coupon-section {
   padding: 29px;
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
   border-radius: 20px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  box-shadow:
-    0 8px 28px
-    rgba(15, 23, 42, 0.035);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 
@@ -244,7 +236,7 @@
   h2 {
     margin: 3px 0 5px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 21px;
   }
@@ -252,7 +244,7 @@
   p {
     margin: 0;
 
-    color: #617176;
+    color: var(--qmah-text-muted);
 
     font-size: 12px;
   }
@@ -264,9 +256,9 @@
 
   border-radius: 999px;
 
-  background: #f3f4f6;
+  background: var(--qmah-surface-muted);
 
-  color: #617176;
+  color: var(--qmah-text-muted);
 
   font-size: 11px;
 }
@@ -298,14 +290,12 @@
 
   overflow: hidden;
 
-  border: 1px solid #dfe2ea;
+  border: 1px solid var(--qmah-border);
   border-radius: 18px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  box-shadow:
-    0 7px 22px
-    rgba(15, 23, 42, 0.045);
+  box-shadow: var(--qmah-shadow-card);
 
   transition:
     transform 0.22s ease,
@@ -320,11 +310,9 @@
     transform:
       translateY(-4px);
 
-    border-color: #c8d9d5;
+    border-color: var(--qmah-border);
 
-    box-shadow:
-      0 13px 30px
-      rgba(15, 23, 42, 0.08);
+    box-shadow: var(--qmah-shadow-card);
   }
 }
 
@@ -333,9 +321,9 @@
   background:
     linear-gradient(
       145deg,
-      var(--qmah-paper) 0%,
-      var(--qmah-paper) 65%,
-      var(--qmah-paper) 100%
+      var(--qmah-surface-elevated) 0%,
+      var(--qmah-surface-elevated) 65%,
+      var(--qmah-surface-elevated) 100%
     );
 }
 
@@ -346,8 +334,8 @@
   background:
     linear-gradient(
       145deg,
-      var(--qmah-paper),
-      #f8f8f9
+      var(--qmah-surface-elevated),
+      var(--qmah-surface-elevated)
     );
 }
 
@@ -374,9 +362,9 @@
 
   border-radius: 50%;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
 }
 
 
@@ -416,12 +404,7 @@
   border-radius: 50%;
 
   background:
-    rgba(
-      99,
-      102,
-      241,
-      0.055
-    );
+    color-mix(in srgb, var(--qmah-primary) 6%, transparent);
 
   pointer-events: none;
 }
@@ -449,7 +432,7 @@
   gap: 9px;
 
   > span {
-    color: #839093;
+    color: var(--qmah-text-subtle);
 
     font-size: 9px;
     font-weight: 800;
@@ -469,7 +452,7 @@
 
   border-radius: 11px;
 
-  background: #e8f0ee;
+  background: var(--qmah-surface-soft);
 
   font-size: 18px;
 }
@@ -492,9 +475,9 @@
 
   border-radius: 999px;
 
-  background: #f3f4f6;
+  background: var(--qmah-surface-muted);
 
-  color: #617176;
+  color: var(--qmah-text-muted);
 
   font-size: 10px;
   font-weight: 750;
@@ -502,30 +485,30 @@
 
 
 .status-badge.available {
-  background: #e8f3ed;
+  background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
 
-  color: #047857;
+  color: var(--qmah-primary);
 }
 
 
 .status-badge.used {
-  background: #f3f4f6;
+  background: var(--qmah-surface-muted);
 
-  color: #617176;
+  color: var(--qmah-text-muted);
 }
 
 
 .status-badge.expired {
-  background: #fbf1e9;
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
 
-  color: #8f493e;
+  color: var(--qmah-danger);
 }
 
 
 .status-badge.revoked {
-  background: #fef2f2;
+  background: color-mix(in srgb, var(--qmah-danger) 10%, var(--qmah-surface-elevated));
 
-  color: #b91c1c;
+  color: var(--qmah-danger);
 }
 
 
@@ -534,9 +517,9 @@
 
   border-radius: 999px;
 
-  background: #fbf1e9;
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
 
-  color: var(--qmah-jade);
+  color: var(--qmah-primary-hover);
 
   font-size: 9px;
   font-weight: 750;
@@ -558,7 +541,7 @@
 
   margin-bottom: 5px;
 
-  color: #839093;
+  color: var(--qmah-text-subtle);
 
   font-size: 10px;
 
@@ -573,7 +556,7 @@
 
   margin: 0 0 10px;
 
-  color: #163f47;
+  color: var(--qmah-primary);
 
   font-size: 18px;
   font-weight: 750;
@@ -587,7 +570,7 @@
 
   margin: 7px 0 10px;
 
-  color: var(--qmah-jade);
+  color: var(--qmah-primary-hover);
 
   font-size: 31px;
   font-weight: 850;
@@ -602,7 +585,7 @@
 .discount-value,
 .coupon-ticket.revoked
 .discount-value {
-  color: #617176;
+  color: var(--qmah-text-muted);
 }
 
 
@@ -618,9 +601,9 @@
 
   border-radius: 8px;
 
-  background: #edf1ef;
+  background: var(--qmah-surface-soft);
 
-  color: var(--qmah-jade-deep);
+  color: var(--qmah-primary);
 
   font-size: 10px;
   font-weight: 700;
@@ -630,9 +613,9 @@
 .used .minimum-chip,
 .expired .minimum-chip,
 .revoked .minimum-chip {
-  background: #f3f4f6;
+  background: var(--qmah-surface-muted);
 
-  color: #617176;
+  color: var(--qmah-text-muted);
 }
 
 
@@ -649,7 +632,7 @@
 
   border-top:
     1px dashed
-    #d9dce3;
+    var(--qmah-border);
 
   span {
     display: none;
@@ -680,13 +663,13 @@
   gap: 4px;
 
   span {
-    color: #839093;
+    color: var(--qmah-text-subtle);
 
     font-size: 9px;
   }
 
   strong {
-    color: #3f565c;
+    color: var(--qmah-text-muted);
 
     font-size: 11px;
     font-weight: 650;
@@ -695,14 +678,14 @@
 
 
 .expiry-item strong {
-  color: var(--qmah-jade);
+  color: var(--qmah-primary-hover);
 }
 
 
 .expiry-item.warning {
 
   strong {
-    color: var(--qmah-jade);
+    color: var(--qmah-primary-hover);
   }
 
 }
@@ -724,15 +707,10 @@
 
   border-top:
     1px solid
-    #e7ecea;
+    var(--qmah-border);
 
   background:
-    rgba(
-      249,
-      250,
-      251,
-      0.65
-    );
+    color-mix(in srgb, var(--qmah-surface-elevated) 65%, transparent);
 }
 
 
@@ -742,7 +720,7 @@
 
   gap: 6px;
 
-  color: #15803d;
+  color: var(--qmah-primary);
 
   font-size: 9px;
   font-weight: 700;
@@ -755,7 +733,7 @@
 
   border-radius: 50%;
 
-  background: #22c55e;
+  background: var(--qmah-primary-hover);
 
   animation:
     greenPulse
@@ -767,7 +745,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #839093;
+  color: var(--qmah-text-subtle);
 
   font-size: 9px;
 }
@@ -779,7 +757,7 @@
 
 
 .ticket-id {
-  color: #c1c5cd;
+  color: var(--qmah-text-subtle);
 
   font-size: 8px;
 
@@ -803,10 +781,10 @@
 
   min-height: 220px;
 
-  border: 1px dashed #d9dce5;
+  border: 1px dashed var(--qmah-border);
   border-radius: 15px;
 
-  background: #fafafa;
+  background: var(--qmah-surface-elevated);
 
   text-align: center;
 
@@ -817,13 +795,13 @@
   strong {
     margin-top: 5px;
 
-    color: #3f565c;
+    color: var(--qmah-text-muted);
 
     font-size: 13px;
   }
 
   span {
-    color: #839093;
+    color: var(--qmah-text-subtle);
 
     font-size: 10px;
   }
@@ -837,21 +815,19 @@
 .empty-state {
   padding: 80px 24px;
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
   border-radius: 18px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
   text-align: center;
 
-  box-shadow:
-    0 5px 18px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: var(--qmah-shadow-card);
 
   h2 {
     margin: 16px 0 8px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 21px;
   }
@@ -859,7 +835,7 @@
   p {
     margin: 0;
 
-    color: #617176;
+    color: var(--qmah-text-muted);
 
     font-size: 13px;
   }
@@ -884,23 +860,23 @@
 
   padding: 25px;
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
   border-radius: 14px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  color: #617176;
+  color: var(--qmah-text-muted);
 
   font-size: 12px;
 }
 
 
 .state-box.error {
-  border-color: #fecaca;
+  border-color: color-mix(in srgb, var(--qmah-danger) 24%, var(--qmah-surface-elevated));
 
-  background: #fef2f2;
+  background: color-mix(in srgb, var(--qmah-danger) 10%, var(--qmah-surface-elevated));
 
-  color: #b91c1c;
+  color: var(--qmah-danger);
 
   span {
     display: flex;
@@ -912,9 +888,9 @@
 
     border-radius: 50%;
 
-    background: #ef4444;
+    background: var(--qmah-danger);
 
-    color: var(--qmah-paper);
+    color: var(--qmah-surface-elevated);
 
     font-weight: 800;
   }
@@ -925,9 +901,9 @@
   width: 19px;
   height: 19px;
 
-  border: 2px solid #d9e0dc;
+  border: 2px solid var(--qmah-border);
 
-  border-top-color: var(--qmah-jade-deep);
+  border-top-color: var(--qmah-primary);
 
   border-radius: 50%;
 
@@ -988,21 +964,15 @@
 @keyframes greenPulse {
 
   0% {
-    box-shadow:
-      0 0 0 0
-      rgba(34, 197, 94, 0.4);
+    box-shadow: var(--qmah-shadow-card);
   }
 
   70% {
-    box-shadow:
-      0 0 0 6px
-      rgba(34, 197, 94, 0);
+    box-shadow: var(--qmah-shadow-card);
   }
 
   100% {
-    box-shadow:
-      0 0 0 0
-      rgba(34, 197, 94, 0);
+    box-shadow: var(--qmah-shadow-card);
   }
 
 }
@@ -1066,4 +1036,42 @@
     flex-direction: column;
   }
 
+}
+
+/* ui-integration: 票券仍保留票面與狀態分區，統一摘要／票券容器的層級與操作基線。 */
+:host {
+  font-family: var(--qmah-font-sans);
+}
+
+.page-header h1 {
+  font-size: var(--qmah-type-page-title-size);
+  line-height: var(--qmah-type-heading-leading);
+}
+
+.section-title h2 {
+  font-size: var(--qmah-type-section-title-size);
+  line-height: var(--qmah-type-heading-leading);
+}
+
+.summary-card,
+.coupon-section,
+.coupon-ticket,
+.empty-state,
+.state-box {
+  border-radius: var(--qmah-radius-card);
+}
+
+.summary-card,
+.coupon-ticket,
+.empty-state {
+  box-shadow: var(--qmah-shadow-card);
+}
+
+:host button {
+  min-height: var(--qmah-control-height);
+}
+
+:host :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
 }

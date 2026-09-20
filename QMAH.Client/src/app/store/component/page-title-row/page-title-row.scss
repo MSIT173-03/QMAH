@@ -5,7 +5,7 @@
 .page-title-row {
   display: flex;
   align-items: flex-end;
-  gap: 14px;
+  gap: var(--qmah-space-4);
   flex-wrap: wrap;
   border-bottom: 1px solid var(--color-ink);
   padding-bottom: 10px;
@@ -13,20 +13,21 @@
 
 .page-title {
   margin: 0;
-  font-family: 'Noto Serif TC', serif;
-  font-size: 24px;
+  font-family: var(--qmah-font-serif);
+  font-size: var(--qmah-type-page-title-size);
+  line-height: var(--qmah-type-heading-leading);
   font-weight: 700;
   color: var(--color-ink-deep);
 }
 
 .page-title-count {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
 .page-title-link {
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
   margin-left: auto;
   text-decoration: none;

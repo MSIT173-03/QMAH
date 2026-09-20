@@ -2,8 +2,8 @@
 :host {
   display: block;
   min-height: 100vh;
-  background: #f7f4ee;
-  color: #27363b;
+  background: var(--qmah-surface);
+  color: var(--qmah-ink);
 }
 
 .achievements-page {
@@ -23,7 +23,7 @@
 
   p {
     margin: 0;
-    color: #617176;
+    color: var(--qmah-text-muted);
   }
 }
 
@@ -39,10 +39,10 @@
   align-items: center;
   gap: 18px;
   padding: 24px;
-  background: white;
-  border: 1px solid #d9e0dc;
+  background: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-border);
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 .summary-icon {
@@ -52,14 +52,14 @@
   width: 54px;
   height: 54px;
   border-radius: 14px;
-  background: #f3f4f6;
+  background: var(--qmah-surface-muted);
   font-size: 26px;
 }
 
 .summary-label {
   display: block;
   margin-bottom: 4px;
-  color: #617176;
+  color: var(--qmah-text-muted);
   font-size: 14px;
 }
 
@@ -73,13 +73,13 @@
 }
 
 .no-title {
-  color: #163f47;
+  color: var(--qmah-primary);
 }
 
 .achievement-section {
   padding: 28px;
-  background: white;
-  border: 1px solid #d9e0dc;
+  background: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-border);
   border-radius: 18px;
 }
 
@@ -96,16 +96,16 @@
 
   p {
     margin: 0;
-    color: #617176;
+    color: var(--qmah-text-muted);
     font-size: 14px;
   }
 }
 
 .achievement-count {
   padding: 6px 12px;
-  background: #f3f4f6;
+  background: var(--qmah-surface-muted);
   border-radius: 999px;
-  color: #617176;
+  color: var(--qmah-text-muted);
   font-size: 13px;
 }
 
@@ -117,8 +117,8 @@
 
 .achievement-card {
   padding: 22px;
-  background: white;
-  border: 1px solid #d9e0dc;
+  background: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-border);
   border-radius: 14px;
   transition:
     transform 0.2s ease,
@@ -127,8 +127,8 @@
 
   &:hover {
     transform: translateY(-3px);
-    border-color: #c8d9d5;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+    border-color: var(--qmah-border);
+    box-shadow: var(--qmah-shadow-card);
   }
 
   h3 {
@@ -138,8 +138,8 @@
 }
 
 .achievement-card.displayed {
-  border-color: #9ab9b5;
-  background: var(--qmah-paper);
+  border-color: var(--qmah-border);
+  background: var(--qmah-surface-elevated);
 }
 
 .achievement-card-header {
@@ -155,22 +155,22 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #f3f4f6;
+  background: var(--qmah-surface-muted);
   font-size: 22px;
 }
 
 .display-badge {
   padding: 5px 10px;
   border-radius: 999px;
-  background: #e8f0ee;
-  color: var(--qmah-jade);
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-primary-hover);
   font-size: 13px;
   font-weight: 600;
 }
 
 .title {
   margin-bottom: 10px;
-  color: var(--qmah-jade-deep);
+  color: var(--qmah-primary);
   font-size: 14px;
   font-weight: 600;
 }
@@ -178,7 +178,7 @@
 .description {
   min-height: 42px;
   margin: 0 0 16px;
-  color: #617176;
+  color: var(--qmah-text-muted);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -188,7 +188,7 @@
   grid-template-columns: 1.4fr 0.8fr 1fr;
   gap: 14px;
   padding-top: 14px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--qmah-border);
 
   div {
     display: flex;
@@ -198,13 +198,13 @@
   }
 
   span {
-    color: #839093;
+    color: var(--qmah-text-subtle);
     font-size: 12px;
     white-space: nowrap;
   }
 
   strong {
-    color: #163f47;
+    color: var(--qmah-primary);
     font-size: 13px;
     font-weight: 700;
     white-space: nowrap;
@@ -214,10 +214,10 @@
 .empty-state {
   padding: 70px 24px;
   text-align: center;
-  background: white;
-  border: 1px solid #d9e0dc;
+  background: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-border);
   border-radius: 18px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--qmah-shadow-card);
 
   h2 {
     margin: 16px 0 8px;
@@ -226,7 +226,7 @@
 
   p {
     margin: 0;
-    color: #617176;
+    color: var(--qmah-text-muted);
   }
 }
 
@@ -236,13 +236,13 @@
 
 .state-box {
   padding: 20px;
-  background: white;
-  border: 1px solid #d9e0dc;
+  background: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-border);
   border-radius: 12px;
 }
 
 .state-box.error {
-  color: #b91c1c;
+  color: var(--qmah-danger);
 }
 
 @media (max-width: 700px) {
@@ -271,4 +271,32 @@
       white-space: normal;
     }
   }
+}
+
+/* ui-integration: 成就頁仍以成就卡片承載內容，僅把層級、表面與焦點狀態對齊會員 tokens。 */
+:host {
+  font-family: var(--qmah-font-sans);
+}
+
+.page-header h1 {
+  font-size: var(--qmah-type-page-title-size);
+  line-height: var(--qmah-type-heading-leading);
+}
+
+.section-title h2 {
+  font-size: var(--qmah-type-section-title-size);
+  line-height: var(--qmah-type-heading-leading);
+}
+
+.summary-card,
+.achievement-section,
+.achievement-card,
+.empty-state {
+  border-radius: var(--qmah-radius-card);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+:host :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
 }

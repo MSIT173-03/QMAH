@@ -21,16 +21,16 @@ summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 64px;
-  padding: 13px 18px;
+  gap: var(--qmah-space-4);
+  min-height: var(--qmah-control-height-lg);
+  padding: 13px var(--qmah-space-4);
   color: var(--how-to-ink);
   cursor: pointer;
   list-style: none;
 }
 
 summary::-webkit-details-marker { display: none; }
-summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offset: -3px; }
+summary:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: -3px; }
 
 .game-how-to__heading {
   display: grid;
@@ -47,7 +47,7 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
 
 .game-how-to__heading strong {
   overflow: hidden;
-  font-family: "Noto Serif TC", "Source Han Serif TC", Georgia, serif;
+  font-family: var(--qmah-font-serif);
   font-size: 18px;
   line-height: 1.35;
   text-overflow: ellipsis;
@@ -56,11 +56,11 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
 
 .game-how-to__toggle {
   position: relative;
-  width: 28px;
-  height: 28px;
+  width: var(--qmah-control-height);
+  height: var(--qmah-control-height);
   flex: 0 0 auto;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--qmah-radius-pill);
   background: color-mix(in srgb, var(--how-to-jade) 12%, transparent);
 }
 
@@ -84,7 +84,7 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
 .game-how-to[open] .game-how-to__toggle::after { transform: translate(-50%, -50%) rotate(0deg); }
 
 .game-how-to__body {
-  padding: 18px;
+  padding: var(--qmah-space-4);
   color: var(--how-to-ink);
   animation: how-to-reveal 180ms ease-out both;
 }
@@ -92,14 +92,14 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
 .game-how-to__body > p {
   margin: 0;
   color: var(--qmah-muted);
-  font-size: 14px;
+  font-size: var(--qmah-type-body-sm-size);
 }
 
 .game-how-to__body ol {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin: 16px 0 0;
+  gap: var(--qmah-space-2);
+  margin: var(--qmah-space-4) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -115,11 +115,11 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
 
 .game-how-to__body li > span {
   color: var(--how-to-cinnabar);
-  font: 800 11px/1.2 ui-monospace, monospace;
+  font: 800 var(--qmah-type-meta-size)/var(--qmah-type-meta-leading) "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
-.game-how-to__body li strong { font-size: 14px; }
-.game-how-to__body li p { margin: 4px 0 0; color: var(--qmah-muted); font-size: 12px; line-height: 1.5; }
+.game-how-to__body li strong { font-size: var(--qmah-type-body-sm-size); }
+.game-how-to__body li p { margin: 4px 0 0; color: var(--qmah-muted); font-size: var(--qmah-type-label-size); line-height: var(--qmah-type-meta-leading); }
 
 @keyframes how-to-reveal { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 

@@ -6,7 +6,7 @@
 .filter-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--qmah-space-4);
   /* 92px 為頁首高度，捲動時側欄固定於頁首下方 */
   position: sticky;
   top: 92px;
@@ -17,7 +17,7 @@
   background: transparent;
   padding: 0;
   text-align: left;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
   transition: color 160ms;
 

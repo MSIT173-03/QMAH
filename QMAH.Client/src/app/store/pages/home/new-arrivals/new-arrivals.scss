@@ -9,19 +9,19 @@
 
 .news-item {
   display: flex;
-  gap: 12px;
+  gap: var(--qmah-space-3);
   align-items: center;
   border-top: 1px solid var(--color-line-soft);
-  padding-top: 12px;
+  padding-top: var(--qmah-space-3);
 
   &+& {
-    margin-top: 12px;
+    margin-top: var(--qmah-space-3);
   }
 }
 
 .news-link {
   display: flex;
-  gap: 12px;
+  gap: var(--qmah-space-3);
   align-items: center;
   flex: 1;
   min-width: 0;
@@ -51,13 +51,13 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--qmah-space-1);
 }
 
 /* 與 product-card 元件共用的品牌樣式，因元件樣式為各自封裝，此處另行宣告一份
    （.product-card-star 已改由全站共用樣式提供） */
 .news-name {
-  font-size: 14px;
+  font-size: var(--qmah-type-body-sm-size);
 }
 
 .news-price-row {
@@ -69,7 +69,7 @@
 
 .news-price {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-ink);
 }
 
@@ -79,11 +79,11 @@
 
 .news-tag {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   border: 1px solid var(--color-gold);
   color: var(--color-gold-text);
   background: var(--color-gold-bg);
-  padding: 1px 5px;
+  padding: var(--qmah-space-1) var(--qmah-space-2);
   border-radius: var(--store-radius);
 
   &--deal {
@@ -95,7 +95,7 @@
 
 .news-rating {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
@@ -104,14 +104,15 @@
   background: var(--color-surface);
   color: var(--color-ink);
   border-radius: var(--store-radius);
-  font-size: 12px;
-  padding: 7px 12px;
+  font-size: var(--qmah-type-label-size);
+  padding: var(--qmah-space-2) var(--qmah-space-3);
+  min-height: var(--qmah-control-height);
   flex: 0 0 auto;
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-on-ink);
+    color: var(--qmah-primary-content);
   }
 }

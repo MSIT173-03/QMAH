@@ -5,9 +5,9 @@
 .breadcrumb {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--qmah-space-2);
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted-2);
 }
 

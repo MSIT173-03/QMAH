@@ -6,16 +6,17 @@
 .fill-btn {
   margin-left: auto;
   border: 1px solid var(--color-ink);
-  border-radius: var(--store-radius);
-  padding: 8px 16px;
-  font-size: 12px;
+  border-radius: var(--qmah-radius-control);
+  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
+  min-height: var(--qmah-control-height);
+  font-size: var(--qmah-type-label-size);
   background: var(--color-surface);
   color: var(--color-ink);
   transition: background 160ms, color 160ms;
 
   &--filled {
     background: var(--color-ink);
-    color: var(--color-on-ink);
+    color: var(--qmah-primary-content);
   }
 
   &:hover {
@@ -29,28 +30,31 @@
 .field-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  gap: var(--qmah-space-3);
 }
 
 /* 單一欄位：標題在上、輸入框在下 */
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
+  gap: var(--qmah-space-2);
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
 .field-input {
   border: 1px solid var(--color-line-mid);
-  border-radius: var(--store-radius);
-  padding: 10px 12px;
-  font-size: 14px;
+  border-radius: var(--qmah-radius-control);
+  min-height: var(--qmah-control-height);
+  padding: var(--qmah-space-2) var(--qmah-control-padding-x);
+  font-size: var(--qmah-type-body-sm-size);
   color: var(--color-ink);
   outline: none;
 
   &:focus {
-    border-color: var(--color-ink);
+    border-color: var(--qmah-focus);
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 1px;
   }
 }
 

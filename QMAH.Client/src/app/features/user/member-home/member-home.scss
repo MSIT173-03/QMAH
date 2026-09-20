@@ -4,9 +4,9 @@
   min-height: 100vh;
 
   /* ui-integration: 會員中心保留 dashboard 卡片配置，只收斂到 QMAH 的紙白、青綠與赭紅語彙。 */
-  background: #f7f4ee;
+  background: var(--qmah-surface);
 
-  color: #27363b;
+  color: var(--qmah-ink);
 }
 
 
@@ -41,17 +41,15 @@
 
   padding: 0 30px;
 
-  border-bottom: 1px solid #e8eaf0;
+  border-bottom: 1px solid var(--qmah-border);
 
   background:
-    rgba(255, 255, 255, 0.93);
+    color-mix(in srgb, var(--qmah-surface-elevated) 93%, transparent);
 
   backdrop-filter:
     blur(14px);
 
-  box-shadow:
-    0 2px 12px
-    rgba(15, 23, 42, 0.025);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 
@@ -69,13 +67,13 @@
   }
 
   strong {
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 15px;
   }
 
   span {
-    color: #839093;
+    color: var(--qmah-text-subtle);
 
     font-size: 8px;
     font-weight: 750;
@@ -98,18 +96,16 @@
   background:
     linear-gradient(
       135deg,
-      var(--qmah-jade-deep),
-      var(--qmah-jade)
+      var(--qmah-primary),
+      var(--qmah-primary-hover)
     );
 
-  color: white;
+  color: var(--qmah-primary-content);
 
   font-size: 16px;
   font-weight: 850;
 
-  box-shadow:
-    0 6px 16px
-    rgba(47, 111, 115, 0.2);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 
@@ -122,12 +118,12 @@
 
   padding: 9px 14px;
 
-  border: 1px solid #fecaca;
+  border: 1px solid color-mix(in srgb, var(--qmah-danger) 24%, var(--qmah-surface-elevated));
   border-radius: 10px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  color: #dc2626;
+  color: var(--qmah-danger);
 
   font-size: 11px;
   font-weight: 700;
@@ -142,9 +138,9 @@
   &:hover:not(:disabled) {
     transform: translateY(-1px);
 
-    border-color: #fca5a5;
+    border-color: color-mix(in srgb, var(--qmah-danger) 36%, var(--qmah-surface-elevated));
 
-    background: #fef2f2;
+    background: color-mix(in srgb, var(--qmah-danger) 10%, var(--qmah-surface-elevated));
   }
 
   &:disabled {
@@ -160,9 +156,9 @@
   height: 12px;
 
   border:
-    2px solid rgba(220, 38, 38, 0.25);
+    2px solid color-mix(in srgb, var(--qmah-danger) 25%, transparent);
 
-  border-top-color: #dc2626;
+  border-top-color: var(--qmah-danger);
 
   border-radius: 50%;
 
@@ -192,14 +188,12 @@
 
   overflow: hidden;
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
   border-radius: 16px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  box-shadow:
-    0 10px 34px
-    rgba(39, 54, 59, 0.07);
+  box-shadow: var(--qmah-shadow-card);
 
   animation:
     cardEnter 0.5s ease both;
@@ -213,7 +207,7 @@
   h1 {
     margin: 5px 0 8px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 29px;
     font-weight: 850;
@@ -226,7 +220,7 @@
 
     max-width: 620px;
 
-    color: #617176;
+    color: var(--qmah-text-muted);
 
     font-size: 13px;
 
@@ -236,7 +230,7 @@
 
 
 .welcome-eyebrow {
-  color: var(--qmah-jade-deep);
+  color: var(--qmah-primary);
 
   font-size: 9px;
   font-weight: 850;
@@ -259,13 +253,13 @@
 
   padding: 8px 12px;
 
-  border: 1px solid #bbf7d0;
+  border: 1px solid color-mix(in srgb, var(--qmah-primary) 24%, var(--qmah-surface-elevated));
   border-radius: 999px;
 
   background:
-    rgba(240, 253, 244, 0.9);
+    color-mix(in srgb, var(--qmah-primary) 14%, var(--qmah-surface-elevated));
 
-  color: #15803d;
+  color: var(--qmah-primary);
 
   font-size: 10px;
   font-weight: 700;
@@ -278,7 +272,7 @@
 
   border-radius: 50%;
 
-  background: #22c55e;
+  background: var(--qmah-primary-hover);
 
   animation:
     greenPulse 2s infinite;
@@ -302,7 +296,7 @@
   right: 120px;
 
   background:
-    rgba(99, 102, 241, 0.055);
+    color-mix(in srgb, var(--qmah-primary) 6%, transparent);
 }
 
 
@@ -314,7 +308,7 @@
   bottom: -85px;
 
   background:
-    rgba(139, 92, 246, 0.055);
+    color-mix(in srgb, var(--qmah-primary) 6%, transparent);
 }
 
 
@@ -333,7 +327,7 @@
   h2 {
     margin: 3px 0 4px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 19px;
     font-weight: 800;
@@ -342,7 +336,7 @@
   p {
     margin: 0;
 
-    color: #617176;
+    color: var(--qmah-text-muted);
 
     font-size: 11px;
   }
@@ -350,7 +344,7 @@
 
 
 .section-eyebrow {
-  color: var(--qmah-jade-deep);
+  color: var(--qmah-primary);
 
   font-size: 9px;
   font-weight: 850;
@@ -395,18 +389,16 @@
 
   overflow: hidden;
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
   border-radius: 14px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
   color: inherit;
 
   text-decoration: none;
 
-  box-shadow:
-    0 5px 18px
-    rgba(39, 54, 59, 0.05);
+  box-shadow: var(--qmah-shadow-card);
 
   transition:
     transform 0.22s ease,
@@ -416,16 +408,14 @@
   &:hover {
     transform: translateY(-4px);
 
-    border-color: #c88b7e;
+    border-color: var(--qmah-accent);
 
-    box-shadow:
-      0 12px 28px
-      rgba(39, 54, 59, 0.1);
+    box-shadow: var(--qmah-shadow-card);
 
     .card-arrow {
       transform: translateX(4px);
 
-      color: var(--qmah-jade);
+      color: var(--qmah-primary-hover);
     }
   }
 }
@@ -455,7 +445,7 @@
 
 
 .card-arrow {
-  color: #c4c7cf;
+  color: var(--qmah-text-subtle);
 
   font-size: 19px;
 
@@ -471,7 +461,7 @@
   h3 {
     margin: 0 0 7px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 16px;
     font-weight: 780;
@@ -480,7 +470,7 @@
   p {
     margin: 0;
 
-    color: #617176;
+    color: var(--qmah-text-muted);
 
     font-size: 11px;
 
@@ -494,7 +484,7 @@
 
   margin-bottom: 5px;
 
-  color: var(--qmah-jade-deep);
+  color: var(--qmah-primary);
 
   font-size: 8px;
   font-weight: 850;
@@ -504,7 +494,7 @@
 
 
 .card-label.orange {
-  color: var(--qmah-jade);
+  color: var(--qmah-primary-hover);
 }
 
 
@@ -519,10 +509,10 @@
 
   padding-top: 13px;
 
-  border-top: 1px solid #e7ecea;
+  border-top: 1px solid var(--qmah-border);
 
   span {
-    color: #839093;
+    color: var(--qmah-text-subtle);
 
     font-size: 8px;
     font-weight: 750;
@@ -531,7 +521,7 @@
   }
 
   strong {
-    color: var(--qmah-jade);
+    color: var(--qmah-primary-hover);
 
     font-size: 10px;
   }
@@ -543,32 +533,32 @@
 // ===============================
 
 .profile-icon {
-  background: #e8f0ee;
+  background: var(--qmah-surface-soft);
 }
 
 
 .address-icon {
-  background: #e8f2f1;
+  background: var(--qmah-surface-soft);
 }
 
 
 .economy-icon {
-  background: #edf1ef;
+  background: var(--qmah-surface-soft);
 }
 
 
 .coupon-icon {
-  background: #fbf1e9;
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
 }
 
 
 .achievement-icon {
-  background: #f7f0df;
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
 }
 
 
 .daily-icon {
-  background: #fbf1e9;
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
 
   animation:
     fireBounce 1.8s ease-in-out infinite;
@@ -576,7 +566,7 @@
 
 
 .notification-icon {
-  background: #e8f3ed;
+  background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
 }
 
 
@@ -585,8 +575,8 @@
 // ===============================
 
 .featured-card {
-  border-color: #c8d9d5;
-  background: var(--qmah-paper);
+  border-color: var(--qmah-border);
+  background: var(--qmah-surface-elevated);
 }
 
 
@@ -597,8 +587,8 @@
 .activity-feature {
   position: relative;
 
-  border-color: #e3c8ba;
-  background: var(--qmah-paper);
+  border-color: color-mix(in srgb, var(--qmah-danger) 24%, var(--qmah-surface-elevated));
+  background: var(--qmah-surface-elevated);
 }
 
 
@@ -614,7 +604,7 @@
   border-radius: 50%;
 
   background:
-    rgba(249, 115, 22, 0.055);
+    color-mix(in srgb, var(--qmah-accent) 6%, transparent);
 
   pointer-events: none;
 }
@@ -635,9 +625,9 @@
 
   padding-top: 19px;
 
-  border-top: 1px solid #d9e0dc;
+  border-top: 1px solid var(--qmah-border);
 
-  color: #839093;
+  color: var(--qmah-text-subtle);
 
   font-size: 8px;
 
@@ -681,23 +671,26 @@
 @keyframes greenPulse {
 
   0% {
-    box-shadow:
-      0 0 0 0
-      rgba(34, 197, 94, 0.42);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--qmah-primary-hover) 42%, transparent);
   }
 
   70% {
-    box-shadow:
-      0 0 0 6px
-      rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 6px transparent;
   }
 
   100% {
-    box-shadow:
-      0 0 0 0
-      rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 0 transparent;
   }
 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot,
+  .daily-icon,
+  .welcome-card,
+  .dashboard-card {
+    animation: none;
+  }
 }
 
 
@@ -785,4 +778,26 @@
     flex-direction: column;
   }
 
+}
+
+/* ui-integration: 會員首頁保留 dashboard 導覽用途，不把它改成圖鑑或社群卡片牆。 */
+:host {
+  font-family: var(--qmah-font-sans);
+}
+
+.welcome-card,
+.dashboard-card {
+  border-radius: var(--qmah-radius-card);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.logout-button {
+  min-height: var(--qmah-control-height);
+  padding-inline: var(--qmah-button-padding-x);
+  border-radius: var(--qmah-radius-control);
+}
+
+:host :is(button, a):focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
 }

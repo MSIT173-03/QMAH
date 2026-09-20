@@ -6,36 +6,37 @@
   display: block;
   min-height: 100%;
   --color-ink: var(--qmah-ink);
-  --color-ink-deep: var(--qmah-jade-deep);
-  --color-body: #3f5b58;
-  --color-muted: var(--qmah-muted);
-  --color-muted-2: #6d8581;
-  --color-faint: #809692;
-  --color-placeholder: #8fa39f;
-  --color-line: var(--qmah-line);
-  --color-line-soft: #e5f1ee;
-  --color-line-mid: #d5e6e1;
-  --color-line-split: #c4d8d2;
+  --color-ink-deep: var(--qmah-primary);
+  --color-body: var(--qmah-text-muted);
+  --color-muted: var(--qmah-text-muted);
+  --color-muted-2: var(--qmah-text-subtle);
+  --color-faint: var(--qmah-text-subtle);
+  --color-placeholder: var(--qmah-text-muted);
+  --color-line: var(--qmah-border);
+  --color-line-soft: color-mix(in srgb, var(--qmah-border) 64%, var(--qmah-page-surface));
+  --color-line-mid: color-mix(in srgb, var(--qmah-border) 82%, var(--qmah-ink));
+  --color-line-split: color-mix(in srgb, var(--qmah-border) 92%, var(--qmah-ink));
   --color-bg: var(--qmah-page-surface);
-  --color-surface: var(--qmah-paper);
+  --color-surface: var(--qmah-surface-elevated);
   --color-swatch: var(--qmah-surface-muted);
-  --color-accent: var(--qmah-jade);
+  --color-accent: var(--qmah-primary-hover);
   --color-teal: var(--qmah-secondary);
-  --color-gold: var(--qmah-bronze);
-  --color-gold-bg: #f5eedf;
-  --color-gold-text: #765a24;
-  --color-good: var(--qmah-jade-deep);
+  --color-gold: var(--qmah-accent);
+  --color-gold-bg: color-mix(in srgb, var(--qmah-accent) 15%, var(--qmah-surface));
+  --color-gold-text: var(--qmah-accent-content);
+  --color-good: var(--qmah-primary);
   --color-nav: var(--qmah-ink);
-  --color-on-ink: var(--qmah-paper);
-  --color-on-accent: var(--qmah-paper);
-  --color-shadow: rgba(34, 52, 61, 0.12);
+  --color-on-ink: var(--qmah-on-dark);
+  --color-on-accent: var(--qmah-primary-content);
+  --color-secondary-content: var(--qmah-secondary-content);
+  --color-shadow: var(--qmah-shadow-card);
   /* ui-integration: Store 控制項與卡片細節共用低圓角，保留既有方正視覺而避免局部漂移。 */
   --store-radius: 2px;
 
   /* 頁面重置樣式（等同原本套用於 body 的樣式，改由頁面根元件承載） */
   background: var(--color-bg);
   color: var(--color-ink);
-  font-family: 'Noto Sans TC', 'Helvetica Neue', Helvetica, sans-serif;
+  font-family: var(--qmah-font-sans);
   -webkit-font-smoothing: antialiased;
 
   * {
@@ -60,25 +61,30 @@
     cursor: pointer;
   }
 
+  :where(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 2px;
+  }
+
   /* 版面容器：置中並限制最大寬度，供各頁面主要內容區使用 */
   .container {
     width: 100%;
     max-width: 1320px;
     min-width: 0;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--qmah-space-5);
   }
 
   /* 文字工具類別 */
   .font-mono { font-family: 'IBM Plex Mono', monospace; }
-  .text-sm { font-size: 12px; }
+  .text-sm { font-size: var(--qmah-type-label-size); }
   .text-accent { color: var(--color-accent); }
   .text-ink { color: var(--color-ink); }
 
   /* mono 字體、大寫間距的區塊／面板標籤文字 */
   .label-tag {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: var(--qmah-type-meta-size);
     letter-spacing: 0.18em;
     color: var(--color-teal);
   }
@@ -87,7 +93,7 @@
 
   /* 區塊／面板標題列右側的次要連結（例如「更多 →」） */
   .section-more {
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
     color: var(--color-muted);
     margin-left: auto;
   }
@@ -97,8 +103,8 @@
 
   /* 量測／折抵規則等補充說明文字 */
   .size-note {
-    font-size: 12px;
-    line-height: 1.7;
+    font-size: var(--qmah-type-label-size);
+    line-height: var(--qmah-type-body-leading);
     color: var(--color-muted);
   }
 
@@ -115,7 +121,7 @@
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: var(--qmah-space-6);
     min-width: 0;
   }
 
@@ -124,18 +130,18 @@
   @media (max-width: 720px) {
     .site-header-row {
       flex-wrap: wrap;
-      gap: 10px;
-      padding: 12px 14px 16px;
+      gap: var(--qmah-space-2);
+      padding: var(--qmah-space-3) var(--qmah-space-3) var(--qmah-space-4);
       min-width: 0;
     }
 
-    .site-header-row--hero { padding-bottom: 18px; }
+    .site-header-row--hero { padding-bottom: var(--qmah-space-4); }
     .site-header-row .brand-logo { flex: 0 0 100%; }
     .site-header-row .brand-logo-img { height: 32px; }
     .site-header-row .search-wrap { flex: 1 1 0; max-width: none; min-width: 0; }
-    .site-header-row .search-submit { padding-inline: 12px; }
-    .site-header-row .hdr-actions { margin-left: 0; gap: 8px; min-width: 0; }
-    .nav-bar-row { gap: 12px; padding: 9px 14px; min-width: 0; }
+    .site-header-row .search-submit { padding-inline: var(--qmah-space-3); }
+    .site-header-row .hdr-actions { margin-left: 0; gap: var(--qmah-space-2); min-width: 0; }
+    .nav-bar-row { gap: var(--qmah-space-3); padding: var(--qmah-space-2) var(--qmah-space-3); min-width: 0; }
     .nav-highlight { margin-left: 0; }
 
     .promobar-row,
@@ -143,15 +149,15 @@
 
     .sticky-92 { position: static; }
 
-    .search-box { min-height: 40px; height: auto; }
-    .search-submit { min-height: 32px; }
+    .search-box { min-height: var(--qmah-control-height); height: auto; }
+    .search-submit { min-height: calc(var(--qmah-control-height) - var(--qmah-space-2)); }
   }
 
   /* 直向排列的側欄容器 */
   .hero-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--qmah-space-3);
   }
 
   /* 捲動時固定於頁首下方 */
@@ -167,21 +173,21 @@
   .summary-row {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
     color: var(--color-body);
   }
 
   .summary-total-row {
     border-top: 1px solid var(--color-line);
-    padding-top: 12px;
+    padding-top: var(--qmah-space-3);
     display: flex;
     justify-content: space-between;
     align-items: baseline;
   }
 
   .summary-total-label {
-    font-family: 'Noto Serif TC', serif;
-    font-size: 14px;
+    font-family: var(--qmah-font-serif);
+    font-size: var(--qmah-type-body-sm-size);
     font-weight: 600;
     color: var(--color-ink-deep);
   }
@@ -196,12 +202,12 @@
   .section-block {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--qmah-space-4);
   }
 
   /* 標籤 + 內容的規格說明列（商品頁規格、尺寸面板、商品說明條列共用） */
-  .spec-row { display: flex; gap: 10px; min-width: 0; }
-  .spec-row--sm { font-size: 12px; }
+  .spec-row { display: flex; gap: var(--qmah-space-2); min-width: 0; }
+  .spec-row--sm { font-size: var(--qmah-type-label-size); }
   .spec-label {
     width: 62px;
     flex: 0 0 auto;
@@ -219,7 +225,7 @@
 
   .product-card-price {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px;
+    font-size: var(--qmah-type-body-sm-size);
     color: var(--color-ink);
 
     &.text-accent { color: var(--color-accent); }
@@ -227,7 +233,7 @@
 
   .product-card-was {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
     color: var(--color-placeholder);
     text-decoration: line-through;
   }
@@ -235,7 +241,7 @@
   /* 設計稿的標籤無外框，僅以底色與文字色區分 */
   .product-card-tag {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
     letter-spacing: 0.06em;
     padding: 1px 5px;
     border-radius: var(--store-radius);
@@ -253,7 +259,7 @@
   /* 品牌名稱（商品卡片與首頁新品上架共用） */
   .product-card-brand {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: var(--qmah-type-meta-size);
     letter-spacing: 0.14em;
     color: var(--color-teal);
   }
@@ -266,7 +272,7 @@
   .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 12px;
+    gap: var(--qmah-space-3);
   }
 
   /* 實心按鈕（例如主視覺 CTA） */
@@ -275,15 +281,15 @@
     border-color: var(--color-accent);
     background: var(--color-accent);
     color: var(--color-on-accent);
-    border-radius: var(--store-radius);
-    padding: 12px 26px;
-    font-size: 12px;
+    border-radius: var(--qmah-radius-control);
+    padding: var(--qmah-space-3) var(--qmah-button-padding-x);
+    font-size: var(--qmah-type-label-size);
     letter-spacing: 0.14em;
     transition: background 160ms;
 
     &:hover {
-      border-color: var(--color-ink-deep);
-      background: var(--color-ink-deep);
+      border-color: var(--qmah-primary);
+      background: var(--qmah-primary);
     }
   }
 
@@ -291,18 +297,18 @@
   @media (max-width: 720px) {
     .card-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: var(--qmah-space-2);
     }
 
     .promobar-row {
-      padding-inline: 14px;
-      gap: 8px 12px;
+      padding-inline: var(--qmah-space-3);
+      gap: var(--qmah-space-2) var(--qmah-space-3);
     }
 
     .promobar-actions {
       width: 100%;
       margin-left: 0;
-      gap: 10px 14px;
+      gap: var(--qmah-space-2) var(--qmah-space-3);
     }
 
     .nav-bar-row {
@@ -319,18 +325,18 @@
     }
 
     .container {
-      padding-inline: 14px;
+      padding-inline: var(--qmah-space-3);
     }
   }
 
   /* ui-integration: 商城主要 CTA 保留原本造型，但把觸控高度收斂到可操作的 44px。 */
   .btn-solid,
   .btn-outline {
-    min-height: 44px;
+    min-height: var(--qmah-control-height);
   }
   /* 佔滿容器寬度的實心按鈕（訂單摘要的主要操作） */
   .btn-solid--full {
-    padding: 13px 0;
+    padding: var(--qmah-space-3) 0;
     letter-spacing: 0.14em;
     text-align: center;
   }
@@ -340,16 +346,16 @@
     border: 1px solid var(--color-ink);
     background: var(--color-surface);
     color: var(--color-ink);
-    border-radius: var(--store-radius);
-    padding: 11px 20px;
-    font-size: 12px;
+    border-radius: var(--qmah-radius-control);
+    padding: var(--qmah-space-3) var(--qmah-button-padding-x);
+    font-size: var(--qmah-type-label-size);
     letter-spacing: 0.12em;
     transition: background 160ms, border-color 160ms, color 160ms;
 
     &:hover {
-      border-color: var(--color-teal);
-      background: var(--color-teal);
-      color: var(--color-secondary-content, var(--color-on-ink));
+      border-color: var(--qmah-primary-hover);
+      background: var(--qmah-primary-hover);
+      color: var(--qmah-primary-content);
     }
   }
 
@@ -369,27 +375,28 @@
 :root:has(.theme-controller[value='qmahdark']:checked) .store-app,
 :root[data-theme='qmahdark'] .store-app {
   --color-ink: var(--qmah-ink);
-  --color-ink-deep: var(--qmah-jade-deep);
-  --color-body: #c4d8d2;
-  --color-muted: var(--qmah-muted);
-  --color-muted-2: #b2c8c1;
-  --color-faint: #8eaaa2;
-  --color-placeholder: #78938c;
-  --color-line: #3b5550;
-  --color-line-soft: #304844;
-  --color-line-mid: #4a635d;
-  --color-line-split: #58736c;
+  --color-ink-deep: var(--qmah-primary);
+  --color-body: var(--qmah-text-muted);
+  --color-muted: var(--qmah-text-muted);
+  --color-muted-2: var(--qmah-text-subtle);
+  --color-faint: var(--qmah-text-subtle);
+  --color-placeholder: var(--qmah-text-muted);
+  --color-line: var(--qmah-border);
+  --color-line-soft: color-mix(in srgb, var(--qmah-border) 72%, var(--qmah-page-surface));
+  --color-line-mid: color-mix(in srgb, var(--qmah-border) 88%, var(--qmah-ink));
+  --color-line-split: color-mix(in srgb, var(--qmah-border) 96%, var(--qmah-ink));
   --color-bg: var(--qmah-page-surface);
-  --color-surface: var(--qmah-surface);
+  --color-surface: var(--qmah-surface-elevated);
   --color-swatch: var(--qmah-surface-muted);
-  --color-accent: var(--qmah-jade);
+  --color-accent: var(--qmah-primary-hover);
   --color-teal: var(--qmah-secondary);
-  --color-gold: var(--qmah-bronze);
-  --color-gold-bg: #3a3527;
-  --color-gold-text: #e4ca8b;
-  --color-good: var(--qmah-jade-bright);
+  --color-gold: var(--qmah-accent);
+  --color-gold-bg: color-mix(in srgb, var(--qmah-accent) 18%, var(--qmah-surface));
+  --color-gold-text: var(--qmah-accent-content);
+  --color-good: var(--qmah-primary-hover);
   --color-nav: var(--qmah-ink);
-  --color-on-ink: var(--qmah-night);
-  --color-on-accent: var(--qmah-night);
-  --color-shadow: rgba(0, 0, 0, 0.24);
+  --color-on-ink: var(--qmah-on-dark);
+  --color-on-accent: var(--qmah-primary-content);
+  --color-secondary-content: var(--qmah-secondary-content);
+  --color-shadow: var(--qmah-shadow-card);
 }

@@ -10,8 +10,8 @@
   background:
     linear-gradient(
       135deg,
-      #f7f4ee 0%,
-      #f3f0e8 100%
+      var(--qmah-surface) 0%,
+      var(--qmah-page-surface) 100%
     );
 }
 
@@ -28,32 +28,30 @@
 .state-card {
   padding: 36px;
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
   border-radius: 20px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  color: #617176;
+  color: var(--qmah-text-muted);
   text-align: center;
 
-  box-shadow:
-    0 12px 35px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--qmah-shadow-card);
 
   &.error {
-    color: #b91c1c;
+    color: var(--qmah-danger);
   }
 }
 
 .profile-card {
   overflow: hidden;
 
-  border: 1px solid #d9e0dc;
+  border: 1px solid var(--qmah-border);
   border-radius: 24px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  box-shadow:
-    0 18px 50px rgba(15, 23, 42, 0.07);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 // ===============================
@@ -71,8 +69,8 @@
 
   overflow: hidden;
 
-  background: var(--qmah-paper);
-  border-bottom: 1px solid #eceef4;
+  background: var(--qmah-surface-elevated);
+  border-bottom: 1px solid var(--qmah-border);
 }
 
 .hero-left {
@@ -99,17 +97,17 @@
   background-image:
     linear-gradient(
       90deg,
-      var(--qmah-paper) 0%,
-      rgba(255, 255, 255, 0.98) 8%,
-      rgba(255, 255, 255, 0.86) 18%,
-      rgba(255, 255, 255, 0.45) 34%,
-      rgba(255, 255, 255, 0.08) 54%,
-      rgba(255, 255, 255, 0) 70%
+      var(--qmah-surface-elevated) 0%,
+      color-mix(in srgb, var(--qmah-surface-elevated) 98%, transparent) 8%,
+      color-mix(in srgb, var(--qmah-primary-content) 86%, transparent) 18%,
+      color-mix(in srgb, var(--qmah-primary-content) 45%, transparent) 34%,
+      color-mix(in srgb, var(--qmah-primary-content) 8%, transparent) 54%,
+      transparent 70%
     ),
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.04),
-      rgba(255, 255, 255, 0.12)
+      color-mix(in srgb, var(--qmah-primary-content) 4%, transparent),
+      color-mix(in srgb, var(--qmah-primary-content) 12%, transparent)
     ),
     url('/images/profile/qingming-scroll-profile-banner.png');
 
@@ -133,23 +131,22 @@
 
   overflow: hidden;
 
-  border: 5px solid var(--qmah-paper);
+  border: 5px solid var(--qmah-surface-elevated);
   border-radius: 50%;
 
   background:
     linear-gradient(
       135deg,
-      var(--qmah-jade-deep),
-      var(--qmah-jade-deep)
+      var(--qmah-primary),
+      var(--qmah-primary)
     );
 
-  color: var(--qmah-paper);
+  color: var(--qmah-surface-elevated);
 
   font-size: 34px;
   font-weight: 800;
 
-  box-shadow:
-    0 10px 28px rgba(99, 102, 241, 0.22);
+  box-shadow: var(--qmah-shadow-card);
 
   img {
     width: 100%;
@@ -173,7 +170,7 @@
   h1 {
     margin: 0;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 30px;
     font-weight: 800;
@@ -183,7 +180,7 @@
 .email {
   margin: 7px 0 11px;
 
-  color: #617176;
+  color: var(--qmah-text-muted);
 
   font-size: 14px;
 }
@@ -210,23 +207,23 @@
 }
 
 .status-badge {
-  background: #f3f4f6;
-  color: #617176;
+  background: var(--qmah-surface-muted);
+  color: var(--qmah-text-muted);
 
   &.active {
-    background: #e8f3ed;
-    color: #15803d;
+    background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
+    color: var(--qmah-primary);
   }
 }
 
 .visibility-badge {
-  background: #e8f0ee;
-  color: var(--qmah-jade);
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-primary-hover);
 }
 
 .role-badge {
-  background: #edf1ef;
-  color: var(--qmah-jade-deep);
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-primary);
 }
 
 // ===============================
@@ -241,12 +238,12 @@
 .success-box {
   padding: 13px 15px;
 
-  border: 1px solid #bbf7d0;
+  border: 1px solid color-mix(in srgb, var(--qmah-primary) 24%, var(--qmah-surface-elevated));
   border-radius: 12px;
 
-  background: #e8f3ed;
+  background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
 
-  color: #166534;
+  color: var(--qmah-primary);
 
   font-size: 14px;
 }
@@ -254,12 +251,12 @@
 .error-box {
   padding: 13px 15px;
 
-  border: 1px solid #fecaca;
+  border: 1px solid color-mix(in srgb, var(--qmah-danger) 24%, var(--qmah-surface-elevated));
   border-radius: 12px;
 
-  background: #fef2f2;
+  background: color-mix(in srgb, var(--qmah-danger) 10%, var(--qmah-surface-elevated));
 
-  color: #b91c1c;
+  color: var(--qmah-danger);
 
   font-size: 14px;
 }
@@ -291,7 +288,7 @@
   h2 {
     margin: 0 0 5px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 21px;
   }
@@ -299,7 +296,7 @@
   p {
     margin: 0;
 
-    color: #839093;
+    color: var(--qmah-text-subtle);
 
     font-size: 13px;
   }
@@ -316,9 +313,9 @@
 
   border-radius: 14px;
 
-  background: #e8f0ee;
+  background: var(--qmah-surface-soft);
 
-  color: var(--qmah-jade);
+  color: var(--qmah-primary-hover);
 
   font-size: 20px;
 }
@@ -329,9 +326,9 @@
   border: 0;
   border-radius: 11px;
 
-  background: var(--qmah-jade);
+  background: var(--qmah-primary-hover);
 
-  color: var(--qmah-paper);
+  color: var(--qmah-surface-elevated);
 
   font-size: 14px;
   font-weight: 650;
@@ -339,7 +336,7 @@
   cursor: pointer;
 
   &:hover {
-    background: #4338ca;
+    background: var(--qmah-primary);
   }
 }
 
@@ -364,10 +361,10 @@
 .side-info {
   padding: 22px;
 
-  border: 1px solid #e8eaf0;
+  border: 1px solid var(--qmah-border);
   border-radius: 16px;
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 }
 
 .info-section {
@@ -375,7 +372,7 @@
   h3 {
     margin: 0 0 17px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 16px;
   }
@@ -384,7 +381,7 @@
 .bio-text {
   margin: 0;
 
-  color: #3f565c;
+  color: var(--qmah-text-muted);
 
   font-size: 14px;
   line-height: 1.8;
@@ -395,7 +392,7 @@
 .empty-text {
   margin: 0;
 
-  color: #839093;
+  color: var(--qmah-text-subtle);
 
   font-size: 14px;
 }
@@ -408,19 +405,19 @@
 
   padding: 13px 0;
 
-  border-bottom: 1px solid #e7ecea;
+  border-bottom: 1px solid var(--qmah-border);
 
   &:last-child {
     border-bottom: 0;
   }
 
   span {
-    color: #839093;
+    color: var(--qmah-text-subtle);
     font-size: 13px;
   }
 
   strong {
-    color: #3f565c;
+    color: var(--qmah-text-muted);
 
     font-size: 13px;
   }
@@ -434,14 +431,13 @@
   background:
     linear-gradient(
       135deg,
-      var(--qmah-jade),
-      var(--qmah-jade-deep)
+      var(--qmah-primary-hover),
+      var(--qmah-primary)
     );
 
-  color: var(--qmah-paper);
+  color: var(--qmah-surface-elevated);
 
-  box-shadow:
-    0 12px 28px rgba(79, 70, 229, 0.2);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 .point-label {
@@ -450,7 +446,7 @@
   margin-bottom: 6px;
 
   color:
-    rgba(255, 255, 255, 0.78);
+    color-mix(in srgb, var(--qmah-primary-content) 78%, transparent);
 
   font-size: 12px;
 }
@@ -464,7 +460,7 @@
 
 .point-unit {
   color:
-    rgba(255, 255, 255, 0.72);
+    color-mix(in srgb, var(--qmah-primary-content) 72%, transparent);
 
   font-size: 12px;
 }
@@ -476,13 +472,13 @@
 
     margin-bottom: 10px;
 
-    color: #839093;
+    color: var(--qmah-text-subtle);
 
     font-size: 12px;
   }
 
   strong {
-    color: #3f565c;
+    color: var(--qmah-text-muted);
 
     font-size: 14px;
   }
@@ -500,9 +496,9 @@
 
   border-radius: 999px;
 
-  background: #edf1ef;
+  background: var(--qmah-surface-soft);
 
-  color: var(--qmah-jade-deep);
+  color: var(--qmah-primary);
 
   font-size: 12px;
   font-weight: 700;
@@ -525,7 +521,7 @@
   h2 {
     margin: 0 0 5px;
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 22px;
   }
@@ -533,7 +529,7 @@
   p {
     margin: 0;
 
-    color: #839093;
+    color: var(--qmah-text-subtle);
 
     font-size: 13px;
   }
@@ -544,7 +540,7 @@
 
   margin: 28px 0;
 
-  background: #eceef3;
+  background: var(--qmah-border);
 }
 
 .edit-layout {
@@ -568,18 +564,17 @@
 .form-card {
   padding: 22px;
 
-  border: 1px solid #e8eaf0;
+  border: 1px solid var(--qmah-border);
   border-radius: 17px;
 
   background:
     linear-gradient(
       180deg,
-      var(--qmah-paper) 0%,
-      #fcfcfe 100%
+      var(--qmah-surface-elevated) 0%,
+      var(--qmah-surface-elevated) 100%
     );
 
-  box-shadow:
-    0 5px 18px rgba(15, 23, 42, 0.03);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 .form-title-row {
@@ -597,7 +592,7 @@
 
     gap: 8px;
 
-    color: #27363b;
+    color: var(--qmah-ink);
 
     font-size: 14px;
     font-weight: 700;
@@ -605,17 +600,17 @@
 }
 
 .field-icon {
-  color: var(--qmah-jade);
+  color: var(--qmah-primary-hover);
 
   font-size: 18px;
 }
 
 .required {
-  color: #dc2626;
+  color: var(--qmah-danger);
 }
 
 .counter {
-  color: #839093;
+  color: var(--qmah-text-subtle);
 
   font-size: 12px;
 }
@@ -631,12 +626,12 @@
 
     padding: 13px 15px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--qmah-border);
     border-radius: 11px;
 
-    background: var(--qmah-paper);
+    background: var(--qmah-surface-elevated);
 
-    color: #163f47;
+    color: var(--qmah-primary);
 
     font-size: 14px;
 
@@ -647,11 +642,9 @@
       box-shadow 0.2s ease;
 
     &:focus {
-      border-color: var(--qmah-jade-deep);
+      border-color: var(--qmah-primary);
 
-      box-shadow:
-        0 0 0 3px
-        rgba(99, 102, 241, 0.1);
+      box-shadow: var(--qmah-shadow-card);
     }
   }
 
@@ -665,7 +658,7 @@
 .field-help {
   margin: 8px 0 0;
 
-  color: #839093;
+  color: var(--qmah-text-subtle);
 
   font-size: 12px;
 }
@@ -673,7 +666,7 @@
 .field-error {
   margin-top: 7px;
 
-  color: #dc2626;
+  color: var(--qmah-danger);
 
   font-size: 12px;
 }
@@ -685,14 +678,14 @@
 .tips-card {
   padding: 22px;
 
-  border: 1px solid #edf1ef;
+  border: 1px solid var(--qmah-surface-soft);
   border-radius: 18px;
 
   background:
     linear-gradient(
       180deg,
-      var(--qmah-paper) 0%,
-      var(--qmah-paper) 100%
+      var(--qmah-surface-elevated) 0%,
+      var(--qmah-surface-elevated) 100%
     );
 }
 
@@ -705,7 +698,7 @@
   h3 {
     margin: 0;
 
-    color: var(--qmah-jade);
+    color: var(--qmah-primary-hover);
 
     font-size: 17px;
   }
@@ -719,7 +712,7 @@
   margin:
     12px 0 18px;
 
-  color: #617176;
+  color: var(--qmah-text-muted);
 
   font-size: 12px;
   line-height: 1.7;
@@ -737,7 +730,7 @@
   border-radius: 13px;
 
   strong {
-    color: #3f565c;
+    color: var(--qmah-text-muted);
 
     font-size: 13px;
   }
@@ -745,7 +738,7 @@
   p {
     margin: 4px 0 0;
 
-    color: #617176;
+    color: var(--qmah-text-muted);
 
     font-size: 11px;
     line-height: 1.5;
@@ -759,15 +752,15 @@
 }
 
 .tip-green {
-  background: #e8f3ed;
+  background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
 }
 
 .tip-blue {
-  background: #eff6ff;
+  background: color-mix(in srgb, var(--qmah-primary) 8%, var(--qmah-surface-elevated));
 }
 
 .tip-purple {
-  background: #faf5ff;
+  background: color-mix(in srgb, var(--qmah-primary) 8%, var(--qmah-surface-elevated));
 }
 
 // ===============================
@@ -783,7 +776,7 @@
   margin-top: 30px;
   padding-top: 24px;
 
-  border-top: 1px solid #eceef3;
+  border-top: 1px solid var(--qmah-border);
 }
 
 .cancel-button,
@@ -804,29 +797,28 @@
 }
 
 .cancel-button {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--qmah-border);
 
-  background: var(--qmah-paper);
+  background: var(--qmah-surface-elevated);
 
-  color: #3f565c;
+  color: var(--qmah-text-muted);
 
   &:hover:not(:disabled) {
-    background: #f9fafb;
+    background: var(--qmah-surface-elevated);
   }
 }
 
 .save-button {
   border: 0;
 
-  background: var(--qmah-jade);
+  background: var(--qmah-primary-hover);
 
-  color: var(--qmah-paper);
+  color: var(--qmah-surface-elevated);
 
-  box-shadow:
-    0 7px 18px rgba(79, 70, 229, 0.18);
+  box-shadow: var(--qmah-shadow-card);
 
   &:hover:not(:disabled) {
-    background: #4338ca;
+    background: var(--qmah-primary);
   }
 }
 
@@ -915,4 +907,48 @@
     width: 100%;
   }
 
+}
+
+/* ui-integration: 個人資料保留身份資訊與編輯表單的雙欄結構，統一內容卡、表單與操作狀態。 */
+:host {
+  font-family: var(--qmah-font-sans);
+}
+
+.profile-card,
+.state-card,
+.info-section,
+.side-info,
+.form-card,
+.tips-card {
+  border-radius: var(--qmah-radius-card);
+}
+
+.profile-card,
+.state-card,
+.info-section,
+.side-info,
+.form-card,
+.tips-card {
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.primary-button,
+.cancel-button,
+.save-button {
+  min-height: var(--qmah-control-height);
+  padding-inline: var(--qmah-button-padding-x);
+  border-radius: var(--qmah-radius-control);
+}
+
+.form-card input,
+.form-card textarea,
+.form-card select {
+  min-height: var(--qmah-control-height);
+  padding-inline: var(--qmah-control-padding-x);
+  border-radius: var(--qmah-radius-control);
+}
+
+:host :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
 }

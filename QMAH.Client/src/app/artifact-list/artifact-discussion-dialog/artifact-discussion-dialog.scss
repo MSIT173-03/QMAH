@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(20, 14, 8, 0.62);
+  background: color-mix(in srgb, var(--qmah-night) 62%, transparent);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.18s ease;
@@ -24,10 +24,10 @@
 .discussion-dialog {
   width: min(520px, 100%);
   padding: 28px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--qmah-border);
   border-radius: 20px;
-  background: var(--card);
-  box-shadow: 0 28px 70px rgba(20, 14, 8, 0.48);
+  background: var(--qmah-surface-elevated);
+  box-shadow: var(--qmah-shadow-card);
   transform: translateY(8px) scale(0.98);
   transition: transform 0.2s ease;
 }
@@ -39,7 +39,7 @@
 .discussion-dialog__eyebrow {
   display: block;
   margin-bottom: 8px;
-  color: var(--blue-deep);
+  color: var(--qmah-primary);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -47,14 +47,14 @@
 
 .discussion-dialog h3 {
   margin: 0;
-  color: var(--ink);
+  color: var(--qmah-ink);
   font-size: clamp(18px, 2vw, 24px);
   line-height: 1.35;
 }
 
 .discussion-dialog__intro {
   margin: 10px 0 20px;
-  color: var(--ink-soft);
+  color: var(--qmah-text-muted);
   font-size: 13px;
   line-height: 1.7;
 }
@@ -62,7 +62,7 @@
 .discussion-dialog__label {
   display: block;
   margin-bottom: 7px;
-  color: var(--ink);
+  color: var(--qmah-ink);
   font-size: 12px;
   font-weight: 700;
 }
@@ -72,10 +72,10 @@
   width: 100%;
   min-height: 132px;
   padding: 12px 14px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--qmah-border);
   border-radius: 12px;
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--qmah-surface-soft);
+  color: var(--qmah-ink);
   font: inherit;
   font-size: 13px;
   line-height: 1.65;
@@ -83,8 +83,8 @@
 }
 
 .discussion-dialog__textarea:focus {
-  border-color: var(--blue);
-  outline: 3px solid rgba(227, 185, 85, 0.24);
+  border-color: var(--qmah-primary-hover);
+  outline: 3px solid color-mix(in srgb, var(--qmah-accent) 24%, transparent);
 }
 
 .discussion-dialog__textarea:disabled {
@@ -93,7 +93,7 @@
 
 .discussion-dialog__error {
   margin: 10px 0 0;
-  color: var(--red);
+  color: var(--qmah-danger);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -119,20 +119,20 @@
 }
 
 .cancel-btn {
-  background: var(--card);
-  color: var(--ink);
-  border: 1px solid var(--line);
+  background: var(--qmah-surface-elevated);
+  color: var(--qmah-ink);
+  border: 1px solid var(--qmah-border);
 }
 
-.cancel-btn:hover { background: var(--surface); }
+.cancel-btn:hover { background: var(--qmah-surface-soft); }
 
 .discussion-submit-btn {
-  background: var(--blue-deep);
-  color: var(--qmah-paper);
-  border: 1px solid var(--blue-deep);
+  background: var(--qmah-primary);
+  color: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-primary);
 }
 
-.discussion-submit-btn:hover { background: var(--blue); color: #2e2110; }
+.discussion-submit-btn:hover { background: var(--qmah-primary-hover); color: var(--qmah-accent-content); }
 
 .discussion-submit-btn:disabled,
 .cancel-btn:disabled {
@@ -159,4 +159,25 @@
   .discussion-dialog {
     transition: none;
   }
+}
+
+/* ui-integration: 對話框沿用圖鑑語彙，但統一成共用浮層、表單與觸控基線。 */
+.discussion-dialog {
+  border-radius: var(--qmah-radius-panel);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.discussion-dialog__textarea {
+  min-height: 132px;
+  border-radius: var(--qmah-radius-control);
+}
+
+.discussion-dialog__textarea:focus {
+  border-color: var(--qmah-primary-hover);
+  outline-color: var(--qmah-focus);
+}
+
+.discussion-dialog__actions .action-btn {
+  min-height: var(--qmah-control-height);
+  padding-inline: var(--qmah-button-padding-x);
 }

@@ -5,13 +5,14 @@
 .cart-link {
   border: 1px solid var(--color-ink);
   background: var(--color-ink);
-  border-radius: var(--store-radius);
+  border-radius: var(--qmah-radius-control);
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-size: 12px;
+  gap: var(--qmah-space-2);
+  font-size: var(--qmah-type-label-size);
   color: var(--color-on-ink);
-  padding: 8px 15px;
+  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
+  min-height: var(--qmah-control-height);
   flex: 0 0 auto;
   text-decoration: none;
   transition: background 160ms, border-color 160ms, color 160ms;
@@ -23,17 +24,17 @@
   }
 
   &--hero {
-    padding: 0 15px;
-    height: 38px;
+    padding: 0 var(--qmah-button-padding-x);
+    height: var(--qmah-control-height);
     cursor: pointer;
   }
 }
 
 .cart-badge {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-ink);
   background: var(--color-surface);
-  border-radius: var(--store-radius);
-  padding: 1px 6px;
+  border-radius: var(--qmah-radius-pill);
+  padding: var(--qmah-space-1) var(--qmah-space-2);
 }

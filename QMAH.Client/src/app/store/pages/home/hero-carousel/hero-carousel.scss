@@ -7,6 +7,7 @@
   overflow: hidden;
   background: var(--color-swatch);
   border: 1px solid var(--color-line);
+  border-radius: var(--store-radius);
   height: 100%;
 }
 
@@ -26,7 +27,7 @@
   background: var(--color-swatch);
   display: flex;
   align-items: flex-end;
-  padding: 30px;
+  padding: var(--qmah-space-8);
   position: relative;
 }
 
@@ -53,12 +54,13 @@
   max-width: 480px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px 22px 18px;
+  gap: var(--qmah-space-3);
+  padding: var(--qmah-space-4) var(--qmah-space-5);
   /* ui-integration: 主視覺以細邊界界定文案層，避免厚重側線破壞圖片與文字的閱讀比例。 */
   border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-line));
   background: color-mix(in srgb, var(--color-surface) 91%, transparent);
-  box-shadow: 0 14px 30px var(--color-shadow);
+  border-radius: var(--store-radius);
+  box-shadow: var(--qmah-shadow-float);
 }
 
 .hero-kicker {
@@ -71,8 +73,8 @@
 .hero-title {
   margin: 0;
   font-family: 'Noto Serif TC', serif;
-  font-size: clamp(30px, 4vw, 42px);
-  line-height: 1.18;
+  font-size: var(--qmah-type-display-size);
+  line-height: var(--qmah-type-heading-leading);
   font-weight: 700;
   color: var(--color-ink-deep);
   text-wrap: pretty;
@@ -82,15 +84,15 @@
 
 .hero-desc {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.75;
+  font-size: var(--qmah-type-body-sm-size);
+  line-height: var(--qmah-type-body-leading);
   color: var(--color-body);
 }
 
 .hero-coupon {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: var(--qmah-space-2);
   width: fit-content;
   max-width: 100%;
   padding: 7px 10px;
@@ -119,7 +121,7 @@
 .hero-dots {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--qmah-space-1);
 }
 
 .hero-controls {
@@ -128,7 +130,7 @@
   bottom: 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--qmah-space-2);
 }
 
 .hero-dot {
@@ -147,6 +149,7 @@
   min-height: 32px;
   padding: 5px 9px;
   border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
+  border-radius: var(--qmah-radius-control);
   background: color-mix(in srgb, var(--color-surface) 86%, transparent);
   color: var(--color-ink);
   font-size: 11px;
@@ -168,7 +171,7 @@
   .hero-slide-body {
     width: min(100%, 430px);
     min-width: 0;
-    padding: 16px 17px 15px;
+    padding: var(--qmah-space-4) var(--qmah-space-4);
   }
 
   .hero-coupon {

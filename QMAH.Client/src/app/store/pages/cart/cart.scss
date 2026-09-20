@@ -18,27 +18,27 @@
    =============================== */
 
 .cart-main {
-  padding-top: 16px;
+  padding-top: var(--qmah-space-4);
   padding-bottom: 72px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--qmah-space-5);
 }
 
 .cart-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 316px);
-  gap: 20px;
+  gap: var(--qmah-space-5);
   align-items: start;
 }
 
 .cart-lines {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--qmah-space-3);
 }
 
-.cart-feedback { margin: 0; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--color-accent) 42%, var(--color-line)); background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)); color: var(--color-accent); }
+.cart-feedback { margin: 0; padding: var(--qmah-space-3) var(--qmah-space-4); border: 1px solid color-mix(in srgb, var(--color-accent) 42%, var(--color-line)); border-radius: var(--store-radius); background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)); color: var(--color-accent); }
 
 /* ui-integration: 摘要在手機移到商品清單下方，保留既有購物車資訊架構但不讓 316px 側欄擠壓內容。 */
 @media (max-width: 800px) {

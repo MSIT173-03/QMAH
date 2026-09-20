@@ -27,6 +27,50 @@
   --qmah-danger-content: var(--qmah-paper);
   --qmah-line: #c9dcd7;
   --qmah-on-dark: var(--qmah-paper);
+
+  /* ui-integration: 全站共用尺度只提供有限選項，讓各 Area 保留構圖但不再各自發明數值。 */
+  --qmah-space-1: 4px;
+  --qmah-space-2: 8px;
+  --qmah-space-3: 12px;
+  --qmah-space-4: 16px;
+  --qmah-space-5: 20px;
+  --qmah-space-6: 24px;
+  --qmah-space-8: 32px;
+  --qmah-space-10: 40px;
+  --qmah-space-12: 48px;
+  --qmah-radius-control: 8px;
+  --qmah-radius-card: 12px;
+  --qmah-radius-panel: 16px;
+  --qmah-radius-pill: 999px;
+  --qmah-shadow-card: 0 8px 24px rgb(18 38 37 / 8%);
+  --qmah-shadow-float: 0 16px 40px rgb(18 38 37 / 14%);
+  --qmah-shadow-dialog: 0 24px 64px rgb(18 38 37 / 20%);
+  --qmah-control-height: 44px;
+  --qmah-control-height-lg: 48px;
+  --qmah-control-padding-x: 16px;
+  --qmah-button-padding-x: 18px;
+
+  /* ui-integration: 文字角色對應使用情境；Serif 用於閱讀與標題，Sans 用於操作，Mono 只做短 metadata。 */
+  --qmah-type-display-size: clamp(34px, 4vw, 54px);
+  --qmah-type-page-title-size: clamp(28px, 3vw, 42px);
+  --qmah-type-section-title-size: clamp(20px, 2.2vw, 28px);
+  --qmah-type-body-size: 16px;
+  --qmah-type-body-sm-size: 14px;
+  --qmah-type-label-size: 12px;
+  --qmah-type-meta-size: 11px;
+  --qmah-type-heading-leading: 1.2;
+  --qmah-type-body-leading: 1.65;
+  --qmah-type-meta-leading: 1.45;
+
+  /* ui-integration: 共用語意別名讓明暗主題與各 Area 使用同一組角色，而不是直接依賴某個色名。 */
+  --qmah-primary: var(--qmah-jade-deep);
+  --qmah-primary-hover: var(--qmah-jade);
+  --qmah-primary-content: var(--qmah-paper);
+  --qmah-focus: var(--qmah-bronze);
+  --qmah-text-muted: var(--qmah-muted);
+  --qmah-text-subtle: var(--qmah-slate);
+  --qmah-border: var(--qmah-line);
+  --qmah-surface-elevated: var(--qmah-paper);
 }
 
 /* ui-integration: 所有 Area 共用最小 viewport 與觸控基線，避免局部頁面把 body 撐出水平捲動。 */
@@ -99,6 +143,48 @@ input,
 select,
 textarea {
   touch-action: manipulation;
+}
+
+/* ui-integration: Admin 已使用 DaisyUI 語意 class；這層只補 QMAH 的尺寸、surface 與對比基線，不改管理頁資料表結構。 */
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) {
+  display: block;
+  color: var(--qmah-ink);
+  font-family: var(--qmah-font-sans);
+}
+
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) > h1 {
+  margin-block: 0 var(--qmah-space-6);
+  color: var(--qmah-primary);
+  font-family: var(--qmah-font-serif);
+  font-size: var(--qmah-type-page-title-size);
+  line-height: var(--qmah-type-heading-leading);
+}
+
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) :where(.btn, .input, .select) {
+  min-height: var(--qmah-control-height);
+  border-radius: var(--qmah-radius-control);
+  font-family: var(--qmah-font-sans);
+}
+
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) :where(.btn-xs, .btn-sm) {
+  padding-inline: var(--qmah-space-3);
+  font-size: var(--qmah-type-label-size);
+}
+
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) > .overflow-x-auto {
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-card);
+  background: var(--qmah-surface-elevated);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) :where(.alert, .badge) {
+  font-family: var(--qmah-font-sans);
+}
+
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) :where(button, a, input, select):focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
 }
 
 /* ui-integration: 登入卡與收合入口共用一個命名轉場，讓面板以 shared-element 方式變形而非突然消失。 */

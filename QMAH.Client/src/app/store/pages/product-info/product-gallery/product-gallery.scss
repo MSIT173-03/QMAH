@@ -21,17 +21,18 @@
   place-items: center;
   overflow: hidden;
   border: 1px solid var(--color-line-soft);
-  background: #eeeae1;
-  box-shadow: inset 0 0 0 8px rgb(255 255 255 / 28%);
+  border-radius: var(--store-radius);
+  background: var(--color-swatch);
+  box-shadow: inset 0 0 0 var(--qmah-space-2) color-mix(in srgb, var(--qmah-surface-elevated) 28%, transparent);
 }
 
 .gallery-function-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--qmah-space-1);
   max-width: 100%;
-  padding: 4px 6px;
+  padding: var(--qmah-space-1) var(--qmah-space-2);
   border-top: 1px solid var(--color-line-soft);
   border-bottom: 1px solid var(--color-line-soft);
   color: var(--color-muted);
@@ -76,7 +77,7 @@
 .gallery-icon-button:hover,
 .gallery-icon-button.is-active {
   color: var(--color-ink-deep);
-  background: var(--color-paper);
+  background: var(--color-surface);
 }
 
 .gallery-icon-button:disabled {
@@ -87,7 +88,7 @@
 }
 
 .gallery-icon-button:focus-visible {
-  outline: 2px solid var(--color-ink-deep);
+  outline: 2px solid var(--qmah-focus);
   outline-offset: -2px;
 }
 
@@ -166,13 +167,14 @@
   margin: 0;
   overflow: hidden;
   border: 1px solid var(--color-line);
-  background: var(--color-paper);
+  border-radius: var(--store-radius);
+  background: var(--color-surface);
 }
 
 .postcard-static {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(112px, 28%);
-  box-shadow: 0 10px 24px rgb(44 39 29 / 12%);
+  box-shadow: var(--qmah-shadow-card);
 }
 
 .postcard-static--portrait {
@@ -192,7 +194,7 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: #e7e1d4;
+  background: var(--color-swatch);
 }
 
 .postcard-static__image img,
@@ -212,7 +214,7 @@
   min-width: 0;
   padding: clamp(14px, 2vw, 24px);
   color: var(--color-ink-deep);
-  background: #f3efe6;
+  background: var(--color-surface);
 }
 
 .postcard-static__caption strong {
@@ -224,7 +226,7 @@
 
 .postcard-static__caption span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
 }
 
 .original-static {
@@ -243,11 +245,11 @@
 .original-static figcaption {
   display: grid;
   gap: 4px;
-  padding: 14px 16px 16px;
+  padding: var(--qmah-space-3) var(--qmah-space-4);
   border-top: 1px solid var(--color-line-soft);
   color: var(--color-body);
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: var(--qmah-type-label-size);
+  line-height: var(--qmah-type-body-leading);
 }
 
 .original-static figcaption strong {

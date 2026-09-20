@@ -5,9 +5,10 @@
 .product-row {
   border: 1px solid var(--color-line);
   background: var(--color-surface);
-  padding: 14px;
+  border-radius: var(--store-radius);
+  padding: var(--qmah-space-3);
   display: flex;
-  gap: 16px;
+  gap: var(--qmah-space-4);
   align-items: flex-start;
   flex-wrap: wrap;
   min-width: 0;
@@ -53,24 +54,24 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--qmah-space-2);
 }
 
 /* mono 品牌／器類說明列 */
 .meta-brand {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
+  font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.14em;
   color: var(--color-teal);
 
   &--sm {
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
   }
 }
 
 .product-row-title {
   font-size: 18px;
-  line-height: 1.45;
+  line-height: var(--qmah-type-heading-leading);
   color: var(--color-ink);
   text-decoration: none;
   min-width: 0;
@@ -84,8 +85,8 @@
 }
 
 .product-row-source {
-  font-size: 12px;
-  line-height: 1.7;
+  font-size: var(--qmah-type-label-size);
+  line-height: var(--qmah-type-body-leading);
   color: var(--color-body);
   min-width: 0;
   overflow-wrap: anywhere;
@@ -93,11 +94,11 @@
 
 .product-row-meta {
   display: flex;
-  gap: 14px;
+  gap: var(--qmah-space-4);
   flex-wrap: wrap;
   min-width: 0;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
@@ -106,7 +107,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 9px;
+  gap: var(--qmah-space-2);
   min-width: 150px;
 }
 
@@ -133,11 +134,11 @@
   border: 1px solid var(--color-ink);
   background: var(--color-surface);
   color: var(--color-ink);
-  border-radius: var(--store-radius);
-  padding: 9px 20px;
-  min-height: 44px;
+  border-radius: var(--qmah-radius-control);
+  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
+  min-height: var(--qmah-control-height);
   flex: 0 0 auto;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   letter-spacing: 0.1em;
   white-space: nowrap;
   transition: background 160ms, border-color 160ms, color 160ms;
@@ -145,7 +146,7 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-on-ink);
+    color: var(--qmah-primary-content);
   }
 }
 

@@ -5,28 +5,29 @@
 .panel {
   border: 1px solid var(--color-line);
   background: var(--color-surface);
-  padding: 18px;
+  padding: var(--qmah-space-4);
+  border-radius: var(--store-radius);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--qmah-space-3);
 
   &--accent {
     border-color: var(--color-ink);
   }
 
   &--filter {
-    padding: 14px 16px;
-    gap: 9px;
+    padding: var(--qmah-space-3) var(--qmah-space-4);
+    gap: var(--qmah-space-2);
   }
 
   &--note {
-    padding: 14px 16px;
-    gap: 8px;
+    padding: var(--qmah-space-3) var(--qmah-space-4);
+    gap: var(--qmah-space-2);
   }
 
   &--size {
-    padding: 14px 16px;
-    gap: 10px;
+    padding: var(--qmah-space-3) var(--qmah-space-4);
+    gap: var(--qmah-space-2);
     border-color: var(--color-line-mid);
   }
 }

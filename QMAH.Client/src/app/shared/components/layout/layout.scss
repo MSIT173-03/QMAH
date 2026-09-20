@@ -6,8 +6,8 @@
   --app-header-height: 72px;
   --color-surface: var(--qmah-surface);
   --color-ink: var(--qmah-ink);
-  --color-primary: var(--qmah-jade);
-  --color-line: var(--qmah-line);
+  --color-primary: var(--qmah-primary);
+  --color-line: var(--qmah-border);
   min-height: 100vh;
   background: var(--color-surface);
   color: var(--color-ink);
@@ -27,11 +27,11 @@
   width: min(1440px, 100%);
   min-height: var(--app-header-height);
   margin: 0 auto;
-  padding: 10px clamp(16px, 3vw, 40px);
+  padding: 10px clamp(var(--qmah-space-4), 3vw, var(--qmah-space-10));
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: clamp(12px, 2vw, 28px);
+  gap: clamp(var(--qmah-space-3), 2vw, 28px);
 }
 
 .app-brand {
@@ -77,8 +77,8 @@
   min-width: 0;
 }
 
-.app-context-navigation { display: inline-flex; align-items: center; gap: 2px; padding-left: 8px; border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
-.app-context-navigation a { min-height: 44px; display: inline-flex; align-items: center; padding: 6px 8px; border-radius: 8px; color: color-mix(in srgb, currentColor 62%, transparent); font-size: 11px; font-weight: 700; text-decoration: none; }
+.app-context-navigation { display: inline-flex; align-items: center; gap: 2px; padding-left: var(--qmah-space-2); border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.app-context-navigation a { min-height: var(--qmah-control-height); display: inline-flex; align-items: center; padding: 6px var(--qmah-space-2); border-radius: var(--qmah-radius-control); color: color-mix(in srgb, currentColor 62%, transparent); font-size: var(--qmah-type-label-size); font-weight: 700; text-decoration: none; }
 .app-context-navigation a:hover, .app-context-navigation a.is-active { color: var(--color-primary, var(--qmah-jade-deep)); background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent); }
 
 .app-header__actions {
@@ -86,7 +86,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: var(--qmah-space-2);
 }
 
 .app-account,
@@ -94,12 +94,12 @@
 .app-logout,
 .app-mobile-logout,
 .app-admin-entry {
-  min-height: 44px;
+  min-height: var(--qmah-control-height);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--qmah-radius-control);
   color: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -153,7 +153,7 @@
 .app-login,
 .app-logout,
 .app-admin-entry {
-  padding: 8px 11px;
+  padding: 8px var(--qmah-space-3);
 }
 
 .app-admin-entry {
@@ -168,13 +168,13 @@
 }
 
 .app-theme-toggle {
-  width: 44px;
-  height: 44px;
+  width: var(--qmah-control-height);
+  height: var(--qmah-control-height);
   display: inline-grid;
   place-items: center;
   position: relative;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--qmah-radius-control);
   color: inherit;
   cursor: pointer;
 }
@@ -209,12 +209,12 @@
 
 .app-menu-toggle,
 .app-icon-button {
-  width: 44px;
-  height: 44px;
+  width: var(--qmah-control-height);
+  height: var(--qmah-control-height);
   display: inline-grid;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--qmah-radius-control);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -240,8 +240,8 @@
   top: -56px;
   left: 16px;
   z-index: 100;
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 10px var(--qmah-space-3);
+  border-radius: var(--qmah-radius-control);
   background: var(--color-ink, #27363b);
   color: var(--color-surface, #f7f4ee);
   font-size: 13px;
@@ -268,7 +268,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--color-primary, var(--qmah-jade-deep));
+  outline: 2px solid var(--qmah-focus, var(--color-primary, var(--qmah-jade-deep)));
   outline-offset: 3px;
 }
 
@@ -290,8 +290,8 @@ textarea:focus-visible {
 
   .app-header__inner {
     min-height: var(--app-header-height);
-    padding: 8px 14px;
-    gap: 8px;
+    padding: 8px var(--qmah-space-3);
+    gap: var(--qmah-space-2);
   }
 
   .app-menu-toggle {
@@ -320,7 +320,7 @@ textarea:focus-visible {
   }
 
   .app-header__actions {
-    gap: 2px;
+    gap: var(--qmah-space-1);
   }
 
   .app-mobile-backdrop {
@@ -363,8 +363,8 @@ textarea:focus-visible {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 14px;
-    padding: 18px;
+    gap: var(--qmah-space-3);
+    padding: var(--qmah-space-4);
   }
 
   .app-mobile-drawer__header {
@@ -388,7 +388,7 @@ textarea:focus-visible {
 
   .app-mobile-drawer__body {
     flex: 1;
-    padding: 18px;
+    padding: var(--qmah-space-4);
   }
 
   .app-mobile-drawer__label {
@@ -400,13 +400,13 @@ textarea:focus-visible {
   }
 
   .app-mobile-drawer__footer a {
-    min-height: 44px;
+    min-height: var(--qmah-control-height);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 8px 10px;
-    border-radius: 8px;
+    padding: 8px var(--qmah-space-2);
+    border-radius: var(--qmah-radius-control);
     color: inherit;
     font-size: 13px;
     font-weight: 650;
@@ -424,7 +424,7 @@ textarea:focus-visible {
 
   .app-mobile-logout {
     width: 100%;
-    padding: 8px 12px;
+    padding: 8px var(--qmah-space-3);
     border-color: color-mix(in srgb, var(--color-error, #a64b3c) 28%, transparent);
     color: var(--color-error, #a64b3c);
     cursor: pointer;

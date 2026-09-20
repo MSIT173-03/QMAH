@@ -19,9 +19,10 @@
 .cart-line {
   border: 1px solid var(--color-line);
   background: var(--color-surface);
-  padding: 14px;
+  border-radius: var(--store-radius);
+  padding: var(--qmah-space-3);
   display: flex;
-  gap: 14px;
+  gap: var(--qmah-space-4);
   align-items: flex-start;
   flex-wrap: wrap;
 
@@ -40,7 +41,7 @@
   align-items: center;
   justify-content: center;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-faint);
   text-decoration: none;
   transition: opacity 160ms;
@@ -57,7 +58,7 @@
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: var(--qmah-space-2);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
   color: var(--color-faint);
@@ -74,21 +75,21 @@
 /* mono 品牌／分類說明列 */
 .cart-line-meta {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   letter-spacing: 0.14em;
   color: var(--color-teal);
 }
 
 .cart-line-name {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--qmah-type-body-sm-size);
+  line-height: var(--qmah-type-body-leading);
   color: var(--color-ink);
   text-decoration: none;
 }
 
 .cart-line-dims {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
@@ -104,13 +105,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
+  gap: var(--qmah-space-2);
   flex: 0 0 auto;
 }
 
 .cart-line-total {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-ink);
 }
 
@@ -118,7 +119,7 @@
   border: 0;
   background: transparent;
   padding: 0;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
   transition: color 160ms;
 

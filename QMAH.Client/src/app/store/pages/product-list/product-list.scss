@@ -7,11 +7,11 @@
    =============================== */
 
 .list-main {
-  padding-top: 16px;
+  padding-top: var(--qmah-space-4);
   padding-bottom: 72px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--qmah-space-5);
   min-width: 0;
 }
 
@@ -19,7 +19,7 @@
 .list-body {
   display: grid;
   grid-template-columns: minmax(0, 218px) minmax(0, 1fr);
-  gap: 20px;
+  gap: var(--qmah-space-5);
   align-items: start;
   min-width: 0;
 }
@@ -31,7 +31,7 @@
 
 .tab-row {
   display: flex;
-  gap: 6px;
+  gap: var(--qmah-space-2);
   flex-wrap: wrap;
   min-width: 0;
 }
@@ -50,11 +50,11 @@
 .product-row-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--qmah-space-2);
   min-width: 0;
 }
 
-.store-loading { display: grid; place-items: center; gap: 12px; min-height: 260px; border: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-muted); }
+.store-loading { display: grid; place-items: center; gap: var(--qmah-space-3); min-height: 260px; border: 1px solid var(--color-line); border-radius: var(--store-radius); background: var(--color-surface); color: var(--color-muted); }
 .store-loading__mark { width: 28px; height: 28px; border: 2px solid var(--color-line-mid); border-top-color: var(--color-accent); border-radius: 50%; animation: store-spin 700ms linear infinite; }
 @keyframes store-spin { to { transform: rotate(360deg); } }
 
@@ -68,7 +68,7 @@
   .tab-row {
     width: 100%;
     min-width: 0;
-    row-gap: 8px;
+    row-gap: var(--qmah-space-2);
   }
 
   /* 兩組切換保留同一工具列語意，但在窄寬度分成可讀的上下段。 */
@@ -76,6 +76,6 @@
     flex: 0 0 100%;
     width: auto;
     height: 1px;
-    margin: 2px 0;
+    margin: var(--qmah-space-1) 0;
   }
 }

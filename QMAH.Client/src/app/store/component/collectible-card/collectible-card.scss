@@ -38,7 +38,7 @@
 }
 
 .card-flip-button:focus-visible {
-  outline: 2px solid #806d48;
+  outline: 2px solid var(--qmah-focus);
   outline-offset: 8px;
 }
 
@@ -62,7 +62,7 @@
   border-radius: var(--store-radius);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  box-shadow: 0 14px 24px -12px rgba(66, 55, 44, 0.4);
+  box-shadow: var(--qmah-shadow-card);
   pointer-events: none;
 }
 
@@ -83,7 +83,7 @@
   overflow: hidden;
   box-sizing: border-box;
   isolation: isolate;
-  background: #f3efe4;
+  background: var(--color-surface);
 }
 
 /* 原紙紋不是無縫素材，因此整面覆蓋；同一個 4 KB 檔案由所有商品共用快取。 */
@@ -93,7 +93,7 @@
   z-index: 4;
   inset: 0;
   background: url('/images/materials/postcard/paper-fiber.webp') no-repeat center / cover;
-  box-shadow: inset 0 0 1px #867654;
+  box-shadow: inset 0 0 1px color-mix(in srgb, var(--color-ink) 38%, transparent);
   content: '';
   mix-blend-mode: multiply;
   opacity: 0.32;
@@ -110,7 +110,7 @@
   /* 正面保留一條直向紙面欄，文字不再壓在作品明暗不一的影像上。 */
   inset: 0 var(--front-copy-width) 0 0;
   display: block;
-  background: #e6dfd0;
+  background: var(--color-swatch);
   container-type: size;
 }
 
@@ -142,8 +142,8 @@
   gap: calc(2 * var(--paper-mm));
   box-sizing: border-box;
   padding: calc(4 * var(--paper-mm));
-  border-left: 1px solid rgba(121, 118, 101, 0.28);
-  background: #f3efe4;
+  border-left: 1px solid color-mix(in srgb, var(--color-line) 72%, transparent);
+  background: var(--color-surface);
 }
 
 .card-back-name {
@@ -161,7 +161,7 @@
 
 /* 正面文字落在獨立紙面欄，不使用橫幅或影像陰影，讓油墨字邊在任何作品上都清楚。 */
 .postcard-caption .ink-print {
-  color: rgba(61, 59, 49, 0.96);
+  color: var(--color-ink);
   mix-blend-mode: multiply;
   text-shadow: 0.22px 0.18px 0 rgba(61, 59, 49, 0.2);
 }
@@ -180,7 +180,7 @@
 }
 
 .postcard-back-paper {
-  color: #49483e;
+  color: var(--color-body);
   font-family: 'Noto Serif TC', 'PMingLiU', 'Songti TC', serif;
 }
 
@@ -252,11 +252,11 @@
 
 /* 墨色保留清楚外框，再用兩側極細重影模擬油墨滲邊；不可用大模糊取代印刷細節。 */
 .ink-print {
-  color: rgba(61, 59, 49, 0.92);
+  color: var(--color-ink);
   text-shadow:
-    0.25px 0.12px 0 rgba(61, 59, 49, 0.34),
-    -0.18px 0.1px 0 rgba(112, 74, 48, 0.2),
-    0 0 0.35px rgba(61, 59, 49, 0.28);
+    0.25px 0.12px 0 color-mix(in srgb, var(--color-ink) 34%, transparent),
+    -0.18px 0.1px 0 color-mix(in srgb, var(--color-body) 20%, transparent),
+    0 0 0.35px color-mix(in srgb, var(--color-ink) 28%, transparent);
   mix-blend-mode: multiply;
 }
 
@@ -266,7 +266,7 @@
   bottom: 10%;
   left: 50%;
   width: 1px;
-  background: rgba(121, 118, 101, 0.34);
+  background: color-mix(in srgb, var(--color-line) 88%, transparent);
 }
 
 .postcard-back-right {
@@ -284,8 +284,8 @@
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  border: 1px solid rgba(121, 118, 101, 0.46);
-  color: rgba(76, 74, 63, 0.8);
+  border: 1px solid color-mix(in srgb, var(--color-line) 92%, transparent);
+  color: var(--color-muted);
   padding: 2%;
   font: 500 var(--stamp-label-size) / 1.4 'Noto Serif TC', 'PMingLiU', serif;
   text-align: center;
@@ -304,7 +304,7 @@
   grid-template-columns: 4fr 1fr 4fr 1fr 4fr 2fr 4fr 1fr 4fr 1fr 4fr;
   align-items: stretch;
   /* 自製明信片採暖灰書寫提示，減輕框線的視覺重量，六格尺寸維持不變。 */
-  color: #938b7b;
+  color: var(--color-muted);
 }
 
 .postcard-postcode i:nth-of-type(1) { grid-column: 1; }
@@ -339,13 +339,13 @@
 
 .postcard-address-lines i {
   display: block;
-  border-top: 1px solid rgba(121, 118, 101, 0.42);
+  border-top: 1px solid color-mix(in srgb, var(--color-line) 88%, transparent);
 }
 
 /* 四行可容納郵遞區號、行政區／街道、樓層門牌與收件人，較符合實際中文地址長度。 */
 .postcard-address-lines::after {
   display: block;
-  border-top: 1px solid rgba(121, 118, 101, 0.42);
+  border-top: 1px solid color-mix(in srgb, var(--color-line) 88%, transparent);
   content: '';
 }
 
@@ -422,7 +422,7 @@
   place-items: center;
   gap: 8px;
   height: 100%;
-  color: #49483e;
+  color: var(--color-body);
 
   svg {
     width: 28px;

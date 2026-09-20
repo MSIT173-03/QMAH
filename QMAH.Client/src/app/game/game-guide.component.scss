@@ -9,7 +9,7 @@
   min-height: 100vh;
   color: var(--guide-ink);
   background: var(--qmah-page-surface);
-  font: 400 16px/1.62 var(--qmah-font-sans);
+  font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 
 .game-guide { width: min(980px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
@@ -17,31 +17,31 @@
 .guide-nav-back,
 .guide-panel-link {
   color: var(--guide-jade);
-  font-size: 13px;
+  font-size: var(--qmah-type-label-size);
   font-weight: 800;
   text-underline-offset: 4px;
 }
 
-.guide-heading { padding: 48px 4px 26px; }
-.eyebrow { margin: 0 0 7px; color: var(--guide-cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
-.guide-heading h1 { margin: 0; font: 700 clamp(36px, 5vw, 58px)/1.1 var(--qmah-font-serif); letter-spacing: -.045em; }
+.guide-heading { padding: var(--qmah-space-12) 4px 26px; }
+.eyebrow { margin: 0 0 7px; color: var(--guide-cinnabar); font-size: var(--qmah-type-meta-size); font-weight: 800; letter-spacing: .16em; line-height: var(--qmah-type-meta-leading); }
+.guide-heading h1 { margin: 0; font: 700 var(--qmah-type-display-size)/var(--qmah-type-heading-leading) var(--qmah-font-serif); letter-spacing: -.04em; }
 .guide-heading p:last-child { max-width: 42ch; margin: 14px 0 0; color: var(--guide-muted); }
 
 .guide-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 24px;
+  gap: var(--qmah-space-2);
+  margin-top: var(--qmah-space-6);
 }
 
 .guide-tabs button {
   display: grid;
   gap: 2px;
-  min-height: 68px;
+  min-height: var(--qmah-control-height-lg);
   border: 0;
   border-bottom: 2px solid transparent;
   border-radius: 0;
-  padding: 11px 14px;
+  padding: 11px var(--qmah-control-padding-x);
   color: var(--guide-muted);
   background: transparent;
   text-align: left;
@@ -52,7 +52,7 @@
 .guide-tabs button:hover { color: var(--guide-ink); transform: none; }
 .guide-tabs button.is-active { border-bottom-color: var(--guide-cinnabar); color: var(--guide-ink); background: transparent; box-shadow: none; }
 .guide-tabs button span { font-size: 16px; font-weight: 800; }
-.guide-tabs button small { color: var(--guide-muted); font-size: 11px; }
+  .guide-tabs button small { color: var(--guide-muted); font-size: var(--qmah-type-meta-size); }
 
 .guide-panel { margin-top: 14px; }
 .guide-panel-link { display: inline-flex; margin-top: 14px; }
@@ -61,7 +61,7 @@
   .game-guide { padding: 10px 10px 40px; }
   .guide-heading { padding: 34px 2px 22px; }
   .guide-heading h1 { font-size: 40px; }
-  .guide-tabs button { min-height: 62px; padding-inline: 10px; }
+  .guide-tabs button { min-height: var(--qmah-control-height); padding-inline: 10px; }
   .guide-tabs button span { font-size: 14px; }
   .guide-tabs button small { font-size: 9px; }
 }

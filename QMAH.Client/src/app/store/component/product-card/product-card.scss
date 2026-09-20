@@ -5,6 +5,7 @@
 .product-card {
   border: 1px solid var(--color-line);
   background: var(--color-surface);
+  border-radius: var(--store-radius);
   display: flex;
   flex-direction: column;
   transition: border-color 160ms;
@@ -70,16 +71,16 @@
 }
 
 .product-card-body {
-  padding: 10px 11px 0;
+  padding: var(--qmah-space-3) var(--qmah-space-3) 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--qmah-space-2);
   flex: 1;
 }
 
 .product-card-name {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--qmah-type-body-sm-size);
+  line-height: var(--qmah-type-body-leading);
   text-wrap: pretty;
 }
 
@@ -111,7 +112,7 @@
 }
 
 .product-card-cta {
-  padding: 10px 11px 12px;
+  padding: var(--qmah-space-3);
 }
 
 .product-card-buy {
@@ -119,16 +120,16 @@
   border: 1px solid var(--color-ink);
   background: var(--color-surface);
   color: var(--color-ink);
-  border-radius: var(--store-radius);
-  padding: 8px 0;
-  min-height: 44px;
-  font-size: 12px;
+  border-radius: var(--qmah-radius-control);
+  padding: var(--qmah-space-2) 0;
+  min-height: var(--qmah-control-height);
+  font-size: var(--qmah-type-label-size);
   letter-spacing: 0.1em;
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-on-ink);
+    color: var(--qmah-primary-content);
   }
 }
