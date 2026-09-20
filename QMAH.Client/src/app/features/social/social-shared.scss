@@ -1,5 +1,7 @@
 /* ui-integration: Social 的共用閱讀寬度、控制項與圖示語法集中在 Area 樣式，避免全域檔案承擔頁面專屬規則。 */
 .qmah-social-page {
+  --social-line: color-mix(in srgb, var(--color-base-content) 14%, transparent);
+  --social-muted: color-mix(in srgb, var(--color-base-content) 62%, transparent);
   width: min(1120px, 100%);
   margin-inline: auto;
   padding: 28px 24px 64px;
@@ -8,17 +10,61 @@
 
 .qmah-social-page .card {
   border-radius: 14px;
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--color-neutral) 8%, transparent);
+  border-color: var(--social-line);
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  /* ui-integration: Social 卡片只保留低對比邊界與柔和陰影，讓貼文內容維持主視覺而不是變成卡片牆。 */
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-neutral) 7%, transparent);
 }
 
 .qmah-social-page .btn:not(.btn-xs):not(.btn-circle) {
-  min-height: 40px;
+  min-height: 44px;
+}
+
+.qmah-social-page .btn-circle:not(.btn-xs) {
+  width: 44px;
+  height: 44px;
 }
 
 .qmah-social-page .input,
 .qmah-social-page .select,
-.qmah-social-page .textarea {
+.qmah-social-page .textarea,
+.qmah-social-page .file-input {
+  min-height: 44px;
   border-radius: 9px;
+}
+
+.qmah-social-page .card-title,
+.qmah-social-page h1,
+.qmah-social-page h2,
+.qmah-social-page h3 {
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.qmah-social-page .social-icon-label {
+  white-space: normal;
+}
+
+.qmah-social-page :is(a, button, input, select, textarea):focus-visible,
+.social-modal :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* ui-integration: 社群建立／編輯對話框保留原生 dialog 的焦點與 Escape 行為，窄螢幕只收斂內距與高度。 */
+.social-modal {
+  padding: 12px;
+}
+
+.social-modal .modal-box {
+  width: min(640px, 100%);
+  max-height: min(90dvh, 760px);
+  overflow: auto;
+  border: 1px solid var(--social-line);
+  border-radius: 14px;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
 }
 
 .qmah-social-page img {
@@ -47,6 +93,14 @@
 @media (max-width: 640px) {
   .qmah-social-page {
     padding: 20px 14px 48px;
+  }
+
+  .qmah-social-page .form-control {
+    min-width: min(100%, 18rem);
+  }
+
+  .social-modal {
+    padding: 8px;
   }
 
   .qmah-social-page .card-title {

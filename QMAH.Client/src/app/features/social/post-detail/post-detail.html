@@ -7,7 +7,7 @@
   </div>
 
 @if (loading) {
-  <div class="text-center py-10 text-gray-400">載入中...</div>
+  <div class="text-center py-10 text-base-content/60">載入中…</div>
 } @else if (loadError) {
   <div class="alert alert-error">{{ loadError }}</div>
 } @else if (post) {
@@ -38,7 +38,7 @@
       @if (post.media.length > 0) {
         <div class="flex flex-col gap-2 mt-2">
           @for (media of post.media; track media.id) {
-            <img [src]="media.url" [alt]="media.altText || ''" class="rounded-lg w-full h-auto max-h-[36rem] object-contain bg-base-200" />
+            <img src="{{ media.url }}" [alt]="media.altText || ''" class="rounded-lg w-full h-auto max-h-[36rem] object-contain bg-base-200" />
           }
         </div>
       }
@@ -64,7 +64,7 @@
         <div class="card-body p-4">
           <div class="flex justify-between items-start">
             <span class="font-bold text-sm">{{ comment.displayName || '匿名會員' }}</span>
-            <span class="text-xs text-gray-500">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+            <span class="text-xs text-base-content/60">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
           </div>
           @if (editingCommentId === comment.id) {
             <div class="form-control gap-2">
@@ -87,7 +87,7 @@
         </div>
       </div>
     } @empty {
-      <div class="text-center py-6 text-gray-400">目前還沒有留言，搶頭香吧！</div>
+      <div class="text-center py-6 text-base-content/60">目前還沒有留言，歡迎留下第一則。</div>
     }
   </div>
 
@@ -102,7 +102,7 @@
   <div class="form-control gap-2">
     <textarea
       class="textarea textarea-bordered"
-      placeholder="留下你的想法..."
+      placeholder="留下你的想法…"
       [(ngModel)]="newComment.content"
     ></textarea>
     <button class="btn btn-primary self-end" (click)="submitComment()">送出留言</button>

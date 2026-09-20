@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -50,6 +50,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   @ViewChild(ImageCropModalComponent) private cropModal!: ImageCropModalComponent;
+  @ViewChild('createPostDialog') private createPostDialog?: ElementRef<HTMLDialogElement>;
   private cropQueue: File[] = [];
 
   posts: SocialPostListItem[] = [];
@@ -153,7 +154,8 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   openCreatePost(): void {
-    (document.getElementById('create_post_modal') as HTMLDialogElement | null)?.showModal();
+    // ui-integration: 由 Angular 保留對話框的 focus／Escape 行為，避免依賴全域 id 變數開啟發布流程。
+    this.createPostDialog?.nativeElement.showModal();
   }
 
   resetFilters(): void {
@@ -280,7 +282,7 @@ export class PostsComponent implements OnInit, OnDestroy {
         this.newPost = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '', mediaIds: [] };
         this.pendingMedia = [];
         this.loadPosts();
-        (document.getElementById('create_post_modal') as HTMLDialogElement | null)?.close();
+        this.createPostDialog?.nativeElement.close();
       },
       error: (err: HttpErrorResponse) => {
         this.createError = err.status === 401 ? '發布失敗：請先登入。' : '發布貼文失敗，請確認欄位是否正確。';

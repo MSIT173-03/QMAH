@@ -1,7 +1,7 @@
 <div class="qmah-social-page">
 <div class="flex justify-between items-center mb-6">
   <h1 class="text-2xl font-bold">社群活動</h1>
-  <button class="btn btn-primary social-icon-label" onclick="create_event_modal.showModal()">
+  <button type="button" class="btn btn-primary social-icon-label" (click)="openCreateEvent()">
     <svg lucidePlus aria-hidden="true" focusable="false"></svg>
     建立活動
   </button>
@@ -23,7 +23,7 @@
       class="input input-bordered input-sm w-full"
       [(ngModel)]="filterKeyword"
       (keyup.enter)="loadEvents()"
-      placeholder="搜尋..."
+      placeholder="搜尋…"
     />
   </label>
   <button class="btn btn-sm btn-primary" (click)="loadEvents()">搜尋</button>
@@ -39,7 +39,7 @@
     <div class="card bg-base-100 shadow-xl border border-base-300">
       @if (event.coverImageUrl) {
         <figure class="max-h-56 overflow-hidden">
-          <img [src]="event.coverImageUrl" [alt]="event.title" class="w-full object-cover" />
+          <img src="{{ event.coverImageUrl }}" [alt]="event.title" class="w-full object-cover" />
         </figure>
       }
       <div class="card-body">
@@ -57,7 +57,7 @@
           <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
           {{ event.organizerDisplayName || '匿名會員' }}
         </p>
-        <p class="text-sm text-gray-500">
+        <p class="text-sm text-base-content/60">
           <span class="social-icon-label"><svg lucideCalendarClock aria-hidden="true" focusable="false"></svg>
           {{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}</span>
         </p>
@@ -73,13 +73,13 @@
       </div>
     </div>
   } @empty {
-    <div class="col-span-full text-center py-10 text-gray-400">目前沒有已公開的活動</div>
+    <div class="col-span-full text-center py-10 text-base-content/60">目前還沒有公開活動</div>
   }
 </div>
 
-<dialog id="create_event_modal" class="modal">
+<dialog #createEventDialog id="create_event_modal" class="modal" aria-labelledby="create-event-title">
   <div class="modal-box">
-    <h3 class="font-bold text-lg mb-4">建立新活動</h3>
+    <h2 id="create-event-title" class="font-bold text-lg mb-4">建立新活動</h2>
     @if (createError) {
       <div class="alert alert-warning mb-3">{{ createError }}</div>
     }
@@ -112,13 +112,13 @@
         (change)="onFilesSelected($event)"
       /></label>
       @if (uploadPending) {
-        <span class="text-xs text-base-content/60">圖片上傳中...</span>
+        <span class="text-xs text-base-content/60">圖片上傳中…</span>
       }
       @if (pendingMedia.length > 0) {
         <div class="flex flex-wrap gap-2">
           @for (media of pendingMedia; track media.id) {
             <div class="relative">
-              <img [src]="media.url" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
+              <img src="{{ media.url }}" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
               <button
                 type="button"
                 class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
@@ -133,7 +133,7 @@
     </div>
     <div class="modal-action">
       <form method="dialog">
-        <button type="button" class="btn btn-ghost" onclick="create_event_modal.close()">取消</button>
+        <button type="submit" class="btn btn-ghost">取消</button>
         <button type="button" class="btn btn-primary" [disabled]="uploadPending" (click)="submitEvent()">送出建立</button>
       </form>
     </div>

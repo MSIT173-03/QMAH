@@ -100,7 +100,7 @@
     </label>
     <button class="btn btn-sm btn-primary" (click)="loadPosts()">搜尋</button>
     <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
-    <span class="text-xs text-gray-500 self-center">共 {{ totalCount }} 筆</span>
+    <span class="text-xs text-base-content/60 self-center">共 {{ totalCount }} 筆</span>
   </div>
 
   @if (loadError) {
@@ -123,7 +123,7 @@
     <div class="card bg-base-100 shadow-xl border border-base-300">
       @if (post.coverImageUrl) {
         <figure class="max-h-80 overflow-hidden">
-          <img [src]="post.coverImageUrl" [alt]="post.title" class="w-full object-cover" />
+          <img src="{{ post.coverImageUrl }}" [alt]="post.title" class="w-full object-cover" />
         </figure>
       }
       <div class="card-body">
@@ -161,13 +161,13 @@
       </div>
     </div>
     } @empty {
-    <div class="text-center py-10 text-gray-400">目前沒有貼文資料</div>
+    <div class="text-center py-10 text-base-content/60">目前還沒有貼文</div>
     }
     }
   </div>
 </div>
 
-<dialog id="create_post_modal" class="modal" aria-labelledby="create-post-title">
+<dialog #createPostDialog id="create_post_modal" class="modal social-modal" aria-labelledby="create-post-title">
   <div class="modal-box">
     <h2 id="create-post-title" class="font-bold text-lg mb-4">發布新貼文</h2>
     @if (createError) {
@@ -218,7 +218,7 @@
         <div class="flex flex-wrap gap-2">
           @for (media of pendingMedia; track media.id) {
             <div class="relative">
-              <img [src]="media.url" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
+              <img src="{{ media.url }}" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
               <button
                 type="button"
                 class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
@@ -233,7 +233,7 @@
     </div>
     <div class="modal-action">
       <form method="dialog">
-        <button type="button" class="btn btn-ghost" onclick="create_post_modal.close()">取消</button>
+        <button type="submit" class="btn btn-ghost">取消</button>
         <button type="button" class="btn btn-primary" [disabled]="uploadPending" (click)="submitPost()">送出發布</button>
       </form>
     </div>

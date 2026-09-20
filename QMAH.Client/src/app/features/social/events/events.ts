@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -20,6 +20,7 @@ export class EventsComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   @ViewChild(ImageCropModalComponent) private cropModal!: ImageCropModalComponent;
+  @ViewChild('createEventDialog') private createEventDialog?: ElementRef<HTMLDialogElement>;
   private cropQueue: File[] = [];
 
   events: EventListItem[] = [];
@@ -51,6 +52,11 @@ export class EventsComponent implements OnInit {
     this.filterStartAfter = '';
     this.filterStartBefore = '';
     this.loadEvents();
+  }
+
+  // ui-integration: 由 Angular 管理活動對話框的開啟，保留原本建立流程並避免 inline onclick 依賴全域 DOM 變數。
+  openCreateEvent(): void {
+    this.createEventDialog?.nativeElement.showModal();
   }
 
   // GET /api/v1/social/events（AllowAnonymous，只回傳審核通過且已發布的活動）
@@ -146,7 +152,7 @@ export class EventsComponent implements OnInit {
         this.newEvent = { eventType: 'PLAYER', title: '', content: '', startAt: '', endAt: '', mediaIds: [] };
         this.pendingMedia = [];
         this.loadEvents();
-        (document.getElementById('create_event_modal') as HTMLDialogElement | null)?.close();
+        this.createEventDialog?.nativeElement.close();
         alert('活動已建立，等待管理員審核通過後才會公開顯示。');
       },
       error: (err: HttpErrorResponse) => {

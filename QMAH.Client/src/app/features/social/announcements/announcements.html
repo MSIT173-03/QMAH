@@ -11,15 +11,15 @@
       <div class="card-body">
         <div class="flex justify-between items-center">
           <span class="badge badge-warning">{{ announcement.category }}</span>
-          <span class="text-xs text-gray-500">{{ announcement.createdAt }}</span>
+          <span class="text-xs text-base-content/60">{{ announcement.createdAt }}</span>
         </div>
         <h2 class="card-title">{{ announcement.title }}</h2>
         <p class="whitespace-pre-line">{{ announcement.summary || announcement.content }}</p>
-        <p class="text-xs text-gray-500 mt-2">發布者：{{ announcement.displayName || '官方' }}</p>
+        <p class="text-xs text-base-content/60 mt-2">發佈者：{{ announcement.displayName || '官方' }}</p>
       </div>
     </div>
   } @empty {
-    <div class="text-center py-10 text-gray-400">目前沒有公告</div>
+    <div class="text-center py-10 text-base-content/60">目前還沒有公告</div>
   }
 </div>
 </div>
