@@ -124,16 +124,28 @@ public sealed class StoreCatalogController(
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
 
-        // integration: 限時特賣只接受資料庫真正低於定價的單品特價，不以前端標籤推測。
+        // integration: 限時特賣接受有效單品售價或真正大於 0 的商品折扣率，不以前端標籤推測。
         if (dealOnly == true)
-            query = query.Where(product => product.SalePrice.HasValue
-                && product.SalePrice.Value > 0m
-                && product.SalePrice.Value < product.Price);
+            query = query.Where(product =>
+                (product.SalePrice.HasValue
+                    && product.SalePrice.Value > 0m
+                    && product.SalePrice.Value < product.Price)
+                || product.DiscountRate > 0m);
 
         if (minPrice is not null and > 0)
-            query = query.Where(p => (p.SalePrice ?? p.Price) >= minPrice);
+            query = query.Where(p =>
+                (p.SalePrice.HasValue
+                    && p.SalePrice.Value > 0m
+                    && p.SalePrice.Value < p.Price
+                    ? p.SalePrice.Value
+                    : Math.Round(p.Price * (100m - p.DiscountRate) / 100m, 2)) >= minPrice);
         if (maxPrice is not null and > 0)
-            query = query.Where(p => (p.SalePrice ?? p.Price) < maxPrice);
+            query = query.Where(p =>
+                (p.SalePrice.HasValue
+                    && p.SalePrice.Value > 0m
+                    && p.SalePrice.Value < p.Price
+                    ? p.SalePrice.Value
+                    : Math.Round(p.Price * (100m - p.DiscountRate) / 100m, 2)) < maxPrice);
 
         if (category != null)
             query = query.Where(p => p.CategoryCode == CategoryTypeToString(category));
@@ -146,9 +158,19 @@ public sealed class StoreCatalogController(
             g.Name,
             g.CategoryCode,
             g.Price,
-            SalePrice = g.SalePrice.HasValue && g.SalePrice.Value > 0m && g.SalePrice.Value < g.Price
+            g.DiscountRate,
+            EffectivePrice = g.SalePrice.HasValue
+                && g.SalePrice.Value > 0m
+                && g.SalePrice.Value < g.Price
+                ? g.SalePrice.Value
+                : Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2),
+            SalePrice = g.SalePrice.HasValue
+                && g.SalePrice.Value > 0m
+                && g.SalePrice.Value < g.Price
                 ? g.SalePrice
-                : null,
+                : g.DiscountRate > 0m
+                    ? Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2)
+                    : (decimal?)null,
             g.Stock,
             g.PrimaryImagePath,
             g.CreatedAt,
@@ -175,10 +197,10 @@ public sealed class StoreCatalogController(
                 .OrderByDescending(g => g.CreatedAt)
                 .ThenBy(g => g.Id),
             OrderType.CheaperFirst => query2
-                .OrderBy(g => g.SalePrice ?? g.Price)
+                .OrderBy(g => g.EffectivePrice)
                 .ThenBy(g => g.Id),
             OrderType.PricierFirst => query2
-                .OrderByDescending(g => g.SalePrice ?? g.Price)
+                .OrderByDescending(g => g.EffectivePrice)
                 .ThenBy(g => g.Id),
             _ => query2.OrderBy(g => g.Id),
         };
@@ -190,6 +212,8 @@ public sealed class StoreCatalogController(
             g.Name,
             g.CategoryCode,
             g.Price,
+            g.DiscountRate,
+            g.EffectivePrice,
             g.SalePrice,
             g.Stock,
             g.PrimaryImagePath,
@@ -234,7 +258,19 @@ public sealed class StoreCatalogController(
                 // 同時提供關聯文物原始尺寸；商品尺寸不再承擔兩種語意。
                 item.Artifact == null ? null : item.Artifact.SizeText,
                 item.Price,
-                item.SalePrice,
+                item.DiscountRate,
+                item.SalePrice.HasValue
+                    && item.SalePrice.Value > 0m
+                    && item.SalePrice.Value < item.Price
+                    ? item.SalePrice.Value
+                    : Math.Round(item.Price * (100m - item.DiscountRate) / 100m, 2),
+                item.SalePrice.HasValue
+                    && item.SalePrice.Value > 0m
+                    && item.SalePrice.Value < item.Price
+                    ? item.SalePrice
+                    : item.DiscountRate > 0m
+                        ? Math.Round(item.Price * (100m - item.DiscountRate) / 100m, 2)
+                        : (decimal?)null,
                 item.Stock,
                 item.PrimaryImagePath,
                 item.SourceUrl,

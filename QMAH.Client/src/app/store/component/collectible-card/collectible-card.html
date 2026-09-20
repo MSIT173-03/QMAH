@@ -13,8 +13,9 @@
         <span class="postcard-front-content">
           <span class="card-art">
             @if (image(); as imageUrl) {
+              <!-- ui-integration: 明信片正面保留商品原圖完整構圖，surface 僅提供留白不裁切影像。 -->
               <app-image-magnifier [image]="imageUrl" [alt]="name()"
-                [fit]="preserveArtwork() ? 'contain' : 'cover'" (loaded)="handleImageLoad($event)" />
+                fit="contain" (loaded)="handleImageLoad($event)" />
             } @else {
               <span class="card-art-placeholder">
                 <svg lucideImage aria-hidden="true" focusable="false"></svg>

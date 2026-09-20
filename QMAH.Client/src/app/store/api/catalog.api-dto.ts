@@ -1,6 +1,6 @@
 /**
  * 商品型錄後端 API 的原始回應格式，對應 doc/apis.xml 中「商品清單」「商品」「商品評論列表」三支 API 的定義。
- * 後端目前只提供這些欄位；品牌、折扣、評分（清單）、已售件數、上架日期、材質、保存狀況、出貨說明、商品圖片集等
+ * 後端目前只提供這些欄位；品牌、評分（清單）、已售件數、上架日期、材質、保存狀況、出貨說明、商品圖片集等
  * 前端顯示用欄位尚未由後端提供，由 toProduct／toProductDetail 轉換時補上預設值。
  */
 
@@ -71,6 +71,8 @@ export interface ApiProductListItem {
   name: string;
   categoryCode: string;
   price: number;
+  discountRate: number;
+  effectivePrice: number;
   salePrice?: number | null;
   stock: number;
   primaryImagePath: string | null;
@@ -116,6 +118,8 @@ export interface ApiProductDetail {
   sizeText: string;
   artifactSizeText: string | null;
   price: number;
+  discountRate: number;
+  effectivePrice: number;
   salePrice?: number | null;
   stock: number;
   primaryImagePath: string | null;
@@ -126,9 +130,7 @@ export interface ApiProductDetail {
 }
 
 export function toProduct(dto: ApiProductListItem): Product {
-  const dealPrice = typeof dto.salePrice === 'number' && dto.salePrice > 0 && dto.salePrice < dto.price
-    ? dto.salePrice
-    : dto.price;
+  const dealPrice = dto.effectivePrice;
   return {
     id: dto.id,
     name: dto.name,
@@ -136,7 +138,7 @@ export function toProduct(dto: ApiProductListItem): Product {
     category: toCategoryLabel(dto.categoryCode),
     price: dto.price,
     dealPrice,
-    discountRate: dto.price > 0 ? Math.round((1 - dealPrice / dto.price) * 100) : 0,
+    discountRate: dto.discountRate,
     rating: 0,
     reviewCount: 0,
     soldCount: 0,

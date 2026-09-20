@@ -84,7 +84,7 @@
   color: var(--color-gold-text);
   background: var(--color-gold-bg);
   padding: 1px 5px;
-  border-radius: 2px;
+  border-radius: var(--store-radius);
 
   &--deal {
     border-color: var(--color-accent);
@@ -103,7 +103,7 @@
   border: 1px solid var(--color-ink);
   background: var(--color-surface);
   color: var(--color-ink);
-  border-radius: 2px;
+  border-radius: var(--store-radius);
   font-size: 12px;
   padding: 7px 12px;
   flex: 0 0 auto;

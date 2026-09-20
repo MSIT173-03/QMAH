@@ -200,7 +200,8 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* ui-integration: 若 surface 直接承載圖片，也保留完整商品構圖，不以展示框比例裁切。 */
+  object-fit: contain;
 }
 
 .postcard-static__caption {

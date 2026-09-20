@@ -28,8 +28,6 @@ export class CollectibleCard {
   dimensions = input('');
   /** 使用既有商品說明，不另行編造文物資料。 */
   description = input('');
-  /** 書畫需完整保留；其他藏品可安全滿版裁切，避免新增圖片版型契約。 */
-  protected readonly preserveArtwork = computed(() => /書畫|繪畫|書法|畫冊|冊頁/u.test(this.type()));
   protected readonly descriptionSegments = computed(() => {
     // 明信片印刷文案不在末尾補停頓符號；只去除最後一個句號，句中標點完整保留。
     const text = this.description().trim().replace(/[。.]$/u, '');

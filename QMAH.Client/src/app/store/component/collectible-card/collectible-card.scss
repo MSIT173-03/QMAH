@@ -59,7 +59,7 @@
   position: absolute;
   inset: 0;
   display: block;
-  border-radius: 1px;
+  border-radius: var(--store-radius);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   box-shadow: 0 14px 24px -12px rgba(66, 55, 44, 0.4);
@@ -114,11 +114,11 @@
   container-type: size;
 }
 
-.card-art img {
+.card-art app-image-magnifier {
+  /* ui-integration: 子元件承載實際圖片；固定填滿 artwork surface，再由 fit="contain" 保留完整構圖。 */
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .postcard-front-content {
@@ -126,9 +126,6 @@
   z-index: 1;
   inset: 0;
 }
-
-/* 書畫保留完整構圖；其他藏品沿用 cover 等比裁切。 */
-.card-art img.is-preserved-artwork { object-fit: contain; }
 
 .postcard-caption {
   position: absolute;

@@ -18,7 +18,8 @@
         <article class="postcard-static" [class.postcard-static--portrait]="orientation() === 'portrait'">
           <div class="postcard-static__image">
             @if (image(); as imageUrl) {
-              <app-image-magnifier [image]="imageUrl" [alt]="name()"
+              <!-- ui-integration: 商品 detail 有實際圖片時保留完整原圖，不用固定 postcard surface 裁切邊緣。 -->
+              <app-image-magnifier [image]="imageUrl" [alt]="name()" fit="contain"
                 (loaded)="onImageLoad($event)" />
             } @else {
               <span>目前沒有可用圖像</span>
@@ -33,7 +34,8 @@
     } @else {
       <figure class="original-static">
         @if (image(); as imageUrl) {
-          <app-image-magnifier [image]="imageUrl" [alt]="name() + '原文物影像'" />
+          <!-- ui-integration: 原圖檢視優先保留完整資料，放大鏡仍沿用既有互動。 -->
+          <app-image-magnifier [image]="imageUrl" [alt]="name() + '原文物影像'" fit="contain" />
         } @else {
           <span>目前沒有可用圖像</span>
         }

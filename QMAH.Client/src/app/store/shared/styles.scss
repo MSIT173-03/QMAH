@@ -29,6 +29,8 @@
   --color-on-ink: #fff;
   --color-on-accent: #fff;
   --color-shadow: rgba(34, 52, 61, 0.12);
+  /* ui-integration: Store 控制項與卡片細節共用低圓角，保留既有方正視覺而避免局部漂移。 */
+  --store-radius: 2px;
 
   /* 頁面重置樣式（等同原本套用於 body 的樣式，改由頁面根元件承載） */
   background: var(--color-bg);
@@ -236,7 +238,7 @@
     font-size: 12px;
     letter-spacing: 0.06em;
     padding: 1px 5px;
-    border-radius: 2px;
+    border-radius: var(--store-radius);
     color: var(--color-gold-text);
     background: var(--color-gold-bg);
   }
@@ -272,7 +274,7 @@
     border: 1px solid var(--color-ink);
     background: var(--color-ink);
     color: var(--color-on-ink);
-    border-radius: 2px;
+    border-radius: var(--store-radius);
     padding: 12px 26px;
     font-size: 12px;
     letter-spacing: 0.14em;
@@ -336,7 +338,7 @@
     border: 1px solid var(--color-ink);
     background: var(--color-surface);
     color: var(--color-ink);
-    border-radius: 2px;
+    border-radius: var(--store-radius);
     padding: 11px 20px;
     font-size: 12px;
     letter-spacing: 0.12em;

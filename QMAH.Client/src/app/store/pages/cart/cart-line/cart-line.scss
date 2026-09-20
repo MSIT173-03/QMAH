@@ -49,7 +49,8 @@
     opacity: 0.82;
   }
 
-  img { width: 100%; height: 100%; object-fit: cover; }
+  /* ui-integration: 購物車縮圖保留完整商品構圖，與商品卡／列表共用 contain surface 規則。 */
+  img { width: 100%; height: 100%; object-fit: contain; }
 }
 
 .cart-line-slot {

@@ -8,7 +8,7 @@
 
 ## Current Goal
 
-目前目標是完成清明鑑定屋前台整合的全站品質收尾：以現有工作樹與既有 commits 為準，不重做已完成的登入／內容型首頁、會員點數鑰匙、圖鑑圖片來源與商城工作單元；在保留 User、Catalog、Game、Social、Store 各自主要版面方向、資訊架構、內容順序、核心操作流程與特色的前提下，完成 Social、Game 與跨 Area 的導覽、Route、typography、色彩角色、間距、按鈕、表單、卡片、狀態、RWD、accessibility 與台灣繁體中文一致性收尾。任何新增或調整的互動，都以「第一次看到就知道怎麼用」為最低門檻，若視覺概念與可理解性衝突，優先簡化互動。
+目前目標是完成清明鑑定屋前台整合的可交付收尾：保留 User、Catalog、Game、Social、Store 的資訊架構、主要版面方向與核心流程，先修正商城商品清單／縮圖無法正常工作的資料契約與媒體路徑，再以小幅 Store polish 收斂圖片 surface 與圓角規則。商城價格必須由後端統一計算：`DiscountRate` 支援管理員批次套用，`SalePrice` 支援管理員指定 199／299 等明確折扣後售價；有效 `SalePrice` 優先，否則依 `DiscountRate` 計算，訂單與購物車共用同一規則。完成後同步更新 `QMAH-Database` 的 `db-v0.10.0` Snapshot、公告日期與升級文件，並以必要的 build、API／資料庫與代表性瀏覽器流程驗證，不擴張成全站 redesign。
 
 登入頁桌面維持畫卷主視覺加右側登入；手機先呈現品牌列與登入表單，再進入畫卷鑑賞，不把桌面浮卡縮小套用到手機。全站採 Noto Sans TC／Noto Serif TC web font 加系統 fallback，並以共用主題 token 支援深淺模式；Game 頁面保留既有大廳、房間、練習與結算流程，不新增假功能或假資料。
 
@@ -39,7 +39,7 @@ Game 的品質門檻同時包含 Usability 與 Modern Visual Quality：玩家第
 - 測試房間重用正式 `GameRoomComponent`，自動走過等待、作答、投票、揭曉與結算，並提供暫停、逐階段、重新開始與返回檢查中心控制；測試流程不得呼叫正式房間加入／作答／投票／獎勵 API，也不得寫入會員、房間或獎勵紀錄。真正的基礎設施健康度若日後需要精準監控，應另接後端 health endpoint，不把前端煙霧檢查冒充成伺服器監控。
 - 測試房間的控制工具不得改變正式房間的版面重心：預設以低干擾、可鍵盤操作的浮動 QA 入口收合，只有展開時才顯示測試訊息與階段控制；管理員可從 Game 子導覽一鍵進入檢查中心與測試房間，普通玩家不顯示測試入口，也不能以 `?test=1` 直接繞過 route guard。
 - 只連到實際存在的 route，不建立假的導覽項目、空殼頁面、Wishlist、Filter 或其他未完成產品功能。
-- 不修改 API business logic、economy / reward logic、auth architecture 或既有 canonical contract；本輪唯一獲明確授權的資料層例外是商城單品 `SalePrice`，必須從 schema、seed、型錄、購物車到訂單使用同一個有效售價規則，不能只做前端假折扣。
+- 不修改 API business logic、economy / reward logic、auth architecture 或既有 canonical contract；本輪獲明確授權的商城資料層調整僅限 `DiscountRate` 批次折扣、`SalePrice` 指定折扣後售價與共用 `EffectivePrice` 規則，必須從 schema、Snapshot、型錄、購物車到訂單使用同一個有效售價規則，不能只做前端假折扣。
 - 不以大型 design system、元件抽象或依賴套件取代目前可用的局部修正。
 - Admin 可以保留自己的管理導覽與版面；前台 global navigation 不應破壞既有 Admin flow。
 - 每一項 UI、Route、Shared Layer、Layout ownership、Navigation behavior 或 RWD behavior 改動，都要在程式碼附近留下清楚易懂的繁中 `ui-integration` 原因註解，讓長時間任務後仍能看懂「為什麼改」與「刻意保留什麼」。TypeScript / HTML 使用 `// ui-integration:`，SCSS / CSS 使用 `/* ui-integration: ... */`；純單點 spacing / typography / class 微調可用區塊註解，不必逐行污染。

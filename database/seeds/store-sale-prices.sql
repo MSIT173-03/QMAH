@@ -1,5 +1,7 @@
 /* QMAH Store demonstration seed
    Applies only to existing generated/imported products and is safe to rerun.
+   DiscountRate is the bulk pricing input; an administrator may still set a
+   separate SalePrice override through the admin API for exact prices.
    The stable ExternalRef ordering makes the selected rows auditable without
    inventing product IDs that differ between database restores. */
 ;WITH candidates AS (
@@ -13,11 +15,12 @@
       AND ExternalRef LIKE N'artifact-%'
 )
 UPDATE product
-SET SalePrice = ROUND(product.Price * CASE candidates.SeedOrder
-        WHEN 1 THEN 0.80
-        WHEN 2 THEN 0.85
-        ELSE 0.90
-    END, 2),
+SET DiscountRate = CASE candidates.SeedOrder
+        WHEN 1 THEN 20.00
+        WHEN 2 THEN 15.00
+        ELSE 10.00
+    END,
+    SalePrice = NULL,
     UpdatedAt = SYSUTCDATETIME()
 FROM [store].[Products] AS product
 INNER JOIN candidates ON candidates.Id = product.Id;

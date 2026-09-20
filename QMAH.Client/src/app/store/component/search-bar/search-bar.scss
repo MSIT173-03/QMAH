@@ -23,7 +23,7 @@
   gap: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-ink);
-  border-radius: 2px;
+  border-radius: var(--store-radius);
   padding: 0 8px 0 12px;
   height: 38px;
   min-width: 0;
@@ -45,7 +45,7 @@
   border: 0;
   background: var(--color-ink);
   color: var(--color-on-ink);
-  border-radius: 2px;
+  border-radius: var(--store-radius);
   padding: 0 20px;
   height: 28px;
   flex: 0 0 auto;

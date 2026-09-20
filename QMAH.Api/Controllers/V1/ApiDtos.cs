@@ -76,8 +76,8 @@ public sealed record AccountSessionDto(Guid UserId, string Email, string? Nickna
 // 回傳 capability（能力旗標）可讓缺少第三方 OAuth secret 時停用單一按鈕，保留一般 Identity 登入。
 public sealed record AccountCapabilitiesDto(bool GoogleLoginEnabled);
 
-// integration: Store 商品 DTO 只暴露目前資料庫與真實 API 已有欄位；品牌、折扣與行銷欄位由前端 adapter
-// 明確補預設值，避免把 mock-only contract 假裝成後端已支援的資料。
+// Store 商品 DTO 暴露定價、後端計算的折扣率與有效售價；DiscountRate 是大量套用折扣的來源，
+// SalePrice 是指定單品價或依 DiscountRate 計算出的唯讀顯示欄位，EffectivePrice 遵守相同優先規則。
 public sealed record ProductListItemDto(
     Guid Id,
     Guid? ArtifactId,
@@ -85,6 +85,8 @@ public sealed record ProductListItemDto(
     string Name,
     string CategoryCode,
     decimal Price,
+    decimal DiscountRate,
+    decimal EffectivePrice,
     decimal? SalePrice,
     int Stock,
     string? PrimaryImagePath,
@@ -120,6 +122,8 @@ public sealed record ProductDetailsDto(
     // 商品固定是 A6 明信片；原文物尺寸另回傳，避免前台只能顯示其中一種尺寸。
     string? ArtifactSizeText,
     decimal Price,
+    decimal DiscountRate,
+    decimal EffectivePrice,
     decimal? SalePrice,
     int Stock,
     string? PrimaryImagePath,

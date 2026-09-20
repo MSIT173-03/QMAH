@@ -674,17 +674,24 @@ public sealed class MeController(
                 item.ProductId,
                 item.Product.Name,
                 item.Product.PrimaryImagePath,
-                item.Product.SalePrice.HasValue && item.Product.SalePrice.Value > 0m && item.Product.SalePrice.Value < item.Product.Price
+                item.Product.SalePrice.HasValue
+                    && item.Product.SalePrice.Value > 0m
+                    && item.Product.SalePrice.Value < item.Product.Price
                     ? item.Product.SalePrice.Value
-                    : item.Product.Price,
-                item.Product.SalePrice.HasValue && item.Product.SalePrice.Value > 0m && item.Product.SalePrice.Value < item.Product.Price
+                    : Math.Round(item.Product.Price * (100m - item.Product.DiscountRate) / 100m, 2),
+                (item.Product.SalePrice.HasValue
+                    && item.Product.SalePrice.Value > 0m
+                    && item.Product.SalePrice.Value < item.Product.Price)
+                    || item.Product.DiscountRate > 0m
                     ? item.Product.Price
                     : null,
                 item.Quantity,
                 item.Product.Stock,
-                (item.Product.SalePrice.HasValue && item.Product.SalePrice.Value > 0m && item.Product.SalePrice.Value < item.Product.Price
+                (item.Product.SalePrice.HasValue
+                    && item.Product.SalePrice.Value > 0m
+                    && item.Product.SalePrice.Value < item.Product.Price
                     ? item.Product.SalePrice.Value
-                    : item.Product.Price) * item.Quantity,
+                    : Math.Round(item.Product.Price * (100m - item.Product.DiscountRate) / 100m, 2)) * item.Quantity,
                 item.AddedAt))
             .ToListAsync(cancellationToken);
 
@@ -739,7 +746,7 @@ public sealed class MeController(
             product.Name,
             mediaUrlResolver.Resolve(product.PrimaryImagePath),
             product.EffectivePrice,
-            product.SalePrice is > 0m && product.SalePrice < product.Price ? product.Price : null,
+            product.EffectivePrice < product.Price ? product.Price : null,
             cartItem.Quantity,
             product.Stock,
             product.EffectivePrice * cartItem.Quantity,

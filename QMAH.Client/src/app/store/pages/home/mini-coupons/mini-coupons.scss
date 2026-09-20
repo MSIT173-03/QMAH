@@ -28,7 +28,7 @@
 
 .coupon-mini-btn {
   border: 1px solid var(--color-ink);
-  border-radius: 2px;
+  border-radius: var(--store-radius);
   font-size: 12px;
   padding: 4px 10px;
   background: var(--color-surface);

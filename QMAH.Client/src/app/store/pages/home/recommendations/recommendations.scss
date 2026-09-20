@@ -9,7 +9,7 @@
   background: var(--color-surface);
   color: var(--color-ink);
   padding: 11px 40px;
-  border-radius: 2px;
+  border-radius: var(--store-radius);
   font-size: 12px;
   letter-spacing: 0.14em;
   transition: background 160ms, border-color 160ms, color 160ms;
