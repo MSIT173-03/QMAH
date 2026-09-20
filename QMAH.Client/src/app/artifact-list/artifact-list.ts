@@ -9,6 +9,7 @@ import { CatalogModel, CatalogDetailModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
 import { KeyService } from '../services/key-service';
 import { KeyModel } from '../models/key-model';
+import { keyAssetPath } from '../shared/key-assets';
 import { SocialApiService } from '../core/services/social-api';
 import { ArtifactDiscussionDialog } from './artifact-discussion-dialog/artifact-discussion-dialog';
 import {
@@ -72,6 +73,8 @@ export class ArtifactList implements OnInit {
   keys = signal(0); // 全部鑰匙的持有總數，頭部徽章用
   /** 萬能鑰匙（如果有的話）；圖鑑頁卡片上的解鎖按鈕固定用這把，不是背包那邊的一般/年代/分類鑰匙 */
   universalKey = signal<KeyModel | null>(null);
+  // ui-integration: 圖鑑的萬能鑰匙確認視窗使用內容型道具圖，功能入口本身仍保留 Lucide 導覽圖示。
+  readonly universalKeyAssetPath = keyAssetPath('UNIVERSAL');
   // integration: 後端目前的 UnlockArtifactAsync 固定扣除 1 把鑰匙；
   // /me/keys/exchange-rules 是鑰匙兌換規則，不是解鎖成本，不能拿來猜畫面數字。
   unlockKeyCost = computed(() => 1);

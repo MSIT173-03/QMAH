@@ -170,7 +170,7 @@ export const FLASH_SALE_ITEMS: { productId: string; stockRatio: number }[] = [
 export const FLASH_SALE_REMAINING_MS = (3 * 3600 + 42 * 60 + 15) * 1000;
 
 export const BRANDS: Brand[] = [
-  { en: 'QMAH SELECT', zh: '清明選物', deal: '特展聯名 8 折' },
+  { en: 'QINGMING SELECT', zh: '清明選物', deal: '特展聯名 8 折' },
   { en: 'SCROLL WORKS', zh: '書畫工房', deal: '新品 9 折' },
   { en: 'RU KILN', zh: '窯作研究', deal: '對杯免運' },
   { en: 'SILK WORKS', zh: '織紋復刻', deal: '第二件半價' },

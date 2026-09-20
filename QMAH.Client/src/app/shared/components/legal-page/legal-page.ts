@@ -17,7 +17,7 @@ interface LegalDocumentContent {
 
 const DOCUMENTS: Record<LegalDocument, LegalDocumentContent> = {
   privacy: {
-    eyebrow: 'QMAH · 使用說明',
+    eyebrow: '清明鑑定屋・使用說明',
     title: '隱私權政策',
     intro: '本頁說明清明鑑定屋展示網站如何處理登入、圖鑑、遊戲與商城流程中產生的資料。這是專題展示版本，實際上線前仍應由維護團隊依部署環境完成法務審閱。',
     sections: [
@@ -37,7 +37,7 @@ const DOCUMENTS: Record<LegalDocument, LegalDocumentContent> = {
       {
         title: '三、外部服務與公開內容',
         paragraphs: [
-          '部分文物來源會連到國立故宮博物院等原始資料頁；聯絡入口則連到 MSIT173-03 的 GitHub 頁面。離開 QMAH 後，資料如何處理會依該外部服務自己的政策為準。',
+          '部分文物來源會連到國立故宮博物院等原始資料頁；聯絡入口則連到 MSIT173-03 的 GitHub 頁面。離開清明鑑定屋後，資料如何處理會依該外部服務自己的政策為準。',
           '你在社群公開發表的內容，會依產品功能顯示給其他使用者。請不要在貼文、留言或個人名稱中放入不必要的私人資料。',
         ],
       },
@@ -50,14 +50,14 @@ const DOCUMENTS: Record<LegalDocument, LegalDocumentContent> = {
     ],
   },
   terms: {
-    eyebrow: 'QMAH · 使用說明',
+    eyebrow: '清明鑑定屋・使用說明',
     title: '服務條款',
     intro: '歡迎使用清明鑑定屋。使用本展示網站前，請先了解以下使用範圍；本頁是專題展示版本的通用條款，不取代正式商業服務上線時應完成的合約與法務文件。',
     sections: [
       {
         title: '一、服務範圍',
         paragraphs: [
-          'QMAH 提供文物資料瀏覽、圖鑑解鎖、互動遊戲、社群交流與商城介面示範。頁面上的商品、價格、庫存、優惠與訂單流程，只有在後端正式啟用並由維護團隊公告時，才代表可成立的實際交易。',
+          '清明鑑定屋提供文物資料瀏覽、圖鑑解鎖、互動遊戲、社群交流與商城介面示範。頁面上的商品、價格、庫存、優惠與訂單流程，只有在後端正式啟用並由維護團隊公告時，才代表可成立的實際交易。',
         ],
       },
       {
@@ -69,7 +69,7 @@ const DOCUMENTS: Record<LegalDocument, LegalDocumentContent> = {
       {
         title: '三、文物資料與外部來源',
         paragraphs: [
-          '文物名稱、影像、年代與來源說明以頁面標示及其原始來源為準；QMAH 不把展示介面視為文物真偽鑑定或專業鑑價意見。使用外部資料時，請遵守原始來源標示的授權與使用條件。',
+          '文物名稱、影像、年代與來源說明以頁面標示及其原始來源為準；清明鑑定屋不把展示介面視為文物真偽鑑定或專業鑑價意見。使用外部資料時，請遵守原始來源標示的授權與使用條件。',
         ],
       },
       {

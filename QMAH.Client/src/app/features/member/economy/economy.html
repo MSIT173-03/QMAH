@@ -84,7 +84,7 @@
       <div class="summary-card">
 
         <div class="summary-icon">
-          <app-qmah-icon name="key-round" />
+          <img [src]="keyAssetPath('NORMAL')" alt="探索鑰匙圖示" loading="lazy" />
         </div>
 
         <div class="progress-content">
@@ -185,6 +185,7 @@
           type="button"
           class="filter-button"
           [class.active]="selectedFilter === 'ALL'"
+          [attr.aria-pressed]="selectedFilter === 'ALL'"
           (click)="setFilter('ALL')"
         >
 
@@ -201,6 +202,7 @@
           type="button"
           class="filter-button"
           [class.active]="selectedFilter === 'NORMAL'"
+          [attr.aria-pressed]="selectedFilter === 'NORMAL'"
           (click)="setFilter('NORMAL')"
         >
 
@@ -217,6 +219,7 @@
           type="button"
           class="filter-button"
           [class.active]="selectedFilter === 'CATEGORY'"
+          [attr.aria-pressed]="selectedFilter === 'CATEGORY'"
           (click)="setFilter('CATEGORY')"
         >
 
@@ -233,6 +236,7 @@
           type="button"
           class="filter-button"
           [class.active]="selectedFilter === 'ERA'"
+          [attr.aria-pressed]="selectedFilter === 'ERA'"
           (click)="setFilter('ERA')"
         >
 
@@ -249,6 +253,7 @@
           type="button"
           class="filter-button"
           [class.active]="selectedFilter === 'UNIVERSAL'"
+          [attr.aria-pressed]="selectedFilter === 'UNIVERSAL'"
           (click)="setFilter('UNIVERSAL')"
         >
 
@@ -287,7 +292,7 @@
 
 
               <div class="key-icon">
-                <app-qmah-icon name="key-round" />
+                <img [src]="keyAssetPath(key.scopeType)" [alt]="keyScopeLabel(key.scopeType) + '圖示'" loading="lazy" />
               </div>
 
 

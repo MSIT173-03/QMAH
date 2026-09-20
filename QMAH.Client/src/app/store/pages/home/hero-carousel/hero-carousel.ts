@@ -14,37 +14,37 @@ type StoreHeroSlide = HeroSlide & { coupon: Coupon | null };
 const EDITORIAL_SLIDES: HeroSlide[] = [
   {
     slot: '',
-    kicker: 'QMAH NOTE / 選物誌',
+    kicker: '清明選物誌',
     title: '把紙上風景帶回書桌',
     desc: '從一張明信片開始，讓一次看見慢慢留在日常。',
   },
   {
     slot: '',
-    kicker: 'QMAH SELECT / 日常收藏',
+    kicker: '清明選物・日常收藏',
     title: '收藏不必等到特別的日子',
     desc: '挑一件有故事的選物，替今天留下一點餘裕。',
   },
   {
     slot: '',
-    kicker: 'QMAH NOTE / 館藏靈感',
+    kicker: '清明選物誌・館藏靈感',
     title: '從一件小物開始認識館藏',
     desc: '在材質、紋樣與來源之間，找到屬於你的喜歡。',
   },
   {
     slot: '',
-    kicker: 'QMAH NOTE / 收藏日常',
+    kicker: '清明選物誌・收藏日常',
     title: '開一盞燈，讓故事留下來',
     desc: '把一段看見放在身邊，日常也能有自己的觀看方式。',
   },
   {
     slot: '',
-    kicker: 'QMAH SELECT / 慢慢挑選',
+    kicker: '清明選物・慢慢挑選',
     title: '把日常留給一件好物',
     desc: '不追著流行走，挑一件真正願意長久相處的物件。',
   },
   {
     slot: '',
-    kicker: 'QMAH NOTE / 看見細節',
+    kicker: '清明選物誌・看見細節',
     title: '看見細節，也看見自己',
     desc: '一點色澤、一段紋樣，都值得被好好理解。',
   },

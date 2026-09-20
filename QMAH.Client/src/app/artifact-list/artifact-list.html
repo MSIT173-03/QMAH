@@ -270,7 +270,7 @@
     (click)="onConfirmOverlayClick($event)"
   >
     <div class="confirm-dialog" *ngIf="confirmTarget() as target" role="dialog" aria-modal="true" aria-labelledby="artifact-unlock-title">
-      <svg lucideKeyRound class="key-icon" aria-hidden="true" focusable="false"></svg>
+      <img class="key-icon" [src]="universalKeyAssetPath" alt="萬能鑰匙圖示" />
       <h3 id="artifact-unlock-title">解鎖確認</h3>
       <p>使用 <strong>{{ confirmCost() }}</strong> 把萬能鑰匙解鎖「{{ target.artifactRef }}」的紀錄？</p>
       <p class="have">

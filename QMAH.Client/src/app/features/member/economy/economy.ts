@@ -11,13 +11,15 @@ import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { keyAssetPath } from '../../../shared/key-assets';
+import { KeyScopeType } from '../../../models/key-model';
 
 
 interface EconomyKey {
   id: string;
   code: string;
   name: string;
-  scopeType: string;
+  scopeType: KeyScopeType;
   categoryId: string | null;
   eraBucketId: string | null;
   balance: number;
@@ -134,6 +136,11 @@ export class Economy implements OnInit {
       ERA: '從指定年代探索一件文物',
       UNIVERSAL: '由你指定一件文物解鎖',
     }[scopeType] ?? '用於解鎖圖鑑文物';
+  }
+
+  /** ui-integration: 會員資產卡片沿用圖鑑的四種內容型鑰匙圖，不把道具誤當成通用功能圖示。 */
+  keyAssetPath(scopeType: KeyScopeType): string {
+    return keyAssetPath(scopeType);
   }
 
 

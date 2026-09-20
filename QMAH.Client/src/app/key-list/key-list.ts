@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 import { KeyService } from '../services/key-service';
 import { CatalogService } from '../services/catalog-service';
 import { KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
+import { keyAssetPath } from '../shared/key-assets';
 import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
 
 @Component({
@@ -253,18 +254,9 @@ export class KeyList implements OnInit {
     return keys.reduce((sum, key) => sum + key.balance, 0);
   }
 
-  /**
-   * 圖鑑鑰匙資產固定使用同一個 1:1 SVG 畫布與同一個直向母版，僅以低彩度色相
-   * 和極少量內圈符號區分適用範圍；這裡只做前端呈現對照，不改後端鑰匙契約。
-   */
+  /** 附圖依檔名對應四種 scope；這裡只做前端呈現對照，不改後端鑰匙契約。 */
   keySlotIcon(key: KeyModel): string {
-    switch (key.scopeType) {
-      case 'CATEGORY': return '/assets/catalog/keys/key-category.svg';
-      case 'ERA': return '/assets/catalog/keys/key-era.svg';
-      case 'UNIVERSAL': return '/assets/catalog/keys/key-universal.svg';
-      case 'NORMAL':
-      default: return '/assets/catalog/keys/key-normal.svg';
-    }
+    return keyAssetPath(key.scopeType);
   }
 
   /**

@@ -37,7 +37,7 @@ export class SiteFooter {
   protected readonly logoAlt = '清明鑑定屋';
   protected readonly brandNote = '以文物資料為起點，整理探索、遊戲、社群與選物。';
   protected readonly githubUrl = 'https://github.com/MSIT173-03/QMAH';
-  protected readonly copyright = '© 2026 QMAH · 清明鑑定屋';
+  protected readonly copyright = '© 2026 清明鑑定屋';
   // ui-integration: 政策入口改用前台實際 route；頁面內容會明確標示展示網站適用範圍，不製造不存在的法律服務承諾。
   protected readonly privacyHref = '/privacy-policy';
   protected readonly termsHref = '/terms';

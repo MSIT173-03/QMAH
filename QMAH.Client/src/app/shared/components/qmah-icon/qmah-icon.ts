@@ -40,8 +40,10 @@ import {
   LucideMessageCircle,
   LucideMoon,
   LucidePackageSearch,
+  LucidePause,
   LucidePartyPopper,
   LucidePencil,
+  LucidePlay,
   LucidePlus,
   LucideReceipt,
   LucideSearch,
@@ -59,6 +61,7 @@ import {
   LucideUserRound,
   LucideUsersRound,
   LucideWrench,
+  LucideZoomIn,
   LucideX,
 } from '@lucide/angular';
 
@@ -102,8 +105,10 @@ const ICONS = {
   'message-circle': LucideMessageCircle,
   moon: LucideMoon,
   'package-search': LucidePackageSearch,
+  pause: LucidePause,
   'party-popper': LucidePartyPopper,
   pencil: LucidePencil,
+  play: LucidePlay,
   plus: LucidePlus,
   receipt: LucideReceipt,
   search: LucideSearch,
@@ -121,6 +126,7 @@ const ICONS = {
   'user-round': LucideUserRound,
   'users-round': LucideUsersRound,
   wrench: LucideWrench,
+  'zoom-in': LucideZoomIn,
   x: LucideX,
 } as const;
 
