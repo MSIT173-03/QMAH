@@ -50,6 +50,8 @@ QMAH.DemoCredentials.local*.csv
 *.swp
 *~
 ~$*
+**/.playwright-cli/
+**/output/playwright/
 
 # 資料收集工具的執行輸出
 _工具輸出/
