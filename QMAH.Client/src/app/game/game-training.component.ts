@@ -105,17 +105,17 @@ interface GuideStep {
             @if (current.modeCode === 'DETAIL_LOCATOR') {
               <div class="locator-game">
                 <div class="clue-image">@if ((current.primaryImagePath || current.thumbnailPath) && !imageUnavailable) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName" (error)="imageUnavailable = true" /> } @else { <span class="image-fallback">圖片整理中<br /><small>請依文物名稱選擇</small></span> }</div>
-                <div class="game-prompt"><h3>這件線索屬於哪一件文物？</h3><p>從下方選項中選出你的判斷。</p><div class="artifact-options">@for (option of locatorOptions; track option.artifactId) { <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" (click)="chooseLocator(option.artifactId)">@if (option.thumbnailPath || option.primaryImagePath) { <img [src]="option.thumbnailPath || option.primaryImagePath" [alt]="option.name" /> } @else { <span class="option-image-fallback" aria-hidden="true">文物</span> }<span>{{ option.name }}</span></button> }</div></div>
+                <div class="game-prompt"><h3>這件線索屬於哪一件文物？</h3><p>從下方選項中選出你的判斷。</p><div class="artifact-options">@for (option of locatorOptions; track option.artifactId) { <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" (click)="chooseLocator(option.artifactId)">@if ((option.thumbnailPath || option.primaryImagePath) && !imageFailed('locator-' + option.artifactId)) { <img [src]="option.thumbnailPath || option.primaryImagePath" [alt]="option.name" (error)="markImageFailed('locator-' + option.artifactId)" /> } @else { <span class="option-image-fallback" aria-hidden="true">文物</span> }<span>{{ option.name }}</span></button> }</div></div>
               </div>
             }
             @else if (current.modeCode === 'MEMORY_MATCH') {
-              <div class="memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>翻開兩張卡片，找出相同文物。全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" (click)="flipMemory(index)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開卡片'">@if (card.revealed || card.matched) { @if (card.image) { <img [src]="card.image" [alt]="card.name" /> } @else { <span class="image-fallback" aria-hidden="true">文物</span> } } @else { <span>翻</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }}</p></div>
+              <div class="memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>翻開兩張卡片，找出相同文物。全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" (click)="flipMemory(index)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback" aria-hidden="true">文物</span> } } @else { <span>翻</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }}</p></div>
             }
             @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
-              <div class="ordering-game"><div class="game-prompt"><h3>館藏拼圖</h3><p>點選兩塊交換位置，把畫面排回順序。</p></div><div class="tile-grid">@for (piece of puzzleOrder; track $index; let slot = $index) { <button type="button" class="image-tile" [class.selected]="puzzleSelection === slot" [attr.aria-pressed]="puzzleSelection === slot" (click)="swapPuzzle(slot)">@if (current.primaryImagePath || current.thumbnailPath) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 拼圖 ' + (piece + 1)" [style.object-position]="piecePosition(piece)" /> } @else { <span class="image-fallback" aria-hidden="true">館藏</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ puzzleSelection === null ? '先選一塊拼圖' : '再選另一塊交換' }}</p></div>
+              <div class="ordering-game"><div class="game-prompt"><h3>館藏拼圖</h3><p>點選兩塊交換位置，把畫面排回順序。</p></div><div class="tile-grid">@for (piece of puzzleOrder; track $index; let slot = $index) { <button type="button" class="image-tile" [class.selected]="puzzleSelection === slot" [attr.aria-pressed]="puzzleSelection === slot" (click)="swapPuzzle(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('puzzle')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 拼圖 ' + (piece + 1)" [style.object-position]="piecePosition(piece)" (error)="markImageFailed('puzzle')" /> } @else { <span class="image-fallback" aria-hidden="true">館藏</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ puzzleSelection === null ? '先選一塊拼圖' : '再選另一塊交換' }}</p></div>
             }
             @else {
-              <div class="ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>點選兩段交換位置，讓長卷從左到右接回原貌。</p></div><div class="strip-row">@for (strip of restoreOrder; track $index; let slot = $index) { <button type="button" class="image-strip" [class.selected]="restoreSelection === slot" [attr.aria-pressed]="restoreSelection === slot" (click)="swapRestore(slot)">@if (current.primaryImagePath || current.thumbnailPath) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 長卷段落 ' + (strip + 1)" [style.object-position]="stripPosition(strip)" /> } @else { <span class="image-fallback" aria-hidden="true">長卷</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ restoreSelection === null ? '先選一段長卷' : '再選另一段交換' }}</p></div>
+              <div class="ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>點選兩段交換位置，讓長卷從左到右接回原貌。</p></div><div class="strip-row">@for (strip of restoreOrder; track $index; let slot = $index) { <button type="button" class="image-strip" [class.selected]="restoreSelection === slot" [attr.aria-pressed]="restoreSelection === slot" (click)="swapRestore(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('restore')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 長卷段落 ' + (strip + 1)" [style.object-position]="stripPosition(strip)" (error)="markImageFailed('restore')" /> } @else { <span class="image-fallback" aria-hidden="true">長卷</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ restoreSelection === null ? '先選一段長卷' : '再選另一段交換' }}</p></div>
             }
 
             <footer class="play-footer"><span>{{ progressText }}</span><div class="play-actions"><button type="button" class="secondary" (click)="exitAttempt()" [disabled]="completing">返回玩法列表</button><button type="button" (click)="completeAttempt()" [disabled]="!canComplete || completing">{{ completing ? '送出中…' : '送出結果' }}</button></div></footer>
@@ -148,6 +148,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   restoreOrder: number[] = [];
   restoreSelection: number | null = null;
   memoryCards: MemoryCard[] = [];
+  private readonly failedImages = new Set<string>();
   memoryOpen: number[] = [];
   memoryMatched = 0;
   memoryBusy = false;
@@ -180,6 +181,13 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   get memoryPairCount(): number { return Math.floor(this.memoryCards.length / 2); }
+
+  imageFailed(key: string): boolean { return this.failedImages.has(key); }
+
+  markImageFailed(key: string): void {
+    this.failedImages.add(key);
+    this.changeDetector.markForCheck();
+  }
 
   get guideSteps(): GuideStep[] {
     switch (this.demoModeCode) {
@@ -354,6 +362,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   private resetBoard(): void {
+    this.failedImages.clear();
     this.locatorChoice = null;
     this.puzzleOrder = this.shuffle([0, 1, 2, 3], this.attempt?.seed ?? 'puzzle');
     this.puzzleSelection = null;

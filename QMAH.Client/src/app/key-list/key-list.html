@@ -24,7 +24,7 @@
       <span class="key-count">{{ totalKeyCount() }} 把</span>
     </div>
 
-    <div class="filter-bar">
+    <div class="filter-bar" role="group" aria-label="鑰匙類型篩選">
       <button
         type="button"
         class="filter-button"
@@ -142,9 +142,15 @@
     [class.open]="confirmTarget() !== null"
     (click)="onConfirmOverlayClick($event)"
   >
-    <div class="confirm-dialog" *ngIf="confirmTarget() as key">
+    <div
+      class="confirm-dialog"
+      *ngIf="confirmTarget() as key"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="key-use-dialog-title"
+    >
       <img class="key-icon" [src]="keySlotIcon(key)" [alt]="key.name + '圖示'" />
-      <h3>使用鑰匙</h3>
+      <h3 id="key-use-dialog-title">使用鑰匙</h3>
       <p>確定要使用「{{ key.name }}」嗎？</p>
       <p class="have">
         使用後將消耗 <strong>{{ confirmCost() }}</strong> 把，剩餘 <strong>{{ key.balance - confirmCost() }}</strong> 把
@@ -166,9 +172,15 @@
     [class.open]="unlockResult() !== null"
     (click)="onResultOverlayClick($event)"
   >
-    <div class="confirm-dialog" *ngIf="unlockResult() as result">
+    <div
+      class="confirm-dialog"
+      *ngIf="unlockResult() as result"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="key-result-dialog-title"
+    >
       <svg lucideCircleCheckBig class="key-icon" aria-hidden="true" focusable="false"></svg>
-      <h3>解鎖成功</h3>
+      <h3 id="key-result-dialog-title">解鎖成功</h3>
       <p>你解鎖了「{{ result.artifactName }}」</p>
       <p class="have">要現在前往圖鑑查看這件文物嗎？</p>
       <div class="confirm-actions">

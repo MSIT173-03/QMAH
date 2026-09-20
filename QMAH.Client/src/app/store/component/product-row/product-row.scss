@@ -10,6 +10,7 @@
   gap: 16px;
   align-items: flex-start;
   flex-wrap: wrap;
+  min-width: 0;
   transition: border-color 160ms;
 
   &:hover {
@@ -71,6 +72,7 @@
   line-height: 1.45;
   color: var(--color-ink);
   text-decoration: none;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -84,12 +86,15 @@
   font-size: 12px;
   line-height: 1.7;
   color: var(--color-body);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .product-row-meta {
   display: flex;
   gap: 14px;
   flex-wrap: wrap;
+  min-width: 0;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--color-muted);
@@ -110,6 +115,7 @@
   gap: 6px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .product-row-price {
@@ -129,8 +135,10 @@
   border-radius: 2px;
   padding: 9px 20px;
   min-height: 44px;
+  flex: 0 0 auto;
   font-size: 12px;
   letter-spacing: 0.1em;
+  white-space: nowrap;
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &:hover {
@@ -149,13 +157,33 @@
 @media (max-width: 600px) {
   .product-row { gap: 12px; padding: 12px; }
   .product-row-thumb { width: 88px; height: 88px; }
-  .product-row-title { white-space: normal; }
+  .product-row-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .product-row-source,
+  .product-row-meta { overflow-wrap: anywhere; }
   .product-row-aside {
     width: 100%;
+    flex: 0 0 100%;
     min-width: 0;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 8px;
     align-items: center;
-    justify-content: space-between;
   }
-  .product-row-price-row { justify-content: flex-start; }
+  .product-row-price-row {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+  .product-row-aside > .product-card-tag {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .product-row-buy {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-self: end;
+  }
 }

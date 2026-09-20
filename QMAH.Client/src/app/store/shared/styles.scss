@@ -62,6 +62,7 @@
   .container {
     width: 100%;
     max-width: 1320px;
+    min-width: 0;
     margin: 0 auto;
     padding: 0 20px;
   }
@@ -113,6 +114,7 @@
     display: flex;
     align-items: center;
     gap: 24px;
+    min-width: 0;
   }
 
   /* ui-integration: 商城頁首在窄螢幕改為品牌／搜尋與購物車分層，避免搜尋列把頁面撐出水平捲軸。 */
@@ -122,6 +124,7 @@
       flex-wrap: wrap;
       gap: 10px;
       padding: 12px 14px 16px;
+      min-width: 0;
     }
 
     .site-header-row--hero { padding-bottom: 18px; }
@@ -129,9 +132,12 @@
     .site-header-row .brand-logo-img { height: 32px; }
     .site-header-row .search-wrap { flex: 1 1 0; max-width: none; min-width: 0; }
     .site-header-row .search-submit { padding-inline: 12px; }
-    .site-header-row .hdr-actions { margin-left: 0; gap: 8px; }
-    .nav-bar-row { gap: 12px; padding: 9px 14px; }
+    .site-header-row .hdr-actions { margin-left: 0; gap: 8px; min-width: 0; }
+    .nav-bar-row { gap: 12px; padding: 9px 14px; min-width: 0; }
     .nav-highlight { margin-left: 0; }
+
+    .promobar-row,
+    .promobar-actions { min-width: 0; }
 
     .sticky-92 { position: static; }
 

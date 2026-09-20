@@ -12,6 +12,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
 /* 左側篩選側欄 + 右側商品區 */
@@ -20,6 +21,7 @@
   grid-template-columns: minmax(0, 218px) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
+  min-width: 0;
 }
 
 /* ===============================
@@ -31,6 +33,7 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* 排序與顯示模式之間的分隔線 */
@@ -48,6 +51,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .store-loading { display: grid; place-items: center; gap: 12px; min-height: 260px; border: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-muted); }
@@ -61,5 +65,17 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .tab-row { width: 100%; }
+  .tab-row {
+    width: 100%;
+    min-width: 0;
+    row-gap: 8px;
+  }
+
+  /* 兩組切換保留同一工具列語意，但在窄寬度分成可讀的上下段。 */
+  .pill-divider {
+    flex: 0 0 100%;
+    width: auto;
+    height: 1px;
+    margin: 2px 0;
+  }
 }
