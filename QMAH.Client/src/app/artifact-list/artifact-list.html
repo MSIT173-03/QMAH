@@ -108,7 +108,7 @@
               >
                 <div class="artifact-card__media">
                   @if (item.thumbnailPath) {
-                    <img [src]="getImageUrl(item.thumbnailPath)" [alt]="item.name" class="thumbnail" />
+                    <img src="{{ getImageUrl(item.thumbnailPath) }}" [alt]="item.name" class="thumbnail" />
                   } @else {
                     <span class="artifact-image-placeholder" aria-label="尚無文物縮圖">
                       <svg lucideImage aria-hidden="true" focusable="false"></svg>
@@ -153,7 +153,7 @@
       <div class="focus-card" [class.unlocked]="item.unlocked">
         <span class="num">{{ item.artifactRef }}</span>
         <span class="category-tag">{{ item.categoryName }}</span>
-        <img [src]="getImageUrl(focusedImagePath(item))" [alt]="item.name" class="focus-thumbnail" />
+        <img src="{{ getImageUrl(focusedImagePath(item)) }}" [alt]="item.name" class="focus-thumbnail" />
         <div class="label">
           <span class="name" id="artifact-focus-title">{{ item.unlocked ? item.name : '尚未解鎖的文物' }}</span>
         </div>
@@ -270,7 +270,7 @@
     (click)="onConfirmOverlayClick($event)"
   >
     <div class="confirm-dialog" *ngIf="confirmTarget() as target" role="dialog" aria-modal="true" aria-labelledby="artifact-unlock-title">
-      <img class="key-icon" [src]="universalKeyAssetPath" alt="萬能鑰匙圖示" />
+      <img class="key-icon" src="{{ universalKeyAssetPath }}" alt="萬能鑰匙圖示" />
       <h3 id="artifact-unlock-title">解鎖確認</h3>
       <p>使用 <strong>{{ confirmCost() }}</strong> 把萬能鑰匙解鎖「{{ target.artifactRef }}」的紀錄？</p>
       <p class="have">
