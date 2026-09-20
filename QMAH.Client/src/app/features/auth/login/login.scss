@@ -84,11 +84,7 @@
   display: block;
   width: min(238px, 68%);
   height: auto;
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 250, 240, 0.36);
-  border-radius: 14px;
-  background: rgba(16, 48, 45, 0.56);
-  box-shadow: 0 10px 28px rgba(8, 27, 26, 0.2);
+  filter: drop-shadow(0 2px 12px rgba(7, 28, 26, 0.42));
 }
 
 .museum-topbar__actions {
@@ -410,8 +406,7 @@
   border-radius: 14px;
   background: rgba(255, 253, 248, 0.6);
   color: var(--login-muted);
-  box-shadow: inset -3px 0 0 var(--login-gold);
-  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
 .login-panel-toggle:hover:not([aria-disabled='true']),
@@ -765,10 +760,13 @@ input:focus-visible {
 }
 
 @media (max-width: 620px) {
-  /* 手機先保留畫卷的沉浸感，再往下進入表單；不把桌面雙欄硬縮成一張窄卡。 */
+  /* ui-integration: 手機改成「畫面 → 說明 → 控制 → 登入」的單一路徑，避免所有資訊疊在畫卷上。 */
   .museum-side {
     order: 1;
-    min-height: min(78svh, 720px);
+    min-height: auto;
+    padding: 0;
+    overflow: visible;
+    background: var(--login-paper);
   }
 
   .login-side {
@@ -779,7 +777,7 @@ input:focus-visible {
   }
 
   .login-side.is-collapsed {
-    min-height: max(120px, calc(100dvh - 670px));
+    min-height: auto;
   }
 
   .login-card {
@@ -794,33 +792,50 @@ input:focus-visible {
     align-items: flex-start;
   }
 
-  .museum-side {
-    min-height: 670px;
-    padding: 22px;
-  }
-
   .museum-topbar {
-    align-items: flex-start;
-    flex-direction: column;
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    left: 22px;
+    align-items: center;
     gap: 12px;
   }
 
   .museum-topbar__actions {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    margin-left: auto;
+    justify-content: flex-end;
   }
 
   .brand-logo {
-    width: min(204px, 78%);
+    width: min(204px, 58vw);
   }
 
   .museum-purpose {
-    font-size: 11px;
+    display: none;
+  }
+
+  .museum-showcase {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--login-paper);
+  }
+
+  .museum-media {
+    position: relative;
+    inset: auto;
+    flex: 0 0 clamp(420px, 58svh, 500px);
+    height: clamp(420px, 58svh, 500px);
+    min-height: 420px;
+    --magnifier-lens-size: clamp(108px, 31vw, 148px);
   }
 
   .museum-media__location,
   .museum-media__counter {
-    top: 110px;
+    top: auto;
+    bottom: 18px;
     font-size: 10px;
   }
 
@@ -834,19 +849,19 @@ input:focus-visible {
 
   .museum-media__hint {
     right: 22px;
-    bottom: 126px;
+    bottom: 54px;
     font-size: 10px;
   }
 
-  .museum-media {
-    --magnifier-lens-size: clamp(108px, 31vw, 148px);
-  }
-
   .museum-copy {
-    right: 22px;
-    bottom: 150px;
-    left: 22px;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
     width: auto;
+    padding: 24px 22px 4px;
+    background: var(--login-paper);
+    color: var(--login-ink);
   }
 
   .museum-copy h1 {
@@ -854,42 +869,81 @@ input:focus-visible {
     font-size: clamp(26px, 7vw, 30px);
     letter-spacing: -0.045em;
     overflow-wrap: anywhere;
+    color: var(--login-ink);
+    text-shadow: none;
   }
 
   .museum-copy__description {
     margin-top: 12px;
+    color: var(--login-muted);
     font-size: 14px;
+    text-shadow: none;
   }
 
   .museum-copy__guide {
     gap: 4px 14px;
     margin-top: 12px;
     padding-top: 10px;
+    border-top-color: var(--login-border);
   }
 
   .museum-copy__guide-item {
+    color: var(--login-muted);
     font-size: 11px;
+    text-shadow: none;
+  }
+
+  .museum-copy__guide-item app-qmah-icon {
+    color: var(--login-teal);
   }
 
   .museum-links {
     gap: 4px 14px;
   }
 
+  .museum-source {
+    color: var(--login-teal);
+  }
+
+  .museum-source--muted {
+    color: var(--login-soft);
+  }
+
   .museum-controls {
-    right: 22px;
-    bottom: 58px;
-    left: 22px;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    display: grid;
+    grid-template-columns: 44px 44px 1fr 44px;
+    width: auto;
+    margin: 0;
+    padding: 12px 22px 20px;
+    background: var(--login-paper);
     gap: 8px;
   }
 
   .museum-controls__counter {
-    margin-inline: auto;
+    margin: 0;
+    justify-self: center;
+    color: var(--login-muted);
+  }
+
+  .museum-controls .icon-button {
+    border-color: var(--login-border);
+    background: var(--login-surface);
+    color: var(--login-ink);
   }
 
   .museum-credit {
-    right: 22px;
-    bottom: 22px;
-    left: 22px;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    margin: 0;
+    padding: 0 22px calc(18px + env(safe-area-inset-bottom));
+    background: var(--login-paper);
+    color: var(--login-soft);
     font-size: 10px;
     text-align: left;
   }
