@@ -9,7 +9,7 @@
   min-height: 100vh;
   color: var(--guide-ink);
   background: #dfe8e4;
-  font: 400 16px/1.62 "QMAH Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  font: 400 16px/1.62 var(--qmah-font-sans);
 }
 
 .game-guide { width: min(980px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
@@ -24,7 +24,7 @@
 
 .guide-heading { padding: 48px 4px 26px; border-bottom: 1px solid var(--guide-line); }
 .eyebrow { margin: 0 0 7px; color: var(--guide-cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
-.guide-heading h1 { margin: 0; font: 700 clamp(36px, 5vw, 58px)/1.1 "Noto Serif TC", "Source Han Serif TC", Georgia, serif; letter-spacing: -.045em; }
+.guide-heading h1 { margin: 0; font: 700 clamp(36px, 5vw, 58px)/1.1 var(--qmah-font-serif); letter-spacing: -.045em; }
 .guide-heading p:last-child { max-width: 42ch; margin: 14px 0 0; color: var(--guide-muted); }
 
 .guide-tabs {

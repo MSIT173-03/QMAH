@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+:root {
+  --qmah-font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --qmah-font-serif: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif;
+}
+
 /* ui-integration: 所有 Area 共用最小 viewport 與觸控基線，避免局部頁面把 body 撐出水平捲動。 */
 html {
   min-width: 320px;
@@ -10,6 +15,8 @@ body {
   min-width: 320px;
   margin: 0;
   overflow-x: hidden;
+  font-family: var(--qmah-font-sans);
+  text-rendering: optimizeLegibility;
 }
 
 /* ui-integration: App Shell 的 theme-controller 位於共用 Layout 之外層；在全域入口切換語意色，讓所有 Area 與商城共享深色背景與對比。 */

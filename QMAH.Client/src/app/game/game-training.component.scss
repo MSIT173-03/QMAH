@@ -12,7 +12,7 @@
   min-height: 100vh;
   color: var(--ink);
   background: #dfe8e4;
-  font: 400 16px/1.62 "QMAH Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  font: 400 16px/1.62 var(--qmah-font-sans);
 }
 
 .training-notebook { width: min(1200px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
@@ -28,11 +28,11 @@
 .training-notebook .chapter { min-height: 0; border: 0; padding: 0; background: transparent; box-shadow: none; }
 .training-notebook .chapter-heading { align-items: flex-end; padding: 34px 0 24px; border-bottom: 1px solid var(--line); }
 .training-notebook .chapter-heading p { margin: 0 0 7px; color: var(--cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
-.training-notebook .chapter-heading h1 { margin: 0; color: var(--ink); font-family: "Noto Serif TC", "Source Han Serif TC", Georgia, serif; font-size: clamp(34px, 4vw, 54px); font-weight: 700; letter-spacing: -.04em; }
+.training-notebook .chapter-heading h1 { margin: 0; color: var(--ink); font-family: var(--qmah-font-serif); font-size: clamp(34px, 4vw, 54px); font-weight: 700; letter-spacing: -.04em; }
 
 .training-hero { display: grid; grid-template-columns: 1fr .96fr; /* ui-integration: 限制 Hero 高度，讓玩法示範與主要選項維持可預期的首屏節奏。 */ height: clamp(318px, 38vw, 470px); min-height: 0; overflow: hidden; color: var(--porcelain); background: var(--ink); animation: training-enter 560ms cubic-bezier(.16, 1, .3, 1) both; }
 .training-hero-copy { display: flex; flex-direction: column; justify-content: center; padding: 42px clamp(24px, 4vw, 52px); }
-.training-hero h2 { max-width: none; margin: 0; color: var(--surface); font-family: "Noto Serif TC", Georgia, serif; font-size: clamp(42px, 4.5vw, 64px); font-weight: 700; letter-spacing: -.045em; line-height: 1.08; }
+.training-hero h2 { max-width: none; margin: 0; color: var(--surface); font-family: var(--qmah-font-serif); font-size: clamp(42px, 4.5vw, 64px); font-weight: 700; letter-spacing: -.045em; line-height: 1.08; }
 .training-hero p { max-width: 34ch; margin: 22px 0 0; color: #d4e1dd; font-size: 16px; }
 .training-artwork { position: relative; height: 100%; min-height: 0; margin: 0; overflow: hidden; border-left: 1px solid rgba(244, 241, 232, .24); }
 .training-artwork img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; filter: saturate(.78) contrast(1.08); transition: transform 700ms cubic-bezier(.16, 1, .3, 1); }
@@ -40,7 +40,7 @@
 .training-artwork::after { content: ""; position: absolute; inset: 0; background: rgba(10, 37, 45, .15); pointer-events: none; }
 .training-artwork figcaption { position: absolute; right: 20px; bottom: 20px; z-index: 1; display: grid; gap: 2px; min-width: 178px; padding: 12px 14px; color: var(--ink); background: var(--porcelain); }
 .training-artwork figcaption span { color: var(--cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
-.training-artwork figcaption strong { font-family: "Noto Serif TC", Georgia, serif; font-size: 17px; }
+.training-artwork figcaption strong { font-family: var(--qmah-font-serif); font-size: 17px; }
 
 .training-notebook .intro { margin: 25px 0 0; color: var(--muted); }
 .training-notebook .message { margin-top: 24px; border: 1px solid var(--line); padding: 13px 16px; background: var(--surface); }
@@ -53,13 +53,13 @@
 .training-notebook .auth-actions button { cursor: pointer; }
 .training-notebook .loading { margin-top: 24px; border: 1px solid var(--line); padding: 18px; color: var(--muted); background: var(--surface); }
 .training-notebook .auth-state { margin-top: 24px; border: 1px solid var(--line); padding: 40px 28px; background: var(--surface); }
-.training-notebook .auth-state h2 { margin: 0; font-family: "Noto Serif TC", Georgia, serif; font-size: 30px; }
+.training-notebook .auth-state h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: 30px; }
 .training-notebook .auth-state p { color: #52686e; }
 
 .training-notebook .guide { margin-top: 30px; border-top: 0; padding-top: 0; }
 .training-notebook .guide-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .training-notebook .guide-heading .kicker { margin: 0 0 6px; color: var(--cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
-.training-notebook .guide-heading h2 { margin: 0; color: var(--ink); font-family: "Noto Serif TC", Georgia, serif; font-size: clamp(26px, 3vw, 38px); letter-spacing: -.04em; }
+.training-notebook .guide-heading h2 { margin: 0; color: var(--ink); font-family: var(--qmah-font-serif); font-size: clamp(26px, 3vw, 38px); letter-spacing: -.04em; }
 .training-notebook .guide-heading > span { color: var(--jade); font: 700 13px/1.2 ui-monospace, monospace; }
 .training-notebook .guide-modes { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 14px; }
 .training-notebook .guide-modes button { min-height: 44px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 7px 0; color: #52686e; background: transparent; font-size: 15px; }
@@ -67,9 +67,9 @@
 .training-notebook .guide-step { display: grid; grid-template-columns: 240px 1fr; gap: 34px; align-items: center; margin-top: 18px; border: 1px solid var(--line); padding: 22px; background: var(--surface); }
 .training-notebook .guide-visual { position: relative; display: grid; place-items: center; min-height: 160px; overflow: hidden; border: 1px solid rgba(244, 241, 232, .25); color: var(--porcelain); background: var(--jade); text-align: center; }
 .training-notebook .guide-visual::after { content: ""; position: absolute; right: -22px; bottom: -28px; width: 108px; height: 108px; border: 1px solid rgba(216, 192, 128, .65); transform: rotate(45deg); }
-.training-notebook .guide-visual strong { position: relative; z-index: 1; font-family: "Noto Serif TC", Georgia, serif; font-size: 28px; }
+.training-notebook .guide-visual strong { position: relative; z-index: 1; font-family: var(--qmah-font-serif); font-size: 28px; }
 .training-notebook .guide-visual small { position: absolute; top: 14px; left: 14px; z-index: 1; color: #d8c080; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
-.training-notebook .guide-copy h3 { margin: 0; color: var(--ink); font-family: "Noto Serif TC", Georgia, serif; font-size: 28px; letter-spacing: -.035em; }
+.training-notebook .guide-copy h3 { margin: 0; color: var(--ink); font-family: var(--qmah-font-serif); font-size: 28px; letter-spacing: -.035em; }
 .training-notebook .guide-copy p { max-width: 45ch; margin: 8px 0 0; color: #52686e; font-size: 16px; }
 .training-notebook .guide-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
 .training-notebook .guide-controls button { min-height: 44px; border: 1px solid var(--ink); border-radius: 3px; padding: 9px 12px; color: var(--surface); background: var(--ink); font-weight: 800; }
@@ -82,7 +82,7 @@
 .training-notebook .mode-index li { display: grid; grid-template-columns: 58px 1fr auto; gap: 20px; align-items: center; border-bottom: 1px solid var(--line); padding: 24px 6px; }
 .training-notebook .mode-index li:hover { background: rgba(255, 253, 248, .54); }
 .training-notebook .mode-index b { color: var(--cinnabar); font: 700 13px ui-monospace, monospace; }
-.training-notebook .mode-index h2 { margin: 0; color: var(--ink); font-family: "Noto Serif TC", Georgia, serif; font-size: 25px; letter-spacing: -.03em; }
+.training-notebook .mode-index h2 { margin: 0; color: var(--ink); font-family: var(--qmah-font-serif); font-size: 25px; letter-spacing: -.03em; }
 .training-notebook .mode-index p { max-width: 55ch; margin: 5px 0 0; color: #52686e; font-size: 15px; }
 .training-notebook .mode-index button, .training-notebook .play-footer button, .training-notebook .result-actions button { min-height: 44px; border: 1px solid var(--ink); border-radius: 3px; padding: 10px 13px; color: var(--surface); background: var(--ink); font-weight: 800; }
 .training-notebook .mode-index button:hover, .training-notebook .play-footer button:hover, .training-notebook .result-actions button:hover { border-color: var(--cinnabar); background: var(--cinnabar); }
@@ -91,9 +91,9 @@
 .training-notebook .play-sheet { margin-top: 24px; border: 1px solid var(--line); padding: 28px; background: var(--surface); }
 .training-notebook .play-heading { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
 .training-notebook .play-heading .kicker { margin: 0 0 7px; color: var(--cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
-.training-notebook .play-heading h2 { margin: 0; font-family: "Noto Serif TC", Georgia, serif; font-size: 34px; letter-spacing: -.04em; }
+.training-notebook .play-heading h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: 34px; letter-spacing: -.04em; }
 .training-notebook .difficulty { border: 1px solid var(--slate); padding: 5px 9px; color: var(--slate); font-size: 11px; font-weight: 800; letter-spacing: .1em; }
-.training-notebook .game-prompt h3 { margin: 0; font-family: "Noto Serif TC", Georgia, serif; font-size: 26px; }
+.training-notebook .game-prompt h3 { margin: 0; font-family: var(--qmah-font-serif); font-size: 26px; }
 .training-notebook .game-prompt p, .training-notebook .game-hint { margin: 6px 0 0; color: var(--muted); }
 .training-notebook .locator-game { display: grid; grid-template-columns: minmax(260px, .95fr) minmax(0, 1.05fr); gap: 34px; align-items: start; padding-top: 28px; }
 .training-notebook .clue-image { min-height: 320px; border: 1px solid var(--line); background: #e7ece7; }
@@ -126,7 +126,7 @@
 .training-notebook .play-footer .secondary:hover:not(:disabled) { color: var(--surface); }
 .training-notebook .result-sheet { max-width: 640px; padding: 78px 0 28px; }
 .training-notebook .result-sheet .kicker { margin: 0 0 8px; color: var(--cinnabar); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
-.training-notebook .result-sheet h2 { font-family: "Noto Serif TC", Georgia, serif; letter-spacing: -.05em; }
+.training-notebook .result-sheet h2 { font-family: var(--qmah-font-serif); letter-spacing: -.05em; }
 .training-notebook .result-sheet h2 span { color: var(--jade); }
 .training-notebook .result-sheet p:not(.kicker), .training-notebook .result-sheet small { color: var(--muted); }
 .training-notebook .result-actions a { color: var(--ink); font-weight: 800; }

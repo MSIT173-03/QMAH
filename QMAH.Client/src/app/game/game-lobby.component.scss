@@ -11,7 +11,7 @@
   min-height: 100vh;
   color: var(--ink);
   background: #dfe8e4;
-  font: 400 16px/1.62 "QMAH Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  font: 400 16px/1.62 var(--qmah-font-sans);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -67,7 +67,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .lobby-hero h1 {
   margin: 0;
   color: var(--ink);
-  font-family: "Noto Serif TC", "Source Han Serif TC", Georgia, serif;
+  font-family: var(--qmah-font-serif);
   font-size: clamp(38px, 4.2vw, 60px);
   font-weight: 700;
   letter-spacing: -.04em;
@@ -108,7 +108,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .lobby-hero-collapsed > div { display: grid; gap: 1px; }
 .lobby-hero-collapsed .lobby-hero-kicker { margin: 0; }
-.lobby-hero-collapsed strong { font-family: "Noto Serif TC", Georgia, serif; font-size: 18px; }
+.lobby-hero-collapsed strong { font-family: var(--qmah-font-serif); font-size: 18px; }
 
 .lobby-artwork { height: 100%; min-height: 0; margin: 0; overflow: hidden; border-left: 1px solid rgba(244, 241, 232, .28); }
 .lobby-artwork img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 50%; background: #454b49; }
@@ -135,7 +135,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .notes-page { position: fixed; z-index: 71; top: 50%; left: 50%; width: min(720px, calc(100vw - 40px)); max-height: calc(100dvh - 48px); overflow: auto; transform: translate(-50%, -50%); padding: 34px 36px 30px; color: var(--porcelain); background: var(--jade); border: 1px solid rgba(244, 241, 232, .42); box-shadow: 0 24px 70px rgba(10, 37, 45, .34); animation: reveal-dialog 180ms ease-out both; }
 .room-detail-backdrop { position: fixed; z-index: 70; inset: 0; background: rgba(10, 37, 45, .62); }
 .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 26px; border-bottom: 1px solid var(--line); }
-.page-heading h2, .room-notes-heading h2 { margin: 0; font-family: "Noto Serif TC", "Source Han Serif TC", Georgia, serif; font-size: clamp(30px, 3vw, 44px); font-weight: 700; letter-spacing: -.035em; line-height: 1.1; }
+.page-heading h2, .room-notes-heading h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: clamp(30px, 3vw, 44px); font-weight: 700; letter-spacing: -.035em; line-height: 1.1; }
 .page-heading p { margin: 9px 0 0; color: #52686e; font-size: 15px; }
 .join-note button, .insert-sheet footer button { border: 1px solid var(--ink); border-radius: 3px; padding: 10px 14px; color: var(--surface); background: var(--ink); font-weight: 800; transition: background 180ms ease, transform 180ms ease; }
 .join-note button:hover, .insert-sheet footer button:hover { background: var(--cinnabar); border-color: var(--cinnabar); transform: translateY(-2px); }
@@ -184,7 +184,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .ledger-skeleton { display: grid; grid-template-columns: 1.1fr .9fr .9fr; gap: 24px; padding: 21px 6px; border-bottom: 1px solid var(--line); }
 .ledger-skeleton i, .notes-skeleton i { display: block; height: 10px; background: rgba(98, 130, 139, .18); }
 .empty-state { padding: 82px 10px; }
-.empty-state h2 { margin: 0; font-family: "Noto Serif TC", Georgia, serif; font-size: 27px; }
+.empty-state h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: 27px; }
 .empty-state p { color: var(--muted); }
 .empty-state button { margin-right: 8px; border: 1px solid var(--ink); border-radius: 2px; padding: 8px 10px; color: var(--ink); background: transparent; }
 .empty-state button + button { color: var(--surface); background: var(--ink); }
@@ -209,7 +209,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .room-record dd { margin: 4px 0 0; color: var(--surface); font-weight: 700; }
 .participant-record { padding: 26px 0; }
 .participant-record header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(244, 241, 232, .28); }
-.participant-record h3 { margin: 0 0 10px; color: var(--surface); font-family: "Noto Serif TC", Georgia, serif; font-size: 20px; }
+.participant-record h3 { margin: 0 0 10px; color: var(--surface); font-family: var(--qmah-font-serif); font-size: 20px; }
 .participant-record header span { color: #c3d9d4; font-size: 13px; }
 .participant-record ol { list-style: none; margin: 0; padding: 0; }
 .participant-record li { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; padding: 11px 0; border-bottom: 1px solid rgba(244, 241, 232, .16); }
@@ -227,7 +227,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .insert-sheet, .qr-sheet { position: fixed; z-index: 71; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid var(--line); color: var(--ink); background: var(--surface); box-shadow: 0 24px 60px rgba(10, 37, 45, .28); }
 .insert-sheet { width: min(620px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 30px; animation: reveal 180ms ease-out both; }
 .insert-sheet > header { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
-.insert-sheet h2 { margin: 0 0 16px; font-family: "Noto Serif TC", Georgia, serif; font-size: 30px; }
+.insert-sheet h2 { margin: 0 0 16px; font-family: var(--qmah-font-serif); font-size: 30px; }
 .insert-sheet > header button { border: 0; background: transparent; font-size: 24px; }
 .form-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
 .insert-sheet label { color: var(--ink); }

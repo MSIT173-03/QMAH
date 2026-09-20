@@ -10,7 +10,7 @@
   min-height: 100vh;
   color: var(--ink);
   background: #dfe8e4;
-  font: 400 16px/1.62 "QMAH Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  font: 400 16px/1.62 var(--qmah-font-sans);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
