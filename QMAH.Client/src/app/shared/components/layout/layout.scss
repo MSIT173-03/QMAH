@@ -74,7 +74,7 @@
 }
 
 .app-context-navigation { display: inline-flex; align-items: center; gap: 2px; padding-left: 8px; border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
-.app-context-navigation a { min-height: 32px; display: inline-flex; align-items: center; padding: 6px 8px; border-radius: 8px; color: color-mix(in srgb, currentColor 62%, transparent); font-size: 11px; font-weight: 700; text-decoration: none; }
+.app-context-navigation a { min-height: 44px; display: inline-flex; align-items: center; padding: 6px 8px; border-radius: 8px; color: color-mix(in srgb, currentColor 62%, transparent); font-size: 11px; font-weight: 700; text-decoration: none; }
 .app-context-navigation a:hover, .app-context-navigation a.is-active { color: var(--color-primary, #8a512e); background: color-mix(in srgb, var(--color-primary, #8a512e) 9%, transparent); }
 
 .app-header__actions {
@@ -88,8 +88,9 @@
 .app-account,
 .app-login,
 .app-logout,
-.app-mobile-logout {
-  min-height: 40px;
+.app-mobile-logout,
+.app-admin-entry {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -112,7 +113,8 @@
 .app-account:hover,
 .app-login:hover,
 .app-logout:hover:not(:disabled),
-.app-mobile-logout:hover:not(:disabled) {
+.app-mobile-logout:hover:not(:disabled),
+.app-admin-entry:hover {
   border-color: color-mix(in srgb, var(--color-primary, #8a512e) 22%, transparent);
   background: color-mix(in srgb, var(--color-primary, #8a512e) 9%, transparent);
   color: var(--color-primary, #8a512e);
@@ -145,8 +147,14 @@
 }
 
 .app-login,
-.app-logout {
+.app-logout,
+.app-admin-entry {
   padding: 8px 11px;
+}
+
+.app-admin-entry {
+  color: inherit;
+  text-decoration: none;
 }
 
 .app-logout:disabled,
@@ -156,8 +164,8 @@
 }
 
 .app-theme-toggle {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: inline-grid;
   place-items: center;
   position: relative;
@@ -197,8 +205,8 @@
 
 .app-menu-toggle,
 .app-icon-button {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   display: inline-grid;
   place-items: center;
   border: 1px solid transparent;
@@ -296,6 +304,8 @@ textarea:focus-visible {
 
   .app-context-navigation { display: none; }
 
+  .app-admin-entry { display: none; }
+
   .app-account {
     padding-right: 4px;
   }
@@ -386,7 +396,7 @@ textarea:focus-visible {
   }
 
   .app-mobile-drawer__footer a {
-    min-height: 42px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -424,7 +434,8 @@ textarea:focus-visible {
   .app-account,
   .app-login,
   .app-logout,
-  .app-mobile-logout {
+  .app-mobile-logout,
+  .app-admin-entry {
     transition: none;
   }
 }

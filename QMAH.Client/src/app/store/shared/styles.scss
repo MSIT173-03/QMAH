@@ -200,7 +200,7 @@
   }
 
   /* 標籤 + 內容的規格說明列（商品頁規格、尺寸面板、商品說明條列共用） */
-  .spec-row { display: flex; gap: 10px; }
+  .spec-row { display: flex; gap: 10px; min-width: 0; }
   .spec-row--sm { font-size: 12px; }
   .spec-label {
     width: 62px;
@@ -208,7 +208,7 @@
     color: var(--color-muted);
   }
   .spec-label--wide { width: 78px; }
-  .spec-value { flex: 1; }
+  .spec-value { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .spec-value--mono { font-family: 'IBM Plex Mono', monospace; }
 
   /* ===============================

@@ -11,6 +11,7 @@ import {
   LucideMessageCircle,
 } from '@lucide/angular';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ThemeService } from '../../../core/services/theme';
 import { MeApiService } from '../../../core/services/me-api';
 import { AdminPendingCountsService } from '../../../core/services/admin-pending-counts';
 import { NotificationsBellComponent } from '../notifications-bell/notifications-bell';
@@ -30,6 +31,7 @@ const PENDING_COUNTS_POLL_INTERVAL_MS = 20000;
 })
 export class LayoutComponent implements OnInit, OnDestroy {
   readonly meApi = inject(MeApiService);
+  readonly themeService = inject(ThemeService);
   readonly adminPendingCounts = inject(AdminPendingCountsService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -42,6 +44,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
   readonly currentUrl = signal(this.router.url);
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
   @ViewChild('mobileNavigation') private mobileNavigation?: ElementRef<HTMLElement>;
+
+  readonly isAdmin = computed(() => this.meApi.me()?.roles?.includes('Admin') ?? false);
 
   // ui-integration: Mobile 次級入口集中成資料，讓同一個 drawer 可延伸到 Social／Admin，而不複製 Layout markup。
   readonly mobileNavigationGroups = computed<readonly NavigationGroup[]>(() => {
@@ -56,7 +60,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       }
     ];
 
-    if (this.meApi.me()?.roles?.includes('Admin')) {
+    if (this.isAdmin()) {
       groups.push({
         label: '管理',
         tone: 'admin',
@@ -86,6 +90,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   readonly isSocialArea = computed(() => this.currentUrl().startsWith('/social'));
+  readonly isAdminArea = computed(() => this.currentUrl().startsWith('/admin'));
 
   ngOnDestroy(): void {
     if (this.pollHandle) clearInterval(this.pollHandle);

@@ -23,11 +23,8 @@
   --on-dark-soft: rgba(255, 255, 255, 0.7);
   --on-dark-accent: #f0d9a0;
 
-  // 標題列跟「篩選欄＋內容區」這個組合現在都改成 position:fixed，直接鎖定在視窗座標，
-  // 不再依賴 .artifact-page 自己的寬度／內距去做版面計算——這樣可以完全避開「.artifact-page
-  // 的 100% 寬度其實是相對於瀏覽器預設 body 邊界，兩者對不齊，導致左右各多一條白邊、
-  // 甚至蓋住標題列」這類問題（fixed 定位一律以視窗為準，不受任何祖先元素的邊界影響）。
-  // .artifact-page 現在主要只負責提供 CSS 變數／背景色，不再是版面計算的依據。
+  // 桌面版的內容區固定在 App Shell header 與圖鑑標題列之下；標題列本身留在正常文件流，
+  // 避免用 page-local fixed stacking context 蓋住共用的 sticky header。
   background: var(--surface);
   font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
   color: var(--ink);
@@ -42,15 +39,11 @@
 /* ---------- header ---------- */
 
 .page-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--header-h); // 用明確高度取代「靠 padding 撐出來的高度」，跟下面 page-body 的 top 才會完全對齊
-  z-index: 60; // 蓋在固定側欄之上，避免任何邊界重疊時被壓到下面
+  position: static;
+  height: var(--header-h); // 用明確高度取代「靠 padding 撐出來的高度」，供 desktop page-body 計算起點
   display: flex;
   align-items: center;
-  background: var(--surface); // 標題列本身是浮在頁面最上層，補上背景避免內容從縫隙透出來
+  background: var(--surface);
 }
 
 .page-header__bar {
@@ -377,7 +370,7 @@
   但實測下來這條「grid 列高度 → 子層 height:100% → 子層內部 flex:1」的鏈路
   沒有確實生效，導致捲動失效、篩選欄的「文物分類」整塊被 overflow:hidden 裁掉。
 
-  現在改成：.page-body 是 position:fixed，四個方向都釘住（top 扣掉標題高度，
+  現在改成：.page-body 是 position:fixed，四個方向都釘住（top 扣掉 App Shell header 與標題高度，
   left/right/bottom 都是 0），本身就有明確的寬高。.search-sidebar／.content-area
   都用 position:absolute（以 .page-body 為定位基準），直接寫 top:0 + bottom:0，
   高度是「寫死撐滿」，不透過任何 grid/flex 的隱性撐高機制，也就不會再卡在
@@ -390,7 +383,7 @@
 
 .page-body {
   position: fixed;
-  top: var(--header-h);
+  top: calc(var(--app-header-height, 72px) + var(--header-h) + 1px);
   left: 0;
   right: 0;
   bottom: 0;
@@ -582,6 +575,7 @@
 
   .search-sidebar {
     position: static;
+    width: 100%;
     height: auto;
     overflow: visible;
     margin-bottom: 24px;

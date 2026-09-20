@@ -36,6 +36,15 @@
         </nav>
       }
 
+      @if (isAdminArea() && isAdmin()) {
+        <nav class="app-context-navigation" aria-label="管理功能">
+          <a routerLink="/admin/events" [class.is-active]="currentUrl().startsWith('/admin/events')" [attr.aria-current]="currentUrl().startsWith('/admin/events') ? 'page' : null">活動管理</a>
+          <a routerLink="/admin/posts" [class.is-active]="currentUrl().startsWith('/admin/posts')" [attr.aria-current]="currentUrl().startsWith('/admin/posts') ? 'page' : null">貼文管理</a>
+          <a routerLink="/admin/comments" [class.is-active]="currentUrl().startsWith('/admin/comments')" [attr.aria-current]="currentUrl().startsWith('/admin/comments') ? 'page' : null">留言管理</a>
+          <a routerLink="/admin/reports" [class.is-active]="currentUrl().startsWith('/admin/reports')" [attr.aria-current]="currentUrl().startsWith('/admin/reports') ? 'page' : null">檢舉審核</a>
+        </nav>
+      }
+
       <div class="app-header__actions">
         @if (meApi.me(); as me) {
           <a class="app-account" routerLink="/member" aria-label="前往會員中心" (click)="closeMenu()">
@@ -52,8 +61,24 @@
         <app-notifications-bell />
         <!-- ui-integration: 前台測試登入入口已移除；測試與管理員操作一律走正式登入頁。 -->
 
+        @if (isAdmin()) {
+          <a
+            class="app-admin-entry"
+            routerLink="/admin/posts"
+            [class.is-active]="isAdminArea()"
+            [attr.aria-current]="isAdminArea() ? 'page' : null"
+            (click)="closeMenu()"
+          >管理</a>
+        }
+
         <label class="app-theme-toggle" aria-label="切換深色模式">
-          <input type="checkbox" value="qmahdark" class="theme-controller" />
+          <input
+            type="checkbox"
+            value="qmahdark"
+            class="theme-controller"
+            [checked]="themeService.theme() === 'qmahdark'"
+            (change)="themeService.toggleTheme()"
+          />
           <app-qmah-icon class="theme-icon theme-icon--light" name="sun" aria-hidden="true" />
           <app-qmah-icon class="theme-icon theme-icon--dark" name="moon" aria-hidden="true" />
         </label>

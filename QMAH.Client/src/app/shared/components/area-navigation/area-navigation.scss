@@ -59,7 +59,7 @@
 }
 
 a {
-  min-height: 42px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -103,7 +103,7 @@ a:focus-visible {
 
 @media (min-width: 900px) {
   .area-navigation--desktop a {
-    min-height: 38px;
+    min-height: 44px;
     padding-inline: 9px;
     font-size: 12px;
   }

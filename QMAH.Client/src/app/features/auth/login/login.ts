@@ -3,11 +3,10 @@ import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal } 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SiteTheme, ThemeService } from '../../../core/services/theme';
 import { environment } from '../../../../environments/environment';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 import { ImageMagnifier } from '../../../store/component/image-magnifier/image-magnifier';
-
-type SiteTheme = 'qmah' | 'qmahdark';
 
 interface QingmingSegment {
   id: string;
@@ -29,6 +28,7 @@ export class Login implements OnInit, OnDestroy {
   googleLoginEnabled = false;
 
   private readonly document = inject(DOCUMENT);
+  private readonly themeService = inject(ThemeService);
   readonly form;
 
   /**
@@ -85,7 +85,7 @@ export class Login implements OnInit, OnDestroy {
   readonly loginPanelTransitioning = signal(false);
   readonly themeTransitioning = signal(false);
   readonly themeDirection = signal<'to-dark' | 'to-light'>('to-dark');
-  readonly theme = signal<SiteTheme>(this.readInitialTheme());
+  readonly theme = this.themeService.theme;
   readonly activeSegment = computed(
     () => this.qingmingSegments[this.activeSegmentIndex()] ?? this.qingmingSegments[0],
   );
@@ -109,8 +109,6 @@ export class Login implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.applyThemeAttribute(this.theme());
-
     this.authService.getCapabilities().subscribe((capabilities) => {
       this.googleLoginEnabled = capabilities.googleLoginEnabled;
     });
@@ -208,8 +206,7 @@ export class Login implements OnInit, OnDestroy {
     this.themeTransitioning.set(true);
 
     const applyTheme = () => {
-      this.applyThemeAttribute(nextTheme);
-      this.theme.set(nextTheme);
+      this.themeService.setTheme(nextTheme);
     };
 
     const documentWithTransition = this.document as Document & {
@@ -306,26 +303,6 @@ export class Login implements OnInit, OnDestroy {
   private stopCarousel(): void {
     if (this.carouselTimer) clearInterval(this.carouselTimer);
     this.carouselTimer = null;
-  }
-
-  private readInitialTheme(): SiteTheme {
-    try {
-      const storedTheme = this.document.defaultView?.localStorage.getItem('qmah-theme');
-      if (storedTheme === 'qmah' || storedTheme === 'qmahdark') return storedTheme;
-    } catch {
-      // 私密瀏覽或受限環境無法讀取儲存時，沿用目前 document theme。
-    }
-
-    return this.document.documentElement.getAttribute('data-theme') === 'qmahdark' ? 'qmahdark' : 'qmah';
-  }
-
-  private applyThemeAttribute(theme: SiteTheme): void {
-    this.document.documentElement.setAttribute('data-theme', theme);
-    try {
-      this.document.defaultView?.localStorage.setItem('qmah-theme', theme);
-    } catch {
-      // 主題切換不應因為儲存權限而失敗。
-    }
   }
 
   private scheduleThemeTransitionUnlock(): void {
