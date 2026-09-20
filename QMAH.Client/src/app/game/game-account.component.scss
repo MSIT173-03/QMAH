@@ -1,15 +1,15 @@
 :host {
-  --ink: #102f38;
-  --jade: #0f534d;
-  --cinnabar: #bd5748;
-  --porcelain: #f4f1e8;
-  --surface: #fffdf8;
-  --line: #d4dad3;
-  --muted: #586b70;
+  --ink: var(--qmah-ink);
+  --jade: var(--qmah-jade);
+  --cinnabar: var(--qmah-cinnabar);
+  --porcelain: var(--qmah-surface-soft);
+  --surface: var(--qmah-surface);
+  --line: var(--qmah-line);
+  --muted: var(--qmah-muted);
   display: block;
   min-height: 100vh;
   color: var(--ink);
-  background: #dfe8e4;
+  background: var(--qmah-page-surface);
   font: 400 16px/1.62 var(--qmah-font-sans);
 }
 
@@ -28,10 +28,10 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .account-loading { margin: 0; color: var(--muted); }
 .account-panel h1 { margin: 0 0 24px; font-size: clamp(26px, 5vw, 36px); line-height: 1.2; letter-spacing: -.025em; overflow-wrap: anywhere; }
 .account-panel > p { margin: -10px 0 24px; color: var(--muted); }
-.account-panel button, .primary-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 16px; padding: 10px 18px; color: #fff; background: var(--jade); border: 0; border-radius: 8px; font-weight: 700; text-decoration: none; transition: background-color 160ms ease, transform 160ms ease; }
+.account-panel button, .primary-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 16px; padding: 10px 18px; color: var(--qmah-on-dark); background: var(--jade); border: 0; border-radius: 8px; font-weight: 700; text-decoration: none; transition: background-color 160ms ease, transform 160ms ease; }
 .account-panel button:hover:not(:disabled), .primary-link:hover { background: #0a403b; transform: translateY(-1px); }
 .account-panel button:disabled { cursor: wait; opacity: .62; }
-.account-error { margin: 18px 0 0; padding: 12px 14px; color: #732f27; background: #f7e8e3; border: 1px solid #d9aaa0; border-radius: 8px; overflow-wrap: anywhere; }
+.account-error { margin: 18px 0 0; padding: 12px 14px; color: var(--cinnabar); background: color-mix(in srgb, var(--cinnabar) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cinnabar) 48%, var(--line)); border-radius: 8px; overflow-wrap: anywhere; }
 
 @media (max-width: 600px) {
   .account-page { padding: 10px 18px 40px; }

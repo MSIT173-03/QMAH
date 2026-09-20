@@ -1,16 +1,16 @@
 :host {
-  --ink: #102f38;
-  --jade: #0f534d;
-  --slate: #62828b;
-  --bronze: #b28d4f;
-  --cinnabar: #bd5748;
-  --paper: #fffdf8;
-  --line: #d4dad3;
-  --muted: #68777a;
+  --ink: var(--qmah-ink);
+  --jade: var(--qmah-jade);
+  --slate: var(--qmah-slate);
+  --bronze: var(--qmah-bronze);
+  --cinnabar: var(--qmah-cinnabar);
+  --paper: var(--qmah-surface);
+  --line: var(--qmah-line);
+  --muted: var(--qmah-muted);
   display: block;
   min-height: 100vh;
   color: var(--ink);
-  background: #dfe8e4;
+  background: var(--qmah-page-surface);
   font: 400 16px/1.62 var(--qmah-font-sans);
 }
 
@@ -51,7 +51,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 .test-tools-note { color: var(--muted); font-size: 11px; white-space: nowrap; }
 .test-tools-message { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .test-tools-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.test-control { min-height: 38px; padding: 7px 12px; border: 1px solid var(--jade); color: var(--paper); background: var(--jade); font-size: 12px; font-weight: 800; }
+.test-control { min-height: 38px; padding: 7px 12px; border: 1px solid var(--jade); color: var(--qmah-on-dark); background: var(--jade); font-size: 12px; font-weight: 800; }
 .test-control.secondary { color: var(--jade); background: transparent; }
 .loading-card, .paper-card { border: 1px solid rgba(16, 47, 56, .12); background: var(--paper); box-shadow: 0 14px 38px rgba(18, 47, 51, .07); }
 .loading-card { display: flex; align-items: center; justify-content: center; gap: 14px; min-height: 280px; color: var(--muted); }
@@ -107,7 +107,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 .waiting-facts span { padding: 6px 10px; background: #edf0e9; color: var(--jade); font-size: 12px; font-weight: 700; }
 .waiting-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
 .waiting-actions button { min-height: 46px; padding: 9px 16px; border: 1px solid var(--jade); color: var(--jade); background: transparent; font-weight: 700; }
-.waiting-actions .start-game { color: var(--paper); background: var(--jade); }
+.waiting-actions .start-game { color: var(--qmah-on-dark); background: var(--jade); }
 .waiting-actions button:disabled { cursor: not-allowed; opacity: .55; }
 
 .round-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }

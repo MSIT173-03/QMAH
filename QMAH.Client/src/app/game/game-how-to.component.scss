@@ -1,9 +1,9 @@
 :host {
-  --how-to-ink: #102f38;
-  --how-to-jade: #0f534d;
-  --how-to-cinnabar: #bd5748;
-  --how-to-paper: #fffdf8;
-  --how-to-line: #d4dad3;
+  --how-to-ink: var(--qmah-ink);
+  --how-to-jade: var(--qmah-jade);
+  --how-to-cinnabar: var(--qmah-cinnabar);
+  --how-to-paper: var(--qmah-surface);
+  --how-to-line: var(--qmah-line);
   display: block;
 }
 
@@ -11,7 +11,7 @@
 .game-how-to {
   overflow: hidden;
   border: 1px solid var(--how-to-line);
-  background: color-mix(in srgb, var(--how-to-paper) 92%, #dfe8e4);
+  background: color-mix(in srgb, var(--how-to-paper) 92%, var(--qmah-page-surface));
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
@@ -94,7 +94,7 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
 
 .game-how-to__body > p {
   margin: 0;
-  color: #52686e;
+  color: var(--qmah-muted);
   font-size: 14px;
 }
 
@@ -114,7 +114,7 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
   min-width: 0;
   padding: 13px;
   border: 1px solid var(--how-to-line);
-  background: rgba(255, 253, 248, .7);
+  background: color-mix(in srgb, var(--how-to-paper) 70%, var(--qmah-page-surface));
 }
 
 .game-how-to__body li > span {
@@ -123,7 +123,7 @@ summary:focus-visible { outline: 2px solid var(--how-to-cinnabar); outline-offse
 }
 
 .game-how-to__body li strong { font-size: 14px; }
-.game-how-to__body li p { margin: 4px 0 0; color: #68777a; font-size: 12px; line-height: 1.5; }
+.game-how-to__body li p { margin: 4px 0 0; color: var(--qmah-muted); font-size: 12px; line-height: 1.5; }
 
 @keyframes how-to-reveal { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 

@@ -1,14 +1,14 @@
 :host {
-  --guide-ink: #102f38;
-  --guide-jade: #0f534d;
-  --guide-cinnabar: #bd5748;
-  --guide-surface: #fffdf8;
-  --guide-line: #d4dad3;
-  --guide-muted: #68777a;
+  --guide-ink: var(--qmah-ink);
+  --guide-jade: var(--qmah-jade);
+  --guide-cinnabar: var(--qmah-cinnabar);
+  --guide-surface: var(--qmah-surface);
+  --guide-line: var(--qmah-line);
+  --guide-muted: var(--qmah-muted);
   display: block;
   min-height: 100vh;
   color: var(--guide-ink);
-  background: #dfe8e4;
+  background: var(--qmah-page-surface);
   font: 400 16px/1.62 var(--qmah-font-sans);
 }
 
@@ -42,7 +42,7 @@
   border-radius: 7px;
   padding: 11px 14px;
   color: var(--guide-muted);
-  background: rgba(255, 253, 248, .6);
+  background: color-mix(in srgb, var(--guide-surface) 60%, var(--qmah-page-surface));
   text-align: left;
   cursor: pointer;
   transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;

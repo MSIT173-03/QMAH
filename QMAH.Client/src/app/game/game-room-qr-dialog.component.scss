@@ -1,4 +1,4 @@
-:host { --ink: #102f38; --jade: #0f534d; --cinnabar: #bd5748; --surface: #fffdf8; --line: #d4dad3; --muted: #68777a; display: contents; }
+:host { --ink: var(--qmah-ink); --jade: var(--qmah-jade); --cinnabar: var(--qmah-cinnabar); --surface: var(--qmah-surface); --line: var(--qmah-line); --muted: var(--qmah-muted); display: contents; }
 /* ui-integration: QR dialog 與 Game create dialog 共用高於 App Shell 的 stacking context，保證 mobile 仍可關閉與複製。 */
 .qr-backdrop { position: fixed; z-index: 70; inset: 0; background: rgba(10, 37, 45, .58); }
 .qr-sheet { position: fixed; z-index: 71; top: 50%; left: 50%; display: grid; justify-items: center; width: min(360px, calc(100vw - 32px)); transform: translate(-50%, -50%); padding: 24px; border: 1px solid var(--line); color: var(--ink); background: var(--surface); box-shadow: 0 24px 60px rgba(10, 37, 45, .28); text-align: center; }
@@ -10,5 +10,5 @@
 .qr-frame qrcode { display: block; line-height: 0; }
 .qr-sheet code { margin-top: 14px; color: var(--ink); font: 800 20px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
 .qr-sheet > p { margin: 10px 0 16px; color: var(--muted); font-size: 12px; }
-.qr-copy { border: 1px solid var(--ink); border-radius: 3px; padding: 9px 13px; color: var(--surface); background: var(--ink); font-weight: 800; }
+.qr-copy { border: 1px solid var(--ink); border-radius: 3px; padding: 9px 13px; color: var(--qmah-on-dark); background: var(--ink); font-weight: 800; }
 .qr-copy:hover { border-color: var(--cinnabar); background: var(--cinnabar); }
