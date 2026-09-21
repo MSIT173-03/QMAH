@@ -4,10 +4,11 @@
   "configurations": [
     {
       "name": "ng serve",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "npm: start",
-      "url": "http://localhost:4200/"
+      "runtimeExecutable": "npm.cmd",
+      "runtimeArgs": ["run", "start", "--", "--open"],
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "ng test",

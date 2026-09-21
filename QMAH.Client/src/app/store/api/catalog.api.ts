@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
-import { apiUrl, getField, toParams } from './http';
+import { apiUrl, toParams } from './http';
 import {
   Category,
   Page,
@@ -38,10 +38,8 @@ export class CatalogApi {
 
   /** GET /categories：器類清單 */
   getCategories(): Observable<Category[]> {
-    // integration: 正式 Store API 回傳陣列，舊 mock 仍回傳 { categories }；
-    // 這裡只做 response adapter，讓測試資料格式相容而不把 mock interceptor 帶入正式 runtime。
-    return this.http.get<ApiCategory[] | { categories: ApiCategory[] }>(apiUrl('/categories')).pipe(
-      map((res) => (Array.isArray(res) ? res : res.categories).map(toCategory)),
+    return this.http.get<ApiCategory[]>(apiUrl('/categories')).pipe(
+      map((res) => res.map(toCategory)),
       // 分類導覽是輔助資料；資料庫短暫失敗時保留商品頁與其他 Area，不讓 toSignal 拋出錯誤。
       catchError(() => of([])),
     );
@@ -91,9 +89,10 @@ export class CatalogApi {
 
   /** GET /products/{id}/related：同類推薦（同器類優先，不足以其他器類補齊） */
   getRelated(id: string, limit?: number): Observable<Product[]> {
-    // integration: 目前後端已確認商品清單／詳情／評論，related route 尚未存在；頁面會以空清單降級，
-    // 不把 mock 的推薦排序當成正式商品資料，待負責人決定資料來源後再補 API。
-    return getField(this.http, apiUrl`/products/${id}/related`, 'items', { limit });
+    // integration: 後端目前沒有 related route；直接回傳空清單，避免每次詳情頁載入產生必定 404。
+    void id;
+    void limit;
+    return of([]);
   }
 
   /**

@@ -75,7 +75,7 @@ export class CartApi {
   }
 
   // integration: develop 已有可用的正式購物車是 /me/cart；此處只做前端 adapter，
-  // 不新增 compatibility endpoint，也不讓未完成的 Store mock contract 進入正式 runtime。
+  // 不新增 compatibility endpoint，也不讓尚未定義的 Store contract 進入正式 runtime。
 
   /** GET /me/cart：將既有 CartItemDto 陣列轉成 Store 頁面既有模型。 */
   getCart(): Observable<ShoppingCart> {

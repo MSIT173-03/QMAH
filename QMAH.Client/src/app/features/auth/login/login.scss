@@ -76,21 +76,64 @@
 }
 
 .museum-topbar {
-  position: absolute;
+  position: fixed;
   top: clamp(24px, 4vw, 64px);
   right: clamp(24px, 4vw, 64px);
   left: clamp(24px, 4vw, 64px);
-  z-index: 5;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
 }
 
+.brand-logo-shell {
+  flex: 0 1 auto;
+  width: min(360px, calc(100vw - 140px));
+  max-width: min(390px, calc(100vw - 140px));
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 14px;
+  border: 1px solid color-mix(in srgb, var(--login-border) 68%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--qmah-paper) 84%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--qmah-night) 24%, transparent);
+  -webkit-backdrop-filter: blur(8px) saturate(1.08);
+  backdrop-filter: blur(8px) saturate(1.08);
+}
+
 .brand-logo {
   box-sizing: border-box;
   display: block;
-  width: min(238px, 68%);
+  width: min(316px, 100%);
+  max-width: 100%;
+  height: auto;
+  image-rendering: auto;
+  filter: drop-shadow(0 2px 12px rgba(7, 28, 26, 0.42));
+}
+
+.museum-media__logo-shell {
+  position: absolute;
+  z-index: 6;
+  top: clamp(24px, 4vw, 64px);
+  left: clamp(24px, 4vw, 64px);
+  display: none;
+  align-items: center;
+  width: min(360px, calc(100vw - 140px));
+  max-width: min(390px, calc(100vw - 140px));
+  padding: 9px 14px;
+  border: 1px solid color-mix(in srgb, var(--login-border) 68%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--qmah-paper) 84%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--qmah-night) 24%, transparent);
+  -webkit-backdrop-filter: blur(8px) saturate(1.08);
+  backdrop-filter: blur(8px) saturate(1.08);
+}
+
+.museum-media__logo {
+  display: block;
+  width: min(316px, 100%);
+  max-width: 100%;
   height: auto;
   filter: drop-shadow(0 2px 12px rgba(7, 28, 26, 0.42));
 }
@@ -733,15 +776,32 @@ input:focus-visible {
   }
 
   .museum-topbar {
-    position: relative;
-    inset: auto;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
     order: 1;
     padding: 24px;
     border-bottom: 1px solid var(--login-border);
+    background: color-mix(in srgb, var(--login-paper) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
   }
 
   .brand-logo {
-    filter: brightness(0.42) saturate(0.72) drop-shadow(0 2px 10px rgba(25, 60, 56, 0.18));
+    filter: drop-shadow(0 2px 12px rgba(7, 28, 26, 0.42));
+  }
+
+  .museum-topbar .brand-logo-shell {
+    display: none;
+  }
+
+  .museum-media__logo-shell {
+    display: inline-flex;
+    top: 18px;
+    left: 22px;
+    width: min(270px, calc(100vw - 110px));
+    max-width: min(300px, calc(100vw - 110px));
   }
 
   .museum-purpose {
@@ -812,9 +872,9 @@ input:focus-visible {
   }
 
   .museum-topbar {
-    top: auto;
-    right: auto;
-    left: auto;
+    top: 0;
+    right: 0;
+    left: 0;
     padding: 18px 22px 14px;
     align-items: center;
     gap: 12px;
@@ -827,7 +887,7 @@ input:focus-visible {
   }
 
   .brand-logo {
-    width: min(204px, 58vw);
+    width: min(248px, 64vw);
   }
 
   .museum-purpose {
@@ -984,6 +1044,16 @@ input:focus-visible {
 
 :host-context([data-theme='qmahdark']) .brand-logo {
   filter: drop-shadow(0 2px 12px rgba(7, 28, 26, 0.42));
+}
+
+:host-context([data-theme='qmahdark']) .brand-logo-shell {
+  background: color-mix(in srgb, var(--qmah-night) 88%, transparent);
+  border-color: color-mix(in srgb, var(--qmah-jade) 48%, var(--login-border));
+}
+
+:host-context([data-theme='qmahdark']) .museum-media__logo-shell {
+  background: color-mix(in srgb, var(--qmah-night) 88%, transparent);
+  border-color: color-mix(in srgb, var(--qmah-jade) 48%, var(--login-border));
 }
 
 :host-context([data-theme='qmahdark']) .theme-toggle {

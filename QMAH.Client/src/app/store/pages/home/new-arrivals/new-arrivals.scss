@@ -95,7 +95,7 @@
 
   &--deal {
     border-color: var(--color-accent);
-    color: var(--color-on-ink);
+    color: var(--color-on-accent);
     background: var(--color-accent);
   }
 }
@@ -120,6 +120,6 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--qmah-primary-content);
+    color: var(--color-on-accent);
   }
 }

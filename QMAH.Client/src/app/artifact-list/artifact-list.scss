@@ -478,9 +478,27 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding-top: 14px;
   margin: 0 0 18px;
   font-size: 14px;
   color: var(--qmah-text-muted);
+}
+
+.content-area__meta-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-filter.is-active {
+  border-color: var(--qmah-catalog-accent);
+  color: var(--qmah-catalog-content);
+  background: var(--qmah-catalog-accent);
+}
+.quick-filter.is-active strong {
+  color: currentColor;
 }
 
 .content-area__scroll {

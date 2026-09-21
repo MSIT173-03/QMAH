@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
@@ -14,6 +15,7 @@ using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Services;
 using QMAH.Infrastructure.Configuration;
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Development;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
@@ -214,6 +216,16 @@ builder.Services.AddScoped<ArtifactDiscussionService>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/problem+json; charset=utf-8";
+        await context.HttpContext.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status429TooManyRequests,
+            Title = "登入嘗試過於頻繁",
+            Detail = "請稍後再試。"
+        }, cancellationToken);
+    };
     options.AddPolicy("auth", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -271,6 +283,24 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        await DevelopmentAdminSeeder.ResetDevelopmentPasswordsAsync(
+            app.Services,
+            builder.Configuration);
+    }
+    catch (Exception exception)
+        when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception))
+    {
+        app.Logger.LogWarning(
+            exception,
+            "開發用帳號密碼初始化時無法連線資料庫；登入仍會回報資料庫錯誤。目標：{DatabaseTarget}",
+            qmahDatabaseResolution.Target);
+    }
+}
+
 // 連線解析只選擇既有資料庫，不會自動建立或套用 migration；正式 Schema 仍由版本化 SQL 控制。
 // 多個候選同時存在時記錄實際採用目標，方便核對 SSMS 與應用程式是否正在查看同一套 QMAH。
 if (qmahDatabaseResolution.FoundTargets.Count > 1)
@@ -291,6 +321,31 @@ else
     app.Logger.LogInformation(
         "QMAH 資料庫目前目標：{SelectedTarget}",
         qmahDatabaseResolution.Target);
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.Logger.LogInformation("公開媒體根目錄：{MediaRoot}", mediaRoot);
+    if (!Directory.Exists(mediaRoot))
+    {
+        app.Logger.LogWarning(
+            "Media:RootPath 不存在，/media/catalog 與 /media/store 將回傳 404。路徑：{MediaRoot}",
+            mediaRoot);
+    }
+    else
+    {
+        foreach (var segment in new[] { "catalog", "store" })
+        {
+            var segmentPath = Path.Combine(mediaRoot, segment);
+            if (!Directory.Exists(segmentPath))
+            {
+                app.Logger.LogWarning(
+                    "資料庫可能包含 /media/{Segment} 圖片路徑，但本機公開媒體資料夾不存在：{SegmentPath}",
+                    segment,
+                    segmentPath);
+            }
+        }
+    }
 }
 
 // 使用者切換頁面／重新整理時，瀏覽器會直接中止尚未完成的舊請求（例如貼文列表還沒回應就跳走）。
@@ -342,6 +397,36 @@ if (!app.Environment.IsDevelopment())
 
 app.UseResponseCompression();
 app.UseHttpsRedirection();
+
+// API＋Angular 前台不需要啟動 QMAH.Web 才能顯示公開圖鑑與商城圖片。
+// 只掛載 catalog/store 兩個公開根目錄；uploads、社群媒體與其他私人檔案不由靜態檔案中介軟體暴露。
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/media")
+        && !context.Request.Path.StartsWithSegments("/media/catalog")
+        && !context.Request.Path.StartsWithSegments("/media/store"))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next(context);
+});
+if (Directory.Exists(mediaRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaRoot),
+        RequestPath = "/media",
+        OnPrepareResponse = context =>
+        {
+            context.Context.Response.Headers.CacheControl =
+                context.Context.Request.Query.ContainsKey("v")
+                    ? "public,max-age=31536000,immutable"
+                    : "public,max-age=3600,must-revalidate";
+        }
+    });
+}
 
 // 順序不可任意交換：先選路由與限流，再套 CORS，接著建立登入身分並執行授權，最後才進 Controller。
 // 需要讀取 User／Role 的新 middleware 放在 Authentication 後；需要讓瀏覽器看見錯誤回應的 middleware 也必須受 CORS 包覆。

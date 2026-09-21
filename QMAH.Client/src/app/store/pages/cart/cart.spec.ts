@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { Cart } from './cart';
-import { provideMockApi } from '../../api/mock/mock-api.interceptor';
 
 describe('Cart', () => {
   let component: Cart;
@@ -10,7 +11,7 @@ describe('Cart', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Cart],
-      providers: [provideMockApi()],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     })
     .compileComponents();
 

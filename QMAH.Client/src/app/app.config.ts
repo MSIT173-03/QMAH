@@ -24,8 +24,6 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(
-      // integration: Store mockApiInterceptor 僅供單元測試的 provideMockApi() 使用；正式 App 必須呼叫已整合的真實 API。
-      // 若把 mock interceptor 放在這裡，商城頁面會在部署時被假資料攔截，導致後端訂單與庫存流程失效。
       withInterceptors([apiCredentialsInterceptor]),
       withXsrfConfiguration({
         cookieName: 'XSRF-TOKEN-API',

@@ -31,7 +31,7 @@
   --color-secondary-content: var(--qmah-secondary-content);
   --color-shadow: var(--qmah-shadow-card);
   /* ui-integration: Store 控制項與卡片細節共用低圓角，保留既有方正視覺而避免局部漂移。 */
-  --store-radius: 2px;
+  --store-radius: 12px;
 
   /* 頁面重置樣式（等同原本套用於 body 的樣式，改由頁面根元件承載） */
   background: var(--color-bg);

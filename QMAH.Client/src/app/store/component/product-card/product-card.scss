@@ -59,14 +59,15 @@
   position: absolute;
   top: 0;
   left: 0;
-  background: var(--color-ink);
-  color: var(--color-on-ink);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   padding: 3px 7px;
 
   &--teal {
     background: var(--color-teal);
+    color: var(--color-secondary-content);
   }
 }
 

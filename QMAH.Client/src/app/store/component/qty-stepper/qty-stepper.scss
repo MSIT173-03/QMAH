@@ -20,8 +20,8 @@
   transition: background 160ms, color 160ms;
 
   &:hover {
-    background: var(--color-ink);
-    color: var(--color-on-ink);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
   }
 
   &--sm {

@@ -1,24 +1,37 @@
+:host {
+  display: block;
+}
+
 .back-button {
   display: inline-flex;
   align-items: center;
-
-  padding: 9px 14px;
-
-  border: 1px solid #c8d9d5;
-  border-radius: 10px;
-
-  background: var(--qmah-paper);
-  color: var(--qmah-jade-deep);
-
-  font-size: 14px;
-  font-weight: 600;
-
+  gap: 8px;
+  min-height: var(--qmah-control-height);
+  padding: 8px var(--qmah-control-padding-x);
+  border: 1px solid color-mix(in srgb, var(--qmah-primary) 34%, var(--qmah-border));
+  border-radius: var(--qmah-radius-control);
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 92%, var(--qmah-primary));
+  color: var(--qmah-primary);
+  font-size: var(--qmah-type-label-size);
+  font-weight: 750;
+  line-height: 1.2;
   text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 
-  transition: 0.2s;
+  app-qmah-icon {
+    width: 17px;
+    height: 17px;
+  }
 
   &:hover {
-    background: #e8f0ee;
-    border-color: #7d9c98;
+    background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
+    border-color: var(--qmah-primary);
+    color: var(--qmah-primary-hover);
+    transform: translateX(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 3px;
   }
 }

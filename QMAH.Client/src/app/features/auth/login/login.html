@@ -5,7 +5,9 @@
   [class.theme-switching--light]="themeDirection() === 'to-light'"
 >
   <div class="museum-topbar">
-    <img class="brand-logo" [src]="logoSrc()" alt="清明鑑定屋" />
+    <div class="brand-logo-shell" [class.brand-logo-shell--dark]="theme() === 'qmahdark'">
+      <img class="brand-logo" [src]="logoSrc()" alt="清明鑑定屋" />
+    </div>
     <div class="museum-topbar__actions">
       <span class="museum-purpose">故宮院藏・清明上河圖</span>
       <button
@@ -41,6 +43,9 @@
           [enabled]="magnifierEnabled()"
           (draggingChange)="handleLensDragging($event)"
         />
+        <div class="museum-media__logo-shell" [class.museum-media__logo-shell--dark]="theme() === 'qmahdark'">
+          <img class="museum-media__logo" [src]="logoSrc()" alt="清明鑑定屋" />
+        </div>
         <span class="museum-media__location">{{ activeSegment().location }}</span>
         <span class="museum-media__counter" aria-live="polite">
           {{ activeSegmentIndex() + 1 }} / {{ qingmingSegments.length }}

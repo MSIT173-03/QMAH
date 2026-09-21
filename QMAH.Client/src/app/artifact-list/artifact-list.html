@@ -99,10 +99,23 @@
           <span class="result-count__scope" *ngIf="filteredItems().length !== totalCount()">（圖鑑共 {{ totalCount() }} 筆）</span>
           ・已解鎖 <strong>{{ filteredUnlockedCount() }}</strong>
         </span>
-        <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
-          <svg lucideKeyRound aria-hidden="true" focusable="false"></svg>
-          鑰匙背包 <strong>{{ keys() }}</strong>
-        </button>
+        <div class="content-area__meta-actions">
+          <button
+            type="button"
+            class="quick-filter"
+            [class.is-active]="unlockedOnly()"
+            [attr.aria-pressed]="unlockedOnly()"
+            (click)="toggleUnlockedFilter()"
+          >
+            <svg lucideLockKeyholeOpen aria-hidden="true" focusable="false"></svg>
+            <span>已解鎖</span>
+            <strong>{{ unlockedCount() }}</strong>
+          </button>
+          <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
+            <svg lucideKeyRound aria-hidden="true" focusable="false"></svg>
+            鑰匙背包 <strong>{{ keys() }}</strong>
+          </button>
+        </div>
       </div>
 
       <!-- 只有這個捲動容器裡的內容會捲動；上面的 content-area__meta 固定不動 -->
@@ -273,19 +286,18 @@
             </div>
             <div class="field">
               <span class="field-label">玩家回答鑑賞</span>
-              <button type="button" class="field-link-button" (click)="onAppreciationClick(detail)">前往鑑賞回答</button>
+              <button type="button" class="field-action" (click)="onAppreciationClick(detail)">前往鑑賞回答</button>
             </div>
             <div class="field field--discussion">
                 <span class="field-label">社群討論</span>
                 <button
                   type="button"
-                  class="field-link-button"
+                  class="field-action"
                   [disabled]="discussionLoading()"
                   (click)="openDiscussion(item.id)"
                 >
                   {{ discussionLoading() ? '檢查討論中…' : '查看／建立討論' }}
                 </button>
-                <br/>
                 <span class="field-hint">已有貼文會直接開啟；尚無貼文時會先確認並請你留下第一則留言。</span>
                 @if (discussionError() && !discussionDialogOpen()) {
                   <span class="field-value field-value--error" role="alert">{{ discussionError() }}</span>
