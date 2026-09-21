@@ -17,7 +17,7 @@
         [attr.aria-label]="theme() === 'qmahdark' ? '切換淺色模式' : '切換深色模式'"
         [attr.aria-pressed]="theme() === 'qmahdark'"
         title="切換深淺模式"
-        (click)="toggleTheme()"
+        (click)="toggleTheme($event)"
       >
         @if (theme() === 'qmahdark') {
           <app-qmah-icon name="sun" aria-hidden="true" />

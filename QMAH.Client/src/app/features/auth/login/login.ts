@@ -221,8 +221,21 @@ export class Login implements OnInit, OnDestroy {
     }, 0);
   }
 
-  toggleTheme(): void {
+  toggleTheme(event: MouseEvent): void {
     if (this.themeTransitioning()) return;
+
+    const toggle = event.currentTarget as HTMLElement | null;
+    if (toggle) {
+      const bounds = toggle.getBoundingClientRect();
+      this.document.documentElement.style.setProperty(
+        '--login-theme-origin-x',
+        `${bounds.left + bounds.width / 2}px`,
+      );
+      this.document.documentElement.style.setProperty(
+        '--login-theme-origin-y',
+        `${bounds.top + bounds.height / 2}px`,
+      );
+    }
 
     const nextTheme: SiteTheme = this.theme() === 'qmahdark' ? 'qmah' : 'qmahdark';
     this.themeDirection.set(nextTheme === 'qmahdark' ? 'to-dark' : 'to-light');
