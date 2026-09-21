@@ -40,12 +40,6 @@ export interface CatalogDetailModel extends CatalogModel {
   attributionText: string;        // 完整署名文字
 }
 
-// CategoryModel／EraModel 的欄位（id / code / name）已經對照過 /api/v1/catalog/categories、
-// /api/v1/catalog/eras 的實際回應內容確認過了。
-// ⚠️ 唯一還沒確認的是外層包裝：目前 catalog-service.ts 假設這兩支 API 直接回傳陣列
-// （CategoryModel[] / EraModel[]），不是像 getArtifacts() 那樣包一層分頁物件。
-// 如果實際上外面還有一層（例如 { items: [...] }），跟我說一聲，我把
-// getCategories()／getEras() 的回傳型別跟裡面的 .pipe() 一起調整。
 
 /** 分類對照資料，對應 /api/v1/catalog/categories */
 export interface CategoryModel {

@@ -112,10 +112,7 @@ export class ArtifactList implements OnInit {
   discussionLoading = signal(false);
   discussionError = signal('');
 
-  // integration: 原分支的「全部解鎖」Debug 開關沒有正式 UI，也不應改寫真實解鎖狀態。
-  // 先註解保留除錯脈絡；正式測試應使用測試資料或 API mock，不把測試捷徑帶進部署程式。
-  // debugAllUnlocked = signal(false);
-  // private debugUnlockBackup: Map<string, boolean> | null = null;
+
 
   // ---- 搜尋／篩選 ----
   searchQuery = signal('');
@@ -273,7 +270,6 @@ export class ArtifactList implements OnInit {
   /** 讓外部（父層路由）接手「玩家回答鑑賞」的導頁邏輯，避免元件直接耦合 Router */
   @Output() appreciationRequested = new EventEmitter<CardEntry>();
 
-  // integration: 原分支留下未使用且綁死 localhost 的圖片 URL；正式圖片路徑應由 API／Media resolver 提供。
   // private baseImageUrl = 'https://localhost:7249/api/v1/me/catalog/artifacts';
 
   constructor(
@@ -346,14 +342,7 @@ export class ArtifactList implements OnInit {
     });
   }
 
-  /**
-   * 從 key-list 解鎖成功後跳轉過來時，會帶 ?focus=<artifactId> 這個 query param，
-   * 清單載入完成後如果有這個 id 就直接開啟放大檢視、聚焦在那張卡片上。
-   *
-   * ⚠️ 這裡假設本頁路由路徑是 '/'——之前 onKeyBagClick() 導去 key-list 用的是
-   * '/key-list'，這裡對稱地假設本頁是 '/'，實際上兩個路徑都還沒跟你的 routes
-   * 設定確認過。如果不對，這裡跟 key-list.ts 的 goToArtifact() 要一起改。
-   */
+
   private focusFromQueryParamIfAny(): void {
     const focusId = this.route.snapshot.queryParamMap.get('focus');
     if (focusId && this.catalogModel().some((i) => i.id === focusId)) {
@@ -392,13 +381,6 @@ export class ArtifactList implements OnInit {
   }
 
   /**
-   * 後端目前還沒有「圖鑑遊戲外皮」的對應欄位或 API（純前端遊戲機制），
-   * 這裡先用暫時的預設值把 CatalogModel 補成 CompendiumCardSummary。
-   *
-   * 文物本身的鑑賞細節（description / sizeText / primaryImagePath...）不在這裡用假資料頂著——
-   * GET /catalog/artifacts/{id} 已經是真正可用的 API 了，所以改成點開卡片時才用
-   * CatalogService.getArtifactById() 即時抓真資料（見 maybeLoadFocusedDetail()），不需要、也不該用假資料。
-   *
    * unlocked／unlockedAt 這裡一律先給預設的「未解鎖」，實際狀態由 loadUnlockStatus()
    * 打 GET /me/catalog/artifact/unlocks 回來後再覆寫（見 loadArtifacts() 內的呼叫順序）。
    */
@@ -423,26 +405,7 @@ export class ArtifactList implements OnInit {
     return path;
   }
 
-  // integration: 以下 CRUD 表單 handler 沒有任何模板呼叫者；保留原始意圖但先停用，
-  // 避免未完成的 Catalog 管理流程與目前唯讀／解鎖前台混在同一個元件。
-  // onAddClick(): void {
-  //   this.editingArtifact.set(null);
-  //   this.showForm.set(true);
-  // }
-  //
-  // onEditClick(catalogModel: CatalogModel): void {
-  //   this.editingArtifact.set(catalogModel);
-  //   this.showForm.set(true);
-  // }
-  //
-  // onFormSaved(): void {
-  //   this.showForm.set(false);
-  //   this.loadArtifacts();
-  // }
-  //
-  // onFormCancelled(): void {
-  //   this.showForm.set(false);
-  // }
+
 
   trackByArtifactId(_index: number, item: CompendiumCardSummary): string {
     return item.id;
@@ -505,7 +468,7 @@ export class ArtifactList implements OnInit {
     }
   }
 
-  /** 放大檢視要顯示的圖片：已解鎖且細節已載入時用正式展示圖，否則沿用清單縮圖（維持「？？？」神秘感） */
+  /** 放大檢視要顯示的圖片：已解鎖且細節已載入時用正式展示圖，否則沿用清單縮圖*/
   focusedImagePath(item: CompendiumCardSummary): string {
     return this.focusedCardEntry()?.primaryImagePath ?? item.thumbnailPath;
   }
@@ -640,8 +603,7 @@ export class ArtifactList implements OnInit {
     this.keyService.unlockWithKey(universal.code, target.id).subscribe({
       next: (result) => {
         this.unlocking.set(false);
-        // 鑰匙餘額改重新呼叫 loadKeyBalance() 問後端要正確數字，不用 unlockKeyCost()
-        // 在前端自己相減去猜。
+        // 鑰匙餘額改重新呼叫 loadKeyBalance() 問後端要正確數字。
         this.loadKeyBalance();
 
         // ⚠️「這把鑰匙目前沒有符合條件的未解鎖文物」這個情境，後端是回 HTTP 200 +
@@ -686,11 +648,7 @@ export class ArtifactList implements OnInit {
     this.appreciationRequested.emit(item);
   }
 
-  /**
-   * 返回會員頁面。
-   * ⚠️ 路由路徑 '/member' 是假設值，還沒跟你的 routes 設定確認過，
-   * 如果會員頁實際路徑不同，這裡要跟著改。
-   */
+
   goBackToMember(): void {
     this.router.navigate(['/member']);
   }
@@ -740,25 +698,6 @@ export class ArtifactList implements OnInit {
   toggleLedger(): void {
     this.ledgerOpen.update((v) => !v);
   }
-
-  // integration: 原分支的全解鎖 Debug handler 沒有模板入口，且會在前端偽造會員解鎖狀態。
-  // 先註解而不刪除，避免測試脈絡遺失；若未來需要使用，應移到 development-only 測試頁。
-  // toggleDebugUnlockAll(): void {
-  //   if (this.debugAllUnlocked()) {
-  //     const backup = this.debugUnlockBackup;
-  //     this.catalogModel.update((list) =>
-  //       list.map((i) => ({ ...i, unlocked: backup?.get(i.id) ?? i.unlocked }))
-  //     );
-  //     this.debugUnlockBackup = null;
-  //     this.debugAllUnlocked.set(false);
-  //   } else {
-  //     this.debugUnlockBackup = new Map(this.catalogModel().map((i) => [i.id, i.unlocked]));
-  //     this.catalogModel.update((list) => list.map((i) => ({ ...i, unlocked: true })));
-  //     this.debugAllUnlocked.set(true);
-  //   }
-  //
-  //   this.maybeLoadFocusedDetail();
-  // }
 
   itemByArtifactId(artifactId: string): CompendiumCardSummary | undefined {
     return this.catalogModel().find((i) => i.id === artifactId);

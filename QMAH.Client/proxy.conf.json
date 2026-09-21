@@ -1,16 +1,16 @@
 {
   "/api": {
-    "target": "http://localhost:5147",
+    "target": "https://localhost:7249",
     "secure": false,
     "changeOrigin": true
   },
   "/openapi": {
-    "target": "http://localhost:5147",
+    "target": "https://localhost:7249",
     "secure": false,
     "changeOrigin": true
   },
   "/scalar": {
-    "target": "http://localhost:5147",
+    "target": "https://localhost:7249",
     "secure": false,
     "changeOrigin": true
   },

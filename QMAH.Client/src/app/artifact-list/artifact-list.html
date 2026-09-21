@@ -221,7 +221,6 @@
               查看資料
             }
           </button>
-          <button type="button" class="hint hint-button" (click)="closeOverlay()">返回圖鑑</button>
         </ng-container>
         <ng-template #lockedActions>
           <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">
@@ -274,40 +273,41 @@
             </div>
             <div class="field">
               <span class="field-label">玩家回答鑑賞</span>
-              <button type="button" class="field-action" (click)="onAppreciationClick(detail)">前往鑑賞回答</button>
-            </div>
-            <div class="field">
-              <span class="field-label">來源</span>
-              <a
-                *ngIf="detail.sourceUrl; else noSource"
-                class="field-link"
-                [href]="detail.sourceUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-              >前往故宮典藏頁面</a>
-              <ng-template #noSource>
-                <span class="field-value field-value--muted">尚無來源資料</span>
-              </ng-template>
-            </div>
-            <div class="field" *ngIf="detail.attributionText">
-              <span class="field-label">授權／署名</span>
-              <span class="field-value field-value--muted">{{ detail.attributionText }}</span>
+              <button type="button" class="field-link-button" (click)="onAppreciationClick(detail)">前往鑑賞回答</button>
             </div>
             <div class="field field--discussion">
-              <span class="field-label">社群討論</span>
-              <button
-                type="button"
-                class="field-action"
-                [disabled]="discussionLoading()"
-                (click)="openDiscussion(item.id)"
-              >
-                {{ discussionLoading() ? '檢查討論中…' : '查看／建立討論' }}
-              </button>
-              <span class="field-hint">已有貼文會直接開啟；尚無貼文時會先確認並請你留下第一則留言。</span>
-              @if (discussionError() && !discussionDialogOpen()) {
-                <span class="field-value field-value--error" role="alert">{{ discussionError() }}</span>
-              }
-            </div>
+                <span class="field-label">社群討論</span>
+                <button
+                  type="button"
+                  class="field-link-button"
+                  [disabled]="discussionLoading()"
+                  (click)="openDiscussion(item.id)"
+                >
+                  {{ discussionLoading() ? '檢查討論中…' : '查看／建立討論' }}
+                </button>
+                <br/>
+                <span class="field-hint">已有貼文會直接開啟；尚無貼文時會先確認並請你留下第一則留言。</span>
+                @if (discussionError() && !discussionDialogOpen()) {
+                  <span class="field-value field-value--error" role="alert">{{ discussionError() }}</span>
+                }
+              </div>
+              <div class="field">
+                  <span class="field-label">來源</span>
+                  <a
+                    *ngIf="detail.sourceUrl; else noSource"
+                    class="field-link"
+                    [href]="detail.sourceUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >前往故宮典藏頁面</a>
+                  <ng-template #noSource>
+                    <span class="field-value field-value--muted">尚無來源資料</span>
+                  </ng-template>
+                </div>
+                <div class="field" *ngIf="detail.attributionText">
+                  <span class="field-label">授權／署名</span>
+                  <span class="field-value field-value--muted">{{ detail.attributionText }}</span>
+                </div>
           </ng-container>
         </div>
       </div>

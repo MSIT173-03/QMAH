@@ -10,11 +10,6 @@ import { environment } from '../../environments/environment';
  *   { title: "...", status: 400, errors: { ArtifactId: ["The ArtifactId field is required."] } }
  * 這裡依序嘗試 errors／message／title／detail 這幾個常見欄位，抓到就顯示，抓不到才
  * fallback 回 statusText。等實際看到 400 回應長怎樣，可以換成直接對應正確的欄位。
- *
- * ⚠️ 寫成 class 外的純函式、不是 KeyService 的方法：handleError 是用
- * catchError(this.handleError) 這種「傳函式參照」的寫法接進 pipe 的，RxJS 實際呼叫時
- * 會遺失 this 綁定，如果這裡也宣告成 this.extractServerErrorDetail() 會直接噴
- * "Cannot read properties of undefined"（上一版就是這樣壞的）。
  */
 function extractServerErrorDetail(error: any): string {
   const body = error?.error;
@@ -31,12 +26,7 @@ function extractServerErrorDetail(error: any): string {
   return body.message || body.title || body.detail || error?.statusText || '未知錯誤';
 }
 
-/**
- * 後端沒有單獨拆出來的「只回傳鑰匙」端點（打 /api/v1/me/keys 會 404），
- * 鑰匙清單其實包在 economy.ts 也在用的這支綜合 API 裡，這裡只取用 keys 那一塊，
- * pointBalance／keyProgress* 這兩個欄位跟 key-list 無關，型別上還是宣告出來，
- * 純粹是因為它們也在同一個 API 回應裡，不代表這個 service 會用到它們。
- */
+
 interface EconomyResponse {
   pointBalance: number;
   keyProgressBalance: number;
@@ -66,13 +56,6 @@ export class KeyService {
   /**
    * 取得鑰匙兌換／解鎖規則：每種鑰匙（NORMAL／CATEGORY／ERA／UNIVERSAL）
    * 解鎖一次要消耗幾把。key-list.ts 用來顯示、檢查各類鑰匙實際要消耗的數量；
-   * artifact-list.ts 用來取代原本寫死的「萬能鑰匙固定消耗 1 把」。
-   *
-   * ⚠️ 沒有實際回應可以對照，防呆方式比照 catalog-service.ts 的 getCategories()／
-   * getEras()：不確定外層是不是直接一個陣列，兩種都接得住（見 toArray()）；
-   * 另外也不確定每筆規則的欄位到底叫 costPerUnlock，還是 cost／requiredCount／
-   * keyCost 之類的名字，parseExchangeRule() 多猜了幾個常見命名，抓不到就 fallback
-   * 成 1。等你把實際回應貼給我，可以把這兩層防呆都拿掉，直接用 http.get<KeyExchangeRule[]>()。
    */
   getExchangeRules(): Observable<KeyExchangeRule[]> {
     return this.http.get<unknown>(this.exchangeRulesUrl).pipe(
@@ -101,11 +84,7 @@ export class KeyService {
     );
   }
 
-  /**
-   * ⚠️ 跟 catalog-service.ts 裡同名方法一樣的防呆邏輯（不確定後端是直接回一個陣列，
-   * 還是外面包了一層），兩邊各放一份是因為目前專案沒有共用的 util 模組；
-   * 如果之後想去重，可以抽到共用檔案讓兩個 service 一起用。
-   */
+
   private toArray<T>(res: unknown, callerLabel: string): T[] {
     if (Array.isArray(res)) return res;
 
