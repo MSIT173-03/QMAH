@@ -488,8 +488,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 16px;
   flex-wrap: wrap;
+}
+
+.quick-filter {
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.quick-filter svg {
+  flex: 0 0 auto;
 }
 
 .quick-filter.is-active {

@@ -102,13 +102,21 @@
         <div class="content-area__meta-actions">
           <button
             type="button"
-            class="quick-filter"
+            class="key-badge key-badge--btn quick-filter"
             [class.is-active]="unlockedOnly()"
             [attr.aria-pressed]="unlockedOnly()"
             (click)="toggleUnlockedFilter()"
           >
-            <svg lucideLockKeyholeOpen aria-hidden="true" focusable="false"></svg>
-            <span>已解鎖</span>
+            @if (unlockedOnly()) {
+              <svg lucideLockKeyholeOpen aria-hidden="true" focusable="false"></svg>
+            } @else {
+              <svg lucideLockKeyhole aria-hidden="true" focusable="false"></svg>
+            }
+            @if (unlockedOnly()) {
+              <span>顯示全部</span>
+            } @else {
+              <span>僅顯示已解鎖</span>
+            }
             <strong>{{ unlockedCount() }}</strong>
           </button>
           <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
