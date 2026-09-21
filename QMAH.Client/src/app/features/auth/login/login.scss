@@ -10,7 +10,8 @@
   --login-primary-content: #f6f1e8;
   --login-gold: var(--qmah-bronze);
   --login-paper: var(--qmah-page-surface);
-  --login-surface: color-mix(in srgb, var(--qmah-paper) 72%, transparent);
+  --login-glass: color-mix(in srgb, var(--qmah-paper) 70%, transparent);
+  --login-surface: var(--login-glass);
   --login-field: var(--qmah-paper);
   --login-muted: var(--qmah-muted);
   --login-soft: var(--qmah-slate);
@@ -96,7 +97,7 @@
   padding: 9px 14px;
   border: 1px solid color-mix(in srgb, var(--login-border) 68%, transparent);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--qmah-paper) 68%, transparent);
+  background: var(--login-glass);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--qmah-night) 24%, transparent);
   -webkit-backdrop-filter: blur(8px) saturate(1.08);
   backdrop-filter: blur(8px) saturate(1.08);
@@ -124,7 +125,7 @@
   padding: 9px 14px;
   border: 1px solid color-mix(in srgb, var(--login-border) 68%, transparent);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--qmah-paper) 68%, transparent);
+  background: var(--login-glass);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--qmah-night) 24%, transparent);
   -webkit-backdrop-filter: blur(8px) saturate(1.08);
   backdrop-filter: blur(8px) saturate(1.08);
@@ -1027,7 +1028,8 @@ input:focus-visible {
   --login-primary-content: #102322;
   --login-gold: var(--qmah-bronze);
   --login-paper: var(--qmah-page-surface);
-  --login-surface: color-mix(in srgb, var(--qmah-surface) 72%, transparent);
+  --login-glass: color-mix(in srgb, var(--qmah-night) 70%, transparent);
+  --login-surface: var(--login-glass);
   --login-field: var(--qmah-surface-muted);
   --login-muted: var(--qmah-muted);
   --login-soft: var(--qmah-slate);
@@ -1049,12 +1051,12 @@ input:focus-visible {
 }
 
 :host-context([data-theme='qmahdark']) .brand-logo-shell {
-  background: color-mix(in srgb, var(--qmah-night) 68%, transparent);
+  background: var(--login-glass);
   border-color: color-mix(in srgb, var(--qmah-jade) 48%, var(--login-border));
 }
 
 :host-context([data-theme='qmahdark']) .museum-media__logo-shell {
-  background: color-mix(in srgb, var(--qmah-night) 68%, transparent);
+  background: var(--login-glass);
   border-color: color-mix(in srgb, var(--qmah-jade) 48%, var(--login-border));
 }
 
