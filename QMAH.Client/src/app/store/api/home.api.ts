@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { CatalogApi } from './catalog.api';
 import {
   Brand,
@@ -33,18 +33,22 @@ export class HomeApi {
     return of<Brand[]>([]);
   }
 
-  /** 以現有商品型錄的販售數量排序代替尚未存在的 rankings route。 */
+  /** 以現有商品型錄的販售數量排序代替尚未存在的 rankings route；首頁輔助區塊失敗時顯示空清單。 */
   getRankings(query: RankingQuery = {}): Observable<Product[]> {
-    return this.catalogApi.getProducts({ cat: query.cat, order: 1, pageSize: query.limit ?? 10 }).pipe(map((page) => page.items));
+    return this.catalogApi.getProducts({ cat: query.cat, order: 1, pageSize: query.limit ?? 10 }).pipe(
+      map((page) => page.items),
+      catchError(() => of<Product[]>([])),
+    );
   }
 
-  /** 以現有商品型錄的最新上架排序代替尚未存在的 recommendations route。 */
+  /** 以現有商品型錄的最新上架排序代替尚未存在的 recommendations route；失敗時視為沒有更多推薦。 */
   getRecommendations(query: PageQuery = {}): Observable<Page<RecommendedProduct>> {
     return this.catalogApi.getProducts({ order: 3, page: query.page, pageSize: query.pageSize }).pipe(
       map((page) => ({
         ...page,
         items: page.items.map((product) => ({ ...product, reason: '近期上架' })),
       })),
+      catchError(() => of({ items: [], total: 0, page: query.page ?? 1, pageSize: query.pageSize ?? 20 })),
     );
   }
 

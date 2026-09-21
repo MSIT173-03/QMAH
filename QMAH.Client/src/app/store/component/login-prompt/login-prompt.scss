@@ -1,0 +1,43 @@
+.login-prompt {
+  /* dialog 會移到 top layer，但 DOM 仍在 .store-app 內，因此沿用商城的色彩變數與按鈕樣式。 */
+  border: 1px solid var(--color-line-mid);
+  border-radius: var(--qmah-radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  padding: 0;
+  width: min(420px, calc(100vw - 32px));
+
+  &::backdrop {
+    background: rgb(0 0 0 / 45%);
+  }
+}
+
+.login-prompt-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-3);
+  padding: var(--qmah-space-5, 24px);
+}
+
+.login-prompt-title {
+  margin: 0;
+  font-family: var(--qmah-font-serif);
+  font-size: var(--qmah-type-section-title-size);
+  line-height: var(--qmah-type-heading-leading);
+  color: var(--color-ink-deep);
+}
+
+.login-prompt-desc {
+  margin: 0;
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-body);
+  line-height: 1.7;
+}
+
+.login-prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--qmah-space-2);
+  margin-top: var(--qmah-space-2);
+}

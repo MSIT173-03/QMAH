@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CartItem, ShoppingCart } from './api.models';
 import { toCatalogThumbnail } from './catalog.api-dto';
@@ -20,19 +20,9 @@ interface ApiCartItem {
 
 const MEMBER_CART_API = `${environment.apiBaseUrl}/me/cart`;
 
-function emptyCart(): ShoppingCart {
-  return {
-    items: [],
-    addons: [],
-    amounts: {
-      subtotal: 0,
-      itemDiscount: 0,
-      shippingFee: 0,
-      payable: 0,
-      freeShippingThreshold: 0,
-      freeShippingShortfall: 0,
-    },
-  };
+/** 空購物車；未登入或購物車 API 暫時無法使用時的顯示內容 */
+export function emptyCart(): ShoppingCart {
+  return toCart([]);
 }
 
 function toCart(dto: ApiCartItem[]): ShoppingCart {
@@ -50,17 +40,21 @@ function toCart(dto: ApiCartItem[]): ShoppingCart {
     qty: item.quantity,
     lineTotal: item.lineTotal,
   }));
-  const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
+  // CartAmounts.subtotal 是折扣前小計；有折扣的品項以後端提供的 originalPrice 計算，差額即商品折扣。
+  const subtotal = items.reduce((sum, item) => sum + (item.originalPrice ?? item.price) * item.qty, 0);
+  const payable = items.reduce((sum, item) => sum + item.lineTotal, 0);
   return {
     items,
     addons: [],
     amounts: {
       subtotal,
-      itemDiscount: 0,
-      shippingFee: 0,
-      payable: subtotal,
-      freeShippingThreshold: 0,
-      freeShippingShortfall: 0,
+      // 金額可能含小數（後端 decimal），相減後修正浮點誤差。
+      itemDiscount: Math.round((subtotal - payable) * 100) / 100,
+      // 後端尚無配送規則（運費、免運門檻），以 null 表示「結帳時計算」，不以 0 假裝免運。
+      shippingFee: null,
+      payable,
+      freeShippingThreshold: null,
+      freeShippingShortfall: null,
     },
   };
 }
@@ -77,12 +71,16 @@ export class CartApi {
   // integration: develop 已有可用的正式購物車是 /me/cart；此處只做前端 adapter，
   // 不新增 compatibility endpoint，也不讓未完成的 Store mock contract 進入正式 runtime。
 
-  /** GET /me/cart：將既有 CartItemDto 陣列轉成 Store 頁面既有模型。 */
+  /**
+   * GET /me/cart：將既有 CartItemDto 陣列轉成 Store 頁面既有模型。
+   * 401（未登入）保留錯誤，讓呼叫端據此判斷登入狀態；其他錯誤（資料庫暫時不可用等）只顯示空車，
+   * 不讓 Store 首頁整頁中止。寫入操作則保留所有錯誤，不假裝成功。
+   */
   getCart(): Observable<ShoppingCart> {
     return this.requestCart().pipe(
-      // 購物車是可選的會員區塊；未登入、資料庫暫時不可用或 route 尚未部署時只顯示空車，
-      // 不讓 Store 首頁因 toSignal 收到錯誤而整頁中止。寫入操作則保留錯誤，不假裝成功。
-      catchError(() => of(emptyCart())),
+      catchError((err: unknown) =>
+        err instanceof HttpErrorResponse && err.status === 401 ? throwError(() => err) : of(emptyCart()),
+      ),
     );
   }
 

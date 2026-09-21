@@ -24,7 +24,6 @@ const ROUTES: MockRoute[] = [
   { method: 'GET', path: /^\/categories$/, handle: () => handlers.listCategories() },
   // { method: 'GET', path: /^\/products$/, handle: (_, params) => handlers.listProducts(params) },
   // { method: 'GET', path: /^\/products\/([^/]+)$/, handle: ([id]) => handlers.getProduct(id) },
-  { method: 'GET', path: /^\/products\/([^/]+)\/related$/, handle: ([id], params) => handlers.listRelated(id, params) },
   // { method: 'GET', path: /^\/products\/([^/]+)\/reviews$/, handle: ([id], params) => handlers.listReviews(id, params) },
   { method: 'GET', path: /^\/home\/hero-slides$/, handle: () => handlers.listHeroSlides() },
   { method: 'GET', path: /^\/home\/flash-sale$/, handle: () => handlers.getFlashSale() },

@@ -13,9 +13,11 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   EmptyState,
+  LoginPrompt,
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { Product } from '../../api/api.models';
+import { toReviewPage } from '../../api/catalog.api-dto';
 import { CART_PATH, CHECKOUT_PATH, HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView, wasPrice } from '../../shared/product-view';
@@ -43,6 +45,7 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
     CartLink,
     Breadcrumb,
     EmptyState,
+    LoginPrompt,
     ProductGallery,
     ProductSummary,
     ProductDetail,
@@ -114,25 +117,30 @@ export class ProductInfo {
     const item = this.item();
     return item ? wasPrice(item) : null;
   });
-  /** 同類推薦清單 */
+  /** 同類推薦清單：同器類的熱銷商品（排除目前商品），商品載入後才查詢 */
   protected related = toSignal(
-    toObservable(this.id).pipe(
-      switchMap((id) =>
-        this.catalogApi.getRelated(id, RELATED_LIMIT).pipe(catchError(() => of<Product[]>([]))),
+    toObservable(this.item).pipe(
+      switchMap((item) =>
+        item
+          ? this.catalogApi.getRelated(item, RELATED_LIMIT).pipe(catchError(() => of<Product[]>([])))
+          : of<Product[]>([]),
       ),
       map((items) => items.map(toProductView)),
     ),
     { initialValue: [] },
   );
 
-  /** 目前商品在選取的篩選條件下的評價回應 */
-  private readonly reviewPage = toSignal(
-    toObservable(computed(() => ({ id: this.id(), filter: REVIEW_FILTERS[this.reviewFilter()] }))).pipe(
-      switchMap(({ id, filter }) =>
-        this.catalogApi.getReviews(id, filter.query).pipe(catchError(() => of(null))),
-      ),
+  /** 目前商品的全部評價；切換篩選條件不重新請求，null 代表載入失敗 */
+  private readonly allReviews = toSignal(
+    toObservable(this.id).pipe(
+      switchMap((id) => this.catalogApi.getReviews(id).pipe(catchError(() => of(null)))),
     ),
   );
+  /** 目前商品在選取的篩選條件下的評價（篩選與統計在前端計算） */
+  private readonly reviewPage = computed(() => {
+    const all = this.allReviews();
+    return all ? toReviewPage(all, REVIEW_FILTERS[this.reviewFilter()].query) : null;
+  });
   /** 符合目前篩選條件的評價 */
   protected reviews = computed(() => this.reviewPage()?.items ?? []);
   /** 各篩選條件的則數（依 REVIEW_FILTERS 順序） */

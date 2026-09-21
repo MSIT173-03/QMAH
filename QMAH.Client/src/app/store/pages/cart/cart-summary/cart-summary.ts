@@ -25,12 +25,16 @@ export class CartSummary {
   protected getSubtotal = computed(() => formatMoney(this.amounts()?.subtotal ?? 0));
   /** 折扣金額顯示文字，有折扣時以負號呈現 */
   protected getSavings = computed(() => formatCut(this.amounts()?.itemDiscount ?? 0));
-  /** 運費顯示文字 */
-  protected getShipping = computed(() => formatShippingFee(this.amounts()?.shippingFee ?? 0));
-  /** 運費說明文字：已達門檻顯示達成訊息，否則提示還差多少金額 */
+  /** 運費顯示文字；尚無配送規則時顯示「結帳時計算」，不以 0 假裝免運 */
+  protected getShipping = computed(() => {
+    const fee = this.amounts()?.shippingFee ?? null;
+    return fee === null ? '結帳時計算' : formatShippingFee(fee);
+  });
+  /** 運費說明文字：已達門檻顯示達成訊息，否則提示還差多少金額；尚無免運門檻時不顯示 */
   protected getShipNote = computed(() => {
-    const threshold = this.amounts()?.freeShippingThreshold ?? 0;
-    const shortfall = this.amounts()?.freeShippingShortfall ?? 0;
+    const threshold = this.amounts()?.freeShippingThreshold ?? null;
+    const shortfall = this.amounts()?.freeShippingShortfall ?? null;
+    if (threshold === null || shortfall === null) return '';
     return shortfall === 0
       ? `已符合滿 ${formatMoney(threshold)} 免運。`
       : `再加購 ${formatMoney(shortfall)} 即可享免運。`;

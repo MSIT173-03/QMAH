@@ -1,15 +1,12 @@
 /**
  * 商品型錄後端 API 的原始回應格式，對應 doc/apis.xml 中「商品清單」「商品」「商品評論列表」三支 API 的定義。
- * 後端目前只提供這些欄位；品牌、評分（清單）、已售件數、上架日期、材質、保存狀況、出貨說明、商品圖片集等
+ * 後端目前只提供這些欄位；品牌、已售件數（詳情）、材質、保存狀況、出貨說明、商品圖片集等
  * 前端顯示用欄位尚未由後端提供，由 toProduct／toProductDetail 轉換時補上預設值。
  */
 
 import { Category, Product, ProductDetail, Review, ReviewPage, ReviewQuery, StorePromotion } from './api.models';
 
-/**
- * 器類代碼（categoryCode）與中文器類名稱對照表；宣告順序需與後端 StoreCatalogController.CategoryType
- * enum 一致，商品清單查詢的 category 參數即以此順序的索引值（數字）表示器類。
- */
+/** 器類代碼（categoryCode）與中文器類名稱對照表 */
 const CATEGORIES: readonly [code: string, label: string][] = [
   ['BRONZE', '青銅器'],
   ['CARVING', '雕刻'],
@@ -22,8 +19,8 @@ const CATEGORIES: readonly [code: string, label: string][] = [
 ];
 
 const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(CATEGORIES);
-const CATEGORY_CODE_BY_LABEL: Record<string, number> = Object.fromEntries(
-  CATEGORIES.map(([, label], index) => [label, index]),
+const CATEGORY_CODE_BY_LABEL: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map(([code, label]) => [label, code]),
 );
 
 /** GET /categories 原始回應；後端的 Code 是篩選契約，Name 僅是資料庫顯示文字。 */
@@ -56,11 +53,12 @@ export function toCatalogThumbnail(path: string | null): string | null {
 }
 
 /**
- * 將中文器類名稱轉為商品清單查詢 API 的 category 參數（對應後端 CategoryType enum 的數字代碼）；
- * 對照表未列出時傳回 undefined，呼叫端應改為不送出此篩選條件。
+ * 將器類名稱轉回商品清單查詢 API 的 categoryCode 參數。
+ * 對照表未列出的器類，toCategoryLabel 會直接沿用後端代碼當名稱，因此反查不到時原樣送出；
+ * 不可略過篩選，否則使用者選了器類卻看到全部商品。
  */
-export function toCategoryCode(label: string): number | undefined {
-  return CATEGORY_CODE_BY_LABEL[label];
+export function toCategoryCode(label: string): string {
+  return CATEGORY_CODE_BY_LABEL[label] ?? label;
 }
 
 /** GET /products 清單項目 */
@@ -76,7 +74,14 @@ export interface ApiProductListItem {
   salePrice?: number | null;
   stock: number;
   primaryImagePath: string | null;
-  isActive: boolean;
+  /** 上架時間（ISO 8601） */
+  createdAt: string;
+  /** 已發布評價的平均星等，無評價時為 0 */
+  averageRating: number;
+  /** 已發布評價則數 */
+  reviewCount: number;
+  /** 已完成訂單的累計販售件數 */
+  sellCount: number;
 }
 
 /** GET /products 回應 */
@@ -114,8 +119,10 @@ export interface ApiProductDetail {
   externalRef: string | null;
   name: string;
   categoryCode: string;
-  description: string;
-  sizeText: string;
+  /** 後端 Product.Description 可為 null */
+  description: string | null;
+  /** 後端 Product.SizeText 可為 null */
+  sizeText: string | null;
   artifactSizeText: string | null;
   price: number;
   discountRate: number;
@@ -129,15 +136,21 @@ export interface ApiProductDetail {
   reviewCount: number;
 }
 
-export function toProduct(dto: ApiProductListItem): Product {
-  const dealPrice = dto.effectivePrice;
+/** 清單與詳情共有的商品欄位 */
+type ApiProductBase = Pick<
+  ApiProductListItem,
+  'id' | 'name' | 'categoryCode' | 'price' | 'discountRate' | 'effectivePrice' | 'externalRef' | 'primaryImagePath'
+>;
+
+/** 清單與詳情共用的基本換算；後端未提供的欄位（品牌、已售件數等）補中性預設值，由呼叫端覆寫。 */
+function toProductBase(dto: ApiProductBase): Product {
   return {
     id: dto.id,
     name: dto.name,
     brand: '',
     category: toCategoryLabel(dto.categoryCode),
     price: dto.price,
-    dealPrice,
+    dealPrice: dto.effectivePrice,
     discountRate: dto.discountRate,
     rating: 0,
     reviewCount: 0,
@@ -145,7 +158,18 @@ export function toProduct(dto: ApiProductListItem): Product {
     source: dto.externalRef ?? '',
     dimensions: '',
     listedAt: '',
-    // 清單只取 200px 縮圖；商品詳情會在 toProductDetail 還原成 600px display 圖。
+    coverImage: dto.primaryImagePath,
+  };
+}
+
+export function toProduct(dto: ApiProductListItem): Product {
+  return {
+    ...toProductBase(dto),
+    rating: dto.averageRating,
+    reviewCount: dto.reviewCount,
+    soldCount: dto.sellCount,
+    listedAt: dto.createdAt.slice(0, 10),
+    // 清單只取 200px 縮圖；商品詳情會在 toProductDetail 使用 600px display 圖。
     coverImage: toCatalogThumbnail(dto.primaryImagePath),
   };
 }
@@ -161,9 +185,10 @@ function toArtifactDescription(description: string): string {
 }
 
 export function toProductDetail(dto: ApiProductDetail): ProductDetail {
-  const artifactDescription = toArtifactDescription(dto.description);
+  const description = dto.description ?? '';
+  const artifactDescription = toArtifactDescription(description);
   return {
-    ...toProduct(dto),
+    ...toProductBase(dto),
     // 套組商品名稱保留在商品摘要；明信片正面改用原文物名稱，避免把販售形式印到作品標題上。
     artifactName: dto.artifactName ?? dto.name,
     // 詳情頁明確使用大圖，讓滿版明信片不會誤拿清單縮圖放大。
@@ -171,11 +196,11 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
     artifactDimensions: dto.artifactSizeText ?? '官方資料未提供',
     rating: dto.averageRating,
     reviewCount: dto.reviewCount,
-    dimensions: dto.sizeText,
+    dimensions: dto.sizeText ?? '',
     source: dto.sourceUrl ?? dto.externalRef ?? '',
     material: '',
     // 商品說明保留套組段落；明信片視圖另用 artifactDescription，避免把行銷段落塞進卡片。
-    description: dto.description.trim(),
+    description: description.trim(),
     artifactDescription,
     condition: '',
     shippingNote: '',
@@ -211,35 +236,28 @@ export interface ApiProductReviewsResponse {
   };
 }
 
-function toReview(dto: ApiProductReview): Review {
+export function toReview(dto: ApiProductReview): Review {
   return {
     id: dto.id,
-    stars: Math.round(dto.rating),
+    // 後端 Rating 有 1–5 的驗證；仍夾在範圍內，避免異常資料讓星等統計寫到不存在的鍵。
+    stars: Math.min(5, Math.max(1, Math.round(dto.rating))),
     user: dto.displayName ?? '匿名會員',
     date: dto.createdAt.slice(0, 10),
-    // 後端評論資料沒有照片欄位，一律視為無照片。
-    hasPhoto: false,
     text: dto.content,
   };
 }
 
 /**
- * 將後端評論回應轉為前端的 ReviewPage：後端只支援分頁（見 doc/apis.xml），不支援依星等／照片篩選，
- * 也不提供各星等則數與附照片則數。呼叫端會以夠大的 pageSize 一次取回全部評論，此函式在前端計算篩選、
- * 分頁與統計；商品評論超過該次取回筆數時，篩選與統計僅涵蓋已取回的部分。
+ * 將商品的全部評論轉為前端的 ReviewPage：後端只支援分頁（見 doc/apis.xml），不支援依星等篩選，
+ * 也不提供各星等則數，因此由 CatalogApi.getReviews 取回全部評論後，在前端計算篩選、分頁與統計。
  */
-export function toReviewPage(res: ApiProductReviewsResponse, query: ReviewQuery): ReviewPage {
-  const all = res.reviews.items.map(toReview);
-
+export function toReviewPage(all: Review[], query: ReviewQuery): ReviewPage {
   const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<1 | 2 | 3 | 4 | 5, number>;
   for (const review of all) ratingBreakdown[review.stars as 1 | 2 | 3 | 4 | 5] += 1;
 
   const minStars = query.minStars ?? 1;
   const maxStars = query.maxStars ?? 5;
-  const matched = all.filter(
-    (review) =>
-      review.stars >= minStars && review.stars <= maxStars && (!query.hasPhoto || review.hasPhoto),
-  );
+  const matched = all.filter((review) => review.stars >= minStars && review.stars <= maxStars);
 
   const page = query.page ?? 1;
   const pageSize = query.pageSize ?? matched.length;
@@ -249,7 +267,5 @@ export function toReviewPage(res: ApiProductReviewsResponse, query: ReviewQuery)
     page,
     pageSize,
     ratingBreakdown,
-    // 後端評論資料沒有照片欄位，附照片則數固定為 0。
-    photoCount: 0,
   };
 }

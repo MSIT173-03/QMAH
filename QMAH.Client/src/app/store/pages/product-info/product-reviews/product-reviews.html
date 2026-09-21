@@ -7,7 +7,7 @@
     </span>
   </app-section-head>
 
-  <!-- 篩選按鈕：星等與是否附照片，括號內為符合的則數 -->
+  <!-- 篩選按鈕：依星等篩選，括號內為符合的則數 -->
   <app-pill-group
     variant="review"
     layout="tabs"
@@ -21,9 +21,6 @@
       <div class="review-meta">
         <span class="product-card-star">{{ review.stars }}</span><span>{{ review.user }}</span><span
           class="product-card-split">|</span><span>{{ review.date }}</span>
-        @if (review.hasPhoto) {
-          <span class="review-photo-tag">{{ photoTagLabel }}</span>
-        }
       </div>
       <p class="review-text">{{ review.text }}</p>
     </div>

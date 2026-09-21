@@ -8,6 +8,7 @@ import {
   BreadcrumbItem,
   PageTitleRow,
   EmptyState,
+  LoginPrompt,
 } from '../../component';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
@@ -30,7 +31,7 @@ const REMOVE_ANIMATION_MS = 300;
 @Component({
   selector: 'app-cart',
   host: { class: 'store-app' },
-  imports: [SiteHeader, HeaderActions, Breadcrumb, PageTitleRow, EmptyState, CartLine, CartSummary, CartAddons],
+  imports: [SiteHeader, HeaderActions, Breadcrumb, PageTitleRow, EmptyState, LoginPrompt, CartLine, CartSummary, CartAddons],
   templateUrl: './cart.html',
   styleUrls: [
     './cart.scss',
@@ -50,7 +51,7 @@ export class Cart {
   protected readonly continueShoppingLink = { label: '繼續選購 →', href: PRODUCT_LIST_PATH };
 
   /** 購物車狀態；每次異動後以 API 回應的內容（含金額摘要）取代 */
-  private readonly cartState = injectCartState();
+  protected readonly cartState = injectCartState();
   /** 正在執行移除動畫、尚未真正從購物車移除的商品 ID */
   private leavingIds = signal<ReadonlySet<string>>(new Set());
 

@@ -1,5 +1,6 @@
 <!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
-<app-promobar [announcements]="site.announcements()" [points]="site.points()" [coupons]="site.coupons()" />
+<app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
+  [coupons]="site.coupons()" />
 
 <!-- 網站頁首：品牌 Logo、搜尋框、分類導覽與購物車入口 -->
 <app-site-header>
@@ -68,3 +69,6 @@
     size="lg" />
   }
 </div>
+
+<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
+<app-login-prompt [open]="cart.loginPrompt()" (confirm)="cart.confirmLogin()" (cancel)="cart.cancelLogin()" />

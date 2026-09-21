@@ -1,6 +1,7 @@
 import { Component, computed, inject, output } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
+import { Product } from '../../../api/api.models';
 import { Panel, SectionHead } from '../../../component';
 import { CatalogApi } from '../../../api';
 import { formatDateMD } from '../../../shared/format';
@@ -34,7 +35,11 @@ export class NewArrivals {
   private readonly products = toSignal(
     inject(CatalogApi)
       .getProducts({ order: 3, pageSize: NEW_ARRIVAL_COUNT })
-      .pipe(map((page) => page.items)),
+      // 首頁輔助區塊：載入失敗時顯示空面板，不中斷整個首頁。
+      .pipe(
+        map((page) => page.items),
+        catchError(() => of<Product[]>([])),
+      ),
     { initialValue: [] },
   );
 

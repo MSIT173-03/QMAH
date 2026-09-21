@@ -1,0 +1,12 @@
+<!-- 登入提示：原生 modal dialog，確認後由頁面導向登入頁 -->
+<dialog #dialog class="login-prompt" aria-labelledby="login-prompt-title" (cancel)="onNativeCancel($event)"
+  (click)="onBackdropClick($event)">
+  <div class="login-prompt-body">
+    <h2 id="login-prompt-title" class="login-prompt-title">{{ title }}</h2>
+    <p class="login-prompt-desc">{{ message() }}</p>
+    <div class="login-prompt-actions">
+      <button type="button" class="btn-outline" (click)="cancel.emit()">{{ cancelLabel }}</button>
+      <button type="button" class="btn-solid" (click)="confirm.emit()">{{ confirmLabel }}</button>
+    </div>
+  </div>
+</dialog>

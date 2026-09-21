@@ -111,6 +111,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             db.Payments.Add(order.Payment!);
             ApplyCouponRedemption(userCoupon, order.CreatedAt);
             await ApplyPointsRedemptionAsync(userId, request.PointsUsed, order, retryToken);
+            await RemoveOrderedCartItemsAsync(userId, groupedItems, retryToken);
 
             await db.SaveChangesAsync(retryToken);
             await transaction.CommitAsync(retryToken);
@@ -374,6 +375,22 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             ReferenceId = order.Id,
             CreatedAt = order.CreatedAt
         });
+    }
+
+    /// <summary>
+    /// 從會員購物車移除已下單的商品；與訂單在同一筆交易中提交，
+    /// 避免訂單成立但購物車仍保留商品，讓會員重複下單。未下單的購物車商品維持不變。
+    /// </summary>
+    private async Task RemoveOrderedCartItemsAsync(
+        Guid userId,
+        List<GroupedOrderItem> items,
+        CancellationToken cancellationToken)
+    {
+        var productIds = items.Select(item => item.ProductId).ToArray();
+        var cartItems = await db.CartItems
+            .Where(item => item.UserId == userId && productIds.Contains(item.ProductId))
+            .ToListAsync(cancellationToken);
+        db.CartItems.RemoveRange(cartItems);
     }
 
     [HttpPost("{id:guid}/cancel")]

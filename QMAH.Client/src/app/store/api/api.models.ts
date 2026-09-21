@@ -105,7 +105,7 @@ export type ProductOrder = 0 | 1 | 2 | 3 | 4 | 5;
 export interface ProductQuery extends PageQuery {
   /** 器類名稱 */
   cat?: string;
-  /** 關鍵字，比對商品名稱、品牌、器類、材質與出處說明 */
+  /** 關鍵字，比對商品名稱與外部編號（後端 Product.Name、ExternalRef） */
   q?: string;
   order?: ProductOrder;
   /** 折扣後售價下限（含） */
@@ -125,24 +125,19 @@ export interface Review {
   user: string;
   /** 評價日期（YYYY-MM-DD） */
   date: string;
-  hasPhoto: boolean;
   text: string;
 }
 
-/** 商品評價查詢參數 */
+/** 商品評價篩選參數 */
 export interface ReviewQuery extends PageQuery {
   minStars?: number;
   maxStars?: number;
-  /** 只列出附照片的評價 */
-  hasPhoto?: boolean;
 }
 
-/** 商品評價回應；total 為篩選後的則數 */
+/** 商品評價篩選結果；total 為篩選後的則數 */
 export interface ReviewPage extends Page<Review> {
   /** 各星等則數，不受篩選條件影響 */
   ratingBreakdown: Record<1 | 2 | 3 | 4 | 5, number>;
-  /** 附照片的則數，不受篩選條件影響 */
-  photoCount: number;
 }
 
 /* ===============================
@@ -245,14 +240,14 @@ export interface CartAmounts {
   subtotal: number;
   /** 商品折扣 */
   itemDiscount: number;
-  /** 預設配送方式的運費，已達免運門檻或購物車為空時為 0 */
-  shippingFee: number;
-  /** 應付總額 */
+  /** 預設配送方式的運費，已達免運門檻或購物車為空時為 0；後端尚未提供配送規則時為 null（結帳時計算） */
+  shippingFee: number | null;
+  /** 應付總額（不含尚未計算的運費） */
   payable: number;
-  /** 滿額免運門檻 */
-  freeShippingThreshold: number;
-  /** 距離免運門檻還差的金額，已達門檻時為 0 */
-  freeShippingShortfall: number;
+  /** 滿額免運門檻；後端尚未提供配送規則時為 null */
+  freeShippingThreshold: number | null;
+  /** 距離免運門檻還差的金額，已達門檻時為 0；後端尚未提供配送規則時為 null */
+  freeShippingShortfall: number | null;
 }
 
 /** 購物車內容 */
@@ -269,13 +264,20 @@ export interface ShoppingCart {
    會員
    =============================== */
 
-/** 收件資訊 */
+/**
+ * 收件資訊；地址依後端 CreateStoreOrderRequest 拆成郵遞區號／縣市／鄉鎮區／街道地址（皆為必填）。
+ * email、taxId、note 後端訂單尚無對應欄位，目前只保留在前端表單，不會送出。
+ */
 export interface Recipient {
   name: string;
   phone: string;
   email: string;
   /** 發票統編 */
   taxId: string;
+  postalCode: string;
+  city: string;
+  district: string;
+  /** 街道地址（不含縣市、鄉鎮區） */
   address: string;
   /** 給客服的備註 */
   note: string;

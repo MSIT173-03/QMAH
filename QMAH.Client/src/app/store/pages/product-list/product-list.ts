@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { catchError, of, switchMap, tap } from 'rxjs';
 
 import {
   Promobar,
@@ -19,6 +19,7 @@ import {
   ProductCard,
   ProductRow,
   EmptyState,
+  LoginPrompt,
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { ProductQuery } from '../../api/api.models';
@@ -73,6 +74,7 @@ function toPage(value: string | undefined): number {
     ProductCard,
     ProductRow,
     EmptyState,
+    LoginPrompt,
   ],
   templateUrl: './product-list.html',
   styleUrls: [
@@ -152,8 +154,10 @@ export class ProductList {
      篩選與查詢結果
      =============================== */
 
+  /** 按下「重新載入」的次數，變動時以相同條件重新查詢 */
+  private reloadCount = signal(0);
   /** 目前篩選條件對應的商品清單查詢參數 */
-  private query = computed<ProductQuery>(() => {
+  private query = computed<ProductQuery & { reload: number }>(() => {
     const band = PRICE_BANDS[this.bandIndex()];
     return {
       cat: this.category() || undefined,
@@ -163,11 +167,29 @@ export class ProductList {
       priceMax: band.max,
       dealOnly: this.dealOnly() || undefined,
       page: this.pageIndex(),
+      // 只為了讓「重新載入」能以相同條件再查一次；不會送到 API。
+      reload: this.reloadCount(),
     };
   });
-  /** 符合目前篩選條件並已排序的商品；undefined 代表尚在載入 */
+  /** 最近一次查詢是否失敗；失敗時顯示錯誤狀態，而不是「找不到符合條件的商品」 */
+  protected loadError = signal(false);
+  /** 符合目前篩選條件並已排序的商品；undefined 代表尚在載入，null 代表查詢失敗 */
   private result = toSignal(
-    toObservable(this.query).pipe(switchMap((query) => this.catalogApi.getProducts(query))),
+    toObservable(this.query).pipe(
+      switchMap((query) =>
+        this.catalogApi.getProducts(query).pipe(
+          tap((page) => {
+            this.loadError.set(false);
+            // 後端會把超出範圍的頁碼夾回最後一頁；同步回頁面與網址，避免分頁元件與實際資料不一致。
+            if (page.page !== query.page) this.setPage(page.page);
+          }),
+          catchError(() => {
+            this.loadError.set(true);
+            return of(null);
+          }),
+        ),
+      ),
+    ),
   );
 
   /** ui-integration: API 尚未回應時顯示載入狀態，不把「0 件商品」誤讀成真的空清單。 */
@@ -175,8 +197,12 @@ export class ProductList {
 
   /** 供卡片與橫列共用的商品顯示資料 */
   protected items = computed<ProductViewData[]>(() => (this.result()?.items ?? []).map(toProductView));
-  /** 是否已載入且沒有任何符合條件的商品 */
-  protected isEmpty = computed(() => this.result() !== undefined && this.items().length === 0);
+  /** 是否已載入且沒有任何符合條件的商品（查詢失敗不算） */
+  protected isEmpty = computed(() => !!this.result() && this.items().length === 0);
+  /** 查詢失敗時的錯誤狀態文案 */
+  protected readonly errorTitle = '商品資料暫時無法載入';
+  protected readonly errorDesc = '伺服器目前沒有回應，請稍後再試。';
+  protected readonly errorCtaLabel = '重新載入';
   /** 是否使用卡片格狀顯示（有商品時才需判斷） */
   protected isGridMode = computed(() => this.mode() === 'grid');
 
@@ -202,8 +228,8 @@ export class ProductList {
     { label: this.heading() },
   ]);
 
-  /** 商品件數說明文字 */
-  protected countLabel = computed(() => `${this.items().length} 件商品`);
+  /** 商品件數說明文字：符合條件的總件數，而非本頁件數 */
+  protected countLabel = computed(() => `${this.result()?.total ?? 0} 件商品`);
 
   /** 排序選項，選取狀態由 sortIndex 推導 */
   protected sortOptions = computed<PillOption[]>(() =>
@@ -293,6 +319,11 @@ export class ProductList {
     this.keyword.set('');
     this.viewKey.set('');
     this.setPage(1);
+  }
+
+  /** 查詢失敗後以相同條件重新查詢 */
+  protected onReload(): void {
+    this.reloadCount.update((count) => count + 1);
   }
 
   /** 加入購物車：數量 1 */

@@ -4,7 +4,7 @@ import { EMPTY, catchError, filter, switchMap } from 'rxjs';
 import { SiteHeader, StepIndicator, Breadcrumb, BreadcrumbItem, PageTitleRow } from '../../component';
 import { CheckoutApi, MemberApi } from '../../api';
 import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
-import { CART_PATH, HOME_PATH } from '../../shared/paths';
+import { CART_PATH, HOME_PATH, MEMBER_PATH } from '../../shared/paths';
 import { RecipientForm } from './recipient-form/recipient-form';
 import { DeliveryOptions } from './delivery-options/delivery-options';
 import { CouponPicker } from './coupon-picker/coupon-picker';
@@ -60,8 +60,8 @@ export class Checkout {
     { label: '購物車', href: CART_PATH },
     { label: '結帳' },
   ];
-  // ui-integration: 結帳頁沿用目前已存在的會員個人資料頁，避免操作完成後落到假的預留連結。
-  protected readonly profileLink = { label: '管理個人資料 →', href: '/member/profile' };
+  // ui-integration: 結帳頁連回會員個人頁面（/member），避免操作完成後落到假的預留連結。
+  protected readonly profileLink = { label: '管理個人資料 →', href: MEMBER_PATH };
 
   /* ===============================
      API 資料
@@ -75,7 +75,7 @@ export class Checkout {
     return !!options && options.shippingOptions.length > 0 && options.paymentOptions.length > 0;
   });
   /** 會員資料（帶入收件資訊、持有點數） */
-  private readonly profile = toSignal(this.memberApi.getProfile());
+  private readonly profile = toSignal(this.memberApi.getCheckoutProfile());
   /** 會員可選用的折價券 */
   protected readonly coupons = toSignal(this.memberApi.getCoupons(), { initialValue: [] });
   /** 付款方式名稱 */
@@ -165,11 +165,14 @@ export class Checkout {
     this.submitted.set(true);
     if (!this.valid() || !options || !request) return;
     this.checkoutApi
-      .createOrder({
-        ...request,
-        recipient: this.form(),
-        paymentOptionId: options.paymentOptions[this.payIndex()].id,
-      })
+      .createOrder(
+        {
+          ...request,
+          recipient: this.form(),
+          paymentOptionId: options.paymentOptions[this.payIndex()].id,
+        },
+        this.coupons()[this.couponIndex()] ?? null,
+      )
       .subscribe((order) => this.order.set(order));
   }
 }

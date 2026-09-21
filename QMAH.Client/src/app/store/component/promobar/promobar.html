@@ -16,6 +16,10 @@
       } @else {
         <span class="promobar-link promobar-link--disabled" aria-disabled="true">訂單查詢</span>
       }
+      <!-- 未登入時只提供登入入口；點數與折價券屬於會員資料，登入後才顯示 -->
+      @if (signedIn() === false) {
+        <a [storeLink]="loginHref()" class="promobar-link">登入</a>
+      } @else if (signedIn()) {
       <a [storeLink]="profileHref()" class="promobar-link">個人頁面</a>
       <a [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
 
@@ -38,6 +42,7 @@
           </div>
         }
       </div>
+      }
     </div>
   </div>
 </div>

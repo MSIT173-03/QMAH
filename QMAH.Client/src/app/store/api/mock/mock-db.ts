@@ -142,11 +142,11 @@ export const CONDITION_MEASURED =
 
 /** 商品評價示意資料（每件商品皆回傳同一組） */
 export const REVIEWS: Review[] = [
-  { id: 'rv-01', stars: 5, user: '藏家 L***n', date: '2026-08-29', hasPhoto: true, text: '紋樣印製比想像中細緻，說明卡把原件年代與館藏編號都寫清楚了，送禮很有面子。' },
-  { id: 'rv-02', stars: 5, user: '藏家 C***h', date: '2026-08-14', hasPhoto: false, text: '包裝厚實，運送沒有碰傷。實物顏色比商品圖再沉穩一點，我個人更喜歡。' },
-  { id: 'rv-03', stars: 4, user: '藏家 W***y', date: '2026-07-30', hasPhoto: true, text: '品質沒問題，尺寸與頁面標示一致，只是希望出貨再快一點。' },
-  { id: 'rv-04', stars: 4, user: '藏家 T***c', date: '2026-07-11', hasPhoto: false, text: '做工扎實，細部的收邊如果再修一點會更好，整體仍值得這個價格。' },
-  { id: 'rv-05', stars: 3, user: '藏家 H***j', date: '2026-06-22', hasPhoto: false, text: '紋樣還原度不錯，但我收到的那件釉面有一小處針孔，頁面已附上說明。' },
+  { id: 'rv-01', stars: 5, user: '藏家 L***n', date: '2026-08-29', text: '紋樣印製比想像中細緻，說明卡把原件年代與館藏編號都寫清楚了，送禮很有面子。' },
+  { id: 'rv-02', stars: 5, user: '藏家 C***h', date: '2026-08-14', text: '包裝厚實，運送沒有碰傷。實物顏色比商品圖再沉穩一點，我個人更喜歡。' },
+  { id: 'rv-03', stars: 4, user: '藏家 W***y', date: '2026-07-30', text: '品質沒問題，尺寸與頁面標示一致，只是希望出貨再快一點。' },
+  { id: 'rv-04', stars: 4, user: '藏家 T***c', date: '2026-07-11', text: '做工扎實，細部的收邊如果再修一點會更好，整體仍值得這個價格。' },
+  { id: 'rv-05', stars: 3, user: '藏家 H***j', date: '2026-06-22', text: '紋樣還原度不錯，但我收到的那件釉面有一小處針孔，頁面已附上說明。' },
 ];
 
 /* ===============================
@@ -219,7 +219,10 @@ export const MEMBER: MemberProfile = {
   phone: '0912-345-678',
   email: 'chengyi.w@example.com',
   taxId: '24681357',
-  address: '台北市中正區重慶南路一段 122 號 5 樓',
+  postalCode: '100',
+  city: '台北市',
+  district: '中正區',
+  address: '重慶南路一段 122 號 5 樓',
   note: '平日下午收件，需禮盒包裝',
   pointBalance: 1860,
 };

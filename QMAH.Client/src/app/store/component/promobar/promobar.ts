@@ -1,4 +1,6 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { MEMBER_PATH, loginPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
 import { Coupon } from '../../api/api.models';
 import { formatDateMD, formatMoney } from '../../shared/format';
@@ -16,14 +18,22 @@ import { formatDateMD, formatMoney } from '../../shared/format';
   ],
 })
 export class Promobar {
+  private readonly router = inject(Router);
+
   /** 跑馬燈公告文字清單 */
   announcements = input<string[]>([]);
 
   // ui-integration: 只把已有會員 route 接到商城快捷列；訂單歷史尚無前台 route，保持非連結狀態，不製造假的頁面入口。
   /** 「訂單查詢」連結網址；尚無對應前台頁面時為 null */
   ordersHref = input<string | null>(null);
+  /** 是否已登入；null 代表尚未確認（先不顯示登入或個人頁面，避免閃爍） */
+  signedIn = input<boolean | null>(null);
   /** 「個人頁面」連結網址 */
-  profileHref = input('/member/profile');
+  profileHref = input(MEMBER_PATH);
+  /** 未登入時的「登入」連結網址，登入後回到目前頁面（router.url 不是 signal，因此每次取用時計算） */
+  protected loginHref(): string {
+    return loginPath(this.router.url);
+  }
   /** 「點數」連結網址 */
   pointsHref = input('/member/economy');
   /** 目前點數顯示文字 */

@@ -103,13 +103,13 @@ const appShellChildren: Routes = [
   },
   ...(isDevMode()
     ? [
-        {
-          path: 'game/demo',
-          canActivate: [adminGameTestGuard],
-          loadComponent: () =>
-            import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
-        }
-      ]
+      {
+        path: 'game/demo',
+        canActivate: [adminGameTestGuard],
+        loadComponent: () =>
+          import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
+      }
+    ]
     : []),
   {
     // ui-integration: 遊戲檢查中心是正式網站的一部分，但只讓管理員進入，避免把隔離測試工具混入一般玩家流程。
@@ -149,23 +149,22 @@ const appShellChildren: Routes = [
         path: '',
         loadComponent: () => import('./store/pages/home/home').then((c) => c.Home),
       },
-      // 商品列表頁支援 q（關鍵字）、cat（器類）、view（主題入口）三個查詢字串參數，
-      // 由 withComponentInputBinding() 直接綁定到同名的元件 input。
       {
         path: 'products',
         loadComponent: () => import('./store/pages/product-list/product-list').then((c) => c.ProductList),
       },
-      // 商品頁以路徑參數帶入商品 ID，同樣由 withComponentInputBinding() 綁定到 id input。
       {
         path: 'product/:id',
         loadComponent: () => import('./store/pages/product-info/product-info').then((c) => c.ProductInfo),
       },
       {
         path: 'cart',
+        canActivate: [authGuard],
         loadComponent: () => import('./store/pages/cart/cart').then((c) => c.Cart),
       },
       {
         path: 'checkout',
+        canActivate: [authGuard],
         loadComponent: () => import('./store/pages/checkout/checkout').then((c) => c.Checkout),
       },
     ],

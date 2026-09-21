@@ -3,7 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { map, of, switchMap } from 'rxjs';
 
-import { Promobar, SearchBar, SearchSuggestion, CartLink, SiteHeader } from '../../component';
+import { Promobar, SearchBar, SearchSuggestion, CartLink, SiteHeader, LoginPrompt } from '../../component';
 import { CatalogApi, HomeApi, SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
 import { CART_PATH, PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
@@ -47,6 +47,7 @@ const RECOMMEND_PAGE_SIZE = 10;
     Recommendations,
     SiteHeader,
     StoreLink,
+    LoginPrompt,
   ],
   templateUrl: './home.html',
   styleUrls: [

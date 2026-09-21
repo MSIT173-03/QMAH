@@ -5,7 +5,9 @@
     <div class="summary-row"><span>{{ subtotalLabel }}</span><span class="font-mono">{{ getSubtotal() }}</span></div>
     <div class="summary-row"><span>{{ savingsLabel }}</span><span class="font-mono text-accent">{{ getSavings() }}</span></div>
     <div class="summary-row"><span>{{ shippingLabel }}</span><span class="font-mono">{{ getShipping() }}</span></div>
-    <span class="summary-note">{{ getShipNote() }}</span>
+    @if (getShipNote()) {
+      <span class="summary-note">{{ getShipNote() }}</span>
+    }
     <div class="summary-total-row">
       <span class="summary-total-label">{{ totalLabel }}</span>
       <span class="summary-total-value">{{ getTotal() }}</span>

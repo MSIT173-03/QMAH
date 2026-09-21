@@ -1,5 +1,6 @@
 <!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
-<app-promobar [announcements]="site.announcements()" [points]="site.points()" [coupons]="site.coupons()" />
+<app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
+  [coupons]="site.coupons()" />
 
 <!-- 網站頁首：品牌 Logo、搜尋框與購物車入口 -->
 <app-site-header variant="list">
@@ -36,6 +37,9 @@
     <div class="section-block">
     @if (loading()) {
       <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark" aria-hidden="true"></span><span>正在整理商品清單…</span></section>
+    } @else if (loadError()) {
+      <app-empty-state [title]="errorTitle" [desc]="errorDesc" [ctaLabel]="errorCtaLabel" ctaMode="button"
+        (ctaClick)="onReload()" />
     } @else if (isEmpty()) {
       <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" ctaMode="button"
         (ctaClick)="onReset()" />
@@ -60,9 +64,12 @@
       }
 
       <!-- 分頁切換 -->
-      @if (!isEmpty()) {
+      @if (!isEmpty() && !loadError()) {
       <app-pagination [page]="pageIndex()" [totalPages]="totalPages()" (pick)="onPagePick($event)" />
       }
     </div>
   </div>
 </div>
+
+<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
+<app-login-prompt [open]="cart.loginPrompt()" (confirm)="cart.confirmLogin()" (cancel)="cart.cancelLogin()" />
