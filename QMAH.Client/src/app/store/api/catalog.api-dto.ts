@@ -1,7 +1,7 @@
 /**
  * 商品型錄後端 API 的原始回應格式，對應 doc/apis.xml 中「商品清單」「商品」「商品評論列表」三支 API 的定義。
- * 後端目前只提供這些欄位；品牌、已售件數（詳情）、材質、保存狀況、出貨說明、商品圖片集等
- * 前端顯示用欄位尚未由後端提供，由 toProduct／toProductDetail 轉換時補上預設值。
+ * 後端目前只提供這些欄位；品牌、評分（清單）、已售件數、上架日期、材質、保存狀況、出貨說明、商品圖片集等
+ * 前端顯示用欄位由 toProduct／toProductDetail 依正式 API 契約轉換；沒有值時才使用中性 fallback。
  */
 
 import { Category, Product, ProductDetail, Review, ReviewPage, ReviewQuery, StorePromotion } from './api.models';
@@ -64,7 +64,7 @@ export function toCategoryCode(label: string): string {
 /** GET /products 清單項目 */
 export interface ApiProductListItem {
   id: string;
-  artifactId: string;
+  artifactId: string | null;
   externalRef: string | null;
   name: string;
   categoryCode: string;
@@ -74,13 +74,9 @@ export interface ApiProductListItem {
   salePrice?: number | null;
   stock: number;
   primaryImagePath: string | null;
-  /** 上架時間（ISO 8601） */
   createdAt: string;
-  /** 已發布評價的平均星等，無評價時為 0 */
   averageRating: number;
-  /** 已發布評價則數 */
   reviewCount: number;
-  /** 已完成訂單的累計販售件數 */
   sellCount: number;
 }
 
@@ -113,15 +109,13 @@ export function toStorePromotion(dto: ApiStorePromotion): StorePromotion {
 /** GET /products/{id} 回應 */
 export interface ApiProductDetail {
   id: string;
-  artifactId: string;
+  artifactId: string | null;
   artifactRef: string | null;
   artifactName: string | null;
   externalRef: string | null;
   name: string;
   categoryCode: string;
-  /** 後端 Product.Description 可為 null */
   description: string | null;
-  /** 後端 Product.SizeText 可為 null */
   sizeText: string | null;
   artifactSizeText: string | null;
   price: number;
@@ -135,15 +129,16 @@ export interface ApiProductDetail {
   averageRating: number;
   reviewCount: number;
 }
-
 /** 清單與詳情共有的商品欄位 */
 type ApiProductBase = Pick<
   ApiProductListItem,
   'id' | 'name' | 'categoryCode' | 'price' | 'discountRate' | 'effectivePrice' | 'externalRef' | 'primaryImagePath'
 >;
-
-/** 清單與詳情共用的基本換算；後端未提供的欄位（品牌、已售件數等）補中性預設值，由呼叫端覆寫。 */
-function toProductBase(dto: ApiProductBase): Product {
+export function toProduct(dto: ApiProductListItem | ApiProductDetail): Product {
+  const dealPrice = dto.effectivePrice;
+  // 商品詳情 API 沒有清單專用的上架時間／已售數欄位；不把它們誤當成清單的正式統計值。
+  const listedAt = 'createdAt' in dto ? dto.createdAt : '';
+  const soldCount = 'sellCount' in dto ? dto.sellCount : 0;
   return {
     id: dto.id,
     name: dto.name,
@@ -152,24 +147,13 @@ function toProductBase(dto: ApiProductBase): Product {
     price: dto.price,
     dealPrice: dto.effectivePrice,
     discountRate: dto.discountRate,
-    rating: 0,
-    reviewCount: 0,
-    soldCount: 0,
-    source: dto.externalRef ?? '',
-    dimensions: '',
-    listedAt: '',
-    coverImage: dto.primaryImagePath,
-  };
-}
-
-export function toProduct(dto: ApiProductListItem): Product {
-  return {
-    ...toProductBase(dto),
     rating: dto.averageRating,
     reviewCount: dto.reviewCount,
-    soldCount: dto.sellCount,
-    listedAt: dto.createdAt.slice(0, 10),
-    // 清單只取 200px 縮圖；商品詳情會在 toProductDetail 使用 600px display 圖。
+    soldCount,
+    source: dto.externalRef ?? '',
+    dimensions: '',
+    listedAt,
+    // 清單只取 200px 縮圖；商品詳情會在 toProductDetail 還原成 600px display 圖。
     coverImage: toCatalogThumbnail(dto.primaryImagePath),
   };
 }
@@ -178,7 +162,8 @@ export function toProduct(dto: ApiProductListItem): Product {
  * 商品 API 的 description 仍包含商城展示用的整合文字；明信片只取最後的故宮原文物說明。
  * 若舊資料沒有標記，才退回完整說明，避免測試資料或未完成資料被靜默清空。
  */
-function toArtifactDescription(description: string): string {
+function toArtifactDescription(description: string | null): string {
+  if (!description?.trim()) return '官方資料未提供';
   const marker = '原文物說明：';
   const markerIndex = description.lastIndexOf(marker);
   return (markerIndex >= 0 ? description.slice(markerIndex + marker.length) : description).trim();
@@ -188,7 +173,7 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
   const description = dto.description ?? '';
   const artifactDescription = toArtifactDescription(description);
   return {
-    ...toProductBase(dto),
+    ...toProduct(dto),
     // 套組商品名稱保留在商品摘要；明信片正面改用原文物名稱，避免把販售形式印到作品標題上。
     artifactName: dto.artifactName ?? dto.name,
     // 詳情頁明確使用大圖，讓滿版明信片不會誤拿清單縮圖放大。
@@ -196,11 +181,11 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
     artifactDimensions: dto.artifactSizeText ?? '官方資料未提供',
     rating: dto.averageRating,
     reviewCount: dto.reviewCount,
-    dimensions: dto.sizeText ?? '',
+    dimensions: dto.sizeText ?? '官方資料未提供',
     source: dto.sourceUrl ?? dto.externalRef ?? '',
     material: '',
     // 商品說明保留套組段落；明信片視圖另用 artifactDescription，避免把行銷段落塞進卡片。
-    description: description.trim(),
+    description: dto.description?.trim() || '官方資料未提供',
     artifactDescription,
     condition: '',
     shippingNote: '',

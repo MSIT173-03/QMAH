@@ -65,15 +65,14 @@ function pointCap(subtotal: number, coupon: Coupon | null): number {
 export class CheckoutApi {
   private readonly http = inject(HttpClient);
 
-  // integration: 正式後端目前只有 POST /store/orders（CreateStoreOrderRequest → OrderDto）；
-  // 配送／付款選項與 quote 試算 route 尚未存在，因此 getOptions 回傳空選項讓結帳頁維持停用，
-  // 不能把 provideMockApi 放回 app.config 來掩蓋差異。
+  // integration: 正式後端目前只有 /store/orders 的既有契約；配送試算與 payment callback 尚未完成，
+  // 因此未定義的 options 只回傳停用狀態，不對不存在的 route 送出請求。
 
   /**
    * GET /checkout/options：配送／付款方式、免運門檻與點數回饋比例。
    *
    * develop 目前沒有正式的 options／quote route；先回傳空選項讓既有頁面停用，
-   * 不向不存在的 endpoint 發 request，也不使用 mock 假裝能付款。待商城負責人定義正式 DTO 後再接回 HTTP。
+   * 不向不存在的 endpoint 發 request，也不以本機假資料假裝能付款。待商城負責人定義正式 DTO 後再接回 HTTP。
    */
   getOptions(): Observable<CheckoutOptions> {
     return of(DISABLED_CHECKOUT_OPTIONS);

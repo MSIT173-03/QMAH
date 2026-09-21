@@ -116,6 +116,8 @@ export class ArtifactList implements OnInit {
 
   // ---- 搜尋／篩選 ----
   searchQuery = signal('');
+  /** 快速切換只看已解鎖文物；不改變後端資料，只作用於目前清單視圖。 */
+  unlockedOnly = signal(false);
   /** 年代／分類改成核取方塊多選，空集合代表「不篩選（全部）」 */
   selectedEras = signal<Set<string>>(new Set());
   selectedCategories = signal<Set<string>>(new Set());
@@ -123,8 +125,13 @@ export class ArtifactList implements OnInit {
   activeFilterCount = computed(() =>
     this.selectedEras().size +
     this.selectedCategories().size +
+    (this.unlockedOnly() ? 1 : 0) +
     (this.searchQuery().trim() ? 1 : 0),
   );
+
+  toggleUnlockedFilter(): void {
+    this.unlockedOnly.update((active) => !active);
+  }
 
   toggleFilterPanel(): void {
     this.filterOpen.update((open) => !open);
@@ -178,6 +185,7 @@ export class ArtifactList implements OnInit {
   /** 清除搜尋關鍵字＋年代／分類篩選，一次全部恢復成「顯示全部」 */
   clearFilters(): void {
     this.searchQuery.set('');
+    this.unlockedOnly.set(false);
     this.selectedEras.set(new Set());
     this.selectedCategories.set(new Set());
   }
@@ -196,6 +204,7 @@ export class ArtifactList implements OnInit {
     const categories = this.selectedCategories();
 
     return this.catalogModel().filter((item) => {
+      if (this.unlockedOnly() && !item.unlocked) return false;
       if (eras.size > 0 && !eras.has(item.eraName)) return false;
       if (categories.size > 0 && !categories.has(item.categoryName)) return false;
       if (!keyword) return true;

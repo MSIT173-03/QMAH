@@ -172,6 +172,16 @@
 }
 
 .postcard-static {
+  /* 明信片設計本體固定淺色，不被商城深色模式染成深色紙面。 */
+  color-scheme: light;
+  --color-ink: #203d3a;
+  --color-body: #536967;
+  --color-muted: #667d7a;
+  --color-line: #c5d4d0;
+  --color-line-soft: #d9e3df;
+  --color-surface: #f6f1e8;
+  --color-swatch: #ebe5d8;
+  background: #f6f1e8;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(112px, 28%);
   box-shadow: var(--qmah-shadow-card);
@@ -214,7 +224,7 @@
   min-width: 0;
   padding: clamp(14px, 2vw, 24px);
   color: var(--color-ink-deep);
-  background: var(--color-surface);
+  background: #f6f1e8;
 }
 
 .postcard-static__caption strong {

@@ -43,8 +43,8 @@
 
 .search-submit {
   border: 0;
-  background: var(--color-ink);
-  color: var(--color-on-ink);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   border-radius: var(--qmah-radius-control);
   padding: 0 var(--qmah-button-padding-x);
   min-height: calc(var(--qmah-control-height) - var(--qmah-space-2));
@@ -55,7 +55,7 @@
   transition: background 160ms;
 
   &:hover {
-    background: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 84%, var(--color-ink));
   }
 }
 

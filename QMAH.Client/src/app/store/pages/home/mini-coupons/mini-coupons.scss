@@ -37,7 +37,7 @@
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &--taken {
-    background: var(--color-ink);
-    color: var(--qmah-primary-content);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
   }
 }

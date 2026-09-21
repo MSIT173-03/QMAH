@@ -139,6 +139,20 @@ npm ci
 npm start
 ```
 
+預設的 `npm start`／`npm run start:https` 使用 API 的 `https` profile，將 `/api`、公開 `/media` 與 OpenAPI 請求轉送到 `https://localhost:7249`；完整啟動時，後台的 `/uploads` 與 `/images/avatars` 轉送到 `https://localhost:7039`。
+
+若要使用 API 的 `http` profile，請另開終端機執行：
+
+```powershell
+dotnet run --project .\QMAH.Api\QMAH.Api.csproj --launch-profile http
+cd QMAH.Client
+npm run start:http
+```
+
+這時 `/api`、公開 `/media` 與 OpenAPI 請求會轉送到 `http://localhost:5147`，後台的 `/uploads` 與 `/images/avatars` 會轉送到 `http://localhost:5183`。HTTP 與 HTTPS 使用各自的 proxy 設定，避免把 HTTPS profile 的 307 redirect 當成 API 回應傳回前端。
+
+需要手動使用 Angular CLI 時，HTTPS profile 可在 `QMAH.Client` 目錄執行 `ng serve` 或 `npx ng serve`；HTTP profile 請執行 `ng serve --proxy-config proxy.http.conf.json` 或 `npx ng serve --proxy-config proxy.http.conf.json`。
+
 瀏覽器開啟 `http://localhost:4200/`。前台的 `/api`、`/openapi` 與 `/scalar` 會透過 `QMAH.Client/proxy.conf.json` 轉送到 `https://localhost:7249`。
 
 ## 本機資料庫自動尋找

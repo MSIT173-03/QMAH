@@ -29,9 +29,9 @@
 
   /* 目前選取的配送方式 */
   &--active {
-    border-color: var(--color-ink);
-    background: var(--color-ink);
-    color: var(--qmah-primary-content);
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
   }
 }
 

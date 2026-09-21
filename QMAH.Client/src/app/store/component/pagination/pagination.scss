@@ -22,9 +22,9 @@
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &:hover:not(:disabled) {
-    background: var(--color-ink);
-    border-color: var(--color-ink);
-    color: var(--qmah-primary-content);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-on-accent);
   }
 
   &:disabled {

@@ -172,7 +172,7 @@ public sealed class StoreCatalogController(
                     ? Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2)
                     : (decimal?)null,
             g.Stock,
-            g.PrimaryImagePath,
+            PrimaryImagePath = g.PrimaryImagePath ?? (g.Artifact == null ? null : g.Artifact.PrimaryImagePath),
             g.CreatedAt,
             AverageRating = db.ProductReviews
                     .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
@@ -272,7 +272,7 @@ public sealed class StoreCatalogController(
                         ? Math.Round(item.Price * (100m - item.DiscountRate) / 100m, 2)
                         : (decimal?)null,
                 item.Stock,
-                item.PrimaryImagePath,
+                item.PrimaryImagePath ?? (item.Artifact == null ? null : item.Artifact.PrimaryImagePath),
                 item.SourceUrl,
                 item.IsActive,
                 item.ProductReviews

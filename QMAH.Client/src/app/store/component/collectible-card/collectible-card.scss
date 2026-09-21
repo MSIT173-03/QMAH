@@ -5,6 +5,17 @@
 }
 
 .card-flip-button {
+  /* 明信片設計本體固定淺色，不被全站深色模式染成深色紙面。 */
+  color-scheme: light;
+  --color-ink: #203d3a;
+  --color-body: #536967;
+  --color-muted: #667d7a;
+  --color-line: #c5d4d0;
+  --color-line-soft: #d9e3df;
+  --color-surface: #f6f1e8;
+  --color-swatch: #ebe5d8;
+  --color-teal: #2d7e78;
+  --magnifier-image-filter: none;
   /* 一單位代表紙面 1 mm；只縮放整張 A6，字級與間距不再受像素上下限影響。 */
   --paper-mm: calc(100cqw / 148);
   --front-copy-width: 28%;
@@ -83,7 +94,7 @@
   overflow: hidden;
   box-sizing: border-box;
   isolation: isolate;
-  background: var(--color-surface);
+  background: #f6f1e8;
 }
 
 /* 原紙紋不是無縫素材，因此整面覆蓋；同一個 4 KB 檔案由所有商品共用快取。 */
@@ -143,7 +154,7 @@
   box-sizing: border-box;
   padding: calc(4 * var(--paper-mm));
   border-left: 1px solid color-mix(in srgb, var(--color-line) 72%, transparent);
-  background: var(--color-surface);
+  background: #f6f1e8;
 }
 
 .card-back-name {

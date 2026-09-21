@@ -85,13 +85,18 @@ export class AuthService {
     request: LoginRequest
   ): Observable<CurrentUser> {
 
+    const normalizedRequest = {
+      ...request,
+      email: request.email.trim(),
+    };
+
     return this.refreshAntiforgeryToken()
       .pipe(
 
         switchMap(() =>
           this.http.post(
             `${environment.apiBaseUrl}/account/login`,
-            request
+            normalizedRequest
           )
         ),
 

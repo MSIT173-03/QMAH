@@ -86,7 +86,8 @@ export class Login implements OnInit, OnDestroy {
   readonly themeTransitioning = signal(false);
   readonly themeDirection = signal<'to-dark' | 'to-light'>('to-dark');
   readonly theme = this.themeService.theme;
-  readonly logoSrc = computed(() => this.theme() === 'qmahdark'
+  /** 登入頁 logo 與背板一起隨主題切換，確保在畫卷與表單上都有足夠對比。 */
+  readonly logoSrc = computed(() => this.themeService.theme() === 'qmahdark'
     ? '/images/brand/qmah-logo-dark.svg'
     : '/images/brand/qmah-logo.svg');
   readonly activeSegment = computed(
@@ -108,8 +109,8 @@ export class Login implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
   ) {
     this.form = this.fb.nonNullable.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
+      password: ['', [Validators.required, Validators.maxLength(100)]],
       rememberMe: [false],
     });
   }
@@ -220,8 +221,21 @@ export class Login implements OnInit, OnDestroy {
     }, 0);
   }
 
-  toggleTheme(): void {
+  toggleTheme(event: MouseEvent): void {
     if (this.themeTransitioning()) return;
+
+    const toggle = event.currentTarget as HTMLElement | null;
+    if (toggle) {
+      const bounds = toggle.getBoundingClientRect();
+      this.document.documentElement.style.setProperty(
+        '--login-theme-origin-x',
+        `${bounds.left + bounds.width / 2}px`,
+      );
+      this.document.documentElement.style.setProperty(
+        '--login-theme-origin-y',
+        `${bounds.top + bounds.height / 2}px`,
+      );
+    }
 
     const nextTheme: SiteTheme = this.theme() === 'qmahdark' ? 'qmah' : 'qmahdark';
     this.themeDirection.set(nextTheme === 'qmahdark' ? 'to-dark' : 'to-light');
@@ -266,7 +280,8 @@ export class Login implements OnInit, OnDestroy {
     this.loading = true;
     this.errorMessage = '';
 
-    this.authService.login(this.form.getRawValue()).subscribe({
+    const value = this.form.getRawValue();
+    this.authService.login({ ...value, email: value.email.trim() }).subscribe({
       next: () => {
         this.loading = false;
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
@@ -279,6 +294,16 @@ export class Login implements OnInit, OnDestroy {
 
         if (error.status === 401) {
           this.errorMessage = '電子郵件或密碼錯誤';
+          return;
+        }
+
+        if (error.status === 400) {
+          this.errorMessage = '請確認電子郵件格式與密碼長度';
+          return;
+        }
+
+        if (error.status === 429) {
+          this.errorMessage = '登入嘗試過於頻繁，請稍後再試';
           return;
         }
 

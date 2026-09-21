@@ -5,8 +5,7 @@ import { environment } from '../../../environments/environment';
 /** 商店 API 的網址前綴 */
 export const STORE_API_BASE = environment.apiBaseUrl + '/store';
 
-// integration: 這個前綴只代表 Store branch 的 API contract；正式 runtime 不再自動套用 mock。
-// 每支 API 必須先和後端既有 route／DTO 對照，未完成的首頁行銷與結帳 contract 留給負責人確認。
+// 這個前綴代表正式 Store API contract；每支 API 都應與後端既有 route／DTO 對照。
 
 /**
  * 組出完整的 API 網址。
