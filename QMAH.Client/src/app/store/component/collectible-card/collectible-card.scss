@@ -5,16 +5,16 @@
 }
 
 .card-flip-button {
-  /* 明信片設計本體固定深色，不被全站主題切換成淺色紙面。 */
-  color-scheme: dark;
-  --color-ink: #f1ede5;
-  --color-body: #c5d0cc;
-  --color-muted: #aebdb8;
-  --color-line: #53656a;
-  --color-line-soft: #43545a;
-  --color-surface: #223036;
-  --color-swatch: #2d3a40;
-  --color-teal: #8fd4c4;
+  /* 明信片設計本體固定淺色，不被全站深色模式染成深色紙面。 */
+  color-scheme: light;
+  --color-ink: #203d3a;
+  --color-body: #536967;
+  --color-muted: #667d7a;
+  --color-line: #c5d4d0;
+  --color-line-soft: #d9e3df;
+  --color-surface: #f6f1e8;
+  --color-swatch: #ebe5d8;
+  --color-teal: #2d7e78;
   --magnifier-image-filter: none;
   /* 一單位代表紙面 1 mm；只縮放整張 A6，字級與間距不再受像素上下限影響。 */
   --paper-mm: calc(100cqw / 148);
@@ -94,7 +94,7 @@
   overflow: hidden;
   box-sizing: border-box;
   isolation: isolate;
-  background: #223036;
+  background: #f6f1e8;
 }
 
 /* 原紙紋不是無縫素材，因此整面覆蓋；同一個 4 KB 檔案由所有商品共用快取。 */
@@ -173,7 +173,7 @@
 /* 正面文字落在獨立紙面欄，不使用橫幅或影像陰影，讓油墨字邊在任何作品上都清楚。 */
 .postcard-caption .ink-print {
   color: var(--color-ink);
-  mix-blend-mode: normal;
+  mix-blend-mode: multiply;
   text-shadow: 0.22px 0.18px 0 rgba(61, 59, 49, 0.2);
 }
 
