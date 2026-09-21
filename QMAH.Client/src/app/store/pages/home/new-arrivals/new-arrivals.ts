@@ -50,6 +50,7 @@ export class NewArrivals {
         id: view.id,
         brand: view.brand,
         name: view.name,
+        coverImage: view.coverImage,
         /** 是否為折扣商品，決定價格與標籤是否使用強調色 */
         hasDeal: price.hasDeal,
         priceText: price.price,

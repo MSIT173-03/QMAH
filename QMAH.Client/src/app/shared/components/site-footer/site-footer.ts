@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ThemeService } from '../../../core/services/theme';
 
 export interface FooterLink {
   label: string;
@@ -25,8 +26,11 @@ export interface FooterColumn {
   ],
 })
 export class SiteFooter {
-  // ui-integration: Footer 與 App Shell 共用部署內的品牌資產，不讓正式網站依賴外部圖片。
-  protected readonly logoSrc = '/images/brand/qmah-logo.svg';
+  // ui-integration: Footer 與 App Shell 共用部署內的品牌資產，並依主題使用正確的 Logo 版本。
+  private readonly themeService = inject(ThemeService);
+  protected readonly logoSrc = computed(() => this.themeService.theme() === 'qmahdark'
+    ? '/images/brand/qmah-logo-dark.svg'
+    : '/images/brand/qmah-logo.svg');
   protected readonly logoAlt = '清明鑑定屋';
   protected readonly brandNote = '以文物資料為本，匯集圖鑑、遊戲、社群與選物。';
   protected readonly githubUrl = 'https://github.com/MSIT173-03/QMAH';

@@ -19,15 +19,17 @@
       </div>
       @if (editingPost) {
         <div class="form-control gap-2">
-          <input type="text" class="input input-bordered w-full" [(ngModel)]="editPostTitle" placeholder="標題" />
-          <textarea class="textarea textarea-bordered h-32" [(ngModel)]="editPostContent"></textarea>
+          <label class="sr-only" for="edit-post-title">貼文標題</label>
+          <input id="edit-post-title" type="text" class="input input-bordered w-full" [(ngModel)]="editPostTitle" placeholder="標題" />
+          <label class="sr-only" for="edit-post-content">貼文內容</label>
+          <textarea id="edit-post-content" class="textarea textarea-bordered h-32" [(ngModel)]="editPostContent"></textarea>
           <div class="flex gap-2 justify-end">
             <button class="btn btn-sm btn-ghost" (click)="cancelEditPost()">取消</button>
             <button class="btn btn-sm btn-primary" (click)="saveEditPost()">儲存</button>
           </div>
         </div>
       } @else {
-        <h2 class="card-title">{{ post.title }}</h2>
+        <h1 class="card-title">{{ post.title }}</h1>
         <p class="text-xs text-base-content/60 social-icon-label">
           <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
           {{ post.displayName || '匿名會員' }}
@@ -38,7 +40,12 @@
       @if (post.media.length > 0) {
         <div class="flex flex-col gap-2 mt-2">
           @for (media of post.media; track media.id) {
-            <img src="{{ media.url }}" [alt]="media.altText || ''" class="rounded-lg w-full h-auto max-h-[36rem] object-contain bg-base-200" />
+            <figure class="social-post-detail__media">
+              <img [src]="media.url" [alt]="media.altText || post.title" />
+              @if (media.altText) {
+                <figcaption>{{ media.altText }}</figcaption>
+              }
+            </figure>
           }
         </div>
       }
@@ -68,7 +75,7 @@
           </div>
           @if (editingCommentId === comment.id) {
             <div class="form-control gap-2">
-              <textarea class="textarea textarea-bordered textarea-sm" [(ngModel)]="editCommentContent"></textarea>
+              <textarea class="textarea textarea-bordered textarea-sm" [(ngModel)]="editCommentContent" aria-label="編輯留言內容"></textarea>
               <div class="flex gap-2 justify-end">
                 <button class="btn btn-xs btn-ghost" (click)="cancelEditComment()">取消</button>
                 <button class="btn btn-xs btn-primary" (click)="saveEditComment(comment.id)">儲存</button>
@@ -100,7 +107,9 @@
   }
 
   <div class="form-control gap-2">
+    <label class="sr-only" for="new-comment-content">留言內容</label>
     <textarea
+      id="new-comment-content"
       class="textarea textarea-bordered"
       placeholder="留下你的想法…"
       [(ngModel)]="newComment.content"

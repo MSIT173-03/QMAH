@@ -9,8 +9,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--qmah-space-6);
-  min-height: 68px;
-  padding-bottom: 6px;
+  min-height: 62px;
+  padding: 4px 0 6px;
 }
 
 .game-navigation__switcher {
@@ -24,7 +24,7 @@
   display: inline-flex;
   align-items: center;
   color: var(--qmah-muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: .12em;
   white-space: nowrap;
@@ -87,9 +87,9 @@ a.is-active {
 a:hover { background: color-mix(in srgb, var(--qmah-surface) 42%, transparent); }
 
 a.is-active {
-  border-color: transparent;
-  background: transparent;
-  box-shadow: inset 0 -3px var(--qmah-danger);
+  border-color: color-mix(in srgb, var(--qmah-game-action) 42%, var(--qmah-line));
+  background: color-mix(in srgb, var(--qmah-game-action) 10%, var(--qmah-surface));
+  box-shadow: var(--qmah-shadow-card);
   font-weight: 800;
 }
 
@@ -106,7 +106,7 @@ a:focus-visible {
     flex-direction: column;
     gap: 6px;
     min-height: 0;
-    padding: 8px 0;
+    padding: 8px 0 10px;
   }
 
   .game-navigation__switcher {

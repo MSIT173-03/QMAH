@@ -18,27 +18,27 @@ export interface KeyModel {
 /** 篩選列用；'ALL' 是畫面上多出來的選項，不是後端資料本身會有的 scopeType */
 export type KeyFilter = 'ALL' | KeyScopeType;
 
-/**
- * 對應 GET /me/keys/exchange-rules 的其中一筆規則：某種鑰匙（scopeType）
- * 解鎖一次要消耗幾把（costPerUnlock）。
- *
- * ⚠️ 目前沒有實際回應可以對照，這是依「不同鑰匙解鎖一次可能要消耗不同數量」
- * 這個需求反推出來的猜測形狀。KeyService.getExchangeRules() 在解析每一筆時
- * 也多猜了幾個常見欄位名稱（cost／requiredCount／keyCost）當備援，等你把
- * 實際回應貼給我，我再把型別和解析邏輯一起對齊、拿掉備援猜測。
- */
+/** 對應 GET /me/keys/exchange-rules 的實際回應：來源鑰匙換成目標鑰匙。 */
 export interface KeyExchangeRule {
-  scopeType: KeyScopeType;
-  costPerUnlock: number;
+  id: string;
+  sourceKeyCode: string;
+  sourceKeyName: string;
+  sourceAmount: number;
+  targetKeyCode: string;
+  targetKeyName: string;
+  targetAmount: number;
+  targetEligibleArtifactCount: number;
+  description: string | null;
 }
 
-/**
- * 依 scopeType 從規則清單找出對應的解鎖成本。
- * 找不到（規則還沒載入完成、或後端沒有回傳這個 scopeType 的規則）時 fallback 為 1，
- * 避免畫面在規則載入完成前，因為算不出成本而整個卡住或誤判「數量不足」。
- */
-export function costForScope(rules: KeyExchangeRule[], scopeType: KeyScopeType): number {
-  return rules.find((rule) => rule.scopeType === scopeType)?.costPerUnlock ?? 1;
+/** 對應 POST /me/keys/exchange 的完成結果。 */
+export interface KeyExchangeResult {
+  ruleId: string;
+  sourceKeyCode: string;
+  sourceAmount: number;
+  targetKeyCode: string;
+  targetAmount: number;
+  targetEligibleArtifactCount: number;
 }
 
 /**

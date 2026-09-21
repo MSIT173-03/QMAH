@@ -8,7 +8,7 @@
     <div>
       <p class="eyebrow">多人鑑定 · 房間</p>
       <h1 id="room-title">{{ room ? '房間 ' + room.roomCode : '遊戲房間' }}</h1>
-      <p class="intro-copy">和朋友一起觀察館藏，寫下判斷，投票選出最有說服力的答案。</p>
+      <p class="intro-copy">房間狀態、玩家席位與目前回合會顯示於此。</p>
     </div>
     @if (room) {
       <div class="room-status" [attr.data-status]="room.status">
@@ -230,7 +230,7 @@
 @if (showLeaveConfirm) {
   <!-- ui-integration: 離開房間會改變座位與遊戲流程，使用明確確認避免誤觸造成進度中斷。 -->
   <div class="leave-dialog-backdrop" role="presentation" (click)="cancelLeaveRoom()">
-    <section class="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-dialog-title" (click)="$event.stopPropagation()">
+    <section #leaveDialog class="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-dialog-title" tabindex="-1" (click)="$event.stopPropagation()">
       <p class="eyebrow">離開房間</p>
       <h2 id="leave-dialog-title">確定要返回大廳嗎？</h2>
       <p>離開後會釋出你的座位；遊戲開始後，將無法重新加入這一場。</p>

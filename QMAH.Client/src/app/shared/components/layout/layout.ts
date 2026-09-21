@@ -42,11 +42,30 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   readonly menuOpen = signal(false);
   readonly loggingOut = signal(false);
+  readonly failedAvatarPath = signal<string | null>(null);
   readonly currentUrl = signal(this.router.url);
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
   @ViewChild('mobileNavigation') private mobileNavigation?: ElementRef<HTMLElement>;
 
   readonly isAdmin = computed(() => this.meApi.me()?.roles?.includes('Admin') ?? false);
+  /** 五大前台 Area 共用同一個 Shell，但各自保留主色語意；頁面內元件仍可使用自己的 secondary／semantic token。 */
+  readonly activeArea = computed<'home' | 'user' | 'catalog' | 'game' | 'social' | 'store' | 'admin'>(() => {
+    const url = this.currentUrl().split('?')[0];
+    if (url.startsWith('/admin')) return 'admin';
+    if (url.startsWith('/member') || url.startsWith('/key-list')) return 'user';
+    if (url.startsWith('/artifact-list')) return 'catalog';
+    if (url.startsWith('/game')) return 'game';
+    if (url.startsWith('/social')) return 'social';
+    if (url.startsWith('/store')) return 'store';
+    return 'home';
+  });
+  readonly logoSrc = computed(() => this.themeService.theme() === 'qmahdark'
+    ? '/images/brand/qmah-logo-dark.svg'
+    : '/images/brand/qmah-logo.svg');
+
+  onAvatarError(path: string): void {
+    this.failedAvatarPath.set(path);
+  }
 
   // ui-integration: Mobile 次級入口集中成資料，讓同一個 drawer 可延伸到 Social／Admin，而不複製 Layout markup。
   readonly mobileNavigationGroups = computed<readonly NavigationGroup[]>(() => {
@@ -163,6 +182,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   private finishLogout(): void {
     this.meApi.clear();
+    this.failedAvatarPath.set(null);
     this.loggingOut.set(false);
     this.closeMenu();
     void this.router.navigate(['/login']);

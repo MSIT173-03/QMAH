@@ -40,18 +40,20 @@
 - Game、Catalog、Social、User、Store 五個 Area 的既有 Razor 管理後台與可延伸的管理頁。
 - `/api/v1/*` REST API、DTO、分頁、ProblemDetails、Cookie 驗證與開發用 OpenAPI／Scalar。
 - 管理員可使用的文物資料 Preview → Import 流程；題庫預設同步，商城同步由管理員選擇。
-- `QMAH.Client` Angular 21.2.22 前台骨架、API proxy、VS Code 擴充套件自動安裝設定與前台交接文件。
+- `QMAH.Client` Angular 21.2.23 前台骨架、API proxy、VS Code 擴充套件自動安裝設定與前台交接文件。
 - DB-first、資料存取、前端、展示資料、匯入工具與 Git 協作文件。
 
 目前工作重點是依既有 API 與資料契約製作前台畫面。Razor 管理後台可獨立維護。
 
+前台共用色彩、五個系統的語意 accent、深色模式對應，以及 UI 素材／照片的使用邊界，集中記錄在 [`QMAH_UI_COLOR_SYSTEM.md`](QMAH_UI_COLOR_SYSTEM.md)；文件站同步版見 [前台色彩與視覺素材基準](https://msit173-03.github.io/QMAH-Docs/frontend/ui-color-system.html)。
+
 正式金流與完整多人遊戲互動仍依各 Area 的既有範圍擴充。
 
-### Angular 21.2.22 的版本理由
+### Angular 21.2.23 的版本理由
 
 課程要求使用 Angular 21，因此 `QMAH.Client` 維持 Angular 21，不升到 Angular 22。
 
-原本的 Angular 21.1.3 相依樹在本機 `npm audit` 會列出漏洞。升到 Angular 21 版本線內的 21.2.22 後，已通過 `npm audit --audit-level=high`。
+原本的 Angular 21.1.3 相依樹在本機 `npm audit` 會列出漏洞。升到 Angular 21 版本線內的 21.2.23 後，已通過 `npm audit --audit-level=high`。
 
 這次只更新同一個 major version 內的次版本與修補版本，既有 standalone、Router、HttpClient、環境設定與 SCSS 寫法不需要改寫。
 
@@ -331,7 +333,7 @@ QMAH/
 │  ├─ Models/                      後台 ViewModel
 │  ├─ Views/                       共用 Razor View
 │  └─ wwwroot/                     樣式、腳本、套件、圖片與品牌素材
-├─ QMAH.Client/                    Angular 21.2.22 使用者前台
+├─ QMAH.Client/                    Angular 21.2.23 使用者前台
 ├─ database/
 │  ├─ README.md                    資料庫路標
 │  ├─ Schema.sql                   DB-first 結構契約

@@ -53,6 +53,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   qrRoom: Pick<GameRoomListItem, 'id' | 'roomCode'> | null = null;
   @ViewChild('createDialog') private createDialog?: ElementRef<HTMLElement>;
   @ViewChild('roomDialog') private roomDialog?: ElementRef<HTMLElement>;
+  private createDialogTrigger: HTMLElement | null = null;
+  private qrDialogTrigger: HTMLElement | null = null;
 
   // ui-integration: 展示模式只對已登入管理員提供入口與標示；一般玩家不會被開發用 Demo 文案干擾。
   readonly isAdmin = computed(() => this.meApi.me()?.roles?.includes('Admin') ?? false);
@@ -193,11 +195,17 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     }
   }
   toggleCreateForm(): void {
-    this.showCreateForm = !this.showCreateForm;
     if (this.showCreateForm) {
-      this.success = '';
-      this.focusDialog(() => this.createDialog);
+      this.showCreateForm = false;
+      this.restoreDialogTrigger(this.createDialogTrigger);
+      this.createDialogTrigger = null;
+      return;
     }
+
+    this.createDialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    this.showCreateForm = true;
+    this.success = '';
+    this.focusDialog(() => this.createDialog);
   }
 
   createRoom(): void {
@@ -282,16 +290,21 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   }
 
   openRoomQr(room: Pick<GameRoomListItem, 'id' | 'roomCode'>): void {
+    this.qrDialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.qrRoom = room;
     this.error = '';
   }
 
-  closeRoomQr(): void { this.qrRoom = null; }
+  closeRoomQr(): void {
+    this.qrRoom = null;
+    this.restoreDialogTrigger(this.qrDialogTrigger);
+    this.qrDialogTrigger = null;
+  }
 
   @HostListener('document:keydown.escape')
   closeTransientPanel(): void {
     if (this.qrRoom) { this.closeRoomQr(); return; }
-    if (this.showCreateForm) { this.showCreateForm = false; return; }
+    if (this.showCreateForm) { this.toggleCreateForm(); return; }
     if (this.selectedRoomId) { this.clearSelection(); return; }
     if (this.showFilter) this.showFilter = false;
   }
@@ -338,7 +351,18 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   }
 
   private focusDialog(getDialog: () => ElementRef<HTMLElement> | undefined): void {
-    setTimeout(() => getDialog()?.nativeElement.focus(), 0);
+    setTimeout(() => {
+      const dialog = getDialog()?.nativeElement;
+      if (!dialog) return;
+      const firstControl = dialog.querySelector<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
+      );
+      (firstControl ?? dialog).focus();
+    }, 0);
+  }
+
+  private restoreDialogTrigger(trigger: HTMLElement | null): void {
+    setTimeout(() => trigger?.focus(), 0);
   }
 
   private restoreRoomTrigger(roomId: string): void {

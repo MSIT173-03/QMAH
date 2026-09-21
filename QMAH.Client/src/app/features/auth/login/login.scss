@@ -119,25 +119,29 @@
 .theme-toggle,
 .icon-button,
 .login-panel-toggle {
-  display: inline-flex;
+  display: grid;
   align-items: center;
   justify-content: center;
+  place-items: center;
+  box-sizing: border-box;
+  line-height: 0;
 }
 
 .theme-toggle {
+  box-sizing: border-box;
   width: 44px;
   height: 44px;
-  border: 1px solid rgba(255, 250, 240, 0.34);
+  border: 1px solid color-mix(in srgb, var(--login-teal) 44%, var(--login-border));
   border-radius: 50%;
-  background: rgba(21, 63, 58, 0.32);
-  color: var(--qmah-paper);
+  background: color-mix(in srgb, var(--login-surface) 82%, var(--login-teal));
+  color: var(--login-ink);
   transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
 .theme-toggle:hover:not(:disabled),
 .theme-toggle:focus-visible {
   border-color: var(--login-gold);
-  background: rgba(21, 63, 58, 0.62);
+  background: color-mix(in srgb, var(--login-teal) 18%, var(--login-surface));
   transform: translateY(-1px);
 }
 
@@ -152,6 +156,13 @@
 .login-panel-collapsed app-qmah-icon {
   width: 18px;
   height: 18px;
+}
+
+.theme-toggle app-qmah-icon {
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+  stroke-width: 2.2;
 }
 
 .museum-showcase {
@@ -177,8 +188,7 @@
 }
 
 .museum-media__location,
-.museum-media__counter,
-.museum-media__hint {
+.museum-media__counter {
   position: absolute;
   z-index: 4;
   color: var(--login-gold);
@@ -201,148 +211,6 @@
 .museum-media__counter {
   right: clamp(24px, 4vw, 64px);
   color: rgba(255, 250, 240, 0.74);
-}
-
-.museum-media__hint {
-  right: clamp(24px, 4vw, 64px);
-  bottom: clamp(116px, 16vh, 172px);
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: rgba(255, 250, 240, 0.78);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.museum-media__hint-button {
-  display: inline-grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 1px solid rgba(255, 250, 240, 0.32);
-  border-radius: 50%;
-  background: rgba(8, 32, 30, 0.26);
-  color: inherit;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.museum-media__hint-button:hover,
-.museum-media__hint-button:focus-visible {
-  background: rgba(8, 32, 30, 0.52);
-  color: var(--qmah-paper);
-}
-
-.museum-media__hint-button:focus-visible {
-  outline: 2px solid var(--login-gold);
-  outline-offset: 3px;
-}
-
-.museum-media__hint-button app-qmah-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.museum-copy {
-  position: absolute;
-  z-index: 4;
-  bottom: clamp(128px, 18vh, 194px);
-  left: clamp(24px, 4vw, 64px);
-  width: min(50%, 660px);
-}
-
-.museum-copy h1 {
-  max-width: 12em;
-  margin: 0;
-  color: var(--qmah-paper);
-  font-family: 'Noto Serif TC', 'Times New Roman', serif;
-  font-size: clamp(32px, 4.2vw, 60px);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.18;
-  text-wrap: balance;
-  text-shadow: 0 3px 20px rgba(10, 35, 33, 0.56);
-}
-
-.museum-copy__description {
-  display: grid;
-  gap: 2px;
-  max-width: 44ch;
-  margin: 14px 0 0;
-  color: rgba(255, 250, 240, 0.88);
-  font-size: clamp(14px, 1.1vw, 16px);
-  line-height: 1.65;
-  text-wrap: pretty;
-  text-shadow: 0 2px 12px rgba(10, 35, 33, 0.5);
-}
-
-.museum-copy__description span {
-  display: block;
-}
-
-.museum-copy__guide {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 250, 240, 0.28);
-}
-
-.museum-copy__guide-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 28px;
-  color: rgba(255, 250, 240, 0.86);
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.03em;
-  text-shadow: 0 1px 8px rgba(10, 35, 33, 0.5);
-}
-
-.museum-copy__guide-item app-qmah-icon {
-  width: 15px;
-  height: 15px;
-  color: var(--login-gold);
-}
-
-.museum-copy__guide-arrows {
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
-}
-
-.museum-copy__guide-arrows app-qmah-icon {
-  width: 13px;
-  height: 13px;
-}
-
-.museum-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  margin-top: 8px;
-}
-
-.museum-source {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--login-gold);
-  font-size: 12px;
-  font-weight: 750;
-  text-underline-offset: 4px;
-}
-
-.museum-source--muted {
-  color: rgba(255, 250, 240, 0.7);
-  font-weight: 600;
-}
-
-.museum-source:hover {
-  color: var(--qmah-paper);
 }
 
 .museum-controls {
@@ -370,6 +238,11 @@
   border-color: var(--login-gold);
   background: rgba(21, 63, 58, 0.62);
   transform: translateY(-1px);
+}
+
+.icon-button.is-active {
+  border-color: color-mix(in srgb, var(--login-gold) 72%, transparent);
+  background: rgba(21, 63, 58, 0.68);
 }
 
 .museum-controls__counter {
@@ -421,6 +294,7 @@
   color: rgba(255, 250, 240, 0.58);
   font-size: 10px;
   line-height: 1.6;
+  text-underline-offset: 3px;
   text-align: right;
 }
 
@@ -490,13 +364,19 @@
 }
 
 .login-panel-toggle app-qmah-icon {
+  display: grid;
+  place-items: center;
   width: 22px;
   height: 22px;
+  line-height: 0;
 }
 
 .login-panel-collapsed {
-  display: inline-grid;
+  display: grid;
   place-items: center;
+  align-content: center;
+  box-sizing: border-box;
+  line-height: 0;
   width: 48px;
   height: 48px;
   min-height: 48px;
@@ -507,6 +387,23 @@
   color: var(--qmah-paper);
   box-shadow: 0 8px 24px rgba(10, 35, 33, 0.24);
   transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.login-panel-collapsed app-qmah-icon,
+.login-button .arrow {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+
+.login-panel-collapsed app-qmah-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.login-button .arrow app-qmah-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .login-panel-collapsed:hover:not([aria-disabled='true']),
@@ -604,6 +501,15 @@
   opacity: 1;
 }
 
+.input-wrapper input:-webkit-autofill,
+.input-wrapper input:-webkit-autofill:hover,
+.input-wrapper input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--login-ink);
+  box-shadow: 0 0 0 1000px var(--login-field) inset;
+  caret-color: var(--login-ink);
+  transition: background-color 9999s ease-out 0s;
+}
+
 .field-error {
   margin: 0;
   color: var(--login-error);
@@ -630,9 +536,43 @@
 }
 
 .remember-me input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--login-teal);
+  appearance: none;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  margin: 0;
+  place-content: center;
+  border: 1.5px solid color-mix(in srgb, var(--login-teal) 64%, var(--login-border));
+  border-radius: 5px;
+  background: var(--login-field);
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.remember-me input::after {
+  width: 9px;
+  height: 5px;
+  border-bottom: 2px solid var(--qmah-on-dark);
+  border-left: 2px solid var(--qmah-on-dark);
+  content: '';
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform 140ms ease;
+}
+
+.remember-me input:checked {
+  border-color: var(--login-teal);
+  background: var(--login-teal);
+}
+
+.remember-me input:checked::after {
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+
+.remember-me input:focus-visible {
+  outline: 2px solid var(--login-gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--login-gold) 18%, transparent);
 }
 
 .forgot-password,
@@ -959,23 +899,6 @@ input:focus-visible {
     text-shadow: none;
   }
 
-  .museum-copy__guide {
-    gap: 4px 14px;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top-color: var(--login-border);
-  }
-
-  .museum-copy__guide-item {
-    color: var(--login-muted);
-    font-size: 11px;
-    text-shadow: none;
-  }
-
-  .museum-copy__guide-item app-qmah-icon {
-    color: var(--login-teal);
-  }
-
   .museum-links {
     gap: 4px 14px;
   }
@@ -994,7 +917,7 @@ input:focus-visible {
     bottom: auto;
     left: auto;
     display: grid;
-    grid-template-columns: 44px 44px 1fr 44px;
+    grid-template-columns: 44px 44px 1fr 44px 44px;
     width: auto;
     margin: 0;
     padding: 12px 22px 20px;

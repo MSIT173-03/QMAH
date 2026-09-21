@@ -38,9 +38,8 @@
   display: grid;
   gap: 2px;
   min-height: var(--qmah-control-height-lg);
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
+  border: 1px solid transparent;
+  border-radius: var(--qmah-radius-card);
   padding: 11px var(--qmah-control-padding-x);
   color: var(--guide-muted);
   background: transparent;
@@ -49,8 +48,8 @@
   transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
-.guide-tabs button:hover { color: var(--guide-ink); transform: none; }
-.guide-tabs button.is-active { border-bottom-color: var(--guide-cinnabar); color: var(--guide-ink); background: transparent; box-shadow: none; }
+.guide-tabs button:hover { border-color: var(--guide-line); color: var(--guide-ink); transform: none; background: color-mix(in srgb, var(--guide-surface) 54%, var(--qmah-page-surface)); }
+.guide-tabs button.is-active { border-color: var(--guide-line); color: var(--guide-ink); background: var(--guide-surface); box-shadow: var(--qmah-shadow-card); }
 .guide-tabs button span { font-size: 16px; font-weight: 800; }
   .guide-tabs button small { color: var(--guide-muted); font-size: var(--qmah-type-meta-size); }
 

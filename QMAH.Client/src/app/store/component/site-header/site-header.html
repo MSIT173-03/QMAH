@@ -3,7 +3,7 @@
   <div class="site-header-row" [class]="variant() === 'default' ? '' : 'site-header-row--' + variant()">
     <!-- 品牌 Logo，點擊回首頁 -->
     <a [storeLink]="homeHref" class="brand-logo">
-      <img src="{{ logoSrc }}" [alt]="logoAlt" class="brand-logo-img" />
+      <img [src]="logoSrc()" [alt]="logoAlt" class="brand-logo-img" />
     </a>
 
     <!-- 供外部投影頁首主列內容（搜尋框、導覽連結、購物車入口等） -->

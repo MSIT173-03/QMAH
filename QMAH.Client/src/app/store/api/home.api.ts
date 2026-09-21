@@ -1,7 +1,6 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, of } from 'rxjs';
-import { apiUrl, getField, toParams } from './http';
+import { Observable, map, of } from 'rxjs';
+import { CatalogApi } from './catalog.api';
 import {
   Brand,
   Coupon,
@@ -17,44 +16,40 @@ import {
 /** 首頁與行銷內容 API */
 @Injectable({ providedIn: 'root' })
 export class HomeApi {
-  private readonly http = inject(HttpClient);
+  private readonly catalogApi = inject(CatalogApi);
 
-  /** GET /home/hero-slides：主視覺輪播 */
+  /** 主視覺由 HeroCarousel 維持本地 editorial fallback，後端尚無版位契約。 */
   getHeroSlides(): Observable<HeroSlide[]> {
-    return getField<HeroSlide[]>(this.http, apiUrl('/home/hero-slides'), 'slides').pipe(
-      // 行銷版位不是商品型錄核心資料；後端尚未提供時只隱藏該版位，保留首頁其他區塊。
-      catchError(() => of<HeroSlide[]>([])),
-    );
+    return of<HeroSlide[]>([]);
   }
 
-  /** GET /home/flash-sale：限時特賣 */
+  /** 後端尚無限時特賣契約，維持空狀態，不發出不存在的請求。 */
   getFlashSale(): Observable<FlashSale> {
-    return this.http.get<FlashSale>(apiUrl('/home/flash-sale')).pipe(
-      catchError(() => of({ endsAt: '', items: [] })),
-    );
+    return of({ endsAt: '', items: [] });
   }
 
-      /** GET /brands：舊版品牌資料介面，前台目前改用年代選藏。 */
+  /** 舊版品牌資料介面，前台目前改用年代選藏；後端沒有此 Store route。 */
   getBrands(): Observable<Brand[]> {
-    return getField<Brand[]>(this.http, apiUrl('/brands'), 'brands').pipe(catchError(() => of<Brand[]>([])));
+    return of<Brand[]>([]);
   }
 
-  /** GET /rankings：熱銷排行，依名次排列 */
+  /** 以現有商品型錄的販售數量排序代替尚未存在的 rankings route。 */
   getRankings(query: RankingQuery = {}): Observable<Product[]> {
-    return getField<Product[]>(this.http, apiUrl('/rankings'), 'items', query).pipe(catchError(() => of<Product[]>([])));
+    return this.catalogApi.getProducts({ cat: query.cat, order: 1, pageSize: query.limit ?? 10 }).pipe(map((page) => page.items));
   }
 
-  /** GET /recommendations：為你推薦（分頁，供「載入更多」逐頁取得） */
+  /** 以現有商品型錄的最新上架排序代替尚未存在的 recommendations route。 */
   getRecommendations(query: PageQuery = {}): Observable<Page<RecommendedProduct>> {
-    return this.http.get<Page<RecommendedProduct>>(apiUrl('/recommendations'), {
-      params: toParams(query),
-    }).pipe(
-      catchError(() => of({ items: [], total: 0, page: query.page ?? 1, pageSize: 0 })),
+    return this.catalogApi.getProducts({ order: 3, page: query.page, pageSize: query.pageSize }).pipe(
+      map((page) => ({
+        ...page,
+        items: page.items.map((product) => ({ ...product, reason: '近期上架' })),
+      })),
     );
   }
 
-  /** GET /coupons/claimable：可領取的折價券 */
+  /** 可領取折價券尚無前台 API，避免把持有券誤當成可領取券。 */
   getClaimableCoupons(): Observable<Coupon[]> {
-    return getField<Coupon[]>(this.http, apiUrl('/coupons/claimable'), 'coupons').pipe(catchError(() => of<Coupon[]>([])));
+    return of<Coupon[]>([]);
   }
 }

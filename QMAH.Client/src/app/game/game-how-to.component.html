@@ -9,10 +9,10 @@
   </summary>
   <div class="game-how-to__body">
     <p>{{ content().description }}</p>
-    <ol>
+    <ol aria-label="玩法流程">
       @for (step of content().steps; track step.label) {
         <li>
-          <span>{{ step.label }}</span>
+          <span class="game-how-to__step-marker">{{ step.label }}</span>
           <div><strong>{{ step.title }}</strong><p>{{ step.description }}</p></div>
         </li>
       }

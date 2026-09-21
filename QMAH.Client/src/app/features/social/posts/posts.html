@@ -8,12 +8,30 @@
           <span>站方公告</span>
           <span class="social-announcements__count">{{ announcements.length }} 則</span>
         </h2>
-        <button
-          type="button"
-          class="social-announcements__toggle"
-          [attr.aria-expanded]="!announcementCollapsed()"
-          (click)="toggleAnnouncements()"
-        >{{ announcementCollapsed() ? '展開公告' : '收合公告' }}</button>
+        <div class="social-announcements__head-actions">
+          @if (announcements.length > 1) {
+            <div class="social-announcements__controls" role="group" aria-label="切換公告">
+              <button type="button" class="social-announcements__nav" aria-label="上一則公告" (click)="previousAnnouncement()">
+                <svg lucideChevronLeft aria-hidden="true" focusable="false"></svg>
+              </button>
+              <span
+                class="social-announcements__position"
+                aria-live="polite"
+                aria-atomic="true"
+                [attr.aria-label]="'目前第 ' + (currentAnnouncementIndex + 1) + ' 則公告，共 ' + announcements.length + ' 則'"
+              >{{ currentAnnouncementIndex + 1 }} / {{ announcements.length }}</span>
+              <button type="button" class="social-announcements__nav" aria-label="下一則公告" (click)="nextAnnouncement()">
+                <svg lucideChevronRight aria-hidden="true" focusable="false"></svg>
+              </button>
+            </div>
+          }
+          <button
+            type="button"
+            class="social-announcements__toggle"
+            [attr.aria-expanded]="!announcementCollapsed()"
+            (click)="toggleAnnouncements()"
+          >{{ announcementCollapsed() ? '展開公告' : '收合公告' }}</button>
+        </div>
       </header>
 
       @if (announcementCollapsed()) {
@@ -24,7 +42,17 @@
           </a>
         }
       } @else {
-        <div class="social-announcements__carousel">
+        <div
+          class="social-announcements__carousel"
+          role="group"
+          aria-roledescription="輪播公告"
+          aria-live="polite"
+          aria-atomic="true"
+          (mouseenter)="pauseAnnouncementsForPointer()"
+          (mouseleave)="resumeAnnouncementsForPointer()"
+          (focusin)="pauseAnnouncementsForFocus()"
+          (focusout)="resumeAnnouncementsForFocus($event)"
+        >
           @for (announcement of announcements; track announcement.id; let i = $index) {
             @if (i === currentAnnouncementIndex) {
               <a
@@ -33,35 +61,17 @@
                 [class.has-cover]="!!announcement.coverImageUrl"
                 [style.background-image]="announcement.coverImageUrl ? 'url(' + announcement.coverImageUrl + ')' : null"
               >
+                <span class="social-announcement-slide__index" aria-hidden="true">{{ (currentAnnouncementIndex + 1).toString().padStart(2, '0') }}</span>
                 <div class="social-announcement-slide__body">
-                  <span class="badge badge-warning badge-sm social-icon-label">
+                  <span class="social-announcement-slide__eyebrow social-icon-label">
                     <svg lucideMegaphone aria-hidden="true" focusable="false"></svg>
-                    最新公告
+                    官方消息
                   </span>
                   <h2>{{ announcement.title }}</h2>
                   <p>{{ announcement.contentPreview }}</p>
                 </div>
               </a>
             }
-          }
-          @if (announcements.length > 1) {
-            <button type="button" class="btn btn-circle btn-sm social-announcements__prev" aria-label="上一則公告" (click)="previousAnnouncement()">
-              <svg lucideChevronLeft aria-hidden="true" focusable="false"></svg>
-            </button>
-            <button type="button" class="btn btn-circle btn-sm social-announcements__next" aria-label="下一則公告" (click)="nextAnnouncement()">
-              <svg lucideChevronRight aria-hidden="true" focusable="false"></svg>
-            </button>
-            <div class="social-announcements__dots" aria-label="公告頁次">
-              @for (announcement of announcements; track announcement.id; let i = $index) {
-                <button
-                  type="button"
-                  [class.is-active]="i === currentAnnouncementIndex"
-                  [attr.aria-label]="'查看第 ' + (i + 1) + ' 則公告'"
-                  [attr.aria-current]="i === currentAnnouncementIndex ? 'true' : null"
-                  (click)="goToAnnouncement(i)"
-                ></button>
-              }
-            </div>
           }
         </div>
       }
@@ -117,45 +127,49 @@
     </div>
   }
 
-  <div class="flex flex-col gap-4">
+  <div class="social-post-wall">
     @if (!loading) {
     @for (post of posts; track post.id) {
-    <article class="card bg-base-100 shadow-xl border border-base-300">
+    <article class="social-post-card">
       @if (post.coverImageUrl) {
-        <figure class="max-h-80 overflow-hidden">
-          <img src="{{ post.coverImageUrl }}" [alt]="post.title" class="w-full object-cover" />
+        <figure class="social-post-card__cover">
+          <img [src]="post.coverImageUrl" [alt]="post.title" />
+          <figcaption>{{ post.title }}</figcaption>
         </figure>
       }
-      <div class="card-body">
-        <div class="flex justify-between">
-          <span class="badge badge-secondary">{{ post.boardCode }}</span>
-          <span class="text-xs text-base-content/60">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+      <div class="social-post-card__body">
+        <div class="social-post-card__meta">
+          <div class="social-post-card__tags">
+            <span class="social-post-card__board">{{ post.boardCode }}</span>
+            @if (post.postType === 'ANNOUNCEMENT') {
+              <span class="social-post-card__type">站方公告</span>
+            }
+          </div>
+          <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
         </div>
-        <h2 class="card-title">
+        <h2 class="social-post-card__title">
           <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
-          @if (post.postType === 'ANNOUNCEMENT') {
-            <span class="badge badge-warning badge-sm">公告</span>
-          }
         </h2>
-        <p class="text-xs text-base-content/60 social-icon-label">
+        <p class="social-post-card__author social-icon-label">
           <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
           {{ post.displayName || '匿名會員' }}
         </p>
-        <p>{{ post.contentPreview }}</p>
-        <div class="card-actions justify-end mt-4 items-center">
+        <p class="social-post-card__excerpt">{{ post.contentPreview }}</p>
+        <div class="social-post-card__footer">
           @if (post.mediaCount > 0) {
-            <span class="text-xs text-base-content/60 mr-auto social-icon-label">
+            <span class="social-post-card__media-count social-icon-label">
               <svg lucideImage aria-hidden="true" focusable="false"></svg>
-              {{ post.mediaCount }}
+              {{ post.mediaCount }} 張圖片
             </span>
           }
-          <button class="btn btn-sm btn-ghost social-icon-label" (click)="reportModal.open('POST', post.id)">
+          <button class="social-post-card__report social-icon-label" type="button" (click)="reportModal.open('POST', post.id)">
             <svg lucideFlag aria-hidden="true" focusable="false"></svg>
             檢舉
           </button>
-          <a class="btn btn-sm btn-outline btn-primary social-icon-label" [routerLink]="['/social/posts', post.id]">
+          <a class="social-post-card__read-more social-icon-label" [routerLink]="['/social/posts', post.id]">
+            閱讀全文
             <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
-            留言 ({{ post.commentCount || 0 }})
+            {{ post.commentCount || 0 }} 則留言
           </a>
         </div>
       </div>

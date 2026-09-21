@@ -38,6 +38,27 @@
   }
 }
 
+.cat-card--gold .cat-icon {
+  /* ui-integration: Store 以 Honey Gold 做選品提示，正文仍維持商城自己的 ink。 */
+  background: color-mix(in srgb, var(--qmah-store-soft) 76%, var(--color-surface));
+  color: var(--qmah-store-action);
+}
+
+.cat-card--azurite .cat-icon {
+  background: color-mix(in srgb, var(--qmah-catalog-soft) 76%, var(--color-surface));
+  color: var(--qmah-catalog-action);
+}
+
+.cat-card--cinnabar .cat-icon {
+  background: color-mix(in srgb, var(--qmah-social-soft) 76%, var(--color-surface));
+  color: var(--qmah-social-action);
+}
+
+.cat-card--jade .cat-icon {
+  background: color-mix(in srgb, var(--qmah-user-soft) 76%, var(--color-surface));
+  color: var(--qmah-user-action);
+}
+
 .cat-count {
   font-family: 'IBM Plex Mono', monospace;
   font-size: var(--qmah-type-label-size);

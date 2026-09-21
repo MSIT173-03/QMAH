@@ -1,7 +1,7 @@
 <div class="legal-page">
   <div class="legal-page__inner">
     <nav class="legal-page__breadcrumb" aria-label="頁面位置">
-      <a routerLink="/social/posts">清明鑑定屋</a>
+      <a routerLink="/home">清明鑑定屋</a>
       <span aria-hidden="true">/</span>
       <span>{{ content().title }}</span>
     </nav>
@@ -25,8 +25,11 @@
     </article>
 
     <footer class="legal-page__footer">
-      <a routerLink="/store">回到商城</a>
-      <a routerLink="/social/posts">回到社群</a>
+      <button type="button" class="legal-page__back" (click)="goBack()">
+        <span aria-hidden="true">←</span>
+        {{ returnLabel }}
+      </button>
+      <a routerLink="/home">回到首頁</a>
     </footer>
   </div>
 </div>

@@ -15,7 +15,7 @@
       </div>
 
       @if (meApi.me(); as me) {
-        <p class="home-hero__member-note">歡迎回來，{{ me.displayName || '會員' }}。繼續探索你的圖鑑與會員資產。</p>
+        <p class="home-hero__member-note">歡迎回來，{{ me.displayName || '會員' }}。<wbr>查看圖鑑與會員資產。</p>
       } @else {
         <p class="home-hero__member-note">登入後可以保存探索進度，並使用完整的會員功能。</p>
       }

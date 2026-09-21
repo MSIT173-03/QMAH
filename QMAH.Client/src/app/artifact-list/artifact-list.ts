@@ -1,5 +1,5 @@
 // artifact-list.ts
-import { Component, EventEmitter, Output, OnInit, signal, computed } from '@angular/core';
+import { Component, EventEmitter, HostListener, Output, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -62,6 +62,8 @@ export class ArtifactList implements OnInit {
   loading = signal(true);
   errorMsg = signal('');
   totalCount = signal(0);
+  unlockStatusReady = signal(false);
+  unlockStatusError = signal('');
 
   // integration: 原分支留下文物新增／編輯表單的狀態，但目前圖鑑頁沒有掛載該表單或管理 API。
   // 先保留註解而不讓它進入執行路徑，避免使用者誤以為前台已提供未完成的管理功能；
@@ -83,6 +85,9 @@ export class ArtifactList implements OnInit {
   /** 解鎖確認視窗要顯示的錯誤／提示訊息（HTTP 失敗或後端 unlocked:false 時使用） */
   unlockError = signal('');
   unlockedCount = computed(() => this.catalogModel().filter((i) => i.unlocked).length);
+  filteredUnlockedCount = computed(() => this.filteredItems().filter((i) => i.unlocked).length);
+  catalogViewReady = computed(() => !this.loading() && !this.errorMsg() && this.unlockStatusReady());
+  unlocking = signal(false);
 
   focusedId = signal<string | null>(null);
   infoOpen = signal(false);
@@ -117,6 +122,25 @@ export class ArtifactList implements OnInit {
   /** 年代／分類改成核取方塊多選，空集合代表「不篩選（全部）」 */
   selectedEras = signal<Set<string>>(new Set());
   selectedCategories = signal<Set<string>>(new Set());
+  filterOpen = signal(false);
+  activeFilterCount = computed(() =>
+    this.selectedEras().size +
+    this.selectedCategories().size +
+    (this.searchQuery().trim() ? 1 : 0),
+  );
+
+  toggleFilterPanel(): void {
+    this.filterOpen.update((open) => !open);
+  }
+
+  closeFilterPanel(): void {
+    this.filterOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeFilterPanelWithEscape(): void {
+    if (this.filterOpen()) this.closeFilterPanel();
+  }
 
   /** 篩選用的年代核取方塊選項，來自「全部」文物（不受目前篩選影響），解鎖／未解鎖都算 */
   eraOptions = computed(() => {
@@ -277,8 +301,9 @@ export class ArtifactList implements OnInit {
         this.catalogModel.set(models.map((model) => this.toCardSummary(model)));
         this.totalCount.set(models.length);
         this.loading.set(false);
-        this.focusFromQueryParamIfAny();
-        this.loadUnlockStatus();
+        this.unlockStatusReady.set(false);
+        this.unlockStatusError.set('');
+        this.loadUnlockStatus(true);
       },
       error: (err) => {
         this.errorMsg.set(err.message);
@@ -295,7 +320,10 @@ export class ArtifactList implements OnInit {
    * 右下角的解鎖流水面板改成顯示這支 API 回傳的真實歷史紀錄，不再只是 debug 假資料；
    * 之後玩家在畫面上實際解鎖（confirmUnlock()）時，才繼續即時 append 新的一筆上去。
    */
-  private loadUnlockStatus(): void {
+  private loadUnlockStatus(initialLoad = false): void {
+    if (initialLoad) this.unlockStatusReady.set(false);
+    this.unlockStatusError.set('');
+
     this.catalogService.getMyArtifactUnlocks().subscribe({
       next: (records) => {
         const unlockedAtByArtifactId = new Map(records.map((r) => [r.artifactId, r.unlockedAt]));
@@ -308,8 +336,13 @@ export class ArtifactList implements OnInit {
         );
 
         this.unlockLedger.set(records);
+        this.unlockStatusReady.set(true);
+        if (initialLoad) this.focusFromQueryParamIfAny();
       },
-      error: (err) => console.error('[ArtifactList] loadUnlockStatus failed', err),
+      error: (err) => {
+        this.unlockStatusError.set('解鎖狀態目前無法載入，請稍後再試。');
+        console.error('[ArtifactList] loadUnlockStatus failed', err);
+      },
     });
   }
 
@@ -578,6 +611,7 @@ export class ArtifactList implements OnInit {
   }
 
   cancelUnlockConfirm(): void {
+    if (this.unlocking()) return;
     this.confirmTargetId.set(null);
     this.unlockError.set('');
   }
@@ -594,15 +628,18 @@ export class ArtifactList implements OnInit {
   confirmUnlock(): void {
     const target = this.confirmTarget();
     if (!target) return;
+    if (this.unlocking()) return;
     if (this.confirmInsufficient()) return;
 
     const universal = this.universalKey();
     if (!universal) return; // 沒有萬能鑰匙時按鈕本來就該是停用狀態，這裡再擋一次
 
     this.unlockError.set('');
+    this.unlocking.set(true);
 
     this.keyService.unlockWithKey(universal.code, target.id).subscribe({
       next: (result) => {
+        this.unlocking.set(false);
         // 鑰匙餘額改重新呼叫 loadKeyBalance() 問後端要正確數字，不用 unlockKeyCost()
         // 在前端自己相減去猜。
         this.loadKeyBalance();
@@ -631,6 +668,7 @@ export class ArtifactList implements OnInit {
         }
       },
       error: (err) => {
+        this.unlocking.set(false);
         // TODO: 依專案慣例改成 Toast / Snackbar 提示
         console.error('[ArtifactList] unlock failed', err);
         this.unlockError.set(err?.message ?? '解鎖失敗，請稍後再試');

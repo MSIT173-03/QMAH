@@ -1,21 +1,18 @@
 // key-list.ts
 import {
   Component,
-  ElementRef,
   EventEmitter,
   Input,
   OnInit,
   Output,
-  effect,
   signal,
   computed,
-  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { KeyService } from '../services/key-service';
 import { CatalogService } from '../services/catalog-service';
-import { KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
+import { KeyExchangeRule, KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
 import { keyAssetPath } from '../shared/key-assets';
 import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
 
@@ -44,6 +41,12 @@ export class KeyList implements OnInit {
   errorMsg = signal('');
 
   selectedFilter = signal<KeyFilter>('ALL');
+  showAllSlots = signal(false);
+  inspectedKey = signal<KeyModel | null>(null);
+  exchangeRules = signal<KeyExchangeRule[]>([]);
+  exchangeLoading = signal(false);
+  exchangeError = signal('');
+  exchangeNotice = signal('');
 
   /** 背包只顯示「持有數量 > 0」的鑰匙；歸零後會自然從這個清單消失 */
   ownedKeys = computed(() => this.keys().filter((key) => key.balance > 0));
@@ -51,50 +54,26 @@ export class KeyList implements OnInit {
   /** 全部鑰匙的持有總數（不是種類數），右上角／篩選列都用這個算法 */
   totalKeyCount = computed(() => this.keys().reduce((sum, key) => sum + key.balance, 0));
 
+  /** 目前持有中的鑰匙種類數，與總把數分開呈現，避免玩家把兩者混為一談。 */
+  ownedKeyTypeCount = computed(() => this.ownedKeys().length);
+
   filteredKeys = computed<KeyModel[]>(() => {
     const filter = this.selectedFilter();
     if (filter === 'ALL') return this.ownedKeys();
     return this.ownedKeys().filter((key) => key.scopeType === filter);
   });
 
-  /**
-   * 固定格數的背包視覺：不管實際持有幾種鑰匙，格線看起來都像「本來就有這麼多格」，
-   * 沒有的就是空格，之後拿到新鑰匙會自然填進空格裡——純粹是前端視覺呈現，
-   * 不代表背包真的有容量上限；如果實際持有種類超過這個數字，全部照樣顯示，
-   * 不會把真實資料裁掉，只有在筆數不足時才補空格。
-   *
-   * ⚠️ 這裡改回 viewChild()（signal 版查詢）＋ effect()：先前為了排除「新版 API
-   * 相容性問題」的疑慮，改用 @ViewChild + ngAfterViewChecked + 手動呼叫
-   * ChangeDetectorRef.detectChanges()／markForCheck()，結果證實那不是相容性問題——
-   * 你的實測 log 顯示 detectChanges() 確實有執行、也沒有丟例外，但畫面／
-   * ngAfterViewChecked 就是沒有真的因此再跑一次，代表「手動呼叫變更偵測 API」
-   * 這條路徑，在這個專案的設定下並不可靠。
-   * effect() 是 Angular 專門設計來處理「訊號變了、要連動跑副作用」這種情境的機制，
-   * 跟框架自己的變更偵測排程是同一套底層機制，理論上不會有這種「呼叫了但沒反應」
-   * 的落差。之前會從這個做法改走，是誤判——當時「格線只佔不到 1/3 高度」那個問題，
-   * 後來查出來是 :host 沒設 height:100% 造成的，跟 effect()／viewChild() 本身無關，
-   * 現在那個高度問題已經修好了，重新用回這個做法。
-   *
-   * gridGap／minSlotWidth 這兩個數字要跟 key-list.scss 的 .key-slot-grid
-   * （gap: 12px；grid-template-columns: repeat(auto-fill, minmax(76px, 1fr))）保持一致，
-   * 其中一邊改了記得同步改另一邊，不然算出來的格數會跟實際排版對不上。
-   */
-  private readonly gridGap = 12;
-  private readonly minSlotWidth = 76;
-  private readonly fallbackSlotCapacity = 24; // 量測還沒有結果之前（極短暫）的保底格數
+  /** 目前篩選範圍的啟用鑰匙種類數，只供「顯示完整格」模式決定視覺格數。 */
+  availableSlotTypeCount = computed(() => {
+    const filter = this.selectedFilter();
+    return this.keys().filter((key) => filter === 'ALL' || key.scopeType === filter).length;
+  });
 
-  private slotGridRef = viewChild<ElementRef<HTMLElement>>('slotGrid');
-
-  /** 量測出來的「完整列」格數；還沒量到之前先用 fallbackSlotCapacity 頂著 */
-  visibleSlotCount = signal(this.fallbackSlotCapacity);
-
-  /** null 代表空格 */
+  /** 預設只顯示持有中的鑰匙；切換完整格時才依目前種類補出空格。 */
   displaySlots = computed<(KeyModel | null)[]>(() => {
-    const keys = this.filteredKeys();
-    // 真實資料一律完整顯示，不會被算出來的格數蓋掉——只有筆數不足時才補空格
-    const capacity = Math.max(this.visibleSlotCount(), keys.length);
-    const emptyCount = Math.max(0, capacity - keys.length);
-    return [...keys, ...Array<null>(emptyCount).fill(null)];
+    if (!this.showAllSlots()) return this.filteredKeys();
+    const filter = this.selectedFilter();
+    return this.keys().filter(key => filter === 'ALL' || key.scopeType === filter);
   });
 
   trackByDisplaySlot(index: number, key: KeyModel | null): string {
@@ -139,49 +118,20 @@ export class KeyList implements OnInit {
     private keyService: KeyService,
     private catalogService: CatalogService,
     private router: Router,
-  ) {
-    // slotGridRef() 是 signal 版查詢：.key-slot-grid 這個元素只有在 !loading()
-    // （資料載入完成）之後才會被 *ngIf 放進 DOM，這個 effect 不管它什麼時候出現
-    // 都會偵測到、自動重新執行——這是 Angular 自己的響應式追蹤機制，不是我們手動
-    // 排程或手動呼叫變更偵測 API，理論上不會有「呼叫了但沒反應」的落差。
-    effect((onCleanup) => {
-      const el = this.slotGridRef()?.nativeElement;
-      // integration: 版面計算已由既有測試驗證，暫時性 console 輸出不參與功能，先註解避免正式部署洩漏除錯資料。
-      // console.log('[KeyList] effect 執行，slotGridRef 目前元素：', el ?? null);
-      if (!el) return;
-
-      // 元素剛出現的當下就先算一次，不用等 ResizeObserver 自己的非同步初次回呼。
-      this.recalculateVisibleSlotCount(el);
-
-      // ResizeObserver 保留下來，只負責處理「之後」真正的尺寸變化（例如視窗縮放）。
-      const observer = new ResizeObserver(() => this.recalculateVisibleSlotCount(el));
-      observer.observe(el);
-      onCleanup(() => observer.disconnect());
-    });
-  }
-
-  /**
-   * 量測 .key-slot-grid 容器目前的實際寬高，算出「剛好幾個完整列」（欄數 x 列數）。
-   * 格子是正方形（key-list.scss 的 .key-slot 用 aspect-ratio:1/1），所以先用寬度、
-   * gap 反推實際欄數與「每格實際邊長」，再用同一個邊長去算高度塞得下幾個完整列。
-   */
-  private recalculateVisibleSlotCount(el: HTMLElement): void {
-    const width = el.clientWidth;
-    const height = el.clientHeight;
-    if (width <= 0 || height <= 0) return;
-
-    const columns = Math.max(1, Math.floor((width + this.gridGap) / (this.minSlotWidth + this.gridGap)));
-    const actualSlotSize = (width - (columns - 1) * this.gridGap) / columns;
-    const rows = Math.max(1, Math.floor((height + this.gridGap) / (actualSlotSize + this.gridGap)));
-
-    this.visibleSlotCount.set(columns * rows);
-    // console.log('[KeyList] 格數計算結果', { width, height, columns, rows, total: columns * rows });
-  }
+  ) {}
 
   ngOnInit(): void {
     // console.log('[KeyList] ngOnInit 執行，開始呼叫 loadKeys()');
     this.loadKeys();
     this.loadCategoryEraNames();
+    this.loadExchangeRules();
+  }
+
+  private loadExchangeRules(): void {
+    this.keyService.getExchangeRules().subscribe({
+      next: (rules) => this.exchangeRules.set(rules.filter((rule) => rule.id && rule.sourceKeyCode && rule.targetKeyCode)),
+      error: (err) => this.exchangeError.set(err?.message ?? '兌換規則暫時無法讀取'),
+    });
   }
 
   private loadKeys(): void {
@@ -248,6 +198,37 @@ export class KeyList implements OnInit {
     this.selectedFilter.set(filter);
   }
 
+  toggleSlotMode(): void {
+    this.showAllSlots.update((showAll) => !showAll);
+  }
+
+  exchangeRulesFor(key: KeyModel): KeyExchangeRule[] {
+    return this.exchangeRules().filter((rule) => rule.sourceKeyCode === key.code);
+  }
+
+  canExchange(rule: KeyExchangeRule): boolean {
+    return (this.ownedKeys().find((key) => key.code === rule.sourceKeyCode)?.balance ?? 0) >= rule.sourceAmount;
+  }
+
+  exchange(rule: KeyExchangeRule): void {
+    if (this.exchangeLoading() || !this.canExchange(rule)) return;
+    this.exchangeLoading.set(true);
+    this.exchangeError.set('');
+    this.exchangeNotice.set('');
+    this.keyService.exchangeKeys(rule.id).subscribe({
+      next: (result) => {
+        this.exchangeLoading.set(false);
+        this.exchangeNotice.set(`已兌換 ${result.sourceAmount} 把鑰匙，取得 ${result.targetAmount} 把${rule.targetKeyName}。`);
+        this.loadKeys();
+        this.loadExchangeRules();
+      },
+      error: (err) => {
+        this.exchangeLoading.set(false);
+        this.exchangeError.set(err?.message ?? '兌換失敗，請稍後再試');
+      },
+    });
+  }
+
   /** 每個篩選按鈕顯示的數字：這個範圍內「持有中」鑰匙的總持有數量加總 */
   getFilterCount(filter: KeyFilter): number {
     const keys = filter === 'ALL' ? this.ownedKeys() : this.ownedKeys().filter((key) => key.scopeType === filter);
@@ -281,13 +262,33 @@ export class KeyList implements OnInit {
     }[scopeType];
   }
 
+  /** 格子右下角的短標籤：不依賴 hover 也能辨識鑰匙用途。 */
+  keyScopeShortLabel(key: KeyModel): string {
+    switch (key.scopeType) {
+      case 'CATEGORY':
+        return this.getCategoryName(key.categoryId) || '分類';
+      case 'ERA':
+        return this.getEraName(key.eraBucketId) || '年代';
+      case 'UNIVERSAL':
+        return '萬能';
+      case 'NORMAL':
+      default:
+        return '一般';
+    }
+  }
+
   /**
    * 萬能鑰匙不能從背包直接使用——依需求，萬能鑰匙是在圖鑑頁「尚未解鎖」的文物卡片上，
    * 點原有的解鎖按鈕時使用，玩家自己指定要解鎖哪一張卡片。背包這裡點萬能鑰匙格子
    * 不開確認視窗，只顯示一個提示。
    */
   onKeySlotClick(key: KeyModel): void {
-    if (key.scopeType === 'UNIVERSAL') return;
+    this.inspectedKey.set(key);
+  }
+
+  requestUnlock(key: KeyModel): void {
+    if (key.scopeType === 'UNIVERSAL' || key.balance < 1 || key.eligibleArtifactCount < 1) return;
+    this.unlockError.set('');
     this.confirmTarget.set(key);
   }
 

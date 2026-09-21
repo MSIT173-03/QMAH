@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { catchError, finalize, forkJoin, interval, of, Subscription } from 'rxjs';
 
 import {
   MiniGameArtifact,
@@ -11,6 +11,7 @@ import {
 } from './game.models';
 import { GameNavigationComponent } from './game-navigation.component';
 import { GameService } from './game.service';
+import { CatalogService } from '../services/catalog-service';
 
 type TrainingPhase = 'list' | 'playing' | 'complete';
 
@@ -23,10 +24,21 @@ interface MemoryCard {
   matched: boolean;
 }
 
-interface GuideStep {
-  title: string;
-  description: string;
-  visual: string;
+interface CatalogHint {
+  artifactId: string;
+  name: string;
+  description: string | null;
+}
+
+interface TrainingSessionSnapshot {
+  attempt: MiniGameStart;
+  elapsedSeconds: number;
+  puzzleOrder: number[];
+  puzzleSelection: number | null;
+  restoreOrder: number[];
+  restoreSelection: number | null;
+  locatorChoice: string | null;
+  matchedCardIds: string[];
 }
 
 @Component({
@@ -34,7 +46,7 @@ interface GuideStep {
   imports: [RouterLink, GameNavigationComponent],
   styleUrl: './game-training.component.scss',
   template: `
-    <div class="training-notebook">
+    <div class="training-notebook" [class.is-playing]="phase === 'playing'">
       <!-- ui-integration: 單人玩法與多人房間共用 Game 子導覽，並保留回到大廳的出口。 -->
       <app-game-navigation>
         <a class="training-nav-back" routerLink="/game">返回多人鑑定大廳</a>
@@ -42,7 +54,8 @@ interface GuideStep {
 
       <section class="chapter" aria-labelledby="training-title">
         <header class="chapter-heading">
-          <div><p>一個人也能玩</p><h1 id="training-title">單人小遊戲</h1></div>
+          <div><p>單人挑戰</p><h1 id="training-title">單人小遊戲</h1><span>目前已開放的模式</span></div>
+          @if (phase === 'list' && !authRequired && !loading) { <strong class="chapter-count"><small>可選模式</small>{{ modes.length }}</strong> }
         </header>
 
         @if (error && !authRequired) { <div class="message error" role="alert"><strong>單人小遊戲目前無法載入</strong><span>{{ error }}</span><div class="auth-actions"><button type="button" (click)="retryModes()">重新載入</button></div></div> }
@@ -63,7 +76,7 @@ interface GuideStep {
           @if (authRequired) {
             <section class="auth-state" aria-labelledby="auth-state-title">
               <p class="kicker">開始前</p>
-              <h2 id="auth-state-title">登入後即可開始練習</h2>
+              <h2 id="auth-state-title">登入後即可開始遊玩</h2>
               <p>登入後會載入目前啟用的玩法，完成結果也會保留在會員紀錄。</p>
               <div class="auth-actions">
                 <a routerLink="/login" [queryParams]="{ returnUrl: '/game/training' }">前往登入</a>
@@ -73,52 +86,61 @@ interface GuideStep {
           }
           <section class="training-hero" aria-labelledby="training-hero-title">
             <div class="training-hero-copy">
-              <h2 id="training-hero-title">挑一件館藏，<br />開始觀察。</h2>
-              <p>短局玩法從眼力、記憶到判斷，帶你熟悉館藏細節。</p>
+              <p class="training-hero-kicker">挑戰模式</p>
+              <h2 id="training-hero-title">開始一局</h2>
+              <p>完成後會立即結算成績與獎勵進度。</p>
             </div>
-            <figure class="training-artwork">
-              <img src="/assets/game/tang-wang.jpg" alt="元趙孟頫湯王徵尹圖軸" />
-              <figcaption><span>單人練習</span><strong>先看，再下判斷</strong></figcaption>
-            </figure>
           </section>
           @if (!authRequired) {
-            <p class="intro">選一種玩法，完成一個小任務；完成後會立即結算並顯示成績。</p>
-            <section class="guide" aria-labelledby="guide-title">
-              <header class="guide-heading"><div><p class="kicker">玩法示範</p><h2 id="guide-title">三步看懂怎麼玩</h2></div><span>第 {{ demoStep + 1 }} / {{ guideSteps.length }} 步</span></header>
-              <nav class="guide-modes" aria-label="選擇示範玩法">@for (mode of modes; track mode.id) { <button type="button" [class.active]="demoModeCode === mode.code" [attr.aria-pressed]="demoModeCode === mode.code" (click)="selectGuideMode(mode.code)">{{ mode.name }}</button> }</nav>
-              <div class="guide-step">
-                <div class="guide-visual"><small>第 {{ demoStep + 1 }} 步</small><strong>{{ currentGuideStep.visual }}</strong></div>
-                <div class="guide-copy"><h3>{{ currentGuideStep.title }}</h3><p>{{ currentGuideStep.description }}</p><div class="guide-controls"><button type="button" class="secondary" (click)="previousGuideStep()" [disabled]="demoStep === 0">上一步</button><button type="button" (click)="nextGuideStep()" [disabled]="demoStep >= guideSteps.length - 1">下一步</button><button type="button" class="secondary" (click)="startGuideMode()" [disabled]="starting">開始練習</button></div></div>
-              </div>
-            </section>
-            <ol class="mode-index">@for (mode of modes; track mode.id; let index = $index) { <li><b>{{ (index + 1).toString().padStart(2, '0') }}</b><div><h2>{{ mode.name }}</h2><p>{{ mode.description }}</p></div><button type="button" (click)="start(mode)" [disabled]="starting">{{ starting ? '準備中…' : '開始練習' }}</button></li> }</ol>
+            <ol class="mode-index">@for (mode of modes; track mode.id; let index = $index) { <li><b>{{ (index + 1).toString().padStart(2, '0') }}</b><div><h2>{{ mode.name }}</h2><p>{{ mode.description }}</p></div><button type="button" (click)="start(mode)" [disabled]="starting">{{ starting ? '準備中…' : '開始挑戰' }}</button></li> }</ol>
           }
           </section>
         }
         @else if (attempt; as current) {
           <section class="play-sheet" aria-live="polite">
             <header class="play-heading">
-              <div><p class="kicker">{{ current.modeName }}</p><h2>{{ current.artifactName }}</h2></div>
-              <span class="difficulty">{{ difficultyText(current.difficulty) }}</span>
+              <div class="play-heading__title"><p class="kicker">{{ current.modeName }}</p><h2>{{ current.artifactName }}</h2></div>
+              <div class="play-heading__meta">
+                <span class="play-state"><span class="play-state__mark" aria-hidden="true">●</span>進行中</span>
+                <span class="difficulty">{{ difficultyText(current.difficulty) }}</span>
+              </div>
+              <div class="play-heading__progress">
+                <div class="play-heading__progress-meta"><span>完成比例</span><strong>{{ progressPercent }}%</strong></div>
+                <div class="play-progress" role="progressbar" aria-label="目前完成比例" [attr.aria-valuenow]="progressPercent" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="progressPercent"></span></div>
+                <small>已用時間 {{ elapsedLabel }}</small>
+              </div>
             </header>
 
+            @if (current.modeCode === 'MEMORY_MATCH') {
+              <aside class="collection-hints" aria-label="隨機館藏提示">
+                <header><span>館藏提示</span><small>隨機顯示 {{ memoryHints.length }} 件</small></header>
+                <div class="collection-hints__grid">
+                  @for (hint of memoryHints; track hint.artifactId) {
+                    <article><strong>{{ hint.name }}</strong><p>{{ hint.description || '館藏說明整理中。' }}</p></article>
+                  }
+                </div>
+              </aside>
+            } @else if (currentArtifactHint; as hint) {
+              <aside class="collection-hint" aria-label="館藏提示"><span>館藏提示</span><strong>{{ hint.name }}</strong><p>{{ hint.description || '館藏說明整理中。' }}</p></aside>
+            }
+
             @if (current.modeCode === 'DETAIL_LOCATOR') {
-              <div class="locator-game">
+              <div class="game-board locator-game">
                 <div class="clue-image">@if ((current.primaryImagePath || current.thumbnailPath) && !imageUnavailable) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName" (error)="imageUnavailable = true" /> } @else { <span class="image-fallback">圖片整理中<br /><small>請依文物名稱選擇</small></span> }</div>
                 <div class="game-prompt"><h3>這件線索屬於哪一件文物？</h3><p>從下方選項中選出你的判斷。</p><div class="artifact-options">@for (option of locatorOptions; track option.artifactId) { <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" (click)="chooseLocator(option.artifactId)">@if ((option.thumbnailPath || option.primaryImagePath) && !imageFailed('locator-' + option.artifactId)) { <img [src]="option.thumbnailPath || option.primaryImagePath" [alt]="option.name" (error)="markImageFailed('locator-' + option.artifactId)" /> } @else { <span class="option-image-fallback" aria-hidden="true">文物</span> }<span>{{ option.name }}</span></button> }</div></div>
               </div>
             }
             @else if (current.modeCode === 'MEMORY_MATCH') {
-              <div class="memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>翻開兩張卡片，找出相同文物。全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" (click)="flipMemory(index)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback" aria-hidden="true">文物</span> } } @else { <span>翻</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }}</p></div>
+              <div class="game-board memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>4×4 共 16 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" (click)="flipMemory(index)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback" aria-hidden="true">文物</span> } } @else { <span>翻</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }}</p></div>
             }
             @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
-              <div class="ordering-game"><div class="game-prompt"><h3>館藏拼圖</h3><p>點選兩塊交換位置，把畫面排回順序。</p></div><div class="tile-grid">@for (piece of puzzleOrder; track $index; let slot = $index) { <button type="button" class="image-tile" [class.selected]="puzzleSelection === slot" [attr.aria-pressed]="puzzleSelection === slot" (click)="swapPuzzle(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('puzzle')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 拼圖 ' + (piece + 1)" [style.object-position]="piecePosition(piece)" (error)="markImageFailed('puzzle')" /> } @else { <span class="image-fallback" aria-hidden="true">館藏</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ puzzleSelection === null ? '先選一塊拼圖' : '再選另一塊交換' }}</p></div>
+              <div class="game-board ordering-game"><div class="game-prompt"><h3>館藏拼圖</h3><p>5×5 拼圖，點選兩塊交換位置，把畫面排回順序。</p></div><div class="tile-grid">@for (piece of puzzleOrder; track $index; let slot = $index) { <button type="button" class="image-tile" [class.selected]="puzzleSelection === slot" [attr.aria-pressed]="puzzleSelection === slot" [attr.aria-label]="'第 ' + (slot + 1) + ' 格拼圖'" (click)="swapPuzzle(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('puzzle')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 拼圖第 ' + (piece + 1) + ' 塊'" [style.left.%]="pieceOffsetX(piece)" [style.top.%]="pieceOffsetY(piece)" (error)="markImageFailed('puzzle')" /> } @else { <span class="image-fallback" aria-hidden="true">館藏</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ puzzleSelection === null ? '先選一塊拼圖' : '再選另一塊交換' }}</p></div>
             }
             @else {
-              <div class="ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>點選兩段交換位置，讓長卷從左到右接回原貌。</p></div><div class="strip-row">@for (strip of restoreOrder; track $index; let slot = $index) { <button type="button" class="image-strip" [class.selected]="restoreSelection === slot" [attr.aria-pressed]="restoreSelection === slot" (click)="swapRestore(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('restore')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 長卷段落 ' + (strip + 1)" [style.object-position]="stripPosition(strip)" (error)="markImageFailed('restore')" /> } @else { <span class="image-fallback" aria-hidden="true">長卷</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ restoreSelection === null ? '先選一段長卷' : '再選另一段交換' }}</p></div>
+              <div class="game-board ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>3×5 長卷，點選兩段交換位置，把完整畫面排回原貌。</p></div><div class="strip-row">@for (strip of restoreOrder; track $index; let slot = $index) { <button type="button" class="image-strip" [class.selected]="restoreSelection === slot" [attr.aria-pressed]="restoreSelection === slot" [attr.aria-label]="'第 ' + (slot + 1) + ' 格長卷'" (click)="swapRestore(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('restore')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 長卷第 ' + (strip + 1) + ' 段'" [style.left.%]="stripOffsetX(strip)" [style.top.%]="stripOffsetY(strip)" (error)="markImageFailed('restore')" /> } @else { <span class="image-fallback" aria-hidden="true">長卷</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ restoreSelection === null ? '先選一段長卷' : '再選另一段交換' }}</p></div>
             }
 
-            <footer class="play-footer"><span>{{ progressText }}</span><div class="play-actions"><button type="button" class="secondary" (click)="exitAttempt()" [disabled]="completing">返回玩法列表</button><button type="button" (click)="completeAttempt()" [disabled]="!canComplete || completing">{{ completing ? '送出中…' : '送出結果' }}</button></div></footer>
+            <footer class="play-footer"><span class="progress-readout" aria-live="polite"><span class="progress-readout__label">目前進度</span><strong>{{ progressText }}</strong></span><div class="play-actions"><button type="button" class="secondary" (click)="exitAttempt()" [disabled]="completing">返回玩法列表</button><button type="button" (click)="completeAttempt()" [disabled]="!canComplete || completing">{{ completing ? '送出中…' : '送出結果' }}</button></div></footer>
           </section>
         }
         @else if (!error) { <div class="loading">目前沒有可開始的單人小遊戲。</div> }
@@ -128,6 +150,7 @@ interface GuideStep {
 })
 export class GameTrainingComponent implements OnInit, OnDestroy {
   readonly game = inject(GameService);
+  private readonly catalog = inject(CatalogService);
   private readonly changeDetector = inject(ChangeDetectorRef);
   modes: MiniGameMode[] = [];
   attempt: MiniGameStart | null = null;
@@ -139,22 +162,33 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   authRequired = false;
   imageUnavailable = false;
   error = '';
-  demoModeCode = '';
-  demoStep = 0;
-
   locatorChoice: string | null = null;
   puzzleOrder: number[] = [];
   puzzleSelection: number | null = null;
   restoreOrder: number[] = [];
   restoreSelection: number | null = null;
   memoryCards: MemoryCard[] = [];
+  memoryHints: CatalogHint[] = [];
+  private currentArtifactHintState: CatalogHint | null = null;
   private readonly failedImages = new Set<string>();
   memoryOpen: number[] = [];
   memoryMatched = 0;
   memoryBusy = false;
+  elapsedSeconds = 0;
   private memoryTimer: ReturnType<typeof setTimeout> | null = null;
+  private elapsedTimer: Subscription | null = null;
+  private attemptStartedAt = 0;
 
-  ngOnInit(): void { this.loadModes(); }
+  ngOnInit(): void {
+    this.restoreSessionState();
+    this.loadModes();
+    this.elapsedTimer = interval(1000).subscribe(() => {
+      if (this.phase !== 'playing' || !this.attemptStartedAt) return;
+      this.elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.attemptStartedAt) / 1000));
+      this.persistSessionState();
+      this.changeDetector.markForCheck();
+    });
+  }
 
   retryModes(): void { this.loadModes(); }
 
@@ -165,7 +199,6 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.game.getMiniGameModes().pipe(finalize(() => { this.loading = false; this.changeDetector.markForCheck(); })).subscribe({
       next: (modes) => {
         this.modes = modes;
-        if (!this.demoModeCode && modes[0]) this.demoModeCode = modes[0].code;
         this.changeDetector.markForCheck();
       },
       error: (error: unknown) => { this.setError(error); this.changeDetector.markForCheck(); }
@@ -174,6 +207,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.memoryTimer !== null) clearTimeout(this.memoryTimer);
+    this.elapsedTimer?.unsubscribe();
   }
 
   get locatorOptions(): MiniGameArtifact[] {
@@ -182,50 +216,29 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   get memoryPairCount(): number { return Math.floor(this.memoryCards.length / 2); }
 
+  get currentArtifactHint(): CatalogHint | null { return this.currentArtifactHintState; }
+
+  get progressPercent(): number {
+    if (!this.attempt) return 0;
+    switch (this.attempt.modeCode) {
+      case 'DETAIL_LOCATOR': return this.locatorChoice ? 100 : 0;
+      case 'MEMORY_MATCH': return this.memoryPairCount ? Math.round((this.memoryMatched / this.memoryPairCount) * 100) : 0;
+      case 'ARTIFACT_PUZZLE': return this.orderScore(this.puzzleOrder);
+      default: return this.orderScore(this.restoreOrder);
+    }
+  }
+
+  get elapsedLabel(): string {
+    const minutes = Math.floor(this.elapsedSeconds / 60).toString().padStart(2, '0');
+    const seconds = (this.elapsedSeconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
+  }
+
   imageFailed(key: string): boolean { return this.failedImages.has(key); }
 
   markImageFailed(key: string): void {
     this.failedImages.add(key);
     this.changeDetector.markForCheck();
-  }
-
-  get guideSteps(): GuideStep[] {
-    switch (this.demoModeCode) {
-      case 'DETAIL_LOCATOR':
-        return [
-          { visual: '看線索', title: '先看清楚線索', description: '記住線索影像的形狀與顏色，再往下一步比對文物。' },
-          { visual: '選文物', title: '選出你的判斷', description: '從下方選項中點選你認為與線索相同的文物。' },
-          { visual: '送出', title: '送出答案', description: '確認選擇後送出，完成後就能看到本次成績。' }
-        ];
-      case 'ARTIFACT_PUZZLE':
-        return [
-          { visual: '看拼圖', title: '查看四塊拼圖', description: '畫面會把文物切成四塊，順序一開始是打亂的。' },
-          { visual: '交換', title: '交換拼圖位置', description: '依序點選兩塊拼圖，就能互換它們的位置。' },
-          { visual: '完成', title: '排回完整畫面', description: '四塊拼圖回到正確順序後，送出結果。' }
-        ];
-      case 'MEMORY_MATCH':
-        return [
-          { visual: '翻牌', title: '一次翻開兩張', description: '點選卡片查看文物，記住每張卡片的位置。' },
-          { visual: '配對', title: '找出相同文物', description: '兩張相同的卡片會留在桌面，不同的卡片會蓋回去。' },
-          { visual: '完成', title: '完成所有配對', description: '全部配對完成後，送出結果。' }
-        ];
-      case 'STRIP_RESTORE':
-        return [
-          { visual: '看長卷', title: '先辨認畫面方向', description: '觀察人物、景物與畫面邊緣，找出長卷的前後關係。' },
-          { visual: '交換', title: '交換段落位置', description: '依序點選兩段長卷，就能互換它們的位置。' },
-          { visual: '完成', title: '接回完整長卷', description: '由左至右排好四段後，送出結果。' }
-        ];
-      default:
-        return [
-          { visual: '閱讀', title: '先看玩法提示', description: '開始前先讀取這個模式的操作說明。' },
-          { visual: '操作', title: '完成畫面上的任務', description: '依照提示操作，直到畫面顯示可以送出結果。' },
-          { visual: '送出', title: '送出結果', description: '完成任務後送出，接著就能看到本次成績。' }
-        ];
-    }
-  }
-
-  get currentGuideStep(): GuideStep {
-    return this.guideSteps[this.demoStep] ?? this.guideSteps[0];
   }
 
   get canComplete(): boolean {
@@ -243,26 +256,13 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     switch (this.attempt.modeCode) {
       case 'DETAIL_LOCATOR': return this.locatorChoice ? '已選定答案' : '尚未選答案';
       case 'MEMORY_MATCH': return `已配對 ${this.memoryMatched} / ${this.memoryPairCount}`;
-      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) ? '拼圖完成' : '交換拼圖直到完成';
-      default: return this.isSolved(this.restoreOrder) ? '長卷完成' : '交換段落直到完成';
+      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) ? '拼圖完成' : '交換 25 塊拼圖直到完成';
+      default: return this.isSolved(this.restoreOrder) ? '長卷完成' : '交換 15 段長卷直到完成';
     }
   }
 
   difficultyText(difficulty: string): string {
     return { EASY: '簡單', NORMAL: '一般', HARD: '困難', EXPERT: '專家' }[difficulty.trim().toUpperCase()] ?? difficulty;
-  }
-
-  selectGuideMode(modeCode: string): void {
-    this.demoModeCode = modeCode;
-    this.demoStep = 0;
-  }
-
-  previousGuideStep(): void { this.demoStep = Math.max(0, this.demoStep - 1); }
-  nextGuideStep(): void { this.demoStep = Math.min(this.guideSteps.length - 1, this.demoStep + 1); }
-
-  startGuideMode(): void {
-    const mode = this.modes.find((item) => item.code === this.demoModeCode);
-    if (mode) this.start(mode);
   }
 
   start(mode: MiniGameMode): void {
@@ -274,20 +274,26 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     });
   }
 
-  chooseLocator(artifactId: string): void { if (this.phase === 'playing') this.locatorChoice = artifactId; }
+  chooseLocator(artifactId: string): void {
+    if (this.phase !== 'playing') return;
+    this.locatorChoice = artifactId;
+    this.persistSessionState();
+  }
 
   swapPuzzle(slot: number): void {
-    if (this.puzzleSelection === null) { this.puzzleSelection = slot; return; }
-    if (this.puzzleSelection === slot) { this.puzzleSelection = null; return; }
+    if (this.puzzleSelection === null) { this.puzzleSelection = slot; this.persistSessionState(); return; }
+    if (this.puzzleSelection === slot) { this.puzzleSelection = null; this.persistSessionState(); return; }
     this.swap(this.puzzleOrder, this.puzzleSelection, slot);
     this.puzzleSelection = null;
+    this.persistSessionState();
   }
 
   swapRestore(slot: number): void {
-    if (this.restoreSelection === null) { this.restoreSelection = slot; return; }
-    if (this.restoreSelection === slot) { this.restoreSelection = null; return; }
+    if (this.restoreSelection === null) { this.restoreSelection = slot; this.persistSessionState(); return; }
+    if (this.restoreSelection === slot) { this.restoreSelection = null; this.persistSessionState(); return; }
     this.swap(this.restoreOrder, this.restoreSelection, slot);
     this.restoreSelection = null;
+    this.persistSessionState();
   }
 
   flipMemory(index: number): void {
@@ -296,7 +302,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     if (!card || card.revealed || card.matched) return;
     card.revealed = true;
     this.memoryOpen = [...this.memoryOpen, index];
-    if (this.memoryOpen.length < 2) return;
+    if (this.memoryOpen.length < 2) { this.persistSessionState(); return; }
     const [firstIndex, secondIndex] = this.memoryOpen;
     const first = this.memoryCards[firstIndex];
     const second = this.memoryCards[secondIndex];
@@ -313,6 +319,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       this.memoryOpen = [];
       this.memoryBusy = false;
       this.memoryTimer = null;
+      this.persistSessionState();
       this.changeDetector.markForCheck();
     }, 650);
   }
@@ -326,7 +333,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       rawScore,
       rawResultJson: JSON.stringify(this.resultPayload(rawScore))
     }).pipe(finalize(() => { this.completing = false; this.changeDetector.markForCheck(); })).subscribe({
-      next: (result) => { this.complete = result; this.phase = 'complete'; this.changeDetector.markForCheck(); },
+      next: (result) => { this.complete = result; this.phase = 'complete'; this.clearSessionState(); this.scrollToTop(); this.changeDetector.markForCheck(); },
       error: (error: unknown) => { this.setError(error); this.changeDetector.markForCheck(); }
     });
   }
@@ -334,12 +341,14 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   exitAttempt(): void {
     if (!this.attempt || this.completing) return;
     // ui-integration: 小遊戲沒有既有取消 API，離開前明確告知進度不會送出，避免玩家誤以為結果已保存。
-    if (!window.confirm('確定要離開這次練習嗎？目前進度不會送出。')) return;
+    if (!window.confirm('確定要離開這次挑戰嗎？目前進度不會送出。')) return;
     this.attempt = null;
     this.complete = null;
     this.phase = 'list';
     this.resetBoard();
     this.error = '';
+    this.clearSessionState();
+    this.scrollToTop();
   }
 
   playAgain(): void {
@@ -348,25 +357,124 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.phase = 'list';
     this.resetBoard();
     this.error = '';
+    this.clearSessionState();
+    this.scrollToTop();
   }
 
-  piecePosition(piece: number): string { return `${(piece % 2) * 100}% ${Math.floor(piece / 2) * 100}%`; }
-  stripPosition(strip: number): string { return `${strip * 33.3333}% 50%`; }
+  pieceOffsetX(piece: number): number { return -(piece % 5) * 100; }
+  pieceOffsetY(piece: number): number { return -Math.floor(piece / 5) * 100; }
+  stripOffsetX(strip: number): number { return -(strip % 5) * 100; }
+  stripOffsetY(strip: number): number { return -Math.floor(strip / 5) * 100; }
 
   private beginAttempt(attempt: MiniGameStart): void {
     this.attempt = attempt;
     this.complete = null;
     this.phase = 'playing';
+    this.attemptStartedAt = Date.now();
+    this.elapsedSeconds = 0;
+    this.memoryHints = [];
+    this.currentArtifactHintState = null;
     this.imageUnavailable = false;
     this.resetBoard();
+    this.loadCatalogHints(attempt);
+    this.persistSessionState();
+    this.scrollToTop();
+  }
+
+  private restoreSessionState(): void {
+    const raw = this.readSessionState();
+    if (!raw || !this.isValidAttempt(raw.attempt)) return;
+
+    this.attempt = raw.attempt;
+    this.complete = null;
+    this.phase = 'playing';
+    this.attemptStartedAt = Date.now() - Math.max(0, raw.elapsedSeconds) * 1000;
+    this.elapsedSeconds = Math.max(0, raw.elapsedSeconds);
+    this.imageUnavailable = false;
+    this.resetBoard();
+    if (this.attempt.modeCode === 'ARTIFACT_PUZZLE' && this.isPermutation(raw.puzzleOrder, 25)) {
+      this.puzzleOrder = raw.puzzleOrder;
+      this.puzzleSelection = this.validSlot(raw.puzzleSelection, 25);
+    }
+    if (this.attempt.modeCode === 'STRIP_RESTORE' && this.isPermutation(raw.restoreOrder, 15)) {
+      this.restoreOrder = raw.restoreOrder;
+      this.restoreSelection = this.validSlot(raw.restoreSelection, 15);
+    }
+    if (this.attempt.modeCode === 'DETAIL_LOCATOR') this.locatorChoice = raw.locatorChoice;
+    if (this.attempt.modeCode === 'MEMORY_MATCH') {
+      const matched = new Set(raw.matchedCardIds);
+      this.memoryCards.forEach((card) => { card.matched = matched.has(card.id); });
+      this.memoryMatched = this.memoryCards.filter((card) => card.matched).length / 2;
+    }
+    this.loadCatalogHints(this.attempt);
+  }
+
+  private persistSessionState(): void {
+    if (this.phase !== 'playing' || !this.attempt) return;
+    const snapshot: TrainingSessionSnapshot = {
+      attempt: this.attempt,
+      elapsedSeconds: this.elapsedSeconds,
+      puzzleOrder: this.puzzleOrder,
+      puzzleSelection: this.puzzleSelection,
+      restoreOrder: this.restoreOrder,
+      restoreSelection: this.restoreSelection,
+      locatorChoice: this.locatorChoice,
+      matchedCardIds: this.memoryCards.filter((card) => card.matched).map((card) => card.id)
+    };
+    try { sessionStorage.setItem('qmah-mini-game-session-v1', JSON.stringify(snapshot)); } catch { /* private mode/storage quota: gameplay remains usable */ }
+  }
+
+  private clearSessionState(): void {
+    try { sessionStorage.removeItem('qmah-mini-game-session-v1'); } catch { /* storage is optional */ }
+  }
+
+  private readSessionState(): TrainingSessionSnapshot | null {
+    try {
+      const raw = sessionStorage.getItem('qmah-mini-game-session-v1');
+      return raw ? JSON.parse(raw) as TrainingSessionSnapshot : null;
+    } catch { return null; }
+  }
+
+  private isValidAttempt(value: unknown): value is MiniGameStart {
+    if (!value || typeof value !== 'object') return false;
+    const attempt = value as Partial<MiniGameStart>;
+    return typeof attempt.attemptId === 'string' && typeof attempt.modeCode === 'string' && Array.isArray(attempt.artifactPool);
+  }
+
+  private isPermutation(order: number[], length: number): boolean {
+    return Array.isArray(order) && order.length === length && new Set(order).size === length && order.every((value) => Number.isInteger(value) && value >= 0 && value < length);
+  }
+
+  private validSlot(slot: number | null, length: number): number | null {
+    return typeof slot === 'number' && Number.isInteger(slot) && slot >= 0 && slot < length ? slot : null;
+  }
+
+  private loadCatalogHints(attempt: MiniGameStart): void {
+    const fallback = this.fallbackArtifact(attempt);
+    const pool = attempt.artifactPool.length ? attempt.artifactPool : [fallback];
+    const candidates = attempt.modeCode === 'MEMORY_MATCH'
+      ? this.shuffle(pool, `${attempt.seed}-catalog-hints`).slice(0, 5)
+      : [pool.find((artifact) => artifact.artifactId === attempt.artifactId) ?? fallback];
+    const details = candidates.map((candidate) => this.catalog.getArtifactById(candidate.artifactId).pipe(catchError(() => of(null))));
+
+    forkJoin(details).subscribe((results) => {
+      const hints = candidates.map((candidate, index) => ({
+        artifactId: candidate.artifactId,
+        name: results[index]?.name ?? candidate.name,
+        description: results[index]?.description?.trim() || null
+      }));
+      this.memoryHints = hints;
+      this.currentArtifactHintState = hints.find((hint) => hint.artifactId === attempt.artifactId) ?? null;
+      this.changeDetector.markForCheck();
+    });
   }
 
   private resetBoard(): void {
     this.failedImages.clear();
     this.locatorChoice = null;
-    this.puzzleOrder = this.shuffle([0, 1, 2, 3], this.attempt?.seed ?? 'puzzle');
+    this.puzzleOrder = this.shuffle(Array.from({ length: 25 }, (_, index) => index), this.attempt?.seed ?? 'puzzle');
     this.puzzleSelection = null;
-    this.restoreOrder = this.shuffle([0, 1, 2, 3], `${this.attempt?.seed ?? 'restore'}-restore`);
+    this.restoreOrder = this.shuffle(Array.from({ length: 15 }, (_, index) => index), `${this.attempt?.seed ?? 'restore'}-restore`);
     this.restoreSelection = null;
     this.memoryOpen = [];
     this.memoryMatched = 0;
@@ -374,7 +482,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     if (this.memoryTimer !== null) clearTimeout(this.memoryTimer);
     this.memoryTimer = null;
     const pool = this.attempt?.artifactPool.length ? this.attempt.artifactPool : this.attempt ? [this.fallbackArtifact(this.attempt)] : [];
-    const source = pool.length ? pool.slice(0, Math.min(pool.length, 4)) : [];
+    const source = pool.length ? pool.slice(0, Math.min(pool.length, 8)) : [];
     this.memoryCards = this.shuffle(source.flatMap((artifact) => [0, 1].map((copy) => ({
       id: `${artifact.artifactId}-${copy}`,
       artifactId: artifact.artifactId,
@@ -439,5 +547,10 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.authRequired = error instanceof HttpErrorResponse && error.status === 401;
     // ui-integration: Game 全區共用正式會員登入；避免登入入口與訓練頁各自維護不同帳號概念。
     this.error = this.authRequired ? '請先登入會員帳號，再開始或繼續小遊戲。' : this.game.errorMessage(error);
+  }
+
+  private scrollToTop(): void {
+    // ui-integration: 狀態由列表切到遊玩或結算時，將視線帶回遊戲標題，避免沿用列表捲動位置造成流程斷裂。
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
   }
 }

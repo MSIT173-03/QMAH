@@ -4,7 +4,7 @@
   --home-ink: var(--qmah-ink);
   --home-muted: var(--qmah-muted);
   --home-paper: var(--qmah-surface-soft);
-  --home-white: var(--qmah-paper);
+  --home-white: var(--qmah-surface-elevated);
   --home-teal: var(--qmah-jade-deep);
   --home-gold: var(--qmah-bronze);
   --home-border: color-mix(in srgb, var(--qmah-jade-deep) 16%, transparent);
@@ -216,7 +216,7 @@
 }
 
 .home-route:hover {
-  background: color-mix(in srgb, var(--qmah-paper) 70%, transparent);
+  background: color-mix(in srgb, var(--home-teal) 10%, var(--home-white));
   color: var(--home-teal);
   transform: translateX(4px);
 }
@@ -252,7 +252,7 @@
 
 .home-route__arrow {
   align-self: center;
-  color: #78918a;
+  color: var(--qmah-muted);
   transition: transform 160ms ease, color 160ms ease;
 }
 
@@ -267,12 +267,13 @@
   min-height: 310px;
   overflow: hidden;
   border: 1px solid var(--home-border);
+  border-radius: var(--qmah-radius-panel);
   background: var(--home-white);
 }
 
 .home-museum-note__image {
   min-height: 280px;
-  background: #244440;
+  background: var(--qmah-night);
 }
 
 .home-museum-note__image img {

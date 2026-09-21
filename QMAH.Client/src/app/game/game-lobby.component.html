@@ -18,14 +18,14 @@
   <section class="lobby-hero" [class.is-collapsed]="heroCollapsed" [attr.aria-labelledby]="heroCollapsed ? null : 'lobby-hero-title'" [attr.aria-label]="heroCollapsed ? '多人鑑定介紹' : null">
     @if (heroCollapsed) {
       <div class="lobby-hero-collapsed">
-        <div><span class="lobby-hero-kicker">多人鑑定</span><strong>一起觀察、作答、投票</strong></div>
-        <button type="button" class="hero-collapse" [attr.aria-expanded]="false" (click)="toggleHero()">展開介紹</button>
+        <div><span class="lobby-hero-kicker">多人鑑定</span><strong>建立或加入房間</strong></div>
+        <button type="button" class="hero-collapse" [attr.aria-expanded]="false" (click)="toggleHero()">顯示房間入口</button>
       </div>
     } @else {
       <div class="lobby-hero-copy">
-        <p class="lobby-hero-kicker">多人鑑定 · 一起觀察</p>
-        <h1 id="lobby-hero-title">從細節出發，<br />一起找答案。</h1>
-        <p>和朋友一起觀察館藏，寫下判斷，投票選出最有說服力的答案。</p>
+        <p class="lobby-hero-kicker">多人鑑定</p>
+        <h1 id="lobby-hero-title">房間大廳</h1>
+        <p>建立房間，或從清單選擇一間房間加入。</p>
         <div class="hero-actions">
           @if (!isDemo) { <button type="button" class="hero-create" (click)="toggleCreateForm()">建立房間</button> }
           <button type="button" class="hero-collapse" [attr.aria-expanded]="true" (click)="toggleHero()">收合介紹</button>
@@ -45,7 +45,7 @@
     <article class="index-page" aria-labelledby="rooms-title">
       <header class="page-heading">
         <div>
-          <h2 id="rooms-title">開放中的房間</h2>
+          <h2 id="rooms-title">可見房間</h2>
           <p>{{ roomListDescription() }}</p>
         </div>
       </header>
@@ -110,8 +110,10 @@
               <p>目前沒有符合條件的房間可供查看。</p>
             } @else {
               <p>請切換房間狀態，或建立新的鑑定房間。</p>
-              <button type="button" (click)="setRoomStatus('WAITING')">查看可加入房間</button>
-              <button type="button" (click)="showCreateForm = true">建立房間</button>
+              <div class="empty-state__actions">
+                <button type="button" (click)="setRoomStatus('WAITING')">查看可加入房間</button>
+                <button type="button" class="empty-state__primary" (click)="showCreateForm = true">建立房間</button>
+              </div>
             }
           </section>
         }

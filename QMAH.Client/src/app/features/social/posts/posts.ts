@@ -75,8 +75,11 @@ export class PostsComponent implements OnInit, OnDestroy {
   currentAnnouncementIndex = 0;
   /** ui-integration: 公告是 supporting context，收合偏好留在瀏覽器，避免每次進入貼文牆都推開主內容。 */
   announcementCollapsed = signal(false);
+  announcementPaused = signal(false);
   private readonly announcementStorageKey = 'qmah.social.announcements.collapsed';
   private announcementTimer?: ReturnType<typeof setInterval>;
+  private announcementPointerPaused = false;
+  private announcementFocusPaused = false;
 
   get isAdmin(): boolean {
     return this.meApi.me()?.roles.includes('Admin') ?? false;
@@ -122,9 +125,39 @@ export class PostsComponent implements OnInit, OnDestroy {
   private syncAnnouncementTimer(): void {
     if (this.announcementTimer) clearInterval(this.announcementTimer);
     this.announcementTimer = undefined;
-    if (!this.announcementCollapsed() && this.announcements.length > 1) {
+    this.announcementPaused.set(this.announcementPointerPaused || this.announcementFocusPaused);
+    if (!this.announcementCollapsed() && !this.announcementPaused() && !this.prefersReducedMotion() && this.announcements.length > 1) {
       this.announcementTimer = setInterval(() => this.nextAnnouncement(), 4500);
     }
+  }
+
+  pauseAnnouncementsForPointer(): void {
+    this.announcementPointerPaused = true;
+    this.syncAnnouncementTimer();
+  }
+
+  resumeAnnouncementsForPointer(): void {
+    this.announcementPointerPaused = false;
+    this.syncAnnouncementTimer();
+  }
+
+  pauseAnnouncementsForFocus(): void {
+    this.announcementFocusPaused = true;
+    this.syncAnnouncementTimer();
+  }
+
+  resumeAnnouncementsForFocus(event: FocusEvent): void {
+    const nextTarget = event.relatedTarget;
+    const currentTarget = event.currentTarget;
+    if (nextTarget instanceof Node && currentTarget instanceof HTMLElement && currentTarget.contains(nextTarget)) return;
+    this.announcementFocusPaused = false;
+    this.syncAnnouncementTimer();
+  }
+
+  private prefersReducedMotion(): boolean {
+    return typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   toggleAnnouncements(): void {

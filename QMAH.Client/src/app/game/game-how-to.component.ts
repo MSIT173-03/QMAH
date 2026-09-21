@@ -18,24 +18,26 @@ interface HowToContent {
 const HOW_TO_CONTENT: Record<GameHowToVariant, HowToContent> = {
   multiplayer: {
     eyebrow: '多人鑑定',
-    title: '先看懂流程，再加入房間',
-    description: '和朋友一起觀察館藏，從作答、投票到揭曉，完成一場多人鑑定。',
+    title: '從選房到回合結算',
+    description: '多人房間會把同一件文物交給大家觀察；每個人先作答，再讀取其他回答並投票，最後查看回合揭曉與整場結果。',
     steps: [
-      { label: '01', title: '選擇或建立房間', description: '選一間可加入的房間，或建立一間新的鑑定房間。' },
-      { label: '02', title: '觀察並寫下判斷', description: '每回合查看館藏，選擇回答方式並寫下你的看法。' },
-      { label: '03', title: '閱讀回答並投票', description: '作答結束後，投票選出最有說服力的回答。' },
-      { label: '04', title: '查看結果與獎勵', description: '回合揭曉後繼續下一回合，完成整場後查看結果並領取獎勵。' }
+      { label: '01', title: '選房／建立', description: '選一間可加入的房間，或建立新房間並等待玩家加入。' },
+      { label: '02', title: '觀察文物', description: '房間開始後，所有玩家查看本回合的館藏與題目。' },
+      { label: '03', title: '作答', description: '在作答時間內寫下自己的判斷；每回合每人作答一次。' },
+      { label: '04', title: '讀取回答', description: '作答時間結束後，查看其他玩家的回答內容。' },
+      { label: '05', title: '投票', description: '不能投自己的回答，每次可投 1 至 3 票，選出最有說服力的說法。' },
+      { label: '06', title: '揭曉／結算', description: '查看本回合得票與勝出者，完成所有回合後查看整場結果與獎勵。' }
     ]
   },
   training: {
     eyebrow: '單人小遊戲',
-    title: '一個人也能完成一局練習',
-    description: '從短局玩法開始，熟悉館藏細節、記憶與判斷，再送出本次成績。',
+    title: '一個人完成一局挑戰',
+    description: '從單人模式選一種玩法，依照畫面提示辨識文物或完成操作任務，送出後立即查看成績與既有獎勵。',
     steps: [
-      { label: '01', title: '選擇一種玩法', description: '從下方的短局玩法中，挑一種你想先試試看的模式。' },
-      { label: '02', title: '完成畫面上的任務', description: '依照提示找文物、翻牌配對，或把畫面排回正確順序。' },
-      { label: '03', title: '送出結果', description: '完成任務後送出結果，系統會顯示本次成績與獎勵。' },
-      { label: '04', title: '換個玩法再試一次', description: '回到玩法列表，繼續挑戰其他短局模式。' }
+      { label: '01', title: '選模式', description: '從目前啟用的單人玩法中選擇一種挑戰。' },
+      { label: '02', title: '觀察或操作任務', description: '看線索辨識文物、完成 5×5 拼圖、翻開 16 張牌配對，或整理 3×5 長卷段落。' },
+      { label: '03', title: '送出答案', description: '完成畫面上的任務後，送出這一局的答案與操作結果。' },
+      { label: '04', title: '顯示成績與既有獎勵', description: '系統立即顯示分數、等級、點數與鑰匙進度；獎勵額度用完時仍會保留成績。' }
     ]
   }
 };

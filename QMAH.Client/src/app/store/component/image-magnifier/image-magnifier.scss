@@ -37,7 +37,7 @@
   border-radius: 50%;
   background-repeat: no-repeat;
   /* Fallback before image metrics arrive; inline size is based on the source image container. */
-  background-size: 260cqw 260cqh;
+  background-size: 100cqw 100cqh;
   background-color: var(--color-swatch);
   box-shadow: var(--qmah-shadow-float), inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 35%, transparent);
   opacity: 0;

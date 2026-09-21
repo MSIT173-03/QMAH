@@ -9,7 +9,11 @@
         <div class="news-item">
           <a [storeLink]="productPath(item.id)" class="news-link">
             <div class="news-thumb">
-              <svg lucidePackageSearch aria-hidden="true" focusable="false"></svg>
+              @if (item.coverImage; as imageUrl) {
+                <img class="news-thumb-image" [src]="imageUrl" [alt]="item.name" loading="lazy" decoding="async" />
+              } @else {
+                <svg lucidePackageSearch aria-hidden="true" focusable="false"></svg>
+              }
             </div>
             <div class="news-info">
               <span class="product-card-brand">{{ item.brand }}</span>

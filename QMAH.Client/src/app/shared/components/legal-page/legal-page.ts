@@ -1,5 +1,6 @@
+import { Location } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 type LegalDocument = 'privacy' | 'terms';
 
@@ -98,9 +99,21 @@ const DOCUMENTS: Record<LegalDocument, LegalDocumentContent> = {
 })
 export class LegalPageComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly location = inject(Location);
+  private readonly router = inject(Router);
   protected readonly content = computed(() => {
     const kind = this.route.snapshot.data['document'] as LegalDocument;
     return DOCUMENTS[kind] ?? DOCUMENTS.privacy;
   });
   protected readonly updatedAt = '2026 年 9 月 20 日';
+  protected readonly returnLabel = history.state?.navigationId > 1 ? '返回上一頁' : '回到首頁';
+
+  protected goBack(): void {
+    if (history.state?.navigationId > 1) {
+      this.location.back();
+      return;
+    }
+
+    void this.router.navigate(['/home']);
+  }
 }

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { KeyModel, KeyExchangeRule, UnlockWithKeyRequest, UnlockWithKeyResult } from '../models/key-model';
+import { KeyExchangeResult, KeyModel, KeyExchangeRule, UnlockWithKeyRequest, UnlockWithKeyResult } from '../models/key-model';
 import { environment } from '../../environments/environment';
 
 /**
@@ -82,13 +82,23 @@ export class KeyService {
   }
 
   private parseExchangeRule(raw: Record<string, unknown>): KeyExchangeRule {
-    const scopeType = (raw['scopeType'] ?? raw['scope'] ?? raw['keyScopeType']) as KeyExchangeRule['scopeType'];
-    const cost = raw['costPerUnlock'] ?? raw['cost'] ?? raw['requiredCount'] ?? raw['keyCost'];
-
     return {
-      scopeType,
-      costPerUnlock: typeof cost === 'number' ? cost : 1,
+      id: String(raw['id'] ?? ''),
+      sourceKeyCode: String(raw['sourceKeyCode'] ?? ''),
+      sourceKeyName: String(raw['sourceKeyName'] ?? '來源鑰匙'),
+      sourceAmount: Number(raw['sourceAmount'] ?? 0),
+      targetKeyCode: String(raw['targetKeyCode'] ?? ''),
+      targetKeyName: String(raw['targetKeyName'] ?? '目標鑰匙'),
+      targetAmount: Number(raw['targetAmount'] ?? 0),
+      targetEligibleArtifactCount: Number(raw['targetEligibleArtifactCount'] ?? 0),
+      description: typeof raw['description'] === 'string' ? raw['description'] : null,
     };
+  }
+
+  exchangeKeys(ruleId: string, units = 1): Observable<KeyExchangeResult> {
+    return this.http.post<KeyExchangeResult>(`${environment.apiBaseUrl}/me/keys/exchange`, { ruleId, units }).pipe(
+      catchError(this.handleError)
+    );
   }
 
   /**

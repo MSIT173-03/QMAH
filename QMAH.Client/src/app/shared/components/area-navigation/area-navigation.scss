@@ -40,7 +40,11 @@
 }
 
 .area-navigation__group a {
-  justify-content: space-between;
+  justify-content: flex-start;
+}
+
+.area-navigation__group a > .area-navigation__badge {
+  margin-left: auto;
 }
 
 .area-navigation__group a > span {

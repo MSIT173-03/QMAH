@@ -8,9 +8,48 @@
   --color-ink: var(--qmah-ink);
   --color-primary: var(--qmah-primary);
   --color-line: var(--qmah-border);
-  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   color: var(--color-ink);
+}
+
+/* ui-integration: Area identity is a restrained Shell accent, not a full-page repaint. */
+.app-shell[data-area='user'] {
+  --color-primary: var(--qmah-user-action);
+  --color-primary-soft: var(--qmah-user-soft);
+  --color-primary-content: var(--qmah-user-content);
+}
+
+.app-shell[data-area='catalog'] {
+  --color-primary: var(--qmah-catalog-action);
+  --color-primary-soft: var(--qmah-catalog-soft);
+  --color-primary-content: var(--qmah-catalog-content);
+}
+
+.app-shell[data-area='game'] {
+  --color-primary: var(--qmah-game-action);
+  --color-primary-soft: var(--qmah-game-soft);
+  --color-primary-content: var(--qmah-game-content);
+}
+
+.app-shell[data-area='social'] {
+  --color-primary: var(--qmah-social-action);
+  --color-primary-soft: var(--qmah-social-soft);
+  --color-primary-content: var(--qmah-social-content);
+}
+
+.app-shell[data-area='store'] {
+  --color-primary: var(--qmah-store-action);
+  --color-primary-soft: var(--qmah-store-soft);
+  --color-primary-content: var(--qmah-store-content);
+}
+
+.app-shell[data-area='admin'] {
+  --color-primary: var(--qmah-danger);
+  --color-primary-soft: var(--qmah-terracotta-soft);
+  --color-primary-content: var(--qmah-danger-content);
 }
 
 /* ui-integration: 前台共用 header 收斂品牌、Area 入口與帳號操作；各 Area 的內容組成仍由自己掌控。 */
@@ -82,6 +121,8 @@
 .app-context-navigation a:hover, .app-context-navigation a.is-active { color: var(--color-primary, var(--qmah-jade-deep)); background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent); }
 
 .app-header__actions {
+  margin-inline-start: auto;
+  justify-self: end;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -135,6 +176,11 @@
   color: var(--color-primary, var(--qmah-jade-deep));
   font-size: 12px;
   font-weight: 800;
+}
+
+.app-account__avatar--image {
+  object-fit: cover;
+  background: var(--color-primary, var(--qmah-jade-deep));
 }
 
 .app-account__copy {
@@ -255,7 +301,9 @@
 }
 
 .app-main {
-  min-height: calc(100vh - var(--app-header-height));
+  flex: 1 0 auto;
+  min-height: calc(100dvh - var(--app-header-height));
+  display: block;
 }
 
 .app-mobile-backdrop,
@@ -269,7 +317,12 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid var(--qmah-focus, var(--color-primary, var(--qmah-jade-deep)));
-  outline-offset: 3px;
+  outline-offset: 2px;
+}
+
+.app-menu-toggle:focus-visible,
+.app-icon-button:focus-visible {
+  outline-color: var(--qmah-catalog-accent, var(--qmah-focus));
 }
 
 @media (max-width: 1180px) {
@@ -338,16 +391,21 @@ textarea:focus-visible {
 
   .app-mobile-drawer {
     position: fixed;
-    inset: 0 auto 0 0;
+    inset: 12px auto auto 12px;
     z-index: 60;
     width: min(360px, calc(100vw - 32px));
+    max-height: calc(100dvh - 24px);
+    height: auto;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     overscroll-behavior: contain;
     visibility: hidden;
-    transform: translateX(-102%);
+    /* 完全離開 viewport，避免隱藏 drawer 的右緣仍多出幾個像素造成水平溢出。 */
+    transform: translateX(calc(-100% - 24px));
     border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    border-radius: var(--qmah-radius-panel);
     background: var(--color-surface, #f7f4ee);
     box-shadow: 18px 0 42px rgba(20, 29, 33, 0.18);
     transition: transform 180ms ease, visibility 180ms ease;
@@ -387,7 +445,7 @@ textarea:focus-visible {
   }
 
   .app-mobile-drawer__body {
-    flex: 1;
+    flex: 0 1 auto;
     padding: var(--qmah-space-4);
   }
 
@@ -425,9 +483,19 @@ textarea:focus-visible {
   .app-mobile-logout {
     width: 100%;
     padding: 8px var(--qmah-space-3);
-    border-color: color-mix(in srgb, var(--color-error, #a64b3c) 28%, transparent);
-    color: var(--color-error, #a64b3c);
+    border: 1px solid var(--qmah-danger);
+    border-radius: var(--qmah-radius-control);
+    background: var(--qmah-danger);
+    color: var(--qmah-danger-content);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 750;
     cursor: pointer;
+  }
+
+  .app-mobile-logout:hover:not(:disabled) {
+    border-color: var(--qmah-danger);
+    background: color-mix(in srgb, var(--qmah-danger) 82%, var(--qmah-night));
   }
 }
 

@@ -51,4 +51,13 @@ export class CategoryGrid {
 
     return 'shapes';
   }
+
+  /** 讓分類入口使用有語意的色彩角色，不改變入口順序或資訊架構。 */
+  protected categoryTone(name: string): 'jade' | 'gold' | 'azurite' | 'cinnabar' {
+    const normalizedName = name.toLowerCase();
+    if (normalizedName.includes('青銅') || normalizedName.includes('錢') || normalizedName.includes('幣')) return 'gold';
+    if (normalizedName.includes('繪') || normalizedName.includes('陶') || normalizedName.includes('瓷') || normalizedName.includes('琺瑯')) return 'azurite';
+    if (normalizedName.includes('雕')) return 'cinnabar';
+    return 'jade';
+  }
 }

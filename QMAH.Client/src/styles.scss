@@ -3,30 +3,61 @@
 :root {
   --qmah-font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --qmah-font-serif: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif;
-  /* ui-integration: digital jade semantic scale, inspired by PANTONE 16-0228 TCX Jade Green. */
-  --qmah-paper: #f7fbf8;
-  --qmah-night: #122625;
-  --qmah-page-surface: #e4f0ed;
+  /* ui-integration: committed museum palette；Pantone 僅作色彩語彙參考，HEX／OKLCH 是瀏覽器工作值。 */
+  --qmah-paper: #f8f6ef;
+  --qmah-night: #18302f;
+  --qmah-page-surface: #e7efee;
   --qmah-surface: var(--qmah-paper);
-  --qmah-surface-soft: #eff7f4;
-  --qmah-surface-muted: #e5f1ee;
-  --qmah-ink: var(--qmah-night);
-  --qmah-muted: #5b7370;
-  --qmah-jade: #147d73;
-  --qmah-jade-deep: #0e5b55;
-  --qmah-jade-bright: #5e928b;
-  --qmah-jade-soft: #d9ece7;
-  --qmah-slate: #6f918c;
+  --qmah-surface-soft: #f0f4ef;
+  --qmah-surface-muted: #e2ece9;
+  --qmah-ink: #1b3533;
+  --qmah-muted: #5b6e6b;
+  --qmah-jade: #26796e;
+  --qmah-jade-deep: #145a53;
+  --qmah-jade-bright: #6da49a;
+  --qmah-jade-soft: #d7ebe6;
+  --qmah-azurite: #527f99;
+  --qmah-azurite-soft: #dcebef;
+  --qmah-slate: #748e8a;
+  --qmah-navy: #334260;
+  --qmah-navy-soft: #e3e7f0;
+  --qmah-terracotta: #b86f5b;
+  --qmah-terracotta-action: #985545;
+  --qmah-terracotta-soft: #f0dfd8;
   --qmah-cinnabar: #b85d50;
-  --qmah-bronze: #b99452;
+  --qmah-bronze: #b7914f;
+  --qmah-honey-action: #8a6b2c;
+  --qmah-honey-soft: #f3ead4;
   --qmah-secondary: var(--qmah-jade-bright);
   --qmah-secondary-content: var(--qmah-night);
-  --qmah-accent: var(--qmah-bronze);
-  --qmah-accent-content: var(--qmah-night);
+  --qmah-accent: var(--qmah-honey-action);
+  --qmah-accent-content: var(--qmah-paper);
   --qmah-danger: var(--qmah-cinnabar);
   --qmah-danger-content: var(--qmah-paper);
   --qmah-line: #c9dcd7;
   --qmah-on-dark: var(--qmah-paper);
+
+  /* ui-integration: 五大 Area 只拿這組 mapping 做辨識；成功／警告／錯誤仍由全站 semantic token 負責。 */
+  --qmah-user-accent: var(--qmah-jade);
+  --qmah-user-action: var(--qmah-jade-deep);
+  --qmah-user-soft: var(--qmah-jade-soft);
+  --qmah-user-content: var(--qmah-paper);
+  --qmah-catalog-accent: var(--qmah-azurite);
+  --qmah-catalog-action: #3d687d;
+  --qmah-catalog-soft: var(--qmah-azurite-soft);
+  --qmah-catalog-content: var(--qmah-paper);
+  --qmah-game-accent: var(--qmah-navy);
+  --qmah-game-action: var(--qmah-navy);
+  --qmah-game-soft: var(--qmah-navy-soft);
+  --qmah-game-content: var(--qmah-paper);
+  --qmah-social-accent: var(--qmah-terracotta);
+  --qmah-social-action: var(--qmah-terracotta-action);
+  --qmah-social-soft: var(--qmah-terracotta-soft);
+  --qmah-social-content: var(--qmah-paper);
+  --qmah-store-accent: var(--qmah-bronze);
+  --qmah-store-action: var(--qmah-honey-action);
+  --qmah-store-soft: var(--qmah-honey-soft);
+  --qmah-store-content: var(--qmah-paper);
 
   /* ui-integration: 全站共用尺度只提供有限選項，讓各 Area 保留構圖但不再各自發明數值。 */
   --qmah-space-1: 4px;
@@ -77,15 +108,53 @@
 html {
   min-width: 320px;
   scroll-padding-top: 76px;
+  overflow-x: clip;
 }
 
 body {
   min-width: 320px;
   margin: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   font-family: var(--qmah-font-sans);
   text-rendering: optimizeLegibility;
   line-break: strict;
+  word-break: normal;
+}
+
+/* 中文內容依標點與語意換行；只有明確的長 ID／URL 元件才在區域樣式中允許硬斷行。 */
+:where(p, li, dd, blockquote) {
+  line-break: strict;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+/* ui-integration: Game 子導覽的返回入口是高頻操作，統一成可辨識、可點擊的控制，不再以裸文字散落在空白區。 */
+.game-navigation__actions > a {
+  display: inline-flex;
+  min-height: var(--qmah-control-height);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-control);
+  padding: 9px var(--qmah-control-padding-x);
+  color: var(--qmah-primary);
+  background: var(--qmah-surface-elevated);
+  font-size: var(--qmah-type-label-size);
+  font-weight: 800;
+  text-decoration: none;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.game-navigation__actions > a:hover {
+  border-color: var(--qmah-primary);
+  color: var(--qmah-primary-content);
+  background: var(--qmah-primary);
+  transform: translateY(-1px);
+}
+
+.game-navigation__actions > a:focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
 }
 
 /* ui-integration: 短標題以 balance 避免孤立短行，長段落以 pretty 保留自然閱讀節奏。 */
@@ -98,43 +167,76 @@ body {
 }
 
 /* ui-integration: App Shell 的 theme-controller 位於共用 Layout 之外層；在全域入口切換語意色，讓所有 Area 與商城共享深色背景與對比。 */
-:root:has(.theme-controller[value='qmahdark']:checked) .app-shell {
-  /* ui-integration: 深色維持故宮紙墨的暖色比例，避免把所有頁面套成冷色 dashboard。 */
+:root[data-theme='qmahdark'] {
+  /* ui-integration: 深色以低彩度藍灰炭黑分層，玉石綠只承擔互動與選取，不把品牌色鋪滿背景。 */
   --color-surface: var(--qmah-surface);
   --color-ink: var(--qmah-ink);
   --color-primary: var(--qmah-jade);
   --color-error: var(--qmah-danger);
-  --qmah-paper: #e9f4f0;
-  --qmah-night: #102322;
-  --qmah-page-surface: #102322;
-  --qmah-surface: #18322f;
-  --qmah-surface-soft: #21413c;
-  --qmah-surface-muted: #2a4a45;
-  --qmah-ink: #e4f2ee;
-  --qmah-muted: #a9c1bc;
-  --qmah-jade: #7bc9be;
-  --qmah-jade-deep: #99ded3;
-  --qmah-jade-bright: #7faba3;
-  --qmah-jade-soft: #2d514b;
-  --qmah-slate: #a7c8c1;
-  --qmah-cinnabar: #d78578;
-  --qmah-bronze: #d4b774;
+  --qmah-paper: #f3efe6;
+  --qmah-night: #121a1e;
+  --qmah-page-surface: #1a2429;
+  --qmah-surface: #222e33;
+  --qmah-surface-soft: #2b383d;
+  --qmah-surface-muted: #35434a;
+  --qmah-surface-elevated: #2d3a40;
+  --qmah-ink: #f1ede5;
+  --qmah-muted: #b8c1bd;
+  --qmah-jade: #79c5b5;
+  --qmah-jade-deep: #8fd4c4;
+  --qmah-jade-bright: #94c7bd;
+  --qmah-jade-soft: #31504c;
+  --qmah-azurite: #91becd;
+  --qmah-azurite-soft: #30464f;
+  --qmah-slate: #b0bfbb;
+  --qmah-navy: #adb9de;
+  --qmah-navy-soft: #3c435e;
+  --qmah-terracotta: #e0a08d;
+  --qmah-terracotta-action: #e0a08d;
+  --qmah-terracotta-soft: #513833;
+  --qmah-cinnabar: #d99082;
+  --qmah-bronze: #ddc184;
+  --qmah-honey-action: #dcbc75;
+  --qmah-honey-soft: #50452a;
   --qmah-secondary: var(--qmah-jade-bright);
   --qmah-secondary-content: var(--qmah-night);
-  --qmah-accent: var(--qmah-bronze);
+  --qmah-accent: var(--qmah-honey-action);
   --qmah-accent-content: var(--qmah-night);
   --qmah-danger: var(--qmah-cinnabar);
   --qmah-danger-content: var(--qmah-night);
   --qmah-line: color-mix(in srgb, var(--qmah-ink) 16%, transparent);
   --qmah-on-dark: var(--qmah-paper);
-}
 
-:root:has(.theme-controller[value='qmahdark']:checked) .app-brand img {
-  filter: brightness(0) invert(1);
-}
+  /* ui-integration: dark mode keeps the Area identities but remaps them for dark surfaces instead of inverting light values. */
+  --qmah-user-accent: var(--qmah-jade);
+  --qmah-user-action: var(--qmah-jade);
+  --qmah-user-soft: var(--qmah-jade-soft);
+  --qmah-user-content: var(--qmah-night);
+  --qmah-catalog-accent: var(--qmah-azurite);
+  --qmah-catalog-action: var(--qmah-azurite);
+  --qmah-catalog-soft: var(--qmah-azurite-soft);
+  --qmah-catalog-content: var(--qmah-night);
+  --qmah-game-accent: #7ea8b7;
+  --qmah-game-action: #3e5967;
+  --qmah-game-soft: #2d414b;
+  --qmah-game-content: var(--qmah-paper);
+  --qmah-social-accent: var(--qmah-terracotta);
+  --qmah-social-action: var(--qmah-terracotta-action);
+  --qmah-social-soft: var(--qmah-terracotta-soft);
+  --qmah-social-content: var(--qmah-night);
+  --qmah-store-accent: var(--qmah-bronze);
+  --qmah-store-action: var(--qmah-honey-action);
+  --qmah-store-soft: var(--qmah-honey-soft);
+  --qmah-store-content: var(--qmah-night);
 
-:root:has(.theme-controller[value='qmahdark']:checked) .store-app .brand-logo-img {
-  filter: brightness(0) invert(1);
+  /* ui-integration: semantic aliases must be remapped at the same scope as dark primitives; otherwise they retain light computed values. */
+  --qmah-primary: var(--qmah-jade-deep);
+  --qmah-primary-hover: var(--qmah-jade);
+  --qmah-primary-content: var(--qmah-night);
+  --qmah-focus: var(--qmah-bronze);
+  --qmah-text-muted: var(--qmah-muted);
+  --qmah-text-subtle: var(--qmah-slate);
+  --qmah-border: var(--qmah-line);
 }
 
 button,
@@ -143,6 +245,11 @@ input,
 select,
 textarea {
   touch-action: manipulation;
+}
+
+/* 高頻操作維持 44px 觸控基線；文字連結不強行變成大方塊，避免閱讀頁的行距被破壞。 */
+:where(button, summary, input:not([type='checkbox']):not([type='radio']):not([type='hidden']), select, textarea) {
+  min-height: var(--qmah-control-height);
 }
 
 /* ui-integration: Admin 已使用 DaisyUI 語意 class；這層只補 QMAH 的尺寸、surface 與對比基線，不改管理頁資料表結構。 */
@@ -275,18 +382,19 @@ textarea {
   prefersdark: false;
   color-scheme: dark;
 
-  --color-base-100: oklch(23% 0.02 180);
-  --color-base-200: oklch(19% 0.02 180);
-  --color-base-300: oklch(15% 0.02 180);
-  --color-base-content: oklch(92% 0.015 170);
-  --color-primary: oklch(76% 0.10 173);
-  --color-primary-content: oklch(18% 0.03 180);
-  --color-secondary: oklch(71% 0.06 170);
-  --color-secondary-content: oklch(18% 0.03 180);
-  --color-accent: oklch(78% 0.10 100);
-  --color-accent-content: oklch(20% 0.03 100);
-  --color-neutral: oklch(26% 0.03 180);
-  --color-neutral-content: oklch(92% 0.015 170);
+  /* ui-integration: DaisyUI dark base follows the same neutral blue-charcoal layer ramp as QMAH tokens. */
+  --color-base-100: oklch(24% 0.018 220);
+  --color-base-200: oklch(20% 0.018 220);
+  --color-base-300: oklch(16% 0.016 220);
+  --color-base-content: oklch(93% 0.014 92);
+  --color-primary: oklch(76% 0.09 173);
+  --color-primary-content: oklch(24% 0.018 220);
+  --color-secondary: oklch(72% 0.055 170);
+  --color-secondary-content: oklch(24% 0.018 220);
+  --color-accent: oklch(78% 0.10 90);
+  --color-accent-content: oklch(24% 0.025 90);
+  --color-neutral: oklch(28% 0.02 220);
+  --color-neutral-content: oklch(93% 0.014 92);
   --color-info: oklch(75% 0.14 220);
   --color-info-content: oklch(16% 0.02 220);
   --color-success: oklch(70% 0.16 145);

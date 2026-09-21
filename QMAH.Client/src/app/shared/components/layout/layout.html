@@ -1,4 +1,4 @@
-<div class="app-shell">
+<div class="app-shell" [attr.data-area]="activeArea()">
   <a class="app-skip-link" href="#main-content">跳至主要內容</a>
 
   <header class="app-header">
@@ -16,11 +16,7 @@
       </button>
 
       <a class="app-brand" routerLink="/home" aria-label="回到清明鑑定屋首頁" (click)="closeMenu()">
-        <img src="/assets/brand/qmah-logo.svg" alt="清明鑑定屋" />
-        <span class="app-brand__copy">
-          <strong>清明鑑定屋</strong>
-          <small>文物探索與互動學習</small>
-        </span>
+        <img [src]="logoSrc()" alt="清明鑑定屋" />
       </a>
 
       <div class="app-header__navigation">
@@ -48,7 +44,17 @@
       <div class="app-header__actions">
         @if (meApi.me(); as me) {
           <a class="app-account" routerLink="/member" aria-label="前往會員中心" (click)="closeMenu()">
-            <span class="app-account__avatar" aria-hidden="true">{{ (me.displayName || me.email).charAt(0).toUpperCase() }}</span>
+            @if (me.avatarPath && me.avatarPath !== failedAvatarPath()) {
+              <img
+                class="app-account__avatar app-account__avatar--image"
+                [src]="me.avatarPath"
+                [alt]="(me.displayName || me.email) + ' 的頭貼'"
+                loading="lazy"
+                (error)="onAvatarError(me.avatarPath)"
+              />
+            } @else {
+              <span class="app-account__avatar" aria-hidden="true">{{ (me.displayName || me.email).charAt(0).toUpperCase() }}</span>
+            }
             <span class="app-account__copy">
               <strong>{{ me.displayName || me.email }}</strong>
               <small>會員中心</small>

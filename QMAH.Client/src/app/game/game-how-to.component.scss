@@ -4,6 +4,8 @@
   --how-to-cinnabar: var(--qmah-cinnabar);
   --how-to-paper: var(--qmah-surface);
   --how-to-line: var(--qmah-line);
+  --how-to-action: var(--qmah-game-action);
+  --how-to-action-content: var(--qmah-game-content);
   display: block;
 }
 
@@ -97,7 +99,7 @@ summary:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: -3
 
 .game-how-to__body ol {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--qmah-space-2);
   margin: var(--qmah-space-4) 0 0;
   padding: 0;
@@ -105,16 +107,26 @@ summary:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: -3
 }
 
 .game-how-to__body li {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 10px;
   min-width: 0;
   padding: 13px;
-  background: color-mix(in srgb, var(--how-to-paper) 70%, var(--qmah-page-surface));
+  border: 1px solid var(--how-to-line);
+  background: color-mix(in srgb, var(--how-to-paper) 72%, var(--qmah-page-surface));
 }
 
-.game-how-to__body li > span {
-  color: var(--how-to-cinnabar);
+.game-how-to__body li:not(:nth-child(3n))::after { content: ""; position: absolute; top: 27px; right: -9px; width: 16px; height: 1px; background: var(--how-to-line); }
+
+.game-how-to__step-marker {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--qmah-radius-pill);
+  color: var(--how-to-action-content);
+  background: var(--how-to-action);
   font: 800 var(--qmah-type-meta-size)/var(--qmah-type-meta-leading) "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
@@ -125,6 +137,8 @@ summary:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: -3
 
 @media (max-width: 760px) {
   .game-how-to__body ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .game-how-to__body li:not(:nth-child(3n))::after { display: none; }
+  .game-how-to__body li:nth-child(2n + 1)::after { display: block; }
 }
 
 @media (max-width: 430px) {
@@ -132,6 +146,7 @@ summary:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: -3
   .game-how-to__heading strong { font-size: 16px; }
   .game-how-to__body { padding: 13px; }
   .game-how-to__body ol { grid-template-columns: 1fr; }
+  .game-how-to__body li::after { display: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

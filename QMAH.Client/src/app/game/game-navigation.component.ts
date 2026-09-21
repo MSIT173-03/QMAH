@@ -12,9 +12,9 @@ export class GameNavigationComponent {
   private readonly router = inject(Router);
 
   protected readonly links = [
-    { label: '多人鑑定', description: '和朋友一起玩', path: '/game', activePrefixes: ['/game/demo', '/game/test', '/game/rooms', '/game/room'] },
-    { label: '單人小遊戲', description: '一個人完成短局', path: '/game/training', activePrefixes: ['/game/training', '/game/minigames'] },
-    { label: '玩法說明', description: '先看懂流程', path: '/game/how-to', activePrefixes: ['/game/how-to'] }
+    { label: '多人鑑定', description: '房間大廳', path: '/game', activePrefixes: ['/game/demo', '/game/test', '/game/rooms', '/game/room'] },
+    { label: '單人小遊戲', description: '單人挑戰', path: '/game/training', activePrefixes: ['/game/training', '/game/minigames'] },
+    { label: '玩法說明', description: '完整流程', path: '/game/how-to', activePrefixes: ['/game/how-to'] }
   ] as const;
 
   protected isActive(link: (typeof this.links)[number]): boolean {

@@ -1,4 +1,5 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { ThemeService } from '../../../core/services/theme';
 import { StoreLink } from '../../shared/store-link';
 import { HOME_PATH } from '../../shared/paths';
 
@@ -21,6 +22,9 @@ export class SiteHeader {
   /** 品牌識別與首頁入口全站一致，不需由各頁面傳入 */
   protected readonly homeHref = HOME_PATH;
   // ui-integration: 使用 Angular public asset 的相對根路徑，避免部署後品牌 Logo 依賴 GitHub raw 網址或開發網路。
-  protected readonly logoSrc = '/images/brand/qmah-logo.svg';
+  private readonly themeService = inject(ThemeService);
+  protected readonly logoSrc = computed(() => this.themeService.theme() === 'qmahdark'
+    ? '/images/brand/qmah-logo-dark.svg'
+    : '/images/brand/qmah-logo.svg');
   protected readonly logoAlt = '清明鑑定屋';
 }

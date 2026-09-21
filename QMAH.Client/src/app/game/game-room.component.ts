@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -88,6 +88,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   lobbyActionBusy = false;
   leaving = false;
   showLeaveConfirm = false;
+  @ViewChild('leaveDialog') private leaveDialog?: ElementRef<HTMLElement>;
+  private leaveDialogTrigger: HTMLElement | null = null;
   rewarding = false;
   reward: MainGameReward | null = null;
   artifactImageUnavailable = false;
@@ -298,10 +300,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   requestLeaveRoom(): void {
     if (!this.room || this.leaving) return;
+    this.leaveDialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.showLeaveConfirm = true;
+    setTimeout(() => this.leaveDialog?.nativeElement.querySelector<HTMLElement>('button:not([disabled])')?.focus(), 0);
   }
 
-  cancelLeaveRoom(): void { this.showLeaveConfirm = false; }
+  cancelLeaveRoom(): void {
+    this.showLeaveConfirm = false;
+    this.restoreLeaveDialogTrigger();
+  }
 
   leaveRoom(): void {
     if (!this.room || this.leaving) return;
@@ -321,9 +328,16 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       next: () => void this.router.navigate(['/game']),
       error: (error: unknown) => {
         this.actionError = this.game.errorMessage(error);
+        this.restoreLeaveDialogTrigger();
         this.changeDetector.markForCheck();
       }
     });
+  }
+
+  private restoreLeaveDialogTrigger(): void {
+    const trigger = this.leaveDialogTrigger;
+    this.leaveDialogTrigger = null;
+    setTimeout(() => trigger?.focus(), 0);
   }
 
   @HostListener('document:keydown.escape')

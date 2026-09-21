@@ -254,7 +254,7 @@ public sealed class MeController(
                 post.PostType,
                 post.PublisherType,
                 post.Title,
-                post.Content.Length > 180 ? post.Content.Substring(0, 180) : post.Content,
+                post.Content.Length > 180 ? post.Content.Substring(0, 180) + "…" : post.Content,
                 post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
                 post.MediaAssets.Count(media => media.Status == "ACTIVE"),
                 post.MediaAssets

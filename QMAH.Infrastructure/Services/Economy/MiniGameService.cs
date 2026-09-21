@@ -17,6 +17,10 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// </remarks>
 public sealed class MiniGameService(QmahDbContext db, EconomyService economyService)
 {
+    private const int PuzzlePieceCount = 25;
+    private const int RestorePieceCount = 15;
+    private const int StandardMemoryPairCount = 8;
+
     /// <summary>取得所有啟用中的 Mini Game 模式及其評分門檻。</summary>
     public async Task<IReadOnlyList<MiniGameModeView>> GetModesAsync(
         CancellationToken cancellationToken = default)
@@ -55,7 +59,11 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         if (artifacts.Count == 0)
             return EconomyResult<MiniGameStartView>.Conflict("目前沒有可供 Mini Game 使用的啟用文物。");
 
-        var poolSize = Math.Clamp(ReadConfigInt(mode.ConfigJson, "poolSize") ?? 1, 1, artifacts.Count);
+        var configuredPoolSize = ReadConfigInt(mode.ConfigJson, "poolSize") ?? 1;
+        var minimumPoolSize = string.Equals(mode.Code, "MEMORY_MATCH", StringComparison.OrdinalIgnoreCase)
+            ? StandardMemoryPairCount
+            : 1;
+        var poolSize = Math.Clamp(Math.Max(configuredPoolSize, minimumPoolSize), 1, artifacts.Count);
         var pool = artifacts
             .OrderBy(_ => Random.Shared.Next())
             .Take(poolSize)
@@ -491,8 +499,8 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             {
                 "DETAIL_LOCATOR" => CalculateLocatorScore(result, artifactPool, artifactId, out error),
                 "MEMORY_MATCH" => CalculateMemoryScore(result, artifactPool.Count, out error),
-                "ARTIFACT_PUZZLE" => CalculateOrderScore(result, "puzzleOrder", out error),
-                "STRIP_RESTORE" => CalculateOrderScore(result, "restoreOrder", out error),
+                "ARTIFACT_PUZZLE" => CalculateOrderScore(result, "puzzleOrder", PuzzlePieceCount, out error),
+                "STRIP_RESTORE" => CalculateOrderScore(result, "restoreOrder", RestorePieceCount, out error),
                 _ => InvalidScore("目前沒有這個 Mini Game 模式的結果驗證規則。", out error)
             };
             if (calculatedScore < 0)
@@ -531,7 +539,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         out string? error)
     {
         error = null;
-        var expectedPairs = Math.Min(artifactPoolCount, 4);
+        var expectedPairs = Math.Min(artifactPoolCount, StandardMemoryPairCount);
         if (!TryGetInt(result, "memoryPairs", out var submittedPairs)
             || submittedPairs != expectedPairs
             || !TryGetInt(result, "memoryMatched", out var matched)
@@ -543,18 +551,18 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         return (int)Math.Round(matched * 100d / expectedPairs, MidpointRounding.AwayFromZero);
     }
 
-    private static int CalculateOrderScore(JsonElement result, string propertyName, out string? error)
+    private static int CalculateOrderScore(JsonElement result, string propertyName, int expectedCount, out string? error)
     {
         error = null;
         if (!TryGetIntArray(result, propertyName, out var order)
-            || order.Length != 4
-            || order.Distinct().Count() != 4
-            || order.Any(piece => piece is < 0 or > 3))
+            || order.Length != expectedCount
+            || order.Distinct().Count() != expectedCount
+            || order.Any(piece => piece is < 0 || piece >= expectedCount))
         {
-            return InvalidScore($"{propertyName} 必須是 0 到 3 的完整排列。", out error);
+            return InvalidScore($"{propertyName} 必須是 0 到 {expectedCount - 1} 的完整排列。", out error);
         }
         var correctPieces = order.Select((piece, index) => piece == index).Count(isCorrect => isCorrect);
-        return (int)Math.Round(correctPieces * 100d / 4d, MidpointRounding.AwayFromZero);
+        return (int)Math.Round(correctPieces * 100d / expectedCount, MidpointRounding.AwayFromZero);
     }
 
     private static int InvalidScore(string message, out string? error)

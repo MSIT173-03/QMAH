@@ -75,23 +75,24 @@ export class Login implements OnInit, OnDestroy {
   ];
 
   readonly collectionUrl = 'https://digitalarchive.npm.gov.tw/Collection/Detail/3782?dep=P';
-  readonly highResolutionSourceUrl =
-    'https://commons.wikimedia.org/wiki/File:Along_the_River_During_the_Qingming_Festival_(Qing_Court_Version).jpg';
-
   readonly activeSegmentIndex = signal(0);
   readonly carouselPaused = signal(false);
   readonly carouselSpeedOptions = [0.75, 1, 1.25, 1.5, 2] as const;
   readonly carouselSpeed = signal<number>(1);
+  readonly magnifierEnabled = signal(true);
   readonly panKey = signal(0);
   readonly loginPanelOpen = signal(true);
   readonly loginPanelTransitioning = signal(false);
   readonly themeTransitioning = signal(false);
   readonly themeDirection = signal<'to-dark' | 'to-light'>('to-dark');
   readonly theme = this.themeService.theme;
+  readonly logoSrc = computed(() => this.theme() === 'qmahdark'
+    ? '/images/brand/qmah-logo-dark.svg'
+    : '/images/brand/qmah-logo.svg');
   readonly activeSegment = computed(
     () => this.qingmingSegments[this.activeSegmentIndex()] ?? this.qingmingSegments[0],
   );
-  readonly carouselDurationMs = computed(() => Math.round(16000 / this.carouselSpeed()));
+  readonly carouselDurationMs = computed(() => Math.round(12000 / this.carouselSpeed()));
   readonly carouselDurationCss = computed(() => `${this.carouselDurationMs()}ms`);
 
   private carouselTimer: ReturnType<typeof setInterval> | null = null;
@@ -168,6 +169,10 @@ export class Login implements OnInit, OnDestroy {
     }
 
     if (!this.carouselPausedBeforeLensDrag) this.carouselPaused.set(false);
+  }
+
+  toggleMagnifier(): void {
+    this.magnifierEnabled.update((enabled) => !enabled);
   }
 
   toggleLoginPanel(): void {

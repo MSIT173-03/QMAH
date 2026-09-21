@@ -1,9 +1,10 @@
 :host {
   --ink: var(--qmah-ink);
-  --jade: var(--qmah-jade);
+  /* ui-integration: Game 使用 Navy Peony 作為判斷／回合語意色；共用 success、warning、error 不跟著變色。 */
+  --jade: var(--qmah-game-accent);
   --slate: var(--qmah-slate);
   --cinnabar: var(--qmah-cinnabar);
-  --porcelain: var(--qmah-surface-soft);
+  --porcelain: var(--qmah-game-soft);
   --surface: var(--qmah-surface);
   --line: var(--qmah-line);
   --muted: var(--qmah-muted);
@@ -44,9 +45,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .lobby-hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(300px, .78fr) minmax(460px, 1.22fr);
+  grid-template-columns: minmax(300px, .82fr) minmax(420px, 1.18fr);
   /* ui-integration: 限制 Hero 高度，避免圖片原始比例把房間清單推到首屏之外。 */
-  height: clamp(366px, 42vw, 520px);
+  height: clamp(250px, 28vw, 340px);
   min-height: 0;
   overflow: hidden;
   color: var(--ink);
@@ -58,7 +59,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  padding: 44px clamp(28px, 4vw, 56px);
+  padding: 30px clamp(28px, 4vw, 52px);
 }
 
 .lobby-hero-kicker { margin: 0 0 16px; color: var(--cinnabar); font-size: var(--qmah-type-meta-size); font-weight: 800; letter-spacing: .12em; line-height: var(--qmah-type-meta-leading); }
@@ -67,7 +68,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   margin: 0;
   color: var(--ink);
   font-family: var(--qmah-font-serif);
-  font-size: clamp(38px, 4.2vw, 60px);
+  font-size: clamp(34px, 4vw, 50px);
   font-weight: 700;
   letter-spacing: -.04em;
   line-height: 1.05;
@@ -75,18 +76,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .lobby-hero-copy p {
   max-width: 34ch;
-  margin: 20px 0 26px;
+  margin: 13px 0 20px;
   color: var(--muted);
   font-size: var(--qmah-type-body-size);
 }
 
 .hero-create {
   min-height: var(--qmah-control-height);
-  border: 1px solid var(--qmah-primary);
+  border: 1px solid var(--qmah-game-action);
   border-radius: var(--qmah-radius-control);
   padding: 11px var(--qmah-button-padding-x);
-  color: var(--qmah-primary-content);
-  background: var(--qmah-primary);
+  color: var(--qmah-game-content);
+  background: var(--qmah-game-action);
   font-weight: 700;
 }
 
@@ -133,7 +134,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .notes-page { position: fixed; z-index: 71; top: 50%; left: 50%; width: min(720px, calc(100vw - 40px)); max-height: calc(100dvh - 48px); overflow: auto; transform: translate(-50%, -50%); padding: 34px 36px 30px; border-radius: var(--qmah-radius-panel); color: var(--qmah-on-dark); background: var(--jade); border: 1px solid color-mix(in srgb, var(--qmah-on-dark) 42%, transparent); box-shadow: var(--qmah-shadow-dialog); animation: reveal-dialog 180ms ease-out both; }
 .room-detail-backdrop { position: fixed; z-index: 70; inset: 0; background: color-mix(in srgb, var(--qmah-night) 62%, transparent); }
 .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 30px; }
-.page-heading h2, .room-notes-heading h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: clamp(30px, 3vw, 44px); font-weight: 700; letter-spacing: -.035em; line-height: 1.1; }
+.page-heading h2, .room-notes-heading h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: clamp(28px, 3vw, 38px); font-weight: 700; letter-spacing: -.035em; line-height: 1.1; }
 .page-heading p { margin: 9px 0 0; color: var(--muted); font-size: var(--qmah-type-body-sm-size); }
 .join-note button, .insert-sheet footer button { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-primary); border-radius: var(--qmah-radius-control); padding: 10px var(--qmah-control-padding-x); color: var(--qmah-primary-content); background: var(--qmah-primary); font-weight: 800; transition: background 180ms ease, transform 180ms ease; }
 .join-note button:hover, .insert-sheet footer button:hover { background: var(--qmah-primary-hover); border-color: var(--qmah-primary-hover); transform: translateY(-2px); }
@@ -164,10 +165,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .room-ledger-head, .room-row { display: grid; grid-template-columns: minmax(145px, 1.15fr) minmax(180px, 1.25fr) minmax(116px, .8fr) minmax(72px, .6fr) 74px; align-items: center; gap: clamp(12px, 2vw, 24px); }
 .room-ledger-head { padding: 14px 6px 8px; color: var(--muted); font-size: var(--qmah-type-meta-size); font-weight: 800; letter-spacing: .08em; line-height: var(--qmah-type-meta-leading); }
 .room-ledger-head span:last-child { text-align: right; }
-.ledger { min-height: 0; overflow: auto; scrollbar-color: var(--slate) transparent; scrollbar-width: thin; }
-.room-row { width: 100%; min-height: 70px; border: 0; padding: 12px 6px; color: var(--ink); background: transparent; text-align: left; transition: background-color 160ms ease, color 160ms ease; }
+.ledger { display: grid; gap: 8px; min-height: 0; overflow: auto; scrollbar-color: var(--slate) transparent; scrollbar-width: thin; }
+.ledger > div[role='listitem'] { overflow: hidden; border: 1px solid var(--line); border-radius: var(--qmah-radius-card); background: var(--qmah-surface-elevated); box-shadow: var(--qmah-shadow-card); }
+.room-row { width: 100%; min-height: 70px; border: 0; padding: 13px 15px; color: var(--ink); background: transparent; text-align: left; transition: background-color 160ms ease, color 160ms ease; }
 .room-row:hover { background: var(--qmah-surface-muted); }
 .room-row.is-selected { background: color-mix(in srgb, var(--qmah-jade-soft) 88%, var(--qmah-jade)); }
+.room-row:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: -3px; }
 .room-row.is-selected .room-code strong { color: var(--cinnabar); }
 .room-code { display: grid; gap: 3px; min-width: 0; }
 .room-code strong { overflow: hidden; font: 800 15px/var(--qmah-type-meta-leading) "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .04em; text-overflow: ellipsis; }
@@ -183,11 +186,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .row-arrow { width: 17px; height: 17px; color: var(--cinnabar); }
 .ledger-skeleton { display: grid; grid-template-columns: 1.1fr .9fr .9fr; gap: 24px; padding: 21px 6px; }
 .ledger-skeleton i, .notes-skeleton i { display: block; height: 10px; border-radius: var(--qmah-radius-control); background: color-mix(in srgb, var(--qmah-text-subtle) 18%, transparent); }
-.empty-state { padding: 82px 10px; }
+.empty-state { padding: 34px 10px 22px; }
 .empty-state h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: 27px; }
 .empty-state p { color: var(--muted); }
-.empty-state button { min-height: var(--qmah-control-height); margin-right: 8px; border: 1px solid var(--qmah-primary); border-radius: var(--qmah-radius-control); padding: 8px var(--qmah-control-padding-x); color: var(--qmah-primary); background: transparent; }
-.empty-state button + button { color: var(--qmah-on-dark); background: var(--ink); }
+.empty-state__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.empty-state button { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); padding: 8px var(--qmah-control-padding-x); color: var(--qmah-game-action); background: var(--surface); }
+.empty-state button:hover { color: var(--qmah-game-content); background: var(--qmah-game-action); }
+.empty-state button.empty-state__primary { color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 800; }
+.empty-state button.empty-state__primary:hover { background: color-mix(in srgb, var(--qmah-game-action) 82%, var(--ink)); }
 .folio-pagination { display: flex; justify-content: center; gap: 4px; padding: 22px 0; }
 .folio-pagination button { min-width: var(--qmah-control-height); min-height: var(--qmah-control-height); border: 0; border-bottom: 2px solid transparent; padding: 4px; color: var(--muted); background: transparent; }
 .folio-pagination app-qmah-icon { width: 17px; height: 17px; }
@@ -241,17 +247,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width: 900px) {
   .game-notebook { padding: 16px 18px 48px; }
   .lobby-hero { grid-template-columns: 1fr .86fr; }
-  .lobby-hero-copy { padding: 38px 32px; }
+  .lobby-hero-copy { padding: 30px 32px; }
 }
 
 @media (max-width: 600px) {
   .game-notebook { padding: 10px 10px 36px; }
   .lobby-hero { display: block; height: auto; min-height: 0; }
-  .lobby-hero-copy { min-height: 274px; padding: 30px 24px 28px; }
+  .lobby-hero-copy { min-height: 192px; padding: 24px 20px 22px; }
   .lobby-hero-kicker { margin-bottom: 12px; }
-  .lobby-hero h1 { font-size: clamp(38px, 11vw, 52px); }
-  .lobby-hero-copy p:not(.lobby-hero-kicker) { margin: 16px 0 22px; font-size: 15px; }
-  .lobby-artwork { height: 230px; min-height: 230px; }
+  .lobby-hero h1 { font-size: clamp(34px, 10vw, 46px); }
+  .lobby-hero-copy p:not(.lobby-hero-kicker) { margin: 10px 0 16px; font-size: 14px; }
+  .lobby-artwork { height: 170px; min-height: 170px; }
   .lobby-hero-collapsed { min-height: 68px; padding: 10px 12px; }
   .lobby-hero-collapsed strong { font-size: 16px; }
   .lobby-hero-collapsed .hero-collapse { min-height: var(--qmah-control-height); padding-inline: 9px; }
@@ -259,7 +265,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .hero-actions .hero-create, .hero-actions .hero-collapse { min-height: var(--qmah-control-height); }
   .index-page { padding: 30px 20px; }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
-  .page-heading h2 { font-size: 32px; }
+  .page-heading h2 { font-size: 30px; }
   .lookup-bar { align-items: flex-start; flex-direction: column; gap: 10px; }
   .lookup-controls, .refresh-actions { justify-content: space-between; width: 100%; }
   .refresh-actions { min-height: var(--qmah-control-height); }
@@ -273,6 +279,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .row-action, .row-selection-state { grid-column: 2; grid-row: 1; justify-self: end; }
   .status-tabs button { padding-right: 8px; padding-left: 8px; font-size: 12px; }
   .status-tabs span { display: none; }
+  .empty-state { padding: 30px 10px 12px; }
   .notes-page { width: min(100% - 20px, 620px); max-height: calc(100dvh - 20px); padding: 26px 22px 24px; }
   .room-code-heading { flex-direction: column; gap: 12px; }
   .room-share-actions { justify-content: flex-start; }
