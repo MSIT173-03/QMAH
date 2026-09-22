@@ -34,6 +34,16 @@ export interface Category {
   productCount: number;
 }
 
+/** 年代（取自商品對應文物的年代分類） */
+export interface Era {
+  id: string;
+  /** 年代代碼，即商品清單查詢的 eraCode 參數 */
+  code: string;
+  name: string;
+  /** 此年代的商品件數 */
+  productCount: number;
+}
+
 /** 商城直接引用的官方優惠活動公告；內容與社群公告相同，不另造商城文案。 */
 export interface StorePromotion {
   id: string;
@@ -105,6 +115,8 @@ export type ProductOrder = 0 | 1 | 2 | 3 | 4 | 5;
 export interface ProductQuery extends PageQuery {
   /** 器類名稱 */
   cat?: string;
+  /** 年代代碼 */
+  era?: string;
   /** 關鍵字，比對商品名稱與外部編號（後端 Product.Name、ExternalRef） */
   q?: string;
   order?: ProductOrder;

@@ -4,6 +4,7 @@ import { Observable, catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { apiUrl, toParams } from './http';
 import {
   Category,
+  Era,
   Page,
   Product,
   ProductDetail,
@@ -44,6 +45,11 @@ export class CatalogApi {
     );
   }
 
+  /** GET /eras：年代清單（依年代先後排序），失敗時與器類清單一樣降級為空清單 */
+  getEras(): Observable<Era[]> {
+    return this.http.get<Era[]>(apiUrl('/eras')).pipe(catchError(() => of([])));
+  }
+
   /** GET /promotions：商城與社群共用的官方優惠活動公告，顯示於頂部公告列。 */
   getPromotions(): Observable<StorePromotion[]> {
     return this.http.get<ApiStorePromotion[]>(apiUrl('/promotions')).pipe(
@@ -62,6 +68,7 @@ export class CatalogApi {
     const params = toParams({
       q: query.q,
       categoryCode: query.cat ? toCategoryCode(query.cat) : undefined,
+      eraCode: query.era,
       order: query.order,
       minPrice: query.priceMin,
       maxPrice: query.priceMax,
