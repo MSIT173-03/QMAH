@@ -57,12 +57,16 @@ export class ProductReviews {
   /** 評論數顯示字串（千分位） */
   protected getReviewCount = computed(() => `${formatNumber(this.reviewCount())} 則評論`);
 
-  /** 篩選按鈕選項，括號內為各條件的則數，選取狀態由 filterIndex 推導 */
+  /** 篩選按鈕選項，括號內為各條件的則數；選取狀態由 filterIndex 推導，該條件則數為 0 時停用按鈕 */
   protected filterOptions = computed<PillOption[]>(() =>
-    REVIEW_FILTERS.map((filter, i) => ({
-      label: `${filter.label}（${this.filterCounts()[i] ?? 0}）`,
-      active: i === this.filterIndex(),
-    })),
+    REVIEW_FILTERS.map((filter, i) => {
+      const count = this.filterCounts()[i] ?? 0;
+      return {
+        label: `${filter.label}（${count}）`,
+        active: i === this.filterIndex(),
+        disabled: count === 0,
+      };
+    }),
   );
 
   /** 評價顯示資料 */

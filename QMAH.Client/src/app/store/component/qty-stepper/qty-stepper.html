@@ -5,6 +5,8 @@
     type="button"
     class="qty-btn"
     [class.qty-btn--sm]="size() === 'sm'"
+    [disabled]="value() < 2"
+    aria-label="減少數量"
     (click)="dec()"
   >−</button>
   <!-- 目前數量顯示 -->
@@ -14,6 +16,7 @@
     type="button"
     class="qty-btn"
     [class.qty-btn--sm]="size() === 'sm'"
+    aria-label="增加數量"
     (click)="inc()"
   >＋</button>
 </div>

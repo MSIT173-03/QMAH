@@ -35,8 +35,8 @@
   </div>
 
   <div class="cart-line-aside">
-    <!-- 數量增減器：可減至 0，觸發移除 -->
-    <app-qty-stepper [value]="qty()" [min]="0" size="sm" (valueChange)="qtyChange.emit($event)" />
+    <!-- 數量增減器：最少 1 件，移除商品改用右側移除按鈕 -->
+    <app-qty-stepper [value]="qty()" size="sm" (valueChange)="qtyChange.emit($event)" />
     <!-- 此行小計 -->
     <span class="cart-line-total">共 {{ lineTotalText() }}</span>
     <!-- 移除按鈕 -->

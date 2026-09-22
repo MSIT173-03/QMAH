@@ -19,9 +19,14 @@
   color: var(--color-ink);
   transition: background 160ms, color 160ms;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--color-accent);
     color: var(--color-on-accent);
+  }
+
+  &:disabled {
+    color: var(--color-faint);
+    cursor: not-allowed;
   }
 
   &--sm {

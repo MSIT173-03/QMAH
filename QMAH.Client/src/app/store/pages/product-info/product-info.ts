@@ -106,7 +106,7 @@ export class ProductInfo {
   protected readonly navLinks: HeaderNavLink[] = [
     { label: '全部分類', href: PRODUCT_LIST_PATH },
     { label: '特展聯名', href: `${PRODUCT_LIST_PATH}?view=exhibit` },
-    { label: '年代選藏', href: '/artifact-list' },
+    { label: '年代選藏', href: PRODUCT_LIST_PATH },
   ];
 
   /* ===============================

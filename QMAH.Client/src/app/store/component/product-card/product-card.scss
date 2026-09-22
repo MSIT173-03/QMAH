@@ -13,7 +13,7 @@
   transition: border-color 160ms;
 
   &:hover {
-    border-color: var(--color-ink);
+    border-color: var(--color-line-mid);
   }
 }
 
@@ -129,7 +129,7 @@
 
 .product-card-buy {
   width: 100%;
-  border: 1px solid var(--color-ink);
+  border: 1px solid var(--color-line-mid);
   background: var(--color-surface);
   color: var(--color-ink);
   border-radius: var(--qmah-radius-control);

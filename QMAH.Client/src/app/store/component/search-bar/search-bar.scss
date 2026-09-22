@@ -22,7 +22,7 @@
   align-items: center;
   gap: var(--qmah-space-2);
   background: var(--color-surface);
-  border: 1px solid var(--color-ink);
+  border: 1px solid var(--color-line-mid);
   border-radius: var(--qmah-radius-control);
   padding: 0 var(--qmah-space-2) 0 var(--qmah-space-3);
   min-height: var(--qmah-control-height);
@@ -91,7 +91,7 @@
   left: 0;
   right: 0;
   background: var(--color-surface);
-  border: 1px solid var(--color-ink);
+  border: 1px solid var(--color-line-mid);
   box-sizing: border-box;
   border-radius: var(--qmah-radius-control);
   box-shadow: var(--qmah-shadow-float);

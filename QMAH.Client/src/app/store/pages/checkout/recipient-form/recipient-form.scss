@@ -5,7 +5,7 @@
 /* 帶入個人資料按鈕：靠面板標題列最右側，帶入後轉為深色實心 */
 .fill-btn {
   margin-left: auto;
-  border: 1px solid var(--color-ink);
+  border: 1px solid var(--color-line-mid);
   border-radius: var(--qmah-radius-control);
   padding: var(--qmah-space-2) var(--qmah-button-padding-x);
   min-height: var(--qmah-control-height);
