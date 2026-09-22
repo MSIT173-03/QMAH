@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
@@ -67,6 +67,14 @@ export class ProductInfo {
 
   /** 商品 ID */
   id = input('');
+
+  constructor() {
+    // 進入商品頁時捲回頂端；從同類推薦切換商品時元件會被重用，因此以 id 變動觸發而非只在建立時執行。
+    effect(() => {
+      this.id();
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    });
+  }
 
   /* ===============================
      頁面狀態
