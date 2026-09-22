@@ -1,12 +1,9 @@
-<!-- ui-integration: 多人與單人共用同一個玩法說明骨架，讓玩家先理解流程再開始操作。 -->
-<details class="game-how-to" [attr.data-variant]="variant()" [open]="openByDefault()">
-  <summary>
-    <span class="game-how-to__heading">
-      <span class="game-how-to__eyebrow">{{ content().eyebrow }} · 玩法說明</span>
-      <strong>{{ content().title }}</strong>
-    </span>
-    <span class="game-how-to__toggle" aria-hidden="true"></span>
-  </summary>
+<!-- ui-integration: 專用玩法說明頁直接呈現完整流程，不再額外要求玩家展開一次。 -->
+<section class="game-how-to" [attr.data-variant]="variant()" aria-label="玩法說明">
+  <header class="game-how-to__heading">
+    <span class="game-how-to__eyebrow">{{ content().eyebrow }} · 玩法說明</span>
+    <strong>{{ content().title }}</strong>
+  </header>
   <div class="game-how-to__body">
     <p>{{ content().description }}</p>
     <ol aria-label="玩法流程">
@@ -18,4 +15,4 @@
       }
     </ol>
   </div>
-</details>
+</section>

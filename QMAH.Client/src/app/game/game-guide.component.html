@@ -20,7 +20,7 @@
   </nav>
 
   <section id="guide-panel" class="guide-panel" role="tabpanel" [attr.aria-labelledby]="'guide-tab-' + activeGuide()" aria-live="polite">
-    <app-game-how-to [variant]="activeGuide()" [openByDefault]="true" />
+    <app-game-how-to [variant]="activeGuide()" />
     @if (activeGuide() === 'multiplayer') {
       <a class="guide-panel-link" routerLink="/game">前往多人鑑定大廳</a>
     } @else {

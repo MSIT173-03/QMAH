@@ -50,6 +50,5 @@ const HOW_TO_CONTENT: Record<GameHowToVariant, HowToContent> = {
 })
 export class GameHowToComponent {
   readonly variant = input<GameHowToVariant>('multiplayer');
-  readonly openByDefault = input(false);
   readonly content = computed(() => HOW_TO_CONTENT[this.variant()]);
 }
