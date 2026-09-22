@@ -136,6 +136,9 @@
 .hero-dot {
   width: 26px;
   height: 3px;
+  /* 全站 :where(button, ...) 的 44px 觸控基線只設定 min-height；
+     min-height 一律蓋過較小的 height，這裡要明確覆寫，指示點才不會被撐高。 */
+  min-height: 3px;
   border: 0;
   padding: 0;
   background: var(--color-line-mid);

@@ -94,8 +94,8 @@ export class Home {
   /** 分類導覽列「新品上架」與各分類的連結網址 */
   protected readonly productsPath = PRODUCT_LIST_PATH;
   protected readonly newArrivalsPath = `${PRODUCT_LIST_PATH}?view=new`;
-  // ui-integration: 「年代選藏」導向既有圖鑑年代篩選，不建立不存在的商城品牌頁。
-  protected readonly eraCollectionPath = '/artifact-list';
+  /** 「年代選藏」進入商品列表，由左側篩選欄挑選年代 */
+  protected readonly eraCollectionPath = PRODUCT_LIST_PATH;
   protected categoryPath(name: string): string {
     return `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`;
   }

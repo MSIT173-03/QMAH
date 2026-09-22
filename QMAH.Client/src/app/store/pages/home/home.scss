@@ -70,16 +70,30 @@
   }
 }
 
-.two-col-section {
+.entry-section {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--qmah-space-3);
+  align-items: start;
+  gap: var(--qmah-space-6);
+
+  /* 其中一欄沒有資料時改為單欄，另一欄取得全部寬度。 */
+  &:has(> :empty) {
+    grid-template-columns: minmax(0, 1fr);
+
+    > :empty {
+      display: none;
+    }
+  }
+
+  &:has(> app-category-grid:empty):has(> app-brand-hall:empty) {
+    display: none;
+  }
 }
 
 /* ui-integration: 商城保留桌面雙欄構圖，但在手機先讓內容各自取得可讀寬度，避免商品名稱被壓成直排。 */
 @media (max-width: 720px) {
   .hero-section,
-  .two-col-section {
+  .entry-section {
     grid-template-columns: minmax(0, 1fr);
   }
 }

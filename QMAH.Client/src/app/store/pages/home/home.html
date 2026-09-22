@@ -41,17 +41,17 @@
     </div>
   </section>
 
-  <!-- 分類入口 -->
-  <app-category-grid />
+  <!-- 分類入口／年代選藏：雙欄並排 -->
+  <section class="entry-section">
+    <app-category-grid />
+    <app-brand-hall />
+  </section>
 
   <!-- 熱銷排行 -->
   <app-ranking-section (addToCart)="onAddToCart($event)" />
 
-  <!-- 新品上架／年代選藏：雙欄並排，保留原首頁資訊配置但改用實際可抵達的年代入口。 -->
-  <section class="two-col-section">
-    <app-new-arrivals (addToCart)="onAddToCart($event)" />
-    <app-brand-hall />
-  </section>
+  <!-- 新品上架 -->
+  <app-new-arrivals (addToCart)="onAddToCart($event)" />
 
   <!-- 為你推薦 -->
   <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)"

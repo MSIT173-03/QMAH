@@ -1,15 +1,3 @@
-<!-- 分類入口：各分類的圖示卡片與商品件數 -->
-<section class="section-block">
-  <app-section-head title="分類入口" tag="CATEGORIES" />
-  <div class="cat-grid">
-    @for (cat of categories(); track cat.name) {
-      <a [storeLink]="cat.link" class="cat-card" [class]="'cat-card cat-card--' + categoryTone(cat.name)">
-        <div class="cat-icon">
-          <app-qmah-icon [name]="categoryIcon(cat.name)" [size]="24" aria-hidden="true" />
-        </div>
-        <span class="text-sm">{{ cat.name }}</span>
-        <span class="cat-count">{{ cat.count }} 件</span>
-      </a>
-    }
-  </div>
-</section>
+@if (categories().length > 0) {
+  <app-entry-grid title="分類入口" tag="CATEGORIES" [items]="categories()" />
+}
