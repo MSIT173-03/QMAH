@@ -80,3 +80,5 @@ export const VIEW_DEFAULT_ORDER: Record<string, ProductOrder> = {
 
 /** 不限器類時的標示文字，同時用於分類清單第一項與未指定條件時的頁面標題 */
 export const ALL_PRODUCTS_LABEL = '全部商品';
+/** 年代篩選的「不限年代」項目文字 */
+export const ALL_ERAS_LABEL = '全部年代';

@@ -27,6 +27,7 @@ import { CART_PATH, HOME_PATH } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { ProductViewData, toProductView } from '../../shared/product-view';
 import {
+  ALL_ERAS_LABEL,
   ALL_PRODUCTS_LABEL,
   DISPLAY_MODES,
   DisplayModeKey,
@@ -97,6 +98,8 @@ export class ProductList {
   q = input('', { transform: orEmpty });
   /** 器類名稱 */
   cat = input('', { transform: orEmpty });
+  /** 年代代碼 */
+  era = input('', { transform: orEmpty });
   /** 主題入口（deal 限時特賣／new 新品上架／exhibit 特展聯名） */
   view = input('', { transform: orEmpty });
   /** 頁碼，從 1 開始；分頁切換時會同步寫回網址查詢字串 */
@@ -116,6 +119,8 @@ export class ProductList {
   protected keyword = linkedSignal(() => this.q());
   /** 目前選取的器類，空字串代表不限器類 */
   protected category = linkedSignal(() => this.cat());
+  /** 目前選取的年代代碼，空字串代表不限年代 */
+  protected eraCode = linkedSignal(() => this.era());
   /** 目前的主題入口，只影響頁面標題；清除篩選後歸零 */
   protected viewKey = linkedSignal(() => this.view());
   /** 目前的排序方式索引，預設值依主題入口而定（例如新品上架預設為最新上架） */
@@ -143,6 +148,8 @@ export class ProductList {
   protected readonly site = injectSiteData();
   /** 器類清單（含各器類商品件數） */
   private readonly categories = toSignal(this.catalogApi.getCategories(), { initialValue: [] });
+  /** 年代清單（含各年代商品件數） */
+  private readonly eras = toSignal(this.catalogApi.getEras(), { initialValue: [] });
   /** 價格區間選項文字 */
   protected readonly bandLabels = PRICE_BANDS.map((band) => band.label);
   /** 找不到商品時的空狀態文案 */
@@ -161,6 +168,7 @@ export class ProductList {
     const band = PRICE_BANDS[this.bandIndex()];
     return {
       cat: this.category() || undefined,
+      era: this.eraCode() || undefined,
       q: this.keyword().trim() || undefined,
       order: ORDER_OPTIONS[this.sortIndex()].order,
       priceMin: band.min,
@@ -211,10 +219,16 @@ export class ProductList {
   /** 總頁數，至少為 1 */
   protected totalPages = computed(() => Math.max(1, Math.ceil((this.result()?.total ?? 0) / this.pageSize())));
 
-  /** 頁面標題：優先顯示器類，其次為搜尋關鍵字，再其次為主題入口名稱 */
+  /** 目前選取年代的顯示名稱；年代清單尚未載入時暫用代碼 */
+  private eraName = computed(() => {
+    const code = this.eraCode();
+    return code ? (this.eras().find((era) => era.code === code)?.name ?? code) : '';
+  });
+
+  /** 頁面標題：優先顯示年代與器類，其次為搜尋關鍵字，再其次為主題入口名稱 */
   protected heading = computed(() => {
-    const category = this.category();
-    if (category) return category;
+    const filters = [this.eraName(), this.category()].filter(Boolean);
+    if (filters.length > 0) return filters.join('・');
 
     const keyword = this.keyword().trim();
     if (keyword) return `「${keyword}」搜尋結果`;
@@ -264,20 +278,42 @@ export class ProductList {
     ];
   });
 
+  /** 年代篩選項目，第一項為「全部年代」；件數取自年代清單 API，不受其他篩選條件影響 */
+  protected eraItems = computed<CategoryListItem[]>(() => {
+    const eras = this.eras();
+    if (eras.length === 0) return [];
+    const selected = this.eraCode();
+    return [
+      {
+        name: ALL_ERAS_LABEL,
+        count: eras.reduce((sum, item) => sum + item.productCount, 0),
+        active: selected === '',
+      },
+      ...eras.map((item) => ({ name: item.name, count: item.productCount, active: selected === item.code })),
+    ];
+  });
+
   /* ===============================
      使用者操作
      =============================== */
 
-  /** 送出搜尋：改以關鍵字為主，同時解除器類篩選，並回到第 1 頁 */
+  /** 送出搜尋：改以關鍵字為主，同時解除器類與年代篩選，並回到第 1 頁 */
   protected onSearch(keyword: string): void {
     this.keyword.set(keyword);
     this.category.set('');
+    this.eraCode.set('');
     this.setPage(1);
   }
 
   /** 切換器類篩選（索引 0 為「全部商品」），並回到第 1 頁 */
   protected onCategoryPick(index: number): void {
     this.category.set(index === 0 ? '' : this.categories()[index - 1].name);
+    this.setPage(1);
+  }
+
+  /** 切換年代篩選（索引 0 為「全部年代」），並回到第 1 頁 */
+  protected onEraPick(index: number): void {
+    this.eraCode.set(index === 0 ? '' : this.eras()[index - 1].code);
     this.setPage(1);
   }
 
@@ -313,6 +349,7 @@ export class ProductList {
   /** 清除所有篩選條件（排序方式保持不變），並回到第 1 頁 */
   protected onReset(): void {
     this.category.set('');
+    this.eraCode.set('');
     this.bandIndex.set(0);
     this.dealOnly.set(false);
     this.searchInput.set('');

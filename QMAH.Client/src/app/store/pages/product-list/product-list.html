@@ -28,10 +28,11 @@
 
   <div class="list-body">
 
-    <!-- 左側篩選側欄：器類、價格區間、折扣篩選 -->
-    <app-filter-sidebar [categories]="categoryItems()" [bands]="bandLabels" [activeBand]="bandIndex()"
-      [dealOnly]="dealOnly()" (categoryPick)="onCategoryPick($event)" (bandPick)="onBandPick($event)"
-      (dealToggle)="onDealToggle()" (reset)="onReset()" />
+    <!-- 左側篩選側欄：器類、年代、價格區間、折扣篩選 -->
+    <app-filter-sidebar [categories]="categoryItems()" [eras]="eraItems()" [bands]="bandLabels"
+      [activeBand]="bandIndex()" [dealOnly]="dealOnly()" (categoryPick)="onCategoryPick($event)"
+      (eraPick)="onEraPick($event)" (bandPick)="onBandPick($event)" (dealToggle)="onDealToggle()"
+      (reset)="onReset()" />
 
     <!-- 右側商品區：依顯示模式切換卡片格狀或橫列清單，無結果時顯示空狀態 -->
     <div class="section-block">
