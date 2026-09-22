@@ -102,6 +102,13 @@ public sealed record StoreCategoryDto(
     string Name,
     int ProductCount);
 
+/// <summary>商城年代入口資料；年代取自商品對應的文物，件數由目前啟用中的商品即時計算。</summary>
+public sealed record StoreEraDto(
+    Guid Id,
+    string Code,
+    string Name,
+    int ProductCount);
+
 // integration: 商城活動直接引用已發布的官方商城公告；不複製優惠券文案，也不讓前台解析自由文字。
 public sealed record StorePromotionDto(
     Guid Id,
