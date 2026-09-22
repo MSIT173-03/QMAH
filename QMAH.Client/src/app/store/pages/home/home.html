@@ -1,5 +1,6 @@
 <!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
-<app-top-bar [announcements]="site.announcements()" [isLoggedIn]="site.isLoggedIn()" [points]="site.points()" [coupons]="site.coupons()" />
+<app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
+  [coupons]="site.coupons()" />
 
 
 <app-site-header variant="hero">
@@ -16,20 +17,20 @@
   <!-- 分類導覽列 -->
   <div class="nav-bar">
     <div class="nav-bar-row">
-      <a href="#" class="nav-link-strong" (click)="onClickAllCategory()">全部分類</a>
-      <a href="#" (click)="onClickSpecial()">特展聯名</a>
-      <a href="#" (click)="onClickOnSell()">限時特賣</a>
-      <a href="#top-rated">評價排行</a>
+      <a [storeLink]="productsPath" class="nav-link-strong">全部分類</a>
+      <a [storeLink]="productsPath + '?view=exhibit'">特展聯名</a>
+      <a [storeLink]="productsPath + '?view=deal'">限時特賣</a>
+      <a [storeLink]="eraCollectionPath">年代選藏</a>
       <a [storeLink]="newArrivalsPath">新品上架</a>
       @for (name of categoryNames(); track name) {
       <a [storeLink]="categoryPath(name)">{{ name }}</a>
       }
-      <a href="#" class="nav-highlight">您好，歡迎光臨！</a>
+      <span class="nav-highlight">您好，歡迎光臨！</span>
     </div>
   </div>
 </app-site-header>
 
-<main class="container home-main">
+<div class="container home-main">
 
   <!-- 主視覺輪播與側欄（限時特賣倒數、迷你折價券） -->
   <section class="hero-section">
@@ -41,22 +42,21 @@
   </section>
 
   <!-- 分類入口 -->
-  <app-category-grid [counts]="categoryCounts()" [images]="categoryImages()" />
+  <app-category-grid />
 
   <!-- 熱銷排行 -->
-  <app-ranking-section [products]="hotProducts()" (addToCart)="onAddToCart($event)" />
+  <app-ranking-section (addToCart)="onAddToCart($event)" />
 
-  <!-- 新品上架／評價排行：雙欄並排 -->
+  <!-- 新品上架／年代選藏：雙欄並排，保留原首頁資訊配置但改用實際可抵達的年代入口。 -->
   <section class="two-col-section">
-    <app-compact-product-list title="新品上架" [tag]="newArrivalsTag()" [moreHref]="newArrivalsPath"
-      [products]="newProducts()" (addToCart)="onAddToCart($event)" />
-    <app-compact-product-list title="評價排行" tag="TOP RATED" [moreHref]="productListPath" anchorId="top-rated"
-      [products]="topRatedProducts()" (addToCart)="onAddToCart($event)" />
+    <app-new-arrivals (addToCart)="onAddToCart($event)" />
+    <app-brand-hall />
   </section>
 
   <!-- 為你推薦 -->
-  <app-recommendation-section [items]="recommendedItems()" (addToCart)="onAddToCart($event)" />
-</main>
+  <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)"
+    (requireMore)="onRequireMore()" />
+</div>
 
-<!-- 頁尾：完整版，含品牌介紹、連結欄位與版權列 -->
-<app-site-footer variant="full" [columns]="site.config()?.footerColumns ?? []" />
+<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
+<app-login-prompt [open]="cart.loginPrompt()" (confirm)="cart.confirmLogin()" (cancel)="cart.cancelLogin()" />

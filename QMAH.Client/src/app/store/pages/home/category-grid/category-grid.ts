@@ -1,36 +1,63 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { SectionHead } from '../../../component';
+import { CatalogApi } from '../../../api';
 import { PRODUCT_LIST_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
+import { QmahIconComponent } from '../../../../shared/components/qmah-icon/qmah-icon';
+import type { QmahIconName } from '../../../../shared/components/qmah-icon/qmah-icon';
 
 /** 首頁「分類入口」區塊：各分類的圖示卡片與商品件數 */
 @Component({
   selector: 'app-category-grid',
-  imports: [SectionHead, StoreLink],
+  imports: [SectionHead, StoreLink, QmahIconComponent],
   templateUrl: './category-grid.html',
   styleUrls: [
     './category-grid.scss',
   ],
 })
 export class CategoryGrid {
-  /** 各器類的上架商品數量（key 為器類名稱，順序即顯示順序） */
-  counts = input<Record<string, number>>({});
-  /** 各器類的封面圖網址（key 為器類名稱），無圖片時顯示佔位文字 */
-  images = input<Record<string, string | null>>({});
-
-  /** 分類顯示資料：分類名稱、商品件數、封面圖與連結網址（商品列表頁並帶上對應的 cat 查詢字串） */
-  protected readonly categories = computed(() =>
-    Object.entries(this.counts()).map(([name, count]) => ({
-      name,
-      count,
-      image: this.images()[name] ?? null,
-      link: `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`,
-    })),
+  /** 分類顯示資料：分類名稱、商品件數與連結網址 */
+  protected readonly categories = toSignal(
+    inject(CatalogApi)
+      .getCategories()
+      .pipe(
+        map((categories) =>
+          categories.map((category) => ({
+            name: category.name,
+            count: category.productCount,
+            /** 商品列表頁並帶上對應的 cat 查詢字串 */
+            link: `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(category.name)}`,
+          })),
+        ),
+      ),
+    { initialValue: [] },
   );
 
-  /** 區塊標籤：商品總件數，尚無資料時只顯示 CATEGORIES */
-  protected readonly tagText = computed(() => {
-    const total = Object.values(this.counts()).reduce((sum, n) => sum + n, 0);
-    return total > 0 ? `CATEGORIES · ${total} 件` : 'CATEGORIES';
-  });
+  /**
+   * ui-integration: 分類仍維持原本的入口卡片配置，只替換重複 Shapes 圖示，讓圖示
+   * 對應分類語意；未知分類回到既有的通用圖示，避免資料新增時破版。
+   */
+  protected categoryIcon(name: string): QmahIconName {
+    const normalizedName = name.toLowerCase();
+
+    if (normalizedName.includes('陶') || normalizedName.includes('瓷')) return 'shapes';
+    if (normalizedName.includes('玉')) return 'gem';
+    if (normalizedName.includes('青銅') || normalizedName.includes('金屬')) return 'shield-check';
+    if (normalizedName.includes('畫') || normalizedName.includes('書') || normalizedName.includes('文獻')) return 'image';
+    if (normalizedName.includes('錢') || normalizedName.includes('幣')) return 'badge';
+    if (normalizedName.includes('飾') || normalizedName.includes('器')) return 'library';
+
+    return 'shapes';
+  }
+
+  /** 讓分類入口使用有語意的色彩角色，不改變入口順序或資訊架構。 */
+  protected categoryTone(name: string): 'jade' | 'gold' | 'azurite' | 'cinnabar' {
+    const normalizedName = name.toLowerCase();
+    if (normalizedName.includes('青銅') || normalizedName.includes('錢') || normalizedName.includes('幣')) return 'gold';
+    if (normalizedName.includes('繪') || normalizedName.includes('陶') || normalizedName.includes('瓷') || normalizedName.includes('琺瑯')) return 'azurite';
+    if (normalizedName.includes('雕')) return 'cinnabar';
+    return 'jade';
+  }
 }

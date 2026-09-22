@@ -12,42 +12,36 @@
 
 .review-card {
   border: 1px solid var(--color-line);
-  background: #fff;
-  padding: 14px 16px;
+  border-radius: var(--store-radius);
+  background: var(--color-surface);
+  padding: var(--qmah-space-3) var(--qmah-space-4);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--qmah-space-2);
 }
 
 .review-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--qmah-space-2);
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
   flex-wrap: wrap;
 }
 
-.review-photo-tag {
-  border: 1px solid var(--color-line-mid);
-  color: var(--color-teal);
-  padding: 1px 5px;
-  border-radius: 2px;
-}
-
 .review-text {
   margin: 6px 0 0;
-  font-size: 12px;
-  line-height: 1.8;
+  font-size: var(--qmah-type-label-size);
+  line-height: var(--qmah-type-body-leading);
   color: var(--color-body);
 }
 
 /* 篩選後無評價時的提示 */
 .no-reviews {
   border: 1px dashed var(--color-line-mid);
-  padding: 22px;
+  padding: var(--qmah-space-6);
   text-align: center;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }

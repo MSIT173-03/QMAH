@@ -4,28 +4,29 @@ import { Router } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
-  TopBar,
+  Promobar,
   SiteHeader,
   SearchBar,
-  HeaderNav,
+  HeaderActions,
   HeaderNavLink,
   CartLink,
   Breadcrumb,
   BreadcrumbItem,
   EmptyState,
-  SiteFooter,
+  LoginPrompt,
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { Product } from '../../api/api.models';
+import { toReviewPage } from '../../api/catalog.api-dto';
 import { CART_PATH, CHECKOUT_PATH, HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView, wasPrice } from '../../shared/product-view';
 import { ProductGallery } from './product-gallery/product-gallery';
 import { ProductSummary } from './product-summary/product-summary';
-import { ProductDescription } from './product-description/product-description';
+import { ProductDetail } from './product-detail/product-detail';
 import { ProductReviews } from './product-reviews/product-reviews';
 import { RelatedProducts } from './related-products/related-products';
-import { RELATED_LIMIT, REVIEW_FILTERS } from './product-detail.data';
+import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
 
 /**
  * 商品詳情頁面。
@@ -34,29 +35,29 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-detail.data';
  * 加入購物車與直接購買皆在此呼叫 API 並以回應內容更新購物車狀態。
  */
 @Component({
-  selector: 'app-product-detail',
+  selector: 'app-product-info',
   host: { class: 'store-app' },
   imports: [
-    TopBar,
+    Promobar,
     SiteHeader,
     SearchBar,
-    HeaderNav,
+    HeaderActions,
     CartLink,
     Breadcrumb,
     EmptyState,
-    SiteFooter,
+    LoginPrompt,
     ProductGallery,
     ProductSummary,
-    ProductDescription,
+    ProductDetail,
     ProductReviews,
     RelatedProducts,
   ],
-  templateUrl: './product-detail.html',
+  templateUrl: './product-info.html',
   styleUrls: [
-    './product-detail.scss',
+    './product-info.scss',
   ],
 })
-export class ProductDetailPage {
+export class ProductInfo {
   private readonly router = inject(Router);
   private readonly catalogApi = inject(CatalogApi);
 
@@ -97,7 +98,7 @@ export class ProductDetailPage {
   protected readonly navLinks: HeaderNavLink[] = [
     { label: '全部分類', href: PRODUCT_LIST_PATH },
     { label: '特展聯名', href: `${PRODUCT_LIST_PATH}?view=exhibit` },
-    { label: '品牌館', href: `${HOME_PATH}#brands` },
+    { label: '年代選藏', href: '/artifact-list' },
   ];
 
   /* ===============================
@@ -116,30 +117,30 @@ export class ProductDetailPage {
     const item = this.item();
     return item ? wasPrice(item) : null;
   });
-  /** 商品圖片的視角名稱清單 */
-  protected galleryViews = computed(() => this.item()?.images.map((image) => image.view) ?? []);
-  /** 商品圖片網址清單（與視角同序），來自 API 的 primaryImagePath */
-  protected galleryImages = computed(() => this.item()?.images.map((image) => image.url) ?? []);
-
-  /** 同類推薦清單 */
+  /** 同類推薦清單：同器類的熱銷商品（排除目前商品），商品載入後才查詢 */
   protected related = toSignal(
-    toObservable(this.id).pipe(
-      switchMap((id) =>
-        this.catalogApi.getRelated(id, RELATED_LIMIT).pipe(catchError(() => of<Product[]>([]))),
+    toObservable(this.item).pipe(
+      switchMap((item) =>
+        item
+          ? this.catalogApi.getRelated(item, RELATED_LIMIT).pipe(catchError(() => of<Product[]>([])))
+          : of<Product[]>([]),
       ),
       map((items) => items.map(toProductView)),
     ),
     { initialValue: [] },
   );
 
-  /** 目前商品在選取的篩選條件下的評價回應 */
-  private readonly reviewPage = toSignal(
-    toObservable(computed(() => ({ id: this.id(), filter: REVIEW_FILTERS[this.reviewFilter()] }))).pipe(
-      switchMap(({ id, filter }) =>
-        this.catalogApi.getReviews(id, filter.query).pipe(catchError(() => of(null))),
-      ),
+  /** 目前商品的全部評價；切換篩選條件不重新請求，null 代表載入失敗 */
+  private readonly allReviews = toSignal(
+    toObservable(this.id).pipe(
+      switchMap((id) => this.catalogApi.getReviews(id).pipe(catchError(() => of(null)))),
     ),
   );
+  /** 目前商品在選取的篩選條件下的評價（篩選與統計在前端計算） */
+  private readonly reviewPage = computed(() => {
+    const all = this.allReviews();
+    return all ? toReviewPage(all, REVIEW_FILTERS[this.reviewFilter()].query) : null;
+  });
   /** 符合目前篩選條件的評價 */
   protected reviews = computed(() => this.reviewPage()?.items ?? []);
   /** 各篩選條件的則數（依 REVIEW_FILTERS 順序） */
@@ -169,11 +170,12 @@ export class ProductDetailPage {
     if (item) this.cart.add(item.id, qty);
   }
 
-  /** 直接購買：先加入購物車，之後應改為導向結帳流程 */
+  /** 直接購買：目前正式付款選項尚未接通，先加入購物車並回到可查看狀態的購物車頁。 */
   protected onBuyNow(qty: number): void {
     const item = this.item();
     if (!item) return;
-    this.cart.add(item.id, qty, () => this.router.navigate([CHECKOUT_PATH]));
+    // ui-integration: 不把「直接購買」送進尚未啟用的結帳頁；保留既有操作入口，但讓使用者回到真實可確認內容的購物車。
+    this.cart.add(item.id, qty, () => this.router.navigate([CART_PATH]));
   }
 
   /** 從同類推薦加入購物車：數量 1 */

@@ -5,7 +5,7 @@
 .head {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: var(--qmah-space-3);
 
   &--section {
     border-bottom: 1px solid var(--color-ink);
@@ -13,27 +13,27 @@
   }
 
   &--panel {
-    gap: 10px;
+    gap: var(--qmah-space-2);
   }
 
   &--wrap {
     flex-wrap: wrap;
-    gap: 14px;
+    gap: var(--qmah-space-4);
   }
 }
 
 .section-title {
   margin: 0;
-  font-family: 'Noto Serif TC', serif;
+  font-family: var(--qmah-font-serif);
   font-weight: 600;
   color: var(--color-ink-deep);
 
   .head--section & {
-    font-size: 18px;
+    font-size: var(--qmah-type-section-title-size);
   }
 
   .head--panel & {
-    font-size: 18px;
+    font-size: var(--qmah-type-section-title-size);
   }
 }
 

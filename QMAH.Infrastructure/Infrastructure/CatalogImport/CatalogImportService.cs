@@ -245,6 +245,20 @@ public sealed class CatalogImportService(QmahDbContext db)
             });
         }
 
+        // 文物名稱會同時出現在圖鑑與題庫；資料包若留下正規化後同名資料，
+        // 即使 ArtifactRef 不同也會讓瀏覽與猜題反覆看到同一個名義，因此在匯入邊界直接拒絕。
+        var duplicateArtifactName = candidates
+            .GroupBy(row => NormalizeArtifactName(row.Name), StringComparer.Ordinal)
+            .FirstOrDefault(group => !string.IsNullOrWhiteSpace(group.Key)
+                && (group.Count() > 2
+                    || (group.Any(row => !row.CategoryCode.Equals("COIN", StringComparison.OrdinalIgnoreCase))
+                        && group.Count() > 1)));
+        if (duplicateArtifactName is not null)
+        {
+            throw new InvalidDataException(
+                $"正規化後文物名稱超過匯入上限：{duplicateArtifactName.Key}；非錢幣必須唯一，錢幣最多兩筆。");
+        }
+
         candidates = candidates
             .GroupBy(row => row.CategoryCode, StringComparer.OrdinalIgnoreCase)
             .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
@@ -702,16 +716,22 @@ public sealed class CatalogImportService(QmahDbContext db)
     {
         var externalRef = $"artifact-{artifact.ArtifactRef}";
         var variation = StableNumber($"price:{artifact.ArtifactRef}") % 7 * 50;
+        // 匯入保底商品也使用文物明信片契約，避免尚未產生完整商品 JSON 時又回到舊的複製品語意。
+        const string cardSize = "A6 明信片（148 × 105 mm）";
+        const string orientationRule = "明信片方向：依主圖原始寬高自動判斷（橫式／直式）";
+        var artifactSize = string.IsNullOrWhiteSpace(artifact.SizeOriginal)
+            ? "官方資料未提供"
+            : artifact.SizeOriginal.Trim();
         var sourceDescription = string.IsNullOrWhiteSpace(artifact.DescriptionOriginal)
-            ? "以故宮開放資料文物為主題的展示型縮小複製品。"
+            ? "以故宮開放資料文物為主題的文物明信片。"
             : artifact.DescriptionOriginal.Trim();
         return new CatalogProductImportRow(
             StableGuid($"product:{externalRef}"),
             externalRef,
-            $"{artifact.Name.Trim()}－縮小複製品",
+            $"{artifact.Name.Trim()}－文物明信片",
             NormalizeCode(artifact.CategoryCode),
-            $"{sourceDescription}\n\n本商品為 QMAH 虛擬展示資料，僅供系統功能測試與課堂展示，不提供實際販售。",
-            artifact.SizeOriginal,
+            $"{sourceDescription}\n\n商品尺寸：{cardSize}\n文物原始尺寸：{artifactSize}\n{orientationRule}\n\n本商品為 QMAH 虛擬展示資料，正面使用故宮開放資料圖像、背面整理基本收藏資訊；僅供系統功能測試與課堂展示，不提供實際販售。",
+            cardSize,
             680 + variation,
             20,
             artifact.ImageUrl,
@@ -875,6 +895,19 @@ public sealed class CatalogImportService(QmahDbContext db)
     }
 
     private static string NormalizeCode(string? value) => value?.Trim().ToUpperInvariant() ?? "";
+
+    private static string NormalizeArtifactName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+
+        // 與 NpmArtifactPipeline 使用同一套 Unicode 正規化，避免產生器與匯入器對「同名」判斷不一致。
+        var normalized = value.Normalize(NormalizationForm.FormKC).ToUpperInvariant();
+        return new string(normalized
+            .Where(character => !char.IsWhiteSpace(character)
+                && !char.IsPunctuation(character)
+                && !char.IsSymbol(character))
+            .ToArray());
+    }
 
     private static string? NullIfWhiteSpace(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();

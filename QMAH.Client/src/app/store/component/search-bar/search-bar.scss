@@ -6,6 +6,7 @@
   flex: 1 1 auto;
   position: relative;
   max-width: 620px;
+  min-width: 0;
 
   /* 商品列表頁：可隨頁首寬度伸縮，仍沿用與首頁相同的最大寬度 */
   &--list {
@@ -19,12 +20,14 @@
 .search-box {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #fff;
+  gap: var(--qmah-space-2);
+  background: var(--color-surface);
   border: 1px solid var(--color-ink);
-  border-radius: 2px;
-  padding: 0 8px 0 12px;
-  height: 38px;
+  border-radius: var(--qmah-radius-control);
+  padding: 0 var(--qmah-space-2) 0 var(--qmah-space-3);
+  min-height: var(--qmah-control-height);
+  min-width: 0;
+  width: 100%;
 }
 
 .search-input {
@@ -33,25 +36,26 @@
   border: 0;
   outline: none;
   background: transparent;
-  font-size: 14px;
+  font-size: var(--qmah-type-body-sm-size);
   font-family: inherit;
   color: var(--color-ink);
 }
 
 .search-submit {
   border: 0;
-  background: var(--color-ink);
-  color: #fff;
-  border-radius: 2px;
-  padding: 0 20px;
-  height: 28px;
-  font-size: 12px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border-radius: var(--qmah-radius-control);
+  padding: 0 var(--qmah-button-padding-x);
+  min-height: calc(var(--qmah-control-height) - var(--qmah-space-2));
+  flex: 0 0 auto;
+  font-size: var(--qmah-type-label-size);
   letter-spacing: 0.14em;
   white-space: nowrap;
   transition: background 160ms;
 
   &:hover {
-    background: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 84%, var(--color-ink));
   }
 }
 
@@ -86,25 +90,36 @@
   top: 44px;
   left: 0;
   right: 0;
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-ink);
   box-sizing: border-box;
-  box-shadow: 0 14px 30px rgba(34, 52, 61, 0.12);
-  padding: 4px;
+  border-radius: var(--qmah-radius-control);
+  box-shadow: var(--qmah-shadow-float);
+  padding: var(--qmah-space-1);
   z-index: 50;
 }
 
 .search-suggest-item {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  font-size: 12px;
+  gap: var(--qmah-space-2);
+  min-width: 0;
+  border: 0;
+  padding: var(--qmah-space-2) var(--qmah-space-3);
+  background: transparent;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-ink);
+
+  &:focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: -2px;
+  }
   cursor: pointer;
+  text-align: left;
 
   &:hover {
-    background: #f2f5f4;
+    background: var(--color-swatch);
   }
 }
 
@@ -113,4 +128,32 @@
   font-size: 12px;
   color: var(--color-placeholder);
   margin-left: auto;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+  .search-wrap,
+  .search-wrap--list {
+    flex: 1 1 0;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .search-box { gap: 6px; }
+  .search-submit { padding-inline: 12px; }
+
+  /* 熱門詞與建議名稱都在自身欄寬內收斂，避免長字串撐出頁面。 */
+  .search-hot {
+    right: 0;
+    max-width: 100%;
+    gap: 8px 12px;
+  }
+
+  .search-suggest-item > span:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

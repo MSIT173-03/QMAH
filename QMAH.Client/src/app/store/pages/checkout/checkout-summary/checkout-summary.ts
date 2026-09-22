@@ -22,6 +22,8 @@ export class CheckoutSummary {
   quote = input<OrderQuote | null>(null);
   /** 選用的配送方式名稱 */
   shipName = input('');
+  /** 正式配送／付款選項是否已啟用；契約未完成時禁止送出。 */
+  checkoutEnabled = input(false);
   /** 是否已按下確認下單 */
   submitted = input(false);
   /** 收件資訊必填欄位是否皆已填妥 */
@@ -59,8 +61,13 @@ export class CheckoutSummary {
   /** 回饋點數顯示文字 */
   protected earnLabel = computed(() => formatNumber(this.quote()?.pointsEarned ?? 0));
 
-  /** 訂單成立後，按鈕轉為完成狀態文字 */
-  protected submitLabel = computed(() => (this.placed() ? '訂單已送出' : '確認下單'));
+  /** 訂單成立或結帳能力停用時，按鈕文字要直接反映真實狀態。 */
+  protected submitLabel = computed(() => {
+    if (this.placed()) return '訂單已送出';
+    return this.checkoutEnabled() ? '確認下單' : '結帳目前未啟用';
+  });
+  /** 使用原生 disabled，讓滑鼠、鍵盤與輔助工具都不會把停用的下單當成可操作。 */
+  protected submitDisabled = computed(() => !this.checkoutEnabled() || this.placed());
   /** 已送出但必填欄位未填妥時，顯示補填提示 */
   protected showMissing = computed(() => this.submitted() && !this.valid());
 

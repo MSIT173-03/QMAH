@@ -39,6 +39,8 @@ export class ProductSummary {
   shipping = input('');
   /** 尺寸／規格說明 */
   dims = input('');
+  /** 關聯文物原始尺寸；與固定 A6 成品尺寸分開顯示。 */
+  artifactDims = input('');
   /** 商品狀態說明 */
   condition = input('');
   /** 尺寸量測說明（佔位資料，正式應由商品說明設定提供） */
@@ -46,7 +48,7 @@ export class ProductSummary {
 
   /** 加入購物車時觸發，帶出目前選購數量 */
   addToCart = output<number>();
-  /** 直接購買時觸發，帶出目前選購數量 */
+  /** 直接購買時觸發，帶出目前選購數量；目前會先放入購物車再進入購物車頁。 */
   buyNow = output<number>();
 
   /** 以下為資訊欄的固定版面文字 */
@@ -55,7 +57,7 @@ export class ProductSummary {
   protected readonly shippingLabel = '出貨';
   protected readonly soldSuffix = '已售';
   protected readonly addCartLabel = '加入購物車';
-  protected readonly buyNowLabel = '直接購買';
+  protected readonly buyNowLabel = '加入並查看購物車';
 
   /** 目前選購數量；只有本元件與其送出的事件會用到，因此不對外公開 */
   protected qty = signal(1);

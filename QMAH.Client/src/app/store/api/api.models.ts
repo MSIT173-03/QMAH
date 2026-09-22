@@ -26,6 +26,22 @@ export interface Page<T> {
    商品型錄與詳情
    =============================== */
 
+/** 器類 */
+export interface Category {
+  id: string;
+  name: string;
+  /** 此器類的商品件數 */
+  productCount: number;
+}
+
+/** 商城直接引用的官方優惠活動公告；內容與社群公告相同，不另造商城文案。 */
+export interface StorePromotion {
+  id: string;
+  title: string;
+  content: string;
+  publishedAt: string;
+}
+
 /** 商品清單項目 */
 export interface Product {
   id: string;
@@ -62,10 +78,16 @@ export interface ProductImage {
 
 /** 商品詳情 */
 export interface ProductDetail extends Product {
+  /** 原文物名稱；明信片正面不顯示套組後綴。 */
+  artifactName: string;
+  /** 關聯文物原始尺寸；明信片視圖只顯示這個尺寸，不重複顯示 A6。 */
+  artifactDimensions: string;
   /** 材質與工法說明 */
   material: string;
-  /** 商品說明段落 */
+  /** 套組商品說明段落，保留產生器寫入的段落分隔。 */
   description: string;
+  /** 明信片／原文物視圖使用的精簡原文物說明。 */
+  artifactDescription: string;
   /** 商品狀態說明 */
   condition: string;
   /** 出貨說明 */
@@ -83,7 +105,7 @@ export type ProductOrder = 0 | 1 | 2 | 3 | 4 | 5;
 export interface ProductQuery extends PageQuery {
   /** 器類名稱 */
   cat?: string;
-  /** 關鍵字，比對商品名稱、品牌、器類、材質與出處說明 */
+  /** 關鍵字，比對商品名稱與外部編號（後端 Product.Name、ExternalRef） */
   q?: string;
   order?: ProductOrder;
   /** 折扣後售價下限（含） */
@@ -103,24 +125,19 @@ export interface Review {
   user: string;
   /** 評價日期（YYYY-MM-DD） */
   date: string;
-  hasPhoto: boolean;
   text: string;
 }
 
-/** 商品評價查詢參數 */
+/** 商品評價篩選參數 */
 export interface ReviewQuery extends PageQuery {
   minStars?: number;
   maxStars?: number;
-  /** 只列出附照片的評價 */
-  hasPhoto?: boolean;
 }
 
-/** 商品評價回應；total 為篩選後的則數 */
+/** 商品評價篩選結果；total 為篩選後的則數 */
 export interface ReviewPage extends Page<Review> {
   /** 各星等則數，不受篩選條件影響 */
   ratingBreakdown: Record<1 | 2 | 3 | 4 | 5, number>;
-  /** 附照片的則數，不受篩選條件影響 */
-  photoCount: number;
 }
 
 /* ===============================
@@ -155,6 +172,27 @@ export interface FlashSale {
   items: FlashSaleItem[];
 }
 
+/** 品牌館品牌 */
+export interface Brand {
+  en: string;
+  zh: string;
+  /** 品牌優惠說明 */
+  deal: string;
+}
+
+/** 熱銷排行查詢參數 */
+export interface RankingQuery {
+  /** 器類名稱，未指定時為全站排行 */
+  cat?: string;
+  limit?: number;
+}
+
+/** 推薦商品 */
+export interface RecommendedProduct extends Product {
+  /** 推薦理由，顯示為卡片角標 */
+  reason: string;
+}
+
 /* ===============================
    搜尋
    =============================== */
@@ -179,6 +217,8 @@ export interface KeywordSuggestion {
 /** 購物車品項 */
 export interface CartItem {
   productId: string;
+  /** 商品主圖縮圖；無圖時維持 null，不拿其他商品圖片冒充。 */
+  coverImage: string | null;
   brand: string;
   /** 器類名稱 */
   category: string;
@@ -200,14 +240,14 @@ export interface CartAmounts {
   subtotal: number;
   /** 商品折扣 */
   itemDiscount: number;
-  /** 預設配送方式的運費，已達免運門檻或購物車為空時為 0 */
-  shippingFee: number;
-  /** 應付總額 */
+  /** 預設配送方式的運費，已達免運門檻或購物車為空時為 0；後端尚未提供配送規則時為 null（結帳時計算） */
+  shippingFee: number | null;
+  /** 應付總額（不含尚未計算的運費） */
   payable: number;
-  /** 滿額免運門檻 */
-  freeShippingThreshold: number;
-  /** 距離免運門檻還差的金額，已達門檻時為 0 */
-  freeShippingShortfall: number;
+  /** 滿額免運門檻；後端尚未提供配送規則時為 null */
+  freeShippingThreshold: number | null;
+  /** 距離免運門檻還差的金額，已達門檻時為 0；後端尚未提供配送規則時為 null */
+  freeShippingShortfall: number | null;
 }
 
 /** 購物車內容 */
@@ -224,13 +264,20 @@ export interface ShoppingCart {
    會員
    =============================== */
 
-/** 收件資訊 */
+/**
+ * 收件資訊；地址依後端 CreateStoreOrderRequest 拆成郵遞區號／縣市／鄉鎮區／街道地址（皆為必填）。
+ * email、taxId、note 後端訂單尚無對應欄位，目前只保留在前端表單，不會送出。
+ */
 export interface Recipient {
   name: string;
   phone: string;
   email: string;
   /** 發票統編 */
   taxId: string;
+  postalCode: string;
+  city: string;
+  district: string;
+  /** 街道地址（不含縣市、鄉鎮區） */
   address: string;
   /** 給客服的備註 */
   note: string;
@@ -262,27 +309,6 @@ export interface Coupon {
   cap: number | null;
   /** 到期日（YYYY-MM-DD），無期限時為 null */
   due: string | null;
-}
-
-/** 商品頁附加資訊：各器類商品數量，以及登入會員的點數與折價券 */
-export interface StoreOverview {
-  /** 各器類的上架商品數量（key 為中文器類名稱） */
-  categoryCounts: Record<string, number>;
-  /** 各器類銷售數量最高商品的主圖網址（key 為中文器類名稱），無圖片時為 null */
-  categoryCoverImages: Record<string, string | null>;
-  isLoggedIn: boolean;
-  /** 鑑定點數；未登入時為 null */
-  pointBalance: number | null;
-  /** 會員可用的折價券；未登入時為空陣列 */
-  coupons: Coupon[];
-  /** 熱銷排行：販賣數量前 10 項 */
-  hotProducts: Product[];
-  /** 新品上架：最新上架的前 4 項 */
-  newProducts: Product[];
-  /** 評價排行：平均評價最高的前 4 項 */
-  topRatedProducts: Product[];
-  /** 為你推薦：隨機挑選的 10 項 */
-  recommendedProducts: Product[];
 }
 
 /* ===============================

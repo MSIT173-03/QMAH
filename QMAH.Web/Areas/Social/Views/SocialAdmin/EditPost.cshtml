@@ -11,6 +11,16 @@
     var postId = ViewData["PostId"];
     var boardCodes = ViewData["BoardCodes"] as IReadOnlyList<string> ?? ["GENERAL"];
     var artifactOptions = ViewData["ArtifactOptions"] as IReadOnlyList<PostArtifactOption> ?? [];
+    var promotionOptions = ViewData["PromotionOptions"] as IReadOnlyList<PostPromotionOption> ?? [];
+}
+
+@section Styles {
+    <style>
+        .qmah-post-preview { min-height: 9rem; white-space: pre-wrap; background: var(--tblr-bg-surface-secondary); }
+        .qmah-post-preview .qmah-preview-heading { font-weight: 700; color: var(--tblr-primary); }
+        .qmah-post-preview .qmah-preview-bullet { padding-left: 1rem; }
+        .qmah-post-preview blockquote { margin: .25rem 0; padding: .35rem .75rem; border-radius: .35rem; background: color-mix(in srgb, var(--tblr-primary) 7%, transparent); color: var(--tblr-secondary); }
+    </style>
 }
 
 @section PageActions {
@@ -59,8 +69,61 @@
 
                         <div class="col-12">
                             <label asp-for="Content" class="form-label"></label>
-                            <textarea asp-for="Content" class="form-control" rows="10"></textarea>
+                            <div class="d-flex flex-wrap gap-2 mb-2" role="toolbar" aria-label="貼文基本排版工具">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-qmah-editor-tool="heading">小標</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-qmah-editor-tool="bullet">項目</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-qmah-editor-tool="quote">引用</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-qmah-editor-tool="paragraph">分段</button>
+                                <span class="form-hint align-self-center">內容保留純文字，前台會依小標、項目與引用呈現層次。</span>
+                            </div>
+                            <textarea asp-for="Content" class="form-control" rows="10" data-qmah-content-editor></textarea>
                             <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12" data-qmah-quick-panel>
+                            <div class="card border-0 bg-light-subtle">
+                                <div class="card-body py-3">
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                        <strong>官方快速插入</strong>
+                                        <span class="form-hint">模板只帶入可編輯的純文字；活動資料仍以正式資料來源為準。</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <select class="form-select form-select-sm" style="max-width: 22rem" data-qmah-promotion-select aria-label="選擇商城優惠活動">
+                                            <option value="">選擇目前有效的商城優惠（可選）</option>
+                                            @foreach (var promotion in promotionOptions)
+                                            {
+                                                <option value="@promotion.Id"
+                                                        data-name="@promotion.Name"
+                                                        data-code="@promotion.Code"
+                                                        data-discount="@promotion.DiscountLabel"
+                                                        data-acquisition="@promotion.AcquisitionLabel"
+                                                        data-minimum="@promotion.MinimumLabel"
+                                                        data-period="@promotion.PeriodLabel"
+                                                        data-validity="@promotion.ValidityLabel">
+                                                    @promotion.Name（@promotion.Code）
+                                                </option>
+                                            }
+                                        </select>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-qmah-quick-template="promotion">商城優惠</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-qmah-quick-template="exhibition">展覽活動</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-qmah-quick-template="guide">文物導讀</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-qmah-quick-template="visit">參觀提醒</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-qmah-quick-template="game">鑑定遊戲</button>
+                                    </div>
+                                    @if (promotionOptions.Count == 0)
+                                    {
+                                        <div class="form-hint mt-2">目前沒有有效商城優惠；仍可直接使用其他官方活動模板。</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="form-label mb-0">內容預覽</span>
+                                <span class="form-hint">預覽只在編輯器中使用，不會把 HTML 寫入貼文。</span>
+                            </div>
+                            <div class="form-control qmah-post-preview" data-qmah-post-preview aria-live="polite"></div>
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -122,4 +185,115 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const content = document.querySelector('[data-qmah-content-editor]');
+            const title = document.querySelector('[name="Title"]');
+            const postType = document.querySelector('[name="PostType"]');
+            const board = document.querySelector('[name="BoardCode"]');
+            const quickPanel = document.querySelector('[data-qmah-quick-panel]');
+            const preview = document.querySelector('[data-qmah-post-preview]');
+            const promotionSelect = document.querySelector('[data-qmah-promotion-select]');
+            if (!(content instanceof HTMLTextAreaElement) || !(title instanceof HTMLInputElement) || !preview) return;
+
+            // 只產生純文字區塊，讓既有 API、搜尋與資料庫不需要改存 HTML，也避免貼文內容形成 XSS 入口。
+            const insertAtCursor = (value) => {
+                const start = content.selectionStart;
+                const end = content.selectionEnd;
+                const before = content.value.slice(0, start);
+                const after = content.value.slice(end);
+                const prefix = before && !before.endsWith('\n') ? '\n\n' : '';
+                content.value = before + prefix + value + after;
+                content.selectionStart = content.selectionEnd = before.length + prefix.length + value.length;
+                content.dispatchEvent(new Event('input', { bubbles: true }));
+                content.focus();
+            };
+
+            const replaceSelectedLines = (prefix, suffix = '') => {
+                const start = content.selectionStart;
+                const end = content.selectionEnd;
+                const selected = content.value.slice(start, end) || '請填寫內容';
+                const formatted = selected.split('\n').map(line => prefix + line + suffix).join('\n');
+                content.setRangeText(formatted, start, end, 'select');
+                content.dispatchEvent(new Event('input', { bubbles: true }));
+                content.focus();
+            };
+
+            const renderPreview = () => {
+                preview.replaceChildren();
+                const lines = content.value.split('\n');
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) {
+                        preview.append(document.createElement('br'));
+                        continue;
+                    }
+                    const node = document.createElement(trimmed.startsWith('【') && trimmed.endsWith('】') ? 'div' : 'div');
+                    node.textContent = line;
+                    if (trimmed.startsWith('【') && trimmed.endsWith('】')) node.className = 'qmah-preview-heading';
+                    if (trimmed.startsWith('• ')) node.className = 'qmah-preview-bullet';
+                    if (trimmed.startsWith('「') || trimmed.startsWith('> ')) {
+                        const quote = document.createElement('blockquote');
+                        quote.textContent = line.replace(/^>\s?/, '');
+                        preview.append(quote);
+                    } else {
+                        preview.append(node);
+                    }
+                }
+            };
+
+            const setBoard = (code) => {
+                if (board instanceof HTMLSelectElement && [...board.options].some(option => option.value === code)) board.value = code;
+            };
+
+            const templates = {
+                exhibition: {
+                    board: 'EVENTS', title: '展覽活動｜請填寫活動名稱', content: '【活動資訊】\n• 活動名稱：\n• 活動時間：\n• 活動地點：\n\n【參與方式】\n請填寫報名方式、名額與注意事項。\n\n歡迎把這段消息分享給想一起來的親朋好友。'
+                },
+                guide: {
+                    board: 'GUIDE', title: '文物導讀｜請填寫文物名稱', content: '【導讀重點】\n• 文物名稱：\n• 時代／類型：\n• 值得留意的細節：\n\n【延伸閱讀】\n請補上圖鑑或相關討論貼文的連結。'
+                },
+                visit: {
+                    board: 'GENERAL', title: '參觀提醒｜請填寫主題', content: '【參觀提醒】\n• 開放時間：\n• 參觀地點：\n• 建議停留時間：\n\n請依現場最新公告為準；這份明信片也適合留作收藏或寄給親朋好友。'
+                },
+                game: {
+                    board: 'GAME', title: '鑑定遊戲｜請填寫活動名稱', content: '【遊戲資訊】\n• 活動時間：\n• 參加方式：\n• 完成條件／獎勵：\n\n【提醒】\n請以遊戲頁面顯示的最新規則為準。'
+                }
+            };
+
+            document.querySelectorAll('[data-qmah-editor-tool]').forEach(button => button.addEventListener('click', () => {
+                const tool = button.dataset.qmahEditorTool;
+                if (tool === 'heading') replaceSelectedLines('【', '】');
+                if (tool === 'bullet') replaceSelectedLines('• ');
+                if (tool === 'quote') replaceSelectedLines('「', '」');
+                if (tool === 'paragraph') insertAtCursor('\n');
+                renderPreview();
+            }));
+
+            document.querySelectorAll('[data-qmah-quick-template]').forEach(button => button.addEventListener('click', () => {
+                const kind = button.dataset.qmahQuickTemplate;
+                if (kind === 'promotion' && promotionSelect instanceof HTMLSelectElement) {
+                    const option = promotionSelect.selectedOptions[0];
+                    if (!option?.value) return alert('請先選擇一個目前有效的商城優惠。');
+                    title.value = `商城優惠活動｜${option.dataset.name || option.dataset.code || '官方活動'}`;
+                    content.value = `【活動亮點】\n${option.dataset.name || ''}\n\n• 優惠內容：${option.dataset.discount || '依商城規則'}\n• 使用門檻：${option.dataset.minimum || '依商城規則'}\n• 取得方式：${option.dataset.acquisition || '依商城規則'}\n• 活動期間：${option.dataset.period || '依商城公告'}\n• 使用期限：${option.dataset.validity || '依商城規則'}\n\n請以商城結帳頁顯示為準；活動規則如有調整，將以最新公告為準。`;
+                    setBoard('STORE');
+                } else if (templates[kind]) {
+                    title.value = templates[kind].title;
+                    content.value = templates[kind].content;
+                    setBoard(templates[kind].board);
+                }
+                content.dispatchEvent(new Event('input', { bubbles: true }));
+                renderPreview();
+            }));
+
+            const syncQuickPanel = () => {
+                if (quickPanel) quickPanel.classList.toggle('d-none', postType instanceof HTMLSelectElement && postType.value !== 'ANNOUNCEMENT');
+            };
+            postType?.addEventListener('change', syncQuickPanel);
+            content.addEventListener('input', renderPreview);
+            syncQuickPanel();
+            renderPreview();
+        })();
+    </script>
 }

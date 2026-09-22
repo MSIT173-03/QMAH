@@ -1,0 +1,67 @@
+<section class="paper-card results-panel" aria-labelledby="results-title">
+  <p class="eyebrow">遊戲結束</p>
+  <h2 id="results-title">本局結算</h2>
+
+  @if (history(); as completedHistory) {
+    <div class="leaderboard-wrap">
+      <h3>最終排行榜</h3>
+      @if (completedHistory.leaderboard.length) {
+        <ol class="leaderboard">
+          @for (entry of completedHistory.leaderboard; track entry.gamePlayerId) {
+            <li [class.is-first]="entry.rank === 1">
+              <span class="rank-number">{{ entry.rank }}</span>
+              <strong>{{ entry.displayName }}</strong>
+              <span class="score-total">{{ entry.score }} <small>票</small></span>
+              <span class="score-detail">勝出 {{ entry.roundsWon }} 回合 · 作答 {{ entry.roundsAnswered }} 次</span>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="empty-copy">這局目前沒有排行榜資料。</p>
+      }
+    </div>
+
+    <div class="round-history">
+      <h3>回合紀錄</h3>
+      @for (result of completedHistory.rounds; track result.id) {
+        <details class="round-result">
+          <summary>
+            <span>第 {{ result.roundNumber }} 回合</span>
+            <strong>{{ result.artifactName }}</strong>
+            <small>{{ result.winnerPlayerDisplayName ? '勝出：' + result.winnerPlayerDisplayName : '沒有有效得票' }}</small>
+          </summary>
+          <ol class="result-answers">
+            @for (answer of result.answers; track answer.id) {
+              <li [class.is-winner]="answer.isWinner">
+                <span>{{ answer.rank }}.</span>
+                <div><strong>{{ answer.playerDisplayName }}</strong><p>{{ answer.text }}</p></div>
+                <b>{{ answer.voteCount }} 票</b>
+              </li>
+            } @empty {
+              <li class="empty-copy">本回合沒有人作答。</li>
+            }
+          </ol>
+        </details>
+      } @empty {
+        <p class="empty-copy">目前沒有回合紀錄。</p>
+      }
+    </div>
+  }
+
+  <div class="reward-panel">
+    <div><h3>本局獎勵</h3><p>每間房的獎勵只能領取一次。</p></div>
+    <button type="button" (click)="claimReward.emit()" [disabled]="rewarding()">
+      {{ rewarding() ? '領取中…' : reward()?.alreadyRewarded ? '查看獎勵結果' : '領取本局獎勵' }}
+    </button>
+  </div>
+  @if (reward(); as receipt) {
+    <div class="reward-receipt" role="status">
+      <strong>{{ receipt.pointReward }} 點</strong>
+      <span>{{ receipt.normalKeyReward }} 把普通鑰匙</span>
+      <span>表現分數 {{ receipt.performanceScore }}</span>
+      <span>勝出 {{ receipt.roundsWon }} 回合</span>
+    </div>
+  }
+  <!-- ui-integration: 結算頁的主要下一步保留既有流程出口，避免玩家只能依賴瀏覽器返回。 -->
+  <a routerLink="/game" class="results-back-link">返回多人鑑定大廳</a>
+</section>

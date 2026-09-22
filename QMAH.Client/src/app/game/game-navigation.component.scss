@@ -1,0 +1,139 @@
+:host {
+  display: block;
+}
+
+/* ui-integration: Game 子導覽只負責模式切換與當前流程出口，跨 Area 導覽由 App Shell 統一擁有。 */
+/* ui-integration: 把主要玩法與說明入口收斂成同一組語意清楚的模式切換，避免玩家第一眼分不出多人、單人與教學入口。 */
+.game-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--qmah-space-6);
+  min-height: 62px;
+  padding: 4px 0 6px;
+}
+
+.game-navigation__switcher {
+  display: flex;
+  align-items: stretch;
+  gap: var(--qmah-space-3);
+  min-width: 0;
+}
+
+.game-navigation__context {
+  display: inline-flex;
+  align-items: center;
+  color: var(--qmah-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  white-space: nowrap;
+}
+
+.game-navigation__links,
+.game-navigation__actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.game-navigation__links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(124px, 1fr));
+  gap: var(--qmah-space-1);
+}
+
+.game-navigation__actions {
+  justify-content: flex-end;
+  gap: var(--qmah-space-2);
+}
+
+a {
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--qmah-radius-control);
+  padding: 8px var(--qmah-control-padding-x);
+  color: var(--qmah-slate);
+  text-decoration: none;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.game-navigation__link-label {
+  font-size: 14px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.game-navigation__link-description {
+  overflow: hidden;
+  max-width: 100%;
+  color: color-mix(in srgb, var(--qmah-muted) 82%, transparent);
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a:hover,
+a.is-active {
+  color: var(--qmah-ink);
+}
+
+a:hover { background: color-mix(in srgb, var(--qmah-surface) 42%, transparent); }
+
+a.is-active {
+  border-color: color-mix(in srgb, var(--qmah-game-action) 42%, var(--qmah-line));
+  background: color-mix(in srgb, var(--qmah-game-action) 10%, var(--qmah-surface));
+  box-shadow: var(--qmah-shadow-card);
+  font-weight: 800;
+}
+
+a.is-active .game-navigation__link-description { color: var(--qmah-muted); }
+
+a:focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .game-navigation {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+    padding: 8px 0 10px;
+  }
+
+  .game-navigation__switcher {
+    display: grid;
+     gap: var(--qmah-space-1);
+  }
+
+  .game-navigation__context {
+    min-height: 20px;
+    padding-inline: 2px;
+  }
+
+  .game-navigation__links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--qmah-space-1);
+  }
+
+  a {
+    min-height: 56px;
+    padding: 8px 9px;
+  }
+
+  .game-navigation__link-label { font-size: 12px; }
+  .game-navigation__link-description { font-size: 9px; }
+  .game-navigation__actions { justify-content: flex-start; min-height: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a { transition: none; }
+}

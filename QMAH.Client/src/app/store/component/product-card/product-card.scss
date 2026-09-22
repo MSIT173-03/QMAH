@@ -4,7 +4,8 @@
 
 .product-card {
   border: 1px solid var(--color-line);
-  background: #fff;
+  background: var(--color-surface);
+  border-radius: var(--store-radius);
   display: flex;
   flex-direction: column;
   transition: border-color 160ms;
@@ -36,10 +37,14 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* ui-integration: 有商品圖片時保留完整構圖，避免方形商品 surface 以 cover 裁掉圖像內容。 */
+  object-fit: contain;
 }
 
 .product-card-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--color-placeholder);
@@ -54,28 +59,29 @@
   position: absolute;
   top: 0;
   left: 0;
-  background: var(--color-ink);
-  color: #fff;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   padding: 3px 7px;
 
   &--teal {
     background: var(--color-teal);
+    color: var(--color-secondary-content);
   }
 }
 
 .product-card-body {
-  padding: 10px 11px 0;
+  padding: var(--qmah-space-3) var(--qmah-space-3) 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--qmah-space-2);
   flex: 1;
 }
 
 .product-card-name {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--qmah-type-body-sm-size);
+  line-height: var(--qmah-type-body-leading);
   text-wrap: pretty;
 }
 
@@ -107,23 +113,24 @@
 }
 
 .product-card-cta {
-  padding: 10px 11px 12px;
+  padding: var(--qmah-space-3);
 }
 
 .product-card-buy {
   width: 100%;
   border: 1px solid var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
-  border-radius: 2px;
-  padding: 8px 0;
-  font-size: 12px;
+  border-radius: var(--qmah-radius-control);
+  padding: var(--qmah-space-2) 0;
+  min-height: var(--qmah-control-height);
+  font-size: var(--qmah-type-label-size);
   letter-spacing: 0.1em;
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--qmah-primary-content);
   }
 }

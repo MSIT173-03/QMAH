@@ -7,18 +7,18 @@
    =============================== */
 
 .checkout-main {
-  padding-top: 16px;
+  padding-top: var(--qmah-space-4);
   padding-bottom: 72px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--qmah-space-5);
 }
 
 /* 左側結帳資訊、右側訂單摘要 */
 .checkout-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
-  gap: 20px;
+  gap: var(--qmah-space-5);
   align-items: start;
 }
 
@@ -26,5 +26,12 @@
 .checkout-fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--qmah-space-3);
+}
+
+/* ui-integration: 結帳仍是同一個先填資料、後確認金額的流程，手機只將摘要改放到表單之後。 */
+@media (max-width: 800px) {
+  .checkout-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

@@ -30,6 +30,9 @@ export const EMPTY_RECIPIENT: Recipient = {
   phone: '',
   email: '',
   taxId: '',
+  postalCode: '',
+  city: '',
+  district: '',
   address: '',
   note: '',
 };
@@ -41,6 +44,9 @@ export function toRecipient(source: Recipient): Recipient {
     phone: source.phone,
     email: source.email,
     taxId: source.taxId,
+    postalCode: source.postalCode,
+    city: source.city,
+    district: source.district,
     address: source.address,
     note: source.note,
   };
@@ -64,22 +70,29 @@ export const RECIPIENT_GRID_FIELDS: RecipientFieldDef[] = [
   { field: 'taxId', label: '發票統編（選填）', placeholder: '8 位數字' },
 ];
 
-/** 佔滿整列的收件地址欄位 */
+/** 收件地址的行政區欄位（後端訂單分欄保存，皆為必填） */
+export const RECIPIENT_REGION_FIELDS: RecipientFieldDef[] = [
+  { field: 'postalCode', label: '郵遞區號', placeholder: '100' },
+  { field: 'city', label: '縣市', placeholder: '台北市' },
+  { field: 'district', label: '鄉鎮市區', placeholder: '中正區' },
+];
+
+/** 佔滿整列的街道地址欄位 */
 export const RECIPIENT_ADDR_FIELD: RecipientFieldDef = {
   field: 'address',
-  label: '收件地址',
-  placeholder: '台北市中正區重慶南路一段 122 號',
+  label: '街道地址',
+  placeholder: '重慶南路一段 122 號',
 };
 
 /** 佔滿整列的備註欄位（多行輸入） */
 export const RECIPIENT_NOTE_FIELD: RecipientFieldDef = {
   field: 'note',
-  label: '給客服的備註（選填）',
+  label: '訂單備註（選填）',
   placeholder: '例：需要禮盒包裝、平日下午收件',
 };
 
-/** 送出訂單前必須填寫的欄位 */
-const REQUIRED_FIELDS: RecipientField[] = ['name', 'phone', 'address'];
+/** 送出訂單前必須填寫的欄位（對應後端 CreateStoreOrderRequest 的必填欄位） */
+const REQUIRED_FIELDS: RecipientField[] = ['name', 'phone', 'postalCode', 'city', 'district', 'address'];
 
 /** 收件資訊是否已填妥必填欄位 */
 export function isRecipientValid(recipient: Recipient): boolean {
@@ -106,11 +119,10 @@ export type PointMode =
 export const POINT_MODES: PointMode[] = ['none', 'max', 'custom'];
 
 /**
- * 依折抵方式換算要向後端申請折抵的點數；實際折抵點數與上限由後端夾限後回傳。
- * 折抵至上限時直接申請全部持有點數，由後端夾在可折抵上限內。
+ * 依折抵方式換算要折抵的點數，夾在 0 與持有點數之間（後端點數不足時會直接拒絕訂單）。
+ * 折抵至上限時申請全部持有點數；依訂單金額的上限由 CheckoutApi.createOrder 送出前再夾限。
  */
 export function requestedPoints(mode: PointMode, customPoints: string, balance: number): number {
-  if (mode === 'max') return balance;
-  if (mode === 'custom') return parseInt(customPoints || '0', 10) || 0;
-  return 0;
+  const points = mode === 'max' ? balance : mode === 'custom' ? parseInt(customPoints || '0', 10) || 0 : 0;
+  return Math.min(Math.max(0, points), balance);
 }

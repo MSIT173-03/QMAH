@@ -254,9 +254,14 @@ public sealed class MeController(
                 post.PostType,
                 post.PublisherType,
                 post.Title,
-                post.Content.Length > 180 ? post.Content.Substring(0, 180) : post.Content,
+                post.Content.Length > 180 ? post.Content.Substring(0, 180) + "…" : post.Content,
                 post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
                 post.MediaAssets.Count(media => media.Status == "ACTIVE"),
+                post.MediaAssets
+                    .Where(media => media.Status == "ACTIVE")
+                    .OrderBy(media => media.CreatedAt)
+                    .Select(media => "/api/v1/social/media/" + media.Id + "/content")
+                    .FirstOrDefault(),
                 post.LocationName,
                 post.Latitude,
                 post.Longitude,
@@ -554,8 +559,14 @@ public sealed class MeController(
             return MissingResource("找不到地址", "這筆地址不存在或不屬於目前帳號。");
 
         await ClearDefaultAddressesAsync(userId, address.Id, cancellationToken);
+
+        // 先將舊的預設地址取消並寫入資料庫，避免唯一索引衝突。
+        await db.SaveChangesAsync(cancellationToken);
+
         address.IsDefault = true;
         address.UpdatedAt = DateTime.UtcNow;
+
+        // 再將新的預設地址寫入資料庫。
         await db.SaveChangesAsync(cancellationToken);
         return Ok(ToAddressDto(address));
     }
@@ -663,10 +674,24 @@ public sealed class MeController(
                 item.ProductId,
                 item.Product.Name,
                 item.Product.PrimaryImagePath,
-                item.Product.Price,
+                item.Product.SalePrice.HasValue
+                    && item.Product.SalePrice.Value > 0m
+                    && item.Product.SalePrice.Value < item.Product.Price
+                    ? item.Product.SalePrice.Value
+                    : Math.Round(item.Product.Price * (100m - item.Product.DiscountRate) / 100m, 2),
+                (item.Product.SalePrice.HasValue
+                    && item.Product.SalePrice.Value > 0m
+                    && item.Product.SalePrice.Value < item.Product.Price)
+                    || item.Product.DiscountRate > 0m
+                    ? item.Product.Price
+                    : null,
                 item.Quantity,
                 item.Product.Stock,
-                item.Product.Price * item.Quantity,
+                (item.Product.SalePrice.HasValue
+                    && item.Product.SalePrice.Value > 0m
+                    && item.Product.SalePrice.Value < item.Product.Price
+                    ? item.Product.SalePrice.Value
+                    : Math.Round(item.Product.Price * (100m - item.Product.DiscountRate) / 100m, 2)) * item.Quantity,
                 item.AddedAt))
             .ToListAsync(cancellationToken);
 
@@ -720,10 +745,11 @@ public sealed class MeController(
             cartItem.ProductId,
             product.Name,
             mediaUrlResolver.Resolve(product.PrimaryImagePath),
-            product.Price,
+            product.EffectivePrice,
+            product.EffectivePrice < product.Price ? product.Price : null,
             cartItem.Quantity,
             product.Stock,
-            product.Price * cartItem.Quantity,
+            product.EffectivePrice * cartItem.Quantity,
             cartItem.AddedAt));
     }
 

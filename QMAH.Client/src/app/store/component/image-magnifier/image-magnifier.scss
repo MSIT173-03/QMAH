@@ -1,0 +1,182 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.magnifier-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-swatch);
+  container-type: size;
+  touch-action: pan-y;
+  cursor: crosshair;
+  overscroll-behavior: contain;
+}
+
+.magnifier-host img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: var(--magnifier-image-filter, none);
+  user-select: none;
+}
+
+.magnifier-host--contain img {
+  object-fit: contain;
+}
+
+.magnifier-lens {
+  position: absolute;
+  width: var(--magnifier-lens-size, clamp(76px, 22%, 132px));
+  aspect-ratio: 1;
+  border: 2px solid var(--qmah-surface-elevated);
+  border-radius: 50%;
+  background-repeat: no-repeat;
+  /* Fallback before image metrics arrive; inline size is based on the source image container. */
+  background-size: 100cqw 100cqh;
+  background-color: var(--color-swatch);
+  box-shadow: var(--qmah-shadow-float), inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 35%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: opacity 120ms ease;
+  user-select: none;
+}
+
+.magnifier-lens.is-active {
+  opacity: 1;
+}
+
+.magnifier-host--persistent .magnifier-lens {
+  opacity: 0.86;
+  pointer-events: auto;
+  cursor: grab;
+  outline: 0;
+}
+
+.magnifier-host--persistent {
+  touch-action: none;
+}
+
+.magnifier-host--persistent .magnifier-lens:hover,
+.magnifier-host--persistent .magnifier-lens:focus-visible,
+.magnifier-host--persistent.is-dragging .magnifier-lens {
+  opacity: 1;
+  cursor: grabbing;
+}
+
+.magnifier-host--persistent .magnifier-lens:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--qmah-focus) 78%, transparent),
+    var(--qmah-shadow-float),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 35%, transparent);
+}
+
+.magnifier-zoom-readout {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--qmah-surface-elevated) 54%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-ink) 46%, transparent);
+  color: var(--qmah-surface-elevated);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  pointer-events: none;
+}
+
+.magnifier-host.is-dragging {
+  cursor: grabbing;
+  touch-action: none;
+}
+
+/*
+ * 這幾組 keyframe 只在鑑賞器傳入 pan 時啟用；商品頁沒有 pan，避免共用元件改變既有節奏。
+ * 以兩個 animation name 配合 panKey 重新掛載，手動切段後仍會從頭開始。
+ * ui-integration: 只動畫 transform，讓長幅畫卷的慢速移動以 compositor-friendly 的方式執行，避免逐幀改 object-position。
+ */
+.magnifier-host--pan-forward.magnifier-host--pan-even img {
+  animation: qmah-image-pan-forward-even var(--magnifier-pan-duration, 16s) ease-in-out both;
+  object-position: 50% 50%;
+  will-change: transform;
+  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-forward.magnifier-host--pan-odd img {
+  animation: qmah-image-pan-forward-odd var(--magnifier-pan-duration, 16s) ease-in-out both;
+  object-position: 50% 50%;
+  will-change: transform;
+  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-backward.magnifier-host--pan-even img {
+  animation: qmah-image-pan-backward-even var(--magnifier-pan-duration, 16s) ease-in-out both;
+  object-position: 50% 50%;
+  will-change: transform;
+  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-backward.magnifier-host--pan-odd img {
+  animation: qmah-image-pan-backward-odd var(--magnifier-pan-duration, 16s) ease-in-out both;
+  object-position: 50% 50%;
+  will-change: transform;
+  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-paused img {
+  animation-play-state: paused !important;
+}
+
+@keyframes qmah-image-pan-forward-even {
+  from { transform: translate3d(-4%, 0, 0) scale(1.08); }
+  to { transform: translate3d(4%, 0, 0) scale(1.08); }
+}
+
+@keyframes qmah-image-pan-forward-odd {
+  from { transform: translate3d(-4%, 0, 0) scale(1.08); }
+  to { transform: translate3d(4%, 0, 0) scale(1.08); }
+}
+
+@keyframes qmah-image-pan-backward-even {
+  from { transform: translate3d(4%, 0, 0) scale(1.08); }
+  to { transform: translate3d(-4%, 0, 0) scale(1.08); }
+}
+
+@keyframes qmah-image-pan-backward-odd {
+  from { transform: translate3d(4%, 0, 0) scale(1.08); }
+  to { transform: translate3d(-4%, 0, 0) scale(1.08); }
+}
+
+.magnifier-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  gap: 8px;
+  color: var(--color-body);
+
+  svg {
+    width: 30px;
+    height: 30px;
+    stroke-width: 1.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .magnifier-lens {
+    transition: none;
+  }
+
+  .magnifier-host--pan-forward img,
+  .magnifier-host--pan-backward img {
+    animation: none;
+    transform: none;
+  }
+}

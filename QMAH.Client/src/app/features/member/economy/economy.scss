@@ -1,0 +1,637 @@
+/* ui-integration: 保留點數摘要、篩選與鑰匙卡片順序，只把會員中心收斂到全站墨色／青瓷／舊金語法。 */
+:host {
+  display: block;
+  min-height: 100vh;
+  --economy-bg: var(--color-base-200, #f6f0e4);
+  --economy-surface: var(--color-base-100, var(--qmah-paper));
+  --economy-ink: var(--color-base-content, #193c38);
+  --economy-muted: color-mix(in srgb, var(--economy-ink) 62%, transparent);
+  --economy-soft: color-mix(in srgb, var(--economy-ink) 46%, transparent);
+  --economy-line: color-mix(in srgb, var(--economy-ink) 14%, transparent);
+  --economy-teal: #4e8097;
+  --economy-gold: #b99a55;
+  --economy-gold-soft: color-mix(in srgb, var(--economy-gold) 12%, var(--economy-surface));
+  --economy-accent: var(--qmah-jade);
+  background: var(--economy-bg);
+  color: var(--economy-ink);
+}
+
+.economy-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+
+// ===============================
+// Header
+// ===============================
+
+.page-header {
+  margin-bottom: 28px;
+
+  h1 {
+    margin: 0 0 8px;
+    color: var(--economy-ink);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 30px;
+    font-weight: 650;
+  }
+
+  p {
+    margin: 0;
+    color: var(--economy-muted);
+    font-size: 15px;
+  }
+}
+
+
+// ===============================
+// Summary
+// ===============================
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  min-height: 128px;
+  padding: 26px 28px;
+
+  border: 1px solid var(--economy-line);
+  border-radius: 14px;
+
+  background: var(--economy-surface);
+
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--economy-ink) 7%, transparent);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+      0 14px 32px color-mix(in srgb, var(--economy-ink) 11%, transparent);
+  }
+}
+
+.summary-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 56px;
+  height: 56px;
+
+  border-radius: 12px;
+
+  background: var(--economy-gold-soft);
+
+  color: var(--economy-gold);
+  font-size: 26px;
+
+  img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+  }
+}
+
+.summary-label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--economy-muted);
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.summary-value {
+  color: var(--economy-ink);
+
+  font-size: 32px;
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+
+// ===============================
+// Progress
+// ===============================
+
+.progress-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.progress-value {
+  font-size: 23px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 9px;
+
+  margin-top: 12px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: var(--economy-line);
+}
+
+.progress-fill {
+  transform-origin: left center;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: var(--economy-teal);
+
+  transition: transform 0.35s ease;
+}
+
+.progress-hint {
+  margin-top: 8px;
+
+  color: var(--economy-soft);
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  strong {
+    margin: 0 3px;
+
+    color: var(--economy-teal);
+
+    font-weight: 700;
+  }
+}
+
+
+// ===============================
+// Keys Section
+// ===============================
+
+.keys-section {
+  padding: 30px;
+
+  border: 1px solid var(--economy-line);
+  border-radius: 14px;
+
+  background: var(--economy-surface);
+
+  box-shadow:
+    0 12px 30px color-mix(in srgb, var(--economy-ink) 6%, transparent);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 26px;
+
+  h2 {
+    margin: 0 0 5px;
+
+    color: var(--economy-ink);
+    font-family: 'Noto Serif TC', serif;
+
+    font-size: 22px;
+    font-weight: 750;
+  }
+
+  p {
+    margin: 0;
+
+    color: var(--economy-muted);
+
+    font-size: 14px;
+  }
+}
+
+.key-count {
+  flex: 0 0 auto;
+
+  padding: 6px 12px;
+
+  border-radius: 999px;
+
+  background: color-mix(in srgb, var(--economy-ink) 7%, transparent);
+
+  color: var(--economy-muted);
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+// ===============================
+// Filter
+// ===============================
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-bottom: 24px;
+}
+
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 9px 14px;
+
+  border: 1px solid var(--economy-line);
+  border-radius: 999px;
+
+  background: var(--economy-surface);
+
+  color: var(--economy-muted);
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 22px;
+    height: 22px;
+
+    padding: 0 6px;
+
+    border-radius: 999px;
+
+    background: color-mix(in srgb, var(--economy-ink) 7%, transparent);
+
+    color: var(--economy-muted);
+
+    font-size: 11px;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+
+    border-color: var(--economy-teal);
+
+    color: var(--economy-teal);
+
+    background: var(--economy-gold-soft);
+  }
+}
+
+.filter-button.active {
+  border-color: var(--economy-ink);
+
+  background: var(--economy-ink);
+
+  color: var(--qmah-paper);
+
+  box-shadow:
+    0 6px 16px color-mix(in srgb, var(--economy-ink) 18%, transparent);
+
+  span {
+    background:
+      rgba(255, 255, 255, 0.18);
+
+    color: var(--qmah-paper);
+  }
+}
+
+
+// ===============================
+// Key Grid
+// ===============================
+
+.key-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fill, minmax(240px, 1fr));
+
+  gap: 16px;
+}
+
+
+// ===============================
+// Key Card
+// ===============================
+
+.key-card {
+  position: relative;
+
+  padding: 20px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--economy-line);
+  border-radius: 14px;
+
+  background: var(--economy-surface);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+
+    border-color: var(--economy-teal);
+
+    box-shadow:
+      0 12px 26px color-mix(in srgb, var(--economy-ink) 10%, transparent);
+  }
+
+  h3 {
+    min-height: 48px;
+
+    margin: 17px 0 14px;
+
+    color: var(--economy-ink);
+
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+}
+
+.key-purpose {
+  min-height: 42px;
+  margin: -6px 0 14px;
+  color: var(--economy-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+
+// ===============================
+// Key Header
+// ===============================
+
+.key-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.key-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 10px;
+
+  background: color-mix(in srgb, var(--economy-ink) 7%, transparent);
+
+  font-size: 20px;
+
+  img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+  }
+}
+
+.filter-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--economy-teal) 72%, transparent);
+  outline-offset: 3px;
+}
+
+.key-card-badges {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+
+  gap: 7px;
+}
+
+
+// ===============================
+// Scope Badge
+// ===============================
+
+.scope-badge {
+  padding: 4px 8px;
+
+  border-radius: 999px;
+
+  background: color-mix(in srgb, var(--economy-ink) 7%, transparent);
+
+  color: var(--economy-muted);
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.category-key .scope-badge {
+  background: color-mix(in srgb, var(--economy-teal) 14%, var(--economy-surface));
+  color: var(--economy-teal);
+}
+
+.era-key .scope-badge {
+  background: color-mix(in srgb, var(--economy-gold) 18%, var(--economy-surface));
+  color: #806526;
+}
+
+.universal-key .scope-badge {
+  background: color-mix(in srgb, var(--economy-accent) 12%, var(--economy-surface));
+  color: var(--economy-accent);
+}
+
+
+// ===============================
+// Balance
+// ===============================
+
+.balance-badge {
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: color-mix(in srgb, var(--economy-ink) 7%, transparent);
+
+  color: var(--economy-soft);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.balance-badge.has-key {
+  background: color-mix(in srgb, var(--economy-teal) 14%, var(--economy-surface));
+  color: var(--economy-teal);
+}
+
+
+// ===============================
+// Key Info
+// ===============================
+
+.key-info {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 12px;
+
+  padding-top: 15px;
+
+  border-top: 1px solid var(--economy-line);
+
+  div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+  }
+
+  span {
+    color: var(--economy-soft);
+
+    font-size: 11px;
+
+    white-space: nowrap;
+  }
+
+  strong {
+    color: var(--economy-ink);
+
+    font-size: 15px;
+    font-weight: 750;
+  }
+}
+
+
+// ===============================
+// Empty Key
+// ===============================
+
+.key-card.empty {
+  background: color-mix(in srgb, var(--economy-ink) 3%, var(--economy-surface));
+
+  border-color: var(--economy-line);
+
+  h3,
+  .key-info {
+    opacity: 0.55;
+  }
+
+  .key-icon {
+    opacity: 0.55;
+  }
+
+  &:hover {
+    transform: none;
+
+    border-color: var(--economy-line);
+
+    box-shadow: none;
+  }
+
+}
+
+
+// ===============================
+// State
+// ===============================
+
+.state-box {
+  padding: 22px;
+
+  border: 1px solid var(--economy-line);
+  border-radius: 14px;
+
+  background: var(--economy-surface);
+
+  color: var(--economy-muted);
+
+  text-align: center;
+}
+
+.state-box.error {
+  border-color: color-mix(in srgb, var(--economy-accent) 38%, var(--economy-line));
+
+  background: color-mix(in srgb, var(--economy-accent) 10%, var(--economy-surface));
+
+  color: var(--economy-accent);
+}
+
+
+// ===============================
+// RWD
+// ===============================
+
+@media (max-width: 700px) {
+
+  .economy-page {
+    padding: 24px 16px 40px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card {
+    min-height: unset;
+
+    padding: 22px;
+  }
+
+  .keys-section {
+    padding: 20px;
+  }
+
+  .section-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .key-grid {
+    grid-template-columns: 1fr;
+  }
+
+}

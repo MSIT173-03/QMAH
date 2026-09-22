@@ -1,0 +1,276 @@
+<!-- key-list.html -->
+<div class="key-page" [class.key-page--embedded]="embedded">
+
+  <div class="page-header">
+    <div class="page-header__bar">
+      <div class="page-header__title-group">
+        <svg lucideLibrary class="page-header__icon" aria-hidden="true" focusable="false"></svg>
+        <h1 class="page-header__title">鑰匙背包</h1>
+      </div>
+    </div>
+    <p class="page-header__sub">查看你目前持有的各類文物鑰匙</p>
+  </div>
+
+  <div *ngIf="loading()" class="state state--loading">
+    <span class="spinner"></span>載入中...
+  </div>
+
+  <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
+
+  <ng-container *ngIf="!loading() && !errorMsg()">
+
+    <div class="section-title">
+      <h2>我的鑰匙</h2>
+      <div class="section-title__tools">
+        <span class="key-count"><strong>{{ totalKeyCount() }} 把</strong><span>共 {{ ownedKeyTypeCount() }} 種</span></span>
+        <button
+          type="button"
+          class="key-view-toggle"
+          [attr.aria-pressed]="showAllSlots()"
+          [attr.aria-label]="showAllSlots() ? '目前顯示完整格位，切換為只顯示持有中的鑰匙' : '目前只顯示持有中的鑰匙，切換為顯示完整格位'"
+          (click)="toggleSlotMode()"
+        >
+          {{ showAllSlots() ? '只顯示持有' : '顯示完整格' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-bar" role="group" aria-label="鑰匙類型篩選">
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'ALL'"
+        [attr.aria-pressed]="selectedFilter() === 'ALL'"
+        (click)="setFilter('ALL')"
+      >
+        全部
+        <span>{{ getFilterCount('ALL') }} 把</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'NORMAL'"
+        [attr.aria-pressed]="selectedFilter() === 'NORMAL'"
+        (click)="setFilter('NORMAL')"
+      >
+        一般
+        <span>{{ getFilterCount('NORMAL') }} 把</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'CATEGORY'"
+        [attr.aria-pressed]="selectedFilter() === 'CATEGORY'"
+        (click)="setFilter('CATEGORY')"
+      >
+        分類
+        <span>{{ getFilterCount('CATEGORY') }} 把</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'ERA'"
+        [attr.aria-pressed]="selectedFilter() === 'ERA'"
+        (click)="setFilter('ERA')"
+      >
+        年代
+        <span>{{ getFilterCount('ERA') }} 把</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="selectedFilter() === 'UNIVERSAL'"
+        [attr.aria-pressed]="selectedFilter() === 'UNIVERSAL'"
+        (click)="setFilter('UNIVERSAL')"
+      >
+        萬能
+        <span>{{ getFilterCount('UNIVERSAL') }} 把</span>
+      </button>
+    </div>
+
+    <ng-container *ngIf="displaySlots().length > 0; else noFilteredKeys">
+    <div class="key-slot-grid" #slotGrid>
+      <button
+        type="button"
+        class="key-slot"
+        *ngFor="let key of displaySlots(); trackBy: trackByDisplaySlot"
+        [class.key-slot--empty]="!key || key.balance === 0"
+        [class.normal-key]="key?.scopeType === 'NORMAL'"
+        [class.category-key]="key?.scopeType === 'CATEGORY'"
+        [class.era-key]="key?.scopeType === 'ERA'"
+        [class.universal-key]="key?.scopeType === 'UNIVERSAL'"
+        [disabled]="!key"
+        [attr.aria-label]="key ? keyScopeLabel(key.scopeType) + '，' + keyScopeDescription(key.scopeType) + '，持有 ' + key.balance + ' 把' : '空的鑰匙格'"
+        (click)="key && onKeySlotClick(key)"
+      >
+        <ng-container *ngIf="key as k">
+          <div class="key-slot__icon">
+            <img [src]="keySlotIcon(k)" [alt]="k.name + '圖示'" loading="lazy" />
+          </div>
+          <span class="key-slot__count">{{ k.balance }}</span>
+          <span class="key-slot__scope-label">{{ keyScopeShortLabel(k) }}</span>
+
+          <div class="key-slot__tooltip">
+            <p class="key-slot__tooltip-name">{{ keyScopeLabel(k.scopeType) }}</p>
+
+            <p class="key-slot__tooltip-detail">{{ k.name }}</p>
+
+            <p class="key-slot__tooltip-description">{{ keyScopeDescription(k.scopeType) }}</p>
+
+            <p class="key-slot__tooltip-row">
+              <span>開鎖類別</span>
+              <strong [ngSwitch]="k.scopeType">
+                <ng-container *ngSwitchCase="'NORMAL'">探索鑰匙</ng-container>
+                <ng-container *ngSwitchCase="'UNIVERSAL'">萬能鑰匙</ng-container>
+                <ng-container *ngSwitchCase="'CATEGORY'">分類鑰匙（{{ getCategoryName(k.categoryId) }}）</ng-container>
+                <ng-container *ngSwitchCase="'ERA'">年代鑰匙（{{ getEraName(k.eraBucketId) }}）</ng-container>
+              </strong>
+            </p>
+
+            <p class="key-slot__tooltip-row">
+              <span>回收點數</span>
+              <strong>{{ k.recyclePointValue }}</strong>
+            </p>
+
+            <p class="key-slot__tooltip-row">
+              <span>可解鎖文物</span>
+              <strong>{{ k.eligibleArtifactCount }} 件</strong>
+            </p>
+
+            <ng-container *ngIf="exchangeRulesFor(k).length">
+              <p class="key-slot__tooltip-row">
+                <span>可用兌換</span>
+                <strong>{{ exchangeRulesFor(k).length }} 種方式</strong>
+              </p>
+              <p class="key-slot__tooltip-hint">兌換方式：在背包的「鑰匙兌換」區按一次兌換一組</p>
+            </ng-container>
+
+            <p class="key-slot__tooltip-hint" *ngIf="k.scopeType === 'UNIVERSAL'; else useHint">
+              請至圖鑑頁的文物卡片上使用
+            </p>
+            <ng-template #useHint>
+              <p class="key-slot__tooltip-hint">點擊查看，不會消耗鑰匙</p>
+            </ng-template>
+          </div>
+        </ng-container>
+      </button>
+    </div>
+    </ng-container>
+    <ng-template #noFilteredKeys>
+      <div class="key-empty" role="status">
+        <p class="key-empty__title">{{ selectedFilter() === 'ALL' ? '目前沒有持有中的鑰匙' : '這個類型目前沒有鑰匙' }}</p>
+        <p class="key-empty__desc">{{ selectedFilter() === 'ALL' ? '取得鑰匙後會顯示在這裡。' : '請切換其他篩選查看已持有的鑰匙。' }}</p>
+      </div>
+    </ng-template>
+
+    <section class="key-inspection" *ngIf="inspectedKey() as key" aria-live="polite">
+      <div>
+        <h3>{{ key.name }}</h3>
+        <p>持有 {{ key.balance }} 把 · 可解鎖 {{ key.eligibleArtifactCount }} 件文物</p>
+        <p>查看不會扣除鑰匙。確認解鎖一件文物後才消耗 1 把。</p>
+        <p *ngIf="key.scopeType === 'UNIVERSAL'">請在圖鑑選擇文物，再按「解鎖」。</p>
+      </div>
+      <button type="button" class="action-btn unlock-btn" *ngIf="key.scopeType !== 'UNIVERSAL'" [disabled]="key.balance < 1 || key.eligibleArtifactCount < 1" (click)="requestUnlock(key)">解鎖一件文物</button>
+      <button type="button" class="action-btn cancel-btn" (click)="inspectedKey.set(null)">收合</button>
+    </section>
+
+    <details class="exchange-panel">
+      <summary class="exchange-panel__summary">
+        <span class="exchange-panel__summary-copy">
+          <span class="section-kicker">資產管理</span>
+          <span class="exchange-panel__title" id="key-exchange-title">鑰匙兌換</span>
+          <span class="exchange-panel__summary-note">查看目前可用的兌換方式</span>
+        </span>
+        <span class="exchange-panel__summary-meta">
+          {{ exchangeRules().length ? exchangeRules().length + ' 種方式' : '尚未有方式' }}
+        </span>
+      </summary>
+
+      <div class="exchange-panel__body" aria-labelledby="key-exchange-title">
+        <p class="exchange-panel__intro">依目前規則把來源鑰匙換成另一種鑰匙。每次兌換一組，扣除與入帳以伺服器回應為準。</p>
+        @if (exchangeNotice()) { <p class="exchange-notice" role="status">{{ exchangeNotice() }}</p> }
+        @if (exchangeError()) { <p class="exchange-message exchange-message--error" role="alert">{{ exchangeError() }}</p> }
+        @if (exchangeRules().length) {
+          <div class="exchange-rules">
+            @for (rule of exchangeRules(); track rule.id) {
+              <article class="exchange-rule">
+                <div class="exchange-rule__route">
+                  <span><strong>{{ rule.sourceAmount }}</strong> {{ rule.sourceKeyName }}</span>
+                  <span class="exchange-rule__arrow" aria-hidden="true">→</span>
+                  <span><strong>{{ rule.targetAmount }}</strong> {{ rule.targetKeyName }}</span>
+                </div>
+                <p>{{ rule.description || '兌換前會再次檢查持有數量與規則狀態。' }}</p>
+                <div class="exchange-rule__footer">
+                  <span>目前可解鎖 {{ rule.targetEligibleArtifactCount }} 件</span>
+                  <button type="button" [attr.aria-label]="'以 ' + rule.sourceAmount + ' 把' + rule.sourceKeyName + '兌換 ' + rule.targetAmount + ' 把' + rule.targetKeyName" [disabled]="exchangeLoading() || !canExchange(rule)" (click)="exchange(rule)">{{ exchangeLoading() ? '處理中…' : canExchange(rule) ? '兌換 1 組' : '鑰匙不足' }}</button>
+                </div>
+              </article>
+            }
+          </div>
+        } @else if (!exchangeError()) {
+          <p class="exchange-message">目前沒有可用的兌換方式。</p>
+        }
+      </div>
+    </details>
+
+  </ng-container>
+
+  <!-- 使用鑰匙確認視窗 -->
+  <div
+    class="confirm-overlay"
+    [class.open]="confirmTarget() !== null"
+    (click)="onConfirmOverlayClick($event)"
+  >
+    <div
+      class="confirm-dialog"
+      *ngIf="confirmTarget() as key"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="key-use-dialog-title"
+    >
+      <img class="key-icon" [src]="keySlotIcon(key)" [alt]="key.name + '圖示'" />
+      <h3 id="key-use-dialog-title">確認解鎖文物</h3>
+      <p>使用「{{ key.name }}」隨機解鎖一件符合範圍的文物？</p>
+      <p class="have">
+        使用後將消耗 <strong>{{ confirmCost() }}</strong> 把，剩餘 <strong>{{ key.balance - confirmCost() }}</strong> 把
+        <span class="warn" *ngIf="confirmInsufficient()">（數量不足）</span>
+      </p>
+      <p class="have warn" *ngIf="unlockError()">{{ unlockError() }}</p>
+      <div class="confirm-actions">
+        <button type="button" class="action-btn cancel-btn" [disabled]="unlocking()" (click)="cancelUseKey()">取消</button>
+        <button type="button" class="action-btn unlock-btn" [disabled]="unlocking() || confirmInsufficient()" (click)="confirmUseKey()">
+          {{ unlocking() ? '解鎖中...' : '確認解鎖，消耗 1 把' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 解鎖成功結果視窗 -->
+  <div
+    class="confirm-overlay"
+    [class.open]="unlockResult() !== null"
+    (click)="onResultOverlayClick($event)"
+  >
+    <div
+      class="confirm-dialog"
+      *ngIf="unlockResult() as result"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="key-result-dialog-title"
+    >
+      <svg lucideCircleCheckBig class="key-icon" aria-hidden="true" focusable="false"></svg>
+      <h3 id="key-result-dialog-title">解鎖成功</h3>
+      <p>你解鎖了「{{ result.artifactName }}」</p>
+      <p class="have">要現在前往圖鑑查看這件文物嗎？</p>
+      <div class="confirm-actions">
+        <button type="button" class="action-btn cancel-btn" (click)="closeUnlockResult()">稍後查看</button>
+        <button type="button" class="action-btn unlock-btn" (click)="goToArtifact()">前往查看</button>
+      </div>
+    </div>
+  </div>
+
+</div>

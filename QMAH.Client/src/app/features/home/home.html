@@ -1,0 +1,82 @@
+<div class="home-page">
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="home-hero__copy">
+      <h1 id="home-title">從一件文物開始，找到你的探索路線。</h1>
+      <p class="home-hero__lead">
+        把圖鑑、遊戲、社群與商城放在同一條路上。你可以先看一件作品，再決定下一步要玩、要聊，或把喜歡的圖像帶回家。
+      </p>
+
+      <div class="home-hero__actions">
+        <a class="home-button home-button--primary" routerLink="/artifact-list">
+          <span>開啟文物圖鑑</span>
+          <app-qmah-icon name="arrow-right" aria-hidden="true" />
+        </a>
+        <a class="home-button home-button--secondary" routerLink="/game">進入遊戲大廳</a>
+      </div>
+
+      @if (meApi.me(); as me) {
+        <p class="home-hero__member-note">歡迎回來，{{ me.displayName || '會員' }}。<wbr>查看圖鑑與會員資產。</p>
+      } @else {
+        <p class="home-hero__member-note">登入後可以保存探索進度，並使用完整的會員功能。</p>
+      }
+    </div>
+
+    <figure class="home-hero__image">
+      <img
+        src="/images/login/museum/main-building.jpg"
+        alt="國立故宮博物院北部院區正館夜景"
+        width="4096"
+        height="2731"
+        fetchpriority="high"
+        decoding="async"
+      />
+      <figcaption>
+        <span>北部院區（本院）・臺北士林</span>
+        <a href="https://www.npm.gov.tw/" target="_blank" rel="noreferrer">認識故宮</a>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="home-explore" aria-labelledby="explore-title">
+    <div class="home-section-heading">
+      <h2 id="explore-title">今天想去哪裡？</h2>
+      <p>沿著你熟悉的入口開始，之後隨時可以回到首頁換一條路。</p>
+    </div>
+
+    <nav class="home-route-list" aria-label="清明鑑定屋探索入口">
+      @for (link of routeLinks; track link.path) {
+        <a class="home-route" [routerLink]="link.path">
+          <span class="home-route__icon" aria-hidden="true"><app-qmah-icon [name]="link.icon" /></span>
+          <span class="home-route__content">
+            <strong>{{ link.label }}</strong>
+            <span>{{ link.description }}</span>
+          </span>
+          <app-qmah-icon class="home-route__arrow" name="arrow-right" aria-hidden="true" />
+        </a>
+      }
+    </nav>
+  </section>
+
+  <section class="home-museum-note" aria-labelledby="museum-note-title">
+    <div class="home-museum-note__image">
+      <img
+        src="/images/login/museum/southern-branch.jpg"
+        alt="國立故宮博物院南部院區墨韻樓、飛白館與水景航拍"
+        width="1024"
+        height="575"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+    <div class="home-museum-note__copy">
+      <h2 id="museum-note-title">南北兩院，各有風景；認識文物，也有兩途。</h2>
+      <p>
+        北部院區坐落於臺北士林，南部院區位於嘉義太保。故宮以南北兩院，讓觀看文物有了不同入口；清明鑑定屋也循著這個比喻，讓你可以和同伴進入多人鑑定大廳觀察、作答、投票，或獨自玩一局小遊戲，從細節認識館藏。
+      </p>
+      <div class="home-museum-note__links">
+        <a routerLink="/game">多人鑑定大廳</a>
+        <a routerLink="/game/training">單人小遊戲</a>
+      </div>
+    </div>
+  </section>
+</div>

@@ -70,6 +70,14 @@ public sealed record ArtifactDetailsDto(
 
 public sealed record CodeLabelDto(Guid Id, string Code, string Name);
 
+public sealed record AccountSessionDto(Guid UserId, string Email, string? Nickname);
+
+// integration: 前端只需要知道選用登入能力是否啟用，不應取得 ClientSecret 或猜測部署設定。
+// 回傳 capability（能力旗標）可讓缺少第三方 OAuth secret 時停用單一按鈕，保留一般 Identity 登入。
+public sealed record AccountCapabilitiesDto(bool GoogleLoginEnabled);
+
+// Store 商品 DTO 暴露定價、後端計算的折扣率與有效售價；DiscountRate 是大量套用折扣的來源，
+// SalePrice 是指定單品價或依 DiscountRate 計算出的唯讀顯示欄位，EffectivePrice 遵守相同優先規則。
 public sealed record ProductListItemDto(
     Guid Id,
     Guid? ArtifactId,
@@ -77,12 +85,29 @@ public sealed record ProductListItemDto(
     string Name,
     string CategoryCode,
     decimal Price,
+    decimal DiscountRate,
+    decimal EffectivePrice,
+    decimal? SalePrice,
     int Stock,
     string? PrimaryImagePath,
     DateTime CreatedAt,
     decimal AverageRating,
     int ReviewCount,
     int SellCount);
+
+/// <summary>商城分類入口資料；商品件數由目前啟用中的商品即時計算。</summary>
+public sealed record StoreCategoryDto(
+    Guid Id,
+    string Code,
+    string Name,
+    int ProductCount);
+
+// integration: 商城活動直接引用已發布的官方商城公告；不複製優惠券文案，也不讓前台解析自由文字。
+public sealed record StorePromotionDto(
+    Guid Id,
+    string Title,
+    string Content,
+    DateTime PublishedAt);
 
 public sealed record ProductDetailsDto(
     Guid Id,
@@ -94,7 +119,12 @@ public sealed record ProductDetailsDto(
     string CategoryCode,
     string? Description,
     string? SizeText,
+    // 商品固定是 A6 明信片；原文物尺寸另回傳，避免前台只能顯示其中一種尺寸。
+    string? ArtifactSizeText,
     decimal Price,
+    decimal DiscountRate,
+    decimal EffectivePrice,
+    decimal? SalePrice,
     int Stock,
     string? PrimaryImagePath,
     string? SourceUrl,
@@ -164,6 +194,7 @@ public sealed record SocialPostListItemDto(
     string ContentPreview,
     int CommentCount,
     int MediaCount,
+    string? CoverImageUrl,
     string? LocationName,
     decimal? Latitude,
     decimal? Longitude,
@@ -212,6 +243,7 @@ public sealed record EventListItemDto(
     Guid? SocialPostId,
     string EventType,
     Guid? OrganizerUserId,
+    string? OrganizerDisplayName,
     string Title,
     string Content,
     string? Location,
@@ -221,13 +253,15 @@ public sealed record EventListItemDto(
     DateTime EndAt,
     DateTime? RegistrationEndAt,
     int? Capacity,
-    int RegistrationCount);
+    int RegistrationCount,
+    string? CoverImageUrl = null);
 
 public sealed record SocialEventDetailsDto(
     Guid Id,
     Guid? SocialPostId,
     string EventType,
     Guid? OrganizerUserId,
+    string? OrganizerDisplayName,
     string Title,
     string Content,
     string? Location,
@@ -239,6 +273,7 @@ public sealed record SocialEventDetailsDto(
     int? Capacity,
     int RegistrationCount,
     bool IsRegistered,
+    IReadOnlyList<SocialMediaDto> Media,
     string? ReviewStatus = null,
     string? PublishStatus = null);
 
@@ -257,156 +292,60 @@ public sealed record AnnouncementDto(
     Guid? EventId,
     DateTime CreatedAt);
 
-public sealed record GameRoomListItemDto(
+public sealed record AdminEventListItemDto(
     Guid Id,
-    string RoomCode,
-    string Status,
-    string Visibility,
-    byte MaxPlayers,
-    byte TotalRounds,
-    int PlayerCount,
+    string EventType,
+    Guid? OrganizerUserId,
+    string? OrganizerDisplayName,
+    string Title,
+    DateTime StartAt,
+    DateTime EndAt,
+    string ReviewStatus,
+    string PublishStatus,
+    string? ReviewNote,
     DateTime CreatedAt);
 
-public sealed record GamePlayerDto(
+public sealed record AdminPostListItemDto(
     Guid Id,
-    string DisplayName,
-    string Role,
-    bool IsReady,
-    byte? SeatNo,
-    string ConnectionStatus);
-
-public sealed record GameRoomDetailsDto(
-    Guid Id,
-    string RoomCode,
+    string BoardCode,
+    Guid UserId,
+    string? DisplayName,
+    string PostType,
+    string PublisherType,
+    string Title,
+    string ContentPreview,
     string Status,
-    string Visibility,
-    byte MaxPlayers,
-    byte TotalRounds,
-    short AnswerSeconds,
-    short VotingSeconds,
-    string? CategoryFilterCode,
-    string? EraBucketFilterCode,
-    byte CurrentRoundNo,
-    IReadOnlyList<GamePlayerDto> Players,
+    int CommentCount,
     DateTime CreatedAt,
-    DateTime? StartedAt,
-    DateTime? EndedAt);
+    DateTime UpdatedAt);
 
-public sealed record GameAnswerDto(
+public sealed record AdminCommentListItemDto(
     Guid Id,
-    Guid GamePlayerId,
-    string PlayerDisplayName,
-    string AnswerType,
-    string Text,
-    int VoteCount,
-    int Rank,
-    bool IsWinner,
-    DateTime SubmittedAt);
+    Guid PostId,
+    string PostTitle,
+    Guid? ParentCommentId,
+    Guid UserId,
+    string? DisplayName,
+    string Content,
+    string Status,
+    DateTime CreatedAt);
 
-public sealed record GameRoundDetailsDto(
+public sealed record AdminContentReportDto(
     Guid Id,
-    Guid RoomId,
-    Guid ArtifactId,
-    string ArtifactName,
-    int RoundNumber,
+    string TargetType,
+    Guid TargetId,
+    string Reason,
+    string? Detail,
     string Status,
-    bool IsSettled,
-    DateTime StartedAt,
-    DateTime AnswerDeadlineAt,
-    DateTime VotingDeadlineAt,
-    DateTime? SettledAt,
-    int ParticipantCount,
-    int TotalVoteCount,
-    Guid? WinnerAnswerId,
-    string? WinnerPlayerDisplayName,
-    IReadOnlyList<GameAnswerDto> Answers);
-
-public sealed record GameRoundSummaryDto(
-    Guid Id,
-    int RoundNumber,
-    Guid ArtifactId,
-    string ArtifactName,
-    string Status,
-    bool IsSettled,
-    DateTime StartedAt,
-    DateTime? SettledAt,
-    int AnswerCount,
-    int TotalVoteCount,
-    Guid? WinnerAnswerId,
-    string? WinnerPlayerDisplayName,
-    IReadOnlyList<GameAnswerDto> Answers);
-
-public sealed record GameLeaderboardItemDto(
-    Guid GamePlayerId,
-    string DisplayName,
-    int Score,
-    int RoundsAnswered,
-    int RoundsWon,
-    int Rank);
-
-public sealed record GameRoomHistoryDto(
-    Guid RoomId,
-    string RoomCode,
-    string Status,
-    IReadOnlyList<GameRoundSummaryDto> Rounds,
-    IReadOnlyList<GameLeaderboardItemDto> Leaderboard);
-
-public sealed class CreateGameRoomRequest
-{
-    [Required, StringLength(20)]
-    public string Visibility { get; set; } = "PUBLIC";
-
-    [StringLength(128)]
-    public string? Password { get; set; }
-
-    [Required, StringLength(80, MinimumLength = 1)]
-    public string DisplayName { get; set; } = "玩家";
-
-    [Range(3, 10)]
-    public byte MaxPlayers { get; set; } = 6;
-
-    [Range(1, 5)]
-    public byte TotalRounds { get; set; } = 3;
-
-    [Range(30, 300)]
-    public short AnswerSeconds { get; set; } = 120;
-
-    [Range(20, 180)]
-    public short VotingSeconds { get; set; } = 60;
-
-    [StringLength(32)]
-    public string? CategoryFilterCode { get; set; }
-
-    [StringLength(32)]
-    public string? EraBucketFilterCode { get; set; }
-}
-
-public sealed class JoinGameRoomRequest
-{
-    [Required, StringLength(80, MinimumLength = 1)]
-    public string DisplayName { get; set; } = "玩家";
-
-    [StringLength(128)]
-    public string? Password { get; set; }
-}
-
-public sealed class SubmitAnswerRequest
-{
-    [Required, StringLength(32)]
-    public string AnswerType { get; set; } = "";
-
-    [Required, StringLength(500, MinimumLength = 1)]
-    public string Text { get; set; } = "";
-}
-
-public sealed class SubmitVoteRequest
-{
-    [Required]
-    public Guid AnswerId { get; set; }
-
-    [Range(1, 5)]
-    public int Count { get; set; } = 1;
-}
+    string? Resolution,
+    Guid ReporterUserId,
+    string? ReporterDisplayName,
+    DateTime CreatedAt,
+    DateTime? ReviewedAt,
+    string? TargetTitle,
+    string? TargetContent,
+    string? TargetStatus,
+    Guid? TargetPostId);
 
 public sealed class CreateSocialPostRequest
 {
@@ -476,6 +415,9 @@ public sealed class CreateSocialEventRequest
 
     [StringLength(4000)]
     public string? PostContent { get; set; }
+
+    [MaxLength(8)]
+    public List<Guid> MediaIds { get; set; } = [];
 }
 
 public sealed class CreateSocialCommentRequest
@@ -484,6 +426,32 @@ public sealed class CreateSocialCommentRequest
     public string Content { get; set; } = "";
 
     public Guid? ParentCommentId { get; set; }
+}
+
+public sealed class EnsureArtifactDiscussionRequest
+{
+    [Required, StringLength(2000, MinimumLength = 1)]
+    public string InitialComment { get; set; } = "";
+}
+
+public sealed record EnsureArtifactDiscussionResultDto(
+    Guid PostId,
+    bool Created,
+    Guid CommentId);
+
+public sealed class UpdateSocialPostRequest
+{
+    [StringLength(80, MinimumLength = 1)]
+    public string Title { get; set; } = "";
+
+    [Required, StringLength(4000, MinimumLength = 1)]
+    public string Content { get; set; } = "";
+}
+
+public sealed class UpdateSocialCommentRequest
+{
+    [Required, StringLength(2000, MinimumLength = 1)]
+    public string Content { get; set; } = "";
 }
 
 public sealed class CreateContentReportRequest
@@ -564,6 +532,8 @@ public sealed record CouponDto(
     DateTime ExpiresAt,
     DateTime? UsedAt);
 
+// integration: 訂單 request／response 與 persistence entity 分離；訂單明細的商品名稱、單價快照
+// 由 StoreOrdersController 建立，讓商品後續異動不會改寫歷史訂單。
 public sealed class CreateOrderItemRequest
 {
     [Required]
@@ -577,6 +547,11 @@ public sealed class CreateStoreOrderRequest
 {
     [Required, MinLength(1)]
     public List<CreateOrderItemRequest> Items { get; set; } = [];
+
+    // integration: 這是同一次下單重送時使用的安全識別，不改變訂單功能；
+    // 有提供時可在 commit 回應遺失後找回原訂單，避免重複扣庫存與會員資產。
+    [StringLength(64, MinimumLength = 1)]
+    public string? IdempotencyKey { get; set; }
 
     public Guid? UserCouponId { get; set; }
 
@@ -674,6 +649,7 @@ public sealed record CartItemDto(
     string ProductName,
     string? PrimaryImagePath,
     decimal UnitPrice,
+    decimal? OriginalPrice,
     int Quantity,
     int AvailableStock,
     decimal LineTotal,

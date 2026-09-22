@@ -7,7 +7,7 @@
 /* 「前往結帳」為 <a> 元素，全站的 a:hover 文字色規則權重高於 .btn-solid 的白字，
    hover 時文字會被覆蓋成強調色而看不清，故在此明確覆寫維持白色 */
 .btn-solid:hover {
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .summary-note {

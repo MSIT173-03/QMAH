@@ -17,6 +17,7 @@ import {
   ApiProductPage,
   ApiProductReview,
   ApiProductReviewsResponse,
+  toCategoryCode,
 } from '../catalog.api-dto';
 import {
   ADDON_LIMIT,
@@ -83,14 +84,14 @@ function toProduct(record: CatalogRecord): Product {
     category: record.cat,
     price: record.price,
     dealPrice: dealPrice(record),
-    discountRate: record.off,
+    discountRate: record.off * 100,
     rating: record.rating,
     reviewCount: record.reviews,
     soldCount: SOLD_BASE + CATALOG.indexOf(record) * SOLD_STEP,
     source: record.source,
     dimensions: record.dims,
     listedAt: record.listedAt,
-    coverImage: null,
+    coverImage: record.image ?? null,
   };
 }
 
@@ -103,20 +104,29 @@ function toApiProduct(record: CatalogRecord): ApiProductListItem {
     name: record.name,
     categoryCode: record.cat,
     price: record.price,
+    discountRate: record.off * 100,
+    effectivePrice: dealPrice(record),
+    salePrice: record.off > 0 ? dealPrice(record) : null,
     stock: MOCK_STOCK,
-    primaryImagePath: null,
-    isActive: true,
+    primaryImagePath: record.image ?? null,
+    createdAt: `${record.listedAt}T00:00:00`,
+    averageRating: record.rating,
+    reviewCount: record.reviews,
+    sellCount: SOLD_BASE + CATALOG.indexOf(record) * SOLD_STEP,
   };
 }
 
 /** CatalogRecord → 後端「商品」DTO（見 doc/apis.xml），供 getProduct 使用 */
 function toApiProductDetail(record: CatalogRecord): ApiProductDetail {
+  const { createdAt, sellCount, ...listItem } = toApiProduct(record);
   return {
-    ...toApiProduct(record),
+    ...listItem,
+    isActive: true,
     artifactRef: record.id,
     artifactName: record.name,
-    description: record.source + DESCRIPTION_SUFFIX,
+    description: `${record.source}${DESCRIPTION_SUFFIX}\n\n文物原始尺寸：${record.artifactDims ?? '官方資料未提供'}`,
     sizeText: record.dims,
+    artifactSizeText: record.artifactDims ?? '官方資料未提供',
     sourceUrl: null,
     averageRating: record.rating,
     reviewCount: record.reviews,
@@ -137,16 +147,19 @@ function numberParam(params: HttpParams, key: string): number | undefined {
 
 /**
  * GET /products：商品清單。回應為後端 DTO 格式（見 doc/apis.xml），由 CatalogApi 轉換為前端顯示用的 Product。
- * 僅支援後端已實作的篩選條件（關鍵字、器類代碼、分頁），排序與價格區間、限折扣品等前端篩選條件後端尚未提供。
+ * 模擬正式 API 的關鍵字、器類代碼、分頁與限折扣品篩選。
  */
 export function listProducts(params: HttpParams): ApiProductPage {
-  const categoryCode = params.get('categoryCode');
+  const categoryCode = params.get('category') ?? params.get('categoryCode');
   const keyword = params.get('q')?.trim();
+  const dealOnly = params.get('dealOnly') === 'true';
   const page = numberParam(params, 'page') ?? 1;
   const pageSize = numberParam(params, 'pageSize') ?? 20;
 
   const matched = CATALOG.filter((record) => {
-    if (categoryCode && record.cat !== categoryCode) return false;
+    // 假型錄以中文器類名稱保存，換成正式 API 的 categoryCode 後再比對。
+    if (categoryCode && toCategoryCode(record.cat) !== categoryCode) return false;
+    if (dealOnly && !(record.off > 0 && dealPrice(record) < record.price)) return false;
     const haystack = record.name + record.brand + record.cat + record.material + record.source;
     return !keyword || haystack.includes(keyword);
   }).sort((a, b) => a.name.localeCompare(b.name));
@@ -163,16 +176,6 @@ export function listProducts(params: HttpParams): ApiProductPage {
 /** GET /products/{id}：商品詳情，回應為後端 DTO 格式（見 doc/apis.xml），查無商品時回應 404 */
 export function getProduct(id: string): ApiProductDetail {
   return toApiProductDetail(findRecord(id));
-}
-
-export function listRelated(id: string, params: HttpParams) {
-  const record = findRecord(id);
-  const limit = numberParam(params, 'limit') ?? 5;
-  const items = CATALOG.filter((other) => other.cat === record.cat && other.id !== record.id)
-    .concat(CATALOG.filter((other) => other.cat !== record.cat))
-    .slice(0, limit)
-    .map(toProduct);
-  return { items };
 }
 
 /** 假型錄的 Review → 後端「商品評論」DTO（見 doc/apis.xml），每件商品皆回傳同一組示意評論 */
@@ -285,6 +288,7 @@ function buildCart(): ShoppingCart {
   const lines = cartLines();
   const items = lines.map(({ record, qty }) => ({
     productId: record.id,
+    coverImage: record.image ?? null,
     brand: record.brand,
     category: record.cat,
     name: record.name,

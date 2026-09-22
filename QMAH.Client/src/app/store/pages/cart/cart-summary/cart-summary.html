@@ -5,17 +5,18 @@
     <div class="summary-row"><span>{{ subtotalLabel }}</span><span class="font-mono">{{ getSubtotal() }}</span></div>
     <div class="summary-row"><span>{{ savingsLabel }}</span><span class="font-mono text-accent">{{ getSavings() }}</span></div>
     <div class="summary-row"><span>{{ shippingLabel }}</span><span class="font-mono">{{ getShipping() }}</span></div>
-    <span class="summary-note">{{ getShipNote() }}</span>
+    @if (getShipNote()) {
+      <span class="summary-note">{{ getShipNote() }}</span>
+    }
     <div class="summary-total-row">
       <span class="summary-total-label">{{ totalLabel }}</span>
       <span class="summary-total-value">{{ getTotal() }}</span>
     </div>
-    <!-- 前往結帳 -->
-    @if (canCheckout()) {
+    <!-- integration: checkout contract 尚未完成時只顯示停用狀態，不把使用者送進無法付款的頁面。 -->
+    @if (checkoutEnabled) {
       <a [storeLink]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
     } @else {
-      <button type="button" class="btn-solid btn-solid--full" disabled [title]="loginRequiredNote">{{ checkoutLabel }}</button>
-      <span class="summary-note">{{ loginRequiredNote }}</span>
+      <button type="button" class="btn-solid btn-solid--full" disabled>{{ checkoutLabel }}</button>
     }
   </app-panel>
 

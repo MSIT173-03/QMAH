@@ -1,35 +1,54 @@
 using System.IO.Compression;
 using System.Threading.RateLimiting;
 
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore;
+using Microsoft.Extensions.FileProviders;
 
-using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
+using QMAH.Api.Infrastructure.OpenApi;
+using QMAH.Api.Services;
+using QMAH.Infrastructure.Configuration;
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Development;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
+using QMAH.Infrastructure.Services.Game;
+
+using Scalar.AspNetCore;
+using QMAH.Infrastructure.Services.Social;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
 // Local 檔最後加入，因此只要檔案存在就具有最高優先權，方便每位組員覆寫連線與前台來源；部署環境不應放置此檔。
+// 開發環境固定不要求 Secure：QMAH.Api 一律以 https launch profile 執行，但 QMAH.Client 的
+// Angular dev server（ng serve）預設是 http，透過 proxy.conf.json 轉送時瀏覽器端看到的其實是
+// http，用 SameAsRequest 會依 Kestrel 收到的 request（永遠是 https）判斷，導致 cookie 被標成
+// Secure，卻沒有穩定的辦法送回純 http 的 4200——會員登入狀態因此不穩定地遺失。
 var cookieSecurePolicy = builder.Environment.IsDevelopment()
-    ? CookieSecurePolicy.SameAsRequest
+    ? CookieSecurePolicy.None
     : CookieSecurePolicy.Always;
 
 builder.Configuration.AddJsonFile(
     "appsettings.Local.json",
     optional: true,
     reloadOnChange: true);
+
+builder.Services
+    .AddOptions<QmahPasswordResetOptions>()
+    .Bind(builder.Configuration.GetSection(QmahPasswordResetOptions.SectionName));
+builder.Services
+    .AddOptions<QmahMailjetOptions>()
+    .Bind(builder.Configuration.GetSection(QmahMailjetOptions.SectionName));
 
 // 先嘗試設定檔指定的連線；失敗時才依 resolver 的候選順序尋找本機名稱為 QMAH 的 SQL Server／LocalDB。
 // 其他需要直接存取資料庫的 host 應重用 resolver，避免 Web、API 與工具程式各自猜測不同 instance。
@@ -142,6 +161,26 @@ builder.Services
     })
     .AddEntityFrameworkStores<QmahDbContext>()
     .AddDefaultTokenProviders();
+
+var authenticationBuilder = builder.Services.AddAuthentication();
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+if (!string.IsNullOrWhiteSpace(googleClientId)
+    && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    authenticationBuilder.AddGoogle(options =>
+    {
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+        options.SignInScheme = IdentityConstants.ExternalScheme;
+    });
+}
+else
+{
+    // integration: Google OAuth 為選用功能，缺少設定時不可阻止 API 啟動。
+    builder.Logging.AddFilter("Microsoft.AspNetCore.Authentication", LogLevel.Warning);
+}
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 {
     // 後台停用帳號後，既有登入 cookie 也要在下一次 request 失效。
@@ -149,7 +188,10 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 });
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IPasswordResetEmailSender, PasswordResetEmailSender>();
+builder.Services.AddHttpClient<IPasswordResetEmailSender, PasswordResetEmailSender>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
 // 使用 DbContext、目前會員或 request 資訊的服務採 Scoped；只有確定無狀態且 thread-safe 的元件才可註冊 Singleton。
 // 新增跨系統規則時放進 Infrastructure service，Controller 只負責輸入驗證與 HTTP response，Web 後台也能重用同一套規則。
@@ -160,11 +202,30 @@ builder.Services.AddScoped<MiniGameService>();
 builder.Services.AddScoped<CommunityRewardService>();
 builder.Services.AddScoped<GameRoomInvitationService>();
 builder.Services.AddScoped<DailyActivityService>();
+// integration: 房間生命週期由背景 worker 定期推進，和 HTTP 請求共用同一個 scoped service；
+// 不依賴前端持續輪詢，部署到不同主機時也只需沿用既有 DI 設定。
+builder.Services.AddScoped<GameRoomLifecycleService>();
+builder.Services.AddHostedService<GameRoomLifecycleWorker>();
+// Social 站內通知：活動審核、檢舉處理等共用同一套排隊寫入方式，由各自的 SaveChangesAsync 一併提交。
+builder.Services.AddScoped<INotificationService, SocialNotificationService>();
+// 圖鑑點擊社群入口需要在同一個交易中確保討論串與第一則留言，
+// 由 Infrastructure service 集中處理，避免 Controller 自己重複維護交易與通知規則。
+builder.Services.AddScoped<ArtifactDiscussionService>();
 
 // 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/problem+json; charset=utf-8";
+        await context.HttpContext.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status429TooManyRequests,
+            Title = "登入嘗試過於頻繁",
+            Detail = "請稍後再試。"
+        }, cancellationToken);
+    };
     options.AddPolicy("auth", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -222,6 +283,24 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        await DevelopmentAdminSeeder.ResetDevelopmentPasswordsAsync(
+            app.Services,
+            builder.Configuration);
+    }
+    catch (Exception exception)
+        when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception))
+    {
+        app.Logger.LogWarning(
+            exception,
+            "開發用帳號密碼初始化時無法連線資料庫；登入仍會回報資料庫錯誤。目標：{DatabaseTarget}",
+            qmahDatabaseResolution.Target);
+    }
+}
+
 // 連線解析只選擇既有資料庫，不會自動建立或套用 migration；正式 Schema 仍由版本化 SQL 控制。
 // 多個候選同時存在時記錄實際採用目標，方便核對 SSMS 與應用程式是否正在查看同一套 QMAH。
 if (qmahDatabaseResolution.FoundTargets.Count > 1)
@@ -244,6 +323,72 @@ else
         qmahDatabaseResolution.Target);
 }
 
+if (app.Environment.IsDevelopment())
+{
+    app.Logger.LogInformation("公開媒體根目錄：{MediaRoot}", mediaRoot);
+    if (!Directory.Exists(mediaRoot))
+    {
+        app.Logger.LogWarning(
+            "Media:RootPath 不存在，/media/catalog 與 /media/store 將回傳 404。路徑：{MediaRoot}",
+            mediaRoot);
+    }
+    else
+    {
+        foreach (var segment in new[] { "catalog", "store" })
+        {
+            var segmentPath = Path.Combine(mediaRoot, segment);
+            if (!Directory.Exists(segmentPath))
+            {
+                app.Logger.LogWarning(
+                    "資料庫可能包含 /media/{Segment} 圖片路徑，但本機公開媒體資料夾不存在：{SegmentPath}",
+                    segment,
+                    segmentPath);
+            }
+        }
+    }
+}
+
+// 使用者切換頁面／重新整理時，瀏覽器會直接中止尚未完成的舊請求（例如貼文列表還沒回應就跳走）。
+// EF Core 收到這個中止會丟出 OperationCanceledException，這是正常現象、不是例外狀況，
+// 客戶端本來就不會再理會這個回應了，所以放在最外層直接吞掉，避免被當成未處理例外噴到主控台或開發例外頁。
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+    {
+    }
+    catch (Exception exception)
+        when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception)
+            && !context.RequestAborted.IsCancellationRequested)
+    {
+        // integration: API 依賴資料庫的單一請求失敗時只回傳 503，不能讓例外穿透成整個 Host 的未處理錯誤。
+        // 這讓登入、型錄、遊戲與其他不依賴該次查詢的功能仍可繼續服務；資料庫恢復後也能直接重試。
+        app.Logger.LogError(
+            exception,
+            "API request 無法連線到 QMAH 資料庫。目標：{DatabaseTarget}",
+            qmahDatabaseResolution.Target);
+
+        if (context.Response.HasStarted)
+        {
+            throw;
+        }
+
+        context.Response.Clear();
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        context.Response.ContentType = "application/problem+json; charset=utf-8";
+        context.Response.Headers.CacheControl = "no-store";
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Title = "資料庫無法連線",
+            Detail = "QMAH 資料庫目前無法連線，請稍後再試。"
+        });
+    }
+});
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler();
@@ -252,6 +397,36 @@ if (!app.Environment.IsDevelopment())
 
 app.UseResponseCompression();
 app.UseHttpsRedirection();
+
+// API＋Angular 前台不需要啟動 QMAH.Web 才能顯示公開圖鑑與商城圖片。
+// 只掛載 catalog/store 兩個公開根目錄；uploads、社群媒體與其他私人檔案不由靜態檔案中介軟體暴露。
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/media")
+        && !context.Request.Path.StartsWithSegments("/media/catalog")
+        && !context.Request.Path.StartsWithSegments("/media/store"))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next(context);
+});
+if (Directory.Exists(mediaRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaRoot),
+        RequestPath = "/media",
+        OnPrepareResponse = context =>
+        {
+            context.Context.Response.Headers.CacheControl =
+                context.Context.Request.Query.ContainsKey("v")
+                    ? "public,max-age=31536000,immutable"
+                    : "public,max-age=3600,must-revalidate";
+        }
+    });
+}
 
 // 順序不可任意交換：先選路由與限流，再套 CORS，接著建立登入身分並執行授權，最後才進 Controller。
 // 需要讀取 User／Role 的新 middleware 放在 Authentication 後；需要讓瀏覽器看見錯誤回應的 middleware 也必須受 CORS 包覆。
@@ -265,6 +440,27 @@ app.UseQmahCookieRecovery(
 app.UseCors("AngularClient");
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
+    var tokens = antiforgery.GetAndStoreTokens(context);
+
+    var secure = cookieSecurePolicy switch
+    {
+        CookieSecurePolicy.Always => true,
+        CookieSecurePolicy.None => false,
+        _ => context.Request.IsHttps, // SameAsRequest
+    };
+
+    context.Response.Cookies.Append("XSRF-TOKEN-API", tokens.RequestToken!, new CookieOptions
+    {
+        HttpOnly = false, // 刻意不是 HttpOnly，就是要給前端 JS 讀
+        Secure = secure,
+        SameSite = SameSiteMode.Lax,
+    });
+
+    await next(context);
+});
 app.MapControllers();
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)

@@ -1,20 +1,24 @@
-<!-- 限時特賣：倒數計時與品項清單 -->
-<app-panel variant="accent">
-  <div class="flash-head">
-    <span class="flash-title">限時特賣</span>
-    <span class="flash-countdown">{{ countdownLabel() }}</span>
-  </div>
-  @for (item of items(); track item.name) {
-    <div class="flash-item">
-      <div class="flash-thumb">IMG</div>
-      <div class="flash-info">
-        <span class="flash-name">{{ item.name }}</span>
-        <div class="flash-price-row">
-          <span class="flash-price">{{ item.price }}</span>
-          <span class="flash-was">{{ item.was }}</span>
-        </div>
-        <div class="flash-bar"><div class="flash-bar-fill" [style.width]="item.left"></div></div>
-      </div>
+@if (items().length > 0) {
+  <!-- ui-integration: 沒有特賣品項時不渲染空面板，避免倒數 00:00:00 被誤解成可操作活動。 -->
+  <app-panel variant="accent">
+    <div class="flash-head">
+      <span class="flash-title">限時特賣</span>
+      <span class="flash-countdown">{{ countdownLabel() }}</span>
     </div>
-  }
-</app-panel>
+    @for (item of items(); track item.name) {
+      <div class="flash-item">
+        <div class="flash-thumb">
+          <svg lucidePackageSearch aria-hidden="true" focusable="false"></svg>
+        </div>
+        <div class="flash-info">
+          <span class="flash-name">{{ item.name }}</span>
+          <div class="flash-price-row">
+            <span class="flash-price">{{ item.price }}</span>
+            <span class="flash-was">{{ item.was }}</span>
+          </div>
+          <div class="flash-bar"><div class="flash-bar-fill" [style.width]="item.left"></div></div>
+        </div>
+      </div>
+    }
+  </app-panel>
+}

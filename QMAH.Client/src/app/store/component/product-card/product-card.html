@@ -3,12 +3,16 @@
   <!-- 點擊整張卡片（圖片＋內容）導向商品頁 -->
   <a [storeLink]="link()" class="product-card-link">
 
-    <!-- 商品圖片區：有 coverImage 時顯示實際圖片，否則顯示佔位符 -->
+    <!-- 商品圖片區：先顯示同一件文物縮圖／大圖；兩者都失敗才顯示中性待補狀態。 -->
     <div class="product-card-cover">
-      @if (!showPlaceholder()) {
-        <img class="product-card-image" [src]="coverImage()" [alt]="name()" (error)="onImageError()" />
+      @if (imageSrc(); as imageUrl) {
+        <!-- 商品列表只載入縮圖；3D／大圖只存在商品詳情，避免 512 件商品同時下載 display 圖。 -->
+        <img class="product-card-image" src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
       } @else {
-        <span class="product-card-slot" [class.product-card-slot--faint]="isFaintSlot()">{{ slotLabel }}</span>
+        <span class="product-card-slot" [class.product-card-slot--faint]="isFaintSlot()">
+          <app-qmah-icon name="image" [size]="22" aria-hidden="true" />
+          <span>{{ slotLabel }}</span>
+        </span>
       }
 
       <!-- 角標（例如排名序號、器類），無 badge 時不顯示 -->
@@ -35,7 +39,9 @@
           @if (pv.was) {
             <span class="product-card-was">{{ pv.was }}</span>
           }
-          <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+          @if (pv.tag) {
+            <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+          }
         </div>
 
         <div class="product-card-rating">

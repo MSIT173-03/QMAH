@@ -1,5 +1,5 @@
 :host {
-  --color-shade: #f2f5f4;
+  --color-shade: var(--qmah-surface-soft);
 
   display: block;
 }
@@ -8,11 +8,12 @@
 
 .coupon-row {
   border: 1px solid var(--color-line-mid);
-  background: #fff;
-  padding: 12px 14px;
+  background: var(--color-surface);
+  border-radius: var(--store-radius);
+  padding: var(--qmah-space-3) var(--qmah-space-4);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--qmah-space-3);
   text-align: left;
   transition: border-color 160ms;
 
@@ -47,13 +48,13 @@
 }
 
 .coupon-row-cond {
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
 .coupon-row-state {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
+  font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.16em;
   color: var(--color-muted);
 }

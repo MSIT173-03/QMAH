@@ -1,0 +1,161 @@
+:host {
+  display: block;
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-line, var(--qmah-line));
+  background: var(--color-surface, var(--qmah-paper));
+  color: var(--color-ink, var(--qmah-ink));
+}
+
+.footer-cols {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.35fr) repeat(4, minmax(130px, 1fr));
+  gap: 16px;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-logo-img {
+  display: block;
+  width: auto;
+  height: 36px;
+}
+
+.brand-logo-img--lg {
+  height: 42px;
+}
+
+.self-start {
+  align-self: flex-start;
+}
+
+.footer-brand-note {
+  margin: 8px 0 0;
+  max-width: 28ch;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--color-muted, var(--qmah-muted));
+  text-wrap: pretty;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-col h2 {
+  margin: 0 0 2px;
+}
+
+.footer-col-link {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--color-nav, var(--qmah-ink));
+  text-decoration: none;
+}
+
+.footer-col-link--disabled {
+  color: var(--color-placeholder);
+  cursor: default;
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--color-line-soft, var(--qmah-line));
+}
+
+.footer-bottom-row {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  font-size: 12px;
+  color: var(--color-placeholder, var(--qmah-muted));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  align-items: center;
+}
+
+.footer-link {
+  color: var(--color-muted, var(--qmah-muted));
+  text-decoration: none;
+}
+
+@media (max-width: 1080px) {
+  .footer-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .footer-cols {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 20px 14px 18px;
+    gap: 12px 16px;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+
+  .footer-bottom-row {
+    padding-inline: 14px;
+    gap: 8px 12px;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 420px) {
+  .footer-cols {
+    /* ui-integration: 保留四組正式入口的可掃讀性，不讓手機 Footer 變成一條超長直欄。 */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+  }
+
+  .brand-logo-img--lg {
+    height: 34px;
+  }
+
+  .footer-brand-note {
+    max-width: 34ch;
+    margin-top: 6px;
+    line-height: 1.45;
+  }
+
+  .footer-col {
+    gap: 2px;
+  }
+
+  .footer-col h2 {
+    font-size: 12px;
+  }
+
+  .footer-col-link {
+    min-height: 28px;
+    font-size: 11px;
+  }
+
+  .footer-bottom-row {
+    align-items: center;
+    flex-direction: row;
+    gap: 6px 10px;
+  }
+}
+
+.footer-note {
+  margin-left: auto;
+}

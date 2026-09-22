@@ -7,19 +7,21 @@
    =============================== */
 
 .list-main {
-  padding-top: 16px;
+  padding-top: var(--qmah-space-4);
   padding-bottom: 72px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--qmah-space-5);
+  min-width: 0;
 }
 
 /* 左側篩選側欄 + 右側商品區 */
 .list-body {
   display: grid;
   grid-template-columns: minmax(0, 218px) minmax(0, 1fr);
-  gap: 20px;
+  gap: var(--qmah-space-5);
   align-items: start;
+  min-width: 0;
 }
 
 /* ===============================
@@ -29,8 +31,9 @@
 
 .tab-row {
   display: flex;
-  gap: 6px;
+  gap: var(--qmah-space-2);
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* 排序與顯示模式之間的分隔線 */
@@ -47,5 +50,32 @@
 .product-row-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--qmah-space-2);
+  min-width: 0;
+}
+
+.store-loading { display: grid; place-items: center; gap: var(--qmah-space-3); min-height: 260px; border: 1px solid var(--color-line); border-radius: var(--store-radius); background: var(--color-surface); color: var(--color-muted); }
+.store-loading__mark { width: 28px; height: 28px; border: 2px solid var(--color-line-mid); border-top-color: var(--color-accent); border-radius: 50%; animation: store-spin 700ms linear infinite; }
+@keyframes store-spin { to { transform: rotate(360deg); } }
+
+/* ui-integration: 商品篩選在手機改成上下排列，維持既有列表／卡片切換而不讓側欄擠壓內容。 */
+@media (max-width: 720px) {
+  /* ui-integration: 行動版把篩選側欄還原為正常流，避免 sticky top 值與雙層頁首重疊。 */
+  .list-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tab-row {
+    width: 100%;
+    min-width: 0;
+    row-gap: var(--qmah-space-2);
+  }
+
+  /* 兩組切換保留同一工具列語意，但在窄寬度分成可讀的上下段。 */
+  .pill-divider {
+    flex: 0 0 100%;
+    width: auto;
+    height: 1px;
+    margin: var(--qmah-space-1) 0;
+  }
 }

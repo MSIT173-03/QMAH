@@ -1,0 +1,57 @@
+<dialog #dialogEl class="modal">
+  <div class="modal-box max-w-2xl max-h-[80vh] overflow-y-auto">
+    <form method="dialog">
+      <button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" (click)="close()" aria-label="關閉活動預覽">
+        <app-qmah-icon name="x" size="16" />
+      </button>
+    </form>
+
+    @if (loading) {
+      <div class="text-center py-10 text-gray-400">載入中...</div>
+    } @else if (loadError) {
+      <div class="alert alert-error">{{ loadError }}</div>
+    } @else if (event) {
+      <span
+        class="badge w-fit"
+        [class.badge-secondary]="event.eventType === 'PLAYER'"
+        [class.badge-warning]="event.eventType === 'OFFICIAL'"
+      >
+        {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
+      </span>
+      <h3 class="font-bold text-lg mt-2">{{ event.title }}</h3>
+      <p class="text-xs text-base-content/60 mb-2">
+        <app-qmah-icon name="user-round" size="14" />
+        {{ event.organizerDisplayName || '匿名會員' }}
+      </p>
+      <p class="whitespace-pre-line">{{ event.content }}</p>
+
+      @if (event.media.length > 0) {
+        <div class="flex flex-col gap-2 mt-3">
+          @for (media of event.media; track media.id) {
+            <img [src]="media.url" [alt]="media.altText || ''" class="rounded-lg w-full h-auto max-h-80 object-contain bg-base-200" />
+          }
+        </div>
+      }
+
+      <ul class="text-sm mt-3 space-y-1">
+        <li>
+          <app-qmah-icon name="calendar-clock" size="14" />
+          {{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}
+        </li>
+        @if (event.location) {
+          <li><app-qmah-icon name="map-pin" size="14" /> {{ event.location }}</li>
+        }
+        @if (event.registrationEndAt) {
+          <li>報名截止：{{ event.registrationEndAt | date: 'yyyy-MM-dd HH:mm' }}</li>
+        }
+        <li>報名人數：{{ event.registrationCount }}{{ event.capacity ? ' / ' + event.capacity : '' }}</li>
+        @if (event.reviewStatus) {
+          <li>審核狀態：{{ event.reviewStatus }}（發布狀態：{{ event.publishStatus }}）</li>
+        }
+      </ul>
+    }
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>

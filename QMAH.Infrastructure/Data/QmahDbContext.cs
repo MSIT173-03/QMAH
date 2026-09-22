@@ -1062,6 +1062,10 @@ public partial class QmahDbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true, "DF_Products_Active");
             entity.Property(e => e.Name).HasMaxLength(200);
             entity.Property(e => e.Price).HasColumnType("decimal(12, 2)");
+            entity.Property(e => e.DiscountRate)
+                .HasColumnType("decimal(5, 2)")
+                .HasDefaultValue(0m, "DF_Products_DiscountRate");
+            entity.Property(e => e.SalePrice).HasColumnType("decimal(12, 2)");
             entity.Property(e => e.PrimaryImagePath).HasMaxLength(500);
             entity.Property(e => e.SizeText).HasMaxLength(500);
             entity.Property(e => e.SourceUrl).HasMaxLength(1000);

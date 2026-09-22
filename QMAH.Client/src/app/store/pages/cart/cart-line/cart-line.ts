@@ -1,6 +1,8 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { QmahIconComponent } from '../../../../shared/components/qmah-icon/qmah-icon';
 import { QtyStepper } from '../../../component';
 import { formatMoney } from '../../../shared/format';
+import { toDisplayImage } from '../../../shared/image-utils';
 import { productPath } from '../../../shared/paths';
 import { toPriceView } from '../../../shared/product-view';
 import { StoreLink } from '../../../shared/store-link';
@@ -11,7 +13,7 @@ import { StoreLink } from '../../../shared/store-link';
  */
 @Component({
   selector: 'app-cart-line',
-  imports: [QtyStepper, StoreLink],
+  imports: [QtyStepper, StoreLink, QmahIconComponent],
   templateUrl: './cart-line.html',
   styleUrls: [
     './cart-line.scss',
@@ -19,6 +21,8 @@ import { StoreLink } from '../../../shared/store-link';
 })
 export class CartLine {
   id = input('');
+  /** 商品圖片網址；讀取失敗時只 fallback 到同一件文物的 display 圖。 */
+  coverImage = input<string | null>(null);
   /** 品牌名稱 */
   brand = input('');
   /** 器類名稱，與品牌併排顯示於第一行 */
@@ -41,10 +45,17 @@ export class CartLine {
   /** 點擊移除按鈕時觸發 */
   remove = output<void>();
 
-  /** 無圖片時顯示於縮圖位置的佔位文字 */
-  protected readonly slotLabel = '[ 商品圖 ]';
+  /** 無圖片時顯示的中性狀態，不以其他商品圖片冒充。 */
+  protected readonly slotLabel = '影像待補';
   /** 移除按鈕文字 */
   protected readonly removeLabel = '移除';
+
+  protected imageSrc = linkedSignal(() => this.coverImage());
+  protected onImageError(): void {
+    const current = this.imageSrc();
+    const display = toDisplayImage(current);
+    this.imageSrc.set(display && display !== current ? display : null);
+  }
 
   /** 商品頁連結網址 */
   protected link = computed(() => productPath(this.id()));

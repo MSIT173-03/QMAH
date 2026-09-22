@@ -1,14 +1,15 @@
 [
   {
-    "Name": "QMAH 後端主機與管理後台（API＋Razor）",
+    "Name": "QMAH API＋Angular 前台",
     "Projects": [
       {
         "Path": "QMAH.Api\\QMAH.Api.csproj",
         "Action": "Start"
       },
       {
-        "Path": "QMAH.Web\\QMAH.Web.csproj",
-        "Action": "Start"
+        "Path": "QMAH.Client\\QMAH.Client.esproj",
+        "Action": "Start",
+        "DebugTarget": "ng serve"
       }
     ]
   },
@@ -18,6 +19,24 @@
       {
         "Path": "QMAH.Api\\QMAH.Api.csproj",
         "Action": "Start"
+      }
+    ]
+  },
+  {
+    "Name": "QMAH 全站（API＋前台＋管理後台）",
+    "Projects": [
+      {
+        "Path": "QMAH.Api\\QMAH.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "QMAH.Web\\QMAH.Web.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "QMAH.Client\\QMAH.Client.esproj",
+        "Action": "Start",
+        "DebugTarget": "ng serve"
       }
     ]
   }

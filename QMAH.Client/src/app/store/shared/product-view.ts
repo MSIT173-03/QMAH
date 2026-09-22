@@ -23,9 +23,9 @@ export interface ProductViewData {
   coverImage: string | null;
 }
 
-/** 折扣前原價，無折扣時為 null */
+/** 折扣前原價；指定 SalePrice 時也要顯示原價，不能只看 DiscountRate。 */
 export function wasPrice(product: Product): number | null {
-  return product.discountRate > 0 ? product.price : null;
+  return product.dealPrice < product.price ? product.price : null;
 }
 
 /** 依商品資料換算成商品顯示資料 */

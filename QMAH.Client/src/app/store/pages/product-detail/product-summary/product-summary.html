@@ -7,13 +7,8 @@
 
   <!-- 評價摘要：評分、評論數與已售件數 -->
   <div class="product-rating-row">
-    @if (reviews() > 0) {
-      <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
-        class="product-card-split">|</span><span>{{ reviewsText() }}</span>
-    } @else {
-      <span>尚無評價</span>
-    }
-    <span
+    <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
+      class="product-card-split">|</span><span>{{ reviewsText() }}</span><span
       class="product-card-split">|</span><span>{{ soldText() }} {{ soldSuffix }}</span>
   </div>
 
@@ -24,28 +19,20 @@
     @if (pv.was) {
       <span class="product-card-was">{{ pv.was }}</span>
     }
-    <span class="product-card-tag product-card-tag--lg" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+    @if (pv.tag) {
+      <span class="product-card-tag product-card-tag--lg" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+    }
   </div>
 
   <!-- 規格說明：材質、考據出處與出貨方式 -->
-  @if (material() || source() || shipping()) {
-    <div class="spec-list">
-      @if (material()) {
-        <div class="spec-row"><span class="spec-label">{{ materialLabel }}</span><span class="spec-value">{{ material() }}</span></div>
-      }
-      @if (source()) {
-        <div class="spec-row"><span class="spec-label">{{ sourceLabel }}</span><span class="spec-value">{{ source() }}</span></div>
-      }
-      @if (shipping()) {
-        <div class="spec-row"><span class="spec-label">{{ shippingLabel }}</span><span class="spec-value">{{ shipping() }}</span></div>
-      }
-    </div>
-  }
+  <div class="spec-list">
+    <div class="spec-row"><span class="spec-label">{{ materialLabel }}</span><span class="spec-value">{{ material() }}</span></div>
+    <div class="spec-row"><span class="spec-label">{{ sourceLabel }}</span><span class="spec-value">{{ source() }}</span></div>
+    <div class="spec-row"><span class="spec-label">{{ shippingLabel }}</span><span class="spec-value">{{ shipping() }}</span></div>
+  </div>
 
-  <!-- 尺寸與商品狀態面板：兩者皆無資料時不顯示 -->
-  @if (dims() || condition()) {
-    <app-size-condition-panel [dims]="dims()" [condition]="condition()" [note]="sizeNote()" />
-  }
+  <!-- 尺寸與商品狀態面板 -->
+  <app-size-condition [dims]="dims()" [artifactDims]="artifactDims()" [condition]="condition()" [note]="sizeNote()" />
 
   <!-- 購買操作：數量增減、加入購物車與直接購買 -->
   <div class="product-actions">

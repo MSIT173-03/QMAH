@@ -2,15 +2,17 @@
 <section class="section-block">
   <app-section-head headingLevel="h2" [title]="title" [tag]="tag" />
 
-  <!-- 說明段落：商品出處說明 + 共通敘述 -->
-  <p class="detail-text">{{ intro() }}</p>
+  <!-- 依資料中的空行分段；標題單行加粗，避免整段擠成一大坨文字。 -->
+  <div class="detail-text">
+    @for (block of descriptionBlocks(); track $index) {
+      <div class="detail-paragraph">
+        @if (block.heading) { <strong>{{ block.heading }}</strong> }
+        @for (line of block.lines; track $index) { <span>{{ line }}</span> }
+      </div>
+    }
+  </div>
 
-  <!-- 商品說明圖：有圖片網址才顯示 -->
-  @if (image()) {
-    <img class="detail-image" [src]="image()" [alt]="title" />
-  }
-
-  <!-- 補充條列：保養、退換、鑑定 -->
+  <!-- 補充條列：保養、退換、鑑定；這些是商品政策，不混入文物說明本文。 -->
   <div class="detail-list">
     @for (row of rows(); track row.label) {
       <div class="detail-row">

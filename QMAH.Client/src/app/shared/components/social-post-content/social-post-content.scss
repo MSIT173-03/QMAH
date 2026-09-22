@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+/* ui-integration: 貼文內容是跨列表與詳情頁共用的閱讀元件，集中使用 SCSS，避免 inline style 與各頁規則分裂。 */
+.social-post-content {
+  color: var(--qmah-ink);
+  font-size: var(--qmah-type-body-size);
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+p {
+  margin: 0 0 0.45rem;
+  white-space: pre-wrap;
+}
+
+h3 {
+  margin: 0.9rem 0 0.45rem;
+  padding: 6px 10px;
+  border-radius: var(--qmah-radius-control);
+  color: var(--qmah-social-action);
+  background: color-mix(in srgb, var(--qmah-social-action) 10%, var(--qmah-surface));
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.bullet {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.bullet li {
+  position: relative;
+  margin: 0 0 0.45rem;
+  padding-left: 1rem;
+}
+
+.bullet li::before {
+  position: absolute;
+  left: 0;
+  color: var(--qmah-social-action);
+  font-weight: 700;
+  content: '•';
+}
+
+blockquote {
+  margin: 0.5rem 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--qmah-radius-control);
+  background: color-mix(in srgb, var(--qmah-accent) 11%, var(--qmah-surface));
+  color: color-mix(in srgb, var(--qmah-ink) 82%, var(--qmah-muted));
+}
+
+.space {
+  height: 0.35rem;
+}

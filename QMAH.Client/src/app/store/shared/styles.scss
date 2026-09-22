@@ -3,32 +3,40 @@
    host: { class: 'store-app' }），不影響專案其餘頁面。
    （色彩變數統一在此宣告，各元件的 :host 只宣告元件專屬的變數） */
 .store-app {
-  --color-ink: #22343d;
-  --color-ink-deep: #193c38;
-  --color-body: #3f5259;
-  --color-muted: #6d7b80;
-  --color-muted-2: #5c6b71;
-  --color-faint: #7e8c91;
-  --color-placeholder: #9aa6aa;
-  --color-line: #e3e7e6;
-  --color-line-soft: #eff2f1;
-  --color-line-mid: #dbe1e1;
-  --color-line-split: #cdd6d6;
-  --color-bg: #f9faf9;
-  --color-surface: #fff;
-  --color-swatch: #edf0f0;
-  --color-accent: #ad594a;
-  --color-teal: #4e8097;
-  --color-gold: #b99a55;
-  --color-gold-bg: #faf5e8;
-  --color-gold-text: #7a6427;
-  --color-good: #0f6b4f;
-  --color-nav: #2f4149;
+  display: block;
+  min-height: 100%;
+  --color-ink: var(--qmah-ink);
+  --color-ink-deep: var(--qmah-primary);
+  --color-body: var(--qmah-text-muted);
+  --color-muted: var(--qmah-text-muted);
+  --color-muted-2: var(--qmah-text-subtle);
+  --color-faint: var(--qmah-text-subtle);
+  --color-placeholder: var(--qmah-text-muted);
+  --color-line: var(--qmah-border);
+  --color-line-soft: color-mix(in srgb, var(--qmah-border) 64%, var(--qmah-page-surface));
+  --color-line-mid: color-mix(in srgb, var(--qmah-border) 82%, var(--qmah-ink));
+  --color-line-split: color-mix(in srgb, var(--qmah-border) 92%, var(--qmah-ink));
+  --color-bg: var(--qmah-page-surface);
+  --color-surface: var(--qmah-surface-elevated);
+  --color-swatch: var(--qmah-surface-muted);
+  --color-accent: var(--qmah-primary-hover);
+  --color-teal: var(--qmah-secondary);
+  --color-gold: var(--qmah-accent);
+  --color-gold-bg: color-mix(in srgb, var(--qmah-accent) 15%, var(--qmah-surface));
+  --color-gold-text: var(--qmah-accent-content);
+  --color-good: var(--qmah-primary);
+  --color-nav: var(--qmah-ink);
+  --color-on-ink: var(--qmah-on-dark);
+  --color-on-accent: var(--qmah-primary-content);
+  --color-secondary-content: var(--qmah-secondary-content);
+  --color-shadow: var(--qmah-shadow-card);
+  /* ui-integration: Store 控制項與卡片細節共用低圓角，保留既有方正視覺而避免局部漂移。 */
+  --store-radius: 12px;
 
   /* 頁面重置樣式（等同原本套用於 body 的樣式，改由頁面根元件承載） */
   background: var(--color-bg);
   color: var(--color-ink);
-  font-family: 'Noto Sans TC', 'Helvetica Neue', Helvetica, sans-serif;
+  font-family: var(--qmah-font-sans);
   -webkit-font-smoothing: antialiased;
 
   * {
@@ -53,23 +61,30 @@
     cursor: pointer;
   }
 
+  :where(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 2px;
+  }
+
   /* 版面容器：置中並限制最大寬度，供各頁面主要內容區使用 */
   .container {
+    width: 100%;
     max-width: 1320px;
+    min-width: 0;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--qmah-space-5);
   }
 
   /* 文字工具類別 */
   .font-mono { font-family: 'IBM Plex Mono', monospace; }
-  .text-sm { font-size: 12px; }
+  .text-sm { font-size: var(--qmah-type-label-size); }
   .text-accent { color: var(--color-accent); }
   .text-ink { color: var(--color-ink); }
 
   /* mono 字體、大寫間距的區塊／面板標籤文字 */
   .label-tag {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: var(--qmah-type-meta-size);
     letter-spacing: 0.18em;
     color: var(--color-teal);
   }
@@ -78,7 +93,7 @@
 
   /* 區塊／面板標題列右側的次要連結（例如「更多 →」） */
   .section-more {
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
     color: var(--color-muted);
     margin-left: auto;
   }
@@ -88,8 +103,8 @@
 
   /* 量測／折抵規則等補充說明文字 */
   .size-note {
-    font-size: 12px;
-    line-height: 1.7;
+    font-size: var(--qmah-type-label-size);
+    line-height: var(--qmah-type-body-leading);
     color: var(--color-muted);
   }
 
@@ -106,14 +121,43 @@
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: var(--qmah-space-6);
+    min-width: 0;
+  }
+
+  /* ui-integration: 商城頁首在窄螢幕改為品牌／搜尋與購物車分層，避免搜尋列把頁面撐出水平捲軸。 */
+  /* ui-integration: 720px 以前先重排商城頁首，再讓內容自行決定欄數，涵蓋常見平板直向與手機。 */
+  @media (max-width: 720px) {
+    .site-header-row {
+      flex-wrap: wrap;
+      gap: var(--qmah-space-2);
+      padding: var(--qmah-space-3) var(--qmah-space-3) var(--qmah-space-4);
+      min-width: 0;
+    }
+
+    .site-header-row--hero { padding-bottom: var(--qmah-space-4); }
+    .site-header-row .brand-logo { flex: 0 0 100%; }
+    .site-header-row .brand-logo-img { height: 32px; }
+    .site-header-row .search-wrap { flex: 1 1 0; max-width: none; min-width: 0; }
+    .site-header-row .search-submit { padding-inline: var(--qmah-space-3); }
+    .site-header-row .hdr-actions { margin-left: 0; gap: var(--qmah-space-2); min-width: 0; }
+    .nav-bar-row { gap: var(--qmah-space-3); padding: var(--qmah-space-2) var(--qmah-space-3); min-width: 0; }
+    .nav-highlight { margin-left: 0; }
+
+    .promobar-row,
+    .promobar-actions { min-width: 0; }
+
+    .sticky-92 { position: static; }
+
+    .search-box { min-height: var(--qmah-control-height); height: auto; }
+    .search-submit { min-height: calc(var(--qmah-control-height) - var(--qmah-space-2)); }
   }
 
   /* 直向排列的側欄容器 */
   .hero-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--qmah-space-3);
   }
 
   /* 捲動時固定於頁首下方 */
@@ -129,21 +173,21 @@
   .summary-row {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
     color: var(--color-body);
   }
 
   .summary-total-row {
     border-top: 1px solid var(--color-line);
-    padding-top: 12px;
+    padding-top: var(--qmah-space-3);
     display: flex;
     justify-content: space-between;
     align-items: baseline;
   }
 
   .summary-total-label {
-    font-family: 'Noto Serif TC', serif;
-    font-size: 14px;
+    font-family: var(--qmah-font-serif);
+    font-size: var(--qmah-type-body-sm-size);
     font-weight: 600;
     color: var(--color-ink-deep);
   }
@@ -158,19 +202,19 @@
   .section-block {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--qmah-space-4);
   }
 
   /* 標籤 + 內容的規格說明列（商品頁規格、尺寸面板、商品說明條列共用） */
-  .spec-row { display: flex; gap: 10px; }
-  .spec-row--sm { font-size: 12px; }
+  .spec-row { display: flex; gap: var(--qmah-space-2); min-width: 0; }
+  .spec-row--sm { font-size: var(--qmah-type-label-size); }
   .spec-label {
     width: 62px;
     flex: 0 0 auto;
     color: var(--color-muted);
   }
   .spec-label--wide { width: 78px; }
-  .spec-value { flex: 1; }
+  .spec-value { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .spec-value--mono { font-family: 'IBM Plex Mono', monospace; }
 
   /* ===============================
@@ -181,7 +225,7 @@
 
   .product-card-price {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px;
+    font-size: var(--qmah-type-body-sm-size);
     color: var(--color-ink);
 
     &.text-accent { color: var(--color-accent); }
@@ -189,7 +233,7 @@
 
   .product-card-was {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
     color: var(--color-placeholder);
     text-decoration: line-through;
   }
@@ -197,16 +241,16 @@
   /* 設計稿的標籤無外框，僅以底色與文字色區分 */
   .product-card-tag {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
     letter-spacing: 0.06em;
     padding: 1px 5px;
-    border-radius: 2px;
+    border-radius: var(--store-radius);
     color: var(--color-gold-text);
     background: var(--color-gold-bg);
   }
   /* 折扣商品的標籤 */
   .product-card-tag--deal {
-    color: #fff;
+    color: var(--color-on-accent);
     background: var(--color-accent);
   }
   /* 商品頁價格列的加大版標籤 */
@@ -215,7 +259,7 @@
   /* 品牌名稱（商品卡片與首頁新品上架共用） */
   .product-card-brand {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: var(--qmah-type-meta-size);
     letter-spacing: 0.14em;
     color: var(--color-teal);
   }
@@ -228,27 +272,71 @@
   .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 12px;
+    gap: var(--qmah-space-3);
   }
 
   /* 實心按鈕（例如主視覺 CTA） */
   .btn-solid {
     border: 1px solid var(--color-ink);
-    background: var(--color-ink);
-    color: #fff;
-    border-radius: 2px;
-    padding: 12px 26px;
-    font-size: 12px;
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    border-radius: var(--qmah-radius-control);
+    padding: var(--qmah-space-3) var(--qmah-button-padding-x);
+    font-size: var(--qmah-type-label-size);
     letter-spacing: 0.14em;
     transition: background 160ms;
 
     &:hover {
-      background: var(--color-accent);
+      border-color: var(--qmah-primary);
+      background: var(--qmah-primary);
     }
+  }
+
+  /* ui-integration: 商品卡片沿用原本網格語意，僅在內容壓力增加時降低欄數，不讓圖片與 CTA 被擠成不可讀的窄條。 */
+  @media (max-width: 720px) {
+    .card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--qmah-space-2);
+    }
+
+    .promobar-row {
+      padding-inline: var(--qmah-space-3);
+      gap: var(--qmah-space-2) var(--qmah-space-3);
+    }
+
+    .promobar-actions {
+      width: 100%;
+      margin-left: 0;
+      gap: var(--qmah-space-2) var(--qmah-space-3);
+    }
+
+    .nav-bar-row {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .container {
+      padding-inline: var(--qmah-space-3);
+    }
+  }
+
+  /* ui-integration: 商城主要 CTA 保留原本造型，但把觸控高度收斂到可操作的 44px。 */
+  .btn-solid,
+  .btn-outline {
+    min-height: var(--qmah-control-height);
   }
   /* 佔滿容器寬度的實心按鈕（訂單摘要的主要操作） */
   .btn-solid--full {
-    padding: 13px 0;
+    padding: var(--qmah-space-3) 0;
     letter-spacing: 0.14em;
     text-align: center;
   }
@@ -256,17 +344,59 @@
   /* 外框按鈕 */
   .btn-outline {
     border: 1px solid var(--color-ink);
-    background: #fff;
+    background: var(--color-surface);
     color: var(--color-ink);
-    border-radius: 2px;
-    padding: 11px 20px;
-    font-size: 12px;
+    border-radius: var(--qmah-radius-control);
+    padding: var(--qmah-space-3) var(--qmah-button-padding-x);
+    font-size: var(--qmah-type-label-size);
     letter-spacing: 0.12em;
     transition: background 160ms, border-color 160ms, color 160ms;
 
     &:hover {
-      background: var(--color-ink);
-      color: #fff;
+      border-color: var(--qmah-primary-hover);
+      background: var(--qmah-primary-hover);
+      color: var(--qmah-primary-content);
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+}
+
+/* ui-integration: 商城沿用全站 theme-controller；只替換同一組語意 token，保留首頁、列表、商品與結帳的原有構圖。 */
+:root:has(.theme-controller[value='qmahdark']:checked) .store-app,
+:root[data-theme='qmahdark'] .store-app {
+  --color-ink: var(--qmah-ink);
+  --color-ink-deep: var(--qmah-primary);
+  --color-body: var(--qmah-text-muted);
+  --color-muted: var(--qmah-text-muted);
+  --color-muted-2: var(--qmah-text-subtle);
+  --color-faint: var(--qmah-text-subtle);
+  --color-placeholder: var(--qmah-text-muted);
+  --color-line: var(--qmah-border);
+  --color-line-soft: color-mix(in srgb, var(--qmah-border) 72%, var(--qmah-page-surface));
+  --color-line-mid: color-mix(in srgb, var(--qmah-border) 88%, var(--qmah-ink));
+  --color-line-split: color-mix(in srgb, var(--qmah-border) 96%, var(--qmah-ink));
+  --color-bg: var(--qmah-page-surface);
+  --color-surface: var(--qmah-surface-elevated);
+  --color-swatch: var(--qmah-surface-muted);
+  --color-accent: var(--qmah-primary-hover);
+  --color-teal: var(--qmah-secondary);
+  --color-gold: var(--qmah-accent);
+  --color-gold-bg: color-mix(in srgb, var(--qmah-accent) 18%, var(--qmah-surface));
+  --color-gold-text: var(--qmah-accent-content);
+  --color-good: var(--qmah-primary-hover);
+  --color-nav: var(--qmah-ink);
+  --color-on-ink: var(--qmah-on-dark);
+  --color-on-accent: var(--qmah-primary-content);
+  --color-secondary-content: var(--qmah-secondary-content);
+  --color-shadow: var(--qmah-shadow-card);
 }

@@ -8,6 +8,7 @@ import { CartItem } from '../../api/api.models';
 /** 供 app-cart-line 顯示用的購物車行資料 */
 export interface CartLineData {
   id: string;
+  coverImage: string | null;
   brand: string;
   cat: string;
   name: string;
@@ -27,6 +28,7 @@ export interface CartLineData {
 export function toCartLineData(item: CartItem, leaving: boolean): CartLineData {
   return {
     id: item.productId,
+    coverImage: item.coverImage,
     brand: item.brand,
     cat: item.category,
     name: item.name,

@@ -1,0 +1,50 @@
+<dialog #dialogEl class="modal">
+  <div class="modal-box max-w-2xl max-h-[80vh] overflow-y-auto">
+    <form method="dialog">
+      <button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" (click)="close()" aria-label="關閉貼文預覽">
+        <app-qmah-icon name="x" size="16" />
+      </button>
+    </form>
+
+    @if (loading) {
+      <div class="text-center py-10 text-gray-400">載入中...</div>
+    } @else if (loadError) {
+      <div class="alert alert-error">{{ loadError }}</div>
+    } @else if (post) {
+      <span class="badge badge-secondary mb-2">{{ post.boardCode }}</span>
+      <h3 class="font-bold text-lg">{{ post.title }}</h3>
+      <p class="text-xs text-base-content/60 mb-2">
+        <app-qmah-icon name="user-round" size="14" />
+        {{ post.displayName || '匿名會員' }} ・ {{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}
+      </p>
+      <p class="whitespace-pre-line">{{ post.content }}</p>
+
+      @if (post.media.length > 0) {
+        <div class="flex flex-col gap-2 mt-3">
+          @for (media of post.media; track media.id) {
+            <img [src]="media.url" [alt]="media.altText || ''" class="rounded-lg w-full h-auto max-h-80 object-contain bg-base-200" />
+          }
+        </div>
+      }
+
+      <div class="divider"></div>
+      <h4 class="font-bold text-sm mb-2">留言（{{ post.comments.length }}）</h4>
+      <div class="space-y-2">
+        @for (comment of post.comments; track comment.id) {
+          <div class="bg-base-200 rounded-lg p-2">
+            <div class="flex justify-between items-start">
+              <span class="text-xs font-bold">{{ comment.displayName || '匿名會員' }}</span>
+              <span class="text-[10px] text-base-content/50">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+            </div>
+            <p class="text-sm whitespace-pre-line">{{ comment.content }}</p>
+          </div>
+        } @empty {
+          <p class="text-sm text-gray-400">目前還沒有留言</p>
+        }
+      </div>
+    }
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button type="button" (click)="close()">close</button>
+  </form>
+</dialog>

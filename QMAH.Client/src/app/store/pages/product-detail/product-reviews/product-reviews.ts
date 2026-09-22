@@ -17,12 +17,11 @@ interface ReviewCardData {
   /** 評價日期，例如 2026.08.29 */
   date: string;
   text: string;
-  hasPhoto: boolean;
 }
 
 /**
  * 商品頁「評價」區塊：評分摘要、篩選按鈕與評價清單。
- * 篩選由評價 API 在後端執行，因此目前選取的條件、各條件的則數與篩選後的評價皆由頁面傳入，
+ * 篩選由頁面計算，因此目前選取的條件、各條件的則數與篩選後的評價皆由頁面傳入，
  * 本元件只負責顯示與回報使用者選取的篩選條件。
  */
 @Component({
@@ -51,7 +50,6 @@ export class ProductReviews {
   /** 以下為區塊的固定版面文字 */
   protected readonly title = '評價';
   protected readonly tag = 'REVIEWS';
-  protected readonly photoTagLabel = '附照片';
   protected readonly emptyText = '此篩選條件下尚無評價。';
 
   /** 評分顯示字串，固定一位小數 */
@@ -77,7 +75,6 @@ export class ProductReviews {
       user: review.user,
       date: review.date.replaceAll('-', '.'),
       text: review.text,
-      hasPhoto: review.hasPhoto,
     })),
   );
 }

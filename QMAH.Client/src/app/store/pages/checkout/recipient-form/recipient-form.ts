@@ -5,6 +5,7 @@ import {
   RECIPIENT_ADDR_FIELD,
   RECIPIENT_GRID_FIELDS,
   RECIPIENT_NOTE_FIELD,
+  RECIPIENT_REGION_FIELDS,
   RecipientField,
 } from '../checkout.data';
 
@@ -39,6 +40,7 @@ export class RecipientForm {
   protected readonly title = '收件資訊';
   protected readonly tag = 'RECIPIENT';
   protected readonly gridFields = RECIPIENT_GRID_FIELDS;
+  protected readonly regionFields = RECIPIENT_REGION_FIELDS;
   protected readonly addrField = RECIPIENT_ADDR_FIELD;
   protected readonly noteField = RECIPIENT_NOTE_FIELD;
 

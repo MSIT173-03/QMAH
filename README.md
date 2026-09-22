@@ -12,14 +12,14 @@
 
 <p align="center">
   <a href="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml"><img src="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main" alt="Build"></a>
-  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.9.0"><img src="https://img.shields.io/badge/database-db--v0.9.0-315E55" alt="Database snapshot db-v0.9.0"></a>
+  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.9.3"><img src="https://img.shields.io/badge/database-db--v0.9.3-315E55" alt="Database snapshot db-v0.9.3"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4" alt=".NET 10">
   <img src="https://img.shields.io/badge/SQL%20Server-DB--first-315E55" alt="SQL Server DB-first">
 </p>
 
 ## 目前正式 Release
 
-目前 QMAH 主程式正式版本是 [`v0.9.0`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.0)。完整資料庫下載請使用 [QMAH-Database `db-v0.9.0` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.0)，其中提供 `QMAH.sql`、`QMAH-0.9.0.bak`、`0.8.0-to-0.9.0.sql` 與 `SHA256SUMS.txt`。
+目前 QMAH 主程式正式版本是 [`v0.9.3`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.9.3)，對應 [QMAH-Database `db-v0.9.3` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.3)。完整資料庫下載請使用 QMAH-Database Release 提供的 `QMAH.sql`、`QMAH-0.9.3.bak` 與 `SHA256SUMS.txt`。
 
 ## 專案簡介
 
@@ -35,23 +35,25 @@
 
 - SQL Server Schema、Entity 對照與 `QmahDbContext`。
 - ASP.NET Core Identity 資料表、Cookie 登入與角色授權。
-- 256 件文物、256 筆題庫設定、256 件對應商城商品，以及各 Area 可直接使用的共同資料。
+- 512 件文物、512 筆題庫設定、512 件對應的文物明信片商品，以及各 Area 可直接使用的共同資料。
 - 8 個文物分類、網站圖片、資料處理工具，以及由 QMAH-Database 提供的完整 SQL Snapshot。
 - Game、Catalog、Social、User、Store 五個 Area 的既有 Razor 管理後台與可延伸的管理頁。
 - `/api/v1/*` REST API、DTO、分頁、ProblemDetails、Cookie 驗證與開發用 OpenAPI／Scalar。
 - 管理員可使用的文物資料 Preview → Import 流程；題庫預設同步，商城同步由管理員選擇。
-- `QMAH.Client` Angular 21.2.22 前台骨架、API proxy、VS Code 擴充套件自動安裝設定與前台交接文件。
+- `QMAH.Client` Angular 21.2.23 前台骨架、API proxy、VS Code 擴充套件自動安裝設定與前台交接文件。
 - DB-first、資料存取、前端、展示資料、匯入工具與 Git 協作文件。
 
 目前工作重點是依既有 API 與資料契約製作前台畫面。Razor 管理後台可獨立維護。
 
+前台共用色彩、五個系統的語意 accent、深色模式對應，以及 UI 素材／照片的使用邊界，集中記錄在 [`QMAH_UI_COLOR_SYSTEM.md`](QMAH_UI_COLOR_SYSTEM.md)；文件站同步版見 [前台色彩與視覺素材基準](https://msit173-03.github.io/QMAH-Docs/frontend/ui-color-system.html)。
+
 正式金流與完整多人遊戲互動仍依各 Area 的既有範圍擴充。
 
-### Angular 21.2.22 的版本理由
+### Angular 21.2.23 的版本理由
 
 課程要求使用 Angular 21，因此 `QMAH.Client` 維持 Angular 21，不升到 Angular 22。
 
-原本的 Angular 21.1.3 相依樹在本機 `npm audit` 會列出漏洞。升到 Angular 21 版本線內的 21.2.22 後，已通過 `npm audit --audit-level=high`。
+原本的 Angular 21.1.3 相依樹在本機 `npm audit` 會列出漏洞。升到 Angular 21 版本線內的 21.2.23 後，已通過 `npm audit --audit-level=high`。
 
 這次只更新同一個 major version 內的次版本與修補版本，既有 standalone、Router、HttpClient、環境設定與 SCSS 寫法不需要改寫。
 
@@ -91,9 +93,9 @@ Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前�
 
 ### 2. 建立本機 QMAH 資料庫
 
-目前相容的完整 Snapshot 是 [QMAH-Database db-v0.9.0 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.0) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.9.0/QMAH.sql)。
+目前相容的完整 Snapshot 是 [QMAH-Database db-v0.9.3 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.3) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.9.3/QMAH.sql)。
 
-也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.9.0/QMAH.sql)。既有 `db-v0.8.0` 資料庫可執行 [`database/upgrades/0.8.0-to-0.9.0.sql`](database/upgrades/0.8.0-to-0.9.0.sql) 保留資料升級。
+也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.9.3/QMAH.sql)。本版刻意替換舊 256 件展示資料並同步訂單商品快照，既有環境請以完整 Snapshot 還原，不使用會保留舊資料的增量腳本。
 
 在 SSMS 連線到可用的本機 SQL Server instance，完整執行 SQL，資料庫名稱使用 `QMAH`。
 
@@ -112,9 +114,9 @@ QMAH 有兩個 ASP.NET Core 主機：`QMAH.Web` 提供 Razor 管理後台，`QMA
 | `QMAH.Web` 的 `https`／`http` | Razor 管理後台與五個 Area | `https://localhost:7039`／`http://localhost:5183` |
 | `QMAH.Api` 的 `https`／`http` | `/api/v1/*`、OpenAPI 與 Scalar | `https://localhost:7249`／`http://localhost:5147` |
 
-Visual Studio 2026 開啟 `QMAH.sln` 後，可選擇 `QMAH 後端主機與管理後台（API＋Razor）`，一次啟動兩個後端主機。
+Visual Studio 2026 開啟 `QMAH.sln` 後，可在啟動設定選擇 `QMAH 全站（API＋前台＋管理後台）`，一次啟動 `QMAH.Api`、Angular 使用者前台與 `QMAH.Web` Razor 管理後台。啟動後可分別從 `https://localhost:7249`、`http://localhost:4200/` 與 `https://localhost:7039` 開啟。
 
-若只要檢查 API，選擇 `QMAH API`。如果 IDE 沒有顯示 `.slnLaunch` 設定，仍可分別啟動兩個專案的 `https` profile。
+若只需要 API 與 Angular 前台，選擇 `QMAH API＋Angular 前台`；若只要檢查 API，選擇 `QMAH API`。如果 IDE 沒有顯示 `.slnLaunch` 設定，仍可分別啟動兩個 ASP.NET Core 專案的 `https` profile，再依「啟動 Angular 使用者前台」的方式啟動前台。
 
 命令列啟動：
 
@@ -136,6 +138,20 @@ cd QMAH.Client
 npm ci
 npm start
 ```
+
+預設的 `npm start`／`npm run start:https` 使用 API 的 `https` profile，將 `/api`、公開 `/media` 與 OpenAPI 請求轉送到 `https://localhost:7249`；完整啟動時，後台的 `/uploads` 與 `/images/avatars` 轉送到 `https://localhost:7039`。
+
+若要使用 API 的 `http` profile，請另開終端機執行：
+
+```powershell
+dotnet run --project .\QMAH.Api\QMAH.Api.csproj --launch-profile http
+cd QMAH.Client
+npm run start:http
+```
+
+這時 `/api`、公開 `/media` 與 OpenAPI 請求會轉送到 `http://localhost:5147`，後台的 `/uploads` 與 `/images/avatars` 會轉送到 `http://localhost:5183`。HTTP 與 HTTPS 使用各自的 proxy 設定，避免把 HTTPS profile 的 307 redirect 當成 API 回應傳回前端。
+
+需要手動使用 Angular CLI 時，HTTPS profile 可在 `QMAH.Client` 目錄執行 `ng serve` 或 `npx ng serve`；HTTP profile 請執行 `ng serve --proxy-config proxy.http.conf.json` 或 `npx ng serve --proxy-config proxy.http.conf.json`。
 
 瀏覽器開啟 `http://localhost:4200/`。前台的 `/api`、`/openapi` 與 `/scalar` 會透過 `QMAH.Client/proxy.conf.json` 轉送到 `https://localhost:7249`。
 
@@ -178,7 +194,7 @@ Web 與 API 使用不同的固定 Cookie 名稱，啟動後會清除已知的舊
 
 若 request 尚未進入應用程式前就再次回傳 431，代表 Cookie 已超過伺服器可解析的上限。關閉本機網站分頁，再從網址列左側的鎖頭開啟網站資料設定，清除 `localhost` 的 Cookie 與網站資料後重新啟動；也可用無痕視窗確認登入頁是否恢復正常。清除後本機登入狀態會消失，需重新登入，但不會刪除資料庫內容。
 
-Cookie 不包含連接埠，因此清除 `localhost` 的網站資料時，不只尋找 `7039`。若仍無法開啟，確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 `QMAH 後端主機與管理後台（API＋Razor）`。
+Cookie 不包含連接埠，因此清除 `localhost` 的網站資料時，不只尋找 `7039`。若仍無法開啟，確認沒有同時保留多個舊的 QMAH Web／API 程序，再重新啟動 `QMAH 全站（API＋前台＋管理後台）` 或需要的局部服務。
 
 ### 無法連線或找不到資料表
 
@@ -242,7 +258,7 @@ Controller 透過建構式取得 scoped `QmahDbContext`，不重新建立 SQL �
 
 `QMAH.Infrastructure` 集中 DB-first Entity、`QmahDbContext` 與匯入核心。API 與 Angular 透過 `QMAH.Client/proxy.conf.json` 連接。
 
-Visual Studio 的 `.slnLaunch` 預設同時啟動 API 與 Razor 管理後台，VS Code 工作區則提供 API＋Angular 的複合啟動。
+Visual Studio 的 `.slnLaunch` 提供 `QMAH 全站（API＋前台＋管理後台）` 複合啟動，也保留 API 單獨啟動與 API＋Angular 前台的選項；VS Code 工作區則提供 API＋Angular 的複合啟動。
 
 Angular 不直接連資料庫，也不依賴管理後台的 ViewModel；前台欄位、狀態、權限與錯誤回應以 [REST API 契約](https://msit173-03.github.io/QMAH-Docs/reference/rest-api.html) 為準。
 
@@ -272,7 +288,9 @@ Angular 不直接連資料庫，也不依賴管理後台的 ViewModel；前台�
 
 商城不直接使用來源商城的圖片與售價，因為來源商城素材的開放授權標示不如故宮 Open Data 文物圖片明確。
 
-資料工具會把同一件文物轉成「文物名稱－縮小複製品」商品，沿用已標示授權的圖片，另外產生商品文案、二分之一尺寸與依年代、分類計算的示意售價。商品資料可以獨立調整，不會改寫圖鑑與題庫；訂單明細另存成交時的品名與單價快照。
+資料工具會把同一件文物轉成「文物名稱－文物明信片」商品，沿用已標示授權的圖片，另外產生明信片文案、A6 明信片尺寸與依年代、分類計算的示意售價。商品資料可以獨立調整，不會改寫圖鑑與題庫；訂單明細另存成交時的品名與單價快照。
+
+官方公告編輯器的「快速插入」可從目前有效優惠券產生商城活動，也提供展覽、文物導讀、參觀提醒與鑑定遊戲模板；商城以外的內容不會被硬套成優惠文案。社群貼文編輯器共用安全的純文字排版標記（`【小標】`、`• 項目`、`「引用」與分段），前台以共用呈現元件顯示層次，不把 HTML 寫入資料庫。這樣保留既有 `SocialPosts.Content` 契約，也讓官方公告能同時被商城與社群引用。
 
 文物資料的 `LicenseCode`、`SourceUrl` 與 `AttributionText` 必須保留。故宮資料頁未明確標示授權時，不因課程用途就視為可公開使用。
 
@@ -329,7 +347,7 @@ QMAH/
 │  ├─ Models/                      後台 ViewModel
 │  ├─ Views/                       共用 Razor View
 │  └─ wwwroot/                     樣式、腳本、套件、圖片與品牌素材
-├─ QMAH.Client/                    Angular 21.2.22 使用者前台
+├─ QMAH.Client/                    Angular 21.2.23 使用者前台
 ├─ database/
 │  ├─ README.md                    資料庫路標
 │  ├─ Schema.sql                   DB-first 結構契約

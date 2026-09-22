@@ -1,30 +1,59 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { apiUrl, getField } from './http';
+import { Observable, catchError, map, of } from 'rxjs';
+import { CatalogApi } from './catalog.api';
 import {
+  Brand,
   Coupon,
   FlashSale,
   HeroSlide,
+  Page,
+  PageQuery,
+  Product,
+  RankingQuery,
+  RecommendedProduct,
 } from './api.models';
 
 /** 首頁與行銷內容 API */
 @Injectable({ providedIn: 'root' })
 export class HomeApi {
-  private readonly http = inject(HttpClient);
+  private readonly catalogApi = inject(CatalogApi);
 
-  /** GET /home/hero-slides：主視覺輪播 */
+  /** 主視覺由 HeroCarousel 維持本地 editorial fallback，後端尚無版位契約。 */
   getHeroSlides(): Observable<HeroSlide[]> {
-    return getField(this.http, apiUrl('/home/hero-slides'), 'slides');
+    return of<HeroSlide[]>([]);
   }
 
-  /** GET /home/flash-sale：限時特賣 */
+  /** 後端尚無限時特賣契約，維持空狀態，不發出不存在的請求。 */
   getFlashSale(): Observable<FlashSale> {
-    return this.http.get<FlashSale>(apiUrl('/home/flash-sale'));
+    return of({ endsAt: '', items: [] });
   }
 
-  /** GET /coupons/claimable：可領取的折價券 */
+  /** 舊版品牌資料介面，前台目前改用年代選藏；後端沒有此 Store route。 */
+  getBrands(): Observable<Brand[]> {
+    return of<Brand[]>([]);
+  }
+
+  /** 以現有商品型錄的販售數量排序代替尚未存在的 rankings route；首頁輔助區塊失敗時顯示空清單。 */
+  getRankings(query: RankingQuery = {}): Observable<Product[]> {
+    return this.catalogApi.getProducts({ cat: query.cat, order: 1, pageSize: query.limit ?? 10 }).pipe(
+      map((page) => page.items),
+      catchError(() => of<Product[]>([])),
+    );
+  }
+
+  /** 以現有商品型錄的最新上架排序代替尚未存在的 recommendations route；失敗時視為沒有更多推薦。 */
+  getRecommendations(query: PageQuery = {}): Observable<Page<RecommendedProduct>> {
+    return this.catalogApi.getProducts({ order: 3, page: query.page, pageSize: query.pageSize }).pipe(
+      map((page) => ({
+        ...page,
+        items: page.items.map((product) => ({ ...product, reason: '近期上架' })),
+      })),
+      catchError(() => of({ items: [], total: 0, page: query.page ?? 1, pageSize: query.pageSize ?? 20 })),
+    );
+  }
+
+  /** 可領取折價券尚無前台 API，避免把持有券誤當成可領取券。 */
   getClaimableCoupons(): Observable<Coupon[]> {
-    return getField(this.http, apiUrl('/coupons/claimable'), 'coupons');
+    return of<Coupon[]>([]);
   }
 }

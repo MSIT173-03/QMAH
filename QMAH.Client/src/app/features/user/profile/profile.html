@@ -1,0 +1,697 @@
+<div class="profile-page">
+
+  <div class="page-container">
+
+    <div class="top-row">
+      <app-back-to-member />
+    </div>
+
+    @if (loading) {
+
+      <div class="state-card">
+        載入會員資料中...
+      </div>
+
+    } @else if (errorMessage && !profile) {
+
+      <div class="state-card error">
+        {{ errorMessage }}
+      </div>
+
+    } @else if (profile) {
+
+      <div class="profile-card">
+
+        <!-- ===================== -->
+        <!-- HERO -->
+        <!-- ===================== -->
+
+        <div class="profile-hero">
+
+          <div class="hero-left">
+
+            <div class="avatar">
+
+              @if (profile.avatarPath && !avatarUnavailable) {
+
+                <img
+                  [src]="profile.avatarPath"
+                  alt="會員頭像"
+                  (error)="avatarUnavailable = true"
+                />
+
+              } @else {
+
+                <span>
+                  {{ getInitial() }}
+                </span>
+
+              }
+
+            </div>
+
+            <div class="identity">
+
+              <div class="name-row">
+
+                <h1>
+                  {{ profile.displayName }}
+                </h1>
+
+                <span
+                  class="status-badge"
+                  [class.active]="profile.status === 'ACTIVE'"
+                >
+                  {{ getStatusText(profile.status) }}
+                </span>
+
+              </div>
+
+              <p class="email">
+                {{ profile.email }}
+              </p>
+
+              <div class="badge-row">
+
+                <span class="visibility-badge">
+                  {{
+                    getVisibilityText(
+                      profile.visibility
+                    )
+                  }}
+                </span>
+
+                @for (
+                  role of profile.roles;
+                  track role
+                ) {
+
+                  <span class="role-badge">
+                    {{ role }}
+                  </span>
+
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- 保留原本身份區右側的清明上河圖構圖；這裡只改用更清楚的檔名。 -->
+          <div class="hero-art" aria-hidden="true"></div>
+
+        </div>
+
+        <!-- ===================== -->
+        <!-- 訊息 -->
+        <!-- ===================== -->
+
+        @if (successMessage) {
+
+          <div class="message-wrapper">
+
+            <div class="success-box">
+              <app-qmah-icon name="circle-check" />
+              {{ successMessage }}
+            </div>
+
+          </div>
+
+        }
+
+        @if (
+          errorMessage &&
+          profile
+        ) {
+
+          <div class="message-wrapper">
+
+            <div class="error-box">
+              {{ errorMessage }}
+            </div>
+
+          </div>
+
+        }
+
+        <!-- ===================== -->
+        <!-- 檢視模式 -->
+        <!-- ===================== -->
+
+        @if (!editMode) {
+
+          <div class="view-content">
+
+            <div class="view-heading">
+
+              <div>
+
+                <span class="heading-icon">
+                  <app-qmah-icon name="user-round" />
+                </span>
+
+                <div>
+
+                  <h2>
+                    個人資料
+                  </h2>
+
+                  <p>
+                    查看你的會員基本資料與公開設定。
+                  </p>
+
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                class="primary-button"
+                (click)="startEdit()"
+              >
+                <app-qmah-icon name="pencil" />
+                編輯資料
+              </button>
+
+            </div>
+
+            <div class="view-grid">
+
+              <div class="view-main">
+
+                <section class="info-section">
+
+                  <h3>
+                    關於我
+                  </h3>
+
+                  @if (profile.bio) {
+
+                    <p class="bio-text">
+                      {{ profile.bio }}
+                    </p>
+
+                  } @else {
+
+                    <p class="empty-text">
+                      尚未填寫自我介紹。
+                    </p>
+
+                  }
+
+                </section>
+
+                <section class="info-section">
+
+                  <h3>
+                    帳號資訊
+                  </h3>
+
+                  <div class="detail-list">
+
+                    <div class="detail-row">
+
+                      <span>
+                        Email
+                      </span>
+
+                      <strong>
+                        {{ profile.email }}
+                      </strong>
+
+                    </div>
+
+                    <div class="detail-row">
+
+                      <span>
+                        帳號狀態
+                      </span>
+
+                      <strong>
+                        {{
+                          getStatusText(
+                            profile.status
+                          )
+                        }}
+                      </strong>
+
+                    </div>
+
+                    <div class="detail-row">
+
+                      <span>
+                        公開範圍
+                      </span>
+
+                      <strong>
+                        {{
+                          getVisibilityText(
+                            profile.visibility
+                          )
+                        }}
+                      </strong>
+
+                    </div>
+
+                    <div class="detail-row">
+
+                      <span>
+                        註冊時間
+                      </span>
+
+                      <strong>
+                        {{
+                          profile.createdAt
+                            | date:'yyyy/MM/dd HH:mm'
+                        }}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                </section>
+
+              </div>
+
+              <div class="view-side">
+
+                <section class="point-card">
+
+                  <span class="point-label">
+                    目前點數
+                  </span>
+
+                  <strong class="point-value">
+                    {{ profile.pointBalance }}
+                  </strong>
+
+                  <span class="point-unit">
+                    Points
+                  </span>
+
+                </section>
+
+                <section class="side-info">
+
+                  <span class="side-label">
+                    會員身分
+                  </span>
+
+                  <div class="side-tags">
+
+                    @for (
+                      role of profile.roles;
+                      track role
+                    ) {
+
+                      <span class="large-role-badge">
+                        {{ role }}
+                      </span>
+
+                    }
+
+                  </div>
+
+                </section>
+
+                <section class="side-info">
+
+                  <span class="side-label">
+                    隱私狀態
+                  </span>
+
+                  <strong>
+                    {{
+                      getVisibilityText(
+                        profile.visibility
+                      )
+                    }}
+                  </strong>
+
+                </section>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        }
+
+        <!-- ===================== -->
+        <!-- 編輯模式 -->
+        <!-- ===================== -->
+
+        @if (editMode) {
+
+          <div class="edit-content">
+
+            <div class="edit-heading">
+
+              <div class="edit-heading-icon">
+                <app-qmah-icon name="pencil" />
+              </div>
+
+              <div>
+
+                <h2>
+                  編輯個人資料
+                </h2>
+
+                <p>
+                  更新暱稱、自我介紹與公開範圍，讓更多人認識你。
+                </p>
+
+              </div>
+
+            </div>
+
+            <div class="section-divider"></div>
+
+            <form
+              [formGroup]="profileForm"
+              (ngSubmit)="saveProfile()"
+            >
+
+              <div class="edit-layout">
+
+                <!-- ================= -->
+                <!-- 左側表單 -->
+                <!-- ================= -->
+
+                <div class="form-column">
+
+                  <!-- 暱稱 -->
+
+                  <div class="form-card">
+
+                    <div class="form-title-row">
+
+                      <label for="nickname">
+                        <span class="field-icon">
+                          <app-qmah-icon name="user-round" />
+                        </span>
+
+                        暱稱
+                        <span class="required">
+                          *
+                        </span>
+                      </label>
+
+                      <span class="counter">
+                        {{
+                          profileForm
+                            .get('nickname')
+                            ?.value
+                            ?.length || 0
+                        }}
+                        / 50
+                      </span>
+
+                    </div>
+
+                    <input
+                      id="nickname"
+                      type="text"
+                      formControlName="nickname"
+                      placeholder="輸入會員暱稱"
+                    />
+
+                    <p class="field-help">
+                      顯示在個人資料中的名稱，最多 50 個字元。
+                    </p>
+
+                    @if (
+                      profileForm
+                        .get('nickname')
+                        ?.touched &&
+                      profileForm
+                        .get('nickname')
+                        ?.hasError('required')
+                    ) {
+
+                      <div class="field-error">
+                        請輸入暱稱
+                      </div>
+
+                    }
+
+                    @if (
+                      profileForm
+                        .get('nickname')
+                        ?.touched &&
+                      profileForm
+                        .get('nickname')
+                        ?.hasError('maxlength')
+                    ) {
+
+                      <div class="field-error">
+                        暱稱最多 50 個字元
+                      </div>
+
+                    }
+
+                  </div>
+
+                  <!-- 自我介紹 -->
+
+                  <div class="form-card">
+
+                    <div class="form-title-row">
+
+                      <label for="bio">
+
+                        <span class="field-icon">
+                          <app-qmah-icon name="message-circle" />
+                        </span>
+
+                        自我介紹
+
+                      </label>
+
+                      <span class="counter">
+                        {{
+                          profileForm
+                            .get('bio')
+                            ?.value
+                            ?.length || 0
+                        }}
+                        / 500
+                      </span>
+
+                    </div>
+
+                    <textarea
+                      id="bio"
+                      rows="6"
+                      formControlName="bio"
+                      placeholder="簡單介紹一下自己..."
+                    ></textarea>
+
+                    <p class="field-help">
+                      簡單介紹一下自己吧！最多 500 個字元。
+                    </p>
+
+                    @if (
+                      profileForm
+                        .get('bio')
+                        ?.touched &&
+                      profileForm
+                        .get('bio')
+                        ?.hasError('maxlength')
+                    ) {
+
+                      <div class="field-error">
+                        自我介紹最多 500 個字元
+                      </div>
+
+                    }
+
+                  </div>
+
+                  <!-- 公開範圍 -->
+
+                  <div class="form-card">
+
+                    <div class="form-title-row">
+
+                      <label for="visibility">
+
+                        <span class="field-icon">
+                          <app-qmah-icon name="eye" />
+                        </span>
+
+                        公開範圍
+
+                        <span class="required">
+                          *
+                        </span>
+
+                      </label>
+
+                    </div>
+
+                    <select
+                      id="visibility"
+                      formControlName="visibility"
+                    >
+
+                      <option value="PUBLIC">
+                        公開
+                      </option>
+
+                      <option value="FRIENDS">
+                        僅好友
+                      </option>
+
+                      <option value="PRIVATE">
+                        不公開
+                      </option>
+
+                    </select>
+
+                    <p class="field-help">
+                      決定其他會員能查看你的資料範圍。
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <!-- ================= -->
+                <!-- 右側提醒 -->
+                <!-- ================= -->
+
+                <aside class="tips-card">
+
+                  <div class="tips-header">
+
+                    <span class="tips-icon">
+                      <app-qmah-icon name="sparkles" />
+                    </span>
+
+                    <h3>
+                      小提醒
+                    </h3>
+
+                  </div>
+
+                  <p class="tips-intro">
+                    完善的個人資料可以讓你的會員體驗更加完整。
+                  </p>
+
+                  <div class="tip-item tip-green">
+
+                    <div class="tip-symbol">
+                      <app-qmah-icon name="users-round" />
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        暱稱
+                      </strong>
+
+                      <p>
+                        使用好辨識的暱稱，讓其他會員更容易記住你。
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <div class="tip-item tip-blue">
+
+                    <div class="tip-symbol">
+                      <app-qmah-icon name="message-circle" />
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        自我介紹
+                      </strong>
+
+                      <p>
+                        分享你的興趣、遊戲喜好或一句話介紹自己吧！
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <div class="tip-item tip-purple">
+
+                    <div class="tip-symbol">
+                      <app-qmah-icon name="lock-keyhole" />
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        公開範圍
+                      </strong>
+
+                      <p>
+                        你可以隨時調整資料的可見範圍，保護個人隱私。
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                </aside>
+
+              </div>
+
+              <!-- ================= -->
+              <!-- 按鈕 -->
+              <!-- ================= -->
+
+              <div class="form-footer">
+
+                <button
+                  type="button"
+                  class="cancel-button"
+                  (click)="cancelEdit()"
+                  [disabled]="saving"
+                >
+                  取消
+                </button>
+
+                <button
+                  type="submit"
+                  class="save-button"
+                  [disabled]="saving"
+                >
+
+                  @if (saving) {
+
+                    儲存中...
+
+                  } @else {
+
+                    <app-qmah-icon name="circle-check" />
+                    儲存變更
+
+                  }
+
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        }
+
+      </div>
+
+    }
+
+  </div>
+
+</div>

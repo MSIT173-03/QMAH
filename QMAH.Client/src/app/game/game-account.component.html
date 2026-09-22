@@ -1,0 +1,25 @@
+<div class="account-page">
+  <!-- ui-integration: 遊戲沿用正式會員登入；本頁只提供登入狀態與返回出口，不維護第二套登入表單。 -->
+  <app-game-navigation>
+    <a class="back-link" routerLink="/game">返回多人鑑定大廳</a>
+  </app-game-navigation>
+
+  <section class="account-panel" aria-labelledby="account-title" [attr.aria-busy]="loading || busy">
+    @if (loading) {
+      <p class="account-loading" role="status">正在確認會員登入狀態…</p>
+    } @else if (accountService.account(); as account) {
+      <h1 id="account-title">目前已登入會員帳號</h1>
+      <p>{{ account.nickname || account.email }}</p>
+      <button type="button" (click)="logout()" [disabled]="loading || busy">{{ busy ? '登出中…' : '登出會員帳號' }}</button>
+    } @else {
+      <!-- ui-integration: 所有正式帳號與管理員共用 /login，避免玩家誤以為遊戲另有測試登入。 -->
+      <h1 id="account-title">需要登入會員帳號</h1>
+      <p>遊戲沿用清明鑑定屋的正式登入狀態；登入後即可加入房間、開始小遊戲並保留可用的遊戲紀錄。</p>
+      <a class="primary-link" routerLink="/login">前往會員登入</a>
+    }
+
+    @if (error) {
+      <p class="account-error" role="alert">{{ error }}</p>
+    }
+  </section>
+</div>

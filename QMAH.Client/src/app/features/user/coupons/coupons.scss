@@ -1,0 +1,1077 @@
+/* ui-integration: 優惠券維持票券資訊架構，只把紫色品牌色收斂為 QMAH 的青綠／赭紅角色。 */
+:host {
+  display: block;
+
+  min-height: 100vh;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--qmah-surface) 0%,
+      var(--qmah-page-surface) 100%
+    );
+
+  color: var(--qmah-ink);
+}
+
+
+.coupons-page {
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  padding: 40px 24px 70px;
+}
+
+
+// ===============================
+// Header
+// ===============================
+
+.page-header {
+  margin: 24px 0 28px;
+
+  h1 {
+    margin: 4px 0 8px;
+
+    color: var(--qmah-primary);
+
+    font-size: 30px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+
+    color: var(--qmah-text-muted);
+
+    font-size: 14px;
+  }
+}
+
+.page-eyebrow,
+.section-eyebrow {
+  color: var(--qmah-primary);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.6px;
+}
+
+
+// ===============================
+// Summary
+// ===============================
+
+.summary-section {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 15px;
+
+  margin-bottom: 26px;
+}
+
+
+.summary-card {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 19px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--qmah-border);
+  border-radius: 16px;
+
+  background: var(--qmah-surface-elevated);
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow: var(--qmah-shadow-card);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+
+    box-shadow: var(--qmah-shadow-card);
+  }
+
+  > div:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+  }
+
+  strong {
+    color: var(--qmah-primary);
+
+    font-size: 26px;
+    font-weight: 800;
+  }
+}
+
+
+.summary-card.active {
+  border-color: var(--qmah-border);
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--qmah-surface-elevated) 0%,
+      var(--qmah-surface-soft) 100%
+    );
+
+  box-shadow: var(--qmah-shadow-card);
+}
+
+
+.summary-label {
+  color: var(--qmah-text-muted);
+
+  font-size: 11px;
+}
+
+
+.summary-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 auto;
+
+  border-radius: 12px;
+
+  background: var(--qmah-surface-soft);
+
+  font-size: 18px;
+}
+
+
+.available-card .summary-icon {
+  background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
+
+  color: var(--qmah-primary);
+}
+
+
+.used-card .summary-icon {
+  background: var(--qmah-surface-muted);
+
+  color: var(--qmah-text-muted);
+}
+
+
+.expired-card .summary-icon {
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
+
+  color: var(--qmah-primary-hover);
+}
+
+
+.filter-arrow {
+  margin-left: auto;
+
+  color: var(--qmah-text-subtle);
+
+  font-size: 17px;
+
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+
+.summary-card:hover .filter-arrow,
+.summary-card.active .filter-arrow {
+  transform: translateX(3px);
+
+  color: var(--qmah-primary);
+}
+
+
+// ===============================
+// Section
+// ===============================
+
+.coupon-section {
+  padding: 29px;
+
+  border: 1px solid var(--qmah-border);
+  border-radius: 20px;
+
+  background: var(--qmah-surface-elevated);
+
+  box-shadow: var(--qmah-shadow-card);
+}
+
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 25px;
+
+  h2 {
+    margin: 3px 0 5px;
+
+    color: var(--qmah-primary);
+
+    font-size: 21px;
+  }
+
+  p {
+    margin: 0;
+
+    color: var(--qmah-text-muted);
+
+    font-size: 12px;
+  }
+}
+
+
+.coupon-count {
+  padding: 6px 11px;
+
+  border-radius: 999px;
+
+  background: var(--qmah-surface-muted);
+
+  color: var(--qmah-text-muted);
+
+  font-size: 11px;
+}
+
+
+// ===============================
+// Coupon Grid
+// ===============================
+
+.coupon-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(340px, 1fr)
+    );
+
+  gap: 20px;
+}
+
+
+// ===============================
+// Ticket
+// ===============================
+
+.coupon-ticket {
+  position: relative;
+
+  overflow: hidden;
+
+  border: 1px solid var(--qmah-border);
+  border-radius: 18px;
+
+  background: var(--qmah-surface-elevated);
+
+  box-shadow: var(--qmah-shadow-card);
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+
+  animation:
+    ticketEnter
+    0.45s ease both;
+
+  &:hover {
+    transform:
+      translateY(-4px);
+
+    border-color: var(--qmah-border);
+
+    box-shadow: var(--qmah-shadow-card);
+  }
+}
+
+
+.coupon-ticket.available {
+  background:
+    linear-gradient(
+      145deg,
+      var(--qmah-surface-elevated) 0%,
+      var(--qmah-surface-elevated) 65%,
+      var(--qmah-surface-elevated) 100%
+    );
+}
+
+
+.coupon-ticket.used,
+.coupon-ticket.expired,
+.coupon-ticket.revoked {
+  background:
+    linear-gradient(
+      145deg,
+      var(--qmah-surface-elevated),
+      var(--qmah-surface-elevated)
+    );
+}
+
+
+.coupon-ticket.expired,
+.coupon-ticket.revoked {
+  opacity: 0.72;
+}
+
+
+// ===============================
+// Ticket Notch
+// ===============================
+
+.ticket-notch {
+  position: absolute;
+
+  z-index: 4;
+
+  width: 22px;
+  height: 22px;
+
+  top: 198px;
+
+  border-radius: 50%;
+
+  background: var(--qmah-surface-elevated);
+
+  border: 1px solid var(--qmah-border);
+}
+
+
+.notch-left {
+  left: -12px;
+}
+
+
+.notch-right {
+  right: -12px;
+}
+
+
+// ===============================
+// Ticket Main
+// ===============================
+
+.ticket-main {
+  position: relative;
+
+  padding: 22px 22px 19px;
+}
+
+
+.coupon-ticket.available
+.ticket-main::before {
+  content: '';
+
+  position: absolute;
+
+  width: 135px;
+  height: 135px;
+
+  top: -75px;
+  right: -55px;
+
+  border-radius: 50%;
+
+  background:
+    color-mix(in srgb, var(--qmah-primary) 6%, transparent);
+
+  pointer-events: none;
+}
+
+
+.ticket-top {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 20px;
+}
+
+
+.coupon-brand {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  > span {
+    color: var(--qmah-text-subtle);
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 1.2px;
+  }
+}
+
+
+.coupon-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 11px;
+
+  background: var(--qmah-surface-soft);
+
+  font-size: 18px;
+}
+
+
+.status-area {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+
+// ===============================
+// Status
+// ===============================
+
+.status-badge {
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: var(--qmah-surface-muted);
+
+  color: var(--qmah-text-muted);
+
+  font-size: 10px;
+  font-weight: 750;
+}
+
+
+.status-badge.available {
+  background: color-mix(in srgb, var(--qmah-primary) 12%, var(--qmah-surface-elevated));
+
+  color: var(--qmah-primary);
+}
+
+
+.status-badge.used {
+  background: var(--qmah-surface-muted);
+
+  color: var(--qmah-text-muted);
+}
+
+
+.status-badge.expired {
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
+
+  color: var(--qmah-danger);
+}
+
+
+.status-badge.revoked {
+  background: color-mix(in srgb, var(--qmah-danger) 10%, var(--qmah-surface-elevated));
+
+  color: var(--qmah-danger);
+}
+
+
+.expire-soon {
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  background: color-mix(in srgb, var(--qmah-accent) 12%, var(--qmah-surface-elevated));
+
+  color: var(--qmah-primary-hover);
+
+  font-size: 9px;
+  font-weight: 750;
+
+  animation:
+    warningPulse
+    2s ease-in-out infinite;
+}
+
+
+// ===============================
+// Coupon Text
+// ===============================
+
+.coupon-code {
+  position: relative;
+
+  z-index: 2;
+
+  margin-bottom: 5px;
+
+  color: var(--qmah-text-subtle);
+
+  font-size: 10px;
+
+  letter-spacing: 0.3px;
+}
+
+
+.ticket-main h3 {
+  position: relative;
+
+  z-index: 2;
+
+  margin: 0 0 10px;
+
+  color: var(--qmah-primary);
+
+  font-size: 18px;
+  font-weight: 750;
+}
+
+
+.discount-value {
+  position: relative;
+
+  z-index: 2;
+
+  margin: 7px 0 10px;
+
+  color: var(--qmah-primary-hover);
+
+  font-size: 31px;
+  font-weight: 850;
+
+  letter-spacing: -0.7px;
+}
+
+
+.coupon-ticket.used
+.discount-value,
+.coupon-ticket.expired
+.discount-value,
+.coupon-ticket.revoked
+.discount-value {
+  color: var(--qmah-text-muted);
+}
+
+
+.minimum-chip {
+  position: relative;
+
+  z-index: 2;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: 6px 10px;
+
+  border-radius: 8px;
+
+  background: var(--qmah-surface-soft);
+
+  color: var(--qmah-primary);
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+.used .minimum-chip,
+.expired .minimum-chip,
+.revoked .minimum-chip {
+  background: var(--qmah-surface-muted);
+
+  color: var(--qmah-text-muted);
+}
+
+
+// ===============================
+// Divider
+// ===============================
+
+.ticket-divider {
+  position: relative;
+
+  height: 1px;
+
+  margin: 0 13px;
+
+  border-top:
+    1px dashed
+    var(--qmah-border);
+
+  span {
+    display: none;
+  }
+}
+
+
+// ===============================
+// Details
+// ===============================
+
+.ticket-details {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 15px;
+
+  padding: 20px 22px 18px;
+}
+
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  span {
+    color: var(--qmah-text-subtle);
+
+    font-size: 9px;
+  }
+
+  strong {
+    color: var(--qmah-text-muted);
+
+    font-size: 11px;
+    font-weight: 650;
+  }
+}
+
+
+.expiry-item strong {
+  color: var(--qmah-primary-hover);
+}
+
+
+.expiry-item.warning {
+
+  strong {
+    color: var(--qmah-primary-hover);
+  }
+
+}
+
+
+// ===============================
+// Footer
+// ===============================
+
+.ticket-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding:
+    13px 22px;
+
+  border-top:
+    1px solid
+    var(--qmah-border);
+
+  background:
+    color-mix(in srgb, var(--qmah-surface-elevated) 65%, transparent);
+}
+
+
+.usable-text {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: var(--qmah-primary);
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+
+.usable-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: var(--qmah-primary-hover);
+
+  animation:
+    greenPulse
+    2s infinite;
+}
+
+
+.inactive-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--qmah-text-subtle);
+
+  font-size: 9px;
+}
+
+.inactive-text app-qmah-icon {
+  width: 13px;
+  height: 13px;
+}
+
+
+.ticket-id {
+  color: var(--qmah-text-subtle);
+
+  font-size: 8px;
+
+  font-family:
+    monospace;
+}
+
+
+// ===============================
+// Empty after filter
+// ===============================
+
+.filter-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  min-height: 220px;
+
+  border: 1px dashed var(--qmah-border);
+  border-radius: 15px;
+
+  background: var(--qmah-surface-elevated);
+
+  text-align: center;
+
+  > div {
+    font-size: 32px;
+  }
+
+  strong {
+    margin-top: 5px;
+
+    color: var(--qmah-text-muted);
+
+    font-size: 13px;
+  }
+
+  span {
+    color: var(--qmah-text-subtle);
+
+    font-size: 10px;
+  }
+}
+
+
+// ===============================
+// General Empty
+// ===============================
+
+.empty-state {
+  padding: 80px 24px;
+
+  border: 1px solid var(--qmah-border);
+  border-radius: 18px;
+
+  background: var(--qmah-surface-elevated);
+
+  text-align: center;
+
+  box-shadow: var(--qmah-shadow-card);
+
+  h2 {
+    margin: 16px 0 8px;
+
+    color: var(--qmah-primary);
+
+    font-size: 21px;
+  }
+
+  p {
+    margin: 0;
+
+    color: var(--qmah-text-muted);
+
+    font-size: 13px;
+  }
+}
+
+
+.empty-icon {
+  font-size: 52px;
+}
+
+
+// ===============================
+// Loading / Error
+// ===============================
+
+.state-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  padding: 25px;
+
+  border: 1px solid var(--qmah-border);
+  border-radius: 14px;
+
+  background: var(--qmah-surface-elevated);
+
+  color: var(--qmah-text-muted);
+
+  font-size: 12px;
+}
+
+
+.state-box.error {
+  border-color: color-mix(in srgb, var(--qmah-danger) 24%, var(--qmah-surface-elevated));
+
+  background: color-mix(in srgb, var(--qmah-danger) 10%, var(--qmah-surface-elevated));
+
+  color: var(--qmah-danger);
+
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    border-radius: 50%;
+
+    background: var(--qmah-danger);
+
+    color: var(--qmah-surface-elevated);
+
+    font-weight: 800;
+  }
+}
+
+
+.loading-spinner {
+  width: 19px;
+  height: 19px;
+
+  border: 2px solid var(--qmah-border);
+
+  border-top-color: var(--qmah-primary);
+
+  border-radius: 50%;
+
+  animation:
+    spin 0.7s linear infinite;
+}
+
+
+// ===============================
+// Animations
+// ===============================
+
+@keyframes spin {
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+
+}
+
+
+@keyframes ticketEnter {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+
+}
+
+
+@keyframes warningPulse {
+
+  0%,
+  100% {
+    transform:
+      scale(1);
+  }
+
+  50% {
+    transform:
+      scale(1.04);
+  }
+
+}
+
+
+@keyframes greenPulse {
+
+  0% {
+    box-shadow: var(--qmah-shadow-card);
+  }
+
+  70% {
+    box-shadow: var(--qmah-shadow-card);
+  }
+
+  100% {
+    box-shadow: var(--qmah-shadow-card);
+  }
+
+}
+
+
+// ===============================
+// RWD
+// ===============================
+
+@media (max-width: 900px) {
+
+  .summary-section {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+}
+
+
+@media (max-width: 700px) {
+
+  .coupons-page {
+    padding:
+      24px 16px
+      50px;
+  }
+
+  .coupon-section {
+    padding: 20px;
+  }
+
+  .coupon-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+}
+
+
+@media (max-width: 520px) {
+
+  .summary-section {
+    grid-template-columns:
+      1fr;
+  }
+
+  .section-title {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .ticket-details {
+    grid-template-columns:
+      1fr;
+  }
+
+  .status-area {
+    align-items: flex-end;
+
+    flex-direction: column;
+  }
+
+}
+
+/* ui-integration: 票券仍保留票面與狀態分區，統一摘要／票券容器的層級與操作基線。 */
+:host {
+  font-family: var(--qmah-font-sans);
+}
+
+.page-header h1 {
+  font-size: var(--qmah-type-page-title-size);
+  line-height: var(--qmah-type-heading-leading);
+}
+
+.section-title h2 {
+  font-size: var(--qmah-type-section-title-size);
+  line-height: var(--qmah-type-heading-leading);
+}
+
+.summary-card,
+.coupon-section,
+.coupon-ticket,
+.empty-state,
+.state-box {
+  border-radius: var(--qmah-radius-card);
+}
+
+.summary-card,
+.coupon-ticket,
+.empty-state {
+  box-shadow: var(--qmah-shadow-card);
+}
+
+:host button {
+  min-height: var(--qmah-control-height);
+}
+
+:host :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
+}

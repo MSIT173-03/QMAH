@@ -1,0 +1,25 @@
+<div class="qmah-social-page">
+<h1 class="text-2xl font-bold mb-6">站方公告</h1>
+
+@if (loadError) {
+  <div class="alert alert-error mb-4">{{ loadError }}</div>
+}
+
+<div class="space-y-4">
+  @for (announcement of announcements; track announcement.id) {
+    <div class="card bg-base-100 shadow-xl border border-base-300">
+      <div class="card-body">
+        <div class="flex justify-between items-center">
+          <span class="badge badge-warning">{{ announcement.category }}</span>
+          <span class="text-xs text-base-content/60">{{ announcement.createdAt }}</span>
+        </div>
+        <h2 class="card-title">{{ announcement.title }}</h2>
+        <p class="whitespace-pre-line">{{ announcement.summary || announcement.content }}</p>
+        <p class="text-xs text-base-content/60 mt-2">發佈者：{{ announcement.displayName || '官方' }}</p>
+      </div>
+    </div>
+  } @empty {
+    <div class="text-center py-10 text-base-content/60">目前還沒有公告</div>
+  }
+</div>
+</div>

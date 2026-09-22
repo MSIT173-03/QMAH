@@ -158,6 +158,59 @@
         }
     });
 
+    // 共用的「查看詳情」彈窗：貼文／活動／檢舉管理列表點一下就能看完整內容與圖片，不用跳頁。
+    const contentDetailTitle = document.querySelector("[data-qmah-content-detail-title-slot]");
+    const contentDetailSubtitle = document.querySelector("[data-qmah-content-detail-subtitle-slot]");
+    const contentDetailBody = document.querySelector("[data-qmah-content-detail-body-slot]");
+    const contentDetailExtra = document.querySelector("[data-qmah-content-detail-extra-slot]");
+    const contentDetailImages = document.querySelector("[data-qmah-content-detail-images-slot]");
+
+    function updateContentDetail(trigger) {
+        if (!contentDetailTitle) return;
+
+        contentDetailTitle.textContent = trigger.dataset.qmahContentDetailTitle?.trim() || "詳情";
+        if (contentDetailSubtitle) {
+            contentDetailSubtitle.textContent = trigger.dataset.qmahContentDetailSubtitle?.trim() || "";
+        }
+        if (contentDetailBody) {
+            contentDetailBody.textContent = trigger.dataset.qmahContentDetailBody?.trim() || "（沒有內容）";
+        }
+
+        const extraText = trigger.dataset.qmahContentDetailExtra?.trim();
+        if (contentDetailExtra) {
+            contentDetailExtra.hidden = !extraText;
+            contentDetailExtra.textContent = extraText || "";
+        }
+
+        const imageUrls = (trigger.dataset.qmahContentDetailImages || "")
+            .split(",")
+            .map((url) => url.trim())
+            .filter(Boolean);
+        if (contentDetailImages) {
+            contentDetailImages.hidden = imageUrls.length === 0;
+            contentDetailImages.innerHTML = "";
+            for (const url of imageUrls) {
+                const img = document.createElement("img");
+                img.src = url;
+                img.alt = "";
+                img.loading = "lazy";
+                img.className = "qmah-table-thumbnail";
+                img.style.width = "96px";
+                img.style.height = "96px";
+                img.style.objectFit = "cover";
+                contentDetailImages.appendChild(img);
+            }
+        }
+    }
+
+    document.addEventListener("click", (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        const trigger = target?.closest("[data-qmah-content-detail]");
+        if (trigger) {
+            updateContentDetail(trigger);
+        }
+    });
+
     function syncThemeUi() {
         const isDark = root.dataset.bsTheme === "dark";
         toggle?.setAttribute("aria-pressed", String(isDark));

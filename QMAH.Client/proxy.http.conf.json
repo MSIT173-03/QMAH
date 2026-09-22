@@ -1,0 +1,32 @@
+{
+  "/api": {
+    "target": "http://localhost:5147",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/openapi": {
+    "target": "http://localhost:5147",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/scalar": {
+    "target": "http://localhost:5147",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/media": {
+    "target": "http://localhost:5147",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/uploads": {
+    "target": "http://localhost:5183",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/images/avatars": {
+    "target": "http://localhost:5183",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

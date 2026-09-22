@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <!-- ui-integration: 四種鑰匙固定同一正方形畫布、斜角、shaft 與 collar；NORMAL 只使用最乾淨的標準 bow。 -->
+  <g transform="rotate(-38 128 128)" stroke="#36545A" stroke-width="2.4" stroke-linejoin="round">
+    <path d="M101 29h54l15 15v17l-15 15h-54L86 61V44l15-15Z" fill="#9AAEB3" />
+    <circle cx="128" cy="52" r="20" fill="none" />
+    <path d="M115 81h26v101h20v13h-16v9h16v14h-46V81Z" fill="#9AAEB3" />
+    <rect x="107" y="75" width="42" height="22" rx="11" fill="#7FA9AE" />
+  </g>
+  <path d="M119 98h5v82h-5z" fill="#C5D2D3" />
+  <path d="M135 96h5v89h-5z" fill="#718A90" opacity=".72" />
+</svg>

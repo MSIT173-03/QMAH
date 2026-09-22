@@ -144,7 +144,9 @@ public sealed class CommunityRewardService(QmahDbContext db)
             targetId: registration.EventId,
             recipientUserId: registration.UserId,
             targetReferenceId: registration.Id,
-            alreadyGranted: () => registration.RewardGrantedAt.HasValue,
+            alreadyGranted: retryToken => db.EventRegistrations
+                .AsNoTracking()
+                .AnyAsync(item => item.Id == registration.Id && item.RewardGrantedAt.HasValue, retryToken),
             applyResult: (campaignId, pointAmount, keyDefinitionId, keyAmount, now) =>
             {
                 registration.RewardCampaignId = campaignId;
@@ -171,7 +173,9 @@ public sealed class CommunityRewardService(QmahDbContext db)
             targetId: invitation.RoomId,
             recipientUserId: invitation.InviteeUserId,
             targetReferenceId: invitation.Id,
-            alreadyGranted: () => invitation.RewardGrantedAt.HasValue,
+            alreadyGranted: retryToken => db.GameRoomInvitations
+                .AsNoTracking()
+                .AnyAsync(item => item.Id == invitation.Id && item.RewardGrantedAt.HasValue, retryToken),
             applyResult: (campaignId, pointAmount, keyDefinitionId, keyAmount, now) =>
             {
                 invitation.RewardCampaignId = campaignId;
@@ -213,14 +217,20 @@ public sealed class CommunityRewardService(QmahDbContext db)
         if ((validUntil - validFrom).TotalDays > MaxCampaignDays)
             return EconomyResult<CommunityRewardPolicyView?>.Invalid("加碼有效期間不可超過 366 天。");
 
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // integration: 設定加碼會同時建立／停用規則；SQL retry 必須重做完整交易，
+        // 否則管理員看到的活動設定可能只更新一半。
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
         var policy = await db.CommunityRewardCampaigns
             .SingleOrDefaultAsync(item =>
                 item.TargetType == targetType
                 && (targetType == "EVENT" ? item.EventId == eventId : item.GameRoomId == gameRoomId),
-                cancellationToken);
+                retryToken);
 
         if (request.PointPerRecipient == 0 && request.KeyPerRecipient == 0)
         {
@@ -228,10 +238,10 @@ public sealed class CommunityRewardService(QmahDbContext db)
             {
                 policy.IsActive = false;
                 policy.UpdatedAt = now;
-                await db.SaveChangesAsync(cancellationToken);
+                await db.SaveChangesAsync(retryToken);
             }
 
-            await transaction.CommitAsync(cancellationToken);
+            await transaction.CommitAsync(retryToken);
             return EconomyResult<CommunityRewardPolicyView?>.Success(
                 policy is null ? null : ToView(policy));
         }
@@ -270,9 +280,10 @@ public sealed class CommunityRewardService(QmahDbContext db)
         policy.ValidUntil = validUntil;
         policy.IsActive = true;
         policy.UpdatedAt = now;
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(retryToken);
+        await transaction.CommitAsync(retryToken);
         return EconomyResult<CommunityRewardPolicyView?>.Success(ToView(policy));
+        }, cancellationToken);
     }
 
     private async Task<string?> ValidateConfigurationAsync(
@@ -345,39 +356,57 @@ public sealed class CommunityRewardService(QmahDbContext db)
         Guid targetId,
         Guid recipientUserId,
         Guid targetReferenceId,
-        Func<bool> alreadyGranted,
+        Func<CancellationToken, Task<bool>> alreadyGranted,
         Action<Guid?, int, Guid?, int, DateTime> applyResult,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // integration: 這個方法可能接收 Social／Game 流程尚未提交的 tracked entity，
+        // 因此只重設本服務上一輪產生的帳本 tracking，不清空報名／入房的 caller entity；
+        // 如此 SQL commit 結果不明時，既有流程仍能以同一批變更安全重試。
+        var hasAttempted = false;
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            var isRetry = hasAttempted;
+            if (isRetry)
+                await ResetGrantTrackingAsync(retryToken);
+            hasAttempted = true;
+
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
+        if (await alreadyGranted(retryToken))
+        {
+            // 只有 retry 且資料庫已確認上一輪 commit 時才接受 tracking；第一次呼叫若外層還有變更，
+            // 仍交由 caller 在原本的流程中 SaveChanges，避免誤吃掉尚未提交的報名／入房資料。
+            if (isRetry)
+                db.ChangeTracker.AcceptAllChanges();
+            await transaction.CommitAsync(retryToken);
+            return null;
+        }
         var policy = await db.CommunityRewardCampaigns
             .Include(item => item.KeyDefinition)
             .SingleOrDefaultAsync(item =>
                 item.TargetType == targetType
                 && (targetType == "EVENT" ? item.EventId == targetId : item.GameRoomId == targetId),
-                cancellationToken);
+                retryToken);
         if (policy is null || !policy.IsActive)
         {
             // 設定不存在時也要標記本次報名已結算，避免未來補上規則後，舊參與紀錄被追溯發放獎勵。
             applyResult(null, 0, null, 0, DateTime.UtcNow);
-            await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            await db.SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken: retryToken);
+            await transaction.CommitAsync(retryToken);
+            db.ChangeTracker.AcceptAllChanges();
             return new CommunityRewardGrantView(false, 0, null, 0);
-        }
-        if (alreadyGranted())
-        {
-            await transaction.CommitAsync(cancellationToken);
-            return null;
         }
 
         var now = DateTime.UtcNow;
         if (now < policy.ValidFrom || now >= policy.ValidUntil)
         {
             applyResult(policy.Id, 0, null, 0, now);
-            await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            await db.SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken: retryToken);
+            await transaction.CommitAsync(retryToken);
+            db.ChangeTracker.AcceptAllChanges();
             return new CommunityRewardGrantView(false, 0, null, 0);
         }
 
@@ -389,7 +418,7 @@ public sealed class CommunityRewardService(QmahDbContext db)
             && CanIssue(policy, policy.PointPerRecipient, policy.PointBudget, policy.PointIssued))
         {
             if (!sponsorIsMember
-                || await CanTakePointsAsync(policy.OwnerUserId, policy.PointPerRecipient, cancellationToken))
+                || await CanTakePointsAsync(policy.OwnerUserId, policy.PointPerRecipient, retryToken))
             {
                 pointAmount = policy.PointPerRecipient;
             }
@@ -401,7 +430,7 @@ public sealed class CommunityRewardService(QmahDbContext db)
             && CanIssue(policy, policy.KeyPerRecipient, policy.KeyBudget, policy.KeyIssued))
         {
             if (!sponsorIsMember
-                || await CanTakeKeyAsync(policy.OwnerUserId, policy.KeyDefinitionId.Value, policy.KeyPerRecipient, cancellationToken))
+                || await CanTakeKeyAsync(policy.OwnerUserId, policy.KeyDefinitionId.Value, policy.KeyPerRecipient, retryToken))
             {
                 keyDefinitionId = policy.KeyDefinitionId;
                 keyAmount = policy.KeyPerRecipient;
@@ -420,7 +449,7 @@ public sealed class CommunityRewardService(QmahDbContext db)
         {
             if (sponsorIsMember)
             {
-                var ownerBalance = await GetOrCreatePointBalanceAsync(policy.OwnerUserId, cancellationToken);
+                var ownerBalance = await GetOrCreatePointBalanceAsync(policy.OwnerUserId, retryToken);
                 ownerBalance.Balance -= pointAmount;
                 ownerBalance.UpdatedAt = now;
                 db.PointTransactions.Add(new PointTransaction
@@ -435,7 +464,7 @@ public sealed class CommunityRewardService(QmahDbContext db)
                 });
             }
 
-            var recipientBalance = await GetOrCreatePointBalanceAsync(recipientUserId, cancellationToken);
+            var recipientBalance = await GetOrCreatePointBalanceAsync(recipientUserId, retryToken);
             recipientBalance.Balance = checked(recipientBalance.Balance + pointAmount);
             recipientBalance.UpdatedAt = now;
             db.PointTransactions.Add(new PointTransaction
@@ -458,7 +487,7 @@ public sealed class CommunityRewardService(QmahDbContext db)
                 var ownerBalance = await GetOrCreateKeyBalanceAsync(
                     policy.OwnerUserId,
                     keyDefinitionId.Value,
-                    cancellationToken);
+                    retryToken);
                 ownerBalance.Balance -= keyAmount;
                 ownerBalance.UpdatedAt = now;
                 db.KeyTransactions.Add(new KeyTransaction
@@ -477,7 +506,7 @@ public sealed class CommunityRewardService(QmahDbContext db)
             var recipientBalance = await GetOrCreateKeyBalanceAsync(
                 recipientUserId,
                 keyDefinitionId.Value,
-                cancellationToken);
+                retryToken);
             recipientBalance.Balance = checked(recipientBalance.Balance + keyAmount);
             recipientBalance.UpdatedAt = now;
             db.KeyTransactions.Add(new KeyTransaction
@@ -496,13 +525,56 @@ public sealed class CommunityRewardService(QmahDbContext db)
 
         policy.UpdatedAt = now;
         applyResult(policy.Id, pointAmount, keyDefinitionId, keyAmount, now);
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken: retryToken);
+        await transaction.CommitAsync(retryToken);
+        db.ChangeTracker.AcceptAllChanges();
         return new CommunityRewardGrantView(
             pointAmount > 0 || keyAmount > 0,
             pointAmount,
             keyDefinitionId,
             keyAmount);
+        }, cancellationToken);
+    }
+
+    private async Task ResetGrantTrackingAsync(CancellationToken cancellationToken)
+    {
+        // 上一輪 SaveChanges 可能已把帳本 entry 標成 Unchanged，但 transaction 之後才 rollback；
+        // 重試前重新載入既有餘額／規則，並移除上一輪新增的流水，避免把同一筆加碼再累加一次。
+        foreach (var entry in db.ChangeTracker.Entries<PointTransaction>()
+            .Where(entry => entry.Entity.ReferenceType == "COMMUNITY_REWARD")
+            .ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
+
+        foreach (var entry in db.ChangeTracker.Entries<KeyTransaction>()
+            .Where(entry => entry.Entity.ReferenceType == "COMMUNITY_REWARD")
+            .ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
+
+        foreach (var entry in db.ChangeTracker.Entries<PointBalance>().ToList())
+        {
+            if (entry.State == EntityState.Added)
+                entry.State = EntityState.Detached;
+            else
+                await entry.ReloadAsync(cancellationToken);
+        }
+
+        foreach (var entry in db.ChangeTracker.Entries<UserKeyBalance>().ToList())
+        {
+            if (entry.State == EntityState.Added)
+                entry.State = EntityState.Detached;
+            else
+                await entry.ReloadAsync(cancellationToken);
+        }
+
+        foreach (var entry in db.ChangeTracker.Entries<CommunityRewardCampaign>().ToList())
+        {
+            if (entry.State != EntityState.Added)
+                await entry.ReloadAsync(cancellationToken);
+        }
     }
 
     private static bool CanIssue(

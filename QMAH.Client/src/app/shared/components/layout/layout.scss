@@ -1,0 +1,513 @@
+:host {
+  display: block;
+}
+
+.app-shell {
+  --app-header-height: 72px;
+  --color-surface: var(--qmah-surface);
+  --color-ink: var(--qmah-ink);
+  --color-primary: var(--qmah-primary);
+  --color-line: var(--qmah-border);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* ui-integration: Area identity is a restrained Shell accent, not a full-page repaint. */
+.app-shell[data-area='user'] {
+  --color-primary: var(--qmah-user-action);
+  --color-primary-soft: var(--qmah-user-soft);
+  --color-primary-content: var(--qmah-user-content);
+}
+
+.app-shell[data-area='catalog'] {
+  --color-primary: var(--qmah-catalog-action);
+  --color-primary-soft: var(--qmah-catalog-soft);
+  --color-primary-content: var(--qmah-catalog-content);
+}
+
+.app-shell[data-area='game'] {
+  --color-primary: var(--qmah-game-action);
+  --color-primary-soft: var(--qmah-game-soft);
+  --color-primary-content: var(--qmah-game-content);
+}
+
+.app-shell[data-area='social'] {
+  --color-primary: var(--qmah-social-action);
+  --color-primary-soft: var(--qmah-social-soft);
+  --color-primary-content: var(--qmah-social-content);
+}
+
+.app-shell[data-area='store'] {
+  --color-primary: var(--qmah-store-action);
+  --color-primary-soft: var(--qmah-store-soft);
+  --color-primary-content: var(--qmah-store-content);
+}
+
+.app-shell[data-area='admin'] {
+  --color-primary: var(--qmah-danger);
+  --color-primary-soft: var(--qmah-terracotta-soft);
+  --color-primary-content: var(--qmah-danger-content);
+}
+
+/* ui-integration: 前台共用 header 收斂品牌、Area 入口與帳號操作；各 Area 的內容組成仍由自己掌控。 */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background: color-mix(in srgb, var(--color-surface, #f7f4ee) 92%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.app-header__inner {
+  width: min(1440px, 100%);
+  min-height: var(--app-header-height);
+  margin: 0 auto;
+  padding: 10px clamp(var(--qmah-space-4), 3vw, var(--qmah-space-10));
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(var(--qmah-space-3), 2vw, 28px);
+}
+
+.app-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-brand img {
+  width: 124px;
+  height: auto;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.app-brand__copy,
+.app-account__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-brand__copy strong {
+  color: currentColor;
+  font-size: 13px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.app-brand__copy small,
+.app-account__copy small {
+  color: color-mix(in srgb, currentColor 58%, transparent);
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.app-header__navigation {
+  min-width: 0;
+}
+
+.app-context-navigation { display: inline-flex; align-items: center; gap: 2px; padding-left: var(--qmah-space-2); border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.app-context-navigation a { min-height: var(--qmah-control-height); display: inline-flex; align-items: center; padding: 6px var(--qmah-space-2); border-radius: var(--qmah-radius-control); color: color-mix(in srgb, currentColor 62%, transparent); font-size: var(--qmah-type-label-size); font-weight: 700; text-decoration: none; }
+.app-context-navigation a:hover, .app-context-navigation a.is-active { color: var(--color-primary, var(--qmah-jade-deep)); background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent); }
+
+.app-header__actions {
+  margin-inline-start: auto;
+  justify-self: end;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--qmah-space-2);
+}
+
+.app-account,
+.app-login,
+.app-logout,
+.app-mobile-logout,
+.app-admin-entry {
+  min-height: var(--qmah-control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--qmah-radius-control);
+  color: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.app-account {
+  max-width: 190px;
+  gap: 8px;
+  padding: 4px 8px 4px 4px;
+}
+
+.app-account:hover,
+.app-login:hover,
+.app-logout:hover:not(:disabled),
+.app-mobile-logout:hover:not(:disabled),
+.app-admin-entry:hover {
+  border-color: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 22%, transparent);
+  background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent);
+  color: var(--color-primary, var(--qmah-jade-deep));
+}
+
+.app-account__avatar {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 13%, transparent);
+  color: var(--color-primary, var(--qmah-jade-deep));
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.app-account__avatar--image {
+  object-fit: cover;
+  background: var(--color-primary, var(--qmah-jade-deep));
+}
+
+.app-account__copy {
+  overflow: hidden;
+}
+
+.app-account__copy strong {
+  overflow: hidden;
+  color: currentColor;
+  font-size: 12px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-login,
+.app-logout,
+.app-admin-entry {
+  padding: 8px var(--qmah-space-3);
+}
+
+.app-admin-entry {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-logout:disabled,
+.app-mobile-logout:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.app-theme-toggle {
+  width: var(--qmah-control-height);
+  height: var(--qmah-control-height);
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: var(--qmah-radius-control);
+  color: inherit;
+  cursor: pointer;
+}
+
+.app-theme-toggle:hover {
+  border-color: color-mix(in srgb, currentColor 16%, transparent);
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.app-theme-toggle input {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.theme-icon {
+  font-size: 18px;
+}
+
+.theme-icon--dark {
+  display: none;
+}
+
+.app-theme-toggle input:checked ~ .theme-icon--light {
+  display: none;
+}
+
+.app-theme-toggle input:checked ~ .theme-icon--dark {
+  display: block;
+}
+
+.app-menu-toggle,
+.app-icon-button {
+  width: var(--qmah-control-height);
+  height: var(--qmah-control-height);
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--qmah-radius-control);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.app-menu-toggle {
+  display: none;
+}
+
+.app-menu-toggle:hover,
+.app-icon-button:hover {
+  border-color: color-mix(in srgb, currentColor 16%, transparent);
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.app-menu-toggle app-qmah-icon,
+.app-icon-button app-qmah-icon {
+  font-size: 20px;
+}
+
+.app-skip-link {
+  position: fixed;
+  top: -56px;
+  left: 16px;
+  z-index: 100;
+  padding: 10px var(--qmah-space-3);
+  border-radius: var(--qmah-radius-control);
+  background: var(--color-ink, #27363b);
+  color: var(--color-surface, #f7f4ee);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 160ms ease;
+}
+
+.app-skip-link:focus {
+  top: 12px;
+}
+
+.app-main {
+  flex: 1 0 auto;
+  min-height: calc(100dvh - var(--app-header-height));
+  display: block;
+}
+
+.app-mobile-backdrop,
+.app-mobile-drawer {
+  display: none;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--qmah-focus, var(--color-primary, var(--qmah-jade-deep)));
+  outline-offset: 2px;
+}
+
+.app-menu-toggle:focus-visible,
+.app-icon-button:focus-visible {
+  outline-color: var(--qmah-catalog-accent, var(--qmah-focus));
+}
+
+@media (max-width: 1180px) {
+  .app-brand__copy {
+    display: none;
+  }
+
+  .app-header__inner {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
+/* ui-integration: 1040px 以下切換成同一個 drawer，避免平板寬度硬塞五個 Area 與帳號操作造成折行。 */
+@media (max-width: 1040px) {
+  .app-shell {
+    --app-header-height: 64px;
+  }
+
+  .app-header__inner {
+    min-height: var(--app-header-height);
+    padding: 8px var(--qmah-space-3);
+    gap: var(--qmah-space-2);
+  }
+
+  .app-menu-toggle {
+    display: inline-grid;
+  }
+
+  .app-brand img {
+    width: 116px;
+  }
+
+  .app-header__navigation {
+    display: none;
+  }
+
+  .app-context-navigation { display: none; }
+
+  .app-admin-entry { display: none; }
+
+  .app-account {
+    padding-right: 4px;
+  }
+
+  .app-account__copy,
+  .app-logout {
+    display: none;
+  }
+
+  .app-header__actions {
+    gap: var(--qmah-space-1);
+  }
+
+  .app-mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 58;
+    border: 0;
+    background: rgba(20, 29, 33, 0.44);
+    cursor: pointer;
+  }
+
+  .app-mobile-backdrop.is-open {
+    display: block;
+  }
+
+  .app-mobile-drawer {
+    position: fixed;
+    inset: 12px auto auto 12px;
+    z-index: 60;
+    width: min(360px, calc(100vw - 32px));
+    max-height: calc(100dvh - 24px);
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    /* 完全離開 viewport，避免隱藏 drawer 的右緣仍多出幾個像素造成水平溢出。 */
+    transform: translateX(calc(-100% - 24px));
+    border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    border-radius: var(--qmah-radius-panel);
+    background: var(--color-surface, #f7f4ee);
+    box-shadow: 18px 0 42px rgba(20, 29, 33, 0.18);
+    transition: transform 180ms ease, visibility 180ms ease;
+  }
+
+  .app-mobile-drawer.is-open {
+    visibility: visible;
+    transform: translateX(0);
+  }
+
+  .app-mobile-drawer__header,
+  .app-mobile-drawer__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--qmah-space-3);
+    padding: var(--qmah-space-4);
+  }
+
+  .app-mobile-drawer__header {
+    border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .app-mobile-drawer__header > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .app-mobile-drawer__header strong {
+    font-size: 16px;
+  }
+
+  .app-mobile-drawer__header span {
+    color: color-mix(in srgb, currentColor 62%, transparent);
+    font-size: 11px;
+  }
+
+  .app-mobile-drawer__body {
+    flex: 0 1 auto;
+    padding: var(--qmah-space-4);
+  }
+
+  .app-mobile-drawer__label {
+    margin: 0 0 8px;
+    color: color-mix(in srgb, currentColor 56%, transparent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .app-mobile-drawer__footer a {
+    min-height: var(--qmah-control-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px var(--qmah-space-2);
+    border-radius: var(--qmah-radius-control);
+    color: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    text-decoration: none;
+  }
+
+  .app-mobile-drawer__footer a:hover {
+    background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent);
+    color: var(--color-primary, var(--qmah-jade-deep));
+  }
+
+  .app-mobile-drawer__footer {
+    border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .app-mobile-logout {
+    width: 100%;
+    padding: 8px var(--qmah-space-3);
+    border: 1px solid var(--qmah-danger);
+    border-radius: var(--qmah-radius-control);
+    background: var(--qmah-danger);
+    color: var(--qmah-danger-content);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 750;
+    cursor: pointer;
+  }
+
+  .app-mobile-logout:hover:not(:disabled) {
+    border-color: var(--qmah-danger);
+    background: color-mix(in srgb, var(--qmah-danger) 82%, var(--qmah-night));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-skip-link,
+  .app-mobile-drawer,
+  .area-navigation a,
+  .app-account,
+  .app-login,
+  .app-logout,
+  .app-mobile-logout,
+  .app-admin-entry {
+    transition: none;
+  }
+}

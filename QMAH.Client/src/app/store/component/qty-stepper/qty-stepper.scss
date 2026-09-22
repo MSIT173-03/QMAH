@@ -6,25 +6,26 @@
   display: flex;
   align-items: center;
   border: 1px solid var(--color-line-mid);
-  border-radius: 2px;
+  border-radius: var(--qmah-radius-control);
   overflow: hidden;
 }
 
 .qty-btn {
   border: 0;
-  background: #fff;
-  padding: 9px 14px;
+  background: var(--color-surface);
+  padding: var(--qmah-space-2) var(--qmah-space-3);
+  min-height: var(--qmah-control-height);
   font-size: 14px;
   color: var(--color-ink);
   transition: background 160ms, color 160ms;
 
   &:hover {
-    background: var(--color-ink);
-    color: #fff;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
   }
 
   &--sm {
-    padding: 7px 12px;
+    padding: var(--qmah-space-2) var(--qmah-space-3);
   }
 }
 

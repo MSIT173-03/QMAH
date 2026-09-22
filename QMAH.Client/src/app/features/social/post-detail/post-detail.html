@@ -1,0 +1,122 @@
+<div class="qmah-social-page">
+  <div class="mb-4">
+    <a routerLink="/social/posts" class="btn btn-ghost btn-sm social-icon-label">
+      <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
+      返回貼文列表
+    </a>
+  </div>
+
+@if (loading) {
+  <div class="text-center py-10 text-base-content/60">載入中…</div>
+} @else if (loadError) {
+  <div class="alert alert-error">{{ loadError }}</div>
+} @else if (post) {
+  <div class="card bg-base-100 shadow-xl border border-base-300 mb-6">
+    <div class="card-body">
+      <div class="flex justify-between items-center">
+        <span class="badge badge-secondary">{{ post.boardCode }}</span>
+        <span class="text-xs text-base-content/60">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+      </div>
+      @if (editingPost) {
+        <div class="form-control gap-2">
+          <label class="sr-only" for="edit-post-title">貼文標題</label>
+          <input id="edit-post-title" type="text" class="input input-bordered w-full" [(ngModel)]="editPostTitle" placeholder="標題" />
+          <label class="sr-only" for="edit-post-content">貼文內容</label>
+          <textarea id="edit-post-content" class="textarea textarea-bordered h-32" [(ngModel)]="editPostContent"></textarea>
+          <div class="flex gap-2 justify-end">
+            <button class="btn btn-sm btn-ghost" (click)="cancelEditPost()">取消</button>
+            <button class="btn btn-sm btn-primary" (click)="saveEditPost()">儲存</button>
+          </div>
+        </div>
+      } @else {
+        <h1 class="card-title">{{ post.title }}</h1>
+        <p class="text-xs text-base-content/60 social-icon-label">
+          <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+          {{ post.displayName || '匿名會員' }}
+        </p>
+        <app-social-post-content [content]="post.content" />
+      }
+
+      @if (post.media.length > 0) {
+        <div class="flex flex-col gap-2 mt-2">
+          @for (media of post.media; track media.id) {
+            <figure class="social-post-detail__media">
+              <img [src]="media.url" [alt]="media.altText || post.title" />
+              @if (media.altText) {
+                <figcaption>{{ media.altText }}</figcaption>
+              }
+            </figure>
+          }
+        </div>
+      }
+
+      <div class="card-actions justify-end mt-4">
+        @if (isOwnPost(post) && !editingPost) {
+          <button class="btn btn-sm btn-ghost social-icon-label" (click)="startEditPost()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button>
+          <button class="btn btn-sm btn-error btn-outline social-icon-label" (click)="deletePost()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button>
+        }
+        <button class="btn btn-sm btn-ghost social-icon-label" (click)="reportModal.open('POST', post.id)"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉貼文</button>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3 social-icon-label">
+    <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
+    留言（{{ post.comments.length }}）
+  </h3>
+
+  <div class="space-y-3 mb-6">
+    @for (comment of post.comments; track comment.id) {
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-4">
+          <div class="flex justify-between items-start">
+            <span class="font-bold text-sm">{{ comment.displayName || '匿名會員' }}</span>
+            <span class="text-xs text-base-content/60">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+          </div>
+          @if (editingCommentId === comment.id) {
+            <div class="form-control gap-2">
+              <textarea class="textarea textarea-bordered textarea-sm" [(ngModel)]="editCommentContent" aria-label="編輯留言內容"></textarea>
+              <div class="flex gap-2 justify-end">
+                <button class="btn btn-xs btn-ghost" (click)="cancelEditComment()">取消</button>
+                <button class="btn btn-xs btn-primary" (click)="saveEditComment(comment.id)">儲存</button>
+              </div>
+            </div>
+          } @else {
+            <p>{{ comment.content }}</p>
+            <div class="card-actions justify-end">
+              @if (isOwnComment(comment)) {
+                <button class="btn btn-xs btn-ghost social-icon-label" (click)="startEditComment(comment)"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button>
+                <button class="btn btn-xs btn-error btn-outline social-icon-label" (click)="deleteComment(comment.id)"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button>
+              }
+              <button class="btn btn-xs btn-ghost social-icon-label" (click)="reportModal.open('COMMENT', comment.id)"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉留言</button>
+            </div>
+          }
+        </div>
+      </div>
+    } @empty {
+      <div class="text-center py-6 text-base-content/60">目前還沒有留言，歡迎留下第一則。</div>
+    }
+  </div>
+
+  @if (actionError) {
+    <div class="alert alert-warning mb-3">{{ actionError }}</div>
+  }
+
+  @if (reportSuccessMessage) {
+    <div class="alert alert-success mb-3">{{ reportSuccessMessage }}</div>
+  }
+
+  <div class="form-control gap-2">
+    <label class="sr-only" for="new-comment-content">留言內容</label>
+    <textarea
+      id="new-comment-content"
+      class="textarea textarea-bordered"
+      placeholder="留下你的想法…"
+      [(ngModel)]="newComment.content"
+    ></textarea>
+    <button class="btn btn-primary self-end" (click)="submitComment()">送出留言</button>
+  </div>
+  }
+</div>
+
+<app-report-modal #reportModal (reported)="onReported()" />

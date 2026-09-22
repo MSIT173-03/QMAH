@@ -1,21 +1,17 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { apiUrl, getField } from './http';
+import { Observable, of } from 'rxjs';
 import { HotSearchLink, KeywordSuggestion } from './api.models';
 
 /** 搜尋 API */
 @Injectable({ providedIn: 'root' })
 export class SearchApi {
-  private readonly http = inject(HttpClient);
-
-  /** GET /search/hot-links：熱門搜尋捷徑 */
+  /** 後端尚未提供熱門搜尋捷徑，首頁仍可使用商品清單搜尋。 */
   getHotLinks(): Observable<HotSearchLink[]> {
-    return getField(this.http, apiUrl('/search/hot-links'), 'links');
+    return of<HotSearchLink[]>([]);
   }
 
-  /** GET /search/suggestions：依輸入中的關鍵字取得搜尋建議 */
+  /** 後端尚未提供搜尋建議，避免每次輸入都打不存在的 route。 */
   getSuggestions(q: string): Observable<KeywordSuggestion[]> {
-    return getField(this.http, apiUrl('/search/suggestions'), 'suggestions', { q });
+    return of<KeywordSuggestion[]>([]);
   }
 }

@@ -7,9 +7,14 @@
       class="pill"
       [class]="variant() === 'default' ? '' : 'pill--' + variant()"
       [class.pill--active]="option.active"
-      [disabled]="option.disabled ?? false"
+      [attr.aria-pressed]="option.active ? 'true' : 'false'"
       [attr.title]="option.title ?? null"
       (click)="select.emit(i)"
-    >{{ option.label }}</button>
+    >
+      @if (option.icon) {
+        <app-qmah-icon [name]="option.icon" />
+      }
+      {{ option.label }}
+    </button>
   }
 </div>

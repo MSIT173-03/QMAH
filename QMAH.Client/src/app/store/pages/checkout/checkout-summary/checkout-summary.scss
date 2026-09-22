@@ -7,37 +7,37 @@
 /* 訂單商品行：名稱佔滿剩餘寬度，數量與小計靠右 */
 .summary-line {
   display: flex;
-  gap: 10px;
+  gap: var(--qmah-space-2);
   align-items: baseline;
   border-top: 1px solid var(--color-line-soft);
-  padding-top: 8px;
+  padding-top: var(--qmah-space-2);
 }
 
 .summary-line-name {
   flex: 1;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: var(--qmah-type-label-size);
+  line-height: var(--qmah-type-body-leading);
   color: var(--color-body);
 }
 
 .summary-line-qty {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
+  font-size: var(--qmah-type-meta-size);
   color: var(--color-muted);
 }
 
 .summary-line-total {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
 }
 
 /* 金額明細區塊 */
 .summary-block {
   border-top: 1px solid var(--color-line);
-  padding-top: 10px;
+  padding-top: var(--qmah-space-2);
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--qmah-space-2);
 }
 
 /* 結帳頁的應付總額列以深色分隔線強調 */
@@ -48,14 +48,14 @@
 /* 回饋點數說明 */
 .summary-earn {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
+  font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.08em;
   color: var(--color-muted);
 }
 
 /* 必填欄位未填妥的提示 */
 .field-warning {
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   line-height: 1.7;
   color: var(--color-accent);
 }

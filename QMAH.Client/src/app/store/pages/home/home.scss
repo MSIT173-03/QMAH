@@ -17,7 +17,7 @@
   padding: 9px 20px;
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: var(--qmah-space-5);
   font-size: 12px;
   color: var(--color-nav);
 }
@@ -36,21 +36,50 @@
    =============================== */
 
 .home-main {
-  padding-top: 20px;
+  padding-top: var(--qmah-space-5);
   padding-bottom: 72px;
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: var(--qmah-space-12);
 }
 
 .hero-section {
   display: grid;
   grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
-  gap: 12px;
+  gap: var(--qmah-space-3);
+
+  /* 資料為空時折疊對應 host，避免保留無內容的 grid 欄位。 */
+  &:has(> app-hero-carousel:empty) {
+    grid-template-columns: minmax(0, 1fr);
+
+    > app-hero-carousel {
+      display: none;
+    }
+  }
+
+  &:has(> .hero-sidebar > app-flash-sale:empty):has(> .hero-sidebar > app-mini-coupons:empty) {
+    grid-template-columns: minmax(0, 1fr);
+
+    > .hero-sidebar {
+      display: none;
+    }
+  }
+
+  &:has(> app-hero-carousel:empty):has(> .hero-sidebar > app-flash-sale:empty):has(> .hero-sidebar > app-mini-coupons:empty) {
+    display: none;
+  }
 }
 
 .two-col-section {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
+  gap: var(--qmah-space-3);
+}
+
+/* ui-integration: 商城保留桌面雙欄構圖，但在手機先讓內容各自取得可讀寬度，避免商品名稱被壓成直排。 */
+@media (max-width: 720px) {
+  .hero-section,
+  .two-col-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

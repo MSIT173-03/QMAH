@@ -1,0 +1,25 @@
+<dialog #dialogEl class="modal">
+  <div class="modal-box max-w-2xl">
+    <h3 class="font-bold text-lg mb-4">裁切圖片</h3>
+
+    @if (imageFile) {
+      <image-cropper
+        [imageFile]="imageFile"
+        [maintainAspectRatio]="true"
+        [aspectRatio]="4 / 3"
+        [roundCropper]="false"
+        output="blob"
+        format="jpeg"
+        [imageQuality]="90"
+        (imageCropped)="onImageCropped($event)"
+        class="max-h-[60vh]"
+      />
+    }
+
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" (click)="cancel()">取消上傳</button>
+      <button type="button" class="btn btn-outline" (click)="skip()">略過裁切，用原圖</button>
+      <button type="button" class="btn btn-primary" (click)="confirm()">確認裁切</button>
+    </div>
+  </div>
+</dialog>

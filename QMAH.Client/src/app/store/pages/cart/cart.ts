@@ -1,18 +1,17 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 
 import {
   SiteHeader,
-  HeaderNav,
+  HeaderActions,
   HeaderNavLink,
   Breadcrumb,
   BreadcrumbItem,
   PageTitleRow,
-  SiteFooter,
   EmptyState,
+  LoginPrompt,
 } from '../../component';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
-import { StoreOverviewService } from '../../shared/store-overview.service';
 import { toProductView } from '../../shared/product-view';
 
 import { CartLine } from './cart-line/cart-line';
@@ -32,13 +31,13 @@ const REMOVE_ANIMATION_MS = 300;
 @Component({
   selector: 'app-cart',
   host: { class: 'store-app' },
-  imports: [SiteHeader, HeaderNav, Breadcrumb, PageTitleRow, SiteFooter, EmptyState, CartLine, CartSummary, CartAddons],
+  imports: [SiteHeader, HeaderActions, Breadcrumb, PageTitleRow, EmptyState, LoginPrompt, CartLine, CartSummary, CartAddons],
   templateUrl: './cart.html',
   styleUrls: [
     './cart.scss',
   ],
 })
-export class CartPage {
+export class Cart {
   /** 麵包屑導覽項目 */
   protected readonly breadcrumbItems: BreadcrumbItem[] = [{ label: '首頁', href: HOME_PATH }, { label: '購物車' }];
 
@@ -52,14 +51,7 @@ export class CartPage {
   protected readonly continueShoppingLink = { label: '繼續選購 →', href: PRODUCT_LIST_PATH };
 
   /** 購物車狀態；每次異動後以 API 回應的內容（含金額摘要）取代 */
-  private readonly cartState = injectCartState();
-  /** 登入狀態；資料載入前視為未登入 */
-  private readonly storeOverview = inject(StoreOverviewService);
-  protected readonly isLoggedIn = this.storeOverview.isLoggedIn;
-
-  constructor() {
-    this.storeOverview.load();
-  }
+  protected readonly cartState = injectCartState();
   /** 正在執行移除動畫、尚未真正從購物車移除的商品 ID */
   private leavingIds = signal<ReadonlySet<string>>(new Set());
 
@@ -75,6 +67,8 @@ export class CartPage {
   protected hasItems = computed(() => this.lines().length > 0);
   /** 購物車件數，顯示於頁首與標題列 */
   protected count = this.cartState.count;
+  /** ui-integration: 購物車異動失敗要留在原頁面並明確告知，不讓使用者誤以為已更新。 */
+  protected error = this.cartState.error;
 
   /** 金額摘要（後端以預設配送方式試算），供 app-cart-summary 顯示 */
   protected amounts = computed(() => this.cartState.cart()?.amounts ?? null);

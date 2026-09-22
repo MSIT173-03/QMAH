@@ -22,7 +22,22 @@
     }
   </div>
 
-  <!-- 收件地址：內容較長，獨佔一整列 -->
+  <!-- 郵遞區號／縣市／鄉鎮市區：後端訂單分欄保存 -->
+  <div class="field-grid">
+    @for (f of regionFields; track f.field) {
+      <label class="field">
+        {{ f.label }}
+        <input
+          class="field-input"
+          [value]="form()[f.field]"
+          [placeholder]="f.placeholder"
+          (input)="onInput(f.field, $event)"
+        />
+      </label>
+    }
+  </div>
+
+  <!-- 街道地址：內容較長，獨佔一整列 -->
   <label class="field">
     {{ addrField.label }}
     <input
@@ -33,7 +48,7 @@
     />
   </label>
 
-  <!-- 給客服的備註：兩行高的多行輸入 -->
+  <!-- 訂單備註：兩行高的多行輸入，不暗示不存在的客服管道。 -->
   <label class="field">
     {{ noteField.label }}
     <textarea

@@ -1,0 +1,19 @@
+<!-- ui-integration: Game 各頁共用同一套模式入口；右側 slot 只放當前流程必要的狀態或返回操作。 -->
+<nav class="game-navigation" aria-label="遊戲區功能">
+  <div class="game-navigation__switcher">
+    <span class="game-navigation__context">遊戲模式</span>
+    <div class="game-navigation__links">
+    @for (link of links; track link.path) {
+      <a
+        [routerLink]="link.path"
+        [class.is-active]="isActive(link)"
+        [attr.aria-current]="isActive(link) ? 'page' : null"
+        [attr.aria-label]="link.label + '，' + link.description"
+      ><span class="game-navigation__link-label">{{ link.label }}</span><span class="game-navigation__link-description">{{ link.description }}</span></a>
+    }
+    </div>
+  </div>
+  <div class="game-navigation__actions">
+    <ng-content />
+  </div>
+</nav>

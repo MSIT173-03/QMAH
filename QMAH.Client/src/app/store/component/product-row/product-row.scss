@@ -4,12 +4,14 @@
 
 .product-row {
   border: 1px solid var(--color-line);
-  background: #fff;
-  padding: 14px;
+  background: var(--color-surface);
+  border-radius: var(--store-radius);
+  padding: var(--qmah-space-3);
   display: flex;
-  gap: 16px;
+  gap: var(--qmah-space-4);
   align-items: flex-start;
   flex-wrap: wrap;
+  min-width: 0;
   transition: border-color 160ms;
 
   &:hover {
@@ -43,7 +45,8 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* ui-integration: 橫列縮圖同樣顯示完整商品圖片，不讓固定縮圖尺寸裁掉資料。 */
+  object-fit: contain;
 }
 
 .product-row-info {
@@ -51,26 +54,27 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--qmah-space-2);
 }
 
 /* mono 品牌／器類說明列 */
 .meta-brand {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
+  font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.14em;
   color: var(--color-teal);
 
   &--sm {
-    font-size: 12px;
+    font-size: var(--qmah-type-label-size);
   }
 }
 
 .product-row-title {
   font-size: 18px;
-  line-height: 1.45;
+  line-height: var(--qmah-type-heading-leading);
   color: var(--color-ink);
   text-decoration: none;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -81,17 +85,20 @@
 }
 
 .product-row-source {
-  font-size: 12px;
-  line-height: 1.7;
+  font-size: var(--qmah-type-label-size);
+  line-height: var(--qmah-type-body-leading);
   color: var(--color-body);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .product-row-meta {
   display: flex;
-  gap: 14px;
+  gap: var(--qmah-space-4);
   flex-wrap: wrap;
+  min-width: 0;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
@@ -100,7 +107,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 9px;
+  gap: var(--qmah-space-2);
   min-width: 150px;
 }
 
@@ -110,6 +117,7 @@
   gap: 6px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .product-row-price {
@@ -124,17 +132,60 @@
 
 .product-row-buy {
   border: 1px solid var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
-  border-radius: 2px;
-  padding: 9px 20px;
-  font-size: 12px;
+  border-radius: var(--qmah-radius-control);
+  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
+  min-height: var(--qmah-control-height);
+  flex: 0 0 auto;
+  font-size: var(--qmah-type-label-size);
   letter-spacing: 0.1em;
+  white-space: nowrap;
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--qmah-primary-content);
+  }
+}
+
+.product-row-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 600px) {
+  .product-row { gap: 12px; padding: 12px; }
+  .product-row-thumb { width: 88px; height: 88px; }
+  .product-row-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .product-row-source,
+  .product-row-meta { overflow-wrap: anywhere; }
+  .product-row-aside {
+    width: 100%;
+    flex: 0 0 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: center;
+  }
+  .product-row-price-row {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+  .product-row-aside > .product-card-tag {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .product-row-buy {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-self: end;
   }
 }

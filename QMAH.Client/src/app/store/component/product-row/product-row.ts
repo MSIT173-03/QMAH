@@ -1,4 +1,6 @@
 import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { toDisplayImage } from '../../shared/image-utils';
 import { productPath } from '../../shared/paths';
 import { formatRating, formatReviews, toPriceView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
@@ -10,7 +12,7 @@ import { StoreLink } from '../../shared/store-link';
  */
 @Component({
   selector: 'app-product-row',
-  imports: [StoreLink],
+  imports: [StoreLink, QmahIconComponent],
   templateUrl: './product-row.html',
   styleUrls: [
     './product-row.scss',
@@ -18,7 +20,7 @@ import { StoreLink } from '../../shared/store-link';
 })
 export class ProductRow {
   id = input('');
-  /** 商品圖片網址，為 null 時改顯示佔位符（slotLabel） */
+  /** 商品圖片網址；錯誤時會先嘗試同目錄 display 圖。 */
   coverImage = input<string | null>(null);
   /** 品牌名稱 */
   brand = input('');
@@ -40,16 +42,22 @@ export class ProductRow {
   /** 點擊加入購物車按鈕時觸發 */
   addToCart = output<void>();
 
-  /** 無圖片時顯示於縮圖位置的佔位文字 */
-  protected readonly slotLabel = '[ 商品圖 ]';
+  /** 無圖片時顯示的中性狀態。 */
+  protected readonly slotLabel = '影像待補';
   /** 加入購物車按鈕文字 */
   protected readonly addCartLabel = '加入購物車';
 
-  /** 是否顯示佔位符，規則與 app-product-card 相同：見該元件的 showPlaceholder 說明 */
-  protected showPlaceholder = linkedSignal(() => !this.coverImage());
-  /** 圖片讀取失敗時觸發，退回無圖片的預設樣式 */
+  protected imageSrc = linkedSignal(() => this.coverImage());
+  protected showPlaceholder = computed(() => !this.imageSrc());
+  /** 圖片讀取失敗時先 fallback 到同一件文物 display 圖。 */
   protected onImageError(): void {
-    this.showPlaceholder.set(true);
+    const current = this.imageSrc();
+    const display = toDisplayImage(current);
+    if (display && display !== current) {
+      this.imageSrc.set(display);
+      return;
+    }
+    this.imageSrc.set(null);
   }
 
   /** 商品頁連結網址 */

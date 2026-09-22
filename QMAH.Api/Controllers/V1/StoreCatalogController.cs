@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
+using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Api.Controllers.V1;
 
 [Route("api/v1/store")]
+// integration: Store 先接上資料庫已有的商品、評論與媒體路徑；首頁行銷 mock 沒有對應後端時不在此控制器虛構資料。
 public sealed class StoreCatalogController(
     QmahDbContext db,
     QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
@@ -33,6 +36,63 @@ public sealed class StoreCatalogController(
         PAINTING,
     }
 
+    private string CategoryTypeToString(CategoryType? type) => type switch
+    {
+        CategoryType.BRONZE => "BRONZE",
+        CategoryType.CARVING => "CARVING",
+        CategoryType.CERAMIC => "CERAMIC",
+        CategoryType.COIN => "COIN",
+        CategoryType.ENAMEL => "ENAMEL",
+        CategoryType.JADE => "JADE",
+        CategoryType.LACQUER => "LACQUER",
+        CategoryType.PAINTING => "PAINTING",
+        _ => ""
+    };
+
+    [HttpGet("categories")]
+    public async Task<ActionResult<IReadOnlyList<StoreCategoryDto>>> GetCategories(
+        CancellationToken cancellationToken = default)
+    {
+        // integration: 分類入口是既有 Store UI 的正式資料，不再使用 mock-db 的固定件數；
+        // 件數與商品列表共用 IsActive 條件，避免下架商品仍出現在分類統計中。
+        var categories = await db.ArtifactCategories
+            .AsNoTracking()
+            .OrderBy(category => category.Name)
+            .Select(category => new StoreCategoryDto(
+                category.Id,
+                category.Code,
+                category.Name,
+                db.Products.Count(product => product.IsActive && product.CategoryCode == category.Code)))
+            .ToListAsync(cancellationToken);
+
+        return Ok(categories);
+    }
+
+    [HttpGet("promotions")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<StorePromotionDto>>> GetPromotions(
+        CancellationToken cancellationToken = default)
+    {
+        // 商城與社群共用同一份官方商城公告，避免優惠券條件在兩個資料來源各維護一次。
+        // 公告內容只作展示；實際折扣與可用性仍由結帳流程重新驗證優惠券定義。
+        var promotions = await db.SocialPosts
+            .AsNoTracking()
+            .Where(post => post.Status == "PUBLISHED"
+                && post.PostType == "ANNOUNCEMENT"
+                && post.PublisherType == "OFFICIAL"
+                && post.BoardCode == "STORE")
+            .OrderByDescending(post => post.CreatedAt)
+            .ThenBy(post => post.Id)
+            .Select(post => new StorePromotionDto(
+                post.Id,
+                post.Title,
+                post.Content,
+                post.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        return Ok(promotions);
+    }
+
     [HttpGet("products")]
     public async Task<ActionResult<ApiPage<ProductListItemDto>>> GetProducts(
         string? q,
@@ -40,6 +100,7 @@ public sealed class StoreCatalogController(
         Guid? artifactId,
         decimal? maxPrice,
         decimal? minPrice,
+        bool? dealOnly,
         CategoryType? category,
         OrderType order = OrderType.None,
         int page = 1,
@@ -63,16 +124,31 @@ public sealed class StoreCatalogController(
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
 
-        if (minPrice is not null and > 0)
-            query = query.Where(p => p.Price >= minPrice);
-        if (maxPrice is not null and > 0)
-            query = query.Where(p => p.Price < maxPrice);
+        // integration: 限時特賣接受有效單品售價或真正大於 0 的商品折扣率，不以前端標籤推測。
+        if (dealOnly == true)
+            query = query.Where(product =>
+                (product.SalePrice.HasValue
+                    && product.SalePrice.Value > 0m
+                    && product.SalePrice.Value < product.Price)
+                || product.DiscountRate > 0m);
 
-        if (category is { } categoryType)
-        {
-            var code = categoryType.ToString();
-            query = query.Where(p => p.CategoryCode == code);
-        }
+        if (minPrice is not null and > 0)
+            query = query.Where(p =>
+                (p.SalePrice.HasValue
+                    && p.SalePrice.Value > 0m
+                    && p.SalePrice.Value < p.Price
+                    ? p.SalePrice.Value
+                    : Math.Round(p.Price * (100m - p.DiscountRate) / 100m, 2)) >= minPrice);
+        if (maxPrice is not null and > 0)
+            query = query.Where(p =>
+                (p.SalePrice.HasValue
+                    && p.SalePrice.Value > 0m
+                    && p.SalePrice.Value < p.Price
+                    ? p.SalePrice.Value
+                    : Math.Round(p.Price * (100m - p.DiscountRate) / 100m, 2)) < maxPrice);
+
+        if (category != null)
+            query = query.Where(p => p.CategoryCode == CategoryTypeToString(category));
 
         var query2 = query.Select(g => new
         {
@@ -82,8 +158,21 @@ public sealed class StoreCatalogController(
             g.Name,
             g.CategoryCode,
             g.Price,
+            g.DiscountRate,
+            EffectivePrice = g.SalePrice.HasValue
+                && g.SalePrice.Value > 0m
+                && g.SalePrice.Value < g.Price
+                ? g.SalePrice.Value
+                : Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2),
+            SalePrice = g.SalePrice.HasValue
+                && g.SalePrice.Value > 0m
+                && g.SalePrice.Value < g.Price
+                ? g.SalePrice
+                : g.DiscountRate > 0m
+                    ? Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2)
+                    : (decimal?)null,
             g.Stock,
-            g.PrimaryImagePath,
+            PrimaryImagePath = g.PrimaryImagePath ?? (g.Artifact == null ? null : g.Artifact.PrimaryImagePath),
             g.CreatedAt,
             AverageRating = db.ProductReviews
                     .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
@@ -91,7 +180,7 @@ public sealed class StoreCatalogController(
             ReviewCount = db.ProductReviews
                     .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
             SellCount = db.OrderDetails
-                    .Where(o => o.ProductId == g.Id && o.Order.Status == "COMPLETED")
+                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
                     .Sum(o => o.Quantity)
         });
 
@@ -108,10 +197,10 @@ public sealed class StoreCatalogController(
                 .OrderByDescending(g => g.CreatedAt)
                 .ThenBy(g => g.Id),
             OrderType.CheaperFirst => query2
-                .OrderBy(g => g.Price)
+                .OrderBy(g => g.EffectivePrice)
                 .ThenBy(g => g.Id),
             OrderType.PricierFirst => query2
-                .OrderByDescending(g => g.Price)
+                .OrderByDescending(g => g.EffectivePrice)
                 .ThenBy(g => g.Id),
             _ => query2.OrderBy(g => g.Id),
         };
@@ -123,6 +212,9 @@ public sealed class StoreCatalogController(
             g.Name,
             g.CategoryCode,
             g.Price,
+            g.DiscountRate,
+            g.EffectivePrice,
+            g.SalePrice,
             g.Stock,
             g.PrimaryImagePath,
             g.CreatedAt,
@@ -145,108 +237,6 @@ public sealed class StoreCatalogController(
         });
     }
 
-    /// <summary>取得八種商品類型的數量；已登入時一併附上點數與優惠券列表。</summary>
-    [HttpGet("products/info")]
-    public async Task<ActionResult<StoreOverviewDto>> GetStoreOverview(
-        CancellationToken cancellationToken = default)
-    {
-        var products = await db.Products
-            .AsNoTracking()
-            .Where(product => product.IsActive)
-            .Select(product => new ProductListItemDto(
-                product.Id,
-                product.ArtifactId,
-                product.ExternalRef,
-                product.Name,
-                product.CategoryCode,
-                product.Price,
-                product.Stock,
-                product.PrimaryImagePath,
-                product.CreatedAt,
-                product.ProductReviews
-                    .Where(review => review.Status == "PUBLISHED")
-                    .Select(review => (decimal?)review.Rating)
-                    .Average() ?? 0m,
-                product.ProductReviews.Count(review => review.Status == "PUBLISHED"),
-                product.OrderDetails
-                    .Where(detail => detail.Order.Status == "COMPLETED")
-                    .Sum(detail => detail.Quantity)))
-            .ToListAsync(cancellationToken);
-
-        var byCategory = products.ToLookup(product => product.CategoryCode);
-        var categoryCounts = Enum.GetNames<CategoryType>()
-            .ToDictionary(name => name, name => byCategory[name].Count());
-        var categoryCoverImages = Enum.GetNames<CategoryType>()
-            .ToDictionary(
-                name => name,
-                name => mediaUrlResolver.Resolve(byCategory[name]
-                    .OrderByDescending(product => product.SellCount)
-                    .ThenBy(product => product.Id)
-                    .FirstOrDefault()?.PrimaryImagePath));
-        var hotProducts = WithPublicImages(products
-            .OrderByDescending(product => product.SellCount)
-            .ThenBy(product => product.Id)
-            .Take(10));
-        var newProducts = WithPublicImages(products
-            .OrderByDescending(product => product.CreatedAt)
-            .ThenBy(product => product.Id)
-            .Take(4));
-        var topRatedProducts = WithPublicImages(products
-            .Where(product => product.ReviewCount > 0)
-            .OrderByDescending(product => product.AverageRating)
-            .ThenByDescending(product => product.ReviewCount)
-            .ThenBy(product => product.Id)
-            .Take(4));
-        var recommendedProducts = WithPublicImages(products
-            .OrderBy(_ => Random.Shared.Next())
-            .Take(10));
-
-        if (!TryGetCurrentUserId(out var userId))
-            return Ok(new StoreOverviewDto(
-                categoryCounts, categoryCoverImages, false, null, null, hotProducts, newProducts, topRatedProducts, recommendedProducts));
-
-        var pointBalance = await db.PointBalances
-            .AsNoTracking()
-            .Where(balance => balance.UserId == userId)
-            .Select(balance => (int?)balance.Balance)
-            .SingleOrDefaultAsync(cancellationToken) ?? 0;
-        var now = DateTime.UtcNow;
-        var coupons = await db.UserCoupons
-            .AsNoTracking()
-            .Where(coupon => coupon.UserId == userId
-                && coupon.Status == "AVAILABLE"
-                && coupon.ExpiresAt > now
-                && coupon.CouponDefinition.IsActive
-                && coupon.CouponDefinition.StartAt <= now
-                && coupon.CouponDefinition.EndAt > now)
-            .OrderByDescending(coupon => coupon.IssuedAt)
-            .Select(coupon => new CouponDto(
-                coupon.Id,
-                coupon.CouponDefinition.Code,
-                coupon.CouponDefinition.Name,
-                coupon.CouponDefinition.AcquisitionType,
-                coupon.CouponDefinition.PointCost,
-                coupon.CouponDefinition.DiscountType,
-                coupon.CouponDefinition.DiscountValue,
-                coupon.CouponDefinition.MinimumAmount,
-                coupon.CouponDefinition.StartAt,
-                coupon.CouponDefinition.EndAt,
-                "AVAILABLE",
-                coupon.IssuedAt,
-                coupon.ExpiresAt,
-                coupon.UsedAt))
-            .ToListAsync(cancellationToken);
-
-        return Ok(new StoreOverviewDto(
-            categoryCounts, categoryCoverImages, true, pointBalance, coupons, hotProducts, newProducts, topRatedProducts, recommendedProducts));
-    }
-
-    /// <summary>圖片網址統一經 CDN 解析後轉為清單。</summary>
-    private IReadOnlyList<ProductListItemDto> WithPublicImages(IEnumerable<ProductListItemDto> items) =>
-        items
-            .Select(item => item with { PrimaryImagePath = mediaUrlResolver.Resolve(item.PrimaryImagePath) })
-            .ToList();
-
     [HttpGet("products/{id:guid}")]
     public async Task<ActionResult<ProductDetailsDto>> GetProduct(
         Guid id,
@@ -265,9 +255,24 @@ public sealed class StoreCatalogController(
                 item.CategoryCode,
                 item.Description,
                 item.SizeText,
+                // 同時提供關聯文物原始尺寸；商品尺寸不再承擔兩種語意。
+                item.Artifact == null ? null : item.Artifact.SizeText,
                 item.Price,
+                item.DiscountRate,
+                item.SalePrice.HasValue
+                    && item.SalePrice.Value > 0m
+                    && item.SalePrice.Value < item.Price
+                    ? item.SalePrice.Value
+                    : Math.Round(item.Price * (100m - item.DiscountRate) / 100m, 2),
+                item.SalePrice.HasValue
+                    && item.SalePrice.Value > 0m
+                    && item.SalePrice.Value < item.Price
+                    ? item.SalePrice
+                    : item.DiscountRate > 0m
+                        ? Math.Round(item.Price * (100m - item.DiscountRate) / 100m, 2)
+                        : (decimal?)null,
                 item.Stock,
-                item.PrimaryImagePath,
+                item.PrimaryImagePath ?? (item.Artifact == null ? null : item.Artifact.PrimaryImagePath),
                 item.SourceUrl,
                 item.IsActive,
                 item.ProductReviews
@@ -275,7 +280,7 @@ public sealed class StoreCatalogController(
                     .Select(review => (decimal?)review.Rating)
                     .Average() ?? 0m,
                 item.ProductReviews.Count(review => review.Status == "PUBLISHED")))
-            .FirstOrDefaultAsync(cancellationToken);
+            .SingleOrDefaultAsync(cancellationToken);
 
         if (product is null)
             return MissingResource("找不到商品", "這件商品不存在或目前未上架。");

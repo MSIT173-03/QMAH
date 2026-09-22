@@ -1,0 +1,35 @@
+<div class="legal-page">
+  <div class="legal-page__inner">
+    <nav class="legal-page__breadcrumb" aria-label="頁面位置">
+      <a routerLink="/home">清明鑑定屋</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ content().title }}</span>
+    </nav>
+
+    <header class="legal-page__header">
+      <p class="legal-page__eyebrow">{{ content().eyebrow }}</p>
+      <h1>{{ content().title }}</h1>
+      <p class="legal-page__intro">{{ content().intro }}</p>
+      <p class="legal-page__updated">最後更新：{{ updatedAt }}</p>
+    </header>
+
+    <article class="legal-page__document">
+      @for (section of content().sections; track section.title) {
+        <section>
+          <h2>{{ section.title }}</h2>
+          @for (paragraph of section.paragraphs; track paragraph) {
+            <p>{{ paragraph }}</p>
+          }
+        </section>
+      }
+    </article>
+
+    <footer class="legal-page__footer">
+      <button type="button" class="legal-page__back" (click)="goBack()">
+        <span aria-hidden="true">←</span>
+        {{ returnLabel }}
+      </button>
+      <a routerLink="/home">回到首頁</a>
+    </footer>
+  </div>
+</div>

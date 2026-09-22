@@ -15,5 +15,6 @@
         public string PublishStatus { get; set; } = "DRAFT";
         public string? ReviewNote { get; set; }
         public DateTime CreatedAt { get; set; }
+        public IReadOnlyList<string> MediaUrls { get; set; } = [];
     }
 }

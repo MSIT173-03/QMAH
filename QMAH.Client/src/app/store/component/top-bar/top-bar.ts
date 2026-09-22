@@ -1,4 +1,6 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { MEMBER_PATH, loginPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
 import { Coupon } from '../../api/api.models';
 import { formatDateMD, formatMoney } from '../../shared/format';
@@ -8,35 +10,39 @@ import { formatDateMD, formatMoney } from '../../shared/format';
  * 並可展開折價券懸浮面板檢視目前可用的折價券清單。
  */
 @Component({
-  selector: 'app-top-bar',
+  selector: 'app-promobar',
   imports: [StoreLink],
-  templateUrl: './top-bar.html',
+  templateUrl: './promobar.html',
   styleUrls: [
-    './top-bar.scss',
+    './promobar.scss',
   ],
 })
-export class TopBar {
+export class Promobar {
+  private readonly router = inject(Router);
+
   /** 跑馬燈公告文字清單 */
   announcements = input<string[]>([]);
 
-  /** 是否已登入；未登入時以「登入」取代個人頁面、點數與折價券 */
-  isLoggedIn = input(false);
-  /** 「登入」連結網址 */
-  loginHref = input('#');
-
-  /** 「訂單查詢」連結網址 */
-  ordersHref = input('#');
+  // ui-integration: 只把已有會員 route 接到商城快捷列；訂單歷史尚無前台 route，保持非連結狀態，不製造假的頁面入口。
+  /** 「訂單查詢」連結網址；尚無對應前台頁面時為 null */
+  ordersHref = input<string | null>(null);
+  /** 是否已登入；null 代表尚未確認（先不顯示登入或個人頁面，避免閃爍） */
+  signedIn = input<boolean | null>(null);
   /** 「個人頁面」連結網址 */
-  profileHref = input('#');
+  profileHref = input(MEMBER_PATH);
+  /** 未登入時的「登入」連結網址，登入後回到目前頁面（router.url 不是 signal，因此每次取用時計算） */
+  protected loginHref(): string {
+    return loginPath(this.router.url);
+  }
   /** 「點數」連結網址 */
-  pointsHref = input('#');
+  pointsHref = input('/member/economy');
   /** 目前點數顯示文字 */
   points = input('0');
 
   /** 「折價券」連結網址 */
-  couponsHref = input('#');
+  couponsHref = input('/member/coupons');
   /** 折價券面板中「管理所有折價券」連結網址 */
-  manageCouponsHref = input('#');
+  manageCouponsHref = input('/member/coupons');
   /** 折價券清單資料 */
   coupons = input<Coupon[]>([]);
 

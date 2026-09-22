@@ -1,7 +1,9 @@
 import { Component, input, output } from '@angular/core';
+import { QmahIconComponent, QmahIconName } from '../../../shared/components/qmah-icon/qmah-icon';
 
 export interface PillOption {
   label: string;
+  icon?: QmahIconName;
   active?: boolean;
   /** 是否停用（例如沒有符合資料的篩選選項），停用時不可點擊 */
   disabled?: boolean;
@@ -15,7 +17,7 @@ export interface PillOption {
  */
 @Component({
   selector: 'app-pill-group',
-  imports: [],
+  imports: [QmahIconComponent],
   templateUrl: './pill-group.html',
   styleUrls: [
     './pill-group.scss',

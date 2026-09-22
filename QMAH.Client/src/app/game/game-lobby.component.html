@@ -1,0 +1,221 @@
+<div class="game-notebook">
+  <!-- ui-integration: 遊戲子導覽固定放在 Global App Shell 之下，讓所有遊戲頁共用同一條操作脈絡。 -->
+  <app-game-navigation>
+    @if (isAdmin()) {
+      @if (isDemo) {
+        <span class="demo-mark">展示模式 · 僅供查看</span>
+        <a class="preview-toggle" routerLink="/game">關閉展示模式</a>
+      } @else if (canOpenPreview) {
+        <a class="preview-toggle" routerLink="/game/demo">開啟展示模式</a>
+      }
+      <!-- ui-integration: 測試房間只對管理員提供一鍵入口，維持一般玩家的 Game 子導覽乾淨且不暴露開發工具。 -->
+      <a class="test-room-entry" routerLink="/game/test">測試房間</a>
+    }
+    @if (!isDemo) { <a class="account-link" routerLink="/login">登入會員帳號</a> }
+  </app-game-navigation>
+
+  <!-- ui-integration: 介紹橫幅可由玩家收合，且狀態會留在本機，避免每次回到大廳都擋住找房間。 -->
+  <section class="lobby-hero" [class.is-collapsed]="heroCollapsed" [attr.aria-labelledby]="heroCollapsed ? null : 'lobby-hero-title'" [attr.aria-label]="heroCollapsed ? '多人鑑定介紹' : null">
+    @if (heroCollapsed) {
+      <div class="lobby-hero-collapsed">
+        <div><span class="lobby-hero-kicker">多人鑑定</span><strong>建立或加入房間</strong></div>
+        <button type="button" class="hero-collapse" [attr.aria-expanded]="false" (click)="toggleHero()">顯示房間入口</button>
+      </div>
+    } @else {
+      <div class="lobby-hero-copy">
+        <p class="lobby-hero-kicker">多人鑑定</p>
+        <h1 id="lobby-hero-title">房間大廳</h1>
+        <p>建立房間，或從清單選擇一間房間加入。</p>
+        <div class="hero-actions">
+          @if (!isDemo) { <button type="button" class="hero-create" (click)="toggleCreateForm()">建立房間</button> }
+          <button type="button" class="hero-collapse" [attr.aria-expanded]="true" (click)="toggleHero()">收合介紹</button>
+        </div>
+      </div>
+      <figure class="lobby-artwork">
+        <!-- ui-integration: 改用現有高彩度展品素材，讓 Hero 在桌面與手機裁切後仍保有清楚主體與細節。 -->
+        <img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="掐絲琺瑯雲龍紋三足香爐" />
+      </figure>
+    }
+  </section>
+
+  @if (error) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span>@if (errorTitle === '請先登入') { <a routerLink="/login">前往會員登入</a> }</div> }
+  @if (success) { <div class="notice notice-success" role="status"><span>{{ success }}</span></div> }
+
+  <section class="notebook-spread" [attr.aria-busy]="loading">
+    <article class="index-page" aria-labelledby="rooms-title">
+      <header class="page-heading">
+        <div>
+          <h2 id="rooms-title">可見房間</h2>
+          <p>{{ roomListDescription() }}</p>
+        </div>
+      </header>
+
+      <div class="lookup-bar">
+        <div class="lookup-controls">
+          <button type="button" class="filter-trigger" [class.is-active]="showFilter" (click)="showFilter = !showFilter" [attr.aria-expanded]="showFilter">篩選：{{ roomStatus === 'WAITING' ? '可加入' : statusText(roomStatus === 'RECENT' ? 'COMPLETED' : roomStatus) }}</button>
+          <label class="sort-control">排序
+            <select name="roomSort" [ngModel]="roomSort" (ngModelChange)="setRoomSort($event)">
+              <option value="RECOMMENDED">推薦</option>
+              <option value="NEARLY_FULL">快滿</option>
+              <option value="NEWEST">最新</option>
+              <option value="OPEN_SLOTS">空位最多</option>
+            </select>
+          </label>
+        </div>
+        <div class="refresh-actions">
+          @if (isDemo) { <span class="refresh-hint"><i aria-hidden="true"></i>每 5 秒更新房間</span> }
+          <button type="button" class="hero-collapse refresh-button" (click)="refreshRooms()" [disabled]="loading || refreshing" [attr.aria-busy]="refreshing">
+            <app-qmah-icon name="refresh" aria-hidden="true" />{{ refreshing ? '更新中…' : '重新整理' }}
+          </button>
+        </div>
+        @if (showFilter) {
+          <section class="filter-note" aria-label="篩選條件">
+            <header><strong>選擇房間狀態</strong><button type="button" (click)="showFilter = false" aria-label="關閉篩選">×</button></header>
+            <p>切換狀態即可查看不同房間。</p>
+            <button type="button" [attr.aria-pressed]="isRoomStatusActive('WAITING')" (click)="setRoomStatus('WAITING')">可加入</button>
+            <button type="button" [attr.aria-pressed]="isRoomStatusActive('PLAYING')" (click)="setRoomStatus('PLAYING')">進行中</button>
+            <button type="button" [attr.aria-pressed]="isRoomStatusActive('RECENT')" (click)="setRoomStatus('RECENT')">最近完成</button>
+          </section>
+        }
+      </div>
+
+      <div class="status-tabs" aria-label="房間狀態">
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('WAITING')" [class.is-active]="isRoomStatusActive('WAITING')" (click)="setRoomStatus('WAITING')">可加入</button>
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('PLAYING')" [class.is-active]="isRoomStatusActive('PLAYING')" (click)="setRoomStatus('PLAYING')">進行中</button>
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('RECENT')" [class.is-active]="isRoomStatusActive('RECENT')" (click)="setRoomStatus('RECENT')">最近完成</button>
+        <span>{{ rooms ? rooms.totalCount + ' 間' : '讀取中' }}</span>
+      </div>
+
+      <!-- ui-integration: 清單用固定欄位標籤建立掃讀基準，避免房間資料只靠留白猜測對應關係。 -->
+      <div class="room-ledger-head" aria-hidden="true"><span>房間</span><span>玩法設定</span><span>席位</span><span>狀態</span><span>操作</span></div>
+
+      <div class="ledger" role="list">
+        @if (rooms === null && loading) {
+          @for (slot of loadingRows; track slot) { <div class="ledger-skeleton" aria-hidden="true"><i></i><i></i><i></i></div> }
+        }
+        @else if (rooms === null && error) {
+          <!-- ui-integration: 清單首次載入失敗時保留可理解的重試出口，不讓左頁變成空白。 -->
+          <section class="empty-state error-state" role="alert">
+            <h2>房間清單暫時載入不了</h2>
+            <p>請稍後再試，或重新載入房間清單。</p>
+            <button type="button" (click)="loadRooms(1, false)">重新載入房間</button>
+          </section>
+        }
+        @else if (rooms && rooms.items.length === 0) {
+          <section class="empty-state">
+            <h2>目前沒有符合條件的房間</h2>
+            @if (isDemo && isAdmin()) {
+              <p>展示資料在這個狀態下沒有房間可供查看。</p>
+            } @else if (isDemo) {
+              <p>目前沒有符合條件的房間可供查看。</p>
+            } @else {
+              <p>請切換房間狀態，或建立新的鑑定房間。</p>
+              <div class="empty-state__actions">
+                <button type="button" (click)="setRoomStatus('WAITING')">查看可加入房間</button>
+                <button type="button" class="empty-state__primary" (click)="showCreateForm = true">建立房間</button>
+              </div>
+            }
+          </section>
+        }
+        @else if (rooms) {
+          @for (room of rooms.items; track room.id) {
+            <div role="listitem">
+              <button type="button" class="room-row" [attr.data-room-id]="room.id" [class.is-selected]="selectedRoomId === room.id" (click)="selectRoom(room)" [attr.aria-pressed]="selectedRoomId === room.id">
+                <span class="room-code"><strong>{{ room.roomCode }}</strong><small>{{ room.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</small></span>
+                <span class="room-facts"><b>{{ room.totalRounds }} 回合</b><span>{{ categoryText(room.categoryFilterCode) }} · {{ eraText(room.eraBucketFilterCode) }}</span></span>
+                <span class="room-occupancy" [attr.aria-label]="'席位 ' + room.playerCount + ' / ' + room.maxPlayers"><b>{{ room.playerCount }} / {{ room.maxPlayers }}</b><i><i [style.width.%]="occupancy(room)"></i></i></span>
+                <span class="room-status" [attr.data-status]="room.status">{{ statusText(room.status) }}</span>
+                @if (selectedRoomId === room.id) { <span class="row-selection-state">已開啟</span> } @else { <span class="row-action"><span>查看</span><app-qmah-icon class="row-arrow" name="arrow-right" aria-hidden="true" /></span> }
+              </button>
+            </div>
+          }
+        }
+      </div>
+
+      @if (rooms && rooms.totalPages > 1) {
+        <nav class="folio-pagination" aria-label="房間清單分頁">
+          <button type="button" aria-label="上一頁" (click)="loadRooms(rooms.page - 1)" [disabled]="rooms.page <= 1"><app-qmah-icon name="chevron-left" aria-hidden="true" /></button>
+          @for (page of pageNumbers(); track page) { <button type="button" (click)="loadRooms(page)" [class.is-current]="page === rooms.page" [attr.aria-current]="page === rooms.page ? 'page' : null">{{ page }}</button> }
+          <button type="button" aria-label="下一頁" (click)="loadRooms(rooms.page + 1)" [disabled]="rooms.page >= rooms.totalPages"><app-qmah-icon name="chevron-right" aria-hidden="true" /></button>
+        </nav>
+      }
+    </article>
+  </section>
+
+  <!-- ui-integration: 房間詳情改成獨立對話框，避免選房後把大廳清單壓縮成難以掃讀的雙欄版面。 -->
+  @if (selectedRoomId) {
+    <div class="room-detail-backdrop" role="presentation" (click)="clearSelection()"></div>
+    <aside #roomDialog class="notes-page room-detail-dialog" role="dialog" aria-modal="true" aria-label="房間詳情" [attr.aria-labelledby]="detailLoading ? null : 'room-details-title'" tabindex="-1">
+      @if (detailLoading) {
+        <div class="notes-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>
+      }
+      @else if (currentRoom(); as room) {
+        <header class="room-notes-heading">
+          <div class="room-code-heading">
+            <div><span class="room-code-label">房間詳情 · 房間代碼</span><h2 id="room-details-title">{{ room.roomCode }}</h2></div>
+            <div class="room-share-actions">
+              <button type="button" class="copy-room-code" (click)="copyRoomCode(room.roomCode)" aria-label="複製房間代碼">複製</button>
+              <button type="button" class="copy-room-code" (click)="openRoomQr(room)" aria-label="顯示房間 QR 碼">QR 碼</button>
+            </div>
+          </div>
+          <button type="button" class="detail-close" (click)="clearSelection()" aria-label="關閉房間資訊">×</button>
+          <span [attr.data-status]="room.status">{{ statusText(room.status) }}</span>
+        </header>
+        <dl class="room-record">
+          <div><dt>分類</dt><dd>{{ categoryText(room.categoryFilterCode) }}</dd></div>
+          <div><dt>年代</dt><dd>{{ eraText(room.eraBucketFilterCode) }}</dd></div>
+          <div><dt>房間類型</dt><dd>{{ room.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</dd></div>
+          <div><dt>回合</dt><dd>{{ room.totalRounds }}</dd></div>
+          <div><dt>作答時間</dt><dd>{{ room.answerSeconds }} 秒</dd></div>
+        </dl>
+        <section class="participant-record">
+          <header><h3>席位</h3><span>{{ room.playerCount ?? room.players.length }} / {{ room.maxPlayers }}</span></header>
+          @if (isDemo) {
+            @if (isAdmin()) {
+              <p class="margin-note">展示模式僅供查看，不能加入房間。</p>
+            } @else {
+              <p class="margin-note">這間房目前僅供查看，不能加入房間。</p>
+            }
+          } @else {
+            <ol>
+              @for (player of room.players; track player.id) { <li><b>{{ (player.seatNo || 0).toString().padStart(2, '0') }}</b><span>{{ player.displayName }}</span><small>{{ playerStateText(player) }}</small></li> }
+              @for (slot of openSlots(room); track slot) { <li class="vacant"><b>{{ (room.players.length + slot + 1).toString().padStart(2, '0') }}</b><span>空位</span><small>可加入</small></li> }
+            </ol>
+          }
+        </section>
+        @if (!isDemo && game.canJoinRoom(room)) {
+          <form #joinFormRef="ngForm" class="join-note" (ngSubmit)="joinRoom()" novalidate>
+            <label>遊戲顯示名稱<input name="joinDisplayName" [(ngModel)]="joinForm.displayName" maxlength="80" required /></label>
+            @if (room.visibility === 'PRIVATE') { <label>房間密碼<input name="joinPassword" type="password" [(ngModel)]="joinForm.password" required /></label> }
+            <button type="submit" [disabled]="joining || joinFormRef.invalid">{{ joining ? '加入中…' : '加入房間' }}</button>
+          </form>
+        } @else if (!isDemo) { <p class="margin-note">這間房目前不能加入，請選擇可加入的房間。</p> }
+      }
+      @else {
+        <p class="margin-note">房間資訊暫時載入不了，請關閉視窗後重新選擇房間。</p>
+      }
+    </aside>
+  }
+
+  @if (qrRoom; as room) {
+    <app-game-room-qr-dialog [room]="room" (close)="closeRoomQr()" (copy)="copyRoomCode($event)" />
+  }
+
+  @if (showCreateForm) {
+    <div class="sheet-backdrop" (click)="toggleCreateForm()"></div>
+    <section #createDialog class="insert-sheet" role="dialog" aria-modal="true" aria-labelledby="create-title" tabindex="-1">
+      <header><div><h2 id="create-title">建立鑑定房間</h2></div><button type="button" (click)="toggleCreateForm()" aria-label="關閉">×</button></header>
+      <form #createFormRef="ngForm" (ngSubmit)="createRoom()">
+        <label>顯示名稱<input name="createDisplayName" [(ngModel)]="createForm.displayName" maxlength="80" required /></label>
+        <div class="form-columns">
+          <label>房間類型<select name="createVisibility" [(ngModel)]="createForm.visibility"><option value="PUBLIC">公開房間</option><option value="PRIVATE">私人房間</option></select></label>
+          <label>玩家上限<input name="createMaxPlayers" type="number" [(ngModel)]="createForm.maxPlayers" min="3" max="10" required /></label>
+          <label>回合數<input name="createTotalRounds" type="number" [(ngModel)]="createForm.totalRounds" min="1" max="5" required /></label>
+          <label>每回合作答時間<input name="createAnswerSeconds" type="number" [(ngModel)]="createForm.answerSeconds" min="30" max="300" required /></label>
+        </div>
+        @if (createForm.visibility === 'PRIVATE') { <label>房間密碼<input name="createPassword" type="password" [(ngModel)]="createForm.password" required /></label> }
+        <footer><span>建立後會直接進入房間。</span><button type="submit" [disabled]="creating || createFormRef.invalid">{{ creating ? '建立中…' : '建立房間' }}</button></footer>
+      </form>
+    </section>
+  }
+</div>

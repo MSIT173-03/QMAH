@@ -4,12 +4,12 @@
 
 .empty-state {
   border: 1px dashed var(--color-line-mid);
-  background: #fff;
+  background: var(--color-surface);
   padding: 60px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--qmah-space-3);
 
   &--lg {
     padding: 72px 24px;
@@ -17,24 +17,26 @@
 }
 
 .empty-state-title {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 18px;
+  font-family: var(--qmah-font-serif);
+  font-size: var(--qmah-type-section-title-size);
+  line-height: var(--qmah-type-heading-leading);
   color: var(--color-ink-deep);
 }
 
 .empty-state-desc {
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
 .empty-state-cta {
   margin-top: 4px;
   border: 1px solid var(--color-ink);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-ink);
-  border-radius: 2px;
-  padding: 9px 22px;
-  font-size: 12px;
+  border-radius: var(--qmah-radius-control);
+  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
+  min-height: var(--qmah-control-height);
+  font-size: var(--qmah-type-label-size);
   letter-spacing: 0.12em;
   text-decoration: none;
   transition: background 160ms, border-color 160ms, color 160ms;
@@ -42,7 +44,7 @@
   &:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--qmah-primary-content);
   }
 
   &--wide {

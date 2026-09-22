@@ -112,9 +112,6 @@ public sealed class EconomyService(QmahDbContext db)
         if (string.IsNullOrWhiteSpace(keyCode))
             return EconomyResult<ArtifactUnlockView>.Invalid("鑰匙代碼不可為空。");
 
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
         var key = await db.KeyDefinitions
             .SingleOrDefaultAsync(item => item.Code == keyCode && item.IsActive, cancellationToken);
         if (key is null)
@@ -122,72 +119,76 @@ public sealed class EconomyService(QmahDbContext db)
         if (key.ScopeType == "NORMAL" && artifactId.HasValue)
             return EconomyResult<ArtifactUnlockView>.Invalid("NORMAL 鑰匙不能指定文物，請讓伺服器從全部候選中抽選。");
 
-        // 候選集完全由伺服器依啟用文物、鑰匙範圍與會員既有解鎖紀錄建立。
-        // CATEGORY／ERA 可指定候選集內的文物；未指定時由伺服器抽選，不能越過鑰匙範圍。
-        var candidates = await GetEligibleArtifactQuery(userId, key)
-            .Select(artifact => new ArtifactCandidateView(artifact.Id, artifact.Name))
-            .ToListAsync(cancellationToken);
-        if (candidates.Count == 0)
+        // integration: API 啟用 SQL retry 時，扣鑰匙、寫入流水與建立解鎖紀錄
+        // 必須包在同一個 execution strategy transaction 內，重試時才不會只完成其中一部分。
+        var strategy = db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
         {
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                cancellationToken);
+
+            // 候選集完全由伺服器依啟用文物、鑰匙範圍與會員既有解鎖紀錄建立。
+            // CATEGORY／ERA 可指定候選集內的文物；未指定時由伺服器抽選，不能越過鑰匙範圍。
+            var candidates = await GetEligibleArtifactQuery(userId, key)
+                .Select(artifact => new ArtifactCandidateView(artifact.Id, artifact.Name))
+                .ToListAsync(cancellationToken);
+            if (candidates.Count == 0)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return EconomyResult<ArtifactUnlockView>.Success(new ArtifactUnlockView(
+                    false, null, null, 0,
+                    "目前沒有符合這把鑰匙的未解鎖文物，因此沒有扣除鑰匙。"));
+            }
+
+            ArtifactCandidateView? selected;
+            if (artifactId.HasValue)
+            {
+                selected = candidates.FirstOrDefault(candidate => candidate.Id == artifactId.Value);
+                if (selected is null)
+                    return EconomyResult<ArtifactUnlockView>.Invalid("指定文物不存在、未啟用或已經解鎖。");
+            }
+            else
+            {
+                selected = candidates[Random.Shared.Next(candidates.Count)];
+            }
+
+            var balance = await GetOrCreateKeyBalanceAsync(userId, key.Id, cancellationToken);
+            if (balance.Balance < 1)
+                return EconomyResult<ArtifactUnlockView>.Conflict("鑰匙數量不足，無法解鎖文物。");
+
+            var now = DateTime.UtcNow;
+            balance.Balance--;
+            balance.UpdatedAt = now;
+            var keyTransaction = new KeyTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                KeyDefinitionId = key.Id,
+                Amount = -1,
+                Reason = "ARTIFACT_UNLOCK",
+                ReferenceType = "ARTIFACT_UNLOCK",
+                ReferenceId = selected.Id,
+                CreatedAt = now
+            };
+            var unlock = new ArtifactUnlock
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                ArtifactId = selected.Id,
+                UnlockMethod = "KEY",
+                KeyTransactionId = keyTransaction.Id,
+                UnlockedAt = now
+            };
+            db.KeyTransactions.Add(keyTransaction);
+            db.ArtifactUnlocks.Add(unlock);
+            await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+
             return EconomyResult<ArtifactUnlockView>.Success(new ArtifactUnlockView(
-                false,
-                null,
-                null,
-                0,
-                "目前沒有符合這把鑰匙的未解鎖文物，因此沒有扣除鑰匙。"));
-        }
-
-        ArtifactCandidateView? selected;
-        if (artifactId.HasValue)
-        {
-            selected = candidates.FirstOrDefault(candidate => candidate.Id == artifactId.Value);
-            if (selected is null)
-                return EconomyResult<ArtifactUnlockView>.Invalid("指定文物不存在、未啟用或已經解鎖。");
-        }
-        else
-        {
-            selected = candidates[Random.Shared.Next(candidates.Count)];
-        }
-
-        var balance = await GetOrCreateKeyBalanceAsync(userId, key.Id, cancellationToken);
-        if (balance.Balance < 1)
-            return EconomyResult<ArtifactUnlockView>.Conflict("鑰匙數量不足，無法解鎖文物。");
-
-        var now = DateTime.UtcNow;
-        balance.Balance--;
-        balance.UpdatedAt = now;
-        var keyTransaction = new KeyTransaction
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            KeyDefinitionId = key.Id,
-            Amount = -1,
-            Reason = "ARTIFACT_UNLOCK",
-            ReferenceType = "ARTIFACT_UNLOCK",
-            ReferenceId = selected.Id,
-            CreatedAt = now
-        };
-        var unlock = new ArtifactUnlock
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            ArtifactId = selected.Id,
-            UnlockMethod = "KEY",
-            KeyTransactionId = keyTransaction.Id,
-            UnlockedAt = now
-        };
-        db.KeyTransactions.Add(keyTransaction);
-        db.ArtifactUnlocks.Add(unlock);
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        return EconomyResult<ArtifactUnlockView>.Success(new ArtifactUnlockView(
-            true,
-            selected.Id,
-            selected.Name,
-            candidates.Count - 1,
-            null));
+                true, selected.Id, selected.Name, candidates.Count - 1, null));
+        });
     }
 
     /// <summary>由管理員替指定會員解鎖一件文物；重複操作維持冪等，並留下管理稽核紀錄。</summary>
@@ -200,24 +201,30 @@ public sealed class EconomyService(QmahDbContext db)
         if (adminUserId == Guid.Empty || userId == Guid.Empty || artifactId == Guid.Empty)
             return EconomyResult<AdminArtifactUnlockView>.Invalid("管理員、會員與文物識別碼都必須有效。");
 
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // integration: SQL retry 開啟後，管理員解鎖的稽核紀錄與解鎖資料必須一起重試，
+        // 否則暫時性斷線可能只留下其中一筆，造成後台看到的狀態與帳務不一致。
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
         var adminExists = await db.Users
             .AsNoTracking()
-            .AnyAsync(user => user.Id == adminUserId && user.Status == "ACTIVE", cancellationToken);
+            .AnyAsync(user => user.Id == adminUserId && user.Status == "ACTIVE", retryToken);
         if (!adminExists)
             return EconomyResult<AdminArtifactUnlockView>.Forbidden("管理員帳號不存在或未啟用。");
 
         var targetExists = await db.Users
             .AsNoTracking()
-            .AnyAsync(user => user.Id == userId && user.Status == "ACTIVE", cancellationToken);
+            .AnyAsync(user => user.Id == userId && user.Status == "ACTIVE", retryToken);
         if (!targetExists)
             return EconomyResult<AdminArtifactUnlockView>.NotFound("找不到啟用中的目標會員。");
 
         var artifactExists = await db.Artifacts
             .AsNoTracking()
-            .AnyAsync(artifact => artifact.Id == artifactId && artifact.IsActive, cancellationToken);
+            .AnyAsync(artifact => artifact.Id == artifactId && artifact.IsActive, retryToken);
         if (!artifactExists)
             return EconomyResult<AdminArtifactUnlockView>.NotFound("找不到啟用中的目標文物。");
 
@@ -225,13 +232,13 @@ public sealed class EconomyService(QmahDbContext db)
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 unlock => unlock.UserId == userId && unlock.ArtifactId == artifactId,
-                cancellationToken);
+                retryToken);
         var now = DateTime.UtcNow;
         if (existing is not null)
         {
             AddAdminUnlockAudit(adminUserId, userId, artifactId, false, now);
-            await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            await db.SaveChangesAsync(retryToken);
+            await transaction.CommitAsync(retryToken);
             return EconomyResult<AdminArtifactUnlockView>.Success(new AdminArtifactUnlockView(
                 false,
                 userId,
@@ -249,8 +256,8 @@ public sealed class EconomyService(QmahDbContext db)
             UnlockedAt = now
         });
         AddAdminUnlockAudit(adminUserId, userId, artifactId, true, now);
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(retryToken);
+        await transaction.CommitAsync(retryToken);
 
         return EconomyResult<AdminArtifactUnlockView>.Success(new AdminArtifactUnlockView(
             true,
@@ -258,6 +265,7 @@ public sealed class EconomyService(QmahDbContext db)
             artifactId,
             "ADMIN",
             now));
+        }, cancellationToken);
     }
 
     /// <summary>依資料庫中的兌換規則交換鑰匙，並留下來源與目標兩筆鑰匙流水。</summary>
@@ -270,13 +278,18 @@ public sealed class EconomyService(QmahDbContext db)
         if (units < 1 || units > 100)
             return EconomyResult<KeyExchangeView>.Invalid("兌換次數必須介於 1 至 100。");
 
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // integration: 來源／目標餘額與兩筆流水必須在同一個可重試交易單位內完成。
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
         var rule = await db.KeyExchangeRules
             .Include(item => item.SourceKeyDefinition)
             .Include(item => item.TargetKeyDefinition)
-            .SingleOrDefaultAsync(item => item.Id == ruleId && item.IsActive, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == ruleId && item.IsActive, retryToken);
         if (rule is null
             || !rule.SourceKeyDefinition.IsActive
             || !rule.TargetKeyDefinition.IsActive)
@@ -285,18 +298,18 @@ public sealed class EconomyService(QmahDbContext db)
         }
 
         var targetEligibleCount = await GetEligibleArtifactQuery(userId, rule.TargetKeyDefinition)
-            .CountAsync(cancellationToken);
+            .CountAsync(retryToken);
         if (targetEligibleCount == 0)
             return EconomyResult<KeyExchangeView>.Conflict("目標鑰匙目前沒有可解鎖的文物，不能兌換。");
 
         var sourceBalance = await GetOrCreateKeyBalanceAsync(
             userId,
             rule.SourceKeyDefinitionId,
-            cancellationToken);
+            retryToken);
         var targetBalance = await GetOrCreateKeyBalanceAsync(
             userId,
             rule.TargetKeyDefinitionId,
-            cancellationToken);
+            retryToken);
         var sourceAmount = checked(rule.SourceAmount * units);
         var targetAmount = checked(rule.TargetAmount * units);
         if (sourceBalance.Balance < sourceAmount)
@@ -330,8 +343,8 @@ public sealed class EconomyService(QmahDbContext db)
             ReferenceId = operationId,
             CreatedAt = now
         });
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(retryToken);
+        await transaction.CommitAsync(retryToken);
 
         return EconomyResult<KeyExchangeView>.Success(new KeyExchangeView(
             rule.Id,
@@ -340,6 +353,7 @@ public sealed class EconomyService(QmahDbContext db)
             rule.TargetKeyDefinition.Code,
             targetAmount,
             targetEligibleCount));
+        }, cancellationToken);
     }
 
     /// <summary>回收已沒有任何可解鎖文物的鑰匙，並同步產生鑰匙與點數流水。</summary>
@@ -353,25 +367,30 @@ public sealed class EconomyService(QmahDbContext db)
         if (amount < 1 || amount > 100)
             return EconomyResult<KeyRecycleView>.Invalid("回收數量必須介於 1 至 100。");
 
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // integration: 回收同時改動鑰匙、點數與兩本流水，需讓 SQL retry 重做完整交易。
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
         var key = await db.KeyDefinitions
-            .SingleOrDefaultAsync(item => item.Code == keyCode && item.IsActive, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Code == keyCode && item.IsActive, retryToken);
         if (key is null)
             return EconomyResult<KeyRecycleView>.NotFound("找不到啟用中的鑰匙定義。");
         if (key.RecyclePointValue <= 0)
             return EconomyResult<KeyRecycleView>.Conflict("這把鑰匙目前未設定可回收的鑑定點數。");
 
-        var eligibleCount = await GetEligibleArtifactQuery(userId, key).CountAsync(cancellationToken);
+        var eligibleCount = await GetEligibleArtifactQuery(userId, key).CountAsync(retryToken);
         if (eligibleCount > 0)
             return EconomyResult<KeyRecycleView>.Conflict("仍有可解鎖文物，不能回收這把鑰匙。");
 
-        var balance = await GetOrCreateKeyBalanceAsync(userId, key.Id, cancellationToken);
+        var balance = await GetOrCreateKeyBalanceAsync(userId, key.Id, retryToken);
         if (balance.Balance < amount)
             return EconomyResult<KeyRecycleView>.Conflict("鑰匙數量不足，不能回收。");
         var pointAmount = checked(key.RecyclePointValue * amount);
-        var pointBalance = await GetOrCreatePointBalanceAsync(userId, cancellationToken);
+        var pointBalance = await GetOrCreatePointBalanceAsync(userId, retryToken);
         var now = DateTime.UtcNow;
         balance.Balance -= amount;
         balance.UpdatedAt = now;
@@ -399,14 +418,15 @@ public sealed class EconomyService(QmahDbContext db)
             ReferenceId = operationId,
             CreatedAt = now
         });
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(retryToken);
+        await transaction.CommitAsync(retryToken);
 
         return EconomyResult<KeyRecycleView>.Success(new KeyRecycleView(
             key.Code,
             amount,
             pointAmount,
             0));
+        }, cancellationToken);
     }
 
     /// <summary>以增減量調整會員點數；不接受直接指定餘額，且每次都建立點數流水。</summary>
@@ -542,11 +562,17 @@ public sealed class EconomyService(QmahDbContext db)
         Guid couponDefinitionId,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // integration: 兌換券會同時扣點數、建立券與建立流水；這裡沿用既有交易邊界，
+        // 只補上 execution strategy，避免暫時性 SQL 失敗留下半套會員資產。
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
         var definition = await db.CouponDefinitions
-            .SingleOrDefaultAsync(item => item.Id == couponDefinitionId, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == couponDefinitionId, retryToken);
         if (definition is null)
             return EconomyResult<CouponView>.NotFound("找不到優惠券定義。");
         var now = DateTime.UtcNow;
@@ -562,7 +588,7 @@ public sealed class EconomyService(QmahDbContext db)
         if (definition.ValidityDays <= 0)
             return EconomyResult<CouponView>.Conflict("優惠券有效天數設定無效。");
 
-        var pointBalance = await GetOrCreatePointBalanceAsync(userId, cancellationToken);
+        var pointBalance = await GetOrCreatePointBalanceAsync(userId, retryToken);
         if (pointBalance.Balance < definition.PointCost.Value)
             return EconomyResult<CouponView>.Conflict("鑑定點數不足，不能兌換這張優惠券。");
 
@@ -589,9 +615,10 @@ public sealed class EconomyService(QmahDbContext db)
             ReferenceId = coupon.Id,
             CreatedAt = now
         });
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(retryToken);
+        await transaction.CommitAsync(retryToken);
         return EconomyResult<CouponView>.Success(ToCouponView(coupon, definition));
+        }, cancellationToken);
     }
 
     /// <summary>列出目前可用且已設定點數成本的常駐兌換券。</summary>
@@ -792,27 +819,34 @@ public sealed class EconomyService(QmahDbContext db)
         Guid roomId,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // integration: 主遊戲獎勵含點數、鑰匙與解鎖佇列，必須和既有冪等檢查一起重試，
+        // 不讓 commit 回應遺失時把同一場遊戲結算成兩次。
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
         var room = await db.GameRooms
             .Include(item => item.GamePlayers)
             .Include(item => item.GameRounds)
                 .ThenInclude(round => round.RoundAnswers)
                     .ThenInclude(answer => answer.Votes)
-            .SingleOrDefaultAsync(item => item.Id == roomId, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == roomId, retryToken);
         if (room is null)
             return EconomyResult<GameRewardView>.NotFound("找不到遊戲房間。");
         if (room.Status != "COMPLETED")
             return EconomyResult<GameRewardView>.Conflict("遊戲尚未完成，現在不能結算獎勵。");
-        var player = room.GamePlayers.FirstOrDefault(item => item.UserId == userId && item.ConnectionStatus != "LEFT");
+        // 房間完成後離場只代表離開畫面，不應讓有效參與者失去尚未領取的一次性獎勵。
+        var player = room.GamePlayers.FirstOrDefault(item => item.UserId == userId);
         if (player is null)
             return EconomyResult<GameRewardView>.Forbidden("目前會員不是這場遊戲的有效參與者。");
 
         var settledRounds = room.GameRounds.Where(round => round.IsSettled).ToList();
         var queuedGameUnlockCount = settledRounds.Count == 0
             ? 0
-            : await QueueGameArtifactUnlocksAsync(userId, settledRounds, cancellationToken);
+            : await QueueGameArtifactUnlocksAsync(userId, settledRounds, retryToken);
 
         var existingPointTransaction = await db.PointTransactions
             .AsNoTracking()
@@ -820,7 +854,7 @@ public sealed class EconomyService(QmahDbContext db)
                 item => item.UserId == userId
                     && item.ReferenceType == "MAIN_GAME_REWARD"
                     && item.ReferenceId == player.Id,
-                cancellationToken);
+                retryToken);
         if (existingPointTransaction is not null)
         {
             var existingKeyAmount = await db.KeyTransactions
@@ -828,10 +862,10 @@ public sealed class EconomyService(QmahDbContext db)
                 .Where(item => item.UserId == userId
                     && item.ReferenceType == "MAIN_GAME_REWARD"
                     && item.ReferenceId == player.Id)
-                .SumAsync(item => (int?)item.Amount, cancellationToken) ?? 0;
+                .SumAsync(item => (int?)item.Amount, retryToken) ?? 0;
             if (queuedGameUnlockCount > 0)
-                await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+                await db.SaveChangesAsync(retryToken);
+            await transaction.CommitAsync(retryToken);
             return EconomyResult<GameRewardView>.Success(new GameRewardView(
                 existingPointTransaction.Amount,
                 existingKeyAmount,
@@ -840,7 +874,7 @@ public sealed class EconomyService(QmahDbContext db)
                 true));
         }
 
-        var settings = await GetGameEconomySettingAsync(cancellationToken);
+        var settings = await GetGameEconomySettingAsync(retryToken);
         if (settings.MinimumPointReward < 0
             || settings.MaximumPointReward < settings.MinimumPointReward
             || settings.BasePointReward < 0
@@ -891,17 +925,17 @@ public sealed class EconomyService(QmahDbContext db)
         if (keyReward < 0)
             return EconomyResult<GameRewardView>.Conflict("主遊戲獎勵設定不可產生負數鑰匙。");
 
-        var pointBalance = await GetOrCreatePointBalanceAsync(userId, cancellationToken);
+        var pointBalance = await GetOrCreatePointBalanceAsync(userId, retryToken);
         // 目前資料庫快照使用 KEY-NORMAL；同時相容 NORMAL，若兩者皆啟用則優先 NORMAL。
         var keyDefinition = await db.KeyDefinitions
             .Where(item => item.IsActive && (item.Code == "NORMAL" || item.Code == "KEY-NORMAL"))
             .OrderBy(item => item.Code == "NORMAL" ? 0 : 1)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(retryToken);
         if (keyReward > 0 && keyDefinition is null)
             return EconomyResult<GameRewardView>.Conflict("找不到啟用中的 NORMAL 鑰匙定義。");
         var keyBalance = keyDefinition is null
             ? null
-            : await GetOrCreateKeyBalanceAsync(userId, keyDefinition.Id, cancellationToken);
+            : await GetOrCreateKeyBalanceAsync(userId, keyDefinition.Id, retryToken);
         var now = DateTime.UtcNow;
         pointBalance.Balance = checked(pointBalance.Balance + points);
         pointBalance.UpdatedAt = now;
@@ -931,14 +965,15 @@ public sealed class EconomyService(QmahDbContext db)
                 CreatedAt = now
             });
         }
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(retryToken);
+        await transaction.CommitAsync(retryToken);
         return EconomyResult<GameRewardView>.Success(new GameRewardView(
             points,
             keyReward,
             performance,
             roundsWon,
             false));
+        }, cancellationToken);
     }
 
     private async Task<int> QueueGameArtifactUnlocksAsync(

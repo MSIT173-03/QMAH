@@ -1,0 +1,16 @@
+@if (eras().length > 0) {
+  <app-panel id="eras">
+    <app-section-head variant="panel" title="年代選藏" tag="ERAS">
+      <span class="section-more section-more--static">按年代探索圖鑑</span>
+    </app-section-head>
+    <div class="brand-grid">
+      @for (era of eras(); track era.code) {
+        <a class="brand-card" [storeLink]="eraHref(era.name)">
+          <span class="brand-en">{{ era.code }}</span>
+          <span class="brand-zh">{{ era.name }}</span>
+          <span class="brand-deal">查看館藏</span>
+        </a>
+      }
+    </div>
+  </app-panel>
+}

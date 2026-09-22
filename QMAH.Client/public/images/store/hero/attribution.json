@@ -1,0 +1,11 @@
+{
+  "source": "OpenAI image generation",
+  "licenseNote": "專案內部生成素材；未使用第三方品牌、人物、商標或可辨識的既有作品。",
+  "usage": "QMAH Store hero fallback backgrounds",
+  "textPolicy": "圖片不含文字；優惠金額與繁體中文標語由前端 HTML 疊印，確保與實際 Coupon 資料同步。",
+  "assets": [
+    "museum-shop-still-life.png",
+    "gift-wrapping.png",
+    "museum-shop-shelf.png"
+  ]
+}

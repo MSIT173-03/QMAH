@@ -9,6 +9,7 @@ internal static class QmahOpenApiOperationCatalog
         new Dictionary<string, (string Summary, string Description)>(StringComparer.OrdinalIgnoreCase)
         {
             ["Account.GetAntiforgeryToken"] = ("取得防偽請求權杖", "在回應 Cookie（瀏覽器保存的小型資料）寫入前端執行寫入操作所需的 `XSRF-TOKEN-API`，成功回傳 `204 No Content`（成功且沒有回應本文）。response body（回應本文）不包含 token（驗證用的暫時字串）；後續 POST、PUT、DELETE 由同一 session（瀏覽器工作階段）沿用該 Cookie。"),
+            ["Account.GetCapabilities"] = ("取得登入能力狀態", "只回傳選用登入能力是否已啟用，不暴露任何第三方 OAuth secret 或 client id；前端可依 `googleLoginEnabled` 停用單一入口，密碼登入不受影響。"),
             ["Account.Login"] = ("登入會員帳號", "驗證 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Password` 與 `RememberMe`，成功建立 Identity Cookie（登入狀態 Cookie）並回傳 `204 No Content`（成功且沒有回應本文）。帳號不存在、帳號狀態不是 `ACTIVE` 或密碼不符時統一回傳 `401`，不揭露失敗欄位；QMAH 資料庫無法連線時回傳 `503`。"),
             ["Account.Logout"] = ("登出會員帳號", "驗證目前 Identity Cookie（登入狀態 Cookie）後清除登入狀態，成功回傳 `204 No Content`（成功且沒有回應本文）。"),
             ["Account.Register"] = ("註冊會員帳號", "以 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Nickname` 與 `Password` 建立會員、Profile（會員資料）及 `User` role（會員角色），成功回傳 `201 Created`（已建立資源）與新會員 `userId`（會員識別碼）。Email 已存在時回傳 `409`，不建立重複帳號。"),
@@ -25,6 +26,8 @@ internal static class QmahOpenApiOperationCatalog
             ["Catalog.GetEras"] = ("取得文物年代", "回傳文物年代桶的 `id`（資源識別碼）、`code`（系統代碼）與中文 `name`（顯示名稱），依年代起始年份及名稱排序，供圖鑑篩選器使用。"),
             ["MemberCatalog.GetArtifacts"] = ("查詢我的圖鑑", "需要登入，以 `q`、`categoryCode`、`eraCode`、`page` 與 `pageSize` 查詢啟用文物，並在每筆資料附上目前會員的 `isUnlocked` 與 `unlockedAt`。會員識別來自登入 Cookie，不接受其他 `userId`；回應為 `ApiPage<MemberArtifactListItemDto>`（標準分頁資料格式）。"),
             ["MemberCatalog.GetUnlocks"] = ("查詢我的解鎖紀錄", "需要登入，以 `q`、`categoryCode`、`eraCode`、`page` 與 `pageSize` 查詢目前會員的文物解鎖歷史，依 `unlockedAt` 最新優先排序。每筆資料包含解鎖方式、文物、分類、年代、遊戲回合與鑰匙流水參照；鑰匙來源會直接附上 `keyCode` 與 `keyName`；回應為 `ApiPage<MemberArtifactUnlockDto>`（標準分頁資料格式）。"),
+            ["StoreCatalog.GetCategories"] = ("查詢商城分類", "回傳目前分類入口與啟用中商品件數；件數由資料庫商品即時計算，避免將下架商品列入前台分類統計。"),
+            ["StoreCatalog.GetPromotions"] = ("查詢商城優惠官方活動", "回傳已發布的官方商城優惠公告；商城與社群共用同一份公告標題與全文，折扣能否使用仍以結帳時的優惠券定義檢查為準。"),
             ["StoreCatalog.GetProducts"] = ("查詢商品清單", "以 query string（查詢參數）的 `q`、`categoryCode`、`artifactId`、`page` 與 `pageSize` 查詢上架商品。`q` 搜尋商品名稱或 `ExternalRef`（外部商品編號），結果只包含 `IsActive` 的商品，回應為 `ApiPage<ProductListItemDto>`（標準分頁資料格式）。"),
             ["StoreCatalog.GetProduct"] = ("取得商品詳情", "以 path parameter（路徑參數）`id` 取得上架商品的價格、庫存、商品圖片、描述、尺寸、評價摘要與對應文物資料。商品不存在或未上架時回傳 `404`。"),
             ["StoreReviews.GetReviews"] = ("查詢商品評價", "以 path parameter（路徑參數）`productId` 查詢商品的已發布評價，並以 `page` 與 `pageSize` 分頁。回應同時包含平均星等與評價總數；隱藏或刪除的評價不列入統計。"),
@@ -47,7 +50,7 @@ internal static class QmahOpenApiOperationCatalog
             ["SocialMedia.GetContent"] = ("讀取社群圖片", "以 path parameter（路徑參數）`id` 讀取已發布貼文使用中的圖片，或由圖片擁有者預覽尚未關聯的圖片。回應支援 HTTP range request（HTTP 分段讀取請求）；圖片不存在、已刪除或目前呼叫者無可見權限時回傳 `404`。"),
             ["SocialMedia.Delete"] = ("刪除社群圖片", "需要登入，依 path parameter（路徑參數）`id` 將目前會員擁有的社群圖片標記為刪除，保留貼文與稽核關聯。成功回傳 `204 No Content`（成功且沒有回應本文）；圖片不存在或不屬於目前會員時回傳 `404`。"),
 
-            ["Game.GetRooms"] = ("查詢遊戲房間", "以 query string（查詢參數）的 `status`、`page` 與 `pageSize` 查詢公開遊戲房間。`status` 可為 `WAITING`、`PLAYING` 或 `COMPLETED`，未指定時預設查詢 `WAITING` 房間，回應為分頁清單。"),
+            ["Game.GetRooms"] = ("查詢遊戲房間", "以 query string（查詢參數）的 `status`、`sort`、`page` 與 `pageSize` 查詢公開遊戲房間。`status` 可為 `WAITING`、`PLAYING` 或 `COMPLETED`，`sort` 可為 `RECOMMENDED`、`NEARLY_FULL`、`NEWEST` 或 `OPEN_SLOTS`；未指定時預設查詢 `WAITING` 並採推薦排序，回應為分頁清單。"),
             ["Game.GetRoom"] = ("取得遊戲房間詳情", "以 path parameter（路徑參數）`id` 取得公開房間，或取得目前會員已參與的私人房間詳情。私人房間只對參與者公開；房間不存在或已取消時回傳 `404`。"),
             ["Game.GetRoomHistory"] = ("取得遊戲房間歷程", "以 path parameter（路徑參數）`id` 取得房間的回合歷程、各回合答案與票數、勝者及整場排行榜。私人房間只對參與者公開；房間不存在或已取消時回傳 `404`。"),
             ["Game.CreateRoom"] = ("建立遊戲房間", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `Visibility`、玩家顯示名稱、回合規則與選填的分類／年代篩選建立房間。私人房間必須提供密碼，公開房間不保存密碼；成功回傳 `201 Created`（已建立資源）與房間詳情。"),
@@ -80,8 +83,7 @@ internal static class QmahOpenApiOperationCatalog
 
             ["MiniGame.GetModes"] = ("查詢 Mini Game 模式", "需要登入，回傳目前啟用的四種 Mini Game backend contract（後端契約）：`DETAIL_LOCATOR`、`ARTIFACT_PUZZLE`、`MEMORY_MATCH` 與 `STRIP_RESTORE`。資料包含模式設定、評級門檻與供前端建立遊戲流程所需的設定 JSON。"),
             ["MiniGame.StartAttempt"] = ("開始 Mini Game 回合", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `ModeCode` 建立一次伺服器決定的遊戲嘗試。伺服器選擇啟用文物、文物池、難度、seed（隨機種子）與模式設定，成功回傳 `201 Created`（已建立資源）與前端所需素材。"),
-            ["MiniGame.CompleteAttempt"] = ("完成 Mini Game 回合", "需要登入，依 path parameter（路徑參數）`id` 與 request body（請求本文，送出的 JSON 內容）送出原始分數及選填結果資料。伺服器驗證分數、依模式門檻計算標準化分數與等級，再依目前經濟設定給予鑑定點數與鑰匙進度；重複送出同一回合不會重複發放經濟獎勵。"),
-            ["MiniGame.RewardMainGame"] = ("結算多人主遊戲獎勵", "需要登入，依 path parameter（路徑參數）`id` 結算目前會員已完成的多人主遊戲。伺服器依回合勝負與投票表現計算鑑定點數及一般鑰匙，並以交易識別避免同一場遊戲重複領取；成功回傳實際獎勵與表現摘要。"),
+            ["MiniGame.CompleteAttempt"] = ("完成 Mini Game 回合", "需要登入，依 path parameter（路徑參數）`id` 與 request body（請求本文，送出的 JSON 內容）送出結果資料。伺服器依 Attempt 與結果盤面重算分數、等級與經濟獎勵；重複送出同一回合不會重複發放經濟獎勵。"),
             ["MiniGame.RewardMainGame"] = ("結算多人主遊戲獎勵", "需要登入，依 path parameter（路徑參數）`id` 結算目前會員已完成的多人主遊戲。伺服器依回合勝負與投票表現計算鑑定點數及一般鑰匙，並在同一交易替該玩家解鎖尚未解鎖的結算回合文物，來源為 `GAME`、`GameRoundId` 指向來源回合；以交易識別避免同一場遊戲重複領取。"),
 
             ["Me.GetMe"] = ("取得目前會員", "需要登入，依 Identity Cookie（登入狀態 Cookie）的會員識別取得目前會員、Profile（會員資料）、角色、點數與帳號狀態。會員識別由登入狀態決定，回應不接受 request body（請求本文，送出的 JSON 內容）或 query string（查詢參數）指定其他 `UserId`（會員識別碼）。"),

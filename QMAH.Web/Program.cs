@@ -9,8 +9,8 @@ using Microsoft.AspNetCore.ResponseCompression;
 
 using QMAH.Web.Areas.Social;
 using QMAH.Web.Areas.Social.Services;
-using QMAH.Web.Infrastructure.Development;
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Development;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Web.Infrastructure.Audit;
 using QMAH.Infrastructure.CatalogImport;
@@ -125,7 +125,7 @@ builder.Services.AddHttpClient<NpmOpenDataClient>(client =>
 });
 builder.Services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
 builder.Services.AddSocialAuthorizationPolicies();
-builder.Services.AddSingleton<AdminNavigationService>();
+builder.Services.AddScoped<AdminNavigationService>();
 builder.Services.AddScoped<AdminAuditLogFilter>();
 builder.Services.AddScoped<CatalogImportService>();
 builder.Services.AddScoped<NpmCatalogSourceService>();

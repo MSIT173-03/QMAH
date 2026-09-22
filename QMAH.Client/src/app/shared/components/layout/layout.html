@@ -1,0 +1,159 @@
+<div class="app-shell" [attr.data-area]="activeArea()">
+  <a class="app-skip-link" href="#main-content">跳至主要內容</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <button
+        type="button"
+        #menuTrigger
+        class="app-menu-toggle"
+        aria-label="開啟主要導覽"
+        aria-controls="mobile-navigation"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="toggleMenu()"
+      >
+        <app-qmah-icon name="menu" aria-hidden="true" />
+      </button>
+
+      <a class="app-brand" routerLink="/home" aria-label="回到清明鑑定屋首頁" (click)="closeMenu()">
+        <img [src]="logoSrc()" alt="清明鑑定屋" />
+      </a>
+
+      <div class="app-header__navigation">
+        <app-area-navigation variant="desktop" />
+      </div>
+
+      @if (isSocialArea()) {
+        <!-- ui-integration: 社群的貼文、活動與公告是同一 Area 的既有頁面；補上桌面次導覽，避免入口只藏在 Mobile drawer。 -->
+        <nav class="app-context-navigation" aria-label="社群功能">
+          <a routerLink="/social/posts" [class.is-active]="currentUrl().startsWith('/social/posts')">貼文</a>
+          <a routerLink="/social/events" [class.is-active]="currentUrl().startsWith('/social/events')">活動</a>
+          <a routerLink="/social/announcements" [class.is-active]="currentUrl().startsWith('/social/announcements')">公告</a>
+        </nav>
+      }
+
+      @if (isAdminArea() && isAdmin()) {
+        <nav class="app-context-navigation" aria-label="管理功能">
+          <a routerLink="/admin/events" [class.is-active]="currentUrl().startsWith('/admin/events')" [attr.aria-current]="currentUrl().startsWith('/admin/events') ? 'page' : null">活動管理</a>
+          <a routerLink="/admin/posts" [class.is-active]="currentUrl().startsWith('/admin/posts')" [attr.aria-current]="currentUrl().startsWith('/admin/posts') ? 'page' : null">貼文管理</a>
+          <a routerLink="/admin/comments" [class.is-active]="currentUrl().startsWith('/admin/comments')" [attr.aria-current]="currentUrl().startsWith('/admin/comments') ? 'page' : null">留言管理</a>
+          <a routerLink="/admin/reports" [class.is-active]="currentUrl().startsWith('/admin/reports')" [attr.aria-current]="currentUrl().startsWith('/admin/reports') ? 'page' : null">檢舉審核</a>
+        </nav>
+      }
+
+      <div class="app-header__actions">
+        @if (meApi.me(); as me) {
+          <a class="app-account" routerLink="/member" aria-label="前往會員中心" (click)="closeMenu()">
+            @if (me.avatarPath && me.avatarPath !== failedAvatarPath()) {
+              <img
+                class="app-account__avatar app-account__avatar--image"
+                [src]="me.avatarPath"
+                [alt]="(me.displayName || me.email) + ' 的頭貼'"
+                loading="lazy"
+                (error)="onAvatarError(me.avatarPath)"
+              />
+            } @else {
+              <span class="app-account__avatar" aria-hidden="true">{{ (me.displayName || me.email).charAt(0).toUpperCase() }}</span>
+            }
+            <span class="app-account__copy">
+              <strong>{{ me.displayName || me.email }}</strong>
+              <small>會員中心</small>
+            </span>
+          </a>
+        } @else {
+          <a class="app-login" routerLink="/login" (click)="closeMenu()">登入</a>
+        }
+
+        <app-notifications-bell />
+        <!-- ui-integration: 前台測試登入入口已移除；測試與管理員操作一律走正式登入頁。 -->
+
+        @if (isAdmin()) {
+          <a
+            class="app-admin-entry"
+            routerLink="/admin/posts"
+            [class.is-active]="isAdminArea()"
+            [attr.aria-current]="isAdminArea() ? 'page' : null"
+            (click)="closeMenu()"
+          >管理</a>
+        }
+
+        <label class="app-theme-toggle" aria-label="切換深色模式">
+          <input
+            type="checkbox"
+            value="qmahdark"
+            class="theme-controller"
+            [checked]="themeService.theme() === 'qmahdark'"
+            (change)="themeService.toggleTheme()"
+          />
+          <app-qmah-icon class="theme-icon theme-icon--light" name="sun" aria-hidden="true" />
+          <app-qmah-icon class="theme-icon theme-icon--dark" name="moon" aria-hidden="true" />
+        </label>
+
+        @if (meApi.me()) {
+          <button
+            type="button"
+            class="app-logout"
+            [disabled]="loggingOut()"
+            (click)="logout()"
+          >
+            {{ loggingOut() ? '登出中…' : '登出' }}
+          </button>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- ui-integration: Mobile 只保留一個可見 drawer，Route 改變後由 LayoutComponent 自動關閉。 -->
+  <button
+    type="button"
+    class="app-mobile-backdrop"
+    [class.is-open]="menuOpen()"
+    aria-label="關閉主要導覽"
+    (click)="closeMenu()"
+  ></button>
+
+  <aside
+    #mobileNavigation
+    id="mobile-navigation"
+    class="app-mobile-drawer"
+    [class.is-open]="menuOpen()"
+    [attr.aria-hidden]="!menuOpen()"
+    [attr.inert]="menuOpen() ? null : ''"
+  >
+    <div class="app-mobile-drawer__header">
+      <div>
+        <strong>清明鑑定屋導覽</strong>
+        <span>探索、遊玩與交流</span>
+      </div>
+      <button type="button" class="app-icon-button" aria-label="關閉主要導覽" (click)="closeMenu()">
+        <app-qmah-icon name="x" aria-hidden="true" />
+      </button>
+    </div>
+
+    <div class="app-mobile-drawer__body">
+      <p class="app-mobile-drawer__label">主要功能</p>
+      <!-- ui-integration: Mobile 主要與次級入口共用同一個泛用 renderer；不在 Shell 內硬編 Area 專屬 markup。 -->
+      <app-area-navigation variant="mobile" [groups]="mobileNavigationGroups()" (itemSelected)="closeMenu()" />
+    </div>
+
+    <div class="app-mobile-drawer__footer">
+      @if (meApi.me()) {
+        <button type="button" class="app-mobile-logout" [disabled]="loggingOut()" (click)="logout()">
+          {{ loggingOut() ? '登出中…' : '登出目前帳號' }}
+        </button>
+      } @else {
+        <a routerLink="/login" (click)="closeMenu()">登入會員</a>
+      }
+    </div>
+  </aside>
+
+  <!-- ui-integration: App Shell 擁有唯一主要內容 landmark；子 Area 的 wrapper 僅保留原本 class 與版面，不再巢狀使用 main。 -->
+  <main id="main-content" class="app-main">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- ui-integration: 所有 App Shell route 共用同一個 footer，首頁與深層頁都保留合理的回站入口。 -->
+  <app-site-footer />
+</div>
+
+<app-toast-container />

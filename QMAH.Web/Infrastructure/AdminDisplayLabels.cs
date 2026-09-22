@@ -45,6 +45,8 @@ public static class AdminDisplayLabels
         "REVIEW" => "鑑賞心得",
         "QUESTION" => "問題求助",
         "GUIDE" => "研究筆記",
+        // STORE 讓官方編輯器能把商城優惠公告與商城共用同一個來源分類。
+        "STORE" => "商城活動",
         _ => string.IsNullOrWhiteSpace(value) ? "未分類" : "其他分類"
     };
 

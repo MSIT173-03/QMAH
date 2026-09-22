@@ -3,10 +3,11 @@
 <div class="product-row">
   <!-- 商品縮圖，連結至商品頁 -->
   <a [storeLink]="link()" class="product-row-thumb">
-    @if (!showPlaceholder()) {
-      <img class="product-row-image" [src]="coverImage()" [alt]="name()" (error)="onImageError()" />
+    @if (imageSrc(); as imageUrl) {
+      <!-- 橫列同樣使用縮圖；只有進入商品詳情才取 display 大圖。 -->
+      <img class="product-row-image" src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
     } @else {
-      {{ slotLabel }}
+      <span class="product-row-slot"><app-qmah-icon name="image" [size]="20" aria-hidden="true" />{{ slotLabel }}</span>
     }
   </a>
 
@@ -32,7 +33,9 @@
       <span class="product-card-was">{{ pv.was }}</span>
       }
     </div>
-    <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+    @if (pv.tag) {
+      <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+    }
     <button type="button" class="product-row-buy" (click)="addToCart.emit()">{{ addCartLabel }}</button>
   </div>
 </div>

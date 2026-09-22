@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <!-- ui-integration: ERA 以乾淨的 round-bow 與 warded bit 表達古典形態，不靠鏽蝕、噪點或金幣感。 -->
+  <g transform="rotate(-38 128 128)" stroke="#36545A" stroke-width="2.4" stroke-linejoin="round">
+    <circle cx="128" cy="52" r="40" fill="#B49A70" />
+    <circle cx="128" cy="52" r="22" fill="none" />
+    <path d="M101 79h54l-7 12h-40l-7-12Z" fill="#B49A70" />
+    <path d="M115 81h26v101h20v13h-16v9h16v14h-46V81Z" fill="#B49A70" />
+    <rect x="107" y="75" width="42" height="22" rx="11" fill="#7FA9AE" />
+  </g>
+  <path d="M119 98h5v82h-5z" fill="#D2BF99" />
+  <path d="M135 96h5v89h-5z" fill="#87704D" opacity=".7" />
+</svg>

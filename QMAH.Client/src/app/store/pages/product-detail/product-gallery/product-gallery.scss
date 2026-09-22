@@ -6,84 +6,274 @@
 .gallery {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.gallery-main {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  background: var(--color-swatch);
-  border: 1px solid var(--color-line);
-  overflow: hidden;
-  display: flex;
+  gap: 12px;
   align-items: center;
-  justify-content: center;
-  cursor: zoom-in;
-  transition: border-color 160ms;
-
-  &:hover {
-    border-color: var(--color-ink);
-  }
+  min-width: 0;
 }
 
-.gallery-main-slot {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--color-faint);
-  letter-spacing: 0.1em;
-}
-
-/* 主圖覆蓋層：預設透明，滑鼠移入主圖時淡入 */
-.gallery-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  background: rgba(34, 52, 61, 0.06);
-  opacity: 0;
-  transition: opacity 160ms;
-
-  .gallery-main:hover & {
-    opacity: 1;
-  }
-}
-
-.gallery-overlay-label {
-  width: 100%;
-  background: rgba(34, 52, 61, 0.86);
-  color: #fff;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-align: center;
-  padding: 8px 0;
-}
-
-.gallery-thumbs {
+.gallery-stage {
+  /* A6 明信片與原圖都在同一個 4:3 展示框內，避免頁面縮放改變商品欄的節奏。 */
+  container-type: size;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  width: min(100%, 640px);
+  aspect-ratio: 4 / 3;
+  min-height: 360px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--color-line-soft);
+  border-radius: var(--store-radius);
+  background: var(--color-swatch);
+  box-shadow: inset 0 0 0 var(--qmah-space-2) color-mix(in srgb, var(--qmah-surface-elevated) 28%, transparent);
 }
 
-.gallery-thumb {
-  aspect-ratio: 1 / 1;
-  background: var(--color-swatch);
-  border-style: solid;
-  border-width: 1px;
-  border-color: var(--color-line);
-  padding: 0;
+.gallery-function-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--color-faint);
-  transition: border-color 160ms, color 160ms;
+  gap: var(--qmah-space-1);
+  max-width: 100%;
+  padding: var(--qmah-space-1) var(--qmah-space-2);
+  border-top: 1px solid var(--color-line-soft);
+  border-bottom: 1px solid var(--color-line-soft);
+  color: var(--color-muted);
+}
 
-  &--active,
-  &:hover {
-    border-color: var(--color-ink);
-    color: var(--color-ink);
+.gallery-icon-button,
+.gallery-icon-note {
+  display: inline-grid;
+  min-width: 52px;
+  min-height: 44px;
+  place-items: center;
+  gap: 1px;
+  border: 0;
+  padding: 4px 8px;
+  color: inherit;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.gallery-icon-button svg,
+.gallery-icon-note svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.gallery-icon-button {
+  cursor: pointer;
+}
+
+.gallery-icon-button small,
+.gallery-icon-note small {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.gallery-icon-button:hover,
+.gallery-icon-button.is-active {
+  color: var(--color-ink-deep);
+  background: var(--color-surface);
+}
+
+.gallery-icon-button:disabled {
+  cursor: not-allowed;
+  color: var(--color-line);
+  background: transparent;
+  opacity: 0.62;
+}
+
+.gallery-icon-button:focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: -2px;
+}
+
+.gallery-icon-note {
+  color: var(--color-muted);
+  opacity: 0.82;
+}
+
+.gallery-function-divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: var(--color-line-soft);
+}
+
+.postcard-viewport {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  overflow: visible;
+}
+
+.postcard-viewport > * {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.postcard-viewport--rotated > * {
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center;
+}
+
+/* 卡片按方向取展示框可用的最大尺寸；旋轉時只交換內層長寬，展示框本身不跳動。 */
+.dynamic-card-frame,
+.postcard-static {
+  position: relative;
+  display: block;
+  width: min(100%, 100cqw);
+  height: auto;
+  max-height: 100%;
+  aspect-ratio: 148 / 105;
+  min-width: 0;
+}
+
+.postcard-viewport--portrait > .dynamic-card-frame,
+.postcard-viewport--portrait > .postcard-static {
+  width: auto;
+  height: 100%;
+  aspect-ratio: 105 / 148;
+}
+
+.postcard-viewport--rotated:not(.postcard-viewport--portrait) > .dynamic-card-frame,
+.postcard-viewport--rotated:not(.postcard-viewport--portrait) > .postcard-static {
+  width: auto;
+  height: calc(100% * 105 / 148);
+  aspect-ratio: 148 / 105;
+}
+
+.postcard-viewport--rotated.postcard-viewport--portrait > .dynamic-card-frame,
+.postcard-viewport--rotated.postcard-viewport--portrait > .postcard-static {
+  width: calc(100% * 105 / 148);
+  height: auto;
+  aspect-ratio: 105 / 148;
+}
+
+.postcard-static,
+.original-static {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--store-radius);
+  background: var(--color-surface);
+}
+
+.postcard-static {
+  /* 明信片設計本體固定淺色，不被商城深色模式染成深色紙面。 */
+  color-scheme: light;
+  --color-ink: #203d3a;
+  --color-body: #536967;
+  --color-muted: #667d7a;
+  --color-line: #c5d4d0;
+  --color-line-soft: #d9e3df;
+  --color-surface: #f6f1e8;
+  --color-swatch: #ebe5d8;
+  background: #f6f1e8;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(112px, 28%);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.postcard-static--portrait {
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.orientation-probe {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.postcard-static__image {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-swatch);
+}
+
+.postcard-static__image img,
+.original-static img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* ui-integration: 若 surface 直接承載圖片，也保留完整商品構圖，不以展示框比例裁切。 */
+  object-fit: contain;
+}
+
+.postcard-static__caption {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  gap: 6px;
+  min-width: 0;
+  padding: clamp(14px, 2vw, 24px);
+  color: var(--color-ink-deep);
+  background: #f6f1e8;
+}
+
+.postcard-static__caption strong {
+  font-family: 'Noto Serif TC', serif;
+  font-size: clamp(16px, 1.7vw, 24px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.postcard-static__caption span {
+  color: var(--color-muted);
+  font-size: var(--qmah-type-label-size);
+}
+
+.original-static {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-rows: minmax(0, 1fr) auto;
+  background: var(--color-surface);
+}
+
+.original-static app-image-magnifier {
+  min-width: 0;
+  min-height: 0;
+}
+
+.original-static figcaption {
+  display: grid;
+  gap: 4px;
+  padding: var(--qmah-space-3) var(--qmah-space-4);
+  border-top: 1px solid var(--color-line-soft);
+  color: var(--color-body);
+  font-size: var(--qmah-type-label-size);
+  line-height: var(--qmah-type-body-leading);
+}
+
+.original-static figcaption strong {
+  color: var(--color-ink-deep);
+}
+
+.original-static figcaption small {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .postcard-viewport > * {
+    transition: none;
   }
 }
 

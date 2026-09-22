@@ -75,6 +75,8 @@ internal static class QmahOpenApiSchemaCatalog
             ["CreateSocialCommentRequest"] = Fields(
                 ("content", "Content（留言內容）；長度為 1 至 2000 個字元"),
                 ("parentCommentId", "ParentCommentId（父留言資源識別碼）；建立回覆時提供")),
+            ["EnsureArtifactDiscussionRequest"] = Fields(
+                ("initialComment", "InitialComment（建立文物討論時的第一則留言）；長度為 1 至 2000 個字元")),
             ["CreateContentReportRequest"] = Fields(
                 ("targetType", "TargetType（被檢舉內容類型系統代碼）"),
                 ("targetId", "TargetId（被檢舉內容資源識別碼）"),
@@ -96,6 +98,7 @@ internal static class QmahOpenApiSchemaCatalog
                 ("quantity", "Quantity（購買數量）；範圍為 1 至 99")),
             ["CreateStoreOrderRequest"] = Fields(
                 ("items", "Items（訂單商品清單）；至少包含一筆商品明細"),
+                ("idempotencyKey", "IdempotencyKey（同一次下單重送識別）；可省略，提供時可避免 commit 回應遺失造成重複訂單"),
                 ("userCouponId", "UserCouponId（會員優惠券資源識別碼）；可省略"),
                 ("pointsUsed", "PointsUsed（使用點數）；不可為負數"),
                 ("recipientName", "RecipientName（收件人姓名）"),
@@ -125,8 +128,8 @@ internal static class QmahOpenApiSchemaCatalog
             ["StartMiniGameRequest"] = Fields(
                 ("modeCode", "ModeCode（Mini Game 模式系統代碼）；使用 DETAIL_LOCATOR、ARTIFACT_PUZZLE、MEMORY_MATCH 或 STRIP_RESTORE")),
             ["CompleteMiniGameRequest"] = Fields(
-                ("rawScore", "RawScore（原始分數）；目前契約接受 0 至 100，等級由伺服器依模式設定計算"),
-                ("rawResultJson", "RawResultJson（原始結果 JSON）；可選，供模式專用驗證擴充，最多 4000 個字元")),
+                ("rawScore", "RawScore（原始分數）；前端盤面計算值，伺服器會依 Attempt 重算並比對，範圍為 0 至 100"),
+                ("rawResultJson", "RawResultJson（原始結果 JSON）；必要，供伺服器依模式重算分數，最多 4000 個字元")),
             ["CreateGameRoomInvitationRequest"] = Fields(
                 ("inviteeUserId", "InviteeUserId（受邀會員資源識別碼）；必須是啟用中的其他會員"),
                 ("message", "Message（邀請訊息）；可省略，最多 300 個字元")),

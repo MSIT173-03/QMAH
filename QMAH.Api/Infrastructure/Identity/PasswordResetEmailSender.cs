@@ -1,33 +1,158 @@
-using Microsoft.AspNetCore.Hosting;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace QMAH.Api.Infrastructure.Identity;
 
 public interface IPasswordResetEmailSender
 {
-    Task SendAsync(string email, string resetUrl, CancellationToken cancellationToken = default);
+    Task SendAsync(
+        string email,
+        string resetUrl,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class PasswordResetEmailSender(
+    HttpClient httpClient,
     ILogger<PasswordResetEmailSender> logger,
-    IWebHostEnvironment environment) : IPasswordResetEmailSender
+    IConfiguration configuration) : IPasswordResetEmailSender
 {
-    public Task SendAsync(
+    public async Task SendAsync(
         string email,
         string resetUrl,
         CancellationToken cancellationToken = default)
     {
+        // integration: 郵件服務改由 typed HttpClient 呼叫 Resend，Controller 不直接處理 HTTP；
+        // API key 只從設定讀取，連結內容不寫入一般 log，避免把密碼重設 token 洩漏到部署紀錄。
         cancellationToken.ThrowIfCancellationRequested();
-        if (environment.IsDevelopment())
+
+        var apiKey = configuration["Resend:ApiKey"];
+
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
-            // 本機沒有外部郵件服務時，僅把連結寫入本機開發 log；不存進資料庫，也不回傳 API。
-            logger.LogInformation("本機密碼重設連結已產生，Email={Email} ResetUrl={ResetUrl}", email, resetUrl);
-        }
-        else
-        {
-            // 正式環境要接入受管控的郵件 provider；未設定前不把 token 寫入回應或一般 log。
-            logger.LogInformation("密碼重設郵件已交由郵件服務處理，Email={Email}", email);
+            logger.LogError("Resend:ApiKey 尚未設定。");
+
+            throw new InvalidOperationException(
+                "Resend API Key 尚未設定。");
         }
 
-        return Task.CompletedTask;
+        await SendViaResendAsync(
+            email,
+            resetUrl,
+            apiKey,
+            cancellationToken);
+    }
+
+    private async Task SendViaResendAsync(
+        string email,
+        string resetUrl,
+        string apiKey,
+        CancellationToken cancellationToken)
+    {
+        var encodedResetUrl = WebUtility.HtmlEncode(resetUrl);
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            "https://api.resend.com/emails")
+        {
+            Content = JsonContent.Create(new
+            {
+                from = "QMAH <onboarding@resend.dev>",
+
+                to = new[]
+                {
+                    email
+                },
+
+                subject = "清明鑑定屋｜重設密碼",
+
+                text = $"""
+                    您好，
+
+                    我們收到重設清明鑑定屋會員密碼的請求。
+
+                    請開啟以下連結設定新密碼：
+
+                    {resetUrl}
+
+                    如果不是您提出的請求，請忽略這封信。
+                    """,
+
+                html = $"""
+                    <!DOCTYPE html>
+                    <html>
+                    <body>
+                        <h2>清明鑑定屋</h2>
+
+                        <p>您好，</p>
+
+                        <p>
+                            我們收到重設清明鑑定屋會員密碼的請求。
+                        </p>
+
+                        <p>
+                            <a href="{encodedResetUrl}">
+                                點此設定新密碼
+                            </a>
+                        </p>
+
+                        <p>
+                            如果按鈕無法使用，也可以複製以下網址到瀏覽器：
+                        </p>
+
+                        <p>
+                            {encodedResetUrl}
+                        </p>
+
+                        <p>
+                            如果不是您提出的請求，請忽略這封信。
+                        </p>
+                    </body>
+                    </html>
+                    """
+            })
+        };
+
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue("Bearer", apiKey);
+
+        using var response = await httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+
+        var responseBody =
+            await response.Content.ReadAsStringAsync(cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            logger.LogError(
+                "Resend 密碼重設郵件傳送失敗。StatusCode={StatusCode} Response={Response}",
+                (int)response.StatusCode,
+                Truncate(responseBody));
+
+            throw new InvalidOperationException(
+                "Resend 密碼重設郵件傳送失敗。");
+        }
+
+        logger.LogInformation(
+            "密碼重設郵件已交由 Resend 處理。RecipientDomain={RecipientDomain}",
+            GetDomain(email));
+    }
+
+    private static string GetDomain(string email)
+    {
+        var at = email.LastIndexOf('@');
+
+        return at > 0 && at < email.Length - 1
+            ? email[(at + 1)..]
+            : "unknown";
+    }
+
+    private static string Truncate(string value)
+    {
+        return value.Length <= 1000
+            ? value
+            : value[..1000];
     }
 }

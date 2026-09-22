@@ -20,19 +20,21 @@ import { StoreLink } from '../../../shared/store-link';
 export class CartSummary {
   /** 購物車金額摘要；尚未載入時為 null */
   amounts = input<CartAmounts | null>(null);
-  /** 是否可前往結帳（需已登入）；為 false 時停用結帳按鈕 */
-  canCheckout = input(false);
 
   /** 商品小計顯示文字 */
   protected getSubtotal = computed(() => formatMoney(this.amounts()?.subtotal ?? 0));
   /** 折扣金額顯示文字，有折扣時以負號呈現 */
   protected getSavings = computed(() => formatCut(this.amounts()?.itemDiscount ?? 0));
-  /** 運費顯示文字 */
-  protected getShipping = computed(() => formatShippingFee(this.amounts()?.shippingFee ?? 0));
-  /** 運費說明文字：已達門檻顯示達成訊息，否則提示還差多少金額 */
+  /** 運費顯示文字；尚無配送規則時顯示「結帳時計算」，不以 0 假裝免運 */
+  protected getShipping = computed(() => {
+    const fee = this.amounts()?.shippingFee ?? null;
+    return fee === null ? '結帳時計算' : formatShippingFee(fee);
+  });
+  /** 運費說明文字：已達門檻顯示達成訊息，否則提示還差多少金額；尚無免運門檻時不顯示 */
   protected getShipNote = computed(() => {
-    const threshold = this.amounts()?.freeShippingThreshold ?? 0;
-    const shortfall = this.amounts()?.freeShippingShortfall ?? 0;
+    const threshold = this.amounts()?.freeShippingThreshold ?? null;
+    const shortfall = this.amounts()?.freeShippingShortfall ?? null;
+    if (threshold === null || shortfall === null) return '';
     return shortfall === 0
       ? `已符合滿 ${formatMoney(threshold)} 免運。`
       : `再加購 ${formatMoney(shortfall)} 即可享免運。`;
@@ -46,8 +48,9 @@ export class CartSummary {
   protected readonly savingsLabel = '折扣';
   protected readonly shippingLabel = '運費';
   protected readonly totalLabel = '應付總額';
-  protected readonly checkoutLabel = '前往結帳';
-  protected readonly loginRequiredNote = '請先登入後再結帳。';
+  // integration: 正式配送／付款 options 尚未存在；先保留原入口位置但停用操作，避免導向不可完成的下單流程。
+  protected readonly checkoutLabel = '結帳目前未啟用';
+  protected readonly checkoutEnabled = false;
   protected readonly checkoutHref = CHECKOUT_PATH;
   protected readonly serviceLabel = 'SERVICE';
   protected readonly serviceNote =

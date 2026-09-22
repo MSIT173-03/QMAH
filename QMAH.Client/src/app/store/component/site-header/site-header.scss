@@ -3,10 +3,9 @@
 }
 
 .site-header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  background: rgba(255, 255, 255, 0.96);
+  /* ui-integration: 外層 App Shell 已負責 sticky global header，商城頁首改為一般流避免雙層 sticky 遮住內容。 */
+  position: relative;
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-line);
 }
@@ -14,25 +13,25 @@
 .site-header-row {
   max-width: 1320px;
   margin: 0 auto;
-  padding: 14px 20px;
+  padding: var(--qmah-space-3) var(--qmah-space-5);
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--qmah-space-6);
 
   /* 首頁：下方接分類導覽列，加大下留白 */
   &--hero {
-    padding: 14px 20px 34px;
+    padding: var(--qmah-space-3) var(--qmah-space-5) 34px;
   }
 
   /* 商品列表頁：搜尋框佔滿中段，間距較窄且允許換行 */
   &--list {
-    gap: 14px;
+    gap: var(--qmah-space-4);
     flex-wrap: wrap;
   }
 
   /* 結帳頁：僅品牌與步驟指示器，間距略窄且允許換行 */
   &--wrap {
-    gap: 20px;
+    gap: var(--qmah-space-5);
     flex-wrap: wrap;
   }
 }

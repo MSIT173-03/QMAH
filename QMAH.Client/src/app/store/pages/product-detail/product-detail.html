@@ -1,23 +1,31 @@
 <!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
-<app-top-bar [announcements]="site.announcements()" [isLoggedIn]="site.isLoggedIn()" [points]="site.points()" [coupons]="site.coupons()" />
+<app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
+  [coupons]="site.coupons()" />
 
 <!-- 網站頁首：品牌 Logo、搜尋框、分類導覽與購物車入口 -->
 <app-site-header>
   <app-search-bar [compact]="true" [(value)]="searchQuery" (search)="onSearch($event)" />
-  <app-header-nav [links]="navLinks">
+  <app-header-actions [links]="navLinks">
     <app-cart-link [href]="cartHref" [count]="cart.count()" />
-  </app-header-nav>
+  </app-header-actions>
 </app-site-header>
 
-<main class="container product-main">
+<div class="container product-main">
   @if (item(); as product) {
 
   <!-- 麵包屑導覽：首頁 / 器類 / 商品名稱 -->
   <app-breadcrumb [items]="breadcrumbItems()" />
 
   <!-- 商品主視覺：左側商品圖庫、右側商品資訊與購買操作 -->
+  <!-- 詳情主視覺改成靜態切換：第一張是明信片正面，第二張是原文物／複製品展示圖。 -->
   <section class="product-hero-section">
-    <app-product-gallery [name]="product.name" [views]="galleryViews()" [images]="galleryImages()" />
+    <app-product-gallery
+      [name]="product.artifactName"
+      [type]="product.category"
+      [image]="product.coverImage"
+      [dimensions]="product.artifactDimensions"
+      [description]="product.artifactDescription"
+    />
     <app-product-summary
       [brand]="product.brand"
       [name]="product.name"
@@ -30,6 +38,7 @@
       [source]="product.source"
       [shipping]="product.shippingNote"
       [dims]="product.dimensions"
+      [artifactDims]="product.artifactDimensions"
       [condition]="product.condition"
       [sizeNote]="sizeNote()"
       (addToCart)="onAddToCart($event)"
@@ -39,7 +48,7 @@
 
   <!-- 商品說明與評價並排 -->
   <section class="product-hero-section">
-    <app-product-description [intro]="product.description" [image]="product.coverImage" [rows]="policies()" />
+    <app-product-detail [intro]="product.description" [rows]="policies()" />
     <app-product-reviews
       [rating]="product.rating"
       [reviewCount]="product.reviewCount"
@@ -52,12 +61,14 @@
 
   <!-- 同類推薦 -->
   <app-related-products [items]="related()" (addToCart)="onAddRelated($event)" />
+  } @else if (item() === undefined) {
+  <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark" aria-hidden="true"></span><span>正在整理商品資料…</span></section>
   } @else if (item() === null) {
   <!-- 查無此商品 -->
   <app-empty-state title="找不到這件商品" desc="商品可能已下架，或網址有誤。" ctaLabel="回到商品列表" [ctaHref]="productsPath"
     size="lg" />
   }
-</main>
+</div>
 
-<!-- 頁尾：簡版，僅顯示版權列 -->
-<app-site-footer />
+<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
+<app-login-prompt [open]="cart.loginPrompt()" (confirm)="cart.confirmLogin()" (cancel)="cart.cancelLogin()" />

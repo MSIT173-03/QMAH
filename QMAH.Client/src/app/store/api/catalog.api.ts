@@ -1,30 +1,32 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { apiUrl, getField, toParams } from './http';
+import { Observable, catchError, forkJoin, map, of, switchMap } from 'rxjs';
+import { apiUrl, toParams } from './http';
 import {
+  Category,
   Page,
   Product,
   ProductDetail,
-  StoreOverview,
   ProductQuery,
-  ReviewPage,
-  ReviewQuery,
+  Review,
+  StorePromotion,
 } from './api.models';
 import {
   ApiProductDetail,
-  ApiStoreOverview,
   ApiProductPage,
   ApiProductReviewsResponse,
+  ApiCategory,
+  ApiStorePromotion,
+  toCategory,
   toCategoryCode,
   toProduct,
   toProductDetail,
-  toStoreOverview,
-  toReviewPage,
+  toReview,
+  toStorePromotion,
 } from './catalog.api-dto';
 
 
-/** 後端單次查詢最多回傳的評論筆數（見 doc/apis.xml pageSize 參數），用於一次取回全部評論 */
+/** 後端單次查詢最多回傳的評論筆數（ApiPaging 的 pageSize 上限），用於以最少請求取回全部評論 */
 const REVIEWS_MAX_PAGE_SIZE = 100;
 
 
@@ -33,18 +35,37 @@ const REVIEWS_MAX_PAGE_SIZE = 100;
 export class CatalogApi {
   private readonly http = inject(HttpClient);
 
+  /** GET /categories：器類清單 */
+  getCategories(): Observable<Category[]> {
+    return this.http.get<ApiCategory[]>(apiUrl('/categories')).pipe(
+      map((res) => res.map(toCategory)),
+      // 分類導覽是輔助資料；資料庫短暫失敗時保留商品頁與其他 Area，不讓 toSignal 拋出錯誤。
+      catchError(() => of([])),
+    );
+  }
+
+  /** GET /promotions：商城與社群共用的官方優惠活動公告，顯示於頂部公告列。 */
+  getPromotions(): Observable<StorePromotion[]> {
+    return this.http.get<ApiStorePromotion[]>(apiUrl('/promotions')).pipe(
+      map((res) => res.map(toStorePromotion)),
+      // 優惠活動只是商城輔助內容；公告暫時不可用時仍保留商品瀏覽與結帳入口。
+      catchError(() => of([])),
+    );
+  }
+
   /**
-   * GET /products：商品清單。後端支援關鍵字、器類、排序、價格區間與分頁；
-   * 器類以 category 參數送出（對應後端 CategoryType enum 的數字代碼，見 catalog.api-dto 的 toCategoryCode）。
-   * 限折扣品等前端篩選條件後端尚未提供，暫不送出。
+   * GET /products：商品清單。後端支援關鍵字、器類代碼、限折扣品、排序、價格區間與分頁。
+   * 失敗時保留錯誤，由呼叫端決定要顯示錯誤狀態（商品列表頁）或靜默降級（首頁輔助區塊），
+   * 避免把伺服器錯誤誤顯示成「找不到符合條件的商品」。
    */
   getProducts(query: ProductQuery = {}): Observable<Page<Product>> {
     const params = toParams({
       q: query.q,
-      category: query.cat ? toCategoryCode(query.cat) : undefined,
+      categoryCode: query.cat ? toCategoryCode(query.cat) : undefined,
       order: query.order,
       minPrice: query.priceMin,
       maxPrice: query.priceMax,
+      dealOnly: query.dealOnly,
       page: query.page,
       pageSize: query.pageSize,
     });
@@ -52,15 +73,11 @@ export class CatalogApi {
       map((res) => ({
         items: res.items.map(toProduct),
         total: res.totalCount,
+        // 後端會把超出範圍的頁碼夾回最後一頁，呼叫端應以此值為準。
         page: res.page,
         pageSize: res.pageSize,
       })),
     );
-  }
-
-  /** GET /products/info：各器類商品數量；已登入時附上點數與可用折價券 */
-  getStoreOverview(): Observable<StoreOverview> {
-    return this.http.get<ApiStoreOverview>(apiUrl('/products/info')).pipe(map(toStoreOverview));
   }
 
   /** GET /products/{id}：商品詳情，查無商品時回應 404 */
@@ -68,20 +85,31 @@ export class CatalogApi {
     return this.http.get<ApiProductDetail>(apiUrl`/products/${id}`).pipe(map(toProductDetail));
   }
 
-  /** GET /products/{id}/related：同類推薦（同器類優先，不足以其他器類補齊） */
-  getRelated(id: string, limit?: number): Observable<Product[]> {
-    return getField(this.http, apiUrl`/products/${id}/related`, 'items', { limit });
+  /**
+   * 同類推薦：同器類的熱銷商品（依販售數量由多到少），排除目前商品。
+   * 後端沒有專用的 related route，直接沿用商品清單 API，多取一筆以補足排除自身後的數量。
+   */
+  getRelated(product: Pick<Product, 'id' | 'category'>, limit: number): Observable<Product[]> {
+    return this.getProducts({ cat: product.category, order: 1, pageSize: limit + 1 }).pipe(
+      map((page) => page.items.filter((item) => item.id !== product.id).slice(0, limit)),
+    );
   }
 
   /**
-   * GET /products/{id}/reviews：商品評價。後端只支援分頁，不支援依星等／照片篩選，也不提供各星等
-   * 則數與附照片則數（見 doc/apis.xml），故一次取回全部評論（上限 100 則），篩選、分頁與統計改在前端計算；
-   * 評論數超過 100 則的商品，篩選與統計僅涵蓋前 100 則。
+   * GET /products/{id}/reviews：取回商品的全部評論。後端只支援分頁，不支援依星等篩選也不提供各星等則數，
+   * 因此逐頁取回全部評論，篩選與統計交由 toReviewPage 在前端計算。
    */
-  getReviews(id: string, query: ReviewQuery = {}): Observable<ReviewPage> {
-    const params = toParams({ page: 1, pageSize: REVIEWS_MAX_PAGE_SIZE });
-    return this.http
-      .get<ApiProductReviewsResponse>(apiUrl`/products/${id}/reviews`, { params })
-      .pipe(map((res) => toReviewPage(res, query)));
+  getReviews(id: string): Observable<Review[]> {
+    const fetchPage = (page: number) =>
+      this.http.get<ApiProductReviewsResponse>(apiUrl`/products/${id}/reviews`, {
+        params: toParams({ page, pageSize: REVIEWS_MAX_PAGE_SIZE }),
+      });
+    return fetchPage(1).pipe(
+      switchMap((first) => {
+        const rest = Array.from({ length: Math.max(0, first.reviews.totalPages - 1) }, (_, i) => fetchPage(i + 2));
+        return rest.length ? forkJoin(rest).pipe(map((pages) => [first, ...pages])) : of([first]);
+      }),
+      map((pages) => pages.flatMap((page) => page.reviews.items.map(toReview))),
+    );
   }
 }

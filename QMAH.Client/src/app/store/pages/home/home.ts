@@ -1,13 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { map, of, switchMap } from 'rxjs';
 
-import { CompactProductList, TopBar, SearchBar, SearchSuggestion, CartLink, SiteFooter, SiteHeader } from '../../component';
-import { SearchApi } from '../../api';
+import { Promobar, SearchBar, SearchSuggestion, CartLink, SiteHeader, LoginPrompt } from '../../component';
+import { CatalogApi, HomeApi, SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
 import { CART_PATH, PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
-import { formatDateMD } from '../../shared/format';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
@@ -17,40 +16,47 @@ import { FlashSale } from './flash-sale/flash-sale';
 import { MiniCoupons } from './mini-coupons/mini-coupons';
 import { CategoryGrid } from './category-grid/category-grid';
 import { RankingSection } from './ranking-section/ranking-section';
-import { RecommendationSection } from './recommendation-section/recommendation-section';
+import { NewArrivals } from './new-arrivals/new-arrivals';
+import { BrandHall } from './brand-hall/brand-hall';
+import { Recommendations } from './recommendations/recommendations';
 import { BadgedProductView } from './home.data';
+
+/** 「為你推薦」每次載入的商品數量 */
+const RECOMMEND_PAGE_SIZE = 10;
 
 /**
  * 首頁。
  * 統整頁首搜尋、主視覺輪播、限時特賣、迷你折價券、分類入口、熱銷排行、
- * 新品上架、評價排行與為你推薦等各版位；購物車、搜尋建議、全站設定與會員資料
+ * 新品上架、年代選藏與為你推薦等各版位；購物車、搜尋建議、全站設定與會員資料
  * 皆由本頁面向 API 取得，「為你推薦」並在此逐頁載入並累加。
  */
 @Component({
   selector: 'app-home',
   host: { class: 'store-app' },
   imports: [
-    TopBar,
+    Promobar,
     SearchBar,
     CartLink,
-    SiteFooter,
     HeroCarousel,
     FlashSale,
     MiniCoupons,
     CategoryGrid,
     RankingSection,
-    CompactProductList,
-    RecommendationSection,
+    NewArrivals,
+    BrandHall,
+    Recommendations,
     SiteHeader,
     StoreLink,
+    LoginPrompt,
   ],
   templateUrl: './home.html',
   styleUrls: [
     './home.scss',
   ],
 })
-export class HomePage {
+export class Home {
   private readonly router = inject(Router);
+  private readonly homeApi = inject(HomeApi);
   private readonly searchApi = inject(SearchApi);
 
   /** 購物車狀態（件數顯示於頁首） */
@@ -59,15 +65,6 @@ export class HomePage {
 
   /** 全站設定與會員資料，供頂部公告列與頁尾使用 */
   protected readonly site = injectSiteData();
-
-  /** 各器類商品數量，供分類入口區塊使用 */
-  protected readonly categoryCounts = computed(() => this.site.overview()?.categoryCounts ?? {});
-  /** 各器類封面圖（銷售數量最高商品的主圖） */
-  protected readonly categoryImages = computed(() => this.site.overview()?.categoryCoverImages ?? {});
-  /** 熱銷排行、新品上架與評價排行的商品（來自 products/info） */
-  protected readonly hotProducts = computed(() => this.site.overview()?.hotProducts ?? []);
-  protected readonly newProducts = computed(() => this.site.overview()?.newProducts ?? []);
-  protected readonly topRatedProducts = computed(() => this.site.overview()?.topRatedProducts ?? []);
 
   /** 搜尋框目前輸入值 */
   protected searchQuery = signal('');
@@ -88,28 +85,29 @@ export class HomePage {
   );
 
   /** 分類導覽列顯示用分類名稱 */
-  protected readonly categoryNames = computed(() => Object.keys(this.site.overview()?.categoryCounts ?? {}));
+  protected readonly categoryNames = toSignal(
+    inject(CatalogApi)
+      .getCategories()
+      .pipe(map((categories) => categories.map((category) => category.name))),
+    { initialValue: [] },
+  );
   /** 分類導覽列「新品上架」與各分類的連結網址 */
+  protected readonly productsPath = PRODUCT_LIST_PATH;
   protected readonly newArrivalsPath = `${PRODUCT_LIST_PATH}?view=new`;
-  /** 「更多 →」連結：評價排行沒有專屬列表頁，先導向商品列表 */
-  protected readonly productListPath = PRODUCT_LIST_PATH;
-  /** 新品上架的標籤：清單由新到舊排列，取第一件的上架日期（MM/DD） */
-  protected readonly newArrivalsTag = computed(() => {
-    const latest = this.newProducts()[0];
-    return latest ? `NEW · ${formatDateMD(latest.listedAt)}` : 'NEW';
-  });
+  // ui-integration: 「年代選藏」導向既有圖鑑年代篩選，不建立不存在的商城品牌頁。
+  protected readonly eraCollectionPath = '/artifact-list';
   protected categoryPath(name: string): string {
     return `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`;
   }
 
-  /** 「為你推薦」商品卡片（來自 products/info，隨機 10 項），角標為器類 */
-  protected readonly recommendedItems = computed((): BadgedProductView[] =>
-    (this.site.overview()?.recommendedProducts ?? []).map((item) => ({
-      ...toProductView(item),
-      badge: item.category,
-      badgeVariant: 'teal',
-    })),
-  );
+  /** 「為你推薦」已載入的商品卡片 */
+  protected recommendedItems = signal<BadgedProductView[]>([]);
+  /** 「為你推薦」已載入的頁數 */
+  private recommendPage = 0;
+
+  constructor() {
+    this.loadRecommendations();
+  }
 
   /** 加入購物車：數量 1 */
   protected onAddToCart(productId: string): void {
@@ -126,9 +124,23 @@ export class HomePage {
     this.onSearch(suggestion.name);
   }
 
-  protected onClickAllCategory() {}
+  /** 「載入更多」：取得下一頁推薦商品並接在清單後面 */
+  protected onRequireMore(): void {
+    this.loadRecommendations();
+  }
 
-  protected onClickSpecial() {}
-
-  protected onClickOnSell() {}
+  /** 請求「為你推薦」的商品資料並加入目前列表。 */
+  private loadRecommendations(): void {
+    this.recommendPage += 1;
+    this.homeApi
+      .getRecommendations({ page: this.recommendPage, pageSize: RECOMMEND_PAGE_SIZE })
+      .subscribe((page) =>
+        this.recommendedItems.update((items) => [
+          ...items,
+          ...page.items.map(
+            (item): BadgedProductView => ({ ...toProductView(item), badge: item.reason, badgeVariant: 'teal' }),
+          ),
+        ]),
+      );
+  }
 }

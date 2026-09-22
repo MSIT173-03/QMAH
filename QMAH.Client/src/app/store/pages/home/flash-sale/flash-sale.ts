@@ -4,11 +4,12 @@ import { interval, map } from 'rxjs';
 import { Panel } from '../../../component';
 import { HomeApi } from '../../../api';
 import { formatMoney, pad } from '../../../shared/format';
+import { LucidePackageSearch } from '@lucide/angular';
 
 /** 首頁側欄的限時特賣面板：倒數計時搭配特賣品項清單 */
 @Component({
   selector: 'app-flash-sale',
-  imports: [Panel],
+  imports: [Panel, LucidePackageSearch],
   templateUrl: './flash-sale.html',
   styleUrls: [
     './flash-sale.scss',

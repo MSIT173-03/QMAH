@@ -16,6 +16,8 @@
 # .NET 編譯與測試產物
 **/bin/
 **/obj/
+# JavaScript 依賴由 package-lock.json + npm ci 重建，不進版控。
+**/node_modules/
 /artifacts/
 TestResults/
 coverage/
@@ -48,6 +50,8 @@ QMAH.DemoCredentials.local*.csv
 *.swp
 *~
 ~$*
+**/.playwright-cli/
+**/output/playwright/
 
 # 資料收集工具的執行輸出
 _工具輸出/
@@ -68,3 +72,6 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+CLAUDE.md
+.claude/launch.json
+QMAH.Client/start-dev.bat

@@ -20,12 +20,15 @@
 }
 
 .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--color-line-mid);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-muted);
-  border-radius: 2px;
-  padding: 6px 14px;
-  font-size: 12px;
+  border-radius: var(--qmah-radius-pill);
+  padding: var(--qmah-space-2) var(--qmah-space-3);
+  font-size: var(--qmah-type-label-size);
   font-family: inherit;
   transition: border-color 160ms, color 160ms, background 160ms;
 
@@ -56,6 +59,16 @@
   &--review {
     font-family: 'IBM Plex Mono', monospace;
     padding: 6px 12px;
+
+    &.pill--active {
+      border-color: var(--color-gold);
+      background: var(--color-gold-bg);
+      color: var(--color-gold-text);
+
+      &:hover {
+        border-color: var(--color-gold);
+      }
+    }
   }
 
   /* 結帳頁付款方式：留白較大，未選取時文字為內文色 */
@@ -71,12 +84,12 @@
   }
 
   &--active {
-    border-color: var(--color-ink);
-    background: var(--color-ink);
-    color: #fff;
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
 
     &:hover {
-      border-color: var(--color-ink);
+      border-color: var(--color-accent);
     }
   }
 

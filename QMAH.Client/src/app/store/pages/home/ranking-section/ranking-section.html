@@ -1,11 +1,17 @@
-<!-- 熱銷排行：依販賣數量列出商品，最多顯示 10 件 -->
-<section class="section-block">
-  <app-section-head title="熱銷排行" tag="RANKING" />
-  <div class="card-grid">
-    @for (item of rankingItems(); track item.id) {
-    <app-product-card [id]="item.id" [coverImage]="item.coverImage" [badge]="item.badge"
-      [badgeVariant]="item.badgeVariant" [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
-      [rating]="item.rating" [reviews]="item.reviews" [sold]="item.sold" (addToCart)="addToCart.emit(item.id)" />
-    }
-  </div>
-</section>
+@if (rankingItems().length > 0) {
+  <!-- ui-integration: 沒有排行資料時隱藏整段，避免把未完成的後端版位呈現成空狀態。 -->
+  <section class="section-block">
+    <app-section-head title="熱銷排行" tag="RANKING · 24H" [wrap]="true">
+      <div class="section-meta">
+        <app-pill-group [options]="tabOptions()" (select)="pickTab($event)" />
+      </div>
+    </app-section-head>
+    <div class="card-grid">
+      @for (item of rankingItems(); track item.id) {
+        <app-product-card [id]="item.id" [coverImage]="item.coverImage" [badge]="item.badge" [badgeVariant]="item.badgeVariant" [brand]="item.brand"
+          [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating" [reviews]="item.reviews"
+          [sold]="item.sold" (addToCart)="addToCart.emit(item.id)" />
+      }
+    </div>
+  </section>
+}

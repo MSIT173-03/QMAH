@@ -3,7 +3,7 @@ import { ReviewPage, ReviewQuery } from '../../api/api.models';
 /**
  * 商品頁的頁面選項定義與商品顯示資料換算。
  * 商品、評價、同類推薦與商品說明文案皆由 API 取得（見 store/api）；
- * 評價篩選在此只定義按鈕文字、對應的查詢參數與則數取法，實際篩選由後端執行。
+ * 評價篩選在此只定義按鈕文字、對應的篩選參數與則數取法，實際篩選由 toReviewPage 在前端計算。
  */
 
 /** 同類推薦顯示的商品數量上限 */
@@ -17,9 +17,9 @@ export const RELATED_LIMIT = 5;
 export interface ReviewFilter {
   /** 按鈕文字前綴，實際顯示會再接上符合條件的則數 */
   label: string;
-  /** 對應評價 API 的查詢參數 */
+  /** 對應的評價篩選參數 */
   query: ReviewQuery;
-  /** 由評價回應的統計資料取得符合此條件的則數 */
+  /** 由評價統計資料取得符合此條件的則數 */
   count: (page: ReviewPage) => number;
 }
 
@@ -37,5 +37,4 @@ export const REVIEW_FILTERS: ReviewFilter[] = [
     query: { maxStars: 3 },
     count: (page) => page.ratingBreakdown[1] + page.ratingBreakdown[2] + page.ratingBreakdown[3],
   },
-  { label: '附照片', query: { hasPhoto: true }, count: (page) => page.photoCount },
 ];

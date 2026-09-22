@@ -6,12 +6,12 @@
 .cat-list-item {
   border: 0;
   background: transparent;
-  padding: 4px 0;
+  padding: var(--qmah-space-1) 0;
   text-align: left;
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  font-size: 12px;
+  gap: var(--qmah-space-2);
+  font-size: var(--qmah-type-label-size);
   font-weight: 400;
   color: var(--color-nav);
   transition: color 160ms;
@@ -33,6 +33,6 @@
 
 .cat-list-count {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }

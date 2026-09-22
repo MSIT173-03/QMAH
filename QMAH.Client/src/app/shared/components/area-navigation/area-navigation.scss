@@ -1,0 +1,119 @@
+:host {
+  display: block;
+}
+
+.area-navigation {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.area-navigation--desktop {
+  justify-content: center;
+}
+
+.area-navigation--mobile {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+/* ui-integration: Mobile 導覽以資料群組呈現次級入口，讓新增 Area 入口不必改寫 Layout template。 */
+.area-navigation__group {
+  display: grid;
+  gap: 3px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.area-navigation__group h2 {
+  margin: 0 0 4px;
+  color: color-mix(in srgb, currentColor 56%, transparent);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.area-navigation__group--admin h2 {
+  color: var(--color-error, #a64b3c);
+}
+
+.area-navigation__group a {
+  justify-content: flex-start;
+}
+
+.area-navigation__group a > .area-navigation__badge {
+  margin-left: auto;
+}
+
+.area-navigation__group a > span {
+  min-width: 0;
+}
+
+.area-navigation__badge {
+  min-width: 22px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: var(--color-error, #a64b3c);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: color-mix(in srgb, currentColor 70%, transparent);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+a:hover {
+  color: var(--color-primary, var(--qmah-jade-deep));
+  background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 8%, transparent);
+}
+
+a.is-active {
+  border-color: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 24%, transparent);
+  background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 12%, transparent);
+  color: var(--color-primary, var(--qmah-jade-deep));
+}
+
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (min-width: 900px) {
+  .area-navigation--desktop a {
+    min-height: 44px;
+    padding-inline: 9px;
+    font-size: 12px;
+  }
+
+  .area-navigation--desktop svg {
+    width: 15px;
+    height: 15px;
+  }
+}

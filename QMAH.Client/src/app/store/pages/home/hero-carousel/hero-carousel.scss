@@ -5,42 +5,62 @@
 .hero {
   position: relative;
   overflow: hidden;
-  background: #eef1f0;
+  background: var(--color-swatch);
   border: 1px solid var(--color-line);
+  border-radius: var(--store-radius);
   height: 100%;
 }
 
 .hero-track {
   display: flex;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   transition: transform 600ms cubic-bezier(.4, 0, .2, 1);
 }
 
 .hero-slide {
   flex: 0 0 100%;
-  min-height: 400px;
+  min-width: 0;
+  min-height: 390px;
+  isolation: isolate;
   background: var(--color-swatch);
   display: flex;
   align-items: flex-end;
-  padding: 40px;
+  padding: var(--qmah-space-8);
   position: relative;
 }
 
-.hero-slide-slot {
+.hero-slide-image {
   position: absolute;
-  top: 14px;
-  left: 16px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  color: var(--color-placeholder);
+  inset: 0;
+  z-index: -2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--color-surface) 16%, transparent);
 }
 
 .hero-slide-body {
-  max-width: 470px;
+  max-width: 480px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--qmah-space-3);
+  padding: var(--qmah-space-4) var(--qmah-space-5);
+  /* ui-integration: 主視覺以細邊界界定文案層，避免厚重側線破壞圖片與文字的閱讀比例。 */
+  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-line));
+  background: color-mix(in srgb, var(--color-surface) 91%, transparent);
+  border-radius: var(--store-radius);
+  box-shadow: var(--qmah-shadow-float);
 }
 
 .hero-kicker {
@@ -53,19 +73,44 @@
 .hero-title {
   margin: 0;
   font-family: 'Noto Serif TC', serif;
-  font-size: 42px;
-  line-height: 1.18;
+  font-size: var(--qmah-type-display-size);
+  line-height: var(--qmah-type-heading-leading);
   font-weight: 700;
   color: var(--color-ink-deep);
   text-wrap: pretty;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .hero-desc {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.75;
+  font-size: var(--qmah-type-body-sm-size);
+  line-height: var(--qmah-type-body-leading);
   color: var(--color-body);
+}
+
+.hero-coupon {
+  display: flex;
+  align-items: baseline;
+  gap: var(--qmah-space-2);
+  width: fit-content;
+  max-width: 100%;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-line));
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  color: var(--color-body);
+  font-size: 12px;
+
+  strong {
+    color: var(--color-accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  span {
+    line-height: 1.5;
+  }
 }
 
 .hero-cta {
@@ -74,11 +119,18 @@
 }
 
 .hero-dots {
-  position: absolute;
-  bottom: 18px;
-  right: 20px;
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: var(--qmah-space-1);
+}
+
+.hero-controls {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: var(--qmah-space-2);
 }
 
 .hero-dot {
@@ -86,9 +138,57 @@
   height: 3px;
   border: 0;
   padding: 0;
-  background: #c3ccce;
+  background: var(--color-line-mid);
 
   &--active {
-    background: var(--color-ink);
+    background: var(--color-accent);
+  }
+}
+
+.hero-play-toggle {
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
+  border-radius: var(--qmah-radius-control);
+  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  color: var(--color-ink);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .hero-slide {
+    min-height: 340px;
+    padding: 20px 16px 64px;
+  }
+
+  .hero-title {
+    /* ui-integration: 手機維持主視覺標題的份量，但讓中文標題以完整語意換行，不留下右側裁切或孤立短行。 */
+    font-size: clamp(26px, 7vw, 32px);
+    text-wrap: balance;
+  }
+
+  .hero-slide-body {
+    width: min(100%, 430px);
+    min-width: 0;
+    padding: var(--qmah-space-4) var(--qmah-space-4);
+  }
+
+  .hero-coupon {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .hero-controls {
+    right: 12px;
+    left: 12px;
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-track {
+    transition: none;
   }
 }

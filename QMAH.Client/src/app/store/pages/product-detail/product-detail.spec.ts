@@ -1,20 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { ProductDetailPage } from './product-detail';
-import { provideMockApi } from '../../api/mock/mock-api.interceptor';
+import { ProductInfo } from './product-info';
 
-describe('ProductDetailPage', () => {
-  let component: ProductDetailPage;
-  let fixture: ComponentFixture<ProductDetailPage>;
+describe('ProductInfo', () => {
+  let component: ProductInfo;
+  let fixture: ComponentFixture<ProductInfo>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProductDetailPage],
-      providers: [provideMockApi()],
+      imports: [ProductInfo],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ProductDetailPage);
+    fixture = TestBed.createComponent(ProductInfo);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
