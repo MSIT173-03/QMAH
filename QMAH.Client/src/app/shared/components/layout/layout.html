@@ -34,10 +34,20 @@
 
       @if (isAdminArea() && isAdmin()) {
         <nav class="app-context-navigation" aria-label="管理功能">
-          <a routerLink="/admin/events" [class.is-active]="currentUrl().startsWith('/admin/events')" [attr.aria-current]="currentUrl().startsWith('/admin/events') ? 'page' : null">活動管理</a>
+          <a routerLink="/admin/events" [class.is-active]="currentUrl().startsWith('/admin/events')" [attr.aria-current]="currentUrl().startsWith('/admin/events') ? 'page' : null">
+            <span>活動管理</span>
+            @if (adminPendingCounts.pendingEventsCount() > 0) {
+              <b class="app-context-navigation__badge">{{ adminPendingCounts.pendingEventsCount() }}</b>
+            }
+          </a>
           <a routerLink="/admin/posts" [class.is-active]="currentUrl().startsWith('/admin/posts')" [attr.aria-current]="currentUrl().startsWith('/admin/posts') ? 'page' : null">貼文管理</a>
           <a routerLink="/admin/comments" [class.is-active]="currentUrl().startsWith('/admin/comments')" [attr.aria-current]="currentUrl().startsWith('/admin/comments') ? 'page' : null">留言管理</a>
-          <a routerLink="/admin/reports" [class.is-active]="currentUrl().startsWith('/admin/reports')" [attr.aria-current]="currentUrl().startsWith('/admin/reports') ? 'page' : null">檢舉審核</a>
+          <a routerLink="/admin/reports" [class.is-active]="currentUrl().startsWith('/admin/reports')" [attr.aria-current]="currentUrl().startsWith('/admin/reports') ? 'page' : null">
+            <span>檢舉審核</span>
+            @if (adminPendingCounts.pendingReportsCount() > 0) {
+              <b class="app-context-navigation__badge">{{ adminPendingCounts.pendingReportsCount() }}</b>
+            }
+          </a>
         </nav>
       }
 
