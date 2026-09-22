@@ -5,8 +5,6 @@ export interface PillOption {
   label: string;
   icon?: QmahIconName;
   active?: boolean;
-  /** 是否停用（例如沒有符合資料的篩選選項），停用時不可點擊 */
-  disabled?: boolean;
   /** 滑鼠停留提示文字（例如僅以圖示辨識的顯示模式切換鈕） */
   title?: string;
 }

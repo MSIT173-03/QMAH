@@ -7,7 +7,9 @@ import {
   OrderQuoteRequest,
   OrderRequest,
   OrderResult,
+  Page,
   Product,
+  RecommendedProduct,
   Review,
   ShoppingCart,
 } from '../api.models';
@@ -21,7 +23,9 @@ import {
 } from '../catalog.api-dto';
 import {
   ADDON_LIMIT,
+  BRANDS,
   CATALOG,
+  CATEGORIES,
   CLAIMABLE_COUPONS,
   CatalogRecord,
   DESCRIPTION_SUFFIX,
@@ -35,6 +39,8 @@ import {
   MOCK_STOCK,
   PAYMENT_OPTIONS,
   POINT_EARN_RATE,
+  RECOMMENDATION_ORDER,
+  RECOMMENDATION_REASONS,
   REVIEWS,
   SHIPPING_OPTIONS,
   SITE_CONFIG,
@@ -141,9 +147,30 @@ function numberParam(params: HttpParams, key: string): number | undefined {
   return value;
 }
 
+/** 依 page／pageSize 參數切出一頁，未指定 pageSize 時回傳全部 */
+function paginate<T>(items: T[], params: HttpParams): Page<T> {
+  const page = numberParam(params, 'page') ?? 1;
+  const pageSize = numberParam(params, 'pageSize') ?? items.length;
+  return {
+    items: items.slice((page - 1) * pageSize, page * pageSize),
+    total: items.length,
+    page,
+    pageSize,
+  };
+}
+
 /* ===============================
    商品型錄與詳情
    =============================== */
+
+export function listCategories() {
+  return {
+    categories: CATEGORIES.map((category) => ({
+      ...category,
+      productCount: CATALOG.filter((record) => record.cat === category.name).length,
+    })),
+  };
+}
 
 /**
  * GET /products：商品清單。回應為後端 DTO 格式（見 doc/apis.xml），由 CatalogApi 轉換為前端顯示用的 Product。
@@ -234,6 +261,32 @@ export function getFlashSale(): FlashSale {
       return { productId, name: record.name, price: dealPrice(record), originalPrice: record.price, stockRatio };
     }),
   };
+}
+
+export function listBrands() {
+  return { brands: BRANDS };
+}
+
+/** 熱銷排行（示意資料沿用型錄順序作為名次，正式應依銷售統計排序） */
+export function listRankings(params: HttpParams) {
+  const cat = params.get('cat');
+  const limit = numberParam(params, 'limit') ?? 10;
+  const items = CATALOG.filter((record) => !cat || record.cat === cat)
+    .slice(0, limit)
+    .map(toProduct);
+  return { items };
+}
+
+export function listRecommendations(params: HttpParams): Page<RecommendedProduct> {
+  const ordered = [
+    ...RECOMMENDATION_ORDER.map(findRecord),
+    ...CATALOG.filter((record) => !RECOMMENDATION_ORDER.includes(record.id)),
+  ];
+  const items = ordered.map((record, i) => ({
+    ...toProduct(record),
+    reason: RECOMMENDATION_REASONS[i % RECOMMENDATION_REASONS.length],
+  }));
+  return paginate(items, params);
 }
 
 export function listClaimableCoupons() {

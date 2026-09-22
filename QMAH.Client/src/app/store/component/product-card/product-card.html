@@ -45,12 +45,8 @@
         </div>
 
         <div class="product-card-rating">
-          @if (reviews() > 0) {
-            <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
-              class="product-card-split">|</span><span>{{ reviewsText() }}</span>
-          } @else {
-            <span>尚無評價</span>
-          }
+          <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
+            class="product-card-split">|</span><span>{{ reviewsText() }}</span>
         </div>
 
         <!-- 次要說明：已售數量 -->

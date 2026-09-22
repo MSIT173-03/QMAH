@@ -3,11 +3,7 @@
   <!-- 標題列：標題、標籤與右側評分摘要 -->
   <app-section-head headingLevel="h2" [title]="title" [tag]="tag">
     <span class="reviews-summary section-meta">
-      @if (reviewCount() > 0) {
-        <span class="product-card-star">★</span> {{ getRating() }} · {{ getReviewCount() }}
-      } @else {
-        尚無評價
-      }
+      <span class="product-card-star">★</span> {{ getRating() }} · {{ getReviewCount() }}
     </span>
   </app-section-head>
 

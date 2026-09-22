@@ -1,8 +1,8 @@
 <!-- 頁首：品牌 Logo、分類捷徑，以及購物車件數 -->
 <app-site-header>
-  <app-header-nav [links]="navLinks">
+  <app-header-actions [links]="navLinks">
     <span class="cart-count">{{ count() }} 件商品</span>
-  </app-header-nav>
+  </app-header-actions>
 </app-site-header>
 
 <div class="container cart-main">
@@ -26,7 +26,7 @@
       }
     </div>
 
-    <app-cart-summary [amounts]="amounts()" [canCheckout]="isLoggedIn()" />
+    <app-cart-summary [amounts]="amounts()" />
   </div>
   } @else if (loaded()) {
   <!-- 購物車是空的 -->

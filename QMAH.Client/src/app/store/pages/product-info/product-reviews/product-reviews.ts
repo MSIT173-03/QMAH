@@ -2,7 +2,7 @@ import { Component, computed, input, output } from '@angular/core';
 import { SectionHead, PillGroup, PillOption } from '../../../component';
 import { Review } from '../../../api/api.models';
 import { formatNumber } from '../../../shared/format';
-import { REVIEW_FILTERS } from '../product-detail.data';
+import { REVIEW_FILTERS } from '../product-info.data';
 
 /** 星等上限，用於把星等換算成實心／空心星號字串 */
 const MAX_STARS = 5;
@@ -62,8 +62,6 @@ export class ProductReviews {
     REVIEW_FILTERS.map((filter, i) => ({
       label: `${filter.label}（${this.filterCounts()[i] ?? 0}）`,
       active: i === this.filterIndex(),
-      // 該條件沒有評價時停用；商品完全沒有評價時全部停用
-      disabled: this.reviewCount() === 0 || (this.filterCounts()[i] ?? 0) === 0,
     })),
   );
 

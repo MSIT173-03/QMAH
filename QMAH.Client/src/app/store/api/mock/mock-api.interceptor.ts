@@ -6,7 +6,6 @@ import {
   provideHttpClient,
   withInterceptors,
 } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { STORE_API_BASE } from '../http';
 import * as handlers from './mock-handlers';
@@ -22,11 +21,15 @@ interface MockRoute {
 }
 
 const ROUTES: MockRoute[] = [
+  { method: 'GET', path: /^\/categories$/, handle: () => handlers.listCategories() },
   // { method: 'GET', path: /^\/products$/, handle: (_, params) => handlers.listProducts(params) },
   // { method: 'GET', path: /^\/products\/([^/]+)$/, handle: ([id]) => handlers.getProduct(id) },
   // { method: 'GET', path: /^\/products\/([^/]+)\/reviews$/, handle: ([id], params) => handlers.listReviews(id, params) },
   { method: 'GET', path: /^\/home\/hero-slides$/, handle: () => handlers.listHeroSlides() },
   { method: 'GET', path: /^\/home\/flash-sale$/, handle: () => handlers.getFlashSale() },
+  { method: 'GET', path: /^\/brands$/, handle: () => handlers.listBrands() },
+  { method: 'GET', path: /^\/rankings$/, handle: (_, params) => handlers.listRankings(params) },
+  { method: 'GET', path: /^\/recommendations$/, handle: (_, params) => handlers.listRecommendations(params) },
   { method: 'GET', path: /^\/coupons\/claimable$/, handle: () => handlers.listClaimableCoupons() },
   { method: 'GET', path: /^\/search\/hot-links$/, handle: () => handlers.listHotLinks() },
   { method: 'GET', path: /^\/search\/suggestions$/, handle: (_, params) => handlers.listSuggestions(params) },
@@ -74,11 +77,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   return next(request);
 };
 
-/**
- * 以假 API 提供 HttpClient，供單元測試使用。
- * 假 API 沒有涵蓋的請求（已改由真實後端提供的端點）不會送出網路請求，而是交給測試用的 HttpClient 後端擱置，
- * 避免測試環境因連不到後端而出現 status 0 錯誤。
- */
+/** 以假 API 提供 HttpClient，供單元測試使用 */
 export function provideMockApi() {
-  return [provideHttpClient(withInterceptors([mockApiInterceptor])), provideHttpClientTesting()];
+  return provideHttpClient(withInterceptors([mockApiInterceptor]));
 }

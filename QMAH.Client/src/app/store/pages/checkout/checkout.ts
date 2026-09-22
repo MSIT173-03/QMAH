@@ -1,10 +1,8 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
 import { EMPTY, catchError, filter, switchMap } from 'rxjs';
 import { SiteHeader, StepIndicator, Breadcrumb, BreadcrumbItem, PageTitleRow } from '../../component';
 import { CheckoutApi, MemberApi } from '../../api';
-import { StoreOverviewService } from '../../shared/store-overview.service';
 import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
 import { CART_PATH, HOME_PATH, MEMBER_PATH } from '../../shared/paths';
 import { RecipientForm } from './recipient-form/recipient-form';
@@ -49,21 +47,9 @@ import {
     './checkout.scss',
   ],
 })
-export class CheckoutPage {
+export class Checkout {
   private readonly checkoutApi = inject(CheckoutApi);
   private readonly memberApi = inject(MemberApi);
-  private readonly router = inject(Router);
-
-  /** 商品資訊中的登入狀態；資料載入完成後若未登入，直接導回首頁 */
-  private readonly storeOverview = inject(StoreOverviewService);
-  private readonly loginGuard = effect(() => {
-    const overview = this.storeOverview.overview();
-    if (overview && !overview.isLoggedIn) this.router.navigateByUrl(HOME_PATH, { replaceUrl: true });
-  });
-
-  constructor() {
-    this.storeOverview.load();
-  }
 
   /** 頁首的結帳流程步驟 */
   protected readonly steps = CHECKOUT_STEPS;

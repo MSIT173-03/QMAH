@@ -16,13 +16,3 @@
   color: var(--color-body);
 }
 
-
-/* 未登入時停用的「前往結帳」按鈕：不可點擊，且 hover 不轉為強調色 */
-.btn-solid:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-
-  &:hover {
-    background: var(--color-ink);
-  }
-}

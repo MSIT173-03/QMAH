@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of, switchMap, tap } from 'rxjs';
 
 import {
-  TopBar,
+  Promobar,
   SiteHeader,
   SearchBar,
   CartLink,
@@ -62,7 +62,7 @@ function toPage(value: string | undefined): number {
   selector: 'app-product-list',
   host: { class: 'store-app' },
   imports: [
-    TopBar,
+    Promobar,
     SiteHeader,
     SearchBar,
     CartLink,
@@ -81,7 +81,7 @@ function toPage(value: string | undefined): number {
     './product-list.scss',
   ],
 })
-export class ProductListPage {
+export class ProductList {
   private readonly catalogApi = inject(CatalogApi);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -141,10 +141,8 @@ export class ProductListPage {
 
   /** 全站設定與頂部公告列資料 */
   protected readonly site = injectSiteData();
-  /** 器類清單（含各器類上架商品件數），來自 products/info */
-  private readonly categories = computed(() =>
-    Object.entries(this.site.overview()?.categoryCounts ?? {}).map(([name, productCount]) => ({ name, productCount })),
-  );
+  /** 器類清單（含各器類商品件數） */
+  private readonly categories = toSignal(this.catalogApi.getCategories(), { initialValue: [] });
   /** 價格區間選項文字 */
   protected readonly bandLabels = PRICE_BANDS.map((band) => band.label);
   /** 找不到商品時的空狀態文案 */
@@ -248,11 +246,14 @@ export class ProductListPage {
     })),
   );
 
-  /** 分類篩選項目，第一項為「全部商品」（件數為各器類件數合計），其餘為各器類的上架商品件數 */
+  /**
+   * 分類篩選項目，第一項為「全部商品」；其件數改採 getProducts 回應的 totalCount
+   * （即目前篩選條件下的符合筆數），其餘器類件數則仍取自器類清單 API，不受其他篩選條件影響。
+   */
   protected categoryItems = computed<CategoryListItem[]>(() => {
     const categories = this.categories();
     const selected = this.category();
-    const allCount = categories.reduce((sum, item) => sum + item.productCount, 0);
+    const allCount = this.result()?.total ?? categories.reduce((sum, item) => sum + item.productCount, 0);
     return [
       {
         name: ALL_PRODUCTS_LABEL,

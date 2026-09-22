@@ -132,27 +132,6 @@ public sealed record ProductDetailsDto(
     decimal AverageRating,
     int ReviewCount);
 
-/// <summary>商品頁所需的附加資訊：各商品類型數量，以及登入會員的點數與優惠券。</summary>
-/// <param name="CategoryCounts">八種商品類型（BRONZE…PAINTING）在架商品數量，無商品者為 0。</param>
-/// <param name="CategoryCoverImages">各商品類型銷售數量最高的商品主圖（PrimaryImagePath）；該類型無商品或無圖片時為 null。</param>
-/// <param name="IsLoggedIn">是否已登入。</param>
-/// <param name="PointBalance">鑑定點數；未登入時為 null。</param>
-/// <param name="Coupons">會員優惠券列表；未登入時為 null。</param>
-/// <param name="HotProducts">熱銷排行：販賣數量前 10 項商品。</param>
-/// <param name="NewProducts">新品上架：最新上架的前 4 項商品。</param>
-/// <param name="TopRatedProducts">評價排行：平均評價最高的前 4 項商品（僅含有評論者）。</param>
-/// <param name="RecommendedProducts">為你推薦：隨機挑選的 10 項商品。</param>
-public sealed record StoreOverviewDto(
-    IReadOnlyDictionary<string, int> CategoryCounts,
-    IReadOnlyDictionary<string, string?> CategoryCoverImages,
-    bool IsLoggedIn,
-    int? PointBalance,
-    IReadOnlyList<CouponDto>? Coupons,
-    IReadOnlyList<ProductListItemDto> HotProducts,
-    IReadOnlyList<ProductListItemDto> NewProducts,
-    IReadOnlyList<ProductListItemDto> TopRatedProducts,
-    IReadOnlyList<ProductListItemDto> RecommendedProducts);
-
 public sealed record ProductReviewSummaryDto(
     decimal AverageRating,
     int ReviewCount);

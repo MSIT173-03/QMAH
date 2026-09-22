@@ -2,7 +2,7 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { QtyStepper } from '../../../component';
 import { formatNumber } from '../../../shared/format';
 import { formatRating, formatReviews, toPriceView } from '../../../shared/product-view';
-import { SizeConditionPanel } from '../size-condition-panel/size-condition-panel';
+import { SizeCondition } from '../size-condition/size-condition';
 
 /**
  * 商品主視覺右側的商品資訊欄：品牌、名稱、評價摘要、價格、規格、尺寸狀態面板與購買操作。
@@ -10,7 +10,7 @@ import { SizeConditionPanel } from '../size-condition-panel/size-condition-panel
  */
 @Component({
   selector: 'app-product-summary',
-  imports: [QtyStepper, SizeConditionPanel],
+  imports: [QtyStepper, SizeCondition],
   templateUrl: './product-summary.html',
   styleUrls: [
     './product-summary.scss',
