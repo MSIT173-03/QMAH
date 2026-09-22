@@ -6,6 +6,8 @@
   border: 1px solid var(--color-line);
   background: var(--color-surface);
   border-radius: var(--store-radius);
+  /* 角標貼齊封面左上角，由卡片圓角裁切，不凸出卡片外 */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   transition: border-color 160ms;

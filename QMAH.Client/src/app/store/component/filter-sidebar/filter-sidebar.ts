@@ -19,6 +19,8 @@ import { PillGroup, PillOption } from '../pill-group/pill-group';
 export class FilterSidebar {
   /** 分類篩選項目（含件數與是否選取） */
   categories = input<CategoryListItem[]>([]);
+  /** 年代篩選項目（含件數與是否選取） */
+  eras = input<CategoryListItem[]>([]);
   /** 價格區間篩選項目文字，順序即顯示順序 */
   bands = input<string[]>([]);
   /** 目前選取的價格區間索引 */
@@ -28,6 +30,7 @@ export class FilterSidebar {
 
   /** 面板標題文字（固定版面文字） */
   protected readonly categoryLabel = 'CATEGORY';
+  protected readonly eraLabel = 'ERA';
   protected readonly priceLabel = 'PRICE';
   protected readonly filterLabel = 'FILTER';
   /** 折扣篩選按鈕文字 */
@@ -44,6 +47,8 @@ export class FilterSidebar {
 
   /** 點擊某個分類時觸發，帶出該分類在 categories 中的索引值 */
   categoryPick = output<number>();
+  /** 點擊某個年代時觸發，帶出該年代在 eras 中的索引值 */
+  eraPick = output<number>();
   /** 點擊某個價格區間時觸發，帶出該區間在 bands 中的索引值 */
   bandPick = output<number>();
   /** 點擊折扣篩選按鈕時觸發（切換開關） */

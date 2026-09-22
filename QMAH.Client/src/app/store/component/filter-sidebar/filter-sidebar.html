@@ -7,6 +7,14 @@
     <app-category-list [items]="categories()" (pick)="categoryPick.emit($event)" />
   </app-panel>
 
+  <!-- 年代篩選：沒有年代資料時不顯示空面板 -->
+  @if (eras().length > 0) {
+    <app-panel variant="filter">
+      <span class="label-tag label-tag--loose">{{ eraLabel }}</span>
+      <app-category-list [items]="eras()" (pick)="eraPick.emit($event)" />
+    </app-panel>
+  }
+
   <!-- 價格區間篩選 -->
   <app-panel variant="filter">
     <span class="label-tag label-tag--loose">{{ priceLabel }}</span>

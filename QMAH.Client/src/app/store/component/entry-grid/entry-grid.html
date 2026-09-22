@@ -1,0 +1,14 @@
+<section class="section-block">
+  <app-section-head [title]="title()" [tag]="tag()" />
+  <div class="cat-grid">
+    @for (item of items(); track item.link) {
+      <a [storeLink]="item.link" [class]="'cat-card cat-card--' + item.tone">
+        <div class="cat-icon">
+          <span class="cat-name">{{ item.name }}</span>
+          <span class="cat-count">{{ item.count }} 件</span>
+          <app-qmah-icon class="cat-glyph" [name]="item.icon" [size]="84" [strokeWidth]="1.4" aria-hidden="true" />
+        </div>
+      </a>
+    }
+  </div>
+</section>
