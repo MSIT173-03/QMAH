@@ -114,23 +114,22 @@
 
 .app-header__navigation {
   min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--qmah-space-2);
+  /* 管理後台的次導覽現在最多五個項目，寬度不夠時用捲動而不是把整個 header 擠到換行。 */
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.app-context-navigation { display: inline-flex; align-items: center; gap: 2px; padding-left: var(--qmah-space-2); border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
-.app-context-navigation a { min-height: var(--qmah-control-height); display: inline-flex; align-items: center; gap: 6px; padding: 6px var(--qmah-space-2); border-radius: var(--qmah-radius-control); color: color-mix(in srgb, currentColor 62%, transparent); font-size: var(--qmah-type-label-size); font-weight: 700; text-decoration: none; }
+.app-header__navigation::-webkit-scrollbar {
+  display: none;
+}
+
+.app-context-navigation { display: inline-flex; align-items: center; flex: 0 0 auto; gap: 2px; padding-left: var(--qmah-space-2); border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.app-context-navigation a { min-height: var(--qmah-control-height); display: inline-flex; align-items: center; gap: 6px; padding: 6px var(--qmah-space-2); border-radius: var(--qmah-radius-control); color: color-mix(in srgb, currentColor 62%, transparent); font-size: var(--qmah-type-label-size); font-weight: 700; text-decoration: none; white-space: nowrap; }
 .app-context-navigation a:hover, .app-context-navigation a.is-active { color: var(--color-primary, var(--qmah-jade-deep)); background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent); }
-
-.app-context-navigation__badge {
-  min-width: 20px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: var(--color-error, #a64b3c);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1.4;
-  text-align: center;
-}
 
 .app-header__actions {
   margin-inline-start: auto;

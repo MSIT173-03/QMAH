@@ -1,5 +1,6 @@
 :host {
   display: block;
+  flex-shrink: 0;
 }
 
 .area-navigation {
@@ -43,23 +44,8 @@
   justify-content: flex-start;
 }
 
-.area-navigation__group a > .area-navigation__badge {
-  margin-left: auto;
-}
-
-.area-navigation__group a > span {
+.area-navigation__group a > span:not(.badge) {
   min-width: 0;
-}
-
-.area-navigation__badge {
-  min-width: 22px;
-  padding: 3px 6px;
-  border-radius: 999px;
-  background: var(--color-error, #a64b3c);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-  text-align: center;
 }
 
 a {

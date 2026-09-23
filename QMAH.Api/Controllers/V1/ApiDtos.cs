@@ -271,61 +271,6 @@ public sealed record AnnouncementDto(
     Guid? EventId,
     DateTime CreatedAt);
 
-public sealed record AdminEventListItemDto(
-    Guid Id,
-    string EventType,
-    Guid? OrganizerUserId,
-    string? OrganizerDisplayName,
-    string Title,
-    DateTime StartAt,
-    DateTime EndAt,
-    string ReviewStatus,
-    string PublishStatus,
-    string? ReviewNote,
-    DateTime CreatedAt);
-
-public sealed record AdminPostListItemDto(
-    Guid Id,
-    string BoardCode,
-    Guid UserId,
-    string? DisplayName,
-    string PostType,
-    string PublisherType,
-    string Title,
-    string ContentPreview,
-    string Status,
-    int CommentCount,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
-
-public sealed record AdminCommentListItemDto(
-    Guid Id,
-    Guid PostId,
-    string PostTitle,
-    Guid? ParentCommentId,
-    Guid UserId,
-    string? DisplayName,
-    string Content,
-    string Status,
-    DateTime CreatedAt);
-
-public sealed record AdminContentReportDto(
-    Guid Id,
-    string TargetType,
-    Guid TargetId,
-    string Reason,
-    string? Detail,
-    string Status,
-    string? Resolution,
-    Guid ReporterUserId,
-    string? ReporterDisplayName,
-    DateTime CreatedAt,
-    DateTime? ReviewedAt,
-    string? TargetTitle,
-    string? TargetContent,
-    string? TargetStatus,
-    Guid? TargetPostId);
-
 public sealed class CreateSocialPostRequest
 {
     [RegularExpression("POST|ANNOUNCEMENT")]

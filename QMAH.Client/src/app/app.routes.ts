@@ -1,7 +1,6 @@
 import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
-import { adminGuard } from './core/guards/admin-guard';
 import { adminGameTestGuard, adminTestRoomGuard } from './core/guards/game-test-guard';
 
 // integration: User 與 Catalog 的既有頁面共用 ASP.NET Core Identity route guard，
@@ -127,18 +126,6 @@ const appShellChildren: Routes = [
       { path: 'events', loadComponent: () => import('./features/social/events/events').then(m => m.EventsComponent) },
       { path: 'events/:id', loadComponent: () => import('./features/social/event-detail/event-detail').then(m => m.EventDetailComponent) },
       { path: 'announcements', loadComponent: () => import('./features/social/announcements/announcements').then(m => m.AnnouncementsComponent) }
-    ]
-  },
-  {
-    path: 'admin',
-    canActivate: [adminGuard],
-    children: [
-      { path: '', pathMatch: 'full', redirectTo: 'posts' },
-      // integration: 管理頁面也採 lazy loading；管理功能不會在一般使用者進入貼文牆時一併下載。
-      { path: 'events', loadComponent: () => import('./features/admin/admin-events/admin-events').then(m => m.AdminEventsComponent) },
-      { path: 'reports', loadComponent: () => import('./features/admin/admin-reports/admin-reports').then(m => m.AdminReportsComponent) },
-      { path: 'posts', loadComponent: () => import('./features/admin/admin-posts/admin-posts').then(m => m.AdminPostsComponent) },
-      { path: 'comments', loadComponent: () => import('./features/admin/admin-comments/admin-comments').then(m => m.AdminCommentsComponent) }
     ]
   },
   {
