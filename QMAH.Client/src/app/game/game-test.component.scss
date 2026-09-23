@@ -155,3 +155,41 @@ pre { max-height: 24rem; overflow: auto; margin: 14px 0 0; padding: 14px; border
 }
 @media (max-width: 430px) { .game-test-page { padding-inline: 10px; } }
 @media (prefers-reduced-motion: reduce) { .test-room-card { transition: none; } .service-status.is-checking .service-status__dot { animation: none; } }
+
+/* 管理員測試中心與正式 Game 頁共用相同側邊模式 rail，不另做一套後台骨架。 */
+@media (min-width: 1180px) {
+  .game-test-page {
+    box-sizing: border-box;
+    position: relative;
+    width: min(1320px, 100%);
+    padding-left: 244px;
+    transition: padding-left 180ms ease;
+  }
+  .game-test-page > app-game-navigation {
+    position: absolute;
+    top: 12px;
+    left: 24px;
+    width: 196px;
+    z-index: 12;
+    transition: width 180ms ease;
+  }
+  .game-test-page:has(> app-game-navigation.is-collapsed) { padding-left: 116px; }
+  .game-test-page:has(> app-game-navigation.is-collapsed) > app-game-navigation { width: 68px; }
+  .game-test-page app-game-navigation a {
+    display: flex;
+    width: 100%;
+    min-height: 40px;
+    align-items: center;
+    border: 1px solid var(--qmah-line);
+    border-radius: var(--qmah-radius-control);
+    padding: 7px 10px;
+    color: var(--qmah-slate);
+    text-decoration: none;
+  }
+  .game-test-page:has(> app-game-navigation.is-collapsed) app-game-navigation a { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-test-page,
+  .game-test-page > app-game-navigation { transition: none; }
+}

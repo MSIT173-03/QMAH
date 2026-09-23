@@ -426,3 +426,88 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .status-tabs > span { display: none; }
   .room-status { font-size: 10px; }
 }
+
+/* impeccable/layout + distill: 寬版把模式切換移到側邊軌，主區只保留找房任務。 */
+.test-room-entry,
+.account-link { display: none !important; }
+.filter-trigger,
+.filter-note { display: none; }
+.lookup-controls { min-width: 0; }
+
+/* 收合介紹不再佔一整條橫幅；保留入口但降成次要控制。 */
+.lobby-hero {
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-panel);
+  box-shadow: var(--qmah-shadow-card);
+}
+.lobby-hero.is-collapsed {
+  display: flex;
+  width: auto;
+  height: auto;
+  justify-content: flex-end;
+  margin: 0 0 8px;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.lobby-hero-collapsed {
+  width: auto;
+  min-height: 48px;
+  padding: 7px 8px 7px 12px;
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-card);
+  background: var(--qmah-surface);
+  box-shadow: var(--qmah-shadow-card);
+}
+.lobby-hero-collapsed > div { display: grid; gap: 0; }
+.lobby-hero-collapsed .lobby-hero-kicker { font-size: 10px; }
+.lobby-hero-collapsed strong { font-size: 14px; }
+.lobby-hero-collapsed .hero-collapse {
+  min-height: 40px;
+  padding: 7px 12px;
+  border-color: var(--qmah-border);
+  color: var(--qmah-slate);
+  background: var(--qmah-surface);
+  box-shadow: none;
+}
+.hero-actions .hero-collapse { color: var(--qmah-slate); background: transparent; }
+
+/* impeccable/bolder: 房間是可加入的遊戲 session，不再只像資料列。 */
+.ledger > div[role='listitem'] { transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.ledger > div[role='listitem']:hover { border-color: color-mix(in srgb, var(--qmah-game-action) 36%, var(--line)); box-shadow: var(--qmah-shadow-float); transform: translateY(-1px); }
+.room-status { justify-self: start; padding: 5px 9px; border: 1px solid color-mix(in srgb, var(--jade) 34%, var(--line)); border-radius: var(--qmah-radius-pill); background: color-mix(in srgb, var(--jade) 7%, var(--surface)); font-weight: 800; }
+.room-status[data-status='PLAYING'] { border-color: color-mix(in srgb, var(--cinnabar) 34%, var(--line)); background: color-mix(in srgb, var(--cinnabar) 7%, var(--surface)); }
+.row-action { min-height: 34px; padding: 6px 8px; border-radius: var(--qmah-radius-control); background: var(--qmah-surface-muted); }
+
+@media (min-width: 1180px) {
+  .game-notebook {
+    box-sizing: border-box;
+    position: relative;
+    width: min(1320px, 100%);
+    padding-left: 244px;
+    transition: padding-left 180ms ease;
+  }
+  .game-notebook > app-game-navigation {
+    position: absolute;
+    top: 12px;
+    left: 24px;
+    width: 196px;
+    z-index: 12;
+    transition: width 180ms ease;
+  }
+  .game-notebook:has(> app-game-navigation.is-collapsed) { padding-left: 116px; }
+  .game-notebook:has(> app-game-navigation.is-collapsed) > app-game-navigation { width: 68px; }
+  .game-notebook:has(> app-game-navigation.is-collapsed) .demo-mark,
+  .game-notebook:has(> app-game-navigation.is-collapsed) .preview-toggle { display: none; }
+}
+
+@media (max-width: 1179px) {
+  .lobby-hero.is-collapsed { justify-content: flex-start; margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-notebook,
+  .game-notebook > app-game-navigation,
+  .ledger > div[role='listitem'] { transition: none; }
+}

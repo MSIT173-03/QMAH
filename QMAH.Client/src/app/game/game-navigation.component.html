@@ -1,19 +1,58 @@
-<!-- ui-integration: Game 各頁共用同一套模式入口；右側 slot 只放當前流程必要的狀態或返回操作。 -->
+<!-- ui-integration: 桌面寬版由各 Game 頁提供側邊軌空間；窄版維持水平模式切換。 -->
 <nav class="game-navigation" aria-label="遊戲區功能">
+  <header class="game-navigation__header">
+    <span class="game-navigation__context"><app-qmah-icon name="gamepad-2" aria-hidden="true" /> <span>遊戲模式</span></span>
+    <button
+      type="button"
+      class="game-navigation__collapse"
+      [attr.aria-expanded]="!railCollapsed()"
+      [attr.aria-label]="railCollapsed() ? '展開遊戲模式導覽' : '收合遊戲模式導覽'"
+      [attr.title]="railCollapsed() ? '展開遊戲模式導覽' : '收合遊戲模式導覽'"
+      (click)="toggleRail()"
+    >
+      <app-qmah-icon [name]="railCollapsed() ? 'chevron-right' : 'chevron-left'" aria-hidden="true" />
+    </button>
+  </header>
+
   <div class="game-navigation__switcher">
-    <span class="game-navigation__context">遊戲模式</span>
     <div class="game-navigation__links">
-    @for (link of links; track link.path) {
-      <a
-        [routerLink]="link.path"
-        [class.is-active]="isActive(link)"
-        [attr.aria-current]="isActive(link) ? 'page' : null"
-        [attr.aria-label]="link.label + '，' + link.description"
-      ><span class="game-navigation__link-label">{{ link.label }}</span><span class="game-navigation__link-description">{{ link.description }}</span></a>
-    }
+      @for (link of links; track link.path) {
+        <a
+          [routerLink]="link.path"
+          [class.is-active]="isActive(link)"
+          [attr.aria-current]="isActive(link) ? 'page' : null"
+          [attr.aria-label]="link.label + '，' + link.description"
+          [attr.title]="railCollapsed() ? link.label + ' · ' + link.description : null"
+        >
+          <app-qmah-icon class="game-navigation__link-icon" [name]="link.icon" aria-hidden="true" />
+          <span class="game-navigation__link-copy">
+            <span class="game-navigation__link-label">{{ link.label }}</span>
+            <span class="game-navigation__link-description">{{ link.description }}</span>
+          </span>
+        </a>
+      }
     </div>
   </div>
+
   <div class="game-navigation__actions">
+    @if (isAdmin()) {
+      <a
+        class="game-navigation__test-entry"
+        routerLink="/game/test"
+        [class.is-active]="isTestActive()"
+        [attr.aria-current]="isTestActive() ? 'page' : null"
+        [attr.title]="railCollapsed() ? '進入測試模式' : null"
+      >
+        <app-qmah-icon name="test-tube" aria-hidden="true" />
+        <span>進入測試模式</span>
+      </a>
+    }
+    @if (!meApi.me()) {
+      <a class="game-navigation__login" routerLink="/login" [attr.title]="railCollapsed() ? '登入會員帳號' : null">
+        <app-qmah-icon name="log-in" aria-hidden="true" />
+        <span>登入會員帳號</span>
+      </a>
+    }
     <ng-content />
   </div>
 </nav>
