@@ -116,67 +116,6 @@ export interface Announcement {
   createdAt: string;
 }
 
-export interface AdminEventListItem {
-  id: string;
-  eventType: string;
-  organizerUserId: string | null;
-  organizerDisplayName: string | null;
-  title: string;
-  startAt: string;
-  endAt: string;
-  reviewStatus: string;
-  publishStatus: string;
-  reviewNote: string | null;
-  createdAt: string;
-}
-
-export interface AdminPostListItem {
-  id: string;
-  boardCode: string;
-  userId: string;
-  displayName: string | null;
-  postType: string;
-  publisherType: string;
-  title: string;
-  contentPreview: string;
-  status: 'PUBLISHED' | 'HIDDEN' | 'DELETED';
-  commentCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AdminCommentListItem {
-  id: string;
-  postId: string;
-  postTitle: string;
-  parentCommentId: string | null;
-  userId: string;
-  displayName: string | null;
-  content: string;
-  status: 'PUBLISHED' | 'HIDDEN' | 'DELETED';
-  createdAt: string;
-}
-
-export interface AdminContentReport {
-  id: string;
-  targetType: 'POST' | 'COMMENT';
-  targetId: string;
-  reason: string;
-  detail: string | null;
-  status: 'PENDING' | 'RESOLVED' | 'REJECTED';
-  resolution: string | null;
-  reporterUserId: string;
-  reporterDisplayName: string | null;
-  createdAt: string;
-  reviewedAt: string | null;
-  // 被檢舉的貼文/留言內容；貼文才有 targetTitle，留言恆為 null
-  targetTitle: string | null;
-  targetContent: string | null;
-  targetStatus: string | null;
-  // 前台沒有獨立的留言詳情頁：POST 檢舉指向該貼文本身，COMMENT 檢舉指向該留言所屬的貼文
-  targetPostId: string | null;
-}
-
 export interface CreateSocialPostRequest {
   postType?: 'POST' | 'ANNOUNCEMENT';
   boardCode: string;
@@ -237,34 +176,14 @@ export interface CreateContentReportRequest {
   detail?: string | null;
 }
 
-export interface ReviewEventRequest {
-  reviewStatus: 'APPROVED' | 'REJECTED';
-  reviewNote?: string | null;
-}
-
-export interface ReviewReportRequest {
-  status: 'PENDING' | 'RESOLVED' | 'REJECTED';
-  resolution?: string | null;
-  contentAction?: 'HIDDEN' | 'DELETED' | null;
-}
-
-export interface SetEventPublishStatusRequest {
-  publishStatus: 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
-}
-
-export interface UpdateContentStatusRequest {
-  status: 'PUBLISHED' | 'HIDDEN' | 'DELETED';
-}
-
-// 對應 QMAH.Api 的 Social 相關端點（SocialController／SocialMediaController／
-// SocialEventsAdminController／SocialReportsAdminController／SocialNotificationsController）。
+// 對應 QMAH.Api 的 Social 使用者端點（SocialController／SocialMediaController／SocialNotificationsController）。
+// 後台管理功能（貼文/留言/檢舉/活動/關鍵字）已搬到 QMAH.Web 的 Razor 後台，這裡只保留一般使用者會呼叫的 API。
 // 登入 Cookie 與 XSRF-TOKEN-API 由 app.config.ts 的 apiCredentialsInterceptor／withXsrfConfiguration 統一處理，
 // 這裡不重複處理身分驗證。
 @Injectable({ providedIn: 'root' })
 export class SocialApiService {
   private http = inject(HttpClient);
   private base = `${environment.apiBaseUrl}/social`;
-  private adminBase = `${environment.apiBaseUrl}/admin`;
 
   // ---- 貼文 ----
 
@@ -387,101 +306,6 @@ export class SocialApiService {
 
   deleteMedia(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/media/${id}`);
-  }
-
-  // ---- 後台：活動管理 ----
-
-  getAdminEvents(params: {
-    reviewStatus?: string;
-    publishStatus?: string;
-    q?: string;
-    page?: number;
-    pageSize?: number;
-  } = {}): Observable<ApiPage<AdminEventListItem>> {
-    return this.http.get<ApiPage<AdminEventListItem>>(`${this.adminBase}/events`, {
-      params: this.toHttpParams(params)
-    });
-  }
-
-  reviewEvent(id: string, request: ReviewEventRequest): Observable<{
-    message: string;
-    id: string;
-    reviewStatus: string;
-    publishStatus: string;
-  }> {
-    return this.http.put<{ message: string; id: string; reviewStatus: string; publishStatus: string }>(
-      `${this.adminBase}/events/${id}/review`,
-      request
-    );
-  }
-
-  setEventPublishStatus(id: string, request: SetEventPublishStatusRequest): Observable<{
-    message: string;
-    id: string;
-    publishStatus: string;
-  }> {
-    return this.http.put<{ message: string; id: string; publishStatus: string }>(
-      `${this.adminBase}/events/${id}/publish-status`,
-      request
-    );
-  }
-
-  // ---- 後台：貼文管理 ----
-
-  getAdminPosts(params: {
-    status?: string;
-    boardCode?: string;
-    postType?: string;
-    q?: string;
-    from?: string;
-    to?: string;
-    page?: number;
-    pageSize?: number;
-  } = {}): Observable<ApiPage<AdminPostListItem>> {
-    return this.http.get<ApiPage<AdminPostListItem>>(`${this.adminBase}/posts`, {
-      params: this.toHttpParams(params)
-    });
-  }
-
-  updatePostStatus(id: string, request: UpdateContentStatusRequest): Observable<{ message: string; id: string; status: string }> {
-    return this.http.put<{ message: string; id: string; status: string }>(`${this.adminBase}/posts/${id}/status`, request);
-  }
-
-  // ---- 後台：留言管理 ----
-
-  getAdminComments(params: {
-    status?: string;
-    postId?: string;
-    q?: string;
-    from?: string;
-    to?: string;
-    page?: number;
-    pageSize?: number;
-  } = {}): Observable<ApiPage<AdminCommentListItem>> {
-    return this.http.get<ApiPage<AdminCommentListItem>>(`${this.adminBase}/comments`, {
-      params: this.toHttpParams(params)
-    });
-  }
-
-  updateCommentStatus(id: string, request: UpdateContentStatusRequest): Observable<{ message: string; id: string; status: string }> {
-    return this.http.put<{ message: string; id: string; status: string }>(`${this.adminBase}/comments/${id}/status`, request);
-  }
-
-  // ---- 後台：檢舉審核 ----
-
-  getAdminReports(params: {
-    status?: string;
-    q?: string;
-    page?: number;
-    pageSize?: number;
-  } = {}): Observable<ApiPage<AdminContentReport>> {
-    return this.http.get<ApiPage<AdminContentReport>>(`${this.adminBase}/reports`, {
-      params: this.toHttpParams(params)
-    });
-  }
-
-  reviewReport(id: string, request: ReviewReportRequest): Observable<{ message: string; id: string; status: string }> {
-    return this.http.put<{ message: string; id: string; status: string }>(`${this.adminBase}/reports/${id}`, request);
   }
 
   private toHttpParams(params: Record<string, unknown>): HttpParams {

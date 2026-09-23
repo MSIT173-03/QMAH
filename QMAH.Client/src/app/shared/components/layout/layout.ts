@@ -2,26 +2,18 @@ import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, comp
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import {
-  LucideCalendarCog,
   LucideCalendarDays,
-  LucideFileText,
-  LucideFlag,
   LucideLibrary,
   LucideMegaphone,
-  LucideMessageCircle,
 } from '@lucide/angular';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ThemeService } from '../../../core/services/theme';
 import { MeApiService } from '../../../core/services/me-api';
-import { AdminPendingCountsService } from '../../../core/services/admin-pending-counts';
 import { NotificationsBellComponent } from '../notifications-bell/notifications-bell';
 import { ToastContainerComponent } from '../toast-container/toast-container';
 import { SiteFooter } from '../site-footer/site-footer';
 import { AreaNavigationComponent, NavigationGroup } from '../area-navigation/area-navigation';
 import { QmahIconComponent } from '../qmah-icon/qmah-icon';
-
-// 跟 notifications-bell 一樣沒有 SignalR/WebSocket，用定時輪詢模擬「待審核數量會即時更新」。
-const PENDING_COUNTS_POLL_INTERVAL_MS = 20000;
 
 @Component({
   selector: 'app-layout',
@@ -33,11 +25,9 @@ const PENDING_COUNTS_POLL_INTERVAL_MS = 20000;
 export class LayoutComponent implements OnInit, OnDestroy {
   readonly meApi = inject(MeApiService);
   readonly themeService = inject(ThemeService);
-  readonly adminPendingCounts = inject(AdminPendingCountsService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  private pollHandle: ReturnType<typeof setInterval> | null = null;
   private routeSubscription: Subscription | null = null;
 
   readonly menuOpen = signal(false);
@@ -47,11 +37,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
   @ViewChild('mobileNavigation') private mobileNavigation?: ElementRef<HTMLElement>;
 
-  readonly isAdmin = computed(() => this.meApi.me()?.roles?.includes('Admin') ?? false);
   /** 五大前台 Area 共用同一個 Shell，但各自保留主色語意；頁面內元件仍可使用自己的 secondary／semantic token。 */
-  readonly activeArea = computed<'home' | 'user' | 'catalog' | 'game' | 'social' | 'store' | 'admin'>(() => {
+  readonly activeArea = computed<'home' | 'user' | 'catalog' | 'game' | 'social' | 'store'>(() => {
     const url = this.currentUrl().split('?')[0];
-    if (url.startsWith('/admin')) return 'admin';
     if (url.startsWith('/member') || url.startsWith('/key-list')) return 'user';
     if (url.startsWith('/artifact-list')) return 'catalog';
     if (url.startsWith('/game')) return 'game';
@@ -67,38 +55,20 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.failedAvatarPath.set(path);
   }
 
-  // ui-integration: Mobile 次級入口集中成資料，讓同一個 drawer 可延伸到 Social／Admin，而不複製 Layout markup。
-  readonly mobileNavigationGroups = computed<readonly NavigationGroup[]>(() => {
-    const groups: NavigationGroup[] = [
-      {
-        label: '社群',
-        items: [
-          { label: '貼文廣場', path: '/social/posts', activePrefixes: ['/social/posts'], icon: LucideLibrary },
-          { label: '活動總覽', path: '/social/events', activePrefixes: ['/social/events'], icon: LucideCalendarDays },
-          { label: '站方公告', path: '/social/announcements', activePrefixes: ['/social/announcements'], icon: LucideMegaphone }
-        ]
-      }
-    ];
-
-    if (this.isAdmin()) {
-      groups.push({
-        label: '管理',
-        tone: 'admin',
-        items: [
-          { label: '活動管理', path: '/admin/events', activePrefixes: ['/admin/events'], icon: LucideCalendarCog, badge: this.adminPendingCounts.pendingEventsCount() || undefined },
-          { label: '貼文管理', path: '/admin/posts', activePrefixes: ['/admin/posts'], icon: LucideFileText },
-          { label: '留言管理', path: '/admin/comments', activePrefixes: ['/admin/comments'], icon: LucideMessageCircle },
-          { label: '檢舉審核', path: '/admin/reports', activePrefixes: ['/admin/reports'], icon: LucideFlag, badge: this.adminPendingCounts.pendingReportsCount() || undefined }
-        ]
-      });
+  // ui-integration: Mobile 次級入口集中成資料，讓同一個 drawer 可延伸到其他 Area，而不複製 Layout markup。
+  readonly mobileNavigationGroups = computed<readonly NavigationGroup[]>(() => [
+    {
+      label: '社群',
+      items: [
+        { label: '貼文廣場', path: '/social/posts', activePrefixes: ['/social/posts'], icon: LucideLibrary },
+        { label: '活動總覽', path: '/social/events', activePrefixes: ['/social/events'], icon: LucideCalendarDays },
+        { label: '站方公告', path: '/social/announcements', activePrefixes: ['/social/announcements'], icon: LucideMegaphone }
+      ]
     }
-
-    return groups;
-  });
+  ]);
 
   ngOnInit(): void {
     this.meApi.refresh();
-    this.pollHandle = setInterval(() => this.adminPendingCounts.refresh(), PENDING_COUNTS_POLL_INTERVAL_MS);
 
     // ui-integration: 跨 Area 或 Detail 導航後自動收起 Mobile drawer，避免新頁面仍被前一頁選單遮住。
     this.routeSubscription = this.router.events
@@ -110,10 +80,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   readonly isSocialArea = computed(() => this.currentUrl().startsWith('/social'));
-  readonly isAdminArea = computed(() => this.currentUrl().startsWith('/admin'));
 
   ngOnDestroy(): void {
-    if (this.pollHandle) clearInterval(this.pollHandle);
     this.routeSubscription?.unsubscribe();
   }
 

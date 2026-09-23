@@ -53,15 +53,17 @@
           (focusin)="pauseAnnouncementsForFocus()"
           (focusout)="resumeAnnouncementsForFocus($event)"
         >
-          @for (announcement of announcements; track announcement.id; let i = $index) {
-            @if (i === currentAnnouncementIndex) {
+          <div class="social-announcements__track" [style.transform]="'translateX(-' + (currentAnnouncementIndex * 100) + '%)'">
+            @for (announcement of announcements; track announcement.id; let i = $index) {
               <a
                 [routerLink]="['/social/posts', announcement.id]"
                 class="social-announcement-slide"
                 [class.has-cover]="!!announcement.coverImageUrl"
                 [style.background-image]="announcement.coverImageUrl ? 'url(' + announcement.coverImageUrl + ')' : null"
+                [attr.aria-hidden]="i === currentAnnouncementIndex ? null : 'true'"
+                [tabindex]="i === currentAnnouncementIndex ? 0 : -1"
               >
-                <span class="social-announcement-slide__index" aria-hidden="true">{{ (currentAnnouncementIndex + 1).toString().padStart(2, '0') }}</span>
+                <span class="social-announcement-slide__index" aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}</span>
                 <div class="social-announcement-slide__body">
                   <span class="social-announcement-slide__eyebrow social-icon-label">
                     <svg lucideMegaphone aria-hidden="true" focusable="false"></svg>
@@ -72,7 +74,7 @@
                 </div>
               </a>
             }
-          }
+          </div>
         </div>
       }
     </section>
