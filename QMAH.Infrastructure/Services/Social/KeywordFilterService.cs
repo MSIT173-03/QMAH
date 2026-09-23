@@ -9,21 +9,19 @@ public sealed record KeywordMatch(Guid KeywordId, string Keyword, string Action,
 
 /// <summary>
 /// 用 Aho-Corasick 自動機比對貼文/留言內容有沒有命中違規關鍵字表（<c>social.ContentKeywords</c>）。
-/// Singleton：自動機建置一次可以重複用在所有請求，不用每次發文都重新建樹。
-/// 內容本身不快取，只快取「目前啟用的關鍵字表建出來的自動機」，後台增刪關鍵字後呼叫 <see cref="ReloadAsync"/> 更新。
+/// API 與 MVC 後台是不同程序；每次提交內容時重新讀取規則，避免 API 持續使用後台修改前的快取。
 /// </summary>
 public sealed class KeywordFilterService(IServiceScopeFactory scopeFactory)
 {
-    private volatile AhoCorasickAutomaton? _automaton;
     private readonly SemaphoreSlim _reloadLock = new(1, 1);
 
     public async Task<IReadOnlyList<KeywordMatch>> ScanAsync(string content, CancellationToken cancellationToken = default)
     {
-        var automaton = _automaton ?? await ReloadAsync(cancellationToken);
+        var automaton = await ReloadAsync(cancellationToken);
         return automaton.Scan(content);
     }
 
-    /// <summary>後台新增/停用/刪除關鍵字後呼叫，從資料庫重新載入啟用中的關鍵字並重建自動機。</summary>
+    /// <summary>從資料庫載入啟用中的關鍵字並重建自動機。</summary>
     public async Task<AhoCorasickAutomaton> ReloadAsync(CancellationToken cancellationToken = default)
     {
         await _reloadLock.WaitAsync(cancellationToken);
@@ -38,7 +36,6 @@ public sealed class KeywordFilterService(IServiceScopeFactory scopeFactory)
                 .ToListAsync(cancellationToken);
 
             var automaton = new AhoCorasickAutomaton(keywords);
-            _automaton = automaton;
             return automaton;
         }
         finally

@@ -266,11 +266,9 @@ builder.Services.AddScoped<INotificationService, SocialNotificationService>();
 builder.Services.AddScoped<ArtifactDiscussionService>();
 // 新增貼文/留言時用 SimHash 擋掉跟最近內容太像的洗版貼文；只有 API 這邊有公開發文入口，Web 後台不用註冊。
 builder.Services.AddScoped<ContentSimilarityService>();
-// 違規關鍵字表：Aho-Corasick 自動機建一次可以重複用，註冊 Singleton；內部用 IServiceScopeFactory
-// 自己開 scope 存取 QmahDbContext，重新載入關鍵字時不用依賴目前請求的 scope。
+// 違規關鍵字表：每次提交內容時重新載入規則，讓獨立執行的後台修改立即反映在 API。
 builder.Services.AddSingleton<KeywordFilterService>();
-// SimHash 比對天數／相似度門檻：跟 KeywordFilterService 一樣快取目前生效值，
-// 後台改設定後由 QMAH.Web 的 ContentKeywordAdminController 呼叫 ReloadAsync 更新，不用重啟服務。
+// API 與 MVC 後台是獨立程序；提交內容時重新讀取 SimHash 設定，讓後台調整生效。
 builder.Services.AddSingleton<ContentModerationSettingsService>();
 // AI 內容審查（OpenAI Moderation，omni-moderation-latest）：只由 AiContentReviewWorker 背景呼叫，
 // 不會出現在發文/留言的同步路徑上，外部 API 逾時或額度用完最多讓審查排程晚一點處理，不影響發文。
