@@ -17,7 +17,7 @@
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 
-.training-notebook { width: min(1200px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
+.training-notebook { width: min(1200px, 100%); margin: 0 auto; padding: 12px clamp(16px, 3vw, 24px) 64px; }
 .training-notebook *, .training-notebook *::before, .training-notebook *::after { box-sizing: border-box; }
 .training-notebook button, .training-notebook input, .training-notebook select { font: inherit; }
 .training-notebook button { cursor: pointer; }
@@ -176,7 +176,7 @@
   .training-notebook .clue-image, .training-notebook .clue-image img { min-height: 220px; }
   .training-notebook .memory-grid { grid-template-columns: repeat(4, minmax(56px, 1fr)); gap: 7px; }
   .training-notebook .tile-grid { gap: 0; }
-  .training-notebook .strip-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+  .training-notebook .strip-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; }
   .training-notebook .play-footer { align-items: stretch; flex-direction: column; gap: 14px; }
   .training-notebook .play-actions { flex-direction: column; }
   .training-notebook .play-actions button { width: 100%; }
@@ -186,4 +186,147 @@
 @media (prefers-reduced-motion: reduce) {
   .training-hero { animation: none; }
   .artifact-options button, .memory-card, .training-notebook button, .training-notebook .mode-index li { transition: none; }
+}
+
+
+/* ui-polish: 保留既有四種 Mini Game 與資料流，只整理頁面層級、對齊與 responsive 行為。 */
+.training-notebook .chapter-heading {
+  align-items: center;
+  padding: 28px 2px 22px;
+}
+.training-notebook .chapter-heading h1 { font-size: clamp(32px, 4vw, 44px); }
+.chapter-count { min-width: 96px; }
+
+/* 原本深色 Hero 與頁面標題資訊重複；縮成輕量模式導引，不移除任何內容。 */
+.training-hero {
+  min-height: 118px;
+  border-color: var(--line);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--action) 8%, var(--surface));
+  box-shadow: var(--qmah-shadow-card);
+}
+.training-hero::before { inset: 0 0 0 62%; opacity: .2; }
+.training-hero::after { top: 20px; right: 28px; width: 68px; height: 68px; opacity: .34; }
+.training-hero-copy {
+  max-width: 760px;
+  min-height: 118px;
+  padding: 22px 26px;
+}
+.training-hero-kicker {
+  margin-bottom: 8px !important;
+  border-color: color-mix(in srgb, var(--jade) 30%, var(--line));
+  color: var(--jade) !important;
+  background: color-mix(in srgb, var(--jade) 8%, transparent);
+}
+.training-hero h2 { color: var(--ink); font-size: clamp(26px, 3vw, 34px); }
+.training-hero-copy > p:last-child { margin-top: 7px; color: var(--muted); }
+
+.training-notebook .mode-index { gap: 14px; margin-top: 16px; }
+.training-notebook .mode-index li {
+  min-height: 158px;
+  padding: 20px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px 14px;
+}
+.training-notebook .mode-index h2 { font-size: 21px; }
+.training-notebook .mode-index button { align-self: end; }
+
+.training-notebook .play-sheet { margin-top: 18px; }
+.training-notebook .play-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(180px, 240px);
+  align-items: center;
+  gap: 16px 22px;
+}
+.training-notebook .play-heading__meta { justify-content: flex-start; }
+.training-notebook .play-heading__progress { min-width: 0; width: 100%; margin-left: 0; }
+.training-notebook .game-board { border-radius: var(--qmah-radius-panel); }
+.training-notebook .collection-hint,
+.training-notebook .collection-hints { border-radius: var(--qmah-radius-card); }
+.training-notebook .play-footer {
+  bottom: max(8px, env(safe-area-inset-bottom));
+  padding: 14px 0 2px;
+}
+
+@media (max-width: 900px) {
+  .training-notebook { padding-inline: 18px; }
+  .training-notebook .play-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+  .training-notebook .play-heading__progress {
+    grid-column: 1 / -1;
+    justify-items: stretch;
+  }
+  .training-notebook .play-heading__progress-meta { justify-content: space-between; }
+}
+
+@media (max-width: 700px) {
+  .training-notebook { padding: 10px 14px 40px; }
+  .training-notebook .chapter-heading { padding: 22px 2px 16px; }
+  .training-notebook .chapter-heading h1 { font-size: 34px; }
+  .training-hero { min-height: 0; }
+  .training-hero::after { display: none; }
+  .training-hero-copy { min-height: 0; padding: 18px; }
+  .training-hero h2 { font-size: 28px; }
+  .training-notebook .mode-index li { padding: 16px; }
+  .training-notebook .play-heading { display: grid; grid-template-columns: 1fr; }
+  .training-notebook .play-heading__meta { grid-row: 2; }
+  .training-notebook .play-heading__progress { grid-column: 1; grid-row: 3; }
+  .training-notebook .game-board { padding: 14px; border-radius: var(--qmah-radius-card); }
+  .training-notebook .strip-row { min-width: 0; width: 100%; }
+}
+
+@media (max-width: 430px) {
+  .training-notebook { padding-inline: 10px; }
+  .chapter-count { min-width: 72px; }
+  .training-notebook .chapter-heading h1 { font-size: 31px; }
+  .training-notebook .mode-index li {
+    grid-template-columns: 30px minmax(0, 1fr);
+    padding: 14px;
+  }
+  .training-notebook .artifact-options { gap: 7px; }
+  .training-notebook .artifact-options button { min-height: 138px; }
+  .training-notebook .artifact-options button img { height: 96px; }
+}
+
+/* impeccable/distill: 移除無功能意義的裝飾格線，遊戲感改由模式、進度與操作本身承擔。 */
+.training-hero::before { display: none; }
+
+/* impeccable/layout: 桌面將 Game 模式切換移入側邊 rail；收合後把空間還給遊戲內容。 */
+@media (min-width: 1180px) {
+  .training-notebook {
+    box-sizing: border-box;
+    position: relative;
+    width: min(1320px, 100%);
+    padding-left: 244px;
+    transition: padding-left 180ms ease;
+  }
+  .training-notebook > app-game-navigation {
+    position: absolute;
+    top: 12px;
+    left: 24px;
+    width: 196px;
+    z-index: 12;
+    transition: width 180ms ease;
+  }
+  .training-notebook:has(> app-game-navigation.is-collapsed) { padding-left: 116px; }
+  .training-notebook:has(> app-game-navigation.is-collapsed) > app-game-navigation { width: 68px; }
+  .training-notebook:has(> app-game-navigation.is-collapsed) .training-nav-back { display: none; }
+  .training-nav-back {
+    display: flex;
+    width: 100%;
+    min-height: 40px;
+    align-items: center;
+    border: 1px solid var(--qmah-line);
+    border-radius: var(--qmah-radius-control);
+    padding: 7px 10px;
+    color: var(--qmah-slate);
+    text-decoration: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .training-notebook,
+  .training-notebook > app-game-navigation { transition: none; }
 }
