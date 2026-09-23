@@ -14,6 +14,8 @@
 .gallery-stage {
   /* A6 明信片與原圖都在同一個 4:3 展示框內，避免頁面縮放改變商品欄的節奏。 */
   container-type: size;
+  /* 商品頁放大鏡比共用預設（clamp(76px, 22%, 132px)）大一級，細節看得更完整；翻面卡片內的放大鏡也會繼承。 */
+  --magnifier-lens-size: clamp(120px, 32%, 180px);
   display: grid;
   width: min(100%, 640px);
   aspect-ratio: 4 / 3;
