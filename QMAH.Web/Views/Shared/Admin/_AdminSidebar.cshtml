@@ -15,7 +15,16 @@
             || string.Equals(currentAction, "ExecuteEconomyBatch", StringComparison.OrdinalIgnoreCase));
     var catalogItems = AdminNavigation.GetAreaItems("Catalog");
     var gameItems = AdminNavigation.GetAreaItems("Game");
-    var socialItems = AdminNavigation.GetAreaItems("Social");
+    var canManageSocialPosts = User.IsInRole("Admin") || User.IsInRole("AnnouncementEditor") || User.IsInRole("ContentModerator");
+    var canManageSocialReports = User.IsInRole("Admin") || User.IsInRole("ContentModerator");
+    var canManageSocialEvents = User.IsInRole("Admin") || User.IsInRole("EventModerator");
+    var socialItems = AdminNavigation.GetAreaItems("Social")
+        .Where(item =>
+            (item.Controller != "SocialPostAdmin" || canManageSocialPosts) &&
+            ((item.Controller != "SocialReportAdmin" && item.Controller != "SocialCommentAdmin" &&
+              item.Controller != "ContentKeywordAdmin") || canManageSocialReports) &&
+            (item.Controller != "SocialEventAdmin" || canManageSocialEvents))
+        .ToArray();
     var storeItems = AdminNavigation.GetAreaItems("Store");
     var userItems = AdminNavigation.GetAreaItems("User");
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
@@ -14,7 +15,9 @@ public sealed class SocialController(
     QmahDbContext db,
     CommunityRewardService communityRewardService,
     INotificationService notificationService,
-    ArtifactDiscussionService artifactDiscussionService) : ApiControllerBase
+    ArtifactDiscussionService artifactDiscussionService,
+    ContentSimilarityService contentSimilarityService,
+    KeywordFilterService keywordFilterService) : ApiControllerBase
 {
     [HttpGet("posts")]
     [AllowAnonymous]
@@ -555,6 +558,7 @@ public sealed class SocialController(
     }
 
     [Authorize]
+    [EnableRateLimiting("socialContent")]
     [HttpPost("posts")]
     public async Task<ActionResult<SocialPostDetailsDto>> CreatePost(
         CreateSocialPostRequest request,
@@ -599,6 +603,34 @@ public sealed class SocialController(
                 detail: "只能附加目前帳號擁有、尚未綁定貼文且仍可使用的圖片。請重新上傳後再試。");
         }
 
+        var title = request.Title.Trim();
+        var content = request.Content.Trim();
+
+        // 關鍵字表：BLOCK 直接擋發文，不寫進資料庫；FLAG 放行但自動送檢舉待審。
+        // 不回傳命中的關鍵字是什麼，避免有心人士用試探的方式反推整份關鍵字清單。
+        var keywordMatches = await keywordFilterService.ScanAsync($"{title}\n{content}", cancellationToken);
+        if (keywordMatches.Any(match => match.Action == "BLOCK"))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "內容包含禁用字詞",
+                detail: "這篇內容包含被禁止發布的字詞，請修改後再發布。");
+        }
+        var flaggedKeyword = keywordMatches.FirstOrDefault(match => match.Action == "FLAG");
+
+        // 不直接擋發文：用 SimHash 找最近幾天內誰發過太像的內容，交給檢舉審核流程處理，不因為誤判就擋掉正常貼文。
+        // 同一人重複貼太像的內容，判定信心夠高，直接自動送出檢舉；不同人內容相似則要另外命中關鍵字才送出檢舉
+        // （見下面 flaggedKeyword 判斷），避免只憑相似度就誤傷巧合寫得很像的正常使用者。
+        var simHash = contentSimilarityService.ComputeSimHash($"{title}\n{content}");
+        var duplicateMatch = await contentSimilarityService.FindRecentDuplicatePostAsync(simHash, cancellationToken);
+        var isSelfDuplicate = duplicateMatch is not null && duplicateMatch.Value.UserId == userId;
+        var algorithmFlagged = isSelfDuplicate || flaggedKeyword is not null;
+
+        // AI 複審（折衷策略）：已經被關鍵字表／SimHash 抓到的內容不用再花錢問一次 AI；
+        // 沒被抓到但看起來可疑（連結、電話、LINE ID 這類招攬話術特徵）才排進 AiContentReviewWorker 的佇列。
+        // 圖片沒有這種規則式訊號可以先篩，暴力／色情只能靠 AI 看內容，所以每張都排入審查。
+        var needsAiTextReview = !algorithmFlagged && SuspiciousContentHeuristics.LooksSuspicious($"{title}\n{content}");
+
         var now = DateTime.UtcNow;
         var post = new SocialPost
         {
@@ -609,11 +641,13 @@ public sealed class SocialController(
             PostType = postType,
             PublisherType = postType == "ANNOUNCEMENT" && User.IsInRole("Admin") ? "OFFICIAL" : "COMMUNITY",
             ContentMode = "CUSTOM",
-            Title = request.Title.Trim(),
-            Content = request.Content.Trim(),
+            Title = title,
+            Content = content,
             LocationName = string.IsNullOrWhiteSpace(request.LocationName) ? null : request.LocationName.Trim(),
             Latitude = request.Latitude,
             Longitude = request.Longitude,
+            SimHash = simHash == 0 ? null : simHash,
+            AiReviewedAt = needsAiTextReview ? null : now,
             Status = "PUBLISHED",
             CreatedAt = now,
             UpdatedAt = now
@@ -622,8 +656,22 @@ public sealed class SocialController(
         {
             mediaAsset.PostId = post.Id;
             mediaAsset.UpdatedAt = now;
+            mediaAsset.AiReviewedAt = null;
         }
         db.SocialPosts.Add(post);
+
+        if (algorithmFlagged)
+        {
+            db.ContentReports.Add(CreateAutoReport(
+                "POST", post.Id, now, isDuplicate: isSelfDuplicate, keywordCategory: flaggedKeyword?.Category));
+
+            // 全部檢舉：不再只保留第一篇沒事，來源那篇也一併送出檢舉待審（同一篇短時間內只送一次，避免被灌爆）。
+            if (isSelfDuplicate)
+            {
+                await AutoReportDuplicateOriginIfNeededAsync("POST", duplicateMatch!.Value.ContentId, now, cancellationToken);
+            }
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         return CreatedAtAction(nameof(GetPost), new { id = post.Id }, new SocialPostDetailsDto(
@@ -704,6 +752,7 @@ public sealed class SocialController(
     }
 
     [Authorize]
+    [EnableRateLimiting("socialContent")]
     [HttpPost("posts/{postId:guid}/comments")]
     public async Task<ActionResult<SocialCommentDto>> CreateComment(
         Guid postId,
@@ -732,6 +781,29 @@ public sealed class SocialController(
             return MissingResource("找不到上層留言", "回覆的留言不存在或目前不可見。");
         }
 
+        var content = request.Content.Trim();
+
+        // 關鍵字表：BLOCK 直接擋留言；FLAG 放行但自動送檢舉待審（理由同 CreatePost，不回傳命中的關鍵字內容）。
+        var keywordMatches = await keywordFilterService.ScanAsync(content, cancellationToken);
+        if (keywordMatches.Any(match => match.Action == "BLOCK"))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "內容包含禁用字詞",
+                detail: "這則留言包含被禁止發布的字詞，請修改後再送出。");
+        }
+        var flaggedKeyword = keywordMatches.FirstOrDefault(match => match.Action == "FLAG");
+
+        // 留言比貼文更容易被洗版工具重複灌，一樣用 SimHash 找最近幾天內誰發過太像的留言；
+        // 同一人重複才自動送出檢舉，不同人內容相似則要另外命中關鍵字才送出檢舉（理由同 CreatePost）。
+        var simHash = contentSimilarityService.ComputeSimHash(content);
+        var duplicateMatch = await contentSimilarityService.FindRecentDuplicateCommentAsync(simHash, cancellationToken);
+        var isSelfDuplicate = duplicateMatch is not null && duplicateMatch.Value.UserId == userId;
+        var algorithmFlagged = isSelfDuplicate || flaggedKeyword is not null;
+
+        // 理由同 CreatePost：已經被規則抓到的不用重複問 AI，只有沒被抓到又看起來可疑的才排隊複審。
+        var needsAiTextReview = !algorithmFlagged && SuspiciousContentHeuristics.LooksSuspicious(content);
+
         var now = DateTime.UtcNow;
         var comment = new SocialComment
         {
@@ -739,12 +811,26 @@ public sealed class SocialController(
             PostId = postId,
             ParentCommentId = request.ParentCommentId,
             UserId = userId,
-            Content = request.Content.Trim(),
+            Content = content,
+            SimHash = simHash == 0 ? null : simHash,
+            AiReviewedAt = needsAiTextReview ? null : now,
             Status = "PUBLISHED",
             CreatedAt = now,
             UpdatedAt = now
         };
         db.SocialComments.Add(comment);
+
+        if (algorithmFlagged)
+        {
+            db.ContentReports.Add(CreateAutoReport(
+                "COMMENT", comment.Id, now, isDuplicate: isSelfDuplicate, keywordCategory: flaggedKeyword?.Category));
+
+            // 全部檢舉：不再只保留第一則沒事，來源那則也一併送出檢舉待審（同一則短時間內只送一次，避免被灌爆）。
+            if (isSelfDuplicate)
+            {
+                await AutoReportDuplicateOriginIfNeededAsync("COMMENT", duplicateMatch!.Value.ContentId, now, cancellationToken);
+            }
+        }
 
         // 自己回覆自己的貼文不用通知自己
         if (post.UserId != userId)
@@ -896,6 +982,68 @@ public sealed class SocialController(
 
     private static string Truncate(string value, int maxLength) =>
         value.Length > maxLength ? value[..maxLength] + "…" : value;
+
+    // 全部檢舉：偵測到「同一人重複發布」時，不再只保留第一篇（來源那篇）沒事，這裡把它也一併送出檢舉待審。
+    // 同一篇來源短時間內可能被好幾篇新內容比對命中，用「是否已經有一筆待處理的自動檢舉」把重複送出擋掉，
+    // 避免同一篇被灌出一堆重複的檢舉紀錄。
+    private async Task AutoReportDuplicateOriginIfNeededAsync(
+        string targetType, Guid targetId, DateTime now, CancellationToken cancellationToken)
+    {
+        var alreadyReported = await db.ContentReports.AnyAsync(
+            report => report.TargetType == targetType && report.TargetId == targetId
+                && report.IsAutoGenerated && report.Status == "PENDING",
+            cancellationToken);
+        if (alreadyReported)
+            return;
+
+        db.ContentReports.Add(new ContentReport
+        {
+            Id = Guid.NewGuid(),
+            ReporterUserId = null,
+            TargetType = targetType,
+            TargetId = targetId,
+            Reason = "AUTO_DUPLICATE_ORIGIN",
+            Detail = "系統偵測到後續有更新的內容與這篇高度相似（同一帳號重複發布），一併送出檢舉待審核。",
+            IsAutoGenerated = true,
+            Status = "PENDING",
+            CreatedAt = now
+        });
+    }
+
+    // ReporterUserId 留空代表「沒有真人檢舉人，是系統自動判定」，後台檢舉列表用 IsAutoGenerated 篩選、
+    // ReporterUserId 是否為 null 來顯示「系統自動」。不通知被檢舉的作者——洗版帳號被自動盯上這件事不用先讓對方知道。
+    // isDuplicate、keywordCategory 兩個訊號可以同時成立（同一人重複貼 + 又命中關鍵字），
+    // 這種情況信心更高，Reason 用 AUTO_DUPLICATE_KEYWORD 讓後台一眼看出是複合訊號。
+    private static ContentReport CreateAutoReport(
+        string targetType, Guid targetId, DateTime now, bool isDuplicate, string? keywordCategory)
+    {
+        var (reason, detail) = (isDuplicate, keywordCategory) switch
+        {
+            (true, not null) => (
+                "AUTO_DUPLICATE_KEYWORD",
+                $"系統偵測到與同一帳號最近發布的內容高度相似，且命中可疑關鍵字（分類：{keywordCategory}），已自動送出檢舉待審核。"),
+            (true, null) => (
+                "AUTO_DUPLICATE",
+                "系統偵測到與同一帳號最近發布的內容高度相似，已自動送出檢舉待審核。"),
+            (false, not null) => (
+                "AUTO_KEYWORD",
+                $"系統偵測到內容命中可疑關鍵字（分類：{keywordCategory}），已自動送出檢舉待審核。"),
+            _ => ("AUTO_KEYWORD", "系統偵測到內容命中可疑關鍵字，已自動送出檢舉待審核。")
+        };
+
+        return new ContentReport
+        {
+            Id = Guid.NewGuid(),
+            ReporterUserId = null,
+            TargetType = targetType,
+            TargetId = targetId,
+            Reason = reason,
+            Detail = detail,
+            IsAutoGenerated = true,
+            Status = "PENDING",
+            CreatedAt = now
+        };
+    }
 
     private async Task<SocialEventDetailsDto> ToEventDetailsAsync(Event eventData, CancellationToken cancellationToken)
     {

@@ -152,6 +152,10 @@ public sealed class AccountController(
     }
 
 
+    // =========================
+    // Google 外部登入
+    // =========================
+
     [AllowAnonymous]
     [HttpGet("google-login")]
     public IActionResult GoogleLogin()
@@ -159,113 +163,269 @@ public sealed class AccountController(
         if (string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"])
             || string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]))
         {
-            // integration: Google OAuth 未設定時只停用該入口，不影響一般 Identity 登入。
             return Problem(
                 statusCode: StatusCodes.Status503ServiceUnavailable,
                 title: "Google 登入目前不可用");
         }
 
+        return StartExternalLogin(
+            provider: "Google",
+            callbackAction: nameof(GoogleCallback));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("google-callback")]
+    public Task<IActionResult> GoogleCallback(
+        string? remoteError = null,
+        CancellationToken cancellationToken = default)
+    {
+        return HandleExternalLoginCallbackAsync(
+            providerName: "Google",
+            errorQueryName: "googleError",
+            remoteError,
+            cancellationToken);
+    }
+
+
+    // =========================
+    // Logto 外部登入
+    // =========================
+
+    // Facebook → Logto → 直接 Facebook
+    [AllowAnonymous]
+    [HttpGet("logto-login")]
+    public IActionResult LogtoLogin()
+    {
+        if (string.IsNullOrWhiteSpace(configuration["Authentication:Logto:Endpoint"])
+            || string.IsNullOrWhiteSpace(configuration["Authentication:Logto:ClientId"])
+            || string.IsNullOrWhiteSpace(configuration["Authentication:Logto:ClientSecret"]))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "Facebook 登入目前不可用");
+        }
+
+        return StartLogtoExternalLogin(
+            connectorId: "facebook",
+            callbackAction: nameof(LogtoCallback));
+    }
+
+
+    // Microsoft → Logto → 直接 Microsoft
+    [AllowAnonymous]
+    [HttpGet("microsoft-login")]
+    public IActionResult MicrosoftLogin()
+    {
+        if (string.IsNullOrWhiteSpace(configuration["Authentication:Logto:Endpoint"])
+            || string.IsNullOrWhiteSpace(configuration["Authentication:Logto:ClientId"])
+            || string.IsNullOrWhiteSpace(configuration["Authentication:Logto:ClientSecret"]))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "Microsoft 登入目前不可用");
+        }
+
+        return StartLogtoExternalLogin(
+            connectorId: "azuread",
+            callbackAction: nameof(LogtoCallback));
+    }
+
+
+    [AllowAnonymous]
+    [HttpGet("logto-callback")]
+    public Task<IActionResult> LogtoCallback(
+        string? remoteError = null,
+        CancellationToken cancellationToken = default)
+    {
+        return HandleExternalLoginCallbackAsync(
+            providerName: "Logto",
+            errorQueryName: "logtoError",
+            remoteError,
+            cancellationToken);
+    }
+
+
+    // =========================
+    // Logto：指定 Social Connector
+    // 跳過 Logto 登入選擇畫面
+    // =========================
+
+    private IActionResult StartLogtoExternalLogin(
+        string connectorId,
+        string callbackAction)
+    {
         var redirectUrl = Url.Action(
-            nameof(GoogleCallback),
+            callbackAction,
             "Account",
             values: null,
             protocol: Request.Scheme);
 
         var properties =
             signInManager.ConfigureExternalAuthenticationProperties(
-                "Google",
+                "Logto",
                 redirectUrl);
 
-        return Challenge(properties, "Google");
+        properties.Items["direct_sign_in"] =
+            $"social:{connectorId}";
+
+        return Challenge(properties, "Logto");
     }
 
-    [AllowAnonymous]
-    [HttpGet("google-callback")]
-    public async Task<IActionResult> GoogleCallback(
-        string? remoteError = null,
-        CancellationToken cancellationToken = default)
+
+    // =========================
+    // 共用：啟動外部登入
+    // =========================
+
+    private IActionResult StartExternalLogin(
+        string provider,
+        string callbackAction)
     {
-        // integration: OAuth callback 必須回到部署中的前台，不能把開發機網址寫死在 Controller；
-        // 未設定時才退回本機預設，方便開發者直接啟動專案，正式環境請由 Frontend:ClientUrl 覆寫。
-        var clientUrl = (configuration["Frontend:ClientUrl"] ?? "http://localhost:4200")
+        var redirectUrl = Url.Action(
+            callbackAction,
+            "Account",
+            values: null,
+            protocol: Request.Scheme);
+
+        var properties =
+            signInManager.ConfigureExternalAuthenticationProperties(
+                provider,
+                redirectUrl);
+
+        return Challenge(properties, provider);
+    }
+
+
+    // =========================
+    // 共用：處理 Google / Logto callback
+    // =========================
+
+    private async Task<IActionResult> HandleExternalLoginCallbackAsync(
+        string providerName,
+        string errorQueryName,
+        string? remoteError,
+        CancellationToken cancellationToken)
+    {
+        var clientUrl =
+            (configuration["Frontend:ClientUrl"] ?? "http://localhost:4200")
             .TrimEnd('/');
+
+        string LoginErrorUrl()
+            => $"{clientUrl}/login?{errorQueryName}=1";
 
         if (!string.IsNullOrWhiteSpace(remoteError))
         {
             logger.LogWarning(
-                "Google 登入失敗。RemoteError={RemoteError}",
+                "{Provider} 登入失敗。RemoteError={RemoteError}",
+                providerName,
                 remoteError);
 
-            return Redirect($"{clientUrl}/login?googleError=1");
+            return Redirect(LoginErrorUrl());
         }
 
         var info = await signInManager.GetExternalLoginInfoAsync();
 
         if (info is null)
-            return Redirect($"{clientUrl}/login?googleError=1");
+        {
+            logger.LogWarning(
+                "{Provider} 登入失敗，無法取得 ExternalLoginInfo。",
+                providerName);
 
-        // 已經綁定過 Google 仍要先檢查 QMAH 自訂 Status；Identity 的外部登入成功本身
-        // 不會自動判斷 ApplicationUser.Status，避免已停權會員重新取得有效 Cookie。
+            return Redirect(LoginErrorUrl());
+        }
+
+        // 已經綁定此外部登入
         var linkedUser = await userManager.FindByLoginAsync(
             info.LoginProvider,
             info.ProviderKey);
-        if (linkedUser is not null && linkedUser.Status != "ACTIVE")
-            return Redirect($"{clientUrl}/login?googleError=1");
 
-        var externalResult = await signInManager.ExternalLoginSignInAsync(
-            info.LoginProvider,
-            info.ProviderKey,
-            isPersistent: true,
-            bypassTwoFactor: false);
+        if (linkedUser is not null
+            && linkedUser.Status != "ACTIVE")
+        {
+            return Redirect(LoginErrorUrl());
+        }
+
+        var externalResult =
+            await signInManager.ExternalLoginSignInAsync(
+                info.LoginProvider,
+                info.ProviderKey,
+                isPersistent: true,
+                bypassTwoFactor: false);
 
         if (externalResult.Succeeded)
         {
-            // integration: 再查一次是防止管理員在 callback 查詢與實際 sign-in 之間停用帳號；
-            // 若狀態已變更，立即清除剛建立的外部登入 Cookie，其他登入方式不受影響。
-            var signedInUser = linkedUser
-                ?? await userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
-            if (signedInUser is null || signedInUser.Status != "ACTIVE")
+            var signedInUser =
+                linkedUser
+                ?? await userManager.FindByLoginAsync(
+                    info.LoginProvider,
+                    info.ProviderKey);
+
+            if (signedInUser is null
+                || signedInUser.Status != "ACTIVE")
             {
                 await signInManager.SignOutAsync();
-                return Redirect($"{clientUrl}/login?googleError=1");
+
+                return Redirect(LoginErrorUrl());
             }
 
             return Redirect($"{clientUrl}/member");
         }
 
-        // 第一次使用 Google 登入
-        var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+        // 第一次使用此外部登入，需要 Email
+        var email =
+            info.Principal.FindFirstValue(ClaimTypes.Email);
 
         if (string.IsNullOrWhiteSpace(email))
-            return Redirect($"{clientUrl}/login?googleError=1");
+        {
+            logger.LogWarning(
+                "{Provider} 未提供 Email claim。",
+                providerName);
+
+            return Redirect(LoginErrorUrl());
+        }
 
         email = email.Trim();
 
-        var user = await userManager.FindByEmailAsync(email);
+        var user =
+            await userManager.FindByEmailAsync(email);
+
+        // -------------------------
+        // 已有 QMAH 帳號 → 綁定外部登入
+        // -------------------------
 
         if (user is not null)
         {
-            // 已有一般 QMAH 帳號 → 綁定 Google
             if (user.Status != "ACTIVE")
-                return Redirect($"{clientUrl}/login?googleError=1");
+                return Redirect(LoginErrorUrl());
 
-            var addLoginResult = await userManager.AddLoginAsync(user, info);
+            var addLoginResult =
+                await userManager.AddLoginAsync(
+                    user,
+                    info);
 
             if (!addLoginResult.Succeeded)
             {
                 logger.LogWarning(
-                    "Google 帳號綁定失敗。UserId={UserId}",
-                    user.Id);
+                    "{Provider} 帳號綁定失敗。UserId={UserId} Errors={Errors}",
+                    providerName,
+                    user.Id,
+                    string.Join(
+                        ", ",
+                        addLoginResult.Errors.Select(x => x.Code)));
 
-                return Redirect($"{clientUrl}/login?googleError=1");
+                return Redirect(LoginErrorUrl());
             }
 
-            await signInManager.SignInAsync(user, isPersistent: true);
+            await signInManager.SignInAsync(
+                user,
+                isPersistent: true);
 
             return Redirect($"{clientUrl}/member");
         }
 
-        // 完全沒有 QMAH 帳號 → 自動建立會員
+        // -------------------------
+        // 沒有 QMAH 帳號 → 建立會員
+        // -------------------------
+
         var now = DateTime.UtcNow;
 
         user = new ApplicationUser
@@ -279,23 +439,35 @@ public sealed class AccountController(
             UpdatedAt = now
         };
 
-        var createResult = await userManager.CreateAsync(user);
+        var createResult =
+            await userManager.CreateAsync(user);
 
         if (!createResult.Succeeded)
         {
             logger.LogWarning(
-                "Google 會員建立失敗。Errors={Errors}",
-                string.Join(", ", createResult.Errors.Select(x => x.Code)));
+                "{Provider} 會員建立失敗。Errors={Errors}",
+                providerName,
+                string.Join(
+                    ", ",
+                    createResult.Errors.Select(x => x.Code)));
 
-            return Redirect($"{clientUrl}/login?googleError=1");
+            return Redirect(LoginErrorUrl());
         }
 
-        var addGoogleResult = await userManager.AddLoginAsync(user, info);
+        var addExternalLoginResult =
+            await userManager.AddLoginAsync(
+                user,
+                info);
 
-        if (!addGoogleResult.Succeeded)
+        if (!addExternalLoginResult.Succeeded)
         {
             await userManager.DeleteAsync(user);
-            return Redirect($"{clientUrl}/login?googleError=1");
+
+            logger.LogWarning(
+                "{Provider} 外部登入資料建立失敗。",
+                providerName);
+
+            return Redirect(LoginErrorUrl());
         }
 
         var nickname =
@@ -313,18 +485,24 @@ public sealed class AccountController(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        var roleResult = await userManager.AddToRoleAsync(user, "User");
+        var roleResult =
+            await userManager.AddToRoleAsync(
+                user,
+                "User");
 
         if (!roleResult.Succeeded)
         {
             logger.LogWarning(
-                "Google 新會員加入 User 角色失敗。UserId={UserId}",
+                "{Provider} 新會員加入 User 角色失敗。UserId={UserId}",
+                providerName,
                 user.Id);
 
-            return Redirect($"{clientUrl}/login?googleError=1");
+            return Redirect(LoginErrorUrl());
         }
 
-        await signInManager.SignInAsync(user, isPersistent: true);
+        await signInManager.SignInAsync(
+            user,
+            isPersistent: true);
 
         return Redirect($"{clientUrl}/member");
     }

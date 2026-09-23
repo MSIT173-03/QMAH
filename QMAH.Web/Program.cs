@@ -19,6 +19,7 @@ using QMAH.Infrastructure.Models.Identity;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Economy;
+using QMAH.Infrastructure.Services.Social;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
@@ -137,6 +138,10 @@ builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>(
 builder.Services.AddScoped<EconomyService>();
 builder.Services.AddScoped<MiniGameService>();
 builder.Services.AddScoped<BulkEconomyService>();
+// 內容審核設定頁（關鍵字表／SimHash 門檻）沿用跟 QMAH.Api 相同的 Singleton 快取，
+// 後台改設定後呼叫 ReloadAsync 更新，不用每次發文/留言都查一次資料庫。
+builder.Services.AddSingleton<KeywordFilterService>();
+builder.Services.AddSingleton<ContentModerationSettingsService>();
 
 // 登入端點使用固定視窗限流，避免錯誤密碼嘗試拖慢其他後台頁面
 builder.Services.AddRateLimiter(options =>

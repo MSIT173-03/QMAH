@@ -332,6 +332,14 @@ export class Login implements OnInit, OnDestroy {
     window.location.href = `${environment.apiBaseUrl}/account/google-login`;
   }
 
+  facebookLogin(): void {
+  window.location.href = `${environment.apiBaseUrl}/account/logto-login`;
+}
+microsoftLogin(): void {
+  window.location.href = `${environment.apiBaseUrl}/account/microsoft-login`;
+}
+
+
   login(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();

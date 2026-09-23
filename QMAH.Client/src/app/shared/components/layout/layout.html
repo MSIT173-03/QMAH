@@ -21,25 +21,16 @@
 
       <div class="app-header__navigation">
         <app-area-navigation variant="desktop" />
+
+        @if (isSocialArea()) {
+          <!-- ui-integration: 社群的貼文、活動與公告是同一 Area 的既有頁面；補上桌面次導覽，避免入口只藏在 Mobile drawer。 -->
+          <nav class="app-context-navigation" aria-label="社群功能">
+            <a routerLink="/social/posts" [class.is-active]="currentUrl().startsWith('/social/posts')">貼文</a>
+            <a routerLink="/social/events" [class.is-active]="currentUrl().startsWith('/social/events')">活動</a>
+            <a routerLink="/social/announcements" [class.is-active]="currentUrl().startsWith('/social/announcements')">公告</a>
+          </nav>
+        }
       </div>
-
-      @if (isSocialArea()) {
-        <!-- ui-integration: 社群的貼文、活動與公告是同一 Area 的既有頁面；補上桌面次導覽，避免入口只藏在 Mobile drawer。 -->
-        <nav class="app-context-navigation" aria-label="社群功能">
-          <a routerLink="/social/posts" [class.is-active]="currentUrl().startsWith('/social/posts')">貼文</a>
-          <a routerLink="/social/events" [class.is-active]="currentUrl().startsWith('/social/events')">活動</a>
-          <a routerLink="/social/announcements" [class.is-active]="currentUrl().startsWith('/social/announcements')">公告</a>
-        </nav>
-      }
-
-      @if (isAdminArea() && isAdmin()) {
-        <nav class="app-context-navigation" aria-label="管理功能">
-          <a routerLink="/admin/events" [class.is-active]="currentUrl().startsWith('/admin/events')" [attr.aria-current]="currentUrl().startsWith('/admin/events') ? 'page' : null">活動管理</a>
-          <a routerLink="/admin/posts" [class.is-active]="currentUrl().startsWith('/admin/posts')" [attr.aria-current]="currentUrl().startsWith('/admin/posts') ? 'page' : null">貼文管理</a>
-          <a routerLink="/admin/comments" [class.is-active]="currentUrl().startsWith('/admin/comments')" [attr.aria-current]="currentUrl().startsWith('/admin/comments') ? 'page' : null">留言管理</a>
-          <a routerLink="/admin/reports" [class.is-active]="currentUrl().startsWith('/admin/reports')" [attr.aria-current]="currentUrl().startsWith('/admin/reports') ? 'page' : null">檢舉審核</a>
-        </nav>
-      }
 
       <div class="app-header__actions">
         @if (meApi.me(); as me) {
@@ -65,17 +56,7 @@
         }
 
         <app-notifications-bell />
-        <!-- ui-integration: 前台測試登入入口已移除；測試與管理員操作一律走正式登入頁。 -->
-
-        @if (isAdmin()) {
-          <a
-            class="app-admin-entry"
-            routerLink="/admin/posts"
-            [class.is-active]="isAdminArea()"
-            [attr.aria-current]="isAdminArea() ? 'page' : null"
-            (click)="closeMenu()"
-          >管理</a>
-        }
+        <!-- ui-integration: 前台測試登入入口已移除；測試與管理員操作一律走正式登入頁。後台管理改由 QMAH.Web 獨立提供，這裡不再放管理入口。 -->
 
         <label class="app-theme-toggle" aria-label="切換深色模式">
           <input

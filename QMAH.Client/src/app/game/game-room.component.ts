@@ -438,7 +438,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.votedAnswerIds.add(answer.id);
-          this.actionMessage = `已投給「${answer.playerDisplayName}」的回答。`;
+          this.actionMessage = '投好了！揭曉時就能看到作者和票數。';
           this.changeDetector.markForCheck();
         },
         error: (error: unknown) => {
@@ -785,7 +785,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (!this.round || !this.canVoteFor(answer)) return;
     answer.voteCount += this.voteCount;
     this.votedAnswerIds.add(answer.id);
-    this.actionMessage = `已投給「${answer.playerDisplayName}」的回答。`;
+    this.actionMessage = '投好了！揭曉時就能看到作者和票數。';
     this.changeDetector.markForCheck();
   }
 

@@ -24,9 +24,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .game-notebook {
-  width: min(1440px, 100%);
+  width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 12px 38px 64px;
+  padding: 12px clamp(16px, 3vw, 24px) 64px;
 }
 
 /* ui-integration: Game 首屏只保留子導覽與頁面任務，避免 App Shell 下再堆疊第二個品牌標頭。 */
@@ -47,7 +47,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   display: grid;
   grid-template-columns: minmax(300px, .82fr) minmax(420px, 1.18fr);
   /* ui-integration: 限制 Hero 高度，避免圖片原始比例把房間清單推到首屏之外。 */
-  height: clamp(250px, 28vw, 340px);
+  height: clamp(228px, 24vw, 300px);
   min-height: 0;
   overflow: hidden;
   color: var(--ink);
@@ -123,13 +123,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   position: relative;
   display: block;
   min-height: 0;
-  max-width: 1260px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 14px 0 0;
   overflow: hidden;
   background: var(--surface);
 }
 
-.index-page { min-width: 0; padding: 36px 42px 30px; }
+.index-page { min-width: 0; padding: clamp(24px, 3vw, 32px); }
 /* ui-integration: 詳情視窗脫離清單文件流，選房不再改變索引欄位寬度。 */
 .notes-page { position: fixed; z-index: 71; top: 50%; left: 50%; width: min(720px, calc(100vw - 40px)); max-height: calc(100dvh - 48px); overflow: auto; transform: translate(-50%, -50%); padding: 34px 36px 30px; border-radius: var(--qmah-radius-panel); color: var(--qmah-on-dark); background: var(--jade); border: 1px solid color-mix(in srgb, var(--qmah-on-dark) 42%, transparent); box-shadow: var(--qmah-shadow-dialog); animation: reveal-dialog 180ms ease-out both; }
 .room-detail-backdrop { position: fixed; z-index: 70; inset: 0; background: color-mix(in srgb, var(--qmah-night) 62%, transparent); }
@@ -293,4 +293,221 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media (prefers-reduced-motion: reduce) {
   .notes-page, .filter-note, .insert-sheet { animation: none; }
   .join-note button, .insert-sheet footer button, .status-tabs button::after { transition: none; }
+}
+
+
+/* ui-polish: 與 User / Social / Store 的頁面骨架收斂，保留既有 Game 色彩與圓角，不改房間資料流。 */
+.notebook-spread {
+  border: 1px solid var(--line);
+  border-radius: var(--qmah-radius-panel);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+/* 狀態 tabs 已完整承擔房間狀態切換；隱藏重複的第二套篩選入口，排序仍保留。 */
+.filter-trigger,
+.filter-note { display: none; }
+.lookup-bar {
+  gap: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  padding: 12px 0;
+}
+.lookup-controls { gap: 12px; }
+.sort-control select {
+  min-width: 112px;
+  border: 1px solid var(--line);
+  border-radius: var(--qmah-radius-control);
+  padding: 7px 28px 7px 10px;
+  background: var(--surface);
+}
+.refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.status-tabs {
+  align-items: center;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--qmah-radius-control);
+  background: var(--qmah-surface-muted);
+}
+.status-tabs button {
+  min-height: 38px;
+  border-radius: calc(var(--qmah-radius-control) - 2px);
+  padding: 8px 13px;
+}
+.status-tabs button::after { display: none; }
+.status-tabs button.is-active {
+  color: var(--qmah-game-content);
+  background: var(--qmah-game-action);
+  box-shadow: var(--qmah-shadow-card);
+}
+.status-tabs > span { padding: 0 8px; }
+
+.room-ledger-head { padding-inline: 15px; }
+.ledger { gap: 7px; padding-top: 7px; }
+.ledger > div[role='listitem'] { transition: border-color 160ms ease, box-shadow 160ms ease; }
+.ledger > div[role='listitem']:hover {
+  border-color: color-mix(in srgb, var(--jade) 34%, var(--line));
+  box-shadow: var(--qmah-shadow-float);
+}
+.room-row { min-height: 76px; }
+.room-status {
+  width: fit-content;
+  border-radius: var(--qmah-radius-pill);
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--jade) 9%, transparent);
+  font-weight: 750;
+}
+.room-status[data-status="PLAYING"] { background: color-mix(in srgb, var(--cinnabar) 9%, transparent); }
+.row-action, .row-selection-state { justify-self: end; }
+
+@media (max-width: 900px) {
+  .game-notebook { padding-inline: 18px; }
+  .lobby-hero { grid-template-columns: minmax(260px, .9fr) minmax(320px, 1.1fr); }
+  .lobby-hero-copy { padding: 26px 28px; }
+  .index-page { padding: 26px 24px; }
+  .room-ledger-head, .room-row {
+    grid-template-columns: minmax(124px, 1fr) minmax(150px, 1.2fr) minmax(100px, .72fr) minmax(70px, .55fr) 62px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .game-notebook { padding: 10px 14px 40px; }
+  .lobby-hero { display: block; height: auto; border-radius: var(--qmah-radius-panel); }
+  .lobby-hero-copy { min-height: 176px; padding: 22px 20px; }
+  .lobby-artwork { height: 150px; min-height: 150px; }
+  .notebook-spread { margin-top: 10px; border-radius: var(--qmah-radius-card); }
+  .index-page { padding: 22px 16px; }
+  .page-heading { padding-bottom: 20px; }
+  .lookup-bar { align-items: stretch; flex-direction: column; gap: 10px; }
+  .lookup-controls, .refresh-actions { width: 100%; }
+  .lookup-controls { justify-content: flex-start; }
+  .refresh-actions { justify-content: space-between; }
+  .sort-control { flex: 1; }
+  .sort-control select { flex: 1; width: 100%; }
+  .status-tabs { overflow-x: auto; scrollbar-width: none; }
+  .status-tabs::-webkit-scrollbar { display: none; }
+  .status-tabs button { flex: 0 0 auto; }
+  .status-tabs > span { margin-left: auto; white-space: nowrap; }
+  .room-ledger-head { display: none; }
+  .ledger { padding-top: 10px; }
+  .room-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    gap: 7px 12px;
+    min-height: 0;
+    padding: 15px 14px;
+  }
+  .room-code { grid-column: 1; grid-row: 1; }
+  .room-facts { grid-column: 1 / -1; grid-row: 2; }
+  .room-occupancy { grid-column: 1; grid-row: 3; flex-direction: row; align-items: center; gap: 8px; }
+  .room-occupancy > i { flex: 0 1 88px; margin: 0; }
+  .room-status { grid-column: 2; grid-row: 2; align-self: start; }
+  .row-action, .row-selection-state { grid-column: 2; grid-row: 1; }
+}
+
+@media (max-width: 430px) {
+  .game-notebook { padding-inline: 10px; }
+  .lobby-hero-collapsed { gap: 10px; padding: 10px 11px; }
+  .lobby-hero-collapsed .lobby-hero-kicker { display: none; }
+  .lobby-hero-collapsed strong { font-size: 15px; }
+  .refresh-hint { display: none; }
+  .refresh-actions { justify-content: flex-end; }
+  .refresh-button { width: 100%; }
+  .status-tabs > span { display: none; }
+  .room-status { font-size: 10px; }
+}
+
+/* impeccable/layout + distill: 寬版把模式切換移到側邊軌，主區只保留找房任務。 */
+.test-room-entry,
+.account-link { display: none !important; }
+.filter-trigger,
+.filter-note { display: none; }
+.lookup-controls { min-width: 0; }
+
+/* 收合介紹不再佔一整條橫幅；保留入口但降成次要控制。 */
+.lobby-hero {
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-panel);
+  box-shadow: var(--qmah-shadow-card);
+}
+.lobby-hero.is-collapsed {
+  display: flex;
+  width: auto;
+  height: auto;
+  justify-content: flex-end;
+  margin: 0 0 8px;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.lobby-hero-collapsed {
+  width: auto;
+  min-height: 48px;
+  padding: 7px 8px 7px 12px;
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-card);
+  background: var(--qmah-surface);
+  box-shadow: var(--qmah-shadow-card);
+}
+.lobby-hero-collapsed > div { display: grid; gap: 0; }
+.lobby-hero-collapsed .lobby-hero-kicker { font-size: 10px; }
+.lobby-hero-collapsed strong { font-size: 14px; }
+.lobby-hero-collapsed .hero-collapse {
+  min-height: 40px;
+  padding: 7px 12px;
+  border-color: var(--qmah-border);
+  color: var(--qmah-slate);
+  background: var(--qmah-surface);
+  box-shadow: none;
+}
+.hero-actions .hero-collapse { color: var(--qmah-slate); background: transparent; }
+
+/* impeccable/bolder: 房間是可加入的遊戲 session，不再只像資料列。 */
+.ledger > div[role='listitem'] { transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.ledger > div[role='listitem']:hover { border-color: color-mix(in srgb, var(--qmah-game-action) 36%, var(--line)); box-shadow: var(--qmah-shadow-float); transform: translateY(-1px); }
+.room-status { justify-self: start; padding: 5px 9px; border: 1px solid color-mix(in srgb, var(--jade) 34%, var(--line)); border-radius: var(--qmah-radius-pill); background: color-mix(in srgb, var(--jade) 7%, var(--surface)); font-weight: 800; }
+.room-status[data-status='PLAYING'] { border-color: color-mix(in srgb, var(--cinnabar) 34%, var(--line)); background: color-mix(in srgb, var(--cinnabar) 7%, var(--surface)); }
+.row-action { min-height: 34px; padding: 6px 8px; border-radius: var(--qmah-radius-control); background: var(--qmah-surface-muted); }
+
+@media (min-width: 1180px) {
+  .game-notebook {
+    box-sizing: border-box;
+    position: relative;
+    width: min(1320px, 100%);
+    padding-left: 244px;
+    transition: padding-left 180ms ease;
+  }
+  .game-notebook > app-game-navigation {
+    position: absolute;
+    top: 12px;
+    left: 24px;
+    width: 196px;
+    z-index: 12;
+    transition: width 180ms ease;
+  }
+  .game-notebook:has(> app-game-navigation.is-collapsed) { padding-left: 116px; }
+  .game-notebook:has(> app-game-navigation.is-collapsed) > app-game-navigation { width: 68px; }
+  .game-notebook:has(> app-game-navigation.is-collapsed) .demo-mark,
+  .game-notebook:has(> app-game-navigation.is-collapsed) .preview-toggle { display: none; }
+}
+
+@media (max-width: 1179px) {
+  .lobby-hero.is-collapsed { justify-content: flex-start; margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-notebook,
+  .game-notebook > app-game-navigation,
+  .ledger > div[role='listitem'] { transition: none; }
 }

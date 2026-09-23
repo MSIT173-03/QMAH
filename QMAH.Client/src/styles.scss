@@ -253,13 +253,13 @@ textarea {
 }
 
 /* ui-integration: Admin 已使用 DaisyUI 語意 class；這層只補 QMAH 的尺寸、surface 與對比基線，不改管理頁資料表結構。 */
-:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) {
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports, app-admin-keywords) {
   display: block;
   color: var(--qmah-ink);
   font-family: var(--qmah-font-sans);
 }
 
-:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) > h1 {
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports, app-admin-keywords) > h1 {
   margin-block: 0 var(--qmah-space-6);
   color: var(--qmah-primary);
   font-family: var(--qmah-font-serif);
@@ -267,13 +267,13 @@ textarea {
   line-height: var(--qmah-type-heading-leading);
 }
 
-:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) :where(.btn, .input, .select) {
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports, app-admin-keywords) :where(.btn, .input, .select) {
   min-height: var(--qmah-control-height);
   border-radius: var(--qmah-radius-control);
   font-family: var(--qmah-font-sans);
 }
 
-:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports) :where(.btn-xs, .btn-sm) {
+:where(app-admin-comments, app-admin-events, app-admin-posts, app-admin-reports, app-admin-keywords) :where(.btn-xs, .btn-sm) {
   padding-inline: var(--qmah-space-3);
   font-size: var(--qmah-type-label-size);
 }

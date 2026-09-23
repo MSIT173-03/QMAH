@@ -6,25 +6,46 @@
 
   <section class="guide-heading" aria-labelledby="game-guide-title">
     <p class="eyebrow">遊戲指南</p>
-    <h1 id="game-guide-title">先看懂，再開始玩</h1>
-    <p>多人從選房到投票揭曉，單人從選模式到成績獎勵；先看流程，再切到對應入口。</p>
+    <h1 id="game-guide-title">一回合怎麼玩？</h1>
+    <p><span>看文物、寫想法，</span><span>再讀別人的匿名回答。</span><span>投完票，</span><span>才知道誰寫了什麼。</span></p>
   </section>
 
-  <nav class="guide-tabs" aria-label="選擇玩法說明" role="tablist">
-    <button id="guide-tab-multiplayer" type="button" role="tab" aria-controls="guide-panel" [attr.aria-selected]="activeGuide() === 'multiplayer'" [class.is-active]="activeGuide() === 'multiplayer'" (click)="selectGuide('multiplayer')">
+  <nav class="guide-tabs" aria-label="選擇玩法說明">
+    <button id="guide-tab-multiplayer" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'multiplayer'" [class.is-active]="activeGuide() === 'multiplayer'" (click)="selectGuide('multiplayer')">
       <span>多人鑑定</span><small>選房、作答、投票</small>
     </button>
-    <button id="guide-tab-training" type="button" role="tab" aria-controls="guide-panel" [attr.aria-selected]="activeGuide() === 'training'" [class.is-active]="activeGuide() === 'training'" (click)="selectGuide('training')">
+    <button id="guide-tab-training" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'training'" [class.is-active]="activeGuide() === 'training'" (click)="selectGuide('training')">
       <span>單人小遊戲</span><small>挑玩法、完成短局</small>
     </button>
   </nav>
 
-  <section id="guide-panel" class="guide-panel" role="tabpanel" [attr.aria-labelledby]="'guide-tab-' + activeGuide()" aria-live="polite">
-    <app-game-how-to [variant]="activeGuide()" [openByDefault]="true" />
+  <section id="guide-panel" class="guide-panel" [attr.aria-labelledby]="'guide-tab-' + activeGuide()" aria-live="polite">
     @if (activeGuide() === 'multiplayer') {
-      <a class="guide-panel-link" routerLink="/game">前往多人鑑定大廳</a>
+      <div class="guide-preview">
+        <div class="guide-preview-heading"><div><span class="eyebrow">玩法示範 · 不會真的投票</span><h2>跟著玩一回合</h2></div><span>觀察與作答 → 匿名投票 → 揭曉</span></div>
+        <div class="guide-preview-artifact"><img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="掐絲琺瑯雲龍紋三足香爐" /><div><strong>先看看這件文物</strong><p>掐絲琺瑯雲龍紋三足香爐</p><span>寫完後，看看其他人怎麼說。</span></div><p class="guide-preview-example"><span>假如你寫下：</span><span>「我覺得這是香爐。」</span></p></div>
+        <h3>哪一則回答最能說服你？</h3>
+        <p class="guide-preview-hint"><span>正式遊戲不能投自己的回答。</span><span>這裡只示範畫面，不會送出投票。</span></p>
+        <ol class="guide-preview-answers">
+          @for (answer of demoAnswers; track answer.author; let index = $index) {
+            <li>
+              <button type="button" [class.is-selected]="selectedDemoAnswer() === index" [class.is-winner]="demoRevealed() && index === 1" [attr.aria-pressed]="selectedDemoAnswer() === index" [disabled]="demoRevealed()" (click)="selectedDemoAnswer.set(index)">
+                <span><strong>回答 {{ (index + 1).toString().padStart(2, '0') }}</strong>@if (demoRevealed()) { <small>{{ answer.author }} · {{ answer.votes }} 票@if (index === 1) { · 勝出 }</small> }</span>
+                <span class="guide-preview-answer-text">{{ answer.text }}</span>
+                @if (!demoRevealed() && selectedDemoAnswer() === index) { <small>已選擇</small> }
+              </button>
+            </li>
+          }
+        </ol>
+        <div class="guide-preview-actions">
+          @if (!demoRevealed()) { <button type="button" [disabled]="selectedDemoAnswer() === null" (click)="demoRevealed.set(true)">揭曉作者與票數</button> }
+          @else { <p role="status"><span>這回合是回答 02（阿墨）勝出。</span><span>你選了回答 {{ ((selectedDemoAnswer() ?? 0) + 1).toString().padStart(2, '0') }}。</span></p><button type="button" class="secondary" (click)="restartDemo()">重新示範</button> }
+        </div>
+      </div>
+      <a class="guide-panel-link" routerLink="/game">開始多人鑑定</a>
     } @else {
-      <a class="guide-panel-link" routerLink="/game/training">前往單人小遊戲</a>
+      <app-game-how-to variant="training" />
+      <a class="guide-panel-link" routerLink="/game/training">開始單人遊戲</a>
     }
   </section>
 </div>

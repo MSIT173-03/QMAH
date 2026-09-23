@@ -30,7 +30,7 @@
           >
             @if (link.icon) { <ng-container *ngComponentOutlet="link.icon"></ng-container> }
             <span>{{ link.label }}</span>
-            @if (link.badge !== undefined) { <b class="area-navigation__badge">{{ link.badge }}</b> }
+            @if (link.badge !== undefined) { <span class="badge badge-xs badge-primary ms-auto">{{ link.badge }}</span> }
           </a>
         }
       </section>

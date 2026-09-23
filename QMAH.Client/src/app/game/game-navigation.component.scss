@@ -1,139 +1,176 @@
 :host {
   display: block;
+  min-width: 0;
+  container-type: inline-size;
 }
 
-/* ui-integration: Game 子導覽只負責模式切換與當前流程出口，跨 Area 導覽由 App Shell 統一擁有。 */
-/* ui-integration: 把主要玩法與說明入口收斂成同一組語意清楚的模式切換，避免玩家第一眼分不出多人、單人與教學入口。 */
+/* Game 子導覽：寬版可成為側邊模式軌，窄版維持全站熟悉的水平切換。 */
 .game-navigation {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--qmah-space-6);
-  min-height: 62px;
-  padding: 4px 0 6px;
+  gap: var(--qmah-space-5);
+  min-height: 64px;
+  padding: 6px 0 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--qmah-line) 72%, transparent);
 }
-
-.game-navigation__switcher {
-  display: flex;
-  align-items: stretch;
-  gap: var(--qmah-space-3);
-  min-width: 0;
-}
-
+.game-navigation__header { display: contents; }
+.game-navigation__switcher { display: flex; align-items: center; gap: var(--qmah-space-3); min-width: 0; }
 .game-navigation__context {
   display: inline-flex;
   align-items: center;
+  gap: 7px;
   color: var(--qmah-muted);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: .12em;
   white-space: nowrap;
 }
-
-.game-navigation__links,
-.game-navigation__actions {
+.game-navigation__context app-qmah-icon { width: 17px; height: 17px; color: var(--qmah-game-action); }
+.game-navigation__collapse {
+  display: none;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--qmah-line);
+  border-radius: var(--qmah-radius-control);
+  color: var(--qmah-slate);
+  background: var(--qmah-surface);
+  cursor: pointer;
+}
+.game-navigation__links {
   display: flex;
   align-items: center;
+  gap: 4px;
   min-width: 0;
+  padding: 3px;
+  border: 1px solid var(--qmah-line);
+  border-radius: var(--qmah-radius-card);
+  background: color-mix(in srgb, var(--qmah-surface) 72%, transparent);
 }
-
-.game-navigation__links {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(124px, 1fr));
-  gap: var(--qmah-space-1);
-}
-
-.game-navigation__actions {
-  justify-content: flex-end;
-  gap: var(--qmah-space-2);
-}
-
-a {
-  min-height: 54px;
+.game-navigation__links a {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1px;
-  min-width: 0;
+  min-width: 118px;
+  min-height: 48px;
+  align-items: center;
+  gap: 9px;
   border: 1px solid transparent;
   border-radius: var(--qmah-radius-control);
-  padding: 8px var(--qmah-control-padding-x);
+  padding: 7px 11px;
   color: var(--qmah-slate);
   text-decoration: none;
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
-
-.game-navigation__link-label {
-  font-size: 14px;
-  font-weight: 750;
-  white-space: nowrap;
-}
-
+.game-navigation__link-icon { width: 18px; height: 18px; flex: 0 0 auto; }
+.game-navigation__link-copy { display: grid; gap: 1px; min-width: 0; }
+.game-navigation__link-label { font-size: 13px; font-weight: 800; white-space: nowrap; }
 .game-navigation__link-description {
   overflow: hidden;
   max-width: 100%;
-  color: color-mix(in srgb, var(--qmah-muted) 82%, transparent);
+  color: color-mix(in srgb, var(--qmah-muted) 86%, transparent);
   font-size: 10px;
-  line-height: 1.2;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-a:hover,
-a.is-active {
-  color: var(--qmah-ink);
-}
-
-a:hover { background: color-mix(in srgb, var(--qmah-surface) 42%, transparent); }
-
-a.is-active {
-  border-color: color-mix(in srgb, var(--qmah-game-action) 42%, var(--qmah-line));
-  background: color-mix(in srgb, var(--qmah-game-action) 10%, var(--qmah-surface));
+.game-navigation__links a:hover { color: var(--qmah-ink); background: var(--qmah-surface-muted); }
+.game-navigation__links a.is-active {
+  border-color: var(--qmah-game-action);
+  color: var(--qmah-game-content);
+  background: var(--qmah-game-action);
   box-shadow: var(--qmah-shadow-card);
+}
+.game-navigation__links a.is-active .game-navigation__link-description { color: color-mix(in srgb, var(--qmah-game-content) 78%, transparent); }
+.game-navigation__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--qmah-space-2);
+  min-width: 0;
+}
+.game-navigation__test-entry,
+.game-navigation__login {
+  display: inline-flex;
+  min-height: var(--qmah-control-height);
+  align-items: center;
+  gap: 7px;
+  border-radius: var(--qmah-radius-control);
+  padding: 8px 12px;
+  font-size: var(--qmah-type-label-size);
   font-weight: 800;
+  text-decoration: none;
+}
+.game-navigation__test-entry {
+  border: 1px solid var(--qmah-game-action);
+  color: var(--qmah-game-content);
+  background: var(--qmah-game-action);
+}
+.game-navigation__test-entry:hover,
+.game-navigation__test-entry.is-active { background: color-mix(in srgb, var(--qmah-game-action) 84%, var(--qmah-ink)); }
+.game-navigation__login { border: 1px solid var(--qmah-line); color: var(--qmah-ink); background: var(--qmah-surface); }
+.game-navigation__login:hover { border-color: var(--qmah-game-action); color: var(--qmah-game-action); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
+
+/* 側邊 rail 由父頁限制 host 寬度後自動啟用；不需要為 Room 頁另建第二套導覽。 */
+@container (max-width: 260px) {
+  .game-navigation {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 0;
+    padding: 12px;
+    border: 1px solid var(--qmah-line);
+    border-radius: var(--qmah-radius-panel);
+    background: color-mix(in srgb, var(--qmah-surface) 92%, var(--qmah-page-surface));
+    box-shadow: var(--qmah-shadow-card);
+  }
+  .game-navigation__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+  .game-navigation__collapse { display: grid; flex: 0 0 auto; }
+  .game-navigation__switcher { display: block; }
+  .game-navigation__links { display: grid; gap: 5px; padding: 0; border: 0; background: transparent; }
+  .game-navigation__links a { min-width: 0; min-height: 50px; width: 100%; }
+  .game-navigation__actions { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 6px; padding-top: 10px; border-top: 1px solid var(--qmah-line); }
+  .game-navigation__test-entry,
+  .game-navigation__login { width: 100%; justify-content: flex-start; }
 }
 
-a.is-active .game-navigation__link-description { color: var(--qmah-muted); }
+@container (max-width: 90px) {
+  .game-navigation { padding: 9px; gap: 9px; border-radius: var(--qmah-radius-card); }
+  .game-navigation__header { justify-content: center; }
+  .game-navigation__context { display: none; }
+  .game-navigation__collapse { width: 42px; height: 42px; }
+  .game-navigation__links a { justify-content: center; width: 100%; min-height: 46px; padding: 8px; }
+  .game-navigation__link-copy,
+  .game-navigation__test-entry span,
+  .game-navigation__login span { display: none; }
+  .game-navigation__test-entry,
+  .game-navigation__login { justify-content: center; width: 100%; min-width: 0; padding-inline: 8px; }
+}
 
-a:focus-visible {
-  outline: 2px solid var(--qmah-focus);
-  outline-offset: 3px;
+@media (max-width: 900px) {
+  .game-navigation { align-items: stretch; flex-wrap: wrap; gap: 8px 12px; }
+  .game-navigation__header { display: none; }
+  .game-navigation__switcher { flex: 1 1 100%; }
+  .game-navigation__links { flex: 1; }
+  .game-navigation__links a { flex: 1 1 0; min-width: 0; }
+  .game-navigation__actions { flex: 1 1 100%; justify-content: flex-start; }
 }
 
 @media (max-width: 600px) {
-  .game-navigation {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 6px;
-    min-height: 0;
-    padding: 8px 0 10px;
-  }
-
-  .game-navigation__switcher {
-    display: grid;
-     gap: var(--qmah-space-1);
-  }
-
-  .game-navigation__context {
-    min-height: 20px;
-    padding-inline: 2px;
-  }
-
-  .game-navigation__links {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--qmah-space-1);
-  }
-
-  a {
-    min-height: 56px;
-    padding: 8px 9px;
-  }
-
+  .game-navigation { min-height: 0; padding: 7px 0 9px; }
+  .game-navigation__switcher { display: block; width: 100%; }
+  .game-navigation__links { width: 100%; }
+  .game-navigation__links a { min-width: 0; min-height: 44px; justify-content: center; padding: 7px 8px; text-align: center; }
+  .game-navigation__link-icon { width: 17px; height: 17px; }
+  .game-navigation__link-copy { display: block; }
   .game-navigation__link-label { font-size: 12px; }
-  .game-navigation__link-description { font-size: 9px; }
-  .game-navigation__actions { justify-content: flex-start; min-height: 34px; }
+  .game-navigation__link-description { display: none; }
+  .game-navigation__actions { gap: 6px; min-height: 34px; }
+  .game-navigation__test-entry,
+  .game-navigation__login { min-height: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  a { transition: none; }
+  .game-navigation__links a { transition: none; }
 }

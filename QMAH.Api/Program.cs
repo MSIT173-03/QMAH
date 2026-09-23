@@ -1,7 +1,9 @@
 using System.IO.Compression;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,6 +13,7 @@ using Microsoft.Extensions.FileProviders;
 
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
+using QMAH.Api.Infrastructure.Moderation;
 using QMAH.Api.Infrastructure.OpenApi;
 using QMAH.Api.Services;
 using QMAH.Infrastructure.Configuration;
@@ -23,9 +26,9 @@ using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
 using QMAH.Infrastructure.Services.Game;
+using QMAH.Infrastructure.Services.Social;
 
 using Scalar.AspNetCore;
-using QMAH.Infrastructure.Services.Social;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
@@ -181,6 +184,56 @@ else
     // integration: Google OAuth 為選用功能，缺少設定時不可阻止 API 啟動。
     builder.Logging.AddFilter("Microsoft.AspNetCore.Authentication", LogLevel.Warning);
 }
+
+
+var logtoEndpoint = builder.Configuration["Authentication:Logto:Endpoint"];
+var logtoClientId = builder.Configuration["Authentication:Logto:ClientId"];
+var logtoClientSecret = builder.Configuration["Authentication:Logto:ClientSecret"];
+
+if (!string.IsNullOrWhiteSpace(logtoEndpoint)
+    && !string.IsNullOrWhiteSpace(logtoClientId)
+    && !string.IsNullOrWhiteSpace(logtoClientSecret))
+{
+    authenticationBuilder.AddOpenIdConnect("Logto", "Logto", options =>
+    {
+        options.Authority = $"{logtoEndpoint.TrimEnd('/')}/oidc";
+        options.ClientId = logtoClientId;
+        options.ClientSecret = logtoClientSecret;
+
+        options.ResponseType = "code";
+        options.SignInScheme = IdentityConstants.ExternalScheme;
+
+        options.CallbackPath = "/Callback";
+
+        options.SaveTokens = true;
+        options.GetClaimsFromUserInfoEndpoint = true;
+
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.Events = new OpenIdConnectEvents
+        {
+            OnRedirectToIdentityProvider = context =>
+            {
+                if (context.Properties.Items.TryGetValue(
+                        "direct_sign_in",
+                        out var directSignIn)
+                    && !string.IsNullOrWhiteSpace(directSignIn))
+                {
+                    context.ProtocolMessage.SetParameter(
+                        "direct_sign_in",
+                        directSignIn);
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+    });
+}
+
+
+
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 {
     // 後台停用帳號後，既有登入 cookie 也要在下一次 request 失效。
@@ -211,19 +264,36 @@ builder.Services.AddScoped<INotificationService, SocialNotificationService>();
 // 圖鑑點擊社群入口需要在同一個交易中確保討論串與第一則留言，
 // 由 Infrastructure service 集中處理，避免 Controller 自己重複維護交易與通知規則。
 builder.Services.AddScoped<ArtifactDiscussionService>();
+// 新增貼文/留言時用 SimHash 擋掉跟最近內容太像的洗版貼文；只有 API 這邊有公開發文入口，Web 後台不用註冊。
+builder.Services.AddScoped<ContentSimilarityService>();
+// 違規關鍵字表：每次提交內容時重新載入規則，讓獨立執行的後台修改立即反映在 API。
+builder.Services.AddSingleton<KeywordFilterService>();
+// API 與 MVC 後台是獨立程序；提交內容時重新讀取 SimHash 設定，讓後台調整生效。
+builder.Services.AddSingleton<ContentModerationSettingsService>();
+// AI 內容審查（OpenAI Moderation，omni-moderation-latest）：只由 AiContentReviewWorker 背景呼叫，
+// 不會出現在發文/留言的同步路徑上，外部 API 逾時或額度用完最多讓審查排程晚一點處理，不影響發文。
+builder.Services.AddHttpClient<IAiContentReviewService, OpenAiContentReviewService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+builder.Services.AddHostedService<AiContentReviewWorker>();
 
-// 只有登入端點套用固定視窗限流，避免密碼嘗試拖慢其他 API 功能
+// 只有登入端點跟發文/留言端點套用固定視窗限流：
+// 登入端點防止密碼嘗試拖慢其他 API 功能；發文/留言端點是緊急的洗版防護——
+// 短時間內狂發文章時，直接在這裡擋掉，不會走到 SimHash 比對／資料庫查詢，
+// 避免真的有人短時間灌爆時，反而是「查重複」那些查詢把資料庫拖垮。
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.OnRejected = async (context, cancellationToken) =>
     {
+        var isAuthEndpoint = context.HttpContext.Request.Path.StartsWithSegments("/api/v1/account");
         context.HttpContext.Response.ContentType = "application/problem+json; charset=utf-8";
         await context.HttpContext.Response.WriteAsJsonAsync(new ProblemDetails
         {
             Status = StatusCodes.Status429TooManyRequests,
-            Title = "登入嘗試過於頻繁",
-            Detail = "請稍後再試。"
+            Title = isAuthEndpoint ? "登入嘗試過於頻繁" : "操作過於頻繁",
+            Detail = isAuthEndpoint ? "請稍後再試。" : "發文/留言速度過快，請稍後再試。"
         }, cancellationToken);
     };
     options.AddPolicy("auth", httpContext =>
@@ -232,6 +302,19 @@ builder.Services.AddRateLimiter(options =>
             _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = 12,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    // 以登入帳號 Id 分桶（而不是 IP），因為要擋的是「同一個帳號」短時間狂發，不是同一個網路出口。
+    options.AddPolicy("socialContent", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
                 AutoReplenishment = true
