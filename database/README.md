@@ -5,7 +5,7 @@
 本目錄只保留產品程式需要的 DB-first 契約與相容版本標記：
 
 - [`Schema.sql`](Schema.sql)：可 review 的資料庫結構契約，供 SQL Server 與 EF Core Scaffold 對照。
-- [`VERSION`](VERSION)：QMAH 主專案目前配合的完整 Snapshot 版本，目前為 `db-v0.10.0`。
+- [`VERSION`](VERSION)：QMAH 主專案目前配合的完整 Snapshot 版本，目前為 `db-v0.10.2`。
 - [`upgrades/0.7.0-to-0.8.0.sql`](upgrades/0.7.0-to-0.8.0.sql)：保留既有資料，將 `db-v0.7.0` 升級至 `db-v0.8.0`。
 - [`upgrades/0.8.0-to-0.9.0.sql`](upgrades/0.8.0-to-0.9.0.sql)：移除重複的一般鑰匙並啟用西夏年代鑰匙，將 `db-v0.8.0` 升級至 `db-v0.9.0`。
 - [`upgrades/0.10.0-to-0.10.1.sql`](upgrades/0.10.0-to-0.10.1.sql)：保留既有資料，貼文/留言新增 `SimHash` 重複偵測指紋、`ContentReports` 支援系統自動送出的檢舉，將 `db-v0.10.0` 升級至 `db-v0.10.1`。
