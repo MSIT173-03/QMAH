@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -45,6 +46,10 @@ builder.Configuration.AddJsonFile(
     "appsettings.Local.json",
     optional: true,
     reloadOnChange: true);
+
+// API 與 MVC 後台使用相同的 Identity Cookie 保護範圍；同一使用者設定檔中的金鑰可跨程序解讀。
+builder.Services.AddDataProtection()
+    .SetApplicationName(QmahSharedAuthentication.DataProtectionApplicationName);
 
 builder.Services
     .AddOptions<QmahPasswordResetOptions>()
@@ -152,7 +157,7 @@ builder.Services.AddDbContext<QmahDbContext>(options =>
             errorNumbersToAdd: null));
 });
 
-// API 與 Web 共用會員資料表，但使用獨立 Cookie 名稱避免雙啟動互相覆蓋登入狀態
+// API 與 Web 共用會員資料表與登入票證；各端仍各自驗證帳號狀態與角色。
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     {
@@ -322,7 +327,7 @@ builder.Services.AddRateLimiter(options =>
 });
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.Cookie.Name = ".QMAH.Api.Auth";
+    options.Cookie.Name = QmahSharedAuthentication.CookieName;
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = cookieSecurePolicy;
     options.Cookie.SameSite = SameSiteMode.Lax;

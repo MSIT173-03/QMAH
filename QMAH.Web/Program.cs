@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Threading.RateLimiting;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,10 @@ builder.Configuration.AddJsonFile(
     "appsettings.Local.json",
     optional: true,
     reloadOnChange: true);
+
+// 與 API 使用相同的 Data Protection 應用識別，讓兩個程序可解讀同一張 Identity 登入票證。
+builder.Services.AddDataProtection()
+    .SetApplicationName(QmahSharedAuthentication.DataProtectionApplicationName);
 
 builder.Services
     .AddOptions<MediaDeliveryOptions>()
@@ -161,8 +166,8 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.ConfigureApplicationCookie(options =>
 {
     // Identity 登入狀態由受 Data Protection 保護的 HttpOnly Cookie 保存。
-    // 固定且獨立的名稱避免 Web、API 與舊版登入票證互相混用
-    options.Cookie.Name = ".QMAH.Web.Auth";
+    // API 與後台共用登入狀態；角色授權仍由各自的端點執行。
+    options.Cookie.Name = QmahSharedAuthentication.CookieName;
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = cookieSecurePolicy;
     options.Cookie.SameSite = SameSiteMode.Lax;
