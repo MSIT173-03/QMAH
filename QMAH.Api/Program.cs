@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Threading.RateLimiting;
 
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -23,9 +24,9 @@ using QMAH.Infrastructure.Security;
 using QMAH.Infrastructure.Services.Common;
 using QMAH.Infrastructure.Services.Economy;
 using QMAH.Infrastructure.Services.Game;
+using QMAH.Infrastructure.Services.Social;
 
 using Scalar.AspNetCore;
-using QMAH.Infrastructure.Services.Social;
 
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
@@ -181,6 +182,56 @@ else
     // integration: Google OAuth 為選用功能，缺少設定時不可阻止 API 啟動。
     builder.Logging.AddFilter("Microsoft.AspNetCore.Authentication", LogLevel.Warning);
 }
+
+
+var logtoEndpoint = builder.Configuration["Authentication:Logto:Endpoint"];
+var logtoClientId = builder.Configuration["Authentication:Logto:ClientId"];
+var logtoClientSecret = builder.Configuration["Authentication:Logto:ClientSecret"];
+
+if (!string.IsNullOrWhiteSpace(logtoEndpoint)
+    && !string.IsNullOrWhiteSpace(logtoClientId)
+    && !string.IsNullOrWhiteSpace(logtoClientSecret))
+{
+    authenticationBuilder.AddOpenIdConnect("Logto", "Logto", options =>
+    {
+        options.Authority = $"{logtoEndpoint.TrimEnd('/')}/oidc";
+        options.ClientId = logtoClientId;
+        options.ClientSecret = logtoClientSecret;
+
+        options.ResponseType = "code";
+        options.SignInScheme = IdentityConstants.ExternalScheme;
+
+        options.CallbackPath = "/Callback";
+
+        options.SaveTokens = true;
+        options.GetClaimsFromUserInfoEndpoint = true;
+
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.Events = new OpenIdConnectEvents
+        {
+            OnRedirectToIdentityProvider = context =>
+            {
+                if (context.Properties.Items.TryGetValue(
+                        "direct_sign_in",
+                        out var directSignIn)
+                    && !string.IsNullOrWhiteSpace(directSignIn))
+                {
+                    context.ProtocolMessage.SetParameter(
+                        "direct_sign_in",
+                        directSignIn);
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+    });
+}
+
+
+
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 {
     // 後台停用帳號後，既有登入 cookie 也要在下一次 request 失效。
