@@ -1,6 +1,5 @@
 import { Component, input, signal } from '@angular/core';
-import { CollectibleCard } from '../../../component/collectible-card/collectible-card';
-import { ImageMagnifier } from '../../../component/image-magnifier/image-magnifier';
+import { ImageMagnifier, CollectibleCard } from '../../../component';
 
 type ViewMode = 'static' | 'dynamic';
 

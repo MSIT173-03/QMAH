@@ -29,6 +29,11 @@
   object-fit: contain;
 }
 
+/* 留白區沒有可放大的影像，改回一般游標，與收起的鏡面一致。 */
+.magnifier-host.is-off-image {
+  cursor: default;
+}
+
 .magnifier-lens {
   position: absolute;
   width: var(--magnifier-lens-size, clamp(76px, 22%, 132px));
@@ -154,6 +159,48 @@
   to { transform: translate3d(-4%, 0, 0) scale(1.08); }
 }
 
+/*
+ * 換段淡入淡出：舊圖快照疊在新圖上淡出。快照凍結在換段當下的平移位置（inline transform），
+ * 因此以 !important 蓋過上方的平移動畫與暫停規則；手動換段時即使畫卷暫停，淡出仍會完成。
+ */
+.magnifier-host img.magnifier-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: qmah-image-fade-out var(--magnifier-crossfade-duration, 600ms) ease both !important;
+  animation-play-state: running !important;
+  will-change: opacity;
+}
+
+@keyframes qmah-image-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/*
+ * 第一張圖片淡入：大圖載入完成前先隱藏，載入後以同樣的 crossfade 時間淡入，
+ * 避免進場時底色與逐步解碼的圖片交替造成閃爍。只在啟用 crossfade 的鑑賞頁生效。
+ */
+.magnifier-host--reveal img:not(.magnifier-fade) {
+  opacity: 0;
+  transition: opacity var(--magnifier-crossfade-duration, 600ms) ease;
+}
+
+.magnifier-host--reveal.is-revealed img:not(.magnifier-fade) {
+  opacity: 1;
+}
+
+/* 圖片出現前暫停平移，讓畫卷從起點開始移動，載入時間不會吃掉第一段的播放時間。 */
+.magnifier-host--reveal:not(.is-revealed) img {
+  animation-play-state: paused !important;
+}
+
+/* 鏡面以同一張圖為背景，圖片出現前一併隱藏。 */
+.magnifier-host--reveal:not(.is-revealed) .magnifier-lens,
+.magnifier-host--reveal:not(.is-revealed) .magnifier-zoom-readout {
+  opacity: 0 !important;
+}
+
 .magnifier-placeholder {
   display: grid;
   width: 100%;
@@ -170,7 +217,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .magnifier-lens {
+  .magnifier-lens,
+  .magnifier-host--reveal img {
     transition: none;
   }
 

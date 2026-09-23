@@ -7,6 +7,10 @@
   [class.magnifier-host--pan-paused]="panPaused()"
   [class.magnifier-host--persistent]="persistentLens()"
   [class.is-dragging]="dragging()"
+  [class.is-off-image]="!overImage()"
+  [style.--magnifier-crossfade-duration]="crossfade() + 'ms'"
+  [class.magnifier-host--reveal]="crossfade() > 0"
+  [class.is-revealed]="revealed()"
   (pointermove)="handlePointerMove($event)"
   (pointerdown)="startDrag($event)"
   (pointerup)="stopDrag($event)"
@@ -16,15 +20,20 @@
   (pointerenter)="active.set(true)"
   (pointerleave)="leave()">
   @if (image(); as imageUrl) {
-    <img src="{{ imageUrl }}" [alt]="alt()" decoding="async" draggable="false" (load)="onLoad($event)" />
+    <img src="{{ imageUrl }}" [alt]="alt()" decoding="async" draggable="false" (load)="onLoad($event)" (error)="revealed.set(true)" (animationend)="onPanEnd($event)" />
+    <!-- 換段時舊圖的快照；只負責淡出，不參與取樣或指標操作。 -->
+    @for (fade of fadingImages(); track fade.key) {
+      <img class="magnifier-fade" [src]="fade.url" alt="" aria-hidden="true" draggable="false"
+        [style.transform]="fade.transform" (animationend)="onFadeEnd(fade.key)" />
+    }
     <!-- 局部鏡頭跟著游標或指標拖曳，僅放大目前位置，不改變原本商品版面流。 -->
     @if (enabled()) {
       <span
         class="magnifier-lens"
-        [class.is-active]="active()"
+        [class.is-active]="active() && overImage()"
         [attr.role]="persistentLens() ? 'button' : null"
         [attr.tabindex]="persistentLens() ? 0 : null"
-        [attr.aria-label]="persistentLens() ? '放大鏡，目前 ' + zoomPercent() + '%，可拖曳、捏合、滾輪或鍵盤調整倍率，按 0 重設' : null"
+        [attr.aria-label]="persistentLens() ? '放大鏡，目前 ' + zoomPercent() + '%，拖曳可移動畫卷，觸控時拖曳鏡面可移動鏡面；捏合、滾輪或鍵盤調整倍率，按 0 重設' : null"
         [attr.title]="persistentLens() ? '拖曳移動畫面，捏合或滾輪調整倍率，鍵盤 0 重設' : null"
         (keydown)="moveWithKeyboard($event)"
         [style.left.%]="position().x" [style.top.%]="position().y"
