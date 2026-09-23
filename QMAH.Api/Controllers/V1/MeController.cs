@@ -139,6 +139,108 @@ public sealed class MeController(
         return await GetMe(cancellationToken);
     }
 
+    /// <summary>上傳並更新目前登入會員的大頭貼。</summary>
+    [HttpPost("avatar")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<MeDto>> UploadAvatar(
+         IFormFile avatarFile,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        if (avatarFile is null || avatarFile.Length == 0)
+        {
+            return BadRequest(new
+            {
+                message = "請選擇要上傳的大頭貼。"
+            });
+        }
+
+        // 最大 5 MB
+        if (avatarFile.Length > 5 * 1024 * 1024)
+        {
+            return BadRequest(new
+            {
+                message = "圖片大小不可超過 5 MB。"
+            });
+        }
+
+        // 允許的圖片格式
+        var allowedExtensions = new[]
+        {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+    };
+
+        var extension = Path
+            .GetExtension(avatarFile.FileName)
+            .ToLowerInvariant();
+
+        if (!allowedExtensions.Contains(extension))
+        {
+            return BadRequest(new
+            {
+                message = "只允許 JPG、JPEG、PNG、WEBP 圖片。"
+            });
+        }
+
+        // 找目前登入會員的 Profile
+        var profile = await db.UserProfiles
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId,
+                cancellationToken);
+
+        if (profile is null)
+        {
+            return NotFound();
+        }
+
+        // QMAH.Web/wwwroot/uploads/avatars
+        var webRootPath = Path.GetFullPath(
+            Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "../QMAH.Web/wwwroot"));
+
+        var avatarFolder = Path.Combine(
+            webRootPath,
+            "uploads",
+            "avatars");
+
+        Directory.CreateDirectory(avatarFolder);
+
+        // 產生不重複的檔名
+        var fileName =
+            $"{Guid.NewGuid():N}{extension}";
+
+        var filePath = Path.Combine(
+            avatarFolder,
+            fileName);
+
+        // 寫入圖片
+        await using (var stream =
+            new FileStream(filePath, FileMode.Create))
+        {
+            await avatarFile.CopyToAsync(
+                stream,
+                cancellationToken);
+        }
+
+        // 更新同一個 UserProfile 的 AvatarPath
+        profile.AvatarPath =
+            $"/uploads/avatars/{fileName}";
+
+        profile.UpdatedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        // 回傳更新後的會員資料
+        return await GetMe(cancellationToken);
+    }
+
+
     /// <summary>分頁取得目前登入會員的訂單摘要。</summary>
     [HttpGet("orders")]
     public async Task<ActionResult<ApiPage<OrderDto>>> GetOrders(

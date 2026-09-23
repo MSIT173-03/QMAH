@@ -952,3 +952,135 @@
   outline: 2px solid var(--qmah-focus);
   outline-offset: 3px;
 }
+
+
+/* =========================
+   大頭貼上傳
+   ========================= */
+
+.avatar-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-clickable {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.avatar-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.25);
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+
+  background: rgba(10, 30, 30, 0.72);
+
+  color: #9be7d5;
+  font-size: 11px;
+  font-weight: 700;
+
+  opacity: 0;
+
+  transition:
+    opacity 0.2s ease;
+}
+
+.avatar-camera {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.avatar-clickable:hover .avatar-overlay {
+  opacity: 1;
+}
+
+
+/* =========================
+   選擇圖片後
+   ========================= */
+
+.avatar-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+
+  max-width: 150px;
+}
+
+.avatar-file-name {
+  max-width: 140px;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+}
+
+.avatar-upload-button {
+  border: 1px solid rgba(130, 220, 200, 0.35);
+  border-radius: 8px;
+
+  padding: 7px 13px;
+
+  background: rgba(102, 201, 180, 0.16);
+
+  color: #8ce0cd;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.avatar-upload-button:hover:not(:disabled) {
+  background: rgba(102, 201, 180, 0.28);
+  border-color: rgba(130, 220, 200, 0.6);
+
+  transform: translateY(-1px);
+}
+
+.avatar-upload-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+
+.avatar-hint {
+  margin-top: -2px;
+
+  color: rgba(143, 220, 204, 0.72);
+  font-size: 11px;
+  font-weight: 500;
+
+  white-space: nowrap;
+
+  transition: color 0.2s ease;
+}
+
+.avatar-editor:hover .avatar-hint {
+  color: #8ce0cd;
+}

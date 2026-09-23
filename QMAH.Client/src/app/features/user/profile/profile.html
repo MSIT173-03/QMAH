@@ -30,25 +30,87 @@
 
           <div class="hero-left">
 
-            <div class="avatar">
+<div class="avatar-editor">
 
-              @if (profile.avatarPath && !avatarUnavailable) {
+  <div
+    class="avatar avatar-clickable"
+    (click)="avatarInput.click()"
+    title="更換大頭貼"
+  >
 
-                <img
-                  [src]="profile.avatarPath"
-                  alt="會員頭像"
-                  (error)="avatarUnavailable = true"
-                />
+    @if (avatarPreviewUrl) {
 
-              } @else {
+      <img
+        [src]="avatarPreviewUrl"
+        alt="大頭貼預覽"
+      />
 
-                <span>
-                  {{ getInitial() }}
-                </span>
+    } @else if (
+      profile.avatarPath &&
+      !avatarUnavailable
+    ) {
 
-              }
+      <img
+        [src]="profile.avatarPath"
+        alt="會員頭像"
+        (error)="avatarUnavailable = true"
+      />
 
-            </div>
+    } @else {
+
+      <span>
+        {{ getInitial() }}
+      </span>
+
+    }
+
+<div class="avatar-overlay">
+  <span class="avatar-camera">📷</span>
+  <span>更換</span>
+</div>
+
+  </div>
+
+  <span class="avatar-hint">
+  點擊頭像更換
+</span>
+
+  <input
+    #avatarInput
+    type="file"
+    accept=".jpg,.jpeg,.png,.webp"
+    hidden
+    (change)="onAvatarSelected($event)"
+  />
+
+  @if (selectedAvatarFile) {
+
+    <div class="avatar-actions">
+
+      <span class="avatar-file-name">
+        {{ selectedAvatarFile.name }}
+      </span>
+
+      <button
+        type="button"
+        class="avatar-upload-button"
+        (click)="uploadAvatar()"
+        [disabled]="uploadingAvatar"
+      >
+
+        @if (uploadingAvatar) {
+          上傳中...
+        } @else {
+          確認更換
+        }
+
+      </button>
+
+    </div>
+
+  }
+
+</div>
 
             <div class="identity">
 

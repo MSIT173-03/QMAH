@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace QMAH.Api.Infrastructure.Identity;
@@ -22,28 +21,26 @@ public sealed class PasswordResetEmailSender(
         string resetUrl,
         CancellationToken cancellationToken = default)
     {
-        // integration: 郵件服務改由 typed HttpClient 呼叫 Resend，Controller 不直接處理 HTTP；
-        // API key 只從設定讀取，連結內容不寫入一般 log，避免把密碼重設 token 洩漏到部署紀錄。
         cancellationToken.ThrowIfCancellationRequested();
 
-        var apiKey = configuration["Resend:ApiKey"];
+        var apiKey = configuration["Brevo:ApiKey"];
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            logger.LogError("Resend:ApiKey 尚未設定。");
+            logger.LogError("Brevo:ApiKey 尚未設定。");
 
             throw new InvalidOperationException(
-                "Resend API Key 尚未設定。");
+                "Brevo API Key 尚未設定。");
         }
 
-        await SendViaResendAsync(
+        await SendViaBrevoAsync(
             email,
             resetUrl,
             apiKey,
             cancellationToken);
     }
 
-    private async Task SendViaResendAsync(
+    private async Task SendViaBrevoAsync(
         string email,
         string resetUrl,
         string apiKey,
@@ -53,20 +50,29 @@ public sealed class PasswordResetEmailSender(
 
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
-            "https://api.resend.com/emails")
+            "https://api.brevo.com/v3/smtp/email")
         {
             Content = JsonContent.Create(new
             {
-                from = "QMAH <onboarding@resend.dev>",
+                sender = new
+                {
+                    name = "清明鑑定屋",
+
+                    // 必須與 Brevo 後台已 Verified 的 Sender Email 相同
+                    email = "kac1897577@gmail.com"
+                },
 
                 to = new[]
                 {
-                    email
+                    new
+                    {
+                        email
+                    }
                 },
 
                 subject = "清明鑑定屋｜重設密碼",
 
-                text = $"""
+                textContent = $"""
                     您好，
 
                     我們收到重設清明鑑定屋會員密碼的請求。
@@ -78,9 +84,9 @@ public sealed class PasswordResetEmailSender(
                     如果不是您提出的請求，請忽略這封信。
                     """,
 
-                html = $"""
+                htmlContent = $"""
                     <!DOCTYPE html>
-                    <html>
+                    <html lang="zh-Hant">
                     <body>
                         <h2>清明鑑定屋</h2>
 
@@ -113,8 +119,7 @@ public sealed class PasswordResetEmailSender(
             })
         };
 
-        request.Headers.Authorization =
-            new AuthenticationHeaderValue("Bearer", apiKey);
+        request.Headers.Add("api-key", apiKey);
 
         using var response = await httpClient.SendAsync(
             request,
@@ -127,16 +132,16 @@ public sealed class PasswordResetEmailSender(
         if (!response.IsSuccessStatusCode)
         {
             logger.LogError(
-                "Resend 密碼重設郵件傳送失敗。StatusCode={StatusCode} Response={Response}",
+                "Brevo 密碼重設郵件傳送失敗。StatusCode={StatusCode} Response={Response}",
                 (int)response.StatusCode,
                 Truncate(responseBody));
 
             throw new InvalidOperationException(
-                "Resend 密碼重設郵件傳送失敗。");
+                "Brevo 密碼重設郵件傳送失敗。");
         }
 
         logger.LogInformation(
-            "密碼重設郵件已交由 Resend 處理。RecipientDomain={RecipientDomain}",
+            "密碼重設郵件已交由 Brevo 處理。RecipientDomain={RecipientDomain}",
             GetDomain(email));
     }
 

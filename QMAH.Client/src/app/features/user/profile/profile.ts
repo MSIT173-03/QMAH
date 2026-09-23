@@ -57,6 +57,9 @@ export class Profile implements OnInit {
   loading = true;
   saving = false;
   avatarUnavailable = false;
+  uploadingAvatar = false;
+  selectedAvatarFile: File | null = null;
+  avatarPreviewUrl: string | null = null;
 
   editMode = false;
 
@@ -310,6 +313,158 @@ export class Profile implements OnInit {
       });
 
   }
+
+// =========================
+// 選擇大頭貼
+// =========================
+
+onAvatarSelected(event: Event): void {
+
+  this.errorMessage = '';
+  this.successMessage = '';
+
+  const input =
+    event.target as HTMLInputElement;
+
+  const file =
+    input.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+
+    this.errorMessage =
+      '只允許 JPG、PNG、WEBP 圖片。';
+
+    input.value = '';
+
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+
+    this.errorMessage =
+      '圖片大小不可超過 5 MB。';
+
+    input.value = '';
+
+    return;
+  }
+
+  this.selectedAvatarFile = file;
+
+  if (this.avatarPreviewUrl) {
+    URL.revokeObjectURL(
+      this.avatarPreviewUrl
+    );
+  }
+
+  this.avatarPreviewUrl =
+    URL.createObjectURL(file);
+}
+
+
+// =========================
+// 上傳大頭貼
+// =========================
+
+uploadAvatar(): void {
+
+  if (!this.selectedAvatarFile) {
+
+    this.errorMessage =
+      '請先選擇圖片。';
+
+    return;
+  }
+
+  this.errorMessage = '';
+  this.successMessage = '';
+
+  const formData = new FormData();
+
+  formData.append(
+    'avatarFile',
+    this.selectedAvatarFile
+  );
+
+  this.uploadingAvatar = true;
+
+  this.http
+    .post<MemberProfile>(
+      `${environment.apiBaseUrl}/me/avatar`,
+      formData
+    )
+    .subscribe({
+
+      next: (data) => {
+
+        this.profile = data;
+
+        this.uploadingAvatar = false;
+        this.selectedAvatarFile = null;
+        this.avatarUnavailable = false;
+
+        if (this.avatarPreviewUrl) {
+
+          URL.revokeObjectURL(
+            this.avatarPreviewUrl
+          );
+
+          this.avatarPreviewUrl = null;
+
+        }
+
+        this.successMessage =
+          '大頭貼已更新。';
+
+        this.cdr.detectChanges();
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'upload avatar error:',
+          error
+        );
+
+        this.uploadingAvatar = false;
+
+        if (error.status === 400) {
+
+          this.errorMessage =
+            '圖片格式不正確或檔案超過 5 MB。';
+
+        } else if (error.status === 401) {
+
+          this.errorMessage =
+            '登入狀態已失效，請重新登入。';
+
+        } else {
+
+          this.errorMessage =
+            '大頭貼上傳失敗，請稍後再試。';
+
+        }
+
+        this.cdr.detectChanges();
+
+      }
+
+    });
+
+}
+
+
 
   private reloadAfterSave(): void {
 

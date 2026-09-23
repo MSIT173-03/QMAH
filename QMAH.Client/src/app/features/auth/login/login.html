@@ -205,17 +205,40 @@
           </button>
         </form>
 
-        @if (googleLoginEnabled) {
-          <!-- ui-integration: 只有後端真正開啟 OAuth 時才呈現替代登入方式，避免顯示無法完成的假入口。 -->
-          <div class="login-divider" aria-hidden="true"><span></span><p>或使用其他方式登入</p><span></span></div>
-          <button type="button" class="google-button" (click)="googleLogin()">
-            <app-qmah-icon name="log-in" aria-hidden="true" />
-            <span>使用 Google 登入</span>
-          </button>
-        } @else {
-          <!-- ui-integration: 不把未完成的 OAuth 當成可用功能；提示只說明管理員需要補的設定。 -->
-          <p class="google-setup-note" role="status">Google 登入尚未設定，請管理員補上 Google Client ID 與 Google Client Secret。</p>
-        }
+<div class="login-divider" aria-hidden="true">
+  <span></span>
+  <p>或使用其他方式登入</p>
+  <span></span>
+</div>
+
+@if (googleLoginEnabled) {
+  <button
+    type="button"
+    class="google-button"
+    (click)="googleLogin()"
+  >
+    <app-qmah-icon name="log-in" aria-hidden="true" />
+    <span>使用 Google 登入</span>
+  </button>
+}
+
+<button
+  type="button"
+  class="google-button"
+  (click)="facebookLogin()"
+>
+  <app-qmah-icon name="log-in" aria-hidden="true" />
+  <span>使用 Facebook 登入</span>
+</button>
+
+<button
+  type="button"
+  class="google-button"
+  (click)="microsoftLogin()"
+>
+  <app-qmah-icon name="log-in" aria-hidden="true" />
+  <span>使用 Microsoft 登入</span>
+</button>
 
         <div class="register-area">
           <span>還沒有帳號？</span>

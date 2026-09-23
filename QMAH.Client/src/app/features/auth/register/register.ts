@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -48,7 +48,8 @@ export class Register {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
 
     this.registerForm = this.fb.group({
@@ -318,40 +319,27 @@ export class Register {
             error.status === 400 &&
             error.error?.errors?.Password
           ) {
-
             this.errorMessage =
               error.error.errors.Password[0];
-
-            return;
           }
-
-          if (error.status === 400) {
-
+          else if (error.status === 400) {
             this.errorMessage =
               '註冊資料不符合規則，請確認 Email、暱稱與密碼。';
-
-            return;
           }
-
-          if (error.status === 409) {
-
+          else if (error.status === 409) {
             this.errorMessage =
               '這個 Email 已經註冊過了。';
-
-            return;
           }
-
-          if (error.status === 429) {
-
+          else if (error.status === 429) {
             this.errorMessage =
               '操作太頻繁，請稍後再試。';
-
-            return;
+          }
+          else {
+            this.errorMessage =
+              '註冊失敗，請稍後再試。';
           }
 
-          this.errorMessage =
-            '註冊失敗，請稍後再試。';
-
+          this.cdr.detectChanges();
         }
 
       });

@@ -4,8 +4,17 @@ import {
   withInterceptors,
   withXsrfConfiguration
 } from '@angular/common/http';
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+
+import {
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners
+} from '@angular/core';
+
+import {
+  provideRouter,
+  withComponentInputBinding
+} from '@angular/router';
+
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -14,21 +23,30 @@ import { environment } from '../environments/environment';
 const apiCredentialsInterceptor: HttpInterceptorFn = (request, next) => {
   const isApiRequest = request.url.startsWith(environment.apiBaseUrl);
 
-  return next(isApiRequest
-    ? request.clone({ withCredentials: true })
-    : request);
+  return next(
+    isApiRequest
+      ? request.clone({ withCredentials: true })
+      : request
+  );
 };
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
+
+    provideRouter(
+      routes,
+      withComponentInputBinding()
+    ),
+
     provideHttpClient(
       withInterceptors([apiCredentialsInterceptor]),
       withXsrfConfiguration({
         cookieName: 'XSRF-TOKEN-API',
         headerName: 'X-XSRF-TOKEN'
       })
-    )
+    ),
+
+
   ]
 };
