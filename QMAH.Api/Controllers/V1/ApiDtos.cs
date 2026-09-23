@@ -633,6 +633,8 @@ public sealed record CartItemDto(
     Guid Id,
     Guid ProductId,
     string ProductName,
+    // 器類代碼；購物車頁依件數最多的器類挑選「再加購」商品。
+    string CategoryCode,
     string? PrimaryImagePath,
     decimal UnitPrice,
     decimal? OriginalPrice,

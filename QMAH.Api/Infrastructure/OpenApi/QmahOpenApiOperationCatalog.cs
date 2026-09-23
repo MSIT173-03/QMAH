@@ -96,7 +96,7 @@ internal static class QmahOpenApiOperationCatalog
             ["Me.GetPosts"] = ("查詢我的貼文", "需要登入，依 `page` 與 `pageSize` 查詢目前會員建立的社群貼文，回應包含貼文摘要、留言數、媒體數與發布狀態。"),
             ["Me.GetAchievements"] = ("查詢我的成就", "需要登入，回傳目前會員已取得且成就定義仍啟用的遊戲與社群成就，包含達成時間、顯示狀態與成就條件。"),
             ["Me.GetCart"] = ("取得我的購物車", "需要登入，回傳目前會員購物車中的商品、數量、目前價格、庫存與小計，依加入購物車時間排序。"),
-            ["Me.AddCartItem"] = ("加入購物車商品", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `ProductId` 與 `Quantity` 將上架商品加入目前會員購物車。既有商品列會更新數量，並依目前庫存及商品狀態檢查；成功回傳購物車項目。"),
+            ["Me.AddCartItem"] = ("加入購物車商品", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `ProductId` 與 `Quantity` 將上架商品加入目前會員購物車。購物車已有同商品時累加數量（以加總後的數量檢查庫存），並依目前庫存及商品狀態檢查；成功回傳購物車項目。"),
             ["Me.UpdateCartItem"] = ("更新購物車商品", "需要登入，依 path parameter（路徑參數）`productId` 與 request body（請求本文，送出的 JSON 內容）中的 `Quantity` 更新目前會員購物車中的商品數量。送出的內容若包含 `ProductId`，必須與路徑參數一致。"),
             ["Me.RemoveCartItem"] = ("移除購物車商品", "需要登入，依 path parameter（路徑參數）`productId` 移除目前會員購物車中的商品。商品列不存在時仍維持冪等結果，成功回傳 `204 No Content`（成功且沒有回應本文）。"),
             ["Me.GetAddresses"] = ("查詢我的地址", "需要登入，回傳目前會員儲存的收件地址與 `IsDefault` 狀態，預設地址優先排序。"),

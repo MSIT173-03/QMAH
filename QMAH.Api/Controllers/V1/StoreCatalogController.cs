@@ -22,6 +22,8 @@ public sealed class StoreCatalogController(
         Newer,
         CheaperFirst,
         PricierFirst,
+        // 每次查詢隨機排序（SQL Server NEWID()）；新值加在最後，前端以數字傳遞的既有排序值不受影響。
+        Random,
     }
 
     [HttpGet("categories")]
@@ -198,6 +200,8 @@ public sealed class StoreCatalogController(
             OrderType.PricierFirst => query2
                 .OrderByDescending(g => g.EffectivePrice)
                 .ThenBy(g => g.Id),
+            OrderType.Random => query2
+                .OrderBy(g => Guid.NewGuid()),
             _ => query2.OrderBy(g => g.Id),
         };
 
