@@ -6,6 +6,45 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!--
+    開機畫面：放在所有外部 CSS 之前，Angular 與頁面程式載入前就先執行。
+    1. 立即套用使用者記住的主題，與 ThemeService 讀同一個 localStorage key，避免深色使用者先看到淺色。
+    2. 直接開啟登入頁時，以畫卷區底色取代瀏覽器預設的白色，並提早下載第一段畫卷。
+  -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      try {
+        var theme = localStorage.getItem('qmah-theme');
+        if (theme === 'qmah' || theme === 'qmahdark') root.setAttribute('data-theme', theme);
+      } catch (e) { /* 無法讀取時維持預設。 */ }
+
+      if (!/^\/login\/?$/.test(location.pathname)) return;
+      root.classList.add('qmah-boot-login');
+
+      // 需與 login.ts 的 qingmingSegments[0].image 一致，畫面上的 <img> 才會直接使用這份下載。
+      var preload = document.createElement('link');
+      preload.rel = 'preload';
+      preload.as = 'image';
+      preload.href = '/images/login/museum/qingming-court/segment-01.webp';
+      preload.setAttribute('fetchpriority', 'high');
+      document.head.appendChild(preload);
+    })();
+  </script>
+  <style>
+    /*
+     * 顏色對應 styles.scss 的 --qmah-jade-deep（登入頁 .museum-media 的底色），此時全站 CSS 尚未載入，只能寫定值。
+     * 只在還沒有任何路由頁面時生效：<app-root> 只有 <router-outlet>，頁面畫出後會成為它的下一個兄弟元素，
+     * 規則隨即失效，即使登入頁被導向其他頁面也不會殘留底色。不支援 :has() 的瀏覽器維持原本的白色。
+     */
+    html.qmah-boot-login:not(:has(app-root > router-outlet + *)) {
+      background: #145a53;
+    }
+
+    html.qmah-boot-login[data-theme='qmahdark']:not(:has(app-root > router-outlet + *)) {
+      background: #8fd4c4;
+    }
+  </style>
   <!-- ui-integration: 使用可部署的 Google CJK 字體改善繁體中文在手機上的筆畫清晰度，保留系統 fallback 避免字體服務失效時無法閱讀。 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

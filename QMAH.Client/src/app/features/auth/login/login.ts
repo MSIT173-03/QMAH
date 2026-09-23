@@ -38,6 +38,7 @@ export class Login implements OnInit, OnDestroy {
   readonly qingmingSegments: readonly QingmingSegment[] = [
     {
       id: 'segment-01',
+      // index.html 會在直接開啟登入頁時預先下載這張；更換路徑時需一併修改。
       image: '/images/login/museum/qingming-court/segment-01.webp',
       alt: '清院本《清明上河圖》畫卷第 01 段的高畫質細節',
       location: '清院本・畫卷第 01 段',
