@@ -7,8 +7,43 @@
   padding: 0;
   width: min(420px, calc(100vw - 32px));
 
+  /* 全站的 Tailwind Preflight 把所有元素的 margin 重設為 0，蓋掉瀏覽器 dialog 預設
+     用 margin: auto 置中的機制；這裡明確覆寫，讓對話框固定顯示在畫面正中央。 */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+
+  /* 淡入淡出：opacity 搭配 allow-discrete，讓對話框在關閉時也能播完退場動畫再離開 top layer。 */
+  opacity: 0;
+  transition: opacity 200ms ease, overlay 200ms ease allow-discrete, display 200ms ease allow-discrete;
+
+  &[open] {
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
   &::backdrop {
+    background: rgb(0 0 0 / 0%);
+    transition: background-color 200ms ease, overlay 200ms ease allow-discrete, display 200ms ease allow-discrete;
+  }
+
+  &[open]::backdrop {
     background: rgb(0 0 0 / 45%);
+
+    @starting-style {
+      background: rgb(0 0 0 / 0%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &::backdrop {
+      transition: none;
+    }
   }
 }
 

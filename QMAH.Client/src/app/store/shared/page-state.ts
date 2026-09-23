@@ -119,11 +119,10 @@ export function injectSiteData() {
   return {
     /** 全站設定，尚未載入時為 undefined */
     config,
-    /** 頂部公告列的公告文字：官方商城優惠活動標題在前，全站設定公告在後 */
-    announcements: computed(() => [
-      ...promotions().map((promotion) => promotion.title),
-      ...(config()?.promoAnnouncements ?? []),
-    ]),
+    /** 頂部公告列的公告文字：只顯示一則，優先取最新的官方商城優惠活動（API 已依發布時間新到舊排序） */
+    announcements: computed(() =>
+      [...promotions().map((promotion) => promotion.title), ...(config()?.promoAnnouncements ?? [])].slice(0, 1),
+    ),
     /** 頂部公告列顯示的會員點數 */
     points: computed(() => formatNumber(profile()?.pointBalance ?? 0)),
     /** 頂部公告列的折價券清單 */

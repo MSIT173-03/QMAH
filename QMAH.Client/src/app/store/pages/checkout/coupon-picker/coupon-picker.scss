@@ -18,12 +18,12 @@
   transition: border-color 160ms;
 
   &:hover {
-    border-color: var(--color-ink);
+    border-color: var(--color-line-mid);
   }
 
   /* 已選用：外框加深並鋪上淺灰底 */
   &--active {
-    border-color: var(--color-ink);
+    border-color: var(--color-line-mid);
     background: var(--color-shade);
   }
 }

@@ -6,12 +6,14 @@
   border: 1px solid var(--color-line);
   background: var(--color-surface);
   border-radius: var(--store-radius);
+  /* 角標貼齊封面左上角，由卡片圓角裁切，不凸出卡片外 */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   transition: border-color 160ms;
 
   &:hover {
-    border-color: var(--color-ink);
+    border-color: var(--color-line-mid);
   }
 }
 
@@ -25,6 +27,7 @@
 
 .product-card-cover {
   position: relative;
+  overflow: hidden;
   aspect-ratio: 1 / 1;
   background: var(--color-swatch);
   display: flex;
@@ -37,8 +40,16 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  /* ui-integration: 有商品圖片時保留完整構圖，避免方形商品 surface 以 cover 裁掉圖像內容。 */
-  object-fit: contain;
+  object-fit: cover;
+  transition: transform 320ms ease;
+
+  .product-card:hover & {
+    transform: scale(1.06);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 .product-card-slot {
@@ -118,7 +129,7 @@
 
 .product-card-buy {
   width: 100%;
-  border: 1px solid var(--color-ink);
+  border: 1px solid var(--color-line-mid);
   background: var(--color-surface);
   color: var(--color-ink);
   border-radius: var(--qmah-radius-control);

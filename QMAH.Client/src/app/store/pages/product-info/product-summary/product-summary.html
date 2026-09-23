@@ -24,12 +24,20 @@
     }
   </div>
 
-  <!-- 規格說明：材質、考據出處與出貨方式 -->
-  <div class="spec-list">
-    <div class="spec-row"><span class="spec-label">{{ materialLabel }}</span><span class="spec-value">{{ material() }}</span></div>
-    <div class="spec-row"><span class="spec-label">{{ sourceLabel }}</span><span class="spec-value">{{ source() }}</span></div>
-    <div class="spec-row"><span class="spec-label">{{ shippingLabel }}</span><span class="spec-value">{{ shipping() }}</span></div>
-  </div>
+  <!-- 規格說明：材質、考據出處與出貨方式；沒有資料的項目不顯示空欄位 -->
+  @if (material() || source() || shipping()) {
+    <div class="spec-list">
+      @if (material()) {
+        <div class="spec-row"><span class="spec-label">{{ materialLabel }}</span><span class="spec-value">{{ material() }}</span></div>
+      }
+      @if (source()) {
+        <div class="spec-row"><span class="spec-label">{{ sourceLabel }}</span><span class="spec-value">{{ source() }}</span></div>
+      }
+      @if (shipping()) {
+        <div class="spec-row"><span class="spec-label">{{ shippingLabel }}</span><span class="spec-value">{{ shipping() }}</span></div>
+      }
+    </div>
+  }
 
   <!-- 尺寸與商品狀態面板 -->
   <app-size-condition [dims]="dims()" [artifactDims]="artifactDims()" [condition]="condition()" [note]="sizeNote()" />

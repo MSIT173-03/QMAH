@@ -6,7 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { SiteTheme, ThemeService } from '../../../core/services/theme';
 import { environment } from '../../../../environments/environment';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
-import { ImageMagnifier } from '../../../store/component/image-magnifier/image-magnifier';
+import { ImageMagnifier } from '../../../store/component';
 
 interface QingmingSegment {
   id: string;
@@ -38,6 +38,7 @@ export class Login implements OnInit, OnDestroy {
   readonly qingmingSegments: readonly QingmingSegment[] = [
     {
       id: 'segment-01',
+      // index.html 會在直接開啟登入頁時預先下載這張；更換路徑時需一併修改。
       image: '/images/login/museum/qingming-court/segment-01.webp',
       alt: '清院本《清明上河圖》畫卷第 01 段的高畫質細節',
       location: '清院本・畫卷第 01 段',
@@ -93,12 +94,17 @@ export class Login implements OnInit, OnDestroy {
   readonly activeSegment = computed(
     () => this.qingmingSegments[this.activeSegmentIndex()] ?? this.qingmingSegments[0],
   );
-  readonly carouselDurationMs = computed(() => Math.round(12000 / this.carouselSpeed()));
-  readonly carouselDurationCss = computed(() => `${this.carouselDurationMs()}ms`);
+  readonly carouselDurationCss = computed(() => `${Math.round(12000 / this.carouselSpeed())}ms`);
 
-  private carouselTimer: ReturnType<typeof setInterval> | null = null;
   private readonly carouselSpeedStorageKey = 'qmah.login.carousel-speed';
   private carouselPausedBeforeLensDrag = false;
+  /** 暫停期間收到的換段通知；恢復播放時才換段，避免畫卷停在尾端後永遠不前進。 */
+  private pendingSegmentAdvance = false;
+  /** 最後一次要求切換的段落；解碼完成前連續點擊仍會依序前進。 */
+  private requestedSegmentIndex = 0;
+  private segmentRequest = 0;
+  /** 保留已解碼的畫卷影像，避免被回收後切換時又要重新解碼。 */
+  private readonly segmentImages = new Map<string, { image: HTMLImageElement; ready: Promise<void> }>();
   private loginPanelUnlockTimer: ReturnType<typeof setTimeout> | null = null;
   private themeUnlockTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -121,33 +127,47 @@ export class Login implements OnInit, OnDestroy {
     });
 
     this.restoreCarouselSpeed();
-    this.startCarousel();
+    this.preloadSegment(1);
+    // 減少動態偏好下沒有平移動畫，也就不會自動換段；維持暫停狀態讓控制列如實呈現。
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.carouselPaused.set(true);
+    }
   }
 
   ngOnDestroy(): void {
-    this.stopCarousel();
     if (this.loginPanelUnlockTimer) clearTimeout(this.loginPanelUnlockTimer);
     if (this.themeUnlockTimer) clearTimeout(this.themeUnlockTimer);
   }
 
   selectSegment(index: number): void {
     if (index < 0 || index >= this.qingmingSegments.length) return;
-    this.activeSegmentIndex.set(index);
-    this.panKey.update((key) => key + 1);
+    this.pendingSegmentAdvance = false;
+    this.requestedSegmentIndex = index;
+    const request = ++this.segmentRequest;
+
+    // 換段會同時換圖並重新開始平移動畫；若新圖還沒解碼，舊圖會先跳回動畫起點。
+    // 先等新圖解碼完成再一起切換，畫面就直接從上一段的結尾換到下一段的開頭。
+    void this.preloadSegment(index).then(() => {
+      if (request !== this.segmentRequest) return;
+      this.activeSegmentIndex.set(index);
+      this.panKey.update((key) => key + 1);
+      this.preloadSegment((index + 1) % this.qingmingSegments.length);
+    });
   }
 
   previousSegment(): void {
     this.selectSegment(
-      (this.activeSegmentIndex() - 1 + this.qingmingSegments.length) % this.qingmingSegments.length,
+      (this.requestedSegmentIndex - 1 + this.qingmingSegments.length) % this.qingmingSegments.length,
     );
   }
 
   nextSegment(): void {
-    this.selectSegment((this.activeSegmentIndex() + 1) % this.qingmingSegments.length);
+    this.selectSegment((this.requestedSegmentIndex + 1) % this.qingmingSegments.length);
   }
 
   toggleCarousel(): void {
     this.carouselPaused.update((paused) => !paused);
+    this.flushPendingSegmentAdvance();
   }
 
   setCarouselSpeed(event: Event): void {
@@ -158,7 +178,6 @@ export class Login implements OnInit, OnDestroy {
     this.carouselSpeed.set(value);
     this.panKey.update((key) => key + 1);
     this.persistCarouselSpeed(value);
-    this.startCarousel();
   }
 
   handleLensDragging(isDragging: boolean): void {
@@ -166,10 +185,54 @@ export class Login implements OnInit, OnDestroy {
     if (isDragging) {
       this.carouselPausedBeforeLensDrag = this.carouselPaused();
       this.carouselPaused.set(true);
+      // 放大鏡會在放開時重新判斷是否停在尾端，舊的待換段通知作廢。
+      this.pendingSegmentAdvance = false;
       return;
     }
 
     if (!this.carouselPausedBeforeLensDrag) this.carouselPaused.set(false);
+    this.flushPendingSegmentAdvance();
+  }
+
+  /** 換段跟著平移動畫實際播完的時間點（拖曳到尾端時由放大鏡延遲一秒通知），拖曳改變進度後節奏仍一致。 */
+  handlePanEnd(): void {
+    if (this.qingmingSegments.length < 2) return;
+    if (this.carouselPaused()) {
+      this.pendingSegmentAdvance = true;
+      return;
+    }
+    this.nextSegment();
+  }
+
+  private flushPendingSegmentAdvance(): void {
+    if (!this.pendingSegmentAdvance || this.carouselPaused()) return;
+    this.pendingSegmentAdvance = false;
+    this.nextSegment();
+  }
+
+  private preloadSegment(index: number): Promise<void> {
+    const segment = this.qingmingSegments[index];
+    if (!segment || typeof Image === 'undefined') return Promise.resolve();
+
+    let entry = this.segmentImages.get(segment.image);
+    if (!entry) {
+      const image = new Image();
+      image.decoding = 'async';
+      const loaded = new Promise<void>((resolve) => {
+        image.onload = () => resolve();
+        image.onerror = () => resolve();
+      });
+      image.src = segment.image;
+      // 下載完成後再等解碼；背景分頁可能延後 decode()，最多等 300ms，避免輪播因此卡住。
+      // 載入或解碼失敗時仍照常換段，交給畫面上的 <img> 自行處理。
+      const ready = loaded.then(() => Promise.race([
+        image.decode().catch(() => undefined),
+        new Promise<void>((resolve) => setTimeout(resolve, 300)),
+      ]));
+      entry = { image, ready };
+      this.segmentImages.set(segment.image, entry);
+    }
+    return entry.ready;
   }
 
   toggleMagnifier(): void {
@@ -332,25 +395,6 @@ export class Login implements OnInit, OnDestroy {
       event.preventDefault();
       this.toggleCarousel();
     }
-  }
-
-  private startCarousel(): void {
-    this.stopCarousel();
-    if (this.qingmingSegments.length < 2 || typeof window === 'undefined') return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      this.carouselPaused.set(true);
-      return;
-    }
-
-    // 每段的基準時間是 16 秒，再依使用者選擇的倍率同步調整平移與換段節奏。
-    this.carouselTimer = setInterval(() => {
-      if (!this.carouselPaused()) this.nextSegment();
-    }, this.carouselDurationMs());
-  }
-
-  private stopCarousel(): void {
-    if (this.carouselTimer) clearInterval(this.carouselTimer);
-    this.carouselTimer = null;
   }
 
   private restoreCarouselSpeed(): void {

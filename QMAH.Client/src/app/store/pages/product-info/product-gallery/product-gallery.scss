@@ -14,6 +14,8 @@
 .gallery-stage {
   /* A6 明信片與原圖都在同一個 4:3 展示框內，避免頁面縮放改變商品欄的節奏。 */
   container-type: size;
+  /* 商品頁放大鏡比共用預設（clamp(76px, 22%, 132px)）大一級，細節看得更完整；翻面卡片內的放大鏡也會繼承。 */
+  --magnifier-lens-size: clamp(120px, 32%, 180px);
   display: grid;
   width: min(100%, 640px);
   aspect-ratio: 4 / 3;
@@ -38,8 +40,7 @@
   color: var(--color-muted);
 }
 
-.gallery-icon-button,
-.gallery-icon-note {
+.gallery-icon-button {
   display: inline-grid;
   min-width: 52px;
   min-height: 44px;
@@ -51,10 +52,11 @@
   background: transparent;
   font-size: 18px;
   line-height: 1;
+  cursor: pointer;
 }
 
 .gallery-icon-button svg,
-.gallery-icon-note svg {
+.gallery-hint svg {
   width: 19px;
   height: 19px;
   fill: none;
@@ -64,12 +66,7 @@
   stroke-width: 1.6;
 }
 
-.gallery-icon-button {
-  cursor: pointer;
-}
-
-.gallery-icon-button small,
-.gallery-icon-note small {
+.gallery-icon-button small {
   font-size: 10px;
   line-height: 1.2;
 }
@@ -92,9 +89,24 @@
   outline-offset: -2px;
 }
 
-.gallery-icon-note {
+/* 提示只是一行說明文字，刻意不沿用按鈕的尺寸與外框，避免被誤認為可點擊。 */
+.gallery-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* 緊貼功能區下緣，抵銷 .gallery 的 12px 間距的一部分，讀起來像功能區的註腳。 */
+  margin: -4px 0 0;
   color: var(--color-muted);
-  opacity: 0.82;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.gallery-hint svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
 }
 
 .gallery-function-divider {
@@ -205,15 +217,6 @@
   min-height: 0;
   overflow: hidden;
   background: var(--color-swatch);
-}
-
-.postcard-static__image img,
-.original-static img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  /* ui-integration: 若 surface 直接承載圖片，也保留完整商品構圖，不以展示框比例裁切。 */
-  object-fit: contain;
 }
 
 .postcard-static__caption {

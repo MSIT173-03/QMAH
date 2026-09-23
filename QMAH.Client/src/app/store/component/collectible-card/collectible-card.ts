@@ -28,6 +28,8 @@ export class CollectibleCard {
   dimensions = input('');
   /** 使用既有商品說明，不另行編造文物資料。 */
   description = input('');
+  /** 外層旋轉觀看方向時的角度，轉交給放大鏡換算游標座標。 */
+  rotation = input(0);
   protected readonly descriptionSegments = computed(() => {
     // 明信片印刷文案不在末尾補停頓符號；只去除最後一個句號，句中標點完整保留。
     const text = this.description().trim().replace(/[。.]$/u, '');

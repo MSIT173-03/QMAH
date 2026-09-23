@@ -1,4 +1,14 @@
-import { Component, OnDestroy, computed, input, output, signal } from '@angular/core';
+import {
+  Component,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+  computed,
+  input,
+  linkedSignal,
+  output,
+  signal,
+} from '@angular/core';
 import { LucideImage } from '@lucide/angular';
 
 interface MagnifierLayout {
@@ -12,6 +22,56 @@ interface MagnifierLayout {
   lensHeight: number;
 }
 
+/** 鑑賞頁平移動畫的位移範圍，需與 image-magnifier.scss 的 qmah-image-pan-* keyframes（±4%）一致。 */
+const PAN_TRAVEL = 0.08;
+/** 拖曳到畫卷尾端放開後，先停留這段時間再通知換段，讓使用者看清楚尾端畫面。 */
+const SCRUB_END_DELAY_MS = 1000;
+/** CSS ease-in-out 等同 cubic-bezier(0.42, 0, 0.58, 1)；拖曳需在時間進度與畫面位移之間互轉。 */
+const EASE_X1 = 0.42;
+const EASE_Y1 = 0;
+const EASE_X2 = 0.58;
+const EASE_Y2 = 1;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function bezier(t: number, p1: number, p2: number): number {
+  const u = 1 - t;
+  return 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t;
+}
+
+/** 貝茲曲線單調遞增，以二分法求出對應的參數 t。 */
+function solveBezier(target: number, p1: number, p2: number): number {
+  let low = 0;
+  let high = 1;
+  for (let i = 0; i < 30; i++) {
+    const mid = (low + high) / 2;
+    if (bezier(mid, p1, p2) < target) low = mid;
+    else high = mid;
+  }
+  return (low + high) / 2;
+}
+
+/** 時間進度 → 位移比例。 */
+function easeInOut(progress: number): number {
+  return bezier(solveBezier(progress, EASE_X1, EASE_X2), EASE_Y1, EASE_Y2);
+}
+
+/** 位移比例 → 時間進度。 */
+function easeInOutInverse(offset: number): number {
+  return bezier(solveBezier(offset, EASE_Y1, EASE_Y2), EASE_X1, EASE_X2);
+}
+
+interface PanScrub {
+  pointerId: number;
+  lastX: number;
+  offset: number;
+  animation: Animation;
+  duration: number;
+  width: number;
+}
+
 /** 商品詳情共用的局部放大鏡；不會放大整個商品欄位，也不建立第二份圖片資產。 */
 @Component({
   selector: 'app-image-magnifier',
@@ -19,7 +79,7 @@ interface MagnifierLayout {
   templateUrl: './image-magnifier.html',
   styleUrl: './image-magnifier.scss',
 })
-export class ImageMagnifier implements OnDestroy {
+export class ImageMagnifier implements OnChanges, OnDestroy {
   image = input<string | null>(null);
   alt = input('');
   fit = input<'cover' | 'contain'>('cover');
@@ -32,15 +92,31 @@ export class ImageMagnifier implements OnDestroy {
   persistentLens = input(false);
   /** 可由外層收起鏡面，只保留原圖與原本的平移狀態。 */
   enabled = input(true);
+  /** 換圖時舊圖淡出的毫秒數；0 代表直接切換，商品頁維持原本行為。 */
+  crossfade = input(0);
+  /** 鏡面初始倍率；常駐鏡面以 1 作為互動縮放起點，商品頁維持固定的局部放大。 */
+  baseZoom = input(2);
+  /** 外層若旋轉了整個宿主（商品頁的觀看方向），需告知角度才能把游標換回宿主座標。 */
+  rotation = input(0);
   loaded = output<{ width: number; height: number }>();
   draggingChange = output<boolean>();
+  /** 平移動畫實際播完時通知外層，讓換段節奏跟著畫面，而不是另一個固定計時器。 */
+  panEnd = output<void>();
+
+  /** 換圖當下的舊圖快照，疊在新圖上淡出；key 讓連續換圖時重新開始淡出動畫。 */
+  protected readonly fadingImages = signal<readonly { key: number; url: string; transform: string }[]>([]);
+  private fadeKey = 0;
 
   protected active = signal(false);
   protected dragging = signal(false);
   protected position = signal({ x: 50, y: 50 });
-  protected readonly zoom = signal(1);
+  /** contain 版型的留白區沒有影像可取樣，游標移到那裡時收起鏡面，避免取樣點卡在圖片邊緣。 */
+  protected readonly overImage = signal(true);
+  /** 第一張圖片是否已載入；啟用 crossfade 時在此之前隱藏圖片，載入後淡入，避免大圖逐步顯示的閃爍。 */
+  protected readonly revealed = signal(false);
+  // 外層調整 baseZoom 時重新以其為起點，使用者的滾輪／捏合縮放仍可覆寫。
+  protected readonly zoom = linkedSignal(() => this.baseZoom());
   protected readonly zoomPercent = computed(() => Math.round(this.zoom() * 100));
-  private readonly defaultZoom = 1;
   private readonly minZoom = 1;
   private readonly maxZoom = 5;
   private readonly zoomStep = 0.25;
@@ -52,7 +128,13 @@ export class ImageMagnifier implements OnDestroy {
   private panFrame: number | null = null;
   private readonly activePointers = new Map<number, { x: number; y: number }>();
   private pinchStartDistance: number | null = null;
-  private pinchStartZoom = this.zoom();
+  private pinchStartZoom = 1;
+  /** 拖曳畫卷時的起點資訊；null 代表目前的拖曳只移動鏡面。 */
+  private scrub: PanScrub | null = null;
+  /** 拖曳到尾端後延遲通知換段的計時器。 */
+  private scrubEndTimer: ReturnType<typeof setTimeout> | null = null;
+  /** 已由拖曳流程負責通知換段的動畫；它自然播完時不再重複通知。 */
+  private scrubEndedAnimation: Animation | null = null;
 
   protected backgroundSize = computed(() => {
     const layout = this.layout();
@@ -78,14 +160,8 @@ export class ImageMagnifier implements OnDestroy {
     const untransformedY = layout.hostHeight / 2
       + (lensCenterY - layout.hostHeight / 2 - transform.translateY) / transform.scaleY;
 
-    const imagePointX = Math.max(
-      0,
-      Math.min(layout.imageWidth, untransformedX - layout.imageOffsetX),
-    );
-    const imagePointY = Math.max(
-      0,
-      Math.min(layout.imageHeight, untransformedY - layout.imageOffsetY),
-    );
+    const imagePointX = clamp(untransformedX - layout.imageOffsetX, 0, layout.imageWidth);
+    const imagePointY = clamp(untransformedY - layout.imageOffsetY, 0, layout.imageHeight);
 
     // background-position is relative to the lens itself, not the page. Anchor
     // the sampled source point to the lens centre. Including the source image's
@@ -119,6 +195,12 @@ export class ImageMagnifier implements OnDestroy {
       return;
     }
 
+    if (this.scrub?.pointerId === event.pointerId) {
+      this.scrubTo(event.clientX);
+      // 滑鼠的鏡面本來就跟著游標；觸控拖曳畫卷時鏡面留在原處，不遮住正在移動的畫面。
+      if (event.pointerType !== 'mouse') return;
+    }
+
     this.move(event);
   }
 
@@ -136,14 +218,16 @@ export class ImageMagnifier implements OnDestroy {
 
   /** Reset only the magnification, keeping the current lens position in view. */
   resetZoom(): void {
-    this.setZoom(this.defaultZoom);
-    this.pinchStartZoom = this.defaultZoom;
+    this.setZoom(this.baseZoom());
+    this.pinchStartZoom = this.zoom();
   }
 
   // ui-integration: 共用放大鏡保留商品頁的游標操作，並補上指標拖曳，讓長幅院藏影像可在觸控與滑鼠上檢視細節。
   protected startDrag(event: PointerEvent): void {
     if (!this.enabled()) return;
     const host = event.currentTarget as HTMLElement;
+    // 重新拖曳代表使用者還在調整位置，先取消尾端的延遲換段，放開時再重新判斷。
+    this.cancelScrubEnd();
     this.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     host.setPointerCapture?.(event.pointerId);
     if (!this.dragging()) {
@@ -151,24 +235,25 @@ export class ImageMagnifier implements OnDestroy {
       this.draggingChange.emit(true);
     }
     if (this.activePointers.size >= 2) {
+      // 第二指落下即轉為捏合縮放，停止拖曳畫卷。
+      this.scrub = null;
       this.pinchStartDistance = this.pointerDistance();
       this.pinchStartZoom = this.zoom();
       return;
     }
 
-    this.move(event);
+    // 滑鼠一律拖曳畫卷（鏡面隨游標移動）；觸控從鏡面開始拖是移動鏡面，從畫卷其他位置開始才是拖曳畫卷。
+    const onLens = (event.target as HTMLElement | null)?.classList.contains('magnifier-lens') ?? false;
+    if (event.pointerType === 'mouse' || !onLens) this.startScrub(event, host);
+    if (!this.scrub || event.pointerType === 'mouse') this.move(event);
   }
 
-  protected stopDrag(event?: PointerEvent): void {
-    const host = event?.currentTarget as HTMLElement | undefined;
-    if (host && event && host.hasPointerCapture?.(event.pointerId)) {
-      host.releasePointerCapture(event.pointerId);
-    }
-    if (event) {
-      this.activePointers.delete(event.pointerId);
-    } else {
-      this.activePointers.clear();
-    }
+  protected stopDrag(event: PointerEvent): void {
+    const host = event.currentTarget as HTMLElement;
+    if (host.hasPointerCapture?.(event.pointerId)) host.releasePointerCapture(event.pointerId);
+    // 只移除這一個指標；捏合時抬起其中一指，另一指仍在拖曳中。
+    this.activePointers.delete(event.pointerId);
+    if (this.scrub?.pointerId === event.pointerId) this.finishScrub();
 
     if (this.activePointers.size < 2) {
       this.pinchStartDistance = null;
@@ -218,14 +303,12 @@ export class ImageMagnifier implements OnDestroy {
     else return;
 
     event.preventDefault();
-    this.position.set({
-      x: Math.max(0, Math.min(100, x)),
-      y: Math.max(0, Math.min(100, y)),
-    });
+    this.position.set({ x: clamp(x, 0, 100), y: clamp(y, 0, 100) });
     this.active.set(true);
   }
 
   protected onLoad(event: Event): void {
+    this.revealed.set(true);
     const image = event.currentTarget as HTMLImageElement;
     const host = image.parentElement;
     this.observedHost = host;
@@ -242,23 +325,77 @@ export class ImageMagnifier implements OnDestroy {
     this.loaded.emit({ width: image.naturalWidth, height: image.naturalHeight });
   }
 
+  protected onPanEnd(event: AnimationEvent): void {
+    if (this.pan() === 'none' || event.target !== event.currentTarget) return;
+    const animation = this.panAnimation();
+    if (animation && animation === this.scrubEndedAnimation) return;
+    this.panEnd.emit();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const change = changes['image'];
+    if (!change || change.firstChange || this.crossfade() <= 0) return;
+
+    const previous = change.previousValue as string | null;
+    const image = this.observedImage;
+    if (!previous || !image || previous === change.currentValue) return;
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    // ngOnChanges 在畫面更新前執行：此刻 <img> 仍是舊圖與它當下的平移位置，凍結成快照再淡出，
+    // 新圖則在下方從平移起點開始，兩者交疊成淡入淡出。
+    const transform = getComputedStyle(image).transform;
+    this.fadingImages.set([
+      { key: ++this.fadeKey, url: previous, transform: transform === 'none' ? '' : transform },
+    ]);
+  }
+
+  protected onFadeEnd(key: number): void {
+    this.fadingImages.update((fades) => fades.filter((fade) => fade.key !== key));
+  }
+
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
+    this.cancelScrubEnd();
     if (this.panFrame !== null) cancelAnimationFrame(this.panFrame);
     this.activePointers.clear();
   }
 
   private setZoom(value: number): void {
-    const next = Math.min(this.maxZoom, Math.max(this.minZoom, value));
+    const next = clamp(value, this.minZoom, this.maxZoom);
     this.zoom.set(Math.round(next * 100) / 100);
+  }
+
+  /** 宿主的版面尺寸；getBoundingClientRect 會帶入祖先 transform，旋轉時（含過場中）長寬會失真。 */
+  private hostSize(host: HTMLElement): { width: number; height: number } {
+    return { width: host.offsetWidth, height: host.offsetHeight };
   }
 
   private updatePosition(host: HTMLElement, clientX: number, clientY: number): void {
     const rect = host.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
-    this.position.set({ x, y });
+    const { width, height } = this.hostSize(host);
+    if (!width || !height) return;
+
+    // 以外框中心為軸做反向旋轉，把視窗座標換回宿主自己的座標系；未旋轉時等同原本的線性換算。
+    const angle = (((this.rotation() % 360) + 360) % 360) * (Math.PI / 180);
+    const dx = clientX - (rect.left + rect.width / 2);
+    const dy = clientY - (rect.top + rect.height / 2);
+    const localX = width / 2 + dx * Math.cos(angle) + dy * Math.sin(angle);
+    const localY = height / 2 - dx * Math.sin(angle) + dy * Math.cos(angle);
+
+    this.position.set({
+      x: clamp((localX / width) * 100, 0, 100),
+      y: clamp((localY / height) * 100, 0, 100),
+    });
+
+    const layout = this.layout();
+    this.overImage.set(
+      !layout
+        || this.fit() !== 'contain'
+        || (localX >= layout.imageOffsetX
+          && localX <= layout.imageOffsetX + layout.imageWidth
+          && localY >= layout.imageOffsetY
+          && localY <= layout.imageOffsetY + layout.imageHeight),
+    );
   }
 
   private startPanSync(): void {
@@ -275,31 +412,84 @@ export class ImageMagnifier implements OnDestroy {
   }
 
   private imageTransform(): { scaleX: number; scaleY: number; translateX: number; translateY: number } {
-    const image = this.observedImage;
-    if (!image || typeof getComputedStyle === 'undefined') {
-      return { scaleX: 1, scaleY: 1, translateX: 0, translateY: 0 };
-    }
-    const transform = getComputedStyle(image).transform;
-    if (!transform || transform === 'none') {
-      return { scaleX: 1, scaleY: 1, translateX: 0, translateY: 0 };
-    }
-    const values = transform.match(/matrix3d\(([^)]+)\)|matrix\(([^)]+)\)/);
-    if (!values) return { scaleX: 1, scaleY: 1, translateX: 0, translateY: 0 };
-    const numbers = (values[1] ?? values[2]).split(',').map(Number);
-    if (values[1]) {
-      return {
-        scaleX: Math.abs(numbers[0]) || 1,
-        scaleY: Math.abs(numbers[5]) || 1,
-        translateX: numbers[12] || 0,
-        translateY: numbers[13] || 0,
-      };
-    }
+    const transform = this.observedImage ? getComputedStyle(this.observedImage).transform : 'none';
+    // computed transform 只會是 none、matrix() 或 matrix3d()；DOMMatrix 的 a/d 為縮放、e/f 為位移，兩種形式通用。
+    const matrix = new DOMMatrixReadOnly(transform === 'none' ? undefined : transform);
     return {
-      scaleX: Math.abs(numbers[0]) || 1,
-      scaleY: Math.abs(numbers[3]) || 1,
-      translateX: numbers[4] || 0,
-      translateY: numbers[5] || 0,
+      scaleX: Math.abs(matrix.a) || 1,
+      scaleY: Math.abs(matrix.d) || 1,
+      translateX: matrix.e,
+      translateY: matrix.f,
     };
+  }
+
+  /** 圖片上的平移動畫；第一張圖片淡入的 opacity 過渡也在同一個元素上，且排序在前，不能直接取第一個。 */
+  private panAnimation(): Animation | undefined {
+    return this.observedImage?.getAnimations?.().find((animation) => animation instanceof CSSAnimation);
+  }
+
+  private startScrub(event: PointerEvent, host: HTMLElement): void {
+    this.scrub = null;
+    if (this.pan() === 'none') return;
+
+    // 平移由 CSS 動畫負責；拖曳時直接改動畫的播放位置，鏡面取樣會照常讀到當下的 transform。
+    const animation = this.panAnimation();
+    const duration = Number(animation?.effect?.getComputedTiming().duration);
+    const width = this.hostSize(host).width;
+    if (!animation || !duration || !width) return;
+
+    const currentTime = typeof animation.currentTime === 'number' ? animation.currentTime : 0;
+    const progress = clamp(currentTime / duration, 0, 1);
+    this.scrub = {
+      pointerId: event.pointerId,
+      lastX: event.clientX,
+      offset: easeInOut(progress),
+      animation,
+      duration,
+      width,
+    };
+  }
+
+  private scrubTo(clientX: number): void {
+    const scrub = this.scrub;
+    if (!scrub) return;
+
+    // 往右拖時畫面也往右移；backward 的 keyframes 方向相反。逐次累加，拖到盡頭後反向可立即回應。
+    const direction = this.pan() === 'backward' ? -1 : 1;
+    const delta = (direction * (clientX - scrub.lastX)) / (scrub.width * PAN_TRAVEL);
+    scrub.offset = clamp(scrub.offset + delta, 0, 1);
+    scrub.lastX = clientX;
+
+    // 停在終點前 1ms：放開後動畫會自然播完並觸發 animationend 換段，不會卡在已結束的狀態。
+    scrub.animation.currentTime = Math.min(
+      scrub.duration - 1,
+      easeInOutInverse(scrub.offset) * scrub.duration,
+    );
+  }
+
+  /** 放開拖曳：停在尾端時由這裡延遲通知換段，否則交回動畫自然播完的流程。 */
+  private finishScrub(): void {
+    const scrub = this.scrub;
+    this.scrub = null;
+    if (!scrub) return;
+
+    if (scrub.offset < 1) {
+      this.scrubEndedAnimation = null;
+      return;
+    }
+
+    this.scrubEndedAnimation = scrub.animation;
+    this.scrubEndTimer = setTimeout(() => {
+      this.scrubEndTimer = null;
+      // 延遲期間若已換段或速度重設，舊動畫已被取消，不再通知。
+      if (this.panAnimation() !== scrub.animation) return;
+      this.panEnd.emit();
+    }, SCRUB_END_DELAY_MS);
+  }
+
+  private cancelScrubEnd(): void {
+    if (this.scrubEndTimer !== null) clearTimeout(this.scrubEndTimer);
+    this.scrubEndTimer = null;
   }
 
   private pointerDistance(): number | null {
@@ -313,7 +503,7 @@ export class ImageMagnifier implements OnDestroy {
   private updateLayout(host = this.observedHost, image = this.observedImage): void {
     if (!host || !image?.naturalWidth || !image.naturalHeight) return;
 
-    const { width: hostWidth, height: hostHeight } = host.getBoundingClientRect();
+    const { width: hostWidth, height: hostHeight } = this.hostSize(host);
     if (!hostWidth || !hostHeight) return;
 
     const scale =
@@ -323,7 +513,6 @@ export class ImageMagnifier implements OnDestroy {
     const imageWidth = image.naturalWidth * scale;
     const imageHeight = image.naturalHeight * scale;
     const lens = host.querySelector<HTMLElement>('.magnifier-lens');
-    const lensRect = lens?.getBoundingClientRect();
 
     // Keep the same centered object-fit geometry as the source image, including letterbox/crop.
     this.layout.set({
@@ -333,8 +522,9 @@ export class ImageMagnifier implements OnDestroy {
       imageHeight,
       imageOffsetX: (hostWidth - imageWidth) / 2,
       imageOffsetY: (hostHeight - imageHeight) / 2,
-      lensWidth: lensRect?.width ?? 132,
-      lensHeight: lensRect?.height ?? 132,
+      // background-position 的定位區是 padding-box，clientWidth 才不含鏡框的 2px 邊線。
+      lensWidth: lens?.clientWidth || 132,
+      lensHeight: lens?.clientHeight || 132,
     });
   }
 }

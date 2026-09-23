@@ -24,31 +24,6 @@ public sealed class StoreCatalogController(
         PricierFirst,
     }
 
-    public enum CategoryType
-    {
-        BRONZE,
-        CARVING,
-        CERAMIC,
-        COIN,
-        ENAMEL,
-        JADE,
-        LACQUER,
-        PAINTING,
-    }
-
-    private string CategoryTypeToString(CategoryType? type) => type switch
-    {
-        CategoryType.BRONZE => "BRONZE",
-        CategoryType.CARVING => "CARVING",
-        CategoryType.CERAMIC => "CERAMIC",
-        CategoryType.COIN => "COIN",
-        CategoryType.ENAMEL => "ENAMEL",
-        CategoryType.JADE => "JADE",
-        CategoryType.LACQUER => "LACQUER",
-        CategoryType.PAINTING => "PAINTING",
-        _ => ""
-    };
-
     [HttpGet("categories")]
     public async Task<ActionResult<IReadOnlyList<StoreCategoryDto>>> GetCategories(
         CancellationToken cancellationToken = default)
@@ -66,6 +41,27 @@ public sealed class StoreCatalogController(
             .ToListAsync(cancellationToken);
 
         return Ok(categories);
+    }
+
+    [HttpGet("eras")]
+    public async Task<ActionResult<IReadOnlyList<StoreEraDto>>> GetEras(
+        CancellationToken cancellationToken = default)
+    {
+        // 商品本身沒有年代欄位，年代取自對應文物；件數與商品列表的 eraCode 篩選共用同一條關聯。
+        var eras = await db.EraBuckets
+            .AsNoTracking()
+            .OrderBy(era => era.StartYear)
+            .ThenBy(era => era.Name)
+            .Select(era => new StoreEraDto(
+                era.Id,
+                era.Code,
+                era.Name,
+                db.Products.Count(product => product.IsActive
+                    && product.Artifact != null
+                    && product.Artifact.EraBucketId == era.Id)))
+            .ToListAsync(cancellationToken);
+
+        return Ok(eras);
     }
 
     [HttpGet("promotions")]
@@ -97,11 +93,11 @@ public sealed class StoreCatalogController(
     public async Task<ActionResult<ApiPage<ProductListItemDto>>> GetProducts(
         string? q,
         string? categoryCode,
+        string? eraCode,
         Guid? artifactId,
         decimal? maxPrice,
         decimal? minPrice,
         bool? dealOnly,
-        CategoryType? category,
         OrderType order = OrderType.None,
         int page = 1,
         int pageSize = 20,
@@ -112,6 +108,7 @@ public sealed class StoreCatalogController(
             .Where(product => product.IsActive);
         q = q?.Trim();
         categoryCode = categoryCode?.Trim().ToUpperInvariant();
+        eraCode = eraCode?.Trim().ToUpperInvariant();
 
         // 篩選
         if (!string.IsNullOrWhiteSpace(q))
@@ -121,6 +118,8 @@ public sealed class StoreCatalogController(
 
         if (!string.IsNullOrWhiteSpace(categoryCode))
             query = query.Where(product => product.CategoryCode == categoryCode);
+        if (!string.IsNullOrWhiteSpace(eraCode))
+            query = query.Where(product => product.Artifact != null && product.Artifact.EraBucket.Code == eraCode);
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
 
@@ -146,9 +145,6 @@ public sealed class StoreCatalogController(
                     && p.SalePrice.Value < p.Price
                     ? p.SalePrice.Value
                     : Math.Round(p.Price * (100m - p.DiscountRate) / 100m, 2)) < maxPrice);
-
-        if (category != null)
-            query = query.Where(p => p.CategoryCode == CategoryTypeToString(category));
 
         var query2 = query.Select(g => new
         {

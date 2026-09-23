@@ -23,17 +23,23 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--color-line-mid);
+  /* 未選取時不顯示外框，滑鼠停留才以淡入淡出顯示，與分類篩選清單一致 */
+  border: 1px solid transparent;
   background: var(--color-surface);
   color: var(--color-muted);
   border-radius: var(--qmah-radius-pill);
   padding: var(--qmah-space-2) var(--qmah-space-3);
   font-size: var(--qmah-type-label-size);
   font-family: inherit;
-  transition: border-color 160ms, color 160ms, background 160ms;
+  transition: border-color 240ms ease, color 160ms, background 160ms;
 
-  &:hover {
-    border-color: var(--color-ink);
+  &:hover:not(:disabled) {
+    border-color: var(--color-line-mid);
+  }
+
+  &:disabled {
+    color: var(--color-faint);
+    cursor: not-allowed;
   }
 
   &--wide {
@@ -60,10 +66,11 @@
     font-family: 'IBM Plex Mono', monospace;
     padding: 6px 12px;
 
+    /* 已選用：外框與底色加深提示選取狀態，文字維持一般顏色，不反白 */
     &.pill--active {
       border-color: var(--color-gold);
       background: var(--color-gold-bg);
-      color: var(--color-gold-text);
+      color: var(--color-ink);
 
       &:hover {
         border-color: var(--color-gold);

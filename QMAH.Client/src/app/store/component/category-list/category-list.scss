@@ -3,27 +3,34 @@
   display: contents;
 }
 
+/* 外觀與側欄價格、折扣篩選的藥丸按鈕（pill--band／pill--filter）一致；未選取時外框只在懸停時淡入 */
 .cat-list-item {
-  border: 0;
-  background: transparent;
-  padding: var(--qmah-space-1) 0;
-  text-align: left;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--qmah-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--qmah-radius-pill);
+  background: var(--color-surface);
+  padding: 6px 10px;
+  text-align: left;
+  font-family: inherit;
   font-size: var(--qmah-type-label-size);
-  font-weight: 400;
-  color: var(--color-nav);
-  transition: color 160ms;
+  color: var(--color-muted);
+  transition: border-color 240ms ease, color 240ms ease, background 240ms ease;
 
   &:hover {
-    color: var(--color-accent);
+    border-color: var(--color-line-mid);
   }
 
   /* 目前選取的分類 */
   &--active {
-    font-weight: 500;
-    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+
+    &:hover {
+      border-color: var(--color-accent);
+    }
   }
 }
 
@@ -34,5 +41,6 @@
 .cat-list-count {
   font-family: 'IBM Plex Mono', monospace;
   font-size: var(--qmah-type-label-size);
-  color: var(--color-muted);
+  color: inherit;
+  opacity: 0.8;
 }

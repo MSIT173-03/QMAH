@@ -6,7 +6,7 @@
         [class.postcard-viewport--rotated]="rotated()">
         <div class="dynamic-card-frame">
           <app-collectible-card [name]="name()" [type]="type()" [image]="image()"
-            [dimensions]="dimensions()" [description]="description()" />
+            [dimensions]="dimensions()" [description]="description()" [rotation]="rotated() ? 90 : 0" />
           @if (image(); as imageUrl) {
             <img class="orientation-probe" src="{{ imageUrl }}" (load)="onNativeImageLoad($event)" alt="" aria-hidden="true" />
           }
@@ -20,7 +20,7 @@
             @if (image(); as imageUrl) {
               <!-- ui-integration: 商品 detail 有實際圖片時保留完整原圖，不用固定 postcard surface 裁切邊緣。 -->
               <app-image-magnifier [image]="imageUrl" [alt]="name()" fit="contain"
-                (loaded)="onImageLoad($event)" />
+                [rotation]="rotated() ? 90 : 0" (loaded)="onImageLoad($event)" />
             } @else {
               <span>目前沒有可用圖像</span>
             }
@@ -84,9 +84,11 @@
       <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M19 8a7 7 0 0 0-12.5-2L5 8" /><path d="M5 4v4h4" /><path d="M5 16a7 7 0 0 0 12.5 2L19 16" /><path d="M19 20v-4h-4" /></svg>
       <small>{{ rotated() ? '復原' : '旋轉' }}</small>
     </button>
-    <span class="gallery-icon-note" title="將游標移入圖片即可局部放大">
-      <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><circle cx="10.5" cy="10.5" r="5.5" /><path d="m15 15 5 5" /></svg>
-      <small>放大</small>
-    </span>
   </div>
+
+  <!-- 純說明文字，不是操作按鈕；放在功能區下方，放大鏡隨游標移入圖片自動出現。 -->
+  <p class="gallery-hint">
+    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><circle cx="10.5" cy="10.5" r="5.5" /><path d="m15 15 5 5" /></svg>
+    <span>移入圖片可局部放大</span>
+  </p>
 </div>
