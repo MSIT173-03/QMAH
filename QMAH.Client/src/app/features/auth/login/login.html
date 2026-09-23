@@ -1,8 +1,8 @@
 <div
   class="login-page"
   [class.theme-switching]="themeTransitioning()"
-  [class.theme-switching--dark]="themeDirection() === 'to-dark'"
-  [class.theme-switching--light]="themeDirection() === 'to-light'"
+  [class.theme-switching--dark]="themeTransitioning() && themeDirection() === 'to-dark'"
+  [class.theme-switching--light]="themeTransitioning() && themeDirection() === 'to-light'"
 >
   <div class="museum-topbar">
     <div class="brand-logo-shell" [class.brand-logo-shell--dark]="theme() === 'qmahdark'">
@@ -40,8 +40,11 @@
           [panKey]="panKey()"
           [panPaused]="carouselPaused()"
           [persistentLens]="true"
+          [baseZoom]="1"
+          [crossfade]="600"
           [enabled]="magnifierEnabled()"
           (draggingChange)="handleLensDragging($event)"
+          (panEnd)="handlePanEnd()"
         />
         <div class="museum-media__logo-shell" [class.museum-media__logo-shell--dark]="theme() === 'qmahdark'">
           <img class="museum-media__logo" [src]="logoSrc()" alt="清明鑑定屋" />
