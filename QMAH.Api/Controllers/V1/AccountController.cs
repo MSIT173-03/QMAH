@@ -265,8 +265,6 @@ public sealed class AccountController(
                 "Logto",
                 redirectUrl);
 
-   
-
         properties.Items["direct_sign_in"] =
             $"social:{connectorId}";
 
