@@ -143,6 +143,11 @@
                 @if (currentRound.status !== 'REVEALED') { <strong>{{ countdownText() }}</strong> }
               </div>
             </header>
+            <ol class="round-phases" aria-label="回合進度">
+              <li [class.is-current]="currentRound.status === 'ANSWERING'" [class.is-done]="currentRound.status !== 'ANSWERING'" [attr.aria-current]="currentRound.status === 'ANSWERING' ? 'step' : null">觀察與作答</li>
+              <li [class.is-current]="currentRound.status === 'VOTING'" [class.is-done]="currentRound.status === 'REVEALED'" [attr.aria-current]="currentRound.status === 'VOTING' ? 'step' : null">匿名投票</li>
+              <li [class.is-current]="currentRound.status === 'REVEALED'" [attr.aria-current]="currentRound.status === 'REVEALED' ? 'step' : null">揭曉結果</li>
+            </ol>
             <section class="artifact-card" aria-label="本回合館藏">
               @if (!artifactImageUnavailable && (currentRound.primaryImagePath || currentRound.thumbnailPath)) {
                 <img [src]="currentRound.primaryImagePath || currentRound.thumbnailPath" [alt]="currentRound.artifactName" (error)="artifactImageUnavailable = true" />
@@ -174,16 +179,16 @@
               </section>
             } @else if (currentRound.status === 'VOTING') {
               <section class="phase-content" aria-labelledby="vote-title">
-                <div class="phase-copy"><p class="eyebrow">閱讀 · 投票</p><h3 id="vote-title">選出最有說服力的回答</h3><p>不能投自己的回答；每次可投 1 至 3 票。</p></div>
+                <div class="phase-copy"><p class="eyebrow">閱讀 · 投票</p><h3 id="vote-title">選出最有說服力的回答</h3><p><span>先讀回答，再決定投給誰。</span><span>作者和票數會在揭曉時公布。</span><span>不能投自己的回答，</span><span>每次可以投 1 到 3 票。</span></p></div>
                 <label class="vote-count-label" for="vote-count">每次投幾票
                   <select id="vote-count" name="voteCount" [(ngModel)]="voteCount">
                     @for (count of voteOptions; track count) { <option [ngValue]="count">{{ count }} 票</option> }
                   </select>
                 </label>
                 <ol class="answer-list">
-                  @for (answer of currentRound.answers; track answer.id) {
+                  @for (answer of currentRound.answers; track answer.id; let index = $index) {
                     <li class="answer-card" [class.is-own]="isOwnAnswer(answer)">
-                      <div class="answer-card-heading"><span>{{ answer.playerDisplayName }}@if (isOwnAnswer(answer)) { <small>你的回答</small> }</span><b>{{ answer.voteCount }} 票</b></div>
+                      <div class="answer-card-heading"><span>回答 {{ (index + 1).toString().padStart(2, '0') }}@if (isOwnAnswer(answer)) { <small>你的回答</small> }</span></div>
                       <span class="answer-kind">{{ answerTypeText(answer.answerType) }}</span>
                       <p class="answer-body">{{ answer.text }}</p>
                       <button type="button" (click)="submitVote(answer)" [disabled]="!canVoteFor(answer) || votingForAnswerId === answer.id">{{ votingForAnswerId === answer.id ? '送出中…' : votedAnswerIds.has(answer.id) ? '已投票' : isOwnAnswer(answer) ? '自己的回答' : '投給這個回答' }}</button>
