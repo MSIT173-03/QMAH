@@ -55,13 +55,14 @@
                         <option value="FLAG">FLAG（放行後自動送檢舉）</option>
                         <option value="BLOCK">BLOCK（直接擋發文）</option>
                     </select>
+                    <span asp-validation-for="NewKeyword.Action" class="text-danger small"></span>
                 </div>
                 <div class="col-12 col-md-3">
                     <label asp-for="NewKeyword.Category" class="form-label">分類（選填）</label>
                     <input asp-for="NewKeyword.Category" class="form-control" placeholder="例如：廣告招攬" />
                 </div>
                 <div class="col-12 col-md-1">
-                    <button type="submit" class="btn btn-primary w-100"><i class="ti ti-plus"></i></button>
+                    <button type="submit" class="btn btn-primary w-100" aria-label="新增關鍵字"><i class="ti ti-plus" aria-hidden="true"></i></button>
                 </div>
             </div>
         </form>
@@ -69,6 +70,15 @@
 </div>
 
 <div class="card qmah-filter-panel mb-3">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title mb-1">關鍵字篩選</h2>
+            <div class="d-flex flex-wrap align-items-center gap-2 text-secondary">
+                <span>依內容與啟用狀態查找審核規則。</span>
+                <span class="badge bg-blue-lt">符合 @Model.TotalCount 筆</span>
+            </div>
+        </div>
+    </div>
     <div class="card-body">
         <form method="get" asp-action="Index">
             <div class="row g-3 align-items-end">
@@ -117,7 +127,7 @@
                 {
                     <tr>
                         <td class="fw-semibold">@item.Keyword</td>
-                        <td><span class="badge @(item.Action == "BLOCK" ? "bg-red-lt" : "bg-yellow-lt")">@item.Action</span></td>
+                        <td><span class="badge @(item.Action == "BLOCK" ? "bg-red-lt" : "bg-yellow-lt")">@(item.Action == "BLOCK" ? "直接阻擋" : "送交審核")</span></td>
                         <td class="text-secondary">@(string.IsNullOrWhiteSpace(item.Category) ? "未分類" : item.Category)</td>
                         <td><span class="badge @(item.IsActive ? "bg-green-lt" : "bg-secondary-lt")">@(item.IsActive ? "已啟用" : "已停用")</span></td>
                         <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
@@ -136,7 +146,7 @@
                                     <input type="hidden" name="id" value="@item.Id" />
                                     <input type="hidden" name="filterIsActive" value="@Model.IsActive" />
                                     <input type="hidden" name="filterKeyword" value="@Model.Keyword" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要刪除關鍵字「@item.Keyword」嗎？刪除後無法復原。')">刪除</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定要刪除這筆關鍵字嗎？刪除後無法復原。')">刪除</button>
                                 </form>
                             </div>
                         </td>

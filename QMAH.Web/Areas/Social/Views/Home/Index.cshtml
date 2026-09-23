@@ -5,12 +5,15 @@
 @{
     ViewData["Title"] = "社群總覽";
     ViewData["AdminDescription"] = "集中掌握社群內容、活動、檢舉與公告的處理狀態。";
-    var canManagePosts = User.IsInRole("Admin") || User.IsInRole("ContentModerator");
+    var canManagePosts = User.IsInRole("Admin") || User.IsInRole("AnnouncementEditor") || User.IsInRole("ContentModerator");
+    var canManageReports = User.IsInRole("Admin") || User.IsInRole("ContentModerator");
     var canManageEvents = User.IsInRole("Admin") || User.IsInRole("EventModerator");
 
     var workspaceItems = AdminNavigation.GetAreaItems("Social")
         .Where(item =>
-            ((item.Controller != "SocialPostAdmin" && item.Controller != "SocialReportAdmin") || canManagePosts) &&
+            (item.Controller != "SocialPostAdmin" || canManagePosts) &&
+            ((item.Controller != "SocialReportAdmin" && item.Controller != "SocialCommentAdmin" &&
+              item.Controller != "ContentKeywordAdmin") || canManageReports) &&
             (item.Controller != "SocialEventAdmin" || canManageEvents))
         .ToArray();
 
@@ -18,6 +21,8 @@
     {
         "SocialPostAdmin" => "依板塊、狀態與日期處理貼文",
         "SocialReportAdmin" => "處理與追蹤檢舉紀錄",
+        "SocialCommentAdmin" => "查找並處理留言",
+        "ContentKeywordAdmin" => "管理內容審核規則",
         "SocialEventAdmin" => "建立、編輯與審核活動",
         _ => $"進入{controller}管理"
     };
@@ -43,16 +48,23 @@
             </a>
 
             <a class="qmah-area-metric qmah-area-metric--link"
-               asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index">
+               asp-area="Social" asp-controller="@(canManageReports ? "SocialCommentAdmin" : "SocialPostAdmin")" asp-action="Index">
                 <span class="qmah-area-metric__icon"><i class="ti ti-message-circle"></i></span>
-                <div><span class="qmah-area-metric__label">留言總量</span><strong class="qmah-area-metric__value">@Model.CommentCount</strong><span class="qmah-area-metric__note">進入貼文內容處理</span></div>
+                <div><span class="qmah-area-metric__label">留言總量</span><strong class="qmah-area-metric__value">@Model.CommentCount</strong><span class="qmah-area-metric__note">@(canManageReports ? "進入留言管理" : "進入貼文內容處理")</span></div>
             </a>
 
+            @if (canManageReports)
+            {
             <a class="qmah-area-metric qmah-area-metric--link"
                asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index" asp-route-Status="PENDING">
                 <span class="qmah-area-metric__icon"><i class="ti ti-message-2-exclamation"></i></span>
                 <div><span class="qmah-area-metric__label">待處理檢舉</span><strong class="qmah-area-metric__value">@Model.PendingReportCount</strong><span class="qmah-area-metric__note">直接處理待審紀錄</span></div>
             </a>
+            }
+            else
+            {
+                <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-message-2-exclamation"></i></span><div><span class="qmah-area-metric__label">待處理檢舉</span><strong class="qmah-area-metric__value">@Model.PendingReportCount</strong><span class="qmah-area-metric__note">需要內容審核</span></div></article>
+            }
         }
         else
         {
@@ -145,11 +157,17 @@
                 @if (canManagePosts)
                 {
                     <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" asp-route-Status="PUBLISHED"><span>已發布貼文</span><strong>@Model.PublishedPostCount</strong></a>
-                    <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index" asp-route-Status="PENDING"><span>待處理檢舉</span><strong class="@(Model.PendingReportCount > 0 ? "text-danger" : "text-success")">@Model.PendingReportCount</strong></a>
                 }
                 else
                 {
                     <div class="list-group-item d-flex align-items-center justify-content-between gap-3"><span>已發布貼文</span><strong>@Model.PublishedPostCount</strong></div>
+                }
+                @if (canManageReports)
+                {
+                    <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3" asp-area="Social" asp-controller="SocialReportAdmin" asp-action="Index" asp-route-Status="PENDING"><span>待處理檢舉</span><strong class="@(Model.PendingReportCount > 0 ? "text-danger" : "text-success")">@Model.PendingReportCount</strong></a>
+                }
+                else
+                {
                     <div class="list-group-item d-flex align-items-center justify-content-between gap-3"><span>待處理檢舉</span><strong>@Model.PendingReportCount</strong></div>
                 }
 
@@ -169,7 +187,7 @@
             <div class="list-group list-group-flush qmah-area-list">
                 @if (canManagePosts)
                 {
-                    <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3" asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index"><span>留言總量</span><strong>@Model.CommentCount</strong></a>
+                    <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3" asp-area="Social" asp-controller="@(canManageReports ? "SocialCommentAdmin" : "SocialPostAdmin")" asp-action="Index"><span>留言總量</span><strong>@Model.CommentCount</strong></a>
                 }
                 else
                 {

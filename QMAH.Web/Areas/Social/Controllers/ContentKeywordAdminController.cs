@@ -11,8 +11,7 @@ using QMAH.Web.Infrastructure.AdminNavigation;
 
 namespace QMAH.Web.Areas.Social.Controllers;
 
-// 違規關鍵字表管理：新增/停用/刪除都會觸發 KeywordFilterService 重建 Aho-Corasick 自動機，
-// 讓下一篇發文/留言立刻套用最新的關鍵字表，不用重啟服務。
+// 違規關鍵字表管理：API 在下一次發文/留言時重新載入規則，不用重啟服務。
 // 洗版防治的 SimHash 設定（比對天數／相似度門檻）也放在同一頁管理，兩者都屬於「內容審核規則」的調整入口。
 [Area("Social")]
 [AdminNavigation("內容審核設定", 60)]
@@ -51,7 +50,7 @@ public sealed class ContentKeywordAdminController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-        ContentKeywordCreateViewModel newKeyword,
+        [Bind(Prefix = "NewKeyword")] ContentKeywordCreateViewModel newKeyword,
         bool? isActive,
         string? keyword,
         CancellationToken cancellationToken = default)
@@ -59,14 +58,14 @@ public sealed class ContentKeywordAdminController : Controller
         var action = newKeyword.Action?.Trim().ToUpperInvariant();
         if (action is null || !KeywordActions.Contains(action))
         {
-            ModelState.AddModelError(nameof(newKeyword.Action), "動作只能是 BLOCK 或 FLAG。");
+            ModelState.AddModelError("NewKeyword.Action", "動作只能是 BLOCK 或 FLAG。");
         }
 
         var trimmedKeyword = newKeyword.Keyword?.Trim() ?? "";
         if (!string.IsNullOrWhiteSpace(trimmedKeyword)
             && await _context.ContentKeywords.AnyAsync(item => item.Keyword == trimmedKeyword, cancellationToken))
         {
-            ModelState.AddModelError(nameof(newKeyword.Keyword), "這個關鍵字已經在清單裡了，請直接編輯既有項目。");
+            ModelState.AddModelError("NewKeyword.Keyword", "這個關鍵字已經在清單裡了，請直接編輯既有項目。");
         }
 
         if (!ModelState.IsValid)
@@ -140,7 +139,7 @@ public sealed class ContentKeywordAdminController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateModerationSettings(
-        ContentModerationSettingsViewModel settings,
+        [Bind(Prefix = "ModerationSettings")] ContentModerationSettingsViewModel settings,
         bool? filterIsActive,
         string? filterKeyword,
         CancellationToken cancellationToken = default)
