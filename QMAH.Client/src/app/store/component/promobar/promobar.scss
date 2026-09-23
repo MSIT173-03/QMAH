@@ -42,9 +42,14 @@
   }
 }
 
+/* 登入前的會員捷徑：灰色、不可點擊，滑鼠移入也不變色 */
 .promobar-link--disabled {
-  cursor: default;
-  opacity: 0.62;
+  cursor: not-allowed;
+  opacity: 0.5;
+
+  &:hover {
+    color: var(--color-muted);
+  }
 }
 
 .promobar-accent {

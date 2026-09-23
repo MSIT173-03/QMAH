@@ -9,39 +9,37 @@
       <span>{{ note }}</span>
     }
 
-    <!-- 右側快捷連結：訂單、個人頁面、點數、折價券 -->
+    <!-- 右側會員捷徑：點數、折價券、購物車；登入後才能使用，登入前以灰色停用狀態顯示 -->
     <div class="promobar-actions">
-      @if (ordersHref(); as ordersHref) {
-        <a [storeLink]="ordersHref" class="promobar-link">訂單查詢</a>
-      } @else {
-        <span class="promobar-link promobar-link--disabled" aria-disabled="true">訂單查詢</span>
-      }
-      <!-- 未登入時只提供登入入口；點數與折價券屬於會員資料，登入後才顯示 -->
-      @if (signedIn() === false) {
-        <a [storeLink]="loginHref()" class="promobar-link">登入</a>
-      } @else if (signedIn()) {
-      <a [storeLink]="profileHref()" class="promobar-link">個人頁面</a>
-      <a [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
+      @if (signedIn()) {
+        <a [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
 
-      <!-- 折價券連結，滑鼠移入時展開懸浮面板 -->
-      <div class="coupon-trigger" (mouseenter)="open.set(true)" (mouseleave)="open.set(false)">
-        <a [storeLink]="couponsHref()" class="promobar-link">折價券 <span class="promobar-accent">{{ coupons().length }}</span> 張</a>
-        @if (open()) {
-          <!-- 折價券懸浮面板：列出可用折價券並提供管理入口 -->
-          <div class="coupon-panel">
-            @for (coupon of couponRows(); track coupon.title) {
-              <a [storeLink]="couponsHref()" class="coupon-panel-item">
-                <span class="coupon-panel-amount">{{ coupon.off }}</span>
-                <span class="coupon-panel-body">
-                  <span class="coupon-panel-title">{{ coupon.title }}</span>
-                  <span class="coupon-panel-meta">{{ coupon.meta }}</span>
-                </span>
-              </a>
-            }
-            <a [storeLink]="manageCouponsHref()" class="coupon-panel-manage">管理所有折價券 →</a>
-          </div>
-        }
-      </div>
+        <!-- 折價券連結，滑鼠移入時展開懸浮面板 -->
+        <div class="coupon-trigger" (mouseenter)="open.set(true)" (mouseleave)="open.set(false)">
+          <a [storeLink]="couponsHref()" class="promobar-link">折價券 <span class="promobar-accent">{{ coupons().length }}</span> 張</a>
+          @if (open()) {
+            <!-- 折價券懸浮面板：列出可用折價券並提供管理入口 -->
+            <div class="coupon-panel">
+              @for (coupon of couponRows(); track coupon.title) {
+                <a [storeLink]="couponsHref()" class="coupon-panel-item">
+                  <span class="coupon-panel-amount">{{ coupon.off }}</span>
+                  <span class="coupon-panel-body">
+                    <span class="coupon-panel-title">{{ coupon.title }}</span>
+                    <span class="coupon-panel-meta">{{ coupon.meta }}</span>
+                  </span>
+                </a>
+              }
+              <a [storeLink]="manageCouponsHref()" class="coupon-panel-manage">管理所有折價券 →</a>
+            </div>
+          }
+        </div>
+
+        <a [storeLink]="cartHref()" class="promobar-link">購物車 <span class="promobar-accent">{{ cartCount() }}</span> 件</a>
+      } @else {
+        <!-- 未登入（或登入狀態尚未確認）時沒有會員資料，只顯示名稱，不顯示數量 -->
+        <span class="promobar-link promobar-link--disabled" aria-disabled="true">點數</span>
+        <span class="promobar-link promobar-link--disabled" aria-disabled="true">折價券</span>
+        <span class="promobar-link promobar-link--disabled" aria-disabled="true">購物車</span>
       }
     </div>
   </div>

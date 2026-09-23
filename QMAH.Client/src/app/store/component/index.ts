@@ -1,5 +1,4 @@
 export { Breadcrumb } from './breadcrumb/breadcrumb';
-export { CartLink } from './cart-link/cart-link';
 export { CategoryList } from './category-list/category-list';
 export { CollectibleCard } from "./collectible-card/collectible-card"
 export { EmptyState } from './empty-state/empty-state';

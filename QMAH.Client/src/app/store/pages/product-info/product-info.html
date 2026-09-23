@@ -1,13 +1,11 @@
-<!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
+<!-- 頂部公告與快捷連結列（點數、折價券、購物車） -->
 <app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
-  [coupons]="site.coupons()" />
+  [coupons]="site.coupons()" [cartCount]="cart.count()" />
 
-<!-- 網站頁首：品牌 Logo、搜尋框、分類導覽與購物車入口 -->
+<!-- 網站頁首：品牌 Logo、搜尋框與分類導覽 -->
 <app-site-header>
   <app-search-bar [compact]="true" [(value)]="searchQuery" (search)="onSearch($event)" />
-  <app-header-actions [links]="navLinks">
-    <app-cart-link [href]="cartHref" [count]="cart.count()" />
-  </app-header-actions>
+  <app-header-actions [links]="navLinks" />
 </app-site-header>
 
 <div class="container product-main">

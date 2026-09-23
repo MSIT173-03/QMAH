@@ -3,10 +3,10 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { map, of, switchMap } from 'rxjs';
 
-import { Promobar, SearchBar, SearchSuggestion, CartLink, SiteHeader, LoginPrompt } from '../../component';
+import { Promobar, SearchBar, SearchSuggestion, SiteHeader, LoginPrompt } from '../../component';
 import { CatalogApi, HomeApi, SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
-import { CART_PATH, PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
+import { PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
@@ -36,7 +36,6 @@ const RECOMMEND_PAGE_SIZE = 10;
   imports: [
     Promobar,
     SearchBar,
-    CartLink,
     HeroCarousel,
     FlashSale,
     MiniCoupons,
@@ -61,7 +60,6 @@ export class Home {
 
   /** 購物車狀態（件數顯示於頁首） */
   protected readonly cart = injectCartState();
-  protected readonly cartPath = CART_PATH;
 
   /** 全站設定與會員資料，供頂部公告列與頁尾使用 */
   protected readonly site = injectSiteData();

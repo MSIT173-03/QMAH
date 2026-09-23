@@ -1,6 +1,6 @@
-<!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
+<!-- 頂部公告與快捷連結列（點數、折價券、購物車） -->
 <app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
-  [coupons]="site.coupons()" />
+  [coupons]="site.coupons()" [cartCount]="cart.count()" />
 
 
 <app-site-header variant="hero">
@@ -8,11 +8,6 @@
   <!-- 站內搜尋框，含熱門搜尋捷徑與輸入建議下拉 -->
   <app-search-bar placeholder="搜尋文物周邊、紋樣、館藏聯名" [(value)]="searchQuery" [hotLinks]="hotLinks()"
     [suggestions]="suggestions()" (search)="onSearch($event)" (suggestionPick)="onSuggestionPick($event)" />
-
-  <!-- 購物車入口，顯示目前購物車件數 -->
-  <div class="hdr-actions">
-    <app-cart-link [href]="cartPath" [count]="cart.count()" [hero]="true" />
-  </div>
 
   <!-- 分類導覽列 -->
   <div class="nav-bar">

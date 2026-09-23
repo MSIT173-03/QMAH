@@ -7,7 +7,6 @@ import {
   Promobar,
   SiteHeader,
   SearchBar,
-  CartLink,
   Breadcrumb,
   BreadcrumbItem,
   PageTitleRow,
@@ -23,7 +22,7 @@ import {
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { ProductQuery } from '../../api/api.models';
-import { CART_PATH, HOME_PATH } from '../../shared/paths';
+import { HOME_PATH } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { ProductViewData, toProductView } from '../../shared/product-view';
 import {
@@ -66,7 +65,6 @@ function toPage(value: string | undefined): number {
     Promobar,
     SiteHeader,
     SearchBar,
-    CartLink,
     Breadcrumb,
     PageTitleRow,
     Pagination,
@@ -88,7 +86,6 @@ export class ProductList {
   private readonly route = inject(ActivatedRoute);
 
   /** 購物車入口連結 */
-  protected readonly cartHref = CART_PATH;
 
   /* ===============================
      網址查詢字串（由 router 的 component input binding 帶入）

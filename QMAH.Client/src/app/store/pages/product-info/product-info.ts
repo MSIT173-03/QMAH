@@ -9,7 +9,6 @@ import {
   SearchBar,
   HeaderActions,
   HeaderNavLink,
-  CartLink,
   Breadcrumb,
   BreadcrumbItem,
   EmptyState,
@@ -42,7 +41,6 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
     SiteHeader,
     SearchBar,
     HeaderActions,
-    CartLink,
     Breadcrumb,
     EmptyState,
     LoginPrompt,
@@ -98,7 +96,6 @@ export class ProductInfo {
   protected policies = computed(() => this.site.config()?.productPolicies ?? []);
 
   /** 購物車入口連結 */
-  protected readonly cartHref = CART_PATH;
   /** 商品列表頁路徑，供「查無此商品」時的返回按鈕使用 */
   protected readonly productsPath = PRODUCT_LIST_PATH;
 
