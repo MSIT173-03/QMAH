@@ -94,8 +94,7 @@ export class Login implements OnInit, OnDestroy {
   readonly activeSegment = computed(
     () => this.qingmingSegments[this.activeSegmentIndex()] ?? this.qingmingSegments[0],
   );
-  readonly carouselDurationMs = computed(() => Math.round(12000 / this.carouselSpeed()));
-  readonly carouselDurationCss = computed(() => `${this.carouselDurationMs()}ms`);
+  readonly carouselDurationCss = computed(() => `${Math.round(12000 / this.carouselSpeed())}ms`);
 
   private readonly carouselSpeedStorageKey = 'qmah.login.carousel-speed';
   private carouselPausedBeforeLensDrag = false;

@@ -8,6 +8,7 @@
   [class.magnifier-host--persistent]="persistentLens()"
   [class.is-dragging]="dragging()"
   [class.is-off-image]="!overImage()"
+  [class.is-disabled]="!enabled()"
   [style.--magnifier-crossfade-duration]="crossfade() + 'ms'"
   [class.magnifier-host--reveal]="crossfade() > 0"
   [class.is-revealed]="revealed()"
@@ -15,7 +16,7 @@
   (pointerdown)="startDrag($event)"
   (pointerup)="stopDrag($event)"
   (pointercancel)="stopDrag($event)"
-  (lostpointercapture)="stopDrag()"
+  (lostpointercapture)="stopDrag($event)"
   (wheel)="adjustZoom($event)"
   (pointerenter)="active.set(true)"
   (pointerleave)="leave()">

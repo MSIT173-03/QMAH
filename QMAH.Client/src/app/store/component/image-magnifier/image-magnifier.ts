@@ -32,6 +32,10 @@ const EASE_Y1 = 0;
 const EASE_X2 = 0.58;
 const EASE_Y2 = 1;
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 function bezier(t: number, p1: number, p2: number): number {
   const u = 1 - t;
   return 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t;
@@ -156,14 +160,8 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     const untransformedY = layout.hostHeight / 2
       + (lensCenterY - layout.hostHeight / 2 - transform.translateY) / transform.scaleY;
 
-    const imagePointX = Math.max(
-      0,
-      Math.min(layout.imageWidth, untransformedX - layout.imageOffsetX),
-    );
-    const imagePointY = Math.max(
-      0,
-      Math.min(layout.imageHeight, untransformedY - layout.imageOffsetY),
-    );
+    const imagePointX = clamp(untransformedX - layout.imageOffsetX, 0, layout.imageWidth);
+    const imagePointY = clamp(untransformedY - layout.imageOffsetY, 0, layout.imageHeight);
 
     // background-position is relative to the lens itself, not the page. Anchor
     // the sampled source point to the lens centre. Including the source image's
@@ -250,18 +248,12 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     if (!this.scrub || event.pointerType === 'mouse') this.move(event);
   }
 
-  protected stopDrag(event?: PointerEvent): void {
-    const host = event?.currentTarget as HTMLElement | undefined;
-    if (host && event && host.hasPointerCapture?.(event.pointerId)) {
-      host.releasePointerCapture(event.pointerId);
-    }
-    if (event) {
-      this.activePointers.delete(event.pointerId);
-      if (this.scrub?.pointerId === event.pointerId) this.finishScrub();
-    } else {
-      this.activePointers.clear();
-      this.finishScrub();
-    }
+  protected stopDrag(event: PointerEvent): void {
+    const host = event.currentTarget as HTMLElement;
+    if (host.hasPointerCapture?.(event.pointerId)) host.releasePointerCapture(event.pointerId);
+    // 只移除這一個指標；捏合時抬起其中一指，另一指仍在拖曳中。
+    this.activePointers.delete(event.pointerId);
+    if (this.scrub?.pointerId === event.pointerId) this.finishScrub();
 
     if (this.activePointers.size < 2) {
       this.pinchStartDistance = null;
@@ -311,10 +303,7 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     else return;
 
     event.preventDefault();
-    this.position.set({
-      x: Math.max(0, Math.min(100, x)),
-      y: Math.max(0, Math.min(100, y)),
-    });
+    this.position.set({ x: clamp(x, 0, 100), y: clamp(y, 0, 100) });
     this.active.set(true);
   }
 
@@ -338,7 +327,7 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
 
   protected onPanEnd(event: AnimationEvent): void {
     if (this.pan() === 'none' || event.target !== event.currentTarget) return;
-    const animation = this.observedImage?.getAnimations?.()[0] ?? null;
+    const animation = this.panAnimation();
     if (animation && animation === this.scrubEndedAnimation) return;
     this.panEnd.emit();
   }
@@ -372,17 +361,13 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
   }
 
   private setZoom(value: number): void {
-    const next = Math.min(this.maxZoom, Math.max(this.minZoom, value));
+    const next = clamp(value, this.minZoom, this.maxZoom);
     this.zoom.set(Math.round(next * 100) / 100);
   }
 
   /** 宿主的版面尺寸；getBoundingClientRect 會帶入祖先 transform，旋轉時（含過場中）長寬會失真。 */
   private hostSize(host: HTMLElement): { width: number; height: number } {
-    if (host.offsetWidth && host.offsetHeight) {
-      return { width: host.offsetWidth, height: host.offsetHeight };
-    }
-    const rect = host.getBoundingClientRect();
-    return { width: rect.width, height: rect.height };
+    return { width: host.offsetWidth, height: host.offsetHeight };
   }
 
   private updatePosition(host: HTMLElement, clientX: number, clientY: number): void {
@@ -398,8 +383,8 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     const localY = height / 2 - dx * Math.sin(angle) + dy * Math.cos(angle);
 
     this.position.set({
-      x: Math.max(0, Math.min(100, (localX / width) * 100)),
-      y: Math.max(0, Math.min(100, (localY / height) * 100)),
+      x: clamp((localX / width) * 100, 0, 100),
+      y: clamp((localY / height) * 100, 0, 100),
     });
 
     const layout = this.layout();
@@ -427,31 +412,20 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
   }
 
   private imageTransform(): { scaleX: number; scaleY: number; translateX: number; translateY: number } {
-    const image = this.observedImage;
-    if (!image || typeof getComputedStyle === 'undefined') {
-      return { scaleX: 1, scaleY: 1, translateX: 0, translateY: 0 };
-    }
-    const transform = getComputedStyle(image).transform;
-    if (!transform || transform === 'none') {
-      return { scaleX: 1, scaleY: 1, translateX: 0, translateY: 0 };
-    }
-    const values = transform.match(/matrix3d\(([^)]+)\)|matrix\(([^)]+)\)/);
-    if (!values) return { scaleX: 1, scaleY: 1, translateX: 0, translateY: 0 };
-    const numbers = (values[1] ?? values[2]).split(',').map(Number);
-    if (values[1]) {
-      return {
-        scaleX: Math.abs(numbers[0]) || 1,
-        scaleY: Math.abs(numbers[5]) || 1,
-        translateX: numbers[12] || 0,
-        translateY: numbers[13] || 0,
-      };
-    }
+    const transform = this.observedImage ? getComputedStyle(this.observedImage).transform : 'none';
+    // computed transform 只會是 none、matrix() 或 matrix3d()；DOMMatrix 的 a/d 為縮放、e/f 為位移，兩種形式通用。
+    const matrix = new DOMMatrixReadOnly(transform === 'none' ? undefined : transform);
     return {
-      scaleX: Math.abs(numbers[0]) || 1,
-      scaleY: Math.abs(numbers[3]) || 1,
-      translateX: numbers[4] || 0,
-      translateY: numbers[5] || 0,
+      scaleX: Math.abs(matrix.a) || 1,
+      scaleY: Math.abs(matrix.d) || 1,
+      translateX: matrix.e,
+      translateY: matrix.f,
     };
+  }
+
+  /** 圖片上的平移動畫；第一張圖片淡入的 opacity 過渡也在同一個元素上，且排序在前，不能直接取第一個。 */
+  private panAnimation(): Animation | undefined {
+    return this.observedImage?.getAnimations?.().find((animation) => animation instanceof CSSAnimation);
   }
 
   private startScrub(event: PointerEvent, host: HTMLElement): void {
@@ -459,13 +433,13 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     if (this.pan() === 'none') return;
 
     // 平移由 CSS 動畫負責；拖曳時直接改動畫的播放位置，鏡面取樣會照常讀到當下的 transform。
-    const animation = this.observedImage?.getAnimations?.()[0];
+    const animation = this.panAnimation();
     const duration = Number(animation?.effect?.getComputedTiming().duration);
     const width = this.hostSize(host).width;
     if (!animation || !duration || !width) return;
 
     const currentTime = typeof animation.currentTime === 'number' ? animation.currentTime : 0;
-    const progress = Math.max(0, Math.min(1, currentTime / duration));
+    const progress = clamp(currentTime / duration, 0, 1);
     this.scrub = {
       pointerId: event.pointerId,
       lastX: event.clientX,
@@ -483,7 +457,7 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     // 往右拖時畫面也往右移；backward 的 keyframes 方向相反。逐次累加，拖到盡頭後反向可立即回應。
     const direction = this.pan() === 'backward' ? -1 : 1;
     const delta = (direction * (clientX - scrub.lastX)) / (scrub.width * PAN_TRAVEL);
-    scrub.offset = Math.max(0, Math.min(1, scrub.offset + delta));
+    scrub.offset = clamp(scrub.offset + delta, 0, 1);
     scrub.lastX = clientX;
 
     // 停在終點前 1ms：放開後動畫會自然播完並觸發 animationend 換段，不會卡在已結束的狀態。
@@ -508,7 +482,7 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     this.scrubEndTimer = setTimeout(() => {
       this.scrubEndTimer = null;
       // 延遲期間若已換段或速度重設，舊動畫已被取消，不再通知。
-      if (!this.observedImage?.getAnimations?.().includes(scrub.animation)) return;
+      if (this.panAnimation() !== scrub.animation) return;
       this.panEnd.emit();
     }, SCRUB_END_DELAY_MS);
   }

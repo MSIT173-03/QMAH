@@ -29,8 +29,9 @@
   object-fit: contain;
 }
 
-/* 留白區沒有可放大的影像，改回一般游標，與收起的鏡面一致。 */
-.magnifier-host.is-off-image {
+/* 留白區沒有可放大的影像，或外層收起了鏡面（此時也不能拖曳），都改回一般游標。 */
+.magnifier-host.is-off-image,
+.magnifier-host.is-disabled {
   cursor: default;
 }
 
@@ -107,32 +108,29 @@
  * 以兩個 animation name 配合 panKey 重新掛載，手動切段後仍會從頭開始。
  * ui-integration: 只動畫 transform，讓長幅畫卷的慢速移動以 compositor-friendly 的方式執行，避免逐幀改 object-position。
  */
-.magnifier-host--pan-forward.magnifier-host--pan-even img {
-  animation: qmah-image-pan-forward-even var(--magnifier-pan-duration, 16s) ease-in-out both;
+.magnifier-host--pan-forward img,
+.magnifier-host--pan-backward img {
+  animation-duration: var(--magnifier-pan-duration, 16s);
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
   object-position: 50% 50%;
   will-change: transform;
-  animation-play-state: var(--magnifier-pan-state, running);
+}
+
+.magnifier-host--pan-forward.magnifier-host--pan-even img {
+  animation-name: qmah-image-pan-forward-even;
 }
 
 .magnifier-host--pan-forward.magnifier-host--pan-odd img {
-  animation: qmah-image-pan-forward-odd var(--magnifier-pan-duration, 16s) ease-in-out both;
-  object-position: 50% 50%;
-  will-change: transform;
-  animation-play-state: var(--magnifier-pan-state, running);
+  animation-name: qmah-image-pan-forward-odd;
 }
 
 .magnifier-host--pan-backward.magnifier-host--pan-even img {
-  animation: qmah-image-pan-backward-even var(--magnifier-pan-duration, 16s) ease-in-out both;
-  object-position: 50% 50%;
-  will-change: transform;
-  animation-play-state: var(--magnifier-pan-state, running);
+  animation-name: qmah-image-pan-backward-even;
 }
 
 .magnifier-host--pan-backward.magnifier-host--pan-odd img {
-  animation: qmah-image-pan-backward-odd var(--magnifier-pan-duration, 16s) ease-in-out both;
-  object-position: 50% 50%;
-  will-change: transform;
-  animation-play-state: var(--magnifier-pan-state, running);
+  animation-name: qmah-image-pan-backward-odd;
 }
 
 .magnifier-host--pan-paused img {

@@ -50,6 +50,7 @@
   background: transparent;
   font-size: 18px;
   line-height: 1;
+  cursor: pointer;
 }
 
 .gallery-icon-button svg,
@@ -61,10 +62,6 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.6;
-}
-
-.gallery-icon-button {
-  cursor: pointer;
 }
 
 .gallery-icon-button small {
@@ -90,7 +87,7 @@
   outline-offset: -2px;
 }
 
-/* 方案甲：提示只是一行說明文字，刻意不沿用按鈕的尺寸與外框，避免被誤認為可點擊。 */
+/* 提示只是一行說明文字，刻意不沿用按鈕的尺寸與外框，避免被誤認為可點擊。 */
 .gallery-hint {
   display: inline-flex;
   align-items: center;
