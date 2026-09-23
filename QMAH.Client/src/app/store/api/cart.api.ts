@@ -3,12 +3,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CartItem, ShoppingCart } from './api.models';
-import { toCatalogThumbnail } from './catalog.api-dto';
+import { toCatalogThumbnail, toCategoryLabel } from './catalog.api-dto';
 
 interface ApiCartItem {
   id: string;
   productId: string;
   productName: string;
+  categoryCode: string;
   primaryImagePath: string | null;
   unitPrice: number;
   originalPrice: number | null;
@@ -32,7 +33,7 @@ function toCart(dto: ApiCartItem[]): ShoppingCart {
     // 後端 CartItemDto 沒有品牌與規格欄位；adapter 以中性值保留既有頁面契約，
     // 不在前端猜測商品資料，也不另外創造一組與資料庫不一致的商城 API。
     brand: '',
-    category: '',
+    category: toCategoryLabel(item.categoryCode),
     name: item.productName,
     dimensions: '',
     price: item.unitPrice,
@@ -45,7 +46,6 @@ function toCart(dto: ApiCartItem[]): ShoppingCart {
   const payable = items.reduce((sum, item) => sum + item.lineTotal, 0);
   return {
     items,
-    addons: [],
     amounts: {
       subtotal,
       // 金額可能含小數（後端 decimal），相減後修正浮點誤差。
@@ -84,7 +84,7 @@ export class CartApi {
     );
   }
 
-  /** POST /me/cart：加入或覆寫既有商品數量，再重新取得完整購物車。 */
+  /** POST /me/cart：加入商品；購物車已有同商品時累加數量，再重新取得完整購物車。 */
   addItem(productId: string, qty: number): Observable<ShoppingCart> {
     return this.http
       .post<ApiCartItem>(MEMBER_CART_API, { productId, quantity: qty })

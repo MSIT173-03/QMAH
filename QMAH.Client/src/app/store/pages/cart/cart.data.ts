@@ -22,10 +22,12 @@ export interface CartLineData {
   lineTotal: number;
   /** 是否正在執行移除動畫（淡出並收合列高），結束後才真正從購物車移除 */
   leaving: boolean;
+  /** 是否正在執行進場動畫（剛加入購物車：展開列高並淡入） */
+  entering: boolean;
 }
 
-/** 依購物車品項與是否正在移除中，換算成購物車行資料 */
-export function toCartLineData(item: CartItem, leaving: boolean): CartLineData {
+/** 依購物車品項與是否正在移除／進場中，換算成購物車行資料 */
+export function toCartLineData(item: CartItem, leaving: boolean, entering = false): CartLineData {
   return {
     id: item.productId,
     coverImage: item.coverImage,
@@ -38,5 +40,6 @@ export function toCartLineData(item: CartItem, leaving: boolean): CartLineData {
     qty: item.qty,
     lineTotal: item.lineTotal,
     leaving,
+    entering,
   };
 }

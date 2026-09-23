@@ -1,6 +1,6 @@
 <!-- 購物車單一行項目：縮圖、商品資訊、數量／小計／移除 -->
 @let pv = priceView();
-<div class="cart-line" [class.cart-line--leaving]="leaving()">
+<div class="cart-line" [class.cart-line--leaving]="leaving()" [class.cart-line--entering]="entering()">
   <!-- 商品縮圖，連結至商品頁 -->
   <a [storeLink]="link()" class="cart-line-thumb">
     @if (imageSrc(); as imageUrl) {

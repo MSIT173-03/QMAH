@@ -18,27 +18,15 @@
   align-items: center;
   gap: var(--qmah-space-6);
 
-  /* 首頁：下方接分類導覽列，加大下留白 */
+  /* 首頁：搜尋框下方以絕對定位顯示熱門搜尋，加大下留白容納它 */
   &--hero {
     padding: var(--qmah-space-3) var(--qmah-space-5) 34px;
   }
 
-  /* 商品列表頁：搜尋框佔滿中段，間距較窄且允許換行 */
-  &--list {
-    gap: var(--qmah-space-4);
-    flex-wrap: wrap;
-  }
-
-  /* 結帳頁：僅品牌與步驟指示器，間距略窄且允許換行 */
+  /* 結帳頁：僅步驟指示器，間距略窄且允許換行 */
   &--wrap {
     gap: var(--qmah-space-5);
     flex-wrap: wrap;
   }
-}
-
-.brand-logo {
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
 }
 

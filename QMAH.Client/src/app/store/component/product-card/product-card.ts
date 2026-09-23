@@ -61,6 +61,8 @@ export class ProductCard {
 
   /** 點擊加入購物車按鈕時觸發 */
   addToCart = output<void>();
+  /** 已加入購物車：按鈕維持反白並在右下角顯示打勾（購物車頁「再加購」使用） */
+  added = input(false);
 
   /** 無圖片時顯示的中性狀態，不假裝這是另一件文物。 */
   protected readonly slotLabel = '影像待補';

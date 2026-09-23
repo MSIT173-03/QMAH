@@ -107,9 +107,9 @@ export interface ProductDetail extends Product {
 
 /**
  * 商品清單排序方式：0 不特別排序、1 依販售數量（多到少）、2 依上架時間（舊到新）、
- * 3 依上架時間（新到舊）、4 依售價（低到高）、5 依售價（高到低）。
+ * 3 依上架時間（新到舊）、4 依售價（低到高）、5 依售價（高到低）、6 隨機。
  */
-export type ProductOrder = 0 | 1 | 2 | 3 | 4 | 5;
+export type ProductOrder = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 /** 商品清單查詢參數，未指定的條件不篩選；未指定 order 時依型錄預設順序 */
 export interface ProductQuery extends PageQuery {
@@ -266,8 +266,6 @@ export interface CartAmounts {
 export interface ShoppingCart {
   /** 購物車品項，依型錄順序排列 */
   items: CartItem[];
-  /** 「再加購」推薦商品，不含購物車內已有的商品 */
-  addons: Product[];
   /** 金額摘要 */
   amounts: CartAmounts;
 }

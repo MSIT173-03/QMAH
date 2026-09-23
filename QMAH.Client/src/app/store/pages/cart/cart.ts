@@ -1,17 +1,18 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
-  SiteHeader,
-  HeaderActions,
-  HeaderNavLink,
+  Promobar,
   Breadcrumb,
   BreadcrumbItem,
   PageTitleRow,
   EmptyState,
   LoginPrompt,
 } from '../../component';
+import { CatalogApi } from '../../api';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
-import { injectCartState } from '../../shared/page-state';
+import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
 
 import { CartLine } from './cart-line/cart-line';
@@ -21,6 +22,12 @@ import { CartLineData, toCartLineData } from './cart.data';
 
 /** 移除一行購物車項目前，淡出動畫的播放時間（需與 cart-line.scss 的動畫時長一致） */
 const REMOVE_ANIMATION_MS = 300;
+/** 新加入的購物車行進場動畫的播放時間（需與 cart-line.scss 的 cart-line-in 時長一致） */
+const ENTER_ANIMATION_MS = 300;
+/** 「再加購」顯示的商品件數 */
+const ADDON_COUNT = 5;
+/** 「再加購」多取的備用件數：使用者陸續加入其中幾件後，清單仍能補滿 ADDON_COUNT */
+const ADDON_SPARE = 5;
 
 /**
  * 購物車頁面。
@@ -31,7 +38,7 @@ const REMOVE_ANIMATION_MS = 300;
 @Component({
   selector: 'app-cart',
   host: { class: 'store-app' },
-  imports: [SiteHeader, HeaderActions, Breadcrumb, PageTitleRow, EmptyState, LoginPrompt, CartLine, CartSummary, CartAddons],
+  imports: [Promobar, Breadcrumb, PageTitleRow, EmptyState, LoginPrompt, CartLine, CartSummary, CartAddons],
   templateUrl: './cart.html',
   styleUrls: [
     './cart.scss',
@@ -41,31 +48,32 @@ export class Cart {
   /** 麵包屑導覽項目 */
   protected readonly breadcrumbItems: BreadcrumbItem[] = [{ label: '首頁', href: HOME_PATH }, { label: '購物車' }];
 
-  /** 頁首導覽連結 */
-  protected readonly navLinks: HeaderNavLink[] = [
-    { label: '全部分類', href: PRODUCT_LIST_PATH },
-    { label: '限時特賣', href: `${PRODUCT_LIST_PATH}?view=deal` },
-  ];
-
   /** 頁面標題列右側連結 */
   protected readonly continueShoppingLink = { label: '繼續選購 →', href: PRODUCT_LIST_PATH };
 
   /** 購物車狀態；每次異動後以 API 回應的內容（含金額摘要）取代 */
   protected readonly cartState = injectCartState();
+  /** 頂部公告列所需的公告、會員點數與折價券 */
+  protected readonly site = injectSiteData();
   /** 正在執行移除動畫、尚未真正從購物車移除的商品 ID */
   private leavingIds = signal<ReadonlySet<string>>(new Set());
+  /** 剛從再加購加入、正在播放進場動畫的商品 ID */
+  private enteringIds = signal<ReadonlySet<string>>(new Set());
 
   /** 購物車行清單，供 app-cart-line 逐行顯示；其餘統計數字皆由此換算 */
   protected lines = computed<CartLineData[]>(() => {
     const leavingIds = this.leavingIds();
-    return (this.cartState.cart()?.items ?? []).map((item) => toCartLineData(item, leavingIds.has(item.productId)));
+    const enteringIds = this.enteringIds();
+    return (this.cartState.cart()?.items ?? []).map((item) =>
+      toCartLineData(item, leavingIds.has(item.productId), enteringIds.has(item.productId)),
+    );
   });
 
   /** 購物車內容是否已載入 */
   protected loaded = computed(() => this.cartState.cart() !== null);
   /** 購物車是否含有商品 */
   protected hasItems = computed(() => this.lines().length > 0);
-  /** 購物車件數，顯示於頁首與標題列 */
+  /** 購物車件數，顯示於頂部公告列的購物車連結 */
   protected count = this.cartState.count;
   /** ui-integration: 購物車異動失敗要留在原頁面並明確告知，不讓使用者誤以為已更新。 */
   protected error = this.cartState.error;
@@ -73,8 +81,59 @@ export class Cart {
   /** 金額摘要（後端以預設配送方式試算），供 app-cart-summary 顯示 */
   protected amounts = computed(() => this.cartState.cart()?.amounts ?? null);
 
-  /** 再加購商品清單（購物車內尚未加入的商品） */
-  protected addons = computed(() => (this.cartState.cart()?.addons ?? []).map(toProductView));
+  /** 購物車內件數加總最多的器類；件數相同時取購物車中較早加入的品項所屬器類 */
+  private readonly topCategory = computed(() => {
+    const totals = new Map<string, number>();
+    for (const item of this.cartState.cart()?.items ?? []) {
+      if (item.category) totals.set(item.category, (totals.get(item.category) ?? 0) + item.qty);
+    }
+    let top: string | null = null;
+    let topQty = 0;
+    for (const [category, qty] of totals) {
+      if (qty > topQty) [top, topQty] = [category, qty];
+    }
+    return top;
+  });
+
+  // inject() 只能在建立元件時呼叫；下方 switchMap 的回呼在之後才執行，必須先取好服務。
+  private readonly catalogApi = inject(CatalogApi);
+
+  /**
+   * 同器類的隨機商品（排序 6：隨機）。只在器類改變時重新抽選，
+   * 調整數量或加入其中一件時清單不會整組換掉；查詢失敗時靜默隱藏此區塊。
+   * 隨機結果可能包含購物車內同器類的品項，因此連同這些品項數與備用件數一起多取，排除後再截到 ADDON_COUNT。
+   */
+  private readonly addonCandidates = toSignal(
+    toObservable(this.topCategory).pipe(
+      switchMap((cat) => {
+        if (!cat) return of([]);
+        const inCategory = (this.cartState.cart()?.items ?? []).filter((item) => item.category === cat).length;
+        return this.catalogApi.getProducts({ cat, order: 6, pageSize: ADDON_COUNT + ADDON_SPARE + inCategory }).pipe(
+          map((page) => page.items),
+          catchError(() => of([])),
+        );
+      }),
+    ),
+    { initialValue: [] },
+  );
+
+  /** 本頁從「再加購」加入購物車的商品 ID */
+  private readonly addedAddonIds = signal<ReadonlySet<string>>(new Set());
+  /** 從「再加購」加入且目前仍在購物車內的商品；之後被移出購物車就恢復為一般卡片 */
+  protected readonly addedAddons = computed<ReadonlySet<string>>(() => {
+    const inCart = new Set((this.cartState.cart()?.items ?? []).map((item) => item.productId));
+    return new Set([...this.addedAddonIds()].filter((id) => inCart.has(id)));
+  });
+
+  /** 「再加購」商品：排除已在購物車內的品項（從這裡加入的保留並顯示已加入），最多 ADDON_COUNT 件 */
+  protected addons = computed(() => {
+    const inCart = new Set((this.cartState.cart()?.items ?? []).map((item) => item.productId));
+    const added = this.addedAddonIds();
+    return this.addonCandidates()
+      .filter((product) => !inCart.has(product.id) || added.has(product.id))
+      .slice(0, ADDON_COUNT)
+      .map(toProductView);
+  });
 
   /** 變更某商品的購物車數量；數量減至 0 視同移除 */
   protected onQtyChange(id: string, qty: number): void {
@@ -99,8 +158,25 @@ export class Cart {
     }, REMOVE_ANIMATION_MS);
   }
 
-  /** 將再加購商品加入購物車（數量 1） */
+  /**
+   * 將再加購商品加入購物車（數量 1）。加入成功後卡片保留並標示已加入；
+   * 第一次加入時新的一行出現並播放進場動畫，再次點擊只累加數量。未登入或加入失敗時不變。
+   */
   protected onAddAddon(id: string): void {
-    this.cartState.add(id);
+    const isNewLine = !(this.cartState.cart()?.items ?? []).some((item) => item.productId === id);
+    this.cartState.add(id, 1, () => {
+      this.addedAddonIds.update((ids) => new Set(ids).add(id));
+      if (!isNewLine) return;
+      this.enteringIds.update((ids) => new Set(ids).add(id));
+      setTimeout(
+        () =>
+          this.enteringIds.update((ids) => {
+            const next = new Set(ids);
+            next.delete(id);
+            return next;
+          }),
+        ENTER_ANIMATION_MS,
+      );
+    });
   }
 }

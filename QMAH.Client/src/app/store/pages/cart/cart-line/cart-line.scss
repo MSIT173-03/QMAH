@@ -16,6 +16,20 @@
   }
 }
 
+/* 加入商品時的進場動畫：移除動畫的反向，自左側滑入、淡入並展開列高 */
+@keyframes cart-line-in {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 200px;
+  }
+}
+
 .cart-line {
   border: 1px solid var(--color-line);
   background: var(--color-surface);
@@ -28,6 +42,11 @@
 
   &--leaving {
     animation: cart-line-out 300ms cubic-bezier(.4, 0, .6, 1) forwards;
+    overflow: hidden;
+  }
+
+  &--entering {
+    animation: cart-line-in 300ms cubic-bezier(.4, 0, .6, 1);
     overflow: hidden;
   }
 }

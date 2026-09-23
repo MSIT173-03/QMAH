@@ -7,8 +7,6 @@ import {
   Promobar,
   SiteHeader,
   SearchBar,
-  HeaderActions,
-  HeaderNavLink,
   Breadcrumb,
   BreadcrumbItem,
   EmptyState,
@@ -40,7 +38,6 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
     Promobar,
     SiteHeader,
     SearchBar,
-    HeaderActions,
     Breadcrumb,
     EmptyState,
     LoginPrompt,
@@ -98,13 +95,6 @@ export class ProductInfo {
   /** 購物車入口連結 */
   /** 商品列表頁路徑，供「查無此商品」時的返回按鈕使用 */
   protected readonly productsPath = PRODUCT_LIST_PATH;
-
-  /** 頁首導覽連結 */
-  protected readonly navLinks: HeaderNavLink[] = [
-    { label: '全部分類', href: PRODUCT_LIST_PATH },
-    { label: '特展聯名', href: `${PRODUCT_LIST_PATH}?view=exhibit` },
-    { label: '年代選藏', href: PRODUCT_LIST_PATH },
-  ];
 
   /* ===============================
      目前商品與相關資料

@@ -39,6 +39,8 @@ export class CartLine {
   lineTotal = input(0);
   /** 是否正在執行移除動畫（淡出並收合列高） */
   leaving = input(false);
+  /** 是否正在執行進場動畫（展開列高並淡入） */
+  entering = input(false);
 
   /** 數量變更時觸發；數量為 0 代表使用者將其減至 0（視同移除） */
   qtyChange = output<number>();

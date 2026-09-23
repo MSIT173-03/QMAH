@@ -108,22 +108,13 @@
     color: var(--color-muted);
   }
 
-  /* 品牌 Logo 圖片（頁首與頁尾共用） */
+  /* 品牌 Logo 圖片（頁尾使用） */
   .brand-logo-img {
     height: 40px;
     width: auto;
     display: block;
   }
   .brand-logo-img--lg { height: 44px; }
-
-  /* 頁首右側操作區：推擠至頁首列最右側 */
-  .hdr-actions {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: var(--qmah-space-6);
-    min-width: 0;
-  }
 
   /* ui-integration: 商城頁首在窄螢幕改為品牌／搜尋與購物車分層，避免搜尋列把頁面撐出水平捲軸。 */
   /* ui-integration: 720px 以前先重排商城頁首，再讓內容自行決定欄數，涵蓋常見平板直向與手機。 */
@@ -136,13 +127,8 @@
     }
 
     .site-header-row--hero { padding-bottom: var(--qmah-space-4); }
-    .site-header-row .brand-logo { flex: 0 0 100%; }
-    .site-header-row .brand-logo-img { height: 32px; }
     .site-header-row .search-wrap { flex: 1 1 0; max-width: none; min-width: 0; }
     .site-header-row .search-submit { padding-inline: var(--qmah-space-3); }
-    .site-header-row .hdr-actions { margin-left: 0; gap: var(--qmah-space-2); min-width: 0; }
-    .nav-bar-row { gap: var(--qmah-space-3); padding: var(--qmah-space-2) var(--qmah-space-3); min-width: 0; }
-    .nav-highlight { margin-left: 0; }
 
     .promobar-row,
     .promobar-actions { min-width: 0; }
@@ -309,13 +295,6 @@
       width: 100%;
       margin-left: 0;
       gap: var(--qmah-space-2) var(--qmah-space-3);
-    }
-
-    .nav-bar-row {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: thin;
-      white-space: nowrap;
     }
   }
 

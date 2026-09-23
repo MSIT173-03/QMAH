@@ -138,10 +138,38 @@
   font-size: var(--qmah-type-label-size);
   letter-spacing: 0.1em;
   transition: background 160ms, border-color 160ms, color 160ms;
+  position: relative;
 
-  &:hover {
+  /* 已加入購物車時維持與滑鼠移入相同的反白 */
+  &:hover,
+  &--added {
     background: var(--color-accent);
     border-color: var(--color-accent);
     color: var(--qmah-primary-content);
+  }
+}
+
+/* 已加入購物車的打勾，貼在按鈕右下角，使用卡片底色；出現時淡入，時長與購物車行的進場動畫一致 */
+@keyframes product-card-check-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.product-card-buy-check {
+  position: absolute;
+  right: 6px;
+  bottom: 10px;
+  scale: 6;
+  color: var(--color-surface);
+  animation: product-card-check-in 300ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card-buy-check {
+    animation: none;
   }
 }

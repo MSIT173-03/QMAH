@@ -2,8 +2,8 @@
 <app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
   [coupons]="site.coupons()" [cartCount]="cart.count()" />
 
-<!-- 網站頁首：品牌 Logo 與搜尋框 -->
-<app-site-header variant="list">
+<!-- 網站頁首：搜尋框 -->
+<app-site-header>
   <!-- 站內搜尋框（列表頁精簡版：不顯示熱門搜尋與建議下拉） -->
   <app-search-bar [compact]="true" [(value)]="searchInput" (search)="onSearch($event)" />
 </app-site-header>

@@ -8,21 +8,6 @@
   <!-- 站內搜尋框，含熱門搜尋捷徑與輸入建議下拉 -->
   <app-search-bar placeholder="搜尋文物周邊、紋樣、館藏聯名" [(value)]="searchQuery" [hotLinks]="hotLinks()"
     [suggestions]="suggestions()" (search)="onSearch($event)" (suggestionPick)="onSuggestionPick($event)" />
-
-  <!-- 分類導覽列 -->
-  <div class="nav-bar">
-    <div class="nav-bar-row">
-      <a [storeLink]="productsPath" class="nav-link-strong">全部分類</a>
-      <a [storeLink]="productsPath + '?view=exhibit'">特展聯名</a>
-      <a [storeLink]="productsPath + '?view=deal'">限時特賣</a>
-      <a [storeLink]="eraCollectionPath">年代選藏</a>
-      <a [storeLink]="newArrivalsPath">新品上架</a>
-      @for (name of categoryNames(); track name) {
-      <a [storeLink]="categoryPath(name)">{{ name }}</a>
-      }
-      <span class="nav-highlight">您好，歡迎光臨！</span>
-    </div>
-  </div>
 </app-site-header>
 
 <div class="container home-main">

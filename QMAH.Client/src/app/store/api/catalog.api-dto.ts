@@ -32,7 +32,7 @@ export interface ApiCategory {
 }
 
 /** 將後端器類代碼轉為中文器類名稱，對應表未列出時直接沿用原文 */
-function toCategoryLabel(categoryCode: string): string {
+export function toCategoryLabel(categoryCode: string): string {
   return CATEGORY_LABELS[categoryCode] ?? categoryCode;
 }
 
