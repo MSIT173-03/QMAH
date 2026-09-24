@@ -129,13 +129,8 @@ export interface ApiProductDetail {
   averageRating: number;
   reviewCount: number;
 }
-/** 清單與詳情共有的商品欄位 */
-type ApiProductBase = Pick<
-  ApiProductListItem,
-  'id' | 'name' | 'categoryCode' | 'price' | 'discountRate' | 'effectivePrice' | 'externalRef' | 'primaryImagePath'
->;
+
 export function toProduct(dto: ApiProductListItem | ApiProductDetail): Product {
-  const dealPrice = dto.effectivePrice;
   // 商品詳情 API 沒有清單專用的上架時間／已售數欄位；不把它們誤當成清單的正式統計值。
   const listedAt = 'createdAt' in dto ? dto.createdAt : '';
   const soldCount = 'sellCount' in dto ? dto.sellCount : 0;
@@ -170,8 +165,6 @@ function toArtifactDescription(description: string | null): string {
 }
 
 export function toProductDetail(dto: ApiProductDetail): ProductDetail {
-  const description = dto.description ?? '';
-  const artifactDescription = toArtifactDescription(description);
   return {
     ...toProduct(dto),
     // 套組商品名稱保留在商品摘要；明信片正面改用原文物名稱，避免把販售形式印到作品標題上。
@@ -179,14 +172,12 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
     // 詳情頁明確使用大圖，讓滿版明信片不會誤拿清單縮圖放大。
     coverImage: dto.primaryImagePath,
     artifactDimensions: dto.artifactSizeText ?? '官方資料未提供',
-    rating: dto.averageRating,
-    reviewCount: dto.reviewCount,
     dimensions: dto.sizeText ?? '官方資料未提供',
     source: dto.sourceUrl ?? dto.externalRef ?? '',
     material: '',
     // 商品說明保留套組段落；明信片視圖另用 artifactDescription，避免把行銷段落塞進卡片。
     description: dto.description?.trim() || '官方資料未提供',
-    artifactDescription,
+    artifactDescription: toArtifactDescription(dto.description),
     condition: '',
     shippingNote: '',
     images: dto.primaryImagePath ? [{ view: '商品', url: dto.primaryImagePath }] : [],

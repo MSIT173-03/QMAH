@@ -12,7 +12,6 @@ export interface CartLineData {
   brand: string;
   cat: string;
   name: string;
-  dims: string;
   /** 折扣後單價 */
   price: number;
   /** 折扣前原價，無折扣時為 null（不顯示劃線價，亦代表無折扣） */
@@ -34,7 +33,6 @@ export function toCartLineData(item: CartItem, leaving: boolean, entering = fals
     brand: item.brand,
     cat: item.category,
     name: item.name,
-    dims: item.dimensions,
     price: item.price,
     was: item.originalPrice,
     qty: item.qty,

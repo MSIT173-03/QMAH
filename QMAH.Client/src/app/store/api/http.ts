@@ -1,5 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 /** 商店 API 的網址前綴 */
@@ -23,11 +22,4 @@ export function toParams(query: object): HttpParams {
     if (value !== undefined) params = params.set(key, String(value));
   }
   return params;
-}
-
-/** GET 回應為 { [key]: T } 的包裝物件時，直接取出其中的 key 欄位；query 會轉為查詢參數 */
-export function getField<T>(http: HttpClient, url: string, key: string, query?: object): Observable<T> {
-  return http
-    .get<Record<string, T>>(url, query && { params: toParams(query) })
-    .pipe(map((res) => res[key]));
 }

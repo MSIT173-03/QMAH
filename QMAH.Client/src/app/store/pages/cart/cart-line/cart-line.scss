@@ -106,12 +106,6 @@
   text-decoration: none;
 }
 
-.cart-line-dims {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: var(--qmah-type-label-size);
-  color: var(--color-muted);
-}
-
 /* 價格列的排列；單價、劃線價與折扣標籤本身沿用全站共用的 .product-card-* 原子樣式 */
 .cart-line-price-row {
   display: flex;

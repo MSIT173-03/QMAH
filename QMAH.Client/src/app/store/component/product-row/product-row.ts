@@ -48,7 +48,6 @@ export class ProductRow {
   protected readonly addCartLabel = '加入購物車';
 
   protected imageSrc = linkedSignal(() => this.coverImage());
-  protected showPlaceholder = computed(() => !this.imageSrc());
   /** 圖片讀取失敗時先 fallback 到同一件文物 display 圖。 */
   protected onImageError(): void {
     const current = this.imageSrc();

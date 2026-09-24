@@ -85,8 +85,6 @@ export class ProductList {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  /** 購物車入口連結 */
-
   /* ===============================
      網址查詢字串（由 router 的 component input binding 帶入）
      =============================== */

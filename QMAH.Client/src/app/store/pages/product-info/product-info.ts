@@ -15,7 +15,7 @@ import {
 import { CatalogApi } from '../../api';
 import { Product } from '../../api/api.models';
 import { toReviewPage } from '../../api/catalog.api-dto';
-import { CART_PATH, CHECKOUT_PATH, HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
+import { CART_PATH, HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView, wasPrice } from '../../shared/product-view';
 import { ProductGallery } from './product-gallery/product-gallery';
@@ -92,7 +92,6 @@ export class ProductInfo {
   protected sizeNote = computed(() => this.site.config()?.sizeNote ?? '');
   protected policies = computed(() => this.site.config()?.productPolicies ?? []);
 
-  /** 購物車入口連結 */
   /** 商品列表頁路徑，供「查無此商品」時的返回按鈕使用 */
   protected readonly productsPath = PRODUCT_LIST_PATH;
 

@@ -89,7 +89,6 @@
     color: var(--color-teal);
   }
   .label-tag--loose { letter-spacing: 0.2em; }
-  .label-tag--tight { letter-spacing: 0.16em; }
 
   /* 區塊／面板標題列右側的次要連結（例如「更多 →」） */
   .section-more {
@@ -126,7 +125,6 @@
       min-width: 0;
     }
 
-    .site-header-row--hero { padding-bottom: var(--qmah-space-4); }
     .site-header-row .search-wrap { flex: 1 1 0; max-width: none; min-width: 0; }
     .site-header-row .search-submit { padding-inline: var(--qmah-space-3); }
 

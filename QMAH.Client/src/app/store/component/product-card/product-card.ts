@@ -71,7 +71,6 @@ export class ProductCard {
 
   /** 目前實際嘗試中的圖片網址；輸入更換時由 linkedSignal 重設。 */
   protected imageSrc = linkedSignal(() => this.coverImage());
-  protected showPlaceholder = computed(() => !this.imageSrc());
   /** 圖片讀取失敗時先 fallback 到同一件文物 display 圖，避免誤顯示其他商品。 */
   protected onImageError(): void {
     const current = this.imageSrc();
