@@ -15,6 +15,11 @@ export function apiUrl(path: string | TemplateStringsArray, ...segments: string[
   return STORE_API_BASE + joined;
 }
 
+/** 目前登入會員的 API 網址（/me 開頭，不在商店 API 前綴下），例如 meUrl('/cart') */
+export function meUrl(path = ''): string {
+  return `${environment.apiBaseUrl}/me${path}`;
+}
+
 /** 將查詢參數物件轉為 HttpParams，略過未指定（undefined）的欄位 */
 export function toParams(query: object): HttpParams {
   let params = new HttpParams();

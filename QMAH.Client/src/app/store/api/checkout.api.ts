@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, of, switchMap } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { apiUrl } from './http';
+import { apiUrl, meUrl } from './http';
 import { CheckoutOptions, Coupon, OrderQuote, OrderQuoteRequest, OrderRequest, OrderResult } from './api.models';
 
 const DISABLED_CHECKOUT_OPTIONS: CheckoutOptions = {
@@ -92,7 +91,7 @@ export class CheckoutApi {
    */
   createOrder(order: OrderRequest, coupon: Coupon | null): Observable<OrderResult> {
     const idempotencyKey = crypto.randomUUID();
-    return this.http.get<ApiCartLine[]>(`${environment.apiBaseUrl}/me/cart`).pipe(
+    return this.http.get<ApiCartLine[]>(meUrl('/cart')).pipe(
       switchMap((cart) => {
         const subtotal = cart.reduce((sum, line) => sum + line.lineTotal, 0);
         const body: ApiCreateOrderRequest = {

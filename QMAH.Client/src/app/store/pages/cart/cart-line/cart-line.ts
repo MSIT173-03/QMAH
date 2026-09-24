@@ -1,8 +1,8 @@
-import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { QmahIconComponent } from '../../../../shared/components/qmah-icon/qmah-icon';
 import { QtyStepper } from '../../../component';
 import { formatMoney } from '../../../shared/format';
-import { toDisplayImage } from '../../../shared/image-utils';
+import { imageWithFallback } from '../../../shared/image-utils';
 import { productPath } from '../../../shared/paths';
 import { toPriceView } from '../../../shared/product-view';
 import { StoreLink } from '../../../shared/store-link';
@@ -52,12 +52,8 @@ export class CartLine {
   /** 移除按鈕文字 */
   protected readonly removeLabel = '移除';
 
-  protected imageSrc = linkedSignal(() => this.coverImage());
-  protected onImageError(): void {
-    const current = this.imageSrc();
-    const display = toDisplayImage(current);
-    this.imageSrc.set(display && display !== current ? display : null);
-  }
+  /** 商品圖片；讀取失敗時只 fallback 到同一件文物的 display 圖。 */
+  protected readonly image = imageWithFallback(() => this.coverImage());
 
   /** 商品頁連結網址 */
   protected link = computed(() => productPath(this.id()));

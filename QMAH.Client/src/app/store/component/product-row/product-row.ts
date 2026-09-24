@@ -1,8 +1,8 @@
-import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
-import { toDisplayImage } from '../../shared/image-utils';
+import { imageWithFallback } from '../../shared/image-utils';
 import { productPath } from '../../shared/paths';
-import { formatRating, formatReviews, toPriceView } from '../../shared/product-view';
+import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
 
 /**
@@ -47,17 +47,8 @@ export class ProductRow {
   /** 加入購物車按鈕文字 */
   protected readonly addCartLabel = '加入購物車';
 
-  protected imageSrc = linkedSignal(() => this.coverImage());
-  /** 圖片讀取失敗時先 fallback 到同一件文物 display 圖。 */
-  protected onImageError(): void {
-    const current = this.imageSrc();
-    const display = toDisplayImage(current);
-    if (display && display !== current) {
-      this.imageSrc.set(display);
-      return;
-    }
-    this.imageSrc.set(null);
-  }
+  /** 商品圖片；讀取失敗時先 fallback 到同一件文物 display 圖。 */
+  protected readonly image = imageWithFallback(() => this.coverImage());
 
   /** 商品頁連結網址 */
   protected link = computed(() => productPath(this.id()));
@@ -70,5 +61,5 @@ export class ProductRow {
   /** 是否有評論；沒有評論時不顯示「0.0」「0 則」，改顯示提示文字 */
   protected hasReviews = computed(() => this.reviews() > 0);
   /** 尚無評論時的提示文字 */
-  protected readonly noReviewsLabel = '無評論';
+  protected readonly noReviewsLabel = NO_REVIEWS_LABEL;
 }

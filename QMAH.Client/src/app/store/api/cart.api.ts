@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { meUrl } from './http';
 import { CartItem, ShoppingCart } from './api.models';
 import { toCatalogThumbnail, toCategoryLabel } from './catalog.api-dto';
 
@@ -19,7 +19,7 @@ interface ApiCartItem {
   addedAt: string;
 }
 
-const MEMBER_CART_API = `${environment.apiBaseUrl}/me/cart`;
+const MEMBER_CART_API = meUrl('/cart');
 
 /** 空購物車；未登入或購物車 API 暫時無法使用時的顯示內容 */
 export function emptyCart(): ShoppingCart {

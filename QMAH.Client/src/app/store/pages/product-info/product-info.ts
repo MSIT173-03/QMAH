@@ -15,7 +15,7 @@ import {
 import { CatalogApi } from '../../api';
 import { Product } from '../../api/api.models';
 import { toReviewPage } from '../../api/catalog.api-dto';
-import { CART_PATH, HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
+import { CART_PATH, HOME_PATH, PRODUCT_LIST_PATH, categoryPath, searchPath } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView, wasPrice } from '../../shared/product-view';
 import { ProductGallery } from './product-gallery/product-gallery';
@@ -149,7 +149,7 @@ export class ProductInfo {
     if (!item) return [{ label: '首頁', href: HOME_PATH }];
     return [
       { label: '首頁', href: HOME_PATH },
-      { label: item.category, href: `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(item.category)}` },
+      { label: item.category, href: categoryPath(item.category) },
       { label: item.name },
     ];
   });
@@ -179,6 +179,6 @@ export class ProductInfo {
 
   /** 送出頁首搜尋：前往商品列表頁，並帶上關鍵字查詢字串 */
   protected onSearch(keyword: string): void {
-    this.router.navigate([PRODUCT_LIST_PATH], { queryParams: { q: keyword } });
+    this.router.navigateByUrl(searchPath(keyword));
   }
 }

@@ -4,6 +4,7 @@ import { EMPTY, catchError, filter, switchMap } from 'rxjs';
 import { SiteHeader, StepIndicator, Breadcrumb, BreadcrumbItem, PageTitleRow } from '../../component';
 import { CheckoutApi, MemberApi } from '../../api';
 import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
+import { EMPTY_RECIPIENT } from '../../api/member.api';
 import { CART_PATH, HOME_PATH, MEMBER_PATH } from '../../shared/paths';
 import { RecipientForm } from './recipient-form/recipient-form';
 import { DeliveryOptions } from './delivery-options/delivery-options';
@@ -13,7 +14,6 @@ import { CheckoutSummary } from './checkout-summary/checkout-summary';
 import {
   CHECKOUT_STEPS,
   CHECKOUT_STEP_INDEX,
-  EMPTY_RECIPIENT,
   NO_COUPON,
   PointMode,
   RecipientField,
@@ -69,11 +69,17 @@ export class Checkout {
 
   /** 配送／付款方式 */
   private readonly options = toSignal(this.checkoutApi.getOptions());
-  /** 正式配送／付款契約尚未接通時，整個下單入口維持停用而不是送出不存在的 API。 */
-  protected readonly checkoutEnabled = computed(() => {
+  /**
+   * 已啟用的配送／付款方式；尚未載入或任一清單為空（正式契約尚未接通）時為 null。
+   * integration: 空 options 代表正式配送／付款契約尚未啟用；不要以 undefined.id
+   * 觸發整頁例外，也不要在尚未有正式 quote API 時送出任何下單請求。
+   */
+  private readonly enabledOptions = computed(() => {
     const options = this.options();
-    return !!options && options.shippingOptions.length > 0 && options.paymentOptions.length > 0;
+    return options && options.shippingOptions.length > 0 && options.paymentOptions.length > 0 ? options : null;
   });
+  /** 正式配送／付款契約尚未接通時，整個下單入口維持停用而不是送出不存在的 API。 */
+  protected readonly checkoutEnabled = computed(() => this.enabledOptions() !== null);
   /** 會員資料（帶入收件資訊、持有點數） */
   private readonly profile = toSignal(this.memberApi.getCheckoutProfile());
   /** 會員可選用的折價券 */
@@ -105,6 +111,8 @@ export class Checkout {
   protected submitted = signal(false);
   /** 訂單成立後的 API 回應，未成立時為 null */
   protected order = signal<OrderResult | null>(null);
+  /** 選用的折價券，未選用時為 null */
+  private readonly selectedCoupon = computed(() => this.coupons()[this.couponIndex()] ?? null);
 
   /* ===============================
      訂單金額試算（後端）
@@ -112,14 +120,11 @@ export class Checkout {
 
   /** 目前選項對應的試算請求；選項尚未載入或訂單已成立（購物車已清空）時為 null，不再試算 */
   private quoteRequest = computed<OrderQuoteRequest | null>(() => {
-    const options = this.options();
-    // integration: 空 options 代表正式配送／付款契約尚未啟用；不要以 undefined.id
-    // 觸發整頁例外，也不要在尚未有正式 quote API 時送出任何下單請求。
-    if (!options || options.shippingOptions.length === 0 || options.paymentOptions.length === 0 || this.order())
-      return null;
+    const options = this.enabledOptions();
+    if (!options || this.order()) return null;
     return {
       shippingOptionId: options.shippingOptions[this.shipIndex()].id,
-      couponId: this.coupons()[this.couponIndex()]?.id ?? null,
+      couponId: this.selectedCoupon()?.id ?? null,
       usePoints: requestedPoints(this.pointMode(), this.customPoints(), this.pointBalance()),
     };
   });
@@ -158,12 +163,12 @@ export class Checkout {
 
   /** 送出訂單；必填欄位未填妥時，由訂單摘要顯示補填提示 */
   protected onSubmit(): void {
-    const options = this.options();
-    const request = this.quoteRequest();
+    const options = this.enabledOptions();
     // checkout 尚未有正式 options 時保持停用；這是局部能力關閉，不影響其他 Area。
-    if (!options || options.shippingOptions.length === 0 || options.paymentOptions.length === 0) return;
+    if (!options) return;
     this.submitted.set(true);
-    if (!this.valid() || !options || !request) return;
+    const request = this.quoteRequest();
+    if (!this.valid() || !request) return;
     this.checkoutApi
       .createOrder(
         {
@@ -171,7 +176,7 @@ export class Checkout {
           recipient: this.form(),
           paymentOptionId: options.paymentOptions[this.payIndex()].id,
         },
-        this.coupons()[this.couponIndex()] ?? null,
+        this.selectedCoupon(),
       )
       .subscribe((order) => this.order.set(order));
   }

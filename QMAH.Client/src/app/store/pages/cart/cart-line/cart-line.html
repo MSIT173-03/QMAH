@@ -3,8 +3,8 @@
 <div class="cart-line" [class.cart-line--leaving]="leaving()" [class.cart-line--entering]="entering()">
   <!-- 商品縮圖，連結至商品頁 -->
   <a [storeLink]="link()" class="cart-line-thumb">
-    @if (imageSrc(); as imageUrl) {
-      <img src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async" (error)="onImageError()" />
+    @if (image.src(); as imageUrl) {
+      <img src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async" (error)="image.onError()" />
     } @else {
       <span class="cart-line-slot">
         <app-qmah-icon name="image" [size]="20" aria-hidden="true" />

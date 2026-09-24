@@ -23,3 +23,13 @@ export function productPath(id: string): string {
 export function searchPath(keyword: string): string {
   return `${PRODUCT_LIST_PATH}?q=${encodeURIComponent(keyword)}`;
 }
+
+/** 商品列表頁依器類名稱篩選的路徑 */
+export function categoryPath(category: string): string {
+  return `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(category)}`;
+}
+
+/** 商品列表頁依年代代碼篩選的路徑 */
+export function eraPath(eraCode: string): string {
+  return `${PRODUCT_LIST_PATH}?era=${encodeURIComponent(eraCode)}`;
+}

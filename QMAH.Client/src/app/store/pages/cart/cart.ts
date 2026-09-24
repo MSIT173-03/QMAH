@@ -30,6 +30,13 @@ const ADDON_COUNT = 5;
 /** 「再加購」多取的備用件數：使用者陸續加入其中幾件後，清單仍能補滿 ADDON_COUNT */
 const ADDON_SPARE = 5;
 
+/** 回傳移除指定 ID 後的新集合（不修改原集合，讓 signal 能偵測到變動） */
+function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
+  const next = new Set(ids);
+  next.delete(id);
+  return next;
+}
+
 /**
  * 購物車頁面。
  * 統整頁首、麵包屑、標題列、購物車行清單、金額摘要與再加購區塊；
@@ -56,6 +63,10 @@ export class Cart {
   protected readonly cartState = injectCartState();
   /** 頂部公告列所需的公告、會員點數與折價券 */
   protected readonly site = injectSiteData();
+  /** 購物車品項；尚在載入時為空陣列 */
+  private readonly cartItems = computed(() => this.cartState.cart()?.items ?? []);
+  /** 購物車內的商品 ID */
+  private readonly cartIds = computed(() => new Set(this.cartItems().map((item) => item.productId)));
   /** 正在執行移除動畫、尚未真正從購物車移除的商品 ID */
   private leavingIds = signal<ReadonlySet<string>>(new Set());
   /** 剛從再加購加入、正在播放進場動畫的商品 ID */
@@ -65,7 +76,7 @@ export class Cart {
   protected lines = computed<CartLineData[]>(() => {
     const leavingIds = this.leavingIds();
     const enteringIds = this.enteringIds();
-    return (this.cartState.cart()?.items ?? []).map((item) =>
+    return this.cartItems().map((item) =>
       toCartLineData(item, leavingIds.has(item.productId), enteringIds.has(item.productId)),
     );
   });
@@ -88,7 +99,7 @@ export class Cart {
    * 最後一件商品被移除的瞬間跟著消失。
    */
   private readonly topCategory = linkedSignal<CartItem[], string | null>({
-    source: () => this.cartState.cart()?.items ?? [],
+    source: this.cartItems,
     computation: (items, previous) => {
       const totals = new Map<string, number>();
       for (const item of items) {
@@ -115,7 +126,7 @@ export class Cart {
     toObservable(this.topCategory).pipe(
       switchMap((cat) => {
         if (!cat) return of([]);
-        const inCategory = (this.cartState.cart()?.items ?? []).filter((item) => item.category === cat).length;
+        const inCategory = this.cartItems().filter((item) => item.category === cat).length;
         return this.catalogApi.getProducts({ cat, order: 6, pageSize: ADDON_COUNT + ADDON_SPARE + inCategory }).pipe(
           map((page) => page.items),
           catchError(() => of([])),
@@ -129,13 +140,13 @@ export class Cart {
   private readonly addedAddonIds = signal<ReadonlySet<string>>(new Set());
   /** 從「再加購」加入且目前仍在購物車內的商品；之後被移出購物車就恢復為一般卡片 */
   protected readonly addedAddons = computed<ReadonlySet<string>>(() => {
-    const inCart = new Set((this.cartState.cart()?.items ?? []).map((item) => item.productId));
+    const inCart = this.cartIds();
     return new Set([...this.addedAddonIds()].filter((id) => inCart.has(id)));
   });
 
   /** 「再加購」商品：排除已在購物車內的品項（從這裡加入的保留並顯示已加入），最多 ADDON_COUNT 件 */
   protected addons = computed(() => {
-    const inCart = new Set((this.cartState.cart()?.items ?? []).map((item) => item.productId));
+    const inCart = this.cartIds();
     const added = this.addedAddonIds();
     return this.addonCandidates()
       .filter((product) => !inCart.has(product.id) || added.has(product.id))
@@ -156,13 +167,7 @@ export class Cart {
   protected onRemove(id: string): void {
     this.leavingIds.update((ids) => new Set(ids).add(id));
     setTimeout(() => {
-      this.cartState.remove(id, () =>
-        this.leavingIds.update((ids) => {
-          const next = new Set(ids);
-          next.delete(id);
-          return next;
-        }),
-      );
+      this.cartState.remove(id, () => this.leavingIds.update((ids) => withoutId(ids, id)));
     }, REMOVE_ANIMATION_MS);
   }
 
@@ -171,20 +176,12 @@ export class Cart {
    * 第一次加入時新的一行出現並播放進場動畫，再次點擊只累加數量。未登入或加入失敗時不變。
    */
   protected onAddAddon(id: string): void {
-    const isNewLine = !(this.cartState.cart()?.items ?? []).some((item) => item.productId === id);
+    const isNewLine = !this.cartIds().has(id);
     this.cartState.add(id, 1, () => {
       this.addedAddonIds.update((ids) => new Set(ids).add(id));
       if (!isNewLine) return;
       this.enteringIds.update((ids) => new Set(ids).add(id));
-      setTimeout(
-        () =>
-          this.enteringIds.update((ids) => {
-            const next = new Set(ids);
-            next.delete(id);
-            return next;
-          }),
-        ENTER_ANIMATION_MS,
-      );
+      setTimeout(() => this.enteringIds.update((ids) => withoutId(ids, id)), ENTER_ANIMATION_MS);
     });
   }
 }

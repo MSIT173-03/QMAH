@@ -6,7 +6,7 @@ import { Panel, SectionHead } from '../../../component';
 import { CatalogApi } from '../../../api';
 import { formatDateMD } from '../../../shared/format';
 import { PRODUCT_LIST_PATH, productPath } from '../../../shared/paths';
-import { formatRating, formatReviews, toPriceView, toProductView } from '../../../shared/product-view';
+import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView, toProductView } from '../../../shared/product-view';
 import { StoreLink } from '../../../shared/store-link';
 import { LucidePackageSearch } from '@lucide/angular';
 
@@ -68,7 +68,7 @@ export class NewArrivals {
     }),
   );
   /** 尚無評論時的提示文字 */
-  protected readonly noReviewsLabel = '無評論';
+  protected readonly noReviewsLabel = NO_REVIEWS_LABEL;
 
   /** 角標日期文字：清單已由新到舊排列，取第一件的上架日期（MM/DD） */
   protected tagText = computed(() => {

@@ -74,3 +74,6 @@ export function formatRating(rating: number): string {
 export function formatReviews(reviews: number, suffix = '則評論'): string {
   return `${formatNumber(reviews)} ${suffix}`;
 }
+
+/** 尚無評論時取代「0.0」「0 則評論」的提示文字 */
+export const NO_REVIEWS_LABEL = '無評論';
