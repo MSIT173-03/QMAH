@@ -1,11 +1,9 @@
 <div class="game-guide">
   <!-- ui-integration: 說明頁沿用 Game 子導覽，讓玩家可直接回到多人鑑定或切換單人玩法。 -->
   <app-game-navigation>
-    <a class="guide-nav-back" routerLink="/game">返回多人鑑定大廳</a>
   </app-game-navigation>
 
   <section class="guide-heading" aria-labelledby="game-guide-title">
-    <p class="eyebrow">遊戲指南</p>
     <h1 id="game-guide-title">一回合怎麼玩？</h1>
     <p><span>看文物、寫想法，</span><span>再讀別人的匿名回答。</span><span>投完票，</span><span>才知道誰寫了什麼。</span></p>
   </section>
@@ -21,29 +19,68 @@
 
   <section id="guide-panel" class="guide-panel" [attr.aria-labelledby]="'guide-tab-' + activeGuide()" aria-live="polite">
     @if (activeGuide() === 'multiplayer') {
-      <div class="guide-preview">
-        <div class="guide-preview-heading"><div><span class="eyebrow">玩法示範 · 不會真的投票</span><h2>跟著玩一回合</h2></div><span>觀察與作答 → 匿名投票 → 揭曉</span></div>
-        <div class="guide-preview-artifact"><img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="掐絲琺瑯雲龍紋三足香爐" /><div><strong>先看看這件文物</strong><p>掐絲琺瑯雲龍紋三足香爐</p><span>寫完後，看看其他人怎麼說。</span></div><p class="guide-preview-example"><span>假如你寫下：</span><span>「我覺得這是香爐。」</span></p></div>
-        <h3>哪一則回答最能說服你？</h3>
-        <p class="guide-preview-hint"><span>正式遊戲不能投自己的回答。</span><span>這裡只示範畫面，不會送出投票。</span></p>
-        <ol class="guide-preview-answers">
-          @for (answer of demoAnswers; track answer.author; let index = $index) {
-            <li>
-              <button type="button" [class.is-selected]="selectedDemoAnswer() === index" [class.is-winner]="demoRevealed() && index === 1" [attr.aria-pressed]="selectedDemoAnswer() === index" [disabled]="demoRevealed()" (click)="selectedDemoAnswer.set(index)">
-                <span><strong>回答 {{ (index + 1).toString().padStart(2, '0') }}</strong>@if (demoRevealed()) { <small>{{ answer.author }} · {{ answer.votes }} 票@if (index === 1) { · 勝出 }</small> }</span>
-                <span class="guide-preview-answer-text">{{ answer.text }}</span>
-                @if (!demoRevealed() && selectedDemoAnswer() === index) { <small>已選擇</small> }
-              </button>
-            </li>
-          }
+      <div class="guide-preview" animate.enter="game-panel-enter">
+        <div class="guide-preview-heading"><h2>跟著玩一回合</h2></div>
+        <ol class="guide-round-progress" aria-label="示範進度">
+          <li [class.is-active]="!demoSubmitted()" [class.is-done]="demoSubmitted()" [attr.aria-current]="!demoSubmitted() ? 'step' : null"><small>01</small>觀察作答</li>
+          <li [class.is-active]="demoSubmitted() && !demoRevealed()" [class.is-done]="demoRevealed()" [attr.aria-current]="demoSubmitted() && !demoRevealed() ? 'step' : null"><small>02</small>匿名投票</li>
+          <li [class.is-active]="demoRevealed()" [attr.aria-current]="demoRevealed() ? 'step' : null"><small>03</small>揭曉結果</li>
         </ol>
-        <div class="guide-preview-actions">
-          @if (!demoRevealed()) { <button type="button" [disabled]="selectedDemoAnswer() === null" (click)="demoRevealed.set(true)">揭曉作者與票數</button> }
-          @else { <p role="status"><span>這回合是回答 02（阿墨）勝出。</span><span>你選了回答 {{ ((selectedDemoAnswer() ?? 0) + 1).toString().padStart(2, '0') }}。</span></p><button type="button" class="secondary" (click)="restartDemo()">重新示範</button> }
+        <p class="guide-preview-hint">這是互動示範，不會送出回答或投票。</p>
+        <div class="guide-round-table">
+          <div class="guide-preview-artifact"><img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="掐絲琺瑯雲龍紋三足香爐" /><div><strong>先看看這件文物</strong><p>掐絲琺瑯雲龍紋三足香爐</p><span>觀察細節，再寫下你的想法。</span></div></div>
+          @if (!demoSubmitted()) {
+            <div class="guide-preview-write">
+              <label for="demo-response">你覺得這件文物有什麼特色？</label>
+              <textarea id="demo-response" rows="3" maxlength="200" placeholder="例如：三隻腳讓它站得很穩，我猜是用來焚香的。" [value]="demoResponse()" (input)="demoResponse.set($any($event.target).value)"></textarea>
+              <button type="button" [disabled]="!demoResponse().trim()" (click)="submitDemoResponse()">完成作答，看看其他回答</button>
+            </div>
+          } @else {
+            <div class="guide-round-vote">
+              <div class="guide-preview-your-answer" animate.enter="game-result-enter"><strong>你的回答</strong><p>{{ demoResponse() }}</p></div>
+              <h3>哪一則回答最能說服你？</h3>
+              <p class="guide-preview-hint">正式遊戲不能投自己的回答。以下回答與票數僅供示範。</p>
+              <ol class="guide-preview-answers" animate.enter="game-result-enter">
+                @for (answer of demoAnswers; track answer.author; let index = $index) {
+                  <li>
+                    <button type="button" [class.is-selected]="selectedDemoAnswer() === index" [class.is-winner]="demoRevealed() && index === 1" [attr.aria-pressed]="selectedDemoAnswer() === index" [disabled]="demoRevealed()" (click)="selectedDemoAnswer.set(index)">
+                      <span><strong>回答 {{ (index + 1).toString().padStart(2, '0') }}</strong>@if (demoRevealed()) { <small>{{ answer.author }} · {{ answer.votes }} 票@if (index === 1) { · 勝出 }</small> }</span>
+                      <span class="guide-preview-answer-text">{{ answer.text }}</span>
+                      @if (!demoRevealed() && selectedDemoAnswer() === index) { <small>已選擇</small> }
+                    </button>
+                  </li>
+                }
+              </ol>
+              <div class="guide-preview-actions">
+                @if (!demoRevealed()) { <button type="button" [disabled]="selectedDemoAnswer() === null" (click)="demoRevealed.set(true)">揭曉作者與票數</button> }
+                @else { <p role="status"><span>這回合是回答 02（阿墨）勝出。</span><span>你選了回答 {{ ((selectedDemoAnswer() ?? 0) + 1).toString().padStart(2, '0') }}。</span></p><button type="button" class="secondary" (click)="restartDemo()">重新示範</button> }
+              </div>
+            </div>
+          }
         </div>
       </div>
       <a class="guide-panel-link" routerLink="/game">開始多人鑑定</a>
     } @else {
+      <section class="training-demo" aria-labelledby="training-demo-title" animate.enter="game-panel-enter">
+        <div class="training-demo__heading"><h2 id="training-demo-title">試玩一題：看圖認文物</h2><p>這是單人玩法的簡短示範，不會計分或發送獎勵。</p></div>
+        <div class="training-demo__body">
+          <img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="示範題目的文物照片" />
+          <div class="training-demo__question">
+            <h3>照片裡是哪一件文物？</h3>
+            <div class="training-demo__choices" role="group" aria-label="選擇文物名稱">
+              @for (choice of trainingChoices; track choice; let index = $index) {
+                <button type="button" [class.is-selected]="selectedTrainingChoice() === index" [class.is-correct]="trainingRevealed() && index === 1" [class.is-wrong]="trainingRevealed() && selectedTrainingChoice() === index && index !== 1" [attr.aria-pressed]="selectedTrainingChoice() === index" [disabled]="trainingRevealed()" (click)="selectedTrainingChoice.set(index)">{{ choice }}</button>
+              }
+            </div>
+            @if (!trainingRevealed()) {
+              <button type="button" class="training-demo__reveal" [disabled]="selectedTrainingChoice() === null" (click)="trainingRevealed.set(true)">查看示範結果</button>
+            } @else {
+              <p class="training-demo__result" [class.is-correct]="selectedTrainingChoice() === 1" [class.is-wrong]="selectedTrainingChoice() !== 1" role="status" animate.enter="game-result-enter">{{ selectedTrainingChoice() === 1 ? '答對了！' : '這次選錯了。' }}照片中是掐絲琺瑯雲龍紋三足香爐。</p>
+              <button type="button" class="training-demo__retry" (click)="restartTrainingDemo()">再試一次</button>
+            }
+          </div>
+        </div>
+      </section>
       <app-game-how-to variant="training" />
       <a class="guide-panel-link" routerLink="/game/training">開始單人遊戲</a>
     }

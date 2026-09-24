@@ -21,12 +21,28 @@ export class GameGuideComponent {
   ] as const;
   readonly selectedDemoAnswer = signal<number | null>(null);
   readonly demoRevealed = signal(false);
+  readonly demoResponse = signal('');
+  readonly demoSubmitted = signal(false);
+  readonly trainingChoices = ['青花折枝花卉盤', '掐絲琺瑯雲龍紋三足香爐', '剔紅山水人物盒'] as const;
+  readonly selectedTrainingChoice = signal<number | null>(null);
+  readonly trainingRevealed = signal(false);
+
+  restartTrainingDemo(): void {
+    this.selectedTrainingChoice.set(null);
+    this.trainingRevealed.set(false);
+  }
+
+  submitDemoResponse(): void {
+    if (this.demoResponse().trim()) this.demoSubmitted.set(true);
+  }
 
   selectGuide(variant: GameHowToVariant): void {
     this.activeGuide.set(variant);
   }
 
   restartDemo(): void {
+    this.demoResponse.set('');
+    this.demoSubmitted.set(false);
     this.selectedDemoAnswer.set(null);
     this.demoRevealed.set(false);
   }
