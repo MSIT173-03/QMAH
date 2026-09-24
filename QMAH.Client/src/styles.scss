@@ -157,6 +157,35 @@ body {
   outline-offset: 3px;
 }
 
+/* 遊戲模式切換時，讓選取狀態在路由間保持連續；Angular 只為三種遊戲主模式啟動轉場。 */
+::view-transition-group(qmah-game-mode) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(.16, 1, .3, 1);
+}
+
+::view-transition-old(root) {
+  animation: qmah-game-scene-exit 110ms ease-in both;
+}
+
+::view-transition-new(root) {
+  animation: qmah-game-scene-enter 220ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes qmah-game-scene-exit {
+  to { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes qmah-game-scene-enter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(qmah-game-mode),
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation-duration: 1ms !important; }
+}
+
 /* ui-integration: 短標題以 balance 避免孤立短行，長段落以 pretty 保留自然閱讀節奏。 */
 :where(h1, h2, h3) {
   text-wrap: balance;
