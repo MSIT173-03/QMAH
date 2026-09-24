@@ -3,11 +3,11 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { map, of, switchMap } from 'rxjs';
 
-import { Promobar, SearchBar, SearchSuggestion, SiteHeader, LoginPrompt } from '../../component';
+import { SearchBar, SearchSuggestion, SessionBar, SiteHeader } from '../../component';
 import { HomeApi, SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
 import { searchPath } from '../../shared/paths';
-import { injectCartState, injectSiteData } from '../../shared/page-state';
+import { injectCartState } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
 
 import { HeroCarousel } from './hero-carousel/hero-carousel';
@@ -33,7 +33,7 @@ const RECOMMEND_PAGE_SIZE = 10;
   selector: 'app-home',
   host: { class: 'store-app' },
   imports: [
-    Promobar,
+    SessionBar,
     SearchBar,
     HeroCarousel,
     FlashSale,
@@ -44,7 +44,6 @@ const RECOMMEND_PAGE_SIZE = 10;
     BrandHall,
     Recommendations,
     SiteHeader,
-    LoginPrompt,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
@@ -56,9 +55,6 @@ export class Home {
 
   /** 購物車狀態（件數顯示於頁首） */
   protected readonly cart = injectCartState();
-
-  /** 全站設定與會員資料，供頂部公告列與頁尾使用 */
-  protected readonly site = injectSiteData();
 
   /** 搜尋框目前輸入值 */
   protected searchQuery = signal('');

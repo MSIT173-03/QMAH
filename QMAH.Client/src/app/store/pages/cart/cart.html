@@ -1,6 +1,5 @@
-<!-- 頂部公告與快捷連結列（點數、折價券、購物車），與其他商城頁面一致 -->
-<app-promobar [announcements]="site.announcements()" [signedIn]="cartState.signedIn()" [points]="site.points()"
-  [coupons]="site.coupons()" [cartCount]="count()" />
+<!-- 頂部公告列與登入提示，與其他商城頁面一致 -->
+<app-session-bar [cart]="cartState" />
 
 <div class="container cart-main">
 
@@ -35,6 +34,3 @@
 </div>
 
 <!-- 頁尾：簡版，僅顯示版權列 -->
-
-<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
-<app-login-prompt [open]="cartState.loginPrompt()" (confirm)="cartState.confirmLogin()" (cancel)="cartState.cancelLogin()" />

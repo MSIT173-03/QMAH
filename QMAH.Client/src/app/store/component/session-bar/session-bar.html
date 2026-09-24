@@ -1,0 +1,7 @@
+@let state = cart();
+<!-- 頂部公告與快捷連結列（點數、折價券、購物車） -->
+<app-promobar [announcements]="site.announcements()" [signedIn]="state.signedIn()" [points]="site.points()"
+  [coupons]="site.coupons()" [cartCount]="state.count()" />
+
+<!-- 未登入時使用加入購物車，詢問是否前往登入頁；原生 modal dialog 顯示於最上層，不佔版面位置 -->
+<app-login-prompt [open]="state.loginPrompt()" (confirm)="state.confirmLogin()" (cancel)="state.cancelLogin()" />

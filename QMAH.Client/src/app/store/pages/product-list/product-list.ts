@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of, switchMap, tap } from 'rxjs';
 
 import {
-  Promobar,
+  SessionBar,
   SiteHeader,
   SearchBar,
   Breadcrumb,
@@ -18,12 +18,11 @@ import {
   ProductCard,
   ProductRow,
   EmptyState,
-  LoginPrompt,
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { ProductQuery } from '../../api/api.models';
 import { HOME_PATH } from '../../shared/paths';
-import { injectCartState, injectSiteData } from '../../shared/page-state';
+import { injectCartState } from '../../shared/page-state';
 import { ProductViewData, toProductView } from '../../shared/product-view';
 import {
   ALL_ERAS_LABEL,
@@ -62,7 +61,7 @@ function toPage(value: string | undefined): number {
   selector: 'app-product-list',
   host: { class: 'store-app' },
   imports: [
-    Promobar,
+    SessionBar,
     SiteHeader,
     SearchBar,
     Breadcrumb,
@@ -73,7 +72,6 @@ function toPage(value: string | undefined): number {
     ProductCard,
     ProductRow,
     EmptyState,
-    LoginPrompt,
   ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
@@ -137,8 +135,6 @@ export class ProductList {
      固定版面文字與外部資料
      =============================== */
 
-  /** 全站設定與頂部公告列資料 */
-  protected readonly site = injectSiteData();
   /** 器類清單（含各器類商品件數） */
   private readonly categories = toSignal(this.catalogApi.getCategories(), { initialValue: [] });
   /** 年代清單（含各年代商品件數） */

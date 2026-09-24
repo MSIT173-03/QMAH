@@ -1,6 +1,5 @@
-<!-- 頂部公告與快捷連結列（點數、折價券、購物車） -->
-<app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
-  [coupons]="site.coupons()" [cartCount]="cart.count()" />
+<!-- 頂部公告列與登入提示 -->
+<app-session-bar [cart]="cart" />
 
 
 <app-site-header>
@@ -37,6 +36,3 @@
   <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)"
     (requireMore)="onRequireMore()" />
 </div>
-
-<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
-<app-login-prompt [open]="cart.loginPrompt()" (confirm)="cart.confirmLogin()" (cancel)="cart.cancelLogin()" />

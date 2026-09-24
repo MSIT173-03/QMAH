@@ -3,17 +3,16 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
-  Promobar,
   Breadcrumb,
   BreadcrumbItem,
   PageTitleRow,
   EmptyState,
-  LoginPrompt,
+  SessionBar,
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { CartItem } from '../../api/api.models';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
-import { injectCartState, injectSiteData } from '../../shared/page-state';
+import { injectCartState } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
 
 import { CartLine } from './cart-line/cart-line';
@@ -46,7 +45,7 @@ function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
 @Component({
   selector: 'app-cart',
   host: { class: 'store-app' },
-  imports: [Promobar, Breadcrumb, PageTitleRow, EmptyState, LoginPrompt, CartLine, CartSummary, CartAddons],
+  imports: [SessionBar, Breadcrumb, PageTitleRow, EmptyState, CartLine, CartSummary, CartAddons],
   templateUrl: './cart.html',
   styleUrl: './cart.scss',
 })
@@ -59,8 +58,6 @@ export class Cart {
 
   /** 購物車狀態；每次異動後以 API 回應的內容（含金額摘要）取代 */
   protected readonly cartState = injectCartState();
-  /** 頂部公告列所需的公告、會員點數與折價券 */
-  protected readonly site = injectSiteData();
   /** 購物車品項；尚在載入時為空陣列 */
   private readonly cartItems = computed(() => this.cartState.cart()?.items ?? []);
   /** 購物車內的商品 ID */
@@ -83,8 +80,6 @@ export class Cart {
   protected loaded = computed(() => this.cartState.cart() !== null);
   /** 購物車是否含有商品 */
   protected hasItems = computed(() => this.lines().length > 0);
-  /** 購物車件數，顯示於頂部公告列的購物車連結 */
-  protected count = this.cartState.count;
   /** ui-integration: 購物車異動失敗要留在原頁面並明確告知，不讓使用者誤以為已更新。 */
   protected error = this.cartState.error;
 

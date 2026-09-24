@@ -16,6 +16,7 @@ export { Promobar } from './promobar/promobar';
 export { QtyStepper } from './qty-stepper/qty-stepper';
 export { SearchBar } from './search-bar/search-bar';
 export { SectionHead } from './section-head/section-head';
+export { SessionBar } from './session-bar/session-bar';
 export { SiteHeader } from './site-header/site-header';
 export { StepIndicator } from './step-indicator/step-indicator';
 
