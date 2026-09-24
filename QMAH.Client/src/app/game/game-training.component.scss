@@ -17,14 +17,14 @@
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 
-.training-notebook { width: min(1200px, 100%); margin: 0 auto; padding: 12px clamp(16px, 3vw, 24px) 64px; }
+.training-notebook { box-sizing: border-box; width: min(100%, clamp(1200px, 88vw, 1440px)); margin: 0 auto; padding: 12px clamp(16px, 3vw, 24px) 64px; }
 .training-notebook *, .training-notebook *::before, .training-notebook *::after { box-sizing: border-box; }
 .training-notebook button, .training-notebook input, .training-notebook select { font: inherit; }
 .training-notebook button { cursor: pointer; }
 .training-notebook button:focus-visible, .training-notebook a:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 4px; }
 
 /* ui-integration: 玩法頁不再重複品牌 header；共同 Game 子導覽下只保留回到大廳的上下文連結。 */
-.training-nav-back { letter-spacing: .01em; }
+.training-nav-back { color: var(--qmah-game-action); font-size: var(--qmah-type-label-size); font-weight: 800; letter-spacing: .01em; text-underline-offset: 4px; }
 
 .training-notebook .chapter { min-height: 0; border: 0; padding: 0; background: transparent; box-shadow: none; }
 .training-notebook .chapter-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 22px 0 18px; }
@@ -292,41 +292,3 @@
 
 /* impeccable/distill: 移除無功能意義的裝飾格線，遊戲感改由模式、進度與操作本身承擔。 */
 .training-hero::before { display: none; }
-
-/* impeccable/layout: 桌面將 Game 模式切換移入側邊 rail；收合後把空間還給遊戲內容。 */
-@media (min-width: 1180px) {
-  .training-notebook {
-    box-sizing: border-box;
-    position: relative;
-    width: min(1320px, 100%);
-    padding-left: 244px;
-    transition: padding-left 180ms ease;
-  }
-  .training-notebook > app-game-navigation {
-    position: absolute;
-    top: 12px;
-    left: 24px;
-    width: 196px;
-    z-index: 12;
-    transition: width 180ms ease;
-  }
-  .training-notebook:has(> app-game-navigation.is-collapsed) { padding-left: 116px; }
-  .training-notebook:has(> app-game-navigation.is-collapsed) > app-game-navigation { width: 68px; }
-  .training-notebook:has(> app-game-navigation.is-collapsed) .training-nav-back { display: none; }
-  .training-nav-back {
-    display: flex;
-    width: 100%;
-    min-height: 40px;
-    align-items: center;
-    border: 1px solid var(--qmah-line);
-    border-radius: var(--qmah-radius-control);
-    padding: 7px 10px;
-    color: var(--qmah-slate);
-    text-decoration: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .training-notebook,
-  .training-notebook > app-game-navigation { transition: none; }
-}
