@@ -76,9 +76,7 @@ function toPage(value: string | undefined): number {
     LoginPrompt,
   ],
   templateUrl: './product-list.html',
-  styleUrls: [
-    './product-list.scss',
-  ],
+  styleUrl: './product-list.scss',
 })
 export class ProductList {
   private readonly catalogApi = inject(CatalogApi);

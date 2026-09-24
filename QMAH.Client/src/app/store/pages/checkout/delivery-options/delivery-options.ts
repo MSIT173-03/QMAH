@@ -11,9 +11,7 @@ import { formatShippingFee } from '../../../shared/format';
   selector: 'app-delivery-options',
   imports: [Panel, SectionHead, PillGroup],
   templateUrl: './delivery-options.html',
-  styleUrls: [
-    './delivery-options.scss',
-  ],
+  styleUrl: './delivery-options.scss',
 })
 export class DeliveryOptions {
   /** 可選的配送方式，fee 為本次訂單實際適用的運費 */

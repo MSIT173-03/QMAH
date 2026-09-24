@@ -6,9 +6,7 @@ import { Panel } from '../../../component';
   selector: 'app-size-condition',
   imports: [Panel],
   templateUrl: './size-condition.html',
-  styleUrls: [
-    './size-condition.scss',
-  ],
+  styleUrl: './size-condition.scss',
 })
 export class SizeCondition {
   /** 尺寸／規格說明 */

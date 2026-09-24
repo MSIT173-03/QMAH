@@ -1,10 +1,10 @@
 export { Breadcrumb } from './breadcrumb/breadcrumb';
 export { CategoryList } from './category-list/category-list';
-export { CollectibleCard } from "./collectible-card/collectible-card"
+export { CollectibleCard } from './collectible-card/collectible-card';
 export { EmptyState } from './empty-state/empty-state';
 export { EntryGrid } from './entry-grid/entry-grid';
 export { FilterSidebar } from './filter-sidebar/filter-sidebar';
-export { ImageMagnifier } from "./image-magnifier/image-magnifier"
+export { ImageMagnifier } from './image-magnifier/image-magnifier';
 export { PageTitleRow } from './page-title-row/page-title-row';
 export { LoginPrompt } from './login-prompt/login-prompt';
 export { Pagination } from './pagination/pagination';

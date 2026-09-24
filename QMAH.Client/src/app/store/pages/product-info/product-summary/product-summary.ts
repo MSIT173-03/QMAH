@@ -12,9 +12,7 @@ import { SizeCondition } from '../size-condition/size-condition';
   selector: 'app-product-summary',
   imports: [QtyStepper, SizeCondition],
   templateUrl: './product-summary.html',
-  styleUrls: [
-    './product-summary.scss',
-  ],
+  styleUrl: './product-summary.scss',
 })
 export class ProductSummary {
   /** 品牌名稱 */

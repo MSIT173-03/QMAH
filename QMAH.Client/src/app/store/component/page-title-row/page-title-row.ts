@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { SiteLink } from '../../api/api.models';
 import { StoreLink } from '../../shared/store-link';
 
 /**
@@ -8,9 +9,7 @@ import { StoreLink } from '../../shared/store-link';
   selector: 'app-page-title-row',
   imports: [StoreLink],
   templateUrl: './page-title-row.html',
-  styleUrls: [
-    './page-title-row.scss',
-  ],
+  styleUrl: './page-title-row.scss',
 })
 export class PageTitleRow {
   /** 頁面標題文字 */
@@ -20,5 +19,5 @@ export class PageTitleRow {
   /** 例如商品列表頁的「128 件商品」 */
   count = input<string | null>(null);
   /** 例如「繼續選購 →」「管理個人資料 →」 */
-  link = input<{ label: string; href: string } | null>(null);
+  link = input<SiteLink | null>(null);
 }

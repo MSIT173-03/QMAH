@@ -12,9 +12,7 @@ import { NO_COUPON } from '../checkout.data';
   selector: 'app-coupon-picker',
   imports: [Panel, SectionHead],
   templateUrl: './coupon-picker.html',
-  styleUrls: [
-    './coupon-picker.scss',
-  ],
+  styleUrl: './coupon-picker.scss',
 })
 export class CouponPicker {
   /** 會員可選用的折價券清單 */

@@ -7,11 +7,8 @@ import { pad } from '../../shared/format';
  */
 @Component({
   selector: 'app-step-indicator',
-  imports: [],
   templateUrl: './step-indicator.html',
-  styleUrls: [
-    './step-indicator.scss',
-  ],
+  styleUrl: './step-indicator.scss',
 })
 export class StepIndicator {
   /** 步驟名稱清單，順序即流程順序；兩位數序號由本元件依索引推導，不需由外部帶入 */

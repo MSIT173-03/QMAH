@@ -43,9 +43,7 @@ import {
     CheckoutSummary,
   ],
   templateUrl: './checkout.html',
-  styleUrls: [
-    './checkout.scss',
-  ],
+  styleUrl: './checkout.scss',
 })
 export class Checkout {
   private readonly checkoutApi = inject(CheckoutApi);

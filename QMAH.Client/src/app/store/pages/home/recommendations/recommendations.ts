@@ -7,9 +7,7 @@ import { BadgedProductView } from '../home.data';
   selector: 'app-recommendations',
   imports: [SectionHead, ProductCard],
   templateUrl: './recommendations.html',
-  styleUrls: [
-    './recommendations.scss',
-  ],
+  styleUrl: './recommendations.scss',
 })
 export class Recommendations {
   /** 推薦商品清單，由首頁向 API 逐頁載入並累加 */

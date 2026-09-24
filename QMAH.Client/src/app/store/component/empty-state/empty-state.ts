@@ -8,9 +8,7 @@ import { StoreLink } from '../../shared/store-link';
   selector: 'app-empty-state',
   imports: [StoreLink],
   templateUrl: './empty-state.html',
-  styleUrls: [
-    './empty-state.scss',
-  ],
+  styleUrl: './empty-state.scss',
 })
 export class EmptyState {
   /** 標題文字 */

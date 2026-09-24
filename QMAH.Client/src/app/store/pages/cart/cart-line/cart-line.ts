@@ -15,9 +15,7 @@ import { StoreLink } from '../../../shared/store-link';
   selector: 'app-cart-line',
   imports: [QtyStepper, StoreLink, QmahIconComponent],
   templateUrl: './cart-line.html',
-  styleUrls: [
-    './cart-line.scss',
-  ],
+  styleUrl: './cart-line.scss',
 })
 export class CartLine {
   id = input('');

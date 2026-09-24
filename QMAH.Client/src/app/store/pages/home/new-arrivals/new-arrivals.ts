@@ -18,9 +18,7 @@ const NEW_ARRIVAL_COUNT = 4;
   selector: 'app-new-arrivals',
   imports: [Panel, SectionHead, StoreLink, LucidePackageSearch],
   templateUrl: './new-arrivals.html',
-  styleUrls: [
-    './new-arrivals.scss',
-  ],
+  styleUrl: './new-arrivals.scss',
 })
 export class NewArrivals {
   /** 點擊任一商品的「加入」按鈕時觸發，帶出商品 ID */

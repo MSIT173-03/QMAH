@@ -17,11 +17,8 @@ export interface CategoryListItem {
  */
 @Component({
   selector: 'app-category-list',
-  imports: [],
   templateUrl: './category-list.html',
-  styleUrls: [
-    './category-list.scss',
-  ],
+  styleUrl: './category-list.scss',
 })
 export class CategoryList {
   /** 分類項目清單 */

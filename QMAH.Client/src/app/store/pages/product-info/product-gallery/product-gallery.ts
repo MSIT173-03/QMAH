@@ -12,9 +12,7 @@ type ViewMode = 'static' | 'dynamic';
   selector: 'app-product-gallery',
   imports: [CollectibleCard, ImageMagnifier],
   templateUrl: './product-gallery.html',
-  styleUrls: [
-    './product-gallery.scss',
-  ],
+  styleUrl: './product-gallery.scss',
 })
 export class ProductGallery {
   /** 明信片正面顯示的原文物名稱，不帶商品套組後綴。 */

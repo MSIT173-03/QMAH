@@ -12,9 +12,7 @@ import { formatDateMD, formatMoney } from '../../shared/format';
   selector: 'app-promobar',
   imports: [StoreLink],
   templateUrl: './promobar.html',
-  styleUrls: [
-    './promobar.scss',
-  ],
+  styleUrl: './promobar.scss',
 })
 export class Promobar {
   /** 跑馬燈公告文字清單 */

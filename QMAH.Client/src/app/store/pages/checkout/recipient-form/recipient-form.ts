@@ -18,9 +18,7 @@ import {
   selector: 'app-recipient-form',
   imports: [Panel, SectionHead],
   templateUrl: './recipient-form.html',
-  styleUrls: [
-    './recipient-form.scss',
-  ],
+  styleUrl: './recipient-form.scss',
 })
 export class RecipientForm {
   /** 目前的收件資訊表單內容 */

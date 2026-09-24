@@ -48,9 +48,7 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
     RelatedProducts,
   ],
   templateUrl: './product-info.html',
-  styleUrls: [
-    './product-info.scss',
-  ],
+  styleUrl: './product-info.scss',
 })
 export class ProductInfo {
   private readonly router = inject(Router);

@@ -24,9 +24,7 @@ const FILTER_PANELS: readonly { section: FilterSection; label: string }[] = [
   selector: 'app-filter-sidebar',
   imports: [Panel, CategoryList, PillGroup, QmahIconComponent],
   templateUrl: './filter-sidebar.html',
-  styleUrls: [
-    './filter-sidebar.scss',
-  ],
+  styleUrl: './filter-sidebar.scss',
 })
 export class FilterSidebar {
   /** 分類篩選項目（含件數與是否選取） */

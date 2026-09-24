@@ -15,9 +15,7 @@ const RANKING_LIMIT = 10;
   selector: 'app-ranking-section',
   imports: [SectionHead, PillGroup, ProductCard],
   templateUrl: './ranking-section.html',
-  styleUrls: [
-    './ranking-section.scss',
-  ],
+  styleUrl: './ranking-section.scss',
 })
 export class RankingSection {
   private readonly homeApi = inject(HomeApi);

@@ -7,9 +7,7 @@ import { ProductViewData } from '../../../shared/product-view';
   selector: 'app-cart-addons',
   imports: [SectionHead, ProductCard],
   templateUrl: './cart-addons.html',
-  styleUrls: [
-    './cart-addons.scss',
-  ],
+  styleUrl: './cart-addons.scss',
 })
 export class CartAddons {
   /** 再加購商品清單 */

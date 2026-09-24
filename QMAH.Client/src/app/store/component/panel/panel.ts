@@ -5,11 +5,8 @@ import { Component, input } from '@angular/core';
  */
 @Component({
   selector: 'app-panel',
-  imports: [],
   templateUrl: './panel.html',
-  styleUrls: [
-    './panel.scss',
-  ],
+  styleUrl: './panel.scss',
 })
 export class Panel {
   /** 面板外觀樣式變體 */

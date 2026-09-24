@@ -56,9 +56,7 @@ const EDITORIAL_SLIDES: HeroSlide[] = [
   selector: 'app-hero-carousel',
   imports: [StoreLink, QmahIconComponent],
   templateUrl: './hero-carousel.html',
-  styleUrls: [
-    './hero-carousel.scss',
-  ],
+  styleUrl: './hero-carousel.scss',
 })
 export class HeroCarousel {
   private readonly homeApi = inject(HomeApi);

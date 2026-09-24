@@ -48,9 +48,7 @@ function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
   host: { class: 'store-app' },
   imports: [Promobar, Breadcrumb, PageTitleRow, EmptyState, LoginPrompt, CartLine, CartSummary, CartAddons],
   templateUrl: './cart.html',
-  styleUrls: [
-    './cart.scss',
-  ],
+  styleUrl: './cart.scss',
 })
 export class Cart {
   /** 麵包屑導覽項目 */

@@ -28,9 +28,7 @@ interface ReviewCardData {
   selector: 'app-product-reviews',
   imports: [SectionHead, PillGroup],
   templateUrl: './product-reviews.html',
-  styleUrls: [
-    './product-reviews.scss',
-  ],
+  styleUrl: './product-reviews.scss',
 })
 export class ProductReviews {
   /** 商品評分（顯示於標題列摘要） */

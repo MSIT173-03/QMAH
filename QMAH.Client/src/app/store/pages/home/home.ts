@@ -47,9 +47,7 @@ const RECOMMEND_PAGE_SIZE = 10;
     LoginPrompt,
   ],
   templateUrl: './home.html',
-  styleUrls: [
-    './home.scss',
-  ],
+  styleUrl: './home.scss',
 })
 export class Home {
   private readonly router = inject(Router);

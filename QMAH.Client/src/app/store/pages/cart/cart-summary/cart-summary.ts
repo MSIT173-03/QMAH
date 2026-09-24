@@ -13,9 +13,7 @@ import { StoreLink } from '../../../shared/store-link';
   selector: 'app-cart-summary',
   imports: [Panel, StoreLink],
   templateUrl: './cart-summary.html',
-  styleUrls: [
-    './cart-summary.scss',
-  ],
+  styleUrl: './cart-summary.scss',
 })
 export class CartSummary {
   /** 購物車金額摘要；尚未載入時為 null */

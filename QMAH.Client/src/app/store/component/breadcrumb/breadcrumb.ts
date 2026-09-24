@@ -13,9 +13,7 @@ export interface BreadcrumbItem {
   selector: 'app-breadcrumb',
   imports: [StoreLink],
   templateUrl: './breadcrumb.html',
-  styleUrls: [
-    './breadcrumb.scss',
-  ],
+  styleUrl: './breadcrumb.scss',
 })
 export class Breadcrumb {
   /** 麵包屑項目清單，最後一項會顯示為目前頁面（不可點擊），其餘項目需附上 href */

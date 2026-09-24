@@ -7,9 +7,7 @@ import { ProductPolicy } from '../../../api/api.models';
   selector: 'app-product-detail',
   imports: [SectionHead],
   templateUrl: './product-detail.html',
-  styleUrls: [
-    './product-detail.scss',
-  ],
+  styleUrl: './product-detail.scss',
 })
 export class ProductDetail {
   /** 產生器提供的套組說明；保留段落與條列換行。 */

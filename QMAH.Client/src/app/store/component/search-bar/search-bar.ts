@@ -20,9 +20,7 @@ export interface SearchSuggestion {
   selector: 'app-search-bar',
   imports: [StoreLink],
   templateUrl: './search-bar.html',
-  styleUrls: [
-    './search-bar.scss',
-  ],
+  styleUrl: './search-bar.scss',
 })
 export class SearchBar {
   /** 輸入框提示文字 */

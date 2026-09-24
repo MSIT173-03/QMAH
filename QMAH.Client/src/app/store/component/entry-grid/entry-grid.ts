@@ -21,9 +21,7 @@ export interface EntryGridItem {
   selector: 'app-entry-grid',
   imports: [SectionHead, StoreLink, QmahIconComponent],
   templateUrl: './entry-grid.html',
-  styleUrls: [
-    './entry-grid.scss',
-  ],
+  styleUrl: './entry-grid.scss',
 })
 export class EntryGrid {
   title = input.required<string>();

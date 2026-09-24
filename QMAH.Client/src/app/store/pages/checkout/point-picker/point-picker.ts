@@ -11,9 +11,7 @@ import { PointMode, POINT_MODES } from '../checkout.data';
   selector: 'app-point-picker',
   imports: [Panel, SectionHead, PillGroup],
   templateUrl: './point-picker.html',
-  styleUrls: [
-    './point-picker.scss',
-  ],
+  styleUrl: './point-picker.scss',
 })
 export class PointPicker {
   /** 會員目前持有的點數 */

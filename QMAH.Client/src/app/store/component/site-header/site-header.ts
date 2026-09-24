@@ -7,9 +7,7 @@ import { Component, input } from '@angular/core';
 @Component({
   selector: 'app-site-header',
   templateUrl: './site-header.html',
-  styleUrls: [
-    './site-header.scss',
-  ],
+  styleUrl: './site-header.scss',
 })
 export class SiteHeader {
   /** default：一般頁面；wrap：結帳頁（僅步驟指示器，間距略窄且可換行） */

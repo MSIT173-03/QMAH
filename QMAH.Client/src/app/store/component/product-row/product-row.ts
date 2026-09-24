@@ -14,9 +14,7 @@ import { StoreLink } from '../../shared/store-link';
   selector: 'app-product-row',
   imports: [StoreLink, QmahIconComponent],
   templateUrl: './product-row.html',
-  styleUrls: [
-    './product-row.scss',
-  ],
+  styleUrl: './product-row.scss',
 })
 export class ProductRow {
   id = input('');

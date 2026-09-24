@@ -13,9 +13,7 @@ import { StoreLink } from '../../../shared/store-link';
   selector: 'app-checkout-summary',
   imports: [Panel, StoreLink],
   templateUrl: './checkout-summary.html',
-  styleUrls: [
-    './checkout-summary.scss',
-  ],
+  styleUrl: './checkout-summary.scss',
 })
 export class CheckoutSummary {
   /** 後端的訂單試算結果；尚未取得時為 null */

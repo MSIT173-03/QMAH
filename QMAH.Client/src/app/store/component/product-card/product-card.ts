@@ -24,9 +24,7 @@ export type ProductCardVariant = 'default' | 'list' | 'compact';
   selector: 'app-product-card',
   imports: [StoreLink, QmahIconComponent],
   templateUrl: './product-card.html',
-  styleUrls: [
-    './product-card.scss',
-  ],
+  styleUrl: './product-card.scss',
 })
 export class ProductCard {
   id = input('');
