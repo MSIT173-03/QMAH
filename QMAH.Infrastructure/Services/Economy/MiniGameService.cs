@@ -54,21 +54,49 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
                 artifact.Id,
                 artifact.Name,
                 artifact.PrimaryImagePath,
-                artifact.ThumbnailPath))
+                artifact.ThumbnailPath,
+                artifact.CategoryId,
+                artifact.EraBucketId))
             .ToListAsync(cancellationToken);
         if (artifacts.Count == 0)
             return EconomyResult<MiniGameStartView>.Conflict("目前沒有可供 Mini Game 使用的啟用文物。");
+
+        var isDetailLocator = string.Equals(mode.Code, "DETAIL_LOCATOR", StringComparison.OrdinalIgnoreCase);
+        if (isDetailLocator && artifacts.Count < 4)
+            return EconomyResult<MiniGameStartView>.Conflict("局部辨識至少需要四件啟用中的文物，才能提供四個答案選項。");
 
         var configuredPoolSize = ReadConfigInt(mode.ConfigJson, "poolSize") ?? 1;
         var minimumPoolSize = string.Equals(mode.Code, "MEMORY_MATCH", StringComparison.OrdinalIgnoreCase)
             ? StandardMemoryPairCount
             : 1;
-        var poolSize = Math.Clamp(Math.Max(configuredPoolSize, minimumPoolSize), 1, artifacts.Count);
-        var pool = artifacts
-            .OrderBy(_ => Random.Shared.Next())
-            .Take(poolSize)
-            .ToList();
-        var selected = pool[Random.Shared.Next(pool.Count)];
+        List<ArtifactMaterialView> pool;
+        ArtifactMaterialView selected;
+        if (isDetailLocator)
+        {
+            // 選項優先取自同類、同時期館藏，令辨識依據落在局部紋飾而非跨類別猜題。
+            selected = artifacts[Random.Shared.Next(artifacts.Count)];
+            var distractors = artifacts
+                .Where(item => item.Id != selected.Id)
+                .OrderByDescending(item =>
+                    (item.CategoryId == selected.CategoryId ? 2 : 0)
+                    + (item.EraBucketId == selected.EraBucketId ? 1 : 0))
+                .ThenBy(_ => Random.Shared.Next())
+                .Take(3)
+                .ToList();
+            pool = distractors
+                .Append(selected)
+                .OrderBy(_ => Random.Shared.Next())
+                .ToList();
+        }
+        else
+        {
+            var poolSize = Math.Clamp(Math.Max(configuredPoolSize, minimumPoolSize), 1, artifacts.Count);
+            pool = artifacts
+                .OrderBy(_ => Random.Shared.Next())
+                .Take(poolSize)
+                .ToList();
+            selected = pool[Random.Shared.Next(pool.Count)];
+        }
         var now = DateTime.UtcNow;
         var attempt = new MiniGameAttempt
         {
@@ -652,7 +680,9 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         Guid Id,
         string Name,
         string PrimaryImagePath,
-        string? ThumbnailPath);
+        string? ThumbnailPath,
+        Guid CategoryId,
+        Guid EraBucketId);
 }
 
 /// <summary>前端建立玩法所需的模式識別與評分門檻。</summary>

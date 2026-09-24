@@ -48,8 +48,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   readonly loadingRows = [1, 2, 3, 4, 5];
   readonly pageSize = 20;
   isDemo = false;
-  // ui-integration: 大廳首次進入以找房為主，介紹橫幅預設收合；玩家仍可主動展開並由 localStorage 記住選擇。
-  heroCollapsed = true;
+  // 首次進入先看見遊戲入口；仍保留玩家自行收合的偏好。
+  heroCollapsed = false;
   qrRoom: Pick<GameRoomListItem, 'id' | 'roomCode'> | null = null;
   @ViewChild('createDialog') private createDialog?: ElementRef<HTMLElement>;
   @ViewChild('roomDialog') private roomDialog?: ElementRef<HTMLElement>;
@@ -189,9 +189,9 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   private readHeroCollapsed(): boolean {
     try {
       const stored = localStorage.getItem(this.heroStorageKey);
-      return stored === null ? true : stored === 'true';
+      return stored === 'true';
     } catch {
-      return true;
+      return false;
     }
   }
   toggleCreateForm(): void {

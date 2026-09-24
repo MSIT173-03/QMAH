@@ -6,16 +6,17 @@
 
 /* Game 子導覽：寬版可成為側邊模式軌，窄版維持全站熟悉的水平切換。 */
 .game-navigation {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas: "context modes actions";
   align-items: center;
-  justify-content: space-between;
   gap: var(--qmah-space-5);
   min-height: 64px;
   padding: 6px 0 8px;
   border-bottom: 1px solid color-mix(in srgb, var(--qmah-line) 72%, transparent);
 }
-.game-navigation__header { display: contents; }
-.game-navigation__switcher { display: flex; align-items: center; gap: var(--qmah-space-3); min-width: 0; }
+.game-navigation__header { display: flex; grid-area: context; align-items: center; min-width: 0; }
+.game-navigation__switcher { display: flex; grid-area: modes; align-items: center; justify-self: center; gap: var(--qmah-space-3); min-width: 0; }
 .game-navigation__context {
   display: inline-flex;
   align-items: center;
@@ -79,10 +80,12 @@
   color: var(--qmah-game-content);
   background: var(--qmah-game-action);
   box-shadow: var(--qmah-shadow-card);
+  view-transition-name: qmah-game-mode;
 }
 .game-navigation__links a.is-active .game-navigation__link-description { color: color-mix(in srgb, var(--qmah-game-content) 78%, transparent); }
 .game-navigation__actions {
   display: flex;
+  grid-area: actions;
   align-items: center;
   justify-content: flex-end;
   gap: var(--qmah-space-2);
@@ -109,11 +112,13 @@
 .game-navigation__test-entry.is-active { background: color-mix(in srgb, var(--qmah-game-action) 84%, var(--qmah-ink)); }
 .game-navigation__login { border: 1px solid var(--qmah-line); color: var(--qmah-ink); background: var(--qmah-surface); }
 .game-navigation__login:hover { border-color: var(--qmah-game-action); color: var(--qmah-game-action); }
+.game-navigation__actions:not(:has(a, button, span)) { display: none; }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
 
 /* 側邊 rail 由父頁限制 host 寬度後自動啟用；不需要為 Room 頁另建第二套導覽。 */
 @container (max-width: 260px) {
   .game-navigation {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
@@ -149,9 +154,9 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); ou
 }
 
 @media (max-width: 900px) {
-  .game-navigation { align-items: stretch; flex-wrap: wrap; gap: 8px 12px; }
+  .game-navigation { display: flex; align-items: stretch; flex-wrap: wrap; gap: 8px 12px; }
   .game-navigation__header { display: none; }
-  .game-navigation__switcher { flex: 1 1 100%; }
+  .game-navigation__switcher { flex: 1 1 100%; justify-content: center; }
   .game-navigation__links { flex: 1; }
   .game-navigation__links a { flex: 1 1 0; min-width: 0; }
   .game-navigation__actions { flex: 1 1 100%; justify-content: flex-start; }

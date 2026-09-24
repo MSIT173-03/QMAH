@@ -17,14 +17,14 @@
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 
-.training-notebook { width: min(1200px, 100%); margin: 0 auto; padding: 12px clamp(16px, 3vw, 24px) 64px; }
+.training-notebook { box-sizing: border-box; width: min(100%, clamp(1200px, 88vw, 1440px)); margin: 0 auto; padding: 12px clamp(16px, 3vw, 24px) 64px; }
 .training-notebook *, .training-notebook *::before, .training-notebook *::after { box-sizing: border-box; }
 .training-notebook button, .training-notebook input, .training-notebook select { font: inherit; }
 .training-notebook button { cursor: pointer; }
 .training-notebook button:focus-visible, .training-notebook a:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 4px; }
 
 /* ui-integration: 玩法頁不再重複品牌 header；共同 Game 子導覽下只保留回到大廳的上下文連結。 */
-.training-nav-back { letter-spacing: .01em; }
+.training-nav-back { color: var(--qmah-game-action); font-size: var(--qmah-type-label-size); font-weight: 800; letter-spacing: .01em; text-underline-offset: 4px; }
 
 .training-notebook .chapter { min-height: 0; border: 0; padding: 0; background: transparent; box-shadow: none; }
 .training-notebook .chapter-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 22px 0 18px; }
@@ -293,40 +293,87 @@
 /* impeccable/distill: 移除無功能意義的裝飾格線，遊戲感改由模式、進度與操作本身承擔。 */
 .training-hero::before { display: none; }
 
-/* impeccable/layout: 桌面將 Game 模式切換移入側邊 rail；收合後把空間還給遊戲內容。 */
-@media (min-width: 1180px) {
-  .training-notebook {
-    box-sizing: border-box;
-    position: relative;
-    width: min(1320px, 100%);
-    padding-left: 244px;
-    transition: padding-left 180ms ease;
-  }
-  .training-notebook > app-game-navigation {
-    position: absolute;
-    top: 12px;
-    left: 24px;
-    width: 196px;
-    z-index: 12;
-    transition: width 180ms ease;
-  }
-  .training-notebook:has(> app-game-navigation.is-collapsed) { padding-left: 116px; }
-  .training-notebook:has(> app-game-navigation.is-collapsed) > app-game-navigation { width: 68px; }
-  .training-notebook:has(> app-game-navigation.is-collapsed) .training-nav-back { display: none; }
-  .training-nav-back {
-    display: flex;
-    width: 100%;
-    min-height: 40px;
-    align-items: center;
-    border: 1px solid var(--qmah-line);
-    border-radius: var(--qmah-radius-control);
-    padding: 7px 10px;
-    color: var(--qmah-slate);
-    text-decoration: none;
-  }
+/* 局部辨識只露出固定原圖的一小塊；答案選項以文物名稱比較，不直接提供可對照的完整縮圖。 */
+.training-notebook .clue-image {
+  position: relative;
+  width: min(100%, 440px);
+  min-height: 0;
+  aspect-ratio: 1;
+  justify-self: center;
+  overflow: hidden;
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-card);
+  background: var(--qmah-night);
+  box-shadow: var(--qmah-shadow-card);
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .training-notebook,
-  .training-notebook > app-game-navigation { transition: none; }
+.training-notebook .clue-image img.clue-image__zoom {
+  position: absolute;
+  display: block;
+  width: 500%;
+  height: 500%;
+  min-height: 0;
+  max-width: none;
+  object-fit: cover;
+}
+.training-notebook .clue-image__badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  border: 1px solid color-mix(in srgb, var(--qmah-on-dark) 35%, transparent);
+  border-radius: var(--qmah-radius-control);
+  padding: 5px 9px;
+  color: var(--qmah-on-dark);
+  background: color-mix(in srgb, var(--qmah-night) 84%, transparent);
+  font-size: var(--qmah-type-meta-size);
+  font-weight: 800;
+}
+.training-notebook .artifact-options--text button {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 10px;
+  min-height: 76px;
+  padding: 12px;
+  font-weight: 650;
+}
+.training-notebook .artifact-options--text button > span:last-child {
+  min-width: 0;
+  padding: 0;
+  overflow-wrap: anywhere;
+}
+.training-notebook .locator-option__index {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--qmah-border);
+  border-radius: 50%;
+  color: var(--qmah-game-action);
+  background: var(--qmah-game-soft);
+  font-size: var(--qmah-type-meta-size);
+  font-weight: 800;
+}
+.training-notebook .artifact-options--text button.selected .locator-option__index {
+  border-color: var(--qmah-game-action);
+  color: var(--qmah-game-content);
+  background: var(--qmah-game-action);
+}
+.training-notebook .locator-answer {
+  display: grid;
+  grid-template-columns: minmax(120px, 190px) minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  max-width: 680px;
+  margin-top: 22px;
+  padding: 14px;
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-card);
+  background: var(--qmah-surface-soft);
+}
+.training-notebook .locator-answer img { display: block; width: 100%; max-height: 160px; border-radius: var(--qmah-radius-control); object-fit: contain; background: var(--qmah-night); }
+.training-notebook .locator-answer strong { color: var(--qmah-game-action); }
+.training-notebook .locator-answer p { margin: 5px 0 0; color: var(--ink); font-weight: 800; }
+@media (max-width: 700px) {
+  .training-notebook .clue-image { width: min(100%, 360px); }
+  .training-notebook .locator-answer { grid-template-columns: 1fr; }
 }

@@ -22,7 +22,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
   outline-offset: 3px;
 }
 
-.room-shell { width: min(1320px, 100%); margin: 0 auto; padding: 8px 34px 56px; }
+.room-shell { box-sizing: border-box; width: min(100%, clamp(1200px, 88vw, 1440px)); margin: 0 auto; padding: 8px clamp(16px, 3vw, 24px) 56px; }
 /* ui-integration: App Shell 與 Game 子導覽已負責品牌與區域切換，房間內容從共同導覽下方開始。 */
 .back-link, .leave-note a { color: var(--jade); font-size: var(--qmah-type-body-sm-size); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 
@@ -203,18 +203,4 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
   .vote-count-label { align-items: flex-start; flex-direction: column; gap: 6px; }
   .result-answers li { grid-template-columns: 20px minmax(0, 1fr); }
   .result-answers li > b { grid-column: 2; }
-}
-
-@media (min-width: 1180px) {
-  .room-shell { box-sizing: border-box; position: relative; padding-left: 244px; transition: padding-left 180ms ease; }
-  .room-shell > app-game-navigation { position: absolute; top: 12px; left: 24px; width: 196px; z-index: 12; transition: width 180ms ease; }
-  .room-shell:has(> app-game-navigation.is-collapsed) { padding-left: 116px; }
-  .room-shell:has(> app-game-navigation.is-collapsed) > app-game-navigation { width: 68px; }
-  .room-shell:has(> app-game-navigation.is-collapsed) .back-link { display: none; }
-  .back-link { display: flex; width: 100%; min-height: 40px; align-items: center; border: 1px solid var(--qmah-line); border-radius: var(--qmah-radius-control); padding: 7px 10px; text-decoration: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .room-shell,
-  .room-shell > app-game-navigation { transition: none; }
 }

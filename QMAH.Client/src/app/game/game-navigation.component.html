@@ -47,12 +47,6 @@
         <span>進入測試模式</span>
       </a>
     }
-    @if (!meApi.me()) {
-      <a class="game-navigation__login" routerLink="/login" [attr.title]="railCollapsed() ? '登入會員帳號' : null">
-        <app-qmah-icon name="log-in" aria-hidden="true" />
-        <span>登入會員帳號</span>
-      </a>
-    }
     <ng-content />
   </div>
 </nav>

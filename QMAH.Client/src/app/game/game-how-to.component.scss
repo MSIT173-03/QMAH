@@ -21,24 +21,24 @@
 .game-how-to__body > p { max-width: 70ch; margin: 0; color: var(--qmah-muted); font-size: var(--qmah-type-body-sm-size); }
 .game-how-to__body ol {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 clamp(12px, 2vw, 24px);
   margin: 20px 0 0;
   padding: 0;
   list-style: none;
 }
 .game-how-to__body li {
+  position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 30px auto;
   align-content: start;
-  gap: 10px;
+  gap: 14px;
   min-width: 0;
-  min-height: 118px;
-  padding: 15px;
-  border: 1px solid var(--how-to-line);
-  border-radius: var(--qmah-radius-card);
-  background: color-mix(in srgb, var(--how-to-paper) 78%, var(--qmah-page-surface));
+  min-height: 150px;
+  padding: 8px 0 14px;
 }
+.game-how-to__body li:not(:last-child)::after { content: ""; position: absolute; top: 22px; right: calc(clamp(12px, 2vw, 24px) * -1); left: 42px; height: 1px; background: var(--how-to-line); }
 .game-how-to__step-marker {
   display: inline-grid;
   place-items: center;
@@ -48,12 +48,17 @@
   color: var(--how-to-action-content);
   background: var(--how-to-action);
   font: 800 var(--qmah-type-meta-size)/1 "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--qmah-game-action) 18%, transparent);
 }
 .game-how-to__body li strong { font-size: var(--qmah-type-body-sm-size); }
 .game-how-to__body li p { margin: 5px 0 0; color: var(--qmah-muted); font-size: var(--qmah-type-label-size); line-height: 1.55; }
-@media (max-width: 860px) { .game-how-to__body ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1140px) {
+  .game-how-to__body ol { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+  .game-how-to__body li { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto; gap: 10px; min-height: 96px; padding: 16px 0; border-top: 1px solid var(--how-to-line); }
+  .game-how-to__body li:not(:last-child)::after { content: none; }
+}
 @media (max-width: 560px) {
   .game-how-to__heading strong { font-size: 23px; }
   .game-how-to__body ol { grid-template-columns: 1fr; }
-  .game-how-to__body li { min-height: 0; padding: 14px; }
+  .game-how-to__body li { min-height: 0; padding: 14px 0; }
 }

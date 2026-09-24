@@ -87,7 +87,7 @@
       </div>
 
       <!-- ui-integration: 清單用固定欄位標籤建立掃讀基準，避免房間資料只靠留白猜測對應關係。 -->
-      <div class="room-ledger-head" aria-hidden="true"><span>房間</span><span>玩法設定</span><span>席位</span><span>狀態</span><span>操作</span></div>
+      @if (rooms?.items?.length) { <div class="room-ledger-head" aria-hidden="true"><span>房間</span><span>玩法設定</span><span>席位</span><span>狀態</span><span>操作</span></div> }
 
       <div class="ledger" role="list">
         @if (rooms === null && loading) {
@@ -103,16 +103,16 @@
         }
         @else if (rooms && rooms.items.length === 0) {
           <section class="empty-state">
-            <h2>目前沒有符合條件的房間</h2>
+            <h2>{{ roomStatus === 'WAITING' ? '目前沒有可加入的房間' : '目前沒有符合條件的房間' }}</h2>
             @if (isDemo && isAdmin()) {
               <p>展示資料在這個狀態下沒有房間可供查看。</p>
             } @else if (isDemo) {
               <p>目前沒有符合條件的房間可供查看。</p>
             } @else {
-              <p>請切換房間狀態，或建立新的鑑定房間。</p>
+              <p>{{ roomStatus === 'WAITING' ? '現在可以建立房間，邀請其他玩家一起鑑定。' : '可以切換到可加入房間，或建立新的鑑定房間。' }}</p>
               <div class="empty-state__actions">
-                <button type="button" (click)="setRoomStatus('WAITING')">查看可加入房間</button>
                 <button type="button" class="empty-state__primary" (click)="showCreateForm = true">建立房間</button>
+                @if (roomStatus !== 'WAITING') { <button type="button" (click)="setRoomStatus('WAITING')">查看可加入房間</button> }
               </div>
             }
           </section>
