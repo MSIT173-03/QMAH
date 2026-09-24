@@ -122,24 +122,16 @@
 .training-demo__heading h2 { margin: 0; font: 700 clamp(22px, 2.5vw, 28px)/1.3 var(--qmah-font-serif); }
 .training-demo__heading p { margin: 6px 0 18px; color: var(--guide-muted); font-size: var(--qmah-type-body-sm-size); }
 .training-demo__body { display: grid; grid-template-columns: minmax(280px, .82fr) minmax(0, 1.18fr); gap: clamp(18px, 3vw, 32px); align-items: stretch; }
-.training-demo__body > img { width: 100%; height: clamp(300px, 34vw, 420px); padding: 12px; object-fit: contain; border-radius: var(--qmah-radius-panel); background: var(--qmah-game-action); box-shadow: var(--qmah-shadow-card); }
 .training-demo__question h3 { margin: 0 0 12px; font-size: 18px; }
 .training-demo__question { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-.training-demo__choices { display: grid; gap: 9px; }
-.training-demo__choices button { min-height: 52px; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-control); padding: 10px 14px; color: var(--guide-ink); background: var(--guide-surface); text-align: left; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease; }
-.training-demo__choices button:hover:not(:disabled) { border-color: var(--qmah-game-action); transform: translateY(-1px); }
-.training-demo__choices button.is-selected { border-color: var(--qmah-game-action); background: var(--qmah-game-soft); box-shadow: 0 0 0 2px color-mix(in srgb, var(--qmah-game-action) 18%, transparent); font-weight: 800; }
-.training-demo__choices button.is-correct { border-color: var(--qmah-game-action); font-weight: 800; }
-.training-demo__choices button.is-wrong { border-color: var(--qmah-danger); background: color-mix(in srgb, var(--qmah-danger) 9%, var(--guide-surface)); }
-.training-demo__choices button:disabled { cursor: default; }
-.training-demo__reveal, .training-demo__retry { min-height: var(--qmah-control-height); margin-top: 12px; border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); padding: 8px var(--qmah-control-padding-x); color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 800; cursor: pointer; }
-.training-demo__reveal:disabled { cursor: not-allowed; opacity: .55; }
+.training-demo__reveal, .training-demo__action, .training-demo__retry { min-height: var(--qmah-control-height); margin-top: 12px; border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); padding: 8px var(--qmah-control-padding-x); color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 800; cursor: pointer; }
+.training-demo__reveal:disabled, .training-demo__action:disabled { cursor: not-allowed; opacity: .55; }
 .training-demo__retry { color: var(--qmah-game-action); background: transparent; }
 .training-demo__result { margin: 14px 0 0; padding: 12px 14px; border-radius: var(--qmah-radius-control); font-weight: 800; }
 .training-demo__result.is-correct { color: var(--qmah-jade-deep); background: var(--qmah-jade-soft); }
 .training-demo__result.is-wrong { color: var(--qmah-danger); background: color-mix(in srgb, var(--qmah-danger) 9%, var(--guide-surface)); }
-.guide-preview-write button:hover:not(:disabled), .guide-preview-actions button:hover:not(:disabled), .training-demo__reveal:hover:not(:disabled) { box-shadow: var(--qmah-shadow-card); transform: translateY(-2px); }
-.guide-preview-write button:active, .guide-preview-actions button:active, .training-demo__reveal:active { transform: translateY(0) scale(.98); }
+.guide-preview-write button:hover:not(:disabled), .guide-preview-actions button:hover:not(:disabled), .training-demo__action:hover:not(:disabled), .training-demo__retry:hover { box-shadow: var(--qmah-shadow-card); transform: translateY(-2px); }
+.guide-preview-write button:active, .guide-preview-actions button:active, .training-demo__action:active, .training-demo__retry:active { transform: translateY(0) scale(.98); }
 
 @keyframes game-panel-arrive { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes game-result-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -148,12 +140,11 @@
 .training-demo button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
 @media (min-width: 640px) { .guide-preview-hint span { display: inline; white-space: normal; } }
 @media (max-width: 799px) {
-  .guide-round-table, .training-demo__body { grid-template-columns: 1fr; gap: 16px; }
+  .guide-round-table, .training-demo__body, .training-demo__board-layout { grid-template-columns: 1fr; gap: 16px; }
   .guide-preview-artifact { min-height: 0; }
   .guide-preview-artifact img { height: clamp(220px, 68vw, 300px); }
   .guide-preview-write { padding: 4px 0; }
   .guide-round-vote { padding-top: 2px; }
-  .training-demo__body > img { height: clamp(260px, 68vw, 340px); }
 }
 @media (max-width: 640px) {
   .game-guide { padding: 10px 14px 40px; }
@@ -169,14 +160,46 @@
   .guide-preview-write button { width: 100%; }
   .guide-round-progress { gap: 4px; }
   .guide-round-progress li { flex-direction: column; gap: 0; min-height: 48px; font-size: 11px; }
-  .training-demo__body > img { height: 170px; }
-  .training-demo__reveal, .training-demo__retry { width: 100%; }
+  .training-demo__action, .training-demo__retry { width: 100%; }
 }
 @media (max-width: 430px) { .game-guide { padding-inline: 10px; } }
 @media (prefers-reduced-motion: reduce) {
   .guide-tabs button,
   .guide-preview-answers button,
   .guide-preview-write button,
-  .training-demo__choices button { transition: none; }
+  .training-demo__choices button, .training-demo__action, .training-demo__retry, .training-demo__board-layout button { transition: none; }
   .game-panel-enter, .game-result-enter { animation-duration: 1ms; }
 }
+
+/* Shared board chrome keeps the four interactive examples in the existing game visual language. */
+.training-demo__modes { width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 8px 0 16px; padding: 0; border: 0; background: transparent; }
+.training-demo__modes button { min-height: 76px; }
+.training-demo__stage { min-height: 390px; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-panel); padding: clamp(14px, 2vw, 24px); background: linear-gradient(145deg, var(--qmah-game-soft), var(--guide-surface) 66%); box-shadow: var(--qmah-shadow-card); }
+.training-demo__crop { position: relative; width: min(100%, 390px); aspect-ratio: 1; justify-self: center; overflow: hidden; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-panel); background: var(--qmah-night); box-shadow: var(--qmah-shadow-card); }
+.training-demo__crop img { position: absolute; top: -200%; left: -200%; width: 500%; height: 500%; max-width: none; object-fit: cover; }
+.training-demo__crop > span { position: absolute; right: 10px; bottom: 10px; border-radius: var(--qmah-radius-control); padding: 5px 9px; color: var(--qmah-on-dark); background: color-mix(in srgb, var(--qmah-night) 86%, transparent); font-size: var(--qmah-type-meta-size); font-weight: 800; }
+.training-demo__instruction, .training-demo__side-copy > p:not(.training-demo__readout, .training-demo__result) { margin: 0 0 14px; color: var(--guide-muted); font-size: var(--qmah-type-body-sm-size); }
+.training-demo__choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.training-demo__choices button { grid-template-columns: 28px minmax(0, 1fr); align-items: center; min-width: 0; }
+.training-demo__choices button > span:first-child { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; color: var(--qmah-game-action); background: var(--qmah-game-soft); font-size: var(--qmah-type-meta-size); font-weight: 800; }
+.training-demo__choices button strong { min-width: 0; font-size: var(--qmah-type-label-size); overflow-wrap: anywhere; }
+.training-demo__choices button.is-correct { border-color: var(--qmah-jade); background: var(--qmah-jade-soft); }
+.training-demo__board-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(220px, .9fr); align-items: start; gap: clamp(20px, 2.4vw, 32px); min-height: 0; }
+.training-demo__memory-grid, .training-demo__puzzle-grid, .training-demo__strip-grid { box-sizing: border-box; display: grid; width: min(100%, 560px); justify-self: center; align-content: start; gap: 6px; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-panel); padding: 8px; background: var(--qmah-game-soft); }
+.training-demo__memory-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.training-demo__puzzle-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.training-demo__strip-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; padding: 6px; }
+.training-demo__memory-grid button, .training-demo__puzzle-grid button, .training-demo__strip-grid button { position: relative; min-width: 0; aspect-ratio: 1; overflow: hidden; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-control); padding: 0; background: var(--qmah-game-action); cursor: pointer; transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease; }
+.training-demo__strip-grid button { aspect-ratio: 1.18; background-repeat: no-repeat; }
+.training-demo__memory-grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.training-demo__memory-grid button > span { display: grid; width: 100%; height: 100%; place-items: center; color: var(--qmah-game-content); font: 800 24px/1 var(--qmah-font-serif); }
+.training-demo__memory-grid button.is-matched { border-color: var(--qmah-jade); box-shadow: inset 0 0 0 3px var(--qmah-jade); }
+.training-demo__puzzle-grid button > span, .training-demo__strip-grid button > span { position: absolute; right: 4px; bottom: 4px; display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; color: var(--qmah-on-dark); background: color-mix(in srgb, var(--qmah-night) 84%, transparent); font-size: 10px; font-weight: 800; }
+.training-demo__puzzle-grid button.is-selected, .training-demo__strip-grid button.is-selected { z-index: 1; border-color: var(--qmah-accent); box-shadow: 0 0 0 3px var(--qmah-accent); transform: scale(.94); }
+.training-demo__puzzle-grid button.is-correct, .training-demo__strip-grid button.is-correct { border-color: var(--qmah-jade); box-shadow: inset 0 0 0 3px var(--qmah-jade); }
+.training-demo__side-copy { min-width: 0; max-width: 44ch; padding-top: 9px; }
+.training-demo__side-copy h3 { margin: 0 0 8px; font: 700 clamp(19px, 2vw, 23px)/1.35 var(--qmah-font-serif); }
+.training-demo__readout { margin: 15px 0 0; border: 1px solid color-mix(in srgb, var(--qmah-accent) 45%, var(--guide-line)); border-radius: var(--qmah-radius-control); padding: 8px 12px; color: var(--qmah-game-action); background: color-mix(in srgb, var(--qmah-accent) 12%, var(--guide-surface)); font-size: var(--qmah-type-label-size); font-weight: 800; }
+@media (max-width: 920px) { .training-demo__modes { grid-template-columns: repeat(2, minmax(0, 1fr)); } .training-demo__board-layout { grid-template-columns: 1fr; } .training-demo__side-copy { max-width: none; padding-top: 0; } .training-demo__stage { min-height: 0; } }
+@media (max-width: 560px) { .training-demo__modes button { min-height: 68px; } .training-demo__stage { padding: 12px; } .training-demo__choices { grid-template-columns: 1fr; } .training-demo__choices button { min-height: 60px; } .training-demo__memory-grid, .training-demo__puzzle-grid { gap: 4px; padding: 6px; } .training-demo__strip-grid { gap: 2px; padding: 5px; } }
+@media (prefers-reduced-motion: reduce) { .training-demo__modes button, .training-demo__memory-grid button, .training-demo__puzzle-grid button, .training-demo__strip-grid button { transition: none; } }

@@ -62,23 +62,86 @@
       <a class="guide-panel-link" routerLink="/game">開始多人鑑定</a>
     } @else {
       <section class="training-demo" aria-labelledby="training-demo-title" animate.enter="game-panel-enter">
-        <div class="training-demo__heading"><h2 id="training-demo-title">試玩一題：看圖認文物</h2><p>這是單人玩法的簡短示範，不會計分或發送獎勵。</p></div>
-        <div class="training-demo__body">
-          <img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="示範題目的文物照片" />
-          <div class="training-demo__question">
-            <h3>照片裡是哪一件文物？</h3>
-            <div class="training-demo__choices" role="group" aria-label="選擇文物名稱">
-              @for (choice of trainingChoices; track choice; let index = $index) {
-                <button type="button" [class.is-selected]="selectedTrainingChoice() === index" [class.is-correct]="trainingRevealed() && index === 1" [class.is-wrong]="trainingRevealed() && selectedTrainingChoice() === index && index !== 1" [attr.aria-pressed]="selectedTrainingChoice() === index" [disabled]="trainingRevealed()" (click)="selectedTrainingChoice.set(index)">{{ choice }}</button>
-              }
+        <div class="training-demo__heading"><h2 id="training-demo-title">試玩四種單人玩法</h2><p>每種玩法都能直接試操作；示範使用館藏圖片，不會送出成績或獎勵。</p></div>
+        <div class="guide-tabs training-demo__modes" role="group" aria-label="選擇單人玩法示範">
+          @for (mode of trainingModes; track mode.code) {
+            <button type="button" [class.is-active]="activeTrainingDemo() === mode.code" [attr.aria-pressed]="activeTrainingDemo() === mode.code" (click)="selectTrainingDemo(mode.code)">
+              <span>{{ mode.label }}</span><small>{{ mode.hint }}</small>
+            </button>
+          }
+        </div>
+
+        <div class="training-demo__stage" [attr.data-mode]="activeTrainingDemo()">
+          @if (activeTrainingDemo() === 'DETAIL_LOCATOR') {
+            <div class="training-demo__body" animate.enter="game-panel-enter">
+              <div class="training-demo__crop" role="img" aria-label="文物原圖的局部示範線索">
+                <img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="" />
+                <span>局部線索</span>
+              </div>
+              <div class="training-demo__question">
+                <h3>從四件相似文物中找出原圖</h3>
+                <p class="training-demo__instruction">示範只顯示原圖的一小塊。正式題目會優先以同類、同時期文物作為干擾選項。</p>
+                <div class="guide-preview-answers training-demo__choices" role="group" aria-label="四選一：選擇最相近的文物">
+                  @for (choice of trainingChoices; track choice.name; let index = $index) {
+                    <button type="button" [class.is-selected]="selectedTrainingChoice() === index" [class.is-correct]="trainingRevealed() && choice.correct" [class.is-wrong]="trainingRevealed() && selectedTrainingChoice() === index && !choice.correct" [attr.aria-pressed]="selectedTrainingChoice() === index" [disabled]="trainingRevealed()" (click)="selectedTrainingChoice.set(index)"><span>{{ (index + 1).toString().padStart(2, '0') }}</span><strong>{{ choice.name }}</strong></button>
+                  }
+                </div>
+                @if (!trainingRevealed()) {
+                  <button type="button" class="training-demo__action" [disabled]="selectedTrainingChoice() === null" (click)="submitTrainingDemo()">送出答案</button>
+                } @else {
+                  <p class="training-demo__result" [class.is-correct]="trainingChoices[selectedTrainingChoice() ?? -1]?.correct" [class.is-wrong]="!trainingChoices[selectedTrainingChoice() ?? -1]?.correct" role="status" animate.enter="game-result-enter">{{ trainingChoices[selectedTrainingChoice() ?? -1]?.correct ? '辨識正確！' : '再觀察一次。' }}答案是掐絲琺瑯雲龍紋三足香爐。</p>
+                  <button type="button" class="training-demo__retry" (click)="restartTrainingDemo()">再試一次</button>
+                }
+              </div>
             </div>
-            @if (!trainingRevealed()) {
-              <button type="button" class="training-demo__reveal" [disabled]="selectedTrainingChoice() === null" (click)="trainingRevealed.set(true)">查看示範結果</button>
-            } @else {
-              <p class="training-demo__result" [class.is-correct]="selectedTrainingChoice() === 1" [class.is-wrong]="selectedTrainingChoice() !== 1" role="status" animate.enter="game-result-enter">{{ selectedTrainingChoice() === 1 ? '答對了！' : '這次選錯了。' }}照片中是掐絲琺瑯雲龍紋三足香爐。</p>
-              <button type="button" class="training-demo__retry" (click)="restartTrainingDemo()">再試一次</button>
-            }
-          </div>
+          } @else if (activeTrainingDemo() === 'MEMORY_MATCH') {
+            <div class="training-demo__board-layout" animate.enter="game-panel-enter">
+              <div class="training-demo__memory-grid" role="group" aria-label="十六張館藏翻牌配對示範">
+                @for (card of memoryDemoCards(); track card.id; let index = $index) {
+                  <button type="button" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" [attr.aria-label]="card.revealed || card.matched ? card.label : '翻開第 ' + (index + 1) + ' 張牌'" [attr.aria-pressed]="card.revealed || card.matched" [disabled]="card.matched" (click)="flipMemoryDemo(index)">
+                    @if (card.revealed || card.matched) { <img [src]="card.image" [alt]="card.label" /> } @else { <span>翻</span> }
+                  </button>
+                }
+              </div>
+              <div class="training-demo__side-copy">
+                <h3>記住圖樣，找出相同文物</h3>
+                <p>翻開兩張牌；相同就留下，不同會蓋回。示範與正式玩法相同為 4×4、共八組。</p>
+                <p class="training-demo__readout" aria-live="polite">已配對 {{ memoryDemoMatchedPairs() }} / {{ memoryDemoPairCount }} · 翻牌 {{ memoryDemoMoves() }} 次</p>
+                @if (memoryDemoComplete()) { <p class="training-demo__result is-correct" role="status" animate.enter="game-result-enter">{{ memoryDemoPairCount }} 組都找到了！</p> }
+                <button type="button" class="training-demo__retry" (click)="restartMemoryDemo()">重新洗牌</button>
+              </div>
+            </div>
+          } @else if (activeTrainingDemo() === 'ARTIFACT_PUZZLE') {
+            <div class="training-demo__board-layout" animate.enter="game-panel-enter">
+              <div class="training-demo__puzzle-grid" role="group" aria-label="二十五格館藏拼圖示範">
+                @for (piece of puzzleDemoOrder(); track $index; let slot = $index) {
+                  <button type="button" [class.is-selected]="puzzleDemoSelection() === slot" [class.is-correct]="puzzleDemoComplete()" [disabled]="puzzleDemoComplete()" [attr.aria-label]="'第 ' + (piece + 1) + ' 塊，目前在第 ' + (slot + 1) + ' 格'" [attr.aria-pressed]="puzzleDemoSelection() === slot" [style.background-image]="'url(/images/login/real/cloisonne-tripod-incense-burner.jpg)'" [style.background-size]="'500% 500%'" [style.background-position]="imagePiecePosition(piece, 5, 5)" (click)="selectDemoPiece('puzzle', slot)"><span>{{ slot + 1 }}</span></button>
+                }
+              </div>
+              <div class="training-demo__side-copy">
+                <h3>交換碎片，拼回文物原圖</h3>
+                <p>示範與正式挑戰相同為 5×5。先選一塊，再選目的格交換，逐步拼回完整文物。</p>
+                <p class="training-demo__readout" aria-live="polite">已交換 {{ puzzleDemoMoves() }} 次</p>
+                @if (puzzleDemoComplete()) { <p class="training-demo__result is-correct" role="status" animate.enter="game-result-enter">拼圖完成！</p> }
+                <button type="button" class="training-demo__retry" (click)="restartPuzzleDemo()">重新打亂</button>
+              </div>
+            </div>
+          } @else {
+            <div class="training-demo__board-layout training-demo__board-layout--scroll" animate.enter="game-panel-enter">
+              <div class="training-demo__strip-grid" role="group" aria-label="十五格長卷復位示範">
+                @for (piece of stripDemoOrder(); track $index; let slot = $index) {
+                  <button type="button" [class.is-selected]="stripDemoSelection() === slot" [class.is-correct]="stripDemoComplete()" [disabled]="stripDemoComplete()" [attr.aria-label]="'第 ' + (piece + 1) + ' 段，目前在第 ' + (slot + 1) + ' 格'" [attr.aria-pressed]="stripDemoSelection() === slot" [style.background-image]="'url(/images/login/real/cloisonne-tripod-incense-burner.jpg)'" [style.background-size]="'500% 300%'" [style.background-position]="imagePiecePosition(piece, 5, 3)" (click)="selectDemoPiece('scroll', slot)"><span>{{ slot + 1 }}</span></button>
+                }
+              </div>
+              <div class="training-demo__side-copy">
+                <h3>把散開的畫面復位</h3>
+                <p>依照紋飾與器形線索交換 15 格。操作與拼圖相同，但格數與畫面比例不同。</p>
+                <p class="training-demo__readout" aria-live="polite">已交換 {{ stripDemoMoves() }} 次</p>
+                @if (stripDemoComplete()) { <p class="training-demo__result is-correct" role="status" animate.enter="game-result-enter">長卷復位完成！</p> }
+                <button type="button" class="training-demo__retry" (click)="restartStripDemo()">重新打亂</button>
+              </div>
+            </div>
+          }
         </div>
       </section>
       <app-game-how-to variant="training" />
