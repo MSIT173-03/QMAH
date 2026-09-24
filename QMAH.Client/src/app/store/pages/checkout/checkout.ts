@@ -1,11 +1,19 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { EMPTY, catchError, filter, switchMap } from 'rxjs';
-import { SiteHeader, StepIndicator, Breadcrumb, BreadcrumbItem, PageTitleRow } from '../../component';
+import {
+  SiteHeader,
+  StepIndicator,
+  Breadcrumb,
+  BreadcrumbItem,
+  PageTitleRow,
+  OrderPlacedDialog,
+} from '../../component';
 import { CheckoutApi, MemberApi } from '../../api';
 import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
 import { EMPTY_RECIPIENT } from '../../api/member.api';
-import { CART_PATH, HOME_PATH, MEMBER_PATH } from '../../shared/paths';
+import { CART_PATH, HOME_PATH, MEMBER_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { RecipientForm } from './recipient-form/recipient-form';
 import { DeliveryOptions } from './delivery-options/delivery-options';
 import { CouponPicker } from './coupon-picker/coupon-picker';
@@ -41,6 +49,7 @@ import {
     CouponPicker,
     PointPicker,
     CheckoutSummary,
+    OrderPlacedDialog,
   ],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss',
@@ -48,6 +57,7 @@ import {
 export class Checkout {
   private readonly checkoutApi = inject(CheckoutApi);
   private readonly memberApi = inject(MemberApi);
+  private readonly router = inject(Router);
 
   /** 頁首的結帳流程步驟 */
   protected readonly steps = CHECKOUT_STEPS;
@@ -109,6 +119,8 @@ export class Checkout {
   protected submitted = signal(false);
   /** 訂單成立後的 API 回應，未成立時為 null */
   protected order = signal<OrderResult | null>(null);
+  /** 訂單送出成功提示是否顯示；跟 order() 是否成立同步 */
+  protected orderPlacedOpen = computed(() => this.order() !== null);
   /** 選用的折價券，未選用時為 null */
   private readonly selectedCoupon = computed(() => this.coupons()[this.couponIndex()] ?? null);
 
@@ -177,5 +189,10 @@ export class Checkout {
         this.selectedCoupon(),
       )
       .subscribe((order) => this.order.set(order));
+  }
+
+  /** 訂單送出成功提示唯一的出路：回到商品列表 */
+  protected onReturnToProducts(): void {
+    this.router.navigateByUrl(PRODUCT_LIST_PATH);
   }
 }

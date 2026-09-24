@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+using QMAH.Api.Infrastructure.Payments;
+
 namespace QMAH.Api.Controllers.V1;
 
 public sealed record ArtifactListItemDto(
@@ -506,6 +508,14 @@ public sealed class CreateStoreOrderRequest
 
     [Required, StringLength(200, MinimumLength = 1)]
     public string ShippingAddressLine { get; set; } = "";
+
+    /// <summary>模擬的配送方式代碼，須存在於 StoreCheckoutCatalog.ShippingOptions。</summary>
+    [Required, StringLength(40, MinimumLength = 1)]
+    public string ShippingOptionId { get; set; } = "";
+
+    /// <summary>模擬的付款方式代碼，須存在於 StoreCheckoutCatalog.PaymentOptions；直接存入 Payment.PaymentType。</summary>
+    [Required, StringLength(40, MinimumLength = 1)]
+    public string PaymentOptionId { get; set; } = "";
 }
 
 public sealed record OrderLineDto(
@@ -522,7 +532,10 @@ public sealed record OrderDto(
     decimal Subtotal,
     decimal DiscountAmount,
     int PointsUsed,
+    decimal ShippingFee,
     decimal TotalAmount,
+    // 依應付總額與 StoreCheckoutCatalog.PointEarnRate 即時換算，尚未在付款完成前實際入帳。
+    int PointsEarned,
     string RecipientName,
     string RecipientPhone,
     string ShippingPostalCode,
@@ -533,7 +546,9 @@ public sealed record OrderDto(
     DateTime CreatedAt,
     DateTime? PaidAt,
     DateTime? CancelledAt,
-    IReadOnlyList<OrderLineDto> Items);
+    IReadOnlyList<OrderLineDto> Items,
+    // 付款方式是信用卡（綠界）時才有值；瀏覽器可以直接拿這份內容組表單送出，導向綠界測試付款頁。
+    EcpayCheckoutFormDto? EcpayCheckout);
 
 public sealed record MeDto(
     Guid Id,

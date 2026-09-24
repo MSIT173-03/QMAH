@@ -399,9 +399,21 @@ export interface OrderQuote extends OrderAmounts {
   pointCap: number;
 }
 
+/**
+ * 可以直接送出、導向綠界（ECPay）測試付款頁的表單內容；瀏覽器用這份內容組出真正的
+ * <form> 並 submit，讓綠界收到的是使用者自己瀏覽器送出的請求，不是後端代打的。
+ */
+export interface EcpayCheckoutForm {
+  actionUrl: string;
+  fields: Record<string, string>;
+}
+
 /** 訂單結果；金額皆由後端重新計算，為最終依據 */
 export interface OrderResult extends OrderAmounts {
   orderId: string;
+  orderNo: string;
+  /** 信用卡付款才有值；其餘付款方式為 null */
+  ecpayCheckout: EcpayCheckoutForm | null;
 }
 
 /* ===============================

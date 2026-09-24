@@ -1,0 +1,18 @@
+<!-- 訂單送出成功提示：原生 modal dialog，唯一動作是回到商品列表 -->
+<dialog #dialog class="order-placed" aria-labelledby="order-placed-title" (cancel)="onNativeCancel($event)"
+  (click)="onBackdropClick($event)">
+  <div class="order-placed-body">
+    <span class="order-placed-mark" aria-hidden="true">✓</span>
+    <h2 id="order-placed-title" class="order-placed-title">{{ title }}</h2>
+    <p class="order-placed-desc">
+      訂單編號 <span class="font-mono">{{ orderNo() }}</span><br />
+      應付總額 <span class="font-mono text-accent">{{ payableLabel() }}</span>
+    </p>
+    <div class="order-placed-actions">
+      @if (ecpayCheckout()) {
+        <button type="button" class="btn-outline" (click)="onEcpayCheckout()">{{ ecpayLabel }}</button>
+      }
+      <button type="button" class="btn-solid" (click)="confirm.emit()">{{ confirmLabel }}</button>
+    </div>
+  </div>
+</dialog>

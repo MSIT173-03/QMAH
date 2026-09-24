@@ -45,4 +45,6 @@ export class DeliveryOptions {
   /** 以下為固定的版面文字 */
   protected readonly title = '配送與付款';
   protected readonly tag = 'DELIVERY';
+  /** integration: 信用卡付款送出訂單時會一併通知綠界（ECPay）測試環境，示範金流串接呼叫，不會實際請款。 */
+  protected readonly paymentNote = '信用卡付款使用綠界（ECPay）金流測試環境；確認下單時會一併通知，不會實際請款。';
 }

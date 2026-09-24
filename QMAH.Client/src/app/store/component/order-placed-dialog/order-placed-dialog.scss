@@ -1,0 +1,94 @@
+.order-placed {
+  /* dialog 會移到 top layer，但 DOM 仍在 .store-app 內，因此沿用商城的色彩變數與按鈕樣式。 */
+  border: 1px solid var(--color-line-mid);
+  border-radius: var(--qmah-radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  padding: 0;
+  width: min(420px, calc(100vw - 32px));
+
+  /* 全站的 Tailwind Preflight 把所有元素的 margin 重設為 0，蓋掉瀏覽器 dialog 預設
+     用 margin: auto 置中的機制；這裡明確覆寫，讓對話框固定顯示在畫面正中央。 */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+
+  /* 淡入淡出：opacity 搭配 allow-discrete，讓對話框在關閉時也能播完退場動畫再離開 top layer。 */
+  opacity: 0;
+  transition: opacity 200ms ease, overlay 200ms ease allow-discrete, display 200ms ease allow-discrete;
+
+  &[open] {
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  &::backdrop {
+    background: rgb(0 0 0 / 0%);
+    transition: background-color 200ms ease, overlay 200ms ease allow-discrete, display 200ms ease allow-discrete;
+  }
+
+  &[open]::backdrop {
+    background: rgb(0 0 0 / 45%);
+
+    @starting-style {
+      background: rgb(0 0 0 / 0%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &::backdrop {
+      transition: none;
+    }
+  }
+}
+
+.order-placed-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--qmah-space-3);
+  padding: var(--qmah-space-6, 32px) var(--qmah-space-5, 24px);
+  text-align: center;
+}
+
+.order-placed-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.order-placed-title {
+  margin: 0;
+  font-family: var(--qmah-font-serif);
+  font-size: var(--qmah-type-section-title-size);
+  line-height: var(--qmah-type-heading-leading);
+  color: var(--color-ink-deep);
+}
+
+.order-placed-desc {
+  margin: 0;
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-body);
+  line-height: 1.9;
+}
+
+.order-placed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--qmah-space-3);
+  width: 100%;
+  margin-top: var(--qmah-space-2);
+}

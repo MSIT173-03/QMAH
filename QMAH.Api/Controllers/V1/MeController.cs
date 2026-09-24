@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
+using QMAH.Api.Infrastructure.Payments;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -727,7 +728,9 @@ public sealed class MeController(
         order.Subtotal,
         order.DiscountAmount,
         order.PointsUsed,
+        order.ShippingFee,
         order.TotalAmount,
+        (int)Math.Floor(order.TotalAmount * StoreCheckoutCatalog.PointEarnRate),
         order.RecipientName,
         order.RecipientPhone,
         order.ShippingPostalCode,
@@ -746,7 +749,14 @@ public sealed class MeController(
                 detail.UnitPrice,
                 detail.Quantity,
                 detail.LineTotal))
-            .ToList());
+            .ToList(),
+        BuildEcpayCheckoutForm(order));
+
+    private static EcpayCheckoutFormDto? BuildEcpayCheckoutForm(StoreOrder order)
+    {
+        var request = EcpayCheckoutFormBuilder.BuildRequestForOrder(order);
+        return request is null ? null : EcpayCheckoutFormBuilder.Build(request);
+    }
 
     private static UserAddressDto ToAddressDto(UserAddress address) => new(
         address.Id,

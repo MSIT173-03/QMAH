@@ -73,13 +73,28 @@
     }
   }
 
-  /* 結帳頁付款方式：留白較大，未選取時文字為內文色 */
+  /*
+   * 結帳頁付款方式與點數折抵：跟同一面板的配送方式（.option-btn）用同樣的圓角矩形、
+   * 高度與「未選取也有外框」，不是這個元件其餘變體用的藥丸形、懸停才淡入外框。
+   */
+  &--pay,
+  &--point {
+    min-height: var(--qmah-control-height);
+    border-radius: var(--qmah-radius-control);
+    border-color: var(--color-line-mid);
+
+    &:hover:not(:disabled) {
+      /* 平常就有外框，懸停要再深一階才看得出差異，不能停在同一個顏色 */
+      border-color: var(--color-accent);
+    }
+  }
+
   &--pay {
     padding: 9px 14px;
     color: var(--color-body);
   }
 
-  /* 結帳頁點數折抵方式：與篩選藥丸同尺寸，數字以等寬字體呈現 */
+  /* 結帳頁點數折抵方式：數字以等寬字體呈現 */
   &--point {
     padding: 7px 10px;
     font-family: 'IBM Plex Mono', monospace;

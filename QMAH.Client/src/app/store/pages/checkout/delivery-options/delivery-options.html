@@ -20,4 +20,5 @@
 
   <!-- 付款方式 -->
   <app-pill-group variant="pay" [options]="paymentOptions()" (select)="paymentSelect.emit($event)" />
+  <p class="option-note">{{ paymentNote }}</p>
 </app-panel>

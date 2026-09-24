@@ -1,15 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, of, switchMap } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { apiUrl, meUrl } from './http';
-import { CheckoutOptions, Coupon, OrderQuote, OrderQuoteRequest, OrderRequest, OrderResult } from './api.models';
-
-const DISABLED_CHECKOUT_OPTIONS: CheckoutOptions = {
-  shippingOptions: [],
-  paymentOptions: [],
-  freeShippingThreshold: 0,
-  pointEarnRate: 0,
-};
+import {
+  CheckoutOptions,
+  Coupon,
+  EcpayCheckoutForm,
+  OrderQuote,
+  OrderQuoteRequest,
+  OrderRequest,
+  OrderResult,
+} from './api.models';
 
 /** GET /me/cart 項目中下單用得到的欄位 */
 interface ApiCartLine {
@@ -32,6 +33,8 @@ interface ApiCreateOrderRequest {
   shippingCity: string;
   shippingDistrict: string;
   shippingAddressLine: string;
+  shippingOptionId: string;
+  paymentOptionId: string;
 }
 
 /** POST /store/orders 回應（後端 OrderDto 中前端用得到的欄位） */
@@ -44,7 +47,11 @@ interface ApiOrder {
   /** 折價券折抵金額 */
   discountAmount: number;
   pointsUsed: number;
+  shippingFee: number;
   totalAmount: number;
+  /** 依應付總額即時換算，付款流程完成前尚未實際入帳 */
+  pointsEarned: number;
+  ecpayCheckout: EcpayCheckoutForm | null;
 }
 
 /**
@@ -64,28 +71,19 @@ function pointCap(subtotal: number, coupon: Coupon | null): number {
 export class CheckoutApi {
   private readonly http = inject(HttpClient);
 
-  // integration: 正式後端目前只有 /store/orders 的既有契約；配送試算與 payment callback 尚未完成，
-  // 因此未定義的 options 只回傳停用狀態，不對不存在的 route 送出請求。
-
-  /**
-   * GET /checkout/options：配送／付款方式、免運門檻與點數回饋比例。
-   *
-   * develop 目前沒有正式的 options／quote route；先回傳空選項讓既有頁面停用，
-   * 不向不存在的 endpoint 發 request，也不以本機假資料假裝能付款。待商城負責人定義正式 DTO 後再接回 HTTP。
-   */
+  /** GET /checkout/options：配送／付款方式、免運門檻與點數回饋比例；選項本身是後端固定的模擬目錄。 */
   getOptions(): Observable<CheckoutOptions> {
-    return of(DISABLED_CHECKOUT_OPTIONS);
+    return this.http.get<CheckoutOptions>(apiUrl('/checkout/options'));
   }
 
-  /** POST /checkout/quote：依配送方式、折價券與點數試算訂單金額（不成立訂單）；後端尚未提供此 route。 */
+  /** POST /checkout/quote：依配送方式、折價券與點數試算訂單金額（不成立訂單，也不寫入任何資料）。 */
   getQuote(request: OrderQuoteRequest): Observable<OrderQuote> {
     return this.http.post<OrderQuote>(apiUrl('/checkout/quote'), request);
   }
 
   /**
-   * POST /store/orders：以目前購物車內容送出訂單，回應中的金額由後端重新計算。
-   * 後端尚無配送與付款方式欄位，shippingOptionId／paymentOptionId 不送出；
-   * 收件人信箱、統編與備註也沒有對應欄位，目前只保留在前端表單。
+   * POST /store/orders：以目前購物車內容送出訂單，回應中的金額（含運費、回饋點數）由後端重新計算。
+   * 收件人信箱、統編與備註後端尚無對應欄位，目前只保留在前端表單，不會送出。
    *
    * @param coupon 選用的折價券（需與 order.couponId 相同），用來估算點數可折抵上限
    */
@@ -106,19 +104,23 @@ export class CheckoutApi {
           shippingCity: order.recipient.city.trim(),
           shippingDistrict: order.recipient.district.trim(),
           shippingAddressLine: order.recipient.address.trim(),
+          shippingOptionId: order.shippingOptionId,
+          paymentOptionId: order.paymentOptionId,
         };
         return this.http.post<ApiOrder>(apiUrl('/orders'), body);
       }),
       map((dto) => ({
         orderId: dto.id,
+        orderNo: dto.orderNo,
         subtotal: dto.subtotal,
-        // 後端 OrderDto 的小計已是商品折扣後金額，也沒有運費與點數回饋欄位。
+        // 後端 OrderDto 的小計已是商品折扣後金額，商品折扣沒有另外的欄位可拆出來。
         itemDiscount: 0,
-        shippingFee: 0,
+        shippingFee: dto.shippingFee,
         couponDiscount: dto.discountAmount,
         pointsUsed: dto.pointsUsed,
         payable: dto.totalAmount,
-        pointsEarned: 0,
+        pointsEarned: dto.pointsEarned,
+        ecpayCheckout: dto.ecpayCheckout,
       })),
     );
   }
