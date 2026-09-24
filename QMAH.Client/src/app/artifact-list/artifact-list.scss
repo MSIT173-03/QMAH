@@ -173,6 +173,21 @@
   gap: 20px;
 }
 
+/*
+  未展開時，不管 previewCount 設多少、也不管目前螢幕寬度一列實際塞得下幾張卡，
+  永遠只看得到第一列：grid-template-rows 只定義「第一列」這一個明確軌道
+  （尺寸依內容自動撐開），超過第一列能容納數量的卡片會被瀏覽器排進「隱性列」
+  （第二列、第三列...），這裡把隱性列的高度直接設成 0（grid-auto-rows: 0），
+  再用 overflow:hidden 把被壓成 0 高度、理論上還是會溢出的卡片內容裁掉，
+  卡片本身完全不會被看到、也不佔版面高度。展開後拿掉這個 class，隱性列
+  就會恢復用 grid-auto-rows 預設的 auto（也就是跟第一列一樣正常撐開）。
+*/
+.artifact-grid--collapsed {
+  grid-template-rows: auto;
+  grid-auto-rows: 0;
+  overflow: hidden;
+}
+
 .artifact-card {
   appearance: none;
   width: 100%;
@@ -441,26 +456,6 @@
   overscroll-behavior: contain;
 }
 
-.search-sidebar__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.search-sidebar__header h3 {
-  margin: 0;
-  color: var(--qmah-ink);
-  font-size: 15px;
-  line-height: 1.3;
-}
-
-.search-sidebar__close,
-.filter-fab,
-.filter-backdrop {
-  display: none;
-}
-
 .content-area {
   position: absolute;
   top: 0;
@@ -722,89 +717,14 @@
   }
 
   .search-sidebar {
-    position: fixed;
-    inset: auto 12px 12px;
-    z-index: 57;
+    position: static;
     width: auto;
     height: auto;
-    max-height: min(720px, calc(100dvh - 24px));
-    margin: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    max-height: none;
+    margin: 0 0 20px;
+    overflow: visible;
     border: 1px solid var(--qmah-border);
     border-radius: var(--qmah-radius-panel);
-    box-shadow: var(--qmah-shadow-float);
-    transform: translateY(120%);
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 180ms ease, opacity 180ms ease;
-  }
-
-  .search-sidebar.is-open {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .search-sidebar__close {
-    display: inline-flex;
-    min-height: 36px;
-    align-items: center;
-    padding: 6px 12px;
-    border: 1px solid var(--qmah-border);
-    border-radius: var(--qmah-radius-pill);
-    background: var(--qmah-surface);
-    color: var(--qmah-ink);
-    font: inherit;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-.filter-fab {
-    position: fixed;
-    right: 16px;
-    bottom: max(16px, env(safe-area-inset-bottom));
-    z-index: 56;
-    display: inline-flex;
-    min-height: var(--qmah-control-height);
-    align-items: center;
-    gap: 7px;
-    padding: 8px 14px;
-    border: 1px solid var(--qmah-catalog-accent);
-    border-radius: 12px;
-    background: var(--qmah-surface-elevated);
-    color: var(--qmah-catalog-accent);
-    box-shadow: var(--qmah-shadow-float);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 800;
-  }
-
-  .filter-fab__count {
-    display: inline-grid;
-    min-width: 20px;
-    height: 20px;
-    place-items: center;
-    padding-inline: 4px;
-    border-radius: 999px;
-    background: var(--qmah-catalog-soft);
-    color: var(--qmah-catalog-action);
-    font-size: 11px;
-  }
-
-  .filter-fab.is-open {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .filter-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 54;
-    display: block;
-    border: 0;
-    background: color-mix(in srgb, var(--qmah-night) 42%, transparent);
-    cursor: pointer;
   }
 
   .content-area {
@@ -831,13 +751,11 @@
   }
 
   .sidebar-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 1;
-    margin-top: auto;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-    background: var(--qmah-surface-elevated);
-    box-shadow: 0 -8px 16px color-mix(in srgb, var(--qmah-surface-elevated) 90%, transparent);
+    position: static;
+    margin-top: 12px;
+    padding-bottom: 0;
+    background: none;
+    box-shadow: none;
   }
 }
 
@@ -864,8 +782,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .search-sidebar,
-  .filter-fab {
+  .search-sidebar {
     transition: none;
   }
 }
@@ -1237,6 +1154,31 @@
   text-underline-offset: 2px;
   cursor: pointer;
 }
+
+.field-link-button {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--blue-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.field-link-button:hover {
+  color: var(--blue);
+}
+
+.field-link-button:disabled {
+  color: var(--ink-soft);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
 
 .field-link-button:hover {
   color: var(--qmah-primary-hover);

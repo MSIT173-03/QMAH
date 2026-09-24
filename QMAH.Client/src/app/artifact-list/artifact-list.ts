@@ -1,5 +1,5 @@
 // artifact-list.ts
-import { Component, EventEmitter, HostListener, Output, OnInit, signal, computed } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,14 +12,6 @@ import { KeyModel } from '../models/key-model';
 import { keyAssetPath } from '../shared/key-assets';
 import { SocialApiService } from '../core/services/social-api';
 import { ArtifactDiscussionDialog } from './artifact-discussion-dialog/artifact-discussion-dialog';
-import {
-  LucideImage,
-  LucideInfo,
-  LucideKeyRound,
-  LucideLockKeyhole,
-  LucideLockKeyholeOpen,
-  LucideX,
-} from '@lucide/angular';
 // ⚠️ 路徑是假設值：假設 key-list.ts 跟 artifact-list.ts 是同一層目錄下的兄弟資料夾
 // （例如都在 components/ 底下），如果實際檔案結構不同，這行要跟著改。
 import { KeyList } from '../key-list/key-list';
@@ -38,12 +30,6 @@ interface EraGroup {
     FormsModule,
     KeyList,
     ArtifactDiscussionDialog,
-    LucideImage,
-    LucideInfo,
-    LucideKeyRound,
-    LucideLockKeyhole,
-    LucideLockKeyholeOpen,
-    LucideX,
   ],
   templateUrl: './artifact-list.html',
   styleUrl: './artifact-list.scss'
@@ -75,7 +61,7 @@ export class ArtifactList implements OnInit {
   keys = signal(0); // 全部鑰匙的持有總數，頭部徽章用
   /** 萬能鑰匙（如果有的話）；圖鑑頁卡片上的解鎖按鈕固定用這把，不是背包那邊的一般/年代/分類鑰匙 */
   universalKey = signal<KeyModel | null>(null);
-  // ui-integration: 圖鑑的萬能鑰匙確認視窗使用內容型道具圖，功能入口本身仍保留 Lucide 導覽圖示。
+  // 萬能鑰匙確認視窗用的是內容型道具圖（keyAssetPath），跟卡片／按鈕上的 emoji 圖示是分開的機制。
   readonly universalKeyAssetPath = keyAssetPath('UNIVERSAL');
   // integration: 後端目前的 UnlockArtifactAsync 固定扣除 1 把鑰匙；
   // /me/keys/exchange-rules 是鑰匙兌換規則，不是解鎖成本，不能拿來猜畫面數字。
@@ -121,29 +107,9 @@ export class ArtifactList implements OnInit {
   /** 年代／分類改成核取方塊多選，空集合代表「不篩選（全部）」 */
   selectedEras = signal<Set<string>>(new Set());
   selectedCategories = signal<Set<string>>(new Set());
-  filterOpen = signal(false);
-  activeFilterCount = computed(() =>
-    this.selectedEras().size +
-    this.selectedCategories().size +
-    (this.unlockedOnly() ? 1 : 0) +
-    (this.searchQuery().trim() ? 1 : 0),
-  );
 
   toggleUnlockedFilter(): void {
     this.unlockedOnly.update((active) => !active);
-  }
-
-  toggleFilterPanel(): void {
-    this.filterOpen.update((open) => !open);
-  }
-
-  closeFilterPanel(): void {
-    this.filterOpen.set(false);
-  }
-
-  @HostListener('document:keydown.escape')
-  closeFilterPanelWithEscape(): void {
-    if (this.filterOpen()) this.closeFilterPanel();
   }
 
   /** 篩選用的年代核取方塊選項，來自「全部」文物（不受目前篩選影響），解鎖／未解鎖都算 */
@@ -246,7 +212,7 @@ export class ArtifactList implements OnInit {
   isEmpty = computed(() => !this.loading() && !this.errorMsg() && this.eraGroups().length === 0);
 
   /** 每個年代區塊預設只展開的（未點「更多文物+」的）數量 */
-  private readonly previewCount = 4;
+  private readonly previewCount = 8;
 
   /** 已展開「顯示全部」的年代名稱集合 */
   expandedEras = signal<Set<string>>(new Set());

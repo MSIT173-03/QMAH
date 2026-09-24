@@ -8,41 +8,13 @@
     </div>
   </div>
 
-  <button
-    type="button"
-    class="filter-fab"
-    [class.is-open]="filterOpen()"
-    *ngIf="catalogViewReady()"
-    [attr.aria-expanded]="filterOpen()"
-    aria-controls="catalog-filter-panel"
-    (click)="toggleFilterPanel()"
-  >
-    篩選
-    <span class="filter-fab__count" *ngIf="activeFilterCount() > 0">{{ activeFilterCount() }}</span>
-  </button>
-
   <div class="page-body">
-
-    <button
-      type="button"
-      class="filter-backdrop"
-      *ngIf="filterOpen()"
-      aria-label="關閉篩選器"
-      (click)="closeFilterPanel()"
-    ></button>
-
     <!-- 左側（占比 1，寬度已縮減為原本一半）：搜尋 bar + 年代／分類核取方塊，可複合式多選 -->
     <aside
       id="catalog-filter-panel"
       class="search-sidebar"
-      [class.is-open]="filterOpen()"
       *ngIf="catalogViewReady()"
     >
-      <div class="search-sidebar__header">
-        <h3>篩選圖鑑</h3>
-        <button type="button" class="search-sidebar__close" (click)="closeFilterPanel()">完成</button>
-      </div>
-
       <input
         id="catalog-search"
         name="catalogSearch"
@@ -108,20 +80,14 @@
             (click)="toggleUnlockedFilter()"
           >
             @if (unlockedOnly()) {
-              <svg lucideLockKeyholeOpen aria-hidden="true" focusable="false"></svg>
+              <span>🔓 顯示全部</span>
             } @else {
-              <svg lucideLockKeyhole aria-hidden="true" focusable="false"></svg>
-            }
-            @if (unlockedOnly()) {
-              <span>顯示全部</span>
-            } @else {
-              <span>僅顯示已解鎖</span>
+              <span>🔒 僅顯示已解鎖</span>
             }
             <strong>{{ unlockedCount() }}</strong>
           </button>
           <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
-            <svg lucideKeyRound aria-hidden="true" focusable="false"></svg>
-            鑰匙背包 <strong>{{ keys() }}</strong>
+            🔑 鑰匙背包 <strong>{{ keys() }}</strong>
           </button>
         </div>
       </div>
@@ -160,7 +126,7 @@
               </button>
             </div>
 
-            <div class="artifact-grid">
+            <div class="artifact-grid" [class.artifact-grid--collapsed]="!isEraExpanded(group.eraName)">
               <button
                 class="artifact-card"
                 type="button"
@@ -178,13 +144,9 @@
                       class="thumbnail"
                     />
                   } @else {
-                    <span class="artifact-image-placeholder" aria-label="尚無文物縮圖">
-                      <svg lucideImage aria-hidden="true" focusable="false"></svg>
-                    </span>
+                    <span class="artifact-image-placeholder" aria-label="尚無文物縮圖">🖼️</span>
                   }
-                  <span class="lock-badge" *ngIf="!item.unlocked">
-                    <svg lucideLockKeyhole aria-hidden="true" focusable="false"></svg>
-                  </span>
+                  <span class="lock-badge" *ngIf="!item.unlocked">🔒</span>
                 </div>
 
                 <div class="artifact-card__info">
@@ -234,20 +196,11 @@
       <div class="focus-actions">
         <ng-container *ngIf="item.unlocked; else lockedActions">
           <button type="button" class="action-btn info-btn" [class.active]="infoOpen()" (click)="toggleInfo()">
-            @if (infoOpen()) {
-              <svg lucideX aria-hidden="true" focusable="false"></svg>
-              關閉
-            } @else {
-              <svg lucideInfo aria-hidden="true" focusable="false"></svg>
-              查看資料
-            }
+            {{ infoOpen() ? '✕ 關閉' : 'ℹ️ 查看資料' }}
           </button>
         </ng-container>
         <ng-template #lockedActions>
-          <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">
-            <svg lucideLockKeyholeOpen aria-hidden="true" focusable="false"></svg>
-            解鎖
-          </button>
+          <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">🔓 解鎖</button>
           <div class="hint">需消耗 {{ unlockKeyCost() }} 把萬能鑰匙解鎖</div>
         </ng-template>
       </div>
@@ -294,23 +247,24 @@
             </div>
             <div class="field">
               <span class="field-label">玩家回答鑑賞</span>
-              <button type="button" class="field-action" (click)="onAppreciationClick(detail)">前往鑑賞回答</button>
+              <button type="button" class="field-link-button" (click)="onAppreciationClick(detail)">前往鑑賞回答</button>
             </div>
             <div class="field field--discussion">
-                <span class="field-label">社群討論</span>
-                <button
-                  type="button"
-                  class="field-action"
-                  [disabled]="discussionLoading()"
-                  (click)="openDiscussion(item.id)"
-                >
-                  {{ discussionLoading() ? '檢查討論中…' : '查看／建立討論' }}
-                </button>
-                <span class="field-hint">已有貼文會直接開啟；尚無貼文時會先確認並請你留下第一則留言。</span>
-                @if (discussionError() && !discussionDialogOpen()) {
-                  <span class="field-value field-value--error" role="alert">{{ discussionError() }}</span>
-                }
-              </div>
+              <span class="field-label">社群討論</span>
+              <button
+                type="button"
+                class="field-link-button"
+                [disabled]="discussionLoading()"
+                (click)="openDiscussion(item.id)"
+              >
+                {{ discussionLoading() ? '檢查討論中…' : '查看／建立討論' }}
+              </button>
+              <br/>
+              <span class="field-hint">已有貼文會直接開啟；尚無貼文時會先確認並請你留下第一則留言。</span>
+              @if (discussionError() && !discussionDialogOpen()) {
+                <span class="field-value field-value--error" role="alert">{{ discussionError() }}</span>
+              }
+            </div>
               <div class="field">
                   <span class="field-label">來源</span>
                   <a
