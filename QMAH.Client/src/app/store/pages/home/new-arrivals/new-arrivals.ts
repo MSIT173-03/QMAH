@@ -62,9 +62,13 @@ export class NewArrivals {
         tagText: price.tag,
         ratingText: formatRating(view.rating),
         reviewsText: formatReviews(view.reviews),
+        /** 是否有評論；沒有評論時不顯示「0.0」「0 則評論」，改顯示提示文字 */
+        hasReviews: view.reviews > 0,
       };
     }),
   );
+  /** 尚無評論時的提示文字 */
+  protected readonly noReviewsLabel = '無評論';
 
   /** 角標日期文字：清單已由新到舊排列，取第一件的上架日期（MM/DD） */
   protected tagText = computed(() => {

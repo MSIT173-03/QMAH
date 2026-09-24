@@ -37,11 +37,6 @@
     border-color: var(--color-line-mid);
   }
 
-  &:disabled {
-    color: var(--color-faint);
-    cursor: not-allowed;
-  }
-
   &--wide {
     padding: 6px 13px;
   }
@@ -98,5 +93,17 @@
     &:hover {
       border-color: var(--color-accent);
     }
+  }
+
+  /*
+   * 停用一律要看起來像停用，不管是否同時搭到 --active／--review 這類選取樣式
+   * （選取到的條件本身則數為 0 時會兩者並存）；用 !important 確保優先於上面
+   * 那些用多個 class 疊出來、特異度更高的選取樣式。
+   */
+  &:disabled {
+    background: var(--color-surface) !important;
+    border-color: var(--color-line-mid) !important;
+    color: var(--color-faint) !important;
+    cursor: not-allowed;
   }
 }

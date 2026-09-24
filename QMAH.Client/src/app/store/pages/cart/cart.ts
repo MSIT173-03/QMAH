@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, map, of, switchMap } from 'rxjs';
 
@@ -11,6 +11,7 @@ import {
   LoginPrompt,
 } from '../../component';
 import { CatalogApi } from '../../api';
+import { CartItem } from '../../api/api.models';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { injectCartState, injectSiteData } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
@@ -81,18 +82,25 @@ export class Cart {
   /** 金額摘要（後端以預設配送方式試算），供 app-cart-summary 顯示 */
   protected amounts = computed(() => this.cartState.cart()?.amounts ?? null);
 
-  /** 購物車內件數加總最多的器類；件數相同時取購物車中較早加入的品項所屬器類 */
-  private readonly topCategory = computed(() => {
-    const totals = new Map<string, number>();
-    for (const item of this.cartState.cart()?.items ?? []) {
-      if (item.category) totals.set(item.category, (totals.get(item.category) ?? 0) + item.qty);
-    }
-    let top: string | null = null;
-    let topQty = 0;
-    for (const [category, qty] of totals) {
-      if (qty > topQty) [top, topQty] = [category, qty];
-    }
-    return top;
+  /**
+   * 購物車內件數加總最多的器類；件數相同時取購物車中較早加入的品項所屬器類。
+   * 購物車清空後保留上一次的器類（而非回到 null），避免「再加購」清單在
+   * 最後一件商品被移除的瞬間跟著消失。
+   */
+  private readonly topCategory = linkedSignal<CartItem[], string | null>({
+    source: () => this.cartState.cart()?.items ?? [],
+    computation: (items, previous) => {
+      const totals = new Map<string, number>();
+      for (const item of items) {
+        if (item.category) totals.set(item.category, (totals.get(item.category) ?? 0) + item.qty);
+      }
+      let top: string | null = null;
+      let topQty = 0;
+      for (const [category, qty] of totals) {
+        if (qty > topQty) [top, topQty] = [category, qty];
+      }
+      return top ?? previous?.value ?? null;
+    },
   });
 
   // inject() 只能在建立元件時呼叫；下方 switchMap 的回呼在之後才執行，必須先取好服務。

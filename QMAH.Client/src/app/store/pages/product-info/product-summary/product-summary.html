@@ -5,11 +5,16 @@
   <!-- 商品名稱 -->
   <h1 class="product-title">{{ name() }}</h1>
 
-  <!-- 評價摘要：評分、評論數與已售件數 -->
+  <!-- 評價摘要：評分、評論數與已售件數；沒有評論時不顯示「0.0」「0 則評論」 -->
   <div class="product-rating-row">
-    <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
-      class="product-card-split">|</span><span>{{ reviewsText() }}</span><span
-      class="product-card-split">|</span><span>{{ soldText() }} {{ soldSuffix }}</span>
+    @if (hasReviews()) {
+      <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
+        class="product-card-split">|</span><span>{{ reviewsText() }}</span><span
+        class="product-card-split">|</span><span>{{ soldText() }} {{ soldSuffix }}</span>
+    } @else {
+      <span>{{ noReviewsLabel }}</span><span
+        class="product-card-split">|</span><span>{{ soldText() }} {{ soldSuffix }}</span>
+    }
   </div>
 
   <!-- 價格列：售價、原價劃線價與折扣標籤 -->

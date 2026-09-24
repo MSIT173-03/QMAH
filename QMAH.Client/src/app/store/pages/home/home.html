@@ -3,10 +3,10 @@
   [coupons]="site.coupons()" [cartCount]="cart.count()" />
 
 
-<app-site-header variant="hero">
+<app-site-header>
 
   <!-- 站內搜尋框，含熱門搜尋捷徑與輸入建議下拉 -->
-  <app-search-bar placeholder="搜尋文物周邊、紋樣、館藏聯名" [(value)]="searchQuery" [hotLinks]="hotLinks()"
+  <app-search-bar [(value)]="searchQuery" [hotLinks]="hotLinks()"
     [suggestions]="suggestions()" (search)="onSearch($event)" (suggestionPick)="onSuggestionPick($event)" />
 </app-site-header>
 

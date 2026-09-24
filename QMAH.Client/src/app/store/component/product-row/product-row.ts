@@ -68,4 +68,8 @@ export class ProductRow {
   protected ratingText = computed(() => formatRating(this.rating()));
   /** 評論數顯示字串，橫列使用較短的後綴 */
   protected reviewsText = computed(() => formatReviews(this.reviews(), '則'));
+  /** 是否有評論；沒有評論時不顯示「0.0」「0 則」，改顯示提示文字 */
+  protected hasReviews = computed(() => this.reviews() > 0);
+  /** 尚無評論時的提示文字 */
+  protected readonly noReviewsLabel = '無評論';
 }

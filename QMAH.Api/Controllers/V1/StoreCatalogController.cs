@@ -50,9 +50,12 @@ public sealed class StoreCatalogController(
         CancellationToken cancellationToken = default)
     {
         // 商品本身沒有年代欄位，年代取自對應文物；件數與商品列表的 eraCode 篩選共用同一條關聯。
+        // 中原、日本兩組年代各自照年代先後排序，但先分組再排序：兩地年代區間本來就會重疊
+        // （例如日本江戶時代早於清），單純依 StartYear 排序會讓兩地年代交錯出現。
         var eras = await db.EraBuckets
             .AsNoTracking()
-            .OrderBy(era => era.StartYear)
+            .OrderBy(era => era.Code.StartsWith("JAPAN_") ? 1 : 0)
+            .ThenBy(era => era.StartYear)
             .ThenBy(era => era.Name)
             .Select(era => new StoreEraDto(
                 era.Id,

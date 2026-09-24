@@ -96,6 +96,10 @@ export class ProductCard {
   protected ratingText = computed(() => formatRating(this.rating()));
   /** 評論數顯示字串 */
   protected reviewsText = computed(() => formatReviews(this.reviews()));
+  /** 是否有評論；沒有評論時不顯示「0.0」「0 則評論」，改顯示提示文字 */
+  protected hasReviews = computed(() => this.reviews() > 0);
+  /** 尚無評論時的提示文字 */
+  protected readonly noReviewsLabel = '無評論';
   /** 已售數量顯示字串，未提供時為 null */
   protected soldText = computed(() => {
     const sold = this.sold();

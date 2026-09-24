@@ -26,6 +26,60 @@
   }
 }
 
+/* 側欄最上方的「清除所有篩選」：不在面板內，稍微加大點擊範圍 */
+.filter-reset--top {
+  padding: var(--qmah-space-2) 0;
+  font-weight: 500;
+}
+
+/* 面板標題列：可點擊展開／收合，樣式與原本靜態的 label-tag 標題外觀一致 */
+.filter-panel-head {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--qmah-space-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-panel-chevron {
+  flex: 0 0 auto;
+  color: var(--color-muted);
+  transition: transform 200ms ease;
+
+  &--open {
+    transform: rotate(90deg);
+  }
+}
+
+/*
+ * 面板內容收合動畫：分類／年代項目數量不固定、無法預先量出實際高度，
+ * 改用 max-height 搭配足夠大的上限值做過場；內容比上限矮時，內容一顯示完
+ * 動畫即結束，不會被硬拉滿整個過場時間。收合時額外把 app-panel 的 gap 用
+ * 負 margin 抵掉，避免標題下方留下一截空隙。
+ */
+.filter-panel-collapse {
+  overflow: hidden;
+  max-height: 0;
+  margin-top: calc(-1 * var(--qmah-space-2));
+  transition: max-height 260ms ease, margin-top 220ms ease;
+
+  &--open {
+    max-height: 640px;
+    margin-top: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-panel-collapse {
+    transition: none;
+  }
+}
+
 @media (max-width: 720px) {
   /* ui-integration: 窄螢幕由頁面順序承擔篩選，不讓側欄固定在商城頁首下方遮住商品。 */
   .filter-sidebar { position: static; }

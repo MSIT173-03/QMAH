@@ -64,7 +64,9 @@
 
 .coupon-panel {
   position: absolute;
-  top: 22px;
+  /* 緊貼觸發連結底部，中間不留任何間隙；滑鼠從連結移向面板時才不會先經過
+     一段兩者都不算「還在裡面」的空白區，導致 mouseleave 提早觸發、面板還沒碰到就關掉。 */
+  top: 100%;
   right: 0;
   z-index: 60;
   width: 268px;
@@ -77,6 +79,26 @@
   display: flex;
   flex-direction: column;
   gap: var(--qmah-space-2);
+
+  /* 淡入淡出：收合時延後套用 visibility:hidden，讓退場動畫播得完；
+     展開時 visibility 立即生效，動畫才看得到。 */
+  opacity: 0;
+  transform: translateY(-4px);
+  visibility: hidden;
+  transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
+
+  &--open {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coupon-panel {
+    transition: opacity 1ms linear, visibility 1ms linear;
+  }
 }
 
 .coupon-panel-item {

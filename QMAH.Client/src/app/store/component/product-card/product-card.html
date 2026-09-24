@@ -46,8 +46,12 @@
       </div>
 
       <div class="product-card-rating">
-        <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
-          class="product-card-split">|</span><span>{{ reviewsText() }}</span>
+        @if (hasReviews()) {
+          <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
+            class="product-card-split">|</span><span>{{ reviewsText() }}</span>
+        } @else {
+          <span>{{ noReviewsLabel }}</span>
+        }
       </div>
 
       <!-- 次要說明：已售數量 -->

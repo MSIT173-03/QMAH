@@ -37,7 +37,14 @@
         }
       </div>
       @if (slides().length > 1) {
-        <button type="button" class="hero-play-toggle" (click)="toggleAutoplay()">
+        <button
+          type="button"
+          class="hero-play-toggle"
+          [class.hero-play-toggle--paused]="!autoplayEnabled()"
+          [attr.aria-pressed]="!autoplayEnabled()"
+          (click)="toggleAutoplay()"
+        >
+          <app-qmah-icon [name]="autoplayEnabled() ? 'pause' : 'play'" [size]="12" aria-hidden="true" />
           {{ autoplayEnabled() ? '暫停輪播' : '播放輪播' }}
         </button>
       }

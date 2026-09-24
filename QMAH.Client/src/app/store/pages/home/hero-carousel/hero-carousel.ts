@@ -5,6 +5,7 @@ import { HomeApi } from '../../../api';
 import type { Coupon, HeroSlide } from '../../../api/api.models';
 import { PRODUCT_LIST_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
+import { QmahIconComponent } from '../../../../shared/components/qmah-icon/qmah-icon';
 
 /** 自動播放間隔（毫秒），僅本元件內部使用，非可由外部調整的行為 */
 const AUTOPLAY_MS = 5200;
@@ -53,7 +54,7 @@ const EDITORIAL_SLIDES: HeroSlide[] = [
 /** 首頁主視覺輪播：自動播放，並可點擊指示點跳至指定投影片 */
 @Component({
   selector: 'app-hero-carousel',
-  imports: [StoreLink],
+  imports: [StoreLink, QmahIconComponent],
   templateUrl: './hero-carousel.html',
   styleUrls: [
     './hero-carousel.scss',

@@ -12,6 +12,6 @@ import { Component, input } from '@angular/core';
   ],
 })
 export class SiteHeader {
-  /** default：一般頁面；hero：首頁（搜尋框下方有熱門搜尋，故加大下留白）；wrap：結帳頁（僅步驟指示器，間距略窄且可換行） */
-  variant = input<'default' | 'hero' | 'wrap'>('default');
+  /** default：一般頁面；wrap：結帳頁（僅步驟指示器，間距略窄且可換行） */
+  variant = input<'default' | 'wrap'>('default');
 }

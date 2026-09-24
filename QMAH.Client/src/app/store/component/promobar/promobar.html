@@ -17,21 +17,23 @@
         <!-- 折價券連結，滑鼠移入時展開懸浮面板 -->
         <div class="coupon-trigger" (mouseenter)="open.set(true)" (mouseleave)="open.set(false)">
           <a [storeLink]="couponsHref()" class="promobar-link">折價券 <span class="promobar-accent">{{ coupons().length }}</span> 張</a>
-          @if (open()) {
-            <!-- 折價券懸浮面板：列出可用折價券並提供管理入口 -->
-            <div class="coupon-panel">
-              @for (coupon of couponRows(); track coupon.title) {
-                <a [storeLink]="couponsHref()" class="coupon-panel-item">
-                  <span class="coupon-panel-amount">{{ coupon.off }}</span>
-                  <span class="coupon-panel-body">
-                    <span class="coupon-panel-title">{{ coupon.title }}</span>
-                    <span class="coupon-panel-meta">{{ coupon.meta }}</span>
-                  </span>
-                </a>
-              }
-              <a [storeLink]="manageCouponsHref()" class="coupon-panel-manage">管理所有折價券 →</a>
-            </div>
-          }
+          <!--
+            折價券懸浮面板：面板本身仍是 .coupon-trigger 的子節點（即使收合時視覺上不可見），
+            滑鼠從連結移到面板途中才不會因為離開了 DOM 而先被判定成 mouseleave、面板提早關閉；
+            開關改用 class 淡入淡出，而不是 @if 整個掛載／卸載。
+          -->
+          <div class="coupon-panel" [class.coupon-panel--open]="open()" [attr.aria-hidden]="!open()" [inert]="!open()">
+            @for (coupon of couponRows(); track coupon.title) {
+              <a [storeLink]="couponsHref()" class="coupon-panel-item">
+                <span class="coupon-panel-amount">{{ coupon.off }}</span>
+                <span class="coupon-panel-body">
+                  <span class="coupon-panel-title">{{ coupon.title }}</span>
+                  <span class="coupon-panel-meta">{{ coupon.meta }}</span>
+                </span>
+              </a>
+            }
+            <a [storeLink]="manageCouponsHref()" class="coupon-panel-manage">管理所有折價券 →</a>
+          </div>
         </div>
 
         <a [storeLink]="cartHref()" class="promobar-link">購物車 <span class="promobar-accent">{{ cartCount() }}</span> 件</a>

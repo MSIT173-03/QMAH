@@ -18,9 +18,11 @@
   align-items: center;
   gap: var(--qmah-space-6);
 
-  /* 首頁：搜尋框下方以絕對定位顯示熱門搜尋，加大下留白容納它 */
-  &--hero {
-    padding: var(--qmah-space-3) var(--qmah-space-5) 34px;
+  /* 熱門搜尋以絕對定位顯示在搜尋框下方，實際出現時才加大下留白容納它；
+     後端熱門搜尋 API 目前固定回傳空陣列，這塊留白平常不會出現，
+     不應該用固定 variant 保留一段用不到的空白，讓首頁跟其他頁面的頁首高度不一致。 */
+  &:has(.search-hot) {
+    padding-bottom: 34px;
   }
 
   /* 結帳頁：僅步驟指示器，間距略窄且允許換行 */
