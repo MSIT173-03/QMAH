@@ -7,35 +7,22 @@
     </button>
   </app-section-head>
 
-  <!-- 姓名／電話／信箱／統編：欄寬不足時自動換行 -->
-  <div class="field-grid">
-    @for (f of gridFields; track f.field) {
-      <label class="field">
-        {{ f.label }}
-        <input
-          class="field-input"
-          [value]="form()[f.field]"
-          [placeholder]="f.placeholder"
-          (input)="onInput(f.field, $event)"
-        />
-      </label>
-    }
-  </div>
-
-  <!-- 郵遞區號／縣市／鄉鎮市區：後端訂單分欄保存 -->
-  <div class="field-grid">
-    @for (f of regionFields; track f.field) {
-      <label class="field">
-        {{ f.label }}
-        <input
-          class="field-input"
-          [value]="form()[f.field]"
-          [placeholder]="f.placeholder"
-          (input)="onInput(f.field, $event)"
-        />
-      </label>
-    }
-  </div>
+  <!-- 短欄位分兩組格狀排列（姓名／電話／信箱／統編，郵遞區號／縣市／鄉鎮市區），欄寬不足時自動換行 -->
+  @for (fields of gridGroups; track $index) {
+    <div class="field-grid">
+      @for (f of fields; track f.field) {
+        <label class="field">
+          {{ f.label }}
+          <input
+            class="field-input"
+            [value]="form()[f.field]"
+            [placeholder]="f.placeholder"
+            (input)="onInput(f.field, $event)"
+          />
+        </label>
+      }
+    </div>
+  }
 
   <!-- 街道地址：內容較長，獨佔一整列 -->
   <label class="field">

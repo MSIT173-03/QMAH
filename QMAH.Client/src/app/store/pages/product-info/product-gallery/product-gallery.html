@@ -6,13 +6,13 @@
         [class.postcard-viewport--rotated]="rotated()">
         <div class="dynamic-card-frame">
           <app-collectible-card [name]="name()" [type]="type()" [image]="image()"
-            [dimensions]="dimensions()" [description]="description()" [rotation]="rotated() ? 90 : 0" />
+            [dimensions]="dimensions()" [description]="description()" [rotation]="rotation()" />
           @if (image(); as imageUrl) {
             <img class="orientation-probe" src="{{ imageUrl }}" (load)="onNativeImageLoad($event)" alt="" aria-hidden="true" />
           }
         </div>
       </div>
-    } @else if (selectedView() === 'postcard') {
+    } @else if (isPostcardView()) {
       <div class="postcard-viewport" [class.postcard-viewport--portrait]="orientation() === 'portrait'"
         [class.postcard-viewport--rotated]="rotated()">
         <article class="postcard-static" [class.postcard-static--portrait]="orientation() === 'portrait'">
@@ -20,7 +20,7 @@
             @if (image(); as imageUrl) {
               <!-- ui-integration: 商品 detail 有實際圖片時保留完整原圖，不用固定 postcard surface 裁切邊緣。 -->
               <app-image-magnifier [image]="imageUrl" [alt]="name()" fit="contain"
-                [rotation]="rotated() ? 90 : 0" (loaded)="onImageLoad($event)" />
+                [rotation]="rotation()" (loaded)="onImageLoad($event)" />
             } @else {
               <span>目前沒有可用圖像</span>
             }
@@ -64,14 +64,14 @@
       <small>翻面</small>
     </button>
     <span class="gallery-function-divider" aria-hidden="true"></span>
-    <button type="button" class="gallery-icon-button" [class.is-active]="selectedMode() === 'static' && selectedView() === 'postcard'"
-      [attr.aria-pressed]="selectedMode() === 'static' && selectedView() === 'postcard'"
+    <button type="button" class="gallery-icon-button" [class.is-active]="isPostcardView()"
+      [attr.aria-pressed]="isPostcardView()"
       (click)="selectedMode.set('static'); selectedView.set('postcard')" title="查看明信片正面">
       <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><rect x="3.5" y="5" width="17" height="14" rx="1.5" /><path d="m6.5 16 3.5-3.5 2.5 2.5 2-2 3 3" /></svg>
       <small>正面</small>
     </button>
-    <button type="button" class="gallery-icon-button" [class.is-active]="selectedMode() === 'static' && selectedView() === 'original'"
-      [attr.aria-pressed]="selectedMode() === 'static' && selectedView() === 'original'" [disabled]="!image()"
+    <button type="button" class="gallery-icon-button" [class.is-active]="isOriginalView()"
+      [attr.aria-pressed]="isOriginalView()" [disabled]="!image()"
       (click)="selectedMode.set('static'); selectedView.set('original')" title="查看縮小複製品原圖">
       <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><circle cx="10.5" cy="10.5" r="5.5" /><path d="m15 15 5 5" /><path d="m8 11 2-2 2 2 1.5-1.5 2 2" /></svg>
       <small>原圖</small>
@@ -79,7 +79,7 @@
     <span class="gallery-function-divider" aria-hidden="true"></span>
     <!-- 每件商品只保留一種自動判定版型；旋轉只改變觀看方向，不重排明信片內容。 -->
     <button type="button" class="gallery-icon-button" [class.is-active]="rotated()"
-      [attr.aria-pressed]="rotated()" [disabled]="!image() || (selectedMode() === 'static' && selectedView() === 'original')"
+      [attr.aria-pressed]="rotated()" [disabled]="!image() || isOriginalView()"
       (click)="rotated.update(value => !value)" [title]="rotated() ? '復原觀看方向' : '旋轉觀看方向'">
       <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M19 8a7 7 0 0 0-12.5-2L5 8" /><path d="M5 4v4h4" /><path d="M5 16a7 7 0 0 0 12.5 2L19 16" /><path d="M19 20v-4h-4" /></svg>
       <small>{{ rotated() ? '復原' : '旋轉' }}</small>

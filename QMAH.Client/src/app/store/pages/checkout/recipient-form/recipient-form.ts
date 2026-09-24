@@ -39,8 +39,8 @@ export class RecipientForm {
   /** 以下為固定的版面文字與欄位定義 */
   protected readonly title = '收件資訊';
   protected readonly tag = 'RECIPIENT';
-  protected readonly gridFields = RECIPIENT_GRID_FIELDS;
-  protected readonly regionFields = RECIPIENT_REGION_FIELDS;
+  /** 以格狀排列的短欄位，每組各佔一個格狀區塊；行政區欄位在後端訂單分欄保存，獨立成一組 */
+  protected readonly gridGroups = [RECIPIENT_GRID_FIELDS, RECIPIENT_REGION_FIELDS];
   protected readonly addrField = RECIPIENT_ADDR_FIELD;
   protected readonly noteField = RECIPIENT_NOTE_FIELD;
 

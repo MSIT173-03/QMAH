@@ -9,12 +9,11 @@
   <div class="product-rating-row">
     @if (hasReviews()) {
       <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
-        class="product-card-split">|</span><span>{{ reviewsText() }}</span><span
-        class="product-card-split">|</span><span>{{ soldText() }} {{ soldSuffix }}</span>
+        class="product-card-split">|</span><span>{{ reviewsText() }}</span>
     } @else {
-      <span>{{ noReviewsLabel }}</span><span
-        class="product-card-split">|</span><span>{{ soldText() }} {{ soldSuffix }}</span>
+      <span>{{ noReviewsLabel }}</span>
     }
+    <span class="product-card-split">|</span><span>{{ soldText() }} {{ soldSuffix }}</span>
   </div>
 
   <!-- 價格列：售價、原價劃線價與折扣標籤 -->

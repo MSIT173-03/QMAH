@@ -7,6 +7,14 @@ import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-ico
 /** 篩選側欄的可收合面板；同時只能展開一個 */
 type FilterSection = 'category' | 'era' | 'price' | 'filter';
 
+/** 面板順序與標題文字（固定版面文字） */
+const FILTER_PANELS: readonly { section: FilterSection; label: string }[] = [
+  { section: 'category', label: 'CATEGORY' },
+  { section: 'era', label: 'ERA' },
+  { section: 'price', label: 'PRICE' },
+  { section: 'filter', label: 'FILTER' },
+];
+
 /**
  * 商品列表頁篩選側欄：分類、年代、價格區間與折扣篩選四個可收合面板，同時只能展開一個。
  * 面板標題與按鈕文案屬於固定版面文字，直接寫在元件內；
@@ -32,11 +40,10 @@ export class FilterSidebar {
   /** 是否只顯示折扣商品 */
   dealOnly = input(false);
 
-  /** 面板標題文字（固定版面文字） */
-  protected readonly categoryLabel = 'CATEGORY';
-  protected readonly eraLabel = 'ERA';
-  protected readonly priceLabel = 'PRICE';
-  protected readonly filterLabel = 'FILTER';
+  /** 顯示中的面板；沒有年代資料時不顯示空的年代面板 */
+  protected panels = computed(() =>
+    FILTER_PANELS.filter((panel) => panel.section !== 'era' || this.eras().length > 0),
+  );
   /** 折扣篩選按鈕文字 */
   protected readonly dealLabel = '只看折扣商品';
   /** 清除篩選按鈕文字 */

@@ -4,57 +4,32 @@
   <!-- 清除所有篩選：放在側欄最上方，不受任一面板收合狀態影響 -->
   <button type="button" class="filter-reset filter-reset--top" (click)="reset.emit()">{{ resetLabel }}</button>
 
-  <!-- 分類篩選 -->
-  <app-panel variant="filter">
-    <button type="button" class="filter-panel-head" [attr.aria-expanded]="isOpen('category')" (click)="toggleSection('category')">
-      <span class="label-tag label-tag--loose">{{ categoryLabel }}</span>
-      <app-qmah-icon name="chevron-right" [size]="14" class="filter-panel-chevron" [class.filter-panel-chevron--open]="isOpen('category')" aria-hidden="true" />
-    </button>
-    <div class="filter-panel-collapse" [class.filter-panel-collapse--open]="isOpen('category')">
-      <div class="filter-panel-collapse-inner">
-        <app-category-list [items]="categories()" (pick)="categoryPick.emit($event)" />
-      </div>
-    </div>
-  </app-panel>
-
-  <!-- 年代篩選：沒有年代資料時不顯示空面板 -->
-  @if (eras().length > 0) {
+  <!-- 可收合面板：標題列與收合外框共用，內容依面板種類切換；沒有年代資料時不顯示年代面板 -->
+  @for (panel of panels(); track panel.section) {
     <app-panel variant="filter">
-      <button type="button" class="filter-panel-head" [attr.aria-expanded]="isOpen('era')" (click)="toggleSection('era')">
-        <span class="label-tag label-tag--loose">{{ eraLabel }}</span>
-        <app-qmah-icon name="chevron-right" [size]="14" class="filter-panel-chevron" [class.filter-panel-chevron--open]="isOpen('era')" aria-hidden="true" />
+      <button type="button" class="filter-panel-head" [attr.aria-expanded]="isOpen(panel.section)" (click)="toggleSection(panel.section)">
+        <span class="label-tag label-tag--loose">{{ panel.label }}</span>
+        <app-qmah-icon name="chevron-right" [size]="14" class="filter-panel-chevron" [class.filter-panel-chevron--open]="isOpen(panel.section)" aria-hidden="true" />
       </button>
-      <div class="filter-panel-collapse" [class.filter-panel-collapse--open]="isOpen('era')">
+      <div class="filter-panel-collapse" [class.filter-panel-collapse--open]="isOpen(panel.section)">
         <div class="filter-panel-collapse-inner">
-          <app-category-list [items]="eras()" (pick)="eraPick.emit($event)" />
+          @switch (panel.section) {
+            @case ('category') {
+              <app-category-list [items]="categories()" (pick)="categoryPick.emit($event)" />
+            }
+            @case ('era') {
+              <app-category-list [items]="eras()" (pick)="eraPick.emit($event)" />
+            }
+            @case ('price') {
+              <app-pill-group variant="band" layout="column" [options]="bandOptions()" (select)="bandPick.emit($event)" />
+            }
+            @case ('filter') {
+              <!-- 其他篩選：目前只有折扣開關 -->
+              <app-pill-group variant="filter" layout="column" [options]="dealOptions()" (select)="dealToggle.emit()" />
+            }
+          }
         </div>
       </div>
     </app-panel>
   }
-
-  <!-- 價格區間篩選 -->
-  <app-panel variant="filter">
-    <button type="button" class="filter-panel-head" [attr.aria-expanded]="isOpen('price')" (click)="toggleSection('price')">
-      <span class="label-tag label-tag--loose">{{ priceLabel }}</span>
-      <app-qmah-icon name="chevron-right" [size]="14" class="filter-panel-chevron" [class.filter-panel-chevron--open]="isOpen('price')" aria-hidden="true" />
-    </button>
-    <div class="filter-panel-collapse" [class.filter-panel-collapse--open]="isOpen('price')">
-      <div class="filter-panel-collapse-inner">
-        <app-pill-group variant="band" layout="column" [options]="bandOptions()" (select)="bandPick.emit($event)" />
-      </div>
-    </div>
-  </app-panel>
-
-  <!-- 其他篩選：目前只有折扣開關 -->
-  <app-panel variant="filter">
-    <button type="button" class="filter-panel-head" [attr.aria-expanded]="isOpen('filter')" (click)="toggleSection('filter')">
-      <span class="label-tag label-tag--loose">{{ filterLabel }}</span>
-      <app-qmah-icon name="chevron-right" [size]="14" class="filter-panel-chevron" [class.filter-panel-chevron--open]="isOpen('filter')" aria-hidden="true" />
-    </button>
-    <div class="filter-panel-collapse" [class.filter-panel-collapse--open]="isOpen('filter')">
-      <div class="filter-panel-collapse-inner">
-        <app-pill-group variant="filter" layout="column" [options]="dealOptions()" (select)="dealToggle.emit()" />
-      </div>
-    </div>
-  </app-panel>
 </aside>
