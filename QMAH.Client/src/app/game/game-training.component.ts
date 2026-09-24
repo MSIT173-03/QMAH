@@ -67,6 +67,12 @@ interface TrainingSessionSnapshot {
               <h2>{{ result.grade }} 級 <span>{{ result.normalizedScore }} 分</span></h2>
               <p>點數 {{ result.pointReward }} · 鑰匙進度 +{{ result.keyProgressReward }}</p>
               @if (!result.economicRewardGranted) { <small>今日獎勵額度已用完，成績仍會保留。</small> }
+              @if (attempt?.modeCode === 'DETAIL_LOCATOR' && attempt; as current) {
+                <section class="locator-answer" aria-label="局部辨識答案" animate.enter="game-result-enter">
+                  <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName" />
+                  <div><strong>{{ result.rawScore === 100 ? '辨識正確' : '正確答案' }}</strong><p>{{ current.artifactName }}</p></div>
+                </section>
+              }
               <div class="result-actions"><button type="button" (click)="playAgain()">再玩一次</button><a routerLink="/game">返回多人鑑定大廳</a></div>
             </section>
           }
@@ -99,7 +105,7 @@ interface TrainingSessionSnapshot {
         @else if (attempt; as current) {
           <section class="play-sheet" aria-live="polite">
             <header class="play-heading">
-              <div class="play-heading__title"><p class="kicker">{{ current.modeName }}</p><h2>{{ current.artifactName }}</h2></div>
+              <div class="play-heading__title"><p class="kicker">{{ current.modeName }}</p><h2>{{ current.modeCode === 'DETAIL_LOCATOR' ? '看局部辨識文物' : current.artifactName }}</h2></div>
               <div class="play-heading__meta">
                 <span class="play-state"><span class="play-state__mark" aria-hidden="true">●</span>進行中</span>
                 <span class="difficulty">{{ difficultyText(current.difficulty) }}</span>
@@ -120,14 +126,30 @@ interface TrainingSessionSnapshot {
                   }
                 </div>
               </aside>
-            } @else if (currentArtifactHint; as hint) {
+            } @else if (current.modeCode !== 'DETAIL_LOCATOR' && currentArtifactHint; as hint) {
               <aside class="collection-hint" aria-label="館藏提示"><span>館藏提示</span><strong>{{ hint.name }}</strong><p>{{ hint.description || '館藏說明整理中。' }}</p></aside>
             }
 
             @if (current.modeCode === 'DETAIL_LOCATOR') {
               <div class="game-board locator-game">
-                <div class="clue-image">@if ((current.primaryImagePath || current.thumbnailPath) && !imageUnavailable) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName" (error)="imageUnavailable = true" /> } @else { <span class="image-fallback">圖片整理中<br /><small>請依文物名稱選擇</small></span> }</div>
-                <div class="game-prompt"><h3>這件線索屬於哪一件文物？</h3><p>從下方選項中選出你的判斷。</p><div class="artifact-options">@for (option of locatorOptions; track option.artifactId) { <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" (click)="chooseLocator(option.artifactId)">@if ((option.thumbnailPath || option.primaryImagePath) && !imageFailed('locator-' + option.artifactId)) { <img [src]="option.thumbnailPath || option.primaryImagePath" [alt]="option.name" (error)="markImageFailed('locator-' + option.artifactId)" /> } @else { <span class="option-image-fallback" aria-hidden="true">文物</span> }<span>{{ option.name }}</span></button> }</div></div>
+                <div class="clue-image" role="img" aria-label="文物原圖的局部線索">
+                  @if ((current.primaryImagePath || current.thumbnailPath) && !imageUnavailable) {
+                    <img class="clue-image__zoom" [src]="current.primaryImagePath || current.thumbnailPath" alt="" [style.left.%]="50 - locatorCropX * 500" [style.top.%]="50 - locatorCropY * 500" (error)="imageUnavailable = true" />
+                  } @else { <span class="image-fallback">圖片整理中<br /><small>請依可見線索作答</small></span> }
+                  <span class="clue-image__badge">局部線索</span>
+                </div>
+                <div class="game-prompt">
+                  <h3>從四件相似文物中找出原圖</h3>
+                  <p>先觀察局部的器形與紋飾；完整原圖會在送出後揭曉。</p>
+                  <div class="artifact-options artifact-options--text" role="group" aria-label="選擇最相近的文物">
+                    @for (option of locatorOptions; track option.artifactId; let index = $index) {
+                      <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" (click)="chooseLocator(option.artifactId)">
+                        <span class="locator-option__index">{{ (index + 1).toString().padStart(2, '0') }}</span>
+                        <span>{{ option.name }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
               </div>
             }
             @else if (current.modeCode === 'MEMORY_MATCH') {
@@ -175,6 +197,8 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   memoryMatched = 0;
   memoryBusy = false;
   elapsedSeconds = 0;
+  locatorCropX = 0.5;
+  locatorCropY = 0.5;
   private memoryTimer: ReturnType<typeof setTimeout> | null = null;
   private elapsedTimer: Subscription | null = null;
   private attemptStartedAt = 0;
@@ -211,7 +235,12 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   get locatorOptions(): MiniGameArtifact[] {
-    return this.attempt?.artifactPool.length ? this.attempt.artifactPool : this.attempt ? [this.fallbackArtifact(this.attempt)] : [];
+    const attempt = this.attempt;
+    const pool = attempt?.artifactPool ?? [];
+    if (!attempt || pool.length <= 4) return pool;
+
+    const targetIndex = pool.findIndex((artifact) => artifact.artifactId === attempt.artifactId);
+    return targetIndex >= 4 ? [...pool.slice(0, 3), pool[targetIndex]] : pool.slice(0, 4);
   }
 
   get memoryPairCount(): number { return Math.floor(this.memoryCards.length / 2); }
@@ -375,6 +404,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.memoryHints = [];
     this.currentArtifactHintState = null;
     this.imageUnavailable = false;
+    this.setLocatorCrop(attempt.seed);
     this.resetBoard();
     this.loadCatalogHints(attempt);
     this.persistSessionState();
@@ -391,6 +421,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.attemptStartedAt = Date.now() - Math.max(0, raw.elapsedSeconds) * 1000;
     this.elapsedSeconds = Math.max(0, raw.elapsedSeconds);
     this.imageUnavailable = false;
+    this.setLocatorCrop(this.attempt.seed);
     this.resetBoard();
     if (this.attempt.modeCode === 'ARTIFACT_PUZZLE' && this.isPermutation(raw.puzzleOrder, 25)) {
       this.puzzleOrder = raw.puzzleOrder;
@@ -450,6 +481,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   private loadCatalogHints(attempt: MiniGameStart): void {
+    if (attempt.modeCode === 'DETAIL_LOCATOR') return;
     const fallback = this.fallbackArtifact(attempt);
     const pool = attempt.artifactPool.length ? attempt.artifactPool : [fallback];
     const candidates = attempt.modeCode === 'MEMORY_MATCH'
@@ -541,6 +573,12 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   private fallbackArtifact(attempt: MiniGameStart): MiniGameArtifact {
     return { artifactId: attempt.artifactId, name: attempt.artifactName, primaryImagePath: attempt.primaryImagePath, thumbnailPath: attempt.thumbnailPath };
+  }
+
+  private setLocatorCrop(seed: string): void {
+    const focusPoints = [0.4, 0.45, 0.5, 0.55, 0.6];
+    this.locatorCropX = this.shuffle(focusPoints, `${seed}-locator-x`)[0];
+    this.locatorCropY = this.shuffle(focusPoints, `${seed}-locator-y`)[0];
   }
 
   private setError(error: unknown): void {
