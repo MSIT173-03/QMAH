@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml"><img src="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main" alt="Build"></a>
-  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.9.3"><img src="https://img.shields.io/badge/database-db--v0.9.3-315E55" alt="Database snapshot db-v0.9.3"></a>
+  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.10.2"><img src="https://img.shields.io/badge/database-db--v0.10.2-315E55" alt="Database snapshot db-v0.10.2"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4" alt=".NET 10">
   <img src="https://img.shields.io/badge/SQL%20Server-DB--first-315E55" alt="SQL Server DB-first">
 </p>
@@ -93,17 +93,13 @@ Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前�
 
 ### 2. 建立本機 QMAH 資料庫
 
-目前相容的完整 Snapshot 是 [QMAH-Database db-v0.9.3 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.9.3) 提供的 [`QMAH.sql`](https://github.com/MSIT173-03/QMAH-Database/blob/db-v0.9.3/QMAH.sql)。
+目前主線以 [QMAH-Database db-v0.10.2 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.10.2) 為完整 Snapshot 基底。下載該版本的 `.bak` 與 `SHA256SUMS.txt`，確認檔案校驗值後，在 SSMS 使用 **Restore Database...** 還原為 `QMAH`。本次本機驗證發現同版本 `QMAH.sql` 在外鍵建立步驟失敗，因此目前請使用已驗證的 `.bak`，勿以 SQL 腳本重建。
 
-也可以使用其 [Raw 檔案](https://raw.githubusercontent.com/MSIT173-03/QMAH-Database/db-v0.9.3/QMAH.sql)。本版刻意替換舊 256 件展示資料並同步訂單商品快照，既有環境請以完整 Snapshot 還原，不使用會保留舊資料的增量腳本。
-
-在 SSMS 連線到可用的本機 SQL Server instance，完整執行 SQL，資料庫名稱使用 `QMAH`。
-
-若另有同一版本且已驗證的 `.bak`，可以在 SSMS 使用 **Restore Database...** 還原。
+還原後執行 [`database/upgrades/0.10.2-store-order-shipping.sql`](database/upgrades/0.10.2-store-order-shipping.sql)，補齊商城訂單配送方式與運費欄位。一般資料庫的舊訂單標為 `LEGACY`，運費保留為 0，不猜測歷史配送方式或重算已成立訂單金額。若確認資料庫**只有展示訂單**，可再手動執行 [`database/seeds/store-showcase-orders-shipping.sql`](database/seeds/store-showcase-orders-shipping.sql)，依目前規則重整全部展示訂單的配送與付款快照；腳本遇到非展示訂單會停止。以 `sqlcmd` 執行時請加 `-f 65001 -b`，確保 UTF-8 讀取及錯誤時停止。
 
 QMAH 主 Repository 的 Release 目前只保留版本導覽，不再提供 SQL／BAK 資產；下載請使用上述 QMAH-Database Release。完整的還原資料、資料表數量、狀態值與展示資料規則見 [QMAH-Docs 開發資料文件](https://msit173-03.github.io/QMAH-Docs/getting-started/development-data.html)。
 
-不需先執行 `database/Schema.sql`、Migration、Patch 或 Seed。網站啟動時不會建立資料庫、建表、覆寫資料或套用 Migration；完整 Snapshot 已包含目前共同資料。
+除上述商城訂單升級外，不需先執行 `database/Schema.sql`、其他 Migration 或 Seed。網站啟動時不會建立資料庫、建表、覆寫資料或套用 Migration；完整 Snapshot 已包含目前共同資料。
 
 ### 3. 啟動後端
 
@@ -200,7 +196,7 @@ Cookie 不包含連接埠，因此清除 `localhost` 的網站資料時，不只
 
 先確認資料庫名稱為 `QMAH`，再在 SSMS 查看實際連線的 instance 是否存在且為 `ONLINE`。啟動記錄會列出 `QmahDatabaseConnectionResolver` 的候選與選用結果；`(localdb)\MSSQLLocalDB` 只是候選之一。
 
-若只有空資料庫，重新使用 QMAH-Database 的完整 `QMAH.sql` 或同版本 `.bak`；不以 Patch 或 Seed 補資料。
+若只有空資料庫，先還原 QMAH-Database 同版本 `.bak`，再套用上述商城訂單升級；不以 Patch 或 Seed 補齊完整展示資料。
 
 ### HTTPS 憑證警告
 
