@@ -19,6 +19,8 @@
                     <th>訂單編號</th>
                     <th>會員</th>
                     <th>狀態</th>
+                    <th>付款方式</th>
+                    <th>付款紀錄</th>
                     <th>商品數量</th>
                     <th>小計</th>
                     <th>折扣</th>
@@ -35,7 +37,7 @@
             <tbody>
                 @if (!Model.Any())
                 {
-                    <tr><td colspan="14" class="text-center text-secondary py-5">目前沒有訂單資料。</td></tr>
+                    <tr><td colspan="16" class="text-center text-secondary py-5">目前沒有訂單資料。</td></tr>
                 }
                 else
                 {
@@ -45,6 +47,8 @@
                             <td><code>@item.OrderNo</code></td>
                             <td class="fw-semibold">@item.UserName</td>
                             <td><span class="badge bg-secondary-lt">@AdminDisplayLabels.Status(item.Status)</span></td>
+                            <td>@AdminDisplayLabels.PaymentType(item.PaymentType)</td>
+                            <td>@AdminDisplayLabels.PaymentStatus(item.PaymentStatus)</td>
                             <td>@item.ItemsCount</td>
                             <td>@item.ItemsTotal.ToString("C0")</td>
                             <td>@item.DiscountAmount.ToString("C0")</td>
@@ -80,7 +84,7 @@
                 serverSide: true,
                 pageLength: 20,
                 lengthMenu: [10, 20, 50, 100],
-                order: [[10, "desc"]],
+                order: [[12, "desc"]],
                 ajax: {
                     url: tableElement.dataset.ajaxUrl,
                     dataSrc: "data"
@@ -89,6 +93,8 @@
                     { data: "orderNo" },
                     { data: "userName" },
                     { data: "status" },
+                    { data: "paymentType" },
+                    { data: "paymentStatus" },
                     { data: "itemsCount" },
                     { data: "subtotal" },
                     { data: "discountAmount" },

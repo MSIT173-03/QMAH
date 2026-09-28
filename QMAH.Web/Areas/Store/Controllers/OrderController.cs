@@ -30,7 +30,7 @@ public class OrderController : Controller
         bool isOverShot = page < 0 || rows < 0 || this.db.StoreOrders.Count() < page * rows;
         if (isOverShot) return View(new List<OrderSimplefyListItem>());
 
-        var query = from order in this.db.StoreOrders.Skip(page * rows).Take(rows)
+        var query = from order in this.db.StoreOrders.Include(item => item.Payment).Skip(page * rows).Take(rows)
                     join user in this.db.Users on order.UserId equals user.Id
                     join items in this.db.OrderDetails on order.Id equals items.OrderId into itemsGroup
                     select new
@@ -55,16 +55,20 @@ public class OrderController : Controller
         int start = 0,
         int length = 20,
         [FromQuery(Name = "search[value]")] string? searchValue = null,
-        [FromQuery(Name = "order[0][column]")] int orderColumn = 10,
+        [FromQuery(Name = "order[0][column]")] int orderColumn = 12,
         [FromQuery(Name = "order[0][dir]")] string? orderDirection = "desc",
         CancellationToken cancellationToken = default)
     {
         var query = from order in db.StoreOrders.AsNoTracking()
                     join user in db.Users.AsNoTracking() on order.UserId equals user.Id
+                    join payment in db.Payments.AsNoTracking() on order.Id equals payment.OrderId into payments
+                    from payment in payments.DefaultIfEmpty()
                     select new
                     {
                         Order = order,
-                        UserName = user.UserName ?? string.Empty
+                        UserName = user.UserName ?? string.Empty,
+                        PaymentType = payment == null ? null : payment.PaymentType,
+                        PaymentStatus = payment == null ? null : payment.Status
                     };
 
         var recordsTotal = await db.StoreOrders.CountAsync(cancellationToken);
@@ -73,7 +77,9 @@ public class OrderController : Controller
         {
             query = query.Where(row => row.Order.OrderNo.Contains(search)
                 || row.UserName.Contains(search)
-                || row.Order.Status.Contains(search));
+                || row.Order.Status.Contains(search)
+                || (row.PaymentType != null && row.PaymentType.Contains(search))
+                || (row.PaymentStatus != null && row.PaymentStatus.Contains(search)));
         }
 
         var recordsFiltered = await query.CountAsync(cancellationToken);
@@ -83,15 +89,17 @@ public class OrderController : Controller
             0 => descending ? query.OrderByDescending(row => row.Order.OrderNo) : query.OrderBy(row => row.Order.OrderNo),
             1 => descending ? query.OrderByDescending(row => row.UserName) : query.OrderBy(row => row.UserName),
             2 => descending ? query.OrderByDescending(row => row.Order.Status) : query.OrderBy(row => row.Order.Status),
-            3 => descending ? query.OrderByDescending(row => db.OrderDetails.Count(detail => detail.OrderId == row.Order.Id)) : query.OrderBy(row => db.OrderDetails.Count(detail => detail.OrderId == row.Order.Id)),
-            4 => descending ? query.OrderByDescending(row => row.Order.Subtotal) : query.OrderBy(row => row.Order.Subtotal),
-            5 => descending ? query.OrderByDescending(row => row.Order.DiscountAmount) : query.OrderBy(row => row.Order.DiscountAmount),
-            6 => descending ? query.OrderByDescending(row => row.Order.PointsUsed) : query.OrderBy(row => row.Order.PointsUsed),
-            7 => descending ? query.OrderByDescending(row => row.Order.ShippingMethod) : query.OrderBy(row => row.Order.ShippingMethod),
-            8 => descending ? query.OrderByDescending(row => row.Order.ShippingFee) : query.OrderBy(row => row.Order.ShippingFee),
-            9 => descending ? query.OrderByDescending(row => row.Order.TotalAmount) : query.OrderBy(row => row.Order.TotalAmount),
-            11 => descending ? query.OrderByDescending(row => row.Order.PaidAt) : query.OrderBy(row => row.Order.PaidAt),
-            12 => descending ? query.OrderByDescending(row => row.Order.CancelledAt) : query.OrderBy(row => row.Order.CancelledAt),
+            3 => descending ? query.OrderByDescending(row => row.PaymentType) : query.OrderBy(row => row.PaymentType),
+            4 => descending ? query.OrderByDescending(row => row.PaymentStatus) : query.OrderBy(row => row.PaymentStatus),
+            5 => descending ? query.OrderByDescending(row => db.OrderDetails.Count(detail => detail.OrderId == row.Order.Id)) : query.OrderBy(row => db.OrderDetails.Count(detail => detail.OrderId == row.Order.Id)),
+            6 => descending ? query.OrderByDescending(row => row.Order.Subtotal) : query.OrderBy(row => row.Order.Subtotal),
+            7 => descending ? query.OrderByDescending(row => row.Order.DiscountAmount) : query.OrderBy(row => row.Order.DiscountAmount),
+            8 => descending ? query.OrderByDescending(row => row.Order.PointsUsed) : query.OrderBy(row => row.Order.PointsUsed),
+            9 => descending ? query.OrderByDescending(row => row.Order.ShippingMethod) : query.OrderBy(row => row.Order.ShippingMethod),
+            10 => descending ? query.OrderByDescending(row => row.Order.ShippingFee) : query.OrderBy(row => row.Order.ShippingFee),
+            11 => descending ? query.OrderByDescending(row => row.Order.TotalAmount) : query.OrderBy(row => row.Order.TotalAmount),
+            13 => descending ? query.OrderByDescending(row => row.Order.PaidAt) : query.OrderBy(row => row.Order.PaidAt),
+            14 => descending ? query.OrderByDescending(row => row.Order.CancelledAt) : query.OrderBy(row => row.Order.CancelledAt),
             _ => descending ? query.OrderByDescending(row => row.Order.CreatedAt) : query.OrderBy(row => row.Order.CreatedAt)
         };
 
@@ -106,6 +114,8 @@ public class OrderController : Controller
                 row.Order.OrderNo,
                 row.UserName,
                 row.Order.Status,
+                row.PaymentType,
+                row.PaymentStatus,
                 db.OrderDetails.Count(detail => detail.OrderId == row.Order.Id),
                 row.Order.Subtotal,
                 row.Order.DiscountAmount,
@@ -129,6 +139,8 @@ public class OrderController : Controller
                 row.OrderNo,
                 row.UserName,
                 Status = AdminDisplayLabels.Status(row.Status),
+                PaymentType = AdminDisplayLabels.PaymentType(row.PaymentType),
+                PaymentStatus = AdminDisplayLabels.PaymentStatus(row.PaymentStatus),
                 row.ItemsCount,
                 Subtotal = row.Subtotal.ToString("C0"),
                 DiscountAmount = row.DiscountAmount.ToString("C0"),
@@ -147,7 +159,7 @@ public class OrderController : Controller
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> GetOrder(Guid id)
     {
-        var query = from order in this.db.StoreOrders
+        var query = from order in this.db.StoreOrders.Include(order => order.Payment)
                     join user in this.db.Users on order.UserId equals user.Id
                     where order.Id == id
                     select new
@@ -176,6 +188,45 @@ public class OrderController : Controller
         var detail = new OrderFullDetail(res.Order, res.Name, list);
 
         return View(detail);
+    }
+
+    [HttpPost("{id:Guid}/shipping")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateShipping(Guid id, [FromForm] string shippingMethod, CancellationToken cancellationToken)
+    {
+        // 已送往金流或已付款的訂單不可改金額；只允許尚未付款的貨到付款訂單調整配送。
+        var normalizedMethod = shippingMethod?.Trim().ToUpperInvariant();
+        if (normalizedMethod is not ("STANDARD" or "CVS"))
+            return BadRequest("請選擇有效的配送方式。");
+
+        var strategy = db.Database.CreateExecutionStrategy();
+        var result = await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, retryToken);
+            var order = await db.StoreOrders.Include(item => item.Payment)
+                .SingleOrDefaultAsync(item => item.Id == id, retryToken);
+            if (order is null)
+                return (IActionResult)NotFound();
+            if (order.Status != "PENDING_PAYMENT" || order.Payment is not { Status: "PENDING", PaymentType: "COD" })
+                return Conflict("只有待付款的貨到付款訂單可修改配送方式。");
+
+            // 與結帳選項一致：商品小計滿 1,500 元免運，否則宅配 80 元、超商 60 元。
+            var shippingFee = order.Subtotal >= 1500m ? 0m : normalizedMethod == "STANDARD" ? 80m : 60m;
+            order.ShippingMethod = normalizedMethod;
+            order.ShippingFee = shippingFee;
+            order.TotalAmount = order.Subtotal - order.DiscountAmount - order.PointsUsed + shippingFee;
+            order.Payment.Amount = order.TotalAmount;
+
+            await db.SaveChangesAsync(retryToken);
+            await transaction.CommitAsync(retryToken);
+            return RedirectToAction(nameof(GetOrder), new { id });
+        }, cancellationToken);
+
+        if (result is RedirectToActionResult)
+            TempData["SuccessMessage"] = "配送方式與應付金額已更新。";
+        return result;
     }
 
     [HttpGet("Create")]
@@ -294,6 +345,8 @@ public class OrderController : Controller
         string OrderNo,
         string UserName,
         string Status,
+        string? PaymentType,
+        string? PaymentStatus,
         int ItemsCount,
         decimal Subtotal,
         decimal DiscountAmount,

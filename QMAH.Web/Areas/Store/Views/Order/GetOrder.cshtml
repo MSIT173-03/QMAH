@@ -56,6 +56,51 @@
     </div>
 </div>
 
+<div class="card qmah-list-card mb-3">
+    <div class="card-header"><h2 class="card-title">付款紀錄</h2></div>
+    <div class="card-body">
+        @if (Model.HasPayment)
+        {
+            <div class="datagrid">
+                <div class="datagrid-item"><div class="datagrid-title">付款方式</div><div class="datagrid-content">@AdminDisplayLabels.PaymentType(Model.PaymentType)</div></div>
+                <div class="datagrid-item"><div class="datagrid-title">付款狀態</div><div class="datagrid-content">@AdminDisplayLabels.PaymentStatus(Model.PaymentStatus)</div></div>
+                <div class="datagrid-item"><div class="datagrid-title">付款金額</div><div class="datagrid-content">@Model.PaymentAmount?.ToString("C0")</div></div>
+                <div class="datagrid-item"><div class="datagrid-title">商店交易編號</div><div class="datagrid-content">@(Model.MerchantTradeNo ?? "—")</div></div>
+                <div class="datagrid-item"><div class="datagrid-title">綠界交易編號</div><div class="datagrid-content">@(Model.EcpayTradeNo ?? "—")</div></div>
+                <div class="datagrid-item"><div class="datagrid-title">綠界回傳代碼</div><div class="datagrid-content">@(Model.RtnCode?.ToString() ?? "—")</div></div>
+                <div class="datagrid-item"><div class="datagrid-title">綠界回傳訊息</div><div class="datagrid-content">@(Model.RtnMsg ?? "—")</div></div>
+                <div class="datagrid-item"><div class="datagrid-title">金流回呼時間</div><div class="datagrid-content">@(Model.CallbackReceivedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")</div></div>
+                <div class="datagrid-item"><div class="datagrid-title">紀錄建立時間</div><div class="datagrid-content">@(Model.PaymentCreatedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")</div></div>
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary mb-0">這筆訂單沒有付款紀錄。</p>
+        }
+    </div>
+</div>
+
+@if (Model.CanEditShipping)
+{
+    <div class="card qmah-list-card mb-3">
+        <div class="card-header"><h2 class="card-title">調整配送方式</h2></div>
+        <div class="card-body">
+            <form asp-action="UpdateShipping" asp-route-id="@Model.Id" method="post" class="d-flex flex-wrap align-items-end gap-3">
+                @Html.AntiForgeryToken()
+                <div>
+                    <label for="shippingMethod" class="form-label">配送方式</label>
+                    <select id="shippingMethod" name="shippingMethod" class="form-select">
+                        <option value="STANDARD" selected="@(Model.ShippingMethod == "STANDARD")">宅配到府</option>
+                        <option value="CVS" selected="@(Model.ShippingMethod == "CVS")">超商取貨</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">儲存配送方式</button>
+                <span class="text-secondary">只限待付款的貨到付款訂單；儲存時會同步重算運費、總額與付款金額。</span>
+            </form>
+        </div>
+    </div>
+}
+
 <div class="card qmah-list-card">
     <div class="card-header">
         <div><h2 class="card-title">商品明細</h2><div class="text-secondary">共 @Model.ItemList.Count 筆品項</div></div>

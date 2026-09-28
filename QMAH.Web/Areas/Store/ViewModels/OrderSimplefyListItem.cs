@@ -17,6 +17,10 @@ public class OrderSimplefyListItem(StoreOrder order, ApplicationUser user, List<
     public string UserName { get; } = user.UserName ?? string.Empty;
     [Display(Name = "狀態")]
     public string Status { get; } = order.Status;
+    [Display(Name = "付款方式")]
+    public string? PaymentType { get; } = order.Payment?.PaymentType;
+    [Display(Name = "付款紀錄狀態")]
+    public string? PaymentStatus { get; } = order.Payment?.Status;
     [Display(Name = "商品數量")]
     public int ItemsCount { get; } = items.Sum(v => v.Quantity);
     [Display(Name = "商品小計")]

@@ -5,6 +5,25 @@ namespace QMAH.Web.Infrastructure;
 /// </summary>
 public static class AdminDisplayLabels
 {
+    public static string PaymentType(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "COD" => "貨到付款",
+        "CREDIT_CARD" => "信用卡（綠界測試）",
+        "CREDIT_CREDITCARD" => "信用卡（舊資料）",
+        "ATM" => "ATM（舊資料）",
+        "WEBATM" => "網路 ATM（舊資料）",
+        _ => string.IsNullOrWhiteSpace(value) ? "未記錄" : value
+    };
+
+    public static string PaymentStatus(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "PENDING" => "待付款",
+        "PAID" => "已付款",
+        "FAILED" => "付款失敗",
+        "CANCELLED" => "已取消",
+        _ => string.IsNullOrWhiteSpace(value) ? "未記錄" : value
+    };
+
     public static string ShippingMethod(string? value) => value?.Trim().ToUpperInvariant() switch
     {
         "STANDARD" => "宅配到府",
