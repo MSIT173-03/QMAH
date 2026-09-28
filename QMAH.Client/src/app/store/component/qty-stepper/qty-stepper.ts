@@ -1,15 +1,12 @@
-import { Component, input, model } from '@angular/core';
+import { Component, computed, input, model } from '@angular/core';
 
 /**
  * 數量調整元件：提供加減按鈕調整數量（雙向綁定），並可設定最小／最大可選數量限制。
  */
 @Component({
   selector: 'app-qty-stepper',
-  imports: [],
   templateUrl: './qty-stepper.html',
-  styleUrls: [
-    './qty-stepper.scss',
-  ],
+  styleUrl: './qty-stepper.scss',
 })
 export class QtyStepper {
   /** 目前數量（雙向綁定） */
@@ -20,6 +17,12 @@ export class QtyStepper {
   max = input<number | null>(null);
   /** 購物車行內使用的縮小版 */
   size = input<'default' | 'sm'>('default');
+
+  /** 是否已達上限；達到時停用加號按鈕 */
+  protected atMax = computed(() => {
+    const max = this.max();
+    return max !== null && this.value() >= max;
+  });
 
   /** 數量減一，不低於 min */
   protected dec() {

@@ -21,7 +21,7 @@ interface CartCallbacks {
 /**
  * 頁面持有的購物車狀態：建立時向 API 取得一次購物車，之後每次異動皆以 API 回應的內容取代。
  * 登入狀態由 StoreAuth（以 AuthService 驗證）判斷：未登入時不送出購物車請求，寫入操作改為開啟登入提示，
- * 由使用者決定是否前往登入頁（loginPrompt／confirmLogin／cancelLogin，搭配 app-login-prompt 顯示）。
+ * 由使用者決定是否前往登入頁（loginPrompt／confirmLogin／cancelLogin，由 app-session-bar 顯示）。
  * 須於注入環境中呼叫（例如元件欄位初始化），各頁面各自持有一份。
  */
 export function injectCartState() {
@@ -105,6 +105,9 @@ export function injectCartState() {
       write(() => cartApi.removeItem(productId), { settled: done }),
   };
 }
+
+/** 頁面持有的購物車狀態（injectCartState 的回傳值） */
+export type CartState = ReturnType<typeof injectCartState>;
 
 /**
  * 全站共用資料：全站設定，以及頂部公告列所需的公告文字、會員點數與折價券。

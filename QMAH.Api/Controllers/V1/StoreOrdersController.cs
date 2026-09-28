@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using QMAH.Api.Infrastructure.Payments;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
 
@@ -14,7 +15,7 @@ namespace QMAH.Api.Controllers.V1;
 
 [Authorize]
 [Route("api/v1/store/orders")]
-public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
+public sealed class StoreOrdersController(QmahDbContext db, IEcpayCheckoutNotifier ecpayNotifier) : ApiControllerBase
 {
     // integration: Store 分支原本把訂單流程拆到一半，留下兩套互相重疊的實作。
     // 目前集中成「輸入整理 → 商品／庫存檢查 → 折扣與點數檢查 → 建立訂單快照」四段，
@@ -34,6 +35,13 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         if (!TryGroupOrderItems(request.Items, out var groupedItems, out var emptyErr))
             return emptyErr;
 
+        var shippingOption = StoreCheckoutCatalog.FindShippingOption(request.ShippingOptionId);
+        if (shippingOption is null)
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "配送方式無效", detail: "請選擇有效的配送方式。");
+        var paymentOption = StoreCheckoutCatalog.FindPaymentOption(request.PaymentOptionId);
+        if (paymentOption is null)
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "付款方式無效", detail: "請選擇有效的付款方式。");
+
         var operationId = Guid.NewGuid();
         // integration: 編號不在 execution strategy 外額外查資料庫，避免資料庫短暫故障繞過
         // 訂單完整交易的 retry；同一 operation ID 產生穩定編號，也保留既有可讀格式。
@@ -43,8 +51,10 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         // integration: SQL retry 必須包住完整訂單流程，而不是只重試某一次查詢；
         // 否則庫存、優惠券、點數與訂單可能只完成其中一部分。每次重試先清掉上一輪追蹤狀態，
         // 再用 Serializable 重新讀取同一批商品，維持庫存與資產的一致性。
+        // 是否為「這次呼叫真的新建立」的訂單；idempotent 重送找回舊訂單時不重複通知綠界。
+        StoreOrder? newlyCreatedOrder = null;
         var strategy = db.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(async retryToken =>
+        var result = await strategy.ExecuteAsync(async retryToken =>
         {
             db.ChangeTracker.Clear();
             await using var transaction = await db.Database.BeginTransactionAsync(
@@ -101,6 +111,8 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 subtotal,
                 discountAmount,
                 userCoupon,
+                shippingOption,
+                paymentOption,
                 operationId,
                 operationOrderNo,
                 idempotencyMerchantTradeNo);
@@ -115,11 +127,24 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
 
             await db.SaveChangesAsync(retryToken);
             await transaction.CommitAsync(retryToken);
+            newlyCreatedOrder = order;
 
             return Created(
                 $"/api/v1/me/orders/{order.Id}",
                 ToOrderDto(order));
         }, cancellationToken);
+
+        // integration: 通知綠界放在交易 commit 之後才做，不佔用資料庫交易的時間；
+        // 只針對這次真的新建立的訂單通知，idempotent 重送不重複通知。
+        // BuildRequestForOrder 只有信用卡付款的訂單才會回傳非 null，其餘付款方式不通知。
+        if (newlyCreatedOrder is not null)
+        {
+            var ecpayRequest = EcpayCheckoutFormBuilder.BuildRequestForOrder(newlyCreatedOrder);
+            if (ecpayRequest is not null)
+                await ecpayNotifier.NotifyAsync(ecpayRequest, cancellationToken);
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -272,13 +297,17 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         decimal subtotal,
         decimal discountAmount,
         UserCoupon? userCoupon,
+        StoreCheckoutCatalog.ShippingOptionDef shippingOption,
+        StoreCheckoutCatalog.PaymentOptionDef paymentOption,
         Guid orderId,
         string orderNo,
         string? idempotencyMerchantTradeNo)
     {
+        // integration: 運費一律由後端依免運門檻重新換算，不採用前端送來的金額，避免被竄改。
+        var shippingFee = StoreCheckoutCatalog.ResolveShippingFee(shippingOption, subtotal);
         // integration: 訂單明細保存商品名稱與單價快照，避免商品後續改名／調價造成歷史訂單變動。
         var totalAmount = decimal.Round(
-            subtotal - discountAmount - request.PointsUsed,
+            subtotal - discountAmount - request.PointsUsed + shippingFee,
             2,
             MidpointRounding.AwayFromZero);
         var order = new StoreOrder
@@ -291,6 +320,8 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
             Subtotal = subtotal,
             DiscountAmount = discountAmount,
             PointsUsed = request.PointsUsed,
+            ShippingMethod = shippingOption.Id,
+            ShippingFee = shippingFee,
             TotalAmount = totalAmount,
             RecipientName = request.RecipientName.Trim(),
             RecipientPhone = request.RecipientPhone.Trim(),
@@ -326,7 +357,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 ?? $"QMAH-{order.CreatedAt:yyyyMMddHHmmss}-{order.Id:N}"[..28],
             Amount = totalAmount,
             Status = "PENDING",
-            PaymentType = "Credit_CreditCard",
+            PaymentType = paymentOption.Id,
             CreatedAt = order.CreatedAt
         };
 
@@ -481,7 +512,9 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         order.Subtotal,
         order.DiscountAmount,
         order.PointsUsed,
+        order.ShippingFee,
         order.TotalAmount,
+        (int)Math.Floor(order.TotalAmount * StoreCheckoutCatalog.PointEarnRate),
         order.RecipientName,
         order.RecipientPhone,
         order.ShippingPostalCode,
@@ -500,5 +533,12 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 detail.UnitPrice,
                 detail.Quantity,
                 detail.LineTotal))
-            .ToList());
+            .ToList(),
+        BuildEcpayCheckoutForm(order));
+
+    private static EcpayCheckoutFormDto? BuildEcpayCheckoutForm(StoreOrder order)
+    {
+        var request = EcpayCheckoutFormBuilder.BuildRequestForOrder(order);
+        return request is null ? null : EcpayCheckoutFormBuilder.Build(request);
+    }
 }

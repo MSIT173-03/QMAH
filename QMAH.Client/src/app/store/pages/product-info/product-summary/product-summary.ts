@@ -1,7 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { QtyStepper } from '../../../component';
 import { formatNumber } from '../../../shared/format';
-import { formatRating, formatReviews, toPriceView } from '../../../shared/product-view';
+import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../../../shared/product-view';
 import { SizeCondition } from '../size-condition/size-condition';
 
 /**
@@ -12,9 +12,7 @@ import { SizeCondition } from '../size-condition/size-condition';
   selector: 'app-product-summary',
   imports: [QtyStepper, SizeCondition],
   templateUrl: './product-summary.html',
-  styleUrls: [
-    './product-summary.scss',
-  ],
+  styleUrl: './product-summary.scss',
 })
 export class ProductSummary {
   /** 品牌名稱 */
@@ -68,6 +66,10 @@ export class ProductSummary {
   protected ratingText = computed(() => formatRating(this.rating()));
   /** 評論數顯示字串 */
   protected reviewsText = computed(() => formatReviews(this.reviews()));
+  /** 是否有評論；沒有評論時不顯示「0.0」「0 則評論」，改顯示提示文字 */
+  protected hasReviews = computed(() => this.reviews() > 0);
+  /** 尚無評論時的提示文字 */
+  protected readonly noReviewsLabel = NO_REVIEWS_LABEL;
   /** 已售件數顯示字串（千分位） */
   protected soldText = computed(() => formatNumber(this.sold()));
 

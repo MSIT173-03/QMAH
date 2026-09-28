@@ -1,9 +1,5 @@
-<!-- 頁首：品牌 Logo、分類捷徑，以及購物車件數 -->
-<app-site-header>
-  <app-header-actions [links]="navLinks">
-    <span class="cart-count">{{ count() }} 件商品</span>
-  </app-header-actions>
-</app-site-header>
+<!-- 頂部公告列與登入提示，與其他商城頁面一致 -->
+<app-session-bar [cart]="cartState" />
 
 <div class="container cart-main">
 
@@ -21,7 +17,7 @@
     <div class="cart-lines">
       @for (line of lines(); track line.id) {
       <app-cart-line [id]="line.id" [coverImage]="line.coverImage" [brand]="line.brand" [cat]="line.cat" [name]="line.name" [price]="line.price"
-        [was]="line.was" [qty]="line.qty" [lineTotal]="line.lineTotal" [leaving]="line.leaving"
+        [was]="line.was" [qty]="line.qty" [lineTotal]="line.lineTotal" [leaving]="line.leaving" [entering]="line.entering"
         (qtyChange)="onQtyChange(line.id, $event)" (remove)="onRemove(line.id)" />
       }
     </div>
@@ -34,10 +30,7 @@
   }
 
   <!-- 再加購 -->
-  <app-cart-addons [items]="addons()" (addToCart)="onAddAddon($event)" />
+  <app-cart-addons [items]="addons()" [addedIds]="addedAddons()" (addToCart)="onAddAddon($event)" />
 </div>
 
 <!-- 頁尾：簡版，僅顯示版權列 -->
-
-<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
-<app-login-prompt [open]="cartState.loginPrompt()" (confirm)="cartState.confirmLogin()" (cancel)="cartState.cancelLogin()" />

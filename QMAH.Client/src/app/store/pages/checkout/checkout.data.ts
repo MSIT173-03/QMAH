@@ -1,4 +1,4 @@
-import { Recipient } from '../../api/api.models';
+import { MemberProfile, Recipient } from '../../api/api.models';
 
 /**
  * 結帳頁面的頁面選項定義與換算規則。
@@ -24,32 +24,9 @@ export const CHECKOUT_STEP_INDEX = 1;
 /** 收件資訊表單的欄位名稱（表單內容直接使用送出訂單的 Recipient 格式） */
 export type RecipientField = keyof Recipient;
 
-/** 收件資訊表單的初始（空白）內容 */
-export const EMPTY_RECIPIENT: Recipient = {
-  name: '',
-  phone: '',
-  email: '',
-  taxId: '',
-  postalCode: '',
-  city: '',
-  district: '',
-  address: '',
-  note: '',
-};
-
-/** 只取出收件資訊欄位（例如由會員資料「帶入個人資料」時，排除點數等其他欄位） */
-export function toRecipient(source: Recipient): Recipient {
-  return {
-    name: source.name,
-    phone: source.phone,
-    email: source.email,
-    taxId: source.taxId,
-    postalCode: source.postalCode,
-    city: source.city,
-    district: source.district,
-    address: source.address,
-    note: source.note,
-  };
+/** 只取出收件資訊欄位（由會員資料「帶入個人資料」時，排除點數欄位） */
+export function toRecipient({ pointBalance, ...recipient }: MemberProfile): Recipient {
+  return recipient;
 }
 
 /** 收件資訊的單一欄位定義（版面固定，非後端資料） */

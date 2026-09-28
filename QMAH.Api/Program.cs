@@ -16,6 +16,7 @@ using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
 using QMAH.Api.Infrastructure.Moderation;
 using QMAH.Api.Infrastructure.OpenApi;
+using QMAH.Api.Infrastructure.Payments;
 using QMAH.Api.Services;
 using QMAH.Infrastructure.Configuration;
 using QMAH.Infrastructure.Data;
@@ -249,6 +250,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<IPasswordResetEmailSender, PasswordResetEmailSender>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(15);
+});
+// integration: 結帳頁「信用卡付款」示範串接綠界測試環境；只在下單成立後通知，失敗不影響訂單本身。
+builder.Services.AddHttpClient<IEcpayCheckoutNotifier, EcpayCheckoutNotifier>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(10);
 });
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
 // 使用 DbContext、目前會員或 request 資訊的服務採 Scoped；只有確定無狀態且 thread-safe 的元件才可註冊 Singleton。

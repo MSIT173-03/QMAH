@@ -1,9 +1,9 @@
-import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 import { formatNumber } from '../../shared/format';
-import { toDisplayImage } from '../../shared/image-utils';
+import { imageWithFallback } from '../../shared/image-utils';
 import { productPath } from '../../shared/paths';
-import { formatRating, formatReviews, toPriceView } from '../../shared/product-view';
+import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
 
 /** 角標樣式變體 */
@@ -24,9 +24,7 @@ export type ProductCardVariant = 'default' | 'list' | 'compact';
   selector: 'app-product-card',
   imports: [StoreLink, QmahIconComponent],
   templateUrl: './product-card.html',
-  styleUrls: [
-    './product-card.scss',
-  ],
+  styleUrl: './product-card.scss',
 })
 export class ProductCard {
   id = input('');
@@ -61,25 +59,16 @@ export class ProductCard {
 
   /** 點擊加入購物車按鈕時觸發 */
   addToCart = output<void>();
+  /** 已加入購物車：按鈕維持反白並在右下角顯示打勾（購物車頁「再加購」使用） */
+  added = input(false);
 
   /** 無圖片時顯示的中性狀態，不假裝這是另一件文物。 */
   protected readonly slotLabel = '影像待補';
   /** 加入購物車按鈕文字 */
   protected readonly addCartLabel = '加入購物車';
 
-  /** 目前實際嘗試中的圖片網址；輸入更換時由 linkedSignal 重設。 */
-  protected imageSrc = linkedSignal(() => this.coverImage());
-  protected showPlaceholder = computed(() => !this.imageSrc());
-  /** 圖片讀取失敗時先 fallback 到同一件文物 display 圖，避免誤顯示其他商品。 */
-  protected onImageError(): void {
-    const current = this.imageSrc();
-    const display = toDisplayImage(current);
-    if (display && display !== current) {
-      this.imageSrc.set(display);
-      return;
-    }
-    this.imageSrc.set(null);
-  }
+  /** 商品圖片；讀取失敗時先 fallback 到同一件文物 display 圖，避免誤顯示其他商品。 */
+  protected readonly image = imageWithFallback(() => this.coverImage());
 
   /** 商品頁連結網址 */
   protected link = computed(() => productPath(this.id()));
@@ -94,6 +83,10 @@ export class ProductCard {
   protected ratingText = computed(() => formatRating(this.rating()));
   /** 評論數顯示字串 */
   protected reviewsText = computed(() => formatReviews(this.reviews()));
+  /** 是否有評論；沒有評論時不顯示「0.0」「0 則評論」，改顯示提示文字 */
+  protected hasReviews = computed(() => this.reviews() > 0);
+  /** 尚無評論時的提示文字 */
+  protected readonly noReviewsLabel = NO_REVIEWS_LABEL;
   /** 已售數量顯示字串，未提供時為 null */
   protected soldText = computed(() => {
     const sold = this.sold();

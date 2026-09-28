@@ -1,33 +1,12 @@
-<!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
-<app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
-  [coupons]="site.coupons()" />
+<!-- 頂部公告列與登入提示 -->
+<app-session-bar [cart]="cart" />
 
 
-<app-site-header variant="hero">
+<app-site-header>
 
   <!-- 站內搜尋框，含熱門搜尋捷徑與輸入建議下拉 -->
-  <app-search-bar placeholder="搜尋文物周邊、紋樣、館藏聯名" [(value)]="searchQuery" [hotLinks]="hotLinks()"
+  <app-search-bar [(value)]="searchQuery" [hotLinks]="hotLinks()"
     [suggestions]="suggestions()" (search)="onSearch($event)" (suggestionPick)="onSuggestionPick($event)" />
-
-  <!-- 購物車入口，顯示目前購物車件數 -->
-  <div class="hdr-actions">
-    <app-cart-link [href]="cartPath" [count]="cart.count()" [hero]="true" />
-  </div>
-
-  <!-- 分類導覽列 -->
-  <div class="nav-bar">
-    <div class="nav-bar-row">
-      <a [storeLink]="productsPath" class="nav-link-strong">全部分類</a>
-      <a [storeLink]="productsPath + '?view=exhibit'">特展聯名</a>
-      <a [storeLink]="productsPath + '?view=deal'">限時特賣</a>
-      <a [storeLink]="eraCollectionPath">年代選藏</a>
-      <a [storeLink]="newArrivalsPath">新品上架</a>
-      @for (name of categoryNames(); track name) {
-      <a [storeLink]="categoryPath(name)">{{ name }}</a>
-      }
-      <span class="nav-highlight">您好，歡迎光臨！</span>
-    </div>
-  </div>
 </app-site-header>
 
 <div class="container home-main">
@@ -57,6 +36,3 @@
   <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)"
     (requireMore)="onRequireMore()" />
 </div>
-
-<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
-<app-login-prompt [open]="cart.loginPrompt()" (confirm)="cart.confirmLogin()" (cancel)="cart.cancelLogin()" />

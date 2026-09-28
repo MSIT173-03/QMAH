@@ -1,10 +1,12 @@
-<!-- 再加購：精簡版商品卡片（僅品牌／名稱／價格），供快速加入購物車 -->
+<!-- 再加購：精簡版商品卡片（僅品牌／名稱／價格），供快速加入購物車；沒有商品時整區不顯示 -->
+@if (items().length > 0) {
 <section class="section-block">
   <app-section-head title="再加購" tag="ADD ON" />
   <div class="card-grid">
     @for (item of items(); track item.id) {
     <app-product-card variant="compact" [id]="item.id" [brand]="item.brand" [name]="item.name" [price]="item.price"
-      [was]="item.was" (addToCart)="addToCart.emit(item.id)" />
+      [coverImage]="item.coverImage" [was]="item.was" [added]="addedIds().has(item.id)" (addToCart)="addToCart.emit(item.id)" />
     }
   </div>
 </section>
+}

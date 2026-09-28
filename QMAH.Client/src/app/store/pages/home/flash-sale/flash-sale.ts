@@ -11,9 +11,7 @@ import { LucidePackageSearch } from '@lucide/angular';
   selector: 'app-flash-sale',
   imports: [Panel, LucidePackageSearch],
   templateUrl: './flash-sale.html',
-  styleUrls: [
-    './flash-sale.scss',
-  ],
+  styleUrl: './flash-sale.scss',
 })
 export class FlashSale {
   /** 限時特賣資料（結束時間與品項） */

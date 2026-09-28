@@ -3,13 +3,12 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { map, of, switchMap } from 'rxjs';
 
-import { Promobar, SearchBar, SearchSuggestion, CartLink, SiteHeader, LoginPrompt } from '../../component';
-import { CatalogApi, HomeApi, SearchApi } from '../../api';
+import { SearchBar, SearchSuggestion, SessionBar, SiteHeader } from '../../component';
+import { HomeApi, SearchApi } from '../../api';
 import { KeywordSuggestion } from '../../api/api.models';
-import { CART_PATH, PRODUCT_LIST_PATH, searchPath } from '../../shared/paths';
-import { injectCartState, injectSiteData } from '../../shared/page-state';
+import { searchPath } from '../../shared/paths';
+import { injectCartState } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
-import { StoreLink } from '../../shared/store-link';
 
 import { HeroCarousel } from './hero-carousel/hero-carousel';
 import { FlashSale } from './flash-sale/flash-sale';
@@ -34,9 +33,8 @@ const RECOMMEND_PAGE_SIZE = 10;
   selector: 'app-home',
   host: { class: 'store-app' },
   imports: [
-    Promobar,
+    SessionBar,
     SearchBar,
-    CartLink,
     HeroCarousel,
     FlashSale,
     MiniCoupons,
@@ -46,13 +44,9 @@ const RECOMMEND_PAGE_SIZE = 10;
     BrandHall,
     Recommendations,
     SiteHeader,
-    StoreLink,
-    LoginPrompt,
   ],
   templateUrl: './home.html',
-  styleUrls: [
-    './home.scss',
-  ],
+  styleUrl: './home.scss',
 })
 export class Home {
   private readonly router = inject(Router);
@@ -61,10 +55,6 @@ export class Home {
 
   /** 購物車狀態（件數顯示於頁首） */
   protected readonly cart = injectCartState();
-  protected readonly cartPath = CART_PATH;
-
-  /** 全站設定與會員資料，供頂部公告列與頁尾使用 */
-  protected readonly site = injectSiteData();
 
   /** 搜尋框目前輸入值 */
   protected searchQuery = signal('');
@@ -83,22 +73,6 @@ export class Home {
     ),
     { initialValue: [] },
   );
-
-  /** 分類導覽列顯示用分類名稱 */
-  protected readonly categoryNames = toSignal(
-    inject(CatalogApi)
-      .getCategories()
-      .pipe(map((categories) => categories.map((category) => category.name))),
-    { initialValue: [] },
-  );
-  /** 分類導覽列「新品上架」與各分類的連結網址 */
-  protected readonly productsPath = PRODUCT_LIST_PATH;
-  protected readonly newArrivalsPath = `${PRODUCT_LIST_PATH}?view=new`;
-  /** 「年代選藏」進入商品列表，由左側篩選欄挑選年代 */
-  protected readonly eraCollectionPath = PRODUCT_LIST_PATH;
-  protected categoryPath(name: string): string {
-    return `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(name)}`;
-  }
 
   /** 「為你推薦」已載入的商品卡片 */
   protected recommendedItems = signal<BadgedProductView[]>([]);

@@ -11,9 +11,7 @@ import { formatShippingFee } from '../../../shared/format';
   selector: 'app-delivery-options',
   imports: [Panel, SectionHead, PillGroup],
   templateUrl: './delivery-options.html',
-  styleUrls: [
-    './delivery-options.scss',
-  ],
+  styleUrl: './delivery-options.scss',
 })
 export class DeliveryOptions {
   /** 可選的配送方式，fee 為本次訂單實際適用的運費 */
@@ -47,4 +45,6 @@ export class DeliveryOptions {
   /** 以下為固定的版面文字 */
   protected readonly title = '配送與付款';
   protected readonly tag = 'DELIVERY';
+  /** integration: 信用卡付款送出訂單時會一併通知綠界（ECPay）測試環境，示範金流串接呼叫，不會實際請款。 */
+  protected readonly paymentNote = '信用卡付款使用綠界（ECPay）金流測試環境；確認下單時會一併通知，不會實際請款。';
 }

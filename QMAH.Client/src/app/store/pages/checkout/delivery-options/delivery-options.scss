@@ -14,17 +14,20 @@
   border-radius: var(--qmah-radius-control);
   background: var(--color-surface);
   color: var(--color-body);
-  padding: var(--qmah-space-2) var(--qmah-space-3);
+  /* 跟同一面板的付款方式（.pill--pay）用同樣的內距，兩排按鈕的密度才一致 */
+  padding: 9px 14px;
   min-height: var(--qmah-control-height);
   font-size: var(--qmah-type-label-size);
   display: flex;
   flex-direction: column;
   gap: var(--qmah-space-1);
   align-items: flex-start;
-  transition: border-color 160ms;
+  /* 跟付款方式（.pill）同一套顏色漸變 */
+  transition: border-color 240ms ease, color 160ms, background 160ms;
 
   &:hover {
-    border-color: var(--color-line-mid);
+    /* 平常就有外框，懸停要再深一階才看得出差異，不能停在同一個顏色 */
+    border-color: var(--color-accent);
   }
 
   /* 目前選取的配送方式 */
@@ -40,4 +43,12 @@
   font-family: 'IBM Plex Mono', monospace;
   font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.08em;
+}
+
+/* 付款方式下方的補充說明（例如信用卡走綠界測試環境） */
+.option-note {
+  margin: 0;
+  font-size: var(--qmah-type-meta-size);
+  line-height: var(--qmah-type-body-leading);
+  color: var(--color-muted);
 }

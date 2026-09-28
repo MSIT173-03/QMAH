@@ -19,9 +19,7 @@ export interface PillOption {
   selector: 'app-pill-group',
   imports: [QmahIconComponent],
   templateUrl: './pill-group.html',
-  styleUrls: [
-    './pill-group.scss',
-  ],
+  styleUrl: './pill-group.scss',
 })
 export class PillGroup {
   /** 選項清單 */

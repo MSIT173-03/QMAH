@@ -7,9 +7,7 @@ import { Component, ElementRef, effect, input, output, viewChild } from '@angula
 @Component({
   selector: 'app-login-prompt',
   templateUrl: './login-prompt.html',
-  styleUrls: [
-    './login-prompt.scss',
-  ],
+  styleUrl: './login-prompt.scss',
 })
 export class LoginPrompt {
   /** 是否顯示對話框 */

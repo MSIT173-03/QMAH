@@ -15,8 +15,6 @@ export interface ProductViewData {
   rating: number;
   reviews: number;
   sold: number;
-  /** 尺寸／規格說明 */
-  dims: string;
   /** 紋樣／器型出處說明 */
   source: string;
   /** 商品主圖網址，無圖片時為 null */
@@ -40,7 +38,6 @@ export function toProductView(product: Product): ProductViewData {
     rating: product.rating,
     reviews: product.reviewCount,
     sold: product.soldCount,
-    dims: product.dimensions,
     source: product.source,
     coverImage: product.coverImage,
   };
@@ -77,3 +74,6 @@ export function formatRating(rating: number): string {
 export function formatReviews(reviews: number, suffix = '則評論'): string {
   return `${formatNumber(reviews)} ${suffix}`;
 }
+
+/** 尚無評論時取代「0.0」「0 則評論」的提示文字 */
+export const NO_REVIEWS_LABEL = '無評論';

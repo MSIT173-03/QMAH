@@ -6,7 +6,7 @@ import { Panel, SectionHead } from '../../../component';
 import { CatalogApi } from '../../../api';
 import { formatDateMD } from '../../../shared/format';
 import { PRODUCT_LIST_PATH, productPath } from '../../../shared/paths';
-import { formatRating, formatReviews, toPriceView, toProductView } from '../../../shared/product-view';
+import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView, toProductView } from '../../../shared/product-view';
 import { StoreLink } from '../../../shared/store-link';
 import { LucidePackageSearch } from '@lucide/angular';
 
@@ -18,9 +18,7 @@ const NEW_ARRIVAL_COUNT = 4;
   selector: 'app-new-arrivals',
   imports: [Panel, SectionHead, StoreLink, LucidePackageSearch],
   templateUrl: './new-arrivals.html',
-  styleUrls: [
-    './new-arrivals.scss',
-  ],
+  styleUrl: './new-arrivals.scss',
 })
 export class NewArrivals {
   /** 點擊任一商品的「加入」按鈕時觸發，帶出商品 ID */
@@ -62,9 +60,13 @@ export class NewArrivals {
         tagText: price.tag,
         ratingText: formatRating(view.rating),
         reviewsText: formatReviews(view.reviews),
+        /** 是否有評論；沒有評論時不顯示「0.0」「0 則評論」，改顯示提示文字 */
+        hasReviews: view.reviews > 0,
       };
     }),
   );
+  /** 尚無評論時的提示文字 */
+  protected readonly noReviewsLabel = NO_REVIEWS_LABEL;
 
   /** 角標日期文字：清單已由新到舊排列，取第一件的上架日期（MM/DD） */
   protected tagText = computed(() => {

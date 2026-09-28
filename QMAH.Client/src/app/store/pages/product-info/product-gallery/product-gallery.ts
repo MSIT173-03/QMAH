@@ -1,4 +1,4 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { ImageMagnifier, CollectibleCard } from '../../../component';
 
 type ViewMode = 'static' | 'dynamic';
@@ -12,9 +12,7 @@ type ViewMode = 'static' | 'dynamic';
   selector: 'app-product-gallery',
   imports: [CollectibleCard, ImageMagnifier],
   templateUrl: './product-gallery.html',
-  styleUrls: [
-    './product-gallery.scss',
-  ],
+  styleUrl: './product-gallery.scss',
 })
 export class ProductGallery {
   /** 明信片正面顯示的原文物名稱，不帶商品套組後綴。 */
@@ -36,6 +34,13 @@ export class ProductGallery {
   protected orientation = signal<'portrait' | 'landscape'>('landscape');
   /** 旋轉整張卡片觀看，不改變單件商品原本的自動版型。 */
   protected rotated = signal(false);
+
+  /** 目前是否顯示靜態的明信片正面 */
+  protected isPostcardView = computed(() => this.selectedMode() === 'static' && this.selectedView() === 'postcard');
+  /** 目前是否顯示靜態的複製品原圖 */
+  protected isOriginalView = computed(() => this.selectedMode() === 'static' && this.selectedView() === 'original');
+  /** 轉交給明信片與放大鏡的旋轉角度 */
+  protected rotation = computed(() => (this.rotated() ? 90 : 0));
 
   protected onImageLoad(size: { width: number; height: number }): void {
     this.orientation.set(size.height > size.width ? 'portrait' : 'landscape');

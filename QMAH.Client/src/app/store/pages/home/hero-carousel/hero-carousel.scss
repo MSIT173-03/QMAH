@@ -149,14 +149,36 @@
 }
 
 .hero-play-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   min-height: 32px;
-  padding: 5px 9px;
+  padding: 5px 10px;
   border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
   border-radius: var(--qmah-radius-control);
   background: color-mix(in srgb, var(--color-surface) 86%, transparent);
   color: var(--color-ink);
   font-size: 11px;
   cursor: pointer;
+  transition: background 160ms, border-color 160ms, color 160ms;
+
+  &:hover {
+    border-color: var(--color-ink);
+    background: var(--color-surface);
+  }
+
+  /* 已暫停：換成強調色的外框、底色與文字／圖示，一眼就能看出輪播目前是停著的，
+     不用先讀按鈕文字才知道狀態。 */
+  &--paused {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+    color: var(--color-accent);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-accent) 28%, var(--color-surface));
+      border-color: var(--color-accent);
+    }
+  }
 }
 
 @media (max-width: 600px) {

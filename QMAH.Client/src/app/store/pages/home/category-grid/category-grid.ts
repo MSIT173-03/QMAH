@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { EntryGrid, EntryGridItem, EntryTone } from '../../../component';
 import { CatalogApi } from '../../../api';
-import { PRODUCT_LIST_PATH } from '../../../shared/paths';
+import { categoryPath } from '../../../shared/paths';
 import type { QmahIconName } from '../../../../shared/components/qmah-icon/qmah-icon';
 
 /** 首頁「分類入口」區塊：各分類的色塊卡片與商品件數 */
@@ -21,7 +21,7 @@ export class CategoryGrid {
           categories.map((category): EntryGridItem => ({
             name: category.name,
             count: category.productCount,
-            link: `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(category.name)}`,
+            link: categoryPath(category.name),
             icon: this.categoryIcon(category.name),
             tone: this.categoryTone(category.name),
           })),

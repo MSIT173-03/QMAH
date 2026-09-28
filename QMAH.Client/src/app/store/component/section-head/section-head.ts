@@ -5,11 +5,8 @@ import { Component, input } from '@angular/core';
  */
 @Component({
   selector: 'app-section-head',
-  imports: [],
   templateUrl: './section-head.html',
-  styleUrls: [
-    './section-head.scss',
-  ],
+  styleUrl: './section-head.scss',
 })
 export class SectionHead {
   /** 標題文字 */

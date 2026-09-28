@@ -4,10 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of, switchMap, tap } from 'rxjs';
 
 import {
-  Promobar,
+  SessionBar,
   SiteHeader,
   SearchBar,
-  CartLink,
   Breadcrumb,
   BreadcrumbItem,
   PageTitleRow,
@@ -19,12 +18,11 @@ import {
   ProductCard,
   ProductRow,
   EmptyState,
-  LoginPrompt,
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { ProductQuery } from '../../api/api.models';
-import { CART_PATH, HOME_PATH } from '../../shared/paths';
-import { injectCartState, injectSiteData } from '../../shared/page-state';
+import { HOME_PATH } from '../../shared/paths';
+import { injectCartState } from '../../shared/page-state';
 import { ProductViewData, toProductView } from '../../shared/product-view';
 import {
   ALL_ERAS_LABEL,
@@ -63,10 +61,9 @@ function toPage(value: string | undefined): number {
   selector: 'app-product-list',
   host: { class: 'store-app' },
   imports: [
-    Promobar,
+    SessionBar,
     SiteHeader,
     SearchBar,
-    CartLink,
     Breadcrumb,
     PageTitleRow,
     Pagination,
@@ -75,20 +72,14 @@ function toPage(value: string | undefined): number {
     ProductCard,
     ProductRow,
     EmptyState,
-    LoginPrompt,
   ],
   templateUrl: './product-list.html',
-  styleUrls: [
-    './product-list.scss',
-  ],
+  styleUrl: './product-list.scss',
 })
 export class ProductList {
   private readonly catalogApi = inject(CatalogApi);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-
-  /** 購物車入口連結 */
-  protected readonly cartHref = CART_PATH;
 
   /* ===============================
      網址查詢字串（由 router 的 component input binding 帶入）
@@ -144,8 +135,6 @@ export class ProductList {
      固定版面文字與外部資料
      =============================== */
 
-  /** 全站設定與頂部公告列資料 */
-  protected readonly site = injectSiteData();
   /** 器類清單（含各器類商品件數） */
   private readonly categories = toSignal(this.catalogApi.getCategories(), { initialValue: [] });
   /** 年代清單（含各年代商品件數） */

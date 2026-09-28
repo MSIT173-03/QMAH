@@ -18,27 +18,17 @@
   align-items: center;
   gap: var(--qmah-space-6);
 
-  /* 首頁：下方接分類導覽列，加大下留白 */
-  &--hero {
-    padding: var(--qmah-space-3) var(--qmah-space-5) 34px;
+  /* 熱門搜尋以絕對定位顯示在搜尋框下方，實際出現時才加大下留白容納它；
+     後端熱門搜尋 API 目前固定回傳空陣列，這塊留白平常不會出現，
+     不應該用固定 variant 保留一段用不到的空白，讓首頁跟其他頁面的頁首高度不一致。 */
+  &:has(.search-hot) {
+    padding-bottom: 34px;
   }
 
-  /* 商品列表頁：搜尋框佔滿中段，間距較窄且允許換行 */
-  &--list {
-    gap: var(--qmah-space-4);
-    flex-wrap: wrap;
-  }
-
-  /* 結帳頁：僅品牌與步驟指示器，間距略窄且允許換行 */
+  /* 結帳頁：僅步驟指示器，間距略窄且允許換行 */
   &--wrap {
     gap: var(--qmah-space-5);
     flex-wrap: wrap;
   }
-}
-
-.brand-logo {
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
 }
 

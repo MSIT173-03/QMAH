@@ -35,6 +35,12 @@
 }
 
 .qty-value {
+  /* 明確使用頁面底色（商品頁原本透出的顏色），放在購物車等不同底色的卡片上也保持一致；撐滿高度讓底色蓋滿整格 */
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   width: 34px;

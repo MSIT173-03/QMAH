@@ -1,14 +1,13 @@
 export { Breadcrumb } from './breadcrumb/breadcrumb';
-export { CartLink } from './cart-link/cart-link';
 export { CategoryList } from './category-list/category-list';
-export { CollectibleCard } from "./collectible-card/collectible-card"
+export { CollectibleCard } from './collectible-card/collectible-card';
 export { EmptyState } from './empty-state/empty-state';
 export { EntryGrid } from './entry-grid/entry-grid';
 export { FilterSidebar } from './filter-sidebar/filter-sidebar';
-export { HeaderActions } from './header-actions/header-actions';
-export { ImageMagnifier } from "./image-magnifier/image-magnifier"
+export { ImageMagnifier } from './image-magnifier/image-magnifier';
 export { PageTitleRow } from './page-title-row/page-title-row';
 export { LoginPrompt } from './login-prompt/login-prompt';
+export { OrderPlacedDialog } from './order-placed-dialog/order-placed-dialog';
 export { Pagination } from './pagination/pagination';
 export { Panel } from './panel/panel';
 export { PillGroup } from './pill-group/pill-group';
@@ -18,13 +17,13 @@ export { Promobar } from './promobar/promobar';
 export { QtyStepper } from './qty-stepper/qty-stepper';
 export { SearchBar } from './search-bar/search-bar';
 export { SectionHead } from './section-head/section-head';
+export { SessionBar } from './session-bar/session-bar';
 export { SiteHeader } from './site-header/site-header';
 export { StepIndicator } from './step-indicator/step-indicator';
 
 export type { BreadcrumbItem } from './breadcrumb/breadcrumb';
 export type { CategoryListItem } from './category-list/category-list';
 export type { EntryGridItem, EntryTone } from './entry-grid/entry-grid';
-export type { HeaderNavLink } from './header-actions/header-actions';
 export type { PillOption } from './pill-group/pill-group';
 export type { ProductCardBadgeVariant, ProductCardVariant } from './product-card/product-card';
 export type { SearchHotLink, SearchSuggestion } from './search-bar/search-bar';

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
+using QMAH.Api.Infrastructure.Payments;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -418,7 +419,7 @@ public sealed class MeController(
         return Ok(await GetCartItemsAsync(userId, cancellationToken));
     }
 
-    /// <summary>新增商品或更新購物車中的商品數量。</summary>
+    /// <summary>加入商品到購物車；已有同商品時累加數量。</summary>
     [HttpPost("cart")]
     public async Task<ActionResult<CartItemDto>> AddCartItem(
         UpsertCartItemRequest request,
@@ -429,7 +430,7 @@ public sealed class MeController(
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        return await UpsertCartItemAsync(userId, request.ProductId, request.Quantity, cancellationToken);
+        return await UpsertCartItemAsync(userId, request.ProductId, request.Quantity, accumulate: true, cancellationToken);
     }
 
     /// <summary>更新目前登入會員購物車中指定商品的數量。</summary>
@@ -446,7 +447,7 @@ public sealed class MeController(
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        return await UpsertCartItemAsync(userId, productId, request.Quantity, cancellationToken);
+        return await UpsertCartItemAsync(userId, productId, request.Quantity, accumulate: false, cancellationToken);
     }
 
     /// <summary>移除目前登入會員購物車中的指定商品。</summary>
@@ -727,7 +728,9 @@ public sealed class MeController(
         order.Subtotal,
         order.DiscountAmount,
         order.PointsUsed,
+        order.ShippingFee,
         order.TotalAmount,
+        (int)Math.Floor(order.TotalAmount * StoreCheckoutCatalog.PointEarnRate),
         order.RecipientName,
         order.RecipientPhone,
         order.ShippingPostalCode,
@@ -746,7 +749,14 @@ public sealed class MeController(
                 detail.UnitPrice,
                 detail.Quantity,
                 detail.LineTotal))
-            .ToList());
+            .ToList(),
+        BuildEcpayCheckoutForm(order));
+
+    private static EcpayCheckoutFormDto? BuildEcpayCheckoutForm(StoreOrder order)
+    {
+        var request = EcpayCheckoutFormBuilder.BuildRequestForOrder(order);
+        return request is null ? null : EcpayCheckoutFormBuilder.Build(request);
+    }
 
     private static UserAddressDto ToAddressDto(UserAddress address) => new(
         address.Id,
@@ -775,6 +785,7 @@ public sealed class MeController(
                 item.Id,
                 item.ProductId,
                 item.Product.Name,
+                item.Product.CategoryCode,
                 item.Product.PrimaryImagePath,
                 item.Product.SalePrice.HasValue
                     && item.Product.SalePrice.Value > 0m
@@ -806,10 +817,12 @@ public sealed class MeController(
             .ToList();
     }
 
+    /// <param name="accumulate">true：加入購物車，累加到既有數量；false：直接設定為指定數量。</param>
     private async Task<ActionResult<CartItemDto>> UpsertCartItemAsync(
         Guid userId,
         Guid productId,
         int quantity,
+        bool accumulate,
         CancellationToken cancellationToken)
     {
         var product = await db.Products
@@ -817,11 +830,19 @@ public sealed class MeController(
             .SingleOrDefaultAsync(item => item.Id == productId && item.IsActive, cancellationToken);
         if (product is null)
             return MissingResource("找不到商品", "這件商品不存在或目前未上架。");
-        if (quantity > product.Stock)
-            return InvalidWorkflow("庫存不足", $"目前最多只能加入 {product.Stock} 件。");
 
         var cartItem = await db.CartItems
             .FirstOrDefaultAsync(item => item.UserId == userId && item.ProductId == productId, cancellationToken);
+        var existingQuantity = accumulate ? cartItem?.Quantity ?? 0 : 0;
+        var nextQuantity = existingQuantity + quantity;
+        // 累加時以加總後的數量檢查庫存，並告知購物車已有的件數，避免使用者不知道為何無法加入。
+        if (nextQuantity > product.Stock)
+        {
+            return InvalidWorkflow("庫存不足", existingQuantity > 0
+                ? $"購物車已有 {existingQuantity} 件，目前最多只能再加入 {Math.Max(0, product.Stock - existingQuantity)} 件。"
+                : $"目前最多只能加入 {product.Stock} 件。");
+        }
+
         var now = DateTime.UtcNow;
         if (cartItem is null)
         {
@@ -830,14 +851,14 @@ public sealed class MeController(
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 ProductId = productId,
-                Quantity = quantity,
+                Quantity = nextQuantity,
                 AddedAt = now
             };
             db.CartItems.Add(cartItem);
         }
         else
         {
-            cartItem.Quantity = quantity;
+            cartItem.Quantity = nextQuantity;
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -846,6 +867,7 @@ public sealed class MeController(
             cartItem.Id,
             cartItem.ProductId,
             product.Name,
+            product.CategoryCode,
             mediaUrlResolver.Resolve(product.PrimaryImagePath),
             product.EffectivePrice,
             product.EffectivePrice < product.Price ? product.Price : null,

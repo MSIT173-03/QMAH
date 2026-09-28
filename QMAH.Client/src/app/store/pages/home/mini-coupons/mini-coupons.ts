@@ -8,9 +8,7 @@ import { HomeApi } from '../../../api';
   selector: 'app-mini-coupons',
   imports: [Panel],
   templateUrl: './mini-coupons.html',
-  styleUrls: [
-    './mini-coupons.scss',
-  ],
+  styleUrl: './mini-coupons.scss',
 })
 export class MiniCoupons {
   /** 可領取的折價券 */

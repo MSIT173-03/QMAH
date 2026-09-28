@@ -68,4 +68,13 @@
   </div>
 </div>
 
+<!-- 訂單送出成功提示：唯一出路是回到商品列表 -->
+<app-order-placed-dialog
+  [open]="orderPlacedOpen()"
+  [orderNo]="order()?.orderNo ?? ''"
+  [payable]="order()?.payable ?? 0"
+  [ecpayCheckout]="order()?.ecpayCheckout ?? null"
+  (confirm)="onReturnToProducts()"
+/>
+
 <!-- 頁尾：簡版，僅顯示版權列 -->

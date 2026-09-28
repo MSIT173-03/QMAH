@@ -21,7 +21,11 @@
               <div class="news-price-row">
                 <span class="news-price" [class.text-accent]="item.hasDeal">{{ item.priceText }}</span>
                 <span class="news-tag" [class.news-tag--deal]="item.hasDeal">{{ item.tagText }}</span>
-                <span class="news-rating"><span class="product-card-star">★</span> {{ item.ratingText }} · {{ item.reviewsText }}</span>
+                @if (item.hasReviews) {
+                  <span class="news-rating"><span class="product-card-star">★</span> {{ item.ratingText }} · {{ item.reviewsText }}</span>
+                } @else {
+                  <span class="news-rating">{{ noReviewsLabel }}</span>
+                }
               </div>
             </div>
           </a>

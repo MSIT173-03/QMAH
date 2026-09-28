@@ -6,11 +6,8 @@ import { Component, computed, input, output } from '@angular/core';
  */
 @Component({
   selector: 'app-pagination',
-  imports: [],
   templateUrl: './pagination.html',
-  styleUrls: [
-    './pagination.scss',
-  ],
+  styleUrl: './pagination.scss',
 })
 export class Pagination {
   /** 目前頁碼，從 1 開始 */

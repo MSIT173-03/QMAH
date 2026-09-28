@@ -4,22 +4,18 @@ import { Router } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
-  Promobar,
+  SessionBar,
   SiteHeader,
   SearchBar,
-  HeaderActions,
-  HeaderNavLink,
-  CartLink,
   Breadcrumb,
   BreadcrumbItem,
   EmptyState,
-  LoginPrompt,
 } from '../../component';
-import { CatalogApi } from '../../api';
+import { CatalogApi, SiteApi } from '../../api';
 import { Product } from '../../api/api.models';
 import { toReviewPage } from '../../api/catalog.api-dto';
-import { CART_PATH, CHECKOUT_PATH, HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
-import { injectCartState, injectSiteData } from '../../shared/page-state';
+import { CART_PATH, HOME_PATH, PRODUCT_LIST_PATH, categoryPath, searchPath } from '../../shared/paths';
+import { injectCartState } from '../../shared/page-state';
 import { toProductView, wasPrice } from '../../shared/product-view';
 import { ProductGallery } from './product-gallery/product-gallery';
 import { ProductSummary } from './product-summary/product-summary';
@@ -38,14 +34,11 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
   selector: 'app-product-info',
   host: { class: 'store-app' },
   imports: [
-    Promobar,
+    SessionBar,
     SiteHeader,
     SearchBar,
-    HeaderActions,
-    CartLink,
     Breadcrumb,
     EmptyState,
-    LoginPrompt,
     ProductGallery,
     ProductSummary,
     ProductDetail,
@@ -53,9 +46,7 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
     RelatedProducts,
   ],
   templateUrl: './product-info.html',
-  styleUrls: [
-    './product-info.scss',
-  ],
+  styleUrl: './product-info.scss',
 })
 export class ProductInfo {
   private readonly router = inject(Router);
@@ -91,23 +82,14 @@ export class ProductInfo {
      固定版面文字與外部資料
      =============================== */
 
-  /** 全站設定與頂部公告列資料 */
-  protected readonly site = injectSiteData();
+  /** 全站設定 */
+  private readonly config = toSignal(inject(SiteApi).getConfig());
   /** 尺寸量測說明與商品政策條列（全站共通文案） */
-  protected sizeNote = computed(() => this.site.config()?.sizeNote ?? '');
-  protected policies = computed(() => this.site.config()?.productPolicies ?? []);
+  protected sizeNote = computed(() => this.config()?.sizeNote ?? '');
+  protected policies = computed(() => this.config()?.productPolicies ?? []);
 
-  /** 購物車入口連結 */
-  protected readonly cartHref = CART_PATH;
   /** 商品列表頁路徑，供「查無此商品」時的返回按鈕使用 */
   protected readonly productsPath = PRODUCT_LIST_PATH;
-
-  /** 頁首導覽連結 */
-  protected readonly navLinks: HeaderNavLink[] = [
-    { label: '全部分類', href: PRODUCT_LIST_PATH },
-    { label: '特展聯名', href: `${PRODUCT_LIST_PATH}?view=exhibit` },
-    { label: '年代選藏', href: PRODUCT_LIST_PATH },
-  ];
 
   /* ===============================
      目前商品與相關資料
@@ -163,7 +145,7 @@ export class ProductInfo {
     if (!item) return [{ label: '首頁', href: HOME_PATH }];
     return [
       { label: '首頁', href: HOME_PATH },
-      { label: item.category, href: `${PRODUCT_LIST_PATH}?cat=${encodeURIComponent(item.category)}` },
+      { label: item.category, href: categoryPath(item.category) },
       { label: item.name },
     ];
   });
@@ -193,6 +175,6 @@ export class ProductInfo {
 
   /** 送出頁首搜尋：前往商品列表頁，並帶上關鍵字查詢字串 */
   protected onSearch(keyword: string): void {
-    this.router.navigate([PRODUCT_LIST_PATH], { queryParams: { q: keyword } });
+    this.router.navigateByUrl(searchPath(keyword));
   }
 }

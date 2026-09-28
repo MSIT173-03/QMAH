@@ -7,6 +7,8 @@
   position: relative;
   max-width: 620px;
   min-width: 0;
+  /* 各頁頁首的搜尋框一律置中；寬度受 max-width 限制，左右自動外距平分剩餘空間 */
+  margin-inline: auto;
 
   /* 商品列表頁：可隨頁首寬度伸縮，仍沿用與首頁相同的最大寬度 */
   &--list {
@@ -24,7 +26,8 @@
   background: var(--color-surface);
   border: 1px solid var(--color-line-mid);
   border-radius: var(--qmah-radius-control);
-  padding: 0 var(--qmah-space-2) 0 var(--qmah-space-3);
+  /* 右內距取 space-2 的一半，與搜尋按鈕上下的留白一致（按鈕高度比框少 space-2） */
+  padding: 0 calc(var(--qmah-space-2) / 2) 0 var(--qmah-space-3);
   min-height: var(--qmah-control-height);
   min-width: 0;
   width: 100%;

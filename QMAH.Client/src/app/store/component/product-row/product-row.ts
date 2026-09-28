@@ -1,8 +1,8 @@
-import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
-import { toDisplayImage } from '../../shared/image-utils';
+import { imageWithFallback } from '../../shared/image-utils';
 import { productPath } from '../../shared/paths';
-import { formatRating, formatReviews, toPriceView } from '../../shared/product-view';
+import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
 
 /**
@@ -14,9 +14,7 @@ import { StoreLink } from '../../shared/store-link';
   selector: 'app-product-row',
   imports: [StoreLink, QmahIconComponent],
   templateUrl: './product-row.html',
-  styleUrls: [
-    './product-row.scss',
-  ],
+  styleUrl: './product-row.scss',
 })
 export class ProductRow {
   id = input('');
@@ -47,18 +45,8 @@ export class ProductRow {
   /** 加入購物車按鈕文字 */
   protected readonly addCartLabel = '加入購物車';
 
-  protected imageSrc = linkedSignal(() => this.coverImage());
-  protected showPlaceholder = computed(() => !this.imageSrc());
-  /** 圖片讀取失敗時先 fallback 到同一件文物 display 圖。 */
-  protected onImageError(): void {
-    const current = this.imageSrc();
-    const display = toDisplayImage(current);
-    if (display && display !== current) {
-      this.imageSrc.set(display);
-      return;
-    }
-    this.imageSrc.set(null);
-  }
+  /** 商品圖片；讀取失敗時先 fallback 到同一件文物 display 圖。 */
+  protected readonly image = imageWithFallback(() => this.coverImage());
 
   /** 商品頁連結網址 */
   protected link = computed(() => productPath(this.id()));
@@ -68,4 +56,8 @@ export class ProductRow {
   protected ratingText = computed(() => formatRating(this.rating()));
   /** 評論數顯示字串，橫列使用較短的後綴 */
   protected reviewsText = computed(() => formatReviews(this.reviews(), '則'));
+  /** 是否有評論；沒有評論時不顯示「0.0」「0 則」，改顯示提示文字 */
+  protected hasReviews = computed(() => this.reviews() > 0);
+  /** 尚無評論時的提示文字 */
+  protected readonly noReviewsLabel = NO_REVIEWS_LABEL;
 }

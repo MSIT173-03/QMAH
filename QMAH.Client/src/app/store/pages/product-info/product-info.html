@@ -1,13 +1,9 @@
-<!-- 頂部公告與快捷連結列（訂單、個人頁面、點數、折價券） -->
-<app-promobar [announcements]="site.announcements()" [signedIn]="cart.signedIn()" [points]="site.points()"
-  [coupons]="site.coupons()" />
+<!-- 頂部公告列與登入提示 -->
+<app-session-bar [cart]="cart" />
 
-<!-- 網站頁首：品牌 Logo、搜尋框、分類導覽與購物車入口 -->
+<!-- 網站頁首：搜尋框 -->
 <app-site-header>
   <app-search-bar [compact]="true" [(value)]="searchQuery" (search)="onSearch($event)" />
-  <app-header-actions [links]="navLinks">
-    <app-cart-link [href]="cartHref" [count]="cart.count()" />
-  </app-header-actions>
 </app-site-header>
 
 <div class="container product-main">
@@ -69,6 +65,3 @@
     size="lg" />
   }
 </div>
-
-<!-- 未登入時使用加入購物車，詢問是否前往登入頁 -->
-<app-login-prompt [open]="cart.loginPrompt()" (confirm)="cart.confirmLogin()" (cancel)="cart.cancelLogin()" />

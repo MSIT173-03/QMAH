@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { Coupon, MemberProfile } from './api.models';
+import { meUrl } from './http';
+import { Coupon, MemberProfile, Recipient } from './api.models';
 
 interface ApiMe {
   email: string;
@@ -37,10 +37,20 @@ interface ApiAddress {
   isDefault: boolean;
 }
 
-const EMPTY_PROFILE: MemberProfile = {
-  name: '', phone: '', email: '', taxId: '', postalCode: '', city: '', district: '', address: '', note: '',
-  pointBalance: 0,
+/** 空白收件資訊；亦為結帳頁收件資訊表單的初始內容 */
+export const EMPTY_RECIPIENT: Recipient = {
+  name: '',
+  phone: '',
+  email: '',
+  taxId: '',
+  postalCode: '',
+  city: '',
+  district: '',
+  address: '',
+  note: '',
 };
+
+const EMPTY_PROFILE: MemberProfile = { ...EMPTY_RECIPIENT, pointBalance: 0 };
 
 /** 會員 API */
 @Injectable({ providedIn: 'root' })
@@ -49,7 +59,7 @@ export class MemberApi {
 
   /** GET /me：會員資料（含點數餘額）；不含收件地址，結帳頁請改用 getCheckoutProfile */
   getProfile(): Observable<MemberProfile> {
-    return this.http.get<ApiMe>(`${environment.apiBaseUrl}/me`).pipe(
+    return this.http.get<ApiMe>(meUrl()).pipe(
       map((profile) => ({
         ...EMPTY_PROFILE,
         name: profile.displayName ?? '',
@@ -66,7 +76,7 @@ export class MemberApi {
    */
   getCheckoutProfile(): Observable<MemberProfile> {
     const addresses = this.http
-      .get<ApiAddress[]>(`${environment.apiBaseUrl}/me/addresses`)
+      .get<ApiAddress[]>(meUrl('/addresses'))
       .pipe(catchError(() => of<ApiAddress[]>([])));
     return forkJoin([this.getProfile(), addresses]).pipe(
       map(([profile, list]) => {
@@ -87,7 +97,7 @@ export class MemberApi {
 
   /** GET /me/coupons：目前帳號持有且可使用的折價券（已使用、過期或未開始的券不列出） */
   getCoupons(): Observable<Coupon[]> {
-    return this.http.get<ApiCoupon[]>(`${environment.apiBaseUrl}/me/coupons`).pipe(
+    return this.http.get<ApiCoupon[]>(meUrl('/coupons')).pipe(
       map((coupons) => coupons.filter((coupon) => coupon.status === 'AVAILABLE').map((coupon) => {
         const isPercent = coupon.discountType.toUpperCase() === 'PERCENT';
         const value = Number(coupon.discountValue);

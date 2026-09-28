@@ -1,19 +1,8 @@
-<!-- 網站頁首：固定於頁面頂端，左側品牌 Logo，其餘內容由外部投影 -->
+<!-- 網站頁首：內容（搜尋框、導覽連結、步驟指示器等）全由外部投影；品牌 Logo 由外層 App Shell 提供 -->
 <header class="site-header">
   <div class="site-header-row" [class]="variant() === 'default' ? '' : 'site-header-row--' + variant()">
-    <!-- 品牌 Logo，點擊回首頁 -->
-    <a [storeLink]="homeHref" class="brand-logo">
-      <img [src]="logoSrc()" [alt]="logoAlt" class="brand-logo-img" />
-    </a>
-
-    <!-- 供外部投影頁首主列內容（搜尋框、導覽連結、購物車入口等） -->
     <ng-content></ng-content>
   </div>
 
-  <!-- ui-integration: Store 保留自己的搜尋、購物與分類次導航；跨 Area 入口由外層 App Shell 統一提供，避免主導航競爭。 -->
-
-  <!-- 首頁 hero 版面專用：分類導覽列，需獨立成一列（滿版、自己的上邊框），故另開一個投影插槽，
-       不能與主列內容一起落在 .site-header-row 裡（那樣會被擠成同一橫列的其中一項）。
-       以 class="nav-bar" 作為選取器，供外部直接沿用既有的 .nav-bar / .nav-bar-row 標記與樣式。 -->
-  <ng-content select=".nav-bar"></ng-content>
+  <!-- ui-integration: Store 保留自己的搜尋與導覽；跨 Area 入口由外層 App Shell 統一提供，避免主導航競爭。 -->
 </header>
