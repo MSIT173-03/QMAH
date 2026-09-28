@@ -25,6 +25,10 @@ public class OrderSimplefyListItem(StoreOrder order, ApplicationUser user, List<
     public decimal DiscountAmount { get; } = order.DiscountAmount;
     [Display(Name = "點數消耗")]
     public decimal PointUsed { get; } = order.PointsUsed;
+    [Display(Name = "配送方式")]
+    public string ShippingMethod { get; } = order.ShippingMethod;
+    [Display(Name = "運費")]
+    public decimal ShippingFee { get; } = order.ShippingFee;
     [Display(Name = "總計")]
     public decimal Total { get; } = order.TotalAmount;
     [Display(Name = "建立時間")]

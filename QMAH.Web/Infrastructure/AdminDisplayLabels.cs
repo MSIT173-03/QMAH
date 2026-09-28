@@ -5,6 +5,14 @@ namespace QMAH.Web.Infrastructure;
 /// </summary>
 public static class AdminDisplayLabels
 {
+    public static string ShippingMethod(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "STANDARD" => "宅配到府",
+        "CVS" => "超商取貨",
+        "LEGACY" => "舊訂單未記錄",
+        _ => string.IsNullOrWhiteSpace(value) ? "未設定" : value
+    };
+
     public static string Status(string? value) => value?.Trim().ToUpperInvariant() switch
     {
         "ACTIVE" => "啟用",

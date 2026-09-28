@@ -55,7 +55,7 @@ public class OrderController : Controller
         int start = 0,
         int length = 20,
         [FromQuery(Name = "search[value]")] string? searchValue = null,
-        [FromQuery(Name = "order[0][column]")] int orderColumn = 7,
+        [FromQuery(Name = "order[0][column]")] int orderColumn = 10,
         [FromQuery(Name = "order[0][dir]")] string? orderDirection = "desc",
         CancellationToken cancellationToken = default)
     {
@@ -87,9 +87,11 @@ public class OrderController : Controller
             4 => descending ? query.OrderByDescending(row => row.Order.Subtotal) : query.OrderBy(row => row.Order.Subtotal),
             5 => descending ? query.OrderByDescending(row => row.Order.DiscountAmount) : query.OrderBy(row => row.Order.DiscountAmount),
             6 => descending ? query.OrderByDescending(row => row.Order.PointsUsed) : query.OrderBy(row => row.Order.PointsUsed),
-            7 => descending ? query.OrderByDescending(row => row.Order.TotalAmount) : query.OrderBy(row => row.Order.TotalAmount),
-            9 => descending ? query.OrderByDescending(row => row.Order.PaidAt) : query.OrderBy(row => row.Order.PaidAt),
-            10 => descending ? query.OrderByDescending(row => row.Order.CancelledAt) : query.OrderBy(row => row.Order.CancelledAt),
+            7 => descending ? query.OrderByDescending(row => row.Order.ShippingMethod) : query.OrderBy(row => row.Order.ShippingMethod),
+            8 => descending ? query.OrderByDescending(row => row.Order.ShippingFee) : query.OrderBy(row => row.Order.ShippingFee),
+            9 => descending ? query.OrderByDescending(row => row.Order.TotalAmount) : query.OrderBy(row => row.Order.TotalAmount),
+            11 => descending ? query.OrderByDescending(row => row.Order.PaidAt) : query.OrderBy(row => row.Order.PaidAt),
+            12 => descending ? query.OrderByDescending(row => row.Order.CancelledAt) : query.OrderBy(row => row.Order.CancelledAt),
             _ => descending ? query.OrderByDescending(row => row.Order.CreatedAt) : query.OrderBy(row => row.Order.CreatedAt)
         };
 
@@ -108,6 +110,8 @@ public class OrderController : Controller
                 row.Order.Subtotal,
                 row.Order.DiscountAmount,
                 row.Order.PointsUsed,
+                row.Order.ShippingMethod,
+                row.Order.ShippingFee,
                 row.Order.TotalAmount,
                 row.Order.CreatedAt,
                 row.Order.PaidAt,
@@ -129,6 +133,8 @@ public class OrderController : Controller
                 Subtotal = row.Subtotal.ToString("C0"),
                 DiscountAmount = row.DiscountAmount.ToString("C0"),
                 PointsUsed = row.PointsUsed.ToString("N0"),
+                ShippingMethod = AdminDisplayLabels.ShippingMethod(row.ShippingMethod),
+                ShippingFee = row.ShippingFee.ToString("C0"),
                 TotalAmount = row.TotalAmount.ToString("C0"),
                 CreatedAt = row.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
                 PaidAt = row.PaidAt?.ToString("yyyy-MM-dd HH:mm") ?? "—",
@@ -292,6 +298,8 @@ public class OrderController : Controller
         decimal Subtotal,
         decimal DiscountAmount,
         int PointsUsed,
+        string ShippingMethod,
+        decimal ShippingFee,
         decimal TotalAmount,
         DateTime CreatedAt,
         DateTime? PaidAt,

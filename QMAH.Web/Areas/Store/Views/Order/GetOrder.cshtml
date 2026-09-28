@@ -32,6 +32,7 @@
                 <dl class="game-admin-definition">
                     <div><dt>會員</dt><dd>@Model.UserName</dd></div>
                     <div><dt>商品數量</dt><dd>@Model.ItemsCount</dd></div>
+                    <div><dt>配送方式</dt><dd>@AdminDisplayLabels.ShippingMethod(Model.ShippingMethod)</dd></div>
                     <div><dt>建立時間</dt><dd>@Model.CreateAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</dd></div>
                     <div><dt>付款時間</dt><dd>@(Model.PaidAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "尚未付款")</dd></div>
                     <div><dt>取消時間</dt><dd>@(Model.CancelledAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")</dd></div>
@@ -47,6 +48,7 @@
                     <div class="datagrid-item"><div class="datagrid-title">商品小計</div><div class="datagrid-content">@Model.ItemsTotal.ToString("C0")</div></div>
                     <div class="datagrid-item"><div class="datagrid-title">折扣</div><div class="datagrid-content">@Model.DiscountAmount.ToString("C0")</div></div>
                     <div class="datagrid-item"><div class="datagrid-title">使用點數</div><div class="datagrid-content">@Model.PointUsed</div></div>
+                    <div class="datagrid-item"><div class="datagrid-title">運費</div><div class="datagrid-content">@Model.ShippingFee.ToString("C0")</div></div>
                     <div class="datagrid-item"><div class="datagrid-title">訂單總計</div><div class="datagrid-content fw-bold fs-3">@Model.Total.ToString("C0")</div></div>
                 </div>
             </div>

@@ -23,6 +23,8 @@
                     <th>小計</th>
                     <th>折扣</th>
                     <th>點數</th>
+                    <th>配送方式</th>
+                    <th>運費</th>
                     <th>總計</th>
                     <th>建立時間</th>
                     <th>付款時間</th>
@@ -33,7 +35,7 @@
             <tbody>
                 @if (!Model.Any())
                 {
-                    <tr><td colspan="12" class="text-center text-secondary py-5">目前沒有訂單資料。</td></tr>
+                    <tr><td colspan="14" class="text-center text-secondary py-5">目前沒有訂單資料。</td></tr>
                 }
                 else
                 {
@@ -47,6 +49,8 @@
                             <td>@item.ItemsTotal.ToString("C0")</td>
                             <td>@item.DiscountAmount.ToString("C0")</td>
                             <td>@item.PointUsed</td>
+                            <td>@AdminDisplayLabels.ShippingMethod(item.ShippingMethod)</td>
+                            <td>@item.ShippingFee.ToString("C0")</td>
                             <td class="fw-semibold">@item.Total.ToString("C0")</td>
                             <td class="text-secondary text-nowrap">@item.CreateAt.ToString("yyyy-MM-dd HH:mm")</td>
                             <td class="text-secondary">@(item.PaidAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
@@ -76,7 +80,7 @@
                 serverSide: true,
                 pageLength: 20,
                 lengthMenu: [10, 20, 50, 100],
-                order: [[8, "desc"]],
+                order: [[10, "desc"]],
                 ajax: {
                     url: tableElement.dataset.ajaxUrl,
                     dataSrc: "data"
@@ -89,6 +93,8 @@
                     { data: "subtotal" },
                     { data: "discountAmount" },
                     { data: "pointsUsed" },
+                    { data: "shippingMethod" },
+                    { data: "shippingFee" },
                     { data: "totalAmount" },
                     { data: "createdAt" },
                     { data: "paidAt" },
