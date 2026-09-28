@@ -144,7 +144,8 @@ public sealed class GameController(
         }
 
         var rounds = room.GameRounds
-            .Where(round => room.Status != "PLAYING" || round.Status != "ANSWERING")
+            // 進行中的歷史只顯示已揭曉回合，不能由摘要或排行榜反推投票中回合的作者與票數。
+            .Where(round => room.Status != "PLAYING" || (round.Status == "REVEALED" && round.IsSettled))
             .OrderBy(round => round.RoundNumber)
             .Select(ToRoundSummary)
             .ToList();
@@ -522,7 +523,11 @@ public sealed class GameController(
         var answerRows = BuildRankedAnswers(round);
         if (round.Status == "ANSWERING")
             answerRows = answerRows.Where(row => row.Answer.GamePlayerId == currentPlayerId).ToList();
-        var winner = GetWinner(answerRows, round.IsSettled);
+        // 揭曉前只保留本人識別所需資料，避免匿名投票的作者與票數從 API 提前洩漏。
+        var revealed = round.Status == "REVEALED" && round.IsSettled;
+        if (!revealed)
+            answerRows = answerRows.OrderBy(row => row.Answer.SubmittedAt).ToList();
+        var winner = revealed ? GetWinner(answerRows, true) : null;
         return new GameRoundDetailsDto(
             round.Id,
             round.RoomId,
@@ -540,17 +545,17 @@ public sealed class GameController(
             round.VotingDeadlineAt,
             round.SettledAt,
             round.Room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"),
-            answerRows.Sum(row => row.VoteCount),
+            revealed ? answerRows.Sum(row => row.VoteCount) : 0,
             winner?.Answer.Id,
             winner?.Answer.GamePlayer.DisplayName,
             answerRows.Select((row, index) => new GameAnswerDto(
                 row.Answer.Id,
-                row.Answer.GamePlayerId,
-                row.Answer.GamePlayer.DisplayName,
+                revealed || row.Answer.GamePlayerId == currentPlayerId ? row.Answer.GamePlayerId : Guid.Empty,
+                revealed ? row.Answer.GamePlayer.DisplayName : string.Empty,
                 row.Answer.AnswerType,
                 row.Answer.Text,
-                row.VoteCount,
-                index + 1,
+                revealed ? row.VoteCount : 0,
+                revealed ? index + 1 : 0,
                 winner?.Answer.Id == row.Answer.Id,
                 row.Answer.SubmittedAt)).ToList());
     }
@@ -590,10 +595,12 @@ public sealed class GameController(
             .Select(player =>
             {
                 var answers = room.GameRounds
+                    .Where(round => round.IsSettled)
                     .SelectMany(round => round.RoundAnswers)
                     .Where(answer => answer.GamePlayerId == player.Id)
                     .ToList();
                 var roundsWon = room.GameRounds
+                    .Where(round => round.IsSettled)
                     .Count(round => GetWinner(BuildRankedAnswers(round), round.IsSettled)?.Answer.GamePlayerId == player.Id);
                 return new
                 {
