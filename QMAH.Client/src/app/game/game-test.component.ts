@@ -59,10 +59,10 @@ interface TestRoomOption {
       <header class="diagnostics-heading">
         <div>
           <p class="eyebrow">只讀連線檢查</p>
-          <h2>遊戲服務狀態</h2>
+          <h2>公開房間 API 讀取狀態</h2>
         </div>
         <p class="description">
-          這項檢查代表目前前端能否用登入狀態讀取遊戲 API；它是操作層煙霧檢查，不取代伺服器本身的健康監控。
+          這項檢查只確認目前登入狀態能否讀取公開房間，不代表作答、投票或結算 API 都正常。
         </p>
       </header>
 
@@ -223,10 +223,10 @@ export class GameTestComponent {
 
   serviceStatusText(): string {
     return {
-      UNKNOWN: '尚未檢查遊戲 API',
-      CHECKING: '正在檢查遊戲 API',
-      ONLINE: '遊戲 API 可連線',
-      OFFLINE: '遊戲 API 暫時無法連線'
+      UNKNOWN: '尚未讀取公開房間',
+      CHECKING: '正在讀取公開房間',
+      ONLINE: '公開房間讀取成功',
+      OFFLINE: '公開房間讀取失敗'
     }[this.serviceStatus];
   }
 

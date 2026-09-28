@@ -61,6 +61,12 @@ function createDemoOrder(length: number): number[] {
 export class GameGuideComponent implements OnDestroy {
   // 說明頁一次呈現一種玩法；每個示範只用本機樣本，不會建立正式挑戰或發放獎勵。
   readonly activeGuide = signal<GameHowToVariant>('multiplayer');
+  readonly failedDemoImages = signal<ReadonlySet<string>>(new Set());
+
+  markDemoImageFailed(id: string): void {
+    // 單張圖片載入失敗時只替換該張牌，避免反覆請求或讓其他配對牌消失。
+    this.failedDemoImages.update((failed) => new Set([...failed, id]));
+  }
   readonly demoAnswers = [
     { author: '小青', text: '青色釉彩最吸引我。\n擺在書房一定很好看。', votes: 2 },
     { author: '阿墨', text: '三隻腳撐得很穩。\n我猜它是用來焚香的。', votes: 4 },

@@ -38,7 +38,7 @@
     }
   </section>
 
-  @if (error) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span>@if (errorTitle === '請先登入') { <a routerLink="/login">前往會員登入</a> }</div> }
+  @if (error && rooms !== null) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span>@if (errorTitle === '請先登入') { <a routerLink="/login">前往會員登入</a> }</div> }
   @if (success) { <div class="notice notice-success" role="status"><span>{{ success }}</span></div> }
 
   <section class="notebook-spread" [attr.aria-busy]="loading">
@@ -83,7 +83,7 @@
         <button type="button" [attr.aria-pressed]="isRoomStatusActive('WAITING')" [class.is-active]="isRoomStatusActive('WAITING')" (click)="setRoomStatus('WAITING')">可加入</button>
         <button type="button" [attr.aria-pressed]="isRoomStatusActive('PLAYING')" [class.is-active]="isRoomStatusActive('PLAYING')" (click)="setRoomStatus('PLAYING')">進行中</button>
         <button type="button" [attr.aria-pressed]="isRoomStatusActive('RECENT')" [class.is-active]="isRoomStatusActive('RECENT')" (click)="setRoomStatus('RECENT')">最近完成</button>
-        <span>{{ rooms ? rooms.totalCount + ' 間' : '讀取中' }}</span>
+        <span>{{ rooms ? rooms.totalCount + ' 間' : error ? '暫時無法取得' : '讀取中' }}</span>
       </div>
 
       <!-- ui-integration: 清單用固定欄位標籤建立掃讀基準，避免房間資料只靠留白猜測對應關係。 -->
@@ -96,8 +96,9 @@
         @else if (rooms === null && error) {
           <!-- ui-integration: 清單首次載入失敗時保留可理解的重試出口，不讓左頁變成空白。 -->
           <section class="empty-state error-state" role="alert">
-            <h2>房間清單暫時載入不了</h2>
-            <p>請稍後再試，或重新載入房間清單。</p>
+            <h2>{{ errorTitle }}</h2>
+            <p>{{ error }}</p>
+            @if (errorTitle === '請先登入') { <a routerLink="/login">前往會員登入</a> }
             <button type="button" (click)="loadRooms(1, false)">重新載入房間</button>
           </section>
         }
@@ -111,7 +112,7 @@
             } @else {
               <p>{{ roomStatus === 'WAITING' ? '現在可以建立房間，邀請其他玩家一起鑑定。' : '可以切換到可加入房間，或建立新的鑑定房間。' }}</p>
               <div class="empty-state__actions">
-                <button type="button" class="empty-state__primary" (click)="showCreateForm = true">建立房間</button>
+                <button type="button" class="empty-state__primary" (click)="toggleCreateForm()">建立房間</button>
                 @if (roomStatus !== 'WAITING') { <button type="button" (click)="setRoomStatus('WAITING')">查看可加入房間</button> }
               </div>
             }

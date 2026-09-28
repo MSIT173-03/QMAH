@@ -82,7 +82,7 @@
 .training-notebook .play-heading__progress strong { color: var(--ink); font: 800 17px/1 "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace; text-align: right; }
 .training-notebook .play-heading__progress small { color: var(--muted); font-size: var(--qmah-type-meta-size); }
 .training-notebook .play-progress { width: 100%; height: 7px; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--line) 82%, transparent); }
-.training-notebook .play-progress span { display: block; height: 100%; border-radius: inherit; background: var(--jade); transition: width 180ms ease; }
+.training-notebook .play-progress span { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--jade); transform-origin: left center; transition: transform 180ms ease; }
 .training-notebook .play-state { display: inline-flex; align-items: center; gap: 6px; border: 1px solid color-mix(in srgb, var(--jade) 42%, var(--qmah-border)); border-radius: 999px; padding: 5px 9px; color: var(--jade); background: color-mix(in srgb, var(--jade) 10%, var(--surface)); font-size: var(--qmah-type-meta-size); font-weight: 800; white-space: nowrap; }
 .training-notebook .play-state__mark { font-size: 9px; }
 .training-notebook .play-heading .kicker { margin: 0 0 7px; color: var(--cinnabar); font-size: var(--qmah-type-meta-size); font-weight: 800; letter-spacing: .08em; line-height: var(--qmah-type-meta-leading); }
@@ -122,6 +122,9 @@
 .training-notebook .memory-card:hover { transform: translateY(-2px); }
 .training-notebook .memory-card.is-open { background: var(--porcelain); }
 .training-notebook .memory-card.is-matched { border-color: var(--bronze); }
+/* 配對成功給短暫確認回饋；減少動態效果時停用動畫。 */
+.training-notebook .memory-card.is-matched { animation: game-match-confirm 220ms ease-out; }
+@keyframes game-match-confirm { 50% { transform: scale(1.045); } }
 .training-notebook .memory-card img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .training-notebook .memory-card .image-fallback, .training-notebook .image-tile .image-fallback, .training-notebook .image-strip .image-fallback { min-height: 0; width: 100%; height: 100%; color: var(--qmah-on-dark); }
 .training-notebook .tile-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; max-width: 680px; margin: 18px auto 0; }
@@ -185,6 +188,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .training-hero { animation: none; }
+  .training-notebook .memory-card.is-matched { animation: none; }
   .artifact-options button, .memory-card, .training-notebook button, .training-notebook .mode-index li { transition: none; }
 }
 

@@ -48,7 +48,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
 
         var artifacts = await db.Artifacts
             .AsNoTracking()
-            .Where(artifact => artifact.IsActive)
+            .Where(artifact => artifact.IsActive && artifact.PrimaryImagePath != "")
             .OrderBy(artifact => artifact.Id)
             .Select(artifact => new ArtifactMaterialView(
                 artifact.Id,
@@ -56,10 +56,16 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
                 artifact.PrimaryImagePath,
                 artifact.ThumbnailPath,
                 artifact.CategoryId,
-                artifact.EraBucketId))
+                artifact.EraBucketId,
+                artifact.Category.Code))
             .ToListAsync(cancellationToken);
+        if (string.Equals(mode.Code, "STRIP_RESTORE", StringComparison.OrdinalIgnoreCase))
+        {
+            // 長卷復位只取書畫素材，避免把瓷器或單件器物切成長卷題目。
+            artifacts = artifacts.Where(item => item.CategoryCode == "PAINTING").ToList();
+        }
         if (artifacts.Count == 0)
-            return EconomyResult<MiniGameStartView>.Conflict("目前沒有可供 Mini Game 使用的啟用文物。");
+            return EconomyResult<MiniGameStartView>.Conflict("目前沒有符合此玩法且具有圖片的啟用文物。");
 
         var isDetailLocator = string.Equals(mode.Code, "DETAIL_LOCATOR", StringComparison.OrdinalIgnoreCase);
         if (isDetailLocator && artifacts.Count < 4)
@@ -682,7 +688,8 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         string PrimaryImagePath,
         string? ThumbnailPath,
         Guid CategoryId,
-        Guid EraBucketId);
+        Guid EraBucketId,
+        string CategoryCode);
 }
 
 /// <summary>前端建立玩法所需的模式識別與評分門檻。</summary>
