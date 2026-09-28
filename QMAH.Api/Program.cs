@@ -35,7 +35,7 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
 // Local 檔最後加入，因此只要檔案存在就具有最高優先權，方便每位組員覆寫連線與前台來源；部署環境不應放置此檔。
-// 開發環境固定不要求 Secure：QMAH.Api 一律以 https launch profile 執行，但 QMAH.Client 的
+// 開發環境固定不要求 Secure：Visual Studio 複合啟動使用 https profile，但 QMAH.Client 的
 // Angular dev server（ng serve）預設是 http，透過 proxy.conf.json 轉送時瀏覽器端看到的其實是
 // http，用 SameAsRequest 會依 Kestrel 收到的 request（永遠是 https）判斷，導致 cookie 被標成
 // Secure，卻沒有穩定的辦法送回純 http 的 4200——會員登入狀態因此不穩定地遺失。
@@ -70,6 +70,16 @@ var configuredMediaRoot = builder.Configuration["Media:RootPath"]
 var mediaRoot = Path.IsPathRooted(configuredMediaRoot)
     ? Path.GetFullPath(configuredMediaRoot)
     : Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, configuredMediaRoot));
+var sharedWebRoot = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "QMAH.Web", "wwwroot"));
+var avatarStorage = AvatarStoragePaths.Resolve(
+    builder.Configuration["Avatar:RootPath"],
+    builder.Environment.ContentRootPath,
+    Path.Combine("..", "QMAH.Web", "wwwroot", "uploads", "avatars"));
+var packagedAvatarPresetRoot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "images", "avatars");
+var avatarPresetRoot = Directory.Exists(packagedAvatarPresetRoot)
+    ? packagedAvatarPresetRoot
+    : Path.Combine(sharedWebRoot, "images", "avatars");
+builder.Services.AddSingleton(avatarStorage);
 builder.Services.Configure<MediaStorageOptions>(options => options.RootPath = mediaRoot);
 builder.Services
     .AddOptions<MediaDeliveryOptions>()
@@ -519,6 +529,23 @@ if (Directory.Exists(mediaRoot))
                     ? "public,max-age=31536000,immutable"
                     : "public,max-age=3600,must-revalidate";
         }
+    });
+}
+
+// 會員頭像由 API 寫入 Web 的公開目錄；只開 API＋Angular 時也應能讀到同一張圖片。
+// 僅掛載頭像目錄，不開放其他 uploads 檔案。
+Directory.CreateDirectory(avatarStorage.RootPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(avatarStorage.RootPath),
+    RequestPath = "/uploads/avatars"
+});
+if (Directory.Exists(avatarPresetRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(avatarPresetRoot),
+        RequestPath = "/images/avatars"
     });
 }
 

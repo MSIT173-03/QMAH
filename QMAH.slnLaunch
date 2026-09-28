@@ -4,12 +4,12 @@
     "Projects": [
       {
         "Path": "QMAH.Api\\QMAH.Api.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "https"
       },
       {
         "Path": "QMAH.Client\\QMAH.Client.esproj",
-        "Action": "Start",
-        "DebugTarget": "ng serve"
+        "Action": "Start"
       }
     ]
   },
@@ -18,7 +18,8 @@
     "Projects": [
       {
         "Path": "QMAH.Api\\QMAH.Api.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "https"
       }
     ]
   },
@@ -27,12 +28,12 @@
     "Projects": [
       {
         "Path": "QMAH.Api\\QMAH.Api.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "https"
       },
       {
         "Path": "QMAH.Client\\QMAH.Client.esproj",
-        "Action": "Start",
-        "DebugTarget": "ng serve"
+        "Action": "Start"
       },
       {
         "Path": "QMAH.Web\\QMAH.Web.csproj",

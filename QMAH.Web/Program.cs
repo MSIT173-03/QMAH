@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.FileProviders;
 
 using QMAH.Web.Areas.Social;
 using QMAH.Web.Areas.Social.Services;
@@ -208,6 +209,10 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+var avatarStorage = AvatarStoragePaths.Resolve(
+    builder.Configuration["Avatar:RootPath"],
+    builder.Environment.ContentRootPath,
+    Path.Combine("wwwroot", "uploads", "avatars"));
 
 // ResolveAsync 只選出可用目標，不在啟動時建立或升級資料庫；Schema 仍由版本化 SQL 管理。
 // 多個候選同時存在時留下警告，避免組員在 SSMS 與應用程式看到不同的 QMAH 而誤判資料遺失。
@@ -336,6 +341,14 @@ app.Use(async (context, next) =>
     }
 
     await next(context);
+});
+
+// 執行期間上傳的頭像不在建置時的靜態資產清單內，所有環境都從共用目錄提供。
+Directory.CreateDirectory(avatarStorage.RootPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(avatarStorage.RootPath),
+    RequestPath = "/uploads/avatars"
 });
 
 if (app.Environment.IsDevelopment())

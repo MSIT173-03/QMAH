@@ -110,7 +110,8 @@ QMAH 有兩個 ASP.NET Core 主機：`QMAH.Web` 提供 Razor 管理後台，`QMA
 | `QMAH.Web` 的 `https`／`http` | Razor 管理後台與五個 Area | `https://localhost:7039`／`http://localhost:5183` |
 | `QMAH.Api` 的 `https`／`http` | `/api/v1/*`、OpenAPI 與 Scalar | `https://localhost:7249`／`http://localhost:5147` |
 
-Visual Studio 2026 開啟 `QMAH.sln` 後，可在啟動設定選擇 `QMAH 全站（API＋前台＋管理後台）`，一次啟動 `QMAH.Api`、Angular 使用者前台與 `QMAH.Web` Razor 管理後台。啟動後可分別從 `https://localhost:7249`、`http://localhost:4200/` 與 `https://localhost:7039` 開啟。
+Visual Studio 2026 開啟 `QMAH.sln` 後，可在啟動設定選擇 `QMAH 全站（API＋前台＋管理後台）`，一次啟動 `QMAH.Api` 的 `https` profile、Angular 使用者前台與 `QMAH.Web` Razor 管理後台。啟動後可分別從 `https://localhost:7249`、`http://localhost:4200/` 與 `https://localhost:7039` 開啟。
+Visual Studio 的 Angular 專案固定使用 HTTPS proxy，與複合啟動指定的 API profile 一致。
 
 若只需要 API 與 Angular 前台，選擇 `QMAH API＋Angular 前台`；若只要檢查 API，選擇 `QMAH API`。如果 IDE 沒有顯示 `.slnLaunch` 設定，仍可分別啟動兩個 ASP.NET Core 專案的 `https` profile，再依「啟動 Angular 使用者前台」的方式啟動前台。
 
@@ -135,7 +136,8 @@ npm ci
 npm start
 ```
 
-預設的 `npm start`／`npm run start:https` 使用 API 的 `https` profile，將 `/api`、公開 `/media` 與 OpenAPI 請求轉送到 `https://localhost:7249`；完整啟動時，後台的 `/uploads` 與 `/images/avatars` 轉送到 `https://localhost:7039`。
+`npm start` 會偵測 API 的 HTTPS／HTTP profile 並選擇對應 proxy；`npm run start:https` 固定使用 `https://localhost:7249`。`/api`、公開 `/media` 與頭像會轉送至 API；其他 `/uploads` 在完整啟動時仍轉送至後台。
+會員頭像的上傳和公開讀取共用 `Avatar:RootPath`。未設定時沿用 `QMAH.Web/wwwroot/uploads/avatars`，既有頭像不必搬移；若要改用其他儲存位置，請在 API 與 Web 各自的本機設定中指定相同的絕對路徑。
 
 若要使用 API 的 `http` profile，請另開終端機執行：
 
@@ -145,7 +147,7 @@ cd QMAH.Client
 npm run start:http
 ```
 
-這時 `/api`、公開 `/media` 與 OpenAPI 請求會轉送到 `http://localhost:5147`，後台的 `/uploads` 與 `/images/avatars` 會轉送到 `http://localhost:5183`。HTTP 與 HTTPS 使用各自的 proxy 設定，避免把 HTTPS profile 的 307 redirect 當成 API 回應傳回前端。
+這時 `/api`、公開 `/media`、頭像與 OpenAPI 請求會轉送到 `http://localhost:5147`，其他 `/uploads` 在完整啟動時轉送到 `http://localhost:5183`。HTTP 與 HTTPS 使用各自的 proxy 設定，避免把 HTTPS profile 的 307 redirect 當成 API 回應傳回前端。
 
 需要手動使用 Angular CLI 時，HTTPS profile 可在 `QMAH.Client` 目錄執行 `ng serve` 或 `npx ng serve`；HTTP profile 請執行 `ng serve --proxy-config proxy.http.conf.json` 或 `npx ng serve --proxy-config proxy.http.conf.json`。
 

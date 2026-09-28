@@ -21,4 +21,12 @@
     <ProjectReference Include="..\QMAH.Infrastructure\QMAH.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 預設頭像只有一份來源，發布 API 時帶入自己的公開靜態檔目錄。 -->
+    <Content Include="..\QMAH.Web\wwwroot\images\avatars\**\*">
+      <Link>wwwroot\images\avatars\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

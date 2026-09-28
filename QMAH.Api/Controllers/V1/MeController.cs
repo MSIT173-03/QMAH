@@ -20,6 +20,7 @@ public sealed class MeController(
     QmahDbContext db,
     UserManager<ApplicationUser> userManager,
     QmahMediaUrlResolver mediaUrlResolver,
+    AvatarStoragePaths avatarStorage,
     EconomyService economyService,
     DailyActivityService dailyActivityService) : ApiControllerBase
 {
@@ -199,26 +200,14 @@ public sealed class MeController(
             return NotFound();
         }
 
-        // QMAH.Web/wwwroot/uploads/avatars
-        var webRootPath = Path.GetFullPath(
-            Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "../QMAH.Web/wwwroot"));
-
-        var avatarFolder = Path.Combine(
-            webRootPath,
-            "uploads",
-            "avatars");
-
-        Directory.CreateDirectory(avatarFolder);
+        // 上傳與公開讀取共用同一個實體目錄，避免啟動工作目錄不同造成路徑分歧。
+        Directory.CreateDirectory(avatarStorage.RootPath);
 
         // 產生不重複的檔名
         var fileName =
             $"{Guid.NewGuid():N}{extension}";
 
-        var filePath = Path.Combine(
-            avatarFolder,
-            fileName);
+        var filePath = Path.Combine(avatarStorage.RootPath, fileName);
 
         // 寫入圖片
         await using (var stream =

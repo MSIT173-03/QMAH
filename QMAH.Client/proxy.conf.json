@@ -19,13 +19,18 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/uploads/avatars": {
+    "target": "https://localhost:7249",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/uploads": {
     "target": "https://localhost:7039",
     "secure": false,
     "changeOrigin": true
   },
   "/images/avatars": {
-    "target": "https://localhost:7039",
+    "target": "https://localhost:7249",
     "secure": false,
     "changeOrigin": true
   }
