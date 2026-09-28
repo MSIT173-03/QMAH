@@ -55,7 +55,7 @@ interface TrainingSessionSnapshot {
       <section class="chapter" aria-labelledby="training-title">
         <header class="chapter-heading">
           <div><p>單人挑戰</p><h1 id="training-title">單人小遊戲</h1><span>目前已開放的模式</span></div>
-          @if (phase === 'list' && !authRequired && !loading) { <strong class="chapter-count"><small>可選模式</small>{{ modes.length }}</strong> }
+          @if (phase === 'list' && !authRequired && !loading && !error) { <strong class="chapter-count"><small>可選模式</small>{{ modes.length }}</strong> }
         </header>
 
         @if (error && !authRequired) { <div class="message error" role="alert"><strong>單人小遊戲目前無法載入</strong><span>{{ error }}</span><div class="auth-actions"><button type="button" (click)="retryModes()">重新載入</button></div></div> }
@@ -66,10 +66,13 @@ interface TrainingSessionSnapshot {
               <p class="kicker">本局完成</p>
               <h2>{{ result.grade }} 級 <span>{{ result.normalizedScore }} 分</span></h2>
               <p>點數 {{ result.pointReward }} · 鑰匙進度 +{{ result.keyProgressReward }}</p>
+              @if (attempt?.modeCode !== 'DETAIL_LOCATOR') { <small>目前依完成盤面結算；所花時間不影響分數。</small> }
               @if (!result.economicRewardGranted) { <small>今日獎勵額度已用完，成績仍會保留。</small> }
               @if (attempt?.modeCode === 'DETAIL_LOCATOR' && attempt; as current) {
                 <section class="locator-answer" aria-label="局部辨識答案" animate.enter="game-result-enter">
-                  <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName" />
+                  @if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('locator-result')) {
+                    <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName" (error)="markImageFailed('locator-result')" />
+                  } @else { <span class="image-fallback" aria-hidden="true">影像暫時無法顯示</span> }
                   <div><strong>{{ result.rawScore === 100 ? '辨識正確' : '正確答案' }}</strong><p>{{ current.artifactName }}</p></div>
                 </section>
               }
@@ -103,7 +106,7 @@ interface TrainingSessionSnapshot {
           </section>
         }
         @else if (attempt; as current) {
-          <section class="play-sheet" aria-live="polite">
+          <section class="play-sheet">
             <header class="play-heading">
               <div class="play-heading__title"><p class="kicker">{{ current.modeName }}</p><h2>{{ current.modeCode === 'DETAIL_LOCATOR' ? '看局部辨識文物' : current.artifactName }}</h2></div>
               <div class="play-heading__meta">
@@ -112,7 +115,7 @@ interface TrainingSessionSnapshot {
               </div>
               <div class="play-heading__progress">
                 <div class="play-heading__progress-meta"><span>完成比例</span><strong>{{ progressPercent }}%</strong></div>
-                <div class="play-progress" role="progressbar" aria-label="目前完成比例" [attr.aria-valuenow]="progressPercent" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="progressPercent"></span></div>
+                <div class="play-progress" role="progressbar" aria-label="目前完成比例" [attr.aria-valuenow]="progressPercent" aria-valuemin="0" aria-valuemax="100"><span [style.transform]="'scaleX(' + progressPercent / 100 + ')'"></span></div>
                 <small>已用時間 {{ elapsedLabel }}</small>
               </div>
             </header>

@@ -4,8 +4,12 @@
   </app-game-navigation>
 
   <section class="guide-heading" aria-labelledby="game-guide-title">
-    <h1 id="game-guide-title">一回合怎麼玩？</h1>
-    <p><span>看文物、寫想法，</span><span>再讀別人的匿名回答。</span><span>投完票，</span><span>才知道誰寫了什麼。</span></p>
+    <h1 id="game-guide-title">{{ activeGuide() === 'multiplayer' ? '一回合怎麼玩？' : '單人小遊戲怎麼玩？' }}</h1>
+    @if (activeGuide() === 'multiplayer') {
+      <p><span>看文物、寫想法，</span><span>再讀別人的匿名回答。</span><span>投完票，</span><span>才知道誰寫了什麼。</span></p>
+    } @else {
+      <p><span>選擇玩法、觀察線索，</span><span>完成挑戰後查看結算。</span></p>
+    }
   </section>
 
   <nav class="guide-tabs" aria-label="選擇玩法說明">
@@ -99,7 +103,10 @@
               <div class="training-demo__memory-grid" role="group" aria-label="十六張館藏翻牌配對示範">
                 @for (card of memoryDemoCards(); track card.id; let index = $index) {
                   <button type="button" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" [attr.aria-label]="card.revealed || card.matched ? card.label : '翻開第 ' + (index + 1) + ' 張牌'" [attr.aria-pressed]="card.revealed || card.matched" [disabled]="card.matched" (click)="flipMemoryDemo(index)">
-                    @if (card.revealed || card.matched) { <img [src]="card.image" [alt]="card.label" /> } @else { <span>翻</span> }
+                    @if (card.revealed || card.matched) {
+                      @if (!failedDemoImages().has(card.id)) { <img [src]="card.image" [alt]="card.label" (error)="markDemoImageFailed(card.id)" /> }
+                      @else { <span>{{ card.label }}</span> }
+                    } @else { <span>翻</span> }
                   </button>
                 }
               </div>

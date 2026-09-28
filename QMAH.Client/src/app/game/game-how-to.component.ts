@@ -25,7 +25,7 @@ const HOW_TO_CONTENT: Record<GameHowToVariant, HowToContent> = {
       { label: '02', title: '觀察文物', description: '房間開始後，所有玩家查看本回合的館藏與題目。' },
       { label: '03', title: '作答', description: '在作答時間內寫下自己的判斷；每回合每人作答一次。' },
       { label: '04', title: '讀取回答', description: '作答時間結束後，查看其他玩家的回答內容。' },
-      { label: '05', title: '投票', description: '不能投自己的回答，每次可投 1 至 3 票，選出最有說服力的說法。' },
+      { label: '05', title: '投票', description: '不能投自己的回答；每份回答最多投一次，每次可選 1 至 3 票。' },
       { label: '06', title: '揭曉／結算', description: '查看本回合得票與勝出者，完成所有回合後查看整場結果與獎勵。' }
     ]
   },
