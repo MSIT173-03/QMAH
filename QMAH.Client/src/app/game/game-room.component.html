@@ -77,7 +77,7 @@
           </dl>
           <div class="sync-caption" aria-live="polite">
             <span [class.is-active]="refreshing" aria-hidden="true"></span>
-            {{ testMode ? '測試流程自動推進' : refreshing ? '同步房間狀態…' : '每 5 秒更新房間狀態' }}
+            {{ testMode ? '測試流程自動推進' : refreshing ? '同步房間狀態…' : '每 2 秒更新房間狀態' }}
           </div>
         </section>
 
@@ -107,7 +107,7 @@
         </section>
       </aside>
 
-      <section class="play-area" aria-live="polite">
+      <section class="play-area">
         @if (currentRoom.status === 'WAITING') {
           <article class="paper-card waiting-panel">
             <p class="eyebrow">準備階段</p>
@@ -139,7 +139,7 @@
             <header class="round-heading">
               <div><p class="eyebrow">第 {{ currentRound.roundNumber }} / {{ currentRoom.totalRounds }} 回合</p><h2>第 {{ currentRound.roundNumber }} 回合</h2></div>
               <div class="phase-clock" [class.is-expired]="countdownSeconds() === 0 && currentRound.status !== 'REVEALED'">
-                <span>{{ phaseText(currentRound.status) }}</span>
+                <span aria-live="polite">{{ phaseText(currentRound.status) }}</span>
                 @if (currentRound.status !== 'REVEALED') { <strong>{{ countdownText() }}</strong> }
               </div>
             </header>
@@ -224,7 +224,7 @@
           <article class="paper-card waiting-panel">
             <p class="eyebrow">房間狀態</p>
             <h2>等待回合資料</h2>
-            <p>房間已開始，但第 {{ currentRoom.currentRoundNo }} 回合還沒準備好。畫面每 5 秒更新一次，請稍候。</p>
+            <p>房間已開始，但第 {{ currentRoom.currentRoundNo }} 回合還沒準備好。畫面每 2 秒更新一次，請稍候。</p>
           </article>
         }
       </section>

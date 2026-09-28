@@ -127,7 +127,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.pollSubscription = timer(0, 5000)
+    // 房間生命週期每兩秒更新；同步頻率一致可減少換階段後仍顯示舊畫面的時間。
+    this.pollSubscription = timer(0, 2000)
       .pipe(exhaustMap(() => this.loadSnapshot()))
       .subscribe((snapshot) => {
         const playerChanged = this.currentPlayerId !== (snapshot.room.currentPlayerId ?? '');
@@ -582,8 +583,13 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     const roundId = `${this.roomId}-round-${roundNumber}`;
     const answerDeadlineAt = new Date(now + this.testScenario.answerSeconds * 1000).toISOString();
     const votingDeadlineAt = new Date(now + (this.testScenario.answerSeconds + this.testScenario.votingSeconds) * 1000).toISOString();
-    const artifactNames = ['青花折枝花卉盤', '剔紅山水人物盒', '玉雕瑞獸佩'];
-    const artifactName = artifactNames[(roundNumber - 1) % artifactNames.length];
+    // 測試房間使用專案內真實素材，名稱與圖片必須同一件文物。
+    const artifacts = [
+      { name: '掐絲琺瑯雲龍紋三足香爐', image: '/images/login/real/cloisonne-tripod-incense-burner.jpg' },
+      { name: '陶瓷方瓶', image: '/assets/game/ceramic-square-vase.jpg' },
+      { name: '唐代文物', image: '/assets/game/tang-wang.jpg' }
+    ];
+    const artifact = artifacts[(roundNumber - 1) % artifacts.length];
 
     this.room = {
       ...this.room,
@@ -600,8 +606,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       currentPlayerId: this.testSelfId,
       votedAnswerIds: [],
       artifactId: `test-artifact-${roundNumber}`,
-      artifactName,
-      primaryImagePath: '/images/login/real/cloisonne-tripod-incense-burner.jpg',
+      artifactName: artifact.name,
+      primaryImagePath: artifact.image,
       thumbnailPath: null,
       roundNumber,
       status: 'ANSWERING',

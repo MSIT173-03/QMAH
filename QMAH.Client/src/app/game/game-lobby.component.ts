@@ -309,6 +309,26 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     if (this.showFilter) this.showFilter = false;
   }
 
+  @HostListener('document:keydown.tab', ['$event'])
+  keepDialogFocus(event: Event): void {
+    if (!(event instanceof KeyboardEvent)) return;
+    if (this.qrRoom) return;
+    const dialog = this.showCreateForm ? this.createDialog?.nativeElement : this.selectedRoomId ? this.roomDialog?.nativeElement : null;
+    if (!dialog) return;
+    const controls = Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter((control) => control.getClientRects().length > 0);
+    if (!controls.length) { event.preventDefault(); dialog.focus(); return; }
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    // 對話框開啟時，Tab 與 Shift+Tab 都留在可操作控制項內。
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+      event.preventDefault(); last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      event.preventDefault(); first.focus();
+    }
+  }
+
   openSlots(room: { players: unknown[]; maxPlayers: number }): number[] { return Array.from({ length: Math.max(0, room.maxPlayers - room.players.length) }, (_, index) => index); }
   occupancy(room: GameRoomListItem): number { return Math.round((room.playerCount / room.maxPlayers) * 100); }
   statusText(status: GameRoomListItem['status']): string { return { WAITING: '等待中', PLAYING: '進行中', COMPLETED: '最近完成', CANCELLED: '已取消' }[status]; }

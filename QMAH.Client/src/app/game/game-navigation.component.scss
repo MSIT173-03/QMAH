@@ -173,7 +173,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); ou
   .game-navigation__link-description { display: none; }
   .game-navigation__actions { gap: 6px; min-height: 34px; }
   .game-navigation__test-entry,
-  .game-navigation__login { min-height: 40px; }
+  .game-navigation__login { min-height: 44px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
