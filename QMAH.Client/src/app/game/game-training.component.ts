@@ -142,7 +142,7 @@ interface TrainingSessionSnapshot {
                   <span class="clue-image__badge">局部線索</span>
                 </div>
                 <div class="game-prompt">
-                  <h3>從四件相似文物中找出原圖</h3>
+                  <h3>從 {{ locatorOptions.length }} 件相似文物中找出原圖</h3>
                   <p>先觀察局部的器形與紋飾；完整原圖會在送出後揭曉。</p>
                   <div class="artifact-options artifact-options--text" role="group" aria-label="選擇最相近的文物">
                     @for (option of locatorOptions; track option.artifactId; let index = $index) {
@@ -156,7 +156,7 @@ interface TrainingSessionSnapshot {
               </div>
             }
             @else if (current.modeCode === 'MEMORY_MATCH') {
-              <div class="game-board memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>4×4 共 16 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" (click)="flipMemory(index)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback" aria-hidden="true">文物</span> } } @else { <span>翻</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }}</p></div>
+              <div class="game-board memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>共 {{ memoryCards.length }} 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" (click)="flipMemory(index)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback" aria-hidden="true">文物</span> } } @else { <span>翻</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }}</p></div>
             }
             @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
               <div class="game-board ordering-game"><div class="game-prompt"><h3>館藏拼圖</h3><p>5×5 拼圖，點選兩塊交換位置，把畫面排回順序。</p></div><div class="tile-grid">@for (piece of puzzleOrder; track $index; let slot = $index) { <button type="button" class="image-tile" [class.selected]="puzzleSelection === slot" [attr.aria-pressed]="puzzleSelection === slot" [attr.aria-label]="'第 ' + (slot + 1) + ' 格拼圖'" (click)="swapPuzzle(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('puzzle')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 拼圖第 ' + (piece + 1) + ' 塊'" [style.left.%]="pieceOffsetX(piece)" [style.top.%]="pieceOffsetY(piece)" (error)="markImageFailed('puzzle')" /> } @else { <span class="image-fallback" aria-hidden="true">館藏</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ puzzleSelection === null ? '先選一塊拼圖' : '再選另一塊交換' }}</p></div>
