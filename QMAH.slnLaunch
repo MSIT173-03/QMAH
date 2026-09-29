@@ -20,6 +20,16 @@
         "Path": "QMAH.Api\\QMAH.Api.csproj",
         "Action": "Start",
         "DebugTarget": "https"
+      }
+    ]
+  },
+  {
+    "Name": "QMAH API＋管理後台",
+    "Projects": [
+      {
+        "Path": "QMAH.Api\\QMAH.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
       },
       {
         "Path": "QMAH.Web\\QMAH.Web.csproj",

@@ -113,7 +113,7 @@ QMAH 有兩個 ASP.NET Core 主機：`QMAH.Web` 提供 Razor 管理後台，`QMA
 Visual Studio 2026 開啟 `QMAH.sln` 後，可在啟動設定選擇 `QMAH 全站（API＋前台＋管理後台）`，一次啟動 `QMAH.Api` 的 `https` profile、Angular 使用者前台與 `QMAH.Web` Razor 管理後台。啟動後可分別從 `https://localhost:7249`、`http://localhost:4200/` 與 `https://localhost:7039` 開啟。
 Visual Studio 的 Angular 專案固定使用 HTTPS proxy，與複合啟動指定的 API profile 一致。
 
-若只需要 API 與 Angular 前台，選擇 `QMAH API＋Angular 前台`；若只要檢查 API，選擇 `QMAH API`。如果 IDE 沒有顯示 `.slnLaunch` 設定，仍可分別啟動兩個 ASP.NET Core 專案的 `https` profile，再依「啟動 Angular 使用者前台」的方式啟動前台。
+若只需要 API 與 Angular 前台，選擇 `QMAH API＋Angular 前台`；若只要檢查 API，選擇 `QMAH API`；若要測試 MVC 管理後台與 API，選擇 `QMAH API＋管理後台`。如果 IDE 沒有顯示 `.slnLaunch` 設定，仍可分別啟動兩個 ASP.NET Core 專案的 `https` profile，再依「啟動 Angular 使用者前台」的方式啟動前台。
 
 命令列啟動：
 
@@ -256,7 +256,7 @@ Controller 透過建構式取得 scoped `QmahDbContext`，不重新建立 SQL �
 
 `QMAH.Infrastructure` 集中 DB-first Entity、`QmahDbContext` 與匯入核心。API 與 Angular 透過 `QMAH.Client/proxy.conf.json` 連接。
 
-Visual Studio 的 `.slnLaunch` 提供 `QMAH 全站（API＋前台＋管理後台）` 複合啟動，也保留 API 單獨啟動與 API＋Angular 前台的選項；VS Code 工作區則提供 API＋Angular 的複合啟動。
+Visual Studio 的 `.slnLaunch` 提供 `QMAH 全站（API＋前台＋管理後台）` 複合啟動，也保留 API 單獨啟動、API＋Angular 前台與 API＋管理後台的選項；VS Code 工作區則提供 API＋Angular 的複合啟動。
 
 Angular 不直接連資料庫，也不依賴管理後台的 ViewModel；前台欄位、狀態、權限與錯誤回應以 [REST API 契約](https://msit173-03.github.io/QMAH-Docs/reference/rest-api.html) 為準。
 
