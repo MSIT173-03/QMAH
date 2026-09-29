@@ -1,6 +1,8 @@
 .artifact-page {
   /* ui-integration: 保留圖鑑的年代分區與放大檢視，只把深木紋主題收斂到 QMAH 共用的紙白、青綠與赭紅。 */
   --filter-sidebar-w: clamp(248px, 24vw, 320px);
+  // 文物區左右留白：左側＝距篩選欄邊線、右側＝距捲軸，兩邊共用同一個值才會等寬。
+  --content-gutter: clamp(24px, 2.4vw, 36px);
   // 標題橫幅（純標題列）的高度概估值；固定側欄／內容區的 top、margin-top、height 都要用同一個
   // 數字才對得齊，所以抽成變數，之後如果標題區塊內容或字級改變，只要改這裡一個地方。
   --header-h: 74px;
@@ -460,8 +462,8 @@
   position: absolute;
   top: 0;
   bottom: 0; // 上下寫死釘住，高度不再依賴 grid/flex 的隱性撐滿
-  left: calc(var(--filter-sidebar-w) + 28px);
-  right: 20px;
+  left: calc(var(--filter-sidebar-w) + var(--content-gutter));
+  right: 0; // 捲軸貼齊視窗右緣，右側留白改由 .content-area__scroll 的 padding 提供
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -474,6 +476,7 @@
   justify-content: space-between;
   gap: 12px;
   padding-top: 14px;
+  padding-right: var(--content-gutter); // 右側按鈕與下方卡片右緣對齊
   margin: 0 0 18px;
   font-size: 14px;
   color: var(--qmah-text-muted);
@@ -509,6 +512,7 @@
   flex: 1;
   min-height: 0; // flex 容器要有這行，內部的 overflow-y:auto 才會正確裁切，不會把外框撐爆
   overflow-y: auto;
+  padding-right: var(--content-gutter); // 卡片到捲軸的距離＝卡片到篩選欄的距離
   padding-bottom: 48px; // 捲到底時留一點呼吸空間
   display: flex;
   flex-direction: column;
@@ -735,7 +739,12 @@
   .content-area__scroll {
     flex: none;
     overflow-y: visible;
+    padding-right: 0;
     padding-bottom: 0;
+  }
+
+  .content-area__meta {
+    padding-right: 0;
   }
 
   .filter-group {

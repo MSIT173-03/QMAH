@@ -1,5 +1,5 @@
 <!-- key-list.html -->
-<div class="key-page" [class.key-page--embedded]="embedded">
+<div class="key-page" [class.key-page--embedded]="embedded" #pageRoot (scroll)="onViewportChange()">
 
   <div class="page-header">
     <div class="page-header__bar">
@@ -18,7 +18,10 @@
   <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
 
   <ng-container *ngIf="!loading() && !errorMsg()">
+  <!-- 背包（左）與合成台（右）並排；內嵌彈出框中只有背包的鑰匙格會捲動 -->
+  <div class="key-layout">
 
+    <section class="key-bag" aria-label="我的鑰匙">
     <div class="section-title">
       <h2>我的鑰匙</h2>
       <div class="section-title__tools">
@@ -84,7 +87,7 @@
     </div>
 
     <ng-container *ngIf="filteredKeys().length > 0; else noFilteredKeys">
-    <div class="key-slot-grid" #slotGrid>
+    <div class="key-slot-grid" #slotGrid (scroll)="onViewportChange()">
       <button
         type="button"
         class="key-slot"
@@ -94,6 +97,14 @@
         [class.era-key]="key.scopeType === 'ERA'"
         [class.universal-key]="key.scopeType === 'UNIVERSAL'"
         [attr.aria-label]="keyScopeLabel(key.scopeType) + '，' + keyScopeDescription(key.scopeType) + '，持有 ' + key.balance + ' 把'"
+        [attr.aria-describedby]="tooltip()?.owner === bagSlot ? 'key-tooltip' : null"
+        #bagSlot
+        (pointerenter)="showKeyTip($event, key, bagTipHint(key))"
+        (pointermove)="moveKeyTip($event)"
+        (pointerleave)="hideKeyTip()"
+        (pointerdown)="pressKeyTip($event, key, bagTipHint(key))"
+        (focus)="focusKeyTip($event, key, bagTipHint(key))"
+        (blur)="hideKeyTip()"
         (click)="onKeySlotClick(key)"
       >
         <div class="key-slot__icon">
@@ -101,48 +112,6 @@
         </div>
         <span class="key-slot__count">{{ key.balance }}</span>
 
-        <div class="key-slot__tooltip">
-          <p class="key-slot__tooltip-name">{{ keyScopeLabel(key.scopeType) }}</p>
-
-          <p class="key-slot__tooltip-detail">{{ key.name }}</p>
-
-          <p class="key-slot__tooltip-description">{{ keyScopeDescription(key.scopeType) }}</p>
-
-          <p class="key-slot__tooltip-row">
-            <span>開鎖類別</span>
-            <strong [ngSwitch]="key.scopeType">
-              <ng-container *ngSwitchCase="'NORMAL'">探索鑰匙</ng-container>
-              <ng-container *ngSwitchCase="'UNIVERSAL'">萬能鑰匙</ng-container>
-              <ng-container *ngSwitchCase="'CATEGORY'">分類鑰匙（{{ getCategoryName(key.categoryId) }}）</ng-container>
-              <ng-container *ngSwitchCase="'ERA'">年代鑰匙（{{ getEraName(key.eraBucketId) }}）</ng-container>
-            </strong>
-          </p>
-
-          <p class="key-slot__tooltip-row">
-            <span>回收點數</span>
-            <strong>{{ key.recyclePointValue }}</strong>
-          </p>
-
-          <p class="key-slot__tooltip-row">
-            <span>可解鎖文物</span>
-            <strong>{{ key.eligibleArtifactCount }} 件</strong>
-          </p>
-
-          <ng-container *ngIf="exchangeRulesFor(key).length">
-            <p class="key-slot__tooltip-row">
-              <span>可用兌換</span>
-              <strong>{{ exchangeRulesFor(key).length }} 種方式</strong>
-            </p>
-            <p class="key-slot__tooltip-hint">兌換方式：在下方「鑰匙合成台」放入這把鑰匙</p>
-          </ng-container>
-
-          <p class="key-slot__tooltip-hint" *ngIf="key.scopeType === 'UNIVERSAL'; else useHint">
-            請至圖鑑頁的文物卡片上使用
-          </p>
-          <ng-template #useHint>
-            <p class="key-slot__tooltip-hint">點擊使用</p>
-          </ng-template>
-        </div>
       </button>
     </div>
     </ng-container>
@@ -152,13 +121,19 @@
         <p class="key-empty__desc">{{ selectedFilter() === 'ALL' ? '取得鑰匙後會顯示在這裡。' : '請切換其他篩選查看已持有的鑰匙。' }}</p>
       </div>
     </ng-template>
+    </section>
 
     <section class="craft-panel" aria-labelledby="key-exchange-title">
       <div class="craft-panel__header">
         <span class="craft-panel__header-copy">
-          <span class="section-kicker">資產管理</span>
           <h2 class="craft-panel__title" id="key-exchange-title">鑰匙合成台</h2>
-          <span class="craft-panel__note">放入來源鑰匙，合成台會依數量展開；中央選擇要兌換的鑰匙，點右側成品完成兌換。</span>
+          @if (exchangeError()) {
+            <span class="craft-panel__note exchange-message--error" role="alert">{{ exchangeError() }}</span>
+          } @else if (exchangeNotice()) {
+            <span class="craft-panel__note exchange-notice-text" role="status">{{ exchangeNotice() }}</span>
+          } @else {
+            <span class="craft-panel__note">放入同一種鑰匙兌換其他鑰匙</span>
+          }
         </span>
         @if (craftSlots().length) {
           <button type="button" class="craft-clear" [disabled]="exchangeLoading()" (click)="clearCraft()">清空合成台</button>
@@ -166,12 +141,40 @@
       </div>
 
       <div class="craft-panel__body">
-        @if (exchangeNotice()) { <p class="exchange-notice" role="status">{{ exchangeNotice() }}</p> }
-        @if (exchangeError()) { <p class="exchange-message exchange-message--error" role="alert">{{ exchangeError() }}</p> }
-
         @if (craftableRules().length) {
+          <h3 class="craft-subtitle">可放入的鑰匙</h3>
+          @if (craftSourceKeys().length) {
+            <div class="craft-tray">
+              @for (key of craftSourceKeys(); track key.id) {
+                <button
+                  type="button"
+                  class="craft-tray__slot"
+                  #traySlot
+                  [attr.data-scope]="key.scopeType"
+                  [draggable]="canAddToCraft(key)"
+                  [disabled]="!canAddToCraft(key)"
+                  [attr.aria-label]="'放入' + key.name + '，剩餘 ' + craftRemaining(key) + ' 把'"
+                  [attr.aria-describedby]="tooltip()?.owner === traySlot ? 'key-tooltip' : null"
+                  (pointerenter)="showKeyTip($event, key, '點擊或拖曳放入合成台')"
+                  (pointermove)="moveKeyTip($event)"
+                  (pointerleave)="hideKeyTip()"
+                  (pointerdown)="pressKeyTip($event, key, '點擊或拖曳放入合成台')"
+                  (focus)="focusKeyTip($event, key, '點擊或拖曳放入合成台')"
+                  (blur)="hideKeyTip()"
+                  (dragstart)="onCraftDragStart($event, key)"
+                  (click)="addToCraft(key)"
+                >
+                  <img [src]="keySlotIcon(key)" alt="" />
+                  <span class="key-slot__count">{{ craftRemaining(key) }}</span>
+                </button>
+              }
+            </div>
+          } @else {
+            <p class="exchange-message">目前沒有可用來兌換的鑰匙。</p>
+          }
+
+          <!-- 第一列：放入區｜箭頭｜產出區，兩側等高、箭頭在正中間；第二列：兩側各自的說明文字 -->
           <div class="craft-bench">
-            <div class="craft-bench__left">
               <div
                 class="craft-ring"
                 [class.craft-ring--over]="craftDragOver()"
@@ -193,15 +196,23 @@
                   <button
                     type="button"
                     class="craft-slot"
+                    #ringSlot
                     [class.craft-slot--hidden]="i >= craftSlots().length"
                     [attr.data-scope]="craftSlots()[i] ? keyScopeByCode(craftSlots()[i]) : null"
                     [style.left.%]="craftSlotPos(i).x"
                     [style.top.%]="craftSlotPos(i).y"
+                    [style.width.%]="craftSlotSize()"
                     [disabled]="i >= craftSlots().length || exchangeLoading()"
                     [attr.aria-hidden]="i >= craftSlots().length ? 'true' : null"
                     [attr.aria-label]="craftSlots()[i] ? '取回' + keyNameByCode(craftSlots()[i]) : null"
-                    [attr.title]="craftSlots()[i] ? keyNameByCode(craftSlots()[i]) : null"
-                    (click)="removeFromCraft(i)"
+                    [attr.aria-describedby]="tooltip()?.owner === ringSlot ? 'key-tooltip' : null"
+                    (pointerenter)="showKeyTip($event, keyByCode(craftSlots()[i]), '點擊取回')"
+                    (pointermove)="moveKeyTip($event)"
+                    (pointerleave)="hideKeyTip()"
+                    (pointerdown)="pressKeyTip($event, undefined, '')"
+                    (focus)="focusKeyTip($event, keyByCode(craftSlots()[i]), '點擊取回')"
+                    (blur)="hideKeyTip()"
+                    (click)="hideKeyTip(); removeFromCraft(i)"
                   >
                     @if (craftSlots()[i]; as code) {
                       <img [src]="keyIconByCode(code)" alt="" />
@@ -214,36 +225,89 @@
                   class="craft-center"
                   [class.craft-center--ready]="craftReadyRule()"
                   [class.craft-center--empty]="!craftSelectedRule()"
-                  [disabled]="craftOptions().length < 2"
-                  [attr.aria-label]="craftSelectedRule() ? '兌換目標：' + craftSelectedRule()!.targetKeyName + (craftOptions().length > 1 ? '，點擊切換' : '') : null"
-                  (click)="cycleCraftRule()"
+                  [class.craft-center--menu]="craftOptions().length > 1"
+                  #centerSlot
+                  [style.width.%]="craftSlotSize()"
+                  [attr.data-scope]="craftSelectedRule() ? keyScopeByCode(craftSelectedRule()!.targetKeyCode) : null"
+                  [attr.aria-disabled]="craftOptions().length < 2 ? 'true' : null"
+                  [attr.aria-describedby]="tooltip()?.owner === centerSlot ? 'key-tooltip' : null"
+                  [attr.aria-haspopup]="craftOptions().length > 1 ? 'menu' : null"
+                  [attr.aria-expanded]="craftOptions().length > 1 ? craftMenuOpen() : null"
+                  [attr.aria-controls]="craftOptions().length > 1 ? 'craft-menu' : null"
+                  [attr.aria-label]="craftSelectedRule() ? '兌換目標：' + craftSelectedRule()!.targetKeyName + (craftOptions().length > 1 ? '，開啟選單更換' : '') : null"
+                  (pointerenter)="showKeyTip($event, craftSelectedRule() ? keyByCode(craftSelectedRule()!.targetKeyCode) : undefined, craftCenterTipHint())"
+                  (pointermove)="moveKeyTip($event)"
+                  (pointerleave)="hideKeyTip()"
+                  (focus)="focusKeyTip($event, craftSelectedRule() ? keyByCode(craftSelectedRule()!.targetKeyCode) : undefined, craftCenterTipHint())"
+                  (blur)="hideKeyTip()"
+                  (click)="toggleCraftMenu()"
                 >
                   @if (craftSelectedRule(); as rule) {
                     <img class="craft-center__icon" [src]="keyIconByCode(rule.targetKeyCode)" alt="" />
-                    <span class="craft-center__name">{{ rule.targetKeyName }}</span>
                     @if (craftOptions().length > 1) {
-                      <span class="craft-center__page">{{ craftSelectedIndex() + 1 }} / {{ craftOptions().length }} 切換</span>
+                      <span class="craft-center__badge" aria-hidden="true">{{ craftOptions().length }}</span>
                     }
                   } @else {
-                    <span class="craft-center__empty">{{ craftSlots().length ? '此數量沒有兌換方式' : '放入鑰匙開始兌換' }}</span>
+                    <span class="craft-center__empty">{{ craftSlots().length ? '沒有可兌換的鑰匙' : '放入鑰匙' }}</span>
                   }
                 </button>
+
+                @if (craftMenuOpen()) {
+                  <div
+                    class="craft-menu"
+                    id="craft-menu"
+                    role="menu"
+                    aria-label="選擇兌換目標"
+                    (keydown)="onCraftMenuKeydown($event)"
+                  >
+                    <p class="craft-menu__title">選擇兌換目標</p>
+                    <div class="craft-menu__grid">
+                      @for (rule of craftOptions(); track rule.id) {
+                        <button
+                          type="button"
+                          class="craft-menu__item"
+                          role="menuitemradio"
+                          #menuItem
+                          [attr.aria-checked]="craftSelectedRule()?.id === rule.id"
+                          [attr.aria-label]="rule.targetAmount + ' 把' + rule.targetKeyName"
+                          [attr.aria-describedby]="tooltip()?.owner === menuItem ? 'key-tooltip' : null"
+                          (pointerenter)="showKeyTip($event, keyByCode(rule.targetKeyCode), '兌換 ' + rule.targetAmount + ' 把')"
+                          (pointermove)="moveKeyTip($event)"
+                          (pointerleave)="hideKeyTip()"
+                          (focus)="focusKeyTip($event, keyByCode(rule.targetKeyCode), '兌換 ' + rule.targetAmount + ' 把')"
+                          (blur)="hideKeyTip()"
+                          (click)="selectCraftRule(rule)"
+                        >
+                          <span class="craft-menu__slot" [attr.data-scope]="keyScopeByCode(rule.targetKeyCode)">
+                            <img [src]="keyIconByCode(rule.targetKeyCode)" alt="" />
+                            <span class="key-slot__count">{{ rule.targetAmount }}</span>
+                          </span>
+                          <span class="craft-menu__name">{{ rule.targetKeyName }}</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
-              <p class="craft-ring__count">
-                @if (craftSlots().length) { {{ craftSlots().length }} / {{ craftMaxSlots() }} 格 }
-              </p>
-            </div>
 
             <div class="craft-arrow" [class.craft-arrow--ready]="craftReadyRule()" aria-hidden="true"></div>
 
-            <div class="craft-bench__right">
+            <div class="craft-output-stage">
               <button
                 type="button"
                 class="craft-output"
+                #outputSlot
                 [class.craft-output--ready]="craftReadyRule()"
                 [attr.data-scope]="craftReadyRule() ? keyScopeByCode(craftReadyRule()!.targetKeyCode) : null"
                 [disabled]="!craftReadyRule() || exchangeLoading()"
                 [attr.aria-label]="craftReadyRule() ? '以 ' + craftReadyRule()!.sourceAmount + ' 把' + craftReadyRule()!.sourceKeyName + '兌換 ' + craftReadyRule()!.targetAmount + ' 把' + craftReadyRule()!.targetKeyName : '成品，尚未符合兌換方式'"
+                [attr.aria-describedby]="tooltip()?.owner === outputSlot ? 'key-tooltip' : null"
+                (pointerenter)="showKeyTip($event, craftReadyRule() ? keyByCode(craftReadyRule()!.targetKeyCode) : undefined, '點擊兌換 1 組')"
+                (pointermove)="moveKeyTip($event)"
+                (pointerleave)="hideKeyTip()"
+                (pointerdown)="pressKeyTip($event, undefined, '')"
+                (focus)="focusKeyTip($event, craftReadyRule() ? keyByCode(craftReadyRule()!.targetKeyCode) : undefined, '點擊兌換 1 組')"
+                (blur)="hideKeyTip()"
                 (click)="craftOutput()"
               >
                 @if (craftReadyRule(); as rule) {
@@ -251,77 +315,23 @@
                   <span class="key-slot__count">{{ rule.targetAmount }}</span>
                 }
               </button>
-              <p class="craft-output__name">{{ craftReadyRule()?.targetKeyName ?? '' }}</p>
-              <p class="craft-hint" aria-live="polite">{{ craftHint() }}</p>
-              @if (craftSelectedRule()?.description; as description) {
-                <p class="craft-hint craft-hint--soft">{{ description }}</p>
+            </div>
+
+            <div class="craft-caption craft-caption--input">
+              @if (craftSlots().length) {
+                <p class="craft-ring__count">{{ craftSlots().length }} / {{ craftMaxSlots() }} 格</p>
               }
+              <p class="craft-hint">{{ craftMenuHint() }}</p>
+            </div>
+
+            <div class="craft-caption craft-caption--output" aria-live="polite">
+              <p class="craft-output__name">{{ craftReadyRule()?.targetKeyName ?? '' }}</p>
+              <p class="craft-hint">
+                {{ craftHint() }}
+                @if (craftHintDetail()) { <span class="craft-hint__detail">{{ craftHintDetail() }}</span> }
+              </p>
             </div>
           </div>
-
-          @if (craftSlots().length) {
-            <h3 class="craft-subtitle">可兌換的鑰匙（放入 {{ craftSlots().length }} 把）</h3>
-            @if (craftOptions().length) {
-              <div class="craft-chips" role="group" aria-label="兌換目標">
-                @for (rule of craftOptions(); track rule.id) {
-                  <button
-                    type="button"
-                    class="craft-chip"
-                    [class.craft-chip--match]="craftRuleMatches(rule)"
-                    [attr.aria-pressed]="craftSelectedRule()?.id === rule.id"
-                    (click)="selectCraftRule(rule)"
-                  >
-                    <img [src]="keyIconByCode(rule.targetKeyCode)" alt="" />
-                    <span>{{ rule.targetAmount }} 把{{ rule.targetKeyName }}</span>
-                    <small>需 {{ rule.sourceKeyName }}</small>
-                  </button>
-                }
-              </div>
-            } @else {
-              <p class="exchange-message">沒有需要 {{ craftSlots().length }} 把的兌換方式，可放入 {{ craftAmountsHint() }} 把。</p>
-            }
-          } @else {
-            <h3 class="craft-subtitle">兌換方式（點選直接放入整組）</h3>
-            <div class="craft-chips">
-              @for (rule of craftableRules(); track rule.id) {
-                <button
-                  type="button"
-                  class="craft-chip"
-                  [disabled]="exchangeLoading() || !canExchange(rule)"
-                  [attr.aria-label]="'放入 ' + rule.sourceAmount + ' 把' + rule.sourceKeyName + '，兌換 ' + rule.targetAmount + ' 把' + rule.targetKeyName"
-                  (click)="fillCraftWithRule(rule)"
-                >
-                  <img [src]="keyIconByCode(rule.sourceKeyCode)" alt="" />
-                  <span>{{ rule.sourceAmount }} 把{{ rule.sourceKeyName }} → {{ rule.targetAmount }} 把{{ rule.targetKeyName }}</span>
-                  <small>{{ canExchange(rule) ? '可兌換' : '鑰匙不足' }}</small>
-                </button>
-              }
-            </div>
-          }
-
-          <h3 class="craft-subtitle">可放入的鑰匙</h3>
-          @if (craftSourceKeys().length) {
-            <div class="craft-tray">
-              @for (key of craftSourceKeys(); track key.id) {
-                <button
-                  type="button"
-                  class="craft-tray__slot"
-                  [attr.data-scope]="key.scopeType"
-                  [draggable]="canAddToCraft(key)"
-                  [disabled]="!canAddToCraft(key)"
-                  [attr.title]="key.name"
-                  [attr.aria-label]="'放入' + key.name + '，剩餘 ' + craftRemaining(key) + ' 把'"
-                  (dragstart)="onCraftDragStart($event, key)"
-                  (click)="addToCraft(key)"
-                >
-                  <img [src]="keySlotIcon(key)" alt="" />
-                  <span class="key-slot__count">{{ craftRemaining(key) }}</span>
-                </button>
-              }
-            </div>
-          } @else {
-            <p class="exchange-message">目前沒有可用來兌換的鑰匙。</p>
-          }
 
           @if (oversizedRuleCount()) {
             <p class="exchange-message">另有 {{ oversizedRuleCount() }} 種方式需要超過 {{ MAX_CRAFT_SLOTS }} 把鑰匙，合成台暫不支援。</p>
@@ -331,6 +341,42 @@
         }
       </div>
     </section>
+  </div>
+
+    <!-- 物品詳細資訊：整頁共用一個，跟著游標出現在指向的物品旁邊 -->
+    @if (tooltip(); as tip) {
+      <div
+        class="key-tooltip"
+        id="key-tooltip"
+        role="tooltip"
+        #keyTooltip
+        [class.key-tooltip--ready]="tooltipPos()"
+        [style.left.px]="tooltipPos()?.left ?? 0"
+        [style.top.px]="tooltipPos()?.top ?? 0"
+      >
+        <p class="key-tooltip__name">{{ tip.key.name }}</p>
+        <p class="key-tooltip__desc">{{ keyScopeDescription(tip.key.scopeType) }}</p>
+        <dl class="key-tooltip__rows">
+          <div>
+            <dt>開鎖類別</dt>
+            <dd>
+              @switch (tip.key.scopeType) {
+                @case ('CATEGORY') { 分類（{{ getCategoryName(tip.key.categoryId) }}） }
+                @case ('ERA') { 年代（{{ getEraName(tip.key.eraBucketId) }}） }
+                @default { {{ keyScopeLabel(tip.key.scopeType) }} }
+              }
+            </dd>
+          </div>
+          <div><dt>持有</dt><dd>{{ tip.key.balance }} 把</dd></div>
+          <div><dt>可解鎖文物</dt><dd>{{ tip.key.eligibleArtifactCount }} 件</dd></div>
+          <div><dt>回收點數</dt><dd>{{ tip.key.recyclePointValue }}</dd></div>
+          @if (exchangeRulesFor(tip.key).length) {
+            <div><dt>可用兌換</dt><dd>{{ exchangeRulesFor(tip.key).length }} 種方式</dd></div>
+          }
+        </dl>
+        @if (tip.hint) { <p class="key-tooltip__hint">{{ tip.hint }}</p> }
+      </div>
+    }
 
   </ng-container>
 
