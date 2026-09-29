@@ -1,24 +1,30 @@
-<!-- 配送與付款：上排選配送方式（附運費），下排選付款方式 -->
+<!-- 配送與付款：左欄選配送方式（附運費），右欄選付款方式，各自有大標題，中間以細線分隔 -->
 <app-panel>
-  <app-section-head [title]="title" [tag]="tag" headingLevel="h2" variant="panel" />
+  <div class="option-columns">
+    <!-- 配送方式：名稱與運費上下兩行 -->
+    <section class="option-col">
+      <app-section-head [title]="shippingTitle" [tag]="shippingTag" headingLevel="h2" variant="panel" />
+      <div class="option-row">
+        @for (option of shippingButtons(); track option.name; let i = $index) {
+          <button
+            type="button"
+            class="option-btn"
+            [class.option-btn--active]="option.active"
+            [attr.aria-pressed]="option.active ? 'true' : 'false'"
+            (click)="shippingSelect.emit(i)"
+          >
+            <span>{{ option.name }}</span>
+            <span class="option-btn-fee">{{ option.fee }}</span>
+          </button>
+        }
+      </div>
+    </section>
 
-  <!-- 配送方式：名稱與運費上下兩行 -->
-  <div class="option-row">
-    @for (option of shippingButtons(); track option.name; let i = $index) {
-      <button
-        type="button"
-        class="option-btn"
-        [class.option-btn--active]="option.active"
-        [attr.aria-pressed]="option.active ? 'true' : 'false'"
-        (click)="shippingSelect.emit(i)"
-      >
-        <span>{{ option.name }}</span>
-        <span class="option-btn-fee">{{ option.fee }}</span>
-      </button>
-    }
+    <!-- 付款方式 -->
+    <section class="option-col">
+      <app-section-head [title]="paymentTitle" [tag]="paymentTag" headingLevel="h2" variant="panel" />
+      <app-pill-group variant="pay" [options]="paymentOptions()" (select)="paymentSelect.emit($event)" />
+      <p class="option-note">{{ paymentNote }}</p>
+    </section>
   </div>
-
-  <!-- 付款方式 -->
-  <app-pill-group variant="pay" [options]="paymentOptions()" (select)="paymentSelect.emit($event)" />
-  <p class="option-note">{{ paymentNote }}</p>
 </app-panel>
