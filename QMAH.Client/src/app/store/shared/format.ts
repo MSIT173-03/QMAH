@@ -23,9 +23,10 @@ export function formatDiscountTag(price: number, was: number | null): string {
   return was !== null && was > price ? `-${Math.round((1 - price / was) * 100)}%` : '';
 }
 
-/** 將 ISO 日期（YYYY-MM-DD）格式化為 MM/DD */
+/** 將 ISO 日期（YYYY-MM-DD）或含時間的 ISO 字串（YYYY-MM-DDTHH:mm:ss）格式化為 MM/DD */
 export function formatDateMD(iso: string): string {
-  const [, month, day] = iso.split('-');
+  // 只取日期部分：API 的建立時間帶有時間，直接依 "-" 切割會把 "DDTHH:mm:ss" 整段當成日。
+  const [, month, day] = iso.split('T')[0].split('-');
   return `${month}/${day}`;
 }
 
