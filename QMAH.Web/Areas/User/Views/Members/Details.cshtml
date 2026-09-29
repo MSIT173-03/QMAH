@@ -1,10 +1,14 @@
 @using System.Linq
 @using System.Globalization
 @model QMAH.Web.Areas.User.ViewModels.MemberDetailsViewModel
+@inject QMAH.Infrastructure.Media.AvatarStoragePaths AvatarStorage
 
 @{
     ViewData["Title"] = "會員詳細資料";
     ViewData["AdminDescription"] = "分區查看會員帳號、個人資料、地址、成就與點數紀錄。";
+    var displayedAvatarPath = Model.Profile is null
+        ? null
+        : AvatarStorage.ResolvePublicPath(Model.Profile.UserId, Model.Profile.AvatarPath);
 }
 
 @section PageActions {
@@ -216,9 +220,9 @@
                         <div class="col-12">
                             <div class="text-muted small mb-2">會員頭像</div>
 
-                            @if (!string.IsNullOrWhiteSpace(Model.Profile.AvatarPath))
+                            @if (!string.IsNullOrWhiteSpace(displayedAvatarPath))
                             {
-                                <img src="@Model.Profile.AvatarPath"
+                                <img src="@displayedAvatarPath"
                                      alt="會員頭像"
                                  class="qmah-member-avatar--detail" />
                             }

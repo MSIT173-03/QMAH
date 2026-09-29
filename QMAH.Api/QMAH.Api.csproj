@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <!-- 預設頭像只有一份來源，發布 API 時帶入自己的公開靜態檔目錄。 -->
-    <None Include="..\QMAH.Web\wwwroot\images\avatars\**\*">
+    <None Include="..\QMAH.Media\images\avatars\**\*">
       <Link>wwwroot\images\avatars\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>

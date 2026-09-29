@@ -1,6 +1,7 @@
 @using Microsoft.EntityFrameworkCore
 @using QMAH.Infrastructure.Data
 @inject QMAH.Infrastructure.Data.QmahDbContext DbContext
+@inject QMAH.Infrastructure.Media.AvatarStoragePaths AvatarStorage
 
 @{
     var isAdmin = User.IsInRole("Admin");
@@ -24,6 +25,7 @@
                 .Where(profile => profile.UserId == currentUserId)
                 .Select(profile => profile.AvatarPath)
                 .FirstOrDefaultAsync();
+            avatarPath = AvatarStorage.ResolvePublicPath(currentUserId, avatarPath);
         }
         catch (Exception exception) when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception))
         {

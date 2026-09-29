@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="QMAH.Web/wwwroot/images/brand/qmah-logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="QMAH.Web/wwwroot/images/brand/qmah-logo.svg">
-    <img src="QMAH.Web/wwwroot/images/brand/qmah-logo-dark.svg" width="560" alt="QMAH 清明鑑定屋">
+    <source media="(prefers-color-scheme: dark)" srcset="QMAH.Media/images/brand/qmah-logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="QMAH.Media/images/brand/qmah-logo.svg">
+    <img src="QMAH.Media/images/brand/qmah-logo-dark.svg" width="560" alt="QMAH 清明鑑定屋">
   </picture>
 </p>
 
@@ -136,8 +136,14 @@ npm ci
 npm start
 ```
 
-`npm start` 會偵測 API 的 HTTPS／HTTP profile 並選擇對應 proxy；`npm run start:https` 固定使用 `https://localhost:7249`。`/api`、公開 `/media` 與頭像會轉送至 API；其他 `/uploads` 在完整啟動時仍轉送至後台。
-會員頭像的上傳和公開讀取共用 `Avatar:RootPath`。未設定時沿用 `QMAH.Web/wwwroot/uploads/avatars`，既有頭像不必搬移；若要改用其他儲存位置，請在 API 與 Web 各自的本機設定中指定相同的絕對路徑。
+`npm start` 會偵測 API 的 HTTPS／HTTP profile 並選擇對應 proxy；`npm run start:https` 固定使用 `https://localhost:7249`。`/api`、公開 `/media`、頭貼與成就上傳圖會轉送至 API；其他 `/uploads` 在完整啟動時仍轉送至後台。
+共用媒體素材集中在專案根目錄的 `QMAH.Media`：文物圖在 `media/catalog`，品牌、預設頭貼與 Web 圖片在 `images`，Web 字型在 `fonts`，會員頭貼與成就上傳圖在 `uploads`。API 與 Web 預設用同一個 `Media:AssetRootPath` 指向此資料夾，相對路徑以各專案的 ContentRoot 為基準。既有 `Media:RootPath`、`Avatar:RootPath`、`Avatar:PresetRootPath` 設定仍可個別覆寫對應目錄；成就上傳圖亦可用 `Achievement:RootPath` 覆寫。若兩個工作區共用一個資料庫，兩邊 API 與 Web 應設定相同的共用媒體絕對路徑。對外 `/media/catalog/...`、`/images/...`、`/fonts/...` 及 `/uploads/...` 網址不變，資料庫不需遷移。新上傳頭貼按會員 ID 分目錄，資料庫仍記錄目前使用的公開路徑。
+
+若既有 `appsettings.Local.json` 仍指向搬空的 `QMAH.Web/wwwroot` 舊目錄，程式會改用 `QMAH.Media`；有檔案的舊目錄或其他自訂目錄仍依原設定使用，部署前請把需要保留的本機上傳檔同步到選定的共用目錄。未指定頭貼網址時，才會使用會員目錄中最新的上傳檔；既有會員指定的頭貼網址優先。
+
+部署時將 `QMAH.Media` 放在 API、Web 發佈目錄可共同讀取的位置，並將兩個服務的 `Media:AssetRootPath` 設為同一個絕對路徑。`uploads` 是持續保留的資料，更新程式時不可覆蓋，應與資料庫一起備份；`media/catalog`、`images` 和 `fonts` 是版本管理的固定素材。API 僅公開 `/media/catalog`、`/media/store`、`/images`、`/fonts`、頭貼與成就圖片路徑，社群上傳媒體不由靜態目錄直接公開。Angular 自身的圖片及 Web 的 CSS、JS、第三方套件仍屬各自的網站建置產物，不從共用媒體目錄讀取。
+
+切換 CDN 時，將 API 與 Web 的 `Media:DeliveryMode` 設成 `Cdn`，並設定相同的 `Media:PublicBaseUrl`（必要時再設 `Media:PublicPathPrefix`）。API 輸出的媒體網址與 Web 圖片標籤會改寫公開的 `/media/catalog`、`/media/store`、`/images`、`/fonts`、`/uploads/avatars`、`/uploads/achievements` 網址；CDN 必須對應到同一份 `QMAH.Media`。CSS 內的固定 `/images`、`/fonts` 網址仍走站點原路徑，部署 CDN 時需在前端入口將這些路徑指向 CDN，或一併由 CDN 提供 Web 靜態建置產物。社群附件仍由受權限控管的 API 提供，資料庫內的路徑不需改成 CDN 網域。
 
 若要使用 API 的 `http` profile，請另開終端機執行：
 
@@ -356,7 +362,7 @@ QMAH/
 └─ README.md
 ```
 
-Logo、獨立圖標與 favicon 位於 `QMAH.Web/wwwroot/images/brand/`。直接引用現有檔案，不在各 Area 複製或重新改色。
+Logo 與獨立圖標位於 `QMAH.Media/images/brand/`，favicon 位於 `QMAH.Media/favicon.ico`。直接引用現有檔案，不在各 Area 複製或重新改色。
 
 ## Git 協作
 

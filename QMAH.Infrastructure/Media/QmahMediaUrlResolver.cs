@@ -7,11 +7,13 @@ namespace QMAH.Infrastructure.Media;
 /// </summary>
 /// <remarks>
 /// Catalog、商城與 Mini Game API 用它輸出圖片網址，Razor 後台則由 MediaUrlTagHelper 呼叫。
-/// 新功能應保存 /media 或 /uploads 開頭的邏輯路徑，顯示時才 Resolve；不要將 localhost 或 CDN 網域寫入資料表。
+/// 新功能應保存站內邏輯路徑，顯示時才 Resolve；不要將 localhost 或 CDN 網域寫入資料表。
 /// </remarks>
 public sealed class QmahMediaUrlResolver(IOptions<MediaDeliveryOptions> options)
 {
-    private static readonly string[] PublicLogicalRoots = ["/media", "/uploads"];
+    // 社群附件等受保護檔案不應隨 CDN 切換而變成公開素材。
+    private static readonly string[] PublicLogicalRoots =
+        ["/media/catalog", "/media/store", "/images", "/fonts", "/uploads/avatars", "/uploads/achievements"];
 
     /// <summary>
     /// Local 模式保留本機路徑；Cdn 模式只轉換公開圖片根目錄。

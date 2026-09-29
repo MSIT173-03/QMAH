@@ -11,6 +11,7 @@ using QMAH.Web.Areas.Game.ViewModels;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Services.Economy;
 using QMAH.Web.Infrastructure;
 using QMAH.Web.Models;
@@ -20,8 +21,7 @@ namespace QMAH.Web.Controllers;
 [Authorize(Roles = "Admin")]
 public sealed class OperationsController(
     QmahDbContext db,
-    IWebHostEnvironment environment,
-    IConfiguration configuration,
+    QmahMediaStoragePaths mediaPaths,
     BulkEconomyService bulkEconomyService,
     UserManager<ApplicationUser> userManager) : Controller
 {
@@ -1478,11 +1478,7 @@ public sealed class OperationsController(
     // 媒體檔案只能落在設定的根目錄，先解析完整路徑再防止路徑穿越
     private string ResolveMediaPath(string relativePath)
     {
-        var configuredRoot = configuration["Media:RootPath"] ?? "wwwroot/media";
-        var root = Path.GetFullPath(
-            Path.IsPathRooted(configuredRoot)
-                ? configuredRoot
-                : Path.Combine(environment.ContentRootPath, configuredRoot));
+        var root = mediaPaths.PublicRoot;
         var fullPath = Path.GetFullPath(Path.Combine(root, relativePath));
         var rootWithSeparator = root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             + Path.DirectorySeparatorChar;

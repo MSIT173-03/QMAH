@@ -65,20 +65,11 @@ var qmahDatabaseResolution = await QmahDatabaseConnectionResolver.ResolveAsync(
     builder.Configuration.GetConnectionString("QmahDatabase"),
     builder.Configuration.GetValue("QmahDatabaseDiscovery:Enabled", true));
 
-var configuredMediaRoot = builder.Configuration["Media:RootPath"]
-    ?? Path.Combine("..", "QMAH.Web", "wwwroot", "media");
-var mediaRoot = Path.IsPathRooted(configuredMediaRoot)
-    ? Path.GetFullPath(configuredMediaRoot)
-    : Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, configuredMediaRoot));
-var sharedWebRoot = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "QMAH.Web", "wwwroot"));
-var avatarStorage = AvatarStoragePaths.Resolve(
-    builder.Configuration["Avatar:RootPath"],
-    builder.Environment.ContentRootPath,
-    Path.Combine("..", "QMAH.Web", "wwwroot", "uploads", "avatars"));
+var mediaPaths = QmahMediaStoragePaths.Resolve(builder.Configuration, builder.Environment.ContentRootPath);
+var mediaRoot = mediaPaths.PublicRoot;
+var avatarStorage = mediaPaths.Avatars;
 var packagedAvatarPresetRoot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "images", "avatars");
-var avatarPresetRoot = Directory.Exists(packagedAvatarPresetRoot)
-    ? packagedAvatarPresetRoot
-    : Path.Combine(sharedWebRoot, "images", "avatars");
+builder.Services.AddSingleton(mediaPaths);
 builder.Services.AddSingleton(avatarStorage);
 builder.Services.Configure<MediaStorageOptions>(options => options.RootPath = mediaRoot);
 builder.Services
@@ -428,7 +419,7 @@ if (app.Environment.IsDevelopment())
     if (!Directory.Exists(mediaRoot))
     {
         app.Logger.LogWarning(
-            "Media:RootPath 不存在，/media/catalog 與 /media/store 將回傳 404。路徑：{MediaRoot}",
+            "公開媒體目錄不存在，請確認 Media:AssetRootPath 或 Media:RootPath；/media/catalog 與 /media/store 將回傳 404。路徑：{MediaRoot}",
             mediaRoot);
     }
     else
@@ -527,7 +518,7 @@ if (Directory.Exists(mediaRoot))
     });
 }
 
-// 會員頭像由 API 寫入 Web 的公開目錄；只開 API＋Angular 時也應能讀到同一張圖片。
+// 會員頭像由 API 寫入共用媒體目錄；只開 API＋Angular 時也應能讀到同一張圖片。
 // 僅掛載頭像目錄，不開放其他 uploads 檔案。
 Directory.CreateDirectory(avatarStorage.RootPath);
 app.UseStaticFiles(new StaticFileOptions
@@ -535,12 +526,48 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(avatarStorage.RootPath),
     RequestPath = "/uploads/avatars"
 });
-if (Directory.Exists(avatarPresetRoot))
+if (Directory.Exists(mediaPaths.PresetAvatarRoot)
+    && !string.Equals(mediaPaths.PresetAvatarRoot, Path.Combine(mediaPaths.ImageRoot, "avatars"),
+        OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
 {
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = new PhysicalFileProvider(avatarPresetRoot),
+        FileProvider = new PhysicalFileProvider(mediaPaths.PresetAvatarRoot),
         RequestPath = "/images/avatars"
+    });
+}
+if (Directory.Exists(mediaPaths.ImageRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaPaths.ImageRoot),
+        RequestPath = "/images"
+    });
+}
+if (Directory.Exists(packagedAvatarPresetRoot)
+    && !string.Equals(mediaPaths.PresetAvatarRoot, packagedAvatarPresetRoot,
+        OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(packagedAvatarPresetRoot),
+        RequestPath = "/images/avatars"
+    });
+}
+if (Directory.Exists(mediaPaths.FontRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaPaths.FontRoot),
+        RequestPath = "/fonts"
+    });
+}
+if (Directory.Exists(mediaPaths.AchievementRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaPaths.AchievementRoot),
+        RequestPath = "/uploads/achievements"
     });
 }
 
@@ -577,6 +604,9 @@ app.Use(async (context, next) =>
 
     await next(context);
 });
+if (File.Exists(mediaPaths.FaviconPath))
+    app.MapMethods("/favicon.ico", [HttpMethods.Get, HttpMethods.Head],
+        () => Results.File(mediaPaths.FaviconPath, "image/x-icon"));
 app.MapControllers();
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)

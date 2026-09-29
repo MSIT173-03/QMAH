@@ -5,6 +5,7 @@ using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Media;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
@@ -14,10 +15,12 @@ namespace QMAH.Web.Areas.User.Controllers;
 public class AchievementsController : Controller
 {
     private readonly QmahDbContext _context;
+    private readonly QmahMediaStoragePaths _mediaPaths;
 
-    public AchievementsController(QmahDbContext context)
+    public AchievementsController(QmahDbContext context, QmahMediaStoragePaths mediaPaths)
     {
         _context = context;
+        _mediaPaths = mediaPaths;
     }
 
     // 成就與獲得人數分開查詢，再用字典合併，避免每列重新計算
@@ -138,12 +141,7 @@ public class AchievementsController : Controller
                 return View(model);
             }
 
-            var uploadFolder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                "uploads",
-                "achievements"
-            );
+            var uploadFolder = _mediaPaths.AchievementRoot;
 
             Directory.CreateDirectory(uploadFolder);
 
@@ -254,12 +252,7 @@ public class AchievementsController : Controller
                 return View(model);
             }
 
-            var uploadFolder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                "uploads",
-                "achievements"
-            );
+            var uploadFolder = _mediaPaths.AchievementRoot;
 
             Directory.CreateDirectory(uploadFolder);
 
