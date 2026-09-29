@@ -567,8 +567,10 @@ public sealed class SocialController(
         if (!TryGetCurrentUserId(out var userId))
             return Unauthorized();
         var postType = (request.PostType ?? string.Empty).Trim().ToUpperInvariant();
-        if (postType is not ("POST" or "ANNOUNCEMENT"))
-            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "貼文類型無效", detail: "貼文只能是一般貼文或公告貼文。");
+        // 站方公告只能從 QMAH.Web 後台「貼文處理」發布（Admin／公告小編，可附圖片）；
+        // 前台 API 一律只接受一般貼文，避免任何人直接呼叫 API 讓貼文出現在公告輪播。
+        if (postType != "POST")
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "貼文類型無效", detail: "前台只能發布一般貼文；站方公告請由後台發布。");
         if (string.IsNullOrWhiteSpace(request.Title))
             ModelState.AddModelError(nameof(request.Title), "標題不可為空白。");
         if (string.IsNullOrWhiteSpace(request.BoardCode))
@@ -639,7 +641,7 @@ public sealed class SocialController(
             UserId = userId,
             ArtifactId = request.ArtifactId,
             PostType = postType,
-            PublisherType = postType == "ANNOUNCEMENT" && User.IsInRole("Admin") ? "OFFICIAL" : "COMMUNITY",
+            PublisherType = "COMMUNITY",
             ContentMode = "CUSTOM",
             Title = title,
             Content = content,

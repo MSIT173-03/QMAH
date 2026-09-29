@@ -23,11 +23,16 @@ public sealed class SocialEventAdminController : Controller
 
     private readonly QmahDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationService _notificationService;
 
-    public SocialEventAdminController(QmahDbContext context, ICurrentUserService currentUserService)
+    public SocialEventAdminController(
+        QmahDbContext context,
+        ICurrentUserService currentUserService,
+        INotificationService notificationService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _notificationService = notificationService;
     }
 
     [HttpGet]
@@ -261,6 +266,7 @@ public sealed class SocialEventAdminController : Controller
             return NotFound();
         }
 
+        var previousStatus = item.ReviewStatus;
         item.ReviewStatus = status;
         item.ReviewNote = NormalizeText(reviewNote);
         item.ReviewedByUserId = _currentUserService.GetCurrentUserId();
@@ -269,6 +275,26 @@ public sealed class SocialEventAdminController : Controller
         item.PublishStatus = status == "APPROVED" ? "PUBLISHED" : "DRAFT";
 
         await SyncLinkedSocialPostAsync(item, cancellationToken: cancellationToken);
+
+        // 玩家自辦活動審核有結果時通知發起人；官方活動通常由管理員自己建立，沒有發起人就略過。
+        if (previousStatus != status
+            && status is "APPROVED" or "REJECTED"
+            && item.OrganizerUserId is Guid organizerUserId)
+        {
+            var content = status == "APPROVED"
+                ? $"你提交的活動「{item.Title}」已通過審核並發布。"
+                : $"你提交的活動「{item.Title}」未通過審核。";
+            if (!string.IsNullOrWhiteSpace(item.ReviewNote))
+            {
+                content += $" 審核說明：{item.ReviewNote}";
+            }
+
+            _notificationService.QueueNotification(
+                organizerUserId,
+                status == "APPROVED" ? "活動審核通過" : "活動審核未通過",
+                content,
+                status == "APPROVED" ? $"/social/events/{item.Id}" : null);
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
         TempData["SuccessMessage"] = $"活動審核狀態已更新為：{status}。";

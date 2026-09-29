@@ -132,6 +132,11 @@ builder.Services.AddHttpClient<NpmOpenDataClient>(client =>
 });
 builder.Services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
 builder.Services.AddSocialAuthorizationPolicies();
+// 後台貼文圖片附件：與 API 共用 Media:RootPath 與 MediaAssets 規則，前台可直接讀到後台上傳的圖片。
+builder.Services.AddScoped<SocialPostMediaService>();
+// 站內通知：後台審核檢舉／活動時寫入 social.UserNotifications，前台鈴鐺經由 API 讀取。
+// 管理功能從 API 移到 Web 時漏註冊了這個服務，審核結果通知因此全部消失。
+builder.Services.AddScoped<INotificationService, SocialNotificationService>();
 builder.Services.AddScoped<AdminNavigationService>();
 builder.Services.AddScoped<AdminAuditLogFilter>();
 builder.Services.AddScoped<CatalogImportService>();

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+
+using Microsoft.AspNetCore.Http;
 
 namespace QMAH.Web.Areas.Social.Models
 {
@@ -15,6 +18,9 @@ public sealed record PostPromotionOption(
     string MinimumLabel,
     string PeriodLabel,
     string ValidityLabel);
+
+// 編輯頁顯示既有圖片用；Url 指向後台受權限保護的讀檔 action，不直接暴露媒體目錄。
+public sealed record PostMediaItem(Guid Id, string Url, string FileName);
 
 public class PostCreateViewModel
 {
@@ -49,5 +55,12 @@ public class PostCreateViewModel
         [Display(Name = "經度")]
         [Range(typeof(decimal), "-180", "180", ErrorMessage = "經度必須介於 -180 到 180 之間")]
         public decimal? Longitude { get; set; }
+
+        // 新增的圖片附件；實際格式與大小由 SocialPostMediaService 以檔案內容檢查，不信任副檔名。
+        [Display(Name = "附加圖片")]
+        public List<IFormFile> Images { get; set; } = [];
+
+        // 編輯時勾選要移除的既有圖片（只會軟刪除屬於這篇貼文的圖片）。
+        public List<Guid> RemoveMediaIds { get; set; } = [];
     }
 }

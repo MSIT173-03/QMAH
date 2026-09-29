@@ -8,30 +8,12 @@
           <span>站方公告</span>
           <span class="social-announcements__count">{{ announcements.length }} 則</span>
         </h2>
-        <div class="social-announcements__head-actions">
-          @if (announcements.length > 1) {
-            <div class="social-announcements__controls" role="group" aria-label="切換公告">
-              <button type="button" class="social-announcements__nav" aria-label="上一則公告" (click)="previousAnnouncement()">
-                <svg lucideChevronLeft aria-hidden="true" focusable="false"></svg>
-              </button>
-              <span
-                class="social-announcements__position"
-                aria-live="polite"
-                aria-atomic="true"
-                [attr.aria-label]="'目前第 ' + (currentAnnouncementIndex + 1) + ' 則公告，共 ' + announcements.length + ' 則'"
-              >{{ currentAnnouncementIndex + 1 }} / {{ announcements.length }}</span>
-              <button type="button" class="social-announcements__nav" aria-label="下一則公告" (click)="nextAnnouncement()">
-                <svg lucideChevronRight aria-hidden="true" focusable="false"></svg>
-              </button>
-            </div>
-          }
-          <button
-            type="button"
-            class="social-announcements__toggle"
-            [attr.aria-expanded]="!announcementCollapsed()"
-            (click)="toggleAnnouncements()"
-          >{{ announcementCollapsed() ? '展開公告' : '收合公告' }}</button>
-        </div>
+        <button
+          type="button"
+          class="social-announcements__toggle"
+          [attr.aria-expanded]="!announcementCollapsed()"
+          (click)="toggleAnnouncements()"
+        >{{ announcementCollapsed() ? '展開公告' : '收合公告' }}</button>
       </header>
 
       @if (announcementCollapsed()) {
@@ -42,39 +24,74 @@
           </a>
         }
       } @else {
+        <!-- ui-integration: 公告輪播與商城主視覺（store/pages/home/hero-carousel）共用同一套版型：
+             滿版底圖 + 左下浮動文案卡 + 右下指示條／暫停鈕；沒有封面時沿用商城的預設主視覺圖。 -->
         <div
-          class="social-announcements__carousel"
+          class="social-hero"
           role="group"
-          aria-roledescription="輪播公告"
-          aria-live="polite"
-          aria-atomic="true"
+          aria-roledescription="carousel"
+          aria-label="站方公告輪播"
           (mouseenter)="pauseAnnouncementsForPointer()"
           (mouseleave)="resumeAnnouncementsForPointer()"
           (focusin)="pauseAnnouncementsForFocus()"
           (focusout)="resumeAnnouncementsForFocus($event)"
         >
-          <div class="social-announcements__track" [style.transform]="'translateX(-' + (currentAnnouncementIndex * 100) + '%)'">
+          <div class="social-hero__track" [style.transform]="'translateX(-' + (currentAnnouncementIndex * 100) + '%)'">
             @for (announcement of announcements; track announcement.id; let i = $index) {
               <a
                 [routerLink]="['/social/posts', announcement.id]"
-                class="social-announcement-slide"
-                [class.has-cover]="!!announcement.coverImageUrl"
-                [style.background-image]="announcement.coverImageUrl ? 'url(' + announcement.coverImageUrl + ')' : null"
+                class="social-hero__slide"
+                [attr.aria-label]="(i + 1) + ' / ' + announcements.length + '：' + announcement.title"
                 [attr.aria-hidden]="i === currentAnnouncementIndex ? null : 'true'"
                 [tabindex]="i === currentAnnouncementIndex ? 0 : -1"
               >
-                <span class="social-announcement-slide__index" aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}</span>
-                <div class="social-announcement-slide__body">
-                  <span class="social-announcement-slide__eyebrow social-icon-label">
+                <img
+                  class="social-hero__image"
+                  [src]="announcementImage(announcement, i)"
+                  alt=""
+                  aria-hidden="true"
+                  [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+                  (error)="onAnnouncementImageError(announcement.id)"
+                />
+                <div class="social-hero__body">
+                  <span class="social-hero__kicker social-icon-label">
                     <svg lucideMegaphone aria-hidden="true" focusable="false"></svg>
-                    官方消息
+                    官方消息・站方公告
                   </span>
-                  <h2>{{ announcement.title }}</h2>
-                  <p>{{ announcement.contentPreview }}</p>
+                  <h2 class="social-hero__title">{{ announcement.title }}</h2>
+                  <p class="social-hero__desc">{{ announcement.contentPreview }}</p>
+                  <span class="social-hero__cta" aria-hidden="true">查看公告</span>
                 </div>
               </a>
             }
           </div>
+
+          @if (announcements.length > 1) {
+            <div class="social-hero__controls" aria-label="輪播控制">
+              <div class="social-hero__dots">
+                @for (announcement of announcements; track announcement.id; let i = $index) {
+                  <button
+                    type="button"
+                    class="social-hero__dot"
+                    [class.social-hero__dot--active]="i === currentAnnouncementIndex"
+                    [attr.aria-label]="'查看第 ' + (i + 1) + ' 則公告'"
+                    [attr.aria-current]="i === currentAnnouncementIndex ? 'true' : null"
+                    (click)="goToAnnouncement(i)"
+                  ></button>
+                }
+              </div>
+              <button
+                type="button"
+                class="social-hero__play-toggle"
+                [class.social-hero__play-toggle--paused]="!announcementAutoplayEnabled()"
+                [attr.aria-pressed]="!announcementAutoplayEnabled()"
+                (click)="toggleAnnouncementAutoplay()"
+              >
+                <app-qmah-icon [name]="announcementAutoplayEnabled() ? 'pause' : 'play'" [size]="12" aria-hidden="true" />
+                {{ announcementAutoplayEnabled() ? '暫停輪播' : '播放輪播' }}
+              </button>
+            </div>
+          }
         </div>
       }
     </section>
@@ -184,72 +201,77 @@
 </div>
 
 <dialog #createPostDialog id="create_post_modal" class="modal social-modal" aria-labelledby="create-post-title">
-  <div class="modal-box">
-    <h2 id="create-post-title" class="font-bold text-lg mb-4">發布新貼文</h2>
+  <div class="modal-box social-post-dialog">
+    <h2 id="create-post-title" class="social-post-dialog__title">發布新貼文</h2>
     @if (createError) {
-      <div class="alert alert-warning mb-3">{{ createError }}</div>
+      <div class="alert alert-warning social-post-dialog__alert" role="alert">{{ createError }}</div>
     }
-    <div class="form-control gap-3">
-      @if (isAdmin) {
-        <select class="select select-bordered w-full" [(ngModel)]="newPost.postType">
-          <option value="POST">一般貼文</option>
-          <option value="ANNOUNCEMENT">站方公告</option>
-        </select>
-      }
-      <label class="sr-only" for="social-post-title">貼文標題</label>
-      <input id="social-post-title" name="title" type="text" placeholder="貼文標題…" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
-      <label class="sr-only" for="social-post-board">貼文看板</label>
-      <select id="social-post-board" name="boardCode" class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
-        <option value="GENERAL">綜合討論區</option>
-        <option value="EVENT">活動看板</option>
-      </select>
-      <div class="flex flex-wrap gap-2" role="toolbar" aria-label="貼文基本排版工具">
-        <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('heading')">小標</button>
-        <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('bullet')">項目</button>
-        <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('quote')">引用</button>
-        <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('paragraph')">分段</button>
-        <span class="text-xs text-base-content/60 self-center">保留純文字，發布後會自動呈現段落層次。</span>
+    <!-- daisyUI 5 已移除 .form-control，原本的 gap-3 沒有 flex/grid 容器可套用；
+         改由 .social-post-form 自己宣告 grid 與間距，欄位之間才會真的有行距。 -->
+    <div class="social-post-form">
+      <div class="social-post-form__field">
+        <label class="social-post-form__label" for="social-post-title">標題</label>
+        <input id="social-post-title" name="title" type="text" placeholder="貼文標題…" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
       </div>
-      <label class="sr-only" for="social-post-content">貼文內容</label>
-      <textarea id="social-post-content" name="content" class="textarea textarea-bordered h-24" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
+      <div class="social-post-form__field">
+        <label class="social-post-form__label" for="social-post-board">看板</label>
+        <select id="social-post-board" name="boardCode" class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
+          <option value="GENERAL">綜合討論區</option>
+          <option value="EVENT">活動看板</option>
+        </select>
+      </div>
+      <div class="social-post-form__field">
+        <label class="social-post-form__label" for="social-post-content">內容</label>
+        <div class="social-post-form__toolbar" role="toolbar" aria-label="貼文基本排版工具">
+          <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('heading')">小標</button>
+          <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('bullet')">項目</button>
+          <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('quote')">引用</button>
+          <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('paragraph')">分段</button>
+          <span class="social-post-form__hint">保留純文字，發布後會自動呈現段落層次。</span>
+        </div>
+        <textarea id="social-post-content" name="content" class="textarea textarea-bordered w-full social-post-form__textarea" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
+      </div>
       @if (newPost.content.trim()) {
-        <div class="rounded-box border border-base-300 bg-base-200/40 p-3">
-          <span class="text-xs text-base-content/60">預覽</span>
+        <div class="social-post-form__preview rounded-box border border-base-300 bg-base-200/40">
+          <span class="social-post-form__hint">預覽</span>
           <app-social-post-content [content]="newPost.content" />
         </div>
       }
 
-      <label class="sr-only" for="social-post-media">貼文圖片（選填，最多 8 張）</label>
-      <input
-        id="social-post-media"
-        type="file"
-        class="file-input file-input-bordered w-full"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        multiple
-        [disabled]="uploadPending || (newPost.mediaIds?.length ?? 0) >= 8"
-        (change)="onFilesSelected($event)"
-      />
-      @if (uploadPending) {
-        <span class="text-xs text-base-content/60" aria-live="polite">圖片上傳中…</span>
-      }
-      @if (pendingMedia.length > 0) {
-        <div class="flex flex-wrap gap-2">
-          @for (media of pendingMedia; track media.id) {
-            <div class="relative">
-              <img src="{{ media.url }}" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
-              <button
-                type="button"
-                class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
-                (click)="removePendingMedia(media)"
-              >
-                <svg lucideX aria-hidden="true" focusable="false"></svg>
-              </button>
-            </div>
-          }
-        </div>
-      }
+      <div class="social-post-form__field">
+        <label class="social-post-form__label" for="social-post-media">圖片（選填，最多 8 張）</label>
+        <input
+          id="social-post-media"
+          type="file"
+          class="file-input file-input-bordered w-full"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          multiple
+          [disabled]="uploadPending || (newPost.mediaIds?.length ?? 0) >= 8"
+          (change)="onFilesSelected($event)"
+        />
+        @if (uploadPending) {
+          <span class="social-post-form__hint" aria-live="polite">圖片上傳中…</span>
+        }
+        @if (pendingMedia.length > 0) {
+          <div class="social-post-form__media-list">
+            @for (media of pendingMedia; track media.id) {
+              <div class="relative">
+                <img src="{{ media.url }}" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
+                <button
+                  type="button"
+                  class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
+                  aria-label="移除這張圖片"
+                  (click)="removePendingMedia(media)"
+                >
+                  <svg lucideX aria-hidden="true" focusable="false"></svg>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
     </div>
-    <div class="modal-action">
+    <div class="modal-action social-post-dialog__actions">
       <form method="dialog">
         <button type="submit" class="btn btn-ghost">取消</button>
         <button type="button" class="btn btn-primary" [disabled]="uploadPending" (click)="submitPost()">送出發布</button>

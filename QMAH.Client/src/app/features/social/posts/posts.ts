@@ -5,14 +5,11 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreateSocialPostRequest, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
-import { MeApiService } from '../../../core/services/me-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 import {
-  LucideChevronLeft,
-  LucideChevronRight,
   LucideFlag,
   LucideImage,
   LucideMessageCircle,
@@ -21,6 +18,16 @@ import {
   LucideUserRound,
   LucideX,
 } from '@lucide/angular';
+
+/**
+ * 公告沒有封面圖時使用的預設主視覺，與商城首頁輪播（store/pages/home/hero-carousel）共用同一組專案內素材
+ * （public/images/store/hero，來源與授權見同目錄 attribution.json）。
+ */
+const ANNOUNCEMENT_FALLBACK_IMAGES = [
+  '/images/store/hero/museum-shop-still-life.png',
+  '/images/store/hero/gift-wrapping.png',
+  '/images/store/hero/museum-shop-shelf.png',
+];
 
 @Component({
   selector: 'app-posts',
@@ -33,8 +40,6 @@ import {
     ReportModalComponent,
     SocialPostContentComponent,
     QmahIconComponent,
-    LucideChevronLeft,
-    LucideChevronRight,
     LucideFlag,
     LucideImage,
     LucideMessageCircle,
@@ -48,7 +53,6 @@ import {
 })
 export class PostsComponent implements OnInit, OnDestroy {
   private socialApi = inject(SocialApiService);
-  private meApi = inject(MeApiService);
   private cdr = inject(ChangeDetectorRef);
 
   @ViewChild(ImageCropModalComponent) private cropModal!: ImageCropModalComponent;
@@ -76,14 +80,14 @@ export class PostsComponent implements OnInit, OnDestroy {
   /** ui-integration: 公告是 supporting context，收合偏好留在瀏覽器，避免每次進入貼文牆都推開主內容。 */
   announcementCollapsed = signal(false);
   announcementPaused = signal(false);
+  /** 與商城輪播一致：提供明確的暫停／播放按鈕，不只依賴滑鼠移入暫停。 */
+  announcementAutoplayEnabled = signal(true);
+  /** 封面圖載入失敗的公告，改用預設主視覺，避免出現破圖。 */
+  private readonly failedAnnouncementImages = new Set<string>();
   private readonly announcementStorageKey = 'qmah.social.announcements.collapsed';
   private announcementTimer?: ReturnType<typeof setInterval>;
   private announcementPointerPaused = false;
   private announcementFocusPaused = false;
-
-  get isAdmin(): boolean {
-    return this.meApi.me()?.roles.includes('Admin') ?? false;
-  }
 
   ngOnInit(): void {
     this.announcementCollapsed.set(this.readAnnouncementCollapsePreference());
@@ -126,7 +130,13 @@ export class PostsComponent implements OnInit, OnDestroy {
     if (this.announcementTimer) clearInterval(this.announcementTimer);
     this.announcementTimer = undefined;
     this.announcementPaused.set(this.announcementPointerPaused || this.announcementFocusPaused);
-    if (!this.announcementCollapsed() && !this.announcementPaused() && !this.prefersReducedMotion() && this.announcements.length > 1) {
+    if (
+      !this.announcementCollapsed() &&
+      !this.announcementPaused() &&
+      this.announcementAutoplayEnabled() &&
+      !this.prefersReducedMotion() &&
+      this.announcements.length > 1
+    ) {
       this.announcementTimer = setInterval(() => this.nextAnnouncement(), 4500);
     }
   }
@@ -170,16 +180,28 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.syncAnnouncementTimer();
   }
 
-  nextAnnouncement(): void {
-    if (this.announcements.length === 0) return;
-    this.currentAnnouncementIndex = (this.currentAnnouncementIndex + 1) % this.announcements.length;
+  toggleAnnouncementAutoplay(): void {
+    this.announcementAutoplayEnabled.update((enabled) => !enabled);
+    this.syncAnnouncementTimer();
+  }
+
+  /** 有官方封面就用封面；沒有或載入失敗時，依序輪流使用商城的預設主視覺。 */
+  announcementImage(announcement: SocialPostListItem, index: number): string {
+    if (announcement.coverImageUrl && !this.failedAnnouncementImages.has(announcement.id)) {
+      return announcement.coverImageUrl;
+    }
+    return ANNOUNCEMENT_FALLBACK_IMAGES[index % ANNOUNCEMENT_FALLBACK_IMAGES.length];
+  }
+
+  onAnnouncementImageError(announcementId: string): void {
+    if (this.failedAnnouncementImages.has(announcementId)) return;
+    this.failedAnnouncementImages.add(announcementId);
     this.cdr.detectChanges();
   }
 
-  previousAnnouncement(): void {
+  nextAnnouncement(): void {
     if (this.announcements.length === 0) return;
-    this.currentAnnouncementIndex =
-      (this.currentAnnouncementIndex - 1 + this.announcements.length) % this.announcements.length;
+    this.currentAnnouncementIndex = (this.currentAnnouncementIndex + 1) % this.announcements.length;
     this.cdr.detectChanges();
   }
 

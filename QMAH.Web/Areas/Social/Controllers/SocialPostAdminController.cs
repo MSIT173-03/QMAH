@@ -24,11 +24,16 @@ public sealed class SocialPostAdminController : Controller
 
     private readonly QmahDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly SocialPostMediaService _mediaService;
 
-    public SocialPostAdminController(QmahDbContext context, ICurrentUserService currentUserService)
+    public SocialPostAdminController(
+        QmahDbContext context,
+        ICurrentUserService currentUserService,
+        SocialPostMediaService mediaService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _mediaService = mediaService;
     }
 
     [HttpGet]
@@ -44,12 +49,15 @@ public sealed class SocialPostAdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(SocialPostMediaService.MaxRequestSize)]
+    [RequestFormLimits(MultipartBodyLengthLimit = SocialPostMediaService.MaxRequestSize)]
     public async Task<IActionResult> Create(
         PostCreateViewModel model,
         CancellationToken cancellationToken = default)
     {
         ValidateModel(model);
         await ValidateArtifactAsync(model, cancellationToken);
+        await ValidateImagesAsync(model, existingCount: 0, cancellationToken);
         if (!ModelState.IsValid)
         {
             ViewData["IsCreate"] = true;
@@ -61,11 +69,13 @@ public sealed class SocialPostAdminController : Controller
 
         var now = DateTime.UtcNow;
         var postType = NormalizePostType(model.PostType);
+        var postId = Guid.NewGuid();
+        var currentUserId = _currentUserService.GetCurrentUserId();
         _context.SocialPosts.Add(new SocialPost
         {
-            Id = Guid.NewGuid(),
+            Id = postId,
             BoardCode = NormalizeBoardCode(model.BoardCode),
-            UserId = _currentUserService.GetCurrentUserId(),
+            UserId = currentUserId,
             ArtifactId = model.ArtifactId,
             PostType = postType,
             PublisherType = GetPublisherType(postType),
@@ -81,9 +91,16 @@ public sealed class SocialPostAdminController : Controller
         });
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // 圖片外鍵指向貼文，所以貼文要先存進資料庫；格式已在上方驗證過，這裡只剩磁碟寫入可能失敗。
+        var failedImages = await _mediaService.AttachAsync(postId, currentUserId, model.Images, cancellationToken);
         TempData["SuccessMessage"] = postType == "ANNOUNCEMENT"
             ? "公告貼文已發布至指定分類。"
             : "一般貼文已發布至指定分類。";
+        if (failedImages > 0)
+        {
+            TempData["Warning"] = $"貼文已發布，但有 {failedImages} 張圖片儲存失敗，請到編輯頁重新上傳。";
+        }
         return RedirectToAction(nameof(Index));
     }
 
@@ -165,12 +182,22 @@ public sealed class SocialPostAdminController : Controller
                 MediaUrls = post.MediaAssets
                     .Where(media => media.Status == "ACTIVE")
                     .OrderBy(media => media.CreatedAt)
-                    .Select(media => "/media/" + media.StoredPath)
+                    .Select(media => media.Id.ToString())
                     .ToList()
             })
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .ToListAsync(cancellationToken);
+
+        // Web 的 /media 只公開圖鑑與商城素材，社群上傳檔會被擋成 404；
+        // 詳情視窗改用受權限保護的 Media action 讀圖。
+        foreach (var listItem in posts)
+        {
+            listItem.MediaUrls = listItem.MediaUrls
+                .Select(mediaId => Url.Action(nameof(Media), new { id = mediaId }) ?? string.Empty)
+                .Where(url => url.Length > 0)
+                .ToList();
+        }
 
         return View("~/Areas/Social/Views/SocialAdmin/SocialPostAdmin.cshtml", new SocialPostAdminPageViewModel
         {
@@ -216,6 +243,7 @@ public sealed class SocialPostAdminController : Controller
         ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
         ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
         ViewData["PromotionOptions"] = await LoadPromotionOptions(cancellationToken);
+        ViewData["ExistingMedia"] = await LoadExistingMediaAsync(post.Id, cancellationToken);
         return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", new PostCreateViewModel
         {
             PostType = NormalizePostType(post.PostType),
@@ -231,6 +259,8 @@ public sealed class SocialPostAdminController : Controller
 
     [HttpPost("Edit/{id:Guid}")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(SocialPostMediaService.MaxRequestSize)]
+    [RequestFormLimits(MultipartBodyLengthLimit = SocialPostMediaService.MaxRequestSize)]
     public async Task<IActionResult> Edit(
         Guid id,
         PostCreateViewModel model,
@@ -251,12 +281,16 @@ public sealed class SocialPostAdminController : Controller
 
         ValidateModel(model);
         await ValidateArtifactAsync(model, cancellationToken);
+        var existingMedia = await LoadExistingMediaAsync(id, cancellationToken);
+        var keptCount = existingMedia.Count(media => !model.RemoveMediaIds.Contains(media.Id));
+        await ValidateImagesAsync(model, keptCount, cancellationToken);
         if (!ModelState.IsValid)
         {
             ViewData["PostId"] = id;
             ViewData["BoardCodes"] = await LoadBoardCodes(cancellationToken);
             ViewData["ArtifactOptions"] = await LoadArtifactOptions(cancellationToken);
             ViewData["PromotionOptions"] = await LoadPromotionOptions(cancellationToken);
+            ViewData["ExistingMedia"] = existingMedia;
             return View("~/Areas/Social/Views/SocialAdmin/EditPost.cshtml", model);
         }
 
@@ -272,10 +306,48 @@ public sealed class SocialPostAdminController : Controller
         post.Latitude = model.Latitude;
         post.Longitude = model.Longitude;
         post.UpdatedAt = DateTime.UtcNow;
+        await _mediaService.MarkDeletedAsync(id, model.RemoveMediaIds, cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // 新圖片的擁有者記為這次編輯的管理員，貼文作者不變。
+        var failedImages = await _mediaService.AttachAsync(
+            id,
+            _currentUserService.GetCurrentUserId(),
+            model.Images,
+            cancellationToken);
         TempData["SuccessMessage"] = "貼文內容已更新。";
+        if (failedImages > 0)
+        {
+            TempData["Warning"] = $"貼文已更新，但有 {failedImages} 張圖片儲存失敗，請重新上傳。";
+        }
         return RedirectToAction(nameof(Index));
+    }
+
+    // 後台預覽社群圖片：Web 的 /media 路徑不公開社群上傳檔，改由這個受 ManagePosts 權限保護的 action 讀檔。
+    // 管理員需要看到已隱藏／已刪除貼文的圖片以便審核，所以只檢查圖片本身是否仍為 ACTIVE。
+    // GET: /Social/SocialPostAdmin/Media/{id}
+    [HttpGet]
+    public async Task<IActionResult> Media(Guid id, CancellationToken cancellationToken = default)
+    {
+        var asset = await _context.MediaAssets
+            .AsNoTracking()
+            .Where(item => item.Id == id && item.Status == "ACTIVE")
+            .Select(item => new { item.StoredPath, item.ContentType })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (asset is null)
+        {
+            return NotFound();
+        }
+
+        var physicalPath = _mediaService.TryResolveExistingFile(asset.StoredPath);
+        if (physicalPath is null)
+        {
+            return NotFound();
+        }
+
+        Response.Headers.CacheControl = "private,max-age=300";
+        return PhysicalFile(physicalPath, asset.ContentType);
     }
 
     // POST: /Social/SocialPostAdmin/SetPostStatus
@@ -390,12 +462,41 @@ public sealed class SocialPostAdminController : Controller
             .ToList();
     }
 
+    private async Task<List<PostMediaItem>> LoadExistingMediaAsync(Guid postId, CancellationToken cancellationToken)
+    {
+        var assets = await _mediaService.GetActiveAsync(postId, cancellationToken);
+        return assets
+            .Select(asset => new PostMediaItem(
+                asset.Id,
+                Url.Action(nameof(Media), new { id = asset.Id }) ?? string.Empty,
+                asset.OriginalFileName))
+            .ToList();
+    }
+
+    private async Task ValidateImagesAsync(
+        PostCreateViewModel model,
+        int existingCount,
+        CancellationToken cancellationToken)
+    {
+        var errors = await _mediaService.ValidateAsync(model.Images, existingCount, cancellationToken);
+        foreach (var error in errors)
+        {
+            ModelState.AddModelError(nameof(model.Images), error);
+        }
+    }
+
     private void ValidateModel(PostCreateViewModel model)
     {
         var postType = NormalizePostType(model.PostType);
         if (!AllowedPostTypes.Contains(postType))
         {
             ModelState.AddModelError(nameof(model.PostType), "請選擇一般貼文或公告貼文。");
+        }
+
+        // 貼文管理權限也包含內容審核員；公告只開放 Admin 與公告小編發布，與 API 的規則一致。
+        if (postType == "ANNOUNCEMENT" && !CanPublishAnnouncement())
+        {
+            ModelState.AddModelError(nameof(model.PostType), "只有管理員或公告小編可以發布公告貼文。");
         }
 
         if (model.Latitude.HasValue != model.Longitude.HasValue)
@@ -406,10 +507,12 @@ public sealed class SocialPostAdminController : Controller
 
     // 公告只有具備管理權限的發布者才算官方公告，其餘仍標記為社群公告
     private string GetPublisherType(string postType) =>
-        postType == "ANNOUNCEMENT"
-            && (User.IsInRole("Admin") || User.IsInRole("AnnouncementEditor"))
+        postType == "ANNOUNCEMENT" && CanPublishAnnouncement()
             ? "OFFICIAL"
             : "COMMUNITY";
+
+    private bool CanPublishAnnouncement() =>
+        User.IsInRole("Admin") || User.IsInRole("AnnouncementEditor");
 
     private static string NormalizePostType(string? postType) =>
         string.IsNullOrWhiteSpace(postType) ? "POST" : postType.Trim().ToUpperInvariant();

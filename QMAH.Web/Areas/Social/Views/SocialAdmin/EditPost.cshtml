@@ -1,4 +1,5 @@
 @using QMAH.Web.Areas.Social.Models
+@using QMAH.Web.Areas.Social.Services
 @model QMAH.Web.Areas.Social.Models.PostCreateViewModel
 
 @{
@@ -12,6 +13,9 @@
     var boardCodes = ViewData["BoardCodes"] as IReadOnlyList<string> ?? ["GENERAL"];
     var artifactOptions = ViewData["ArtifactOptions"] as IReadOnlyList<PostArtifactOption> ?? [];
     var promotionOptions = ViewData["PromotionOptions"] as IReadOnlyList<PostPromotionOption> ?? [];
+    var existingMedia = ViewData["ExistingMedia"] as IReadOnlyList<PostMediaItem> ?? [];
+    // 內容審核員也有貼文管理權限，但公告只開放 Admin 與公告小編（controller 端同樣會再檢查）。
+    var canPublishAnnouncement = User.IsInRole("Admin") || User.IsInRole("AnnouncementEditor");
 }
 
 @section Styles {
@@ -19,6 +23,13 @@
         .qmah-post-preview { min-height: 9rem; white-space: pre-wrap; background: var(--tblr-bg-surface-secondary); }
         .qmah-post-preview .qmah-preview-heading { font-weight: 700; color: var(--tblr-primary); }
         .qmah-post-preview .qmah-preview-bullet { padding-left: 1rem; }
+        .qmah-post-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .75rem; }
+        .qmah-post-media-item { position: relative; margin: 0; overflow: hidden; border: 1px solid var(--tblr-border-color); border-radius: .5rem; background: var(--tblr-bg-surface-secondary); }
+        .qmah-post-media-item img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+        .qmah-post-media-item figcaption { padding: .35rem .5rem; font-size: .75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .qmah-post-media-item .form-check { margin: 0; padding: .35rem .5rem .45rem 2rem; border-top: 1px solid var(--tblr-border-color); font-size: .8rem; }
+        .qmah-post-media-item:has(input:checked) img { opacity: .35; }
+        .qmah-post-media-cover { position: absolute; top: .4rem; left: .4rem; }
         .qmah-post-preview blockquote { margin: .25rem 0; padding: .35rem .75rem; border-radius: .35rem; background: color-mix(in srgb, var(--tblr-primary) 7%, transparent); color: var(--tblr-secondary); }
     </style>
 }
@@ -36,7 +47,7 @@
                 <h2 class="card-title">@(isCreate ? "新增貼文" : "貼文內容")</h2>
             </div>
             <div class="card-body">
-                <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@(isCreate ? null : postId)" method="post">
+                <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@(isCreate ? null : postId)" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
@@ -45,9 +56,16 @@
                             <label asp-for="PostType" class="form-label"></label>
                             <select asp-for="PostType" class="form-select">
                                 <option value="POST">一般貼文</option>
-                                <option value="ANNOUNCEMENT">公告貼文</option>
+                                @if (canPublishAnnouncement || Model.PostType == "ANNOUNCEMENT")
+                                {
+                                    <option value="ANNOUNCEMENT">公告貼文</option>
+                                }
                             </select>
-                            <div class="form-hint">公告仍是貼文的一種；具備官方發布權限時會標示為官方公告。</div>
+                            <div class="form-hint">
+                                @(canPublishAnnouncement
+                                    ? "公告仍是貼文的一種；由管理員或公告小編發布時會標示為官方公告。"
+                                    : "公告貼文僅限管理員或公告小編發布。")
+                            </div>
                             <span asp-validation-for="PostType" class="text-danger"></span>
                         </div>
                         <div class="col-12 col-md-8">
@@ -124,6 +142,46 @@
                                 <span class="form-hint">預覽只在編輯器中使用，不會把 HTML 寫入貼文。</span>
                             </div>
                             <div class="form-control qmah-post-preview" data-qmah-post-preview aria-live="polite"></div>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Images" class="form-label"></label>
+                            @if (existingMedia.Count > 0)
+                            {
+                                <div class="form-hint mb-2">目前已附 @existingMedia.Count 張；勾選「移除」後按儲存才會生效。</div>
+                                <div class="qmah-post-media-grid mb-3">
+                                    @for (var index = 0; index < existingMedia.Count; index++)
+                                    {
+                                        var media = existingMedia[index];
+                                        var removeId = $"remove-media-{media.Id:N}";
+                                        <figure class="qmah-post-media-item">
+                                            @if (index == 0)
+                                            {
+                                                <span class="badge bg-primary text-primary-fg qmah-post-media-cover">封面</span>
+                                            }
+                                            <img src="@media.Url" alt="@media.FileName" loading="lazy" />
+                                            <figcaption title="@media.FileName">@media.FileName</figcaption>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="RemoveMediaIds" value="@media.Id" id="@removeId"
+                                                       checked="@Model.RemoveMediaIds.Contains(media.Id)" />
+                                                <label class="form-check-label" for="@removeId">移除</label>
+                                            </div>
+                                        </figure>
+                                    }
+                                </div>
+                            }
+                            <input asp-for="Images" type="file" class="form-control" multiple
+                                   accept="@SocialPostMediaService.AcceptAttribute" data-qmah-image-input />
+                            <div class="form-hint">
+                                選填，每篇最多 @SocialPostMediaService.MaxImagesPerPost 張、單張 8 MB 以內，支援 JPEG／PNG／GIF／WebP。
+                                第一張會成為前台貼文卡片與公告輪播的封面；沒有圖片時前台會使用預設主視覺。
+                                @if (!ViewData.ModelState.IsValid)
+                                {
+                                    <strong class="d-block text-warning">表單送出後瀏覽器不會保留已選的檔案，請重新選擇圖片。</strong>
+                                }
+                            </div>
+                            <div class="qmah-post-media-grid mt-2" data-qmah-image-preview hidden></div>
+                            <span asp-validation-for="Images" class="text-danger d-block"></span>
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -286,6 +344,33 @@
                 content.dispatchEvent(new Event('input', { bubbles: true }));
                 renderPreview();
             }));
+
+            // 新選擇圖片的本機預覽：只用 object URL 顯示，不上傳也不改動表單值；
+            // 張數與格式仍以伺服器端檢查為準。
+            const imageInput = document.querySelector('[data-qmah-image-input]');
+            const imagePreview = document.querySelector('[data-qmah-image-preview]');
+            let previewUrls = [];
+            imageInput?.addEventListener('change', () => {
+                if (!(imageInput instanceof HTMLInputElement) || !(imagePreview instanceof HTMLElement)) return;
+                previewUrls.forEach(url => URL.revokeObjectURL(url));
+                previewUrls = [];
+                imagePreview.replaceChildren();
+                for (const file of imageInput.files ?? []) {
+                    const figure = document.createElement('figure');
+                    figure.className = 'qmah-post-media-item';
+                    const img = document.createElement('img');
+                    const url = URL.createObjectURL(file);
+                    previewUrls.push(url);
+                    img.src = url;
+                    img.alt = file.name;
+                    const caption = document.createElement('figcaption');
+                    caption.textContent = `${file.name}（${(file.size / 1024 / 1024).toFixed(1)} MB）`;
+                    caption.title = file.name;
+                    figure.append(img, caption);
+                    imagePreview.append(figure);
+                }
+                imagePreview.hidden = imagePreview.childElementCount === 0;
+            });
 
             const syncQuickPanel = () => {
                 if (quickPanel) quickPanel.classList.toggle('d-none', postType instanceof HTMLSelectElement && postType.value !== 'ANNOUNCEMENT');

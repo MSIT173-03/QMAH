@@ -282,7 +282,8 @@ public sealed record AnnouncementDto(
 
 public sealed class CreateSocialPostRequest
 {
-    [RegularExpression("POST|ANNOUNCEMENT")]
+    // 公告改由 QMAH.Web 後台發布；前台 API 只接受一般貼文。
+    [RegularExpression("POST", ErrorMessage = "前台只能發布一般貼文；站方公告請由後台發布。")]
     public string PostType { get; set; } = "POST";
 
     [Required, StringLength(32)]

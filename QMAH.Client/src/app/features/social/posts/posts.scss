@@ -32,50 +32,6 @@
   font-weight: 750;
 }
 
-.social-announcements__head-actions {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
-  gap: 8px;
-}
-
-.social-announcements__controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  min-height: var(--qmah-control-height);
-  padding: 3px;
-  border: 1px solid color-mix(in srgb, var(--qmah-border) 80%, transparent);
-  border-radius: var(--qmah-radius-pill);
-  background: color-mix(in srgb, var(--qmah-surface) 72%, transparent);
-}
-
-.social-announcements__nav {
-  width: 32px;
-  height: 32px;
-  display: inline-grid;
-  place-items: center;
-  border: 0;
-  border-radius: var(--qmah-radius-pill);
-  color: var(--qmah-social-action);
-  background: transparent;
-  cursor: pointer;
-}
-
-.social-announcements__nav:hover {
-  color: var(--qmah-on-dark);
-  background: var(--qmah-social-action);
-}
-
-.social-announcements__nav svg { width: 16px; height: 16px; }
-
-.social-announcements__position {
-  min-width: 44px;
-  color: var(--qmah-muted);
-  font: 700 var(--qmah-type-meta-size)/1 "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
-  text-align: center;
-}
-
 .social-announcements__title svg {
   width: 17px;
   height: 17px;
@@ -136,86 +92,259 @@
   height: 14px;
 }
 
-.social-announcements__carousel {
+/* ui-integration: 公告輪播對齊商城首頁主視覺（store/pages/home/hero-carousel.scss）的版型與節奏：
+   滿版底圖 + 淡色遮罩、左下浮動文案卡、右下細條指示點與暫停鈕。
+   強調色沿用 Social 的 --qmah-social-action，若要與商城完全同色，改成 --qmah-primary-hover 即可。 */
+.social-hero {
+  --social-hero-accent: var(--qmah-social-action);
   position: relative;
   overflow: hidden;
-  border-radius: inherit;
+  background: var(--qmah-surface-muted);
 }
 
-.social-announcements__track {
+.social-hero__track {
   display: flex;
   width: 100%;
-  transition: transform .5s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+  transition: transform 600ms cubic-bezier(.4, 0, .2, 1);
+}
+
+.social-hero__slide {
+  position: relative;
+  isolation: isolate;
+  flex: 0 0 100%;
+  min-width: 0;
+  min-height: 340px;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--qmah-space-8);
+  color: var(--qmah-ink);
+  background: var(--qmah-surface-muted);
+  text-decoration: none;
+}
+
+.social-hero__image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.social-hero__slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 16%, transparent);
+}
+
+.social-hero__body {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-3);
+  padding: var(--qmah-space-4) var(--qmah-space-5);
+  border: 1px solid color-mix(in srgb, var(--social-hero-accent) 24%, var(--qmah-border));
+  border-radius: var(--qmah-radius-card);
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 91%, transparent);
+  box-shadow: var(--qmah-shadow-float);
+}
+
+.social-hero__kicker {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: var(--social-hero-accent);
+}
+
+.qmah-social-page .social-hero__kicker svg {
+  width: 14px;
+  height: 14px;
+}
+
+.social-hero__title {
+  margin: 0;
+  font-family: var(--qmah-font-serif);
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: var(--qmah-type-heading-leading);
+  font-weight: 700;
+  color: var(--qmah-primary);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.social-hero__desc {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--qmah-type-body-sm-size);
+  line-height: var(--qmah-type-body-leading);
+  color: var(--qmah-text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* 視覺上對應商城的「立即選購」實心按鈕；整張投影片本身就是連結，所以這裡只是 span。 */
+.social-hero__cta {
+  align-self: flex-start;
+  margin-top: 4px;
+  min-height: var(--qmah-control-height);
+  display: inline-flex;
+  align-items: center;
+  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
+  border: 1px solid var(--social-hero-accent);
+  border-radius: var(--qmah-radius-control);
+  background: var(--social-hero-accent);
+  color: var(--qmah-on-dark);
+  font-size: var(--qmah-type-label-size);
+  letter-spacing: 0.14em;
+  transition: filter 160ms;
+}
+
+.social-hero__slide:hover .social-hero__cta {
+  filter: brightness(0.92);
+}
+
+.social-hero__controls {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: var(--qmah-space-2);
+}
+
+.social-hero__dots {
+  display: flex;
+  align-items: center;
+  gap: var(--qmah-space-1);
+}
+
+.social-hero__dot {
+  width: 26px;
+  height: 3px;
+  /* 全站按鈕有 44px 觸控 min-height 基線，指示條要明確覆寫才不會被撐高（同商城輪播）。 */
+  min-height: 3px;
+  border: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--qmah-border) 82%, var(--qmah-ink));
+  cursor: pointer;
+}
+
+.social-hero__dot--active {
+  background: var(--social-hero-accent);
+}
+
+.social-hero__play-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--qmah-ink) 22%, transparent);
+  border-radius: var(--qmah-radius-control);
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 86%, transparent);
+  color: var(--qmah-ink);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 160ms, border-color 160ms, color 160ms;
+}
+
+.social-hero__play-toggle:hover {
+  border-color: var(--qmah-ink);
+  background: var(--qmah-surface-elevated);
+}
+
+.social-hero__play-toggle--paused {
+  border-color: var(--social-hero-accent);
+  background: color-mix(in srgb, var(--social-hero-accent) 18%, var(--qmah-surface-elevated));
+  color: var(--social-hero-accent);
+}
+
+.social-hero__play-toggle--paused:hover {
+  border-color: var(--social-hero-accent);
+  background: color-mix(in srgb, var(--social-hero-accent) 28%, var(--qmah-surface-elevated));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .social-announcements__track {
+  .social-hero__track {
     transition: none;
   }
 }
 
-.social-announcement-slide {
-  position: relative;
-  flex: 0 0 100%;
-  min-width: 100%;
-  min-height: 238px;
+/* 發布貼文對話框：欄位、工具列、預覽與按鈕之間的行距。 */
+.social-post-dialog__title {
+  margin: 0 0 var(--qmah-space-5);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.social-post-dialog__alert {
+  margin-bottom: var(--qmah-space-4);
+}
+
+.social-post-form {
+  display: grid;
+  gap: var(--qmah-space-5);
+}
+
+.social-post-form__field {
+  display: grid;
+  gap: var(--qmah-space-2);
+  min-width: 0;
+}
+
+.social-post-form__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qmah-ink);
+}
+
+.social-post-form__toolbar {
   display: flex;
-  align-items: flex-end;
-  color: var(--qmah-ink);
-  background: color-mix(in srgb, var(--qmah-surface-muted) 78%, var(--qmah-social-soft) 22%);
-  background-position: center;
-  background-size: cover;
-  text-decoration: none;
-}
-
-.social-announcement-slide.has-cover {
-  color: var(--qmah-on-dark);
-}
-
-/* 沒有官方封面時仍保留文化語境，但不把裝飾素材當成公告本身的圖片。 */
-.social-announcement-slide:not(.has-cover) {
-  color: var(--qmah-ink);
-  background: linear-gradient(135deg, var(--qmah-surface-muted), var(--qmah-surface-elevated));
-}
-
-.social-announcement-slide__index {
-  position: absolute;
-  top: 16px;
-  right: 22px;
-  color: color-mix(in srgb, var(--qmah-social-action) 28%, transparent);
-  font: 700 clamp(52px, 8vw, 92px)/.9 var(--qmah-font-serif);
-  letter-spacing: -.08em;
-  pointer-events: none;
-}
-
-.social-announcement-slide__body {
-  width: 100%;
-  align-self: flex-end;
-  padding: 28px 22px;
-  background: linear-gradient(to top, color-mix(in srgb, var(--qmah-night) 88%, transparent), color-mix(in srgb, var(--qmah-night) 24%, transparent));
-}
-
-.has-cover .social-announcement-slide__body {
-  background: linear-gradient(to top, color-mix(in srgb, var(--qmah-night) 76%, transparent), transparent);
-}
-
-.social-announcement-slide:not(.has-cover) .social-announcement-slide__body {
-  max-width: min(82%, 720px);
-  background: transparent;
-}
-
-.social-announcement-slide__eyebrow {
-  display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  color: var(--qmah-social-action);
-  font-size: var(--qmah-type-meta-size);
-  font-weight: 800;
-  letter-spacing: .08em;
+  gap: var(--qmah-space-2);
 }
 
-.has-cover .social-announcement-slide__eyebrow { color: var(--qmah-bronze); }
-.social-announcement-slide__eyebrow svg { width: 15px; height: 15px; }
+.social-post-form__hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--qmah-text-muted);
+}
+
+.social-post-form__textarea {
+  min-height: 8rem;
+  line-height: 1.7;
+}
+
+.social-post-form__preview {
+  display: grid;
+  gap: var(--qmah-space-2);
+  padding: var(--qmah-space-3) var(--qmah-space-4);
+}
+
+.social-post-form__media-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--qmah-space-3);
+  padding-top: var(--qmah-space-2);
+}
+
+.social-post-dialog__actions {
+  margin-top: var(--qmah-space-6);
+}
+
+.social-post-dialog__actions form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--qmah-space-3);
+}
 
 .social-post-wall {
   display: grid;
@@ -410,24 +539,6 @@
   background: var(--qmah-social-action);
 }
 
-.social-announcement-slide h2 {
-  margin: 10px 0 5px;
-  font-size: clamp(18px, 2.5vw, 28px);
-  line-height: 1.3;
-  text-wrap: balance;
-}
-
-.social-announcement-slide p {
-  max-width: 72ch;
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.65;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
 .social-posts-heading {
   gap: 16px;
 }
@@ -456,15 +567,30 @@
     margin-bottom: 18px;
   }
 
-  .social-announcement-slide {
-    min-height: 190px;
+  .social-hero__slide {
+    min-height: 300px;
+    padding: 20px 16px 64px;
   }
 
-  .social-announcement-slide__body {
-    padding: 18px 16px 28px;
+  .social-hero__body {
+    width: min(100%, 430px);
+    padding: var(--qmah-space-4);
   }
 
-  .social-announcement-slide:not(.has-cover) .social-announcement-slide__body { max-width: 90%; }
+  .social-hero__title {
+    font-size: clamp(22px, 6.5vw, 28px);
+    text-wrap: balance;
+  }
+
+  .social-hero__controls {
+    right: 12px;
+    left: 12px;
+    justify-content: space-between;
+  }
+
+  .social-post-form {
+    gap: var(--qmah-space-4);
+  }
 
   .social-posts-heading {
     align-items: stretch;

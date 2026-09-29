@@ -117,7 +117,8 @@ export interface Announcement {
 }
 
 export interface CreateSocialPostRequest {
-  postType?: 'POST' | 'ANNOUNCEMENT';
+  // 前台只能發一般貼文；站方公告改由 QMAH.Web 後台「貼文處理」發布（可附圖片）。
+  postType?: 'POST';
   boardCode: string;
   title: string;
   content: string;

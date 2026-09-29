@@ -7,6 +7,7 @@ using QMAH.Web.Areas.Social.Services;
 using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Services.Social;
 
 namespace QMAH.Web.Areas.Social.Controllers;
 
@@ -24,11 +25,16 @@ public sealed class SocialReportAdminController : Controller
 
     private readonly QmahDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationService _notificationService;
 
-    public SocialReportAdminController(QmahDbContext context, ICurrentUserService currentUserService)
+    public SocialReportAdminController(
+        QmahDbContext context,
+        ICurrentUserService currentUserService,
+        INotificationService notificationService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _notificationService = notificationService;
     }
 
     [HttpGet]
@@ -235,16 +241,29 @@ public sealed class SocialReportAdminController : Controller
             return NotFound();
         }
 
+        var previousStatus = report.Status;
         report.Status = status;
         report.Resolution = string.IsNullOrWhiteSpace(resolution) ? null : resolution.Trim();
         report.ReviewedByUserId = status == "PENDING" ? null : _currentUserService.GetCurrentUserId();
         report.ReviewedAt = status == "PENDING" ? null : DateTime.UtcNow;
 
+        HiddenTarget? hiddenTarget = null;
         if (status == "RESOLVED")
         {
-            await HideTarget(report.TargetType, report.TargetId, cancellationToken);
+            hiddenTarget = await HideTarget(report.TargetType, report.TargetId, cancellationToken);
         }
 
+        // 只有狀態真的從未結案變成結案時才通知，重複按同一個按鈕不會一直發。
+        if (previousStatus != status && status is "RESOLVED" or "REJECTED")
+        {
+            QueueReporterNotification(report);
+            if (hiddenTarget is not null)
+            {
+                QueueAuthorHiddenNotification(hiddenTarget);
+            }
+        }
+
+        // 通知與審核結果在同一次 SaveChanges 寫入：要嘛一起成功，要嘛一起失敗。
         await _context.SaveChangesAsync(cancellationToken);
         TempData["SuccessMessage"] = $"檢舉狀態已更新為：{status}。";
         return RedirectToAction(nameof(Index));
@@ -309,16 +328,32 @@ public sealed class SocialReportAdminController : Controller
         var currentUserId = _currentUserService.GetCurrentUserId();
         var now = DateTime.UtcNow;
 
+        // 同一篇內容可能被很多人檢舉：作者只收一次「內容已被隱藏」通知。
+        var notifiedHiddenTargets = new HashSet<Guid>();
         foreach (var report in reports)
         {
+            var previousStatus = report.Status;
             report.Status = status;
             report.ReviewedByUserId = currentUserId;
             report.ReviewedAt = now;
 
             // HIDE 等同單筆審核的「核准」：確認違規並隱藏被檢舉的貼文/留言；REJECT 只改狀態，不動目標內容。
+            HiddenTarget? hiddenTarget = null;
             if (normalizedAction == "HIDE")
             {
-                await HideTarget(report.TargetType, report.TargetId, cancellationToken);
+                hiddenTarget = await HideTarget(report.TargetType, report.TargetId, cancellationToken);
+            }
+
+            if (previousStatus == status)
+            {
+                continue;
+            }
+
+            // 系統自動檢舉（洗版、關鍵字）沒有檢舉人，QueueReporterNotification 會自動略過。
+            QueueReporterNotification(report);
+            if (hiddenTarget is not null && notifiedHiddenTargets.Add(report.TargetId))
+            {
+                QueueAuthorHiddenNotification(hiddenTarget);
             }
         }
 
@@ -360,16 +395,19 @@ public sealed class SocialReportAdminController : Controller
         }
     }
 
-    // 檢舉判定為成立時只隱藏目標，不刪除原始資料，方便稽核與追查
-    private async Task HideTarget(string targetType, Guid targetId, CancellationToken cancellationToken)
+    // 檢舉判定為成立時只隱藏目標，不刪除原始資料，方便稽核與追查。
+    // 回傳「這次真的從公開變成隱藏」的目標與作者，供通知使用；原本就已隱藏或找不到時回傳 null。
+    private async Task<HiddenTarget?> HideTarget(string targetType, Guid targetId, CancellationToken cancellationToken)
     {
         if (targetType == "POST")
         {
             var post = await _context.SocialPosts.FirstOrDefaultAsync(item => item.Id == targetId, cancellationToken);
             if (post is not null)
             {
+                var wasVisible = post.Status == "PUBLISHED";
                 post.Status = "HIDDEN";
                 post.UpdatedAt = DateTime.UtcNow;
+                return wasVisible ? new HiddenTarget("POST", post.UserId, post.Title) : null;
             }
         }
         else if (targetType == "COMMENT")
@@ -377,11 +415,48 @@ public sealed class SocialReportAdminController : Controller
             var comment = await _context.SocialComments.FirstOrDefaultAsync(item => item.Id == targetId, cancellationToken);
             if (comment is not null)
             {
+                var wasVisible = comment.Status == "PUBLISHED";
                 comment.Status = "HIDDEN";
                 comment.UpdatedAt = DateTime.UtcNow;
+                return wasVisible ? new HiddenTarget("COMMENT", comment.UserId, Truncate(comment.Content, 30)) : null;
             }
         }
+
+        return null;
     }
+
+    // 對應前台 API 送出檢舉時的承諾：「管理員審核後會有結果通知」。
+    private void QueueReporterNotification(ContentReport report)
+    {
+        if (report.ReporterUserId is not Guid reporterUserId)
+        {
+            return;
+        }
+
+        var targetLabel = report.TargetType == "COMMENT" ? "留言" : "貼文";
+        var content = report.Status == "RESOLVED"
+            ? $"你檢舉的{targetLabel}經審核確認違規，已被隱藏。感謝你協助維護社群。"
+            : $"你檢舉的{targetLabel}經審核後未發現違規，內容將維持公開。";
+        if (!string.IsNullOrWhiteSpace(report.Resolution))
+        {
+            content += $" 管理員說明：{report.Resolution}";
+        }
+
+        _notificationService.QueueNotification(reporterUserId, "檢舉審核結果", content);
+    }
+
+    private void QueueAuthorHiddenNotification(HiddenTarget target)
+    {
+        var content = target.TargetType == "COMMENT"
+            ? $"你的留言「{target.Summary}」經檢舉審核確認違反社群規範，已被隱藏。"
+            : $"你的貼文「{target.Summary}」經檢舉審核確認違反社群規範，已被隱藏。";
+        _notificationService.QueueNotification(target.AuthorUserId, "你的內容已被隱藏", content);
+    }
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength] + "…";
+
+    private sealed record HiddenTarget(string TargetType, Guid AuthorUserId, string Summary);
 
     private static string? Normalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToUpperInvariant();
