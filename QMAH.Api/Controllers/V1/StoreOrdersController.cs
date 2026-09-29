@@ -15,7 +15,7 @@ namespace QMAH.Api.Controllers.V1;
 
 [Authorize]
 [Route("api/v1/store/orders")]
-public sealed class StoreOrdersController(QmahDbContext db, IEcpayCheckoutNotifier ecpayNotifier) : ApiControllerBase
+public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
 {
     // integration: Store 分支原本把訂單流程拆到一半，留下兩套互相重疊的實作。
     // 目前集中成「輸入整理 → 商品／庫存檢查 → 折扣與點數檢查 → 建立訂單快照」四段，
@@ -51,8 +51,6 @@ public sealed class StoreOrdersController(QmahDbContext db, IEcpayCheckoutNotifi
         // integration: SQL retry 必須包住完整訂單流程，而不是只重試某一次查詢；
         // 否則庫存、優惠券、點數與訂單可能只完成其中一部分。每次重試先清掉上一輪追蹤狀態，
         // 再用 Serializable 重新讀取同一批商品，維持庫存與資產的一致性。
-        // 是否為「這次呼叫真的新建立」的訂單；idempotent 重送找回舊訂單時不重複通知綠界。
-        StoreOrder? newlyCreatedOrder = null;
         var strategy = db.Database.CreateExecutionStrategy();
         var result = await strategy.ExecuteAsync(async retryToken =>
         {
@@ -127,22 +125,11 @@ public sealed class StoreOrdersController(QmahDbContext db, IEcpayCheckoutNotifi
 
             await db.SaveChangesAsync(retryToken);
             await transaction.CommitAsync(retryToken);
-            newlyCreatedOrder = order;
 
             return Created(
                 $"/api/v1/me/orders/{order.Id}",
                 ToOrderDto(order));
         }, cancellationToken);
-
-        // integration: 通知綠界放在交易 commit 之後才做，不佔用資料庫交易的時間；
-        // 只針對這次真的新建立的訂單通知，idempotent 重送不重複通知。
-        // BuildRequestForOrder 只有信用卡付款的訂單才會回傳非 null，其餘付款方式不通知。
-        if (newlyCreatedOrder is not null)
-        {
-            var ecpayRequest = EcpayCheckoutFormBuilder.BuildRequestForOrder(newlyCreatedOrder);
-            if (ecpayRequest is not null)
-                await ecpayNotifier.NotifyAsync(ecpayRequest, cancellationToken);
-        }
 
         return result;
     }
