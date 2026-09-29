@@ -2,9 +2,19 @@
   display: contents;
 }
 
+/* 兩欄各四列，先排滿左欄再排右欄（依由新到舊順序閱讀）；窄螢幕改為單欄。 */
 .news-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(4, auto);
+  grid-auto-flow: column;
+  gap: var(--qmah-space-3) var(--qmah-space-6);
+
+  @media (max-width: 720px) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-flow: row;
+  }
 }
 
 .news-item {
@@ -13,10 +23,6 @@
   align-items: center;
   border-top: 1px solid var(--color-line-soft);
   padding-top: var(--qmah-space-3);
-
-  &+& {
-    margin-top: var(--qmah-space-3);
-  }
 }
 
 .news-link {
