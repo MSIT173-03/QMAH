@@ -2,9 +2,19 @@
   display: contents;
 }
 
+/* 兩欄各四列，先排滿左欄再排右欄（依由新到舊順序閱讀）；窄螢幕改為單欄。 */
 .news-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(4, auto);
+  grid-auto-flow: column;
+  gap: var(--qmah-space-3) var(--qmah-space-6);
+
+  @media (max-width: 720px) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-flow: row;
+  }
 }
 
 .news-item {
@@ -13,10 +23,6 @@
   align-items: center;
   border-top: 1px solid var(--color-line-soft);
   padding-top: var(--qmah-space-3);
-
-  &+& {
-    margin-top: var(--qmah-space-3);
-  }
 }
 
 .news-link {
@@ -84,17 +90,19 @@
   color: var(--color-accent);
 }
 
+/* 與商品卡片的 product-card-tag 同一套形狀：無外框，僅以底色與文字色區分。 */
 .news-tag {
   font-family: 'IBM Plex Mono', monospace;
   font-size: var(--qmah-type-label-size);
-  border: 1px solid var(--color-gold);
-  color: var(--color-gold-text);
+  letter-spacing: 0.06em;
+  /* --color-gold-text 是實心金色底上的文字色（淺色主題為近白），放在淺金底上會看不清楚，
+     因此改由金色與內文色混合，讓文字比底色深。 */
+  color: color-mix(in srgb, var(--color-gold) 70%, var(--color-ink));
   background: var(--color-gold-bg);
-  padding: var(--qmah-space-1) var(--qmah-space-2);
+  padding: 1px var(--qmah-space-2);
   border-radius: var(--store-radius);
 
   &--deal {
-    border-color: var(--color-accent);
     color: var(--color-on-accent);
     background: var(--color-accent);
   }

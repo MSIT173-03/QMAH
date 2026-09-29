@@ -261,11 +261,6 @@ builder.Services.AddHttpClient<IPasswordResetEmailSender, PasswordResetEmailSend
 {
     client.Timeout = TimeSpan.FromSeconds(15);
 });
-// integration: 結帳頁「信用卡付款」示範串接綠界測試環境；只在下單成立後通知，失敗不影響訂單本身。
-builder.Services.AddHttpClient<IEcpayCheckoutNotifier, EcpayCheckoutNotifier>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(10);
-});
 builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>();
 // 使用 DbContext、目前會員或 request 資訊的服務採 Scoped；只有確定無狀態且 thread-safe 的元件才可註冊 Singleton。
 // 新增跨系統規則時放進 Infrastructure service，Controller 只負責輸入驗證與 HTTP response，Web 後台也能重用同一套規則。

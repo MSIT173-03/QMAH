@@ -1,10 +1,14 @@
 // key-list.ts
 import {
   Component,
+  ElementRef,
   EventEmitter,
+  HostListener,
   Input,
+  OnDestroy,
   OnInit,
   Output,
+  ViewChild,
   signal,
   computed,
 } from '@angular/core';
@@ -23,7 +27,7 @@ import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
   templateUrl: './key-list.html',
   styleUrl: './key-list.scss',
 })
-export class KeyList implements OnInit {
+export class KeyList implements OnInit, OnDestroy {
   /**
    * 這個元件現在有兩種使用情境：
    * 1. 獨立頁面（例如從「會員」區塊點進來）：embedded 維持預設值 false，
@@ -48,8 +52,9 @@ export class KeyList implements OnInit {
 
   // ---- 鑰匙合成台（取代原本的兌換規則卡片清單）----
   // 玩家把來源鑰匙放進合成台，放入的格子會依數量展開成多邊形（1 格、2 格左右、3 格三角形、
-  // 4 格正方形……），中央是要兌換的目標鑰匙，右側是成品。可選的目標會隨放入數量改變：
-  // 只列出 sourceAmount 等於目前放入把數的兌換規則。實際扣除與入帳仍走原本的 exchangeKeys()。
+  // 4 格正方形……），中央是要兌換的目標鑰匙，右側是成品。不會一次列出所有兌換方式：
+  // 只有「來源鑰匙與放入的一樣、sourceAmount 等於放入把數」的規則才會成為選項，
+  // 選項超過一個時點中央開選單挑選。實際扣除與入帳仍走原本的 exchangeKeys()。
 
   /** 合成台最多可以展開的格數；超過的規則無法在多邊形上排開，改列在提示中 */
   readonly MAX_CRAFT_SLOTS = 12;
@@ -58,9 +63,11 @@ export class KeyList implements OnInit {
 
   /** 已放入合成台的鑰匙 code，依放入順序排列；順序不影響兌換結果 */
   craftSlots = signal<string[]>([]);
-  /** 玩家在中央切換到的兌換規則；null 代表跟著自動選擇 */
+  /** 玩家在中央選單選的兌換規則；null 代表用第一個選項 */
   selectedRuleId = signal<string | null>(null);
   craftDragOver = signal(false);
+  /** 中央的兌換目標選單是否展開 */
+  craftMenuOpen = signal(false);
 
   /** 能在合成台上排開的兌換規則 */
   craftableRules = computed(() =>
@@ -70,7 +77,7 @@ export class KeyList implements OnInit {
   /** 需要超過合成台格數的規則數量，只做提示 */
   oversizedRuleCount = computed(() => this.exchangeRules().length - this.craftableRules().length);
 
-  /** 下方材料欄：持有中、且至少是一條兌換規則來源的鑰匙 */
+  /** 合成台上方的材料欄：持有中、且至少是一條兌換規則來源的鑰匙 */
   craftSourceKeys = computed(() => {
     const codes = new Set(this.craftableRules().map((rule) => rule.sourceKeyCode));
     return this.ownedKeys().filter((key) => codes.has(key.code));
@@ -79,15 +86,30 @@ export class KeyList implements OnInit {
   /** 合成台實際可放的上限 = 所有規則裡最大的 sourceAmount */
   craftMaxSlots = computed(() => Math.max(0, ...this.craftableRules().map((rule) => rule.sourceAmount)));
 
-  /** 各規則需要的把數，N 把沒有對應規則時提示玩家可以放幾把 */
-  craftAmountsHint = computed(() =>
-    [...new Set(this.craftableRules().map((rule) => rule.sourceAmount))].sort((a, b) => a - b).join('、'),
-  );
+  /** 放了不只一種來源鑰匙；每次兌換只接受同一種來源 */
+  craftMixed = computed(() => new Set(this.craftSlots()).size > 1);
 
-  /** 目前放入數量可選的兌換目標 */
+  /** 合成台上全部是同一種鑰匙時的 code；空的或混放時為 null */
+  craftSourceCode = computed(() => {
+    const slots = this.craftSlots();
+    return slots.length && !this.craftMixed() ? slots[0] : null;
+  });
+
+  /** 依放入的鑰匙決定的兌換選項：同一種來源、數量剛好 */
   craftOptions = computed(() => {
+    const code = this.craftSourceCode();
     const count = this.craftSlots().length;
-    return count ? this.craftableRules().filter((rule) => rule.sourceAmount === count) : [];
+    return code ? this.craftableRules().filter((rule) => rule.sourceKeyCode === code && rule.sourceAmount === count) : [];
+  });
+
+  /** 同一種來源、還要再多放幾把才能兌換的規則，給提示用（依需要數量由少到多） */
+  craftUpcoming = computed(() => {
+    const code = this.craftSourceCode();
+    const count = this.craftSlots().length;
+    if (!code) return [];
+    return this.craftableRules()
+      .filter((rule) => rule.sourceKeyCode === code && rule.sourceAmount > count)
+      .sort((a, b) => a.sourceAmount - b.sourceAmount);
   });
 
   craftSelectedRule = computed<KeyExchangeRule | null>(() => {
@@ -95,33 +117,35 @@ export class KeyList implements OnInit {
     return options.find((rule) => rule.id === this.selectedRuleId()) ?? options[0] ?? null;
   });
 
-  craftSelectedIndex = computed(() => {
-    const rule = this.craftSelectedRule();
-    return rule ? this.craftOptions().indexOf(rule) : -1;
-  });
-
-  /** 放入的鑰匙剛好符合目前選擇的規則時，才會出現成品 */
+  /** 選到的規則持有數也夠時，才會出現成品 */
   craftReadyRule = computed<KeyExchangeRule | null>(() => {
     const rule = this.craftSelectedRule();
-    return rule && this.ruleMatchesCraft(rule) && this.canExchange(rule) ? rule : null;
+    return rule && this.canExchange(rule) ? rule : null;
   });
 
-  /** 放了不只一種來源鑰匙；每次兌換只接受同一種來源 */
-  craftMixed = computed(() => new Set(this.craftSlots()).size > 1);
+  /**
+   * 放入格與中央目標格一樣大（以合成台邊長的比例表示）。格子數多時自動縮小，
+   * 讓整圈（半徑＋半格）留在合成台內；中央與四周之間刻意留大間距，參考寶石合成介面。
+   */
+  private craftGeometry = computed(() => {
+    const count = this.craftSlots().length;
+    const centerGap = 1.6; // 中央格與四周格的中心距離 = 1.6 格
+    const neighborGap = 1.3; // 相鄰兩格的中心距離至少 1.3 格
+    const factor = count > 2 ? Math.max(centerGap, neighborGap / (2 * Math.sin(Math.PI / count))) : centerGap;
+    const size = Math.min(0.2, 0.48 / (factor + 0.5));
+    return { count, size, radius: size * factor };
+  });
+
+  /** 放入格與中央格的邊長（百分比，綁在 [style.width.%]） */
+  craftSlotSize = computed(() => this.craftGeometry().size * 100);
 
   /**
-   * 多邊形頂點位置（以合成台邊長的百分比表示，不必量測 DOM）。
-   * 下面的比例要跟 SCSS 的 .craft-slot（17%）與 .craft-center（30%）保持一致。
-   * 奇數邊頂點朝上（三角形），偶數邊底邊水平（正方形、六邊形），2 格時為左右兩格。
+   * 多邊形頂點位置（百分比，不必量測 DOM）。
+   * 奇數邊頂點朝上（三角形），偶數邊底邊水平（正方形、六邊形），1 格在上方，2 格左右排。
    */
   craftSlotPositions = computed(() => {
-    const count = this.craftSlots().length;
+    const { count, radius } = this.craftGeometry();
     if (!count) return [];
-    const slot = 0.17;
-    const center = 0.3;
-    const gap = 0.04;
-    const minRadius = center / 2 + slot / 2 + gap;
-    const radius = count <= 2 ? minRadius : Math.max(minRadius, (slot + gap) / (2 * Math.sin(Math.PI / count)));
     if (count === 1) return [{ x: 50, y: 50 - radius * 100 }];
     const start = -Math.PI / 2 + (count % 2 === 0 ? Math.PI / count : 0);
     return Array.from({ length: count }, (_, i) => {
@@ -137,16 +161,54 @@ export class KeyList implements OnInit {
     return points.map((point) => `${point.x},${point.y}`).join(' ');
   });
 
+  /** 右側成品下方第一行：兌換狀態 */
   craftHint = computed(() => {
     const count = this.craftSlots().length;
     const rule = this.craftSelectedRule();
     if (this.exchangeLoading()) return '處理中…';
-    if (!count) return '';
-    if (this.craftReadyRule()) return `點擊成品兌換 1 組，目前可解鎖 ${rule!.targetEligibleArtifactCount} 件`;
-    if (this.craftMixed()) return '一次只能放入同一種來源鑰匙';
-    if (rule) return `需要 ${rule.sourceAmount} 把${rule.sourceKeyName}`;
-    return `沒有 ${count} 把的兌換方式，可放入 ${this.craftAmountsHint()} 把`;
+    if (!count) return ''; // 尚未放入時的引導文字改放在左側放入區下方（craftMenuHint）
+    if (this.craftMixed()) return '一次只能放入同一種鑰匙';
+    if (rule && !this.canExchange(rule)) return `持有的${rule.sourceKeyName}不足 ${rule.sourceAmount} 把`;
+    if (rule) return '點擊成品兌換 1 組';
+    const next = this.craftUpcoming()[0];
+    if (next) return `再放入 ${next.sourceAmount - count} 把，可兌換${next.targetKeyName}`;
+    return '這個數量沒有兌換方式，請取回幾把';
   });
+
+  /** 右側成品下方第二行：可以兌換時才顯示「幾把換幾把」 */
+  craftHintDetail = computed(() => {
+    const rule = this.craftReadyRule();
+    if (!rule || this.exchangeLoading()) return '';
+    return `${rule.sourceAmount} 把${rule.sourceKeyName}兌換 ${rule.targetAmount} 把${rule.targetKeyName}`;
+  });
+
+  /** 中央目標格的提示框操作說明 */
+  craftCenterTipHint = computed(() => (this.craftOptions().length > 1 ? '點擊選擇其他兌換目標' : '兌換目標'));
+
+  /**
+   * 左側放入區下方：還沒放入時引導玩家放鑰匙；有多個兌換目標時提示可以點中央挑選。
+   */
+  craftMenuHint = computed(() => {
+    if (!this.craftSlots().length) return '從上方點選或拖曳鑰匙放入合成台';
+    const count = this.craftOptions().length;
+    return count > 1 ? `點中央可從 ${count} 種中選擇` : '';
+  });
+
+  // ---- 物品詳細資訊提示框：跟著游標出現在物品旁邊（取代原本固定在底部的資訊條）----
+  // 整頁只有一個提示框，以 fixed 定位擺在游標或格子旁，並夾在 .key-page 的可見範圍內，
+  // 獨立頁面與內嵌彈出框都不會被邊緣裁掉。
+
+  @ViewChild('pageRoot', { static: true }) private pageRoot?: ElementRef<HTMLElement>;
+  @ViewChild('keyTooltip') private keyTooltipEl?: ElementRef<HTMLElement>;
+
+  /** 目前提示的鑰匙，以及操作提示（依格子位置不同：點擊使用／放入／取回／兌換） */
+  tooltip = signal<{ key: KeyModel; hint: string; owner: HTMLElement } | null>(null);
+  /** 定位完成前先隱藏，避免提示框在左上角閃一下 */
+  tooltipPos = signal<{ left: number; top: number } | null>(null);
+  /** 游標或觸控起點；鍵盤聚焦時為 null，改以格子本身為定位基準 */
+  private tooltipPointer: { x: number; y: number } | null = null;
+  private tooltipFrame = 0;
+  private tooltipTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** 背包只顯示「持有數量 > 0」的鑰匙；歸零後會自然從這個清單消失 */
   ownedKeys = computed(() => this.keys().filter((key) => key.balance > 0));
@@ -321,16 +383,6 @@ export class KeyList implements OnInit {
     return this.craftSlotPositions()[index] ?? { x: 50, y: 50 };
   }
 
-  /** 合成台上的鑰匙完全符合這條規則（同一種來源、數量剛好），且持有數足夠 */
-  craftRuleMatches(rule: KeyExchangeRule): boolean {
-    return this.ruleMatchesCraft(rule) && this.canExchange(rule);
-  }
-
-  private ruleMatchesCraft(rule: KeyExchangeRule): boolean {
-    const slots = this.craftSlots();
-    return slots.length === rule.sourceAmount && slots.every((code) => code === rule.sourceKeyCode);
-  }
-
   /** 這把鑰匙扣掉已放進合成台的數量後，還能再放幾把 */
   craftRemaining(key: KeyModel): number {
     return key.balance - this.craftSlots().filter((code) => code === key.code).length;
@@ -345,39 +397,72 @@ export class KeyList implements OnInit {
     this.exchangeNotice.set('');
     this.exchangeError.set('');
     this.craftSlots.update((slots) => [...slots, key.code]);
-    this.syncCraftSelection();
+    this.afterCraftChange();
   }
 
   removeFromCraft(index: number): void {
     if (this.exchangeLoading()) return;
     this.craftSlots.update((slots) => slots.filter((_, i) => i !== index));
-    this.syncCraftSelection();
+    this.afterCraftChange();
   }
 
   clearCraft(): void {
     this.craftSlots.set([]);
     this.selectedRuleId.set(null);
+    this.craftMenuOpen.set(false);
   }
 
-  /** 合成台是空的時候，點兌換方式直接放入整組來源鑰匙 */
-  fillCraftWithRule(rule: KeyExchangeRule): void {
-    if (this.exchangeLoading() || !this.canExchange(rule) || rule.sourceAmount > this.MAX_CRAFT_SLOTS) return;
-    this.exchangeNotice.set('');
-    this.exchangeError.set('');
-    this.craftSlots.set(Array.from({ length: rule.sourceAmount }, () => rule.sourceKeyCode));
-    this.selectedRuleId.set(rule.id);
+  /** 中央只有一個選項時沒有選單可開，直接顯示那個目標 */
+  toggleCraftMenu(): void {
+    if (this.craftOptions().length < 2) return;
+    const open = !this.craftMenuOpen();
+    this.craftMenuOpen.set(open);
+    this.hideKeyTip();
+    if (open) {
+      // 開啟後把焦點移到目前選中的項目，鍵盤可以直接上下左右挑選
+      requestAnimationFrame(() =>
+        this.pageRoot?.nativeElement.querySelector<HTMLElement>('.craft-menu__item[aria-checked="true"]')?.focus(),
+      );
+    }
   }
 
   selectCraftRule(rule: KeyExchangeRule): void {
     this.selectedRuleId.set(rule.id);
+    this.closeCraftMenu(true);
   }
 
-  /** 點中央的目標鑰匙，依序切換同數量的其他兌換方式 */
-  cycleCraftRule(): void {
-    const options = this.craftOptions();
-    if (options.length < 2) return;
-    const next = options[(this.craftSelectedIndex() + 1) % options.length];
-    this.selectedRuleId.set(next.id);
+  closeCraftMenu(restoreFocus = false): void {
+    if (!this.craftMenuOpen()) return;
+    this.craftMenuOpen.set(false);
+    this.hideKeyTip();
+    if (restoreFocus) this.pageRoot?.nativeElement.querySelector<HTMLElement>('.craft-center')?.focus();
+  }
+
+  /** 選單內用方向鍵移動、Esc 關閉 */
+  onCraftMenuKeydown(event: KeyboardEvent): void {
+    const items = Array.from(
+      this.pageRoot?.nativeElement.querySelectorAll<HTMLElement>('.craft-menu__item') ?? [],
+    );
+    const index = items.indexOf(document.activeElement as HTMLElement);
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (step && items.length) {
+      event.preventDefault();
+      items[(index + step + items.length) % items.length].focus();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeCraftMenu(true);
+    } else if (event.key === 'Tab') {
+      this.closeCraftMenu();
+    }
+  }
+
+  /** 點選單以外的地方就收起來 */
+  @HostListener('document:pointerdown', ['$event'])
+  onDocumentPointerDown(event: PointerEvent): void {
+    if (!this.craftMenuOpen()) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('.craft-menu, .craft-center')) return;
+    this.closeCraftMenu();
   }
 
   craftOutput(): void {
@@ -385,17 +470,10 @@ export class KeyList implements OnInit {
     if (rule) this.exchange(rule);
   }
 
-  /**
-   * 放入的鑰匙改變後：目前選擇仍符合就保留（例如同樣材料可換不同目標時，尊重玩家的選擇），
-   * 否則自動跳到第一個符合的規則；都不符合時維持原選擇，讓提示顯示還缺什麼。
-   */
-  private syncCraftSelection(): void {
-    const options = this.craftOptions();
-    const current = options.find((rule) => rule.id === this.selectedRuleId());
-    if (current && this.ruleMatchesCraft(current)) return;
-    const matched = options.find((rule) => this.ruleMatchesCraft(rule));
-    if (matched) this.selectedRuleId.set(matched.id);
-    else if (!current) this.selectedRuleId.set(options[0]?.id ?? null);
+  /** 放入的鑰匙改變後收起選單；目前的選擇若已不在選項內，交給 craftSelectedRule 退回第一個 */
+  private afterCraftChange(): void {
+    this.craftMenuOpen.set(false);
+    if (!this.craftOptions().some((rule) => rule.id === this.selectedRuleId())) this.selectedRuleId.set(null);
   }
 
   /** 重新讀取持有數量後，拿掉合成台上超出目前持有數的鑰匙 */
@@ -409,11 +487,12 @@ export class KeyList implements OnInit {
     });
     if (next.length !== this.craftSlots().length) {
       this.craftSlots.set(next);
-      this.syncCraftSelection();
+      this.afterCraftChange();
     }
   }
 
   onCraftDragStart(event: DragEvent, key: KeyModel): void {
+    this.hideKeyTip();
     event.dataTransfer?.setData('text/plain', key.code);
     if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy';
   }
@@ -429,6 +508,141 @@ export class KeyList implements OnInit {
     const code = event.dataTransfer?.getData('text/plain');
     const key = this.ownedKeys().find((item) => item.code === code);
     if (key) this.addToCraft(key);
+  }
+
+  // ---- 物品詳細資訊提示框 ----
+
+  /** 滑鼠移入：出現在游標右下方 */
+  showKeyTip(event: PointerEvent, key: KeyModel | undefined, hint: string): void {
+    if (!key || event.pointerType !== 'mouse' || this.craftMenuOpenFor(event)) return;
+    this.tooltipPointer = { x: event.clientX, y: event.clientY };
+    this.openKeyTip(key, hint, event.currentTarget as HTMLElement);
+  }
+
+  /** 滑鼠在同一格內移動時跟著游標走 */
+  moveKeyTip(event: PointerEvent): void {
+    const tip = this.tooltip();
+    if (!tip || event.pointerType !== 'mouse' || tip.owner !== event.currentTarget) return;
+    this.tooltipPointer = { x: event.clientX, y: event.clientY };
+    this.scheduleTooltipPosition();
+  }
+
+  /**
+   * 按下時：滑鼠點擊先收起提示（跟系統提示框一樣，點了就消失）；
+   * 觸控沒有 hover，改成點一下後在格子旁顯示 2 秒。
+   */
+  pressKeyTip(event: PointerEvent, key: KeyModel | undefined, hint: string): void {
+    if (event.pointerType === 'mouse') {
+      this.hideKeyTip();
+      return;
+    }
+    if (!key) return;
+    this.tooltipPointer = null;
+    this.openKeyTip(key, hint, event.currentTarget as HTMLElement);
+    this.tooltipTimer = setTimeout(() => this.hideKeyTip(), 2000);
+  }
+
+  /** 只有鍵盤聚焦（:focus-visible）才顯示，滑鼠點擊造成的聚焦不重複跳出 */
+  focusKeyTip(event: FocusEvent, key: KeyModel | undefined, hint: string): void {
+    const owner = event.currentTarget as HTMLElement;
+    if (!key || !owner.matches(':focus-visible')) return;
+    this.tooltipPointer = null;
+    this.openKeyTip(key, hint, owner);
+  }
+
+  /** 背包格的操作提示：萬能鑰匙不能從背包使用 */
+  bagTipHint(key: KeyModel): string {
+    if (key.scopeType === 'UNIVERSAL') return '請至圖鑑頁的文物卡片上使用';
+    return key.eligibleArtifactCount > 0 ? '點擊使用' : '目前沒有可解鎖的文物';
+  }
+
+  hideKeyTip(): void {
+    clearTimeout(this.tooltipTimer);
+    cancelAnimationFrame(this.tooltipFrame);
+    this.tooltip.set(null);
+    this.tooltipPos.set(null);
+  }
+
+  /** 捲動時提示框會跟格子脫節，直接收起 */
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onViewportChange(): void {
+    if (this.tooltip()) this.hideKeyTip();
+  }
+
+  ngOnDestroy(): void {
+    this.hideKeyTip();
+  }
+
+  private craftMenuOpenFor(event: Event): boolean {
+    return this.craftMenuOpen() && !(event.currentTarget as HTMLElement).closest('.craft-menu');
+  }
+
+  private openKeyTip(key: KeyModel, hint: string, owner: HTMLElement): void {
+    clearTimeout(this.tooltipTimer);
+    const current = this.tooltip();
+    if (current?.key.id !== key.id || current.hint !== hint || current.owner !== owner) {
+      this.tooltip.set({ key, hint, owner });
+      this.tooltipPos.set(null);
+    }
+    this.scheduleTooltipPosition();
+  }
+
+  /** 等提示框渲染出來量到實際大小後再定位 */
+  private scheduleTooltipPosition(): void {
+    cancelAnimationFrame(this.tooltipFrame);
+    this.tooltipFrame = requestAnimationFrame(() => this.positionKeyTip());
+  }
+
+  /**
+   * 提示框用 position: fixed，以畫面座標計算：優先放在游標（或格子）的右下方，
+   * 下方放不下就翻到上方，並夾在 .key-page 的可見範圍內（內嵌時就是彈出框本身）。
+   *
+   * ⚠️ 內嵌模式的彈出框（.key-bag-stage）若有 transform，fixed 的定位基準會變成彈出框
+   * 而不是整個畫面。所以不直接相信 left/top：先量提示框「實際」出現在哪裡，算出定位基準
+   * 的偏移再扣回去，兩種情況都能對準。提示框本身不能加 transform，否則這個量法會失準。
+   */
+  private positionKeyTip(): void {
+    const tip = this.tooltip();
+    const page = this.pageRoot?.nativeElement;
+    const el = this.keyTooltipEl?.nativeElement;
+    if (!tip || !page || !el) return;
+    if (!tip.owner.isConnected) {
+      this.hideKeyTip();
+      return;
+    }
+
+    const current = this.tooltipPos() ?? { left: 0, top: 0 };
+    const rendered = el.getBoundingClientRect();
+    const originX = rendered.left - current.left;
+    const originY = rendered.top - current.top;
+    const width = rendered.width;
+    const height = rendered.height;
+    const margin = 8;
+
+    let left: number;
+    let below: number;
+    let above: number;
+    if (this.tooltipPointer) {
+      left = this.tooltipPointer.x + 12;
+      below = this.tooltipPointer.y + 20;
+      above = this.tooltipPointer.y - height - 10;
+    } else {
+      const rect = tip.owner.getBoundingClientRect();
+      left = rect.left;
+      below = rect.bottom + 6;
+      above = rect.top - height - 6;
+    }
+
+    const pageRect = page.getBoundingClientRect();
+    const minX = Math.max(pageRect.left, 0) + margin;
+    const maxX = Math.min(pageRect.right, window.innerWidth) - width - margin;
+    const minY = Math.max(pageRect.top, 0) + margin;
+    const maxY = Math.min(pageRect.bottom, window.innerHeight) - height - margin;
+
+    const x = Math.max(minX, Math.min(left, maxX));
+    const y = below <= maxY ? below : Math.max(minY, above);
+    this.tooltipPos.set({ left: x - originX, top: y - originY });
   }
 
   /** 兌換目標可能還沒持有（balance 0），所以從完整的 keys() 找，而不是 ownedKeys() */
@@ -489,6 +703,7 @@ export class KeyList implements OnInit {
    */
   onKeySlotClick(key: KeyModel): void {
     if (key.scopeType === 'UNIVERSAL' || key.balance < 1 || key.eligibleArtifactCount < 1) return;
+    this.hideKeyTip();
     this.unlockError.set('');
     this.confirmTarget.set(key);
   }

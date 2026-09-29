@@ -89,15 +89,21 @@ describe('KeyList', () => {
     expect(component.craftMaxSlots()).toBe(3);
   });
 
-  it('可選的兌換目標會隨放入數量改變', () => {
-    const normal = component.craftSourceKeys()[0];
+  it('兌換選項依放入的鑰匙決定，不會列出其他來源的規則', () => {
+    const [normal, era] = component.craftSourceKeys();
     component.addToCraft(normal);
     expect(component.craftOptions().length).toBe(0);
+    expect(component.craftHint()).toContain('再放入 2 把');
 
     component.addToCraft(normal);
     component.addToCraft(normal);
     expect(component.craftOptions().map((rule) => rule.id)).toEqual(['r-era', 'r-uni']);
     expect(component.craftReadyRule()?.id).toBe('r-era');
+
+    component.clearCraft();
+    component.addToCraft(era);
+    component.addToCraft(era);
+    expect(component.craftOptions().map((rule) => rule.id)).toEqual(['r-era-uni']);
   });
 
   it('多邊形格數等於放入數量，三格時頂點朝上', () => {
@@ -111,14 +117,34 @@ describe('KeyList', () => {
     expect(points[0].y).toBeLessThan(50);
   });
 
-  it('中央切換目標後，同樣的材料會兌換成不同鑰匙', () => {
-    component.fillCraftWithRule(rules[0]);
-    component.cycleCraftRule();
+  it('點中央開啟選單，選擇後兌換成選到的鑰匙', () => {
+    const normal = component.craftSourceKeys()[0];
+    [0, 1, 2].forEach(() => component.addToCraft(normal));
+
+    component.toggleCraftMenu();
+    expect(component.craftMenuOpen()).toBe(true);
+
+    component.selectCraftRule(rules[1]);
+    expect(component.craftMenuOpen()).toBe(false);
     expect(component.craftReadyRule()?.id).toBe('r-uni');
 
     component.craftOutput();
     expect(exchangedRuleIds).toEqual(['r-uni']);
     expect(component.craftSlots().length).toBe(0);
+  });
+
+  it('只有一個選項時中央不開選單；放入的鑰匙改變後選單自動收起', () => {
+    const [normal, era] = component.craftSourceKeys();
+    component.addToCraft(era);
+    component.addToCraft(era);
+    component.toggleCraftMenu();
+    expect(component.craftMenuOpen()).toBe(false);
+
+    component.clearCraft();
+    [0, 1, 2].forEach(() => component.addToCraft(normal));
+    component.toggleCraftMenu();
+    component.removeFromCraft(0);
+    expect(component.craftMenuOpen()).toBe(false);
   });
 
   it('不能放入超過持有數量的鑰匙', () => {
@@ -130,15 +156,57 @@ describe('KeyList', () => {
     expect(component.craftRemaining(era)).toBe(0);
   });
 
-  it('混放不同來源時不會出現成品', () => {
+  it('混放不同來源時沒有選項也不會出現成品', () => {
     const [normal, era] = component.craftSourceKeys();
     component.addToCraft(normal);
     component.addToCraft(era);
     component.addToCraft(normal);
     expect(component.craftMixed()).toBe(true);
+    expect(component.craftOptions().length).toBe(0);
     expect(component.craftReadyRule()).toBeNull();
 
     component.craftOutput();
     expect(exchangedRuleIds.length).toBe(0);
+  });
+
+  it('尚未放入鑰匙時，引導文字顯示在左側放入區下方，右側不重複顯示', () => {
+    expect(component.craftMenuHint()).toBe('從上方點選或拖曳鑰匙放入合成台');
+    expect(component.craftHint()).toBe('');
+  });
+
+  it('提示拆成左右兩段：左側提示可選數量，右側說明幾把換幾把', () => {
+    const [normal, era] = component.craftSourceKeys();
+    [0, 1, 2].forEach(() => component.addToCraft(normal));
+    expect(component.craftMenuHint()).toBe('點中央可從 2 種中選擇');
+    expect(component.craftHint()).toBe('點擊成品兌換 1 組');
+    expect(component.craftHintDetail()).toBe('3 把NORMAL_A 鑰匙兌換 1 把ERA_A 鑰匙');
+
+    component.clearCraft();
+    component.addToCraft(era);
+    component.addToCraft(era);
+    expect(component.craftMenuHint()).toBe('');
+
+    component.removeFromCraft(0);
+    expect(component.craftHintDetail()).toBe('');
+  });
+
+  it('放入格與中央格同尺寸，格子變多時縮小但整圈仍留在合成台內', () => {
+    const normal = component.craftSourceKeys()[0];
+    component.addToCraft(normal);
+    const size = component.craftSlotSize();
+    expect(size).toBeCloseTo(20);
+    const [top] = component.craftSlotPositions();
+    expect(50 - top.y).toBeGreaterThan(size * 1.5); // 中央與四周拉開間距
+    component.addToCraft(normal);
+    component.addToCraft(normal);
+    component.craftSlotPositions().forEach((point) => {
+      expect(point.x - size / 2).toBeGreaterThanOrEqual(0);
+      expect(point.y - size / 2).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  it('背包格的操作提示會區分萬能鑰匙', () => {
+    expect(component.bagTipHint(keys[0])).toBe('點擊使用');
+    expect(component.bagTipHint(keys[2])).toBe('請至圖鑑頁的文物卡片上使用');
   });
 });

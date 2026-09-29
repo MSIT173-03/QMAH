@@ -10,8 +10,8 @@ import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView, toProductVi
 import { StoreLink } from '../../../shared/store-link';
 import { LucidePackageSearch } from '@lucide/angular';
 
-/** 新品上架顯示的商品數量 */
-const NEW_ARRIVAL_COUNT = 4;
+/** 新品上架顯示的商品數量：兩欄各四列 */
+const NEW_ARRIVAL_COUNT = 8;
 
 /** 首頁「新品上架」面板：橫列式商品清單 */
 @Component({
