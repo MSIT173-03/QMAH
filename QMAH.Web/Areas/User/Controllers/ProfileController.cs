@@ -10,6 +10,7 @@ using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Media;
 
 namespace QMAH.Web.Areas.User.Controllers;
 
@@ -20,13 +21,16 @@ public class ProfileController : Controller
 {
     private readonly QmahDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly AvatarStoragePaths _avatarStorage;
 
     public ProfileController(
         QmahDbContext context,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        AvatarStoragePaths avatarStorage)
     {
         _context = context;
         _userManager = userManager;
+        _avatarStorage = avatarStorage;
     }
 
 
@@ -199,13 +203,8 @@ public class ProfileController : Controller
                 return View(model);
             }
 
-            // wwwroot/uploads/avatars
-            var uploadFolder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                "uploads",
-                "avatars"
-            );
+            // 與 API 和 Web 的公開讀取目錄共用同一項設定。
+            var uploadFolder = _avatarStorage.RootPath;
 
             Directory.CreateDirectory(uploadFolder);
 

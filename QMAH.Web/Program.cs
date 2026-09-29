@@ -213,11 +213,12 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestHeadersTotalSize = 64 * 1024;
 });
 
-var app = builder.Build();
 var avatarStorage = AvatarStoragePaths.Resolve(
     builder.Configuration["Avatar:RootPath"],
     builder.Environment.ContentRootPath,
     Path.Combine("wwwroot", "uploads", "avatars"));
+builder.Services.AddSingleton(avatarStorage);
+var app = builder.Build();
 
 // ResolveAsync 只選出可用目標，不在啟動時建立或升級資料庫；Schema 仍由版本化 SQL 管理。
 // 多個候選同時存在時留下警告，避免組員在 SSMS 與應用程式看到不同的 QMAH 而誤判資料遺失。

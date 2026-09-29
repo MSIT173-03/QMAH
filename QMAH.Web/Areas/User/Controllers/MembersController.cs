@@ -8,6 +8,7 @@ using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Web.Areas.User.Controllers;
@@ -23,19 +24,22 @@ public class MembersController : Controller
     private readonly QmahDbContext _context;
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
     private readonly EconomyService _economyService;
+    private readonly AvatarStoragePaths _avatarStorage;
 
     public MembersController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         QmahDbContext context,
         RoleManager<IdentityRole<Guid>> roleManager,
-        EconomyService economyService)
+        EconomyService economyService,
+        AvatarStoragePaths avatarStorage)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
         _roleManager = roleManager;
         _economyService = economyService;
+        _avatarStorage = avatarStorage;
     }
 
     // 先查會員基本資料，再批次補上個人資料、點數與角色，避免每列各打一次 Identity 查詢
@@ -511,12 +515,8 @@ public class MembersController : Controller
             var fileName =
                 $"{Guid.NewGuid()}{extension}";
 
-            var folderPath = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                "uploads",
-                "avatars"
-            );
+            // 與 API 和 Web 的公開讀取目錄共用同一項設定。
+            var folderPath = _avatarStorage.RootPath;
 
             Directory.CreateDirectory(folderPath);
 

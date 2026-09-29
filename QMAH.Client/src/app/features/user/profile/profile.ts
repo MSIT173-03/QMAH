@@ -17,6 +17,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { BackToMember } from '../../../shared/back-to-member/back-to-member';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { MeApiService } from '../../../core/services/me-api';
 
 interface MemberProfile {
   id: string;
@@ -69,7 +70,8 @@ export class Profile implements OnInit {
   constructor(
     private http: HttpClient,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private meApi: MeApiService
   ) {
 
     this.profileForm = this.fb.group({
@@ -408,6 +410,8 @@ uploadAvatar(): void {
       next: (data) => {
 
         this.profile = data;
+        // 上傳回應即為最新會員資料，讓導覽列頭貼同步顯示。
+        this.meApi.me.set(data);
 
         this.uploadingAvatar = false;
         this.selectedAvatarFile = null;
