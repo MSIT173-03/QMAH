@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { EMPTY, catchError, filter, switchMap } from 'rxjs';
+import { EMPTY, catchError, distinctUntilChanged, filter, switchMap } from 'rxjs';
 import {
   SiteHeader,
   StepIndicator,
@@ -143,6 +143,14 @@ export class Checkout {
   protected quote = toSignal(
     toObservable(this.quoteRequest).pipe(
       filter((request): request is OrderQuoteRequest => request !== null),
+      // quoteRequest 每次重算都是新物件（例如會員點數載入後），內容沒變就不重送，
+      // 否則 switchMap 會取消還在途中的相同請求，API 端就會收到被中止的請求。
+      distinctUntilChanged(
+        (previous, current) =>
+          previous.shippingOptionId === current.shippingOptionId &&
+          previous.couponId === current.couponId &&
+          previous.usePoints === current.usePoints,
+      ),
       switchMap((request) => this.checkoutApi.getQuote(request).pipe(catchError(() => EMPTY))),
     ),
     { initialValue: null },
