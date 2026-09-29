@@ -43,8 +43,9 @@ export class DeliveryOptions {
   );
 
   /** 以下為固定的版面文字 */
-  protected readonly title = '配送與付款';
-  protected readonly tag = 'DELIVERY';
-  /** integration: 信用卡付款訂單成立後，可由訂單完成視窗前往綠界（ECPay）測試付款頁，不會實際請款。 */
-  protected readonly paymentNote = '信用卡付款使用綠界（ECPay）金流測試環境；訂單成立後可前往測試付款頁，不會實際請款。';
+  protected readonly shippingTitle = '配送方式';
+  protected readonly shippingTag = 'DELIVERY';
+  protected readonly paymentTitle = '付款方式';
+  protected readonly paymentTag = 'PAYMENT';
+  protected readonly paymentNote = '信用卡付款使用綠界（ECPay）金流，訂單成立後可前往付款頁面。';
 }
