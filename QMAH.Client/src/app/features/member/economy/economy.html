@@ -2,7 +2,6 @@
 
   <app-back-to-member></app-back-to-member>
 
-
   <!-- ===================== -->
   <!-- 頁面標題 -->
   <!-- ===================== -->
@@ -48,13 +47,11 @@
 
   @if (economy) {
 
-
     <!-- ===================== -->
     <!-- 資產摘要 -->
     <!-- ===================== -->
 
     <section class="summary-grid">
-
 
       <!-- 鑑定點數 -->
 
@@ -79,12 +76,16 @@
       </div>
 
 
-      <!-- 一般鑰匙累積進度 -->
+      <!-- 探索鑰匙累積進度 -->
 
       <div class="summary-card">
 
         <div class="summary-icon">
-          <img src="{{ keyAssetPath('NORMAL') }}" alt="探索鑰匙圖示" loading="lazy" />
+          <img
+            src="{{ keyAssetPath('NORMAL') }}"
+            alt="探索鑰匙圖示"
+            loading="lazy"
+          />
         </div>
 
         <div class="progress-content">
@@ -92,7 +93,6 @@
           <span class="summary-label">
             探索鑰匙累積進度
           </span>
-
 
           <div class="summary-value progress-value">
 
@@ -130,7 +130,7 @@
 
             } @else {
 
-              已達成一般鑰匙累積門檻
+              已達成探索鑰匙累積門檻
 
             }
 
@@ -143,240 +143,14 @@
     </section>
 
 
-
     <!-- ===================== -->
-    <!-- 我的鑰匙 -->
+    <!-- 鑰匙背包 -->
+    <!-- 使用共用 KeyList -->
     <!-- ===================== -->
 
-    <section class="keys-section">
+    <section class="key-backpack-section">
 
-
-      <div class="section-title">
-
-        <div>
-
-          <h2>
-            我的鑰匙
-          </h2>
-
-          <p>
-            查看目前持有的各類文物鑰匙
-          </p>
-
-        </div>
-
-
-        <span class="key-count">
-          {{ economy.keys.length }} 種
-        </span>
-
-      </div>
-
-
-
-      <!-- ===================== -->
-      <!-- 篩選 -->
-      <!-- ===================== -->
-
-      <div class="filter-bar">
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'ALL'"
-          [attr.aria-pressed]="selectedFilter === 'ALL'"
-          (click)="setFilter('ALL')"
-        >
-
-          全部
-
-          <span>
-            {{ getFilterCount('ALL') }}
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'NORMAL'"
-          [attr.aria-pressed]="selectedFilter === 'NORMAL'"
-          (click)="setFilter('NORMAL')"
-        >
-
-          一般
-
-          <span>
-            {{ getFilterCount('NORMAL') }}
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'CATEGORY'"
-          [attr.aria-pressed]="selectedFilter === 'CATEGORY'"
-          (click)="setFilter('CATEGORY')"
-        >
-
-          分類
-
-          <span>
-            {{ getFilterCount('CATEGORY') }}
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'ERA'"
-          [attr.aria-pressed]="selectedFilter === 'ERA'"
-          (click)="setFilter('ERA')"
-        >
-
-          年代
-
-          <span>
-            {{ getFilterCount('ERA') }}
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'UNIVERSAL'"
-          [attr.aria-pressed]="selectedFilter === 'UNIVERSAL'"
-          (click)="setFilter('UNIVERSAL')"
-        >
-
-          萬能
-
-          <span>
-            {{ getFilterCount('UNIVERSAL') }}
-          </span>
-
-        </button>
-
-      </div>
-
-
-
-      <!-- ===================== -->
-      <!-- 鑰匙卡片 -->
-      <!-- ===================== -->
-
-      <div class="key-grid">
-
-
-        @for (key of filteredKeys; track key.id) {
-
-          <div
-            class="key-card"
-            [class.empty]="key.balance === 0"
-            [class.normal-key]="key.scopeType === 'NORMAL'"
-            [class.category-key]="key.scopeType === 'CATEGORY'"
-            [class.era-key]="key.scopeType === 'ERA'"
-            [class.universal-key]="key.scopeType === 'UNIVERSAL'"
-          >
-
-
-            <div class="key-card-header">
-
-
-              <div class="key-icon">
-                <img src="{{ keyAssetPath(key.scopeType) }}" [alt]="keyScopeLabel(key.scopeType) + '圖示'" loading="lazy" />
-              </div>
-
-
-              <div class="key-card-badges">
-
-
-                <span class="scope-badge">
-
-                  {{ keyScopeLabel(key.scopeType) }}
-
-                </span>
-
-
-                <span
-                  class="balance-badge"
-                  [class.has-key]="key.balance > 0"
-                >
-
-                  × {{ key.balance }}
-
-                </span>
-
-              </div>
-
-            </div>
-
-
-            <h3>
-              {{ key.name }}
-            </h3>
-
-            <p class="key-purpose">
-              {{ keyScopeDescription(key.scopeType) }}
-            </p>
-
-
-            <div class="key-info">
-
-
-              <div>
-
-                <span>
-                  持有數量
-                </span>
-
-                <strong>
-                  {{ key.balance }}
-                </strong>
-
-              </div>
-
-
-              <div>
-
-                <span>
-                  可解鎖文物
-                </span>
-
-                <strong>
-                  {{ key.eligibleArtifactCount }}
-                </strong>
-
-              </div>
-
-
-              <div>
-
-                <span>
-                  回收點數
-                </span>
-
-                <strong>
-                  {{ key.recyclePointValue }}
-                </strong>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        }
-
-      </div>
+      <app-key-list></app-key-list>
 
     </section>
 

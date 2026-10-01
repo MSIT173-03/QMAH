@@ -10,40 +10,30 @@ import { HttpClient } from '@angular/common/http';
 import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
-import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
-import { keyAssetPath } from '../../../shared/key-assets';
-import { KeyScopeType } from '../../../models/key-model';
 
+import {
+  QmahIconComponent
+} from '../../../shared/components/qmah-icon/qmah-icon';
 
-interface EconomyKey {
-  id: string;
-  code: string;
-  name: string;
-  scopeType: KeyScopeType;
-  categoryId: string | null;
-  eraBucketId: string | null;
-  balance: number;
-  eligibleArtifactCount: number;
-  recyclePointValue: number;
-}
+import {
+  keyAssetPath
+} from '../../../shared/key-assets';
+
+import {
+  KeyScopeType
+} from '../../../models/key-model';
+
+// 共用鑰匙背包元件
+import {
+  KeyList
+} from '../../../key-list/key-list';
 
 
 interface EconomyResponse {
   pointBalance: number;
-
   keyProgressBalance: number;
   keyProgressToNormalKey: number;
-
-  keys: EconomyKey[];
 }
-
-
-type KeyFilter =
-  | 'ALL'
-  | 'NORMAL'
-  | 'CATEGORY'
-  | 'ERA'
-  | 'UNIVERSAL';
 
 
 @Component({
@@ -52,7 +42,8 @@ type KeyFilter =
   imports: [
     CommonModule,
     BackToMember,
-    QmahIconComponent
+    QmahIconComponent,
+    KeyList
   ],
 
   templateUrl: './economy.html',
@@ -64,8 +55,6 @@ export class Economy implements OnInit {
 
   loading = true;
   errorMessage = '';
-
-  selectedFilter: KeyFilter = 'ALL';
 
 
   constructor(
@@ -80,7 +69,7 @@ export class Economy implements OnInit {
 
 
   // ===============================
-  // 一般鑰匙累積進度
+  // 探索鑰匙累積進度百分比
   // ===============================
 
   get keyProgressPercent(): number {
@@ -108,41 +97,19 @@ export class Economy implements OnInit {
     );
   }
 
-  /**
-   * ui-integration: 進度條以 transform 呈現比例，避免每次資料更新都觸發 width layout
-   * 重排；保留原本的百分比計算與視覺回饋，不改變會員資產契約。
-   */
+
+  // ===============================
+  // 進度條比例 0 ~ 1
+  // ===============================
+
   get keyProgressRatio(): number {
     return this.keyProgressPercent / 100;
   }
 
-  /**
-   * ui-integration: 以玩家任務語意取代後端 scope 名稱，讓四種鑰匙在會員與圖鑑頁
-   * 使用同一套稱呼；API enum 仍維持原值，避免牽動既有資料與解鎖流程。
-   */
-  keyScopeLabel(scopeType: string): string {
-    return {
-      NORMAL: '探索鑰匙',
-      CATEGORY: '分類鑰匙',
-      ERA: '年代鑰匙',
-      UNIVERSAL: '萬能鑰匙',
-    }[scopeType] ?? '鑰匙';
-  }
 
-  keyScopeDescription(scopeType: string): string {
-    return {
-      NORMAL: '從尚未解鎖的文物中探索一件',
-      CATEGORY: '從指定分類探索一件文物',
-      ERA: '從指定年代探索一件文物',
-      UNIVERSAL: '由你指定一件文物解鎖',
-    }[scopeType] ?? '用於解鎖圖鑑文物';
-  }
-
-  /** ui-integration: 會員資產卡片沿用圖鑑的四種內容型鑰匙圖，不把道具誤當成通用功能圖示。 */
-  keyAssetPath(scopeType: KeyScopeType): string {
-    return keyAssetPath(scopeType);
-  }
-
+  // ===============================
+  // 距離下一把探索鑰匙
+  // ===============================
 
   get remainingKeyProgress(): number {
 
@@ -159,46 +126,14 @@ export class Economy implements OnInit {
 
 
   // ===============================
-  // 鑰匙篩選
+  // 鑰匙圖片
   // ===============================
 
-  get filteredKeys(): EconomyKey[] {
+  keyAssetPath(
+    scopeType: KeyScopeType
+  ): string {
 
-    if (!this.economy) {
-      return [];
-    }
-
-    if (this.selectedFilter === 'ALL') {
-      return this.economy.keys;
-    }
-
-    return this.economy.keys.filter(
-      key =>
-        key.scopeType ===
-        this.selectedFilter
-    );
-  }
-
-
-  setFilter(filter: KeyFilter): void {
-    this.selectedFilter = filter;
-  }
-
-
-  getFilterCount(filter: KeyFilter): number {
-
-    if (!this.economy) {
-      return 0;
-    }
-
-    if (filter === 'ALL') {
-      return this.economy.keys.length;
-    }
-
-    return this.economy.keys.filter(
-      key =>
-        key.scopeType === filter
-    ).length;
+    return keyAssetPath(scopeType);
   }
 
 
@@ -219,16 +154,11 @@ export class Economy implements OnInit {
 
         next: (data) => {
 
-          // integration: 會員資產已由畫面狀態呈現，先註解原本的資料除錯輸出，避免洩漏帳戶內容。
-          // console.log('economy:', data);
-
           this.economy = data;
-
           this.loading = false;
 
           this.cdr.detectChanges();
         },
-
 
         error: (error) => {
 
@@ -247,5 +177,4 @@ export class Economy implements OnInit {
 
       });
   }
-
 }
