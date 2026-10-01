@@ -27,41 +27,48 @@ public sealed class AiContentReviewWorker(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
-        do
+        try
         {
-            try
+            do
             {
-                await using var scope = scopeFactory.CreateAsyncScope();
-                var db = scope.ServiceProvider.GetRequiredService<QmahDbContext>();
-                var aiReview = scope.ServiceProvider.GetRequiredService<IAiContentReviewService>();
-
-                if (!aiReview.IsConfigured)
+                try
                 {
-                    // 沒有設定 API Key（例如經費申請中）：整批跳過，不去動 AiReviewedAt。
-                    // 這樣等金鑰設定好之後，這段空窗期累積的貼文/留言/圖片會在下一輪排程
-                    // 自動被抓出來補審查，不會因為先前被誤標成「已審查」而永久漏審。
-                    if (!_hasWarnedNotConfigured)
-                    {
-                        logger.LogWarning("OpenAi:ApiKey 尚未設定，AI 內容審查排程本次略過，將持續等待設定完成後自動補審查累積內容。");
-                        _hasWarnedNotConfigured = true;
-                    }
-                    continue;
-                }
-                _hasWarnedNotConfigured = false;
+                    await using var scope = scopeFactory.CreateAsyncScope();
+                    var db = scope.ServiceProvider.GetRequiredService<QmahDbContext>();
+                    var aiReview = scope.ServiceProvider.GetRequiredService<IAiContentReviewService>();
 
-                await ReviewPostsAsync(db, aiReview, stoppingToken);
-                await ReviewCommentsAsync(db, aiReview, stoppingToken);
-                await ReviewMediaAsync(db, aiReview, stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "AI 內容審查排程發生錯誤。");
-            }
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
+                    if (!aiReview.IsConfigured)
+                    {
+                        // 沒有設定 API Key（例如經費申請中）：整批跳過，不去動 AiReviewedAt。
+                        // 這樣等金鑰設定好之後，這段空窗期累積的貼文/留言/圖片會在下一輪排程
+                        // 自動被抓出來補審查，不會因為先前被誤標成「已審查」而永久漏審。
+                        if (!_hasWarnedNotConfigured)
+                        {
+                            logger.LogWarning("OpenAi:ApiKey 尚未設定，AI 內容審查排程本次略過，將持續等待設定完成後自動補審查累積內容。");
+                            _hasWarnedNotConfigured = true;
+                        }
+                        continue;
+                    }
+                    _hasWarnedNotConfigured = false;
+
+                    await ReviewPostsAsync(db, aiReview, stoppingToken);
+                    await ReviewCommentsAsync(db, aiReview, stoppingToken);
+                    await ReviewMediaAsync(db, aiReview, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception exception)
+                {
+                    logger.LogError(exception, "AI 內容審查排程發生錯誤。");
+                }
+            } while (await timer.WaitForNextTickAsync(stoppingToken));
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // 停止服務會取消計時器等待，屬於正常結束，不應回報背景服務故障。
+        }
     }
 
     private async Task ReviewPostsAsync(QmahDbContext db, IAiContentReviewService aiReview, CancellationToken cancellationToken)
@@ -79,6 +86,10 @@ public sealed class AiContentReviewWorker(
             try
             {
                 result = await aiReview.ReviewTextAsync($"{post.Title}\n{post.Content}", cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -111,6 +122,10 @@ public sealed class AiContentReviewWorker(
             try
             {
                 result = await aiReview.ReviewTextAsync(comment.Content, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -150,6 +165,10 @@ public sealed class AiContentReviewWorker(
                     if (result.Flagged && media.PostId.HasValue)
                         db.ContentReports.Add(CreateAiReport("POST", media.PostId.Value, now, result, isImage: true));
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception exception)
             {
