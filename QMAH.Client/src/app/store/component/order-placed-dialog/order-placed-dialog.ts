@@ -1,5 +1,6 @@
-import { Component, ElementRef, computed, effect, input, output, viewChild } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { formatMoney } from '../../shared/format';
+import { ModalDialog } from '../../shared/modal-dialog';
 import { EcpayCheckoutForm } from '../../api/api.models';
 
 /**
@@ -8,6 +9,7 @@ import { EcpayCheckoutForm } from '../../api/api.models';
  */
 @Component({
   selector: 'app-order-placed-dialog',
+  imports: [ModalDialog],
   templateUrl: './order-placed-dialog.html',
   styleUrl: './order-placed-dialog.scss',
 })
@@ -31,28 +33,6 @@ export class OrderPlacedDialog {
 
   /** 應付總額顯示文字 */
   protected payableLabel = computed(() => formatMoney(this.payable()));
-
-  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
-
-  constructor() {
-    // 以原生 <dialog> 的 modal 模式呈現，焦點鎖定由瀏覽器處理。
-    effect(() => {
-      const dialog = this.dialog().nativeElement;
-      if (this.open() && !dialog.open) dialog.showModal();
-      else if (!this.open() && dialog.open) dialog.close();
-    });
-  }
-
-  /** Esc 觸發的原生 cancel：阻止瀏覽器自行關閉，改由頁面統一處理「回到商品列表」。 */
-  protected onNativeCancel(event: Event): void {
-    event.preventDefault();
-    this.confirm.emit();
-  }
-
-  /** 點擊對話框外的背景（事件目標是 dialog 本身）視同確認。 */
-  protected onBackdropClick(event: MouseEvent): void {
-    if (event.target === this.dialog().nativeElement) this.confirm.emit();
-  }
 
   /**
    * 在新分頁開啟綠界測試付款頁：動態組一個真正的 <form> 並 submit，讓綠界收到的是

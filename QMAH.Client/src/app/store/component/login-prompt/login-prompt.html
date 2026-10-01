@@ -1,6 +1,5 @@
 <!-- 登入提示：原生 modal dialog，確認後由頁面導向登入頁 -->
-<dialog #dialog class="login-prompt" aria-labelledby="login-prompt-title" (cancel)="onNativeCancel($event)"
-  (click)="onBackdropClick($event)">
+<dialog class="login-prompt" aria-labelledby="login-prompt-title" [appModalDialog]="open()" (dismiss)="cancel.emit()">
   <div class="login-prompt-body">
     <h2 id="login-prompt-title" class="login-prompt-title">{{ title }}</h2>
     <p class="login-prompt-desc">{{ message() }}</p>

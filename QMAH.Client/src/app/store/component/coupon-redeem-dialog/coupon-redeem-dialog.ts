@@ -1,4 +1,5 @@
-import { Component, ElementRef, effect, input, output, viewChild } from '@angular/core';
+import { Component, input, output } from '@angular/core';
+import { ModalDialog } from '../../shared/modal-dialog';
 
 /**
  * 折價券兌換確認對話框：已登入的會員按下折價券的兌換區塊後顯示，列出折價券名稱與所需點數，
@@ -6,6 +7,7 @@ import { Component, ElementRef, effect, input, output, viewChild } from '@angula
  */
 @Component({
   selector: 'app-coupon-redeem-dialog',
+  imports: [ModalDialog],
   templateUrl: './coupon-redeem-dialog.html',
   styleUrl: './coupon-redeem-dialog.scss',
 })
@@ -32,28 +34,6 @@ export class CouponRedeemDialog {
   protected readonly confirmLabel = '確認兌換';
   protected readonly pendingLabel = '兌換中…';
   protected readonly cancelLabel = '取消';
-
-  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
-
-  constructor() {
-    // 以原生 <dialog> 的 modal 模式呈現，焦點鎖定與 Esc 關閉由瀏覽器處理。
-    effect(() => {
-      const dialog = this.dialog().nativeElement;
-      if (this.open() && !dialog.open) dialog.showModal();
-      else if (!this.open() && dialog.open) dialog.close();
-    });
-  }
-
-  /** Esc 會觸發 cancel 事件；阻止瀏覽器自行關閉，改由頁面更新 open 狀態，避免兩邊狀態不同步。 */
-  protected onNativeCancel(event: Event): void {
-    event.preventDefault();
-    this.onCancel();
-  }
-
-  /** 點擊對話框外的背景（事件目標是 dialog 本身）視同取消。 */
-  protected onBackdropClick(event: MouseEvent): void {
-    if (event.target === this.dialog().nativeElement) this.onCancel();
-  }
 
   /** 兌換請求進行中不能取消，否則使用者看不到結果。 */
   protected onCancel(): void {

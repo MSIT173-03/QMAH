@@ -15,6 +15,7 @@ export { PillGroup } from './pill-group/pill-group';
 export { ProductCard } from './product-card/product-card';
 export { ProductRow } from './product-row/product-row';
 export { Promobar } from './promobar/promobar';
+export { PromobarPanel } from './promobar-panel/promobar-panel';
 export { QtyStepper } from './qty-stepper/qty-stepper';
 export { SearchBar } from './search-bar/search-bar';
 export { SectionHead } from './section-head/section-head';

@@ -1,6 +1,5 @@
 <!-- 折價券兌換確認：原生 modal dialog，確認後由頁面呼叫兌換 API -->
-<dialog #dialog class="redeem-dialog" aria-labelledby="redeem-dialog-title" (cancel)="onNativeCancel($event)"
-  (click)="onBackdropClick($event)">
+<dialog class="redeem-dialog" aria-labelledby="redeem-dialog-title" [appModalDialog]="open()" (dismiss)="onCancel()">
   <div class="redeem-dialog-body">
     <h2 id="redeem-dialog-title" class="redeem-dialog-title">{{ title }}</h2>
     <dl class="redeem-dialog-detail">

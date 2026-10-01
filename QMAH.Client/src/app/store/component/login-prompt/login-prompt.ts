@@ -1,4 +1,5 @@
-import { Component, ElementRef, effect, input, output, viewChild } from '@angular/core';
+import { Component, input, output } from '@angular/core';
+import { ModalDialog } from '../../shared/modal-dialog';
 
 /** 登入提示的預設說明文字（使用情境為加入購物車） */
 export const DEFAULT_LOGIN_PROMPT_MESSAGE = '加入購物車需要先登入會員，是否前往登入頁？登入後會回到目前頁面。';
@@ -9,6 +10,7 @@ export const DEFAULT_LOGIN_PROMPT_MESSAGE = '加入購物車需要先登入會�
  */
 @Component({
   selector: 'app-login-prompt',
+  imports: [ModalDialog],
   templateUrl: './login-prompt.html',
   styleUrl: './login-prompt.scss',
 })
@@ -27,26 +29,4 @@ export class LoginPrompt {
   protected readonly title = '請先登入';
   protected readonly confirmLabel = '前往登入';
   protected readonly cancelLabel = '取消';
-
-  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
-
-  constructor() {
-    // 以原生 <dialog> 的 modal 模式呈現，焦點鎖定與 Esc 關閉由瀏覽器處理。
-    effect(() => {
-      const dialog = this.dialog().nativeElement;
-      if (this.open() && !dialog.open) dialog.showModal();
-      else if (!this.open() && dialog.open) dialog.close();
-    });
-  }
-
-  /** Esc 會觸發 cancel 事件；阻止瀏覽器自行關閉，改由頁面更新 open 狀態，避免兩邊狀態不同步。 */
-  protected onNativeCancel(event: Event): void {
-    event.preventDefault();
-    this.cancel.emit();
-  }
-
-  /** 點擊對話框外的背景（事件目標是 dialog 本身）視同取消。 */
-  protected onBackdropClick(event: MouseEvent): void {
-    if (event.target === this.dialog().nativeElement) this.cancel.emit();
-  }
 }
