@@ -416,25 +416,20 @@ else
 if (app.Environment.IsDevelopment())
 {
     app.Logger.LogInformation("公開媒體根目錄：{MediaRoot}", mediaRoot);
-    if (!Directory.Exists(mediaRoot))
+    try
+    {
+        await using var mediaDiagnosticScope = app.Services.CreateAsyncScope();
+        var mediaDiagnosticDb = mediaDiagnosticScope.ServiceProvider.GetRequiredService<QmahDbContext>();
+        await QmahPublicMediaDiagnostics.LogMissingDirectoriesAsync(
+            mediaRoot, mediaDiagnosticDb, app.Logger, app.Lifetime.ApplicationStopping);
+    }
+    catch (Exception exception)
+        when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception))
     {
         app.Logger.LogWarning(
-            "公開媒體目錄不存在，請確認 Media:AssetRootPath 或 Media:RootPath；/media/catalog 與 /media/store 將回傳 404。路徑：{MediaRoot}",
-            mediaRoot);
-    }
-    else
-    {
-        foreach (var segment in new[] { "catalog", "store" })
-        {
-            var segmentPath = Path.Combine(mediaRoot, segment);
-            if (!Directory.Exists(segmentPath))
-            {
-                app.Logger.LogWarning(
-                    "資料庫可能包含 /media/{Segment} 圖片路徑，但本機公開媒體資料夾不存在：{SegmentPath}",
-                    segment,
-                    segmentPath);
-            }
-        }
+            exception,
+            "無法連線資料庫核對公開媒體參照；尚未判定圖片是否缺少。目標：{DatabaseTarget}",
+            qmahDatabaseResolution.Target);
     }
 }
 
@@ -606,7 +601,8 @@ app.Use(async (context, next) =>
 });
 if (File.Exists(mediaPaths.FaviconPath))
     app.MapMethods("/favicon.ico", [HttpMethods.Get, HttpMethods.Head],
-        () => Results.File(mediaPaths.FaviconPath, "image/x-icon"));
+        () => Results.File(mediaPaths.FaviconPath, "image/x-icon"))
+        .ExcludeFromDescription();
 app.MapControllers();
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)

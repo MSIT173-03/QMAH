@@ -64,8 +64,12 @@ public sealed class QmahOpenApiSecurityTransformer(
         OpenApiOperationTransformerContext context,
         CancellationToken cancellationToken)
     {
-        var controller = context.Description.ActionDescriptor.RouteValues["controller"] ?? "API";
-        var action = context.Description.ActionDescriptor.RouteValues["action"] ?? "Operation";
+        // Minimal API 不一定有 MVC 的 controller／action，缺少鍵時仍須保留授權資訊。
+        var routeValues = context.Description.ActionDescriptor.RouteValues;
+        routeValues.TryGetValue("controller", out var controllerValue);
+        routeValues.TryGetValue("action", out var actionValue);
+        var controller = controllerValue ?? "API";
+        var action = actionValue ?? "Operation";
         var operationKey = $"{controller}.{action}";
         if (QmahOpenApiOperationCatalog.TryGet(controller, action, out var operationInfo))
         {
