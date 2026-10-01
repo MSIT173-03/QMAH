@@ -36,7 +36,7 @@ describe('KeyList', () => {
   let fixture: ComponentFixture<KeyList>;
   let exchangedRuleIds: string[];
 
-  const keys = [makeKey('NORMAL_A', 5), makeKey('ERA_A', 2, 'ERA'), makeKey('UNI', 0, 'UNIVERSAL')];
+  const keys = [makeKey('NORMAL_A', 5), { ...makeKey('ERA_A', 2, 'ERA'), eraBucketId: 'era-taisho' }, makeKey('UNI', 0, 'UNIVERSAL')];
   const rules = [
     makeRule('r-era', 'NORMAL_A', 3, 'ERA_A'),
     makeRule('r-uni', 'NORMAL_A', 3, 'UNI'),
@@ -68,7 +68,12 @@ describe('KeyList', () => {
         ['BRONZE', '銅器'], ['CARVING', '雕刻'], ['CERAMIC', '陶瓷'], ['COIN', '錢幣'],
         ['ENAMEL', '琺瑯器'], ['JADE', '玉器'], ['LACQUER', '漆器'], ['PAINTING', '繪畫'],
       ].map(([code, name]) => ({ id: `category-${code}`, code, name }))),
-      getEras: () => of([]),
+      getEras: () =>
+        of([
+          { id: 'era-tang', code: 'TANG', name: '唐' },
+          { id: 'era-taisho', code: 'JAPAN_TAISHO', name: '日本大正時代' },
+          { id: 'era-edo', code: 'JAPAN_EDO', name: '日本江戶時代' },
+        ]),
     };
 
     await TestBed.configureTestingModule({
@@ -233,5 +238,12 @@ describe('KeyList', () => {
   it('背包格的操作提示會區分萬能鑰匙', () => {
     expect(component.bagTipHint(keys[0])).toBe('點擊使用');
     expect(component.bagTipHint(keys[2])).toBe('請至圖鑑頁的文物卡片上使用');
+  });
+
+  it('年代鑰匙依年代名稱算出字首，其他鑰匙不顯示', () => {
+    expect(component.eraMark(keys[1])).toEqual(['日', '大']);
+    expect(component.eraMarkByCode('ERA_A')).toEqual(['日', '大']);
+    expect(component.eraMark(keys[0])).toBeNull();
+    expect(component.eraMark(undefined)).toBeNull();
   });
 });
