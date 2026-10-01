@@ -53,7 +53,7 @@ export function placePiece(order: readonly number[], piece: number, slot: number
     </dialog>
     <dialog #confirmDialog class="assist-dialog" aria-labelledby="assist-title">
       <h3 id="assist-title">完成剩餘碎片？</h3>
-      <p>還有 {{ remaining() }} 格未歸位。將自動完成，扣 {{ assistancePenalty() }} 分，且本局不會獲得 S 級。完成後仍需自行送出結果。</p>
+      <p>還有 {{ remaining() }} 格未歸位。代完成扣 {{ assistancePenalty() }} 分，且本局不會獲得 S 級。{{ settleAfterHelp() ? '確認後會完成盤面並送出結果，獎勵依最後評分發放。' : '完成後仍需自行送出結果。' }}</p>
       <button type="button" (click)="confirmDialog.close()">繼續自己拼</button>
       <button type="button" (click)="autoFinish(); confirmDialog.close()">確認代完成</button>
     </dialog>
@@ -78,6 +78,8 @@ export class GamePlacementBoardComponent {
   readonly hintUsed = output<void>();
   readonly autoCompleted = output<number>();
   readonly availabilityChange = output<boolean>();
+  readonly settleAfterHelp = input(false);
+  readonly settlementRequested = output<void>();
   readonly failed = signal(false);
   readonly imageRevision = signal(0);
   readonly selected = signal<number | null>(null);
@@ -133,12 +135,21 @@ export class GamePlacementBoardComponent {
     this.hintRegion.set(this.region(piece)); this.hintUsed.emit();
     this.feedback.set('這塊屬於原圖的' + ['左上', '右上', '左下', '右下'][this.region(piece)] + '區域；已扣 3 分。');
   }
+  requestHint(): void {
+    if (this.disabled() || this.solved()) return;
+    if (this.selected() === null) {
+      this.selected.set(this.order().findIndex((piece, slot) => piece !== slot));
+      this.hintRegion.set(null);
+    }
+    this.showRegion();
+  }
   autoFinish(): void {
     if (this.disabled() || this.solved()) return;
     const count = this.remaining();
     this.autoCompleted.emit(count);
     this.orderChange.emit(this.order().map((_, slot) => slot));
     this.selected.set(null); this.hintRegion.set(null); this.feedback.set('代完成已記錄，現在可以送出結果。');
+    if (this.settleAfterHelp()) this.settlementRequested.emit();
   }
   beginDrag(event: PointerEvent, piece: number): void {
     if (piece < 0 || this.disabled() || this.solved() || event.button !== 0) return;

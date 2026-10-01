@@ -66,13 +66,13 @@
                   <p>哪一件館藏同時有這三處細節？選定後送出，揭曉答案。</p>
                   <div class="artifact-options" role="group" aria-label="選擇最相近的文物">
                     @for (option of locatorOptions; track option.artifactId; let index = $index) {
-                      <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" [disabled]="imageUnavailable || completing" (click)="chooseLocator(option.artifactId)">
+                      <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" [disabled]="imageUnavailable || completing || locatorExcludedIds.includes(option.artifactId)" (click)="chooseLocator(option.artifactId)">
                         <span class="locator-option__image">
                           @if ((option.primaryImagePath || option.thumbnailPath) && !imageFailed('option-' + option.artifactId)) {
                             <img [src]="option.primaryImagePath || option.thumbnailPath" alt="" (error)="markImageFailed('option-' + option.artifactId)" />
                           } @else { <span>影像暫缺</span> }
                         </span>
-                        <span class="locator-option__caption"><span class="locator-option__index">{{ ['A', 'B', 'C', 'D'][index] }}</span><span>{{ option.name }}</span><span class="locator-option__state">{{ locatorChoice === option.artifactId ? '已選定' : '選擇這件' }}</span></span>
+                        <span class="locator-option__caption"><span class="locator-option__index">{{ ['A', 'B', 'C', 'D'][index] }}</span><span>{{ option.name }}</span><span class="locator-option__state">{{ locatorExcludedIds.includes(option.artifactId) ? '提示已排除' : locatorChoice === option.artifactId ? '已選定' : '選擇這件' }}</span></span>
                       </button>
                     }
                   </div>
@@ -83,10 +83,10 @@
               <div class="game-board memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>共 {{ memoryCards.length }} 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" [disabled]="card.matched || memoryBusy || completing" [attr.aria-pressed]="card.revealed || card.matched" (click)="flipMemory(index)" (keydown)="moveBoardFocus($event, index, 4)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開第 ' + (index + 1) + ' 張卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback">{{ card.name }}</span> } } @else { <span class="card-back" aria-hidden="true">鑑</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }} · 翻牌組合 {{ moves }} 次</p></div>
             }
             @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
-              <div class="game-board ordering-game"><app-game-placement-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="puzzleOrder" [disabled]="completing || imageFailed('puzzle')" (orderChange)="updatePlacement('puzzle', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" (autoCompleted)="recordAuto($event)" (availabilityChange)="setPuzzleAvailability($event)" /></div>
+              <div class="game-board ordering-game"><app-game-placement-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="puzzleOrder" [disabled]="completing || imageFailed('puzzle')" (orderChange)="updatePlacement('puzzle', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" (autoCompleted)="recordAuto($event)" [settleAfterHelp]="true" (settlementRequested)="completeAttempt()" (availabilityChange)="setPuzzleAvailability($event)" /></div>
             }
             @else {
-              <div class="game-board ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>沿書畫原圖方向排列 15 段，接回連續的筆墨與景物。</p></div><app-game-scroll-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="restoreOrder" [disabled]="completing" (orderChange)="updatePlacement('restore', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" (autoCompleted)="recordAuto($event)" (availabilityChange)="setScrollAvailability($event)" /><p class="game-hint">{{ isRestoreSolved ? '書畫復位完成，可以送出結果。' : '拖曳碎片到目標格，接回書畫原貌。' }}</p></div>
+              <div class="game-board ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>沿書畫原圖方向排列 15 段，接回連續的筆墨與景物。</p></div><app-game-scroll-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="restoreOrder" [disabled]="completing" (orderChange)="updatePlacement('restore', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" (autoCompleted)="recordAuto($event)" [settleAfterHelp]="true" (settlementRequested)="completeAttempt()" (availabilityChange)="setScrollAvailability($event)" /><p class="game-hint">{{ isRestoreSolved ? '書畫復位完成，可以送出結果。' : '拖曳碎片到目標格，接回書畫原貌。' }}</p></div>
             }
 
             <footer class="play-footer"><div class="play-footer__context">            @if (current.modeCode === 'MEMORY_MATCH') {
@@ -101,7 +101,7 @@
               </details>
             } @else if (current.modeCode !== 'DETAIL_LOCATOR' && currentArtifactHint; as hint) {
               <details class="collection-hint"><summary>查看館藏提示</summary><strong>{{ hint.name }}</strong><p>{{ hint.description || '館藏說明整理中。' }}</p></details>
-            }<span class="progress-readout" aria-live="polite"><strong>{{ progressText }}</strong></span></div><div class="play-actions">@if (canComplete || completing) { <button type="button" (click)="completeAttempt()" [disabled]="completing" animate.enter="ready-enter">{{ completing ? '送出中…' : '送出結果' }}</button> } @else { <span class="play-command">{{ current.modeCode === 'DETAIL_LOCATOR' ? '選出答案後揭曉' : '完成盤面後揭曉' }}</span> }</div></footer>
+            }<span class="progress-readout" aria-live="polite"><strong>{{ progressText }}</strong></span></div><div class="play-actions"><button type="button" class="secondary" (click)="openPause(); helpRequested = true" [disabled]="!canAskForHelp">需要幫忙</button>@if (canComplete || completing) { <button type="button" (click)="completeAttempt()" [disabled]="completing" animate.enter="ready-enter">{{ completing ? '送出中…' : '送出結果' }}</button> } @else { <span class="play-command">{{ current.modeCode === 'DETAIL_LOCATOR' ? '選出答案後揭曉' : '完成盤面後揭曉' }}</span> }</div></footer>
           </section>
           @if (phase === 'complete' && complete; as result) {
             <section class="result-sheet" aria-labelledby="result-title" animate.enter="game-result-enter">
@@ -124,7 +124,7 @@
                 @if (current.modeCode === 'ARTIFACT_PUZZLE' || current.modeCode === 'STRIP_RESTORE') { <p class="result-note">拼圖與書畫依完成度、用時、放置次數與輔助計分；查看原圖不扣分，區域提示每次扣 3 分，代完成按剩餘比例扣分且不得 S 級。</p> }
                 @if (!result.economicRewardGranted) { <p class="result-note" role="status">今日獎勵額度已用完，成績仍會保留。</p> }
                 @if (result.alreadyCompleted) { <p class="result-note">這是已結算的結果，不會重複發放獎勵。</p> }
-                <div class="result-actions"><button type="button" (click)="playAgain()" [disabled]="starting">{{ starting ? '準備新挑戰…' : '再玩同一種' }}</button><button type="button" class="secondary" (click)="showModeList()" [disabled]="starting">換一種玩法</button><a routerLink="/game">返回多人鑑定大廳</a></div>
+                <p class="result-note">本局使用 {{ hintsUsed }} 次提示、{{ autoPlaced }} 份代完成協助，已納入評分；獎勵以後端結算為準。</p><div class="result-actions"><button type="button" (click)="playAgain()" [disabled]="starting">{{ starting ? '準備新挑戰…' : '再玩同一種' }}</button><button type="button" class="secondary" (click)="showModeList()" [disabled]="starting">換一種玩法</button><a routerLink="/game">返回多人鑑定大廳</a></div>
               </div>
             </section>
           }
@@ -133,8 +133,16 @@
         @else if (!error) { <div class="loading">目前沒有可開始的單人小遊戲。</div> }
       </section>
       <dialog #pauseDialog class="pause-dialog" aria-labelledby="pause-title" (close)="resumeFromPause()">
-        <h2 id="pause-title">{{ confirmLeaving ? '離開這一局？' : '先歇一會' }}</h2><p>{{ confirmLeaving ? '目前進度不會送出，也不會發放獎勵。' : '本局盤面與進度仍保留。' }}</p>
-        <button type="button" (click)="closePause()">繼續遊玩</button>
+        <h2 id="pause-title">{{ helpRequested ? '需要幫忙嗎？' : confirmLeaving ? '離開這一局？' : '先歇一會' }}</h2><p>{{ confirmLeaving ? '目前進度不會送出，也不會發放獎勵。' : '本局盤面與進度仍保留。' }}</p>
+        @if (helpRequested) {
+  <p>提示後可以繼續玩；每次提示扣 {{ hintPenalty }} 分。代完成按剩餘比例扣 {{ helpPenalty }} 分，且不能獲得 S 級。分數最低為 0，不會扣除你持有的點數。</p>
+  <p>代完成會直接送出結果，獎勵依最後評分發放。若本局有領取獎勵，也會計入每日獎勵次數。若送出失敗，盤面與求救紀錄會保留，可重新送出。</p>
+  <button type="button" (click)="useHelp(false)" [disabled]="!canRequestHint">提示後繼續（扣 {{ hintPenalty }} 分）</button>
+  <button type="button" (click)="useHelp(true)" [disabled]="!canAskForHelp">確認代完成並結算</button>
+} @else if (!confirmLeaving) {
+  <button type="button" (click)="helpRequested = true" [disabled]="!canAskForHelp">求救選項</button>
+}
+<button type="button" (click)="closePause()">繼續遊玩</button>
         <button type="button" class="secondary" (click)="leaveFromPause()">{{ confirmLeaving ? '確認離開' : '返回玩法列表' }}</button>
       </dialog>
     </div>

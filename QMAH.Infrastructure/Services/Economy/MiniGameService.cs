@@ -226,7 +226,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             var result = resultDocument.RootElement;
             var pieces = mode.Code == "ARTIFACT_PUZZLE" ? PuzzlePieceCount : RestorePieceCount;
             var wallSeconds = Math.Max(0, (DateTime.UtcNow - attempt.StartedAt).TotalSeconds);
-            if (TryGetInt(result, "scoringVersion", out var scoringVersion) && scoringVersion == 2)
+            if (TryGetInt(result, "scoringVersion", out var scoringVersion) && scoringVersion is 2 or 3)
             {
                 if (!TryGetInt(result, "elapsedSeconds", out var elapsedSeconds) || elapsedSeconds < 0 || elapsedSeconds > wallSeconds + 10
                     || !TryGetInt(result, "moves", out var moves) || moves is < 0 or > 100000
@@ -240,6 +240,21 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             {
                 // 舊版仍可送出盤面，但缺少表現紀錄時不把「完成」直接認定為 S 級。
                 normalizedScore = Math.Min(rawScore, Math.Max(0, mode.GradeSThreshold - 1));
+            }
+        }
+
+        if (mode.Code is "MEMORY_MATCH" or "DETAIL_LOCATOR")
+        {
+            using var resultDocument = JsonDocument.Parse(rawResultJson!);
+            var result = resultDocument.RootElement;
+            if (TryGetInt(result, "scoringVersion", out var scoringVersion) && scoringVersion == 3)
+            {
+                var units = mode.Code == "MEMORY_MATCH" && TryReadArtifactPool(attempt.ArtifactPoolJson, out var pool)
+                    ? Math.Min(pool.Count, StandardMemoryPairCount) : 1;
+                if (!TryGetInt(result, "hintsUsed", out var hints) || hints < 0 || hints > (mode.Code == "MEMORY_MATCH" ? units : 2)
+                    || !TryGetInt(result, "autoPlaced", out var assisted) || assisted < 0 || assisted > units)
+                    return EconomyResult<MiniGameCompleteView>.Invalid("求救紀錄無效，請保留進度並重新送出。");
+                normalizedScore = MiniGamePlacementScoring.CalculateAssistance(rawScore, units, hints, assisted, mode.Code == "DETAIL_LOCATOR" ? 10 : 3, mode.GradeSThreshold);
             }
         }
 
