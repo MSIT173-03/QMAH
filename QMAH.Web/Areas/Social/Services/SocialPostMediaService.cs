@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Web.Areas.Social.Services;
@@ -11,14 +12,13 @@ namespace QMAH.Web.Areas.Social.Services;
 /// </summary>
 /// <remarks>
 /// 儲存規則刻意與 QMAH.Api 的 SocialMediaController 相同：檔名使用 MediaAssets.SequenceNo、
-/// 實體檔案放在 Media:RootPath（預設兩個 host 都指向 QMAH.Web/wwwroot/media），
+/// 實體檔案放在 Media:RootPath（預設兩個 host 都指向 QMAH.Media/media），
 /// 資料庫只保存相對檔名。前台因此能直接透過 /api/v1/social/media/{id}/content 讀到後台上傳的圖片，
 /// 貼文列表的封面（coverImageUrl）也會自動取第一張 ACTIVE 圖片。
 /// </remarks>
 public sealed class SocialPostMediaService(
     QmahDbContext db,
-    IConfiguration configuration,
-    IWebHostEnvironment environment,
+    QmahMediaStoragePaths mediaPaths,
     ILogger<SocialPostMediaService> logger)
 {
     /// <summary>與前台發文相同：每篇最多 8 張、單張 8 MB。</summary>
@@ -76,7 +76,7 @@ public sealed class SocialPostMediaService(
         if (incoming.Count == 0)
             return 0;
 
-        var root = GetRootPath();
+        var root = mediaPaths.PublicRoot;
         Directory.CreateDirectory(root);
 
         var failed = 0;
@@ -189,22 +189,13 @@ public sealed class SocialPostMediaService(
     {
         try
         {
-            var path = ResolvePhysicalPath(GetRootPath(), storedPath);
+            var path = ResolvePhysicalPath(mediaPaths.PublicRoot, storedPath);
             return File.Exists(path) ? path : null;
         }
         catch (InvalidOperationException)
         {
             return null;
         }
-    }
-
-    private string GetRootPath()
-    {
-        // 與 QMAH.Api 的 Program.cs 解析方式一致：相對路徑以 ContentRoot 為基準。
-        var configured = configuration["Media:RootPath"] ?? Path.Combine("wwwroot", "media");
-        return Path.IsPathRooted(configured)
-            ? Path.GetFullPath(configured)
-            : Path.GetFullPath(Path.Combine(environment.ContentRootPath, configured));
     }
 
     private static string ResolvePhysicalPath(string root, string relativePath)

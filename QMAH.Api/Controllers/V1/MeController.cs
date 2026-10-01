@@ -59,7 +59,7 @@ public sealed class MeController(
             user.CreatedAt,
             profile?.Bio,
             profile?.Visibility ?? "PRIVATE",
-            mediaUrlResolver.Resolve(profile?.AvatarPath)));
+            mediaUrlResolver.Resolve(avatarStorage.ResolvePublicPath(user.Id, profile?.AvatarPath))));
     }
 
     /// <summary>依歷史登入資料即時計算目前會員的累積天數、連續天數與登入率。</summary>
@@ -201,13 +201,7 @@ public sealed class MeController(
         }
 
         // 上傳與公開讀取共用同一個實體目錄，避免啟動工作目錄不同造成路徑分歧。
-        Directory.CreateDirectory(avatarStorage.RootPath);
-
-        // 產生不重複的檔名
-        var fileName =
-            $"{Guid.NewGuid():N}{extension}";
-
-        var filePath = Path.Combine(avatarStorage.RootPath, fileName);
+        var (filePath, publicPath) = avatarStorage.CreateUploadTarget(userId, extension);
 
         // 寫入圖片
         await using (var stream =
@@ -219,8 +213,7 @@ public sealed class MeController(
         }
 
         // 更新同一個 UserProfile 的 AvatarPath
-        profile.AvatarPath =
-            $"/uploads/avatars/{fileName}";
+        profile.AvatarPath = publicPath;
 
         profile.UpdatedAt = DateTime.UtcNow;
 

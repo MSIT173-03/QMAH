@@ -62,9 +62,12 @@ _工具輸出/
 **/debug-logs/
 
 # 社群上傳圖片只保留在本機或部署儲存區；官方文物圖鑑素材仍由 Git 管理
-/QMAH.Web/wwwroot/media/*
-!/QMAH.Web/wwwroot/media/catalog/
-!/QMAH.Web/wwwroot/media/catalog/**
+/QMAH.Web/wwwroot/media/
+/QMAH.Web/wwwroot/uploads/avatars/
+/QMAH.Media/media/*
+!/QMAH.Media/media/catalog/
+!/QMAH.Media/media/catalog/**
+/QMAH.Media/uploads/
 
 # 作業系統產生的檔案
 .DS_Store

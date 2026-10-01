@@ -122,7 +122,7 @@ public class ProfileController : Controller
             Email = user.Email ?? "",
             Nickname = profile.Nickname,
             Bio = profile.Bio,
-            AvatarPath = profile.AvatarPath,
+            AvatarPath = _avatarStorage.ResolvePublicPath(user.Id, profile.AvatarPath),
             Visibility = profile.Visibility,
             RowVersion = profile.RowVersion
         };
@@ -204,18 +204,7 @@ public class ProfileController : Controller
             }
 
             // 與 API 和 Web 的公開讀取目錄共用同一項設定。
-            var uploadFolder = _avatarStorage.RootPath;
-
-            Directory.CreateDirectory(uploadFolder);
-
-            // 產生新的檔名，避免同名圖片互相覆蓋
-            var fileName =
-                $"{Guid.NewGuid()}{extension}";
-
-            var filePath = Path.Combine(
-                uploadFolder,
-                fileName
-            );
+            var (filePath, publicPath) = _avatarStorage.CreateUploadTarget(user.Id, extension);
 
             await using (var stream =
                 new FileStream(filePath, FileMode.Create))
@@ -224,8 +213,7 @@ public class ProfileController : Controller
             }
 
             // 資料庫只存網站路徑
-            profile.AvatarPath =
-                $"/uploads/avatars/{fileName}";
+            profile.AvatarPath = publicPath;
         }
 
         try

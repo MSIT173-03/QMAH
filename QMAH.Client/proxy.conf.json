@@ -24,6 +24,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/uploads/achievements": {
+    "target": "https://localhost:7249",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/uploads": {
     "target": "https://localhost:7039",
     "secure": false,

@@ -16,6 +16,73 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// </remarks>
 public sealed class EconomyService(QmahDbContext db)
 {
+    /// <summary>將既有達標進度一次轉成探索鑰匙；重複或並行請求只結算尚未轉換的進度。</summary>
+    public async Task<EconomyResult<KeyProgressConversionView>> ConvertKeyProgressAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable, retryToken);
+            var setting = await GetGameEconomySettingAsync(retryToken);
+            var threshold = setting.KeyProgressToNormalKey;
+            if (threshold <= 0)
+                return EconomyResult<KeyProgressConversionView>.Conflict("鑰匙轉換門檻設定無效，請聯絡管理員。");
+
+            var progress = await db.KeyProgressBalances
+                .SingleOrDefaultAsync(item => item.UserId == userId, retryToken);
+            var balance = progress?.Balance ?? 0;
+            if (balance < 0)
+                return EconomyResult<KeyProgressConversionView>.Conflict("鑰匙進度資料異常，請聯絡管理員。");
+            var convertedKeys = balance / threshold;
+            if (convertedKeys == 0)
+            {
+                await transaction.CommitAsync(retryToken);
+                return EconomyResult<KeyProgressConversionView>.Success(
+                    new(0, 0, balance, threshold));
+            }
+
+            // 與小遊戲相同：相容目前 Snapshot 的 KEY-NORMAL，優先使用 NORMAL。
+            var normalKey = await db.KeyDefinitions
+                .Where(item => item.IsActive && item.ScopeType == "NORMAL"
+                    && (item.Code == "NORMAL" || item.Code == "KEY-NORMAL"))
+                .OrderBy(item => item.Code == "NORMAL" ? 0 : 1)
+                .FirstOrDefaultAsync(retryToken);
+            if (normalKey is null)
+                return EconomyResult<KeyProgressConversionView>.Conflict("探索鑰匙暫時無法發放，進度已保留，請稍後重試。");
+            var keyBalance = await GetOrCreateKeyBalanceAsync(userId, normalKey.Id, retryToken);
+            if (keyBalance.Balance < 0 || keyBalance.Balance > int.MaxValue - convertedKeys)
+                return EconomyResult<KeyProgressConversionView>.Conflict("鑰匙餘額資料異常，進度已保留，請聯絡管理員。");
+
+            var now = DateTime.UtcNow;
+            var referenceId = Guid.NewGuid();
+            var consumedProgress = convertedKeys * threshold;
+            progress!.Balance = balance % threshold;
+            progress.UpdatedAt = now;
+            keyBalance.Balance += convertedKeys;
+            keyBalance.UpdatedAt = now;
+            db.KeyProgressTransactions.Add(new KeyProgressTransaction
+            {
+                Id = Guid.NewGuid(), UserId = userId, Amount = -consumedProgress,
+                Reason = "達標鑰匙進度自動轉換探索鑰匙",
+                ReferenceType = "KEY_PROGRESS_CONVERSION", ReferenceId = referenceId, CreatedAt = now
+            });
+            db.KeyTransactions.Add(new KeyTransaction
+            {
+                Id = Guid.NewGuid(), UserId = userId, KeyDefinitionId = normalKey.Id,
+                Amount = convertedKeys, Reason = "達標鑰匙進度自動轉換探索鑰匙",
+                ReferenceType = "KEY_PROGRESS_CONVERSION", ReferenceId = referenceId, CreatedAt = now
+            });
+            await db.SaveChangesAsync(retryToken);
+            await transaction.CommitAsync(retryToken);
+            return EconomyResult<KeyProgressConversionView>.Success(
+                new(convertedKeys, consumedProgress, progress.Balance, threshold));
+        }, cancellationToken);
+    }
+
     /// <summary>讀取會員目前的鑑定點數、鑰匙、解鎖候選數與可用兌換規則。</summary>
     public async Task<MemberEconomyView> GetMemberEconomyAsync(
         Guid userId,
@@ -1217,6 +1284,13 @@ public sealed record MemberEconomyView(
     int KeyProgressToNormalKey,
     IReadOnlyList<KeyBalanceView> Keys,
     IReadOnlyList<KeyExchangeRuleView> ExchangeRules);
+
+/// <summary>本次實際入帳的探索鑰匙數與剩餘進度；未達標時轉換數為零。</summary>
+public sealed record KeyProgressConversionView(
+    int ConvertedNormalKeys,
+    int ConsumedKeyProgress,
+    int RemainingKeyProgress,
+    int KeyProgressToNormalKey);
 
 /// <summary>單一鑰匙定義在會員身上的餘額與目前可解鎖數。</summary>
 public sealed record KeyBalanceView(

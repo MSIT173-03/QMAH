@@ -2,7 +2,6 @@
 
   <app-back-to-member></app-back-to-member>
 
-
   <!-- ===================== -->
   <!-- 頁面標題 -->
   <!-- ===================== -->
@@ -39,22 +38,30 @@
 
   @if (errorMessage) {
 
-    <div class="state-box error">
+    <div class="state-box error" role="alert">
       {{ errorMessage }}
+      <button type="button" class="economy-button" (click)="loadEconomy()" [disabled]="loading">重新載入</button>
     </div>
 
   }
 
 
-  @if (economy) {
+  @if (economy && !loading) {
 
+    @if (conversionError) {
+      <div class="state-box error" role="alert">
+        <p>{{ conversionError }}</p>
+        <button type="button" class="economy-button" (click)="loadEconomy()" [disabled]="loading">
+          {{ loading ? '轉換中…' : '重試轉換' }}
+        </button>
+      </div>
+    }
 
     <!-- ===================== -->
     <!-- 資產摘要 -->
     <!-- ===================== -->
 
     <section class="summary-grid">
-
 
       <!-- 鑑定點數 -->
 
@@ -79,12 +86,16 @@
       </div>
 
 
-      <!-- 一般鑰匙累積進度 -->
+      <!-- 探索鑰匙累積進度 -->
 
       <div class="summary-card">
 
         <div class="summary-icon">
-          <img src="{{ keyAssetPath('NORMAL') }}" alt="探索鑰匙圖示" loading="lazy" />
+          <img
+            src="{{ keyAssetPath('NORMAL') }}"
+            alt="探索鑰匙圖示"
+            loading="lazy"
+          />
         </div>
 
         <div class="progress-content">
@@ -92,7 +103,6 @@
           <span class="summary-label">
             探索鑰匙累積進度
           </span>
-
 
           <div class="summary-value progress-value">
 
@@ -105,7 +115,10 @@
           </div>
 
 
-          <div class="progress-bar">
+          <div class="progress-bar" role="progressbar" aria-label="探索鑰匙累積進度"
+            aria-valuemin="0" [attr.aria-valuemax]="economy.keyProgressToNormalKey"
+            [attr.aria-valuenow]="keyProgressPercent * economy.keyProgressToNormalKey / 100"
+            [attr.aria-valuetext]="economy.keyProgressBalance + ' / ' + economy.keyProgressToNormalKey">
 
             <div
               class="progress-fill"
@@ -130,7 +143,7 @@
 
             } @else {
 
-              已達成一般鑰匙累積門檻
+              已達轉換門檻，等待轉換為探索鑰匙
 
             }
 
@@ -143,243 +156,35 @@
     </section>
 
 
-
     <!-- ===================== -->
-    <!-- 我的鑰匙 -->
+    <!-- 鑰匙背包 -->
+    <!-- 使用共用 KeyList -->
     <!-- ===================== -->
 
-    <section class="keys-section">
+    <section class="key-backpack-section">
 
-
-      <div class="section-title">
-
-        <div>
-
-          <h2>
-            我的鑰匙
-          </h2>
-
-          <p>
-            查看目前持有的各類文物鑰匙
-          </p>
-
-        </div>
-
-
-        <span class="key-count">
-          {{ economy.keys.length }} 種
-        </span>
-
-      </div>
-
-
-
-      <!-- ===================== -->
-      <!-- 篩選 -->
-      <!-- ===================== -->
-
-      <div class="filter-bar">
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'ALL'"
-          [attr.aria-pressed]="selectedFilter === 'ALL'"
-          (click)="setFilter('ALL')"
-        >
-
-          全部
-
-          <span>
-            {{ getFilterCount('ALL') }}
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'NORMAL'"
-          [attr.aria-pressed]="selectedFilter === 'NORMAL'"
-          (click)="setFilter('NORMAL')"
-        >
-
-          一般
-
-          <span>
-            {{ getFilterCount('NORMAL') }}
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'CATEGORY'"
-          [attr.aria-pressed]="selectedFilter === 'CATEGORY'"
-          (click)="setFilter('CATEGORY')"
-        >
-
-          分類
-
-          <span>
-            {{ getFilterCount('CATEGORY') }}
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'ERA'"
-          [attr.aria-pressed]="selectedFilter === 'ERA'"
-          (click)="setFilter('ERA')"
-        >
-
-          年代
-
-          <span>
-            {{ getFilterCount('ERA') }}
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="selectedFilter === 'UNIVERSAL'"
-          [attr.aria-pressed]="selectedFilter === 'UNIVERSAL'"
-          (click)="setFilter('UNIVERSAL')"
-        >
-
-          萬能
-
-          <span>
-            {{ getFilterCount('UNIVERSAL') }}
-          </span>
-
-        </button>
-
-      </div>
-
-
-
-      <!-- ===================== -->
-      <!-- 鑰匙卡片 -->
-      <!-- ===================== -->
-
-      <div class="key-grid">
-
-
-        @for (key of filteredKeys; track key.id) {
-
-          <div
-            class="key-card"
-            [class.empty]="key.balance === 0"
-            [class.normal-key]="key.scopeType === 'NORMAL'"
-            [class.category-key]="key.scopeType === 'CATEGORY'"
-            [class.era-key]="key.scopeType === 'ERA'"
-            [class.universal-key]="key.scopeType === 'UNIVERSAL'"
-          >
-
-
-            <div class="key-card-header">
-
-
-              <div class="key-icon">
-                <img src="{{ keyAssetPath(key.scopeType) }}" [alt]="keyScopeLabel(key.scopeType) + '圖示'" loading="lazy" />
-              </div>
-
-
-              <div class="key-card-badges">
-
-
-                <span class="scope-badge">
-
-                  {{ keyScopeLabel(key.scopeType) }}
-
-                </span>
-
-
-                <span
-                  class="balance-badge"
-                  [class.has-key]="key.balance > 0"
-                >
-
-                  × {{ key.balance }}
-
-                </span>
-
-              </div>
-
-            </div>
-
-
-            <h3>
-              {{ key.name }}
-            </h3>
-
-            <p class="key-purpose">
-              {{ keyScopeDescription(key.scopeType) }}
-            </p>
-
-
-            <div class="key-info">
-
-
-              <div>
-
-                <span>
-                  持有數量
-                </span>
-
-                <strong>
-                  {{ key.balance }}
-                </strong>
-
-              </div>
-
-
-              <div>
-
-                <span>
-                  可解鎖文物
-                </span>
-
-                <strong>
-                  {{ key.eligibleArtifactCount }}
-                </strong>
-
-              </div>
-
-
-              <div>
-
-                <span>
-                  回收點數
-                </span>
-
-                <strong>
-                  {{ key.recyclePointValue }}
-                </strong>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        }
-
-      </div>
+      <app-key-list class="key-list--economy"></app-key-list>
 
     </section>
 
   }
 
 </div>
+
+<dialog #conversionDialog class="conversion-dialog" aria-labelledby="conversion-title"
+  aria-describedby="conversion-description">
+  @if (conversion) {
+    <img class="conversion-key" [src]="keyAssetPath('NORMAL')" alt="" width="64" height="64" />
+    <h2 id="conversion-title">獲得 {{ conversion.convertedNormalKeys }} 把探索鑰匙</h2>
+    <p id="conversion-description">
+      累積的 {{ conversion.consumedKeyProgress }} 點鑰匙進度已自動轉換，鑰匙已放入背包。
+    </p>
+    <p class="conversion-remaining">
+      目前進度 {{ conversion.remainingKeyProgress }} / {{ conversion.keyProgressToNormalKey }}，
+      再累積 {{ conversion.keyProgressToNormalKey - conversion.remainingKeyProgress }} 點可獲得下一把。
+    </p>
+    <form method="dialog">
+      <button class="economy-button" autofocus>知道了</button>
+    </form>
+  }
+</dialog>

@@ -123,7 +123,7 @@ public class MembersController : Controller
                     Role = userRole,
                     PointBalance = pointBalance?.Balance ?? 0,
                     Nickname = profile?.Nickname,
-                    AvatarPath = profile?.AvatarPath
+                    AvatarPath = _avatarStorage.ResolvePublicPath(user.Id, profile?.AvatarPath)
                 };
             })
             // 角色篩選
@@ -440,7 +440,7 @@ public class MembersController : Controller
             Email = user.Email ?? "",
             Nickname = profile.Nickname,
             Bio = profile.Bio,
-            AvatarPath = profile.AvatarPath,
+            AvatarPath = _avatarStorage.ResolvePublicPath(user.Id, profile.AvatarPath),
             Visibility = profile.Visibility,
             RowVersion = profile.RowVersion
         };
@@ -512,18 +512,7 @@ public class MembersController : Controller
                 return View(model);
             }
 
-            var fileName =
-                $"{Guid.NewGuid()}{extension}";
-
-            // 與 API 和 Web 的公開讀取目錄共用同一項設定。
-            var folderPath = _avatarStorage.RootPath;
-
-            Directory.CreateDirectory(folderPath);
-
-            var filePath = Path.Combine(
-                folderPath,
-                fileName
-            );
+            var (filePath, publicPath) = _avatarStorage.CreateUploadTarget(id, extension);
 
             await using var stream =
                 new FileStream(
@@ -533,8 +522,7 @@ public class MembersController : Controller
 
             await model.AvatarFile.CopyToAsync(stream);
 
-            profile.AvatarPath =
-                $"/uploads/avatars/{fileName}";
+            profile.AvatarPath = publicPath;
         }
 
         try

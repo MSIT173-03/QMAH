@@ -40,6 +40,18 @@
 
 /* ---------- header ---------- */
 
+// 會員資產頁只調整外側尺寸，保留背包的格子、篩選與合成台原有設計。
+:host(.key-list--economy) {
+  height: auto;
+
+  .key-page {
+    min-height: 0;
+    max-width: none;
+    margin: 0;
+    padding-bottom: 24px;
+  }
+}
+
 .page-header {
   margin: 0 -20px 28px;
 }

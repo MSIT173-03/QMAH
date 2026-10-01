@@ -10,6 +10,22 @@ namespace QMAH.Api.Controllers.V1;
 [Route("api/v1/me")]
 public sealed class EconomyController(EconomyService economyService) : ApiControllerBase
 {
+    /// <summary>自動結算目前會員已達門檻的鑰匙進度；重複呼叫不會重複發放。</summary>
+    [HttpPost("keys/convert-progress")]
+    public async Task<ActionResult<KeyProgressConversionDto>> ConvertKeyProgress(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        var result = await economyService.ConvertKeyProgressAsync(userId, cancellationToken);
+        if (!result.Succeeded)
+            return ToFailure(result);
+        var value = result.Value!;
+        return Ok(new KeyProgressConversionDto(
+            value.ConvertedNormalKeys, value.ConsumedKeyProgress,
+            value.RemainingKeyProgress, value.KeyProgressToNormalKey));
+    }
+
     /// <summary>取得目前會員的鑑定點數、鑰匙進度、鑰匙餘額與可用兌換規則。</summary>
     [HttpGet("economy")]
     public async Task<ActionResult<MemberEconomyDto>> GetEconomy(

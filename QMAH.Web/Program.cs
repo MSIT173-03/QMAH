@@ -213,10 +213,10 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestHeadersTotalSize = 64 * 1024;
 });
 
-var avatarStorage = AvatarStoragePaths.Resolve(
-    builder.Configuration["Avatar:RootPath"],
-    builder.Environment.ContentRootPath,
-    Path.Combine("wwwroot", "uploads", "avatars"));
+var mediaPaths = QmahMediaStoragePaths.Resolve(builder.Configuration, builder.Environment.ContentRootPath);
+var mediaRoot = mediaPaths.PublicRoot;
+var avatarStorage = mediaPaths.Avatars;
+builder.Services.AddSingleton(mediaPaths);
 builder.Services.AddSingleton(avatarStorage);
 var app = builder.Build();
 
@@ -349,6 +349,48 @@ app.Use(async (context, next) =>
     await next(context);
 });
 
+if (Directory.Exists(mediaRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaRoot),
+        RequestPath = "/media"
+    });
+}
+
+if (Directory.Exists(mediaPaths.PresetAvatarRoot)
+    && !string.Equals(mediaPaths.PresetAvatarRoot, Path.Combine(mediaPaths.ImageRoot, "avatars"),
+        OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaPaths.PresetAvatarRoot),
+        RequestPath = "/images/avatars"
+    });
+}
+if (Directory.Exists(mediaPaths.ImageRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaPaths.ImageRoot),
+        RequestPath = "/images"
+    });
+}
+if (Directory.Exists(mediaPaths.FontRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(mediaPaths.FontRoot),
+        RequestPath = "/fonts"
+    });
+}
+Directory.CreateDirectory(mediaPaths.AchievementRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(mediaPaths.AchievementRoot),
+    RequestPath = "/uploads/achievements"
+});
+
 // 執行期間上傳的頭像不在建置時的靜態資產清單內，所有環境都從共用目錄提供。
 Directory.CreateDirectory(avatarStorage.RootPath);
 app.UseStaticFiles(new StaticFileOptions
@@ -389,6 +431,9 @@ app.UseAuthorization();
 
 // Areas route 必須先於一般 route，否則後台區域可能被當成一般 Controller；新增 Area 不需要再註冊獨立路由。
 app.MapStaticAssets();
+if (File.Exists(mediaPaths.FaviconPath))
+    app.MapMethods("/favicon.ico", [HttpMethods.Get, HttpMethods.Head],
+        () => Results.File(mediaPaths.FaviconPath, "image/x-icon"));
 
 app.MapControllerRoute(
     name: "areas",

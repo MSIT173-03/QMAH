@@ -63,7 +63,13 @@ describe('KeyList', () => {
       },
       unlockWithKey: () => of({ unlocked: false, artifactId: null, artifactName: null, remainingEligibleArtifactCount: 0, message: null }),
     };
-    const catalogServiceStub = { getCategories: () => of([]), getEras: () => of([]) };
+    const catalogServiceStub = {
+      getCategories: () => of([
+        ['BRONZE', '銅器'], ['CARVING', '雕刻'], ['CERAMIC', '陶瓷'], ['COIN', '錢幣'],
+        ['ENAMEL', '琺瑯器'], ['JADE', '玉器'], ['LACQUER', '漆器'], ['PAINTING', '繪畫'],
+      ].map(([code, name]) => ({ id: `category-${code}`, code, name }))),
+      getEras: () => of([]),
+    };
 
     await TestBed.configureTestingModule({
       imports: [KeyList],
@@ -82,6 +88,25 @@ describe('KeyList', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('以分類 ID 查詢 API 代碼，背包與合成台共用八種材質圖示', () => {
+    const codes = ['BRONZE', 'CARVING', 'CERAMIC', 'COIN', 'ENAMEL', 'JADE', 'LACQUER', 'PAINTING'];
+    const categoryKeys = codes.map((code, index) => ({
+      ...makeKey(`opaque-key-${index}`, 1, 'CATEGORY'),
+      categoryId: `category-${code}`,
+      name: '分類鑰匙',
+    }));
+    component.keys.set(categoryKeys);
+    for (const [index, key] of categoryKeys.entries()) {
+      const expected = `/assets/catalog/keys/category-${codes[index].toLowerCase()}.png`;
+      expect(component.keySlotIcon(key)).toBe(expected);
+      expect(component.keyIconByCode(key.code)).toBe(expected);
+    }
+    expect(component.keySlotIcon({ ...makeKey('unknown', 1, 'CATEGORY'), name: '繪畫鑰匙' }))
+      .toBe('/assets/catalog/keys/category-painting.png');
+    expect(component.keySlotIcon({ ...makeKey('unknown', 1, 'CATEGORY'), name: '銅器鑰匙' }))
+      .toBe('/assets/catalog/keys/category-bronze.png');
   });
 
   it('只把持有中、且是兌換來源的鑰匙列進材料欄', () => {

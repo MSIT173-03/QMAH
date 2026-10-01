@@ -18,6 +18,10 @@ using QMAH.Infrastructure.Models.Identity;
 //增加GOOGLE API 9/17
 using System.Security.Claims;
 
+// 註冊表單採用 Cloudflare Turnstile 人機驗證。
+using System.Net.Http.Json;
+using System.Text.Json.Serialization;
+
 
 namespace QMAH.Api.Controllers.V1;
 
@@ -32,6 +36,7 @@ public sealed class AccountController(
     IPasswordResetEmailSender emailSender,
     IOptions<QmahPasswordResetOptions> passwordResetOptions,
     IConfiguration configuration,
+    IHttpClientFactory httpClientFactory,
     ILogger<AccountController> logger) : ApiControllerBase
 {
     [AllowAnonymous]
@@ -537,16 +542,128 @@ public sealed class AccountController(
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
+        // =========================
+        // Cloudflare Turnstile 驗證
+        // =========================
+
+        if (string.IsNullOrWhiteSpace(request.TurnstileToken))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "安全驗證失敗",
+                Detail = "請完成安全驗證後再註冊。"
+            });
+        }
+
+        var turnstileSecret =
+            configuration["Turnstile:SecretKey"];
+
+        if (string.IsNullOrWhiteSpace(turnstileSecret))
+        {
+            logger.LogError(
+                "Cloudflare Turnstile SecretKey 尚未設定。");
+
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "安全驗證服務目前不可用");
+        }
+
+        var httpClient =
+            httpClientFactory.CreateClient();
+
+        try
+        {
+            using var verificationTimeout =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            verificationTimeout.CancelAfter(TimeSpan.FromSeconds(10));
+
+            using var verifyResponse =
+                await httpClient.PostAsJsonAsync(
+                    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+                    new
+                    {
+                        secret = turnstileSecret,
+                        response = request.TurnstileToken
+                    },
+                    verificationTimeout.Token);
+
+            if (!verifyResponse.IsSuccessStatusCode)
+            {
+                logger.LogWarning(
+                    "Cloudflare Turnstile Siteverify 無法正常回應。StatusCode={StatusCode}",
+                    verifyResponse.StatusCode);
+
+                return Problem(
+                    statusCode: StatusCodes.Status503ServiceUnavailable,
+                    title: "安全驗證服務目前不可用");
+            }
+
+            var turnstileResult =
+                await verifyResponse.Content
+                    .ReadFromJsonAsync<TurnstileVerifyResponse>(
+                        cancellationToken: verificationTimeout.Token);
+
+            if (turnstileResult?.Success != true)
+            {
+                logger.LogWarning(
+                    "Cloudflare Turnstile 驗證失敗。Errors={Errors}",
+                    string.Join(
+                        ", ",
+                        turnstileResult?.ErrorCodes
+                        ?? Array.Empty<string>()));
+
+                return BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "安全驗證失敗",
+                    Detail = "安全驗證無效或已過期，請重新驗證。"
+                });
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning("Cloudflare Turnstile Siteverify 逾時。");
+
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "安全驗證服務目前不可用");
+        }
+        catch (HttpRequestException exception)
+        {
+            logger.LogWarning(exception, "Cloudflare Turnstile Siteverify 請求失敗。");
+
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "安全驗證服務目前不可用");
+        }
+        catch (System.Text.Json.JsonException exception)
+        {
+            logger.LogWarning(exception, "Cloudflare Turnstile Siteverify 回應格式無效。");
+
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "安全驗證服務目前不可用");
+        }
+
+        // =========================
+        // 原本的會員註冊流程
+        // =========================
+
         var email = request.Email.Trim();
+
         if (await userManager.FindByEmailAsync(email) is not null)
+        {
             return Conflict(new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,
                 Title = "Email 已註冊",
                 Detail = "請使用其他 Email。"
             });
+        }
 
         var now = DateTime.UtcNow;
+
         var user = new ApplicationUser
         {
             Id = Guid.NewGuid(),
@@ -557,11 +674,19 @@ public sealed class AccountController(
             CreatedAt = now,
             UpdatedAt = now
         };
-        var createResult = await userManager.CreateAsync(user, request.Password);
+
+        var createResult =
+            await userManager.CreateAsync(
+                user,
+                request.Password);
+
         if (!createResult.Succeeded)
         {
             foreach (var error in createResult.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
+                ModelState.AddModelError(
+                    string.Empty,
+                    error.Description);
+
             return ValidationProblem(ModelState);
         }
 
@@ -573,17 +698,31 @@ public sealed class AccountController(
             CreatedAt = now,
             UpdatedAt = now
         });
-        await db.SaveChangesAsync(cancellationToken);
 
-        var roleResult = await userManager.AddToRoleAsync(user, "User");
+        await db.SaveChangesAsync(
+            cancellationToken);
+
+        var roleResult =
+            await userManager.AddToRoleAsync(
+                user,
+                "User");
+
         if (!roleResult.Succeeded)
         {
             foreach (var error in roleResult.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
+                ModelState.AddModelError(
+                    string.Empty,
+                    error.Description);
+
             return ValidationProblem(ModelState);
         }
 
-        return Created("/api/v1/account/login", new { userId = user.Id });
+        return Created(
+            "/api/v1/account/login",
+            new
+            {
+                userId = user.Id
+            });
     }
 
     [AllowAnonymous]
@@ -664,4 +803,17 @@ public sealed class AccountController(
 
         return NoContent();
     }
+
+    // =========================
+    // Cloudflare Turnstile 回應
+    // =========================
+    private sealed class TurnstileVerifyResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
+
+        [JsonPropertyName("error-codes")]
+        public string[] ErrorCodes { get; set; } = Array.Empty<string>();
+    }
+
 }

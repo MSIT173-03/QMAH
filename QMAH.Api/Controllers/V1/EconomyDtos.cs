@@ -2,6 +2,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QMAH.Api.Controllers.V1;
 
+/// <summary>將已達門檻的鑰匙進度入帳後，回傳實際轉換數與剩餘進度。</summary>
+public sealed record KeyProgressConversionDto(
+    int ConvertedNormalKeys,
+    int ConsumedKeyProgress,
+    int RemainingKeyProgress,
+    int KeyProgressToNormalKey);
+
 /// <summary>目前會員的鑑定點數、鑰匙進度、鑰匙餘額與可用兌換規則。</summary>
 public sealed record MemberEconomyDto(
     int PointBalance,
