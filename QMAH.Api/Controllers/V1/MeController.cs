@@ -434,6 +434,77 @@ public sealed class MeController(
             .ToList());
     }
 
+    /// <summary>
+    /// 將目前登入會員已取得的指定成就設為展示稱號。
+    /// 同一時間只允許展示一個稱號。
+    /// </summary>
+    [HttpPut("achievements/{id:guid}/display")]
+    public async Task<ActionResult<UserAchievementDto>> SetDisplayedAchievement(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        // 取得目前登入會員
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        // 找到這個會員「已經取得」的成就
+        // id 使用 UserAchievement.Id
+        var selectedAchievement = await db.UserAchievements
+            .Include(item => item.Achievement)
+            .FirstOrDefaultAsync(
+                item =>
+                    item.Id == id &&
+                    item.UserId == userId &&
+                    item.Achievement.Status == "ACTIVE",
+                cancellationToken);
+
+        if (selectedAchievement is null)
+        {
+            return MissingResource(
+                "找不到成就",
+                "這個成就不存在、尚未取得，或不屬於目前帳號。");
+        }
+
+        // 取得目前正在展示的其他成就
+        var displayedAchievements = await db.UserAchievements
+            .Where(item =>
+                item.UserId == userId &&
+                item.IsDisplayed &&
+                item.Id != selectedAchievement.Id)
+            .ToListAsync(cancellationToken);
+
+        // 取消原本展示中的稱號
+        foreach (var achievement in displayedAchievements)
+        {
+            achievement.IsDisplayed = false;
+            achievement.DisplayedAt = null;
+        }
+
+        // 設定新的展示稱號
+        selectedAchievement.IsDisplayed = true;
+        selectedAchievement.DisplayedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        // 回傳剛設定完成的成就
+        return Ok(new UserAchievementDto(
+            selectedAchievement.Id,
+            selectedAchievement.AchievementId,
+            selectedAchievement.Achievement.Code,
+            selectedAchievement.Achievement.Name,
+            selectedAchievement.Achievement.Title,
+            selectedAchievement.Achievement.Description,
+            mediaUrlResolver.Resolve(
+                selectedAchievement.Achievement.IconPath),
+            selectedAchievement.Achievement.ConditionType,
+            selectedAchievement.Achievement.ThresholdValue,
+            selectedAchievement.AchievedAt,
+            selectedAchievement.IsDisplayed,
+            selectedAchievement.DisplayedAt
+        ));
+    }
+
+
     /// <summary>取得目前登入會員的購物車內容。</summary>
     [HttpGet("cart")]
     public async Task<ActionResult<IReadOnlyList<CartItemDto>>> GetCart(

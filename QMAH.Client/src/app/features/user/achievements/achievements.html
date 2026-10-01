@@ -3,17 +3,31 @@
   <!-- 共用返回會員中心 -->
   <app-back-to-member></app-back-to-member>
 
+
+  <!-- ===================== -->
+  <!-- 頁面標題 -->
+  <!-- ===================== -->
+
   <div class="page-header">
 
     <div>
-      <h1>成就與稱號</h1>
+
+      <h1>
+        成就與稱號
+      </h1>
 
       <p>
-        查看已取得的成就與目前展示中的稱號。
+        查看已取得的成就，並選擇你想展示的稱號。
       </p>
+
     </div>
 
   </div>
+
+
+  <!-- ===================== -->
+  <!-- Loading -->
+  <!-- ===================== -->
 
   @if (loading) {
 
@@ -23,6 +37,11 @@
 
   }
 
+
+  <!-- ===================== -->
+  <!-- Error -->
+  <!-- ===================== -->
+
   @if (errorMessage) {
 
     <div class="state-box error">
@@ -30,6 +49,25 @@
     </div>
 
   }
+
+
+  <!-- ===================== -->
+  <!-- Success -->
+  <!-- ===================== -->
+
+  @if (successMessage) {
+
+    <div class="state-box success">
+      <app-qmah-icon name="circle-check" />
+      {{ successMessage }}
+    </div>
+
+  }
+
+
+  <!-- ===================== -->
+  <!-- 尚未取得成就 -->
+  <!-- ===================== -->
 
   @if (
     !loading &&
@@ -55,10 +93,18 @@
 
   }
 
+
   @if (achievements.length > 0) {
 
+
+    <!-- ===================== -->
     <!-- 上方摘要 -->
+    <!-- ===================== -->
+
     <section class="summary-section">
+
+
+      <!-- 已取得成就 -->
 
       <div class="summary-card">
 
@@ -80,7 +126,13 @@
 
       </div>
 
-      <div class="summary-card">
+
+      <!-- 展示中稱號 -->
+
+      <div
+        class="summary-card title-summary"
+        [class.has-title]="displayedAchievement"
+      >
 
         <div class="summary-icon">
           <app-qmah-icon name="sparkles" />
@@ -96,7 +148,7 @@
 
             @if (displayedAchievement) {
 
-              {{ displayedAchievement.title }}
+              《{{ displayedAchievement.title }}》
 
             } @else {
 
@@ -114,7 +166,11 @@
 
     </section>
 
+
+    <!-- ===================== -->
     <!-- 成就列表 -->
+    <!-- ===================== -->
+
     <section class="achievement-section">
 
       <div class="section-title">
@@ -126,7 +182,7 @@
           </h2>
 
           <p>
-            目前已取得的成就與對應稱號
+            已取得的成就可以選擇一個稱號進行展示
           </p>
 
         </div>
@@ -136,6 +192,7 @@
         </span>
 
       </div>
+
 
       <div class="achievement-grid">
 
@@ -149,29 +206,56 @@
             [class.displayed]="achievement.isDisplayed"
           >
 
+
+            <!-- ===================== -->
+            <!-- 卡片 Header -->
+            <!-- ===================== -->
+
             <div class="achievement-card-header">
 
               <div class="achievement-icon">
                 <app-qmah-icon name="trophy" />
               </div>
 
+
               @if (achievement.isDisplayed) {
 
                 <span class="display-badge">
+
+                  <app-qmah-icon
+                    name="circle-check"
+                    size="14"
+                  />
+
                   展示中
+
                 </span>
 
               }
 
             </div>
 
+
+            <!-- ===================== -->
+            <!-- 成就內容 -->
+            <!-- ===================== -->
+
             <h3>
               {{ achievement.name }}
             </h3>
 
+
             <div class="title">
+
+              <app-qmah-icon
+                name="sparkles"
+                size="14"
+              />
+
               {{ achievement.title }}
+
             </div>
+
 
             @if (achievement.description) {
 
@@ -180,6 +264,11 @@
               </p>
 
             }
+
+
+            <!-- ===================== -->
+            <!-- 成就資訊 -->
+            <!-- ===================== -->
 
             <div class="achievement-info">
 
@@ -190,10 +279,15 @@
                 </span>
 
                 <strong>
-                  {{ getConditionTypeLabel(achievement.conditionType) }}
+                  {{
+                    getConditionTypeLabel(
+                      achievement.conditionType
+                    )
+                  }}
                 </strong>
 
               </div>
+
 
               <div>
 
@@ -207,6 +301,7 @@
 
               </div>
 
+
               <div>
 
                 <span>
@@ -214,10 +309,69 @@
                 </span>
 
                 <strong>
-                  {{ achievement.achievedAt | date:'yyyy/MM/dd' }}
+                  {{
+                    achievement.achievedAt
+                      | date:'yyyy/MM/dd'
+                  }}
                 </strong>
 
               </div>
+
+            </div>
+
+
+            <!-- ===================== -->
+            <!-- 稱號操作 -->
+            <!-- ===================== -->
+
+            <div class="title-action">
+
+              @if (achievement.isDisplayed) {
+
+                <button
+                  type="button"
+                  class="display-button active"
+                  disabled
+                >
+
+                  <app-qmah-icon
+                    name="circle-check"
+                    size="16"
+                  />
+
+                  目前展示中
+
+                </button>
+
+              } @else {
+
+                <button
+                  type="button"
+                  class="display-button"
+                  [disabled]="settingDisplayId !== null"
+                  (click)="setDisplayedAchievement(achievement)"
+                >
+
+                  @if (
+                    isSettingDisplay(achievement)
+                  ) {
+
+                    設定中...
+
+                  } @else {
+
+                    <app-qmah-icon
+                      name="sparkles"
+                      size="16"
+                    />
+
+                    設為展示稱號
+
+                  }
+
+                </button>
+
+              }
 
             </div>
 
