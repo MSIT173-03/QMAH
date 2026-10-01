@@ -93,26 +93,6 @@ public sealed class MiniGameController(
             value.AlreadyRewarded));
     }
 
-    private ActionResult ToFailure<T>(EconomyResult<T> result) => result.ErrorCode switch
-    {
-        "NOT_FOUND" => Problem(
-            statusCode: StatusCodes.Status404NotFound,
-            title: "找不到資源",
-            detail: result.ErrorMessage),
-        "FORBIDDEN" => Problem(
-            statusCode: StatusCodes.Status403Forbidden,
-            title: "沒有執行此操作的權限",
-            detail: result.ErrorMessage),
-        "CONFLICT" => Problem(
-            statusCode: StatusCodes.Status409Conflict,
-            title: "目前狀態不允許此操作",
-            detail: result.ErrorMessage),
-        _ => Problem(
-            statusCode: StatusCodes.Status400BadRequest,
-            title: "請求資料無效",
-            detail: result.ErrorMessage)
-    };
-
     private MiniGameStartDto ToStartDto(MiniGameStartView value) => new(
         value.AttemptId,
         value.ModeCode,
