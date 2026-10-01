@@ -1,4 +1,4 @@
-<div class="app-shell" [attr.data-area]="activeArea()">
+<div class="app-shell" [attr.data-area]="activeArea()" [class.game-focus-mode]="activeArea() === 'game' && gameFocus.active()">
   <a class="app-skip-link" href="#main-content">跳至主要內容</a>
 
   <header class="app-header">

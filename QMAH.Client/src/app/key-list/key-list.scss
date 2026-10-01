@@ -924,6 +924,52 @@
   text-align: center;
 }
 
+/* ---------- 年代鑰匙的字首 ----------
+   鑰匙圖本身不變，年代字首疊在鑰匙前方、貼齊格子左上角。字首規則見 shared/era-initials.ts：
+   字首不重複只用一個字，重複時取字首＋第一個不重複的字（日本大正 → 日大）。
+   字級用 cqw（格子寬度的百分比），背包格、材料格、合成台各種大小都等比縮放；
+   描一圈格子底色的邊，字壓到鑰匙時也讀得出來。 */
+
+.key-slot,
+.craft-slot,
+.craft-tray__slot,
+.craft-output,
+.craft-center,
+.craft-menu__slot {
+  container-type: inline-size;
+}
+
+.key-era-mark {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 5cqw 0 0 6cqw;
+  overflow: hidden;
+  border-radius: inherit;
+  color: var(--yellow);
+  font-family: var(--qmah-font-serif);
+  font-size: 27cqw;
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  text-shadow:
+    0 0 1.5cqw var(--card), 0 0 1.5cqw var(--card),
+    0.8cqw 0.8cqw 0 var(--card), -0.8cqw -0.8cqw 0 var(--card),
+    0.8cqw -0.8cqw 0 var(--card), -0.8cqw 0.8cqw 0 var(--card);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 數量角標與紅色徽章維持在最上層 */
+.key-slot__count,
+.craft-center__badge {
+  z-index: 3;
+}
+
 /* 物品詳細資訊提示框：整頁共用一個，跟著游標出現在指向的物品旁（參考系統檔案提示框的
    精簡樣式）。位置由 key-list.ts 的 positionKeyTip() 以 fixed 定位計算；這裡不能加
    transform，否則會影響定位基準的量測。 */

@@ -1,4 +1,4 @@
-<div class="game-guide">
+<div class="game-guide" [class.is-focus-mode]="focusMode.active()">
   <!-- ui-integration: 說明頁沿用 Game 子導覽，讓玩家可直接回到多人鑑定或切換單人玩法。 -->
   <app-game-navigation>
   </app-game-navigation>
@@ -78,10 +78,7 @@
         <div class="training-demo__stage" [attr.data-mode]="activeTrainingDemo()">
           @if (activeTrainingDemo() === 'DETAIL_LOCATOR') {
             <div class="training-demo__body" animate.enter="game-panel-enter">
-              <div class="training-demo__crop" role="img" aria-label="文物原圖的局部示範線索">
-                <img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="" />
-                <span>局部線索</span>
-              </div>
+              <app-game-detail-clue image="/images/login/real/cloisonne-tripod-incense-burner.jpg" [cropX]=".49" [cropY]=".4" />
               <div class="training-demo__question">
                 <h3>從四件相似文物中找出原圖</h3>
                 <p class="training-demo__instruction">示範只顯示原圖的一小塊。正式題目會優先以同類、同時期文物作為干擾選項。</p>
@@ -120,31 +117,27 @@
             </div>
           } @else if (activeTrainingDemo() === 'ARTIFACT_PUZZLE') {
             <div class="training-demo__board-layout" animate.enter="game-panel-enter">
-              <div class="training-demo__puzzle-grid" role="group" aria-label="二十五格館藏拼圖示範">
-                @for (piece of puzzleDemoOrder(); track $index; let slot = $index) {
-                  <button type="button" [class.is-selected]="puzzleDemoSelection() === slot" [class.is-correct]="puzzleDemoComplete()" [disabled]="puzzleDemoComplete()" [attr.aria-label]="'第 ' + (piece + 1) + ' 塊，目前在第 ' + (slot + 1) + ' 格'" [attr.aria-pressed]="puzzleDemoSelection() === slot" [style.background-image]="'url(/images/login/real/cloisonne-tripod-incense-burner.jpg)'" [style.background-size]="'500% 500%'" [style.background-position]="imagePiecePosition(piece, 5, 5)" (click)="selectDemoPiece('puzzle', slot)"><span>{{ slot + 1 }}</span></button>
-                }
-              </div>
+              <app-game-placement-board image="/images/login/real/cloisonne-tripod-incense-burner.jpg" name="掐絲琺瑯香爐" [order]="puzzleDemoOrder()" (orderChange)="updateDemoPlacement('puzzle', $event)" (moveMade)="recordDemoMove('puzzle')" />
               <div class="training-demo__side-copy">
-                <h3>交換碎片，拼回文物原圖</h3>
-                <p>示範與正式挑戰相同為 5×5。先選一塊，再選目的格交換，逐步拼回完整文物。</p>
-                <p class="training-demo__readout" aria-live="polite">已交換 {{ puzzleDemoMoves() }} 次</p>
+                <h3>拖曳碎片，拼回文物原圖</h3>
+                <p>示範與正式挑戰相同為 5×5。將備選區碎片拖到目標格，也可點選碎片再點目的格，逐步拼回完整文物。</p>
+                <p class="training-demo__readout" aria-live="polite">已放置 {{ puzzleDemoMoves() }} 次</p>
                 @if (puzzleDemoComplete()) { <p class="training-demo__result is-correct" role="status" animate.enter="game-result-enter">拼圖完成！</p> }
                 <button type="button" class="training-demo__retry" (click)="restartPuzzleDemo()">重新打亂</button>
               </div>
             </div>
           } @else {
             <div class="training-demo__board-layout training-demo__board-layout--scroll" animate.enter="game-panel-enter">
-              <div class="training-demo__strip-grid" role="group" aria-label="十五格長卷復位示範">
-                @for (piece of stripDemoOrder(); track $index; let slot = $index) {
-                  <button type="button" [class.is-selected]="stripDemoSelection() === slot" [class.is-correct]="stripDemoComplete()" [disabled]="stripDemoComplete()" [attr.aria-label]="'第 ' + (piece + 1) + ' 段，目前在第 ' + (slot + 1) + ' 格'" [attr.aria-pressed]="stripDemoSelection() === slot" [style.background-image]="'url(/images/login/real/cloisonne-tripod-incense-burner.jpg)'" [style.background-size]="'500% 300%'" [style.background-position]="imagePiecePosition(piece, 5, 3)" (click)="selectDemoPiece('scroll', slot)"><span>{{ slot + 1 }}</span></button>
-                }
-              </div>
+              <app-game-scroll-board [image]="scrollSample().image" [name]="scrollSample().name" [order]="stripDemoOrder()" (orderChange)="updateDemoPlacement('scroll', $event)" (moveMade)="recordDemoMove('scroll')" />
               <div class="training-demo__side-copy">
-                <h3>把散開的畫面復位</h3>
-                <p>依照紋飾與器形線索交換 15 格。操作與拼圖相同，但格數與畫面比例不同。</p>
-                <p class="training-demo__readout" aria-live="polite">已交換 {{ stripDemoMoves() }} 次</p>
-                @if (stripDemoComplete()) { <p class="training-demo__result is-correct" role="status" animate.enter="game-result-enter">長卷復位完成！</p> }
+                <h3>接回書畫的筆墨與景物</h3>
+                <p>橫幅為 5×3、立軸為 3×5，均依完整原圖比例顯示。觀察山水、人物與筆墨的連續線索，拖曳十五段歸位；需要看清細節時可展開原圖並放大。</p>
+                <div class="training-demo__scroll-samples" role="group" aria-label="選擇書畫示範">
+                  @for (sample of scrollSamples; track sample.image; let index = $index) { <button type="button" [attr.aria-pressed]="scrollSampleIndex() === index" (click)="selectScrollSample(index)">{{ sample.label }}</button> }
+                </div>
+                <p>{{ scrollSample().name }}</p>
+                <p class="training-demo__readout" aria-live="polite">已放置 {{ stripDemoMoves() }} 次</p>
+                @if (stripDemoComplete()) { <p class="training-demo__result is-correct" role="status" animate.enter="game-result-enter">筆墨接上了，書畫復位完成！<span>你用了 {{ stripDemoMoves() }} 次放置。此示範不會發放獎勵。</span></p> }
                 <button type="button" class="training-demo__retry" (click)="restartStripDemo()">重新打亂</button>
               </div>
             </div>

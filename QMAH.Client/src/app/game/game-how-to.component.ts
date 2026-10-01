@@ -35,7 +35,7 @@ const HOW_TO_CONTENT: Record<GameHowToVariant, HowToContent> = {
     description: '從單人模式選一種玩法，依照畫面提示辨識文物或完成操作任務，送出後立即查看成績與既有獎勵。',
     steps: [
       { label: '01', title: '選模式', description: '從目前啟用的單人玩法中選擇一種挑戰。' },
-      { label: '02', title: '觀察或操作任務', description: '看線索辨識文物、完成 5×5 拼圖、翻開 16 張牌配對，或整理 3×5 長卷段落。' },
+      { label: '02', title: '觀察或操作任務', description: '看局部線索辨識文物、完成 5×5 拼圖、翻開卡牌配對，或沿書畫原圖方向排列 15 段橫卷／立軸。' },
       { label: '03', title: '送出答案', description: '完成畫面上的任務後，送出這一局的答案與操作結果。' },
       { label: '04', title: '顯示成績與既有獎勵', description: '系統立即顯示分數、等級、點數與鑰匙進度；獎勵額度用完時仍會保留成績。' }
     ]

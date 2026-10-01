@@ -65,56 +65,40 @@
 
       <!-- 鑑定點數 -->
 
-      <div class="summary-card">
-
-        <div class="summary-icon">
-          <app-qmah-icon name="gem" />
-        </div>
-
-        <div>
-
-          <span class="summary-label">
-            鑑定點數
-          </span>
-
-          <div class="summary-value">
-            {{ economy.pointBalance }}
+      <article class="summary-card point-card" [attr.data-point-level]="pointLevel">
+        <div class="asset-heading">
+          <div class="asset-number">
+            <span class="summary-label">鑑定點數</span>
+            <div class="summary-value" [class.long-value]="economy.pointBalance >= 10000000">{{ economy.pointBalance | number:'1.0-0' }}</div>
+            <span class="asset-state">{{ pointLevelLabel }}</span>
           </div>
-
+          <div class="gem-collection" aria-hidden="true">
+            @for (gem of pointGems; track gem) {
+              <app-qmah-icon name="gem" [size]="gem === 0 ? 40 : 23" />
+            }
+          </div>
         </div>
-
-      </div>
+        <dl class="asset-notes">
+          <div><dt>如何累積</dt><dd>多人遊戲、每日簽到，或回收已無法解鎖文物的鑰匙。</dd></div>
+          <div><dt>點數用途</dt><dd>兌換商城折價券，結帳時依券面條件折抵商品金額。</dd></div>
+        </dl>
+      </article>
 
 
       <!-- 探索鑰匙累積進度 -->
 
-      <div class="summary-card">
-
-        <div class="summary-icon">
-          <img
-            src="{{ keyAssetPath('NORMAL') }}"
-            alt="探索鑰匙圖示"
-            loading="lazy"
-          />
-        </div>
-
-        <div class="progress-content">
-
-          <span class="summary-label">
-            探索鑰匙累積進度
-          </span>
-
-          <div class="summary-value progress-value">
-
-            {{ economy.keyProgressBalance }}
-
-            /
-
-            {{ economy.keyProgressToNormalKey }}
-
+      <article class="summary-card key-progress-card" [class.almost-ready]="isKeyAlmostReady">
+        <div class="asset-heading">
+          <div class="asset-number">
+            <span class="summary-label">探索鑰匙累積進度</span>
+            <div class="summary-value progress-value">{{ economy.keyProgressBalance }} / {{ economy.keyProgressToNormalKey }}</div>
+            <span class="asset-state">{{ isKeyAlmostReady ? '快集滿了' : '探索累積中' }}</span>
           </div>
-
-
+          <div class="summary-icon key-progress-icon">
+            <img [src]="keyAssetPath('NORMAL')" alt="探索鑰匙圖示" loading="lazy" />
+          </div>
+        </div>
+        <div class="progress-content">
           <div class="progress-bar" role="progressbar" aria-label="探索鑰匙累積進度"
             aria-valuemin="0" [attr.aria-valuemax]="economy.keyProgressToNormalKey"
             [attr.aria-valuenow]="keyProgressPercent * economy.keyProgressToNormalKey / 100"
@@ -130,28 +114,18 @@
 
 
           <div class="progress-hint">
-
             @if (remainingKeyProgress > 0) {
-
-              再累積
-
-              <strong>
-                {{ remainingKeyProgress }}
-              </strong>
-
-              點即可獲得 1 把探索鑰匙
-
+              <span>還差 <strong>{{ remainingKeyProgress }}</strong> 點，獲得 1 把探索鑰匙</span>
             } @else {
-
               已達轉換門檻，等待轉換為探索鑰匙
-
             }
-
           </div>
-
         </div>
-
-      </div>
+        <dl class="asset-notes">
+          <div><dt>如何累積</dt><dd>玩單人小遊戲，累積鑰匙碎片。</dd></div>
+          <div><dt>集滿之後</dt><dd>每滿 {{ economy.keyProgressToNormalKey }} 點，自動換成 1 把探索鑰匙；剩下的碎片繼續累積。</dd></div>
+        </dl>
+      </article>
 
     </section>
 

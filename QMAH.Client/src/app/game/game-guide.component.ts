@@ -1,8 +1,12 @@
-import { Component, OnDestroy, computed, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { GameHowToComponent, GameHowToVariant } from './game-how-to.component';
 import { GameNavigationComponent } from './game-navigation.component';
+import { GamePlacementBoardComponent } from './game-placement-board.component';
+import { GameScrollBoardComponent } from './game-scroll-board.component';
+import { GameDetailClueComponent } from './game-detail-clue.component';
+import { GameFocusMode } from '../core/services/game-focus-mode';
 
 type TrainingDemoCode = 'DETAIL_LOCATOR' | 'MEMORY_MATCH' | 'ARTIFACT_PUZZLE' | 'STRIP_RESTORE';
 
@@ -54,13 +58,15 @@ function createDemoOrder(length: number): number[] {
 @Component({
   selector: 'app-game-guide',
   standalone: true,
-  imports: [RouterLink, GameHowToComponent, GameNavigationComponent],
+  imports: [GamePlacementBoardComponent, RouterLink, GameHowToComponent, GameNavigationComponent, GameScrollBoardComponent, GameDetailClueComponent],
   templateUrl: './game-guide.component.html',
   styleUrl: './game-guide.component.scss'
 })
 export class GameGuideComponent implements OnDestroy {
+  readonly focusMode = inject(GameFocusMode);
   // 說明頁一次呈現一種玩法；每個示範只用本機樣本，不會建立正式挑戰或發放獎勵。
-  readonly activeGuide = signal<GameHowToVariant>('multiplayer');
+  private readonly route = inject(ActivatedRoute);
+  readonly activeGuide = signal<GameHowToVariant>(this.route.snapshot.queryParamMap.get('mode') === 'training' ? 'training' : 'multiplayer');
   readonly failedDemoImages = signal<ReadonlySet<string>>(new Set());
 
   markDemoImageFailed(id: string): void {
@@ -80,10 +86,14 @@ export class GameGuideComponent implements OnDestroy {
   readonly trainingModes = [
     { code: 'DETAIL_LOCATOR', label: '局部辨識', hint: '看一小塊線索，挑出相似文物' },
     { code: 'MEMORY_MATCH', label: '翻牌配對', hint: '記住圖樣位置，找齊配對' },
-    { code: 'ARTIFACT_PUZZLE', label: '館藏拼圖', hint: '交換碎片，拼回文物原圖' },
-    { code: 'STRIP_RESTORE', label: '長卷復位', hint: '整理 15 格畫面順序' },
+    { code: 'ARTIFACT_PUZZLE', label: '館藏拼圖', hint: '拖曳碎片，拼回文物原圖' },
+    { code: 'STRIP_RESTORE', label: '長卷復位', hint: '沿書畫方向排列 15 段' },
   ] as const;
-  readonly activeTrainingDemo = signal<TrainingDemoCode>('DETAIL_LOCATOR');
+  readonly activeTrainingDemo = signal<TrainingDemoCode>(this.initialDemo());
+  private initialDemo(): TrainingDemoCode {
+    const code = this.route.snapshot.queryParamMap.get('game');
+    return this.trainingModes.find(mode => mode.code === code)?.code ?? 'DETAIL_LOCATOR';
+  }
   readonly trainingChoices = [
     { name: '掐絲琺瑯雲龍紋三足香爐', correct: true },
     { name: '同類型的掐絲琺瑯鼎式爐', correct: false },
@@ -99,14 +109,20 @@ export class GameGuideComponent implements OnDestroy {
   readonly memoryDemoPairCount = MEMORY_DEMO_IMAGES.length;
   readonly memoryDemoMatchedPairs = computed(() => this.memoryDemoCards().filter((card) => card.matched).length / 2);
   readonly memoryDemoComplete = computed(() => this.memoryDemoCards().length > 0 && this.memoryDemoCards().every((card) => card.matched));
-  readonly puzzleDemoOrder = signal(createDemoOrder(25));
+  readonly puzzleDemoOrder = signal(Array<number>(25).fill(-1));
   readonly puzzleDemoSelection = signal<number | null>(null);
   readonly puzzleDemoMoves = signal(0);
   readonly puzzleDemoComplete = computed(() => this.puzzleDemoOrder().every((piece, slot) => piece === slot));
-  readonly stripDemoOrder = signal(createDemoOrder(15));
+  readonly stripDemoOrder = signal(Array<number>(15).fill(-1));
   readonly stripDemoSelection = signal<number | null>(null);
   readonly stripDemoMoves = signal(0);
   readonly stripDemoComplete = computed(() => this.stripDemoOrder().every((piece, slot) => piece === slot));
+  readonly scrollSamples = [
+    { name: '東海道六 五十三次 戸塚', image: '/media/catalog/painting/南購畫00001600000/display.jpg', label: '橫幅' },
+    { name: '清黃應諶陋室銘圖　軸', image: '/media/catalog/painting/中畫00015500000/display.jpg', label: '立軸' }
+  ] as const;
+  readonly scrollSampleIndex = signal(0);
+  readonly scrollSample = computed(() => this.scrollSamples[this.scrollSampleIndex()]);
   private memoryDemoTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnDestroy(): void {
@@ -194,16 +210,28 @@ export class GameGuideComponent implements OnDestroy {
     else this.stripDemoMoves.update((moves) => moves + 1);
   }
 
+  updateDemoPlacement(kind: 'puzzle' | 'scroll', order: number[]): void {
+    (kind === 'puzzle' ? this.puzzleDemoOrder : this.stripDemoOrder).set(order);
+  }
+  recordDemoMove(kind: 'puzzle' | 'scroll'): void {
+    (kind === 'puzzle' ? this.puzzleDemoMoves : this.stripDemoMoves).update(value => value + 1);
+  }
+
   restartPuzzleDemo(): void {
-    this.puzzleDemoOrder.set(createDemoOrder(25));
+    this.puzzleDemoOrder.set(Array<number>(25).fill(-1));
     this.puzzleDemoSelection.set(null);
     this.puzzleDemoMoves.set(0);
   }
 
   restartStripDemo(): void {
-    this.stripDemoOrder.set(createDemoOrder(15));
+    this.stripDemoOrder.set(Array<number>(15).fill(-1));
     this.stripDemoSelection.set(null);
     this.stripDemoMoves.set(0);
+  }
+
+  selectScrollSample(index: number): void {
+    this.scrollSampleIndex.set(index);
+    this.restartStripDemo();
   }
 
   imagePiecePosition(piece: number, columns: number, rows: number): string {

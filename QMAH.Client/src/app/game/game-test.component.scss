@@ -1,3 +1,5 @@
+@use './game-scene' as scene;
+
 /* 管理員遊戲檢查中心：沿用 QMAH tokens，不改測試流程或 API。 */
 :host {
   display: block;
@@ -7,11 +9,34 @@
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 .game-test-page {
+  @include scene.surface;
   box-sizing: border-box;
-  width: min(100%, clamp(1200px, 88vw, 1440px));
-  margin: 0 auto;
-  padding: 12px clamp(16px, 3vw, 24px) 64px;
 }
+.tools-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 28px 0 16px; color: var(--scene-ink); }
+.tools-heading h1 { margin: 0; font: 700 clamp(28px, 3vw, 36px)/1.3 var(--qmah-font-serif); }
+.tools-heading a { min-height: 44px; display: inline-flex; align-items: center; color: var(--scene-ink); font-size: 14px; text-underline-offset: 4px; }
+.tools-tabs { display: flex; gap: 8px; }
+.tools-tabs button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--game-nav-line); border-radius: var(--qmah-radius-control); color: var(--scene-ink); background: transparent; font: inherit; cursor: pointer; }
+.tools-tabs button[aria-pressed='true'] { color: var(--qmah-ink); background: var(--qmah-paper); }
+.game-test-page .test-launcher { border: 0; box-shadow: none; background: transparent; padding: 24px 0; margin: 0; color: var(--scene-ink); }
+.test-launcher h2 { margin: 0; font: 700 24px/1.3 var(--qmah-font-serif); }
+.test-launcher .description { color: var(--scene-muted); }
+.rehearsal-picker { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.8fr); align-items: center; gap: clamp(24px, 5vw, 64px); min-height: max(400px, calc(100dvh - 360px)); }
+.rehearsal-menu { display: grid; gap: 12px; }
+.rehearsal-menu button { display: grid; gap: 8px; min-height: 96px; padding: 16px; border: 1px solid transparent; border-radius: var(--qmah-radius-control); color: var(--scene-ink); background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.rehearsal-menu strong { font: 700 22px/1.3 var(--qmah-font-serif); }
+.rehearsal-menu span { font-size: 14px; color: var(--scene-muted); }
+.rehearsal-menu button[aria-pressed='true'] { border-color: var(--game-nav-line); background: color-mix(in srgb, var(--scene-ink) 10%, transparent); }
+.rehearsal-preview { min-width: 0; }
+.rehearsal-preview h3 { margin: 0 0 24px; font: 700 32px/1.3 var(--qmah-font-serif); }
+.rehearsal-flow { display: flex; flex-wrap: wrap; gap: 8px 24px; list-style: none; padding: 0; margin: 0 0 24px; }
+.rehearsal-flow li { padding-block: 12px; border-bottom: 1px solid var(--game-nav-line); }
+.rehearsal-preview p { max-width: 52ch; color: var(--scene-muted); }
+.rehearsal-start { display: inline-flex; align-items: center; gap: 16px; min-height: 48px; padding: 12px 24px; border: 0; border-radius: var(--qmah-radius-control); background: var(--qmah-paper); color: var(--qmah-ink); font: inherit; font-weight: 700; cursor: pointer; }
+.rehearsal-start app-qmah-icon { width: 18px; }
+.game-test-page .diagnostics-heading { color: var(--scene-ink); }
+.game-test-page .diagnostics-heading .description { color: var(--scene-muted); }
+@media (max-width: 650px) { .tools-heading { align-items: start; flex-direction: column; gap: 4px; } .rehearsal-picker { grid-template-columns: 1fr; gap: 24px; } .rehearsal-menu { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } .rehearsal-menu button { min-height: 80px; padding: 10px 6px; text-align: center; } .rehearsal-menu strong { font-size: 16px; } .rehearsal-menu span { display: none; } .rehearsal-preview h3 { font-size: 26px; } }
 .game-test-page *, .game-test-page *::before, .game-test-page *::after { box-sizing: border-box; }
 .test-launcher {
   margin-top: 28px;

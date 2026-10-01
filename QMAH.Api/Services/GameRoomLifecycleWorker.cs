@@ -15,26 +15,33 @@ public sealed class GameRoomLifecycleWorker(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await using var scope = scopeFactory.CreateAsyncScope();
-                var gameLifecycle = scope.ServiceProvider.GetRequiredService<GameRoomLifecycleService>();
-                await gameLifecycle.ProcessExpiredPresenceAsync(stoppingToken);
-                await gameLifecycle.ProcessDueGamesAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "推進多人遊戲房間狀態時發生錯誤。");
-            }
+                try
+                {
+                    await using var scope = scopeFactory.CreateAsyncScope();
+                    var gameLifecycle = scope.ServiceProvider.GetRequiredService<GameRoomLifecycleService>();
+                    await gameLifecycle.ProcessExpiredPresenceAsync(stoppingToken);
+                    await gameLifecycle.ProcessDueGamesAsync(stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception exception)
+                {
+                    logger.LogError(exception, "推進多人遊戲房間狀態時發生錯誤。");
+                }
 
-            if (!await timer.WaitForNextTickAsync(stoppingToken))
-                break;
+                if (!await timer.WaitForNextTickAsync(stoppingToken))
+                    break;
+            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // 停止服務會取消計時器等待，屬於正常結束，不應回報背景服務故障。
         }
     }
 }

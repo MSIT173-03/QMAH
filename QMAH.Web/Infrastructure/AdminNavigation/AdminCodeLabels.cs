@@ -47,6 +47,7 @@ public static class AdminCodeLabels
 
     public static string KeyTransactionReason(string? value) => value?.Trim().ToUpperInvariant() switch
     {
+        _ when value?.Contains("進度", StringComparison.Ordinal) == true && value.Contains("轉換", StringComparison.Ordinal) => value,
         "ADMIN_GRANT" => "後台發放",
         "ADMIN_ADJUST" => "後台調整",
         "ADMIN_DELETE_BALANCE" => "刪除背包餘額",
@@ -58,6 +59,12 @@ public static class AdminCodeLabels
 
     public static string ReferenceType(string? value) => value?.Trim().ToUpperInvariant() switch
     {
+        "KEY_PROGRESS_CONVERSION" => "鑰匙碎片自動轉換",
+        "MINIGAME_PROGRESS_CONVERSION" => "小遊戲碎片轉換",
+        "DAILY_CHECK_IN" => "每日簽到獎勵",
+        "DAILY_CHECK_IN_MAKEUP" => "補簽基本獎勵",
+        "DAILY_CHECK_IN_MAKEUP_FREE" => "免費補簽獎勵",
+        "DAILY_CHECK_IN_MAKEUP_FEE" => "補簽扣點",
         "ADMIN" => "後台操作",
         "SYSTEM" => "系統",
         "GAME" => "遊戲",

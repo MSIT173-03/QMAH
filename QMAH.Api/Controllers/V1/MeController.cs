@@ -77,7 +77,9 @@ public sealed class MeController(
             summary.TotalLoginDays,
             summary.CurrentLoginStreak,
             summary.LongestLoginStreak,
-            summary.LifetimeLoginRate));
+            summary.LifetimeLoginRate,
+            summary.HasCheckedInToday, summary.DailyPointReward, summary.AwardedPoints, summary.CurrentCheckInStreak,
+            summary.RemainingMonthlyBonuses, summary.MakeUpDays?.Select(day => new MakeUpCheckInDayDto(day.Date, day.PointCost)).ToArray()));
     }
 
     /// <summary>記錄目前會員一次前台登入活動，並回傳重新計算的登入進度。</summary>
@@ -96,7 +98,49 @@ public sealed class MeController(
             summary.TotalLoginDays,
             summary.CurrentLoginStreak,
             summary.LongestLoginStreak,
-            summary.LifetimeLoginRate));
+            summary.LifetimeLoginRate,
+            summary.HasCheckedInToday, summary.DailyPointReward, summary.AwardedPoints, summary.CurrentCheckInStreak,
+            summary.RemainingMonthlyBonuses, summary.MakeUpDays?.Select(day => new MakeUpCheckInDayDto(day.Date, day.PointCost)).ToArray()));
+    }
+
+    /// <summary>領取今日簽到基本點數與連續加成；台灣時間每日一次，不接受前端指定獎勵量。</summary>
+    [HttpPost("daily-activity/check-in")]
+    public async Task<ActionResult<DailyActivityDto>> CheckIn(CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        try
+        {
+            var summary = await dailyActivityService.CheckInAsync(userId, cancellationToken);
+            return Ok(new DailyActivityDto(summary.LastLoginDate, summary.HasLoggedInToday,
+                summary.TotalLoginDays, summary.CurrentLoginStreak, summary.LongestLoginStreak,
+                summary.LifetimeLoginRate, summary.HasCheckedInToday, summary.DailyPointReward,
+                summary.AwardedPoints, summary.CurrentCheckInStreak, summary.RemainingMonthlyBonuses,
+                summary.MakeUpDays?.Select(day => new MakeUpCheckInDayDto(day.Date, day.PointCost)).ToArray()));
+        }
+        catch (OverflowException exception)
+        {
+            return Problem(statusCode: 409, title: "無法領取簽到獎勵", detail: exception.Message);
+        }
+    }
+
+    /// <summary>補近 7 天的簽到，每日一次免費，其餘扣 1～2 點並發基本 3 點。</summary>
+    [HttpPost("daily-activity/make-up")]
+    public async Task<ActionResult<DailyActivityDto>> MakeUpCheckIn([FromBody] MakeUpCheckInRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        try
+        {
+            var summary = await dailyActivityService.MakeUpCheckInAsync(userId, request.TargetDate, request.ExpectedPointCost, cancellationToken);
+            return Ok(new DailyActivityDto(summary.LastLoginDate, summary.HasLoggedInToday,
+                summary.TotalLoginDays, summary.CurrentLoginStreak, summary.LongestLoginStreak,
+                summary.LifetimeLoginRate, summary.HasCheckedInToday, summary.DailyPointReward,
+                summary.AwardedPoints, summary.CurrentCheckInStreak, summary.RemainingMonthlyBonuses,
+                summary.MakeUpDays?.Select(day => new MakeUpCheckInDayDto(day.Date, day.PointCost)).ToArray()));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Problem(statusCode: 409, title: "無法補簽", detail: exception.Message);
+        }
     }
 
     /// <summary>更新目前登入會員的暱稱、自介與個人資料可見性。</summary>

@@ -14,7 +14,7 @@
   --economy-muted:
     color-mix(
       in srgb,
-      var(--economy-ink) 62%,
+      var(--economy-ink) 74%,
       transparent
     );
 
@@ -105,10 +105,9 @@
 
 .summary-card {
   display: flex;
-
-  align-items: center;
-
-  gap: 20px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
 
   min-height: 128px;
 
@@ -204,6 +203,8 @@
   font-weight: 800;
 
   letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 
@@ -257,7 +258,7 @@
   margin-top: 8px;
 
   color:
-    var(--economy-soft);
+    var(--economy-muted);
 
   font-size: 12px;
   line-height: 1.5;
@@ -270,6 +271,65 @@
 
     font-weight: 700;
   }
+}
+
+.asset-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.asset-number { min-width: 0; }
+.summary-value.long-value { font-size: 24px; }
+.asset-state { display: inline-block; margin-top: 5px; font-size: 12px; color: var(--economy-muted); }
+.asset-notes {
+  margin: auto 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--economy-line);
+  display: grid;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.7;
+  div { display: grid; grid-template-columns: 4em minmax(0, 1fr); gap: 12px; align-items: baseline; }
+  dt { color: var(--economy-ink); font-weight: 600; white-space: nowrap; }
+  dd { margin: 0; color: var(--economy-muted); text-wrap: pretty; }
+}
+.gem-collection {
+  flex: 0 0 100px;
+  min-height: 80px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  color: var(--qmah-honey-action);
+  app-qmah-icon { width: auto; height: auto; }
+  app-qmah-icon:first-child { flex-basis: 100%; justify-content: center; }
+}
+.point-card[data-point-level='growing'] {
+  .gem-collection { color: var(--qmah-honey-action); }
+  .asset-state { color: var(--qmah-honey-action); }
+}
+.point-card[data-point-level='abundant'],
+.point-card[data-point-level='treasury'] {
+  background: color-mix(in srgb, var(--qmah-bronze) 8%, var(--economy-surface));
+  border-color: color-mix(in srgb, var(--qmah-bronze) 45%, var(--economy-line));
+  .summary-value, .asset-state { color: var(--qmah-honey-action); }
+  .gem-collection { transform: rotate(-8deg); }
+}
+.point-card[data-point-level='treasury'] .gem-collection { gap: 5px; }
+.key-progress-card.almost-ready {
+  border-color: color-mix(in srgb, var(--qmah-bronze) 45%, var(--economy-line));
+  background: color-mix(in srgb, var(--qmah-bronze) 6%, var(--economy-surface));
+  .asset-state, .progress-hint strong { color: var(--qmah-honey-action); }
+  .progress-fill { background: var(--qmah-bronze); }
+  .key-progress-icon { background: var(--qmah-honey-soft); transform: rotate(-8deg); }
+}
+.key-progress-icon { transition: transform 0.3s ease, background-color 0.3s ease; }
+@media (max-width: 400px) {
+  .summary-card { padding: 22px 18px; }
+  .gem-collection { flex-basis: 66px; }
+  .summary-value { font-size: 30px; }
+  .asset-notes div { grid-template-columns: 1fr; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .summary-card, .progress-fill, .key-progress-icon { transition: none; }
 }
 
 

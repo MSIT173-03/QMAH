@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Infrastructure.Services.Economy;
@@ -15,7 +16,7 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// MiniGameController 是目前的 HTTP 入口，EconomyService 提供共用經濟設定與資產規則。
 /// 新增玩法通常只需新增 GameModeDefinition 與對應的結果驗證／計分策略；Attempt、每日獎勵上限與流水仍沿用此流程。
 /// </remarks>
-public sealed class MiniGameService(QmahDbContext db, EconomyService economyService)
+public sealed class MiniGameService(QmahDbContext db, EconomyService economyService, ScrollPaintingEligibility scrollPaintingEligibility)
 {
     private const int PuzzlePieceCount = 25;
     private const int RestorePieceCount = 15;
@@ -62,7 +63,8 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         if (string.Equals(mode.Code, "STRIP_RESTORE", StringComparison.OrdinalIgnoreCase))
         {
             // 長卷復位只取書畫素材，避免把瓷器或單件器物切成長卷題目。
-            artifacts = artifacts.Where(item => item.CategoryCode == "PAINTING").ToList();
+            artifacts = artifacts.Where(item => item.CategoryCode == "PAINTING"
+                && scrollPaintingEligibility.IsEligible(item.PrimaryImagePath)).ToList();
         }
         if (artifacts.Count == 0)
             return EconomyResult<MiniGameStartView>.Conflict("目前沒有符合此玩法且具有圖片的啟用文物。");
@@ -217,13 +219,52 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             return EconomyResult<MiniGameCompleteView>.Conflict("Mini Game 模式的評分設定無效，請先由管理員修正。");
         }
 
-        var grade = rawScore >= mode.GradeSThreshold
+        var normalizedScore = rawScore;
+        if (mode.Code is "ARTIFACT_PUZZLE" or "STRIP_RESTORE")
+        {
+            using var resultDocument = JsonDocument.Parse(rawResultJson!);
+            var result = resultDocument.RootElement;
+            var pieces = mode.Code == "ARTIFACT_PUZZLE" ? PuzzlePieceCount : RestorePieceCount;
+            var wallSeconds = Math.Max(0, (DateTime.UtcNow - attempt.StartedAt).TotalSeconds);
+            if (TryGetInt(result, "scoringVersion", out var scoringVersion) && scoringVersion is 2 or 3)
+            {
+                if (!TryGetInt(result, "elapsedSeconds", out var elapsedSeconds) || elapsedSeconds < 0 || elapsedSeconds > wallSeconds + 10
+                    || !TryGetInt(result, "moves", out var moves) || moves is < 0 or > 100000
+                    || !TryGetInt(result, "hintsUsed", out var hints) || hints is < 0 or > 100000
+                    || !TryGetInt(result, "autoPlaced", out var autoPlaced) || autoPlaced < 0 || autoPlaced > pieces)
+                    return EconomyResult<MiniGameCompleteView>.Invalid("用時、放置次數或輔助紀錄無效，請保留盤面並重新送出。");
+                // 操作與輔助數據由客戶端回報，這是評分規則，不代表完整防作弊驗證。
+                normalizedScore = MiniGamePlacementScoring.Calculate(rawScore, pieces, elapsedSeconds, moves, hints, autoPlaced, mode.GradeSThreshold);
+            }
+            else
+            {
+                // 舊版仍可送出盤面，但缺少表現紀錄時不把「完成」直接認定為 S 級。
+                normalizedScore = Math.Min(rawScore, Math.Max(0, mode.GradeSThreshold - 1));
+            }
+        }
+
+        if (mode.Code is "MEMORY_MATCH" or "DETAIL_LOCATOR")
+        {
+            using var resultDocument = JsonDocument.Parse(rawResultJson!);
+            var result = resultDocument.RootElement;
+            if (TryGetInt(result, "scoringVersion", out var scoringVersion) && scoringVersion == 3)
+            {
+                var units = mode.Code == "MEMORY_MATCH" && TryReadArtifactPool(attempt.ArtifactPoolJson, out var pool)
+                    ? Math.Min(pool.Count, StandardMemoryPairCount) : 1;
+                if (!TryGetInt(result, "hintsUsed", out var hints) || hints < 0 || hints > (mode.Code == "MEMORY_MATCH" ? units : 2)
+                    || !TryGetInt(result, "autoPlaced", out var assisted) || assisted < 0 || assisted > units)
+                    return EconomyResult<MiniGameCompleteView>.Invalid("求救紀錄無效，請保留進度並重新送出。");
+                normalizedScore = MiniGamePlacementScoring.CalculateAssistance(rawScore, units, hints, assisted, mode.Code == "DETAIL_LOCATOR" ? 10 : 3, mode.GradeSThreshold);
+            }
+        }
+
+        var grade = normalizedScore >= mode.GradeSThreshold
             ? "S"
-            : rawScore >= mode.GradeAThreshold
+            : normalizedScore >= mode.GradeAThreshold
                 ? "A"
-                : rawScore >= mode.GradeBThreshold
+                : normalizedScore >= mode.GradeBThreshold
                     ? "B"
-                    : rawScore > 0 ? "C" : "FAIL";
+                    : normalizedScore > 0 ? "C" : "FAIL";
         var (pointReward, keyProgressReward) = grade switch
         {
             "S" => (mode.SPointReward, mode.SKeyProgressReward),
@@ -335,7 +376,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         attempt.Status = "COMPLETED";
         attempt.RawScore = rawScore;
         attempt.RawResultJson = rawResultJson;
-        attempt.NormalizedScore = rawScore;
+        attempt.NormalizedScore = normalizedScore;
         attempt.Grade = grade;
         attempt.PointReward = pointReward;
         attempt.KeyProgressReward = keyProgressReward;
@@ -349,7 +390,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             attempt.Id,
             mode.Code,
             rawScore,
-            rawScore,
+            normalizedScore,
             grade,
             pointReward,
             keyProgressReward,
@@ -364,7 +405,12 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         mode.Id,
         mode.Code,
         mode.Name,
-        mode.Description,
+        mode.Code switch
+        {
+            "ARTIFACT_PUZZLE" => "把備選區的二十五塊碎片拖到目標格，接回文物原貌。可查看原圖、使用區域提示，或扣分完成剩餘碎片。",
+            "STRIP_RESTORE" => "依書畫原圖方向拖曳十五段歸位，接回連續的筆墨與景物。可查看原圖細節或使用輔助。",
+            _ => mode.Description
+        },
         mode.ConfigJson,
         mode.GradeBThreshold,
         mode.GradeAThreshold,

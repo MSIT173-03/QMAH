@@ -18,11 +18,11 @@
         </p>
       </div>
 
-      @if (dailyActivity?.hasLoggedInToday) {
+      @if (dailyActivity?.hasCheckedInToday) {
 
         <div class="today-status">
           <span class="today-status-dot"></span>
-          今日任務完成
+          今日獎勵已領取
         </div>
 
       }
@@ -55,7 +55,7 @@
 
   @if (errorMessage) {
 
-    <div class="state-box error">
+    <div class="state-box error" role="alert">
       {{ errorMessage }}
     </div>
 
@@ -68,6 +68,14 @@
 
   @if (dailyActivity) {
 
+    @if (!rewardServiceReady) {
+      <div class="service-notice" role="status">
+        <app-qmah-icon name="info" size="20" />
+        <div><strong>簽到服務更新中</strong><p>登入紀錄已載入，簽到與補簽暫時無法使用。請稍後重新整理。</p></div>
+        <button type="button" (click)="loadDailyActivity()" [disabled]="loading">重新載入</button>
+      </div>
+    }
+
 
     <!-- =============================== -->
     <!-- 今日登入 Hero -->
@@ -75,22 +83,17 @@
 
     <section
       class="checkin-hero"
-      [class.completed]="dailyActivity.hasLoggedInToday"
+      [class.completed]="dailyActivity.hasCheckedInToday"
     >
 
       <div class="hero-decoration decoration-one"></div>
       <div class="hero-decoration decoration-two"></div>
 
 
-      @if (dailyActivity.hasLoggedInToday) {
+      @if (dailyActivity.hasCheckedInToday) {
 
         <div class="shine"></div>
 
-        <div class="success-particles" aria-hidden="true">
-          <app-qmah-icon name="sparkles" size="16" />
-          <app-qmah-icon name="sparkles" size="16" />
-          <app-qmah-icon name="sparkles" size="16" />
-        </div>
 
       }
 
@@ -99,16 +102,16 @@
 
         <div class="checkin-icon">
 
-          @if (dailyActivity.hasLoggedInToday) {
+          @if (dailyActivity.hasCheckedInToday) {
 
             <span class="check-icon">
-              <app-qmah-icon name="circle-check" />
+              <app-qmah-icon name="circle-check" size="32" />
             </span>
 
           } @else {
 
             <span>
-              <app-qmah-icon name="calendar" />
+              <app-qmah-icon name="calendar" size="32" />
             </span>
 
           }
@@ -118,29 +121,26 @@
 
         <div class="checkin-copy">
 
-          <span class="eyebrow">
-            DAILY CHECK-IN
-          </span>
-
-
-          @if (dailyActivity.hasLoggedInToday) {
+          @if (!rewardServiceReady) {
+            <h2>簽到獎勵更新中</h2><p>登入紀錄可以查看，稍後再來領取獎勵。</p>
+          } @else if (dailyActivity.hasCheckedInToday) {
 
             <h2>
-              今日登入完成！
+              今日簽到完成！
             </h2>
 
             <p>
-              今天的登入紀錄已經保存，明天記得再回來。
+              今日的鑑定點數獎勵已領取，明天記得再回來。
             </p>
 
           } @else {
 
             <h2>
-              今天還沒登入
+              今天尚未簽到
             </h2>
 
             <p>
-              完成今日登入，繼續累積你的登入紀錄。
+              每天凌晨 00:00（台灣時間）更新，記得領取今日獎勵。
             </p>
 
           }
@@ -150,20 +150,28 @@
       </div>
 
 
-      @if (!dailyActivity.hasLoggedInToday) {
+      @if (rewardServiceReady) {
+        <div class="today-reward" [class.reward-bonus]="dailyActivity.dailyPointReward > 3">
+          <span>{{ dailyActivity.hasCheckedInToday ? '今日已領取' : '今日可領取' }}</span>
+          <strong>{{ dailyActivity.dailyPointReward }}<small> 點</small></strong>
+          @if (dailyActivity.dailyPointReward > 3) { <span>含連續簽到加成</span> }
+        </div>
+      }
+
+      @if (rewardServiceReady && !dailyActivity.hasCheckedInToday) {
 
         <button
           type="button"
           class="checkin-button"
           (click)="loginToday()"
-          [disabled]="loggingIn"
+          [disabled]="loggingIn || makingUp"
         >
 
           @if (loggingIn) {
 
             <span class="button-spinner"></span>
 
-            紀錄中...
+            領取中…
 
           } @else {
 
@@ -177,7 +185,7 @@
 
         </button>
 
-      } @else {
+      } @else if (rewardServiceReady) {
 
         <div class="completed-badge">
 
@@ -200,7 +208,7 @@
 
     @if (successMessage) {
 
-      <div class="success-message">
+      <div class="success-message" role="status">
 
         <span>
           <app-qmah-icon name="party-popper" />
@@ -209,7 +217,7 @@
         <div>
 
           <strong>
-            簽到成功
+            獎勵已入帳
           </strong>
 
           <p>
@@ -227,14 +235,14 @@
     <!-- 目前連續登入 -->
     <!-- =============================== -->
 
-    <section class="streak-card">
+    <section class="streak-card" [attr.data-streak-level]="streakLevel">
 
       <div class="streak-left">
 
         <div class="fire-orb">
 
           <span class="fire-icon">
-            <app-qmah-icon name="flame" />
+            <app-qmah-icon name="flame" size="32" />
           </span>
 
         </div>
@@ -259,12 +267,14 @@
           </div>
 
 
-          @if (dailyActivity.currentLoginStreak > 0) {
+          @if (dailyActivity.currentLoginStreak > 0 && dailyActivity.currentLoginStreak < dailyActivity.longestLoginStreak) {
 
             <p class="streak-message">
-              保持這個節奏，明天也記得回來！
+              再連續登入 {{ dailyActivity.longestLoginStreak - dailyActivity.currentLoginStreak }} 天，就能追平最長紀錄。
             </p>
 
+          } @else if (dailyActivity.currentLoginStreak > 1) {
+            <p class="streak-message">正在刷新你的連續登入紀錄。</p>
           } @else {
 
             <p class="streak-message">
@@ -309,34 +319,60 @@
 
     </section>
 
+    <details class="checkin-rules" aria-labelledby="checkin-rules-title">
+      <summary class="rules-heading">
+        <h2 id="checkin-rules-title">簽到與補簽規則</h2>
+        <span>{{ rewardServiceReady ? '本月還有 ' + dailyActivity.remainingMonthlyBonuses + ' 次加成' : '查看領取方式' }}<app-qmah-icon name="chevron-right" size="18" /></span>
+      </summary>
+      <dl class="rules-list">
+        <div><dt>每天 3 點</dt><dd>連續簽到每滿 7 天，再加 3 點。單日最多 6 點，每月最多加成 4 次，共 12 點。</dd></div>
+        <div><dt>漏簽也能補</dt><dd>可補近 7 天，每天第一次免費。之後補 1～3 天前扣 1 點，4～7 天前扣 2 點。</dd></div>
+        <div><dt>補簽實得 1～3 點</dt><dd>每次補簽領 3 點，再扣除補簽費用，不追補過去的連續加成。補齊漏簽日期可接回連續紀錄；未補齊則重新累積。</dd></div>
+      </dl>
+      @if (rewardServiceReady && dailyActivity.makeUpDays.length) {
+        <div class="makeup-controls">
+          <div class="makeup-field">
+            <label for="makeup-date">選擇補簽日期</label>
+            <select id="makeup-date" [value]="selectedMakeUpDate" (change)="selectedMakeUpDate = $any($event.target).value" [disabled]="loggingIn || makingUp">
+              <option value="">選擇漏簽的日期</option>
+              @for (day of dailyActivity.makeUpDays; track day.date) {
+                <option [value]="day.date">{{ day.date }} · {{ day.pointCost === 0 ? '免費' : '扣 ' + day.pointCost + ' 點' }}</option>
+              }
+            </select>
+          </div>
+          <button type="button" class="makeup-button" [disabled]="!selectedMakeUpDay || loggingIn || makingUp" (click)="makeUp()">
+            {{ makingUp ? '補簽中…' : selectedMakeUpDay ? (selectedMakeUpDay.pointCost === 0 ? '免費補簽，領 3 點' : '扣 ' + selectedMakeUpDay.pointCost + ' 點補簽，實得 ' + (3 - selectedMakeUpDay.pointCost) + ' 點') : '確認補簽' }}
+          </button>
+        </div>
+      } @else if (rewardServiceReady) {
+        <p class="makeup-empty">近 7 天沒有可補簽的日期。</p>
+      }
+    </details>
+
 
     <!-- =============================== -->
     <!-- 7 日連續登入 -->
     <!-- =============================== -->
 
-    <section class="weekly-checkin">
+    <section class="weekly-checkin" [class.service-pending]="!rewardServiceReady">
 
       <div class="weekly-header">
 
         <div>
 
-          <span class="section-eyebrow">
-            LOGIN STREAK
-          </span>
-
           <h2>
-            7 日連續登入
+            7 日連續簽到
           </h2>
 
           <p>
-            每天回來登入，維持你的連續登入紀錄。
+            {{ !rewardServiceReady ? '簽到紀錄正在更新。' : dailyActivity.remainingMonthlyBonuses > 0 ? '再簽到 ' + daysUntilBonus + ' 天，可領取 3 點加成。' : '本月加成已領完，每天仍可簽到領 3 點。' }}
           </p>
 
         </div>
 
 
         <div class="weekly-progress-text">
-          {{ dailyActivity.currentLoginStreak }} 天連續
+          {{ rewardServiceReady ? dailyActivity.currentCheckInStreak + ' 天連續' : '等待更新' }}
         </div>
 
       </div>
@@ -344,7 +380,7 @@
 
       <div class="weekly-track">
 
-        <div class="track-line"></div>
+        <div class="track-line"><div class="track-fill" [style.transform]="'scaleX(' + completedWeekDays / 7 + ')' "></div></div>
 
 
         @for (item of streakDays; track item.day) {
@@ -354,6 +390,7 @@
             [class.completed]="item.completed"
             [class.current]="item.current"
             [class.reward]="item.reward"
+            [class.upcoming]="item.upcoming && rewardServiceReady"
           >
 
             <div class="day-circle">
@@ -384,7 +421,7 @@
             <div class="day-copy">
 
               <strong>
-                Day {{ item.day }}
+                第 {{ item.day }} 天
               </strong>
 
 
@@ -400,16 +437,18 @@
                   已完成
                 </span>
 
+              } @else if (item.upcoming && rewardServiceReady) {
+                <span class="today-label">今天可簽到</span>
               } @else if (item.reward) {
 
                 <span>
-                  第 7 天
+                  {{ rewardServiceReady && dailyActivity.remainingMonthlyBonuses > 0 ? '加成日' : '每日簽到' }}
                 </span>
 
               } @else {
 
                 <span>
-                  待登入
+                  待簽到
                 </span>
 
               }
@@ -434,12 +473,12 @@
           <div>
 
             <strong>
-              保持連續登入
+              保持連續簽到
             </strong>
 
             <p>
-              目前已連續登入
-              {{ dailyActivity.currentLoginStreak }}
+              目前已連續簽到
+              {{ dailyActivity.currentCheckInStreak }}
               天。
             </p>
 
@@ -644,23 +683,25 @@
 
 
       <div
-        class="status"
-        [class.active-status]="dailyActivity.hasLoggedInToday"
+        class="login-status"
+        [class.active-status]="dailyActivity.hasCheckedInToday"
       >
 
         <span
           class="status-dot"
-          [class.active]="dailyActivity.hasLoggedInToday"
+          [class.active]="dailyActivity.hasCheckedInToday"
         ></span>
 
 
-        @if (dailyActivity.hasLoggedInToday) {
+        @if (!rewardServiceReady) {
+          簽到狀態更新中
+        } @else if (dailyActivity.hasCheckedInToday) {
 
-          今日已登入
+          今日已簽到
 
         } @else {
 
-          今日尚未登入
+          今日尚未簽到
 
         }
 

@@ -18,6 +18,7 @@ import { KeyService } from '../services/key-service';
 import { CatalogService } from '../services/catalog-service';
 import { KeyExchangeRule, KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
 import { keyAssetPath } from '../shared/key-assets';
+import { eraInitials } from '../shared/era-initials';
 import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
 
 @Component({
@@ -263,6 +264,12 @@ export class KeyList implements OnInit, OnDestroy {
   private categoryNameById = signal<Map<string, string>>(new Map());
   private categoryCodeById = signal<Map<string, string>>(new Map());
   private eraNameById = signal<Map<string, string>>(new Map());
+
+  /**
+   * 年代鑰匙的字首（鑰匙圖本身不變，字疊在鑰匙前方的左上角）。
+   * 依全部年代名稱一起算，字首重複的才會取兩個字，例如日本大正 → 日大。
+   */
+  private eraInitialsByName = computed(() => eraInitials([...new Set(this.eraNameById().values())]));
 
   constructor(
     private keyService: KeyService,
@@ -666,6 +673,21 @@ export class KeyList implements OnInit, OnDestroy {
 
   keyScopeByCode(code: string): KeyModel['scopeType'] {
     return this.keyByCode(code)?.scopeType ?? 'NORMAL';
+  }
+
+  /**
+   * 年代鑰匙格左上角要顯示的字首（拆成單字陣列，模板逐字輸出）。
+   * 不是年代鑰匙、或年代對照表還沒載入時回傳 null，不顯示字首。
+   */
+  eraMark(key: KeyModel | undefined): string[] | null {
+    if (key?.scopeType !== 'ERA' || !key.eraBucketId) return null;
+    const name = this.eraNameById().get(key.eraBucketId);
+    const initials = name ? this.eraInitialsByName().get(name) : undefined;
+    return initials ? [...initials] : null;
+  }
+
+  eraMarkByCode(code: string): string[] | null {
+    return this.eraMark(this.keyByCode(code));
   }
 
   /** 每個篩選按鈕顯示的數字：這個範圍內「持有中」鑰匙的總持有數量加總 */
