@@ -24,6 +24,7 @@
             </section>
           }
           @if (!authRequired) {
+            <p class="game-hint" role="status">@if (rewardRemaining !== null) { 今日還可領取 {{ rewardRemaining }} 次獎勵。 } 每天凌晨 00:00（台灣時間）更新；額度用完後仍可挑戰並保留成績。</p>
             <div class="mode-stage">
               <ol class="mode-index" aria-label="選擇單人玩法" (keydown)="navigateModes($event)">@for (mode of modes; track mode.id) { <li><button type="button" [class.is-selected]="selectedMode?.code === mode.code" [attr.aria-pressed]="selectedMode?.code === mode.code" (click)="selectMode(mode.code)" [disabled]="starting"><h2>{{ mode.name }}</h2><span>{{ modeMechanic(mode.code) }}</span></button></li> }</ol>
               @if (selectedMode; as mode) {
@@ -66,7 +67,7 @@
                   <p>哪一件館藏同時有這三處細節？選定後送出，揭曉答案。</p>
                   <div class="artifact-options" role="group" aria-label="選擇最相近的文物">
                     @for (option of locatorOptions; track option.artifactId; let index = $index) {
-                      <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" [disabled]="imageUnavailable || completing || locatorExcludedIds.includes(option.artifactId)" (click)="chooseLocator(option.artifactId)">
+                      <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" [disabled]="imageUnavailable || completing || resultFrozen || locatorExcludedIds.includes(option.artifactId)" (click)="chooseLocator(option.artifactId)">
                         <span class="locator-option__image">
                           @if ((option.primaryImagePath || option.thumbnailPath) && !imageFailed('option-' + option.artifactId)) {
                             <img [src]="option.primaryImagePath || option.thumbnailPath" alt="" (error)="markImageFailed('option-' + option.artifactId)" />
@@ -83,10 +84,10 @@
               <div class="game-board memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>共 {{ memoryCards.length }} 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" [disabled]="card.matched || memoryBusy || completing" [attr.aria-pressed]="card.revealed || card.matched" (click)="flipMemory(index)" (keydown)="moveBoardFocus($event, index, 4)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開第 ' + (index + 1) + ' 張卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback">{{ card.name }}</span> } } @else { <span class="card-back" aria-hidden="true">鑑</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }} · 翻牌組合 {{ moves }} 次</p></div>
             }
             @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
-              <div class="game-board ordering-game"><app-game-placement-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="puzzleOrder" [disabled]="completing || imageFailed('puzzle')" (orderChange)="updatePlacement('puzzle', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" (autoCompleted)="recordAuto($event)" [settleAfterHelp]="true" (settlementRequested)="completeAttempt()" (availabilityChange)="setPuzzleAvailability($event)" /></div>
+              <div class="game-board ordering-game"><app-game-placement-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="puzzleOrder" [initialSelection]="puzzleSelection" [initialHintRegion]="puzzleHintRegion" [disabled]="completing || resultFrozen || imageFailed('puzzle')" (orderChange)="updatePlacement('puzzle', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" (autoCompleted)="recordAuto($event)" [settleAfterHelp]="true" (settlementRequested)="completeAttempt()" (availabilityChange)="setPuzzleAvailability($event)" /></div>
             }
             @else {
-              <div class="game-board ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>沿書畫原圖方向排列 15 段，接回連續的筆墨與景物。</p></div><app-game-scroll-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="restoreOrder" [disabled]="completing" (orderChange)="updatePlacement('restore', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" (autoCompleted)="recordAuto($event)" [settleAfterHelp]="true" (settlementRequested)="completeAttempt()" (availabilityChange)="setScrollAvailability($event)" /><p class="game-hint">{{ isRestoreSolved ? '書畫復位完成，可以送出結果。' : '拖曳碎片到目標格，接回書畫原貌。' }}</p></div>
+              <div class="game-board ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>沿書畫原圖方向排列 15 段，接回連續的筆墨與景物。</p></div><app-game-scroll-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="restoreOrder" [initialSelection]="restoreSelection" [initialHintRegion]="restoreHintRegion" [disabled]="completing || resultFrozen" (orderChange)="updatePlacement('restore', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" (autoCompleted)="recordAuto($event)" [settleAfterHelp]="true" (settlementRequested)="completeAttempt()" (availabilityChange)="setScrollAvailability($event)" /><p class="game-hint">{{ isRestoreSolved ? '書畫復位完成，可以送出結果。' : '拖曳碎片到目標格，接回書畫原貌。' }}</p></div>
             }
 
             <footer class="play-footer"><div class="play-footer__context">            @if (current.modeCode === 'MEMORY_MATCH') {

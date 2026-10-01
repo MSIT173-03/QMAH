@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, computed, input, output, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, effect, input, output, signal } from '@angular/core';
 
 /** Empty slots are -1. Pieces have stable identities; a drop never swaps two pieces. */
 export function placePiece(order: readonly number[], piece: number, slot: number): number[] {
@@ -15,8 +15,8 @@ export function placePiece(order: readonly number[], piece: number, slot: number
     @if (failed()) { <p role="alert">圖片暫時無法載入，盤面進度仍保留。<button type="button" (click)="retryImage()">重試圖片</button></p> }
     <div class="placement-tools">
       <button type="button" (click)="referenceDialog.showModal()" aria-haspopup="dialog">原圖與格線</button>
-      <button type="button" (click)="showRegion()" [disabled]="disabled() || selected() === null || solved()">區域提示（−3 分）</button>
-      <button type="button" (click)="confirmDialog.showModal()" [disabled]="disabled() || solved()">完成剩餘碎片</button>
+      <button type="button" (click)="showRegion()" [disabled]="!ready() || disabled() || selected() === null || solved()">區域提示（−3 分）</button>
+      <button type="button" (click)="confirmDialog.showModal()" [disabled]="!ready() || disabled() || solved()">完成剩餘碎片</button>
       <button type="button" (click)="pieceDialog.showModal()" [disabled]="selected() === null">放大選取碎片</button>
       <ng-content />
     </div>
@@ -24,7 +24,7 @@ export function placePiece(order: readonly number[], piece: number, slot: number
     <div class="placement-workspace" [style.--piece-ratio]="displayRatio()" [style.--image-width.px]="naturalWidth()">
       <div class="placement-board" [class.is-solved]="solved()" [style.aspect-ratio]="displayRatio()" [style.grid-template-columns]="columnsStyle()" [style.grid-template-rows]="rowsStyle()" role="group" aria-label="拼圖目標盤面">
         @for (piece of order(); track $index; let slot = $index) {
-          <button type="button" class="piece slot" [attr.data-slot]="slot" [class.selected]="piece >= 0 && selected() === piece" [class.is-lifted]="piece >= 0 && lifted() === piece" [class.just-placed]="lastPlaced() === slot" [class.hinted]="hintRegion() !== null && region(slot) === hintRegion()" [disabled]="disabled() || solved()" [attr.aria-label]="'第 ' + (slot + 1) + ' 格' + (piece < 0 ? '，空格' : '，已有碎片')" (click)="activateSlot(slot)" (pointerdown)="beginDrag($event, piece)">
+          <button type="button" class="piece slot" [attr.data-slot]="slot" [class.selected]="piece >= 0 && selected() === piece" [class.is-lifted]="piece >= 0 && lifted() === piece" [class.just-placed]="lastPlaced() === slot" [class.hinted]="hintRegion() !== null && region(slot) === hintRegion()" [disabled]="!ready() || disabled() || solved()" [attr.aria-label]="'第 ' + (slot + 1) + ' 格' + (piece < 0 ? '，空格' : '，已有碎片')" (click)="activateSlot(slot, $event)" (keydown)="moveFocus($event, slot)" (pointerdown)="beginDrag($event, piece)">
             @if (piece >= 0) { <img [src]="image()" alt="" draggable="false" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(piece % columns()) * 100" [style.top.%]="-row(piece) * 100" /> }
             <span>{{ slot + 1 }}</span>
           </button>
@@ -35,7 +35,7 @@ export function placePiece(order: readonly number[], piece: number, slot: number
         <div class="piece-tray" [style.aspect-ratio]="displayRatio()" [style.grid-template-columns]="columnsStyle()" [style.grid-template-rows]="rowsStyle()" [style.column-gap.%]="4 / (columns() - 1)" [style.row-gap.%]="4 / (rows() - 1)">
           @for (piece of traySlots(); track piece) {
             @if (!order().includes(piece)) {
-            <button type="button" class="piece" [attr.data-piece]="piece" [class.selected]="selected() === piece" [class.is-lifted]="lifted() === piece" [disabled]="disabled()" [attr.aria-label]="'選取待放置碎片 ' + (tray().indexOf(piece) + 1)" [attr.aria-pressed]="selected() === piece" (click)="select(piece)" (pointerdown)="beginDrag($event, piece)">
+            <button type="button" class="piece" [attr.data-piece]="piece" [class.selected]="selected() === piece" [class.is-lifted]="lifted() === piece" [disabled]="!ready() || disabled()" [attr.aria-label]="'選取待放置碎片 ' + (tray().indexOf(piece) + 1)" [attr.aria-pressed]="selected() === piece" (click)="select(piece, $event)" (keydown)="moveFocus($event, tray().indexOf(piece))" (pointerdown)="beginDrag($event, piece)">
               <img [src]="image()" alt="" draggable="false" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(piece % columns()) * 100" [style.top.%]="-row(piece) * 100" />
             </button>
             } @else { <span class="placed-slot" aria-hidden="true"></span> }
@@ -70,6 +70,9 @@ export class GamePlacementBoardComponent {
   readonly ratio = input<number | null>(null);
   readonly naturalRatio = signal(1);
   readonly naturalWidth = signal(560);
+  readonly ready = signal(false);
+  readonly initialSelection = input<number | null>(null);
+  readonly initialHintRegion = input<number | null>(null);
   readonly displayRatio = computed(() => this.ratio() ?? this.naturalRatio());
   readonly pieceRatio = computed(() => this.displayRatio() * this.rows() / this.columns());
   readonly disabled = input(false);
@@ -99,25 +102,31 @@ export class GamePlacementBoardComponent {
   private readonly host: ElementRef<HTMLElement>;
   private pointer: { id: number; piece: number; x: number; y: number; width: number } | null = null;
   private suppressClick = false;
-  constructor(host: ElementRef<HTMLElement>) { this.host = host; }
+  constructor(host: ElementRef<HTMLElement>) {
+    this.host = host;
+    effect(() => { this.selected.set(this.initialSelection()); this.hintRegion.set(this.initialHintRegion()); });
+  }
   readImage(event: Event): void {
     const image = event.target as HTMLImageElement;
     this.naturalRatio.set(image.naturalWidth / Math.max(1, image.naturalHeight));
     this.naturalWidth.set(image.naturalWidth);
     this.failed.set(false);
+    this.ready.set(true);
     this.availabilityChange.emit(true);
   }
-  imageError(): void { this.failed.set(true); this.availabilityChange.emit(false); }
-  retryImage(): void { this.failed.set(false); this.imageRevision.update(value => value + 1); }
+  imageError(): void { this.ready.set(false); this.failed.set(true); this.availabilityChange.emit(false); }
+  retryImage(): void { this.ready.set(false); this.failed.set(false); this.imageRevision.update(value => value + 1); }
   row(piece: number): number { return Math.floor(piece / this.columns()); }
   private shuffleKey(piece: number): number { return Math.sin((piece + 1) * 127.1) * 43758.5453 % 1; }
   region(slot: number): number { return (this.row(slot) >= this.rows() / 2 ? 2 : 0) + (slot % this.columns() >= this.columns() / 2 ? 1 : 0); }
-  select(piece: number): void {
-    if (this.suppressClick) { this.suppressClick = false; return; }
+  select(piece: number, event?: MouseEvent): void {
+    if (this.suppressClick && event?.detail !== 0) { this.suppressClick = false; return; }
+    this.suppressClick = false;
     this.selected.set(this.selected() === piece ? null : piece); this.hintRegion.set(null);
   }
-  activateSlot(slot: number): void {
-    if (this.suppressClick) { this.suppressClick = false; return; }
+  activateSlot(slot: number, event?: MouseEvent): void {
+    if (this.suppressClick && event?.detail !== 0) { this.suppressClick = false; return; }
+    this.suppressClick = false;
     const piece = this.selected();
     if (piece === null) { if (this.order()[slot] >= 0) this.select(this.order()[slot]); return; }
     this.drop(piece, slot);
@@ -131,12 +140,12 @@ export class GamePlacementBoardComponent {
   }
   showRegion(): void {
     const piece = this.selected();
-    if (piece === null || this.disabled() || this.hintRegion() !== null) return;
+    if (piece === null || this.disabled() || !this.ready() || this.hintRegion() !== null) return;
     this.hintRegion.set(this.region(piece)); this.hintUsed.emit();
     this.feedback.set('這塊屬於原圖的' + ['左上', '右上', '左下', '右下'][this.region(piece)] + '區域；已扣 3 分。');
   }
   requestHint(): void {
-    if (this.disabled() || this.solved()) return;
+    if (this.disabled() || !this.ready() || this.solved()) return;
     if (this.selected() === null) {
       this.selected.set(this.order().findIndex((piece, slot) => piece !== slot));
       this.hintRegion.set(null);
@@ -144,7 +153,7 @@ export class GamePlacementBoardComponent {
     this.showRegion();
   }
   autoFinish(): void {
-    if (this.disabled() || this.solved()) return;
+    if (this.disabled() || !this.ready() || this.solved()) return;
     const count = this.remaining();
     this.autoCompleted.emit(count);
     this.orderChange.emit(this.order().map((_, slot) => slot));
@@ -183,5 +192,16 @@ export class GamePlacementBoardComponent {
     this.dragging.set(null); this.lifted.set(null); this.pointer = null;
   }
   @HostListener('document:pointercancel')
+  @HostListener('document:lostpointercapture')
+  @HostListener('window:blur')
   cancelDrag(): void { this.dragging.set(null); this.lifted.set(null); this.pointer = null; }
+  moveFocus(event: KeyboardEvent, slot: number): void {
+    const columns = this.columns();
+    const delta: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
+    if (!(event.key in delta) && event.key !== 'Home' && event.key !== 'End') return;
+    event.preventDefault();
+    const buttons = Array.from((event.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLButtonElement>('button') ?? []);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : slot + delta[event.key];
+    buttons[Math.max(0, Math.min(buttons.length - 1, next))]?.focus();
+  }
 }

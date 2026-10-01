@@ -20,7 +20,7 @@ export function scrollGeometry(width: number, height: number) {
         @for (revision of [imageRevision()]; track revision) {
           <img class="scroll-source" [src]="image()" alt="" aria-hidden="true" (load)="readDimensions($event)" (error)="onImageError()" />
         }
-        <app-game-placement-board [image]="image()" [name]="name()" [order]="order()" [columns]="layout().columns" [rows]="layout().rows" [ratio]="layout().ratio" [disabled]="disabled() || !ready()" (orderChange)="orderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="settleAfterHelp()" (settlementRequested)="settlementRequested.emit()"><div class="scroll-reference"><button type="button" (click)="openReference()" aria-haspopup="dialog">放大書畫細節</button></div></app-game-placement-board>
+        <app-game-placement-board [image]="image()" [name]="name()" [order]="order()" [initialSelection]="initialSelection()" [initialHintRegion]="initialHintRegion()" [columns]="layout().columns" [rows]="layout().rows" [ratio]="layout().ratio" [disabled]="disabled() || !ready()" (orderChange)="orderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="settleAfterHelp()" (settlementRequested)="settlementRequested.emit()"><div class="scroll-reference"><button type="button" (click)="openReference()" aria-haspopup="dialog">放大書畫細節</button></div></app-game-placement-board>
         <dialog #referenceDialog class="scroll-inspection" aria-labelledby="scroll-inspection-title">
           <header><h2 id="scroll-inspection-title">{{ name() }}</h2><button type="button" (click)="referenceDialog.close()">返回盤面</button></header>
           <label>原圖放大倍率 <input type="range" min="1" max="3" step="0.25" [value]="zoom()" (input)="setZoom($event)" /> {{ zoom() }} 倍</label>
@@ -35,6 +35,10 @@ export function scrollGeometry(width: number, height: number) {
 })
 export class GameScrollBoardComponent {
   @ViewChild(GamePlacementBoardComponent) private placement?: GamePlacementBoardComponent;
+  readonly initialSelection = input<number | null>(null);
+  readonly initialHintRegion = input<number | null>(null);
+  get selected(): number | null { return this.placement?.selected() ?? null; }
+  get hintRegion(): number | null { return this.placement?.hintRegion() ?? null; }
   requestHint(): void { this.placement?.requestHint(); }
   finishWithHelp(): void { this.placement?.autoFinish(); }
   @ViewChild('referenceDialog') private referenceDialog?: ElementRef<HTMLDialogElement>;

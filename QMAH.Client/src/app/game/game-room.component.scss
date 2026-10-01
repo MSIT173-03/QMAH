@@ -138,8 +138,8 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 .answer-form textarea { min-height: 134px; padding: 11px 12px; resize: vertical; }
 .answer-form textarea::placeholder { color: var(--qmah-text-subtle); }
 .form-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--muted); font-size: var(--qmah-type-label-size); }
-.form-foot button, .reward-panel button { min-height: var(--qmah-control-height); padding: 8px var(--qmah-button-padding-x); border: 0; border-radius: var(--qmah-radius-control); background: var(--qmah-primary); color: var(--qmah-primary-content); font-size: var(--qmah-type-label-size); font-weight: 700; }
-.form-foot button:disabled, .reward-panel button:disabled { cursor: not-allowed; opacity: .55; }
+.form-foot button { min-height: var(--qmah-control-height); padding: 8px var(--qmah-button-padding-x); border: 0; border-radius: var(--qmah-radius-control); background: var(--qmah-primary); color: var(--qmah-primary-content); font-size: var(--qmah-type-label-size); font-weight: 700; }
+.form-foot button:disabled { cursor: not-allowed; opacity: .55; }
 .phase-callout { margin-top: 16px; padding: var(--qmah-space-4) 18px; border: 1px solid color-mix(in srgb, var(--qmah-accent) 28%, var(--qmah-border)); box-shadow: var(--qmah-shadow-card); background: color-mix(in srgb, var(--qmah-accent) 10%, var(--qmah-surface-elevated)); }
 .phase-callout p { margin: 3px 0 0; color: var(--muted); font-size: var(--qmah-type-body-sm-size); }
 .success-callout { border-color: color-mix(in srgb, var(--qmah-primary) 28%, var(--qmah-border)); box-shadow: inset 3px 0 0 var(--qmah-primary); }

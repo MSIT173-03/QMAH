@@ -192,6 +192,12 @@ export class GameService {
   getMiniGameModes(): Observable<MiniGameMode[]> {
     return this.http.get<MiniGameMode[]>(`${this.apiUrl}/modes`);
   }
+  getMiniGameRewardStatus(): Observable<{ dailyLimit: number; remaining: number; resetsAt: string }> {
+    return this.http.get<{ dailyLimit: number; remaining: number; resetsAt: string }>(`${this.apiUrl}/reward-status`);
+  }
+  verifyMiniGameOwner(attemptId: string): Observable<unknown> {
+    return this.http.get(`${this.apiUrl}/attempts/${encodeURIComponent(attemptId)}`);
+  }
 
   /** 開始 Mini Game；素材、難度與 seed 必須採用 API 回傳值。 */
   startMiniGame(request: StartMiniGameRequest | string): Observable<MiniGameStart> {

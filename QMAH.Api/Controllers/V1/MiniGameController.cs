@@ -31,6 +31,22 @@ public sealed class MiniGameController(
             mode.GradeSThreshold)).ToList());
     }
 
+    /// <summary>查詢當前會員今日剩餘的小遊戲獎勵次數。</summary>
+    [HttpGet("reward-status")]
+    public async Task<ActionResult<MiniGameRewardStatusView>> GetRewardStatus(CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        return Ok(await miniGameService.GetRewardStatusAsync(userId, cancellationToken));
+    }
+
+    /// <summary>確認目前會員能否恢復這筆尚未結算的遊戲。</summary>
+    [HttpGet("attempts/{id:guid}")]
+    public async Task<IActionResult> GetAttempt(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        return await miniGameService.CanResumeAsync(userId, id, cancellationToken) ? Ok(new { canResume = true }) : NotFound();
+    }
+
     /// <summary>開始一次 Mini Game，並由伺服器決定文物、素材池、難度與種子。</summary>
     [HttpPost("attempts")]
     public async Task<ActionResult<MiniGameStartDto>> StartAttempt(

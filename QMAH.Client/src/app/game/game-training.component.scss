@@ -1,5 +1,5 @@
 :host { display: block; color: var(--qmah-ink); background: var(--qmah-page-surface); font: 400 16px/1.5 var(--qmah-font-sans); }
-.training-notebook { position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: color-mix(in srgb, var(--qmah-game-action) 65%, var(--qmah-night)); --stage-ink: var(--qmah-game-content); --stage-muted: color-mix(in srgb, var(--stage-ink) 76%, var(--stage-surface)); --stage-accent: color-mix(in srgb, var(--qmah-accent) 45%, var(--stage-ink)); width: min(calc(100% - 24px), 1440px); margin: 16px auto 32px; padding: 16px clamp(12px, 3vw, 40px); border-radius: var(--qmah-radius-panel); background: var(--stage-surface); color: var(--stage-ink); }
+.training-notebook { position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: var(--qmah-surface); --stage-ink: var(--qmah-ink); --stage-muted: color-mix(in srgb, var(--stage-ink) 76%, var(--stage-surface)); --stage-accent: color-mix(in srgb, var(--qmah-accent) 45%, var(--stage-ink)); width: min(calc(100% - 24px), 1440px); margin: 16px auto 32px; padding: 16px clamp(12px, 3vw, 40px); border-radius: var(--qmah-radius-panel); background: var(--stage-surface); color: var(--stage-ink); }
 .scene-toolbar { display: flex; justify-content: space-between; align-items: center; min-height: 48px; margin-bottom: 8px; }
 app-game-navigation { --game-nav-ink: var(--stage-ink); --game-nav-muted: var(--stage-muted); --game-nav-line: color-mix(in srgb, var(--stage-ink) 25%, transparent); --game-nav-surface: transparent; --game-nav-hover: color-mix(in srgb, var(--stage-ink) 10%, transparent); }
 .scene-toolbar a, .scene-toolbar button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; color: var(--stage-ink); background: transparent; border: 1px solid color-mix(in srgb, var(--stage-ink) 25%, transparent); border-radius: var(--qmah-radius-control); text-decoration: none; font: inherit; font-size: 14px; }
@@ -16,13 +16,11 @@ button:active:not(:disabled) { transform: translateY(1px); }
 .chapter-heading h1 { margin: 0; font: 700 24px/1.3 var(--qmah-font-serif); }
 .chapter-heading span { display: none; }
 .is-playing .chapter-heading, .is-complete .chapter-heading { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
-.scene-exits { display: flex; gap: 20px; position: absolute; right: clamp(12px, 3vw, 40px); top: 76px; z-index: 2; }
-.scene-exits a { display: flex; align-items: center; min-height: 44px; font-size: 14px; color: var(--qmah-muted); text-underline-offset: 4px; }
-.mode-stage { display: grid; grid-template-columns: minmax(210px, .65fr) minmax(0, 2fr); align-items: center; gap: clamp(32px, 6vw, 80px); min-height: calc(var(--arena-height) - 52px); }
+.mode-stage { display: grid; grid-template-columns: minmax(210px, .65fr) minmax(0, 2fr); align-items: start; gap: clamp(24px, 4vw, 56px); padding-block: 24px; min-height: 0; }
 .mode-index { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .mode-index button { display: block; width: 100%; min-height: 86px; text-align: left; padding: 16px 20px; border: 1px solid transparent; border-radius: var(--qmah-radius-control); color: var(--stage-ink); background: transparent; transition: color 160ms, background-color 160ms; }
 .mode-index button:hover { background: color-mix(in srgb, var(--stage-ink) 12%, transparent); }
-.mode-index button.is-selected { color: var(--qmah-ink); background: var(--qmah-paper); }
+.mode-index button.is-selected { color: var(--qmah-game-content); background: var(--qmah-game-action); }
 .mode-index h2 { margin: 0 0 6px; font: 700 clamp(24px, 2.2vw, 30px)/1.25 var(--qmah-font-serif); }
 .mode-index span { font-size: 14px; }
 .mode-preview { min-width: 0; }
@@ -31,7 +29,7 @@ button:active:not(:disabled) { transform: translateY(1px); }
 .mode-preview__art[data-mode='DETAIL_LOCATOR'], .mode-preview__art[data-mode='ARTIFACT_PUZZLE'] { width: min(100%, 440px); height: auto; aspect-ratio: 1; border-radius: var(--qmah-radius-card); box-shadow: 0 16px 36px color-mix(in srgb, var(--qmah-ink) 18%, transparent); }
 .mode-preview__art[data-mode='DETAIL_LOCATOR'] { box-shadow: none; }
 app-game-detail-clue { --clue-ink: var(--stage-muted); }
-.mode-preview__art[data-mode='ARTIFACT_PUZZLE'] > img { object-fit: cover; }
+.mode-preview__art[data-mode='ARTIFACT_PUZZLE'] > img { object-fit: contain; }
 .mode-preview__art[data-mode='STRIP_RESTORE'] { width: min(100%, 580px); height: auto; aspect-ratio: 4 / 3; box-shadow: 0 16px 36px color-mix(in srgb, var(--qmah-ink) 18%, transparent); }
 .preview-grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); pointer-events: none; }
 .preview-grid[hidden] { display: none; }
@@ -39,7 +37,7 @@ app-game-detail-clue { --clue-ink: var(--stage-muted); }
 .preview-grid span { border: 1px solid var(--qmah-surface); }
 .preview-memory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: min(100%, 440px); aspect-ratio: 1; }
 .preview-memory > span { display: grid; min-width: 0; place-items: center; overflow: hidden; border-radius: var(--qmah-radius-control); color: var(--qmah-game-content); background: var(--qmah-game-action); font: 700 32px var(--qmah-font-serif); }
-.preview-memory img { width: 100%; height: 100%; object-fit: cover; }
+.preview-memory img { width: 100%; height: 100%; object-fit: contain; }
 .mode-preview__copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; padding: 28px 0 12px; }
 .mode-preview__copy h2 { margin: 0; font: 700 28px/1.3 var(--qmah-font-serif); }
 .mode-preview__copy p { grid-column: 1; margin: 0; color: var(--qmah-muted); max-width: 45ch; }
@@ -63,8 +61,8 @@ app-game-detail-clue { --clue-ink: var(--stage-muted); }
 .play-heading__progress { display: grid; gap: 5px; font-size: 14px; font-variant-numeric: tabular-nums; }
 .play-heading__progress-meta { display: flex; justify-content: space-between; }
 .play-heading__progress small { color: var(--qmah-muted); }
-.play-progress { height: 4px; overflow: hidden; border-radius: 4px; background: var(--qmah-line); }
-.play-progress span { display: block; height: 100%; background: var(--qmah-jade); transform-origin: left; transition: transform 180ms; }
+.play-progress { height: 4px; overflow: hidden; border-radius: 4px; }
+.play-progress span { display: block; height: 100%; transform-origin: left; transition: transform 180ms; }
 .collection-hint, .collection-hints { position: static; max-width: min(360px, 100%); padding: 0; }
 .collection-hint summary, .collection-hints summary { min-height: 44px; padding: 10px 14px; border-radius: var(--qmah-radius-control); color: var(--qmah-jade); background: var(--qmah-surface); cursor: pointer; }
 .collection-hint[open], .collection-hints[open] { padding: 12px; max-height: min(180px, 30dvh); overflow: auto; background: var(--qmah-surface); color: var(--qmah-ink); border-radius: var(--qmah-radius-card); }
@@ -102,13 +100,6 @@ app-game-detail-clue { --clue-ink: var(--stage-muted); }
 @media (prefers-reduced-motion: reduce) { .memory-card { transition: none; } .memory-card.is-open { animation: none; } }
 .memory-card.is-open { animation: card-turn 260ms ease-out; }
 .memory-card.is-matched { border-color: var(--qmah-jade); opacity: 1; }
-.tile-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: min(100%, 560px, max(270px, calc(100dvh - 280px))); aspect-ratio: 1; gap: 2px; box-shadow: 0 16px 36px color-mix(in srgb, var(--qmah-ink) 18%, transparent); }
-.image-tile { position: relative; min-width: 0; min-height: 44px; overflow: hidden; border: 0; padding: 0; background: var(--qmah-surface-soft); }
-.image-tile img { position: absolute; width: 500%; height: 500%; max-width: none; object-fit: cover; pointer-events: none; }
-.image-tile b { position: absolute; right: 3px; bottom: 3px; padding: 1px 4px; border-radius: 3px; color: var(--qmah-on-dark); background: var(--qmah-night); font-size: 12px; }
-.image-tile.selected { outline: 3px solid var(--qmah-accent); outline-offset: -3px; z-index: 1; }
-.image-tile:disabled { opacity: 1; }
-.image-tile:disabled b { visibility: hidden; }
 app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height-limit: max(240px, calc(100dvh - 420px)); --scroll-ink: var(--stage-ink); --scroll-muted: var(--stage-muted); }
 .game-hint { margin: 8px 0 0; color: var(--qmah-jade); font-size: 14px; text-align: center; }
 .image-fallback { display: grid; gap: 12px; place-items: center; height: 100%; padding: 12px; font: 400 14px/1.5 var(--qmah-font-sans); }
@@ -146,12 +137,12 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
 .result-rewards p, .result-note { margin: 4px 0 0; font-size: 12px; color: var(--qmah-muted); }
 .result-note { grid-column: 1; }
 .result-actions { grid-column: 2; grid-row: 1 / 5; display: grid; gap: 8px; justify-items: stretch; }
-.scene-exits a, .mode-preview__copy p, .play-heading__title > span, .play-heading__meta, .play-heading__progress small, .game-prompt p, .progress-readout, .play-command, .result-facts dt, .result-rewards dt, .result-rewards p, .result-note { color: var(--stage-muted); }
+.mode-preview__copy p, .play-heading__title > span, .play-heading__meta, .play-heading__progress small, .game-prompt p, .progress-readout, .play-command, .result-facts dt, .result-rewards dt, .result-rewards p, .result-note { color: var(--stage-muted); }
 .mode-preview__actions a, .result-actions a, .result-gallery a, .game-hint, .result-facts dd span, .result-rewards dd { color: var(--stage-accent); }
 .play-progress { background: color-mix(in srgb, var(--stage-ink) 25%, transparent); }
 .play-progress span { background: var(--stage-accent); }
 .pause-trigger, .result-actions .secondary { color: var(--stage-ink); border-color: color-mix(in srgb, var(--stage-ink) 30%, transparent); }
-.mode-preview__actions button, .play-actions button, .result-actions button:not(.secondary) { color: var(--qmah-ink); border-color: var(--qmah-paper); background: var(--qmah-paper); }
+.mode-preview__actions button, .play-actions button, .result-actions button:not(.secondary) { color: var(--qmah-game-content); border-color: var(--qmah-game-action); background: var(--qmah-game-action); }
 .pause-dialog { position: fixed; inset: 0; margin: auto; width: min(420px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 32px; border: 0; border-radius: var(--qmah-radius-panel); background: var(--qmah-surface); color: var(--qmah-ink); box-shadow: 0 16px 40px color-mix(in srgb, var(--qmah-night) 30%, transparent); }
 .pause-dialog::backdrop { background: color-mix(in srgb, var(--qmah-night) 70%, transparent); }
 .pause-dialog h2 { margin: 0; font: 700 30px var(--qmah-font-serif); }
@@ -177,15 +168,13 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
 @media (max-width: 600px) {
   .training-notebook { --arena-height: max(620px, calc(100dvh - 200px)); }
   .training-notebook.is-focus-mode { --arena-height: max(620px, calc(100dvh - 88px)); }
-  .scene-exits { gap: 12px; }
   .chapter-heading h1 { font-size: 20px; }
-  .scene-exits a { font-size: 12px; }
-  .mode-stage { display: flex; flex-direction: column-reverse; justify-content: center; gap: 12px; padding-block: 12px; }
-  .mode-index { display: flex; gap: 6px; width: 100%; }
+  .mode-stage { display: flex; flex-direction: column; justify-content: start; gap: 12px; padding-block: 12px; }
+  .mode-index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; width: 100%; }
   .mode-index li { flex: 1; min-width: 0; }
   .mode-index button { min-height: 68px; padding: 10px 6px; text-align: center; }
   .mode-index h2 { margin: 0; font: 700 15px/1.5 var(--qmah-font-sans); }
-  .mode-index span { display: none; }
+  .mode-index span { display: block; font-size: 12px; margin-top: 4px; }
   .mode-preview { width: 100%; }
   .mode-preview__art { height: 290px; }
   .mode-preview__art[data-mode='DETAIL_LOCATOR'], .mode-preview__art[data-mode='ARTIFACT_PUZZLE'] { width: min(100%, 280px); }
@@ -228,6 +217,6 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
   .is-focus-mode.is-playing .play-sheet { height: var(--arena-height); min-height: 0; }
   .is-focus-mode.is-playing .game-board { padding: 8px; min-height: 0; align-content: safe center; overflow-y: auto; overscroll-behavior: contain; }
   .ordering-game { width: 100%; }
-  app-game-placement-board { --board-height: calc(100dvh - 380px); --tray-height: calc(100dvh - 450px); }
+  app-game-placement-board { --board-height: max(220px, calc(100dvh - 380px)); --tray-height: max(220px, calc(100dvh - 450px)); }
   app-game-scroll-board { width: 100%; --scroll-height-limit: calc(100dvh - 380px); --tray-height: calc(100dvh - 450px); }
 }

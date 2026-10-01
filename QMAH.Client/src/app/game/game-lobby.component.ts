@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -21,6 +22,7 @@ type LobbyStatus = GameRoomFilterStatus | 'RECENT';
   styleUrl: './game-lobby.component.scss'
 })
 export class GameLobbyComponent implements OnInit, OnDestroy {
+  private readonly destroyRef = inject(DestroyRef);
   readonly game = inject(GameService);
   readonly meApi = inject(MeApiService);
   readonly focusMode = inject(GameFocusMode);
@@ -76,6 +78,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();
+    this.listRequest?.unsubscribe();
+    this.detailRequest?.unsubscribe();
   }
 
   loadRooms(page = 1, syncUrl = true): void {
@@ -126,10 +130,11 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     }
 
     const status = this.roomStatus === 'RECENT' ? 'COMPLETED' : this.roomStatus;
-    this.game.getRooms({ status, sort: this.roomSort, page, pageSize: this.pageSize }).pipe(finalize(() => {
+    this.listRequest?.unsubscribe();
+    this.listRequest = this.game.getRooms({ status, sort: this.roomSort, page, pageSize: this.pageSize }).pipe(finalize(() => {
       this.refreshing = false;
       this.changeDetector.markForCheck();
-    })).subscribe({
+    })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (rooms) => {
         this.rooms = rooms;
         this.changeDetector.markForCheck();
@@ -148,11 +153,12 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       this.demoRoom = this.makeDemoDetail(room);
       return;
     }
+    this.detailRequest?.unsubscribe();
     this.game.clearState(); this.detailLoading = true;
-    this.game.getRoom(room.id).pipe(finalize(() => {
+    this.detailRequest = this.game.getRoom(room.id).pipe(finalize(() => {
       this.detailLoading = false;
       this.changeDetector.markForCheck();
-    })).subscribe({
+    })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.changeDetector.markForCheck();
       },
@@ -165,6 +171,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
 
   currentRoom(): GameRoomDetails | null { return this.demoRoom ?? this.game.currentRoom(); }
   clearSelection(): void {
+    this.detailRequest?.unsubscribe();
     const roomId = this.selectedRoomId;
     this.selectedRoomId = ''; this.demoRoom = null; this.game.clearState();
     this.restoreRoomTrigger(roomId);
@@ -214,7 +221,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.game.createRoom(this.createForm).pipe(finalize(() => {
       this.creating = false;
       this.changeDetector.markForCheck();
-    })).subscribe({
+    })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (room) => {
         this.showCreateForm = false;
         this.enterRoom(room.id);
@@ -239,7 +246,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.game.joinRoom(room.id, this.joinForm).pipe(finalize(() => {
       this.joining = false;
       this.changeDetector.markForCheck();
-    })).subscribe({
+    })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (joinedRoom) => {
         this.enterRoom(joinedRoom.id);
       },
@@ -346,12 +353,15 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   }
   pageNumbers(): number[] { if (!this.rooms) return []; const start = Math.max(1, Math.min(this.rooms.page - 1, this.rooms.totalPages - 2)); return Array.from({ length: Math.min(3, this.rooms.totalPages) }, (_, index) => start + index); }
 
+  private listRequest?: Subscription;
+  private detailRequest?: Subscription;
   private run<T>(request: Observable<T>, assign: (value: T) => void): void {
+    this.listRequest?.unsubscribe();
     this.loading = true;
-    request.pipe(finalize(() => {
+    this.listRequest = request.pipe(finalize(() => {
       this.loading = false;
       this.changeDetector.markForCheck();
-    })).subscribe({
+    })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (value) => {
         assign(value);
         this.changeDetector.markForCheck();

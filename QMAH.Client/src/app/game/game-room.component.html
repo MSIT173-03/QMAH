@@ -171,7 +171,7 @@
                       @for (type of answerTypes; track type.value) { <option [ngValue]="type.value">{{ type.label }} — {{ type.hint }}</option> }
                     </select>
                     <label for="answer-text">你的回答</label>
-                    <textarea id="answer-text" name="answerText" [(ngModel)]="answerText" maxlength="500" required rows="5" placeholder="寫下你的推理或故事…"></textarea>
+                    <textarea id="answer-text" name="answerText" [(ngModel)]="answerText" (ngModelChange)="saveDraft($event)" maxlength="500" required rows="5" placeholder="寫下你的推理或故事…"></textarea>
                     <div class="form-foot"><span>{{ answerText.length }} / 500</span><button type="submit" [disabled]="submittingAnswer || !answerText.trim()">{{ submittingAnswer ? '送出中…' : '送出回答' }}</button></div>
                   </form>
                 } @else if (hasSubmittedAnswer()) {

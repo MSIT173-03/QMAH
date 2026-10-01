@@ -1,7 +1,7 @@
 // Shared scene frame. Website chrome remains outside and is hidden only by opt-in focus mode.
 @mixin surface {
-  --scene-ground: color-mix(in srgb, var(--qmah-game-action) 65%, var(--qmah-night));
-  --scene-ink: var(--qmah-game-content);
+  --scene-ground: var(--qmah-surface);
+  --scene-ink: var(--qmah-ink);
   --scene-muted: color-mix(in srgb, var(--scene-ink) 76%, var(--scene-ground));
   --game-nav-ink: var(--scene-ink);
   --game-nav-muted: var(--scene-muted);

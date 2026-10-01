@@ -21,6 +21,20 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
     private const int PuzzlePieceCount = 25;
     private const int RestorePieceCount = 15;
     private const int StandardMemoryPairCount = 8;
+    public Task<bool> CanResumeAsync(Guid userId, Guid attemptId, CancellationToken cancellationToken = default)
+        => db.MiniGameAttempts.AsNoTracking().AnyAsync(item => item.UserId == userId && item.Id == attemptId
+            && item.Status == "STARTED", cancellationToken);
+
+    public async Task<MiniGameRewardStatusView> GetRewardStatusAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var setting = await economyService.GetGameEconomySettingAsync(cancellationToken);
+        var start = DateTime.UtcNow.AddHours(8).Date.AddHours(-8);
+        var end = start.AddDays(1);
+        var count = await db.MiniGameAttempts.AsNoTracking().CountAsync(item => item.UserId == userId
+            && item.RewardGranted && item.CompletedAt >= start && item.CompletedAt < end, cancellationToken);
+        return new MiniGameRewardStatusView(setting.DailyMiniGameRewardLimit,
+            Math.Max(0, setting.DailyMiniGameRewardLimit - count), end);
+    }
 
     /// <summary>取得所有啟用中的 Mini Game 模式及其評分門檻。</summary>
     public async Task<IReadOnlyList<MiniGameModeView>> GetModesAsync(
@@ -114,7 +128,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             ArtifactId = selected.Id,
             ArtifactPoolJson = JsonSerializer.Serialize(pool.Select(item => item.Id)),
             Difficulty = ReadConfigString(mode.ConfigJson, "difficulty") ?? "NORMAL",
-            Seed = Guid.NewGuid().ToString("N"),
+            Seed = "v3-" + Guid.NewGuid().ToString("N"),
             ConfigJson = mode.ConfigJson,
             Status = "STARTED",
             StartedAt = now
@@ -208,6 +222,17 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             return EconomyResult<MiniGameCompleteView>.Conflict("這個 Attempt 目前不可完成。");
 
         var mode = attempt.GameModeDefinition;
+        if (attempt.Seed.StartsWith("v3-", StringComparison.Ordinal))
+        {
+            try
+            {
+                using var submitted = JsonDocument.Parse(rawResultJson ?? "{}");
+                if (submitted.RootElement.ValueKind != JsonValueKind.Object
+                    || !TryGetInt(submitted.RootElement, "scoringVersion", out var version) || version != 3)
+                    return EconomyResult<MiniGameCompleteView>.Invalid("本局需要目前版本的評分資料，請重新整理後再送出。");
+            }
+            catch (JsonException) { return EconomyResult<MiniGameCompleteView>.Invalid("遊戲結果格式無效，請保留進度後重新送出。"); }
+        }
         if (!TryCalculateVerifiedScore(attempt, mode, rawScore, rawResultJson, out var verifiedRawScore, out var scoreError))
             return EconomyResult<MiniGameCompleteView>.Invalid(scoreError!);
         rawScore = verifiedRawScore;
@@ -278,7 +303,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         var setting = await economyService.GetGameEconomySettingAsync(cancellationToken);
         if (setting.DailyMiniGameRewardLimit < 0 || setting.KeyProgressToNormalKey <= 0)
             return EconomyResult<MiniGameCompleteView>.Conflict("Mini Game 每日獎勵或進度門檻設定無效。");
-        var utcDate = DateTime.UtcNow.Date;
+        var utcDate = DateTime.UtcNow.AddHours(8).Date.AddHours(-8);
         var nextUtcDate = utcDate.AddDays(1);
         var rewardedToday = await db.MiniGameAttempts
             .CountAsync(item => item.UserId == userId
@@ -737,6 +762,9 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         Guid EraBucketId,
         string CategoryCode);
 }
+
+/// <summary>目前會員的小遊戲每日獎勵額度。</summary>
+public sealed record MiniGameRewardStatusView(int DailyLimit, int Remaining, DateTime ResetsAt);
 
 /// <summary>前端建立玩法所需的模式識別與評分門檻。</summary>
 public sealed record MiniGameModeView(

@@ -1,4 +1,6 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MeApiService } from '../core/services/me-api';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { catchError, finalize, forkJoin, interval, of, Subscription } from 'rxjs';
@@ -35,6 +37,10 @@ interface CatalogHint {
 }
 
 interface TrainingSessionSnapshot {
+  ownerId?: string;
+  pendingResult?: { rawScore: number; rawResultJson: string };
+  puzzleHintRegion?: number | null;
+  restoreHintRegion?: number | null;
   attempt: MiniGameStart;
   elapsedSeconds: number;
   puzzleOrder: number[];
@@ -57,12 +63,19 @@ interface TrainingSessionSnapshot {
   templateUrl: './game-training.component.html',
 })
 export class GameTrainingComponent implements OnInit, OnDestroy {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly meApi = inject(MeApiService);
+  private ownerId = '';
+  private pendingResult: { rawScore: number; rawResultJson: string } | null = null;
+  puzzleHintRegion: number | null = null;
+  restoreHintRegion: number | null = null;
   readonly game = inject(GameService);
   readonly focusMode = inject(GameFocusMode);
   private readonly catalog = inject(CatalogService);
   private readonly changeDetector = inject(ChangeDetectorRef);
   modes: MiniGameMode[] = [];
   selectedModeCode = '';
+  rewardRemaining: number | null = null;
   readonly previewMemory = Array.from({ length: 16 }, (_, index) => [2, 5, 10, 13].includes(index));
   readonly previewPuzzle = Array.from({ length: 25 });
   readonly previewScroll = Array.from({ length: 15 });
@@ -85,9 +98,9 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   get helpPenalty(): number { return Math.ceil(60 * this.helpRemaining / Math.max(1, this.helpUnits)); }
   get hintPenalty(): number { return this.attempt?.modeCode === 'DETAIL_LOCATOR' ? 10 : 3; }
   get canAskForHelp(): boolean {
-    if (this.phase !== 'playing' || this.completing || this.memoryBusy || this.helpRemaining <= 0) return false;
+    if (this.phase !== 'playing' || this.completing || this.pendingResult || this.memoryBusy || this.helpRemaining <= 0) return false;
     if (this.attempt?.modeCode === 'DETAIL_LOCATOR' && this.autoPlaced > 0) return false;
-    if (this.attempt?.modeCode === 'ARTIFACT_PUZZLE') return !!this.placement?.naturalWidth() && !this.imageFailed('puzzle');
+    if (this.attempt?.modeCode === 'ARTIFACT_PUZZLE') return !!this.placement?.ready() && !this.imageFailed('puzzle');
     if (this.attempt?.modeCode === 'STRIP_RESTORE') return !!this.scrollBoard?.ready() && this.scrollBoard.layout().eligible;
     return !this.imageUnavailable;
   }
@@ -232,10 +245,19 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   private attemptStartedAt = 0;
 
   ngOnInit(): void {
-    this.restoreSessionState();
-    this.loadModes();
+    this.meApi.getMe().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: me => { this.ownerId = me.id; this.restoreSessionState(); this.loadModes(); },
+      error: () => this.loadModes()
+    });
+    let lastTick = Date.now();
     this.elapsedTimer = interval(1000).subscribe(() => {
+      const now = Date.now(), delta = now - lastTick;
+      lastTick = now;
       if (this.phase !== 'playing' || this.paused || !this.attemptStartedAt) return;
+      if (this.pendingResult || this.completing || document.hidden || document.querySelector('dialog[open]')) {
+        this.attemptStartedAt += delta;
+        return;
+      }
       this.elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.attemptStartedAt) / 1000));
       this.persistSessionState();
       this.changeDetector.markForCheck();
@@ -283,10 +305,14 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   private loadModes(): void {
+    this.game.getMiniGameRewardStatus().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: status => { this.rewardRemaining = Number.isInteger(status.remaining) ? status.remaining : null; this.changeDetector.markForCheck(); },
+      error: () => { this.rewardRemaining = null; }
+    });
     this.loading = true;
     this.authRequired = false;
     this.error = '';
-    this.game.getMiniGameModes().pipe(finalize(() => { this.loading = false; this.changeDetector.markForCheck(); })).subscribe({
+    this.game.getMiniGameModes().pipe(finalize(() => { this.loading = false; this.changeDetector.markForCheck(); })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (modes) => {
         this.modes = modes;
         this.changeDetector.markForCheck();
@@ -342,8 +368,8 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     switch (this.attempt.modeCode) {
       case 'DETAIL_LOCATOR': return this.locatorChoice !== null && !this.imageUnavailable;
       case 'MEMORY_MATCH': return this.memoryPairCount > 0 && this.memoryMatched === this.memoryPairCount;
-      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) && !this.imageFailed('puzzle');
-      default: return this.isSolved(this.restoreOrder) && !this.imageFailed('restore');
+      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) && !!this.placement?.ready() && !this.imageFailed('puzzle');
+      default: return this.isSolved(this.restoreOrder) && !!this.scrollBoard?.ready() && this.scrollBoard.layout().eligible && !this.imageFailed('restore');
     }
   }
 
@@ -358,14 +384,14 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   difficultyText(difficulty: string): string {
-    return { EASY: '簡單', NORMAL: '一般', HARD: '困難', EXPERT: '專家' }[difficulty.trim().toUpperCase()] ?? difficulty;
+    return { EASY: '簡單', NORMAL: '一般', HARD: '困難', EXPERT: '專家' }[difficulty?.trim().toUpperCase()] ?? '一般';
   }
 
   start(mode: Pick<MiniGameMode, 'code'>): void {
     if (this.starting || this.completing) return;
     this.starting = true;
     this.error = '';
-    this.game.startMiniGame(mode.code).pipe(finalize(() => { this.starting = false; this.changeDetector.markForCheck(); })).subscribe({
+    this.game.startMiniGame(mode.code).pipe(finalize(() => { this.starting = false; this.changeDetector.markForCheck(); })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (attempt) => { this.beginAttempt(attempt); this.changeDetector.markForCheck(); },
       error: (error: unknown) => { this.setError(error); this.changeDetector.markForCheck(); }
     });
@@ -428,11 +454,12 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     if (!this.attempt || !this.canComplete || this.completing) return;
     this.completing = true;
     this.error = '';
-    const rawScore = this.score();
-    this.game.completeMiniGame(this.attempt.attemptId, {
-      rawScore,
-      rawResultJson: JSON.stringify(this.resultPayload(rawScore))
-    }).pipe(finalize(() => { this.completing = false; this.changeDetector.markForCheck(); })).subscribe({
+    if (!this.pendingResult) {
+      const rawScore = this.score();
+      this.pendingResult = { rawScore, rawResultJson: JSON.stringify(this.resultPayload(rawScore)) };
+      this.persistSessionState();
+    }
+    this.game.completeMiniGame(this.attempt.attemptId, this.pendingResult).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => { this.completing = false; this.changeDetector.markForCheck(); })).subscribe({
       next: (result) => {
         this.complete = result;
         this.phase = 'complete';
@@ -444,6 +471,8 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       error: (error: unknown) => { this.setError(error); this.changeDetector.markForCheck(); }
     });
   }
+
+  get resultFrozen(): boolean { return this.pendingResult !== null; }
 
   exitAttempt(): void {
     if (!this.attempt || this.completing) return;
@@ -477,6 +506,9 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   pieceOffsetY(piece: number): number { return -Math.floor(piece / 5) * 100; }
 
   private beginAttempt(attempt: MiniGameStart): void {
+    this.pendingResult = null;
+    this.puzzleHintRegion = null;
+    this.restoreHintRegion = null;
     this.attempt = attempt;
     this.complete = null;
     this.authRequired = false;
@@ -496,7 +528,26 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   private restoreSessionState(): void {
     const raw = this.readSessionState();
-    if (!raw || !this.isValidAttempt(raw.attempt)) return;
+    if (!raw) return;
+    if (!raw.ownerId && this.isValidAttempt(raw.attempt)) {
+      this.game.verifyMiniGameOwner(raw.attempt.attemptId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => {
+          if (this.phase !== 'list' || this.starting || this.readSessionState()?.attempt.attemptId !== raw.attempt.attemptId) return;
+          raw.ownerId = this.ownerId;
+          try { sessionStorage.setItem('qmah-mini-game-session-v1', JSON.stringify(raw)); } catch { return; }
+          this.restoreSessionState(); this.changeDetector.markForCheck();
+        },
+        error: (error: unknown) => {
+          if (error instanceof HttpErrorResponse && error.status === 404) this.clearSessionState();
+          else { this.setError(error); this.changeDetector.markForCheck(); }
+        }
+      });
+      return;
+    }
+    if (raw.ownerId !== this.ownerId || !this.isValidAttempt(raw.attempt)) {
+      this.clearSessionState();
+      return;
+    }
 
     this.attempt = raw.attempt;
     this.complete = null;
@@ -507,6 +558,9 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.imageUnavailable = false;
     this.setLocatorCrop(this.attempt.seed);
     this.resetBoard();
+    if (raw.pendingResult && Number.isFinite(raw.pendingResult.rawScore) && typeof raw.pendingResult.rawResultJson === 'string') this.pendingResult = raw.pendingResult;
+    this.puzzleHintRegion = Number.isInteger(raw.puzzleHintRegion) && raw.puzzleHintRegion! >= 0 && raw.puzzleHintRegion! < 4 ? raw.puzzleHintRegion! : null;
+    this.restoreHintRegion = Number.isInteger(raw.restoreHintRegion) && raw.restoreHintRegion! >= 0 && raw.restoreHintRegion! < 4 ? raw.restoreHintRegion! : null;
     this.moves = Number.isInteger(raw.moves) && raw.moves! >= 0 ? raw.moves! : 0;
     this.hintsUsed = Number.isInteger(raw.hintsUsed) && raw.hintsUsed! >= 0 ? raw.hintsUsed! : 0;
     this.autoPlaced = Number.isInteger(raw.autoPlaced) && raw.autoPlaced! >= 0 ? raw.autoPlaced! : 0;
@@ -535,12 +589,16 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   private persistSessionState(): void {
     if (this.phase !== 'playing' || !this.attempt) return;
     const snapshot: TrainingSessionSnapshot = {
+      ownerId: this.ownerId,
+      pendingResult: this.pendingResult ?? undefined,
+      puzzleHintRegion: this.placement ? this.placement.hintRegion() : this.puzzleHintRegion,
+      restoreHintRegion: this.scrollBoard ? this.scrollBoard.hintRegion : this.restoreHintRegion,
       attempt: this.attempt,
       elapsedSeconds: this.elapsedSeconds,
       puzzleOrder: this.puzzleOrder,
-      puzzleSelection: this.puzzleSelection,
+      puzzleSelection: this.placement ? this.placement.selected() : this.puzzleSelection,
       restoreOrder: this.restoreOrder,
-      restoreSelection: this.restoreSelection,
+      restoreSelection: this.scrollBoard ? this.scrollBoard.selected : this.restoreSelection,
       locatorChoice: this.locatorChoice,
       matchedCardIds: this.memoryCards.filter((card) => card.matched).map((card) => card.id),
       moves: this.moves,
@@ -569,6 +627,8 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     return typeof attempt.attemptId === 'string' && attempt.attemptId.length > 0
       && ['DETAIL_LOCATOR', 'MEMORY_MATCH', 'ARTIFACT_PUZZLE', 'STRIP_RESTORE'].includes(attempt.modeCode ?? '')
       && typeof attempt.seed === 'string'
+      && typeof attempt.difficulty === 'string' && typeof attempt.modeName === 'string'
+      && typeof attempt.primaryImagePath === 'string'
       && typeof attempt.artifactId === 'string' && typeof attempt.artifactName === 'string'
       && Array.isArray(attempt.artifactPool)
       && attempt.artifactPool.every(artifact => artifact && typeof artifact.artifactId === 'string' && typeof artifact.name === 'string');
@@ -591,7 +651,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       : [pool.find((artifact) => artifact.artifactId === attempt.artifactId) ?? fallback];
     const details = candidates.map((candidate) => this.catalog.getArtifactById(candidate.artifactId).pipe(catchError(() => of(null))));
 
-    forkJoin(details).subscribe((results) => {
+    forkJoin(details).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((results) => {
       if (this.attempt?.attemptId !== attempt.attemptId) return;
       const hints = candidates.map((candidate, index) => ({
         artifactId: candidate.artifactId,

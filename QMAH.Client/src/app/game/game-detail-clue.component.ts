@@ -38,7 +38,7 @@ import { Component, ElementRef, Input, OnChanges, ViewChild, output } from '@ang
     .clue-rule { width: 80px; height: 1px; background: var(--clue-ink, var(--qmah-border)); opacity: .5; }
     .clue-status { display: grid; justify-items: center; gap: 12px; color: var(--clue-ink, var(--qmah-muted)); }
     button { min-height: 44px; padding: 8px 16px; font: inherit; border: 1px solid var(--qmah-border);
-      border-radius: var(--qmah-radius-control); background: var(--qmah-paper); color: var(--qmah-ink); cursor: pointer; }
+      border-radius: var(--qmah-radius-control); background: var(--qmah-surface); color: var(--qmah-ink); cursor: pointer; }
     button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
     @media (max-width: 600px) { .clue-image { min-height: 120px; padding: 12px 0; } .clue-study { gap: 12px; } .clue-fragments { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } canvas:first-child { grid-column: auto; } }
   `

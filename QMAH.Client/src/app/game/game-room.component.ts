@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -52,6 +53,7 @@ interface TestScenario {
   styleUrl: './game-room.component.scss'
 })
 export class GameRoomComponent implements OnInit, OnDestroy {
+  private readonly destroyRef = inject(DestroyRef);
   readonly game = inject(GameService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -140,6 +142,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         this.needsGameAccount = false;
         if (playerChanged || this.round?.id !== this.lastRoundId) {
           this.lastRoundId = this.round?.id ?? '';
+          this.restoreDraft();
           this.artifactImageUnavailable = false;
           this.restoreVotedAnswers();
         }
@@ -157,9 +160,26 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.saveDraft(this.answerText);
     this.pollSubscription?.unsubscribe();
     this.clockSubscription?.unsubscribe();
     this.heartbeatSubscription?.unsubscribe();
+  }
+
+  private draftKey(roundId = this.round?.id): string {
+    return `qmah-game-draft:${this.roomId}:${roundId}:${this.currentPlayerId}`;
+  }
+  saveDraft(text: string): void {
+    if (this.testMode || !this.round || !this.currentPlayerId || this.hasSubmittedAnswer()) return;
+    try { sessionStorage.setItem(this.draftKey(), text.slice(0, 500)); } catch { /* storage is optional */ }
+  }
+  private restoreDraft(): void {
+    this.answerText = '';
+    if (this.testMode || !this.round || !this.currentPlayerId || this.hasSubmittedAnswer()) return;
+    try { this.answerText = sessionStorage.getItem(this.draftKey())?.slice(0, 500) ?? ''; } catch { /* storage is optional */ }
+  }
+  private clearDraft(roundId: string): void {
+    try { sessionStorage.removeItem(this.draftKey(roundId)); } catch { /* storage is optional */ }
   }
 
   testStageText(): string {
@@ -260,7 +280,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.game.setReady(this.room.id, !player.isReady).pipe(finalize(() => {
       this.lobbyActionBusy = false;
       this.changeDetector.markForCheck();
-    })).subscribe({
+    })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (room) => {
         this.room = room;
         this.actionMessage = player.isReady ? '已取消準備。' : '已準備，等待房主開始遊戲。';
@@ -286,7 +306,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.game.startRoom(this.room.id).pipe(finalize(() => {
       this.lobbyActionBusy = false;
       this.changeDetector.markForCheck();
-    })).subscribe({
+    })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (room) => {
         this.room = room;
         this.actionMessage = '遊戲已開始，正在載入第一回合。';
@@ -325,7 +345,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.game.leaveRoom(this.room.id).pipe(finalize(() => {
       this.leaving = false;
       this.changeDetector.markForCheck();
-    })).subscribe({
+    })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => void this.router.navigate(['/game']),
       error: (error: unknown) => {
         this.actionError = this.game.errorMessage(error);
@@ -402,17 +422,21 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.actionError = '';
     this.actionMessage = '';
     this.submittingAnswer = true;
-    this.game.submitAnswer(this.round.id, { answerType: this.answerType, text: this.answerText })
+    const submittedRoundId = this.round.id;
+    this.game.submitAnswer(submittedRoundId, { answerType: this.answerType, text: this.answerText })
       .pipe(finalize(() => {
         this.submittingAnswer = false;
         this.changeDetector.markForCheck();
       }))
-      .subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (answer) => {
           this.currentPlayerId = answer.gamePlayerId;
-          this.submittedRoundId = this.round?.id ?? '';
-          this.answerText = '';
-          this.actionMessage = '回答已送出，等待其他玩家完成作答。';
+          this.submittedRoundId = submittedRoundId;
+          this.clearDraft(submittedRoundId);
+          if (this.round?.id === submittedRoundId) {
+            this.answerText = '';
+            this.actionMessage = '回答已送出，等待其他玩家完成作答。';
+          }
           this.changeDetector.markForCheck();
         },
         error: (error: unknown) => {
@@ -436,7 +460,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         this.votingForAnswerId = '';
         this.changeDetector.markForCheck();
       }))
-      .subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => {
           this.votedAnswerIds.add(answer.id);
           this.actionMessage = '投好了！揭曉時就能看到作者和票數。';
@@ -471,7 +495,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         this.rewarding = false;
         this.changeDetector.markForCheck();
       }))
-      .subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (reward) => {
           this.reward = reward;
           this.actionMessage = reward.alreadyRewarded
