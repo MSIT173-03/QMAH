@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
   apiBaseUrl: '/api/v1',
-  turnstileSiteKey: '1x00000000000000000000AA'
+  turnstileSiteKey: '0x4AAAAAAFImg3rIKJ91ZL5P'
 };
