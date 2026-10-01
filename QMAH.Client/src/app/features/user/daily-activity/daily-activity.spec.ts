@@ -82,4 +82,23 @@ describe('DailyActivity check-in', () => {
     expect(component.makingUp).toBe(false);
     expect(component.selectedMakeUpDate).toBe('2026-09-29');
   });
+  it('keeps history visible when old services omit rewards and blocks claiming', () => {
+    component.loadDailyActivity();
+    http.expectOne('/api/v1/me/daily-activity').flush({lastLoginDate: '2026-10-01', hasLoggedInToday: true,
+      totalLoginDays: 32, currentLoginStreak: 1, longestLoginStreak: 30, lifetimeLoginRate: 0.8});
+    expect(component.rewardServiceReady).toBe(false);
+    expect(component.dailyActivity?.makeUpDays).toEqual([]);
+    expect(component.dailyActivity?.totalLoginDays).toBe(32);
+    expect(component.streakDays.length).toBe(7);
+    component.loginToday();
+    http.expectNone('/api/v1/account/antiforgery-token');
+  });
+  it('marks the next available day and counts down to the bounded bonus', () => {
+    expect(component.daysUntilBonus).toBe(1);
+    expect(component.streakDays.find(day => day.upcoming)?.day).toBe(7);
+    expect(component.completedWeekDays).toBe(6);
+    component.dailyActivity = {...summary, hasCheckedInToday: true, currentCheckInStreak: 7};
+    expect(component.daysUntilBonus).toBe(7);
+    expect(component.completedWeekDays).toBe(7);
+  });
 });
