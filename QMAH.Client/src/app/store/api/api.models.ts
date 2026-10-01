@@ -329,11 +329,6 @@ export interface StoreCoupon {
   off: string;
   /** 使用條件說明文字 */
   cond: string;
-  /** 可使用的最低應付金額門檻，0 代表不限金額 */
-  min: number;
-  kind: Exclude<CouponKind, 'freeship'>;
-  /** amount：折抵金額；percent：折抵比例（0.1 代表折 10%） */
-  value: number;
   /** 兌換所需點數 */
   pointCost: number;
   /** 兌換後的持有有效天數 */

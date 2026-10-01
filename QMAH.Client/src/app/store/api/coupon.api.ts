@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { apiUrl } from './http';
+import { formatCouponCondition, formatCouponOff } from '../shared/format';
 import { StoreCoupon, StoreCouponRedeemResult } from './api.models';
 
 /** GET /store/coupons 項目（對應後端 StoreCouponDto） */
@@ -27,19 +28,13 @@ interface ApiRedeemResult {
   expiresAt: string;
 }
 
-/** 後端折價券定義轉為商城顯示用的模型；標示文字與會員折價券（MemberApi.getCoupons）保持一致 */
+/** 後端折價券定義轉為商城顯示用的模型；標示文字與會員折價券（MemberApi.getCoupons）共用同一組格式化函式 */
 function toStoreCoupon(coupon: ApiStoreCoupon): StoreCoupon {
-  const isPercent = coupon.discountType.toUpperCase() === 'PERCENT';
-  const value = Number(coupon.discountValue);
-  const min = Number(coupon.minimumAmount);
   return {
     id: coupon.id,
     title: coupon.name,
-    off: isPercent ? `${value}% OFF` : `NT$${value}`,
-    cond: min > 0 ? `最低消費 NT$${min}` : '不限金額',
-    min,
-    kind: isPercent ? 'percent' : 'amount',
-    value: isPercent ? value / 100 : value,
+    off: formatCouponOff(coupon.discountType, coupon.discountValue),
+    cond: formatCouponCondition(coupon.minimumAmount),
     pointCost: coupon.pointCost,
     validityDays: coupon.validityDays,
     endDate: coupon.endAt.slice(0, 10),

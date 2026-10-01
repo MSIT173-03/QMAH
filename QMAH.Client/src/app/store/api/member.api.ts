@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
+import { formatCouponCondition, formatCouponOff } from '../shared/format';
 import { meUrl } from './http';
 import { Coupon, MemberProfile, Recipient } from './api.models';
 
@@ -106,9 +107,9 @@ export class MemberApi {
         return {
           id: coupon.id,
           // 與會員折價券頁一致：PERCENT 的 discountValue 是折抵百分比，不是折數。
-          off: isPercent ? `${value}% OFF` : `NT$${value}`,
+          off: formatCouponOff(coupon.discountType, coupon.discountValue),
           title: coupon.name,
-          cond: coupon.minimumAmount > 0 ? `最低消費 NT$${coupon.minimumAmount}` : '不限金額',
+          cond: formatCouponCondition(coupon.minimumAmount),
           min: coupon.minimumAmount,
           kind: isPercent ? 'percent' : 'amount',
           value: isPercent ? value / 100 : value,

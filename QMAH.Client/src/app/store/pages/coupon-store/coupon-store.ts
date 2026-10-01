@@ -14,6 +14,13 @@ import { formatNumber } from '../../shared/format';
 /** 兌換成功後頁面會重新整理，結果訊息暫存在 sessionStorage，等重新載入完成後再顯示 */
 const REDEEM_NOTICE_KEY = 'qmah.store.couponRedeemNotice';
 
+/** 兌換確認視窗與兌換請求需要的折價券資訊（券面顯示用的 coupons() 項目的子集） */
+interface RedeemTarget {
+  id: string;
+  title: string;
+  costLabel: string;
+}
+
 /** 兌換成功訊息自動消失前的停留時間（毫秒） */
 const FEEDBACK_AUTO_DISMISS_MS = 10_000;
 /** 訊息淡出的時間（毫秒），需與 coupon-store.scss 的 .coupon-feedback 過渡時間一致 */
@@ -91,7 +98,7 @@ export class CouponStore {
      =============================== */
 
   /** 等待使用者確認兌換的折價券；null 代表確認視窗關閉 */
-  protected readonly pendingCoupon = signal<{ id: string; title: string; costLabel: string } | null>(null);
+  protected readonly pendingCoupon = signal<RedeemTarget | null>(null);
 
   /** 兌換請求進行中 */
   protected readonly redeeming = signal(false);
@@ -119,7 +126,7 @@ export class CouponStore {
   }
 
   /** 按下券面的點數區塊：未登入開啟登入提示，已登入開啟兌換確認 */
-  protected onRedeemClick(coupon: { id: string; title: string; costLabel: string }): void {
+  protected onRedeemClick(coupon: RedeemTarget): void {
     this.clearFeedback();
     this.cart.requireSignIn(() => this.pendingCoupon.set(coupon));
   }
