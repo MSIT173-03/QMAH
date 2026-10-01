@@ -18,11 +18,11 @@
         </p>
       </div>
 
-      @if (dailyActivity?.hasLoggedInToday) {
+      @if (dailyActivity?.hasCheckedInToday) {
 
         <div class="today-status">
           <span class="today-status-dot"></span>
-          今日任務完成
+          今日獎勵已領取
         </div>
 
       }
@@ -55,7 +55,7 @@
 
   @if (errorMessage) {
 
-    <div class="state-box error">
+    <div class="state-box error" role="alert">
       {{ errorMessage }}
     </div>
 
@@ -75,22 +75,17 @@
 
     <section
       class="checkin-hero"
-      [class.completed]="dailyActivity.hasLoggedInToday"
+      [class.completed]="dailyActivity.hasCheckedInToday"
     >
 
       <div class="hero-decoration decoration-one"></div>
       <div class="hero-decoration decoration-two"></div>
 
 
-      @if (dailyActivity.hasLoggedInToday) {
+      @if (dailyActivity.hasCheckedInToday) {
 
         <div class="shine"></div>
 
-        <div class="success-particles" aria-hidden="true">
-          <app-qmah-icon name="sparkles" size="16" />
-          <app-qmah-icon name="sparkles" size="16" />
-          <app-qmah-icon name="sparkles" size="16" />
-        </div>
 
       }
 
@@ -99,16 +94,16 @@
 
         <div class="checkin-icon">
 
-          @if (dailyActivity.hasLoggedInToday) {
+          @if (dailyActivity.hasCheckedInToday) {
 
             <span class="check-icon">
-              <app-qmah-icon name="circle-check" />
+              <app-qmah-icon name="circle-check" size="32" />
             </span>
 
           } @else {
 
             <span>
-              <app-qmah-icon name="calendar" />
+              <app-qmah-icon name="calendar" size="32" />
             </span>
 
           }
@@ -123,24 +118,24 @@
           </span>
 
 
-          @if (dailyActivity.hasLoggedInToday) {
+          @if (dailyActivity.hasCheckedInToday) {
 
             <h2>
-              今日登入完成！
+              今日簽到完成！
             </h2>
 
             <p>
-              今天的登入紀錄已經保存，明天記得再回來。
+              今日的鑑定點數獎勵已領取，明天記得再回來。
             </p>
 
           } @else {
 
             <h2>
-              今天還沒登入
+              今天尚未簽到
             </h2>
 
             <p>
-              完成今日登入，繼續累積你的登入紀錄。
+              今日簽到可領取 {{ dailyActivity.dailyPointReward }} 點鑑定點數。每天凌晨 00:00（台灣時間）更新。
             </p>
 
           }
@@ -150,20 +145,20 @@
       </div>
 
 
-      @if (!dailyActivity.hasLoggedInToday) {
+      @if (!dailyActivity.hasCheckedInToday) {
 
         <button
           type="button"
           class="checkin-button"
           (click)="loginToday()"
-          [disabled]="loggingIn"
+          [disabled]="loggingIn || makingUp"
         >
 
           @if (loggingIn) {
 
             <span class="button-spinner"></span>
 
-            紀錄中...
+            領取中…
 
           } @else {
 
@@ -200,7 +195,7 @@
 
     @if (successMessage) {
 
-      <div class="success-message">
+      <div class="success-message" role="status">
 
         <span>
           <app-qmah-icon name="party-popper" />
@@ -234,7 +229,7 @@
         <div class="fire-orb">
 
           <span class="fire-icon">
-            <app-qmah-icon name="flame" />
+            <app-qmah-icon name="flame" size="32" />
           </span>
 
         </div>
@@ -309,6 +304,36 @@
 
     </section>
 
+    <section class="checkin-rules" aria-labelledby="checkin-rules-title">
+      <div class="rules-heading">
+        <h2 id="checkin-rules-title">簽到與補簽規則</h2>
+        <span>本月還有 {{ dailyActivity.remainingMonthlyBonuses }} 次加成</span>
+      </div>
+      <dl class="rules-list">
+        <div><dt>每天 3 點</dt><dd>連續簽到每滿 7 天，再加 3 點。單日最多 6 點，每月最多加成 4 次，共 12 點。</dd></div>
+        <div><dt>漏簽也能補</dt><dd>可補近 7 天，每天第一次免費。之後補 1～3 天前扣 1 點，4～7 天前扣 2 點。</dd></div>
+        <div><dt>補簽實得 1～3 點</dt><dd>每次補簽領 3 點，再扣除補簽費用，不追補過去的連續加成。補齊漏簽日期可接回連續紀錄；未補齊則重新累積。</dd></div>
+      </dl>
+      @if (dailyActivity.makeUpDays.length) {
+        <div class="makeup-controls">
+          <div class="makeup-field">
+            <label for="makeup-date">選擇補簽日期</label>
+            <select id="makeup-date" [value]="selectedMakeUpDate" (change)="selectedMakeUpDate = $any($event.target).value" [disabled]="loggingIn || makingUp">
+              <option value="">選擇漏簽的日期</option>
+              @for (day of dailyActivity.makeUpDays; track day.date) {
+                <option [value]="day.date">{{ day.date }} · {{ day.pointCost === 0 ? '免費' : '扣 ' + day.pointCost + ' 點' }}</option>
+              }
+            </select>
+          </div>
+          <button type="button" class="makeup-button" [disabled]="!selectedMakeUpDay || loggingIn || makingUp" (click)="makeUp()">
+            {{ makingUp ? '補簽中…' : selectedMakeUpDay ? (selectedMakeUpDay.pointCost === 0 ? '免費補簽，領 3 點' : '扣 ' + selectedMakeUpDay.pointCost + ' 點補簽，實得 ' + (3 - selectedMakeUpDay.pointCost) + ' 點') : '確認補簽' }}
+          </button>
+        </div>
+      } @else {
+        <p class="makeup-empty">近 7 天沒有可補簽的日期。</p>
+      }
+    </section>
+
 
     <!-- =============================== -->
     <!-- 7 日連續登入 -->
@@ -325,18 +350,18 @@
           </span>
 
           <h2>
-            7 日連續登入
+            7 日連續簽到
           </h2>
 
           <p>
-            每天回來登入，維持你的連續登入紀錄。
+            每天回來簽到，維持你的連續簽到紀錄。
           </p>
 
         </div>
 
 
         <div class="weekly-progress-text">
-          {{ dailyActivity.currentLoginStreak }} 天連續
+          {{ dailyActivity.currentCheckInStreak }} 天連續
         </div>
 
       </div>
@@ -409,7 +434,7 @@
               } @else {
 
                 <span>
-                  待登入
+                  待簽到
                 </span>
 
               }
@@ -434,12 +459,12 @@
           <div>
 
             <strong>
-              保持連續登入
+              保持連續簽到
             </strong>
 
             <p>
-              目前已連續登入
-              {{ dailyActivity.currentLoginStreak }}
+              目前已連續簽到
+              {{ dailyActivity.currentCheckInStreak }}
               天。
             </p>
 
@@ -644,23 +669,23 @@
 
 
       <div
-        class="status"
-        [class.active-status]="dailyActivity.hasLoggedInToday"
+        class="login-status"
+        [class.active-status]="dailyActivity.hasCheckedInToday"
       >
 
         <span
           class="status-dot"
-          [class.active]="dailyActivity.hasLoggedInToday"
+          [class.active]="dailyActivity.hasCheckedInToday"
         ></span>
 
 
-        @if (dailyActivity.hasLoggedInToday) {
+        @if (dailyActivity.hasCheckedInToday) {
 
-          今日已登入
+          今日已簽到
 
         } @else {
 
-          今日尚未登入
+          今日尚未簽到
 
         }
 

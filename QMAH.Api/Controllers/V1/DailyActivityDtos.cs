@@ -11,4 +11,13 @@ public sealed record DailyActivityDto(
     int TotalLoginDays,
     int CurrentLoginStreak,
     int LongestLoginStreak,
-    decimal LifetimeLoginRate);
+    decimal LifetimeLoginRate,
+    bool HasCheckedInToday = false,
+    int DailyPointReward = 3,
+    int AwardedPoints = 0,
+    int CurrentCheckInStreak = 0,
+    int RemainingMonthlyBonuses = 4,
+    IReadOnlyList<MakeUpCheckInDayDto>? MakeUpDays = null);
+
+public sealed record MakeUpCheckInDayDto(DateOnly Date, int PointCost);
+public sealed record MakeUpCheckInRequest(DateOnly TargetDate, int ExpectedPointCost);

@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { switchMap } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 
@@ -14,6 +15,12 @@ interface DailyActivityResponse {
   currentLoginStreak: number;
   longestLoginStreak: number;
   lifetimeLoginRate: number;
+  hasCheckedInToday: boolean;
+  dailyPointReward: number;
+  awardedPoints: number;
+  currentCheckInStreak: number;
+  remainingMonthlyBonuses: number;
+  makeUpDays: { date: string; pointCost: number }[];
 }
 
 @Component({
@@ -34,6 +41,8 @@ export class DailyActivity implements OnInit {
 
   loading = true;
   loggingIn = false;
+  makingUp = false;
+  selectedMakeUpDate = '';
 
   errorMessage = '';
   successMessage = '';
@@ -51,10 +60,12 @@ export class DailyActivity implements OnInit {
   get streakDays() {
 
     const streak =
-      this.dailyActivity?.currentLoginStreak ?? 0;
+      this.dailyActivity?.currentCheckInStreak ?? 0;
 
     const completedCount =
-      Math.min(streak, 7);
+      this.dailyActivity?.hasCheckedInToday && streak > 0
+        ? ((streak - 1) % 7) + 1
+        : streak % 7;
 
     return Array.from(
       { length: 7 },
@@ -69,7 +80,7 @@ export class DailyActivity implements OnInit {
             day <= completedCount,
 
           current:
-            this.dailyActivity?.hasLoggedInToday === true &&
+            this.dailyActivity?.hasCheckedInToday === true &&
             day === completedCount,
 
           reward:
@@ -81,7 +92,7 @@ export class DailyActivity implements OnInit {
   }
 
 
-  private loadDailyActivity(): void {
+  loadDailyActivity(): void {
 
     this.loading = true;
 
@@ -129,8 +140,8 @@ export class DailyActivity implements OnInit {
   loginToday(): void {
 
     if (
-      this.loggingIn ||
-      this.dailyActivity?.hasLoggedInToday
+      this.loggingIn || this.makingUp ||
+      !this.dailyActivity || this.dailyActivity.hasCheckedInToday
     ) {
       return;
     }
@@ -172,11 +183,42 @@ export class DailyActivity implements OnInit {
 
   }
 
+  get selectedMakeUpDay() {
+    return this.dailyActivity?.makeUpDays?.find(day => day.date === this.selectedMakeUpDate);
+  }
+
+  makeUp(): void {
+    const day = this.selectedMakeUpDay;
+    if (!day || this.loggingIn || this.makingUp) return;
+    this.makingUp = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.http.get(`${environment.apiBaseUrl}/account/antiforgery-token`).pipe(
+      switchMap(() => this.http.post<DailyActivityResponse>(`${environment.apiBaseUrl}/me/daily-activity/make-up`,
+        { targetDate: day.date, expectedPointCost: day.pointCost }))
+    ).subscribe({
+      next: response => {
+        this.dailyActivity = response;
+        this.selectedMakeUpDate = '';
+        this.makingUp = false;
+        this.successMessage = response.awardedPoints > 0
+          ? `已補簽 ${day.date}，${day.pointCost === 0 ? '本次免費' : `扣除 ${day.pointCost} 點`}，實得 ${response.awardedPoints} 點。`
+          : '這天已完成簽到，沒有重複扣點或發放獎勵。';
+        this.cdr.detectChanges();
+      },
+      error: error => {
+        this.makingUp = false;
+        this.errorMessage = error.error?.detail || '補簽未完成，請稍後再試。';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
 
   private sendDailyLogin(): void {
 
-    this.http.post(
-      `${environment.apiBaseUrl}/me/daily-activity/login`,
+    this.http.post<DailyActivityResponse>(
+      `${environment.apiBaseUrl}/me/daily-activity/check-in`,
       {}
     )
       .subscribe({
@@ -188,9 +230,10 @@ export class DailyActivity implements OnInit {
           this.loggingIn = false;
 
           this.successMessage =
-            '今日登入紀錄成功！';
-
-          this.loadDailyActivity();
+            response.awardedPoints > 0
+              ? `簽到成功，已領取 ${response.awardedPoints} 點鑑定點數！`
+              : '今日獎勵已領取，明天再回來簽到。';
+          this.dailyActivity = response;
 
           this.cdr.detectChanges();
 
@@ -206,7 +249,7 @@ export class DailyActivity implements OnInit {
           this.loggingIn = false;
 
           this.errorMessage =
-            '記錄每日登入失敗';
+            error.error?.detail || '簽到獎勵尚未領取，請稍後重試。';
 
           this.cdr.detectChanges();
 

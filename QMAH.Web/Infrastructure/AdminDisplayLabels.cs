@@ -244,6 +244,11 @@ public static class AdminDisplayLabels
 
     public static string PointReferenceType(string? value) => value?.Trim().ToUpperInvariant() switch
     {
+        "DAILY_CHECK_IN" => "每日簽到獎勵",
+        "DAILY_CHECK_IN_MAKEUP" => "補簽基本獎勵",
+        "DAILY_CHECK_IN_MAKEUP_FREE" => "免費補簽獎勵",
+        "DAILY_CHECK_IN_MAKEUP_FEE" => "補簽扣點",
+        "KEY_PROGRESS_CONVERSION" or "MINIGAME_PROGRESS_CONVERSION" => "鑰匙碎片轉換",
         "SHOWCASE" => "展示資料",
         "ORDER" => "訂單回饋",
         "GAME" => "遊戲獎勵",
@@ -254,6 +259,7 @@ public static class AdminDisplayLabels
 
     public static string PointReason(string? value) => value?.Trim().ToUpperInvariant() switch
     {
+        _ when value?.StartsWith("每日簽到", StringComparison.Ordinal) == true => value,
         "FIXTURE_GRANT" => "展示資料發放",
         "ADMIN_ADJUST" => "後台調整",
         "ORDER_REWARD" => "訂單回饋",
