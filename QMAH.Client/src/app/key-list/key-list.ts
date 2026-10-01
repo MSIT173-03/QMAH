@@ -261,6 +261,7 @@ export class KeyList implements OnInit, OnDestroy {
   // 被通知要重新渲染）。改成 signal 後，每次都整包塞一個新的 Map 進去，
   // 才能確實觸發畫面更新。
   private categoryNameById = signal<Map<string, string>>(new Map());
+  private categoryCodeById = signal<Map<string, string>>(new Map());
   private eraNameById = signal<Map<string, string>>(new Map());
 
   constructor(
@@ -310,11 +311,15 @@ export class KeyList implements OnInit, OnDestroy {
     this.catalogService.getCategories().subscribe({
       next: (categories) => {
         const map = new Map<string, string>();
+        const codes = new Map<string, string>();
         for (const category of categories) {
           map.set(category.id, category.name);
           map.set(category.code, category.name);
+          codes.set(category.id, category.code);
+          codes.set(category.code, category.code);
         }
         this.categoryNameById.set(map);
+        this.categoryCodeById.set(codes);
       },
       error: (err) => console.error('[KeyList] loadCategoryEraNames (categories) failed', err),
     });
@@ -651,7 +656,8 @@ export class KeyList implements OnInit, OnDestroy {
   }
 
   keyIconByCode(code: string): string {
-    return keyAssetPath(this.keyByCode(code)?.scopeType ?? 'NORMAL');
+    const key = this.keyByCode(code);
+    return key ? this.keySlotIcon(key) : keyAssetPath('NORMAL');
   }
 
   keyNameByCode(code: string): string {
@@ -668,9 +674,13 @@ export class KeyList implements OnInit, OnDestroy {
     return keys.reduce((sum, key) => sum + key.balance, 0);
   }
 
-  /** 附圖依檔名對應四種 scope；這裡只做前端呈現對照，不改後端鑰匙契約。 */
+  /** 分類鑰匙依分類名稱或代碼顯示材質圖示，沿用既有後端鑰匙資料。 */
   keySlotIcon(key: KeyModel): string {
-    return keyAssetPath(key.scopeType);
+    const categoryCode = key.categoryId ? this.categoryCodeById().get(key.categoryId) : undefined;
+    return keyAssetPath(
+      key.scopeType,
+      categoryCode ?? `${this.getCategoryName(key.categoryId)} ${key.categoryId ?? ''} ${key.code} ${key.name}`,
+    );
   }
 
   /**
