@@ -1,7 +1,7 @@
 <div class="room-shell">
   <!-- ui-integration: 房間頁沿用共同遊戲子導覽，返回入口只保留為子導覽的上下文操作。 -->
   <app-game-navigation>
-    <a class="back-link" routerLink="/game">返回多人鑑定大廳</a>
+    <a class="back-link" [routerLink]="testMode ? '/game/test' : '/game'" [queryParams]="testMode ? { scenario: room?.id } : null">{{ testMode ? '返回流程演練' : '返回多人鑑定大廳' }}</a>
   </app-game-navigation>
 
   <section class="room-intro" aria-labelledby="room-title">
@@ -31,6 +31,7 @@
   }
 
   @if (testMode) {
+    <p class="rehearsal-context" role="status">流程演練 · 本局不會建立遊戲紀錄或發放獎勵</p>
     <!-- ui-integration: 測試工具不佔用房間版面，預設收合成低干擾浮動入口；展開後才提供檢查流程控制。 -->
     <aside class="test-tools" [class.is-open]="testToolsOpen" aria-label="本機測試工具">
       <button
@@ -129,9 +130,12 @@
           </article>
         } @else if (currentRoom.status === 'COMPLETED') {
           <app-game-room-results
+            [rehearsal]="testMode"
+            [scenario]="currentRoom.id"
             [history]="history"
             [reward]="reward"
             [rewarding]="rewarding"
+            [canClaim]="!!currentPlayer()"
             (claimReward)="claimReward()"
           />
         } @else if (round; as currentRound) {

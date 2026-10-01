@@ -36,17 +36,17 @@
 
   <div class="game-navigation__actions">
     @if (isAdmin()) {
-      <a
-        class="game-navigation__test-entry"
-        routerLink="/game/test"
-        [class.is-active]="isTestActive()"
-        [attr.aria-current]="isTestActive() ? 'page' : null"
-        [attr.title]="railCollapsed() ? '進入測試模式' : null"
-      >
-        <app-qmah-icon name="test-tube" aria-hidden="true" />
-        <span>進入測試模式</span>
-      </a>
+      <details #tools class="game-tools" [class.is-active]="isTestActive() || isDemoActive()">
+        <summary><app-qmah-icon name="test-tube" aria-hidden="true" /><span>管理員工具</span></summary>
+        <div class="game-tools__menu">
+          <a routerLink="/game/test" (click)="closeTools()" [attr.aria-current]="isTestActive() ? 'page' : null"><strong>流程演練</strong><span>體驗作答、投票與結算，不寫入遊戲紀錄</span></a>
+          @if (canShowRooms) {
+            <a routerLink="/game/demo" [queryParams]="lobbyQuery()" (click)="closeTools()" [attr.aria-current]="isDemoActive() ? 'page' : null"><strong>房間展示</strong><span>查看範例房間與清單排列，不能加入</span></a>
+          }
+        </div>
+      </details>
     }
+    <button type="button" class="game-focus-toggle" (click)="focusMode.toggle()" [attr.aria-pressed]="focusMode.active()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button>
     <ng-content />
   </div>
 </nav>

@@ -1,0 +1,17 @@
+// Shared scene frame. Website chrome remains outside and is hidden only by opt-in focus mode.
+@mixin surface {
+  --scene-ground: color-mix(in srgb, var(--qmah-game-action) 65%, var(--qmah-night));
+  --scene-ink: var(--qmah-game-content);
+  --scene-muted: color-mix(in srgb, var(--scene-ink) 76%, var(--scene-ground));
+  --game-nav-ink: var(--scene-ink);
+  --game-nav-muted: var(--scene-muted);
+  --game-nav-line: color-mix(in srgb, var(--scene-ink) 25%, transparent);
+  --game-nav-surface: transparent;
+  --game-nav-hover: color-mix(in srgb, var(--scene-ink) 10%, transparent);
+  width: min(calc(100% - 24px), 1440px);
+  margin: 16px auto 32px;
+  padding: 16px clamp(12px, 3vw, 40px) 24px;
+  border-radius: var(--qmah-radius-panel);
+  background: var(--scene-ground);
+  &.is-focus-mode { width: 100%; min-height: 100dvh; margin: 0; border-radius: 0; }
+}

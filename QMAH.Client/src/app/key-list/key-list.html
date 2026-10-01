@@ -110,6 +110,9 @@
         <div class="key-slot__icon">
           <img [src]="keySlotIcon(key)" [alt]="key.name + '圖示'" loading="lazy" />
         </div>
+        @if (eraMark(key); as mark) {
+          <span class="key-era-mark" aria-hidden="true">@for (char of mark; track $index) {<span>{{ char }}</span>}</span>
+        }
         <span class="key-slot__count">{{ key.balance }}</span>
 
       </button>
@@ -165,6 +168,9 @@
                   (click)="addToCraft(key)"
                 >
                   <img [src]="keySlotIcon(key)" alt="" />
+                  @if (eraMark(key); as mark) {
+                    <span class="key-era-mark" aria-hidden="true">@for (char of mark; track $index) {<span>{{ char }}</span>}</span>
+                  }
                   <span class="key-slot__count">{{ craftRemaining(key) }}</span>
                 </button>
               }
@@ -216,6 +222,9 @@
                   >
                     @if (craftSlots()[i]; as code) {
                       <img [src]="keyIconByCode(code)" alt="" />
+                      @if (eraMarkByCode(code); as mark) {
+                        <span class="key-era-mark" aria-hidden="true">@for (char of mark; track $index) {<span>{{ char }}</span>}</span>
+                      }
                     }
                   </button>
                 }
@@ -244,6 +253,9 @@
                 >
                   @if (craftSelectedRule(); as rule) {
                     <img class="craft-center__icon" [src]="keyIconByCode(rule.targetKeyCode)" alt="" />
+                    @if (eraMarkByCode(rule.targetKeyCode); as mark) {
+                      <span class="key-era-mark" aria-hidden="true">@for (char of mark; track $index) {<span>{{ char }}</span>}</span>
+                    }
                     @if (craftOptions().length > 1) {
                       <span class="craft-center__badge" aria-hidden="true">{{ craftOptions().length }}</span>
                     }
@@ -280,6 +292,9 @@
                         >
                           <span class="craft-menu__slot" [attr.data-scope]="keyScopeByCode(rule.targetKeyCode)">
                             <img [src]="keyIconByCode(rule.targetKeyCode)" alt="" />
+                            @if (eraMarkByCode(rule.targetKeyCode); as mark) {
+                              <span class="key-era-mark" aria-hidden="true">@for (char of mark; track $index) {<span>{{ char }}</span>}</span>
+                            }
                             <span class="key-slot__count">{{ rule.targetAmount }}</span>
                           </span>
                           <span class="craft-menu__name">{{ rule.targetKeyName }}</span>
@@ -312,6 +327,9 @@
               >
                 @if (craftReadyRule(); as rule) {
                   <img [src]="keyIconByCode(rule.targetKeyCode)" alt="" />
+                  @if (eraMarkByCode(rule.targetKeyCode); as mark) {
+                    <span class="key-era-mark" aria-hidden="true">@for (char of mark; track $index) {<span>{{ char }}</span>}</span>
+                  }
                   <span class="key-slot__count">{{ rule.targetAmount }}</span>
                 }
               </button>

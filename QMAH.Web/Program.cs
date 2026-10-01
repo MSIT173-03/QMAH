@@ -148,6 +148,7 @@ builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>(
 // 批次資產作業另外保留活動主檔與篩選快照，讓營運中心能統計活動事件，且不取代逐會員帳本。
 builder.Services.AddScoped<EconomyService>();
 builder.Services.AddScoped<MiniGameService>();
+builder.Services.AddSingleton<ScrollPaintingEligibility>();
 builder.Services.AddScoped<BulkEconomyService>();
 // 內容審核設定頁（關鍵字表／SimHash 門檻）沿用跟 QMAH.Api 相同的 Singleton 快取，
 // 後台改設定後呼叫 ReloadAsync 更新，不用每次發文/留言都查一次資料庫。

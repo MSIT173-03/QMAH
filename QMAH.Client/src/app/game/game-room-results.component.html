@@ -1,8 +1,12 @@
 <section class="paper-card results-panel" aria-labelledby="results-title">
-  <p class="eyebrow">遊戲結束</p>
-  <h2 id="results-title">本局結算</h2>
+  <h2 id="results-title">本局鑑定完成</h2>
 
   @if (history(); as completedHistory) {
+    <p class="section-copy">房間 {{ completedHistory.roomCode }} · {{ completedHistory.rounds.length }} 回合的想法，現在一起揭曉。</p>
+    @if (leaders().length) {
+      <section class="results-highlight" aria-label="本局最高得票"><h3>{{ leaders().length > 1 ? '並列最高得票' : '本局最高得票' }}</h3>@for (leader of leaders(); track leader.gamePlayerId) { <p><strong>{{ leader.displayName }}</strong><span>{{ leader.score }} 票 · 勝出 {{ leader.roundsWon }} 回合</span></p> }</section>
+    }
+    <div class="results-layout">
     <div class="leaderboard-wrap">
       <h3>最終排行榜</h3>
       @if (completedHistory.leaderboard.length) {
@@ -46,22 +50,26 @@
         <p class="empty-copy">目前沒有回合紀錄。</p>
       }
     </div>
+    </div>
+  } @else {
+    <p class="empty-copy" role="status">正在讀取排行榜與回合紀錄…</p>
   }
 
   <div class="reward-panel">
     <div><h3>本局獎勵</h3><p>每間房的獎勵只能領取一次。</p></div>
-    <button type="button" (click)="claimReward.emit()" [disabled]="rewarding()">
-      {{ rewarding() ? '領取中…' : reward()?.alreadyRewarded ? '查看獎勵結果' : '領取本局獎勵' }}
-    </button>
+    @if (!canClaim()) { <p>獎勵僅供本局參與玩家領取。</p> }
+    @else if (!reward()) { <button type="button" (click)="claimReward.emit()" [disabled]="rewarding()">{{ rewarding() ? '領取中…' : '領取本局獎勵' }}</button> }
+    @else { <strong class="reward-status" role="status">本局獎勵已結算</strong> }
   </div>
   @if (reward(); as receipt) {
-    <div class="reward-receipt" role="status">
+    <div class="reward-receipt" aria-label="本局獎勵明細">
       <strong>{{ receipt.pointReward }} 點</strong>
       <span>{{ receipt.normalKeyReward }} 把普通鑰匙</span>
       <span>表現分數 {{ receipt.performanceScore }}</span>
       <span>勝出 {{ receipt.roundsWon }} 回合</span>
     </div>
+    @if (receipt.alreadyRewarded) { <p class="empty-copy">顯示先前已領取的紀錄，不會重複發放。</p> }
   }
   <!-- ui-integration: 結算頁的主要下一步保留既有流程出口，避免玩家只能依賴瀏覽器返回。 -->
-  <a routerLink="/game" class="results-back-link">返回多人鑑定大廳</a>
+  <a [routerLink]="rehearsal() ? '/game/test' : '/game'" [queryParams]="rehearsal() ? { scenario: scenario() } : null" class="results-back-link">{{ rehearsal() ? '返回流程演練' : '返回多人鑑定大廳' }}</a>
 </section>

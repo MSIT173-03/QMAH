@@ -1,3 +1,5 @@
+@use './game-scene' as scene;
+
 :host {
   --ink: var(--qmah-ink);
   /* ui-integration: Game 使用 Navy Peony 作為判斷／回合語意色；共用 success、warning、error 不跟著變色。 */
@@ -24,11 +26,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .game-notebook {
+  @include scene.surface;
   box-sizing: border-box;
-  width: min(100%, clamp(1200px, 88vw, 1440px));
-  margin: 0 auto;
-  padding: 12px clamp(16px, 3vw, 24px) 64px;
 }
+.lobby-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 28px 0 16px; color: var(--scene-ink); }
+.lobby-heading h1 { margin: 0; font: 700 clamp(28px, 3vw, 36px)/1.3 var(--qmah-font-serif); }
+.lobby-heading p { margin: 8px 0 0; max-width: 65ch; color: var(--scene-muted); font-size: 14px; }
+.lobby-heading .hero-create { flex-shrink: 0; color: var(--qmah-ink); background: var(--qmah-paper); border-color: var(--qmah-paper); text-decoration: none; }
+.game-notebook > .notebook-spread { min-height: max(440px, calc(100dvh - 280px)); border: 0; box-shadow: none; }
+.game-notebook .page-heading { padding-bottom: 16px; }
+.game-notebook .page-heading h2 { font-size: 22px; }
+.game-notebook .ledger { min-height: 240px; align-content: start; }
+.account-link { color: var(--scene-ink); }
+@media (max-width: 600px) { .lobby-heading { flex-wrap: wrap; gap: 16px; padding-block: 20px 8px; } .game-notebook > .notebook-spread { min-height: 440px; } }
 
 /* ui-integration: Game 首屏只保留子導覽與頁面任務，避免 App Shell 下再堆疊第二個品牌標頭。 */
 .demo-mark {

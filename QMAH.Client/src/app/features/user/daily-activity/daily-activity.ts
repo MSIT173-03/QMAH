@@ -43,6 +43,7 @@ export class DailyActivity implements OnInit {
   loggingIn = false;
   makingUp = false;
   selectedMakeUpDate = '';
+  rewardServiceReady = false;
 
   errorMessage = '';
   successMessage = '';
@@ -84,11 +85,38 @@ export class DailyActivity implements OnInit {
             day === completedCount,
 
           reward:
-            day === 7
+            day === 7,
+          upcoming: !this.dailyActivity?.hasCheckedInToday && day === completedCount + 1
         };
 
       }
     );
+  }
+
+  get daysUntilBonus(): number {
+    return 7 - ((this.dailyActivity?.currentCheckInStreak ?? 0) % 7);
+  }
+
+  get completedWeekDays(): number {
+    return this.streakDays.filter(day => day.completed).length;
+  }
+
+  get streakLevel(): string {
+    const days = this.dailyActivity?.currentLoginStreak ?? 0;
+    return days >= 30 ? 'established' : days >= 7 ? 'steady' : 'starting';
+  }
+
+  private acceptResponse(data: DailyActivityResponse): void {
+    this.rewardServiceReady = typeof data.hasCheckedInToday === 'boolean'
+      && Number.isFinite(data.dailyPointReward) && Number.isFinite(data.currentCheckInStreak)
+      && Number.isFinite(data.remainingMonthlyBonuses) && Array.isArray(data.makeUpDays);
+    // 舊版服務仍可顯示登入歷史；缺少的獎勵欄位不當成實際發放資料。
+    this.dailyActivity = {
+      ...data, hasCheckedInToday: data.hasCheckedInToday ?? false,
+      dailyPointReward: data.dailyPointReward ?? 0, awardedPoints: data.awardedPoints ?? 0,
+      currentCheckInStreak: data.currentCheckInStreak ?? 0,
+      remainingMonthlyBonuses: data.remainingMonthlyBonuses ?? 0, makeUpDays: data.makeUpDays ?? []
+    };
   }
 
 
@@ -108,7 +136,7 @@ export class DailyActivity implements OnInit {
           // integration: 每日活動資料由畫面消化，原本的開發期 console 輸出先停用。
           // console.log('dailyActivity:', data);
 
-          this.dailyActivity = data;
+          this.acceptResponse(data);
 
           this.loading = false;
 
@@ -140,7 +168,7 @@ export class DailyActivity implements OnInit {
   loginToday(): void {
 
     if (
-      this.loggingIn || this.makingUp ||
+      !this.rewardServiceReady || this.loggingIn || this.makingUp ||
       !this.dailyActivity || this.dailyActivity.hasCheckedInToday
     ) {
       return;
@@ -189,7 +217,7 @@ export class DailyActivity implements OnInit {
 
   makeUp(): void {
     const day = this.selectedMakeUpDay;
-    if (!day || this.loggingIn || this.makingUp) return;
+    if (!day || !this.rewardServiceReady || this.loggingIn || this.makingUp) return;
     this.makingUp = true;
     this.errorMessage = '';
     this.successMessage = '';
@@ -198,7 +226,7 @@ export class DailyActivity implements OnInit {
         { targetDate: day.date, expectedPointCost: day.pointCost }))
     ).subscribe({
       next: response => {
-        this.dailyActivity = response;
+        this.acceptResponse(response);
         this.selectedMakeUpDate = '';
         this.makingUp = false;
         this.successMessage = response.awardedPoints > 0
@@ -233,7 +261,7 @@ export class DailyActivity implements OnInit {
             response.awardedPoints > 0
               ? `簽到成功，已領取 ${response.awardedPoints} 點鑑定點數！`
               : '今日獎勵已領取，明天再回來簽到。';
-          this.dailyActivity = response;
+          this.acceptResponse(response);
 
           this.cdr.detectChanges();
 

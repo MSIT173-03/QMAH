@@ -2,6 +2,10 @@
   display: block;
 }
 
+.app-shell.game-focus-mode > .app-header,
+.app-shell.game-focus-mode > app-site-footer { display: none; }
+.app-shell.game-focus-mode .app-main { padding: 0; }
+
 .app-shell {
   --app-header-height: 72px;
   --color-surface: var(--qmah-surface);

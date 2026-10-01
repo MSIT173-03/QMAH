@@ -123,6 +123,23 @@ export class Economy implements OnInit {
     return this.keyProgressPercent / 100;
   }
 
+  get pointLevel(): 'starter' | 'growing' | 'abundant' | 'treasury' {
+    const points = this.economy?.pointBalance ?? 0;
+    return points >= 1000 ? 'treasury' : points >= 500 ? 'abundant' : points >= 100 ? 'growing' : 'starter';
+  }
+
+  get pointLevelLabel(): string {
+    return { starter: '慢慢累積', growing: '累積有成', abundant: '點數充裕', treasury: '點數滿載' }[this.pointLevel];
+  }
+
+  get pointGems(): number[] {
+    return Array.from({ length: { starter: 1, growing: 3, abundant: 5, treasury: 7 }[this.pointLevel] }, (_, index) => index);
+  }
+
+  get isKeyAlmostReady(): boolean {
+    return this.keyProgressPercent >= 80 && this.remainingKeyProgress > 0;
+  }
+
 
   // ===============================
   // 距離下一把探索鑰匙

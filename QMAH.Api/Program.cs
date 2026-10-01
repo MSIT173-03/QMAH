@@ -258,6 +258,7 @@ builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>(
 // API 與管理後台共用經濟領域服務；交易帳本與 Mini Game 獎勵在服務層保持一致。
 builder.Services.AddScoped<EconomyService>();
 builder.Services.AddScoped<MiniGameService>();
+builder.Services.AddSingleton<ScrollPaintingEligibility>();
 // 活動與私人房間共用同一套加碼與邀請服務，確保實際發放、資產扣除與交易流水一致。
 builder.Services.AddScoped<CommunityRewardService>();
 builder.Services.AddScoped<GameRoomInvitationService>();
