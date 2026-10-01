@@ -15,24 +15,23 @@
   <div class="product-row-info">
     <span class="meta-brand meta-brand--sm">{{ brand() }} · {{ cat() }}</span>
     <a [storeLink]="link()" class="product-row-title">{{ name() }}</a>
-    <span class="product-row-source">{{ source() }}</span>
-    <div class="product-row-meta">
-      @if (hasReviews()) {
-        <span><span class="product-card-star">★</span> {{ ratingText() }} · {{ reviewsText() }}</span>
-      } @else {
-        <span>{{ noReviewsLabel }}</span>
-      }
-    </div>
-  </div>
-
-  <!-- 右側：價格、折扣標籤與加入購物車按鈕 -->
-  <div class="product-row-aside">
     <div class="product-row-price-row">
       <span class="product-row-price" [class.text-accent]="pv.hasDeal">{{ pv.price }}</span>
       @if (pv.was) {
       <span class="product-card-was">{{ pv.was }}</span>
       }
     </div>
+    <div class="product-row-meta">
+      @if (hasReviews()) {
+      <span><span class="product-card-star">★</span> {{ ratingText() }} · {{ reviewsText() }}</span>
+      } @else {
+      <span>{{ noReviewsLabel }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- 右側：價格、折扣標籤與加入購物車按鈕 -->
+  <div class="product-row-aside">
     @if (pv.tag) {
       <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
     }

@@ -1,6 +1,7 @@
 export { Breadcrumb } from './breadcrumb/breadcrumb';
 export { CategoryList } from './category-list/category-list';
 export { CollectibleCard } from './collectible-card/collectible-card';
+export { CouponRedeemDialog } from './coupon-redeem-dialog/coupon-redeem-dialog';
 export { EmptyState } from './empty-state/empty-state';
 export { EntryGrid } from './entry-grid/entry-grid';
 export { FilterSidebar } from './filter-sidebar/filter-sidebar';
@@ -14,6 +15,7 @@ export { PillGroup } from './pill-group/pill-group';
 export { ProductCard } from './product-card/product-card';
 export { ProductRow } from './product-row/product-row';
 export { Promobar } from './promobar/promobar';
+export { PromobarPanel } from './promobar-panel/promobar-panel';
 export { QtyStepper } from './qty-stepper/qty-stepper';
 export { SearchBar } from './search-bar/search-bar';
 export { SectionHead } from './section-head/section-head';

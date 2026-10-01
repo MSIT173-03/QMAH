@@ -56,96 +56,86 @@
   color: var(--color-accent);
 }
 
-.coupon-trigger {
+/* 懸浮面板內容的樣式（面板本身的外框與開關動畫在 app-promobar-panel）。
+   面板內的每個子項目都有 .panel-item：列（.panel-row）可點擊並有懸停外框，
+   說明或連結（.panel-note）是置中的小字。 */
+.panel-item {
+  text-decoration: none;
+  font-family: var(--qmah-font-sans);
+  font-size: var(--qmah-type-label-size);
+  letter-spacing: 0;
+}
+
+/* 列表樣式：平常不顯示列的外框，相鄰的項目之間以虛線分隔。
+   虛線畫在後一項的上緣，後一項再上移 1px 與前一項重疊；懸停的列以 outline 顯示外框並浮到上層，
+   所以不論是虛線上方或下方的列懸停，外框都會蓋住虛線。outline 不佔版面，懸停時列不會位移。 */
+.panel-item + .panel-item {
+  margin-top: -1px;
+  border-top: 1px dashed var(--color-line-mid);
+}
+
+.panel-row {
   position: relative;
   display: flex;
   align-items: center;
-}
-
-.coupon-panel {
-  position: absolute;
-  /* 緊貼觸發連結底部，中間不留任何間隙；滑鼠從連結移向面板時才不會先經過
-     一段兩者都不算「還在裡面」的空白區，導致 mouseleave 提早觸發、面板還沒碰到就關掉。 */
-  top: 100%;
-  right: 0;
-  z-index: 60;
-  width: 268px;
-  max-width: calc(100vw - 28px);
-  background: var(--color-surface);
-  border: 1px solid var(--color-ink);
-  border-radius: var(--qmah-radius-control);
-  box-shadow: var(--qmah-shadow-float);
-  padding: var(--qmah-space-2);
-  display: flex;
-  flex-direction: column;
-  gap: var(--qmah-space-2);
-
-  /* 淡入淡出：收合時延後套用 visibility:hidden，讓退場動畫播得完；
-     展開時 visibility 立即生效，動畫才看得到。 */
-  opacity: 0;
-  transform: translateY(-4px);
-  visibility: hidden;
-  transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
-
-  &--open {
-    opacity: 1;
-    transform: translateY(0);
-    visibility: visible;
-    transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .coupon-panel {
-    transition: opacity 1ms linear, visibility 1ms linear;
-  }
-}
-
-.coupon-panel-item {
-  display: flex;
-  align-items: center;
   gap: var(--qmah-space-2);
   padding: var(--qmah-space-2);
-  border: 1px solid var(--color-line-soft);
-  text-decoration: none;
-  transition: border-color 160ms;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+  transition: outline-color 160ms;
 
   &:hover {
-    border-color: var(--color-line-mid);
+    z-index: 1;
+    outline-color: var(--color-line-mid);
   }
 }
 
-.coupon-panel-amount {
+.panel-note {
+  padding: var(--qmah-space-2);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* 折價券的列：左側折抵幅度，右側名稱與說明 */
+.coupon-row-amount {
   font-family: 'IBM Plex Mono', monospace;
   font-size: var(--qmah-type-body-sm-size);
   color: var(--color-accent);
   min-width: 52px;
 }
 
-.coupon-panel-body {
+.coupon-row-body {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-family: var(--qmah-font-sans);
-  letter-spacing: 0;
 }
 
-.coupon-panel-title {
-  font-size: var(--qmah-type-label-size);
+.coupon-row-title {
   color: var(--color-ink);
 }
 
-.coupon-panel-meta {
-  font-size: var(--qmah-type-label-size);
+.coupon-row-meta {
   color: var(--color-muted);
 }
 
-.coupon-panel-manage {
-  font-family: var(--qmah-font-sans);
-  font-size: var(--qmah-type-label-size);
-  color: var(--color-muted);
-  text-align: center;
-  letter-spacing: 0;
-  text-decoration: none;
+/* 購物車的列：「商品名稱 × 數量」 */
+.cart-row {
+  align-items: baseline;
+}
+
+/* 名稱過長時以刪節號截斷，數量欄固定在右側 */
+.cart-row-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-row-qty {
+  flex: 0 0 auto;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--color-accent);
 }

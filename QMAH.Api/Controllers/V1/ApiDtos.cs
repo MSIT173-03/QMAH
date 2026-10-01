@@ -169,6 +169,32 @@ public sealed class UpsertProductReviewRequest
     public string Content { get; set; } = "";
 }
 
+/// <summary>
+/// 折價券商店可兌換的折價券定義（store.CouponDefinitions 中仍在活動期間、可用點數兌換的項目）。
+/// DiscountType 為 PERCENT 時，DiscountValue 是折抵百分比（10 代表折 10%）；為 FIXED 時是折抵金額。
+/// </summary>
+public sealed record StoreCouponDto(
+    Guid Id,
+    string Name,
+    string DiscountType,
+    decimal DiscountValue,
+    decimal MinimumAmount,
+    int PointCost,
+    int ValidityDays,
+    DateTime EndAt);
+
+/// <summary>會員在折價券商店以點數兌換一張折價券後的結果。</summary>
+/// <param name="UserCouponId">新建立的會員折價券 ID（store.UserCoupons.Id）。</param>
+/// <param name="PointCost">本次扣除的點數。</param>
+/// <param name="RemainingPoints">扣除後的點數餘額。</param>
+/// <param name="ExpiresAt">會員這張折價券的到期時間。</param>
+public sealed record StoreCouponRedeemResultDto(
+    Guid UserCouponId,
+    string Name,
+    int PointCost,
+    int RemainingPoints,
+    DateTime ExpiresAt);
+
 public sealed record SocialPostListItemDto(
     Guid Id,
     string BoardCode,

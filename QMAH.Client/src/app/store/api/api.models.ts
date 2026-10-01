@@ -321,6 +321,34 @@ export interface Coupon {
   due: string | null;
 }
 
+/** 折價券商店中可用點數兌換的折價券（GET /store/coupons） */
+export interface StoreCoupon {
+  id: string;
+  title: string;
+  /** 折抵幅度標示（例如「NT$50」「10% OFF」） */
+  off: string;
+  /** 使用條件說明文字 */
+  cond: string;
+  /** 兌換所需點數 */
+  pointCost: number;
+  /** 兌換後的持有有效天數 */
+  validityDays: number;
+  /** 可兌換期間的結束日（YYYY-MM-DD） */
+  endDate: string;
+}
+
+/** 以點數兌換折價券後的結果（POST /store/coupons/{id}/redeem） */
+export interface StoreCouponRedeemResult {
+  /** 會員取得的折價券名稱 */
+  name: string;
+  /** 本次扣除的點數 */
+  pointCost: number;
+  /** 扣除後的點數餘額 */
+  remainingPoints: number;
+  /** 這張折價券的到期時間（ISO 8601） */
+  expiresAt: string;
+}
+
 /* ===============================
    結帳與訂單
    =============================== */

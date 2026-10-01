@@ -1,0 +1,61 @@
+@use '../dialog-shell' as dialog;
+
+.redeem-dialog {
+  @include dialog.store-dialog-shell;
+}
+
+.redeem-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-3);
+  padding: var(--qmah-space-5, 24px);
+}
+
+.redeem-dialog-title {
+  @include dialog.store-dialog-title;
+}
+
+/* 折價券名稱與價格：左側欄位名稱，右側內容 */
+.redeem-dialog-detail {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-2);
+}
+
+.redeem-dialog-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--qmah-space-3);
+  font-size: var(--qmah-type-label-size);
+
+  dt {
+    flex: 0 0 52px;
+    color: var(--color-muted);
+  }
+
+  dd {
+    margin: 0;
+    min-width: 0;
+    color: var(--color-ink);
+  }
+}
+
+.redeem-dialog-cost {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.redeem-dialog-note {
+  margin: 0;
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.redeem-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--qmah-space-2);
+  margin-top: var(--qmah-space-2);
+}

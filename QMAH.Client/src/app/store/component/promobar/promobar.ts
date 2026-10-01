@@ -1,16 +1,20 @@
-import { Component, computed, input, signal } from '@angular/core';
-import { CART_PATH } from '../../shared/paths';
+import { Component, computed, input } from '@angular/core';
+import { CART_PATH, productPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
-import { Coupon } from '../../api/api.models';
+import { PromobarPanel } from '../promobar-panel/promobar-panel';
+import { CartItem, Coupon } from '../../api/api.models';
 import { formatDateMD, formatMoney } from '../../shared/format';
+
+/** 折價券與購物車懸浮面板最多列出的項數，超過的部分合併成「以及另外 n …」一行 */
+const PANEL_MAX_ITEMS = 5;
 
 /**
  * 頁面頂部工具列：左側輪播跑馬燈公告，右側提供點數、折價券與購物車捷徑連結（登入前以停用狀態顯示），
- * 並可展開折價券懸浮面板檢視目前可用的折價券清單。
+ * 並可展開折價券與購物車懸浮面板，檢視目前可用的折價券與購物車內的商品。
  */
 @Component({
   selector: 'app-promobar',
-  imports: [StoreLink],
+  imports: [StoreLink, PromobarPanel],
   templateUrl: './promobar.html',
   styleUrl: './promobar.scss',
 })
@@ -27,8 +31,8 @@ export class Promobar {
 
   /** 「折價券」連結網址 */
   couponsHref = input('/member/coupons');
-  /** 折價券面板中「管理所有折價券」連結網址 */
-  manageCouponsHref = input('/member/coupons');
+  /** 折價券面板中「兌換折價券」連結網址（折價券商店） */
+  couponStoreHref = input('/store/coupons');
   /** 折價券清單資料 */
   coupons = input<Coupon[]>([]);
 
@@ -36,19 +40,34 @@ export class Promobar {
   cartHref = input(CART_PATH);
   /** 購物車內商品件數 */
   cartCount = input(0);
+  /** 購物車內的商品品項，供懸浮面板列出名稱與數量 */
+  cartItems = input<CartItem[]>([]);
 
-  /** 折價券懸浮面板的顯示資料：使用門檻與到期日合併為一行說明 */
+  /** 折價券懸浮面板的顯示資料：最多 PANEL_MAX_ITEMS 張，使用門檻與到期日合併為一行說明 */
   protected couponRows = computed(() =>
-    this.coupons().map((coupon) => {
-      const threshold = coupon.min > 0 ? `滿 ${formatMoney(coupon.min)}` : '不限金額';
-      return {
-        off: coupon.off,
-        title: coupon.title,
-        meta: coupon.due ? `${threshold} · ${formatDateMD(coupon.due)} 到期` : threshold,
-      };
-    }),
+    this.coupons()
+      .slice(0, PANEL_MAX_ITEMS)
+      .map((coupon) => {
+        const threshold = coupon.min > 0 ? `滿 ${formatMoney(coupon.min)}` : '不限金額';
+        return {
+          off: coupon.off,
+          title: coupon.title,
+          meta: coupon.due ? `${threshold} · ${formatDateMD(coupon.due)} 到期` : threshold,
+          id: coupon.id
+        };
+      }),
   );
 
-  /** 折價券懸浮面板是否展開 */
-  protected open = signal(false);
+  /** 超出面板上限而未列出的折價券張數 */
+  protected couponRest = computed(() => Math.max(0, this.coupons().length - PANEL_MAX_ITEMS));
+
+  /** 購物車懸浮面板列出的商品：最多 PANEL_MAX_ITEMS 項，每項可點擊前往商品頁 */
+  protected cartRows = computed(() =>
+    this.cartItems()
+      .slice(0, PANEL_MAX_ITEMS)
+      .map((item) => ({ id: item.productId, name: item.name, qty: item.qty, href: productPath(item.productId) })),
+  );
+
+  /** 超出面板上限而未列出的商品項數 */
+  protected cartRest = computed(() => Math.max(0, this.cartItems().length - PANEL_MAX_ITEMS));
 }

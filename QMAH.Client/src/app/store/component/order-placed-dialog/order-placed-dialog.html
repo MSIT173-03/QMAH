@@ -1,6 +1,6 @@
 <!-- 訂單送出成功提示：原生 modal dialog，唯一動作是回到商品列表 -->
-<dialog #dialog class="order-placed" aria-labelledby="order-placed-title" (cancel)="onNativeCancel($event)"
-  (click)="onBackdropClick($event)">
+<!-- Esc 或點擊背景（dismiss）與按鈕同樣視為確認：訂單已成立，沒有東西可以取消 -->
+<dialog class="order-placed" aria-labelledby="order-placed-title" [appModalDialog]="open()" (dismiss)="confirm.emit()">
   <div class="order-placed-body">
     <span class="order-placed-mark" aria-hidden="true">✓</span>
     <h2 id="order-placed-title" class="order-placed-title">{{ title }}</h2>
