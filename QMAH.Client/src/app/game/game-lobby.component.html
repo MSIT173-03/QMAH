@@ -1,42 +1,16 @@
-<div class="game-notebook">
+<div class="game-notebook" [class.is-focus-mode]="focusMode.active()">
   <!-- ui-integration: 遊戲子導覽固定放在 Global App Shell 之下，讓所有遊戲頁共用同一條操作脈絡。 -->
   <app-game-navigation>
-    @if (isAdmin()) {
-      @if (isDemo) {
-        <span class="demo-mark">展示模式 · 僅供查看</span>
-        <a class="preview-toggle" routerLink="/game">關閉展示模式</a>
-      } @else if (canOpenPreview) {
-        <a class="preview-toggle" routerLink="/game/demo">開啟展示模式</a>
-      }
-      <!-- ui-integration: 測試房間只對管理員提供一鍵入口，維持一般玩家的 Game 子導覽乾淨且不暴露開發工具。 -->
-      <a class="test-room-entry" routerLink="/game/test">測試房間</a>
-    }
-    @if (!isDemo) { <a class="account-link" routerLink="/login">登入會員帳號</a> }
+    @if (!isDemo && !meApi.me()) { <a class="account-link" routerLink="/login" [queryParams]="{ returnUrl: '/game' }">登入</a> }
   </app-game-navigation>
 
   <!-- ui-integration: 介紹橫幅可由玩家收合，且狀態會留在本機，避免每次回到大廳都擋住找房間。 -->
-  <section class="lobby-hero" [class.is-collapsed]="heroCollapsed" [attr.aria-labelledby]="heroCollapsed ? null : 'lobby-hero-title'" [attr.aria-label]="heroCollapsed ? '多人鑑定介紹' : null">
-    @if (heroCollapsed) {
-      <div class="lobby-hero-collapsed">
-        <div><span class="lobby-hero-kicker">多人鑑定</span><strong>建立或加入房間</strong></div>
-        <button type="button" class="hero-collapse" [attr.aria-expanded]="false" (click)="toggleHero()">顯示房間入口</button>
-      </div>
-    } @else {
-      <div class="lobby-hero-copy">
-        <p class="lobby-hero-kicker">多人鑑定</p>
-        <h1 id="lobby-hero-title">房間大廳</h1>
-        <p>建立房間，或從清單選擇一間房間加入。</p>
-        <div class="hero-actions">
-          @if (!isDemo) { <button type="button" class="hero-create" (click)="toggleCreateForm()">建立房間</button> }
-          <button type="button" class="hero-collapse" [attr.aria-expanded]="true" (click)="toggleHero()">收合介紹</button>
-        </div>
-      </div>
-      <figure class="lobby-artwork">
-        <!-- ui-integration: 改用現有高彩度展品素材，讓 Hero 在桌面與手機裁切後仍保有清楚主體與細節。 -->
-        <img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="掐絲琺瑯雲龍紋三足香爐" />
-      </figure>
-    }
-  </section>
+  <header class="lobby-heading">
+    <div><h1>{{ isDemo ? '房間展示' : '房間大廳' }}</h1><p>{{ isDemo ? '以下為範例房間，可查看排列與詳情；不能加入，也不會建立遊戲紀錄。' : '選一間房間加入，或建立你的鑑定房間。' }}</p></div>
+    @if (isDemo) {
+      <a class="hero-create" routerLink="/game" [queryParams]="{ status: roomStatus === 'WAITING' ? null : roomStatus, sort: roomSort === 'RECOMMENDED' ? null : roomSort, page: rooms && rooms.page > 1 ? rooms.page : null }">返回正式大廳</a>
+    } @else { <button type="button" class="hero-create" (click)="toggleCreateForm()">建立房間</button> }
+  </header>
 
   @if (error && rooms !== null) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span>@if (errorTitle === '請先登入') { <a routerLink="/login">前往會員登入</a> }</div> }
   @if (success) { <div class="notice notice-success" role="status"><span>{{ success }}</span></div> }
@@ -45,7 +19,7 @@
     <article class="index-page" aria-labelledby="rooms-title">
       <header class="page-heading">
         <div>
-          <h2 id="rooms-title">可見房間</h2>
+          <h2 id="rooms-title">{{ isDemo ? '範例房間' : '房間清單' }}</h2>
           <p>{{ roomListDescription() }}</p>
         </div>
       </header>
@@ -63,7 +37,6 @@
           </label>
         </div>
         <div class="refresh-actions">
-          @if (isDemo) { <span class="refresh-hint"><i aria-hidden="true"></i>每 5 秒更新房間</span> }
           <button type="button" class="hero-collapse refresh-button" (click)="refreshRooms()" [disabled]="loading || refreshing" [attr.aria-busy]="refreshing">
             <app-qmah-icon name="refresh" aria-hidden="true" />{{ refreshing ? '更新中…' : '重新整理' }}
           </button>
@@ -154,10 +127,10 @@
         <header class="room-notes-heading">
           <div class="room-code-heading">
             <div><span class="room-code-label">房間詳情 · 房間代碼</span><h2 id="room-details-title">{{ room.roomCode }}</h2></div>
-            <div class="room-share-actions">
+            @if (!isDemo) { <div class="room-share-actions">
               <button type="button" class="copy-room-code" (click)="copyRoomCode(room.roomCode)" aria-label="複製房間代碼">複製</button>
               <button type="button" class="copy-room-code" (click)="openRoomQr(room)" aria-label="顯示房間 QR 碼">QR 碼</button>
-            </div>
+            </div> }
           </div>
           <button type="button" class="detail-close" (click)="clearSelection()" aria-label="關閉房間資訊">×</button>
           <span [attr.data-status]="room.status">{{ statusText(room.status) }}</span>

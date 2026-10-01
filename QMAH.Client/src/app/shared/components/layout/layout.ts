@@ -8,6 +8,7 @@ import {
 } from '@lucide/angular';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ThemeService } from '../../../core/services/theme';
+import { GameFocusMode } from '../../../core/services/game-focus-mode';
 import { MeApiService } from '../../../core/services/me-api';
 import { NotificationsBellComponent } from '../notifications-bell/notifications-bell';
 import { ToastContainerComponent } from '../toast-container/toast-container';
@@ -25,6 +26,7 @@ import { QmahIconComponent } from '../qmah-icon/qmah-icon';
 export class LayoutComponent implements OnInit, OnDestroy {
   readonly meApi = inject(MeApiService);
   readonly themeService = inject(ThemeService);
+  readonly gameFocus = inject(GameFocusMode);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -75,6 +77,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.currentUrl.set(event.urlAfterRedirects);
+        if (!event.urlAfterRedirects.startsWith('/game')) this.gameFocus.exit();
         this.closeMenu();
       });
   }
@@ -105,8 +108,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   closeMenu(): void {
+    const restoreDrawerFocus = this.menuOpen();
     this.menuOpen.set(false);
-    setTimeout(() => this.menuTrigger?.nativeElement.focus(), 0);
+    if (restoreDrawerFocus) setTimeout(() => this.menuTrigger?.nativeElement.focus(), 0);
   }
 
   // ui-integration: Drawer 使用 Escape 關閉，讓鍵盤使用者不必依賴滑鼠點擊遮罩。

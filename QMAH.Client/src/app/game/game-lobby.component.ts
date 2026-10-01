@@ -1,8 +1,8 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, isDevMode } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable, Subscription, finalize, timer } from 'rxjs';
+import { Observable, Subscription, finalize } from 'rxjs';
 
 import { ApiPage, CreateGameRoomRequest, GameRoomDetails, GameRoomFilterStatus, GameRoomListItem, GameRoomSort, JoinGameRoomRequest } from './game.models';
 import { GameNavigationComponent } from './game-navigation.component';
@@ -10,6 +10,7 @@ import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameService } from './game.service';
 import { MeApiService } from '../core/services/me-api';
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
+import { GameFocusMode } from '../core/services/game-focus-mode';
 
 type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
@@ -22,11 +23,11 @@ type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 export class GameLobbyComponent implements OnInit, OnDestroy {
   readonly game = inject(GameService);
   readonly meApi = inject(MeApiService);
+  readonly focusMode = inject(GameFocusMode);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly changeDetector = inject(ChangeDetectorRef);
   private routeSubscription?: Subscription;
-  private pollSubscription?: Subscription;
 
   createForm: CreateGameRoomRequest = this.game.roomDefaults();
   joinForm: JoinGameRoomRequest = { displayName: '玩家', password: null };
@@ -58,8 +59,6 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
 
   // ui-integration: 展示模式只對已登入管理員提供入口與標示；一般玩家不會被開發用 Demo 文案干擾。
   readonly isAdmin = computed(() => this.meApi.me()?.roles?.includes('Admin') ?? false);
-  // ui-integration: 展示 route 仍是 development-only；正式版本改由管理員遊戲檢查中心承擔流程測試，避免產生失效入口。
-  readonly canOpenPreview = isDevMode();
   private readonly heroStorageKey = 'qmah.game.lobby.hero-collapsed';
   private demoRefreshCount = 0;
 
@@ -73,15 +72,10 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       this.roomSort = requestedSort === 'NEARLY_FULL' || requestedSort === 'NEWEST' || requestedSort === 'OPEN_SLOTS' ? requestedSort : 'RECOMMENDED';
       this.loadRooms(Math.max(1, Number(params.get('page')) || 1), false);
     });
-    // ui-integration: 展示模式用與正式房間相同的刷新入口，定期重算清單快照，讓展示不會停在靜態畫面。
-    this.pollSubscription = timer(5000, 5000).subscribe(() => {
-      if (this.isDemo) this.refreshRooms();
-    });
   }
 
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();
-    this.pollSubscription?.unsubscribe();
   }
 
   loadRooms(page = 1, syncUrl = true): void {
@@ -124,7 +118,6 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.success = '';
     this.refreshing = true;
     if (this.isDemo) {
-      this.demoRefreshCount += 1;
       this.rooms = this.demoPage(page);
       this.syncDemoSelection();
       this.refreshing = false;

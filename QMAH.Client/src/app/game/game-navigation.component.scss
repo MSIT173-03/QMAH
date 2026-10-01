@@ -6,6 +6,7 @@
 
 /* Game 子導覽：寬版可成為側邊模式軌，窄版維持全站熟悉的水平切換。 */
 .game-navigation {
+  color: var(--game-nav-ink, var(--qmah-ink));
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   grid-template-areas: "context modes actions";
@@ -13,7 +14,7 @@
   gap: var(--qmah-space-5);
   min-height: 64px;
   padding: 6px 0 8px;
-  border-bottom: 1px solid color-mix(in srgb, var(--qmah-line) 72%, transparent);
+  border-bottom: 1px solid var(--game-nav-line, var(--qmah-line));
 }
 .game-navigation__header { display: flex; grid-area: context; align-items: center; min-width: 0; }
 .game-navigation__switcher { display: flex; grid-area: modes; align-items: center; justify-self: center; gap: var(--qmah-space-3); min-width: 0; }
@@ -21,19 +22,19 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: var(--qmah-muted);
+  color: var(--game-nav-muted, var(--qmah-muted));
   font-size: 11px;
   font-weight: 800;
   letter-spacing: .12em;
   white-space: nowrap;
 }
-.game-navigation__context app-qmah-icon { width: 17px; height: 17px; color: var(--qmah-game-action); }
+.game-navigation__context app-qmah-icon { width: 17px; height: 17px; color: inherit; }
 .game-navigation__collapse {
   display: none;
   width: 36px;
   height: 36px;
   place-items: center;
-  border: 1px solid var(--qmah-line);
+  border: 1px solid var(--game-nav-line, var(--qmah-line));
   border-radius: var(--qmah-radius-control);
   color: var(--qmah-slate);
   background: var(--qmah-surface);
@@ -47,7 +48,7 @@
   padding: 3px;
   border: 1px solid var(--qmah-line);
   border-radius: var(--qmah-radius-card);
-  background: color-mix(in srgb, var(--qmah-surface) 72%, transparent);
+  background: var(--game-nav-surface, var(--qmah-surface));
 }
 .game-navigation__links a {
   display: flex;
@@ -58,7 +59,7 @@
   border: 1px solid transparent;
   border-radius: var(--qmah-radius-control);
   padding: 7px 11px;
-  color: var(--qmah-slate);
+  color: var(--game-nav-ink, var(--qmah-slate));
   text-decoration: none;
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
@@ -68,13 +69,13 @@
 .game-navigation__link-description {
   overflow: hidden;
   max-width: 100%;
-  color: color-mix(in srgb, var(--qmah-muted) 86%, transparent);
+  color: var(--game-nav-muted, var(--qmah-muted));
   font-size: 10px;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.game-navigation__links a:hover { color: var(--qmah-ink); background: var(--qmah-surface-muted); }
+.game-navigation__links a:hover { color: var(--game-nav-ink, var(--qmah-ink)); background: var(--game-nav-hover, var(--qmah-surface-muted)); }
 .game-navigation__links a.is-active {
   border-color: var(--qmah-game-action);
   color: var(--qmah-game-content);
@@ -114,6 +115,18 @@
 .game-navigation__login:hover { border-color: var(--qmah-game-action); color: var(--qmah-game-action); }
 .game-navigation__actions:not(:has(a, button, span)) { display: none; }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
+.game-tools { position: relative; }
+.game-tools summary, .game-focus-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--game-nav-line, var(--qmah-line)); border-radius: var(--qmah-radius-control); color: var(--game-nav-ink, var(--qmah-ink)); background: transparent; font: inherit; font-size: 14px; cursor: pointer; }
+.game-tools summary { list-style: none; }
+.game-tools summary::-webkit-details-marker { display: none; }
+.game-tools summary app-qmah-icon { width: 18px; height: 18px; }
+.game-tools[open] summary, .game-tools.is-active summary { background: var(--game-nav-hover, var(--qmah-surface-muted)); }
+.game-tools summary:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
+.game-tools__menu { position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; width: min(300px, calc(100vw - 48px)); padding: 8px; background: var(--qmah-surface); color: var(--qmah-ink); border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); }
+.game-tools__menu a { display: grid; gap: 4px; padding: 12px; border-radius: var(--qmah-radius-control); text-decoration: none; color: inherit; }
+.game-tools__menu span { color: var(--qmah-muted); font-size: 14px; }
+.game-tools__menu a:hover, .game-tools__menu a[aria-current='page'] { background: var(--qmah-game-soft); }
+@media (max-width: 900px) { .game-tools__menu { left: 0; right: auto; } }
 
 /* 側邊 rail 由父頁限制 host 寬度後自動啟用；不需要為 Room 頁另建第二套導覽。 */
 @container (max-width: 260px) {

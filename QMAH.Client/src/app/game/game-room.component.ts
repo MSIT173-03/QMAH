@@ -317,7 +317,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (this.testMode) {
       this.leaving = true;
       this.changeDetector.markForCheck();
-      void this.router.navigate(['/game/test']);
+      void this.router.navigate(['/game/test'], { queryParams: { scenario: this.room?.id } });
       return;
     }
     this.actionError = '';
@@ -768,7 +768,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.testAutoPaused = true;
     this.testPausedRemainingMs = 0;
     this.testStageEndsAt = 0;
-    this.actionMessage = '測試流程已完成，可以檢查結算、領取展示獎勵，或返回大廳。';
+    this.actionMessage = '演練已完成，可以查看結算或返回流程演練；本局不會發放正式獎勵。';
   }
 
   private submitTestAnswer(): void {

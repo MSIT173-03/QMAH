@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { catchError, finalize, forkJoin, interval, of, Subscription } from 'rxjs';
@@ -9,9 +9,13 @@ import {
   MiniGameMode,
   MiniGameStart
 } from './game.models';
-import { GameNavigationComponent } from './game-navigation.component';
+import { GameScrollBoardComponent } from './game-scroll-board.component';
+import { GamePlacementBoardComponent } from './game-placement-board.component';
+import { GameDetailClueComponent } from './game-detail-clue.component';
 import { GameService } from './game.service';
 import { CatalogService } from '../services/catalog-service';
+import { GameFocusMode } from '../core/services/game-focus-mode';
+import { GameNavigationComponent } from './game-navigation.component';
 
 type TrainingPhase = 'list' | 'playing' | 'complete';
 
@@ -39,145 +43,92 @@ interface TrainingSessionSnapshot {
   restoreSelection: number | null;
   locatorChoice: string | null;
   matchedCardIds: string[];
+  moves?: number;
+  hintsUsed?: number;
+  autoPlaced?: number;
 }
 
 @Component({
   selector: 'app-game-training',
-  imports: [RouterLink, GameNavigationComponent],
+  imports: [RouterLink, GameNavigationComponent, GameScrollBoardComponent, GamePlacementBoardComponent, GameDetailClueComponent],
   styleUrl: './game-training.component.scss',
-  template: `
-    <div class="training-notebook" [class.is-playing]="phase === 'playing'">
-      <!-- ui-integration: 單人玩法與多人房間共用 Game 子導覽，並保留回到大廳的出口。 -->
-      <app-game-navigation>
-        <a class="training-nav-back" routerLink="/game">返回多人鑑定大廳</a>
-      </app-game-navigation>
-
-      <section class="chapter" aria-labelledby="training-title">
-        <header class="chapter-heading">
-          <div><p>單人挑戰</p><h1 id="training-title">單人小遊戲</h1><span>目前已開放的模式</span></div>
-          @if (phase === 'list' && !authRequired && !loading && !error) { <strong class="chapter-count"><small>可選模式</small>{{ modes.length }}</strong> }
-        </header>
-
-        @if (error && !authRequired) { <div class="message error" role="alert"><strong>單人小遊戲目前無法載入</strong><span>{{ error }}</span><div class="auth-actions"><button type="button" (click)="retryModes()">重新載入</button></div></div> }
-        @if (loading) { <div class="loading" role="status">正在載入單人小遊戲…</div> }
-        @else if (phase === 'complete') {
-          @if (complete; as result) {
-            <section class="result-sheet" aria-live="polite">
-              <p class="kicker">本局完成</p>
-              <h2>{{ result.grade }} 級 <span>{{ result.normalizedScore }} 分</span></h2>
-              <p>點數 {{ result.pointReward }} · 鑰匙進度 +{{ result.keyProgressReward }}</p>
-              @if (attempt?.modeCode !== 'DETAIL_LOCATOR') { <small>目前依完成盤面結算；所花時間不影響分數。</small> }
-              @if (!result.economicRewardGranted) { <small>今日獎勵額度已用完，成績仍會保留。</small> }
-              @if (attempt?.modeCode === 'DETAIL_LOCATOR' && attempt; as current) {
-                <section class="locator-answer" aria-label="局部辨識答案" animate.enter="game-result-enter">
-                  @if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('locator-result')) {
-                    <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName" (error)="markImageFailed('locator-result')" />
-                  } @else { <span class="image-fallback" aria-hidden="true">影像暫時無法顯示</span> }
-                  <div><strong>{{ result.rawScore === 100 ? '辨識正確' : '正確答案' }}</strong><p>{{ current.artifactName }}</p></div>
-                </section>
-              }
-              <div class="result-actions"><button type="button" (click)="playAgain()">再玩一次</button><a routerLink="/game">返回多人鑑定大廳</a></div>
-            </section>
-          }
-        }
-        @else if (phase === 'list' && (authRequired || modes.length)) {
-          <section class="training-list" [class.is-auth-gated]="authRequired">
-          @if (authRequired) {
-            <section class="auth-state" aria-labelledby="auth-state-title">
-              <p class="kicker">開始前</p>
-              <h2 id="auth-state-title">登入後即可開始遊玩</h2>
-              <p>登入後會載入目前啟用的玩法，完成結果也會保留在會員紀錄。</p>
-              <div class="auth-actions">
-                <a routerLink="/login" [queryParams]="{ returnUrl: '/game/training' }">前往登入</a>
-                <button type="button" (click)="retryModes()">重新載入</button>
-              </div>
-            </section>
-          }
-          <section class="training-hero" aria-labelledby="training-hero-title">
-            <div class="training-hero-copy">
-              <p class="training-hero-kicker">挑戰模式</p>
-              <h2 id="training-hero-title">開始一局</h2>
-              <p>完成後會立即結算成績與獎勵進度。</p>
-            </div>
-          </section>
-          @if (!authRequired) {
-            <ol class="mode-index">@for (mode of modes; track mode.id; let index = $index) { <li><b>{{ (index + 1).toString().padStart(2, '0') }}</b><div><h2>{{ mode.name }}</h2><p>{{ mode.description }}</p></div><button type="button" (click)="start(mode)" [disabled]="starting">{{ starting ? '準備中…' : '開始挑戰' }}</button></li> }</ol>
-          }
-          </section>
-        }
-        @else if (attempt; as current) {
-          <section class="play-sheet">
-            <header class="play-heading">
-              <div class="play-heading__title"><p class="kicker">{{ current.modeName }}</p><h2>{{ current.modeCode === 'DETAIL_LOCATOR' ? '看局部辨識文物' : current.artifactName }}</h2></div>
-              <div class="play-heading__meta">
-                <span class="play-state"><span class="play-state__mark" aria-hidden="true">●</span>進行中</span>
-                <span class="difficulty">{{ difficultyText(current.difficulty) }}</span>
-              </div>
-              <div class="play-heading__progress">
-                <div class="play-heading__progress-meta"><span>完成比例</span><strong>{{ progressPercent }}%</strong></div>
-                <div class="play-progress" role="progressbar" aria-label="目前完成比例" [attr.aria-valuenow]="progressPercent" aria-valuemin="0" aria-valuemax="100"><span [style.transform]="'scaleX(' + progressPercent / 100 + ')'"></span></div>
-                <small>已用時間 {{ elapsedLabel }}</small>
-              </div>
-            </header>
-
-            @if (current.modeCode === 'MEMORY_MATCH') {
-              <aside class="collection-hints" aria-label="隨機館藏提示">
-                <header><span>館藏提示</span><small>隨機顯示 {{ memoryHints.length }} 件</small></header>
-                <div class="collection-hints__grid">
-                  @for (hint of memoryHints; track hint.artifactId) {
-                    <article><strong>{{ hint.name }}</strong><p>{{ hint.description || '館藏說明整理中。' }}</p></article>
-                  }
-                </div>
-              </aside>
-            } @else if (current.modeCode !== 'DETAIL_LOCATOR' && currentArtifactHint; as hint) {
-              <aside class="collection-hint" aria-label="館藏提示"><span>館藏提示</span><strong>{{ hint.name }}</strong><p>{{ hint.description || '館藏說明整理中。' }}</p></aside>
-            }
-
-            @if (current.modeCode === 'DETAIL_LOCATOR') {
-              <div class="game-board locator-game">
-                <div class="clue-image" role="img" aria-label="文物原圖的局部線索">
-                  @if ((current.primaryImagePath || current.thumbnailPath) && !imageUnavailable) {
-                    <img class="clue-image__zoom" [src]="current.primaryImagePath || current.thumbnailPath" alt="" [style.left.%]="50 - locatorCropX * 500" [style.top.%]="50 - locatorCropY * 500" (error)="imageUnavailable = true" />
-                  } @else { <span class="image-fallback">圖片整理中<br /><small>請依可見線索作答</small></span> }
-                  <span class="clue-image__badge">局部線索</span>
-                </div>
-                <div class="game-prompt">
-                  <h3>從 {{ locatorOptions.length }} 件相似文物中找出原圖</h3>
-                  <p>先觀察局部的器形與紋飾；完整原圖會在送出後揭曉。</p>
-                  <div class="artifact-options artifact-options--text" role="group" aria-label="選擇最相近的文物">
-                    @for (option of locatorOptions; track option.artifactId; let index = $index) {
-                      <button type="button" [class.selected]="locatorChoice === option.artifactId" [attr.aria-pressed]="locatorChoice === option.artifactId" (click)="chooseLocator(option.artifactId)">
-                        <span class="locator-option__index">{{ (index + 1).toString().padStart(2, '0') }}</span>
-                        <span>{{ option.name }}</span>
-                      </button>
-                    }
-                  </div>
-                </div>
-              </div>
-            }
-            @else if (current.modeCode === 'MEMORY_MATCH') {
-              <div class="game-board memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>共 {{ memoryCards.length }} 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" (click)="flipMemory(index)" [attr.aria-label]="card.revealed || card.matched ? card.name : '翻開卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback" aria-hidden="true">文物</span> } } @else { <span>翻</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }}</p></div>
-            }
-            @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
-              <div class="game-board ordering-game"><div class="game-prompt"><h3>館藏拼圖</h3><p>5×5 拼圖，點選兩塊交換位置，把畫面排回順序。</p></div><div class="tile-grid">@for (piece of puzzleOrder; track $index; let slot = $index) { <button type="button" class="image-tile" [class.selected]="puzzleSelection === slot" [attr.aria-pressed]="puzzleSelection === slot" [attr.aria-label]="'第 ' + (slot + 1) + ' 格拼圖'" (click)="swapPuzzle(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('puzzle')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 拼圖第 ' + (piece + 1) + ' 塊'" [style.left.%]="pieceOffsetX(piece)" [style.top.%]="pieceOffsetY(piece)" (error)="markImageFailed('puzzle')" /> } @else { <span class="image-fallback" aria-hidden="true">館藏</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ puzzleSelection === null ? '先選一塊拼圖' : '再選另一塊交換' }}</p></div>
-            }
-            @else {
-              <div class="game-board ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>3×5 長卷，點選兩段交換位置，把完整畫面排回原貌。</p></div><div class="strip-row">@for (strip of restoreOrder; track $index; let slot = $index) { <button type="button" class="image-strip" [class.selected]="restoreSelection === slot" [attr.aria-pressed]="restoreSelection === slot" [attr.aria-label]="'第 ' + (slot + 1) + ' 格長卷'" (click)="swapRestore(slot)">@if ((current.primaryImagePath || current.thumbnailPath) && !imageFailed('restore')) { <img [src]="current.primaryImagePath || current.thumbnailPath" [alt]="current.artifactName + ' 長卷第 ' + (strip + 1) + ' 段'" [style.left.%]="stripOffsetX(strip)" [style.top.%]="stripOffsetY(strip)" (error)="markImageFailed('restore')" /> } @else { <span class="image-fallback" aria-hidden="true">長卷</span> }<b>{{ slot + 1 }}</b></button> }</div><p class="game-hint">{{ restoreSelection === null ? '先選一段長卷' : '再選另一段交換' }}</p></div>
-            }
-
-            <footer class="play-footer"><span class="progress-readout" aria-live="polite"><span class="progress-readout__label">目前進度</span><strong>{{ progressText }}</strong></span><div class="play-actions"><button type="button" class="secondary" (click)="exitAttempt()" [disabled]="completing">返回玩法列表</button><button type="button" (click)="completeAttempt()" [disabled]="!canComplete || completing">{{ completing ? '送出中…' : '送出結果' }}</button></div></footer>
-          </section>
-        }
-        @else if (!error) { <div class="loading">目前沒有可開始的單人小遊戲。</div> }
-      </section>
-    </div>
-  `,
+  templateUrl: './game-training.component.html',
 })
 export class GameTrainingComponent implements OnInit, OnDestroy {
   readonly game = inject(GameService);
+  readonly focusMode = inject(GameFocusMode);
   private readonly catalog = inject(CatalogService);
   private readonly changeDetector = inject(ChangeDetectorRef);
   modes: MiniGameMode[] = [];
+  selectedModeCode = '';
+  readonly previewMemory = Array.from({ length: 16 }, (_, index) => [2, 5, 10, 13].includes(index));
+  readonly previewPuzzle = Array.from({ length: 25 });
+  readonly previewScroll = Array.from({ length: 15 });
+  paused = false;
+  confirmLeaving = false;
+  private readonly hostElement = inject<ElementRef<HTMLElement>>(ElementRef);
+  private pausedAt = 0;
+  @ViewChild('pauseDialog') private pauseDialog?: ElementRef<HTMLDialogElement>;
+  get selectedMode(): MiniGameMode | null { return this.modes.find(mode => mode.code === this.selectedModeCode) ?? this.modes[0] ?? null; }
+  selectMode(code: string): void { if (!this.starting) this.selectedModeCode = code; }
+  modeMechanic(code: string): string { return ({ DETAIL_LOCATOR: '觀察局部 · 選出文物', MEMORY_MATCH: '4×4 翻牌 · 找出八組', ARTIFACT_PUZZLE: '5×5 拼圖 · 接回原貌', STRIP_RESTORE: '十五格書畫 · 復位筆墨' } as Record<string, string>)[code] ?? '館藏挑戰'; }
+  previewImage(code: string): string { return code === 'STRIP_RESTORE' ? '/media/catalog/painting/南購畫00001600000/display.jpg' : code === 'ARTIFACT_PUZZLE' ? '/media/catalog/painting/中畫00015500000/display.jpg' : '/images/login/real/cloisonne-tripod-incense-burner.jpg'; }
+  navigateModes(event: KeyboardEvent): void {
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key) || this.starting) return;
+    const buttons = Array.from((event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('button'));
+    const index = buttons.indexOf(event.target as HTMLButtonElement);
+    if (index < 0) return;
+    event.preventDefault();
+    const next = (index + (['ArrowUp', 'ArrowLeft'].includes(event.key) ? -1 : 1) + buttons.length) % buttons.length;
+    this.selectMode(this.modes[next].code);
+    buttons[next].focus();
+  }
+  openPause(): void {
+    if (this.phase !== 'playing' || this.paused || this.completing || !this.pauseDialog || document.querySelector('dialog[open]')) return;
+    this.paused = true;
+    this.pausedAt = Date.now();
+    this.persistSessionState();
+    if (this.memoryTimer !== null) { clearTimeout(this.memoryTimer); this.memoryTimer = null; }
+    this.pauseDialog.nativeElement.showModal();
+  }
+  closePause(): void { this.pauseDialog?.nativeElement.close(); }
+  resumeFromPause(): void {
+    if (this.paused) this.attemptStartedAt += Date.now() - this.pausedAt;
+    this.paused = false;
+    this.confirmLeaving = false;
+    if (this.pendingMemoryPair && this.memoryTimer === null) this.memoryTimer = setTimeout(this.pendingMemoryPair, 650);
+    this.changeDetector.markForCheck();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handlePauseKey(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || this.phase !== 'playing' || this.paused || document.querySelector('dialog[open]')) return;
+    event.preventDefault();
+    this.openPause();
+  }
+
+  @HostListener('document:visibilitychange')
+  pauseWhenHidden(): void { if (document.hidden && this.phase === 'playing' && !this.paused) this.openPause(); }
+
+  moveBoardFocus(event: KeyboardEvent, slot: number, columns: number): void {
+    const buttons = Array.from((event.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLButtonElement>('button') ?? []);
+    const delta = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
+    if (!(event.key in delta)) return;
+    event.preventDefault();
+    const step = delta[event.key as keyof typeof delta];
+    let next = slot + step;
+    while (next >= 0 && next < buttons.length) {
+      if (Math.abs(step) === 1 && Math.floor(next / columns) !== Math.floor(slot / columns)) break;
+      if (!buttons[next].disabled) { buttons[next].focus(); break; }
+      next += step;
+    }
+  }
+
+  leaveFromPause(): void {
+    if (!this.confirmLeaving) { this.confirmLeaving = true; return; }
+    this.exitAttempt();
+    if (this.phase === 'list') this.closePause();
+  }
   attempt: MiniGameStart | null = null;
   complete: MiniGameComplete | null = null;
   phase: TrainingPhase = 'list';
@@ -199,10 +150,15 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   memoryOpen: number[] = [];
   memoryMatched = 0;
   memoryBusy = false;
+  memoryFeedback = '翻開一張牌，記住文物與位置。';
   elapsedSeconds = 0;
+  moves = 0;
+  hintsUsed = 0;
+  autoPlaced = 0;
   locatorCropX = 0.5;
   locatorCropY = 0.5;
   private memoryTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingMemoryPair: (() => void) | null = null;
   private elapsedTimer: Subscription | null = null;
   private attemptStartedAt = 0;
 
@@ -210,7 +166,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.restoreSessionState();
     this.loadModes();
     this.elapsedTimer = interval(1000).subscribe(() => {
-      if (this.phase !== 'playing' || !this.attemptStartedAt) return;
+      if (this.phase !== 'playing' || this.paused || !this.attemptStartedAt) return;
       this.elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.attemptStartedAt) / 1000));
       this.persistSessionState();
       this.changeDetector.markForCheck();
@@ -218,6 +174,44 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   retryModes(): void { this.loadModes(); }
+
+  retryAction(): void {
+    if (this.phase === 'complete') this.playAgain();
+    else if (this.phase === 'playing' && this.canComplete) this.completeAttempt();
+    else this.loadModes();
+  }
+
+  retryImages(): void {
+    this.failedImages.clear();
+    this.imageUnavailable = false;
+  }
+
+  setScrollAvailability(available: boolean): void {
+    if (available) this.failedImages.delete('restore');
+    else this.failedImages.add('restore');
+  }
+
+  setPuzzleAvailability(available: boolean): void {
+    if (available) this.failedImages.delete('puzzle');
+    else this.failedImages.add('puzzle');
+    this.changeDetector.markForCheck();
+  }
+
+  get isPuzzleSolved(): boolean { return this.isSolved(this.puzzleOrder); }
+  get isRestoreSolved(): boolean { return this.isSolved(this.restoreOrder); }
+
+  get resultArtifacts(): MiniGameArtifact[] {
+    if (!this.attempt) return [];
+    if (this.attempt.modeCode !== 'MEMORY_MATCH') return [this.fallbackArtifact(this.attempt)];
+    const ids = new Set(this.memoryCards.map(card => card.artifactId));
+    return this.attempt.artifactPool.filter(artifact => ids.has(artifact.artifactId));
+  }
+
+  get resultTitle(): string {
+    if (this.attempt?.modeCode === 'DETAIL_LOCATOR') return this.complete?.rawScore === 100 ? '找到了，就是這件文物！' : '差一點，再觀察一次';
+    if (this.attempt?.modeCode === 'MEMORY_MATCH') return `${this.memoryPairCount} 組文物，都找到了`;
+    return this.attempt?.modeCode === 'STRIP_RESTORE' ? '筆墨接上了，書畫復位完成' : '最後一塊到位，拼圖完成';
+  }
 
   private loadModes(): void {
     this.loading = true;
@@ -233,6 +227,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.focusMode.exit();
     if (this.memoryTimer !== null) clearTimeout(this.memoryTimer);
     this.elapsedTimer?.unsubscribe();
   }
@@ -276,10 +271,10 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   get canComplete(): boolean {
     if (!this.attempt || this.phase !== 'playing') return false;
     switch (this.attempt.modeCode) {
-      case 'DETAIL_LOCATOR': return this.locatorChoice !== null;
+      case 'DETAIL_LOCATOR': return this.locatorChoice !== null && !this.imageUnavailable;
       case 'MEMORY_MATCH': return this.memoryPairCount > 0 && this.memoryMatched === this.memoryPairCount;
-      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder);
-      default: return this.isSolved(this.restoreOrder);
+      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) && !this.imageFailed('puzzle');
+      default: return this.isSolved(this.restoreOrder) && !this.imageFailed('restore');
     }
   }
 
@@ -288,8 +283,8 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     switch (this.attempt.modeCode) {
       case 'DETAIL_LOCATOR': return this.locatorChoice ? '已選定答案' : '尚未選答案';
       case 'MEMORY_MATCH': return `已配對 ${this.memoryMatched} / ${this.memoryPairCount}`;
-      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) ? '拼圖完成' : '交換 25 塊拼圖直到完成';
-      default: return this.isSolved(this.restoreOrder) ? '長卷完成' : '交換 15 段長卷直到完成';
+      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) ? '拼圖完成' : '拖曳碎片到目標格，可依完成比例調整';
+      default: return this.isSolved(this.restoreOrder) ? '長卷完成' : '拖曳十五段書畫，接回筆墨';
     }
   }
 
@@ -297,7 +292,8 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     return { EASY: '簡單', NORMAL: '一般', HARD: '困難', EXPERT: '專家' }[difficulty.trim().toUpperCase()] ?? difficulty;
   }
 
-  start(mode: MiniGameMode): void {
+  start(mode: Pick<MiniGameMode, 'code'>): void {
+    if (this.starting || this.completing) return;
     this.starting = true;
     this.error = '';
     this.game.startMiniGame(mode.code).pipe(finalize(() => { this.starting = false; this.changeDetector.markForCheck(); })).subscribe({
@@ -307,57 +303,60 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   chooseLocator(artifactId: string): void {
-    if (this.phase !== 'playing') return;
+    if (this.phase !== 'playing' || this.completing || this.imageUnavailable) return;
     this.locatorChoice = artifactId;
     this.persistSessionState();
   }
 
-  swapPuzzle(slot: number): void {
-    if (this.puzzleSelection === null) { this.puzzleSelection = slot; this.persistSessionState(); return; }
-    if (this.puzzleSelection === slot) { this.puzzleSelection = null; this.persistSessionState(); return; }
-    this.swap(this.puzzleOrder, this.puzzleSelection, slot);
-    this.puzzleSelection = null;
+  updatePlacement(kind: 'puzzle' | 'restore', order: number[]): void {
+    if (this.phase !== 'playing' || this.paused || this.completing) return;
+    if (kind === 'puzzle') this.puzzleOrder = order;
+    else this.restoreOrder = order;
     this.persistSessionState();
   }
 
-  swapRestore(slot: number): void {
-    if (this.restoreSelection === null) { this.restoreSelection = slot; this.persistSessionState(); return; }
-    if (this.restoreSelection === slot) { this.restoreSelection = null; this.persistSessionState(); return; }
-    this.swap(this.restoreOrder, this.restoreSelection, slot);
-    this.restoreSelection = null;
-    this.persistSessionState();
-  }
+  recordPlacement(): void { this.moves++; this.persistSessionState(); }
+  recordHint(): void { this.hintsUsed++; this.persistSessionState(); }
+  recordAuto(count: number): void { this.autoPlaced += count; this.persistSessionState(); }
 
   flipMemory(index: number): void {
-    if (this.phase !== 'playing' || this.memoryBusy) return;
+    if (this.phase !== 'playing' || this.memoryBusy || this.completing) return;
     const card = this.memoryCards[index];
     if (!card || card.revealed || card.matched) return;
     card.revealed = true;
+    this.memoryFeedback = '再翻一張，找出相同文物。';
     this.memoryOpen = [...this.memoryOpen, index];
     if (this.memoryOpen.length < 2) { this.persistSessionState(); return; }
     const [firstIndex, secondIndex] = this.memoryOpen;
+    this.moves += 1;
     const first = this.memoryCards[firstIndex];
     const second = this.memoryCards[secondIndex];
     this.memoryBusy = true;
-    this.memoryTimer = setTimeout(() => {
+    this.pendingMemoryPair = () => {
       if (first.artifactId === second.artifactId) {
         first.matched = true;
         second.matched = true;
         this.memoryMatched += 1;
+        this.memoryFeedback = this.memoryMatched === this.memoryPairCount
+          ? '全部配對完成，可以送出結果。'
+          : `找到 ${first.name}！繼續尋找下一組。`;
       } else {
         first.revealed = false;
         second.revealed = false;
+        this.memoryFeedback = '這兩張不同，記住位置後再試一次。';
       }
       this.memoryOpen = [];
       this.memoryBusy = false;
       this.memoryTimer = null;
+      this.pendingMemoryPair = null;
       this.persistSessionState();
       this.changeDetector.markForCheck();
-    }, 650);
+    };
+    this.memoryTimer = setTimeout(this.pendingMemoryPair, 650);
   }
 
   completeAttempt(): void {
-    if (!this.attempt || !this.canComplete) return;
+    if (!this.attempt || !this.canComplete || this.completing) return;
     this.completing = true;
     this.error = '';
     const rawScore = this.score();
@@ -365,7 +364,14 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       rawScore,
       rawResultJson: JSON.stringify(this.resultPayload(rawScore))
     }).pipe(finalize(() => { this.completing = false; this.changeDetector.markForCheck(); })).subscribe({
-      next: (result) => { this.complete = result; this.phase = 'complete'; this.clearSessionState(); this.scrollToTop(); this.changeDetector.markForCheck(); },
+      next: (result) => {
+        this.complete = result;
+        this.phase = 'complete';
+        this.clearSessionState();
+        this.scrollToTop();
+        this.changeDetector.markForCheck();
+        requestAnimationFrame(() => this.hostElement.nativeElement.querySelector<HTMLElement>('#result-title')?.focus({ preventScroll: true }));
+      },
       error: (error: unknown) => { this.setError(error); this.changeDetector.markForCheck(); }
     });
   }
@@ -373,7 +379,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   exitAttempt(): void {
     if (!this.attempt || this.completing) return;
     // ui-integration: 小遊戲沒有既有取消 API，離開前明確告知進度不會送出，避免玩家誤以為結果已保存。
-    if (!window.confirm('確定要離開這次挑戰嗎？目前進度不會送出。')) return;
+    if (!this.confirmLeaving) { this.openPause(); this.confirmLeaving = true; return; }
     this.attempt = null;
     this.complete = null;
     this.phase = 'list';
@@ -384,6 +390,11 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   playAgain(): void {
+    if (this.attempt) this.start({ code: this.attempt.modeCode });
+  }
+
+  showModeList(): void {
+    if (this.starting || this.completing) return;
     this.attempt = null;
     this.complete = null;
     this.phase = 'list';
@@ -395,12 +406,11 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   pieceOffsetX(piece: number): number { return -(piece % 5) * 100; }
   pieceOffsetY(piece: number): number { return -Math.floor(piece / 5) * 100; }
-  stripOffsetX(strip: number): number { return -(strip % 5) * 100; }
-  stripOffsetY(strip: number): number { return -Math.floor(strip / 5) * 100; }
 
   private beginAttempt(attempt: MiniGameStart): void {
     this.attempt = attempt;
     this.complete = null;
+    this.authRequired = false;
     this.phase = 'playing';
     this.attemptStartedAt = Date.now();
     this.elapsedSeconds = 0;
@@ -412,6 +422,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.loadCatalogHints(attempt);
     this.persistSessionState();
     this.scrollToTop();
+    requestAnimationFrame(() => this.hostElement.nativeElement.querySelector<HTMLElement>('.game-board button:not(:disabled), .pause-trigger')?.focus({ preventScroll: true }));
   }
 
   private restoreSessionState(): void {
@@ -421,20 +432,24 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.attempt = raw.attempt;
     this.complete = null;
     this.phase = 'playing';
-    this.attemptStartedAt = Date.now() - Math.max(0, raw.elapsedSeconds) * 1000;
-    this.elapsedSeconds = Math.max(0, raw.elapsedSeconds);
+    const savedSeconds = Number.isFinite(raw.elapsedSeconds) ? Math.max(0, raw.elapsedSeconds) : 0;
+    this.attemptStartedAt = Date.now() - savedSeconds * 1000;
+    this.elapsedSeconds = savedSeconds;
     this.imageUnavailable = false;
     this.setLocatorCrop(this.attempt.seed);
     this.resetBoard();
-    if (this.attempt.modeCode === 'ARTIFACT_PUZZLE' && this.isPermutation(raw.puzzleOrder, 25)) {
+    this.moves = Number.isInteger(raw.moves) && raw.moves! >= 0 ? raw.moves! : 0;
+    this.hintsUsed = Number.isInteger(raw.hintsUsed) && raw.hintsUsed! >= 0 ? raw.hintsUsed! : 0;
+    this.autoPlaced = Number.isInteger(raw.autoPlaced) && raw.autoPlaced! >= 0 ? raw.autoPlaced! : 0;
+    if (this.attempt.modeCode === 'ARTIFACT_PUZZLE' && this.isPlacement(raw.puzzleOrder, 25)) {
       this.puzzleOrder = raw.puzzleOrder;
       this.puzzleSelection = this.validSlot(raw.puzzleSelection, 25);
     }
-    if (this.attempt.modeCode === 'STRIP_RESTORE' && this.isPermutation(raw.restoreOrder, 15)) {
+    if (this.attempt.modeCode === 'STRIP_RESTORE' && this.isPlacement(raw.restoreOrder, 15)) {
       this.restoreOrder = raw.restoreOrder;
       this.restoreSelection = this.validSlot(raw.restoreSelection, 15);
     }
-    if (this.attempt.modeCode === 'DETAIL_LOCATOR') this.locatorChoice = raw.locatorChoice;
+    if (this.attempt.modeCode === 'DETAIL_LOCATOR') this.locatorChoice = this.locatorOptions.some(option => option.artifactId === raw.locatorChoice) ? raw.locatorChoice : null;
     if (this.attempt.modeCode === 'MEMORY_MATCH') {
       const matched = new Set(raw.matchedCardIds);
       this.memoryCards.forEach((card) => { card.matched = matched.has(card.id); });
@@ -453,7 +468,10 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       restoreOrder: this.restoreOrder,
       restoreSelection: this.restoreSelection,
       locatorChoice: this.locatorChoice,
-      matchedCardIds: this.memoryCards.filter((card) => card.matched).map((card) => card.id)
+      matchedCardIds: this.memoryCards.filter((card) => card.matched).map((card) => card.id),
+      moves: this.moves,
+      hintsUsed: this.hintsUsed,
+      autoPlaced: this.autoPlaced
     };
     try { sessionStorage.setItem('qmah-mini-game-session-v1', JSON.stringify(snapshot)); } catch { /* private mode/storage quota: gameplay remains usable */ }
   }
@@ -475,8 +493,8 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     return typeof attempt.attemptId === 'string' && typeof attempt.modeCode === 'string' && Array.isArray(attempt.artifactPool);
   }
 
-  private isPermutation(order: number[], length: number): boolean {
-    return Array.isArray(order) && order.length === length && new Set(order).size === length && order.every((value) => Number.isInteger(value) && value >= 0 && value < length);
+  private isPlacement(order: number[], length: number): boolean {
+    return Array.isArray(order) && order.length === length && order.every(value => Number.isInteger(value) && value >= -1 && value < length) && new Set(order.filter(value => value >= 0)).size === order.filter(value => value >= 0).length;
   }
 
   private validSlot(slot: number | null, length: number): number | null {
@@ -493,6 +511,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     const details = candidates.map((candidate) => this.catalog.getArtifactById(candidate.artifactId).pipe(catchError(() => of(null))));
 
     forkJoin(details).subscribe((results) => {
+      if (this.attempt?.attemptId !== attempt.attemptId) return;
       const hints = candidates.map((candidate, index) => ({
         artifactId: candidate.artifactId,
         name: results[index]?.name ?? candidate.name,
@@ -505,14 +524,19 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   private resetBoard(): void {
+    this.pendingMemoryPair = null;
+    this.moves = 0;
+    this.hintsUsed = 0;
+    this.autoPlaced = 0;
     this.failedImages.clear();
     this.locatorChoice = null;
-    this.puzzleOrder = this.shuffle(Array.from({ length: 25 }, (_, index) => index), this.attempt?.seed ?? 'puzzle');
+    this.puzzleOrder = Array<number>(25).fill(-1);
     this.puzzleSelection = null;
-    this.restoreOrder = this.shuffle(Array.from({ length: 15 }, (_, index) => index), `${this.attempt?.seed ?? 'restore'}-restore`);
+    this.restoreOrder = Array<number>(15).fill(-1);
     this.restoreSelection = null;
     this.memoryOpen = [];
     this.memoryMatched = 0;
+    this.memoryFeedback = '翻開一張牌，記住文物與位置。';
     this.memoryBusy = false;
     if (this.memoryTimer !== null) clearTimeout(this.memoryTimer);
     this.memoryTimer = null;
@@ -543,6 +567,11 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       modeCode: this.attempt?.modeCode,
       artifactId: this.attempt?.artifactId,
       rawScore,
+      scoringVersion: 2,
+      elapsedSeconds: this.elapsedSeconds,
+      moves: this.moves,
+      hintsUsed: this.hintsUsed,
+      autoPlaced: this.autoPlaced,
       locatorChoice: this.locatorChoice,
       puzzleOrder: this.puzzleOrder,
       restoreOrder: this.restoreOrder,

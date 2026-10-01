@@ -1,3 +1,4 @@
+@use './game-scene' as scene;
 :host {
   --guide-ink: var(--qmah-ink);
   --guide-jade: var(--qmah-jade);
@@ -175,9 +176,6 @@
 .training-demo__modes { width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 8px 0 16px; padding: 0; border: 0; background: transparent; }
 .training-demo__modes button { min-height: 76px; }
 .training-demo__stage { min-height: 390px; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-panel); padding: clamp(14px, 2vw, 24px); background: linear-gradient(145deg, var(--qmah-game-soft), var(--guide-surface) 66%); box-shadow: var(--qmah-shadow-card); }
-.training-demo__crop { position: relative; width: min(100%, 390px); aspect-ratio: 1; justify-self: center; overflow: hidden; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-panel); background: var(--qmah-night); box-shadow: var(--qmah-shadow-card); }
-.training-demo__crop img { position: absolute; top: -200%; left: -200%; width: 500%; height: 500%; max-width: none; object-fit: cover; }
-.training-demo__crop > span { position: absolute; right: 10px; bottom: 10px; border-radius: var(--qmah-radius-control); padding: 5px 9px; color: var(--qmah-on-dark); background: color-mix(in srgb, var(--qmah-night) 86%, transparent); font-size: var(--qmah-type-meta-size); font-weight: 800; }
 .training-demo__instruction, .training-demo__side-copy > p:not(.training-demo__readout, .training-demo__result) { margin: 0 0 14px; color: var(--guide-muted); font-size: var(--qmah-type-body-sm-size); }
 .training-demo__choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .training-demo__choices button { grid-template-columns: 28px minmax(0, 1fr); align-items: center; min-width: 0; }
@@ -191,7 +189,8 @@
 .training-demo__strip-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; padding: 6px; }
 .training-demo__memory-grid button, .training-demo__puzzle-grid button, .training-demo__strip-grid button { position: relative; min-width: 0; aspect-ratio: 1; overflow: hidden; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-control); padding: 0; background: var(--qmah-game-action); cursor: pointer; transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease; }
 .training-demo__strip-grid button { aspect-ratio: 1.18; background-repeat: no-repeat; }
-.training-demo__memory-grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.training-demo__memory-grid img { display: block; width: 100%; height: 100%; padding: 6px; box-sizing: border-box; object-fit: contain; }
+.training-demo__memory-grid button.is-matched::after { content: '已配對'; position: absolute; inset: auto 0 0; padding: 2px; color: var(--qmah-game-content); background: var(--qmah-night); font: 400 12px/1.5 var(--qmah-font-sans); }
 .training-demo__memory-grid button > span { display: grid; width: 100%; height: 100%; place-items: center; color: var(--qmah-game-content); font: 800 24px/1 var(--qmah-font-serif); }
 .training-demo__memory-grid button.is-matched { border-color: var(--qmah-jade); box-shadow: inset 0 0 0 3px var(--qmah-jade); }
 .training-demo__puzzle-grid button > span, .training-demo__strip-grid button > span { position: absolute; right: 4px; bottom: 4px; display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; color: var(--qmah-on-dark); background: color-mix(in srgb, var(--qmah-night) 84%, transparent); font-size: 10px; font-weight: 800; }
@@ -199,7 +198,39 @@
 .training-demo__puzzle-grid button.is-correct, .training-demo__strip-grid button.is-correct { border-color: var(--qmah-jade); box-shadow: inset 0 0 0 3px var(--qmah-jade); }
 .training-demo__side-copy { min-width: 0; max-width: 44ch; padding-top: 9px; }
 .training-demo__side-copy h3 { margin: 0 0 8px; font: 700 clamp(19px, 2vw, 23px)/1.35 var(--qmah-font-serif); }
+.training-demo__board-layout--scroll { grid-template-columns: minmax(0, 1fr); }
+.training-demo__board-layout--scroll .training-demo__side-copy { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 10px 24px; }
+.training-demo__board-layout--scroll .training-demo__side-copy > p { grid-column: 1; }
+.training-demo__board-layout--scroll .training-demo__side-copy h3 { margin-bottom: 0; }
+.training-demo__scroll-samples { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-wrap: wrap; gap: 8px; }
+.training-demo__scroll-samples button { min-height: var(--qmah-control-height); border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-control); padding: 8px 16px; color: var(--guide-ink); background: var(--guide-surface); font: inherit; cursor: pointer; }
+.training-demo__scroll-samples button[aria-pressed="true"] { color: var(--qmah-game-content); background: var(--qmah-game-action); }
+.training-demo__result span { display: block; margin-top: 6px; font-weight: 400; }
+@media (max-width: 560px) { .training-demo__board-layout--scroll .training-demo__side-copy { display: block; } .training-demo__scroll-samples { margin-block: 12px; } }
 .training-demo__readout { margin: 15px 0 0; border: 1px solid color-mix(in srgb, var(--qmah-accent) 45%, var(--guide-line)); border-radius: var(--qmah-radius-control); padding: 8px 12px; color: var(--qmah-game-action); background: color-mix(in srgb, var(--qmah-accent) 12%, var(--guide-surface)); font-size: var(--qmah-type-label-size); font-weight: 800; }
 @media (max-width: 920px) { .training-demo__modes { grid-template-columns: repeat(2, minmax(0, 1fr)); } .training-demo__board-layout { grid-template-columns: 1fr; } .training-demo__side-copy { max-width: none; padding-top: 0; } .training-demo__stage { min-height: 0; } }
 @media (max-width: 560px) { .training-demo__modes button { min-height: 68px; } .training-demo__stage { padding: 12px; } .training-demo__choices { grid-template-columns: 1fr; } .training-demo__choices button { min-height: 60px; } .training-demo__memory-grid, .training-demo__puzzle-grid { gap: 4px; padding: 6px; } .training-demo__strip-grid { gap: 2px; padding: 5px; } }
 @media (prefers-reduced-motion: reduce) { .training-demo__modes button, .training-demo__memory-grid button, .training-demo__puzzle-grid button, .training-demo__strip-grid button { transition: none; } }
+
+// The practice table belongs to the same game scene as the lobby and challenge.
+.game-guide {
+  @include scene.surface;
+  --guide-ink: var(--scene-ink);
+  --guide-muted: var(--scene-muted);
+  --guide-line: color-mix(in srgb, var(--scene-ink) 25%, transparent);
+  --guide-jade: color-mix(in srgb, var(--qmah-accent) 45%, var(--scene-ink));
+  color: var(--guide-ink);
+}
+.guide-heading { padding-block: 20px; }
+.guide-heading h1 { font-size: clamp(26px, 3vw, 36px); }
+.guide-panel, .training-demo__stage { border: 0; box-shadow: none; background: transparent; }
+.guide-panel { padding-inline: 0; }
+.training-demo__stage { padding-inline: 0; }
+.training-demo__board-layout { grid-template-columns: 1fr; }
+.training-demo__side-copy { max-width: none; }
+.training-demo__modes button { color: var(--scene-muted); }
+.training-demo__modes button.is-active { color: var(--qmah-ink); background: var(--qmah-paper); }
+.guide-tabs { background: transparent; }
+.guide-tabs button.is-active { color: var(--qmah-ink); }
+.training-demo__action, .training-demo__retry, .guide-panel-link { color: var(--qmah-ink); background: var(--qmah-paper); }
+app-game-scroll-board { --scroll-ink: var(--scene-ink); --scroll-muted: var(--scene-muted); }

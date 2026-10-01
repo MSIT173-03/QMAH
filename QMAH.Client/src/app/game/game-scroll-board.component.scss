@@ -1,0 +1,33 @@
+:host { display: block; min-width: 0; }
+.scroll-workbench { min-width: 0; width: min(100%, 1100px); margin-inline: auto; --board-height: var(--scroll-height-limit, 560px); }
+.scroll-source { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.scroll-direction { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin: 0 0 var(--qmah-space-3); color: var(--scroll-ink, var(--qmah-ink)); font-weight: 700; }
+.scroll-direction span, .scroll-help { color: var(--scroll-muted, var(--qmah-muted)); font-size: var(--qmah-type-body-sm-size); font-weight: 400; }
+.scroll-viewport { border-radius: var(--qmah-radius-card); background: var(--qmah-surface-soft); }
+.scroll-board { display: grid; width: 100%; margin-inline: auto; aspect-ratio: var(--scroll-ratio); gap: 2px; box-shadow: 0 16px 36px color-mix(in srgb, var(--qmah-ink) 18%, transparent); }
+.scroll-board.is-vertical { width: 100%; }
+.scroll-board button { position: relative; min-width: 0; min-height: 44px; overflow: hidden; border: 0; border-radius: 2px; padding: 0; background: var(--qmah-surface); cursor: pointer; transition: box-shadow 160ms ease; }
+.scroll-board button img { position: absolute; max-width: none; object-fit: fill; pointer-events: none; user-select: none; }
+.scroll-board button span { position: absolute; right: 3px; bottom: 3px; min-width: 22px; padding: 2px 4px; border-radius: var(--qmah-radius-control); color: var(--qmah-on-dark); background: var(--qmah-night); font-size: var(--qmah-type-meta-size); font-variant-numeric: tabular-nums; }
+.scroll-board button.is-selected { z-index: 1; box-shadow: inset 0 0 0 3px var(--qmah-accent); }
+.scroll-board button.is-selected img { opacity: .72; }
+.scroll-board button.is-solved span { opacity: 0; }
+.scroll-board button:disabled { cursor: default; }
+.scroll-board button:hover:not(:disabled) { box-shadow: inset 0 0 0 2px var(--qmah-jade); }
+.scroll-viewport:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
+.scroll-help { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.scroll-reference { margin: 0; }
+.scroll-reference button { min-height: 44px; border: 0; border-radius: var(--qmah-radius-control); padding: 8px 12px; color: var(--qmah-jade); background: var(--qmah-surface); font: inherit; font-weight: 700; cursor: pointer; }
+.scroll-inspection { position: fixed; inset: 0; margin: auto; width: min(960px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 20px; border: 0; border-radius: var(--qmah-radius-panel); color: var(--qmah-ink); background: var(--qmah-surface); }
+.scroll-inspection::backdrop { background: color-mix(in srgb, var(--qmah-night) 70%, transparent); }
+.scroll-inspection header { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+.scroll-inspection h2 { margin: 0 0 16px; font: 700 24px/1.4 var(--qmah-font-serif); }
+.scroll-inspection button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); color: var(--qmah-ink); background: var(--qmah-surface-soft); white-space: nowrap; font: inherit; cursor: pointer; }
+.scroll-inspection label { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.scroll-inspection input { min-height: 44px; max-width: 100%; accent-color: var(--qmah-jade); }
+.scroll-reference-viewport { max-height: 480px; overflow: auto; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); background: var(--qmah-surface-soft); }
+.scroll-reference-viewport img { display: block; max-width: none; height: auto; }
+.scroll-reference-viewport:focus-visible, .scroll-inspection input:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
+.scroll-error { padding: var(--qmah-space-4); color: var(--qmah-danger); background: var(--qmah-surface-soft); }
+.scroll-error button { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); padding: 8px 16px; color: var(--qmah-ink); background: var(--qmah-surface); font: inherit; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .scroll-board button { transition: none; } }

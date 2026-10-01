@@ -1,7 +1,8 @@
 import { JsonPipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 
 import {
@@ -12,6 +13,7 @@ import {
 import { GameNavigationComponent } from './game-navigation.component';
 import { GameService } from './game.service';
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
+import { GameFocusMode } from '../core/services/game-focus-mode';
 
 interface TestRoomOption {
   id: string;
@@ -25,40 +27,37 @@ interface TestRoomOption {
   imports: [FormsModule, JsonPipe, RouterLink, GameNavigationComponent, QmahIconComponent],
   styleUrl: './game-test.component.scss',
   template: `
-    <div class="game-test-page">
+    <div class="game-test-page" [class.is-focus-mode]="focusMode.active()">
       <!-- ui-integration: 管理員檢查中心沿用 Game 導覽，讓正式工具有清楚入口與返回大廳的出口。 -->
-      <app-game-navigation><a routerLink="/game">返回多人鑑定大廳</a></app-game-navigation>
+      <app-game-navigation />
+      <header class="tools-heading"><h1>流程演練</h1><a routerLink="/game">返回房間大廳</a></header>
+      <div class="tools-tabs" role="group" aria-label="管理員工具內容">
+        <button type="button" [attr.aria-pressed]="panel === 'rehearsal'" (click)="selectPanel('rehearsal')">遊戲流程</button>
+        <button type="button" [attr.aria-pressed]="panel === 'service'" (click)="selectPanel('service')">服務檢查</button>
+      </div>
+      @if (panel === 'rehearsal') {
       <section class="test-launcher" aria-labelledby="test-launcher-title">
         <header>
-          <p class="eyebrow">管理員工具 · 遊戲檢查中心</p>
-          <h1 id="test-launcher-title">檢查遊戲流程與服務</h1>
-          <p class="description">用隔離測試房間檢查畫面與跳轉，也能讀取目前遊戲 API 的公開房間資料確認服務是否接通。測試流程不建立會員、房間或獎勵紀錄。</p>
+          <h2 id="test-launcher-title">選擇演練節奏</h2>
+          <p class="description">體驗等待、作答、投票、揭曉與結算。使用範例玩家，不建立正式房間，也不發放獎勵。</p>
         </header>
-        <div class="test-safety-note" role="note">
-          <strong>僅限管理員</strong>
-          <span>這裡的測試玩家與獎勵都是前端隔離資料，不會影響正式玩家。</span>
-        </div>
-        <div class="test-section-heading">
-          <div>
-            <p class="eyebrow">流程預覽</p>
-            <h2>選一間測試房間</h2>
-          </div>
-          <span class="section-note">可重複進入</span>
-        </div>
-        <div class="test-room-grid">
+        <div class="rehearsal-picker">
+          <div class="rehearsal-menu" role="group" aria-label="演練情境">
           @for (room of testRooms; track room.id) {
-            <article class="test-room-card">
-              <span class="test-room-code">{{ room.code }}</span>
-              <h2>{{ room.name }}</h2>
-              <p>{{ room.description }}</p>
-              <button type="button" (click)="joinTestRoom(room.id)">加入測試房間 <app-qmah-icon name="arrow-right" aria-hidden="true" /></button>
-            </article>
+            <button type="button" [attr.aria-pressed]="selectedRoomId === room.id" (click)="selectedRoomId = room.id"><strong>{{ room.name }}</strong><span>{{ room.description }}</span></button>
           }
+          </div>
+          <section class="rehearsal-preview" aria-labelledby="rehearsal-title">
+            <h3 id="rehearsal-title">{{ selectedScenario.name }}</h3>
+            <ol class="rehearsal-flow" aria-label="演練流程"><li>等待入席</li><li>觀察作答</li><li>匿名投票</li><li>揭曉館藏</li><li>本局結算</li></ol>
+            <p>進入後可暫停、跳到下一階段，或重新開始。演練結束後可以回到這裡選擇其他節奏。</p>
+            <button type="button" class="rehearsal-start" (click)="joinTestRoom(selectedRoomId)">開始演練 <app-qmah-icon name="arrow-right" aria-hidden="true" /></button>
+          </section>
         </div>
       </section>
+      } @else {
       <header class="diagnostics-heading">
         <div>
-          <p class="eyebrow">只讀連線檢查</p>
           <h2>公開房間 API 讀取狀態</h2>
         </div>
         <p class="description">
@@ -144,15 +143,32 @@ interface TestRoomOption {
           <pre>{{ round | json }}</pre>
         }
       </section>
+      }
     </div>
   `
 })
 export class GameTestComponent {
   readonly game = inject(GameService);
+  readonly focusMode = inject(GameFocusMode);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  panel: 'rehearsal' | 'service' = this.route.snapshot.queryParamMap.get('panel') === 'service' ? 'service' : 'rehearsal';
+  selectedRoomId = this.route.snapshot.queryParamMap.get('scenario') ?? 'test-room-quick';
+  get selectedScenario(): TestRoomOption { return this.testRooms.find(room => room.id === this.selectedRoomId) ?? this.testRooms[0]; }
+  constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
+      this.panel = params.get('panel') === 'service' ? 'service' : 'rehearsal';
+      this.changeDetector.markForCheck();
+    });
+  }
+  selectPanel(panel: 'rehearsal' | 'service'): void {
+    this.panel = panel;
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { panel: panel === 'service' ? 'service' : null }, queryParamsHandling: 'merge' });
+  }
 
   readonly testRooms: TestRoomOption[] = [
-    { id: 'test-room-quick', code: 'QA-快轉', name: '快速巡覽', description: '約半分鐘跑完兩回合，適合先確認主要畫面與路由出口。' },
+    { id: 'test-room-quick', code: 'QA-快轉', name: '快速巡覽', description: '兩回合、短倒數，快速走完各階段。' },
     { id: 'test-room-standard', code: 'QA-完整', name: '完整流程', description: '節奏較寬，方便逐步檢查作答、投票、揭曉與結算。' },
     { id: 'test-room-replay', code: 'QA-重播', name: '重播檢查', description: '每次加入都從乾淨狀態開始，可重複檢查同一條流程。' }
   ];
@@ -167,8 +183,7 @@ export class GameTestComponent {
   lastCheckedLabel = '尚未檢查';
 
   ngOnInit(): void {
-    // ui-integration: 進入正式檢查中心即先做一次只讀連線檢查，管理員不必再猜測服務是否可用。
-    this.loadRooms();
+    this.selectedRoomId = this.selectedScenario.id;
   }
 
   joinTestRoom(roomId: string): void {
@@ -237,8 +252,8 @@ export class GameTestComponent {
   private run<T>(request: Observable<T>, assign: (value: T) => void, onError?: () => void): void {
     this.loading = true;
     this.error = '';
-    request.pipe(finalize(() => (this.loading = false))).subscribe({
-      next: assign,
+    request.pipe(finalize(() => { this.loading = false; this.changeDetector.markForCheck(); })).subscribe({
+      next: (value) => { assign(value); this.changeDetector.markForCheck(); },
       error: (error: unknown) => {
         this.error = this.game.errorMessage(error);
         onError?.();
