@@ -143,6 +143,8 @@ npm start
 
 部署時將 `QMAH.Media` 放在 API、Web 發佈目錄可共同讀取的位置，並將兩個服務的 `Media:AssetRootPath` 設為同一個絕對路徑。`uploads` 是持續保留的資料，更新程式時不可覆蓋，應與資料庫一起備份；`media/catalog`、`images` 和 `fonts` 是版本管理的固定素材。API 僅公開 `/media/catalog`、`/media/store`、`/images`、`/fonts`、頭貼與成就圖片路徑，社群上傳媒體不由靜態目錄直接公開。Angular 自身的圖片及 Web 的 CSS、JS、第三方套件仍屬各自的網站建置產物，不從共用媒體目錄讀取。
 
+會員註冊的 Turnstile site key 依 Angular 環境設定；正式環境的 secret 請透過 `Turnstile__SecretKey` 環境變數提供，不要放進版控。Development 環境使用 Cloudflare 公開測試金鑰。
+
 切換 CDN 時，將 API 與 Web 的 `Media:DeliveryMode` 設成 `Cdn`，並設定相同的 `Media:PublicBaseUrl`（必要時再設 `Media:PublicPathPrefix`）。API 輸出的媒體網址與 Web 圖片標籤會改寫公開的 `/media/catalog`、`/media/store`、`/images`、`/fonts`、`/uploads/avatars`、`/uploads/achievements` 網址；CDN 必須對應到同一份 `QMAH.Media`。CSS 內的固定 `/images`、`/fonts` 網址仍走站點原路徑，部署 CDN 時需在前端入口將這些路徑指向 CDN，或一併由 CDN 提供 Web 靜態建置產物。社群附件仍由受權限控管的 API 提供，資料庫內的路徑不需改成 CDN 網域。
 
 若要使用 API 的 `http` profile，請另開終端機執行：

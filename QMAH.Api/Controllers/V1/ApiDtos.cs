@@ -652,6 +652,10 @@ public sealed class RegisterRequest
 
     [Required, Compare(nameof(Password)), DataType(DataType.Password)]
     public string ConfirmPassword { get; set; } = "";
+
+    // Cloudflare Turnstile 驗證 Token 9/29
+    [Required, StringLength(2048)]
+    public string TurnstileToken { get; set; } = "";
 }
 
 public sealed class ResetPasswordRequest

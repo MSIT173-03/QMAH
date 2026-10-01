@@ -294,4 +294,55 @@
   .register-card {
     padding: var(--qmah-space-6) var(--qmah-space-5);
   }
+
+
+
+}
+
+/* =========================
+   Cloudflare Turnstile
+   ========================= */
+
+.turnstile-section {
+  margin-top: 18px;
+  margin-bottom: 14px;
+}
+
+.turnstile-header {
+  margin-bottom: 10px;
+}
+
+.turnstile-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.turnstile-description {
+  margin: 4px 0 0;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  opacity: 0.65;
+}
+
+.turnstile-widget {
+  min-height: 65px;
+}
+
+.turnstile-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 7px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #3fa879;
 }

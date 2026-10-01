@@ -2,21 +2,24 @@
 
   <div class="register-card">
 
+    <!-- ===================== -->
+    <!-- 標題 -->
+    <!-- ===================== -->
+
     <div class="register-header">
 
       <div class="register-icon">
         <app-qmah-icon name="user-plus" />
       </div>
 
-      <h1>
-        建立會員帳號
-      </h1>
+      <h1>建立會員帳號</h1>
 
       <p>
         註冊清明鑑定屋會員，開始使用會員功能。
       </p>
 
     </div>
+
 
     <form
       [formGroup]="registerForm"
@@ -29,9 +32,7 @@
 
       <div class="form-group">
 
-        <label for="email">
-          Email
-        </label>
+        <label for="email">Email</label>
 
         <input
           id="email"
@@ -61,15 +62,14 @@
 
       </div>
 
+
       <!-- ===================== -->
       <!-- 暱稱 -->
       <!-- ===================== -->
 
       <div class="form-group">
 
-        <label for="nickname">
-          暱稱
-        </label>
+        <label for="nickname">暱稱</label>
 
         <input
           id="nickname"
@@ -99,15 +99,14 @@
 
       </div>
 
+
       <!-- ===================== -->
       <!-- 密碼 -->
       <!-- ===================== -->
 
       <div class="form-group">
 
-        <label for="password">
-          密碼
-        </label>
+        <label for="password">密碼</label>
 
         <div
           class="password-wrapper"
@@ -122,9 +121,7 @@
             autocomplete="new-password"
           />
 
-          <!-- 密碼正確 -->
           @if (passwordValid) {
-
             <span
               class="password-valid-icon"
               aria-label="密碼格式正確"
@@ -132,10 +129,8 @@
             >
               <app-qmah-icon name="circle-check" />
             </span>
-
           }
 
-          <!-- 顯示 / 隱藏密碼 -->
           <button
             type="button"
             class="password-toggle"
@@ -151,15 +146,15 @@
                 : '顯示密碼'
             "
           >
-            <app-qmah-icon [name]="showPassword ? 'eye-off' : 'eye'" />
+            <app-qmah-icon
+              [name]="showPassword ? 'eye-off' : 'eye'"
+            />
           </button>
 
         </div>
 
-        <!--
-          有輸入密碼，而且尚未全部符合時，
-          才顯示密碼規則
-        -->
+
+        <!-- 密碼規則 -->
 
         @if (
           passwordValue.length > 0 &&
@@ -173,9 +168,11 @@
               [class.valid]="hasMinLength"
             >
               <span>
-                <app-qmah-icon [name]="hasMinLength ? 'circle-check' : 'circle-alert'" size="14" />
+                <app-qmah-icon
+                  [name]="hasMinLength ? 'circle-check' : 'circle-alert'"
+                  size="14"
+                />
               </span>
-
               至少 8 個字元
             </p>
 
@@ -184,9 +181,11 @@
               [class.valid]="hasUppercase"
             >
               <span>
-                <app-qmah-icon [name]="hasUppercase ? 'circle-check' : 'circle-alert'" size="14" />
+                <app-qmah-icon
+                  [name]="hasUppercase ? 'circle-check' : 'circle-alert'"
+                  size="14"
+                />
               </span>
-
               至少 1 個大寫英文
             </p>
 
@@ -195,9 +194,11 @@
               [class.valid]="hasLowercase"
             >
               <span>
-                <app-qmah-icon [name]="hasLowercase ? 'circle-check' : 'circle-alert'" size="14" />
+                <app-qmah-icon
+                  [name]="hasLowercase ? 'circle-check' : 'circle-alert'"
+                  size="14"
+                />
               </span>
-
               至少 1 個小寫英文
             </p>
 
@@ -206,9 +207,11 @@
               [class.valid]="hasNumber"
             >
               <span>
-                <app-qmah-icon [name]="hasNumber ? 'circle-check' : 'circle-alert'" size="14" />
+                <app-qmah-icon
+                  [name]="hasNumber ? 'circle-check' : 'circle-alert'"
+                  size="14"
+                />
               </span>
-
               至少 1 個數字
             </p>
 
@@ -217,9 +220,11 @@
               [class.valid]="hasSpecialCharacter"
             >
               <span>
-                <app-qmah-icon [name]="hasSpecialCharacter ? 'circle-check' : 'circle-alert'" size="14" />
+                <app-qmah-icon
+                  [name]="hasSpecialCharacter ? 'circle-check' : 'circle-alert'"
+                  size="14"
+                />
               </span>
-
               至少 1 個特殊符號
             </p>
 
@@ -228,6 +233,7 @@
         }
 
       </div>
+
 
       <!-- ===================== -->
       <!-- 確認密碼 -->
@@ -246,19 +252,13 @@
 
           <input
             id="confirmPassword"
-            [type]="
-              showConfirmPassword
-                ? 'text'
-                : 'password'
-            "
+            [type]="showConfirmPassword ? 'text' : 'password'"
             formControlName="confirmPassword"
             placeholder="再輸入一次密碼"
             autocomplete="new-password"
           />
 
-          <!-- 確認密碼一致 -->
           @if (passwordsMatch) {
-
             <span
               class="password-valid-icon"
               aria-label="兩次密碼一致"
@@ -266,10 +266,8 @@
             >
               <app-qmah-icon name="circle-check" />
             </span>
-
           }
 
-          <!-- 顯示 / 隱藏確認密碼 -->
           <button
             type="button"
             class="password-toggle"
@@ -285,12 +283,14 @@
                 : '顯示確認密碼'
             "
           >
-            <app-qmah-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'" />
+            <app-qmah-icon
+              [name]="showConfirmPassword ? 'eye-off' : 'eye'"
+            />
           </button>
 
         </div>
 
-        <!-- 有輸入確認密碼，但兩次不同 -->
+
         @if (
           confirmPasswordValue.length > 0 &&
           !passwordsMatch
@@ -305,6 +305,63 @@
 
       </div>
 
+
+      <!-- ===================== -->
+      <!-- Cloudflare Turnstile -->
+      <!-- ===================== -->
+
+      <div class="turnstile-section">
+
+        <div class="turnstile-header">
+
+          <div class="turnstile-title">
+            <app-qmah-icon
+              name="circle-check"
+              size="16"
+            />
+
+            <span>安全驗證</span>
+          </div>
+
+          <p class="turnstile-description">
+            系統將自動確認目前操作是否為正常使用者
+          </p>
+
+        </div>
+
+
+        <!--
+          Cloudflare Turnstile
+          由 register.ts 使用 turnstile.render()
+          動態載入到這個位置
+        -->
+
+        <div
+          id="turnstile-widget"
+          class="turnstile-widget"
+        ></div>
+
+
+        @if (turnstileToken) {
+
+          <div class="turnstile-result">
+
+            <app-qmah-icon
+              name="circle-check"
+              size="14"
+            />
+
+            <span>
+              安全驗證已完成
+            </span>
+
+          </div>
+
+        }
+
+      </div>
+
+
       <!-- ===================== -->
       <!-- 後端錯誤 -->
       <!-- ===================== -->
@@ -317,29 +374,31 @@
 
       }
 
+
       <!-- ===================== -->
-      <!-- 註冊 -->
+      <!-- 建立帳號 -->
       <!-- ===================== -->
 
       <button
         type="submit"
         class="register-button"
-        [disabled]="submitting"
+        [disabled]="submitting || !turnstileToken"
       >
 
         @if (submitting) {
-
           註冊中...
-
         } @else {
-
           建立帳號
-
         }
 
       </button>
 
     </form>
+
+
+    <!-- ===================== -->
+    <!-- 返回登入 -->
+    <!-- ===================== -->
 
     <div class="login-link">
 
