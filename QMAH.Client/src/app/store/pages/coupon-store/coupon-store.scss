@@ -1,0 +1,191 @@
+:host {
+  display: block;
+}
+
+.coupon-store-main {
+  padding-top: var(--qmah-space-4);
+  padding-bottom: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-5);
+  min-width: 0;
+}
+
+/* 每行最多三張：欄寬下限取「300px」與「三等分寬度」較大者，寬螢幕固定三欄、
+   空間不足時自動減為兩欄、一欄（卡片內部欄位寬度固定，不能再縮得更窄）。 */
+.coupon-grid {
+  --coupon-grid-gap: var(--qmah-space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(max(300px, calc((100% - 2 * var(--coupon-grid-gap)) / 3)), 1fr));
+  gap: var(--coupon-grid-gap);
+}
+
+/* 券面：左側為折抵幅度，中間為名稱與說明，最右為所需點數區塊。
+   卡片高度與三個欄位的寬度都固定，不隨文字多寡改變：中間欄吃剩下的寬度，
+   名稱最多兩行、說明各一行，超出以刪節號截斷（完整名稱放在 title 屬性）。
+   卡片只留 2px 的內距，讓點數區塊貼近卡片的上、右、下緣；折抵幅度欄自行補回左側間距。 */
+.coupon-card {
+  display: grid;
+  grid-template-columns: 98px minmax(0, 1fr) 96px;
+  column-gap: var(--qmah-space-4);
+  align-items: stretch;
+  height: 136px;
+  padding: 2px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--store-radius);
+  background: var(--color-surface);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+
+  /* 滑鼠移入：外框加深並浮起一層陰影，提示這張券可以兌換 */
+  &:hover {
+    border-color: var(--color-line-mid);
+    box-shadow: var(--color-shadow);
+  }
+}
+
+/* 折抵幅度（固定欄寬 98px = 左側間距 14px + 內容 84px） */
+.coupon-card-off {
+  align-self: center;
+  padding-left: calc(var(--qmah-space-4) - 2px);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--qmah-type-body-size);
+  color: var(--color-accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.coupon-card-body {
+  min-width: 0;
+  padding-block: var(--qmah-space-3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.coupon-card-title {
+  font-size: var(--qmah-type-body-sm-size);
+  color: var(--color-ink);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.coupon-card-meta {
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 兌換所需點數：本身是按鈕，按下後登入提示或兌換確認。
+   平常用頁面底色，滑鼠移入換成外框色；左側以虛線與券面分隔。 */
+.coupon-card-cost {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 var(--qmah-space-2);
+  white-space: nowrap;
+  border: 0;
+  border-left: 1px dashed var(--color-line-mid);
+  /* 內圓角比卡片外圓角小一個內距，右側兩個角才貼合卡片外框 */
+  border-radius: 0 calc(var(--store-radius) - 3px) calc(var(--store-radius) - 3px) 0;
+  background: var(--color-bg);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background 160ms ease;
+
+  &:hover {
+    background: var(--color-line);
+  }
+}
+
+/* 點數上方的「兌換」字樣 */
+.coupon-card-cost-label {
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+}
+
+.coupon-card-cost-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--qmah-type-body-sm-size);
+  color: var(--color-ink);
+}
+
+/* 兌換結果訊息：成功沿用強調色，失敗（例如點數不足）改用警示底色。
+   右側有關閉用的叉號；移除前先淡出（--leaving），淡出時間需與 FEEDBACK_FADE_MS 一致。 */
+.coupon-feedback {
+  display: flex;
+  align-items: center;
+  gap: var(--qmah-space-3);
+  /* 高度固定 50px，不隨文字多寡改變；過長的文字在 .coupon-feedback-text 以刪節號截斷 */
+  box-sizing: border-box;
+  height: 50px;
+  margin: 0;
+  padding: 0 var(--qmah-space-4);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 42%, var(--color-line));
+  border-radius: var(--store-radius);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  color: var(--color-accent);
+  opacity: 1;
+  transition: opacity 300ms ease;
+
+  &--error {
+    border-color: var(--qmah-danger);
+    background: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  &--leaving {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.coupon-feedback-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 尾端的叉號：點擊後立刻淡出並移除訊息 */
+.coupon-feedback-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--qmah-radius-control);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 160ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 14%, transparent);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}

@@ -1,6 +1,7 @@
 export { Breadcrumb } from './breadcrumb/breadcrumb';
 export { CategoryList } from './category-list/category-list';
 export { CollectibleCard } from './collectible-card/collectible-card';
+export { CouponRedeemDialog } from './coupon-redeem-dialog/coupon-redeem-dialog';
 export { EmptyState } from './empty-state/empty-state';
 export { EntryGrid } from './entry-grid/entry-grid';
 export { FilterSidebar } from './filter-sidebar/filter-sidebar';

@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { LoginPrompt } from '../login-prompt/login-prompt';
+import { DEFAULT_LOGIN_PROMPT_MESSAGE, LoginPrompt } from '../login-prompt/login-prompt';
 import { Promobar } from '../promobar/promobar';
 import { CartState, injectSiteData } from '../../shared/page-state';
 
@@ -19,6 +19,8 @@ import { CartState, injectSiteData } from '../../shared/page-state';
 export class SessionBar {
   /** 頁面持有的購物車狀態（injectCartState） */
   cart = input.required<CartState>();
+  /** 登入提示的說明文字；各頁面依使用情境（加入購物車、兌換折價券…）自訂，預設為加入購物車 */
+  loginMessage = input(DEFAULT_LOGIN_PROMPT_MESSAGE);
 
   /** 頂部公告列所需的公告、會員點數與折價券 */
   protected readonly site = injectSiteData();

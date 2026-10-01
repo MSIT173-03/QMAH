@@ -145,6 +145,10 @@ const appShellChildren: Routes = [
         loadComponent: () => import('./store/pages/product-info/product-info').then((c) => c.ProductInfo),
       },
       {
+        path: 'coupons',
+        loadComponent: () => import('./store/pages/coupon-store/coupon-store').then((c) => c.CouponStore),
+      },
+      {
         path: 'cart',
         canActivate: [authGuard],
         loadComponent: () => import('./store/pages/cart/cart').then((c) => c.Cart),

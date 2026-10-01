@@ -93,6 +93,17 @@ export function injectCartState() {
     },
     /** 登入提示按下「取消」：留在目前頁面 */
     cancelLogin: () => loginPrompt.set(false),
+    /** 需要登入才能做的操作（例如兌換折價券）：確認登入狀態後，已登入就執行 action，未登入改為開啟登入提示 */
+    requireSignIn: (action: () => void) =>
+      auth.ensureLoaded().subscribe(() => {
+        if (auth.status() === 'anonymous') loginPrompt.set(true);
+        else action();
+      }),
+    /** 商城 API 回應 401（登入已失效）時呼叫：清除全站登入狀態並開啟登入提示 */
+    handleUnauthorized: () => {
+      auth.markSignedOut();
+      loginPrompt.set(true);
+    },
     /** 購物車內商品件數 */
     count: computed(() => cart()?.items.reduce((sum, item) => sum + item.qty, 0) ?? 0),
     /** 加入購物車（預設數量 1）；成功後執行 done，未登入時改為開啟登入提示 */

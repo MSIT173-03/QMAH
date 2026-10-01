@@ -4,4 +4,4 @@
   [coupons]="site.coupons()" [cartCount]="state.count()" [cartItems]="state.cart()?.items ?? []" />
 
 <!-- 未登入時使用加入購物車，詢問是否前往登入頁；原生 modal dialog 顯示於最上層，不佔版面位置 -->
-<app-login-prompt [open]="state.loginPrompt()" (confirm)="state.confirmLogin()" (cancel)="state.cancelLogin()" />
+<app-login-prompt [open]="state.loginPrompt()" [message]="loginMessage()" (confirm)="state.confirmLogin()" (cancel)="state.cancelLogin()" />

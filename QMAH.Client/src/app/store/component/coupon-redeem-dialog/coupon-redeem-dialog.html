@@ -1,0 +1,24 @@
+<!-- 折價券兌換確認：原生 modal dialog，確認後由頁面呼叫兌換 API -->
+<dialog #dialog class="redeem-dialog" aria-labelledby="redeem-dialog-title" (cancel)="onNativeCancel($event)"
+  (click)="onBackdropClick($event)">
+  <div class="redeem-dialog-body">
+    <h2 id="redeem-dialog-title" class="redeem-dialog-title">{{ title }}</h2>
+    <dl class="redeem-dialog-detail">
+      <div class="redeem-dialog-row">
+        <dt>{{ nameLabel }}</dt>
+        <dd class="redeem-dialog-name">{{ name() }}</dd>
+      </div>
+      <div class="redeem-dialog-row">
+        <dt>{{ costLabel }}</dt>
+        <dd class="redeem-dialog-cost">{{ cost() }}</dd>
+      </div>
+    </dl>
+    <p class="redeem-dialog-note">{{ note }}</p>
+    <div class="redeem-dialog-actions">
+      <button type="button" class="btn-outline" [disabled]="pending()" (click)="onCancel()">{{ cancelLabel }}</button>
+      <button type="button" class="btn-solid" [disabled]="pending()" (click)="confirm.emit()">
+        {{ pending() ? pendingLabel : confirmLabel }}
+      </button>
+    </div>
+  </div>
+</dialog>
