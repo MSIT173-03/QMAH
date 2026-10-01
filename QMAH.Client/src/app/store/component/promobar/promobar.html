@@ -36,7 +36,23 @@
           </div>
         </div>
 
-        <a [storeLink]="cartHref()" class="promobar-link">購物車 <span class="promobar-accent">{{ cartCount() }}</span> 件</a>
+        <!-- 購物車連結，滑鼠移入時展開懸浮面板；結構與折價券面板相同（面板留在觸發容器內，避免移動途中提早收合） -->
+        <div class="cart-trigger" (mouseenter)="cartOpen.set(true)" (mouseleave)="cartOpen.set(false)">
+          <a [storeLink]="cartHref()" class="promobar-link">購物車 <span class="promobar-accent">{{ cartCount() }}</span> 件</a>
+          <div class="cart-panel" [class.cart-panel--open]="cartOpen()" [attr.aria-hidden]="!cartOpen()" [inert]="!cartOpen()">
+            @for (row of cartRows(); track row.id) {
+              <a [storeLink]="row.href" class="cart-panel-item">
+                <span class="cart-panel-name">{{ row.name }}</span>
+                <span class="cart-panel-qty">× {{ row.qty }}</span>
+              </a>
+            } @empty {
+              <span class="cart-panel-empty">購物車目前沒有商品</span>
+            }
+            @if (cartRest() > 0) {
+              <a [storeLink]="cartHref()" class="cart-panel-more">以及另外 {{ cartRest() }} 項商品</a>
+            }
+          </div>
+        </div>
       } @else {
         <!-- 未登入（或登入狀態尚未確認）時沒有會員資料，只顯示名稱，不顯示數量 -->
         <span class="promobar-link promobar-link--disabled" aria-disabled="true">點數</span>
