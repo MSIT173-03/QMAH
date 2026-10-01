@@ -451,8 +451,11 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     }
     if (this.attempt.modeCode === 'DETAIL_LOCATOR') this.locatorChoice = this.locatorOptions.some(option => option.artifactId === raw.locatorChoice) ? raw.locatorChoice : null;
     if (this.attempt.modeCode === 'MEMORY_MATCH') {
-      const matched = new Set(raw.matchedCardIds);
-      this.memoryCards.forEach((card) => { card.matched = matched.has(card.id); });
+      const matched = new Set(Array.isArray(raw.matchedCardIds) ? raw.matchedCardIds : []);
+      this.memoryCards.forEach((card) => {
+        const pair = this.memoryCards.filter(candidate => candidate.artifactId === card.artifactId);
+        card.matched = pair.length === 2 && pair.every(candidate => matched.has(candidate.id));
+      });
       this.memoryMatched = this.memoryCards.filter((card) => card.matched).length / 2;
     }
     this.loadCatalogHints(this.attempt);
@@ -490,7 +493,12 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   private isValidAttempt(value: unknown): value is MiniGameStart {
     if (!value || typeof value !== 'object') return false;
     const attempt = value as Partial<MiniGameStart>;
-    return typeof attempt.attemptId === 'string' && typeof attempt.modeCode === 'string' && Array.isArray(attempt.artifactPool);
+    return typeof attempt.attemptId === 'string' && attempt.attemptId.length > 0
+      && ['DETAIL_LOCATOR', 'MEMORY_MATCH', 'ARTIFACT_PUZZLE', 'STRIP_RESTORE'].includes(attempt.modeCode ?? '')
+      && typeof attempt.seed === 'string'
+      && typeof attempt.artifactId === 'string' && typeof attempt.artifactName === 'string'
+      && Array.isArray(attempt.artifactPool)
+      && attempt.artifactPool.every(artifact => artifact && typeof artifact.artifactId === 'string' && typeof artifact.name === 'string');
   }
 
   private isPlacement(order: number[], length: number): boolean {
