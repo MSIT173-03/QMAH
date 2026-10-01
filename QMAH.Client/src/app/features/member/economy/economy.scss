@@ -356,18 +356,54 @@ app-key-list {
 }
 
 
-/* ========================================
-   內嵌鑰匙背包
-   KeyList 原本是獨立頁面，會有 100vh 高度。
-   放進 Economy 時改成依內容自然撐開。
-======================================== */
+.key-backpack-section {
+  overflow: hidden;
+  border: 1px solid var(--economy-line);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--economy-ink) 7%, transparent);
 
-:host ::ng-deep app-key-list {
-  height: auto;
+  app-key-list { margin-top: 0; }
 }
 
-:host ::ng-deep app-key-list .key-page {
-  min-height: 0;
-  height: auto;
-  padding-bottom: 24px;
+.state-box.error { margin-bottom: 20px; }
+
+.economy-button {
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--qmah-primary);
+  color: var(--qmah-primary-content);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: color-mix(in srgb, var(--qmah-primary) 85%, var(--economy-ink)); }
+  &:focus-visible { outline: 2px solid var(--qmah-primary); outline-offset: 3px; }
+  &:disabled { opacity: .6; cursor: wait; }
+}
+
+.conversion-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  border: 1px solid var(--economy-line);
+  border-radius: 14px;
+  background: var(--economy-surface);
+  color: var(--economy-ink);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--economy-ink) 20%, transparent);
+  text-align: center;
+
+  &::backdrop { background: color-mix(in srgb, var(--qmah-night) 45%, transparent); }
+  h2 { margin: 16px 0 12px; font-size: 22px; font-weight: 700; }
+  p { line-height: 1.7; }
+  .conversion-remaining { margin: 16px 0 24px; }
+  .economy-button { width: 100%; }
+}
+
+.conversion-key { margin: 0 auto; object-fit: contain; }
+
+@media (prefers-reduced-motion: reduce) {
+  .summary-card, .progress-fill { transition: none; }
 }
