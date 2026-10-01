@@ -81,6 +81,8 @@
             {{ economy.pointBalance }}
           </div>
 
+          <p class="asset-description">玩多人遊戲、每日簽到，或回收已無法解鎖文物的鑰匙，都能累積鑑定點數。點數可兌換商城折價券，結帳時依券面條件折抵商品金額。</p>
+
         </div>
 
       </div>
@@ -130,6 +132,8 @@
 
 
           <div class="progress-hint">
+
+            <p>玩單人小遊戲可累積鑰匙碎片。每滿 {{ economy.keyProgressToNormalKey }} 點進度，就會自動換成 1 把探索鑰匙，剩下的碎片繼續累積。</p>
 
             @if (remainingKeyProgress > 0) {
 
