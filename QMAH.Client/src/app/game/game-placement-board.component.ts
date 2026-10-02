@@ -1,4 +1,5 @@
 import { Component, ElementRef, HostListener, computed, effect, input, output, signal } from '@angular/core';
+import { findBackgroundPieces } from './game-background-pieces';
 
 /** Empty slots are -1. Pieces have stable identities; a drop never swaps two pieces. */
 export function placePiece(order: readonly number[], piece: number, slot: number): number[] {
@@ -18,6 +19,7 @@ export function placePiece(order: readonly number[], piece: number, slot: number
       <button type="button" (click)="showRegion()" [disabled]="!ready() || disabled() || selected() === null || solved()">區域提示（−3 分）</button>
       <button type="button" (click)="confirmDialog.showModal()" [disabled]="!ready() || disabled() || solved()">完成剩餘碎片</button>
       <button type="button" (click)="pieceDialog.showModal()" [disabled]="selected() === null">放大選取碎片</button>
+      <button type="button" (click)="prepareBackground(); backgroundDialog.showModal()" [disabled]="!ready() || disabled() || solved()">預覽背景候選（不扣分）</button>
       <ng-content />
     </div>
     <dialog #referenceDialog class="assist-dialog reference-dialog" aria-label="原圖與格線"><button type="button" (click)="referenceDialog.close()">返回盤面</button><figure class="reference"><img [src]="image()" [alt]="name() + '原圖'" /><div [style.grid-template-columns]="columnsStyle()" [style.grid-template-rows]="rowsStyle()">@for (cell of order(); track $index) { <span>{{ $index + 1 }}</span> }</div></figure></dialog>
@@ -41,7 +43,7 @@ export function placePiece(order: readonly number[], piece: number, slot: number
             } @else { <span class="placed-slot" aria-hidden="true"></span> }
           }
         </div>
-        <p>拖到目標格；也可點選碎片，再點目的格。放錯時可重放，原有碎片會回到備選區。</p>
+        <p>把碎片拖到目標格，也可先點碎片，再點目的格。放錯時可重新放置，被替換的碎片會回到備選區。</p>
       </section>
     </div>
     <p class="placement-feedback" role="status">{{ feedback() }}</p>
@@ -53,9 +55,41 @@ export function placePiece(order: readonly number[], piece: number, slot: number
     </dialog>
     <dialog #confirmDialog class="assist-dialog" aria-labelledby="assist-title">
       <h3 id="assist-title">完成剩餘碎片？</h3>
-      <p>還有 {{ remaining() }} 格未歸位。代完成扣 {{ assistancePenalty() }} 分，且本局不會獲得 S 級。{{ settleAfterHelp() ? '確認後會完成盤面並送出結果，獎勵依最後評分發放。' : '完成後仍需自行送出結果。' }}</p>
+      <p>還有 <span class="text-unit">{{ remaining() }} 格</span>未歸位。</p>
+      <p>代完成扣 <span class="text-unit">{{ assistancePenalty() }} 分</span>，本局無法取得 <span class="text-unit">S 級</span>。</p>
+      <p>{{ settleAfterHelp() ? '確認後會將剩餘碎片歸位，立即送出結果。' : '確認後會將剩餘碎片歸位。' }}</p>
+      <p>{{ settleAfterHelp() ? '結算時依評分等級自動發放獎勵。' : '完成後請自行按「送出結果」。' }}</p>
       <button type="button" (click)="confirmDialog.close()">繼續自己拼</button>
       <button type="button" (click)="autoFinish(); confirmDialog.close()">確認代完成</button>
+    </dialog>
+    <dialog #backgroundDialog class="assist-dialog background-dialog" aria-labelledby="background-title">
+      <h3 id="background-title">要協助歸位背景片嗎？</h3>
+      <p>下列碎片顏色接近外框背景，細節也較少。</p>
+      <p>偵測可能把有淡墨或圖案細節的碎片誤認為背景。</p>
+      <p>請逐片查看，取消勾選有圖案或想自己拼的碎片。</p>
+      @if (backgroundUnavailable()) {
+        <p role="status">目前無法分析這張圖片。你仍可繼續拼圖，或使用原圖與格線對照。</p>
+      } @else if (!pendingBackground().length) {
+        <p role="status">沒有找到符合條件、尚未歸位的背景片。</p>
+        <p>畫面有墨跡或圖案時，可能不會列出候選。你仍可使用原圖與格線對照。</p>
+      } @else {
+        <p>找到 <span class="text-unit">{{ pendingBackground().length }} 片</span>背景候選。</p>
+        <p>相似的空白片可能看起來一樣。按下「歸位勾選的背景片」後，系統才會將它們放到正確格子。</p>
+        <div class="background-candidates">
+          @for (piece of pendingBackground(); track piece) {
+            <label>
+              <div class="piece" [style.aspect-ratio]="pieceRatio()"><img [src]="image()" alt="" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(piece % columns()) * 100" [style.top.%]="-row(piece) * 100" /></div>
+              <span><input type="checkbox" [checked]="backgroundSelection().includes(piece)" (change)="setBackgroundSelected(piece, $event)" />候選 {{ $index + 1 }}</span>
+            </label>
+          }
+        </div>
+        <p>歸位已勾選的 <span class="text-unit">{{ selectedBackground().length }} 片</span>，本局成績再扣 <span class="text-unit">{{ backgroundPenalty() }} 分</span>。</p>
+        <p>使用這項協助後，本局無法取得 <span class="text-unit">S 級</span>。</p>
+        <p>歸位後可繼續拼其他碎片，最後自行按「送出結果」。</p>
+        <p>若背景片的正確格子已放了其他碎片，原本的碎片會移回待放置區。</p>
+      }
+      <button type="button" (click)="backgroundDialog.close()">繼續自己拼</button>
+      <button type="button" (click)="placeBackground(); backgroundDialog.close()" [disabled]="!selectedBackground().length || disabled() || !ready() || solved()">歸位勾選的背景片</button>
     </dialog>
   `,
   styleUrl: './game-placement-board.component.scss'
@@ -80,6 +114,14 @@ export class GamePlacementBoardComponent {
   readonly moveMade = output<void>();
   readonly hintUsed = output<void>();
   readonly autoCompleted = output<number>();
+  readonly assistedPieces = input(0);
+  readonly backgroundPieces = signal<number[]>([]);
+  readonly backgroundSelection = signal<number[]>([]);
+  readonly backgroundUnavailable = signal(false);
+  readonly pendingBackground = computed(() => this.backgroundPieces().filter(piece => this.order()[piece] !== piece));
+  readonly selectedBackground = computed(() => this.pendingBackground().filter(piece => this.backgroundSelection().includes(piece)));
+  readonly backgroundPenalty = computed(() => Math.ceil(60 * (this.assistedPieces() + this.selectedBackground().length) / this.order().length)
+    - Math.ceil(60 * this.assistedPieces() / this.order().length));
   readonly availabilityChange = output<boolean>();
   readonly settleAfterHelp = input(false);
   readonly settlementRequested = output<void>();
@@ -93,7 +135,8 @@ export class GamePlacementBoardComponent {
   readonly lastPlaced = signal<number | null>(null);
   readonly solved = computed(() => this.order().every((piece, slot) => piece === slot));
   readonly remaining = computed(() => this.order().filter((piece, slot) => piece !== slot).length);
-  readonly assistancePenalty = computed(() => Math.ceil(60 * this.remaining() / this.order().length));
+  readonly assistancePenalty = computed(() => Math.ceil(60 * (this.assistedPieces() + this.remaining()) / this.order().length)
+    - Math.ceil(60 * this.assistedPieces() / this.order().length));
   readonly columnsStyle = computed(() => 'repeat(' + this.columns() + ', minmax(0, 1fr))');
   readonly rowsStyle = computed(() => 'repeat(' + this.rows() + ', minmax(0, 1fr))');
   readonly traySlots = computed(() => Array.from({ length: this.order().length }, (_, piece) => piece).sort((a, b) => this.shuffleKey(a) - this.shuffleKey(b)));
@@ -112,7 +155,44 @@ export class GamePlacementBoardComponent {
     this.naturalWidth.set(image.naturalWidth);
     this.failed.set(false);
     this.ready.set(true);
+    this.analyzeBackground(image);
     this.availabilityChange.emit(true);
+  }
+  private analyzeBackground(image: HTMLImageElement): void {
+    this.backgroundPieces.set([]);
+    this.backgroundSelection.set([]);
+    this.backgroundUnavailable.set(false);
+    try {
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+      canvas.width = Math.floor(image.naturalWidth * scale);
+      canvas.height = Math.floor(image.naturalHeight * scale);
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) throw new Error('無法讀取圖片');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      this.backgroundPieces.set(findBackgroundPieces(context.getImageData(0, 0, canvas.width, canvas.height).data,
+        canvas.width, canvas.height, this.columns(), this.rows()));
+    } catch {
+      // 跨來源圖片或瀏覽器無法讀取像素時保留原盤面，不以分析失敗阻擋遊戲。
+      this.backgroundUnavailable.set(true);
+    }
+  }
+  prepareBackground(): void { this.backgroundSelection.set([...this.pendingBackground()]); }
+  setBackgroundSelected(piece: number, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.backgroundSelection.update(selection => checked
+      ? [...new Set([...selection, piece])] : selection.filter(value => value !== piece));
+  }
+  placeBackground(): void {
+    const pieces = this.selectedBackground();
+    if (!pieces.length || this.disabled() || !this.ready() || this.solved()) return;
+    const next = pieces.reduce((order, piece) => placePiece(order, piece, piece), [...this.order()]);
+    this.autoCompleted.emit(pieces.length);
+    this.orderChange.emit(next);
+    this.selected.set(null);
+    this.hintRegion.set(null);
+    this.backgroundSelection.set([]);
+    this.feedback.set(`已協助歸位 ${pieces.length} 片背景候選，並記錄輔助扣分。你可以繼續拼其他碎片。`);
   }
   imageError(): void { this.ready.set(false); this.failed.set(true); this.availabilityChange.emit(false); }
   retryImage(): void { this.ready.set(false); this.failed.set(false); this.imageRevision.update(value => value + 1); }
@@ -142,7 +222,7 @@ export class GamePlacementBoardComponent {
     const piece = this.selected();
     if (piece === null || this.disabled() || !this.ready() || this.hintRegion() !== null) return;
     this.hintRegion.set(this.region(piece)); this.hintUsed.emit();
-    this.feedback.set('這塊屬於原圖的' + ['左上', '右上', '左下', '右下'][this.region(piece)] + '區域；已扣 3 分。');
+    this.feedback.set('這塊屬於原圖的' + ['左上', '右上', '左下', '右下'][this.region(piece)] + '區域。已扣 3 分。');
   }
   requestHint(): void {
     if (this.disabled() || !this.ready() || this.solved()) return;
@@ -200,8 +280,19 @@ export class GamePlacementBoardComponent {
     const delta: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
     if (!(event.key in delta) && event.key !== 'Home' && event.key !== 'End') return;
     event.preventDefault();
-    const buttons = Array.from((event.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLButtonElement>('button') ?? []);
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : slot + delta[event.key];
-    buttons[Math.max(0, Math.min(buttons.length - 1, next))]?.focus();
+    const current = event.currentTarget as HTMLElement;
+    const cells = Array.from(current.parentElement?.children ?? []);
+    const index = cells.indexOf(current);
+    if (index < 0) return;
+    // 備選區保留已放置的空位，方向鍵依實際格位移動，不能把空位壓縮成另一個棋盤。
+    const step = event.key === 'End' ? -1 : event.key === 'Home' ? 1 : delta[event.key];
+    let next = event.key === 'Home' ? 0 : event.key === 'End' ? cells.length - 1 : index + step;
+    while (next >= 0 && next < cells.length) {
+      if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight')
+        && Math.floor(next / columns) !== Math.floor(index / columns)) return;
+      const target = cells[next];
+      if (target instanceof HTMLButtonElement && !target.disabled) { target.focus(); return; }
+      next += step;
+    }
   }
 }

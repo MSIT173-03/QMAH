@@ -1,9 +1,11 @@
-:host { display: block; color: var(--qmah-ink); background: var(--qmah-page-surface); font: 400 16px/1.5 var(--qmah-font-sans); }
+@use './game-scene' as scene;
+:host { display: block; color: var(--qmah-ink); background: var(--qmah-page-surface); font: 400 16px/1.5 var(--qmah-font-sans); @include scene.pattern; }
 .training-notebook { position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: var(--qmah-surface); --stage-ink: var(--qmah-ink); --stage-muted: color-mix(in srgb, var(--stage-ink) 76%, var(--stage-surface)); --stage-accent: color-mix(in srgb, var(--qmah-accent) 45%, var(--stage-ink)); width: min(calc(100% - 24px), 1440px); margin: 16px auto 32px; padding: 16px clamp(12px, 3vw, 40px); border-radius: var(--qmah-radius-panel); background: var(--stage-surface); color: var(--stage-ink); }
+.training-notebook { @include scene.pattern(var(--stage-surface)); }
 .scene-toolbar { display: flex; justify-content: space-between; align-items: center; min-height: 48px; margin-bottom: 8px; }
 app-game-navigation { --game-nav-ink: var(--stage-ink); --game-nav-muted: var(--stage-muted); --game-nav-line: color-mix(in srgb, var(--stage-ink) 25%, transparent); --game-nav-surface: transparent; --game-nav-hover: color-mix(in srgb, var(--stage-ink) 10%, transparent); }
 .scene-toolbar a, .scene-toolbar button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; color: var(--stage-ink); background: transparent; border: 1px solid color-mix(in srgb, var(--stage-ink) 25%, transparent); border-radius: var(--qmah-radius-control); text-decoration: none; font: inherit; font-size: 14px; }
-.training-notebook.is-focus-mode { --arena-height: max(580px, calc(100dvh - 88px)); width: 100%; margin: 0; border-radius: 0; }
+.training-notebook.is-focus-mode { --arena-height: max(580px, calc(100dvh - 88px)); width: 100%; margin: 0; border-radius: 0; background-image: none; }
 *, *::before, *::after { box-sizing: border-box; }
 ::selection { color: var(--qmah-game-content); background: var(--qmah-game-action); }
 button, input, select { font: inherit; }
@@ -134,7 +136,9 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
 .result-rewards dl > div { display: flex; gap: 8px; }
 .result-rewards dt { color: var(--qmah-muted); font-size: 14px; }
 .result-rewards dd { margin: 0; font-weight: 700; color: var(--qmah-jade); font-variant-numeric: tabular-nums; }
-.result-rewards p, .result-note { margin: 4px 0 0; font-size: 12px; color: var(--qmah-muted); }
+.result-rewards p, .result-note { margin: 8px 0 0; font-size: 14px; line-height: 1.7; color: var(--qmah-muted); line-break: strict; overflow-wrap: break-word; }
+.result-scoring { margin-block: 16px; }
+.reward-status > span { display: block; line-height: 1.7; }
 .result-note { grid-column: 1; }
 .result-actions { grid-column: 2; grid-row: 1 / 5; display: grid; gap: 8px; justify-items: stretch; }
 .mode-preview__copy p, .play-heading__title > span, .play-heading__meta, .play-heading__progress small, .game-prompt p, .progress-readout, .play-command, .result-facts dt, .result-rewards dt, .result-rewards p, .result-note { color: var(--stage-muted); }
@@ -143,11 +147,18 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
 .play-progress span { background: var(--stage-accent); }
 .pause-trigger, .result-actions .secondary { color: var(--stage-ink); border-color: color-mix(in srgb, var(--stage-ink) 30%, transparent); }
 .mode-preview__actions button, .play-actions button, .result-actions button:not(.secondary) { color: var(--qmah-game-content); border-color: var(--qmah-game-action); background: var(--qmah-game-action); }
-.pause-dialog { position: fixed; inset: 0; margin: auto; width: min(420px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 32px; border: 0; border-radius: var(--qmah-radius-panel); background: var(--qmah-surface); color: var(--qmah-ink); box-shadow: 0 16px 40px color-mix(in srgb, var(--qmah-night) 30%, transparent); }
+.pause-dialog { position: fixed; inset: 0; margin: auto; width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: clamp(20px, 5vw, 32px); border: 0; border-radius: var(--qmah-radius-panel); background: var(--qmah-surface); color: var(--qmah-ink); box-shadow: 0 16px 40px color-mix(in srgb, var(--qmah-night) 30%, transparent); }
 .pause-dialog::backdrop { background: color-mix(in srgb, var(--qmah-night) 70%, transparent); }
 .pause-dialog h2 { margin: 0; font: 700 30px var(--qmah-font-serif); }
-.pause-dialog p { color: var(--qmah-muted); }
+.pause-dialog p { color: var(--qmah-muted); margin: 12px 0; font-size: 1rem; line-height: 1.75; word-break: normal; overflow-wrap: break-word; line-break: strict; text-wrap: pretty; }
 .pause-dialog button { width: 100%; margin-top: 12px; }
+.pause-dialog h2 { line-height: 1.3; text-wrap: balance; }
+.help-options { display: grid; gap: 24px; margin-block: 24px; }
+.help-option h3 { margin: 0; font: 700 1.125rem/1.4 var(--qmah-font-sans); }
+.help-option p { margin-block: 6px; }
+.text-unit { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.help-notes { display: grid; gap: 8px; margin: 0 0 20px; padding-inline-start: 1.25em; color: var(--qmah-muted); font-size: 1rem; line-height: 1.75; line-break: strict; overflow-wrap: break-word; }
+.help-notes li > span { display: block; }
 .scene-preview-enter { animation: preview-reveal 300ms cubic-bezier(.16, 1, .3, 1); }
 .scene-play-enter { animation: play-reveal 360ms cubic-bezier(.16, 1, .3, 1); }
 .game-result-enter { animation: result-reveal 500ms ease-out; }

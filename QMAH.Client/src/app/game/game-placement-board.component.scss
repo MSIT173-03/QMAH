@@ -23,7 +23,7 @@ button:disabled { cursor: default; }
 .piece-tray { display: grid; width: min(100%, 560px, var(--image-width, 560px), calc(var(--tray-height, 440px) * var(--piece-ratio, 1))); margin: 6px auto; padding: 0; }
 .piece-tray .piece, .placed-slot { display: grid; place-items: center; min-height: 0; }
 .inspection-piece { width: min(100%, 300px); margin: 16px auto 0; }
-.piece-supply p, .placement-feedback { font-size: 14px; margin: 12px 0 0; }
+.piece-supply p, .placement-feedback { font-size: 14px; line-height: 1.7; margin: 12px 0 0; line-break: strict; }
 .placement-feedback { text-align: center; min-height: 24px; }
 .drag-preview { position: fixed; z-index: 100; min-height: 0; transform: translate(-50%, -50%) rotate(-2deg); pointer-events: none; box-shadow: 0 14px 24px color-mix(in srgb, var(--qmah-night) 45%, transparent); animation: piece-lift 140ms ease-out; }
 .reference { position: relative; width: min(100%, 560px); margin: 16px auto 0; }
@@ -34,7 +34,17 @@ button:disabled { cursor: default; }
 .assist-dialog { position: fixed; inset: 0; margin: auto; width: min(440px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 24px; border: 0; border-radius: var(--qmah-radius-panel); color: var(--qmah-ink); background: var(--qmah-surface); }
 .assist-dialog::backdrop { background: color-mix(in srgb, var(--qmah-night) 70%, transparent); }
 .assist-dialog h3 { margin: 0; }
+.assist-dialog p { margin-block: 12px; font-size: 1rem; line-height: 1.75; line-break: strict; overflow-wrap: break-word; }
+.text-unit { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .assist-dialog button { display: block; width: 100%; margin-top: 12px; }
+.background-dialog { width: min(620px, calc(100% - 32px)); overflow-y: auto; }
+.background-dialog p { line-height: 1.7; overflow-wrap: anywhere; }
+.background-candidates { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 16px; }
+.background-candidates label { display: grid; gap: 8px; cursor: pointer; }
+.background-candidates .piece { width: min(100%, 120px); cursor: default; }
+.background-candidates label > span { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.background-candidates input { width: 20px; height: 20px; accent-color: var(--qmah-accent); }
+.background-candidates input:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
 @media (max-width: 700px) { .placement-workspace { grid-template-columns: 1fr; gap: 16px; } .piece-supply { width: 100%; } }
 .piece { cursor: grab; transition: transform 140ms ease-out, opacity 140ms ease-out, box-shadow 140ms ease-out; }
 .piece.is-lifted { cursor: grabbing; opacity: .4; transform: translateY(-3px); box-shadow: 0 8px 12px color-mix(in srgb, var(--qmah-night) 30%, transparent); }

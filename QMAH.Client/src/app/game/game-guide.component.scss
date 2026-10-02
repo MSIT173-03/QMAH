@@ -10,6 +10,7 @@
   min-height: 100vh;
   color: var(--guide-ink);
   background: var(--qmah-page-surface);
+  @include scene.pattern;
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 .game-guide { box-sizing: border-box; width: min(100%, clamp(1200px, 88vw, 1440px)); margin: 0 auto; padding: 12px clamp(16px, 3vw, 24px) 64px; }
@@ -84,7 +85,7 @@
 .guide-preview-artifact span { color: var(--qmah-game-content); font-size: var(--qmah-type-label-size); font-weight: 700; }
 .guide-preview h3 { margin: 24px 0 4px; font: 700 20px/1.3 var(--qmah-font-serif); }
 .guide-preview-hint { margin: 0 0 14px; }
-.guide-preview-hint span { display: block; white-space: nowrap; }
+.guide-preview-hint span { display: block; white-space: normal; line-height: 1.65; overflow-wrap: break-word; }
 .guide-preview-answers { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .guide-preview-answers button { display: grid; gap: 8px; width: 100%; min-height: 72px; padding: 12px 14px; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-control); color: var(--qmah-ink); background: var(--guide-surface); text-align: left; cursor: pointer; }
 .guide-preview-answers button { transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease; }
@@ -150,13 +151,13 @@
   .guide-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .guide-tabs button { min-height: 52px; padding: 8px; }
   .guide-tabs button span { font-size: 14px; }
-  .guide-tabs button small { font-size: 11px; }
+  .guide-tabs button small { font-size: 12px; line-height: 1.5; }
   .guide-panel { padding: 16px; border-radius: var(--qmah-radius-card); }
   .guide-panel-link { width: 100%; justify-content: center; }
   .guide-preview-artifact { padding: 14px; }
   .guide-preview-write button { width: 100%; }
   .guide-round-progress { gap: 4px; }
-  .guide-round-progress li { flex-direction: column; gap: 0; min-height: 48px; font-size: 11px; }
+  .guide-round-progress li { flex-direction: column; gap: 0; min-height: 48px; font-size: 12px; line-height: 1.5; }
   .training-demo__action, .training-demo__retry { width: 100%; }
 }
 @media (max-width: 430px) { .game-guide { padding-inline: 10px; } }

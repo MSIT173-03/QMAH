@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { GameTrainingComponent } from './game-training.component';
 import { GameService } from './game.service';
@@ -9,7 +9,7 @@ import { MiniGameStart } from './game.models';
 function setup(modeCode: string) {
   const complete = vi.fn(() => of({ normalizedScore: 40, rawScore: 100, grade: 'C', pointReward: 0, keyProgressReward: 1 }));
   TestBed.configureTestingModule({ imports: [GameTrainingComponent], providers: [
-    { provide: GameService, useValue: { completeMiniGame: complete } },
+    { provide: GameService, useValue: { completeMiniGame: complete, errorMessage: () => '連線中斷' } },
     { provide: CatalogService, useValue: {} }
   ] });
   const fixture = TestBed.createComponent(GameTrainingComponent);
@@ -22,6 +22,42 @@ function setup(modeCode: string) {
 }
 
 describe('單人遊戲求救', () => {
+  it('送出失敗後重送同一份結果，保留提示紀錄且不能更改答案', () => {
+    const { component, complete } = setup('DETAIL_LOCATOR');
+    component.useHelp(false);
+    component.chooseLocator('a0');
+    complete.mockImplementationOnce(() => throwError(() => new Error('連線中斷')));
+    component.completeAttempt();
+    expect(component.phase).toBe('playing');
+    expect(component.resultFrozen).toBe(true);
+    expect(component.hintsUsed).toBe(1);
+    component.chooseLocator('a2');
+    expect(component.locatorChoice).toBe('a0');
+    component.retryAction();
+    expect(complete).toHaveBeenCalledTimes(2);
+    expect(complete.mock.calls[1]).toEqual(complete.mock.calls[0]);
+    expect(component.phase).toBe('complete');
+  });
+
+  it('先協助一片後再代完成，顯示累計進位的新增扣分', () => {
+    const { component } = setup('ARTIFACT_PUZZLE');
+    component.autoPlaced = 1;
+    component.puzzleOrder = Array.from({ length: 25 }, (_, index) => index === 24 ? -1 : index);
+    expect(component.helpPenalty).toBe(2);
+  });
+  it('暫停與結果重送期間，不能透過元件操作改動已凍結的答案', () => {
+    const { component } = setup('DETAIL_LOCATOR');
+    component.paused = true;
+    component.chooseLocator('a1');
+    expect(component.locatorChoice).toBeNull();
+    component.paused = false;
+    component['pendingResult'] = { rawScore: 100, rawResultJson: '{}' };
+    component.chooseLocator('a1');
+    expect(component.locatorChoice).toBeNull();
+    component.attempt!.modeCode = 'MEMORY_MATCH';
+    component.flipMemory(0);
+    expect(component.memoryCards[0].revealed).toBe(false);
+  });
   it('翻牌提示不完成配對，同一組重看不重複扣分', () => {
     const { component, complete } = setup('MEMORY_MATCH');
     component.useHelp(false);

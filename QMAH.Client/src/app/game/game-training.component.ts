@@ -15,6 +15,7 @@ import { GameScrollBoardComponent } from './game-scroll-board.component';
 import { GamePlacementBoardComponent } from './game-placement-board.component';
 import { GameDetailClueComponent } from './game-detail-clue.component';
 import { GameService } from './game.service';
+import { GameRewardMeterComponent } from './game-reward-meter.component';
 import { CatalogService } from '../services/catalog-service';
 import { GameFocusMode } from '../core/services/game-focus-mode';
 import { GameNavigationComponent } from './game-navigation.component';
@@ -58,7 +59,7 @@ interface TrainingSessionSnapshot {
 
 @Component({
   selector: 'app-game-training',
-  imports: [RouterLink, GameNavigationComponent, GameScrollBoardComponent, GamePlacementBoardComponent, GameDetailClueComponent],
+  imports: [RouterLink, GameNavigationComponent, GameScrollBoardComponent, GamePlacementBoardComponent, GameDetailClueComponent, GameRewardMeterComponent],
   styleUrl: './game-training.component.scss',
   templateUrl: './game-training.component.html',
 })
@@ -75,7 +76,6 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   private readonly changeDetector = inject(ChangeDetectorRef);
   modes: MiniGameMode[] = [];
   selectedModeCode = '';
-  rewardRemaining: number | null = null;
   readonly previewMemory = Array.from({ length: 16 }, (_, index) => [2, 5, 10, 13].includes(index));
   readonly previewPuzzle = Array.from({ length: 25 });
   readonly previewScroll = Array.from({ length: 15 });
@@ -95,7 +95,11 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       default: return 1;
     }
   }
-  get helpPenalty(): number { return Math.ceil(60 * this.helpRemaining / Math.max(1, this.helpUnits)); }
+  get helpPenalty(): number {
+    // 輔助扣分按累計數量進位，顯示本次增加的差額，避免分次使用時多顯示一分。
+    const units = Math.max(1, this.helpUnits);
+    return Math.ceil(60 * (this.autoPlaced + this.helpRemaining) / units) - Math.ceil(60 * this.autoPlaced / units);
+  }
   get hintPenalty(): number { return this.attempt?.modeCode === 'DETAIL_LOCATOR' ? 10 : 3; }
   get canAskForHelp(): boolean {
     if (this.phase !== 'playing' || this.completing || this.pendingResult || this.memoryBusy || this.helpRemaining <= 0) return false;
@@ -195,12 +199,12 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   moveBoardFocus(event: KeyboardEvent, slot: number, columns: number): void {
     const buttons = Array.from((event.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLButtonElement>('button') ?? []);
     const delta = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
-    if (!(event.key in delta)) return;
+    if (!(event.key in delta) && event.key !== 'Home' && event.key !== 'End') return;
     event.preventDefault();
-    const step = delta[event.key as keyof typeof delta];
-    let next = slot + step;
+    const step = event.key === 'Home' ? 1 : event.key === 'End' ? -1 : delta[event.key as keyof typeof delta];
+    let next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : slot + step;
     while (next >= 0 && next < buttons.length) {
-      if (Math.abs(step) === 1 && Math.floor(next / columns) !== Math.floor(slot / columns)) break;
+      if (['ArrowLeft', 'ArrowRight'].includes(event.key) && Math.floor(next / columns) !== Math.floor(slot / columns)) break;
       if (!buttons[next].disabled) { buttons[next].focus(); break; }
       next += step;
     }
@@ -305,10 +309,6 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   private loadModes(): void {
-    this.game.getMiniGameRewardStatus().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: status => { this.rewardRemaining = Number.isInteger(status.remaining) ? status.remaining : null; this.changeDetector.markForCheck(); },
-      error: () => { this.rewardRemaining = null; }
-    });
     this.loading = true;
     this.authRequired = false;
     this.error = '';
@@ -398,7 +398,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   chooseLocator(artifactId: string): void {
-    if (this.phase !== 'playing' || this.completing || this.imageUnavailable || this.locatorExcludedIds.includes(artifactId)) return;
+    if (this.phase !== 'playing' || this.paused || this.resultFrozen || this.completing || this.imageUnavailable || this.locatorExcludedIds.includes(artifactId)) return;
     this.locatorChoice = artifactId;
     this.persistSessionState();
   }
@@ -415,7 +415,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   recordAuto(count: number): void { this.autoPlaced += count; this.persistSessionState(); }
 
   flipMemory(index: number): void {
-    if (this.phase !== 'playing' || this.memoryBusy || this.completing) return;
+    if (this.phase !== 'playing' || this.paused || this.resultFrozen || this.memoryBusy || this.completing) return;
     const card = this.memoryCards[index];
     if (!card || card.revealed || card.matched) return;
     card.revealed = true;
@@ -426,6 +426,8 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.moves += 1;
     const first = this.memoryCards[firstIndex];
     const second = this.memoryCards[secondIndex];
+    const focusedCard = document.activeElement;
+    const restoreKeyboardFocus = focusedCard?.classList.contains('memory-card');
     this.memoryBusy = true;
     this.pendingMemoryPair = () => {
       if (first.artifactId === second.artifactId) {
@@ -446,6 +448,15 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       this.pendingMemoryPair = null;
       this.persistSessionState();
       this.changeDetector.markForCheck();
+      if (restoreKeyboardFocus) requestAnimationFrame(() => {
+        // 配對後原卡片會禁用，將鍵盤焦點留在盤面，避免玩家被送回頁首重新找操作位置。
+        if (this.phase !== 'playing' || this.paused || document.querySelector('dialog[open]')) return;
+        const active = document.activeElement;
+        if (active !== document.body && active !== focusedCard) return;
+        const buttons = Array.from(this.hostElement.nativeElement.querySelectorAll<HTMLButtonElement>('.memory-card'));
+        const next = buttons.slice(secondIndex + 1).find(button => !button.disabled) ?? buttons.find(button => !button.disabled);
+        (next ?? this.hostElement.nativeElement.querySelector<HTMLButtonElement>('.play-actions button:not(:disabled)'))?.focus({ preventScroll: true });
+      });
     };
     this.memoryTimer = setTimeout(this.pendingMemoryPair, 650);
   }

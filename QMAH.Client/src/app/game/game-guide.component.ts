@@ -22,7 +22,7 @@ interface MemoryDemoCard {
 const DEMO_ARTIFACT_IMAGE = '/images/login/real/cloisonne-tripod-incense-burner.jpg';
 const MEMORY_DEMO_IMAGES = [
   { id: 'cloisonne', label: '掐絲琺瑯文物', image: DEMO_ARTIFACT_IMAGE },
-  { id: 'tang-figure', label: '唐代文物', image: '/assets/game/tang-wang.jpg' },
+  { id: 'tang-figure', label: '人物山水畫', image: '/assets/game/tang-wang.jpg' },
   { id: 'ceramic-vase', label: '陶瓷方瓶', image: '/assets/game/ceramic-square-vase.jpg' },
   { id: 'scroll-a', label: '畫卷片段甲', image: '/images/login/real/qingming-iiif/segment-SDAAA-compact.jpg' },
   { id: 'scroll-b', label: '畫卷片段乙', image: '/images/login/real/qingming-iiif/segment-SDAAB-compact.jpg' },
@@ -74,9 +74,9 @@ export class GameGuideComponent implements OnDestroy {
     this.failedDemoImages.update((failed) => new Set([...failed, id]));
   }
   readonly demoAnswers = [
-    { author: '小青', text: '青色釉彩最吸引我。\n擺在書房一定很好看。', votes: 2 },
-    { author: '阿墨', text: '三隻腳撐得很穩。\n我猜它是用來焚香的。', votes: 4 },
-    { author: '阿銅', text: '金屬線勾出這麼細的花紋，\n手藝真厲害。', votes: 1 }
+    { author: '小青', category: '史實推理', text: '三足香爐的器形，加上掐絲琺瑯和雲龍紋，我猜它可能是供焚香使用的陳設器。\n光看圖片還不能確定它的年代和使用場合。', votes: 2 },
+    { author: '阿墨', category: '擬真異說', text: '我猜這座爐可能放在書齋待客桌上，客人到訪時才掀蓋添香，三足也能讓爐身離開桌面。\n藍地和蓮花、法輪紋或許是主人挑來配合書齋陳設的樣式。', votes: 4 },
+    { author: '阿銅', category: '妙想奇談', text: '三隻腳站得穩，說不定半夜還會自己巡房。\n雲龍負責喊口令，香爐專心裝作沒聽見。', votes: 1 }
   ] as const;
   readonly selectedDemoAnswer = signal<number | null>(null);
   readonly demoRevealed = signal(false);

@@ -6,7 +6,7 @@ import { Component, ElementRef, Input, OnChanges, ViewChild, output } from '@ang
   template: `
     <figure class="clue-study">
       <div class="clue-image">
-        <div class="clue-fragments" [hidden]="!ready">
+        <div class="clue-fragments" [class.is-expanded]="expanded" [hidden]="!ready">
           <canvas #canvas class="clue-image__zoom" role="img" aria-label="文物中央的局部線索" [style.width.px]="displaySize"></canvas>
           <canvas #secondCanvas class="clue-image__zoom" role="img" aria-label="文物左側的局部線索" [style.width.px]="displaySize"></canvas>
           <canvas #thirdCanvas class="clue-image__zoom" role="img" aria-label="文物右下方的局部線索" [style.width.px]="displaySize"></canvas>
@@ -22,6 +22,9 @@ import { Component, ElementRef, Input, OnChanges, ViewChild, output } from '@ang
         }
       </div>
       <figcaption>三處細節，同一件文物</figcaption>
+      @if (ready) {
+        <button type="button" (click)="expanded = !expanded" [attr.aria-expanded]="expanded">{{ expanded ? '並排查看線索' : '放大線索分開看' }}</button>
+      }
       <span class="clue-rule" aria-hidden="true"></span>
     </figure>
   `,
@@ -41,6 +44,8 @@ import { Component, ElementRef, Input, OnChanges, ViewChild, output } from '@ang
       border-radius: var(--qmah-radius-control); background: var(--qmah-surface); color: var(--qmah-ink); cursor: pointer; }
     button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
     @media (max-width: 600px) { .clue-image { min-height: 120px; padding: 12px 0; } .clue-study { gap: 12px; } .clue-fragments { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } canvas:first-child { grid-column: auto; } }
+    .clue-fragments.is-expanded { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .clue-fragments.is-expanded canvas:first-child { grid-column: auto; }
   `
 })
 export class GameDetailClueComponent implements OnChanges {
@@ -55,8 +60,9 @@ export class GameDetailClueComponent implements OnChanges {
   failed = false;
   revision = 0;
   displaySize = 0;
+  expanded = false;
 
-  ngOnChanges(): void { this.retry(); }
+  ngOnChanges(): void { this.expanded = false; this.retry(); }
   retry(): void {
     this.ready = false;
     this.failed = false;

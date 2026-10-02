@@ -13,14 +13,14 @@ export function scrollGeometry(width: number, height: number) {
   template: `
     <div class="scroll-workbench" [style.--scroll-ratio]="layout().ratio">
       @if (ready() && !layout().eligible) {
-        <p role="alert">這幅書畫比例不適合十五格復位，請返回選單重新選題；不會裁切或拉伸原圖。</p>
+        <p role="alert">這幅書畫比例不適合十五格復位，請返回選單重新選題。原圖不會被裁切或拉伸。</p>
       } @else if (!image() || failed()) {
         <div class="scroll-error" role="alert"><p>書畫圖片暫時無法顯示，復位進度仍保留。</p><button type="button" (click)="retryImage()">重新載入圖片</button></div>
       } @else {
         @for (revision of [imageRevision()]; track revision) {
           <img class="scroll-source" [src]="image()" alt="" aria-hidden="true" (load)="readDimensions($event)" (error)="onImageError()" />
         }
-        <app-game-placement-board [image]="image()" [name]="name()" [order]="order()" [initialSelection]="initialSelection()" [initialHintRegion]="initialHintRegion()" [columns]="layout().columns" [rows]="layout().rows" [ratio]="layout().ratio" [disabled]="disabled() || !ready()" (orderChange)="orderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="settleAfterHelp()" (settlementRequested)="settlementRequested.emit()"><div class="scroll-reference"><button type="button" (click)="openReference()" aria-haspopup="dialog">放大書畫細節</button></div></app-game-placement-board>
+        <app-game-placement-board [image]="image()" [name]="name()" [order]="order()" [initialSelection]="initialSelection()" [initialHintRegion]="initialHintRegion()" [columns]="layout().columns" [rows]="layout().rows" [ratio]="layout().ratio" [disabled]="disabled() || !ready()" (orderChange)="orderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" [assistedPieces]="assistedPieces()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="settleAfterHelp()" (settlementRequested)="settlementRequested.emit()"><div class="scroll-reference"><button type="button" (click)="openReference()" aria-haspopup="dialog">放大書畫細節</button></div></app-game-placement-board>
         <dialog #referenceDialog class="scroll-inspection" aria-labelledby="scroll-inspection-title">
           <header><h2 id="scroll-inspection-title">{{ name() }}</h2><button type="button" (click)="referenceDialog.close()">返回盤面</button></header>
           <label>原圖放大倍率 <input type="range" min="1" max="3" step="0.25" [value]="zoom()" (input)="setZoom($event)" /> {{ zoom() }} 倍</label>
@@ -52,6 +52,7 @@ export class GameScrollBoardComponent {
   readonly moveMade = output<void>();
   readonly hintUsed = output<void>();
   readonly autoCompleted = output<number>();
+  readonly assistedPieces = input(0);
   readonly availabilityChange = output<boolean>();
   readonly settleAfterHelp = input(false);
   readonly settlementRequested = output<void>();

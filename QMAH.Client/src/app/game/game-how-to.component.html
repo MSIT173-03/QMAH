@@ -5,12 +5,12 @@
     <strong>{{ content().title }}</strong>
   </header>
   <div class="game-how-to__body">
-    <p>{{ content().description }}</p>
+    <p>@for (sentence of sentences(content().description); track $index) { <span class="instruction-sentence">{{ sentence }}</span> }</p>
     <ol aria-label="玩法流程">
       @for (step of content().steps; track step.label) {
         <li>
           <span class="game-how-to__step-marker">{{ step.label }}</span>
-          <div><strong>{{ step.title }}</strong><p>{{ step.description }}</p></div>
+          <div><strong>{{ step.title }}</strong><p>@for (sentence of sentences(step.description); track $index) { <span class="instruction-sentence">{{ sentence }}</span> }</p></div>
         </li>
       }
     </ol>
