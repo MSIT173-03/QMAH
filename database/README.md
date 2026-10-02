@@ -5,7 +5,7 @@
 本目錄只保留產品程式需要的 DB-first 契約與相容版本標記：
 
 - [`Schema.sql`](Schema.sql)：可 review 的資料庫結構契約，供 SQL Server 與 EF Core Scaffold 對照。
-- [`VERSION`](VERSION)：QMAH 主專案目前配合的完整 Snapshot 版本，本次開發版本為 `db-v0.12.0`，正式 Release 仍為 `db-v0.11.0`。
+- [`VERSION`](VERSION)：QMAH 主專案目前配合的完整 Snapshot 版本，目前為 `db-v0.12.0`。
 - [`upgrades/0.7.0-to-0.8.0.sql`](upgrades/0.7.0-to-0.8.0.sql)：保留既有資料，將 `db-v0.7.0` 升級至 `db-v0.8.0`。
 - [`upgrades/0.8.0-to-0.9.0.sql`](upgrades/0.8.0-to-0.9.0.sql)：移除重複的一般鑰匙並啟用西夏年代鑰匙，將 `db-v0.8.0` 升級至 `db-v0.9.0`。
 - [`upgrades/0.10.0-to-0.10.1.sql`](upgrades/0.10.0-to-0.10.1.sql)：保留既有資料，貼文/留言新增 `SimHash` 重複偵測指紋、`ContentReports` 支援系統自動送出的檢舉，將 `db-v0.10.0` 升級至 `db-v0.10.1`。
@@ -14,13 +14,13 @@
 - [`seeds/store-sale-prices.sql`](seeds/store-sale-prices.sql)：依穩定 `ExternalRef` 順序，對最多三件既有匯入商品寫入可追溯的示範折扣率；可重複執行。
 - [`seeds/store-showcase-orders-shipping.sql`](seeds/store-showcase-orders-shipping.sql)：**僅限純展示資料庫、手動選用**。沿用 `db-v0.10.2` 並套用上述欄位升級後，依目前商城規則重整展示訂單；新版 `db-v0.11.0` 已包含此結果，不需再執行。
 
-完整結構、共同資料、Identity、後台展示資料與版本歷史集中在 [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database)。新環境使用 `db-v0.11.0` Release 的已驗證 `.bak` 或同源 `QMAH.sql` 建立 `QMAH`；舊 `db-v0.10.2` 的 SQL 重建問題不影響此新版。
+完整結構、共同資料、Identity、後台展示資料與版本歷史集中在 [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database)。新環境使用 `db-v0.12.0` Release 的已驗證 `.bak` 或同源 `QMAH.sql` 建立 `QMAH`；舊 `db-v0.10.2` 的 SQL 重建問題不影響此新版。
 
 產生下一版 Snapshot 時，依 [資料工具參考](https://msit173-03.github.io/QMAH-Docs/reference/data-tools.html) 的單一輸出流程操作，並同步更新 `Schema.sql`、`VERSION`、QMAH-Database 的 `manifest.json` 與 Git tag。
 
-## db-v0.12.0 開發版本（尚未發布）
+## db-v0.12.0 更新內容
 
-本輪結構契約與種子內容均納入同一版本，不另開內容版本。正式 Release 仍為 db-v0.11.0；新版需搭配 feature/game 的 decimal 進度與獎勵服務，不可只替換資料庫就沿用舊 int 讀取程式。
+本輪結構契約與種子內容均納入同一版本，不另開內容版本。本版對應 QMAH v0.12.0，需搭配 decimal 進度與獎勵服務，不可只替換資料庫就沿用舊 int 讀取程式。
 
 - 單人與多人共用每日 100 點，符合條件可一天突破一次至 130 點。完成一場多人或三種不同單人玩法達 B 級以上即可取得突破資格，突破不直接加點數。使用既有 DailyMemberActivities 記錄，沒有新增通用獎勵紀錄表。
 - 多人領獎收據擴充在 GamePlayers，包含領取時間、點數、實得鑰匙、進度及倍率。零點數但仍有鑰匙的場次也能正確防重領。MiniGameAttempts 補上倍率及實得一般鑰匙，重送使用原收據。
@@ -29,4 +29,4 @@
 - 結帳直接使用點數的上限為折價券套用後商品小計的 5%，且最多 20 點，不折抵運費。原點數兌換券門檻與券值保持不變。
 - db-v0.12.0 必須全新還原，不提供 0.11→0.12 增補腳本。本次同時重整場次、回答、收藏、成就與商務資料，只補欄位無法得到相同結果。先備份舊資料庫，停止 API／Web，再還原新版完整 BAK，或在乾淨資料庫執行同源 SQL。不要將完整 SQL 疊加到舊資料庫，也不要先執行舊產生器再重跑種子。
 
-Snapshot、校驗碼、完整驗證結果與詳細發布說明由同一次既有匯出流程產生。本地提交待確認，尚未建立 tag 或發布 Release。
+Snapshot、校驗碼、完整驗證結果與詳細發布說明由同一次既有匯出流程產生。完整附件見 [db-v0.12.0 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.12.0)。
