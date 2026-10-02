@@ -1,0 +1,45 @@
+// Kenney UI Pack - Adventure，CC0，素材以九宮格切片配合實際控制項尺寸
+// 來源：https://kenney.nl/assets/ui-pack-adventure
+@mixin button($secondary: false) {
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 6px solid transparent;
+  border-image: var(--game-primary-image) 5 fill / 1 / 0 stretch;
+  border-radius: 12px;
+  color: var(--game-primary-ink);
+  background: transparent;
+  font-weight: 800;
+  box-shadow: 0 3px 7px #33251426;
+  @if $secondary {
+    border-image-source: var(--game-secondary-image);
+    color: var(--game-secondary-ink);
+  }
+  &:hover:not(:disabled) { filter: brightness(1.08); }
+  &:active:not(:disabled) { transform: translateY(1px); }
+}
+
+@mixin panel {
+  border: 8px solid transparent;
+  border-image: var(--game-frame-image) 8 / 1 / 0 stretch;
+  border-radius: 14px;
+  color: var(--qmah-ink);
+  background: var(--qmah-surface) padding-box;
+}
+
+@mixin title {
+  font-weight: 800;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+@mixin jewel {
+  &::before {
+    display: inline-block;
+    width: 18px;
+    height: 20px;
+    margin-inline-end: 8px;
+    vertical-align: -.08em;
+    background: url('/assets/game/kenney-jewel.svg') center / contain no-repeat;
+    content: '';
+  }
+}

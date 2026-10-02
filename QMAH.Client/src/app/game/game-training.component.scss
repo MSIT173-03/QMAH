@@ -1,8 +1,39 @@
 @use './game-scene' as scene;
+@use './game-ui' as ui;
 :host { display: block; color: var(--qmah-ink); background: var(--qmah-page-surface); font: 400 16px/1.5 var(--qmah-font-sans); @include scene.pattern; }
-.training-notebook { position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: var(--qmah-surface); --stage-ink: var(--qmah-ink); --stage-muted: color-mix(in srgb, var(--stage-ink) 76%, var(--stage-surface)); --stage-accent: color-mix(in srgb, var(--qmah-accent) 45%, var(--stage-ink)); width: min(calc(100% - 24px), 1440px); margin: 16px auto 32px; padding: 16px clamp(12px, 3vw, 40px); border-radius: var(--qmah-radius-panel); background: var(--stage-surface); color: var(--stage-ink); }
+.training-notebook { position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: #fbf5e8; --stage-ink: #45382b; --stage-muted: #6b5744; --stage-accent: #a76535; --qmah-surface: #fbf5e8; --qmah-surface-soft: #eee1ca; --qmah-surface-muted: #e4d8c3; --qmah-surface-elevated: #fffaf0; --qmah-ink: #45382b; --qmah-muted: #6b5744; --qmah-jade: #986038; --qmah-jade-deep: #744724; --qmah-jade-soft: #f0dfc3; --qmah-primary: #744724; --qmah-primary-hover: #986038; --qmah-primary-content: #fff7e8; --qmah-game-action: #a65c32; --qmah-game-accent: #a76535; --qmah-game-soft: #f2e2c8; --qmah-game-content: #fff7e8; --qmah-accent: #a76535; --qmah-accent-content: #fff7e8; --qmah-border: #b99a70; --qmah-line: #d7c5a4; --qmah-focus: #8c512c; width: min(calc(100% - 24px), 1440px); margin: 16px auto 32px; padding: 16px clamp(12px, 3vw, 40px); border-radius: var(--qmah-radius-panel); background: var(--stage-surface); color: var(--stage-ink); }
+// 單人遊戲沿用桌面材質，用淺紙面和陶色按鈕帶出清楚的前後層次
+:host-context(html[data-theme='qmahdark']) .training-notebook {
+  --stage-surface: #3c3027;
+  --stage-ink: #fff4df;
+  --stage-muted: #e2cda9;
+  --stage-accent: #e0ad62;
+  --qmah-page-surface: #332920;
+  --qmah-surface: #43352b;
+  --qmah-surface-soft: #584638;
+  --qmah-surface-muted: #6a543f;
+  --qmah-surface-elevated: #5b493a;
+  --qmah-ink: #fff4df;
+  --qmah-muted: #e2cda9;
+  --qmah-jade: #d5a563;
+  --qmah-jade-deep: #b77b3f;
+  --qmah-jade-soft: #5b4836;
+  --qmah-primary: #a76836;
+  --qmah-primary-hover: #c88b4c;
+  --qmah-primary-content: #fff4df;
+  --qmah-game-action: #bd7947;
+  --qmah-game-accent: #e0ad62;
+  --qmah-game-soft: #5e4937;
+  --qmah-game-content: #fff4df;
+  --qmah-accent: #e0ad62;
+  --qmah-accent-content: #38281d;
+  --qmah-line: #82694d;
+  --qmah-border: #967650;
+  --qmah-focus: #f1d39b;
+}
 .training-notebook { @include scene.pattern(var(--stage-surface)); }
-.scene-toolbar { display: flex; justify-content: space-between; align-items: center; min-height: 48px; margin-bottom: 8px; }
+.training-notebook.is-playing { background-image:none; }
+.scene-toolbar { display: flex; justify-content: space-between; align-items: center; gap:12px; min-height: 48px; margin-bottom: 16px; }
 app-game-navigation { --game-nav-ink: var(--stage-ink); --game-nav-muted: var(--stage-muted); --game-nav-line: color-mix(in srgb, var(--stage-ink) 25%, transparent); --game-nav-surface: transparent; --game-nav-hover: color-mix(in srgb, var(--stage-ink) 10%, transparent); }
 .scene-toolbar a, .scene-toolbar button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; color: var(--stage-ink); background: transparent; border: 1px solid color-mix(in srgb, var(--stage-ink) 25%, transparent); border-radius: var(--qmah-radius-control); text-decoration: none; font: inherit; font-size: 14px; }
 .training-notebook.is-focus-mode { --arena-height: max(580px, calc(100dvh - 88px)); width: 100%; margin: 0; border-radius: 0; background-image: none; }
@@ -37,7 +68,8 @@ app-game-detail-clue { --clue-ink: var(--stage-muted); }
 .preview-grid[hidden] { display: none; }
 .preview-grid.is-scroll { grid-template-rows: repeat(3, 1fr); }
 .preview-grid span { border: 1px solid var(--qmah-surface); }
-.preview-memory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: min(100%, 440px); aspect-ratio: 1; }
+.preview-memory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: min(100%, 320px); aspect-ratio: 254 / 354; }
+.preview-memory > span:not(:has(img)) { background:#fff9ed url('/assets/game/kenney-card-back-blue.png') center / contain no-repeat; }
 .preview-memory > span { display: grid; min-width: 0; place-items: center; overflow: hidden; border-radius: var(--qmah-radius-control); color: var(--qmah-game-content); background: var(--qmah-game-action); font: 700 32px var(--qmah-font-serif); }
 .preview-memory img { width: 100%; height: 100%; object-fit: contain; }
 .mode-preview__copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; padding: 28px 0 12px; }
@@ -55,10 +87,10 @@ app-game-detail-clue { --clue-ink: var(--stage-muted); }
 .auth-state { margin-block: 40px; }
 .loading { padding: 48px 0; color: var(--qmah-muted); }
 .game-arena { position: relative; min-height: var(--arena-height); }
-.play-sheet { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; min-height: var(--arena-height); gap: 8px; }
+.play-sheet { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; min-height: var(--arena-height); gap: 12px; }
 .play-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(140px, 190px) auto; gap: 16px; align-items: center; padding-block: 8px; }
 .play-heading h2 { margin: 0; font: 700 24px/1.3 var(--qmah-font-serif); }
-.play-heading__title > span { display: block; font-size: 14px; color: var(--qmah-muted); max-width: 42ch; overflow-wrap: anywhere; }
+.play-heading__title > span { display: block; margin-block-start:4px; font-size: 14px; line-height:1.6; color: var(--qmah-muted); max-width: 42ch; overflow-wrap: break-word; line-break:strict; }
 .play-heading__meta { color: var(--qmah-muted); font-size: 14px; }
 .play-heading__progress { display: grid; gap: 5px; font-size: 14px; font-variant-numeric: tabular-nums; }
 .play-heading__progress-meta { display: flex; justify-content: space-between; }
@@ -70,7 +102,7 @@ app-game-detail-clue { --clue-ink: var(--stage-muted); }
 .collection-hint[open], .collection-hints[open] { padding: 12px; max-height: min(180px, 30dvh); overflow: auto; background: var(--qmah-surface); color: var(--qmah-ink); border-radius: var(--qmah-radius-card); }
 .collection-hint p, .collection-hints p { color: var(--qmah-muted); font-size: 14px; }
 .collection-hints__grid { display: grid; gap: 16px; }
-.game-board { grid-row: 2; min-width: 0; display: grid; align-content: center; justify-items: center; gap: 8px; padding: 8px 0 48px; }
+.game-board { grid-row: 2; min-width: 0; display: grid; align-content: center; justify-items: center; gap: 12px; padding: 16px 0 24px; }
 .game-board > .game-prompt { text-align: center; }
 .memory-game > .game-prompt, .ordering-game > .game-prompt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .game-prompt h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
@@ -88,27 +120,30 @@ app-game-detail-clue { --clue-ink: var(--stage-muted); }
 .locator-option__index { color: var(--stage-accent); font-weight: 700; }
 .locator-option__state { grid-column: 2; color: var(--stage-muted); font-size: 12px; }
 .selected .locator-option__state { color: var(--stage-accent); }
-.memory-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(100%, 500px, max(280px, calc(100dvh - 280px))); gap: 8px; }
-.memory-card { position: relative; display: grid; place-items: center; min-width: 0; aspect-ratio: 1; overflow: hidden; border: 2px solid transparent; border-radius: var(--qmah-radius-control); padding: 0; color: var(--qmah-game-content); background: var(--qmah-game-action); }
-.card-back { display: grid; place-items: center; width: 70%; height: 70%; border: 1px solid color-mix(in srgb, var(--qmah-game-content) 40%, transparent); border-radius: 4px; font: 700 30px var(--qmah-font-serif); }
+.memory-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(100%, 456px, max(260px, calc((100dvh - 360px) * .72))); gap: 12px; padding:16px; border-radius:16px; background:#e4d8c3; box-shadow:0 8px 20px color-mix(in srgb,var(--qmah-night) 12%,transparent); }
+.memory-card { position: relative; display: grid; place-items: center; min-width: 0; aspect-ratio: 254 / 354; overflow: hidden; border: 0; border-radius: 7px; padding: 0; color: var(--qmah-game-content); background: #fff9ed; }
 .memory-card img { display: block; width: 100%; height: 100%; min-height: 0; padding: 8px; box-sizing: border-box; object-fit: contain; }
 .memory-card { cursor: pointer; box-shadow: 0 5px 12px color-mix(in srgb, var(--qmah-night) 28%, transparent); transition: transform 180ms ease-out, background-color 180ms ease-out, box-shadow 180ms ease-out; }
-.memory-card:hover:not(:disabled):not(.is-open) { transform: translateY(-3px); background: color-mix(in srgb, var(--qmah-game-action) 82%, var(--qmah-game-content)); }
+// Kenney Board Game Pack 的 CC0 寶藍牌背，保留原始比例並與綠絨桌面分色
+// 來源：https://kenney.nl/assets/boardgame-pack
+.memory-card:not(.is-open) { background:#fff9ed url('/assets/game/kenney-card-back-blue.png') center / contain no-repeat; }
+.memory-card:hover:not(:disabled):not(.is-open) { transform: translateY(-3px); }
 .memory-card:active:not(:disabled) { transform: translateY(1px); }
 .memory-card:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
-.memory-card.is-open { background: var(--qmah-night); }
-.memory-card.is-matched::after { content: '已配對'; position: absolute; inset: auto 0 0; padding: 3px; color: var(--qmah-game-content); background: var(--qmah-night); font-size: 12px; }
-.memory-feedback { min-height: 1.5em; margin: 8px 0 0; color: var(--stage-ink); font-size: 14px; text-align: center; }
+.memory-card.is-open { background: #fff9ed; }
+.memory-card.is-matched::after { content: '已配對'; position: absolute; inset: auto 0 0; padding: 3px; color: var(--game-table-ink); background: var(--game-card-action); font-size: 12px; }
+.memory-feedback { min-height: 1.5em; margin: 0; color: var(--stage-ink); font-size: 14px; line-height:1.6; text-align: center; text-wrap:pretty; }
 @media (prefers-reduced-motion: reduce) { .memory-card { transition: none; } .memory-card.is-open { animation: none; } }
 .memory-card.is-open { animation: card-turn 260ms ease-out; }
-.memory-card.is-matched { border-color: var(--qmah-jade); opacity: 1; }
+.memory-card.is-matched { outline:2px solid var(--qmah-jade); outline-offset:2px; opacity: 1; }
 app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height-limit: max(240px, calc(100dvh - 420px)); --scroll-ink: var(--stage-ink); --scroll-muted: var(--stage-muted); }
-.game-hint { margin: 8px 0 0; color: var(--qmah-jade); font-size: 14px; text-align: center; }
+.game-hint { margin: 0; color: var(--stage-accent); font-size: 14px; line-height:1.6; text-align: center; }
 .image-fallback { display: grid; gap: 12px; place-items: center; height: 100%; padding: 12px; font: 400 14px/1.5 var(--qmah-font-sans); }
 .image-fallback button, .ordering-game > p button { min-height: 44px; }
-.play-footer { display: flex; justify-content: space-between; align-items: center; min-height: 64px; gap: 16px; padding-block: 8px; }
+.play-footer { display: grid; grid-template-columns:minmax(0,1fr) auto; align-items: center; min-height: 64px; gap: 24px; padding-block: 16px; }
 .play-footer__context { display: grid; gap: 8px; min-width: 0; }
-.play-actions { flex: 0 0 auto; }
+.play-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:12px; min-width:0; }
+.play-command { max-width:24ch; text-wrap:pretty; line-height:1.6; }
 .progress-readout, .play-command { font-size: 14px; color: var(--qmah-muted); }
 .is-complete .play-sheet { visibility: hidden; }
 .result-sheet { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr; grid-template-rows: auto minmax(220px, 1fr) auto; justify-items: center; gap: 16px; padding: 12px 0; background: var(--stage-surface); }
@@ -201,14 +236,16 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
   .play-heading__progress-meta { gap: 8px; }
   .play-progress { flex: 1; min-width: 60px; }
   .pause-trigger { font-size: 14px; padding-inline: 10px; }
-  .game-board { padding-bottom: 48px; }
+  .game-board { padding-bottom: 16px; }
   .locator-game { grid-template-columns: 1fr; gap: 16px; }
   .artifact-options { gap: 8px; }
   .locator-option__caption { padding: 4px 6px 8px; grid-template-columns: 16px minmax(0, 1fr); gap: 4px; }
   .game-prompt p { font-size: 12px; }
-  .memory-grid { gap: 6px; }
+  .memory-grid { width:min(100%,332px,max(240px,calc((100dvh - 392px) * .72))); gap:8px; padding:12px; }
   .collection-hint, .collection-hints { bottom: 64px; }
-  .play-footer { min-height: 64px; }
+  .play-footer { grid-template-columns:1fr; gap:16px; }
+  .play-actions { justify-content:space-between; }
+  .play-actions button { padding-inline:16px; }
   .progress-readout, .play-command { font-size: 12px; }
   .result-sheet { gap: 12px; }
   .result-gallery img { height: min(36dvh, 280px); }
@@ -230,4 +267,26 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
   .ordering-game { width: 100%; }
   app-game-placement-board { --board-height: max(220px, calc(100dvh - 380px)); --tray-height: max(220px, calc(100dvh - 450px)); }
   app-game-scroll-board { width: 100%; --scroll-height-limit: calc(100dvh - 380px); --tray-height: calc(100dvh - 450px); }
+}
+
+// 遊戲標題、木框控制項與進度條共用同一套素材，正文不套描邊
+.training-notebook.is-playing { @include ui.panel; --stage-surface:var(--game-table-ground); --stage-ink:var(--game-table-ink); --stage-muted:var(--game-table-muted); --stage-accent:#e4b868; --qmah-surface:var(--game-table-ground); --qmah-surface-soft:#477b56; --qmah-surface-muted:#e4d8c3; --qmah-surface-elevated:#fffaf0; --qmah-ink:var(--game-table-ink); --qmah-muted:var(--game-table-muted); --qmah-jade:#dfb568; --qmah-jade-deep:#c58a45; --qmah-jade-soft:#70553a; --qmah-primary:#99572f; --qmah-primary-hover:#ad693b; --qmah-primary-content:#fff7e8; --qmah-game-action:#a65c32; --qmah-game-accent:#e4b868; --qmah-game-soft:#477b56; --qmah-game-content:#fff7e8; --qmah-accent:#e4b868; --qmah-accent-content:#39291b; --qmah-border:#b89062; --qmah-line:#a5b897; --qmah-focus:#fff0c9; --game-card-action:#a65c32; --game-frame-image:url('/assets/game/kenney-wood-frame.svg'); --game-primary-image:url('/assets/game/kenney-button-training.svg'); --game-primary-ink:#fff7e8; --game-secondary-image:url('/assets/game/kenney-button-secondary.svg'); --game-secondary-ink:#45382b; background:linear-gradient(var(--game-table-ground),var(--game-table-ground)) padding-box; color:var(--game-table-ink); }
+// 深色主題進入遊戲時沿用同一張木桌，不把牌桌切回黑底綠字
+:host-context(html[data-theme='qmahdark']) .training-notebook.is-playing { --stage-surface:var(--game-table-ground); --stage-ink:var(--game-table-ink); --stage-muted:var(--game-table-muted); --stage-accent:#e4b868; --qmah-surface:var(--game-table-ground); --qmah-surface-soft:#477b56; --qmah-surface-muted:#e4d8c3; --qmah-surface-elevated:#fffaf0; --qmah-ink:var(--game-table-ink); --qmah-muted:var(--game-table-muted); --qmah-jade:#dfb568; --qmah-jade-deep:#c58a45; --qmah-jade-soft:#70553a; --qmah-primary:#99572f; --qmah-primary-hover:#ad693b; --qmah-primary-content:#fff7e8; --qmah-game-action:#a65c32; --qmah-game-accent:#e4b868; --qmah-game-soft:#477b56; --qmah-game-content:#fff7e8; --qmah-accent:#e4b868; --qmah-accent-content:#39291b; --qmah-border:#b89062; --qmah-line:#a5b897; --qmah-focus:#fff0c9; --game-card-action:#a65c32; --game-frame-image:url('/assets/game/kenney-wood-frame.svg'); --game-primary-image:url('/assets/game/kenney-button-training.svg'); --game-primary-ink:#fff7e8; --game-secondary-image:url('/assets/game/kenney-button-secondary.svg'); --game-secondary-ink:#45382b; background:linear-gradient(var(--game-table-ground),var(--game-table-ground)) padding-box; color:var(--game-table-ink); }
+.chapter-heading h1, .play-heading h2, .mode-preview__copy h2, .result-banner h2 { @include ui.title; }
+.play-heading h2 { @include ui.jewel; }
+.scene-toolbar a, .scene-toolbar button, .pause-trigger { @include ui.button(true); }
+.mode-preview__actions button, .play-actions button, .result-actions button, .pause-dialog button, .auth-actions a, .auth-actions button { @include ui.button; }
+.play-actions .secondary, .result-actions .secondary, .pause-dialog .secondary { @include ui.button(true); }
+.pause-dialog { @include ui.panel; }
+.pause-dialog h2 { @include ui.title; }
+.play-heading__progress-meta strong { font-size: 18px; font-weight: 800; }
+.play-progress { height: 14px; border: 3px solid transparent; border-image: var(--game-frame-image) 8 / 1 / 0 stretch; background: var(--qmah-surface-soft); }
+.play-progress span { border: 3px solid transparent; border-image: url('/assets/game/kenney-progress-training.svg') 6 fill / 1 / 0 stretch; background: transparent; }
+.memory-grid { border: 8px solid transparent; border-image: var(--game-frame-image) 8 / 1 / 0 stretch; }
+.memory-feedback, .play-command { @include ui.panel; border-width: 4px; padding: 4px 12px; }
+.collection-hint summary, .collection-hints summary { @include ui.button(true); }
+@media (max-width: 600px) {
+  .play-heading h2 { font-size: 22px; }
+  .scene-toolbar a, .scene-toolbar button { padding-inline: 8px; font-size: 12px; }
 }

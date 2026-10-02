@@ -1,3 +1,4 @@
+@use './game-ui' as ui;
 :host { display: block; min-width: 0; }
 .scroll-workbench { min-width: 0; width: min(100%, 1100px); margin-inline: auto; --board-height: var(--scroll-height-limit, 560px); }
 .scroll-source { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -31,3 +32,6 @@
 .scroll-error { padding: var(--qmah-space-4); color: var(--qmah-danger); background: var(--qmah-surface-soft); }
 .scroll-error button { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); padding: 8px 16px; color: var(--qmah-ink); background: var(--qmah-surface); font: inherit; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .scroll-board button { transition: none; } }
+
+.scroll-reference button, .scroll-inspection button, .scroll-error button { @include ui.button; }
+.scroll-inspection { @include ui.panel; }

@@ -1,0 +1,10 @@
+// 昭源環方，Google Fonts 字型，Fontsource 5.3.0 的 WOFF2 分片，OFL 隨素材提供
+// unicode-range 讓瀏覽器只下載當前文字需要的分片，遊戲以外維持既有字體
+:where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
+  --qmah-font-sans: 'Chiron GoRound TC Variable', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --qmah-font-serif: var(--qmah-font-sans);
+  font-family: var(--qmah-font-sans);
+}
+html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
+  --game-title-outline: #173c29;
+}

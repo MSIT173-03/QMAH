@@ -1,0 +1,74 @@
+// 遊戲區共用暖紙、玉綠與柔木色，不變更其他區域的品牌與主題
+:where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
+  --qmah-page-surface: #e8ecdf;
+  --qmah-surface: #fbf5e8;
+  --qmah-surface-soft: #e7eedf;
+  --qmah-surface-muted: #dce5d4;
+  --qmah-surface-elevated: #fff9ed;
+  --qmah-ink: #273e33;
+  --qmah-muted: #4f6656;
+  --qmah-jade: #2f6b50;
+  --qmah-jade-deep: #285c45;
+  --qmah-jade-soft: #d7e7d7;
+  --qmah-game-action: #306c50;
+  --qmah-game-accent: #306c50;
+  --qmah-game-soft: #dbe8d5;
+  --qmah-game-content: #fff7e8;
+  --qmah-accent: #805a23;
+  --qmah-accent-content: #fff7e8;
+  --qmah-border: #a8b49d;
+  --qmah-line: #c7d2bb;
+  --qmah-focus: #276347;
+  --qmah-danger: #963d32;
+  --qmah-primary: var(--qmah-jade-deep);
+  --qmah-primary-hover: var(--qmah-jade);
+  --qmah-primary-content: #fff7e8;
+  --qmah-slate: var(--qmah-muted);
+  --game-table-ground: #3b704e;
+  --game-table-ink: #fff8e9;
+  --game-table-muted: #f3f0db;
+  --game-stage-ground: #e9dfca;
+  --game-card-ground: #f7f2e7;
+  --game-card-ink: #273e33;
+  --game-card-muted: #4c6051;
+  --game-card-action: #2d644b;
+  --game-card-line: #a7b5a2;
+  --game-frame-image: url('/assets/game/kenney-wood-frame.svg');
+  --game-frame-rim-image: url('/assets/game/kenney-wood-rim.svg');
+  --game-primary-image: url('/assets/game/kenney-button.svg');
+  --game-primary-ink: #fff8e9;
+  --game-secondary-image: url('/assets/game/kenney-button-secondary.svg');
+  --game-secondary-ink: #334737;
+}
+
+html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
+  --qmah-page-surface: #1e3329;
+  --qmah-surface: #263e31;
+  --qmah-surface-soft: #304c3b;
+  --qmah-surface-muted: #3b5743;
+  --qmah-surface-elevated: #35523f;
+  --qmah-ink: #fcf5e4;
+  --qmah-muted: #d0dfc7;
+  --qmah-jade: #add4b4;
+  --qmah-jade-deep: #d1e6c8;
+  --qmah-jade-soft: #355942;
+  --qmah-game-action: #b7d7b5;
+  --qmah-game-accent: #c6e0bd;
+  --qmah-game-soft: #3b5c44;
+  --qmah-game-content: #273e33;
+  --qmah-accent: #e6cc92;
+  --qmah-accent-content: #273e33;
+  --qmah-border: #789175;
+  --qmah-line: #5b765a;
+  --qmah-focus: #f3dba4;
+  --qmah-danger: #ffc7b6;
+  --qmah-primary-content: #273e33;
+  --game-table-ground: #315d42;
+  --game-stage-ground: #22392e;
+  --game-card-ground: #f0ecdf;
+  --game-frame-image: url('/assets/game/kenney-wood-frame-dark.svg');
+  --game-frame-rim-image: url('/assets/game/kenney-wood-rim-dark.svg');
+  --game-primary-image: url('/assets/game/kenney-button-dark.svg');
+  --game-secondary-image: url('/assets/game/kenney-button-secondary-dark.svg');
+  --game-secondary-ink: #f3f0df;
+}

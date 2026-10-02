@@ -1,8 +1,9 @@
 @use './game-scene' as scene;
+@use './game-ui' as ui;
 
 :host {
   --ink: var(--qmah-ink);
-  /* ui-integration: Game 使用 Navy Peony 作為判斷／回合語意色；共用 success、warning、error 不跟著變色。 */
+  // 遊戲判斷與回合語意沿用共用玉綠，警告與錯誤維持各自語意
   --jade: var(--qmah-game-accent);
   --slate: var(--qmah-slate);
   --cinnabar: var(--qmah-cinnabar);
@@ -392,3 +393,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .lobby-heading.is-rehearsal { align-items: flex-start; }
   .lobby-heading.is-rehearsal .hero-create { width: 100%; text-align: center; }
 }
+
+.lobby-heading h1, .page-heading h2 { @include ui.title; }
+.lobby-heading h1 { @include ui.jewel; }
+.lobby-heading .hero-create, .join-note button, .insert-sheet footer button, .rehearsal-join button { @include ui.button; }
+.refresh-button, .filter-trigger { @include ui.button(true); }

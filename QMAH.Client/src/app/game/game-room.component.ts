@@ -35,6 +35,7 @@ import { GameRoomChatComponent } from './game-room-chat.component';
 import { GameFocusMode } from '../core/services/game-focus-mode';
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 import { GameService } from './game.service';
+import { GameFontsDirective } from './game-fonts.directive';
 
 interface RoomSnapshot {
   room: GameRoomDetails;
@@ -56,6 +57,7 @@ interface TestScenario {
 
 @Component({
   selector: 'app-game-room',
+  hostDirectives: [GameFontsDirective],
   imports: [FormsModule, RouterLink, GameRoomResultsComponent, GameAnswerTableComponent, GameRoomChatComponent, QmahIconComponent],
   templateUrl: './game-room.component.html',
   styleUrl: './game-room.component.scss'

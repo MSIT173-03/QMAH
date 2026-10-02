@@ -59,7 +59,7 @@
         <nav class="mobile-answer-types" aria-label="選擇回答類型">
           @for (choice of answerTypeChoices(); track choice.type) {
             <button type="button" [attr.aria-pressed]="activeMobileAnswerType() === choice.type" [disabled]="choice.count === 0" (click)="selectMobileAnswerType(choice.type)">
-              <span>{{ choice.label }}</span><small>{{ choice.count }}</small>
+              <span>{{ choice.label }}</span><small>{{ choice.voted ? '已投' : choice.count + ' 張' }}</small>
             </button>
           }
         </nav>
@@ -100,7 +100,7 @@
         <nav class="mobile-answer-types" aria-label="選擇回答類型">
           @for (choice of answerTypeChoices(); track choice.type) {
             <button type="button" [attr.aria-pressed]="activeMobileAnswerType() === choice.type" [disabled]="choice.count === 0" (click)="selectMobileAnswerType(choice.type)">
-              <span>{{ choice.label }}</span><small>{{ choice.count }}</small>
+              <span>{{ choice.label }}</span><small>{{ choice.voted ? '已投' : choice.count + ' 張' }}</small>
             </button>
           }
         </nav>

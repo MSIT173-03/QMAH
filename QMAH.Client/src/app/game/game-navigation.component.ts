@@ -4,10 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 import { MeApiService } from '../core/services/me-api';
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 import { GameFocusMode } from '../core/services/game-focus-mode';
+import { GameFontsDirective } from './game-fonts.directive';
 
 // ui-integration: Game Area 內只保留一條模式與流程子導覽；跨 Area 導航仍由 Global App Shell 負責。
 @Component({
   selector: 'app-game-navigation',
+  hostDirectives: [GameFontsDirective],
   imports: [RouterLink, QmahIconComponent],
   templateUrl: './game-navigation.component.html',
   styleUrl: './game-navigation.component.scss',

@@ -30,7 +30,7 @@
                 <section class="mode-preview" aria-labelledby="mode-preview-title">
                   @for (preview of [mode.code]; track preview) {
                     <div class="mode-preview__art" [attr.data-mode]="mode.code" aria-label="玩法預覽" animate.enter="scene-preview-enter">
-                      @if (mode.code === 'MEMORY_MATCH') { <div class="preview-memory" aria-hidden="true">@for (tile of previewMemory; track $index) { <span>@if (tile) { <img [src]="previewImage(mode.code)" alt="" /> } @else { <span>鑑</span> }</span> }</div> }
+                      @if (mode.code === 'MEMORY_MATCH') { <div class="preview-memory" aria-hidden="true">@for (tile of previewMemory; track $index) { <span>@if (tile) { <img [src]="previewImage(mode.code)" alt="" /> }</span> }</div> }
                       @else if (mode.code === 'DETAIL_LOCATOR') { <app-game-detail-clue [image]="previewImage(mode.code)" [cropX]=".49" [cropY]=".4" /> }
                       @else { <img [src]="previewImage(mode.code)" alt="館藏玩法預覽" /><div class="preview-grid" [class.is-scroll]="mode.code === 'STRIP_RESTORE'" aria-hidden="true">@for (tile of mode.code === 'STRIP_RESTORE' ? previewScroll : previewPuzzle; track $index) { <span></span> }</div> }
                     </div>
@@ -81,7 +81,21 @@
               </div>
             }
             @else if (current.modeCode === 'MEMORY_MATCH') {
-              <div class="game-board memory-game"><div class="game-prompt"><h3>翻牌配對</h3><p>共 {{ memoryCards.length }} 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div><div class="memory-grid">@for (card of memoryCards; track card.id; let index = $index) { <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" [disabled]="card.matched || memoryBusy || completing || resultFrozen" [attr.aria-pressed]="card.revealed || card.matched" (click)="flipMemory(index)" (keydown)="moveBoardFocus($event, index, 4)" [attr.aria-label]="card.matched ? card.name + '，已配對' : card.revealed ? card.name : '翻開第 ' + (index + 1) + ' 張卡片'">@if (card.revealed || card.matched) { @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> } @else { <span class="image-fallback">{{ card.name }}</span> } } @else { <span class="card-back" aria-hidden="true">鑑</span> }</button> }</div><p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }} · 翻牌組合 {{ moves }} 次</p></div>
+              <div class="game-board memory-game">
+                <div class="game-prompt"><h3>翻牌配對</h3><p>共 {{ memoryCards.length }} 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div>
+                <div class="memory-grid">
+                  @for (card of memoryCards; track card.id; let index = $index) {
+                    <button type="button" class="memory-card" [class.is-open]="card.revealed || card.matched" [class.is-matched]="card.matched" [disabled]="card.matched || memoryBusy || completing || resultFrozen" [attr.aria-pressed]="card.revealed || card.matched" (click)="flipMemory(index)" (keydown)="moveBoardFocus($event, index, 4)" [attr.aria-label]="card.matched ? card.name + '，已配對' : card.revealed ? card.name : '翻開第 ' + (index + 1) + ' 張卡片'">
+                      @if (card.revealed || card.matched) {
+                        @if (card.image && !imageFailed('memory-' + card.id)) { <img [src]="card.image" [alt]="card.name" (error)="markImageFailed('memory-' + card.id)" /> }
+                        @else { <span class="image-fallback">{{ card.name }}</span> }
+                      }
+                    </button>
+                  }
+                </div>
+                <p class="game-hint">已配對 {{ memoryMatched }} / {{ memoryPairCount }} · 翻牌組合 {{ moves }} 次</p>
+                <p class="memory-feedback" role="status" aria-live="polite">{{ memoryFeedback }}</p>
+              </div>
             }
             @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
               <div class="game-board ordering-game"><app-game-placement-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="puzzleOrder" [initialSelection]="puzzleSelection" [initialHintRegion]="puzzleHintRegion" [disabled]="completing || resultFrozen || imageFailed('puzzle')" (orderChange)="updatePlacement('puzzle', $event)" (moveMade)="recordPlacement()" (hintUsed)="recordHint()" [assistedPieces]="autoPlaced" (autoCompleted)="recordAuto($event)" [settleAfterHelp]="true" (settlementRequested)="completeAttempt()" (availabilityChange)="setPuzzleAvailability($event)" /></div>
@@ -91,7 +105,6 @@
             }
 
             <footer class="play-footer"><div class="play-footer__context">            @if (current.modeCode === 'MEMORY_MATCH') {
-              <p class="memory-feedback" role="status" aria-live="polite">{{ memoryFeedback }}</p>
               <details class="collection-hints">
                 <summary>查看本局館藏提示（{{ memoryHints.length }} 件）</summary>
                 <div class="collection-hints__grid">
@@ -102,7 +115,15 @@
               </details>
             } @else if (current.modeCode !== 'DETAIL_LOCATOR' && currentArtifactHint; as hint) {
               <details class="collection-hint"><summary>查看館藏提示</summary><strong>{{ hint.name }}</strong><p>{{ hint.description || '館藏說明整理中。' }}</p></details>
-            }<span class="progress-readout" aria-live="polite"><strong>{{ progressText }}</strong></span></div><div class="play-actions"><button type="button" class="secondary" (click)="openPause(); helpRequested = true" [disabled]="!canAskForHelp">需要幫忙</button>@if (canComplete || completing) { <button type="button" (click)="completeAttempt()" [disabled]="completing" animate.enter="ready-enter">{{ completing ? '送出中…' : '送出結果' }}</button> } @else { <span class="play-command">{{ current.modeCode === 'DETAIL_LOCATOR' ? '選出答案後揭曉' : '完成盤面後揭曉' }}</span> }</div></footer>
+            }
+            @if (current.modeCode !== 'MEMORY_MATCH') { <span class="progress-readout" aria-live="polite"><strong>{{ progressText }}</strong></span> }
+            </div>
+            <div class="play-actions">
+              <button type="button" class="secondary" (click)="openPause(); helpRequested = true" [disabled]="!canAskForHelp">需要幫忙</button>
+              @if (canComplete || completing) { <button type="button" (click)="completeAttempt()" [disabled]="completing" animate.enter="ready-enter">{{ completing ? '送出中…' : '送出結果' }}</button> }
+              @else { <span class="play-command">{{ current.modeCode === 'DETAIL_LOCATOR' ? '選出答案後揭曉' : current.modeCode === 'MEMORY_MATCH' ? '配對完成後即可送出' : '完成盤面後即可送出' }}</span> }
+            </div>
+            </footer>
           </section>
           @if (phase === 'complete' && complete; as result) {
             <section class="result-sheet" aria-labelledby="result-title" animate.enter="game-result-enter">

@@ -56,7 +56,9 @@ export class GameAnswerTableComponent {
     .filter(group => group.answers.length > 0));
   readonly answerTypeChoices = computed(() => ANSWER_GROUPS.map(group => ({
     ...group,
-    count: this.round().answers.filter(answer => answer.answerType === group.type).length
+    count: this.round().answers.filter(answer => answer.answerType === group.type).length,
+    voted: this.round().status === 'VOTING'
+      && this.round().answers.some(answer => answer.answerType === group.type && this.votedAnswerIds().has(answer.id))
   })));
   readonly activeMobileAnswerType = computed(() => {
     const groups = this.answerGroups();

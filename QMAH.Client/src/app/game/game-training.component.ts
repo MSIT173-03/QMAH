@@ -15,6 +15,7 @@ import { GameScrollBoardComponent } from './game-scroll-board.component';
 import { GamePlacementBoardComponent } from './game-placement-board.component';
 import { GameDetailClueComponent } from './game-detail-clue.component';
 import { GameService } from './game.service';
+import { GameFontsDirective } from './game-fonts.directive';
 import { GameRewardMeterComponent } from './game-reward-meter.component';
 import { CatalogService } from '../services/catalog-service';
 import { GameFocusMode } from '../core/services/game-focus-mode';
@@ -59,6 +60,7 @@ interface TrainingSessionSnapshot {
 
 @Component({
   selector: 'app-game-training',
+  hostDirectives: [GameFontsDirective],
   imports: [RouterLink, GameNavigationComponent, GameScrollBoardComponent, GamePlacementBoardComponent, GameDetailClueComponent, GameRewardMeterComponent],
   styleUrl: './game-training.component.scss',
   templateUrl: './game-training.component.html',
