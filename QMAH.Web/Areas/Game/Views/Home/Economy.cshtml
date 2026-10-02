@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "經濟設定";
-    ViewData["AdminDescription"] = "調整多人主遊戲與 Mini Game 的獎勵參數；前端只讀取 API，不需要寫死數值。";
+    ViewData["AdminDescription"] = "調整遊戲獎勵參數，並查看每日共用點數上限與鑰匙收藏倍率。";
 }
 
 @section PageActions {
@@ -15,7 +15,7 @@
             @Html.AntiForgeryToken()
             <input asp-for="Economy.Id" type="hidden" />
             <input asp-for="Economy.RowVersion" type="hidden" />
-            <div class="card-header"><div><h2 class="card-title">主遊戲與共用經濟</h2><div class="card-subtitle">主遊戲點數依投票比例與勝場比例計算；Mini Game 進度達門檻後才轉成一般鑰匙。</div></div></div>
+            <div class="card-header"><div><h2 class="card-title">主遊戲與共用經濟</h2><div class="card-subtitle">主遊戲點數依投票比例與勝場比例計算；單人與多人共用每日點數額度。</div></div></div>
             <div class="card-body">
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                 <section class="qmah-form-section">
@@ -29,12 +29,13 @@
                     </div>
                 </section>
                 <section class="qmah-form-section">
-                    <h3 class="qmah-form-section-title">主遊戲鑰匙與 Mini Game 上限</h3>
+                    <h3 class="qmah-form-section-title">主遊戲鑰匙與鑰匙進度</h3>
                     <div class="row g-3">
                         <div class="col-12 col-sm-6"><label asp-for="Economy.CompletedNormalKey" class="form-label">完成給予一般鑰匙</label><input asp-for="Economy.CompletedNormalKey" class="form-control" min="0" /></div>
                         <div class="col-12 col-sm-6"><label asp-for="Economy.ExcellentExtraNormalKey" class="form-label">優秀表現額外一般鑰匙</label><input asp-for="Economy.ExcellentExtraNormalKey" class="form-control" min="0" /></div>
                         <div class="col-12 col-sm-6"><label asp-for="Economy.ExcellentThreshold" class="form-label">優秀表現門檻</label><input asp-for="Economy.ExcellentThreshold" class="form-control" min="0" max="100" /></div>
-                        <div class="col-12 col-sm-6"><label asp-for="Economy.DailyMiniGameRewardLimit" class="form-label">每日 Mini Game 有獎勵次數</label><input asp-for="Economy.DailyMiniGameRewardLimit" class="form-control" min="0" /></div>
+                        <input asp-for="Economy.DailyMiniGameRewardLimit" type="hidden" />
+                        <div class="col-12"><div class="alert alert-info mb-0" role="note"><strong>每日共用點數上限：100 點</strong><span class="d-block">達成每日突破條件後增加 30 點額度。多人完成一間正式房間，或當日以 B 級以上完成 3 種不同單人模式，即可解鎖一次。</span></div></div>
                         <div class="col-12 col-sm-6"><label asp-for="Economy.KeyProgressToNormalKey" class="form-label">進度轉一般鑰匙門檻</label><input asp-for="Economy.KeyProgressToNormalKey" class="form-control" min="1" /></div>
                     </div>
                 </section>
@@ -43,12 +44,12 @@
         </form>
     </div>
     <div class="col-12 col-xl-4">
-        <div class="card qmah-dashboard-note h-100"><div class="card-body"><span class="qmah-status qmah-status--info">平衡提示</span><h2 class="card-title mt-3">點數與進度分開累積</h2><p class="text-secondary mb-0">Mini Game 的 PointReward 直接增加鑑定點數；KeyProgressReward 先累積在進度條，達到門檻後轉成一般鑰匙並保留餘數。</p></div></div>
+        <div class="card qmah-dashboard-note h-100"><div class="card-body"><span class="qmah-status qmah-status--info">鑰匙取得量</span><h2 class="card-title mt-3">圖鑑逐漸收齊後，鑰匙獎勵放緩</h2><p class="text-secondary">收藏未達 80% 時維持原獎勵，達 80% 後減半，全數收齊後為四分之一。只計算啟用中的文物。</p><p class="text-secondary mb-0">累積滿 @Model.Economy.KeyProgressToNormalKey 進度可換一把一般鑰匙，不足一把的進度會保留。每日點數達上限後仍可累積鑰匙獎勵。</p></div></div>
     </div>
 </div>
 
 <div class="card qmah-list-card mt-3">
-    <div class="card-header"><div><h2 class="card-title">Mini Game 模式</h2><div class="card-subtitle">模式本身不包含遊戲畫面；這裡只維護前端開始 Attempt 所需的契約設定。</div></div></div>
+    <div class="card-header"><div><h2 class="card-title">單人遊戲</h2><div class="card-subtitle">調整四種玩法的評分門檻與單局獎勵。</div></div></div>
     <div class="table-responsive">
         <table class="table table-vcenter table-hover card-table qmah-crud-table">
             <thead><tr><th>模式</th><th>評分門檻</th><th>獎勵</th><th>狀態</th><th class="w-1 text-center">操作</th></tr></thead>

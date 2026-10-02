@@ -13,7 +13,7 @@
         "Rooms" => "查看房間生命週期與玩家數",
         "Players" => "查看連線與加入房間狀態",
         "Rounds" => "集中查看回合、作答與投票紀錄",
-        "Answers" => "查看玩家作答紀錄",
+        "Answers" => "管理作答、鑑賞票與回合得票",
         "Votes" => "查看玩家投票紀錄",
         _ => "進入此管理功能"
     };
@@ -27,6 +27,12 @@
 }
 
 @section PageActions {
+    <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="GameEconomy" asp-action="Index">
+        <i class="ti ti-adjustments me-1"></i>經濟設定
+    </a>
+    <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="Answers" asp-action="Index" asp-route-sort="appreciation">
+        <i class="ti ti-heart me-1"></i>鑑賞回答
+    </a>
     <a class="btn btn-primary" asp-area="Game" asp-controller="QuestionEntries" asp-action="Index">
         <i class="ti ti-list-check me-1"></i>題庫管理
     </a>
@@ -39,6 +45,17 @@
         <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-users"></i></span><div><span class="qmah-area-metric__label">在線玩家</span><strong class="qmah-area-metric__value">@Model.OnlinePlayerCount</strong><span class="qmah-area-metric__note">房內即時連線狀態</span></div></article>
         <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-circle-check"></i></span><div><span class="qmah-area-metric__label">已完成房間</span><strong class="qmah-area-metric__value">@Model.CompletedRoomCount</strong><span class="qmah-area-metric__note">已結束的遊戲場次</span></div></article>
         <article class="qmah-area-metric"><span class="qmah-area-metric__icon"><i class="ti ti-history"></i></span><div><span class="qmah-area-metric__label">遊戲紀錄</span><strong class="qmah-area-metric__value">@Model.RoundCount</strong><span class="qmah-area-metric__note">作答 @Model.AnswerCount · 投票 @Model.VoteCount</span></div></article>
+    </section>
+
+    <section class="card qmah-dashboard-note my-3" aria-labelledby="game-reward-rules-title">
+        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h2 class="card-title mb-1" id="game-reward-rules-title">目前獎勵規則</h2>
+                <p class="text-secondary mb-1">單人與多人共用每日 @Model.DailyPointBaseLimit 點；完成一間正式多人房，或以 B 級以上完成 3 種不同單人模式，可再解鎖 @Model.DailyPointBreakthroughBonus 點額度。</p>
+                <p class="text-secondary mb-0">鑰匙取得量：收藏未達 80% 時維持原獎勵，達 80% 後減半，全數收齊後為四分之一。目前啟用文物 @Model.ActiveArtifactCount 件，累積滿 @Model.KeyProgressThreshold 進度可換一把一般鑰匙。</p>
+            </div>
+            <a class="btn btn-outline-secondary" asp-area="Game" asp-controller="GameEconomy" asp-action="Index">查看經濟設定</a>
+        </div>
     </section>
 
     <div class="qmah-area-overview-grid">
@@ -68,7 +85,7 @@
 
         <section class="card qmah-area-card">
             <div class="card-header">
-                <div><h2 class="card-title mb-1">最近房間</h2><div class="card-subtitle">依建立時間顯示最近的房間活動。</div></div>
+                <div><h2 class="card-title mb-1">最近房間</h2><div class="card-subtitle">依建立時間顯示近期房間紀錄。</div></div>
                 <div class="card-actions"><a asp-area="Game" asp-controller="Rooms" asp-action="Index" class="btn btn-sm btn-outline-secondary">查看全部</a></div>
             </div>
             @if (Model.RecentRooms.Count == 0)
