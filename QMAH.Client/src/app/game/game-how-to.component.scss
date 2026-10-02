@@ -9,6 +9,8 @@
   display: block;
 }
 .game-how-to { color: var(--how-to-ink); }
+.instruction-sentence { display: block; }
+.game-how-to p { line-break: strict; overflow-wrap: break-word; text-wrap: pretty; }
 .game-how-to__heading {
   display: grid;
   gap: 4px;

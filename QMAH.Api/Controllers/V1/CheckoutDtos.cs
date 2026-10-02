@@ -31,6 +31,13 @@ public static class StoreCheckoutCatalog
     /// <summary>訂單完成後回饋的點數比例，以應付總額計算。</summary>
     public const decimal PointEarnRate = 0.01m;
 
+    public const int DirectPointMaximum = 20;
+    public const decimal DirectPointRate = 0.05m;
+
+    /// <summary>直接點數折抵只補小額差額，較大折扣保留給兌換券。</summary>
+    public static int GetDirectPointCap(decimal subtotal, decimal couponDiscount) =>
+        Math.Min(DirectPointMaximum, Math.Max(0, (int)Math.Floor(Math.Max(0m, subtotal - couponDiscount) * DirectPointRate)));
+
     public static ShippingOptionDef? FindShippingOption(string id) =>
         ShippingOptions.FirstOrDefault(option => option.Id == id);
 

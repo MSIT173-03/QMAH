@@ -2,6 +2,11 @@
   display: block;
 }
 
+.size-note {
+  display: block;
+  margin-block-start: var(--qmah-space-2);
+}
+
 /* .font-mono、.text-sm、.text-ink、.section-more 已在全站共用樣式（shared/styles.scss）中定義 */
 
 /* 持有點數的數字，以等寬字體與較深文字色強調 */

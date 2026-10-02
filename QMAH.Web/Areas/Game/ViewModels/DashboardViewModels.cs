@@ -8,6 +8,14 @@ public sealed class GameDashboardViewModel
 
     public int DisabledQuestionCount => Math.Max(0, TotalQuestionCount - EnabledQuestionCount);
 
+    public int DailyPointBaseLimit { get; init; }
+
+    public int DailyPointBreakthroughBonus { get; init; }
+
+    public int ActiveArtifactCount { get; init; }
+
+    public int KeyProgressThreshold { get; init; }
+
     public int WaitingRoomCount { get; init; }
 
     public int PlayingRoomCount { get; init; }

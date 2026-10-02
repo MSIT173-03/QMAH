@@ -14,6 +14,7 @@
   min-height: 100vh;
   color: var(--ink);
   background: var(--qmah-page-surface);
+  @include scene.pattern;
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 
@@ -77,7 +78,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .notes-page { position: fixed; z-index: 71; top: 50%; left: 50%; width: min(720px, calc(100vw - 40px)); max-height: calc(100dvh - 48px); overflow: auto; transform: translate(-50%, -50%); padding: 34px 36px 30px; border-radius: var(--qmah-radius-panel); color: var(--qmah-on-dark); background: var(--jade); border: 1px solid color-mix(in srgb, var(--qmah-on-dark) 42%, transparent); box-shadow: var(--qmah-shadow-dialog); animation: reveal-dialog 180ms ease-out both; }
 .room-detail-backdrop { position: fixed; z-index: 70; inset: 0; background: color-mix(in srgb, var(--qmah-night) 62%, transparent); }
 .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 30px; }
-.page-heading h2, .room-notes-heading h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: clamp(28px, 3vw, 38px); font-weight: 700; letter-spacing: -.035em; line-height: 1.1; }
+.page-heading h2, .room-notes-heading h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: clamp(28px, 3vw, 38px); font-weight: 700; letter-spacing: -.035em; line-height: 1.25; text-wrap: balance; }
 .page-heading p { margin: 9px 0 0; color: var(--muted); font-size: var(--qmah-type-body-sm-size); }
 .join-note button, .insert-sheet footer button { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-primary); border-radius: var(--qmah-radius-control); padding: 10px var(--qmah-control-padding-x); color: var(--qmah-primary-content); background: var(--qmah-primary); font-weight: 800; transition: background 180ms ease, transform 180ms ease; }
 .join-note button:hover, .insert-sheet footer button:hover { background: var(--qmah-primary-hover); border-color: var(--qmah-primary-hover); transform: translateY(-2px); }
@@ -336,7 +337,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .refresh-actions { justify-content: flex-end; }
   .refresh-button { width: 100%; }
   .status-tabs > span { display: none; }
-  .room-status { font-size: 10px; }
+  .room-status { font-size: 12px; line-height: 1.5; white-space: normal; }
 }
 
 /* 遊戲頁與玩法說明共用置中的頂部模式導覽。 */
@@ -359,4 +360,35 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 @media (prefers-reduced-motion: reduce) {
   .game-notebook, .game-notebook > app-game-navigation, .ledger > div[role='listitem'], .hero-create { transition: none; }
+}
+
+/* 大廳測試入口沿用既有遊戲墨綠與朱色，明確標示虛擬場次但不另造一套面板。 */
+.lobby-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+  color: var(--qmah-game-action);
+  font-size: var(--qmah-type-meta-size);
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.lobby-kicker::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--qmah-cinnabar);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--qmah-cinnabar) 14%, transparent);
+  content: "";
+}
+.lobby-heading.is-rehearsal {
+  margin: 10px 0 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--qmah-game-action) 24%, var(--line));
+}
+.is-rehearsal .room-code small { color: var(--qmah-game-action); font-weight: 750; }
+.rehearsal-join p { margin: 0 0 12px; color: color-mix(in srgb, var(--qmah-on-dark) 78%, transparent); }
+.rehearsal-join button { width: 100%; }
+@media (max-width: 600px) {
+  .lobby-heading.is-rehearsal { align-items: flex-start; }
+  .lobby-heading.is-rehearsal .hero-create { width: 100%; text-align: center; }
 }

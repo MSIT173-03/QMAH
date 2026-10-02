@@ -225,6 +225,7 @@
             const scene = document.querySelector(".qmah-auth-scene");
             const page = document.querySelector(".qmah-auth-page");
             const wall = document.querySelector(".qmah-auth-editorial-wall");
+            const prefersReducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
             // 只在畫面外預載下一張，確認仍在畫面外後才替換，避免圖片牆在眼前斷裂
             if (wall) {
@@ -257,11 +258,11 @@
                     preload.src = imagePath;
                 };
 
-                window.setInterval(showNextArtifact, 700);
+                if (!prefersReducedMotion) window.setInterval(showNextArtifact, 700);
             }
 
             // 先完成登入表單，再讓照片牆進入動畫合成
-            if (page && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            if (page && !prefersReducedMotion) {
                 const enableMotion = () => page.classList.add("qmah-auth-page--motion-ready");
                 if ("requestIdleCallback" in window) {
                     window.requestIdleCallback(enableMotion, { timeout: 900 });

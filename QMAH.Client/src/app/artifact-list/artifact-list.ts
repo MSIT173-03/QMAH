@@ -621,6 +621,7 @@ export class ArtifactList implements OnInit {
 
   onAppreciationClick(item: CardEntry): void {
     this.appreciationRequested.emit(item);
+    void this.router.navigate(['/game/appreciation'], { queryParams: { artifactId: item.id } });
   }
 
 

@@ -1,0 +1,139 @@
+<section class="answer-table" [class.is-compact]="compact()" [attr.data-phase]="round().status" aria-label="多人鑑定卡牌桌">
+  @if (showHeader()) {
+    <header class="table-heading">
+      <h3>第 {{ round().roundNumber }} 回合 · {{ round().status === 'ANSWERING' ? '答案正在入桌' : round().status === 'VOTING' ? '翻牌閱讀，匿名投票' : '揭曉本回合結果' }}</h3>
+      <span class="table-phase"><i aria-hidden="true"></i>{{ round().status === 'ANSWERING' ? '作答中' : round().status === 'VOTING' ? '投票中' : '已揭曉' }}</span>
+    </header>
+  }
+
+  <div class="table-felt">
+    @if (showSeats()) {
+      <ol class="seat-rail" aria-label="玩家席位">
+        @for (player of players(); track player.id; let index = $index) {
+          <li class="table-seat" [style.--seat-color]="seatColor(player.id, index)">
+            <span class="seat-number">{{ (player.seatNo ?? index + 1).toString().padStart(2, '0') }}</span>
+            <span class="seat-name">{{ player.displayName }}@if (player.id === currentPlayerId()) { <small>你</small> }</span>
+            <span class="seat-role">{{ player.role === 'HOST' ? '房主' : '玩家' }}</span>
+            <span class="seat-card-back" aria-hidden="true"><i></i></span>
+          </li>
+        } @empty {
+          <li class="seat-empty">等待玩家席位資料</li>
+        }
+      </ol>
+    }
+
+    <div class="table-center">
+      @if (round().status === 'ANSWERING') {
+        <section class="answering-deck" aria-live="polite">
+          <div class="deck-caption"><span>匿名牌堆</span><strong>{{ submittedAnswerCount() }} 張已入桌</strong></div>
+          <div class="back-deck" [attr.aria-label]="submittedAnswerCount() + ' 張匿名回答已送出'">
+            @for (back of answerBacks(); track back) {
+              <span class="answer-back-card" [attr.data-back]="back % 6" aria-hidden="true"><i></i></span>
+            }
+            @if (submittedAnswerCount() === 0) { <span class="deck-empty">牌桌正等第一張答案</span> }
+          </div>
+          <p class="deck-privacy">牌背只顯示送達數量，位置不對應玩家。</p>
+        </section>
+      } @else if (round().status === 'VOTING') {
+        <p class="swipe-instruction">左右滑動，一次看一張回答</p>
+        <div class="answer-groups">
+          @for (group of answerGroups(); track group.type) {
+            <section class="answer-group" [attr.data-answer-type]="group.type">
+              <header class="group-heading">
+                <span class="group-icon"><app-qmah-icon [name]="group.icon" aria-hidden="true" /></span>
+                <h4>{{ group.label }}</h4>
+              </header>
+              <div class="answer-card-grid">
+                @for (answer of group.answers; track answer.id; let index = $index) {
+                  <button type="button" class="answer-card is-anonymous" [attr.data-answer-type]="answer.answerType" [style.--card-tilt]="cardTilt(index)" (click)="openAnswer(answer)">
+                    <span class="answer-card-top"><app-qmah-icon [name]="group.icon" aria-hidden="true" /><strong>匿名回答</strong></span>
+                    <span class="answer-text answer-text--clamped">{{ answer.text }}</span>
+                  </button>
+                }
+              </div>
+            </section>
+          } @empty {
+            <p class="table-empty">目前還沒有可翻開的答案。</p>
+          }
+        </div>
+        <nav class="mobile-answer-types" aria-label="選擇回答類型">
+          @for (choice of answerTypeChoices(); track choice.type) {
+            <button type="button" [attr.aria-pressed]="activeMobileAnswerType() === choice.type" [disabled]="choice.count === 0" (click)="selectMobileAnswerType(choice.type)">
+              <span>{{ choice.label }}</span><small>{{ choice.count }}</small>
+            </button>
+          }
+        </nav>
+        <div #mobileAnswerCarousel class="mobile-answer-carousel" role="region" aria-label="匿名回答，左右滑動切換">
+          @for (slide of answerSlides(); track slide.answer.id; let index = $index) {
+            <button type="button" class="answer-card is-anonymous mobile-answer-card" [attr.data-answer-type]="slide.answer.answerType" (click)="openAnswer(slide.answer)">
+              <span class="mobile-card-meta"><strong>{{ slide.group.label }}</strong><span>{{ slide.index + 1 }} / {{ slide.count }}</span></span>
+              <span class="answer-card-top"><app-qmah-icon [name]="slide.group.icon" aria-hidden="true" /><strong>匿名回答</strong></span>
+              <span class="answer-text">{{ slide.answer.text }}</span>
+            </button>
+          } @empty { <p class="table-empty">這個類別還沒有回答。</p> }
+        </div>
+      } @else {
+        <p class="swipe-instruction">左右滑動，一次查看一張得票最高的回答</p>
+        <div class="answer-groups reveal-groups">
+          @for (group of answerGroups(); track group.type) {
+            <section class="answer-group" [attr.data-answer-type]="group.type">
+              <header class="group-heading">
+                <span class="group-icon"><app-qmah-icon [name]="group.icon" aria-hidden="true" /></span>
+                <h4>{{ group.label }}</h4>
+              </header>
+              <div class="answer-card-grid">
+                @for (answer of group.answers; track answer.id; let index = $index) {
+                  <button type="button" class="answer-card revealed-answer" [attr.data-answer-type]="answer.answerType" [class.is-winner]="answer.isWinner" [style.--answer-owner-color]="seatColor(answer.gamePlayerId, index)" [style.--card-tilt]="cardTilt(index)" (click)="openAnswer(answer)">
+                    <span class="answer-card-top">
+                      <strong class="revealed-author">{{ answer.playerDisplayName }}@if (answer.isWinner) { <b>勝出</b> }</strong>
+                      <span class="vote-total">{{ answer.voteCount }} 票</span>
+                    </span>
+                    <span class="answer-text answer-text--clamped">{{ answer.text }}</span>
+                  </button>
+                }
+              </div>
+            </section>
+          } @empty {
+            <p class="table-empty">本回合沒有回答紀錄。</p>
+          }
+        </div>
+        <nav class="mobile-answer-types" aria-label="選擇回答類型">
+          @for (choice of answerTypeChoices(); track choice.type) {
+            <button type="button" [attr.aria-pressed]="activeMobileAnswerType() === choice.type" [disabled]="choice.count === 0" (click)="selectMobileAnswerType(choice.type)">
+              <span>{{ choice.label }}</span><small>{{ choice.count }}</small>
+            </button>
+          }
+        </nav>
+        <div #mobileAnswerCarousel class="mobile-answer-carousel" role="region" aria-label="揭曉回答，左右滑動切換">
+          @for (slide of answerSlides(); track slide.answer.id; let index = $index) {
+            <button type="button" class="answer-card mobile-answer-card revealed-answer" [attr.data-answer-type]="slide.answer.answerType" [class.is-winner]="slide.answer.isWinner" [style.--answer-owner-color]="seatColor(slide.answer.gamePlayerId, slide.index)" (click)="openAnswer(slide.answer)">
+              <span class="mobile-card-meta"><strong>{{ slide.group.label }}</strong><span>{{ slide.index + 1 }} / {{ slide.count }}</span></span>
+              <span class="answer-card-top"><strong class="revealed-author">{{ slide.answer.playerDisplayName }}@if (slide.answer.isWinner) { <b>勝出</b> }</strong><span class="vote-total">{{ slide.answer.voteCount }} 票</span></span>
+              <span class="answer-text">{{ slide.answer.text }}</span>
+            </button>
+          } @empty { <p class="table-empty">這個類別還沒有回答。</p> }
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<dialog #answerDialog class="answer-dialog" aria-labelledby="answer-dialog-title" (click)="closeOnBackdrop($event)" (close)="selectedAnswer.set(null)">
+  @if (selectedAnswer(); as answer) {
+    <article class="answer-dialog-sheet" [attr.data-answer-type]="answer.answerType">
+      <header class="dialog-heading">
+        <h3 id="answer-dialog-title">{{ answerTypeText(answer.answerType) }} · {{ round().status === 'REVEALED' ? answer.playerDisplayName : '匿名回答' }}</h3>
+        <button type="button" class="dialog-close" aria-label="關閉放大回答" (click)="closeAnswer()">×</button>
+      </header>
+      <p class="dialog-answer-text">{{ answer.text }}</p>
+      @if (round().status === 'VOTING') {
+        <footer class="dialog-actions">
+          <span>{{ canVote()(answer) ? '投票後才會揭曉作者。' : votedAnswerIds().has(answer.id) ? '你已投過這張回答。' : '依本回合規則，目前不能投這張回答。' }}</span>
+          <button type="button" class="vote-action" [disabled]="!canSubmitVote(answer)" (click)="submitVote(answer)">{{ voteButtonText(answer) }}</button>
+        </footer>
+      } @else if (round().status === 'REVEALED') {
+        <footer class="dialog-reveal"><strong>{{ answer.playerDisplayName }}</strong><span>{{ answer.voteCount }} 票</span>@if (answer.isWinner) { <b>本回合勝出</b> }</footer>
+      }
+    </article>
+  }
+</dialog>

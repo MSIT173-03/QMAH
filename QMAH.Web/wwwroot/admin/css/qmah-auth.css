@@ -301,6 +301,10 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
     var(--qmah-auth-scene-bg);
 }
 
+html[data-bs-theme="dark"] .qmah-auth-artifact {
+  background: linear-gradient(135deg, rgba(34, 55, 56, 0.94), rgba(15, 29, 31, 0.96));
+}
+
 .qmah-auth-artifact--space-wide {
   margin-right: clamp(1rem, 1.6vw, 1.9rem);
 }
@@ -323,6 +327,11 @@ html[data-bs-theme="dark"] .qmah-auth-scene::after {
     0 1px 1px rgba(20, 38, 43, 0.04),
     0 14px 30px rgba(20, 38, 43, 0.105);
   transition: opacity 260ms ease;
+}
+
+html[data-bs-theme="dark"] .qmah-auth-artifact img {
+  border-color: rgba(178, 202, 193, 0.20);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.18), 0 14px 30px rgba(0, 0, 0, 0.30);
 }
 
 .qmah-auth-artifact--loaded img {

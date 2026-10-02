@@ -1,5 +1,21 @@
 // 對應 /api/v1/game 的資料契約；遊戲規則判斷集中在 GameService，元件只負責呈現結果。
 export type GameRoomStatus = 'WAITING' | 'PLAYING' | 'COMPLETED' | 'CANCELLED';
+
+export interface GameDailyRewardStatus {
+  dailyLimit: number;
+  remaining: number;
+  resetsAt: string;
+  earned: number;
+  baseLimit: number;
+  bonusLimit: number;
+  breakthroughUnlocked: boolean;
+  canBreakthrough: boolean;
+  completedModes: number;
+  hasCompletedMultiplayer: boolean;
+  collectedArtifacts: number;
+  totalArtifacts: number;
+  keyRewardDivisor: number;
+}
 export type GameRoomFilterStatus = Exclude<GameRoomStatus, 'CANCELLED'>;
 export type GameRoomSort = 'RECOMMENDED' | 'NEARLY_FULL' | 'NEWEST' | 'OPEN_SLOTS';
 export type GameRoomVisibility = 'PUBLIC' | 'PRIVATE';
@@ -86,6 +102,7 @@ export interface GameRoundDetails {
   votingDeadlineAt: string;
   settledAt: string | null;
   participantCount: number;
+  submittedAnswerCount?: number;
   totalVoteCount: number;
   winnerAnswerId: string | null;
   winnerPlayerDisplayName: string | null;
@@ -195,6 +212,7 @@ export interface CompleteMiniGameRequest {
 }
 
 export interface MiniGameComplete {
+  keyRewardDivisor: number;
   attemptId: string;
   modeCode: string;
   rawScore: number;
@@ -210,11 +228,30 @@ export interface MiniGameComplete {
 }
 
 export interface MainGameReward {
+  keyProgressReward: number;
+  keyRewardDivisor: number;
   pointReward: number;
   normalKeyReward: number;
   performanceScore: number;
   roundsWon: number;
   alreadyRewarded: boolean;
+}
+
+export interface AppreciationAnswer {
+  id: string;
+  roomId: string;
+  roomCode: string;
+  artifactId: string;
+  artifactName: string;
+  categoryName: string;
+  answerType: string;
+  text: string;
+  author: string;
+  completedAt: string;
+  gameVotes: number;
+  voteCount: number;
+  voted: boolean;
+  isOwn: boolean;
 }
 
 /** 前端在送出 HTTP 請求前發現的欄位錯誤；API 回應錯誤仍由 GameService.errorMessage 處理。 */
@@ -230,4 +267,29 @@ export interface GameRoomQuery {
   sort?: GameRoomSort;
   page?: number;
   pageSize?: number;
+}
+export interface GameRoomChatMessage {
+  id: string;
+  gamePlayerId: string;
+  displayName: string;
+  text: string;
+  sentAt: string;
+}
+
+export interface GameRoomPresentation {
+  colors: Record<string, string>;
+  messages: GameRoomChatMessage[];
+}
+
+export interface GameRehearsalMaterial {
+  artifactId: string;
+  artifactName: string;
+  primaryImagePath: string | null;
+  thumbnailPath: string | null;
+  answers: { answerType: GameAnswerType; text: string }[];
+}
+export interface GameRehearsalSession {
+  materials: GameRehearsalMaterial[];
+  playerNames: string[];
+  currentPlayerName: string;
 }

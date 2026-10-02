@@ -28,7 +28,8 @@ export class GameNavigationComponent {
   protected readonly links = [
     { label: '多人鑑定', description: '房間大廳', icon: 'users-round', path: '/game', activePrefixes: ['/game/demo', '/game/rooms', '/game/room'] },
     { label: '單人小遊戲', description: '單人挑戰', icon: 'gamepad-2', path: '/game/training', activePrefixes: ['/game/training', '/game/minigames'] },
-    { label: '玩法試玩', description: '先玩再挑戰', icon: 'book-open', path: '/game/how-to', activePrefixes: ['/game/how-to'] }
+    { label: '玩法試玩', description: '先玩再挑戰', icon: 'book-open', path: '/game/how-to', activePrefixes: ['/game/how-to'] },
+    { label: '鑑賞回答', description: '讀回答、投一票', icon: 'book-open', path: '/game/appreciation', activePrefixes: ['/game/appreciation'] }
   ] as const;
 
   protected isActive(link: (typeof this.links)[number]): boolean {

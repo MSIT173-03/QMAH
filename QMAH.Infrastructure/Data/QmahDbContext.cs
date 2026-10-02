@@ -128,6 +128,7 @@ public partial class QmahDbContext
     {
         // IdentityDbContext 的基礎 mapping 必須先保留，再套用 QMAH 的 schema 與欄位設定。
         base.OnModelCreating(modelBuilder);
+        ConfigureAppreciation(modelBuilder);
 
         modelBuilder.Entity<AdminAuditLog>(entity =>
         {
@@ -643,6 +644,8 @@ public partial class QmahDbContext
             entity.Property(e => e.LeftAt).HasPrecision(3);
             entity.Property(e => e.PlayerKey).HasMaxLength(80);
             entity.Property(e => e.ReconnectDeadlineAt).HasPrecision(3);
+            entity.Property(e => e.RewardClaimedAt).HasPrecision(3);
+            entity.Property(e => e.RewardKeyProgress).HasPrecision(12, 2);
             entity.Property(e => e.Role)
                 .HasMaxLength(20)
                 .HasDefaultValue("PLAYER", "DF_GamePlayers_Role");
@@ -663,6 +666,7 @@ public partial class QmahDbContext
         modelBuilder.Entity<GameRoom>(entity =>
         {
             entity.ToTable("GameRooms", "game");
+            entity.Property(item => item.IsShowcase).HasDefaultValue(false, "DF_GameRooms_IsShowcase");
 
             entity.HasIndex(e => new { e.Status, e.Visibility, e.CreatedAt }, "IX_GameRooms_PublicLobby").IsDescending(false, false, true);
 
@@ -829,6 +833,9 @@ public partial class QmahDbContext
             entity.Property(e => e.Seed).HasMaxLength(128);
             entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("STARTED", "DF_MiniGameAttempts_Status");
             entity.Property(e => e.Grade).HasMaxLength(2);
+            entity.Property(e => e.KeyProgressReward).HasPrecision(12, 2);
+            entity.Property(e => e.KeyRewardDivisor).HasDefaultValue((byte)1, "DF_MiniGameAttempts_KeyRewardDivisor");
+            entity.Property(e => e.ConvertedNormalKeys).HasDefaultValue(0, "DF_MiniGameAttempts_ConvertedNormalKeys");
             entity.Property(e => e.StartedAt)
                 .HasPrecision(3)
                 .HasDefaultValueSql("(sysutcdatetime())", "DF_MiniGameAttempts_Started");
@@ -935,6 +942,7 @@ public partial class QmahDbContext
 
         modelBuilder.Entity<KeyProgressBalance>(entity =>
         {
+            entity.Property(e => e.Balance).HasPrecision(12, 2);
             entity.HasKey(e => e.UserId);
             entity.ToTable("KeyProgressBalances", "catalog");
             entity.Property(e => e.UserId).ValueGeneratedNever();
@@ -949,6 +957,7 @@ public partial class QmahDbContext
 
         modelBuilder.Entity<KeyProgressTransaction>(entity =>
         {
+            entity.Property(e => e.Amount).HasPrecision(12, 2);
             entity.ToTable("KeyProgressTransactions", "catalog");
             entity.HasIndex(e => new { e.UserId, e.CreatedAt }, "IX_KeyProgressTransactions_User").IsDescending(false, true);
             entity.Property(e => e.Id).ValueGeneratedNever();

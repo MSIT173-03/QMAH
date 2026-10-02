@@ -54,18 +54,6 @@ interface ApiOrder {
   ecpayCheckout: EcpayCheckoutForm | null;
 }
 
-/**
- * 本次訂單可折抵的點數上限（1 點折抵 1 元），依後端 StoreOrdersController 的規則：
- * 點數只能折抵「商品小計 − 折價券折抵」，折價券折抵金額不超過小計。
- * 未達折價券門檻時後端會直接拒絕該券，這裡不另行處理。
- */
-function pointCap(subtotal: number, coupon: Coupon | null): number {
-  let discount = 0;
-  if (coupon?.kind === 'percent') discount = Math.round(subtotal * coupon.value * 100) / 100;
-  else if (coupon?.kind === 'amount') discount = coupon.value;
-  return Math.max(0, Math.floor(subtotal - Math.min(discount, subtotal)));
-}
-
 /** 結帳與訂單 API */
 @Injectable({ providedIn: 'root' })
 export class CheckoutApi {
@@ -85,19 +73,18 @@ export class CheckoutApi {
    * POST /store/orders：以目前購物車內容送出訂單，回應中的金額（含運費、回饋點數）由後端重新計算。
    * 收件人信箱、統編與備註後端尚無對應欄位，目前只保留在前端表單，不會送出。
    *
-   * @param coupon 選用的折價券（需與 order.couponId 相同），用來估算點數可折抵上限
+   * 折抵上限由後端試算提供，保留既有呼叫參數相容性。
    */
-  createOrder(order: OrderRequest, coupon: Coupon | null): Observable<OrderResult> {
+  createOrder(order: OrderRequest, _coupon: Coupon | null): Observable<OrderResult> {
     const idempotencyKey = crypto.randomUUID();
     return this.http.get<ApiCartLine[]>(meUrl('/cart')).pipe(
-      switchMap((cart) => {
-        const subtotal = cart.reduce((sum, line) => sum + line.lineTotal, 0);
+      switchMap((cart) => this.getQuote({ shippingOptionId: order.shippingOptionId, couponId: order.couponId, usePoints: order.usePoints }).pipe(switchMap(quote => {
         const body: ApiCreateOrderRequest = {
           items: cart.map(({ productId, quantity }) => ({ productId, quantity })),
           idempotencyKey,
           userCouponId: order.couponId,
-          // 後端不夾限點數，超過「折價券折抵後小計」會直接回 400；送出前先夾在可折抵上限內。
-          pointsUsed: Math.min(order.usePoints, pointCap(subtotal, coupon)),
+          // 使用後端試算的上限，不在前端複製折抵比例與金額規則。
+          pointsUsed: Math.min(order.usePoints, quote.pointCap),
           recipientName: order.recipient.name.trim(),
           recipientPhone: order.recipient.phone.trim(),
           shippingPostalCode: order.recipient.postalCode.trim(),
@@ -108,7 +95,7 @@ export class CheckoutApi {
           paymentOptionId: order.paymentOptionId,
         };
         return this.http.post<ApiOrder>(apiUrl('/orders'), body);
-      }),
+      }))),
       map((dto) => ({
         orderId: dto.id,
         orderNo: dto.orderNo,

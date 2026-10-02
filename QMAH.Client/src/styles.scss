@@ -197,6 +197,8 @@ body {
 
 /* ui-integration: App Shell 的 theme-controller 位於共用 Layout 之外層；在全域入口切換語意色，讓所有 Area 與商城共享深色背景與對比。 */
 :root[data-theme='qmahdark'] {
+  /* 現成 SVG 在深色模式改用淡色，避免沿用藏青紋樣而看不見。 */
+  --qmah-game-pattern: url('/assets/game/hero-temple-dark.svg');
   /* ui-integration: 深色以低彩度藍灰炭黑分層，玉石綠只承擔互動與選取，不把品牌色鋪滿背景。 */
   --color-surface: var(--qmah-surface);
   --color-ink: var(--qmah-ink);

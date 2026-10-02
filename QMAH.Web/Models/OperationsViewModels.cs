@@ -141,8 +141,8 @@ public sealed record OperationsEconomyDay(
     int KeyIncrease,
     int KeyDecrease,
     int KeyNetChange,
-    int KeyProgressIncrease,
-    int KeyProgressConversion);
+    decimal KeyProgressIncrease,
+    decimal KeyProgressConversion);
 
 public sealed record OperationsEconomyBatchDay(
     DateTime Date,

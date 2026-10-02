@@ -44,12 +44,13 @@
               <div class="guide-preview-your-answer" animate.enter="game-result-enter"><strong>你的回答</strong><p>{{ demoResponse() }}</p></div>
               <h3>哪一則回答最能說服你？</h3>
               <p class="guide-preview-hint">正式遊戲不能投自己的回答。以下回答與票數僅供示範。</p>
+              <p class="guide-preview-hint">史實推理：推測文物的真實名稱、用途、年代或背景。擬真異說：編一段聽起來可信的說明。妙想奇談：把文物寫進幽默誇張的故事。</p>
               <ol class="guide-preview-answers" animate.enter="game-result-enter">
                 @for (answer of demoAnswers; track answer.author; let index = $index) {
                   <li>
                     <button type="button" [class.is-selected]="selectedDemoAnswer() === index" [class.is-winner]="demoRevealed() && index === 1" [attr.aria-pressed]="selectedDemoAnswer() === index" [disabled]="demoRevealed()" (click)="selectedDemoAnswer.set(index)">
                       <span><strong>回答 {{ (index + 1).toString().padStart(2, '0') }}</strong>@if (demoRevealed()) { <small>{{ answer.author }} · {{ answer.votes }} 票@if (index === 1) { · 勝出 }</small> }</span>
-                      <span class="guide-preview-answer-text">{{ answer.text }}</span>
+                      <span class="guide-preview-answer-text"><strong>{{ answer.category }}</strong><br />{{ answer.text }}</span>
                       @if (!demoRevealed() && selectedDemoAnswer() === index) { <small>已選擇</small> }
                     </button>
                   </li>

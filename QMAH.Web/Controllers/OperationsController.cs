@@ -632,6 +632,13 @@ public sealed class OperationsController(
         return model;
     }
 
+    private static (decimal Increase, decimal Decrease, decimal Net) SummarizeAmounts(IEnumerable<decimal> amounts)
+    {
+        var values = amounts.ToArray();
+        return (values.Where(amount => amount > 0).Sum(),
+            values.Where(amount => amount < 0).Sum(amount => Math.Abs(amount)), values.Sum());
+    }
+
     private static (int Increase, int Decrease, int Net) SummarizeAmounts(IEnumerable<int> amounts)
     {
         var values = amounts.ToArray();

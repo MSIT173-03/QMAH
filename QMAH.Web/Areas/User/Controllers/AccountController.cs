@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -7,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.User.ViewModels;
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Models.Identity;
 
@@ -19,20 +19,20 @@ public class AccountController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly QmahDbContext _context;
-    private readonly IWebHostEnvironment _environment;
+    private readonly QmahMediaStoragePaths _mediaPaths;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         QmahDbContext context,
-        IWebHostEnvironment environment,
+        QmahMediaStoragePaths mediaPaths,
         ILogger<AccountController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
-        _environment = environment;
+        _mediaPaths = mediaPaths;
         _logger = logger;
     }
 
@@ -284,15 +284,8 @@ public class AccountController : Controller
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var webRoot = _environment.WebRootPath;
-            if (string.IsNullOrWhiteSpace(webRoot))
-            {
-                // 以 DLL 直接啟動或靜態檔案尚未部署時，沒有 WebRoot 也不應阻斷登入頁。
-                ViewData["LoginArtifactImages"] = Array.Empty<string>();
-                return;
-            }
-
-            var catalogRoot = Path.Combine(webRoot, "media", "catalog");
+            // 與 API、後台靜態檔案共用媒體根目錄，避免搬移媒體後圖片牆變成空白。
+            var catalogRoot = Path.Combine(_mediaPaths.PublicRoot, "catalog");
             if (!Directory.Exists(catalogRoot))
             {
                 ViewData["LoginArtifactImages"] = Array.Empty<string>();
@@ -300,10 +293,12 @@ public class AccountController : Controller
             }
 
             var images = Directory
-                .EnumerateFiles(catalogRoot, "thumbnail.jpg", SearchOption.AllDirectories)
+                .EnumerateDirectories(catalogRoot)
+                .SelectMany(category => Directory.EnumerateFiles(category, "thumbnail.jpg", SearchOption.AllDirectories)
+                    .OrderBy(_ => Random.Shared.Next()).Take(3))
                 .OrderBy(_ => Random.Shared.Next())
                 .Take(24)
-                .Select(file => "/" + Path.GetRelativePath(webRoot, file)
+                .Select(file => "/media/" + Path.GetRelativePath(_mediaPaths.PublicRoot, file)
                     .Replace(Path.DirectorySeparatorChar, '/')
                     .Replace(Path.AltDirectorySeparatorChar, '/'))
                 .ToArray();

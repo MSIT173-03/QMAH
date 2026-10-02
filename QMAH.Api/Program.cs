@@ -257,6 +257,7 @@ builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>(
 // 新增跨系統規則時放進 Infrastructure service，Controller 只負責輸入驗證與 HTTP response，Web 後台也能重用同一套規則。
 // API 與管理後台共用經濟領域服務；交易帳本與 Mini Game 獎勵在服務層保持一致。
 builder.Services.AddScoped<EconomyService>();
+builder.Services.AddScoped<GameDailyRewardService>();
 builder.Services.AddScoped<MiniGameService>();
 builder.Services.AddSingleton<ScrollPaintingEligibility>();
 // 活動與私人房間共用同一套加碼與邀請服務，確保實際發放、資產扣除與交易流水一致。
@@ -266,6 +267,7 @@ builder.Services.AddScoped<DailyActivityService>();
 // integration: 房間生命週期由背景 worker 定期推進，和 HTTP 請求共用同一個 scoped service；
 // 不依賴前端持續輪詢，部署到不同主機時也只需沿用既有 DI 設定。
 builder.Services.AddScoped<GameRoomLifecycleService>();
+builder.Services.AddSingleton<GameRoomSessionStore>();
 builder.Services.AddHostedService<GameRoomLifecycleWorker>();
 // Social 站內通知：活動審核、檢舉處理等共用同一套排隊寫入方式，由各自的 SaveChangesAsync 一併提交。
 builder.Services.AddScoped<INotificationService, SocialNotificationService>();

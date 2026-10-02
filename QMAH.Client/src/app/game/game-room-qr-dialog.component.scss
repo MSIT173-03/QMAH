@@ -9,7 +9,7 @@
 .qr-frame { display: grid; place-items: center; width: 244px; height: 244px; border: 1px solid var(--qmah-border); background: var(--qmah-surface-elevated); }
 .qr-frame qrcode { display: block; line-height: 0; }
 .qr-sheet code { margin-top: 14px; color: var(--ink); font: 800 20px/var(--qmah-type-heading-leading) "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
-.qr-sheet > p { margin: 10px 0 16px; color: var(--muted); font-size: 12px; }
+.qr-sheet > p { margin: 10px 0 16px; color: var(--muted); font-size: 14px; line-height: 1.7; overflow-wrap: break-word; }
 .qr-copy { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-primary); border-radius: var(--qmah-radius-control); padding: 9px var(--qmah-button-padding-x); color: var(--qmah-primary-content); background: var(--qmah-primary); font-weight: 800; }
 .qr-copy:hover { border-color: var(--qmah-primary-hover); background: var(--qmah-primary-hover); }
 .qr-sheet button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }

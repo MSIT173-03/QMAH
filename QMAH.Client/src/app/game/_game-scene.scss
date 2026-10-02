@@ -1,4 +1,17 @@
 // Shared scene frame. Website chrome remains outside and is hidden only by opt-in focus mode.
+// 現成 Temple 紋樣只作背景裝飾，中央以面板底色遮住，來源與授權見 SVG 署名。
+@mixin pattern($ground: null) {
+  @if $ground {
+    background-image: linear-gradient(90deg, transparent, $ground 18%, $ground 82%, transparent), var(--qmah-game-pattern, url('/assets/game/hero-temple.svg'));
+    background-size: auto, 256px 256px;
+  } @else {
+    background-image: var(--qmah-game-pattern, url('/assets/game/hero-temple.svg'));
+    background-size: 256px 256px;
+  }
+  background-position: center, center top;
+  background-repeat: repeat;
+}
+
 @mixin surface {
   --scene-ground: var(--qmah-surface);
   --scene-ink: var(--qmah-ink);
@@ -13,5 +26,6 @@
   padding: 16px clamp(12px, 3vw, 40px) 24px;
   border-radius: var(--qmah-radius-panel);
   background: var(--scene-ground);
-  &.is-focus-mode { width: 100%; min-height: 100dvh; margin: 0; border-radius: 0; }
+  @include pattern(var(--scene-ground));
+  &.is-focus-mode { width: 100%; min-height: 100dvh; margin: 0; border-radius: 0; background-image: none; }
 }

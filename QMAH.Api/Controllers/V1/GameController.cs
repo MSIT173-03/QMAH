@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
@@ -19,6 +20,77 @@ public sealed class GameController(
     GameRoomLifecycleService gameRoomLifecycleService,
     QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
+    [Authorize(Roles = "Admin")]
+    [HttpGet("rehearsal-rooms")]
+    public ActionResult<ApiPage<GameRehearsalRoomDto>> GetRehearsalRooms(string? status, string? sort, int page = 1, int pageSize = 20)
+    {
+        if (page<1 || pageSize is <1 or >100) return Problem(statusCode: 400, title: "分頁設定無效");
+        // 房卡只是同一演練流程的展示設定，不建立實體房間或背景計時器。
+        IEnumerable<GameRehearsalRoomDto> rooms = Enumerable.Range(1,24).Select(index =>
+        {
+            var capacity=4+index%3;
+            var playerCount=index%5==0 ? capacity : 1+index%(capacity-1);
+            return new GameRehearsalRoomDto($"test-room-virtual-{index}",new Random(index*179).Next(1000,9999).ToString(),
+                "WAITING","PUBLIC",capacity,2+index%3,playerCount,null,null,DateTime.UtcNow.AddMinutes(-index*3));
+        });
+        if (!string.IsNullOrWhiteSpace(status) && !string.Equals(status,"WAITING",StringComparison.OrdinalIgnoreCase)) rooms=[];
+        rooms=sort?.ToUpperInvariant() switch
+        {
+            "NEARLY_FULL" => rooms.OrderBy(room=>room.MaxPlayers-room.PlayerCount),
+            "OPEN_SLOTS" => rooms.OrderByDescending(room=>room.MaxPlayers-room.PlayerCount),
+            "NEWEST" => rooms.OrderByDescending(room=>room.CreatedAt),
+            _ => rooms
+        };
+        var all=rooms.ToArray();
+        return Ok(new ApiPage<GameRehearsalRoomDto>(all.Skip((page-1)*pageSize).Take(pageSize).ToArray(),page,pageSize,all.Length,(int)Math.Ceiling(all.Length/(double)pageSize)));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("rehearsal-session")]
+    public async Task<ActionResult<GameRehearsalSessionDto>> GetRehearsalSession(
+        int count = 3, int players = 4, CancellationToken cancellationToken = default)
+    {
+        if (count is < 1 or > 6)
+            return Problem(statusCode: 400, title: "回合數無效", detail: "演練素材一次可抽取一至六件文物。");
+        if (!TryGetCurrentUserId(out var currentUserId)) return Unauthorized();
+        if (players is <2 or >6) return Problem(statusCode: 400,title: "玩家人數無效",detail: "演練可使用二至六位玩家。");
+        var currentPlayerName = await db.UserProfiles.AsNoTracking().Where(profile => profile.UserId == currentUserId)
+            .Select(profile => profile.Nickname).SingleOrDefaultAsync(cancellationToken) ?? "玩家";
+        var playerNames = await db.UserProfiles.AsNoTracking()
+            .Where(profile => profile.UserId != currentUserId && profile.User.Status == "ACTIVE" && profile.Nickname != "")
+            .OrderBy(_ => Guid.NewGuid()).Take(players-1).Select(profile => profile.Nickname).ToArrayAsync(cancellationToken);
+        if (playerNames.Length < players-1)
+            return Problem(statusCode: 409, title: "模擬玩家不足", detail: "有暱稱的啟用會員不足，請選擇人數較少的演練房間。");
+
+        // 演練只讀取已完成回合，不建立房間、不改原回答或會員獎勵。
+        var historical = db.RoundAnswers.AsNoTracking().Where(answer => answer.Round.IsSettled
+            && answer.Round.Room.Status == "COMPLETED" && answer.Text != "");
+        var artifacts = await db.Artifacts.AsNoTracking()
+            .Where(artifact => artifact.IsActive && artifact.PrimaryImagePath != null && artifact.PrimaryImagePath != ""
+                && historical.Any(answer => answer.Round.ArtifactId == artifact.Id && answer.AnswerType == "FACTUAL_REASONING")
+                && historical.Any(answer => answer.Round.ArtifactId == artifact.Id && answer.AnswerType == "PLAUSIBLE_FICTION")
+                && historical.Any(answer => answer.Round.ArtifactId == artifact.Id && answer.AnswerType == "CREATIVE_TALE"))
+            .OrderBy(_ => Guid.NewGuid()).Take(count)
+            .Select(artifact => new { artifact.Id, artifact.Name, artifact.PrimaryImagePath, artifact.ThumbnailPath })
+            .ToListAsync(cancellationToken);
+        if (artifacts.Count < count)
+            return Problem(statusCode: 409, title: "演練素材不足", detail: "需要有圖片、且三類歷史回答完整的文物，才能開始演練。");
+
+        var artifactIds = artifacts.Select(artifact => artifact.Id).ToArray();
+        var answers = await historical.Where(answer => artifactIds.Contains(answer.Round.ArtifactId))
+            .Select(answer => new { answer.Round.ArtifactId, answer.AnswerType, answer.Text })
+            .ToListAsync(cancellationToken);
+        string[] types = ["FACTUAL_REASONING", "PLAUSIBLE_FICTION", "CREATIVE_TALE"];
+        if (artifacts.Any(artifact => types.Any(type => !answers.Any(answer => answer.ArtifactId == artifact.Id && answer.AnswerType == type))))
+            return Problem(statusCode: 409, title: "演練素材已變更", detail: "歷史回答剛被更新或移除，請重新抽取素材。");
+        var materials = artifacts.Select(artifact => new GameRehearsalMaterialDto(
+            artifact.Id, artifact.Name, mediaUrlResolver.Resolve(artifact.PrimaryImagePath), mediaUrlResolver.Resolve(artifact.ThumbnailPath),
+            types.Select(type => new GameRehearsalAnswerDto(type, answers
+                .Where(answer => answer.ArtifactId == artifact.Id && answer.AnswerType == type)
+                .OrderBy(_ => Random.Shared.Next()).First().Text)).ToArray())).ToArray();
+        return Ok(new GameRehearsalSessionDto(materials, playerNames, currentPlayerName));
+    }
+
     [AllowAnonymous]
     [HttpGet("rooms")]
     public async Task<ActionResult<ApiPage<GameRoomListItemDto>>> GetRooms(
@@ -30,7 +102,7 @@ public sealed class GameController(
     {
         var query = db.GameRooms
             .AsNoTracking()
-            .Where(room => room.Visibility == "PUBLIC");
+            .Where(room => room.Visibility == "PUBLIC" && !room.IsShowcase);
         status = status?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(status))
         {
@@ -387,47 +459,55 @@ public sealed class GameController(
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        var round = await db.GameRounds
-            .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
-        if (round is null)
-            return MissingResource("找不到遊戲回合", "這個回合不存在。");
-        if (round.Status != "VOTING" || round.VotingDeadlineAt < DateTime.UtcNow)
-            return InvalidWorkflow("目前不是投票階段", "只有投票中的回合可以投票。");
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync<ActionResult>(async retryToken =>
+        {
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, retryToken);
 
-        var voter = await db.GamePlayers
-            .SingleOrDefaultAsync(item => item.RoomId == round.RoomId
-                && item.UserId == userId
-                && item.ConnectionStatus != "LEFT", cancellationToken);
-        if (voter is null)
-            return Forbid();
-        var answer = await db.RoundAnswers
-            .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == request.AnswerId && item.RoundId == id, cancellationToken);
-        if (answer is null)
-            return MissingResource("找不到回答", "投票目標不屬於這個回合。");
-        if (answer.GamePlayerId == voter.Id)
-            return InvalidWorkflow("不能投給自己的回答", "請選擇其他玩家的回答。");
-        if (await db.Votes.AnyAsync(
-                vote => vote.RoundId == id
+            var round = await db.GameRounds
+                .SingleOrDefaultAsync(item => item.Id == id, retryToken);
+            if (round is null)
+                return MissingResource("找不到遊戲回合", "這個回合不存在。");
+            var now = DateTime.UtcNow;
+            if (round.Status != "VOTING" || round.VotingDeadlineAt <= now)
+                return InvalidWorkflow("目前不是投票階段", "只有投票期限內的回合可以投票。");
+
+            var voter = await db.GamePlayers
+                .SingleOrDefaultAsync(item => item.RoomId == round.RoomId
+                    && item.UserId == userId
+                    && item.ConnectionStatus != "LEFT", retryToken);
+            if (voter is null)
+                return Forbid();
+            var answer = await db.RoundAnswers
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.Id == request.AnswerId && item.RoundId == id, retryToken);
+            if (answer is null)
+                return MissingResource("找不到回答", "投票目標不屬於這個回合。");
+            if (answer.GamePlayerId == voter.Id)
+                return InvalidWorkflow("不能投給自己的回答", "請選擇其他玩家的回答。");
+
+            if (await db.Votes.AnyAsync(vote => vote.RoundId == id
                     && vote.VoterGamePlayerId == voter.Id
-                    && vote.AnswerId == answer.Id,
-                cancellationToken))
-        {
-            return InvalidWorkflow("投票已送出", "同一位玩家不能重複投給同一個回答。");
-        }
+                    && vote.Answer.RoundId == id
+                    && vote.Answer.AnswerType == answer.AnswerType,
+                retryToken))
+            {
+                return InvalidWorkflow("這種類型已投過票", "每回合每種類型只能投一票。");
+            }
 
-        db.Votes.Add(new Vote
-        {
-            Id = Guid.NewGuid(),
-            RoundId = id,
-            VoterGamePlayerId = voter.Id,
-            AnswerId = answer.Id,
-            Count = request.Count,
-            SubmittedAt = DateTime.UtcNow
-        });
-        await db.SaveChangesAsync(cancellationToken);
-        return Accepted();
+            db.Votes.Add(new Vote
+            {
+                Id = Guid.NewGuid(),
+                RoundId = id,
+                VoterGamePlayerId = voter.Id,
+                AnswerId = answer.Id,
+                Count = 1,
+                SubmittedAt = now
+            });
+            await db.SaveChangesAsync(retryToken);
+            await transaction.CommitAsync(retryToken);
+            return Accepted();
+        }, cancellationToken);
     }
 
     [Authorize]
@@ -545,6 +625,7 @@ public sealed class GameController(
             round.VotingDeadlineAt,
             round.SettledAt,
             round.Room.GamePlayers.Count(player => player.ConnectionStatus != "LEFT"),
+            round.RoundAnswers.Count,
             revealed ? answerRows.Sum(row => row.VoteCount) : 0,
             winner?.Answer.Id,
             winner?.Answer.GamePlayer.DisplayName,

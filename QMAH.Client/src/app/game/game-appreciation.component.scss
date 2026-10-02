@@ -1,0 +1,28 @@
+@use './game-scene' as scene;
+:host { display: block; @include scene.pattern(var(--qmah-surface)); }
+.appreciation-scene { max-width: 1100px; margin-inline: auto; padding: 32px; color: var(--qmah-ink); }
+header { margin-block-end: 24px; }
+h1 { font-size: clamp(28px, 4vw, 42px); }
+h1, h2 { text-wrap: balance; }
+p { font-size: 16px; line-height: 1.8; line-break: strict; text-wrap: pretty; }
+.rules { max-width: 760px; margin-block: 20px; }
+summary { min-height: 44px; cursor: pointer; align-content: center; }
+.filters { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; margin-block: 24px; }
+label { display: grid; gap: 8px; }
+select, button { min-height: 44px; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); padding: 8px 16px; font: inherit; background: var(--qmah-surface); color: var(--qmah-ink); }
+button { cursor: pointer; }
+button:disabled { opacity: .55; cursor: default; }
+button[aria-pressed='true'] { background: var(--qmah-game-action); color: var(--qmah-game-content); }
+button:focus-visible, select:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
+.answer-gallery { padding: 0; list-style: none; }
+.answer-gallery li { padding: 24px 0; border-block-start: 1px solid var(--qmah-border); }
+.answer-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
+.answer-heading h2 { font-size: 22px; margin: 0; }
+.answer-heading > span { color: var(--qmah-muted); }
+.answer-text { max-width: 760px; white-space: pre-wrap; overflow-wrap: anywhere; }
+footer { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+footer > div { display: grid; gap: 6px; }
+footer span, small { color: var(--qmah-muted); font-size: 14px; }
+.source-note { color: var(--qmah-muted); margin-block: 8px; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 16px; }
+@media (max-width: 600px) { .appreciation-scene { padding: 20px 16px; } .filters label { flex: 1 1 140px; min-width: 0; } select { width: 100%; } footer { flex-wrap: wrap; } }
