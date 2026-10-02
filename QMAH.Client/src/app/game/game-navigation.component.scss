@@ -23,7 +23,7 @@
   align-items: center;
   gap: 7px;
   color: var(--game-nav-muted, var(--qmah-muted));
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: .12em;
   white-space: nowrap;
@@ -65,15 +65,14 @@
 }
 .game-navigation__link-icon { width: 18px; height: 18px; flex: 0 0 auto; }
 .game-navigation__link-copy { display: grid; gap: 1px; min-width: 0; }
-.game-navigation__link-label { font-size: 13px; font-weight: 800; white-space: nowrap; }
+.game-navigation__link-label { font-size: 14px; font-weight: 800; line-height: 1.5; white-space: normal; }
 .game-navigation__link-description {
-  overflow: hidden;
+  overflow-wrap: break-word;
   max-width: 100%;
   color: var(--game-nav-muted, var(--qmah-muted));
-  font-size: 10px;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: normal;
 }
 .game-navigation__links a:hover { color: var(--game-nav-ink, var(--qmah-ink)); background: var(--game-nav-hover, var(--qmah-surface-muted)); }
 .game-navigation__links a.is-active {
@@ -180,9 +179,9 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); ou
   .game-navigation__switcher { display: block; width: 100%; }
   .game-navigation__links { width: 100%; }
   .game-navigation__links a { min-width: 0; min-height: 44px; justify-content: center; padding: 7px 8px; text-align: center; }
-  .game-navigation__link-icon { width: 17px; height: 17px; }
+  .game-navigation__link-icon { display: none; }
   .game-navigation__link-copy { display: block; }
-  .game-navigation__link-label { font-size: 12px; }
+  .game-navigation__link-label { font-size: 14px; white-space: nowrap; }
   .game-navigation__link-description { display: none; }
   .game-navigation__actions { gap: 6px; min-height: 34px; }
   .game-navigation__test-entry,

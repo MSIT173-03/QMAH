@@ -6,19 +6,24 @@ import { finalize, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   ApiPage,
+  GameDailyRewardStatus,
   CompleteMiniGameRequest,
   CreateGameRoomRequest,
   GameAnswer,
   GameAnswerType,
   GameRoomDetails,
+  GameRoomPresentation,
+  GameRoomChatMessage,
   GameRoomHistory,
   GameRoomListItem,
   GameRoomQuery,
   GameRoomSort,
   GameRoundDetails,
+  GameRehearsalSession,
   GameValidationError,
   JoinGameRoomRequest,
   MainGameReward,
+  AppreciationAnswer,
   MiniGameComplete,
   MiniGameMode,
   MiniGameStart,
@@ -59,6 +64,36 @@ export class GameService {
     if (query.status) params = params.set('status', query.status);
     if (query.sort) params = params.set('sort', query.sort);
     return this.http.get<ApiPage<GameRoomListItem>>(`${this.apiUrl}/rooms`, { params });
+  }
+
+  /** 只讀取同件文物的三類歷史回答，供管理員流程演練使用。 */
+  getRehearsalSession(count: number, players = 4): Observable<GameRehearsalSession> {
+    return this.http.get<GameRehearsalSession>(`${this.apiUrl}/rehearsal-session`, { params: { count, players } });
+  }
+
+  private readonly rehearsalRooms = new Map<string, GameRoomListItem>();
+
+  getRoomPresentation(roomId: string, connectionId: string): Observable<GameRoomPresentation> {
+    return this.http.get<GameRoomPresentation>(`${this.apiUrl}/rooms/${roomId}/presentation`, { params: { connectionId } });
+  }
+
+  sendRoomMessage(roomId: string, text: string, clientMessageId: string): Observable<GameRoomChatMessage> {
+    return this.http.post<GameRoomChatMessage>(`${this.apiUrl}/rooms/${roomId}/presentation/chat`, { text, clientMessageId });
+  }
+
+  setRoomColor(roomId: string, color: string): Observable<GameRoomPresentation> {
+    return this.http.put<GameRoomPresentation>(`${this.apiUrl}/rooms/${roomId}/presentation/color`, { color });
+  }
+
+  disconnectRoomPresentation(roomId: string, connectionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/rooms/${roomId}/presentation/connections/${connectionId}`);
+  }
+  getRehearsalRooms(query: GameRoomQuery = {}): Observable<ApiPage<GameRoomListItem>> {
+    return this.http.get<ApiPage<GameRoomListItem>>(`${this.apiUrl}/rehearsal-rooms`, { params: { ...query } })
+      .pipe(tap(page => page.items.forEach(room => this.rehearsalRooms.set(room.id, room))));
+  }
+  getRehearsalRoom(roomId: string): GameRoomListItem | undefined {
+    return this.rehearsalRooms.get(roomId);
   }
 
   /** 讀取房間詳細資料並更新目前房間快照。 */
@@ -192,8 +227,21 @@ export class GameService {
   getMiniGameModes(): Observable<MiniGameMode[]> {
     return this.http.get<MiniGameMode[]>(`${this.apiUrl}/modes`);
   }
-  getMiniGameRewardStatus(): Observable<{ dailyLimit: number; remaining: number; resetsAt: string }> {
-    return this.http.get<{ dailyLimit: number; remaining: number; resetsAt: string }>(`${this.apiUrl}/reward-status`);
+  getMiniGameRewardStatus(): Observable<GameDailyRewardStatus> {
+    return this.http.get<GameDailyRewardStatus>(`${this.apiUrl}/reward-status`);
+  }
+  unlockDailyRewardBreakthrough(): Observable<GameDailyRewardStatus> {
+    return this.mutate(() => this.http.post<GameDailyRewardStatus>(`${this.apiUrl}/reward-status/breakthrough`, {}));
+  }
+  getAppreciation(filters: { artifactId: string; categoryCode: string; answerType: string; sort: string; page: number }): Observable<ApiPage<AppreciationAnswer>> {
+    let params = new HttpParams().set('sort', filters.sort).set('page', filters.page);
+    if (filters.artifactId) params = params.set('artifactId', filters.artifactId);
+    if (filters.categoryCode) params = params.set('categoryCode', filters.categoryCode);
+    if (filters.answerType) params = params.set('answerType', filters.answerType);
+    return this.http.get<ApiPage<AppreciationAnswer>>(`${this.apiUrl}/appreciation`, { params });
+  }
+  voteAppreciation(answerId: string, voted: boolean): Observable<{ voted: boolean; voteCount: number }> {
+    return this.mutate(() => this.http.put<{ voted: boolean; voteCount: number }>(`${this.apiUrl}/appreciation/${encodeURIComponent(answerId)}/vote`, { voted }));
   }
   verifyMiniGameOwner(attemptId: string): Observable<unknown> {
     return this.http.get(`${this.apiUrl}/attempts/${encodeURIComponent(attemptId)}`);

@@ -8,6 +8,11 @@ import { adminGameTestGuard, adminTestRoomGuard } from './core/guards/game-test-
 // 展示頁仍只在 development mode 登記；正式的遊戲檢查中心則由 Admin guard 保護，讓它能長期存在於部署版本。
 const appShellChildren: Routes = [
   {
+    path: 'game/appreciation',
+    canActivate: [authGuard],
+    loadComponent: () => import('./game/game-appreciation.component').then(m => m.GameAppreciationComponent)
+  },
+  {
     // ui-integration: 登入後與網站根路徑都有明確的內容型首頁，讓使用者能從同一個入口重新選擇 Area。
     path: 'home',
     loadComponent: () => import('./features/home/home').then(m => m.HomeComponent)
@@ -86,17 +91,22 @@ const appShellChildren: Routes = [
   },
   {
     path: 'game/rooms',
+    canActivate: [adminTestRoomGuard],
+    runGuardsAndResolvers: 'paramsOrQueryParamsChange',
     loadComponent: () =>
       import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
   },
   {
     path: 'game/room/:roomId',
     canActivate: [adminTestRoomGuard],
+    runGuardsAndResolvers: 'paramsOrQueryParamsChange',
     loadComponent: () =>
       import('./game/game-room.component').then(({ GameRoomComponent }) => GameRoomComponent)
   },
   {
     path: 'game',
+    canActivate: [adminTestRoomGuard],
+    runGuardsAndResolvers: 'paramsOrQueryParamsChange',
     loadComponent: () =>
       import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
   },
