@@ -1,252 +1,56 @@
-<div class="room-shell">
-  <!-- ui-integration: 房間頁沿用共同遊戲子導覽，返回入口只保留為子導覽的上下文操作。 -->
-  <app-game-navigation>
-    <a class="back-link" [routerLink]="testMode ? '/game/test' : '/game'" [queryParams]="testMode ? { scenario: room?.id } : null">{{ testMode ? '返回流程演練' : '返回多人鑑定大廳' }}</a>
-  </app-game-navigation>
-
-  <section class="room-intro" aria-labelledby="room-title">
-    <div>
-      <p class="eyebrow">多人鑑定 · 房間</p>
-      <h1 id="room-title">{{ room ? '房間 ' + room.roomCode : '遊戲房間' }}</h1>
-      <p class="intro-copy">房間狀態、玩家席位與目前回合會顯示於此。</p>
-    </div>
-    @if (room) {
-      <div class="room-status" [attr.data-status]="room.status">
-        <span class="status-dot" aria-hidden="true"></span>{{ statusText(room.status) }}
-      </div>
-    }
-  </section>
-
-  @if (refreshError) {
-    <div class="notice error" role="alert"><strong>房間同步失敗</strong><span>{{ refreshError }}</span>@if (needsGameAccount) { <a routerLink="/login">前往會員登入</a> } @else { <a routerLink="/game">返回多人鑑定大廳</a> }</div>
-  }
-  @if (roundLoadError) {
-    <div class="notice error" role="alert"><strong>回合資料無法讀取</strong><span>{{ roundLoadError }}</span></div>
-  }
-  @if (actionError) {
-    <div class="notice error" role="alert"><strong>操作未完成</strong><span>{{ actionError }}</span></div>
-  }
-  @if (actionMessage && !testMode) {
-    <div class="notice success" role="status">{{ actionMessage }}</div>
-  }
-
-  @if (testMode) {
-    <p class="rehearsal-context" role="status">流程演練 · 本局不會建立遊戲紀錄或發放獎勵</p>
-    <!-- ui-integration: 測試工具不佔用房間版面，預設收合成低干擾浮動入口；展開後才提供檢查流程控制。 -->
-    <aside class="test-tools" [class.is-open]="testToolsOpen" aria-label="本機測試工具">
-      <button
-        type="button"
-        class="test-tools-toggle"
-        [attr.aria-expanded]="testToolsOpen"
-        [attr.aria-label]="testToolsOpen ? '收合測試工具' : '開啟測試工具'"
-        [attr.title]="testToolsOpen ? '收合測試工具' : '開啟測試工具'"
-        (click)="toggleTestTools()"
-      >
-        <span aria-hidden="true">QA</span>
-      </button>
-      @if (testToolsOpen) {
-        <section class="test-tools-panel" aria-label="本機流程測試">
-          <header>
-            <div><p class="eyebrow">本機流程測試</p><strong>{{ testStageText() }}</strong></div>
-            <span class="test-tools-note">不寫入正式紀錄</span>
-          </header>
-          @if (actionMessage) { <p class="test-tools-message" role="status">{{ actionMessage }}</p> }
-          <div class="test-tools-actions">
-            @if (testStage !== 'COMPLETED') {
-              <button type="button" class="test-control secondary" (click)="toggleTestAuto()">{{ testAutoPaused ? '繼續自動流程' : '暫停自動流程' }}</button>
-              <button type="button" class="test-control" (click)="skipTestStage()">下一階段</button>
-            }
-            <button type="button" class="test-control secondary" (click)="restartTestFlow()">重新開始</button>
-          </div>
-        </section>
+<div class="game-stage" [class.is-focused]="isRoomFocused()">
+  <header class="table-hud">
+    <div class="hud-title"><strong>多人鑑定</strong><span>{{ room ? '牌桌 ' + room.roomCode : '準備牌桌' }}@if (testMode) { · 演練 }</span></div>
+    <div class="hud-turn">@if (round) { <span>第 {{ round.roundNumber }}／{{ room?.totalRounds }} 回合</span><strong>{{ phaseText(round.status) }} @if (round.status !== 'REVEALED') { {{ countdownText() }} }</strong> } @else if (room) { <strong>{{ statusText(room.status) }}</strong> }</div>
+    <button type="button" class="hud-menu" (click)="openRoomPanel('settings')" aria-label="開啟牌桌選單"><app-qmah-icon name="menu" />牌桌選單</button>
+  </header>
+  @if (refreshError || roundLoadError || actionError) { <div class="table-notice" role="alert">{{ refreshError || roundLoadError || actionError }}@if (testMode && refreshError) { <button type="button" [disabled]="loading" (click)="restartTestFlow()">重新讀取</button> }</div> }
+  @if (loading && !room) { <div class="table-loading" role="status">正在準備牌桌…</div> }
+  @if (room; as currentRoom) {
+    <nav class="table-seats" aria-label="玩家席位">
+      @for (player of currentRoom.players; track player.id) {
+        <button type="button" class="table-seat" [class.is-self]="player.id === currentPlayerId" [attr.data-seat-position]="seatPosition(player, currentRoom.players, currentRoom.maxPlayers)" [style.--seat-color]="seatColor(player.id)" (click)="inspectSeat(player.id)">
+          <span class="seat-back" aria-hidden="true"></span><span><strong>{{ player.displayName }}@if (player.id === currentPlayerId) { <small>你</small> }</strong><small>{{ player.role === 'HOST' ? '房主' : '' }} {{ player.connectionStatus === 'ONLINE' ? (currentRoom.status === 'WAITING' ? (player.isReady ? '已準備' : '未準備') : '在桌') : '暫時離線' }}</small></span>
+        </button>
       }
-    </aside>
-  }
-
-  @if (loading && !room) {
-    <section class="loading-card" aria-live="polite"><span class="loading-mark" aria-hidden="true"></span><p>正在讀取房間與回合資料…</p></section>
-  } @else if (room; as currentRoom) {
-    <div class="room-layout">
-      <aside class="room-sidebar">
-        <section class="paper-card room-facts" aria-labelledby="facts-title">
-          <header class="section-heading"><div><p class="eyebrow">房間資訊</p><h2 id="facts-title">房間設定</h2></div><span class="room-code">{{ currentRoom.roomCode }}</span></header>
-          <dl>
-            <div><dt>目前進度</dt><dd>{{ currentRoom.currentRoundNo }} / {{ currentRoom.totalRounds }} 回合</dd></div>
-            <div><dt>作答時間</dt><dd>{{ currentRoom.answerSeconds }} 秒</dd></div>
-            <div><dt>投票時間</dt><dd>{{ currentRoom.votingSeconds }} 秒</dd></div>
-            <div><dt>房間類型</dt><dd>{{ currentRoom.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</dd></div>
-          </dl>
-          <div class="sync-caption" aria-live="polite">
-            <span [class.is-active]="refreshing" aria-hidden="true"></span>
-            {{ testMode ? '測試流程自動推進' : refreshing ? '同步房間狀態…' : '每 2 秒更新房間狀態' }}
-          </div>
-        </section>
-
-        <section class="paper-card players-card" aria-labelledby="players-title">
-          <header class="section-heading"><div><p class="eyebrow">目前玩家</p><h2 id="players-title">玩家席位</h2></div><span class="seat-count">{{ currentRoom.players.length }} / {{ currentRoom.maxPlayers }}</span></header>
-          <ol class="player-list">
-            @for (player of currentRoom.players; track player.id) {
-              <li>
-                <span class="seat-number">{{ seatText(player.seatNo) }}</span>
-                <span class="player-name">{{ player.displayName }}@if (currentPlayerId === player.id) { <small>你</small> }</span>
-                <span class="player-state" [class.is-offline]="player.connectionStatus !== 'ONLINE'">{{ playerStateText(player) }}</span>
-              </li>
-            } @empty {
-              <li class="empty-players">目前沒有玩家資料。</li>
-            }
-          </ol>
-        </section>
-
-        <section class="leave-note" aria-label="房間出口">
-          <strong>{{ currentRoom.status === 'COMPLETED' || currentRoom.status === 'CANCELLED' ? '下一步' : '返回大廳' }}</strong>
-          <p>{{ currentRoom.status === 'COMPLETED' ? '本局已完成，可以回到大廳選擇下一間房。' : currentRoom.status === 'CANCELLED' ? '這間房已結束，可以回到大廳重新選擇。' : '離開後會釋出座位；遊戲開始後，將無法重新加入這一場。' }}</p>
-          @if (currentRoom.status === 'COMPLETED' || currentRoom.status === 'CANCELLED') {
-            <a routerLink="/game">返回多人鑑定大廳</a>
-          } @else {
-            <button type="button" (click)="requestLeaveRoom()" [disabled]="leaving">{{ leaving ? '離開中…' : '離開房間並返回大廳' }}</button>
-          }
-        </section>
-      </aside>
-
-      <section class="play-area">
+      @for (slot of [].constructor(currentRoom.maxPlayers - currentRoom.players.length); track $index) { <span class="empty-seat">空席</span> }
+    </nav>
+    <main class="table-playfield" [class.is-waiting]="currentRoom.status === 'WAITING'">
+      @if (currentRoom.status === 'WAITING') {
+        <div class="waiting-table"><h1>等大家入座</h1><p>{{ currentRoom.players.length }}／{{ currentRoom.maxPlayers }} 位玩家 · {{ currentRoom.totalRounds }} 回合</p><p>選好牌背並準備，房主就能開始。</p></div>
+      } @else if (currentRoom.status === 'COMPLETED') {
+        <div class="table-settlement"><app-game-room-results [rehearsal]="testMode" [scenario]="currentRoom.id" [history]="history" [reward]="reward" [rewarding]="rewarding" [canClaim]="!!currentPlayer()" (claimReward)="claimReward()" /></div>
+      } @else if (currentRoom.status === 'CANCELLED') { <div class="waiting-table"><h1>這場遊戲已結束</h1><a routerLink="/game">返回大廳</a></div>
+      } @else if (round; as currentRound) {
+        <button type="button" class="artifact-on-table" (click)="openRoomPanel('artifact')" aria-label="放大查看本回合文物">
+          @if (!artifactImageUnavailable && (currentRound.primaryImagePath || currentRound.thumbnailPath)) { <img [src]="currentRound.primaryImagePath || currentRound.thumbnailPath" [alt]="currentRound.artifactName" (error)="artifactImageUnavailable = true" /> }
+          <strong>{{ currentRound.artifactName }}</strong><span>點圖放大觀察</span>
+        </button>
+        <div class="central-board"><app-game-answer-table [players]="currentRoom.players" [round]="currentRound" [currentPlayerId]="currentPlayerId" [playerColors]="playerColors" [votedAnswerIds]="votedAnswerIds" [votingForAnswerId]="votingForAnswerId" [canVote]="canVoteAtTable" [showSeats]="false" [showHeader]="false" (vote)="submitVote($event)" /></div>
+      } @else { <div class="waiting-table" role="status">正在準備下一回合…</div> }
+    </main>
+    <footer class="table-hand">
+      <div class="hand-action">
         @if (currentRoom.status === 'WAITING') {
-          <article class="paper-card waiting-panel">
-            <p class="eyebrow">準備階段</p>
-            <div class="waiting-emblem" aria-hidden="true">等</div>
-            <h2>等待房間開始</h2>
-            <p>玩家名單會自動更新。所有玩家準備好後，由房主開始遊戲。</p>
-            <div class="waiting-facts"><span>{{ currentRoom.players.length }} 位玩家</span><span>{{ currentRoom.totalRounds }} 回合</span><span>房間代碼 {{ currentRoom.roomCode }}</span></div>
-            @if (currentPlayer(); as player) {
-              <div class="waiting-actions">
-                <button type="button" class="ready-toggle" [attr.aria-pressed]="player.isReady" [disabled]="lobbyActionBusy" (click)="setReady()">{{ lobbyActionBusy ? '更新中…' : player.isReady ? '取消準備' : '準備好了' }}</button>
-                @if (player.role === 'HOST') {
-                  <button type="button" class="start-game" [disabled]="lobbyActionBusy || !canStartRoom()" (click)="startGame()">{{ lobbyActionBusy ? '開始中…' : '開始遊戲' }}</button>
-                  <p class="action-hint">{{ startDisabledReason() || '所有玩家都準備好後即可開始。' }}</p>
-                }
-              </div>
-            } @else {
-              <div class="phase-callout"><strong>請先登入會員帳號</strong><p>登入後才能準備、作答與參與這場遊戲。</p><a routerLink="/login">前往會員登入</a></div>
-            }
-          </article>
-        } @else if (currentRoom.status === 'COMPLETED') {
-          <app-game-room-results
-            [rehearsal]="testMode"
-            [scenario]="currentRoom.id"
-            [history]="history"
-            [reward]="reward"
-            [rewarding]="rewarding"
-            [canClaim]="!!currentPlayer()"
-            (claimReward)="claimReward()"
-          />
-        } @else if (round; as currentRound) {
-          <article class="paper-card round-panel">
-            <header class="round-heading">
-              <div><p class="eyebrow">第 {{ currentRound.roundNumber }} / {{ currentRoom.totalRounds }} 回合</p><h2>第 {{ currentRound.roundNumber }} 回合</h2></div>
-              <div class="phase-clock" [class.is-expired]="countdownSeconds() === 0 && currentRound.status !== 'REVEALED'">
-                <span aria-live="polite">{{ phaseText(currentRound.status) }}</span>
-                @if (currentRound.status !== 'REVEALED') { <strong>{{ countdownText() }}</strong> }
-              </div>
-            </header>
-            <ol class="round-phases" aria-label="回合進度">
-              <li [class.is-current]="currentRound.status === 'ANSWERING'" [class.is-done]="currentRound.status !== 'ANSWERING'" [attr.aria-current]="currentRound.status === 'ANSWERING' ? 'step' : null">觀察與作答</li>
-              <li [class.is-current]="currentRound.status === 'VOTING'" [class.is-done]="currentRound.status === 'REVEALED'" [attr.aria-current]="currentRound.status === 'VOTING' ? 'step' : null">匿名投票</li>
-              <li [class.is-current]="currentRound.status === 'REVEALED'" [attr.aria-current]="currentRound.status === 'REVEALED' ? 'step' : null">揭曉結果</li>
-            </ol>
-            <section class="artifact-card" aria-label="本回合館藏">
-              @if (!artifactImageUnavailable && (currentRound.primaryImagePath || currentRound.thumbnailPath)) {
-                <img [src]="currentRound.primaryImagePath || currentRound.thumbnailPath" [alt]="currentRound.artifactName" (error)="artifactImageUnavailable = true" />
-              } @else {
-                <span class="artifact-mark" aria-hidden="true">藏</span>
-              }
-              <div><p>本回合觀察</p><h3>{{ currentRound.artifactName }}</h3></div>
-            </section>
-
-            @if (currentRound.status === 'ANSWERING') {
-              <section class="phase-content" aria-labelledby="answer-title">
-                <div class="phase-copy"><p class="eyebrow">觀察 · 作答</p><h3 id="answer-title">寫下你的判斷</h3><p>選一種回答方式，用清楚的文字說明你對這件館藏的看法。每位玩家每回合只能作答一次。</p></div>
-                @if (game.canAnswer(currentRound, now) && !hasSubmittedAnswer()) {
-                  <form class="answer-form" (ngSubmit)="submitAnswer()">
-                    <label for="answer-type">回答方式</label>
-                    <select id="answer-type" name="answerType" [(ngModel)]="answerType">
-                      @for (type of answerTypes; track type.value) { <option [ngValue]="type.value">{{ type.label }} — {{ type.hint }}</option> }
-                    </select>
-                    <label for="answer-text">你的回答</label>
-                    <textarea id="answer-text" name="answerText" [(ngModel)]="answerText" (ngModelChange)="saveDraft($event)" maxlength="500" required rows="5" placeholder="寫下你的推理或故事…"></textarea>
-                    <div class="form-foot"><span>{{ answerText.length }} / 500</span><button type="submit" [disabled]="submittingAnswer || !answerText.trim()">{{ submittingAnswer ? '送出中…' : '送出回答' }}</button></div>
-                  </form>
-                } @else if (hasSubmittedAnswer()) {
-                  <div class="phase-callout success-callout"><strong>回答已送出</strong><p>作答時間結束後，就能查看其他玩家的回答並投票。</p></div>
-                } @else {
-                  <div class="phase-callout"><strong>作答時間已到</strong><p>作答時間已結束，請稍候；投票開放後，畫面會自動更新。</p></div>
-                }
-                <p class="privacy-note">其他玩家的回答會在投票階段顯示。</p>
-              </section>
-            } @else if (currentRound.status === 'VOTING') {
-              <section class="phase-content" aria-labelledby="vote-title">
-                <div class="phase-copy"><p class="eyebrow">閱讀 · 投票</p><h3 id="vote-title">選出最有說服力的回答</h3><p><span>先讀回答，再決定投給誰。</span><span>作者和票數會在揭曉時公布。</span><span>不能投自己的回答，</span><span>每次可以投 1 到 3 票。</span></p></div>
-                <label class="vote-count-label" for="vote-count">每次投幾票
-                  <select id="vote-count" name="voteCount" [(ngModel)]="voteCount">
-                    @for (count of voteOptions; track count) { <option [ngValue]="count">{{ count }} 票</option> }
-                  </select>
-                </label>
-                <ol class="answer-list">
-                  @for (answer of currentRound.answers; track answer.id; let index = $index) {
-                    <li class="answer-card" [class.is-own]="isOwnAnswer(answer)">
-                      <div class="answer-card-heading"><span>回答 {{ (index + 1).toString().padStart(2, '0') }}@if (isOwnAnswer(answer)) { <small>你的回答</small> }</span></div>
-                      <span class="answer-kind">{{ answerTypeText(answer.answerType) }}</span>
-                      <p class="answer-body">{{ answer.text }}</p>
-                      <button type="button" (click)="submitVote(answer)" [disabled]="!canVoteFor(answer) || votingForAnswerId === answer.id">{{ votingForAnswerId === answer.id ? '送出中…' : votedAnswerIds.has(answer.id) ? '已投票' : isOwnAnswer(answer) ? '自己的回答' : '投給這個回答' }}</button>
-                    </li>
-                  } @empty {
-                    <li class="phase-callout">目前沒有可投票的回答。</li>
-                  }
-                </ol>
-                @if (!game.canVote(currentRound, now)) { <div class="phase-callout"><strong>投票時間已到</strong><p>投票時間已結束，結果揭曉後畫面會自動更新。</p></div> }
-              </section>
-            } @else {
-              <section class="phase-content reveal-content" aria-labelledby="reveal-title">
-                <p class="eyebrow">結果揭曉</p><h3 id="reveal-title">{{ currentRound.winnerPlayerDisplayName ? '本回合勝出者' : '本回合沒有有效得票' }}</h3>
-                @if (currentRound.winnerPlayerDisplayName) { <p class="winner-name">{{ currentRound.winnerPlayerDisplayName }}</p> }
-                <p class="section-copy">本回合共收到 {{ currentRound.totalVoteCount }} 票。下一回合開始後，畫面會自動更新。</p>
-                <ol class="result-answers">
-                  @for (answer of currentRound.answers; track answer.id) {
-                    <li [class.is-winner]="answer.isWinner"><span>{{ answer.rank }}.</span><div><strong>{{ answer.playerDisplayName }}</strong><p>{{ answer.text }}</p></div><b>{{ answer.voteCount }} 票</b></li>
-                  } @empty { <li class="empty-copy">本回合沒有回答紀錄。</li> }
-                </ol>
-              </section>
-            }
-          </article>
-        } @else if (currentRoom.status === 'CANCELLED') {
-          <!-- ui-integration: 已取消的房間不再顯示「等待回合」；直接說明狀態並提供回到大廳的出口。 -->
-          <article class="paper-card waiting-panel ended-panel">
-            <p class="eyebrow">房間已結束</p>
-            <h2>這場遊戲已取消</h2>
-            <p>這間房已無法繼續遊玩，請回到多人鑑定大廳選擇下一間房。</p>
-            <a class="primary-link" routerLink="/game">返回多人鑑定大廳</a>
-          </article>
-        } @else {
-          <article class="paper-card waiting-panel">
-            <p class="eyebrow">房間狀態</p>
-            <h2>等待回合資料</h2>
-            <p>房間已開始，但第 {{ currentRoom.currentRoundNo }} 回合還沒準備好。畫面每 2 秒更新一次，請稍候。</p>
-          </article>
-        }
-      </section>
-    </div>
-  }
-</div>
-
-@if (showLeaveConfirm) {
-  <!-- ui-integration: 離開房間會改變座位與遊戲流程，使用明確確認避免誤觸造成進度中斷。 -->
-  <div class="leave-dialog-backdrop" role="presentation" (click)="cancelLeaveRoom()">
-    <section #leaveDialog class="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-dialog-title" tabindex="-1" (click)="$event.stopPropagation()">
-      <p class="eyebrow">離開房間</p>
-      <h2 id="leave-dialog-title">確定要返回大廳嗎？</h2>
-      <p>離開後會釋出你的座位；遊戲開始後，將無法重新加入這一場。</p>
-      <div class="leave-dialog-actions">
-        <button type="button" class="secondary" (click)="cancelLeaveRoom()">留在房間</button>
-        <button type="button" class="danger" (click)="leaveRoom()" [disabled]="leaving">{{ leaving ? '離開中…' : '離開並返回大廳' }}</button>
+          <button type="button" class="hand-card" [style.--seat-color]="seatColor(currentPlayerId)" (click)="openRoomPanel('colors')">更換牌背</button>
+          @if (currentPlayer(); as player) {
+            <button type="button" class="primary-action" [attr.aria-pressed]="player.isReady" [disabled]="lobbyActionBusy" (click)="setReady()">{{ player.isReady ? '取消準備' : '準備好了' }}</button>
+            @if (player.role === 'HOST') { <button type="button" class="primary-action" [disabled]="lobbyActionBusy || !canStartRoom()" [title]="startDisabledReason()" (click)="startGame()">開始遊戲</button> }
+          }
+        } @else if (round?.status === 'ANSWERING') {
+          <button type="button" class="hand-card" [style.--seat-color]="seatColor(currentPlayerId)" [disabled]="hasSubmittedAnswer() || !round || !game.canAnswer(round, now)" (click)="openRoomPanel('answer')">{{ hasSubmittedAnswer() ? '回答已入桌' : '寫下回答' }}</button>
+          <p>{{ hasSubmittedAnswer() ? '等大家出牌後，就能翻開回答。' : '觀察文物，再點手牌寫下你的說法。' }}</p>
+        } @else if (round?.status === 'VOTING') { <p>點桌上的回答卡放大閱讀，再投給你喜歡的回答。</p> }
+        @else if (round?.status === 'REVEALED') { <p>本回合已揭曉，下一回合會自動開始。</p> }
       </div>
-    </section>
-  </div>
-}
+      @if (currentPlayerId && currentRoom.status !== 'CANCELLED') { <app-game-room-chat [messages]="chatMessages" [currentPlayerId]="currentPlayerId" [sending]="chatSending" [error]="chatError" [disabled]="currentRoom.status === 'COMPLETED'" (send)="sendChat($event)" /> }
+    </footer>
+  }
+  <dialog class="table-dialog" data-panel="settings" aria-labelledby="settings-title"><header><h2 id="settings-title">房間設定</h2><button type="button" (click)="closeRoomPanel('settings')" aria-label="關閉房間設定">關閉</button></header>@if (room) { <dl><dt>房間代碼</dt><dd>{{ room.roomCode }}</dd><dt>回合數</dt><dd>{{ room.totalRounds }}</dd><dt>作答時間</dt><dd>{{ room.answerSeconds }} 秒</dd><dt>投票時間</dt><dd>{{ room.votingSeconds }} 秒</dd><dt>房間類型</dt><dd>{{ room.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</dd></dl> }<p>聊天只留在這張牌桌。所有玩家離線並逾時後，紀錄就會清除。</p>@if (testMode) { <p>演練不會新增正式回合、點數或鑰匙。</p> }<div class="settings-actions"><button type="button" [attr.aria-pressed]="isRoomFocused()" (click)="toggleRoomFocus()">{{ isRoomFocused() ? '顯示網站導覽' : '專注模式' }}</button>@if (testMode) { <button type="button" aria-label="開啟測試工具" (click)="closeRoomPanel('settings'); openRoomPanel('test')">演練控制</button> }<button type="button" (click)="closeRoomPanel('settings'); requestLeaveRoom()">離開房間</button></div></dialog>
+  <dialog class="table-dialog" data-panel="seat" aria-labelledby="seat-title"><header><h2 id="seat-title">玩家席位</h2><button type="button" (click)="closeRoomPanel('seat')">關閉</button></header>@if (selectedSeat(); as player) { <h3>{{ player.displayName }}</h3><p>第 {{ player.seatNo }} 席 · {{ player.role === 'HOST' ? '房主' : '玩家' }}</p><p>{{ player.connectionStatus === 'ONLINE' ? '目前在線' : '暫時離線' }}</p>@if (player.id === currentPlayerId && room?.status === 'WAITING') { <button type="button" (click)="closeRoomPanel('seat'); openRoomPanel('colors')">更換我的牌背</button> } }</dialog>
+  <dialog class="table-dialog" data-panel="colors" aria-labelledby="colors-title"><header><h2 id="colors-title">選擇牌背顏色</h2><button type="button" (click)="closeRoomPanel('colors')">關閉</button></header><div class="color-grid">@for (color of cardColors; track color) { <button type="button" [attr.data-color]="color" [attr.aria-label]="'牌背顏色 ' + ($index + 1)" [attr.aria-pressed]="playerColors[currentPlayerId] === color" [disabled]="colorBusy || isCardColorTaken(color)" (click)="chooseCardColor(color)">{{ playerColors[currentPlayerId] === color ? '已選' : '' }}</button> }</div><p>開始遊戲後，這局的牌背顏色就會固定。</p></dialog>
+  <dialog class="table-dialog artifact-dialog" data-panel="artifact" aria-labelledby="artifact-title"><header><h2 id="artifact-title">{{ round?.artifactName }}</h2><button type="button" (click)="closeRoomPanel('artifact')">關閉</button></header>@if (round) { <img [src]="round.primaryImagePath || round.thumbnailPath" [alt]="round.artifactName" /> }</dialog>
+  <dialog class="table-dialog answer-dialog" data-panel="answer" aria-labelledby="answer-title"><header><h2 id="answer-title">你的回答</h2><button type="button" (click)="closeRoomPanel('answer')">先收起</button></header><form (ngSubmit)="submitAnswer(); closeRoomPanel('answer')"><label for="answer-type">回答方式</label><select id="answer-type" name="answerType" [(ngModel)]="answerType">@for (type of answerTypes; track type.value) { <option [ngValue]="type.value">{{ type.label }}</option> }</select><p>{{ answerTypes[0].value === answerType ? answerTypes[0].hint : answerTypes[1].value === answerType ? answerTypes[1].hint : answerTypes[2].hint }}</p><label for="answer-text">寫下你的說法</label><textarea id="answer-text" name="answerText" [(ngModel)]="answerText" (ngModelChange)="saveDraft($event)" maxlength="500" required rows="7" placeholder="從文物上的細節開始寫…"></textarea><div class="answer-foot"><span>{{ answerText.length }}／500</span><button type="submit" [disabled]="submittingAnswer || !answerText.trim()">{{ submittingAnswer ? '送出中…' : '出牌' }}</button></div></form></dialog>
+  @if (testMode) { <dialog class="table-dialog" data-panel="test" aria-labelledby="test-title"><header><h2 id="test-title">演練控制</h2><button type="button" aria-label="收合測試工具" (click)="closeRoomPanel('test')">關閉</button></header><p>{{ testStageText() }} · 不寫入正式紀錄</p><button type="button" (click)="toggleTestAuto()">{{ testAutoPaused ? '繼續自動流程' : '暫停自動流程' }}</button><button type="button" (click)="skipTestStage()">下一階段</button><button type="button" [disabled]="loading" (click)="restartTestFlow(); closeRoomPanel('test')">重新開始</button></dialog> }
+  @if (showLeaveConfirm) { <div class="leave-dialog-backdrop" role="presentation" (click)="cancelLeaveRoom()"><section #leaveDialog class="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-dialog-title" tabindex="-1" (click)="$event.stopPropagation()"><h2 id="leave-dialog-title">要離開牌桌嗎？</h2><p>離開後會釋出你的座位。遊戲開始後，無法重新加入這一場。</p><button type="button" (click)="cancelLeaveRoom()">留在牌桌</button><button type="button" (click)="leaveRoom()" [disabled]="leaving">{{ leaving ? '離開中…' : '離開房間' }}</button></section></div> }
+</div>

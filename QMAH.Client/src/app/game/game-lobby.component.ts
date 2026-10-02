@@ -5,8 +5,9 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, Subscription, finalize } from 'rxjs';
 
-import { ApiPage, CreateGameRoomRequest, GameRoomDetails, GameRoomFilterStatus, GameRoomListItem, GameRoomSort, JoinGameRoomRequest } from './game.models';
+import { ApiPage, CreateGameRoomRequest, GamePlayer, GameRoomDetails, GameRoomFilterStatus, GameRoomListItem, GameRoomQuery, GameRoomSort, JoinGameRoomRequest } from './game.models';
 import { GameNavigationComponent } from './game-navigation.component';
+import { GameRewardMeterComponent } from './game-reward-meter.component';
 import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameService } from './game.service';
 import { MeApiService } from '../core/services/me-api';
@@ -17,7 +18,7 @@ type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, GameNavigationComponent, GameRoomQrDialogComponent, QmahIconComponent],
+  imports: [FormsModule, RouterLink, GameNavigationComponent, GameRoomQrDialogComponent, QmahIconComponent, GameRewardMeterComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })
@@ -51,6 +52,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   readonly loadingRows = [1, 2, 3, 4, 5];
   readonly pageSize = 20;
   isDemo = false;
+  isRehearsal = false;
   // 首次進入先看見遊戲入口；仍保留玩家自行收合的偏好。
   heroCollapsed = false;
   qrRoom: Pick<GameRoomListItem, 'id' | 'roomCode'> | null = null;
@@ -68,6 +70,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.heroCollapsed = this.readHeroCollapsed();
     this.routeSubscription = this.route.queryParamMap.subscribe((params) => {
       this.isDemo = this.route.snapshot.routeConfig?.path === 'game/demo';
+      // 演練入口已由路由守衛完成管理員驗證，避免重複等待另一份會員快照。
+      this.isRehearsal = params.get('test') === '1';
       const requestedStatus = params.get('status') as LobbyStatus | null;
       this.roomStatus = requestedStatus === 'PLAYING' || requestedStatus === 'COMPLETED' || requestedStatus === 'RECENT' ? requestedStatus : 'WAITING';
       const requestedSort = params.get('sort') as GameRoomSort | null;
@@ -84,7 +88,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
 
   loadRooms(page = 1, syncUrl = true): void {
     if (syncUrl) {
-      this.router.navigate([], { relativeTo: this.route, queryParams: { status: this.roomStatus === 'WAITING' ? null : this.roomStatus, sort: this.roomSort === 'RECOMMENDED' ? null : this.roomSort, page: page === 1 ? null : page } });
+      this.router.navigate([], { relativeTo: this.route, queryParams: { status: this.roomStatus === 'WAITING' ? null : this.roomStatus, sort: this.roomSort === 'RECOMMENDED' ? null : this.roomSort, page: page === 1 ? null : page, test: this.isRehearsal ? '1' : null } });
       return;
     }
     this.errorTitle = '公開房間目前無法取得'; this.error = ''; this.selectedRoomId = ''; this.demoRoom = null;
@@ -93,8 +97,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       this.rooms = this.demoPage(page);
       return;
     }
-    const status = this.roomStatus === 'RECENT' ? 'COMPLETED' : this.roomStatus;
-    this.run(this.game.getRooms({ status, sort: this.roomSort, page, pageSize: this.pageSize }), (rooms) => (this.rooms = rooms));
+    this.run(this.roomListRequest(page), (rooms) => (this.rooms = rooms));
   }
 
   setRoomStatus(status: LobbyStatus): void {
@@ -129,9 +132,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const status = this.roomStatus === 'RECENT' ? 'COMPLETED' : this.roomStatus;
     this.listRequest?.unsubscribe();
-    this.listRequest = this.game.getRooms({ status, sort: this.roomSort, page, pageSize: this.pageSize }).pipe(finalize(() => {
+    this.listRequest = this.roomListRequest(page).pipe(finalize(() => {
       this.refreshing = false;
       this.changeDetector.markForCheck();
     })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -151,6 +153,10 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.focusDialog(() => this.roomDialog);
     if (this.isDemo) {
       this.demoRoom = this.makeDemoDetail(room);
+      return;
+    }
+    if (this.isRehearsal) {
+      this.demoRoom = this.makeRehearsalDetail(room);
       return;
     }
     this.detailRequest?.unsubscribe();
@@ -235,6 +241,10 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
 
   joinRoom(): void {
     const room = this.currentRoom(); if (!room) return;
+    if (this.isRehearsal) {
+      this.enterRoom(room.id);
+      return;
+    }
     if (this.isDemo) {
       this.errorTitle = this.isAdmin() ? '預覽模式' : '房間目前僅供查看';
       this.error = this.isAdmin()
@@ -258,7 +268,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   }
 
   private enterRoom(roomId: string): void {
-    void this.router.navigate(['/game/room', roomId]);
+    void this.router.navigate(['/game/room', roomId], { queryParams: this.isRehearsal ? { test: '1' } : undefined });
   }
 
   private showRoomActionError(error: unknown, fallbackTitle: string): void {
@@ -400,6 +410,39 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     if (!this.selectedRoomId || !this.rooms) return;
     const room = this.rooms.items.find((item) => item.id === this.selectedRoomId);
     if (room) this.demoRoom = this.makeDemoDetail(room);
+  }
+
+  private roomListRequest(page: number): Observable<ApiPage<GameRoomListItem>> {
+    const query: GameRoomQuery = {
+      status: this.roomStatus === 'RECENT' ? 'COMPLETED' : this.roomStatus,
+      sort: this.roomSort,
+      page,
+      pageSize: this.pageSize
+    };
+    return this.isRehearsal ? this.game.getRehearsalRooms(query) : this.game.getRooms(query);
+  }
+
+  private makeRehearsalDetail(room: GameRoomListItem): GameRoomDetails {
+    const names = ['青銅觀察員', '釉色記錄員', '紋樣尋線者', '器形校對員', '展櫃巡看員', '細節捕手', '圖錄翻頁手', '印記辨讀者', '材質筆記員', '席位候補員'];
+    const players: GamePlayer[] = Array.from({ length: Math.min(room.playerCount, room.maxPlayers) }, (_, index) => ({
+      id: `test-player-${index + 1}`,
+      displayName: names[index % names.length],
+      role: index === 0 ? 'HOST' : 'PLAYER',
+      isReady: index % 3 !== 1,
+      seatNo: index + 1,
+      connectionStatus: 'CONNECTED'
+    }));
+    return {
+      ...room,
+      answerSeconds: 90,
+      votingSeconds: 60,
+      currentRoundNo: 0,
+      currentRoundId: null,
+      currentPlayerId: null,
+      players,
+      startedAt: null,
+      endedAt: null
+    };
   }
 
   private demoPage(page: number): ApiPage<GameRoomListItem> {

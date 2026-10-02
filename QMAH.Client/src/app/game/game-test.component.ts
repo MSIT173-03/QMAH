@@ -39,7 +39,7 @@ interface TestRoomOption {
       <section class="test-launcher" aria-labelledby="test-launcher-title">
         <header>
           <h2 id="test-launcher-title">選擇演練節奏</h2>
-          <p class="description">體驗等待、作答、投票、揭曉與結算。使用範例玩家，不建立正式房間，也不發放獎勵。</p>
+          <p class="description">從現有會員抽出模擬玩家，使用同件文物的歷史回答。沿用正式遊戲畫面，不建立正式房間，也不發放獎勵。</p>
         </header>
         <div class="rehearsal-picker">
           <div class="rehearsal-menu" role="group" aria-label="演練情境">
@@ -50,7 +50,7 @@ interface TestRoomOption {
           <section class="rehearsal-preview" aria-labelledby="rehearsal-title">
             <h3 id="rehearsal-title">{{ selectedScenario.name }}</h3>
             <ol class="rehearsal-flow" aria-label="演練流程"><li>等待入席</li><li>觀察作答</li><li>匿名投票</li><li>揭曉館藏</li><li>本局結算</li></ol>
-            <p>進入後可暫停、跳到下一階段，或重新開始。演練結束後可以回到這裡選擇其他節奏。</p>
+            <p>模擬玩家會在不同時間作答。可暫停、跳過等待或重新抽取，結束後再回來選擇其他節奏。</p>
             <button type="button" class="rehearsal-start" (click)="joinTestRoom(selectedRoomId)">開始演練 <app-qmah-icon name="arrow-right" aria-hidden="true" /></button>
           </section>
         </div>
@@ -168,9 +168,9 @@ export class GameTestComponent {
   }
 
   readonly testRooms: TestRoomOption[] = [
-    { id: 'test-room-quick', code: 'QA-快轉', name: '快速巡覽', description: '兩回合、短倒數，快速走完各階段。' },
-    { id: 'test-room-standard', code: 'QA-完整', name: '完整流程', description: '節奏較寬，方便逐步檢查作答、投票、揭曉與結算。' },
-    { id: 'test-room-replay', code: 'QA-重播', name: '重播檢查', description: '每次加入都從乾淨狀態開始，可重複檢查同一條流程。' }
+    { id: 'test-room-quick', code: 'A101', name: '快速巡覽', description: '兩回合、短倒數，快速走完各階段。' },
+    { id: 'test-room-standard', code: 'A103', name: '完整流程', description: '節奏較寬，方便逐步檢查作答、投票、揭曉與結算。' },
+    { id: 'test-room-replay', code: 'A102', name: '重播檢查', description: '每次加入都從初始狀態開始，可重複檢查同一條流程。' }
   ];
 
   roomStatus: GameRoomFilterStatus | '' = '';

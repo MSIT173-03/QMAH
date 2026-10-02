@@ -2,10 +2,11 @@ import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { GameRoomHistory, MainGameReward } from './game.models';
+import { GameRewardMeterComponent } from './game-reward-meter.component';
 
 @Component({
   selector: 'app-game-room-results',
-  imports: [RouterLink],
+  imports: [RouterLink, GameRewardMeterComponent],
   templateUrl: './game-room-results.component.html',
   styleUrl: './game-room-results.component.scss'
 })

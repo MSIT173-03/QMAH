@@ -1,0 +1,58 @@
+<aside class="chat-dock" [class.is-open]="!collapsed()" aria-label="房間聊天室">
+  <header class="chat-dock-heading">
+    <button
+      type="button"
+      class="chat-toggle"
+      [class.is-open]="!collapsed()"
+      [attr.aria-expanded]="!collapsed()"
+      aria-controls="game-room-chat-panel"
+      [attr.aria-label]="collapsed() ? '展開聊天室' + (unreadCount() ? '，' + unreadCount() + ' 則未讀訊息' : '') : '收合聊天室'"
+      (click)="togglePanel()">
+      <span class="chat-title-icon"><app-qmah-icon name="message-circle" aria-hidden="true" /></span>
+      <span class="chat-title">聊天室</span>
+      @if (unreadCount() > 0) { <span class="unread-count" [attr.aria-label]="unreadCount() + ' 則未讀訊息'">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span> }
+      <span class="chat-toggle-icon" aria-hidden="true"><app-qmah-icon name="chevron-right" /></span>
+    </button>
+  </header>
+
+  <section id="game-room-chat-panel" class="chat-panel" [hidden]="collapsed()" [attr.aria-hidden]="collapsed()">
+      @if (disabled()) {
+        <p class="chat-disabled-note">這場遊戲已結束，仍可查看離線前的聊天紀錄。</p>
+      } @else {
+        <ol class="chat-messages" role="log" aria-label="聊天訊息" aria-live="polite" aria-relevant="additions">
+          @for (message of visibleMessages(); track message.id) {
+            <li class="chat-message" [class.is-own]="message.gamePlayerId === currentPlayerId()">
+              <div class="message-heading">
+                <strong>{{ message.gamePlayerId === currentPlayerId() ? '我' : message.displayName }}</strong>
+                <time [attr.datetime]="message.sentAt">{{ formatTime(message.sentAt) }}</time>
+              </div>
+              <p>{{ message.text }}</p>
+            </li>
+          } @empty {
+            <li class="chat-empty">目前還沒有訊息，向同桌玩家打聲招呼吧。</li>
+          }
+        </ol>
+        @if (error()) { <p class="chat-error" role="alert">{{ error() }}</p> }
+        <form class="chat-compose" (ngSubmit)="submitMessage()">
+          <label class="visually-hidden" for="game-room-chat-input">輸入聊天訊息</label>
+          <textarea
+            id="game-room-chat-input"
+            name="chatMessage"
+            [ngModel]="draft()"
+            (ngModelChange)="draft.set($event)"
+            (keydown)="onMessageKeydown($event)"
+            maxlength="500"
+            rows="2"
+            [disabled]="sending()"
+            placeholder="傳個訊息給同桌玩家…"
+            aria-describedby="chat-compose-hint"></textarea>
+          <div class="chat-compose-footer">
+            <span id="chat-compose-hint">{{ draft().length }} / 500 · Enter 傳送，Shift + Enter 換行</span>
+            <button type="submit" [disabled]="disabled() || sending() || !draft().trim()">
+              {{ sending() ? '傳送中…' : '傳送' }}
+            </button>
+          </div>
+        </form>
+      }
+  </section>
+</aside>

@@ -61,13 +61,16 @@
     @else if (!reward()) { <button type="button" (click)="claimReward.emit()" [disabled]="rewarding()">{{ rewarding() ? '領取中…' : '領取本局獎勵' }}</button> }
     @else { <strong class="reward-status" role="status">本局獎勵已結算</strong> }
   </div>
+  @if (!rehearsal()) { <app-game-reward-meter [refreshToken]="reward()" /> }
   @if (reward(); as receipt) {
     <div class="reward-receipt" aria-label="本局獎勵明細">
       <strong>{{ receipt.pointReward }} 點</strong>
       <span>{{ receipt.normalKeyReward }} 把普通鑰匙</span>
+      @if (receipt.keyProgressReward > 0) { <span>本局累積 {{ receipt.keyProgressReward }} 點鑰匙進度，已含上方轉換的鑰匙</span> }
       <span>表現分數 {{ receipt.performanceScore }}</span>
       <span>勝出 {{ receipt.roundsWon }} 回合</span>
     </div>
+    @if (receipt.keyRewardDivisor > 1) { <p class="empty-copy">依圖鑑完成度，本局鑰匙獎勵以原本的{{ receipt.keyRewardDivisor === 2 ? '一半' : '四分之一' }}累積。</p> }
     @if (receipt.alreadyRewarded) { <p class="empty-copy">顯示先前已領取的紀錄，不會重複發放。</p> }
   }
   <!-- ui-integration: 結算頁的主要下一步保留既有流程出口，避免玩家只能依賴瀏覽器返回。 -->

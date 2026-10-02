@@ -23,16 +23,24 @@ import {
   GameRoomHistory,
   GameRoundDetails,
   GameRoundSummary,
-  MainGameReward
+  MainGameReward,
+  GameRehearsalMaterial,
+  GameRoomListItem,
+  GameRoomPresentation,
+  GameRoomChatMessage
 } from './game.models';
-import { GameNavigationComponent } from './game-navigation.component';
 import { GameRoomResultsComponent } from './game-room-results.component';
+import { GameAnswerTableComponent } from './game-answer-table.component';
+import { GameRoomChatComponent } from './game-room-chat.component';
+import { GameFocusMode } from '../core/services/game-focus-mode';
+import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 import { GameService } from './game.service';
 
 interface RoomSnapshot {
   room: GameRoomDetails;
   history: GameRoomHistory | null;
   round: GameRoundDetails | null;
+  presentation?: GameRoomPresentation;
 }
 
 type TestStage = 'WAITING' | 'ANSWERING' | 'VOTING' | 'REVEALED' | 'COMPLETED';
@@ -48,7 +56,7 @@ interface TestScenario {
 
 @Component({
   selector: 'app-game-room',
-  imports: [FormsModule, RouterLink, GameNavigationComponent, GameRoomResultsComponent],
+  imports: [FormsModule, RouterLink, GameRoomResultsComponent, GameAnswerTableComponent, GameRoomChatComponent, QmahIconComponent],
   templateUrl: './game-room.component.html',
   styleUrl: './game-room.component.scss'
 })
@@ -58,9 +66,20 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly gameFocus = inject(GameFocusMode);
+  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+  private previousFocusMode = false;
+  selectedSeatId = '';
   private pollSubscription?: Subscription;
   private clockSubscription?: Subscription;
   private heartbeatSubscription?: Subscription;
+  private readonly connectionId = crypto.randomUUID();
+  playerColors: Record<string, string> = {};
+  chatMessages: GameRoomChatMessage[] = [];
+  chatSending = false;
+  chatError = '';
+  colorBusy = false;
+  readonly cardColors = ['jade', 'blue', 'vermilion', 'gold', 'violet', 'teal', 'rose', 'slate', 'olive', 'copper', 'indigo', 'sand'];
   testStage: TestStage = 'WAITING';
   private testStageEndsAt = 0;
   private testScenario: TestScenario | null = null;
@@ -68,6 +87,12 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private testSubmittedAnswer: GameAnswer | null = null;
   private testPausedRemainingMs = 0;
   private readonly testSelfId = 'test-player-self';
+  private testMaterials: GameRehearsalMaterial[] = [];
+  private testPlayerNames: string[] = [];
+  private testRoomOptions?: GameRoomListItem;
+  private testCurrentPlayerName = '玩家';
+  private testBotPlans: { answer: GameAnswer; readyAt: number; submitted: boolean }[] = [];
+  private testPausedAt = 0;
 
   roomId = '';
   room: GameRoomDetails | null = null;
@@ -83,7 +108,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   actionMessage = '';
   answerText = '';
   answerType: GameAnswerType = 'FACTUAL_REASONING';
-  voteCount = 1;
   now = Date.now();
   submittingAnswer = false;
   votingForAnswerId = '';
@@ -102,14 +126,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private lastRoundId = '';
   private submittedRoundId = '';
 
-  readonly voteOptions = [1, 2, 3];
   readonly answerTypes: { value: GameAnswerType; label: string; hint: string }[] = [
-    { value: 'FACTUAL_REASONING', label: '根據線索推理', hint: '提出你認為合理的真實解釋。' },
-    { value: 'PLAUSIBLE_FICTION', label: '看似可信的猜想', hint: '試著寫一個有說服力的說法。' },
-    { value: 'CREATIVE_TALE', label: '創意故事', hint: '用一段短故事描述這件館藏。' }
+    { value: 'FACTUAL_REASONING', label: '史實推理', hint: '推測真正的名稱、用途、年代或背景。' },
+    { value: 'PLAUSIBLE_FICTION', label: '擬真異說', hint: '寫出看似合理、實際虛構的文物說明。' },
+    { value: 'CREATIVE_TALE', label: '妙想奇談', hint: '寫一段幽默、誇張或有故事性的回答。' }
   ];
 
   ngOnInit(): void {
+    this.previousFocusMode = this.gameFocus.active();
+    this.gameFocus.active.set(true);
     this.roomId = this.route.snapshot.paramMap.get('roomId') ?? '';
     if (!this.roomId) {
       void this.router.navigate(['/game']);
@@ -138,6 +163,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         this.room = snapshot.room;
         this.history = snapshot.history;
         this.round = snapshot.round;
+        if (snapshot.presentation) {
+          this.playerColors = snapshot.presentation.colors;
+          this.chatMessages = snapshot.presentation.messages;
+        }
         this.refreshError = '';
         this.needsGameAccount = false;
         if (playerChanged || this.round?.id !== this.lastRoundId) {
@@ -160,10 +189,99 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.gameFocus.active.set(this.previousFocusMode);
     this.saveDraft(this.answerText);
     this.pollSubscription?.unsubscribe();
     this.clockSubscription?.unsubscribe();
     this.heartbeatSubscription?.unsubscribe();
+    if (!this.testMode && this.currentPlayerId) {
+      this.game.disconnectRoomPresentation(this.roomId, this.connectionId).pipe(catchError(() => EMPTY)).subscribe();
+    }
+  }
+
+  openRoomPanel(panel: string): void {
+    this.host.nativeElement.querySelector<HTMLDialogElement>(`dialog[data-panel="${panel}"]`)?.showModal();
+  }
+
+  closeRoomPanel(panel: string): void {
+    this.host.nativeElement.querySelector<HTMLDialogElement>(`dialog[data-panel="${panel}"]`)?.close();
+  }
+
+  inspectSeat(id: string): void {
+    this.selectedSeatId = id;
+    this.openRoomPanel('seat');
+  }
+
+  selectedSeat() { return this.room?.players.find(player => player.id === this.selectedSeatId); }
+
+  isRoomFocused(): boolean { return this.gameFocus.active(); }
+
+  toggleRoomFocus(): void { this.gameFocus.toggle(); }
+
+  seatColor(id: string): string {
+    const colors: Record<string, string> = { jade: '#376d62', blue: '#406591', vermilion: '#a43f34', gold: '#806020', violet: '#66528f', teal: '#216c69', rose: '#a04660', slate: '#506471', olive: '#56682f', copper: '#92552e', indigo: '#435293', sand: '#806139' };
+    return colors[this.playerColors[id]] ?? '#376d62';
+  }
+
+  seatPosition(player: GameRoomDetails['players'][number], players: GameRoomDetails['players'], capacity: number): string {
+    if (player.id === this.currentPlayerId) return 'self';
+
+    const self = players.find(candidate => candidate.id === this.currentPlayerId);
+    const seatNo = (candidate: GameRoomDetails['players'][number]): number => candidate.seatNo ?? players.indexOf(candidate) + 1;
+    const selfSeat = self ? seatNo(self) : 1;
+    const opponents = players
+      .filter(candidate => candidate.id !== this.currentPlayerId)
+      .sort((left, right) => {
+        const leftSeat = ((seatNo(left) - selfSeat + capacity) % capacity + capacity) % capacity;
+        const rightSeat = ((seatNo(right) - selfSeat + capacity) % capacity + capacity) % capacity;
+        return leftSeat - rightSeat;
+      });
+    const index = opponents.findIndex(candidate => candidate.id === player.id);
+    const layouts: Record<number, string[]> = {
+      1: ['top-center'],
+      2: ['top-left', 'top-right'],
+      3: ['top-left', 'top-center', 'top-right'],
+      4: ['bottom-right', 'top-right', 'top-left', 'bottom-left'],
+      5: ['bottom-right', 'middle-right', 'top-center', 'middle-left', 'bottom-left']
+    };
+    return layouts[opponents.length]?.[index] ?? 'top-center';
+  }
+
+  sendChat(text: string): void {
+    if (this.chatSending || !this.currentPlayerId || !text.trim() || text.length > 500) return;
+    this.chatError = '';
+    if (this.testMode) {
+      if (this.chatMessages.length >= 100) { this.chatError = '本房間已達 100 則訊息。'; return; }
+      this.chatMessages = [...this.chatMessages, { id: crypto.randomUUID(), gamePlayerId: this.currentPlayerId,
+        displayName: this.testCurrentPlayerName, text: text.trim(), sentAt: new Date().toISOString() }];
+      return;
+    }
+    this.chatSending = true;
+    this.game.sendRoomMessage(this.roomId, text.trim(), crypto.randomUUID()).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.chatSending = false; this.changeDetector.markForCheck(); })
+    ).subscribe({
+      next: message => { if (!this.chatMessages.some(item => item.id === message.id)) this.chatMessages = [...this.chatMessages, message]; },
+      error: error => { this.chatError = this.game.errorMessage(error); }
+    });
+  }
+
+  chooseCardColor(color: string): void {
+    if (this.colorBusy || this.room?.status !== 'WAITING' || !this.currentPlayerId) return;
+    if (this.testMode) {
+      if (!this.isCardColorTaken(color)) this.playerColors = { ...this.playerColors, [this.currentPlayerId]: color };
+      return;
+    }
+    this.colorBusy = true;
+    this.game.setRoomColor(this.roomId, color).pipe(takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.colorBusy = false; this.changeDetector.markForCheck(); })).subscribe({
+      next: presentation => { this.playerColors = presentation.colors; },
+      error: error => { this.actionError = this.game.errorMessage(error); }
+    });
+  }
+
+  isCardColorTaken(color: string): boolean {
+    return Object.entries(this.playerColors).some(([id, chosen]) => id !== this.currentPlayerId && chosen === color);
   }
 
   private draftKey(roundId = this.round?.id): string {
@@ -201,11 +319,14 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   toggleTestAuto(): void {
     if (!this.testMode || this.testStage === 'COMPLETED') return;
     if (!this.testAutoPaused) {
+      this.testPausedAt = Date.now();
       this.testPausedRemainingMs = Math.max(0, this.testStageEndsAt - Date.now());
       this.now = Date.now();
       this.testAutoPaused = true;
     } else {
       const resumeAt = Date.now();
+      const pausedFor = resumeAt - this.testPausedAt;
+      for (const plan of this.testBotPlans) if (!plan.submitted) plan.readyAt += pausedFor;
       this.testStageEndsAt = resumeAt + this.testPausedRemainingMs;
       this.updateTestRoundDeadlines(resumeAt);
       this.now = resumeAt;
@@ -223,9 +344,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   restartTestFlow(): void {
-    if (!this.testMode) return;
+    if (!this.testMode || this.loading) return;
     this.initializeTestFlow();
-    this.actionMessage = '已重新開始這間測試房間。';
     this.changeDetector.markForCheck();
   }
 
@@ -271,7 +391,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (!this.room || this.room.status !== 'WAITING' || !player || this.lobbyActionBusy) return;
     if (this.testMode) {
       player.isReady = !player.isReady;
-      this.actionMessage = player.isReady ? '測試玩家已準備。' : '測試玩家已取消準備。';
+      this.actionMessage = player.isReady ? '你已準備。' : '你已取消準備。';
       this.changeDetector.markForCheck();
       return;
     }
@@ -297,7 +417,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (!this.room || this.lobbyActionBusy || !this.canStartRoom()) return;
     if (this.testMode) {
       this.startTestRound(1);
-      this.actionMessage = '測試流程已開始，正在進入第一回合。';
+      this.actionMessage = '遊戲已開始，正在進入第一回合。';
       this.changeDetector.markForCheck();
       return;
     }
@@ -410,8 +530,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       && !!this.round
       && this.game.canVote(this.round, this.now)
       && !this.isOwnAnswer(answer)
-      && !this.votedAnswerIds.has(answer.id);
+      && !this.round.answers.some(item => item.answerType === answer.answerType && this.votedAnswerIds.has(item.id));
   }
+
+  readonly canVoteAtTable = (answer: GameAnswer): boolean => this.canVoteFor(answer);
 
   submitAnswer(): void {
     if (!this.currentPlayerId || !this.round || !this.game.canAnswer(this.round, this.now) || this.hasSubmittedAnswer()) return;
@@ -455,14 +577,14 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.actionError = '';
     this.actionMessage = '';
     this.votingForAnswerId = answer.id;
-    this.game.submitVote(this.round.id, { answerId: answer.id, count: this.voteCount })
+    this.game.submitVote(this.round.id, { answerId: answer.id, count: 1 })
       .pipe(finalize(() => {
         this.votingForAnswerId = '';
         this.changeDetector.markForCheck();
       }))
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => {
-          this.votedAnswerIds.add(answer.id);
+          this.votedAnswerIds = new Set([...this.votedAnswerIds, answer.id]);
           this.actionMessage = '投好了！揭曉時就能看到作者和票數。';
           this.changeDetector.markForCheck();
         },
@@ -477,11 +599,13 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (!this.room || this.room.status !== 'COMPLETED' || this.rewarding) return;
     if (this.testMode) {
       this.reward = {
-        pointReward: 30,
+        pointReward: 18,
         normalKeyReward: 1,
         performanceScore: 86,
-        roundsWon: this.testRounds.filter((round) => round.winnerPlayerDisplayName === '測試玩家').length,
-        alreadyRewarded: false
+        roundsWon: this.testRounds.filter((round) => round.winnerPlayerDisplayName === '你').length,
+        alreadyRewarded: false,
+        keyProgressReward: 0,
+        keyRewardDivisor: 1
       };
       this.actionMessage = '測試獎勵已顯示；這筆結果只存在目前頁面。';
       this.changeDetector.markForCheck();
@@ -511,6 +635,36 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   private initializeTestFlow(): void {
+    this.loading = true;
+    this.room = null;
+    this.round = null;
+    this.history = null;
+    this.refreshError = '';
+    this.testScenario = null;
+    this.testAutoPaused = true;
+    const loadRooms: Observable<unknown> = this.roomId.startsWith('test-room-virtual-') && !this.game.getRehearsalRoom(this.roomId)
+      ? this.game.getRehearsalRooms({ pageSize: 100 }) : of(null);
+    loadRooms.pipe(switchMap(() => {
+      this.testRoomOptions = this.game.getRehearsalRoom(this.roomId);
+      return this.game.getRehearsalSession(this.testScenarioFor(this.roomId).totalRounds,
+        this.testRoomOptions ? this.testRoomOptions.maxPlayers : 4);
+    }), takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: session => {
+          this.testMaterials = session.materials;
+          this.testPlayerNames = session.playerNames;
+          this.testCurrentPlayerName = session.currentPlayerName;
+          this.buildTestFlow();
+          this.changeDetector.markForCheck();
+        },
+        error: error => {
+          this.loading = false;
+          this.refreshError = this.game.errorMessage(error);
+          this.changeDetector.markForCheck();
+        }
+      });
+  }
+
+  private buildTestFlow(): void {
     const scenario = this.testScenarioFor(this.roomId);
     const createdAt = new Date(Date.now() - 60_000).toISOString();
     this.testScenario = scenario;
@@ -541,21 +695,19 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       roomCode: scenario.roomCode,
       status: 'WAITING',
       visibility: 'PUBLIC',
-      maxPlayers: 4,
+      maxPlayers: this.testRoomOptions?.maxPlayers ?? 4,
       totalRounds: scenario.totalRounds,
       answerSeconds: scenario.answerSeconds,
       votingSeconds: scenario.votingSeconds,
-      categoryFilterCode: 'CERAMIC',
-      eraBucketFilterCode: 'QING',
+      categoryFilterCode: null,
+      eraBucketFilterCode: null,
       currentRoundNo: 0,
       currentRoundId: null,
       currentPlayerId: this.testSelfId,
-      playerCount: 4,
+      playerCount: this.testPlayerNames.length + 1,
       players: [
-        { id: this.testSelfId, displayName: '測試玩家', role: 'HOST', isReady: true, seatNo: 1, connectionStatus: 'ONLINE' },
-        { id: 'test-player-a', displayName: '小青', role: 'PLAYER', isReady: true, seatNo: 2, connectionStatus: 'ONLINE' },
-        { id: 'test-player-b', displayName: '小白', role: 'PLAYER', isReady: true, seatNo: 3, connectionStatus: 'ONLINE' },
-        { id: 'test-player-c', displayName: '阿墨', role: 'PLAYER', isReady: true, seatNo: 4, connectionStatus: 'ONLINE' }
+        { id: this.testSelfId, displayName: this.testCurrentPlayerName, role: 'HOST', isReady: true, seatNo: 1, connectionStatus: 'ONLINE' },
+        ...this.testPlayerNames.map((displayName, index) => ({ id: `test-player-${index}`, displayName, role: 'PLAYER', isReady: true, seatNo: index + 2, connectionStatus: 'ONLINE' }))
       ],
       createdAt,
       startedAt: null,
@@ -563,21 +715,27 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     };
     this.history = null;
     this.round = null;
+    this.chatMessages = [];
+    this.playerColors = Object.fromEntries(this.room.players.map((player, index) => [player.id, this.cardColors[index % this.cardColors.length]]));
     this.changeDetector.markForCheck();
   }
 
   private testScenarioFor(roomId: string): TestScenario {
+    if (this.testRoomOptions) {
+      return { roomCode: this.testRoomOptions.roomCode, totalRounds: this.testRoomOptions.totalRounds, waitingSeconds: 4, answerSeconds: 90, votingSeconds: 30, revealSeconds: 6 };
+    }
     if (roomId === 'test-room-standard') {
-      return { roomCode: 'QA-完整', totalRounds: 3, waitingSeconds: 5, answerSeconds: 10, votingSeconds: 8, revealSeconds: 4 };
+      return { roomCode: 'A103', totalRounds: 3, waitingSeconds: 5, answerSeconds: 90, votingSeconds: 30, revealSeconds: 6 };
     }
     if (roomId === 'test-room-replay') {
-      return { roomCode: 'QA-重播', totalRounds: 2, waitingSeconds: 4, answerSeconds: 8, votingSeconds: 7, revealSeconds: 4 };
+      return { roomCode: 'A102', totalRounds: 2, waitingSeconds: 4, answerSeconds: 45, votingSeconds: 20, revealSeconds: 5 };
     }
-    return { roomCode: 'QA-快轉', totalRounds: 2, waitingSeconds: 3, answerSeconds: 6, votingSeconds: 6, revealSeconds: 3 };
+    return { roomCode: 'A101', totalRounds: 2, waitingSeconds: 3, answerSeconds: 12, votingSeconds: 10, revealSeconds: 4 };
   }
 
   private advanceTestFlow(force = false): void {
     if (!this.testMode || !this.testScenario || !this.room || this.testStage === 'COMPLETED') return;
+    if (!this.testAutoPaused && this.testStage === 'ANSWERING') this.collectTestBotAnswers();
     if (!force && (this.testAutoPaused || Date.now() < this.testStageEndsAt)) return;
 
     switch (this.testStage) {
@@ -607,13 +765,18 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     const roundId = `${this.roomId}-round-${roundNumber}`;
     const answerDeadlineAt = new Date(now + this.testScenario.answerSeconds * 1000).toISOString();
     const votingDeadlineAt = new Date(now + (this.testScenario.answerSeconds + this.testScenario.votingSeconds) * 1000).toISOString();
-    // 測試房間使用專案內真實素材，名稱與圖片必須同一件文物。
-    const artifacts = [
-      { name: '掐絲琺瑯雲龍紋三足香爐', image: '/images/login/real/cloisonne-tripod-incense-burner.jpg' },
-      { name: '陶瓷方瓶', image: '/assets/game/ceramic-square-vase.jpg' },
-      { name: '唐代文物', image: '/assets/game/tang-wang.jpg' }
-    ];
-    const artifact = artifacts[(roundNumber - 1) % artifacts.length];
+    // 圖片、文物名稱與三類回答都來自同一件歷史回合的文物。
+    const artifact = this.testMaterials[roundNumber - 1];
+    if (!artifact) return;
+    // 三種類型各保留一份歷史回答，讓演練可以完成每種類型的投票。
+    const historicalAnswers = [...artifact.answers].sort(() => Math.random() - 0.5);
+    this.testBotPlans = this.testPlayerNames.map((name, index) => ({
+      answer: this.makeTestAnswer(`${roundId}-answer-${index}`, `test-player-${index}`, name,
+        (historicalAnswers[index] ?? artifact.answers[index % artifact.answers.length]).answerType,
+        historicalAnswers[index]?.text ?? `這是「${name}」的模擬回答，僅供展示。`),
+      readyAt: now + Math.round((0.2 + 0.65 * (index + Math.random()) / this.testPlayerNames.length) * this.testScenario!.answerSeconds * 1000),
+      submitted: false
+    }));
 
     this.room = {
       ...this.room,
@@ -629,10 +792,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       roomId: this.roomId,
       currentPlayerId: this.testSelfId,
       votedAnswerIds: [],
-      artifactId: `test-artifact-${roundNumber}`,
-      artifactName: artifact.name,
-      primaryImagePath: artifact.image,
-      thumbnailPath: null,
+      artifactId: artifact.artifactId,
+      artifactName: artifact.artifactName,
+      primaryImagePath: artifact.primaryImagePath,
+      thumbnailPath: artifact.thumbnailPath,
       roundNumber,
       status: 'ANSWERING',
       isSettled: false,
@@ -662,18 +825,20 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private startTestVoting(): void {
     if (!this.round || !this.testScenario) return;
     const now = Date.now();
-    const submittedAnswer = this.testSubmittedAnswer ?? this.makeTestAnswer(
-      `${this.round.id}-answer-self`,
-      this.testSelfId,
-      '測試玩家',
-      'FACTUAL_REASONING',
-      '從器形與紋飾來看，這件館藏應該來自宮廷日用脈絡。'
-    );
+    const material = this.testMaterials[this.round.roundNumber - 1];
+    if (!material) return;
+    this.collectTestBotAnswers(true);
     const answers: GameAnswer[] = [
-      { ...submittedAnswer, voteCount: 0, rank: 0, isWinner: false },
-      this.makeTestAnswer(`${this.round.id}-answer-a`, 'test-player-a', '小青', 'PLAUSIBLE_FICTION', '我猜它曾經陪著一位旅人走過很長的路。', 2),
-      this.makeTestAnswer(`${this.round.id}-answer-b`, 'test-player-b', '小白', 'CREATIVE_TALE', '如果它會說話，最想分享的應該是一段午後故事。', 1)
+      ...(this.testSubmittedAnswer ? [{ ...this.testSubmittedAnswer, voteCount: 0, rank: 0, isWinner: false }] : []),
+      ...this.testBotPlans.map(plan => ({ ...plan.answer }))
     ];
+    // 每位模擬玩家只投給別人，唯一回答的場次可沒有有效得票。
+    for (const plan of this.testBotPlans) {
+      for (const type of this.answerTypes) {
+        const targets = answers.filter(answer => answer.gamePlayerId !== plan.answer.gamePlayerId && answer.answerType === type.value);
+        if (targets.length) targets[Math.floor(Math.random() * targets.length)].voteCount += 1;
+      }
+    }
     this.round = {
       ...this.round,
       status: 'VOTING',
@@ -694,7 +859,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     const now = Date.now();
     const settledAt = new Date(now).toISOString();
     const rankedAnswers = [...this.round.answers]
-      .sort((left, right) => right.voteCount - left.voteCount || left.id.localeCompare(right.id))
+      .sort((left, right) => right.voteCount - left.voteCount || left.submittedAt.localeCompare(right.submittedAt) || left.id.localeCompare(right.id))
       .map((answer, index): GameAnswer => ({
         ...answer,
         rank: index + 1,
@@ -725,6 +890,19 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       : '本回合沒有有效得票，稍後自動進入下一回合。';
   }
 
+  private collectTestBotAnswers(force = false): void {
+    const now = Date.now();
+    for (const plan of this.testBotPlans) {
+      if (!plan.submitted && (force || now >= plan.readyAt)) {
+        plan.submitted = true;
+        plan.answer = { ...plan.answer, submittedAt: new Date(Math.min(now, plan.readyAt)).toISOString() };
+      }
+    }
+    if (this.round?.status === 'ANSWERING') {
+      this.round = { ...this.round, submittedAnswerCount: this.testBotPlans.filter(plan => plan.submitted).length + (this.testSubmittedAnswer ? 1 : 0) };
+    }
+  }
+
   private completeTestRoom(): void {
     if (!this.room || !this.testScenario) return;
     const rounds: GameRoundSummary[] = this.testRounds.map((round) => ({
@@ -742,12 +920,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       winnerPlayerDisplayName: round.winnerPlayerDisplayName,
       answers: round.answers.map((answer) => ({ ...answer }))
     }));
-    const playerNames = [
-      { id: this.testSelfId, name: '測試玩家' },
-      { id: 'test-player-a', name: '小青' },
-      { id: 'test-player-b', name: '小白' },
-      { id: 'test-player-c', name: '阿墨' }
-    ];
+    const playerNames = this.room.players.map(player => ({ id: player.id, name: player.displayName }));
     const totals = new Map(playerNames.map((player) => [player.id, { score: 0, wins: 0 }]));
     for (const round of rounds) {
       for (const answer of round.answers) {
@@ -765,11 +938,11 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         gamePlayerId: player.id,
         displayName: player.name,
         score: totals.get(player.id)?.score ?? 0,
-        roundsAnswered: rounds.length,
+        roundsAnswered: rounds.filter(round => round.answers.some(answer => answer.gamePlayerId === player.id)).length,
         roundsWon: totals.get(player.id)?.wins ?? 0,
         rank: 0
       }))
-      .sort((left, right) => right.score - left.score || right.roundsWon - left.roundsWon)
+      .sort((left, right) => right.score - left.score || right.roundsWon - left.roundsWon || right.roundsAnswered - left.roundsAnswered || left.displayName.localeCompare(right.displayName))
       .map((player, index) => ({ ...player, rank: index + 1 }));
 
     const endedAt = new Date().toISOString();
@@ -800,7 +973,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     const answer = this.makeTestAnswer(
       `${this.round.id}-answer-self`,
       this.testSelfId,
-      '測試玩家',
+      this.testCurrentPlayerName,
       this.answerType,
       this.answerText.trim()
     );
@@ -813,8 +986,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   private submitTestVote(answer: GameAnswer): void {
     if (!this.round || !this.canVoteFor(answer)) return;
-    answer.voteCount += this.voteCount;
-    this.votedAnswerIds.add(answer.id);
+    this.round = { ...this.round, answers: this.round.answers.map(item => item.id === answer.id ? { ...item, voteCount: item.voteCount + 1 } : item) };
+    this.votedAnswerIds = new Set([...this.votedAnswerIds, answer.id]);
     this.actionMessage = '投好了！揭曉時就能看到作者和票數。';
     this.changeDetector.markForCheck();
   }
@@ -881,6 +1054,12 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           })
         );
       }),
+      switchMap(snapshot => !snapshot.room.currentPlayerId || snapshot.room.status === 'CANCELLED'
+        ? of(snapshot)
+        : this.game.getRoomPresentation(this.roomId, this.connectionId).pipe(
+          map(presentation => ({ ...snapshot, presentation })),
+          catchError(error => { this.chatError = this.game.errorMessage(error); return of(snapshot); })
+        )),
       catchError((error: unknown) => {
         this.refreshError = this.game.errorMessage(error);
         this.needsGameAccount = error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403);
