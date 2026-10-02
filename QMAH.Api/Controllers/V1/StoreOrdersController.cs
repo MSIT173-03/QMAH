@@ -258,12 +258,12 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         decimal discountAmount,
         CancellationToken cancellationToken)
     {
-        // integration: 點數只折抵折扣後的小計，並在同一 transaction 內再次確認會員餘額。
-        if (pointsUsed > subtotal - discountAmount)
+        // 與試算共用券後金額的直接折抵上限，並在交易內再次確認會員餘額。
+        if (pointsUsed > StoreCheckoutCatalog.GetDirectPointCap(subtotal, discountAmount))
             return Problem(
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "點數折抵超過訂單金額",
-                detail: "PointsUsed 不可超過折扣後的小計。");
+                detail: "直接點數折抵每單最多 20 元，且不超過折價券折抵後商品金額的 5%。較大折扣可使用點數兌換券。");
         if (pointsUsed > 0)
         {
             var balance = await db.PointBalances

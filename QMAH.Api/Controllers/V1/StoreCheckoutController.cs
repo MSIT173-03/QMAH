@@ -85,9 +85,8 @@ public sealed class StoreCheckoutController(QmahDbContext db) : ApiControllerBas
             .Where(balance => balance.UserId == userId)
             .Select(balance => (int?)balance.Balance)
             .SingleOrDefaultAsync(cancellationToken) ?? 0;
-        // integration: 點數折抵上限只看「折扣後小計」，跟 StoreOrdersController.ValidatePointsUsageAsync 用同一條規則，
-        // 運費不計入上限——運費本來就不是「商品金額」，兩邊算法對不齊會讓試算跟實際下單結果不一致。
-        var pointCap = Math.Max(0, (int)Math.Floor(subtotal - couponDiscount));
+        // 試算與正式下單共用直接折抵規則，運費不列入基準。
+        var pointCap = StoreCheckoutCatalog.GetDirectPointCap(subtotal, couponDiscount);
         pointCap = Math.Min(pointCap, pointBalance);
         var pointsUsed = Math.Clamp(request.UsePoints, 0, pointCap);
 
