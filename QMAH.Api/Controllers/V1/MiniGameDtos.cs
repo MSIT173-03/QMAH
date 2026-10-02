@@ -61,12 +61,12 @@ public sealed record MiniGameCompleteDto(
     int NormalizedScore,
     string Grade,
     int PointReward,
-    int KeyProgressReward,
+    decimal KeyProgressReward,
     int ConvertedNormalKeys,
-    int RemainingKeyProgress,
+    decimal RemainingKeyProgress,
     bool EconomicRewardGranted,
     bool AlreadyCompleted,
-    DateTime CompletedAt);
+    DateTime CompletedAt, byte KeyRewardDivisor = 1);
 
 /// <summary>多人主遊戲單一會員的獎勵結算結果。</summary>
 public sealed record MainGameRewardDto(
@@ -74,4 +74,4 @@ public sealed record MainGameRewardDto(
     int NormalKeyReward,
     int PerformanceScore,
     int RoundsWon,
-    bool AlreadyRewarded);
+    bool AlreadyRewarded, decimal KeyProgressReward = 0, byte KeyRewardDivisor = 1);

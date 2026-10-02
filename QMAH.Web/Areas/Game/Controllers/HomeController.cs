@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.Game.ViewModels;
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Web.Areas.Game.Controllers;
 
@@ -27,17 +28,30 @@ public sealed class HomeController(QmahDbContext db) : Controller
             .GroupBy(room => room.Status)
             .Select(group => new { Status = group.Key, Count = group.Count() })
             .ToDictionaryAsync(item => item.Status, item => item.Count, cancellationToken);
+        var activeRoomCounts = await db.GameRooms
+            .AsNoTracking()
+            .Where(room => !room.IsShowcase)
+            .GroupBy(room => room.Status)
+            .Select(group => new { Status = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.Status, item => item.Count, cancellationToken);
 
         var model = new GameDashboardViewModel
         {
             EnabledQuestionCount = questionStats?.EnabledCount ?? 0,
             TotalQuestionCount = questionStats?.TotalCount ?? 0,
-            WaitingRoomCount = roomCounts.GetValueOrDefault("WAITING"),
-            PlayingRoomCount = roomCounts.GetValueOrDefault("PLAYING"),
+            DailyPointBaseLimit = GameDailyRewardService.BaseLimit,
+            DailyPointBreakthroughBonus = GameDailyRewardService.BonusLimit,
+            ActiveArtifactCount = await db.Artifacts.AsNoTracking().CountAsync(item => item.IsActive, cancellationToken),
+            KeyProgressThreshold = await db.GameEconomySettings.AsNoTracking()
+                .Where(item => item.Id == 1)
+                .Select(item => (int?)item.KeyProgressToNormalKey)
+                .SingleOrDefaultAsync(cancellationToken) ?? 100,
+            WaitingRoomCount = activeRoomCounts.GetValueOrDefault("WAITING"),
+            PlayingRoomCount = activeRoomCounts.GetValueOrDefault("PLAYING"),
             CompletedRoomCount = roomCounts.GetValueOrDefault("COMPLETED"),
             OnlinePlayerCount = await db.GamePlayers
                 .AsNoTracking()
-                .CountAsync(x => x.ConnectionStatus == "ONLINE", cancellationToken),
+                .CountAsync(x => !x.Room.IsShowcase && x.ConnectionStatus == "ONLINE", cancellationToken),
             RoundCount = await db.GameRounds.AsNoTracking().CountAsync(cancellationToken),
             AnswerCount = await db.RoundAnswers.AsNoTracking().CountAsync(cancellationToken),
             VoteCount = await db.Votes.AsNoTracking().CountAsync(cancellationToken),

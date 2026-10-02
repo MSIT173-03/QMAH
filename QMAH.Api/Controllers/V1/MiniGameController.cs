@@ -11,6 +11,7 @@ namespace QMAH.Api.Controllers.V1;
 [Route("api/v1/game")]
 public sealed class MiniGameController(
     MiniGameService miniGameService,
+    GameDailyRewardService dailyRewards,
     EconomyService economyService,
     QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
@@ -31,12 +32,19 @@ public sealed class MiniGameController(
             mode.GradeSThreshold)).ToList());
     }
 
-    /// <summary>查詢當前會員今日剩餘的小遊戲獎勵次數。</summary>
+    /// <summary>查詢單人與多人共用的每日點數進度。</summary>
     [HttpGet("reward-status")]
     public async Task<ActionResult<MiniGameRewardStatusView>> GetRewardStatus(CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
         return Ok(await miniGameService.GetRewardStatusAsync(userId, cancellationToken));
+    }
+
+    [HttpPost("reward-status/breakthrough")]
+    public async Task<ActionResult<MiniGameRewardStatusView>> UnlockBreakthrough(CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        return Ok(await dailyRewards.UnlockAsync(userId, cancellationToken));
     }
 
     /// <summary>確認目前會員能否恢復這筆尚未結算的遊戲。</summary>
@@ -106,7 +114,7 @@ public sealed class MiniGameController(
             value.NormalKeyReward,
             value.PerformanceScore,
             value.RoundsWon,
-            value.AlreadyRewarded));
+            value.AlreadyRewarded, value.KeyProgressReward, value.KeyRewardDivisor));
     }
 
     private MiniGameStartDto ToStartDto(MiniGameStartView value) => new(
@@ -139,5 +147,5 @@ public sealed class MiniGameController(
         value.RemainingKeyProgress,
         value.EconomicRewardGranted,
         value.AlreadyCompleted,
-        value.CompletedAt);
+        value.CompletedAt, value.KeyRewardDivisor);
 }

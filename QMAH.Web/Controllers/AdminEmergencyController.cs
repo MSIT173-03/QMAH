@@ -25,14 +25,14 @@ public sealed class AdminEmergencyController(QmahDbContext db) : Controller
                     await ForceDeleteAnswerAsync(id, cancellationToken);
                     await db.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["Success"] = "作答與其投票已強制刪除。";
+                    TempData["Success"] = "作答與其回合投票、鑑賞票已強制刪除。";
                     return RedirectToAction("Index", "Answers", new { area = "Game" });
 
                 case "round":
                     await ForceDeleteRoundAsync(id, cancellationToken);
                     await db.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["Success"] = "回合與其作答、投票及解鎖關聯已強制刪除。";
+                    TempData["Success"] = "回合與其作答、兩種投票及解鎖關聯已強制刪除。";
                     return RedirectToAction("Index", "Rounds", new { area = "Game" });
 
                 case "player":
@@ -133,6 +133,7 @@ public sealed class AdminEmergencyController(QmahDbContext db) : Controller
         if (answer is null) throw new InvalidOperationException("Answer not found.");
 
         db.Votes.RemoveRange(await db.Votes.Where(x => x.AnswerId == id).ToListAsync(cancellationToken));
+        await RemoveAppreciationVotesAsync([id], cancellationToken);
         db.RoundAnswers.Remove(answer);
     }
 
@@ -141,7 +142,9 @@ public sealed class AdminEmergencyController(QmahDbContext db) : Controller
         var round = await db.GameRounds.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (round is null) throw new InvalidOperationException("Round not found.");
 
+        var answerIds = await db.RoundAnswers.Where(x => x.RoundId == id).Select(x => x.Id).ToListAsync(cancellationToken);
         db.Votes.RemoveRange(await db.Votes.Where(x => x.RoundId == id).ToListAsync(cancellationToken));
+        await RemoveAppreciationVotesAsync(answerIds, cancellationToken);
         db.RoundAnswers.RemoveRange(await db.RoundAnswers.Where(x => x.RoundId == id).ToListAsync(cancellationToken));
         db.ArtifactUnlocks.RemoveRange(await db.ArtifactUnlocks.Where(x => x.GameRoundId == id).ToListAsync(cancellationToken));
         db.GameRounds.Remove(round);
@@ -158,6 +161,7 @@ public sealed class AdminEmergencyController(QmahDbContext db) : Controller
         db.Votes.RemoveRange(await db.Votes
             .Where(x => x.VoterGamePlayerId == id || answerIds.Contains(x.AnswerId))
             .ToListAsync(cancellationToken));
+        await RemoveAppreciationVotesAsync(answerIds, cancellationToken);
         db.RoundAnswers.RemoveRange(answers);
         db.GamePlayers.Remove(player);
     }
@@ -172,11 +176,22 @@ public sealed class AdminEmergencyController(QmahDbContext db) : Controller
         var players = await db.GamePlayers.Where(x => x.RoomId == id).ToListAsync(cancellationToken);
         var playerIds = players.Select(x => x.Id).ToList();
 
+        var answerIds = await db.RoundAnswers.Where(x => roundIds.Contains(x.RoundId)).Select(x => x.Id).ToListAsync(cancellationToken);
         db.Votes.RemoveRange(await db.Votes.Where(x => roundIds.Contains(x.RoundId) || playerIds.Contains(x.VoterGamePlayerId)).ToListAsync(cancellationToken));
+        await RemoveAppreciationVotesAsync(answerIds, cancellationToken);
         db.RoundAnswers.RemoveRange(await db.RoundAnswers.Where(x => roundIds.Contains(x.RoundId)).ToListAsync(cancellationToken));
         db.ArtifactUnlocks.RemoveRange(await db.ArtifactUnlocks.Where(x => x.GameRoundId.HasValue && roundIds.Contains(x.GameRoundId.Value)).ToListAsync(cancellationToken));
         db.GameRounds.RemoveRange(rounds);
         db.GamePlayers.RemoveRange(players);
         db.GameRooms.Remove(room);
+    }
+
+    private async Task RemoveAppreciationVotesAsync(IReadOnlyCollection<Guid> answerIds, CancellationToken cancellationToken)
+    {
+        if (answerIds.Count == 0) return;
+
+        db.ArtifactAppreciationVotes.RemoveRange(await db.ArtifactAppreciationVotes
+            .Where(vote => answerIds.Contains(vote.AnswerId))
+            .ToListAsync(cancellationToken));
     }
 }

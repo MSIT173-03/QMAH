@@ -147,6 +147,7 @@ builder.Services.AddScoped<IPasswordHasher<GameRoom>, PasswordHasher<GameRoom>>(
 // EconomyService 負責會員單筆經濟規則；MiniGameService 負責四種玩法共用的開始、結算與獎勵契約。
 // 批次資產作業另外保留活動主檔與篩選快照，讓營運中心能統計活動事件，且不取代逐會員帳本。
 builder.Services.AddScoped<EconomyService>();
+builder.Services.AddScoped<GameDailyRewardService>();
 builder.Services.AddScoped<MiniGameService>();
 builder.Services.AddSingleton<ScrollPaintingEligibility>();
 builder.Services.AddScoped<BulkEconomyService>();

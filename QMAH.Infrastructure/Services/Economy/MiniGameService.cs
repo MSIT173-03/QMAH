@@ -16,7 +16,7 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// MiniGameController 是目前的 HTTP 入口，EconomyService 提供共用經濟設定與資產規則。
 /// 新增玩法通常只需新增 GameModeDefinition 與對應的結果驗證／計分策略；Attempt、每日獎勵上限與流水仍沿用此流程。
 /// </remarks>
-public sealed class MiniGameService(QmahDbContext db, EconomyService economyService, ScrollPaintingEligibility scrollPaintingEligibility)
+public sealed class MiniGameService(QmahDbContext db, EconomyService economyService, ScrollPaintingEligibility scrollPaintingEligibility, GameDailyRewardService dailyRewards)
 {
     private const int PuzzlePieceCount = 25;
     private const int RestorePieceCount = 15;
@@ -27,13 +27,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
 
     public async Task<MiniGameRewardStatusView> GetRewardStatusAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var setting = await economyService.GetGameEconomySettingAsync(cancellationToken);
-        var start = DateTime.UtcNow.AddHours(8).Date.AddHours(-8);
-        var end = start.AddDays(1);
-        var count = await db.MiniGameAttempts.AsNoTracking().CountAsync(item => item.UserId == userId
-            && item.RewardGranted && item.CompletedAt >= start && item.CompletedAt < end, cancellationToken);
-        return new MiniGameRewardStatusView(setting.DailyMiniGameRewardLimit,
-            Math.Max(0, setting.DailyMiniGameRewardLimit - count), end);
+        return await dailyRewards.GetStatusAsync(userId, cancellationToken);
     }
 
     /// <summary>取得所有啟用中的 Mini Game 模式及其評分門檻。</summary>
@@ -213,10 +207,10 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             var currentProgress = await db.KeyProgressBalances
                 .AsNoTracking()
                 .Where(item => item.UserId == userId)
-                .Select(item => (int?)item.Balance)
+                .Select(item => (decimal?)item.Balance)
                 .SingleOrDefaultAsync(cancellationToken) ?? 0;
             await transaction.CommitAsync(cancellationToken);
-            return EconomyResult<MiniGameCompleteView>.Success(ToCompleteView(attempt, 0, currentProgress, true));
+            return EconomyResult<MiniGameCompleteView>.Success(ToCompleteView(attempt, currentProgress, true));
         }
         if (attempt.Status != "STARTED")
             return EconomyResult<MiniGameCompleteView>.Conflict("這個 Attempt 目前不可完成。");
@@ -312,19 +306,10 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
                 && item.CompletedAt >= utcDate
                 && item.CompletedAt < nextUtcDate,
                 cancellationToken);
-        var hasEconomicReward = rewardedToday < setting.DailyMiniGameRewardLimit;
-        if (!hasEconomicReward)
-        {
-            pointReward = 0;
-            keyProgressReward = 0;
-        }
+        // 改按每日共用點數預算計算，鑰匙進度不受點數預算影響。
+        pointReward = await dailyRewards.LimitPointsAsync(userId, pointReward, cancellationToken);
+        var hasEconomicReward = true;
 
-        var convertedNormalKeys = 0;
-        var remainingProgress = await db.KeyProgressBalances
-            .AsNoTracking()
-            .Where(item => item.UserId == userId)
-            .Select(item => (int?)item.Balance)
-            .SingleOrDefaultAsync(cancellationToken) ?? 0;
         var now = DateTime.UtcNow;
         if (hasEconomicReward && pointReward > 0)
         {
@@ -342,69 +327,23 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
                 CreatedAt = now
             });
         }
-        if (hasEconomicReward && keyProgressReward > 0)
-        {
-            var progressBalance = await GetOrCreateProgressBalanceAsync(userId, cancellationToken);
-            var totalProgress = checked(progressBalance.Balance + keyProgressReward);
-            convertedNormalKeys = totalProgress / setting.KeyProgressToNormalKey;
-            remainingProgress = totalProgress % setting.KeyProgressToNormalKey;
-            progressBalance.Balance = remainingProgress;
-            progressBalance.UpdatedAt = now;
-            db.KeyProgressTransactions.Add(new KeyProgressTransaction
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                Amount = keyProgressReward,
-                Reason = $"Mini Game {mode.Name} {grade} 鑰匙進度獎勵",
-                ReferenceType = "MINIGAME_REWARD",
-                ReferenceId = attempt.Id,
-                CreatedAt = now
-            });
-
-            if (convertedNormalKeys > 0)
-            {
-                // 目前資料庫快照使用 KEY-NORMAL；同時相容 NORMAL，若兩者皆啟用則優先 NORMAL。
-                var normalKey = await db.KeyDefinitions
-                    .Where(item => item.IsActive && (item.Code == "NORMAL" || item.Code == "KEY-NORMAL"))
-                    .OrderBy(item => item.Code == "NORMAL" ? 0 : 1)
-                    .FirstOrDefaultAsync(cancellationToken);
-                if (normalKey is null)
-                    return EconomyResult<MiniGameCompleteView>.Conflict("找不到啟用中的 NORMAL 鑰匙定義，無法轉換進度。");
-                var normalBalance = await GetOrCreateKeyBalanceAsync(userId, normalKey.Id, cancellationToken);
-                normalBalance.Balance = checked(normalBalance.Balance + convertedNormalKeys);
-                normalBalance.UpdatedAt = now;
-                var convertedAmount = checked(convertedNormalKeys * setting.KeyProgressToNormalKey);
-                db.KeyProgressTransactions.Add(new KeyProgressTransaction
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = userId,
-                    Amount = -convertedAmount,
-                    Reason = "鑰匙進度達到門檻轉換 NORMAL 鑰匙",
-                    ReferenceType = "MINIGAME_PROGRESS_CONVERSION",
-                    ReferenceId = attempt.Id,
-                    CreatedAt = now
-                });
-                db.KeyTransactions.Add(new KeyTransaction
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = userId,
-                    KeyDefinitionId = normalKey.Id,
-                    Amount = convertedNormalKeys,
-                    Reason = "Mini Game 鑰匙進度轉換 NORMAL 鑰匙",
-                    ReferenceType = "MINIGAME_PROGRESS_CONVERSION",
-                    ReferenceId = attempt.Id,
-                    CreatedAt = now
-                });
-            }
-        }
-
+        var keyPolicy = await dailyRewards.GetKeyPolicyAsync(userId, cancellationToken);
+        var adjustedProgress = keyProgressReward / (decimal)keyPolicy.Divisor;
+        var grant = await economyService.GrantGameKeyProgressAsync(userId, adjustedProgress,
+            setting.KeyProgressToNormalKey, "MINIGAME_REWARD", "MINIGAME_PROGRESS_CONVERSION", attempt.Id, cancellationToken);
+        if (!grant.Succeeded)
+            return EconomyResult<MiniGameCompleteView>.Conflict(grant.ErrorMessage!);
+        var convertedNormalKeys = grant.Value!.NormalKeys;
+        var remainingProgress = grant.Value.RemainingProgress;
         attempt.Status = "COMPLETED";
         attempt.RawScore = rawScore;
         attempt.RawResultJson = rawResultJson;
         attempt.NormalizedScore = normalizedScore;
         attempt.Grade = grade;
         attempt.PointReward = pointReward;
-        attempt.KeyProgressReward = keyProgressReward;
+        attempt.KeyProgressReward = adjustedProgress;
+        attempt.KeyRewardDivisor = keyPolicy.Divisor;
+        attempt.ConvertedNormalKeys = convertedNormalKeys;
         attempt.RewardAttemptNo = hasEconomicReward ? rewardedToday + 1 : null;
         attempt.RewardGranted = hasEconomicReward;
         attempt.CompletedAt = now;
@@ -418,12 +357,12 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             normalizedScore,
             grade,
             pointReward,
-            keyProgressReward,
+            adjustedProgress,
             convertedNormalKeys,
             remainingProgress,
             hasEconomicReward,
             false,
-            attempt.CompletedAt.Value));
+            attempt.CompletedAt.Value, attempt.KeyRewardDivisor));
     }
 
     private static MiniGameModeView ToModeView(GameModeDefinition mode) => new(
@@ -443,8 +382,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
 
     private static MiniGameCompleteView ToCompleteView(
         MiniGameAttempt attempt,
-        int convertedNormalKeys,
-        int remainingKeyProgress,
+        decimal remainingKeyProgress,
         bool alreadyCompleted) => new(
         attempt.Id,
         attempt.GameModeDefinition.Code,
@@ -453,11 +391,11 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         attempt.Grade ?? "FAIL",
         attempt.PointReward,
         attempt.KeyProgressReward,
-        convertedNormalKeys,
+        attempt.ConvertedNormalKeys,
         remainingKeyProgress,
         attempt.RewardGranted,
         alreadyCompleted,
-        attempt.CompletedAt ?? attempt.StartedAt);
+        attempt.CompletedAt ?? attempt.StartedAt, attempt.KeyRewardDivisor);
 
     private async Task<UserKeyBalance> GetOrCreateKeyBalanceAsync(
         Guid userId,
@@ -763,9 +701,6 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         string CategoryCode);
 }
 
-/// <summary>目前會員的小遊戲每日獎勵額度。</summary>
-public sealed record MiniGameRewardStatusView(int DailyLimit, int Remaining, DateTime ResetsAt);
-
 /// <summary>前端建立玩法所需的模式識別與評分門檻。</summary>
 public sealed record MiniGameModeView(
     Guid Id,
@@ -807,9 +742,9 @@ public sealed record MiniGameCompleteView(
     int NormalizedScore,
     string Grade,
     int PointReward,
-    int KeyProgressReward,
+    decimal KeyProgressReward,
     int ConvertedNormalKeys,
-    int RemainingKeyProgress,
+    decimal RemainingKeyProgress,
     bool EconomicRewardGranted,
     bool AlreadyCompleted,
-    DateTime CompletedAt);
+    DateTime CompletedAt, byte KeyRewardDivisor = 1);

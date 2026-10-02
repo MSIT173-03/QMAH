@@ -70,6 +70,7 @@ public sealed record GameRoundDetailsDto(
     DateTime VotingDeadlineAt,
     DateTime? SettledAt,
     int ParticipantCount,
+    int SubmittedAnswerCount,
     int TotalVoteCount,
     Guid? WinnerAnswerId,
     string? WinnerPlayerDisplayName,
@@ -163,6 +164,6 @@ public sealed class SubmitVoteRequest
     [Required]
     public Guid AnswerId { get; set; }
 
-    [Range(1, 3)]
+    [Range(1, 1)]
     public int Count { get; set; } = 1;
 }

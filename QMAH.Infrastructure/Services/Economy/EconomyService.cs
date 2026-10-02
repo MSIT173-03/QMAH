@@ -14,8 +14,54 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// Economy API、Mini Game、會員管理、鑰匙背包與優惠券背包共用本服務。
 /// 新增會改變會員資產的流程時，應在此服務或同層領域服務同時更新 Balance 與 Transaction，Controller 不直接改餘額。
 /// </remarks>
-public sealed class EconomyService(QmahDbContext db)
+public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dailyRewards)
 {
+    /// <summary>在呼叫端的結算交易中累積遊戲鑰匙進度，保留小數並轉換完整鑰匙。</summary>
+    public async Task<EconomyResult<GameKeyGrantView>> GrantGameKeyProgressAsync(
+        Guid userId, decimal progressReward, int threshold, string referenceType,
+        string conversionReferenceType, Guid referenceId, CancellationToken cancellationToken)
+    {
+        if (threshold <= 0 || progressReward < 0)
+            return EconomyResult<GameKeyGrantView>.Conflict("鑰匙進度設定無效，請聯絡管理員。");
+        var progress = await db.KeyProgressBalances.SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
+        var total = checked((progress?.Balance ?? 0) + progressReward);
+        var keys = checked((int)decimal.Floor(total / threshold));
+        var normalKey = progressReward > 0 || keys > 0
+            ? await db.KeyDefinitions.Where(item => item.IsActive && item.ScopeType == "NORMAL"
+                && (item.Code == "NORMAL" || item.Code == "KEY-NORMAL"))
+                .OrderBy(item => item.Code == "NORMAL" ? 0 : 1).FirstOrDefaultAsync(cancellationToken)
+            : null;
+        if ((progressReward > 0 || keys > 0) && normalKey is null)
+            return EconomyResult<GameKeyGrantView>.Conflict("探索鑰匙暫時無法發放，請稍後重試。");
+        if (progressReward == 0 && keys == 0)
+            return EconomyResult<GameKeyGrantView>.Success(new(0, total));
+        var now = DateTime.UtcNow;
+        if (progress is null)
+        {
+            progress = new KeyProgressBalance { UserId = userId };
+            db.KeyProgressBalances.Add(progress);
+        }
+        progress.Balance = total % threshold;
+        progress.UpdatedAt = now;
+        if (progressReward > 0)
+            db.KeyProgressTransactions.Add(new KeyProgressTransaction {
+                Id = Guid.NewGuid(), UserId = userId, Amount = progressReward,
+                Reason = "遊戲完成鑰匙進度獎勵", ReferenceType = referenceType, ReferenceId = referenceId, CreatedAt = now });
+        if (keys > 0)
+        {
+            var balance = await GetOrCreateKeyBalanceAsync(userId, normalKey!.Id, cancellationToken);
+            balance.Balance = checked(balance.Balance + keys);
+            balance.UpdatedAt = now;
+            db.KeyProgressTransactions.Add(new KeyProgressTransaction {
+                Id = Guid.NewGuid(), UserId = userId, Amount = -checked(keys * threshold),
+                Reason = "遊戲進度達標轉換探索鑰匙", ReferenceType = conversionReferenceType, ReferenceId = referenceId, CreatedAt = now });
+            db.KeyTransactions.Add(new KeyTransaction {
+                Id = Guid.NewGuid(), UserId = userId, KeyDefinitionId = normalKey.Id, Amount = keys,
+                Reason = "遊戲進度達標轉換探索鑰匙", ReferenceType = referenceType, ReferenceId = referenceId, CreatedAt = now });
+        }
+        return EconomyResult<GameKeyGrantView>.Success(new(keys, progress.Balance));
+    }
+
     /// <summary>將既有達標進度一次轉成探索鑰匙；重複或並行請求只結算尚未轉換的進度。</summary>
     public async Task<EconomyResult<KeyProgressConversionView>> ConvertKeyProgressAsync(
         Guid userId,
@@ -37,7 +83,7 @@ public sealed class EconomyService(QmahDbContext db)
             var balance = progress?.Balance ?? 0;
             if (balance < 0)
                 return EconomyResult<KeyProgressConversionView>.Conflict("鑰匙進度資料異常，請聯絡管理員。");
-            var convertedKeys = balance / threshold;
+            var convertedKeys = checked((int)decimal.Floor(balance / threshold));
             if (convertedKeys == 0)
             {
                 await transaction.CommitAsync(retryToken);
@@ -121,7 +167,7 @@ public sealed class EconomyService(QmahDbContext db)
         var keyProgress = await db.KeyProgressBalances
             .AsNoTracking()
             .Where(balance => balance.UserId == userId)
-            .Select(balance => (int?)balance.Balance)
+            .Select(balance => (decimal?)balance.Balance)
             .SingleOrDefaultAsync(cancellationToken) ?? 0;
         var gameSetting = await GetGameEconomySettingAsync(cancellationToken);
 
@@ -905,6 +951,8 @@ public sealed class EconomyService(QmahDbContext db)
             return EconomyResult<GameRewardView>.NotFound("找不到遊戲房間。");
         if (room.Status != "COMPLETED")
             return EconomyResult<GameRewardView>.Conflict("遊戲尚未完成，現在不能結算獎勵。");
+        if (room.IsShowcase)
+            return EconomyResult<GameRewardView>.Conflict("展示房間不發放獎勵，請參加正式多人遊戲。");
         // 房間完成後離場只代表離開畫面，不應讓有效參與者失去尚未領取的一次性獎勵。
         var player = room.GamePlayers.FirstOrDefault(item => item.UserId == userId);
         if (player is null)
@@ -914,6 +962,17 @@ public sealed class EconomyService(QmahDbContext db)
         var queuedGameUnlockCount = settledRounds.Count == 0
             ? 0
             : await QueueGameArtifactUnlocksAsync(userId, settledRounds, retryToken);
+
+        if (player.RewardClaimedAt is not null)
+        {
+            if (queuedGameUnlockCount > 0)
+                await db.SaveChangesAsync(retryToken);
+            await transaction.CommitAsync(retryToken);
+            return EconomyResult<GameRewardView>.Success(new GameRewardView(
+                player.RewardPoints!.Value, player.RewardNormalKeys!.Value,
+                player.RewardPerformanceScore!.Value, player.RewardRoundsWon!.Value, true,
+                player.RewardKeyProgress!.Value, player.RewardKeyDivisor!.Value));
+        }
 
         var existingPointTransaction = await db.PointTransactions
             .AsNoTracking()
@@ -987,26 +1046,25 @@ public sealed class EconomyService(QmahDbContext db)
             + (int)Math.Floor(settings.MaximumVoteBonus * voteRatio)
             + (int)Math.Floor(settings.MaximumWinBonus * winRatio);
         points = Math.Clamp(points, settings.MinimumPointReward, settings.MaximumPointReward);
+        points = await dailyRewards.LimitPointsAsync(userId, points, retryToken);
         var keyReward = settings.CompletedNormalKey
             + (performance >= settings.ExcellentThreshold ? settings.ExcellentExtraNormalKey : 0);
         if (keyReward < 0)
             return EconomyResult<GameRewardView>.Conflict("主遊戲獎勵設定不可產生負數鑰匙。");
 
         var pointBalance = await GetOrCreatePointBalanceAsync(userId, retryToken);
-        // 目前資料庫快照使用 KEY-NORMAL；同時相容 NORMAL，若兩者皆啟用則優先 NORMAL。
-        var keyDefinition = await db.KeyDefinitions
-            .Where(item => item.IsActive && (item.Code == "NORMAL" || item.Code == "KEY-NORMAL"))
-            .OrderBy(item => item.Code == "NORMAL" ? 0 : 1)
-            .FirstOrDefaultAsync(retryToken);
-        if (keyReward > 0 && keyDefinition is null)
-            return EconomyResult<GameRewardView>.Conflict("找不到啟用中的 NORMAL 鑰匙定義。");
-        var keyBalance = keyDefinition is null
-            ? null
-            : await GetOrCreateKeyBalanceAsync(userId, keyDefinition.Id, retryToken);
+        var keyPolicy = await dailyRewards.GetKeyPolicyAsync(userId, retryToken);
+        var progressReward = checked(keyReward * settings.KeyProgressToNormalKey) / (decimal)keyPolicy.Divisor;
+        var grant = await GrantGameKeyProgressAsync(userId, progressReward, settings.KeyProgressToNormalKey,
+            "MAIN_GAME_REWARD", "MAIN_GAME_REWARD_CONVERSION", player.Id, retryToken);
+        if (!grant.Succeeded)
+            return EconomyResult<GameRewardView>.Conflict(grant.ErrorMessage!);
+        keyReward = grant.Value!.NormalKeys;
         var now = DateTime.UtcNow;
         pointBalance.Balance = checked(pointBalance.Balance + points);
         pointBalance.UpdatedAt = now;
-        db.PointTransactions.Add(new PointTransaction
+        if (points > 0)
+            db.PointTransactions.Add(new PointTransaction
         {
             Id = Guid.NewGuid(),
             UserId = userId,
@@ -1016,30 +1074,17 @@ public sealed class EconomyService(QmahDbContext db)
             ReferenceId = player.Id,
             CreatedAt = now
         });
-        if (keyDefinition is not null && keyBalance is not null && keyReward > 0)
-        {
-            keyBalance.Balance = checked(keyBalance.Balance + keyReward);
-            keyBalance.UpdatedAt = now;
-            db.KeyTransactions.Add(new KeyTransaction
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                KeyDefinitionId = keyDefinition.Id,
-                Amount = keyReward,
-                Reason = "多人主遊戲完成獎勵",
-                ReferenceType = "MAIN_GAME_REWARD",
-                ReferenceId = player.Id,
-                CreatedAt = now
-            });
-        }
+        player.RewardClaimedAt = now;
+        player.RewardPoints = points;
+        player.RewardNormalKeys = keyReward;
+        player.RewardPerformanceScore = performance;
+        player.RewardRoundsWon = roundsWon;
+        player.RewardKeyProgress = progressReward;
+        player.RewardKeyDivisor = keyPolicy.Divisor;
         await db.SaveChangesAsync(retryToken);
         await transaction.CommitAsync(retryToken);
         return EconomyResult<GameRewardView>.Success(new GameRewardView(
-            points,
-            keyReward,
-            performance,
-            roundsWon,
-            false));
+            points, keyReward, performance, roundsWon, false, progressReward, keyPolicy.Divisor));
         }, cancellationToken);
     }
 
@@ -1280,7 +1325,7 @@ public sealed record EconomyResult<T>(T? Value, string? ErrorCode, string? Error
 /// <summary>會員經濟總覽，包含點數、鑰匙進度、鑰匙餘額與可用兌換規則。</summary>
 public sealed record MemberEconomyView(
     int PointBalance,
-    int KeyProgressBalance,
+    decimal KeyProgressBalance,
     int KeyProgressToNormalKey,
     IReadOnlyList<KeyBalanceView> Keys,
     IReadOnlyList<KeyExchangeRuleView> ExchangeRules);
@@ -1288,8 +1333,8 @@ public sealed record MemberEconomyView(
 /// <summary>本次實際入帳的探索鑰匙數與剩餘進度；未達標時轉換數為零。</summary>
 public sealed record KeyProgressConversionView(
     int ConvertedNormalKeys,
-    int ConsumedKeyProgress,
-    int RemainingKeyProgress,
+    decimal ConsumedKeyProgress,
+    decimal RemainingKeyProgress,
     int KeyProgressToNormalKey);
 
 /// <summary>單一鑰匙定義在會員身上的餘額與目前可解鎖數。</summary>
@@ -1396,4 +1441,8 @@ public sealed record GameRewardView(
     int NormalKeyReward,
     int PerformanceScore,
     int RoundsWon,
-    bool AlreadyRewarded);
+    bool AlreadyRewarded,
+    decimal KeyProgressReward = 0,
+    byte KeyRewardDivisor = 1);
+
+public sealed record GameKeyGrantView(int NormalKeys, decimal RemainingProgress);

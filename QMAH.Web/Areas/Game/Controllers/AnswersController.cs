@@ -56,6 +56,7 @@ public sealed class AnswersController(QmahDbContext db) : Controller
             "room" => query.OrderBy(x => x.Round.Room.RoomCode).ThenByDescending(x => x.SubmittedAt),
             "player" => query.OrderBy(x => x.GamePlayer.DisplayName).ThenByDescending(x => x.SubmittedAt),
             "votes" => query.OrderByDescending(x => x.Votes.Sum(v => v.Count)).ThenByDescending(x => x.SubmittedAt),
+            "appreciation" => query.OrderByDescending(x => db.ArtifactAppreciationVotes.Count(vote => vote.AnswerId == x.Id)).ThenByDescending(x => x.SubmittedAt),
             _ => query.OrderByDescending(x => x.SubmittedAt)
         };
 
@@ -72,7 +73,8 @@ public sealed class AnswersController(QmahDbContext db) : Controller
                 AnswerType = x.AnswerType,
                 Text = x.Text,
                 SubmittedAt = x.SubmittedAt,
-                VoteCount = x.Votes.Sum(v => v.Count)
+                VoteCount = x.Votes.Sum(v => v.Count),
+                AppreciationVoteCount = db.ArtifactAppreciationVotes.Count(vote => vote.AnswerId == x.Id)
             })
             .ToListAsync(cancellationToken);
 
@@ -112,6 +114,7 @@ public sealed class AnswersController(QmahDbContext db) : Controller
                 Text = x.Text,
                 SubmittedAt = x.SubmittedAt,
                 VoteCount = x.Votes.Sum(v => v.Count),
+                AppreciationVoteCount = db.ArtifactAppreciationVotes.Count(vote => vote.AnswerId == x.Id),
                 Votes = x.Votes
                     .OrderByDescending(v => v.SubmittedAt)
                     .Select(v => new VoteListItemViewModel
@@ -128,6 +131,22 @@ public sealed class AnswersController(QmahDbContext db) : Controller
                     .ToList()
             })
             .SingleOrDefaultAsync(cancellationToken);
+
+        if (model is not null)
+        {
+            model.AppreciationVotes = await db.ArtifactAppreciationVotes
+                .AsNoTracking()
+                .Where(vote => vote.AnswerId == id)
+                .OrderByDescending(vote => vote.CreatedAt)
+                .Select(vote => new AppreciationVoteListItemViewModel
+                {
+                    VoterName = db.Users.Where(user => user.Id == vote.UserId)
+                        .Select(user => user.Profile == null ? null : user.Profile.Nickname)
+                        .FirstOrDefault() ?? "會員",
+                    CreatedAt = vote.CreatedAt
+                })
+                .ToListAsync(cancellationToken);
+        }
 
         return model is null ? NotFound() : View(model);
     }
@@ -204,7 +223,8 @@ public sealed class AnswersController(QmahDbContext db) : Controller
                 AnswerType = x.AnswerType,
                 Text = x.Text,
                 SubmittedAt = x.SubmittedAt,
-                VoteCount = x.Votes.Count,
+                VoteCount = x.Votes.Sum(vote => vote.Count),
+                AppreciationVoteCount = db.ArtifactAppreciationVotes.Count(vote => vote.AnswerId == x.Id),
                 RowVersion = Convert.ToBase64String(x.RowVersion)
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -299,7 +319,8 @@ public sealed class AnswersController(QmahDbContext db) : Controller
                 RoundNumber = x.Round.RoundNumber,
                 PlayerName = x.GamePlayer.DisplayName,
                 Text = x.Text,
-                VoteCount = x.Votes.Count,
+                VoteCount = x.Votes.Sum(vote => vote.Count),
+                AppreciationVoteCount = db.ArtifactAppreciationVotes.Count(vote => vote.AnswerId == x.Id),
                 RowVersion = Convert.ToBase64String(x.RowVersion)
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -319,9 +340,10 @@ public sealed class AnswersController(QmahDbContext db) : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        if (await db.Votes.AnyAsync(x => x.AnswerId == id, cancellationToken))
+        if (await db.Votes.AnyAsync(x => x.AnswerId == id, cancellationToken)
+            || await db.ArtifactAppreciationVotes.AnyAsync(x => x.AnswerId == id, cancellationToken))
         {
-            TempData["Error"] = "已有投票指向這筆作答，不能刪除，請保留歷史資料。";
+            TempData["Error"] = "已有回合得票或鑑賞票指向這筆作答，不能刪除，請保留歷史資料。";
             return RedirectToAction(nameof(Details), new { id });
         }
 
@@ -395,13 +417,15 @@ public sealed class AnswersController(QmahDbContext db) : Controller
                 RoomCode = x.Round.Room.RoomCode,
                 x.Round.RoundNumber,
                 PlayerName = x.GamePlayer.DisplayName,
-                VoteCount = x.Votes.Count
+                VoteCount = x.Votes.Sum(vote => vote.Count),
+                AppreciationVoteCount = db.ArtifactAppreciationVotes.Count(vote => vote.AnswerId == x.Id)
             })
             .SingleAsync(cancellationToken);
         model.RoomCode = summary.RoomCode;
         model.RoundNumber = summary.RoundNumber;
         model.PlayerName = summary.PlayerName;
         model.VoteCount = summary.VoteCount;
+        model.AppreciationVoteCount = summary.AppreciationVoteCount;
     }
 
     private async Task LoadRoundOptionsAsync(Guid? selected, CancellationToken cancellationToken)
@@ -464,7 +488,7 @@ public sealed class AnswersController(QmahDbContext db) : Controller
 
     private static string NormalizeSort(string? sort) => sort?.Trim().ToLowerInvariant() switch
     {
-        "room" or "player" or "votes" => sort.Trim().ToLowerInvariant(),
+        "room" or "player" or "votes" or "appreciation" => sort.Trim().ToLowerInvariant(),
         _ => "submitted"
     };
 }

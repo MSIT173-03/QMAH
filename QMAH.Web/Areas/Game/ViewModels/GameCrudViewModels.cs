@@ -233,6 +233,8 @@ public sealed class AnswerEditViewModel : AnswerFormViewModel
 
     public int VoteCount { get; set; }
 
+    public int AppreciationVoteCount { get; set; }
+
     public string RowVersion { get; set; } = string.Empty;
 }
 
@@ -250,9 +252,11 @@ public sealed class AnswerDeleteViewModel
 
     public int VoteCount { get; init; }
 
+    public int AppreciationVoteCount { get; init; }
+
     public required string RowVersion { get; init; }
 
-    public bool CanDelete => VoteCount == 0;
+    public bool CanDelete => VoteCount == 0 && AppreciationVoteCount == 0;
 }
 
 public abstract class VoteFormViewModel

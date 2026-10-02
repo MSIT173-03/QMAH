@@ -150,6 +150,8 @@ public class AnswerListItemViewModel
     public DateTime SubmittedAt { get; init; }
 
     public int VoteCount { get; init; }
+
+    public int AppreciationVoteCount { get; init; }
 }
 
 public sealed class AnswerDetailsViewModel : AnswerListItemViewModel
@@ -157,6 +159,15 @@ public sealed class AnswerDetailsViewModel : AnswerListItemViewModel
     public required string ArtifactName { get; init; }
 
     public IReadOnlyList<VoteListItemViewModel> Votes { get; init; } = [];
+
+    public IReadOnlyList<AppreciationVoteListItemViewModel> AppreciationVotes { get; set; } = [];
+}
+
+public sealed class AppreciationVoteListItemViewModel
+{
+    public required string VoterName { get; init; }
+
+    public DateTime CreatedAt { get; init; }
 }
 
 public sealed class VoteIndexViewModel
