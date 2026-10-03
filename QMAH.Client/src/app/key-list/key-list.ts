@@ -16,7 +16,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { KeyService } from '../services/key-service';
 import { CatalogService } from '../services/catalog-service';
-import { KeyExchangeRule, KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
+import { KeyExchangeResult, KeyExchangeRule, KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
 import { keyAssetPath } from '../shared/key-assets';
 import { eraInitials } from '../shared/era-initials';
 import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
@@ -69,6 +69,23 @@ export class KeyList implements OnInit, OnDestroy {
   craftDragOver = signal(false);
   /** 中央的兌換目標選單是否展開 */
   craftMenuOpen = signal(false);
+
+  // ---- 合成動畫：箭頭上的鎚子 ----
+  // 可以合成時鎚子出現在箭頭上；按下成品後鎚子敲三下、下方進度條每敲一下前進一格，
+  // 敲完且伺服器回應成功才補滿進度條、成品閃一下，再入帳並清空合成台。
+  // 伺服器比動畫慢時，鎚子會繼續敲、進度條停在九成等待；失敗則立即停止並顯示錯誤。
+
+  /** 鎚子敲三下的總時間（毫秒）；測試可設成 0，回應一到就直接完成 */
+  forgeDurationMs = 1350;
+  /** 敲完到入帳之間的停頓：進度條補滿、成品閃一下 */
+  forgeSettleMs = 380;
+  /** idle：沒有在合成；forging：鎚子敲擊中；done：進度條補滿、準備入帳 */
+  craftPhase = signal<'idle' | 'forging' | 'done'>('idle');
+  /** 這次合成實際使用的動畫時間（系統設定減少動態時會縮短），綁到 CSS 變數 --forge-ms */
+  forgeActiveMs = signal(this.forgeDurationMs);
+  /** 點成品後等待玩家確認的兌換規則；null 代表確認視窗關閉 */
+  craftConfirm = signal<KeyExchangeRule | null>(null);
+  private forgeTimers: ReturnType<typeof setTimeout>[] = [];
 
   /** 能在合成台上排開的兌換規則 */
   craftableRules = computed(() =>
@@ -166,6 +183,7 @@ export class KeyList implements OnInit, OnDestroy {
   craftHint = computed(() => {
     const count = this.craftSlots().length;
     const rule = this.craftSelectedRule();
+    if (this.craftPhase() !== 'idle') return '合成中…';
     if (this.exchangeLoading()) return '處理中…';
     if (!count) return ''; // 尚未放入時的引導文字改放在左側放入區下方（craftMenuHint）
     if (this.craftMixed()) return '一次只能放入同一種鑰匙';
@@ -374,13 +392,7 @@ export class KeyList implements OnInit, OnDestroy {
     this.exchangeError.set('');
     this.exchangeNotice.set('');
     this.keyService.exchangeKeys(rule.id).subscribe({
-      next: (result) => {
-        this.exchangeLoading.set(false);
-        this.exchangeNotice.set(`已兌換 ${result.sourceAmount} 把鑰匙，取得 ${result.targetAmount} 把${rule.targetKeyName}。`);
-        this.clearCraft();
-        this.loadKeys();
-        this.loadExchangeRules();
-      },
+      next: (result) => this.finishExchange(rule, result),
       error: (err) => {
         this.exchangeLoading.set(false);
         this.exchangeError.set(err?.message ?? '兌換失敗，請稍後再試');
@@ -477,9 +489,114 @@ export class KeyList implements OnInit, OnDestroy {
     this.closeCraftMenu();
   }
 
+  /** 點擊成品：先開確認視窗，玩家按「確認合成」才真的開始 */
+  requestCraft(): void {
+    const rule = this.craftReadyRule();
+    if (!rule || this.exchangeLoading() || this.craftPhase() !== 'idle') return;
+    this.hideKeyTip();
+    this.closeCraftMenu();
+    this.craftConfirm.set(rule);
+    requestAnimationFrame(() => this.pageRoot?.nativeElement.querySelector<HTMLElement>('.craft-confirm__ok')?.focus());
+  }
+
+  confirmCraft(): void {
+    if (!this.craftConfirm()) return;
+    this.craftConfirm.set(null);
+    this.craftOutput();
+  }
+
+  cancelCraft(): void {
+    if (!this.craftConfirm()) return;
+    this.craftConfirm.set(null);
+    this.pageRoot?.nativeElement.querySelector<HTMLElement>('.craft-output')?.focus();
+  }
+
+  onCraftConfirmOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.cancelCraft();
+  }
+
+  /** 確認視窗開著時，按 Esc 取消 */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.cancelCraft();
+  }
+
+  /** 確認視窗顯示「合成後剩餘幾把」 */
+  craftSourceBalance(rule: KeyExchangeRule): number {
+    return this.keyByCode(rule.sourceKeyCode)?.balance ?? 0;
+  }
+
+  /**
+   * 確認合成後：開始鎚子敲擊動畫，同時送出兌換請求。
+   * 動畫跑完「且」伺服器成功回應，才進入完成階段；兩者誰先好都會等另一個。
+   */
   craftOutput(): void {
     const rule = this.craftReadyRule();
-    if (rule) this.exchange(rule);
+    if (!rule || this.exchangeLoading() || this.craftPhase() !== 'idle') return;
+
+    const duration = this.prefersReducedMotion() ? Math.min(this.forgeDurationMs, 450) : this.forgeDurationMs;
+    this.hideKeyTip();
+    this.closeCraftMenu();
+    this.exchangeLoading.set(true);
+    this.exchangeError.set('');
+    this.exchangeNotice.set('');
+    this.forgeActiveMs.set(duration);
+    this.craftPhase.set('forging');
+
+    let animationDone = duration <= 0;
+    let result: KeyExchangeResult | null = null;
+    const settle = () => {
+      if (!animationDone || !result || this.craftPhase() !== 'forging') return;
+      const completed = result;
+      this.craftPhase.set('done');
+      this.afterForge(this.forgeSettleMs, () => this.finishExchange(rule, completed));
+    };
+
+    this.afterForge(duration, () => {
+      animationDone = true;
+      settle();
+    });
+
+    this.keyService.exchangeKeys(rule.id).subscribe({
+      next: (response) => {
+        result = response;
+        settle();
+      },
+      error: (err) => {
+        this.cancelForge();
+        this.exchangeLoading.set(false);
+        this.exchangeError.set(err?.message ?? '兌換失敗，請稍後再試');
+      },
+    });
+  }
+
+  /** 兌換成功後的共同收尾：入帳提示、清空合成台、重新讀取持有數與規則 */
+  private finishExchange(rule: KeyExchangeRule, result: KeyExchangeResult): void {
+    this.cancelForge();
+    this.exchangeLoading.set(false);
+    this.exchangeNotice.set(`已兌換 ${result.sourceAmount} 把鑰匙，取得 ${result.targetAmount} 把${rule.targetKeyName}。`);
+    this.clearCraft();
+    this.loadKeys();
+    this.loadExchangeRules();
+  }
+
+  /** 延遲 ms 後執行；ms 為 0 時直接執行（測試與減少動態時不必等計時器） */
+  private afterForge(ms: number, fn: () => void): void {
+    if (ms <= 0) {
+      fn();
+      return;
+    }
+    this.forgeTimers.push(setTimeout(fn, ms));
+  }
+
+  private cancelForge(): void {
+    this.forgeTimers.forEach((timer) => clearTimeout(timer));
+    this.forgeTimers = [];
+    this.craftPhase.set('idle');
+  }
+
+  private prefersReducedMotion(): boolean {
+    return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   }
 
   /** 放入的鑰匙改變後收起選單；目前的選擇若已不在選項內，交給 craftSelectedRule 退回第一個 */
@@ -584,6 +701,7 @@ export class KeyList implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.hideKeyTip();
+    this.cancelForge();
   }
 
   private craftMenuOpenFor(event: Event): boolean {

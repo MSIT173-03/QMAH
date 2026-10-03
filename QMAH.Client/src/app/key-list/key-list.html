@@ -305,7 +305,34 @@
                 }
               </div>
 
-            <div class="craft-arrow" [class.craft-arrow--ready]="craftReadyRule()" aria-hidden="true"></div>
+            <!-- 箭頭上的鎚子：可以合成時出現；按下成品後敲三下，下方進度條每敲一下前進一格 -->
+            <div
+              class="craft-forge"
+              [class.craft-forge--ready]="craftReadyRule() && craftPhase() === 'idle'"
+              [class.craft-forge--forging]="craftPhase() === 'forging'"
+              [class.craft-forge--done]="craftPhase() === 'done'"
+              [style.--forge-ms]="forgeActiveMs() + 'ms'"
+            >
+              <svg class="craft-forge__hammer" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                <g transform="rotate(-45 16 16)">
+                  <rect x="14" y="11" width="4" height="19" rx="2" class="craft-forge__handle" />
+                  <rect x="6.5" y="3.5" width="19" height="8.5" rx="2" class="craft-forge__head" />
+                  <rect x="8.5" y="5" width="15" height="2" rx="1" class="craft-forge__shine" />
+                </g>
+              </svg>
+              <span class="craft-forge__sparks" aria-hidden="true"><i></i><i></i><i></i></span>
+              <div class="craft-arrow" [class.craft-arrow--ready]="craftReadyRule()" aria-hidden="true"></div>
+              @if (craftPhase() !== 'idle') {
+                <div
+                  class="craft-forge__progress"
+                  role="progressbar"
+                  aria-label="合成進度"
+                  [attr.aria-valuetext]="craftPhase() === 'done' ? '完成' : '合成中'"
+                >
+                  <span></span>
+                </div>
+              }
+            </div>
 
             <div class="craft-output-stage">
               <button
@@ -313,6 +340,8 @@
                 class="craft-output"
                 #outputSlot
                 [class.craft-output--ready]="craftReadyRule()"
+                [class.craft-output--forging]="craftPhase() === 'forging'"
+                [class.craft-output--forged]="craftPhase() === 'done'"
                 [attr.data-scope]="craftReadyRule() ? keyScopeByCode(craftReadyRule()!.targetKeyCode) : null"
                 [disabled]="!craftReadyRule() || exchangeLoading()"
                 [attr.aria-label]="craftReadyRule() ? '以 ' + craftReadyRule()!.sourceAmount + ' 把' + craftReadyRule()!.sourceKeyName + '兌換 ' + craftReadyRule()!.targetAmount + ' 把' + craftReadyRule()!.targetKeyName : '成品，尚未符合兌換方式'"
@@ -323,7 +352,7 @@
                 (pointerdown)="pressKeyTip($event, undefined, '')"
                 (focus)="focusKeyTip($event, craftReadyRule() ? keyByCode(craftReadyRule()!.targetKeyCode) : undefined, '點擊兌換 1 組')"
                 (blur)="hideKeyTip()"
-                (click)="craftOutput()"
+                (click)="requestCraft()"
               >
                 @if (craftReadyRule(); as rule) {
                   <img [src]="keyIconByCode(rule.targetKeyCode)" alt="" />
@@ -424,6 +453,49 @@
         <button type="button" class="action-btn unlock-btn" [disabled]="unlocking() || confirmInsufficient()" (click)="confirmUseKey()">
           {{ unlocking() ? '解鎖中...' : '確認解鎖，消耗 1 把' }}
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 合成確認視窗：點成品後先確認，按「確認合成」才開始鎚子敲擊 -->
+  <div
+    class="confirm-overlay"
+    [class.open]="craftConfirm() !== null"
+    (click)="onCraftConfirmOverlayClick($event)"
+  >
+    <div
+      class="confirm-dialog"
+      *ngIf="craftConfirm() as rule"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="craft-confirm-title"
+      aria-describedby="craft-confirm-desc"
+    >
+      <div class="craft-confirm__route" aria-hidden="true">
+        <span class="craft-menu__slot" [attr.data-scope]="keyScopeByCode(rule.sourceKeyCode)">
+          <img [src]="keyIconByCode(rule.sourceKeyCode)" alt="" />
+          @if (eraMarkByCode(rule.sourceKeyCode); as mark) {
+            <span class="key-era-mark">@for (char of mark; track $index) {<span>{{ char }}</span>}</span>
+          }
+          <span class="key-slot__count">{{ rule.sourceAmount }}</span>
+        </span>
+        <span class="craft-arrow craft-arrow--ready"></span>
+        <span class="craft-menu__slot" [attr.data-scope]="keyScopeByCode(rule.targetKeyCode)">
+          <img [src]="keyIconByCode(rule.targetKeyCode)" alt="" />
+          @if (eraMarkByCode(rule.targetKeyCode); as mark) {
+            <span class="key-era-mark">@for (char of mark; track $index) {<span>{{ char }}</span>}</span>
+          }
+          <span class="key-slot__count">{{ rule.targetAmount }}</span>
+        </span>
+      </div>
+      <h3 id="craft-confirm-title">確認合成</h3>
+      <p id="craft-confirm-desc">使用 {{ rule.sourceAmount }} 把{{ rule.sourceKeyName }}，合成 {{ rule.targetAmount }} 把{{ rule.targetKeyName }}？</p>
+      <p class="have">
+        合成後剩餘 <strong>{{ craftSourceBalance(rule) - rule.sourceAmount }}</strong> 把{{ rule.sourceKeyName }}
+      </p>
+      <div class="confirm-actions">
+        <button type="button" class="action-btn cancel-btn" (click)="cancelCraft()">取消</button>
+        <button type="button" class="action-btn unlock-btn craft-confirm__ok" (click)="confirmCraft()">確認合成</button>
       </div>
     </div>
   </div>

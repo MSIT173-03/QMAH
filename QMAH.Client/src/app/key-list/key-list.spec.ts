@@ -87,6 +87,9 @@ describe('KeyList', () => {
 
     fixture = TestBed.createComponent(KeyList);
     component = fixture.componentInstance;
+    // 合成動畫在測試裡直接跳過，回應一到就完成；動畫流程另有獨立的測試
+    component.forgeDurationMs = 0;
+    component.forgeSettleMs = 0;
     fixture.detectChanges();
     await fixture.whenStable();
   });
@@ -245,5 +248,50 @@ describe('KeyList', () => {
     expect(component.eraMarkByCode('ERA_A')).toEqual(['日', '大']);
     expect(component.eraMark(keys[0])).toBeNull();
     expect(component.eraMark(undefined)).toBeNull();
+  });
+
+  it('按下成品後先敲擊，動畫跑完才入帳並清空合成台', async () => {
+    component.forgeDurationMs = 40;
+    component.forgeSettleMs = 20;
+    const normal = component.craftSourceKeys()[0];
+    [0, 1, 2].forEach(() => component.addToCraft(normal));
+
+    component.craftOutput();
+    expect(component.craftPhase()).toBe('forging');
+    expect(exchangedRuleIds).toEqual(['r-era']);
+    expect(component.craftSlots().length).toBe(3);
+    expect(component.craftHint()).toBe('合成中…');
+
+    component.craftOutput(); // 敲擊中重複按不會再送一次
+    expect(exchangedRuleIds.length).toBe(1);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(component.craftPhase()).toBe('done');
+
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    expect(component.craftPhase()).toBe('idle');
+    expect(component.craftSlots().length).toBe(0);
+    expect(component.exchangeLoading()).toBe(false);
+  });
+
+  it('點擊成品先跳出確認視窗，取消不會送出，確認後才開始合成', () => {
+    const normal = component.craftSourceKeys()[0];
+    [0, 1, 2].forEach(() => component.addToCraft(normal));
+
+    component.requestCraft();
+    expect(component.craftConfirm()?.id).toBe('r-era');
+    expect(component.craftSourceBalance(component.craftConfirm()!)).toBe(5);
+    expect(exchangedRuleIds.length).toBe(0);
+
+    component.cancelCraft();
+    expect(component.craftConfirm()).toBeNull();
+    expect(exchangedRuleIds.length).toBe(0);
+    expect(component.craftSlots().length).toBe(3);
+
+    component.requestCraft();
+    component.confirmCraft();
+    expect(component.craftConfirm()).toBeNull();
+    expect(exchangedRuleIds).toEqual(['r-era']);
+    expect(component.craftSlots().length).toBe(0);
   });
 });

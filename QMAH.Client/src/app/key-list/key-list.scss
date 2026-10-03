@@ -508,7 +508,7 @@
   --ring-size: clamp(180px, 28vh, 320px); // 依視窗高度縮放，讓內嵌彈出框不用捲動也放得下
   --output-width: 200px;
   display: grid;
-  grid-template-columns: minmax(0, var(--ring-size)) 36px var(--output-width);
+  grid-template-columns: minmax(0, var(--ring-size)) 48px var(--output-width); // 中間欄放箭頭、鎚子與進度條
   grid-template-areas:
     "ring arrow output"
     "input-caption . output-caption";
@@ -776,18 +776,114 @@
 
 .craft-menu__item[aria-checked='true'] .craft-menu__name { color: var(--blue-deep); }
 
-.craft-arrow {
+/* 箭頭欄：箭頭本身＋上方的鎚子＋下方的進度條。可以合成時鎚子出現並輕晃；
+   合成中鎚子每 --forge-ms/3 敲一下，進度條在每次敲擊時前進一格，最後由 done 補滿。 */
+.craft-forge {
   grid-area: arrow;
   align-self: center; // 第一列高度 = 放入區高度，置中後剛好在兩側的中線
   justify-self: center;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 84px;
+  --strike-ms: calc(var(--forge-ms, 1350ms) / 3);
+}
+.craft-arrow {
   width: 36px;
   height: 24px;
   background: var(--line);
   clip-path: polygon(0 35%, 55% 35%, 55% 0, 100% 50%, 55% 100%, 55% 65%, 0 65%);
   transition: background 0.2s ease;
 }
-
 .craft-arrow--ready { background: var(--blue); }
+
+.craft-forge__hammer {
+  position: absolute;
+  left: 50%;
+  bottom: calc(50% + 4px);
+  width: 30px;
+  height: 30px;
+  margin-left: -13px;
+  transform-origin: 81% 81%;
+  opacity: 0;
+  transform: scale(0.4) rotate(20deg);
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 18%));
+}
+
+.craft-forge__handle { fill: #c08a46; stroke: #5a3a14; stroke-width: 1.4; }
+.craft-forge__head { fill: #6f7c84; stroke: #2a3338; stroke-width: 1.4; }
+.craft-forge__shine { fill: #b9c4ca; }
+.craft-forge--ready .craft-forge__hammer { opacity: 1; transform: none; animation: forge-hammer-idle 1.6s ease-in-out infinite; }
+.craft-forge--forging .craft-forge__hammer { opacity: 1; transform: none; animation: forge-hammer-strike var(--strike-ms) cubic-bezier(0.5, 0, 0.6, 1) infinite; }
+.craft-forge--done .craft-forge__hammer { opacity: 0; transform: translateY(-6px) scale(0.6); animation: none; }
+
+@keyframes forge-hammer-idle {
+  50% { transform: rotate(10deg); }
+}
+@keyframes forge-hammer-strike {
+  0%   { transform: rotate(14deg); }
+  50%  { transform: rotate(34deg); }
+  64%  { transform: rotate(-26deg); }
+  74%  { transform: rotate(-18deg); }
+  100% { transform: rotate(14deg); }
+}
+
+.craft-forge__sparks {
+  position: absolute;
+  left: calc(50% - 9px);
+  top: calc(50% - 12px);
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.craft-forge__sparks i {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--yellow);
+  opacity: 0;
+}
+.craft-forge--forging .craft-forge__sparks i { animation: forge-spark var(--strike-ms) linear infinite; }
+.craft-forge__sparks i:nth-child(1) { --dx: -9px; --dy: -7px; }
+.craft-forge__sparks i:nth-child(2) { --dx: -2px; --dy: -11px; }
+.craft-forge__sparks i:nth-child(3) { --dx: 7px; --dy: -8px; }
+@keyframes forge-spark {
+  0%, 62% { opacity: 0; transform: translate(0, 0) scale(1); }
+  66% { opacity: 1; transform: translate(0, 0) scale(1.3); }
+  92% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.6); }
+  100% { opacity: 0; }
+}
+
+.craft-forge__progress {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 18px);
+  width: 46px;
+  height: 7px;
+  margin-left: -23px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ink) 12%, var(--card));
+}
+.craft-forge__progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--blue);
+}
+.craft-forge--forging .craft-forge__progress span { animation: forge-fill var(--forge-ms, 1350ms) linear forwards; }
+.craft-forge--done .craft-forge__progress span { width: 100%; transition: width 0.15s ease-out; }
+@keyframes forge-fill {
+  0%, 20%  { width: 0; }
+  23%, 53% { width: 30%; }
+  56%, 86% { width: 60%; }
+  89%, 100% { width: 88%; }
+}
 
 /* 產出區：拉成與放入區等高，成品格在正中間 */
 .craft-output-stage {
@@ -841,6 +937,24 @@
 
 @keyframes craft-ready {
   50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--blue) 22%, transparent); }
+}
+
+/* 合成中：成品半透明、停止呼吸光暈；完成時彈一下 */
+.craft-output--forging {
+  opacity: 0.55;
+  animation: none;
+  cursor: progress;
+}
+
+.craft-output--forged {
+  animation: craft-forged 0.38s cubic-bezier(0.3, 1.6, 0.5, 1);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--yellow) 35%, transparent), var(--qmah-shadow-card);
+}
+
+@keyframes craft-forged {
+  0% { transform: scale(0.9); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
 }
 
 .craft-output__name { min-height: 1.4em; margin: 0; color: var(--ink); font-size: 14px; font-weight: 800; }
@@ -1120,6 +1234,18 @@
   max-height: calc(100% - 32px);
 }
 
+/* 合成確認視窗頂部：來源鑰匙 → 目標鑰匙，沿用選單的鑰匙方格樣式 */
+.craft-confirm__route {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  .craft-menu__slot { width: 60px; }
+  .craft-arrow { width: 30px; height: 20px; transform: none; } // 窄螢幕也維持向右，不跟合成台一起轉向
+}
+
 .confirm-dialog .have {
   font-size: 12px;
   color: var(--ink-soft);
@@ -1191,8 +1317,13 @@
   .craft-tray__slot { transition: none; }
 
   .craft-output--ready,
+  .craft-output--forged,
   .craft-menu,
-  .craft-center__badge { animation: none; }
+  .craft-center__badge,
+  .craft-forge__hammer,
+  .craft-forge__sparks i { animation: none !important; }
+
+  .craft-forge__hammer { transition: opacity 0.2s ease; }
 
   .key-tooltip { transition: none; }
 }
@@ -1260,6 +1391,11 @@
     row-gap: 8px;
   }
   .craft-arrow { transform: rotate(90deg); }
+  /* 箭頭朝下時，鎚子改從箭頭左側敲下，進度條仍在箭頭下方 */
+  .craft-forge { width: 100px; height: 76px; }
+  .craft-forge__hammer { bottom: calc(50% - 6px); margin-left: -40px; }
+  .craft-forge__sparks { left: calc(50% - 12px); top: calc(50% - 4px); }
+  .craft-forge__progress { top: calc(50% + 22px); }
   .craft-output-stage { padding: 12px 0; }
   .craft-caption--output { max-width: 100%; }
   .craft-menu__item { width: 64px; }
