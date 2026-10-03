@@ -2,6 +2,7 @@
 
 # Compiled output
 /dist
+/.game-assets
 /tmp
 /out-tsc
 /bazel-out

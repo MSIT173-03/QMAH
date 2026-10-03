@@ -7,24 +7,29 @@ public sealed class ScrollPaintingEligibility(QmahMediaStoragePaths paths)
 {
     public bool IsEligible(string imagePath)
     {
+        var dimensions = ImageDimensions(imagePath);
+        var ratio = dimensions.Height > 0 ? (double)dimensions.Width / dimensions.Height : 0;
+        return dimensions.Width >= 300 && dimensions.Height >= 240 && ratio >= .5 && ratio <= 2.2;
+    }
+
+    public (int Width, int Height) ImageDimensions(string imagePath)
+    {
         var normalized = imagePath.Replace('\\', '/');
         var root = normalized.StartsWith("/media/", StringComparison.Ordinal) ? paths.PublicRoot
             : normalized.StartsWith("/images/", StringComparison.Ordinal) ? paths.ImageRoot : null;
-        if (root is null) return false;
+        if (root is null) return (0, 0);
         try
         {
             var relative = normalized[(normalized.IndexOf('/', 1) + 1)..];
             var fullRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)) + Path.DirectorySeparatorChar;
             var file = Path.GetFullPath(Path.Combine(root, relative));
-            if (!file.StartsWith(fullRoot, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)) return false;
+            if (!file.StartsWith(fullRoot, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)) return (0, 0);
             using var stream = File.OpenRead(file);
-            var (width, height) = ReadDimensions(stream);
-            var ratio = height > 0 ? (double)width / height : 0;
-            return width >= 300 && height >= 240 && ratio >= .5 && ratio <= 2.2;
+            return ReadDimensions(stream);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            return false;
+            return (0, 0);
         }
     }
 

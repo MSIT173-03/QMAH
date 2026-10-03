@@ -362,13 +362,21 @@ public sealed class GameRoomLifecycleService(
                     room.StateVersion++;
                 }
             }
-            else if (round.Status == "VOTING" && round.VotingDeadlineAt <= now)
+            else if (round.Status == "VOTING")
             {
-                round.Status = "REVEALED";
-                round.IsSettled = true;
-                round.SettledAt = now;
-                round.StateVersion++;
-                room.StateVersion++;
+                var votes = await db.Votes.AsNoTracking().Where(vote => vote.RoundId == round.Id)
+                    .Select(vote => new { vote.VoterGamePlayerId, vote.Answer.AnswerType }).ToListAsync(token);
+                var allVoted = activePlayers.All(player => round.RoundAnswers
+                    .Where(answer => answer.GamePlayerId != player.Id).Select(answer => answer.AnswerType).Distinct()
+                    .All(type => votes.Any(vote => vote.VoterGamePlayerId == player.Id && vote.AnswerType == type)));
+                if (allVoted || round.VotingDeadlineAt <= now)
+                {
+                    round.Status = "REVEALED";
+                    round.IsSettled = true;
+                    round.SettledAt = now;
+                    round.StateVersion++;
+                    room.StateVersion++;
+                }
             }
             else if (round.Status == "REVEALED"
                 && round.SettledAt is { } settledAt
@@ -493,6 +501,8 @@ public sealed class GameRoomLifecycleService(
 
     private static GameRound CreateRound(GameRoom room, Guid artifactId, int roundNumber, DateTime now)
     {
+        room.AnswerSeconds = (short)Math.Clamp((int)room.AnswerSeconds, 120, 300);
+        room.VotingSeconds = (short)Math.Clamp((int)room.VotingSeconds, 120, 300);
         var answerDeadlineAt = now.AddSeconds(room.AnswerSeconds);
         return new GameRound
         {

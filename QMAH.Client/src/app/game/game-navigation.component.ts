@@ -41,7 +41,7 @@ export class GameNavigationComponent {
 
   protected isTestActive(): boolean {
     const currentPath = this.currentPath();
-    return currentPath === '/game/test' || currentPath.startsWith('/game/test/');
+    return currentPath === '/game/test' || currentPath.startsWith('/game/test/') || this.router.parseUrl(this.router.url).queryParams['test'] === '1';
   }
 
   protected isDemoActive(): boolean { return this.currentPath() === '/game/demo'; }

@@ -79,4 +79,18 @@ describe('玩家自行選擇背景協助', () => {
     expect(document.activeElement).toBe(buttons[0]);
     grid.remove();
   });
+
+  it('手機碎片匣方向鍵依實際欄數移動，不沿用原圖欄數', () => {
+    const { board } = setup();
+    const grid = document.createElement('div');
+    grid.className = 'is-compact';
+    grid.style.gridTemplateColumns = '60px 60px 60px';
+    grid.innerHTML = '<button>一</button><button>二</button><button>三</button><button>四</button>';
+    document.body.append(grid);
+    const buttons = grid.querySelectorAll('button');
+    buttons[0].focus();
+    board.moveFocus({ key: 'ArrowDown', currentTarget: buttons[0], preventDefault: vi.fn() } as unknown as KeyboardEvent, 0);
+    expect(document.activeElement).toBe(buttons[3]);
+    grid.remove();
+  });
 });

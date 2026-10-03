@@ -37,16 +37,16 @@
   <div class="game-navigation__actions">
     @if (isAdmin()) {
       <details #tools class="game-tools" [class.is-active]="isTestActive() || isDemoActive()">
-        <summary><app-qmah-icon name="test-tube" aria-hidden="true" /><span>管理員工具</span></summary>
+        <summary><app-qmah-icon name="test-tube" aria-hidden="true" /><span class="game-action-label"><span>管理員</span><span>工具</span></span></summary>
         <div class="game-tools__menu">
-          <a routerLink="/game/test" (click)="closeTools()" [attr.aria-current]="isTestActive() ? 'page' : null"><strong>流程演練</strong><span>體驗作答、投票與結算，不寫入遊戲紀錄</span></a>
+          <a routerLink="/game" [queryParams]="{ test: '1' }" (click)="closeTools()" [attr.aria-current]="isTestActive() ? 'page' : null"><strong>模擬遊戲</strong><span>點房卡入桌，或建立房間讓 NPC 一起玩</span></a>
           @if (canShowRooms) {
             <a routerLink="/game/demo" [queryParams]="lobbyQuery()" (click)="closeTools()" [attr.aria-current]="isDemoActive() ? 'page' : null"><strong>房間展示</strong><span>查看範例房間與清單排列，不能加入</span></a>
           }
         </div>
       </details>
     }
-    <button type="button" class="game-focus-toggle" (click)="focusMode.toggle()" [attr.aria-pressed]="focusMode.active()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button>
+    <button type="button" class="game-focus-toggle" (click)="focusMode.toggle()" [attr.aria-pressed]="focusMode.active()" [attr.aria-label]="focusMode.active() ? '離開專注模式' : '專注模式'"><span class="game-action-label"><span>{{ focusMode.active() ? '離開專注' : '專注' }}</span><span>模式</span></span></button>
     <ng-content />
   </div>
 </nav>

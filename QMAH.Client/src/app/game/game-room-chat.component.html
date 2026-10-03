@@ -1,6 +1,7 @@
 <aside class="chat-dock" [class.is-open]="!collapsed()" aria-label="房間聊天室">
   <header class="chat-dock-heading">
     <button
+      #chatToggle
       type="button"
       class="chat-toggle"
       [class.is-open]="!collapsed()"
@@ -16,26 +17,36 @@
   </header>
 
   <section id="game-room-chat-panel" class="chat-panel" [hidden]="collapsed()" [attr.aria-hidden]="collapsed()">
+      <header class="chat-panel-heading"><strong>同桌聊天</strong><button type="button" (click)="togglePanel()" aria-label="關閉聊天室">×</button></header>
       @if (disabled()) {
         <p class="chat-disabled-note">這場遊戲已結束，仍可查看離線前的聊天紀錄。</p>
-      } @else {
-        <ol class="chat-messages" role="log" aria-label="聊天訊息" aria-live="polite" aria-relevant="additions">
-          @for (message of visibleMessages(); track message.id) {
-            <li class="chat-message" [class.is-own]="message.gamePlayerId === currentPlayerId()">
-              <div class="message-heading">
-                <strong>{{ message.gamePlayerId === currentPlayerId() ? '我' : message.displayName }}</strong>
+      }
+        <div class="chat-history">
+        <ol #messageLog class="chat-messages" role="log" aria-label="聊天訊息" aria-live="polite" aria-relevant="additions" tabindex="0" (scroll)="updateScrollPosition()">
+          @for (entry of transcript(); track entry.message.id) {
+            @let message = entry.message;
+            @if (entry.dateLabel) { <li class="chat-date">{{ entry.dateLabel }}</li> }
+            <li class="chat-message" [class.is-own]="message.gamePlayerId === currentPlayerId()" [class.is-continuation]="entry.continuation">
+              <span class="message-avatar" [style.background]="playerColor(message.gamePlayerId)" aria-hidden="true">{{ message.displayName.slice(0, 1) }}</span>
+              <div class="message-bubble">
+                @if (!entry.continuation && message.gamePlayerId !== currentPlayerId()) { <strong class="message-sender">{{ message.displayName }}</strong> }
+                <p>{{ messageText(message) }}</p>
+                @if (message.text.length > 160) { <button type="button" class="message-expand" [attr.aria-expanded]="expandedMessages().has(message.id)" (click)="toggleMessage(message.id)">{{ expandedMessages().has(message.id) ? '收合全文' : '展開全文' }}</button> }
                 <time [attr.datetime]="message.sentAt">{{ formatTime(message.sentAt) }}</time>
               </div>
-              <p>{{ message.text }}</p>
             </li>
           } @empty {
             <li class="chat-empty">目前還沒有訊息，向同桌玩家打聲招呼吧。</li>
           }
         </ol>
+        @if (!atLatest() && visibleMessages().length) { <button type="button" class="chat-latest" aria-label="回到最新訊息 ↓" (click)="jumpToLatest(true)">{{ unreadCount() ? unreadCount() + ' 則新訊息 ↓' : '回到最新訊息 ↓' }}</button> }
+        </div>
         @if (error()) { <p class="chat-error" role="alert">{{ error() }}</p> }
+        @if (!disabled()) {
         <form class="chat-compose" (ngSubmit)="submitMessage()">
           <label class="visually-hidden" for="game-room-chat-input">輸入聊天訊息</label>
           <textarea
+            #messageInput
             id="game-room-chat-input"
             name="chatMessage"
             [ngModel]="draft()"
@@ -47,7 +58,7 @@
             placeholder="傳個訊息給同桌玩家…"
             aria-describedby="chat-compose-hint"></textarea>
           <div class="chat-compose-footer">
-            <span id="chat-compose-hint">{{ draft().length }} / 500 · Enter 傳送，Shift + Enter 換行</span>
+            <span id="chat-compose-hint"><span>{{ draft().length }}／500</span><span class="compose-shortcut" title="Enter 傳送，Shift + Enter 換行">Enter 傳送</span><span class="visually-hidden">Shift + Enter 換行</span></span>
             <button type="submit" [disabled]="disabled() || sending() || !draft().trim()">
               {{ sending() ? '傳送中…' : '傳送' }}
             </button>

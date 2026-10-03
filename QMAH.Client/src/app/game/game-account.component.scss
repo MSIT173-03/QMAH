@@ -1,3 +1,4 @@
+@use './game-ui' as ui;
 :host {
   --ink: var(--qmah-ink);
   --jade: var(--qmah-jade);
@@ -24,6 +25,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .account-page { width: min(960px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
 /* ui-integration: App Shell 與 Game 子導覽已統一品牌入口，帳號內容只處理登入狀態與表單。 */
 .back-link { color: var(--jade); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
+.game-action-label { display: inline-flex; white-space: nowrap; }
 .account-panel { width: min(520px, 100%); margin: clamp(44px, 10vh, 100px) auto 0; padding: clamp(28px, 6vw, 48px); background: var(--surface); border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); }
 .account-loading { margin: 0; color: var(--muted); }
 .account-panel h1 { margin: 0 0 var(--qmah-space-6); font-size: var(--qmah-type-page-title-size); line-height: var(--qmah-type-heading-leading); letter-spacing: -.025em; overflow-wrap: anywhere; }
@@ -36,6 +38,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 button:disabled { cursor: not-allowed; }
 
 @media (max-width: 600px) {
+  .back-link { display: inline-flex; align-items: center; justify-content: center; min-height: 60px; padding: 8px 12px; }
+  .game-action-label { display: grid; text-align: center; line-height: 1.5; }
   .account-page { padding: 10px 18px 40px; }
   .account-panel { margin-top: 34px; }
 }
@@ -43,3 +47,7 @@ button:disabled { cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   .account-panel button, .primary-link { transition: none; }
 }
+
+// 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
+.account-panel > p { @include ui.prose; }
+.account-panel h1 { font-size: clamp(24px, 4vw, 32px); word-break: normal; overflow-wrap: break-word; }

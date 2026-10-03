@@ -70,7 +70,7 @@ public sealed class MiniGameController(
             return ToFailure(result);
         var value = result.Value!;
         return CreatedAtAction(
-            nameof(StartAttempt),
+            nameof(GetAttempt),
             new { id = value.AttemptId },
             ToStartDto(value));
     }

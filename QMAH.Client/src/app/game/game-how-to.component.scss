@@ -1,3 +1,4 @@
+@use './game-ui' as ui;
 :host {
   --how-to-ink: var(--qmah-ink);
   --how-to-jade: var(--qmah-jade);
@@ -64,3 +65,6 @@
   .game-how-to__body ol { grid-template-columns: 1fr; }
   .game-how-to__body li { min-height: 0; padding: 14px 0; }
 }
+
+// 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
+.game-how-to__body > p, .game-how-to__body li p { @include ui.prose; }

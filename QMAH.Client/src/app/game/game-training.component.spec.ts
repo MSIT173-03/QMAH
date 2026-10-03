@@ -1,3 +1,6 @@
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { locatorTarget } from './game-detail-locator';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
@@ -8,7 +11,7 @@ import { MiniGameStart } from './game.models';
 
 function setup(modeCode: string) {
   const complete = vi.fn(() => of({ normalizedScore: 40, rawScore: 100, grade: 'C', pointReward: 0, keyProgressReward: 1 }));
-  TestBed.configureTestingModule({ imports: [GameTrainingComponent], providers: [
+  TestBed.configureTestingModule({ imports: [GameTrainingComponent], providers: [provideRouter([]), provideHttpClient(),
     { provide: GameService, useValue: { completeMiniGame: complete, errorMessage: () => '連線中斷' } },
     { provide: CatalogService, useValue: {} }
   ] });
@@ -25,14 +28,14 @@ describe('單人遊戲求救', () => {
   it('送出失敗後重送同一份結果，保留提示紀錄且不能更改答案', () => {
     const { component, complete } = setup('DETAIL_LOCATOR');
     component.useHelp(false);
-    component.chooseLocator('a0');
+    for (const artifact of component.locatorOptions) component.locateDetail({ artifactId: artifact.artifactId, imageWidth: 1000, imageHeight: 1000, ...locatorTarget(component.attempt!.seed, artifact.artifactId) });
     complete.mockImplementationOnce(() => throwError(() => new Error('連線中斷')));
     component.completeAttempt();
     expect(component.phase).toBe('playing');
     expect(component.resultFrozen).toBe(true);
     expect(component.hintsUsed).toBe(1);
-    component.chooseLocator('a2');
-    expect(component.locatorChoice).toBe('a0');
+    component.locateDetail({ artifactId: 'a2', x: 0, y: 0, imageWidth: 1000, imageHeight: 1000 });
+    expect(component.locatorAnswers).toHaveLength(4);
     component.retryAction();
     expect(complete).toHaveBeenCalledTimes(2);
     expect(complete.mock.calls[1]).toEqual(complete.mock.calls[0]);
@@ -48,12 +51,12 @@ describe('單人遊戲求救', () => {
   it('暫停與結果重送期間，不能透過元件操作改動已凍結的答案', () => {
     const { component } = setup('DETAIL_LOCATOR');
     component.paused = true;
-    component.chooseLocator('a1');
-    expect(component.locatorChoice).toBeNull();
+    component.locateDetail({ artifactId: 'a0', x: .5, y: .5, imageWidth: 1000, imageHeight: 1000 });
+    expect(component.locatorAnswers).toEqual([]);
     component.paused = false;
     component['pendingResult'] = { rawScore: 100, rawResultJson: '{}' };
-    component.chooseLocator('a1');
-    expect(component.locatorChoice).toBeNull();
+    component.locateDetail({ artifactId: 'a0', x: .5, y: .5, imageWidth: 1000, imageHeight: 1000 });
+    expect(component.locatorAnswers).toEqual([]);
     component.attempt!.modeCode = 'MEMORY_MATCH';
     component.flipMemory(0);
     expect(component.memoryCards[0].revealed).toBe(false);
@@ -79,29 +82,45 @@ describe('單人遊戲求救', () => {
     const request = complete.mock.calls[0] as unknown as [string, { rawResultJson: string }];
     expect(JSON.parse(request[1].rawResultJson)).toMatchObject({ scoringVersion: 3, hintsUsed: 1, autoPlaced: 7, memoryMatched: 8 });
   });
-  it('細節提示最多排除兩個錯誤選項，仍須作答', () => {
+  it('定位提示標示目前文物區域，同一件重看不扣第二次', () => {
     const { component, complete } = setup('DETAIL_LOCATOR');
     component.useHelp(false);
     component.useHelp(false);
-    component.useHelp(false);
-    expect(component.locatorExcludedIds).toHaveLength(2);
-    expect(component.locatorExcludedIds).not.toContain('a0');
-    expect(component.hintsUsed).toBe(2);
-    expect(component.locatorChoice).toBeNull();
+    expect(component.locatorHintArtifactId).toBe('a0');
+    expect(component.hintsUsed).toBe(1);
+    expect(component.locatorAnswers).toEqual([]);
     expect(complete).not.toHaveBeenCalled();
-    component.chooseLocator(component.locatorExcludedIds[0]);
-    expect(component.locatorChoice).toBeNull();
+    component.locateDetail({ artifactId: 'a0', imageWidth: 1000, imageHeight: 1000, ...locatorTarget('seed', 'a0') });
+    expect(component.locatorHintArtifactId).toBeNull();
+    component.useHelp(false);
+    expect(component.locatorHintArtifactId).toBe('a1');
+    expect(component.hintsUsed).toBe(2);
   });
-  it('求救按鈕不會洩漏細節題答案，代完成仍需扣分並送出', () => {
+  it('代完成只協助剩餘文物，送出 v4 座標與輔助數量', () => {
     const { component, complete } = setup('DETAIL_LOCATOR');
-    component.locatorChoice = 'a0';
-    expect(component.canAskForHelp).toBe(true);
-    component.locatorChoice = 'a1';
-    expect(component.canAskForHelp).toBe(true);
+    component.locateDetail({ artifactId: 'a0', imageWidth: 1000, imageHeight: 1000, ...locatorTarget('seed', 'a0') });
     component.useHelp(true);
-    expect(component.autoPlaced).toBe(1);
+    expect(component.autoPlaced).toBe(3);
     expect(component.canAskForHelp).toBe(false);
-    expect(component.locatorChoice).toBe('a0');
+    expect(component.locatorAnswers).toHaveLength(1);
+    expect(component.locatorAssistedIds).toEqual(['a1', 'a2', 'a3']);
     expect(complete).toHaveBeenCalledTimes(1);
+    const request = complete.mock.calls[0] as unknown as [string, { rawResultJson: string }];
+    expect(JSON.parse(request[1].rawResultJson)).toMatchObject({ scoringVersion: 4, autoPlaced: 3, locatorAnswers: component.locatorAnswers });
+  });
+  it('拒絕越界、重複及跳題座標；四件定位完成才可結算', () => {
+    const { component, complete } = setup('DETAIL_LOCATOR');
+    component.locateDetail({ artifactId: 'a1', x: .5, y: .5, imageWidth: 1000, imageHeight: 1000 });
+    component.locateDetail({ artifactId: 'a0', x: 1.1, y: .5, imageWidth: 1000, imageHeight: 1000 });
+    expect(component.locatorAnswers).toEqual([]);
+    expect(component.canComplete).toBe(false);
+    component.locateDetail({ artifactId: 'a0', imageWidth: 1000, imageHeight: 1000, ...locatorTarget('seed', 'a0') });
+    component.locateDetail({ artifactId: 'a0', x: .5, y: .5, imageWidth: 1000, imageHeight: 1000 });
+    expect(component.locatorAnswers).toHaveLength(1);
+    for (const artifact of component.locatorOptions.slice(1)) component.locateDetail({ artifactId: artifact.artifactId, imageWidth: 1000, imageHeight: 1000, x: 0, y: 0 });
+    expect(component.canComplete).toBe(true);
+    component.completeAttempt();
+    const request = complete.mock.calls[0] as unknown as [string, { rawScore: number }];
+    expect(request[1].rawScore).toBe(25);
   });
 });

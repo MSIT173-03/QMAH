@@ -1,0 +1,14 @@
+<button type="button" [attr.data-mode]="mode().code" [attr.aria-label]="'選擇玩法：' + mode().name + '。' + mechanic()" [class.is-selected]="selected()" [attr.aria-pressed]="selected()" (click)="modeSelected.emit(mode().code)" [disabled]="disabled()">
+  <span class="mode-cover" [attr.data-mode]="mode().code" [style.--preview-image]="'url(' + previewImage() + ')'" aria-hidden="true">
+    @if (mode().code === 'MEMORY_MATCH') {
+      <span class="mini-memory">@for (tile of previewMemory; track $index) { <span [class.is-open]="tile">@if (tile) { <img [src]="previewImage()" alt="" /> }</span> }</span>
+    } @else if (mode().code === 'DETAIL_LOCATOR') {
+      <span class="mini-locator"><span></span><img [src]="previewImage()" alt="" /></span>
+    } @else if (mode().code === 'ARTIFACT_PUZZLE') {
+      <span class="mini-puzzle">@for (tile of previewPuzzle; track $index) { <span [style.--tile-x]="$index % 5" [style.--tile-y]="($index - $index % 5) / 5"></span> }</span>
+    } @else if (mode().code === 'STRIP_RESTORE') {
+      <span class="mini-scroll">@for (tile of previewScroll; track $index) { <span [style.--tile-x]="$index % 5" [style.--tile-y]="($index - $index % 5) / 5"></span> }</span>
+    } @else { <img [src]="previewImage()" alt="" /> }
+  </span>
+  <span class="mode-choice-copy"><span class="mode-card-copy-head"><span class="mode-card-title">{{ mode().name }}</span>@if (selected()) { <span class="mode-selection">已選擇</span> }</span><span class="mode-card-effect"><span class="mode-card-effect__label">玩法說明</span><span class="mode-mechanic">{{ mechanic() }}</span></span></span>
+</button>

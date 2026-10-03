@@ -2,21 +2,22 @@
   display: block;
   min-width: 0;
   container-type: inline-size;
+  margin-block-end: 20px;
 }
 
 /* Game 子導覽：寬版可成為側邊模式軌，窄版維持全站熟悉的水平切換。 */
 .game-navigation {
   color: var(--game-nav-ink, var(--qmah-ink));
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  grid-template-areas: "context modes actions";
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "modes actions";
   align-items: center;
   gap: var(--qmah-space-5);
   min-height: 64px;
-  padding: 6px 0 8px;
+  padding: 12px 0 20px;
   border-bottom: 1px solid var(--game-nav-line, var(--qmah-line));
 }
-.game-navigation__header { display: flex; grid-area: context; align-items: center; min-width: 0; }
+.game-navigation__header { display: none; align-items: center; min-width: 0; }
 .game-navigation__switcher { display: flex; grid-area: modes; align-items: center; justify-self: center; gap: var(--qmah-space-3); min-width: 0; }
 .game-navigation__context {
   display: inline-flex;
@@ -45,10 +46,10 @@
   align-items: center;
   gap: 4px;
   min-width: 0;
-  padding: 3px;
-  border: 1px solid var(--qmah-line);
+  padding: 0;
+  border: 0;
   border-radius: var(--qmah-radius-card);
-  background: var(--game-nav-surface, var(--qmah-surface));
+  background: transparent;
 }
 .game-navigation__links a {
   display: flex;
@@ -82,7 +83,7 @@
   box-shadow: var(--qmah-shadow-card);
   view-transition-name: qmah-game-mode;
 }
-.game-navigation__links a.is-active .game-navigation__link-description { color: color-mix(in srgb, var(--qmah-game-content) 78%, transparent); }
+.game-navigation__links a.is-active .game-navigation__link-description { color: var(--qmah-game-content); }
 .game-navigation__actions {
   display: flex;
   grid-area: actions;
@@ -91,6 +92,8 @@
   gap: var(--qmah-space-2);
   min-width: 0;
 }
+.game-navigation__actions > * { flex-shrink: 0; }
+.game-action-label { display: inline-flex; white-space: nowrap; }
 .game-navigation__test-entry,
 .game-navigation__login {
   display: inline-flex;
@@ -128,6 +131,21 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); ou
 @media (max-width: 900px) { .game-tools__menu { left: 0; right: auto; } }
 
 /* 側邊 rail 由父頁限制 host 寬度後自動啟用；不需要為 Room 頁另建第二套導覽。 */
+// 依實際容器換列，避免寬螢幕中的窄內容區把操作文字擠成直排。
+@container (min-width: 261px) and (max-width: 1100px) {
+  .game-navigation { grid-template-columns: minmax(0, 1fr); grid-template-areas: "modes" "actions"; gap: 16px; }
+  .game-navigation__switcher { width: 100%; }
+  .game-navigation__links { width: 100%; }
+  .game-navigation__links a { flex: 1; min-width: 0; }
+  .game-navigation__actions { flex-wrap: wrap; justify-content: flex-end; }
+}
+
+@container (min-width: 261px) and (max-width: 600px) {
+  .game-action-label { display: grid; text-align: center; line-height: 1.5; }
+  .game-action-label > span { white-space: nowrap; }
+  .game-tools summary, .game-focus-toggle { justify-content: center; }
+}
+
 @container (max-width: 260px) {
   .game-navigation {
     display: flex;
@@ -175,10 +193,10 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); ou
 }
 
 @media (max-width: 600px) {
-  .game-navigation { min-height: 0; padding: 7px 0 9px; }
+  .game-navigation { min-height: 0; padding: 12px 0 20px; gap: 12px; }
   .game-navigation__switcher { display: block; width: 100%; }
   .game-navigation__links { width: 100%; }
-  .game-navigation__links a { min-width: 0; min-height: 44px; justify-content: center; padding: 7px 8px; text-align: center; }
+  .game-navigation__links a { min-width: 0; min-height: 44px; justify-content: center; padding: 7px 6px; text-align: center; }
   .game-navigation__link-icon { display: none; }
   .game-navigation__link-copy { display: block; }
   .game-navigation__link-label { font-size: 14px; white-space: nowrap; }
@@ -186,6 +204,10 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); ou
   .game-navigation__actions { gap: 6px; min-height: 34px; }
   .game-navigation__test-entry,
   .game-navigation__login { min-height: 44px; }
+}
+
+@media (max-width: 360px) {
+  .game-navigation__links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

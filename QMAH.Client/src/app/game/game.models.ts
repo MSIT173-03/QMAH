@@ -31,6 +31,8 @@ export interface ApiPage<T> {
 }
 
 export interface GameRoomListItem {
+  answerSeconds?: number;
+  votingSeconds?: number;
   id: string;
   roomCode: string;
   status: GameRoomStatus;
@@ -263,6 +265,7 @@ export class GameValidationError extends Error {
 }
 
 export interface GameRoomQuery {
+  roomCode?: string;
   status?: GameRoomFilterStatus;
   sort?: GameRoomSort;
   page?: number;

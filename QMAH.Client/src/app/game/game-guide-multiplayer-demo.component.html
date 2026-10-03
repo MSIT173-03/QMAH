@@ -1,0 +1,41 @@
+<div class="guide-preview" animate.enter="game-panel-enter">
+  <div class="guide-preview-heading"><h2>跟著玩一回合</h2></div>
+  <ol class="guide-round-progress" aria-label="示範進度">
+    <li [class.is-active]="!submitted()" [class.is-done]="submitted()" [attr.aria-current]="!submitted() ? 'step' : null"><small>01</small>觀察作答</li>
+    <li [class.is-active]="submitted() && !revealed()" [class.is-done]="revealed()" [attr.aria-current]="submitted() && !revealed() ? 'step' : null"><small>02</small>匿名投票</li>
+    <li [class.is-active]="revealed()" [attr.aria-current]="revealed() ? 'step' : null"><small>03</small>揭曉結果</li>
+  </ol>
+  <p class="guide-preview-hint">這是互動示範，不會送出回答或投票。</p>
+  <div class="guide-round-table">
+    <div class="guide-preview-artifact"><img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="掐絲琺瑯雲龍紋三足香爐" /><div><strong>先看看這件文物</strong><p>掐絲琺瑯雲龍紋三足香爐</p><span>觀察細節，再寫下你的想法。</span></div></div>
+    @if (!submitted()) {
+      <div class="guide-preview-write">
+        <label for="demo-response">你覺得這件文物有什麼特色？</label>
+        <textarea id="demo-response" rows="3" maxlength="200" placeholder="例如：三隻腳讓它站得很穩，我猜是用來焚香的。" [value]="response()" (input)="responseChange.emit($any($event.target).value)"></textarea>
+        <button type="button" [disabled]="!response().trim()" (click)="submitResponse.emit()">完成作答，看看其他回答</button>
+      </div>
+    } @else {
+      <div class="guide-round-vote">
+        <div class="guide-preview-your-answer" animate.enter="game-result-enter"><strong>你的回答</strong><p>{{ response() }}</p></div>
+        <h3>哪一則回答最能說服你？</h3>
+        <p class="guide-preview-hint">正式遊戲不能投自己的回答。以下回答與票數僅供示範。</p>
+        <p class="guide-preview-hint">史實推理：推測文物的真實名稱、用途、年代或背景。擬真異說：編一段聽起來可信的說明。妙想奇談：把文物寫進幽默誇張的故事。</p>
+        <ol class="guide-preview-answers" animate.enter="game-result-enter">
+          @for (answer of answers(); track answer.author; let index = $index) {
+            <li>
+              <button type="button" [class.is-selected]="selectedAnswer() === index" [class.is-winner]="revealed() && index === 1" [attr.aria-pressed]="selectedAnswer() === index" [disabled]="revealed()" (click)="selectedAnswerChange.emit(index)">
+                <span><strong>回答 {{ (index + 1).toString().padStart(2, '0') }}</strong>@if (revealed()) { <small>{{ answer.author }} · {{ answer.votes }} 票@if (index === 1) { · 勝出 }</small> }</span>
+                <span class="guide-preview-answer-text"><strong>{{ answer.category }}</strong><br />{{ answer.text }}</span>
+                @if (!revealed() && selectedAnswer() === index) { <small>已選擇</small> }
+              </button>
+            </li>
+          }
+        </ol>
+        <div class="guide-preview-actions">
+          @if (!revealed()) { <button type="button" [disabled]="selectedAnswer() === null" (click)="reveal.emit()">揭曉作者與票數</button> }
+          @else { <p role="status"><span>這回合是回答 02（阿墨）勝出。</span><span>你選了回答 {{ ((selectedAnswer() ?? 0) + 1).toString().padStart(2, '0') }}。</span></p><button type="button" class="secondary" (click)="restart.emit()">重新示範</button> }
+        </div>
+      </div>
+    }
+  </div>
+</div>

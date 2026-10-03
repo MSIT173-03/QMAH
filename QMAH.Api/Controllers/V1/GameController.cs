@@ -22,18 +22,25 @@ public sealed class GameController(
 {
     [Authorize(Roles = "Admin")]
     [HttpGet("rehearsal-rooms")]
-    public ActionResult<ApiPage<GameRehearsalRoomDto>> GetRehearsalRooms(string? status, string? sort, int page = 1, int pageSize = 20)
+    public ActionResult<ApiPage<GameRehearsalRoomDto>> GetRehearsalRooms(string? status, string? sort, int page = 1, int pageSize = 20, string? roomCode = null)
     {
         if (page<1 || pageSize is <1 or >100) return Problem(statusCode: 400, title: "分頁設定無效");
+        roomCode = roomCode?.Trim().ToUpperInvariant();
+        if (roomCode?.Length > 16) return Problem(statusCode: 400, title: "房號過長");
         // 房卡只是同一演練流程的展示設定，不建立實體房間或背景計時器。
+        int[] answerTimes = [120, 150, 180, 240, 300];
+        int[] votingTimes = [120, 150, 180, 240, 300];
+        var roomCodes = Enumerable.Range(1000, 9000).OrderBy(_ => Random.Shared.Next()).Take(24).ToArray();
         IEnumerable<GameRehearsalRoomDto> rooms = Enumerable.Range(1,24).Select(index =>
         {
-            var capacity=4+index%3;
-            var playerCount=index%5==0 ? capacity : 1+index%(capacity-1);
-            return new GameRehearsalRoomDto($"test-room-virtual-{index}",new Random(index*179).Next(1000,9999).ToString(),
-                "WAITING","PUBLIC",capacity,2+index%3,playerCount,null,null,DateTime.UtcNow.AddMinutes(-index*3));
+            var capacity = Random.Shared.Next(3, 7);
+            var playerCount = Random.Shared.Next(1, capacity + 1);
+            return new GameRehearsalRoomDto($"test-room-virtual-{index}", roomCodes[index - 1].ToString(),
+                "WAITING", "PUBLIC", capacity, Random.Shared.Next(1, 6), playerCount, null, null,
+                DateTime.UtcNow.AddMinutes(-Random.Shared.Next(1, 90)), answerTimes[Random.Shared.Next(answerTimes.Length)], votingTimes[Random.Shared.Next(votingTimes.Length)]);
         });
         if (!string.IsNullOrWhiteSpace(status) && !string.Equals(status,"WAITING",StringComparison.OrdinalIgnoreCase)) rooms=[];
+        if (!string.IsNullOrEmpty(roomCode)) rooms = rooms.Where(room => room.RoomCode.StartsWith(roomCode, StringComparison.OrdinalIgnoreCase));
         rooms=sort?.ToUpperInvariant() switch
         {
             "NEARLY_FULL" => rooms.OrderBy(room=>room.MaxPlayers-room.PlayerCount),
@@ -98,11 +105,16 @@ public sealed class GameController(
         string? sort,
         int page = 1,
         int pageSize = 20,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? roomCode = null)
     {
         var query = db.GameRooms
             .AsNoTracking()
             .Where(room => room.Visibility == "PUBLIC" && !room.IsShowcase);
+        // 房號先篩選再分頁，不會漏掉其他頁的房間，也不開放搜尋私人房間。
+        roomCode = roomCode?.Trim().ToUpperInvariant();
+        if (roomCode?.Length > 16) return Problem(statusCode: 400, title: "房號過長");
+        if (!string.IsNullOrEmpty(roomCode)) query = query.Where(room => room.RoomCode.StartsWith(roomCode));
         status = status?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(status))
         {

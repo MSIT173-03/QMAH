@@ -125,7 +125,7 @@ const appShellChildren: Routes = [
     path: 'game/test',
     canActivate: [adminGameTestGuard],
     loadComponent: () =>
-      import('./game/game-test.component').then(({ GameTestComponent }) => GameTestComponent)
+      import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
   },
   {
     path: 'social',

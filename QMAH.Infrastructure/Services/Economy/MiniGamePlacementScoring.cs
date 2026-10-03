@@ -10,8 +10,10 @@ public static class MiniGamePlacementScoring
     }
     public static int Calculate(int completion, int pieces, int elapsedSeconds, int moves, int hints, int autoPlaced, int sThreshold)
     {
-        // 每片六秒的寬限時間，理想操作為每片一次；超額時間與操作各最多扣 25 分。
-        var timePenalty = Math.Min(25, Math.Max(0, elapsedSeconds - pieces * 6) * 12d / (pieces * 6));
+        // 每片十二秒的寬限時間：25 片五分鐘、15 片三分鐘。
+        // 超過寬限後逐點扣分，再經過一段相同時間才達到最多扣十分。
+        var graceSeconds = pieces * 12;
+        var timePenalty = Math.Min(10, Math.Floor(Math.Max(0, elapsedSeconds - graceSeconds) * 10d / graceSeconds));
         var movePenalty = Math.Min(25, Math.Max(0, moves - pieces) * 15d / pieces);
         var assistancePenalty = Math.Ceiling(60d * autoPlaced / pieces);
         var score = Math.Clamp((int)Math.Floor(completion - timePenalty - movePenalty - hints * 3d - assistancePenalty), 0, 100);

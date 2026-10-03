@@ -123,11 +123,11 @@ public sealed class CreateGameRoomRequest
     [Range(1, 5)]
     public byte TotalRounds { get; set; } = 3;
 
-    [Range(30, 300)]
-    public short AnswerSeconds { get; set; } = 120;
+    [Range(120, 300)]
+    public short AnswerSeconds { get; set; } = 180;
 
-    [Range(20, 180)]
-    public short VotingSeconds { get; set; } = 60;
+    [Range(120, 300)]
+    public short VotingSeconds { get; set; } = 120;
 
     [StringLength(32)]
     public string? CategoryFilterCode { get; set; }

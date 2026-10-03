@@ -1,0 +1,23 @@
+<button type="button" class="answer-card" [class.mobile-answer-card]="mobile()"
+  [class.is-anonymous]="anonymous()"
+  [class.revealed-answer]="!anonymous()"
+  [class.is-winner]="!anonymous() && answer().isWinner"
+  [attr.data-answer-type]="answer().answerType"
+  [style.--answer-owner-color]="ownerColor()"
+  [style.--card-tilt]="tilt()"
+  [style.--card-order]="order()"
+  (click)="selected.emit(answer())">
+  @if (mobile()) {
+    <span class="mobile-card-meta"><strong>{{ groupLabel() }}</strong><span>{{ position() }} / {{ count() }}</span></span>
+  }
+  <span class="answer-card-top">
+    @if (anonymous()) {
+      <app-qmah-icon [name]="icon()" aria-hidden="true" />
+      <strong>匿名回答</strong>
+    } @else {
+      <strong class="revealed-author">{{ answer().playerDisplayName }}@if (answer().isWinner) { <b>勝出</b> }</strong>
+      <span class="vote-total">{{ answer().voteCount }} 票</span>
+    }
+  </span>
+  <span class="answer-text" [class.answer-text--clamped]="!mobile()">{{ answer().text }}</span>
+</button>

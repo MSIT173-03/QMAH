@@ -2,6 +2,12 @@
   "name": "qmah-client",
   "version": "0.0.0",
   "scripts": {
+    "prestart": "node scripts/link-game-assets.mjs",
+    "prestart:https": "node scripts/link-game-assets.mjs",
+    "prestart:http": "node scripts/link-game-assets.mjs",
+    "prebuild": "node scripts/link-game-assets.mjs",
+    "prewatch": "node scripts/link-game-assets.mjs",
+    "pretest": "node scripts/link-game-assets.mjs",
     "ng": "ng",
     "start": "node scripts/serve-auto.mjs",
     "start:https": "ng serve --proxy-config proxy.conf.json",

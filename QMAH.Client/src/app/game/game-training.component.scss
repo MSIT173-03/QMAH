@@ -1,38 +1,13 @@
 @use './game-scene' as scene;
 @use './game-ui' as ui;
 :host { display: block; color: var(--qmah-ink); background: var(--qmah-page-surface); font: 400 16px/1.5 var(--qmah-font-sans); @include scene.pattern; }
-.training-notebook { position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: #fbf5e8; --stage-ink: #45382b; --stage-muted: #6b5744; --stage-accent: #a76535; --qmah-surface: #fbf5e8; --qmah-surface-soft: #eee1ca; --qmah-surface-muted: #e4d8c3; --qmah-surface-elevated: #fffaf0; --qmah-ink: #45382b; --qmah-muted: #6b5744; --qmah-jade: #986038; --qmah-jade-deep: #744724; --qmah-jade-soft: #f0dfc3; --qmah-primary: #744724; --qmah-primary-hover: #986038; --qmah-primary-content: #fff7e8; --qmah-game-action: #a65c32; --qmah-game-accent: #a76535; --qmah-game-soft: #f2e2c8; --qmah-game-content: #fff7e8; --qmah-accent: #a76535; --qmah-accent-content: #fff7e8; --qmah-border: #b99a70; --qmah-line: #d7c5a4; --qmah-focus: #8c512c; width: min(calc(100% - 24px), 1440px); margin: 16px auto 32px; padding: 16px clamp(12px, 3vw, 40px); border-radius: var(--qmah-radius-panel); background: var(--stage-surface); color: var(--stage-ink); }
-// 單人遊戲沿用桌面材質，用淺紙面和陶色按鈕帶出清楚的前後層次
-:host-context(html[data-theme='qmahdark']) .training-notebook {
-  --stage-surface: #3c3027;
-  --stage-ink: #fff4df;
-  --stage-muted: #e2cda9;
-  --stage-accent: #e0ad62;
-  --qmah-page-surface: #332920;
-  --qmah-surface: #43352b;
-  --qmah-surface-soft: #584638;
-  --qmah-surface-muted: #6a543f;
-  --qmah-surface-elevated: #5b493a;
-  --qmah-ink: #fff4df;
-  --qmah-muted: #e2cda9;
-  --qmah-jade: #d5a563;
-  --qmah-jade-deep: #b77b3f;
-  --qmah-jade-soft: #5b4836;
-  --qmah-primary: #a76836;
-  --qmah-primary-hover: #c88b4c;
-  --qmah-primary-content: #fff4df;
-  --qmah-game-action: #bd7947;
-  --qmah-game-accent: #e0ad62;
-  --qmah-game-soft: #5e4937;
-  --qmah-game-content: #fff4df;
-  --qmah-accent: #e0ad62;
-  --qmah-accent-content: #38281d;
-  --qmah-line: #82694d;
-  --qmah-border: #967650;
-  --qmah-focus: #f1d39b;
-}
-.training-notebook { @include scene.pattern(var(--stage-surface)); }
+.training-notebook { @include scene.surface; position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: var(--qmah-surface); --stage-ink: var(--qmah-ink); --stage-muted: var(--qmah-muted); --stage-accent: var(--qmah-jade); color: var(--stage-ink); }
 .training-notebook.is-playing { background-image:none; }
+:host { min-height: 100dvh; padding-block: 1px; }
+:host:has(.training-notebook.is-focus-mode.is-playing) { padding-block:0; }
+.training-notebook.is-playing, .training-notebook.is-complete { margin-block: 16px 32px; }
+.training-notebook:not(.is-playing):not(.is-complete) { width: min(calc(100% - 64px), 1440px); margin-block: 24px 40px; padding-inline: 0; background: transparent; }
+@media (max-width: 600px) { .training-notebook:not(.is-playing):not(.is-complete) { width: calc(100% - 24px); margin-block: 12px 24px; } }
 .scene-toolbar { display: flex; justify-content: space-between; align-items: center; gap:12px; min-height: 48px; margin-bottom: 16px; }
 app-game-navigation { --game-nav-ink: var(--stage-ink); --game-nav-muted: var(--stage-muted); --game-nav-line: color-mix(in srgb, var(--stage-ink) 25%, transparent); --game-nav-surface: transparent; --game-nav-hover: color-mix(in srgb, var(--stage-ink) 10%, transparent); }
 .scene-toolbar a, .scene-toolbar button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; color: var(--stage-ink); background: transparent; border: 1px solid color-mix(in srgb, var(--stage-ink) 25%, transparent); border-radius: var(--qmah-radius-control); text-decoration: none; font: inherit; font-size: 14px; }
@@ -46,247 +21,84 @@ button:disabled { cursor: default; opacity: .5; }
 button:active:not(:disabled) { transform: translateY(1px); }
 .chapter { position: relative; }
 .chapter-heading { padding-block: 8px; }
-.chapter-heading h1 { margin: 0; font: 700 24px/1.3 var(--qmah-font-serif); }
+.chapter-heading h1 { margin: 0; font: 700 clamp(26px, 3vw, 32px)/1.3 var(--qmah-font-serif); }
 .chapter-heading span { display: none; }
 .is-playing .chapter-heading, .is-complete .chapter-heading { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
-.mode-stage { display: grid; grid-template-columns: minmax(210px, .65fr) minmax(0, 2fr); align-items: start; gap: clamp(24px, 4vw, 56px); padding-block: 24px; min-height: 0; }
-.mode-index { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
-.mode-index button { display: block; width: 100%; min-height: 86px; text-align: left; padding: 16px 20px; border: 1px solid transparent; border-radius: var(--qmah-radius-control); color: var(--stage-ink); background: transparent; transition: color 160ms, background-color 160ms; }
-.mode-index button:hover { background: color-mix(in srgb, var(--stage-ink) 12%, transparent); }
-.mode-index button.is-selected { color: var(--qmah-game-content); background: var(--qmah-game-action); }
-.mode-index h2 { margin: 0 0 6px; font: 700 clamp(24px, 2.2vw, 30px)/1.25 var(--qmah-font-serif); }
-.mode-index span { font-size: 14px; }
-.mode-preview { min-width: 0; }
-.mode-preview__art { position: relative; display: grid; place-items: center; width: min(100%, 620px); height: clamp(280px, 51dvh, 510px); margin-inline: auto; overflow: hidden; }
-.mode-preview__art > img { display: block; width: 100%; height: 100%; object-fit: contain; }
-.mode-preview__art[data-mode='DETAIL_LOCATOR'], .mode-preview__art[data-mode='ARTIFACT_PUZZLE'] { width: min(100%, 440px); height: auto; aspect-ratio: 1; border-radius: var(--qmah-radius-card); box-shadow: 0 16px 36px color-mix(in srgb, var(--qmah-ink) 18%, transparent); }
-.mode-preview__art[data-mode='DETAIL_LOCATOR'] { box-shadow: none; }
-app-game-detail-clue { --clue-ink: var(--stage-muted); }
-.mode-preview__art[data-mode='ARTIFACT_PUZZLE'] > img { object-fit: contain; }
-.mode-preview__art[data-mode='STRIP_RESTORE'] { width: min(100%, 580px); height: auto; aspect-ratio: 4 / 3; box-shadow: 0 16px 36px color-mix(in srgb, var(--qmah-ink) 18%, transparent); }
-.preview-grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); pointer-events: none; }
-.preview-grid[hidden] { display: none; }
-.preview-grid.is-scroll { grid-template-rows: repeat(3, 1fr); }
-.preview-grid span { border: 1px solid var(--qmah-surface); }
-.preview-memory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: min(100%, 320px); aspect-ratio: 254 / 354; }
-.preview-memory > span:not(:has(img)) { background:#fff9ed url('/assets/game/kenney-card-back-blue.png') center / contain no-repeat; }
-.preview-memory > span { display: grid; min-width: 0; place-items: center; overflow: hidden; border-radius: var(--qmah-radius-control); color: var(--qmah-game-content); background: var(--qmah-game-action); font: 700 32px var(--qmah-font-serif); }
-.preview-memory img { width: 100%; height: 100%; object-fit: contain; }
-.mode-preview__copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; padding: 28px 0 12px; }
-.mode-preview__copy h2 { margin: 0; font: 700 28px/1.3 var(--qmah-font-serif); }
-.mode-preview__copy p { grid-column: 1; margin: 0; color: var(--qmah-muted); max-width: 45ch; }
-.mode-preview__actions { display: grid; grid-column: 2; grid-row: 1 / 3; align-content: center; justify-items: center; gap: 8px; }
-.mode-preview__actions a, .result-actions a { min-height: 44px; display: inline-flex; align-items: center; color: var(--qmah-jade); text-underline-offset: 4px; }
-.mode-preview__actions button, .play-actions button, .result-actions button, .auth-actions a, .auth-actions button, .pause-dialog button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 24px; border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 700; text-decoration: none; }
-.result-actions .secondary, .pause-dialog .secondary, .pause-trigger { color: var(--qmah-game-action); background: transparent; border: 1px solid var(--qmah-border); }
+.pause-dialog button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 24px; border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 700; text-decoration: none; }
+.pause-dialog .secondary, .pause-trigger { color: var(--qmah-game-action); background: transparent; border: 1px solid var(--qmah-border); }
 .pause-trigger { min-height: 44px; padding: 8px 14px; border-radius: var(--qmah-radius-control); white-space: nowrap; }
-.message, .auth-state { position: relative; z-index: 10; padding: 20px; border-radius: var(--qmah-radius-card); background: var(--qmah-surface); }
-.auth-state { color: var(--qmah-ink); }
+.message { position: relative; z-index: 10; padding: 20px; border-radius: var(--qmah-radius-card); background: var(--qmah-surface); }
 .message.error { display: grid; gap: 8px; color: var(--qmah-danger); border: 1px solid var(--qmah-danger); }
-.auth-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.auth-state { margin-block: 40px; }
 .loading { padding: 48px 0; color: var(--qmah-muted); }
 .game-arena { position: relative; min-height: var(--arena-height); }
-.play-sheet { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; min-height: var(--arena-height); gap: 12px; }
-.play-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(140px, 190px) auto; gap: 16px; align-items: center; padding-block: 8px; }
-.play-heading h2 { margin: 0; font: 700 24px/1.3 var(--qmah-font-serif); }
-.play-heading__title > span { display: block; margin-block-start:4px; font-size: 14px; line-height:1.6; color: var(--qmah-muted); max-width: 42ch; overflow-wrap: break-word; line-break:strict; }
-.play-heading__meta { color: var(--qmah-muted); font-size: 14px; }
-.play-heading__progress { display: grid; gap: 5px; font-size: 14px; font-variant-numeric: tabular-nums; }
-.play-heading__progress-meta { display: flex; justify-content: space-between; }
-.play-heading__progress small { color: var(--qmah-muted); }
-.play-progress { height: 4px; overflow: hidden; border-radius: 4px; }
-.play-progress span { display: block; height: 100%; transform-origin: left; transition: transform 180ms; }
-.collection-hint, .collection-hints { position: static; max-width: min(360px, 100%); padding: 0; }
-.collection-hint summary, .collection-hints summary { min-height: 44px; padding: 10px 14px; border-radius: var(--qmah-radius-control); color: var(--qmah-jade); background: var(--qmah-surface); cursor: pointer; }
-.collection-hint[open], .collection-hints[open] { padding: 12px; max-height: min(180px, 30dvh); overflow: auto; background: var(--qmah-surface); color: var(--qmah-ink); border-radius: var(--qmah-radius-card); }
-.collection-hint p, .collection-hints p { color: var(--qmah-muted); font-size: 14px; }
-.collection-hints__grid { display: grid; gap: 16px; }
-.game-board { grid-row: 2; min-width: 0; display: grid; align-content: center; justify-items: center; gap: 12px; padding: 16px 0 24px; }
-.game-board > .game-prompt { text-align: center; }
-.memory-game > .game-prompt, .ordering-game > .game-prompt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.game-prompt h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.game-prompt p { color: var(--qmah-muted); margin: 0 0 8px; font-size: 14px; }
-.locator-game { grid-template-columns: minmax(0, 380px) minmax(0, 600px); justify-content: center; gap: clamp(24px, 5vw, 64px); }
-.locator-game .game-prompt { text-align: left; }
-.artifact-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.artifact-options button { display: grid; min-width: 0; padding: 0; border: 2px solid transparent; border-radius: var(--qmah-radius-control); color: var(--stage-ink); background: transparent; text-align: left; overflow-wrap: anywhere; transition: border-color 180ms, background-color 180ms; }
-.artifact-options button:hover:not(:disabled) { background: color-mix(in srgb, var(--stage-ink) 8%, transparent); }
-.artifact-options button.selected { border-color: var(--stage-accent); background: color-mix(in srgb, var(--stage-ink) 12%, transparent); }
-.locator-option__image { display: block; height: clamp(96px, 18dvh, 160px); padding: 12px; overflow: hidden; }
-.locator-option__image img { display: block; width: 100%; height: 100%; min-height: 0; max-height: 100%; object-fit: contain; }
-.locator-option__image > span { color: var(--stage-muted); font-size: 14px; }
-.locator-option__caption { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 4px 8px; padding: 8px 12px 12px; font-size: 14px; }
-.locator-option__index { color: var(--stage-accent); font-weight: 700; }
-.locator-option__state { grid-column: 2; color: var(--stage-muted); font-size: 12px; }
-.selected .locator-option__state { color: var(--stage-accent); }
-.memory-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(100%, 456px, max(260px, calc((100dvh - 360px) * .72))); gap: 12px; padding:16px; border-radius:16px; background:#e4d8c3; box-shadow:0 8px 20px color-mix(in srgb,var(--qmah-night) 12%,transparent); }
-.memory-card { position: relative; display: grid; place-items: center; min-width: 0; aspect-ratio: 254 / 354; overflow: hidden; border: 0; border-radius: 7px; padding: 0; color: var(--qmah-game-content); background: #fff9ed; }
-.memory-card img { display: block; width: 100%; height: 100%; min-height: 0; padding: 8px; box-sizing: border-box; object-fit: contain; }
-.memory-card { cursor: pointer; box-shadow: 0 5px 12px color-mix(in srgb, var(--qmah-night) 28%, transparent); transition: transform 180ms ease-out, background-color 180ms ease-out, box-shadow 180ms ease-out; }
-// Kenney Board Game Pack 的 CC0 寶藍牌背，保留原始比例並與綠絨桌面分色
-// 來源：https://kenney.nl/assets/boardgame-pack
-.memory-card:not(.is-open) { background:#fff9ed url('/assets/game/kenney-card-back-blue.png') center / contain no-repeat; }
-.memory-card:hover:not(:disabled):not(.is-open) { transform: translateY(-3px); }
-.memory-card:active:not(:disabled) { transform: translateY(1px); }
-.memory-card:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
-.memory-card.is-open { background: #fff9ed; }
-.memory-card.is-matched::after { content: '已配對'; position: absolute; inset: auto 0 0; padding: 3px; color: var(--game-table-ink); background: var(--game-card-action); font-size: 12px; }
-.memory-feedback { min-height: 1.5em; margin: 0; color: var(--stage-ink); font-size: 14px; line-height:1.6; text-align: center; text-wrap:pretty; }
-@media (prefers-reduced-motion: reduce) { .memory-card { transition: none; } .memory-card.is-open { animation: none; } }
-.memory-card.is-open { animation: card-turn 260ms ease-out; }
-.memory-card.is-matched { outline:2px solid var(--qmah-jade); outline-offset:2px; opacity: 1; }
-app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height-limit: max(240px, calc(100dvh - 420px)); --scroll-ink: var(--stage-ink); --scroll-muted: var(--stage-muted); }
-.game-hint { margin: 0; color: var(--stage-accent); font-size: 14px; line-height:1.6; text-align: center; }
-.image-fallback { display: grid; gap: 12px; place-items: center; height: 100%; padding: 12px; font: 400 14px/1.5 var(--qmah-font-sans); }
-.image-fallback button, .ordering-game > p button { min-height: 44px; }
-.play-footer { display: grid; grid-template-columns:minmax(0,1fr) auto; align-items: center; min-height: 64px; gap: 24px; padding-block: 16px; }
-.play-footer__context { display: grid; gap: 8px; min-width: 0; }
-.play-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:12px; min-width:0; }
-.play-command { max-width:24ch; text-wrap:pretty; line-height:1.6; }
-.progress-readout, .play-command { font-size: 14px; color: var(--qmah-muted); }
-.is-complete .play-sheet { visibility: hidden; }
-.result-sheet { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr; grid-template-rows: auto minmax(220px, 1fr) auto; justify-items: center; gap: 16px; padding: 12px 0; background: var(--stage-surface); }
-.result-banner { text-align: center; }
-.result-banner h2 { margin: 0; font: 700 clamp(24px, 3vw, 36px)/1.3 var(--qmah-font-serif); text-wrap: balance; }
-.result-banner p { margin: 8px 0 0; color: var(--stage-muted); font-size: 14px; }
-.result-gallery { width: min(100%, 800px); align-self: center; }
-.result-gallery figure { margin: 0; }
-.result-gallery img { display: block; width: 100%; height: min(46dvh, 440px); object-fit: contain; }
-.result-gallery figcaption { padding-top: 8px; text-align: center; font-size: 14px; }
-.result-gallery a { color: var(--qmah-jade); text-underline-offset: 4px; }
-.result-gallery.is-memory { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; width: min(100%, 760px); }
-.result-gallery.is-memory img { height: clamp(90px, 15dvh, 140px); }
-.result-gallery.is-memory figcaption { overflow-wrap: anywhere; }
-.result-image-fallback { display: grid; place-items: center; min-height: 140px; color: var(--qmah-muted); }
-.result-image-fallback small { display: block; }
-.result-summary { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px 24px; }
-.result-facts { grid-column: 1; display: flex; flex-wrap: wrap; gap: 32px; margin: 0; }
-.result-facts dt { color: var(--qmah-muted); font-size: 14px; }
-.result-facts dd { margin: 2px 0 0; font-size: 24px; font-variant-numeric: tabular-nums; }
-.result-facts dd span { font-size: 14px; color: var(--qmah-jade); }
-.result-rewards { grid-column: 1; }
-.result-rewards h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.result-rewards dl { display: flex; flex-wrap: wrap; gap: 24px; margin: 0; }
-.result-rewards dl > div { display: flex; gap: 8px; }
-.result-rewards dt { color: var(--qmah-muted); font-size: 14px; }
-.result-rewards dd { margin: 0; font-weight: 700; color: var(--qmah-jade); font-variant-numeric: tabular-nums; }
-.result-rewards p, .result-note { margin: 8px 0 0; font-size: 14px; line-height: 1.7; color: var(--qmah-muted); line-break: strict; overflow-wrap: break-word; }
-.result-scoring { margin-block: 16px; }
+.is-complete app-game-training-play-sheet { display:none; }
+/* Kenney Board Game Pack 的 CC0 寶藍牌背，保留原始比例並與綠絨桌面分色*/
+/* 來源：https://kenney.nl/assets/boardgame-pack*/
 .reward-status > span { display: block; line-height: 1.7; }
-.result-note { grid-column: 1; }
-.result-actions { grid-column: 2; grid-row: 1 / 5; display: grid; gap: 8px; justify-items: stretch; }
-.mode-preview__copy p, .play-heading__title > span, .play-heading__meta, .play-heading__progress small, .game-prompt p, .progress-readout, .play-command, .result-facts dt, .result-rewards dt, .result-rewards p, .result-note { color: var(--stage-muted); }
-.mode-preview__actions a, .result-actions a, .result-gallery a, .game-hint, .result-facts dd span, .result-rewards dd { color: var(--stage-accent); }
-.play-progress { background: color-mix(in srgb, var(--stage-ink) 25%, transparent); }
-.play-progress span { background: var(--stage-accent); }
-.pause-trigger, .result-actions .secondary { color: var(--stage-ink); border-color: color-mix(in srgb, var(--stage-ink) 30%, transparent); }
-.mode-preview__actions button, .play-actions button, .result-actions button:not(.secondary) { color: var(--qmah-game-content); border-color: var(--qmah-game-action); background: var(--qmah-game-action); }
+.pause-trigger { color: var(--stage-ink); border-color: color-mix(in srgb, var(--stage-ink) 30%, transparent); }
 .pause-dialog { position: fixed; inset: 0; margin: auto; width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: clamp(20px, 5vw, 32px); border: 0; border-radius: var(--qmah-radius-panel); background: var(--qmah-surface); color: var(--qmah-ink); box-shadow: 0 16px 40px color-mix(in srgb, var(--qmah-night) 30%, transparent); }
 .pause-dialog::backdrop { background: color-mix(in srgb, var(--qmah-night) 70%, transparent); }
-.pause-dialog h2 { margin: 0; font: 700 30px var(--qmah-font-serif); }
-.pause-dialog p { color: var(--qmah-muted); margin: 12px 0; font-size: 1rem; line-height: 1.75; word-break: normal; overflow-wrap: break-word; line-break: strict; text-wrap: pretty; }
+.pause-dialog h2 { margin: 0; font: 700 clamp(24px, 4vw, 28px)/1.4 var(--qmah-font-serif); }
+.pause-dialog p { color: var(--qmah-muted); margin: 12px 0; font-size: 1rem; line-height: 1.65; word-break: normal; overflow-wrap: break-word; line-break: strict; text-wrap: pretty; }
 .pause-dialog button { width: 100%; margin-top: 12px; }
-.pause-dialog h2 { line-height: 1.3; text-wrap: balance; }
+.pause-dialog h2 { text-wrap: balance; }
 .help-options { display: grid; gap: 24px; margin-block: 24px; }
 .help-option h3 { margin: 0; font: 700 1.125rem/1.4 var(--qmah-font-sans); }
-.help-option p { margin-block: 6px; }
+.help-option p { margin-block: 8px; }
 .text-unit { white-space: nowrap; font-variant-numeric: tabular-nums; }
-.help-notes { display: grid; gap: 8px; margin: 0 0 20px; padding-inline-start: 1.25em; color: var(--qmah-muted); font-size: 1rem; line-height: 1.75; line-break: strict; overflow-wrap: break-word; }
-.help-notes li > span { display: block; }
-.scene-preview-enter { animation: preview-reveal 300ms cubic-bezier(.16, 1, .3, 1); }
-.scene-play-enter { animation: play-reveal 360ms cubic-bezier(.16, 1, .3, 1); }
-.game-result-enter { animation: result-reveal 500ms ease-out; }
-.ready-enter { animation: ready-reveal 240ms cubic-bezier(.16, 1, .3, 1); }
-@keyframes preview-reveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
-@keyframes play-reveal { from { opacity: .5; transform: scale(.985); } to { opacity: 1; transform: scale(1); } }
-@keyframes result-reveal { from { opacity: 0; filter: saturate(.4); } to { opacity: 1; filter: saturate(1); } }
-@keyframes ready-reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.help-notes { display: grid; gap: 20px; margin: 0 0 24px; padding: 20px 0 0; border-top: 1px solid var(--game-card-line); list-style: none; }
+.help-notes strong { display: block; color: var(--qmah-ink); font-size: 1rem; font-weight: 700; line-height: 1.5; }
+.pause-dialog .help-notes p { margin: 6px 0 0; }
 @keyframes card-turn { from { transform: rotateY(75deg); } to { transform: rotateY(0); } }
-@media (max-width: 900px) {
-  .mode-stage { grid-template-columns: 210px minmax(0, 1fr); gap: 24px; }
-  .mode-preview__copy { grid-template-columns: 1fr; }
-  .mode-preview__actions { grid-column: 1; grid-row: auto; display: flex; justify-content: space-between; }
-  .play-heading { grid-template-columns: minmax(0, 1fr) minmax(130px, 160px) auto; }
-  .play-heading__meta { display: none; }
-  .locator-game { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
-}
 @media (max-width: 600px) {
   .training-notebook { --arena-height: max(620px, calc(100dvh - 200px)); }
   .training-notebook.is-focus-mode { --arena-height: max(620px, calc(100dvh - 88px)); }
-  .chapter-heading h1 { font-size: 20px; }
-  .mode-stage { display: flex; flex-direction: column; justify-content: start; gap: 12px; padding-block: 12px; }
-  .mode-index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; width: 100%; }
-  .mode-index li { flex: 1; min-width: 0; }
-  .mode-index button { min-height: 68px; padding: 10px 6px; text-align: center; }
-  .mode-index h2 { margin: 0; font: 700 15px/1.5 var(--qmah-font-sans); }
-  .mode-index span { display: block; font-size: 12px; margin-top: 4px; }
-  .mode-preview { width: 100%; }
-  .mode-preview__art { height: 290px; }
-  .mode-preview__art[data-mode='DETAIL_LOCATOR'], .mode-preview__art[data-mode='ARTIFACT_PUZZLE'] { width: min(100%, 280px); }
-  .mode-preview__art[data-mode='STRIP_RESTORE'] { width: min(100%, 360px); }
-  .preview-memory { width: min(100%, 280px); }
-  .mode-preview__copy { padding-block: 20px 8px; gap: 6px; }
-  .mode-preview__copy h2 { font-size: 24px; }
-  .mode-preview__copy p { font-size: 14px; }
-  .play-heading { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-  .play-heading h2 { font-size: 20px; }
-  .play-heading__title > span { font-size: 12px; }
-  .play-heading__progress { grid-column: 1 / -1; grid-row: 2; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
-  .play-heading__progress-meta { gap: 8px; }
-  .play-progress { flex: 1; min-width: 60px; }
+  .chapter-heading h1 { font-size: 26px; }
   .pause-trigger { font-size: 14px; padding-inline: 10px; }
-  .game-board { padding-bottom: 16px; }
-  .locator-game { grid-template-columns: 1fr; gap: 16px; }
-  .artifact-options { gap: 8px; }
-  .locator-option__caption { padding: 4px 6px 8px; grid-template-columns: 16px minmax(0, 1fr); gap: 4px; }
-  .game-prompt p { font-size: 12px; }
-  .memory-grid { width:min(100%,332px,max(240px,calc((100dvh - 392px) * .72))); gap:8px; padding:12px; }
-  .collection-hint, .collection-hints { bottom: 64px; }
-  .play-footer { grid-template-columns:1fr; gap:16px; }
-  .play-actions { justify-content:space-between; }
-  .play-actions button { padding-inline:16px; }
-  .progress-readout, .play-command { font-size: 12px; }
-  .result-sheet { gap: 12px; }
-  .result-gallery img { height: min(36dvh, 280px); }
-  .result-gallery.is-memory { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-  .result-gallery.is-memory img { height: 90px; }
-  .result-gallery.is-memory figcaption { font-size: 12px; }
-  .result-summary { grid-template-columns: 1fr; gap: 8px; }
-  .result-facts { gap: 24px; }
-  .result-facts dd { font-size: 20px; }
-  .result-actions { grid-column: 1; grid-row: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .result-actions a { grid-column: 1 / -1; justify-content: center; }
 }
-@media (max-height: 550px) and (min-width: 650px) { .training-notebook { --arena-height: 540px; } .mode-preview__art { height: 270px; } .mode-preview__art[data-mode='DETAIL_LOCATOR'], .mode-preview__art[data-mode='ARTIFACT_PUZZLE'] { width: 280px; } .mode-preview__art[data-mode='STRIP_RESTORE'] { width: 380px; } .preview-memory { width: 280px; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+/* 短版手機先留出完整拼圖盤面，備選碎片與說明可往下捲動查看*/
+@media (max-width: 600px) and (max-height: 700px) {
+  .training-notebook { --arena-height: max(540px, calc(100dvh - 120px)); }
+  .training-notebook.is-focus-mode { --arena-height: max(520px, calc(100dvh - 64px)); }
+  .scene-toolbar { min-height: 44px; margin-bottom: 8px; }
+}
+@media (max-height: 550px) and (min-width: 650px) { .training-notebook { --arena-height: 540px; } }
 @media (min-width: 901px) {
   .training-notebook.is-focus-mode.is-playing { --arena-height: calc(100dvh - 88px); height: 100dvh; padding-block: 12px; }
-  .is-focus-mode.is-playing .play-sheet { height: var(--arena-height); min-height: 0; }
-  .is-focus-mode.is-playing .game-board { padding: 8px; min-height: 0; align-content: safe center; overflow-y: auto; overscroll-behavior: contain; }
-  .ordering-game { width: 100%; }
-  app-game-placement-board { --board-height: max(220px, calc(100dvh - 380px)); --tray-height: max(220px, calc(100dvh - 450px)); }
-  app-game-scroll-board { width: 100%; --scroll-height-limit: calc(100dvh - 380px); --tray-height: calc(100dvh - 450px); }
 }
 
-// 遊戲標題、木框控制項與進度條共用同一套素材，正文不套描邊
-.training-notebook.is-playing { @include ui.panel; --stage-surface:var(--game-table-ground); --stage-ink:var(--game-table-ink); --stage-muted:var(--game-table-muted); --stage-accent:#e4b868; --qmah-surface:var(--game-table-ground); --qmah-surface-soft:#477b56; --qmah-surface-muted:#e4d8c3; --qmah-surface-elevated:#fffaf0; --qmah-ink:var(--game-table-ink); --qmah-muted:var(--game-table-muted); --qmah-jade:#dfb568; --qmah-jade-deep:#c58a45; --qmah-jade-soft:#70553a; --qmah-primary:#99572f; --qmah-primary-hover:#ad693b; --qmah-primary-content:#fff7e8; --qmah-game-action:#a65c32; --qmah-game-accent:#e4b868; --qmah-game-soft:#477b56; --qmah-game-content:#fff7e8; --qmah-accent:#e4b868; --qmah-accent-content:#39291b; --qmah-border:#b89062; --qmah-line:#a5b897; --qmah-focus:#fff0c9; --game-card-action:#a65c32; --game-frame-image:url('/assets/game/kenney-wood-frame.svg'); --game-primary-image:url('/assets/game/kenney-button-training.svg'); --game-primary-ink:#fff7e8; --game-secondary-image:url('/assets/game/kenney-button-secondary.svg'); --game-secondary-ink:#45382b; background:linear-gradient(var(--game-table-ground),var(--game-table-ground)) padding-box; color:var(--game-table-ink); }
-// 深色主題進入遊戲時沿用同一張木桌，不把牌桌切回黑底綠字
-:host-context(html[data-theme='qmahdark']) .training-notebook.is-playing { --stage-surface:var(--game-table-ground); --stage-ink:var(--game-table-ink); --stage-muted:var(--game-table-muted); --stage-accent:#e4b868; --qmah-surface:var(--game-table-ground); --qmah-surface-soft:#477b56; --qmah-surface-muted:#e4d8c3; --qmah-surface-elevated:#fffaf0; --qmah-ink:var(--game-table-ink); --qmah-muted:var(--game-table-muted); --qmah-jade:#dfb568; --qmah-jade-deep:#c58a45; --qmah-jade-soft:#70553a; --qmah-primary:#99572f; --qmah-primary-hover:#ad693b; --qmah-primary-content:#fff7e8; --qmah-game-action:#a65c32; --qmah-game-accent:#e4b868; --qmah-game-soft:#477b56; --qmah-game-content:#fff7e8; --qmah-accent:#e4b868; --qmah-accent-content:#39291b; --qmah-border:#b89062; --qmah-line:#a5b897; --qmah-focus:#fff0c9; --game-card-action:#a65c32; --game-frame-image:url('/assets/game/kenney-wood-frame.svg'); --game-primary-image:url('/assets/game/kenney-button-training.svg'); --game-primary-ink:#fff7e8; --game-secondary-image:url('/assets/game/kenney-button-secondary.svg'); --game-secondary-ink:#45382b; background:linear-gradient(var(--game-table-ground),var(--game-table-ground)) padding-box; color:var(--game-table-ink); }
-.chapter-heading h1, .play-heading h2, .mode-preview__copy h2, .result-banner h2 { @include ui.title; }
-.play-heading h2 { @include ui.jewel; }
+/* 遊戲標題、木框控制項與進度條共用同一套素材，正文不套描邊*/
+.training-notebook.is-playing { @include ui.panel; --stage-surface:var(--game-table-ground); --stage-ink:var(--game-table-ink); --stage-muted:var(--game-table-muted); --stage-accent:var(--game-table-ink); --qmah-surface:var(--game-table-ground); --qmah-ink:var(--game-table-ink); --qmah-muted:var(--game-table-muted); --qmah-focus:#fff0c9; background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat,linear-gradient(var(--game-table-ground),var(--game-table-ground)) padding-box; color:var(--game-table-ink); }
+.chapter-heading h1 { @include ui.title; }
 .scene-toolbar a, .scene-toolbar button, .pause-trigger { @include ui.button(true); }
-.mode-preview__actions button, .play-actions button, .result-actions button, .pause-dialog button, .auth-actions a, .auth-actions button { @include ui.button; }
-.play-actions .secondary, .result-actions .secondary, .pause-dialog .secondary { @include ui.button(true); }
-.pause-dialog { @include ui.panel; }
+.pause-dialog button { @include ui.button; }
+.pause-dialog .secondary { @include ui.button(true); }
+.pause-lobby { @include ui.button(true); display:flex; justify-content:center; align-items:center; min-height:48px; text-decoration:none; }
+.pause-dialog { @include ui.paper-panel; }
 .pause-dialog h2 { @include ui.title; }
-.play-heading__progress-meta strong { font-size: 18px; font-weight: 800; }
-.play-progress { height: 14px; border: 3px solid transparent; border-image: var(--game-frame-image) 8 / 1 / 0 stretch; background: var(--qmah-surface-soft); }
-.play-progress span { border: 3px solid transparent; border-image: url('/assets/game/kenney-progress-training.svg') 6 fill / 1 / 0 stretch; background: transparent; }
-.memory-grid { border: 8px solid transparent; border-image: var(--game-frame-image) 8 / 1 / 0 stretch; }
-.memory-feedback, .play-command { @include ui.panel; border-width: 4px; padding: 4px 12px; }
-.collection-hint summary, .collection-hints summary { @include ui.button(true); }
+.pause-dialog__header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 12px; padding-bottom: 8px; background: var(--qmah-surface); }
+.pause-dialog__header h2 { flex: 1; min-width: 0; }
+.pause-dialog .pause-close { @include ui.button(true); flex: 0 0 44px; width: 44px; min-height: 44px; margin: 0; padding: 0; }
 @media (max-width: 600px) {
-  .play-heading h2 { font-size: 22px; }
   .scene-toolbar a, .scene-toolbar button { padding-inline: 8px; font-size: 12px; }
+}
+
+/* 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。*/
+
+/* 展籤 HUD 與閱讀操作區使用紙面，綠桌只承載中間的遊戲盤面。*/
+
+
+/* 選單專注模式保留對稱邊距；不讓一般選單規則覆蓋全螢幕尺寸。 */
+.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { width: calc(100% - 32px); margin: 16px auto; padding: 0; min-height: calc(100dvh - 32px); --mode-stage-min-height: calc(100dvh - 200px); }
+.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) .chapter-heading { display: none; }
+.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) app-game-training-mode-picker { --mode-stage-min-height: calc(100dvh - 96px); }
+.focus-exit { display: flex; justify-content: flex-end; min-height: 44px; margin-bottom: 8px; }
+.focus-exit button { @include ui.button(true); }
+@media (min-width: 1001px) { .training-notebook:not(.is-playing):not(.is-complete) { --mode-stage-min-height: calc(100dvh - 280px); } }
+@media (max-width: 600px) { .training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { width: calc(100% - 24px); margin: 12px auto; --mode-stage-min-height: auto; } }
+.pause-dialog app-game-scroll-panel { --scroll-panel-height:auto; --scroll-panel-max-height:calc(100dvh - 240px); }
+@media(min-width:901px) {
+  .training-notebook.is-focus-mode.is-playing { display:grid; grid-template-rows:minmax(0,1fr); gap:8px; height:100dvh; border-width:clamp(20px,2.4vw,34px); padding:12px 16px; }
+  .training-notebook.is-focus-mode.is-playing .chapter, .training-notebook.is-focus-mode.is-playing .game-arena { height:100%; min-height:0; }
+  .training-notebook.is-focus-mode.is-playing .scene-toolbar { margin-bottom:0; }
 }

@@ -32,6 +32,7 @@ import {
 import { GameRoomResultsComponent } from './game-room-results.component';
 import { GameAnswerTableComponent } from './game-answer-table.component';
 import { GameRoomChatComponent } from './game-room-chat.component';
+import { gamePlayerColor } from './game-player-colors';
 import { GameFocusMode } from '../core/services/game-focus-mode';
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 import { GameService } from './game.service';
@@ -80,8 +81,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   chatMessages: GameRoomChatMessage[] = [];
   chatSending = false;
   chatError = '';
+  chatOpen = false;
+  readonly colorHex = gamePlayerColor;
   colorBusy = false;
   readonly cardColors = ['jade', 'blue', 'vermilion', 'gold', 'violet', 'teal', 'rose', 'slate', 'olive', 'copper', 'indigo', 'sand'];
+  readonly cardColorNames: Record<string, string> = {
+    jade: '青玉', blue: '湖藍', vermilion: '朱紅', gold: '古金',
+    violet: '藤紫', teal: '青碧', rose: '玫瑰', slate: '石灰藍',
+    olive: '橄欖', copper: '赤銅', indigo: '靛藍', sand: '沙金'
+  };
   testStage: TestStage = 'WAITING';
   private testStageEndsAt = 0;
   private testScenario: TestScenario | null = null;
@@ -94,6 +102,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private testRoomOptions?: GameRoomListItem;
   private testCurrentPlayerName = '玩家';
   private testBotPlans: { answer: GameAnswer; readyAt: number; submitted: boolean }[] = [];
+  private testBotVotePlans: { answerIds: string[]; readyAt: number; submitted: boolean }[] = [];
   private testPausedAt = 0;
 
   roomId = '';
@@ -221,8 +230,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   toggleRoomFocus(): void { this.gameFocus.toggle(); }
 
   seatColor(id: string): string {
-    const colors: Record<string, string> = { jade: '#376d62', blue: '#406591', vermilion: '#a43f34', gold: '#806020', violet: '#66528f', teal: '#216c69', rose: '#a04660', slate: '#506471', olive: '#56682f', copper: '#92552e', indigo: '#435293', sand: '#806139' };
-    return colors[this.playerColors[id]] ?? '#376d62';
+    return gamePlayerColor(this.playerColors[id]);
   }
 
   seatPosition(player: GameRoomDetails['players'][number], players: GameRoomDetails['players'], capacity: number): string {
@@ -328,20 +336,13 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     } else {
       const resumeAt = Date.now();
       const pausedFor = resumeAt - this.testPausedAt;
-      for (const plan of this.testBotPlans) if (!plan.submitted) plan.readyAt += pausedFor;
+      for (const plan of [...this.testBotPlans, ...this.testBotVotePlans]) if (!plan.submitted) plan.readyAt += pausedFor;
       this.testStageEndsAt = resumeAt + this.testPausedRemainingMs;
       this.updateTestRoundDeadlines(resumeAt);
       this.now = resumeAt;
       this.testAutoPaused = false;
     }
     this.actionMessage = this.testAutoPaused ? '自動流程已暫停，可以逐步檢查目前畫面。' : '自動流程已繼續。';
-    this.changeDetector.markForCheck();
-  }
-
-  skipTestStage(): void {
-    if (!this.testMode || this.testStage === 'COMPLETED') return;
-    // ui-integration: 「下一階段」只推進本機測試狀態，讓檢查員不必等待倒數，也不改變正式遊戲流程。
-    this.advanceTestFlow(true);
     this.changeDetector.markForCheck();
   }
 
@@ -459,7 +460,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (this.testMode) {
       this.leaving = true;
       this.changeDetector.markForCheck();
-      void this.router.navigate(['/game/test'], { queryParams: { scenario: this.room?.id } });
+      void this.router.navigate(['/game'], { queryParams: { test: '1' } });
       return;
     }
     this.actionError = '';
@@ -538,9 +539,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   readonly canVoteAtTable = (answer: GameAnswer): boolean => this.canVoteFor(answer);
 
   submitAnswer(): void {
-    if (!this.currentPlayerId || !this.round || !this.game.canAnswer(this.round, this.now) || this.hasSubmittedAnswer()) return;
+    if (this.submittingAnswer || !this.answerText.trim() || !this.currentPlayerId || !this.round || !this.game.canAnswer(this.round, this.now) || this.hasSubmittedAnswer()) return;
     if (this.testMode) {
       this.submitTestAnswer();
+      this.closeRoomPanel('answer');
       return;
     }
     this.actionError = '';
@@ -557,6 +559,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           this.currentPlayerId = answer.gamePlayerId;
           this.submittedRoundId = submittedRoundId;
           this.clearDraft(submittedRoundId);
+          this.closeRoomPanel('answer');
           if (this.round?.id === submittedRoundId) {
             this.answerText = '';
             this.actionMessage = '回答已送出，等待其他玩家完成作答。';
@@ -604,12 +607,12 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         pointReward: 18,
         normalKeyReward: 1,
         performanceScore: 86,
-        roundsWon: this.testRounds.filter((round) => round.winnerPlayerDisplayName === '你').length,
+        roundsWon: this.testRounds.filter(round => round.answers.some(answer => answer.isWinner && answer.gamePlayerId === this.testSelfId)).length,
         alreadyRewarded: false,
         keyProgressReward: 0,
         keyRewardDivisor: 1
       };
-      this.actionMessage = '測試獎勵已顯示；這筆結果只存在目前頁面。';
+      this.actionMessage = '獎勵已揭曉，這筆結果只存在目前頁面。';
       this.changeDetector.markForCheck();
       return;
     }
@@ -724,26 +727,30 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   private testScenarioFor(roomId: string): TestScenario {
     if (this.testRoomOptions) {
-      return { roomCode: this.testRoomOptions.roomCode, totalRounds: this.testRoomOptions.totalRounds, waitingSeconds: 4, answerSeconds: 90, votingSeconds: 30, revealSeconds: 6 };
+      return { roomCode: this.testRoomOptions.roomCode, totalRounds: this.testRoomOptions.totalRounds, waitingSeconds: 8, ...this.game.getRehearsalTiming(roomId), revealSeconds: 8 };
     }
     if (roomId === 'test-room-standard') {
-      return { roomCode: 'A103', totalRounds: 3, waitingSeconds: 5, answerSeconds: 90, votingSeconds: 30, revealSeconds: 6 };
+      return { roomCode: 'A103', totalRounds: 3, waitingSeconds: 8, answerSeconds: 180, votingSeconds: 120, revealSeconds: 8 };
     }
     if (roomId === 'test-room-replay') {
-      return { roomCode: 'A102', totalRounds: 2, waitingSeconds: 4, answerSeconds: 45, votingSeconds: 20, revealSeconds: 5 };
+      return { roomCode: 'A102', totalRounds: 2, waitingSeconds: 8, answerSeconds: 120, votingSeconds: 120, revealSeconds: 8 };
     }
-    return { roomCode: 'A101', totalRounds: 2, waitingSeconds: 3, answerSeconds: 12, votingSeconds: 10, revealSeconds: 4 };
+    return { roomCode: 'A101', totalRounds: 2, waitingSeconds: 8, answerSeconds: 180, votingSeconds: 120, revealSeconds: 8 };
   }
 
-  private advanceTestFlow(force = false): void {
+  private advanceTestFlow(): void {
     if (!this.testMode || !this.testScenario || !this.room || this.testStage === 'COMPLETED') return;
+    if (this.testStage === 'WAITING') return;
     if (!this.testAutoPaused && this.testStage === 'ANSWERING') this.collectTestBotAnswers();
-    if (!force && (this.testAutoPaused || Date.now() < this.testStageEndsAt)) return;
+    if (!this.testAutoPaused && this.testStage === 'VOTING') this.collectTestBotVotes();
+    const allFinished = this.testStage === 'ANSWERING'
+      ? !!this.testSubmittedAnswer && this.testBotPlans.every(plan => plan.submitted)
+      : this.testStage === 'VOTING' && this.testBotVotePlans.every(plan => plan.submitted)
+        && this.answerTypes.every(type => !this.round?.answers.some(answer => answer.answerType === type.value && answer.gamePlayerId !== this.testSelfId)
+          || this.round.answers.some(answer => answer.answerType === type.value && this.votedAnswerIds.has(answer.id)));
+    if (this.testAutoPaused || (!allFinished && Date.now() < this.testStageEndsAt)) return;
 
     switch (this.testStage) {
-      case 'WAITING':
-        this.startTestRound(1);
-        return;
       case 'ANSWERING':
         this.startTestVoting();
         return;
@@ -775,7 +782,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.testBotPlans = this.testPlayerNames.map((name, index) => ({
       answer: this.makeTestAnswer(`${roundId}-answer-${index}`, `test-player-${index}`, name,
         (historicalAnswers[index] ?? artifact.answers[index % artifact.answers.length]).answerType,
-        historicalAnswers[index]?.text ?? `這是「${name}」的模擬回答，僅供展示。`),
+        (historicalAnswers[index] ?? artifact.answers[index % artifact.answers.length]).text),
       readyAt: now + Math.round((0.2 + 0.65 * (index + Math.random()) / this.testPlayerNames.length) * this.testScenario!.answerSeconds * 1000),
       submitted: false
     }));
@@ -834,13 +841,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       ...(this.testSubmittedAnswer ? [{ ...this.testSubmittedAnswer, voteCount: 0, rank: 0, isWinner: false }] : []),
       ...this.testBotPlans.map(plan => ({ ...plan.answer }))
     ];
-    // 每位模擬玩家只投給別人，唯一回答的場次可沒有有效得票。
-    for (const plan of this.testBotPlans) {
-      for (const type of this.answerTypes) {
+    // NPC 和玩家一樣，每個可投票類型投一票，並在各自思考後送出。
+    this.testBotVotePlans = this.testBotPlans.map((plan, index) => ({
+      answerIds: this.answerTypes.flatMap(type => {
         const targets = answers.filter(answer => answer.gamePlayerId !== plan.answer.gamePlayerId && answer.answerType === type.value);
-        if (targets.length) targets[Math.floor(Math.random() * targets.length)].voteCount += 1;
-      }
-    }
+        return targets.length ? [targets[Math.floor(Math.random() * targets.length)].id] : [];
+      }),
+      readyAt: now + Math.round((.15 + .6 * (index + Math.random()) / this.testBotPlans.length) * this.testScenario!.votingSeconds * 1000),
+      submitted: false
+    }));
     this.round = {
       ...this.round,
       status: 'VOTING',
@@ -967,7 +976,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.testAutoPaused = true;
     this.testPausedRemainingMs = 0;
     this.testStageEndsAt = 0;
-    this.actionMessage = '演練已完成，可以查看結算或返回流程演練；本局不會發放正式獎勵。';
+    this.actionMessage = '演練已完成，可以查看結算或返回模擬大廳。本局不會發放正式獎勵。';
   }
 
   private submitTestAnswer(): void {
@@ -992,6 +1001,16 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.votedAnswerIds = new Set([...this.votedAnswerIds, answer.id]);
     this.actionMessage = '投好了！揭曉時就能看到作者和票數。';
     this.changeDetector.markForCheck();
+  }
+
+  private collectTestBotVotes(): void {
+    if (!this.round || this.testStage !== 'VOTING') return;
+    for (const plan of this.testBotVotePlans) {
+      if (plan.submitted || Date.now() < plan.readyAt) continue;
+      plan.submitted = true;
+      this.round = { ...this.round, answers: this.round.answers.map(answer => plan.answerIds.includes(answer.id) ? { ...answer, voteCount: answer.voteCount + 1 } : answer) };
+    }
+    this.round = { ...this.round, totalVoteCount: this.round.answers.reduce((total, answer) => total + answer.voteCount, 0) };
   }
 
   private makeTestAnswer(

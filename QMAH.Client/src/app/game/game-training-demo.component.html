@@ -1,0 +1,69 @@
+<div class="demo-toolbar">
+  <p>{{ phase === 'complete' ? '示範完成' : autoPlaying ? '正在自動示範' : '換你試試' }}<span>試玩不計成績與獎勵。</span></p>
+  <div class="demo-controls">
+    @if (phase === 'playing') { <button type="button" (click)="toggleAutoPlay()" [attr.aria-pressed]="autoPlaying">{{ autoPlaying ? '我來操作' : '繼續自動示範' }}</button> }
+    <button type="button" (click)="restartDemo()">重播這一局</button>
+  </div>
+</div>
+@if (attempt; as current) {
+  <div class="demo-table">
+          <app-game-training-play-sheet
+            class="is-playing"
+            [class.is-focus-mode]="focusMode.active()"
+
+            [attempt]="current"
+            [isComplete]="false" [demonstration]="true"
+            [paused]="paused"
+            [completing]="completing"
+            [resultFrozen]="phase === 'complete'"
+            [imageUnavailable]="imageUnavailable"
+            [failedImageKeys]="failedImageKeys"
+            [locatorOptions]="locatorOptions"
+            [locatorCropX]="locatorCropX"
+            [locatorCropY]="locatorCropY"
+            [locatorAnswers]="locatorAnswers" [locatorHintArtifactId]="locatorHintArtifactId"
+            [locatorExcludedIds]="locatorExcludedIds"
+            [memoryCards]="memoryCards"
+            [memoryBusy]="memoryBusy"
+            [memoryMatched]="memoryMatched"
+            [memoryPairCount]="memoryPairCount"
+            [memoryFeedback]="memoryFeedback"
+            [moves]="moves"
+            [puzzleOrder]="puzzleOrder"
+            [puzzleSelection]="puzzleSelection"
+            [puzzleHintRegion]="puzzleHintRegion"
+            [restoreOrder]="restoreOrder"
+            [restoreSelection]="restoreSelection"
+            [restoreHintRegion]="restoreHintRegion"
+            [autoPlaced]="autoPlaced"
+            [isRestoreSolved]="isRestoreSolved"
+            [memoryHints]="memoryHints"
+            [currentArtifactHint]="currentArtifactHint"
+            [progressPercent]="progressPercent"
+            [elapsedLabel]="elapsedLabel"
+            [progressText]="progressText"
+            [canAskForHelp]="false"
+            [canComplete]="canComplete"
+            (pauseRequested)="openPause()"
+            (helpRequested)="openPause(); helpRequested = true"
+            (completeRequested)="completeAttempt()"
+            (detailLocated)="locateDetail($event)"
+            (boardFocusMove)="moveBoardFocus($event.event, $event.slot, $event.columns)"
+            (imageError)="markImageFailed($event)"
+            (memoryFlipped)="flipMemory($event)"
+            (puzzleOrderChange)="updatePlacement('puzzle', $event)"
+            (restoreOrderChange)="updatePlacement('restore', $event)"
+            (moveMade)="recordPlacement()"
+            (hintUsed)="recordHint()"
+            (autoCompleted)="recordAuto($event)"
+            (settlementRequested)="completeAttempt()"
+            (locatorAvailability)="imageUnavailable = !$event"
+            (puzzleAvailability)="setPuzzleAvailability($event)"
+            (scrollAvailability)="setScrollAvailability($event)" />  </div>
+}
+@if (phase === 'complete') {
+  <div class="demo-complete" role="status"><strong>這一局完成了！</strong><span>正式挑戰會在這一步送出成績，顯示評級與獎勵。</span><a routerLink="/game/training" [queryParams]="{ game: modeCode() }">開始正式挑戰</a></div>
+}
+<dialog #pauseDialog class="demo-pause" aria-labelledby="demo-pause-title" (close)="resumeFromPause()">
+  <h2 id="demo-pause-title">試玩已暫停</h2><p>盤面保留在這一步，繼續後接著示範。</p><button type="button" (click)="closePause()">繼續試玩</button>
+</dialog>

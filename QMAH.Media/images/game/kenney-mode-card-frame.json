@@ -1,0 +1,6 @@
+{
+  "source": "https://kenney.nl/assets/boardgame-pack",
+  "license": "CC0-1.0",
+  "asset": "kenney-mode-card-frame.svg",
+  "changes": "Preserved original blank card frame paths inside atlas viewBox 10 210 140 190. Removed outside-atlas paths and masked the interior. Four card face colors are CSS variables instead of four duplicated atlases."
+}

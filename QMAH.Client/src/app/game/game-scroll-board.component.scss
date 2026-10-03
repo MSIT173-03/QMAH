@@ -34,4 +34,4 @@
 @media (prefers-reduced-motion: reduce) { .scroll-board button { transition: none; } }
 
 .scroll-reference button, .scroll-inspection button, .scroll-error button { @include ui.button; }
-.scroll-inspection { @include ui.panel; }
+.scroll-inspection { @include ui.paper-panel; overflow-y: auto; }

@@ -79,81 +79,17 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
 .deck-empty { padding: 10px 16px; border: 1px dashed color-mix(in srgb, var(--table-content,var(--qmah-game-content)) 48%, transparent); border-radius: 8px; color: color-mix(in srgb, var(--table-content,var(--qmah-game-content)) 84%, transparent); }
 .deck-privacy { margin: 0; color: color-mix(in srgb, var(--table-content,var(--qmah-game-content)) 74%, transparent); font-size: var(--qmah-type-meta-size); }
 
-.answer-groups { display: grid; gap: clamp(18px, 2.6vw, 30px); }
-@media (min-width: 701px) {
-  .answer-groups { grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; }
-}
-@media (max-width: 700px) {
-  .answer-groups { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-  .group-heading { flex-wrap:wrap; gap:4px; min-height:36px; }
-  .group-heading h4 { font-size:12px; }
-  .group-icon { display:none; }
-  .answer-card-grid { grid-template-columns:minmax(0,1fr); }
-}
-.answer-group { min-width: 0; }
-.group-heading { display: flex; align-items: center; gap: 9px; margin-block-end: 9px; color: var(--table-content,var(--qmah-game-content)); }
-.group-heading h4 { margin: 0; font: 650 17px/1.3 var(--qmah-font-serif); }
-.group-icon { display: grid; place-items: center; flex: none; width: 27px; height: 27px; color: var(--table-content,var(--qmah-game-content)); }
-.group-icon app-qmah-icon { width: 19px; height: 19px; }
-.answer-card-grid { display: grid; grid-template-columns: repeat(auto-fit, 180px); justify-content: center; gap: 16px 12px; min-width: 0; padding-block: 3px 8px; }
-.answer-card {
-  // 卡牌是固定紙色的實體物件，深色模式也沿用紙面上的深色文字
-  --qmah-ink: var(--game-card-ink);
-  --qmah-muted: var(--game-card-muted);
-  --qmah-surface-elevated: var(--game-card-ground);
-  --qmah-game-action: var(--game-card-action);
-  --qmah-border: var(--game-card-line);
-  --answer-accent: var(--qmah-jade);
-  display: flex;
-  flex-direction: column;
-  width: 180px;
-  min-height: 240px;
-  height: clamp(240px, 27vh, 258px);
-  min-width: 0;
-  border: 1px solid var(--qmah-border);
-  border-block-start: 4px solid var(--answer-accent);
-  border-radius: 11px;
-  padding: 13px;
-  color: var(--qmah-ink);
-  background: var(--qmah-surface-elevated);
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-  transform: rotate(var(--card-tilt, 0deg));
-  transform-origin: 50% 92%;
-  transition: transform 160ms ease, border-color 160ms ease;
-}
-.answer-card.is-anonymous { border-color:#a5a59e; border-block-start-color:#90918d; color:#343632; background:#e5e4de; animation:card-shuffle 420ms cubic-bezier(.18,.78,.24,1) both; }
-.answer-card.is-anonymous[data-answer-type='FACTUAL_REASONING'], .answer-card.is-anonymous[data-answer-type='PLAUSIBLE_FICTION'], .answer-card.is-anonymous[data-answer-type='CREATIVE_TALE'] { border-block-start-color:#90918d; }
-.answer-card.is-anonymous .answer-card-top, .answer-card.is-anonymous .answer-card-top app-qmah-icon { color:#676963; }
-.answer-card.is-anonymous .answer-text, .answer-card.is-anonymous .mobile-card-meta { color:#343632; }
-.answer-card.is-anonymous .mobile-card-meta span { color:#5b5e56; }
-.answer-card-grid .is-anonymous:nth-child(2), .mobile-answer-carousel .is-anonymous:nth-child(2) { animation-delay:45ms; }
-.answer-card-grid .is-anonymous:nth-child(3), .mobile-answer-carousel .is-anonymous:nth-child(3) { animation-delay:90ms; }
-.answer-card-grid .is-anonymous:nth-child(4), .mobile-answer-carousel .is-anonymous:nth-child(4) { animation-delay:135ms; }
-.answer-card-grid .is-anonymous:nth-child(5), .mobile-answer-carousel .is-anonymous:nth-child(5) { animation-delay:180ms; }
-.answer-card-grid .is-anonymous:nth-child(6), .mobile-answer-carousel .is-anonymous:nth-child(6) { animation-delay:225ms; }
-.answer-card[data-answer-type='FACTUAL_REASONING'], .answer-dialog-sheet[data-answer-type='FACTUAL_REASONING'] { --answer-accent: #2c654d; }
-.answer-card[data-answer-type='PLAUSIBLE_FICTION'], .answer-dialog-sheet[data-answer-type='PLAUSIBLE_FICTION'] { --answer-accent: #72511f; }
-.answer-card[data-answer-type='CREATIVE_TALE'], .answer-dialog-sheet[data-answer-type='CREATIVE_TALE'] { --answer-accent: #853e35; }
-.answer-card:hover, .answer-card:focus-visible { transform: translateY(-5px) rotate(var(--card-tilt, 0deg)); }
-.answer-card-top { display: flex; align-items: center; gap: 9px; min-width: 0; color: var(--qmah-game-action); font-size: var(--qmah-type-label-size); }
-.answer-card-top app-qmah-icon { flex: none; width: 20px; height: 20px; color: var(--answer-accent); }
-.answer-card-top strong { min-width: 0; overflow-wrap: anywhere; }
-.revealed-author { min-width: 0; color: var(--qmah-ink); overflow-wrap: anywhere; }
-.revealed-author b { display: inline-block; margin-inline-start: 5px; border-radius: 999px; padding: 2px 6px; color: var(--qmah-accent-content); background: var(--qmah-accent); font-size: 10px; }
-.vote-total { flex: none; color: var(--qmah-game-action); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.answer-text { min-width: 0; margin: 12px 0; color: var(--qmah-ink); font-size: var(--qmah-type-label-size); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
-.answer-text--clamped { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 6; }
-// 紙面素材：Mihaela Hinayon，CC BY 3.0，原圖未修改
-// 來源：https://www.transparenttextures.com/natural-paper.html
-.revealed-answer { border-color:color-mix(in srgb,var(--answer-owner-color,#376d62) 46%,var(--qmah-border)); border-block-start-color:var(--answer-owner-color,#376d62); background:url('/assets/game/natural-paper.png') repeat,color-mix(in srgb,var(--answer-owner-color,#376d62) 13%,var(--qmah-surface-elevated)); }
-.revealed-answer .answer-card-top { align-items: flex-start; justify-content: space-between; gap: 7px; font-size: 13px; }
-.revealed-answer .answer-text { margin-block-start: 10px; }
+.answer-dialog-sheet[data-answer-type='FACTUAL_REASONING'] { --answer-accent: #2c654d; }
+.answer-dialog-sheet[data-answer-type='PLAUSIBLE_FICTION'] { --answer-accent: #72511f; }
+.answer-dialog-sheet[data-answer-type='CREATIVE_TALE'] { --answer-accent: #853e35; }
 .table-empty { margin: 0; padding: 18px 0; color: color-mix(in srgb, var(--table-content,var(--qmah-game-content)) 82%, transparent); text-align: center; }
-.revealed-answer.is-winner { border-color: color-mix(in srgb, var(--qmah-accent) 66%, var(--qmah-border)); border-block-start-color: var(--qmah-accent); }
 
 .answer-dialog {
+  --qmah-game-action: var(--game-card-action);
+  --qmah-game-content: #fff8e9;
+  --qmah-accent: #805a23;
+  --qmah-accent-content: #fff8e9;
+  --qmah-focus: var(--game-card-action);
   --qmah-surface: var(--game-card-ground);
   --qmah-surface-elevated: var(--game-card-ground);
   --qmah-ink: var(--game-card-ink);
@@ -188,11 +124,6 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
 @keyframes deal-in { from { opacity: 0; translate: 0 -18px; } to { opacity: 1; translate: 0 0; } }
 
 .answer-table.is-compact .table-felt { gap: 12px; }
-.answer-table.is-compact .answer-groups { gap: 16px; }
-.answer-table.is-compact .group-heading { margin-block-end: 6px; }
-.answer-table.is-compact .answer-card-grid { gap: 12px 9px; }
-.answer-table.is-compact .answer-card { height: clamp(240px, 25vh, 248px); padding: 11px; }
-.answer-table.is-compact .answer-text { margin-block: 9px; }
 
 @media (max-width: 600px) {
   .table-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
@@ -204,41 +135,21 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
   .seat-card-back { grid-column: 1; grid-row: 2; justify-self: start; width: 20px; height: 27px; }
   .answering-deck { min-height: 190px; }
   .answer-back-card { width: 50px; height: 72px; }
-  .answer-groups { display: flex; gap: 14px; overflow-x: auto; padding: 3px 4px 14px; scroll-snap-type: x mandatory; scrollbar-color: color-mix(in srgb, var(--table-content,var(--qmah-game-content)) 60%, transparent) transparent; scrollbar-width: thin; }
-  .answer-group { flex: 0 0 min(220px, calc(100vw - 56px)); width: min(220px, calc(100vw - 56px)); scroll-snap-align: start; }
-  .group-heading { margin-block-end: 8px; }
-  .group-heading h4 { font-size: 13px; }
-  .group-icon { width: 22px; height: 22px; }
-  .group-icon app-qmah-icon { width: 17px; height: 17px; }
-  .answer-card-grid { grid-template-columns: 180px; justify-content: start; gap: 10px; }
-  .answer-card { width: 180px; min-height: 240px; height: 244px; padding: 11px; }
-  .answer-card-top { font-size: 12px; }
-  .answer-text { font-size: 13px; line-height: 1.6; }
-  .answer-card { transform: rotate(0deg); }
-  .answer-card:hover, .answer-card:focus-visible { transform: translateY(-3px); }
   .dialog-actions { align-items: stretch; flex-direction: column; }
   .vote-action { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .answer-back-card, .answer-card.is-anonymous { animation: none; }
-  .answer-card, .vote-action { transition: none; }
+  .answer-back-card, .vote-action { transition: none; }
 }
 
 .swipe-instruction { display:none; }
-// 桌面和手機共用類別切換，回答留在橫向牌列，避免堆疊到席位區
-.answer-groups { display:none; }
 .mobile-answer-types { display:flex; gap:8px; width:100%; margin-block:0 14px; }
 .mobile-answer-types button { display:flex; align-items:center; justify-content:center; gap:8px; flex:1 1 0; min-width:0; min-height:44px; padding:8px; border:1px solid color-mix(in srgb,var(--table-content,var(--qmah-game-content)) 28%,transparent); border-radius:5px; color:var(--table-content,var(--qmah-game-content)); background:color-mix(in srgb,var(--table-ground,#285b50) 82%,white); font:650 16px/1.3 var(--qmah-font-serif); }
 .mobile-answer-types button[aria-pressed='true'] { border-color:#e7c891; color:#29251e; background:#e7c891; }
 .mobile-answer-types button:disabled { cursor:default; opacity:.45; }
 .mobile-answer-types small { font:400 14px/1.3 var(--qmah-font-sans); font-variant-numeric:tabular-nums; }
 .mobile-answer-carousel { display:flex; gap:14px; width:100%; min-width:0; padding:8px 6px 14px; overflow-x:auto; overscroll-behavior-inline:contain; scroll-snap-type:x mandatory; scrollbar-color:#cab48790 transparent; scrollbar-width:thin; }
-.mobile-answer-card { flex:0 0 220px; width:220px; height:280px; scroll-snap-align:start; }
-.answer-table.is-compact .mobile-answer-card { min-height:var(--table-answer-height,240px); height:var(--table-answer-height,280px); padding:16px; }
-.mobile-card-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; font-size:14px; }
-.mobile-card-meta span { font-variant-numeric:tabular-nums; }
-.mobile-answer-card .answer-text { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:8; overflow:hidden; font-size:16px; line-height:1.7; }
 @media (max-width:1000px) {
   .swipe-instruction { display:block; margin:0 0 7px; color:color-mix(in srgb,var(--table-content,var(--qmah-game-content)) 83%,transparent); font-size:12px; text-align:center; }
   .answering-deck { min-height:140px; gap:7px; }
@@ -246,23 +157,15 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
   .back-deck { min-height:56px; gap:2px; }
   .answer-back-card { width:36px; height:52px; }
   .answer-back-card:nth-child(n+2) { margin-inline-start:-12px; }
-  .answer-groups { display:none; }
   .mobile-answer-types { display:flex; gap:8px; width:min(calc(100% - var(--answer-tabs-start,0px)),540px); margin:0 auto 12px; margin-inline-start:var(--answer-tabs-start,auto); }
   .mobile-answer-types button { flex-direction:column; justify-content:center; gap:4px; min-height:56px; padding:8px; font-size:clamp(12px,3.2vw,14px); }
   .mobile-answer-types button[aria-pressed='true'] { border-color:#e7c891; color:#29251e; background:#e7c891; }
   .mobile-answer-types button:disabled { opacity:.45; }
   .mobile-answer-types small { flex:none; font-size:11px; font-variant-numeric:tabular-nums; }
-  .mobile-answer-carousel { gap:12px; width:min(100%,540px); margin-inline:auto; padding:4px 4px 12px; scroll-snap-stop:always; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .mobile-answer-carousel { gap:12px; width:min(100%,540px); margin-inline:auto; padding:4px 4px 12px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
   .mobile-answer-carousel::-webkit-scrollbar { display:none; }
-  .mobile-answer-card { flex:0 0 100%; width:100%; min-height:250px; height:clamp(250px,38dvh,320px); padding:16px; scroll-snap-align:center; transform:none; }
-  .mobile-answer-card:hover, .mobile-answer-card:focus-visible { transform:none; }
-  .mobile-card-meta { display:flex; justify-content:space-between; align-items:center; gap:12px; color:var(--answer-accent); font-size:13px; font-weight:800; }
-  .mobile-card-meta span { color:var(--qmah-muted); font-size:13px; font-variant-numeric:tabular-nums; }
-  .mobile-answer-card .answer-text { font-size:16px; line-height:1.7; }
   .mobile-answer-carousel > .table-empty { flex:0 0 100%; }
 }
-
-@keyframes card-shuffle { 0% { opacity:0; transform:translate3d(0,-34px,0) rotate(-8deg) scale(.94); } 70% { opacity:1; transform:translate3d(0,3px,0) rotate(1deg) scale(1.01); } 100% { opacity:1; transform:translate3d(0,0,0) rotate(0) scale(1); } }
 
 .mobile-answer-types button { @include ui.button(true); }
 .mobile-answer-types button[aria-pressed='true'] { @include ui.button; }
@@ -272,4 +175,10 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
 .dialog-close { @include ui.button(true); padding: 2px; }
 @media (max-width: 1000px) {
   .mobile-answer-types button { min-height:56px; padding-inline:4px; white-space:nowrap; }
+}
+
+// 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
+.dialog-answer-text { @include ui.prose; white-space: pre-wrap; }
+@media (prefers-reduced-motion: reduce) {
+  .answer-back-card { animation: none; }
 }

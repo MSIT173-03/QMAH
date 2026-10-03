@@ -1,0 +1,14 @@
+{
+  "family": "QMAH game meters",
+  "source": "https://kenney.nl/assets/ui-pack-adventure",
+  "sourceVersion": "1.1",
+  "license": "CC0-1.0",
+  "format": "SVG, transparent, 32 by 16 logical pixels",
+  "display": "horizontal nine-slice, 6px vertical and 8px horizontal caps; 20px track",
+  "assets": [
+    { "file": "kenney-meter-track.svg", "original": "Vector/progress_transparent.svg", "role": "empty groove", "modification": "90 degree rotation; paths and colors preserved" },
+    { "file": "kenney-meter-fill.svg", "original": "Vector/progress_green.svg", "role": "earned points fill", "modification": "90 degree rotation; paths and colors preserved" }
+  ],
+  "states": ["empty", "partial", "full", "expanded details", "light", "dark"],
+  "approval": "Selected within the user's authorized Kenney UI Pack direction; validate in actual browser at native scale"
+}

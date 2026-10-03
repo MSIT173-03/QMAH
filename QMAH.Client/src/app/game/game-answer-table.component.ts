@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
 
 import { GameAnswer, GameAnswerType, GamePlayer, GameRoundDetails } from './game.models';
-import { QmahIconComponent, QmahIconName } from '../shared/components/qmah-icon/qmah-icon';
+import { GameAnswerCardComponent } from './game-answer-card.component';
+import { QmahIconName } from '../shared/components/qmah-icon/qmah-icon';
 
 const ANSWER_GROUPS: readonly { type: GameAnswerType; label: string; icon: QmahIconName }[] = [
   { type: 'FACTUAL_REASONING', label: '史實推理', icon: 'book-open' },
@@ -27,7 +28,7 @@ const PLAYER_COLOR_CODES = Object.keys(PLAYER_BACK_COLORS);
 @Component({
   selector: 'app-game-answer-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [QmahIconComponent],
+  imports: [GameAnswerCardComponent],
   templateUrl: './game-answer-table.component.html',
   styleUrl: './game-answer-table.component.scss'
 })
@@ -91,10 +92,6 @@ export class GameAnswerTableComponent {
   seatColor(playerId: string, index: number): string {
     const selectedCode = this.playerColors()[playerId] ?? PLAYER_COLOR_CODES[index % PLAYER_COLOR_CODES.length];
     return PLAYER_BACK_COLORS[selectedCode] ?? PLAYER_BACK_COLORS[PLAYER_COLOR_CODES[index % PLAYER_COLOR_CODES.length]];
-  }
-
-  cardTilt(index: number): string {
-    return ['-5deg', '0deg', '5deg'][index % 3];
   }
 
   openAnswer(answer: GameAnswer): void {

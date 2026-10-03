@@ -33,6 +33,7 @@ public sealed class GameAppreciationController(QmahDbContext db) : ApiController
     public async Task<ActionResult<ApiPage<AppreciationAnswerDto>>> List(
         [FromQuery] Guid? artifactId, [FromQuery] string? categoryCode, [FromQuery] string? answerType,
         [FromQuery] string sort = "votes", [FromQuery] int page = 1, [FromQuery] int pageSize = 12,
+        [FromQuery] string? keyword = null, [FromQuery] string? eraCode = null,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
@@ -40,8 +41,15 @@ public sealed class GameAppreciationController(QmahDbContext db) : ApiController
             return BadRequest();
         var winners = WinnerIds();
         var query = db.RoundAnswers.AsNoTracking().Where(answer => winners.Contains(answer.Id));
+        keyword = keyword?.Trim();
+        if (keyword?.Length > 100) return BadRequest("搜尋文字最多可輸入 100 字。");
         if (artifactId.HasValue) query = query.Where(answer => answer.Round.ArtifactId == artifactId);
         if (!string.IsNullOrWhiteSpace(categoryCode)) query = query.Where(answer => answer.Round.Artifact.Category.Code == categoryCode);
+        if (!string.IsNullOrWhiteSpace(eraCode)) query = query.Where(answer => answer.Round.Artifact.EraBucket.Code == eraCode);
+        // 與圖鑑使用相同搜尋欄位，先由資料庫篩選，再排序與分頁。
+        if (!string.IsNullOrWhiteSpace(keyword)) query = query.Where(answer =>
+            answer.Round.Artifact.Name.Contains(keyword) || answer.Round.Artifact.ArtifactRef.Contains(keyword)
+            || answer.Round.Artifact.EraBucket.Name.Contains(keyword) || answer.Round.Artifact.Category.Name.Contains(keyword));
         if (!string.IsNullOrWhiteSpace(answerType)) query = query.Where(answer => answer.AnswerType == answerType);
         var ranked = query.Select(answer => new {
             Answer = answer,

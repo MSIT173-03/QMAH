@@ -1,0 +1,92 @@
+<article class="index-page" aria-labelledby="rooms-title">
+  <header class="page-heading">
+    <div>
+      <h2 id="rooms-title">{{ isDemo() ? '範例房間' : isRehearsal() ? '選一桌開始遊戲' : '房間清單' }}</h2>
+      <p>{{ roomListDescription() }}</p>
+    </div>
+    @if (showRewardMeter()) { <app-game-reward-meter /> }
+  </header>
+
+  <div class="lookup-bar">
+    <form class="room-code-search" (ngSubmit)="search.emit()">
+      <label for="room-code-search">搜尋房號</label>
+      <input id="room-code-search" name="roomCodeSearch" [(ngModel)]="roomCodeSearch" maxlength="16" placeholder="輸入房號或開頭" autocomplete="off" />
+      <button type="submit" [disabled]="loading()">搜尋</button>
+      @if (roomCodeFilter()) { <button type="button" (click)="clearRoomCode.emit()">清除</button> }
+    </form>
+    <div class="lookup-controls">
+      <div class="sort-control" role="group" aria-label="房間排序">
+        <span>排序</span>
+        <div class="sort-options">
+          <button type="button" [class.is-active]="roomSort() === 'RECOMMENDED'" [attr.aria-pressed]="roomSort() === 'RECOMMENDED'" (click)="sortSelected.emit('RECOMMENDED')">推薦</button>
+          <button type="button" [class.is-active]="roomSort() === 'NEARLY_FULL'" [attr.aria-pressed]="roomSort() === 'NEARLY_FULL'" (click)="sortSelected.emit('NEARLY_FULL')">快滿</button>
+          <button type="button" [class.is-active]="roomSort() === 'NEWEST'" [attr.aria-pressed]="roomSort() === 'NEWEST'" (click)="sortSelected.emit('NEWEST')">最新</button>
+          <button type="button" [class.is-active]="roomSort() === 'OPEN_SLOTS'" [attr.aria-pressed]="roomSort() === 'OPEN_SLOTS'" (click)="sortSelected.emit('OPEN_SLOTS')">空位最多</button>
+        </div>
+      </div>
+    </div>
+    <div class="refresh-actions">
+      <button type="button" class="hero-collapse refresh-button" (click)="refresh.emit()" [disabled]="loading() || refreshing()" [attr.aria-busy]="refreshing()">
+        <app-qmah-icon name="refresh" aria-hidden="true" />{{ refreshing() ? '更新中…' : '重新整理' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="status-tabs" role="group" aria-label="房間狀態">
+    <button type="button" [attr.aria-pressed]="isRoomStatusActive('WAITING')" [class.is-active]="isRoomStatusActive('WAITING')" (click)="statusSelected.emit('WAITING')">可加入</button>
+    <button type="button" [attr.aria-pressed]="isRoomStatusActive('PLAYING')" [class.is-active]="isRoomStatusActive('PLAYING')" (click)="statusSelected.emit('PLAYING')">進行中</button>
+    <button type="button" [attr.aria-pressed]="isRoomStatusActive('RECENT')" [class.is-active]="isRoomStatusActive('RECENT')" (click)="statusSelected.emit('RECENT')">最近完成</button>
+    <span>{{ rooms() ? rooms()!.totalCount + ' 間' : error() ? '暫時無法取得' : '讀取中' }}</span>
+  </div>
+
+  @if (rooms()?.items?.length) { <div class="room-ledger-head" aria-hidden="true"><span>房間</span><span>玩法設定</span><span>席位</span><span>狀態</span><span>操作</span></div> }
+  <div class="ledger" role="list" aria-label="房間留言板">
+    @if (rooms() === null && loading()) {
+      @for (slot of loadingRows; track slot) { <div class="ledger-skeleton" aria-hidden="true"><i></i><i></i><i></i></div> }
+    } @else if (rooms() === null && error()) {
+      <section class="empty-state error-state" role="alert">
+        <h2>{{ errorTitle() }}</h2><p>{{ error() }}</p>
+        @if (errorTitle() === '請先登入') { <a routerLink="/login">前往會員登入</a> }
+        <button type="button" (click)="retry.emit()">重新載入房間</button>
+      </section>
+    } @else if (rooms(); as page) {
+      @if (page.items.length === 0) {
+        <section class="empty-state">
+          <h2>{{ roomStatus() === 'WAITING' ? '目前沒有可加入的房間' : '目前沒有符合條件的房間' }}</h2>
+          @if (isDemo() && isAdmin()) { <p>展示資料在這個狀態下沒有房間可供查看。</p> }
+          @else if (isDemo()) { <p>目前沒有符合條件的房間可供查看。</p> }
+          @else {
+            <p>{{ roomStatus() === 'WAITING' ? '現在可以建立房間，邀請其他玩家一起鑑定。' : '可以切換到可加入房間，或建立新的鑑定房間。' }}</p>
+            <div class="empty-state__actions">
+              <button type="button" class="empty-state__primary" (click)="createRoom.emit()">建立房間</button>
+              @if (roomStatus() !== 'WAITING') { <button type="button" (click)="statusSelected.emit('WAITING')">查看可加入房間</button> }
+            </div>
+          }
+        </section>
+      } @else {
+        @for (room of page.items; track room.id) {
+          <div role="listitem">
+            <button type="button" class="room-row" [attr.data-room-id]="room.id" [class.is-selected]="selectedRoomId() === room.id" (click)="roomSelected.emit(room)" [attr.aria-pressed]="selectedRoomId() === room.id">
+              <span class="room-code"><strong>{{ room.roomCode }}</strong><small>{{ room.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</small></span>
+              <span class="room-facts"><b>{{ room.totalRounds }} 回合</b><span>{{ categoryText(room.categoryFilterCode) }} · {{ eraText(room.eraBucketFilterCode) }}</span>@if (isRehearsal()) { <span>作答 {{ (room.answerSeconds || 180) / 60 }} 分 · 投票 {{ (room.votingSeconds || 120) / 60 }} 分</span> }</span>
+              <span class="room-occupancy" [attr.aria-label]="'席位 ' + room.playerCount + ' / ' + room.maxPlayers"><b>{{ room.playerCount }} / {{ room.maxPlayers }}</b><i><i [style.width.%]="occupancy(room)"></i></i></span>
+              <span class="room-status" [attr.data-status]="room.status">{{ statusText(room.status) }}</span>
+              @if (selectedRoomId() === room.id) { <span class="row-selection-state">已開啟</span> }
+              @else { <span class="row-action"><span>{{ isRehearsal() ? '直接入桌' : '查看' }}</span><app-qmah-icon class="row-arrow" name="arrow-right" aria-hidden="true" /></span> }
+            </button>
+          </div>
+        }
+      }
+    }
+  </div>
+
+  @if (rooms(); as page) {
+    @if (page.totalPages > 1) {
+      <nav class="folio-pagination" aria-label="房間清單分頁">
+        <button type="button" class="page-arrow" aria-label="上一頁" (click)="pageSelected.emit(page.page - 1)" [disabled]="page.page <= 1"><img src="/assets/game/kenney-page-left.png" alt="" width="22" height="22" /></button>
+        @for (pageNumber of pageNumbers(); track pageNumber) { <button type="button" (click)="pageSelected.emit(pageNumber)" [class.is-current]="pageNumber === page.page" [attr.aria-current]="pageNumber === page.page ? 'page' : null">{{ pageNumber }}</button> }
+        <button type="button" class="page-arrow" aria-label="下一頁" (click)="pageSelected.emit(page.page + 1)" [disabled]="page.page >= page.totalPages"><img src="/assets/game/kenney-page-right.png" alt="" width="22" height="22" /></button>
+      </nav>
+    }
+  }
+</article>

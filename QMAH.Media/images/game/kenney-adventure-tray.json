@@ -1,0 +1,7 @@
+{
+  "source": "https://kenney.nl/assets/ui-pack-adventure",
+  "sourceFile": "Vector/panel_grey_dark.svg",
+  "asset": "kenney-adventure-tray.svg",
+  "license": "CC0-1.0",
+  "changes": "Unmodified vector. Fixed-size container rendered with 9-slice borders and an inset shadow."
+}

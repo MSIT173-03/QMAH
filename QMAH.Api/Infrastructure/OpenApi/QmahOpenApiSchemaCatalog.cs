@@ -35,8 +35,8 @@ internal static class QmahOpenApiSchemaCatalog
                 ("displayName", "DisplayName（遊戲中顯示名稱）"),
                 ("maxPlayers", "MaxPlayers（房間人數上限）；範圍為 3 至 10"),
                 ("totalRounds", "TotalRounds（遊戲回合數）；範圍為 1 至 5"),
-                ("answerSeconds", "AnswerSeconds（每回合作答秒數）；範圍為 30 至 300"),
-                ("votingSeconds", "VotingSeconds（每回合投票秒數）；範圍為 20 至 180"),
+                ("answerSeconds", "AnswerSeconds（每回合作答秒數），範圍為 120 至 300"),
+                ("votingSeconds", "VotingSeconds（每回合投票秒數），範圍為 120 至 300"),
                 ("categoryFilterCode", "CategoryFilterCode（文物分類系統代碼）；可省略"),
                 ("eraBucketFilterCode", "EraBucketFilterCode（文物年代系統代碼）；可省略")),
             ["JoinGameRoomRequest"] = Fields(

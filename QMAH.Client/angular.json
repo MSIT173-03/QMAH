@@ -29,6 +29,12 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": ".game-assets",
+                "followSymlinks": true,
+                "output": "assets/game"
               }
             ],
             "styles": [

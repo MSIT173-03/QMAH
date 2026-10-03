@@ -1,6 +1,6 @@
 // 遊戲區共用暖紙、玉綠與柔木色，不變更其他區域的品牌與主題
 :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
-  --qmah-page-surface: #e8ecdf;
+  --qmah-page-surface: #f0eee5;
   --qmah-surface: #fbf5e8;
   --qmah-surface-soft: #e7eedf;
   --qmah-surface-muted: #dce5d4;
@@ -30,23 +30,58 @@
   --game-stage-ground: #e9dfca;
   --game-card-ground: #f7f2e7;
   --game-card-ink: #273e33;
-  --game-card-muted: #4c6051;
+  --game-card-muted: #425443;
   --game-card-action: #2d644b;
   --game-card-line: #a7b5a2;
+  --game-puzzle-frame: #d6bf98;
+  --game-puzzle-board: #eee3cf;
+  --game-puzzle-empty: #f4ead8;
+  --game-puzzle-line: #c7b28e;
+  --game-puzzle-index: #466b51;
   --game-frame-image: url('/assets/game/kenney-wood-frame.svg');
   --game-frame-rim-image: url('/assets/game/kenney-wood-rim.svg');
+  --game-frame-width: clamp(28px, 3vw, 48px);
   --game-primary-image: url('/assets/game/kenney-button.svg');
+  --game-button-blue-image: url('/assets/game/kenney-button-blue.svg');
+  --game-button-marsala-image: url('/assets/game/kenney-button-marsala.svg');
+  --game-button-ochre-image: url('/assets/game/kenney-button-ochre.svg');
   --game-primary-ink: #fff8e9;
   --game-secondary-image: url('/assets/game/kenney-button-secondary.svg');
   --game-secondary-ink: #334737;
 }
 
+:where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-appreciation, app-game-account)
+  :is(dialog, .notes-page, .insert-sheet form, .reward-details, .collection-hints__grid, .piece-tray-viewport, .instructions-content, .placement-tools, .scroll-reference-viewport) {
+  scrollbar-width:auto;
+  scrollbar-gutter:stable;
+  scrollbar-color:#9a7850 #e8dbc7;
+}
+
+// 色相參考 Pantone 17-4021 TCX Faded Denim、16-0924 TCX Croissant、18-1438 TCX Marsala；
+// 按鈕使用同明度／彩度的較深螢幕版，確保柔和色系上的米白文字仍有足夠對比。
+:where(app-game-room, app-game-training) [data-button-tone='reversible'] {
+  --game-button-image: var(--game-button-blue-image);
+  --game-button-ink: #fff8e9;
+}
+:where(app-game-room, app-game-training) [data-button-tone='start'] {
+  --game-button-image: var(--game-button-ochre-image);
+  --game-button-ink: #fff8e9;
+}
+:where(app-game-room, app-game-training) [data-button-tone='danger'] {
+  --game-button-image: var(--game-button-marsala-image);
+  --game-button-ink: #fff8e9;
+}
+
+@media (max-width: 1000px) {
+  :where(app-game-room, app-game-training) { --game-frame-width: 18px; }
+}
+
 html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
-  --qmah-page-surface: #1e3329;
-  --qmah-surface: #263e31;
-  --qmah-surface-soft: #304c3b;
-  --qmah-surface-muted: #3b5743;
-  --qmah-surface-elevated: #35523f;
+  --qmah-page-surface: #202526;
+  --qmah-surface: #2d3333;
+  --qmah-surface-soft: #373e3d;
+  --qmah-surface-muted: #424a47;
+  --qmah-surface-elevated: #3b4340;
   --qmah-ink: #fcf5e4;
   --qmah-muted: #d0dfc7;
   --qmah-jade: #add4b4;
@@ -66,9 +101,19 @@ html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-train
   --game-table-ground: #315d42;
   --game-stage-ground: #22392e;
   --game-card-ground: #f0ecdf;
+  --game-puzzle-frame: #bfa580;
+  --game-puzzle-board: #e3d6be;
+  --game-puzzle-empty: #ebe1cd;
+  --game-puzzle-line: #b4a080;
   --game-frame-image: url('/assets/game/kenney-wood-frame-dark.svg');
   --game-frame-rim-image: url('/assets/game/kenney-wood-rim-dark.svg');
   --game-primary-image: url('/assets/game/kenney-button-dark.svg');
   --game-secondary-image: url('/assets/game/kenney-button-secondary-dark.svg');
   --game-secondary-ink: #f3f0df;
+}
+
+// 輸入提示也是可閱讀內容，兩種主題都沿用次要文字色。
+:where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) :where(input, textarea)::placeholder {
+  color: var(--qmah-muted);
+  opacity: 1;
 }

@@ -1,5 +1,6 @@
-import { Component, ElementRef, HostListener, computed, effect, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, afterNextRender, computed, effect, inject, input, output, signal } from '@angular/core';
 import { findBackgroundPieces } from './game-background-pieces';
+import { scatterPieces } from './game-piece-scatter';
 
 /** Empty slots are -1. Pieces have stable identities; a drop never swaps two pieces. */
 export function placePiece(order: readonly number[], piece: number, slot: number): number[] {
@@ -14,16 +15,8 @@ export function placePiece(order: readonly number[], piece: number, slot: number
   template: `
     @for (revision of [imageRevision()]; track revision) { <img class="image-source" [src]="image()" alt="" aria-hidden="true" (load)="readImage($event)" (error)="imageError()" /> }
     @if (failed()) { <p role="alert">圖片暫時無法載入，盤面進度仍保留。<button type="button" (click)="retryImage()">重試圖片</button></p> }
-    <div class="placement-tools">
-      <button type="button" (click)="referenceDialog.showModal()" aria-haspopup="dialog">原圖與格線</button>
-      <button type="button" (click)="showRegion()" [disabled]="!ready() || disabled() || selected() === null || solved()">區域提示（−3 分）</button>
-      <button type="button" (click)="confirmDialog.showModal()" [disabled]="!ready() || disabled() || solved()">完成剩餘碎片</button>
-      <button type="button" (click)="pieceDialog.showModal()" [disabled]="selected() === null">放大選取碎片</button>
-      <button type="button" (click)="prepareBackground(); backgroundDialog.showModal()" [disabled]="!ready() || disabled() || solved()">預覽背景候選（不扣分）</button>
-      <ng-content />
-    </div>
     <dialog #referenceDialog class="assist-dialog reference-dialog" aria-label="原圖與格線"><button type="button" (click)="referenceDialog.close()">返回盤面</button><figure class="reference"><img [src]="image()" [alt]="name() + '原圖'" /><div [style.grid-template-columns]="columnsStyle()" [style.grid-template-rows]="rowsStyle()">@for (cell of order(); track $index) { <span>{{ $index + 1 }}</span> }</div></figure></dialog>
-    <div class="placement-workspace" [style.--piece-ratio]="displayRatio()" [style.--image-width.px]="naturalWidth()">
+    <div class="placement-workspace" [style.--piece-ratio]="displayRatio()" [style.--tile-ratio]="pieceRatio()" [style.--image-width.px]="naturalWidth()">
       <div class="placement-board" [class.is-solved]="solved()" [style.aspect-ratio]="displayRatio()" [style.grid-template-columns]="columnsStyle()" [style.grid-template-rows]="rowsStyle()" role="group" aria-label="拼圖目標盤面">
         @for (piece of order(); track $index; let slot = $index) {
           <button type="button" class="piece slot" [attr.data-slot]="slot" [class.selected]="piece >= 0 && selected() === piece" [class.is-lifted]="piece >= 0 && lifted() === piece" [class.just-placed]="lastPlaced() === slot" [class.hinted]="hintRegion() !== null && region(slot) === hintRegion()" [disabled]="!ready() || disabled() || solved()" [attr.aria-label]="'第 ' + (slot + 1) + ' 格' + (piece < 0 ? '，空格' : '，已有碎片')" (click)="activateSlot(slot, $event)" (keydown)="moveFocus($event, slot)" (pointerdown)="beginDrag($event, piece)">
@@ -32,18 +25,29 @@ export function placePiece(order: readonly number[], piece: number, slot: number
           </button>
         }
       </div>
-      <section class="piece-supply" aria-label="待放置碎片">
-        <h4>待放置 {{ tray().length }} 片</h4>
-        <div class="piece-tray" [style.aspect-ratio]="displayRatio()" [style.grid-template-columns]="columnsStyle()" [style.grid-template-rows]="rowsStyle()" [style.column-gap.%]="4 / (columns() - 1)" [style.row-gap.%]="4 / (rows() - 1)">
-          @for (piece of traySlots(); track piece) {
+      <section class="piece-supply" aria-label="待放置碎片" [style.--piece-rows]="rows()">
+        <div class="piece-supply-header"><h4>待放置 {{ tray().length }} 片</h4>
+          <details class="placement-tools-menu"><summary>盤面工具</summary><div class="placement-tools">
+            <button type="button" (click)="referenceDialog.showModal()" aria-haspopup="dialog">原圖與格線</button>
+            <button type="button" (click)="showRegion()" [disabled]="!ready() || disabled() || selected() === null || solved()">區域提示（−3 分）</button>
+            <button type="button" (click)="confirmDialog.showModal()" [disabled]="!ready() || disabled() || solved()">完成剩餘碎片</button>
+            <button type="button" (click)="pieceDialog.showModal()" [disabled]="selected() === null">放大選取碎片</button>
+            <button type="button" (click)="prepareBackground(); backgroundDialog.showModal()" [disabled]="!ready() || disabled() || solved()">預覽背景候選（不扣分）</button>
+            <ng-content />
+          </div></details>
+        </div>@if (compactTools() && tray().length > columns()) { <p class="tray-scroll-note">上下捲動查看碎片，再拖曳或點選放置。</p> }
+        <div class="piece-tray-viewport" tabindex="0" aria-label="待放置碎片，可捲動查看">
+        <div class="piece-tray" [class.is-compact]="compactTools()" [style.grid-template-columns]="compactTools() ? null : 'repeat(' + scattered().columns + ', 1fr)'">
+          @for (piece of compactTools() ? tray() : traySlots(); track piece) {
             @if (!order().includes(piece)) {
-            <button type="button" class="piece" [attr.data-piece]="piece" [class.selected]="selected() === piece" [class.is-lifted]="lifted() === piece" [disabled]="!ready() || disabled()" [attr.aria-label]="'選取待放置碎片 ' + (tray().indexOf(piece) + 1)" [attr.aria-pressed]="selected() === piece" (click)="select(piece, $event)" (keydown)="moveFocus($event, tray().indexOf(piece))" (pointerdown)="beginDrag($event, piece)">
+            <button type="button" class="piece" [style.left.%]="compactTools() ? null : scattered().pieces[$index].x" [style.top.%]="compactTools() ? null : scattered().pieces[$index].y" [style.width.%]="compactTools() ? null : scattered().pieces[$index].width" [style.height.%]="compactTools() ? null : scattered().pieces[$index].height" [style.--piece-turn]="scattered().pieces[$index].turn + 'deg'" [attr.data-piece]="piece" [class.selected]="selected() === piece" [class.is-lifted]="lifted() === piece" [disabled]="!ready() || disabled()" [attr.aria-label]="'選取待放置碎片 ' + (tray().indexOf(piece) + 1)" [attr.aria-pressed]="selected() === piece" (click)="select(piece, $event)" (keydown)="moveFocus($event, tray().indexOf(piece))" (pointerdown)="beginDrag($event, piece)">
               <img [src]="image()" alt="" draggable="false" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(piece % columns()) * 100" [style.top.%]="-row(piece) * 100" />
             </button>
             } @else { <span class="placed-slot" aria-hidden="true"></span> }
           }
         </div>
-        <p>把碎片拖到目標格，也可先點碎片，再點目的格。放錯時可重新放置，被替換的碎片會回到備選區。</p>
+        </div>
+        <details class="placement-instructions"><summary>操作說明</summary><div class="instructions-content"><p>把碎片拖到目標格，也可先點碎片，再點目的格。</p><p>放錯時可重新放置，被替換的碎片會回到待放置區。</p></div></details>
       </section>
     </div>
     <p class="placement-feedback" role="status">{{ feedback() }}</p>
@@ -127,6 +131,7 @@ export class GamePlacementBoardComponent {
   readonly settlementRequested = output<void>();
   readonly failed = signal(false);
   readonly imageRevision = signal(0);
+  readonly compactTools = signal(false);
   readonly selected = signal<number | null>(null);
   readonly hintRegion = signal<number | null>(null);
   readonly feedback = signal('先觀察輪廓、紋飾與明暗，再把碎片拖到目標格。');
@@ -140,6 +145,8 @@ export class GamePlacementBoardComponent {
   readonly columnsStyle = computed(() => 'repeat(' + this.columns() + ', minmax(0, 1fr))');
   readonly rowsStyle = computed(() => 'repeat(' + this.rows() + ', minmax(0, 1fr))');
   readonly traySlots = computed(() => Array.from({ length: this.order().length }, (_, piece) => piece).sort((a, b) => this.shuffleKey(a) - this.shuffleKey(b)));
+  readonly traySize = signal({ width: 360, height: 300 });
+  readonly scattered = computed(() => scatterPieces(this.order().length, this.traySize().width, this.traySize().height, this.pieceRatio()));
   readonly tray = computed(() => Array.from({ length: this.order().length }, (_, piece) => piece)
     .filter(piece => !this.order().includes(piece)).sort((a, b) => this.shuffleKey(a) - this.shuffleKey(b)));
   private readonly host: ElementRef<HTMLElement>;
@@ -148,6 +155,20 @@ export class GamePlacementBoardComponent {
   constructor(host: ElementRef<HTMLElement>) {
     this.host = host;
     effect(() => { this.selected.set(this.initialSelection()); this.hintRegion.set(this.initialHintRegion()); });
+    this.updateCompactTools();
+    const destroy = inject(DestroyRef);
+    afterNextRender(() => {
+      const tray = this.host.nativeElement.querySelector<HTMLElement>('.piece-tray');
+      if (!tray) return;
+      const observer = new ResizeObserver(() => this.traySize.set({ width:tray.clientWidth, height:tray.clientHeight }));
+      observer.observe(tray);
+      destroy.onDestroy(() => observer.disconnect());
+    });
+  }
+  @HostListener('window:resize')
+  updateCompactTools(): void {
+    if (typeof window === 'undefined') return;
+    this.compactTools.set(window.matchMedia?.('(max-width: 700px)').matches ?? window.innerWidth <= 700);
   }
   readImage(event: Event): void {
     const image = event.target as HTMLImageElement;
@@ -199,6 +220,12 @@ export class GamePlacementBoardComponent {
   row(piece: number): number { return Math.floor(piece / this.columns()); }
   private shuffleKey(piece: number): number { return Math.sin((piece + 1) * 127.1) * 43758.5453 % 1; }
   region(slot: number): number { return (this.row(slot) >= this.rows() / 2 ? 2 : 0) + (slot % this.columns() >= this.columns() / 2 ? 1 : 0); }
+  advanceDemonstration(): void {
+    if (!this.ready() || this.disabled() || this.solved()) return;
+    const next = this.order().findIndex((piece, slot) => piece !== slot);
+    if (this.selected() === next) this.activateSlot(next);
+    else this.select(next);
+  }
   select(piece: number, event?: MouseEvent): void {
     if (this.suppressClick && event?.detail !== 0) { this.suppressClick = false; return; }
     this.suppressClick = false;
@@ -276,15 +303,19 @@ export class GamePlacementBoardComponent {
   @HostListener('window:blur')
   cancelDrag(): void { this.dragging.set(null); this.lifted.set(null); this.pointer = null; }
   moveFocus(event: KeyboardEvent, slot: number): void {
-    const columns = this.columns();
+    const current = event.currentTarget as HTMLElement;
+    const parent = current.parentElement;
+    // 手機碎片匣會依寬度重排，方向鍵須跟著實際欄數移動。
+    const columns = parent?.classList.contains('is-compact')
+      ? getComputedStyle(parent).gridTemplateColumns.split(' ').length
+      : parent?.classList.contains('piece-tray') ? this.scattered().columns : this.columns();
     const delta: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
     if (!(event.key in delta) && event.key !== 'Home' && event.key !== 'End') return;
     event.preventDefault();
-    const current = event.currentTarget as HTMLElement;
     const cells = Array.from(current.parentElement?.children ?? []);
     const index = cells.indexOf(current);
     if (index < 0) return;
-    // 備選區保留已放置的空位，方向鍵依實際格位移動，不能把空位壓縮成另一個棋盤。
+    // 依畫面上的格位移動，桌面版略過已歸位的空位。
     const step = event.key === 'End' ? -1 : event.key === 'Home' ? 1 : delta[event.key];
     let next = event.key === 'Home' ? 0 : event.key === 'End' ? cells.length - 1 : index + step;
     while (next >= 0 && next < cells.length) {

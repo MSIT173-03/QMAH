@@ -58,6 +58,8 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         var artifacts = await db.Artifacts
             .AsNoTracking()
             .Where(artifact => artifact.IsActive && artifact.PrimaryImagePath != "")
+            .Where(artifact => modeCode != "STRIP_RESTORE" || artifact.Category.Code == "PAINTING")
+            .Where(artifact => modeCode != "ARTIFACT_PUZZLE" || artifact.Category.Code != "PAINTING")
             .OrderBy(artifact => artifact.Id)
             .Select(artifact => new ArtifactMaterialView(
                 artifact.Id,
@@ -77,9 +79,10 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         if (artifacts.Count == 0)
             return EconomyResult<MiniGameStartView>.Conflict("目前沒有符合此玩法且具有圖片的啟用文物。");
 
+        if (mode.Code == "DETAIL_LOCATOR") artifacts = artifacts.Where(item => { var size = scrollPaintingEligibility.ImageDimensions(item.PrimaryImagePath); return size.Width > 0 && size.Height > 0; }).ToList();
         var isDetailLocator = string.Equals(mode.Code, "DETAIL_LOCATOR", StringComparison.OrdinalIgnoreCase);
         if (isDetailLocator && artifacts.Count < 4)
-            return EconomyResult<MiniGameStartView>.Conflict("局部辨識至少需要四件啟用中的文物，才能提供四個答案選項。");
+            return EconomyResult<MiniGameStartView>.Conflict("局部辨識至少需要四件具有圖片的啟用文物，才能完成一輪定位。");
 
         var configuredPoolSize = ReadConfigInt(mode.ConfigJson, "poolSize") ?? 1;
         var minimumPoolSize = string.Equals(mode.Code, "MEMORY_MATCH", StringComparison.OrdinalIgnoreCase)
@@ -89,20 +92,9 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         ArtifactMaterialView selected;
         if (isDetailLocator)
         {
-            // 選項優先取自同類、同時期館藏，令辨識依據落在局部紋飾而非跨類別猜題。
-            selected = artifacts[Random.Shared.Next(artifacts.Count)];
-            var distractors = artifacts
-                .Where(item => item.Id != selected.Id)
-                .OrderByDescending(item =>
-                    (item.CategoryId == selected.CategoryId ? 2 : 0)
-                    + (item.EraBucketId == selected.EraBucketId ? 1 : 0))
-                .ThenBy(_ => Random.Shared.Next())
-                .Take(3)
-                .ToList();
-            pool = distractors
-                .Append(selected)
-                .OrderBy(_ => Random.Shared.Next())
-                .ToList();
+            // 每件各定位一處細節；素材池保存出題順序，無需存放額外題目資料。
+            pool = artifacts.OrderBy(_ => Random.Shared.Next()).Take(4).ToList();
+            selected = pool[0];
         }
         else
         {
@@ -122,7 +114,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             ArtifactId = selected.Id,
             ArtifactPoolJson = JsonSerializer.Serialize(pool.Select(item => item.Id)),
             Difficulty = ReadConfigString(mode.ConfigJson, "difficulty") ?? "NORMAL",
-            Seed = "v3-" + Guid.NewGuid().ToString("N"),
+            Seed = (isDetailLocator ? "v4-" : "v3-") + Guid.NewGuid().ToString("N"),
             ConfigJson = mode.ConfigJson,
             Status = "STARTED",
             StartedAt = now
@@ -175,21 +167,29 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
     {
         if (rawScore is < 0 or > 100)
             return EconomyResult<MiniGameCompleteView>.Invalid("rawScore 必須介於 0 至 100；分數由伺服器重新驗證。");
+        JsonDocument? parsedResult = null;
         if (!string.IsNullOrWhiteSpace(rawResultJson))
         {
             if (rawResultJson.Length > 4000)
                 return EconomyResult<MiniGameCompleteView>.Invalid("rawResultJson 不可超過 4000 個字元。");
             try
             {
-                using var parsed = JsonDocument.Parse(rawResultJson);
-                if (parsed.RootElement.ValueKind != JsonValueKind.Object)
+                parsedResult = JsonDocument.Parse(rawResultJson);
+                if (parsedResult.RootElement.ValueKind != JsonValueKind.Object)
+                {
+                    parsedResult.Dispose();
                     return EconomyResult<MiniGameCompleteView>.Invalid("rawResultJson 必須是 JSON 物件。");
+                }
             }
             catch (JsonException)
             {
                 return EconomyResult<MiniGameCompleteView>.Invalid("rawResultJson 不是有效的 JSON。");
             }
         }
+
+        // 同一份結果供版本、盤面與輔助評分使用，重送仍沿用既有結算。
+        using var resultDocument = parsedResult;
+        var result = resultDocument?.RootElement ?? default;
 
         await using var transaction = await db.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
@@ -216,18 +216,21 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             return EconomyResult<MiniGameCompleteView>.Conflict("這個 Attempt 目前不可完成。");
 
         var mode = attempt.GameModeDefinition;
-        if (attempt.Seed.StartsWith("v3-", StringComparison.Ordinal))
+        if (attempt.Seed.StartsWith("v3-", StringComparison.Ordinal)
+            && (result.ValueKind != JsonValueKind.Object
+                || !TryGetInt(result, "scoringVersion", out var version)
+                || version != 3 && !(mode.Code == "DETAIL_LOCATOR" && version == 4)))
+            return EconomyResult<MiniGameCompleteView>.Invalid("本局需要目前版本的評分資料，請重新整理後再送出。");
+        var locatorSizes = new Dictionary<Guid, (int Width, int Height)>();
+        if (mode.Code == "DETAIL_LOCATOR" && TryGetInt(result, "scoringVersion", out var locatorVersion) && locatorVersion == 4)
         {
-            try
-            {
-                using var submitted = JsonDocument.Parse(rawResultJson ?? "{}");
-                if (submitted.RootElement.ValueKind != JsonValueKind.Object
-                    || !TryGetInt(submitted.RootElement, "scoringVersion", out var version) || version != 3)
-                    return EconomyResult<MiniGameCompleteView>.Invalid("本局需要目前版本的評分資料，請重新整理後再送出。");
-            }
-            catch (JsonException) { return EconomyResult<MiniGameCompleteView>.Invalid("遊戲結果格式無效，請保留進度後重新送出。"); }
+            if (!TryReadArtifactPool(attempt.ArtifactPoolJson, out var locatorPool))
+                return EconomyResult<MiniGameCompleteView>.Invalid("本輪文物素材池資料無效。");
+            var images = await db.Artifacts.AsNoTracking().Where(item => locatorPool.Contains(item.Id))
+                .Select(item => new { item.Id, item.PrimaryImagePath }).ToListAsync(cancellationToken);
+            foreach (var image in images) locatorSizes[image.Id] = scrollPaintingEligibility.ImageDimensions(image.PrimaryImagePath);
         }
-        if (!TryCalculateVerifiedScore(attempt, mode, rawScore, rawResultJson, out var verifiedRawScore, out var scoreError))
+        if (!TryCalculateVerifiedScore(attempt, mode, rawScore, result, locatorSizes, out var verifiedRawScore, out var scoreError))
             return EconomyResult<MiniGameCompleteView>.Invalid(scoreError!);
         rawScore = verifiedRawScore;
         if (mode.GradeBThreshold < 0
@@ -241,8 +244,6 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         var normalizedScore = rawScore;
         if (mode.Code is "ARTIFACT_PUZZLE" or "STRIP_RESTORE")
         {
-            using var resultDocument = JsonDocument.Parse(rawResultJson!);
-            var result = resultDocument.RootElement;
             var pieces = mode.Code == "ARTIFACT_PUZZLE" ? PuzzlePieceCount : RestorePieceCount;
             var wallSeconds = Math.Max(0, (DateTime.UtcNow - attempt.StartedAt).TotalSeconds);
             if (TryGetInt(result, "scoringVersion", out var scoringVersion) && scoringVersion is 2 or 3)
@@ -264,13 +265,13 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
 
         if (mode.Code is "MEMORY_MATCH" or "DETAIL_LOCATOR")
         {
-            using var resultDocument = JsonDocument.Parse(rawResultJson!);
-            var result = resultDocument.RootElement;
-            if (TryGetInt(result, "scoringVersion", out var scoringVersion) && scoringVersion == 3)
+            if (TryGetInt(result, "scoringVersion", out var scoringVersion)
+                && (scoringVersion == 3 || mode.Code == "DETAIL_LOCATOR" && scoringVersion == 4))
             {
-                var units = mode.Code == "MEMORY_MATCH" && TryReadArtifactPool(attempt.ArtifactPoolJson, out var pool)
-                    ? Math.Min(pool.Count, StandardMemoryPairCount) : 1;
-                if (!TryGetInt(result, "hintsUsed", out var hints) || hints < 0 || hints > (mode.Code == "MEMORY_MATCH" ? units : 2)
+                var units = TryReadArtifactPool(attempt.ArtifactPoolJson, out var pool)
+                    ? mode.Code == "MEMORY_MATCH" ? Math.Min(pool.Count, StandardMemoryPairCount) : scoringVersion == 4 ? pool.Count : 1
+                    : 1;
+                if (!TryGetInt(result, "hintsUsed", out var hints) || hints < 0 || hints > (mode.Code == "MEMORY_MATCH" || scoringVersion == 4 ? units : 2)
                     || !TryGetInt(result, "autoPlaced", out var assisted) || assisted < 0 || assisted > units)
                     return EconomyResult<MiniGameCompleteView>.Invalid("求救紀錄無效，請保留進度並重新送出。");
                 normalizedScore = MiniGamePlacementScoring.CalculateAssistance(rawScore, units, hints, assisted, mode.Code == "DETAIL_LOCATOR" ? 10 : 3, mode.GradeSThreshold);
@@ -460,7 +461,9 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         try
         {
             using var document = JsonDocument.Parse(json);
-            return document.RootElement.TryGetProperty(propertyName, out var value)
+            return document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty(propertyName, out var value)
+                && value.ValueKind == JsonValueKind.Number
                 && value.TryGetInt32(out var parsed)
                 ? parsed
                 : null;
@@ -478,7 +481,8 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         try
         {
             using var document = JsonDocument.Parse(json);
-            return document.RootElement.TryGetProperty(propertyName, out var value)
+            return document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty(propertyName, out var value)
                 && value.ValueKind == JsonValueKind.String
                 ? value.GetString()
                 : null;
@@ -493,84 +497,76 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         MiniGameAttempt attempt,
         GameModeDefinition mode,
         int submittedScore,
-        string? rawResultJson,
+        JsonElement result,
+        IReadOnlyDictionary<Guid, (int Width, int Height)> locatorSizes,
         out int verifiedScore,
         out string? error)
     {
         // ponytail: 只驗證最終盤面，先堵住客戶端直接改分數的缺口；不記錄操作序列。
         verifiedScore = 0;
         error = null;
-        if (string.IsNullOrWhiteSpace(rawResultJson))
+        if (result.ValueKind != JsonValueKind.Object)
         {
-            error = "rawResultJson 為必要欄位，請傳送完成後的遊戲盤面。";
+            error = "rawResultJson 必須是 JSON 物件。";
             return false;
         }
 
-        try
+        if (!TryGetString(result, "modeCode", out var resultMode)
+            || !string.Equals(resultMode, mode.Code, StringComparison.OrdinalIgnoreCase))
         {
-            using var document = JsonDocument.Parse(rawResultJson);
-            var result = document.RootElement;
-            if (result.ValueKind != JsonValueKind.Object)
-            {
-                error = "rawResultJson 必須是 JSON 物件。";
-                return false;
-            }
-
-            if (!TryGetString(result, "modeCode", out var resultMode)
-                || !string.Equals(resultMode, mode.Code, StringComparison.OrdinalIgnoreCase))
-            {
-                error = "遊戲結果的 modeCode 與 Attempt 不一致。";
-                return false;
-            }
-
-            if (attempt.ArtifactId is not Guid artifactId
-                || !TryGetGuid(result, "artifactId", out var resultArtifactId)
-                || resultArtifactId != artifactId)
-            {
-                error = "遊戲結果的 artifactId 與 Attempt 不一致。";
-                return false;
-            }
-
-            if (!TryReadArtifactPool(attempt.ArtifactPoolJson, out var artifactPool)
-                || !artifactPool.Contains(artifactId))
-            {
-                error = "Attempt 的文物素材池資料無效。";
-                return false;
-            }
-
-            var calculatedScore = mode.Code switch
-            {
-                "DETAIL_LOCATOR" => CalculateLocatorScore(result, artifactPool, artifactId, out error),
-                "MEMORY_MATCH" => CalculateMemoryScore(result, artifactPool.Count, out error),
-                "ARTIFACT_PUZZLE" => CalculateOrderScore(result, "puzzleOrder", PuzzlePieceCount, out error),
-                "STRIP_RESTORE" => CalculateOrderScore(result, "restoreOrder", RestorePieceCount, out error),
-                _ => InvalidScore("目前沒有這個 Mini Game 模式的結果驗證規則。", out error)
-            };
-            if (calculatedScore < 0)
-                return false;
-            if (submittedScore != calculatedScore)
-            {
-                error = $"rawScore 與伺服器計算結果不一致（應為 {calculatedScore}）。";
-                return false;
-            }
-
-            verifiedScore = calculatedScore;
-            return true;
-        }
-        catch (JsonException)
-        {
-            error = "rawResultJson 不是有效的遊戲結果。";
+            error = "遊戲結果的 modeCode 與 Attempt 不一致。";
             return false;
         }
+
+        if (attempt.ArtifactId is not Guid artifactId
+            || !TryGetGuid(result, "artifactId", out var resultArtifactId)
+            || resultArtifactId != artifactId)
+        {
+            error = "遊戲結果的 artifactId 與 Attempt 不一致。";
+            return false;
+        }
+
+        if (!TryReadArtifactPool(attempt.ArtifactPoolJson, out var artifactPool)
+            || !artifactPool.Contains(artifactId))
+        {
+            error = "Attempt 的文物素材池資料無效。";
+            return false;
+        }
+
+        var calculatedScore = mode.Code switch
+        {
+            "DETAIL_LOCATOR" => CalculateLocatorScore(result, artifactPool, artifactId, attempt.Seed, locatorSizes, out error),
+            "MEMORY_MATCH" => CalculateMemoryScore(result, artifactPool.Count, out error),
+            "ARTIFACT_PUZZLE" => CalculateOrderScore(result, "puzzleOrder", PuzzlePieceCount, out error),
+            "STRIP_RESTORE" => CalculateOrderScore(result, "restoreOrder", RestorePieceCount, out error),
+            _ => InvalidScore("目前沒有這個 Mini Game 模式的結果驗證規則。", out error)
+        };
+        if (calculatedScore < 0)
+            return false;
+        if (submittedScore != calculatedScore)
+        {
+            error = $"rawScore 與伺服器計算結果不一致（應為 {calculatedScore}）。";
+            return false;
+        }
+
+        verifiedScore = calculatedScore;
+        return true;
     }
 
     private static int CalculateLocatorScore(
         JsonElement result,
         IReadOnlyCollection<Guid> artifactPool,
         Guid artifactId,
+        string seed,
+        IReadOnlyDictionary<Guid, (int Width, int Height)> locatorSizes,
         out string? error)
     {
         error = null;
+        if (TryGetInt(result, "scoringVersion", out var version) && version == 4)
+            return MiniGameDetailLocatorScoring.Calculate(result, artifactPool, seed, locatorSizes, out error);
+        if (seed.StartsWith("v4-", StringComparison.Ordinal))
+            return InvalidScore("這輪局部辨識必須使用原圖定位，請重新載入遊戲。", out error);
+        // 已送出但等待重試的舊版結果仍可完成，不將新題目降回四選一。
         if (!TryGetGuid(result, "locatorChoice", out var choice) || !artifactPool.Contains(choice))
             return InvalidScore("locatorChoice 必須是素材池中的文物。", out error);
         return choice == artifactId ? 100 : 25;

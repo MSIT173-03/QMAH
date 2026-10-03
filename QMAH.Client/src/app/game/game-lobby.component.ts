@@ -5,20 +5,20 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, Subscription, finalize } from 'rxjs';
 
-import { ApiPage, CreateGameRoomRequest, GamePlayer, GameRoomDetails, GameRoomFilterStatus, GameRoomListItem, GameRoomQuery, GameRoomSort, JoinGameRoomRequest } from './game.models';
+import { ApiPage, CreateGameRoomRequest, GameRoomDetails, GameRoomFilterStatus, GameRoomListItem, GameRoomQuery, GameRoomSort, JoinGameRoomRequest } from './game.models';
 import { GameNavigationComponent } from './game-navigation.component';
-import { GameRewardMeterComponent } from './game-reward-meter.component';
+import { GameLobbyRoomBoardComponent } from './game-lobby-room-board.component';
+import { GameLobbyRoomDetailDialogComponent } from './game-lobby-room-detail-dialog.component';
 import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameService } from './game.service';
 import { MeApiService } from '../core/services/me-api';
-import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 import { GameFocusMode } from '../core/services/game-focus-mode';
 
 type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, GameNavigationComponent, GameRoomQrDialogComponent, QmahIconComponent, GameRewardMeterComponent],
+  imports: [FormsModule, RouterLink, GameNavigationComponent, GameLobbyRoomBoardComponent, GameLobbyRoomDetailDialogComponent, GameRoomQrDialogComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })
@@ -39,13 +39,14 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   selectedRoomId = '';
   demoRoom: GameRoomDetails | null = null;
   roomSort: GameRoomSort = 'RECOMMENDED';
+  roomCodeSearch = '';
+  roomCodeFilter = '';
   loading = false;
   refreshing = false;
   detailLoading = false;
   creating = false;
   joining = false;
   showCreateForm = false;
-  showFilter = false;
   error = '';
   success = '';
   errorTitle = '公開房間目前無法取得';
@@ -57,7 +58,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   heroCollapsed = false;
   qrRoom: Pick<GameRoomListItem, 'id' | 'roomCode'> | null = null;
   @ViewChild('createDialog') private createDialog?: ElementRef<HTMLElement>;
-  @ViewChild('roomDialog') private roomDialog?: ElementRef<HTMLElement>;
+  @ViewChild(GameLobbyRoomDetailDialogComponent) private roomDialog?: GameLobbyRoomDetailDialogComponent;
   private createDialogTrigger: HTMLElement | null = null;
   private qrDialogTrigger: HTMLElement | null = null;
 
@@ -71,10 +72,12 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.routeSubscription = this.route.queryParamMap.subscribe((params) => {
       this.isDemo = this.route.snapshot.routeConfig?.path === 'game/demo';
       // 演練入口已由路由守衛完成管理員驗證，避免重複等待另一份會員快照。
-      this.isRehearsal = params.get('test') === '1';
+      this.isRehearsal = this.route.snapshot.routeConfig?.path === 'game/test' || params.get('test') === '1';
       const requestedStatus = params.get('status') as LobbyStatus | null;
       this.roomStatus = requestedStatus === 'PLAYING' || requestedStatus === 'COMPLETED' || requestedStatus === 'RECENT' ? requestedStatus : 'WAITING';
       const requestedSort = params.get('sort') as GameRoomSort | null;
+      this.roomCodeFilter = (params.get('roomCode') ?? '').trim().toUpperCase();
+      this.roomCodeSearch = this.roomCodeFilter;
       this.roomSort = requestedSort === 'NEARLY_FULL' || requestedSort === 'NEWEST' || requestedSort === 'OPEN_SLOTS' ? requestedSort : 'RECOMMENDED';
       this.loadRooms(Math.max(1, Number(params.get('page')) || 1), false);
     });
@@ -88,7 +91,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
 
   loadRooms(page = 1, syncUrl = true): void {
     if (syncUrl) {
-      this.router.navigate([], { relativeTo: this.route, queryParams: { status: this.roomStatus === 'WAITING' ? null : this.roomStatus, sort: this.roomSort === 'RECOMMENDED' ? null : this.roomSort, page: page === 1 ? null : page, test: this.isRehearsal ? '1' : null } });
+      this.router.navigate([], { relativeTo: this.route, queryParams: { status: this.roomStatus === 'WAITING' ? null : this.roomStatus, sort: this.roomSort === 'RECOMMENDED' ? null : this.roomSort, page: page === 1 ? null : page, test: this.isRehearsal ? '1' : null, roomCode: this.roomCodeFilter || null } });
       return;
     }
     this.errorTitle = '公開房間目前無法取得'; this.error = ''; this.selectedRoomId = ''; this.demoRoom = null;
@@ -100,9 +103,18 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.run(this.roomListRequest(page), (rooms) => (this.rooms = rooms));
   }
 
+  searchRoomCode(): void {
+    this.roomCodeFilter = this.roomCodeSearch.trim().toUpperCase();
+    this.loadRooms(1);
+  }
+
+  clearRoomCode(): void {
+    this.roomCodeSearch = ''; this.roomCodeFilter = ''; this.loadRooms(1);
+  }
+
   setRoomStatus(status: LobbyStatus): void {
     if (this.roomStatus === status) return;
-    this.roomStatus = status; this.showFilter = false; this.game.clearState(); this.loadRooms();
+    this.roomStatus = status; this.game.clearState(); this.loadRooms();
   }
 
   isRoomStatusActive(status: LobbyStatus): boolean { return this.roomStatus === status; }
@@ -133,7 +145,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     }
 
     this.listRequest?.unsubscribe();
-    this.listRequest = this.roomListRequest(page).pipe(finalize(() => {
+    this.listRequest = this.roomListRequest(page, true).pipe(finalize(() => {
       this.refreshing = false;
       this.changeDetector.markForCheck();
     })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -149,14 +161,11 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   }
 
   selectRoom(room: GameRoomListItem): void {
+    if (this.isRehearsal) { this.enterRoom(room.id); return; }
     this.selectedRoomId = room.id; this.errorTitle = '目前無法載入房間資訊'; this.success = ''; this.error = '';
-    this.focusDialog(() => this.roomDialog);
+    this.focusDialog(() => this.roomDialog?.focusTarget());
     if (this.isDemo) {
       this.demoRoom = this.makeDemoDetail(room);
-      return;
-    }
-    if (this.isRehearsal) {
-      this.demoRoom = this.makeRehearsalDetail(room);
       return;
     }
     this.detailRequest?.unsubscribe();
@@ -176,6 +185,10 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
   }
 
   currentRoom(): GameRoomDetails | null { return this.demoRoom ?? this.game.currentRoom(); }
+  canJoinSelectedRoom(): boolean {
+    const room = this.currentRoom();
+    return !!room && this.game.canJoinRoom(room);
+  }
   clearSelection(): void {
     this.detailRequest?.unsubscribe();
     const roomId = this.selectedRoomId;
@@ -211,7 +224,7 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     this.createDialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.showCreateForm = true;
     this.success = '';
-    this.focusDialog(() => this.createDialog);
+    this.focusDialog(() => this.createDialog?.nativeElement);
   }
 
   createRoom(): void {
@@ -224,7 +237,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       return;
     }
     this.creating = true; this.errorTitle = '房間建立失敗'; this.error = ''; this.success = '';
-    this.game.createRoom(this.createForm).pipe(finalize(() => {
+    const request: Observable<Pick<GameRoomDetails, 'id'>> = this.isRehearsal ? this.game.createRehearsalRoom(this.createForm) : this.game.createRoom(this.createForm);
+    request.pipe(finalize(() => {
       this.creating = false;
       this.changeDetector.markForCheck();
     })).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -316,14 +330,13 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     if (this.qrRoom) { this.closeRoomQr(); return; }
     if (this.showCreateForm) { this.toggleCreateForm(); return; }
     if (this.selectedRoomId) { this.clearSelection(); return; }
-    if (this.showFilter) this.showFilter = false;
   }
 
   @HostListener('document:keydown.tab', ['$event'])
   keepDialogFocus(event: Event): void {
     if (!(event instanceof KeyboardEvent)) return;
     if (this.qrRoom) return;
-    const dialog = this.showCreateForm ? this.createDialog?.nativeElement : this.selectedRoomId ? this.roomDialog?.nativeElement : null;
+    const dialog = this.showCreateForm ? this.createDialog?.nativeElement : this.selectedRoomId ? this.roomDialog?.focusTarget() : null;
     if (!dialog) return;
     const controls = Array.from(dialog.querySelectorAll<HTMLElement>(
       'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -339,29 +352,15 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     }
   }
 
-  openSlots(room: { players: unknown[]; maxPlayers: number }): number[] { return Array.from({ length: Math.max(0, room.maxPlayers - room.players.length) }, (_, index) => index); }
-  occupancy(room: GameRoomListItem): number { return Math.round((room.playerCount / room.maxPlayers) * 100); }
-  statusText(status: GameRoomListItem['status']): string { return { WAITING: '等待中', PLAYING: '進行中', COMPLETED: '最近完成', CANCELLED: '已取消' }[status]; }
   roomListDescription(): string {
     const subject = this.roomStatus === 'PLAYING'
       ? '正在進行的房間'
       : this.roomStatus === 'RECENT'
         ? '最近完成的房間'
         : '目前可加入的房間';
-    return `${subject}，${this.roomSortText()}排列；點選房間開啟詳情`;
+    return this.isRehearsal ? '點一張房卡直接入桌，重新整理可換一批房間設定。' : `${subject}，${this.roomSortText()}排列，點選房間開啟詳情`;
   }
   roomSortText(): string { return { RECOMMENDED: '推薦', NEARLY_FULL: '快滿', NEWEST: '最新', OPEN_SLOTS: '空位最多' }[this.roomSort]; }
-  playerStateText(player: GameRoomDetails['players'][number]): string {
-    return player.role === 'HOST' ? '房主' : player.isReady ? '已準備' : '等待中';
-  }
-  categoryText(code: string | null): string {
-    return { CERAMIC: '陶瓷', JADE: '玉器', PAINTING: '書畫', METAL: '金屬' }[code?.toUpperCase() ?? ''] ?? code ?? '不限';
-  }
-  eraText(code: string | null): string {
-    // 年代名稱由資料庫 metadata 為主；這裡保留既有 fallback，讓新增的日本江戶年代在 API 暫時不可用時仍可讀。
-    return { TANG: '唐代', SONG: '宋代', MING: '明代', QING: '清代', JAPAN_EDO: '日本江戶時代', MODERN: '近現代' }[code?.toUpperCase() ?? ''] ?? code ?? '不限';
-  }
-  pageNumbers(): number[] { if (!this.rooms) return []; const start = Math.max(1, Math.min(this.rooms.page - 1, this.rooms.totalPages - 2)); return Array.from({ length: Math.min(3, this.rooms.totalPages) }, (_, index) => start + index); }
 
   private listRequest?: Subscription;
   private detailRequest?: Subscription;
@@ -383,9 +382,9 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     });
   }
 
-  private focusDialog(getDialog: () => ElementRef<HTMLElement> | undefined): void {
+  private focusDialog(getDialog: () => HTMLElement | undefined): void {
     setTimeout(() => {
-      const dialog = getDialog()?.nativeElement;
+      const dialog = getDialog();
       if (!dialog) return;
       const firstControl = dialog.querySelector<HTMLElement>(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
@@ -412,37 +411,15 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     if (room) this.demoRoom = this.makeDemoDetail(room);
   }
 
-  private roomListRequest(page: number): Observable<ApiPage<GameRoomListItem>> {
+  private roomListRequest(page: number, refresh = false): Observable<ApiPage<GameRoomListItem>> {
     const query: GameRoomQuery = {
+      roomCode: this.roomCodeFilter || undefined,
       status: this.roomStatus === 'RECENT' ? 'COMPLETED' : this.roomStatus,
       sort: this.roomSort,
       page,
       pageSize: this.pageSize
     };
-    return this.isRehearsal ? this.game.getRehearsalRooms(query) : this.game.getRooms(query);
-  }
-
-  private makeRehearsalDetail(room: GameRoomListItem): GameRoomDetails {
-    const names = ['青銅觀察員', '釉色記錄員', '紋樣尋線者', '器形校對員', '展櫃巡看員', '細節捕手', '圖錄翻頁手', '印記辨讀者', '材質筆記員', '席位候補員'];
-    const players: GamePlayer[] = Array.from({ length: Math.min(room.playerCount, room.maxPlayers) }, (_, index) => ({
-      id: `test-player-${index + 1}`,
-      displayName: names[index % names.length],
-      role: index === 0 ? 'HOST' : 'PLAYER',
-      isReady: index % 3 !== 1,
-      seatNo: index + 1,
-      connectionStatus: 'CONNECTED'
-    }));
-    return {
-      ...room,
-      answerSeconds: 90,
-      votingSeconds: 60,
-      currentRoundNo: 0,
-      currentRoundId: null,
-      currentPlayerId: null,
-      players,
-      startedAt: null,
-      endedAt: null
-    };
+    return this.isRehearsal ? this.game.getRehearsalRooms(query, refresh) : this.game.getRooms(query);
   }
 
   private demoPage(page: number): ApiPage<GameRoomListItem> {
@@ -454,7 +431,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       const status: GameRoomListItem['status'] = index % 7 === 0 ? 'PLAYING' : index % 11 === 0 ? 'COMPLETED' : 'WAITING';
       const createdAt = new Date(Date.UTC(2026, 8, 10, 3, 0, 0) - index * 5 * 60_000).toISOString();
       return { id: `demo-${index + 1}`, roomCode: this.demoRoomCode(index), status, visibility: index % 9 === 0 ? 'PRIVATE' : 'PUBLIC', maxPlayers, totalRounds: index % 3 + 3, playerCount, categoryFilterCode: index % 2 ? 'CERAMIC' : 'PAINTING', eraBucketFilterCode: index % 2 ? 'QING' : 'MING', createdAt };
-    }).filter((room) => this.roomStatus === 'RECENT' ? room.status === 'COMPLETED' : room.status === this.roomStatus)
+    }).filter((room) => (this.roomStatus === 'RECENT' ? room.status === 'COMPLETED' : room.status === this.roomStatus)
+      && room.roomCode.toUpperCase().startsWith(this.roomCodeFilter))
       .sort((left, right) => this.compareDemoRooms(left, right));
     const totalPages = Math.max(1, Math.ceil(all.length / this.pageSize)); const safePage = Math.min(page, totalPages);
     return { items: all.slice((safePage - 1) * this.pageSize, safePage * this.pageSize), page: safePage, pageSize: this.pageSize, totalCount: all.length, totalPages };

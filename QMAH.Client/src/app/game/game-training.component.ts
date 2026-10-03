@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnD
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MeApiService } from '../core/services/me-api';
 import { HttpErrorResponse } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, finalize, forkJoin, interval, of, Subscription } from 'rxjs';
 
 import {
@@ -11,32 +11,19 @@ import {
   MiniGameMode,
   MiniGameStart
 } from './game.models';
-import { GameScrollBoardComponent } from './game-scroll-board.component';
-import { GamePlacementBoardComponent } from './game-placement-board.component';
-import { GameDetailClueComponent } from './game-detail-clue.component';
 import { GameService } from './game.service';
 import { GameFontsDirective } from './game-fonts.directive';
-import { GameRewardMeterComponent } from './game-reward-meter.component';
+import { GameTrainingModePickerComponent } from './game-training-mode-picker.component';
+import { GameTrainingPlaySheetComponent, TrainingCatalogHint, TrainingMemoryCard } from './game-training-play-sheet.component';
+import { GameTrainingResultComponent } from './game-training-result.component';
+import { GameScrollPanelComponent } from './game-scroll-panel.component';
 import { CatalogService } from '../services/catalog-service';
 import { GameFocusMode } from '../core/services/game-focus-mode';
 import { GameNavigationComponent } from './game-navigation.component';
 
+import { LocatorAnswer, locatorCorrect, validLocatorAnswer } from './game-detail-locator';
+
 type TrainingPhase = 'list' | 'playing' | 'complete';
-
-interface MemoryCard {
-  id: string;
-  artifactId: string;
-  name: string;
-  image: string;
-  revealed: boolean;
-  matched: boolean;
-}
-
-interface CatalogHint {
-  artifactId: string;
-  name: string;
-  description: string | null;
-}
 
 interface TrainingSessionSnapshot {
   ownerId?: string;
@@ -49,7 +36,9 @@ interface TrainingSessionSnapshot {
   puzzleSelection: number | null;
   restoreOrder: number[];
   restoreSelection: number | null;
-  locatorChoice: string | null;
+  locatorChoice?: string | null;
+  locatorAnswers?: LocatorAnswer[];
+  locatorAssistedIds?: string[];
   matchedCardIds: string[];
   moves?: number;
   hintsUsed?: number;
@@ -61,7 +50,7 @@ interface TrainingSessionSnapshot {
 @Component({
   selector: 'app-game-training',
   hostDirectives: [GameFontsDirective],
-  imports: [RouterLink, GameNavigationComponent, GameScrollBoardComponent, GamePlacementBoardComponent, GameDetailClueComponent, GameRewardMeterComponent],
+  imports: [RouterLink, GameNavigationComponent, GameTrainingModePickerComponent, GameTrainingPlaySheetComponent, GameTrainingResultComponent, GameScrollPanelComponent],
   styleUrl: './game-training.component.scss',
   templateUrl: './game-training.component.html',
 })
@@ -77,24 +66,20 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   private readonly catalog = inject(CatalogService);
   private readonly changeDetector = inject(ChangeDetectorRef);
   modes: MiniGameMode[] = [];
-  selectedModeCode = '';
-  readonly previewMemory = Array.from({ length: 16 }, (_, index) => [2, 5, 10, 13].includes(index));
-  readonly previewPuzzle = Array.from({ length: 25 });
-  readonly previewScroll = Array.from({ length: 15 });
+  selectedModeCode = inject(ActivatedRoute).snapshot.queryParamMap.get('game') ?? '';
   paused = false;
   confirmLeaving = false;
   helpRequested = false;
   private readonly hintedArtifacts = new Set<string>();
   locatorExcludedIds: string[] = [];
-  @ViewChild(GamePlacementBoardComponent) private placement?: GamePlacementBoardComponent;
-  @ViewChild(GameScrollBoardComponent) private scrollBoard?: GameScrollBoardComponent;
-  get helpUnits(): number { return this.attempt?.modeCode === 'MEMORY_MATCH' ? this.memoryPairCount : this.attempt?.modeCode === 'ARTIFACT_PUZZLE' ? 25 : this.attempt?.modeCode === 'STRIP_RESTORE' ? 15 : 1; }
+  @ViewChild(GameTrainingPlaySheetComponent) protected playSheet?: GameTrainingPlaySheetComponent;
+  get helpUnits(): number { return this.attempt?.modeCode === 'MEMORY_MATCH' ? this.memoryPairCount : this.attempt?.modeCode === 'ARTIFACT_PUZZLE' ? 25 : this.attempt?.modeCode === 'STRIP_RESTORE' ? 15 : this.locatorOptions.length; }
   get helpRemaining(): number {
     switch (this.attempt?.modeCode) {
       case 'MEMORY_MATCH': return this.memoryPairCount - this.memoryMatched;
       case 'ARTIFACT_PUZZLE': return this.puzzleOrder.filter((piece, slot) => piece !== slot).length;
       case 'STRIP_RESTORE': return this.restoreOrder.filter((piece, slot) => piece !== slot).length;
-      default: return 1;
+      default: return this.locatorOptions.length - this.locatorAnswers.length - this.locatorAssistedIds.length;
     }
   }
   get helpPenalty(): number {
@@ -105,27 +90,27 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   get hintPenalty(): number { return this.attempt?.modeCode === 'DETAIL_LOCATOR' ? 10 : 3; }
   get canAskForHelp(): boolean {
     if (this.phase !== 'playing' || this.completing || this.pendingResult || this.memoryBusy || this.helpRemaining <= 0) return false;
-    if (this.attempt?.modeCode === 'DETAIL_LOCATOR' && this.autoPlaced > 0) return false;
-    if (this.attempt?.modeCode === 'ARTIFACT_PUZZLE') return !!this.placement?.ready() && !this.imageFailed('puzzle');
-    if (this.attempt?.modeCode === 'STRIP_RESTORE') return !!this.scrollBoard?.ready() && this.scrollBoard.layout().eligible;
+    if (this.attempt?.modeCode === 'ARTIFACT_PUZZLE') return !!this.playSheet?.puzzleReady() && !this.imageFailed('puzzle');
+    if (this.attempt?.modeCode === 'STRIP_RESTORE') return !!this.playSheet?.scrollReady() && this.playSheet.scrollEligible();
     return !this.imageUnavailable;
   }
-  get canRequestHint(): boolean {
-    return this.canAskForHelp && (this.attempt?.modeCode !== 'DETAIL_LOCATOR'
-      || this.locatorExcludedIds.length < Math.max(0, this.locatorOptions.length - 2));
+  get locatorHintArtifactId(): string | null {
+    const artifact = this.locatorOptions[this.locatorAnswers.length];
+    return artifact && this.hintedArtifacts.has(artifact.artifactId) ? artifact.artifactId : null;
   }
+  get canRequestHint(): boolean { return this.canAskForHelp && (this.attempt?.modeCode !== 'DETAIL_LOCATOR' || !this.locatorHintArtifactId); }
   useHelp(automatic: boolean): void {
     if (!this.canAskForHelp || (!automatic && !this.canRequestHint)) return;
     this.closePause();
     this.resumeFromPause();
     if (this.attempt?.modeCode === 'ARTIFACT_PUZZLE') {
-      if (automatic) this.placement?.autoFinish(); else this.placement?.requestHint();
+      this.playSheet?.requestPuzzleHelp(automatic);
     } else if (this.attempt?.modeCode === 'STRIP_RESTORE') {
-      if (automatic) this.scrollBoard?.finishWithHelp(); else this.scrollBoard?.requestHint();
+      this.playSheet?.requestScrollHelp(automatic);
     } else if (this.attempt?.modeCode === 'MEMORY_MATCH') {
       if (automatic) {
         this.autoPlaced += this.helpRemaining;
-        this.memoryCards.forEach(card => { card.matched = true; card.revealed = true; });
+        this.memoryCards = this.memoryCards.map(card => ({ ...card, matched: true, revealed: true }));
         this.memoryMatched = this.memoryPairCount;
         this.memoryOpen = [];
         this.memoryFeedback = '剩餘配對已代完成，正在送出結果。';
@@ -139,15 +124,17 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
         const positions = this.memoryCards.flatMap((candidate, index) => candidate.artifactId === card.artifactId ? [index + 1] : []);
         this.memoryFeedback = `第 ${positions[0]} 張與第 ${positions[1]} 張是同一件文物。這組提示扣 3 分，重看不再扣分。`;
       }
-    } else if (automatic && this.attempt) {
-      this.autoPlaced += this.helpRemaining;
-      this.locatorChoice = this.attempt.artifactId;
-    } else {
-      const wrong = this.locatorOptions.find(option => option.artifactId !== this.attempt?.artifactId && !this.locatorExcludedIds.includes(option.artifactId));
-      if (!wrong) return;
-      this.locatorExcludedIds = [...this.locatorExcludedIds, wrong.artifactId];
-      if (this.locatorChoice === wrong.artifactId) this.locatorChoice = null;
-      this.hintsUsed++;
+    } else if (this.attempt) {
+      if (automatic) {
+        const remaining = this.locatorOptions.slice(this.locatorAnswers.length);
+        this.autoPlaced += remaining.length;
+        this.locatorAssistedIds = remaining.map(artifact => artifact.artifactId);
+      } else {
+        const artifact = this.locatorOptions[this.locatorAnswers.length];
+        if (!artifact || this.hintedArtifacts.has(artifact.artifactId)) return;
+        this.hintedArtifacts.add(artifact.artifactId);
+        this.hintsUsed++;
+      }
     }
     this.persistSessionState();
     this.changeDetector.markForCheck();
@@ -158,18 +145,6 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   @ViewChild('pauseDialog') private pauseDialog?: ElementRef<HTMLDialogElement>;
   get selectedMode(): MiniGameMode | null { return this.modes.find(mode => mode.code === this.selectedModeCode) ?? this.modes[0] ?? null; }
   selectMode(code: string): void { if (!this.starting) this.selectedModeCode = code; }
-  modeMechanic(code: string): string { return ({ DETAIL_LOCATOR: '觀察局部 · 選出文物', MEMORY_MATCH: '4×4 翻牌 · 找出八組', ARTIFACT_PUZZLE: '5×5 拼圖 · 接回原貌', STRIP_RESTORE: '十五格書畫 · 復位筆墨' } as Record<string, string>)[code] ?? '館藏挑戰'; }
-  previewImage(code: string): string { return code === 'STRIP_RESTORE' ? '/media/catalog/painting/南購畫00001600000/display.jpg' : code === 'ARTIFACT_PUZZLE' ? '/media/catalog/painting/中畫00015500000/display.jpg' : '/images/login/real/cloisonne-tripod-incense-burner.jpg'; }
-  navigateModes(event: KeyboardEvent): void {
-    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key) || this.starting) return;
-    const buttons = Array.from((event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('button'));
-    const index = buttons.indexOf(event.target as HTMLButtonElement);
-    if (index < 0) return;
-    event.preventDefault();
-    const next = (index + (['ArrowUp', 'ArrowLeft'].includes(event.key) ? -1 : 1) + buttons.length) % buttons.length;
-    this.selectMode(this.modes[next].code);
-    buttons[next].focus();
-  }
   openPause(): void {
     if (this.phase !== 'playing' || this.paused || this.completing || !this.pauseDialog || document.querySelector('dialog[open]')) return;
     this.paused = true;
@@ -226,15 +201,17 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   authRequired = false;
   imageUnavailable = false;
   error = '';
-  locatorChoice: string | null = null;
+  locatorAnswers: LocatorAnswer[] = [];
+  locatorAssistedIds: string[] = [];
   puzzleOrder: number[] = [];
   puzzleSelection: number | null = null;
   restoreOrder: number[] = [];
   restoreSelection: number | null = null;
-  memoryCards: MemoryCard[] = [];
-  memoryHints: CatalogHint[] = [];
-  private currentArtifactHintState: CatalogHint | null = null;
+  memoryCards: TrainingMemoryCard[] = [];
+  memoryHints: TrainingCatalogHint[] = [];
+  private currentArtifactHintState: TrainingCatalogHint | null = null;
   private readonly failedImages = new Set<string>();
+  failedImageKeys: string[] = [];
   memoryOpen: number[] = [];
   memoryMatched = 0;
   memoryBusy = false;
@@ -280,17 +257,20 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   retryImages(): void {
     this.failedImages.clear();
+    this.syncFailedImageKeys();
     this.imageUnavailable = false;
   }
 
   setScrollAvailability(available: boolean): void {
     if (available) this.failedImages.delete('restore');
     else this.failedImages.add('restore');
+    this.syncFailedImageKeys();
   }
 
   setPuzzleAvailability(available: boolean): void {
     if (available) this.failedImages.delete('puzzle');
     else this.failedImages.add('puzzle');
+    this.syncFailedImageKeys();
     this.changeDetector.markForCheck();
   }
 
@@ -299,13 +279,14 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   get resultArtifacts(): MiniGameArtifact[] {
     if (!this.attempt) return [];
+    if (this.attempt.modeCode === 'DETAIL_LOCATOR') return this.locatorOptions;
     if (this.attempt.modeCode !== 'MEMORY_MATCH') return [this.fallbackArtifact(this.attempt)];
     const ids = new Set(this.memoryCards.map(card => card.artifactId));
     return this.attempt.artifactPool.filter(artifact => ids.has(artifact.artifactId));
   }
 
   get resultTitle(): string {
-    if (this.attempt?.modeCode === 'DETAIL_LOCATOR') return this.complete?.rawScore === 100 ? '找到了，就是這件文物！' : '差一點，再觀察一次';
+    if (this.attempt?.modeCode === 'DETAIL_LOCATOR') return this.complete?.rawScore === 100 ? '四處細節，都找到了！' : '本輪定位完成，再挑戰一次吧';
     if (this.attempt?.modeCode === 'MEMORY_MATCH') return `${this.memoryPairCount} 組文物，都找到了`;
     return this.attempt?.modeCode === 'STRIP_RESTORE' ? '筆墨接上了，書畫復位完成' : '最後一塊到位，拼圖完成';
   }
@@ -325,6 +306,10 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.focusMode.exit();
+    this.stopAttemptTimers();
+  }
+
+  protected stopAttemptTimers(): void {
     if (this.memoryTimer !== null) clearTimeout(this.memoryTimer);
     this.elapsedTimer?.unsubscribe();
   }
@@ -340,12 +325,12 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   get memoryPairCount(): number { return Math.floor(this.memoryCards.length / 2); }
 
-  get currentArtifactHint(): CatalogHint | null { return this.currentArtifactHintState; }
+  get currentArtifactHint(): TrainingCatalogHint | null { return this.currentArtifactHintState; }
 
   get progressPercent(): number {
     if (!this.attempt) return 0;
     switch (this.attempt.modeCode) {
-      case 'DETAIL_LOCATOR': return this.locatorChoice ? 100 : 0;
+      case 'DETAIL_LOCATOR': return this.locatorOptions.length ? Math.round((this.locatorAnswers.length + this.locatorAssistedIds.length) / this.locatorOptions.length * 100) : 0;
       case 'MEMORY_MATCH': return this.memoryPairCount ? Math.round((this.memoryMatched / this.memoryPairCount) * 100) : 0;
       case 'ARTIFACT_PUZZLE': return this.orderScore(this.puzzleOrder);
       default: return this.orderScore(this.restoreOrder);
@@ -362,23 +347,27 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
 
   markImageFailed(key: string): void {
     this.failedImages.add(key);
+    this.syncFailedImageKeys();
     this.changeDetector.markForCheck();
   }
 
+  private syncFailedImageKeys(): void { this.failedImageKeys = [...this.failedImages]; }
+
   get canComplete(): boolean {
     if (!this.attempt || this.phase !== 'playing') return false;
+    if (this.pendingResult) return true;
     switch (this.attempt.modeCode) {
-      case 'DETAIL_LOCATOR': return this.locatorChoice !== null && !this.imageUnavailable;
+      case 'DETAIL_LOCATOR': return this.locatorOptions.length === 4 && this.locatorAnswers.length + this.locatorAssistedIds.length === 4 && !this.imageUnavailable;
       case 'MEMORY_MATCH': return this.memoryPairCount > 0 && this.memoryMatched === this.memoryPairCount;
-      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) && !!this.placement?.ready() && !this.imageFailed('puzzle');
-      default: return this.isSolved(this.restoreOrder) && !!this.scrollBoard?.ready() && this.scrollBoard.layout().eligible && !this.imageFailed('restore');
+      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) && !!this.playSheet?.puzzleReady() && !this.imageFailed('puzzle');
+      default: return this.isSolved(this.restoreOrder) && !!this.playSheet?.scrollReady() && this.playSheet.scrollEligible() && !this.imageFailed('restore');
     }
   }
 
   get progressText(): string {
     if (!this.attempt) return '';
     switch (this.attempt.modeCode) {
-      case 'DETAIL_LOCATOR': return this.locatorChoice ? '已選定答案' : '尚未選答案';
+      case 'DETAIL_LOCATOR': return `定位 ${this.locatorAnswers.length} / ${this.locatorOptions.length} 件文物`;
       case 'MEMORY_MATCH': return `已配對 ${this.memoryMatched} / ${this.memoryPairCount}`;
       case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) ? '拼圖完成' : '拖曳碎片到目標格，可依完成比例調整';
       default: return this.isSolved(this.restoreOrder) ? '長卷完成' : '拖曳十五段書畫，接回筆墨';
@@ -399,12 +388,13 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     });
   }
 
-  chooseLocator(artifactId: string): void {
-    if (this.phase !== 'playing' || this.paused || this.resultFrozen || this.completing || this.imageUnavailable || this.locatorExcludedIds.includes(artifactId)) return;
-    this.locatorChoice = artifactId;
+  locateDetail(answer: LocatorAnswer): void {
+    if (this.phase !== 'playing' || this.paused || this.resultFrozen || this.completing || this.imageUnavailable || !validLocatorAnswer(answer)) return;
+    if (this.locatorOptions[this.locatorAnswers.length]?.artifactId !== answer.artifactId) return;
+    this.locatorAnswers = [...this.locatorAnswers, answer];
+    this.moves++;
     this.persistSessionState();
   }
-
   updatePlacement(kind: 'puzzle' | 'restore', order: number[]): void {
     if (this.phase !== 'playing' || this.paused || this.completing) return;
     if (kind === 'puzzle') this.puzzleOrder = order;
@@ -421,6 +411,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     const card = this.memoryCards[index];
     if (!card || card.revealed || card.matched) return;
     card.revealed = true;
+    this.memoryCards = [...this.memoryCards];
     this.memoryFeedback = '再翻一張，找出相同文物。';
     this.memoryOpen = [...this.memoryOpen, index];
     if (this.memoryOpen.length < 2) { this.persistSessionState(); return; }
@@ -444,6 +435,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
         second.revealed = false;
         this.memoryFeedback = '這兩張不同，記住位置後再試一次。';
       }
+      this.memoryCards = [...this.memoryCards];
       this.memoryOpen = [];
       this.memoryBusy = false;
       this.memoryTimer = null;
@@ -518,7 +510,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   pieceOffsetX(piece: number): number { return -(piece % 5) * 100; }
   pieceOffsetY(piece: number): number { return -Math.floor(piece / 5) * 100; }
 
-  private beginAttempt(attempt: MiniGameStart): void {
+  protected beginAttempt(attempt: MiniGameStart): void {
     this.pendingResult = null;
     this.puzzleHintRegion = null;
     this.restoreHintRegion = null;
@@ -536,7 +528,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.loadCatalogHints(attempt);
     this.persistSessionState();
     this.scrollToTop();
-    requestAnimationFrame(() => this.hostElement.nativeElement.querySelector<HTMLElement>('.game-board button:not(:disabled), .pause-trigger')?.focus({ preventScroll: true }));
+    this.focusInitialBoard();
   }
 
   private restoreSessionState(): void {
@@ -587,32 +579,44 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       this.restoreOrder = raw.restoreOrder;
       this.restoreSelection = this.validSlot(raw.restoreSelection, 15);
     }
-    if (this.attempt.modeCode === 'DETAIL_LOCATOR') this.locatorChoice = this.locatorOptions.some(option => option.artifactId === raw.locatorChoice) ? raw.locatorChoice : null;
+    if (this.attempt.modeCode === 'DETAIL_LOCATOR' && Array.isArray(raw.locatorAnswers)) {
+      for (const answer of raw.locatorAnswers.slice(0, 4)) {
+        if (!validLocatorAnswer(answer) || answer.artifactId !== this.locatorOptions[this.locatorAnswers.length]?.artifactId) break;
+        this.locatorAnswers.push(answer);
+      }
+    }
+    if (this.attempt.modeCode === 'DETAIL_LOCATOR' && Array.isArray(raw.locatorAssistedIds)) {
+      const expected = this.locatorOptions.slice(this.locatorAnswers.length).map(artifact => artifact.artifactId);
+      if (raw.locatorAssistedIds.length === expected.length && raw.locatorAssistedIds.every((id, index) => id === expected[index])) this.locatorAssistedIds = [...raw.locatorAssistedIds];
+    }
     if (this.attempt.modeCode === 'MEMORY_MATCH') {
       const matched = new Set(Array.isArray(raw.matchedCardIds) ? raw.matchedCardIds : []);
-      this.memoryCards.forEach((card) => {
+      this.memoryCards = this.memoryCards.map((card) => {
         const pair = this.memoryCards.filter(candidate => candidate.artifactId === card.artifactId);
-        card.matched = pair.length === 2 && pair.every(candidate => matched.has(candidate.id));
+        return { ...card, matched: pair.length === 2 && pair.every(candidate => matched.has(candidate.id)) };
       });
       this.memoryMatched = this.memoryCards.filter((card) => card.matched).length / 2;
     }
     this.loadCatalogHints(this.attempt);
   }
 
-  private persistSessionState(): void {
+  protected persistSessionState(): void {
     if (this.phase !== 'playing' || !this.attempt) return;
+    const placementState = this.playSheet?.placementState();
+    const scrollState = this.playSheet?.scrollState();
     const snapshot: TrainingSessionSnapshot = {
       ownerId: this.ownerId,
       pendingResult: this.pendingResult ?? undefined,
-      puzzleHintRegion: this.placement ? this.placement.hintRegion() : this.puzzleHintRegion,
-      restoreHintRegion: this.scrollBoard ? this.scrollBoard.hintRegion : this.restoreHintRegion,
+      puzzleHintRegion: placementState ? placementState.hintRegion : this.puzzleHintRegion,
+      restoreHintRegion: scrollState ? scrollState.hintRegion : this.restoreHintRegion,
       attempt: this.attempt,
       elapsedSeconds: this.elapsedSeconds,
       puzzleOrder: this.puzzleOrder,
-      puzzleSelection: this.placement ? this.placement.selected() : this.puzzleSelection,
+      puzzleSelection: placementState ? placementState.selection : this.puzzleSelection,
       restoreOrder: this.restoreOrder,
-      restoreSelection: this.scrollBoard ? this.scrollBoard.selected : this.restoreSelection,
-      locatorChoice: this.locatorChoice,
+      restoreSelection: scrollState ? scrollState.selection : this.restoreSelection,
+      locatorAnswers: this.locatorAnswers,
+      locatorAssistedIds: this.locatorAssistedIds,
       matchedCardIds: this.memoryCards.filter((card) => card.matched).map((card) => card.id),
       moves: this.moves,
       hintsUsed: this.hintsUsed,
@@ -623,7 +627,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     try { sessionStorage.setItem('qmah-mini-game-session-v1', JSON.stringify(snapshot)); } catch { /* private mode/storage quota: gameplay remains usable */ }
   }
 
-  private clearSessionState(): void {
+  protected clearSessionState(): void {
     try { sessionStorage.removeItem('qmah-mini-game-session-v1'); } catch { /* storage is optional */ }
   }
 
@@ -655,7 +659,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     return typeof slot === 'number' && Number.isInteger(slot) && slot >= 0 && slot < length ? slot : null;
   }
 
-  private loadCatalogHints(attempt: MiniGameStart): void {
+  protected loadCatalogHints(attempt: MiniGameStart): void {
     if (attempt.modeCode === 'DETAIL_LOCATOR') return;
     const fallback = this.fallbackArtifact(attempt);
     const pool = attempt.artifactPool.length ? attempt.artifactPool : [fallback];
@@ -685,7 +689,9 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.hintedArtifacts.clear();
     this.locatorExcludedIds = [];
     this.failedImages.clear();
-    this.locatorChoice = null;
+    this.syncFailedImageKeys();
+    this.locatorAnswers = [];
+    this.locatorAssistedIds = [];
     this.puzzleOrder = Array<number>(25).fill(-1);
     this.puzzleSelection = null;
     this.restoreOrder = Array<number>(15).fill(-1);
@@ -711,7 +717,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   private score(): number {
     if (!this.attempt) return 0;
     switch (this.attempt.modeCode) {
-      case 'DETAIL_LOCATOR': return this.locatorChoice === this.attempt.artifactId ? 100 : 25;
+      case 'DETAIL_LOCATOR': return this.locatorOptions.length ? Math.round((this.locatorAnswers.filter(answer => locatorCorrect(this.attempt!.seed, answer)).length + this.locatorAssistedIds.length) / this.locatorOptions.length * 100) : 0;
       case 'MEMORY_MATCH': return this.memoryPairCount ? Math.round((this.memoryMatched / this.memoryPairCount) * 100) : 0;
       case 'ARTIFACT_PUZZLE': return this.orderScore(this.puzzleOrder);
       default: return this.orderScore(this.restoreOrder);
@@ -723,12 +729,13 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       modeCode: this.attempt?.modeCode,
       artifactId: this.attempt?.artifactId,
       rawScore,
-      scoringVersion: 3,
+      scoringVersion: this.attempt?.modeCode === 'DETAIL_LOCATOR' ? 4 : 3,
       elapsedSeconds: this.elapsedSeconds,
       moves: this.moves,
       hintsUsed: this.hintsUsed,
       autoPlaced: this.autoPlaced,
-      locatorChoice: this.locatorChoice,
+      locatorAnswers: this.locatorAnswers,
+      locatorAssistedIds: this.locatorAssistedIds,
       puzzleOrder: this.puzzleOrder,
       restoreOrder: this.restoreOrder,
       memoryMatched: this.memoryMatched,
@@ -775,7 +782,11 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.error = this.authRequired ? '請先登入會員帳號，再開始或繼續小遊戲。' : this.game.errorMessage(error);
   }
 
-  private scrollToTop(): void {
+  protected focusInitialBoard(): void {
+    requestAnimationFrame(() => this.hostElement.nativeElement.querySelector<HTMLElement>('.game-board button:not(:disabled), .pause-trigger')?.focus({ preventScroll: true }));
+  }
+
+  protected scrollToTop(): void {
     // ui-integration: 狀態由列表切到遊玩或結算時，將視線帶回遊戲標題，避免沿用列表捲動位置造成流程斷裂。
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
   }

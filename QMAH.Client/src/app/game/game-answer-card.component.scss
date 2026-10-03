@@ -1,0 +1,117 @@
+:host {
+  --qmah-ink: var(--game-card-ink);
+  --qmah-muted: var(--game-card-muted);
+  --qmah-surface-elevated: var(--game-card-ground);
+  --qmah-game-action: var(--game-card-action);
+  --qmah-border: var(--game-card-line);
+  --qmah-accent: #805a23;
+  display: block;
+  width: 180px;
+  min-width: 0;
+}
+
+:host(.mobile-answer-card) {
+  flex: 0 0 220px;
+  width: 220px;
+  height: 280px;
+}
+
+.answer-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 240px;
+  height: clamp(240px, 27vh, 258px);
+  border: 1px solid var(--qmah-border);
+  border-block-start: 4px solid var(--answer-accent, var(--qmah-jade));
+  border-radius: 11px;
+  padding: 13px;
+  color: var(--qmah-ink);
+  background: var(--qmah-surface-elevated);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transform: rotate(var(--card-tilt, 0deg));
+  transform-origin: 50% 92%;
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+.answer-card.mobile-answer-card { height: 100%; min-height: 100%; }
+
+.answer-card.is-anonymous {
+  border-color: #a5a59e;
+  border-block-start-color: #90918d;
+  color: #343632;
+  background: #e5e4de;
+  animation: card-shuffle 420ms cubic-bezier(.18, .78, .24, 1) both;
+  animation-delay: calc(var(--card-order, 0) * 45ms);
+}
+
+.answer-card.is-anonymous .answer-card-top,
+.answer-card.is-anonymous .answer-card-top app-qmah-icon { color: #676963; }
+.answer-card.is-anonymous .answer-text,
+.answer-card.is-anonymous .mobile-card-meta { color: #343632; }
+.answer-card.is-anonymous .mobile-card-meta span { color: #5b5e56; }
+
+.answer-card:not(.is-anonymous)[data-answer-type='FACTUAL_REASONING'] { --answer-accent: #2c654d; }
+.answer-card:not(.is-anonymous)[data-answer-type='PLAUSIBLE_FICTION'] { --answer-accent: #72511f; }
+.answer-card:not(.is-anonymous)[data-answer-type='CREATIVE_TALE'] { --answer-accent: #853e35; }
+.answer-card:hover,
+.answer-card:focus-visible { transform: translateY(-5px) rotate(var(--card-tilt, 0deg)); }
+
+.answer-card-top {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--qmah-game-action);
+  font-size: var(--qmah-type-label-size);
+}
+.answer-card-top app-qmah-icon { flex: none; width: 20px; height: 20px; color: var(--answer-accent); }
+.answer-card-top strong { min-width: 0; overflow-wrap: anywhere; }
+.revealed-author { min-width: 0; color: var(--qmah-ink); overflow-wrap: anywhere; }
+.revealed-author b { display: inline-block; margin-inline-start: 5px; border-radius: 999px; padding: 2px 6px; color: var(--qmah-accent-content); background: var(--qmah-accent); font-size: 10px; }
+.vote-total { flex: none; color: var(--qmah-game-action); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.answer-text { min-width: 0; margin: 12px 0; color: var(--qmah-ink); font-size: var(--qmah-type-label-size); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
+.answer-text--clamped { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 6; }
+// 紙面紋理來自 Mihaela Hinayon，採 CC BY 3.0，保留原圖
+// 來源：https://www.transparenttextures.com/natural-paper.html
+.revealed-answer { border-color: color-mix(in srgb, var(--answer-owner-color, #376d62) 46%, var(--qmah-border)); border-block-start-color: var(--answer-owner-color, #376d62); background: url('/assets/game/natural-paper.png') repeat, color-mix(in srgb, var(--answer-owner-color, #376d62) 13%, var(--qmah-surface-elevated)); }
+.revealed-answer .answer-card-top { align-items: flex-start; justify-content: space-between; gap: 7px; font-size: 13px; }
+.revealed-answer .answer-text { margin-block-start: 10px; }
+.revealed-answer.is-winner { border-color: color-mix(in srgb, var(--qmah-accent) 66%, var(--qmah-border)); border-block-start-color: var(--qmah-accent); }
+
+.mobile-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; font-size: 14px; }
+.mobile-card-meta span { font-variant-numeric: tabular-nums; }
+.mobile-answer-card .answer-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 8; overflow: hidden; font-size: 16px; line-height: 1.7; }
+
+:host-context(.answer-table.is-compact) .answer-card { height: clamp(240px, 25vh, 248px); padding: 11px; }
+:host-context(.answer-table.is-compact) .answer-text { margin-block: 9px; }
+:host-context(.answer-table.is-compact) .mobile-answer-card { min-height: var(--table-answer-height, 240px); height: var(--table-answer-height, 280px); padding: 16px; }
+
+@keyframes card-shuffle {
+  0% { opacity: 0; transform: translate3d(0, -34px, 0) rotate(-8deg) scale(.94); }
+  70% { opacity: 1; transform: translate3d(0, 3px, 0) rotate(1deg) scale(1.01); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0) scale(1); }
+}
+
+@media (max-width: 1000px) {
+  :host(.mobile-answer-card) { flex: 0 0 100%; width: 100%; min-height: 250px; height: clamp(250px, 38dvh, 320px); }
+  .mobile-answer-card { transform: none; scroll-snap-align: center; scroll-snap-stop: always; }
+  .mobile-answer-card:hover, .mobile-answer-card:focus-visible { transform: none; }
+  .mobile-card-meta { color: var(--answer-accent); font-size: 13px; font-weight: 800; }
+  .mobile-card-meta span { color: var(--qmah-muted); font-size: 13px; }
+}
+
+@media (max-width: 600px) {
+  :host:not(.mobile-answer-card) { display: none; }
+  .answer-card { width: 180px; min-height: 240px; height: 244px; padding: 11px; transform: rotate(0deg); }
+  .answer-card-top { font-size: 12px; }
+  .answer-text { font-size: 13px; line-height: 1.6; }
+  .answer-card:hover, .answer-card:focus-visible { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .answer-card.is-anonymous { animation: none; }
+  .answer-card, .answer-card:hover, .answer-card:focus-visible { transform: none; transition: none; }
+}

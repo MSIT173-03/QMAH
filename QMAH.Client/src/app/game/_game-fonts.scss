@@ -4,6 +4,12 @@
   --qmah-font-sans: 'Chiron GoRound TC Variable', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
   --qmah-font-serif: var(--qmah-font-sans);
   font-family: var(--qmah-font-sans);
+  line-break: strict;
+  overflow-wrap: break-word;
+}
+
+:where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) :where(h1, h2, h3, h4) {
+  text-wrap: balance;
 }
 html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
   --game-title-outline: #173c29;

@@ -16,14 +16,7 @@ public sealed class GameDailyRewardService(QmahDbContext db)
     {
         var start = DateTime.UtcNow.AddHours(8).Date.AddHours(-8);
         var end = start.AddDays(1);
-        var ledger = db.PointTransactions.AsNoTracking().Where(item => item.UserId == userId
-            && item.CreatedAt >= start && item.CreatedAt < end);
-        var rewardDate = DateOnly.FromDateTime(start.AddHours(8));
-        var unlocked = await db.DailyMemberActivities.AsNoTracking().AnyAsync(item => item.UserId == userId
-            && item.ActivityType == BreakthroughType && item.ActivityDate == rewardDate, cancellationToken);
-        var earned = await ledger.Where(item => item.Amount > 0
-            && (item.ReferenceType == "MINIGAME_REWARD" || item.ReferenceType == "MAIN_GAME_REWARD"))
-            .SumAsync(item => (int?)item.Amount, cancellationToken) ?? 0;
+        var (unlocked, earned) = await GetPointBudgetAsync(userId, start, cancellationToken);
         var multiplayer = await db.GamePlayers.AsNoTracking().AnyAsync(item => item.UserId == userId
             && !item.Room.IsShowcase && item.Room.Status == "COMPLETED" && item.Room.CompletedAt >= start && item.Room.CompletedAt < end, cancellationToken);
         var modes = await db.MiniGameAttempts.AsNoTracking().Where(item => item.UserId == userId
@@ -50,7 +43,28 @@ public sealed class GameDailyRewardService(QmahDbContext db)
 
     // 呼叫端已有 Serializable 結算交易，預算查詢與點數入帳必須在同一筆交易內。
     public async Task<int> LimitPointsAsync(Guid userId, int proposed, CancellationToken cancellationToken)
-        => Math.Min(Math.Max(0, proposed), (await GetStatusAsync(userId, cancellationToken)).Remaining);
+    {
+        if (proposed <= 0) return 0;
+
+        // 結算只需要剩餘點數，不必重查突破資格、多人紀錄和圖鑑完成度。
+        var start = DateTime.UtcNow.AddHours(8).Date.AddHours(-8);
+        var (unlocked, earned) = await GetPointBudgetAsync(userId, start, cancellationToken);
+        return Math.Min(proposed, Math.Max(0, BaseLimit + (unlocked ? BonusLimit : 0) - earned));
+    }
+
+    private async Task<(bool Unlocked, int Earned)> GetPointBudgetAsync(
+        Guid userId, DateTime start, CancellationToken cancellationToken)
+    {
+        var end = start.AddDays(1);
+        var rewardDate = DateOnly.FromDateTime(start.AddHours(8));
+        var unlocked = await db.DailyMemberActivities.AsNoTracking().AnyAsync(item => item.UserId == userId
+            && item.ActivityType == BreakthroughType && item.ActivityDate == rewardDate, cancellationToken);
+        var earned = await db.PointTransactions.AsNoTracking().Where(item => item.UserId == userId
+            && item.CreatedAt >= start && item.CreatedAt < end && item.Amount > 0
+            && (item.ReferenceType == "MINIGAME_REWARD" || item.ReferenceType == "MAIN_GAME_REWARD"))
+            .SumAsync(item => (int?)item.Amount, cancellationToken) ?? 0;
+        return (unlocked, earned);
+    }
 
     public async Task<MiniGameRewardStatusView> UnlockAsync(Guid userId, CancellationToken cancellationToken = default)
         => await db.Database.CreateExecutionStrategy().ExecuteAsync(async token =>

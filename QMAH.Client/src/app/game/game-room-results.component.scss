@@ -1,23 +1,34 @@
-.paper-card { padding: clamp(20px, 3vw, 34px); border-radius: var(--qmah-radius-panel); background: var(--qmah-surface); }
-.results-highlight { margin-block: var(--qmah-space-5); padding-block: var(--qmah-space-4); border-block: 1px solid var(--qmah-accent); }
+@use './game-ui' as ui;
+:host { display:block; height:100%; min-height:0; }
+.results-frame { @include ui.paper-panel; @include ui.reading-surface; display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden; }
+.paper-card { @include ui.reading-surface; --muted:var(--game-card-muted); --jade:var(--game-card-action); --line:var(--game-card-line); --bronze:#805a23; padding:clamp(16px,2vw,24px); }
+.results-highlight { margin:0; padding:12px 18px; border:6px solid transparent; border-image:var(--game-secondary-image) 5 fill / 1 / 0 stretch; }
 .results-highlight h3 { margin: 0 0 12px; color: var(--qmah-jade); font-size: var(--qmah-type-body-sm-size); }
 .results-highlight p { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin: 8px 0; }
 .results-highlight strong { color: var(--qmah-ink); font: 700 clamp(24px, 3vw, 34px)/1.3 var(--qmah-font-serif); overflow-wrap: anywhere; }
 .results-highlight span { color: var(--qmah-muted); font-variant-numeric: tabular-nums; }
 .results-layout { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: var(--qmah-space-6); align-items: start; }
 .results-layout .round-history { margin-top: 0; }
+.personal-result { padding:14px 18px; border:6px solid transparent; border-image:var(--game-secondary-image) 5 fill / 1 / 0 stretch; }
+.personal-result h3 { margin:0 0 12px; font-size:18px; }
+.personal-result dl { display:flex; flex-wrap:wrap; gap:12px 32px; margin:0; }
+.personal-result dt { color:var(--muted); font-size:13px; }
+.personal-result dd { margin:4px 0 0; font-size:24px; font-weight:800; }
+.leaderboard li.is-self { box-shadow:inset 3px 0 var(--jade); }
+.round-history > summary { min-height:44px; align-content:center; cursor:pointer; font-size:18px; font-weight:800; }
 .reward-status { color: var(--qmah-jade); }
 .results-panel button:focus-visible, .results-panel summary:focus-visible, .results-panel a:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 4px; }
-.results-panel { animation: results-reveal 240ms ease-out; }
+.results-panel { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; animation:results-reveal 240ms ease-out; }
+.results-panel > :not(.personal-result):not(.results-highlight) { grid-column:1/-1; }
 @keyframes results-reveal { from { opacity: .5; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 1000px) { .results-layout { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .results-panel { animation: none; } }
 .eyebrow { margin: 0; color: var(--qmah-danger); font-size: var(--qmah-type-meta-size); font-weight: 800; letter-spacing: .16em; line-height: var(--qmah-type-meta-leading); }
-.results-panel > h2 { margin: 7px 0 10px; font: 600 var(--qmah-type-page-title-size)/var(--qmah-type-heading-leading) var(--qmah-font-serif); }
-.section-copy { margin: 0 0 26px; color: var(--muted); }
+.results-panel > h2 { margin:0; font:700 30px/1.3 var(--qmah-font-serif); }
+.section-copy { margin:0; color:var(--muted); }
 .leaderboard-wrap h3, .round-history h3, .reward-panel h3 { margin: 0 0 12px; font: 600 20px/1.3 var(--qmah-font-serif); }
 .leaderboard { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
-.leaderboard li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; column-gap: 11px; padding: var(--qmah-space-3); border: 1px solid var(--qmah-border); background: var(--qmah-surface-elevated); }
+.leaderboard li { display:grid; grid-template-columns:36px minmax(0,1fr) auto; align-items:center; column-gap:11px; padding:var(--qmah-space-3); border:6px solid transparent; border-image:url('/assets/game/kenney-rpg-paper.png') 8 fill / 1 / 0 stretch; box-shadow:0 3px 6px #3023161a; }
 .leaderboard li.is-first { border-color: var(--bronze); background: color-mix(in srgb, var(--qmah-accent) 14%, var(--qmah-surface-elevated)); }
 .rank-number { grid-row: span 2; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--line); color: var(--bronze); font-weight: 800; }
 .leaderboard li.is-first .rank-number { border-color: var(--bronze); background: var(--bronze); color: var(--qmah-accent-content); }
@@ -39,18 +50,24 @@
 .result-answers li > div p { margin: 3px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--qmah-type-body-sm-size); }
 .result-answers li > b { color: var(--jade); font-size: var(--qmah-type-label-size); white-space: nowrap; }
 .empty-copy { margin: 10px 0; color: var(--muted); font-size: var(--qmah-type-body-sm-size); }
-.reward-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 28px; padding: 18px; background: var(--qmah-surface-muted); }
+.reward-panel { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px; background:var(--qmah-surface-muted); }
+.reward-panel > div { flex:1; }
 .reward-panel h3 { margin-bottom: 3px; }
 .reward-panel p { margin: 0; color: var(--muted); font-size: var(--qmah-type-label-size); }
-.reward-panel button { flex: none; min-height: var(--qmah-control-height); padding: 8px var(--qmah-button-padding-x); border: 0; border-radius: var(--qmah-radius-control); background: var(--qmah-primary); color: var(--qmah-primary-content); font-size: var(--qmah-type-label-size); font-weight: 700; }
+.reward-panel button { @include ui.button; flex:none; }
 .reward-panel button:disabled { cursor: not-allowed; opacity: .55; }
 /* ui-integration: 結算提示改用完整邊界加內嵌色線，保留語意層級但避免厚重側標籤搶走內容焦點。 */
 .reward-receipt { display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 10px; padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--qmah-primary) 20%, var(--qmah-border)); box-shadow: inset 3px 0 0 var(--qmah-primary); background: color-mix(in srgb, var(--qmah-primary) 8%, var(--qmah-surface-elevated)); color: var(--qmah-primary); font-size: var(--qmah-type-body-sm-size); }
 /* ui-integration: 結算出口採 tertiary action，讓獎勵與排行榜保有主要視覺權重。 */
-.results-back-link { display: inline-flex; min-height: var(--qmah-control-height); align-items: center; margin-top: 18px; color: var(--jade); font-size: var(--qmah-type-label-size); font-weight: 800; text-underline-offset: 4px; }
+.results-back-link { @include ui.button(true); display:inline-flex; align-items:center; text-decoration:none; }
 @media (max-width: 650px) {
+  .results-panel { grid-template-columns:minmax(0,1fr); }
   .paper-card { padding: 20px 17px; }
   .result-answers li { grid-template-columns: 20px minmax(0, 1fr); }
   .result-answers li > b { grid-column: 2; }
   .reward-panel { align-items: flex-start; flex-direction: column; }
 }
+
+// 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
+.section-copy, .result-answers li > div p, .reward-panel p, .empty-copy { @include ui.prose; }
+.leaderboard strong, .round-result summary strong, .result-answers li > div { min-width: 0; overflow-wrap: break-word; }

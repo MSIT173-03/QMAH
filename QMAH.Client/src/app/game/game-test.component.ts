@@ -168,7 +168,7 @@ export class GameTestComponent {
   }
 
   readonly testRooms: TestRoomOption[] = [
-    { id: 'test-room-quick', code: 'A101', name: '快速巡覽', description: '兩回合、短倒數，快速走完各階段。' },
+    { id: 'test-room-quick', code: 'A101', name: '快速巡覽', description: '兩回合、自動走完各階段。' },
     { id: 'test-room-standard', code: 'A103', name: '完整流程', description: '節奏較寬，方便逐步檢查作答、投票、揭曉與結算。' },
     { id: 'test-room-replay', code: 'A102', name: '重播檢查', description: '每次加入都從初始狀態開始，可重複檢查同一條流程。' }
   ];

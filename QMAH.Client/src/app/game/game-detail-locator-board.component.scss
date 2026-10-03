@@ -1,0 +1,31 @@
+@use './game-ui' as ui;
+:host { display: block; width: 100%; min-width: 0; }
+* { box-sizing: border-box; }
+.locator-round { display: grid; gap: 16px; }
+.locator-instruction { text-align: center; }
+.locator-instruction strong { font-size: 20px; }
+.locator-instruction p { margin: 8px 0 0; line-height: 1.6; }
+.locator-instruction p span { display: block; }
+.locator-steps { display: flex; justify-content: center; gap: 12px; padding: 0; margin: 0; list-style: none; }
+.locator-steps li { display: grid; justify-items: center; gap: 4px; min-width: 48px; padding: 4px; border-bottom: 2px solid transparent; font-variant-numeric: tabular-nums; }
+.locator-steps li[aria-current] { border-color: currentColor; font-weight: 700; }
+.locator-steps span { font-size: 12px; }
+.locator-steps .is-done { opacity: .8; }
+.locator-workspace { display: grid; grid-template-columns: minmax(100px, 220px) minmax(0, 1fr); gap: clamp(16px, 4vw, 48px); align-items: center; justify-items: center; }
+figure { margin: 0; min-width: 0; text-align: center; }
+.locator-clue__image { position: relative; width: min(100%, 180px); margin: 0 auto 12px; }
+.locator-clue canvas { display: block; width: 100%; height: auto; border: 6px solid var(--game-card-ground); border-radius: 8px; }
+.locator-crosshair { position: absolute; top: 50%; left: 50%; width: 32px; height: 32px; transform: translate(-50%, -50%); pointer-events: none; }
+.locator-original { position: relative; display: block; width: fit-content; max-width: 100%; margin-inline: auto; padding: 0; border: 0; border-radius: 6px; background: var(--game-card-ground); cursor: crosshair; }
+.locator-original img { display:block; width:auto; max-width:100%; max-height:var(--locator-image-height,min(62dvh,580px)); height:auto; border-radius:6px; }
+.locator-original:disabled { cursor: default; opacity: 1; }
+figcaption { margin-top: 12px; font-size: 14px; line-height: 1.6; }
+figcaption small { display: block; margin-top: 4px; font-size: 12px; }
+.locator-cursor { position: absolute; width: 24px; height: 24px; transform: translate(-50%, -50%); border: 3px solid white; border-radius: 50%; background: #25493480; box-shadow: 0 0 0 2px #273e33; pointer-events: none; }
+.locator-region { position: absolute; width: 50%; height: 50%; border: 3px dashed #fff7e8; background: #2f6b5059; pointer-events: none; }
+.locator-feedback { @include ui.paper-panel; margin: 0; padding: 8px 16px; border-width: 4px; text-align: center; }
+.locator-status { display: grid; justify-items: center; gap: 12px; }
+.locator-status button { @include ui.button(true); }
+button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
+[hidden] { display: none !important; }
+@media (max-width: 600px) { .locator-workspace { grid-template-columns: 1fr; gap: 16px; } .locator-clue__image { width: 104px; } .locator-crosshair { width: 28px; height: 28px; } .locator-original img { max-height: 55dvh; } .locator-source small { max-width: 28ch; margin-inline: auto; } }

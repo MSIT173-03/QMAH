@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
-import { finalize, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
 import {
@@ -63,6 +63,7 @@ export class GameService {
       .set('pageSize', String(this.boundedInteger(query.pageSize, 20, 1, 100)));
     if (query.status) params = params.set('status', query.status);
     if (query.sort) params = params.set('sort', query.sort);
+    if (query.roomCode?.trim()) params = params.set('roomCode', query.roomCode.trim().toUpperCase());
     return this.http.get<ApiPage<GameRoomListItem>>(`${this.apiUrl}/rooms`, { params });
   }
 
@@ -72,6 +73,7 @@ export class GameService {
   }
 
   private readonly rehearsalRooms = new Map<string, GameRoomListItem>();
+  private readonly rehearsalTiming = new Map<string, Pick<CreateGameRoomRequest, 'answerSeconds' | 'votingSeconds'>>();
 
   getRoomPresentation(roomId: string, connectionId: string): Observable<GameRoomPresentation> {
     return this.http.get<GameRoomPresentation>(`${this.apiUrl}/rooms/${roomId}/presentation`, { params: { connectionId } });
@@ -88,12 +90,53 @@ export class GameService {
   disconnectRoomPresentation(roomId: string, connectionId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/rooms/${roomId}/presentation/connections/${connectionId}`);
   }
-  getRehearsalRooms(query: GameRoomQuery = {}): Observable<ApiPage<GameRoomListItem>> {
-    return this.http.get<ApiPage<GameRoomListItem>>(`${this.apiUrl}/rehearsal-rooms`, { params: { ...query } })
-      .pipe(tap(page => page.items.forEach(room => this.rehearsalRooms.set(room.id, room))));
+  getRehearsalRooms(query: GameRoomQuery = {}, refresh = false): Observable<ApiPage<GameRoomListItem>> {
+    const cached = [...this.rehearsalRooms.values()].filter(room => room.id.startsWith('test-room-virtual-'));
+    const source = cached.length && !refresh ? of(cached)
+      : this.http.get<ApiPage<GameRoomListItem>>(`${this.apiUrl}/rehearsal-rooms`, { params: { page: 1, pageSize: 100 } }).pipe(map(page => page.items));
+    return source.pipe(map(remote => {
+        remote.forEach(room => this.rehearsalRooms.set(room.id, room));
+        const prefix = query.roomCode?.trim().toUpperCase() ?? '';
+        const local = [...this.rehearsalRooms.values()].filter(room => room.id.startsWith('test-room-local-')
+          && (!query.status || room.status === query.status) && room.roomCode.startsWith(prefix));
+        const items = [...local, ...remote].filter(room => (!query.status || room.status === query.status) && room.roomCode.startsWith(prefix));
+        if (query.sort === 'NEWEST') items.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+        if (query.sort === 'NEARLY_FULL') items.sort((a, b) => (a.maxPlayers - a.playerCount) - (b.maxPlayers - b.playerCount));
+        if (query.sort === 'OPEN_SLOTS') items.sort((a, b) => (b.maxPlayers - b.playerCount) - (a.maxPlayers - a.playerCount));
+        const pageSize = this.boundedInteger(query.pageSize, 20, 1, 100);
+        const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+        const page = Math.min(this.boundedInteger(query.page, 1, 1, Number.MAX_SAFE_INTEGER), totalPages);
+        return { items: items.slice((page - 1) * pageSize, page * pageSize), page, pageSize, totalCount: items.length, totalPages };
+      }));
   }
   getRehearsalRoom(roomId: string): GameRoomListItem | undefined {
     return this.rehearsalRooms.get(roomId);
+  }
+
+  getRehearsalTiming(roomId: string): Pick<CreateGameRoomRequest, 'answerSeconds' | 'votingSeconds'> {
+    const room = this.rehearsalRooms.get(roomId);
+    return this.rehearsalTiming.get(roomId) ?? { answerSeconds: room?.answerSeconds ?? 180, votingSeconds: room?.votingSeconds ?? 120 };
+  }
+
+  /** 模擬建房只保存在本次瀏覽工作階段，不呼叫正式建房 API。 */
+  createRehearsalRoom(request: CreateGameRoomRequest): Observable<GameRoomListItem> {
+    const normalized = this.normalizeCreateRoomRequest({ ...request, visibility: 'PUBLIC', password: null });
+    const errors = this.validateCreateRoomRequest(normalized);
+    if (normalized.maxPlayers > 6) errors.push('模擬房間最多使用 6 位玩家。');
+    if (errors.length) return this.invalid(errors);
+    const room: GameRoomListItem = {
+      id: `test-room-local-${crypto.randomUUID()}`,
+      roomCode: String(1000 + Math.floor(Math.random() * 9000)),
+      status: 'WAITING', visibility: 'PUBLIC', maxPlayers: normalized.maxPlayers,
+      totalRounds: normalized.totalRounds, playerCount: 1,
+      answerSeconds: normalized.answerSeconds, votingSeconds: normalized.votingSeconds,
+      categoryFilterCode: normalized.categoryFilterCode ?? null,
+      eraBucketFilterCode: normalized.eraBucketFilterCode ?? null,
+      createdAt: new Date().toISOString()
+    };
+    this.rehearsalRooms.set(room.id, room);
+    this.rehearsalTiming.set(room.id, { answerSeconds: normalized.answerSeconds, votingSeconds: normalized.votingSeconds });
+    return of(room);
   }
 
   /** 讀取房間詳細資料並更新目前房間快照。 */
@@ -118,8 +161,8 @@ export class GameService {
       displayName: '玩家',
       maxPlayers: 6,
       totalRounds: 3,
-      answerSeconds: 120,
-      votingSeconds: 60,
+      answerSeconds: 180,
+      votingSeconds: 120,
       categoryFilterCode: null,
       eraBucketFilterCode: null
     };
@@ -233,9 +276,11 @@ export class GameService {
   unlockDailyRewardBreakthrough(): Observable<GameDailyRewardStatus> {
     return this.mutate(() => this.http.post<GameDailyRewardStatus>(`${this.apiUrl}/reward-status/breakthrough`, {}));
   }
-  getAppreciation(filters: { artifactId: string; categoryCode: string; answerType: string; sort: string; page: number }): Observable<ApiPage<AppreciationAnswer>> {
+  getAppreciation(filters: { artifactId: string; categoryCode: string; answerType: string; sort: string; page: number; keyword?: string; eraCode?: string }): Observable<ApiPage<AppreciationAnswer>> {
     let params = new HttpParams().set('sort', filters.sort).set('page', filters.page);
     if (filters.artifactId) params = params.set('artifactId', filters.artifactId);
+    if (filters.keyword?.trim()) params = params.set('keyword', filters.keyword.trim());
+    if (filters.eraCode) params = params.set('eraCode', filters.eraCode);
     if (filters.categoryCode) params = params.set('categoryCode', filters.categoryCode);
     if (filters.answerType) params = params.set('answerType', filters.answerType);
     return this.http.get<ApiPage<AppreciationAnswer>>(`${this.apiUrl}/appreciation`, { params });
@@ -349,11 +394,11 @@ export class GameService {
     if (!Number.isInteger(request.totalRounds) || request.totalRounds < 1 || request.totalRounds > 5) {
       errors.push('回合數必須介於 1 至 5 回合。');
     }
-    if (!Number.isInteger(request.answerSeconds) || request.answerSeconds < 30 || request.answerSeconds > 300) {
-      errors.push('回答時間必須介於 30 至 300 秒。');
+    if (!Number.isInteger(request.answerSeconds) || request.answerSeconds < 120 || request.answerSeconds > 300) {
+      errors.push('作答時間必須介於 120 至 300 秒。');
     }
-    if (!Number.isInteger(request.votingSeconds) || request.votingSeconds < 20 || request.votingSeconds > 180) {
-      errors.push('投票時間必須介於 20 至 180 秒。');
+    if (!Number.isInteger(request.votingSeconds) || request.votingSeconds < 120 || request.votingSeconds > 300) {
+      errors.push('投票時間必須介於 120 至 300 秒。');
     }
     if (request.categoryFilterCode && request.categoryFilterCode.length > 32) {
       errors.push('分類篩選代碼不可超過 32 個字元。');

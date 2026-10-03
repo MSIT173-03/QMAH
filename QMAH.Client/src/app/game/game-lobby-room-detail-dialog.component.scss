@@ -1,0 +1,51 @@
+@use './_game-ui' as ui;
+
+:host { display: contents; }
+
+.notes-page { --qmah-on-dark: var(--qmah-ink); position: fixed; z-index: 71; top: 50%; left: 50%; width: min(720px, calc(100vw - 40px)); max-height: calc(100dvh - 48px); overflow: auto; transform: translate(-50%, -50%); padding: 34px 36px 30px; border-radius: var(--qmah-radius-panel); color: var(--qmah-on-dark); background: var(--jade); border: 1px solid color-mix(in srgb, var(--qmah-on-dark) 42%, transparent); box-shadow: var(--qmah-shadow-dialog); animation: reveal-dialog 180ms ease-out both; }
+.room-notes-heading { position: relative; padding: 0 48px 22px 0; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 28%, transparent); }
+.room-code-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.room-code-label { display: block; margin: 0 0 6px; color: color-mix(in srgb, var(--qmah-on-dark) 76%, transparent); font-size: var(--qmah-type-meta-size); letter-spacing: .06em; line-height: var(--qmah-type-meta-leading); }
+.room-notes-heading h2 { margin: 0; color: var(--qmah-on-dark); font-family: var(--qmah-font-serif); font-size: clamp(28px, 3vw, 38px); font-weight: 700; letter-spacing: -.035em; line-height: 1.25; text-wrap: balance; }
+.room-notes-heading > span { display: inline-block; margin-top: 12px; color: var(--qmah-accent); font-size: var(--qmah-type-label-size); }
+.room-notes-heading span[data-status="PLAYING"] { color: var(--qmah-danger); }
+.room-share-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.detail-close { position: absolute; top: -4px; right: 0; display: inline-grid; place-items: center; width: var(--qmah-control-height); height: var(--qmah-control-height); border: 1px solid color-mix(in srgb, var(--qmah-on-dark) 42%, transparent); border-radius: var(--qmah-radius-control); color: var(--qmah-on-dark); background: transparent; font-size: 24px; line-height: 1; }
+.detail-close:hover { border-color: var(--qmah-accent); color: var(--qmah-accent); }
+.copy-room-code { min-height: var(--qmah-control-height); border: 1px solid color-mix(in srgb, var(--qmah-on-dark) 42%, transparent); border-radius: var(--qmah-radius-control); padding: 7px var(--qmah-space-2); color: var(--qmah-on-dark); background: transparent; font-size: var(--qmah-type-meta-size); font-weight: 800; }
+.copy-room-code:hover { border-color: var(--qmah-accent); color: var(--qmah-accent); }
+.room-record { display: grid; grid-template-columns: 1fr 1fr; margin: 0; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 22%, transparent); }
+.room-record div { padding: 18px 0; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 16%, transparent); }
+.room-record dt { color: color-mix(in srgb, var(--qmah-on-dark) 76%, transparent); font-size: var(--qmah-type-meta-size); line-height: var(--qmah-type-meta-leading); letter-spacing: .06em; }
+.room-record dd { margin: 4px 0 0; color: var(--qmah-on-dark); font-weight: 700; }
+.participant-record { padding: 26px 0; }
+.participant-record header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 28%, transparent); }
+.participant-record h3 { margin: 0 0 10px; color: var(--qmah-on-dark); font-family: var(--qmah-font-serif); font-size: 20px; }
+.participant-record header span { color: color-mix(in srgb, var(--qmah-on-dark) 76%, transparent); font-size: var(--qmah-type-label-size); }
+.participant-record ol { list-style: none; margin: 0; padding: 0; }
+.participant-record li { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; padding: 11px 0; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 16%, transparent); }
+.participant-record li b { color: var(--qmah-accent); font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace; font-size: var(--qmah-type-label-size); }
+.participant-record li small { color: color-mix(in srgb, var(--qmah-on-dark) 76%, transparent); font-size: var(--qmah-type-label-size); }
+.join-note { border-top: 1px solid color-mix(in srgb, var(--qmah-on-dark) 28%, transparent); padding-top: 20px; }
+.join-note label { display: block; margin-bottom: 13px; color: color-mix(in srgb, var(--qmah-on-dark) 90%, transparent); font-size: var(--qmah-type-body-sm-size); font-weight: 700; }
+.join-note input { display: block; width: 100%; min-height: var(--qmah-control-height); margin-top: 6px; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 35%, transparent); padding: 8px 0; color: var(--qmah-on-dark); background: transparent; }
+.join-note button { width: 100%; margin-top: 8px; min-height: var(--qmah-control-height); border: 1px solid var(--qmah-primary); border-radius: var(--qmah-radius-control); padding: 10px var(--qmah-control-padding-x); color: var(--qmah-primary-content); background: var(--qmah-primary); font-weight: 800; transition: background 180ms ease, transform 180ms ease; }
+.join-note button:hover { border-color: var(--surface); background: var(--surface); transform: translateY(-2px); }
+.margin-note { border-top: 1px solid color-mix(in srgb, var(--qmah-on-dark) 28%, transparent); padding-top: 16px; color: color-mix(in srgb, var(--qmah-on-dark) 74%, transparent); font-size: var(--qmah-type-body-sm-size); line-height: 1.7; }
+.rehearsal-join p { margin: 0 0 12px; color: color-mix(in srgb, var(--qmah-on-dark) 78%, transparent); }
+.rehearsal-join button { width: 100%; }
+
+@keyframes reveal-dialog { from { opacity: 0; transform: translate(-50%, -47%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+@media (max-width: 600px) {
+  .notes-page { width: min(100% - 20px, 620px); max-height: calc(100dvh - 20px); padding: 26px 22px 24px; }
+  .room-code-heading { flex-direction: column; gap: 12px; }
+  .room-share-actions { justify-content: flex-start; }
+  .room-notes-heading { padding-right: 42px; }
+  .room-record { grid-template-columns: 1fr 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notes-page { animation: none; }
+  .join-note button { transition: none; }
+}

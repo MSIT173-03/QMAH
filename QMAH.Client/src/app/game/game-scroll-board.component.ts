@@ -39,6 +39,7 @@ export class GameScrollBoardComponent {
   readonly initialHintRegion = input<number | null>(null);
   get selected(): number | null { return this.placement?.selected() ?? null; }
   get hintRegion(): number | null { return this.placement?.hintRegion() ?? null; }
+  advanceDemonstration(): void { this.placement?.advanceDemonstration(); }
   requestHint(): void { this.placement?.requestHint(); }
   finishWithHelp(): void { this.placement?.autoFinish(); }
   @ViewChild('referenceDialog') private referenceDialog?: ElementRef<HTMLDialogElement>;

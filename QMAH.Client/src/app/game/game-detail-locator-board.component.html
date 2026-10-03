@@ -1,0 +1,22 @@
+@if (current(); as artifact) {
+  <div class="locator-round">
+    <div class="locator-instruction"><strong>第 {{ roundNumber() }}／{{ artifacts().length }} 件</strong><p><span>看細節，點出準心在原圖上的位置。</span><span>每件定位一次，以碎片中心點計算。</span></p></div>
+    <ol class="locator-steps" aria-label="本輪文物進度">@for (item of artifacts(); track item.artifactId; let index = $index) { <li [class.is-done]="index < answers().length" [attr.aria-current]="index === answers().length ? 'step' : null">{{ index + 1 }}<span>{{ index < answers().length ? '已定位' : index === answers().length ? '定位中' : '待定位' }}</span></li> }</ol>
+    <div class="locator-workspace">
+      <figure class="locator-clue"><div class="locator-clue__image" [hidden]="!ready()"><canvas #clueCanvas role="img" aria-label="碎片中央準心所指的位置，請在原圖中找出同一點"></canvas><svg class="locator-crosshair" viewBox="0 0 48 48" fill="none" aria-hidden="true"><g stroke="#173c2a" stroke-width="3"><circle cx="24" cy="24" r="8" /><path d="M24 2v12M24 34v12M2 24h12M34 24h12" /></g><g stroke="#fffaf0" stroke-width="1.25"><circle cx="24" cy="24" r="8" /><path d="M24 2v12M24 34v12M2 24h12M34 24h12" /></g></svg></div><figcaption>準心所指的位置在哪裡？</figcaption></figure>
+      <figure class="locator-source">
+        @for (version of [artifact.artifactId + '-' + revision()]; track version) {
+          <button type="button" class="locator-original" [disabled]="disabled() || !ready() || finished()" [attr.aria-label]="artifact.name + '，點選細節位置；方向鍵移動游標，Enter 確認'" (click)="locate($event)" (keydown)="moveCursor($event)">
+            <img [src]="artifact.primaryImagePath || artifact.thumbnailPath" [alt]="artifact.name" (load)="render($event)" (error)="unavailable()" />
+            @if (keyboardCursor() && !finished()) { <span class="locator-cursor" [style.left.%]="cursor().x * 100" [style.top.%]="cursor().y * 100" aria-hidden="true"></span> }
+            @if (hintVisible()) { <span class="locator-region" [style.left.%]="target().x < .5 ? 0 : 50" [style.top.%]="target().y < .5 ? 0 : 50" aria-hidden="true"></span> }
+            @if (finished()) { <span class="locator-cursor is-answer" [style.left.%]="target().x * 100" [style.top.%]="target().y * 100" aria-hidden="true"></span> }
+          </button>
+        }
+        <figcaption>{{ artifact.name }}<small>鍵盤：方向鍵移動 · Shift 加速 · Enter 定位</small></figcaption>
+      </figure>
+    </div>
+    @if (!ready()) { <p class="locator-status" role="status">{{ failed() ? '文物圖片無法載入，進度仍保留。' : '正在準備細節與原圖…' }}@if (failed()) { <button type="button" (click)="retry()">重新載入圖片</button> }</p> }
+    @if (lastAnswer()) { <p class="locator-feedback" role="status">{{ finished() ? '本輪定位完成。' : '上一件：' }}{{ lastCorrect() ? '找到細節位置！' : '位置稍有偏差，結算時會計入準確度。' }}</p> }
+  </div>
+}

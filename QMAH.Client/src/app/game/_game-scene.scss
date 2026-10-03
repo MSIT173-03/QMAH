@@ -26,6 +26,6 @@
   padding: 16px clamp(12px, 3vw, 40px) 24px;
   border-radius: var(--qmah-radius-panel);
   background: var(--scene-ground);
-  @include pattern(var(--scene-ground));
+  // 選單與閱讀面保持安靜；紋樣留給外圍背景與真正的遊戲桌面。
   &.is-focus-mode { width: 100%; min-height: 100dvh; margin: 0; border-radius: 0; background-image: none; }
 }

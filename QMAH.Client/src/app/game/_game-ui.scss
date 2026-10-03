@@ -4,15 +4,15 @@
   min-height: 44px;
   padding: 6px 12px;
   border: 6px solid transparent;
-  border-image: var(--game-primary-image) 5 fill / 1 / 0 stretch;
+  border-image: var(--game-button-image, var(--game-primary-image)) 5 fill / 1 / 0 stretch;
   border-radius: 12px;
-  color: var(--game-primary-ink);
+  color: var(--game-button-ink, var(--game-primary-ink));
   background: transparent;
   font-weight: 800;
   box-shadow: 0 3px 7px #33251426;
   @if $secondary {
-    border-image-source: var(--game-secondary-image);
-    color: var(--game-secondary-ink);
+    border-image-source: var(--game-button-image, var(--game-secondary-image));
+    color: var(--game-button-ink, var(--game-secondary-ink));
   }
   &:hover:not(:disabled) { filter: brightness(1.08); }
   &:active:not(:disabled) { transform: translateY(1px); }
@@ -26,10 +26,75 @@
   background: var(--qmah-surface) padding-box;
 }
 
+// 牌桌上的說明與對話框共用紙面，文字不沿用綠桌面的淺色字。
+@mixin paper-panel {
+  --qmah-surface: var(--game-card-ground);
+  --qmah-ink: var(--game-card-ink);
+  --qmah-muted: var(--game-card-muted);
+  --qmah-focus: var(--game-card-action);
+  @include panel;
+  // Kenney RPG Expansion 紙面（CC0），閱讀視窗不再沿用牌桌木框。
+  border-image-source: url('/assets/game/kenney-rpg-paper.png');
+}
+
+// 固定紙邊與四角的尺寸，避免整張方形素材被拉成長方形。
+@mixin inset-paper {
+  position: relative;
+  isolation: isolate;
+  background: #efe5ce padding-box;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 8px solid transparent;
+    border-image: url('/assets/game/kenney-rpg-paper.png') 8 fill / 1 / 0 round;
+    pointer-events: none;
+  }
+}
+
+// 長時間閱讀的紙面不跟著深色環境反相，互動色與文字一起切換。
+@mixin reading-surface {
+  --qmah-surface: var(--game-card-ground);
+  --qmah-surface-elevated: #fffaf0;
+  --qmah-surface-soft: #e8e5d8;
+  --qmah-surface-muted: #e5e2d5;
+  --qmah-ink: var(--game-card-ink);
+  --qmah-muted: var(--game-card-muted);
+  --qmah-jade: var(--game-card-action);
+  --qmah-jade-soft: #d7e7d7;
+  --qmah-game-action: var(--game-card-action);
+  --qmah-game-content: #fff8e9;
+  --qmah-game-soft: #e4eadb;
+  --qmah-border: var(--game-card-line);
+  --qmah-line: var(--game-card-line);
+  --qmah-primary: var(--game-card-action);
+  --qmah-primary-hover: #234c39;
+  --qmah-primary-content: #fff8e9;
+  --qmah-focus: var(--game-card-action);
+  --qmah-danger: #963d32;
+  --qmah-accent: #805a23;
+  --qmah-accent-content: #fff8e9;
+  --qmah-cinnabar: #963d32;
+  color: var(--game-card-ink);
+  background: var(--game-card-ground);
+}
+
 @mixin title {
   font-weight: 800;
   -webkit-text-stroke: 0;
   text-shadow: none;
+}
+
+// 說明與完整回答使用同一套正文規格，盤面上的短標籤另外保留緊湊尺寸。
+@mixin prose {
+  font-size: 1rem;
+  line-height: 1.7;
+  letter-spacing: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  line-break: strict;
+  text-wrap: pretty;
 }
 
 @mixin jewel {

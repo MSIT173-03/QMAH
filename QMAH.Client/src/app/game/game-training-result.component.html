@@ -1,0 +1,42 @@
+<section class="result-shell"><app-game-scroll-panel label="單人成績與館藏，可上下捲動" cue="往下查看館藏與獎勵">
+<section class="result-sheet" aria-labelledby="result-title" animate.enter="game-result-enter">
+  <header class="result-banner">
+    <h2 id="result-title" tabindex="-1">{{ title() }}</h2>
+    <p>{{ attempt().modeName }} · 本局館藏已揭曉，點選名稱可前往圖鑑。</p>
+  </header>
+  <div class="result-gallery" [class.is-memory]="attempt().modeCode === 'MEMORY_MATCH' || attempt().modeCode === 'DETAIL_LOCATOR'" aria-label="本局館藏揭曉">
+    @for (artifact of artifacts(); track artifact.artifactId) {
+      <figure>
+        @if ((artifact.primaryImagePath || artifact.thumbnailPath) && !imageUnavailable('result-' + artifact.artifactId)) { <img [src]="artifact.primaryImagePath || artifact.thumbnailPath" [alt]="artifact.name" (error)="imageFailed.emit('result-' + artifact.artifactId)" /> }
+        @else { <span class="result-image-fallback">{{ artifact.name }}<small>影像暫時無法顯示</small></span> }
+        <figcaption><a routerLink="/artifact-list" [queryParams]="{ focus: artifact.artifactId }">{{ artifact.name }}</a></figcaption>
+      </figure>
+    }
+    <app-game-reward-meter [refreshToken]="complete()" />
+  </div>
+  <section class="result-summary" aria-label="成績卡片">
+    <div class="result-award">
+      <div class="result-grade" [class.is-fail]="complete().grade === 'FAIL'"><span>本局評級</span><strong>{{ complete().grade === 'FAIL' ? '未達標' : complete().grade }}</strong></div>
+      <div><div class="result-score">{{ complete().normalizedScore }} <small>分</small></div><p class="result-award-copy">{{ complete().grade === 'S' ? '觀察入微，這一局表現出色！' : complete().grade === 'A' ? '掌握訣竅，離最高評級更近了。' : complete().grade === 'FAIL' ? '把這次的經驗帶進下一局。' : '挑戰達標，再來一局突破自己。' }}</p></div>
+    </div>
+    <dl class="result-facts"><div><dt>挑戰用時</dt><dd>{{ elapsedLabel() }}</dd></div>@if (attempt().modeCode !== 'DETAIL_LOCATOR') { <div><dt>{{ attempt().modeCode === 'MEMORY_MATCH' ? '翻牌組合' : '放置次數' }}</dt><dd>{{ moves() }} 次</dd></div> }</dl>
+    <section class="result-rewards" aria-labelledby="result-rewards-title">
+      <h3 id="result-rewards-title">本局獎勵</h3>
+      <dl><div><dt>鑑定點數</dt><dd>+{{ complete().pointReward }}</dd></div><div><dt>鑰匙進度</dt><dd>+{{ complete().keyProgressReward }}</dd></div>@if (complete().convertedNormalKeys > 0) { <div><dt>轉換普通鑰匙</dt><dd>{{ complete().convertedNormalKeys }} 把</dd></div> }</dl>
+      <p>剩餘鑰匙進度 {{ complete().remainingKeyProgress }}</p>
+      @if (complete().keyRewardDivisor > 1) { <p>依圖鑑完成度，本局鑰匙獎勵以原本的{{ complete().keyRewardDivisor === 2 ? '一半' : '四分之一' }}累積。</p> }
+      @if (complete().alreadyCompleted) { <p>這是已結算的結果，不會重複發放獎勵。</p> }
+    </section>
+    <div class="result-actions"><button type="button" (click)="playAgain.emit()" [disabled]="starting()">{{ starting() ? '準備新挑戰…' : '再玩同一種' }}</button><button type="button" class="secondary" (click)="showModeList.emit()" [disabled]="starting()">換一種玩法</button></div>
+    <div class="result-links"><button type="button" [attr.popovertarget]="'result-rules-' + attempt().attemptId">計分與輔助說明</button><a routerLink="/game">返回多人鑑定大廳</a></div>
+  </section>
+  <aside class="result-rules" [id]="'result-rules-' + attempt().attemptId" popover="auto" aria-label="計分與輔助說明">
+    <h3>計分與輔助說明</h3>
+    @if (attempt().modeCode === 'ARTIFACT_PUZZLE' || attempt().modeCode === 'STRIP_RESTORE') { <p>評分依完成度、用時、放置次數與輔助計算。</p><p>{{ attempt().modeCode === 'ARTIFACT_PUZZLE' ? '前 5 分鐘' : '前 3 分鐘' }}不因用時扣分，之後緩慢扣分，時間最多扣 10 分。沒有倒數限制。</p><p>查看原圖不扣分，區域提示每次扣 3 分。代完成按剩餘比例扣分，本局無法取得 S 級。</p> }
+    @if (attempt().modeCode === 'DETAIL_LOCATOR') { <p>以碎片準心的中心點計算定位正確率。區域提示每件扣 10 分，系統代答也會計入扣分。</p> }
+    <p>本局已計入 {{ hintsUsed() }} 次提示扣分。</p>
+    <p>{{ attempt().modeCode === 'MEMORY_MATCH' ? '系統協助完成的配對' : attempt().modeCode === 'DETAIL_LOCATOR' ? '系統協助作答的題目' : '系統協助歸位的碎片' }}：{{ autoPlaced() }} {{ attempt().modeCode === 'MEMORY_MATCH' ? '組' : attempt().modeCode === 'DETAIL_LOCATOR' ? '題' : '片' }}，已計入扣分。</p>
+    <button type="button" [attr.popovertarget]="'result-rules-' + attempt().attemptId" popovertargetaction="hide">返回成績卡片</button>
+  </aside>
+</section>
+</app-game-scroll-panel></section>
