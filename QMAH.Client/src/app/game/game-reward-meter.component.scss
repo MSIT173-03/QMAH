@@ -1,7 +1,7 @@
 @use './game-ui' as ui;
 :host { display: block; min-width: 0; }
 *, *::before, *::after { box-sizing: border-box; }
-.reward-meter { @include ui.reading-surface; @include ui.inset-paper; width:min(100%,520px); margin:var(--reward-meter-margin,8px 0 16px auto); padding:4px; border:8px solid transparent; border-image:var(--game-frame-rim-image) 8 / 1 / 0 stretch; border-radius:12px; box-shadow:0 4px 10px #14291c26; }
+.reward-meter { @include ui.control-housing; width:min(100%,520px); margin:var(--reward-meter-margin,8px 0 16px auto); padding:2px; background-color:#b9cbd3; color:#203b46; }
 .meter-heading { display: grid; width: 100%; border: 0; border-image: none; background: transparent; color: inherit; font: inherit; text-align: start; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 16px; padding:var(--reward-meter-heading-padding,8px 12px); list-style: none; }
 .meter-heading::-webkit-details-marker { display: none; }
 .meter-heading strong { display: inline-flex; align-items: center; gap: 8px; font-size: var(--reward-meter-heading-font-size, 14px); font-weight: 700; }
@@ -12,7 +12,7 @@
 .reward-meter.is-open .meter-toggle::after { transform: rotate(225deg); }
 .meter-track { position: relative; grid-column: 1 / 3; display: block; width: 100%; height: 20px; border: 6px solid transparent; border-image: url('/assets/game/kenney-meter-track.svg') 6 8 fill / 1 / 0 stretch; border-radius: 10px; background: transparent; box-shadow: inset 0 1px 3px #55452d4d, 0 1px 0 #fff9ed; }
 .meter-fill { position: absolute; inset: -4px; display: block; border: 6px solid transparent; border-image: url('/assets/game/kenney-meter-fill.svg') 6 8 fill / 1 / 0 stretch; clip-path: inset(0 calc(100% - var(--meter-progress, 0%)) 0 0); }
-.reward-details { @include ui.paper-panel; @include ui.reading-surface; padding:16px; }
+.reward-details { @include ui.paper-panel; @include ui.reading-surface(true); padding:16px; }
 @media (max-width: 430px) { .meter-heading { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: var(--reward-meter-mobile-padding, 10px); } .meter-heading .meter-toggle { grid-column: 2; grid-row: 2; font-size: 12px; } .meter-track { grid-column: 1; } }
 .breakthrough-action { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
 p { margin: 8px 0; font-size: 16px; line-height: 1.7; line-break: strict; text-wrap: pretty; }

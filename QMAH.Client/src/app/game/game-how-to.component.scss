@@ -1,5 +1,8 @@
 @use './game-ui' as ui;
-:host {
+:host { display: block; }
+.game-how-to {
+  @include ui.reading-surface;
+  background: transparent;
   --how-to-ink: var(--qmah-ink);
   --how-to-jade: var(--qmah-jade);
   --how-to-cinnabar: var(--qmah-cinnabar);
@@ -7,9 +10,8 @@
   --how-to-line: var(--qmah-line);
   --how-to-action: var(--qmah-game-action);
   --how-to-action-content: var(--qmah-game-content);
-  display: block;
+  color: var(--how-to-ink);
 }
-.game-how-to { color: var(--how-to-ink); }
 .instruction-sentence { display: block; }
 .game-how-to p { line-break: strict; overflow-wrap: break-word; text-wrap: pretty; }
 .game-how-to__heading {

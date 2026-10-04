@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, input, outpu
 import { FormsModule } from '@angular/forms';
 
 import { GameRoomDetails, JoinGameRoomRequest } from './game.models';
+import { GameScrollPanelComponent } from './game-scroll-panel.component';
 
 @Component({
   selector: 'app-game-lobby-room-detail-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, GameScrollPanelComponent],
   templateUrl: './game-lobby-room-detail-dialog.component.html',
   styleUrl: './game-lobby-room-detail-dialog.component.scss'
 })
@@ -29,6 +30,11 @@ export class GameLobbyRoomDetailDialogComponent {
 
   focusTarget(): HTMLElement | undefined { return this.roomDialog?.nativeElement; }
   get form(): JoinGameRoomRequest { return this.joinForm(); }
+  durationText(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds % 60;
+    return minutes ? `${minutes} 分鐘${remainder ? ` ${remainder} 秒` : ''}` : `${remainder} 秒`;
+  }
   openSlots(room: GameRoomDetails): number[] { return Array.from({ length: Math.max(0, room.maxPlayers - room.players.length) }, (_, index) => index); }
   statusText(status: GameRoomDetails['status']): string { return { WAITING: '等待中', PLAYING: '進行中', COMPLETED: '最近完成', CANCELLED: '已取消' }[status]; }
   playerStateText(player: GameRoomDetails['players'][number]): string { return player.role === 'HOST' ? '房主' : player.isReady ? '已準備' : '等待中'; }

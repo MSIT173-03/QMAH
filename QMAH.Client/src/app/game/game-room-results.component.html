@@ -1,5 +1,5 @@
 <section class="results-frame" aria-labelledby="results-title">
-<app-game-scroll-panel label="結算內容，可捲動查看排行與回合紀錄" cue="往下查看排行與回合紀錄"><div class="paper-card results-panel">
+<app-game-scroll-panel label="結算內容，可捲動查看排行與回合紀錄" cue="往下查看回合紀錄與獎勵"><div class="paper-card results-panel">
   <h2 id="results-title">本局鑑定完成</h2>
 
   @if (history(); as completedHistory) {
@@ -10,26 +10,6 @@
     @if (leaders().length) {
       <section class="results-highlight" aria-label="本局最高得票"><h3>{{ leaders().length > 1 ? '並列最高得票' : '本局最高得票' }}</h3>@for (leader of leaders(); track leader.gamePlayerId) { <p><strong>{{ leader.displayName }}</strong><span>{{ leader.score }} 票 · 勝出 {{ leader.roundsWon }} 回合</span></p> }</section>
     }
-  <div class="reward-panel">
-    <div><h3>本局獎勵</h3><p>每間房的獎勵只能領取一次。</p></div>
-    @if (!canClaim()) { <p>獎勵僅供本局參與玩家領取。</p> }
-    @else if (!reward()) { <button type="button" (click)="claimReward.emit()" [disabled]="rewarding()">{{ rewarding() ? '領取中…' : '領取本局獎勵' }}</button> }
-    @else { <strong class="reward-status" role="status">本局獎勵已結算</strong> }
-  <a routerLink="/game" [queryParams]="rehearsal() ? { test: '1' } : null" class="results-back-link">返回大廳</a>
-  </div>
-  @if (!rehearsal()) { <app-game-reward-meter [refreshToken]="reward()" /> }
-  @if (reward(); as receipt) {
-    <div class="reward-receipt" aria-label="本局獎勵明細">
-      <strong>{{ receipt.pointReward }} 點</strong>
-      <span>{{ receipt.normalKeyReward }} 把普通鑰匙</span>
-      @if (receipt.keyProgressReward > 0) { <span>本局累積 {{ receipt.keyProgressReward }} 點鑰匙進度，已含上方轉換的鑰匙</span> }
-      <span>表現分數 {{ receipt.performanceScore }}</span>
-      <span>勝出 {{ receipt.roundsWon }} 回合</span>
-    </div>
-    @if (receipt.keyRewardDivisor > 1) { <p class="empty-copy">依圖鑑完成度，本局鑰匙獎勵以原本的{{ receipt.keyRewardDivisor === 2 ? '一半' : '四分之一' }}累積。</p> }
-    @if (receipt.alreadyRewarded) { <p class="empty-copy">顯示先前已領取的紀錄，不會重複發放。</p> }
-  }
-
     <div class="results-layout">
     <div class="leaderboard-wrap">
       <h3>最終排行榜</h3>
@@ -74,6 +54,26 @@
       }
     </details>
     </div>
+  <div class="reward-panel">
+    <div><h3>本局獎勵</h3><p>每間房的獎勵只能領取一次。</p></div>
+    @if (!canClaim()) { <p>獎勵僅供本局參與玩家領取。</p> }
+    @else if (!reward()) { <button type="button" (click)="claimReward.emit()" [disabled]="rewarding()">{{ rewarding() ? '領取中…' : '領取本局獎勵' }}</button> }
+    @else { <strong class="reward-status" role="status">本局獎勵已結算</strong> }
+  <a routerLink="/game" [queryParams]="rehearsal() ? { test: '1' } : null" class="results-back-link">返回大廳</a>
+  </div>
+  @if (!rehearsal()) { <app-game-reward-meter [refreshToken]="reward()" /> }
+  @if (reward(); as receipt) {
+    <div class="reward-receipt" aria-label="本局獎勵明細">
+      <strong>{{ receipt.pointReward }} 點</strong>
+      <span>{{ receipt.normalKeyReward }} 把普通鑰匙</span>
+      @if (receipt.keyProgressReward > 0) { <span>本局累積 {{ receipt.keyProgressReward }} 點鑰匙進度，已含上方轉換的鑰匙</span> }
+      <span>表現分數 {{ receipt.performanceScore }}</span>
+      <span>勝出 {{ receipt.roundsWon }} 回合</span>
+    </div>
+    @if (receipt.keyRewardDivisor > 1) { <p class="empty-copy">依圖鑑完成度，本局鑰匙獎勵以原本的{{ receipt.keyRewardDivisor === 2 ? '一半' : '四分之一' }}累積。</p> }
+    @if (receipt.alreadyRewarded) { <p class="empty-copy">顯示先前已領取的紀錄，不會重複發放。</p> }
+  }
+
   } @else {
     <p class="empty-copy" role="status">正在讀取排行榜與回合紀錄…</p>
   }

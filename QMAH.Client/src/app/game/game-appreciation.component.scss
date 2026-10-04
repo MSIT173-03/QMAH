@@ -1,71 +1,69 @@
 @use './game-ui' as ui;
-:host { position: relative; isolation: isolate; display: block; font: 400 1rem/1.7 var(--qmah-font-sans); background: var(--qmah-surface); }
-// 沿用 Hero Patterns 的菱格作淡背景，不把紋樣邊線當成內容框。
-:host::before { position: absolute; z-index: -1; inset: 0; background: url('/assets/game/hero-diamonds.svg') center / 72px 96px repeat; filter: brightness(0); opacity: .035; pointer-events: none; content: ''; }
-:host-context(html[data-theme='qmahdark'])::before { filter: none; opacity: .08; }
-.appreciation-scene { max-width: 1100px; margin-inline: auto; padding: 32px; color: var(--qmah-ink); }
-header { margin-block-end: 24px; }
-h1 { font: 800 clamp(28px, 4vw, 42px)/1.35 var(--qmah-font-sans); }
-h1, h2 { text-wrap: balance; }
-p { font-size: 16px; line-height: 1.8; line-break: strict; text-wrap: pretty; }
-.rules { max-width: 760px; margin-block: 20px; }
-summary { min-height: 44px; cursor: pointer; align-content: center; }
-.filters { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; margin-block: 24px; }
-label { display: grid; gap: 8px; }
-select, button, input { min-height: 44px; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); padding: 8px 16px; font: inherit; background: var(--qmah-surface); color: var(--qmah-ink); }
-button { cursor: pointer; }
-button:disabled { opacity: .55; cursor: default; }
-button[aria-pressed='true'] { background: var(--qmah-game-action); color: var(--qmah-game-content); }
-button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
-.answer-gallery { padding: 0; list-style: none; }
-.answer-gallery li {
-  --qmah-ink: var(--game-card-ink);
-  --qmah-muted: var(--game-card-muted);
-  --qmah-surface: var(--game-card-ground);
-  --qmah-border: var(--game-card-line);
-  --qmah-jade: var(--game-card-action);
-  --qmah-game-action: var(--game-card-action);
-  --qmah-game-content: #fff8e9;
-  --qmah-focus: var(--game-card-action);
-  padding: 28px; margin-block: 20px; color: var(--qmah-ink); background: var(--game-card-ground); border: 8px solid transparent; border-image: url('/assets/game/kenney-rpg-paper.png') 8 fill / 1 / 0 stretch; border-radius: 12px;
-  box-shadow: 0 5px 18px #17221b14;
-}
-.answer-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
-.answer-heading h2 { font: 700 22px/1.4 var(--qmah-font-sans); margin: 0; }
-.answer-heading > span { color: var(--qmah-muted); }
-.answer-text { max-width: 760px; white-space: pre-wrap; overflow-wrap: anywhere; }
-footer { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
-footer > div { display: grid; gap: 6px; }
-footer span, small { color: var(--qmah-muted); font-size: 14px; }
-.source-note { color: var(--qmah-muted); margin-block: 8px; }
-.pagination { display: flex; justify-content: center; align-items: center; gap: 16px; }
-.artifact-search { flex-basis: 100%; display: grid; gap: 8px; }
-.artifact-search > div { display: flex; gap: 8px; max-width: 680px; }
-.artifact-search input { flex: 1; min-width: 0; width: 100%; font-size: 1rem; }
-.artifact-search button { flex: none; }
-.filter-options { width: 100%; }
-.filter-options > summary { display: none; }
-.filter-options__fields { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; }
-.filter-options:not([open]) > .filter-options__fields { display: flex; }
-.filter-options__fields label { flex: 1 1 180px; min-width: 0; }
-.filter-options__fields select { width: 100%; }
-.artifact-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-block: 12px; border-block: 1px solid var(--qmah-border); }
-.artifact-filter > span { flex: 1 1 240px; min-width: 0; overflow-wrap: break-word; }
-.artifact-pick { margin-top: 8px; padding-inline: 0; border: 0; background: transparent; color: var(--qmah-jade); text-decoration: underline; text-underline-offset: 4px; }
-@media (max-width: 600px) { .appreciation-scene { padding: 20px 16px; } .filters label { flex: 1 1 140px; min-width: 0; } select { width: 100%; } footer { flex-wrap: wrap; } }
-@media (max-width: 600px) {
-  .filter-options > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-block: 1px solid var(--qmah-line); font-weight: 700; }
-  .filter-options > summary span { color: var(--qmah-muted); font-size: 14px; }
-  .filter-options > summary::after { content: ''; width: 8px; height: 8px; flex: none; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
-  .filter-options[open] > summary::after { transform: rotate(225deg); }
-  .filter-options:not([open]) > .filter-options__fields { display: none; }
-  .filter-options__fields { padding-block: 16px; }
-  .answer-gallery li { padding: 20px; }
-  .answer-heading { gap: 8px; }
-  .answer-heading h2 { flex-basis: 100%; font-size: 20px; }
-  footer button { flex: 1 1 100%; }
-}
-
-// 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
-.appreciation-scene p { @include ui.prose; max-width: 70ch; }
-.answer-heading h2, .answer-heading > span, footer > div { min-width: 0; overflow-wrap: break-word; }
+:host { display:block; background:#eae8e1; color:var(--qmah-ink); font:400 1rem/1.7 var(--qmah-font-sans); }
+:host-context(html[data-theme='qmahdark']) { background:var(--qmah-surface); }
+.appreciation-scene { max-width:1200px; margin:auto; padding:32px; }
+header { position:relative; margin:24px 0 16px; padding-right:120px; }
+h1 { margin:0 0 8px; font-size:clamp(28px,4vw,40px); line-height:1.35; font-weight:800; }
+header p { margin:0; color:var(--qmah-muted); }
+header a { position:absolute; right:0; bottom:0; min-height:44px; align-content:center; text-underline-offset:5px; }
+p { line-height:1.8; line-break:strict; }
+.rules { margin-inline-start:auto; }
+.rules-content { @include ui.paper-panel; @include ui.reading-surface(true); position:fixed; inset:0; margin:auto; box-sizing:border-box; width:min(600px,calc(100vw - 40px)); max-height:65dvh; overflow:auto; padding:16px 20px; box-shadow:0 8px 20px #18251d40; }
+.rules-content::backdrop { background:#14291c66; }
+.rules-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.rules-heading h3 { margin:0; font:700 22px/1.4 var(--qmah-font-serif); }
+.rules-content p { max-width:70ch; font-size:16px; }
+summary { min-height:44px; align-content:center; cursor:pointer; font-weight:700; }
+.filters { @include ui.control-housing(true); display:grid; gap:12px; padding:16px; margin-bottom:28px; box-shadow:0 4px 10px #18251d20; }
+label { display:grid; gap:6px; font-weight:600; }
+input,select { min-height:44px; min-width:0; padding:8px 12px; border:1px solid var(--qmah-border); border-radius:6px; background:#e7e2d3; color:var(--qmah-ink); font:inherit; caret-color:var(--qmah-jade); box-shadow:inset 0 2px 4px #382c2426,0 1px 0 #fffaf0; }
+button { @include ui.button(true); min-height:44px; cursor:pointer; }
+button:disabled { opacity:.55; cursor:default; }
+button[aria-pressed='true'] { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; color:#fff8e9; }
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:3px; }
+.artifact-search > div { display:flex; gap:8px; }
+.artifact-search input { flex:1; width:100%; }
+.artifact-search button { flex:none; }
+.filter-options > summary { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.filter-options > summary::after { content:''; width:8px; height:8px; border-right:2px solid; border-bottom:2px solid; transform:rotate(45deg); }
+.filter-options[open] > summary::after { transform:rotate(225deg); }
+.filter-options summary span { margin-left:auto; font-size:14px; color:var(--qmah-muted); }
+.filter-options__fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding-top:16px; }
+.artifact-filter { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:20px; }
+.answer-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:28px; padding:0; list-style:none; }
+.answer-gallery > li { @include ui.reading-surface; border:7px solid transparent; border-image:url('/assets/game/kenney-mode-card-frame.svg') 7 / 1 / 0 stretch; background:url('/assets/game/natural-paper.png') repeat,var(--game-card-ground); background-blend-mode:multiply; position:relative; padding:20px; box-shadow:0 6px 16px #18251d20; overflow-wrap:anywhere; }
+.answer-heading { display:grid; grid-template-columns:1fr auto; gap:8px 12px; align-items:center; }
+.answer-heading > span { justify-self:start; padding:4px 12px; background:#dce8e1; color:#294c3c; border-radius:2px; font-size:14px; font-weight:700; }
+[data-type='PLAUSIBLE_FICTION'] .answer-heading > span { background:#dce7ef; color:#2c4d66; }
+[data-type='CREATIVE_TALE'] .answer-heading > span { background:#eadfe9; color:#654363; }
+.answer-heading h3 { grid-row:2; grid-column:1 / -1; margin:4px 0 0; font-size:24px; line-height:1.5; text-wrap:balance; }
+small { color:var(--game-card-muted); font-size:14px; }
+.artifact-pick { min-height:44px; padding:0; border:0; border-image:none; background:none; color:var(--game-card-action); box-shadow:none; font-size:14px; text-decoration:underline; text-underline-offset:4px; }
+.answer-text { margin:16px 0 20px; padding-top:20px; border-top:1px solid var(--game-card-line); font-size:18px; line-height:1.9; white-space:pre-wrap; }
+.source-note { margin:0 0 20px; color:var(--game-card-muted); font-size:14px; }
+footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:20px; padding-top:16px; border-top:1px solid var(--game-card-line); }
+footer > div { display:grid; gap:4px; min-width:0; }
+footer span { color:var(--game-card-muted); font-size:13px; }
+footer strong { font-size:16px; }
+footer .vote-action { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; }
+.vote-action span { font-size:14px; }
+.vote-action strong { font-size:24px; color:var(--game-card-ink); font-variant-numeric:tabular-nums; }
+.answer-gallery .empty { grid-column:1 / -1; padding:40px 24px; text-align:center; }
+.pagination { display:flex; justify-content:center; align-items:center; gap:16px; margin-top:32px; font-variant-numeric:tabular-nums; }
+@media(max-width:760px) { .appreciation-scene { padding:20px 16px; } header { padding:0; } header a { position:static; display:inline-block; margin-top:8px; } .answer-gallery { grid-template-columns:1fr; gap:20px; } .filter-options__fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:400px) { .filters,.answer-gallery > li { padding:16px; } .filter-options__fields { grid-template-columns:1fr; } .answer-heading h3 { font-size:22px; } }
+.collection-heading { display:flex; flex-wrap:wrap; align-items:baseline; gap:12px; margin:0 0 16px; }
+.collection-heading h2 { margin:0; font-size:28px; font-family:var(--qmah-font-serif); }
+.collection-heading > span { color:var(--qmah-muted); font-size:14px; }
+.type-filter { display:grid; gap:8px; margin-bottom:28px; }
+.type-filter > span { font-size:14px; font-weight:700; }
+.category-index { display:flex; flex-wrap:wrap; gap:8px; }
+.category-index button { min-width:100px; }
+.category-index button[aria-pressed='true'] { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; box-shadow:0 3px 7px #14291c40; }
+.collection-answers { min-width:0; }
+.answer-category { margin-bottom:32px; }
+.category-title { display:flex; flex-wrap:wrap; align-items:baseline; gap:12px; margin:0 0 16px; padding-bottom:12px; border-bottom:1px solid var(--qmah-border); font:700 24px/1.5 var(--qmah-font-serif); }
+.category-title span { font-size:14px; font-weight:400; color:var(--qmah-muted); }
+.empty { @include ui.paper-panel; padding:24px; }
+@media(min-width:900px) { .filters { grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:24px; } .filter-options { min-width:180px; } .filter-options[open] { grid-column:1 / -1; } .filter-options summary { gap:16px; } }
+@media(max-width:600px) { .category-index { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } .category-index button { min-width:0; width:100%; } }

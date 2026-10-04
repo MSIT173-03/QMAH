@@ -65,7 +65,7 @@ export class GameTrainingModePickerComponent {
   }
   modeDescription(mode: MiniGameMode): string {
     return mode.code === 'DETAIL_LOCATOR'
-      ? '一輪四件文物，看細節後點原圖定位，每件作答一次。依定位正確率計分，記錄本輪用時，區域提示每件扣 10 分。'
+      ? '觀察四件文物的局部細節，在原圖點出準心對應的位置，每件只能定位一次。四件完成後按「送出結果」，依定位準確度計分。區域提示每件扣 10 分。'
       : mode.description || this.modeMechanic(mode.code);
   }
   navigateModes(event: KeyboardEvent): void {

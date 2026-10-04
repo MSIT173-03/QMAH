@@ -1,5 +1,7 @@
-<aside #roomDialog class="notes-page room-detail-dialog" role="dialog" aria-modal="true" aria-label="房間詳情" [attr.aria-labelledby]="detailLoading() ? null : 'room-details-title'" tabindex="-1">
+<aside #roomDialog class="notes-page room-detail-dialog" role="dialog" aria-modal="true" aria-label="房間詳情" [attr.aria-labelledby]="!detailLoading() && room() ? 'room-details-title' : null" tabindex="-1">
+  <button type="button" class="detail-close" (click)="close.emit()" aria-label="關閉房間資訊"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
   @if (detailLoading()) {
+    <p class="room-loading" role="status">正在取回房間資訊…</p>
     <div class="notes-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>
   } @else if (room(); as currentRoom) {
     <header class="room-notes-heading">
@@ -12,15 +14,15 @@
           </div>
         }
       </div>
-      <button type="button" class="detail-close" (click)="close.emit()" aria-label="關閉房間資訊">×</button>
       <span [attr.data-status]="currentRoom.status">{{ statusText(currentRoom.status) }}</span>
     </header>
-    <dl class="room-record">
+    <app-game-scroll-panel label="房間設定與席位，可上下捲動" cue="往下查看席位"><dl class="room-record">
       <div><dt>分類</dt><dd>{{ categoryText(currentRoom.categoryFilterCode) }}</dd></div>
       <div><dt>年代</dt><dd>{{ eraText(currentRoom.eraBucketFilterCode) }}</dd></div>
       <div><dt>房間類型</dt><dd>{{ currentRoom.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</dd></div>
-      <div><dt>回合</dt><dd>{{ currentRoom.totalRounds }}</dd></div>
-      <div><dt>作答時間</dt><dd>{{ currentRoom.answerSeconds }} 秒</dd></div>
+      <div><dt>回合</dt><dd>{{ currentRoom.totalRounds }} 回合</dd></div>
+      <div><dt>作答時間</dt><dd>{{ durationText(currentRoom.answerSeconds) }}</dd></div>
+      <div><dt>投票時間</dt><dd>{{ durationText(currentRoom.votingSeconds) }}</dd></div>
     </dl>
     <section class="participant-record">
       <header><h3>席位</h3><span>{{ currentRoom.playerCount ?? currentRoom.players.length }} / {{ currentRoom.maxPlayers }}</span></header>
@@ -34,10 +36,11 @@
         </ol>
       }
     </section>
+    </app-game-scroll-panel>
     @if (isRehearsal()) {
       <div class="join-note rehearsal-join">
-        <p>這張房卡只提供展示參數；開始後會進入共用的模擬回合，不會加入真實房間。</p>
-        <button type="button" (click)="join.emit()">進入流程演練</button>
+        <p>這間房會依房卡設定開始遊戲。</p>
+        <button type="button" (click)="join.emit()">加入房間</button>
       </div>
     } @else if (!isDemo() && canJoin()) {
       <form #joinFormRef="ngForm" class="join-note" (ngSubmit)="join.emit()" novalidate>
@@ -46,5 +49,5 @@
         <button type="submit" [disabled]="joining() || joinFormRef.invalid">{{ joining() ? '加入中…' : '加入房間' }}</button>
       </form>
     } @else if (!isDemo()) { <p class="margin-note">這間房目前不能加入，請選擇可加入的房間。</p> }
-  } @else { <p class="margin-note">房間資訊暫時載入不了，請關閉視窗後重新選擇房間。</p> }
+  } @else { <p class="margin-note" role="alert">房間資訊暫時載入不了，請關閉視窗後重新選擇房間。</p> }
 </aside>

@@ -13,7 +13,7 @@
 :host(.mobile-answer-card) {
   flex: 0 0 220px;
   width: 220px;
-  height: 280px;
+  height: var(--table-answer-height,280px);
 }
 
 .answer-card {
@@ -28,13 +28,13 @@
   border-radius: 11px;
   padding: 13px;
   color: var(--qmah-ink);
-  background: var(--qmah-surface-elevated);
+  background:url('/assets/game/natural-paper.png') repeat,var(--qmah-surface-elevated); background-blend-mode:multiply;
   font: inherit;
   text-align: start;
   cursor: pointer;
   transform: rotate(var(--card-tilt, 0deg));
   transform-origin: 50% 92%;
-  transition: transform 160ms ease, border-color 160ms ease;
+  box-shadow:0 5px 12px #14291c30; transition:transform 160ms ease,box-shadow 160ms ease;
 }
 .answer-card.mobile-answer-card { height: 100%; min-height: 100%; }
 
@@ -96,7 +96,7 @@
 }
 
 @media (max-width: 1000px) {
-  :host(.mobile-answer-card) { flex: 0 0 100%; width: 100%; min-height: 250px; height: clamp(250px, 38dvh, 320px); }
+  :host(.mobile-answer-card) { flex:0 0 100%; width:100%; min-height:var(--table-answer-height,250px); height:var(--table-answer-height,280px); }
   .mobile-answer-card { transform: none; scroll-snap-align: center; scroll-snap-stop: always; }
   .mobile-answer-card:hover, .mobile-answer-card:focus-visible { transform: none; }
   .mobile-card-meta { color: var(--answer-accent); font-size: 13px; font-weight: 800; }
@@ -106,6 +106,7 @@
 @media (max-width: 600px) {
   :host:not(.mobile-answer-card) { display: none; }
   .answer-card { width: 180px; min-height: 240px; height: 244px; padding: 11px; transform: rotate(0deg); }
+  .answer-card.mobile-answer-card { width:100%; }
   .answer-card-top { font-size: 12px; }
   .answer-text { font-size: 13px; line-height: 1.6; }
   .answer-card:hover, .answer-card:focus-visible { transform: translateY(-3px); }
@@ -115,3 +116,6 @@
   .answer-card.is-anonymous { animation: none; }
   .answer-card, .answer-card:hover, .answer-card:focus-visible { transform: none; transition: none; }
 }
+
+.answer-card-top { padding-bottom:8px; border-bottom:1px solid var(--game-card-line); }
+.answer-card:hover, .answer-card:focus-visible { box-shadow:0 10px 18px #14291c40; }

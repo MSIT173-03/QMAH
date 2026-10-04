@@ -2,8 +2,8 @@
 :host { display: block; min-width: 0; }
 .scroll-workbench { min-width: 0; width: min(100%, 1100px); margin-inline: auto; --board-height: var(--scroll-height-limit, 560px); }
 .scroll-source { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.scroll-direction { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin: 0 0 var(--qmah-space-3); color: var(--scroll-ink, var(--qmah-ink)); font-weight: 700; }
-.scroll-direction span, .scroll-help { color: var(--scroll-muted, var(--qmah-muted)); font-size: var(--qmah-type-body-sm-size); font-weight: 400; }
+.scroll-direction { @include ui.reading-surface; padding:8px 12px; border-radius:4px; box-shadow:0 3px 8px #14291c24; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin: 0 0 var(--qmah-space-3); color:var(--game-card-ink); font-weight:700; }
+.scroll-direction span { color:var(--game-card-muted); font-size: var(--qmah-type-body-sm-size); font-weight: 400; }
 .scroll-viewport { border-radius: var(--qmah-radius-card); background: var(--qmah-surface-soft); }
 .scroll-board { display: grid; width: 100%; margin-inline: auto; aspect-ratio: var(--scroll-ratio); gap: 2px; box-shadow: 0 16px 36px color-mix(in srgb, var(--qmah-ink) 18%, transparent); }
 .scroll-board.is-vertical { width: 100%; }
@@ -35,3 +35,6 @@
 
 .scroll-reference button, .scroll-inspection button, .scroll-error button { @include ui.button; }
 .scroll-inspection { @include ui.paper-panel; overflow-y: auto; }
+
+.scroll-help { color:var(--scroll-muted,var(--qmah-muted)); font-size:14px; line-height:1.6; }
+.scroll-reference-viewport { background:#e7e2d3; box-shadow:inset 0 3px 8px #382c2426; scrollbar-color:#7d969c #e7e2d3; }

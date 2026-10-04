@@ -186,3 +186,11 @@ pre { max-height: 24rem; overflow: auto; margin: 14px 0 0; padding: 14px; border
 
 // 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
 .test-launcher .description, .rehearsal-preview > p { @include ui.prose; max-width: 70ch; }
+
+.tools-tabs button, .rehearsal-start { @include ui.button(true); }
+.tools-tabs button[aria-pressed='true'] { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; background:transparent; }
+.rehearsal-menu button { @include ui.paper-panel; @include ui.reading-surface(true); box-shadow:0 4px 10px #14291c20; }
+.rehearsal-menu button[aria-pressed='true'] { outline:3px solid var(--qmah-focus); outline-offset:3px; }
+
+.rehearsal-preview { @include ui.control-housing(true); padding:24px; }
+.rehearsal-preview > p { color:var(--game-card-muted); }

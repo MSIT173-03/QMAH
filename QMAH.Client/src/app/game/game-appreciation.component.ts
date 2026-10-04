@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -19,12 +19,6 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
     <section class="appreciation-scene" aria-labelledby="appreciation-title">
       <app-game-navigation />
       <header><h1 id="appreciation-title">鑑賞回答</h1><p>看看玩家怎麼解讀文物，把票投給你喜歡的回答。</p><a routerLink="/artifact-list">返回圖鑑</a></header>
-      <details class="rules"><summary>哪些回答會入選？</summary>
-        <p>每局多人遊戲結束後，三種類型各取遊戲得票最高的一則回答。同票時先送出者優先，再依回答識別碼決定。</p>
-        <p>沒有回答的類型不會入選。鑑賞票另計，不影響遊戲勝負與獎勵。每則回答可投一票，也可收回，不能投自己的回答。</p>
-        <p>【史實推理】推測文物真正的名稱、用途、年代或背景。玩家的推測仍需與文物資料核對。</p>
-        <p>【擬真異說】看似合理的虛構說明。【妙想奇談】幽默、誇張或帶有故事性的創意回答。</p>
-      </details>
       <form class="filters" aria-label="篩選鑑賞回答" (ngSubmit)="search()">
         <div class="artifact-search">
           <label for="appreciation-search">找文物</label>
@@ -32,7 +26,6 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
         </div>
         <details class="filter-options"><summary>篩選與排序@if (hasFilters) { <span>已套用篩選</span> }</summary><div class="filter-options__fields">
         <label>排序<select name="sort" [(ngModel)]="sort" (ngModelChange)="load(1)"><option value="votes">鑑賞票數最多</option><option value="time">最新完成</option></select></label>
-        <label>回答類型<select name="type" [(ngModel)]="answerType" (ngModelChange)="load(1)"><option value="">全部類型</option><option value="FACTUAL_REASONING">史實推理</option><option value="PLAUSIBLE_FICTION">擬真異說</option><option value="CREATIVE_TALE">妙想奇談</option></select></label>
         <label>文物分類<select name="category" [(ngModel)]="categoryCode" (ngModelChange)="load(1)"><option value="">全部分類</option>@for (category of categories(); track category.id) { <option [value]="category.code">{{ category.name }}</option> }</select></label>
         <label>文物年代<select name="era" [(ngModel)]="eraCode" (ngModelChange)="load(1)"><option value="">全部年代</option>@for (era of eras(); track era.id) { <option [value]="era.code">{{ era.name }}</option> }</select></label>
         @if (hasFilters) { <button type="button" (click)="clearFilters()">清除篩選</button> }
@@ -41,29 +34,58 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
       @if (artifactId) { <div class="artifact-filter"><span>只看：<strong>{{ artifactName || '指定文物' }}</strong></span><button type="button" (click)="showAll()">取消文物限制</button></div> }
       @if (error()) { <p role="alert">{{ error() }} <button type="button" (click)="load(currentPage())">重新讀取</button></p> }
       @if (loading()) { <p role="status">正在整理鑑賞回答…</p> }
+      <div class="collection-heading"><h2>入選回答</h2>@if (result(); as page) { <span>{{ page.totalCount }} 則符合條件</span> }
+        <button type="button" class="rules" popovertarget="appreciation-rules">哪些回答會入選？</button>
+        <div id="appreciation-rules" class="rules-content" popover="auto" aria-label="入選與投票規則">
+          <div class="rules-heading"><h3>入選與投票規則</h3><button type="button" popovertarget="appreciation-rules" popovertargetaction="hide">關閉</button></div>
+          <p>每局多人遊戲結束後，三種類型各取遊戲得票最高的一則回答。同票時先送出者優先，再依回答識別碼決定。</p>
+          <p>沒有回答的類型不會入選。鑑賞票另計，不影響遊戲勝負與獎勵。每則回答可投一票，也可收回，不能投自己的回答。</p>
+          <p>【史實推理】推測文物真正的名稱、用途、年代或背景。玩家的推測仍需與文物資料核對。</p>
+          <p>【擬真異說】看似合理的虛構說明。【妙想奇談】幽默、誇張或帶有故事性的創意回答。</p>
+        </div>
+      </div>
+      <div class="type-filter" role="group" aria-label="篩選回答類型">
+        <span>回答類型</span>
+        <div class="category-index">
+          @for (type of answerTypes; track type) { <button type="button" (click)="selectAnswerType(type)" [attr.aria-pressed]="answerType === type">{{ type ? typeLabel(type) : '全部' }}</button> }
+        </div>
+      </div>
+      <div class="collection-answers">
+      @for (group of answerGroups(); track group.type) {
+      <section class="answer-category" [attr.id]="'answers-' + group.type" [attr.aria-labelledby]="'heading-' + group.type">
+      <h2 class="category-title" [attr.id]="'heading-' + group.type">{{ typeLabel(group.type) }}<span>本頁 {{ group.items.length }} 則回答</span></h2>
       <ol class="answer-gallery" [attr.aria-busy]="loading()">
-        @for (answer of result()?.items; track answer.id) {
-          <li>
-            <div class="answer-heading"><span>{{ typeLabel(answer.answerType) }}</span><h2>{{ answer.artifactName }}</h2><small>{{ answer.categoryName }}</small></div>
+        @for (answer of group.items; track answer.id) {
+          <li [attr.data-type]="answer.answerType">
+            <div class="answer-heading"><span>{{ typeLabel(answer.answerType) }}</span><h3>{{ answer.artifactName }}</h3><small>{{ answer.categoryName }}</small></div>
             @if (!artifactId) { <button type="button" class="artifact-pick" (click)="selectArtifact(answer)">只看這件文物</button> }
             <p class="answer-text">{{ answer.text }}</p>
             @if (answer.answerType !== 'FACTUAL_REASONING') { <p class="source-note">{{ answer.answerType === 'PLAUSIBLE_FICTION' ? '虛構說明，並非文物史實。' : '創意故事，並非文物史實。' }}</p> }
             <footer><div><strong>{{ answer.author }}</strong><span>房間 {{ answer.roomCode }} · {{ answer.completedAt | date:'yyyy/MM/dd HH:mm' }}</span><span>入選時 {{ answer.gameVotes }} 張遊戲票</span></div>
-              <button type="button" [attr.aria-pressed]="answer.voted" [disabled]="pendingVote() === answer.id || answer.isOwn || loading()" (click)="vote(answer)">{{ answer.isOwn ? '你的回答' : pendingVote() === answer.id ? '送出中…' : answer.voted ? '收回鑑賞票' : '投一票' }} · {{ answer.voteCount }}</button>
+              <div class="vote-action"><span><strong>{{ answer.voteCount }}</strong> 鑑賞票</span><button type="button" [attr.aria-pressed]="answer.voted" [disabled]="!!pendingVote() || answer.isOwn || loading()" (click)="vote(answer)">{{ answer.isOwn ? '你的回答' : pendingVote() === answer.id ? '送出中…' : answer.voted ? '收回鑑賞票' : '投一票' }}</button></div>
             </footer>
           </li>
-        } @empty { @if (!loading() && !error()) { <li class="empty">{{ hasFilters ? '找不到符合條件的回答，可以換個關鍵字或清除篩選。' : '目前還沒有入選回答。多人遊戲完成後，三種類型的第一名回答就會出現在這裡。' }}</li> } }
+        }
       </ol>
+      </section>
+      } @empty { @if (!loading() && !error()) { <p class="empty">{{ hasFilters ? '找不到符合條件的回答，可以換個關鍵字或清除篩選。' : '目前還沒有入選回答。多人遊戲完成後，三種類型的第一名回答就會出現在這裡。' }}</p> } }
+      </div>
       @if (result(); as page) { @if (page.totalPages > 1) { <nav class="pagination" aria-label="鑑賞回答分頁"><button type="button" [disabled]="loading() || page.page <= 1" (click)="load(page.page - 1)">上一頁</button><span>{{ page.page }}／{{ page.totalPages }} 頁</span><button type="button" [disabled]="loading() || page.page >= page.totalPages" (click)="load(page.page + 1)">下一頁</button></nav> } }
     </section>
   `
 })
 export class GameAppreciationComponent {
+  readonly answerTypes = ['', 'FACTUAL_REASONING', 'PLAUSIBLE_FICTION', 'CREATIVE_TALE'];
   private readonly game = inject(GameService);
   private readonly catalog = inject(CatalogService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   readonly result = signal<ApiPage<AppreciationAnswer> | null>(null);
+  readonly answerGroups = computed(() => {
+    const items = this.result()?.items ?? [];
+    const types = [...new Set(['FACTUAL_REASONING', 'PLAUSIBLE_FICTION', 'CREATIVE_TALE', ...items.map(answer => answer.answerType)])];
+    return types.map(type => ({ type, items: items.filter(answer => answer.answerType === type) })).filter(group => group.items.length);
+  });
   readonly categories = signal<CategoryModel[]>([]);
   readonly eras = signal<EraModel[]>([]);
   readonly loading = signal(false);
@@ -85,6 +107,7 @@ export class GameAppreciationComponent {
     this.load(1);
   }
   typeLabel(type: string): string { return ({ FACTUAL_REASONING: '史實推理', PLAUSIBLE_FICTION: '擬真異說', CREATIVE_TALE: '妙想奇談' } as Record<string, string>)[type] ?? type; }
+  selectAnswerType(type: string): void { if (this.answerType !== type) { this.answerType = type; this.load(1); } }
   get hasFilters(): boolean { return !!(this.artifactId || this.keyword || this.eraCode || this.categoryCode || this.answerType); }
   search(): void { this.keyword = this.searchText.trim(); this.load(1); }
   selectArtifact(answer: AppreciationAnswer): void { this.artifactId = answer.artifactId; this.artifactName = answer.artifactName; this.load(1); }

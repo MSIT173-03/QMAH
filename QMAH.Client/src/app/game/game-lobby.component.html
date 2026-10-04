@@ -71,8 +71,8 @@
   @if (showCreateForm) {
     <div class="sheet-backdrop" (click)="toggleCreateForm()"></div>
     <section #createDialog class="insert-sheet" role="dialog" aria-modal="true" aria-labelledby="create-title" tabindex="-1">
-      <header><div><h2 id="create-title">建立房間</h2><p>設定這一桌的節奏，準備好就入席。</p></div><button type="button" (click)="toggleCreateForm()" aria-label="關閉建立房間">關閉</button></header>
-      <form id="create-room-form" #createFormRef="ngForm" (ngSubmit)="createRoom()">
+      <header><h2 id="create-title">建立房間</h2><button type="button" (click)="toggleCreateForm()" aria-label="關閉建立房間">關閉</button><p class="create-intro"><span>設定這一桌的節奏，</span><span>準備好就入席。</span></p></header>
+      <app-game-scroll-panel label="房間設定，可上下捲動" cue="往下設定回合與時間"><form id="create-room-form" #createFormRef="ngForm" (ngSubmit)="createRoom()">
         @if (error && errorTitle === '房間建立失敗') { <p class="notice notice-error" role="alert">{{ error }}</p> }
         @if (!isRehearsal) { <label>顯示名稱<input name="createDisplayName" [(ngModel)]="createForm.displayName" maxlength="80" required /></label> }
         <div class="form-columns">
@@ -83,8 +83,8 @@
           <fieldset class="room-setting room-setting-wide"><legend>投票時間</legend><div class="setting-choices">@for (seconds of [120, 180, 240, 300]; track seconds) { <button type="button" [class.is-selected]="createForm.votingSeconds === seconds" [attr.aria-pressed]="createForm.votingSeconds === seconds" (click)="createForm.votingSeconds = seconds">{{ seconds / 60 }} 分鐘</button> }</div></fieldset>
         </div>
         @if (!isRehearsal && createForm.visibility === 'PRIVATE') { <label>房間密碼<input name="createPassword" type="password" [(ngModel)]="createForm.password" required /></label> }
-      </form>
-      <footer><span>建立後會直接進入房間。</span><div class="create-actions"><button type="button" class="secondary" (click)="toggleCreateForm()">取消</button><button type="submit" form="create-room-form" [disabled]="creating || createFormRef.invalid">{{ creating ? '建立中…' : '建立並入席' }}</button></div></footer>
+      </form></app-game-scroll-panel>
+      <footer><span role="status">{{ createFormRef.invalid ? (createForm.visibility === 'PRIVATE' && !createForm.password ? '請往下填寫房間密碼。' : '請填寫顯示名稱。') : '建立後會直接進入房間。' }}</span><div class="create-actions"><button type="button" class="secondary" (click)="toggleCreateForm()">取消</button><button type="submit" form="create-room-form" [disabled]="creating || createFormRef.invalid">{{ creating ? '建立中…' : '建立並入席' }}</button></div></footer>
     </section>
   }
 </div>

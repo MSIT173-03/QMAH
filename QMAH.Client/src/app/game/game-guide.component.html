@@ -37,7 +37,7 @@
       <a class="guide-panel-link" routerLink="/game">開始多人鑑定</a>
     } @else {
       <section class="training-demo" aria-labelledby="training-demo-title" animate.enter="game-panel-enter">
-        <div class="training-demo__heading"><h2 id="training-demo-title">試玩四種單人玩法</h2><p>看一局自動示範，也能切換成自己操作；盤面與正式遊戲相同。</p></div>
+        <div class="training-demo__heading"><h2 id="training-demo-title">試玩四種單人玩法</h2><p>看一局自動示範，也能切換成自己操作。盤面與正式遊戲相同。</p></div>
         <div class="guide-tabs training-demo__modes" role="group" aria-label="選擇單人玩法示範">
           @for (mode of trainingModes; track mode.code) {
             <button type="button" [class.is-active]="activeTrainingDemo() === mode.code" [attr.aria-pressed]="activeTrainingDemo() === mode.code" (click)="selectTrainingDemo(mode.code)">

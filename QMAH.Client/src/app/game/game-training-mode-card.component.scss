@@ -1,7 +1,7 @@
 :host { display: block; min-width: 0; }
 *, *::before, *::after { box-sizing: border-box; }
 button { display: grid; width: 100%; min-height: 44px; gap: 12px; padding: 10px; font: inherit; font-weight: 800; text-align: left; cursor: pointer; transition: transform 220ms cubic-bezier(.16, 1, .3, 1), box-shadow 220ms ease-out; }
-button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
+button:focus-visible { outline: 3px solid var(--game-table-ink, #fff8e9); outline-offset: 4px; }
 button:disabled { opacity: .55; cursor: wait; }
 .mode-choice-copy { display: grid; min-width: 0; gap: 8px; }
 .mode-card-title { overflow-wrap: anywhere; font: 750 20px/1.25 var(--qmah-font-serif); letter-spacing: -.025em; text-wrap: balance; }
@@ -10,7 +10,7 @@ button:disabled { opacity: .55; cursor: wait; }
 .mode-mechanic { min-width: 0; font: 500 16px/1.5 var(--qmah-font-sans); overflow-wrap: anywhere; text-wrap: pretty; }
 .mode-card-copy-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .mode-selection { display: inline-flex; align-items: center; gap: 6px; min-height: 22px; font: 700 12px/1.5 var(--qmah-font-sans); }
-.is-selected .mode-selection::before { content: ''; width: 14px; height: 16px; background: url('/assets/game/kenney-jewel.svg') center/contain no-repeat; }
+.is-selected .mode-selection::before { content: ''; width: 14px; height: 16px; background:url('/assets/game/kenney-selected-mark.svg') center/contain no-repeat; }
 .mode-cover { position: relative; display: grid; place-items: center; width: 100%; min-width: 0; aspect-ratio: 8/5; padding: 10px; border-radius: 8px; background: #eadfc7; overflow: hidden; }
 .mini-memory { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3px; height: 100%; aspect-ratio: 254/354; }
 .mini-memory > span { min-width: 0; min-height: 0; border-radius: 2px; background: url('/assets/game/kenney-card-back-blue.png') center/100% 100%; overflow: hidden; }
@@ -48,7 +48,7 @@ button.is-selected:hover:not(:disabled) { transform: translateY(-8px); }
 button[data-mode].is-selected::before, button[data-mode].is-selected::after { --mode-corner-size: clamp(24px, 10vw, 34px); content: ''; position: absolute; inset: calc(-1 * clamp(8px, 2vw, 12px)); z-index: 2; pointer-events: none; filter: drop-shadow(0 0 2px #fff3d8) drop-shadow(0 1px 2px #14291c50); }
 button[data-mode].is-selected::before { background: linear-gradient(#1e3547, #1e3547) left top / var(--mode-corner-size) 3px no-repeat, linear-gradient(#1e3547, #1e3547) left top / 3px var(--mode-corner-size) no-repeat, linear-gradient(#1e3547, #1e3547) right bottom / var(--mode-corner-size) 3px no-repeat, linear-gradient(#1e3547, #1e3547) right bottom / 3px var(--mode-corner-size) no-repeat; }
 button[data-mode].is-selected::after { background: linear-gradient(#1e3547, #1e3547) right top / var(--mode-corner-size) 3px no-repeat, linear-gradient(#1e3547, #1e3547) right top / 3px var(--mode-corner-size) no-repeat, linear-gradient(#1e3547, #1e3547) left bottom / var(--mode-corner-size) 3px no-repeat, linear-gradient(#1e3547, #1e3547) left bottom / 3px var(--mode-corner-size) no-repeat; }
-button[data-mode].is-selected:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
+button[data-mode].is-selected:focus-visible { outline: 3px solid var(--game-table-ink, #fff8e9); outline-offset: 4px; }
 @media (max-width: 600px) {
   button { padding: 6px; gap: 8px; }
   .mode-cover { padding: 6px; }
@@ -58,16 +58,16 @@ button[data-mode].is-selected:focus-visible { outline: 3px solid var(--qmah-focu
   .mode-mechanic { min-height: 48px; }
 }
 @media (min-width: 1001px) {
-  button[data-mode] { transform: rotate(var(--mode-card-tilt, 0deg)) scale(.94); transition: transform 260ms cubic-bezier(.2, .8, .2, 1), box-shadow 260ms ease, filter 180ms ease; box-shadow: 0 8px 16px #14291c4a; }
-  button[data-mode].is-selected { z-index: 2; transform: rotate(var(--mode-card-tilt, 0deg)) translateY(-6px) scale(.97); box-shadow: 0 12px 20px #14291c66; }
+  button[data-mode] { transform:translateY(var(--mode-card-offset,0px)) rotate(var(--mode-card-tilt, 0deg)) scale(.94); transition: transform 260ms cubic-bezier(.2, .8, .2, 1), box-shadow 260ms ease, filter 180ms ease; box-shadow: 0 8px 16px #14291c4a; }
+  button[data-mode].is-selected { z-index: 2; transform: rotate(var(--mode-card-tilt, 0deg)) translateY(-8px) scale(.97); box-shadow: 0 12px 20px #14291c66; }
   button[data-mode]:hover:not(:disabled) { z-index: 4; transform: rotate(0deg) translateY(-14px) scale(1.02); box-shadow: 0 18px 24px #14291c70; }
   button[data-mode].is-selected:hover:not(:disabled) { transform: rotate(0deg) translateY(-14px) scale(1.02); }
 }
 @media (prefers-reduced-motion: reduce) {
   button, .mode-selection { transition: none; }
   .is-selected .mode-selection { animation: none; }
-  button.is-selected, button.is-selected:hover:not(:disabled), button:active:not(:disabled) { transform: none; }
+  button:active:not(:disabled) { transition:none; }
 }
 @media (prefers-reduced-motion: reduce) and (min-width: 1001px) {
-  button[data-mode], button[data-mode].is-selected, button[data-mode]:hover:not(:disabled), button[data-mode].is-selected:hover:not(:disabled) { transform: none; transition: none; }
+  button[data-mode] { transition:none; }
 }

@@ -1,0 +1,11 @@
+{
+  "source": "https://kenney.nl/assets/ui-pack-adventure",
+  "license": "CC0-1.0",
+  "scope": "Game UI only. Four distinct additions, no complete pack import.",
+  "assets": [
+    {"file":"kenney-index-frame.svg","sourceFile":"Vector/panel_border_grey_detail.svg","role":"Metal corner frame for indexes and storage","slice":18},
+    {"file":"kenney-control-panel.svg","sourceFile":"Vector/panel_grey_bolts_detail_a.svg","role":"Blue grey control housing for HUD and controls","slice":18},
+    {"file":"kenney-confirm-button.svg","sourceFile":"Vector/button_red.svg","role":"Leave and cancel actions","slice":5},
+    {"file":"kenney-selected-mark.svg","sourceFile":"Vector/checkbox_beige_checked.svg","role":"Selected status, never the sole indicator"}
+  ]
+}

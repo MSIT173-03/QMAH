@@ -2,7 +2,7 @@
 <section class="result-sheet" aria-labelledby="result-title" animate.enter="game-result-enter">
   <header class="result-banner">
     <h2 id="result-title" tabindex="-1">{{ title() }}</h2>
-    <p>{{ attempt().modeName }} · 本局館藏已揭曉，點選名稱可前往圖鑑。</p>
+    <p><span>{{ attempt().modeName }} · 本局館藏已揭曉。</span><span>點選文物名稱，前往圖鑑。</span></p>
   </header>
   <div class="result-gallery" [class.is-memory]="attempt().modeCode === 'MEMORY_MATCH' || attempt().modeCode === 'DETAIL_LOCATOR'" aria-label="本局館藏揭曉">
     @for (artifact of artifacts(); track artifact.artifactId) {
@@ -16,7 +16,7 @@
   </div>
   <section class="result-summary" aria-label="成績卡片">
     <div class="result-award">
-      <div class="result-grade" [class.is-fail]="complete().grade === 'FAIL'"><span>本局評級</span><strong>{{ complete().grade === 'FAIL' ? '未達標' : complete().grade }}</strong></div>
+      <div class="result-grade" [attr.data-grade]="complete().grade" [class.is-fail]="complete().grade === 'FAIL'"><span>本局評級</span><strong>{{ complete().grade === 'FAIL' ? '未達標' : complete().grade }}</strong></div>
       <div><div class="result-score">{{ complete().normalizedScore }} <small>分</small></div><p class="result-award-copy">{{ complete().grade === 'S' ? '觀察入微，這一局表現出色！' : complete().grade === 'A' ? '掌握訣竅，離最高評級更近了。' : complete().grade === 'FAIL' ? '把這次的經驗帶進下一局。' : '挑戰達標，再來一局突破自己。' }}</p></div>
     </div>
     <dl class="result-facts"><div><dt>挑戰用時</dt><dd>{{ elapsedLabel() }}</dd></div>@if (attempt().modeCode !== 'DETAIL_LOCATOR') { <div><dt>{{ attempt().modeCode === 'MEMORY_MATCH' ? '翻牌組合' : '放置次數' }}</dt><dd>{{ moves() }} 次</dd></div> }</dl>

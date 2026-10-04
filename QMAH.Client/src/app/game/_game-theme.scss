@@ -38,15 +38,15 @@
   --game-puzzle-empty: #f4ead8;
   --game-puzzle-line: #c7b28e;
   --game-puzzle-index: #466b51;
-  --game-frame-image: url('/assets/game/kenney-wood-frame.svg');
-  --game-frame-rim-image: url('/assets/game/kenney-wood-rim.svg');
+  --game-frame-image: url('/assets/game/kenney-wood.svg#light');
+  --game-frame-rim-image: url('/assets/game/kenney-wood.svg#light-rim');
   --game-frame-width: clamp(28px, 3vw, 48px);
-  --game-primary-image: url('/assets/game/kenney-button.svg');
-  --game-button-blue-image: url('/assets/game/kenney-button-blue.svg');
-  --game-button-marsala-image: url('/assets/game/kenney-button-marsala.svg');
-  --game-button-ochre-image: url('/assets/game/kenney-button-ochre.svg');
+  --game-primary-image: url('/assets/game/kenney-buttons.svg#green');
+  --game-button-blue-image: url('/assets/game/kenney-button-tones.svg#blue');
+  --game-button-marsala-image: url('/assets/game/kenney-button-tones.svg#marsala');
+  --game-button-ochre-image: url('/assets/game/kenney-button-tones.svg#ochre');
   --game-primary-ink: #fff8e9;
-  --game-secondary-image: url('/assets/game/kenney-button-secondary.svg');
+  --game-secondary-image: url('/assets/game/kenney-buttons.svg#paper');
   --game-secondary-ink: #334737;
 }
 
@@ -105,10 +105,10 @@ html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-train
   --game-puzzle-board: #e3d6be;
   --game-puzzle-empty: #ebe1cd;
   --game-puzzle-line: #b4a080;
-  --game-frame-image: url('/assets/game/kenney-wood-frame-dark.svg');
-  --game-frame-rim-image: url('/assets/game/kenney-wood-rim-dark.svg');
-  --game-primary-image: url('/assets/game/kenney-button-dark.svg');
-  --game-secondary-image: url('/assets/game/kenney-button-secondary-dark.svg');
+  --game-frame-image: url('/assets/game/kenney-wood.svg#dark');
+  --game-frame-rim-image: url('/assets/game/kenney-wood.svg#dark-rim');
+  --game-primary-image: url('/assets/game/kenney-buttons.svg#dark');
+  --game-secondary-image: url('/assets/game/kenney-buttons.svg#paper-dark');
   --game-secondary-ink: #f3f0df;
 }
 

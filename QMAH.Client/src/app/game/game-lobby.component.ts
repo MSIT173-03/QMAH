@@ -10,6 +10,7 @@ import { GameNavigationComponent } from './game-navigation.component';
 import { GameLobbyRoomBoardComponent } from './game-lobby-room-board.component';
 import { GameLobbyRoomDetailDialogComponent } from './game-lobby-room-detail-dialog.component';
 import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
+import { GameScrollPanelComponent } from './game-scroll-panel.component';
 import { GameService } from './game.service';
 import { MeApiService } from '../core/services/me-api';
 import { GameFocusMode } from '../core/services/game-focus-mode';
@@ -18,7 +19,7 @@ type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, GameNavigationComponent, GameLobbyRoomBoardComponent, GameLobbyRoomDetailDialogComponent, GameRoomQrDialogComponent],
+  imports: [FormsModule, RouterLink, GameNavigationComponent, GameLobbyRoomBoardComponent, GameLobbyRoomDetailDialogComponent, GameRoomQrDialogComponent, GameScrollPanelComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })
@@ -232,8 +233,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       this.showCreateForm = false;
       this.errorTitle = this.isAdmin() ? '預覽模式' : '房間目前僅供查看';
       this.error = this.isAdmin()
-        ? '目前是預覽模式，不能建立房間；你可以查看內容，或返回多人鑑定大廳。'
-        : '這間房目前僅供查看，不能建立房間；請返回多人鑑定大廳。';
+        ? '目前是預覽模式，不能建立房間。你可以查看內容，或返回多人鑑定大廳。'
+        : '這間房目前僅供查看，不能建立房間。請返回多人鑑定大廳。';
       return;
     }
     this.creating = true; this.errorTitle = '房間建立失敗'; this.error = ''; this.success = '';
@@ -262,8 +263,8 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
     if (this.isDemo) {
       this.errorTitle = this.isAdmin() ? '預覽模式' : '房間目前僅供查看';
       this.error = this.isAdmin()
-        ? '目前是預覽模式，不能加入房間；你可以查看內容，或返回多人鑑定大廳。'
-        : '這間房目前僅供查看，不能加入房間；請返回多人鑑定大廳。';
+        ? '目前是預覽模式，不能加入房間。你可以查看內容，或返回多人鑑定大廳。'
+        : '這間房目前僅供查看，不能加入房間。請返回多人鑑定大廳。';
       return;
     }
     this.joining = true; this.errorTitle = '加入房間失敗'; this.error = ''; this.success = '';

@@ -32,11 +32,10 @@
   border-radius: var(--qmah-radius-card);
 }
 .guide-tabs button {
+
   display: grid;
   gap: 2px;
   min-height: 66px;
-  border: 1px solid transparent;
-  border-radius: var(--qmah-radius-control);
   padding: 11px 14px;
   color: var(--guide-muted);
   background: transparent;
@@ -44,12 +43,13 @@
   cursor: pointer;
   transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
-.guide-tabs button:hover { color: var(--guide-ink); background: var(--qmah-surface-muted); }
-.guide-tabs button.is-active { border-color: var(--qmah-game-action); background: var(--qmah-game-action); box-shadow: var(--qmah-shadow-card); }
+.guide-tabs button:hover { color: var(--guide-ink); }
+.guide-tabs button.is-active { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; color:#fff8e9; background:transparent; box-shadow:0 3px 0 #27445a,0 6px 10px #14291c24; }
 .guide-tabs button span { font-size: 16px; font-weight: 800; }
 .guide-tabs button small { color: var(--guide-muted); font-size: var(--qmah-type-label-size); }
-.guide-tabs button.is-active small { color: color-mix(in srgb, var(--qmah-game-content) 78%, transparent); }
+.guide-tabs button.is-active small { color:#f3eadb; }
 .guide-panel {
+  @include ui.paper-panel;
   @include ui.reading-surface;
   --guide-ink: var(--game-card-ink);
   --guide-jade: var(--game-card-action);
@@ -58,18 +58,17 @@
   --guide-surface: var(--game-card-ground);
   --guide-line: var(--game-card-line);
   margin-top: 14px;
-  border: 1px solid var(--guide-line);
   border-radius: var(--qmah-radius-panel);
   padding: clamp(18px, 3vw, 28px);
   background: var(--guide-surface);
   box-shadow: var(--qmah-shadow-card);
 }
 .guide-panel-link {
+
   display: inline-flex;
   min-height: var(--qmah-control-height);
   align-items: center;
   margin-top: 18px;
-  border: 1px solid var(--guide-line);
   border-radius: var(--qmah-radius-control);
   padding: 8px var(--qmah-control-padding-x);
   color: var(--guide-jade);
@@ -77,7 +76,7 @@
   text-decoration: none;
 }
 .training-demo__choices { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.training-demo__choices button { display: grid; gap: 8px; width: 100%; min-height: 72px; padding: 12px 14px; border: 1px solid var(--guide-line); border-radius: var(--qmah-radius-control); color: var(--qmah-ink); background: var(--guide-surface); text-align: left; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease; }
+.training-demo__choices button { display: grid; gap: 8px; width: 100%; min-height: 72px; padding: 12px 14px; color: var(--game-card-ink); background: transparent; text-align: left; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease; }
 .training-demo__choices button:hover:not(:disabled) { border-color: var(--qmah-game-action); transform: translateY(-1px); }
 .training-demo__choices button.is-selected { border-color: var(--qmah-game-action); background: color-mix(in srgb, var(--qmah-game-action) 8%, var(--guide-surface)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--qmah-game-action) 16%, transparent); }
 .training-demo__choices button:disabled { cursor: default; opacity: 1; }
@@ -91,9 +90,9 @@
 .training-demo__body { display: grid; grid-template-columns: minmax(280px, .82fr) minmax(0, 1.18fr); gap: clamp(18px, 3vw, 32px); align-items: stretch; }
 .training-demo__question h3 { margin: 0 0 12px; font-size: 18px; }
 .training-demo__question { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-.training-demo__action, .training-demo__retry { min-height: var(--qmah-control-height); margin-top: 12px; border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); padding: 8px var(--qmah-control-padding-x); color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 800; cursor: pointer; }
+.training-demo__action, .training-demo__retry { min-height: var(--qmah-control-height); margin-top: 12px; padding: 8px var(--qmah-control-padding-x); color: var(--qmah-game-content); background: transparent; font-weight: 800; cursor: pointer; }
 .training-demo__action:disabled { cursor: not-allowed; opacity: .55; }
-.training-demo__retry { color: var(--qmah-game-action); background: transparent; }
+.training-demo__retry { --game-button-image:var(--game-secondary-image); color: var(--qmah-game-action); background: transparent; }
 .training-demo__result { margin: 14px 0 0; padding: 12px 14px; border-radius: var(--qmah-radius-control); font-weight: 800; }
 .training-demo__result.is-correct { color: var(--qmah-jade-deep); background: var(--qmah-jade-soft); }
 .training-demo__result.is-wrong { color: var(--qmah-danger); background: color-mix(in srgb, var(--qmah-danger) 9%, var(--guide-surface)); }
@@ -177,9 +176,13 @@
 .training-demo__modes button { color: var(--scene-muted); }
 .training-demo__modes button.is-active { color: var(--qmah-game-content); background: var(--qmah-game-action); }
 .guide-tabs { background: transparent; }
-.guide-tabs button.is-active { color: var(--qmah-game-content); }
+.guide-tabs button.is-active { color:#fff8e9; }
 .training-demo__action, .training-demo__retry, .guide-panel-link { color: var(--qmah-game-content); background: var(--qmah-game-action); }
 app-game-scroll-board { --scroll-ink: var(--scene-ink); --scroll-muted: var(--scene-muted); }
 
 // 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
 .training-demo__instruction, .training-demo__side-copy > p:not(.training-demo__readout, .training-demo__result) { @include ui.prose; max-width: 70ch; }
+
+
+.guide-tabs button, .guide-panel-link, .training-demo__choices button, .training-demo__action, .training-demo__retry { @include ui.button(true); }
+.training-demo__action { --game-button-image:var(--game-primary-image); --game-button-ink:var(--game-primary-ink); }

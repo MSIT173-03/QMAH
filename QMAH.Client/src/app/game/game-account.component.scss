@@ -26,7 +26,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 /* ui-integration: App Shell 與 Game 子導覽已統一品牌入口，帳號內容只處理登入狀態與表單。 */
 .back-link { color: var(--jade); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
 .game-action-label { display: inline-flex; white-space: nowrap; }
-.account-panel { width: min(520px, 100%); margin: clamp(44px, 10vh, 100px) auto 0; padding: clamp(28px, 6vw, 48px); background: var(--surface); border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); }
+.account-panel { @include ui.control-housing(true); --ink:var(--game-card-ink); --muted:var(--game-card-muted); width: min(520px, 100%); margin: clamp(44px, 10vh, 100px) auto 0; padding: clamp(28px, 6vw, 48px); background: var(--game-card-ground); border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); }
 .account-loading { margin: 0; color: var(--muted); }
 .account-panel h1 { margin: 0 0 var(--qmah-space-6); font-size: var(--qmah-type-page-title-size); line-height: var(--qmah-type-heading-leading); letter-spacing: -.025em; overflow-wrap: anywhere; }
 .account-panel > p { margin: -10px 0 24px; color: var(--muted); }
@@ -51,3 +51,5 @@ button:disabled { cursor: not-allowed; }
 // 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
 .account-panel > p { @include ui.prose; }
 .account-panel h1 { font-size: clamp(24px, 4vw, 32px); word-break: normal; overflow-wrap: break-word; }
+
+.account-panel button, .primary-link { @include ui.button; background:transparent; }

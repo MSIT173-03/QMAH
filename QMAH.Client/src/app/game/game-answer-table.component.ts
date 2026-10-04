@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
 
 import { GameAnswer, GameAnswerType, GamePlayer, GameRoundDetails } from './game.models';
 import { GameAnswerCardComponent } from './game-answer-card.component';
@@ -45,10 +45,13 @@ export class GameAnswerTableComponent {
   readonly canVote = input.required<(answer: GameAnswer) => boolean>();
   readonly vote = output<GameAnswer>();
 
-  readonly selectedAnswer = signal<GameAnswer | null>(null);
+  readonly selectedAnswerId = signal<string | null>(null);
+  readonly selectedAnswer = computed(() => this.round().answers.find(answer => answer.id === this.selectedAnswerId()) ?? null);
   private readonly answerDialog = viewChild<ElementRef<HTMLDialogElement>>('answerDialog');
   private readonly mobileAnswerCarousel = viewChild<ElementRef<HTMLElement>>('mobileAnswerCarousel');
+  private readonly roundId = computed(() => this.round().id);
   readonly selectedMobileAnswerType = signal<GameAnswerType>('FACTUAL_REASONING');
+  readonly carouselIndex = signal(0);
   readonly answerGroups = computed(() => ANSWER_GROUPS
     .map(group => ({
       ...group,
@@ -75,6 +78,20 @@ export class GameAnswerTableComponent {
     (_, index) => index
   ));
 
+  constructor() {
+    effect(() => {
+      if (this.selectedAnswerId() && !this.selectedAnswer()) this.closeAnswer();
+    });
+    effect(() => {
+      this.roundId();
+      const rail = this.mobileAnswerCarousel()?.nativeElement;
+      if (rail) {
+        this.carouselIndex.set(0);
+        rail.scrollTo({ left:0, behavior:'auto' });
+      }
+    });
+  }
+
   submittedAnswerCount(): number {
     const count = (this.round() as GameRoundDetails & { submittedAnswerCount?: number }).submittedAnswerCount ?? 0;
     return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
@@ -86,7 +103,30 @@ export class GameAnswerTableComponent {
 
   selectMobileAnswerType(type: GameAnswerType): void {
     this.selectedMobileAnswerType.set(type);
+    this.carouselIndex.set(0);
     this.mobileAnswerCarousel()?.nativeElement.scrollTo({ left: 0, behavior: 'auto' });
+  }
+
+  updateCarouselIndex(): void {
+    const rail = this.mobileAnswerCarousel()?.nativeElement;
+    const cards = rail?.querySelectorAll<HTMLElement>('app-game-answer-card');
+    if (!rail || !cards?.length) return;
+    const firstOffset = cards[0].offsetLeft;
+    let nearest = 0;
+    for (let index = 1; index < cards.length; index++) {
+      if (Math.abs(cards[index].offsetLeft - firstOffset - rail.scrollLeft)
+        < Math.abs(cards[nearest].offsetLeft - firstOffset - rail.scrollLeft)) nearest = index;
+    }
+    this.carouselIndex.set(nearest);
+  }
+
+  browseAnswers(direction: -1 | 1): void {
+    const rail = this.mobileAnswerCarousel()?.nativeElement;
+    const cards = rail?.querySelectorAll<HTMLElement>('app-game-answer-card');
+    if (!rail || !cards?.length) return;
+    const index = Math.max(0, Math.min(cards.length - 1, this.carouselIndex() + direction));
+    rail.scrollTo({ left: cards[index].offsetLeft - cards[0].offsetLeft,
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
 
   seatColor(playerId: string, index: number): string {
@@ -95,7 +135,7 @@ export class GameAnswerTableComponent {
   }
 
   openAnswer(answer: GameAnswer): void {
-    this.selectedAnswer.set(answer);
+    this.selectedAnswerId.set(answer.id);
     const dialog = this.answerDialog()?.nativeElement;
     if (dialog && !dialog.open) dialog.showModal();
   }
@@ -103,7 +143,7 @@ export class GameAnswerTableComponent {
   closeAnswer(): void {
     const dialog = this.answerDialog()?.nativeElement;
     if (dialog?.open) dialog.close();
-    this.selectedAnswer.set(null);
+    this.selectedAnswerId.set(null);
   }
 
   closeOnBackdrop(event: MouseEvent): void {

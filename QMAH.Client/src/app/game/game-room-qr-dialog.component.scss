@@ -2,7 +2,7 @@
 :host { --ink: var(--qmah-ink); --jade: var(--qmah-jade); --cinnabar: var(--qmah-cinnabar); --surface: var(--qmah-surface); --line: var(--qmah-line); --muted: var(--qmah-muted); display: contents; }
 /* ui-integration: QR dialog 與 Game create dialog 共用高於 App Shell 的 stacking context，保證 mobile 仍可關閉與複製。 */
 .qr-backdrop { position: fixed; z-index: 70; inset: 0; background: color-mix(in srgb, var(--qmah-night) 58%, transparent); }
-.qr-sheet { position: fixed; z-index: 71; top: 50%; left: 50%; display: grid; justify-items: center; width: min(360px, calc(100vw - 32px)); transform: translate(-50%, -50%); padding: var(--qmah-space-6); border: 1px solid var(--qmah-border); color: var(--ink); background: var(--surface); box-shadow: var(--qmah-shadow-dialog); text-align: center; }
+.qr-sheet { @include ui.control-housing(true); --ink:var(--game-card-ink); --muted:var(--game-card-muted); --surface:var(--game-card-ground); position: fixed; z-index: 71; top: 50%; left: 50%; display: grid; justify-items: center; width: min(360px, calc(100vw - 32px)); transform: translate(-50%, -50%); padding: var(--qmah-space-6); color: var(--ink); background: var(--surface); box-shadow: var(--qmah-shadow-dialog); text-align: center; }
 .qr-sheet > header { display: flex; align-items: flex-start; justify-content: space-between; width: 100%; gap: 16px; margin-bottom: 18px; border-bottom: 1px solid var(--line); text-align: left; }
 .qr-sheet header p { margin: 0 0 4px; color: var(--cinnabar); font-size: 10px; font-weight: 800; letter-spacing: .16em; }
 .qr-sheet h2 { margin: 0 0 var(--qmah-space-4); font-family: var(--qmah-font-serif); font-size: var(--qmah-type-section-title-size); line-height: var(--qmah-type-heading-leading); }
@@ -23,3 +23,6 @@
 .qr-sheet > header button { flex: none; }
 .qr-sheet > header button { color: var(--ink); }
 .qr-frame { max-width: 100%; }
+
+.qr-copy, .qr-sheet > header button { @include ui.button(true); background:transparent; }
+.qr-frame { background:#fff; padding:8px; box-shadow:inset 0 2px 5px #33251420; }

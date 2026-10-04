@@ -1,6 +1,6 @@
 <div class="training-notebook" [class.is-playing]="phase === 'playing'" [class.is-complete]="phase === 'complete'" [class.is-focus-mode]="focusMode.active()">
       @if (phase === 'list') {
-        @if (focusMode.active()) { <div class="focus-exit"><button type="button" (click)="focusMode.toggle()">離開專注模式</button></div> }
+        @if (focusMode.active()) { <div class="focus-exit"><button type="button" (click)="focusMode.toggle()" aria-label="離開專注模式"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5" /></svg><span>離開專注模式</span></button></div> }
         @else { <app-game-navigation /> }
       } @else if (phase === 'complete') { <div class="scene-toolbar"><a routerLink="/game">遊戲大廳</a><button type="button" (click)="focusMode.toggle()" [attr.aria-pressed]="focusMode.active()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button></div> }
 
@@ -77,14 +77,18 @@
         }
         @else if (!error) { <div class="loading">目前沒有可開始的單人小遊戲。</div> }
       </section>
-      <dialog #pauseDialog class="pause-dialog" aria-labelledby="pause-title" (close)="resumeFromPause()">
+      <dialog #pauseDialog class="pause-dialog" [class.is-confirming]="confirmLeaving" aria-labelledby="pause-title" (close)="resumeFromPause()">
         <header class="pause-dialog__header">
-          <h2 id="pause-title">{{ helpRequested ? '需要幫忙嗎？' : confirmLeaving ? '離開這一局？' : '先歇一會' }}</h2>
+          <h2 id="pause-title">{{ confirmLeaving ? '離開這一局？' : helpRequested ? '需要幫忙嗎？' : '先歇一會' }}</h2>
           <button type="button" class="pause-close" aria-label="關閉選單並繼續遊玩" (click)="closePause()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
           </button>
         </header>
-        <app-game-scroll-panel label="暫停與協助選項，可上下捲動" cue="往下查看其他選項"><p>{{ confirmLeaving ? '目前進度不會送出，也不會發放獎勵。' : '本局盤面與進度仍保留。' }}</p>
+        @if (confirmLeaving) {
+          <p class="leave-warning"><span>離開後會清除本局進度，</span><span>不會結算成績或發放獎勵。</span></p>
+          <div class="confirm-actions"><button type="button" (click)="closePause()">繼續這一局</button><button type="button" class="secondary" data-button-tone="danger" (click)="leaveFromPause()">放棄本局，回玩法列表</button></div>
+        } @else {
+        <app-game-scroll-panel label="暫停與協助選項，可上下捲動" cue="往下查看其他選項"><p>暫停期間不計時，繼續遊玩會回到目前盤面。</p>
         @if (helpRequested) {
           <div class="help-options">
             <section class="help-option" aria-labelledby="hint-option-title">
@@ -101,17 +105,19 @@
               <button type="button" (click)="useHelp(true)" [disabled]="!canAskForHelp">確認代完成並結算</button>
             </section>
           </div>
-          <ul class="help-notes">
+          <details class="help-explanation"><summary>計分與送出說明</summary><ul class="help-notes">
             <li><strong>扣分只影響這一局</strong><p>帳戶中的鑑定點數不會減少。<br />本局扣分後最低為<span class="text-unit"> 0 分</span>。</p></li>
             <li><strong>獎勵依結算評級發放</strong><p>點數受今日剩餘可得點數限制。<br />鑰匙進度不受每日點數上限影響。</p></li>
             <li><strong>送出失敗也不用重玩</strong><p>盤面、提示與<span class="text-unit">代完成</span>紀錄都會保留。<br />再按一次「送出結果」即可。</p></li>
-          </ul>
-} @else if (!confirmLeaving) {
+          </ul></details>
+} @else {
   <button type="button" (click)="helpRequested = true" [disabled]="!canAskForHelp">求救選項</button>
 }
 <button type="button" (click)="closePause()">繼續遊玩</button>
         <button type="button" class="secondary" (click)="focusMode.toggle(); closePause()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button>
-        <a routerLink="/game" class="pause-lobby">遊戲大廳</a>
-        <button type="button" class="secondary" [attr.data-button-tone]="confirmLeaving ? 'danger' : null" (click)="leaveFromPause()">{{ confirmLeaving ? '確認離開' : '返回玩法列表' }}</button>
-      </app-game-scroll-panel></dialog>
+        <a routerLink="/game" class="pause-lobby">保留進度回大廳</a>
+        <button type="button" class="secondary" (click)="leaveFromPause()">放棄本局，回玩法列表</button>
+      </app-game-scroll-panel>
+        }
+      </dialog>
     </div>

@@ -1,31 +1,52 @@
 @use './game-ui' as ui;
-:host { display: block; width: 100%; min-width: 0; }
-* { box-sizing: border-box; }
-.locator-round { display: grid; gap: 16px; }
-.locator-instruction { text-align: center; }
-.locator-instruction strong { font-size: 20px; }
-.locator-instruction p { margin: 8px 0 0; line-height: 1.6; }
-.locator-instruction p span { display: block; }
-.locator-steps { display: flex; justify-content: center; gap: 12px; padding: 0; margin: 0; list-style: none; }
-.locator-steps li { display: grid; justify-items: center; gap: 4px; min-width: 48px; padding: 4px; border-bottom: 2px solid transparent; font-variant-numeric: tabular-nums; }
-.locator-steps li[aria-current] { border-color: currentColor; font-weight: 700; }
-.locator-steps span { font-size: 12px; }
-.locator-steps .is-done { opacity: .8; }
-.locator-workspace { display: grid; grid-template-columns: minmax(100px, 220px) minmax(0, 1fr); gap: clamp(16px, 4vw, 48px); align-items: center; justify-items: center; }
-figure { margin: 0; min-width: 0; text-align: center; }
-.locator-clue__image { position: relative; width: min(100%, 180px); margin: 0 auto 12px; }
-.locator-clue canvas { display: block; width: 100%; height: auto; border: 6px solid var(--game-card-ground); border-radius: 8px; }
-.locator-crosshair { position: absolute; top: 50%; left: 50%; width: 32px; height: 32px; transform: translate(-50%, -50%); pointer-events: none; }
-.locator-original { position: relative; display: block; width: fit-content; max-width: 100%; margin-inline: auto; padding: 0; border: 0; border-radius: 6px; background: var(--game-card-ground); cursor: crosshair; }
-.locator-original img { display:block; width:auto; max-width:100%; max-height:var(--locator-image-height,min(62dvh,580px)); height:auto; border-radius:6px; }
-.locator-original:disabled { cursor: default; opacity: 1; }
-figcaption { margin-top: 12px; font-size: 14px; line-height: 1.6; }
-figcaption small { display: block; margin-top: 4px; font-size: 12px; }
-.locator-cursor { position: absolute; width: 24px; height: 24px; transform: translate(-50%, -50%); border: 3px solid white; border-radius: 50%; background: #25493480; box-shadow: 0 0 0 2px #273e33; pointer-events: none; }
-.locator-region { position: absolute; width: 50%; height: 50%; border: 3px dashed #fff7e8; background: #2f6b5059; pointer-events: none; }
-.locator-feedback { @include ui.paper-panel; margin: 0; padding: 8px 16px; border-width: 4px; text-align: center; }
-.locator-status { display: grid; justify-items: center; gap: 12px; }
+:host { display:block; width:100%; min-width:0; height:var(--locator-round-height,auto); }
+* { box-sizing:border-box; }
+.locator-round { display:grid; grid-template-rows:minmax(0,1fr); height:100%; min-height:0; }
+.locator-round-heading { display:grid; gap:12px; align-self:start; text-align:left; }
+.locator-round-heading > strong { font-size:22px; }
+.locator-steps { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; padding:0; margin:0; list-style:none; }
+.locator-steps li { display:flex; align-items:center; justify-content:center; gap:8px; min-width:80px; min-height:44px; padding:4px 8px; border:5px solid transparent; border-image:var(--game-secondary-image) 5 fill / 1 / 0 stretch; color:var(--game-secondary-ink); font-variant-numeric:tabular-nums; }
+.locator-steps li[aria-current] { border-image-source:var(--game-button-blue-image); color:#fff8e9; font-weight:700; }
+.locator-steps span { font-size:12px; }
+.locator-steps .is-done { background:url('/assets/game/kenney-selected-mark.svg') right 4px center / 16px 16px no-repeat; padding-inline-end:24px; }
+.locator-workspace { display:grid; grid-template-columns:minmax(220px,280px) minmax(0,1fr); gap:24px; min-height:0; }
+figure { margin:0; min-width:0; min-height:0; text-align:center; }
+.locator-clue, .locator-source { display:grid; grid-template-rows:auto minmax(0,1fr) auto; align-items:center; width:100%; padding:16px; }
+.locator-clue { @include ui.paper-panel; @include ui.reading-surface(true); grid-template-rows:auto minmax(0,1fr) auto; gap:12px; box-shadow:0 10px 22px #14291c40; }
+.locator-source { @include ui.control-housing(true); @include ui.ink-mat; border-width:6px; padding:8px; }
+.locator-surface-title { align-self:start; display:block; margin:0 0 8px; text-align:left; font-size:20px; }
+.locator-clue__image { position:relative; width:min(100%,200px); margin-inline:auto; }
+.locator-clue canvas { display:block; width:100%; height:auto; border-radius:3px; box-shadow:0 6px 12px #14291c35; }
+.locator-crosshair { position:absolute; top:50%; left:50%; width:32px; height:32px; transform:translate(-50%,-50%); pointer-events:none; }
+.locator-image-stage { display:grid; place-items:center; container:locator-image / size; min-height:var(--locator-stage-min-height,480px); height:100%; }
+.locator-original { position:relative; display:block; width:fit-content; max-width:100%; padding:0; border:0; border-radius:6px; background:var(--game-card-ground); cursor:crosshair; box-shadow:0 6px 16px #14291c40; }
+.locator-original img { display:block; width:auto; height:auto; max-width:100cqw; max-height:100cqh; border-radius:6px; }
+.locator-original:disabled { cursor:default; opacity:1; }
+figcaption { margin-top:14px; font-size:16px; line-height:1.6; color:var(--game-card-ink); }
+figcaption small { display:block; margin-top:4px; font-size:12px; color:var(--game-card-muted); }
+.locator-source figcaption { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:4px 16px; margin-top:8px; color:var(--stage-ink); }
+.locator-source figcaption small { margin:0; color:var(--stage-muted); }
+.locator-clue figcaption { text-align:left; color:var(--game-card-muted); }
+.locator-clue figcaption span { display:block; }
+.locator-cursor { position:absolute; width:24px; height:24px; transform:translate(-50%,-50%); border:3px solid white; border-radius:50%; background:#25493480; box-shadow:0 0 0 2px #273e33; pointer-events:none; }
+.locator-region { position:absolute; width:50%; height:50%; border:3px dashed #fff7e8; background:#2f6b5059; pointer-events:none; }
+.locator-feedback { display:block; min-height:44px; margin-top:8px; font-size:14px; line-height:22px; color:var(--game-card-action); text-align:left; }
+.locator-feedback.is-empty { visibility:hidden; }
+.locator-status { display:grid; justify-items:center; gap:12px; }
 .locator-status button { @include ui.button(true); }
-button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
-[hidden] { display: none !important; }
-@media (max-width: 600px) { .locator-workspace { grid-template-columns: 1fr; gap: 16px; } .locator-clue__image { width: 104px; } .locator-crosshair { width: 28px; height: 28px; } .locator-original img { max-height: 55dvh; } .locator-source small { max-width: 28ch; margin-inline: auto; } }
+button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; }
+[hidden] { display:none !important; }
+@media(min-width:601px) { .locator-steps li { min-width:0; } .locator-steps span { display:none; } }
+@media(max-width:600px) {
+  .locator-round-heading { grid-column:1 / -1; grid-row:1; gap:8px; }
+  .locator-round-heading .locator-steps { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .locator-steps li { min-width:0; padding-inline:4px; gap:4px; }
+  .locator-workspace { grid-template-columns:1fr; gap:16px; }
+  .locator-clue { grid-template-columns:104px minmax(0,1fr); grid-template-rows:auto auto; gap:8px 16px; padding:12px; }
+  .locator-clue__image { grid-column:1; grid-row:2; width:104px; }
+  .locator-clue figcaption { grid-column:2; grid-row:2; margin:0; font-size:14px; }
+  .locator-feedback { min-height:0; }
+  .locator-feedback.is-empty { display:none; }
+  .locator-source { padding:12px; }
+  .locator-image-stage { min-height:320px; height:52dvh; }
+}

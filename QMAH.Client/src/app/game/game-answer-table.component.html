@@ -43,7 +43,7 @@
             </button>
           }
         </nav>
-        <div #mobileAnswerCarousel class="mobile-answer-carousel" role="region" aria-label="匿名回答，左右滑動切換">
+        <div #mobileAnswerCarousel class="mobile-answer-carousel" role="region" aria-label="匿名回答，左右滑動切換" (scroll)="updateCarouselIndex()">
           @for (slide of answerSlides(); track slide.answer.id; let index = $index) {
             <app-game-answer-card class="mobile-answer-card" [answer]="slide.answer" [groupLabel]="slide.group.label" [icon]="slide.group.icon" [anonymous]="true" [mobile]="true" [order]="index" [position]="slide.index + 1" [count]="slide.count" (selected)="openAnswer($event)" />
           } @empty { <p class="table-empty">這個類別還沒有回答。</p> }
@@ -57,17 +57,24 @@
             </button>
           }
         </nav>
-        <div #mobileAnswerCarousel class="mobile-answer-carousel" role="region" aria-label="揭曉回答，左右滑動切換">
+        <div #mobileAnswerCarousel class="mobile-answer-carousel" role="region" aria-label="揭曉回答，左右滑動切換" (scroll)="updateCarouselIndex()">
           @for (slide of answerSlides(); track slide.answer.id; let index = $index) {
             <app-game-answer-card class="mobile-answer-card" [answer]="slide.answer" [groupLabel]="slide.group.label" [icon]="slide.group.icon" [anonymous]="false" [mobile]="true" [order]="index" [position]="slide.index + 1" [count]="slide.count" [ownerColor]="seatColor(slide.answer.gamePlayerId, slide.index)" (selected)="openAnswer($event)" />
           } @empty { <p class="table-empty">這個類別還沒有回答。</p> }
         </div>
       }
+      @if (round().status !== 'ANSWERING' && answerSlides().length > 1) {
+        <nav class="answer-carousel-controls" aria-label="切換回答卡片">
+          <button type="button" aria-label="上一張回答" [disabled]="carouselIndex() === 0" (click)="browseAnswers(-1)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg></button>
+          <span aria-live="polite">{{ carouselIndex() + 1 }}／{{ answerSlides().length }} 張</span>
+          <button type="button" aria-label="下一張回答" [disabled]="carouselIndex() >= answerSlides().length - 1" (click)="browseAnswers(1)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg></button>
+        </nav>
+      }
     </div>
   </div>
 </section>
 
-<dialog #answerDialog class="answer-dialog" aria-labelledby="answer-dialog-title" (click)="closeOnBackdrop($event)" (close)="selectedAnswer.set(null)">
+<dialog #answerDialog class="answer-dialog" aria-labelledby="answer-dialog-title" (click)="closeOnBackdrop($event)" (close)="selectedAnswerId.set(null)">
   @if (selectedAnswer(); as answer) {
     <article class="answer-dialog-sheet" [attr.data-answer-type]="answer.answerType">
       <header class="dialog-heading">

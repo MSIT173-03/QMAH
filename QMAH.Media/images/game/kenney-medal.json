@@ -1,0 +1,9 @@
+{
+  "source": "https://kenney.nl/assets/medals",
+  "sourceFile": "Vector/medals_vector.svg",
+  "license": "CC0-1.0",
+  "file": "kenney-medal.svg",
+  "role": "Earned single-player grades and first-place ranking",
+  "edits": "Extracted three paths from the plain bronze medallion, normalized viewBox, shared geometry with bronze/silver/gold fragment palettes. Ribbon omitted to protect compact layout. No image stretching.",
+  "variants": ["bronze", "silver", "gold"]
+}

@@ -1,0 +1,74 @@
+{
+  "description": "整併專案既有 Kenney 按鈕與木框，同形版本共用幾何，保留原配色與延展方式",
+  "buttonStretch": "kenney-buttons.svg：填滿延展",
+  "buttonTones": "kenney-button-tones.svg：保持比例",
+  "wood": "kenney-wood.svg：填滿延展",
+  "variants": [
+    {
+      "old": "kenney-button.svg",
+      "next": "kenney-buttons.svg#green",
+      "width": 48,
+      "height": 24
+    },
+    {
+      "old": "kenney-button-dark.svg",
+      "next": "kenney-buttons.svg#dark",
+      "width": 48,
+      "height": 24
+    },
+    {
+      "old": "kenney-button-secondary.svg",
+      "next": "kenney-buttons.svg#paper",
+      "width": 48,
+      "height": 24
+    },
+    {
+      "old": "kenney-button-secondary-dark.svg",
+      "next": "kenney-buttons.svg#paper-dark",
+      "width": 48,
+      "height": 24
+    },
+    {
+      "old": "kenney-button-blue.svg",
+      "next": "kenney-button-tones.svg#blue",
+      "width": 48,
+      "height": 24
+    },
+    {
+      "old": "kenney-button-marsala.svg",
+      "next": "kenney-button-tones.svg#marsala",
+      "width": 48,
+      "height": 24
+    },
+    {
+      "old": "kenney-button-ochre.svg",
+      "next": "kenney-button-tones.svg#ochre",
+      "width": 48,
+      "height": 24
+    },
+    {
+      "old": "kenney-wood-frame.svg",
+      "next": "kenney-wood.svg#light",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "old": "kenney-wood-rim.svg",
+      "next": "kenney-wood.svg#light-rim",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "old": "kenney-wood-frame-dark.svg",
+      "next": "kenney-wood.svg#dark",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "old": "kenney-wood-rim-dark.svg",
+      "next": "kenney-wood.svg#dark-rim",
+      "width": 64,
+      "height": 64
+    }
+  ]
+}

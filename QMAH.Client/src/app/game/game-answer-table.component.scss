@@ -22,7 +22,7 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
   min-width: 0;
   min-height: 58px;
   padding: 7px 9px;
-  border: 1px solid color-mix(in srgb, var(--table-content,var(--qmah-game-content)) 35%, transparent);
+  border-width:4px;
   border-radius: 10px;
   color: var(--qmah-ink);
   background: var(--qmah-surface-elevated);
@@ -146,7 +146,6 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
 .swipe-instruction { display:none; }
 .mobile-answer-types { display:flex; gap:8px; width:100%; margin-block:0 14px; }
 .mobile-answer-types button { display:flex; align-items:center; justify-content:center; gap:8px; flex:1 1 0; min-width:0; min-height:44px; padding:8px; border:1px solid color-mix(in srgb,var(--table-content,var(--qmah-game-content)) 28%,transparent); border-radius:5px; color:var(--table-content,var(--qmah-game-content)); background:color-mix(in srgb,var(--table-ground,#285b50) 82%,white); font:650 16px/1.3 var(--qmah-font-serif); }
-.mobile-answer-types button[aria-pressed='true'] { border-color:#e7c891; color:#29251e; background:#e7c891; }
 .mobile-answer-types button:disabled { cursor:default; opacity:.45; }
 .mobile-answer-types small { font:400 14px/1.3 var(--qmah-font-sans); font-variant-numeric:tabular-nums; }
 .mobile-answer-carousel { display:flex; gap:14px; width:100%; min-width:0; padding:8px 6px 14px; overflow-x:auto; overscroll-behavior-inline:contain; scroll-snap-type:x mandatory; scrollbar-color:#cab48790 transparent; scrollbar-width:thin; }
@@ -159,7 +158,6 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
   .answer-back-card:nth-child(n+2) { margin-inline-start:-12px; }
   .mobile-answer-types { display:flex; gap:8px; width:min(calc(100% - var(--answer-tabs-start,0px)),540px); margin:0 auto 12px; margin-inline-start:var(--answer-tabs-start,auto); }
   .mobile-answer-types button { flex-direction:column; justify-content:center; gap:4px; min-height:56px; padding:8px; font-size:clamp(12px,3.2vw,14px); }
-  .mobile-answer-types button[aria-pressed='true'] { border-color:#e7c891; color:#29251e; background:#e7c891; }
   .mobile-answer-types button:disabled { opacity:.45; }
   .mobile-answer-types small { flex:none; font-size:11px; font-variant-numeric:tabular-nums; }
   .mobile-answer-carousel { gap:12px; width:min(100%,540px); margin-inline:auto; padding:4px 4px 12px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
@@ -168,8 +166,8 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
 }
 
 .mobile-answer-types button { @include ui.button(true); }
-.mobile-answer-types button[aria-pressed='true'] { @include ui.button; }
-.answer-dialog { @include ui.panel; }
+.mobile-answer-types button[aria-pressed='true'] { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; color:#fff8e9; }
+.answer-dialog { @include ui.paper-panel; }
 .answer-dialog-sheet { border-block-start: 0; }
 .vote-action { @include ui.button; }
 .dialog-close { @include ui.button(true); padding: 2px; }
@@ -179,6 +177,13 @@ button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px
 
 // 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
 .dialog-answer-text { @include ui.prose; white-space: pre-wrap; }
+.answer-carousel-controls { display:none; }
+@media(min-width:1001px) { .mobile-answer-carousel > app-game-answer-card { flex:0 0 calc((100% - 28px) / 3); width:calc((100% - 28px) / 3); min-width:180px; } }
+@media(max-width:1000px) {
+  .answer-carousel-controls { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; width:min(100%,540px); gap:12px; margin:4px auto 0; text-align:center; font-size:14px; font-variant-numeric:tabular-nums; }
+  .answer-carousel-controls button { @include ui.button(true); display:grid; place-items:center; padding:4px; }
+  .answer-carousel-controls button:disabled { opacity:.45; cursor:default; }
+}
 @media (prefers-reduced-motion: reduce) {
   .answer-back-card { animation: none; }
 }

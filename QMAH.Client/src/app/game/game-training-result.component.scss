@@ -4,8 +4,9 @@
 .result-shell { position:absolute; inset:0; border:18px solid transparent; border-image:var(--game-frame-image) 8 / 1 / 0 stretch; border-radius:18px; background:var(--game-table-ground); overflow:hidden; }
 .result-sheet { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto minmax(0,1fr); gap:20px 32px; padding:clamp(16px,2.5vw,32px); background:url('/assets/game/hero-diamonds-subtle.svg') repeat,var(--game-table-ground); color:var(--game-table-ink); }
 .result-banner { grid-column:1/-1; }
-.result-banner h2 { @include ui.title; margin:0; font-size:clamp(24px,3vw,34px); color:var(--game-table-ink); }
-.result-banner p { margin:8px 0 0; color:var(--game-table-muted); font-size:14px; }
+.result-banner h2 { @include ui.title; margin:0; font-size:clamp(24px,3vw,34px); line-height:1.35; text-wrap:balance; color:var(--game-table-ink); }
+.result-banner p { display:flex; flex-wrap:wrap; gap:4px 16px; margin:10px 0 0; color:var(--game-table-muted); font-size:16px; line-height:1.6; }
+.result-banner p span { text-wrap:pretty; }
 .result-gallery { align-self:center; min-width:0; width:min(100%,640px); justify-self:center; }
 .result-gallery figure { @include ui.paper-panel; margin:0; padding:12px; box-shadow:0 14px 26px #14291c66; transform:rotate(-2deg); }
 .result-gallery img { display:block; width:100%; height:min(43dvh,390px); object-fit:contain; }
@@ -17,13 +18,18 @@
 .is-memory img { height:clamp(80px,14dvh,140px); }
 .is-memory figcaption { font-size:13px; overflow-wrap:anywhere; }
 .result-image-fallback { display:grid; place-items:center; min-height:140px; color:var(--game-card-muted); }
-.result-summary { @include ui.reading-surface; @include ui.inset-paper; display:grid; align-self:center; gap:12px; min-width:0; padding:18px; border:12px solid transparent; border-image:var(--game-frame-rim-image) 8 / 1 / 0 stretch; box-shadow:0 12px 24px #14291c66; }
+.result-summary { @include ui.control-housing(true); display:grid; align-self:center; gap:12px; min-width:0; padding:18px;  box-shadow:0 12px 24px #14291c66; }
 app-game-reward-meter { grid-column:1/-1; margin-top:20px; --reward-meter-margin:0 auto; --reward-meter-heading-padding:8px 10px; }
 .result-award { display:flex; align-items:center; gap:20px; }
-.result-grade { flex:0 0 88px; min-height:96px; display:grid; place-items:center; border:8px solid transparent; border-image:url('/assets/game/kenney-button-ochre.svg') 5 fill / 1 / 0 stretch; color:#fff9e8; }
+.result-grade { flex:0 0 88px; min-height:96px; display:grid; place-items:center; border:8px solid transparent; border-image:var(--game-button-ochre-image) 5 fill / 1 / 0 stretch; color:#fff9e8; }
 .result-grade span { font-size:12px; }
 .result-grade strong { font:700 44px/1 var(--qmah-font-serif); }
-.result-grade.is-fail strong { font-size:20px; }
+.result-grade.is-fail { border-image-source:var(--game-button-marsala-image); }
+.result-grade.is-fail strong { font-size:18px; white-space:nowrap; }
+.result-grade:not(.is-fail) { grid-template-rows:20px 80px; gap:4px; min-height:104px; border:0; color:#3d2d1d; background:url('/assets/game/kenney-medal.svg#bronze') center bottom / 80px 80px no-repeat; }
+.result-grade:not(.is-fail) strong { font-size:32px; }
+.result-grade[data-grade='A'] { background-image:url('/assets/game/kenney-medal.svg#silver'); }
+.result-grade[data-grade='S'] { background-image:url('/assets/game/kenney-medal.svg#gold'); }
 .result-score { font-size:clamp(36px,4vw,48px); line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; }
 .result-score small { font-size:18px; }
 .result-award-copy { margin:6px 0 0; font-size:14px; color:var(--game-card-muted); }
@@ -40,7 +46,7 @@ app-game-reward-meter { grid-column:1/-1; margin-top:20px; --reward-meter-margin
 .result-links { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
 .result-links button { @include ui.button(true); font-size:13px; }
 .result-links a { display:inline-flex; align-items:center; min-height:44px; color:var(--game-card-action); font-size:13px; text-underline-offset:4px; }
-.result-rules { @include ui.paper-panel; @include ui.reading-surface; position:fixed; inset:0; margin:auto; width:min(480px,calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 32px); padding:24px; overflow:auto; box-shadow:0 20px 60px #14291c66; }
+.result-rules { @include ui.paper-panel; @include ui.reading-surface(true); position:fixed; inset:0; margin:auto; width:min(480px,calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 32px); padding:24px; overflow:auto; box-shadow:0 20px 60px #14291c66; }
 .result-rules h3 { margin:0 0 16px; font-size:22px; }
 .result-rules p { @include ui.prose; }
 .result-rules button { @include ui.button(true); width:100%; }
@@ -49,6 +55,7 @@ button:disabled { opacity:.55; }
 .game-result-enter { animation:result-reveal 320ms ease-out; }
 @keyframes result-reveal { from { opacity:.5; } to { opacity:1; } }
 @media (max-width:800px) {
+  .result-banner p { flex-direction:column; align-items:flex-start; }
   .result-sheet { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto; align-content:start; padding:16px; }
   .result-summary { grid-row:2; }
   .result-gallery { grid-row:3; }
@@ -59,8 +66,12 @@ button:disabled { opacity:.55; }
 @media (max-width:450px) {
   .result-sheet { padding:12px; }
   .result-summary { padding:14px; border-width:8px; }
-  .result-award { gap:12px; }
+  .result-award { display:grid; grid-template-columns:72px minmax(0,1fr); gap:12px; }
+  .result-award > div:last-child { display:contents; }
+  .result-score { grid-column:2; grid-row:1; }
+  .result-award-copy { grid-column:1 / -1; margin:0; text-wrap:balance; }
   .result-grade { flex-basis:72px; min-height:86px; }
+  .result-grade:not(.is-fail) { grid-template-rows:20px 64px; min-height:88px; background-size:64px 64px; }
   .result-links { justify-content:center; }
 }
 @media (prefers-reduced-motion:reduce) { .game-result-enter { animation:none; } }
