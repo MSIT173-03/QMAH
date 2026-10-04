@@ -1,11 +1,9 @@
 <div class="guide-preview" animate.enter="game-panel-enter">
-  <div class="guide-preview-heading"><h2>跟著玩一回合</h2></div>
   <ol class="guide-round-progress" aria-label="示範進度">
     <li [class.is-active]="!submitted()" [class.is-done]="submitted()" [attr.aria-current]="!submitted() ? 'step' : null"><small>01</small>觀察作答</li>
     <li [class.is-active]="submitted() && !revealed()" [class.is-done]="revealed()" [attr.aria-current]="submitted() && !revealed() ? 'step' : null"><small>02</small>匿名投票</li>
     <li [class.is-active]="revealed()" [attr.aria-current]="revealed() ? 'step' : null"><small>03</small>揭曉結果</li>
   </ol>
-  <p class="guide-preview-hint">這是互動示範，不會送出回答或投票。</p>
   <div class="guide-round-table">
     <div class="guide-preview-artifact"><img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="掐絲琺瑯雲龍紋三足香爐" /><div><strong>先看看這件文物</strong><p>掐絲琺瑯雲龍紋三足香爐</p><span>觀察細節，再寫下你的想法。</span></div></div>
     @if (!submitted()) {

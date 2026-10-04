@@ -74,7 +74,7 @@
   </div>
 </section>
 
-<dialog #answerDialog class="answer-dialog" aria-labelledby="answer-dialog-title" (click)="closeOnBackdrop($event)" (close)="selectedAnswerId.set(null)">
+<dialog #answerDialog class="answer-dialog" aria-labelledby="answer-dialog-title" (click)="closeOnBackdrop($event)" (close)="selectedAnswerId.set(null); confirmingVote.set('')">
   @if (selectedAnswer(); as answer) {
     <article class="answer-dialog-sheet" [attr.data-answer-type]="answer.answerType">
       <header class="dialog-heading">
@@ -84,8 +84,13 @@
       <p class="dialog-answer-text">{{ answer.text }}</p>
       @if (round().status === 'VOTING') {
         <footer class="dialog-actions">
-          <span>{{ canVote()(answer) ? '投票後才會揭曉作者。' : votedAnswerIds().has(answer.id) ? '你已投過這張回答。' : '依本回合規則，目前不能投這張回答。' }}</span>
-          <button type="button" class="vote-action" [disabled]="!canSubmitVote(answer)" (click)="submitVote(answer)">{{ voteButtonText(answer) }}</button>
+          <span role="status">{{ confirmingVote() === answer.id ? '投出後不能更改，確定投給這張嗎？' : canVote()(answer) ? '投票後才會揭曉作者。' : votedAnswerIds().has(answer.id) ? '你已投過這張回答。' : '依本回合規則，目前不能投這張回答。' }}</span>
+          @if (confirmingVote() === answer.id) {
+            <button type="button" class="vote-cancel" (click)="setVoteConfirmation('')">再想想</button>
+            <button type="button" class="vote-action" [disabled]="!canSubmitVote(answer)" (click)="setVoteConfirmation(''); submitVote(answer)">確定投票</button>
+          } @else {
+            <button type="button" class="vote-action" [disabled]="!canSubmitVote(answer)" (click)="setVoteConfirmation(answer.id)">{{ voteButtonText(answer) }}</button>
+          }
         </footer>
       } @else if (round().status === 'REVEALED') {
         <footer class="dialog-reveal"><strong>{{ answer.playerDisplayName }}</strong><span>{{ answer.voteCount }} 票</span>@if (answer.isWinner) { <b>本回合勝出</b> }</footer>

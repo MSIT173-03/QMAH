@@ -79,7 +79,11 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         if (artifacts.Count == 0)
             return EconomyResult<MiniGameStartView>.Conflict("目前沒有符合此玩法且具有圖片的啟用文物。");
 
-        if (mode.Code == "DETAIL_LOCATOR") artifacts = artifacts.Where(item => { var size = scrollPaintingEligibility.ImageDimensions(item.PrimaryImagePath); return size.Width > 0 && size.Height > 0; }).ToList();
+        if (mode.Code == "DETAIL_LOCATOR")
+        {
+            // 定位題需要可辨識的原圖，沿用尺寸與比例限制，排除超長卷及過小圖片。
+            artifacts = artifacts.Where(item => scrollPaintingEligibility.IsEligible(item.PrimaryImagePath)).ToList();
+        }
         var isDetailLocator = string.Equals(mode.Code, "DETAIL_LOCATOR", StringComparison.OrdinalIgnoreCase);
         if (isDetailLocator && artifacts.Count < 4)
             return EconomyResult<MiniGameStartView>.Conflict("局部辨識至少需要四件具有圖片的啟用文物，才能完成一輪定位。");
@@ -373,7 +377,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         mode.Code switch
         {
             "ARTIFACT_PUZZLE" => "把備選區的二十五塊碎片拖到目標格，接回文物原貌。可查看原圖、使用區域提示，或扣分完成剩餘碎片。",
-            "STRIP_RESTORE" => "依書畫原圖方向拖曳十五段歸位，接回連續的筆墨與景物。可查看原圖細節或使用輔助。",
+            "STRIP_RESTORE" => "從第一片起，每回合三選一，挑出接得上的書畫碎片，十五片接完就是整幅長卷。可查看原圖細節或使用輔助。",
             _ => mode.Description
         },
         mode.ConfigJson,

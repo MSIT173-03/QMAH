@@ -1,3 +1,4 @@
+import { GameFocusMode } from '../core/services/game-focus-mode';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Subscription, finalize } from 'rxjs';
@@ -13,6 +14,7 @@ import { GameAccountService } from './game-account.service';
   styleUrl: './game-account.component.scss'
 })
 export class GameAccountComponent implements OnInit, OnDestroy {
+  protected readonly focusMode = inject(GameFocusMode);
   readonly accountService = inject(GameAccountService);
   private readonly game = inject(GameService);
   private readonly changeDetector = inject(ChangeDetectorRef);

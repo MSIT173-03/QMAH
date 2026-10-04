@@ -3,7 +3,6 @@
 
 :host {
   --ink: var(--qmah-ink);
-  /* 遊戲判斷與回合語意沿用共用玉綠，警告與錯誤維持各自語意*/
   --jade: var(--qmah-game-accent);
   --slate: var(--qmah-slate);
   --cinnabar: var(--qmah-cinnabar);
@@ -12,11 +11,10 @@
   --line: var(--qmah-line);
   --muted: var(--qmah-muted);
   display: block;
-  min-height: 100vh;
+  min-height: 100dvh;
   color: var(--ink);
   background: var(--qmah-page-surface);
   @include scene.pattern;
-  background-image:none;
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 
@@ -28,179 +26,70 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline-offset: 4px;
 }
 
-.game-notebook {
-  @include scene.surface;
-  box-sizing: border-box;
-}
-.lobby-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 0 12px; color: var(--scene-ink); }
-.lobby-heading h1 { margin: 0; font: 700 clamp(28px, 3vw, 36px)/1.3 var(--qmah-font-serif); }
-.lobby-heading p { margin: 6px 0 0; max-width: 65ch; color: var(--scene-muted); font-size: 16px; }
-.lobby-heading__actions { display:flex; align-items:center; justify-content:flex-end; gap:12px; flex:0 0 auto; }
-.lobby-heading__actions app-game-reward-meter { width:min(400px,38vw); --reward-meter-margin:0; }
-.lobby-heading .hero-create { flex-shrink: 0; color: var(--qmah-ink); background: var(--qmah-paper); border-color: var(--qmah-paper); text-decoration: none; }
-.game-notebook > .notebook-spread { min-height: 440px; border: 0; box-shadow: none; background: transparent; }
-@media (max-width: 900px) { .lobby-heading { align-items:flex-start; } .lobby-heading__actions { gap:8px; } .lobby-heading__actions app-game-reward-meter { width:min(340px,36vw); } }
-@media (max-width: 600px) { .lobby-heading { flex-wrap: wrap; gap: 12px; padding-block: 16px 8px; } .lobby-heading__actions { width:100%; justify-content:space-between; flex-wrap:wrap; } .lobby-heading__actions app-game-reward-meter { width:min(100%,320px); } .game-notebook > .notebook-spread { min-height: 440px; } }
+// 專注模式只隱藏站台頁首頁尾，大廳舞台本身不變。
+.game-notebook { @include scene.stage-page; }
+.lobby-stage { @include scene.table-stage; }
+app-game-navigation { --game-nav-ink: var(--qmah-ink); }
+.account-link { display: none !important; }
 
-/* ui-integration: Game 首屏只保留子導覽與頁面任務，避免 App Shell 下再堆疊第二個品牌標頭。 */
-.account-link { display: inline-flex; align-items: center; min-height: var(--qmah-control-height); color: var(--jade); font-size: var(--qmah-type-label-size); font-weight: 700; text-underline-offset: 4px; }
-.notice-error a { color: var(--jade); font-weight: 700; text-underline-offset: 4px; }
+.lobby-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; color: var(--game-table-ink); }
+.lobby-heading h1 { margin: 0; font: 800 clamp(28px, 3vw, 38px)/1.25 var(--qmah-font-sans); -webkit-text-stroke: .55px #285440; paint-order: stroke fill; text-shadow: 0 1px 0 #1d4635; }
+.lobby-heading p { margin: 4px 0 0; max-width: 56ch; color: var(--game-table-muted); font-size: 15px; }
+.lobby-heading__actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; flex: 0 1 auto; }
+.lobby-heading__actions app-game-reward-meter { width: min(400px, 38vw); --reward-meter-margin: 0; }
+.hero-create { @include ui.button; min-height: 52px; padding-inline: 20px; font-size: 16px; text-decoration: none; transition: transform 150ms ease, filter 150ms ease; }
+.hero-create, .insert-sheet footer button[type='submit'] { --game-button-image: var(--game-button-ochre-image); --game-button-ink: #fff8e9; }
+.hero-create:hover { transform: translateY(-2px); }
 
-.hero-create {
-  min-height: var(--qmah-control-height);
-  border: 1px solid var(--qmah-accent);
-  border-radius: var(--qmah-radius-control);
-  padding: 11px var(--qmah-button-padding-x);
-  color: var(--qmah-accent-content);
-  background: var(--qmah-accent);
-  font-weight: 700;
-  transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
-}
+.notice { display: flex; gap: 14px; margin: 0; padding: 12px 16px; border: 2px solid #{ui.$tag-line}; border-radius: 12px; color: var(--game-card-ink); background: var(--game-card-ground); }
+.notice-error { color: #963d32; }
+.notice-success { color: var(--game-card-action); }
+.notice-error a { color: #334260; font-weight: 700; text-underline-offset: 4px; }
 
-.hero-create:hover { background: color-mix(in srgb, var(--qmah-accent) 86%, white); box-shadow: var(--qmah-shadow-card); transform: translateY(-2px); }
-.hero-create:active { transform: translateY(0) scale(.98); }
-.hero-collapse { min-height: var(--qmah-control-height); border: 1px solid color-mix(in srgb, var(--ink) 32%, transparent); border-radius: var(--qmah-radius-control); padding: 8px var(--qmah-space-3); color: var(--ink); background: color-mix(in srgb, var(--surface) 70%, transparent); font-size: var(--qmah-type-label-size); font-weight: 750; }
-
-.notice { display: flex; gap: 14px; margin: 16px 0; padding: var(--qmah-space-3) var(--qmah-space-4); border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); background: var(--surface); }
-.notice-error { border-color: color-mix(in srgb, var(--qmah-danger) 48%, var(--qmah-border)); color: var(--qmah-danger); }
-.notice-success { border-color: color-mix(in srgb, var(--qmah-primary) 30%, var(--qmah-border)); color: var(--qmah-primary); }
-
-.notebook-spread {
-  position: relative;
-  display: block;
-  min-height: 0;
-  max-width: none;
-  margin: 14px 0 0;
-  overflow: visible;
-  background: transparent;
-}
-/* 底板顆粒以固定大小平鋪，外框另用九宮格，兩層不互相拉伸。*/
-/* ui-integration: 詳情視窗脫離清單文件流，選房不再改變索引欄位寬度。 */
-.room-detail-backdrop { position: fixed; z-index: 70; inset: 0; background: color-mix(in srgb, var(--qmah-night) 62%, transparent); }
-.insert-sheet footer button { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-primary); border-radius: var(--qmah-radius-control); padding: 10px var(--qmah-control-padding-x); color: var(--qmah-primary-content); background: var(--qmah-primary); font-weight: 800; transition: background 180ms ease, transform 180ms ease; }
-.insert-sheet footer button:hover { background: var(--qmah-primary-hover); border-color: var(--qmah-primary-hover); transform: translateY(-2px); }
-.empty-state__actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.empty-state__actions { justify-content: center; }
-.empty-state__primary { box-shadow: var(--qmah-shadow-card); }
-.insert-sheet label { display: block; margin-bottom: 13px; color: color-mix(in srgb, var(--qmah-on-dark) 90%, transparent); font-size: var(--qmah-type-body-sm-size); font-weight: 700; }
-.insert-sheet input, .insert-sheet select { display: block; width: 100%; min-height: var(--qmah-control-height); margin-top: 6px; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 35%, transparent); padding: 8px 0; color: var(--qmah-on-dark); background: transparent; }
+.notebook-spread { position: relative; display: block; min-height: 0; flex: 1 1 auto; background: transparent; }
 
 /* ui-integration: Game dialog 必須位於 App Shell sticky header 與 Mobile drawer 之上，避免 fixed navigation 蓋住關鍵操作。 */
-.sheet-backdrop { position: fixed; z-index: 70; inset: 0; background: color-mix(in srgb, var(--qmah-night) 58%, transparent); }
-.insert-sheet { @include ui.paper-panel; @include ui.reading-surface(true); --ink: var(--game-card-ink); --muted: var(--game-card-muted); --line: var(--game-card-line); position: fixed; z-index: 71; inset: 0; margin: auto; height: fit-content; border-width: 8px; box-shadow: 0 18px 40px #14291c66; }
-.insert-sheet { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(620px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: hidden; padding: 30px; animation: reveal 180ms ease-out both; }
-.insert-sheet form { padding:2px 4px 4px; }
-.insert-sheet app-game-scroll-panel { min-height:0; }
-.create-intro { grid-column:1 / -1; margin:0 0 20px; }
-.create-intro span { display:inline-block; }
-.insert-sheet > header { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; margin-bottom:24px; border-bottom:1px solid var(--line); }
-.insert-sheet h2 { margin:0; font-family:var(--qmah-font-serif); font-size:30px; }
+.room-detail-backdrop, .sheet-backdrop { position: fixed; z-index: 70; inset: 0; background: color-mix(in srgb, var(--qmah-night) 62%, transparent); }
+.insert-sheet { @include ui.paper-panel; @include ui.reading-surface(true); --ink: var(--game-card-ink); --muted: var(--game-card-muted); --line: var(--game-card-line); position: fixed; z-index: 71; inset: 0; margin: auto; height: fit-content; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(620px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: hidden; padding: 30px; box-shadow: 0 18px 40px #14291c66; animation: reveal 180ms ease-out both; }
+.insert-sheet form { padding: 2px 4px 4px; }
+.insert-sheet app-game-scroll-panel { min-height: 0; }
+.insert-sheet > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
 .insert-sheet > header button { @include ui.button(true); align-self: flex-start; flex-shrink: 0; }
+.insert-sheet > header p { margin: 0 0 20px; color: var(--game-card-muted); }
+.insert-sheet h2 { margin: 0; font-family: var(--qmah-font-serif); font-size: 30px; }
+.insert-sheet p { @include ui.prose; }
+.create-intro { grid-column: 1 / -1; margin: 0 0 20px; }
+.create-intro span { display: inline-block; }
+.insert-sheet label { display: block; margin-bottom: 13px; color: var(--ink); font-size: var(--qmah-type-body-sm-size); font-weight: 700; }
+.insert-sheet input, .insert-sheet select { display: block; width: 100%; min-height: var(--qmah-control-height); margin-top: 6px; padding: 10px 12px; border: 2px solid #{ui.$tag-line}; border-radius: 10px; color: var(--game-card-ink); background: #efe7d3; box-shadow: inset 0 2px 4px #382c2433; }
 .form-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
-.insert-sheet label { color: var(--ink); }
-.insert-sheet input, .insert-sheet select { border-bottom-color: var(--line); color: var(--ink); }
-.insert-sheet input { border: 1px solid var(--game-card-line); border-radius: 8px; background: #fffaf0; padding: 10px 12px; color: var(--game-card-ink); box-shadow: inset 0 2px 4px #51341c18; }
-.insert-sheet > header p { margin:0 0 20px; color:var(--game-card-muted); font-size:16px; line-height:1.6; }
 .room-setting { min-width: 0; margin: 0 0 18px; padding: 0; border: 0; }
 .room-setting-wide { grid-column: 1 / -1; }
 .room-setting legend { margin-bottom: 8px; font-weight: 800; color: var(--game-card-ink); }
-.room-setting legend small { margin-inline-start: 8px; font-size: 13px; font-weight: 400; color: var(--game-card-muted); }
+.room-setting legend small { margin-inline-start: 8px; font-size: 14px; font-weight: 400; color: var(--game-card-muted); }
 .setting-choices { display: flex; flex-wrap: wrap; gap: 8px; }
-.room-setting-time .setting-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-.room-setting-players .setting-choices { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
-.room-setting-players .setting-choices button { min-width:0; padding-inline:1px; font-size:14px; }
-@media(max-width:360px) { .room-setting-players .setting-choices button { font-size:13px; } }
+.room-setting-time .setting-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.room-setting-players .setting-choices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.room-setting-players .setting-choices button { min-width: 0; padding-inline: 1px; font-size: 14px; }
 .setting-choices button { @include ui.button(true); min-width: 96px; flex: 1 0 96px; white-space: nowrap; }
-.setting-choices button.is-selected { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; background:#37658a padding-box; box-shadow:0 4px 9px #203b3540; }
+.setting-choices button.is-selected { --game-button-image: var(--game-button-blue-image); --game-button-ink: #fff8e9; background: #37658a padding-box; box-shadow: 0 4px 9px #203b3540; }
 .create-actions { display: flex; gap: 10px; flex-shrink: 0; }
-.insert-sheet footer .secondary { @include ui.button(true); }
-.insert-sheet footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 13px; }
-@keyframes hero-enter { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+.insert-sheet footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 14px; }
+.insert-sheet footer button, .insert-sheet footer .secondary { @include ui.button(true); }
 @keyframes reveal { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-@media (max-width: 900px) {
-  .game-notebook { padding: 16px 18px 48px; }
+@media (max-width: 760px) {
+  .game-notebook { width: calc(100% - 20px); }
+  .lobby-heading__actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
+  .lobby-heading__actions app-game-reward-meter { width: 100%; }
+  .hero-create { width: 100%; text-align: center; }
 }
-
 @media (max-width: 600px) {
-  .game-notebook { padding: 10px 10px 36px; }
   .form-columns { grid-template-columns: 1fr; }
   .insert-sheet { padding: 22px; }
   .insert-sheet footer { align-items: flex-start; flex-direction: column; }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .insert-sheet { animation: none; }
-  .insert-sheet footer button { transition: none; }
+  .hero-create { transition: none; }
 }
-
-
-/* ui-polish: 與 User / Social / Store 的頁面骨架收斂，保留既有 Game 色彩與圓角，不改房間資料流。 */
-.notebook-spread {
-  border: 1px solid var(--line);
-  border-radius: var(--qmah-radius-panel);
-  box-shadow: var(--qmah-shadow-card);
-}
-
-/* 狀態 tabs 已完整承擔房間狀態切換；隱藏重複的第二套篩選入口，排序仍保留。 */
-
-@media (max-width: 900px) {
-  .game-notebook { padding-inline: 18px; }
-}
-
-@media (max-width: 760px) {
-  .game-notebook { padding: 10px 14px 40px; }
-  .notebook-spread { margin-top: 10px; border-radius: var(--qmah-radius-card); }
-}
-
-@media (max-width: 430px) {
-  .game-notebook { padding-inline: 10px; }
-}
-
-/* 遊戲頁與玩法說明共用置中的頂部模式導覽。 */
-.account-link { display: none !important; }
-
-/* 收合介紹不再佔一整條橫幅；保留入口但降成次要控制。 */
-
-/* impeccable/bolder: 房間是可加入的遊戲 session，不再只像資料列。 */
-
-@media (prefers-reduced-motion: reduce) {
-  .game-notebook, .game-notebook > app-game-navigation, .hero-create { transition: none; }
-}
-
-/* 大廳測試入口沿用既有遊戲墨綠與朱色，明確標示虛擬場次但不另造一套面板。 */
-.lobby-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 7px;
-  color: var(--qmah-game-action);
-  font-size: var(--qmah-type-meta-size);
-  font-weight: 800;
-  letter-spacing: .08em;
-}
-.lobby-kicker::before {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--qmah-cinnabar);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--qmah-cinnabar) 14%, transparent);
-  content: "";
-}
-.lobby-heading.is-rehearsal {
-  margin: 0;
-}
-@media (max-width: 600px) {
-  .lobby-heading.is-rehearsal { align-items: flex-start; }
-  .lobby-heading.is-rehearsal .hero-create { width: 100%; text-align: center; }
-}
-
-.lobby-heading h1 { @include ui.title; }
-.lobby-heading .hero-create, .insert-sheet footer button { @include ui.button; }
-.lobby-heading .hero-create, .insert-sheet footer button[type='submit'] { --game-button-image:var(--game-button-ochre-image); --game-button-ink:#fff8e9; }
-
-/* 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。*/
-.insert-sheet p { @include ui.prose; }
-
-
-.insert-sheet input, .insert-sheet select { background:#e7e2d3; padding:10px 12px; border:1px solid var(--game-card-line); border-radius:6px; box-shadow:inset 0 2px 4px #382c2426; }

@@ -1,3 +1,5 @@
+import { GameAudio } from './game-audio.service';
+import { GameAudioToggleComponent } from './game-audio-toggle.component';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MeApiService } from '../core/services/me-api';
@@ -50,12 +52,13 @@ interface TrainingSessionSnapshot {
 @Component({
   selector: 'app-game-training',
   hostDirectives: [GameFontsDirective],
-  imports: [RouterLink, GameNavigationComponent, GameTrainingModePickerComponent, GameTrainingPlaySheetComponent, GameTrainingResultComponent, GameScrollPanelComponent],
+  imports: [RouterLink, GameNavigationComponent, GameTrainingModePickerComponent, GameTrainingPlaySheetComponent, GameTrainingResultComponent, GameScrollPanelComponent, GameAudioToggleComponent],
   styleUrl: './game-training.component.scss',
   templateUrl: './game-training.component.html',
 })
 export class GameTrainingComponent implements OnInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly audio = (() => { const audio = inject(GameAudio); this.destroyRef.onDestroy(audio.attach()); this.destroyRef.onDestroy(() => this.releaseScene?.()); return audio; })();
   private readonly meApi = inject(MeApiService);
   private ownerId = '';
   private pendingResult: { rawScore: number; rawResultJson: string } | null = null;
@@ -155,12 +158,16 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
   closePause(): void { this.pauseDialog?.nativeElement.close(); }
   resumeFromPause(): void {
+    const restoreFocus = this.paused;
     if (this.paused) this.attemptStartedAt += Date.now() - this.pausedAt;
     this.paused = false;
     this.confirmLeaving = false;
     this.helpRequested = false;
     if (this.pendingMemoryPair && this.memoryTimer === null) this.memoryTimer = setTimeout(this.pendingMemoryPair, 650);
     this.changeDetector.markForCheck();
+    if (restoreFocus) requestAnimationFrame(() => {
+      if (this.hostElement.nativeElement.isConnected && this.phase === 'playing' && !this.paused) this.hostElement.nativeElement.querySelector<HTMLButtonElement>('.pause-trigger')?.focus({ preventScroll: true });
+    });
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -194,7 +201,15 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
   attempt: MiniGameStart | null = null;
   complete: MiniGameComplete | null = null;
-  phase: TrainingPhase = 'list';
+  private currentPhase: TrainingPhase = 'list';
+  private releaseScene: (() => void) | null = null;
+  // 挑戰進行中換成牌桌那首音樂，其餘時候用選單那首
+  get phase(): TrainingPhase { return this.currentPhase; }
+  set phase(value: TrainingPhase) {
+    this.currentPhase = value;
+    this.releaseScene?.();
+    this.releaseScene = value === 'playing' ? this.audio.useScene('play') : null;
+  }
   loading = false;
   starting = false;
   completing = false;
@@ -305,7 +320,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.focusMode.exit();
+    // 專注模式跨頁保持；離開遊戲區時由版面統一關閉
     this.stopAttemptTimers();
   }
 
@@ -370,7 +385,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
       case 'DETAIL_LOCATOR': return `定位 ${this.locatorAnswers.length} / ${this.locatorOptions.length} 件文物`;
       case 'MEMORY_MATCH': return `已配對 ${this.memoryMatched} / ${this.memoryPairCount}`;
       case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) ? '拼圖完成' : '拖曳碎片到目標格，可依完成比例調整';
-      default: return this.isSolved(this.restoreOrder) ? '長卷完成' : '拖曳十五段書畫，接回筆墨';
+      default: return this.isSolved(this.restoreOrder) ? '長卷完成' : '三選一，把長卷接起來';
     }
   }
 
@@ -411,6 +426,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     const card = this.memoryCards[index];
     if (!card || card.revealed || card.matched) return;
     card.revealed = true;
+    this.audio.play('flip');
     this.memoryCards = [...this.memoryCards];
     this.memoryFeedback = '再翻一張，找出相同文物。';
     this.memoryOpen = [...this.memoryOpen, index];
@@ -427,6 +443,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
         first.matched = true;
         second.matched = true;
         this.memoryMatched += 1;
+        this.audio.play('success');
         this.memoryFeedback = this.memoryMatched === this.memoryPairCount
           ? '全部配對完成，可以送出結果。'
           : `找到 ${first.name}！繼續尋找下一組。`;

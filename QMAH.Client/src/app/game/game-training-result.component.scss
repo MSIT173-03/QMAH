@@ -1,57 +1,62 @@
 @use './game-ui' as ui;
 :host { display: contents; }
 *, *::before, *::after { box-sizing: border-box; }
-.result-shell { position:absolute; inset:0; overflow:hidden; background:var(--game-stage-ground); color:var(--game-card-ink); }
-.result-sheet { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto minmax(0,1fr); gap:20px 32px; padding:clamp(16px,2.5vw,32px); background:var(--game-card-ground); color:var(--game-card-ink); }
+.result-shell { position:absolute; inset:0; overflow:hidden; background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground); color:var(--game-table-ink); }
+.result-sheet { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto minmax(0,1fr); gap:20px 32px; min-height:100%; align-content:center; padding:clamp(16px,2.5vw,40px) clamp(16px,4vw,64px); color:var(--game-table-ink); }
 .result-banner { grid-column:1/-1; }
-.result-banner h2 { @include ui.title; margin:0; font-size:clamp(24px,3vw,34px); line-height:1.35; text-wrap:balance; color:var(--game-card-ink); }
-.result-banner p { display:flex; flex-wrap:wrap; gap:4px 16px; margin:10px 0 0; color:var(--game-card-muted); font-size:16px; line-height:1.6; }
+.result-banner h2 { @include ui.title; margin:0; font-size:clamp(24px,3vw,34px); line-height:1.35; text-wrap:balance; color:var(--game-table-ink); }
+.result-banner p { display:flex; flex-wrap:wrap; gap:4px 16px; margin:10px 0 0; color:var(--game-table-muted); font-size:16px; line-height:1.6; }
 .result-banner p span { text-wrap:pretty; }
 .result-gallery { align-self:center; min-width:0; width:min(100%,640px); justify-self:center; }
-.result-gallery figure { @include ui.paper-panel; margin:0; padding:12px; box-shadow:0 14px 26px #14291c66; transform:rotate(-2deg); }
+.result-gallery figure { @include ui.paper-panel; margin:0; padding:14px 14px 12px; box-shadow:inset 0 0 0 2px #c7b090, 0 14px 26px #14291c66; transform:rotate(-2deg); animation:result-deal 480ms cubic-bezier(.16,1,.3,1) both; }
+.result-gallery figure:nth-child(2) { animation-delay:90ms; }
+.result-gallery figure:nth-child(3) { animation-delay:180ms; }
+.result-gallery figure:nth-child(4) { animation-delay:270ms; }
 .result-gallery img { display:block; width:100%; height:min(43dvh,390px); object-fit:contain; }
 .result-gallery figcaption { padding-top:10px; text-align:center; font-size:16px; font-weight:700; }
 .result-gallery a { color:var(--game-card-ink); text-underline-offset:4px; }
 .result-gallery.is-memory { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
-.is-memory figure { padding:6px; border-width:6px; }
+.is-memory figure { padding:8px 8px 6px; }
 .is-memory figure:nth-child(even) { transform:rotate(2deg); }
 .is-memory img { height:clamp(80px,14dvh,140px); }
-.is-memory figcaption { font-size:13px; overflow-wrap:anywhere; }
+.is-memory figcaption { font-size:14px; overflow-wrap:anywhere; }
 .result-image-fallback { display:grid; place-items:center; min-height:140px; color:var(--game-card-muted); }
-.result-summary { @include ui.control-housing(true); display:grid; align-self:center; gap:12px; min-width:0; padding:18px;  box-shadow:0 12px 24px #14291c66; }
+.result-summary { @include ui.control-housing(true); display:grid; align-self:center; gap:16px; min-width:0; padding:24px 26px; box-shadow:inset 0 0 0 2px #c7b090, 0 16px 30px #14291c66; animation:result-deal 520ms 120ms cubic-bezier(.16,1,.3,1) both; }
 app-game-reward-meter { grid-column:1/-1; margin-top:20px; --reward-meter-margin:0 auto; --reward-meter-heading-padding:8px 10px; }
 .result-award { display:flex; align-items:center; gap:20px; }
-.result-grade { flex:0 0 88px; min-height:96px; display:grid; place-items:center; border:8px solid transparent; border-image:var(--game-button-ochre-image) 5 fill / 1 / 0 stretch; color:#fff9e8; }
-.result-grade span { font-size:12px; }
+.result-grade { flex:0 0 112px; min-height:96px; display:grid; place-items:center; border:8px solid transparent; border-image:var(--game-button-ochre-image) 5 fill / 1 / 0 stretch; color:#fff9e8; }
+.result-grade span { font-size:14px; }
 .result-grade strong { font:700 44px/1 var(--qmah-font-serif); }
 .result-grade.is-fail { border-image-source:var(--game-button-marsala-image); }
 .result-grade.is-fail strong { font-size:18px; white-space:nowrap; }
-.result-grade:not(.is-fail) { grid-template-rows:20px 80px; gap:4px; min-height:104px; border:0; color:#3d2d1d; background:url('/assets/game/kenney-medal.svg#bronze') center bottom / 80px 80px no-repeat; }
-.result-grade:not(.is-fail) strong { font-size:32px; }
+.result-grade:not(.is-fail) { grid-template-rows:20px 100px; gap:6px; min-height:128px; border:0; color:#3d2d1d; background:url('/assets/game/kenney-medal.svg#bronze') center bottom / 100px 100px no-repeat; animation:medal-pop 640ms 420ms cubic-bezier(.34,1.56,.64,1) both; }
+.result-grade:not(.is-fail) strong { font-size:40px; }
 .result-grade[data-grade='A'] { background-image:url('/assets/game/kenney-medal.svg#silver'); }
 .result-grade[data-grade='S'] { background-image:url('/assets/game/kenney-medal.svg#gold'); }
 .result-score { font-size:clamp(36px,4vw,48px); line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; }
 .result-score small { font-size:18px; }
 .result-award-copy { margin:6px 0 0; font-size:14px; color:var(--game-card-muted); }
 .result-facts, .result-rewards dl { display:flex; flex-wrap:wrap; gap:12px 28px; margin:0; }
-.result-facts { padding-block:12px; border-block:1px solid var(--game-card-line); }
-.result-facts dt, .result-rewards dt { color:var(--game-card-muted); font-size:13px; }
+.result-facts { padding-block:14px; border-block:2px dashed #c7b090; }
+.result-facts dt, .result-rewards dt { color:var(--game-card-muted); font-size:14px; }
 .result-facts dd, .result-rewards dd { margin:3px 0 0; font-size:22px; font-variant-numeric:tabular-nums; }
 .result-rewards h3 { margin:0 0 10px; font-size:18px; }
 .result-rewards dd { font-weight:800; color:#805a23; }
-.result-rewards p { margin:8px 0 0; font-size:13px; color:var(--game-card-muted); }
+.result-rewards p { margin:8px 0 0; font-size:14px; color:var(--game-card-muted); }
 .result-actions { display:flex; flex-wrap:wrap; gap:10px; }
 .result-actions button { @include ui.button; flex:1 0 120px; }
 .result-actions .secondary { @include ui.button(true); }
 .result-links { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
-.result-links button { @include ui.button(true); font-size:13px; }
-.result-links a { display:inline-flex; align-items:center; min-height:44px; color:var(--qmah-game-action); font-size:13px; text-underline-offset:4px; }
+.result-links button { @include ui.button(true); font-size:14px; }
+.result-links a { display:inline-flex; align-items:center; min-height:44px; color:var(--qmah-game-action); font-size:14px; text-underline-offset:4px; }
 .result-rules { @include ui.paper-panel; @include ui.reading-surface(true); position:fixed; inset:0; margin:auto; width:min(480px,calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 32px); padding:24px; overflow:auto; box-shadow:0 20px 60px #14291c66; }
 .result-rules h3 { margin:0 0 16px; font-size:22px; }
 .result-rules p { @include ui.prose; }
 .result-rules button { @include ui.button(true); width:100%; }
 button:focus-visible, a:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; }
 button:disabled { opacity:.55; }
+@keyframes result-deal { from { opacity:0; translate:0 22px; scale:.96; } to { opacity:1; translate:0 0; scale:1; } }
+@keyframes medal-pop { from { opacity:0; scale:.3; rotate:-18deg; } to { opacity:1; scale:1; rotate:0deg; } }
 .game-result-enter { animation:result-reveal 320ms ease-out; }
 @keyframes result-reveal { from { opacity:.5; } to { opacity:1; } }
 @media (max-width:800px) {
@@ -65,7 +70,7 @@ button:disabled { opacity:.55; }
 }
 @media (max-width:450px) {
   .result-sheet { padding:12px; }
-  .result-summary { padding:14px; border-width:8px; }
+  .result-summary { padding:16px; }
   .result-award { display:grid; grid-template-columns:72px minmax(0,1fr); gap:12px; }
   .result-award > div:last-child { display:contents; }
   .result-score { grid-column:2; grid-row:1; }
@@ -74,4 +79,4 @@ button:disabled { opacity:.55; }
   .result-grade:not(.is-fail) { grid-template-rows:20px 64px; min-height:88px; background-size:64px 64px; }
   .result-links { justify-content:center; }
 }
-@media (prefers-reduced-motion:reduce) { .game-result-enter { animation:none; } }
+@media (prefers-reduced-motion:reduce) { .game-result-enter, .result-gallery figure, .result-summary, .result-grade { animation:none !important; } }

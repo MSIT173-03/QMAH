@@ -1,3 +1,4 @@
+import { GamePromptBarComponent } from './game-prompt-bar.component';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -20,7 +21,7 @@ type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, GameNavigationComponent, GameLobbyRoomBoardComponent, GameLobbyRoomDetailDialogComponent, GameRoomQrDialogComponent, GameScrollPanelComponent, GameRewardMeterComponent],
+  imports: [FormsModule, RouterLink, GameNavigationComponent, GameLobbyRoomBoardComponent, GameLobbyRoomDetailDialogComponent, GameRoomQrDialogComponent, GameScrollPanelComponent, GameRewardMeterComponent, GamePromptBarComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })

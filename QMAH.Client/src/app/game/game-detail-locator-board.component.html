@@ -6,7 +6,7 @@
           <ol class="locator-steps" aria-label="本輪文物進度">@for (item of artifacts(); track item.artifactId; let index = $index) { <li [class.is-done]="index < answers().length" [attr.aria-current]="index === answers().length ? 'step' : null" [attr.aria-label]="'第 ' + (index + 1) + ' 件，' + (index < answers().length ? '已定位' : index === answers().length ? '定位中' : '待定位')">{{ index + 1 }}<span>{{ index < answers().length ? '已定位' : index === answers().length ? '定位中' : '待定位' }}</span></li> }</ol>
         </div>
         <div class="locator-clue__image" [hidden]="!ready()"><canvas #clueCanvas role="img" aria-label="碎片中央準心所指的位置，請在原圖中找出同一點"></canvas><svg class="locator-crosshair" viewBox="0 0 48 48" fill="none" aria-hidden="true"><g stroke="#173c2a" stroke-width="3"><circle cx="24" cy="24" r="8" /><path d="M24 2v12M24 34v12M2 24h12M34 24h12" /></g><g stroke="#fffaf0" stroke-width="1.25"><circle cx="24" cy="24" r="8" /><path d="M24 2v12M24 34v12M2 24h12M34 24h12" /></g></svg></div>
-        <figcaption><span>對照細節圖，在原圖選出位置。</span><span>按「確認位置」才會計分。</span><span class="locator-feedback" [class.is-empty]="!lastAnswer()" role="status">@if (lastAnswer()) { {{ finished() ? '本輪定位完成。' : '上一件：' }}{{ lastCorrect() ? '找到細節位置！' : '位置稍有偏差，結算時會計入準確度。' }} }</span></figcaption>
+        <figcaption><span>對照細節，在原圖選位置。</span><span>按「確認位置」後才計分。</span><span class="locator-feedback" [class.is-empty]="!lastAnswer()" role="status">@if (lastAnswer()) { {{ finished() ? '本輪定位完成。' : '上一件：' }}{{ lastCorrect() ? '找到細節位置！' : '位置稍有偏差，結算時會計入準確度。' }} }</span></figcaption>
       </figure>
       <figure class="locator-source">
         <strong class="locator-surface-title">在原圖上定位</strong>
@@ -16,6 +16,7 @@
             <app-image-magnifier [image]="artifact.primaryImagePath || artifact.thumbnailPath" [alt]="artifact.name" fit="contain" [persistentLens]="true" [baseZoom]="2.5" [enabled]="ready() && !disabled() && !finished()" (loaded)="sourceLoaded($event)" (imageLoaded)="renderClue($event)" (loadFailed)="unavailable()" />
             @if ((keyboardCursor() || pendingPoint()) && !finished()) { <span class="locator-cursor is-pending" [style.left.%]="pointOnImage(cursor(), 'x')" [style.top.%]="pointOnImage(cursor(), 'y')" aria-hidden="true"></span> }
             @if (hintVisible()) { <span class="locator-region" [style.left.%]="imageBounds().left + (target().x < .5 ? 0 : imageBounds().width / 2)" [style.top.%]="imageBounds().top + (target().y < .5 ? 0 : imageBounds().height / 2)" [style.width.%]="imageBounds().width / 2" [style.height.%]="imageBounds().height / 2" aria-hidden="true"></span> }
+            @if (verdict(); as v) { @if (v.artifactId === artifact.artifactId) { <span class="locator-verdict" role="status" [attr.data-tier]="v.tier" [style.left.%]="pointOnImage(v, 'x')" [style.top.%]="pointOnImage(v, 'y')">{{ v.text }}</span> } }
             @if (finished()) { <span class="locator-cursor is-answer" [style.left.%]="pointOnImage(target(), 'x')" [style.top.%]="pointOnImage(target(), 'y')" aria-hidden="true"></span> }
           </div>
         }

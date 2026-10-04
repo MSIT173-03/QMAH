@@ -61,7 +61,7 @@ export class GameTrainingModePickerComponent {
       DETAIL_LOCATOR: '看四件文物的局部特徵，逐件在原圖點出位置。',
       MEMORY_MATCH: '翻開 4×4 牌面，記住位置並配對八組文物。',
       ARTIFACT_PUZZLE: '拖曳 25 塊碎片至目標格，拼回文物原圖。',
-      STRIP_RESTORE: '依原作拖曳 15 段書畫，接回連續筆墨與景物。'
+      STRIP_RESTORE: '從第一片起，每回合三選一，挑出接得上的書畫碎片。'
     } as Record<string, string>)[code] ?? '開始一場館藏挑戰。';
   }
   modeDescription(mode: MiniGameMode): readonly [string, string] {
@@ -69,7 +69,7 @@ export class GameTrainingModePickerComponent {
       DETAIL_LOCATOR: ['看細節，在原圖選出位置。', '四件各確認一次，再結算。'],
       MEMORY_MATCH: ['翻開十六張牌，找齊配對。', '記住圖樣位置，配對再送出。'],
       ARTIFACT_PUZZLE: ['拖曳二十五片，拼回原圖。', '可看原圖或提示，再送出。'],
-      STRIP_RESTORE: ['排列十五段，接回原作。', '可看原圖或提示，再送出。']
+      STRIP_RESTORE: ['十五片依序接力，三選一。', '可看原圖或提示，再送出。']
     };
     return descriptions[mode.code] ?? ['開始一場館藏挑戰。', '完成盤面後送出結果。'];
   }

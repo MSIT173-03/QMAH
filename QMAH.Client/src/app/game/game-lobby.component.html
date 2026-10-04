@@ -5,6 +5,7 @@
   </app-game-navigation>
 
   <!-- ui-integration: 介紹橫幅可由玩家收合，且狀態會留在本機，避免每次回到大廳都擋住找房間。 -->
+  <div class="lobby-stage">
   <header class="lobby-heading" [class.is-rehearsal]="isRehearsal">
     <div>
       <h1>{{ isDemo ? '房間展示' : isRehearsal ? '多人流程排練' : '房間大廳' }}</h1>
@@ -46,6 +47,8 @@
       (retry)="loadRooms(1, false)"
       (roomSelected)="selectRoom($event)" />
   </section>
+  <app-game-prompt-bar [hints]="[{ keys: ['Q', 'E'], pad: ['LB', 'RB'], label: '切換分頁' }]" />
+  </div>
 
   <!-- 房間詳情保留在大廳流程控制；視窗本身由專屬元件管理版面。 -->
   @if (selectedRoomId) {

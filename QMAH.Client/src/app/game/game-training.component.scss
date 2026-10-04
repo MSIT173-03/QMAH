@@ -1,17 +1,23 @@
 @use './game-scene' as scene;
 @use './game-ui' as ui;
-:host { display: block; color: var(--qmah-ink); background: var(--qmah-page-surface); background-image:none; font: 400 16px/1.5 var(--qmah-font-sans); @include scene.pattern; }
+:host { display: block; color: var(--qmah-ink); background: var(--qmah-page-surface); font: 400 16px/1.5 var(--qmah-font-sans); @include scene.pattern; }
 .training-notebook { @include scene.surface; position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: var(--qmah-surface); --stage-ink: var(--qmah-ink); --stage-muted: var(--qmah-muted); --stage-accent: var(--qmah-jade); color: var(--stage-ink); }
 .training-notebook.is-playing { background-image:none; }
-:host { min-height: 100dvh; padding-block: 1px; }
+:host { min-height: 100dvh; }
 :host:has(.training-notebook.is-focus-mode.is-playing) { padding-block:0; }
 .training-notebook.is-playing, .training-notebook.is-complete { margin-block: 16px 32px; }
-.training-notebook:not(.is-playing):not(.is-complete) { width: min(calc(100% - 64px), 1440px); margin-block: 24px 40px; padding-inline: 0; background: transparent; }
-@media (max-width: 600px) { .training-notebook:not(.is-playing):not(.is-complete) { width: calc(100% - 24px); margin-block: 12px 24px; } }
+// 選牌頁與大廳、說明、鑑賞同一個版心，專注模式只是少了站台頁首頁尾
+.training-notebook:not(.is-playing):not(.is-complete) { --stage-offset: 73px; position: relative; width: min(calc(100% - 24px), 1760px); min-height: calc(100dvh - var(--stage-offset)); margin: 0 auto; padding: 10px 0; background: transparent; display: flex; flex-direction: column; gap: 12px; }
+.training-notebook:not(.is-playing):not(.is-complete) > .chapter { flex: 1 1 0; min-height: 0; }
+@media (min-width: 1000px) { .training-notebook:not(.is-playing):not(.is-complete) { width: min(calc(100% - 24px), calc((100dvh - var(--stage-offset) - 20px) * 16 / 9)); aspect-ratio: 16 / 9; height: auto; min-height: 0; padding: 0; margin-block: 10px; } .training-notebook:not(.is-playing):not(.is-complete) > .chapter { display: flex; flex-direction: column; } .training-notebook:not(.is-playing):not(.is-complete) .chapter > app-game-training-mode-picker { flex: 1 1 0; min-height: 0; } }
+.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { --stage-offset: 0px; padding: 0; }
+.training-notebook:not(.is-playing):not(.is-complete) > app-game-navigation { position: absolute; top: 16px; left: 18px; }
+@media (min-width: 1000px) { .training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { width: min(100%, calc(100dvh * 16 / 9)); margin-block: 0; } .training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) > app-game-navigation { top: 12px; } }
 .scene-toolbar { display: flex; justify-content: space-between; align-items: center; gap:12px; min-height: 48px; margin-bottom: 16px; }
 app-game-navigation { --game-nav-ink: var(--stage-ink); --game-nav-muted: var(--stage-muted); --game-nav-line: color-mix(in srgb, var(--stage-ink) 25%, transparent); --game-nav-surface: transparent; --game-nav-hover: color-mix(in srgb, var(--stage-ink) 10%, transparent); }
 .scene-toolbar a, .scene-toolbar button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; color: var(--stage-ink); background: transparent; border: 1px solid color-mix(in srgb, var(--stage-ink) 25%, transparent); border-radius: var(--qmah-radius-control); text-decoration: none; font: inherit; font-size: 14px; }
-.training-notebook.is-focus-mode { --arena-height: max(580px, calc(100dvh - 88px)); width: 100%; margin: 0; border-radius: 0; background-image: none; }
+.training-notebook.is-focus-mode { --arena-height: max(580px, calc(100dvh - 88px)); }
+.training-notebook.is-focus-mode:is(.is-playing, .is-complete) { width: 100%; margin: 0; border-radius: 0; }
 *, *::before, *::after { box-sizing: border-box; }
 ::selection { color: var(--qmah-game-content); background: var(--qmah-game-action); }
 button, input, select { font: inherit; }
@@ -23,7 +29,7 @@ button:active:not(:disabled) { transform: translateY(1px); }
 .chapter-heading { padding-block: 8px; }
 .chapter-heading h1 { margin: 0; font: 700 clamp(26px, 3vw, 32px)/1.3 var(--qmah-font-serif); }
 .chapter-heading span { display: none; }
-.is-playing .chapter-heading, .is-complete .chapter-heading { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+.chapter-heading { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
 .pause-dialog button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 24px; border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 700; text-decoration: none; }
 .pause-dialog .secondary, .pause-trigger { color: var(--qmah-game-action); background: transparent; border: 1px solid var(--qmah-border); }
 .pause-trigger { min-height: 44px; padding: 8px 14px; border-radius: var(--qmah-radius-control); white-space: nowrap; }
@@ -86,7 +92,7 @@ button:active:not(:disabled) { transform: translateY(1px); }
 .pause-exit-actions h3 { margin:0; font-size:17px; }
 .pause-exit-actions p { margin:8px 0 16px; font-size:14px; }
 @media (max-width: 600px) {
-  .scene-toolbar a, .scene-toolbar button { padding-inline: 8px; font-size: 12px; }
+  .scene-toolbar a, .scene-toolbar button { padding-inline: 8px; font-size:14px; }
   .pause-utility-actions { grid-template-columns:1fr; }
 }
 
@@ -96,14 +102,6 @@ button:active:not(:disabled) { transform: translateY(1px); }
 
 
 /* 選單專注模式保留對稱邊距；不讓一般選單規則覆蓋全螢幕尺寸。 */
-.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { width: calc(100% - 32px); margin: 16px auto; padding: 0; min-height: calc(100dvh - 32px); --mode-stage-min-height: calc(100dvh - 200px); }
-.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { margin-bottom:14px; }
-.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) .chapter-heading { display: none; }
-.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) app-game-training-mode-picker { --mode-stage-min-height: 0; }
-.focus-exit { display:flex; justify-content:flex-end; min-height:44px; margin:0 clamp(28px,3vw,48px) 8px; }
-.focus-exit button { @include ui.button(true); --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:4px 10px; font-size:14px; }
-@media (min-width: 1001px) { .training-notebook:not(.is-playing):not(.is-complete) { --mode-stage-min-height: calc(100dvh - 280px); } }
-@media (max-width: 600px) { .training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { width: calc(100% - 24px); margin: 12px auto; --mode-stage-min-height: auto; } }
 .pause-dialog app-game-scroll-panel { --scroll-panel-height:auto; --scroll-panel-max-height:calc(100dvh - 240px); }
 .leave-warning span { display:inline-block; }
 .pause-dialog.is-confirming { scrollbar-gutter:auto; }
@@ -113,4 +111,10 @@ button:active:not(:disabled) { transform: translateY(1px); }
   .training-notebook.is-focus-mode.is-playing { display:grid; grid-template-rows:minmax(0,1fr); gap:8px; height:100dvh; border-width:clamp(20px,2.4vw,34px); padding:12px 16px; }
   .training-notebook.is-focus-mode.is-playing .chapter, .training-notebook.is-focus-mode.is-playing .game-arena { height:100%; min-height:0; }
   .training-notebook.is-focus-mode.is-playing .scene-toolbar { margin-bottom:0; }
+}
+// 牌桌進行中：同樣收進 16:9，專注模式鋪滿螢幕，非專注模式讓出站台頁首
+@media (min-width: 901px) {
+  .training-notebook.is-playing { --off: 73px; --arena-height: 100%; display: grid; grid-template-rows: minmax(0, 1fr); gap: 8px; width: min(calc(100% - 24px), calc((100dvh - var(--off) - 20px) * 16 / 9)); height: auto; aspect-ratio: 16 / 9; margin: 10px auto; padding: 12px 16px; overflow: auto; }
+  .training-notebook.is-playing .chapter, .training-notebook.is-playing .game-arena { height: 100%; min-height: 0; }
+  .training-notebook.is-focus-mode.is-playing { --off: 0px; width: min(100%, calc(100dvh * 16 / 9)); margin: 0 auto; }
 }

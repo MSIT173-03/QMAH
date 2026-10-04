@@ -1,4 +1,5 @@
 @use './game-ui' as ui;
+@use './game-scene' as scene;
 :host {
   --ink: var(--qmah-ink);
   --jade: var(--qmah-jade);
@@ -11,6 +12,7 @@
   min-height: 100vh;
   color: var(--ink);
   background: var(--qmah-page-surface);
+  @include scene.pattern;
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 
@@ -22,7 +24,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   outline-offset: 4px;
 }
 
-.account-page { width: min(960px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
+.account-page { @include scene.stage-page; align-items: center; justify-content: center; }
+.account-page > .account-panel { width: min(560px, 100%); box-sizing: border-box; }
 /* ui-integration: App Shell 與 Game 子導覽已統一品牌入口，帳號內容只處理登入狀態與表單。 */
 .back-link { color: var(--qmah-game-action); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
 .game-action-label { display: inline-flex; white-space: nowrap; }
@@ -40,7 +43,6 @@ button:disabled { cursor: not-allowed; }
 @media (max-width: 600px) {
   .back-link { display: inline-flex; align-items: center; justify-content: center; min-height: 60px; padding: 8px 12px; }
   .game-action-label { display: grid; text-align: center; line-height: 1.5; }
-  .account-page { padding: 10px 18px 40px; }
   .account-panel { margin-top: 34px; }
 }
 

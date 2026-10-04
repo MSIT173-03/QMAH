@@ -1,3 +1,4 @@
+import { GameAudio } from './game-audio.service';
 import { Component, DestroyRef, ElementRef, HostListener, afterNextRender, computed, effect, inject, input, output, signal } from '@angular/core';
 import { findBackgroundPieces } from './game-background-pieces';
 import { scatterPieces } from './game-piece-scatter';
@@ -152,6 +153,7 @@ export class GamePlacementBoardComponent {
   private readonly host: ElementRef<HTMLElement>;
   private pointer: { id: number; piece: number; x: number; y: number; width: number } | null = null;
   private suppressClick = false;
+  private readonly audio = inject(GameAudio);
   constructor(host: ElementRef<HTMLElement>) {
     this.host = host;
     effect(() => { this.selected.set(this.initialSelection()); this.hintRegion.set(this.initialHintRegion()); });
@@ -240,7 +242,7 @@ export class GamePlacementBoardComponent {
   }
   private drop(piece: number, slot: number): void {
     if (this.disabled() || this.solved() || this.order()[slot] === piece) return;
-    this.orderChange.emit(placePiece(this.order(), piece, slot)); this.moveMade.emit();
+    this.orderChange.emit(placePiece(this.order(), piece, slot)); this.moveMade.emit(); this.audio.play('place');
     this.selected.set(null); this.hintRegion.set(null);
     this.lastPlaced.set(slot);
     this.feedback.set('已放置。可依完成比例確認整體進度，或查看原圖對照。');

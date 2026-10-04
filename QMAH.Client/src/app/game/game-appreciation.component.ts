@@ -1,5 +1,6 @@
+import { GameFocusMode } from '../core/services/game-focus-mode';
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,8 +17,9 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './game-appreciation.component.scss',
   template: `
-    <section class="appreciation-scene" aria-labelledby="appreciation-title">
+    <section class="appreciation-scene" [class.is-focus-mode]="focusMode.active()" aria-labelledby="appreciation-title">
       <app-game-navigation />
+      <div class="appreciation-stage">
       <header><h1 id="appreciation-title">鑑賞回答</h1><p>看看玩家怎麼解讀文物，把票投給你喜歡的回答。</p><a routerLink="/artifact-list">返回圖鑑</a></header>
       <form class="filters" aria-label="篩選鑑賞回答" (ngSubmit)="search()">
         <div class="artifact-search">
@@ -62,7 +64,7 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
             <p class="answer-text">{{ answer.text }}</p>
             @if (answer.answerType !== 'FACTUAL_REASONING') { <p class="source-note">{{ answer.answerType === 'PLAUSIBLE_FICTION' ? '虛構說明，並非文物史實。' : '創意故事，並非文物史實。' }}</p> }
             <footer><div><strong>{{ answer.author }}</strong><span>房間 {{ answer.roomCode }} · {{ answer.completedAt | date:'yyyy/MM/dd HH:mm' }}</span><span>入選時 {{ answer.gameVotes }} 張遊戲票</span></div>
-              <div class="vote-action"><span><strong>{{ answer.voteCount }}</strong> 鑑賞票</span><button type="button" [attr.aria-pressed]="answer.voted" [disabled]="!!pendingVote() || answer.isOwn || loading()" (click)="vote(answer)">{{ answer.isOwn ? '你的回答' : pendingVote() === answer.id ? '送出中…' : answer.voted ? '收回鑑賞票' : '投一票' }}</button></div>
+              <div class="vote-action"><span><strong>{{ answer.voteCount }}</strong> 鑑賞票</span><button type="button" [attr.aria-pressed]="answer.voted" [disabled]="!!pendingVote() || answer.isOwn || loading()" (click)="openConfirmation(answer)">{{ answer.isOwn ? '你的回答' : pendingVote() === answer.id ? '送出中…' : answer.voted ? '收回鑑賞票' : '投一票' }}</button></div>
             </footer>
           </li>
         }
@@ -71,10 +73,19 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
       } @empty { @if (!loading() && !error()) { <p class="empty">{{ hasFilters ? '找不到符合條件的回答，可以換個關鍵字或清除篩選。' : '目前還沒有入選回答。多人遊戲完成後，三種類型的第一名回答就會出現在這裡。' }}</p> } }
       </div>
       @if (result(); as page) { @if (page.totalPages > 1) { <nav class="pagination" aria-label="鑑賞回答分頁"><button type="button" [disabled]="loading() || page.page <= 1" (click)="load(page.page - 1)">上一頁</button><span>{{ page.page }}／{{ page.totalPages }} 頁</span><button type="button" [disabled]="loading() || page.page >= page.totalPages" (click)="load(page.page + 1)">下一頁</button></nav> } }
+      </div>
+      <dialog #confirmationDialog class="confirm-card" aria-labelledby="vote-confirm-title" aria-describedby="vote-confirm-description" (close)="confirming.set(null)">
+        @if (confirming(); as target) {
+            <h3 id="vote-confirm-title">{{ target.voted ? '要收回這張鑑賞票嗎？' : '要投這則回答一票嗎？' }}</h3>
+            <p id="vote-confirm-description"><strong>{{ target.author }}</strong> 寫的「{{ target.artifactName }}」{{ target.voted ? '，收回後票數會少一票，之後還可以重新投。' : '，每則回答只能投一票，之後也可以收回。' }}</p>
+            <div class="confirm-actions"><button type="button" class="secondary" autofocus (click)="confirmationDialog.close()">先不要</button><button type="button" [disabled]="!!pendingVote()" (click)="confirmVote(target)">{{ target.voted ? '收回鑑賞票' : '投下這一票' }}</button></div>
+        }
+      </dialog>
     </section>
   `
 })
 export class GameAppreciationComponent {
+  protected readonly focusMode = inject(GameFocusMode);
   readonly answerTypes = ['', 'FACTUAL_REASONING', 'PLAUSIBLE_FICTION', 'CREATIVE_TALE'];
   private readonly game = inject(GameService);
   private readonly catalog = inject(CatalogService);
@@ -91,6 +102,8 @@ export class GameAppreciationComponent {
   readonly loading = signal(false);
   readonly error = signal('');
   readonly pendingVote = signal('');
+  readonly confirming = signal<AppreciationAnswer | null>(null);
+  @ViewChild('confirmationDialog') private confirmationDialog?: ElementRef<HTMLDialogElement>;
   readonly currentPage = signal(1);
   sort = 'votes';
   answerType = '';
@@ -125,6 +138,13 @@ export class GameAppreciationComponent {
       error: () => { if (version === this.requestVersion) this.error.set('鑑賞回答暫時無法讀取，請再試一次。'); }
     });
   }
+  openConfirmation(answer: AppreciationAnswer): void {
+    if (this.pendingVote() || answer.isOwn || this.loading()) return;
+    this.confirming.set(answer);
+    this.confirmationDialog?.nativeElement.showModal();
+    queueMicrotask(() => this.confirmationDialog?.nativeElement.querySelector<HTMLButtonElement>('button')?.focus());
+  }
+  confirmVote(answer: AppreciationAnswer): void { this.confirmationDialog?.nativeElement.close(); this.confirming.set(null); this.vote(answer); }
   vote(answer: AppreciationAnswer): void {
     if (this.pendingVote() || answer.isOwn) return;
     this.pendingVote.set(answer.id);

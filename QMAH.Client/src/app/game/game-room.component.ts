@@ -1,3 +1,5 @@
+import { GameAudio } from './game-audio.service';
+import { GameAudioToggleComponent } from './game-audio-toggle.component';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -59,12 +61,13 @@ interface TestScenario {
 @Component({
   selector: 'app-game-room',
   hostDirectives: [GameFontsDirective],
-  imports: [FormsModule, RouterLink, GameRoomResultsComponent, GameAnswerTableComponent, GameRoomChatComponent, QmahIconComponent],
+  imports: [FormsModule, RouterLink, GameRoomResultsComponent, GameAnswerTableComponent, GameRoomChatComponent, QmahIconComponent, GameAudioToggleComponent],
   templateUrl: './game-room.component.html',
   styleUrl: './game-room.component.scss'
 })
 export class GameRoomComponent implements OnInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly audio = (() => { const audio = inject(GameAudio); this.destroyRef.onDestroy(audio.attach()); this.destroyRef.onDestroy(audio.useScene('play')); return audio; })();
   readonly game = inject(GameService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -72,6 +75,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private readonly gameFocus = inject(GameFocusMode);
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private previousFocusMode = false;
+  private focusTouched = false;
   selectedSeatId = '';
   private pollSubscription?: Subscription;
   private clockSubscription?: Subscription;
@@ -200,7 +204,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.gameFocus.active.set(this.previousFocusMode);
+    // 牌桌預設用滿畫面；玩家在牌桌裡自己切過專注模式，就依他的選擇保持到下一頁
+    if (!this.focusTouched) this.gameFocus.active.set(this.previousFocusMode);
     this.saveDraft(this.answerText);
     this.pollSubscription?.unsubscribe();
     this.clockSubscription?.unsubscribe();
@@ -227,7 +232,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   isRoomFocused(): boolean { return this.gameFocus.active(); }
 
-  toggleRoomFocus(): void { this.gameFocus.toggle(); }
+  toggleRoomFocus(): void { this.focusTouched = true; this.gameFocus.toggle(); }
 
   seatColor(id: string): string {
     return gamePlayerColor(this.playerColors[id]);

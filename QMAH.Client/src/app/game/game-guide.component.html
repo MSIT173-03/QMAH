@@ -3,23 +3,28 @@
   <app-game-navigation>
   </app-game-navigation>
 
-  <section class="guide-heading" aria-labelledby="game-guide-title">
-    <h1 id="game-guide-title">{{ activeGuide() === 'multiplayer' ? '一回合怎麼玩？' : '單人小遊戲怎麼玩？' }}</h1>
-    @if (activeGuide() === 'multiplayer') {
-      <p><span>看文物、寫想法，</span><span>再讀別人的匿名回答。</span><span>投完票，</span><span>才知道誰寫了什麼。</span></p>
-    } @else {
-      <p><span>選擇玩法、觀察線索，</span><span>完成挑戰後查看結算。</span></p>
-    }
-  </section>
-
-  <nav class="guide-tabs" aria-label="選擇玩法說明">
-    <button id="guide-tab-multiplayer" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'multiplayer'" [class.is-active]="activeGuide() === 'multiplayer'" (click)="selectGuide('multiplayer')">
-      <span>多人鑑定</span><small>選房、作答、投票</small>
-    </button>
-    <button id="guide-tab-training" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'training'" [class.is-active]="activeGuide() === 'training'" (click)="selectGuide('training')">
-      <span>單人小遊戲</span><small>挑玩法、完成短局</small>
-    </button>
-  </nav>
+  <div class="guide-stage">
+  <header class="guide-bar">
+    <div class="guide-bar__lead">
+      <h1 id="game-guide-title" class="guide-title-hidden">{{ activeGuide() === 'multiplayer' ? '一回合怎麼玩？' : '單人小遊戲怎麼玩？' }}</h1>
+      <nav class="guide-tabs" aria-label="選擇玩法說明">
+        <button id="guide-tab-multiplayer" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'multiplayer'" [class.is-active]="activeGuide() === 'multiplayer'" (click)="selectGuide('multiplayer')">
+          <span>多人鑑定</span><small>選房、作答、投票</small>
+        </button>
+        <button id="guide-tab-training" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'training'" [class.is-active]="activeGuide() === 'training'" (click)="selectGuide('training')">
+          <span>單人小遊戲</span><small>挑玩法、完成短局</small>
+        </button>
+      </nav>
+    </div>
+    <div class="guide-bar__actions">
+      <button type="button" class="guide-rules-button" popovertarget="guide-rules">文字說明</button>
+      <a class="guide-panel-link" [routerLink]="activeGuide() === 'multiplayer' ? '/game' : '/game/training'">{{ activeGuide() === 'multiplayer' ? '開始多人鑑定' : '開始單人遊戲' }}</a>
+    </div>
+  </header>
+  <div id="guide-rules" class="guide-rules" popover="auto" aria-label="玩法文字說明">
+    <button type="button" class="guide-rules__close" popovertarget="guide-rules" popovertargetaction="hide" aria-label="關閉文字說明">關閉</button>
+    <app-game-how-to [variant]="activeGuide()" />
+  </div>
 
   <section id="guide-panel" class="guide-panel" [attr.aria-labelledby]="'guide-tab-' + activeGuide()" aria-live="polite">
     @if (activeGuide() === 'multiplayer') {
@@ -34,11 +39,9 @@
         (selectedAnswerChange)="selectedDemoAnswer.set($event)"
         (reveal)="demoRevealed.set(true)"
         (restart)="restartDemo()" />
-      <a class="guide-panel-link" routerLink="/game">開始多人鑑定</a>
     } @else {
-      <section class="training-demo" aria-labelledby="training-demo-title" animate.enter="game-panel-enter">
-        <div class="training-demo__heading"><h2 id="training-demo-title">試玩四種單人玩法</h2><p>看一局自動示範，也能切換成自己操作。盤面與正式遊戲相同。</p></div>
-        <div class="guide-tabs training-demo__modes" role="group" aria-label="選擇單人玩法示範">
+      <section class="training-demo" animate.enter="game-panel-enter">
+        <div class="mode-list" role="group" aria-label="選擇單人玩法示範">
           @for (mode of trainingModes; track mode.code) {
             <button type="button" [class.is-active]="activeTrainingDemo() === mode.code" [attr.aria-pressed]="activeTrainingDemo() === mode.code" (click)="selectTrainingDemo(mode.code)">
               <span>{{ mode.label }}</span><small>{{ mode.hint }}</small>
@@ -48,8 +51,7 @@
 
         <div class="training-demo__stage" [attr.data-mode]="activeTrainingDemo()"><app-game-training-demo [modeCode]="activeTrainingDemo()" /></div>
       </section>
-      <app-game-how-to variant="training" />
-      <a class="guide-panel-link" routerLink="/game/training">開始單人遊戲</a>
     }
   </section>
+  </div>
 </div>

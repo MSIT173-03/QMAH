@@ -36,8 +36,6 @@
   --game-puzzle-frame: #d6bf98;
   --game-puzzle-board: #eee3cf;
   --game-puzzle-empty: #f4ead8;
-  --game-puzzle-line: #c7b28e;
-  --game-puzzle-index: #466b51;
   --game-frame-image: url('/assets/game/kenney-wood.svg#light');
   --game-frame-rim-image: url('/assets/game/kenney-wood.svg#light-rim');
   --game-frame-width: clamp(28px, 3vw, 48px);
@@ -48,6 +46,9 @@
   --game-primary-ink: #fff8e9;
   --game-secondary-image: url('/assets/game/kenney-buttons.svg#paper');
   --game-secondary-ink: #334737;
+  // 遊戲區文字最小 14px，不沿用全站較小的標籤字級
+  --qmah-type-label-size: 14px;
+  --qmah-type-meta-size: 14px;
 }
 
 :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-appreciation, app-game-account)
@@ -109,9 +110,6 @@ html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-train
   --game-puzzle-line: #b4a080;
   --game-frame-image: url('/assets/game/kenney-wood.svg#dark');
   --game-frame-rim-image: url('/assets/game/kenney-wood.svg#dark-rim');
-  --game-primary-image: var(--game-button-blue-image);
-  --game-secondary-image: url('/assets/game/kenney-buttons.svg#paper-dark');
-  --game-secondary-ink: #26393e;
 }
 
 // 遊戲頁首以辨識色顯示目前入口，避免拿深色按鈕底色當文字色。

@@ -36,7 +36,7 @@ export class GameGuideComponent {
     { code: 'DETAIL_LOCATOR', label: '局部辨識', hint: '看細節，在四件原圖上定位' },
     { code: 'MEMORY_MATCH', label: '翻牌配對', hint: '記住圖樣位置，找齊配對' },
     { code: 'ARTIFACT_PUZZLE', label: '館藏拼圖', hint: '拖曳碎片，拼回文物原圖' },
-    { code: 'STRIP_RESTORE', label: '長卷復位', hint: '沿書畫方向排列 15 段' },
+    { code: 'STRIP_RESTORE', label: '長卷復位', hint: '三選一，把長卷一片片接起來' },
   ] as const;
   readonly activeTrainingDemo = signal<TrainingDemoCode>(this.initialDemo());
   private initialDemo(): TrainingDemoCode {

@@ -1,15 +1,7 @@
-<div class="demo-toolbar">
-  <p>{{ phase === 'complete' ? '示範完成' : autoPlaying ? '正在自動示範' : '換你試試' }}<span>試玩不計成績與獎勵。</span></p>
-  <div class="demo-controls">
-    @if (phase === 'playing') { <button type="button" (click)="toggleAutoPlay()">{{ autoPlaying ? '我來操作' : '繼續自動示範' }}</button> }
-    <button type="button" (click)="restartDemo()">重播這一局</button>
-  </div>
-</div>
 @if (attempt; as current) {
   <div class="demo-table">
           <app-game-training-play-sheet
-            class="is-playing"
-            [class.is-focus-mode]="focusMode.active()"
+            class="is-playing is-focus-mode"
 
             [attempt]="current"
             [isComplete]="false" [demonstration]="true"
@@ -59,11 +51,16 @@
             (settlementRequested)="completeAttempt()"
             (locatorAvailability)="imageUnavailable = !$event"
             (puzzleAvailability)="setPuzzleAvailability($event)"
-            (scrollAvailability)="setScrollAvailability($event)" />  </div>
-}
-@if (phase === 'complete') {
-  <div class="demo-complete" role="status"><strong>這一局完成了！</strong><span>正式挑戰會在這一步送出成績，顯示評級與獎勵。</span><a routerLink="/game/training" [queryParams]="{ game: modeCode() }">開始正式挑戰</a></div>
+            (scrollAvailability)="setScrollAvailability($event)">
+            <span play-status class="demo-status" role="status">{{ phase === 'complete' ? '試玩完成' : autoPlaying ? '自動示範中' : '自行操作' }} · 不計成績與獎勵</span>
+            <div play-controls class="demo-controls">
+              @if (phase === 'playing') { <button type="button" [attr.aria-pressed]="autoPlaying" (click)="toggleAutoPlay()">{{ autoPlaying ? '自己操作' : '自動示範' }}</button> }
+              <button type="button" (click)="restartDemo()">重新試玩</button>
+              @if (phase === 'complete') { <a class="demo-start" routerLink="/game/training" [queryParams]="{ game: modeCode() }">正式挑戰</a> }
+            </div>
+          </app-game-training-play-sheet>
+  </div>
 }
 <dialog #pauseDialog class="demo-pause" aria-labelledby="demo-pause-title" (close)="resumeFromPause()">
-  <h2 id="demo-pause-title">試玩已暫停</h2><p>盤面保留在這一步，繼續後接著示範。</p><button type="button" (click)="closePause()">繼續試玩</button>
+  <h2 id="demo-pause-title">試玩已暫停</h2><p>目前進度已保留，繼續後可接著{{ autoPlaying ? '觀看示範' : '操作盤面' }}。</p><button type="button" autofocus (click)="closePause()">繼續試玩</button>
 </dialog>

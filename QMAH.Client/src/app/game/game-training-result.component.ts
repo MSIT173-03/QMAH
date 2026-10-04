@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { GameAudio } from './game-audio.service';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { MiniGameArtifact, MiniGameComplete, MiniGameStart } from './game.models';
@@ -13,6 +14,7 @@ import { GameScrollPanelComponent } from './game-scroll-panel.component';
   styleUrl: './game-training-result.component.scss'
 })
 export class GameTrainingResultComponent {
+  private readonly victory = inject(GameAudio).play('win');
   readonly attempt = input.required<MiniGameStart>();
   readonly complete = input.required<MiniGameComplete>();
   readonly title = input.required<string>();

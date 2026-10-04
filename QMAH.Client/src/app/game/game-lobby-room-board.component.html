@@ -1,38 +1,34 @@
 <article class="index-page" aria-label="房間清單與搜尋">
   <div class="lookup-bar">
+    <div class="status-tabs" role="group" aria-label="房間狀態">
+      <div class="status-options">
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('WAITING')" [class.is-active]="isRoomStatusActive('WAITING')" (click)="statusSelected.emit('WAITING')">可加入</button>
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('PLAYING')" [class.is-active]="isRoomStatusActive('PLAYING')" (click)="statusSelected.emit('PLAYING')">進行中</button>
+        <button type="button" [attr.aria-pressed]="isRoomStatusActive('RECENT')" [class.is-active]="isRoomStatusActive('RECENT')" (click)="statusSelected.emit('RECENT')">最近完成</button>
+      </div>
+      <span class="room-count">{{ rooms() ? rooms()!.totalCount + ' 張牌桌' : error() ? '暫時無法取得' : '讀取中' }}</span>
+    </div>
     <form class="room-code-search" (ngSubmit)="search.emit()">
       <label for="room-code-search">搜尋房號</label>
       <input id="room-code-search" name="roomCodeSearch" [(ngModel)]="roomCodeSearch" maxlength="16" placeholder="輸入房號或開頭" autocomplete="off" />
       <button type="submit" [disabled]="loading()">搜尋</button>
       @if (roomCodeFilter()) { <button type="button" (click)="clearRoomCode.emit()">清除</button> }
     </form>
-    <div class="lookup-controls">
-      <div class="sort-control" role="group" aria-label="房間排序">
-        <span>排序</span>
-        <div class="sort-options">
-          <button type="button" [class.is-active]="roomSort() === 'RECOMMENDED'" [attr.aria-pressed]="roomSort() === 'RECOMMENDED'" (click)="sortSelected.emit('RECOMMENDED')">推薦</button>
-          <button type="button" [class.is-active]="roomSort() === 'NEARLY_FULL'" [attr.aria-pressed]="roomSort() === 'NEARLY_FULL'" (click)="sortSelected.emit('NEARLY_FULL')">快滿</button>
-          <button type="button" [class.is-active]="roomSort() === 'NEWEST'" [attr.aria-pressed]="roomSort() === 'NEWEST'" (click)="sortSelected.emit('NEWEST')">最新</button>
-          <button type="button" [class.is-active]="roomSort() === 'OPEN_SLOTS'" [attr.aria-pressed]="roomSort() === 'OPEN_SLOTS'" (click)="sortSelected.emit('OPEN_SLOTS')">空位最多</button>
-        </div>
+    <div class="sort-control" role="group" aria-label="房間排序">
+      <span>排序</span>
+      <div class="sort-options">
+        <button type="button" [class.is-active]="roomSort() === 'RECOMMENDED'" [attr.aria-pressed]="roomSort() === 'RECOMMENDED'" (click)="sortSelected.emit('RECOMMENDED')">推薦</button>
+        <button type="button" [class.is-active]="roomSort() === 'NEARLY_FULL'" [attr.aria-pressed]="roomSort() === 'NEARLY_FULL'" (click)="sortSelected.emit('NEARLY_FULL')">快滿</button>
+        <button type="button" [class.is-active]="roomSort() === 'NEWEST'" [attr.aria-pressed]="roomSort() === 'NEWEST'" (click)="sortSelected.emit('NEWEST')">最新</button>
+        <button type="button" [class.is-active]="roomSort() === 'OPEN_SLOTS'" [attr.aria-pressed]="roomSort() === 'OPEN_SLOTS'" (click)="sortSelected.emit('OPEN_SLOTS')">空位最多</button>
       </div>
     </div>
-    <div class="refresh-actions">
-      <button type="button" class="hero-collapse refresh-button" (click)="refresh.emit()" [disabled]="loading() || refreshing()" [attr.aria-busy]="refreshing()">
-        <app-qmah-icon name="refresh" aria-hidden="true" />{{ refreshing() ? '更新中…' : '重新整理' }}
-      </button>
-    </div>
+    <button type="button" class="refresh-button" (click)="refresh.emit()" [disabled]="loading() || refreshing()" [attr.aria-busy]="refreshing()">
+      <app-qmah-icon name="refresh" aria-hidden="true" /><span class="refresh-label">{{ refreshing() ? '更新中…' : '重新整理' }}</span>
+    </button>
   </div>
 
-  <div class="status-tabs" role="group" aria-label="房間狀態">
-    <button type="button" [attr.aria-pressed]="isRoomStatusActive('WAITING')" [class.is-active]="isRoomStatusActive('WAITING')" (click)="statusSelected.emit('WAITING')">可加入</button>
-    <button type="button" [attr.aria-pressed]="isRoomStatusActive('PLAYING')" [class.is-active]="isRoomStatusActive('PLAYING')" (click)="statusSelected.emit('PLAYING')">進行中</button>
-    <button type="button" [attr.aria-pressed]="isRoomStatusActive('RECENT')" [class.is-active]="isRoomStatusActive('RECENT')" (click)="statusSelected.emit('RECENT')">最近完成</button>
-    <span>{{ rooms() ? rooms()!.totalCount + ' 間' : error() ? '暫時無法取得' : '讀取中' }}</span>
-  </div>
-
-  @if (rooms()?.items?.length) { <div class="room-ledger-head" aria-hidden="true"><span>房間</span><span>玩法設定</span><span>席位</span><span>狀態</span><span>操作</span></div> }
-  <div class="ledger" role="list" aria-label="房間留言板">
+  <div class="ledger" role="list" aria-label="牌桌清單">
     @if (rooms() === null && loading()) {
       @for (slot of loadingRows; track slot) { <div class="ledger-skeleton" aria-hidden="true"><i></i><i></i><i></i></div> }
     } @else if (rooms() === null && error()) {
@@ -42,27 +38,39 @@
         <button type="button" (click)="retry.emit()">重新載入房間</button>
       </section>
     } @else if (rooms(); as page) {
+      @if (!isDemo() && !isRehearsal() && roomStatus() === 'WAITING' && page.items.length > 0) {
+        <div role="listitem" class="new-table">
+          <button type="button" class="room-row" (click)="createRoom.emit()">
+            <span class="new-table__plus" aria-hidden="true">＋</span>
+            <strong>開一張新牌桌</strong>
+            <small>自己設定人數與節奏，邀大家入座</small>
+          </button>
+        </div>
+      }
       @if (page.items.length === 0) {
         <section class="empty-state">
-          <h2><span>目前沒有</span><span>{{ roomStatus() === 'WAITING' ? '可加入的房間' : '符合條件的房間' }}</span></h2>
+          <h2><span>目前沒有</span><span>{{ roomStatus() === 'WAITING' ? '可加入的牌桌' : '符合條件的牌桌' }}</span></h2>
           @if (isDemo() && isAdmin()) { <p>展示資料在這個狀態下沒有房間可供查看。</p> }
           @else if (isDemo()) { <p>目前沒有符合條件的房間可供查看。</p> }
           @else {
-            <p>{{ roomStatus() === 'WAITING' ? '現在可以建立房間，邀請其他玩家一起鑑定。' : '可以切換到可加入房間，或建立新的鑑定房間。' }}</p>
+            <p>{{ roomStatus() === 'WAITING' ? '現在可以開一張新牌桌，邀其他玩家一起鑑定。' : '可以切換到可加入的牌桌，或自己開一張。' }}</p>
             <div class="empty-state__actions">
               <button type="button" class="empty-state__primary" (click)="createRoom.emit()">建立房間</button>
-              @if (roomStatus() !== 'WAITING') { <button type="button" (click)="statusSelected.emit('WAITING')">查看可加入房間</button> }
+              @if (roomStatus() !== 'WAITING') { <button type="button" (click)="statusSelected.emit('WAITING')">查看可加入牌桌</button> }
             </div>
           }
         </section>
       } @else {
         @for (room of page.items; track room.id) {
-          <div role="listitem">
+          <div role="listitem" [attr.data-status]="room.status" [class.is-full]="room.playerCount >= room.maxPlayers">
             <button type="button" class="room-row" [attr.data-room-id]="room.id" [class.is-selected]="selectedRoomId() === room.id" (click)="roomSelected.emit(room)" [attr.aria-pressed]="selectedRoomId() === room.id">
               <span class="room-code"><strong>{{ room.roomCode }}</strong><small>{{ room.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</small></span>
-              <span class="room-facts"><b>{{ room.totalRounds }} 回合</b><span>{{ categoryText(room.categoryFilterCode) }} · {{ eraText(room.eraBucketFilterCode) }}</span>@if (isRehearsal()) { <span>作答 {{ (room.answerSeconds || 180) / 60 }} 分 · 投票 {{ (room.votingSeconds || 120) / 60 }} 分</span> }</span>
-              <span class="room-occupancy" [attr.aria-label]="'席位 ' + room.playerCount + ' / ' + room.maxPlayers"><b>{{ room.playerCount }} / {{ room.maxPlayers }}</b><i><i [style.width.%]="occupancy(room)"></i></i></span>
               <span class="room-status" [attr.data-status]="room.status">{{ statusText(room.status) }}</span>
+              <span class="room-facts"><b>{{ room.totalRounds }} 回合</b><span>{{ categoryText(room.categoryFilterCode) }} · {{ eraText(room.eraBucketFilterCode) }}</span>@if (isRehearsal()) { <span>作答 {{ (room.answerSeconds || 180) / 60 }} 分 · 投票 {{ (room.votingSeconds || 120) / 60 }} 分</span> }</span>
+              <span class="room-occupancy" [attr.aria-label]="'席位 ' + room.playerCount + ' / ' + room.maxPlayers">
+                <span class="seat-pips" aria-hidden="true">@for (seat of seatSlots(room); track seat) { <i [class.is-taken]="seat < room.playerCount"></i> }</span>
+                <b>{{ room.playerCount }}／{{ room.maxPlayers }}</b>
+              </span>
               @if (selectedRoomId() === room.id) { <span class="row-selection-state">已開啟</span> }
               @else { <span class="row-action"><span>{{ isRehearsal() ? '直接入桌' : '查看' }}</span><app-qmah-icon class="row-arrow" name="arrow-right" aria-hidden="true" /></span> }
             </button>

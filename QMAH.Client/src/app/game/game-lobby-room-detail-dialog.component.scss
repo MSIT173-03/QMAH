@@ -10,14 +10,12 @@
 .room-notes-heading > span { display: inline-block; margin-top: 12px; color: var(--qmah-accent); font-size: var(--qmah-type-label-size); }
 .room-notes-heading span[data-status="PLAYING"] { color: var(--qmah-danger); }
 .room-share-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-.detail-close { position:absolute; top:28px; right:28px; z-index:2; display:inline-grid; place-items:center; width:44px; height:44px; border:1px solid var(--game-card-line); border-radius:var(--qmah-radius-control); color:var(--game-card-ink); background:var(--game-card-ground); }
+.detail-close { @include ui.button(true); position:absolute; top:28px; right:28px; z-index:2; display:inline-grid; place-items:center; width:48px; padding:0; }
 .room-loading { padding-right:48px; }
 .notes-page { display:flex; flex-direction:column; gap:16px; overflow:hidden; }
 .notes-page app-game-scroll-panel { flex:1; --scroll-panel-height:auto; }
 .room-notes-heading, .join-note { flex:none; }
-.detail-close:hover { border-color: var(--qmah-accent); color: var(--qmah-accent); }
-.copy-room-code { min-height: var(--qmah-control-height); border: 1px solid color-mix(in srgb, var(--qmah-on-dark) 42%, transparent); border-radius: var(--qmah-radius-control); padding: 7px var(--qmah-space-2); color: var(--qmah-on-dark); background: transparent; font-size: var(--qmah-type-meta-size); font-weight: 800; }
-.copy-room-code:hover { border-color: var(--qmah-accent); color: var(--qmah-accent); }
+.copy-room-code { @include ui.button(true); padding: 6px 12px; font-size: var(--qmah-type-label-size); }
 .room-record { display: grid; grid-template-columns: 1fr 1fr; margin: 0; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 22%, transparent); }
 .room-record div { padding: 18px 0; border-bottom: 1px solid color-mix(in srgb, var(--qmah-on-dark) 16%, transparent); }
 .room-record dt { color: color-mix(in srgb, var(--qmah-on-dark) 76%, transparent); font-size: var(--qmah-type-meta-size); line-height: var(--qmah-type-meta-leading); letter-spacing: .06em; }

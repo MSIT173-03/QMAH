@@ -1,3 +1,5 @@
+$tag-line: #6d5841; // 紙標籤外線，與按鈕素材同色
+$tag-mid: #c7b090; // 中帶
 // Kenney UI Pack - Adventure，CC0，素材以九宮格切片配合實際控制項尺寸
 // 來源：https://kenney.nl/assets/ui-pack-adventure
 @mixin button($secondary: false) {
@@ -14,7 +16,8 @@
     border-image-source: var(--game-button-image, var(--game-secondary-image));
     color: var(--game-button-ink, var(--game-secondary-ink));
   }
-  &:hover:not(:disabled) { filter: brightness(1.08); }
+  transition: transform 150ms, filter 150ms;
+  &:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-2px); }
   &:active:not(:disabled) { transform: translateY(1px); }
 }
 
@@ -32,9 +35,9 @@
   --qmah-ink: var(--game-card-ink);
   --qmah-muted: var(--game-card-muted);
   --qmah-focus: var(--game-card-action);
-  @include panel;
-  // Kenney RPG Expansion 紙面（CC0），閱讀視窗不再沿用牌桌木框。
-  border-image-source: url('/assets/game/kenney-rpg-paper.png');
+  // 閱讀視窗與卡片共用紙標籤框線，不再沿用牌桌木框或另一套紙邊素材。
+  @include tag-frame(var(--game-card-ground), 14px);
+  color: var(--qmah-ink);
 }
 
 // 固定紙邊與四角的尺寸，避免整張方形素材被拉成長方形。
@@ -119,19 +122,37 @@
   }
 }
 
-// 控制與收納採金屬外殼，內容仍使用暖紙色，避免每個介面都是木框。
+// 控制與收納的外殼：與按鈕、卡片同一組棕色紙標籤框線
 @mixin control-housing($index: false, $reading: true) {
   @if $reading { @include reading-surface; }
-  border: 12px solid transparent;
-  border-radius: 10px;
-  border-image: url('/assets/game/kenney-control-panel.svg') 18 / 1 / 0 stretch;
-  background-clip: padding-box;
-  @if $index { border-image-source:url('/assets/game/kenney-index-frame.svg'); }
-  box-shadow:0 5px 12px #14291c30;
+  border: 2px solid #{$tag-line};
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 2px #{$tag-mid}, 0 5px 12px #14291c30;
 }
 @mixin writing-well {
   color:var(--game-card-ink);
   background:#eee9dc;
-  border:1px solid var(--game-card-line);
-  box-shadow:inset 0 2px 4px #382c2420,0 1px 0 #fffaf0;
+  border:2px solid #{$tag-line};
+  border-radius:10px;
+  box-shadow:inset 0 2px 4px #382c2433;
+}
+
+// 紙標籤框線：與按鈕素材同一組外線／中帶／底色，卡片、輸入框、HUD 共用
+@mixin tag-frame($fill: var(--game-card-ground), $radius: 12px) {
+  border: 2px solid #{$tag-line};
+  border-radius: $radius;
+  background: $fill;
+  box-shadow: inset 0 0 0 2px #{$tag-mid}, 0 3px 7px #33251426;
+}
+
+// 一組單選控制（導覽、排序、狀態）放進同一種淺凹托盤
+@mixin tab-tray {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, #{$tag-mid} 55%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, #{$tag-mid} 22%, transparent);
+  box-shadow: inset 0 1px 3px #33251418;
 }

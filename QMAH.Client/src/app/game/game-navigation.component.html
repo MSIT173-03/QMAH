@@ -1,52 +1,38 @@
-<!-- ui-integration: 桌面寬版由各 Game 頁提供側邊軌空間；窄版維持水平模式切換。 -->
-<nav class="game-navigation" aria-label="遊戲區功能">
-  <header class="game-navigation__header">
-    <span class="game-navigation__context"><app-qmah-icon name="gamepad-2" aria-hidden="true" /> <span>遊戲模式</span></span>
-    <button
-      type="button"
-      class="game-navigation__collapse"
-      [attr.aria-expanded]="!railCollapsed()"
-      [attr.aria-label]="railCollapsed() ? '展開遊戲模式導覽' : '收合遊戲模式導覽'"
-      [attr.title]="railCollapsed() ? '展開遊戲模式導覽' : '收合遊戲模式導覽'"
-      (click)="toggleRail()"
-    >
-      <app-qmah-icon [name]="railCollapsed() ? 'chevron-right' : 'chevron-left'" aria-hidden="true" />
-    </button>
-  </header>
+<!-- 遊戲區選單：平時只留左上角一顆按鈕，把整個畫面讓給牌桌；點開才浮出模式、聲音與專注模式。 -->
+<nav class="game-navigation" [class.is-open]="open()" aria-label="遊戲區功能">
+  <button type="button" class="game-menu" aria-controls="game-menu-panel" [attr.aria-expanded]="open()" (click)="toggleMenu($event)">
+    <app-qmah-icon [name]="open() ? 'x' : 'gamepad-2'" aria-hidden="true" />
+    <span>{{ open() ? '收起' : '選單' }}</span>
+  </button>
 
-  <div class="game-navigation__switcher">
-    <div class="game-navigation__links">
-      @for (link of links; track link.path) {
-        <a
-          [routerLink]="link.path"
-          [class.is-active]="isActive(link)"
-          [attr.aria-current]="isActive(link) ? 'page' : null"
-          [attr.aria-label]="link.label + '，' + link.description"
-          [attr.title]="railCollapsed() ? link.label + ' · ' + link.description : null"
-        >
-          <app-qmah-icon class="game-navigation__link-icon" [name]="link.icon" aria-hidden="true" />
-          <span class="game-navigation__link-copy">
-            <span class="game-navigation__link-label">{{ link.label }}</span>
-            <span class="game-navigation__link-description">{{ link.description }}</span>
-          </span>
-        </a>
-      }
+  @if (open()) {
+    <div id="game-menu-panel" class="game-menu__panel" (click)="$event.stopPropagation()">
+      <p class="game-menu__hint"><kbd>Q</kbd><kbd>E</kbd> 切換分頁</p>
+      <div class="game-navigation__links">
+        @for (link of links; track link.path) {
+          <a [routerLink]="link.path" [class.is-active]="isActive(link)" [attr.aria-current]="isActive(link) ? 'page' : null" (click)="open.set(false)">
+            <app-qmah-icon class="game-navigation__link-icon" [name]="link.icon" aria-hidden="true" />
+            <span class="game-navigation__link-copy">
+              <span class="game-navigation__link-label">{{ link.label }}</span>
+              <span class="game-navigation__link-description">{{ link.description }}</span>
+            </span>
+          </a>
+        }
+      </div>
+
+      <div class="game-navigation__actions">
+        @if (isAdmin()) {
+          <div class="game-tools" [class.is-active]="isTestActive() || isDemoActive()">
+            <a routerLink="/game" [queryParams]="{ test: '1' }" (click)="open.set(false)" [attr.aria-current]="isTestActive() ? 'page' : null"><strong>模擬遊戲</strong><span>點房卡入桌，或建立房間讓 NPC 一起玩</span></a>
+            @if (canShowRooms) {
+              <a routerLink="/game/demo" [queryParams]="lobbyQuery()" (click)="open.set(false)" [attr.aria-current]="isDemoActive() ? 'page' : null"><strong>房間展示</strong><span>查看範例房間與清單排列，不能加入</span></a>
+            }
+          </div>
+        }
+        <app-game-audio-toggle [inline]="true" />
+        <button type="button" class="game-focus-toggle" (click)="focusMode.toggle(); open.set(false)" [attr.aria-pressed]="focusMode.active()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5" /></svg><span>{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</span></button>
+        <div class="game-navigation__extra"><ng-content /></div>
+      </div>
     </div>
-  </div>
-
-  <div class="game-navigation__actions">
-    @if (isAdmin()) {
-      <details #tools class="game-tools" [class.is-active]="isTestActive() || isDemoActive()">
-        <summary><app-qmah-icon name="test-tube" aria-hidden="true" /><span class="game-action-label">管理員工具</span></summary>
-        <div class="game-tools__menu">
-          <a routerLink="/game" [queryParams]="{ test: '1' }" (click)="closeTools()" [attr.aria-current]="isTestActive() ? 'page' : null"><strong>模擬遊戲</strong><span>點房卡入桌，或建立房間讓 NPC 一起玩</span></a>
-          @if (canShowRooms) {
-            <a routerLink="/game/demo" [queryParams]="lobbyQuery()" (click)="closeTools()" [attr.aria-current]="isDemoActive() ? 'page' : null"><strong>房間展示</strong><span>查看範例房間與清單排列，不能加入</span></a>
-          }
-        </div>
-      </details>
-    }
-    <button type="button" class="game-focus-toggle" (click)="focusMode.toggle()" [attr.aria-pressed]="focusMode.active()" [attr.aria-label]="focusMode.active() ? '離開專注模式' : '專注模式'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5" /></svg><span class="game-action-label">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</span></button>
-    <ng-content />
-  </div>
+  }
 </nav>

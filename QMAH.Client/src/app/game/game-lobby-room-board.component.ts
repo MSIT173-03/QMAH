@@ -42,6 +42,7 @@ export class GameLobbyRoomBoardComponent {
   readonly loadingRows = [1, 2, 3, 4, 5];
 
   isRoomStatusActive(status: LobbyStatus): boolean { return this.roomStatus() === status; }
+  seatSlots(room: GameRoomListItem): number[] { return Array.from({ length: Math.max(room.maxPlayers, 1) }, (_, index) => index); }
   occupancy(room: GameRoomListItem): number { return Math.round((room.playerCount / room.maxPlayers) * 100); }
   statusText(status: GameRoomListItem['status']): string { return { WAITING: '等待中', PLAYING: '進行中', COMPLETED: '最近完成', CANCELLED: '已取消' }[status]; }
   categoryText(code: string | null): string {

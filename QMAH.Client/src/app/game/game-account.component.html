@@ -1,4 +1,4 @@
-<div class="account-page">
+<div class="account-page" [class.is-focus-mode]="focusMode.active()">
   <!-- ui-integration: 遊戲沿用正式會員登入；本頁只提供登入狀態與返回出口，不維護第二套登入表單。 -->
   <app-game-navigation>
     <a class="back-link" routerLink="/game"><span class="game-action-label"><span>返回</span><span>多人鑑定大廳</span></span></a>

@@ -35,8 +35,8 @@ const HOW_TO_CONTENT: Record<GameHowToVariant, HowToContent> = {
     description: '選一種玩法，依照提示辨識文物、配對或拼圖。完成後按「送出結果」，查看成績與本局獎勵。',
     steps: [
       { label: '01', title: '選模式', description: '從目前啟用的單人玩法中選擇一種挑戰。' },
-      { label: '02', title: '完成挑戰', description: '依選擇的玩法辨識細節、翻牌配對，或將文物與書畫碎片放回原圖位置。' },
-      { label: '03', title: '送出結果', description: '完成全部定位、配對或拼圖後，按「送出結果」才會結算成績與獎勵。' },
+      { label: '02', title: '完成挑戰', description: '依選擇的玩法辨識細節、翻牌配對、把館藏碎片拼回原圖，或在長卷復位裡每次三選一，接出下一片。' },
+      { label: '03', title: '送出結果', description: '完成全部定位、配對、拼圖或接力後，按「送出結果」才會結算成績與獎勵。' },
       { label: '04', title: '查看成績與獎勵', description: '查看分數、等級、鑑定點數與鑰匙進度。每日點數已滿後，成績與鑰匙進度仍會保留。' }
     ]
   }

@@ -32,7 +32,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
   private demoTimer: ReturnType<typeof setInterval> | null = null;
   private demoTicks = 0;
   private completionTicks = 0;
-  autoPlaying = true;
+  autoPlaying = false;
 
   override ngOnInit(): void { /* 本機示範不載入正式挑戰、會員或存檔。 */ }
   ngOnChanges(): void { this.restartDemo(); }
@@ -45,7 +45,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
     if (this.demoTimer !== null) clearInterval(this.demoTimer);
     this.closePause();
     this.paused = false;
-    this.autoPlaying = true;
+    this.autoPlaying = false;
     this.demoTicks = 0;
     this.completionTicks = 0;
     const modeCode = this.modeCode();
@@ -60,7 +60,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
       if (this.paused || this.phase !== 'playing') return;
       this.demoTicks++;
       this.elapsedSeconds = Math.floor(this.demoTicks / 2);
-      if (this.autoPlaying) this.advanceDemo();
+      if (this.autoPlaying && this.demoTicks % 2 === 0) this.advanceDemo();
       this.demoDetector.markForCheck();
     }, 500);
   }
@@ -87,7 +87,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
     this.completionTicks = 0;
     if (this.demoTicks < 3) return;
     if (this.attempt?.modeCode === 'DETAIL_LOCATOR') {
-      if (this.demoTicks % 3 === 0) this.playSheet?.advanceDemonstration();
+       if (this.demoTicks % 6 === 0) this.playSheet?.advanceDemonstration();
     } else if (this.attempt?.modeCode === 'MEMORY_MATCH') {
       if (this.memoryBusy) return;
       const first = this.memoryOpen[0];

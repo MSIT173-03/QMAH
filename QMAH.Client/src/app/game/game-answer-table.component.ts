@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 
 import { GameAnswer, GameAnswerType, GamePlayer, GameRoundDetails } from './game.models';
 import { GameAnswerCardComponent } from './game-answer-card.component';
@@ -84,6 +84,7 @@ export class GameAnswerTableComponent {
     });
     effect(() => {
       this.roundId();
+      this.confirmingVote.set('');
       const rail = this.mobileAnswerCarousel()?.nativeElement;
       if (rail) {
         this.carouselIndex.set(0);
@@ -135,12 +136,14 @@ export class GameAnswerTableComponent {
   }
 
   openAnswer(answer: GameAnswer): void {
+    this.confirmingVote.set('');
     this.selectedAnswerId.set(answer.id);
     const dialog = this.answerDialog()?.nativeElement;
     if (dialog && !dialog.open) dialog.showModal();
   }
 
   closeAnswer(): void {
+    this.confirmingVote.set('');
     const dialog = this.answerDialog()?.nativeElement;
     if (dialog?.open) dialog.close();
     this.selectedAnswerId.set(null);
@@ -154,6 +157,21 @@ export class GameAnswerTableComponent {
     return this.canVote()(answer)
       && !this.votedAnswerIds().has(answer.id)
       && !this.votingForAnswerId();
+  }
+
+  protected readonly confirmingVote = signal('');
+
+  private readonly injector = inject(Injector);
+
+  setVoteConfirmation(answerId: string): void {
+    this.confirmingVote.set(answerId);
+    afterNextRender(() => {
+      const dialog = this.answerDialog()?.nativeElement;
+      if (!dialog?.open || this.confirmingVote() !== answerId) return;
+      const target = dialog.querySelector<HTMLButtonElement>(answerId ? '.vote-cancel' : '.vote-action:not(:disabled)')
+        ?? dialog.querySelector<HTMLButtonElement>('.dialog-close');
+      target?.focus();
+    }, { injector: this.injector });
   }
 
   submitVote(answer: GameAnswer): void {

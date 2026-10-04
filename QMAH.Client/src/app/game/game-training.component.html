@@ -1,7 +1,5 @@
 <div class="training-notebook" [class.is-playing]="phase === 'playing'" [class.is-complete]="phase === 'complete'" [class.is-focus-mode]="focusMode.active()">
-      @if (phase === 'list') {
-        @if (focusMode.active()) { <div class="focus-exit"><button type="button" (click)="focusMode.toggle()" aria-label="離開專注模式"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5" /></svg><span>離開專注模式</span></button></div> }
-        @else { <app-game-navigation /> }
+      @if (phase === 'list') { <app-game-navigation />
       } @else if (phase === 'complete') { <div class="scene-toolbar"><a routerLink="/game">遊戲大廳</a><button type="button" (click)="focusMode.toggle()" [attr.aria-pressed]="focusMode.active()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button></div> }
 
       <section class="chapter" aria-labelledby="training-title">
@@ -88,7 +86,7 @@
           <p class="leave-warning"><span>離開後會清除本局進度，</span><span>不會結算成績或發放獎勵。</span></p>
           <div class="confirm-actions"><button type="button" (click)="closePause()">繼續這一局</button><button type="button" class="secondary" data-button-tone="danger" (click)="leaveFromPause()">放棄本局，回玩法列表</button></div>
         } @else {
-        <app-game-scroll-panel label="暫停與協助選項，可上下捲動" cue="往下查看其他選項"><p>暫停期間不計時，繼續遊玩會回到目前盤面。</p>
+        <app-game-scroll-panel label="暫停與協助選項，可上下捲動" cue="往下查看其他選項"><p>暫停期間不計時，繼續遊玩會回到目前盤面。</p><app-game-audio-toggle />
         @if (helpRequested) {
           <div class="help-options">
             <section class="help-option" aria-labelledby="hint-option-title">

@@ -1,13 +1,14 @@
 @if (attempt(); as current) {
-  <section class="play-sheet" [attr.inert]="paused() || isComplete() ? '' : null" [attr.aria-hidden]="isComplete() ? 'true' : null" animate.enter="scene-play-enter">
+  <section class="play-sheet" [class.is-demo]="demonstration()" [attr.inert]="paused() || isComplete() ? '' : null" [attr.aria-hidden]="isComplete() ? 'true' : null" animate.enter="scene-play-enter">
     <header class="play-heading">
-      <div class="play-heading__title"><h2>{{ current.modeName }}</h2><span>{{ current.modeCode === 'DETAIL_LOCATOR' ? '看細節，在原圖上定位' : current.artifactName }} · {{ difficultyText(current.difficulty) }}</span></div>
+      <div class="play-heading__title"><h2>{{ current.modeName }}</h2><span>{{ current.modeCode === 'DETAIL_LOCATOR' ? '看細節，在原圖上定位' : current.artifactName }} · {{ difficultyText(current.difficulty) }}</span><ng-content select="[play-status]" /></div>
       <div class="play-heading__progress">
         <div class="play-heading__progress-meta"><span>完成比例</span><strong>{{ progressPercent() }}%</strong></div>
         <div class="play-progress" role="progressbar" aria-label="目前完成比例" [attr.aria-valuenow]="progressPercent()" aria-valuemin="0" aria-valuemax="100"><span [style.transform]="'scaleX(' + progressPercent() / 100 + ')'" ></span></div>
         <small>已用時間 {{ elapsedLabel() }}</small>
       </div>
-      <button type="button" class="pause-trigger" (click)="pauseRequested.emit()" [disabled]="completing() || resultFrozen()">暫停與選單</button>
+      <ng-content select="[play-controls]" />
+      <button type="button" class="pause-trigger" (click)="pauseRequested.emit()" [disabled]="completing() || resultFrozen()">{{ demonstration() ? '暫停試玩' : '暫停與選單' }}</button>
     </header>
 
     @if (current.modeCode === 'DETAIL_LOCATOR') {
@@ -31,9 +32,10 @@
     } @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
       <div class="game-board ordering-game"><app-game-placement-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="puzzleOrder()" [initialSelection]="puzzleSelection()" [initialHintRegion]="puzzleHintRegion()" [disabled]="completing() || resultFrozen() || imageFailed('puzzle')" (orderChange)="puzzleOrderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" [assistedPieces]="autoPlaced()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="true" (settlementRequested)="settlementRequested.emit()" (availabilityChange)="puzzleAvailability.emit($event)" /></div>
     } @else {
-      <div class="game-board ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>沿書畫原圖方向排列 15 段，接回連續的筆墨與景物。</p></div><app-game-scroll-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="restoreOrder()" [initialSelection]="restoreSelection()" [initialHintRegion]="restoreHintRegion()" [disabled]="completing() || resultFrozen()" (orderChange)="restoreOrderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" [assistedPieces]="autoPlaced()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="true" (settlementRequested)="settlementRequested.emit()" (availabilityChange)="scrollAvailability.emit($event)" /><p class="game-hint">{{ isRestoreSolved() ? '書畫復位完成，可以送出結果。' : '拖曳碎片到目標格，接回書畫原貌。' }}</p></div>
+      <div class="game-board ordering-game"><div class="game-prompt"><h3>長卷復位</h3><p>從第一片開始，每次三選一，挑出邊緣接得上的那一片。</p></div><app-game-scroll-board [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="restoreOrder()" [initialSelection]="restoreSelection()" [initialHintRegion]="restoreHintRegion()" [disabled]="completing() || resultFrozen()" (orderChange)="restoreOrderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" [assistedPieces]="autoPlaced()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="true" (settlementRequested)="settlementRequested.emit()" (availabilityChange)="scrollAvailability.emit($event)" /><p class="game-hint">{{ isRestoreSolved() ? '書畫復位完成，可以送出結果。' : '三選一接力，十五片接完就是整幅長卷。' }}</p></div>
     }
 
+    @if (!demonstration() || canComplete()) {
     <footer class="play-footer">
       <div class="play-footer__context">
         @if (current.modeCode === 'MEMORY_MATCH' && memoryHints().length) {
@@ -50,5 +52,6 @@
         @else { <span class="play-command">{{ current.modeCode === 'DETAIL_LOCATOR' ? '四件文物定位後即可送出' : current.modeCode === 'MEMORY_MATCH' ? '配對完成後即可送出' : '完成盤面後即可送出' }}</span> }
       </div>
     </footer>
+    }
   </section>
 }

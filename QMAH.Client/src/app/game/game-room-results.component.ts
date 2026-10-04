@@ -1,4 +1,5 @@
-import { Component, computed, input, output } from '@angular/core';
+import { GameAudio } from './game-audio.service';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GameRoomHistory, MainGameReward } from './game.models';
 import { GameRewardMeterComponent } from './game-reward-meter.component';
@@ -11,6 +12,7 @@ import { GameScrollPanelComponent } from './game-scroll-panel.component';
   styleUrl:'./game-room-results.component.scss'
 })
 export class GameRoomResultsComponent {
+  private readonly victory = inject(GameAudio).play('win');
   readonly history = input<GameRoomHistory | null>(null);
   readonly reward = input<MainGameReward | null>(null);
   readonly rewarding = input(false);

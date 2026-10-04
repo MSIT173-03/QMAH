@@ -1,5 +1,6 @@
 <section class="training-list" [class.is-auth-gated]="authRequired()">
   @if (authRequired()) {
+    <div class="mode-stage mode-stage--auth">
     <section class="auth-state" aria-labelledby="auth-state-title">
       <h2 id="auth-state-title">登入後即可開始遊玩</h2>
       <p>登入後會載入目前啟用的玩法，完成結果也會保留在會員紀錄。</p>
@@ -8,6 +9,7 @@
         <button type="button" (click)="retryModes.emit()">重新載入</button>
       </div>
     </section>
+    </div>
   }
   @if (!authRequired()) {
     <div class="mode-stage">
