@@ -32,7 +32,7 @@ export class SiteFooter {
     ? '/images/brand/qmah-logo-dark.svg'
     : '/images/brand/qmah-logo.svg');
   protected readonly logoAlt = '清明鑑定屋';
-  protected readonly brandNote = '以文物資料為本，匯集圖鑑、遊戲、社群與選物。';
+  protected readonly brandNote = '從文物出發，逛圖鑑、玩遊戲，也看看大家的分享。';
   protected readonly githubUrl = 'https://github.com/MSIT173-03/QMAH';
   protected readonly copyright = '© 2026 清明鑑定屋';
   protected readonly columns: readonly FooterColumn[] = [
