@@ -34,6 +34,7 @@ describe('LayoutComponent', () => {
     );
 
     expect(component).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('a.app-admin-entry')).toBeNull();
   });
 
   it('shows the display name once /me resolves', () => {
@@ -55,5 +56,18 @@ describe('LayoutComponent', () => {
     );
 
     expect(component.meApi.me()?.displayName).toBe('測試管理員');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('a.app-admin-entry').getAttribute('href')).toBe('/api/v1/navigation/admin');
+    expect(fixture.nativeElement.querySelector('a.app-mobile-admin-entry')).not.toBeNull();
+  });
+
+  it('hides both admin entries for ordinary members', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({ roles: ['Member'], email: 'member@example.test' });
+    httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
+      { message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' }
+    );
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('a.app-admin-entry')).toBeNull();
+    expect(fixture.nativeElement.querySelector('a.app-mobile-admin-entry')).toBeNull();
   });
 });

@@ -1,5 +1,7 @@
 ﻿@model ErrorViewModel
 @{
+    // 錯誤頁不能依賴後台導覽的登入表單，避免同一例外在錯誤處理時再次發生。
+    Layout = null;
     ViewData["Title"] = "Error";
 }
 

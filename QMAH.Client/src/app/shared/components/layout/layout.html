@@ -55,8 +55,13 @@
           <a class="app-login" routerLink="/login" (click)="closeMenu()">登入</a>
         }
 
+        @if (isAdmin()) {
+          <a class="app-admin-entry" [href]="adminEntryUrl" (click)="confirmAdminNavigation($event)">
+            <app-qmah-icon name="shield-check" [size]="16" aria-hidden="true" />
+            <span>管理後台</span>
+          </a>
+        }
         <app-notifications-bell />
-        <!-- ui-integration: 前台測試登入入口已移除；測試與管理員操作一律走正式登入頁。後台管理改由 QMAH.Web 獨立提供，這裡不再放管理入口。 -->
 
         <label class="app-theme-toggle" aria-label="切換深色模式">
           <input
@@ -118,6 +123,12 @@
     </div>
 
     <div class="app-mobile-drawer__footer">
+      @if (isAdmin()) {
+        <a class="app-mobile-admin-entry" [href]="adminEntryUrl" (click)="confirmAdminNavigation($event)">
+          <app-qmah-icon name="shield-check" [size]="16" aria-hidden="true" />
+          <span>管理後台</span>
+        </a>
+      }
       @if (meApi.me()) {
         <button type="button" class="app-mobile-logout" [disabled]="loggingOut()" (click)="logout()">
           {{ loggingOut() ? '登出中…' : '登出目前帳號' }}
@@ -136,5 +147,24 @@
   <!-- ui-integration: 所有 App Shell route 共用同一個 footer，首頁與深層頁都保留合理的回站入口。 -->
   <app-site-footer />
 </div>
+
+<dialog #siteSwitchDialog class="app-site-switch-dialog" aria-labelledby="site-switch-title"
+        (click)="$event.target === $event.currentTarget && closeSiteSwitch()">
+  <div class="app-site-switch-dialog__heading">
+    <span class="app-site-switch-dialog__mark"><app-qmah-icon name="shield-check" [size]="22" aria-hidden="true" /></span>
+    <div>
+      <span class="app-site-switch-dialog__eyebrow">切換工作區</span>
+      <h2 id="site-switch-title">前往管理後台？</h2>
+    </div>
+  </div>
+  <div class="app-site-switch-dialog__copy">
+    <p>即將離開前台，開啟管理工具。</p>
+    <p>請先確認目前的操作已完成。</p>
+  </div>
+  <div class="app-site-switch-dialog__actions">
+    <button type="button" autofocus (click)="closeSiteSwitch()">留在前台</button>
+    <a [href]="adminEntryUrl">確認前往</a>
+  </div>
+</dialog>
 
 <app-toast-container />

@@ -214,6 +214,10 @@ npm run start:http
 
 ## 常見啟動問題
 
+前後台切換入口由伺服器讀取站台設定後轉址，元件內不指定主機或連接埠。API 的 `Backend:AdminUrl` 指向管理後台，Web 的 `Frontend:ClientUrl` 指向使用者前台。兩者都支援完整網址與部署子路徑，可在各自的 `appsettings.Local.json` 或環境變數 `Backend__AdminUrl`、`Frontend__ClientUrl` 覆寫。本機預設沿用標準 HTTPS 後台與 Angular 前台，若只啟動 HTTP 後台，請將 `Backend:AdminUrl` 改成該部署的 HTTP 網址。
+
+切換連結保留原有登入機制，不會透過網址傳遞登入票證。前台入口僅對 `Admin` 顯示，API 與後台轉址入口也檢查管理員權限。
+
 ### 431 Request Header Fields Too Large
 
 若瀏覽器開啟 `https://localhost:7039` 時顯示 `431 Request Header Fields Too Large`，通常是瀏覽器保留了舊版或重複的 `localhost` Cookie，不是 NuGet 還原或專案載入失敗。

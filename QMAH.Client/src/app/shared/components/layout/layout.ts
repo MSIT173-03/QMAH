@@ -15,6 +15,7 @@ import { ToastContainerComponent } from '../toast-container/toast-container';
 import { SiteFooter } from '../site-footer/site-footer';
 import { AreaNavigationComponent, NavigationGroup } from '../area-navigation/area-navigation';
 import { QmahIconComponent } from '../qmah-icon/qmah-icon';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-layout',
@@ -36,8 +37,20 @@ export class LayoutComponent implements OnInit, OnDestroy {
   readonly loggingOut = signal(false);
   readonly failedAvatarPath = signal<string | null>(null);
   readonly currentUrl = signal(this.router.url);
+  readonly isAdmin = computed(() => this.meApi.me()?.roles.includes('Admin') ?? false);
+  readonly adminEntryUrl = `${environment.apiBaseUrl}/navigation/admin`;
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
   @ViewChild('mobileNavigation') private mobileNavigation?: ElementRef<HTMLElement>;
+  @ViewChild('siteSwitchDialog') private siteSwitchDialog?: ElementRef<HTMLDialogElement>;
+
+  confirmAdminNavigation(event: MouseEvent): void {
+    event.preventDefault();
+    this.siteSwitchDialog?.nativeElement.showModal();
+  }
+
+  closeSiteSwitch(): void {
+    this.siteSwitchDialog?.nativeElement.close();
+  }
 
   /** 五大前台 Area 共用同一個 Shell，但各自保留主色語意；頁面內元件仍可使用自己的 secondary／semantic token。 */
   readonly activeArea = computed<'home' | 'user' | 'catalog' | 'game' | 'social' | 'store'>(() => {

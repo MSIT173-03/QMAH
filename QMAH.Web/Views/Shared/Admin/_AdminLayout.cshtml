@@ -70,6 +70,7 @@
     <link rel="stylesheet" href="~/admin/css/qmah-admin-footer.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-admin-typography.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/admin/css/qmah-image-preview.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/qmah-site-switch.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="qmah-admin qmah-area-@areaKey" data-qmah-area="@areaKey">
@@ -152,6 +153,35 @@
             hidden>
         <i class="ti ti-arrow-up" aria-hidden="true"></i>
     </button>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="modal modal-blur fade qmah-site-switch-modal" id="frontend-switch-modal" tabindex="-1" aria-hidden="true" aria-labelledby="frontend-switch-title">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="qmah-site-switch-heading">
+                        <span class="qmah-site-switch-mark" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h6v6M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+                            </svg>
+                        </span>
+                        <div>
+                            <span class="qmah-site-switch-eyebrow">切換工作區</span>
+                            <h2 id="frontend-switch-title">前往使用者前台？</h2>
+                        </div>
+                    </div>
+                    <div class="qmah-site-switch-copy">
+                        <p>即將離開後台，開啟使用者網站。</p>
+                        <p>請先確認目前的修改已儲存。</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" data-bs-dismiss="modal">留在後台</button>
+                        <a class="btn btn-primary" asp-area="" asp-controller="Home" asp-action="Frontend">確認前往</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <div class="modal modal-blur fade" id="economy-adjustment-modal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">

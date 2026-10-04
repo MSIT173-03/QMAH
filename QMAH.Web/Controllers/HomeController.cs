@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Configuration;
 using QMAH.Web.Models;
 
 namespace QMAH.Web.Controllers;
@@ -134,6 +135,10 @@ public sealed class HomeController(QmahDbContext db) : Controller
         return View();
     }
 
+    public IActionResult Frontend([FromServices] IConfiguration configuration)
+        => Redirect(QmahSiteNavigation.GetTarget(configuration, "Frontend:ClientUrl"));
+
+    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
