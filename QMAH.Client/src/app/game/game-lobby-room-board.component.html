@@ -1,12 +1,4 @@
-<article class="index-page" aria-labelledby="rooms-title">
-  <header class="page-heading">
-    <div>
-      <h2 id="rooms-title">{{ isDemo() ? '範例房間' : isRehearsal() ? '選一桌開始遊戲' : '房間清單' }}</h2>
-      <p>{{ roomListDescription() }}</p>
-    </div>
-    @if (showRewardMeter()) { <app-game-reward-meter /> }
-  </header>
-
+<article class="index-page" aria-label="房間清單與搜尋">
   <div class="lookup-bar">
     <form class="room-code-search" (ngSubmit)="search.emit()">
       <label for="room-code-search">搜尋房號</label>
@@ -52,7 +44,7 @@
     } @else if (rooms(); as page) {
       @if (page.items.length === 0) {
         <section class="empty-state">
-          <h2>{{ roomStatus() === 'WAITING' ? '目前沒有可加入的房間' : '目前沒有符合條件的房間' }}</h2>
+          <h2><span>目前沒有</span><span>{{ roomStatus() === 'WAITING' ? '可加入的房間' : '符合條件的房間' }}</span></h2>
           @if (isDemo() && isAdmin()) { <p>展示資料在這個狀態下沒有房間可供查看。</p> }
           @else if (isDemo()) { <p>目前沒有符合條件的房間可供查看。</p> }
           @else {

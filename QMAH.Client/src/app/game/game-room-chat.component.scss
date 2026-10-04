@@ -13,7 +13,7 @@ button:focus-visible, textarea:focus-visible, .chat-messages:focus-visible { out
 .chat-toggle-icon { transform:rotate(-90deg); transition:transform 150ms ease; }
 .chat-toggle.is-open .chat-toggle-icon { transform:rotate(90deg); }
 .unread-count { display:grid; place-items:center; min-width:24px; height:24px; border-radius:99px; padding-inline:6px; color:#fff8e9; background:#963d32; font-size:12px; font-weight:800; }
-.chat-panel { @include ui.reading-surface; position:absolute; inset-inline-end:0; inset-block-end:calc(100% + 16px); display:flex; flex-direction:column; gap:12px; width:min(380px,calc(100vw - 24px)); height:min(560px,calc(100dvh - 140px)); padding:14px; border:8px solid transparent; border-image:url('/assets/game/kenney-index-frame.svg') 18 / 1 / 0 stretch; border-radius:12px; background:url('/assets/game/natural-paper.png') repeat,#f7f2e7; background-clip:padding-box; box-shadow:0 12px 32px #14291c55; }
+.chat-panel { @include ui.reading-surface; position:absolute; inset-inline-end:0; inset-block-end:calc(100% + 16px); display:flex; flex-direction:column; gap:12px; width:min(380px,calc(100vw - 24px)); height:min(560px,calc(100dvh - 140px)); padding:14px; border:1px solid var(--game-card-line); border-radius:12px; background:var(--game-card-ground); box-shadow:0 12px 32px #14291c55; }
 .chat-panel[hidden] { display:none; }
 .chat-panel-heading { padding-bottom:10px; border-bottom:1px solid #bcc8c4; display:flex; flex:none; align-items:center; justify-content:space-between; gap:12px; }
 .chat-panel-heading strong { font-size:18px; }

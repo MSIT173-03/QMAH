@@ -26,7 +26,7 @@
               <button type="button" [class.is-selected]="selectedAnswer() === index" [class.is-winner]="revealed() && index === 1" [attr.aria-pressed]="selectedAnswer() === index" [disabled]="revealed()" (click)="selectedAnswerChange.emit(index)">
                 <span><strong>回答 {{ (index + 1).toString().padStart(2, '0') }}</strong>@if (revealed()) { <small>{{ answer.author }} · {{ answer.votes }} 票@if (index === 1) { · 勝出 }</small> }</span>
                 <span class="guide-preview-answer-text"><strong>{{ answer.category }}</strong><br />{{ answer.text }}</span>
-                @if (!revealed() && selectedAnswer() === index) { <small>已選擇</small> }
+                @if (!revealed() && selectedAnswer() === index) { <small class="answer-selection">已選擇</small> }
               </button>
             </li>
           }

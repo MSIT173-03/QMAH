@@ -13,7 +13,7 @@
         @if (authRequired && phase !== 'list') { <div class="message error" role="alert"><strong>登入狀態已失效，本局進度仍保留。</strong><a routerLink="/login" [queryParams]="{ returnUrl: '/game/training' }">重新登入後繼續</a></div> }
         @if (loading) { <div class="loading" role="status">正在載入單人小遊戲…</div> }
         @else if (phase === 'list' && (authRequired || modes.length)) {
-          <app-game-training-mode-picker [authRequired]="authRequired" [modes]="modes" [selectedMode]="selectedMode" [starting]="starting" (modeSelected)="selectMode($event)" (startMode)="start($event)" (retryModes)="retryModes()" />
+          <app-game-training-mode-picker [authRequired]="authRequired" [modes]="modes" [selectedMode]="selectedMode" [starting]="starting" [quickStart]="!focusMode.active()" (modeSelected)="selectMode($event)" (startMode)="start($event)" (retryModes)="retryModes()" />
         }
         @else if (attempt; as current) {
           <div class="game-arena">
@@ -110,13 +110,10 @@
             <li><strong>獎勵依結算評級發放</strong><p>點數受今日剩餘可得點數限制。<br />鑰匙進度不受每日點數上限影響。</p></li>
             <li><strong>送出失敗也不用重玩</strong><p>盤面、提示與<span class="text-unit">代完成</span>紀錄都會保留。<br />再按一次「送出結果」即可。</p></li>
           </ul></details>
-} @else {
-  <button type="button" (click)="helpRequested = true" [disabled]="!canAskForHelp">求救選項</button>
 }
-<button type="button" (click)="closePause()">繼續遊玩</button>
-        <button type="button" class="secondary" (click)="focusMode.toggle(); closePause()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button>
-        <a routerLink="/game" class="pause-lobby">保留進度回大廳</a>
-        <button type="button" class="secondary" (click)="leaveFromPause()">放棄本局，回玩法列表</button>
+        <button type="button" class="pause-resume" (click)="closePause()">繼續遊玩</button>
+        <div class="pause-utility-actions">@if (!helpRequested) { <button type="button" class="secondary" (click)="helpRequested = true" [disabled]="!canAskForHelp">求救選項</button> }<button type="button" class="secondary" (click)="focusMode.toggle(); closePause()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button></div>
+        <section class="pause-exit-actions" aria-labelledby="pause-exit-title"><h3 id="pause-exit-title">離開盤面</h3><p>回大廳會保留本局，可回來繼續。<br />放棄則清除進度，不結算成績或獎勵。</p><a routerLink="/game" class="pause-lobby">保留進度回大廳</a><button type="button" class="secondary" data-button-tone="danger" (click)="leaveFromPause()">放棄本局，回玩法列表</button></section>
       </app-game-scroll-panel>
         }
       </dialog>

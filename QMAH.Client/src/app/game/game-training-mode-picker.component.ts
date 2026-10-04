@@ -17,6 +17,7 @@ export class GameTrainingModePickerComponent {
   readonly modes = input<MiniGameMode[]>([]);
   readonly selectedMode = input<MiniGameMode | null>(null);
   readonly starting = input(false);
+  readonly quickStart = input(false);
 
   readonly modeSelected = output<string>();
   readonly startMode = output<MiniGameMode>();
@@ -63,10 +64,14 @@ export class GameTrainingModePickerComponent {
       STRIP_RESTORE: '依原作拖曳 15 段書畫，接回連續筆墨與景物。'
     } as Record<string, string>)[code] ?? '開始一場館藏挑戰。';
   }
-  modeDescription(mode: MiniGameMode): string {
-    return mode.code === 'DETAIL_LOCATOR'
-      ? '觀察四件文物的局部細節，在原圖點出準心對應的位置，每件只能定位一次。四件完成後按「送出結果」，依定位準確度計分。區域提示每件扣 10 分。'
-      : mode.description || this.modeMechanic(mode.code);
+  modeDescription(mode: MiniGameMode): readonly [string, string] {
+    const descriptions: Record<string, readonly [string, string]> = {
+      DETAIL_LOCATOR: ['看細節，在原圖選出位置。', '四件各確認一次，再結算。'],
+      MEMORY_MATCH: ['翻開十六張牌，找齊配對。', '記住圖樣位置，配對再送出。'],
+      ARTIFACT_PUZZLE: ['拖曳二十五片，拼回原圖。', '可看原圖或提示，再送出。'],
+      STRIP_RESTORE: ['排列十五段，接回原作。', '可看原圖或提示，再送出。']
+    };
+    return descriptions[mode.code] ?? ['開始一場館藏挑戰。', '完成盤面後送出結果。'];
   }
   navigateModes(event: KeyboardEvent): void {
     const modes = this.modes();

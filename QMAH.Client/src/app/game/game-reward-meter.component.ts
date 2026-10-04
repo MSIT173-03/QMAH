@@ -15,7 +15,7 @@ let rewardMeterSequence = 0;
       <section class="reward-meter" [class.is-open]="detailsOpen()">
         <button #meterHeading type="button" class="meter-heading" [attr.popovertarget]="detailsId" [attr.aria-expanded]="detailsOpen()" [attr.aria-controls]="detailsId"><strong>今日遊戲點數</strong><span aria-live="polite">{{ current.earned }}／{{ current.dailyLimit }} 點</span><span class="meter-toggle">{{ current.canBreakthrough ? '可突破上限' : '獎勵詳情' }}</span><span class="meter-track" role="progressbar" aria-label="今日已獲得遊戲點數" aria-valuemin="0" [attr.aria-valuemax]="current.dailyLimit" [attr.aria-valuenow]="Math.min(current.dailyLimit, current.earned)"><span class="meter-fill" [style.--meter-progress]="progressPercent(current) + '%'" aria-hidden="true"></span></span></button>
         <div #rewardDetails class="reward-details" [id]="detailsId" popover="auto" (toggle)="onDetailsToggle($event)" aria-label="獎勵詳情">
-        <button type="button" class="reward-details-close" [attr.popovertarget]="detailsId" popovertargetaction="hide">關閉獎勵詳情</button>
+        <header class="reward-details-heading"><h2>今日獎勵進度</h2><button type="button" class="reward-details-close" [attr.popovertarget]="detailsId" popovertargetaction="hide" aria-label="關閉獎勵詳情"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></header>
         <p>{{ current.remaining > 0 ? '今天還可獲得 ' + current.remaining + ' 點。' : '今日點數已滿，仍可遊玩並取得鑰匙獎勵。' }}</p>
         @if (current.breakthroughUnlocked) {
           <p>今日已突破，上限增加 {{ current.bonusLimit }} 點。</p>
@@ -56,7 +56,7 @@ export class GameRewardMeterComponent {
   constructor() { effect(() => { this.refreshToken(); this.load(); }); }
   onDetailsToggle(event: Event): void {
     this.detailsOpen.set((event as ToggleEvent).newState === 'open');
-    if (this.detailsOpen()) this.positionDetails();
+    if (this.detailsOpen()) requestAnimationFrame(() => this.positionDetails());
   }
   @HostListener('window:resize')
   @HostListener('window:scroll')
@@ -65,7 +65,7 @@ export class GameRewardMeterComponent {
     const panel = this.rewardDetails?.nativeElement;
     if (!heading || !panel || !this.detailsOpen()) return;
     const rect = heading.getBoundingClientRect();
-    const width = Math.min(520, window.innerWidth - 32);
+    const width = Math.min(500, window.innerWidth - 32);
     panel.style.setProperty('--reward-popover-width', `${width}px`);
     const height = Math.min(panel.scrollHeight, window.innerHeight * .65, 520);
     const below = window.innerHeight - rect.bottom - 16;

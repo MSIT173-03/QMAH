@@ -1,7 +1,7 @@
 <div class="demo-toolbar">
   <p>{{ phase === 'complete' ? '示範完成' : autoPlaying ? '正在自動示範' : '換你試試' }}<span>試玩不計成績與獎勵。</span></p>
   <div class="demo-controls">
-    @if (phase === 'playing') { <button type="button" (click)="toggleAutoPlay()" [attr.aria-pressed]="autoPlaying">{{ autoPlaying ? '我來操作' : '繼續自動示範' }}</button> }
+    @if (phase === 'playing') { <button type="button" (click)="toggleAutoPlay()">{{ autoPlaying ? '我來操作' : '繼續自動示範' }}</button> }
     <button type="button" (click)="restartDemo()">重播這一局</button>
   </div>
 </div>

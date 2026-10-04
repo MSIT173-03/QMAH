@@ -15,6 +15,9 @@ const SAMPLES: MiniGameArtifact[] = [
   { artifactId: 'demo-scroll-d', name: '畫卷片段丁', primaryImagePath: '/images/login/museum/qingming-court/segment-06.webp', thumbnailPath: null },
   { artifactId: 'demo-scroll-e', name: '畫卷片段戊', primaryImagePath: '/images/login/museum/qingming-court/segment-10.webp', thumbnailPath: null }
 ];
+const PAINTING_SAMPLE: MiniGameArtifact = { artifactId:'demo-painting', name:'東海道五十三次・戶塚', primaryImagePath:'/media/catalog/painting/南購畫00001600000/display.jpg', thumbnailPath:null };
+// 入門定位題採用比例適中的原圖，避免長卷讓玩家先學放大與平移。
+const LOCATOR_SAMPLES: MiniGameArtifact[] = [...SAMPLES.slice(0,3), PAINTING_SAMPLE];
 
 /** 示範沿用正式控制器與盤面；只替換題目來源、存檔與結算出口。 */
 @Component({
@@ -48,10 +51,10 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
     const modeCode = this.modeCode();
     const modeName = ({ DETAIL_LOCATOR: '局部辨識', MEMORY_MATCH: '翻牌配對', ARTIFACT_PUZZLE: '館藏拼圖', STRIP_RESTORE: '長卷復位' } as Record<string, string>)[modeCode] ?? '館藏挑戰';
     const target = modeCode === 'STRIP_RESTORE'
-      ? { artifactId: 'demo-painting', name: '東海道五十三次・戶塚', primaryImagePath: '/media/catalog/painting/南購畫00001600000/display.jpg', thumbnailPath: null }
+      ? PAINTING_SAMPLE
       : SAMPLES[0];
     this.beginAttempt({ attemptId: `demo-${modeCode}`, modeCode, modeName, ...target, artifactName: target.name,
-      artifactPool: modeCode === 'DETAIL_LOCATOR' ? SAMPLES.slice(0, 4) : SAMPLES,
+      artifactPool: modeCode === 'DETAIL_LOCATOR' ? LOCATOR_SAMPLES : SAMPLES,
       difficulty: 'NORMAL', seed: 'qmah-demo-v1', configJson: null, startedAt: new Date().toISOString() });
     this.demoTimer = setInterval(() => {
       if (this.paused || this.phase !== 'playing') return;

@@ -3,7 +3,6 @@
 :host {
   --guide-ink: var(--qmah-ink);
   --guide-jade: var(--qmah-jade);
-  --guide-cinnabar: var(--qmah-cinnabar);
   --guide-surface: var(--qmah-surface);
   --guide-line: var(--qmah-line);
   --guide-muted: var(--qmah-muted);
@@ -12,6 +11,7 @@
   color: var(--guide-ink);
   background: var(--qmah-page-surface);
   @include scene.pattern;
+  background-image:none;
   font: 400 var(--qmah-type-body-size)/var(--qmah-type-body-leading) var(--qmah-font-sans);
 }
 .game-guide { box-sizing: border-box; width: min(100%, clamp(1200px, 88vw, 1440px)); margin: 0 auto; padding: 12px clamp(16px, 3vw, 24px) 64px; }
@@ -46,7 +46,7 @@
 .guide-tabs button:hover { color: var(--guide-ink); }
 .guide-tabs button.is-active { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; color:#fff8e9; background:transparent; box-shadow:0 3px 0 #27445a,0 6px 10px #14291c24; }
 .guide-tabs button span { font-size: 16px; font-weight: 800; }
-.guide-tabs button small { color: var(--guide-muted); font-size: var(--qmah-type-label-size); }
+.guide-tabs button small { color: var(--game-secondary-ink); font-size: var(--qmah-type-label-size); }
 .guide-tabs button.is-active small { color:#f3eadb; }
 .guide-panel {
   @include ui.paper-panel;
@@ -54,9 +54,11 @@
   --guide-ink: var(--game-card-ink);
   --guide-jade: var(--game-card-action);
   --guide-muted: var(--game-card-muted);
-  --guide-cinnabar: #963d32;
   --guide-surface: var(--game-card-ground);
   --guide-line: var(--game-card-line);
+  --qmah-game-action: #334260;
+  --qmah-game-content: #fff8e9;
+  --qmah-game-soft: #e3e7f0;
   margin-top: 14px;
   border-radius: var(--qmah-radius-panel);
   padding: clamp(18px, 3vw, 28px);
@@ -71,7 +73,7 @@
   margin-top: 18px;
   border-radius: var(--qmah-radius-control);
   padding: 8px var(--qmah-control-padding-x);
-  color: var(--guide-jade);
+  color: var(--qmah-game-action);
   background: var(--guide-surface);
   text-decoration: none;
 }
@@ -173,8 +175,9 @@
 .training-demo__stage { padding-inline: 0; }
 .training-demo__board-layout { grid-template-columns: 1fr; }
 .training-demo__side-copy { max-width: none; }
-.training-demo__modes button { color: var(--scene-muted); }
-.training-demo__modes button.is-active { color: var(--qmah-game-content); background: var(--qmah-game-action); }
+.training-demo__modes button { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; color:#fff8e9; }
+.training-demo__modes button small { color:#e5e8e3; }
+.training-demo__modes button.is-active { color:#fff8e9; background:transparent; }
 .guide-tabs { background: transparent; }
 .guide-tabs button.is-active { color:#fff8e9; }
 .training-demo__action, .training-demo__retry, .guide-panel-link { color: var(--qmah-game-content); background: var(--qmah-game-action); }

@@ -182,7 +182,7 @@ pre { max-height: 24rem; overflow: auto; margin: 14px 0 0; padding: 14px; border
 @media (max-width: 430px) { .game-test-page { padding-inline: 10px; } }
 @media (prefers-reduced-motion: reduce) { .test-room-card { transition: none; } .service-status.is-checking .service-status__dot { animation: none; } }
 
-.game-test-page app-game-navigation a { color: var(--qmah-game-action); font-size: var(--qmah-type-label-size); font-weight: 800; text-underline-offset: 4px; }
+.game-test-page app-game-navigation a { color: #334260; font-size: var(--qmah-type-label-size); font-weight: 800; text-underline-offset: 4px; }
 
 // 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
 .test-launcher .description, .rehearsal-preview > p { @include ui.prose; max-width: 70ch; }
@@ -190,7 +190,7 @@ pre { max-height: 24rem; overflow: auto; margin: 14px 0 0; padding: 14px; border
 .tools-tabs button, .rehearsal-start { @include ui.button(true); }
 .tools-tabs button[aria-pressed='true'] { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; background:transparent; }
 .rehearsal-menu button { @include ui.paper-panel; @include ui.reading-surface(true); box-shadow:0 4px 10px #14291c20; }
-.rehearsal-menu button[aria-pressed='true'] { outline:3px solid var(--qmah-focus); outline-offset:3px; }
+.rehearsal-menu button[aria-pressed='true'] { outline:3px solid #334260; outline-offset:3px; }
 
-.rehearsal-preview { @include ui.control-housing(true); padding:24px; }
+.rehearsal-preview { @include ui.control-housing(true); --qmah-game-action:#334260; --qmah-game-content:#fff8e9; --qmah-game-soft:#e3e7f0; --qmah-primary:#334260; --qmah-primary-hover:#263650; padding:24px; }
 .rehearsal-preview > p { color:var(--game-card-muted); }

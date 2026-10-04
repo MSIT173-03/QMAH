@@ -234,7 +234,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   seatPosition(player: GameRoomDetails['players'][number], players: GameRoomDetails['players'], capacity: number): string {
-    if (player.id === this.currentPlayerId) return 'self';
+    if (player.id === this.currentPlayerId && players.length <= 6) return players.length === 4 ? 'bottom-right' : 'self';
 
     const self = players.find(candidate => candidate.id === this.currentPlayerId);
     const seatNo = (candidate: GameRoomDetails['players'][number]): number => candidate.seatNo ?? players.indexOf(candidate) + 1;
@@ -250,11 +250,48 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     const layouts: Record<number, string[]> = {
       1: ['top-center'],
       2: ['top-left', 'top-right'],
-      3: ['top-left', 'top-center', 'top-right'],
+      3: ['top-right', 'top-left', 'bottom-left'],
       4: ['bottom-right', 'top-right', 'top-left', 'bottom-left'],
-      5: ['bottom-right', 'middle-right', 'top-center', 'middle-left', 'bottom-left']
+      5: ['bottom-right', 'top-right', 'top-center', 'top-left', 'bottom-left']
     };
-    return layouts[opponents.length]?.[index] ?? 'top-center';
+    if (self && players.length <= 6) return layouts[opponents.length]?.[index] ?? 'top-center';
+
+    const topCount = self ? Math.floor(players.length / 2) : Math.ceil(players.length / 2);
+    const bottomCount = players.length - topCount;
+    const selfSlot = self ? Math.floor(bottomCount / 2) : -1;
+    if (player.id === this.currentPlayerId) return `bottom-${selfSlot}-${bottomCount}`;
+    const positions = [
+      ...Array.from({ length: bottomCount - selfSlot - 1 }, (_, offset) => `bottom-${bottomCount - offset - 1}-${bottomCount}`),
+      ...Array.from({ length: topCount }, (_, offset) => `top-${topCount - offset - 1}-${topCount}`),
+      ...Array.from({ length: Math.max(0, selfSlot) }, (_, offset) => `bottom-${selfSlot - offset - 1}-${bottomCount}`)
+    ];
+    return positions[index] ?? 'top-center';
+  }
+
+  seatHorizontalPosition(position: string): string {
+    if (position.endsWith('-left')) return '12%';
+    if (position.endsWith('-right')) return '88%';
+    const distributed = /^(?:top|bottom)-(\d+)-(\d+)$/.exec(position);
+    if (!distributed) return '50%';
+    const index = Number(distributed[1]);
+    const count = Number(distributed[2]);
+    return `${count > 1 ? 12 + index * 76 / (count - 1) : 50}%`;
+  }
+
+  mobileSeatRows(): number {
+    return Math.max(1, Math.ceil((this.room?.players.filter(player => player.id !== this.currentPlayerId).length ?? 0) / 3));
+  }
+
+  mobileSeatIndex(player: GameRoomDetails['players'][number], players: GameRoomDetails['players']): number {
+    return players.filter(candidate => candidate.id !== this.currentPlayerId).findIndex(candidate => candidate.id === player.id);
+  }
+
+  mobileSeatRow(player: GameRoomDetails['players'][number], players: GameRoomDetails['players']): number {
+    return 2 + Math.floor(this.mobileSeatIndex(player, players) / 3);
+  }
+
+  mobileSeatColumn(player: GameRoomDetails['players'][number], players: GameRoomDetails['players']): number {
+    return 1 + this.mobileSeatIndex(player, players) % 3;
   }
 
   sendChat(text: string): void {

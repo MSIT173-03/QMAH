@@ -28,7 +28,7 @@
   border-radius: 11px;
   padding: 13px;
   color: var(--qmah-ink);
-  background:url('/assets/game/natural-paper.png') repeat,var(--qmah-surface-elevated); background-blend-mode:multiply;
+  background:var(--qmah-surface-elevated);
   font: inherit;
   text-align: start;
   cursor: pointer;
@@ -76,7 +76,7 @@
 .answer-text--clamped { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 6; }
 // 紙面紋理來自 Mihaela Hinayon，採 CC BY 3.0，保留原圖
 // 來源：https://www.transparenttextures.com/natural-paper.html
-.revealed-answer { border-color: color-mix(in srgb, var(--answer-owner-color, #376d62) 46%, var(--qmah-border)); border-block-start-color: var(--answer-owner-color, #376d62); background: url('/assets/game/natural-paper.png') repeat, color-mix(in srgb, var(--answer-owner-color, #376d62) 13%, var(--qmah-surface-elevated)); }
+.revealed-answer { border-color: color-mix(in srgb, var(--answer-owner-color, #376d62) 46%, var(--qmah-border)); border-block-start-color: var(--answer-owner-color, #376d62); background: color-mix(in srgb, var(--answer-owner-color, #376d62) 13%, var(--qmah-surface-elevated)); }
 .revealed-answer .answer-card-top { align-items: flex-start; justify-content: space-between; gap: 7px; font-size: 13px; }
 .revealed-answer .answer-text { margin-block-start: 10px; }
 .revealed-answer.is-winner { border-color: color-mix(in srgb, var(--qmah-accent) 66%, var(--qmah-border)); border-block-start-color: var(--qmah-accent); }

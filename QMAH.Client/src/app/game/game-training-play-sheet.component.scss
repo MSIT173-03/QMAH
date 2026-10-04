@@ -124,8 +124,8 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
   .play-heading__progress small { white-space: nowrap; font-size: 11px; }
 }
 @media (min-width: 901px) {
-  app-game-placement-board { --board-height: max(220px, calc(100dvh - 380px)); --tray-height: max(220px, calc(100dvh - 450px)); }
-  app-game-scroll-board { width: 100%; --scroll-height-limit: calc(100dvh - 380px); --tray-height: calc(100dvh - 450px); }
+  app-game-placement-board { --board-height:clamp(380px,calc(100dvh - 240px),640px); --tray-height:clamp(320px,calc(100dvh - 310px),540px); }
+  app-game-scroll-board { width:100%; --scroll-height-limit:clamp(380px,calc(100dvh - 240px),640px); --tray-height:clamp(320px,calc(100dvh - 310px),540px); }
 }
 .play-heading__progress-meta strong { font-size: 18px; font-weight: 800; }
 

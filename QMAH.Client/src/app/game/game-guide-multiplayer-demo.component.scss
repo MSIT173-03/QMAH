@@ -20,10 +20,10 @@
 .guide-preview h3 { margin: 24px 0 4px; font: 700 20px/1.3 var(--qmah-font-serif); }
 .guide-preview-hint span { display: block; white-space: normal; line-height: 1.65; overflow-wrap: break-word; }
 .guide-preview-answers { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.guide-preview-answers button { display:grid; gap:8px; width:100%; min-height:72px; padding:16px; border:6px solid transparent; border-image:url('/assets/game/kenney-mode-card-frame.svg') 7 / 1 / 0 stretch; color:var(--guide-ink); background:url('/assets/game/natural-paper.png') repeat,var(--guide-surface); background-blend-mode:multiply; background-clip:padding-box; text-align:left; cursor:pointer; box-shadow:0 4px 10px #18251d20; transition:transform 160ms ease-out,box-shadow 160ms ease-out; }
+.guide-preview-answers button { position:relative; display:grid; gap:8px; width:100%; min-height:72px; padding:16px 16px 48px; border:1px solid var(--guide-line); border-radius:8px; color:var(--guide-ink); background:var(--guide-surface); text-align:left; cursor:pointer; box-shadow:0 4px 10px #18251d20; transition:transform 160ms ease-out,box-shadow 160ms ease-out; }
 .guide-preview-answers button:hover:not(:disabled) { border-color: var(--qmah-game-action); transform: translateY(-1px); }
 .guide-preview-answers button.is-selected { transform:translateY(-3px); box-shadow:0 8px 16px #18251d35; }
-.guide-preview-answers button.is-selected > small { justify-self:end; padding:4px 12px; border-radius:4px; color:#fff8e9; background:#365f7a; }
+.guide-preview-answers button.is-selected > .answer-selection { position:absolute; right:16px; bottom:12px; z-index:1; padding:4px 12px; border-radius:4px; color:#fff8e9; background:#365f7a; }
 .guide-preview-answers button.is-winner { background-color:#efe0b5; box-shadow:0 8px 16px #805a2330; }
 .guide-preview-answers button:disabled { cursor: default; opacity: 1; }
 .guide-preview-answers button > span:first-child { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }

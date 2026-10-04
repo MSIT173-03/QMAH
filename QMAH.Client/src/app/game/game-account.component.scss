@@ -24,9 +24,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 
 .account-page { width: min(960px, 100%); margin: 0 auto; padding: 12px 38px 64px; }
 /* ui-integration: App Shell 與 Game 子導覽已統一品牌入口，帳號內容只處理登入狀態與表單。 */
-.back-link { color: var(--jade); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
+.back-link { color: var(--qmah-game-action); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
 .game-action-label { display: inline-flex; white-space: nowrap; }
-.account-panel { @include ui.control-housing(true); --ink:var(--game-card-ink); --muted:var(--game-card-muted); width: min(520px, 100%); margin: clamp(44px, 10vh, 100px) auto 0; padding: clamp(28px, 6vw, 48px); background: var(--game-card-ground); border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); }
+.account-panel { @include ui.control-housing(true); --ink:var(--game-card-ink); --muted:var(--game-card-muted); --qmah-primary:#334260; --qmah-primary-hover:#263650; --qmah-primary-content:#fff8e9; width: min(520px, 100%); margin: clamp(44px, 10vh, 100px) auto 0; padding: clamp(28px, 6vw, 48px); background: var(--game-card-ground); border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); }
 .account-loading { margin: 0; color: var(--muted); }
 .account-panel h1 { margin: 0 0 var(--qmah-space-6); font-size: var(--qmah-type-page-title-size); line-height: var(--qmah-type-heading-leading); letter-spacing: -.025em; overflow-wrap: anywhere; }
 .account-panel > p { margin: -10px 0 24px; color: var(--muted); }

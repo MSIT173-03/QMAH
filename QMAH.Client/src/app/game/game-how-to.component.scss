@@ -8,8 +8,8 @@
   --how-to-cinnabar: var(--qmah-cinnabar);
   --how-to-paper: var(--qmah-surface);
   --how-to-line: var(--qmah-line);
-  --how-to-action: var(--qmah-game-action);
-  --how-to-action-content: var(--qmah-game-content);
+  --how-to-action: #334260;
+  --how-to-action-content: #fff8e9;
   color: var(--how-to-ink);
 }
 .instruction-sentence { display: block; }
@@ -53,7 +53,7 @@
   color: var(--how-to-action-content);
   background: var(--how-to-action);
   font: 800 var(--qmah-type-meta-size)/1 "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--qmah-game-action) 18%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--how-to-action) 18%, transparent);
 }
 .game-how-to__body li strong { font-size: var(--qmah-type-body-sm-size); }
 .game-how-to__body li p { margin: 5px 0 0; color: var(--qmah-muted); font-size: var(--qmah-type-label-size); line-height: 1.55; }

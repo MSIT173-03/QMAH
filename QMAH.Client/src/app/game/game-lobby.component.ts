@@ -11,6 +11,7 @@ import { GameLobbyRoomBoardComponent } from './game-lobby-room-board.component';
 import { GameLobbyRoomDetailDialogComponent } from './game-lobby-room-detail-dialog.component';
 import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameScrollPanelComponent } from './game-scroll-panel.component';
+import { GameRewardMeterComponent } from './game-reward-meter.component';
 import { GameService } from './game.service';
 import { MeApiService } from '../core/services/me-api';
 import { GameFocusMode } from '../core/services/game-focus-mode';
@@ -19,7 +20,7 @@ type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, RouterLink, GameNavigationComponent, GameLobbyRoomBoardComponent, GameLobbyRoomDetailDialogComponent, GameRoomQrDialogComponent, GameScrollPanelComponent],
+  imports: [FormsModule, RouterLink, GameNavigationComponent, GameLobbyRoomBoardComponent, GameLobbyRoomDetailDialogComponent, GameRoomQrDialogComponent, GameScrollPanelComponent, GameRewardMeterComponent],
   templateUrl: './game-lobby.component.html',
   styleUrl: './game-lobby.component.scss'
 })
@@ -352,16 +353,6 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
       event.preventDefault(); first.focus();
     }
   }
-
-  roomListDescription(): string {
-    const subject = this.roomStatus === 'PLAYING'
-      ? '正在進行的房間'
-      : this.roomStatus === 'RECENT'
-        ? '最近完成的房間'
-        : '目前可加入的房間';
-    return this.isRehearsal ? '點一張房卡直接入桌，重新整理可換一批房間設定。' : `${subject}，${this.roomSortText()}排列，點選房間開啟詳情`;
-  }
-  roomSortText(): string { return { RECOMMENDED: '推薦', NEARLY_FULL: '快滿', NEWEST: '最新', OPEN_SLOTS: '空位最多' }[this.roomSort]; }
 
   private listRequest?: Subscription;
   private detailRequest?: Subscription;

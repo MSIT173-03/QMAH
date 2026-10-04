@@ -1,5 +1,5 @@
 @use './game-ui' as ui;
-:host { display:block; background:#eae8e1; color:var(--qmah-ink); font:400 1rem/1.7 var(--qmah-font-sans); }
+:host { display:block; background:var(--qmah-page-surface); color:var(--qmah-ink); font:400 1rem/1.7 var(--qmah-font-sans); }
 :host-context(html[data-theme='qmahdark']) { background:var(--qmah-surface); }
 .appreciation-scene { max-width:1200px; margin:auto; padding:32px; }
 header { position:relative; margin:24px 0 16px; padding-right:120px; }
@@ -31,14 +31,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .filter-options__fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding-top:16px; }
 .artifact-filter { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:20px; }
 .answer-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:28px; padding:0; list-style:none; }
-.answer-gallery > li { @include ui.reading-surface; border:7px solid transparent; border-image:url('/assets/game/kenney-mode-card-frame.svg') 7 / 1 / 0 stretch; background:url('/assets/game/natural-paper.png') repeat,var(--game-card-ground); background-blend-mode:multiply; position:relative; padding:20px; box-shadow:0 6px 16px #18251d20; overflow-wrap:anywhere; }
+.answer-gallery > li { @include ui.reading-surface; border:1px solid var(--game-card-line); border-radius:10px; background:var(--game-card-ground); position:relative; padding:20px; box-shadow:0 5px 12px #18251d20; overflow-wrap:anywhere; }
 .answer-heading { display:grid; grid-template-columns:1fr auto; gap:8px 12px; align-items:center; }
 .answer-heading > span { justify-self:start; padding:4px 12px; background:#dce8e1; color:#294c3c; border-radius:2px; font-size:14px; font-weight:700; }
 [data-type='PLAUSIBLE_FICTION'] .answer-heading > span { background:#dce7ef; color:#2c4d66; }
 [data-type='CREATIVE_TALE'] .answer-heading > span { background:#eadfe9; color:#654363; }
 .answer-heading h3 { grid-row:2; grid-column:1 / -1; margin:4px 0 0; font-size:24px; line-height:1.5; text-wrap:balance; }
 small { color:var(--game-card-muted); font-size:14px; }
-.artifact-pick { min-height:44px; padding:0; border:0; border-image:none; background:none; color:var(--game-card-action); box-shadow:none; font-size:14px; text-decoration:underline; text-underline-offset:4px; }
+.artifact-pick { min-height:44px; padding:0; border:0; border-image:none; background:none; color:var(--qmah-game-action); box-shadow:none; font-size:14px; text-decoration:underline; text-underline-offset:4px; }
 .answer-text { margin:16px 0 20px; padding-top:20px; border-top:1px solid var(--game-card-line); font-size:18px; line-height:1.9; white-space:pre-wrap; }
 .source-note { margin:0 0 20px; color:var(--game-card-muted); font-size:14px; }
 footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:20px; padding-top:16px; border-top:1px solid var(--game-card-line); }

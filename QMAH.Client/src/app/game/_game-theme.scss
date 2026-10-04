@@ -10,9 +10,9 @@
   --qmah-jade: #2f6b50;
   --qmah-jade-deep: #285c45;
   --qmah-jade-soft: #d7e7d7;
-  --qmah-game-action: #306c50;
-  --qmah-game-accent: #306c50;
-  --qmah-game-soft: #dbe8d5;
+  --qmah-game-action: #334260;
+  --qmah-game-accent: #334260;
+  --qmah-game-soft: #e3e7f0;
   --qmah-game-content: #fff7e8;
   --qmah-accent: #805a23;
   --qmah-accent-content: #fff7e8;
@@ -20,8 +20,8 @@
   --qmah-line: #c7d2bb;
   --qmah-focus: #276347;
   --qmah-danger: #963d32;
-  --qmah-primary: var(--qmah-jade-deep);
-  --qmah-primary-hover: var(--qmah-jade);
+  --qmah-primary: #334260;
+  --qmah-primary-hover: #263650;
   --qmah-primary-content: #fff7e8;
   --qmah-slate: var(--qmah-muted);
   --game-table-ground: #3b704e;
@@ -41,7 +41,7 @@
   --game-frame-image: url('/assets/game/kenney-wood.svg#light');
   --game-frame-rim-image: url('/assets/game/kenney-wood.svg#light-rim');
   --game-frame-width: clamp(28px, 3vw, 48px);
-  --game-primary-image: url('/assets/game/kenney-buttons.svg#green');
+  --game-primary-image: var(--game-button-blue-image);
   --game-button-blue-image: url('/assets/game/kenney-button-tones.svg#blue');
   --game-button-marsala-image: url('/assets/game/kenney-button-tones.svg#marsala');
   --game-button-ochre-image: url('/assets/game/kenney-button-tones.svg#ochre');
@@ -77,29 +77,31 @@
 }
 
 html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
-  --qmah-page-surface: #202526;
-  --qmah-surface: #2d3333;
-  --qmah-surface-soft: #373e3d;
-  --qmah-surface-muted: #424a47;
-  --qmah-surface-elevated: #3b4340;
+  --qmah-page-surface: #24272b;
+  --qmah-surface: #2d3338;
+  --qmah-surface-soft: #373d43;
+  --qmah-surface-muted: #424b54;
+  --qmah-surface-elevated: #3a434c;
   --qmah-ink: #fcf5e4;
-  --qmah-muted: #d0dfc7;
+  --qmah-muted: #d2d0c8;
   --qmah-jade: #add4b4;
   --qmah-jade-deep: #d1e6c8;
   --qmah-jade-soft: #355942;
-  --qmah-game-action: #b7d7b5;
-  --qmah-game-accent: #c6e0bd;
-  --qmah-game-soft: #3b5c44;
-  --qmah-game-content: #273e33;
+  --qmah-game-action: #adc1d2;
+  --qmah-game-accent: #adc1d2;
+  --qmah-game-soft: #354858;
+  --qmah-game-content: #21384a;
   --qmah-accent: #e6cc92;
   --qmah-accent-content: #273e33;
-  --qmah-border: #789175;
-  --qmah-line: #5b765a;
+  --qmah-border: #747c82;
+  --qmah-line: #59636c;
   --qmah-focus: #f3dba4;
   --qmah-danger: #ffc7b6;
-  --qmah-primary-content: #273e33;
+  --qmah-primary: #adc1d2;
+  --qmah-primary-hover: #c3d0dc;
+  --qmah-primary-content: #21384a;
   --game-table-ground: #315d42;
-  --game-stage-ground: #22392e;
+  --game-stage-ground: #2b3540;
   --game-card-ground: #f0ecdf;
   --game-puzzle-frame: #bfa580;
   --game-puzzle-board: #e3d6be;
@@ -107,9 +109,14 @@ html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-train
   --game-puzzle-line: #b4a080;
   --game-frame-image: url('/assets/game/kenney-wood.svg#dark');
   --game-frame-rim-image: url('/assets/game/kenney-wood.svg#dark-rim');
-  --game-primary-image: url('/assets/game/kenney-buttons.svg#dark');
+  --game-primary-image: var(--game-button-blue-image);
   --game-secondary-image: url('/assets/game/kenney-buttons.svg#paper-dark');
-  --game-secondary-ink: #f3f0df;
+  --game-secondary-ink: #26393e;
+}
+
+// 遊戲頁首以辨識色顯示目前入口，避免拿深色按鈕底色當文字色。
+html[data-theme='qmahdark'] .app-shell[data-area='game'] > .app-header {
+  --color-primary: var(--qmah-game-accent);
 }
 
 // 輸入提示也是可閱讀內容，兩種主題都沿用次要文字色。
@@ -117,3 +124,5 @@ html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-train
   color: var(--qmah-muted);
   opacity: 1;
 }
+.app-shell[data-area='game'] button:disabled { opacity:.55; cursor:not-allowed; box-shadow:none; }
+html:has(.app-shell[data-area='game'] :is(.sheet-backdrop,.room-detail-backdrop)) { overflow:hidden; }

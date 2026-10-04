@@ -99,6 +99,8 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
   /** 外層若旋轉了整個宿主（商品頁的觀看方向），需告知角度才能把游標換回宿主座標。 */
   rotation = input(0);
   loaded = output<{ width: number; height: number }>();
+  imageLoaded = output<HTMLImageElement>();
+  loadFailed = output<void>();
   draggingChange = output<boolean>();
   /** 平移動畫實際播完時通知外層，讓換段節奏跟著畫面，而不是另一個固定計時器。 */
   panEnd = output<void>();
@@ -323,6 +325,12 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     this.updateLayout();
     this.startPanSync();
     this.loaded.emit({ width: image.naturalWidth, height: image.naturalHeight });
+    this.imageLoaded.emit(image);
+  }
+
+  protected onImageError(): void {
+    this.revealed.set(true);
+    this.loadFailed.emit();
   }
 
   protected onPanEnd(event: AnimationEvent): void {

@@ -1,11 +1,11 @@
 @use './game-ui' as ui;
 :host { display: contents; }
 *, *::before, *::after { box-sizing: border-box; }
-.result-shell { position:absolute; inset:0; border:18px solid transparent; border-image:var(--game-frame-image) 8 / 1 / 0 stretch; border-radius:18px; background:var(--game-table-ground); overflow:hidden; }
-.result-sheet { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto minmax(0,1fr); gap:20px 32px; padding:clamp(16px,2.5vw,32px); background:url('/assets/game/hero-diamonds-subtle.svg') repeat,var(--game-table-ground); color:var(--game-table-ink); }
+.result-shell { position:absolute; inset:0; overflow:hidden; background:var(--game-stage-ground); color:var(--game-card-ink); }
+.result-sheet { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto minmax(0,1fr); gap:20px 32px; padding:clamp(16px,2.5vw,32px); background:var(--game-card-ground); color:var(--game-card-ink); }
 .result-banner { grid-column:1/-1; }
-.result-banner h2 { @include ui.title; margin:0; font-size:clamp(24px,3vw,34px); line-height:1.35; text-wrap:balance; color:var(--game-table-ink); }
-.result-banner p { display:flex; flex-wrap:wrap; gap:4px 16px; margin:10px 0 0; color:var(--game-table-muted); font-size:16px; line-height:1.6; }
+.result-banner h2 { @include ui.title; margin:0; font-size:clamp(24px,3vw,34px); line-height:1.35; text-wrap:balance; color:var(--game-card-ink); }
+.result-banner p { display:flex; flex-wrap:wrap; gap:4px 16px; margin:10px 0 0; color:var(--game-card-muted); font-size:16px; line-height:1.6; }
 .result-banner p span { text-wrap:pretty; }
 .result-gallery { align-self:center; min-width:0; width:min(100%,640px); justify-self:center; }
 .result-gallery figure { @include ui.paper-panel; margin:0; padding:12px; box-shadow:0 14px 26px #14291c66; transform:rotate(-2deg); }
@@ -45,7 +45,7 @@ app-game-reward-meter { grid-column:1/-1; margin-top:20px; --reward-meter-margin
 .result-actions .secondary { @include ui.button(true); }
 .result-links { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
 .result-links button { @include ui.button(true); font-size:13px; }
-.result-links a { display:inline-flex; align-items:center; min-height:44px; color:var(--game-card-action); font-size:13px; text-underline-offset:4px; }
+.result-links a { display:inline-flex; align-items:center; min-height:44px; color:var(--qmah-game-action); font-size:13px; text-underline-offset:4px; }
 .result-rules { @include ui.paper-panel; @include ui.reading-surface(true); position:fixed; inset:0; margin:auto; width:min(480px,calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 32px); padding:24px; overflow:auto; box-shadow:0 20px 60px #14291c66; }
 .result-rules h3 { margin:0 0 16px; font-size:22px; }
 .result-rules p { @include ui.prose; }

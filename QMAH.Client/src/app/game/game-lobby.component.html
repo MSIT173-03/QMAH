@@ -7,12 +7,15 @@
   <!-- ui-integration: 介紹橫幅可由玩家收合，且狀態會留在本機，避免每次回到大廳都擋住找房間。 -->
   <header class="lobby-heading" [class.is-rehearsal]="isRehearsal">
     <div>
-      <h1>{{ isDemo ? '房間展示' : '房間大廳' }}</h1>
-      <p>{{ isDemo ? '以下為範例房間，可查看排列與詳情，不能加入，也不會建立遊戲紀錄。' : '選一間房間加入，或建立你的鑑定房間。' }}</p>
+      <h1>{{ isDemo ? '房間展示' : isRehearsal ? '多人流程排練' : '房間大廳' }}</h1>
+      <p>{{ isDemo ? '以下為範例房間，可查看排列與詳情，不能加入，也不會建立遊戲紀錄。' : isRehearsal ? '選一桌直接進入排練，練習作答、投票與揭曉流程。' : '搜尋房號或篩選房間，加入鑑定，或建立新房間。' }}</p>
     </div>
+    <div class="lobby-heading__actions">
+      @if (!isDemo && !isRehearsal && meApi.me()) { <app-game-reward-meter /> }
     @if (isDemo) {
       <a class="hero-create" routerLink="/game" [queryParams]="{ status: roomStatus === 'WAITING' ? null : roomStatus, sort: roomSort === 'RECOMMENDED' ? null : roomSort, page: rooms && rooms.page > 1 ? rooms.page : null }">返回正式大廳</a>
     } @else { <button type="button" class="hero-create" (click)="toggleCreateForm()">建立房間</button> }
+    </div>
   </header>
 
   @if (error && rooms !== null) { <div class="notice notice-error" role="alert"><strong>{{ errorTitle }}</strong><span>{{ error }}</span>@if (errorTitle === '請先登入') { <a routerLink="/login">前往會員登入</a> }</div> }
@@ -32,8 +35,6 @@
       [error]="error"
       [errorTitle]="errorTitle"
       [selectedRoomId]="selectedRoomId"
-      [roomListDescription]="roomListDescription()"
-      [showRewardMeter]="!isDemo && !isRehearsal && !!meApi.me()"
       [(roomCodeSearch)]="roomCodeSearch"
       (search)="searchRoomCode()"
       (clearRoomCode)="clearRoomCode()"
@@ -77,10 +78,10 @@
         @if (!isRehearsal) { <label>顯示名稱<input name="createDisplayName" [(ngModel)]="createForm.displayName" maxlength="80" required /></label> }
         <div class="form-columns">
           @if (!isRehearsal) { <fieldset class="room-setting room-setting-wide"><legend>房間類型</legend><div class="setting-choices"><button type="button" [class.is-selected]="createForm.visibility === 'PUBLIC'" [attr.aria-pressed]="createForm.visibility === 'PUBLIC'" (click)="createForm.visibility = 'PUBLIC'; createForm.password = null">公開房間</button><button type="button" [class.is-selected]="createForm.visibility === 'PRIVATE'" [attr.aria-pressed]="createForm.visibility === 'PRIVATE'" (click)="createForm.visibility = 'PRIVATE'">私人房間</button></div></fieldset> }
-          <fieldset class="room-setting room-setting-wide"><legend>玩家上限 <small>包含房主</small></legend><div class="setting-choices">@for (count of isRehearsal ? [3, 4, 5, 6] : [3, 4, 5, 6, 7, 8, 9, 10]; track count) { <button type="button" [class.is-selected]="createForm.maxPlayers === count" [attr.aria-pressed]="createForm.maxPlayers === count" (click)="createForm.maxPlayers = count">{{ count }} 人</button> }</div></fieldset>
+          <fieldset class="room-setting room-setting-wide room-setting-players"><legend>玩家上限 <small>包含房主</small></legend><div class="setting-choices">@for (count of isRehearsal ? [3, 4, 5, 6] : [3, 4, 5, 6, 7, 8, 9, 10]; track count) { <button type="button" [class.is-selected]="createForm.maxPlayers === count" [attr.aria-pressed]="createForm.maxPlayers === count" (click)="createForm.maxPlayers = count">{{ count }} 人</button> }</div></fieldset>
           <fieldset class="room-setting room-setting-wide"><legend>回合數</legend><div class="setting-choices">@for (count of [1, 2, 3, 4, 5]; track count) { <button type="button" [class.is-selected]="createForm.totalRounds === count" [attr.aria-pressed]="createForm.totalRounds === count" (click)="createForm.totalRounds = count">{{ count }} 回合</button> }</div></fieldset>
-          <fieldset class="room-setting room-setting-wide"><legend>作答時間</legend><div class="setting-choices">@for (seconds of [120, 180, 240, 300]; track seconds) { <button type="button" [class.is-selected]="createForm.answerSeconds === seconds" [attr.aria-pressed]="createForm.answerSeconds === seconds" (click)="createForm.answerSeconds = seconds">{{ seconds / 60 }} 分鐘</button> }</div></fieldset>
-          <fieldset class="room-setting room-setting-wide"><legend>投票時間</legend><div class="setting-choices">@for (seconds of [120, 180, 240, 300]; track seconds) { <button type="button" [class.is-selected]="createForm.votingSeconds === seconds" [attr.aria-pressed]="createForm.votingSeconds === seconds" (click)="createForm.votingSeconds = seconds">{{ seconds / 60 }} 分鐘</button> }</div></fieldset>
+          <fieldset class="room-setting room-setting-time"><legend>作答時間</legend><div class="setting-choices">@for (seconds of [120, 180, 240, 300]; track seconds) { <button type="button" [class.is-selected]="createForm.answerSeconds === seconds" [attr.aria-pressed]="createForm.answerSeconds === seconds" (click)="createForm.answerSeconds = seconds">{{ seconds / 60 }} 分鐘</button> }</div></fieldset>
+          <fieldset class="room-setting room-setting-time"><legend>投票時間</legend><div class="setting-choices">@for (seconds of [120, 180, 240, 300]; track seconds) { <button type="button" [class.is-selected]="createForm.votingSeconds === seconds" [attr.aria-pressed]="createForm.votingSeconds === seconds" (click)="createForm.votingSeconds = seconds">{{ seconds / 60 }} 分鐘</button> }</div></fieldset>
         </div>
         @if (!isRehearsal && createForm.visibility === 'PRIVATE') { <label>房間密碼<input name="createPassword" type="password" [(ngModel)]="createForm.password" required /></label> }
       </form></app-game-scroll-panel>

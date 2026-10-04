@@ -21,7 +21,7 @@
   (pointerenter)="active.set(true)"
   (pointerleave)="leave()">
   @if (image(); as imageUrl) {
-    <img src="{{ imageUrl }}" [alt]="alt()" decoding="async" draggable="false" (load)="onLoad($event)" (error)="revealed.set(true)" (animationend)="onPanEnd($event)" />
+    <img src="{{ imageUrl }}" [alt]="alt()" decoding="async" draggable="false" (load)="onLoad($event)" (error)="onImageError()" (animationend)="onPanEnd($event)" />
     <!-- 換段時舊圖的快照；只負責淡出，不參與取樣或指標操作。 -->
     @for (fade of fadingImages(); track fade.key) {
       <img class="magnifier-fade" [src]="fade.url" alt="" aria-hidden="true" draggable="false"

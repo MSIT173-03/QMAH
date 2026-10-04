@@ -62,7 +62,7 @@
   align-items: center;
   gap: 9px;
   padding: 6px 8px;
-  color: var(--game-nav-ink, var(--qmah-slate));
+  color: var(--game-secondary-ink);
   text-decoration: none;
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
@@ -72,12 +72,12 @@
 .game-navigation__link-description {
   overflow-wrap: break-word;
   max-width: 100%;
-  color: var(--game-nav-muted, var(--qmah-muted));
+  color: var(--game-secondary-ink);
   font-size: 12px;
   line-height: 1.5;
   white-space: normal;
 }
-.game-navigation__links a:hover { color: var(--game-nav-ink, var(--qmah-ink)); transform:translateY(-2px); }
+.game-navigation__links a:hover { transform:translateY(-2px); }
 .game-navigation__links a.is-active {
   --game-button-image:var(--game-button-blue-image);
   --game-button-ink:#fff8e9;
@@ -125,7 +125,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--qmah-focus); ou
 .game-tools summary { list-style: none; }
 .game-tools summary::-webkit-details-marker { display: none; }
 .game-tools summary app-qmah-icon { width: 18px; height: 18px; }
-.game-tools[open] summary, .game-tools.is-active summary { background: var(--game-nav-hover, var(--qmah-surface-muted)); }
+.game-tools[open] summary, .game-tools.is-active summary { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; background:transparent; }
 .game-tools summary:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
 .game-tools__menu { @include ui.paper-panel; @include ui.reading-surface(true); position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; width: min(300px, calc(100vw - 48px)); padding: 8px; background: var(--qmah-surface); color: var(--qmah-ink); border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); }
 .game-tools__menu a { display: grid; gap: 4px; padding: 12px; border-radius: var(--qmah-radius-control); text-decoration: none; color: inherit; }

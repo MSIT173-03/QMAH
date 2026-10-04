@@ -11,7 +11,7 @@
   }
   @if (!authRequired()) {
     <div class="mode-stage">
-      <header class="mode-stage__heading"><div><h2>選擇玩法</h2><p>挑一張遊戲牌，開始這一局。</p></div><app-game-reward-meter /></header>
+      <header class="mode-stage__heading"><div><h2>選擇玩法</h2><p>挑一張遊戲牌，開始這一局。</p></div><app-game-reward-meter />@if (quickStart() && selectedMode(); as mode) { <button class="mode-stage__quick-start" type="button" data-button-tone="start" (click)="startMode.emit(mode)" [disabled]="starting()">{{ starting() ? '準備中…' : '開始' + mode.name }}</button> }</header>
       <ol #modeRail id="training-mode-carousel" class="mode-index" aria-label="選擇單人玩法" (keydown)="navigateModes($event)" (scrollend)="settleMode()">
         @for (mode of modes(); track mode.id) {
           <li>
@@ -37,7 +37,7 @@
       @if (selectedMode(); as mode) {
         <section class="mode-preview" aria-labelledby="mode-preview-title">
           <div class="mode-preview__insert">
-            <div class="mode-preview__copy" animate.enter="scene-preview-enter"><h2 id="mode-preview-title">本局流程</h2><p>{{ modeDescription(mode) }}</p></div>
+            <div class="mode-preview__copy" animate.enter="scene-preview-enter"><h2 id="mode-preview-title">本局流程</h2><p>@for (line of modeDescription(mode); track $index) { <span>{{ line }}</span> }</p></div>
             <div class="mode-preview__actions"><button type="button" data-button-tone="start" (click)="startMode.emit(mode)" [disabled]="starting()">{{ starting() ? '準備中…' : '開始' + mode.name }}</button><a routerLink="/game/how-to" data-button-tone="reversible" [queryParams]="{ mode: 'training', game: mode.code }">先試玩</a></div>
           </div>
         </section>

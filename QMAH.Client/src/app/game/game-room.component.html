@@ -1,5 +1,5 @@
 <div class="game-stage" [class.has-chat]="chatOpen" [class.is-focused]="isRoomFocused()">
-  <div class="table-mat" [class.is-waiting]="room?.status === 'WAITING'" [class.is-completed]="room?.status === 'COMPLETED'">
+  <div class="table-mat" [class.is-waiting]="room?.status === 'WAITING'" [class.is-completed]="room?.status === 'COMPLETED'" [style.--mobile-seat-rows]="mobileSeatRows()">
   <header class="table-hud">
     <div class="hud-title"><strong>多人鑑定</strong><span>{{ room ? '牌桌 ' + room.roomCode : '準備牌桌' }}@if (testMode) { · 演練 }</span></div>
     <div class="hud-turn">@if (round) { <span>第 {{ round.roundNumber }}／{{ room?.totalRounds }} 回合</span><strong>{{ phaseText(round.status) }} @if (round.status !== 'REVEALED') { {{ countdownText() }} }</strong> } @else if (room) { <strong>{{ statusText(room.status) }}</strong> }</div>
@@ -10,7 +10,7 @@
   @if (room; as currentRoom) {
     <nav class="table-seats" aria-label="玩家席位">
       @for (player of currentRoom.players; track player.id) {
-        <button type="button" class="table-seat" [class.is-self]="player.id === currentPlayerId" [attr.data-seat-position]="seatPosition(player, currentRoom.players, currentRoom.maxPlayers)" [style.--seat-color]="seatColor(player.id)" (click)="inspectSeat(player.id)">
+        <button type="button" class="table-seat" [class.is-self]="player.id === currentPlayerId" [attr.data-seat-position]="seatPosition(player, currentRoom.players, currentRoom.maxPlayers)" [style.--seat-x]="seatHorizontalPosition(seatPosition(player, currentRoom.players, currentRoom.maxPlayers))" [style.--seat-mobile-row]="mobileSeatRow(player, currentRoom.players)" [style.--seat-mobile-column]="mobileSeatColumn(player, currentRoom.players)" [style.--seat-color]="seatColor(player.id)" (click)="inspectSeat(player.id)">
           <span class="seat-back" aria-hidden="true"></span><span><strong>{{ player.displayName }}</strong><small>{{ player.role === 'HOST' ? '房主' : '' }} {{ player.connectionStatus === 'ONLINE' ? (currentRoom.status === 'WAITING' ? (player.isReady ? '已準備' : '未準備') : '在桌') : '暫時離線' }}@if (player.id === currentPlayerId) { · 你 }</small></span>
         </button>
       }

@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { ApiPage, GameRoomFilterStatus, GameRoomListItem, GameRoomSort } from './game.models';
-import { GameRewardMeterComponent } from './game-reward-meter.component';
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 
 type LobbyStatus = GameRoomFilterStatus | 'RECENT';
@@ -11,7 +10,7 @@ type LobbyStatus = GameRoomFilterStatus | 'RECENT';
 @Component({
   selector: 'app-game-lobby-room-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, QmahIconComponent, GameRewardMeterComponent],
+  imports: [FormsModule, RouterLink, QmahIconComponent],
   templateUrl: './game-lobby-room-board.component.html',
   styleUrl: './game-lobby-room-board.component.scss'
 })
@@ -28,8 +27,6 @@ export class GameLobbyRoomBoardComponent {
   readonly error = input('');
   readonly errorTitle = input('公開房間目前無法取得');
   readonly selectedRoomId = input('');
-  readonly roomListDescription = input('');
-  readonly showRewardMeter = input(false);
   readonly roomCodeSearch = model('');
 
   readonly search = output<void>();
