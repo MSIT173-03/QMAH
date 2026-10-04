@@ -130,6 +130,19 @@
   transform: translateY(1px);
 }
 
+.key-badge--btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 一鍵解鎖按鈕跟 .quick-filter 共用同樣的「圖示＋文字＋數量」排版，但不綁定 is-active 這種
+   篩選開關語意，避免跟「僅顯示已解鎖」的啟用狀態混在一起。 */
+.bulk-unlock-btn {
+  gap: 7px;
+  white-space: nowrap;
+}
+
 /* ---------- state messages ---------- */
 
 .state {

@@ -86,6 +86,14 @@
             }
             <strong>{{ unlockedCount() }}</strong>
           </button>
+          <button
+            type="button"
+            class="key-badge key-badge--btn bulk-unlock-btn"
+            [disabled]="lockedTotalCount() === 0 || bulkUnlocking()"
+            (click)="openBulkUnlockConfirm()"
+          >
+            ⚡ 一鍵解鎖 <strong>{{ lockedTotalCount() }}</strong>
+          </button>
           <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
             🔑 鑰匙背包 <strong>{{ keys() }}</strong>
           </button>
@@ -314,6 +322,62 @@
           {{ unlocking() ? '解鎖中…' : '確認解鎖' }}
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 一鍵解鎖全部（消耗萬能鑰匙）：確認／結果共用同一個視窗，依 bulkUnlockResult() 是否有值切換內容 -->
+  <div
+    class="confirm-overlay"
+    [class.open]="bulkUnlockConfirmOpen()"
+    (click)="onBulkUnlockOverlayClick($event)"
+  >
+    <div
+      class="confirm-dialog"
+      *ngIf="bulkUnlockConfirmOpen()"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bulk-unlock-title"
+    >
+      <img class="key-icon" src="{{ universalKeyAssetPath }}" alt="萬能鑰匙圖示" />
+
+      <ng-container *ngIf="!bulkUnlockResult(); else bulkUnlockDone">
+        <h3 id="bulk-unlock-title">一鍵解鎖確認</h3>
+        <p>
+          圖鑑目前尚有 <strong>{{ lockedTotalCount() }}</strong> 件文物尚未解鎖，
+          持有 <strong>{{ universalKey()?.balance ?? 0 }}</strong> 把萬能鑰匙。
+        </p>
+        <p class="have" *ngIf="bulkUnlockPlannedCount() > 0 && bulkUnlockPlannedCount() >= lockedTotalCount()">
+          萬能鑰匙足夠，將依圖鑑順序由上至下，一次解鎖全部 <strong>{{ lockedTotalCount() }}</strong> 件文物。
+        </p>
+        <p class="have warn" *ngIf="bulkUnlockPlannedCount() > 0 && bulkUnlockPlannedCount() < lockedTotalCount()">
+          萬能鑰匙不足以解鎖全部，將依圖鑑由上至下的順序，先解鎖前 <strong>{{ bulkUnlockPlannedCount() }}</strong> 件，
+          剩餘 <strong>{{ lockedTotalCount() - bulkUnlockPlannedCount() }}</strong> 件文物會維持未解鎖，之後可以再用鑰匙補解鎖。
+        </p>
+        <p class="have warn" *ngIf="(universalKey()?.balance ?? 0) === 0">目前沒有萬能鑰匙，請先取得萬能鑰匙再使用一鍵解鎖。</p>
+        <p class="have warn" role="alert" *ngIf="bulkUnlockError()">{{ bulkUnlockError() }}</p>
+
+        <div class="confirm-actions">
+          <button type="button" class="action-btn cancel-btn" [disabled]="bulkUnlocking()" (click)="cancelBulkUnlock()">取消</button>
+          <button
+            type="button"
+            class="action-btn unlock-btn confirm-btn"
+            [disabled]="bulkUnlocking() || bulkUnlockPlannedCount() === 0"
+            (click)="confirmBulkUnlock()"
+          >
+            {{ bulkUnlocking() ? '解鎖中…' : '確認一鍵解鎖' }}
+          </button>
+        </div>
+      </ng-container>
+
+      <ng-template #bulkUnlockDone>
+        <h3 id="bulk-unlock-title">一鍵解鎖結果</h3>
+        <p>本次共解鎖了 <strong>{{ bulkUnlockResult()?.unlockedCount }}</strong> 件文物。</p>
+        <p class="have warn" role="alert" *ngIf="bulkUnlockError()">{{ bulkUnlockError() }}</p>
+        <p class="have" *ngIf="!bulkUnlockError() && lockedTotalCount() === 0">圖鑑內所有文物都已經解鎖囉！</p>
+        <div class="confirm-actions">
+          <button type="button" class="action-btn unlock-btn confirm-btn" (click)="closeBulkUnlockResult()">關閉</button>
+        </div>
+      </ng-template>
     </div>
   </div>
 

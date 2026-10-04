@@ -75,6 +75,19 @@ export class ArtifactList implements OnInit {
   catalogViewReady = computed(() => !this.loading() && !this.errorMsg() && this.unlockStatusReady());
   unlocking = signal(false);
 
+  // ---- 一鍵解鎖全部（消耗萬能鑰匙）----
+  /** 目前「整本圖鑑」尚未解鎖的文物數量，不受搜尋／篩選影響，一鍵解鎖是對全部文物動作 */
+  lockedTotalCount = computed(() => this.catalogModel().filter((i) => !i.unlocked).length);
+  /** 本次一鍵解鎖「預計」能解鎖幾件：萬能鑰匙餘額與未解鎖文物數兩者取較小值 */
+  bulkUnlockPlannedCount = computed(() =>
+    Math.min(this.universalKey()?.balance ?? 0, this.lockedTotalCount())
+  );
+  bulkUnlockConfirmOpen = signal(false);
+  bulkUnlocking = signal(false);
+  bulkUnlockError = signal('');
+  /** 非 null 代表上一輪一鍵解鎖已跑完，視窗要切換成顯示結果而不是確認表單 */
+  bulkUnlockResult = signal<{ unlockedCount: number } | null>(null);
+
   focusedId = signal<string | null>(null);
   infoOpen = signal(false);
   confirmTargetId = signal<string | null>(null);
@@ -195,6 +208,28 @@ export class ArtifactList implements OnInit {
     const groups = new Map<string, CompendiumCardSummary[]>();
 
     for (const item of this.filteredItems()) {
+      const list = groups.get(item.eraName) ?? [];
+      list.push(item);
+      groups.set(item.eraName, list);
+    }
+
+    return Array.from(groups.entries())
+      .map(([eraName, items]) => ({
+        eraName,
+        items: [...items].sort((a, b) => a.categoryCode.localeCompare(b.categoryCode)),
+      }))
+      .sort((a, b) => b.items.length - a.items.length);
+  });
+
+  /**
+   * 跟 eraGroups 同一套年代分區／排序邏輯，但依據「整本圖鑑」（catalogModel）而不是
+   * 搜尋／篩選後的 filteredItems——一鍵解鎖全部要依照圖鑑真正的顯示順序由上至下解鎖，
+   * 不能因為玩家當下有打關鍵字或勾年代／分類篩選，就漏掉被篩選掉的文物。
+   */
+  private allEraGroups = computed<EraGroup[]>(() => {
+    const groups = new Map<string, CompendiumCardSummary[]>();
+
+    for (const item of this.catalogModel()) {
       const list = groups.get(item.eraName) ?? [];
       list.push(item);
       groups.set(item.eraName, list);
@@ -616,6 +651,118 @@ export class ArtifactList implements OnInit {
   onConfirmOverlayClick(event: MouseEvent): void {
     if (event.target === event.currentTarget) {
       this.cancelUnlockConfirm();
+    }
+  }
+
+  /**
+   * 開啟「一鍵解鎖全部」確認視窗。跟單張卡片的 openUnlockConfirm() 是分開的流程，
+   * 不會動到 confirmTargetId（單張解鎖）的狀態。
+   */
+  openBulkUnlockConfirm(): void {
+    if (this.lockedTotalCount() === 0) return;
+    this.bulkUnlockError.set('');
+    this.bulkUnlockResult.set(null);
+    this.bulkUnlockConfirmOpen.set(true);
+  }
+
+  cancelBulkUnlock(): void {
+    if (this.bulkUnlocking()) return; // 解鎖進行中不能關閉，避免玩家中途跳開搞不清楚跑到哪一筆
+    this.bulkUnlockConfirmOpen.set(false);
+  }
+
+  onBulkUnlockOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.cancelBulkUnlock();
+    }
+  }
+
+  /** 結果畫面按「關閉」：收起視窗並重置狀態，下次打開會是全新的確認表單 */
+  closeBulkUnlockResult(): void {
+    this.bulkUnlockConfirmOpen.set(false);
+    this.bulkUnlockResult.set(null);
+    this.bulkUnlockError.set('');
+  }
+
+  /**
+   * 一鍵解鎖全部：消耗萬能鑰匙，依「圖鑑由上至下」的順序（allEraGroups 攤平後的順序）
+   * 逐一解鎖目前尚未解鎖的文物。
+   *
+   * ⚠️ 刻意「一筆一筆」依序呼叫真正的 POST /me/keys/{keyCode}/unlock，不是前端自己算完
+   * 一次性更新畫面：每一筆都要走後端真實的扣鑰匙／寫入 ArtifactUnlocks 流程，流水與
+   * 鑰匙餘額才會跟後端一致。鑰匙數量不夠解鎖全部時，後端對某一筆回傳 unlocked:false
+   * （代表鑰匙或符合條件的文物已經用完）就停止，不會繼續往後嘗試——由上至下，
+   * 能解幾筆算幾筆，停在哪筆由後端的真實狀態決定，不是前端用鑰匙數量自己猜。
+   */
+  confirmBulkUnlock(): void {
+    if (this.bulkUnlocking()) return;
+
+    const universal = this.universalKey();
+    if (!universal || universal.balance < 1) {
+      this.bulkUnlockError.set('目前沒有萬能鑰匙，無法使用一鍵解鎖。');
+      return;
+    }
+
+    const queue = this.allEraGroups()
+      .flatMap((group) => group.items)
+      .filter((item) => !item.unlocked);
+
+    if (queue.length === 0) {
+      this.bulkUnlockError.set('目前沒有尚未解鎖的文物。');
+      return;
+    }
+
+    this.bulkUnlockError.set('');
+    this.bulkUnlocking.set(true);
+    this.runBulkUnlockStep(universal.code, queue, 0, 0);
+  }
+
+  private runBulkUnlockStep(
+    keyCode: string,
+    queue: CompendiumCardSummary[],
+    index: number,
+    unlockedCount: number
+  ): void {
+    if (index >= queue.length) {
+      this.finishBulkUnlock(unlockedCount);
+      return;
+    }
+
+    const target = queue[index];
+    this.keyService.unlockWithKey(keyCode, target.id).subscribe({
+      next: (result) => {
+        if (!result.unlocked) {
+          // 鑰匙（或符合條件的文物）已經用完，依目前已解鎖的數量結束，不繼續嘗試剩下的項目
+          this.finishBulkUnlock(unlockedCount, result.message ?? undefined);
+          return;
+        }
+
+        // unlockedAt 先用前端當下時間點近似，finishBulkUnlock() 之後的 loadUnlockStatus()
+        // 打 GET /me/catalog/artifact/unlocks 成功後，會再用後端真實時間覆寫回來。
+        this.catalogModel.update((list) =>
+          list.map((i) =>
+            i.id === target.id ? { ...i, unlocked: true, unlockedAt: new Date().toISOString() } : i
+          )
+        );
+        this.runBulkUnlockStep(keyCode, queue, index + 1, unlockedCount + 1);
+      },
+      error: (err) => {
+        console.error('[ArtifactList] bulk unlock step failed', err);
+        this.finishBulkUnlock(unlockedCount, err?.message ?? '解鎖過程發生錯誤，已停止一鍵解鎖。');
+      },
+    });
+  }
+
+  /** 一鍵解鎖全部跑完（不論正常結束或中途出錯）統一收尾：跟後端重新同步鑰匙餘額與真實流水 */
+  private finishBulkUnlock(unlockedCount: number, message?: string): void {
+    this.bulkUnlocking.set(false);
+    this.bulkUnlockResult.set({ unlockedCount });
+    if (message) this.bulkUnlockError.set(message);
+    this.loadKeyBalance();
+    this.loadUnlockStatus();
+
+    // 如果玩家一鍵解鎖當下剛好聚焦著某張卡片，順便刷新它的鑑賞細節（可能剛好被這次解鎖了）
+    if (this.focusedId()) {
+      this.maybeLoadFocusedDetail();
     }
   }
 
