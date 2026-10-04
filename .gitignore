@@ -52,6 +52,9 @@ QMAH.DemoCredentials.local*.csv
 ~$*
 **/.playwright-cli/
 **/output/playwright/
+# 遊戲驗證與設計暫存存放於 repo 外的 QMAH-game-驗證；避免誤加入版本。
+/output/
+/.impeccable/
 
 # 資料收集工具的執行輸出
 _工具輸出/
