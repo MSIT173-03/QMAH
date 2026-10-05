@@ -3,10 +3,10 @@
   <!-- 點擊整張卡片（圖片＋內容）導向商品頁 -->
   <a [storeLink]="link()" class="product-card-link">
 
-    <!-- 商品圖片區：先顯示同一件文物縮圖／大圖；兩者都失敗才顯示中性待補狀態。 -->
+    <!-- 商品圖片區：先顯示縮圖，失敗時改用同一件文物的大圖，兩者都失敗才顯示「影像待補」 -->
     <div class="product-card-cover">
       @if (image.src(); as imageUrl) {
-      <!-- 商品列表只載入縮圖；3D／大圖只存在商品詳情，避免 512 件商品同時下載 display 圖。 -->
+      <!-- 卡片只載入縮圖，大圖留給商品詳情，避免列表同時下載大量 display 圖 -->
       <img class="product-card-image" src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async"
         (error)="image.onError()" />
       } @else {
@@ -65,7 +65,7 @@
   <!-- 加入購物車按鈕區 -->
   <div class="product-card-cta">
     <button type="button" class="product-card-buy" [class.product-card-buy--added]="added()"
-      [attr.aria-label]="added() ? addCartLabel + '（已加入購物車）' : null" (click)="addToCart.emit()">
+      [attr.aria-label]="added() ? addCartLabel + '（已加入購物車）' : null" (click)="onAddToCart($event)">
       {{ addCartLabel }}
       @if (added()) {
       <app-qmah-icon name="check" class="product-card-buy-check" [size]="14" [strokeWidth]="2.4" aria-hidden="true" />

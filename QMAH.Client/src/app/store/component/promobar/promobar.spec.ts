@@ -130,9 +130,6 @@ describe('Promobar', () => {
     title: `折價券 ${index}`,
     cond: '',
     min: 0,
-    kind: 'amount',
-    value: index * 10,
-    cap: null,
     due: null,
   });
 
@@ -149,22 +146,93 @@ describe('Promobar', () => {
     showCoupons(5);
 
     expect(couponPanelItems()).toHaveLength(5);
-    expect(notes('coupon')).toEqual(['兌換折價券 →']);
+    expect(notes('coupon')).toEqual([]);
   });
 
   it('shows at most five coupons and summarizes the rest', () => {
     showCoupons(8);
 
     expect(couponPanelItems()).toHaveLength(5);
-    expect(notes('coupon')).toEqual(['以及另外 3 張折價券', '兌換折價券 →']);
+    expect(notes('coupon')).toEqual(['以及另外 3 張折價券']);
   });
 
-  it('ends the coupon panel with a single exchange link to the coupon store', () => {
+  it('links the coupon count and every coupon row to the coupon store, with no separate exchange link', () => {
     showCoupons(2);
 
-    const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-menu .panel-note'));
-    expect(links).toHaveLength(1);
-    expect(links[0].textContent?.trim()).toBe('兌換折價券 →');
-    expect(links[0].getAttribute('href')).toBe('/store/coupons');
+    expect(notes('coupon')).toEqual([]);
+    const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-menu a'));
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/store/coupons',
+      '/store/coupons',
+      '/store/coupons',
+    ]);
+  });
+
+  /* ===============================
+     購物車件數變化動畫
+     =============================== */
+
+  describe('cart count bump animation', () => {
+    let animate: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      // jsdom 沒有 Web Animations API；補上可觀察的 animate。
+      animate = vi.fn();
+      HTMLElement.prototype.animate = animate as unknown as HTMLElement['animate'];
+      fixture.componentRef.setInput('signedIn', true);
+      fixture.componentRef.setInput('cartCount', 2);
+      fixture.detectChanges();
+    });
+
+    afterEach(() => {
+      delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
+      delete (window as Partial<Window>).matchMedia;
+    });
+
+    const setCount = (count: number): void => {
+      fixture.componentRef.setInput('cartCount', count);
+      fixture.detectChanges();
+    };
+
+    it('scales the number up and back when the cart count changes', () => {
+      setCount(3);
+
+      expect(animate).toHaveBeenCalledTimes(1);
+      const [keyframes, options] = animate.mock.calls[0];
+      expect(keyframes.map((frame: Keyframe) => frame['transform'])).toEqual(['scale(1)', 'scale(1.6)', 'scale(1)']);
+      expect(options.duration).toBe(400);
+    });
+
+    it('plays again for every further change, but not when the count stays the same', () => {
+      setCount(3);
+      setCount(3);
+      setCount(5);
+
+      expect(animate).toHaveBeenCalledTimes(2);
+    });
+
+    it('treats the first loaded count as the baseline instead of a change', () => {
+      fixture.componentRef.setInput('cartLoaded', false);
+      fixture.componentRef.setInput('cartCount', 0);
+      fixture.detectChanges();
+      animate.mockClear();
+
+      // 購物車載入完成：0 → 4 是載入出來的初始件數，不是使用者造成的變化。
+      fixture.componentRef.setInput('cartCount', 4);
+      fixture.componentRef.setInput('cartLoaded', true);
+      fixture.detectChanges();
+      expect(animate).not.toHaveBeenCalled();
+
+      setCount(5);
+      expect(animate).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not animate when the user prefers reduced motion', () => {
+      window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
+
+      setCount(3);
+
+      expect(animate).not.toHaveBeenCalled();
+    });
   });
 });

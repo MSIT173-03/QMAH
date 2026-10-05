@@ -10,11 +10,11 @@ const ERA_TONES: EntryTone[] = ['gold', 'azurite', 'cinnabar', 'jade'];
 
 /** 首頁「年代選藏」區塊：與分類入口相同的色塊卡片，連往依年代篩選的商品列表 */
 @Component({
-  selector: 'app-brand-hall',
+  selector: 'app-era-grid',
   imports: [EntryGrid],
-  templateUrl: './brand-hall.html',
+  templateUrl: './era-grid.html',
 })
-export class BrandHall {
+export class EraGrid {
   protected readonly eras = toSignal(
     inject(CatalogApi)
       .getEras()

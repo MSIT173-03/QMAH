@@ -59,7 +59,6 @@
     <app-checkout-summary
       [quote]="quote()"
       [shipName]="shipName()"
-      [checkoutEnabled]="checkoutEnabled()"
       [submitted]="submitted()"
       [valid]="valid()"
       [placed]="order() !== null"
@@ -76,5 +75,3 @@
   [ecpayCheckout]="order()?.ecpayCheckout ?? null"
   (confirm)="onReturnToProducts()"
 />
-
-<!-- 頁尾：簡版，僅顯示版權列 -->

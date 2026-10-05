@@ -1,5 +1,5 @@
 <div class="gallery">
-  <!-- 外框固定為商品主視覺展示間；內層內容只按原比例等比放大，不再反過來撐開頁面。 -->
+  <!-- 展示框大小固定；內層內容依原比例等比縮放，不會撐開頁面 -->
   <div class="gallery-stage">
     @if (selectedMode() === 'dynamic') {
       <div class="postcard-viewport" [class.postcard-viewport--portrait]="orientation() === 'portrait'"
@@ -18,7 +18,7 @@
         <article class="postcard-static" [class.postcard-static--portrait]="orientation() === 'portrait'">
           <div class="postcard-static__image">
             @if (image(); as imageUrl) {
-              <!-- ui-integration: 商品 detail 有實際圖片時保留完整原圖，不用固定 postcard surface 裁切邊緣。 -->
+              <!-- 保留完整原圖，不裁切邊緣 -->
               <app-image-magnifier [image]="imageUrl" [alt]="name()" fit="contain"
                 [rotation]="rotation()" (loaded)="onImageLoad($event)" />
             } @else {
@@ -34,7 +34,7 @@
     } @else {
       <figure class="original-static">
         @if (image(); as imageUrl) {
-          <!-- ui-integration: 原圖檢視優先保留完整資料，放大鏡仍沿用既有互動。 -->
+          <!-- 原圖檢視保留完整影像，可用放大鏡檢視細節 -->
           <app-image-magnifier [image]="imageUrl" [alt]="name() + '原文物影像'" fit="contain" />
         } @else {
           <span>目前沒有可用圖像</span>

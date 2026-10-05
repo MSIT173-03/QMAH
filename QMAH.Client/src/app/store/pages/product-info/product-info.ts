@@ -11,7 +11,7 @@ import {
   BreadcrumbItem,
   EmptyState,
 } from '../../component';
-import { CatalogApi, SiteApi } from '../../api';
+import { CatalogApi } from '../../api';
 import { Product } from '../../api/api.models';
 import { toReviewPage } from '../../api/catalog.api-dto';
 import { CART_PATH, HOME_PATH, PRODUCT_LIST_PATH, categoryPath, searchPath } from '../../shared/paths';
@@ -81,12 +81,6 @@ export class ProductInfo {
   /* ===============================
      固定版面文字與外部資料
      =============================== */
-
-  /** 全站設定 */
-  private readonly config = toSignal(inject(SiteApi).getConfig());
-  /** 尺寸量測說明與商品政策條列（全站共通文案） */
-  protected sizeNote = computed(() => this.config()?.sizeNote ?? '');
-  protected policies = computed(() => this.config()?.productPolicies ?? []);
 
   /** 商品列表頁路徑，供「查無此商品」時的返回按鈕使用 */
   protected readonly productsPath = PRODUCT_LIST_PATH;
@@ -160,11 +154,10 @@ export class ProductInfo {
     if (item) this.cart.add(item.id, qty);
   }
 
-  /** 直接購買：目前正式付款選項尚未接通，先加入購物車並回到可查看狀態的購物車頁。 */
+  /** 加入並查看購物車：加入成功後前往購物車頁，由購物車頁再進入結帳 */
   protected onBuyNow(qty: number): void {
     const item = this.item();
     if (!item) return;
-    // ui-integration: 不把「直接購買」送進尚未啟用的結帳頁；保留既有操作入口，但讓使用者回到真實可確認內容的購物車。
     this.cart.add(item.id, qty, () => this.router.navigate([CART_PATH]));
   }
 

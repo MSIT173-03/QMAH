@@ -7,7 +7,7 @@ import { ProductViewData } from '../../../shared/product-view';
  *
  * 版面與購物車頁的 app-cart-addons、首頁的 app-recommendations 相同
  * （區塊標題 + 商品卡片格狀清單），但三者的卡片變體與傳入欄位各不相同，
- * 合併成共用元件需要額外參數且無法明顯簡化，因此維持各自獨立、不再合併。
+ * 合併成共用元件需要額外參數且無法明顯簡化，因此維持各自獨立。
  */
 @Component({
   selector: 'app-related-products',

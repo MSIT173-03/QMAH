@@ -1,5 +1,6 @@
-import { Component, computed, input } from '@angular/core';
-import { CART_PATH, productPath } from '../../shared/paths';
+import { Component, ElementRef, computed, effect, input, untracked, viewChild } from '@angular/core';
+import { bumpElement } from '../../shared/bump';
+import { CART_PATH, COUPON_STORE_PATH, productPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
 import { PromobarPanel } from '../promobar-panel/promobar-panel';
 import { CartItem, Coupon } from '../../api/api.models';
@@ -29,10 +30,8 @@ export class Promobar {
   /** 目前點數顯示文字 */
   points = input('0');
 
-  /** 「折價券」連結網址 */
-  couponsHref = input('/member/coupons');
-  /** 折價券面板中「兌換折價券」連結網址（折價券商店） */
-  couponStoreHref = input('/store/coupons');
+  /** 「折價券」連結網址：兌換商店（含我的折價券） */
+  couponsHref = input(COUPON_STORE_PATH);
   /** 折價券清單資料 */
   coupons = input<Coupon[]>([]);
 
@@ -40,6 +39,8 @@ export class Promobar {
   cartHref = input(CART_PATH);
   /** 購物車內商品件數 */
   cartCount = input(0);
+  /** 購物車內容是否已載入；載入前的 0 不是真的「變化」，載入完成帶出的初始件數也不播放動畫 */
+  cartLoaded = input(true);
   /** 購物車內的商品品項，供懸浮面板列出名稱與數量 */
   cartItems = input<CartItem[]>([]);
 
@@ -70,4 +71,26 @@ export class Promobar {
 
   /** 超出面板上限而未列出的商品項數 */
   protected cartRest = computed(() => Math.max(0, this.cartItems().length - PANEL_MAX_ITEMS));
+
+  private readonly cartCountLabel = viewChild<ElementRef<HTMLElement>>('cartCountLabel');
+
+  constructor() {
+    // 購物車件數變化（例如加入購物車）時，讓數字放大一下再恢復原狀；
+    // 首次載入（含登入後購物車才載入完成）帶出的件數只當作基準，不播放。
+    let previous: number | null = null;
+    effect(() => {
+      const count = this.cartCount();
+      if (!this.cartLoaded()) {
+        previous = null;
+        return;
+      }
+      if (previous !== null && previous !== count) untracked(() => this.bumpCartCount());
+      previous = count;
+    });
+  }
+
+  /** 購物車件數的數字放大再還原 */
+  private bumpCartCount(): void {
+    bumpElement(this.cartCountLabel()?.nativeElement);
+  }
 }

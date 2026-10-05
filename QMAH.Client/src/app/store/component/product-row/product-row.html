@@ -4,16 +4,16 @@
   <!-- 商品縮圖，連結至商品頁 -->
   <a [storeLink]="link()" class="product-row-thumb">
     @if (image.src(); as imageUrl) {
-      <!-- 橫列同樣使用縮圖；只有進入商品詳情才取 display 大圖。 -->
+      <!-- 橫列同樣只載入縮圖，大圖留給商品詳情 -->
       <img class="product-row-image" src="{{ imageUrl }}" [alt]="name()" loading="lazy" decoding="async" (error)="image.onError()" />
     } @else {
       <span class="product-row-slot"><app-qmah-icon name="image" [size]="20" aria-hidden="true" />{{ slotLabel }}</span>
     }
   </a>
 
-  <!-- 商品資訊：品牌與器類、名稱、出處說明、尺寸與評價 -->
+  <!-- 商品資訊：品牌與器類、名稱、價格與評價 -->
   <div class="product-row-info">
-    <span class="meta-brand meta-brand--sm">{{ brand() }} · {{ cat() }}</span>
+    <span class="meta-brand meta-brand--sm">{{ meta() }}</span>
     <a [storeLink]="link()" class="product-row-title">{{ name() }}</a>
     <div class="product-row-price-row">
       <span class="product-row-price" [class.text-accent]="pv.hasDeal">{{ pv.price }}</span>
@@ -35,6 +35,6 @@
     @if (pv.tag) {
       <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
     }
-    <button type="button" class="product-row-buy" (click)="addToCart.emit()">{{ addCartLabel }}</button>
+    <button type="button" class="product-row-buy" (click)="onAddToCart($event)">{{ addCartLabel }}</button>
   </div>
 </div>
