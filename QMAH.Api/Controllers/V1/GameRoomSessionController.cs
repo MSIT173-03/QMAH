@@ -14,7 +14,8 @@ namespace QMAH.Api.Controllers.V1;
 [Route("api/v1/game/rooms/{id:guid}/presentation")]
 public sealed class GameRoomSessionController(
     QmahDbContext db,
-    GameRoomSessionStore sessionStore) : ApiControllerBase
+    GameRoomSessionStore sessionStore,
+    IGameRoomNotifier roomNotifier) : ApiControllerBase
 {
     [HttpGet]
     [ProducesResponseType<GameRoomPresentation>(StatusCodes.Status200OK)]
@@ -98,7 +99,7 @@ public sealed class GameRoomSessionController(
 
         return result.Status switch
         {
-            GameRoomSessionResultStatus.Success => Ok(result.Message),
+            GameRoomSessionResultStatus.Success => Notified(room.Id, Ok(result.Message)),
             GameRoomSessionResultStatus.RateLimited => TooManyMessages(result.RetryAfter),
             GameRoomSessionResultStatus.CapacityReached => Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "房間暫存容量已滿", detail: "請稍後重試。"),
             GameRoomSessionResultStatus.Expired => Problem(statusCode: StatusCodes.Status404NotFound, title: "房間暫存狀態已過期"),
@@ -128,11 +129,17 @@ public sealed class GameRoomSessionController(
 
         return result.Status switch
         {
-            GameRoomSessionResultStatus.Success => Ok(result.Presentation),
+            GameRoomSessionResultStatus.Success => Notified(room.Id, Ok(result.Presentation)),
             GameRoomSessionResultStatus.CapacityReached => Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "房間暫存容量已滿", detail: "請稍後重試。"),
             GameRoomSessionResultStatus.Expired => Problem(statusCode: StatusCodes.Status404NotFound, title: "房間暫存狀態已過期"),
             _ => Problem(statusCode: StatusCodes.Status409Conflict, title: "顏色無效、已被使用，或房間已開始")
         };
+    }
+
+    private ActionResult Notified(Guid roomId, ActionResult result)
+    {
+        roomNotifier.Changed(roomId);
+        return result;
     }
 
     private async Task<ParticipantAccess> FindParticipantAsync(

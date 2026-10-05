@@ -63,7 +63,8 @@ public sealed class GameAppreciationController(QmahDbContext db) : ApiController
             item.Answer.Round.Room.CompletedAt!.Value, item.Answer.Votes.Sum(vote => vote.Count),
             item.VoteCount,
             db.ArtifactAppreciationVotes.Any(vote => vote.AnswerId == item.Answer.Id && vote.UserId == userId),
-            item.Answer.GamePlayer.UserId == userId));
+            item.Answer.GamePlayer.UserId == userId,
+            item.Answer.Round.Artifact.ThumbnailPath ?? item.Answer.Round.Artifact.PrimaryImagePath));
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
     }
 
@@ -92,6 +93,6 @@ public sealed class GameAppreciationController(QmahDbContext db) : ApiController
 
 public sealed record AppreciationAnswerDto(Guid Id, Guid RoomId, string RoomCode, Guid ArtifactId,
     string ArtifactName, string CategoryName, string AnswerType, string Text, string Author,
-    DateTime CompletedAt, int GameVotes, int VoteCount, bool Voted, bool IsOwn);
+    DateTime CompletedAt, int GameVotes, int VoteCount, bool Voted, bool IsOwn, string? ImagePath);
 public sealed record AppreciationVoteRequest(bool Voted);
 public sealed record AppreciationVoteDto(bool Voted, int VoteCount);

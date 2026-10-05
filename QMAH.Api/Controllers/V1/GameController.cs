@@ -18,6 +18,7 @@ public sealed class GameController(
     QmahDbContext db,
     IPasswordHasher<GameRoom> passwordHasher,
     GameRoomLifecycleService gameRoomLifecycleService,
+    IGameRoomNotifier roomNotifier,
     QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
 {
     [Authorize(Roles = "Admin")]
@@ -122,8 +123,9 @@ public sealed class GameController(
                 return Problem(statusCode: StatusCodes.Status400BadRequest, title: "房間狀態無效", detail: "status 只能是 WAITING、PLAYING 或 COMPLETED。");
             query = query.Where(room => room.Status == status);
         }
-        else
+        else if (string.IsNullOrEmpty(roomCode))
         {
+            // 用房號找人時不限狀態：滿座或已開始的公開房間也能找到並進場觀戰。
             query = query.Where(room => room.Status == "WAITING");
         }
 
@@ -447,6 +449,7 @@ public sealed class GameController(
         };
         db.RoundAnswers.Add(answer);
         await db.SaveChangesAsync(cancellationToken);
+        roomNotifier.Changed(round.RoomId);
         return Ok(new GameAnswerDto(
             answer.Id,
             answer.GamePlayerId,
@@ -518,6 +521,7 @@ public sealed class GameController(
             });
             await db.SaveChangesAsync(retryToken);
             await transaction.CommitAsync(retryToken);
+            roomNotifier.Changed(round.RoomId);
             return Accepted();
         }, cancellationToken);
     }
@@ -545,7 +549,12 @@ public sealed class GameController(
         var player = round.Room.GamePlayers.SingleOrDefault(item =>
             item.UserId == userId && item.ConnectionStatus != "LEFT");
         if (player is null)
-            return Forbid();
+        {
+            // 觀戰：公開房間任何登入者都能唯讀查看回合；識別為空，作答中不會看到任何回答。
+            if (round.Room.Visibility != "PUBLIC")
+                return Forbid();
+            return Ok(ToRoundDetailsDto(round, Guid.Empty, [], mediaUrlResolver));
+        }
 
         var votedAnswerIds = await db.Votes.AsNoTracking()
             .Where(vote => vote.RoundId == id && vote.VoterGamePlayerId == player.Id)

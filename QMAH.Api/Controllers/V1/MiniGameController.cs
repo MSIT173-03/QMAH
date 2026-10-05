@@ -65,7 +65,7 @@ public sealed class MiniGameController(
             return Unauthorized();
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
-        var result = await miniGameService.StartAttemptAsync(userId, request.ModeCode, cancellationToken);
+        var result = await miniGameService.StartAttemptAsync(userId, request.ModeCode, request.Variant, cancellationToken);
         if (!result.Succeeded)
             return ToFailure(result);
         var value = result.Value!;
@@ -133,7 +133,9 @@ public sealed class MiniGameController(
         value.Difficulty,
         value.Seed,
         value.ConfigJson,
-        value.StartedAt);
+        value.StartedAt,
+        value.LocatorTargets?.Select(target => new MiniGameLocatorTargetDto(target.ArtifactId, target.X, target.Y)).ToList(),
+        value.BackgroundPieces);
 
     private static MiniGameCompleteDto ToCompleteDto(MiniGameCompleteView value) => new(
         value.AttemptId,

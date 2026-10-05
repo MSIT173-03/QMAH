@@ -12,18 +12,32 @@ public sealed class ScrollPaintingEligibility(QmahMediaStoragePaths paths)
         return dimensions.Width >= 300 && dimensions.Height >= 240 && ratio >= .5 && ratio <= 2.2;
     }
 
-    public (int Width, int Height) ImageDimensions(string imagePath)
+    /// <summary>把站內圖片網址對應到本機檔案；不在媒體資料夾內就回傳 null。</summary>
+    public string? ResolveFile(string imagePath)
     {
-        var normalized = imagePath.Replace('\\', '/');
+        var normalized = imagePath.Replace((char)92, '/');
         var root = normalized.StartsWith("/media/", StringComparison.Ordinal) ? paths.PublicRoot
             : normalized.StartsWith("/images/", StringComparison.Ordinal) ? paths.ImageRoot : null;
-        if (root is null) return (0, 0);
+        if (root is null) return null;
         try
         {
             var relative = normalized[(normalized.IndexOf('/', 1) + 1)..];
             var fullRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)) + Path.DirectorySeparatorChar;
             var file = Path.GetFullPath(Path.Combine(root, relative));
-            if (!file.StartsWith(fullRoot, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)) return (0, 0);
+            return file.StartsWith(fullRoot, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) && File.Exists(file) ? file : null;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return null;
+        }
+    }
+
+    public (int Width, int Height) ImageDimensions(string imagePath)
+    {
+        var file = ResolveFile(imagePath);
+        if (file is null) return (0, 0);
+        try
+        {
             using var stream = File.OpenRead(file);
             return ReadDimensions(stream);
         }
