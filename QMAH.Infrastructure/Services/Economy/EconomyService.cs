@@ -468,7 +468,8 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
         }, cancellationToken);
     }
 
-    /// <summary>回收已沒有任何可解鎖文物的鑰匙，並同步產生鑰匙與點數流水。</summary>
+    /// <summary>回收適用範圍內已無可解鎖文物的鑰匙，並同步產生鑰匙與點數流水。</summary>
+    /// <remarks>CATEGORY／ERA 只檢查該分類／年代；NORMAL／UNIVERSAL 檢查全部啟用文物。</remarks>
     public async Task<EconomyResult<KeyRecycleView>> RecycleKeyAsync(
         Guid userId,
         string keyCode,

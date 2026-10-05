@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { KeyExchangeResult, KeyModel, KeyExchangeRule, UnlockWithKeyRequest, UnlockWithKeyResult } from '../models/key-model';
+import { KeyExchangeResult, KeyModel, KeyExchangeRule, KeyRecycleResult, MemberEconomy, RecycleKeyRequest, UnlockWithKeyRequest, UnlockWithKeyResult } from '../models/key-model';
 import { environment } from '../../environments/environment';
 
 /**
@@ -26,13 +26,6 @@ function extractServerErrorDetail(error: any): string {
 }
 
 
-interface EconomyResponse {
-  pointBalance: number;
-  keyProgressBalance: number;
-  keyProgressToNormalKey: number;
-  keys: KeyModel[];
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -46,10 +39,35 @@ export class KeyService {
 
   /** 取得玩家背包內持有的所有鑰匙；實際上是打 economy 這支綜合 API，只取其中的 keys 陣列 */
   getKeys(): Observable<KeyModel[]> {
-    return this.http.get<EconomyResponse>(this.apiUrl).pipe(
-      map((res) => res.keys),
+    return this.getEconomy().pipe(map((res) => res.keys));
+  }
+
+  /** 取得實際資產餘額；回收成功後呼叫此方法，同時更新點數與鑰匙。 */
+  getEconomy(): Observable<MemberEconomy> {
+    return this.http.get<MemberEconomy>(this.apiUrl).pipe(
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * 畫面用的回收資格預判；eligibleArtifactCount 是這把鑰匙適用範圍內的候選數。
+   * 分類／年代鑰匙不必等全圖鑑完成。最終資格及扣除數量仍由 API 在交易內確認。
+   */
+  canRecycleKey(key: KeyModel, amount = 1): boolean {
+    return Number.isInteger(amount) && amount >= 1 && amount <= 100
+      && key.balance >= amount && key.recyclePointValue > 0 && key.eligibleArtifactCount === 0;
+  }
+
+  /**
+   * 送出一次回收請求；點數由資料庫 RecyclePointValue 計算，並寫入鑰匙、點數流水。
+   * 沿用全域登入 Cookie／XSRF 設定。成功後用 getEconomy() 更新資產；不要自動重試
+   * 此 POST，避免回應遺失時重複回收。409 的具體原因會經由共用錯誤處理傳出。
+   */
+  recycleKey(keyCode: string, amount = 1): Observable<KeyRecycleResult> {
+    const body: RecycleKeyRequest = { amount };
+    return this.http.post<KeyRecycleResult>(
+      `${environment.apiBaseUrl}/me/keys/${encodeURIComponent(keyCode)}/recycle`, body
+    ).pipe(catchError(this.handleError));
   }
 
   /**
