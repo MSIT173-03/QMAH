@@ -18,7 +18,11 @@
     <h1 class="social-panel__title">{{ event.title }}</h1>
     <p class="social-meta social-icon-label">
       <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
-      {{ event.organizerDisplayName || '匿名會員' }}
+      @if (event.organizerUserId) {
+        <a class="social-author-link" [routerLink]="['/social/members', event.organizerUserId]">{{ event.organizerDisplayName || '匿名會員' }}</a>
+      } @else {
+        {{ event.organizerDisplayName || '匿名會員' }}
+      }
     </p>
 
     <ul class="social-facts">
@@ -31,6 +35,9 @@
       }
       <li><svg lucideUsers aria-hidden="true" focusable="false"></svg><span>已報名 {{ event.registrationCount }}{{ event.capacity ? ' / ' + event.capacity : '' }} 人</span></li>
     </ul>
+
+    <!-- 有座標用座標定位，沒有座標用地址搜尋；純線上活動不顯示地圖。 -->
+    <app-event-map [latitude]="event.latitude" [longitude]="event.longitude" [location]="event.location" />
 
     <p class="social-event-detail__content">{{ event.content }}</p>
 
@@ -56,17 +63,34 @@
 
     <div class="social-panel__actions">
       @if (event.socialPostId) {
-        <a class="btn btn-ghost social-icon-label" [routerLink]="['/social/posts', event.socialPostId]">
+        <button
+          type="button"
+          class="btn btn-ghost social-icon-label"
+          [attr.aria-expanded]="showDiscussion"
+          aria-controls="event-discussion"
+          (click)="toggleDiscussion()"
+        >
           <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
-          活動貼文與留言
-        </a>
+          {{ showDiscussion ? '收合貼文與留言' : '活動貼文與留言' }}
+        </button>
       }
       @if (event.isRegistered) {
         <button type="button" class="btn btn-error btn-outline" [disabled]="actionPending" (click)="cancelRegistration()">取消報名</button>
       } @else {
-        <button type="button" class="btn btn-primary" [disabled]="actionPending" (click)="register()">報名參加</button>
+        @switch (registrationState) {
+          @case ('ENDED') { <button type="button" class="btn" disabled>活動已結束</button> }
+          @case ('CLOSED') { <button type="button" class="btn" disabled>報名已截止</button> }
+          @case ('FULL') { <button type="button" class="btn" disabled>名額已滿</button> }
+          @default { <button type="button" class="btn btn-primary" [disabled]="actionPending" (click)="register()">報名參加</button> }
+        }
       }
     </div>
   </article>
+
+  @if (showDiscussion && event.socialPostId) {
+    <section id="event-discussion" aria-label="活動貼文與留言">
+      <app-post-detail [id]="event.socialPostId" [embedded]="true" />
+    </section>
+  }
 }
 </div>

@@ -6,12 +6,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreateSocialEventRequest, EventListItem, SocialApiService, SocialMedia } from '../../../core/services/social-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
+import { LocationPick, LocationPickerComponent } from '../../../shared/components/location-picker/location-picker';
 import { LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideUsers, LucideX } from '@lucide/angular';
+
+// 與後端 EventScheduleRules.MaxCapacity 相同。
+const MAX_EVENT_CAPACITY = 10000;
 
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideUsers, LucideX],
+  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, LocationPickerComponent, LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideUsers, LucideX],
   templateUrl: './events.html',
   styleUrls: ['../social-common.scss', './events.scss']
 })
@@ -142,11 +146,32 @@ export class EventsComponent implements OnInit {
     this.newEvent.mediaIds = (this.newEvent.mediaIds ?? []).filter((id) => id !== mediaId);
   }
 
+  // 從地圖選點：座標一定會更新；反查到地址時才覆蓋地點文字（沒查到就保留使用者原本填的）。
+  onLocationPicked(pick: LocationPick): void {
+    this.newEvent.latitude = pick.latitude;
+    this.newEvent.longitude = pick.longitude;
+    if (pick.location !== null) this.newEvent.location = pick.location;
+    this.cdr.detectChanges();
+  }
+
+  // 清除位置只清座標；地點文字是使用者可能自己輸入的，不一起清掉。
+  onLocationCleared(): void {
+    this.newEvent.latitude = null;
+    this.newEvent.longitude = null;
+    this.cdr.detectChanges();
+  }
+
   // POST /api/v1/social/events（需要登入；新活動要等管理員審核通過才會公開顯示）
   // 送出按鈕是 type="button"，故意不靠 <form method="dialog"> 自動關閉視窗，
   // 避免請求還沒回來、或失敗時視窗就先關掉導致看不到錯誤訊息。
   submitEvent(): void {
     this.createError = null;
+    const problems = this.validateNewEvent();
+    if (problems.length > 0) {
+      this.createError = problems.join(' ');
+      return;
+    }
+
     this.socialApi.createEvent(this.newEvent).subscribe({
       next: () => {
         this.newEvent = { eventType: 'PLAYER', title: '', content: '', startAt: '', endAt: '', mediaIds: [] };
@@ -156,9 +181,63 @@ export class EventsComponent implements OnInit {
         alert('活動已建立，等待管理員審核通過後才會公開顯示。');
       },
       error: (err: HttpErrorResponse) => {
-        this.createError = err.status === 401 ? '請先登入才能建立活動。' : '建立活動失敗，請確認欄位是否正確。';
+        this.createError = this.describeCreateError(err);
         console.error('建立活動失敗:', err);
       }
     });
+  }
+
+  // 前端先做基本檢查，讓使用者立刻看到哪裡要改；伺服器仍會用同一組規則（EventScheduleRules）再驗證一次。
+  private validateNewEvent(): string[] {
+    const event = this.newEvent;
+    const problems: string[] = [];
+    const now = new Date();
+    // datetime-local 的值不帶時區，new Date() 會以瀏覽器所在時區解讀，與使用者輸入一致。
+    const toDate = (value?: string | null) => (value ? new Date(value) : null);
+    const start = toDate(event.startAt);
+    const end = toDate(event.endAt);
+    const registrationEnd = toDate(event.registrationEndAt);
+
+    if (!event.title.trim()) problems.push('請輸入活動標題。');
+    if (!event.content.trim()) problems.push('請輸入活動說明。');
+
+    if (!start || Number.isNaN(start.getTime())) problems.push('請選擇開始時間。');
+    else if (start <= now) problems.push('開始時間必須晚於現在。');
+
+    if (!end || Number.isNaN(end.getTime())) problems.push('請選擇結束時間。');
+    else if (start && !Number.isNaN(start.getTime()) && end <= start) problems.push('結束時間必須晚於開始時間。');
+
+    if (registrationEnd && !Number.isNaN(registrationEnd.getTime())) {
+      if (start && !Number.isNaN(start.getTime()) && registrationEnd > start) {
+        problems.push('報名截止時間不能晚於開始時間。');
+      } else if (registrationEnd <= now) {
+        problems.push('報名截止時間必須晚於現在。');
+      }
+    }
+
+    const capacity = event.capacity;
+    if (capacity !== null && capacity !== undefined) {
+      if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_EVENT_CAPACITY) {
+        problems.push(`名額上限必須是 1 到 ${MAX_EVENT_CAPACITY} 的整數。`);
+      }
+    }
+
+    return problems;
+  }
+
+  // 優先顯示 API 回傳的具體原因（欄位錯誤或 detail），不再一律顯示「請確認欄位是否正確」。
+  private describeCreateError(err: HttpErrorResponse): string {
+    if (err.status === 401) return '請先登入才能建立活動。';
+    if (err.status === 403) return '你的帳號沒有建立這種活動的權限。';
+    if (err.status === 429) return '操作太頻繁，請稍後再試。';
+
+    const fieldErrors = err.error?.errors as Record<string, string[]> | undefined;
+    if (fieldErrors) {
+      const messages = Object.values(fieldErrors).flat().filter(Boolean);
+      if (messages.length > 0) return messages.join(' ');
+    }
+
+    if (typeof err.error?.detail === 'string' && err.error.detail) return err.error.detail;
+    return '建立活動失敗，請確認欄位是否正確。';
   }
 }

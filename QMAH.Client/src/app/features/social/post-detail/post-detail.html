@@ -1,8 +1,10 @@
-<div class="qmah-social-page">
-  <a routerLink="/social/posts" class="btn btn-ghost social-back social-icon-label">
-    <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
-    返回貼文列表
-  </a>
+<div class="qmah-social-page" [class.qmah-social-page--embedded]="embedded">
+  @if (!embedded) {
+    <a routerLink="/social/posts" class="btn btn-ghost social-back social-icon-label">
+      <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
+      返回貼文列表
+    </a>
+  }
 
 @if (loading) {
   <div class="social-state" role="status" aria-live="polite"><span class="loading loading-spinner loading-lg"></span></div>
@@ -31,7 +33,11 @@
       <h1 class="social-panel__title">{{ post.title }}</h1>
       <p class="social-meta social-icon-label">
         <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
-        {{ post.displayName || '匿名會員' }}
+        @if (post.publisherType === 'COMMUNITY' && post.userId) {
+          <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
+        } @else {
+          {{ post.displayName || '匿名會員' }}
+        }
       </p>
       <app-social-post-content [content]="post.content" />
     }
@@ -53,10 +59,20 @@
       <!-- ui-integration: 自己的貼文只給編輯／刪除；檢舉只出現在別人的貼文，避免作者看到自己檢舉自己。 -->
       <div class="social-panel__actions">
         @if (isOwnPost(post)) {
-          <button type="button" class="btn btn-ghost social-icon-label" (click)="startEditPost()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button>
-          <button type="button" class="btn btn-error btn-outline social-icon-label" (click)="deletePost()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button>
+          <div class="dropdown dropdown-end dropdown-top">
+            <button type="button" tabindex="0" class="social-menu__trigger" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
+            <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
+            <li role="none"><button type="button" role="menuitem" class="social-icon-label " (click)="startEditPost(); closeMenu()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button></li>
+            <li role="none"><button type="button" role="menuitem" class="social-icon-label social-menu__danger" (click)="deletePost(); closeMenu()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button></li>
+            </ul>
+          </div>
         } @else {
-          <button type="button" class="btn btn-ghost social-icon-label" (click)="reportModal.open('POST', post.id)"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉貼文</button>
+          <div class="dropdown dropdown-end dropdown-top">
+            <button type="button" tabindex="0" class="social-menu__trigger" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
+            <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
+            <li role="none"><button type="button" role="menuitem" class="social-icon-label " (click)="reportModal.open('POST', post.id); closeMenu()"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉貼文</button></li>
+            </ul>
+          </div>
         }
       </div>
     }
@@ -92,7 +108,7 @@
       @for (comment of post.comments; track comment.id) {
         <li class="social-comment">
           <div class="social-comment__head">
-            <span class="social-comment__author">{{ comment.displayName || '匿名會員' }}</span>
+            <span class="social-comment__author"><a class="social-author-link" [routerLink]="['/social/members', comment.userId]">{{ comment.displayName || '匿名會員' }}</a></span>
             <time class="social-meta" [attr.datetime]="comment.createdAt">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
           </div>
           @if (editingCommentId === comment.id) {
@@ -107,10 +123,20 @@
             <p class="social-comment__body">{{ comment.content }}</p>
             <div class="social-comment__actions">
               @if (isOwnComment(comment)) {
-                <button type="button" class="btn btn-ghost btn-sm social-icon-label" (click)="startEditComment(comment)"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button>
-                <button type="button" class="btn btn-error btn-outline btn-sm social-icon-label" (click)="deleteComment(comment.id)"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button>
+                <div class="dropdown dropdown-end ">
+                  <button type="button" tabindex="0" class="social-menu__trigger" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
+                  <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
+                  <li role="none"><button type="button" role="menuitem" class="social-icon-label " (click)="startEditComment(comment); closeMenu()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button></li>
+                  <li role="none"><button type="button" role="menuitem" class="social-icon-label social-menu__danger" (click)="deleteComment(comment.id); closeMenu()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button></li>
+                  </ul>
+                </div>
               } @else {
-                <button type="button" class="btn btn-ghost btn-sm social-icon-label" (click)="reportModal.open('COMMENT', comment.id)"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉留言</button>
+                <div class="dropdown dropdown-end ">
+                  <button type="button" tabindex="0" class="social-menu__trigger" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
+                  <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
+                  <li role="none"><button type="button" role="menuitem" class="social-icon-label " (click)="reportModal.open('COMMENT', comment.id); closeMenu()"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉留言</button></li>
+                  </ul>
+                </div>
               }
             </div>
           }

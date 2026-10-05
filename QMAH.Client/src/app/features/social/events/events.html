@@ -66,7 +66,11 @@
       <div class="social-panel__actions social-event-card__footer">
         <p class="social-meta social-icon-label social-event-card__organizer">
           <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
-          {{ event.organizerDisplayName || '匿名會員' }}
+          @if (event.organizerUserId) {
+            <a class="social-author-link" [routerLink]="['/social/members', event.organizerUserId]">{{ event.organizerDisplayName || '匿名會員' }}</a>
+          } @else {
+            {{ event.organizerDisplayName || '匿名會員' }}
+          }
         </p>
         <a class="btn btn-outline btn-primary" [routerLink]="['/social/events', event.id]">查看詳情</a>
       </div>
@@ -83,13 +87,18 @@
       <div class="alert alert-warning mb-3" role="alert">{{ createError }}</div>
     }
     <div class="social-form">
-      <label class="social-field"><span class="social-field__label">活動類型</span><select class="select select-bordered w-full" [(ngModel)]="newEvent.eventType" aria-label="活動類型">
-        <option value="PLAYER">玩家發起</option>
-        <option value="OFFICIAL">官方活動</option>
-      </select></label>
       <label class="social-field"><span class="social-field__label">活動標題</span><input type="text" placeholder="例如：週末館藏交流" class="input input-bordered w-full" [(ngModel)]="newEvent.title" /></label>
       <label class="social-field"><span class="social-field__label">活動說明</span><textarea class="textarea textarea-bordered h-24" placeholder="寫下活動內容與參加方式" [(ngModel)]="newEvent.content"></textarea></label>
-      <label class="social-field"><span class="social-field__label">地點（選填）</span><input type="text" placeholder="例如：線上或臺北市立場館" class="input input-bordered w-full" [(ngModel)]="newEvent.location" /></label>
+      <label class="social-field"><span class="social-field__label">地點（選填，可手動輸入，或用下方地圖選點自動帶入）</span><input type="text" maxlength="200" placeholder="例如：線上或臺北市立場館" class="input input-bordered w-full" [(ngModel)]="newEvent.location" /></label>
+      <div class="social-field">
+        <span class="social-field__label">在地圖上選擇地點（選填）</span>
+        <app-location-picker
+          [latitude]="newEvent.latitude"
+          [longitude]="newEvent.longitude"
+          (picked)="onLocationPicked($event)"
+          (cleared)="onLocationCleared()"
+        />
+      </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label class="social-field">
           <span class="social-field__label">開始時間</span>
@@ -100,7 +109,11 @@
           <input type="datetime-local" class="input input-bordered w-full" [(ngModel)]="newEvent.endAt" />
         </label>
       </div>
-      <label class="social-field"><span class="social-field__label">名額上限（選填）</span><input type="number" placeholder="例如：30" class="input input-bordered w-full" [(ngModel)]="newEvent.capacity" /></label>
+      <label class="social-field">
+        <span class="social-field__label">報名截止時間（選填，不能晚於開始時間）</span>
+        <input type="datetime-local" class="input input-bordered w-full" [(ngModel)]="newEvent.registrationEndAt" />
+      </label>
+      <label class="social-field"><span class="social-field__label">名額上限（選填）</span><input type="number" min="1" max="10000" step="1" placeholder="例如：30" class="input input-bordered w-full" [(ngModel)]="newEvent.capacity" /></label>
 
       <label class="social-field" for="social-event-media"><span class="social-field__label">活動圖片（選填，最多 8 張）</span><input
         id="social-event-media"

@@ -135,6 +135,7 @@ const appShellChildren: Routes = [
       { path: 'posts/:id', loadComponent: () => import('./features/social/post-detail/post-detail').then(m => m.PostDetailComponent) },
       { path: 'events', loadComponent: () => import('./features/social/events/events').then(m => m.EventsComponent) },
       { path: 'events/:id', loadComponent: () => import('./features/social/event-detail/event-detail').then(m => m.EventDetailComponent) },
+      { path: 'members/:id', loadComponent: () => import('./features/social/member-profile/member-profile').then(m => m.MemberProfileComponent) },
       { path: 'announcements', loadComponent: () => import('./features/social/announcements/announcements').then(m => m.AnnouncementsComponent) }
     ]
   },

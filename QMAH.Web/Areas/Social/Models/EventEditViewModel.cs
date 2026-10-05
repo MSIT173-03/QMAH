@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+using QMAH.Infrastructure.Services.Social;
+
 namespace QMAH.Web.Areas.Social.Models;
 
 public sealed class EventEditViewModel
@@ -31,16 +33,16 @@ public sealed class EventEditViewModel
 
     [Required(ErrorMessage = "請輸入開始時間")]
     [Display(Name = "開始時間")]
-    public DateTime StartAt { get; set; } = DateTime.Now.AddHours(1);
+    public DateTime StartAt { get; set; } = EventScheduleRules.Now.AddHours(1);
 
     [Required(ErrorMessage = "請輸入結束時間")]
     [Display(Name = "結束時間")]
-    public DateTime EndAt { get; set; } = DateTime.Now.AddHours(2);
+    public DateTime EndAt { get; set; } = EventScheduleRules.Now.AddHours(2);
 
     [Display(Name = "報名截止時間")]
     public DateTime? RegistrationEndAt { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "人數上限必須大於 0")]
+    [Range(1, EventScheduleRules.MaxCapacity, ErrorMessage = "人數上限必須介於 1 到 10000 之間")]
     [Display(Name = "人數上限")]
     public int? Capacity { get; set; }
 

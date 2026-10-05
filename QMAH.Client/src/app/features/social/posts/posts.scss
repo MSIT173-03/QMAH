@@ -337,14 +337,14 @@
 }
 
 .social-post-wall {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  align-items: stretch;
+  columns: 2;
+  column-gap: 18px;
 }
 
 .social-post-card {
   min-width: 0;
+  margin-bottom: 18px;
+  break-inside: avoid;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -432,7 +432,6 @@
   display: -webkit-box;
   overflow: hidden;
   max-width: 72ch;
-  min-height: 4.8em;
   margin: 2px 0 0;
   color: var(--qmah-ink);
   font-size: var(--qmah-type-body-sm-size);
@@ -502,7 +501,8 @@
 }
 
 @media (max-width: 640px) {
-  .social-post-wall { grid-template-columns: 1fr; gap: 14px; }
+  .social-post-wall { columns: 1; }
+  .social-post-card { margin-bottom: 14px; }
 
   .social-announcements {
     margin-bottom: 18px;
@@ -537,3 +537,15 @@
   .social-post-card__meta { align-items: flex-start; flex-direction: column; gap: 6px; }
   .social-post-card__title { max-width: none; font-size: 21px; }
 }
+
+/* 沒有封面圖的貼文：改成「文字卡」，標題放大、摘要多給幾行、背景微微染色，和圖片卡錯落出節奏。 */
+.social-post-card--text {
+  background: color-mix(in srgb, var(--qmah-surface-muted) 55%, var(--qmah-surface-elevated));
+}
+
+.social-post-card--text .social-post-card__title {
+  font-size: clamp(22px, 2.4vw, 28px);
+  -webkit-line-clamp: 3;
+}
+
+.social-post-card--text .social-post-card__excerpt { -webkit-line-clamp: 6; }

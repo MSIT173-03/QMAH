@@ -62,6 +62,51 @@ describe('EventDetailComponent', () => {
     expect(component.event?.isRegistered).toBe(false);
   });
 
+  it('disables registration with a reason once the event is full, closed or ended', () => {
+    fixture.componentRef.setInput('id', eventId);
+    fixture.detectChanges();
+    // 活動時間是不帶時區的「當地時間」字串，測試資料也用當地時間格式產生，避免受測試機時區影響。
+    const future = (hours: number) => {
+      const date = new Date(Date.now() + hours * 3600_000);
+      const pad = (value: number) => String(value).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+    httpMock.expectOne((r) => r.url.endsWith(`/social/events/${eventId}`)).flush({
+      ...sampleEvent,
+      startAt: future(24),
+      endAt: future(26)
+    });
+    expect(component.registrationState).toBe('OPEN');
+
+    component.event = { ...component.event!, registrationCount: 10 };
+    expect(component.registrationState).toBe('FULL');
+
+    component.event = { ...component.event!, registrationCount: 3, registrationEndAt: future(-1) };
+    expect(component.registrationState).toBe('CLOSED');
+
+    component.event = { ...component.event!, registrationEndAt: null, endAt: future(-1) };
+    expect(component.registrationState).toBe('ENDED');
+  });
+
+  it('shows the server reason when registration is rejected', () => {
+    fixture.componentRef.setInput('id', eventId);
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith(`/social/events/${eventId}`)).flush(sampleEvent);
+
+    component.register();
+    httpMock
+      .expectOne((r) => r.url.endsWith(`/social/events/${eventId}/registration`) && r.method === 'POST')
+      .flush({ title: '活動已額滿', detail: '這場活動目前沒有剩餘名額。' }, { status: 409, statusText: 'Conflict' });
+
+    expect(component.actionError).toBe('這場活動目前沒有剩餘名額。');
+  });
+
+  it('toggles the inline discussion without navigating away', () => {
+    expect(component.showDiscussion).toBe(false);
+    component.toggleDiscussion();
+    expect(component.showDiscussion).toBe(true);
+  });
+
   it('shows a friendly message when registering without being logged in', () => {
     fixture.componentRef.setInput('id', eventId);
     fixture.detectChanges();
