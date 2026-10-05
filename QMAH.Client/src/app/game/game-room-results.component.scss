@@ -80,3 +80,23 @@
 .leaderboard strong, .round-result summary strong, .result-answers li > div { min-width: 0; overflow-wrap: break-word; }
 
 .leaderboard strong small { font-size: 14px; }
+
+.round-browser h3 { margin:0 0 10px; font:600 20px/1.3 var(--qmah-font-serif); }
+.round-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.round-tabs button { min-height:40px; padding:0 14px; border:2px solid var(--line); background:var(--game-card-ground); color:inherit; font:700 15px/1 var(--qmah-font-sans); cursor:pointer; }
+.round-tabs button.is-on { border-color:var(--jade); background:#f4e2b4; }
+.round-title { display:grid; gap:2px; margin:0 0 8px; }
+.round-title small { color:var(--muted); font-size:14px; }
+.result-answers { padding:0; }
+.result-answers li.is-mine { outline:3px solid var(--jade); outline-offset:1px; }
+.result-answers li em { margin-inline-start:8px; padding:1px 8px; border-radius:999px; background:var(--bronze); color:#fff; font-size:12px; font-style:normal; }
+.result-answers li small { font-size:13px; }
+.vote-bar { display:block; height:6px; margin-top:8px; background:#0000001a; }
+.vote-bar u { display:block; height:100%; background:var(--jade); }
+.my-answers h3 { margin:0 0 8px; font:600 18px/1.3 var(--qmah-font-serif); }
+.my-answers ol { display:grid; gap:6px; margin:0; padding:0; list-style:none; max-height:220px; overflow:auto; }
+.my-answers button { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:4px 10px; align-items:baseline; width:100%; padding:8px 10px; border:1px solid var(--line); background:var(--game-card-ground); color:inherit; text-align:start; font:inherit; cursor:pointer; }
+.my-answers span { color:var(--bronze); font-weight:800; font-size:14px; }
+.my-answers q { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; quotes:none; font-size:14px; }
+.my-answers q.none { color:var(--muted); }
+.my-answers b { color:var(--jade); white-space:nowrap; }
