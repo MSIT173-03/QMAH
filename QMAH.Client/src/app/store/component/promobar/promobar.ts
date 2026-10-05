@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, ElementRef, computed, effect, input, untracked, viewChild } from '@angular/core';
 import { CART_PATH, productPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
 import { PromobarPanel } from '../promobar-panel/promobar-panel';
@@ -7,6 +7,9 @@ import { formatDateMD, formatMoney } from '../../shared/format';
 
 /** 折價券與購物車懸浮面板最多列出的項數，超過的部分合併成「以及另外 n …」一行 */
 const PANEL_MAX_ITEMS = 5;
+
+/** 購物車件數變化時，數字放大再恢復原狀的動畫時間（毫秒） */
+const COUNT_BUMP_MS = 400;
 
 /**
  * 頁面頂部工具列：左側輪播跑馬燈公告，右側提供點數、折價券與購物車捷徑連結（登入前以停用狀態顯示），
@@ -40,6 +43,8 @@ export class Promobar {
   cartHref = input(CART_PATH);
   /** 購物車內商品件數 */
   cartCount = input(0);
+  /** 購物車內容是否已載入；載入前的 0 不是真的「變化」，載入完成帶出的初始件數也不播放動畫 */
+  cartLoaded = input(true);
   /** 購物車內的商品品項，供懸浮面板列出名稱與數量 */
   cartItems = input<CartItem[]>([]);
 
@@ -70,4 +75,32 @@ export class Promobar {
 
   /** 超出面板上限而未列出的商品項數 */
   protected cartRest = computed(() => Math.max(0, this.cartItems().length - PANEL_MAX_ITEMS));
+
+  private readonly cartCountLabel = viewChild<ElementRef<HTMLElement>>('cartCountLabel');
+
+  constructor() {
+    // 購物車件數變化（例如加入購物車）時，讓數字放大一下再恢復原狀；
+    // 首次載入（含登入後購物車才載入完成）帶出的件數只當作基準，不播放。
+    let previous: number | null = null;
+    effect(() => {
+      const count = this.cartCount();
+      if (!this.cartLoaded()) {
+        previous = null;
+        return;
+      }
+      if (previous !== null && previous !== count) untracked(() => this.bumpCartCount());
+      previous = count;
+    });
+  }
+
+  /** 以 Web Animations API 播放放大再還原；連續變化時每次都從頭播放，使用者偏好減少動態時不播放 */
+  private bumpCartCount(): void {
+    const element = this.cartCountLabel()?.nativeElement;
+    if (!element || typeof element.animate !== 'function') return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    element.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.6)', offset: 0.4 }, { transform: 'scale(1)' }],
+      { duration: COUNT_BUMP_MS, easing: 'ease-out' },
+    );
+  }
 }

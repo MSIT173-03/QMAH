@@ -35,7 +35,7 @@
 
       <!-- 購物車連結，滑鼠移入時展開懸浮面板，與折價券面板共用同一個元件 -->
       <app-promobar-panel class="cart-menu">
-        <a panelTrigger [storeLink]="cartHref()" class="promobar-link">購物車 <span class="promobar-accent">{{
+        <a panelTrigger [storeLink]="cartHref()" class="promobar-link">購物車 <span #cartCountLabel class="promobar-accent promobar-count">{{
             cartCount() }}</span> 件</a>
         @for (row of cartRows(); track row.id) {
         <a [storeLink]="row.href" class="panel-item panel-row cart-row">
