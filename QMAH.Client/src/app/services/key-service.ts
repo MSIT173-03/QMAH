@@ -8,8 +8,7 @@ import { environment } from '../../environments/environment';
  * 嘗試從後端錯誤回應的 body 讀出比 statusText 更精確的錯誤原因。
  * ASP.NET Core 預設的驗證錯誤格式（ValidationProblemDetails）通常長這樣：
  *   { title: "...", status: 400, errors: { ArtifactId: ["The ArtifactId field is required."] } }
- * 這裡依序嘗試 errors／message／title／detail 這幾個常見欄位，抓到就顯示，抓不到才
- * fallback 回 statusText。等實際看到 400 回應長怎樣，可以換成直接對應正確的欄位。
+ * 優先顯示驗證錯誤與 detail／message；title 通常只是通用摘要，最後才使用。
  */
 function extractServerErrorDetail(error: any): string {
   const body = error?.error;
@@ -23,7 +22,7 @@ function extractServerErrorDetail(error: any): string {
     if (parts.length > 0) return parts.join(' | ');
   }
 
-  return body.message || body.title || body.detail || error?.statusText || '未知錯誤';
+  return body.detail || body.message || body.title || error?.statusText || '未知錯誤';
 }
 
 
