@@ -79,7 +79,7 @@
           </div>
         </div>
         <dl class="asset-notes">
-          <div><dt>如何累積</dt><dd>多人遊戲、每日簽到，或回收已無法解鎖文物的鑰匙。</dd></div>
+          <div><dt>如何累積</dt><dd>玩小遊戲與多人遊戲，完成就有基本點數，每天最多 100 點，完成突破任務可再加 30 點。也可以每日簽到，或回收已無法解鎖文物的鑰匙。</dd></div>
           <div><dt>點數用途</dt><dd>兌換商城折價券，結帳時依券面條件折抵商品金額。</dd></div>
         </dl>
       </article>
@@ -115,15 +115,15 @@
 
           <div class="progress-hint">
             @if (remainingKeyProgress > 0) {
-              <span>還差 <strong>{{ remainingKeyProgress }}</strong> 點，獲得 1 把探索鑰匙</span>
+              <span>還差 <strong>{{ remainingKeyProgress }}</strong> 進度，獲得 1 把探索鑰匙</span>
             } @else {
               已達轉換門檻，等待轉換為探索鑰匙
             }
           </div>
         </div>
         <dl class="asset-notes">
-          <div><dt>如何累積</dt><dd>玩單人小遊戲，累積鑰匙碎片。</dd></div>
-          <div><dt>集滿之後</dt><dd>每滿 {{ economy.keyProgressToNormalKey }} 點，自動換成 1 把探索鑰匙；剩下的碎片繼續累積。</dd></div>
+          <div><dt>如何累積</dt><dd>玩小遊戲與多人遊戲，完成就有基本進度，表現越好越多。每天最多累積 1000 進度，約 10 把鑰匙，台灣時間 00:00 重置。</dd></div>
+          <div><dt>集滿之後</dt><dd>每滿 {{ economy.keyProgressToNormalKey }} 進度，自動換成 1 把探索鑰匙，不足的進度會保留。</dd></div>
         </dl>
       </article>
 

@@ -15,6 +15,8 @@ export interface GameDailyRewardStatus {
   collectedArtifacts: number;
   totalArtifacts: number;
   keyRewardDivisor: number;
+  keyProgressToday?: number;
+  keyProgressLimit?: number;
 }
 export type GameRoomFilterStatus = Exclude<GameRoomStatus, 'CANCELLED'>;
 export type GameRoomSort = 'RECOMMENDED' | 'NEARLY_FULL' | 'NEWEST' | 'OPEN_SLOTS';

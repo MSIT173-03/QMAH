@@ -25,9 +25,13 @@ public sealed class GameDailyRewardService(QmahDbContext db)
             .Select(item => item.GameModeDefinition.Code).Distinct().CountAsync(cancellationToken);
         var limit = BaseLimit + (unlocked ? BonusLimit : 0);
         var keyPolicy = await GetKeyPolicyAsync(userId, cancellationToken);
+        var keyToday = await db.KeyProgressTransactions.AsNoTracking()
+            .Where(item => item.UserId == userId && item.Amount > 0 && item.CreatedAt >= start && item.CreatedAt < end
+                && (item.ReferenceType == "MINIGAME_REWARD" || item.ReferenceType == "MAIN_GAME_REWARD"))
+            .SumAsync(item => (decimal?)item.Amount, cancellationToken) ?? 0m;
         return new(limit, Math.Max(0, limit - earned), end, earned, BaseLimit, BonusLimit,
             unlocked, !unlocked && (multiplayer || modes >= 3), modes, multiplayer,
-            keyPolicy.Collected, keyPolicy.Total, keyPolicy.Divisor);
+            keyPolicy.Collected, keyPolicy.Total, keyPolicy.Divisor, keyToday, EconomyService.DailyKeyProgressLimit);
     }
 
     public async Task<GameKeyPolicyView> GetKeyPolicyAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -90,6 +94,7 @@ public sealed class GameDailyRewardService(QmahDbContext db)
 public sealed record MiniGameRewardStatusView(int DailyLimit, int Remaining, DateTime ResetsAt,
     int Earned, int BaseLimit, int BonusLimit, bool BreakthroughUnlocked, bool CanBreakthrough,
     int CompletedModes, bool HasCompletedMultiplayer,
-    int CollectedArtifacts, int TotalArtifacts, byte KeyRewardDivisor);
+    int CollectedArtifacts, int TotalArtifacts, byte KeyRewardDivisor,
+    decimal KeyProgressToday = 0m, decimal KeyProgressLimit = 0m);
 
 public sealed record GameKeyPolicyView(int Collected, int Total, byte Divisor);

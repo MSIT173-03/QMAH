@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,7 +14,7 @@ let rewardMeterSequence = 0;
   selector: 'app-game-reward-meter',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './game-reward-meter.component.scss',
-  imports: [GameMeterRowComponent, QmahIconComponent],
+  imports: [DecimalPipe, GameMeterRowComponent, QmahIconComponent],
   template: `
     @if (status(); as current) {
       <section class="reward-meter" [class.is-open]="detailsOpen()" [class.is-compact]="variant() === 'compact'" [class.is-frozen]="frozen()">
@@ -53,7 +54,7 @@ let rewardMeterSequence = 0;
           </section>
           <section class="rd-section">
             @if (keys(); as k) { <app-game-meter-row [row]="keysRow(k)" /> }
-            <p>鑰匙進度滿 {{ keys()?.threshold ?? 100 }}，自動換成 1 把普通探索鑰匙，不受每日點數上限影響。</p>
+            <p>鑰匙進度滿 {{ keys()?.threshold ?? 100 }}，自動換成 1 把普通探索鑰匙。每天最多累積 {{ current.keyProgressLimit || 1000 }} 進度（約 {{ ((current.keyProgressLimit || 1000) / (keys()?.threshold ?? 100)) | number:'1.0-0' }} 把），台灣時間 00:00 重置；不受每日點數上限影響。@if (current.keyProgressLimit) { 今天已累積 {{ current.keyProgressToday ?? 0 | number:'1.0-0' }}／{{ current.keyProgressLimit }}。 }</p>
             <details>
               <summary>圖鑑完成度如何影響鑰匙</summary>
               <p>圖鑑已收集 {{ current.collectedArtifacts }}／{{ current.totalArtifacts }} 件。{{ current.keyRewardDivisor === 4 ? '已收齊，鑰匙進度以原本的四分之一累積。' : current.keyRewardDivisor === 2 ? '已達 80%，鑰匙進度以原本的一半累積。' : '收集達 80% 後鑰匙進度減半，全部收齊後為四分之一。' }}</p>
