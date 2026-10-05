@@ -45,14 +45,6 @@
   border-top-color: var(--color-ink);
 }
 
-/* 回饋點數說明 */
-.summary-earn {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: var(--qmah-type-meta-size);
-  letter-spacing: 0.08em;
-  color: var(--color-muted);
-}
-
 /* 必填欄位未填妥的提示 */
 .field-warning {
   font-size: var(--qmah-type-label-size);

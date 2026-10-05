@@ -1,5 +1,6 @@
 import { Component, computed, input, output } from '@angular/core';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { bumpAddToCart } from '../../shared/bump';
 import { imageWithFallback } from '../../shared/image-utils';
 import { productPath } from '../../shared/paths';
 import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../../shared/product-view';
@@ -60,4 +61,10 @@ export class ProductRow {
   protected hasReviews = computed(() => this.reviews() > 0);
   /** 尚無評論時的提示文字 */
   protected readonly noReviewsLabel = NO_REVIEWS_LABEL;
+
+  /** 按下加入購物車：通知外部，並讓按鈕放大再還原一下 */
+  protected onAddToCart(event: Event): void {
+    this.addToCart.emit();
+    bumpAddToCart(event.currentTarget as HTMLElement);
+  }
 }

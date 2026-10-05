@@ -27,9 +27,6 @@
       <span class="summary-total-value">{{ totalLabel() }}</span>
     </div>
 
-    <!-- 本次訂單可回饋的點數 -->
-    <span class="summary-earn">回饋點數 +{{ earnLabel() }}</span>
-
     <!-- 訂單成立後停用（原生 disabled，避免重複送出） -->
     <button type="button" class="btn-solid btn-solid--full" [disabled]="placed()"
       (click)="submitOrder.emit()">{{ submitLabel() }}</button>

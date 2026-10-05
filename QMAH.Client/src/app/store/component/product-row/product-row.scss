@@ -94,13 +94,23 @@
   color: var(--color-muted);
 }
 
+/* 加入購物車按鈕在橫列中上下置中（與橫列上下緣等距）；折扣標籤固定在右上角，不影響按鈕位置 */
 .product-row-aside {
+  position: relative;
   flex: 0 0 auto;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
   gap: var(--qmah-space-2);
   min-width: 150px;
+
+  > .product-card-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
 }
 
 .product-row-price-row {
@@ -164,12 +174,14 @@
     column-gap: 12px;
     row-gap: 8px;
     align-items: center;
+    justify-content: normal;
   }
   .product-row-price-row {
     grid-column: 1;
     justify-content: flex-start;
   }
   .product-row-aside > .product-card-tag {
+    position: static;
     grid-column: 1;
     justify-self: start;
   }

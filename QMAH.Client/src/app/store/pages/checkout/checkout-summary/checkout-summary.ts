@@ -1,13 +1,13 @@
 import { Component, computed, input, output } from '@angular/core';
 import { Panel } from '../../../component';
 import { OrderQuote } from '../../../api/api.models';
-import { formatCut, formatMoney, formatNumber, formatShippingFee } from '../../../shared/format';
+import { formatCut, formatMoney, formatShippingFee } from '../../../shared/format';
 import { CART_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
 
 /**
  * 結帳頁側欄的訂單金額摘要。
- * 商品行小計、各項折抵、運費、應付總額與回饋點數皆來自後端的訂單試算結果，本元件只負責格式化顯示。
+ * 商品行小計、各項折抵、運費與應付總額皆來自後端的訂單試算結果，本元件只負責格式化顯示。
  */
 @Component({
   selector: 'app-checkout-summary',
@@ -54,8 +54,6 @@ export class CheckoutSummary {
   protected shipFeeLabel = computed(() => formatShippingFee(this.quote()?.shippingFee ?? 0));
   /** 應付總額顯示文字 */
   protected totalLabel = computed(() => formatMoney(this.quote()?.payable ?? 0));
-  /** 回饋點數顯示文字 */
-  protected earnLabel = computed(() => formatNumber(this.quote()?.pointsEarned ?? 0));
 
   /** 下單按鈕文字：訂單成立後改為「訂單已送出」 */
   protected submitLabel = computed(() => (this.placed() ? '訂單已送出' : '確認下單'));

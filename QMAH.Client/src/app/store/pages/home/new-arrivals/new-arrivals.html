@@ -31,7 +31,7 @@
               </div>
             </div>
           </a>
-          <button type="button" class="news-add" (click)="addToCart.emit(item.id)">加入</button>
+          <button type="button" class="news-add" (click)="onAddToCart(item.id, $event)">加入</button>
         </div>
       }
     </div>

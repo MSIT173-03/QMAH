@@ -10,3 +10,8 @@ export function bumpElement(element: HTMLElement | null | undefined, scale = 1.6
     { duration, easing: 'ease-out' },
   );
 }
+
+/** 「加入購物車」按鈕按下時的放大動畫（商品卡片、商品橫列、商品頁共用） */
+export function bumpAddToCart(element: HTMLElement | null | undefined): void {
+  bumpElement(element, 1.1, 250);
+}

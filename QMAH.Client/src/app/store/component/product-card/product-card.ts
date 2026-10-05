@@ -1,15 +1,11 @@
 import { Component, computed, input, output } from '@angular/core';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
-import { bumpElement } from '../../shared/bump';
+import { bumpAddToCart } from '../../shared/bump';
 import { formatNumber } from '../../shared/format';
 import { imageWithFallback } from '../../shared/image-utils';
 import { productPath } from '../../shared/paths';
 import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../../shared/product-view';
 import { StoreLink } from '../../shared/store-link';
-
-/** 加入購物車時按鈕放大再還原的倍率與時間（毫秒） */
-const ADD_BUMP_SCALE = 1.05;
-const ADD_BUMP_MS = 300;
 
 /** 角標樣式變體 */
 export type ProductCardBadgeVariant = 'ink' | 'teal';
@@ -99,6 +95,6 @@ export class ProductCard {
   /** 按下加入購物車：通知外部，並讓按鈕放大再還原一下 */
   protected onAddToCart(event: Event): void {
     this.addToCart.emit();
-    bumpElement(event.currentTarget as HTMLElement, ADD_BUMP_SCALE, ADD_BUMP_MS);
+    bumpAddToCart(event.currentTarget as HTMLElement);
   }
 }

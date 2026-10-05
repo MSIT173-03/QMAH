@@ -41,7 +41,7 @@
   <!-- 購買操作：數量增減、加入購物車與直接購買 -->
   <div class="product-actions">
     <app-qty-stepper [(value)]="qty" />
-    <button type="button" class="btn-outline btn-outline--flex" (click)="onAdd()">{{ addCartLabel }}</button>
+    <button type="button" class="btn-outline btn-outline--flex" (click)="onAdd($event)">{{ addCartLabel }}</button>
     <button type="button" class="btn-solid btn-solid--flex" (click)="onBuyNow()">{{ buyNowLabel }}</button>
   </div>
 </div>

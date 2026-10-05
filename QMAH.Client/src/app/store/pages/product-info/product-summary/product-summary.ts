@@ -1,5 +1,6 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { QtyStepper } from '../../../component';
+import { bumpAddToCart } from '../../../shared/bump';
 import { formatNumber } from '../../../shared/format';
 import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../../../shared/product-view';
 import { SizeCondition } from '../size-condition/size-condition';
@@ -63,9 +64,10 @@ export class ProductSummary {
   /** 已售件數顯示字串（千分位） */
   protected soldText = computed(() => formatNumber(this.sold()));
 
-  /** 加入購物車，帶出目前選購數量 */
-  protected onAdd(): void {
+  /** 加入購物車，帶出目前選購數量，並讓按鈕放大再還原一下 */
+  protected onAdd(event: Event): void {
     this.addToCart.emit(this.qty());
+    bumpAddToCart(event.currentTarget as HTMLElement);
   }
 
   /** 直接購買，帶出目前選購數量 */
