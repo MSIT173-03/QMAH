@@ -77,13 +77,11 @@ export class Checkout {
 
   /** 配送／付款方式 */
   private readonly options = toSignal(this.checkoutApi.getOptions());
-  /** 可用的配送／付款方式；尚未載入，或配送、付款任一清單為空時為 null */
+  /** 可用的配送／付款方式；尚未載入，或配送、付款任一清單為空時為 null（此時不試算也不下單） */
   private readonly enabledOptions = computed(() => {
     const options = this.options();
     return options && options.shippingOptions.length > 0 && options.paymentOptions.length > 0 ? options : null;
   });
-  /** 有可用的配送與付款方式才能試算與下單；否則整個下單入口維持停用 */
-  protected readonly checkoutEnabled = computed(() => this.enabledOptions() !== null);
   /** 會員資料（帶入收件資訊、持有點數） */
   private readonly profile = toSignal(this.memberApi.getCheckoutProfile());
   /** 會員可選用的折價券 */

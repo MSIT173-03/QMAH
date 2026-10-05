@@ -20,8 +20,6 @@ export class CheckoutSummary {
   quote = input<OrderQuote | null>(null);
   /** 選用的配送方式名稱 */
   shipName = input('');
-  /** 是否有可用的配送與付款方式；沒有時禁止送出訂單 */
-  checkoutEnabled = input(false);
   /** 是否已按下確認下單 */
   submitted = input(false);
   /** 收件資訊必填欄位是否皆已填妥 */
@@ -59,13 +57,8 @@ export class CheckoutSummary {
   /** 回饋點數顯示文字 */
   protected earnLabel = computed(() => formatNumber(this.quote()?.pointsEarned ?? 0));
 
-  /** 下單按鈕文字：訂單已成立、可下單、或目前無法下單 */
-  protected submitLabel = computed(() => {
-    if (this.placed()) return '訂單已送出';
-    return this.checkoutEnabled() ? '確認下單' : '結帳目前未啟用';
-  });
-  /** 下單按鈕是否停用（使用原生 disabled，滑鼠、鍵盤與輔助工具都不會誤以為可操作） */
-  protected submitDisabled = computed(() => !this.checkoutEnabled() || this.placed());
+  /** 下單按鈕文字：訂單成立後改為「訂單已送出」 */
+  protected submitLabel = computed(() => (this.placed() ? '訂單已送出' : '確認下單'));
   /** 已送出但必填欄位未填妥時，顯示補填提示 */
   protected showMissing = computed(() => this.submitted() && !this.valid());
 

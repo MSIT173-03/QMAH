@@ -30,7 +30,6 @@
         @if (couponRest() > 0) {
         <a [storeLink]="couponsHref()" class="panel-item panel-note">以及另外 {{ couponRest() }} 張折價券</a>
         }
-        <a [storeLink]="couponStoreHref()" class="panel-item panel-note">兌換折價券 →</a>
       </app-promobar-panel>
 
       <!-- 購物車連結，滑鼠移入時展開懸浮面板，與折價券面板共用同一個元件 -->

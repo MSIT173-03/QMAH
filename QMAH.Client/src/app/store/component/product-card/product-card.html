@@ -65,7 +65,7 @@
   <!-- 加入購物車按鈕區 -->
   <div class="product-card-cta">
     <button type="button" class="product-card-buy" [class.product-card-buy--added]="added()"
-      [attr.aria-label]="added() ? addCartLabel + '（已加入購物車）' : null" (click)="addToCart.emit()">
+      [attr.aria-label]="added() ? addCartLabel + '（已加入購物車）' : null" (click)="onAddToCart($event)">
       {{ addCartLabel }}
       @if (added()) {
       <app-qmah-icon name="check" class="product-card-buy-check" [size]="14" [strokeWidth]="2.4" aria-hidden="true" />

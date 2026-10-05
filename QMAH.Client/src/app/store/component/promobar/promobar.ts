@@ -1,5 +1,6 @@
 import { Component, ElementRef, computed, effect, input, untracked, viewChild } from '@angular/core';
-import { CART_PATH, productPath } from '../../shared/paths';
+import { bumpElement } from '../../shared/bump';
+import { CART_PATH, COUPON_STORE_PATH, productPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
 import { PromobarPanel } from '../promobar-panel/promobar-panel';
 import { CartItem, Coupon } from '../../api/api.models';
@@ -7,9 +8,6 @@ import { formatDateMD, formatMoney } from '../../shared/format';
 
 /** 折價券與購物車懸浮面板最多列出的項數，超過的部分合併成「以及另外 n …」一行 */
 const PANEL_MAX_ITEMS = 5;
-
-/** 購物車件數變化時，數字放大再恢復原狀的動畫時間（毫秒） */
-const COUNT_BUMP_MS = 400;
 
 /**
  * 頁面頂部工具列：左側輪播跑馬燈公告，右側提供點數、折價券與購物車捷徑連結（登入前以停用狀態顯示），
@@ -32,10 +30,8 @@ export class Promobar {
   /** 目前點數顯示文字 */
   points = input('0');
 
-  /** 「折價券」連結網址 */
-  couponsHref = input('/member/coupons');
-  /** 折價券面板中「兌換折價券」連結網址（兌換商店） */
-  couponStoreHref = input('/store/coupons');
+  /** 「折價券」連結網址：兌換商店（含我的折價券） */
+  couponsHref = input(COUPON_STORE_PATH);
   /** 折價券清單資料 */
   coupons = input<Coupon[]>([]);
 
@@ -93,14 +89,8 @@ export class Promobar {
     });
   }
 
-  /** 以 Web Animations API 播放放大再還原；連續變化時每次都從頭播放，使用者偏好減少動態時不播放 */
+  /** 購物車件數的數字放大再還原 */
   private bumpCartCount(): void {
-    const element = this.cartCountLabel()?.nativeElement;
-    if (!element || typeof element.animate !== 'function') return;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    element.animate(
-      [{ transform: 'scale(1)' }, { transform: 'scale(1.6)', offset: 0.4 }, { transform: 'scale(1)' }],
-      { duration: COUNT_BUMP_MS, easing: 'ease-out' },
-    );
+    bumpElement(this.cartCountLabel()?.nativeElement);
   }
 }

@@ -273,7 +273,7 @@ describe('CouponStore', () => {
   it('says so when the account owns no coupon', async () => {
     await loadOwned(true, []);
 
-    expect(ownedSection()?.textContent).toContain('目前沒有持有的折價券');
+    expect(ownedSection()?.textContent).toContain('目前沒有折價券');
     expect(fixture.nativeElement.querySelectorAll('.my-coupons .coupon-card')).toHaveLength(0);
   });
 

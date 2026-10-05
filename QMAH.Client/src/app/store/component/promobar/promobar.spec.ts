@@ -146,23 +146,26 @@ describe('Promobar', () => {
     showCoupons(5);
 
     expect(couponPanelItems()).toHaveLength(5);
-    expect(notes('coupon')).toEqual(['兌換折價券 →']);
+    expect(notes('coupon')).toEqual([]);
   });
 
   it('shows at most five coupons and summarizes the rest', () => {
     showCoupons(8);
 
     expect(couponPanelItems()).toHaveLength(5);
-    expect(notes('coupon')).toEqual(['以及另外 3 張折價券', '兌換折價券 →']);
+    expect(notes('coupon')).toEqual(['以及另外 3 張折價券']);
   });
 
-  it('ends the coupon panel with a single exchange link to the coupon store', () => {
+  it('links the coupon count and every coupon row to the coupon store, with no separate exchange link', () => {
     showCoupons(2);
 
-    const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-menu .panel-note'));
-    expect(links).toHaveLength(1);
-    expect(links[0].textContent?.trim()).toBe('兌換折價券 →');
-    expect(links[0].getAttribute('href')).toBe('/store/coupons');
+    expect(notes('coupon')).toEqual([]);
+    const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-menu a'));
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/store/coupons',
+      '/store/coupons',
+      '/store/coupons',
+    ]);
   });
 
   /* ===============================
