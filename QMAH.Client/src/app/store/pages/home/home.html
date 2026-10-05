@@ -20,7 +20,7 @@
     </div>
   </section>
 
-  <!-- 分類入口／年代選藏：雙欄並排 -->
+  <!-- 分類入口／年代選藏：上下分欄 -->
   <section class="entry-section">
     <app-category-grid />
     <app-brand-hall />
@@ -33,6 +33,5 @@
   <app-new-arrivals (addToCart)="onAddToCart($event)" />
 
   <!-- 為你推薦 -->
-  <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)"
-    (requireMore)="onRequireMore()" />
+  <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)" />
 </div>

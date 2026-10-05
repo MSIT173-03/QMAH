@@ -18,16 +18,13 @@ import { RankingSection } from './ranking-section/ranking-section';
 import { NewArrivals } from './new-arrivals/new-arrivals';
 import { BrandHall } from './brand-hall/brand-hall';
 import { Recommendations } from './recommendations/recommendations';
-import { BadgedProductView } from './home.data';
-
-/** 「為你推薦」每次載入的商品數量 */
-const RECOMMEND_PAGE_SIZE = 10;
+import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 
 /**
  * 首頁。
  * 統整頁首搜尋、主視覺輪播、限時特賣、迷你折價券、分類入口、熱銷排行、
  * 新品上架、年代選藏與為你推薦等各版位；購物車、搜尋建議、全站設定與會員資料
- * 皆由本頁面向 API 取得，「為你推薦」並在此逐頁載入並累加。
+ * 皆由本頁面向 API 取得；「為你推薦」在此一次取得。
  */
 @Component({
   selector: 'app-home',
@@ -76,8 +73,6 @@ export class Home {
 
   /** 「為你推薦」已載入的商品卡片 */
   protected recommendedItems = signal<BadgedProductView[]>([]);
-  /** 「為你推薦」已載入的頁數 */
-  private recommendPage = 0;
 
   constructor() {
     this.loadRecommendations();
@@ -98,23 +93,16 @@ export class Home {
     this.onSearch(suggestion.name);
   }
 
-  /** 「載入更多」：取得下一頁推薦商品並接在清單後面 */
-  protected onRequireMore(): void {
-    this.loadRecommendations();
-  }
-
-  /** 請求「為你推薦」的商品資料並加入目前列表。 */
+  /** 請求「為你推薦」的商品資料（一次取 HOME_PRODUCT_COUNT 件，實際顯示幾件由版位的欄數與固定行數決定）。 */
   private loadRecommendations(): void {
-    this.recommendPage += 1;
     this.homeApi
-      .getRecommendations({ page: this.recommendPage, pageSize: RECOMMEND_PAGE_SIZE })
+      .getRecommendations({ page: 1, pageSize: HOME_PRODUCT_COUNT })
       .subscribe((page) =>
-        this.recommendedItems.update((items) => [
-          ...items,
-          ...page.items.map(
+        this.recommendedItems.set(
+          page.items.map(
             (item): BadgedProductView => ({ ...toProductView(item), badge: item.reason, badgeVariant: 'teal' }),
           ),
-        ]),
+        ),
       );
   }
 }
