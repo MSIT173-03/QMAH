@@ -110,14 +110,15 @@
         <div class="navbar-nav flex-row ms-auto align-items-center qmah-topbar-actions">
             @if (isAdmin)
             {
-                <button type="button" class="btn btn-sm btn-outline-secondary gap-2 text-nowrap d-inline-flex align-items-center"
-                        data-bs-toggle="modal" data-bs-target="#frontend-switch-modal" aria-label="前往前台">
+                <a class="btn btn-sm btn-outline-secondary gap-2 text-nowrap d-inline-flex align-items-center"
+                   asp-area="" asp-controller="Home" asp-action="Frontend"
+                   data-qmah-site-switch="frontend-switch-modal" aria-label="前往前台">
                     <svg class="d-block flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M15 3h6v6M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
                     </svg>
                     <span class="d-none d-sm-inline">前往前台</span>
                     <span class="d-sm-none">前台</span>
-                </button>
+                </a>
             }
             <div class="nav-item">
                 <button type="button"

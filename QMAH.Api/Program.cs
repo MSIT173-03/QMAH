@@ -39,9 +39,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Angular dev server（ng serve）預設是 http，透過 proxy.conf.json 轉送時瀏覽器端看到的其實是
 // http，用 SameAsRequest 會依 Kestrel 收到的 request（永遠是 https）判斷，導致 cookie 被標成
 // Secure，卻沒有穩定的辦法送回純 http 的 4200——會員登入狀態因此不穩定地遺失。
-var cookieSecurePolicy = builder.Environment.IsDevelopment()
-    ? CookieSecurePolicy.None
-    : CookieSecurePolicy.Always;
+var cookieSecurePolicy = QmahSharedAuthentication.GetSecurePolicy(builder.Environment);
 
 builder.Configuration.AddJsonFile(
     "appsettings.Local.json",

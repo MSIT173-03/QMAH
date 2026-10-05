@@ -135,8 +135,14 @@ public sealed class HomeController(QmahDbContext db) : Controller
         return View();
     }
 
-    public IActionResult Frontend([FromServices] IConfiguration configuration)
-        => Redirect(QmahSiteNavigation.GetTarget(configuration, "Frontend:ClientUrl"));
+    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public IActionResult Frontend(
+        [FromServices] IConfiguration configuration,
+        [FromServices] IWebHostEnvironment environment)
+        => Redirect(QmahSiteNavigation.GetTarget(
+            configuration, "Frontend:ClientUrl", environment.IsDevelopment(),
+            QmahSiteNavigation.GetRequestHost(Request, environment.IsDevelopment())));
 
     [Microsoft.AspNetCore.Authorization.AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -44,12 +44,26 @@ export class LayoutComponent implements OnInit, OnDestroy {
   @ViewChild('siteSwitchDialog') private siteSwitchDialog?: ElementRef<HTMLDialogElement>;
 
   confirmAdminNavigation(event: MouseEvent): void {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    const dialog = this.siteSwitchDialog?.nativeElement;
+    // 原始連結是可用的備援；不支援 dialog 時仍能前往後台。
+    if (!dialog || typeof dialog.showModal !== 'function') return;
+    this.closeMenu(false);
+    try {
+      if (!dialog.open) dialog.showModal();
+    } catch {
+      return;
+    }
     event.preventDefault();
-    this.siteSwitchDialog?.nativeElement.showModal();
   }
 
   closeSiteSwitch(): void {
     this.siteSwitchDialog?.nativeElement.close();
+  }
+
+  onSiteSwitchBackdropClick(event: MouseEvent): void {
+    // Angular 將回傳 false 的 click handler 視為 preventDefault；內部連結必須保留預設導頁。
+    if (event.target === event.currentTarget) this.closeSiteSwitch();
   }
 
   /** 五大前台 Area 共用同一個 Shell，但各自保留主色語意；頁面內元件仍可使用自己的 secondary／semantic token。 */
@@ -120,8 +134,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     firstFocusable?.focus();
   }
 
-  closeMenu(): void {
-    const restoreDrawerFocus = this.menuOpen();
+  closeMenu(restoreFocus = true): void {
+    const restoreDrawerFocus = restoreFocus && this.menuOpen();
     this.menuOpen.set(false);
     if (restoreDrawerFocus) setTimeout(() => this.menuTrigger?.nativeElement.focus(), 0);
   }
@@ -129,12 +143,14 @@ export class LayoutComponent implements OnInit, OnDestroy {
   // ui-integration: Drawer 使用 Escape 關閉，讓鍵盤使用者不必依賴滑鼠點擊遮罩。
   @HostListener('document:keydown.escape')
   closeMenuWithEscape(): void {
+    if (this.siteSwitchDialog?.nativeElement.open) return;
     if (this.menuOpen()) this.closeMenu();
   }
 
   // ui-integration: Mobile drawer 開啟時把 Tab 限制在選單內，關閉後把焦點還給觸發按鈕。
   @HostListener('document:keydown', ['$event'])
   keepFocusInsideDrawer(event: KeyboardEvent): void {
+    if (this.siteSwitchDialog?.nativeElement.open) return;
     if (!this.menuOpen() || event.key !== 'Tab') return;
     const drawer = this.mobileNavigation?.nativeElement;
     if (!drawer) return;

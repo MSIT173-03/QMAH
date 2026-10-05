@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -42,7 +42,10 @@ export class MeApiService {
   refresh(): void {
     this.http.get<Me>(this.base).subscribe({
       next: (me) => this.me.set(me),
-      error: () => this.me.set(null)
+      error: (error: HttpErrorResponse) => {
+        // 暫時斷線或伺服器忙碌不代表登出，保留已確認的會員與切換入口。
+        if (error.status === 401 || error.status === 403) this.me.set(null);
+      }
     });
   }
 

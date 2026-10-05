@@ -214,7 +214,9 @@ npm run start:http
 
 ## 常見啟動問題
 
-前後台切換入口由伺服器讀取站台設定後轉址，元件內不指定主機或連接埠。API 的 `Backend:AdminUrl` 指向管理後台，Web 的 `Frontend:ClientUrl` 指向使用者前台。兩者都支援完整網址與部署子路徑，可在各自的 `appsettings.Local.json` 或環境變數 `Backend__AdminUrl`、`Frontend__ClientUrl` 覆寫。本機預設沿用標準 HTTPS 後台與 Angular 前台，若只啟動 HTTP 後台，請將 `Backend:AdminUrl` 改成該部署的 HTTP 網址。
+前後台切換入口由伺服器讀取站台設定後轉址，元件內不指定主機或連接埠。API 的 `Backend:AdminUrl` 指向管理後台，Web 的 `Frontend:ClientUrl` 指向使用者前台。兩者都支援完整網址與部署子路徑，可在各自的 `appsettings.Local.json` 或環境變數 `Backend__AdminUrl`、`Frontend__ClientUrl` 覆寫。本機預設後台入口為 `http://localhost:5183`，兩種標準啟動 profile 都會監聽此網址；HTTPS profile 會由後台轉至 HTTPS。Angular 前台預設為 `http://localhost:4200`。自訂連接埠、不同主機或部署時須設定實際網址，並確認目標服務已啟動。既有 Local 設定若仍指定 `https://localhost:7039`，只啟動 HTTP 後台時也須改成 HTTP 入口。
+
+切換入口僅轉往固定設定的站台，不讀取管理資料，也不接受使用者提供的任意轉址網址。登入過期時由後台導向登入頁，後台頁面仍檢查 Admin 權限。回到前台的轉址不要求有效票證。前後台在 Development 共用不標記 Secure 的 `.QMAH.Auth` Cookie，支援 HTTP Angular 代理與 HTTPS 後台；正式環境仍一律要求 Secure。開發時的 loopback 轉址保留目前的 `localhost`／`127.0.0.1`／`::1`，避免切換後落到不同 Cookie 主機；Angular 代理改寫 Host 時，使用 loopback Referer 辨識瀏覽器來源。不同部署網域不能只靠同名 Cookie 共用登入；應另外規劃登入流程。確認視窗無法使用時仍可透過原始連結切換。
 
 切換連結保留原有登入機制，不會透過網址傳遞登入票證。前台入口僅對 `Admin` 顯示，API 與後台轉址入口也檢查管理員權限。
 
