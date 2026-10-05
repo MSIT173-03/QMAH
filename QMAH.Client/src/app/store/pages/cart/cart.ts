@@ -50,6 +50,9 @@ function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
   styleUrl: './cart.scss',
 })
 export class Cart {
+  // inject() 只能在建立元件時呼叫；下方 switchMap 的回呼在之後才執行，必須先取好服務。
+  private readonly catalogApi = inject(CatalogApi);
+
   /** 麵包屑導覽項目 */
   protected readonly breadcrumbItems: BreadcrumbItem[] = [{ label: '首頁', href: HOME_PATH }, { label: '購物車' }];
 
@@ -80,7 +83,7 @@ export class Cart {
   protected loaded = computed(() => this.cartState.cart() !== null);
   /** 購物車是否含有商品 */
   protected hasItems = computed(() => this.lines().length > 0);
-  /** ui-integration: 購物車異動失敗要留在原頁面並明確告知，不讓使用者誤以為已更新。 */
+  /** 最近一次購物車異動失敗的訊息；失敗時留在原頁面告知，不讓使用者誤以為已更新 */
   protected error = this.cartState.error;
 
   /** 金額摘要（後端以預設配送方式試算），供 app-cart-summary 顯示 */
@@ -106,9 +109,6 @@ export class Cart {
       return top ?? previous?.value ?? null;
     },
   });
-
-  // inject() 只能在建立元件時呼叫；下方 switchMap 的回呼在之後才執行，必須先取好服務。
-  private readonly catalogApi = inject(CatalogApi);
 
   /**
    * 同器類的隨機商品（排序 6：隨機）。只在器類改變時重新抽選，

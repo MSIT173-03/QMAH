@@ -2,6 +2,12 @@
   display: block;
 }
 
+/* 頁面背景（.store-app）至少撐滿 App Shell 的主要內容區（視窗高度扣掉頁首）：
+   兌換商店的內容可能很短，否則下方會露出外層底色。 */
+:host(.store-app) {
+  min-height: calc(100dvh - var(--app-header-height, 72px));
+}
+
 .coupon-store-main {
   padding-top: var(--qmah-space-4);
   padding-bottom: 72px;
@@ -187,5 +193,33 @@
   svg {
     width: 16px;
     height: 16px;
+  }
+}
+
+/* 上下兩個區塊（我的折價券、兌換商店）：各自是有標題列的區塊，券面列表依寬度自動換行（每行最多三張，見 .coupon-grid）。 */
+.coupon-section {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-5);
+
+  /* 兩個大標題相鄰時多留一點間距 */
+  & + & {
+    margin-top: var(--qmah-space-3);
+  }
+}
+
+.my-coupons-empty {
+  margin: 0;
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+}
+
+/* 持有中的券右側只是資訊（到期日），不能點擊：沿用兌換區塊的外觀，但不要懸停變色與手形游標 */
+.coupon-card-cost--static {
+  cursor: default;
+
+  &:hover {
+    background: var(--color-bg);
   }
 }

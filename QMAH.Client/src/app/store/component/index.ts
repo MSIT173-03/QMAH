@@ -28,4 +28,3 @@ export type { CategoryListItem } from './category-list/category-list';
 export type { EntryGridItem, EntryTone } from './entry-grid/entry-grid';
 export type { PillOption } from './pill-group/pill-group';
 export type { ProductCardBadgeVariant, ProductCardVariant } from './product-card/product-card';
-export type { SearchHotLink, SearchSuggestion } from './search-bar/search-bar';

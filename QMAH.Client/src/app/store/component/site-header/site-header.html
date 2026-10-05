@@ -3,6 +3,4 @@
   <div class="site-header-row" [class]="variant() === 'default' ? '' : 'site-header-row--' + variant()">
     <ng-content></ng-content>
   </div>
-
-  <!-- ui-integration: Store 保留自己的搜尋與導覽；跨 Area 入口由外層 App Shell 統一提供，避免主導航競爭。 -->
 </header>

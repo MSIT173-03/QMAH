@@ -3,7 +3,7 @@
 }
 
 .site-header {
-  /* ui-integration: 外層 App Shell 已負責 sticky global header，商城頁首改為一般流避免雙層 sticky 遮住內容。 */
+  /* 外層 App Shell 已有固定在頂端的全站頁首，商城頁首維持一般流，避免雙層 sticky 遮住內容 */
   position: relative;
   background: color-mix(in srgb, var(--color-surface) 96%, transparent);
   backdrop-filter: blur(8px);
@@ -17,13 +17,6 @@
   display: flex;
   align-items: center;
   gap: var(--qmah-space-6);
-
-  /* 熱門搜尋以絕對定位顯示在搜尋框下方，實際出現時才加大下留白容納它；
-     後端熱門搜尋 API 目前固定回傳空陣列，這塊留白平常不會出現，
-     不應該用固定 variant 保留一段用不到的空白，讓首頁跟其他頁面的頁首高度不一致。 */
-  &:has(.search-hot) {
-    padding-bottom: 34px;
-  }
 
   /* 結帳頁：僅步驟指示器，間距略窄且允許換行 */
   &--wrap {

@@ -22,7 +22,7 @@ interface MagnifierLayout {
   lensHeight: number;
 }
 
-/** 鑑賞頁平移動畫的位移範圍，需與 image-magnifier.scss 的 qmah-image-pan-* keyframes（±4%）一致。 */
+/** 平移動畫的位移範圍，需與 image-magnifier.scss 的 qmah-image-pan-* keyframes（±4%）一致。 */
 const PAN_TRAVEL = 0.08;
 /** 拖曳到畫卷尾端放開後，先停留這段時間再通知換段，讓使用者看清楚尾端畫面。 */
 const SCRUB_END_DELAY_MS = 1000;
@@ -72,7 +72,10 @@ interface PanScrub {
   width: number;
 }
 
-/** 商品詳情共用的局部放大鏡；不會放大整個商品欄位，也不建立第二份圖片資產。 */
+/**
+ * 局部放大鏡（商品詳情、登入頁的清明上河圖與遊戲的定位盤共用）：只放大游標所在位置，不放大整個欄位，
+ * 也不建立第二份圖片。傳入 pan 時圖片會慢速平移，persistentLens 讓鏡面常駐並可拖曳、縮放。
+ */
 @Component({
   selector: 'app-image-magnifier',
   imports: [LucideImage],
@@ -83,16 +86,16 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
   image = input<string | null>(null);
   alt = input('');
   fit = input<'cover' | 'contain'>('cover');
-  /** 只在需要時啟用慢速平移，商品卡片維持原本的靜態放大行為。 */
+  /** 慢速平移的方向；none（預設）不平移，圖片靜止。 */
   pan = input<'none' | 'forward' | 'backward'>('none');
   /** 由外層在換圖時切換，讓同一個元件也能重新開始平移動畫。 */
   panKey = input(0);
   panPaused = input(false);
-  /** 鑑賞頁可讓鏡面常駐，避免使用者必須先猜到游標移入畫卷才會出現。 */
+  /** 鏡面常駐，使用者不必先猜到游標要移入圖片才會出現。 */
   persistentLens = input(false);
-  /** 可由外層收起鏡面，只保留原圖與原本的平移狀態。 */
+  /** 由外層收起鏡面：關閉時只顯示原圖（仍維持平移）。 */
   enabled = input(true);
-  /** 換圖時舊圖淡出的毫秒數；0 代表直接切換，商品頁維持原本行為。 */
+  /** 換圖時舊圖淡出的毫秒數；0 代表直接切換 */
   crossfade = input(0);
   /** 鏡面初始倍率；常駐鏡面以 1 作為互動縮放起點，商品頁維持固定的局部放大。 */
   baseZoom = input(2);
@@ -151,8 +154,8 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     const point = this.position();
     if (!layout) return '50% 50%';
 
-    // CSS owns the source-image pan animation. Read its current transform on
-    // every frame so the lens samples the same pixels that are under the pointer.
+    // 來源圖片的平移動畫由 CSS 負責；每一幀都讀取它目前的 transform，
+    // 鏡面才會取樣到游標正下方的像素。
     this.panTick();
     const lensCenterX = (point.x / 100) * layout.hostWidth;
     const lensCenterY = (point.y / 100) * layout.hostHeight;
@@ -165,9 +168,8 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     const imagePointX = clamp(untransformedX - layout.imageOffsetX, 0, layout.imageWidth);
     const imagePointY = clamp(untransformedY - layout.imageOffsetY, 0, layout.imageHeight);
 
-    // background-position is relative to the lens itself, not the page. Anchor
-    // the sampled source point to the lens centre. Including the source image's
-    // live CSS scale keeps 100% identical to the pixels directly underneath.
+    // background-position 是相對於鏡面本身，不是頁面：把取樣點對齊鏡面中心。
+    // 一併計入來源圖片當下的 CSS 縮放，100% 時才會和正下方的像素完全一致。
     const imageLeft = layout.lensWidth / 2 - imagePointX * transform.scaleX * this.zoom();
     const imageTop = layout.lensHeight / 2 - imagePointY * transform.scaleY * this.zoom();
     return `${imageLeft}px ${imageTop}px`;
@@ -210,21 +212,20 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     if (!this.enabled() || !this.persistentLens()) return;
 
     event.preventDefault();
-    // Wheel events can arrive after the pointer has moved. Refresh the source
-    // point first so the next zoom frame is anchored to the pixels under the
-    // pointer, not to the previous lens position.
+    // 滾輪事件可能在游標移動之後才到達：先更新取樣點，
+    // 讓下一幀的縮放對準游標下的像素，而不是上一次的鏡面位置。
     this.updatePosition(event.currentTarget as HTMLElement, event.clientX, event.clientY);
     const direction = event.deltaY < 0 ? 1 : -1;
     this.setZoom(this.zoom() + direction * this.zoomStep);
   }
 
-  /** Reset only the magnification, keeping the current lens position in view. */
+  /** 只重設倍率，鏡面維持目前位置 */
   resetZoom(): void {
     this.setZoom(this.baseZoom());
     this.pinchStartZoom = this.zoom();
   }
 
-  // ui-integration: 共用放大鏡保留商品頁的游標操作，並補上指標拖曳，讓長幅院藏影像可在觸控與滑鼠上檢視細節。
+  /** 指標按下：開始拖曳（滑鼠與觸控皆可）；第二指落下時轉為捏合縮放 */
   protected startDrag(event: PointerEvent): void {
     if (!this.enabled()) return;
     const host = event.currentTarget as HTMLElement;
@@ -383,7 +384,7 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     const { width, height } = this.hostSize(host);
     if (!width || !height) return;
 
-    // 以外框中心為軸做反向旋轉，把視窗座標換回宿主自己的座標系；未旋轉時等同原本的線性換算。
+    // 以外框中心為軸做反向旋轉，把視窗座標換回宿主自己的座標系；未旋轉時就是單純的線性換算。
     const angle = (((this.rotation() % 360) + 360) % 360) * (Math.PI / 180);
     const dx = clientX - (rect.left + rect.width / 2);
     const dy = clientY - (rect.top + rect.height / 2);
@@ -522,7 +523,7 @@ export class ImageMagnifier implements OnChanges, OnDestroy {
     const imageHeight = image.naturalHeight * scale;
     const lens = host.querySelector<HTMLElement>('.magnifier-lens');
 
-    // Keep the same centered object-fit geometry as the source image, including letterbox/crop.
+    // 與來源圖片相同的置中 object-fit 幾何，包含留白（contain）或裁切（cover）。
     this.layout.set({
       hostWidth,
       hostHeight,

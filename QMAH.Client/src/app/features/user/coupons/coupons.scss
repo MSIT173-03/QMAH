@@ -1,15 +1,13 @@
-/* ui-integration: 優惠券維持票券資訊架構，只把紫色品牌色收斂為 QMAH 的青綠／赭紅角色。 */
+/* ui-integration: 折價券維持票券資訊架構，只把紫色品牌色收斂為 QMAH 的青綠／赭紅角色。 */
 :host {
   display: block;
 
   min-height: 100vh;
 
   background:
-    linear-gradient(
-      180deg,
+    linear-gradient(180deg,
       var(--qmah-surface) 0%,
-      var(--qmah-page-surface) 100%
-    );
+      var(--qmah-page-surface) 100%);
 
   color: var(--qmah-ink);
 }
@@ -111,7 +109,7 @@
     box-shadow: var(--qmah-shadow-card);
   }
 
-  > div:nth-child(2) {
+  >div:nth-child(2) {
     display: flex;
     flex-direction: column;
 
@@ -131,11 +129,9 @@
   border-color: var(--qmah-border);
 
   background:
-    linear-gradient(
-      135deg,
+    linear-gradient(135deg,
       var(--qmah-surface-elevated) 0%,
-      var(--qmah-surface-soft) 100%
-    );
+      var(--qmah-surface-soft) 100%);
 
   box-shadow: var(--qmah-shadow-card);
 }
@@ -272,10 +268,8 @@
   display: grid;
 
   grid-template-columns:
-    repeat(
-      auto-fill,
-      minmax(340px, 1fr)
-    );
+    repeat(auto-fill,
+      minmax(340px, 1fr));
 
   gap: 20px;
 }
@@ -303,8 +297,7 @@
     border-color 0.22s ease;
 
   animation:
-    ticketEnter
-    0.45s ease both;
+    ticketEnter 0.45s ease both;
 
   &:hover {
     transform:
@@ -319,12 +312,10 @@
 
 .coupon-ticket.available {
   background:
-    linear-gradient(
-      145deg,
+    linear-gradient(145deg,
       var(--qmah-surface-elevated) 0%,
       var(--qmah-surface-elevated) 65%,
-      var(--qmah-surface-elevated) 100%
-    );
+      var(--qmah-surface-elevated) 100%);
 }
 
 
@@ -332,11 +323,9 @@
 .coupon-ticket.expired,
 .coupon-ticket.revoked {
   background:
-    linear-gradient(
-      145deg,
+    linear-gradient(145deg,
       var(--qmah-surface-elevated),
-      var(--qmah-surface-elevated)
-    );
+      var(--qmah-surface-elevated));
 }
 
 
@@ -389,8 +378,7 @@
 }
 
 
-.coupon-ticket.available
-.ticket-main::before {
+.coupon-ticket.available .ticket-main::before {
   content: '';
 
   position: absolute;
@@ -431,7 +419,7 @@
 
   gap: 9px;
 
-  > span {
+  >span {
     color: var(--qmah-text-subtle);
 
     font-size: 9px;
@@ -525,8 +513,7 @@
   font-weight: 750;
 
   animation:
-    warningPulse
-    2s ease-in-out infinite;
+    warningPulse 2s ease-in-out infinite;
 }
 
 
@@ -579,12 +566,9 @@
 }
 
 
-.coupon-ticket.used
-.discount-value,
-.coupon-ticket.expired
-.discount-value,
-.coupon-ticket.revoked
-.discount-value {
+.coupon-ticket.used .discount-value,
+.coupon-ticket.expired .discount-value,
+.coupon-ticket.revoked .discount-value {
   color: var(--qmah-text-muted);
 }
 
@@ -631,8 +615,7 @@
   margin: 0 13px;
 
   border-top:
-    1px dashed
-    var(--qmah-border);
+    1px dashed var(--qmah-border);
 
   span {
     display: none;
@@ -706,8 +689,7 @@
     13px 22px;
 
   border-top:
-    1px solid
-    var(--qmah-border);
+    1px solid var(--qmah-border);
 
   background:
     color-mix(in srgb, var(--qmah-surface-elevated) 65%, transparent);
@@ -736,8 +718,7 @@
   background: var(--qmah-primary-hover);
 
   animation:
-    greenPulse
-    2s infinite;
+    greenPulse 2s infinite;
 }
 
 
@@ -788,7 +769,7 @@
 
   text-align: center;
 
-  > div {
+  >div {
     font-size: 32px;
   }
 
@@ -996,8 +977,7 @@
 
   .coupons-page {
     padding:
-      24px 16px
-      50px;
+      24px 16px 50px;
   }
 
   .coupon-section {

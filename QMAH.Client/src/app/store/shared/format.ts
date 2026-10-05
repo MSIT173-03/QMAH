@@ -37,7 +37,7 @@ export function pad(value: number): string {
 
 /**
  * 折價券的折抵幅度標示（券面左側的大字）：PERCENT 的折抵值是百分比（10 代表 10% OFF），
- * 其餘（FIXED）為折抵金額。會員折價券與折價券商店共用，兩邊的標示才會一致。
+ * 其餘（FIXED）為折抵金額。會員折價券與兌換商店共用，兩邊的標示才會一致。
  */
 export function formatCouponOff(discountType: string, discountValue: number): string {
   const value = Number(discountValue);

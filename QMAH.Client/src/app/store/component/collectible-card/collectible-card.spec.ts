@@ -25,7 +25,7 @@ describe('CollectibleCard', () => {
 
   it('should preserve the full description and offer punctuation-aware wrapping', () => {
     const description =
-      '第一段文字用來超過舊版的七十二字限制，並確認逗號後可優先換行；第二段仍須完整顯示，不可以因為版面高度而被程式裁掉。最後一句必須完整保留。';
+      '第一段文字用來超過七十二個字，並確認逗號後可優先換行；第二段仍須完整顯示，不可以因為版面高度而被程式裁掉。最後一句必須完整保留。';
     fixture.componentRef.setInput('description', description);
     fixture.detectChanges();
 

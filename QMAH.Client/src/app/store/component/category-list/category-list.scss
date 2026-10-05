@@ -15,6 +15,8 @@
   text-align: left;
   font-family: inherit;
   font-size: var(--qmah-type-label-size);
+  /* 選項高度為文字行高的兩倍（覆蓋全站按鈕 44px 的觸控最小高度，那會讓選項約是文字的 2.4 倍） */
+  min-height: 2lh;
   color: var(--color-muted);
   transition: border-color 240ms ease, color 240ms ease, background 240ms ease;
 

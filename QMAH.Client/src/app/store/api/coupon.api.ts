@@ -41,7 +41,7 @@ function toStoreCoupon(coupon: ApiStoreCoupon): StoreCoupon {
   };
 }
 
-/** 折價券商店 API */
+/** 兌換商店 API：列出可用點數兌換的折價券，以及兌換 */
 @Injectable({ providedIn: 'root' })
 export class CouponApi {
   private readonly http = inject(HttpClient);

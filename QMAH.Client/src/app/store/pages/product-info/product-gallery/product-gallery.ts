@@ -4,9 +4,9 @@ import { ImageMagnifier, CollectibleCard } from '../../../component';
 type ViewMode = 'static' | 'dynamic';
 
 /**
- * 商品詳情的靜態視圖切換器。
- * 第一個視圖是明信片正面，第二個視圖是套組內縮小複製品使用的原文物影像；
- * 商品列表不使用此元件，因此仍維持低成本靜態縮圖。
+ * 商品詳情的圖庫：靜態檢視可在明信片正面與原文物原圖（套組內縮小複製品使用的影像）之間切換，
+ * 翻面檢視載入 app-collectible-card，可翻轉查看明信片背面的基本資料；兩種檢視都可旋轉觀看方向。
+ * 商品列表不使用此元件，仍維持低成本的靜態縮圖。
  */
 @Component({
   selector: 'app-product-gallery',
@@ -26,13 +26,13 @@ export class ProductGallery {
   /** 第二個視圖使用的原文物簡述。 */
   description = input('');
 
-  /** 靜態預覽是預設模式；動態模式只在詳情頁載入既有 3D 翻面。 */
+  /** 檢視模式：靜態（預設）或翻面（3D 明信片） */
   protected selectedMode = signal<ViewMode>('static');
   /** 靜態模式切換明信片正面與複製品原圖。 */
   protected selectedView = signal<'postcard' | 'original'>('postcard');
   /** 圖片載入後依原始比例切換版型；畫面不把方向印在明信片上。 */
   protected orientation = signal<'portrait' | 'landscape'>('landscape');
-  /** 旋轉整張卡片觀看，不改變單件商品原本的自動版型。 */
+  /** 是否旋轉 90 度觀看；只改變觀看方向，不改變依圖片判定的版型 */
   protected rotated = signal(false);
 
   /** 目前是否顯示靜態的明信片正面 */

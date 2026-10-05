@@ -4,6 +4,7 @@ import { catchError, map, of } from 'rxjs';
 import { Product } from '../../../api/api.models';
 import { Panel, SectionHead } from '../../../component';
 import { CatalogApi } from '../../../api';
+import { bumpAddToCart } from '../../../shared/bump';
 import { formatDateMD } from '../../../shared/format';
 import { PRODUCT_LIST_PATH, productPath } from '../../../shared/paths';
 import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView, toProductView } from '../../../shared/product-view';
@@ -33,7 +34,7 @@ export class NewArrivals {
   private readonly products = toSignal(
     inject(CatalogApi)
       .getProducts({ order: 3, pageSize: NEW_ARRIVAL_COUNT })
-      // 首頁輔助區塊：載入失敗時顯示空面板，不中斷整個首頁。
+      // 載入失敗時當作沒有新品（面板不顯示），不中斷整個首頁。
       .pipe(
         map((page) => page.items),
         catchError(() => of<Product[]>([])),
@@ -71,7 +72,13 @@ export class NewArrivals {
   /** 角標日期文字：清單已由新到舊排列，取第一件的上架日期（MM/DD） */
   protected tagText = computed(() => {
     const latest = this.products()[0];
-    // ui-integration: 缺少上架日期時使用可讀 fallback，避免 undefined/undefined 出現在正式商城文案。
+    // 缺少上架日期時改顯示「近期上架」，避免角標出現 undefined/undefined
     return latest?.listedAt ? `NEW · ${formatDateMD(latest.listedAt)}` : 'NEW · 近期上架';
   });
+
+  /** 按下「加入」：通知外部，並讓按鈕放大再還原一下 */
+  protected onAddToCart(productId: string, event: Event): void {
+    this.addToCart.emit(productId);
+    bumpAddToCart(event.currentTarget as HTMLElement);
+  }
 }

@@ -3,7 +3,7 @@ import { MemberProfile, Recipient } from '../../api/api.models';
 /**
  * 結帳頁面的頁面選項定義與換算規則。
  * 購物車內容、會員資料、配送／付款方式、折價券與點數規則皆由 API 取得（見 store/api）；
- * 所有金額（運費、折價券與點數折抵、應付總額）皆由 POST /checkout/quote 試算、POST /orders 確定，
+ * 所有金額（運費、折價券與點數折抵、應付總額）皆由 POST /store/checkout/quote 試算、POST /store/orders 確定，
  * 本檔僅存放結帳流程的表單設定與選項定義。
  */
 
@@ -97,7 +97,7 @@ export const POINT_MODES: PointMode[] = ['none', 'max', 'custom'];
 
 /**
  * 依折抵方式換算要折抵的點數，夾在 0 與持有點數之間（後端點數不足時會直接拒絕訂單）。
- * 折抵至上限時申請全部持有點數；依訂單金額的上限由 CheckoutApi.createOrder 送出前再夾限。
+ * 折抵至上限時申請全部持有點數；每單可折抵的上限由後端試算（OrderQuote.pointCap）決定，送出訂單前再夾限。
  */
 export function requestedPoints(mode: PointMode, customPoints: string, balance: number): number {
   const points = mode === 'max' ? balance : mode === 'custom' ? parseInt(customPoints || '0', 10) || 0 : 0;

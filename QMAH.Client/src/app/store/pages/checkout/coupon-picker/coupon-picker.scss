@@ -1,6 +1,4 @@
 :host {
-  --color-shade: var(--qmah-surface-soft);
-
   display: block;
 }
 
@@ -15,16 +13,12 @@
   align-items: center;
   gap: var(--qmah-space-3);
   text-align: left;
-  transition: border-color 160ms;
+  transition: border-color 160ms, background 160ms;
 
-  &:hover {
-    border-color: var(--color-line-mid);
-  }
-
-  /* 已選用：外框加深並鋪上淺灰底 */
+  /* 已選用：與按鈕（.btn-solid）相同的強調色底，文字改用強調色上的文字色 */
   &--active {
-    border-color: var(--color-line-mid);
-    background: var(--color-shade);
+    border-color: var(--color-accent);
+    background: var(--color-accent);
   }
 }
 
@@ -65,7 +59,15 @@
   color: var(--color-placeholder);
 }
 
-/* 已選用：狀態文字以強調色呈現 */
-.coupon-row--active .coupon-row-state {
-  color: var(--color-accent);
+/* 已選用：強調色底上的文字（說明與狀態略淡，維持層次） */
+.coupon-row--active {
+  .coupon-row-off,
+  .coupon-row-title,
+  .coupon-row-state {
+    color: var(--color-on-accent);
+  }
+
+  .coupon-row-cond {
+    color: color-mix(in srgb, var(--color-on-accent) 80%, transparent);
+  }
 }

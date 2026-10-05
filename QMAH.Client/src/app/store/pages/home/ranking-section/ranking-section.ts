@@ -1,16 +1,14 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, output, signal, viewChild } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 import { SectionHead, PillGroup, PillOption, ProductCard } from '../../../component';
 import { HomeApi } from '../../../api';
 import { pad } from '../../../shared/format';
+import { gridColumns } from '../../../shared/grid-columns';
 import { toProductView } from '../../../shared/product-view';
-import { BadgedProductView, RANKING_TABS } from '../home.data';
+import { BadgedProductView, HOME_PRODUCT_COUNT, HOME_PRODUCT_ROWS, RANKING_TABS } from '../home.data';
 
-/** 熱銷排行最多顯示的商品數量 */
-const RANKING_LIMIT = 10;
-
-/** 首頁「熱銷排行」區塊：可依分類分頁切換，最多顯示 10 件商品 */
+/** 首頁「熱銷排行」區塊：可依分類分頁切換，向 API 取 HOME_PRODUCT_COUNT 件商品，但固定只顯示兩行 */
 @Component({
   selector: 'app-ranking-section',
   imports: [SectionHead, PillGroup, ProductCard],
@@ -35,7 +33,7 @@ export class RankingSection {
   protected rankingItems = toSignal(
     toObservable(this.activeTab).pipe(
       switchMap((tab) =>
-        this.homeApi.getRankings({ cat: tab === 0 ? undefined : this.tabs[tab], limit: RANKING_LIMIT }),
+        this.homeApi.getRankings({ cat: tab === 0 ? undefined : this.tabs[tab], limit: HOME_PRODUCT_COUNT }),
       ),
       map((items): BadgedProductView[] =>
         items.map((item, i) => ({ ...toProductView(item), badge: `#${pad(i + 1)}`, badgeVariant: 'ink' })),
@@ -43,6 +41,11 @@ export class RankingSection {
     ),
     { initialValue: [] },
   );
+
+  private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
+  private readonly columns = gridColumns(this.grid);
+  /** 實際顯示的商品：欄數 × 固定行數，超出的不渲染 */
+  protected visibleItems = computed(() => this.rankingItems().slice(0, this.columns() * HOME_PRODUCT_ROWS));
 
   /** 切換分類分頁 */
   protected pickTab(index: number): void {

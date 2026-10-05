@@ -1,15 +1,22 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { LucideX } from '@lucide/angular';
 import { catchError, of, switchMap } from 'rxjs';
 
-import { Breadcrumb, BreadcrumbItem, CouponRedeemDialog, EmptyState, PageTitleRow, SessionBar } from '../../component';
-import { CouponApi } from '../../api';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  CouponRedeemDialog,
+  EmptyState,
+  PageTitleRow,
+  SessionBar,
+} from '../../component';
+import { CouponApi, MemberApi } from '../../api';
 import { HOME_PATH } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
-import { formatNumber } from '../../shared/format';
+import { formatDateMD, formatNumber } from '../../shared/format';
 
 /** 兌換成功後頁面會重新整理，結果訊息暫存在 sessionStorage，等重新載入完成後再顯示 */
 const REDEEM_NOTICE_KEY = 'qmah.store.couponRedeemNotice';
@@ -22,31 +29,40 @@ interface RedeemTarget {
 }
 
 /** 兌換成功訊息自動消失前的停留時間（毫秒） */
-const FEEDBACK_AUTO_DISMISS_MS = 10_000;
+const FEEDBACK_AUTO_DISMISS_MS = 5_000;
 /** 訊息淡出的時間（毫秒），需與 coupon-store.scss 的 .coupon-feedback 過渡時間一致 */
 const FEEDBACK_FADE_MS = 300;
 
 /**
- * 折價券商店頁面：列出目前可用點數兌換的折價券（GET /store/coupons，後端已篩選啟用、期間內且有兌換點數者）。
+ * 兌換商店頁面（上方為「我的折價券」，下方為「兌換商店」）：列出目前可用點數兌換的折價券（GET /store/coupons，後端已篩選啟用、期間內且有兌換點數者）。
  * 按下券面右側的點數區塊即兌換：未登入先跳出登入提示，已登入則先跳出確認視窗，
  * 確認後呼叫 POST /store/coupons/{id}/redeem（點數檢查、扣點與發券都在後端同一個交易內完成）。
  */
 @Component({
   selector: 'app-coupon-store',
   host: { class: 'store-app' },
-  imports: [SessionBar, Breadcrumb, PageTitleRow, EmptyState, CouponRedeemDialog, LucideX],
+  imports: [
+    SessionBar,
+    Breadcrumb,
+    PageTitleRow,
+    EmptyState,
+    CouponRedeemDialog,
+    LucideX,
+    NgTemplateOutlet,
+  ],
   templateUrl: './coupon-store.html',
   styleUrl: './coupon-store.scss',
 })
 export class CouponStore {
   private readonly couponApi = inject(CouponApi);
+  private readonly memberApi = inject(MemberApi);
   private readonly document = inject(DOCUMENT);
 
   /** 頁面持有的購物車狀態，供頂部公告列顯示與登入提示共用 */
   protected readonly cart = injectCartState();
 
   /** 麵包屑導覽項目 */
-  protected readonly breadcrumbItems: BreadcrumbItem[] = [{ label: '首頁', href: HOME_PATH }, { label: '折價券商店' }];
+  protected readonly breadcrumbItems: BreadcrumbItem[] = [{ label: '首頁', href: HOME_PATH }, { label: '折價券' }];
 
   /** 按下「重新載入」的次數，變動時重新查詢 */
   private readonly reloadCount = signal(0);
@@ -74,12 +90,36 @@ export class CouponStore {
     (this.result() ?? []).map((coupon) => ({
       ...coupon,
       costLabel: `${formatNumber(coupon.pointCost)} 點`,
-      validityLabel: `兌換後 ${coupon.validityDays} 天內有效`,
-      endLabel: `${coupon.endDate} 前可兌換`,
+      // 券面中間欄的說明行（與「我的折價券」共用同一個券面樣板）
+      metas: [coupon.cond, `兌換後 ${coupon.validityDays} 天內有效`, `${coupon.endDate} 前可兌換`],
     })),
   );
   protected readonly isEmpty = computed(() => !!this.result() && this.coupons().length === 0);
-  protected readonly countLabel = computed(() => `${this.coupons().length} 張折價券`);
+
+  /* ===============================
+     我的折價券
+     =============================== */
+
+  /** 是否顯示「我的折價券」：只有登入的會員才有持有的折價券 */
+  protected readonly showOwned = computed(() => this.cart.signedIn() === true);
+
+  /** 帳號持有且可使用的折價券；undefined 代表尚在載入，null 代表未登入（不顯示這個區塊） */
+  private readonly ownedResult = toSignal(
+    toObservable(this.cart.signedIn).pipe(
+      switchMap((signedIn) => (signedIn ? this.memberApi.getCoupons() : of(null))),
+    ),
+  );
+  protected readonly ownedLoading = computed(() => this.showOwned() && this.ownedResult() === undefined);
+  /** 供模板顯示的持有折價券，券面與商店的折價券同一個形式，右側改顯示到期日 */
+  protected readonly ownedCoupons = computed(() =>
+    (this.ownedResult() ?? []).map((coupon) => ({
+      id: coupon.id,
+      off: coupon.off,
+      title: coupon.title,
+      metas: [coupon.cond, coupon.due ? `${coupon.due} 前有效` : '長期有效'],
+      dueLabel: coupon.due ? `${formatDateMD(coupon.due)} 到期` : '長期有效',
+    })),
+  );
 
   /** 固定的版面文字 */
   protected readonly emptyTitle = '目前沒有可兌換的折價券';
@@ -89,6 +129,8 @@ export class CouponStore {
   protected readonly errorCtaLabel = '重新載入';
   /** 所需點數上方的動作字樣 */
   protected readonly costActionLabel = '兌換';
+  /** 我的折價券右側區塊的標示 */
+  protected readonly ownedLabel = '持有中';
 
   /** 登入提示的說明文字（兌換需要登入） */
   protected readonly loginMessage = '兌換折價券需要先登入會員，是否前往登入頁？登入後會回到目前頁面。';
@@ -116,7 +158,7 @@ export class CouponStore {
     const notice = this.takeRedeemNotice();
     if (notice) this.feedback.set({ kind: 'success', text: notice });
 
-    // 成功訊息顯示 10 秒後自動淡出（清單載入完成、訊息真正顯示出來才開始計時）；錯誤訊息保留到使用者關閉。
+    // 成功訊息顯示 5 秒後自動淡出（清單載入完成、訊息真正顯示出來才開始計時）；錯誤訊息保留到使用者關閉。
     effect((onCleanup) => {
       if (this.loading() || this.feedback()?.kind !== 'success') return;
       const timer = setTimeout(() => this.dismissFeedback(), FEEDBACK_AUTO_DISMISS_MS);

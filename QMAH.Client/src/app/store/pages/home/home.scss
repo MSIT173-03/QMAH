@@ -14,57 +14,17 @@
   gap: var(--qmah-space-12);
 }
 
-.hero-section {
-  display: grid;
-  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
-  gap: var(--qmah-space-3);
-
-  /* 資料為空時折疊對應 host，避免保留無內容的 grid 欄位。 */
-  &:has(> app-hero-carousel:empty) {
-    grid-template-columns: minmax(0, 1fr);
-
-    > app-hero-carousel {
-      display: none;
-    }
-  }
-
-  &:has(> .hero-sidebar > app-flash-sale:empty):has(> .hero-sidebar > app-mini-coupons:empty) {
-    grid-template-columns: minmax(0, 1fr);
-
-    > .hero-sidebar {
-      display: none;
-    }
-  }
-
-  &:has(> app-hero-carousel:empty):has(> .hero-sidebar > app-flash-sale:empty):has(> .hero-sidebar > app-mini-coupons:empty) {
-    display: none;
-  }
-}
-
 .entry-section {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--qmah-space-6);
 
-  /* 其中一欄沒有資料時改為單欄，另一欄取得全部寬度。 */
-  &:has(> :empty) {
-    grid-template-columns: minmax(0, 1fr);
-
-    > :empty {
-      display: none;
-    }
-  }
-
-  &:has(> app-category-grid:empty):has(> app-brand-hall:empty) {
+  /* 資料為空的區塊不佔列，避免多出一段空白間距。 */
+  > :empty {
     display: none;
   }
-}
 
-/* ui-integration: 商城保留桌面雙欄構圖，但在手機先讓內容各自取得可讀寬度，避免商品名稱被壓成直排。 */
-@media (max-width: 720px) {
-  .hero-section,
-  .entry-section {
-    grid-template-columns: minmax(0, 1fr);
+  &:has(> app-category-grid:empty):has(> app-era-grid:empty) {
+    display: none;
   }
 }

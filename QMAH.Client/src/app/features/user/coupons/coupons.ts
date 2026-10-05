@@ -113,7 +113,7 @@ export class Coupons implements OnInit {
 
 
   // ===============================
-  // 篩選後優惠券
+  // 篩選後折價券
   // ===============================
 
   get filteredCoupons(): MemberCoupon[] {
@@ -171,7 +171,7 @@ export class Coupons implements OnInit {
         return '已過期';
 
       default:
-        return '全部優惠券';
+        return '全部折價券';
 
     }
 
@@ -394,7 +394,7 @@ export class Coupons implements OnInit {
           data: MemberCoupon[]
         ) => {
 
-          // integration: 優惠券清單不需在 console 留存，避免正式環境輸出會員資產資料。
+          // integration: 折價券清單不需在 console 留存，避免正式環境輸出會員資產資料。
           // console.log('coupons:', data);
 
           this.coupons = data;
@@ -414,7 +414,7 @@ export class Coupons implements OnInit {
           );
 
           this.errorMessage =
-            '讀取優惠券資料失敗';
+            '讀取折價券資料失敗';
 
           this.loading = false;
 

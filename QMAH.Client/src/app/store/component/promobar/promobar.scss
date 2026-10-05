@@ -56,6 +56,11 @@
   color: var(--color-accent);
 }
 
+/* 購物車件數：要有行內區塊才能套用縮放動畫（行內元素不吃 transform） */
+.promobar-count {
+  display: inline-block;
+}
+
 /* 懸浮面板內容的樣式（面板本身的外框與開關動畫在 app-promobar-panel）。
    面板內的每個子項目都有 .panel-item：列（.panel-row）可點擊並有懸停外框，
    說明或連結（.panel-note）是置中的小字。 */

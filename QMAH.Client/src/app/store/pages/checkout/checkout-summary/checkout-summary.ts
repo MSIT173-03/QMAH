@@ -1,13 +1,13 @@
 import { Component, computed, input, output } from '@angular/core';
 import { Panel } from '../../../component';
 import { OrderQuote } from '../../../api/api.models';
-import { formatCut, formatMoney, formatNumber, formatShippingFee } from '../../../shared/format';
+import { formatCut, formatMoney, formatShippingFee } from '../../../shared/format';
 import { CART_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
 
 /**
  * 結帳頁側欄的訂單金額摘要。
- * 商品行小計、各項折抵、運費、應付總額與回饋點數皆來自後端的訂單試算結果，本元件只負責格式化顯示。
+ * 商品行小計、各項折抵、運費與應付總額皆來自後端的訂單試算結果，本元件只負責格式化顯示。
  */
 @Component({
   selector: 'app-checkout-summary',
@@ -20,8 +20,6 @@ export class CheckoutSummary {
   quote = input<OrderQuote | null>(null);
   /** 選用的配送方式名稱 */
   shipName = input('');
-  /** 正式配送／付款選項是否已啟用；契約未完成時禁止送出。 */
-  checkoutEnabled = input(false);
   /** 是否已按下確認下單 */
   submitted = input(false);
   /** 收件資訊必填欄位是否皆已填妥 */
@@ -56,16 +54,9 @@ export class CheckoutSummary {
   protected shipFeeLabel = computed(() => formatShippingFee(this.quote()?.shippingFee ?? 0));
   /** 應付總額顯示文字 */
   protected totalLabel = computed(() => formatMoney(this.quote()?.payable ?? 0));
-  /** 回饋點數顯示文字 */
-  protected earnLabel = computed(() => formatNumber(this.quote()?.pointsEarned ?? 0));
 
-  /** 訂單成立或結帳能力停用時，按鈕文字要直接反映真實狀態。 */
-  protected submitLabel = computed(() => {
-    if (this.placed()) return '訂單已送出';
-    return this.checkoutEnabled() ? '確認下單' : '結帳目前未啟用';
-  });
-  /** 使用原生 disabled，讓滑鼠、鍵盤與輔助工具都不會把停用的下單當成可操作。 */
-  protected submitDisabled = computed(() => !this.checkoutEnabled() || this.placed());
+  /** 下單按鈕文字：訂單成立後改為「訂單已送出」 */
+  protected submitLabel = computed(() => (this.placed() ? '訂單已送出' : '確認下單'));
   /** 已送出但必填欄位未填妥時，顯示補填提示 */
   protected showMissing = computed(() => this.submitted() && !this.valid());
 

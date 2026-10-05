@@ -64,14 +64,7 @@ describe('Cart add-ons', () => {
   // 青銅器共 3 件（2 個品項），陶瓷 2 件：件數最多的器類是青銅器。
   const cart: ShoppingCart = {
     items: [cartItem('bronze-1', '青銅器', 1), cartItem('ceramic-1', '陶瓷', 2), cartItem('bronze-2', '青銅器', 2)],
-    amounts: {
-      subtotal: 500,
-      itemDiscount: 0,
-      shippingFee: null,
-      payable: 500,
-      freeShippingThreshold: null,
-      freeShippingShortfall: null,
-    },
+    amounts: { subtotal: 500, itemDiscount: 0, payable: 500 },
   };
   let productQueries: ProductQuery[];
   /** 測試中的購物車狀態；加入時與後端相同：已有同商品則累加數量，否則新增一行 */

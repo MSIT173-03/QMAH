@@ -3,7 +3,7 @@
 
 <!-- 網站頁首：搜尋框 -->
 <app-site-header>
-  <!-- 站內搜尋框（列表頁精簡版：不顯示熱門搜尋與建議下拉） -->
+  <!-- 站內搜尋框（列表頁精簡版：寬度可隨頁首伸縮） -->
   <app-search-bar [compact]="true" [(value)]="searchInput" (search)="onSearch($event)" />
 </app-site-header>
 
@@ -33,38 +33,41 @@
 
     <!-- 右側商品區：依顯示模式切換卡片格狀或橫列清單，無結果時顯示空狀態 -->
     <div class="section-block">
-    @if (loading()) {
-      <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark" aria-hidden="true"></span><span>正在整理商品清單…</span></section>
-    } @else if (loadError()) {
-      <app-empty-state [title]="errorTitle" [desc]="errorDesc" [ctaLabel]="errorCtaLabel" ctaMode="button"
-        (ctaClick)="onReload()" />
-    } @else if (isEmpty()) {
-      <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" ctaMode="button"
-        (ctaClick)="onReset()" />
+      @if (loading()) {
+        <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark" aria-hidden="true"></span><span>正在整理商品清單…</span></section>
+      } @else if (loadError()) {
+        <app-empty-state [title]="errorTitle" [desc]="errorDesc" [ctaLabel]="errorCtaLabel" ctaMode="button"
+          (ctaClick)="onReload()" />
+      } @else if (isEmpty()) {
+        <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" ctaMode="button"
+          (ctaClick)="onReset()" />
       } @else if (isGridMode()) {
-      <!-- 卡片格狀顯示 -->
-      <div class="card-grid">
-        @for (item of items(); track item.id) {
-        <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage" [badge]="item.cat"
-          badgeVariant="teal" [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
-          [rating]="item.rating" [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
-        }
-      </div>
+        <!-- 卡片格狀顯示 -->
+        <div class="card-grid">
+          @for (item of items(); track item.id) {
+            <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage" [badge]="item.cat"
+              badgeVariant="teal" [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
+              [rating]="item.rating" [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
+          }
+        </div>
       } @else {
-      <!-- 橫列清單顯示 -->
-      <div class="product-row-list">
-        @for (item of items(); track item.id) {
-        <app-product-row [id]="item.id" [coverImage]="item.coverImage" [brand]="item.brand" [cat]="item.cat"
-          [name]="item.name" [source]="item.source" [price]="item.price" [was]="item.was" [rating]="item.rating"
-          [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
-        }
-      </div>
-      }
-
-      <!-- 分頁切換 -->
-      @if (!isEmpty() && !loadError()) {
-      <app-pagination [page]="pageIndex()" [totalPages]="totalPages()" (pick)="onPagePick($event)" />
+        <!-- 橫列清單顯示 -->
+        <div class="product-row-list">
+          @for (item of items(); track item.id) {
+            <app-product-row [id]="item.id" [coverImage]="item.coverImage" [brand]="item.brand" [cat]="item.cat"
+              [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating"
+              [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
+          }
+        </div>
       }
     </div>
   </div>
+
+  <!-- 分頁切換：放在側欄所在的容器之外。側欄以 sticky 黏著，範圍是它的容器；分頁若在容器內，
+       捲到底時側欄會延伸到分頁列，而不是停在最後一排商品卡片的底端。 -->
+  @if (!isEmpty() && !loadError()) {
+  <div class="list-pagination">
+    <app-pagination [page]="pageIndex()" [totalPages]="totalPages()" (pick)="onPagePick($event)" />
+  </div>
+  }
 </div>

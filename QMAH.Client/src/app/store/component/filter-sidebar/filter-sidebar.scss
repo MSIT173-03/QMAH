@@ -7,7 +7,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--qmah-space-4);
-  /* 92px 為頁首高度，捲動時側欄固定於頁首下方 */
+  /* 捲動時側欄固定：top 由元件依側欄與視窗的高度即時算出（見 filter-sidebar.ts 的 stickyTop），
+     這裡的 92px（頁首高度）只是尚未計算前的預設值 */
   position: sticky;
   top: 92px;
 }
@@ -32,7 +33,7 @@
   font-weight: 500;
 }
 
-/* 面板標題列：可點擊展開／收合，樣式與原本靜態的 label-tag 標題外觀一致 */
+/* 面板標題列：可點擊展開／收合，外觀與 label-tag 標題一致 */
 .filter-panel-head {
   width: 100%;
   border: 0;
@@ -58,20 +59,25 @@
 
 /*
  * 面板內容收合動畫：分類／年代項目數量不固定、無法預先量出實際高度，
- * 改用 max-height 搭配足夠大的上限值做過場；內容比上限矮時，內容一顯示完
- * 動畫即結束，不會被硬拉滿整個過場時間。收合時額外把 app-panel 的 gap 用
- * 負 margin 抵掉，避免標題下方留下一截空隙。
+ * 用 grid 的列高 0fr ↔ 1fr 做過場，高度永遠等於內容的實際高度，沒有上限、不會把後面的選項切掉。
+ * 收合時額外把 app-panel 的 gap 用負 margin 抵掉，避免標題下方留下一截空隙。
  */
 .filter-panel-collapse {
-  overflow: hidden;
-  max-height: 0;
+  display: grid;
+  grid-template-rows: 0fr;
   margin-top: calc(-1 * var(--qmah-space-2));
-  transition: max-height 260ms ease, margin-top 220ms ease;
+  transition: grid-template-rows 260ms ease, margin-top 220ms ease;
 
   &--open {
-    max-height: 640px;
+    grid-template-rows: 1fr;
     margin-top: 0;
   }
+}
+
+/* 內層負責裁切：列高收到 0 時內容被藏起來，展開時完整顯示 */
+.filter-panel-collapse-inner {
+  min-height: 0;
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -81,6 +87,6 @@
 }
 
 @media (max-width: 720px) {
-  /* ui-integration: 窄螢幕由頁面順序承擔篩選，不讓側欄固定在商城頁首下方遮住商品。 */
+  /* 窄螢幕不固定側欄：篩選依頁面順序呈現，避免側欄固定在頁首下方遮住商品 */
   .filter-sidebar { position: static; }
 }
