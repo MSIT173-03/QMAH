@@ -3,16 +3,13 @@
 *, *::before, *::after { box-sizing: border-box; }
 .result-shell { position:absolute; inset:0; overflow:hidden; background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground); color:var(--game-table-ink); }
 .result-sheet { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto minmax(0,1fr); gap:20px 32px; min-height:100%; align-content:center; padding:clamp(16px,2.5vw,40px) clamp(16px,4vw,64px); color:var(--game-table-ink); }
-.result-banner { grid-column:1/-1; }
-.result-banner h2 { @include ui.title; margin:0; font-size:clamp(24px,3vw,34px); line-height:1.35; text-wrap:balance; color:var(--game-table-ink); }
-.result-banner p { display:flex; flex-wrap:wrap; gap:4px 16px; margin:10px 0 0; color:var(--game-table-muted); font-size:16px; line-height:1.6; }
-.result-banner p span { text-wrap:pretty; }
 .result-gallery { align-self:center; min-width:0; width:min(100%,640px); justify-self:center; }
-.result-gallery figure { @include ui.paper-panel; margin:0; padding:14px 14px 12px; box-shadow:inset 0 0 0 2px #c7b090, 0 14px 26px #14291c66; transform:rotate(-2deg); animation:result-deal 480ms cubic-bezier(.16,1,.3,1) both; }
+.result-gallery figure { @include ui.paper-panel; margin:0; padding:14px 14px 12px; box-shadow:inset 0 0 0 2px #e3d2a8, 0 14px 26px #14291c66; transform:rotate(-2deg); animation:result-deal 480ms cubic-bezier(.16,1,.3,1) both; }
 .result-gallery figure:nth-child(2) { animation-delay:90ms; }
 .result-gallery figure:nth-child(3) { animation-delay:180ms; }
 .result-gallery figure:nth-child(4) { animation-delay:270ms; }
 .result-gallery img { display:block; width:100%; height:min(43dvh,390px); object-fit:contain; }
+.result-gallery figcaption a { display: inline-flex; align-items: center; min-height: 40px; }
 .result-gallery figcaption { padding-top:10px; text-align:center; font-size:16px; font-weight:700; }
 .result-gallery a { color:var(--game-card-ink); text-underline-offset:4px; }
 .result-gallery.is-memory { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
@@ -21,46 +18,13 @@
 .is-memory img { height:clamp(80px,14dvh,140px); }
 .is-memory figcaption { font-size:14px; overflow-wrap:anywhere; }
 .result-image-fallback { display:grid; place-items:center; min-height:140px; color:var(--game-card-muted); }
-.result-summary { @include ui.control-housing(true); display:grid; align-self:center; gap:16px; min-width:0; padding:24px 26px; box-shadow:inset 0 0 0 2px #c7b090, 0 16px 30px #14291c66; animation:result-deal 520ms 120ms cubic-bezier(.16,1,.3,1) both; }
-app-game-reward-meter { grid-column:1/-1; margin-top:20px; --reward-meter-margin:0 auto; --reward-meter-heading-padding:8px 10px; }
-.result-award { display:flex; align-items:center; gap:20px; }
-.result-grade { flex:0 0 112px; min-height:96px; display:grid; place-items:center; border:8px solid transparent; border-image:var(--game-button-ochre-image) 5 fill / 1 / 0 stretch; color:#fff9e8; }
-.result-grade span { font-size:14px; }
-.result-grade strong { font:700 44px/1 var(--qmah-font-serif); }
-.result-grade.is-fail { border-image-source:var(--game-button-marsala-image); }
-.result-grade.is-fail strong { font-size:18px; white-space:nowrap; }
-.result-grade:not(.is-fail) { grid-template-rows:20px 100px; gap:6px; min-height:128px; border:0; color:#3d2d1d; background:url('/assets/game/kenney-medal.svg#bronze') center bottom / 100px 100px no-repeat; animation:medal-pop 640ms 420ms cubic-bezier(.34,1.56,.64,1) both; }
-.result-grade:not(.is-fail) strong { font-size:40px; }
-.result-grade[data-grade='A'] { background-image:url('/assets/game/kenney-medal.svg#silver'); }
-.result-grade[data-grade='S'] { background-image:url('/assets/game/kenney-medal.svg#gold'); }
-.result-score { font-size:clamp(36px,4vw,48px); line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; }
-.result-score small { font-size:18px; }
-.result-award-copy { margin:6px 0 0; font-size:14px; color:var(--game-card-muted); }
-.result-facts, .result-rewards dl { display:flex; flex-wrap:wrap; gap:12px 28px; margin:0; }
-.result-facts { padding-block:14px; border-block:2px dashed #c7b090; }
-.result-facts dt, .result-rewards dt { color:var(--game-card-muted); font-size:14px; }
-.result-facts dd, .result-rewards dd { margin:3px 0 0; font-size:22px; font-variant-numeric:tabular-nums; }
-.result-rewards h3 { margin:0 0 10px; font-size:18px; }
-.result-rewards dd { font-weight:800; color:#805a23; }
-.result-rewards p { margin:8px 0 0; font-size:14px; color:var(--game-card-muted); }
-.result-actions { display:flex; flex-wrap:wrap; gap:10px; }
-.result-actions button { @include ui.button; flex:1 0 120px; }
-.result-actions .secondary { @include ui.button(true); }
-.result-links { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
-.result-links button { @include ui.button(true); font-size:14px; }
-.result-links a { display:inline-flex; align-items:center; min-height:44px; color:var(--qmah-game-action); font-size:14px; text-underline-offset:4px; }
-.result-rules { @include ui.paper-panel; @include ui.reading-surface(true); position:fixed; inset:0; margin:auto; width:min(480px,calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 32px); padding:24px; overflow:auto; box-shadow:0 20px 60px #14291c66; }
-.result-rules h3 { margin:0 0 16px; font-size:22px; }
-.result-rules p { @include ui.prose; }
-.result-rules button { @include ui.button(true); width:100%; }
+.result-summary { @include ui.control-housing(true); display:grid; align-self:center; gap:16px; min-width:0; padding:24px 26px; box-shadow:inset 0 0 0 2px #e3d2a8, 0 16px 30px #14291c66; animation:result-deal 520ms 120ms cubic-bezier(.16,1,.3,1) both; }
 button:focus-visible, a:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; }
 button:disabled { opacity:.55; }
 @keyframes result-deal { from { opacity:0; translate:0 22px; scale:.96; } to { opacity:1; translate:0 0; scale:1; } }
-@keyframes medal-pop { from { opacity:0; scale:.3; rotate:-18deg; } to { opacity:1; scale:1; rotate:0deg; } }
 .game-result-enter { animation:result-reveal 320ms ease-out; }
 @keyframes result-reveal { from { opacity:.5; } to { opacity:1; } }
 @media (max-width:800px) {
-  .result-banner p { flex-direction:column; align-items:flex-start; }
   .result-sheet { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto; align-content:start; padding:16px; }
   .result-summary { grid-row:2; }
   .result-gallery { grid-row:3; }
@@ -71,12 +35,207 @@ button:disabled { opacity:.55; }
 @media (max-width:450px) {
   .result-sheet { padding:12px; }
   .result-summary { padding:16px; }
-  .result-award { display:grid; grid-template-columns:72px minmax(0,1fr); gap:12px; }
-  .result-award > div:last-child { display:contents; }
-  .result-score { grid-column:2; grid-row:1; }
-  .result-award-copy { grid-column:1 / -1; margin:0; text-wrap:balance; }
-  .result-grade { flex-basis:72px; min-height:86px; }
-  .result-grade:not(.is-fail) { grid-template-rows:20px 64px; min-height:88px; background-size:64px 64px; }
-  .result-links { justify-content:center; }
 }
 @media (prefers-reduced-motion:reduce) { .game-result-enter, .result-gallery figure, .result-summary, .result-grade { animation:none !important; } }
+
+// ── 版面與字級：標題 34／副標 16／卡片標題 18／標籤 14／數字 800 ──
+.result-banner { grid-column: 1 / -1; display: grid; gap: 12px; }
+.result-banner h2 { margin: 0; color: var(--game-table-ink); font: 800 clamp(26px, 3vw, 32px) / 1.3 var(--qmah-font-sans); text-shadow: 0 2px 0 #1d4635; text-wrap-style: balance; }
+.result-banner p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 0; color: var(--game-table-muted); font-size: 16px; line-height: 1.6; }
+.result-level { padding: 1px 12px; border: 2px solid #0f1b14; border-radius: 999px; color: #2b2108; background: var(--game-button-ochre-image); font-size: 14px; font-weight: 800; }
+.result-left { display: grid; align-content: center; gap: 18px; min-width: 0; }
+.result-left app-game-reward-meter { --reward-meter-margin: 0; }
+.result-label { color: var(--game-card-muted); font-size: 14px; font-weight: 700; letter-spacing: .04em; }
+// 獎牌：緞帶加鋸齒外圈的圓章，依評級換色
+.result-award { align-items: center; }
+.result-medal { --m1: #ffe9a3; --m2: #d79a22; --edge: #5a4210; --ink: #2b2610; flex: none; filter: drop-shadow(0 6px 8px #14291c55); }
+.result-medal[data-grade='A'] { --m1: #f4f6fb; --m2: #a3abc2; --edge: #4a5470; --ink: #2a3248; }
+.result-medal[data-grade='B'] { --m1: #f0be8a; --m2: #b06a32; --edge: #3b2a12; --ink: #2b2610; }
+.result-medal[data-grade='C'] { --m1: #e6e8ef; --m2: #b4b9cb; --edge: #4a5068; --ink: #2a3248; }
+.result-medal[data-grade='FAIL'] { --m1: #e7b0aa; --m2: #b5524c; --edge: #5c1f2c; --ink: #4a1620; }
+.result-medal svg { display: block; width: 100%; height: auto; overflow: visible; }
+.medal-ribbon { fill: #3f6fb4; stroke: #0f1b14; stroke-width: 3; stroke-linejoin: round; }
+.medal-scallop { fill: none; stroke: var(--edge); stroke-width: 9; stroke-dasharray: 7.2 4.4; }
+.medal-disc { fill: var(--m2); stroke: #0f1b14; stroke-width: 3; }
+.medal-ring { fill: var(--m1); stroke: var(--edge); stroke-width: 3; }
+.result-medal text { fill: var(--ink); font-family: var(--qmah-font-serif, serif); font-weight: 800; }
+.result-score-block { display: grid; gap: 4px; min-width: 0; }
+.result-score { display: flex; align-items: baseline; gap: 8px; color: #2d4a3a; font: 800 clamp(48px, 5vw, 64px)/1 var(--qmah-font-sans); font-variant-numeric: tabular-nums; }
+.result-score small { font-size: 20px; font-weight: 700; }
+.result-award-copy { margin: 4px 0 0; color: var(--game-card-muted); font-size: 16px; line-height: 1.55; text-wrap-style: balance; }
+.result-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 0; padding-block: 14px; border-block: 2px dashed #e3d2a8; }
+.result-facts dt { color: var(--game-card-muted); font-size: 14px; font-weight: 700; }
+.result-facts dd { margin: 2px 0 0; font: 800 26px/1.2 var(--qmah-font-sans); font-variant-numeric: tabular-nums; }
+.result-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.result-actions button { @extend %ui-btn; min-height: 52px; font-size: 17px; }
+.result-actions .secondary { @extend %ui-btn-2; }
+.result-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.result-info { @extend %ui-btn-2; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; }
+.result-info span { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 2px solid #0f1b14; border-radius: 50%; background: #fff8e9; font: 800 14px/1 var(--qmah-font-sans); }
+.result-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--qmah-game-action); font-size: 15px; font-weight: 700; text-underline-offset: 4px; }
+@keyframes medal-pop { from { opacity: 0; scale: .3; rotate: -18deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
+@media (max-width: 800px) {
+  .result-sheet { grid-template-rows: auto auto auto; }
+  .result-summary { grid-row: 2; }
+  .result-left { grid-row: 3; }
+}
+@media (max-width: 450px) {
+  .result-award { gap: 14px; }
+  .result-medal { width: 96px; }
+  .result-actions { grid-template-columns: 1fr; }
+  .result-links { justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) { .result-medal, .reward-tile b { animation: none; } }
+
+// 好成績的慶祝：彩紙噴出、獎牌後面的光暈呼吸
+.confetti { position: absolute; width: 0; height: 0; pointer-events: none; }
+.confetti i { position: absolute; width: 10px; height: 16px; border: 1.5px solid #0f1b14; border-radius: 2px; opacity: 0; animation: confetti-burst 1500ms var(--delay, 0ms) cubic-bezier(.12, .8, .3, 1) both; }
+@keyframes confetti-burst { 0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(.4); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 90px)) rotate(var(--rot)) scale(1); } }
+.result-medal.is-celebrating::before { content: ''; position: absolute; inset: -24px; z-index: -1; border-radius: 50%; background: radial-gradient(circle, #fff3b0cc, transparent 66%); animation: medal-glow 2.4s ease-in-out infinite; }
+.result-medal.is-celebrating .medal-scallop { animation: medal-sparkle 2.4s ease-in-out infinite; }
+@keyframes medal-glow { 0%, 100% { opacity: .5; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.08); } }
+@keyframes medal-sparkle { 50% { stroke: #fff3b0; } }
+@media (prefers-reduced-motion: reduce) { .confetti { display: none; } .result-medal.is-celebrating::before, .result-medal.is-celebrating .medal-scallop { animation: none; } }
+
+// 入帳動畫：數字從 0 往上跳，圖示彈出、閃光，不再用進度條（頂端狀態列才是進度條）
+@property --n { syntax: '<integer>'; inherits: false; initial-value: 0; }
+
+// 一個畫面放得下：框、導覽列之下直接是兩欄，不再需要捲動
+@media (min-width: 801px) {
+  .result-shell { background: none; }
+  .result-sheet { align-content: start; gap: 14px 24px; padding: clamp(8px, 1.4dvh, 16px) clamp(8px, 1.5vw, 20px) 10px; min-height: 0; }
+  .result-gallery figure { padding: 10px 10px 8px; }
+  .result-gallery img { height: clamp(140px, 30dvh, 300px); }
+  .result-gallery figcaption { padding-top: 6px; font-size: 15px; }
+  .result-left { gap: 12px; align-self: start; }
+  .result-summary { align-self: start; }
+}
+
+// ── 結算的成就感：標語、獎牌蓋章、光芒、星星、分數跳動，依評級放大或收斂 ──
+.result-sheet { --glow: #ffffff22; --accent: #f0c24a; }
+.result-sheet[data-grade='S'] { --glow: #ffe08a66; --accent: #f0c24a; }
+.result-sheet[data-grade='A'] { --glow: #dfe6ff55; --accent: #b9c6ec; }
+.result-sheet[data-grade='B'] { --glow: #f0b98a44; --accent: #e2a46c; }
+.result-sheet[data-grade='FAIL'] { --glow: #e7b0aa33; --accent: #d8605a; }
+.result-sheet::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(60% 70% at 72% 45%, var(--glow), transparent 70%); pointer-events: none; animation: glow-in 900ms .2s ease-out both; }
+.result-sheet { position: relative; isolation: isolate; }
+@keyframes glow-in { from { opacity: 0; } }
+.result-award { position: relative; display: grid; justify-items: center; gap: 4px; padding-top: 4px; text-align: center; }
+.result-rays { position: absolute; z-index: 0; top: 36px; left: 50%; width: 260px; height: 260px; margin-left: -130px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--accent) 55%, transparent) 0 8deg, transparent 8deg 20deg); -webkit-mask: radial-gradient(circle, #000 28%, transparent 70%); mask: radial-gradient(circle, #000 28%, transparent 70%); opacity: 0; animation: rays-in 700ms .5s ease-out both, rays-spin 36s linear infinite; pointer-events: none; }
+@keyframes rays-in { to { opacity: .85; } }
+@keyframes rays-spin { to { transform: rotate(360deg); } }
+.result-sheet[data-grade='C'] .result-rays, .result-sheet[data-grade='FAIL'] .result-rays { display: none; }
+.result-headline { position: relative; z-index: 2; margin: 0; padding: 4px 28px; border: 3px solid #0f1b14; border-radius: 12px; color: #2b2108; background: linear-gradient(#fff3b8, var(--accent)); box-shadow: 0 4px 0 #0f1b14, 0 10px 18px #14291c55; font: 800 clamp(22px, 2.2vw, 28px)/1.4 var(--qmah-font-sans); letter-spacing: .08em; animation: headline-in 520ms .1s cubic-bezier(.22, 1, .36, 1) both; }
+.result-sheet[data-grade='A'] .result-headline { background: linear-gradient(#f4f6fb, var(--accent)); }
+.result-sheet[data-grade='FAIL'] .result-headline { color: #fff8e9; background: linear-gradient(#c9867f, #8c3d56); }
+@keyframes headline-in { from { opacity: 0; transform: translateY(-18px) scale(.7); } }
+.result-medal { position: relative; z-index: 1; width: 150px; margin-top: 4px; animation: medal-stamp 700ms .35s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes medal-stamp { 0% { opacity: 0; transform: scale(2.6) rotate(-14deg); } 60% { opacity: 1; transform: scale(.94) rotate(2deg); } 100% { transform: none; } }
+.result-stars { position: relative; z-index: 1; display: flex; gap: 6px; margin-top: -2px; }
+.result-stars .star { width: 38px; height: 38px; fill: #0f1b1426; stroke: #0f1b14; stroke-width: 1.8; stroke-linejoin: round; opacity: 0; animation: star-appear 400ms calc(var(--d) * 1ms) ease-out both; }
+.result-stars .star.is-on { fill: #f0c24a; animation: star-pop 560ms calc(var(--d) * 1ms) cubic-bezier(.22, 1, .36, 1) both; filter: drop-shadow(0 0 6px #f0c24a99); }
+@keyframes star-appear { to { opacity: 1; } }
+@keyframes star-pop { 0% { opacity: 0; transform: scale(.1) rotate(-60deg); } 100% { opacity: 1; transform: none; } }
+.result-score-block { position: relative; z-index: 1; justify-items: center; }
+.result-score { justify-content: center; }
+.result-score .num { --n: var(--to, 0); counter-reset: n var(--n); animation: score-count 1.5s .9s cubic-bezier(.16, 1, .3, 1) both; }
+.result-score .num::before { content: counter(n); }
+@keyframes score-count { from { --n: 0; } to { --n: var(--to); } }
+.confetti { top: 150px; left: 50%; z-index: 3; }
+// 獎勵卡的金幣雨
+@media (max-width: 800px) { .result-rays { width: 220px; height: 220px; margin-left: -110px; } .result-medal { width: 120px; } }
+@media (prefers-reduced-motion: reduce) { .result-sheet::before, .result-rays, .result-headline, .result-medal, .result-stars .star, .result-score .num, .coin-rain i { animation: none !important; opacity: 1; } .coin-rain { display: none; } .result-rays { opacity: .6; } }
+
+@media (min-width: 801px) {
+  .result-summary { padding: 10px 20px 14px; }
+  .result-award-copy { margin: 0; font-size: 15px; }
+}
+@media (min-width: 801px) {
+  .result-medal { width: 100px; }
+  .result-rays { top: 20px; width: 190px; height: 190px; margin-left: -95px; }
+  .result-headline { padding: 2px 24px; font-size: 22px; }
+  .result-stars .star { width: 28px; height: 28px; }
+  .result-label { display: none; }
+  .result-score { font-size: 42px; }
+  .result-facts { padding-block: 6px 2px; border-block: 0; }
+  .result-summary { gap: 6px; }
+  .confetti { top: 110px; }
+}
+// 大螢幕（16:9）：依視窗高度分兩級放大，所有尺寸直接調整、不用 zoom，確保獎勵入帳區仍在同一個畫面內
+@media (min-width: 801px) and (min-height: 860px) {
+  .result-gallery img { height: clamp(220px, 33dvh, 480px); }
+  .result-gallery figcaption { font-size: 17px; }
+  .result-banner h2 { font-size: 34px; }
+  .result-banner p { font-size: 17px; }
+  .result-summary { padding: 18px 26px 22px; gap: 10px; }
+  .result-medal { width: 128px; }
+  .result-rays { top: 26px; width: 230px; height: 230px; margin-left: -115px; }
+  .result-headline { padding: 4px 28px; font-size: 26px; }
+  .result-stars .star { width: 34px; height: 34px; }
+  .result-score { font-size: 56px; }
+  .result-award-copy { font-size: 17px; }
+  .result-facts dd { font-size: 30px; }
+  .result-facts dt { font-size: 15px; }
+  .result-actions button { min-height: 60px; font-size: 19px; }
+  .confetti { top: 130px; }
+}
+@media (min-width: 801px) and (min-height: 1000px) {
+  .result-gallery img { height: clamp(300px, 36dvh, 560px); }
+  .result-banner h2 { font-size: 38px; }
+  .result-banner p { font-size: 19px; }
+  .result-summary { padding: 24px 32px 28px; gap: 14px; }
+  .result-medal { width: 156px; }
+  .result-rays { top: 32px; width: 270px; height: 270px; margin-left: -135px; }
+  .result-headline { padding: 6px 34px; font-size: 30px; }
+  .result-stars .star { width: 40px; height: 40px; }
+  .result-score { font-size: 68px; }
+  .result-award-copy { font-size: 19px; }
+  .result-facts dd { font-size: 34px; }
+  .result-facts dt { font-size: 16px; }
+  .result-actions button { min-height: 68px; font-size: 21px; }
+  .confetti { top: 150px; }
+}
+
+.result-gallery.is-memory { align-self: start; }
+.result-gallery.is-memory img { height: auto; aspect-ratio: 1; max-height: clamp(160px, 22dvh, 300px); }
+.result-gallery.is-memory figure { transform: none; }
+.result-summary { position: relative; }
+// 評分標準放在成績卡右上角；窄螢幕改回卡片底部，避免壓到獎章
+.result-links { position: absolute; top: 14px; right: 14px; }
+@media (max-width: 800px) { .result-links { position: static; justify-content: center; } }
+
+// 短螢幕（例如 1280×720）：整體收緊，仍然一個畫面放完，不靠縮小內文字
+@media (min-width: 801px) and (max-height: 780px) {
+  .result-banner h2 { font-size: 28px; }
+  .result-banner p { font-size: 15px; }
+  .result-gallery img { height: clamp(96px, 17dvh, 140px); }
+  .result-gallery figure { padding: 8px 8px 6px; }
+  .result-gallery figcaption { padding-top: 2px; font-size: 14px; }
+  .result-left { gap: 8px; }
+  .result-medal { width: 84px; }
+  .result-rays { top: 16px; width: 150px; height: 150px; margin-left: -75px; }
+  .result-headline { padding: 0 20px; font-size: 20px; }
+  .result-stars .star { width: 24px; height: 24px; }
+  .result-score { font-size: 36px; }
+  .result-facts { padding-block: 2px; }
+  .result-facts dd { font-size: 22px; }
+  .result-actions button { min-height: 44px; font-size: 16px; }
+  .confetti { top: 90px; }
+}
+
+// ── 新的展品卡設計：不管文物圖是直是橫、長卷或方形，都放進同一種「正方形襯紙」，卡片寬度跟著襯紙走 ──
+// 單件：一張置中的展品卡；多件：同樣的展品卡排成四欄。圖一律 contain、不裁切、不拉伸，也不傾斜。
+.result-left { width: 100%; justify-self: stretch; }
+.result-gallery { display: flex; flex-wrap: wrap; justify-content: center; align-content: start; gap: 12px; width: 100%; align-self: auto; }
+.result-gallery figure { --mat: clamp(160px, 34dvh, 400px); flex: 0 0 auto; width: min(100%, var(--mat)); margin: 0; padding: 10px 10px 8px; transform: none !important; }
+.result-gallery figure img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; border-radius: 6px; background: #ebe3cf; box-shadow: inset 0 0 0 1px #c9b98f66; }
+.result-gallery figcaption { padding-top: 8px; text-align: center; font-size: 15px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.result-gallery.is-memory { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.result-gallery.is-memory figure { --mat: 100%; width: 100%; padding: 6px 6px 4px; }
+.result-gallery.is-memory figcaption { padding-top: 4px; font-size: 13px; }
+@media (max-width: 800px) { .result-left { width: 100%; } .result-gallery figure { --mat: min(60vw, 280px); } .result-gallery.is-memory { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 801px) and (max-height: 780px) { .result-sheet { gap: 8px 24px; padding-top: 4px; } .result-banner { gap: 6px; } .result-gallery figure { --mat: clamp(120px, 24dvh, 200px); } .result-gallery.is-memory figure { --mat: 100%; } }
+@media (min-width: 801px) and (max-height: 780px) { .result-gallery.is-memory { gap: 6px; } .result-gallery.is-memory figure { padding: 6px 6px 4px; } .result-gallery.is-memory figure img { aspect-ratio: 16 / 10; } .result-gallery.is-memory figcaption { padding-top: 2px; font-size: 13px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; } }
+@media (min-width: 801px) and (max-height: 780px) { .result-gallery.is-memory figcaption a { min-height: 28px; line-height: 1.25; } }
+// 電腦版：兩欄等高，文物卡在上方空間置中，獎勵入帳貼齊成績卡底部，左緣與標題對齊
+@media (min-width: 801px) { .result-sheet { align-items: stretch; align-content: stretch; flex: 1 1 auto; grid-template-rows: auto minmax(0, 1fr); } .result-left, .result-summary { align-self: stretch; } .result-left { grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; } .result-gallery { align-content: center; } }

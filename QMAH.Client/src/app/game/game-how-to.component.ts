@@ -22,11 +22,11 @@ const HOW_TO_CONTENT: Record<GameHowToVariant, HowToContent> = {
     description: '每回合所有玩家觀察同一件文物。先寫下自己的判斷，再閱讀其他玩家的匿名回答並投票。投票結束後揭曉作者與得票，所有回合結束後查看整場結果。',
     steps: [
       { label: '01', title: '選房／建立', description: '選一間可加入的房間，或建立新房間並等待玩家加入。' },
-      { label: '02', title: '觀察文物', description: '房間開始後，所有玩家查看本回合的館藏與題目。' },
+      { label: '02', title: '觀察文物', description: '房間開始後，所有玩家查看本回合的文物與題目。' },
       { label: '03', title: '作答', description: '選擇史實推理、擬真異說或妙想奇談，再寫下回答。史實推理推測真實名稱、用途、年代或背景。擬真異說是看似合理的虛構說明。妙想奇談是幽默、誇張或有故事性的回答。每回合每人只能送出一次。' },
       { label: '04', title: '查看回答', description: '進入投票階段後，點開匿名回答卡閱讀全文，也可切換類型查看其他回答。' },
       { label: '05', title: '投票', description: '每種類型選一則回答投一票，三種類型最多共投三票。不能投自己的回答，同一類型投票後不能改投。' },
-      { label: '06', title: '揭曉／結算', description: '查看本回合得票與勝出者，完成所有回合後查看整場結果與獎勵。' }
+      { label: '06', title: '揭曉／結算', description: '查看本回合得票。三種類型各由得票最高的回答勝出。完成所有回合後，再看整場結果與獎勵，鑑定點數有每日上限。' }
     ]
   },
   training: {
@@ -34,10 +34,10 @@ const HOW_TO_CONTENT: Record<GameHowToVariant, HowToContent> = {
     title: '一個人完成一局挑戰',
     description: '選一種玩法，依照提示辨識文物、配對或拼圖。完成後按「送出結果」，查看成績與本局獎勵。',
     steps: [
-      { label: '01', title: '選模式', description: '從目前啟用的單人玩法中選擇一種挑戰。' },
-      { label: '02', title: '完成挑戰', description: '依選擇的玩法辨識細節、翻牌配對、把館藏碎片拼回原圖，或在長卷復位裡每次三選一，接出下一片。' },
+      { label: '01', title: '選玩法', description: '從目前啟用的單人玩法中選擇一種挑戰。' },
+      { label: '02', title: '完成挑戰', description: '依選擇的玩法找出細節位置、翻牌配對文物、把碎片拼回原圖，或把書畫碎片相鄰交換、滑進空格，拼回原樣。' },
       { label: '03', title: '送出結果', description: '完成全部定位、配對、拼圖或接力後，按「送出結果」才會結算成績與獎勵。' },
-      { label: '04', title: '查看成績與獎勵', description: '查看分數、等級、鑑定點數與鑰匙進度。每日點數已滿後，成績與鑰匙進度仍會保留。' }
+      { label: '04', title: '查看成績與獎勵', description: '查看分數、評級、鑑定點數與鑰匙進度。每日點數已滿後，成績與鑰匙進度仍會保留。' }
     ]
   }
 };

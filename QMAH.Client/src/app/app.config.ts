@@ -23,7 +23,7 @@ import { environment } from '../environments/environment';
 
 function gameMode(route: ActivatedRouteSnapshot): 'multiplayer' | 'training' | 'guide' | null {
   const path = `/${route.pathFromRoot.flatMap(snapshot => snapshot.url.map(segment => segment.path)).filter(Boolean).join('/')}`;
-  if (path === '/game' || path === '/game/rooms' || path === '/game/demo' || path.startsWith('/game/room/')) return 'multiplayer';
+  if (path === '/game' || path === '/game/rooms' || path.startsWith('/game/room/')) return 'multiplayer';
   if (path === '/game/training' || path === '/game/minigames') return 'training';
   if (path === '/game/how-to') return 'guide';
   return null;

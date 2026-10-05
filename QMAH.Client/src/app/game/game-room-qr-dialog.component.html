@@ -1,13 +1,13 @@
 <div class="qr-backdrop" (click)="close.emit()"></div>
 <section #dialog class="qr-sheet" role="dialog" aria-modal="true" aria-labelledby="qr-title" tabindex="-1">
   <header>
-    <div><p>分享房間</p><h2 id="qr-title">掃描 QR 碼取得房間代碼</h2></div>
-    <button type="button" (click)="close.emit()" aria-label="關閉 QR 碼">×</button>
+    <div><p>分享房間</p><h2 id="qr-title">掃描加入這一桌</h2></div>
+    <button type="button" (click)="close.emit()" aria-label="關閉 QR 碼"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
   </header>
   <div class="qr-frame">
-    <qrcode [qrdata]="room().roomCode" [width]="220" [elementType]="'svg'" [errorCorrectionLevel]="'M'" [alt]="'房間代碼 ' + room().roomCode" [ariaLabel]="'房間代碼 ' + room().roomCode"></qrcode>
+    <qrcode [qrdata]="joinUrl()" [width]="220" [elementType]="'svg'" [errorCorrectionLevel]="'M'" [alt]="'房間代碼 ' + room().roomCode" [ariaLabel]="'房間代碼 ' + room().roomCode"></qrcode>
   </div>
   <code>{{ room().roomCode }}</code>
-  <p>把 QR 碼傳給朋友，他們掃描後就能取得房間代碼。</p>
-  <button type="button" class="qr-copy" (click)="copyRoomCode()">複製房間代碼</button>
+  <p>朋友掃描後會直接開啟大廳，找到這一桌。也可以把代號唸給他們。</p>
+  <button type="button" class="qr-copy" (click)="copyRoomCode()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>複製房間代號</button>
 </section>

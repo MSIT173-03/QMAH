@@ -1,0 +1,78 @@
+@use './game-ui' as ui;
+:host { display: contents; }
+*, *::before, *::after { box-sizing: border-box; }
+button, select, textarea { font: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .45; }
+button:focus-visible, textarea:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
+.table-dialog button, .leave-dialog button { @extend %ui-btn-2; }
+.table-dialog, .leave-dialog { @include ui.paper-panel; --qmah-surface-elevated: #fffaf0; --qmah-border: var(--game-card-line); }
+.table-dialog button svg, .leave-dialog button svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tone-blue { --game-button-image: var(--game-button-blue-image); --game-button-ink: #fff8e9; }
+// 牌背縮圖：Kenney Board Game Pack（CC0）藍色牌背，依玩家牌色混色
+.seat-back { position: relative; isolation: isolate; border: 2px solid #e9e5d9; border-radius: 6px; background: var(--seat-color); box-shadow: 0 4px 8px #0003; transform: rotate(-4deg); }
+.seat-back::before { position: absolute; z-index: -1; inset: 0; content: ''; background: url('/assets/game/kenney-card-back-blue.png') center / contain no-repeat; mix-blend-mode: luminosity; }
+.table-dialog { position:fixed; inset:0; width:min(560px,calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 40px); margin:auto; padding:24px; overflow:auto; box-shadow:0 16px 40px #0004; }
+.table-dialog::backdrop { background:#0a151bb3; }
+.table-dialog header { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.table-dialog h2 { margin:0; font:650 24px/1.3 var(--qmah-font-serif); }
+.table-dialog p { margin:0 0 10px; }
+.table-dialog dl { display:grid; grid-template-columns:max-content 1fr; gap:10px 28px; margin:0 0 16px; padding:14px 18px; border:2px dashed #e3d2a8; border-radius:12px; }
+.table-dialog dt { margin:0; }
+.table-dialog dd { margin:0; font-weight:700; }
+.artifact-dialog { width:min(960px,calc(100vw - 32px)); }
+.artifact-dialog img { display:block; max-width:100%; max-height:72dvh; margin:auto; object-fit:contain; }
+.answer-dialog form { display:grid; gap:12px; }
+.answer-dialog form p { margin:0 0 8px; }
+.answer-dialog label { font-weight:700; }
+.answer-dialog textarea { width:100%; border:2px solid #{ui.$tag-line}; border-radius:10px; padding:12px; color:var(--qmah-ink); background:#eee9dc; box-shadow:inset 0 2px 4px #382c2420; }
+.answer-types { min-width:0; margin:0; padding:0; border:0; }
+.answer-types legend { margin-bottom:8px; font-weight:700; }
+.answer-types > div { display:flex; flex-wrap:wrap; gap:8px; }
+.answer-types button { flex:1 0 120px; }
+.answer-types button.is-selected { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; }
+.answer-dialog textarea { resize:vertical; min-height:160px; line-height:1.8; }
+.answer-foot { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px 12px; }
+.answer-foot span { font-size:14px; color:var(--qmah-muted); }
+.answer-error { color:var(--qmah-danger); }
+[data-color='jade'] { --card-color:#376d62; } [data-color='blue'] { --card-color:#406591; } [data-color='vermilion'] { --card-color:#a43f34; } [data-color='gold'] { --card-color:#806020; } [data-color='violet'] { --card-color:#66528f; } [data-color='teal'] { --card-color:#216c69; } [data-color='rose'] { --card-color:#a04660; } [data-color='slate'] { --card-color:#506471; } [data-color='olive'] { --card-color:#56682f; } [data-color='copper'] { --card-color:#92552e; } [data-color='indigo'] { --card-color:#435293; } [data-color='sand'] { --card-color:#806139; }
+.leave-dialog-backdrop { position:absolute; z-index:50; inset:0; display:grid; place-items:center; padding:20px; background:#0a151bb3; }
+.table-dialog button[type='submit'] { --game-button-image:var(--game-primary-image); --game-button-ink:var(--game-primary-ink); }
+.table-dialog h2 { @include ui.title; }
+.table-dialog p, .leave-dialog p { @include ui.prose; }
+.table-dialog header h2 { min-width: 0; }
+.table-dialog header > button { flex: none; }
+.table-dialog .dlg-close { width:44px; padding:0; flex:none; }
+.menu-code button, .menu-leave button { gap:8px; }
+.table-dialog header p { margin:4px 0 0; font-size:15px; color:var(--game-card-muted); text-wrap-style: balance; }
+.table-dialog header { margin-block-end:16px; }
+.menu-dialog { width:min(480px,calc(100vw - 32px)); }
+.menu-code { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:2px solid #2c3a30; border-radius:12px; background:#fff2d9; box-shadow:inset 0 0 0 2px #e3d2a8; }
+.menu-code small { display:block; font-size:14px; color:var(--game-card-muted); }
+.menu-code code { font:800 28px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:.12em; }
+.table-dialog .menu-facts { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:12px 0; padding:0; border:0; }
+.menu-facts > div { display:grid; gap:2px; padding:8px 12px; border-radius:10px; background:#efe7d3; }
+.menu-facts dt { font-size:14px; color:var(--game-card-muted); }
+.menu-facts dd { font-size:16px; }
+.menu-notes { display:grid; gap:8px; margin:0 0 14px; padding:0; list-style:none; }
+.menu-notes li { display:flex; align-items:flex-start; gap:10px; font-size:15px; line-height:1.6; color:var(--game-card-muted); text-wrap-style: balance; }
+.menu-notes i { @include ui.info-ball(22px); margin-top:2px; }
+.menu-leave { display:flex; justify-content:flex-end; margin-top:16px; padding-top:14px; border-top:2px dashed #e3d2a8; }
+.colors-dialog { width:min(640px,calc(100vw - 32px)); }
+.color-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; padding-top:6px; }
+.colors-dialog .swatch { --game-button-image:#fffaf0; --game-button-ink:var(--game-card-ink); position:relative; display:grid; justify-items:center; align-content:center; gap:8px; min-width:0; min-height:132px; padding:12px 4px 10px; font-size:15px; border-radius:12px; }
+.colors-dialog .swatch .color-preview { grid-row:auto; width:40px; height:56px; transition:transform 160ms; }
+.colors-dialog .swatch:hover:not(:disabled) .color-preview { transform:rotate(0) scale(1.06); }
+.swatch-name { font-weight:800; }
+.swatch-badge { padding:0 8px; white-space:nowrap; border-radius:99px; color:#fff8e9; background:#2f5aa6; font-size:14px; font-weight:800; line-height:1.6; }
+.swatch-badge.is-taken { color:var(--game-card-muted); background:#e5e2d5; }
+.colors-dialog .swatch[data-state='mine'] { --game-button-image:#fff2d9; transform:translateY(-4px); box-shadow:inset 0 0 0 3px #f0c24a, 0 3px 0 #0f1b14, 0 10px 16px #14291c40; }
+.colors-dialog .swatch[data-state='mine'] .color-preview { transform:rotate(0) scale(1.08); }
+.leave-dialog { display:grid; justify-items:center; gap:10px; width:min(420px,100%); padding:26px 24px 22px; text-align:center; }
+.leave-icon { display:grid; place-items:center; width:56px; height:56px; border:2px solid #963d32; border-radius:50%; color:#963d32; background:#f4dcd8; }
+.leave-icon svg { width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.leave-dialog h2 { margin:0; font:800 24px/1.3 var(--qmah-font-sans); }
+.leave-dialog p { margin:0; }
+.leave-actions { display:flex; gap:12px; width:100%; margin-top:8px; }
+.leave-actions button { flex:1; gap:8px; }
+@media (max-width: 1000px) { .table-dialog { padding: 18px; } .color-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .color-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .menu-code code { font-size: 24px; } }

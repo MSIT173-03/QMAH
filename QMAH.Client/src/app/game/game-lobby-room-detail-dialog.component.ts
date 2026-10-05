@@ -14,7 +14,6 @@ import { GameScrollPanelComponent } from './game-scroll-panel.component';
 export class GameLobbyRoomDetailDialogComponent {
   readonly room = input<GameRoomDetails | null>(null);
   readonly detailLoading = input(false);
-  readonly isDemo = input(false);
   readonly isAdmin = input(false);
   readonly isRehearsal = input(false);
   readonly canJoin = input(false);
@@ -25,6 +24,7 @@ export class GameLobbyRoomDetailDialogComponent {
   readonly copyCode = output<string>();
   readonly showQr = output<Pick<GameRoomDetails, 'id' | 'roomCode'>>();
   readonly join = output<void>();
+  readonly spectate = output<void>();
 
   @ViewChild('roomDialog') private roomDialog?: ElementRef<HTMLElement>;
 

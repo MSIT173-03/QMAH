@@ -15,11 +15,12 @@ type LobbyStatus = GameRoomFilterStatus | 'RECENT';
   styleUrl: './game-lobby-room-board.component.scss'
 })
 export class GameLobbyRoomBoardComponent {
-  readonly isDemo = input(false);
   readonly isRehearsal = input(false);
   readonly isAdmin = input(false);
   readonly roomStatus = input<LobbyStatus>('WAITING');
   readonly roomSort = input<GameRoomSort>('RECOMMENDED');
+  readonly sortLabels: Record<GameRoomSort, string> = { RECOMMENDED: '推薦', NEARLY_FULL: '快額滿', NEWEST: '最新', OPEN_SLOTS: '空位多' };
+  readonly sortChoices: GameRoomSort[] = ['RECOMMENDED', 'NEARLY_FULL', 'NEWEST', 'OPEN_SLOTS'];
   readonly roomCodeFilter = input('');
   readonly rooms = input<ApiPage<GameRoomListItem> | null>(null);
   readonly loading = input(false);
@@ -30,6 +31,7 @@ export class GameLobbyRoomBoardComponent {
   readonly roomCodeSearch = model('');
 
   readonly search = output<void>();
+  readonly quickJoin = output<void>();
   readonly clearRoomCode = output<void>();
   readonly statusSelected = output<LobbyStatus>();
   readonly sortSelected = output<GameRoomSort>();

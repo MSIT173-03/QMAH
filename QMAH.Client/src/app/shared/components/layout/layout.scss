@@ -146,10 +146,7 @@
 }
 
 .app-account,
-.app-login,
-.app-logout,
-.app-mobile-logout,
-.app-admin-entry {
+.app-login {
   min-height: var(--qmah-control-height);
   display: inline-flex;
   align-items: center;
@@ -171,10 +168,7 @@
 }
 
 .app-account:hover,
-.app-login:hover,
-.app-logout:hover:not(:disabled),
-.app-mobile-logout:hover:not(:disabled),
-.app-admin-entry:hover {
+.app-login:hover {
   border-color: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 22%, transparent);
   background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent);
   color: var(--color-primary, var(--qmah-jade-deep));
@@ -211,22 +205,10 @@
   white-space: nowrap;
 }
 
-.app-login,
-.app-logout,
-.app-admin-entry {
+.app-login {
   padding: 8px var(--qmah-space-3);
 }
 
-.app-admin-entry {
-  gap: 6px;
-  white-space: nowrap;
-  border-color: color-mix(in srgb, currentColor 18%, transparent);
-  color: inherit;
-  text-decoration: none;
-}
-
-.app-admin-entry app-qmah-icon,
-.app-mobile-admin-entry app-qmah-icon { width:16px; height:16px; align-items:center; justify-content:center; }
 .app-site-switch-dialog { position:fixed; inset:0; margin:auto; width:min(420px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; padding:28px; border:1px solid var(--qmah-border); border-radius:var(--qmah-radius-panel,16px); background:var(--qmah-surface); color:var(--qmah-ink); box-shadow:var(--qmah-shadow-dialog); }
 .app-site-switch-dialog::backdrop { background:rgb(18 38 37 / 42%); backdrop-filter:blur(3px); }
 .app-site-switch-dialog__eyebrow { color:var(--qmah-muted); font-size:12px; font-weight:700; }
@@ -241,11 +223,6 @@
 .app-site-switch-dialog__actions a { background:var(--qmah-jade-deep); border-color:var(--qmah-jade-deep); color:#fff; }
 .app-site-switch-dialog__actions > *:hover { filter:brightness(.95); }
 
-.app-logout:disabled,
-.app-mobile-logout:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
 
 .app-theme-toggle {
   width: var(--qmah-control-height);
@@ -395,14 +372,12 @@ textarea:focus-visible {
 
   .app-context-navigation { display: none; }
 
-  .app-admin-entry { display: none; }
-
   .app-account {
     padding-right: 4px;
   }
 
   .app-account__copy,
-  .app-logout {
+  .app-account__chevron {
     display: none;
   }
 
@@ -516,28 +491,6 @@ textarea:focus-visible {
     border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
   }
 
-  .app-mobile-drawer__footer .app-mobile-admin-entry {
-    justify-content: center;
-    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  }
-
-  .app-mobile-logout {
-    width: 100%;
-    padding: 8px var(--qmah-space-3);
-    border: 1px solid var(--qmah-danger);
-    border-radius: var(--qmah-radius-control);
-    background: var(--qmah-danger);
-    color: var(--qmah-danger-content);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 750;
-    cursor: pointer;
-  }
-
-  .app-mobile-logout:hover:not(:disabled) {
-    border-color: var(--qmah-danger);
-    background: color-mix(in srgb, var(--qmah-danger) 82%, var(--qmah-night));
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -545,10 +498,23 @@ textarea:focus-visible {
   .app-mobile-drawer,
   .area-navigation a,
   .app-account,
-  .app-login,
-  .app-logout,
-  .app-mobile-logout,
-  .app-admin-entry {
+  .app-login {
     transition: none;
   }
 }
+
+// 帳號小選單
+.app-account-wrap { position: relative; }
+.app-account { background: transparent; cursor: pointer; }
+.app-account__chevron { width: 7px; height: 7px; margin-inline: 2px 4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-2px); }
+.app-account[aria-expanded='true'] .app-account__chevron { transform: rotate(225deg); }
+.app-account-panel { position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; display: grid; gap: 2px; width: min(240px, calc(100vw - 24px)); padding: 6px; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-panel, 14px); background: var(--qmah-surface); color: var(--qmah-ink); box-shadow: var(--qmah-shadow-dialog); }
+.app-account-panel[hidden] { display: none; }
+.app-account-panel__who { display: grid; gap: 2px; padding: 8px 10px 10px; border-bottom: 1px solid var(--qmah-line, var(--qmah-border)); }
+.app-account-panel__who strong { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.app-account-panel__who small { overflow: hidden; color: var(--qmah-muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.app-account-panel a, .app-account-panel button { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 10px; border: 0; border-radius: var(--qmah-radius-control); background: transparent; color: inherit; font: inherit; font-size: 15px; font-weight: 700; text-align: start; text-decoration: none; cursor: pointer; }
+.app-account-panel a:hover, .app-account-panel button:hover:not(:disabled) { background: color-mix(in srgb, var(--color-primary, var(--qmah-jade-deep)) 9%, transparent); }
+.app-account-panel .app-logout { color: var(--qmah-danger); }
+.app-account-panel button:disabled { cursor: not-allowed; opacity: .55; }
+.app-account-panel app-qmah-icon { width: 16px; height: 16px; }

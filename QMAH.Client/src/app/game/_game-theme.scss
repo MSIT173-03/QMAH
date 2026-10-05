@@ -14,7 +14,7 @@
   --qmah-game-accent: #334260;
   --qmah-game-soft: #e3e7f0;
   --qmah-game-content: #fff7e8;
-  --qmah-accent: #805a23;
+  --qmah-accent: #6a4a52;
   --qmah-accent-content: #fff7e8;
   --qmah-border: #a8b49d;
   --qmah-line: #c7d2bb;
@@ -40,12 +40,14 @@
   --game-frame-rim-image: url('/assets/game/kenney-wood.svg#light-rim');
   --game-frame-width: clamp(28px, 3vw, 48px);
   --game-primary-image: var(--game-button-blue-image);
-  --game-button-blue-image: url('/assets/game/kenney-button-tones.svg#blue');
-  --game-button-marsala-image: url('/assets/game/kenney-button-tones.svg#marsala');
-  --game-button-ochre-image: url('/assets/game/kenney-button-tones.svg#ochre');
+  --game-button-blue-image: linear-gradient(#4370b6, #2f5aa6);
+  --game-button-marsala-image: linear-gradient(#b8524c, #b13a3a);
+  --game-button-ochre-image: linear-gradient(#f2cb52, #dba422);
+  --game-ink-yellow: #2b2108;
+  --game-button-stone-image: linear-gradient(#d9dce6, #b7bccd);
   --game-primary-ink: #fff8e9;
-  --game-secondary-image: url('/assets/game/kenney-buttons.svg#paper');
-  --game-secondary-ink: #334737;
+  --game-secondary-image: var(--game-button-stone-image);
+  --game-secondary-ink: #232a3d;
   // 遊戲區文字最小 14px，不沿用全站較小的標籤字級
   --qmah-type-label-size: 14px;
   --qmah-type-meta-size: 14px;
@@ -53,24 +55,20 @@
 
 :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-appreciation, app-game-account)
   :is(dialog, .notes-page, .insert-sheet form, .reward-details, .collection-hints__grid, .piece-tray-viewport, .instructions-content, .placement-tools, .scroll-reference-viewport) {
-  scrollbar-width:auto;
-  scrollbar-gutter:stable;
-  scrollbar-color:#9a7850 #e8dbc7;
+  // 現代介面不常駐捲動條：內容仍可用滾輪或手指捲動
+  scrollbar-width:none;
+  scrollbar-gutter:auto;
 }
 
-// 色相參考 Pantone 17-4021 TCX Faded Denim、16-0924 TCX Croissant、18-1438 TCX Marsala；
-// 按鈕使用同明度／彩度的較深螢幕版，確保柔和色系上的米白文字仍有足夠對比。
-:where(app-game-room, app-game-training) [data-button-tone='reversible'] {
-  --game-button-image: var(--game-button-blue-image);
-  --game-button-ink: #fff8e9;
-}
-:where(app-game-room, app-game-training) [data-button-tone='start'] {
-  --game-button-image: var(--game-button-ochre-image);
-  --game-button-ink: #fff8e9;
-}
-:where(app-game-room, app-game-training) [data-button-tone='danger'] {
-  --game-button-image: var(--game-button-marsala-image);
-  --game-button-ink: #fff8e9;
+// 四種色、四種意圖，低彩度的桌遊代幣色；描邊、底緣厚度全部相同，只有色面不同：
+//   黃＝往前，一個畫面只放一顆（開始、建立、送出、確定、領取）
+//   藍＝一般操作與選中、頂端系統列　灰藍淺色＝取消、返回、次要　紅＝離開、收回等不可逆
+// 按鈕狀態只改立體感（按下去、選中時凹陷），不換色。
+:where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
+  [data-button-tone='start'] { --game-button-image: var(--game-button-ochre-image); --game-button-ink: var(--game-ink-yellow); }
+  [data-button-tone='reversible'] { --game-button-image: var(--game-button-blue-image); --game-button-ink: #fff8e9; }
+  [data-button-tone='danger'] { --game-button-image: var(--game-button-marsala-image); --game-button-ink: #fff8e9; }
+  [data-button-tone='neutral'] { --game-button-image: var(--game-secondary-image); --game-button-ink: var(--game-secondary-ink); }
 }
 
 @media (max-width: 1000px) {
@@ -124,3 +122,13 @@ html[data-theme='qmahdark'] .app-shell[data-area='game'] > .app-header {
 }
 .app-shell[data-area='game'] button:disabled { opacity:.55; cursor:not-allowed; box-shadow:none; }
 html:has(.app-shell[data-area='game'] :is(.sheet-backdrop,.room-detail-backdrop)) { overflow:hidden; }
+:where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-appreciation, app-game-account) *::-webkit-scrollbar { display: none; }
+
+// 配色依據：WCAG 2.2 的 1.4.3（文字 4.5:1）與 1.4.11（元件邊界 3:1）；
+// 色相用 Material 3 的語意分工（主要、次要、錯誤各有固定色與對應的文字色），
+// 按鈕色面取各色 40 色階附近、搭配米白字，黃與綠色面較亮則搭深色字。
+
+// 短文案不留孤字：說明、標籤、按鈕、標題一律平均斷行（瀏覽器只對六行以內處理，長文不受影響）
+:is(app-game-lobby, app-game-room, app-game-training, app-game-training-pause, app-game-guide, app-game-how-to, app-game-appreciation) :is(p, small, button, a, li, span) {
+  text-wrap-style: balance;
+}

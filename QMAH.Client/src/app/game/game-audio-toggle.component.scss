@@ -1,17 +1,20 @@
 :host { position: relative; display: inline-block; }
-.audio-menu summary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; border: 2px solid #3f3123; border-radius: 14px; color: #f2e4c7; background: linear-gradient(#7d6246, #5f4a36); box-shadow: inset 0 1px 0 #ffffff26, 0 3px 8px #1d150d3d; font: 800 14px/1.2 var(--qmah-font-sans, sans-serif); list-style: none; cursor: pointer; }
+.audio-menu summary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; border: 2px solid #0f1b14; border-radius: 12px; color: #fff8e9; background: var(--game-button-blue-image); box-shadow: inset 0 1px 0 #ffffff59, 0 3px 0 #0f1b14; font: 800 14px/1.2 var(--qmah-font-sans, sans-serif); list-style: none; cursor: pointer; }
 .audio-menu summary::-webkit-details-marker { display: none; }
 .audio-menu summary:hover { filter: brightness(1.1); }
 .audio-menu summary:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--qmah-focus, #fff2d9); outline-offset: 3px; }
-b { min-width: 1.4em; padding: 2px 6px; border-radius: 8px; color: #d9c7a4; background: #3f3123; font-size: 13px; text-align: center; }
-b.is-on, button[aria-pressed='true'] b { color: #fff8e9; background: #2f6b50; }
-.audio-panel { position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; display: grid; gap: 14px; width: 260px; padding: 16px; border: 2px solid #3f3123; border-radius: 16px; color: #273e33; background: #f7f2e7; box-shadow: inset 0 0 0 2px #c7b090, 0 12px 26px #14291c59; }
-.audio-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
-.audio-row button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 12px; border: 2px solid #6d5841; border-radius: 12px; color: #273e33; background: #fff2d9; font: 800 14px/1.2 var(--qmah-font-sans, sans-serif); cursor: pointer; }
-input[type='range'] { width: 100%; min-width: 0; height: 28px; accent-color: #2f6b50; cursor: pointer; }
+b { min-width: 2.4em; padding: 2px 8px; border-radius: 8px; color: #fff8e9; background: #5b6379; font-size: 14px; text-align: center; }
+b.is-on, button[aria-pressed='true'] b { color: #232a3d; background: #fff8e9; }
+.audio-panel { position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; display: grid; gap: 14px; width: 260px; padding: 16px; border: 2px solid #0f1b14; border-radius: 16px; color: #273e33; background: #f7f2e7; box-shadow: inset 0 0 0 2px #e3d2a8, 0 12px 26px #14291c59; }
+.audio-row input { min-width: 0; width: 100%; }
+.audio-menu summary { white-space: nowrap; }
+.audio-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.audio-row button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; border: 2px solid #0f1b14; border-radius: 12px; color: #232a3d; background: var(--game-button-stone-image); box-shadow: inset 0 1px 0 #ffffff80, 0 3px 0 #0f1b14; font: 800 14px/1.2 var(--qmah-font-sans, sans-serif); cursor: pointer; }
+input[type='range'] { width: 100%; min-width: 0; height: 28px; accent-color: #4370b6; cursor: pointer; }
 input[type='range']:disabled { opacity: .45; cursor: default; }
 // 在對話框裡直接攤開，不用再點開
-:host(.is-inline) { display: block; }
+:host(.is-inline) { display: block; flex: 1 1 100%; }
 :host(.is-inline) summary { display: none; }
-:host(.is-inline) .audio-panel { position: static; width: auto; margin-top: 4px; }
-@media (max-width: 600px) { .audio-panel { right: auto; left: 0; } }
+:host(.is-inline) .audio-panel { position: static; width: auto; margin-top: 4px; padding: 0; border: 0; background: none; box-shadow: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; }
+:host(.is-inline) .audio-row { grid-template-columns: 1fr; gap: 6px; }
+@media (max-width: 600px) { .audio-panel { right: auto; left: 0; width: min(260px, calc(100vw - 56px)); } }

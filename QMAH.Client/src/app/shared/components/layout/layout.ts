@@ -34,6 +34,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private routeSubscription: Subscription | null = null;
 
   readonly menuOpen = signal(false);
+  readonly accountOpen = signal(false);
   readonly loggingOut = signal(false);
   readonly failedAvatarPath = signal<string | null>(null);
   readonly currentUrl = signal(this.router.url);
@@ -42,6 +43,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
   @ViewChild('mobileNavigation') private mobileNavigation?: ElementRef<HTMLElement>;
   @ViewChild('siteSwitchDialog') private siteSwitchDialog?: ElementRef<HTMLDialogElement>;
+
+  toggleAccount(): void { this.accountOpen.update(open => !open); }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    if (this.accountOpen() && !(event.target as HTMLElement).closest('.app-account-wrap')) this.accountOpen.set(false);
+  }
 
   confirmAdminNavigation(event: MouseEvent): void {
     if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -137,12 +145,14 @@ export class LayoutComponent implements OnInit, OnDestroy {
   closeMenu(restoreFocus = true): void {
     const restoreDrawerFocus = restoreFocus && this.menuOpen();
     this.menuOpen.set(false);
+    this.accountOpen.set(false);
     if (restoreDrawerFocus) setTimeout(() => this.menuTrigger?.nativeElement.focus(), 0);
   }
 
   // ui-integration: Drawer 使用 Escape 關閉，讓鍵盤使用者不必依賴滑鼠點擊遮罩。
   @HostListener('document:keydown.escape')
   closeMenuWithEscape(): void {
+    this.accountOpen.set(false);
     if (this.siteSwitchDialog?.nativeElement.open) return;
     if (this.menuOpen()) this.closeMenu();
   }

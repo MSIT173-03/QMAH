@@ -24,16 +24,16 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   outline-offset: 4px;
 }
 
-.account-page { @include scene.stage-page; align-items: center; justify-content: center; }
-.account-page > .account-panel { width: min(560px, 100%); box-sizing: border-box; }
+.account-page { @include scene.stage-page; }
+.account-page > .account-panel { width: min(560px, calc(100% - 32px)); box-sizing: border-box; margin: auto; }
 /* ui-integration: App Shell 與 Game 子導覽已統一品牌入口，帳號內容只處理登入狀態與表單。 */
-.back-link { color: var(--qmah-game-action); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
+.back-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--qmah-game-action); font-size: 14px; font-weight: 700; text-underline-offset: 4px; }
 .game-action-label { display: inline-flex; white-space: nowrap; }
 .account-panel { @include ui.control-housing(true); --ink:var(--game-card-ink); --muted:var(--game-card-muted); --qmah-primary:#334260; --qmah-primary-hover:#263650; --qmah-primary-content:#fff8e9; width: min(520px, 100%); margin: clamp(44px, 10vh, 100px) auto 0; padding: clamp(28px, 6vw, 48px); background: var(--game-card-ground); border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); }
 .account-loading { margin: 0; color: var(--muted); }
-.account-panel h1 { margin: 0 0 var(--qmah-space-6); font-size: var(--qmah-type-page-title-size); line-height: var(--qmah-type-heading-leading); letter-spacing: -.025em; overflow-wrap: anywhere; }
+.account-panel h1 { margin: 0 0 var(--qmah-space-6); line-height: var(--qmah-type-heading-leading); letter-spacing: -.025em; }
 .account-panel > p { margin: -10px 0 24px; color: var(--muted); }
-.account-panel button, .primary-link { display: inline-flex; align-items: center; justify-content: center; min-height: var(--qmah-control-height-lg); margin-top: var(--qmah-space-4); padding: 10px var(--qmah-button-padding-x); color: var(--qmah-primary-content); background: var(--qmah-primary); border: 0; border-radius: var(--qmah-radius-control); font-weight: 700; text-decoration: none; transition: background-color 160ms ease, transform 160ms ease; }
+.account-panel button, .primary-link { display: inline-flex; align-items: center; justify-content: center; min-height: var(--qmah-control-height-lg); margin-top: var(--qmah-space-4); padding: 10px var(--qmah-button-padding-x); color: var(--qmah-primary-content); border: 0; border-radius: var(--qmah-radius-control); font-weight: 700; text-decoration: none; transition: background-color 160ms ease, transform 160ms ease; }
 .account-panel button:hover:not(:disabled), .primary-link:hover { background: var(--qmah-primary-hover); transform: translateY(-1px); }
 .account-panel button:disabled { cursor: wait; opacity: .62; }
 .account-error { margin: 18px 0 0; padding: var(--qmah-space-3) 14px; color: var(--qmah-danger); background: color-mix(in srgb, var(--qmah-danger) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--qmah-danger) 48%, var(--qmah-border)); border-radius: var(--qmah-radius-control); overflow-wrap: anywhere; }
@@ -54,4 +54,4 @@ button:disabled { cursor: not-allowed; }
 .account-panel > p { @include ui.prose; }
 .account-panel h1 { font-size: clamp(24px, 4vw, 32px); word-break: normal; overflow-wrap: break-word; }
 
-.account-panel button, .primary-link { @include ui.button; background:transparent; }
+.account-panel button, .primary-link { @extend %ui-btn; background:transparent; }

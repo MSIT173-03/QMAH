@@ -25,7 +25,7 @@
           }
         </ol>
       } @else {
-        <p class="empty-copy">這局目前沒有排行榜資料。</p>
+        <p class="empty-copy">本局目前沒有排行榜資料。</p>
       }
     </div>
 
@@ -57,16 +57,16 @@
   <div class="reward-panel">
     <div><h3>本局獎勵</h3><p>每間房的獎勵只能領取一次。</p></div>
     @if (!canClaim()) { <p>獎勵僅供本局參與玩家領取。</p> }
-    @else if (!reward()) { <button type="button" (click)="claimReward.emit()" [disabled]="rewarding()">{{ rewarding() ? '領取中…' : '領取本局獎勵' }}</button> }
+    @else if (!reward()) { <button type="button" data-button-tone="start" (click)="claimReward.emit()" [disabled]="rewarding()">{{ rewarding() ? '領取中…' : '領取本局獎勵' }}</button> }
     @else { <strong class="reward-status" role="status">本局獎勵已結算</strong> }
   <a routerLink="/game" [queryParams]="rehearsal() ? { test: '1' } : null" class="results-back-link">返回大廳</a>
   </div>
-  @if (!rehearsal()) { <app-game-reward-meter [refreshToken]="reward()" /> }
+  @if (!rehearsal()) { <app-game-reward-meter variant="full" [refreshToken]="reward()" [gain]="reward()?.pointReward ?? 0" [keyGain]="reward()?.keyProgressReward ?? 0" /> }
   @if (reward(); as receipt) {
     <div class="reward-receipt" aria-label="本局獎勵明細">
-      <strong>{{ receipt.pointReward }} 點</strong>
+      <strong>{{ receipt.pointReward }} 點鑑定點數</strong>
       <span>{{ receipt.normalKeyReward }} 把普通鑰匙</span>
-      @if (receipt.keyProgressReward > 0) { <span>本局累積 {{ receipt.keyProgressReward }} 點鑰匙進度，已含上方轉換的鑰匙</span> }
+      @if (receipt.keyProgressReward > 0) { <span>本局累積 {{ receipt.keyProgressReward }} 片鑰匙進度，已含上方轉換的鑰匙</span> }
       <span>表現分數 {{ receipt.performanceScore }}</span>
       <span>勝出 {{ receipt.roundsWon }} 回合</span>
     </div>

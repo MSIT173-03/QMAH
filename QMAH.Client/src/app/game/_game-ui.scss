@@ -1,24 +1,80 @@
-$tag-line: #6d5841; // 紙標籤外線，與按鈕素材同色
-$tag-mid: #c7b090; // 中帶
+$tag-line: #2c3a30; // 紙標籤外線，與按鈕素材同色
+$tag-mid: #e3d2a8; // 中帶
 // Kenney UI Pack - Adventure，CC0，素材以九宮格切片配合實際控制項尺寸
 // 來源：https://kenney.nl/assets/ui-pack-adventure
+// 全站同一套按鈕：純色漸層、頂緣高光、底部厚度；選中、按下都是同一個形狀，沒有缺角。
 @mixin button($secondary: false) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.3;
   min-height: 44px;
-  padding: 6px 12px;
-  border: 6px solid transparent;
-  border-image: var(--game-button-image, var(--game-primary-image)) 5 fill / 1 / 0 stretch;
+  padding: 6px 16px;
+  border: 2px solid #0f1b14;
   border-radius: 12px;
   color: var(--game-button-ink, var(--game-primary-ink));
-  background: transparent;
+  background: var(--game-button-image, var(--game-primary-image));
   font-weight: 800;
-  box-shadow: 0 3px 7px #33251426;
+  box-shadow: inset 0 0 0 1px #ffffff33, inset 0 1px 0 #ffffff59, 0 3px 0 #0f1b14, 0 6px 10px #14291c40;
   @if $secondary {
-    border-image-source: var(--game-button-image, var(--game-secondary-image));
     color: var(--game-button-ink, var(--game-secondary-ink));
+    background: var(--game-button-image, var(--game-secondary-image));
   }
-  transition: transform 150ms, filter 150ms;
+  transition: transform 150ms, filter 150ms, box-shadow 150ms;
   &:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-2px); }
-  &:active:not(:disabled) { transform: translateY(1px); }
+  &:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 0 0 1px #ffffff33, inset 0 1px 0 #ffffff59, 0 1px 0 #0f1b14, 0 3px 6px #14291c40; }
+  &[aria-pressed='true'], &.is-active, &.is-selected { box-shadow: inset 0 0 0 2px #ffffff59, inset 0 1px 0 #ffffff80, 0 3px 0 #0f1b14, 0 6px 10px #14291c40; }
+}
+
+// 同一個元件裡的所有按鈕共用一份輸出（@extend），不要每顆都重複展開 mixin
+%ui-btn { @include button; }
+%ui-btn-2 { @include button(true); }
+
+// 說明用的資訊小球：全站同一個，正體 i
+@mixin info-ball($size: 22px) {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: $size;
+  height: $size;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font: 800 #{$size * .64} / 1 var(--qmah-font-sans, sans-serif);
+  font-style: normal;
+}
+@mixin info-button {
+  @include button(true);
+  @include info-ball(44px);
+  position: relative;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid #0f1b14;
+  cursor: pointer;
+}
+
+// 展示用的卡面：深色外線、內側細金邊、底部厚度；展品、作答卡、回答卡共用
+@mixin exhibit-card($face: #f7f2e7, $rim: #c9a24d) {
+  border: 2px solid #0f1b14;
+  border-radius: 16px;
+  background: $face;
+  box-shadow: inset 0 0 0 4px $face, inset 0 0 0 5px $rim, 0 3px 0 #0f1b14, 0 12px 20px #0a141055;
+}
+
+// 每頁頁首的統一規格：標題（左）與說明一句話、動作鈕（右）；各頁最上方可以不同，這一段全站一致
+@mixin page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-width: 0;
+  margin: 4px 0 16px;
+  color: var(--game-table-ink);
+  :is(h1, h2) { margin: 0; color: var(--game-table-ink); font: 800 clamp(26px, 3vw, 32px) / 1.3 var(--qmah-font-sans); text-shadow: 0 2px 0 #1d4635; }
+  p { margin: 4px 0 0; max-width: 56ch; color: var(--game-table-muted); font-size: 15px; line-height: 1.5; }
+  > :last-child:not(:first-child) { margin-inline-start: auto; }
+  .page-head__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 }
 
 @mixin panel {
@@ -78,7 +134,7 @@ $tag-mid: #c7b090; // 中帶
   --qmah-primary-hover: #234c39;
   --qmah-primary-content: #fff8e9;
   --qmah-danger: #963d32;
-  --qmah-accent: #805a23;
+  --qmah-accent: #6a4a52;
   --qmah-accent-content: #fff8e9;
   --qmah-cinnabar: #963d32;
   color: var(--game-card-ink);
@@ -93,10 +149,10 @@ $tag-mid: #c7b090; // 中帶
 
 // 墨藍織面與金色回紋共用於原圖底板及遊戲 HUD，文字固定為暖白。
 @mixin ink-mat {
-  --stage-ink: #f5edda;
-  --stage-muted: #d3dbd6;
+  --stage-ink: #273e33;
+  --stage-muted: #4f6656;
   color: var(--stage-ink);
-  background: #223c50 url('/assets/game/ink-key-pattern.svg') repeat padding-box;
+  background: linear-gradient(#fffaf0, #f3ecda) padding-box;
 }
 
 // 說明與完整回答使用同一套正文規格，盤面上的短標籤另外保留緊湊尺寸。
@@ -107,7 +163,7 @@ $tag-mid: #c7b090; // 中帶
   word-break: normal;
   overflow-wrap: break-word;
   line-break: strict;
-  text-wrap: pretty;
+  text-wrap-style: balance;
 }
 
 @mixin jewel {

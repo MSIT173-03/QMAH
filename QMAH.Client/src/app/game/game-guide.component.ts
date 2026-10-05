@@ -1,3 +1,5 @@
+import { GameRewardMeterComponent } from './game-reward-meter.component';
+import { MeApiService } from '../core/services/me-api';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -13,12 +15,13 @@ type TrainingDemoCode = 'DETAIL_LOCATOR' | 'MEMORY_MATCH' | 'ARTIFACT_PUZZLE' | 
 @Component({
   selector: 'app-game-guide',
   standalone: true,
-  imports: [RouterLink, GameHowToComponent, GameNavigationComponent, GameTrainingDemoComponent, GameGuideMultiplayerDemoComponent],
+  imports: [GameRewardMeterComponent, RouterLink, GameHowToComponent, GameNavigationComponent, GameTrainingDemoComponent, GameGuideMultiplayerDemoComponent],
   templateUrl: './game-guide.component.html',
   styleUrl: './game-guide.component.scss'
 })
 export class GameGuideComponent {
   readonly focusMode = inject(GameFocusMode);
+  readonly meApi = inject(MeApiService);
   // 說明頁一次呈現一種玩法；每個示範只用本機樣本，不會建立正式挑戰或發放獎勵。
   private readonly route = inject(ActivatedRoute);
   readonly activeGuide = signal<GameHowToVariant>(this.route.snapshot.queryParamMap.get('mode') === 'training' ? 'training' : 'multiplayer');
@@ -33,10 +36,10 @@ export class GameGuideComponent {
   readonly demoSubmitted = signal(false);
 
   readonly trainingModes = [
-    { code: 'DETAIL_LOCATOR', label: '局部辨識', hint: '看細節，在四件原圖上定位' },
-    { code: 'MEMORY_MATCH', label: '翻牌配對', hint: '記住圖樣位置，找齊配對' },
+    { code: 'DETAIL_LOCATOR', label: '細節追跡', hint: '看細節，在四件原圖上定位' },
+    { code: 'MEMORY_MATCH', label: '館藏翻牌', hint: '記住圖樣位置，找齊配對' },
     { code: 'ARTIFACT_PUZZLE', label: '館藏拼圖', hint: '拖曳碎片，拼回文物原圖' },
-    { code: 'STRIP_RESTORE', label: '長卷復位', hint: '三選一，把長卷一片片接起來' },
+    { code: 'STRIP_RESTORE', label: '書畫拼貼', hint: '相鄰碎片交換，拼回原樣' },
   ] as const;
   readonly activeTrainingDemo = signal<TrainingDemoCode>(this.initialDemo());
   private initialDemo(): TrainingDemoCode {

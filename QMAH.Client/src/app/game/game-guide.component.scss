@@ -41,14 +41,11 @@
 }
 .guide-tabs button:hover { color: var(--guide-ink); }
 // 頂層玩法分頁與模式列同一套木質托盤
-nav.guide-tabs { gap: 4px; padding: 5px; border: 2px solid #3f3123; border-radius: 16px; background: linear-gradient(#7d6246, #5f4a36); box-shadow: inset 0 1px 0 #ffffff26, 0 4px 10px #1d150d3d; }
-nav.guide-tabs button { border: 0; border-image: none; border-radius: 11px; color: #f2e4c7; box-shadow: none; }
+nav.guide-tabs { gap: 4px; padding: 5px; border-radius: 16px; }
+nav.guide-tabs button { border: 0; border-image: none; background: transparent; box-shadow: none; border-radius: 11px; color: #f2e4c7; box-shadow: none; }
 nav.guide-tabs button:hover { background: #ffffff1c; }
-nav.guide-tabs button small { color: #d9c7a4; }
-nav.guide-tabs button.is-active { color: #273e33; background: #fff2d9; box-shadow: inset 0 0 0 2px #c7b090, 0 4px 9px #1d150d59; }
-nav.guide-tabs button.is-active small { color: #5b4b36; }
+nav.guide-tabs button.is-active { color: #273e33; background: #fff2d9; box-shadow: inset 0 0 0 2px #e3d2a8, 0 4px 9px #0f1b1459; }
 .guide-tabs button span { font-size: 16px; font-weight: 800; }
-.guide-tabs button small { font-size: var(--qmah-type-label-size); }
 .guide-panel {
   @include ui.paper-panel;
   @include ui.reading-surface;
@@ -63,23 +60,20 @@ nav.guide-tabs button.is-active small { color: #5b4b36; }
   margin-top: 14px;
 }
 .guide-tabs button:focus-visible, .guide-panel-link:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
-.training-demo { padding-bottom: 28px; }
 
 @keyframes game-panel-arrive { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes game-result-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .game-panel-enter { animation: game-panel-arrive 240ms cubic-bezier(.16, 1, .3, 1) both; }
-.game-result-enter { animation: game-result-arrive 200ms cubic-bezier(.16, 1, .3, 1) both; }
 @media (max-width: 640px) {
   .guide-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .guide-tabs button { min-height: 52px; padding: 8px; }
   .guide-tabs button span { font-size: 14px; }
-  .guide-tabs button small { font-size:14px; line-height: 1.5; }
   .guide-panel { padding: 16px; border-radius: var(--qmah-radius-card); }
   .guide-panel-link { width: 100%; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   .guide-tabs button { transition: none; }
-  .game-panel-enter, .game-result-enter { animation-duration: 1ms; }
+  .game-panel-enter { animation-duration: 1ms; }
 }
 
 /* Shared board chrome keeps the four interactive examples in the existing game visual language. */
@@ -87,41 +81,108 @@ nav.guide-tabs button.is-active small { color: #5b4b36; }
 .training-demo__stage { min-width: 0; min-height: 0; height: 100%; overflow: hidden; }
 app-game-training-demo { height: 100%; }
 
-.guide-tabs button, .guide-panel-link { @include ui.button(true); }
 
 // 多人示範直接放在綠毯上，不再包一層紙；開始按鈕用主要色
 .guide-panel:has(app-game-guide-multiplayer-demo), .guide-panel:has(.training-demo) { --guide-ink: var(--game-table-ink); --guide-muted: var(--game-table-muted); --guide-line: #ffffff40; padding: 0; border: 0; background: none; box-shadow: none; color: var(--game-table-ink); }
-.guide-panel-link { --game-button-image: var(--game-button-ochre-image); --game-button-ink: #fff8e9; padding-inline: 24px; margin-top: 24px; text-decoration: none; }
+.guide-panel-link { @extend %ui-btn; --game-button-image: var(--game-button-ochre-image); --game-button-ink: var(--game-ink-yellow); display: inline-flex; align-items: center; padding-inline: 24px; margin-top: 24px; text-decoration: none; }
 
 // 一個畫面放得下的版面：標題收成螢幕閱讀器用，分頁、文字說明、開始按鈕排同一列
-.guide-title-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.guide-bar__lead { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; min-width: 0; }
-.guide-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
 nav.guide-tabs { width: min(440px, 100%); }
 .guide-tabs button { min-height: 48px; padding: 6px 14px; }
 .guide-tabs button small { display: none; }
 .guide-bar__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.guide-rules-button { @include ui.button(true); }
-.guide-bar .guide-panel-link { display: inline-flex; align-items: center; min-height: 44px; margin: 0; padding-inline: 24px; text-decoration: none; }
+.guide-rules-button { @include ui.info-button; }
 .guide-panel { margin-top: 0; display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; }
 app-game-guide-multiplayer-demo { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; }
 @media (min-width: 1000px) { .training-demo { min-height: 0; } .guide-panel { overflow: hidden; } }
 .guide-rules { @include ui.paper-panel; @include ui.reading-surface(true); position: fixed; inset: 0; margin: auto; width: min(900px, calc(100vw - 32px)); height: fit-content; max-height: calc(100dvh - 48px); overflow: auto; padding: 28px 28px 24px; box-shadow: 0 20px 60px #14291c66; }
 .guide-rules::backdrop { background: #14291c66; }
-.guide-rules__close { @include ui.button(true); position: absolute; top: 14px; right: 14px; }
+.guide-rules__close { @extend %ui-btn-2; position: absolute; top: 14px; right: 14px; }
 .training-demo { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding-bottom: 0; }
 .mode-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.mode-list button { @include ui.button(true); display: grid; gap: 2px; padding: 10px 14px; text-align: left; }
+.mode-list button { @extend %ui-btn-2; display: grid; gap: 2px; padding: 10px 14px; text-align: left; }
 .mode-list small { font-size: var(--qmah-type-label-size); font-weight: 600; }
 .mode-list button.is-active { --game-button-image: var(--game-button-blue-image); --game-button-ink: #fff8e9; }
 @media (min-width: 1000px) { .mode-list button { min-height: 44px; padding-block: 4px; } .mode-list small { display: none; } }
-@media (min-width: 1000px) { .guide-stage { padding-top: 18px; } .guide-bar { padding-inline-start: 108px; } }
+
 @media (max-width: 899px) { .training-demo { grid-template-columns: 1fr; } .mode-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 999px) {
   .guide-stage, .guide-panel { flex: none; height: auto; min-height: auto; }
-  .training-demo { display: block; flex: none; height: auto; min-height: auto; }
-  .training-demo__stage { height: auto; min-height: auto; overflow: visible; margin-top: 12px; }
-  app-game-training-demo { height: auto; }
   .guide-bar__actions { width: 100%; }
-  .guide-bar .guide-panel-link { padding-inline: 12px; }
 }
+
+// 手機與平板：玩法展示依內容自然長高，不被固定高度壓扁
+@media (max-width: 999px) {
+  .guide-panel { flex: none; overflow: visible; }
+  app-game-guide-multiplayer-demo { flex: none; min-height: auto; }
+  .training-demo { display: block; flex: none; height: auto; min-height: 0; }
+  .training-demo__stage { height: auto; min-height: 0; overflow: visible; margin-top: 12px; }
+  app-game-training-demo { height: auto; min-height: 0; }
+}
+
+nav.guide-tabs { background: #00000030; border: 2px solid #ffffff30; box-shadow: none; }
+// 頁首統一規格；分頁列緊接在下
+.guide-head { @include ui.page-head; }
+.guide-start-bottom { display: none; }
+@media (max-width: 899px) {
+  .guide-head .guide-start-top { display: none; }
+  .guide-stage > .guide-start-bottom { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin: 8px 0 0; text-decoration: none; }
+}
+
+// 頁首：標題在左，分頁、說明、開始排在右邊同一列；整頁一個畫面放得下
+.guide-head .guide-bar__actions { flex-wrap: nowrap; }
+.guide-head nav.guide-tabs { display: inline-grid; width: auto; }
+.guide-head nav.guide-tabs button { white-space: nowrap; }
+.guide-head .guide-bar__actions .guide-rules-button { order: 2; }
+.guide-head .guide-start-top { order: 3; margin: 0; min-height: 44px; }
+@media (max-width: 899px) {
+  .guide-head { gap: 8px; }
+  .guide-head > div:first-child p { display: none; }
+  .guide-head .guide-bar__actions { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+  .guide-head nav.guide-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+}
+
+// 玩法分頁：像開關一樣的切換，藍色滑塊會滑到被選的那一邊
+.guide-head nav.guide-tabs { position: relative; isolation: isolate; grid-template-columns: repeat(2, minmax(150px, 1fr)); padding: 5px; gap: 0; }
+.guide-head nav.guide-tabs::before { content: ''; position: absolute; z-index: -1; inset: 5px auto 5px 5px; width: calc(50% - 5px); border: 2px solid #0f1b14; border-radius: 10px; background: var(--game-button-blue-image); box-shadow: inset 0 1px 0 #ffffff59, 0 3px 0 #0f1b14; transition: transform 260ms cubic-bezier(.22, 1, .36, 1); }
+.guide-head nav.guide-tabs:has(#guide-tab-training.is-active)::before { transform: translateX(100%); }
+.guide-head nav.guide-tabs button { min-height: 48px; padding: 4px 20px; justify-items: center; text-align: center; box-shadow: none; }
+.guide-head nav.guide-tabs button span { font-size: 17px; }
+.guide-head nav.guide-tabs button.is-active { color: #fff8e9; background: transparent; box-shadow: none; transform: none; }
+.guide-head nav.guide-tabs button:not(.is-active):hover { filter: none; transform: none; }
+@media (prefers-reduced-motion: reduce) { .guide-head nav.guide-tabs::before { transition: none; } }
+
+// 四種示範共用頂部玩法列，盤面使用下方完整寬度。
+@media (min-width: 1000px) {
+  .training-demo { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 12px; }
+  .guide-head { gap: 16px; margin: 0; }
+  .guide-head h1 { margin: 0 0 4px; font-size: 28px; }
+  .guide-head p { margin: 0; }
+  .mode-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .mode-list button { min-height: 44px; padding-inline: 14px; justify-content: center; }
+  .mode-list button small { display: none; }
+}
+.is-demo-locator { display: none; }
+@media (max-width: 899px) { .guide-head nav.guide-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); } .guide-head .guide-bar__actions { grid-template-columns: minmax(0, 1fr) auto; } }
+// 分頁依容器縮小，不讓固定內距擠掉中文；中等寬度先換列再縮盤面。
+.guide-head > div, .guide-bar__actions, .guide-head nav.guide-tabs { min-width: 0; }
+.guide-head nav.guide-tabs button { min-width: 0; padding-inline: clamp(6px, 1.5vw, 20px); }
+@media (min-width: 900px) and (max-width: 1199px) {
+  .guide-head .guide-bar__actions { flex-wrap: wrap; }
+}
+@media (max-width: 380px) {
+  .guide-head nav.guide-tabs button span { font-size: 15px; }
+}
+@media (max-width: 899px) {
+  .guide-head .guide-bar__actions { margin-inline-start: 0; }
+  .guide-head nav.guide-tabs { grid-area: 1 / 1; justify-self: stretch; }
+  .guide-head .guide-rules-button { grid-area: 1 / 2; }
+  .mode-list button { min-height: 44px; }
+}
+@media (min-width: 601px) and (max-width: 999px) {
+  .mode-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .mode-list button { padding-inline: 8px; }
+  .mode-list button small { display: none; }
+}
+// 手機的玩法按鈕只留名稱，說明在下方標題已經有
+@media (max-width: 520px) { .mode-list button small { display: none; } }

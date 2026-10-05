@@ -202,10 +202,15 @@ export interface MiniGameStart {
   seed: string;
   configJson: string | null;
   startedAt: string;
+  /** 細節追跡：伺服器依文物本體算好的目標點（新的一局才有，舊局沿用雜湊位置）。 */
+  locatorTargets?: { artifactId: string; x: number; y: number }[] | null;
+  backgroundPieces?: number[] | null;
 }
 
 export interface StartMiniGameRequest {
   modeCode: string;
+  /** 館藏拼圖：MEMORY 只看十秒、滿分 100；REFERENCE 隨時看原圖、上限 80。 */
+  variant?: 'EASY' | 'HARD';
 }
 
 export interface CompleteMiniGameRequest {
@@ -254,6 +259,7 @@ export interface AppreciationAnswer {
   voteCount: number;
   voted: boolean;
   isOwn: boolean;
+  imagePath?: string | null;
 }
 
 /** 前端在送出 HTTP 請求前發現的欄位錯誤；API 回應錯誤仍由 GameService.errorMessage 處理。 */

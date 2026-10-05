@@ -7,12 +7,10 @@
     <header class="room-notes-heading">
       <div class="room-code-heading">
         <div><span class="room-code-label">房間詳情 · 房間代碼</span><h2 id="room-details-title">{{ currentRoom.roomCode }}</h2></div>
-        @if (!isDemo()) {
-          <div class="room-share-actions">
+        <div class="room-share-actions">
             <button type="button" class="copy-room-code" (click)="copyCode.emit(currentRoom.roomCode)" aria-label="複製房間代碼">複製</button>
             <button type="button" class="copy-room-code" (click)="showQr.emit(currentRoom)" aria-label="顯示房間 QR 碼">QR 碼</button>
-          </div>
-        }
+        </div>
       </div>
       <span [attr.data-status]="currentRoom.status">{{ statusText(currentRoom.status) }}</span>
     </header>
@@ -26,15 +24,10 @@
     </dl>
     <section class="participant-record">
       <header><h3>席位</h3><span>{{ currentRoom.playerCount ?? currentRoom.players.length }} / {{ currentRoom.maxPlayers }}</span></header>
-      @if (isDemo()) {
-        @if (isAdmin()) { <p class="margin-note">展示模式僅供查看，不能加入房間。</p> }
-        @else { <p class="margin-note">這間房目前僅供查看，不能加入房間。</p> }
-      } @else {
         <ol>
           @for (player of currentRoom.players; track player.id) { <li><b>{{ (player.seatNo || 0).toString().padStart(2, '0') }}</b><span>{{ player.displayName }}</span><small>{{ playerStateText(player) }}</small></li> }
           @for (slot of openSlots(currentRoom); track slot) { <li class="vacant"><b>{{ (currentRoom.players.length + slot + 1).toString().padStart(2, '0') }}</b><span>空位</span><small>可加入</small></li> }
         </ol>
-      }
     </section>
     </app-game-scroll-panel>
     @if (isRehearsal()) {
@@ -42,12 +35,17 @@
         <p>這間房會依房卡設定開始遊戲。</p>
         <button type="button" (click)="join.emit()">加入房間</button>
       </div>
-    } @else if (!isDemo() && canJoin()) {
+    } @else if (canJoin()) {
       <form #joinFormRef="ngForm" class="join-note" (ngSubmit)="join.emit()" novalidate>
         <label>遊戲顯示名稱<input name="joinDisplayName" [(ngModel)]="form.displayName" maxlength="80" required /></label>
         @if (currentRoom.visibility === 'PRIVATE') { <label>房間密碼<input name="joinPassword" type="password" [(ngModel)]="form.password" required /></label> }
         <button type="submit" [disabled]="joining() || joinFormRef.invalid">{{ joining() ? '加入中…' : '加入房間' }}</button>
       </form>
-    } @else if (!isDemo()) { <p class="margin-note">這間房目前不能加入，請選擇可加入的房間。</p> }
+    } @else if (currentRoom.visibility === 'PUBLIC' && currentRoom.status !== 'CANCELLED') {
+      <div class="join-note spectate-note">
+        <p>{{ currentRoom.status === 'WAITING' ? '這一桌已經坐滿' : currentRoom.status === 'PLAYING' ? '這一桌正在進行' : '這一桌已經結束' }}，還是可以進場觀戰，看大家怎麼玩。</p>
+        <button type="button" (click)="spectate.emit()">進場觀戰</button>
+      </div>
+    } @else { <p class="margin-note">這間房目前不能加入，請選擇可加入的房間。</p> }
   } @else { <p class="margin-note" role="alert">房間資訊暫時載入不了，請關閉視窗後重新選擇房間。</p> }
 </aside>

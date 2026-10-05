@@ -1,13 +1,22 @@
-<!-- 遊戲區選單：平時只留左上角一顆按鈕，把整個畫面讓給牌桌；點開才浮出模式、聲音與專注模式。 -->
+<!-- 遊戲區狀態列：左邊選單，中間放頁面說明，右邊是頁面自己的動作與專注（全螢幕）鈕；固定佔一列，不會蓋住牌桌。 -->
 <nav class="game-navigation" [class.is-open]="open()" aria-label="遊戲區功能">
-  <button type="button" class="game-menu" aria-controls="game-menu-panel" [attr.aria-expanded]="open()" (click)="toggleMenu($event)">
-    <app-qmah-icon [name]="open() ? 'x' : 'gamepad-2'" aria-hidden="true" />
-    <span>{{ open() ? '收起' : '選單' }}</span>
-  </button>
+  <div class="game-bar">
+    <button type="button" class="game-menu" aria-controls="game-menu-panel" [attr.aria-expanded]="open()" (click)="toggleMenu($event)">
+      <app-qmah-icon [name]="open() ? 'x' : 'menu'" aria-hidden="true" />
+      <span>{{ open() ? '收起' : '選單' }}</span>
+    </button>
+    <div class="game-bar__note"><ng-content select="[navNote]" /></div>
+    <div class="game-navigation__extra"><ng-content /></div>
+    <button type="button" class="game-sound-toggle" (click)="audio.toggleMute()" [attr.aria-pressed]="audio.muted()" [attr.aria-label]="audio.muted() ? '開啟音樂與音效' : '一鍵靜音'" [attr.title]="audio.muted() ? '開啟聲音' : '靜音'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor" stroke="none" />@if (audio.muted()) { <path d="m16 9.5 5 5M21 9.5l-5 5" /> } @else { <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" /> }</svg>
+    </button>
+    <button type="button" class="game-focus-toggle" (click)="focusMode.toggle()" [attr.aria-pressed]="focusMode.active()" [attr.aria-label]="focusMode.active() ? '離開專注模式與全螢幕' : '專注模式，進入全螢幕'" [attr.title]="focusMode.active() ? '離開專注' : '專注模式'">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">@if (focusMode.active()) { <path d="M3 8h5V3M16 3v5h5M8 21v-5H3M21 16h-5v5" /> } @else { <path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5" /> }</svg>
+    </button>
+  </div>
 
   @if (open()) {
     <div id="game-menu-panel" class="game-menu__panel" (click)="$event.stopPropagation()">
-      <p class="game-menu__hint"><kbd>Q</kbd><kbd>E</kbd> 切換分頁</p>
       <div class="game-navigation__links">
         @for (link of links; track link.path) {
           <a [routerLink]="link.path" [class.is-active]="isActive(link)" [attr.aria-current]="isActive(link) ? 'page' : null" (click)="open.set(false)">
@@ -21,17 +30,7 @@
       </div>
 
       <div class="game-navigation__actions">
-        @if (isAdmin()) {
-          <div class="game-tools" [class.is-active]="isTestActive() || isDemoActive()">
-            <a routerLink="/game" [queryParams]="{ test: '1' }" (click)="open.set(false)" [attr.aria-current]="isTestActive() ? 'page' : null"><strong>模擬遊戲</strong><span>點房卡入桌，或建立房間讓 NPC 一起玩</span></a>
-            @if (canShowRooms) {
-              <a routerLink="/game/demo" [queryParams]="lobbyQuery()" (click)="open.set(false)" [attr.aria-current]="isDemoActive() ? 'page' : null"><strong>房間展示</strong><span>查看範例房間與清單排列，不能加入</span></a>
-            }
-          </div>
-        }
         <app-game-audio-toggle [inline]="true" />
-        <button type="button" class="game-focus-toggle" (click)="focusMode.toggle(); open.set(false)" [attr.aria-pressed]="focusMode.active()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5" /></svg><span>{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</span></button>
-        <div class="game-navigation__extra"><ng-content /></div>
       </div>
     </div>
   }

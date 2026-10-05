@@ -1,0 +1,30 @@
+@use './game-ui' as ui;
+:host { display: contents; }
+.pause-dialog button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 24px; border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 700; text-decoration: none; }
+.pause-dialog { position: fixed; inset: 0; margin: auto; border: 0; border-radius: var(--qmah-radius-panel); background: var(--qmah-surface); color: var(--qmah-ink); box-shadow: 0 16px 40px color-mix(in srgb, var(--qmah-night) 30%, transparent); }
+.pause-dialog::backdrop { background: color-mix(in srgb, var(--qmah-night) 70%, transparent); }
+.pause-dialog h2 { margin: 0; font: 700 clamp(24px, 4vw, 28px)/1.4 var(--qmah-font-serif); }
+.pause-dialog p { color: var(--qmah-muted); margin: 12px 0; font-size: 1rem; line-height: 1.65; word-break: normal; overflow-wrap: break-word; line-break: strict; text-wrap-style: balance; }
+.pause-dialog button { width: 100%; margin-top: 12px; }
+.pause-dialog h2 { text-wrap-style: balance; }
+.help-options { display: grid; gap: 24px; margin-block: 24px; }
+.help-option h3 { margin: 0; font: 700 1.125rem/1.4 var(--qmah-font-sans); }
+.help-option p { margin-block: 8px; }
+.pause-dialog { @include ui.paper-panel; width: min(92vw, 460px); max-height: none; overflow: visible; padding: 22px 24px 20px; }
+.pause-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.pause-head h2 { @include ui.title; margin: 0; font-size: 28px; }
+.pause-head p { margin: 4px 0 0; color: var(--game-card-muted); font-size: 14px; }
+.pause-menu { display: grid; gap: 12px; }
+.pause-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 520px) { .pause-pair { grid-template-columns: 1fr; } }
+.pause-dialog :is(button, a.pause-lobby) { @extend %ui-btn-2; display: flex; align-items: center; justify-content: center; min-height: 52px; margin: 0; text-align: center; text-decoration: none; font-size: 16px; }
+.pause-dialog .pause-resume { @extend %ui-btn; min-height: 64px; font-size: 20px; }
+.pause-dialog .pause-quit { min-height: 44px; font-size: 15px; }
+.pause-note { margin: 14px 0 0; color: var(--game-card-muted); font-size: 14px; line-height: 1.6; text-align: center; text-wrap-style: balance; }
+.pause-dialog .help-options { display: grid; gap: 12px; }
+.pause-dialog .help-option { display: grid; gap: 6px; padding: 12px 14px; border: 2px solid var(--game-card-line); border-radius: 12px; background: #00000008; }
+.pause-dialog .help-option h3 { margin: 0; font-size: 17px; }
+.pause-dialog .help-option p { margin: 0; font-size: 14px; line-height: 1.6; }
+.pause-dialog .help-option button { margin-top: 4px; }
+.pause-dialog .help-options + .pause-note { margin-bottom: 14px; }
+@media (max-height: 520px) { .pause-dialog { padding-block: 12px; } .pause-head { margin-bottom: 8px; } .pause-dialog .pause-resume { min-height: 48px; } .pause-note { margin-top: 8px; } .pause-dialog .help-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pause-dialog { width: min(92vw, 640px); } }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, computed, Component, ElementRef, ViewChild, input, output, signal } from '@angular/core';
 
 import { MiniGameArtifact, MiniGameStart } from './game.models';
 import { GameDetailLocatorBoardComponent } from './game-detail-locator-board.component';
@@ -30,6 +30,8 @@ export interface TrainingCatalogHint {
 })
 export class GameTrainingPlaySheetComponent {
   readonly attempt = input.required<MiniGameStart>();
+  // 館藏拼圖的「只看十秒」玩法：伺服器把玩法記在 seed 尾端（-m）；試玩不套用。
+  readonly puzzleMemory = computed(() => !this.demonstration() && this.attempt().seed.endsWith('-m'));
   readonly isComplete = input(false);
   readonly demonstration = input(false);
   readonly paused = input(false);
@@ -58,6 +60,16 @@ export class GameTrainingPlaySheetComponent {
   readonly autoPlaced = input(0);
   readonly isRestoreSolved = input(false);
   readonly memoryHints = input<TrainingCatalogHint[]>([]);
+  /** 本局翻牌用到的文物（每件一筆），電腦版側欄點開可看介紹。 */
+  readonly memoryDeck = computed(() => {
+    const seen = new Map<string, { artifactId: string; name: string; image: string | null; description: string }>();
+    for (const card of this.memoryCards()) {
+      if (!seen.has(card.artifactId)) seen.set(card.artifactId, { artifactId: card.artifactId, name: card.name, image: card.image ?? null, description: this.memoryHints().find(hint => hint.artifactId === card.artifactId)?.description ?? '' });
+    }
+    return [...seen.values()];
+  });
+  readonly deckPick = signal<string | null>(null);
+  readonly deckPicked = computed(() => this.memoryDeck().find(item => item.artifactId === this.deckPick()) ?? null);
   readonly currentArtifactHint = input<TrainingCatalogHint | null>(null);
   readonly progressPercent = input(0);
   readonly elapsedLabel = input('00:00');
@@ -69,6 +81,7 @@ export class GameTrainingPlaySheetComponent {
   readonly helpRequested = output<void>();
   readonly completeRequested = output<void>();
   readonly detailLocated = output<LocatorAnswer>();
+  readonly locatorFeedback = output<boolean>();
   readonly boardFocusMove = output<{ event: KeyboardEvent; slot: number; columns: number }>();
   readonly imageError = output<string>();
   readonly memoryFlipped = output<number>();
@@ -97,6 +110,9 @@ export class GameTrainingPlaySheetComponent {
     else if (this.attempt().modeCode === 'ARTIFACT_PUZZLE') this.placement?.advanceDemonstration();
     else this.scrollBoard?.advanceDemonstration();
   }
+  readonly hard = input(false);
+  /** 困難玩法沒有求救（拼圖除外）。 */
+  readonly helpAvailable = input(true);
   puzzleReady(): boolean { return !!this.placement?.ready(); }
   scrollReady(): boolean { return !!this.scrollBoard?.ready(); }
   scrollEligible(): boolean { return !!this.scrollBoard?.layout().eligible; }

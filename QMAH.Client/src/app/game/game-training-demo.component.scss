@@ -5,17 +5,32 @@ app-game-training-play-sheet { display: block; height: 100%; }
 .demo-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; padding-block: 0 10px; color: var(--game-table-ink); }
 .demo-toolbar p { margin: 0; font-weight: 700; }
 .demo-toolbar p span { margin-left: 12px; color: var(--game-table-muted); font-size: 14px; font-weight: 400; }
-.demo-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.demo-controls { flex-wrap: wrap; }
 .demo-status { display: block; margin-top: 4px; color: var(--game-table-muted); font-size: 14px; line-height: 1.5; }
-.demo-controls button { @include ui.button(true); }
-.demo-controls .demo-start { @include ui.button; --game-button-image: var(--game-button-ochre-image); --game-button-ink: #fff8e9; display: inline-flex; align-items: center; text-decoration: none; }
+.demo-controls .demo-start { @extend %ui-btn; --game-button-image: var(--game-button-ochre-image); --game-button-ink: var(--game-ink-yellow); display: inline-flex; align-items: center; text-decoration: none; }
 .demo-table { --stage-ink: var(--game-table-ink); --stage-muted: var(--game-table-muted); --stage-accent: var(--game-table-ink); --qmah-surface: var(--game-table-ground); --qmah-ink: var(--game-table-ink); --qmah-muted: var(--game-table-muted); --qmah-game-action: #fff8e9; --qmah-game-content: #273e33; --qmah-focus: #fff0c9; padding: 0; color: var(--game-table-ink); }
-.demo-pause { @include ui.paper-panel; position: fixed; inset: 0; margin: auto; width: min(420px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; }
+.demo-pause { @include ui.paper-panel; position: fixed; inset: 0; margin: auto; height: fit-content; position: fixed; inset: 0; margin: auto; width: min(420px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; }
 .demo-pause h2 { margin: 0; font-size: 24px; }
 .demo-pause p { margin-block: 12px 20px; line-height: 1.7; }
-.demo-pause button { @include ui.button; display: block; margin-inline: auto; min-width: 160px; }
+.demo-pause button { @extend %ui-btn; display: block; margin-inline: auto; min-width: 160px; }
 .demo-pause::backdrop { background: #14241ab3; }
 button, a { font: inherit; cursor: pointer; }
 button:focus-visible, a:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
-@media (max-width: 600px) { .demo-table { --stage-ink: var(--game-table-ink); --stage-muted: var(--game-table-muted); --stage-accent: var(--game-table-ink); --qmah-surface: var(--game-table-ground); border-radius: 10px; } .demo-controls { width: 100%; } }
+@media (max-width: 600px) { .demo-table { --stage-ink: var(--game-table-ink); --stage-muted: var(--game-table-muted); --stage-accent: var(--game-table-ink); --qmah-surface: var(--game-table-ground); border-radius: 0; } }
 @media (max-width: 999px) { :host, app-game-training-play-sheet { height: auto; } .demo-table { flex-basis: auto; } .demo-toolbar p span { display: block; margin: 4px 0 0; } .demo-controls { gap: 8px; } }
+
+@media (max-width: 999px) { :host { height: auto; } .demo-table { flex: none; min-height: 0; } app-game-training-play-sheet { height: auto; } }
+
+// 試玩控制：自動示範（藍色開關）、重來（只有圖示）、說明小球、完成後的正式挑戰（黃色），各自用途不同、顏色也不同
+.demo-controls { display: flex; align-items: center; gap: 10px; }
+.demo-controls svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.demo-auto { @extend %ui-btn-2; gap: 8px; padding-inline: 16px; }
+.demo-auto[aria-pressed='true'] { --game-button-image: var(--game-button-blue-image); --game-button-ink: #fff8e9; }
+.demo-restart { @extend %ui-btn-2; width: 44px; padding: 0; }
+.demo-auto:not([aria-pressed='true']) svg { fill: currentColor; stroke-width: 1.5; }
+@media (max-height: 820px) { .demo-status { display: none; } }
+@media (max-width: 700px) { .demo-controls { gap: 8px; } }
+@media (max-width: 520px) {
+  .demo-controls { flex-wrap: nowrap; gap: 6px; }
+  .demo-auto { gap: 4px; padding-inline: 8px; font-size: 14px; }
+}

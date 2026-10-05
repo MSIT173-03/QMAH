@@ -1,15 +1,33 @@
 <div class="training-notebook" [class.is-playing]="phase === 'playing'" [class.is-complete]="phase === 'complete'" [class.is-focus-mode]="focusMode.active()">
-      @if (phase === 'list') { <app-game-navigation />
-      } @else if (phase === 'complete') { <div class="scene-toolbar"><a routerLink="/game">遊戲大廳</a><button type="button" (click)="focusMode.toggle()" [attr.aria-pressed]="focusMode.active()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button></div> }
+      <app-game-navigation>@if (!authRequired) { <app-game-reward-meter [refreshToken]="complete" [gain]="complete?.pointReward ?? 0" [keyGain]="complete?.keyProgressReward ?? 0" /> }</app-game-navigation>
 
       <section class="chapter" aria-labelledby="training-title">
         <header class="chapter-heading">
-          <div><h1 id="training-title">{{ phase === 'list' ? '單人小遊戲' : phase === 'complete' ? '本局結算' : attempt?.modeName }}</h1>@if (phase === 'list') { <span>選一種玩法，開始這一局。</span> }</div>
+          <div><h1 id="training-title">{{ phase === 'list' ? '單人小遊戲' : phase === 'complete' ? '本局結算' : attempt?.modeName }}</h1>@if (phase === 'list') { <span>選一種玩法，開始一局。</span> }</div>
         </header>
 
         @if (error && !authRequired) { <div class="message error" role="alert"><strong>{{ phase === 'playing' ? '結果尚未送出，進度仍保留' : phase === 'complete' ? '新挑戰尚未開始，上一局結果仍保留' : '目前無法開始挑戰' }}</strong><span>{{ error }}</span><div class="auth-actions"><button type="button" (click)="retryAction()" [disabled]="starting || completing">{{ phase === 'playing' && canComplete ? '重新送出結果' : '重新載入' }}</button></div></div> }
         @if (authRequired && phase !== 'list') { <div class="message error" role="alert"><strong>登入狀態已失效，本局進度仍保留。</strong><a routerLink="/login" [queryParams]="{ returnUrl: '/game/training' }">重新登入後繼續</a></div> }
         @if (loading) { <div class="loading" role="status">正在載入單人小遊戲…</div> }
+        @else if (phase === 'list' && difficultyOpen) {
+          <section class="difficulty-stage" aria-labelledby="difficulty-title">
+            <header class="difficulty-head"><div><h2 id="difficulty-title">選擇難度</h2><p>{{ pendingModeName }}：想輕鬆練習，還是挑戰滿分？</p></div></header>
+            <div class="difficulty-options" role="radiogroup" aria-label="難度">
+              @for (item of difficultyOptions; track item.code) {
+                <button type="button" role="radio" class="difficulty-card" [attr.data-difficulty]="item.code" [attr.aria-checked]="pickedDifficulty === item.code" [class.is-selected]="pickedDifficulty === item.code" (click)="pickedDifficulty = item.code">
+                  <span class="difficulty-stars" [attr.aria-label]="'難度 ' + item.option.stars + ' / 3'"><i [class.is-on]="item.option.stars >= 1"></i><i [class.is-on]="item.option.stars >= 2"></i><i [class.is-on]="item.option.stars >= 3"></i></span>
+                  <strong>{{ item.name }}</strong>
+                  <span class="difficulty-tagline">{{ item.option.tagline }}</span>
+                  <dl>@for (row of item.option.rows; track row[0]) { <div><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div> }</dl>
+                </button>
+              }
+            </div>
+            <div class="difficulty-actions">
+              <button type="button" data-button-tone="neutral" (click)="difficultyOpen = false">返回選玩法</button>
+              <button type="button" data-button-tone="start" (click)="confirmDifficulty()" [disabled]="starting">{{ starting ? '準備中…' : '開始（' + (pickedDifficulty === 'EASY' ? '簡單' : '困難') + '）' }}</button>
+            </div>
+          </section>
+        }
         @else if (phase === 'list' && (authRequired || modes.length)) {
           <app-game-training-mode-picker [authRequired]="authRequired" [modes]="modes" [selectedMode]="selectedMode" [starting]="starting" [quickStart]="!focusMode.active()" (modeSelected)="selectMode($event)" (startMode)="start($event)" (retryModes)="retryModes()" />
         }
@@ -20,6 +38,7 @@
             [class.is-focus-mode]="focusMode.active()"
             [class.is-complete]="phase === 'complete'"
             [attempt]="current"
+            [hard]="isHard" [helpAvailable]="helpAvailable"
             [isComplete]="phase === 'complete'"
             [paused]="paused"
             [completing]="completing"
@@ -55,7 +74,7 @@
             (pauseRequested)="openPause()"
             (helpRequested)="openPause(); helpRequested = true"
             (completeRequested)="completeAttempt()"
-            (detailLocated)="locateDetail($event)"
+            (detailLocated)="locateDetail($event)" (locatorFeedback)="locatorFeedbackChanged($event)"
             (boardFocusMove)="moveBoardFocus($event.event, $event.slot, $event.columns)"
             (imageError)="markImageFailed($event)"
             (memoryFlipped)="flipMemory($event)"
@@ -69,50 +88,11 @@
             (puzzleAvailability)="setPuzzleAvailability($event)"
             (scrollAvailability)="setScrollAvailability($event)" />
           @if (phase === 'complete' && complete; as result) {
-            <app-game-training-result [attempt]="current" [complete]="result" [title]="resultTitle" [artifacts]="resultArtifacts" [elapsedLabel]="elapsedLabel" [moves]="moves" [hintsUsed]="hintsUsed" [autoPlaced]="autoPlaced" [starting]="starting" [failedImageKeys]="failedImageKeys" (playAgain)="playAgain()" (showModeList)="showModeList()" (imageFailed)="markImageFailed($event)" />
+            <app-game-training-result [attempt]="current" [mode]="modeOf(current.modeCode)" [complete]="result" [title]="resultTitle" [artifacts]="resultArtifacts" [elapsedLabel]="elapsedLabel" [moves]="moves" [hintsUsed]="hintsUsed" [autoPlaced]="autoPlaced" [starting]="starting" [failedImageKeys]="failedImageKeys" (playAgain)="playAgain()" (showModeList)="showModeList()" (imageFailed)="markImageFailed($event)" />
           }
           </div>
         }
         @else if (!error) { <div class="loading">目前沒有可開始的單人小遊戲。</div> }
       </section>
-      <dialog #pauseDialog class="pause-dialog" [class.is-confirming]="confirmLeaving" aria-labelledby="pause-title" (close)="resumeFromPause()">
-        <header class="pause-dialog__header">
-          <h2 id="pause-title">{{ confirmLeaving ? '離開這一局？' : helpRequested ? '需要幫忙嗎？' : '先歇一會' }}</h2>
-          <button type="button" class="pause-close" aria-label="關閉選單並繼續遊玩" (click)="closePause()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
-          </button>
-        </header>
-        @if (confirmLeaving) {
-          <p class="leave-warning"><span>離開後會清除本局進度，</span><span>不會結算成績或發放獎勵。</span></p>
-          <div class="confirm-actions"><button type="button" (click)="closePause()">繼續這一局</button><button type="button" class="secondary" data-button-tone="danger" (click)="leaveFromPause()">放棄本局，回玩法列表</button></div>
-        } @else {
-        <app-game-scroll-panel label="暫停與協助選項，可上下捲動" cue="往下查看其他選項"><p>暫停期間不計時，繼續遊玩會回到目前盤面。</p><app-game-audio-toggle />
-        @if (helpRequested) {
-          <div class="help-options">
-            <section class="help-option" aria-labelledby="hint-option-title">
-              <h3 id="hint-option-title">提示後繼續</h3>
-              <p>{{ attempt?.modeCode === 'DETAIL_LOCATOR' ? '標示目前細節所在的原圖區域，再由你指出位置。' : attempt?.modeCode === 'MEMORY_MATCH' ? '告訴你一組配對的位置，再由你翻牌完成。' : '標示一片碎片在原圖中的區域，再由你放到正確格子。' }}</p>
-              <p>{{ attempt?.modeCode === 'MEMORY_MATCH' ? '首次查看一組配對扣' : '每次提示扣' }} <span class="text-unit">{{ hintPenalty }} 分</span>。</p>
-              @if (attempt?.modeCode === 'MEMORY_MATCH') { <p>重看同一組配對不再扣分。</p> }
-              <button type="button" (click)="useHelp(false)" [disabled]="!canRequestHint">取得提示並繼續</button>
-            </section>
-            <section class="help-option" aria-labelledby="auto-option-title">
-              <h3 id="auto-option-title">代完成並結算</h3>
-              <p>協助完成剩餘內容，立即送出結果。</p>
-              <p>本次扣 <span class="text-unit">{{ helpPenalty }} 分</span>，本局無法取得 <span class="text-unit">S 級</span>。</p>
-              <button type="button" (click)="useHelp(true)" [disabled]="!canAskForHelp">確認代完成並結算</button>
-            </section>
-          </div>
-          <details class="help-explanation"><summary>計分與送出說明</summary><ul class="help-notes">
-            <li><strong>扣分只影響這一局</strong><p>帳戶中的鑑定點數不會減少。<br />本局扣分後最低為<span class="text-unit"> 0 分</span>。</p></li>
-            <li><strong>獎勵依結算評級發放</strong><p>點數受今日剩餘可得點數限制。<br />鑰匙進度不受每日點數上限影響。</p></li>
-            <li><strong>送出失敗也不用重玩</strong><p>盤面、提示與<span class="text-unit">代完成</span>紀錄都會保留。<br />再按一次「送出結果」即可。</p></li>
-          </ul></details>
-}
-        <button type="button" class="pause-resume" (click)="closePause()">繼續遊玩</button>
-        <div class="pause-utility-actions">@if (!helpRequested) { <button type="button" class="secondary" (click)="helpRequested = true" [disabled]="!canAskForHelp">求救選項</button> }<button type="button" class="secondary" (click)="focusMode.toggle(); closePause()">{{ focusMode.active() ? '離開專注模式' : '專注模式' }}</button></div>
-        <section class="pause-exit-actions" aria-labelledby="pause-exit-title"><h3 id="pause-exit-title">離開盤面</h3><p>回大廳會保留本局，可回來繼續。<br />放棄則清除進度，不結算成績或獎勵。</p><a routerLink="/game" class="pause-lobby">保留進度回大廳</a><button type="button" class="secondary" data-button-tone="danger" (click)="leaveFromPause()">放棄本局，回玩法列表</button></section>
-      </app-game-scroll-panel>
-        }
-      </dialog>
+      <app-game-training-pause #pauseDialog [attempt]="attempt" [elapsedLabel]="elapsedLabel" [confirmLeaving]="confirmLeaving" [(helpRequested)]="helpRequested" [canRequestHint]="canRequestHint" [canAskForHelp]="canAskForHelp" [hintPenalty]="hintPenalty" [helpPenalty]="helpPenalty" (resume)="closePause()" (leave)="leaveFromPause()" (help)="useHelp($event)" (closed)="resumeFromPause()" />
     </div>

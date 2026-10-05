@@ -73,10 +73,9 @@ export class GameAnswerTableComponent {
     group.type === this.activeMobileAnswerType()
       ? group.answers.map((answer, index) => ({ group, answer, index, count: group.answers.length }))
       : []));
-  readonly answerBacks = computed(() => Array.from(
-    { length: Math.min(this.submittedAnswerCount(), 8) },
-    (_, index) => index
-  ));
+  /** 作答中的牌堆：一位玩家一格，已送出的格子翻成牌背。 */
+  readonly deckTotal = computed(() => Math.max(this.round().participantCount ?? 0, this.submittedAnswerCount()));
+  readonly deckSlots = computed(() => Array.from({ length: Math.min(this.deckTotal(), 10) }, (_, index) => index));
 
   constructor() {
     effect(() => {
