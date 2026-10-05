@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 import { MiniGameComplete } from './game.models';
@@ -13,7 +13,7 @@ import { MiniGameComplete } from './game.models';
     <section class="reward-tally" aria-labelledby="tally-title">
       <header class="tally-head">
         <h3 id="tally-title">本局獎勵入帳</h3>
-        @if (complete().pointReward === 0) { <span class="tally-warn">{{ belowB() ? '未達 B 級，沒有鑑定點數' : '今日鑑定點數已達上限' }}</span> }
+        @if (complete().pointReward === 0) { <span class="tally-warn">今日鑑定點數已達上限</span> }
       </header>
       <div class="tally-grid">
         <div class="tally-card" data-tone="points" [class.is-zero]="complete().pointReward === 0">
@@ -43,6 +43,4 @@ import { MiniGameComplete } from './game.models';
 })
 export class GameResultTallyComponent {
   readonly complete = input.required<MiniGameComplete>();
-  /** 評級低於 B（C 或未達標）不發點數；只有 B 以上卻沒拿到點數，才是每日上限。 */
-  readonly belowB = computed(() => !['S', 'A', 'B'].includes(this.complete().grade));
 }
