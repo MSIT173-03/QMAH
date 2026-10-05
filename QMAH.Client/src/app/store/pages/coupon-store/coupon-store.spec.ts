@@ -251,7 +251,7 @@ describe('CouponStore', () => {
       await click(costButton());
       await click(dialog().querySelector('.btn-solid')!);
       const [request] = http.match((req) => req.url.endsWith('/store/coupons/c1/redeem'));
-      request.flush({ detail: '鑑定點數不足，不能兌換這張優惠券。' }, { status: 409, statusText: 'Conflict' });
+      request.flush({ detail: '鑑定點數不足，不能兌換這張折價券。' }, { status: 409, statusText: 'Conflict' });
       await fixture.whenStable();
       fixture.detectChanges();
 
@@ -268,7 +268,7 @@ describe('CouponStore', () => {
 
     const [request] = http.match((req) => req.url.endsWith('/store/coupons/c1/redeem'));
     request.flush(
-      { title: '無法兌換這張折價券', detail: '鑑定點數不足，不能兌換這張優惠券。' },
+      { title: '無法兌換這張折價券', detail: '鑑定點數不足，不能兌換這張折價券。' },
       { status: 409, statusText: 'Conflict' },
     );
     await fixture.whenStable();
