@@ -21,7 +21,7 @@
 @keyframes tally-pop { from { opacity: 0; scale: .2; rotate: -30deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
 .tally-note { margin: 0; color: var(--game-card-muted); font-size: 14px; line-height: 1.6; text-wrap-style: balance; }
 .tally-card { isolation: isolate; }
-.tally-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tally-head { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
 .tally-warn { padding: 3px 12px; border: 2px solid #963d32; border-radius: 999px; color: #963d32; background: #fff1ee; font-size: 14px; font-weight: 800; white-space: nowrap; }
 @media (max-width: 450px) { .tally-grid { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .tally-num, .tally-card .tile-icon, .tally-bar i { animation: none; } }

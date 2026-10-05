@@ -16,13 +16,24 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// </remarks>
 public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dailyRewards)
 {
+    public const decimal DailyKeyProgressLimit = 500m;
+
     /// <summary>在呼叫端的結算交易中累積遊戲鑰匙進度，保留小數並轉換完整鑰匙。</summary>
+
     public async Task<EconomyResult<GameKeyGrantView>> GrantGameKeyProgressAsync(
         Guid userId, decimal progressReward, int threshold, string referenceType,
         string conversionReferenceType, Guid referenceId, CancellationToken cancellationToken)
     {
         if (threshold <= 0 || progressReward < 0)
             return EconomyResult<GameKeyGrantView>.Conflict("鑰匙進度設定無效，請聯絡管理員。");
+        // 每日鑰匙進度上限（小遊戲與多人共用）：約等於 5 把鑰匙，遠寬於點數上限，只擋刷分。
+        var dayStart = DateTime.UtcNow.AddHours(8).Date.AddHours(-8);
+        var earnedToday = await db.KeyProgressTransactions
+            .Where(item => item.UserId == userId && item.Amount > 0 && item.CreatedAt >= dayStart
+                && item.CreatedAt < dayStart.AddDays(1)
+                && (item.ReferenceType == "MINIGAME_REWARD" || item.ReferenceType == "MAIN_GAME_REWARD"))
+            .SumAsync(item => (decimal?)item.Amount, cancellationToken) ?? 0m;
+        progressReward = Math.Min(progressReward, Math.Max(0m, DailyKeyProgressLimit - earnedToday));
         var progress = await db.KeyProgressBalances.SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
         var total = checked((progress?.Balance ?? 0) + progressReward);
         var keys = checked((int)decimal.Floor(total / threshold));
@@ -34,7 +45,7 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
         if ((progressReward > 0 || keys > 0) && normalKey is null)
             return EconomyResult<GameKeyGrantView>.Conflict("探索鑰匙暫時無法發放，請稍後重試。");
         if (progressReward == 0 && keys == 0)
-            return EconomyResult<GameKeyGrantView>.Success(new(0, total));
+            return EconomyResult<GameKeyGrantView>.Success(new(0, total, 0m));
         var now = DateTime.UtcNow;
         if (progress is null)
         {
@@ -59,7 +70,7 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
                 Id = Guid.NewGuid(), UserId = userId, KeyDefinitionId = normalKey.Id, Amount = keys,
                 Reason = "遊戲進度達標轉換探索鑰匙", ReferenceType = referenceType, ReferenceId = referenceId, CreatedAt = now });
         }
-        return EconomyResult<GameKeyGrantView>.Success(new(keys, progress.Balance));
+        return EconomyResult<GameKeyGrantView>.Success(new(keys, progress.Balance, progressReward));
     }
 
     /// <summary>將既有達標進度一次轉成探索鑰匙；重複或並行請求只結算尚未轉換的進度。</summary>
@@ -1079,12 +1090,12 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
         player.RewardNormalKeys = keyReward;
         player.RewardPerformanceScore = performance;
         player.RewardRoundsWon = roundsWon;
-        player.RewardKeyProgress = progressReward;
+        player.RewardKeyProgress = grant.Value!.GrantedProgress;
         player.RewardKeyDivisor = keyPolicy.Divisor;
         await db.SaveChangesAsync(retryToken);
         await transaction.CommitAsync(retryToken);
         return EconomyResult<GameRewardView>.Success(new GameRewardView(
-            points, keyReward, performance, roundsWon, false, progressReward, keyPolicy.Divisor));
+            points, keyReward, performance, roundsWon, false, grant.Value!.GrantedProgress, keyPolicy.Divisor));
         }, cancellationToken);
     }
 
@@ -1445,4 +1456,4 @@ public sealed record GameRewardView(
     decimal KeyProgressReward = 0,
     byte KeyRewardDivisor = 1);
 
-public sealed record GameKeyGrantView(int NormalKeys, decimal RemainingProgress);
+public sealed record GameKeyGrantView(int NormalKeys, decimal RemainingProgress, decimal GrantedProgress = 0m);

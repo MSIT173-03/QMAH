@@ -36,7 +36,7 @@ describe('ProductSummary', () => {
     expect(animate).toHaveBeenCalledTimes(1);
     expect(animate.mock.contexts[0]).toBe(addButton);
     const [keyframes] = animate.mock.calls[0];
-    expect(keyframes.map((frame: Keyframe) => frame['transform'])).toEqual(['scale(1)', 'scale(1.05)', 'scale(1)']);
+    expect(keyframes.map((frame: Keyframe) => frame['transform'])).toEqual(['scale(1)', 'scale(1.1)', 'scale(1)']);
   });
 
   it('does not animate the "add and view cart" button', () => {

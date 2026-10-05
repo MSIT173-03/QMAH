@@ -389,7 +389,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         attempt.NormalizedScore = normalizedScore;
         attempt.Grade = grade;
         attempt.PointReward = pointReward;
-        attempt.KeyProgressReward = adjustedProgress;
+        attempt.KeyProgressReward = grant.Value.GrantedProgress;
         attempt.KeyRewardDivisor = keyPolicy.Divisor;
         attempt.ConvertedNormalKeys = convertedNormalKeys;
         attempt.RewardAttemptNo = hasEconomicReward ? rewardedToday + 1 : null;
@@ -405,7 +405,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             normalizedScore,
             grade,
             pointReward,
-            adjustedProgress,
+            grant.Value.GrantedProgress,
             convertedNormalKeys,
             remainingProgress,
             hasEconomicReward,

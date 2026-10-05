@@ -211,7 +211,7 @@ describe('書頁分頁計算', () => {
   });
 
   it('showContinuedHeader 為 false 的頁面改放分隔線', () => {
-    const pages = paginateCatalog([makeGroup('清', 40)], layout, () => true, (i) => i % 2 === 0);
+    const pages = paginateCatalog([makeGroup('清', 90)], layout, () => true, (i) => i % 2 === 0);
     expect(pages[1].lines[0].kind).toBe('divider');
     expect(pages[2].lines[0].kind).toBe('header');
   });
