@@ -1,15 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { KeyExchangeResult, KeyModel, KeyExchangeRule, UnlockWithKeyRequest, UnlockWithKeyResult } from '../models/key-model';
+import { KeyExchangeResult, KeyModel, KeyExchangeRule, KeyRecycleResult, MemberEconomy, RecycleKeyRequest, UnlockWithKeyRequest, UnlockWithKeyResult } from '../models/key-model';
 import { environment } from '../../environments/environment';
 
 /**
  * 嘗試從後端錯誤回應的 body 讀出比 statusText 更精確的錯誤原因。
  * ASP.NET Core 預設的驗證錯誤格式（ValidationProblemDetails）通常長這樣：
  *   { title: "...", status: 400, errors: { ArtifactId: ["The ArtifactId field is required."] } }
- * 這裡依序嘗試 errors／message／title／detail 這幾個常見欄位，抓到就顯示，抓不到才
- * fallback 回 statusText。等實際看到 400 回應長怎樣，可以換成直接對應正確的欄位。
+ * 優先顯示驗證錯誤與 detail／message；title 通常只是通用摘要，最後才使用。
  */
 function extractServerErrorDetail(error: any): string {
   const body = error?.error;
@@ -23,16 +22,9 @@ function extractServerErrorDetail(error: any): string {
     if (parts.length > 0) return parts.join(' | ');
   }
 
-  return body.message || body.title || body.detail || error?.statusText || '未知錯誤';
+  return body.detail || body.message || body.title || error?.statusText || '未知錯誤';
 }
 
-
-interface EconomyResponse {
-  pointBalance: number;
-  keyProgressBalance: number;
-  keyProgressToNormalKey: number;
-  keys: KeyModel[];
-}
 
 @Injectable({
   providedIn: 'root',
@@ -47,10 +39,35 @@ export class KeyService {
 
   /** 取得玩家背包內持有的所有鑰匙；實際上是打 economy 這支綜合 API，只取其中的 keys 陣列 */
   getKeys(): Observable<KeyModel[]> {
-    return this.http.get<EconomyResponse>(this.apiUrl).pipe(
-      map((res) => res.keys),
+    return this.getEconomy().pipe(map((res) => res.keys));
+  }
+
+  /** 取得實際資產餘額；回收成功後呼叫此方法，同時更新點數與鑰匙。 */
+  getEconomy(): Observable<MemberEconomy> {
+    return this.http.get<MemberEconomy>(this.apiUrl).pipe(
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * 畫面用的回收資格預判；eligibleArtifactCount 是這把鑰匙適用範圍內的候選數。
+   * 分類／年代鑰匙不必等全圖鑑完成。最終資格及扣除數量仍由 API 在交易內確認。
+   */
+  canRecycleKey(key: KeyModel, amount = 1): boolean {
+    return Number.isInteger(amount) && amount >= 1 && amount <= 100
+      && key.balance >= amount && key.recyclePointValue > 0 && key.eligibleArtifactCount === 0;
+  }
+
+  /**
+   * 送出一次回收請求；點數由資料庫 RecyclePointValue 計算，並寫入鑰匙、點數流水。
+   * 沿用全域登入 Cookie／XSRF 設定。成功後用 getEconomy() 更新資產；不要自動重試
+   * 此 POST，避免回應遺失時重複回收。409 的具體原因會經由共用錯誤處理傳出。
+   */
+  recycleKey(keyCode: string, amount = 1): Observable<KeyRecycleResult> {
+    const body: RecycleKeyRequest = { amount };
+    return this.http.post<KeyRecycleResult>(
+      `${environment.apiBaseUrl}/me/keys/${encodeURIComponent(keyCode)}/recycle`, body
+    ).pipe(catchError(this.handleError));
   }
 
   /**

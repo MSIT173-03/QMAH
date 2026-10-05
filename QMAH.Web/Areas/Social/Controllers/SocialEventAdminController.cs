@@ -24,15 +24,18 @@ public sealed class SocialEventAdminController : Controller
     private readonly QmahDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly INotificationService _notificationService;
+    private readonly SocialPostMediaService _mediaService;
 
     public SocialEventAdminController(
         QmahDbContext context,
         ICurrentUserService currentUserService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        SocialPostMediaService mediaService)
     {
         _context = context;
         _currentUserService = currentUserService;
         _notificationService = notificationService;
+        _mediaService = mediaService;
     }
 
     [HttpGet]
@@ -94,12 +97,22 @@ public sealed class SocialEventAdminController : Controller
                     : item.SocialPost.MediaAssets
                         .Where(media => media.Status == "ACTIVE")
                         .OrderBy(media => media.CreatedAt)
-                        .Select(media => "/media/" + media.StoredPath)
+                        .Select(media => media.Id.ToString())
                         .ToList()
             })
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        // Web 的 /media 只公開圖鑑與商城素材，社群上傳檔會被擋成 404；
+        // 改用本 Controller 的 Media action（受活動管理權限保護）讀圖。
+        foreach (var listItem in events)
+        {
+            listItem.MediaUrls = listItem.MediaUrls
+                .Select(mediaId => Url.Action(nameof(Media), new { id = mediaId }) ?? string.Empty)
+                .Where(url => url.Length > 0)
+                .ToList();
+        }
 
         return View("~/Areas/Social/Views/SocialAdmin/SocialEventAdmin.cshtml", new EventAdminPageViewModel
         {
@@ -328,8 +341,13 @@ public sealed class SocialEventAdminController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        var previousPublishStatus = item.PublishStatus;
         item.PublishStatus = status;
         await SyncLinkedSocialPostAsync(item, cancellationToken: cancellationToken);
+        if (status == "CANCELLED" && previousPublishStatus != "CANCELLED")
+        {
+            await QueueCancellationNotificationsAsync(item, cancellationToken);
+        }
         await _context.SaveChangesAsync(cancellationToken);
         TempData["SuccessMessage"] = $"活動發布狀態已更新為：{status}。";
         return RedirectToAction(nameof(Index));
@@ -348,13 +366,81 @@ public sealed class SocialEventAdminController : Controller
         }
 
         // 活動可能已經有人報名，因此保留資料並標記為取消是安全的處理方式。
+        var wasCancelled = item.PublishStatus == "CANCELLED";
         item.PublishStatus = "CANCELLED";
         item.ReviewNote = "已由後台標記取消。";
         await SyncLinkedSocialPostAsync(item, cancellationToken: cancellationToken);
+        if (!wasCancelled)
+        {
+            await QueueCancellationNotificationsAsync(item, cancellationToken);
+        }
         await _context.SaveChangesAsync(cancellationToken);
 
         TempData["SuccessMessage"] = "活動已標記取消。";
         return RedirectToAction(nameof(Index));
+    }
+
+    // 後台預覽活動貼文的圖片：Web 的 /media 不公開社群上傳檔，改由受活動管理權限保護的 action 讀檔。
+    // 只提供綁在活動貼文上的圖片，避免活動審核員藉此讀到其他貼文的附件。
+    // GET: /Social/SocialEventAdmin/Media/{id}
+    [HttpGet]
+    public async Task<IActionResult> Media(Guid id, CancellationToken cancellationToken = default)
+    {
+        var asset = await _context.MediaAssets
+            .AsNoTracking()
+            .Where(media => media.Id == id
+                && media.Status == "ACTIVE"
+                && media.Post != null
+                && media.Post.EventId != null)
+            .Select(media => new { media.StoredPath, media.ContentType })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (asset is null)
+        {
+            return NotFound();
+        }
+
+        var physicalPath = _mediaService.TryResolveExistingFile(asset.StoredPath);
+        if (physicalPath is null)
+        {
+            return NotFound();
+        }
+
+        Response.Headers.CacheControl = "private,max-age=300";
+        return PhysicalFile(physicalPath, asset.ContentType);
+    }
+
+    // 活動取消時通知所有仍有效的報名者；與狀態異動在同一次 SaveChanges 寫入。
+    // 主辦人若本身也有報名，同樣會收到（他也是參加者）。
+    private async Task QueueCancellationNotificationsAsync(Event item, CancellationToken cancellationToken)
+    {
+        var registrantIds = await _context.EventRegistrations
+            .AsNoTracking()
+            .Where(registration => registration.EventId == item.Id
+                && (registration.Status == "REGISTERED" || registration.Status == "ATTENDED"))
+            .Select(registration => registration.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var startAt = item.StartAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm");
+        foreach (var userId in registrantIds)
+        {
+            _notificationService.QueueNotification(
+                userId,
+                "活動已取消",
+                $"你報名的活動「{item.Title}」（原定 {startAt}）已取消，造成不便敬請見諒。",
+                // 取消後的活動頁只有發起人與管理員看得到，給報名者連結只會導到 404。
+                null);
+        }
+
+        // 發起人沒有報名自己的活動時，另外通知一次。
+        if (item.OrganizerUserId is Guid organizerUserId && !registrantIds.Contains(organizerUserId))
+        {
+            _notificationService.QueueNotification(
+                organizerUserId,
+                "你的活動已被取消",
+                $"你發起的活動「{item.Title}」已由管理員取消。",
+                $"/social/events/{item.Id}");
+        }
     }
 
     private static string? NormalizeStatus(string? value) =>

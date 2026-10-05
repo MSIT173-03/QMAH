@@ -15,6 +15,28 @@ export interface KeyModel {
   recyclePointValue: number;
 }
 
+/** 對應 GET /me/economy；回收成功後重新讀取，更新點數與鑰匙餘額。 */
+export interface MemberEconomy {
+  pointBalance: number;
+  keyProgressBalance: number;
+  keyProgressToNormalKey: number;
+  keys: KeyModel[];
+  exchangeRules: KeyExchangeRule[];
+}
+
+/** POST /me/keys/{keyCode}/recycle；每次回收 1 至 100 把。 */
+export interface RecycleKeyRequest {
+  amount: number;
+}
+
+/** 回收結果中的 pointAmount 是本次入帳點數，不是會員的點數餘額。 */
+export interface KeyRecycleResult {
+  keyCode: string;
+  keyAmount: number;
+  pointAmount: number;
+  remainingEligibleArtifactCount: number;
+}
+
 /** 篩選列用；'ALL' 是畫面上多出來的選項，不是後端資料本身會有的 scopeType */
 export type KeyFilter = 'ALL' | KeyScopeType;
 

@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Services.Social;
 using QMAH.Web.Areas.Social.Models;
+using QMAH.Web.Areas.Social.Services;
 using QMAH.Web.Infrastructure;
 using QMAH.Web.Infrastructure.AdminNavigation;
 
@@ -18,10 +20,17 @@ public sealed class SocialCommentAdminController : Controller
     private static readonly HashSet<string> AllowedStatuses = ["PUBLISHED", "HIDDEN", "DELETED"];
 
     private readonly QmahDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationService _notificationService;
 
-    public SocialCommentAdminController(QmahDbContext context)
+    public SocialCommentAdminController(
+        QmahDbContext context,
+        ICurrentUserService currentUserService,
+        INotificationService notificationService)
     {
         _context = context;
+        _currentUserService = currentUserService;
+        _notificationService = notificationService;
     }
 
     [HttpGet]
@@ -133,8 +142,24 @@ public sealed class SocialCommentAdminController : Controller
             return NotFound();
         }
 
+        var previousStatus = comment.Status;
         comment.Status = status;
         comment.UpdatedAt = DateTime.UtcNow;
+
+        // 管理員直接下架／恢復留言時通知留言者；處理自己的留言時不用通知自己。
+        if (previousStatus != status && comment.UserId != _currentUserService.GetCurrentUserId())
+        {
+            var message = ContentStatusNotification.ForComment(comment.Content, previousStatus, status);
+            if (message is not null)
+            {
+                _notificationService.QueueNotification(
+                    comment.UserId,
+                    message.Value.Title,
+                    message.Value.Content,
+                    status == "PUBLISHED" ? $"/social/posts/{comment.PostId}" : null);
+            }
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
         TempData["SuccessMessage"] = $"留言狀態已更新為：{AdminDisplayLabels.Status(status)}。";

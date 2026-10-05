@@ -193,7 +193,7 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
             exchangeRules);
     }
 
-    /// <summary>取得目前仍有可解鎖文物的鑰匙兌換規則。</summary>
+    /// <summary>取得啟用中的鑰匙兌換規則；目標已無可解鎖文物時仍可兌換。</summary>
     public async Task<IReadOnlyList<KeyExchangeRuleView>> GetExchangeRulesAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -412,8 +412,7 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
 
         var targetEligibleCount = await GetEligibleArtifactQuery(userId, rule.TargetKeyDefinition)
             .CountAsync(retryToken);
-        if (targetEligibleCount == 0)
-            return EconomyResult<KeyExchangeView>.Conflict("目標鑰匙目前沒有可解鎖的文物，不能兌換。");
+        // 候選數量只供回應顯示；兌換不執行解鎖，全圖鑑或目標範圍收集完成後仍可合成。
 
         var sourceBalance = await GetOrCreateKeyBalanceAsync(
             userId,
@@ -469,7 +468,8 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
         }, cancellationToken);
     }
 
-    /// <summary>回收已沒有任何可解鎖文物的鑰匙，並同步產生鑰匙與點數流水。</summary>
+    /// <summary>回收適用範圍內已無可解鎖文物的鑰匙，並同步產生鑰匙與點數流水。</summary>
+    /// <remarks>CATEGORY／ERA 只檢查該分類／年代；NORMAL／UNIVERSAL 檢查全部啟用文物。</remarks>
     public async Task<EconomyResult<KeyRecycleView>> RecycleKeyAsync(
         Guid userId,
         string keyCode,

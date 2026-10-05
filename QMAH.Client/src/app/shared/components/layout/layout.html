@@ -149,7 +149,7 @@
 </div>
 
 <dialog #siteSwitchDialog class="app-site-switch-dialog" aria-labelledby="site-switch-title"
-        (click)="$event.target === $event.currentTarget && closeSiteSwitch()">
+        (click)="onSiteSwitchBackdropClick($event)">
   <div class="app-site-switch-dialog__heading">
     <span class="app-site-switch-dialog__mark"><app-qmah-icon name="shield-check" [size]="22" aria-hidden="true" /></span>
     <div>

@@ -42,7 +42,7 @@ public sealed class EconomyController(EconomyService economyService) : ApiContro
             economy.ExchangeRules.Select(ToExchangeRuleDto).ToList()));
     }
 
-    /// <summary>取得目前仍有可解鎖文物的鑰匙兌換規則。</summary>
+    /// <summary>取得啟用中的鑰匙兌換規則；目標已無可解鎖文物時仍可兌換。</summary>
     [HttpGet("keys/exchange-rules")]
     public async Task<ActionResult<IReadOnlyList<KeyExchangeRuleDto>>> GetKeyExchangeRules(
         CancellationToken cancellationToken = default)
