@@ -89,30 +89,6 @@
   color: var(--color-body);
 }
 
-.hero-coupon {
-  display: flex;
-  align-items: baseline;
-  gap: var(--qmah-space-2);
-  width: fit-content;
-  max-width: 100%;
-  padding: 7px 10px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-line));
-  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
-  color: var(--color-body);
-  font-size: 12px;
-
-  strong {
-    color: var(--color-accent);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 15px;
-    white-space: nowrap;
-  }
-
-  span {
-    line-height: 1.5;
-  }
-}
-
 .hero-cta {
   align-self: flex-start;
   margin-top: 4px;
@@ -197,12 +173,6 @@
     width: min(100%, 430px);
     min-width: 0;
     padding: var(--qmah-space-4) var(--qmah-space-4);
-  }
-
-  .hero-coupon {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 2px;
   }
 
   .hero-controls {

@@ -30,13 +30,9 @@
       [sold]="product.soldCount"
       [price]="product.dealPrice"
       [was]="was()"
-      [material]="product.material"
       [source]="product.source"
-      [shipping]="product.shippingNote"
       [dims]="product.dimensions"
       [artifactDims]="product.artifactDimensions"
-      [condition]="product.condition"
-      [sizeNote]="sizeNote()"
       (addToCart)="onAddToCart($event)"
       (buyNow)="onBuyNow($event)"
     />
@@ -44,7 +40,7 @@
 
   <!-- 商品說明與評價並排 -->
   <section class="product-hero-section">
-    <app-product-detail [intro]="product.description" [rows]="policies()" />
+    <app-product-detail [intro]="product.description" />
     <app-product-reviews
       [rating]="product.rating"
       [reviewCount]="product.reviewCount"

@@ -156,13 +156,9 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
     artifactDimensions: dto.artifactSizeText ?? '官方資料未提供',
     dimensions: dto.sizeText ?? '官方資料未提供',
     source: dto.sourceUrl ?? dto.externalRef ?? '',
-    material: '',
     // 商品說明保留套組段落；明信片視圖另用 artifactDescription，避免把行銷段落塞進卡片。
     description: dto.description?.trim() || '官方資料未提供',
     artifactDescription: toArtifactDescription(dto.description),
-    condition: '',
-    shippingNote: '',
-    images: dto.primaryImagePath ? [{ view: '商品', url: dto.primaryImagePath }] : [],
   };
 }
 

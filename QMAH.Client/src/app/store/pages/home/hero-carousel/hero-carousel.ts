@@ -1,8 +1,6 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { Component, computed, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
-import { HomeApi } from '../../../api';
-import type { Coupon, HeroSlide } from '../../../api/api.models';
 import { PRODUCT_LIST_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
 import { QmahIconComponent } from '../../../../shared/components/qmah-icon/qmah-icon';
@@ -10,9 +8,15 @@ import { QmahIconComponent } from '../../../../shared/components/qmah-icon/qmah-
 /** 自動播放間隔（毫秒），僅本元件內部使用，非可由外部調整的行為 */
 const AUTOPLAY_MS = 5200;
 
-type StoreHeroSlide = HeroSlide & { coupon: Coupon | null };
+/** 主視覺輪播投影片 */
+interface HeroSlide {
+  kicker: string;
+  title: string;
+  desc: string;
+}
 
-const EDITORIAL_SLIDES: HeroSlide[] = [
+/** 輪播的投影片（本地的編輯文案，後端沒有主視覺版位的 API） */
+const HERO_SLIDES: HeroSlide[] = [
   {
     kicker: '清明選物誌',
     title: '把紙上風景帶回書桌',
@@ -53,38 +57,10 @@ const EDITORIAL_SLIDES: HeroSlide[] = [
   styleUrl: './hero-carousel.scss',
 })
 export class HeroCarousel {
-  private readonly homeApi = inject(HomeApi);
+  /** 輪播的投影片 */
+  protected readonly slides = HERO_SLIDES;
 
-  /** 後端提供的輪播文案；有資料時優先使用 */
-  private readonly apiSlides = toSignal(this.homeApi.getHeroSlides(), { initialValue: [] });
-  /** 可領取的折價券，用來在主視覺補充優惠訊息 */
-  private readonly claimableCoupons = toSignal(this.homeApi.getClaimableCoupons(), { initialValue: [] });
-
-  /**
-   * 輪播的投影片：後端的主視覺文案優先（最多 3 張），沒有時取本地編輯文案的前 3 張；
-   * 接著是可領取折價券（最多 3 張），最後以其餘的本地編輯文案補滿，總共最多 6 張。
-   */
-  protected readonly slides = computed<StoreHeroSlide[]>(() => {
-    const apiSlides = this.apiSlides();
-    const baseSlides = apiSlides.length > 0 ? apiSlides.slice(0, 3) : EDITORIAL_SLIDES.slice(0, 3);
-    const couponSlides = this.claimableCoupons().slice(0, 3).map((coupon) => ({
-      kicker: this.couponKicker(coupon),
-      title: this.couponSlogan(coupon),
-      desc: `${coupon.title}｜${coupon.cond}。`,
-      coupon,
-    }));
-    const editorialSlides = EDITORIAL_SLIDES
-      .filter((slide) => !baseSlides.some((baseSlide) => baseSlide.title === slide.title))
-      .map((slide) => ({ ...slide, coupon: null }));
-
-    return [
-      ...baseSlides.map((slide) => ({ ...slide, coupon: null })),
-      ...couponSlides,
-      ...editorialSlides,
-    ].slice(0, 6);
-  });
-
-  /** 本地的無文字素材只負責氛圍，文案與折價數字由模板顯示，保持可讀、可更新 */
+  /** 本地的無文字素材只負責氛圍，文案由模板顯示，保持可讀、可更新 */
   private readonly slideImages = [
     '/images/store/hero/museum-shop-still-life.png',
     '/images/store/hero/gift-wrapping.png',
@@ -103,29 +79,12 @@ export class HeroCarousel {
     return this.slideImages[index % this.slideImages.length];
   }
 
-  protected couponForSlide(index: number): Coupon | null {
-    return this.slides()[index]?.coupon ?? null;
-  }
-
-  private couponKicker(coupon: Coupon): string {
-    if (coupon.kind === 'percent') return 'MEMBER BENEFIT / 會員回饋';
-    if (coupon.kind === 'freeship') return 'SHIPPING BENEFIT / 寄送回饋';
-    return 'COLLECTOR BENEFIT / 藏家優惠';
-  }
-
-  private couponSlogan(coupon: Coupon): string {
-    if (coupon.kind === 'percent') return '讓下一件收藏更剛好';
-    if (coupon.kind === 'freeship') return '喜歡的選物，安心寄到家';
-    return '把喜歡的文物帶回家';
-  }
-
   constructor() {
     // 自動播放，元件銷毀時自動停止
     interval(AUTOPLAY_MS)
       .pipe(takeUntilDestroyed())
       .subscribe(() => {
-        const count = this.slides().length;
-        if (count > 0 && this.autoplayEnabled()) this.activeSlide.update((v) => (v + 1) % count);
+        if (this.autoplayEnabled()) this.activeSlide.update((v) => (v + 1) % this.slides.length);
       });
   }
 

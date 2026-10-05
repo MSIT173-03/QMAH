@@ -5,7 +5,7 @@ import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../.
 import { SizeCondition } from '../size-condition/size-condition';
 
 /**
- * 商品主視覺右側的商品資訊欄：品牌、名稱、評價摘要、價格、規格、尺寸狀態面板與購買操作。
+ * 商品主視覺右側的商品資訊欄：品牌、名稱、評價摘要、價格、考據、尺寸面板與購買操作。
  * 價格列與評分的顯示字串與 app-product-card 共用 shared/product-view 的換算函式。
  */
 @Component({
@@ -29,20 +29,12 @@ export class ProductSummary {
   price = input(0);
   /** 折扣前原價，為 null 時代表無折扣 */
   was = input<number | null>(null);
-  /** 材質與工法說明 */
-  material = input('');
   /** 紋樣／器型出處說明 */
   source = input('');
-  /** 出貨說明；沒有資料時不顯示該列 */
-  shipping = input('');
   /** 尺寸／規格說明 */
   dims = input('');
   /** 關聯文物原始尺寸；與固定 A6 成品尺寸分開顯示。 */
   artifactDims = input('');
-  /** 商品狀態說明 */
-  condition = input('');
-  /** 尺寸量測說明（全站設定提供） */
-  sizeNote = input('');
 
   /** 加入購物車時觸發，帶出目前選購數量 */
   addToCart = output<number>();
@@ -50,9 +42,7 @@ export class ProductSummary {
   buyNow = output<number>();
 
   /** 以下為資訊欄的固定版面文字 */
-  protected readonly materialLabel = '材質';
   protected readonly sourceLabel = '考據';
-  protected readonly shippingLabel = '出貨';
   protected readonly soldSuffix = '已售';
   protected readonly addCartLabel = '加入購物車';
   protected readonly buyNowLabel = '加入並查看購物車';

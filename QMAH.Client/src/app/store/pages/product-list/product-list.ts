@@ -91,7 +91,7 @@ export class ProductList {
   cat = input('', { transform: orEmpty });
   /** 年代代碼 */
   era = input('', { transform: orEmpty });
-  /** 主題入口（deal 限時特賣／new 新品上架／exhibit 特展聯名） */
+  /** 主題入口（new 新品上架） */
   view = input('', { transform: orEmpty });
   /** 頁碼，從 1 開始；分頁切換時會同步寫回網址查詢字串 */
   page = input(1, { transform: toPage });
@@ -130,8 +130,8 @@ export class ProductList {
     const order = VIEW_DEFAULT_ORDER[this.view()];
     return order !== undefined ? ORDER_OPTIONS.findIndex((option) => option.order === order) : 0;
   });
-  /** 是否只顯示折扣商品，由限時特賣入口進來時預設開啟 */
-  protected dealOnly = linkedSignal(() => this.viewKey() === 'deal');
+  /** 是否只顯示折扣商品 */
+  protected dealOnly = signal(false);
   /** 目前頁碼，初始值來自網址查詢字串；切換分頁或其他篩選條件變動時由 setPage 統一更新（含寫回網址） */
   protected pageIndex = linkedSignal(() => this.page());
 

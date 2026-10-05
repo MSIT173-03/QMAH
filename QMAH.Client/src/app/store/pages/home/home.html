@@ -2,22 +2,14 @@
 <app-session-bar [cart]="cart" />
 
 <app-site-header>
-
-  <!-- 站內搜尋框，含熱門搜尋捷徑與輸入建議下拉 -->
-  <app-search-bar [(value)]="searchQuery" [hotLinks]="hotLinks()"
-    [suggestions]="suggestions()" (search)="onSearch($event)" (suggestionPick)="onSuggestionPick($event)" />
+  <!-- 站內搜尋框 -->
+  <app-search-bar (search)="onSearch($event)" />
 </app-site-header>
 
 <div class="container home-main">
 
-  <!-- 主視覺輪播與側欄（限時特賣倒數、迷你折價券） -->
-  <section class="hero-section">
-    <app-hero-carousel />
-    <div class="hero-sidebar">
-      <app-flash-sale />
-      <app-mini-coupons />
-    </div>
-  </section>
+  <!-- 主視覺輪播 -->
+  <app-hero-carousel />
 
   <!-- 分類入口／年代選藏：上下分欄 -->
   <section class="entry-section">

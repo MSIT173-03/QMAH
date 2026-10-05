@@ -109,7 +109,6 @@ export class MemberApi {
           title: coupon.name,
           cond: formatCouponCondition(coupon.minimumAmount),
           min: coupon.minimumAmount,
-          kind: coupon.discountType.toUpperCase() === 'PERCENT' ? 'percent' : 'amount',
           due: due.slice(0, 10),
         } satisfies Coupon;
       })),

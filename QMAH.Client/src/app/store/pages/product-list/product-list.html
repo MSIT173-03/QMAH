@@ -3,7 +3,7 @@
 
 <!-- 網站頁首：搜尋框 -->
 <app-site-header>
-  <!-- 站內搜尋框（列表頁精簡版：不顯示熱門搜尋與建議下拉） -->
+  <!-- 站內搜尋框（列表頁精簡版：寬度可隨頁首伸縮） -->
   <app-search-bar [compact]="true" [(value)]="searchInput" (search)="onSearch($event)" />
 </app-site-header>
 

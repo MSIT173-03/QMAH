@@ -130,7 +130,6 @@ describe('Promobar', () => {
     title: `折價券 ${index}`,
     cond: '',
     min: 0,
-    kind: 'amount',
     due: null,
   });
 

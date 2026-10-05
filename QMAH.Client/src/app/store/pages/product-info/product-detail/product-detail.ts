@@ -1,8 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { SectionHead } from '../../../component';
-import { ProductPolicy } from '../../../api/api.models';
 
-/** 商品頁「商品說明」區塊：原文物說明與保養／退換／鑑定條列。 */
+/** 商品頁「商品說明」區塊：商品與原文物的說明段落。 */
 @Component({
   selector: 'app-product-detail',
   imports: [SectionHead],
@@ -12,8 +11,6 @@ import { ProductPolicy } from '../../../api/api.models';
 export class ProductDetail {
   /** 產生器提供的套組說明；保留段落與條列換行。 */
   intro = input('');
-  /** 商品政策條列（全站共通的保養、退換、鑑定說明） */
-  rows = input<ProductPolicy[]>([]);
 
   /** 以下為區塊的固定版面文字。 */
   protected readonly title = '商品說明';

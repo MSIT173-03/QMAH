@@ -11,7 +11,7 @@ import {
   BreadcrumbItem,
   EmptyState,
 } from '../../component';
-import { CatalogApi, SiteApi } from '../../api';
+import { CatalogApi } from '../../api';
 import { Product } from '../../api/api.models';
 import { toReviewPage } from '../../api/catalog.api-dto';
 import { CART_PATH, HOME_PATH, PRODUCT_LIST_PATH, categoryPath, searchPath } from '../../shared/paths';
@@ -81,12 +81,6 @@ export class ProductInfo {
   /* ===============================
      固定版面文字與外部資料
      =============================== */
-
-  /** 全站設定 */
-  private readonly config = toSignal(inject(SiteApi).getConfig());
-  /** 尺寸量測說明與商品政策條列（全站共通文案） */
-  protected sizeNote = computed(() => this.config()?.sizeNote ?? '');
-  protected policies = computed(() => this.config()?.productPolicies ?? []);
 
   /** 商品列表頁路徑，供「查無此商品」時的返回按鈕使用 */
   protected readonly productsPath = PRODUCT_LIST_PATH;

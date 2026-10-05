@@ -1,18 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { map, of, switchMap } from 'rxjs';
 
-import { SearchBar, SearchSuggestion, SessionBar, SiteHeader } from '../../component';
-import { HomeApi, SearchApi } from '../../api';
-import { KeywordSuggestion } from '../../api/api.models';
+import { SearchBar, SessionBar, SiteHeader } from '../../component';
+import { HomeApi } from '../../api';
 import { searchPath } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
 
 import { HeroCarousel } from './hero-carousel/hero-carousel';
-import { FlashSale } from './flash-sale/flash-sale';
-import { MiniCoupons } from './mini-coupons/mini-coupons';
 import { CategoryGrid } from './category-grid/category-grid';
 import { RankingSection } from './ranking-section/ranking-section';
 import { NewArrivals } from './new-arrivals/new-arrivals';
@@ -22,9 +17,9 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 
 /**
  * 首頁。
- * 統整頁首搜尋、主視覺輪播、限時特賣、迷你折價券、分類入口、年代選藏、熱銷排行、
- * 新品上架與為你推薦等版位。各版位自行向 API 取得資料；本頁面持有購物車狀態（加入購物車）、
- * 搜尋框與搜尋建議，並一次取得「為你推薦」的商品。
+ * 統整頁首搜尋、主視覺輪播、分類入口、年代選藏、熱銷排行、新品上架與為你推薦等版位。
+ * 各版位自行向 API 取得資料；本頁面持有購物車狀態（加入購物車）與搜尋框，
+ * 並一次取得「為你推薦」的商品。
  */
 @Component({
   selector: 'app-home',
@@ -33,8 +28,6 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
     SessionBar,
     SearchBar,
     HeroCarousel,
-    FlashSale,
-    MiniCoupons,
     CategoryGrid,
     RankingSection,
     NewArrivals,
@@ -48,28 +41,9 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 export class Home {
   private readonly router = inject(Router);
   private readonly homeApi = inject(HomeApi);
-  private readonly searchApi = inject(SearchApi);
 
   /** 購物車狀態（件數顯示於頁首） */
   protected readonly cart = injectCartState();
-
-  /** 搜尋框目前輸入值 */
-  protected searchQuery = signal('');
-  /** 搜尋框旁的熱門搜尋捷徑連結 */
-  protected readonly hotLinks = toSignal(this.searchApi.getHotLinks(), { initialValue: [] });
-  /** 依目前輸入內容即時查詢的搜尋建議清單 */
-  protected suggestions = toSignal(
-    toObservable(this.searchQuery).pipe(
-      switchMap((value) => {
-        const q = value.trim();
-        return q ? this.searchApi.getSuggestions(q) : of<KeywordSuggestion[]>([]);
-      }),
-      map((list): SearchSuggestion[] =>
-        list.map((item) => ({ name: item.keyword, count: `${item.productCount} 件` })),
-      ),
-    ),
-    { initialValue: [] },
-  );
 
   /** 「為你推薦」已載入的商品卡片 */
   protected recommendedItems = signal<BadgedProductView[]>([]);
@@ -86,11 +60,6 @@ export class Home {
   /** 送出搜尋：前往商品列表頁，並帶上關鍵字查詢字串 */
   protected onSearch(keyword: string): void {
     this.router.navigateByUrl(searchPath(keyword));
-  }
-
-  /** 選取搜尋建議：以建議的關鍵字搜尋 */
-  protected onSuggestionPick(suggestion: SearchSuggestion): void {
-    this.onSearch(suggestion.name);
   }
 
   /** 請求「為你推薦」的商品資料（一次取 HOME_PRODUCT_COUNT 件，實際顯示幾件由版位的欄數與固定行數決定）。 */

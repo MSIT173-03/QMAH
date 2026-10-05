@@ -13,6 +13,12 @@ export interface PageQuery {
   pageSize?: number;
 }
 
+/** 連結 */
+export interface SiteLink {
+  label: string;
+  href: string;
+}
+
 /** 分頁回應 */
 export interface Page<T> {
   items: T[];
@@ -78,31 +84,16 @@ export interface Product {
   coverImage: string | null;
 }
 
-/** 商品圖片 */
-export interface ProductImage {
-  /** 視角名稱（正面、細節…），順序即縮圖列的顯示順序 */
-  view: string;
-  /** 圖片網址，為 null 時前端顯示佔位文字 */
-  url: string | null;
-}
-
 /** 商品詳情 */
 export interface ProductDetail extends Product {
   /** 原文物名稱；明信片正面不顯示套組後綴。 */
   artifactName: string;
   /** 關聯文物原始尺寸；明信片視圖只顯示這個尺寸，不重複顯示 A6。 */
   artifactDimensions: string;
-  /** 材質與工法說明 */
-  material: string;
   /** 套組商品說明段落，保留產生器寫入的段落分隔。 */
   description: string;
   /** 明信片／原文物視圖使用的精簡原文物說明。 */
   artifactDescription: string;
-  /** 商品狀態說明 */
-  condition: string;
-  /** 出貨說明 */
-  shippingNote: string;
-  images: ProductImage[];
 }
 
 /**
@@ -156,32 +147,6 @@ export interface ReviewPage extends Page<Review> {
    首頁與行銷內容
    =============================== */
 
-/** 主視覺輪播投影片 */
-export interface HeroSlide {
-  kicker: string;
-  title: string;
-  desc: string;
-}
-
-/** 限時特賣品項 */
-export interface FlashSaleItem {
-  productId: string;
-  name: string;
-  /** 特賣價 */
-  price: number;
-  /** 原價 */
-  originalPrice: number;
-  /** 剩餘庫存比例（0-1） */
-  stockRatio: number;
-}
-
-/** 限時特賣 */
-export interface FlashSale {
-  /** 特賣結束時間（ISO 8601） */
-  endsAt: string;
-  items: FlashSaleItem[];
-}
-
 /** 熱銷排行查詢參數 */
 export interface RankingQuery {
   /** 器類名稱，未指定時為全站排行 */
@@ -193,23 +158,6 @@ export interface RankingQuery {
 export interface RecommendedProduct extends Product {
   /** 推薦理由，顯示為卡片角標 */
   reason: string;
-}
-
-/* ===============================
-   搜尋
-   =============================== */
-
-/** 熱門搜尋捷徑 */
-export interface HotSearchLink {
-  label: string;
-  href: string;
-}
-
-/** 搜尋建議關鍵字 */
-export interface KeywordSuggestion {
-  keyword: string;
-  /** 符合此關鍵字的商品件數 */
-  productCount: number;
 }
 
 /* ===============================
@@ -283,10 +231,7 @@ export interface MemberProfile extends Recipient {
   pointBalance: number;
 }
 
-/** 折價券折抵方式：amount 折抵固定金額；percent 依比例折抵；freeship 免除運費 */
-export type CouponKind = 'amount' | 'percent' | 'freeship';
-
-/** 折價券（頂部公告列、首頁側欄與結帳頁共用同一模型） */
+/** 折價券（頂部公告列與結帳頁共用同一模型） */
 export interface Coupon {
   id: string;
   /** 折抵幅度標示（例如「$100」「9 折」「免運」） */
@@ -296,7 +241,6 @@ export interface Coupon {
   cond: string;
   /** 可使用的最低應付金額門檻 */
   min: number;
-  kind: CouponKind;
   /** 到期日（YYYY-MM-DD），無期限時為 null */
   due: string | null;
 }
@@ -422,29 +366,4 @@ export interface OrderResult extends OrderAmounts {
   orderNo: string;
   /** 信用卡付款才有值；其餘付款方式為 null */
   ecpayCheckout: EcpayCheckoutForm | null;
-}
-
-/* ===============================
-   全站設定
-   =============================== */
-
-/** 連結 */
-export interface SiteLink {
-  label: string;
-  href: string;
-}
-
-/** 商品政策條列（保養、退換、鑑定） */
-export interface ProductPolicy {
-  label: string;
-  text: string;
-}
-
-/** 全站共通、低頻更新的文案與設定 */
-export interface SiteConfig {
-  /** 頂部公告列的公告文字 */
-  promoAnnouncements: string[];
-  productPolicies: ProductPolicy[];
-  /** 商品尺寸量測說明 */
-  sizeNote: string;
 }

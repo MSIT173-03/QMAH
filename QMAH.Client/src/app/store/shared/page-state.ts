@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { StoreAuth } from './store-auth';
-import { CartApi, CatalogApi, MemberApi, SiteApi } from '../api';
+import { CartApi, CatalogApi, MemberApi } from '../api';
 import { ShoppingCart } from '../api/api.models';
 import { emptyCart } from '../api/cart.api';
 import { formatNumber } from './format';
@@ -121,22 +121,17 @@ export function injectCartState() {
 export type CartState = ReturnType<typeof injectCartState>;
 
 /**
- * 全站共用資料：全站設定，以及頂部公告列所需的公告文字、會員點數與折價券。
+ * 全站共用資料：頂部公告列所需的公告文字、會員點數與折價券。
  * 須於注入環境中呼叫（例如元件欄位初始化）。
  */
 export function injectSiteData() {
   const memberApi = inject(MemberApi);
-  const config = toSignal(inject(SiteApi).getConfig());
   const promotions = toSignal(inject(CatalogApi).getPromotions(), { initialValue: [] });
   const profile = toSignal(memberApi.getProfile());
 
   return {
-    /** 全站設定，尚未載入時為 undefined */
-    config,
-    /** 頂部公告列的公告文字：只顯示一則，優先取最新的官方商城優惠活動（API 已依發布時間新到舊排序） */
-    announcements: computed(() =>
-      [...promotions().map((promotion) => promotion.title), ...(config()?.promoAnnouncements ?? [])].slice(0, 1),
-    ),
+    /** 頂部公告列的公告文字：只顯示一則，取最新的官方商城優惠活動（API 已依發布時間新到舊排序） */
+    announcements: computed(() => promotions().slice(0, 1).map((promotion) => promotion.title)),
     /** 頂部公告列顯示的會員點數 */
     points: computed(() => formatNumber(profile()?.pointBalance ?? 0)),
     /** 頂部公告列的折價券清單 */

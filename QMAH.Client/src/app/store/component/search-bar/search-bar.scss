@@ -17,8 +17,7 @@
   }
 }
 
-/* 精簡版（compact）僅隱藏熱門搜尋與建議下拉，輸入框本身尺寸固定與完整版一致，
-   避免商品列表頁與首頁的搜尋欄位出現高度落差 */
+/* 輸入框本身的尺寸不隨 compact 改變，商品列表頁與首頁的搜尋欄位高度一致 */
 .search-box {
   display: flex;
   align-items: center;
@@ -62,78 +61,6 @@
   }
 }
 
-.search-hot {
-  position: absolute;
-  top: 44px;
-  left: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  font-size: 12px;
-  color: var(--color-faint);
-}
-
-.search-hot-label {
-  font-family: 'IBM Plex Mono', monospace;
-  letter-spacing: 0.1em;
-  color: var(--color-teal);
-}
-
-.search-hot-link {
-  color: var(--color-faint);
-  text-decoration: none;
-
-  &:hover {
-    color: var(--color-accent);
-  }
-}
-
-.search-suggest {
-  position: absolute;
-  top: 44px;
-  left: 0;
-  right: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-line-mid);
-  box-sizing: border-box;
-  border-radius: var(--qmah-radius-control);
-  box-shadow: var(--qmah-shadow-float);
-  padding: var(--qmah-space-1);
-  z-index: 50;
-}
-
-.search-suggest-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--qmah-space-2);
-  min-width: 0;
-  border: 0;
-  padding: var(--qmah-space-2) var(--qmah-space-3);
-  background: transparent;
-  font-size: var(--qmah-type-label-size);
-  color: var(--color-ink);
-
-  &:focus-visible {
-    outline: 2px solid var(--qmah-focus);
-    outline-offset: -2px;
-  }
-  cursor: pointer;
-  text-align: left;
-
-  &:hover {
-    background: var(--color-swatch);
-  }
-}
-
-.search-suggest-count {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--color-placeholder);
-  margin-left: auto;
-  flex: 0 0 auto;
-}
-
 @media (max-width: 720px) {
   .search-wrap,
   .search-wrap--list {
@@ -144,19 +71,4 @@
 
   .search-box { gap: 6px; }
   .search-submit { padding-inline: 12px; }
-
-  /* 熱門詞與建議名稱都在自身欄寬內收斂，避免長字串撐出頁面。 */
-  .search-hot {
-    right: 0;
-    max-width: 100%;
-    gap: 8px 12px;
-  }
-
-  .search-suggest-item > span:first-child {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 }
