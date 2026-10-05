@@ -4,14 +4,15 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { SocialApiService, SocialEventDetails } from '../../../core/services/social-api';
-import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideMapPin, LucideUserRound } from '@lucide/angular';
+import { publishStatusLabel, reviewStatusLabel } from '../social-labels';
+import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUserRound, LucideUsers } from '@lucide/angular';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideMapPin, LucideUserRound],
+  imports: [CommonModule, RouterLink, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUserRound, LucideUsers],
   templateUrl: './event-detail.html',
-  styleUrl: './event-detail.scss'
+  styleUrls: ['../social-common.scss', './event-detail.scss']
 })
 export class EventDetailComponent implements OnChanges {
   // 路由參數 :id 由 app.config.ts 的 withComponentInputBinding() 自動綁定
@@ -20,6 +21,8 @@ export class EventDetailComponent implements OnChanges {
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
 
+  readonly reviewStatusLabel = reviewStatusLabel;
+  readonly publishStatusLabel = publishStatusLabel;
   event: SocialEventDetails | null = null;
   loading = false;
   loadError: string | null = null;

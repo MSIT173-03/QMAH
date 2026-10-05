@@ -54,10 +54,6 @@
                   (error)="onAnnouncementImageError(announcement.id)"
                 />
                 <div class="social-hero__body">
-                  <span class="social-hero__kicker social-icon-label">
-                    <svg lucideMegaphone aria-hidden="true" focusable="false"></svg>
-                    官方消息・站方公告
-                  </span>
                   <h2 class="social-hero__title">{{ announcement.title }}</h2>
                   <p class="social-hero__desc">{{ announcement.contentPreview }}</p>
                   <span class="social-hero__cta" aria-hidden="true">查看公告</span>
@@ -97,39 +93,40 @@
     </section>
   }
 
-  <header class="social-posts-heading flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">社群貼文牆</h1>
+  <header class="social-page-head">
+    <h1 class="social-page-title">社群貼文牆</h1>
     <button type="button" class="btn btn-primary social-icon-label" (click)="openCreatePost()">
       <svg lucidePlus aria-hidden="true" focusable="false"></svg>
       發布貼文
     </button>
   </header>
 
-  <div class="flex flex-wrap gap-2 mb-6 items-end">
-    <label class="form-control">
-      <span class="label-text text-xs">標籤（看板）</span>
-      <select class="select select-bordered select-sm" [(ngModel)]="filterBoardCode" (change)="loadPosts()">
-        <option value="">全部</option>
+  <!-- ui-integration: 篩選列改用 social-filters／social-field；daisyUI 5 已移除 .form-control，舊寫法的欄位間距是碰運氣。看板顯示中文名稱，不直接露出 GENERAL 這類代碼。 -->
+  <div class="social-filters" role="search">
+    <label class="social-field">
+      <span class="social-field__label">看板</span>
+      <select class="select select-bordered" [(ngModel)]="filterBoardCode" (change)="loadPosts()">
+        <option value="">全部看板</option>
         @for (board of boardCodes; track board) {
-          <option [value]="board">{{ board }}</option>
+          <option [value]="board">{{ boardLabel(board) }}</option>
         }
       </select>
     </label>
-    <label class="form-control flex-1 min-w-40">
-      <span class="label-text text-xs">關鍵字（標題／內容）</span>
+    <label class="social-field social-field--grow">
+      <span class="social-field__label">關鍵字（標題／內容）</span>
       <input
         type="text"
-        class="input input-bordered input-sm w-full"
+        class="input input-bordered w-full"
         [(ngModel)]="filterKeyword"
         (keyup.enter)="loadPosts()"
         name="social-post-search"
         autocomplete="off"
-        placeholder="搜尋…"
+        placeholder="輸入關鍵字"
       />
     </label>
-    <button class="btn btn-sm btn-primary" (click)="loadPosts()">搜尋</button>
-    <button class="btn btn-sm btn-ghost" (click)="resetFilters()">清除篩選</button>
-    <span class="text-xs text-base-content/60 self-center">共 {{ totalCount }} 筆</span>
+    <button type="button" class="btn btn-primary" (click)="loadPosts()">搜尋</button>
+    <button type="button" class="btn btn-ghost" (click)="resetFilters()">清除篩選</button>
+    <span class="social-filters__count" aria-live="polite">共 {{ totalCount }} 篇</span>
   </div>
 
   @if (loadError) {
@@ -141,7 +138,7 @@
   }
 
   @if (loading) {
-    <div class="flex justify-center py-10" role="status" aria-live="polite">
+    <div class="social-state" role="status" aria-live="polite">
       <span class="loading loading-spinner loading-lg"></span>
     </div>
   }
@@ -152,16 +149,15 @@
     <article class="social-post-card">
       @if (post.coverImageUrl) {
         <figure class="social-post-card__cover">
-          <img [src]="post.coverImageUrl" [alt]="post.title" />
-          <figcaption>{{ post.title }}</figcaption>
+          <img [src]="post.coverImageUrl" alt="" loading="lazy" />
         </figure>
       }
       <div class="social-post-card__body">
         <div class="social-post-card__meta">
           <div class="social-post-card__tags">
-            <span class="social-post-card__board">{{ post.boardCode }}</span>
+            <span class="social-tag">{{ boardLabel(post.boardCode) }}</span>
             @if (post.postType === 'ANNOUNCEMENT') {
-              <span class="social-post-card__type">站方公告</span>
+              <span class="social-tag social-tag--notice">站方公告</span>
             }
           </div>
           <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
@@ -175,26 +171,36 @@
         </p>
         <p class="social-post-card__excerpt">{{ post.contentPreview }}</p>
         <div class="social-post-card__footer">
-          @if (post.mediaCount > 0) {
-            <span class="social-post-card__media-count social-icon-label">
-              <svg lucideImage aria-hidden="true" focusable="false"></svg>
-              {{ post.mediaCount }} 張圖片
+          <p class="social-post-card__stats">
+            <span class="social-icon-label">
+              <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
+              {{ post.commentCount || 0 }} 則留言
             </span>
-          }
-          <button class="social-post-card__report social-icon-label" type="button" (click)="reportModal.open('POST', post.id)">
+            @if (post.mediaCount > 0) {
+              <span class="social-icon-label">
+                <svg lucideImage aria-hidden="true" focusable="false"></svg>
+                {{ post.mediaCount }} 張圖片
+              </span>
+            }
+          </p>
+          <button
+            class="social-post-card__report"
+            type="button"
+            [attr.aria-label]="'檢舉貼文：' + post.title"
+            title="檢舉這篇貼文"
+            (click)="reportModal.open('POST', post.id)"
+          >
             <svg lucideFlag aria-hidden="true" focusable="false"></svg>
-            檢舉
           </button>
           <a class="social-post-card__read-more social-icon-label" [routerLink]="['/social/posts', post.id]">
             閱讀全文
-            <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
-            {{ post.commentCount || 0 }} 則留言
+            <app-qmah-icon name="arrow-right" [size]="14" aria-hidden="true" />
           </a>
         </div>
       </div>
     </article>
     } @empty {
-    <div class="text-center py-10 text-base-content/60">目前還沒有貼文</div>
+    <div class="social-state social-state--wide">目前還沒有貼文</div>
     }
     }
   </div>
@@ -216,8 +222,8 @@
       <div class="social-post-form__field">
         <label class="social-post-form__label" for="social-post-board">看板</label>
         <select id="social-post-board" name="boardCode" class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
-          <option value="GENERAL">綜合討論區</option>
-          <option value="EVENT">活動看板</option>
+          <option value="GENERAL">{{ boardLabel('GENERAL') }}</option>
+          <option value="EVENT">{{ boardLabel('EVENT') }}</option>
         </select>
       </div>
       <div class="social-post-form__field">

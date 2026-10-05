@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { MeApiService, UserNotification } from '../../../core/services/me-api';
@@ -7,6 +7,7 @@ import { ToastService } from '../../../core/services/toast';
 import { QmahIconComponent } from '../qmah-icon/qmah-icon';
 
 // 沒有 SignalR/WebSocket，用定時輪詢模擬「有新通知會跳出來」；20 秒對展示用途已經夠即時。
+// 分頁切到背景時暫停輪詢、切回來立刻查一次，避免沒人在看的分頁一直打 API。
 const POLL_INTERVAL_MS = 20000;
 
 @Component({
@@ -19,6 +20,7 @@ const POLL_INTERVAL_MS = 20000;
 export class NotificationsBellComponent implements OnInit, OnDestroy {
   private meApi = inject(MeApiService);
   private toast = inject(ToastService);
+  private document = inject(DOCUMENT);
 
   notifications: UserNotification[] = [];
   loggedIn = false;
@@ -27,13 +29,34 @@ export class NotificationsBellComponent implements OnInit, OnDestroy {
   private hasLoadedOnce = false;
   private pollHandle: ReturnType<typeof setInterval> | null = null;
 
+  private readonly onVisibilityChange = () => {
+    if (this.document.visibilityState === 'hidden') {
+      this.stopPolling();
+    } else {
+      this.load();
+      this.startPolling();
+    }
+  };
+
   ngOnInit(): void {
     this.load();
-    this.pollHandle = setInterval(() => this.load(), POLL_INTERVAL_MS);
+    this.startPolling();
+    this.document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   ngOnDestroy(): void {
+    this.document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    this.stopPolling();
+  }
+
+  private startPolling(): void {
+    this.stopPolling();
+    this.pollHandle = setInterval(() => this.load(), POLL_INTERVAL_MS);
+  }
+
+  private stopPolling(): void {
     if (this.pollHandle) clearInterval(this.pollHandle);
+    this.pollHandle = null;
   }
 
   get unreadCount(): number {

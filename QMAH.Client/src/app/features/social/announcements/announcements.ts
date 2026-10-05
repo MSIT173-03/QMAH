@@ -8,7 +8,7 @@ import { Announcement, SocialApiService } from '../../../core/services/social-ap
   standalone: true,
   imports: [CommonModule],
   templateUrl: './announcements.html',
-  styleUrl: './announcements.scss'
+  styleUrls: ['../social-common.scss', './announcements.scss']
 })
 export class AnnouncementsComponent implements OnInit {
   private socialApi = inject(SocialApiService);

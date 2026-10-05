@@ -102,4 +102,36 @@ describe('NotificationsBellComponent', () => {
 
     expect(component.notifications[0].isRead).toBe(true);
   });
+
+  it('reloads immediately when the tab becomes visible again', () => {
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush({
+      items: [],
+      page: 1,
+      pageSize: 10,
+      totalCount: 0,
+      totalPages: 0
+    });
+
+    // jsdom 的 visibilityState 定義在 Document.prototype；在 document 上蓋一個可設定的 getter 模擬切換分頁。
+    let state: DocumentVisibilityState = 'hidden';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+
+    // 切到背景：不應發出請求。
+    document.dispatchEvent(new Event('visibilitychange'));
+    httpMock.expectNone((r) => r.url.endsWith('/me/notifications'));
+
+    // 切回前景：立刻查一次。
+    state = 'visible';
+    document.dispatchEvent(new Event('visibilitychange'));
+    httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush({
+      items: [],
+      page: 1,
+      pageSize: 10,
+      totalCount: 0,
+      totalPages: 0
+    });
+
+    delete (document as { visibilityState?: DocumentVisibilityState }).visibilityState;
+  });
 });

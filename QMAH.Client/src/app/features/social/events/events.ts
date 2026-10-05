@@ -6,14 +6,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreateSocialEventRequest, EventListItem, SocialApiService, SocialMedia } from '../../../core/services/social-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
-import { LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideX } from '@lucide/angular';
+import { LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideUsers, LucideX } from '@lucide/angular';
 
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideX],
+  imports: [CommonModule, FormsModule, RouterLink, ImageCropModalComponent, LucideCalendarClock, LucideMapPin, LucidePlus, LucideUserRound, LucideUsers, LucideX],
   templateUrl: './events.html',
-  styleUrl: './events.scss'
+  styleUrls: ['../social-common.scss', './events.scss']
 })
 export class EventsComponent implements OnInit {
   private socialApi = inject(SocialApiService);

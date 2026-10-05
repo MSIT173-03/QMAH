@@ -1,0 +1,347 @@
+/* ui-integration: Social 四個頁面（貼文牆、貼文詳情、活動、公告）共用的頁首／篩選／panel／tag／留言列語法。
+   放在元件 stylesheet 而非全域 social-shared.scss，避免撐大 initial bundle（預算 500 kB）；各頁以 styleUrl 陣列引入。 */
+/* ui-integration: 貼文詳情／活動／公告原本直接套 daisyUI 預設 card（shadow-xl、badge-secondary、text-2xl），
+   與貼文牆的語法脫節；這裡集中成 Social 共用的頁首、篩選列、panel、tag、留言列，四頁回到同一組 token。 */
+.qmah-social-page .social-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--qmah-space-4);
+  margin-bottom: var(--qmah-space-6);
+}
+
+.qmah-social-page .social-page-title {
+  margin: 0;
+  color: var(--qmah-primary);
+  font-family: var(--qmah-font-serif);
+  font-size: var(--qmah-type-page-title-size);
+  font-weight: 700;
+  line-height: var(--qmah-type-heading-leading);
+}
+
+.qmah-social-page .social-back {
+  margin-bottom: var(--qmah-space-4);
+}
+
+.qmah-social-page .social-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--qmah-space-3);
+  margin-bottom: var(--qmah-space-6);
+}
+
+.qmah-social-page .social-field {
+  display: grid;
+  gap: var(--qmah-space-1);
+  min-width: 0;
+}
+
+.qmah-social-page .social-field--grow {
+  flex: 1 1 14rem;
+}
+
+.qmah-social-page .social-field__label {
+  color: var(--qmah-text-muted);
+  font-size: var(--qmah-type-label-size);
+  font-weight: 700;
+}
+
+.qmah-social-page .social-filters__count {
+  align-self: center;
+  margin-left: auto;
+  color: var(--qmah-text-muted);
+  font-size: var(--qmah-type-label-size);
+  font-variant-numeric: tabular-nums;
+}
+
+.qmah-social-page .social-form {
+  display: grid;
+  gap: var(--qmah-space-4);
+}
+
+.social-modal .social-form {
+  gap: var(--qmah-space-4);
+}
+
+.social-modal .social-field {
+  display: grid;
+  gap: var(--qmah-space-1);
+  min-width: 0;
+}
+
+.social-modal .social-field__label {
+  color: var(--qmah-text-muted);
+  font-size: var(--qmah-type-label-size);
+  font-weight: 700;
+}
+
+.social-modal .social-dialog-title {
+  margin: 0 0 var(--qmah-space-5);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.qmah-social-page .social-event-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.qmah-social-page .social-event-card {
+  align-content: start;
+  overflow: hidden;
+}
+
+.qmah-social-page .social-event-card__cover {
+  height: clamp(140px, 18vw, 200px);
+  margin: calc(-1 * clamp(16px, 2.5vw, 28px)) calc(-1 * clamp(16px, 2.5vw, 28px)) 0;
+  overflow: hidden;
+  background: var(--qmah-surface-muted);
+}
+
+.qmah-social-page .social-event-card__cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qmah-social-page .social-event-card__title {
+  margin: 0;
+  font-family: var(--qmah-font-serif);
+  font-size: clamp(19px, 2vw, 24px);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.qmah-social-page .social-event-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.qmah-social-page .social-event-card__title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.qmah-social-page .social-event-card__footer {
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.qmah-social-page .social-event-card__organizer {
+  min-width: 0;
+}
+
+.qmah-social-page .social-announcement-list {
+  display: grid;
+  gap: var(--qmah-space-4);
+}
+
+.qmah-social-page .social-event-detail__content {
+  margin: 0;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.qmah-social-page .social-event-detail__media {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-card);
+  background: var(--qmah-surface-muted);
+}
+
+.qmah-social-page .social-event-detail__media img {
+  display: block;
+  width: 100%;
+  max-height: 36rem;
+  object-fit: contain;
+}
+
+.qmah-social-page .social-state {
+  padding: var(--qmah-space-10) 0;
+  color: var(--qmah-text-muted);
+  text-align: center;
+}
+
+.qmah-social-page .social-state--wide {
+  grid-column: 1 / -1;
+}
+
+.qmah-social-page .social-panel {
+  display: grid;
+  gap: var(--qmah-space-4);
+  min-width: 0;
+  padding: clamp(16px, 2.5vw, 28px);
+  border: 1px solid color-mix(in srgb, var(--qmah-border) 86%, transparent);
+  border-radius: var(--qmah-radius-card);
+  background: var(--qmah-surface-elevated);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.qmah-social-page .social-panel__title {
+  margin: 0;
+  font-family: var(--qmah-font-serif);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.qmah-social-page .social-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--qmah-space-2);
+  padding-top: var(--qmah-space-4);
+  border-top: 1px solid color-mix(in srgb, var(--qmah-border) 60%, transparent);
+}
+
+/* ui-integration: 標籤字色用 social-action 配 social-soft 底；原本 on-dark（白）疊在淡赭底，對比不足。 */
+.qmah-social-page .social-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 24px;
+  padding: 3px 10px;
+  border-radius: var(--qmah-radius-pill);
+  background: var(--qmah-social-soft);
+  color: var(--qmah-social-action);
+  font-size: var(--qmah-type-label-size);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.qmah-social-page .social-tag--notice {
+  background: var(--qmah-accent);
+  color: var(--qmah-accent-content);
+}
+
+.qmah-social-page .social-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0;
+  color: var(--qmah-muted);
+  font-size: var(--qmah-type-label-size);
+}
+
+.qmah-social-page .social-meta time {
+  font-variant-numeric: tabular-nums;
+}
+
+.qmah-social-page .social-facts {
+  display: grid;
+  gap: var(--qmah-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--qmah-type-body-sm-size);
+  line-height: 1.6;
+}
+
+.qmah-social-page .social-facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--qmah-space-2);
+}
+
+.qmah-social-page .social-facts svg {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.2rem;
+  color: var(--qmah-social-action);
+  stroke-width: 1.8;
+}
+
+/* ui-integration: 留言改成分隔線列表，不再每則一張卡片；留言一多時視覺不會變成卡片牆。 */
+.qmah-social-page .social-comments {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qmah-social-page .social-comment {
+  display: grid;
+  gap: var(--qmah-space-2);
+  padding: var(--qmah-space-4) 0;
+  border-top: 1px solid color-mix(in srgb, var(--qmah-border) 70%, transparent);
+}
+
+.qmah-social-page .social-comment__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--qmah-space-3);
+}
+
+.qmah-social-page .social-comment__author {
+  font-size: var(--qmah-type-body-sm-size);
+  font-weight: 700;
+}
+
+.qmah-social-page .social-comment__body {
+  margin: 0;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.qmah-social-page .social-comment__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--qmah-space-2);
+}
+
+.qmah-social-page .social-comments-section {
+  margin-top: var(--qmah-space-8);
+}
+
+.qmah-social-page .social-section-title {
+  margin: 0 0 var(--qmah-space-4);
+  font-size: var(--qmah-type-body-size);
+  font-weight: 700;
+}
+
+.qmah-social-page .social-composer {
+  display: grid;
+  gap: var(--qmah-space-3);
+  margin-bottom: var(--qmah-space-4);
+}
+
+.qmah-social-page .social-composer textarea {
+  min-height: 6rem;
+  line-height: 1.7;
+}
+
+.qmah-social-page .social-composer .btn {
+  justify-self: end;
+}
+
+@media (max-width: 640px) {
+  .qmah-social-page .social-page-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .qmah-social-page .social-page-head .btn,
+  .qmah-social-page .social-filters .btn {
+    width: 100%;
+  }
+
+  .qmah-social-page .social-field,
+  .qmah-social-page .social-field--grow {
+    flex: 1 1 100%;
+  }
+
+  .qmah-social-page .social-filters__count {
+    margin-left: 0;
+  }
+}

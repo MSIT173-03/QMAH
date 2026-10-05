@@ -8,6 +8,7 @@ import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialPost
 import { MeApiService } from '../../../core/services/me-api';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
+import { boardLabel } from '../social-labels';
 import { LucideArrowLeft, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, LucideUserRound } from '@lucide/angular';
 
 @Component({
@@ -15,7 +16,7 @@ import { LucideArrowLeft, LucideFlag, LucideMessageCircle, LucidePencil, LucideT
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, LucideArrowLeft, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, LucideUserRound],
   templateUrl: './post-detail.html',
-  styleUrl: './post-detail.scss'
+  styleUrls: ['../social-common.scss', './post-detail.scss']
 })
 export class PostDetailComponent implements OnChanges {
   // 路由參數 :id 由 app.config.ts 的 withComponentInputBinding() 自動綁定
@@ -26,6 +27,7 @@ export class PostDetailComponent implements OnChanges {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
+  readonly boardLabel = boardLabel;
   post: SocialPostDetails | null = null;
   loading = false;
   loadError: string | null = null;

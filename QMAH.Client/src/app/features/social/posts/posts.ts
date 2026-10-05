@@ -9,6 +9,7 @@ import { ImageCropModalComponent } from '../../../shared/components/image-crop-m
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { boardLabel } from '../social-labels';
 import {
   LucideFlag,
   LucideImage,
@@ -49,7 +50,7 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
     LucideX,
   ],
   templateUrl: './posts.html',
-  styleUrl: './posts.scss'
+  styleUrls: ['../social-common.scss', './posts.scss']
 })
 export class PostsComponent implements OnInit, OnDestroy {
   private socialApi = inject(SocialApiService);
@@ -70,6 +71,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   pendingMedia: SocialMedia[] = [];
   uploadPending = false;
 
+  readonly boardLabel = boardLabel;
   boardCodes: string[] = [];
   filterBoardCode = '';
   filterKeyword = '';
