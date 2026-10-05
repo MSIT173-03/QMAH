@@ -1,13 +1,39 @@
 <section class="results-frame" aria-labelledby="results-title">
-<app-game-scroll-panel label="結算內容，可捲動查看排行與回合紀錄" cue="往下查看回合紀錄與獎勵"><div class="results-sheet">
+<div class="results-sheet">
   <header class="results-banner">
     <h2 id="results-title">本局鑑定完成</h2>
     @if (history(); as h) { <p>房間 {{ h.roomCode }} · {{ h.rounds.length }} 回合的想法，現在一起揭曉。</p> }
   </header>
   @if (history(); as completedHistory) {
     <div class="results-main paper-card">
-    @if (leaders().length) {
-      <section class="results-highlight" aria-label="本局最高得票"><h3>{{ leaders().length > 1 ? '並列最高得票' : '本局最高得票' }}</h3>@for (leader of leaders(); track leader.gamePlayerId) { <p><strong>{{ leader.displayName }}</strong><span>{{ leader.score }} 票 · 勝出 {{ leader.roundsWon }} 回合</span></p> }</section>
+    <section class="round-browser" aria-label="逐回合查看所有人的回答">
+      <h3>逐回合看大家怎麼說</h3>
+      <div class="round-tabs" role="tablist">
+        @for (result of completedHistory.rounds; track result.id; let i = $index) {
+          <button type="button" role="tab" [attr.aria-selected]="i === picked()" [class.is-on]="i === picked()" (click)="picked.set(i)">第 {{ result.roundNumber }} 回合@if (myAnswers()[i]?.answer; as mine) { <small>你 {{ mine.voteCount }} 票</small> }</button>
+        }
+      </div>
+      @if (round(); as result) {
+        <p class="round-title"><strong>{{ result.artifactName }}</strong><small>{{ result.winnerPlayerDisplayName ? '勝出：' + result.winnerPlayerDisplayName : '沒有有效得票' }} · 共 {{ result.totalVoteCount }} 票</small></p>
+        <ol class="result-answers">
+          @for (answer of result.answers; track answer.id) {
+            <li [class.is-winner]="answer.isWinner" [class.is-mine]="answer.gamePlayerId === currentPlayerId()">
+              <span>{{ answer.rank }}.</span>
+              <div><strong>{{ answer.playerDisplayName }}@if (answer.gamePlayerId === currentPlayerId()) { <small>（你）</small> }@if (answer.isWinner) { <em>勝出</em> }</strong><p><span class="answer-type" [attr.data-answer-type]="answer.answerType">{{ typeLabel[answer.answerType] }}</span>{{ answer.text }}</p><i class="vote-bar" aria-hidden="true"><u [style.width.%]="answer.voteCount / maxVotes(result.answers) * 100"></u></i></div>
+              <b>{{ answer.voteCount }} 票</b>
+            </li>
+          } @empty {
+            <li class="empty-copy">本回合沒有人作答。</li>
+          }
+        </ol>
+      } @else {
+        <p class="empty-copy">目前沒有回合紀錄。</p>
+      }
+    </section>
+    </div>
+    <aside class="results-side" aria-label="排行榜、你的成績與獎勵">
+    @if (ownResult(); as own) {
+      <section class="personal-result" aria-label="你的本局成績"><h3>你的本局成績</h3><dl><div><dt>最終排名</dt><dd>第 {{ own.rank }} 名</dd></div><div><dt>獲得票數</dt><dd>{{ own.score }} 票</dd></div><div><dt>勝出回合</dt><dd>{{ own.roundsWon }} 回合</dd></div></dl></section>
     }
     <div class="leaderboard-wrap">
       <h3>最終排行榜</h3>
@@ -27,42 +53,6 @@
       }
     </div>
 
-    <section class="round-browser" aria-label="逐回合查看所有人的回答">
-      <h3>逐回合看大家怎麼說</h3>
-      <div class="round-tabs" role="tablist">
-        @for (result of completedHistory.rounds; track result.id; let i = $index) {
-          <button type="button" role="tab" [attr.aria-selected]="i === picked()" [class.is-on]="i === picked()" (click)="picked.set(i)">第 {{ result.roundNumber }} 回合</button>
-        }
-      </div>
-      @if (round(); as result) {
-        <p class="round-title"><strong>{{ result.artifactName }}</strong><small>{{ result.winnerPlayerDisplayName ? '勝出：' + result.winnerPlayerDisplayName : '沒有有效得票' }} · 共 {{ result.totalVoteCount }} 票</small></p>
-        <ol class="result-answers">
-          @for (answer of result.answers; track answer.id) {
-            <li [class.is-winner]="answer.isWinner" [class.is-mine]="answer.gamePlayerId === currentPlayerId()">
-              <span>{{ answer.rank }}.</span>
-              <div><strong>{{ answer.playerDisplayName }}@if (answer.gamePlayerId === currentPlayerId()) { <small>（你）</small> }@if (answer.isWinner) { <em>勝出</em> }</strong><p>{{ answer.text }}</p><i class="vote-bar" aria-hidden="true"><u [style.width.%]="answer.voteCount / maxVotes(result.answers) * 100"></u></i></div>
-              <b>{{ answer.voteCount }} 票</b>
-            </li>
-          } @empty {
-            <li class="empty-copy">本回合沒有人作答。</li>
-          }
-        </ol>
-      } @else {
-        <p class="empty-copy">目前沒有回合紀錄。</p>
-      }
-    </section>
-    </div>
-    <aside class="results-side" aria-label="你的成績與獎勵">
-    @if (ownResult(); as own) {
-      <section class="personal-result" aria-label="你的本局成績"><h3>你的本局成績</h3><dl><div><dt>最終排名</dt><dd>第 {{ own.rank }} 名</dd></div><div><dt>獲得票數</dt><dd>{{ own.score }} 票</dd></div><div><dt>勝出回合</dt><dd>{{ own.roundsWon }} 回合</dd></div></dl></section>
-    }
-    @if (myAnswers().length) {
-      <section class="my-answers" aria-label="你的每回合回答"><h3>你的回答與得票</h3>
-        <ol>@for (item of myAnswers(); track item.round.id; let i = $index) {
-          <li><button type="button" (click)="picked.set(i)"><span>第 {{ item.round.roundNumber }} 回合</span>@if (item.answer) { <q>{{ item.answer.text }}</q><b>{{ item.answer.voteCount }} 票</b> } @else { <q class="none">這回合沒有作答</q> }</button></li>
-        }</ol>
-      </section>
-    }
   <div class="reward-panel">
     <div><h3>本局獎勵</h3><p>每間房的獎勵只能領取一次。</p></div>
     @if (!canClaim()) { <p>獎勵僅供本局參與玩家領取。</p> }
@@ -88,5 +78,4 @@
     <p class="empty-copy results-loading" role="status">正在讀取排行榜與回合紀錄…</p>
   }
 </div>
-</app-game-scroll-panel>
 </section>

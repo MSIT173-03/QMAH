@@ -28,7 +28,7 @@ describe('多人結算的閱讀順序與獎勵入口', () => {
 
   it('沒有排行榜資料時仍可領取獎勵及返回大廳', () => {
     const view = render([]);
-    expect(view.querySelector('.empty-copy')?.textContent).toContain('沒有排行榜資料');
+    expect(view.querySelector('.leaderboard-wrap .empty-copy')?.textContent).toContain('沒有排行榜資料');
     expect(view.querySelector('.reward-panel button')?.textContent).toContain('領取本局獎勵');
     expect(view.querySelector('.results-back-link')?.getAttribute('href')).toBe('/game?test=1');
   });
