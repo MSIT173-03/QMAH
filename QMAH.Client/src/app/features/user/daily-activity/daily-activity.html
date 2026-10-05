@@ -632,6 +632,10 @@
               %
             </small>
 
+            <span class="stat-note">
+              自帳號建立日起計算
+            </span>
+
           </div>
 
         </div>
@@ -642,22 +646,74 @@
 
 
     <!-- =============================== -->
-    <!-- 最後登入 -->
+    <!-- 近期登入狀態 -->
     <!-- =============================== -->
 
-    <section class="last-login">
+    <section class="recent-activity">
 
-      <div class="last-login-left">
+      <!-- 左側 -->
+      <div class="recent-activity-main">
 
-        <div class="last-login-icon">
-          <app-qmah-icon name="clock" />
+        <div class="recent-activity-icon">
+          <app-qmah-icon
+            name="calendar"
+            size="22"
+          />
         </div>
 
+        <div class="recent-activity-copy">
 
-        <div>
+          <span class="recent-activity-label">
+            近期登入狀態
+          </span>
+
+          @if (!rewardServiceReady) {
+
+            <strong>
+              簽到資料更新中
+            </strong>
+
+            <p>
+              登入紀錄仍可正常查看
+            </p>
+
+          } @else if (dailyActivity.hasCheckedInToday) {
+
+            <strong>
+              今天已完成簽到
+            </strong>
+
+            <p>
+              已連續簽到
+              {{ dailyActivity.currentCheckInStreak }}
+              天，明天記得再回來。
+            </p>
+
+          } @else {
+
+            <strong>
+              今天還沒簽到
+            </strong>
+
+            <p>
+              完成今日簽到，繼續累積你的連續紀錄。
+            </p>
+
+          }
+
+        </div>
+
+      </div>
+
+
+      <!-- 中間資訊 -->
+      <div class="recent-activity-stats">
+
+        <!-- 最近登入 -->
+        <div class="recent-mini-stat">
 
           <span>
-            最後登入日期
+            最近登入
           </span>
 
           <strong>
@@ -666,14 +722,76 @@
 
               {{
                 dailyActivity.lastLoginDate
-                | date:'yyyy/MM/dd'
+                  | date:'MM/dd'
               }}
 
             } @else {
 
-              尚無登入紀錄
+              --
 
             }
+
+          </strong>
+
+        </div>
+
+
+        <div class="recent-stat-divider"></div>
+
+
+        <!-- 距離下一次加成 -->
+        <div class="recent-mini-stat">
+
+          <span>
+            距離加成
+          </span>
+
+          <strong>
+
+            @if (
+              rewardServiceReady &&
+              dailyActivity.remainingMonthlyBonuses > 0
+            ) {
+
+              {{ daysUntilBonus }}
+              <small>天</small>
+
+            } @else if (rewardServiceReady) {
+
+              <small>本月已完成</small>
+
+            } @else {
+
+              --
+
+            }
+
+          </strong>
+
+        </div>
+
+
+        <div class="recent-stat-divider"></div>
+
+
+        <!-- 近 7 天可補簽 -->
+        <div class="recent-mini-stat">
+
+          <span>
+            近 7 天可補簽
+          </span>
+
+          <strong
+            [class.has-makeup]="
+              dailyActivity.makeUpDays.length > 0
+            "
+          >
+
+            {{ dailyActivity.makeUpDays.length }}
+
+            <small>
+              天
+            </small>
 
           </strong>
 
@@ -682,26 +800,32 @@
       </div>
 
 
+      <!-- 右側狀態 -->
       <div
-        class="login-status"
-        [class.active-status]="dailyActivity.hasCheckedInToday"
+        class="recent-activity-status"
+        [class.completed]="
+          dailyActivity.hasCheckedInToday
+        "
       >
 
         <span
-          class="status-dot"
-          [class.active]="dailyActivity.hasCheckedInToday"
+          class="recent-status-dot"
+          [class.active]="
+            dailyActivity.hasCheckedInToday
+          "
         ></span>
 
-
         @if (!rewardServiceReady) {
-          簽到狀態更新中
+
+          更新中
+
         } @else if (dailyActivity.hasCheckedInToday) {
 
           今日已簽到
 
         } @else {
 
-          今日尚未簽到
+          等待簽到
 
         }
 

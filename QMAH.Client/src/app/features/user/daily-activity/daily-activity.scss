@@ -1936,3 +1936,309 @@
 @media (prefers-reduced-motion: reduce) {
   :host *, :host *::before, :host *::after { animation: none !important; transition: none !important; }
 }
+
+// =====================================================
+// Recent Activity
+// 近期登入狀態
+// =====================================================
+
+.recent-activity {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+
+  margin-top: 22px;
+  padding: 24px 28px;
+
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-card);
+
+  background: var(--qmah-surface-elevated);
+
+  box-shadow: var(--qmah-shadow-card);
+
+  animation: cardEnter 0.5s ease 0.22s both;
+}
+
+
+// ===============================
+// 左側主要資訊
+// ===============================
+
+.recent-activity-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.recent-activity-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 13px;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--qmah-primary) 10%,
+      var(--qmah-surface-elevated)
+    );
+
+  color: var(--qmah-primary);
+}
+
+.recent-activity-copy {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recent-activity-label {
+  color: var(--qmah-text-subtle);
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.recent-activity-copy strong {
+  color: var(--qmah-ink);
+
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.recent-activity-copy p {
+  margin: 0;
+
+  color: var(--qmah-text-muted);
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+
+// ===============================
+// 中間資訊
+// ===============================
+
+.recent-activity-stats {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+
+  flex: 0 0 auto;
+}
+
+.recent-mini-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  min-width: 78px;
+}
+
+.recent-mini-stat span {
+  color: var(--qmah-text-subtle);
+
+  font-size: 11px;
+
+  white-space: nowrap;
+}
+
+.recent-mini-stat strong {
+  color: var(--qmah-primary);
+
+  font-size: 17px;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+
+  white-space: nowrap;
+}
+
+.recent-mini-stat strong small {
+  margin-left: 2px;
+
+  color: var(--qmah-text-muted);
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.recent-mini-stat strong.has-makeup {
+  color: var(--qmah-honey-action);
+}
+
+.recent-stat-divider {
+  width: 1px;
+  height: 36px;
+
+  flex: 0 0 auto;
+
+  background: var(--qmah-border);
+}
+
+
+// ===============================
+// 右側狀態
+// ===============================
+
+.recent-activity-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  flex: 0 0 auto;
+
+  padding: 7px 11px;
+
+  border: 1px solid var(--qmah-border);
+  border-radius: 999px;
+
+  background: var(--qmah-surface-soft);
+
+  color: var(--qmah-text-muted);
+
+  font-size: 12px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.recent-activity-status.completed {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--qmah-primary) 24%,
+      var(--qmah-surface-elevated)
+    );
+
+  background:
+    color-mix(
+      in srgb,
+      var(--qmah-primary) 10%,
+      var(--qmah-surface-elevated)
+    );
+
+  color: var(--qmah-primary);
+}
+
+.recent-status-dot {
+  width: 8px;
+  height: 8px;
+
+  flex: 0 0 auto;
+
+  border-radius: 50%;
+
+  background: var(--qmah-text-subtle);
+}
+
+.recent-status-dot.active {
+  background: var(--qmah-primary-hover);
+
+  box-shadow:
+    0 0 0 4px
+    color-mix(
+      in srgb,
+      var(--qmah-primary) 10%,
+      transparent
+    );
+}
+
+
+// =====================================================
+// Recent Activity RWD
+// =====================================================
+
+@media (max-width: 1000px) {
+
+  .recent-activity {
+    flex-wrap: wrap;
+  }
+
+  .recent-activity-main {
+    flex: 1 1 55%;
+  }
+
+  .recent-activity-stats {
+    order: 3;
+
+    width: 100%;
+
+    padding-top: 18px;
+
+    border-top: 1px solid var(--qmah-border);
+  }
+
+  .recent-activity-status {
+    margin-left: auto;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .recent-activity {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 18px;
+
+    padding: 20px;
+  }
+
+  .recent-activity-main {
+    width: 100%;
+    flex: none;
+  }
+
+  .recent-activity-status {
+    order: 2;
+
+    margin-left: 62px;
+  }
+
+  .recent-activity-stats {
+    order: 3;
+
+    width: 100%;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding-top: 18px;
+  }
+
+  .recent-mini-stat {
+    min-width: 0;
+  }
+
+  .recent-stat-divider {
+    height: 32px;
+  }
+
+}
+
+.stat-note {
+  display: block;
+  margin-top: 7px;
+
+  color: var(--qmah-text-subtle);
+
+  font-size: 11px;
+  line-height: 1.5;
+}
