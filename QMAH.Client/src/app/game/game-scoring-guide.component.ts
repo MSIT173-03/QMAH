@@ -49,7 +49,7 @@ let guideSequence = 0;
         }
         <h4>會扣分的地方</h4>
         <ul class="scoring-deductions">@for (line of r.deductions; track line) { <li>{{ line }}</li> }</ul>
-        <p class="scoring-note">簡單最高 80 分，困難最高 100 分。使用系統代答，最高 A 級。正式遊戲完成並送出後，即使未達 B 級也有基本獎勵：未得分至少 2 點／10 鑰匙進度，C 級至少 4 點／15 進度；B、A、S 級分別至少 6、8、10 點與 20、30、40 進度。點數每天最多 100，鑰匙進度每天最多 500，約 5 把鑰匙，也會依收藏比例調整。試玩與放棄不發獎勵。</p>
+        <p class="scoring-note">簡單最高 80 分，困難最高 100 分。使用系統代答，最高 A 級。正式遊戲完成並送出後，即使未達 B 級也有基本獎勵：未得分至少 2 點／10 鑰匙進度，C 級至少 4 點／15 進度；B、A、S 級分別至少 6、8、10 點與 20、30、40 進度。點數每天最多 100，鑰匙進度每天最多 1000，約 10 把鑰匙，也會依收藏比例調整。試玩與放棄不發獎勵。</p>
         @if (!inline()) { <button type="button" class="scoring-close" [attr.popovertarget]="id" popovertargetaction="hide">知道了</button> }
       </div>
     }

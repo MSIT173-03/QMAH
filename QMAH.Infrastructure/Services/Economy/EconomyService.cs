@@ -16,7 +16,7 @@ namespace QMAH.Infrastructure.Services.Economy;
 /// </remarks>
 public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dailyRewards)
 {
-    public const decimal DailyKeyProgressLimit = 500m;
+    public const decimal DailyKeyProgressLimit = 1000m;
 
     /// <summary>在呼叫端的結算交易中累積遊戲鑰匙進度，保留小數並轉換完整鑰匙。</summary>
 
@@ -26,7 +26,7 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
     {
         if (threshold <= 0 || progressReward < 0)
             return EconomyResult<GameKeyGrantView>.Conflict("鑰匙進度設定無效，請聯絡管理員。");
-        // 每日鑰匙進度上限（小遊戲與多人共用）：約等於 5 把鑰匙，遠寬於點數上限，只擋刷分。
+        // 每日鑰匙進度上限（小遊戲與多人共用）：約等於 10 把鑰匙，遠寬於點數上限，只擋刷分。
         var dayStart = DateTime.UtcNow.AddHours(8).Date.AddHours(-8);
         var earnedToday = await db.KeyProgressTransactions
             .Where(item => item.UserId == userId && item.Amount > 0 && item.CreatedAt >= dayStart
