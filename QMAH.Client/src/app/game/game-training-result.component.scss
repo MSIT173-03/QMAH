@@ -4,19 +4,11 @@
 .result-shell { position:absolute; inset:0; overflow:hidden; background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground); color:var(--game-table-ink); }
 .result-sheet { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto minmax(0,1fr); gap:20px 32px; min-height:100%; align-content:center; padding:clamp(16px,2.5vw,40px) clamp(16px,4vw,64px); color:var(--game-table-ink); }
 .result-gallery { align-self:center; min-width:0; width:min(100%,640px); justify-self:center; }
-.result-gallery figure { @include ui.paper-panel; margin:0; padding:14px 14px 12px; box-shadow:inset 0 0 0 2px #e3d2a8, 0 14px 26px #14291c66; transform:rotate(-2deg); animation:result-deal 480ms cubic-bezier(.16,1,.3,1) both; }
 .result-gallery figure:nth-child(2) { animation-delay:90ms; }
 .result-gallery figure:nth-child(3) { animation-delay:180ms; }
 .result-gallery figure:nth-child(4) { animation-delay:270ms; }
-.result-gallery img { display:block; width:100%; height:min(43dvh,390px); object-fit:contain; }
 .result-gallery figcaption a { display: inline-flex; align-items: center; min-height: 40px; }
-.result-gallery figcaption { padding-top:10px; text-align:center; font-size:16px; font-weight:700; }
 .result-gallery a { color:var(--game-card-ink); text-underline-offset:4px; }
-.result-gallery.is-memory { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
-.is-memory figure { padding:8px 8px 6px; }
-.is-memory figure:nth-child(even) { transform:rotate(2deg); }
-.is-memory img { height:clamp(80px,14dvh,140px); }
-.is-memory figcaption { font-size:14px; overflow-wrap:anywhere; }
 .result-image-fallback { display:grid; place-items:center; min-height:140px; color:var(--game-card-muted); }
 .result-summary { @include ui.control-housing(true); display:grid; align-self:center; gap:16px; min-width:0; padding:24px 26px; box-shadow:inset 0 0 0 2px #e3d2a8, 0 16px 30px #14291c66; animation:result-deal 520ms 120ms cubic-bezier(.16,1,.3,1) both; }
 button:focus-visible, a:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; }
@@ -28,18 +20,16 @@ button:disabled { opacity:.55; }
   .result-sheet { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto; align-content:start; padding:16px; }
   .result-summary { grid-row:2; }
   .result-gallery { grid-row:3; }
-  .result-gallery img { height:min(32dvh,280px); }
   .result-gallery.is-memory { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .is-memory img { height:120px; }
 }
 @media (max-width:450px) {
   .result-sheet { padding:12px; }
   .result-summary { padding:16px; }
 }
-@media (prefers-reduced-motion:reduce) { .game-result-enter, .result-gallery figure, .result-summary, .result-grade { animation:none !important; } }
+@media (prefers-reduced-motion:reduce) { .game-result-enter, .result-gallery figure, .result-summary { animation:none !important; } }
 
-// ── 版面與字級：標題 34／副標 16／卡片標題 18／標籤 14／數字 800 ──
-.result-banner { grid-column: 1 / -1; display: grid; gap: 12px; }
+// ── 版面與字級：標題 34／副標 16／卡
+.result-banner { grid-column: 1 / -1; display: grid; gap: 8px; }
 .result-banner h2 { margin: 0; color: var(--game-table-ink); font: 800 clamp(26px, 3vw, 32px) / 1.3 var(--qmah-font-sans); text-shadow: 0 2px 0 #1d4635; text-wrap-style: balance; }
 .result-banner p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 0; color: var(--game-table-muted); font-size: 16px; line-height: 1.6; }
 .result-level { padding: 1px 12px; border: 2px solid #0f1b14; border-radius: 999px; color: #2b2108; background: var(--game-button-ochre-image); font-size: 14px; font-weight: 800; }
@@ -73,7 +63,6 @@ button:disabled { opacity:.55; }
 .result-info { @extend %ui-btn-2; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; }
 .result-info span { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 2px solid #0f1b14; border-radius: 50%; background: #fff8e9; font: 800 14px/1 var(--qmah-font-sans); }
 .result-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--qmah-game-action); font-size: 15px; font-weight: 700; text-underline-offset: 4px; }
-@keyframes medal-pop { from { opacity: 0; scale: .3; rotate: -18deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
 @media (max-width: 800px) {
   .result-sheet { grid-template-rows: auto auto auto; }
   .result-summary { grid-row: 2; }
@@ -81,11 +70,9 @@ button:disabled { opacity:.55; }
 }
 @media (max-width: 450px) {
   .result-award { gap: 14px; }
-  .result-medal { width: 96px; }
   .result-actions { grid-template-columns: 1fr; }
   .result-links { justify-content: center; }
 }
-@media (prefers-reduced-motion: reduce) { .result-medal, .reward-tile b { animation: none; } }
 
 // 好成績的慶祝：彩紙噴出、獎牌後面的光暈呼吸
 .confetti { position: absolute; width: 0; height: 0; pointer-events: none; }
@@ -97,21 +84,18 @@ button:disabled { opacity:.55; }
 @keyframes medal-sparkle { 50% { stroke: #fff3b0; } }
 @media (prefers-reduced-motion: reduce) { .confetti { display: none; } .result-medal.is-celebrating::before, .result-medal.is-celebrating .medal-scallop { animation: none; } }
 
-// 入帳動畫：數字從 0 往上跳，圖示彈出、閃光，不再用進度條（頂端狀態列才是進度條）
+// 入帳動畫：數字從 0 往上跳，圖示彈出、閃光
 @property --n { syntax: '<integer>'; inherits: false; initial-value: 0; }
 
 // 一個畫面放得下：框、導覽列之下直接是兩欄，不再需要捲動
 @media (min-width: 801px) {
   .result-shell { background: none; }
-  .result-sheet { align-content: start; gap: 14px 24px; padding: clamp(8px, 1.4dvh, 16px) clamp(8px, 1.5vw, 20px) 10px; min-height: 0; }
-  .result-gallery figure { padding: 10px 10px 8px; }
-  .result-gallery img { height: clamp(140px, 30dvh, 300px); }
-  .result-gallery figcaption { padding-top: 6px; font-size: 15px; }
+  .result-sheet { align-content: start; gap: 10px 24px; padding: clamp(6px, 1dvh, 12px) clamp(8px, 1.5vw, 20px) 10px; min-height: 0; }
   .result-left { gap: 12px; align-self: start; }
   .result-summary { align-self: start; }
 }
 
-// ── 結算的成就感：標語、獎牌蓋章、光芒、星星、分數跳動，依評級放大或收斂 ──
+// ── 結算的成就感：標語、獎牌蓋章、光芒、星
 .result-sheet { --glow: #ffffff22; --accent: #f0c24a; }
 .result-sheet[data-grade='S'] { --glow: #ffe08a66; --accent: #f0c24a; }
 .result-sheet[data-grade='A'] { --glow: #dfe6ff55; --accent: #b9c6ec; }
@@ -142,100 +126,50 @@ button:disabled { opacity:.55; }
 .result-score .num::before { content: counter(n); }
 @keyframes score-count { from { --n: 0; } to { --n: var(--to); } }
 .confetti { top: 150px; left: 50%; z-index: 3; }
-// 獎勵卡的金幣雨
 @media (max-width: 800px) { .result-rays { width: 220px; height: 220px; margin-left: -110px; } .result-medal { width: 120px; } }
-@media (prefers-reduced-motion: reduce) { .result-sheet::before, .result-rays, .result-headline, .result-medal, .result-stars .star, .result-score .num, .coin-rain i { animation: none !important; opacity: 1; } .coin-rain { display: none; } .result-rays { opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .result-sheet::before, .result-rays, .result-headline, .result-medal, .result-stars .star, .result-score .num { animation: none !important; opacity: 1; } .result-rays { opacity: .6; } }
 
 @media (min-width: 801px) {
   .result-summary { padding: 10px 20px 14px; }
-  .result-award-copy { margin: 0; font-size: 15px; }
 }
 @media (min-width: 801px) {
-  .result-medal { width: 100px; }
-  .result-rays { top: 20px; width: 190px; height: 190px; margin-left: -95px; }
-  .result-headline { padding: 2px 24px; font-size: 22px; }
-  .result-stars .star { width: 28px; height: 28px; }
   .result-label { display: none; }
-  .result-score { font-size: 42px; }
   .result-facts { padding-block: 6px 2px; border-block: 0; }
   .result-summary { gap: 6px; }
-  .confetti { top: 110px; }
 }
-// 大螢幕（16:9）：依視窗高度分兩級放大，所有尺寸直接調整、不用 zoom，確保獎勵入帳區仍在同一個畫面內
+// 大螢幕（16:9）：依視窗高度分兩級放大，所
 @media (min-width: 801px) and (min-height: 860px) {
-  .result-gallery img { height: clamp(220px, 33dvh, 480px); }
-  .result-gallery figcaption { font-size: 17px; }
   .result-banner h2 { font-size: 34px; }
   .result-banner p { font-size: 17px; }
   .result-summary { padding: 18px 26px 22px; gap: 10px; }
-  .result-medal { width: 128px; }
-  .result-rays { top: 26px; width: 230px; height: 230px; margin-left: -115px; }
-  .result-headline { padding: 4px 28px; font-size: 26px; }
-  .result-stars .star { width: 34px; height: 34px; }
-  .result-score { font-size: 56px; }
-  .result-award-copy { font-size: 17px; }
-  .result-facts dd { font-size: 30px; }
-  .result-facts dt { font-size: 15px; }
-  .result-actions button { min-height: 60px; font-size: 19px; }
-  .confetti { top: 130px; }
 }
 @media (min-width: 801px) and (min-height: 1000px) {
-  .result-gallery img { height: clamp(300px, 36dvh, 560px); }
   .result-banner h2 { font-size: 38px; }
   .result-banner p { font-size: 19px; }
   .result-summary { padding: 24px 32px 28px; gap: 14px; }
-  .result-medal { width: 156px; }
-  .result-rays { top: 32px; width: 270px; height: 270px; margin-left: -135px; }
-  .result-headline { padding: 6px 34px; font-size: 30px; }
-  .result-stars .star { width: 40px; height: 40px; }
-  .result-score { font-size: 68px; }
-  .result-award-copy { font-size: 19px; }
-  .result-facts dd { font-size: 34px; }
-  .result-facts dt { font-size: 16px; }
-  .result-actions button { min-height: 68px; font-size: 21px; }
-  .confetti { top: 150px; }
 }
 
-.result-gallery.is-memory { align-self: start; }
-.result-gallery.is-memory img { height: auto; aspect-ratio: 1; max-height: clamp(160px, 22dvh, 300px); }
-.result-gallery.is-memory figure { transform: none; }
 .result-summary { position: relative; }
 // 評分標準放在成績卡右上角；窄螢幕改回卡片底部，避免壓到獎章
 .result-links { position: absolute; top: 14px; right: 14px; }
 @media (max-width: 800px) { .result-links { position: static; justify-content: center; } }
 
-// 短螢幕（例如 1280×720）：整體收緊，仍然一個畫面放完，不靠縮小內文字
+// 短螢幕（例如 1280×720）：整體收緊，
 @media (min-width: 801px) and (max-height: 780px) {
   .result-banner h2 { font-size: 28px; }
   .result-banner p { font-size: 15px; }
-  .result-gallery img { height: clamp(96px, 17dvh, 140px); }
-  .result-gallery figure { padding: 8px 8px 6px; }
-  .result-gallery figcaption { padding-top: 2px; font-size: 14px; }
   .result-left { gap: 8px; }
-  .result-medal { width: 84px; }
-  .result-rays { top: 16px; width: 150px; height: 150px; margin-left: -75px; }
-  .result-headline { padding: 0 20px; font-size: 20px; }
-  .result-stars .star { width: 24px; height: 24px; }
-  .result-score { font-size: 36px; }
   .result-facts { padding-block: 2px; }
-  .result-facts dd { font-size: 22px; }
-  .result-actions button { min-height: 44px; font-size: 16px; }
-  .confetti { top: 90px; }
 }
 
-// ── 新的展品卡設計：不管文物圖是直是橫、長卷或方形，都放進同一種「正方形襯紙」，卡片寬度跟著襯紙走 ──
-// 單件：一張置中的展品卡；多件：同樣的展品卡排成四欄。圖一律 contain、不裁切、不拉伸，也不傾斜。
-.result-left { width: 100%; justify-self: stretch; }
-.result-gallery { display: flex; flex-wrap: wrap; justify-content: center; align-content: start; gap: 12px; width: 100%; align-self: auto; }
-.result-gallery figure { --mat: clamp(160px, 34dvh, 400px); flex: 0 0 auto; width: min(100%, var(--mat)); margin: 0; padding: 10px 10px 8px; transform: none !important; }
-.result-gallery figure img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; border-radius: 6px; background: #ebe3cf; box-shadow: inset 0 0 0 1px #c9b98f66; }
-.result-gallery figcaption { padding-top: 8px; text-align: center; font-size: 15px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
-.result-gallery.is-memory { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.result-gallery.is-memory figure { --mat: 100%; width: 100%; padding: 6px 6px 4px; }
-.result-gallery.is-memory figcaption { padding-top: 4px; font-size: 13px; }
-@media (max-width: 800px) { .result-left { width: 100%; } .result-gallery figure { --mat: min(60vw, 280px); } .result-gallery.is-memory { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 801px) and (max-height: 780px) { .result-sheet { gap: 8px 24px; padding-top: 4px; } .result-banner { gap: 6px; } .result-gallery figure { --mat: clamp(120px, 24dvh, 200px); } .result-gallery.is-memory figure { --mat: 100%; } }
-@media (min-width: 801px) and (max-height: 780px) { .result-gallery.is-memory { gap: 6px; } .result-gallery.is-memory figure { padding: 6px 6px 4px; } .result-gallery.is-memory figure img { aspect-ratio: 16 / 10; } .result-gallery.is-memory figcaption { padding-top: 2px; font-size: 13px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; } }
-@media (min-width: 801px) and (max-height: 780px) { .result-gallery.is-memory figcaption a { min-height: 28px; line-height: 1.25; } }
-// 電腦版：兩欄等高，文物卡在上方空間置中，獎勵入帳貼齊成績卡底部，左緣與標題對齊
-@media (min-width: 801px) { .result-sheet { align-items: stretch; align-content: stretch; flex: 1 1 auto; grid-template-rows: auto minmax(0, 1fr); } .result-left, .result-summary { align-self: stretch; } .result-left { grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; } .result-gallery { align-content: center; } }
+// 電腦版：獎章、星星、分數、按鈕依視窗高度連續
+@media (min-width: 801px) {
+  .result-medal { width: clamp(84px, 12dvh, 156px); }
+  .result-rays { top: clamp(16px, 3dvh, 32px); width: clamp(150px, 25dvh, 270px); height: clamp(150px, 25dvh, 270px); margin-left: calc(clamp(150px, 25dvh, 270px) / -2); }
+  .result-headline { padding: .1em 1.1em; font-size: clamp(20px, 2.8dvh, 30px); }
+  .result-stars .star { width: clamp(24px, 3.7dvh, 40px); height: clamp(24px, 3.7dvh, 40px); }
+  .result-score { font-size: clamp(36px, 6.3dvh, 68px); }
+  .result-facts dd { font-size: clamp(22px, 3.1dvh, 34px); }
+  .result-actions button { min-height: clamp(44px, 6.3dvh, 68px); font-size: clamp(16px, 1.95dvh, 21px); }
+  .confetti { top: clamp(90px, 14dvh, 150px); }
+}

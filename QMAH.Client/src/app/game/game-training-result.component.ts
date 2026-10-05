@@ -15,7 +15,7 @@ import { GameResultRulesComponent } from './game-result-rules.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, GameScrollPanelComponent, GameResultTallyComponent, GameResultRulesComponent],
   templateUrl: './game-training-result.component.html',
-  styleUrl: './game-training-result.component.scss'
+  styleUrls: ['./game-training-result.component.scss', './game-training-result-gallery.component.scss']
 })
 export class GameTrainingResultComponent {
   private readonly victory = inject(GameAudio).play('win');

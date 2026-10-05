@@ -58,3 +58,5 @@
   .tally-bar { height: 8px; margin-top: 2px; }
   .tally-note { font-size: 13px; }
 }
+// 短螢幕：換得鑰匙時三張卡排成一列，不多佔一行高度
+@media (min-width: 801px) and (max-height: 780px) { .tally-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); } .tally-card.is-wide { grid-column: auto; } }

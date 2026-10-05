@@ -66,7 +66,7 @@
     <div class="reward-receipt" aria-label="本局獎勵明細">
       <strong>{{ receipt.pointReward }} 點鑑定點數</strong>
       <span>{{ receipt.normalKeyReward }} 把普通鑰匙</span>
-      @if (receipt.keyProgressReward > 0) { <span>本局累積 {{ receipt.keyProgressReward }} 片鑰匙進度，已含上方轉換的鑰匙</span> }
+      @if (receipt.keyProgressReward > 0) { <span>鑰匙進度 +{{ receipt.keyProgressReward }}，每滿 100 換 1 把，已含上方換得的鑰匙</span> }
       <span>表現分數 {{ receipt.performanceScore }}</span>
       <span>勝出 {{ receipt.roundsWon }} 回合</span>
     </div>
