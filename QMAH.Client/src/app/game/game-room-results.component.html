@@ -1,16 +1,14 @@
 <section class="results-frame" aria-labelledby="results-title">
-<app-game-scroll-panel label="結算內容，可捲動查看排行與回合紀錄" cue="往下查看回合紀錄與獎勵"><div class="paper-card results-panel">
-  <h2 id="results-title">本局鑑定完成</h2>
-
+<app-game-scroll-panel label="結算內容，可捲動查看排行與回合紀錄" cue="往下查看回合紀錄與獎勵"><div class="results-sheet">
+  <header class="results-banner">
+    <h2 id="results-title">本局鑑定完成</h2>
+    @if (history(); as h) { <p>房間 {{ h.roomCode }} · {{ h.rounds.length }} 回合的想法，現在一起揭曉。</p> }
+  </header>
   @if (history(); as completedHistory) {
-    <p class="section-copy">房間 {{ completedHistory.roomCode }} · {{ completedHistory.rounds.length }} 回合的想法，現在一起揭曉。</p>
-    @if (ownResult(); as own) {
-      <section class="personal-result" aria-label="你的本局成績"><h3>你的本局成績</h3><dl><div><dt>最終排名</dt><dd>第 {{ own.rank }} 名</dd></div><div><dt>獲得票數</dt><dd>{{ own.score }} 票</dd></div><div><dt>勝出回合</dt><dd>{{ own.roundsWon }} 回合</dd></div></dl></section>
-    }
+    <div class="results-main paper-card">
     @if (leaders().length) {
       <section class="results-highlight" aria-label="本局最高得票"><h3>{{ leaders().length > 1 ? '並列最高得票' : '本局最高得票' }}</h3>@for (leader of leaders(); track leader.gamePlayerId) { <p><strong>{{ leader.displayName }}</strong><span>{{ leader.score }} 票 · 勝出 {{ leader.roundsWon }} 回合</span></p> }</section>
     }
-    <div class="results-layout">
     <div class="leaderboard-wrap">
       <h3>最終排行榜</h3>
       @if (completedHistory.leaderboard.length) {
@@ -54,6 +52,10 @@
       }
     </details>
     </div>
+    <aside class="results-side" aria-label="你的成績與獎勵">
+    @if (ownResult(); as own) {
+      <section class="personal-result" aria-label="你的本局成績"><h3>你的本局成績</h3><dl><div><dt>最終排名</dt><dd>第 {{ own.rank }} 名</dd></div><div><dt>獲得票數</dt><dd>{{ own.score }} 票</dd></div><div><dt>勝出回合</dt><dd>{{ own.roundsWon }} 回合</dd></div></dl></section>
+    }
   <div class="reward-panel">
     <div><h3>本局獎勵</h3><p>每間房的獎勵只能領取一次。</p></div>
     @if (!canClaim()) { <p>獎勵僅供本局參與玩家領取。</p> }
@@ -74,11 +76,10 @@
     @if (receipt.alreadyRewarded) { <p class="empty-copy">顯示先前已領取的紀錄，不會重複發放。</p> }
   }
 
+    </aside>
   } @else {
-    <p class="empty-copy" role="status">正在讀取排行榜與回合紀錄…</p>
+    <p class="empty-copy results-loading" role="status">正在讀取排行榜與回合紀錄…</p>
   }
-
-
 </div>
 </app-game-scroll-panel>
 </section>

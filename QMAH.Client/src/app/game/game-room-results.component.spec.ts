@@ -35,9 +35,9 @@ describe('多人結算的閱讀順序與獎勵入口', () => {
 
   it('先呈現排行與回合紀錄，再呈現獎勵操作', () => {
     const view = render([{ gamePlayerId: 'player', displayName: '小青', rank: 1, score: 3, roundsWon: 1, roundsAnswered: 1 }]);
-    const sections = Array.from(view.querySelector('.results-panel')!.children);
-    const ranking = view.querySelector('.results-layout')!;
-    const rewards = view.querySelector('.reward-panel')!;
+    const sections = Array.from(view.querySelector('.results-sheet')!.children);
+    const ranking = view.querySelector('.results-main')!;
+    const rewards = view.querySelector('.results-side')!;
     expect(sections.indexOf(ranking)).toBeLessThan(sections.indexOf(rewards));
     expect(ranking.contains(rewards)).toBe(false);
   });
