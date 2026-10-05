@@ -1,4 +1,15 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Panel } from '../panel/panel';
 import { CategoryList, CategoryListItem } from '../category-list/category-list';
 import { PillGroup, PillOption } from '../pill-group/pill-group';
@@ -6,6 +17,11 @@ import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-ico
 
 /** 篩選側欄的可收合面板；同時只能展開一個 */
 type FilterSection = 'category' | 'era' | 'price' | 'filter';
+
+/** 頁首高度：側欄比視窗矮時，捲動時固定在頁首下方 */
+const HEADER_OFFSET = 92;
+/** 側欄比視窗高時，捲到側欄底端後固定在離視窗底端這個距離的位置 */
+const BOTTOM_GAP = 16;
 
 /** 面板順序與標題文字（固定版面文字） */
 const FILTER_PANELS: readonly { section: FilterSection; label: string }[] = [
@@ -63,6 +79,33 @@ export class FilterSidebar {
   /** 切換面板收合狀態：點擊已展開的面板收合它，點擊其他面板則換成展開該面板 */
   protected toggleSection(section: FilterSection): void {
     this.expandedSection.update((current) => (current === section ? null : section));
+  }
+
+  private readonly aside = viewChild.required<ElementRef<HTMLElement>>('aside');
+  /**
+   * 側欄 sticky 的 top。側欄比視窗矮時是頁首高度，固定在頁首下方；
+   * 側欄比視窗高時會變成負值，讓使用者往下捲時先把側欄捲完（看到最後一個選項），
+   * 側欄底端到達視窗底端後才固定住，由商品卡片接著往下捲。
+   * 側欄高度會隨面板展開／收合與視窗大小改變，所以要持續重算，無法單靠 CSS。
+   */
+  protected readonly stickyTop = signal(HEADER_OFFSET);
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const element = this.aside().nativeElement;
+      const update = () =>
+        this.stickyTop.set(Math.min(HEADER_OFFSET, window.innerHeight - element.offsetHeight - BOTTOM_GAP));
+      update();
+
+      const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+      observer?.observe(element);
+      window.addEventListener('resize', update);
+      destroyRef.onDestroy(() => {
+        observer?.disconnect();
+        window.removeEventListener('resize', update);
+      });
+    });
   }
 
   /** 點擊某個分類時觸發，帶出該分類在 categories 中的索引值 */

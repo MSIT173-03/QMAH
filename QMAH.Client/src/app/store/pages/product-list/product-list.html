@@ -60,11 +60,14 @@
         }
       </div>
       }
-
-      <!-- 分頁切換 -->
-      @if (!isEmpty() && !loadError()) {
-      <app-pagination [page]="pageIndex()" [totalPages]="totalPages()" (pick)="onPagePick($event)" />
-      }
     </div>
   </div>
+
+  <!-- 分頁切換：放在側欄所在的容器之外。側欄以 sticky 黏著，範圍是它的容器；分頁若在容器內，
+       捲到底時側欄會延伸到分頁列，而不是停在最後一排商品卡片的底端。 -->
+  @if (!isEmpty() && !loadError()) {
+  <div class="list-pagination">
+    <app-pagination [page]="pageIndex()" [totalPages]="totalPages()" (pick)="onPagePick($event)" />
+  </div>
+  }
 </div>

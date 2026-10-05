@@ -1,5 +1,5 @@
 <!-- 商品列表頁篩選側欄：捲動時固定於視窗上方 -->
-<aside class="filter-sidebar">
+<aside #aside class="filter-sidebar" [style.top.px]="stickyTop()">
 
   <!-- 清除所有篩選：放在側欄最上方，不受任一面板收合狀態影響 -->
   <button type="button" class="filter-reset filter-reset--top" (click)="reset.emit()">{{ resetLabel }}</button>
