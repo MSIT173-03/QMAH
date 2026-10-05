@@ -1,49 +1,172 @@
 // artifact-list.ts
-import { Component, EventEmitter, Output, OnInit, signal, computed } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+  computed,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 import { CatalogService } from '../services/catalog-service';
-import { CatalogModel, CatalogDetailModel } from '../models/catalog-model';
+import { CatalogModel, CatalogDetailModel, EraModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
 import { KeyService } from '../services/key-service';
-import { KeyModel } from '../models/key-model';
+import { KeyFilter, KeyModel } from '../models/key-model';
 import { keyAssetPath } from '../shared/key-assets';
 import { SocialApiService } from '../core/services/social-api';
 import { ArtifactDiscussionDialog } from './artifact-discussion-dialog/artifact-discussion-dialog';
-// ⚠️ 路徑是假設值：假設 key-list.ts 跟 artifact-list.ts 是同一層目錄下的兄弟資料夾
-// （例如都在 components/ 底下），如果實際檔案結構不同，這行要跟著改。
 import { KeyList } from '../key-list/key-list';
 
-/** 依年代分組後的顯示用結構（格狀列表只需要清單卡片，不含鑑賞細節） */
+/** 依年代分組後的結構；一鍵解鎖用它決定「圖鑑由上至下」的順序 */
 interface EraGroup {
   eraName: string;
   items: CompendiumCardSummary[];
 }
 
+/** 書頁上的一個分區：全部／年代頁籤依年代分區，分類頁籤依分類分區 */
+export interface CatalogGroup {
+  /** 展開狀態的 key，例如 era:唐、category:玉器；全部與年代頁籤共用年代的展開狀態 */
+  key: string;
+  label: string;
+  items: CompendiumCardSummary[];
+}
+
+/**
+ * 書頁內容以「行」為單位排版：分區標題一行、卡片每 cols 張一行。
+ * divider：分區跨到右頁時不重複標題，只留一條與標題同高的分隔線，左右兩頁的卡片列才會對齊。
+ */
+export type CatalogLine =
+  | { kind: 'header'; key: string; group: CatalogGroup; continued: boolean }
+  | { kind: 'divider'; key: string; group: CatalogGroup }
+  | { kind: 'row'; key: string; group: CatalogGroup; items: CompendiumCardSummary[] };
+
+export interface CatalogPage {
+  lines: CatalogLine[];
+}
+
+/** 由實際書頁大小算出的卡片尺寸；TS 跟 CSS 用同一組數字，分頁才會剛好放滿 */
+export interface CatalogLayout {
+  cols: number;
+  cardW: number;
+  cardH: number;
+  rowH: number;
+  bodyH: number;
+}
+
+export type BookState = 'closed' | 'opening' | 'open' | 'closing';
+export type BookSection = 'catalog' | 'keys';
+export type CatalogTab = 'ALL' | 'CATEGORY' | 'ERA';
+
+/** 版面常數：要跟 artifact-list.scss 的 .group-head／.card-row／.artifact-card 一致 */
+export const BOOK_LAYOUT = {
+  gap: 10,
+  minCardW: 92,
+  /** 卡片名稱列（含與圖框的間距）高度 */
+  labelH: 26,
+  /** 圖框高度 = 卡片寬 × 這個比例 */
+  frameRatio: 0.86,
+  /** 分區標題高度（含下方間距） */
+  headerH: 36,
+} as const;
+
+/** 年代先後排序用：沒有年代資料的排到最後 */
+export function compareEraOrder(
+  a: string,
+  b: string,
+  order: ReadonlyMap<string, { start: number; end: number }>,
+): number {
+  const ea = order.get(a);
+  const eb = order.get(b);
+  if (ea && eb) return ea.start - eb.start || ea.end - eb.end || a.localeCompare(b);
+  if (ea) return -1;
+  if (eb) return 1;
+  return a.localeCompare(b);
+}
+
+/**
+ * 計算單頁可以放幾欄、卡片多大。寬度不足兩欄時仍維持兩欄，避免小螢幕只剩一張卡。
+ */
+export function computeCatalogLayout(width: number, height: number): CatalogLayout | null {
+  if (width <= 0 || height <= 0) return null;
+  const { gap, minCardW, labelH, frameRatio } = BOOK_LAYOUT;
+  const cols = Math.max(2, Math.floor((width + gap) / (minCardW + gap)));
+  const cardW = Math.floor((width - gap * (cols - 1)) / cols);
+  const cardH = Math.round(cardW * frameRatio) + labelH;
+  return { cols, cardW, cardH, rowH: cardH + gap, bodyH: Math.floor(height) };
+}
+
+/**
+ * 把分區依頁面高度切成多頁：
+ * - 分區標題不會單獨留在頁尾（放不下標題＋第一列就換頁）
+ * - 分區跨頁時，新的一頁開頭：showContinuedHeader(頁碼) 為 true 補「（續）」標題（左頁），
+ *   否則只留分隔線（右頁），避免左右兩頁都出現年代標題與收合按鈕
+ * - 收合狀態只顯示第一列（cols 張），展開才顯示全部
+ */
+export function paginateCatalog(
+  groups: CatalogGroup[],
+  layout: CatalogLayout,
+  isExpanded: (group: CatalogGroup) => boolean,
+  showContinuedHeader: (pageIndex: number) => boolean = () => true,
+): CatalogPage[] {
+  const { headerH } = BOOK_LAYOUT;
+  const pages: CatalogPage[] = [];
+  let lines: CatalogLine[] = [];
+  let used = 0;
+  const flush = () => {
+    pages.push({ lines });
+    lines = [];
+    used = 0;
+  };
+
+  for (const group of groups) {
+    const visible = isExpanded(group) ? group.items : group.items.slice(0, layout.cols);
+    if (lines.length && used + headerH + layout.rowH > layout.bodyH) flush();
+    lines.push({ kind: 'header', key: `h:${group.key}`, group, continued: false });
+    used += headerH;
+
+    for (let start = 0, row = 0; start < visible.length; start += layout.cols, row++) {
+      if (used + layout.rowH > layout.bodyH && lines.length) {
+        flush();
+        lines.push(
+          showContinuedHeader(pages.length)
+            ? { kind: 'header', key: `c:${group.key}:${row}`, group, continued: true }
+            : { kind: 'divider', key: `d:${group.key}:${row}`, group },
+        );
+        used += headerH;
+      }
+      lines.push({ kind: 'row', key: `r:${group.key}:${row}`, group, items: visible.slice(start, start + layout.cols) });
+      used += layout.rowH;
+    }
+  }
+
+  if (lines.length) flush();
+  return pages;
+}
+
 @Component({
   selector: 'app-artifact-list',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    KeyList,
-    ArtifactDiscussionDialog,
-  ],
+  imports: [CommonModule, FormsModule, KeyList, ArtifactDiscussionDialog],
   templateUrl: './artifact-list.html',
-  styleUrl: './artifact-list.scss'
+  // 封面、書本、彈出視窗的樣式拆成三個檔案，避免單一樣式檔超過 angular.json 的 32kB 預算；
+  // 封面要放在最前面，artifact-list.scss 裡的窄螢幕規則才能覆寫它。
+  styleUrls: ['./artifact-list.cover.scss', './artifact-list.scss', './artifact-list.dialogs.scss'],
 })
-export class ArtifactList implements OnInit {
+export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   // ---- 文物清單 ----
-  // ⚠️ 版面改成「依年代分區、每區可展開全部」之後，畫面需要看到「全部」文物才能正確分組、
-  // 正確搜尋，不能只看某一頁的 12 筆，所以這裡不再是分頁抓取，而是把後端全部分頁串接起來，
-  // 一次載入完整清單。catalogModel 現在存放的是「全部」文物，不是單一頁。
-  //
-  // 型別是 CompendiumCardSummary 而不是 CardEntry：格狀列表只需要清單欄位＋外皮＋解鎖狀態，
-  // 不需要 description / sizeText / primaryImagePath 這類鑑賞細節——那些欄位只在使用者
-  // 點開某張卡片時才透過 CatalogService.getArtifactById() 即時抓取（見下方 focusedDetail 相關程式碼），
-  // 避免一次把整批文物的細節資料都打回來。
+  // 版面需要「全部」文物才能正確分組與搜尋，所以把後端全部分頁串接起來一次載入。
+  // 型別是 CompendiumCardSummary：格狀列表只需要清單欄位＋外皮＋解鎖狀態，
+  // 鑑賞細節只在點開卡片時才透過 CatalogService.getArtifactById() 取得。
   catalogModel = signal<CompendiumCardSummary[]>([]);
   loading = signal(true);
   errorMsg = signal('');
@@ -51,24 +174,16 @@ export class ArtifactList implements OnInit {
   unlockStatusReady = signal(false);
   unlockStatusError = signal('');
 
-  // integration: 原分支留下文物新增／編輯表單的狀態，但目前圖鑑頁沒有掛載該表單或管理 API。
-  // 先保留註解而不讓它進入執行路徑，避免使用者誤以為前台已提供未完成的管理功能；
-  // 後續若要做管理介面，應改放到 Admin route 並補齊權限與 API 後再恢復。
-  // showForm = signal(false);
-  // editingArtifact = signal<CatalogModel | null>(null);
-
-  // ---- 圖鑑放大檢視／解鎖（原 artifact-unlock.ts 併入）----
-  keys = signal(0); // 全部鑰匙的持有總數，頭部徽章用
-  /** 萬能鑰匙（如果有的話）；圖鑑頁卡片上的解鎖按鈕固定用這把，不是背包那邊的一般/年代/分類鑰匙 */
+  // ---- 圖鑑放大檢視／解鎖 ----
+  keys = signal(0); // 全部鑰匙的持有總數，上方「鑰匙背包」頁籤徽章用
+  /** 背包內全部鑰匙；左側鑰匙篩選頁籤的數量用，鑰匙背包內有變動時由 KeyList 回報 */
+  allKeys = signal<KeyModel[]>([]);
+  /** 萬能鑰匙（如果有的話）；圖鑑卡片上的解鎖按鈕固定用這把 */
   universalKey = signal<KeyModel | null>(null);
-  // 萬能鑰匙確認視窗用的是內容型道具圖（keyAssetPath），跟卡片／按鈕上的 emoji 圖示是分開的機制。
   readonly universalKeyAssetPath = keyAssetPath('UNIVERSAL');
-  // integration: 後端目前的 UnlockArtifactAsync 固定扣除 1 把鑰匙；
-  // /me/keys/exchange-rules 是鑰匙兌換規則，不是解鎖成本，不能拿來猜畫面數字。
+  // integration: 後端目前的 UnlockArtifactAsync 固定扣除 1 把鑰匙。
   unlockKeyCost = computed(() => 1);
-  /** 現在改由 GET /me/catalog/artifact/unlocks 載入真實流水，見 loadUnlockStatus() */
   unlockLedger = signal<ArtifactUnlockRecord[]>([]);
-  /** 解鎖確認視窗要顯示的錯誤／提示訊息（HTTP 失敗或後端 unlocked:false 時使用） */
   unlockError = signal('');
   unlockedCount = computed(() => this.catalogModel().filter((i) => i.unlocked).length);
   filteredUnlockedCount = computed(() => this.filteredItems().filter((i) => i.unlocked).length);
@@ -76,31 +191,23 @@ export class ArtifactList implements OnInit {
   unlocking = signal(false);
 
   // ---- 一鍵解鎖全部（消耗萬能鑰匙）----
-  /** 目前「整本圖鑑」尚未解鎖的文物數量，不受搜尋／篩選影響，一鍵解鎖是對全部文物動作 */
   lockedTotalCount = computed(() => this.catalogModel().filter((i) => !i.unlocked).length);
-  /** 本次一鍵解鎖「預計」能解鎖幾件：萬能鑰匙餘額與未解鎖文物數兩者取較小值 */
   bulkUnlockPlannedCount = computed(() =>
     Math.min(this.universalKey()?.balance ?? 0, this.lockedTotalCount())
   );
   bulkUnlockConfirmOpen = signal(false);
   bulkUnlocking = signal(false);
   bulkUnlockError = signal('');
-  /** 非 null 代表上一輪一鍵解鎖已跑完，視窗要切換成顯示結果而不是確認表單 */
   bulkUnlockResult = signal<{ unlockedCount: number } | null>(null);
 
   focusedId = signal<string | null>(null);
   infoOpen = signal(false);
   confirmTargetId = signal<string | null>(null);
-  ledgerOpen = signal(false);
 
-  // ---- 目前放大檢視中卡片的鑑賞細節（description / sizeText / primaryImagePath...）----
-  // 只有已解鎖的卡片才需要載入，見 maybeLoadFocusedDetail()。
   focusedDetail = signal<CatalogDetailModel | null>(null);
   focusedDetailLoading = signal(false);
   focusedDetailError = signal('');
 
-  // 社群入口採「先查詢、沒有才確認建立」的流程，不在圖鑑清單載入時大量查詢貼文，
-  // 讓 512 件文物的日常瀏覽仍維持單一型錄請求；點擊後才讀取對應討論。
   discussionTargetId = signal<string | null>(null);
   discussionTarget = computed<CompendiumCardSummary | null>(() => {
     const id = this.discussionTargetId();
@@ -111,31 +218,398 @@ export class ArtifactList implements OnInit {
   discussionLoading = signal(false);
   discussionError = signal('');
 
+  // ================= 書本狀態 =================
 
+  /** closed：只看到封面；opening／closing：翻頁動畫中；open：書本攤開 */
+  bookState = signal<BookState>('closed');
+  /** 書本上方頁籤：圖鑑／鑰匙背包 */
+  bookSection = signal<BookSection>('catalog');
+  /**
+   * 書本左側頁籤（圖鑑模式）：全部／分類／年代。
+   * 分類、年代不是獨立頁面，只是叫出疊在左頁上的篩選單；兩邊的勾選同時生效，
+   * 切回「全部」時自動清除。
+   */
+  catalogTab = signal<CatalogTab>('ALL');
+  /** 分類／年代篩選單是否展開；頁籤維持選取時可以先收起篩選單看結果 */
+  filterPanelOpen = signal(false);
+  /** 書本左側頁籤（鑰匙背包模式）：交給 KeyList 篩選 */
+  keyFilter = signal<KeyFilter>('ALL');
+
+  readonly catalogTabs: { id: CatalogTab; label: string }[] = [
+    { id: 'ALL', label: '全部' },
+    { id: 'CATEGORY', label: '分類' },
+    { id: 'ERA', label: '年代' },
+  ];
+
+  readonly keyTabs: { id: KeyFilter; label: string }[] = [
+    { id: 'ALL', label: '全部' },
+    { id: 'CATEGORY', label: '分類' },
+    { id: 'ERA', label: '年代' },
+    { id: 'UNIVERSAL', label: '萬能' },
+    { id: 'NORMAL', label: '一般' },
+  ];
+
+  /** 目前翻到第幾個跨頁（全部頁籤＝左右兩頁一組；分類／年代頁籤＝右頁一頁一組） */
+  spread = signal(0);
+  /** 翻頁動畫方向；null 代表沒有在翻頁 */
+  turning = signal<'next' | 'prev' | null>(null);
+  /** 書頁內容區（扣掉頁首搜尋列與頁尾翻頁列）的實際大小，由 ResizeObserver 回報 */
+  pageBox = signal<{ w: number; h: number }>({ w: 0, h: 0 });
+
+  @ViewChild('pageMeasure', { static: true }) private pageMeasure?: ElementRef<HTMLElement>;
+  private resizeObserver?: ResizeObserver;
+  private timers: ReturnType<typeof setTimeout>[] = [];
 
   // ---- 搜尋／篩選 ----
   searchQuery = signal('');
-  /** 快速切換只看已解鎖文物；不改變後端資料，只作用於目前清單視圖。 */
   unlockedOnly = signal(false);
-  /** 年代／分類改成核取方塊多選，空集合代表「不篩選（全部）」 */
+  /** 年代／分類核取方塊，空集合代表不篩選；兩組同時生效（組內 OR、組間 AND） */
   selectedEras = signal<Set<string>>(new Set());
   selectedCategories = signal<Set<string>>(new Set());
 
-  toggleUnlockedFilter(): void {
-    this.unlockedOnly.update((active) => !active);
-  }
+  /**
+   * 年代的先後（GET /catalog/eras 的 startYear／endYear，西元前為負數），
+   * 以年代代碼與名稱都建一份，文物資料不論帶哪一種都對得上。
+   */
+  private eraOrder = signal<Map<string, { start: number; end: number }>>(new Map());
 
-  /** 篩選用的年代核取方塊選項，來自「全部」文物（不受目前篩選影響），解鎖／未解鎖都算 */
+  private compareEra = (a: CompendiumCardSummary, b: CompendiumCardSummary): number => {
+    const order = this.eraOrder();
+    const ka = order.has(a.eraCode) ? a.eraCode : a.eraName;
+    const kb = order.has(b.eraCode) ? b.eraCode : b.eraName;
+    return compareEraOrder(ka, kb, order);
+  };
+
+  /** 篩選單的年代選項也依年代先後排列 */
   eraOptions = computed(() => {
-    const names = new Set(this.catalogModel().map((i) => i.eraName));
-    return Array.from(names).sort();
+    const first = new Map<string, CompendiumCardSummary>();
+    for (const item of this.catalogModel()) if (!first.has(item.eraName)) first.set(item.eraName, item);
+    return Array.from(first.values()).sort(this.compareEra).map((item) => item.eraName);
   });
 
-  /** 篩選用的分類核取方塊選項，同上 */
   categoryOptions = computed(() => {
     const names = new Set(this.catalogModel().map((i) => i.categoryName));
     return Array.from(names).sort();
   });
+
+  /**
+   * 搜尋框＋「僅顯示已解鎖」：三個左側頁籤共用。
+   * 關鍵字比對：編號／年代／分類一律可比對；名字只比對已解鎖的文物
+   * （未解鎖的名稱是「？？？」謎底，不應該被搜出來）。
+   */
+  private searchedItems = computed<CompendiumCardSummary[]>(() => {
+    const keyword = this.searchQuery().trim().toLowerCase();
+    const unlockedOnly = this.unlockedOnly();
+
+    return this.catalogModel().filter((item) => {
+      if (unlockedOnly && !item.unlocked) return false;
+      if (!keyword) return true;
+      return (
+        item.artifactRef.toLowerCase().includes(keyword) ||
+        item.eraName.toLowerCase().includes(keyword) ||
+        item.categoryName.toLowerCase().includes(keyword) ||
+        (item.unlocked && item.name.toLowerCase().includes(keyword))
+      );
+    });
+  });
+
+  /** 搜尋＋年代＋分類核取方塊（任一頁籤勾的都會同時生效） */
+  filteredItems = computed<CompendiumCardSummary[]>(() => {
+    const eras = this.selectedEras();
+    const categories = this.selectedCategories();
+    return this.searchedItems().filter(
+      (i) => (!eras.size || eras.has(i.eraName)) && (!categories.size || categories.has(i.categoryName)),
+    );
+  });
+
+  /** 依年代分區，年代由遠到近排列，區內依分類排 */
+  private eraGroupsOf(items: CompendiumCardSummary[]): CatalogGroup[] {
+    const groups = new Map<string, CompendiumCardSummary[]>();
+    for (const item of items) {
+      const list = groups.get(item.eraName) ?? [];
+      list.push(item);
+      groups.set(item.eraName, list);
+    }
+    return Array.from(groups.entries())
+      .map(([label, list]) => ({
+        key: `era:${label}`,
+        label,
+        items: [...list].sort((a, b) => a.categoryCode.localeCompare(b.categoryCode)),
+      }))
+      .sort((a, b) => this.compareEra(a.items[0], b.items[0]));
+  }
+
+  /** 篩選後的全部年代分區（不受展開影響） */
+  private filteredEraGroups = computed(() => this.eraGroupsOf(this.filteredItems()));
+
+  /** 目前展開中的年代（一次只展開一個；展開時其他年代先隱藏） */
+  expandedGroupKey = signal<string | null>(null);
+
+  /**
+   * 書頁上實際排版的分區：有年代展開時只剩那個年代，收合後才顯示全部。
+   * 展開的年代被搜尋／篩選掉時，退回顯示全部。
+   */
+  catalogGroups = computed<CatalogGroup[]>(() => {
+    const groups = this.filteredEraGroups();
+    const key = this.expandedGroupKey();
+    const expanded = key ? groups.find((group) => group.key === key) : undefined;
+    return expanded ? [expanded] : groups;
+  });
+
+  /** 跟書頁同一套年代排序，但依據整本圖鑑——一鍵解鎖由上至下的順序不受搜尋／篩選影響 */
+  private allEraGroups = computed<EraGroup[]>(() =>
+    this.eraGroupsOf(this.catalogModel()).map((group) => ({ eraName: group.label, items: group.items })),
+  );
+
+  isEmpty = computed(() => !this.loading() && !this.errorMsg() && this.catalogGroups().length === 0);
+
+  isGroupExpanded(group: CatalogGroup): boolean {
+    return this.expandedGroupKey() === group.key;
+  }
+
+  /** 左側頁籤上的勾選數 */
+  selectedFilterCount(tab: CatalogTab): number {
+    if (tab === 'ERA') return this.selectedEras().size;
+    if (tab === 'CATEGORY') return this.selectedCategories().size;
+    return 0;
+  }
+
+  /** 篩選單底部的摘要 */
+  filterSummary = computed(() => {
+    const eras = this.selectedEras().size;
+    const categories = this.selectedCategories().size;
+    if (!eras && !categories) return '尚未勾選，顯示全部文物';
+    return [eras ? `年代 ${eras} 項` : '', categories ? `分類 ${categories} 項` : ''].filter(Boolean).join('・');
+  });
+
+  /** 書頁目前的卡片尺寸；書頁還沒量到大小前是 null */
+  layout = computed(() => computeCatalogLayout(this.pageBox().w, this.pageBox().h));
+
+  /** 收合時每個分區顯示的數量＝一列放得下的張數 */
+  previewCount = computed(() => this.layout()?.cols ?? 4);
+
+  pages = computed<CatalogPage[]>(() => {
+    const layout = this.layout();
+    if (!layout) return [];
+    const key = this.expandedGroupKey();
+    const filterMode = this.filterMode();
+    // 兩頁翻閱時只有左頁補「（續）」標題與收合按鈕，右頁只留分隔線；
+    // 篩選單開著時每次只翻右頁，每一頁都要有標題
+    return paginateCatalog(
+      this.catalogGroups(),
+      layout,
+      (group) => group.key === key,
+      (index) => filterMode || index % 2 === 0,
+    );
+  });
+
+  /**
+   * 篩選單開著時（分類／年代頁籤），左頁整頁是篩選單，文物只排在右頁、一次翻一頁；
+   * 收起篩選單或切回全部後，恢復左右兩頁一起翻。
+   */
+  filterMode = computed(() => this.catalogTab() !== 'ALL' && this.filterPanelOpen());
+
+  private pagesPerSpread = computed(() => (this.filterMode() ? 1 : 2));
+
+  spreadCount = computed(() => Math.max(1, Math.ceil(this.pages().length / this.pagesPerSpread())));
+
+  currentSpread = computed(() => Math.min(Math.max(this.spread(), 0), this.spreadCount() - 1));
+
+  leftPage = computed<CatalogPage | null>(() =>
+    this.filterMode() ? null : this.pages()[this.currentSpread() * 2] ?? null,
+  );
+  rightPage = computed<CatalogPage | null>(() =>
+    this.filterMode()
+      ? this.pages()[this.currentSpread()] ?? null
+      : this.pages()[this.currentSpread() * 2 + 1] ?? null,
+  );
+
+  canTurnPrev = computed(() => this.currentSpread() > 0);
+  canTurnNext = computed(() => this.currentSpread() < this.spreadCount() - 1);
+
+  leftPageNumber = computed(() => (this.filterMode() ? null : this.currentSpread() * 2 + 1));
+  rightPageNumber = computed(() => {
+    const n = this.filterMode() ? this.currentSpread() + 1 : this.currentSpread() * 2 + 2;
+    return n <= this.pages().length ? n : null;
+  });
+
+  /** 內容頁索引 → 跨頁索引 */
+  private spreadOfPage(index: number): number {
+    return Math.floor(index / this.pagesPerSpread());
+  }
+  totalPageCount = computed(() => Math.max(1, this.pages().length));
+
+  @Output() appreciationRequested = new EventEmitter<CardEntry>();
+
+  constructor(
+    private catalogService: CatalogService,
+    private keyService: KeyService,
+    private socialApi: SocialApiService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private zone: NgZone,
+  ) { }
+
+  ngOnInit(): void {
+    // ui-integration: 商城「年代選藏」帶 ?era= 進來時，直接翻開書並切到年代頁籤。
+    const query = this.route.snapshot.queryParamMap;
+    const era = query.get('era')?.trim();
+    if (era) {
+      this.selectedEras.set(new Set([era]));
+      this.catalogTab.set('ERA'); // 頁籤停在年代並顯示勾選數；篩選單先收起，直接看到結果
+    }
+    // 從其他頁面指定文物（?focus=）或年代進來時，不必再點一次封面
+    if (era || query.get('focus')) this.bookState.set('open');
+
+    this.loadArtifacts();
+    this.loadKeyBalance();
+    this.loadEraOrder();
+  }
+
+  ngAfterViewInit(): void {
+    const el = this.pageMeasure?.nativeElement;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    this.resizeObserver = new ResizeObserver(([entry]) => {
+      const w = Math.floor(entry.contentRect.width);
+      const h = Math.floor(entry.contentRect.height);
+      const current = this.pageBox();
+      if (current.w === w && current.h === h) return;
+      this.zone.run(() => this.pageBox.set({ w, h }));
+    });
+    this.resizeObserver.observe(el);
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+    this.timers.forEach((timer) => clearTimeout(timer));
+  }
+
+  // ================= 書本：開闔、頁籤、翻頁 =================
+
+  openBook(): void {
+    if (this.bookState() !== 'closed') return;
+    if (this.prefersReducedMotion()) {
+      this.bookState.set('open');
+      return;
+    }
+    this.bookState.set('opening');
+    this.later(1200, () => this.bookState.set('open'));
+  }
+
+  /** 闔上書本；完全闔上後切回「圖鑑」章節並收合展開中的年代，下次翻開從圖鑑開始 */
+  closeBook(): void {
+    if (this.bookState() !== 'open') return;
+    const finish = () => {
+      this.bookState.set('closed');
+      this.setSection('catalog');
+      this.expandedGroupKey.set(null);
+      this.spread.set(0);
+    };
+    if (this.prefersReducedMotion()) {
+      finish();
+      return;
+    }
+    this.bookState.set('closing');
+    this.later(1100, finish);
+  }
+
+  onCoverKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.openBook();
+  }
+
+  setSection(section: BookSection): void {
+    if (this.bookSection() === section) return;
+    this.bookSection.set(section);
+    this.expandedGroupKey.set(null);
+    this.spread.set(0);
+    // 玩家在背包裡可能用掉鑰匙、解鎖了文物；回到圖鑑時重新同步
+    if (section === 'catalog') {
+      this.loadKeyBalance();
+      this.loadUnlockStatus();
+    }
+  }
+
+  /**
+   * 全部：清除年代／分類勾選並收起篩選單。
+   * 分類／年代：叫出篩選單；再點一次已選取的頁籤則收起／展開篩選單。
+   */
+  setCatalogTab(tab: CatalogTab): void {
+    // 切換頁籤時收合展開中的年代
+    if (tab !== this.catalogTab()) this.expandedGroupKey.set(null);
+    if (tab === 'ALL') {
+      const hadFilter = this.selectedEras().size > 0 || this.selectedCategories().size > 0;
+      this.catalogTab.set('ALL');
+      this.filterPanelOpen.set(false);
+      if (hadFilter) this.clearSelections();
+      return;
+    }
+    if (this.catalogTab() === tab) {
+      this.filterPanelOpen.update((open) => !open);
+      this.spread.set(0);
+      return;
+    }
+    this.catalogTab.set(tab);
+    this.filterPanelOpen.set(true);
+    this.spread.set(0);
+  }
+
+  closeFilterPanel(): void {
+    this.filterPanelOpen.set(false);
+    this.spread.set(0);
+  }
+
+  setKeyFilter(filter: KeyFilter): void {
+    this.keyFilter.set(filter);
+  }
+
+  /** 左側鑰匙頁籤上的數量：該類型持有中鑰匙的把數總和 */
+  keyFilterCount(filter: KeyFilter): number {
+    return this.allKeys()
+      .filter((key) => key.balance > 0 && (filter === 'ALL' || key.scopeType === filter))
+      .reduce((sum, key) => sum + key.balance, 0);
+  }
+
+  /** dir：1 下一頁、-1 上一頁；翻頁動畫進行一半時才換內容 */
+  turnPage(dir: 1 | -1): void {
+    if (this.turning()) return;
+    const target = this.currentSpread() + dir;
+    if (target < 0 || target >= this.spreadCount()) return;
+    if (this.prefersReducedMotion()) {
+      this.spread.set(target);
+      return;
+    }
+    this.turning.set(dir > 0 ? 'next' : 'prev');
+    this.later(280, () => this.spread.set(target));
+    this.later(640, () => this.turning.set(null));
+  }
+
+  /** 書本攤開、停在圖鑑時，可用鍵盤左右鍵翻頁（輸入框內與彈出視窗開著時不處理） */
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (this.bookState() !== 'open' || this.bookSection() !== 'catalog') return;
+    if (this.isOverlayOpen() || this.confirmTargetId() || this.bulkUnlockConfirmOpen() || this.discussionDialogOpen()) return;
+    if (event.key === 'Escape' && this.filterPanelOpen()) {
+      this.closeFilterPanel();
+      return;
+    }
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+    event.preventDefault();
+    this.turnPage(event.key === 'ArrowRight' ? 1 : -1);
+  }
+
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    this.spread.set(0);
+  }
+
+  toggleUnlockedFilter(): void {
+    this.unlockedOnly.update((active) => !active);
+    this.spread.set(0);
+  }
 
   toggleEraFilter(era: string): void {
     this.selectedEras.update((set) => {
@@ -143,6 +617,7 @@ export class ArtifactList implements OnInit {
       if (next.has(era)) next.delete(era); else next.add(era);
       return next;
     });
+    this.spread.set(0);
   }
 
   isEraSelected(era: string): boolean {
@@ -155,148 +630,85 @@ export class ArtifactList implements OnInit {
       if (next.has(category)) next.delete(category); else next.add(category);
       return next;
     });
+    this.spread.set(0);
   }
 
   isCategorySelected(category: string): boolean {
     return this.selectedCategories().has(category);
   }
 
-  /** 清除搜尋關鍵字＋年代／分類篩選，一次全部恢復成「顯示全部」 */
+  /** 清除年代＋分類勾選（兩個篩選頁籤同步） */
+  clearSelections(): void {
+    this.selectedEras.set(new Set());
+    this.selectedCategories.set(new Set());
+    this.spread.set(0);
+  }
+
+  /** 搜尋、已解鎖、年代、分類全部恢復預設 */
   clearFilters(): void {
     this.searchQuery.set('');
     this.unlockedOnly.set(false);
     this.selectedEras.set(new Set());
     this.selectedCategories.set(new Set());
+    this.spread.set(0);
   }
 
   /**
-   * 套用搜尋框關鍵字 + 年代／分類核取方塊後的結果。
-   * 年代／分類各自是「複選、勾了哪些就顯示哪些」（同一組內是 OR），
-   * 兩組之間再取交集（AND）；都沒勾任何選項時視為不篩選（顯示全部）。
-   * 關鍵字比對：編號／年代／分類一律可比對；「名字」只比對已解鎖的文物
-   * （未解鎖的文物名稱是遊戲機制上的「？？？」謎底，不應該被關鍵字搜出來）。
-   * 年代／分類核取方塊本身不分解鎖狀態，兩種文物都會篩到。
+   * 展開：隱藏其他年代，只看這個年代，從第一個跨頁的左頁開始。
+   * 收合：其他年代重新出現，翻回這個年代所在的跨頁。
    */
-  filteredItems = computed<CompendiumCardSummary[]>(() => {
-    const keyword = this.searchQuery().trim().toLowerCase();
-    const eras = this.selectedEras();
-    const categories = this.selectedCategories();
-
-    return this.catalogModel().filter((item) => {
-      if (this.unlockedOnly() && !item.unlocked) return false;
-      if (eras.size > 0 && !eras.has(item.eraName)) return false;
-      if (categories.size > 0 && !categories.has(item.categoryName)) return false;
-      if (!keyword) return true;
-
-      const matchesRef = item.artifactRef.toLowerCase().includes(keyword);
-      const matchesEra = item.eraName.toLowerCase().includes(keyword);
-      const matchesCategory = item.categoryName.toLowerCase().includes(keyword);
-      const matchesName = item.unlocked && item.name.toLowerCase().includes(keyword);
-
-      return matchesRef || matchesEra || matchesCategory || matchesName;
-    });
-  });
-
-  /**
-   * 依年代分區，區內再依分類排序（相同分類排在一起）。
-   * 年代區塊排序：預設用「該年代文物數量」由多到少排——因為 categoryCode／eraCode
-   * 不足以推斷正確的朝代先後順序（要正確按朝代先後排，需要一份完整的朝代對照表，
-   * 這裡沒有現成資料可用，先用數量排序頂替；如果你有現成的朝代排序規則，
-   * 告訴我我再把排序依據換掉）。
-   */
-  eraGroups = computed<EraGroup[]>(() => {
-    const groups = new Map<string, CompendiumCardSummary[]>();
-
-    for (const item of this.filteredItems()) {
-      const list = groups.get(item.eraName) ?? [];
-      list.push(item);
-      groups.set(item.eraName, list);
+  toggleGroupExpand(group: CatalogGroup): void {
+    if (this.expandedGroupKey() === group.key) {
+      this.expandedGroupKey.set(null);
+      const index = this.pages().findIndex((page) =>
+        page.lines.some((line) => line.kind === 'header' && !line.continued && line.group.key === group.key),
+      );
+      this.spread.set(index >= 0 ? this.spreadOfPage(index) : 0);
+      return;
     }
+    this.expandedGroupKey.set(group.key);
+    this.spread.set(0);
+  }
 
-    return Array.from(groups.entries())
-      .map(([eraName, items]) => ({
-        eraName,
-        items: [...items].sort((a, b) => a.categoryCode.localeCompare(b.categoryCode)),
-      }))
-      .sort((a, b) => b.items.length - a.items.length);
-  });
+  /** 翻到某件文物所在的頁面；被收合時先展開它的分區 */
+  private revealItem(artifactId: string): void {
+    const item = this.catalogModel().find((i) => i.id === artifactId);
+    if (!item) return;
 
-  /**
-   * 跟 eraGroups 同一套年代分區／排序邏輯，但依據「整本圖鑑」（catalogModel）而不是
-   * 搜尋／篩選後的 filteredItems——一鍵解鎖全部要依照圖鑑真正的顯示順序由上至下解鎖，
-   * 不能因為玩家當下有打關鍵字或勾年代／分類篩選，就漏掉被篩選掉的文物。
-   */
-  private allEraGroups = computed<EraGroup[]>(() => {
-    const groups = new Map<string, CompendiumCardSummary[]>();
-
-    for (const item of this.catalogModel()) {
-      const list = groups.get(item.eraName) ?? [];
-      list.push(item);
-      groups.set(item.eraName, list);
+    let index = this.pageIndexOf(artifactId);
+    if (index < 0) {
+      // 被收合或被其他年代的展開隱藏：展開它所在的年代
+      this.expandedGroupKey.set(`era:${item.eraName}`);
+      index = this.pageIndexOf(artifactId);
     }
-
-    return Array.from(groups.entries())
-      .map(([eraName, items]) => ({
-        eraName,
-        items: [...items].sort((a, b) => a.categoryCode.localeCompare(b.categoryCode)),
-      }))
-      .sort((a, b) => b.items.length - a.items.length);
-  });
-
-  /** 涵蓋兩種情況：後端本來就沒有資料、或搜尋／篩選條件下沒有任何符合的文物 */
-  isEmpty = computed(() => !this.loading() && !this.errorMsg() && this.eraGroups().length === 0);
-
-  /** 每個年代區塊預設只展開的（未點「更多文物+」的）數量 */
-  private readonly previewCount = 8;
-
-  /** 已展開「顯示全部」的年代名稱集合 */
-  expandedEras = signal<Set<string>>(new Set());
-
-  isEraExpanded(eraName: string): boolean {
-    return this.expandedEras().has(eraName);
+    if (index < 0 && this.catalogTab() !== 'ALL') {
+      // 被年代／分類勾選篩掉：切回全部（會清除勾選）
+      this.setCatalogTab('ALL');
+      this.expandedGroupKey.set(`era:${item.eraName}`);
+      index = this.pageIndexOf(artifactId);
+    }
+    if (index >= 0) this.spread.set(this.spreadOfPage(index));
   }
 
-  toggleEraExpand(eraName: string): void {
-    this.expandedEras.update((set) => {
-      const next = new Set(set);
-      if (next.has(eraName)) {
-        next.delete(eraName);
-      } else {
-        next.add(eraName);
-      }
-      return next;
-    });
+  private pageIndexOf(artifactId: string): number {
+    return this.pages().findIndex((page) =>
+      page.lines.some((line) => line.kind === 'row' && line.items.some((i) => i.id === artifactId)),
+    );
   }
 
-  /** 這個年代區塊目前要顯示的文物（預覽 4 筆或全部） */
-  visibleItemsForEra(group: EraGroup): CompendiumCardSummary[] {
-    return this.isEraExpanded(group.eraName) ? group.items : group.items.slice(0, this.previewCount);
+  trackByArtifactId(_index: number, item: CompendiumCardSummary): string {
+    return item.id;
   }
 
-  trackByEraName(_index: number, group: EraGroup): string {
-    return group.eraName;
+  cardLabel(item: CompendiumCardSummary): string {
+    return `${item.unlocked ? item.name : '尚未解鎖的文物'}，${item.categoryName}，${item.eraName}`;
   }
 
-  /** 讓外部（父層路由）接手「玩家回答鑑賞」的導頁邏輯，避免元件直接耦合 Router */
-  @Output() appreciationRequested = new EventEmitter<CardEntry>();
-
-  // private baseImageUrl = 'https://localhost:7249/api/v1/me/catalog/artifacts';
-
-  constructor(
-    private catalogService: CatalogService,
-    private keyService: KeyService,
-    private socialApi: SocialApiService,
-    private router: Router,
-    private route: ActivatedRoute,
-  ) { }
-
-  ngOnInit(): void {
-    // ui-integration: 商城「年代選藏」使用既有圖鑑篩選，讓跨 Area 入口抵達後保留使用者選的年代脈絡。
-    const era = this.route.snapshot.queryParamMap.get('era')?.trim();
-    if (era) this.selectedEras.set(new Set([era]));
-    this.loadArtifacts();
-    this.loadKeyBalance();
+  cardTitle(item: CompendiumCardSummary): string {
+    return `No. ${item.artifactRef}\n${item.unlocked ? item.name : '？？？'}\n${item.categoryName}・${item.eraName}`;
   }
+
+  // ================= 資料載入 =================
 
   loadArtifacts(): void {
     this.loading.set(true);
@@ -318,14 +730,7 @@ export class ArtifactList implements OnInit {
     });
   }
 
-  /**
-   * 文物清單載入完成後，再打 GET /me/catalog/artifact/unlocks 補上真實解鎖狀態，
-   * 取代 toCardSummary() 裡 unlocked: false 的佔位假資料。
-   *
-   * 同時把這份流水拿來取代原本「本次連線期間由 API 回應累積」的除錯用 unlockLedger——
-   * 右下角的解鎖流水面板改成顯示這支 API 回傳的真實歷史紀錄，不再只是 debug 假資料；
-   * 之後玩家在畫面上實際解鎖（confirmUnlock()）時，才繼續即時 append 新的一筆上去。
-   */
+  /** 文物清單載入完成後，再打 GET /me/catalog/unlocks 補上真實解鎖狀態 */
   private loadUnlockStatus(initialLoad = false): void {
     if (initialLoad) this.unlockStatusReady.set(false);
     this.unlockStatusError.set('');
@@ -352,20 +757,14 @@ export class ArtifactList implements OnInit {
     });
   }
 
-
   private focusFromQueryParamIfAny(): void {
     const focusId = this.route.snapshot.queryParamMap.get('focus');
     if (focusId && this.catalogModel().some((i) => i.id === focusId)) {
+      this.revealItem(focusId);
       this.openCard(focusId);
     }
   }
 
-  /**
-   * 依序把後端所有分頁抓完、合併成單一陣列。
-   * ⚠️ 如果文物總數很大（例如上千筆），每次都全部抓回來效能不理想；
-   * 比較好的長期方案是後端直接提供一支「已依年代分組」的專用 API，
-   * 這裡先用現有的 getArtifacts() 分頁 API 湊出同樣效果。
-   */
   private fetchAllPages(page: number, acc: CatalogModel[]): Observable<CatalogModel[]> {
     const bulkPageSize = 100;
     return this.catalogService.getArtifacts(page, bulkPageSize).pipe(
@@ -376,24 +775,38 @@ export class ArtifactList implements OnInit {
     );
   }
 
-  /**
-   * 右上角顯示的鑰匙數是「全部鑰匙的持有數量總和」；同時把萬能鑰匙（如果有）另外存起來，
-   * 圖鑑頁卡片上的解鎖按鈕固定要用這把鑰匙，不是背包那邊任何一把一般/年代/分類鑰匙。
-   */
+  /** 讀取年代對照表（含起訖年），書頁依年代先後排列；失敗時退回依名稱排序 */
+  private loadEraOrder(): void {
+    this.catalogService.getEras().subscribe({
+      next: (eras: EraModel[]) => {
+        const order = new Map<string, { start: number; end: number }>();
+        for (const era of eras) {
+          const start = Number(era.startYear);
+          if (!Number.isFinite(start)) continue;
+          const span = { start, end: Number.isFinite(Number(era.endYear)) ? Number(era.endYear) : start };
+          order.set(era.code, span);
+          order.set(era.name, span);
+        }
+        this.eraOrder.set(order);
+      },
+      error: (err) => console.error('[ArtifactList] loadEraOrder failed', err),
+    });
+  }
+
   private loadKeyBalance(): void {
     this.keyService.getKeys().subscribe({
-      next: (allKeys) => {
-        this.keys.set(allKeys.reduce((sum, key) => sum + key.balance, 0));
-        this.universalKey.set(allKeys.find((key) => key.scopeType === 'UNIVERSAL') ?? null);
-      },
+      next: (allKeys) => this.onKeysChanged(allKeys),
       error: (err) => console.error('[ArtifactList] loadKeyBalance failed', err),
     });
   }
 
-  /**
-   * unlocked／unlockedAt 這裡一律先給預設的「未解鎖」，實際狀態由 loadUnlockStatus()
-   * 打 GET /me/catalog/artifact/unlocks 回來後再覆寫（見 loadArtifacts() 內的呼叫順序）。
-   */
+  /** KeyList（鑰匙背包頁）每次重新讀取鑰匙時也會呼叫這裡，讓頁籤數量與萬能鑰匙餘額保持同步 */
+  onKeysChanged(allKeys: KeyModel[]): void {
+    this.allKeys.set(allKeys);
+    this.keys.set(allKeys.reduce((sum, key) => sum + key.balance, 0));
+    this.universalKey.set(allKeys.find((key) => key.scopeType === 'UNIVERSAL') ?? null);
+  }
+
   private toCardSummary(model: CatalogModel): CompendiumCardSummary {
     const placeholderSkin: CompendiumSkin = {
       color: '#2a5cad',
@@ -415,13 +828,7 @@ export class ArtifactList implements OnInit {
     return path;
   }
 
-
-
-  trackByArtifactId(_index: number, item: CompendiumCardSummary): string {
-    return item.id;
-  }
-
-  // ========== 以下為原 artifact-unlock.ts 的放大檢視／解鎖邏輯 ==========
+  // ================= 放大檢視／解鎖 =================
 
   focusedItem = computed<CompendiumCardSummary | null>(() => {
     const id = this.focusedId();
@@ -429,11 +836,6 @@ export class ArtifactList implements OnInit {
     return this.catalogModel().find((i) => i.id === id) ?? null;
   });
 
-  /**
-   * 目前放大檢視卡片的「完整」資料：清單卡片＋已載入的鑑賞細節。
-   * 只有在細節已經抓回來、且 id 對得上目前聚焦的卡片時才會有值，
-   * 提供給資訊面板顯示、放大圖、以及「玩家回答鑑賞」導頁使用。
-   */
   focusedCardEntry = computed<CardEntry | null>(() => {
     const item = this.focusedItem();
     const detail = this.focusedDetail();
@@ -452,8 +854,6 @@ export class ArtifactList implements OnInit {
   confirmCost = computed(() => this.unlockKeyCost());
 
   confirmInsufficient = computed(() => (this.universalKey()?.balance ?? 0) < this.unlockKeyCost());
-
-  ledgerDescending = computed(() => [...this.unlockLedger()].reverse());
 
   openCard(id: string): void {
     this.focusedId.set(id);
@@ -478,15 +878,10 @@ export class ArtifactList implements OnInit {
     }
   }
 
-  /** 放大檢視要顯示的圖片：已解鎖且細節已載入時用正式展示圖，否則沿用清單縮圖*/
   focusedImagePath(item: CompendiumCardSummary): string {
     return this.focusedCardEntry()?.primaryImagePath ?? item.thumbnailPath;
   }
 
-  /**
-   * 只有「已解鎖」的卡片才需要載入完整鑑賞細節，未解鎖的卡片畫面上只會顯示縮圖跟「？？？」，
-   * 不需要先把細節資料抓回來。同一張卡片如果已經有細節了就不重抓。
-   */
   private maybeLoadFocusedDetail(): void {
     const item = this.focusedItem();
     if (!item?.unlocked) return;
@@ -506,10 +901,7 @@ export class ArtifactList implements OnInit {
     });
   }
 
-  /**
-   * 先查詢已發布的一般貼文；已有討論就直接導向，沒有才讓會員確認並輸入第一則留言。
-   * 只有已解鎖文物會顯示此入口，避免社群導覽意外揭露尚未解鎖的文物名稱。
-   */
+  /** 先查詢已發布的一般貼文；已有討論就直接導向，沒有才讓會員確認並輸入第一則留言 */
   openDiscussion(artifactId: string): void {
     if (this.discussionLoading()) return;
 
@@ -590,13 +982,8 @@ export class ArtifactList implements OnInit {
   }
 
   /**
-   * 圖鑑頁卡片上的解鎖按鈕固定使用萬能鑰匙（不是背包裡任何一般/年代/分類鑰匙），
-   * 呼叫 KeyService.unlockWithKey() 並帶上 artifactId 指定要解鎖哪一張卡片。
-   *
-   * ⚠️ 後端實際回應（ArtifactUnlockResultDto）只有 unlocked／artifactId／artifactName／
-   * remainingEligibleArtifactCount／message，沒有完整流水紀錄，也沒有鑰匙剩餘數量，
-   * 所以這裡不從回應裡讀鑰匙餘額或流水，改成成功後重新呼叫 loadKeyBalance()／
-   * loadUnlockStatus() 跟後端要正確資料；unlockedAt 先用前端當下時間點近似。
+   * 圖鑑卡片上的解鎖按鈕固定使用萬能鑰匙，呼叫 unlockWithKey() 並帶上 artifactId。
+   * 後端回應沒有鑰匙餘額與完整流水，成功後重新呼叫 loadKeyBalance()／loadUnlockStatus()。
    */
   confirmUnlock(): void {
     const target = this.confirmTarget();
@@ -605,7 +992,7 @@ export class ArtifactList implements OnInit {
     if (this.confirmInsufficient()) return;
 
     const universal = this.universalKey();
-    if (!universal) return; // 沒有萬能鑰匙時按鈕本來就該是停用狀態，這裡再擋一次
+    if (!universal) return;
 
     this.unlockError.set('');
     this.unlocking.set(true);
@@ -613,20 +1000,14 @@ export class ArtifactList implements OnInit {
     this.keyService.unlockWithKey(universal.code, target.id).subscribe({
       next: (result) => {
         this.unlocking.set(false);
-        // 鑰匙餘額改重新呼叫 loadKeyBalance() 問後端要正確數字。
         this.loadKeyBalance();
 
-        // ⚠️「這把鑰匙目前沒有符合條件的未解鎖文物」這個情境，後端是回 HTTP 200 +
-        // unlocked: false（不會扣鑰匙），不是錯誤狀態碼，所以不能只看 HTTP 有沒有
-        // 成功就當作解鎖了——要另外檢查 result.unlocked，沒解鎖時把 message 顯示在
-        // 確認視窗裡，並讓視窗繼續開著，不去更新 catalogModel 的解鎖狀態。
+        // 後端在「沒有符合條件的文物」時回 HTTP 200 + unlocked:false，要另外檢查
         if (!result.unlocked) {
           this.unlockError.set(result.message ?? '目前沒有符合條件的文物可以解鎖。');
           return;
         }
 
-        // unlockedAt 先用前端當下時間點近似，等 loadUnlockStatus() 打
-        // GET /me/catalog/artifact/unlocks 成功後，會再用後端真實時間覆寫回來。
         this.catalogModel.update((list) =>
           list.map((i) =>
             i.id === target.id ? { ...i, unlocked: true, unlockedAt: new Date().toISOString() } : i
@@ -641,7 +1022,6 @@ export class ArtifactList implements OnInit {
       },
       error: (err) => {
         this.unlocking.set(false);
-        // TODO: 依專案慣例改成 Toast / Snackbar 提示
         console.error('[ArtifactList] unlock failed', err);
         this.unlockError.set(err?.message ?? '解鎖失敗，請稍後再試');
       },
@@ -654,10 +1034,6 @@ export class ArtifactList implements OnInit {
     }
   }
 
-  /**
-   * 開啟「一鍵解鎖全部」確認視窗。跟單張卡片的 openUnlockConfirm() 是分開的流程，
-   * 不會動到 confirmTargetId（單張解鎖）的狀態。
-   */
   openBulkUnlockConfirm(): void {
     if (this.lockedTotalCount() === 0) return;
     this.bulkUnlockError.set('');
@@ -666,7 +1042,7 @@ export class ArtifactList implements OnInit {
   }
 
   cancelBulkUnlock(): void {
-    if (this.bulkUnlocking()) return; // 解鎖進行中不能關閉，避免玩家中途跳開搞不清楚跑到哪一筆
+    if (this.bulkUnlocking()) return;
     this.bulkUnlockConfirmOpen.set(false);
   }
 
@@ -676,7 +1052,6 @@ export class ArtifactList implements OnInit {
     }
   }
 
-  /** 結果畫面按「關閉」：收起視窗並重置狀態，下次打開會是全新的確認表單 */
   closeBulkUnlockResult(): void {
     this.bulkUnlockConfirmOpen.set(false);
     this.bulkUnlockResult.set(null);
@@ -684,14 +1059,8 @@ export class ArtifactList implements OnInit {
   }
 
   /**
-   * 一鍵解鎖全部：消耗萬能鑰匙，依「圖鑑由上至下」的順序（allEraGroups 攤平後的順序）
-   * 逐一解鎖目前尚未解鎖的文物。
-   *
-   * ⚠️ 刻意「一筆一筆」依序呼叫真正的 POST /me/keys/{keyCode}/unlock，不是前端自己算完
-   * 一次性更新畫面：每一筆都要走後端真實的扣鑰匙／寫入 ArtifactUnlocks 流程，流水與
-   * 鑰匙餘額才會跟後端一致。鑰匙數量不夠解鎖全部時，後端對某一筆回傳 unlocked:false
-   * （代表鑰匙或符合條件的文物已經用完）就停止，不會繼續往後嘗試——由上至下，
-   * 能解幾筆算幾筆，停在哪筆由後端的真實狀態決定，不是前端用鑰匙數量自己猜。
+   * 一鍵解鎖全部：依「圖鑑由上至下」的順序（allEraGroups 攤平）逐一呼叫真正的解鎖 API，
+   * 後端對某一筆回 unlocked:false 就停止；停在哪筆由後端真實狀態決定。
    */
   confirmBulkUnlock(): void {
     if (this.bulkUnlocking()) return;
@@ -731,13 +1100,10 @@ export class ArtifactList implements OnInit {
     this.keyService.unlockWithKey(keyCode, target.id).subscribe({
       next: (result) => {
         if (!result.unlocked) {
-          // 鑰匙（或符合條件的文物）已經用完，依目前已解鎖的數量結束，不繼續嘗試剩下的項目
           this.finishBulkUnlock(unlockedCount, result.message ?? undefined);
           return;
         }
 
-        // unlockedAt 先用前端當下時間點近似，finishBulkUnlock() 之後的 loadUnlockStatus()
-        // 打 GET /me/catalog/artifact/unlocks 成功後，會再用後端真實時間覆寫回來。
         this.catalogModel.update((list) =>
           list.map((i) =>
             i.id === target.id ? { ...i, unlocked: true, unlockedAt: new Date().toISOString() } : i
@@ -752,7 +1118,6 @@ export class ArtifactList implements OnInit {
     });
   }
 
-  /** 一鍵解鎖全部跑完（不論正常結束或中途出錯）統一收尾：跟後端重新同步鑰匙餘額與真實流水 */
   private finishBulkUnlock(unlockedCount: number, message?: string): void {
     this.bulkUnlocking.set(false);
     this.bulkUnlockResult.set({ unlockedCount });
@@ -760,7 +1125,6 @@ export class ArtifactList implements OnInit {
     this.loadKeyBalance();
     this.loadUnlockStatus();
 
-    // 如果玩家一鍵解鎖當下剛好聚焦著某張卡片，順便刷新它的鑑賞細節（可能剛好被這次解鎖了）
     if (this.focusedId()) {
       this.maybeLoadFocusedDetail();
     }
@@ -771,58 +1135,36 @@ export class ArtifactList implements OnInit {
     void this.router.navigate(['/game/appreciation'], { queryParams: { artifactId: item.id } });
   }
 
-
   goBackToMember(): void {
     this.router.navigate(['/member']);
   }
 
-  /** 鑰匙背包彈出框是否開啟；不再導頁到另一個頁面，直接在同一畫面上開一個放大框 */
-  keyBagOpen = signal(false);
-
-  onKeyBagClick(): void {
-    this.keyBagOpen.set(true);
-  }
-
   /**
-   * 關閉鑰匙背包彈出框。玩家在裡面可能用掉了鑰匙、解鎖了文物，關閉時重新拿一次
-   * 鑰匙餘額跟解鎖狀態，不管他在裡面實際做了什麼操作，圖鑑頁資料都會是最新的
-   * ——不用逐一去追蹤彈出框裡發生的每個動作。
-   */
-  closeKeyBag(): void {
-    this.keyBagOpen.set(false);
-    this.loadKeyBalance();
-    this.loadUnlockStatus();
-  }
-
-  onKeyBagOverlayClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.closeKeyBag();
-    }
-  }
-
-  /**
-   * 鑰匙背包彈出框裡按「前往查看」（KeyList embedded 模式 emit 出來的事件）：
-   * 關掉背包彈出框，直接在同一頁聚焦剛解鎖的那張卡片，不整頁導頁。
+   * 鑰匙背包頁按「前往查看」（KeyList emit 的事件）：切回圖鑑頁籤、翻到那件文物所在的頁，
+   * 並直接打開放大檢視，不整頁導頁。
    */
   onArtifactFocusRequestedFromKeyBag(artifactId: string): void {
-    this.closeKeyBag();
+    this.setSection('catalog');
 
-    // 樂觀地先把這張卡標成已解鎖：loadUnlockStatus() 是非同步的，如果還沒回來
-    // 就直接呼叫 openCard()，卡片可能會先短暫呈現「未解鎖」再跳成已解鎖，
-    // 這裡先手動標記避免那個閃爍；loadUnlockStatus() 完成後會再用後端真實資料覆寫回來。
+    // 先樂觀標成已解鎖，避免 loadUnlockStatus() 回來前卡片先閃一下「未解鎖」
     this.catalogModel.update((list) =>
       list.map((i) =>
         i.id === artifactId ? { ...i, unlocked: true, unlockedAt: i.unlockedAt ?? new Date().toISOString() } : i
       )
     );
+    this.revealItem(artifactId);
     this.openCard(artifactId);
-  }
-
-  toggleLedger(): void {
-    this.ledgerOpen.update((v) => !v);
   }
 
   itemByArtifactId(artifactId: string): CompendiumCardSummary | undefined {
     return this.catalogModel().find((i) => i.id === artifactId);
+  }
+
+  private later(ms: number, fn: () => void): void {
+    this.timers.push(setTimeout(fn, ms));
+  }
+
+  private prefersReducedMotion(): boolean {
+    return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   }
 }

@@ -1,6 +1,13 @@
 <!-- key-list.html -->
-<div class="key-page" [class.key-page--embedded]="embedded" #pageRoot (scroll)="onViewportChange()">
+<div
+  class="key-page"
+  [class.key-page--embedded]="embedded"
+  [class.key-page--book]="bookMode"
+  #pageRoot
+  (scroll)="onViewportChange()"
+>
 
+  @if (!bookMode) {
   <div class="page-header">
     <div class="page-header__bar">
       <div class="page-header__title-group">
@@ -10,6 +17,7 @@
     </div>
     <p class="page-header__sub">查看你目前持有的各類文物鑰匙</p>
   </div>
+  }
 
   <div *ngIf="loading()" class="state state--loading">
     <span class="spinner"></span>載入中...
@@ -29,6 +37,7 @@
       </div>
     </div>
 
+    @if (!bookMode) {
     <div class="filter-bar" role="group" aria-label="鑰匙類型篩選">
       <button
         type="button"
@@ -85,13 +94,47 @@
         <span>{{ getFilterCount('UNIVERSAL') }} 把</span>
       </button>
     </div>
+    }
+
+    @if (bookMode) {
+    <!-- 書本模式：背包格排滿左頁，鑰匙之後補上空格，模擬真實的背包 -->
+    <div
+      class="key-slot-grid key-slot-grid--book"
+      #bookSlotGrid
+      (scroll)="onViewportChange()"
+      [style.--bag-cols]="bagLayout().cols"
+      [style.--bag-size]="bagLayout().size + 'px'"
+    >
+      @for (key of filteredKeys(); track key.id) {
+        <ng-container *ngTemplateOutlet="keySlotTpl; context: { $implicit: key }"></ng-container>
+      }
+      @for (slot of bagEmptySlots(); track slot) {
+        <span class="key-slot key-slot--empty" aria-hidden="true"></span>
+      }
+    </div>
+    <p class="key-bag__foot" role="status">{{ bagFootText() }}</p>
+    } @else {
 
     <ng-container *ngIf="filteredKeys().length > 0; else noFilteredKeys">
     <div class="key-slot-grid" #slotGrid (scroll)="onViewportChange()">
+      <ng-container *ngFor="let key of filteredKeys(); trackBy: trackByKeyId">
+        <ng-container *ngTemplateOutlet="keySlotTpl; context: { $implicit: key }"></ng-container>
+      </ng-container>
+    </div>
+    </ng-container>
+    <ng-template #noFilteredKeys>
+      <div class="key-empty" role="status">
+        <p class="key-empty__title">{{ selectedFilter() === 'ALL' ? '目前沒有持有中的鑰匙' : '這個類型目前沒有鑰匙' }}</p>
+        <p class="key-empty__desc">{{ selectedFilter() === 'ALL' ? '取得鑰匙後會顯示在這裡。' : '請切換其他篩選查看已持有的鑰匙。' }}</p>
+      </div>
+    </ng-template>
+    }
+
+    <!-- 背包格（一般頁面與書本模式共用） -->
+    <ng-template #keySlotTpl let-key>
       <button
         type="button"
         class="key-slot"
-        *ngFor="let key of filteredKeys(); trackBy: trackByKeyId"
         [class.normal-key]="key.scopeType === 'NORMAL'"
         [class.category-key]="key.scopeType === 'CATEGORY'"
         [class.era-key]="key.scopeType === 'ERA'"
@@ -105,7 +148,9 @@
         (pointerdown)="pressKeyTip($event, key, bagTipHint(key))"
         (focus)="focusKeyTip($event, key, bagTipHint(key))"
         (blur)="hideKeyTip()"
-        (click)="onKeySlotClick(key)"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="keyAction()?.owner === bagSlot"
+        (click)="onKeySlotClick(key, $event)"
       >
         <div class="key-slot__icon">
           <img [src]="keySlotIcon(key)" [alt]="key.name + '圖示'" loading="lazy" />
@@ -116,13 +161,6 @@
         <span class="key-slot__count">{{ key.balance }}</span>
 
       </button>
-    </div>
-    </ng-container>
-    <ng-template #noFilteredKeys>
-      <div class="key-empty" role="status">
-        <p class="key-empty__title">{{ selectedFilter() === 'ALL' ? '目前沒有持有中的鑰匙' : '這個類型目前沒有鑰匙' }}</p>
-        <p class="key-empty__desc">{{ selectedFilter() === 'ALL' ? '取得鑰匙後會顯示在這裡。' : '請切換其他篩選查看已持有的鑰匙。' }}</p>
-      </div>
     </ng-template>
     </section>
 
@@ -190,6 +228,34 @@
                 (dragleave)="craftDragOver.set(false)"
                 (drop)="onCraftDrop($event)"
               >
+                @if (bookMode) {
+                  <!-- 書本模式：合成台底下的八卦魔法陣；可以合成時發光、合成中加速旋轉 -->
+                  <svg
+                    class="craft-magic"
+                    [class.craft-magic--ready]="craftReadyRule()"
+                    [class.craft-magic--forging]="craftPhase() !== 'idle'"
+                    viewBox="0 0 200 200"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g class="craft-magic__outer">
+                      <circle cx="100" cy="100" r="96" />
+                      <circle cx="100" cy="100" r="88" stroke-dasharray="1.5 4" />
+                      <text class="craft-magic__runes">
+                        <textPath href="#craft-magic-rune-path">☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷</textPath>
+                      </text>
+                      <circle cx="100" cy="100" r="72" />
+                    </g>
+                    <g class="craft-magic__inner">
+                      <polygon points="100,30 160.6,135 39.4,135" />
+                      <polygon points="100,170 39.4,65 160.6,65" />
+                      <circle cx="100" cy="100" r="44" stroke-dasharray="6 3" />
+                    </g>
+                    <defs>
+                      <path id="craft-magic-rune-path" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0" />
+                    </defs>
+                  </svg>
+                }
                 <svg class="craft-ring__outline" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
                   @if (craftSlots().length >= 2) {
                     <polygon [attr.points]="craftOutlinePoints()" />
@@ -334,7 +400,7 @@
               }
             </div>
 
-            <div class="craft-output-stage">
+            <div class="craft-output-stage" [class.craft-output-stage--ready]="craftReadyRule()">
               <button
                 type="button"
                 class="craft-output"
@@ -389,6 +455,40 @@
       </div>
     </section>
   </div>
+
+    <!-- 點開鑰匙後的小選單：兌換（換成點數）／使用（解鎖文物）；萬能鑰匙只有兌換 -->
+    @if (keyAction(); as action) {
+      <div
+        class="key-action"
+        #keyActionEl
+        role="dialog"
+        [attr.aria-label]="action.key.name + '：兌換或使用'"
+        [class.key-action--ready]="keyActionPos()"
+        [style.left.px]="keyActionPos()?.left ?? 0"
+        [style.top.px]="keyActionPos()?.top ?? 0"
+      >
+        <p class="key-action__name">{{ action.key.name }} <span>× {{ action.key.balance }}</span></p>
+        <div class="key-action__buttons">
+          <button
+            type="button"
+            class="key-action__btn key-action__btn--recycle"
+            [disabled]="!canRecycle(action.key)"
+            [attr.title]="canRecycle(action.key) ? null : recycleRuleText(action.key)"
+            (click)="chooseRecycle(action.key)"
+          >兌換</button>
+          @if (action.key.scopeType !== 'UNIVERSAL') {
+            <button
+              type="button"
+              class="key-action__btn key-action__btn--use"
+              [disabled]="!canUse(action.key)"
+              [attr.title]="canUse(action.key) ? null : '這把鑰匙目前沒有可解鎖的文物'"
+              (click)="chooseUse(action.key)"
+            >使用</button>
+          }
+        </div>
+        <p class="key-action__hint" [class.key-action__hint--ok]="canRecycle(action.key)">{{ keyActionHint(action.key) }}</p>
+      </div>
+    }
 
     <!-- 物品詳細資訊：整頁共用一個，跟著游標出現在指向的物品旁邊 -->
     @if (tooltip(); as tip) {
@@ -454,6 +554,52 @@
           {{ unlocking() ? '解鎖中...' : '確認解鎖，消耗 1 把' }}
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 兌換點數視窗：選擇數量 → 確認 → 顯示獲得的點數 -->
+  <div
+    class="confirm-overlay"
+    [class.open]="recycleTarget() !== null"
+    (click)="onRecycleOverlayClick($event)"
+  >
+    <div
+      class="confirm-dialog recycle-dialog"
+      *ngIf="recycleTarget() as key"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="key-recycle-title"
+    >
+      <img class="key-icon" [src]="keySlotIcon(key)" [alt]="key.name + '圖示'" />
+      @if (recycleResult(); as result) {
+        <h3 id="key-recycle-title">兌換成功</h3>
+        <p>以 {{ result.keyAmount }} 把{{ key.name }}兌換了</p>
+        <p class="recycle-dialog__points"><strong>{{ result.pointAmount }}</strong> 點</p>
+        <div class="confirm-actions">
+          <button type="button" class="action-btn unlock-btn" (click)="closeRecycle()">完成</button>
+        </div>
+      } @else {
+        <h3 id="key-recycle-title">兌換點數</h3>
+        <p>將「{{ key.name }}」兌換成點數，每把 {{ key.recyclePointValue }} 點。</p>
+        <div class="recycle-dialog__stepper" role="group" aria-label="兌換數量">
+          <button type="button" class="recycle-dialog__step" aria-label="減少一把" [disabled]="recycling() || recycleAmount() <= 1" (click)="stepRecycleAmount(-1)">−</button>
+          <span class="recycle-dialog__amount" aria-live="polite">{{ recycleAmount() }} 把</span>
+          <button type="button" class="recycle-dialog__step" aria-label="增加一把" [disabled]="recycling() || recycleAmount() >= recycleMax()" (click)="stepRecycleAmount(1)">＋</button>
+          <button type="button" class="recycle-dialog__all" [disabled]="recycling() || recycleAmount() === recycleMax()" (click)="setRecycleAmount(recycleMax())">全部</button>
+        </div>
+        <p class="have">
+          可獲得 <strong>{{ recyclePoints() }}</strong> 點・兌換後剩餘 <strong>{{ key.balance - recycleAmount() }}</strong> 把
+        </p>
+        @if (recycleError()) {
+          <p class="have warn" role="alert">{{ recycleError() }}</p>
+        }
+        <div class="confirm-actions">
+          <button type="button" class="action-btn cancel-btn" [disabled]="recycling()" (click)="closeRecycle()">取消</button>
+          <button type="button" class="action-btn unlock-btn" [disabled]="recycling()" (click)="confirmRecycle()">
+            {{ recycling() ? '兌換中...' : '確認兌換' }}
+          </button>
+        </div>
+      }
     </div>
   </div>
 

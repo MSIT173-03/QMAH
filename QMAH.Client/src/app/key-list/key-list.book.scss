@@ -1,0 +1,578 @@
+/* key-list.book.scss — 書本模式（圖鑑書「鑰匙背包」頁籤）
+   只作用在 .key-page--book 底下，獨立鑰匙頁與會員資產頁的樣式完全不受影響。
+   左右頁的格線（頁首高度、頁尾高度、兩頁間距）沿用圖鑑書 .book 上的 CSS 變數，
+   兩個頁籤切換時，頁首與內容的起始高度才會一致。 */
+
+.key-page--book {
+  --ink: #3a2414;
+  --ink-soft: #6e5236;
+  --line: rgb(110 82 54 / 45%);
+  --surface: transparent;
+  --card: #f1e2c0;
+  --blue: #9a6a2a;
+  --blue-deep: #6f4417;
+  --yellow: #c99a3e;
+  --red: #a3392b;
+  --sapphire: #5d8fb0;
+  --ruby: #c0566a;
+  --panel-dark: #1f1208;
+  --gold: #d4ae5c;
+  --gold-light: #f3d98e;
+  --magic: #9d84ee;
+  --slot-wood: radial-gradient(circle at 50% 38%, #6b4a2b, #3b2414 78%);
+  --slot-edge: #2a1709;
+  --qmah-surface-soft: rgb(120 84 40 / 8%);
+  --qmah-primary-content: #fbf3df;
+  --qmah-paper: #fbf3df;
+  --qmah-focus: #c99a3e;
+  --qmah-shadow-card: 0 4px 12px rgb(60 30 10 / 25%);
+  --qmah-shadow-float: 0 12px 30px rgb(40 20 5 / 35%);
+
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--qmah-font-serif);
+}
+
+.key-page--book > .state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0;
+  color: var(--ink-soft);
+}
+
+/* ---------- 左右兩頁 ---------- */
+
+.key-page--book .key-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: var(--book-col-gap, 68px);
+  align-items: stretch;
+  height: 100%;
+  padding: 0;
+}
+
+.key-page--book .key-bag,
+.key-page--book .craft-panel {
+  position: static;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--book-head-h, 46px) minmax(0, 1fr) var(--book-foot-h, 40px);
+  row-gap: var(--book-row-gap, 10px);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+
+/* 頁首：與圖鑑頁的搜尋列同高，底下同樣是雙線 */
+.key-page--book .section-title,
+.key-page--book .craft-panel__header {
+  align-items: center;
+  margin: 0;
+  padding: 0 0 6px;
+  border-bottom: 3px double var(--line);
+  flex-wrap: nowrap;
+}
+
+.key-page--book .section-title h2,
+.key-page--book .craft-panel__title {
+  color: var(--ink);
+  font-family: var(--qmah-font-serif);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.key-page--book .section-title h2::before,
+.key-page--book .craft-panel__title::before {
+  content: '❖';
+  margin-right: 6px;
+  color: #9c7630;
+  font-size: 14px;
+}
+
+.key-page--book .key-count {
+  border-color: var(--line);
+  background: rgb(255 248 230 / 55%);
+  color: var(--ink-soft);
+}
+
+.key-page--book .key-count strong {
+  color: var(--ink);
+}
+
+.key-page--book .craft-panel__header {
+  padding-inline: 0;
+  gap: 10px;
+}
+
+.key-page--book .craft-panel__header-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.key-page--book .craft-panel__note {
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.key-page--book .exchange-notice-text {
+  color: #2f5a4b;
+}
+
+.key-page--book .craft-clear {
+  min-height: 30px;
+  padding: 4px 12px;
+  border-color: var(--line);
+  border-radius: 999px;
+  background: rgb(255 248 230 / 60%);
+  color: var(--ink);
+  font-family: var(--qmah-font-serif);
+}
+
+/* ---------- 背包格：木框物品欄排滿整頁 ---------- */
+
+.key-page--book .key-slot-grid--book {
+  display: grid;
+  grid-template-columns: repeat(var(--bag-cols, 6), var(--bag-size, 64px));
+  grid-auto-rows: var(--bag-size, 64px);
+  gap: 8px;
+  justify-content: center;
+  align-content: start;
+  min-height: 0;
+  margin: 0;
+  padding: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgb(110 82 54 / 35%);
+  border-radius: 10px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(255 248 228 / 35%), transparent 70%),
+    rgb(120 84 40 / 10%);
+  box-shadow: inset 0 2px 8px rgb(80 50 20 / 18%);
+  scrollbar-color: rgb(110 82 54 / 45%) transparent;
+  scrollbar-width: thin;
+}
+
+.key-page--book .key-slot,
+.key-page--book .craft-tray__slot,
+.key-page--book .craft-slot,
+.key-page--book .craft-center,
+.key-page--book .craft-output,
+.key-page--book .craft-menu__slot {
+  /* 年代字首的描邊用 --card，木框格裡改成深色 */
+  --card: #3b2414;
+  border: 2px solid var(--slot-edge);
+  border-radius: 8px;
+  background: var(--slot-wood);
+  box-shadow:
+    inset 0 0 0 2px rgb(240 200 140 / 14%),
+    inset 0 8px 14px rgb(0 0 0 / 35%),
+    0 2px 0 rgb(255 245 220 / 45%);
+}
+
+.key-page--book .key-slot {
+  width: var(--bag-size, 64px);
+  height: var(--bag-size, 64px);
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+.key-page--book .key-slot:hover:not(:disabled):not(.key-slot--empty) {
+  border-color: var(--gold);
+  box-shadow:
+    inset 0 0 0 2px rgb(243 217 142 / 40%),
+    0 0 0 2px rgb(212 174 92 / 35%),
+    0 6px 12px rgb(60 30 10 / 30%);
+}
+
+/* 鑰匙種類用內框色區分（一般維持木框） */
+.key-page--book .key-slot.category-key { box-shadow: inset 0 0 0 2px var(--sapphire), inset 0 8px 14px rgb(0 0 0 / 35%), 0 2px 0 rgb(255 245 220 / 45%); }
+.key-page--book .key-slot.era-key { box-shadow: inset 0 0 0 2px var(--yellow), inset 0 8px 14px rgb(0 0 0 / 35%), 0 2px 0 rgb(255 245 220 / 45%); }
+.key-page--book .key-slot.universal-key { box-shadow: inset 0 0 0 2px var(--ruby), inset 0 0 14px rgb(192 86 106 / 35%), 0 2px 0 rgb(255 245 220 / 45%); }
+
+.key-page--book .key-slot--empty {
+  cursor: default;
+  background: radial-gradient(circle at 50% 40%, #5a3e24, #3a2514 80%);
+  opacity: 0.78;
+}
+
+.key-page--book .key-slot--empty::after {
+  content: '';
+  position: absolute;
+  inset: 22%;
+  border: 1px dashed rgb(243 217 142 / 12%);
+  border-radius: 50%;
+}
+
+.key-page--book .key-slot__icon {
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 50%));
+}
+
+.key-page--book .key-slot__count {
+  background: rgb(20 10 4 / 85%);
+  border-color: rgb(243 217 142 / 35%);
+  color: var(--gold-light);
+}
+
+.key-bag__foot {
+  align-self: center;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 合成台：魔法陣 ---------- */
+
+.key-page--book .craft-panel__body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  container-type: size;
+}
+
+.key-page--book .craft-subtitle {
+  margin: 4px 0 6px;
+  color: var(--ink);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+}
+
+/* 材料欄固定一列，鑰匙種類多時橫向捲動，不把合成台往下擠 */
+.key-page--book .craft-tray {
+  flex: none;
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 54px;
+  grid-template-rows: 54px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px;
+  border-color: rgb(110 82 54 / 35%);
+  border-radius: 10px;
+  background: rgb(120 84 40 / 10%);
+  box-shadow: inset 0 2px 8px rgb(80 50 20 / 18%);
+  scrollbar-width: thin;
+}
+
+.key-page--book .craft-tray__slot {
+  width: 54px;
+  height: 54px;
+  min-height: 0;
+}
+
+.key-page--book .craft-bench {
+  --output-width: 150px;
+  --ring-size: max(150px, min(calc(100cqh - 196px), calc(100cqw - 236px), 330px));
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgb(110 82 54 / 30%);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 30% 50%, rgb(157 132 238 / 10%), transparent 60%),
+    rgb(60 36 14 / 6%);
+}
+
+.key-page--book .craft-ring {
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(40 22 8 / 8%), transparent 70%);
+}
+
+.key-page--book .craft-ring--over {
+  background: radial-gradient(circle, rgb(157 132 238 / 25%), transparent 70%);
+}
+
+.key-page--book .craft-ring__outline polygon,
+.key-page--book .craft-ring__outline polyline {
+  stroke: #9c7630;
+  stroke-width: 0.8;
+}
+
+.craft-magic {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  pointer-events: none;
+  overflow: visible;
+  opacity: 0.55;
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+.craft-magic circle,
+.craft-magic polygon {
+  fill: none;
+  stroke: #8a6427;
+  stroke-width: 1.2;
+}
+
+.craft-magic__runes {
+  fill: #8a6427;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.craft-magic__outer,
+.craft-magic__inner {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+
+.craft-magic__outer { animation: magic-spin 80s linear infinite; }
+.craft-magic__inner { animation: magic-spin 50s linear infinite reverse; }
+
+.craft-magic--ready {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgb(157 132 238 / 70%));
+}
+
+.craft-magic--ready circle,
+.craft-magic--ready polygon {
+  stroke: #6d54c4;
+}
+
+.craft-magic--ready .craft-magic__runes {
+  fill: #6d54c4;
+}
+
+.craft-magic--forging .craft-magic__outer { animation-duration: 3s; }
+.craft-magic--forging .craft-magic__inner { animation-duration: 2s; }
+
+.craft-magic--forging {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgb(212 174 92 / 90%));
+}
+
+@keyframes magic-spin {
+  to { transform: rotate(360deg); }
+}
+
+.key-page--book .craft-slot,
+.key-page--book .craft-center {
+  z-index: 1;
+}
+
+.key-page--book .craft-slot[data-scope='CATEGORY'],
+.key-page--book .craft-tray__slot[data-scope='CATEGORY'],
+.key-page--book .craft-menu__slot[data-scope='CATEGORY'],
+.key-page--book .craft-output[data-scope='CATEGORY'],
+.key-page--book .craft-center[data-scope='CATEGORY'] { border-color: var(--sapphire); }
+
+.key-page--book .craft-slot[data-scope='ERA'],
+.key-page--book .craft-tray__slot[data-scope='ERA'],
+.key-page--book .craft-menu__slot[data-scope='ERA'],
+.key-page--book .craft-output[data-scope='ERA'],
+.key-page--book .craft-center[data-scope='ERA'] { border-color: var(--yellow); }
+
+.key-page--book .craft-slot[data-scope='UNIVERSAL'],
+.key-page--book .craft-tray__slot[data-scope='UNIVERSAL'],
+.key-page--book .craft-menu__slot[data-scope='UNIVERSAL'],
+.key-page--book .craft-output[data-scope='UNIVERSAL'],
+.key-page--book .craft-center[data-scope='UNIVERSAL'] { border-color: var(--ruby); }
+
+.key-page--book .craft-center--empty {
+  border: 2px dashed rgb(110 82 54 / 55%);
+  background: rgb(255 248 230 / 35%);
+  box-shadow: none;
+}
+
+.key-page--book .craft-center__empty {
+  color: var(--ink-soft);
+}
+
+.key-page--book .craft-center--ready {
+  box-shadow:
+    0 0 0 3px rgb(157 132 238 / 55%),
+    0 0 18px rgb(157 132 238 / 55%),
+    inset 0 8px 14px rgb(0 0 0 / 35%);
+}
+
+.key-page--book .craft-center__badge {
+  border-color: var(--card);
+  background: #8e1f1a;
+}
+
+.key-page--book .craft-menu {
+  border-color: #9c7630;
+  background: linear-gradient(#f3e6c8, #e6d2a7);
+}
+
+.key-page--book .craft-arrow {
+  background: rgb(110 82 54 / 40%);
+}
+
+.key-page--book .craft-arrow--ready {
+  background: linear-gradient(90deg, #9c7630, #6d54c4);
+  filter: drop-shadow(0 0 4px rgb(157 132 238 / 60%));
+}
+
+.key-page--book .craft-output-stage {
+  border: 0;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  align-self: center;
+  background:
+    radial-gradient(circle, transparent 0 55%, rgb(138 100 39 / 55%) 55.5% 56.5%, transparent 57% 64%, rgb(138 100 39 / 35%) 64.5% 65%, transparent 65.5%),
+    radial-gradient(circle, rgb(255 248 228 / 45%), transparent 70%);
+  transition: filter 0.3s ease;
+}
+
+.key-page--book .craft-output-stage--ready {
+  filter: drop-shadow(0 0 10px rgb(157 132 238 / 55%));
+}
+
+.key-page--book .craft-output {
+  width: 72px;
+  height: 72px;
+  min-height: 0;
+  border-style: dashed;
+  border-color: rgb(110 82 54 / 55%);
+  background: rgb(255 248 230 / 35%);
+  box-shadow: none;
+}
+
+.key-page--book .craft-output--ready {
+  border-style: solid;
+  border-color: var(--gold);
+  background: var(--slot-wood);
+}
+
+.key-page--book .craft-output__name {
+  color: var(--ink);
+}
+
+.key-page--book .craft-hint,
+.key-page--book .craft-ring__count,
+.key-page--book .exchange-message {
+  color: var(--ink-soft);
+}
+
+/* ---------- 浮動提示框與確認視窗：羊皮紙風格 ---------- */
+
+.key-page--book .key-tooltip {
+  border-color: #9c7630;
+  background: linear-gradient(#f6ead0, #ead7ad);
+  color: var(--ink);
+  box-shadow: 0 8px 20px rgb(40 20 5 / 35%);
+}
+
+.key-page--book .key-tooltip__hint {
+  color: #6e2230;
+}
+
+.key-page--book .confirm-dialog {
+  border-color: #9c7630;
+  background: linear-gradient(#f6ead0, #e6d2a7);
+  color: var(--ink);
+}
+
+.key-page--book .confirm-dialog h3 {
+  color: var(--ink);
+  font-family: var(--qmah-font-serif);
+  letter-spacing: 0.1em;
+}
+
+.key-page--book .unlock-btn {
+  background: linear-gradient(180deg, #7a4a1c, #573111);
+  color: #fbf3df;
+}
+
+.key-page--book .cancel-btn {
+  border-color: var(--line);
+  background: rgb(255 248 230 / 70%);
+}
+
+/* ---------- 窄螢幕：上下疊放 ---------- */
+
+@media (max-width: 1079px) {
+  .key-page--book {
+    height: auto;
+  }
+
+  .key-page--book .key-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 18px;
+  }
+
+  .key-page--book .key-bag {
+    grid-template-rows: var(--book-head-h, 46px) 360px var(--book-foot-h, 40px);
+  }
+
+  .key-page--book .craft-panel {
+    grid-template-rows: var(--book-head-h, 46px) auto;
+    padding-top: 14px;
+    border-top: 4px double var(--line);
+  }
+
+  .key-page--book .craft-panel__body {
+    container-type: normal;
+  }
+
+  .key-page--book .craft-bench {
+    --ring-size: min(260px, 100%);
+    --output-width: 150px;
+  }
+
+  .key-page--book .craft-magic {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .key-page--book .craft-panel__note {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .craft-magic__outer,
+  .craft-magic__inner {
+    animation: none;
+  }
+}
+
+/* ---------- 兌換／使用小選單（書本模式）：羊皮紙卡片 ---------- */
+
+.key-page--book .key-action {
+  border-color: #9c7630;
+  background: linear-gradient(#f6ead0, #ead7ad);
+  box-shadow: 0 10px 24px rgb(40 20 5 / 38%);
+  font-family: var(--qmah-font-serif);
+}
+
+.key-page--book .key-slot[aria-expanded='true'] {
+  border-color: var(--gold);
+  box-shadow:
+    inset 0 0 0 2px rgb(243 217 142 / 45%),
+    0 0 0 3px rgb(212 174 92 / 55%);
+}
+
+.key-page--book .recycle-dialog__step,
+.key-page--book .recycle-dialog__all {
+  border-color: var(--line);
+  background: rgb(255 248 230 / 70%);
+}

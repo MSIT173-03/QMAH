@@ -5,6 +5,7 @@ import {
   EventEmitter,
   HostListener,
   Input,
+  NgZone,
   OnDestroy,
   OnInit,
   Output,
@@ -16,7 +17,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { KeyService } from '../services/key-service';
 import { CatalogService } from '../services/catalog-service';
-import { KeyExchangeResult, KeyExchangeRule, KeyModel, KeyFilter, UnlockWithKeyResult } from '../models/key-model';
+import { KeyExchangeResult, KeyExchangeRule, KeyModel, KeyFilter, KeyRecycleResult, UnlockWithKeyResult } from '../models/key-model';
 import { keyAssetPath } from '../shared/key-assets';
 import { eraInitials } from '../shared/era-initials';
 import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
@@ -26,7 +27,9 @@ import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
   standalone: true,
   imports: [CommonModule, LucideCircleCheckBig, LucideLibrary],
   templateUrl: './key-list.html',
-  styleUrl: './key-list.scss',
+  // 書本模式（圖鑑書裡的鑰匙背包）樣式另外放一個檔案，避免單一樣式檔超過 32kB 預算
+  // key-list.actions.scss：點開鑰匙的兌換／使用選單與兌換點數視窗；book 要放最後才能覆寫前兩者
+  styleUrls: ['./key-list.scss', './key-list.actions.scss', './key-list.book.scss'],
 })
 export class KeyList implements OnInit, OnDestroy {
   /**
@@ -38,8 +41,23 @@ export class KeyList implements OnInit, OnDestroy {
    *    「關掉背包、直接在同一頁聚焦那張卡片」，不再整頁導頁。
    */
   @Input() embedded = false;
-  /** embedded 為 true 時，「前往查看」改 emit 這個事件，帶剛解鎖的 artifactId，父層負責關窗＋聚焦卡片 */
+  /** embedded 或 bookMode 為 true 時，「前往查看」改 emit 這個事件，帶剛解鎖的 artifactId，父層負責切頁＋聚焦卡片 */
   @Output() artifactFocusRequested = new EventEmitter<string>();
+
+  /**
+   * 3. 圖鑑書本裡的「鑰匙背包」頁籤：父層傳入 [bookMode]="true"。
+   *    左頁是背包格（沒有鑰匙的格子也排滿空格），右頁是魔法陣合成台；
+   *    鑰匙種類篩選改由書本左側的頁籤透過 [filter] 控制，元件內不再顯示篩選列。
+   */
+  @Input() bookMode = false;
+
+  /** 由外部（書本左側頁籤）控制的鑰匙篩選；沒有傳入時沿用元件內的篩選列 */
+  @Input() set filter(value: KeyFilter | null | undefined) {
+    if (value) this.selectedFilter.set(value);
+  }
+
+  /** 每次重新讀取鑰匙後回報給父層，讓頁籤上的數量與萬能鑰匙餘額保持同步 */
+  @Output() keysChanged = new EventEmitter<KeyModel[]>();
 
   keys = signal<KeyModel[]>([]);
   loading = signal(true);
@@ -244,6 +262,62 @@ export class KeyList implements OnInit, OnDestroy {
     return this.ownedKeys().filter((key) => key.scopeType === filter);
   });
 
+  // ---- 書本模式的背包格：依左頁實際大小排滿格子，沒有鑰匙的格子顯示成空格 ----
+
+  /** 書本模式背包格的內距與格距（要跟 key-list.book.scss 的 .key-slot-grid--book 一致） */
+  private readonly BAG_PAD = 12;
+  private readonly BAG_GAP = 8;
+  /** 希望的格子大小；實際大小會微調到剛好排滿整列 */
+  private readonly BAG_TARGET = 68;
+
+  /** 背包格容器的實際大小，由 ResizeObserver 回報 */
+  bagBox = signal<{ w: number; h: number }>({ w: 0, h: 0 });
+
+  /** 欄數、格子大小、總格數（至少排滿一整頁；鑰匙更多時補滿最後一列） */
+  bagLayout = computed(() => {
+    const { w, h } = this.bagBox();
+    const count = this.filteredKeys().length;
+    if (!w || !h) return { cols: 6, size: this.BAG_TARGET, total: Math.max(36, Math.ceil(count / 6) * 6) };
+    const innerW = w - this.BAG_PAD * 2;
+    const innerH = h - this.BAG_PAD * 2;
+    const cols = Math.max(3, Math.round((innerW + this.BAG_GAP) / (this.BAG_TARGET + this.BAG_GAP)));
+    const size = Math.max(40, Math.floor((innerW - this.BAG_GAP * (cols - 1)) / cols));
+    const rows = Math.max(1, Math.floor((innerH + this.BAG_GAP) / (size + this.BAG_GAP)));
+    const total = Math.max(cols * rows, Math.ceil(count / cols) * cols);
+    return { cols, size, total };
+  });
+
+  /** 鑰匙之後補上的空格數量 */
+  bagEmptySlots = computed(() =>
+    Array.from({ length: Math.max(0, this.bagLayout().total - this.filteredKeys().length) }, (_, i) => i),
+  );
+
+  private bagResizeObserver?: ResizeObserver;
+
+  /** 書本模式的背包格出現／消失時（載入完成、切換篩選）重新掛上 ResizeObserver */
+  @ViewChild('bookSlotGrid') set bookSlotGrid(ref: ElementRef<HTMLElement> | undefined) {
+    this.bagResizeObserver?.disconnect();
+    this.bagResizeObserver = undefined;
+    const el = ref?.nativeElement;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    this.bagResizeObserver = new ResizeObserver(([entry]) => {
+      const w = Math.floor(entry.contentRect.width + this.BAG_PAD * 2);
+      const h = Math.floor(entry.contentRect.height + this.BAG_PAD * 2);
+      const current = this.bagBox();
+      if (current.w === w && current.h === h) return;
+      this.zone.run(() => this.bagBox.set({ w, h }));
+    });
+    this.bagResizeObserver.observe(el);
+  }
+
+  /** 書本左頁下方的說明文字 */
+  bagFootText = computed(() => {
+    const keys = this.filteredKeys();
+    if (!keys.length) return this.selectedFilter() === 'ALL' ? '背包空空如也，取得鑰匙後會收進這裡' : '這個類型目前沒有鑰匙';
+    const total = keys.reduce((sum, key) => sum + key.balance, 0);
+    return `${keys.length} 種・共 ${total} 把　點擊鑰匙即可使用`;
+  });
+
   trackByKeyId(_index: number, key: KeyModel): string {
     return key.id;
   }
@@ -256,6 +330,28 @@ export class KeyList implements OnInit, OnDestroy {
   /** 解鎖成功後的結果，給「解鎖了什麼文物」的提示視窗用；null 代表視窗關閉 */
   unlockResult = signal<UnlockWithKeyResult | null>(null);
   unlockError = signal('');
+
+  // ---- 點開鑰匙：兌換／使用小選單 ----
+  // 點背包格後在格子旁邊出現兩個小按鈕：兌換（換成點數）與使用（解鎖文物）；萬能鑰匙只有兌換。
+  // 位置計算跟物品提示框一樣用 fixed 定位，並扣掉祖先 transform 造成的偏移。
+
+  /** 目前展開選單的鑰匙與它的格子；null 代表選單關閉 */
+  keyAction = signal<{ key: KeyModel; owner: HTMLElement } | null>(null);
+  keyActionPos = signal<{ left: number; top: number } | null>(null);
+  @ViewChild('keyActionEl') private keyActionEl?: ElementRef<HTMLElement>;
+  private keyActionFrame = 0;
+
+  // ---- 兌換點數：POST /me/keys/{keyCode}/recycle ----
+  recycleTarget = signal<KeyModel | null>(null);
+  recycleAmount = signal(1);
+  recycling = signal(false);
+  recycleError = signal('');
+  /** 兌換成功後的結果；有值時視窗改成顯示結果 */
+  recycleResult = signal<KeyRecycleResult | null>(null);
+
+  /** 一次最多兌換 100 把（API 限制），也不能超過持有數 */
+  recycleMax = computed(() => Math.max(1, Math.min(100, this.recycleTarget()?.balance ?? 1)));
+  recyclePoints = computed(() => this.recycleAmount() * (this.recycleTarget()?.recyclePointValue ?? 0));
 
   // integration: 後端目前對一般、年代與分類鑰匙的解鎖交易固定扣 1 把；
   // 兌換規則 API 是另一個未在本頁使用的資料契約，不能把它誤當成解鎖成本。
@@ -285,7 +381,7 @@ export class KeyList implements OnInit, OnDestroy {
 
   /**
    * 年代鑰匙的字首（鑰匙圖本身不變，字疊在鑰匙前方的左上角）。
-   * 依全部年代名稱一起算，字首重複的才會取兩個字，例如日本大正 → 日大。
+   * 依全部年代名稱一起算，字首重複的才會取兩個字（從第一個不重複的字開始），例如日本大正 → 大正。
    */
   private eraInitialsByName = computed(() => eraInitials([...new Set(this.eraNameById().values())]));
 
@@ -293,6 +389,7 @@ export class KeyList implements OnInit, OnDestroy {
     private keyService: KeyService,
     private catalogService: CatalogService,
     private router: Router,
+    private zone: NgZone,
   ) {}
 
   ngOnInit(): void {
@@ -319,6 +416,7 @@ export class KeyList implements OnInit, OnDestroy {
         this.keys.set(keys);
         this.clampCraftSlots();
         this.loading.set(false);
+        this.keysChanged.emit(keys);
       },
       error: (err) => {
         this.errorMsg.set(err?.message ?? '讀取鑰匙資料失敗');
@@ -480,11 +578,14 @@ export class KeyList implements OnInit, OnDestroy {
     }
   }
 
-  /** 點選單以外的地方就收起來 */
+  /** 點選單以外的地方就收起來（合成目標選單、鑰匙的兌換／使用選單） */
   @HostListener('document:pointerdown', ['$event'])
   onDocumentPointerDown(event: PointerEvent): void {
-    if (!this.craftMenuOpen()) return;
     const target = event.target as HTMLElement | null;
+    if (this.keyAction() && !target?.closest('.key-action') && target !== this.keyAction()!.owner && !this.keyAction()!.owner.contains(target)) {
+      this.closeKeyAction();
+    }
+    if (!this.craftMenuOpen()) return;
     if (target?.closest('.craft-menu, .craft-center')) return;
     this.closeCraftMenu();
   }
@@ -515,10 +616,12 @@ export class KeyList implements OnInit, OnDestroy {
     if (event.target === event.currentTarget) this.cancelCraft();
   }
 
-  /** 確認視窗開著時，按 Esc 取消 */
+  /** 按 Esc：關閉合成確認、兌換視窗與鑰匙選單 */
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.cancelCraft();
+    this.closeRecycle();
+    this.closeKeyAction();
   }
 
   /** 確認視窗顯示「合成後剩餘幾把」 */
@@ -679,10 +782,10 @@ export class KeyList implements OnInit, OnDestroy {
     this.openKeyTip(key, hint, owner);
   }
 
-  /** 背包格的操作提示：萬能鑰匙不能從背包使用 */
+  /** 背包格的操作提示：點開後選兌換或使用；萬能鑰匙在背包只能兌換 */
   bagTipHint(key: KeyModel): string {
-    if (key.scopeType === 'UNIVERSAL') return '請至圖鑑頁的文物卡片上使用';
-    return key.eligibleArtifactCount > 0 ? '點擊使用' : '目前沒有可解鎖的文物';
+    if (key.scopeType === 'UNIVERSAL') return '點擊兌換點數（使用請至圖鑑的文物卡片）';
+    return '點擊選擇兌換或使用';
   }
 
   hideKeyTip(): void {
@@ -692,16 +795,19 @@ export class KeyList implements OnInit, OnDestroy {
     this.tooltipPos.set(null);
   }
 
-  /** 捲動時提示框會跟格子脫節，直接收起 */
+  /** 捲動時提示框與鑰匙選單會跟格子脫節，直接收起 */
   @HostListener('window:scroll')
   @HostListener('window:resize')
   onViewportChange(): void {
     if (this.tooltip()) this.hideKeyTip();
+    if (this.keyAction()) this.closeKeyAction();
   }
 
   ngOnDestroy(): void {
     this.hideKeyTip();
+    cancelAnimationFrame(this.keyActionFrame);
     this.cancelForge();
+    this.bagResizeObserver?.disconnect();
   }
 
   private craftMenuOpenFor(event: Event): boolean {
@@ -845,17 +951,148 @@ export class KeyList implements OnInit, OnDestroy {
     }[scopeType];
   }
 
+  // ================= 點開鑰匙：兌換／使用 =================
+
   /**
-   * 萬能鑰匙不能從背包直接使用——依需求，萬能鑰匙是在圖鑑頁「尚未解鎖」的文物卡片上，
-   * 點原有的解鎖按鈕時使用，玩家自己指定要解鎖哪一張卡片。背包這裡點萬能鑰匙格子
-   * 不開確認視窗，只顯示一個提示（見 tooltip）。
-   * 其他鑰匙點格子直接開啟使用確認視窗，不需要先看檢視面板再按解鎖。
+   * 回收（兌換點數）條件，跟後端一致：
+   * - 一般／萬能鑰匙：全部啟用中的文物都已解鎖
+   * - 分類／年代鑰匙：該分類／年代的文物都已解鎖
+   * eligibleArtifactCount 就是「這把鑰匙適用範圍內還沒解鎖的文物數」，為 0 代表範圍內已全部解鎖。
+   * 最終資格仍由 API 在交易內確認（不符合時回 409，訊息會顯示在兌換視窗）。
    */
-  onKeySlotClick(key: KeyModel): void {
-    if (key.scopeType === 'UNIVERSAL' || key.balance < 1 || key.eligibleArtifactCount < 1) return;
+  canRecycle(key: KeyModel): boolean {
+    return key.balance >= 1 && key.recyclePointValue > 0 && key.eligibleArtifactCount === 0;
+  }
+
+  /** 萬能鑰匙不能從背包使用（要到圖鑑的文物卡片上指定文物） */
+  canUse(key: KeyModel): boolean {
+    return key.scopeType !== 'UNIVERSAL' && key.balance >= 1 && key.eligibleArtifactCount > 0;
+  }
+
+  /** 兌換條件的文字說明（依鑰匙種類） */
+  recycleRuleText(key: KeyModel): string {
+    switch (key.scopeType) {
+      case 'CATEGORY':
+        return `「${this.getCategoryName(key.categoryId)}」分類的文物全部解鎖後才可兌換`;
+      case 'ERA':
+        return `「${this.getEraName(key.eraBucketId)}」年代的文物全部解鎖後才可兌換`;
+      default:
+        return '圖鑑中全部文物解鎖後才可兌換';
+    }
+  }
+
+  /** 選單下方的一行說明：可兌換時顯示點數，不可兌換時說明原因 */
+  keyActionHint(key: KeyModel): string {
+    if (this.canRecycle(key)) return `可兌換，每把 ${key.recyclePointValue} 點`;
+    if (key.recyclePointValue <= 0) return '這把鑰匙沒有可兌換的點數';
+    return `${this.recycleRuleText(key)}（尚有 ${key.eligibleArtifactCount} 件未解鎖）`;
+  }
+
+  /** 點背包格：在格子旁打開兌換／使用選單；再點同一格則收起 */
+  onKeySlotClick(key: KeyModel, event?: Event): void {
+    const owner = (event?.currentTarget as HTMLElement | null) ?? null;
     this.hideKeyTip();
+    if (!owner) return;
+    if (this.keyAction()?.owner === owner) {
+      this.closeKeyAction();
+      return;
+    }
+    this.keyAction.set({ key, owner });
+    this.keyActionPos.set(null);
+    cancelAnimationFrame(this.keyActionFrame);
+    this.keyActionFrame = requestAnimationFrame(() => this.positionKeyAction());
+  }
+
+  closeKeyAction(): void {
+    if (!this.keyAction()) return;
+    cancelAnimationFrame(this.keyActionFrame);
+    this.keyAction.set(null);
+    this.keyActionPos.set(null);
+  }
+
+  /** 選單的「使用」：開原本的使用確認視窗 */
+  chooseUse(key: KeyModel): void {
+    if (!this.canUse(key)) return;
+    this.closeKeyAction();
     this.unlockError.set('');
     this.confirmTarget.set(key);
+  }
+
+  /** 選單的「兌換」：開兌換點數視窗 */
+  chooseRecycle(key: KeyModel): void {
+    if (!this.canRecycle(key)) return;
+    this.closeKeyAction();
+    this.recycleError.set('');
+    this.recycleResult.set(null);
+    this.recycleAmount.set(1);
+    this.recycleTarget.set(key);
+  }
+
+  stepRecycleAmount(delta: number): void {
+    this.setRecycleAmount(this.recycleAmount() + delta);
+  }
+
+  setRecycleAmount(value: number): void {
+    if (this.recycling()) return;
+    const next = Math.round(Number(value));
+    this.recycleAmount.set(Number.isFinite(next) ? Math.min(this.recycleMax(), Math.max(1, next)) : 1);
+  }
+
+  /** 送出兌換；不自動重試，避免回應遺失時重複回收 */
+  confirmRecycle(): void {
+    const key = this.recycleTarget();
+    if (!key || this.recycling() || this.recycleResult()) return;
+    const amount = this.recycleAmount();
+    if (amount < 1 || amount > key.balance) return;
+
+    this.recycling.set(true);
+    this.recycleError.set('');
+    this.keyService.recycleKey(key.code, amount).subscribe({
+      next: (result) => {
+        this.recycling.set(false);
+        this.recycleResult.set(result);
+        this.loadKeys();
+      },
+      error: (err) => {
+        this.recycling.set(false);
+        this.recycleError.set(err?.message ?? '兌換失敗，請稍後再試');
+      },
+    });
+  }
+
+  closeRecycle(): void {
+    if (this.recycling() || !this.recycleTarget()) return;
+    this.recycleTarget.set(null);
+    this.recycleResult.set(null);
+    this.recycleError.set('');
+  }
+
+  onRecycleOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeRecycle();
+  }
+
+  /** 選單放在格子下方（放不下就翻到上方），並夾在畫面內；扣掉祖先 transform 造成的定位偏移 */
+  private positionKeyAction(): void {
+    const action = this.keyAction();
+    const el = this.keyActionEl?.nativeElement;
+    if (!action || !el) return;
+    if (!action.owner.isConnected) {
+      this.closeKeyAction();
+      return;
+    }
+    const current = this.keyActionPos() ?? { left: 0, top: 0 };
+    const rendered = el.getBoundingClientRect();
+    const originX = rendered.left - current.left;
+    const originY = rendered.top - current.top;
+    const rect = action.owner.getBoundingClientRect();
+    const margin = 8;
+
+    let x = rect.left + rect.width / 2 - rendered.width / 2;
+    x = Math.max(margin, Math.min(x, window.innerWidth - rendered.width - margin));
+    const below = rect.bottom + 8;
+    const above = rect.top - rendered.height - 8;
+    const y = below + rendered.height <= window.innerHeight - margin ? below : Math.max(margin, above);
+    this.keyActionPos.set({ left: x - originX, top: y - originY });
   }
 
   cancelUseKey(): void {
@@ -932,7 +1169,7 @@ export class KeyList implements OnInit, OnDestroy {
     if (!result || !result.artifactId) return;
     this.unlockResult.set(null);
 
-    if (this.embedded) {
+    if (this.embedded || this.bookMode) {
       this.artifactFocusRequested.emit(result.artifactId);
       return;
     }
