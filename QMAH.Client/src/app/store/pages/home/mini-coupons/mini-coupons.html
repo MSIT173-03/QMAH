@@ -1,5 +1,5 @@
 @if (displayCoupons().length > 0) {
-  <!-- ui-integration: 沒有可領折價券時隱藏整個側欄面板，不用空標題暗示存在可用優惠。 -->
+  <!-- 沒有可領取的折價券時不顯示面板，不用空標題暗示有優惠 -->
   <app-panel>
     <span class="label-tag label-tag--loose coupon-mini-label">COUPON</span>
     @for (coupon of displayCoupons(); track $index; let i = $index) {

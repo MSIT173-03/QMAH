@@ -1,5 +1,4 @@
 @if (slides().length > 0) {
-  <!-- ui-integration: 正式主視覺優先；API 暫無資料時才使用專案內素材與可驗證優惠的 fallback。 -->
   <section class="hero" aria-label="商城主視覺輪播" aria-roledescription="carousel">
     <div class="hero-track" [style.transform]="trackShift()">
       @for (slide of slides(); track $index) {

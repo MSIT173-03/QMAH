@@ -14,37 +14,31 @@ type StoreHeroSlide = HeroSlide & { coupon: Coupon | null };
 
 const EDITORIAL_SLIDES: HeroSlide[] = [
   {
-    slot: '',
     kicker: '清明選物誌',
     title: '把紙上風景帶回書桌',
     desc: '從一張明信片開始，讓一次看見慢慢留在日常。',
   },
   {
-    slot: '',
     kicker: '清明選物・日常收藏',
     title: '收藏不必等到特別的日子',
     desc: '挑一件有故事的選物，替今天留下一點餘裕。',
   },
   {
-    slot: '',
     kicker: '清明選物誌・館藏靈感',
     title: '從一件小物開始認識館藏',
     desc: '在材質、紋樣與來源之間，找到屬於你的喜歡。',
   },
   {
-    slot: '',
     kicker: '清明選物誌・收藏日常',
     title: '開一盞燈，讓故事留下來',
     desc: '把一段看見放在身邊，日常也能有自己的觀看方式。',
   },
   {
-    slot: '',
     kicker: '清明選物・慢慢挑選',
     title: '把日常留給一件好物',
     desc: '不追著流行走，挑一件真正願意長久相處的物件。',
   },
   {
-    slot: '',
     kicker: '清明選物誌・看見細節',
     title: '看見細節，也看見自己',
     desc: '一點色澤、一段紋樣，都值得被好好理解。',
@@ -61,21 +55,19 @@ const EDITORIAL_SLIDES: HeroSlide[] = [
 export class HeroCarousel {
   private readonly homeApi = inject(HomeApi);
 
-  /** 後端提供的輪播文案；有資料時永遠優先使用正式內容。 */
+  /** 後端提供的輪播文案；有資料時優先使用 */
   private readonly apiSlides = toSignal(this.homeApi.getHeroSlides(), { initialValue: [] });
-  /** 真實可領取優惠，僅用來在主視覺補充可驗證的優惠訊息。 */
+  /** 可領取的折價券，用來在主視覺補充優惠訊息 */
   private readonly claimableCoupons = toSignal(this.homeApi.getClaimableCoupons(), { initialValue: [] });
 
   /**
-   * ui-integration: 不修改 Hero API 契約；後端尚未提供主視覺時，才用專案內的品牌
-   * 素材與真實可領優惠維持首頁入口的完整性。若兩個 API 都沒有資料，版位仍隱藏，
-   * 不把空資料包裝成假促銷。
+   * 輪播的投影片：後端的主視覺文案優先（最多 3 張），沒有時取本地編輯文案的前 3 張；
+   * 接著是可領取折價券（最多 3 張），最後以其餘的本地編輯文案補滿，總共最多 6 張。
    */
   protected readonly slides = computed<StoreHeroSlide[]>(() => {
     const apiSlides = this.apiSlides();
     const baseSlides = apiSlides.length > 0 ? apiSlides.slice(0, 3) : EDITORIAL_SLIDES.slice(0, 3);
     const couponSlides = this.claimableCoupons().slice(0, 3).map((coupon) => ({
-      slot: '',
       kicker: this.couponKicker(coupon),
       title: this.couponSlogan(coupon),
       desc: `${coupon.title}｜${coupon.cond}。`,
@@ -92,7 +84,7 @@ export class HeroCarousel {
     ].slice(0, 6);
   });
 
-  /** 本地生成的無文字素材只負責氛圍，重要文案與折價數字由 HTML 保持可讀、可更新。 */
+  /** 本地的無文字素材只負責氛圍，文案與折價數字由模板顯示，保持可讀、可更新 */
   private readonly slideImages = [
     '/images/store/hero/museum-shop-still-life.png',
     '/images/store/hero/gift-wrapping.png',
@@ -101,7 +93,7 @@ export class HeroCarousel {
 
   /** 目前顯示的投影片索引 */
   protected activeSlide = signal(0);
-  /** ui-integration: 首頁輪播保留自動播放，但提供明確暫停控制，避免動態內容搶走閱讀焦點。 */
+  /** 是否自動播放；使用者可暫停，避免動態內容搶走閱讀焦點 */
   protected autoplayEnabled = signal(true);
   protected readonly productsPath = PRODUCT_LIST_PATH;
   /** 依目前投影片索引換算的輪播橫向位移量 */

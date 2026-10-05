@@ -27,7 +27,7 @@
       <img class="magnifier-fade" [src]="fade.url" alt="" aria-hidden="true" draggable="false"
         [style.transform]="fade.transform" (animationend)="onFadeEnd(fade.key)" />
     }
-    <!-- 局部鏡頭跟著游標或指標拖曳，僅放大目前位置，不改變原本商品版面流。 -->
+    <!-- 局部鏡頭跟著游標或指標拖曳，只放大目前位置，不影響版面 -->
     @if (enabled()) {
       <span
         class="magnifier-lens"

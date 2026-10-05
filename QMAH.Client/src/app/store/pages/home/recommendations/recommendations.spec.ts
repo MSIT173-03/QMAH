@@ -14,7 +14,6 @@ const item = (index: number): BadgedProductView => ({
   rating: 0,
   reviews: 0,
   sold: 0,
-  source: '',
   coverImage: null,
   badge: '近期上架',
   badgeVariant: 'teal',

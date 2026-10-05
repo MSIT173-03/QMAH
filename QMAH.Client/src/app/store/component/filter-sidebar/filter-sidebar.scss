@@ -33,7 +33,7 @@
   font-weight: 500;
 }
 
-/* 面板標題列：可點擊展開／收合，樣式與原本靜態的 label-tag 標題外觀一致 */
+/* 面板標題列：可點擊展開／收合，外觀與 label-tag 標題一致 */
 .filter-panel-head {
   width: 100%;
   border: 0;
@@ -59,9 +59,8 @@
 
 /*
  * 面板內容收合動畫：分類／年代項目數量不固定、無法預先量出實際高度，
- * 用 grid 的列高 0fr ↔ 1fr 做過場，高度永遠等於內容的實際高度，沒有上限、不會把後面的選項切掉
- * （原本用 max-height 搭配固定上限，年代項目一多就被截斷）。收合時額外把 app-panel 的 gap 用
- * 負 margin 抵掉，避免標題下方留下一截空隙。
+ * 用 grid 的列高 0fr ↔ 1fr 做過場，高度永遠等於內容的實際高度，沒有上限、不會把後面的選項切掉。
+ * 收合時額外把 app-panel 的 gap 用負 margin 抵掉，避免標題下方留下一截空隙。
  */
 .filter-panel-collapse {
   display: grid;
@@ -88,6 +87,6 @@
 }
 
 @media (max-width: 720px) {
-  /* ui-integration: 窄螢幕由頁面順序承擔篩選，不讓側欄固定在商城頁首下方遮住商品。 */
+  /* 窄螢幕不固定側欄：篩選依頁面順序呈現，避免側欄固定在頁首下方遮住商品 */
   .filter-sidebar { position: static; }
 }

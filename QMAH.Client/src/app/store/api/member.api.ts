@@ -100,8 +100,6 @@ export class MemberApi {
   getCoupons(): Observable<Coupon[]> {
     return this.http.get<ApiCoupon[]>(meUrl('/coupons')).pipe(
       map((coupons) => coupons.filter((coupon) => coupon.status === 'AVAILABLE').map((coupon) => {
-        const isPercent = coupon.discountType.toUpperCase() === 'PERCENT';
-        const value = Number(coupon.discountValue);
         // 會員券與活動其中一個先到期即失效，顯示較早的日期。
         const due = coupon.expiresAt < coupon.endAt ? coupon.expiresAt : coupon.endAt;
         return {
@@ -111,9 +109,7 @@ export class MemberApi {
           title: coupon.name,
           cond: formatCouponCondition(coupon.minimumAmount),
           min: coupon.minimumAmount,
-          kind: isPercent ? 'percent' : 'amount',
-          value: isPercent ? value / 100 : value,
-          cap: null,
+          kind: coupon.discountType.toUpperCase() === 'PERCENT' ? 'percent' : 'amount',
           due: due.slice(0, 10),
         } satisfies Coupon;
       })),

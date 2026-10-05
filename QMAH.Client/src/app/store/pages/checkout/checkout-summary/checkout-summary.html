@@ -30,7 +30,7 @@
     <!-- 本次訂單可回饋的點數 -->
     <span class="summary-earn">回饋點數 +{{ earnLabel() }}</span>
 
-    <!-- integration: 後端尚未提供正式配送／付款選項時，明確停用下單按鈕，避免使用者以為訂單已送出。 -->
+    <!-- 沒有可用的配送／付款方式或訂單已成立時，下單按鈕停用 -->
     <button type="button" class="btn-solid btn-solid--full" [disabled]="submitDisabled()"
       (click)="submitOrder.emit()">{{ submitLabel() }}</button>
 

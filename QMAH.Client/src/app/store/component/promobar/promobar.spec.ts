@@ -131,8 +131,6 @@ describe('Promobar', () => {
     cond: '',
     min: 0,
     kind: 'amount',
-    value: index * 10,
-    cap: null,
     due: null,
   });
 

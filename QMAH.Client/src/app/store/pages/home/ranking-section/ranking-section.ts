@@ -8,7 +8,7 @@ import { gridColumns } from '../../../shared/grid-columns';
 import { toProductView } from '../../../shared/product-view';
 import { BadgedProductView, HOME_PRODUCT_COUNT, HOME_PRODUCT_ROWS, RANKING_TABS } from '../home.data';
 
-/** 首頁「熱銷排行」區塊：可依分類分頁切換，向 API 取 20 件商品，但固定只顯示兩行 */
+/** 首頁「熱銷排行」區塊：可依分類分頁切換，向 API 取 HOME_PRODUCT_COUNT 件商品，但固定只顯示兩行 */
 @Component({
   selector: 'app-ranking-section',
   imports: [SectionHead, PillGroup, ProductCard],

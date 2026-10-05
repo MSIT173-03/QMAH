@@ -1,5 +1,5 @@
 /**
- * 後端 API 的請求參數與回應資料格式，規格說明見 doc/api-requirements.html。
+ * 商城前端使用的 API 請求參數與回應資料格式（已由各 api 檔轉換成頁面直接可用的形狀）。
  */
 
 /* ===============================
@@ -158,8 +158,6 @@ export interface ReviewPage extends Page<Review> {
 
 /** 主視覺輪播投影片 */
 export interface HeroSlide {
-  /** 主視覺圖片的佔位說明文字 */
-  slot: string;
   kicker: string;
   title: string;
   desc: string;
@@ -182,14 +180,6 @@ export interface FlashSale {
   /** 特賣結束時間（ISO 8601） */
   endsAt: string;
   items: FlashSaleItem[];
-}
-
-/** 品牌館品牌 */
-export interface Brand {
-  en: string;
-  zh: string;
-  /** 品牌優惠說明 */
-  deal: string;
 }
 
 /** 熱銷排行查詢參數 */
@@ -246,20 +236,14 @@ export interface CartItem {
   lineTotal: number;
 }
 
-/** 購物車金額摘要（以預設配送方式試算運費） */
+/** 購物車金額摘要；運費依配送方式與免運門檻決定，到結帳頁才試算，這裡不含運費 */
 export interface CartAmounts {
   /** 商品小計（折扣前） */
   subtotal: number;
   /** 商品折扣 */
   itemDiscount: number;
-  /** 預設配送方式的運費，已達免運門檻或購物車為空時為 0；後端尚未提供配送規則時為 null（結帳時計算） */
-  shippingFee: number | null;
-  /** 應付總額（不含尚未計算的運費） */
+  /** 應付商品金額（不含運費） */
   payable: number;
-  /** 滿額免運門檻；後端尚未提供配送規則時為 null */
-  freeShippingThreshold: number | null;
-  /** 距離免運門檻還差的金額，已達門檻時為 0；後端尚未提供配送規則時為 null */
-  freeShippingShortfall: number | null;
 }
 
 /** 購物車內容 */
@@ -299,7 +283,7 @@ export interface MemberProfile extends Recipient {
   pointBalance: number;
 }
 
-/** 折價券折抵方式：amount 折抵固定金額；percent 依比例折抵並以 cap 為上限；freeship 免除運費 */
+/** 折價券折抵方式：amount 折抵固定金額；percent 依比例折抵；freeship 免除運費 */
 export type CouponKind = 'amount' | 'percent' | 'freeship';
 
 /** 折價券（頂部公告列、首頁側欄與結帳頁共用同一模型） */
@@ -313,15 +297,11 @@ export interface Coupon {
   /** 可使用的最低應付金額門檻 */
   min: number;
   kind: CouponKind;
-  /** amount：折抵金額；percent：折抵比例；freeship：不使用 */
-  value: number;
-  /** percent 的折抵金額上限，無上限時為 null */
-  cap: number | null;
   /** 到期日（YYYY-MM-DD），無期限時為 null */
   due: string | null;
 }
 
-/** 折價券商店中可用點數兌換的折價券（GET /store/coupons） */
+/** 兌換商店中可用點數兌換的折價券（GET /store/coupons） */
 export interface StoreCoupon {
   id: string;
   title: string;
@@ -423,7 +403,7 @@ export interface OrderQuote extends OrderAmounts {
   shippingOptions: ShippingOption[];
   /** 已達使用門檻的會員折價券 ID */
   usableCouponIds: string[];
-  /** 本次可折抵點數上限（持有點數與應付商品金額取小者） */
+  /** 本次可折抵點數上限（每單直接折抵上限、券後商品金額的 5% 與持有點數三者取小） */
   pointCap: number;
 }
 
@@ -454,12 +434,6 @@ export interface SiteLink {
   href: string;
 }
 
-/** 頁尾連結欄位 */
-export interface SiteLinkColumn {
-  title: string;
-  links: SiteLink[];
-}
-
 /** 商品政策條列（保養、退換、鑑定） */
 export interface ProductPolicy {
   label: string;
@@ -470,7 +444,6 @@ export interface ProductPolicy {
 export interface SiteConfig {
   /** 頂部公告列的公告文字 */
   promoAnnouncements: string[];
-  footerColumns: SiteLinkColumn[];
   productPolicies: ProductPolicy[];
   /** 商品尺寸量測說明 */
   sizeNote: string;

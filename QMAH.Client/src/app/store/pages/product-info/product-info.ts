@@ -160,11 +160,10 @@ export class ProductInfo {
     if (item) this.cart.add(item.id, qty);
   }
 
-  /** 直接購買：目前正式付款選項尚未接通，先加入購物車並回到可查看狀態的購物車頁。 */
+  /** 加入並查看購物車：加入成功後前往購物車頁，由購物車頁再進入結帳 */
   protected onBuyNow(qty: number): void {
     const item = this.item();
     if (!item) return;
-    // ui-integration: 不把「直接購買」送進尚未啟用的結帳頁；保留既有操作入口，但讓使用者回到真實可確認內容的購物車。
     this.cart.add(item.id, qty, () => this.router.navigate([CART_PATH]));
   }
 

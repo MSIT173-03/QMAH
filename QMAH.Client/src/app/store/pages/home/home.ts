@@ -16,15 +16,15 @@ import { MiniCoupons } from './mini-coupons/mini-coupons';
 import { CategoryGrid } from './category-grid/category-grid';
 import { RankingSection } from './ranking-section/ranking-section';
 import { NewArrivals } from './new-arrivals/new-arrivals';
-import { BrandHall } from './brand-hall/brand-hall';
+import { EraGrid } from './era-grid/era-grid';
 import { Recommendations } from './recommendations/recommendations';
 import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 
 /**
  * 首頁。
- * 統整頁首搜尋、主視覺輪播、限時特賣、迷你折價券、分類入口、熱銷排行、
- * 新品上架、年代選藏與為你推薦等各版位；購物車、搜尋建議、全站設定與會員資料
- * 皆由本頁面向 API 取得；「為你推薦」在此一次取得。
+ * 統整頁首搜尋、主視覺輪播、限時特賣、迷你折價券、分類入口、年代選藏、熱銷排行、
+ * 新品上架與為你推薦等版位。各版位自行向 API 取得資料；本頁面持有購物車狀態（加入購物車）、
+ * 搜尋框與搜尋建議，並一次取得「為你推薦」的商品。
  */
 @Component({
   selector: 'app-home',
@@ -38,7 +38,7 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
     CategoryGrid,
     RankingSection,
     NewArrivals,
-    BrandHall,
+    EraGrid,
     Recommendations,
     SiteHeader,
   ],

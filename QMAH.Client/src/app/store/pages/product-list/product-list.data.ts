@@ -71,7 +71,7 @@ export const VIEW_HEADINGS: Record<string, string> = {
 
 /**
  * 由網址 view 參數對應的預設排序方式（未列出者使用 ORDER_OPTIONS 第一項）；
- * 特展聯名原以評價最多排序，因商品清單 API 的 order 參數未提供依評價排序，改以熱銷排行代替。
+ * 特展聯名依熱銷排行（商品清單 API 的 order 參數沒有提供依評價排序）。
  */
 export const VIEW_DEFAULT_ORDER: Record<string, ProductOrder> = {
   new: 3,

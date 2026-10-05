@@ -1,5 +1,5 @@
 @if (items().length > 0) {
-  <!-- ui-integration: 空 API 結果不渲染只有標題的商品區，讓首頁版面依真實內容收縮。 -->
+  <!-- 沒有新品時不顯示整個面板，不留下只有標題的空面板 -->
   <app-panel>
     <app-section-head variant="panel" title="新品上架" [tag]="tagText()">
       <a class="section-more" [storeLink]="moreHref">更多 →</a>

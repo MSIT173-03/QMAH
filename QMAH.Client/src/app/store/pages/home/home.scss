@@ -51,12 +51,12 @@
     display: none;
   }
 
-  &:has(> app-category-grid:empty):has(> app-brand-hall:empty) {
+  &:has(> app-category-grid:empty):has(> app-era-grid:empty) {
     display: none;
   }
 }
 
-/* ui-integration: 商城保留桌面雙欄構圖，但在手機先讓內容各自取得可讀寬度，避免商品名稱被壓成直排。 */
+/* 手機上各區塊改為單欄，讓內容各自取得可讀寬度，避免商品名稱被壓成直排 */
 @media (max-width: 720px) {
   .hero-section {
     grid-template-columns: minmax(0, 1fr);

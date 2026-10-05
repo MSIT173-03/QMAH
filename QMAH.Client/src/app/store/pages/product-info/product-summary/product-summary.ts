@@ -33,7 +33,7 @@ export class ProductSummary {
   material = input('');
   /** 紋樣／器型出處說明 */
   source = input('');
-  /** 出貨說明（佔位資料，正式應由物流設定提供） */
+  /** 出貨說明；沒有資料時不顯示該列 */
   shipping = input('');
   /** 尺寸／規格說明 */
   dims = input('');
@@ -41,7 +41,7 @@ export class ProductSummary {
   artifactDims = input('');
   /** 商品狀態說明 */
   condition = input('');
-  /** 尺寸量測說明（佔位資料，正式應由商品說明設定提供） */
+  /** 尺寸量測說明（全站設定提供） */
   sizeNote = input('');
 
   /** 加入購物車時觸發，帶出目前選購數量 */

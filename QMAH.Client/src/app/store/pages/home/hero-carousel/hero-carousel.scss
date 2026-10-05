@@ -56,7 +56,7 @@
   flex-direction: column;
   gap: var(--qmah-space-3);
   padding: var(--qmah-space-4) var(--qmah-space-5);
-  /* ui-integration: 主視覺以細邊界界定文案層，避免厚重側線破壞圖片與文字的閱讀比例。 */
+  /* 文案層以細邊界區隔，不用厚重側線，避免破壞圖片與文字的閱讀比例 */
   border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-line));
   background: color-mix(in srgb, var(--color-surface) 91%, transparent);
   border-radius: var(--store-radius);
@@ -188,7 +188,7 @@
   }
 
   .hero-title {
-    /* ui-integration: 手機維持主視覺標題的份量，但讓中文標題以完整語意換行，不留下右側裁切或孤立短行。 */
+    /* 手機上維持主視覺標題的份量，並讓中文標題依語意換行，避免右側裁切或孤立短行 */
     font-size: clamp(26px, 7vw, 32px);
     text-wrap: balance;
   }

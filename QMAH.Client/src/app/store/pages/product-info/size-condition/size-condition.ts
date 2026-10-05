@@ -15,7 +15,7 @@ export class SizeCondition {
   artifactDims = input('');
   /** 商品狀態說明 */
   condition = input('');
-  /** 尺寸量測說明（佔位資料，正式應由商品說明設定提供） */
+  /** 尺寸量測說明（全站設定提供） */
   note = input('');
 
   /** 以下為面板的固定版面文字 */

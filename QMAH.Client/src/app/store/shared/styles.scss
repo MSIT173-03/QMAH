@@ -33,10 +33,10 @@
   --color-on-accent: var(--qmah-primary-content);
   --color-secondary-content: var(--qmah-secondary-content);
   --color-shadow: var(--qmah-shadow-card);
-  /* ui-integration: Store 控制項與卡片細節共用低圓角，保留既有方正視覺而避免局部漂移。 */
+  /* 控制項與卡片細節共用的低圓角，維持方正的視覺 */
   --store-radius: 12px;
 
-  /* 頁面重置樣式（等同原本套用於 body 的樣式，改由頁面根元件承載） */
+  /* 頁面重置樣式（由頁面根元件承載，而不是 body） */
   background-color: var(--color-bg);
   background-image: var(--color-bg-image);
   /* 底紋原圖是 60px，放大三倍 */
@@ -121,8 +121,7 @@
   }
   .brand-logo-img--lg { height: 44px; }
 
-  /* ui-integration: 商城頁首在窄螢幕改為品牌／搜尋與購物車分層，避免搜尋列把頁面撐出水平捲軸。 */
-  /* ui-integration: 720px 以前先重排商城頁首，再讓內容自行決定欄數，涵蓋常見平板直向與手機。 */
+  /* 720px 以下（平板直向與手機）：商城頁首改為分層排列，避免搜尋列把頁面撐出水平捲軸 */
   @media (max-width: 720px) {
     .site-header-row {
       flex-wrap: wrap;
@@ -210,7 +209,7 @@
   /* ===============================
      商品價格與評分列的共用原子樣式
      （商品卡片、商品橫列、購物車行、商品頁資訊欄皆使用同一組樣式，
-     　故定義於全站共用樣式，各元件不再各自宣告一份）
+     　故定義於全站共用樣式，各元件不需各自宣告）
      =============================== */
 
   .product-card-price {
@@ -283,7 +282,7 @@
     }
   }
 
-  /* ui-integration: 商品卡片沿用原本網格語意，僅在內容壓力增加時降低欄數，不讓圖片與 CTA 被擠成不可讀的窄條。 */
+  /* 窄螢幕降為兩欄，避免圖片與按鈕被擠成難以閱讀的窄條 */
   @media (max-width: 720px) {
     .card-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -312,7 +311,7 @@
     }
   }
 
-  /* ui-integration: 商城主要 CTA 保留原本造型，但把觸控高度收斂到可操作的 44px。 */
+  /* 主要按鈕的最小高度（觸控目標） */
   .btn-solid,
   .btn-outline {
     min-height: var(--qmah-control-height);
@@ -354,7 +353,7 @@
   }
 }
 
-/* ui-integration: 商城沿用全站 theme-controller；只替換同一組語意 token，保留首頁、列表、商品與結帳的原有構圖。 */
+/* 深色主題：沿用全站的 theme-controller，只替換同一組語意色彩變數 */
 :root:has(.theme-controller[value='qmahdark']:checked) .store-app,
 :root[data-theme='qmahdark'] .store-app {
   --color-ink: var(--qmah-ink);

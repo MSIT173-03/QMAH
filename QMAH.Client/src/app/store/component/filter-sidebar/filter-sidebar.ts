@@ -54,6 +54,17 @@ export class FilterSidebar {
   /** 是否只顯示折扣商品 */
   dealOnly = input(false);
 
+  /** 點擊某個分類時觸發，帶出該分類在 categories 中的索引值 */
+  categoryPick = output<number>();
+  /** 點擊某個年代時觸發，帶出該年代在 eras 中的索引值 */
+  eraPick = output<number>();
+  /** 點擊某個價格區間時觸發，帶出該區間在 bands 中的索引值 */
+  bandPick = output<number>();
+  /** 點擊折扣篩選按鈕時觸發（切換開關） */
+  dealToggle = output<void>();
+  /** 點擊「清除所有篩選」時觸發 */
+  reset = output<void>();
+
   /** 顯示中的面板；沒有年代資料時不顯示空的年代面板 */
   protected panels = computed(() =>
     FILTER_PANELS.filter((panel) => panel.section !== 'era' || this.eras().length > 0),
@@ -107,15 +118,4 @@ export class FilterSidebar {
       });
     });
   }
-
-  /** 點擊某個分類時觸發，帶出該分類在 categories 中的索引值 */
-  categoryPick = output<number>();
-  /** 點擊某個年代時觸發，帶出該年代在 eras 中的索引值 */
-  eraPick = output<number>();
-  /** 點擊某個價格區間時觸發，帶出該區間在 bands 中的索引值 */
-  bandPick = output<number>();
-  /** 點擊折扣篩選按鈕時觸發（切換開關） */
-  dealToggle = output<void>();
-  /** 點擊「清除所有篩選」時觸發 */
-  reset = output<void>();
 }

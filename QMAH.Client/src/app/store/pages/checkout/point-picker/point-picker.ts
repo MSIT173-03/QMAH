@@ -68,9 +68,9 @@ export class PointPicker {
   private modeLabel(mode: PointMode): string {
     if (mode === 'none') return '不使用';
     if (mode === 'custom') return '自訂數量';
-    // 上限等於持有點數代表點數可全額折抵；否則上限即為應付商品金額，改標示可折抵的應付金額
+    // 上限等於持有點數代表持有的點數可以全額折抵；否則只能折抵到每單的折抵上限
     return this.cap() === this.balance()
       ? `點數全額 ${this.balanceLabel()} 點`
-      : `折抵應付金額 ${this.capLabel()} 點`;
+      : `折抵上限 ${this.capLabel()} 點`;
   }
 }

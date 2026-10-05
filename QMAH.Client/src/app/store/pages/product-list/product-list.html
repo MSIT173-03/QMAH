@@ -33,32 +33,32 @@
 
     <!-- 右側商品區：依顯示模式切換卡片格狀或橫列清單，無結果時顯示空狀態 -->
     <div class="section-block">
-    @if (loading()) {
-      <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark" aria-hidden="true"></span><span>正在整理商品清單…</span></section>
-    } @else if (loadError()) {
-      <app-empty-state [title]="errorTitle" [desc]="errorDesc" [ctaLabel]="errorCtaLabel" ctaMode="button"
-        (ctaClick)="onReload()" />
-    } @else if (isEmpty()) {
-      <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" ctaMode="button"
-        (ctaClick)="onReset()" />
+      @if (loading()) {
+        <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark" aria-hidden="true"></span><span>正在整理商品清單…</span></section>
+      } @else if (loadError()) {
+        <app-empty-state [title]="errorTitle" [desc]="errorDesc" [ctaLabel]="errorCtaLabel" ctaMode="button"
+          (ctaClick)="onReload()" />
+      } @else if (isEmpty()) {
+        <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" ctaMode="button"
+          (ctaClick)="onReset()" />
       } @else if (isGridMode()) {
-      <!-- 卡片格狀顯示 -->
-      <div class="card-grid">
-        @for (item of items(); track item.id) {
-        <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage" [badge]="item.cat"
-          badgeVariant="teal" [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
-          [rating]="item.rating" [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
-        }
-      </div>
+        <!-- 卡片格狀顯示 -->
+        <div class="card-grid">
+          @for (item of items(); track item.id) {
+            <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage" [badge]="item.cat"
+              badgeVariant="teal" [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
+              [rating]="item.rating" [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
+          }
+        </div>
       } @else {
-      <!-- 橫列清單顯示 -->
-      <div class="product-row-list">
-        @for (item of items(); track item.id) {
-        <app-product-row [id]="item.id" [coverImage]="item.coverImage" [brand]="item.brand" [cat]="item.cat"
-          [name]="item.name" [source]="item.source" [price]="item.price" [was]="item.was" [rating]="item.rating"
-          [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
-        }
-      </div>
+        <!-- 橫列清單顯示 -->
+        <div class="product-row-list">
+          @for (item of items(); track item.id) {
+            <app-product-row [id]="item.id" [coverImage]="item.coverImage" [brand]="item.brand" [cat]="item.cat"
+              [name]="item.name" [price]="item.price" [was]="item.was" [rating]="item.rating"
+              [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
+          }
+        </div>
       }
     </div>
   </div>

@@ -34,7 +34,7 @@ export class Promobar {
 
   /** 「折價券」連結網址 */
   couponsHref = input('/member/coupons');
-  /** 折價券面板中「兌換折價券」連結網址（折價券商店） */
+  /** 折價券面板中「兌換折價券」連結網址（兌換商店） */
   couponStoreHref = input('/store/coupons');
   /** 折價券清單資料 */
   coupons = input<Coupon[]>([]);

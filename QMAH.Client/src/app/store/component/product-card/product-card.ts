@@ -17,9 +17,7 @@ export type ProductCardBadgeVariant = 'ink' | 'teal';
  */
 export type ProductCardVariant = 'default' | 'list' | 'compact';
 
-/**
- * 商品卡片。
- */
+/** 商品卡片：封面圖、角標、品牌與名稱、價格、評分與加入購物車按鈕，版面依 variant 切換。 */
 @Component({
   selector: 'app-product-card',
   imports: [StoreLink, QmahIconComponent],
@@ -32,7 +30,7 @@ export class ProductCard {
   /** 版面變體 */
   variant = input<ProductCardVariant>('default');
 
-  /** 商品圖片網址；錯誤時會先嘗試同目錄的 display 圖，再顯示明確的影像待補狀態。 */
+  /** 商品圖片網址；讀取失敗時先嘗試同目錄的 display 圖，再顯示「影像待補」 */
   coverImage = input<string | null>(null);
 
   /** 角標文字（例如「#01」「新品」），為 null 時不顯示 */
@@ -62,12 +60,12 @@ export class ProductCard {
   /** 已加入購物車：按鈕維持反白並在右下角顯示打勾（購物車頁「再加購」使用） */
   added = input(false);
 
-  /** 無圖片時顯示的中性狀態，不假裝這是另一件文物。 */
+  /** 無圖片時顯示的文字 */
   protected readonly slotLabel = '影像待補';
   /** 加入購物車按鈕文字 */
   protected readonly addCartLabel = '加入購物車';
 
-  /** 商品圖片；讀取失敗時先 fallback 到同一件文物 display 圖，避免誤顯示其他商品。 */
+  /** 商品圖片；讀取失敗時先改用同一件文物的 display 圖，仍失敗才顯示佔位狀態 */
   protected readonly image = imageWithFallback(() => this.coverImage());
 
   /** 商品頁連結網址 */

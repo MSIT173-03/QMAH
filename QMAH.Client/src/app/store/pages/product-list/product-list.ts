@@ -112,10 +112,9 @@ export class ProductList {
      頁面狀態
      =============================== */
 
-  /**
-   * 以下四項以網址參數為初始值，之後可由使用者操作覆寫；
-   * 網址參數變動時（例如從首頁再次點進不同器類）會重新以新值為準。
-   */
+  // 以下各項以網址參數為初始值，之後可由使用者操作覆寫；
+  // 網址參數變動時（例如從首頁再次點進不同器類）會重新以新值為準。
+
   /** 搜尋框目前的輸入內容 */
   protected searchInput = linkedSignal(() => this.q());
   /** 已送出的搜尋關鍵字（按下 Enter 或搜尋鈕才更新） */
@@ -201,7 +200,7 @@ export class ProductList {
     ),
   );
 
-  /** ui-integration: API 尚未回應時顯示載入狀態，不把「0 件商品」誤讀成真的空清單。 */
+  /** 是否尚在載入；載入中顯示載入狀態，不把「0 件商品」誤讀成真的沒有結果 */
   protected loading = computed(() => this.result() === undefined);
 
   /** 供卡片與橫列共用的商品顯示資料 */
@@ -303,43 +302,37 @@ export class ProductList {
     this.keyword.set(keyword);
     this.category.set('');
     this.eraCode.set('');
-    this.setPage(1);
-    this.scrollToTop();
+    this.showFirstPage();
   }
 
   /** 切換器類篩選（索引 0 為「全部商品」），並回到第 1 頁 */
   protected onCategoryPick(index: number): void {
     this.category.set(index === 0 ? '' : this.categories()[index - 1].name);
-    this.setPage(1);
-    this.scrollToTop();
+    this.showFirstPage();
   }
 
   /** 切換年代篩選（索引 0 為「全部年代」），並回到第 1 頁 */
   protected onEraPick(index: number): void {
     this.eraCode.set(index === 0 ? '' : this.eras()[index - 1].code);
-    this.setPage(1);
-    this.scrollToTop();
+    this.showFirstPage();
   }
 
   /** 切換價格區間篩選，並回到第 1 頁 */
   protected onBandPick(index: number): void {
     this.bandIndex.set(index);
-    this.setPage(1);
-    this.scrollToTop();
+    this.showFirstPage();
   }
 
   /** 切換「只看折扣商品」，並回到第 1 頁 */
   protected onDealToggle(): void {
     this.dealOnly.update((only) => !only);
-    this.setPage(1);
-    this.scrollToTop();
+    this.showFirstPage();
   }
 
   /** 切換排序方式，並回到第 1 頁 */
   protected onSortPick(index: number): void {
     this.sortIndex.set(index);
-    this.setPage(1);
-    this.scrollToTop();
+    this.showFirstPage();
   }
 
   /** 切換顯示模式 */
@@ -362,8 +355,7 @@ export class ProductList {
     this.searchInput.set('');
     this.keyword.set('');
     this.viewKey.set('');
-    this.setPage(1);
-    this.scrollToTop();
+    this.showFirstPage();
   }
 
   /** 查詢失敗後以相同條件重新查詢 */
@@ -376,7 +368,12 @@ export class ProductList {
     this.cart.add(productId);
   }
 
-  /** 捲回頁面頂端；篩選條件改變時列表內容整批替換，維持在原位置會看不到新結果 */
+  /** 篩選或排序條件改變後：回到第 1 頁並捲回頂端（列表內容整批替換，停在原位會看不到新結果） */
+  private showFirstPage(): void {
+    this.setPage(1);
+    this.scrollToTop();
+  }
+
   private scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

@@ -33,7 +33,7 @@ import {
 /**
  * 結帳頁面。
  * 各面板皆為顯示元件，結帳過程的狀態（收件資訊、配送、付款、折價券、點數）統一由本頁面持有；
- * 選項變動時向後端試算訂單金額（POST /checkout/quote），各面板與訂單摘要只顯示試算結果，
+ * 選項變動時向後端試算訂單金額（POST /store/checkout/quote），各面板與訂單摘要只顯示試算結果，
  * 前端不自行計算任何金額。
  */
 @Component({
@@ -68,7 +68,7 @@ export class Checkout {
     { label: '購物車', href: CART_PATH },
     { label: '結帳' },
   ];
-  // ui-integration: 結帳頁連回會員個人頁面（/member），避免操作完成後落到假的預留連結。
+  /** 頁面標題列右側連結：前往會員個人頁面 */
   protected readonly profileLink = { label: '管理個人資料 →', href: MEMBER_PATH };
 
   /* ===============================
@@ -77,16 +77,12 @@ export class Checkout {
 
   /** 配送／付款方式 */
   private readonly options = toSignal(this.checkoutApi.getOptions());
-  /**
-   * 已啟用的配送／付款方式；尚未載入或任一清單為空（正式契約尚未接通）時為 null。
-   * integration: 空 options 代表正式配送／付款契約尚未啟用；不要以 undefined.id
-   * 觸發整頁例外，也不要在尚未有正式 quote API 時送出任何下單請求。
-   */
+  /** 可用的配送／付款方式；尚未載入，或配送、付款任一清單為空時為 null */
   private readonly enabledOptions = computed(() => {
     const options = this.options();
     return options && options.shippingOptions.length > 0 && options.paymentOptions.length > 0 ? options : null;
   });
-  /** 正式配送／付款契約尚未接通時，整個下單入口維持停用而不是送出不存在的 API。 */
+  /** 有可用的配送與付款方式才能試算與下單；否則整個下單入口維持停用 */
   protected readonly checkoutEnabled = computed(() => this.enabledOptions() !== null);
   /** 會員資料（帶入收件資訊、持有點數） */
   private readonly profile = toSignal(this.memberApi.getCheckoutProfile());
@@ -182,20 +178,16 @@ export class Checkout {
   /** 送出訂單；必填欄位未填妥時，由訂單摘要顯示補填提示 */
   protected onSubmit(): void {
     const options = this.enabledOptions();
-    // checkout 尚未有正式 options 時保持停用；這是局部能力關閉，不影響其他 Area。
     if (!options) return;
     this.submitted.set(true);
     const request = this.quoteRequest();
     if (!this.valid() || !request) return;
     this.checkoutApi
-      .createOrder(
-        {
-          ...request,
-          recipient: this.form(),
-          paymentOptionId: options.paymentOptions[this.payIndex()].id,
-        },
-        this.selectedCoupon(),
-      )
+      .createOrder({
+        ...request,
+        recipient: this.form(),
+        paymentOptionId: options.paymentOptions[this.payIndex()].id,
+      })
       .subscribe((order) => this.order.set(order));
   }
 
