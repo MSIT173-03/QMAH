@@ -736,3 +736,15 @@ public sealed record ApiMetadataDto(
     IReadOnlyList<MetadataOptionDto> EventReviewStatuses,
     IReadOnlyList<MetadataOptionDto> EventPublishStatuses,
     IReadOnlyList<MetadataOptionDto> MediaStatuses);
+
+/// <summary>其他會員可看到的公開個人頁資料；個人檔案非 PUBLIC 時只回傳暱稱與統計。</summary>
+public sealed record SocialMemberProfileDto(
+    Guid UserId,
+    string Nickname,
+    string? AvatarUrl,
+    string? Bio,
+    DateTime? JoinedAt,
+    string? Email,
+    bool IsPublic,
+    int PostCount,
+    int EventCount);

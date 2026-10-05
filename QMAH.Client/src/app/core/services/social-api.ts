@@ -34,6 +34,18 @@ export interface SocialPostListItem {
   updatedAt: string;
 }
 
+export interface SocialMemberProfile {
+  userId: string;
+  nickname: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  joinedAt: string | null;
+  email: string | null;
+  isPublic: boolean;
+  postCount: number;
+  eventCount: number;
+}
+
 export interface SocialComment {
   id: string;
   postId: string;
@@ -193,12 +205,17 @@ export class SocialApiService {
     boardCode?: string;
     postType?: string;
     artifactId?: string;
+    userId?: string;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<SocialPostListItem>> {
     return this.http.get<ApiPage<SocialPostListItem>>(`${this.base}/posts`, {
       params: this.toHttpParams(params)
     });
+  }
+
+  getMember(userId: string): Observable<SocialMemberProfile> {
+    return this.http.get<SocialMemberProfile>(`${this.base}/members/${userId}`);
   }
 
   getPost(id: string): Observable<SocialPostDetails> {
@@ -253,6 +270,7 @@ export class SocialApiService {
     q?: string;
     startAfter?: string;
     startBefore?: string;
+    organizerUserId?: string;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<EventListItem>> {

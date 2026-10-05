@@ -1,9 +1,9 @@
 // era-initials.ts
 /**
  * 年代鑰匙的背景字：字首不重複就用一個字；
- * 字首重複時，取字首＋第一個跟同字首年代不重複的字。
+ * 字首重複時，從第一個跟同字首年代不重複的字開始，取連續兩個字。
  *
- * 例：唐 → 唐、日本大正時代 → 日大、日本江戶時代 → 日江、中華民國 → 中民。
+ * 例：唐 → 唐、日本大正時代 → 大正、日本江戶時代 → 江戶、中華民國 → 民國、中華人民共和國 → 人民。
  * 傳入「所有年代名稱」一起算，才知道哪些字首重複；新增年代後結果會自動跟著變。
  */
 export function eraInitials(names: readonly string[]): Map<string, string> {
@@ -24,7 +24,8 @@ export function eraInitials(names: readonly string[]): Map<string, string> {
       }
       const others = group.filter((other) => other !== name).map((other) => [...other]);
       const index = chars.findIndex((char, i) => i > 0 && others.every((other) => other[i] !== char));
-      result.set(name, chars[0] + (index > 0 ? chars[index] : chars[1] ?? ''));
+      const start = index > 0 ? index : 0;
+      result.set(name, chars.slice(start, start + 2).join(''));
     }
   }
   return result;

@@ -136,7 +136,7 @@ public sealed class SocialEventAdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(EventEditViewModel model, CancellationToken cancellationToken = default)
     {
-        ValidateModel(model);
+        ValidateModel(model, isNewEvent: true);
         if (!ModelState.IsValid)
         {
             ViewData["IsCreate"] = true;
@@ -219,7 +219,14 @@ public sealed class SocialEventAdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, EventEditViewModel model, CancellationToken cancellationToken = default)
     {
-        ValidateModel(model);
+        // 人數上限不能低於目前已報名人數，所以驗證前先查出現有報名數。
+        var registeredCount = await _context.EventRegistrations
+            .AsNoTracking()
+            .CountAsync(
+                registration => registration.EventId == id
+                    && (registration.Status == "REGISTERED" || registration.Status == "ATTENDED"),
+                cancellationToken);
+        ValidateModel(model, isNewEvent: false, registeredCount);
         if (!ModelState.IsValid)
         {
             ViewData["EventId"] = id;
@@ -451,16 +458,24 @@ public sealed class SocialEventAdminController : Controller
             ? value!.Trim().ToUpperInvariant()
             : "OFFICIAL";
 
-    private void ValidateModel(EventEditViewModel model)
+    private void ValidateModel(EventEditViewModel model, bool isNewEvent, int currentRegistrations = 0)
     {
-        if (model.EndAt <= model.StartAt)
+        // 時間與名額規則與前台 API 共用（EventScheduleRules）。
+        // 欄位已有 DataAnnotations 錯誤時不重複加訊息（例如人數上限超出範圍）。
+        foreach (var issue in EventScheduleRules.Validate(
+            model.StartAt,
+            model.EndAt,
+            model.RegistrationEndAt,
+            model.Capacity,
+            isNewEvent,
+            currentRegistrations))
         {
-            ModelState.AddModelError(nameof(model.EndAt), "結束時間必須晚於開始時間。");
-        }
+            if (ModelState.TryGetValue(issue.Field, out var entry) && entry.Errors.Count > 0)
+            {
+                continue;
+            }
 
-        if (model.RegistrationEndAt.HasValue && model.RegistrationEndAt.Value > model.StartAt)
-        {
-            ModelState.AddModelError(nameof(model.RegistrationEndAt), "報名截止時間不能晚於開始時間。");
+            ModelState.AddModelError(issue.Field, issue.Message);
         }
 
         if (model.Latitude.HasValue != model.Longitude.HasValue)

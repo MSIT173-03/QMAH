@@ -1,0 +1,182 @@
+/* key-list.actions.scss — 點開鑰匙後的「兌換／使用」小選單與兌換點數視窗
+   獨立成一個檔案，避免 key-list.scss 超過 angular.json 的 anyComponentStyle 預算。
+   書本模式的配色覆寫在 key-list.book.scss（載入順序在本檔之後）。 */
+
+/* 萬能鑰匙現在可以點開（兌換點數），游標改回可點擊 */
+.key-slot.universal-key {
+  cursor: pointer;
+}
+
+.key-slot[aria-expanded='true'] {
+  border-color: var(--blue-deep);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 35%, transparent);
+}
+
+/* ---------- 小選單：跟著格子出現，位置由 key-list.ts 的 positionKeyAction() 計算 ---------- */
+
+.key-action {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 95; /* 高於物品提示框（90），低於確認視窗（100） */
+  width: max-content;
+  min-width: 168px;
+  max-width: 240px;
+  box-sizing: border-box;
+  padding: 10px 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--qmah-shadow-float);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.key-action--ready {
+  visibility: visible;
+  opacity: 1;
+}
+
+.key-action__name {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+
+  span {
+    margin-left: 4px;
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+}
+
+.key-action__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.key-action__btn {
+  flex: 1;
+  min-width: 64px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+
+  &:active:not(:disabled) { transform: translateY(1px); }
+
+  &:focus-visible {
+    outline: 3px solid var(--qmah-focus);
+    outline-offset: 2px;
+  }
+
+  /* 條件不成立：淺灰、不能點 */
+  &:disabled {
+    border-color: color-mix(in srgb, var(--ink) 12%, transparent);
+    background: color-mix(in srgb, var(--ink) 8%, var(--card));
+    color: color-mix(in srgb, var(--ink) 38%, transparent);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+.key-action__btn--recycle:not(:disabled) {
+  background: linear-gradient(180deg, #f3d98e, #d4ae5c);
+  border-color: #9c7630;
+  color: #3a2414;
+  box-shadow: 0 2px 6px rgb(156 118 48 / 35%);
+
+  &:hover { background: linear-gradient(180deg, #f8e3a6, #ddb967); }
+}
+
+.key-action__btn--use:not(:disabled) {
+  background: var(--blue-deep);
+  border-color: var(--blue-deep);
+  color: var(--qmah-primary-content);
+  box-shadow: var(--qmah-shadow-card);
+
+  &:hover { filter: brightness(1.08); }
+}
+
+.key-action__hint {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.key-action__hint--ok {
+  color: #8a6427;
+  font-weight: 700;
+}
+
+/* ---------- 兌換點數視窗 ---------- */
+
+.recycle-dialog__stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 14px 0 10px;
+}
+
+.recycle-dialog__step,
+.recycle-dialog__all {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: var(--blue); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 2px; }
+}
+
+.recycle-dialog__step {
+  width: 34px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.recycle-dialog__all {
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.recycle-dialog__amount {
+  min-width: 64px;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.recycle-dialog__points {
+  margin: 6px 0 16px !important;
+  color: var(--ink) !important;
+  font-size: 15px !important;
+
+  strong {
+    color: #9c7630;
+    font-size: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key-action,
+  .key-action__btn { transition: none; }
+}

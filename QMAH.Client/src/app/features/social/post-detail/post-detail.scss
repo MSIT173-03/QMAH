@@ -1,3 +1,10 @@
+/* 嵌入活動詳情時，外層頁面已經有頁面外距，這裡不要再疊一層。 */
+.qmah-social-page.qmah-social-page--embedded {
+  width: 100%;
+  margin-inline: 0;
+  padding: 0;
+}
+
 .social-post-detail__media {
   margin: 0;
   overflow: hidden;

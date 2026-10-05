@@ -146,7 +146,7 @@
   <div class="social-post-wall">
     @if (!loading) {
     @for (post of posts; track post.id) {
-    <article class="social-post-card">
+    <article class="social-post-card" [class.social-post-card--text]="!post.coverImageUrl">
       @if (post.coverImageUrl) {
         <figure class="social-post-card__cover">
           <img [src]="post.coverImageUrl" alt="" loading="lazy" />
@@ -167,7 +167,11 @@
         </h2>
         <p class="social-post-card__author social-icon-label">
           <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
-          {{ post.displayName || '匿名會員' }}
+          @if (post.publisherType === 'COMMUNITY' && post.userId) {
+            <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
+          } @else {
+            {{ post.displayName || '匿名會員' }}
+          }
         </p>
         <p class="social-post-card__excerpt">{{ post.contentPreview }}</p>
         <div class="social-post-card__footer">

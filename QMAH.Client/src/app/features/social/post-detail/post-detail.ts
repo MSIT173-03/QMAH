@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Input, OnChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -9,18 +9,20 @@ import { MeApiService } from '../../../core/services/me-api';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { boardLabel } from '../social-labels';
-import { LucideArrowLeft, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, LucideUserRound } from '@lucide/angular';
+import { LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, LucideUserRound } from '@lucide/angular';
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, LucideArrowLeft, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, LucideUserRound],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, LucideUserRound],
   templateUrl: './post-detail.html',
   styleUrls: ['../social-common.scss', './post-detail.scss']
 })
 export class PostDetailComponent implements OnChanges {
   // 路由參數 :id 由 app.config.ts 的 withComponentInputBinding() 自動綁定
   @Input() id!: string;
+  // 嵌入其他頁面（例如活動詳情）時為 true：不顯示「返回貼文列表」，也不撐出獨立頁面的外距，使用者不必離開原頁面。
+  @Input() embedded = false;
 
   private socialApi = inject(SocialApiService);
   private meApi = inject(MeApiService);
@@ -54,8 +56,9 @@ export class PostDetailComponent implements OnChanges {
     return this.currentUserId !== null && this.currentUserId === comment.userId;
   }
 
-  ngOnChanges(): void {
-    if (this.id) this.loadPost();
+  ngOnChanges(changes: SimpleChanges): void {
+    // 只在 id 變動時重新載入；embedded 之類的其他輸入變動不需要重打 API。
+    if (changes['id'] && this.id) this.loadPost();
   }
 
   // GET /api/v1/social/posts/{id}（AllowAnonymous）
@@ -78,6 +81,11 @@ export class PostDetailComponent implements OnChanges {
   }
 
   // ---- 編輯／刪除自己的貼文 ----
+
+  // daisyUI dropdown 靠焦點開合；選了項目後主動失焦，選單才會收起來。
+  closeMenu(): void {
+    (document.activeElement as HTMLElement | null)?.blur();
+  }
 
   startEditPost(): void {
     if (!this.post) return;

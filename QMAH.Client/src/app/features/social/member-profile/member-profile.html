@@ -1,0 +1,69 @@
+<div class="qmah-social-page">
+  <a routerLink="/social/posts" class="btn btn-ghost social-back social-icon-label">
+    <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
+    返回貼文牆
+  </a>
+
+  @if (loading) {
+    <div class="social-state" role="status" aria-live="polite"><span class="loading loading-spinner loading-lg"></span></div>
+  } @else if (loadError) {
+    <div class="alert alert-error" role="alert">{{ loadError }}</div>
+  } @else if (profile) {
+    <section class="social-panel member-head">
+      <div class="member-avatar">
+        @if (profile.avatarUrl && !avatarFailed) {
+          <img [src]="profile.avatarUrl" alt="" (error)="avatarFailed = true" />
+        } @else {
+          <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+        }
+      </div>
+      <div class="member-head__text">
+        <h1 class="member-name">{{ profile.nickname }}</h1>
+        @if (profile.isPublic) {
+          @if (profile.bio) { <p class="member-bio">{{ profile.bio }}</p> }
+          @if (profile.email) {
+            <p class="social-meta">聯絡信箱：<a class="social-author-link" [href]="'mailto:' + profile.email">{{ profile.email }}</a></p>
+          }
+          @if (profile.joinedAt) {
+            <p class="social-meta">加入於 {{ profile.joinedAt | date: 'yyyy-MM-dd' }}</p>
+          }
+        } @else {
+          <p class="social-meta">這位會員沒有公開個人檔案。</p>
+        }
+        <p class="social-meta">{{ profile.postCount }} 篇貼文 · {{ profile.eventCount }} 場活動</p>
+      </div>
+    </section>
+
+    <section class="member-section">
+      <h2>貼文</h2>
+      @if (posts.length === 0) {
+        <p class="social-meta">還沒有貼文。</p>
+      } @else {
+        <ul class="member-list">
+          @for (post of posts; track post.id) {
+            <li>
+              <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
+              <time class="social-meta" [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd' }}</time>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="member-section">
+      <h2>舉辦的活動</h2>
+      @if (events.length === 0) {
+        <p class="social-meta">還沒有舉辦活動。</p>
+      } @else {
+        <ul class="member-list">
+          @for (event of events; track event.id) {
+            <li>
+              <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
+              <time class="social-meta" [attr.datetime]="event.startAt">{{ event.startAt | date: 'yyyy-MM-dd' }}</time>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</div>

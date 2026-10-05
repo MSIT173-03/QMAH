@@ -15,13 +15,16 @@ describe('eraInitials', () => {
     expect(result.get('新石器時代')).toBe('新');
   });
 
-  it('字首重複時取字首＋第一個不重複的字', () => {
+  it('字首重複時從第一個不重複的字開始取兩個字', () => {
     const result = eraInitials(ERA_NAMES);
-    expect(result.get('日本大正時代')).toBe('日大');
-    expect(result.get('日本江戶時代')).toBe('日江');
-    expect(result.get('日本明治時代')).toBe('日明');
-    expect(result.get('中華民國')).toBe('中民');
-    expect(result.get('中華人民共和國')).toBe('中人');
+    expect(result.get('日本大正時代')).toBe('大正');
+    expect(result.get('日本江戶時代')).toBe('江戶');
+    expect(result.get('日本明治時代')).toBe('明治');
+    expect(result.get('日本昭和時代')).toBe('昭和');
+    expect(result.get('日本平成時代')).toBe('平成');
+    expect(result.get('日本令和時代')).toBe('令和');
+    expect(result.get('中華民國')).toBe('民國');
+    expect(result.get('中華人民共和國')).toBe('人民');
   });
 
   it('30 個年代的背景字全部不重複', () => {

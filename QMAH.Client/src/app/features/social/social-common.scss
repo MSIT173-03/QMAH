@@ -345,3 +345,72 @@
     margin-left: 0;
   }
 }
+
+/* 作者名稱連到公開個人頁：平常維持原本的次要文字色，滑過才出現底線。 */
+.social-author-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.social-author-link:hover,
+.social-author-link:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+
+/* 貼文／留言的「更多操作」選單。 */
+.qmah-social-page .social-menu {
+  z-index: 20;
+  width: max-content;
+  min-width: 9rem;
+  padding: var(--qmah-space-2);
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-card);
+  background: var(--qmah-surface-elevated);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.qmah-social-page .social-menu__danger { color: var(--color-error, #b3261e); }
+
+.qmah-social-page .social-composer .textarea { width: 100%; }
+
+.qmah-social-page .social-menu__trigger {
+  border-color: var(--qmah-border);
+  color: var(--qmah-ink);
+}
+
+.qmah-social-page .social-menu__trigger svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke-width: 2;
+}
+
+.qmah-social-page .social-menu .social-icon-label { gap: 8px; }
+
+/* 選單按鈕不再依賴 daisyUI .btn（它的邊框／文字色用主題變數，這裡會變透明）；
+   顏色全走 --qmah-* 語意 token，深色主題（data-theme='qmahdark'）會自動換色。 */
+.qmah-social-page .social-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1.5px solid color-mix(in srgb, var(--qmah-ink) 45%, transparent);
+  border-radius: var(--qmah-radius-control);
+  background: var(--qmah-surface-elevated);
+  color: var(--qmah-ink);
+  cursor: pointer;
+}
+
+.qmah-social-page .social-menu__trigger:hover,
+.qmah-social-page .dropdown:focus-within .social-menu__trigger {
+  border-color: var(--qmah-ink);
+  background: color-mix(in srgb, var(--qmah-ink) 8%, var(--qmah-surface-elevated));
+}
+
+.qmah-social-page .social-menu__trigger svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke: currentColor;
+  stroke-width: 2.25;
+}
+
+.qmah-social-page .social-menu { color: var(--qmah-ink); }
