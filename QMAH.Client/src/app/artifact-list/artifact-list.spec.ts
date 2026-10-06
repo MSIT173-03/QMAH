@@ -10,6 +10,7 @@ import {
   CatalogGroup,
   compareEraOrder,
   computeCatalogLayout,
+  ERA_FALLBACK,
   paginateCatalog,
 } from './artifact-list';
 import { CompendiumCardSummary } from '../models/artifact-unlock-model';
@@ -59,6 +60,58 @@ describe('ArtifactList', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  function mockFullscreen() {
+    const page = { requestFullscreen: vi.fn<() => Promise<void>>() };
+    const fullscreenDocument = {
+      fullscreenElement: null as typeof page | null,
+      exitFullscreen: vi.fn<() => Promise<void>>(),
+    };
+    page.requestFullscreen.mockImplementation(async () => {
+      fullscreenDocument.fullscreenElement = page;
+    });
+    fullscreenDocument.exitFullscreen.mockImplementation(async () => {
+      fullscreenDocument.fullscreenElement = null;
+    });
+    // 模擬瀏覽器的 Fullscreen API，不修改測試環境共用的 document。
+    Object.assign(component, {
+      document: fullscreenDocument,
+      artifactPage: { nativeElement: page },
+      fullscreenSupported: true,
+    });
+    return { page, fullscreenDocument };
+  }
+
+  it('全螢幕按鈕可進入與退出，完成後解除忙碌狀態', async () => {
+    const { page, fullscreenDocument } = mockFullscreen();
+    await component.toggleFullscreen();
+    expect(page.requestFullscreen).toHaveBeenCalledOnce();
+    expect(component.isFullscreen()).toBe(true);
+    expect(component.fullscreenBusy()).toBe(false);
+
+    await component.toggleFullscreen();
+    expect(fullscreenDocument.exitFullscreen).toHaveBeenCalledOnce();
+    expect(component.isFullscreen()).toBe(false);
+  });
+
+  it('瀏覽器以 Esc 退出全螢幕時同步按鈕狀態，保留書本攤開', async () => {
+    const { fullscreenDocument } = mockFullscreen();
+    component.bookState.set('open');
+    await component.toggleFullscreen();
+    fullscreenDocument.fullscreenElement = null;
+    component.onFullscreenChange();
+    expect(component.isFullscreen()).toBe(false);
+    expect(component.bookState()).toBe('open');
+  });
+
+  it('瀏覽器拒絕全螢幕時顯示提示，仍可再次操作', async () => {
+    const { page } = mockFullscreen();
+    page.requestFullscreen.mockRejectedValue(new Error('Permission denied'));
+    await component.toggleFullscreen();
+    expect(component.isFullscreen()).toBe(false);
+    expect(component.fullscreenError()).toBe('無法切換全螢幕，請再試一次。');
+    expect(component.fullscreenBusy()).toBe(false);
   });
 
   it('預設停在封面；點封面後進入翻開狀態', () => {
@@ -275,9 +328,10 @@ describe('文物討論串接', () => {
 describe('書頁分頁計算', () => {
   const layout = computeCatalogLayout(500, 520)!;
 
-  it('依寬度算出欄數，至少兩欄', () => {
-    expect(layout.cols).toBe(5);
-    expect(computeCatalogLayout(120, 300)!.cols).toBe(2);
+  it('依寬度算出欄數，一排至少四張', () => {
+    expect(layout.cols).toBe(4);
+    expect(computeCatalogLayout(120, 300)!.cols).toBe(4);
+    expect(computeCatalogLayout(1400, 520)!.cols).toBeGreaterThanOrEqual(4);
     expect(computeCatalogLayout(0, 300)).toBeNull();
   });
 
@@ -319,5 +373,60 @@ describe('書頁分頁計算', () => {
   it('頁面高度比一列還小時也不會無限迴圈', () => {
     const tiny = computeCatalogLayout(150, 40)!;
     expect(paginateCatalog([makeGroup('清', 6)], tiny, () => true).length).toBeGreaterThan(0);
+  });
+});
+
+describe('書頁版面防呆與年代排序', () => {
+  it('卡片再大也要讓「標題＋一列」放得進一頁，文物不會被裁掉', () => {
+    const l = computeCatalogLayout(700, 260)!;
+    expect(36 + l.rowH).toBeLessThanOrEqual(l.bodyH);
+    expect(computeCatalogLayout(500, 30)!.cardW).toBeGreaterThanOrEqual(72);
+  });
+
+  it('內建年代對照依史實先後排列', () => {
+    const order = new Map(ERA_FALLBACK.map((e) => [e.name, { start: e.start, end: e.end }]));
+    const names = ['日本大正時代', '元', '良渚文化', '商', '清', '中華民國', '宋', '日本明治時代'];
+    names.sort((a, b) => compareEraOrder(a, b, order));
+    expect(names).toEqual(['良渚文化', '商', '宋', '元', '清', '日本明治時代', '日本大正時代', '中華民國']);
+  });
+});
+
+describe('ArtifactList 渲染防呆', () => {
+  it('有資料且量到書頁大小時，畫面上一定要出現文物卡片與縮圖', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ArtifactList],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(ArtifactList);
+    const c = fixture.componentInstance;
+    fixture.detectChanges();
+    c.catalogModel.set(Array.from({ length: 12 }, (_, i) => ({ ...makeItem(`x${i}`, '商', '銅器', i % 2 === 0), thumbnailPath: 'a.jpg' })));
+    c.loading.set(false);
+    c.unlockStatusReady.set(true);
+    c.bookState.set('open');
+    c.pageBox.set({ w: 400, h: 450 });
+    fixture.detectChanges();
+    const cards = fixture.nativeElement.querySelectorAll('.artifact-card');
+    const imgs = fixture.nativeElement.querySelectorAll('.artifact-card .thumbnail');
+    expect(c.layout(), 'layout').not.toBeNull();
+    expect(c.pages().length, 'pages').toBeGreaterThan(0);
+    expect(cards.length, 'cards').toBeGreaterThan(0);
+    expect(imgs.length).toBeGreaterThan(0);
+  });
+});
+
+describe('放大檢視的離開方式', () => {
+  it('點到任何透明處都會關閉，只有點在實體內容上才不關閉', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ArtifactList],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+    const c = TestBed.createComponent(ArtifactList).componentInstance;
+    const close = vi.spyOn(c, 'closeOverlay').mockImplementation(() => undefined);
+    const click = (hit: boolean) => ({ target: { closest: () => (hit ? {} : null) } }) as unknown as MouseEvent;
+    c.onOverlayClick(click(false));
+    expect(close).toHaveBeenCalledTimes(1);
+    c.onOverlayClick(click(true));
+    expect(close).toHaveBeenCalledTimes(1);
   });
 });
