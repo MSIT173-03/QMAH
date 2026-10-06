@@ -75,13 +75,13 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
       } @empty { @if (!loading() && !error()) { <p class="empty">{{ hasFilters ? '找不到符合條件的回答，可以換個關鍵字或清除篩選。' : '目前還沒有入選回答。多人遊戲完成後，三種類型的第一名回答就會出現在這裡。' }}</p> } }
       </div>
       @if (result(); as page) { @if (page.totalPages > 1) { <nav class="pagination" aria-label="鑑賞回答分頁"><button type="button" [disabled]="loading() || page.page <= 1" (click)="load(page.page - 1)">上一頁</button><span>{{ page.page }}／{{ page.totalPages }} 頁</span><button type="button" [disabled]="loading() || page.page >= page.totalPages" (click)="load(page.page + 1)">下一頁</button></nav> } }
+      </div>
       @if (stuck()) {
         <div class="jump-dock">
           <button type="button" class="jump-btn jump-filter" (click)="openSheet()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>篩選@if (hasFilters) { <i class="jump-badge" aria-label="已套用篩選"></i> }</button>
           <button type="button" class="jump-btn jump-top" data-button-tone="neutral" (click)="toTop()" aria-label="回到頂部"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6M12 8v11" /></svg><span>回到頂部</span></button>
         </div>
       }
-      </div>
       <app-game-appreciation-confirm [pending]="pendingVote()" (confirmed)="vote($event)" />
     </section>
   `
@@ -131,7 +131,10 @@ export class GameAppreciationComponent implements AfterViewInit {
     const sentinel = this.sentinel?.nativeElement;
     if (!sentinel || typeof IntersectionObserver === 'undefined') return;
     const observer = new IntersectionObserver(([entry]) => {
-      const out = !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0) + 8;
+      const stage = this.host.nativeElement.querySelector<HTMLElement>('.appreciation-stage');
+      const scrollsInside = stage && /(auto|scroll)/.test(getComputedStyle(stage).overflowY);
+      const visibleTop = Math.max(entry.rootBounds?.top ?? 0, scrollsInside ? stage.getBoundingClientRect().top : 0);
+      const out = !entry.isIntersecting && entry.boundingClientRect.top < visibleTop + 8;
       if (out && !this.stuck()) this.naturalHeight.set(this.filtersForm?.nativeElement.offsetHeight ?? 0);
       if (!out) this.sheetOpen.set(false);
       this.stuck.set(out);
