@@ -218,6 +218,16 @@ export class GameService {
     }));
   }
 
+  closeSoloRoom(roomId: string): Observable<void> {
+    return this.mutate(() => this.http.post<void>(
+      `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/close-solo`, null,
+    )).pipe(tap(() => {
+      if (this.roomState()?.id === roomId) this.roomState.set(null);
+      this.roundState.set(null);
+      this.historyState.set(null);
+    }));
+  }
+
   heartbeat(roomId: string): Observable<void> {
     return this.mutate(() => this.http.post<void>(
       `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/heartbeat`,

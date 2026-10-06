@@ -38,6 +38,7 @@ import { GameRoomResultsComponent } from './game-room-results.component';
 import { GameAnswerTableComponent } from './game-answer-table.component';
 import { GameRoomChatComponent } from './game-room-chat.component';
 import { GameRoomLive } from './game-room-live.service';
+import { watchRoomRefresh } from './game-room-refresh';
 import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
 import { GameRoomDialogsComponent } from './game-room-dialogs.component';
 import { GameRoomWaitingComponent } from './game-room-waiting.component';
@@ -186,8 +187,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     // 保底輪詢：連線正常時 20 秒一次，斷線時退回每 2 秒，確保任何情況下畫面都會更新。
     const changed$ = this.live.watch(this.roomId, connected => { this.liveConnected = connected; }).pipe(debounceTime(50));
     const fallback$ = timer(0, 1000).pipe(filter(tick => tick % (this.liveConnected ? 20 : 2) === 0));
-    this.pollSubscription = merge(changed$, fallback$)
-      .pipe(switchMap(() => this.loadSnapshot()))
+    this.pollSubscription = watchRoomRefresh(merge(changed$, fallback$), () => this.loadSnapshot())
       .subscribe((snapshot) => {
         const playerChanged = this.currentPlayerId !== (snapshot.room.currentPlayerId ?? '');
         // 觀戰者的回合識別是全零 Guid，視為沒有玩家身分。
@@ -538,6 +538,30 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.leaveDialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.showLeaveConfirm = true;
     setTimeout(() => this.dialogs?.leaveDialog?.nativeElement.querySelector<HTMLElement>('button:not([disabled])')?.focus(), 0);
+  }
+
+  canCloseSoloRoom(): boolean {
+    return !this.testMode && !this.isSpectator && this.room?.status === 'WAITING'
+      && this.currentPlayer()?.role === 'HOST'
+      && this.room.players.filter(player => player.connectionStatus !== 'LEFT').length === 1;
+  }
+
+  closeSoloRoom(): void {
+    if (!this.canCloseSoloRoom() || !this.room || this.leaving) return;
+    this.actionError = '';
+    this.leaving = true;
+    this.game.closeSoloRoom(this.room.id).pipe(
+      finalize(() => { this.leaving = false; this.changeDetector.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: () => void this.router.navigate(['/game']),
+      error: (error: unknown) => {
+        this.actionError = error instanceof HttpErrorResponse && error.status === 409
+          ? '房間已有其他玩家加入或已開始，無法直接關閉。請使用離開房間。'
+          : this.game.errorMessage(error);
+        this.changeDetector.markForCheck();
+      },
+    });
   }
 
   cancelLeaveRoom(): void {
@@ -1162,6 +1186,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   private loadSnapshot(): Observable<RoomSnapshot> {
+    if (this.leaving) return EMPTY;
     this.loading = !this.room;
     this.refreshing = true;
     return this.game.getRoom(this.roomId).pipe(

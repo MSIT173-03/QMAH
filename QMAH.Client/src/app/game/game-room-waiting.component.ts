@@ -20,6 +20,12 @@ import type { GameRoomComponent } from './game-room.component';
             <p class="invite-note">{{ room().players.length >= room().maxPlayers ? '座位已滿，朋友掃描 QR 碼仍可進場觀戰。' : '朋友掃描 QR 碼，或在大廳輸入代號就能入座。' }}</p>
           </div>
           <p class="waiting-hint">選好牌背並準備，房主就能開始。</p>
+          @if (host().canCloseSoloRoom()) {
+            <button type="button" class="close-solo-room" data-button-tone="danger" [disabled]="host().leaving" (click)="host().closeSoloRoom()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+              {{ host().leaving ? '關閉中…' : '關閉房間' }}
+            </button>
+          }
         </div>
   `
 })

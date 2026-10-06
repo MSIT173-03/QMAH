@@ -186,6 +186,33 @@ public sealed class GameRoomLifecycleService(
             return Result(GameRoomMutationStatus.Success, room);
         }, cancellationToken);
 
+    public Task<GameRoomMutationResult> CloseSoloAsync(
+        Guid roomId,
+        Guid userId,
+        CancellationToken cancellationToken = default) =>
+        InTransactionAsync(async token =>
+        {
+            if (!await IsActiveUserAsync(userId, token))
+                return Result(GameRoomMutationStatus.Forbidden);
+            var room = await LoadRoomAsync(roomId, token);
+            if (room is null)
+                return Result(GameRoomMutationStatus.NotFound);
+            var player = room.GamePlayers.SingleOrDefault(item => item.UserId == userId);
+            if (player is null || player.Role != "HOST")
+                return Result(GameRoomMutationStatus.Forbidden);
+            // 重複關閉已關閉的單人房可成功回覆，避免回應遺失後無法重試。
+            if (room.Status == "CANCELLED" && player.ConnectionStatus == "LEFT")
+                return Result(GameRoomMutationStatus.Success, room);
+            if (room.Status != "WAITING" || player.ConnectionStatus == "LEFT"
+                || room.GamePlayers.Any(item => item.Id != player.Id && item.ConnectionStatus != "LEFT"))
+                return Result(GameRoomMutationStatus.Conflict);
+            var now = DateTime.UtcNow;
+            MarkLeft(player, now);
+            room.StateVersion++;
+            CancelRoom(room, now);
+            return Result(GameRoomMutationStatus.Success, room);
+        }, cancellationToken);
+
     public Task<GameRoomMutationResult> LeaveAsync(
         Guid roomId,
         Guid userId,

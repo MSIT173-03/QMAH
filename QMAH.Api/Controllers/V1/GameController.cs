@@ -402,6 +402,15 @@ public sealed class GameController(
     }
 
     [Authorize]
+    [HttpPost("rooms/{id:guid}/close-solo")]
+    public async Task<ActionResult> CloseSoloRoom(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        var result = await gameRoomLifecycleService.CloseSoloAsync(id, userId, cancellationToken);
+        return result.Succeeded ? NoContent() : MutationFailure(result.Status);
+    }
+
+    [Authorize]
     [HttpPost("rounds/{id:guid}/answers")]
     public async Task<ActionResult<GameAnswerDto>> SubmitAnswer(
         Guid id,
