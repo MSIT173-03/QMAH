@@ -132,10 +132,9 @@ dotnet run --project .\QMAH.Web\QMAH.Web.csproj --launch-profile https
 
 ```powershell
 cd QMAH.Client
+npm ci
 npm start
 ```
-
-`npm start`、`npm run start:https`、`npm run start:http`（含 Visual Studio／VS Code 啟動）會先檢查前台套件。首次下載或拉取更新後，若缺少套件（例如 `@microsoft/signalr`）或版本與 `package-lock.json` 不符，會自動執行 `npm ci` 安裝鎖定版本，再啟動 Angular；套件齊全時不會重裝。建置、watch 與測試也使用相同檢查。自動安裝需要可用的 Node.js、npm 與套件來源；安裝失敗時會停止啟動並顯示原因。需要手動完整重裝時仍可執行 `npm ci`。
 
 `npm start` 會偵測 API 的 HTTPS／HTTP profile 並選擇對應 proxy；`npm run start:https` 固定使用 `https://localhost:7249`。`/api`、公開 `/media`、頭貼與成就上傳圖會轉送至 API；其他 `/uploads` 在完整啟動時仍轉送至後台。
 共用媒體素材集中在專案根目錄的 `QMAH.Media`：文物圖在 `media/catalog`，品牌、預設頭貼與 Web 圖片在 `images`，Web 字型在 `fonts`，會員頭貼與成就上傳圖在 `uploads`。API 與 Web 預設用同一個 `Media:AssetRootPath` 指向此資料夾，相對路徑以各專案的 ContentRoot 為基準。既有 `Media:RootPath`、`Avatar:RootPath`、`Avatar:PresetRootPath` 設定仍可個別覆寫對應目錄；成就上傳圖亦可用 `Achievement:RootPath` 覆寫。若兩個工作區共用一個資料庫，兩邊 API 與 Web 應設定相同的共用媒體絕對路徑。對外 `/media/catalog/...`、`/images/...`、`/fonts/...` 及 `/uploads/...` 網址不變，資料庫不需遷移。新上傳頭貼按會員 ID 分目錄，資料庫仍記錄目前使用的公開路徑。
@@ -180,7 +179,7 @@ npm run start:http
 
 這時 `/api`、公開 `/media`、頭像與 OpenAPI 請求會轉送到 `http://localhost:5147`，其他 `/uploads` 在完整啟動時轉送到 `http://localhost:5183`。HTTP 與 HTTPS 使用各自的 proxy 設定，避免把 HTTPS profile 的 307 redirect 當成 API 回應傳回前端。
 
-需要手動使用 Angular CLI 時，HTTPS profile 可在 `QMAH.Client` 目錄執行 `ng serve` 或 `npx ng serve`；HTTP profile 請執行 `ng serve --proxy-config proxy.http.conf.json` 或 `npx ng serve --proxy-config proxy.http.conf.json`。直接使用 Angular CLI 不會執行 npm 的套件檢查，請先執行 `npm ci`；日常啟動建議使用上面的 npm 指令。
+需要手動使用 Angular CLI 時，HTTPS profile 可在 `QMAH.Client` 目錄執行 `ng serve` 或 `npx ng serve`；HTTP profile 請執行 `ng serve --proxy-config proxy.http.conf.json` 或 `npx ng serve --proxy-config proxy.http.conf.json`。
 
 瀏覽器開啟 `http://localhost:4200/`。前台的 `/api`、`/openapi` 與 `/scalar` 會透過 `QMAH.Client/proxy.conf.json` 轉送到 `https://localhost:7249`。
 
