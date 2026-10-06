@@ -44,6 +44,10 @@ jobs:
         run: npm run build
         working-directory: QMAH.Client
 
+      - name: Check automatic frontend dependency installation
+        run: npm run test:setup
+        working-directory: QMAH.Client
+
       - name: Run existing frontend unit checks
         run: npm test -- --watch=false
         working-directory: QMAH.Client
