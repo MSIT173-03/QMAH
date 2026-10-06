@@ -296,13 +296,13 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
                 // 操作與輔助數據由客戶端回報，這是評分規則，不代表完整防作弊驗證。
                 // 書畫滑拼要滑很多次，寬限的次數與時間比拼圖寬鬆。
                 normalizedScore = mode.Code == "STRIP_RESTORE"
-                    ? MiniGamePlacementScoring.Calculate(rawScore, pieces, elapsedSeconds, moves, hints, autoPlaced, mode.GradeSThreshold, IsEasy(attempt.Seed, mode.Code) ? 100 : 60, IsEasy(attempt.Seed, mode.Code) ? 600 : 420)
-                    : MiniGamePlacementScoring.Calculate(rawScore, pieces, elapsedSeconds, moves, hints, autoPlaced, mode.GradeSThreshold);
+                    ? MiniGamePlacementScoring.Calculate(rawScore, pieces, elapsedSeconds, moves, hints, autoPlaced, mode.GradeAThreshold, IsEasy(attempt.Seed, mode.Code) ? 100 : 60, IsEasy(attempt.Seed, mode.Code) ? 600 : 420)
+                    : MiniGamePlacementScoring.Calculate(rawScore, pieces, elapsedSeconds, moves, hints, autoPlaced, mode.GradeAThreshold);
             }
             else
             {
                 // 舊版仍可送出盤面，但缺少表現紀錄時不把「完成」直接認定為 S 級。
-                normalizedScore = Math.Min(rawScore, Math.Max(0, mode.GradeSThreshold - 1));
+                normalizedScore = Math.Min(rawScore, Math.Max(0, mode.GradeAThreshold - 1));
             }
         }
 
@@ -317,13 +317,16 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
                 if (!TryGetInt(result, "hintsUsed", out var hints) || hints < 0 || hints > (mode.Code == "MEMORY_MATCH" || scoringVersion == 4 ? units : 2)
                     || !TryGetInt(result, "autoPlaced", out var assisted) || assisted < 0 || assisted > units)
                     return EconomyResult<MiniGameCompleteView>.Invalid("求救紀錄無效，請保留進度並重新送出。");
-                normalizedScore = MiniGamePlacementScoring.CalculateAssistance(rawScore, units, hints, assisted, mode.Code == "DETAIL_LOCATOR" ? 10 : 3, mode.GradeSThreshold);
+                normalizedScore = MiniGamePlacementScoring.CalculateAssistance(rawScore, units, hints, assisted, mode.Code == "DETAIL_LOCATOR" ? 10 : 3, mode.GradeAThreshold);
             }
         }
 
         if (IsEasy(attempt.Seed, mode.Code))
             normalizedScore = Math.Min(normalizedScore, EasyMaxScore);
 
+        // 沒有實際操作（例如一開局就請系統代完成後等著領獎）不給獎勵，也不算入每日突破的評級。
+        var meaningfulPlay = HasMeaningfulPlay(attempt, mode, result);
+        if (!meaningfulPlay) normalizedScore = 0;
         var grade = normalizedScore >= mode.GradeSThreshold
             ? "S"
             : normalizedScore >= mode.GradeAThreshold
@@ -340,7 +343,9 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         };
         if (pointReward < 0 || keyProgressReward < 0)
             return EconomyResult<MiniGameCompleteView>.Conflict("Mini Game 獎勵設定不可為負數。");
-        (pointReward, keyProgressReward) = MiniGameCompletionReward.Apply(grade, pointReward, keyProgressReward);
+        (pointReward, keyProgressReward) = meaningfulPlay
+            ? MiniGameCompletionReward.Apply(grade, pointReward, keyProgressReward)
+            : (0, 0);
 
         var setting = await economyService.GetGameEconomySettingAsync(cancellationToken);
         if (setting.DailyMiniGameRewardLimit < 0 || setting.KeyProgressToNormalKey <= 0)
@@ -356,7 +361,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
                 cancellationToken);
         // 改按每日共用點數預算計算，鑰匙進度不受點數預算影響。
         pointReward = await dailyRewards.LimitPointsAsync(userId, pointReward, cancellationToken);
-        var hasEconomicReward = true;
+        var hasEconomicReward = meaningfulPlay;
 
         var now = DateTime.UtcNow;
         if (hasEconomicReward && pointReward > 0)
@@ -692,6 +697,31 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         return TryGetProperty(element, propertyName, out var property)
             && property.ValueKind == JsonValueKind.String
             && property.TryGetGuid(out value);
+    }
+
+    /// <summary>實際操作門檻：至少操作幾次，或實際遊玩超過幾秒；全部由系統代完成則一律不算。</summary>
+    private const int MinEngagedSeconds = 20;
+    private const int MinEngagedMoves = 3;
+    private const int MinLocatorAnswers = 2;
+
+    private static bool HasMeaningfulPlay(MiniGameAttempt attempt, GameModeDefinition mode, JsonElement result)
+    {
+        var units = mode.Code switch
+        {
+            "ARTIFACT_PUZZLE" => PuzzlePieceCount,
+            "STRIP_RESTORE" => RestorePieceCount,
+            "MEMORY_MATCH" => TryReadArtifactPool(attempt.ArtifactPoolJson, out var memoryPool) ? Math.Min(memoryPool.Count, StandardMemoryPairCount) : StandardMemoryPairCount,
+            _ => TryReadArtifactPool(attempt.ArtifactPoolJson, out var locatorPool) ? locatorPool.Count : 4
+        };
+        TryGetInt(result, "autoPlaced", out var assisted);
+        TryGetInt(result, "moves", out var moves);
+        var wallSeconds = Math.Max(0, (DateTime.UtcNow - attempt.StartedAt).TotalSeconds);
+        var seconds = TryGetInt(result, "elapsedSeconds", out var elapsed) ? Math.Min(elapsed, wallSeconds) : wallSeconds;
+        var ownUnits = units - assisted;
+        if (ownUnits <= 0) return false;
+        return mode.Code == "DETAIL_LOCATOR"
+            ? ownUnits >= MinLocatorAnswers || seconds >= MinEngagedSeconds
+            : moves >= MinEngagedMoves || seconds >= MinEngagedSeconds;
     }
 
     private static bool TryGetInt(JsonElement element, string propertyName, out int value)
