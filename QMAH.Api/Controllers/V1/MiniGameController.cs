@@ -37,7 +37,14 @@ public sealed class MiniGameController(
     public async Task<ActionResult<MiniGameRewardStatusView>> GetRewardStatus(CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
-        return Ok(await miniGameService.GetRewardStatusAsync(userId, cancellationToken));
+        try
+        {
+            return Ok(await miniGameService.GetRewardStatusAsync(userId, cancellationToken));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
     }
 
     [HttpPost("reward-status/breakthrough")]

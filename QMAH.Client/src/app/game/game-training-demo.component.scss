@@ -7,7 +7,6 @@ app-game-training-play-sheet { display: block; height: 100%; }
 .demo-toolbar p span { margin-left: 12px; color: var(--game-table-muted); font-size: 14px; font-weight: 400; }
 .demo-controls { flex-wrap: wrap; }
 .demo-status { display: block; margin-top: 4px; color: var(--game-table-muted); font-size: 14px; line-height: 1.5; }
-.demo-controls .demo-start { @extend %ui-btn; --game-button-image: var(--game-button-ochre-image); --game-button-ink: var(--game-ink-yellow); display: inline-flex; align-items: center; text-decoration: none; }
 .demo-table { --stage-ink: var(--game-table-ink); --stage-muted: var(--game-table-muted); --stage-accent: var(--game-table-ink); --qmah-surface: var(--game-table-ground); --qmah-ink: var(--game-table-ink); --qmah-muted: var(--game-table-muted); --qmah-game-action: #fff8e9; --qmah-game-content: #273e33; --qmah-focus: #fff0c9; padding: 0; color: var(--game-table-ink); }
 .demo-pause { @include ui.paper-panel; position: fixed; inset: 0; margin: auto; height: fit-content; position: fixed; inset: 0; margin: auto; width: min(420px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; }
 .demo-pause h2 { margin: 0; font-size: 24px; }
@@ -33,7 +32,6 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--qmah-focus); ou
 .demo-playback :focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }
 .demo-restart { @extend %ui-btn-2; width: 44px; padding: 0; }
 .demo-auto:not([aria-pressed='true']) svg { fill: currentColor; stroke-width: 1.5; }
-@media (max-height: 820px) { .demo-status { display: none; } }
 @media (max-width: 700px) { .demo-controls { gap: 8px; } }
 @media (max-width: 520px) {
   .demo-controls { flex-wrap: nowrap; gap: 6px; }

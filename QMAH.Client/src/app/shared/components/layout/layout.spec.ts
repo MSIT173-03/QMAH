@@ -1,3 +1,5 @@
+import { EMPTY } from 'rxjs';
+import { NotificationLive } from '../../../core/services/notification-live';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -13,7 +15,7 @@ describe('LayoutComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [LayoutComponent],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: NotificationLive, useValue: { changes: EMPTY } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(LayoutComponent);

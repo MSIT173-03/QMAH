@@ -1,8 +1,6 @@
 import { Component, OnChanges, inject, ChangeDetectorRef } from '@angular/core';
 import { input } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { GameTrainingComponent } from './game-training.component';
-import { GameScoringGuideComponent } from './game-scoring-guide.component';
 import { GameTrainingPlaySheetComponent } from './game-training-play-sheet.component';
 import { MiniGameArtifact, MiniGameStart } from './game.models';
 
@@ -30,7 +28,7 @@ const LOCATOR_SAMPLES: MiniGameArtifact[] = [...SAMPLES.slice(0,3), PAINTING_SAM
 /** 示範沿用正式控制器與盤面；只替換題目來源、存檔與結算出口。 */
 @Component({
   selector: 'app-game-training-demo',
-  imports: [RouterLink, GameTrainingPlaySheetComponent, GameScoringGuideComponent],
+  imports: [GameTrainingPlaySheetComponent],
   templateUrl: './game-training-demo.component.html',
   styleUrl: './game-training-demo.component.scss'
 })

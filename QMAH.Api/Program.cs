@@ -266,6 +266,8 @@ builder.Services.AddScoped<DailyActivityService>();
 // integration: 房間生命週期由背景 worker 定期推進，和 HTTP 請求共用同一個 scoped service；
 // 不依賴前端持續輪詢，部署到不同主機時也只需沿用既有 DI 設定。
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<NotificationConnections>();
+builder.Services.AddHostedService<NotificationPushService>();
 // ponytail: 單機記憶體群組；多台主機部署時加 Redis backplane（AddStackExchangeRedis）即可，其餘程式不用動。
 builder.Services.AddSingleton<IGameRoomNotifier, SignalRGameRoomNotifier>();
 builder.Services.AddScoped<GameRoomLifecycleService>();
@@ -610,6 +612,7 @@ if (File.Exists(mediaPaths.FaviconPath))
         .ExcludeFromDescription();
 app.MapControllers();
 app.MapHub<GameRoomHub>("/hubs/game-room");
+app.MapHub<NotificationHub>("/hubs/notifications", options => options.CloseOnAuthenticationExpiration = true);
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)
 {

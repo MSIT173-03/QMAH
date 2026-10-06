@@ -1,3 +1,4 @@
+import { singlePlayerMechanic } from './game-single-player-copy';
 import { ChangeDetectionStrategy, computed, Component, ElementRef, ViewChild, input, output, signal } from '@angular/core';
 
 import { MiniGameArtifact, MiniGameStart } from './game.models';
@@ -5,6 +6,8 @@ import { GameDetailLocatorBoardComponent } from './game-detail-locator-board.com
 import { LocatorAnswer } from './game-detail-locator';
 import { GamePlacementBoardComponent } from './game-placement-board.component';
 import { GameScrollBoardComponent } from './game-scroll-board.component';
+import { RouterLink } from '@angular/router';
+import { GameScoringGuideComponent } from './game-scoring-guide.component';
 
 export interface TrainingMemoryCard {
   id: string;
@@ -24,7 +27,7 @@ export interface TrainingCatalogHint {
 @Component({
   selector: 'app-game-training-play-sheet',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GameDetailLocatorBoardComponent, GamePlacementBoardComponent, GameScrollBoardComponent],
+  imports: [GameDetailLocatorBoardComponent, GamePlacementBoardComponent, GameScrollBoardComponent, RouterLink, GameScoringGuideComponent],
   templateUrl: './game-training-play-sheet.component.html',
   styleUrl: './game-training-play-sheet.component.scss'
 })
@@ -34,6 +37,7 @@ export class GameTrainingPlaySheetComponent {
   readonly puzzleMemory = computed(() => !this.demonstration() && this.attempt().seed.endsWith('-m'));
   readonly isComplete = input(false);
   readonly demonstration = input(false);
+  readonly instruction = computed(() => singlePlayerMechanic(this.attempt().modeCode)[0]);
   readonly paused = input(false);
   readonly completing = input(false);
   readonly resultFrozen = input(false);

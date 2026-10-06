@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, linkedSignal, signal } from
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import {
   SessionBar,
@@ -123,7 +123,7 @@ export class ProductInfo {
   /** 向後端取得的目前商品全部評價；切換篩選條件不重新請求，null 代表載入失敗 */
   private readonly loadedReviews = toSignal(
     toObservable(this.id).pipe(
-      switchMap((id) => this.catalogApi.getReviews(id).pipe(catchError(() => of(null)))),
+      switchMap((id) => this.catalogApi.getReviews(id).pipe(catchError(() => of(null)), startWith(undefined))),
     ),
   );
   /** 目前商品的全部評價；會員儲存評價後直接更新這份清單，不需要重新請求 */
@@ -167,20 +167,27 @@ export class ProductInfo {
 
   /** 目前會員是否買過這件商品 */
   protected readonly canReview = computed(() => this.purchased.has(this.id()));
+  /** 讀取或送出評價失敗的說明；切換商品後清除。 */
+  protected readonly reviewError = signal<string | null>(null);
   /** 向後端取得的自己的評價；undefined 代表尚在載入（或不能評價），null 代表還沒有評價 */
   private readonly loadedMyReview = toSignal(
     toObservable(computed(() => (this.canReview() ? this.id() : null))).pipe(
-      switchMap((id) =>
-        id ? this.reviewApi.getMyReview(id).pipe(catchError(() => of(null))) : of(undefined),
-      ),
+      switchMap((id) => {
+        this.reviewError.set(null);
+        return id ? this.reviewApi.getMyReview(id).pipe(
+          catchError(() => {
+            this.reviewError.set('無法讀取你的評價，請稍後重新整理。');
+            return of(undefined);
+          }),
+          startWith(undefined),
+        ) : of(undefined);
+      }),
     ),
   );
   /** 自己的評價；送出後直接換成後端回傳的內容 */
   protected readonly myReview = linkedSignal<Review | null | undefined>(() => this.loadedMyReview());
   /** 評價正在送出 */
   protected readonly reviewSaving = signal(false);
-  /** 最近一次送出失敗的說明 */
-  protected readonly reviewError = signal<string | null>(null);
 
   /** 麵包屑導覽項目：首頁 / 器類 / 商品名稱 */
   protected breadcrumbItems = computed<BreadcrumbItem[]>(() => {
@@ -225,6 +232,7 @@ export class ProductInfo {
       },
       error: (error: unknown) => {
         this.reviewSaving.set(false);
+        if (this.id() !== id) return;
         if (error instanceof HttpErrorResponse && error.status === 401) {
           // 登入已失效：清除登入狀態並詢問是否重新登入。
           this.cart.handleUnauthorized();

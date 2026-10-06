@@ -187,3 +187,5 @@ nav.guide-tabs { background: #00000030; border: 2px solid #ffffff30; box-shadow:
 }
 // 手機的玩法按鈕只留名稱，說明在下方標題已經有
 @media (max-width: 520px) { .mode-list button small { display: none; } }
+
+.guide-head nav.guide-tabs button:not(.is-active):hover { color: #fff8e9; }

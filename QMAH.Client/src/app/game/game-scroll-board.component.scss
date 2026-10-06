@@ -1,6 +1,6 @@
 @use './game-ui' as ui;
 :host { display: block; min-width: 0; }
-.scroll-workbench { min-width: 0; width: min(100%, 1200px); margin-inline: auto; --board-height: var(--scroll-height-limit, max(300px, calc(100dvh - 380px))); }
+.scroll-workbench { min-width: 0; width: 100%; margin-inline: auto; --board-height: var(--scroll-height-limit, max(300px, calc(100dvh - 380px))); }
 .scroll-source { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .scroll-reference { margin: 0; }
 .scroll-reference button { min-height: 44px; border: 0; border-radius: var(--qmah-radius-control); padding: 8px 12px; color: var(--qmah-jade); background: var(--qmah-surface); font: inherit; font-weight: 700; cursor: pointer; }
