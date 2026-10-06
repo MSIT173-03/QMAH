@@ -1,0 +1,894 @@
+/* artifact-list.filters.scss — 從 artifact-list.scss 拆出來的後半（分類／年代篩選單、標籤、窄螢幕、圖釘），
+   讓每個樣式檔都在 angular.json 的 anyComponentStyle 預算內。載入順序：cover → scss → filters → dialogs。 */
+
+/* ================= 分類／年代篩選單 =================
+   外觀沿用上一版：直接寫在左頁上，沒有外框與陰影。篩選單開著時左頁只放篩選單，
+   文物只排在右頁（見 artifact-list.ts 的 filterMode）。 */
+
+.page .filter-sheet {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
+  animation: sheet-in 0.25s ease;
+}
+
+.artifact-page[data-filter-open] .page--left .page__body {
+  visibility: hidden;
+}
+
+@keyframes sheet-in {
+  from { opacity: 0; }
+}
+
+.ledger__foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ink-line);
+}
+
+.ledger__summary {
+  min-width: 0;
+  color: var(--ink-soft);
+  font-family: var(--qmah-font-serif);
+  font-size: 12.5px;
+}
+
+/* 年代跨到右頁：與標題同高、只有一條分隔線 */
+.group-divider {
+  box-sizing: border-box;
+  height: 36px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+.ledger__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0 6px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.ledger__title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--qmah-font-serif);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.ledger__title::before {
+  content: '❖';
+  margin-right: 6px;
+  color: var(--gold-deep);
+  font-size: 14px;
+}
+
+.ledger__clear {
+  min-height: 0;
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  color: #6e2230;
+  font-family: var(--qmah-font-serif);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ledger__clear:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ledger__options {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  align-content: start;
+  gap: 8px;
+  padding: 2px 6px 6px 2px;
+  scrollbar-color: rgb(110 82 54 / 45%) transparent;
+  scrollbar-width: thin;
+}
+
+.filter-option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 9px;
+  border: 1px dashed rgb(110 82 54 / 45%);
+  border-radius: 8px;
+  background: rgb(255 250 235 / 35%);
+  color: var(--ink);
+  font-family: var(--qmah-font-serif);
+  font-size: 13.5px;
+  line-height: 1.3;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.filter-option:hover {
+  background: rgb(255 248 228 / 75%);
+  border-color: rgb(110 82 54 / 70%);
+}
+
+.filter-option > span {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.filter-option input[type='checkbox'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  opacity: 0;
+  pointer-events: none;
+  clip: rect(0 0 0 0);
+}
+
+.filter-option::before {
+  content: '';
+  display: grid;
+  place-items: center;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 4px;
+  background: rgb(255 252 242 / 80%);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.filter-option:has(input:checked) {
+  border-style: solid;
+  border-color: var(--gold-deep);
+  background: rgb(243 217 142 / 45%);
+  font-weight: 800;
+}
+
+.filter-option:has(input:checked)::before {
+  content: '✓';
+  border-color: var(--ink);
+  background: var(--gold);
+}
+
+.filter-option:has(input:focus-visible) {
+  outline: 2px solid var(--gold-deep);
+  outline-offset: 2px;
+}
+
+/* 分類紙籤：每行固定四張，沿用古書紙色、墨色與金色勾記。 */
+.ledger__options--categories {
+  flex: none;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 12px;
+  padding: 14px 4px 18px;
+  overflow: visible;
+}
+
+/* 古書書籤：燕尾缺口、頂端一條褪色的緞帶、黃銅小孔；五種克制的舊紙色循環 */
+.category-slip {
+  --slip-a: color-mix(in srgb, rgb(var(--acc)) 20%, #faf4e4);
+  --slip-b: color-mix(in srgb, rgb(var(--acc)) 34%, #f0e6cc);
+  --slip-band: rgb(var(--acc) / 78%);
+  --slip-ink: color-mix(in srgb, rgb(var(--acc)) 52%, #1a1109);
+
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 120px;
+  padding: 26px 8px 24px;
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(-12px -40px, calc(100% + 12px) -40px, 100% 100%, 50% calc(100% - 13px), 0 100%);
+  color: var(--slip-ink);
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.category-slip,
+.category-slip:hover,
+.category-slip:has(input:checked) {
+  background:
+    linear-gradient(var(--slip-band), var(--slip-band)) top / 100% 5px no-repeat,
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27140%27%20height%3D%27140%27%3E%3Cfilter%20id%3D%27f%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.55%27%20numOctaves%3D%274%27%20seed%3D%279%27%20stitchTiles%3D%27stitch%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.3%200%200%200%200%200.22%200%200%200%200%200.1%200%200%200%200.16%20-0.03%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27140%27%20height%3D%27140%27%20filter%3D%27url(%23f)%27%2F%3E%3C%2Fsvg%3E"),
+    linear-gradient(175deg, var(--slip-a), var(--slip-b));
+  background-size: 100% 5px, 140px 140px, 100% 100%;
+  /* 雙線框：外細金線＋內縮的暗金細線 */
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--acc) / 42%),
+    inset 0 -14px 14px -14px rgb(var(--paper-shade) / 22%);
+}
+
+/* 配色有規則：卡面一律是米色紙，只有「顏料色」不同——同材質／同時代同一色（見 artifact-list.ts 的 categoryTone／eraTone） */
+.category-slip, .era-slip { --acc: 108 102 90; --pin-hue: 170deg; }
+[data-tone='slate'] { --acc: 96 128 142; --pin-hue: 170deg; }
+[data-tone='bronze'] { --acc: 194 154 44; --pin-hue: 38deg; }
+[data-tone='cinnabar'] { --acc: 200 74 58; --pin-hue: 0deg; }
+[data-tone='ochre'] { --acc: 172 100 58; --pin-hue: 22deg; }
+[data-tone='jade'] { --acc: 76 140 108; --pin-hue: 125deg; }
+[data-tone='celadon'] { --acc: 84 140 162; --pin-hue: 175deg; }
+[data-tone='indigo'] { --acc: 80 102 160; --pin-hue: 215deg; }
+[data-tone='rouge'] { --acc: 184 88 128; --pin-hue: -12deg; }
+[data-tone='sumi'] { --acc: 100 102 108; --pin-hue: 0deg; }
+[data-tone='plum'] { --acc: 132 104 164; --pin-hue: 270deg; }
+
+/* 沒有預先打好的孔：被選到時才用圖釘釘上去 */
+.category-slip::before {
+  content: none;
+}
+
+.category-slip:has(input:checked)::before,
+.category-slip:has(input:checked)::after {
+  content: '';
+  position: absolute;
+  display: block;
+  top: -17px;
+  left: 50%;
+  flex: none;
+  width: 30px;
+  height: 38px;
+  margin: 0 0 0 -15px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 0;
+  pointer-events: none;
+}
+
+.category-slip::after {
+  content: none;
+}
+
+.category-slip:hover {
+  --slip-ink: #20150a;
+  transform: translateY(-3px);
+  filter: brightness(1.04);
+}
+
+.category-slip__glyph[data-glyph='bronze'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath%20d%3D%27M9%2014h30M12%2014v7c0%206%205%2010%2012%2010s12-4%2012-10v-7M18%2031l-3%209M30%2031l3%209M24%2031v9M6%2014c0-3%202-5%205-5M42%2014c0-3-2-5-5-5%27%2F%3E%3Cpath%20d%3D%27M16%2020h16M17%2025h14M24%2014v-4%27%20opacity%3D%27.55%27%2F%3E%3C/svg%3E"); }
+.category-slip__glyph[data-glyph='jade'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2717%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%276%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2711.5%27%20stroke-dasharray%3D%271.4%203.1%27%20opacity%3D%27.7%27%2F%3E%3Cpath%20d%3D%27M24%204v3M24%2041v3M4%2024h3M41%2024h3%27%20opacity%3D%27.6%27%2F%3E%3C/svg%3E"); }
+.category-slip__glyph[data-glyph='clay'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath%20d%3D%27M20%206h8M21%206v5c0%203-7%205-7%2012v14c0%203%204%205%2010%205s10-2%2010-5V23c0-7-7-9-7-12V6%27%2F%3E%3Cpath%20d%3D%27M15%2026c3%202%2015%202%2018%200M15%2034c3%202%2015%202%2018%200%27%20opacity%3D%27.6%27%2F%3E%3Cpath%20d%3D%27M24%2028c-2%201-2%203%200%203s2-2%200-3z%27%20opacity%3D%27.7%27%2F%3E%3C/svg%3E"); }
+.category-slip__glyph[data-glyph='lacquer'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect%20x%3D%277%27%20y%3D%2721%27%20width%3D%2734%27%20height%3D%2718%27%20rx%3D%273%27%2F%3E%3Cpath%20d%3D%27M7%2021c0-6%205-9%2017-9s17%203%2017%209M7%2028h34%27%2F%3E%3Cpath%20d%3D%27M18%2034c2-3%204%202%206-1s4%202%206-1%27%20opacity%3D%27.7%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724.5%27%20r%3D%271.3%27%2F%3E%3C/svg%3E"); }
+.category-slip__glyph[data-glyph='rouge'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2717%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2712.5%27%20opacity%3D%27.55%27%2F%3E%3Cpath%20d%3D%27M24%2014c4%203%204%206%200%2010-4-4-4-7%200-10zM34%2024c-3%204-6%204-10%200%204-4%207-4%2010%200zM24%2034c-4-3-4-6%200-10%204%204%204%207%200%2010zM14%2024c3-4%206-4%2010%200-4%204-7%204-10%200z%27%2F%3E%3C/svg%3E"); }
+.category-slip__glyph[data-glyph='coin'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2717%27%2F%3E%3Crect%20x%3D%2718%27%20y%3D%2718%27%20width%3D%2712%27%20height%3D%2712%27%20rx%3D%271%27%2F%3E%3Cpath%20d%3D%27M9%2024h5M34%2024h5M24%209v5M24%2034v5%27%20opacity%3D%27.55%27%2F%3E%3C/svg%3E"); }
+.category-slip__glyph[data-glyph='painting'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath%20d%3D%27M13%206h22M13%2042h22M24%206V4M24%2042v2%27%2F%3E%3Crect%20x%3D%2715%27%20y%3D%279%27%20width%3D%2718%27%20height%3D%2730%27%2F%3E%3Cpath%20d%3D%27M17%2033l6-9%204%205%203-4%203%208%27%20%2F%3E%3Ccircle%20cx%3D%2728%27%20cy%3D%2716%27%20r%3D%272.2%27%2F%3E%3Cpath%20d%3D%27M18%2020c2-1%204%200%206-1%27%20opacity%3D%27.55%27%2F%3E%3C/svg%3E"); }
+.category-slip__glyph[data-glyph='carving'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2713%27%20r%3D%275%27%2F%3E%3Cpath%20d%3D%27M24%2018c-8%200-12%206-12%2012%200%203%202%205%205%205h14c3%200%205-2%205-5%200-6-4-12-12-12z%27%2F%3E%3Cpath%20d%3D%27M10%2041h28M18%2035v6M30%2035v6M24%2021v6%27%20opacity%3D%27.7%27%2F%3E%3C/svg%3E"); }
+.category-slip__glyph[data-glyph='stone'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect%20x%3D%2713%27%20y%3D%277%27%20width%3D%2722%27%20height%3D%2713%27%20rx%3D%272%27%2F%3E%3Crect%20x%3D%279%27%20y%3D%2723%27%20width%3D%2730%27%20height%3D%2716%27%20rx%3D%272%27%2F%3E%3Cpath%20d%3D%27M16%2031h16%27%20opacity%3D%27.6%27%2F%3E%3C/svg%3E"); }
+
+.category-slip__glyph {
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  background: color-mix(in srgb, rgb(var(--acc)) 80%, #2a1c10);
+  -webkit-mask: var(--glyph) center / contain no-repeat;
+  mask: var(--glyph) center / contain no-repeat;
+  opacity: 0.88;
+}
+
+.category-slip > .category-slip__name {
+  padding: 0;
+  color: inherit;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  text-align: center;
+}
+
+.category-slip__check {
+  position: absolute;
+  top: 14px;
+  right: 8px;
+  width: 15px;
+  height: 15px;
+  color: #fff0b8;
+  opacity: 0;
+}
+
+/* 夾住的書籤：緞帶換成舊金色、打勾 */
+.category-slip:has(input:checked) {
+  border: 0;
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 0 0 2px rgb(var(--acc) / 75%),
+    inset 0 -14px 14px -14px rgb(var(--paper-shade) / 22%);
+}
+
+
+
+.category-slip__check { display: none; }
+
+/* 年代籤：英倫風的票籤——顏色是底、文字是淺色；切角的外框、內縮的雙線、兩端的渦卷花飾。
+   18 個年代排成 3 欄 × 6 列，一頁看完 */
+.ledger__options--eras {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 44px;
+  gap: 8px 10px;
+  padding: 8px 6px 12px 4px;
+  align-content: start;
+}
+
+.era-slip {
+  --era-a: color-mix(in srgb, rgb(var(--acc)) 26%, #faf4e4);
+  --era-b: color-mix(in srgb, rgb(var(--acc)) 42%, #efe4c8);
+  --gilt: var(--acc);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 0;
+  padding: 3px 22px;
+  border: 0;
+  border-radius: 0;
+  color: color-mix(in srgb, rgb(var(--acc)) 52%, #1a1109);
+  /* 下緣兩角切角；上緣不裁，圖釘才露得出來 */
+  clip-path: polygon(-12px -40px, calc(100% + 12px) -40px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px));
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.era-slip,
+.era-slip:hover,
+.era-slip:has(input:checked) {
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27140%27%20height%3D%27140%27%3E%3Cfilter%20id%3D%27f%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.55%27%20numOctaves%3D%274%27%20seed%3D%279%27%20stitchTiles%3D%27stitch%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.3%200%200%200%200%200.22%200%200%200%200%200.1%200%200%200%200.16%20-0.03%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27140%27%20height%3D%27140%27%20filter%3D%27url(%23f)%27%2F%3E%3C%2Fsvg%3E"),
+    linear-gradient(180deg, var(--era-a), var(--era-b));
+  background-size: 140px 140px, 100% 100%;
+  font-weight: inherit;
+  box-shadow: inset 0 0 0 1px rgb(var(--acc) / 50%);
+}
+
+/* 內縮的細線 */
+.era-slip::before,
+.era-slip:has(input:checked)::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  display: block;
+  width: auto;
+  height: auto;
+  border: 1px solid rgb(var(--acc) / 30%);
+  border-radius: 0;
+  background: none;
+  pointer-events: none;
+}
+
+
+
+.era-slip:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.era-slip__name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: color-mix(in srgb, rgb(var(--acc)) 50%, #1a1109);
+  font-family: var(--qmah-font-serif);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.era-slip__years {
+  color: color-mix(in srgb, rgb(var(--acc)) 78%, #000);
+  font-family: var(--qmah-font-sans);
+  font-size: 10px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+
+
+
+
+.era-slip:has(input:checked) {
+  box-shadow: inset 0 0 0 2px rgb(var(--acc) / 75%);
+}
+
+/* ================= 狀態訊息 ================= */
+
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--ink-soft);
+  font-family: var(--qmah-font-serif);
+  font-size: 15px;
+  text-align: center;
+}
+
+.state--error {
+  color: #8e1f1a;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  border: 2px solid rgb(110 82 54 / 30%);
+  border-top-color: var(--gold-deep, #9c7630);
+  border-radius: 50%;
+  vertical-align: -3px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+.empty__title {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-family: var(--qmah-font-serif);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.empty__desc {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+/* ================= 窄螢幕：兩頁改成上下疊放 ================= */
+
+@media (max-width: 1079px) {
+  .cover__tabs {
+    display: none;
+  }
+
+  .artifact-page {
+    padding: 72px 16px 32px;
+  }
+
+  .book {
+    --pad-x: 18px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+  }
+
+  .artifact-page[data-book='closed'] .book,
+  .artifact-page[data-book='closing'] .book {
+    transform: none;
+  }
+
+  .artifact-page[data-book='closed'] .book {
+    width: min(100%, 460px);
+    height: min(135vw, 640px);
+  }
+
+  .artifact-page[data-book='closed'] .book__spread {
+    display: none;
+  }
+
+  .artifact-page:not([data-book='open']) .book__board,
+  .artifact-page:not([data-book='open']) .book__spread {
+    clip-path: none;
+  }
+
+  .book__cover {
+    left: calc(-1 * var(--board));
+    transition: transform 1.1s cubic-bezier(0.65, 0.05, 0.3, 1), opacity 1.1s ease;
+  }
+
+  .artifact-page[data-book='opening'] .book__cover,
+  .artifact-page[data-book='open'] .book__cover {
+    transform: perspective(2600px) rotateY(-100deg);
+    opacity: 0;
+  }
+
+  .book__spread {
+    position: relative;
+    inset: auto;
+  }
+
+  .book__paper--left {
+    width: 100%;
+    border-radius: 4px;
+  }
+
+  .book__paper--right,
+  .book__gutter,
+  .book__turn-layer {
+    display: none;
+  }
+
+  .book__content {
+    position: relative;
+    inset: auto;
+    padding: 22px var(--pad-x) 16px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 18px;
+  }
+
+  .page {
+    display: grid;
+    grid-template-rows: var(--book-head-h) var(--narrow-body-h) var(--book-foot-h);
+    row-gap: var(--book-row-gap);
+  }
+
+  .page--left > *,
+  .page--right > * {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .page--right {
+    padding-top: 14px;
+    border-top: 4px double var(--ink-line);
+  }
+
+  /* 不指定格線位置的絕對定位 → 以 .book__content 的 padding box 為基準，左右扣掉內距＝內容寬 */
+  .page-measure {
+    position: absolute;
+    grid-column: auto;
+    grid-row: auto;
+    top: 0;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    height: var(--narrow-body-h);
+  }
+
+  .book-keys {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .page-meta {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .book__side-tabs {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    z-index: 3;
+    order: -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    padding: 4px 0 12px;
+  }
+
+  .ribbon--side {
+    flex-direction: row;
+    width: auto;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    transform: none;
+  }
+
+  .ribbon--side .ribbon__label {
+    width: auto;
+    letter-spacing: 0.14em;
+  }
+
+  .ribbon--side:hover,
+  .ribbon--side.is-active {
+    transform: none;
+  }
+
+  .ribbon--top {
+    height: 42px;
+    padding: 0 18px 8px;
+    font-size: 15px;
+  }
+
+  .book__control {
+    top: calc(-1 * var(--board) - 12px);
+    right: calc(-1 * var(--board) - 6px);
+  }
+
+  .book__fullscreen {
+    right: calc(-1 * var(--board) + 48px);
+  }
+}
+
+@media (max-width: 560px) {
+  .ledger__options--categories {
+    gap: 10px 7px;
+    padding-inline: 2px;
+  }
+
+  .category-slip {
+    min-height: 104px;
+    padding: 22px 3px 14px;
+    gap: 10px;
+  }
+
+  .category-slip > .category-slip__name {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .page-meta__count {
+    font-size: 12px;
+  }
+
+  .seal-btn {
+    padding: 0 9px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book,
+  .book__cover,
+  .book__top-tabs,
+  .book__side-tabs,
+  .book__control,
+  .artifact-card,
+  .ribbon {
+    transition: none;
+  }
+
+  .desk__glow,
+  .desk__motes,
+  .cover__emblem-ring,
+  .cover__iris,
+  .cover__hint,
+  .book--turning .page__body,
+  .page .filter-sheet {
+    animation: none;
+  }
+}
+
+/* ================= 圖釘 =================
+   圖釘的顏色就是標籤的顏色（--acc）：外形用遮罩切出來，再用同色的明暗漸層上色（圓柱高光、圓盤頂面反光、底緣暗邊）；
+   鋼針與投影是另一層（::after）。整支微微傾斜，針尖朝右下方，投影也落在右下，跟光源（書桌上方）一致。 */
+.category-slip:has(input:checked)::before,
+.seal-btn.is-active::before {
+  z-index: 1;
+  background:
+    linear-gradient(90deg, transparent 0 25%, rgb(255 255 255 / 55%) 29% 34%, transparent 39%),
+    linear-gradient(180deg, transparent 0 55%, rgb(255 255 255 / 26%) 59% 70%, rgb(0 0 0 / 20%) 73% 100%),
+    linear-gradient(90deg,
+      color-mix(in srgb, rgb(var(--acc)) 55%, #000) 0%,
+      rgb(var(--acc)) 28%,
+      color-mix(in srgb, rgb(var(--acc)) 72%, #fff) 46%,
+      rgb(var(--acc)) 64%,
+      color-mix(in srgb, rgb(var(--acc)) 52%, #000) 100%);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2030%2038%27%3E%3Crect%20x%3D%278%27%20y%3D%271.5%27%20width%3D%2714%27%20height%3D%279.5%27%20rx%3D%274.6%27%2F%3E%3Cpath%20d%3D%27M9.6%2011.8h10.8l1.4%2010.7H8.2z%27%2F%3E%3Cellipse%20cx%3D%2715%27%20cy%3D%2723.4%27%20rx%3D%2712%27%20ry%3D%274.6%27%2F%3E%3Cpath%20d%3D%27M3%2023.4v1.4a12%204.6%200%200%200%2024%200v-1.4z%27%2F%3E%3C%2Fsvg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2030%2038%27%3E%3Crect%20x%3D%278%27%20y%3D%271.5%27%20width%3D%2714%27%20height%3D%279.5%27%20rx%3D%274.6%27%2F%3E%3Cpath%20d%3D%27M9.6%2011.8h10.8l1.4%2010.7H8.2z%27%2F%3E%3Cellipse%20cx%3D%2715%27%20cy%3D%2723.4%27%20rx%3D%2712%27%20ry%3D%274.6%27%2F%3E%3Cpath%20d%3D%27M3%2023.4v1.4a12%204.6%200%200%200%2024%200v-1.4z%27%2F%3E%3C%2Fsvg%3E") center / 100% 100% no-repeat;
+  transform: rotate(-22deg);
+  transform-origin: 50% 72%;
+}
+
+.category-slip:has(input:checked)::after,
+.seal-btn.is-active::after {
+  z-index: 0;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2030%2038%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27n%27%20x1%3D%270%27%20x2%3D%271%27%3E%3Cstop%20offset%3D%270%27%20stop-color%3D%27%235b5b5b%27%2F%3E%3Cstop%20offset%3D%27.5%27%20stop-color%3D%27%23eee%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%236a6a6a%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cellipse%20cx%3D%2721%27%20cy%3D%2732.6%27%20rx%3D%2710.5%27%20ry%3D%272.8%27%20fill%3D%27%23000%27%20opacity%3D%27.24%27%20transform%3D%27rotate(12%2021%2032.6)%27%2F%3E%3Cpath%20d%3D%27M14.1%2028.2h1.8L15.2%2036.4h-.4z%27%20fill%3D%27url(%23n)%27%2F%3E%3C%2Fsvg%3E") center / 100% 100% no-repeat;
+  transform: rotate(-22deg);
+  transform-origin: 50% 72%;
+}
+
+/* ================= 右上角兩顆按鈕：就是按鈕，不要圖釘 =================
+   沒按：輕輕浮起，底下一道實邊加柔和的陰影；按下（含「僅看已解鎖」開啟中）：往下貼緊，陰影收進按鈕內側。
+   「僅看已解鎖」是綠色的紙色按鈕、「一鍵解鎖」是朱紅的實色按鈕，兩顆顏色不同但手感一樣。 */
+.seal-btn,
+.seal-btn--gold {
+  --edge: color-mix(in srgb, rgb(var(--acc)) 55%, #000);
+
+  padding: 0 14px;
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  clip-path: none;
+  background: linear-gradient(180deg, var(--tag-bg-a), var(--tag-bg-b));
+  background-size: 100% 100%;
+  color: var(--tag-fg);
+  text-shadow: none;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 55%),
+    0 3px 0 var(--edge),
+    0 6px 10px rgb(var(--paper-shade, 110 72 28) / 28%);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.seal-btn--gold {
+  --acc: 200 74 58;
+  --tag-bg-a: color-mix(in srgb, rgb(var(--acc)) 90%, #fff);
+  --tag-bg-b: rgb(var(--acc));
+  --tag-fg: #fffaf0;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 30%);
+}
+
+.seal-btn::before,
+.seal-btn::after,
+.seal-btn--gold::before,
+.seal-btn--gold::after,
+.seal-btn.is-active::before,
+.seal-btn.is-active::after {
+  content: none;
+}
+
+/* 滑過：再浮起一點 */
+.seal-btn:hover:not(:disabled),
+.seal-btn--gold:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 60%),
+    0 4px 0 var(--edge),
+    0 9px 14px rgb(var(--paper-shade, 110 72 28) / 32%);
+  filter: brightness(1.04);
+}
+
+/* 按下去（實際按壓中）與「已開啟」：貼緊，陰影收進內側 */
+.seal-btn:active:not(:disabled),
+.seal-btn--gold:active:not(:disabled),
+.seal-btn.is-active,
+.seal-btn.is-active:hover:not(:disabled) {
+  transform: translateY(2px);
+  filter: none;
+  box-shadow:
+    inset 0 2px 5px rgb(var(--paper-shade, 110 72 28) / 45%),
+    inset 0 0 0 1px rgb(0 0 0 / 8%),
+    0 1px 0 rgb(255 255 255 / 40%);
+}
+
+.seal-btn.is-active,
+.seal-btn.is-active:hover:not(:disabled) {
+  --tag-bg-a: color-mix(in srgb, rgb(var(--acc)) 46%, #e6dcc0);
+  --tag-bg-b: color-mix(in srgb, rgb(var(--acc)) 62%, #d6caa4);
+  --tag-fg: #14100a;
+}
+
+.seal-btn:disabled,
+.seal-btn--gold:disabled {
+  transform: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 40%), 0 1px 0 var(--edge);
+}
+
+
+
+/* ================= 年代籤 再重做：貼在書頁裡的「圖書館標籤紙」＋「借閱戳記」 =================
+   概念：書頁裡自然會出現的東西——夾頁用的標籤紙（像博物館／藏書票上那種打字標籤，細線框、襯線字），
+   以及蓋在頁面上的橡皮章。沒選時是安靜的紙籤；選中時在紙籤右端「蓋」一枚年代色的圓章（雙圈、刻度、小星，
+   帶一點油墨斑駁與歪斜），標籤線框同時加粗。顏色沿用年代色，全部只用紙與墨，沒有金屬、沒有圖釘。 */
+.era-slip,
+.era-slip:hover,
+.era-slip:has(input:checked) {
+  clip-path: none;
+  border: 0;
+  border-radius: 2px;
+  padding: 3px 14px;
+  filter: none;
+  background:
+    linear-gradient(180deg, var(--era-a), var(--era-b));
+  box-shadow:
+    0 0 0 1px rgb(var(--acc) / 55%),
+    0 1px 2px rgb(var(--paper-shade, 110 72 28) / 30%);
+}
+
+/* 內縮的細線框 */
+.era-slip::before,
+.era-slip:has(input:checked)::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  z-index: 0;
+  border: 1px solid rgb(var(--acc) / 38%);
+  border-radius: 1px;
+  background: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* 紋樣印章：選中時蓋在標籤右端。單色朱紅油墨——外圈、串珠圈、內圈，中央是「清明鑑定屋」圖記（qmah-mark.svg 的長卷、館舍、鑑定鏡）；
+   用乘色混合疊在紙上，帶一點油墨斑駁與歪斜，只有紋樣，沒有立體的蠟塊。 */
+.era-slip::after,
+.era-slip:has(input:checked)::after {
+  content: '';
+  position: absolute;
+  inset: auto;
+  right: -2px;
+  top: 50%;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  background: #b5281b;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2048%2048%27%3E%3Cdefs%3E%3Cfilter%20id%3D%27r%27%20x%3D%27-6%25%27%20y%3D%27-6%25%27%20width%3D%27112%25%27%20height%3D%27112%25%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%27.85%27%20numOctaves%3D%272%27%20seed%3D%276%27%20result%3D%27n%27%2F%3E%3CfeDisplacementMap%20in%3D%27SourceGraphic%27%20in2%3D%27n%27%20scale%3D%271.5%27%20result%3D%27d%27%2F%3E%3CfeColorMatrix%20in%3D%27n%27%20type%3D%27matrix%27%20values%3D%270%200%200%200%200%20%200%200%200%200%200%20%200%200%200%200%200%20%200%200%200%20-9%206.5%27%20result%3D%27m%27%2F%3E%3CfeComposite%20in%3D%27d%27%20in2%3D%27m%27%20operator%3D%27in%27%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cg%20filter%3D%27url(%23r)%27%20fill%3D%27none%27%20stroke%3D%27%23000%27%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2721.4%27%20stroke-width%3D%272.4%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2718.6%27%20stroke-width%3D%271.6%27%20stroke-dasharray%3D%271.1%202.1%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2716%27%20stroke-width%3D%27.9%27%2F%3E%3Cg%20transform%3D%27translate(9.6%209.6)%20scale(.3)%27%3E%3Cpath%20d%3D%27M14%2022h62c5%200%209%204%209%209v38c0%205-4%209-9%209H22c-6%200-11-5-11-11s5-11%2011-11h55%27%20stroke-width%3D%276%27%20stroke-linejoin%3D%27round%27%2F%3E%3Cpath%20d%3D%27M22%2045%2048%2025%2074%2045M24%2046h48M30%2047v16M48%2047v16M66%2047v16M20%2067h56%27%20stroke-width%3D%275.6%27%20stroke-linecap%3D%27square%27%20stroke-linejoin%3D%27miter%27%2F%3E%3Ccircle%20cx%3D%2765%27%20cy%3D%2757%27%20r%3D%2711.5%27%20stroke-width%3D%275.6%27%2F%3E%3Cpath%20d%3D%27m73%2065%2011%2011%27%20stroke-width%3D%276.4%27%20stroke-linecap%3D%27square%27%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2048%2048%27%3E%3Cdefs%3E%3Cfilter%20id%3D%27r%27%20x%3D%27-6%25%27%20y%3D%27-6%25%27%20width%3D%27112%25%27%20height%3D%27112%25%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%27.85%27%20numOctaves%3D%272%27%20seed%3D%276%27%20result%3D%27n%27%2F%3E%3CfeDisplacementMap%20in%3D%27SourceGraphic%27%20in2%3D%27n%27%20scale%3D%271.5%27%20result%3D%27d%27%2F%3E%3CfeColorMatrix%20in%3D%27n%27%20type%3D%27matrix%27%20values%3D%270%200%200%200%200%20%200%200%200%200%200%20%200%200%200%200%200%20%200%200%200%20-9%206.5%27%20result%3D%27m%27%2F%3E%3CfeComposite%20in%3D%27d%27%20in2%3D%27m%27%20operator%3D%27in%27%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cg%20filter%3D%27url(%23r)%27%20fill%3D%27none%27%20stroke%3D%27%23000%27%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2721.4%27%20stroke-width%3D%272.4%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2718.6%27%20stroke-width%3D%271.6%27%20stroke-dasharray%3D%271.1%202.1%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2716%27%20stroke-width%3D%27.9%27%2F%3E%3Cg%20transform%3D%27translate(9.6%209.6)%20scale(.3)%27%3E%3Cpath%20d%3D%27M14%2022h62c5%200%209%204%209%209v38c0%205-4%209-9%209H22c-6%200-11-5-11-11s5-11%2011-11h55%27%20stroke-width%3D%276%27%20stroke-linejoin%3D%27round%27%2F%3E%3Cpath%20d%3D%27M22%2045%2048%2025%2074%2045M24%2046h48M30%2047v16M48%2047v16M66%2047v16M20%2067h56%27%20stroke-width%3D%275.6%27%20stroke-linecap%3D%27square%27%20stroke-linejoin%3D%27miter%27%2F%3E%3Ccircle%20cx%3D%2765%27%20cy%3D%2757%27%20r%3D%2711.5%27%20stroke-width%3D%275.6%27%2F%3E%3Cpath%20d%3D%27m73%2065%2011%2011%27%20stroke-width%3D%276.4%27%20stroke-linecap%3D%27square%27%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  mix-blend-mode: multiply;
+  filter: none;
+  opacity: 0;
+  transform: rotate(-10deg) scale(1.4);
+  transition: opacity 0.1s ease, transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1);
+  pointer-events: none;
+}
+
+.era-slip:has(input:checked)::after {
+  opacity: 0.92;
+  transform: rotate(-10deg) scale(1);
+}
+
+.era-slip:hover {
+  transform: translateY(-1px);
+}
+
+/* 選中的標籤：線框加粗，文字加深（不改底色，維持紙感） */
+.era-slip:has(input:checked) {
+  box-shadow:
+    0 0 0 2px rgb(var(--acc) / 85%),
+    0 1px 2px rgb(var(--paper-shade, 110 72 28) / 30%);
+}
+
+.era-slip:has(input:checked) .era-slip__name {
+  color: color-mix(in srgb, rgb(var(--acc)) 55%, #120c06);
+}
+
+.era-slip:has(input:checked) .era-slip__years {
+  color: color-mix(in srgb, rgb(var(--acc)) 80%, #000);
+}
+
+.ledger__options--eras {
+  overflow-x: hidden;
+  padding-right: 12px;
+}
+
+.era-slip__name,
+.era-slip__years {
+  position: relative;
+  z-index: 1;
+}
+
+.era-slip__name {
+  color: color-mix(in srgb, rgb(var(--acc)) 62%, #120c06);
+}
+
+.era-slip__years {
+  color: color-mix(in srgb, rgb(var(--acc)) 82%, #000);
+}
