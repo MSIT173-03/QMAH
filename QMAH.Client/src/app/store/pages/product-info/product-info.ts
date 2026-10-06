@@ -1,6 +1,7 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
@@ -11,11 +12,13 @@ import {
   BreadcrumbItem,
   EmptyState,
 } from '../../component';
-import { CatalogApi } from '../../api';
-import { Product } from '../../api/api.models';
+import { CatalogApi, ReviewApi } from '../../api';
+import { Product, Review } from '../../api/api.models';
+import { ReviewDraft } from '../../api/review.api';
 import { toReviewPage } from '../../api/catalog.api-dto';
 import { CART_PATH, HOME_PATH, PRODUCT_LIST_PATH, categoryPath, searchPath } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
+import { PurchasedProducts } from '../../shared/purchased-products';
 import { toProductView, wasPrice } from '../../shared/product-view';
 import { ProductGallery } from './product-gallery/product-gallery';
 import { ProductSummary } from './product-summary/product-summary';
@@ -51,6 +54,8 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
 export class ProductInfo {
   private readonly router = inject(Router);
   private readonly catalogApi = inject(CatalogApi);
+  private readonly reviewApi = inject(ReviewApi);
+  private readonly purchased = inject(PurchasedProducts);
 
   /* ===============================
      網址路徑參數（由 router 的 component input binding 帶入）
@@ -60,6 +65,7 @@ export class ProductInfo {
   id = input('');
 
   constructor() {
+    this.purchased.ensureLoaded();
     // 進入商品頁時捲回頂端；從同類推薦切換商品時元件會被重用，因此以 id 變動觸發而非只在建立時執行。
     effect(() => {
       this.id();
@@ -114,16 +120,38 @@ export class ProductInfo {
     { initialValue: [] },
   );
 
-  /** 目前商品的全部評價；切換篩選條件不重新請求，null 代表載入失敗 */
-  private readonly allReviews = toSignal(
+  /** 向後端取得的目前商品全部評價；切換篩選條件不重新請求，null 代表載入失敗 */
+  private readonly loadedReviews = toSignal(
     toObservable(this.id).pipe(
       switchMap((id) => this.catalogApi.getReviews(id).pipe(catchError(() => of(null)))),
     ),
   );
+  /** 目前商品的全部評價；會員儲存評價後直接更新這份清單，不需要重新請求 */
+  private readonly allReviews = linkedSignal<Review[] | null | undefined>(() => this.loadedReviews());
+  /** 儲存評價後依最新清單重算的評分與評論數；在這之前沿用商品 API 的值 */
+  private readonly savedStats = signal<{ id: string; rating: number; count: number } | null>(null);
+  /** 目前顯示的商品評分 */
+  protected readonly rating = computed(() => {
+    const item = this.item();
+    const saved = this.savedStats();
+    return saved && saved.id === item?.id ? saved.rating : (item?.rating ?? 0);
+  });
+  /** 目前顯示的商品評論數 */
+  protected readonly reviewCount = computed(() => {
+    const item = this.item();
+    const saved = this.savedStats();
+    return saved && saved.id === item?.id ? saved.count : (item?.reviewCount ?? 0);
+  });
+  /** 評價清單顯示的評價：不含目前會員自己的評價（自己的只顯示在評價區上方的編輯區） */
+  private readonly listedReviews = computed(() => {
+    const all = this.allReviews();
+    const mine = this.myReview();
+    return all && mine ? all.filter((review) => review.id !== mine.id) : all;
+  });
   /** 目前商品在選取的篩選條件下的評價（篩選與統計在前端計算） */
   private readonly reviewPage = computed(() => {
-    const all = this.allReviews();
-    return all ? toReviewPage(all, REVIEW_FILTERS[this.reviewFilter()].query) : null;
+    const listed = this.listedReviews();
+    return listed ? toReviewPage(listed, REVIEW_FILTERS[this.reviewFilter()].query) : null;
   });
   /** 符合目前篩選條件的評價 */
   protected reviews = computed(() => this.reviewPage()?.items ?? []);
@@ -132,6 +160,27 @@ export class ProductInfo {
     const page = this.reviewPage();
     return page ? REVIEW_FILTERS.map((filter) => filter.count(page)) : [];
   });
+
+  /* ===============================
+     自己的評價（買過才能評價：訂單不是待付款或已取消）
+     =============================== */
+
+  /** 目前會員是否買過這件商品 */
+  protected readonly canReview = computed(() => this.purchased.has(this.id()));
+  /** 向後端取得的自己的評價；undefined 代表尚在載入（或不能評價），null 代表還沒有評價 */
+  private readonly loadedMyReview = toSignal(
+    toObservable(computed(() => (this.canReview() ? this.id() : null))).pipe(
+      switchMap((id) =>
+        id ? this.reviewApi.getMyReview(id).pipe(catchError(() => of(null))) : of(undefined),
+      ),
+    ),
+  );
+  /** 自己的評價；送出後直接換成後端回傳的內容 */
+  protected readonly myReview = linkedSignal<Review | null | undefined>(() => this.loadedMyReview());
+  /** 評價正在送出 */
+  protected readonly reviewSaving = signal(false);
+  /** 最近一次送出失敗的說明 */
+  protected readonly reviewError = signal<string | null>(null);
 
   /** 麵包屑導覽項目：首頁 / 器類 / 商品名稱 */
   protected breadcrumbItems = computed<BreadcrumbItem[]>(() => {
@@ -159,6 +208,44 @@ export class ProductInfo {
     const item = this.item();
     if (!item) return;
     this.cart.add(item.id, qty, () => this.router.navigate([CART_PATH]));
+  }
+
+  /** 送出評價（新增或編輯）：成功後顯示為不可修改的文字，並同步更新評價清單與評分 */
+  protected onSaveReview(draft: ReviewDraft): void {
+    if (this.reviewSaving()) return;
+    const id = this.id();
+    this.reviewSaving.set(true);
+    this.reviewError.set(null);
+    this.reviewApi.saveMyReview(id, draft).subscribe({
+      next: (saved) => {
+        this.reviewSaving.set(false);
+        if (this.id() !== id) return; // 儲存期間已換到別的商品
+        this.myReview.set(saved);
+        this.applySavedReview(id, saved);
+      },
+      error: (error: unknown) => {
+        this.reviewSaving.set(false);
+        if (error instanceof HttpErrorResponse && error.status === 401) {
+          // 登入已失效：清除登入狀態並詢問是否重新登入。
+          this.cart.handleUnauthorized();
+          return;
+        }
+        const detail = error instanceof HttpErrorResponse ? error.error?.detail : null;
+        this.reviewError.set(typeof detail === 'string' && detail ? detail : '評價送出失敗，請稍後再試。');
+      },
+    });
+  }
+
+  /** 把儲存後的評價放進評價清單（已有則取代、沒有則加在最前面），並依新清單重算評分與評論數 */
+  private applySavedReview(id: string, saved: Review): void {
+    const all = this.allReviews();
+    if (!all) return;
+    const next = all.some((review) => review.id === saved.id)
+      ? all.map((review) => (review.id === saved.id ? saved : review))
+      : [saved, ...all];
+    this.allReviews.set(next);
+    const average = next.reduce((sum, review) => sum + review.stars, 0) / next.length;
+    this.savedStats.set({ id, rating: Math.round(average * 10) / 10, count: next.length });
   }
 
   /** 從同類推薦加入購物車：數量 1 */

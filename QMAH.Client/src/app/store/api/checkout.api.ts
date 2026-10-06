@@ -61,6 +61,11 @@ export class CheckoutApi {
     return this.http.get<CheckoutOptions>(apiUrl('/checkout/options'));
   }
 
+  /** GET /store/orders/purchased-product-ids：購買過（訂單不是待付款或已取消）的不重複商品編號 */
+  getPurchasedProductIds(): Observable<string[]> {
+    return this.http.get<string[]>(apiUrl('/orders/purchased-product-ids'));
+  }
+
   /** POST /store/checkout/quote：依配送方式、折價券與點數試算訂單金額（不成立訂單，也不寫入任何資料）。 */
   getQuote(request: OrderQuoteRequest): Observable<OrderQuote> {
     return this.http.post<OrderQuote>(apiUrl('/checkout/quote'), request);

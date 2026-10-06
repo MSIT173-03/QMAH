@@ -30,6 +30,16 @@ export function formatDateMD(iso: string): string {
   return `${month}/${day}`;
 }
 
+/**
+ * 將 ISO 時間格式化為本地時間的 YYYY.MM.DD HH:mm。
+ * 後端時間是 UTC 但序列化時不帶時區標記，沒有時區時視為 UTC。
+ */
+export function formatDateTime(iso: string): string {
+  const date = new Date(/(Z|[+-]d{2}:?d{2})$/i.test(iso) ? iso : `${iso}Z`);
+  const day = `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`;
+  return `${day} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 /** 數字補零至兩位，用於排行角標、倒數計時與步驟序號 */
 export function pad(value: number): string {
   return String(value).padStart(2, '0');

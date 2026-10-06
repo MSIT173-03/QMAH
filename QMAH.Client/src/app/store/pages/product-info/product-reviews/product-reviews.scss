@@ -1,6 +1,13 @@
 :host {
   /* 由 .section-block 直接成為說明／評價格線的項目 */
   display: contents;
+
+  /* 評價區所有星星的顏色：比全站的強調金色更亮的黃色 */
+  --review-star-color: #ffc928;
+}
+
+.product-card-star {
+  color: var(--review-star-color);
 }
 
 /* 標題列右側的評分摘要，推擠至最右側 */
@@ -35,6 +42,114 @@
   font-size: var(--qmah-type-label-size);
   line-height: var(--qmah-type-body-leading);
   color: var(--color-body);
+}
+
+/* 自己的評價：已送出的文字（外觀與評價卡片一致）與輸入表單 */
+.review-edited {
+  color: var(--color-faint);
+}
+
+/* 編輯按鈕：無外框、無底色的文字，靠 margin-left: auto 置於同一行的尾端 */
+.review-edit {
+  margin-left: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 2px;
+  }
+}
+
+.review-editor {
+  border: 1px solid var(--color-line);
+  border-radius: var(--store-radius);
+  background: var(--color-surface);
+  padding: var(--qmah-space-3) var(--qmah-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-2);
+}
+
+.review-editor-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+}
+
+.review-stars-input {
+  display: flex;
+  gap: 2px;
+}
+
+.review-star {
+  min-height: 0;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  font-size: 24px;
+  line-height: 1.2;
+  color: var(--color-line-mid);
+  cursor: pointer;
+  transition: color 160ms;
+
+  &--on {
+    color: var(--review-star-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 2px;
+  }
+}
+
+.review-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 84px;
+  padding: var(--qmah-space-2) var(--qmah-space-3);
+  border: 1px solid var(--color-line-mid);
+  border-radius: var(--qmah-radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--qmah-type-label-size);
+  line-height: var(--qmah-type-body-leading);
+  resize: vertical;
+
+  &:focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 1px;
+  }
+}
+
+.review-error {
+  margin: 0;
+  font-size: var(--qmah-type-label-size);
+  color: var(--qmah-danger);
+}
+
+/* 送出按鈕在最右側，取消在它左邊 */
+.review-actions {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: var(--qmah-space-2);
+
+  /* 送出按鈕在尚未填寫完整或送出中時停用（沿用全站按鈕樣式，只調整停用外觀） */
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* 篩選後無評價時的提示 */

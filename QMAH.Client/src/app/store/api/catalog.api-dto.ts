@@ -198,6 +198,8 @@ export function toReview(dto: ApiProductReview): Review {
     user: dto.displayName ?? '匿名會員',
     date: dto.createdAt.slice(0, 10),
     text: dto.content,
+    // 新增時 UpdatedAt 與 CreatedAt 相同；之後有編輯才會比建立時間晚。
+    editedAt: Date.parse(dto.updatedAt) > Date.parse(dto.createdAt) ? dto.updatedAt : null,
   };
 }
 

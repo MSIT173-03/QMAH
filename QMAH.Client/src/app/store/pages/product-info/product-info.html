@@ -25,8 +25,8 @@
     <app-product-summary
       [brand]="product.brand"
       [name]="product.name"
-      [rating]="product.rating"
-      [reviews]="product.reviewCount"
+      [rating]="rating()"
+      [reviews]="reviewCount()"
       [sold]="product.soldCount"
       [price]="product.dealPrice"
       [was]="was()"
@@ -42,12 +42,17 @@
   <section class="product-hero-section">
     <app-product-detail [intro]="product.description" />
     <app-product-reviews
-      [rating]="product.rating"
-      [reviewCount]="product.reviewCount"
+      [rating]="rating()"
+      [reviewCount]="reviewCount()"
       [reviews]="reviews()"
       [filterCounts]="reviewCounts()"
       [filterIndex]="reviewFilter()"
+      [canReview]="canReview()"
+      [myReview]="myReview()"
+      [saving]="reviewSaving()"
+      [saveError]="reviewError()"
       (filterChange)="reviewFilter.set($event)"
+      (reviewSave)="onSaveReview($event)"
     />
   </section>
 

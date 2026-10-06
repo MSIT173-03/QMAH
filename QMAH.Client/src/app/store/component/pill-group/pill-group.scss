@@ -19,6 +19,13 @@
   }
 }
 
+/* 圖標元件預設只有 1em 見方，但 SVG 本身是 18px，會溢出下方而偏離垂直置中；
+   讓圖標元件的外框跟著 SVG 的實際大小，按鈕的 align-items: center 才能把它置中 */
+.pill app-qmah-icon {
+  width: auto;
+  height: auto;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;

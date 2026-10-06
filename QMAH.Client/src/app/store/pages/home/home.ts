@@ -5,6 +5,7 @@ import { SearchBar, SessionBar, SiteHeader } from '../../component';
 import { HomeApi } from '../../api';
 import { searchPath } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
+import { PurchasedProducts } from '../../shared/purchased-products';
 import { toProductView } from '../../shared/product-view';
 
 import { HeroCarousel } from './hero-carousel/hero-carousel';
@@ -41,6 +42,7 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 export class Home {
   private readonly router = inject(Router);
   private readonly homeApi = inject(HomeApi);
+  private readonly purchased = inject(PurchasedProducts);
 
   /** 購物車狀態（件數顯示於頁首） */
   protected readonly cart = injectCartState();
@@ -49,6 +51,7 @@ export class Home {
   protected recommendedItems = signal<BadgedProductView[]>([]);
 
   constructor() {
+    this.purchased.ensureLoaded();
     this.loadRecommendations();
   }
 

@@ -23,6 +23,7 @@ import { CatalogApi } from '../../api';
 import { ProductQuery } from '../../api/api.models';
 import { HOME_PATH } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
+import { PurchasedProducts } from '../../shared/purchased-products';
 import { ProductViewData, toProductView } from '../../shared/product-view';
 import {
   ALL_ERAS_LABEL,
@@ -80,6 +81,7 @@ export class ProductList {
   private readonly catalogApi = inject(CatalogApi);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly purchased = inject(PurchasedProducts);
 
   /* ===============================
      網址查詢字串（由 router 的 component input binding 帶入）
@@ -97,6 +99,7 @@ export class ProductList {
   page = input(1, { transform: toPage });
 
   constructor() {
+    this.purchased.ensureLoaded();
     // 從首頁或商品頁進入列表時捲回頂端；元件在同一路由內重用（例如再次點進不同器類）時，
     // 也以網址篩選參數變動觸發，而不是只在建立時執行。
     effect(() => {

@@ -129,6 +129,8 @@ export interface Review {
   /** 評價日期（YYYY-MM-DD） */
   date: string;
   text: string;
+  /** 最後編輯時間（ISO 8601）；從未編輯過時為 null */
+  editedAt: string | null;
 }
 
 /** 商品評價篩選參數 */

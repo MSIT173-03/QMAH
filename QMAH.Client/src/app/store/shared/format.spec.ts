@@ -1,4 +1,15 @@
-import { formatCouponCondition, formatCouponOff } from './format';
+import { formatCouponCondition, formatCouponOff, formatDateTime } from './format';
+
+describe('formatDateTime', () => {
+  it('treats a time without a zone as UTC and shows it in local time', () => {
+    const local = new Date('2026-10-06T02:30:00Z');
+    const pad = (value: number) => String(value).padStart(2, '0');
+    const expected = `${local.getFullYear()}.${pad(local.getMonth() + 1)}.${pad(local.getDate())} ${pad(local.getHours())}:${pad(local.getMinutes())}`;
+
+    expect(formatDateTime('2026-10-06T02:30:00')).toBe(expected);
+    expect(formatDateTime('2026-10-06T02:30:00Z')).toBe(expected);
+  });
+});
 
 describe('coupon labels', () => {
   it('shows PERCENT discounts as a percentage and FIXED discounts as an amount', () => {
