@@ -338,6 +338,22 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('pageMeasure', { static: true }) private pageMeasure?: ElementRef<HTMLElement>;
   private resizeObserver?: ResizeObserver;
   private timers: ReturnType<typeof setTimeout>[] = [];
+
+  /**
+   * 頁籤「抽起」＋內容「浮現」的節奏（寫在 .artifact-page 的 data-reveal 屬性上，動畫由 CSS 負責）：
+   * - pending：書頁內容先隱藏；翻書時（範圍 book）選中的頁籤也先跟其他頁籤一樣收在書頁裡
+   * - run：書頁內容淡入浮現；翻書時選中的頁籤同時被抽起來
+   * - done：一般狀態
+   * 範圍（data-reveal-scope）：
+   * - book：翻開書本時，整頁內容浮現；上方與左側目前選中的頁籤在攤開後才一起抽起
+   * - section：切換上方頁籤（圖鑑／鑰匙）時，整個章節的內容浮現
+   * - content：切換左側頁籤時，只有文物格（鑰匙背包格）浮現，搜尋列、統計列、篩選單維持原樣不閃
+   * 切頁籤時頁籤本身只有被點的那一個抽出來（CSS 的 is-active 過渡），上方與左側互不影響
+   */
+  reveal = signal<'pending' | 'run' | 'done'>('done');
+  revealScope = signal<'book' | 'section' | 'content'>('book');
+  /** 每次播放遞增；舊的計時器發現編號不同就不動作，連續快速切頁籤也不會互相干擾 */
+  private revealSeq = 0;
   private firstSpreadPreloaded = false;
 
   // ---- 搜尋／篩選 ----
@@ -629,7 +645,16 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
       this.catalogTab.set('ERA'); // 頁籤停在年代並顯示勾選數；篩選單先收起，直接看到結果
     }
     // 從其他頁面指定文物（?focus=）或年代進來時，不必再點一次封面
-    if (era || query.get('focus')) this.bookState.set('open');
+    if (era || query.get('focus')) {
+      this.bookState.set('open');
+      // 直接攤開進來時也播一次：選中的頁籤抽起、內容浮現
+      if (!this.prefersReducedMotion()) {
+        const seq = ++this.revealSeq;
+        this.revealScope.set('book');
+        this.reveal.set('pending');
+        this.later(150, () => this.runReveal(seq));
+      }
+    }
 
     this.loadArtifacts();
     this.loadKeyBalance();
@@ -699,20 +724,50 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  /**
+   * 翻開：書頁內容先隱藏（reveal = pending），頁籤一路跟著封面翻過去（只在封面轉到側面那一瞬間淡出淡入，
+   * 見 artifact-list.cover.scss）。完全攤開後，選中的頁籤才被抽起、內容同時浮現（reveal = run）。
+   */
   openBook(): void {
     if (this.bookState() !== 'closed') return;
     if (this.prefersReducedMotion()) {
       this.bookState.set('open');
       return;
     }
+    const seq = ++this.revealSeq;
+    this.revealScope.set('book');
+    this.reveal.set('pending');
     this.bookState.set('opening');
-    this.later(1200, () => this.bookState.set('open'));
+    this.later(1200, () => {
+      this.bookState.set('open');
+      // 攤平後停一拍再抽起選中的頁籤
+      this.later(150, () => this.runReveal(seq));
+    });
+  }
+
+  /** 切換頁籤時：只重播內容浮現（頁籤由 CSS 過渡，只有被點的那一個抽出來） */
+  private playReveal(scope: 'section' | 'content'): void {
+    if (this.bookState() !== 'open' || this.prefersReducedMotion()) return;
+    const seq = ++this.revealSeq;
+    this.revealScope.set(scope);
+    this.reveal.set('pending');
+    this.later(40, () => this.runReveal(seq));
+  }
+
+  private runReveal(seq: number): void {
+    if (seq !== this.revealSeq) return;
+    this.reveal.set('run');
+    this.later(900, () => {
+      if (seq === this.revealSeq) this.reveal.set('done');
+    });
   }
 
   /** 闔上書本；完全闔上後切回「圖鑑」章節並收合展開中的年代，下次翻開從圖鑑開始 */
   closeBook(): void {
     if (this.bookState() !== 'open') return;
     if (this.isFullscreen()) void this.toggleFullscreen();
+    this.revealSeq++;
+    this.reveal.set('done');
     const finish = () => {
       this.bookState.set('closed');
       this.setSection('catalog');
@@ -735,6 +790,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   setSection(section: BookSection): void {
     if (this.bookSection() === section) return;
+    this.playReveal('section');
     this.bookSection.set(section);
     this.expandedGroupKey.set(null);
     this.spread.set(0);
@@ -750,8 +806,11 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
    * 分類／年代：叫出篩選單；再點一次已選取的頁籤則收起／展開篩選單。
    */
   setCatalogTab(tab: CatalogTab): void {
-    // 切換頁籤時收合展開中的年代
-    if (tab !== this.catalogTab()) this.expandedGroupKey.set(null);
+    // 切換頁籤時收合展開中的年代，並重播內容浮現
+    if (tab !== this.catalogTab()) {
+      this.expandedGroupKey.set(null);
+      this.playReveal('content');
+    }
     if (tab === 'ALL') {
       const hadFilter = this.selectedEras().size > 0 || this.selectedCategories().size > 0;
       this.catalogTab.set('ALL');
@@ -775,6 +834,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   setKeyFilter(filter: KeyFilter): void {
+    if (filter !== this.keyFilter()) this.playReveal('content');
     this.keyFilter.set(filter);
   }
 

@@ -2,6 +2,8 @@
   class="artifact-page"
   #artifactPage
   [attr.data-book]="bookState()"
+  [attr.data-reveal]="reveal()"
+  [attr.data-reveal-scope]="revealScope()"
   [attr.data-section]="bookSection()"
   [attr.data-tab]="catalogTab()"
   [attr.data-filter-open]="filterMode() ? '' : null"
@@ -168,46 +170,7 @@
                   role="region"
                   [attr.aria-label]="catalogTab() === 'ERA' ? '年代篩選' : '分類篩選'"
                 >
-                  <div class="ledger">
-                    <div class="ledger__head">
-                      <h4 class="ledger__title">{{ catalogTab() === 'ERA' ? '文物年代' : '文物分類' }}</h4>
-                      <button
-                        type="button"
-                        class="ledger__clear"
-                        [disabled]="selectedEras().size === 0 && selectedCategories().size === 0"
-                        (click)="clearSelections()"
-                      >清除篩選</button>
-                    </div>
-                    <div
-                      class="ledger__options"
-                      [class.ledger__options--categories]="catalogTab() === 'CATEGORY'"
-                      [class.ledger__options--eras]="catalogTab() === 'ERA'"
-                    >
-                      @if (catalogTab() === 'ERA') {
-                        @for (era of eraOptions(); track era) {
-                          <label class="filter-option era-slip" [attr.data-tone]="eraTone(era)">
-                            <input type="checkbox" [checked]="isEraSelected(era)" (change)="toggleEraFilter(era)" />
-                            <span class="era-slip__name">{{ era }}</span>
-                            @if (eraYears(era); as years) {
-                              <span class="era-slip__years">{{ years }}</span>
-                            }
-                          </label>
-                        }
-                      } @else {
-                        @for (category of categoryOptions(); track category) {
-                          <label class="filter-option category-slip" [attr.data-tone]="categoryTone(category)">
-                            <input type="checkbox" [checked]="isCategorySelected(category)" (change)="toggleCategoryFilter(category)" />
-                            <span class="category-slip__glyph" [attr.data-glyph]="categoryGlyph(category)" aria-hidden="true"></span>
-                            <span class="category-slip__name">{{ category }}</span>
-                            <app-qmah-icon class="category-slip__check" name="check" [size]="16" aria-hidden="true" />
-                          </label>
-                        }
-                      }
-                    </div>
-                    <div class="ledger__foot">
-                      <span class="ledger__summary">{{ filterSummary() }}・符合 {{ filteredItems().length }} 件</span>
-                    </div>
-                  </div>
+                  <ng-container *ngTemplateOutlet="ledgerTpl"></ng-container>
                 </div>
               }
 
@@ -299,16 +262,26 @@
           <div
             class="book__turn-layer"
             aria-hidden="true"
+            inert
             [style.--cols]="layout()?.cols ?? 4"
             [style.--card-w]="(layout()?.cardW ?? 96) + 'px'"
             [style.--card-h]="(layout()?.cardH ?? 128) + 'px'"
           >
             <div class="book__leaf" [attr.data-dir]="leafSide()">
               <div class="leaf__face leaf__face--front">
+                <ng-container *ngTemplateOutlet="leafHeadTpl"></ng-container>
                 <ng-container *ngTemplateOutlet="catalogPageTpl; context: { $implicit: leafFront(), first: false }"></ng-container>
               </div>
               <div class="leaf__face leaf__face--back">
-                <ng-container *ngTemplateOutlet="catalogPageTpl; context: { $implicit: leafBack(), first: false }"></ng-container>
+                <ng-container *ngTemplateOutlet="leafHeadTpl"></ng-container>
+                @if (filterMode()) {
+                  <!-- 篩選單開著時，翻過來的是左頁：上面同樣印著篩選單，翻頁全程篩選單都在 -->
+                  <div class="filter-sheet leaf__sheet">
+                    <ng-container *ngTemplateOutlet="ledgerTpl"></ng-container>
+                  </div>
+                } @else {
+                  <ng-container *ngTemplateOutlet="catalogPageTpl; context: { $implicit: leafBack(), first: false }"></ng-container>
+                }
               </div>
             </div>
           </div>
@@ -439,8 +412,7 @@
         <!-- 封面背面：翻開／闔上時，左頁連同內容「長在」封面背面上一起繞書脊翻（跟翻其他頁同一個做法），
              所以內容全程跟著書頁走，不會先空白、也不會獨自淡出 -->
         <div class="cover__back" aria-hidden="true">
-          <!-- 展開時的頁籤（有字、有顏色、選中的抽出來）：長在封面背面裡，疊在皮革邊框之上、紙面之下，
-               與真正的頁籤同一個層次與位置；封面轉到右邊時它們被背面遮住，換成封面正面外側探出的背面頁籤 -->
+          <!-- 封面背面上的文字頁籤：封面翻過 90° 之後接手，位置與攤開後真正的頁籤完全相同，攤開瞬間直接換手 -->
           <div class="cover__tabs cover__tabs--text cover__tabs--top" aria-hidden="true">
             <span class="ribbon ribbon--top" data-tone="jade" [class.is-active]="bookSection() === 'catalog'">圖鑑</span>
             <span class="ribbon ribbon--top" data-tone="wine" [class.is-active]="bookSection() === 'keys'">鑰匙</span>
@@ -479,6 +451,84 @@
   </div>
 
   <!-- 單一書頁的文物內容（左右頁共用） -->
+  <!-- 篩選單內容（左頁上的篩選單與翻頁書頁上的那一份共用） -->
+  <ng-template #ledgerTpl>
+    <div class="ledger">
+      <div class="ledger__head">
+        <h4 class="ledger__title">{{ catalogTab() === 'ERA' ? '文物年代' : '文物分類' }}</h4>
+        <button
+          type="button"
+          class="ledger__clear"
+          [disabled]="selectedEras().size === 0 && selectedCategories().size === 0"
+          (click)="clearSelections()"
+        >清除篩選</button>
+      </div>
+      <div
+        class="ledger__options"
+        [class.ledger__options--categories]="catalogTab() === 'CATEGORY'"
+        [class.ledger__options--eras]="catalogTab() === 'ERA'"
+      >
+        @if (catalogTab() === 'ERA') {
+          @for (era of eraOptions(); track era) {
+            <label class="filter-option era-slip" [attr.data-tone]="eraTone(era)">
+              <input type="checkbox" [checked]="isEraSelected(era)" (change)="toggleEraFilter(era)" />
+              <span class="era-slip__name">{{ era }}</span>
+              @if (eraYears(era); as years) {
+                <span class="era-slip__years">{{ years }}</span>
+              }
+            </label>
+          }
+        } @else {
+          @for (category of categoryOptions(); track category) {
+            <label class="filter-option category-slip" [attr.data-tone]="categoryTone(category)">
+              <input type="checkbox" [checked]="isCategorySelected(category)" (change)="toggleCategoryFilter(category)" />
+              <span class="category-slip__glyph" [attr.data-glyph]="categoryGlyph(category)" aria-hidden="true"></span>
+              <span class="category-slip__name">{{ category }}</span>
+              <app-qmah-icon class="category-slip__check" name="check" [size]="16" aria-hidden="true" />
+            </label>
+          }
+        }
+      </div>
+      <div class="ledger__foot">
+        <span class="ledger__summary">{{ filterSummary() }}・符合 {{ filteredItems().length }} 件</span>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- 翻頁書頁上的頁首：每一頁都印著同樣的搜尋列（左頁）與統計列（右頁），翻頁時頁首不會消失。
+       只是外觀的複本（書頁整層 inert、不能操作），真正可以操作的在底下的頁面上 -->
+  <ng-template #leafHeadTpl>
+    <div class="leaf__head leaf__head--left">
+      <span class="quill-search">
+        <svg class="quill-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="M15.5 15.5 21 21" />
+        </svg>
+        <input type="search" tabindex="-1" readonly placeholder="搜尋編號／名稱／年代／分類" [value]="searchQuery()" />
+      </span>
+    </div>
+    <div class="leaf__head leaf__head--right">
+      @if (catalogViewReady()) {
+        <div class="page-meta">
+          <span class="page-meta__count">
+            符合 <strong>{{ filteredItems().length }}</strong> 件・已解鎖 <strong>{{ filteredUnlockedCount() }}</strong>
+          </span>
+          <div class="page-meta__actions">
+            <button type="button" tabindex="-1" class="seal-btn" [class.is-active]="unlockedOnly()">
+              <app-qmah-icon [name]="unlockedOnly() ? 'lock-keyhole-open' : 'lock-keyhole'" [size]="16" aria-hidden="true" />
+              僅看已解鎖
+              <strong>{{ unlockedCount() }}</strong>
+            </button>
+            <button type="button" tabindex="-1" class="seal-btn seal-btn--gold" [disabled]="lockedTotalCount() === 0 || bulkUnlocking()">
+              <app-qmah-icon name="zap" [size]="16" aria-hidden="true" />
+              一鍵解鎖 <strong>{{ lockedTotalCount() }}</strong>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </ng-template>
+
   <ng-template #catalogPageTpl let-page let-first="first">
     @if (first && loading()) {
       <div class="state"><span class="spinner"></span>翻閱典籍中…</div>

@@ -606,3 +606,25 @@
   border-color: var(--line);
   background: rgb(255 248 230 / 70%);
 }
+
+/* ---------- 書本模式：切換左側鑰匙頁籤時，只有背包格裡的鑰匙浮現 ----------
+   節奏由圖鑑書寫在 .artifact-page 上的 data-reveal／data-reveal-scope 決定（見 artifact-list.ts 的 reveal），
+   背包的木框、合成台、說明文字都留在原地不閃。 */
+:host-context(.artifact-page[data-reveal='pending'][data-reveal-scope='content']) .key-slot-grid--book > * {
+  opacity: 0;
+}
+
+:host-context(.artifact-page[data-reveal='run'][data-reveal-scope='content']) .key-slot-grid--book > * {
+  animation: bag-slot-rise 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) 0.04s both;
+}
+
+@keyframes bag-slot-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host-context(.artifact-page[data-reveal='run'][data-reveal-scope='content']) .key-slot-grid--book > * {
+    animation: none;
+  }
+}

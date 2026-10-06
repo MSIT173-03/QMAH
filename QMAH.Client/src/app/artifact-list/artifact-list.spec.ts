@@ -120,6 +120,42 @@ describe('ArtifactList', () => {
     expect(['opening', 'open']).toContain(component.bookState());
   });
 
+  it('翻書時內容先隱藏；攤開後抽起選中頁籤並讓內容浮現；切換頁籤時重播，快速連點不會提早結束', () => {
+    vi.useFakeTimers();
+    try {
+      component.openBook();
+      expect(component.reveal()).toBe('pending');
+      expect(component.revealScope()).toBe('book'); // 翻書：上方與左側選中的頁籤攤開後才抽起
+      vi.advanceTimersByTime(1200);
+      expect(component.bookState()).toBe('open');
+      expect(component.reveal()).toBe('pending'); // 攤平後停一拍
+      vi.advanceTimersByTime(150);
+      expect(component.reveal()).toBe('run');
+      vi.advanceTimersByTime(900);
+      expect(component.reveal()).toBe('done');
+
+      component.setCatalogTab('ERA');
+      expect(component.reveal()).toBe('pending');
+      expect(component.revealScope()).toBe('content'); // 切頁籤：只重播內容浮現，頁籤只有被點的那個抽出
+      vi.advanceTimersByTime(40);
+      expect(component.reveal()).toBe('run');
+
+      // 第一次的 done 計時器還沒到就又切換：舊計時器不能把新的動畫提早結束
+      component.setKeyFilter('ERA');
+      expect(component.reveal()).toBe('pending');
+      vi.advanceTimersByTime(910);
+      expect(component.reveal()).toBe('run');
+      vi.advanceTimersByTime(40);
+      expect(component.reveal()).toBe('done');
+
+      // 點目前已選的頁籤（只開關篩選單）不重播
+      component.setCatalogTab('ERA');
+      expect(component.reveal()).toBe('done');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('切換頁籤時收合展開中的年代；闔上書本後切回圖鑑章節', () => {
     component.catalogModel.set([makeItem('1', '唐', '玉器'), makeItem('2', '清', '陶瓷')]);
     component.toggleGroupExpand(component.catalogGroups()[0]);
