@@ -43,9 +43,7 @@ export class PurchasedProducts {
     if (this.requested) return;
     this.requested = true;
     this.request = this.checkoutApi.getPurchasedProductIds().subscribe({
-      next: (ids) => {
-        this.ids.set(new Set(ids.map((id) => id.toLowerCase())))
-      },
+      next: (ids) => this.ids.set(new Set(ids.map((id) => id.toLowerCase()))),
       // 查詢失敗只是暫時無法評價；下次登入狀態改變時會再查詢。
       error: () => (this.requested = false),
     });
