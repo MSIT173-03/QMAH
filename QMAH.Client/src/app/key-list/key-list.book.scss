@@ -311,11 +311,12 @@
   stroke-width: 0.8;
 }
 
+/* 魔法陣精準置中：與合成圈同圓心、同直徑（inset 0、100%），圓心就是中央的放入格 */
 .craft-magic {
   position: absolute;
-  inset: -4%;
-  width: 108%;
-  height: 108%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   overflow: visible;
   opacity: 0.55;
@@ -323,14 +324,24 @@
 }
 
 .craft-magic circle,
-.craft-magic polygon {
+.craft-magic polygon,
+.craft-magic line {
   fill: none;
-  stroke: #8a6427;
+  stroke: url(#craft-magic-gold);
   stroke-width: 1.2;
 }
 
+.craft-magic .craft-magic__glow { fill: url(#craft-magic-glow); stroke: none; animation: magic-breathe 5s ease-in-out infinite; }
+.craft-magic .craft-magic__ticks { stroke-width: 3.2; stroke-dasharray: 0.8 3.15; }
+.craft-magic__nodes path { fill: url(#craft-magic-gold); stroke: none; }
+.craft-magic__spokes line { stroke-width: 0.9; }
+
+@keyframes magic-breathe {
+  50% { opacity: 0.35; }
+}
+
 .craft-magic__runes {
-  fill: #8a6427;
+  fill: url(#craft-magic-gold);
   font-size: 10px;
   letter-spacing: 2px;
 }
@@ -350,9 +361,13 @@
 }
 
 .craft-magic--ready circle,
-.craft-magic--ready polygon {
+.craft-magic--ready polygon,
+.craft-magic--ready line {
   stroke: #6d54c4;
 }
+
+.craft-magic--ready .craft-magic__nodes path { fill: #6d54c4; }
+.craft-magic--ready .craft-magic__glow { fill: rgb(157 132 238 / 30%); }
 
 .craft-magic--ready .craft-magic__runes {
   fill: #6d54c4;
@@ -472,15 +487,36 @@
 
 /* ---------- 浮動提示框與確認視窗：羊皮紙風格 ---------- */
 
+/* 提示框：一張高質感的紙片——淡象牙紙面（真實紙張照片疊淡色）、細墨邊、內縮一道細框線，
+   陰影分兩層（貼紙的接觸陰影＋懸浮的長陰影），不用黃色底 */
 .key-page--book .key-tooltip {
-  border-color: #9c7630;
-  background: linear-gradient(#f6ead0, #ead7ad);
-  color: var(--ink);
-  box-shadow: 0 8px 20px rgb(40 20 5 / 35%);
+  padding: 9px 12px 10px;
+  border: 1px solid rgb(120 98 66 / 42%);
+  border-radius: 2px;
+  background-image:
+    linear-gradient(#f8f4e8, #f8f4e8),
+    url('/assets/catalog/page-paper.jpg');
+  background-size: 100% 100%, 320px 320px;
+  background-blend-mode: multiply, normal;
+  color: #2c2118;
+  outline: 1px solid rgb(120 98 66 / 18%);
+  outline-offset: -4px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 80%),
+    0 1px 2px rgb(60 40 15 / 22%),
+    0 14px 24px -8px rgb(40 25 8 / 42%);
+}
+
+.key-page--book .key-tooltip__name {
+  color: #1e150d;
+  font-family: var(--qmah-font-serif);
+  font-size: 14px;
+  letter-spacing: 0.04em;
 }
 
 .key-page--book .key-tooltip__hint {
-  color: #6e2230;
+  border-top-color: rgb(120 98 66 / 30%);
+  color: #8a2f2c;
 }
 
 .key-page--book .confirm-dialog {
@@ -535,12 +571,6 @@
   .key-page--book .craft-bench {
     --ring-size: min(260px, 100%);
     --output-width: 150px;
-  }
-
-  .key-page--book .craft-magic {
-    inset: 0;
-    width: 100%;
-    height: 100%;
   }
 
   .key-page--book .craft-panel__note {
