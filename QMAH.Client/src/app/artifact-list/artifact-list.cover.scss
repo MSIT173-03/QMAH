@@ -14,6 +14,7 @@
   transform-origin: left center;
   transform-style: preserve-3d;
   transform: perspective(2600px) rotateY(0deg);
+  /* 注意：封面不能做 opacity 動畫——透明度小於 1 會讓 preserve-3d 壓平，封面正面的鏡像就會閃出來 */
   transition: transform 1.1s cubic-bezier(0.65, 0.05, 0.3, 1);
   cursor: pointer;
   outline: none;
@@ -31,6 +32,7 @@
 }
 
 .artifact-page[data-book='open'] .book__cover {
+    /* 封面背面帶著的左頁與真正的左頁一模一樣，所以攤開完成時直接換手，不需要淡出 */
   visibility: hidden;
 }
 
@@ -39,15 +41,29 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: 4px 14px 14px 4px;
+  border-radius: 3px 12px 12px 3px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  background:
-    radial-gradient(ellipse at 30% 20%, rgb(255 210 150 / 16%), transparent 50%),
-    radial-gradient(ellipse at 75% 85%, rgb(0 0 0 / 35%), transparent 55%),
-    repeating-radial-gradient(circle at 20% 30%, rgb(0 0 0 / 6%) 0 1px, transparent 1px 3px),
-    repeating-radial-gradient(circle at 70% 60%, rgb(255 255 255 / 2.5%) 0 1px, transparent 1px 4px),
-    linear-gradient(135deg, #5e3519, #3f2210 55%, #2c170a);
+  isolation: isolate;
+  /* 書皮：原設計的棕色皮革，改成更深、更有層次的栗棕——比桌面深一階、帶一點酒紅，才不會和橡木桌混在一起。底色只負責色相與光影，
+     顆粒由下面 ::before 的高度圖用 overlay 疊出來。光從書的正上方來：上緣亮、四周暗、右下角陰影最深。 */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 38%, rgb(255 205 150 / 9%), transparent 72%),
+    linear-gradient(170deg, #67371f 0%, #5a2f1a 55%, #4b2615 100%);
+}
+
+/* 皮革顆粒：高度圖（灰階）以 overlay 疊在底色上，凹凸才會真的「看得見」 */
+.cover__front::before,
+.cover__back::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url('/assets/catalog/cover-leather-height.jpg') 0 0 / 150px 150px;
+  filter: contrast(1) brightness(1.05);
+  mix-blend-mode: overlay;
+  opacity: 0.16;
+  pointer-events: none;
 }
 
 .cover__front {
@@ -56,14 +72,34 @@
   align-items: center;
   justify-content: center;
   box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 60%),
-    inset 0 0 70px rgb(0 0 0 / 55%),
-    0 30px 60px rgb(0 0 0 / 55%);
+    inset 0 0 0 1px rgb(0 0 0 / 65%),
+    inset 0 1px 0 rgb(255 220 170 / 16%),
+    inset 0 0 38px rgb(0 0 0 / 26%),
+    0 28px 50px rgb(40 22 8 / 55%),
+    0 8px 16px rgb(40 22 8 / 40%);
 }
 
 .cover__back {
   transform: rotateY(180deg);
-  border-radius: 14px 4px 4px 14px;
+  border-radius: 12px 3px 3px 12px;
+}
+
+/* 封面背面上的左頁：位置與封面背面的紙面完全相同（落在書的左半），帶著真實的頁面內容 */
+.cover__back > .cover__page {
+  position: absolute;
+  z-index: 1; /* 要在背面的紙面（::after）之上，否則內容會被紙面蓋住、只剩 z-index 較高的縮圖 */
+  top: var(--board);
+  bottom: var(--board);
+  left: var(--board);
+  right: 0;
+  border-radius: 3px 0 0 3px;
+  backface-visibility: hidden;
+}
+
+/* 闔上：稍微延遲一點點才開始轉，書與封面同時、同一條曲線合上（頁籤、左頁都長在封面上，一起走） */
+.artifact-page[data-book='closing'] .book__cover,
+.artifact-page[data-book='closing'] .book {
+  transition-delay: 0.14s;
 }
 
 /* 封面背面＝攤開後的左側皮革＋左頁，翻到左邊時跟真正的左頁接得起來 */
@@ -74,81 +110,129 @@
   bottom: var(--board);
   left: var(--board);
   right: 0;
-  border-radius: 4px 0 0 4px;
+  border-radius: 3px 0 0 3px;
 }
 
+/* ---------- 書脊與書溝：五道凸起的書脊帶，帶上燙金雙線，與封面之間一道凹下去的書溝 ---------- */
 .cover__spine {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 38px;
+  z-index: 1;
+  width: 40px;
   background:
     linear-gradient(180deg,
-      transparent 13%, rgb(255 220 170 / 16%) 13% 15%, rgb(0 0 0 / 35%) 15% 16%,
-      transparent 16% 36%, rgb(255 220 170 / 16%) 36% 38%, rgb(0 0 0 / 35%) 38% 39%,
-      transparent 39% 61%, rgb(255 220 170 / 16%) 61% 63%, rgb(0 0 0 / 35%) 63% 64%,
-      transparent 64% 84%, rgb(255 220 170 / 16%) 84% 86%, rgb(0 0 0 / 35%) 86% 87%, transparent 87%),
-    linear-gradient(90deg, rgb(0 0 0 / 50%), rgb(255 220 170 / 8%) 45%, rgb(0 0 0 / 40%));
+      transparent 12%, rgb(0 0 0 / 40%) 12% 12.6%, rgb(255 220 170 / 15%) 12.6% 14.6%, rgb(0 0 0 / 38%) 14.6% 15.2%, transparent 15.2% 35%,
+      rgb(0 0 0 / 40%) 35% 35.6%, rgb(255 220 170 / 15%) 35.6% 37.6%, rgb(0 0 0 / 38%) 37.6% 38.2%, transparent 38.2% 61%,
+      rgb(0 0 0 / 40%) 61% 61.6%, rgb(255 220 170 / 15%) 61.6% 63.6%, rgb(0 0 0 / 38%) 63.6% 64.2%, transparent 64.2% 84%,
+      rgb(0 0 0 / 40%) 84% 84.6%, rgb(255 220 170 / 15%) 84.6% 86.6%, rgb(0 0 0 / 38%) 86.6% 87.2%, transparent 87.2%),
+    linear-gradient(90deg, rgb(0 0 0 / 55%) 0%, rgb(0 0 0 / 8%) 40%, rgb(255 220 170 / 10%) 62%, rgb(0 0 0 / 38%) 92%, rgb(0 0 0 / 70%) 100%);
+  box-shadow: inset -1px 0 0 rgb(0 0 0 / 55%), 2px 0 3px rgb(0 0 0 / 30%);
 }
 
+/* 書溝上的燙金細線 */
+.cover__spine::before,
+.cover__spine::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  height: 22.6%;
+  border-top: 1px solid rgb(226 190 100 / 70%);
+  border-bottom: 1px solid rgb(226 190 100 / 70%);
+  opacity: 0.8;
+}
+
+.cover__spine::before { top: 14.6%; height: 20%; }
+.cover__spine::after { top: 38.2%; height: 22.8%; }
+
+/* ---------- 封面框：盲壓（無色）的深壓痕 + 一條細金線 + 縫線 ---------- */
 .cover__frame {
   position: absolute;
-  inset: 30px 30px 30px 58px;
-  border: 2px solid rgb(212 174 92 / 75%);
-  border-radius: 6px;
+  inset: 34px 34px 34px 62px;
+  z-index: 1;
+  border: 1px solid rgb(0 0 0 / 55%);
   box-shadow:
-    inset 0 0 0 7px transparent,
-    inset 0 0 0 8px rgb(212 174 92 / 40%),
-    0 0 0 1px rgb(0 0 0 / 40%),
-    inset 0 0 0 1px rgb(0 0 0 / 40%);
+    0 0 0 1px rgb(255 220 170 / 14%),
+    inset 0 0 0 1px rgb(255 220 170 / 12%);
   pointer-events: none;
+}
+
+.cover__frame::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1.5px solid #c9a24d;
+  filter: drop-shadow(-0.6px -0.6px 0 rgb(0 0 0 / 70%)) drop-shadow(0.6px 0.6px 0 rgb(255 230 170 / 25%));
+  opacity: 0.9;
+}
+
+.cover__frame::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border: 1.5px dashed rgb(0 0 0 / 50%);
+  border-radius: 6px;
+  box-shadow: 0 1px 0 rgb(255 220 170 / 14%);
 }
 
 .cover__corner {
   position: absolute;
-  width: 54px;
-  height: 54px;
-  background:
-    radial-gradient(circle at 0 0, transparent 0 20px, var(--gold) 20px 22px, transparent 22px 29px, rgb(212 174 92 / 60%) 29px 30px, transparent 30px),
-    radial-gradient(circle at 11px 11px, var(--gold) 0 4px, transparent 5px);
+  width: 64px;
+  height: 64px;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%20fill%3D%27none%27%3E%3Cg%20stroke%3D%27%2523d9b45c%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M4%2062V16Q4%204%2016%204H62%27%20stroke-width%3D%272%27%2F%3E%3Cpath%20d%3D%27M11%2062V22Q11%2011%2022%2011H62%27%20stroke-width%3D%271%27%20opacity%3D%27.8%27%2F%3E%3Cpath%20d%3D%27M18%2018l7%200M18%2018l0%207%27%20stroke-width%3D%271.2%27%20opacity%3D%27.0%27%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%2722%27%20cy%3D%2722%27%20r%3D%272.6%27%20fill%3D%27%2523d9b45c%27%2F%3E%3Cpath%20d%3D%27M22%2014.5l2%202.6-2%202.6-2-2.6z%27%20fill%3D%27%2523d9b45c%27%20opacity%3D%27.0%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  filter: drop-shadow(-1px -1px 0 rgb(0 0 0 / 65%)) drop-shadow(1px 1px 0 rgb(255 228 165 / 22%));
 }
 
-.cover__corner--tl { top: 6px; left: 6px; }
-.cover__corner--tr { top: 6px; right: 6px; transform: scaleX(-1); }
-.cover__corner--bl { bottom: 6px; left: 6px; transform: scaleY(-1); }
-.cover__corner--br { bottom: 6px; right: 6px; transform: scale(-1, -1); }
+.cover__corner--tl { top: 12px; left: 12px; }
+.cover__corner--tr { top: 12px; right: 12px; transform: scaleX(-1); }
+.cover__corner--bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+.cover__corner--br { bottom: 12px; right: 12px; transform: scale(-1, -1); }
 
 .cover__center {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-left: 28px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 70px 0 100px; /* 左側避開書脊與框，右側避開搭扣：書名永遠在框內 */
   text-align: center;
 }
 
+/* ---------- 魔法陣（窺探之眼）：全部用金箔漸層描邊，套同一個燙金壓印濾鏡 ---------- */
 .cover__emblem {
-  width: min(250px, 48%);
+  width: min(260px, 100%);
   aspect-ratio: 1;
   overflow: visible;
-  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 55%)) drop-shadow(0 0 14px rgb(230 190 100 / 22%));
+  filter: url(#cover-stamp);
 }
 
 .cover__emblem-ring {
   fill: none;
-  stroke: var(--gold);
-  stroke-width: 1.6;
+  stroke: url(#cover-foil);
+  stroke-width: 1.5;
   transform-box: view-box;
   transform-origin: 50% 50%;
-  animation: emblem-spin 60s linear infinite;
+  animation: emblem-spin 90s linear infinite;
 }
 
-.cover__emblem-runes {
-  fill: var(--gold);
-  font-size: 11px;
-  letter-spacing: 3px;
-  opacity: 0.85;
+.cover__emblem-ring path { fill: url(#cover-foil); stroke: none; }
+.cover__emblem-ring .cover__tick { stroke-width: 3; stroke-dasharray: 0.8 3.2; }
+.cover__emblem-ring .cover__dots { stroke-width: 1.4; stroke-dasharray: 0.1 4; stroke-linecap: round; }
+
+/* 盧恩文字：24 個字母每 15° 一個，剛好補滿一圈；用筆畫畫的，不依賴字型。與外環反向、更慢地旋轉 */
+.cover__runes {
+  fill: none;
+  stroke: url(#cover-foil);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: emblem-spin 140s linear infinite reverse;
 }
 
 .cover__eye {
@@ -175,53 +259,88 @@
   50% { fill: #e2b250; }
 }
 
+/* ---------- 書名：SVG 文字 + 同一個燙金壓印濾鏡（金箔反光、顆粒、浮雕高光、壓進皮革的暗邊） ---------- */
 .cover__title {
-  margin: 22px 0 8px;
-  padding-left: 0.3em;
-  font-family: var(--qmah-font-serif);
-  font-size: clamp(40px, 4.4vw, 66px);
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: 0.3em;
-  white-space: nowrap;
-  background: linear-gradient(180deg, #fff1c1 0%, #e6c06a 40%, #a87a2c 64%, #f0d68e 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 65%)) drop-shadow(0 0 12px rgb(230 190 100 / 25%));
+  margin: 18px 0 0;
+  line-height: 0;
 }
 
-.cover__subtitle {
-  margin: 0;
-  color: rgb(243 217 142 / 80%);
+.cover__title-svg {
+  display: block;
+  width: min(100%, 480px);
+  height: auto;
+  overflow: visible;
+}
+
+/* 站內統一的襯線體（Noto Serif TC，index.html 已載入 600／700），不另外引入字型 */
+.cover__title-text,
+.cover__subtitle-text {
   font-family: var(--qmah-font-serif);
-  font-size: 13px;
-  letter-spacing: 0.4em;
+  text-anchor: middle;
+}
+
+.cover__title-text {
+  fill: url(#cover-foil);
+  font-size: 84px;
+  font-weight: 700;
+  letter-spacing: 22px;
+  filter: url(#cover-stamp);
+}
+
+.cover__subtitle-text {
+  fill: #f3dc92;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 7px;
+  stroke: rgb(30 14 5 / 80%);
+  stroke-width: 2.6px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+.cover__title-rule {
+  stroke: #d9b45c;
+  stroke-width: 1.4;
+  filter: url(#cover-stamp);
+}
+
+.cover__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .cover__hint {
   position: absolute;
-  bottom: 52px;
+  z-index: 1;
+  bottom: 56px;
   left: 0;
   right: 0;
   margin: 0;
-  padding-left: 28px;
-  color: rgb(243 217 142 / 75%);
+  padding-left: 30px;
+  color: rgb(226 196 120 / 78%);
   font-family: var(--qmah-font-serif);
   font-size: 13px;
   letter-spacing: 0.25em;
   text-align: center;
-  animation: hint-pulse 2.6s ease-in-out infinite;
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 60%);
+  animation: hint-pulse 2.8s ease-in-out infinite;
 }
 
 @keyframes hint-pulse {
-  50% { opacity: 0.35; }
+  50% { opacity: 0.4; }
 }
 
+/* ---------- 搭扣：皮帶 + 黃銅扣 + 鉚釘 ---------- */
 .cover__clasp {
   position: absolute;
   right: 0;
   top: 50%;
+  z-index: 2;
   width: 40px;
   height: 70px;
   margin-top: -35px;
@@ -243,3 +362,92 @@
   box-shadow: 0 2px 4px rgb(0 0 0 / 50%);
 }
 
+
+
+
+/* ---------- 夾在封面上的頁籤（背面） ----------
+   它們是 .book__cover（preserve-3d）的子元素：translateZ(-1px) 讓它們藏在封面正面後面，
+   只露出探出封面邊緣的部分；封面繞書脊翻 180° 時，它們自然被「帶」到左邊——位置左右鏡像、看不到文字
+   （背面本來就沒有字）。這是純 transform 動畫，不需要任何額外的 JS 或重排。 */
+.cover__tabs {
+  position: absolute;
+  z-index: 0;
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+  transform: translateZ(-1px);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 上緣：鏡像後要落在左半邊 6% 的位置，所以放在封面靠右處、排列順序反過來 */
+.cover__tabs--top {
+  right: calc(var(--board) + 12%);
+  bottom: calc(100% - 20px);
+  flex-direction: row-reverse;
+}
+
+/* 右緣：鏡像後落在書的左緣，位置與正面側邊頁籤一致 */
+.cover__tabs--side {
+  left: calc(100% - var(--board) - 6px);
+  top: 5%;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cover__tabs--blank .ribbon {
+  position: relative;
+  color: transparent;
+  text-shadow: none;
+}
+
+.cover__tabs--blank .ribbon > * {
+  opacity: 0;
+}
+
+.cover__tabs--blank .ribbon::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgb(255 235 190 / 30%);
+  border-radius: inherit;
+}
+
+.cover__tabs--blank .ribbon--side {
+  border-radius: 0 12px 12px 0;
+}
+
+.cover__tabs--blank .ribbon--side:not(.is-active) {
+  transform: translateX(-6px);
+}
+
+/* 封面背面裡的頁籤（展開時的樣式）：座標就是「落在左邊之後」的書的座標，所以不需要任何鏡像手法；
+   位置換算：背面的左上角比書多出一圈書板（--board）。 */
+.cover__back > .cover__tabs--text {
+  transform: none;
+  backface-visibility: visible;
+  z-index: auto;
+}
+
+.cover__back > .cover__tabs--top {
+  right: auto;
+  top: auto;
+  left: calc(var(--board) + 12%);
+  bottom: calc(100% - var(--board) - 6px);
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.cover__back > .cover__tabs--side {
+  right: auto;
+  bottom: auto;
+  left: calc(var(--board) - 52px);
+  top: calc(var(--board) + 5%);
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* 背面不能把頁籤裁掉 */
+.cover__back {
+  overflow: visible;
+}
