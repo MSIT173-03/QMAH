@@ -28,6 +28,13 @@ describe('ProductList', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('has a back-to-top button that only appears after scrolling', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.list-main > app-scroll-top')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.scroll-top')).toBeNull();
+  });
 });
 
 describe('ProductList purchased products lookup', () => {

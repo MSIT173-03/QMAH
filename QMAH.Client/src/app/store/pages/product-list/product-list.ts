@@ -18,6 +18,7 @@ import {
   ProductCard,
   ProductRow,
   EmptyState,
+  ScrollTop,
 } from '../../component';
 import { CatalogApi } from '../../api';
 import { ProductQuery } from '../../api/api.models';
@@ -73,6 +74,7 @@ function toPage(value: string | undefined): number {
     ProductCard,
     ProductRow,
     EmptyState,
+    ScrollTop,
   ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
