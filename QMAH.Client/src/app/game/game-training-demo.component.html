@@ -52,12 +52,17 @@
             (locatorAvailability)="imageUnavailable = !$event"
             (puzzleAvailability)="setPuzzleAvailability($event)"
             (scrollAvailability)="setScrollAvailability($event)">
-            <span play-status class="demo-status" role="status">{{ phase === 'complete' ? '試玩完成' : autoPlaying ? '自動示範中' : '自行操作' }} · 不計成績與獎勵</span>
+            <span play-status class="demo-status" role="status">{{ phase === 'complete' ? '試玩完成' : autoPlaying ? (autoPlaySpeed === 2 ? '2 倍速自動示範中' : '自動示範中') : '自行操作／示範暫停' }} · 不計成績與獎勵</span>
             <div play-controls class="demo-controls">
               @if (phase === 'playing') {
-                <button type="button" class="demo-auto" [attr.aria-pressed]="autoPlaying" (click)="toggleAutoPlay()">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">@if (autoPlaying) { <path d="M8 5v14M16 5v14" /> } @else { <path d="M7 4.5v15l12-7.5z" /> }</svg>{{ autoPlaying ? '自己操作' : '自動示範' }}
-                </button>
+                <div class="demo-playback" role="group" aria-label="自動示範控制">
+                  <button type="button" class="demo-auto" [attr.aria-pressed]="autoPlaying" (click)="toggleAutoPlay()">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">@if (autoPlaying) { <path d="M8 5v14M16 5v14" /> } @else { <path d="M7 4.5v15l12-7.5z" /> }</svg>{{ autoPlaying ? '暫停示範' : '自動示範' }}
+                  </button>
+                  <select class="demo-speed" aria-label="示範播放速度" [value]="autoPlaySpeed" (change)="setAutoPlaySpeed($event)">
+                    <option value="1">1×</option><option value="2">2×</option>
+                  </select>
+                </div>
               }
               <button type="button" class="demo-restart" (click)="restartDemo()" aria-label="重新試玩" title="重新試玩"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" /></svg></button>
               <app-game-scoring-guide [code]="modeCode()" />

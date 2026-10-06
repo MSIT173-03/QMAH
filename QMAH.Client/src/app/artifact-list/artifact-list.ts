@@ -11,9 +11,11 @@ import {
   Output,
   ViewChild,
   computed,
+  effect,
+  inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
@@ -26,6 +28,18 @@ import { keyAssetPath } from '../shared/key-assets';
 import { SocialApiService } from '../core/services/social-api';
 import { ArtifactDiscussionDialog } from './artifact-discussion-dialog/artifact-discussion-dialog';
 import { KeyList } from '../key-list/key-list';
+import { QmahIconComponent, type QmahIconName } from '../shared/components/qmah-icon/qmah-icon';
+
+const CATEGORY_ICONS: Readonly<Record<string, QmahIconName>> = {
+  銅器: 'cooking-pot',
+  陶瓷: 'amphora',
+  玉器: 'gem',
+  琺瑯器: 'flower-2',
+  漆器: 'box',
+  錢幣: 'coins',
+  雕刻: 'shapes',
+  繪畫: 'brush',
+};
 
 /** 依年代分組後的結構；一鍵解鎖用它決定「圖鑑由上至下」的順序 */
 interface EraGroup {
@@ -70,16 +84,68 @@ export type CatalogTab = 'ALL' | 'CATEGORY' | 'ERA';
 /** 版面常數：要跟 artifact-list.scss 的 .group-head／.card-row／.artifact-card 一致 */
 export const BOOK_LAYOUT = {
   gap: 10,
-  minCardW: 92,
+  /** 每排最少張數 */
+  minCols: 4,
+  minCardW: 130,
   /** 卡片名稱列（含與圖框的間距）高度 */
   labelH: 26,
   /** 圖框高度 = 卡片寬 × 這個比例 */
   frameRatio: 0.86,
   /** 分區標題高度（含下方間距） */
   headerH: 36,
+  /** 書頁高度的安全餘量，避免小數點進位讓最後一列被裁掉 */
+  slack: 6,
 } as const;
 
-/** 年代先後排序用：沒有年代資料的排到最後 */
+/**
+ * 年代的內建對照（西元，西元前為負數；endYear 空缺＝迄今用 9999）。
+ * 後端 /catalog/eras 沒回、還沒回或缺某個年代時用它，排序與篩選單的年份都不會亂。
+ * 內容與 QMAH.Infrastructure 的 era-buckets.json 一致。
+ */
+const OPEN_END = 9999;
+export const ERA_FALLBACK: ReadonlyArray<{ code: string; name: string; start: number; end: number }> = [
+  { code: 'NEOLITHIC', name: '新石器時代', start: -10000, end: -2000 },
+  { code: 'YANGSHAO', name: '仰韶文化', start: -5000, end: -3000 },
+  { code: 'HONGSHAN', name: '紅山文化', start: -4700, end: -2900 },
+  { code: 'LIANGZHU', name: '良渚文化', start: -3300, end: -2300 },
+  { code: 'SHANG', name: '商', start: -1600, end: -1046 },
+  { code: 'ZHOU', name: '周', start: -1046, end: -256 },
+  { code: 'SPRING_AUTUMN', name: '春秋', start: -770, end: -476 },
+  { code: 'WARRING_STATES', name: '戰國', start: -475, end: -221 },
+  { code: 'QIN', name: '秦', start: -221, end: -206 },
+  { code: 'HAN', name: '漢', start: -206, end: 220 },
+  { code: 'THREE_KINGDOMS', name: '三國', start: 220, end: 280 },
+  { code: 'NORTH_SOUTH', name: '南北朝', start: 420, end: 589 },
+  { code: 'SUI', name: '隋', start: 581, end: 618 },
+  { code: 'TANG', name: '唐', start: 618, end: 907 },
+  { code: 'FIVE_DYNASTIES', name: '五代十國', start: 907, end: 960 },
+  { code: 'LIAO', name: '遼', start: 916, end: 1125 },
+  { code: 'SONG', name: '宋', start: 960, end: 1279 },
+  { code: 'WESTERN_XIA', name: '西夏', start: 1038, end: 1227 },
+  { code: 'JIN', name: '金', start: 1115, end: 1234 },
+  { code: 'YUAN', name: '元', start: 1271, end: 1368 },
+  { code: 'MING', name: '明', start: 1368, end: 1644 },
+  { code: 'QING', name: '清', start: 1644, end: 1912 },
+  { code: 'JAPAN_EDO', name: '日本江戶時代', start: 1603, end: 1868 },
+  { code: 'JAPAN_MEIJI', name: '日本明治時代', start: 1868, end: 1912 },
+  { code: 'REPUBLIC', name: '中華民國', start: 1912, end: OPEN_END },
+  { code: 'JAPAN_TAISHO', name: '日本大正時代', start: 1912, end: 1926 },
+  { code: 'JAPAN_SHOWA', name: '日本昭和時代', start: 1926, end: 1989 },
+  { code: 'PRC', name: '中華人民共和國', start: 1949, end: OPEN_END },
+  { code: 'JAPAN_HEISEI', name: '日本平成時代', start: 1989, end: 2019 },
+  { code: 'JAPAN_REIWA', name: '日本令和時代', start: 2019, end: OPEN_END },
+];
+
+function buildFallbackEraOrder(): Map<string, { start: number; end: number }> {
+  const map = new Map<string, { start: number; end: number }>();
+  for (const era of ERA_FALLBACK) {
+    map.set(era.code, { start: era.start, end: era.end });
+    map.set(era.name, { start: era.start, end: era.end });
+  }
+  return map;
+}
+
+/** 年代先後排序用：先比起年、再比迄年（迄今排最後）、沒有年代資料的排到最後 */
 export function compareEraOrder(
   a: string,
   b: string,
@@ -94,15 +160,21 @@ export function compareEraOrder(
 }
 
 /**
- * 計算單頁可以放幾欄、卡片多大。寬度不足兩欄時仍維持兩欄，避免小螢幕只剩一張卡。
+ * 計算單頁可以放幾欄、卡片多大。寬度再小也維持四欄（卡片跟著縮小），避免小螢幕只剩一兩張卡。
  */
 export function computeCatalogLayout(width: number, height: number): CatalogLayout | null {
   if (width <= 0 || height <= 0) return null;
   const { gap, minCardW, labelH, frameRatio } = BOOK_LAYOUT;
-  const cols = Math.max(2, Math.floor((width + gap) / (minCardW + gap)));
-  const cardW = Math.floor((width - gap * (cols - 1)) / cols);
+  // 無論視窗放大或縮小，一排至少四張；寬度夠才會更多
+  const cols = Math.max(BOOK_LAYOUT.minCols, Math.floor((width + gap) / (minCardW + gap)));
+  const bodyH = Math.floor(height) - BOOK_LAYOUT.slack;
+  let cardW = Math.floor((width - gap * (cols - 1)) / cols);
+  // 標題＋一列卡片一定要放得進一頁，否則那一列會被書頁裁掉、文物像憑空消失
+  const maxCardH = bodyH - BOOK_LAYOUT.headerH - gap;
+  const maxCardW = Math.floor((maxCardH - labelH) / frameRatio);
+  cardW = Math.min(cardW, Math.max(maxCardW, 72));
   const cardH = Math.round(cardW * frameRatio) + labelH;
-  return { cols, cardW, cardH, rowH: cardH + gap, bodyH: Math.floor(height) };
+  return { cols, cardW, cardH, rowH: cardH + gap, bodyH };
 }
 
 /**
@@ -156,13 +228,20 @@ export function paginateCatalog(
 @Component({
   selector: 'app-artifact-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, KeyList, ArtifactDiscussionDialog],
+  imports: [CommonModule, FormsModule, KeyList, ArtifactDiscussionDialog, QmahIconComponent],
   templateUrl: './artifact-list.html',
   // 封面、書本、彈出視窗的樣式拆成三個檔案，避免單一樣式檔超過 angular.json 的 32kB 預算；
   // 封面要放在最前面，artifact-list.scss 裡的窄螢幕規則才能覆寫它。
-  styleUrls: ['./artifact-list.cover.scss', './artifact-list.scss', './artifact-list.dialogs.scss'],
+  styleUrls: ['./artifact-list.cover.scss', './artifact-list.scss', './artifact-list.filters.scss', './artifact-list.dialogs.scss'],
 })
 export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
+  private readonly document = inject(DOCUMENT);
+  @ViewChild('artifactPage', { static: true }) private artifactPage?: ElementRef<HTMLElement>;
+  readonly fullscreenSupported = !!this.document.fullscreenEnabled;
+  readonly isFullscreen = signal(false);
+  readonly fullscreenBusy = signal(false);
+  readonly fullscreenError = signal('');
+
   // ---- 文物清單 ----
   // 版面需要「全部」文物才能正確分組與搜尋，所以把後端全部分頁串接起來一次載入。
   // 型別是 CompendiumCardSummary：格狀列表只需要清單欄位＋外皮＋解鎖狀態，
@@ -259,6 +338,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('pageMeasure', { static: true }) private pageMeasure?: ElementRef<HTMLElement>;
   private resizeObserver?: ResizeObserver;
   private timers: ReturnType<typeof setTimeout>[] = [];
+  private firstSpreadPreloaded = false;
 
   // ---- 搜尋／篩選 ----
   searchQuery = signal('');
@@ -271,7 +351,69 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
    * 年代的先後（GET /catalog/eras 的 startYear／endYear，西元前為負數），
    * 以年代代碼與名稱都建一份，文物資料不論帶哪一種都對得上。
    */
-  private eraOrder = signal<Map<string, { start: number; end: number }>>(new Map());
+  private eraOrder = signal<Map<string, { start: number; end: number }>>(buildFallbackEraOrder());
+
+  /**
+   * 年代籤的顏色依「時代區間」分成九個礦物／植物顏料色（石青灰、青銅、朱砂、赭石、石綠、天青、靛、胭脂、墨），
+   * 日本各時代統一用藤紫。分界點取各時代的起始年：
+   *   < -2000 史前　< -475 商周春秋　< 220 戰國秦漢　< 618 三國至隋　< 907 唐
+   *   < 1271 五代宋遼金　< 1644 元明　< 1868 清　之後 近現代
+   */
+  eraTone(era: string): string {
+    if (era.startsWith('日本')) return 'plum';
+    const start = this.eraOrder().get(era)?.start;
+    if (start == null) return 'stone';
+    if (start < -2000) return 'slate';
+    if (start < -475) return 'bronze';
+    if (start < 220) return 'cinnabar';
+    if (start < 618) return 'ochre';
+    if (start < 907) return 'jade';
+    if (start < 1271) return 'celadon';
+    if (start < 1644) return 'indigo';
+    if (start < 1868) return 'rouge';
+    return 'sumi';
+  }
+
+  /**
+   * 分類的顏色：八個分類各自一個獨立的顏料色，不重複（漆器朱紅、陶瓷青瓷、玉器青玉、琺瑯胭脂、
+   * 繪畫靛藍、銅器赭銅、錢幣黃銅、雕刻石青灰）。分類籤、文物卡的角框、文物詳情頁都用同一組。
+   * 沒列到的新分類退回石青灰。
+   */
+  categoryTone(category: string): string {
+    if (/漆/.test(category)) return 'cinnabar';
+    if (/陶|瓷|磚|瓦/.test(category)) return 'celadon';
+    if (/玉/.test(category)) return 'jade';
+    if (/琺瑯/.test(category)) return 'rouge';
+    if (/畫|書|紙|帖|絹|織|繡/.test(category)) return 'indigo';
+    if (/幣/.test(category)) return 'bronze';
+    if (/銅|金|銀|錫|鐵/.test(category)) return 'ochre';
+    return 'slate';
+  }
+
+  /** 文物卡與詳情頁的顏色：依目前的檢視方式——用「分類」時是分類色，其餘（年代／全部）是年代色，兩處永遠同一色系 */
+  cardTone(item: { eraName: string; categoryName: string }): string {
+    return this.catalogTab() === 'CATEGORY' ? this.categoryTone(item.categoryName) : this.eraTone(item.eraName);
+  }
+
+  categoryGlyph(category: string): string {
+    if (/琺瑯/.test(category)) return 'rouge';
+    if (/銅|金|銀|錫|鐵/.test(category)) return 'bronze';
+    if (/幣/.test(category)) return 'coin';
+    if (/陶|瓷|磚|瓦/.test(category)) return 'clay';
+    if (/漆/.test(category)) return 'lacquer';
+    if (/玉/.test(category)) return 'jade';
+    if (/畫|書|紙|帖|絹|織|繡/.test(category)) return 'painting';
+    if (/雕|刻|佛|像/.test(category)) return 'carving';
+    return 'stone';
+  }
+
+  /** 年代篩選條上的年份註記，例如「前1046–前256」「1912–迄今」 */
+  eraYears(era: string): string {
+    const span = this.eraOrder().get(era);
+    if (!span) return '';
+    const fmt = (y: number) => (y < 0 ? `前${-y}` : `${y}`);
+    return `${fmt(span.start)}–${span.end >= OPEN_END ? '迄今' : fmt(span.end)}`;
+  }
 
   private compareEra = (a: CompendiumCardSummary, b: CompendiumCardSummary): number => {
     const order = this.eraOrder();
@@ -291,6 +433,10 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     const names = new Set(this.catalogModel().map((i) => i.categoryName));
     return Array.from(names).sort();
   });
+
+  categoryIcon(category: string): QmahIconName {
+    return CATEGORY_ICONS[category] ?? 'shapes';
+  }
 
   /**
    * 搜尋框＋「僅顯示已解鎖」：三個左側頁籤共用。
@@ -448,7 +594,31 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private zone: NgZone,
-  ) { }
+  ) {
+    // 書頁大小是畫面能不能排出文物的唯一依據：ResizeObserver 之外，書本狀態／分頁／資料就緒時也主動量一次，
+    // 避免觀察器漏報（例如元件熱更新、書本從收合到攤開）造成 pageBox 一直是 0、整本書空白
+    effect(() => {
+      this.bookState();
+      this.bookSection();
+      this.catalogViewReady();
+      this.measureSoon();
+    });
+    // 圖鑑資料一就緒就預先載入第一個跨頁（兩頁）的照片：翻開書的過程中第一頁已經完整呈現，不會一張張補上
+    effect(() => {
+      if (!this.catalogViewReady() || this.firstSpreadPreloaded) return;
+      const pages = this.pages();
+      const fromPages = pages.slice(0, 2).flatMap((page) => page.lines.flatMap((line) => (line.kind === 'row' ? line.items : [])));
+      const items = fromPages.length ? fromPages : (this.catalogGroups()[0]?.items.slice(0, 16) ?? []);
+      if (!items.length) return;
+      this.firstSpreadPreloaded = true;
+      for (const item of items) {
+        if (!item.thumbnailPath) continue;
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = this.getImageUrl(item.thumbnailPath);
+      }
+    });
+  }
 
   ngOnInit(): void {
     // ui-integration: 商城「年代選藏」帶 ?era= 進來時，直接翻開書並切到年代頁籤。
@@ -467,16 +637,34 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    this.measurePage();
+    this.measureSoon();
     const el = this.pageMeasure?.nativeElement;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    this.resizeObserver = new ResizeObserver(([entry]) => {
-      const w = Math.floor(entry.contentRect.width);
-      const h = Math.floor(entry.contentRect.height);
-      const current = this.pageBox();
-      if (current.w === w && current.h === h) return;
-      this.zone.run(() => this.pageBox.set({ w, h }));
-    });
+    this.resizeObserver = new ResizeObserver(() => this.zone.run(() => this.measurePage()));
     this.resizeObserver.observe(el);
+  }
+
+  /** 量一次書頁內容區的實際大小；大小沒變就不動，避免多餘的重排 */
+  private measurePage(): void {
+    const el = this.pageMeasure?.nativeElement;
+    if (!el) return;
+    const w = Math.floor(el.clientWidth);
+    const h = Math.floor(el.clientHeight);
+    const current = this.pageBox();
+    if (current.w !== w || current.h !== h) this.pageBox.set({ w, h });
+  }
+
+  /** 下一個畫面與書本翻開動畫結束後各補量一次 */
+  private measureSoon(): void {
+    for (const delay of [0, 120, 1250]) {
+      this.timers.push(setTimeout(() => this.measurePage(), delay));
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.measurePage();
   }
 
   ngOnDestroy(): void {
@@ -485,6 +673,31 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ================= 書本：開闔、頁籤、翻頁 =================
+
+  @HostListener('document:fullscreenchange')
+  onFullscreenChange(): void {
+    this.isFullscreen.set(this.document.fullscreenElement === this.artifactPage?.nativeElement);
+    this.fullscreenError.set('');
+  }
+
+  async toggleFullscreen(): Promise<void> {
+    const page = this.artifactPage?.nativeElement;
+    if (!page || !this.fullscreenSupported || this.fullscreenBusy()) return;
+    this.fullscreenBusy.set(true);
+    this.fullscreenError.set('');
+    try {
+      if (this.document.fullscreenElement === page) {
+        await this.document.exitFullscreen();
+      } else {
+        await page.requestFullscreen();
+      }
+      this.onFullscreenChange();
+    } catch {
+      this.fullscreenError.set('無法切換全螢幕，請再試一次。');
+    } finally {
+      this.fullscreenBusy.set(false);
+    }
+  }
 
   openBook(): void {
     if (this.bookState() !== 'closed') return;
@@ -499,6 +712,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   /** 闔上書本；完全闔上後切回「圖鑑」章節並收合展開中的年代，下次翻開從圖鑑開始 */
   closeBook(): void {
     if (this.bookState() !== 'open') return;
+    if (this.isFullscreen()) void this.toggleFullscreen();
     const finish = () => {
       this.bookState.set('closed');
       this.setSection('catalog');
@@ -580,10 +794,50 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
       this.spread.set(target);
       return;
     }
+    // 先把底下的頁面換成新的（被翻開的那一側立刻露出新內容），再讓書頁翻過去
+    this.turnFrom.set(this.currentSpread());
     this.turning.set(dir > 0 ? 'next' : 'prev');
-    this.later(280, () => this.spread.set(target));
-    this.later(640, () => this.turning.set(null));
+    this.spread.set(target);
+    this.later(720, () => this.turning.set(null));
   }
+
+  /** 翻頁動畫開始時的跨頁索引 */
+  turnFrom = signal(0);
+
+  private pageAt(index: number): CatalogPage | null {
+    return this.pages()[index] ?? null;
+  }
+  private leftIndex(spread: number): number {
+    return spread * 2;
+  }
+  private rightIndex(spread: number): number {
+    return this.filterMode() ? spread : spread * 2 + 1;
+  }
+
+  /** 翻頁的書頁落在哪一側：往後翻＝右半繞書脊翻到左；往前翻＝左半翻到右。篩選單開著時左頁是篩選單，一律從右半翻出 */
+  leafSide = computed<'next' | 'prev' | null>(() => (this.turning() ? (this.filterMode() ? 'next' : this.turning()) : null));
+
+  /** 書頁正面（翻走的那一頁）與背面（翻過來的那一頁）的內容 */
+  leafFront = computed<CatalogPage | null>(() => {
+    const t = this.turning();
+    if (!t) return null;
+    const from = this.turnFrom();
+    return t === 'prev' && !this.filterMode() ? this.pageAt(this.leftIndex(from)) : this.pageAt(this.rightIndex(from));
+  });
+  leafBack = computed<CatalogPage | null>(() => {
+    const t = this.turning();
+    if (!t || this.filterMode()) return null;
+    const to = this.currentSpread();
+    return t === 'next' ? this.pageAt(this.leftIndex(to)) : this.pageAt(this.rightIndex(to));
+  });
+
+  /** 翻頁期間兩頁各自顯示的內容：被書頁蓋住的那一側維持舊內容，翻開的那一側已經是新內容 */
+  shownLeft = computed<CatalogPage | null>(() =>
+    this.turning() === 'next' && !this.filterMode() ? this.pageAt(this.leftIndex(this.turnFrom())) : this.leftPage(),
+  );
+  shownRight = computed<CatalogPage | null>(() =>
+    this.turning() === 'prev' && !this.filterMode() ? this.pageAt(this.rightIndex(this.turnFrom())) : this.rightPage(),
+  );
 
   /** 書本攤開、停在圖鑑時，可用鍵盤左右鍵翻頁（輸入框內與彈出視窗開著時不處理） */
   @HostListener('document:keydown', ['$event'])
@@ -779,11 +1033,13 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   private loadEraOrder(): void {
     this.catalogService.getEras().subscribe({
       next: (eras: EraModel[]) => {
-        const order = new Map<string, { start: number; end: number }>();
+        // 以內建對照為底，後端有回的年代再覆蓋；endYear 為空代表迄今
+        const order = buildFallbackEraOrder();
         for (const era of eras) {
           const start = Number(era.startYear);
-          if (!Number.isFinite(start)) continue;
-          const span = { start, end: Number.isFinite(Number(era.endYear)) ? Number(era.endYear) : start };
+          if (era.startYear == null || !Number.isFinite(start)) continue;
+          const end = era.endYear == null ? OPEN_END : Number(era.endYear);
+          const span = { start, end: Number.isFinite(end) ? end : OPEN_END };
           order.set(era.code, span);
           order.set(era.name, span);
         }
@@ -872,10 +1128,14 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     this.infoOpen.update((v) => !v);
   }
 
+  /**
+   * 放大檢視：點到任何「透明處」都要能離開——背景、卡片與按鈕之間的空隙、資料頁外的留白都算。
+   * 只有點在實體內容（放大圖卡片、資料頁、按鈕、連結、輸入框）上才不關閉。
+   */
   onOverlayClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.closeOverlay();
-    }
+    const target = event.target as HTMLElement | null;
+    const solid = target?.closest?.('.focus-card, .info-panel__inner, .focus-actions .action-btn, .hint, a, button, input, textarea, select');
+    if (!solid) this.closeOverlay();
   }
 
   focusedImagePath(item: CompendiumCardSummary): string {
@@ -1133,10 +1393,6 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   onAppreciationClick(item: CardEntry): void {
     this.appreciationRequested.emit(item);
     void this.router.navigate(['/game/appreciation'], { queryParams: { artifactId: item.id } });
-  }
-
-  goBackToMember(): void {
-    this.router.navigate(['/member']);
   }
 
   /**

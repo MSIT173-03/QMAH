@@ -1,6 +1,7 @@
-:host { display: block; min-width: 0; }
+:host { display: block; min-width: 0; position:relative; isolation:isolate; }
+:host:has(.is-selected) { z-index:3; }
 *, *::before, *::after { box-sizing: border-box; }
-button { display: grid; width: 100%; min-height: 44px; gap: 12px; padding: 10px; font: inherit; font-weight: 800; text-align: left; cursor: pointer; transition: transform 220ms cubic-bezier(.16, 1, .3, 1), box-shadow 220ms ease-out; }
+button { display: grid; width: 100%; min-height: 44px; gap: 12px; padding: 10px; font: inherit; font-weight: 800; text-align: left; cursor: pointer; transition: transform 220ms cubic-bezier(.16, 1, .3, 1), box-shadow 220ms ease-out, filter 180ms ease-out; }
 button:focus-visible { outline: 3px solid var(--game-table-ink, #fff8e9); outline-offset: 4px; }
 button:disabled { opacity: .55; cursor: wait; }
 .mode-choice-copy { display: grid; min-width: 0; gap: 8px; }
@@ -40,8 +41,10 @@ button[data-mode] .mode-choice-copy { grid-template-rows: auto auto; align-conte
 button[data-mode] .mode-cover { background: transparent; outline: 0; }
 button:hover:not(:disabled) { transform: translateY(-4px); box-shadow: 0 10px 18px #14291c50; }
 button:hover:not(:disabled) .mode-cover { filter: saturate(1.08); }
-button.is-selected { transform: translateY(-10px); box-shadow: 0 0 0 5px var(--game-table-ground, #3b704e), 0 0 0 9px #ffd45a, 0 0 26px 10px #ffd45a59, 0 24px 22px -6px #0c1a12b3; }
-button.is-selected:hover:not(:disabled) { transform: translateY(-10px); }
+button[data-mode]:not(.is-selected) { filter: brightness(.74) saturate(.78); }
+button[data-mode]:not(.is-selected):hover:not(:disabled) { filter: brightness(.9) saturate(.92); }
+button.is-selected { transform: translateY(-16px) scale(1.025); filter: brightness(1.04); box-shadow: 0 32px 32px -10px #07150dc4, 0 12px 18px -6px #07150d80; }
+button.is-selected:hover:not(:disabled) { transform: translateY(-16px) scale(1.025); box-shadow: 0 32px 32px -10px #07150dc4, 0 12px 18px -6px #07150d80; }
 @keyframes selection-stamp { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 button[data-mode].is-selected:focus-visible { outline: 3px solid var(--game-table-ink, #fff8e9); outline-offset: 4px; }
 @media (max-width: 600px) {
@@ -54,9 +57,9 @@ button[data-mode].is-selected:focus-visible { outline: 3px solid var(--game-tabl
 }
 @media (min-width: 1001px) {
   button[data-mode] { transform:translateY(var(--mode-card-offset,0px)) rotate(var(--mode-card-tilt, 0deg)) scale(.94); transition: transform 260ms cubic-bezier(.2, .8, .2, 1), box-shadow 260ms ease, filter 180ms ease; box-shadow: 0 8px 16px #14291c4a; }
-  button[data-mode].is-selected { z-index: 3; transform: rotate(0deg) translateY(-14px) scale(1.04); box-shadow: 0 0 0 5px var(--game-table-ground, #3b704e), 0 0 0 9px #ffd45a, 0 0 26px 10px #ffd45a59, 0 24px 22px -6px #0c1a12b3; }
+  button[data-mode].is-selected { z-index: 3; transform: rotate(0deg) translateY(-32px) scale(1.07); box-shadow: 0 32px 32px -10px #07150dc4, 0 12px 18px -6px #07150d80; }
   button[data-mode]:hover:not(:disabled) { z-index: 4; transform: rotate(0deg) translateY(-14px) scale(1.02); box-shadow: 0 18px 24px #14291c70; }
-  button[data-mode].is-selected:hover:not(:disabled) { transform: rotate(0deg) translateY(-14px) scale(1.02); }
+  button[data-mode].is-selected:hover:not(:disabled) { transform: rotate(0deg) translateY(-32px) scale(1.07); box-shadow: 0 32px 32px -10px #07150dc4, 0 12px 18px -6px #07150d80; }
 }
 @media (prefers-reduced-motion: reduce) {
   button { transition: none; }

@@ -493,6 +493,15 @@
 
 .action-btn {
   padding-inline: var(--qmah-button-padding-x);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.action-btn app-qmah-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .field-action:focus-visible,
@@ -637,4 +646,328 @@ app-artifact-discussion-dialog {
 .cancel-btn {
   background: rgb(255 248 230 / 70%);
   border-color: rgb(110 82 54 / 45%);
+}
+
+
+/* ================= 放大檢視：換掉棕色，右頁與圖鑑同一種書頁材質，左側依年代色 =================
+   左側面板是「深墨色」＋年代色的細框，不再是棕色木框；右側資料頁用跟圖鑑書頁一樣的紙面照片、
+   淡象牙色、頁緣陰影與疊層頁緣。顏色變數 --acc 來自 .stage 的 data-tone（見 artifact-list.ts 的 eraTone）。 */
+:where(.stage) {
+  --acc: 108 102 90; /* 預設色；年代色由 data-tone 的規則覆蓋（零權重，才蓋得過去） */
+}
+
+.stage {
+  --ink-dlg: #2d2218;
+}
+
+.overlay {
+  background: radial-gradient(ellipse at 50% 40%, rgb(30 34 40 / 62%), rgb(10 12 15 / 84%));
+  /* 上緣讓出固定標題列的高度，內容區（放大圖、資料頁）一律排在標題列下方，不會被擋住 */
+  box-sizing: border-box;
+  padding: calc(var(--app-header-height, 78px) + 14px) 14px 14px;
+}
+
+.stage {
+  /* 高度不超過「視窗扣掉標題列」所剩的空間；空間夠時維持原本的 740px */
+  --stage-h: clamp(460px, calc(100dvh - var(--app-header-height, 78px) - 40px), 740px);
+  max-height: 100%;
+}
+
+.confirm-overlay {
+  background: rgb(10 12 15 / 64%);
+}
+
+.focus-card {
+  border: 4px solid rgb(var(--acc));
+  background: color-mix(in srgb, rgb(var(--acc)) 38%, #0d0f12);
+  box-shadow:
+    inset 0 0 0 5px color-mix(in srgb, rgb(var(--acc)) 38%, #0d0f12),
+    inset 0 0 0 6px rgb(255 255 255 / 22%),
+    0 24px 50px rgb(5 6 8 / 60%);
+}
+
+.focus-card.unlocked {
+  border-color: rgb(var(--acc));
+}
+
+.focus-thumbnail {
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, rgb(var(--acc)) 48%, #20252b), color-mix(in srgb, rgb(var(--acc)) 26%, #0a0b0d) 80%);
+  /* 照片四邊羽化，融進深色底，不留硬邊 */
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  mask-composite: intersect;
+}
+
+.focus-card:not(.unlocked) .focus-thumbnail {
+  filter: grayscale(1) brightness(0.5);
+}
+
+.focus-card .num,
+.focus-card .category-tag {
+  border-radius: 2px;
+  background: color-mix(in srgb, rgb(var(--acc)) 70%, #000);
+  color: #fffaf0;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 28%);
+}
+
+.focus-card .label {
+  background: linear-gradient(0deg, color-mix(in srgb, rgb(var(--acc)) 30%, #08090b) 25%, transparent 100%);
+}
+
+/* 資料頁：與圖鑑書頁相同的材質 */
+.info-panel__inner {
+  border: 0;
+  border-radius: 3px;
+  background-image:
+    radial-gradient(ellipse at 30% 10%, rgb(255 252 240 / 40%), transparent 60%),
+    linear-gradient(90deg, rgb(var(--paper-shade, 110 72 28) / 18%) 0%, transparent 6%, transparent 94%, rgb(var(--paper-shade, 110 72 28) / 20%) 100%),
+    linear-gradient(color-mix(in srgb, rgb(var(--acc)) 14%, var(--paper-tint, #fbf6e8)), color-mix(in srgb, rgb(var(--acc)) 14%, var(--paper-tint, #fbf6e8))),
+    url('/assets/catalog/page-paper.jpg');
+  background-size: 100% 100%, 100% 100%, 100% 100%, 480px 480px;
+  background-blend-mode: normal, normal, multiply, normal;
+  border-top: 6px solid rgb(var(--acc));
+  box-shadow:
+    inset 0 0 30px rgb(var(--paper-shade, 110 72 28) / 12%),
+    2px 0 0 var(--paper-edge-1, #e0cfa2),
+    4px 1px 0 var(--paper-edge-2, #c7ae7a),
+    6px 2px 0 var(--paper-edge-3, #ae9262),
+    0 24px 50px rgb(5 6 8 / 50%);
+  color: var(--ink-dlg);
+}
+
+.info-panel__inner h3 {
+  color: #1f160d;
+  border-bottom: 3px double rgb(var(--acc) / 45%);
+}
+
+.info-panel__inner .num {
+  color: color-mix(in srgb, rgb(var(--acc)) 70%, #2a1c10);
+}
+
+.field {
+  border-top-color: rgb(var(--acc) / 22%);
+}
+
+.field .field-label {
+  color: color-mix(in srgb, rgb(var(--acc)) 78%, #1c120a);
+}
+
+.field-link-button,
+.field-link {
+  color: color-mix(in srgb, rgb(var(--acc)) 78%, #1c120a);
+  border-bottom-color: rgb(var(--acc) / 45%);
+}
+
+.field-link-button:hover,
+.field-link:hover {
+  color: color-mix(in srgb, rgb(var(--acc)) 95%, #000);
+}
+
+/* 按鈕：方正的紙籤，不用圓形藥丸；主要動作用年代色，次要動作是紙色 */
+.action-btn {
+  border-radius: 3px;
+}
+
+.unlock-btn {
+  background: linear-gradient(180deg, color-mix(in srgb, rgb(var(--acc)) 94%, #fff), color-mix(in srgb, rgb(var(--acc)) 86%, #000));
+  color: #fffaf0;
+  border: 1px solid color-mix(in srgb, rgb(var(--acc)) 60%, #000);
+}
+
+.info-btn {
+  background: linear-gradient(180deg, #f8f2e2, #ece3cb);
+  color: #2d2218;
+  border-color: rgb(var(--acc) / 70%);
+}
+
+.info-btn.active {
+  background: linear-gradient(180deg, color-mix(in srgb, rgb(var(--acc)) 94%, #fff), color-mix(in srgb, rgb(var(--acc)) 86%, #000));
+  border-color: color-mix(in srgb, rgb(var(--acc)) 60%, #000);
+  color: #fffaf0;
+}
+
+.hint {
+  color: rgb(240 236 224 / 80%);
+}
+
+/* 確認視窗：同一種紙面 */
+.confirm-dialog {
+  border: 1px solid rgb(120 98 66 / 45%);
+  border-radius: 3px;
+  background-image:
+    linear-gradient(var(--paper-tint, #fbf6e8), var(--paper-tint, #fbf6e8)),
+    url('/assets/catalog/page-paper.jpg');
+  background-size: 100% 100%, 400px 400px;
+  background-blend-mode: multiply, normal;
+}
+
+/* ================= 放大檢視：改成明亮的紙面，不再陰暗；深色／淺色模式觀感一致 =================
+   所有顏色都用固定值（不引用會隨深淺模式變的站內變數），所以兩種模式看起來完全一樣。 */
+.overlay {
+  background: rgb(44 36 28 / 46%);
+  backdrop-filter: blur(5px);
+}
+
+.confirm-overlay {
+  background: rgb(44 36 28 / 50%);
+}
+
+.focus-card {
+  background: linear-gradient(170deg, #fbf8ef, #f1ead8);
+  border: 4px solid rgb(var(--acc));
+  box-shadow:
+    inset 0 0 0 5px #fbf8ef,
+    inset 0 0 0 6px rgb(var(--acc) / 40%),
+    0 24px 50px rgb(40 30 20 / 38%);
+}
+
+.focus-thumbnail {
+  background: transparent;
+  filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.focus-card:not(.unlocked) .focus-thumbnail {
+  filter: grayscale(1) brightness(0.55) contrast(1.1);
+}
+
+.focus-card .label {
+  background: linear-gradient(0deg, #fbf8ef 45%, transparent 100%);
+}
+
+.focus-card .label .name {
+  color: #1f160d;
+}
+
+.hint {
+  color: #fff8e8;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 55%);
+}
+
+/* ---------- 左側外框：角花框（與圖鑑裡的文物卡同一語言，放大版）----------
+   外緣一道年代／分類色的實線框 → 內縮的紙面襯底（紙張照片＋淡色）→ 四角折線 → 再內縮一圈細線。 */
+.focus-card {
+  border: 3px solid rgb(var(--acc));
+  background-color: #fbf8ef;
+  background-image:
+    linear-gradient(color-mix(in srgb, rgb(var(--acc)) 6%, #fbf8ef), color-mix(in srgb, rgb(var(--acc)) 6%, #fbf8ef)),
+    url('/assets/catalog/page-paper.jpg');
+  background-size: 100% 100%, 420px 420px;
+  background-blend-mode: multiply, normal;
+  box-shadow:
+    inset 0 0 0 4px #fbf8ef,
+    inset 0 0 0 5px rgb(var(--acc) / 55%),
+    inset 0 0 22px rgb(var(--paper-shade, 110 72 28) / 12%),
+    0 24px 50px rgb(40 30 20 / 38%);
+}
+
+/* 四角折線 */
+.focus-card::before {
+  --c: rgb(var(--acc));
+  --l: 30px;
+  --w: 3px;
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--c), var(--c)), linear-gradient(var(--c), var(--c)),
+    linear-gradient(var(--c), var(--c)), linear-gradient(var(--c), var(--c)),
+    linear-gradient(var(--c), var(--c)), linear-gradient(var(--c), var(--c)),
+    linear-gradient(var(--c), var(--c)), linear-gradient(var(--c), var(--c));
+  background-size:
+    var(--l) var(--w), var(--w) var(--l), var(--l) var(--w), var(--w) var(--l),
+    var(--l) var(--w), var(--w) var(--l), var(--l) var(--w), var(--w) var(--l);
+  background-position:
+    11px 11px, 11px 11px, calc(100% - 11px) 11px, calc(100% - 11px) 11px,
+    11px calc(100% - 11px), 11px calc(100% - 11px), calc(100% - 11px) calc(100% - 11px), calc(100% - 11px) calc(100% - 11px);
+  background-repeat: no-repeat;
+}
+
+/* 內縮細線 */
+.focus-card::after {
+  content: '';
+  position: absolute;
+  inset: 19px;
+  z-index: 1;
+  border: 1px solid rgb(var(--acc) / 30%);
+  pointer-events: none;
+}
+
+.focus-thumbnail {
+  padding: 46px 40px 70px;
+}
+
+/* 編號與分類標籤避開四角折線，放在內縮細線之內 */
+.focus-card .num { top: 28px; left: 32px; }
+.focus-card .category-tag { top: 28px; right: 32px; }
+.focus-card .label { padding: 16px 32px 30px; }
+
+/* ================= 修正：右頁回到一般書頁的色彩；左側內框改虛線；照片更明亮清晰 ================= */
+
+/* 右頁：與圖鑑書頁完全相同的象牙紙（不染年代色、沒有色帶），文字色也用書頁的墨色／酒紅／古金 */
+.info-panel__inner {
+  border-top: 0;
+  background-image:
+    radial-gradient(ellipse at 30% 10%, rgb(255 252 240 / 40%), transparent 60%),
+    linear-gradient(90deg, rgb(var(--paper-shade, 110 72 28) / 18%) 0%, transparent 6%, transparent 94%, rgb(var(--paper-shade, 110 72 28) / 20%) 100%),
+    linear-gradient(var(--paper-tint, #f7f0de), var(--paper-tint, #f7f0de)),
+    url('/assets/catalog/page-paper.jpg');
+}
+
+.info-panel__inner h3 {
+  border-bottom: 3px double rgb(110 82 54 / 45%);
+}
+
+.info-panel__inner .num {
+  color: #6e5236;
+}
+
+.field {
+  border-top-color: rgb(110 82 54 / 25%);
+}
+
+.field .field-label {
+  color: #8a6427;
+}
+
+.field-link-button,
+.field-link {
+  color: #6e2230;
+  border-bottom-color: rgb(110 34 48 / 40%);
+}
+
+.field-link-button:hover,
+.field-link:hover {
+  color: #9c7630;
+}
+
+/* 左側：外緣實線框 + 內縮虛線框（不再有四角折線） */
+.focus-card::before {
+  content: none;
+}
+
+.focus-card::after {
+  inset: 14px;
+  border: 1.5px dashed rgb(var(--acc) / 65%);
+}
+
+.focus-card .num { top: 24px; left: 28px; }
+.focus-card .category-tag { top: 24px; right: 28px; }
+.focus-card .label { padding: 16px 28px 26px; }
+
+.focus-thumbnail {
+  padding: 56px 32px 72px;
+}
+
+/* 放大後的照片維持原樣，不做色彩加工（提亮只用在圖鑑裡尚未點開的縮圖） */
+.focus-card.unlocked .focus-thumbnail {
+  filter: none;
 }

@@ -103,11 +103,12 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
 @media (max-width: 600px) { .locator-steps span { display: none; } .locator-steps li { min-width: 0; } }
 
 // 原圖下方的操作列：名稱在左，倍率與確認在右，同一行；說明文字只在空間夠時顯示
-.locator-source figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 12px; margin-top: 8px; }
-.locator-source figcaption > span:first-child { margin-right: auto; font-weight: 700; }
-.locator-source figcaption small, .locator-pending-status { order: 5; flex: 1 1 100%; }
+.locator-source figcaption { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: 6px 8px; margin-top: 8px; text-align: left; }
+.locator-source figcaption > span:first-child { grid-column: 1 / -1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.locator-source figcaption small, .locator-source figcaption .locator-pending-status { grid-column: 1 / -1; min-width: 0; overflow-wrap: anywhere; }
+.locator-source figcaption .locator-pending-status { min-height: 1.6em; }
 .locator-zoom, .locator-confirm { grid-column: auto; grid-row: auto; }
-.locator-confirm { flex: none; min-width: 148px; }
+.locator-source figcaption .locator-zoom, .locator-source figcaption .locator-confirm { grid-row: 2; min-width: 0; width: 100%; padding-inline: 6px; justify-content: center; }
 @media (max-height: 760px) { .locator-source figcaption small { display: none; } .locator-surface-title { margin-bottom: 4px; font-size: 18px; } .locator-source { padding: 8px 10px; } }
 @media (max-width: 760px) { .locator-source figcaption { justify-content: space-between; } }
 @media (max-height: 760px) { .locator-confirm { min-width: 112px; } .locator-zoom button { min-width: 40px; padding: 0 6px; } }

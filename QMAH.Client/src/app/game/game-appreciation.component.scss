@@ -102,7 +102,10 @@ header a { @extend %ui-btn-2; display: inline-flex; align-items: center; text-de
 .filters-sheet-head strong { font: 800 18px/1.4 var(--qmah-font-sans); }
 .filters-sheet-head button { @extend %ui-btn; --game-button-image: var(--game-button-ochre-image); --game-button-ink: var(--game-ink-yellow); cursor: pointer; }
 .filters-backdrop { position: fixed; inset: 0; z-index: 55; background: #0a14108c; }
-.jump-dock { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 50; height: 0; margin-top: -1px; pointer-events: none; }
+.jump-dock { position: fixed; left: 24px; right: 24px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 50; height: 0; pointer-events: none; }
+@media (min-width: 1000px) {
+  .jump-dock { position: absolute; left: 32px; right: 32px; bottom: 28px; }
+}
 .jump-btn { @extend %ui-btn; position: absolute; bottom: 0; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding-inline: 18px; border-radius: 999px; cursor: pointer; pointer-events: auto; }
 .jump-btn svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .jump-filter { left: 4px; --game-button-image: var(--game-button-blue-image); --game-button-ink: #fff8e9; }

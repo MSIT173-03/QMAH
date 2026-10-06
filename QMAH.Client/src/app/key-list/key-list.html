@@ -238,20 +238,60 @@
                     aria-hidden="true"
                     focusable="false"
                   >
+                    <circle class="craft-magic__glow" cx="100" cy="100" r="60" fill="url(#craft-magic-glow)" />
                     <g class="craft-magic__outer">
-                      <circle cx="100" cy="100" r="96" />
-                      <circle cx="100" cy="100" r="88" stroke-dasharray="1.5 4" />
+                      <circle cx="100" cy="100" r="97.5" />
+                      <circle cx="100" cy="100" r="94.5" stroke-width="0.7" />
+                      <circle class="craft-magic__ticks" cx="100" cy="100" r="91" />
+                      <circle cx="100" cy="100" r="87.5" stroke-width="0.7" />
                       <text class="craft-magic__runes">
                         <textPath href="#craft-magic-rune-path">☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷</textPath>
                       </text>
-                      <circle cx="100" cy="100" r="72" />
+                      <circle cx="100" cy="100" r="73" />
+                      <circle cx="100" cy="100" r="70" stroke-width="0.7" stroke-dasharray="1 3.2" />
+                      <g class="craft-magic__nodes">
+                      <path d="M100 2.5l2.6 4.2-2.6 4.2-2.6-4.2z" transform="rotate(0 100 100)" />
+                      <path d="M100 2.5l2.6 4.2-2.6 4.2-2.6-4.2z" transform="rotate(45 100 100)" />
+                      <path d="M100 2.5l2.6 4.2-2.6 4.2-2.6-4.2z" transform="rotate(90 100 100)" />
+                      <path d="M100 2.5l2.6 4.2-2.6 4.2-2.6-4.2z" transform="rotate(135 100 100)" />
+                      <path d="M100 2.5l2.6 4.2-2.6 4.2-2.6-4.2z" transform="rotate(180 100 100)" />
+                      <path d="M100 2.5l2.6 4.2-2.6 4.2-2.6-4.2z" transform="rotate(225 100 100)" />
+                      <path d="M100 2.5l2.6 4.2-2.6 4.2-2.6-4.2z" transform="rotate(270 100 100)" />
+                      <path d="M100 2.5l2.6 4.2-2.6 4.2-2.6-4.2z" transform="rotate(315 100 100)" />
+                      </g>
                     </g>
                     <g class="craft-magic__inner">
-                      <polygon points="100,30 160.6,135 39.4,135" />
-                      <polygon points="100,170 39.4,65 160.6,65" />
-                      <circle cx="100" cy="100" r="44" stroke-dasharray="6 3" />
+                      <polygon points="100,34 157.2,133 42.8,133" />
+                      <polygon points="100,166 42.8,67 157.2,67" />
+                      <circle cx="100" cy="100" r="48" stroke-dasharray="6 3" />
+                      <circle cx="100" cy="100" r="33" stroke-width="0.8" />
+                      <g class="craft-magic__spokes">
+                      <line x1="100" y1="52" x2="100" y2="62" transform="rotate(0 100 100)" />
+                      <line x1="100" y1="56" x2="100" y2="62" transform="rotate(30 100 100)" />
+                      <line x1="100" y1="52" x2="100" y2="62" transform="rotate(60 100 100)" />
+                      <line x1="100" y1="56" x2="100" y2="62" transform="rotate(90 100 100)" />
+                      <line x1="100" y1="52" x2="100" y2="62" transform="rotate(120 100 100)" />
+                      <line x1="100" y1="56" x2="100" y2="62" transform="rotate(150 100 100)" />
+                      <line x1="100" y1="52" x2="100" y2="62" transform="rotate(180 100 100)" />
+                      <line x1="100" y1="56" x2="100" y2="62" transform="rotate(210 100 100)" />
+                      <line x1="100" y1="52" x2="100" y2="62" transform="rotate(240 100 100)" />
+                      <line x1="100" y1="56" x2="100" y2="62" transform="rotate(270 100 100)" />
+                      <line x1="100" y1="52" x2="100" y2="62" transform="rotate(300 100 100)" />
+                      <line x1="100" y1="56" x2="100" y2="62" transform="rotate(330 100 100)" />
+                      </g>
                     </g>
                     <defs>
+                      <linearGradient id="craft-magic-gold" gradientUnits="userSpaceOnUse" x1="10" y1="10" x2="190" y2="190">
+                        <stop offset="0" stop-color="#7d5a1c" />
+                        <stop offset="0.25" stop-color="#d9b25a" />
+                        <stop offset="0.5" stop-color="#8a6427" />
+                        <stop offset="0.75" stop-color="#e2c070" />
+                        <stop offset="1" stop-color="#7d5a1c" />
+                      </linearGradient>
+                      <radialGradient id="craft-magic-glow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0" stop-color="#e2b250" stop-opacity="0.32" />
+                        <stop offset="1" stop-color="#e2b250" stop-opacity="0" />
+                      </radialGradient>
                       <path id="craft-magic-rune-path" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0" />
                     </defs>
                   </svg>

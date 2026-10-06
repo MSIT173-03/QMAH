@@ -14,9 +14,9 @@ describe('玩法試玩模式', () => {
   });
   afterEach(() => { TestBed.resetTestingModule(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
-  function start() {
+  function start(modeCode = 'ARTIFACT_PUZZLE') {
     const fixture = TestBed.createComponent(GameTrainingDemoComponent);
-    fixture.componentRef.setInput('modeCode', 'ARTIFACT_PUZZLE');
+    fixture.componentRef.setInput('modeCode', modeCode);
     fixture.componentInstance.ngOnChanges();
     const step = vi.fn();
     fixture.componentInstance['playSheet'] = { advanceDemonstration: step } as unknown as GameTrainingPlaySheetComponent;
@@ -30,6 +30,41 @@ describe('玩法試玩模式', () => {
     expect(step).not.toHaveBeenCalled();
     demo.toggleAutoPlay();
     demo.restartDemo();
+    expect(demo.autoPlaying).toBe(false);
+  });
+
+  it('細節追跡每秒推進定位、選定與確認，評語播放時停止推進', () => {
+    const { demo, step } = start('DETAIL_LOCATOR');
+    demo.toggleAutoPlay();
+    vi.advanceTimersByTime(4000);
+    expect(step).toHaveBeenCalledTimes(3);
+    demo.locatorReviewing = true;
+    vi.advanceTimersByTime(1500);
+    expect(step).toHaveBeenCalledTimes(3);
+    demo.locatorReviewing = false;
+    vi.advanceTimersByTime(1000);
+    expect(step).toHaveBeenCalledTimes(4);
+  });
+
+  it('速度獨立選擇，暫停與繼續保留兩倍速，重新試玩恢復一般速度', () => {
+    const { demo, step } = start('DETAIL_LOCATOR');
+    demo.toggleAutoPlay();
+    vi.advanceTimersByTime(2000);
+    expect(step).toHaveBeenCalledTimes(1);
+    demo.setAutoPlaySpeed({ target: { value: '2' } } as unknown as Event);
+    expect(demo.autoPlaySpeed).toBe(2);
+    vi.advanceTimersByTime(1000);
+    expect(step).toHaveBeenCalledTimes(3);
+    demo.toggleAutoPlay();
+    expect(demo.autoPlaying).toBe(false);
+    vi.advanceTimersByTime(2000);
+    expect(step).toHaveBeenCalledTimes(3);
+    demo.toggleAutoPlay();
+    expect(demo.autoPlaySpeed).toBe(2);
+    vi.advanceTimersByTime(1000);
+    expect(step).toHaveBeenCalledTimes(5);
+    demo.restartDemo();
+    expect(demo.autoPlaySpeed).toBe(1);
     expect(demo.autoPlaying).toBe(false);
   });
 
