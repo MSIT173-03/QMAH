@@ -108,6 +108,7 @@ internal static class QmahOpenApiOperationCatalog
             ["Me.MarkNotificationRead"] = ("標記通知為已讀", "需要登入，依 path parameter（路徑參數）`id` 將目前會員的通知標記為已讀並寫入已讀時間。通知不存在或不屬於目前會員時回傳 `404`；成功回傳 `204 No Content`（成功且沒有回應本文）。"),
 
             ["StoreOrders.CreateOrder"] = ("建立商城訂單", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的商品明細、優惠券、點數與配送資料建立訂單。伺服器會在同一交易中檢查商品上架狀態、庫存、優惠券有效性、點數餘額並扣減庫存；成功回傳 `201 Created`（已建立資源）與訂單資料。"),
+            ["StoreOrders.GetPurchasedProductIds"] = ("查詢已購買的商品編號", "需要登入，回傳目前會員曾購買的不重複商品編號清單：訂單狀態不是 `PENDING_PAYMENT`（待付款）或 `CANCELLED`（已取消），與評價的 `IsVerifiedPurchase`（已驗證購買）判斷一致；沒有符合的商品時回傳空陣列。"),
             ["StoreOrders.CancelOrder"] = ("取消商城訂單", "需要登入，依 path parameter（路徑參數）`id` 取消目前會員仍處於可取消狀態的訂單，並回補庫存、優惠券與點數。已出貨、已完成或其他不可取消狀態回傳 `409`；成功回傳 `204 No Content`（成功且沒有回應本文）。")
         };
 

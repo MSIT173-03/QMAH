@@ -411,6 +411,28 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         db.CartItems.RemoveRange(cartItems);
     }
 
+    /// <summary>
+    /// 取得目前會員曾購買的不重複商品編號：訂單狀態不是待付款（PENDING_PAYMENT）或已取消（CANCELLED），
+    /// 與評價的 IsVerifiedPurchase 判斷一致，供商品頁判斷是否可以留下評價。
+    /// </summary>
+    [HttpGet("purchased-product-ids")]
+    public async Task<ActionResult<IReadOnlyList<Guid>>> GetPurchasedProductIds(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var productIds = await db.OrderDetails
+            .AsNoTracking()
+            .Where(detail => detail.Order.UserId == userId
+                && detail.Order.Status != "PENDING_PAYMENT"
+                && detail.Order.Status != "CANCELLED")
+            .Select(detail => detail.ProductId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        return Ok(productIds);
+    }
+
     [HttpPost("{id:guid}/cancel")]
     public async Task<ActionResult> CancelOrder(
         Guid id,

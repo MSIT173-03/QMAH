@@ -441,6 +441,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Me.GetNotifications"] = "回傳目前會員的通知分頁清單",
             ["Me.MarkNotificationRead"] = "已標記通知為已讀，不回傳 response body（回應本文）",
             ["StoreOrders.CreateOrder"] = "已建立商城訂單，並回傳訂單資料",
+            ["StoreOrders.GetPurchasedProductIds"] = "回傳目前會員已購買（訂單不是待付款或已取消）的不重複商品編號",
             ["StoreOrders.CancelOrder"] = "已取消商城訂單，不回傳 response body（回應本文）",
             ["Economy.GetEconomy"] = "回傳會員鑑定點數、鑰匙進度、鑰匙餘額與動態可解鎖數量",
             ["Economy.GetKeyExchangeRules"] = "回傳目前可執行的鑰匙兌換規則",
