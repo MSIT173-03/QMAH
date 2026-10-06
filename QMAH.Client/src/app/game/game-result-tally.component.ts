@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
@@ -36,14 +36,13 @@ import { MiniGameComplete } from './game.models';
           </small>
           <b class="tally-num is-decimal" [attr.aria-label]="'獲得 ' + complete().keyProgressReward + ' 鑰匙進度'">+{{ complete().keyProgressReward | number:'1.0-6' }}</b>
           <span class="tally-bar" aria-hidden="true"><i [style.--w]="complete().remainingKeyProgress"></i></span>
+          @if (showKeyNotice()) {
+            <div class="key-conversion-notice" role="status" aria-live="polite">
+              <app-qmah-icon name="key-round" aria-hidden="true" />
+              <span>本局換得普通鑰匙 <strong>＋{{ complete().convertedNormalKeys }} 把</strong></span>
+            </div>
+          }
         </div>
-        @if (complete().convertedNormalKeys > 0) {
-          <div class="tally-card is-wide" data-tone="keys">
-            <app-qmah-icon class="tile-icon" name="key-round" aria-hidden="true" />
-            <span class="tally-label">換得普通鑰匙</span>
-            <b class="tally-num is-plain" [style.--to]="complete().convertedNormalKeys"></b>
-          </div>
-        }
       </div>
       @if (complete().alreadyCompleted) { <p class="tally-note">這是已結算的結果，不會重複發放獎勵。</p> }
     </section>
@@ -51,4 +50,5 @@ import { MiniGameComplete } from './game.models';
 })
 export class GameResultTallyComponent {
   readonly complete = input.required<MiniGameComplete>();
+  readonly showKeyNotice = computed(() => this.complete().convertedNormalKeys > 0);
 }
