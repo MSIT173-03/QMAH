@@ -95,7 +95,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
     this.completionTicks = 0;
     if (this.demoTicks < 3) return;
     if (this.attempt?.modeCode === 'DETAIL_LOCATOR') {
-       if (this.demoTicks % 6 === 0) this.playSheet?.advanceDemonstration();
+      this.playSheet?.advanceDemonstration();
     } else if (this.attempt?.modeCode === 'MEMORY_MATCH') {
       if (this.memoryBusy) return;
       const first = this.memoryOpen[0];
