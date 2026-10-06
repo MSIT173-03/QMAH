@@ -1,9 +1,4 @@
 <div class="guide-preview" animate.enter="game-panel-enter">
-  <ol class="guide-round-progress" aria-label="示範進度">
-    <li [class.is-active]="!submitted()" [class.is-done]="submitted()" [attr.aria-current]="!submitted() ? 'step' : null"><svg class="step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/></svg>觀察作答</li>
-    <li [class.is-active]="submitted() && !revealed()" [class.is-done]="revealed()" [attr.aria-current]="submitted() && !revealed() ? 'step' : null"><svg class="step-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11 6 7h12l-2 4M12 3v4"/></svg>匿名投票</li>
-    <li [class.is-active]="revealed()" [attr.aria-current]="revealed() ? 'step' : null"><svg class="step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>揭曉結果</li>
-  </ol>
   <div class="guide-round-table">
     <figure class="exhibit">
       <div class="exhibit-frame"><div class="exhibit-mat"><img src="/images/login/real/cloisonne-tripod-incense-burner.jpg" alt="掐絲琺瑯雲龍紋三足香爐" /></div></div>

@@ -98,7 +98,7 @@ app-game-guide-multiplayer-demo { display: flex; flex-direction: column; flex: 1
 .guide-rules { @include ui.paper-panel; @include ui.reading-surface(true); position: fixed; inset: 0; margin: auto; width: min(900px, calc(100vw - 32px)); height: fit-content; max-height: calc(100dvh - 48px); overflow: auto; padding: 28px 28px 24px; box-shadow: 0 20px 60px #14291c66; }
 .guide-rules::backdrop { background: #14291c66; }
 .guide-rules__close { @extend %ui-btn-2; position: absolute; top: 14px; right: 14px; }
-.training-demo { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding-bottom: 0; }
+.training-demo { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 10px; padding-bottom: 0; }
 .mode-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .mode-list button { @extend %ui-btn-2; display: grid; gap: 2px; padding: 10px 14px; text-align: left; }
 .mode-list small { font-size: var(--qmah-type-label-size); font-weight: 600; }
@@ -134,7 +134,7 @@ nav.guide-tabs { background: #00000030; border: 2px solid #ffffff30; box-shadow:
 .guide-head nav.guide-tabs { display: inline-grid; width: auto; }
 .guide-head nav.guide-tabs button { white-space: nowrap; }
 .guide-head .guide-bar__actions .guide-rules-button { order: 2; }
-.guide-head .guide-start-top { order: 3; margin: 0; min-height: 44px; }
+.guide-head .guide-start-top { order: -1; margin: 0; min-height: 44px; }
 @media (max-width: 899px) {
   .guide-head { gap: 8px; }
   .guide-head > div:first-child p { display: none; }
@@ -155,7 +155,7 @@ nav.guide-tabs { background: #00000030; border: 2px solid #ffffff30; box-shadow:
 
 // 四種示範共用頂部玩法列，盤面使用下方完整寬度。
 @media (min-width: 1000px) {
-  .training-demo { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 12px; }
+  .training-demo { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 12px; }
   .guide-head { gap: 16px; margin: 0; }
   .guide-head h1 { margin: 0 0 4px; font-size: 28px; }
   .guide-head p { margin: 0; }
@@ -189,3 +189,24 @@ nav.guide-tabs { background: #00000030; border: 2px solid #ffffff30; box-shadow:
 @media (max-width: 520px) { .mode-list button small { display: none; } }
 
 .guide-head nav.guide-tabs button:not(.is-active):hover { color: #fff8e9; }
+
+// 多人的三步驟與單人的玩法列放在標題列中間：寬度夠就與標題、切換同一列，不夠才換到下一列
+.guide-round-progress { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 0; list-style: none; }
+.guide-round-progress li { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 4px 14px; border: 2px solid #ffffff30; border-radius: 999px; color: var(--game-table-muted); background: #00000030; font-size: 15px; font-weight: 800; white-space: nowrap; transition: background-color 200ms, color 200ms, transform 200ms cubic-bezier(.16, 1, .3, 1); }
+.guide-round-progress li.is-active { border-color: #2c3a30; color: #273e33; background: #fff2d9; box-shadow: 0 4px 9px #14291c40; transform: translateY(-2px); }
+.guide-round-progress li.is-done { border-color: #285c45; color: #fff8e9; background: #2f6b50; }
+.step-ico { flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.guide-head .guide-round-progress, .guide-head .mode-list { order: 3; flex: 1 1 100%; min-width: 0; }
+@media (min-width: 1480px) {
+  .guide-head .guide-round-progress, .guide-head .mode-list { order: 0; flex: 1 1 0; min-width: 380px; max-width: 540px; margin-inline: auto; }
+}
+@media (max-width: 899px) {
+  .guide-head .guide-round-progress, .guide-head .mode-list { order: 3; flex: 1 1 100%; max-width: none; }
+}
+@media (max-width: 700px) {
+  .guide-round-progress { display: flex; justify-content: center; }
+  .guide-round-progress li:not(.is-active), .guide-round-progress li.is-done { display: none; }
+  .guide-round-progress li.is-active { transform: none; padding-inline: 18px; gap: 8px; }
+  .guide-round-progress li.is-active::after { content: '／3'; color: #4a5a54; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .guide-round-progress li { transition: none; } }

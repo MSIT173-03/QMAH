@@ -14,7 +14,9 @@ import { MiniGameComplete } from './game.models';
     <section class="reward-tally" aria-labelledby="tally-title">
       <header class="tally-head">
         <h3 id="tally-title">本局獎勵入帳</h3>
-        @if (!complete().alreadyCompleted) {
+        @if (!complete().alreadyCompleted && !complete().economicRewardGranted) {
+          <span class="tally-warn">操作太少，本局不計獎勵（至少操作 3 次，或實際遊玩 20 秒以上）</span>
+        } @else if (!complete().alreadyCompleted) {
           @if (complete().pointReward === 0) { <span class="tally-warn">今日鑑定點數已達上限</span> }
           @if (complete().keyProgressReward === 0) { <span class="tally-warn">今日鑰匙進度已達上限</span> }
         }

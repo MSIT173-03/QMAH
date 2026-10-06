@@ -1,11 +1,11 @@
 @if (current(); as artifact) {
   <div class="locator-round">
-    <div class="locator-workspace">
+    <div class="locator-workspace" [style.--src-ratio]="sourceRatio()">
       <figure class="locator-clue">
-        <div class="locator-round-heading"><strong>第 {{ roundNumber() }}／{{ artifacts().length }} 件</strong>
+        <div class="locator-round-heading"><strong>第 {{ roundNumber() }}／{{ artifacts().length }} 件<span class="locator-round-name">{{ artifact.name }}</span></strong>
           <ol class="locator-steps" aria-label="本局文物進度">@for (item of artifacts(); track item.artifactId; let index = $index) { <li [class.is-done]="index < answers().length" [attr.aria-current]="index === answers().length ? 'step' : null" [attr.aria-label]="'第 ' + (index + 1) + ' 件，' + (index < answers().length ? '已定位' : index === answers().length ? '定位中' : '待定位')">{{ index + 1 }}<span>{{ index < answers().length ? '已定位' : index === answers().length ? '定位中' : '待定位' }}</span></li> }</ol>
         </div>
-        <div class="locator-clue__image" [hidden]="!ready()"><canvas #clueCanvas role="img" aria-label="碎片中央準心所指的位置，請在原圖中找出同一點"></canvas><svg class="locator-crosshair" viewBox="0 0 48 48" fill="none" aria-hidden="true"><g stroke="#173c2a" stroke-width="3"><circle cx="24" cy="24" r="8" /><path d="M24 2v12M24 34v12M2 24h12M34 24h12" /></g><g stroke="#fffaf0" stroke-width="1.25"><circle cx="24" cy="24" r="8" /><path d="M24 2v12M24 34v12M2 24h12M34 24h12" /></g></svg></div>
+        <div class="locator-clue__image" [hidden]="!ready()"><canvas #clueCanvas role="img" aria-label="碎片中央準心所指的位置，請在原圖中找出同一點"></canvas><svg class="locator-crosshair" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 1v17M24 30v17M1 24h17M30 24h17" stroke="#173c2a" stroke-width="5.5" stroke-linecap="round"/><path d="M24 1v17M24 30v17M1 24h17M30 24h17" stroke="#fffaf0" stroke-width="2.6" stroke-linecap="round"/><circle cx="24" cy="24" r="3" fill="#e0453a" stroke="#fffaf0" stroke-width="1.6"/></svg></div>
         <figcaption>@if (showInstructions()) { <span class="locator-howto">在原圖中點選準心對應的位置。</span><span>按「確認位置」後才計分。</span> }<span class="locator-feedback" [class.is-empty]="!lastAnswer()" role="status">@if (lastAnswer()) { {{ finished() ? '本局定位完成。' : '上一件：' }}{{ lastCorrect() ? '找到細節位置！' : '位置稍有偏差，結算時會計入準確度。' }} }</span></figcaption>
       </figure>
       <figure class="locator-source">
@@ -18,12 +18,39 @@
             @if ((keyboardCursor() || pendingPoint()) && !finished()) { <span class="locator-cursor is-pending" [style.left.%]="pointOnImage(cursor(), 'x')" [style.top.%]="pointOnImage(cursor(), 'y')" aria-hidden="true"></span> }
             @if (hintVisible()) { <span class="locator-region" [style.left.%]="imageBounds().left + (target().x < .5 ? 0 : imageBounds().width / 2)" [style.top.%]="imageBounds().top + (target().y < .5 ? 0 : imageBounds().height / 2)" [style.width.%]="imageBounds().width / 2" [style.height.%]="imageBounds().height / 2" aria-hidden="true"></span> }
             @if (verdict(); as v) { @if (v.artifactId === artifact.artifactId) { <span class="locator-verdict" role="status" [attr.data-tier]="v.tier" [style.left.%]="pointOnImage(v, 'x')" [style.top.%]="pointOnImage(v, 'y')">{{ v.text }}</span> } }
+            @if (shownAnswer(); as mine) { <span class="locator-cursor is-pending is-mine" [style.left.%]="pointOnImage(mine, 'x')" [style.top.%]="pointOnImage(mine, 'y')" aria-hidden="true"></span> }
             @if (finished()) { <span class="locator-cursor is-answer" [style.left.%]="pointOnImage(target(), 'x')" [style.top.%]="pointOnImage(target(), 'y')" aria-hidden="true"></span> }
           </div>
         }
         </div>
-        <figcaption><span>{{ artifact.name }}</span>@if (showInstructions()) { <small>移動或拖曳準心，再確認位置。<span class="kb-only">方向鍵移動準心。</span></small> }<span class="locator-pending-status" role="status">{{ pendingPoint() ? '位置已選好，確認後才計分。' : '' }}</span><button type="button" class="locator-zoom locator-loupe" (click)="loupeOn.set(!loupeOn()); lens.set(null)" [attr.aria-pressed]="loupeOn()" title="開關放大鏡">放大鏡{{ loupeOn() ? '開' : '關' }}</button>@if (loupeOn()) { <button type="button" class="locator-zoom" (click)="cycleZoom()" [attr.aria-label]="'放大倍率 ' + zoom() + ' 倍，點一下切換'" title="切換放大倍率"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M10.5 8v5M8 10.5h5"/></svg>{{ zoom() }}×</button> }<button type="button" class="locator-confirm" data-button-tone="reversible" [disabled]="!pendingPoint() || disabled() || finished() || reviewing()" (click)="confirmLocation()">確認位置</button></figcaption>
       </figure>
+      <aside class="locator-tools" aria-label="定位工具">
+        <h4 class="tool-title">工具</h4>
+        <app-game-loupe-controls [on]="loupeOn()" [zoom]="zoom()" [size]="lensSize()" (loupeChange)="setLoupe($event)" (sizeChange)="setLensSize($event)" />
+        <div class="tool-group tool-progress-group">
+          <span class="tool-label" id="progress-label">本局進度</span>
+          <ol class="tool-progress" aria-labelledby="progress-label">
+            @for (item of artifacts(); track item.artifactId; let index = $index) {
+              <li [class.is-done]="index < answers().length" [class.is-current]="finished() ? index === shownIndex() : index === answers().length" [attr.aria-current]="(finished() ? index === shownIndex() : index === answers().length) ? 'step' : null">
+                <button type="button" [disabled]="!finished()" (click)="review(index)">
+                  <b>{{ index + 1 }}</b>
+                  <span class="tool-progress__name">{{ index <= answers().length ? item.name : '尚未開啟' }}</span>
+                  <small>{{ finished() ? (index === shownIndex() ? '檢視中' : '點擊檢視') : index < answers().length ? '已定位' : index === answers().length ? '定位中' : '待定位' }}</small>
+                </button>
+              </li>
+            }
+          </ol>
+        </div>
+        @if (finished()) { <p class="tool-review">綠色十字是正確位置，紅色十字是你點的位置。點上面的題目可以來回檢視。</p> }
+        <ul class="tool-tips" aria-label="操作小技巧">
+          <li>把游標移到原圖上，放大畫面會跟著走。</li>
+          <li>對照左邊的細節，找出同一個紋樣或形狀。</li>
+          <li>點一下選位置，也可以用方向鍵微調。</li>
+        </ul>
+        @if (showInstructions()) { <p class="tool-hint">移動或拖曳準心，再確認位置。<span class="kb-only">方向鍵移動準心。</span></p> }
+        <span class="locator-pending-status" role="status">{{ pendingPoint() ? '位置已選好，確認後才計分。' : '' }}</span>
+        <button type="button" class="locator-confirm" data-button-tone="reversible" [disabled]="!pendingPoint() || disabled() || finished() || reviewing()" (click)="confirmLocation()">確認位置</button>
+      </aside>
     </div>
     @if (!ready()) { <p class="locator-status" role="status">{{ failed() ? '文物圖片無法載入，進度仍保留。' : '正在準備細節與原圖…' }}@if (failed()) { <button type="button" (click)="retry()">重新載入圖片</button> }</p> }
   </div>

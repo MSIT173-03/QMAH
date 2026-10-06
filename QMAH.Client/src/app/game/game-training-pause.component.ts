@@ -1,20 +1,18 @@
 import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, input, model, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { GameAudioToggleComponent } from './game-audio-toggle.component';
 import { MiniGameStart } from './game.models';
 
 /** 單人遊戲的暫停選單：暫停、求救、確認離開三個畫面；狀態與動作由父層決定。 */
 @Component({
   selector: 'app-game-training-pause',
-  imports: [RouterLink, GameAudioToggleComponent],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './game-training-pause.component.scss',
   template: `
       <dialog #dialog class="pause-dialog" aria-labelledby="pause-title" (close)="closed.emit()">
         <header class="pause-head">
           <div><h2 id="pause-title">{{ confirmLeaving() ? '離開本局？' : helpRequested() ? '需要幫忙嗎？' : '遊戲暫停' }}</h2>@if (!confirmLeaving() && !helpRequested()) { <p>{{ attempt()?.modeName }} · 已用時間 {{ elapsedLabel() }}，暫停中不計時</p> }</div>
-          @if (!confirmLeaving() && !helpRequested()) { <app-game-audio-toggle /> }
         </header>
         @if (confirmLeaving()) {
           <p class="pause-note">離開後會清除本局進度，不會結算成績或發放獎勵。</p>
@@ -30,9 +28,9 @@ import { MiniGameStart } from './game.models';
               <button type="button" (click)="help.emit(false)" [disabled]="!canRequestHint()">取得提示並繼續</button>
             </section>
             <section class="help-option" aria-labelledby="auto-option-title">
-              <h3 id="auto-option-title">代完成並結算</h3>
-              <p>協助完成剩餘內容並立即送出，扣 <span class="text-unit">{{ helpPenalty() }} 分</span>，本局無法取得 <span class="text-unit">S 級</span>。</p>
-              <button type="button" data-button-tone="danger" (click)="help.emit(true)" [disabled]="!canAskForHelp()">確認代完成並結算</button>
+              <h3 id="auto-option-title">協助完成</h3>
+              <p>協助完成剩餘內容，扣 <span class="text-unit">{{ helpPenalty() }} 分</span>，本局最高 <span class="text-unit">B 級</span>。完成後不會自動送出，可以自己選擇查看結算。</p>
+              <button type="button" data-button-tone="danger" (click)="help.emit(true)" [disabled]="!canAskForHelp()">確認協助完成</button>
             </section>
           </div>
           <p class="pause-note">扣分只影響本局，不會減少帳戶裡的鑑定點數。送出失敗時，進度與協助紀錄都會保留。</p>
@@ -41,7 +39,6 @@ import { MiniGameStart } from './game.models';
           <div class="pause-menu">
             <button type="button" class="pause-resume" data-button-tone="start" (click)="resume.emit()">繼續遊玩</button>
             <div class="pause-pair">
-              <button type="button" data-button-tone="neutral" (click)="helpRequested.set(true)" [disabled]="!canAskForHelp()">求救選項</button>
               <a routerLink="/game" class="pause-lobby" data-button-tone="neutral">保留進度回大廳</a>
             </div>
             <button type="button" class="pause-quit" data-button-tone="danger" (click)="leave.emit()">放棄本局</button>

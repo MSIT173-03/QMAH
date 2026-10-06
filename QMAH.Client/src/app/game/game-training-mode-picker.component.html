@@ -15,7 +15,7 @@
     <div class="mode-stage">
       <header class="mode-stage__heading"><div><h2>選擇玩法</h2><p>挑一張遊戲牌，開始一局。</p></div></header>
       <div class="mode-rail">
-        <ol #modeRail id="training-mode-carousel" class="mode-index" aria-label="選擇單人玩法" (keydown)="navigateModes($event)" (scrollend)="settleMode()" (pointerdown)="dragStart($event)" (pointermove)="dragMove($event)" (pointerup)="dragEnd()" (pointercancel)="dragEnd()" (dragstart)="$event.preventDefault()" [class.is-dragging]="dragging">
+        <ol #modeRail id="training-mode-carousel" class="mode-index" aria-label="選擇單人玩法" (keydown)="navigateModes($event)" (scrollend)="settleMode()" (wheel)="markUserAction()" (touchstart)="markUserAction()" (keydown.enter)="markUserAction()" (pointerdown)="dragStart($event)" (pointermove)="dragMove($event)" (pointerup)="dragEnd()" (pointercancel)="dragEnd()" (dragstart)="$event.preventDefault()" [class.is-dragging]="dragging">
           @for (mode of modes(); track mode.id) {
             <li>
               <app-game-training-mode-card [mode]="mode" [mechanic]="modeMechanic(mode.code)" [selected]="selectedMode()?.code === mode.code" [disabled]="starting()" (modeSelected)="chooseMode($event)" />

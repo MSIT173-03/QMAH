@@ -37,3 +37,23 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--qmah-focus); ou
   .demo-controls { flex-wrap: nowrap; gap: 6px; }
   .demo-auto { gap: 4px; padding-inline: 8px; font-size: 14px; }
 }
+
+.demo-done__actions { display: grid; gap: 10px; }
+.demo-done__formal { @extend %ui-btn; --game-button-image: var(--game-button-ochre-image); --game-button-ink: var(--game-ink-yellow); display: flex; align-items: center; justify-content: center; min-width: 160px; text-decoration: none; }
+.demo-done .demo-done__again { --game-button-image: var(--game-secondary-image); --game-button-ink: var(--game-secondary-ink); }
+
+.demo-help { @extend %ui-btn-2; gap: 8px; padding-inline: 16px; }
+.demo-help:disabled { opacity: .55; cursor: not-allowed; }
+.demo-help-pop[open] { gap: 10px; }
+.demo-help-pop[open] { display: grid; }
+.demo-help-pop h2 { margin-bottom: 4px; }
+.demo-help-pop button { width: 100%; }
+.demo-help-pop button strong, .demo-help-pop button small { display: block; }
+.demo-help-pop button small { margin-top: 2px; font-size: 13px; font-weight: 600; opacity: .9; }
+.demo-help-pop .demo-help__finish { --game-button-image: var(--game-button-red-image, linear-gradient(#b94b46, #8e302d)); --game-button-ink: #fff8e9; }
+.demo-help-pop .demo-help__close { --game-button-image: var(--game-secondary-image); --game-button-ink: var(--game-secondary-ink); }
+
+.demo-level { display: inline-flex; overflow: hidden; border: 2px solid #0f1b14; border-radius: 12px; box-shadow: 0 3px 0 #0f1b14; }
+.demo-level button { min-height: 44px; padding: 0 14px; border: 0; color: var(--game-secondary-ink); background: var(--game-secondary-image); font: 800 15px/1 var(--qmah-font-sans); cursor: pointer; }
+.demo-level button[aria-pressed='true'] { color: #fff8e9; background: var(--game-button-blue-image); }
+.demo-level button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }

@@ -1,6 +1,6 @@
 import { singlePlayerMechanic } from './game-single-player-copy';
 import { GameScoringGuideComponent } from './game-scoring-guide.component';
-import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChild, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, effect, input, output, viewChild, model } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { MiniGameMode } from './game.models';
@@ -25,8 +25,28 @@ export class GameTrainingModePickerComponent {
   readonly retryModes = output<void>();
   readonly modeRail = viewChild<ElementRef<HTMLOListElement>>('modeRail');
 
+  // 只有玩家自己操作（點選、拖曳、滾輪、觸控）後的捲動才算選擇；程式把目前玩法捲到中間，不能反過來改掉已選的玩法
+  private lastUserAction = 0;
+  private centered = false;
+  constructor() {
+    effect(() => {
+      const count = this.modes().length;
+      const code = this.selectedMode()?.code;
+      if (!count || !code || this.centered) return;
+      this.centered = true;
+      setTimeout(() => this.centerMode(code), 0);
+    });
+  }
+  markUserAction(): void { this.lastUserAction = Date.now(); }
+  private centerMode(code: string): void {
+    const rail = this.modeRail()?.nativeElement;
+    const item = rail?.children[this.modes().findIndex(mode => mode.code === code)] as HTMLElement | undefined;
+    if (rail && item && rail.scrollWidth > rail.clientWidth) rail.scrollTo({ left: item.offsetLeft - (rail.clientWidth - item.clientWidth) / 2, behavior: 'instant' });
+  }
+
   chooseMode(code: string): void {
     if (this.starting()) return;
+    this.markUserAction();
     this.modeSelected.emit(code);
     const rail = this.modeRail()?.nativeElement;
     const index = this.modes().findIndex(mode => mode.code === code);
@@ -44,6 +64,7 @@ export class GameTrainingModePickerComponent {
   private clickGuard = false;
 
   dragStart(event: PointerEvent): void {
+    this.markUserAction();
     const rail = this.modeRail()?.nativeElement;
     if (!rail || event.pointerType !== 'mouse' || event.button !== 0 || rail.scrollWidth <= rail.clientWidth) return;
     if (!this.clickGuard) {
@@ -77,7 +98,7 @@ export class GameTrainingModePickerComponent {
 
   settleMode(): void {
     const rail = this.modeRail()?.nativeElement;
-    if (!rail || rail.scrollWidth <= rail.clientWidth || this.starting()) return;
+    if (!rail || rail.scrollWidth <= rail.clientWidth || this.starting() || Date.now() - this.lastUserAction > 2500) return;
     const center = rail.scrollLeft + rail.clientWidth / 2;
     const items = Array.from(rail.children) as HTMLElement[];
     const index = items.reduce((best, item, index) =>
@@ -106,7 +127,7 @@ export class GameTrainingModePickerComponent {
       ARTIFACT_PUZZLE: ['拖曳 25 塊，拼回原圖。', '可看原圖或提示，再送出。'],
       STRIP_RESTORE: ['滑動碎片進空格。', '拼回原圖，再送出。']
     };
-    return descriptions[mode.code] ?? ['開始一局挑戰。', '完成盤面後送出結果。'];
+    return descriptions[mode.code] ?? ['開始一局挑戰。', '完成盤面後查看結算。'];
   }
   navigateModes(event: KeyboardEvent): void {
     const modes = this.modes();

@@ -1,12 +1,11 @@
 import { singlePlayerMechanic } from './game-single-player-copy';
-import { ChangeDetectionStrategy, computed, Component, ElementRef, ViewChild, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, computed, Component, ElementRef, ViewChild, effect, input, output, signal } from '@angular/core';
 
 import { MiniGameArtifact, MiniGameStart } from './game.models';
 import { GameDetailLocatorBoardComponent } from './game-detail-locator-board.component';
 import { LocatorAnswer } from './game-detail-locator';
 import { GamePlacementBoardComponent } from './game-placement-board.component';
 import { GameScrollBoardComponent } from './game-scroll-board.component';
-import { RouterLink } from '@angular/router';
 import { GameScoringGuideComponent } from './game-scoring-guide.component';
 
 export interface TrainingMemoryCard {
@@ -27,7 +26,7 @@ export interface TrainingCatalogHint {
 @Component({
   selector: 'app-game-training-play-sheet',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GameDetailLocatorBoardComponent, GamePlacementBoardComponent, GameScrollBoardComponent, RouterLink, GameScoringGuideComponent],
+  imports: [GameDetailLocatorBoardComponent, GamePlacementBoardComponent, GameScrollBoardComponent, GameScoringGuideComponent],
   templateUrl: './game-training-play-sheet.component.html',
   styleUrl: './game-training-play-sheet.component.scss'
 })
@@ -49,6 +48,7 @@ export class GameTrainingPlaySheetComponent {
   readonly locatorAnswers = input<LocatorAnswer[]>([]);
   readonly locatorHintArtifactId = input<string | null>(null);
   readonly locatorExcludedIds = input<string[]>([]);
+  readonly locatorAssistedIds = input<string[]>([]);
   readonly memoryCards = input<TrainingMemoryCard[]>([]);
   readonly memoryBusy = input(false);
   readonly memoryMatched = input(0);
@@ -99,6 +99,23 @@ export class GameTrainingPlaySheetComponent {
   readonly puzzleAvailability = output<boolean>();
   readonly scrollAvailability = output<boolean>();
 
+  private congratulated: string | null = null;
+  constructor() {
+    // 盤面一完成就跳出恭喜視窗（每局只跳一次），讓玩家選擇去看結算或留在頁面
+    effect(() => {
+      const ready = this.canComplete() && !this.demonstration();
+      const id = this.attempt().attemptId;
+      if (!ready || this.congratulated === id) return;
+      this.congratulated = id;
+      setTimeout(() => { if (!this.completing() && !this.paused()) this.openFinish(); }, 800);
+    });
+  }
+  @ViewChild('finishDialog') private finishDialog?: ElementRef<HTMLDialogElement>;
+  openFinish(): void { const dialog = this.finishDialog?.nativeElement; if (dialog && !dialog.open && typeof dialog.showModal === 'function') dialog.showModal(); }
+  closeFinish(): void { const dialog = this.finishDialog?.nativeElement; if (dialog?.open) dialog.close(); }
+  readonly leaveRequested = output<void>();
+  leaveFromFinish(): void { this.closeFinish(); this.leaveRequested.emit(); }
+  submitFinish(): void { this.closeFinish(); this.completeRequested.emit(); }
   @ViewChild(GamePlacementBoardComponent) private placement?: GamePlacementBoardComponent;
   @ViewChild(GameScrollBoardComponent) private scrollBoard?: GameScrollBoardComponent;
   @ViewChild(GameDetailLocatorBoardComponent) private locatorBoard?: GameDetailLocatorBoardComponent;

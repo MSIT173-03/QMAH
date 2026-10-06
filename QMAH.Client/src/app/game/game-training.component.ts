@@ -123,7 +123,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   get helpPenalty(): number {
     // 輔助扣分按累計數量進位，顯示本次增加的差額，避免分次使用時多顯示一分。
     const units = Math.max(1, this.helpUnits);
-    return Math.ceil(60 * (this.autoPlaced + this.helpRemaining) / units) - Math.ceil(60 * this.autoPlaced / units);
+    return Math.ceil(100 * (this.autoPlaced + this.helpRemaining) / units) - Math.ceil(100 * this.autoPlaced / units);
   }
   get hintPenalty(): number { return this.attempt?.modeCode === 'DETAIL_LOCATOR' ? 10 : 3; }
   get canAskForHelp(): boolean {
@@ -151,7 +151,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
         this.memoryCards = this.memoryCards.map(card => ({ ...card, matched: true, revealed: true }));
         this.memoryMatched = this.memoryPairCount;
         this.memoryOpen = [];
-        this.memoryFeedback = '剩餘配對已代完成，正在送出結果。';
+        this.memoryFeedback = '剩餘配對已由系統完成，本局算作協助完成。';
       } else {
         const card = this.memoryCards.find(card => !card.matched);
         if (!card) return;
@@ -176,7 +176,6 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     }
     this.persistSessionState();
     this.changeDetector.markForCheck();
-    if (automatic) this.completeAttempt();
   }
   private readonly hostElement = inject<ElementRef<HTMLElement>>(ElementRef);
   private pausedAt = 0;
@@ -501,7 +500,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
         this.memoryMatched += 1;
         this.audio.play('success');
         this.memoryFeedback = this.memoryMatched === this.memoryPairCount
-          ? '全部配對完成，可以送出結果。'
+          ? '全部配對完成！'
           : `找到 ${first.name}！繼續尋找下一組。`;
       } else {
         first.revealed = false;

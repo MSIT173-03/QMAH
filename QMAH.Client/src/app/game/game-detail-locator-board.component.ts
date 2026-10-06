@@ -1,10 +1,12 @@
 import { Component, DestroyRef, ElementRef, ViewChild, computed, effect, inject, input, output, signal } from '@angular/core';
 import { MiniGameArtifact } from './game.models';
 import { GameAudio } from './game-audio.service';
+import { GameLoupeControlsComponent, LoupeSizeId, loadLoupePrefs, loupePixels, saveLoupePrefs, wheelZoom } from './game-loupe';
 import { LocatorAnswer, locatorCorrect, locatorTarget, rememberLocatorTargets } from './game-detail-locator';
 
 @Component({
   selector: 'app-game-detail-locator-board',
+  imports: [GameLoupeControlsComponent],
   templateUrl: './game-detail-locator-board.component.html',
   styleUrl: './game-detail-locator-board.component.scss'
 })
@@ -13,6 +15,8 @@ export class GameDetailLocatorBoardComponent {
   readonly seed = input.required<string>();
   readonly targets = input<readonly { artifactId: string; x: number; y: number }[] | null>(null);
   readonly answers = input<LocatorAnswer[]>([]);
+  /** 按「協助完成」代為完成的題目；盤面視為完成，可以檢視正解位置。 */
+  readonly assisted = input<string[]>([]);
   readonly disabled = input(false);
   readonly showInstructions = input(true);
   readonly hintedArtifactId = input<string | null>(null);
@@ -21,10 +25,11 @@ export class GameDetailLocatorBoardComponent {
   readonly reviewing = signal(false);
   readonly availabilityChange = output<boolean>();
   // 放大倍率與「第一次提示」是否看過，都記在這台瀏覽器
-  readonly zoomLevels = [2, 3, 4] as const;
-  readonly zoom = signal(Number(this.stored('qmah.game.zoom')) || 3);
+  private readonly prefs = loadLoupePrefs();
+  readonly zoom = signal(this.prefs.zoom);
+  readonly lensSize = signal<LoupeSizeId>(this.prefs.size);
   /** 放大鏡可以關掉：關掉後點哪裡就選哪裡，不會有鏡面跟著游標。 */
-  readonly loupeOn = signal(true);
+  readonly loupeOn = signal(this.prefs.on);
   readonly lens = signal<{ x: number; y: number; url: string; size: string; pos: string } | null>(null);
   private pressed = false;
   readonly hintSeen = signal(this.stored('qmah.game.locator-hint') === '1');
@@ -39,10 +44,21 @@ export class GameDetailLocatorBoardComponent {
   private verdictTimer = 0;
   readonly keyboardCursor = signal(false);
   readonly dimensions = signal({ imageWidth: 0, imageHeight: 0 });
-  readonly roundNumber = computed(() => Math.min(this.answers().length + 1, this.artifacts().length));
-  readonly current = computed(() => this.artifacts()[Math.min(this.answers().length, this.artifacts().length - 1)]);
+  /** 原圖寬高比：讓右側原圖面板貼著圖片大小，不留左右空白。 */
+  readonly sourceRatio = computed(() => { const { imageWidth, imageHeight } = this.dimensions(); return imageWidth && imageHeight ? imageWidth / imageHeight : 1; });
+  /** 全部定位完成後，可以來回切換第 1～4 件，復盤自己當時點在哪裡。 */
+  readonly reviewIndex = signal<number | null>(null);
+  readonly shownIndex = computed(() => {
+    const last = Math.max(0, this.artifacts().length - 1);
+    const review = this.reviewIndex();
+    return this.finished() && review !== null ? Math.min(review, last) : Math.min(this.answers().length, last);
+  });
+  readonly shownAnswer = computed(() => this.finished() ? this.answers()[this.shownIndex()] ?? null : null);
+  review(index: number): void { if (this.finished()) this.reviewIndex.set(index); }
+  readonly roundNumber = computed(() => this.shownIndex() + 1);
+  readonly current = computed(() => this.artifacts()[this.shownIndex()]);
   readonly target = computed(() => { rememberLocatorTargets(this.seed(), this.targets()); return locatorTarget(this.seed(), this.current()?.artifactId ?? ''); });
-  readonly finished = computed(() => this.artifacts().length > 0 && this.answers().length === this.artifacts().length);
+  readonly finished = computed(() => this.artifacts().length > 0 && this.answers().length + this.assisted().length >= this.artifacts().length);
   readonly lastAnswer = computed(() => this.answers().at(-1));
   readonly lastCorrect = computed(() => (rememberLocatorTargets(this.seed(), this.targets()), !!this.lastAnswer()) && locatorCorrect(this.seed(), this.lastAnswer()!));
   readonly hintVisible = computed(() => this.hintedArtifactId() === this.current()?.artifactId && !this.finished());
@@ -55,6 +71,7 @@ export class GameDetailLocatorBoardComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => window.clearTimeout(this.verdictTimer));
+    effect(() => { if (!this.finished()) this.reviewIndex.set(null); });
     effect(() => {
       const count = this.answers().length;
       if (count > this.answered) this.audio.play(this.lastCorrect() ? 'success' : 'error');
@@ -106,31 +123,27 @@ export class GameDetailLocatorBoardComponent {
     const box = (event.currentTarget as HTMLElement).getBoundingClientRect();
     this.hintPos.set({ x: (event.clientX - box.left) / box.width * 100, y: (event.clientY - box.top) / box.height * 100 });
   }
-  setZoom(level: number): void { this.zoom.set(level); this.store('qmah.game.zoom', String(level)); }
-  cycleZoom(): void { this.setZoom(this.zoomLevels[(this.zoomLevels.indexOf(this.zoom() as 2 | 3 | 4) + 1) % this.zoomLevels.length]); }
-  lensWheel(event: WheelEvent): void {
-    if (!this.ready()) return;
-    event.preventDefault();
-    const index = this.zoomLevels.indexOf(this.zoom() as 2 | 3 | 4);
-    this.setZoom(this.zoomLevels[Math.max(0, Math.min(this.zoomLevels.length - 1, index + (event.deltaY < 0 ? 1 : -1)))]);
-  }
+  /** 放大鏡與倍率合成一個選擇：0 = 關閉，其餘是倍率。 */
+  setLoupe(level: number): void { this.lens.set(null); this.loupeOn.set(level > 0); saveLoupePrefs({ on: level > 0 }); if (level > 0) this.setZoom(level); }
+  setZoom(level: number): void { this.zoom.set(level); saveLoupePrefs({ zoom: level }); }
+  setLensSize(size: LoupeSizeId): void { this.lensSize.set(size); saveLoupePrefs({ size }); }
   /** 指標落在圖片上的位置（0–1）；不在圖片上則回傳 null。 */
-  private pointAt(event: PointerEvent): { x: number; y: number } | null {
+  private pointAt(event: MouseEvent): { x: number; y: number } | null {
     if (this.reviewing()) return null;
     const image = this.sourceImg?.nativeElement.getBoundingClientRect();
     if (!image?.width || !image.height) return null;
     const x = (event.clientX - image.left) / image.width, y = (event.clientY - image.top) / image.height;
     return x < 0 || x > 1 || y < 0 || y > 1 ? null : { x, y };
   }
-  private showLens(event: PointerEvent): void {
+  private showLens(event: MouseEvent): void {
     if (!this.loupeOn()) { this.lens.set(null); return; }
     const frame = this.sourceFrame?.nativeElement.getBoundingClientRect();
     const image = this.sourceImg?.nativeElement;
     const rect = image?.getBoundingClientRect();
     const point = this.pointAt(event);
     if (!frame || !image || !rect || !point || !this.ready() || this.disabled() || this.finished()) { this.lens.set(null); return; }
-    const size = Math.min(150, Math.max(104, frame.width * .3));
-    const touch = event.pointerType !== 'mouse';
+    const size = Math.min(loupePixels(this.lensSize()), frame.width * .6);
+    const touch = 'pointerType' in event && event.pointerType !== 'mouse';
     const x = event.clientX - frame.left;
     // 觸控時鏡面浮在手指上方，不會被手指擋住；靠近上緣就改放到下方
     let y = event.clientY - frame.top - (touch ? size * .85 : 0);
@@ -138,6 +151,14 @@ export class GameDetailLocatorBoardComponent {
     const zoom = this.zoom();
     this.sourceFrame!.nativeElement.style.setProperty('--loupe', size + 'px');
     this.lens.set({ x, y, url: image.currentSrc || image.src, size: `${rect.width * zoom}px ${rect.height * zoom}px`, pos: `${size / 2 - point.x * rect.width * zoom}px ${size / 2 - point.y * rect.height * zoom}px` });
+  }
+  /** 滾輪與按鈕兩種方式都能調倍率：每滾一格換一檔，鏡面留在游標下。 */
+  lensWheel(event: WheelEvent): void {
+    if (!this.ready()) return;
+    event.preventDefault();
+    if (!this.loupeOn()) { if (event.deltaY < 0) this.setLoupe(this.zoom()); return; }
+    this.setZoom(wheelZoom(this.zoom(), event.deltaY));
+    this.showLens(event);
   }
   lensDown(event: PointerEvent): void {
     if (event.button !== 0 || !this.ready() || this.disabled() || this.finished()) return;

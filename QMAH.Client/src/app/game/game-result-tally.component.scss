@@ -70,3 +70,9 @@
 .key-conversion-notice strong { display: block; white-space: nowrap; font-size: 30px; font-weight: 800; }
 @keyframes key-notice-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .key-conversion-notice { animation: none; } }
+
+// 小數點的鑰匙進度（例如 +3.75）不換行；旁邊的說明讓出空間
+.tally-num { white-space: nowrap; }
+.tally-num.is-decimal { font-size: clamp(28px, 3.2vw, 38px); }
+.tally-card:has(.tally-key-meta) .tally-key-meta { max-width: 12em; }
+.tally-warn { white-space: normal; }

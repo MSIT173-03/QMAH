@@ -32,11 +32,11 @@ const HOW_TO_CONTENT: Record<GameHowToVariant, HowToContent> = {
   training: {
     eyebrow: '單人小遊戲',
     title: '一個人完成一局挑戰',
-    description: '選一種玩法，依照提示辨識文物、配對或拼圖。完成後按「送出結果」，查看成績與本局獎勵。',
+    description: '選一種玩法，依照提示辨識文物、配對或拼圖。完成後選擇「查看結算」，查看成績與本局獎勵。',
     steps: [
       { label: '01', title: '選玩法', description: '從目前啟用的單人玩法中選擇一種挑戰。' },
       { label: '02', title: '完成挑戰', description: '依選擇的玩法找出細節位置、翻牌配對文物、把碎片拼回原圖，或把書畫碎片相鄰交換、滑進空格，拼回原樣。' },
-      { label: '03', title: '送出結果', description: '完成全部定位、配對、拼圖或接力後，按「送出結果」才會結算成績與獎勵。' },
+      { label: '03', title: '查看結算', description: '完成全部定位、配對、拼圖或接力後，選擇「查看結算」才會送出成績並發放獎勵。' },
       { label: '04', title: '查看成績與獎勵', description: '查看分數、評級、鑑定點數與鑰匙進度。每日點數已滿後，成績與鑰匙進度仍會保留。' }
     ]
   }

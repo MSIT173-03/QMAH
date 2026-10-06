@@ -30,7 +30,7 @@ export function placePiece(order: readonly number[], piece: number, slot: number
     <div class="placement-workspace" [class.is-hidden]="memoryMode() && !memoryDone()" [class.is-shuffled]="shuffled()" [style.--piece-ratio]="displayRatio()" [style.--tile-ratio]="pieceRatio()" [style.--image-width.px]="naturalWidth()">
       <div class="placement-board" [class.is-solved]="solved()" [style.aspect-ratio]="displayRatio()" [style.grid-template-columns]="columnsStyle()" [style.grid-template-rows]="rowsStyle()" role="group" aria-label="拼圖目標盤面">
         @for (piece of order(); track $index; let slot = $index) {
-          <button type="button" class="piece slot" [attr.data-slot]="slot" [class.selected]="piece >= 0 && selected() === piece" [class.is-lifted]="piece >= 0 && lifted() === piece" [class.just-placed]="lastPlaced() === slot" [class.hinted]="hintRegion() !== null && region(slot) === hintRegion()" [disabled]="!ready() || disabled() || solved()" [attr.aria-label]="'第 ' + (slot + 1) + ' 格' + (piece < 0 ? '，空格' : '，已有碎片')" (click)="activateSlot(slot, $event)" (keydown)="moveFocus($event, slot)" (pointerdown)="beginDrag($event, piece)">
+          <button type="button" class="piece slot" [attr.data-slot]="slot" [class.selected]="piece >= 0 && selected() === piece" [class.is-lifted]="piece >= 0 && lifted() === piece" [class.just-placed]="lastPlaced() === slot" [class.hinted]="hintRegion() !== null && region(slot) === hintRegion()" [disabled]="!ready() || disabled() || solved()" [attr.aria-label]="'第 ' + (slot + 1) + ' 格' + (piece < 0 ? '，空格' : '，已有碎片')" (click)="activateSlot(slot, $event)" (keydown)="moveFocus($event, slot)" (keydown.delete)="returnToTray(slot)" (keydown.backspace)="returnToTray(slot)" (pointerdown)="beginDrag($event, piece, slot)">
             @if (piece >= 0) { <img [src]="image()" alt="" draggable="false" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(piece % columns()) * 100" [style.top.%]="-row(piece) * 100" /> }
             @else if (!memoryMode()) { <img class="ghost" [src]="image()" alt="" draggable="false" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(slot % columns()) * 100" [style.top.%]="-row(slot) * 100" /> }
             <span>{{ slot + 1 }}</span>
@@ -57,18 +57,36 @@ export function placePiece(order: readonly number[], piece: number, slot: number
         <p class="placement-feedback" role="status">{{ feedback() }}</p>
       </section>
     <div class="placement-toolbar" role="toolbar" aria-label="盤面工具" [class.is-hidden]="memoryMode() && !memoryDone()">
+      <div class="tools-only tools-info">
+        <h4>工具</h4>
+        <p class="tools-count"><b>{{ order().length - remaining() }}</b>／{{ order().length }} 片歸位</p>
+        <div class="tools-preview" aria-label="選取碎片放大">
+          @if (selected(); as picked) { <div class="piece inspection-piece" [style.aspect-ratio]="pieceRatio()"><img [src]="image()" alt="選取碎片放大細節" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(picked % columns()) * 100" [style.top.%]="-row(picked) * 100" /></div> }
+          @else if (selected() === 0) { <div class="piece inspection-piece" [style.aspect-ratio]="pieceRatio()"><img [src]="image()" alt="選取碎片放大細節" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" style="left:0;top:0" /></div> }
+          @else { <p>點選一塊碎片，這裡會放大顯示。</p> }
+        </div>
+        <p class="tools-feedback" role="status">{{ feedback() || '把碎片拖到格子裡。放錯了，把盤面上的碎片拖到外面就能收回。' }}</p>
+      </div>
       @if (!memoryMode()) { <button type="button" data-button-tone="reversible" (click)="referenceDialog.showModal()" aria-haspopup="dialog">看原圖</button> }
+      @if (hint(); as artifactHint) { <button type="button" (click)="hintDialog.showModal()" aria-haspopup="dialog">文物提示</button> }
       <button type="button" (click)="pieceDialog.showModal()" [disabled]="selected() === null">放大碎片</button>
+      @if (!memoryMode()) { <button type="button" (click)="prepareBackground(); backgroundDialog.showModal()" [disabled]="!ready() || disabled() || solved()">背景預覽</button> }
       @if (memoryMode()) { <button type="button" (click)="showRegion()" [disabled]="!ready() || disabled() || selected() === null || solved()">區域提示 −3</button> }
-      <button type="button" class="more-trigger" [attr.popovertarget]="moreId" aria-label="更多協助" title="更多協助"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>更多</button>
-      <div class="more-pop" [id]="moreId" popover="auto"><h5>更多協助</h5>
+      @if (showHelp()) {
+      <button type="button" class="more-trigger" [attr.popovertarget]="moreId" aria-label="協助完成" title="協助完成"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>協助完成</button>
+      <div class="more-pop" [id]="moreId" popover="auto"><h5>協助完成</h5>
         <button type="button" (click)="prepareBackground(); backgroundDialog.showModal(); closeMore()" [disabled]="!ready() || disabled() || solved()"><strong>背景預覽</strong><small>找出顏色接近外框的碎片，不扣分</small></button>
         <button type="button" data-button-tone="danger" (click)="confirmDialog.showModal(); closeMore()" [disabled]="!ready() || disabled() || solved()"><strong>完成剩餘碎片</strong><small>系統代為歸位，會扣分且無法拿 S 級</small></button>
       </div>
+      }
       <ng-content />
     </div>
     </div>
     @if (dragging(); as drag) { <div class="piece drag-preview" aria-hidden="true" [style.width.px]="drag.width" [style.left.px]="drag.x" [style.top.px]="drag.y" [style.aspect-ratio]="displayRatio() * rows() / columns()"><img [src]="image()" alt="" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(drag.piece % columns()) * 100" [style.top.%]="-row(drag.piece) * 100" /></div> }
+    <dialog #hintDialog class="assist-dialog hint-dialog" aria-label="文物提示">
+      @if (hint(); as artifactHint) { <h3>{{ artifactHint.name }}</h3><p>{{ artifactHint.description || '文物說明整理中。' }}</p> }
+      <button type="button" (click)="hintDialog.close()">返回盤面</button>
+    </dialog>
     <dialog #pieceDialog class="assist-dialog" aria-label="選取碎片細節">
       <button type="button" (click)="pieceDialog.close()">返回盤面</button>
       @if (selected(); as piece) { <div class="piece inspection-piece" [style.aspect-ratio]="pieceRatio()"><img [src]="image()" alt="選取碎片放大細節" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(piece % columns()) * 100" [style.top.%]="-row(piece) * 100" /></div> }
@@ -77,11 +95,10 @@ export function placePiece(order: readonly number[], piece: number, slot: number
     <dialog #confirmDialog class="assist-dialog" aria-labelledby="assist-title">
       <h3 id="assist-title">完成剩餘碎片？</h3>
       <p>還有 <span class="text-unit">{{ remaining() }} 格</span>未歸位。</p>
-      <p>代完成扣 <span class="text-unit">{{ assistancePenalty() }} 分</span>，本局無法取得 <span class="text-unit">S 級</span>。</p>
-      <p>{{ settleAfterHelp() ? '確認後會將剩餘碎片歸位，立即送出結果。' : '確認後會將剩餘碎片歸位。' }}</p>
-      <p>{{ settleAfterHelp() ? '結算時依評級自動發放獎勵。' : '完成後請自行按「送出結果」。' }}</p>
+      <p>協助完成扣 <span class="text-unit">{{ assistancePenalty() }} 分</span>，本局最高 <span class="text-unit">B 級</span>。</p>
+      <p>確認後，系統會把剩餘碎片放回原位。完成後可以自己選擇查看結算，或留在頁面欣賞。</p>
       <button type="button" (click)="confirmDialog.close()">繼續自己拼</button>
-      <button type="button" (click)="autoFinish(); confirmDialog.close()">確認代完成</button>
+      <button type="button" (click)="autoFinish(); confirmDialog.close()">確認協助完成</button>
     </dialog>
     <dialog #backgroundDialog class="assist-dialog background-dialog" aria-labelledby="background-title">
       <h3 id="background-title">要協助歸位背景片嗎？</h3>
@@ -112,6 +129,10 @@ export class GamePlacementBoardComponent {
   readonly image = input.required<string>();
   /** 記憶玩法：開局只看十秒原圖，之後不能再看。 */
   readonly memoryMode = input(false);
+  /** 這件文物的介紹（資料庫原文），工具列的「文物提示」打開。 */
+  readonly hint = input<{ name: string; description: string | null } | null>(null);
+  /** 展示頁把「協助完成」統一放在上方控制列，盤面內就不再放。 */
+  readonly showHelp = input(false);
   readonly memoryKey = input('');
   readonly memoryLeft = signal<number | null>(null);
   /** 記憶挑戰：原圖看完（或這局已看過）後才顯示盤面，並播放碎片打亂的動畫。 */
@@ -146,8 +167,8 @@ export class GamePlacementBoardComponent {
   readonly backgroundUnavailable = signal(false);
   readonly pendingBackground = computed(() => this.backgroundPieces().filter(piece => this.order()[piece] !== piece));
   readonly selectedBackground = computed(() => this.pendingBackground().filter(piece => this.backgroundSelection().includes(piece)));
-  readonly backgroundPenalty = computed(() => Math.ceil(60 * (this.assistedPieces() + this.selectedBackground().length) / this.order().length)
-    - Math.ceil(60 * this.assistedPieces() / this.order().length));
+  readonly backgroundPenalty = computed(() => Math.ceil(100 * (this.assistedPieces() + this.selectedBackground().length) / this.order().length)
+    - Math.ceil(100 * this.assistedPieces() / this.order().length));
   readonly availabilityChange = output<boolean>();
   readonly settleAfterHelp = input(false);
   readonly settlementRequested = output<void>();
@@ -162,17 +183,37 @@ export class GamePlacementBoardComponent {
   readonly lastPlaced = signal<number | null>(null);
   readonly solved = computed(() => this.order().every((piece, slot) => piece === slot));
   readonly remaining = computed(() => this.order().filter((piece, slot) => piece !== slot).length);
-  readonly assistancePenalty = computed(() => Math.ceil(60 * (this.assistedPieces() + this.remaining()) / this.order().length)
-    - Math.ceil(60 * this.assistedPieces() / this.order().length));
+  readonly assistancePenalty = computed(() => Math.ceil(100 * (this.assistedPieces() + this.remaining()) / this.order().length)
+    - Math.ceil(100 * this.assistedPieces() / this.order().length));
   readonly columnsStyle = computed(() => 'repeat(' + this.columns() + ', minmax(0, 1fr))');
   readonly rowsStyle = computed(() => 'repeat(' + this.rows() + ', minmax(0, 1fr))');
   readonly traySlots = computed(() => Array.from({ length: this.order().length }, (_, piece) => piece).sort((a, b) => this.shuffleKey(a) - this.shuffleKey(b)));
   readonly traySize = signal({ width: 360, height: 300 });
-  readonly scattered = computed(() => scatterPieces(this.order().length, this.traySize().width, this.traySize().height, this.pieceRatio()));
+  /** 電腦版：碎片散落在拼圖盤面的左右兩側（一邊 13 片、一邊 12 片），不收在盒子裡。 */
+  readonly fieldMode = signal(false);
+  readonly fieldGeom = signal({ width: 0, height: 0, boardLeft: 0, boardRight: 0 });
+  readonly scattered = computed(() => {
+    const count = this.order().length;
+    const ratio = this.pieceRatio();
+    const geom = this.fieldGeom();
+    if (!this.fieldMode() || geom.width <= 0 || geom.height <= 0 || geom.boardRight <= geom.boardLeft) {
+      return scatterPieces(count, this.traySize().width, this.traySize().height, ratio);
+    }
+    const gap = 16;
+    const leftCount = Math.ceil(count / 2);
+    const leftWidth = Math.max(60, geom.boardLeft - gap);
+    const rightX = geom.boardRight + gap;
+    const rightWidth = Math.max(60, geom.width - rightX);
+    const left = scatterPieces(leftCount, leftWidth, geom.height, ratio, 1271);
+    const right = scatterPieces(count - leftCount, rightWidth, geom.height, ratio, 3187);
+    const place = (piece: { x: number; y: number; width: number; height: number; turn: number }, offset: number, zone: number) =>
+      ({ x: (offset + piece.x / 100 * zone) / geom.width * 100, y: piece.y, width: piece.width / 100 * zone / geom.width * 100, height: piece.height, turn: piece.turn });
+    return { columns: left.columns, pieces: [...left.pieces.map(piece => place(piece, 0, leftWidth)), ...right.pieces.map(piece => place(piece, rightX, rightWidth))] };
+  });
   readonly tray = computed(() => Array.from({ length: this.order().length }, (_, piece) => piece)
     .filter(piece => !this.order().includes(piece)).sort((a, b) => this.shuffleKey(a) - this.shuffleKey(b)));
   private readonly host: ElementRef<HTMLElement>;
-  private pointer: { id: number; piece: number; x: number; y: number; width: number } | null = null;
+  private pointer: { id: number; piece: number; x: number; y: number; width: number; fromSlot?: number } | null = null;
   private suppressClick = false;
   private readonly audio = inject(GameAudio);
   constructor(host: ElementRef<HTMLElement>) {
@@ -184,13 +225,24 @@ export class GamePlacementBoardComponent {
     afterNextRender(() => {
       const tray = this.host.nativeElement.querySelector<HTMLElement>('.piece-tray');
       if (!tray) return;
-      const observer = new ResizeObserver(() => {
+      const board = this.host.nativeElement.querySelector<HTMLElement>('.placement-board');
+      const measure = () => {
         const width = tray.clientWidth;
         const height = tray.clientHeight;
         // A hidden tray has no usable geometry; retain its last valid scatter.
         if (width > 0 && height > 0) this.traySize.set({ width, height });
-      });
+        if (width > 0 && height > 0 && board) {
+          const origin = tray.getBoundingClientRect();
+          const box = board.getBoundingClientRect();
+          this.fieldGeom.set({ width, height, boardLeft: box.left - origin.left, boardRight: box.right - origin.left });
+        }
+      };
+      const observer = new ResizeObserver(measure);
+      // 版面（欄寬、置中）在第一次繪製後才定案，稍後再量一次，碎片才不會壓到盤面
+      const timers = [150, 500, 1200].map(delay => setTimeout(measure, delay));
+      destroy.onDestroy(() => timers.forEach(clearTimeout));
       observer.observe(tray);
+      if (board) observer.observe(board);
       destroy.onDestroy(() => observer.disconnect());
     });
   }
@@ -198,6 +250,7 @@ export class GamePlacementBoardComponent {
   updateCompactTools(): void {
     if (typeof window === 'undefined') return;
     this.compactTools.set(window.matchMedia?.('(max-width: 700px)').matches ?? window.innerWidth <= 700);
+    this.fieldMode.set(window.matchMedia?.('(min-width: 1000px)').matches ?? window.innerWidth >= 1000);
   }
   readImage(event: Event): void {
     const image = event.target as HTMLImageElement;
@@ -303,6 +356,14 @@ export class GamePlacementBoardComponent {
     this.lastPlaced.set(slot);
     this.feedback.set('已放置。可依完成比例確認整體進度，或查看原圖對照。');
   }
+  returnToTray(slot: number): void {
+    const piece = this.order()[slot];
+    if (piece === undefined || piece < 0 || this.disabled() || this.solved()) return;
+    this.orderChange.emit(this.order().map((value, index) => index === slot ? -1 : value));
+    this.selected.set(null); this.hintRegion.set(null);
+    this.audio.play('place');
+    this.feedback.set('已收回待放置區，可以再拖回盤面。');
+  }
   showRegion(): void {
     const piece = this.selected();
     if (piece === null || this.disabled() || !this.ready() || this.hintRegion() !== null) return;
@@ -322,15 +383,15 @@ export class GamePlacementBoardComponent {
     const count = this.remaining();
     this.autoCompleted.emit(count);
     this.orderChange.emit(this.order().map((_, slot) => slot));
-    this.selected.set(null); this.hintRegion.set(null); this.feedback.set('代完成已記錄，現在可以送出結果。');
+    this.selected.set(null); this.hintRegion.set(null); this.feedback.set('剩餘碎片已由系統放回原位，本局算作協助完成。');
     if (this.settleAfterHelp()) this.settlementRequested.emit();
   }
-  beginDrag(event: PointerEvent, piece: number): void {
+  beginDrag(event: PointerEvent, piece: number, fromSlot?: number): void {
     if (piece < 0 || this.disabled() || this.solved() || event.button !== 0) return;
     this.suppressClick = false;
     const source = event.currentTarget as HTMLElement;
     const width = (source.querySelector('.piece-face') ?? source).getBoundingClientRect().width;
-    this.pointer = { id: event.pointerId, piece, x: event.clientX, y: event.clientY, width: width * 1.12 };
+    this.pointer = { id: event.pointerId, piece, x: event.clientX, y: event.clientY, width: width * 1.12, fromSlot };
     this.lifted.set(piece); this.lastPlaced.set(null);
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   }
@@ -352,6 +413,8 @@ export class GamePlacementBoardComponent {
     if (this.dragging()) {
       const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-slot]');
       if (target && this.host.nativeElement.contains(target)) this.drop(this.pointer.piece, Number(target.dataset['slot']));
+      // 從盤面拖出去、沒放到任何格子上：收回待放置的碎片（隨時都可以）
+      else if (this.pointer.fromSlot !== undefined) this.returnToTray(this.pointer.fromSlot);
       this.suppressClick = true;
     }
     this.dragging.set(null); this.lifted.set(null); this.pointer = null;

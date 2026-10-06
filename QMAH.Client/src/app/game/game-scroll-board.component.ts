@@ -1,5 +1,6 @@
 import { Component, ElementRef, ViewChild, computed, effect, inject, input, output, signal } from '@angular/core';
 import { GameAudio } from './game-audio.service';
+import { GameLoupeControlsComponent, wheelZoom, LoupeSizeId, loadLoupePrefs, loupePixels, saveLoupePrefs } from './game-loupe';
 
 /** 保留給舊測試與其他頁面使用的版面計算；滑拼固定是 4×4。 */
 export function scrollGeometry(width: number, height: number) {
@@ -150,6 +151,7 @@ export function solveSlide(start: readonly number[], limit = 40): number[] | nul
 
 @Component({
   selector: 'app-game-scroll-board',
+  imports: [GameLoupeControlsComponent],
   template: `
     <div class="scroll-workbench" [style.--scroll-ratio]="ratio()">
       @if (!image() || failed()) {
@@ -159,7 +161,18 @@ export function solveSlide(start: readonly number[], limit = 40): number[] | nul
           <img class="scroll-source" [src]="image()" alt="" aria-hidden="true" (load)="readDimensions($event)" (error)="onImageError()" />
         }
         <div class="swap" [style.--cols]="size" [style.--tile-ratio]="ratio()">
-            <button type="button" class="swap-ref" (click)="openReference()" aria-haspopup="dialog"><img [src]="image()" alt="" /><span>看原圖</span></button>
+            <aside class="swap-intro" aria-label="書畫介紹">
+              <h4>{{ intro()?.name || name() }}</h4>
+              <p>{{ intro()?.description || '拼回原圖後，可以對照右邊的原圖欣賞整幅畫面。' }}</p>
+            </aside>
+            <section class="swap-ref" aria-label="原圖對照">
+              <div class="swap-ref__view" role="img" [attr.aria-label]="name() + '原圖，移動游標用放大鏡查看細節'"
+                (pointermove)="refMove($event)" (pointerdown)="refDown($event)" (pointerup)="refLeave()" (pointercancel)="refLeave()" (pointerleave)="refLeave()" (wheel)="refWheel($event)">
+                <img [src]="image()" alt="" draggable="false" />
+                @if (lens(); as l) { <span class="swap-ref__lens" [style.left.px]="l.x" [style.top.px]="l.y" [style.width.px]="l.size" [style.height.px]="l.size" [style.background-image]="'url(' + image() + ')'" [style.background-size]="l.bg" [style.background-position]="l.pos" aria-hidden="true"></span> }
+              </div>
+              <div class="swap-ref__bar"><h4 class="swap-ref__title">工具</h4><p class="swap-ref__stat"><span>本局進度</span> <b>{{ correct() }}</b>／15 片歸位 · 已{{ hard() ? '滑動' : '移動' }} {{ moves() }} 次</p><app-game-loupe-controls class="is-row" [on]="loupeOn()" [zoom]="zoom()" [size]="lensSize()" (loupeChange)="setLoupe($event)" (sizeChange)="setLensSize($event)" /></div>
+            </section>
           <div class="swap-grid" [class.is-swap]="!hard()" role="group" tabindex="0" [attr.aria-label]="'書畫拼貼，已歸位 ' + correct() + ' ／ 15 片，點碎片滑進空格，方向鍵也能移動'" (keydown)="onKey($event)">
             @for (cell of cells(); track $index; let index = $index) {
               @let piece = cell < 0 ? 15 : cell;
@@ -181,13 +194,6 @@ export function solveSlide(start: readonly number[], limit = 40): number[] | nul
             }
           </aside>
         </div>
-        <dialog #referenceDialog class="scroll-inspection" aria-labelledby="scroll-inspection-title">
-          <header><h2 id="scroll-inspection-title">{{ name() }}</h2><button type="button" (click)="referenceDialog.close()">返回盤面</button></header>
-          <label>原圖放大倍率 <input type="range" min="1" max="4" step="0.5" [value]="zoom()" (input)="setZoom($event)" /> {{ zoom() }} 倍</label>
-          <div class="scroll-reference-viewport" tabindex="0" role="region" aria-label="書畫原圖，放大後可捲動查看細節">
-            <img [src]="image()" [alt]="name() + '完整原圖'" [style.width.%]="zoom() * 100" [style.max-height]="zoom() === 1 ? 'calc(100dvh - 200px)' : null" />
-          </div>
-        </dialog>
       }
     </div>
   `,
@@ -195,6 +201,8 @@ export function solveSlide(start: readonly number[], limit = 40): number[] | nul
 })
 export class GameScrollBoardComponent {
   readonly showSummary = input(true);
+  /** 電腦版左側欄顯示這件書畫的介紹。 */
+  readonly intro = input<{ name: string; description: string | null } | null>(null);
   private readonly audio = inject(GameAudio);
   readonly size = SLIDE_SIZE;
   readonly slots = Array.from({ length: PIECES }, (_, index) => index);
@@ -289,11 +297,42 @@ export class GameScrollBoardComponent {
     this.orderChange.emit(this.slots.slice());
     if (this.settleAfterHelp()) this.settlementRequested.emit();
   }
-  @ViewChild('referenceDialog') private referenceDialog?: ElementRef<HTMLDialogElement>;
-  openReference(): void {
-    const dialog = this.referenceDialog?.nativeElement;
-    dialog?.showModal();
-    dialog?.querySelector<HTMLElement>('.scroll-reference-viewport')?.focus();
+  // 原圖旁邊用放大鏡看細節：設定與細節追跡共用（倍率最高 4 倍）
+  private readonly prefs = loadLoupePrefs();
+  readonly loupeOn = signal(this.prefs.on);
+  readonly lensSize = signal<LoupeSizeId>(this.prefs.size);
+  readonly lens = signal<{ x: number; y: number; size: number; bg: string; pos: string } | null>(null);
+  private refPressed = false;
+  setLoupe(level: number): void { this.lens.set(null); this.loupeOn.set(level > 0); saveLoupePrefs({ on: level > 0 }); if (level > 0) { this.zoom.set(level); saveLoupePrefs({ zoom: level }); } }
+  setLensSize(size: LoupeSizeId): void { this.lensSize.set(size); saveLoupePrefs({ size }); }
+  refDown(event: PointerEvent): void { this.refPressed = true; this.showRefLens(event); }
+  refMove(event: PointerEvent): void { if (event.pointerType === 'mouse' || this.refPressed) this.showRefLens(event); }
+  refLeave(): void { this.refPressed = false; this.lens.set(null); }
+  /** 滾輪與按鈕兩種方式都能調倍率：每滾一格換一檔，鏡面留在游標下。 */
+  refWheel(event: WheelEvent): void {
+    event.preventDefault();
+    if (!this.loupeOn()) { if (event.deltaY < 0) this.setLoupe(this.zoom()); return; }
+    const level = wheelZoom(this.zoom(), event.deltaY);
+    this.zoom.set(level); saveLoupePrefs({ zoom: level });
+    this.showRefLens(event);
+  }
+  private showRefLens(event: MouseEvent): void {
+    if (!this.loupeOn()) { this.lens.set(null); return; }
+    const view = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    if (!view.width || !view.height) return;
+    // 圖片以 contain 置中：算出實際顯示的範圍，游標不在圖上就不顯示
+    const ratio = this.ratio();
+    const width = Math.min(view.width, view.height * ratio), height = width / ratio;
+    const left = (view.width - width) / 2, top = (view.height - height) / 2;
+    const x = event.clientX - view.left, y = event.clientY - view.top;
+    const px = (x - left) / width, py = (y - top) / height;
+    if (px < 0 || px > 1 || py < 0 || py > 1) { this.lens.set(null); return; }
+    const size = Math.min(loupePixels(this.lensSize()), view.width * .6, view.height * .8);
+    const touch = 'pointerType' in event && event.pointerType !== 'mouse';
+    let lensY = y - (touch ? size * .85 : 0);
+    if (touch && lensY < size / 2) lensY = y + size * .85;
+    const zoom = this.zoom();
+    this.lens.set({ x, y: lensY, size, bg: `${width * zoom}px ${height * zoom}px`, pos: `${size / 2 - px * width * zoom}px ${size / 2 - py * height * zoom}px` });
   }
   readonly image = input.required<string>();
   readonly name = input.required<string>();
@@ -311,7 +350,7 @@ export class GameScrollBoardComponent {
   readonly failed = signal(false);
   readonly ready = signal(false);
   readonly imageRevision = signal(0);
-  readonly zoom = signal(1);
+  readonly zoom = signal(this.prefs.zoom);
   readonly dimensions = signal({ width: 1, height: 1 });
   readonly layout = computed(() => scrollGeometry(this.dimensions().width, this.dimensions().height));
 
@@ -324,7 +363,6 @@ export class GameScrollBoardComponent {
       this.picked.set(null);
       this.ready.set(false);
       this.dimensions.set({ width: 1, height: 1 });
-      this.zoom.set(1);
       this.availabilityChange.emit(!!image);
     });
   }
@@ -348,5 +386,4 @@ export class GameScrollBoardComponent {
     this.imageRevision.update(value => value + 1);
   }
 
-  setZoom(event: Event): void { this.zoom.set(Number((event.target as HTMLInputElement).value)); }
 }

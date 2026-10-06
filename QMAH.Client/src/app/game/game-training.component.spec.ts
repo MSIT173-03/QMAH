@@ -46,7 +46,7 @@ describe('單人遊戲求救', () => {
     const { component } = setup('ARTIFACT_PUZZLE');
     component.autoPlaced = 1;
     component.puzzleOrder = Array.from({ length: 25 }, (_, index) => index === 24 ? -1 : index);
-    expect(component.helpPenalty).toBe(2);
+    expect(component.helpPenalty).toBe(4);
   });
   it('暫停與結果重送期間，不能透過元件操作改動已凍結的答案', () => {
     const { component } = setup('DETAIL_LOCATOR');
@@ -70,7 +70,7 @@ describe('單人遊戲求救', () => {
     expect(component.memoryFeedback).toContain('重看不再扣分');
     expect(complete).not.toHaveBeenCalled();
   });
-  it('代完成只計剩餘組數，直接送出一次並保留原提示紀錄', () => {
+  it('代完成只計剩餘組數，不自動送出，玩家自己完成後送出一次並保留原提示紀錄', () => {
     const { component, complete } = setup('MEMORY_MATCH');
     component.useHelp(false);
     const id = component.memoryCards[0].artifactId;
@@ -78,6 +78,9 @@ describe('單人遊戲求救', () => {
     component.memoryMatched = 1;
     component.useHelp(true);
     component.useHelp(true);
+    expect(complete).not.toHaveBeenCalled();
+    expect(component.canComplete).toBe(true);
+    component.completeAttempt();
     expect(complete).toHaveBeenCalledTimes(1);
     const request = complete.mock.calls[0] as unknown as [string, { rawResultJson: string }];
     expect(JSON.parse(request[1].rawResultJson)).toMatchObject({ scoringVersion: 3, hintsUsed: 1, autoPlaced: 7, memoryMatched: 8 });
@@ -96,7 +99,7 @@ describe('單人遊戲求救', () => {
     expect(component.locatorHintArtifactId).toBe('a1');
     expect(component.hintsUsed).toBe(2);
   });
-  it('代完成只協助剩餘文物，送出 v4 座標與輔助數量', () => {
+  it('代完成只協助剩餘文物，不自動送出；玩家自己送出時帶 v4 座標與輔助數量', () => {
     const { component, complete } = setup('DETAIL_LOCATOR');
     component.locateDetail({ artifactId: 'a0', imageWidth: 1000, imageHeight: 1000, ...locatorTarget('seed', 'a0') });
     component.useHelp(true);
@@ -104,6 +107,9 @@ describe('單人遊戲求救', () => {
     expect(component.canAskForHelp).toBe(false);
     expect(component.locatorAnswers).toHaveLength(1);
     expect(component.locatorAssistedIds).toEqual(['a1', 'a2', 'a3']);
+    expect(complete).not.toHaveBeenCalled();
+    expect(component.canComplete).toBe(true);
+    component.completeAttempt();
     expect(complete).toHaveBeenCalledTimes(1);
     const request = complete.mock.calls[0] as unknown as [string, { rawResultJson: string }];
     expect(JSON.parse(request[1].rawResultJson)).toMatchObject({ scoringVersion: 4, autoPlaced: 3, locatorAnswers: component.locatorAnswers });
