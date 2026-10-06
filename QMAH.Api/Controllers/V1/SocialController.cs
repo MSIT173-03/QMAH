@@ -93,6 +93,29 @@ public sealed class SocialController(
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
     }
 
+    // 批次取得多位會員的頭像網址（社群列表一次要顯示很多作者）；只回傳公開個人檔案且有頭像的會員。
+    [HttpGet("members/avatars")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyDictionary<Guid, string?>>> GetMemberAvatars(
+        [FromQuery] Guid[] ids,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = ids.Distinct().Take(100).ToList();
+        var profiles = await db.UserProfiles
+            .AsNoTracking()
+            .Where(profile => wanted.Contains(profile.UserId) && profile.Visibility == "PUBLIC")
+            .Select(profile => new { profile.UserId, profile.AvatarPath })
+            .ToListAsync(cancellationToken);
+
+        var result = wanted.ToDictionary(id => id, _ => (string?)null);
+        foreach (var profile in profiles)
+        {
+            result[profile.UserId] = mediaUrlResolver.Resolve(
+                avatarStorage.ResolvePublicPath(profile.UserId, profile.AvatarPath));
+        }
+        return Ok(result);
+    }
+
     // 公開個人頁：貼文與活動本來就是公開的，所以統計永遠回傳；頭像、簡介、加入時間、Email 只在對方設為 PUBLIC 時回傳。
     [HttpGet("members/{userId:guid}")]
     [AllowAnonymous]
@@ -542,6 +565,44 @@ public sealed class SocialController(
         }
 
         return Ok(await ToEventDetailsAsync(eventData, cancellationToken));
+    }
+
+    // 參加者名單：只有活動發起人與 Admin 看得到；只回傳暱稱，不含 Email。
+    // 報名與取消共用同一筆資料（EventId + UserId 唯一），重複報名／取消不會多出紀錄。
+    [Authorize]
+    [HttpGet("events/{id:guid}/registrations")]
+    public async Task<ActionResult<EventRegistrationsDto>> GetEventRegistrations(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var eventData = await db.Events
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (eventData is null)
+            return MissingResource("找不到活動", "這場活動不存在。");
+        if (eventData.OrganizerUserId != userId && !User.IsInRole("Admin"))
+            return Problem(statusCode: StatusCodes.Status403Forbidden, title: "沒有權限", detail: "只有活動發起人可以查看參加者名單。");
+
+        var rows = await db.EventRegistrations
+            .AsNoTracking()
+            .Where(item => item.EventId == id)
+            .OrderBy(item => item.RegisteredAt)
+            .Select(item => new EventRegistrantDto(
+                item.UserId,
+                db.UserProfiles
+                    .Where(profile => profile.UserId == item.UserId)
+                    .Select(profile => profile.Nickname)
+                    .FirstOrDefault(),
+                item.Status,
+                item.RegisteredAt))
+            .ToListAsync(cancellationToken);
+
+        return Ok(new EventRegistrationsDto(
+            rows.Where(row => row.Status != "CANCELLED").ToList(),
+            rows.Where(row => row.Status == "CANCELLED").ToList()));
     }
 
     [HttpGet("announcements")]

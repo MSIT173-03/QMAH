@@ -748,3 +748,14 @@ public sealed record SocialMemberProfileDto(
     bool IsPublic,
     int PostCount,
     int EventCount);
+
+/// <summary>活動發起人看到的參加者名單；取消報名的人另外放在 Cancelled，只記「來過並取消」，不保留每次操作的流水紀錄。</summary>
+public sealed record EventRegistrationsDto(
+    IReadOnlyList<EventRegistrantDto> Active,
+    IReadOnlyList<EventRegistrantDto> Cancelled);
+
+public sealed record EventRegistrantDto(
+    Guid UserId,
+    string? DisplayName,
+    string Status,
+    DateTime RegisteredAt);

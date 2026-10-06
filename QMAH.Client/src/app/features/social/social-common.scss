@@ -126,15 +126,41 @@
   text-underline-offset: 4px;
 }
 
+/* 活動卡片底部與貼文卡片一致：作者在標題下方，底部只放右側的圖示按鈕，不會誤點到作者。 */
 .qmah-social-page .social-event-card__footer {
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: var(--qmah-space-4);
   margin-top: auto;
 }
 
 .qmah-social-page .social-event-card__organizer {
   min-width: 0;
+  margin: 0;
 }
+
+.qmah-social-page .social-event-card__organizer app-user-avatar { --user-avatar-size: 1.5rem; }
+
+.qmah-social-page .social-event-card__open {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: var(--qmah-control-height);
+  height: var(--qmah-control-height);
+  border: 1.5px solid color-mix(in srgb, var(--qmah-social-action) 60%, transparent);
+  border-radius: var(--qmah-radius-control);
+  background: transparent;
+  color: var(--qmah-social-action);
+  text-decoration: none;
+}
+
+.qmah-social-page .social-event-card__open:hover {
+  border-color: var(--qmah-social-action);
+  background: var(--qmah-social-action);
+  color: var(--qmah-on-dark);
+}
+
+.qmah-social-page .social-event-card__open svg { width: 1.15rem; height: 1.15rem; stroke-width: 2.25; }
 
 .qmah-social-page .social-announcement-list {
   display: grid;
@@ -414,3 +440,51 @@
 }
 
 .qmah-social-page .social-menu { color: var(--qmah-ink); }
+
+/* 作者名稱旁的頭像與名字排成一列。 */
+.qmah-social-page .social-comment__author,
+.qmah-social-page .social-registrants__who {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qmah-social-page .social-comment__author app-user-avatar,
+.qmah-social-page .social-registrants__who app-user-avatar { --user-avatar-size: 1.75rem; }
+
+/* 留言輸入框：底色與上方貼文卡片相同（--qmah-surface-elevated），邊框維持淡赤陶、聚焦時變成按鈕紅；深色模式 token 會自動換色。 */
+.qmah-social-page .social-composer .textarea {
+  background: var(--qmah-surface-elevated);
+  border-color: color-mix(in srgb, var(--qmah-social-accent) 45%, transparent);
+  color: var(--qmah-ink);
+}
+
+.qmah-social-page .social-composer .textarea:focus,
+.qmah-social-page .social-composer .textarea:focus-visible {
+  border-color: var(--qmah-social-action);
+}
+
+.qmah-social-page .social-composer .textarea::placeholder { color: var(--qmah-muted); }
+
+
+/* 留言輸入框：送出鈕改成框內右下角的圖示（像 Facebook），空白時變灰且不可按。 */
+.qmah-social-page .social-composer:has(.social-composer__send) { position: relative; }
+.qmah-social-page .social-composer:has(.social-composer__send) .textarea { padding-right: 3.25rem; }
+.qmah-social-page .social-composer__send {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--qmah-social-action);
+  cursor: pointer;
+}
+.qmah-social-page .social-composer__send:hover:not(:disabled) { background: color-mix(in srgb, var(--qmah-social-action) 14%, transparent); }
+.qmah-social-page .social-composer__send:disabled { color: var(--qmah-muted); opacity: .5; cursor: not-allowed; }
+.qmah-social-page .social-composer__send svg { width: 1.25rem; height: 1.25rem; stroke-width: 2; }

@@ -166,7 +166,7 @@
           <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
         </h2>
         <p class="social-post-card__author social-icon-label">
-          <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+          <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
           @if (post.publisherType === 'COMMUNITY' && post.userId) {
             <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
           } @else {
@@ -196,9 +196,8 @@
           >
             <svg lucideFlag aria-hidden="true" focusable="false"></svg>
           </button>
-          <a class="social-post-card__read-more social-icon-label" [routerLink]="['/social/posts', post.id]">
-            閱讀全文
-            <app-qmah-icon name="arrow-right" [size]="14" aria-hidden="true" />
+          <a class="social-post-card__open" [routerLink]="['/social/posts', post.id]" [attr.aria-label]="'開啟貼文：' + post.title" title="開啟貼文">
+            <svg lucideArrowRight aria-hidden="true" focusable="false"></svg>
           </a>
         </div>
       </div>

@@ -32,7 +32,7 @@
     } @else {
       <h1 class="social-panel__title">{{ post.title }}</h1>
       <p class="social-meta social-icon-label">
-        <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+        <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
         @if (post.publisherType === 'COMMUNITY' && post.userId) {
           <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
         } @else {
@@ -101,14 +101,14 @@
         placeholder="留下你的想法…"
         [(ngModel)]="newComment.content"
       ></textarea>
-      <button type="button" class="btn btn-primary" [disabled]="!newComment.content.trim()" (click)="submitComment()">送出留言</button>
+      <button type="button" class="social-composer__send" aria-label="送出留言" title="送出留言" [disabled]="!newComment.content.trim()" (click)="submitComment()"><svg lucideSendHorizontal aria-hidden="true" focusable="false"></svg></button>
     </div>
 
     <ul class="social-comments">
       @for (comment of post.comments; track comment.id) {
         <li class="social-comment">
           <div class="social-comment__head">
-            <span class="social-comment__author"><a class="social-author-link" [routerLink]="['/social/members', comment.userId]">{{ comment.displayName || '匿名會員' }}</a></span>
+            <span class="social-comment__author"><app-user-avatar [userId]="comment.userId" /><a class="social-author-link" [routerLink]="['/social/members', comment.userId]">{{ comment.displayName || '匿名會員' }}</a></span>
             <time class="social-meta" [attr.datetime]="comment.createdAt">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
           </div>
           @if (editingCommentId === comment.id) {

@@ -1,4 +1,7 @@
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { MeApiService } from '../../../core/services/me-api';
+import { demoPost, isDemoAdmin } from '../social-demo';
+import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -11,12 +14,12 @@ import { SocialPostContentComponent } from '../../../shared/components/social-po
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 import { boardLabel } from '../social-labels';
 import {
+  LucideArrowRight,
   LucideFlag,
   LucideImage,
   LucideMessageCircle,
   LucideMegaphone,
   LucidePlus,
-  LucideUserRound,
   LucideX,
 } from '@lucide/angular';
 
@@ -41,13 +44,14 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
     ReportModalComponent,
     SocialPostContentComponent,
     QmahIconComponent,
+    LucideArrowRight,
     LucideFlag,
     LucideImage,
     LucideMessageCircle,
     LucideMegaphone,
     LucidePlus,
-    LucideUserRound,
     LucideX,
+    UserAvatarComponent
   ],
   templateUrl: './posts.html',
   styleUrls: ['../social-common.scss', './posts.scss']
@@ -55,6 +59,7 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
 export class PostsComponent implements OnInit, OnDestroy {
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
+  private meApi = inject(MeApiService);
 
   @ViewChild(ImageCropModalComponent) private cropModal!: ImageCropModalComponent;
   @ViewChild('createPostDialog') private createPostDialog?: ElementRef<HTMLDialogElement>;
@@ -214,6 +219,10 @@ export class PostsComponent implements OnInit, OnDestroy {
 
   openCreatePost(): void {
     // ui-integration: 由 Angular 保留對話框的 focus／Escape 行為，避免依賴全域 id 變數開啟發布流程。
+    // 管理員示範用：表單是空的才預填，不會蓋掉已經在寫的內容。
+    if (isDemoAdmin(this.meApi.me()) && !this.newPost.title.trim() && !this.newPost.content.trim()) {
+      this.newPost = demoPost();
+    }
     this.createPostDialog?.nativeElement.showModal();
   }
 

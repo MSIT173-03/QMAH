@@ -1,18 +1,20 @@
 import { ChangeDetectorRef, Component, Input, OnChanges, inject } from '@angular/core';
+import { MeApiService } from '../../../core/services/me-api';
+import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { SocialApiService, SocialEventDetails } from '../../../core/services/social-api';
+import { EventRegistrations, SocialApiService, SocialEventDetails } from '../../../core/services/social-api';
 import { EventMapComponent } from '../../../shared/components/event-map/event-map';
 import { PostDetailComponent } from '../post-detail/post-detail';
 import { publishStatusLabel, reviewStatusLabel } from '../social-labels';
-import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUserRound, LucideUsers } from '@lucide/angular';
+import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUsers } from '@lucide/angular';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, EventMapComponent, PostDetailComponent, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUserRound, LucideUsers],
+  imports: [CommonModule, RouterLink, EventMapComponent, PostDetailComponent, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUsers, UserAvatarComponent],
   templateUrl: './event-detail.html',
   styleUrls: ['../social-common.scss', './event-detail.scss']
 })
@@ -22,6 +24,7 @@ export class EventDetailComponent implements OnChanges {
 
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
+  private meApi = inject(MeApiService);
 
   readonly reviewStatusLabel = reviewStatusLabel;
   readonly publishStatusLabel = publishStatusLabel;
@@ -32,6 +35,30 @@ export class EventDetailComponent implements OnChanges {
   actionPending = false;
   // 活動貼文與留言直接展開在這一頁，使用者不會跳離報名頁面。
   showDiscussion = false;
+  // 參加者名單：只有發起人／Admin 會載入，其他人完全不會呼叫這支 API。
+  registrations: EventRegistrations | null = null;
+  registrationsError: string | null = null;
+
+  get canViewRegistrations(): boolean {
+    const me = this.meApi.me();
+    return !!this.event && !!me && (this.event.organizerUserId === me.id || me.roles.includes('Admin'));
+  }
+
+  private loadRegistrations(): void {
+    this.registrations = null;
+    this.registrationsError = null;
+    if (!this.canViewRegistrations || !this.event) return;
+    this.socialApi.getEventRegistrations(this.event.id).subscribe({
+      next: (data) => {
+        this.registrations = data;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.registrationsError = '參加者名單載入失敗，請稍後再試。';
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   toggleDiscussion(): void {
     this.showDiscussion = !this.showDiscussion;
@@ -60,6 +87,7 @@ export class EventDetailComponent implements OnChanges {
     this.socialApi.getEvent(this.id).subscribe({
       next: (event) => {
         this.event = event;
+        this.loadRegistrations();
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -80,6 +108,7 @@ export class EventDetailComponent implements OnChanges {
     this.socialApi.registerEvent(this.event.id).subscribe({
       next: (event) => {
         this.event = event;
+        this.loadRegistrations();
         this.actionPending = false;
         this.cdr.detectChanges();
       },
@@ -102,6 +131,7 @@ export class EventDetailComponent implements OnChanges {
     this.socialApi.cancelEventRegistration(this.event.id).subscribe({
       next: (event) => {
         this.event = event;
+        this.loadRegistrations();
         this.actionPending = false;
         this.cdr.detectChanges();
       },
