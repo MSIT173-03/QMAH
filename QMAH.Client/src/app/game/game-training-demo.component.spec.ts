@@ -46,6 +46,28 @@ describe('玩法試玩模式', () => {
     expect(step).toHaveBeenCalledTimes(4);
   });
 
+  it('速度獨立選擇，暫停與繼續保留兩倍速，重新試玩恢復一般速度', () => {
+    const { demo, step } = start('DETAIL_LOCATOR');
+    demo.toggleAutoPlay();
+    vi.advanceTimersByTime(2000);
+    expect(step).toHaveBeenCalledTimes(1);
+    demo.setAutoPlaySpeed({ target: { value: '2' } } as unknown as Event);
+    expect(demo.autoPlaySpeed).toBe(2);
+    vi.advanceTimersByTime(1000);
+    expect(step).toHaveBeenCalledTimes(3);
+    demo.toggleAutoPlay();
+    expect(demo.autoPlaying).toBe(false);
+    vi.advanceTimersByTime(2000);
+    expect(step).toHaveBeenCalledTimes(3);
+    demo.toggleAutoPlay();
+    expect(demo.autoPlaySpeed).toBe(2);
+    vi.advanceTimersByTime(1000);
+    expect(step).toHaveBeenCalledTimes(5);
+    demo.restartDemo();
+    expect(demo.autoPlaySpeed).toBe(1);
+    expect(demo.autoPlaying).toBe(false);
+  });
+
   it('自動操作每秒一步，計時仍按秒更新，暫停不推進', () => {
     const { demo, step } = start();
     demo.toggleAutoPlay();

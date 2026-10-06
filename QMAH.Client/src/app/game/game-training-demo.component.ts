@@ -41,6 +41,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
   private demoTicks = 0;
   private completionTicks = 0;
   autoPlaying = false;
+  autoPlaySpeed = 1;
 
   override ngOnInit(): void { /* 本機示範不載入正式挑戰、會員或存檔。 */ }
   ngOnChanges(): void { this.restartDemo(); }
@@ -54,6 +55,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
     this.closePause();
     this.paused = false;
     this.autoPlaying = false;
+    this.autoPlaySpeed = 1;
     this.demoTicks = 0;
     this.completionTicks = 0;
     const modeCode = this.modeCode();
@@ -68,12 +70,15 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
       if (this.paused || this.locatorReviewing || this.phase !== 'playing') return;
       this.demoTicks++;
       this.elapsedSeconds = Math.floor(this.demoTicks / 2);
-      if (this.autoPlaying && this.demoTicks % 2 === 0) this.advanceDemo();
+      if (this.autoPlaying && (this.autoPlaySpeed === 2 || this.demoTicks % 2 === 0)) this.advanceDemo();
       this.demoDetector.markForCheck();
     }, 500);
   }
 
   toggleAutoPlay(): void { this.autoPlaying = !this.autoPlaying; }
+  setAutoPlaySpeed(event: Event): void {
+    this.autoPlaySpeed = (event.target as HTMLSelectElement).value === '2' ? 2 : 1;
+  }
   override completeAttempt(): void {
     if (!this.canComplete || this.paused) return;
     this.phase = 'complete';

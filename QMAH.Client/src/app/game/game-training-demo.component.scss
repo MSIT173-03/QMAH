@@ -26,6 +26,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--qmah-focus); ou
 .demo-controls svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .demo-auto { @extend %ui-btn-2; gap: 8px; padding-inline: 16px; }
 .demo-auto[aria-pressed='true'] { --game-button-image: var(--game-button-blue-image); --game-button-ink: #fff8e9; }
+.demo-playback { display: inline-flex; align-items: stretch; min-height: 48px; overflow: hidden; border: 2px solid #0f1b14; border-radius: 12px; background: var(--game-button-blue-image); box-shadow: 0 3px 0 #0f1b14; }
+.demo-playback .demo-auto { min-height: 44px; border: 0; border-image: none; border-radius: 0; box-shadow: none; transform: none; }
+.demo-speed { flex: none; width: 64px; min-height: 44px; padding: 0 6px; border: 0; border-left: 1px solid #0f1b14; border-radius: 0; color: #fff8e9; background: transparent; font: 800 15px var(--qmah-font-sans); cursor: pointer; }
+.demo-speed option { color: #273e33; background: #fff8e9; }
+.demo-playback :focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }
 .demo-restart { @extend %ui-btn-2; width: 44px; padding: 0; }
 .demo-auto:not([aria-pressed='true']) svg { fill: currentColor; stroke-width: 1.5; }
 @media (max-height: 820px) { .demo-status { display: none; } }
