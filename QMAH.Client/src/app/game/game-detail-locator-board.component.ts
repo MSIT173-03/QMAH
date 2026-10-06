@@ -14,6 +14,7 @@ export class GameDetailLocatorBoardComponent {
   readonly targets = input<readonly { artifactId: string; x: number; y: number }[] | null>(null);
   readonly answers = input<LocatorAnswer[]>([]);
   readonly disabled = input(false);
+  readonly showInstructions = input(true);
   readonly hintedArtifactId = input<string | null>(null);
   readonly pointChosen = output<LocatorAnswer>();
   readonly feedbackChange = output<boolean>();

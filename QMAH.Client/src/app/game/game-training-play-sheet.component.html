@@ -1,20 +1,25 @@
 @if (attempt(); as current) {
   <section class="play-sheet" [class.is-demo]="demonstration()" [attr.inert]="paused() || isComplete() ? '' : null" [attr.aria-hidden]="isComplete() ? 'true' : null" animate.enter="scene-play-enter">
     <header class="play-heading">
-      <div class="play-heading__title"><h2>{{ current.modeName }}</h2><span>{{ current.modeCode === 'DETAIL_LOCATOR' ? '看細節，在原圖上定位' : current.artifactName }} · {{ difficultyText(current.difficulty) }}</span><ng-content select="[play-status]" /></div>
+      <div class="play-heading__title"><h2>{{ current.modeName }}</h2><span class="play-mode-label">{{ demonstration() ? '玩法展示 · 不計成績與獎勵' : '正式挑戰 · ' + difficultyText(current.difficulty) }}</span><ng-content select="[play-status]" /></div>
       <div class="play-hud">
+        <app-game-scoring-guide [code]="current.modeCode" />
         @if (!demonstration()) { <span class="hud-time" title="已用時間" [attr.aria-label]="'已用時間 ' + elapsedLabel()"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2M9.5 3h5" /></svg>{{ elapsedLabel() }}</span> }
         <span class="hud-progress" role="progressbar" aria-label="目前完成比例" [attr.aria-valuenow]="progressPercent()" aria-valuemin="0" aria-valuemax="100"><span class="hud-bar"><i [style.transform]="'scaleX(' + progressPercent() / 100 + ')'"></i></span><b>{{ progressPercent() }}%</b></span>
         <ng-content select="[play-controls]" />
-        @if (!demonstration()) { <button type="button" class="pause-trigger" (click)="pauseRequested.emit()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>{{ demonstration() ? '暫停試玩' : '暫停' }}</button> }
+        @if (!demonstration()) { <button type="button" class="pause-trigger" (click)="pauseRequested.emit()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>暫停挑戰</button> }
       </div>
     </header>
 
+    <div class="play-context" aria-label="操作提示與目前進度">
+      <p class="play-instruction">{{ demonstration() && resultFrozen() ? '展示完成，可重新展示或開始正式挑戰。' : instruction() }}</p>
+      <span class="progress-readout" aria-live="polite">{{ current.modeCode === 'MEMORY_MATCH' ? '已配對 ' + memoryMatched() + '／' + memoryPairCount() + ' 組 · 翻牌 ' + moves() + ' 次' : progressText() }}</span>
+    </div>
+
     @if (current.modeCode === 'DETAIL_LOCATOR') {
-      <div class="game-board locator-game"><app-game-detail-locator-board [artifacts]="locatorOptions()" [seed]="current.seed" [targets]="current.locatorTargets ?? null" [answers]="locatorAnswers()" [hintedArtifactId]="locatorHintArtifactId()" [disabled]="paused() || completing() || resultFrozen()" (pointChosen)="detailLocated.emit($event)" (feedbackChange)="locatorFeedback.emit($event)" (availabilityChange)="locatorAvailability.emit($event)" /></div>
+      <div class="game-board locator-game"><app-game-detail-locator-board [showInstructions]="false" [artifacts]="locatorOptions()" [seed]="current.seed" [targets]="current.locatorTargets ?? null" [answers]="locatorAnswers()" [hintedArtifactId]="locatorHintArtifactId()" [disabled]="paused() || completing() || resultFrozen()" (pointChosen)="detailLocated.emit($event)" (feedbackChange)="locatorFeedback.emit($event)" (availabilityChange)="locatorAvailability.emit($event)" /></div>
     } @else if (current.modeCode === 'MEMORY_MATCH') {
       <div class="game-board memory-game">
-        <div class="game-prompt"><h3>館藏翻牌</h3><p>共 {{ memoryCards().length }} 張牌，翻開兩張卡片找出相同文物，全部配對後再送出結果。</p></div>
         <div class="memory-layout">
         <div class="memory-grid">
           @for (card of memoryCards(); track card.id; let index = $index) {
@@ -27,7 +32,6 @@
           }
         </div>
         <aside class="memory-sidebar" aria-label="翻牌進度與文物介紹">
-        <p class="game-hint">已配對 {{ memoryMatched() }} / {{ memoryPairCount() }} · 翻牌組合 {{ moves() }} 次</p>
         <p class="memory-feedback" role="status" aria-live="polite">{{ memoryFeedback() }}</p>
         <section class="memory-deck" aria-label="本局文物">
           <h4>本局文物</h4>
@@ -40,10 +44,9 @@
     } @else if (current.modeCode === 'ARTIFACT_PUZZLE') {
       <div class="game-board ordering-game"><app-game-placement-board [detectedBackground]="current.backgroundPieces ?? null" [memoryMode]="puzzleMemory()" [memoryKey]="attempt().seed" [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="puzzleOrder()" [initialSelection]="puzzleSelection()" [initialHintRegion]="puzzleHintRegion()" [disabled]="completing() || resultFrozen() || imageFailed('puzzle')" (orderChange)="puzzleOrderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" [assistedPieces]="autoPlaced()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="true" (settlementRequested)="settlementRequested.emit()" (availabilityChange)="puzzleAvailability.emit($event)" /></div>
     } @else {
-      <div class="game-board ordering-game"><div class="game-prompt"><h3>書畫拼貼</h3><p>15 片書畫碎片拼回原本的畫面。簡單點兩片相鄰碎片交換，困難少一格，把碎片滑進空格。</p></div><app-game-scroll-board [hard]="hard()" [moves]="moves()" [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="restoreOrder()" [initialSelection]="restoreSelection()" [initialHintRegion]="restoreHintRegion()" [disabled]="completing() || resultFrozen()" (orderChange)="restoreOrderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" [assistedPieces]="autoPlaced()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="true" (settlementRequested)="settlementRequested.emit()" (availabilityChange)="scrollAvailability.emit($event)" /><p class="game-hint">{{ isRestoreSolved() ? '書畫拼貼完成，可以送出結果。' : '移動次數越少分數越高。' }}</p></div>
+      <div class="game-board ordering-game"><app-game-scroll-board [showSummary]="false" [hard]="hard()" [moves]="moves()" [image]="current.primaryImagePath || current.thumbnailPath || ''" [name]="current.artifactName" [order]="restoreOrder()" [initialSelection]="restoreSelection()" [initialHintRegion]="restoreHintRegion()" [disabled]="completing() || resultFrozen()" (orderChange)="restoreOrderChange.emit($event)" (moveMade)="moveMade.emit()" (hintUsed)="hintUsed.emit()" [assistedPieces]="autoPlaced()" (autoCompleted)="autoCompleted.emit($event)" [settleAfterHelp]="true" (settlementRequested)="settlementRequested.emit()" (availabilityChange)="scrollAvailability.emit($event)" /></div>
     }
 
-    @if (!demonstration() || canComplete()) {
     <footer class="play-footer">
       <div class="play-footer__context">
         @if (current.modeCode === 'MEMORY_MATCH' && memoryHints().length) {
@@ -51,18 +54,16 @@
         } @else if (current.modeCode !== 'DETAIL_LOCATOR' && currentArtifactHint(); as hint) {
           <details class="collection-hint"><summary>查看文物提示</summary><div class="collection-hints__grid"><strong>{{ hint.name }}</strong><p>{{ hint.description || '文物說明整理中。' }}</p></div></details>
         }
-        @if (current.modeCode !== 'MEMORY_MATCH') { <span class="progress-readout" aria-live="polite"><strong>{{ progressText() }}</strong></span> }
       </div>
       <div class="play-actions">
         @if (!demonstration() && helpAvailable()) { <button type="button" class="secondary" (click)="helpRequested.emit()" [disabled]="!canAskForHelp()">需要幫忙</button> }
         @if (demonstration()) {
-          @if (canComplete() || completing()) { <button type="button" data-button-tone="start" (click)="completeRequested.emit()" [disabled]="completing()" animate.enter="ready-enter">完成試玩</button> }
-          @else { <span class="play-command">{{ resultFrozen() ? '本局試玩已完成' : '可自動示範，也能自己操作' }}</span> }
+          @if (canComplete() && !resultFrozen()) { <button type="button" class="secondary" (click)="completeRequested.emit()">完成展示</button> }
+          <a class="play-formal-link" data-button-tone="start" routerLink="/game/training" [queryParams]="{ game: current.modeCode }">開始正式挑戰</a>
         } @else {
           <button type="button" data-button-tone="start" (click)="completeRequested.emit()" [disabled]="!(canComplete() || completing()) || completing()" [attr.title]="canComplete() ? null : (current.modeCode === 'DETAIL_LOCATOR' ? '四件文物定位後即可送出' : current.modeCode === 'MEMORY_MATCH' ? '配對完成後即可送出' : '完成盤面後即可送出')">{{ completing() ? '送出中…' : '送出結果' }}</button>
         }
       </div>
     </footer>
-    }
   </section>
 }

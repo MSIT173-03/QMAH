@@ -1,5 +1,4 @@
 import { GameRewardMeterComponent } from './game-reward-meter.component';
-import { MeApiService } from '../core/services/me-api';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -21,7 +20,6 @@ type TrainingDemoCode = 'DETAIL_LOCATOR' | 'MEMORY_MATCH' | 'ARTIFACT_PUZZLE' | 
 })
 export class GameGuideComponent {
   readonly focusMode = inject(GameFocusMode);
-  readonly meApi = inject(MeApiService);
   // 說明頁一次呈現一種玩法；每個示範只用本機樣本，不會建立正式挑戰或發放獎勵。
   private readonly route = inject(ActivatedRoute);
   readonly activeGuide = signal<GameHowToVariant>(this.route.snapshot.queryParamMap.get('mode') === 'training' ? 'training' : 'multiplayer');

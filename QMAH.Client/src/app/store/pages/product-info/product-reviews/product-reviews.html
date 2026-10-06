@@ -20,9 +20,6 @@
       </div>
       <textarea class="review-input" rows="3" [attr.aria-label]="contentLabel" [placeholder]="contentPlaceholder"
         [attr.maxlength]="maxContentLength" [value]="draftContent()" (input)="onContentInput($event)"></textarea>
-      @if (saveError(); as message) {
-        <p class="review-error" role="alert">{{ message }}</p>
-      }
       <div class="review-actions">
         <button type="submit" class="btn-solid" [disabled]="!canSubmit()">{{ saving() ? submittingLabel : submitLabel }}</button>
         @if (editing()) {
@@ -44,6 +41,10 @@
       </div>
       <p class="review-text">{{ review.text }}</p>
     </div>
+  }
+
+  @if (saveError(); as message) {
+    <p class="review-error" role="alert">{{ message }}</p>
   }
 
   <!-- 篩選按鈕：依星等篩選，括號內為符合的則數 -->

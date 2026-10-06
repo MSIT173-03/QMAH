@@ -33,13 +33,21 @@ public sealed class EconomyController(EconomyService economyService) : ApiContro
     {
         if (!TryGetCurrentUserId(out var userId))
             return Unauthorized();
-        var economy = await economyService.GetMemberEconomyAsync(userId, cancellationToken);
-        return Ok(new MemberEconomyDto(
-            economy.PointBalance,
-            economy.KeyProgressBalance,
-            economy.KeyProgressToNormalKey,
-            economy.Keys.Select(ToKeyBalanceDto).ToList(),
-            economy.ExchangeRules.Select(ToExchangeRuleDto).ToList()));
+        try
+        {
+            var economy = await economyService.GetMemberEconomyAsync(userId, cancellationToken);
+            return Ok(new MemberEconomyDto(
+                economy.PointBalance,
+                economy.KeyProgressBalance,
+                economy.KeyProgressToNormalKey,
+                economy.Keys.Select(ToKeyBalanceDto).ToList(),
+                economy.ExchangeRules.Select(ToExchangeRuleDto).ToList()));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // 頁面切換取消讀取時，只結束該次請求，不回傳不完整資產或當成伺服器錯誤。
+            return StatusCode(499);
+        }
     }
 
     /// <summary>取得啟用中的鑰匙兌換規則；目標已無可解鎖文物時仍可兌換。</summary>

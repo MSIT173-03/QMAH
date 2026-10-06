@@ -54,6 +54,7 @@ export function placePiece(order: readonly number[], piece: number, slot: number
           }
         </div>
         </div>
+        <p class="placement-feedback" role="status">{{ feedback() }}</p>
       </section>
     <div class="placement-toolbar" role="toolbar" aria-label="盤面工具" [class.is-hidden]="memoryMode() && !memoryDone()">
       @if (!memoryMode()) { <button type="button" data-button-tone="reversible" (click)="referenceDialog.showModal()" aria-haspopup="dialog">看原圖</button> }
@@ -67,7 +68,6 @@ export function placePiece(order: readonly number[], piece: number, slot: number
       <ng-content />
     </div>
     </div>
-    <p class="placement-feedback" role="status">{{ feedback() }}</p>
     @if (dragging(); as drag) { <div class="piece drag-preview" aria-hidden="true" [style.width.px]="drag.width" [style.left.px]="drag.x" [style.top.px]="drag.y" [style.aspect-ratio]="displayRatio() * rows() / columns()"><img [src]="image()" alt="" [style.width.%]="columns() * 100" [style.height.%]="rows() * 100" [style.left.%]="-(drag.piece % columns()) * 100" [style.top.%]="-row(drag.piece) * 100" /></div> }
     <dialog #pieceDialog class="assist-dialog" aria-label="選取碎片細節">
       <button type="button" (click)="pieceDialog.close()">返回盤面</button>
@@ -156,7 +156,7 @@ export class GamePlacementBoardComponent {
   readonly compactTools = signal(false);
   readonly selected = signal<number | null>(null);
   readonly hintRegion = signal<number | null>(null);
-  readonly feedback = signal('先觀察輪廓、紋飾與明暗，再把碎片拖到目標格。');
+  readonly feedback = signal('');
   readonly dragging = signal<{ piece: number; x: number; y: number; width: number } | null>(null);
   readonly lifted = signal<number | null>(null);
   readonly lastPlaced = signal<number | null>(null);

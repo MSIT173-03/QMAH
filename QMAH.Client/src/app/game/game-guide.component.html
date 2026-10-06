@@ -1,10 +1,10 @@
 <div class="game-guide" [class.is-focus-mode]="focusMode.active()">
   <!-- ui-integration: 說明頁沿用 Game 子導覽，讓玩家可直接回到多人鑑定或切換單人玩法。 -->
-  <app-game-navigation>@if (meApi.me()) { <app-game-reward-meter /> }</app-game-navigation>
+  <app-game-navigation><app-game-reward-meter /></app-game-navigation>
 
   <div class="guide-stage">
   <header class="guide-head">
-    <div><h1 id="game-guide-title">{{ activeGuide() === 'multiplayer' ? '一回合怎麼玩？' : '單人小遊戲怎麼玩？' }}</h1><p>{{ activeGuide() === 'multiplayer' ? '跟著三個步驟走一遍，再進房間。' : '挑一種玩法，直接試玩一局。' }}</p></div>
+    <div><h1 id="game-guide-title">{{ activeGuide() === 'multiplayer' ? '一回合怎麼玩？' : '單人玩法展示' }}</h1><p>{{ activeGuide() === 'multiplayer' ? '跟著三個步驟走一遍，再進房間。' : '選擇玩法，觀看示範或自己操作。' }}</p></div>
     <div class="guide-bar__actions page-head__actions">
       <nav class="guide-tabs" aria-label="選擇玩法說明">
         <button id="guide-tab-multiplayer" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'multiplayer'" [class.is-active]="activeGuide() === 'multiplayer'" (click)="selectGuide('multiplayer')">
@@ -15,7 +15,7 @@
         </button>
       </nav>
       <button type="button" class="guide-rules-button" popovertarget="guide-rules" aria-label="文字說明" title="文字說明">i</button>
-      <a class="guide-panel-link guide-start-top" [routerLink]="activeGuide() === 'multiplayer' ? '/game' : '/game/training'">{{ activeGuide() === 'multiplayer' ? '開始多人鑑定' : '開始單人遊戲' }}</a>
+      @if (activeGuide() === 'multiplayer') { <a class="guide-panel-link guide-start-top" routerLink="/game">開始多人鑑定</a> }
     </div>
   </header>
   <div id="guide-rules" class="guide-rules" popover="auto" aria-label="玩法文字說明">
@@ -50,6 +50,6 @@
       </section>
     }
   </section>
-  <a class="guide-panel-link guide-start-bottom" [routerLink]="activeGuide() === 'multiplayer' ? '/game' : '/game/training'">{{ activeGuide() === 'multiplayer' ? '開始多人鑑定' : '開始單人遊戲' }}</a>
+  @if (activeGuide() === 'multiplayer') { <a class="guide-panel-link guide-start-bottom" routerLink="/game">開始多人鑑定</a> }
   </div>
 </div>

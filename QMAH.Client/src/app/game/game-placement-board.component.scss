@@ -26,7 +26,7 @@ button:disabled { cursor: default; }
 .piece-tray .piece, .placed-slot { display: grid; place-items: center; min-height: 0; }
 .piece-tray .piece { border-radius:0; box-shadow:0 3px 5px #17232c50; }
 @media (min-width:701px) {
-  .placement-workspace { width:min(100%,calc(var(--board-height,560px) * var(--piece-ratio,1) + 504px)); grid-template-columns:minmax(0,1fr) minmax(260px,480px); grid-template-rows:minmax(0,1fr) auto; max-width:none; gap:12px 24px; }
+  .placement-workspace { width:100%; grid-template-columns:minmax(0,1fr) minmax(260px,480px); grid-template-rows:minmax(0,1fr) auto; max-width:none; gap:12px 24px; }
   .placement-board { grid-row:1 / span 2; width:min(100%,calc(var(--board-height,560px) * var(--piece-ratio,1))); }
   .piece-supply { grid-column:2; --supply-size:480px; height:calc(var(--board-height,560px) - 56px); }
   .placement-workspace .placement-toolbar { grid-column:2; margin:0; }
@@ -38,7 +38,7 @@ button:disabled { cursor: default; }
 }
 .inspection-piece { width: min(100%, 300px); margin: 16px auto 0; }
 .piece-supply p, .placement-feedback { font-size: 14px; line-height: 1.7; margin: 12px 0 0; line-break: strict; }
-.placement-feedback { text-align: center; min-height: 24px; }
+.placement-feedback { text-align: left; min-height: 24px; }
 .drag-preview { position: fixed; z-index: 100; min-height: 0; transform: translate(-50%, -50%) rotate(-2deg); pointer-events: none; box-shadow: 0 14px 24px color-mix(in srgb, var(--qmah-night) 45%, transparent); animation: piece-lift 140ms ease-out; }
 .reference { position: relative; width: min(100%, 560px); margin: 16px auto 0; }
 .reference-dialog { width: min(620px, calc(100% - 32px)); overflow-y: auto; }
@@ -105,7 +105,7 @@ button:disabled { cursor: default; }
 .placement-toolbar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
 .placement-toolbar button { @extend %ui-btn-2; min-height: 44px; padding-inline: 16px; font-size: 15px; white-space: nowrap; }
 .placement-toolbar button:disabled { opacity: .5; }
-.placement-feedback { margin-top: 10px; color: var(--game-table-muted, inherit); }
+.placement-feedback { margin-top: 10px; color: inherit; }
 // 記憶挑戰：裱框原圖，倒數條，看完才打亂開始
 .memory-dialog { width: min(640px, calc(100% - 24px)); padding: 20px 22px 18px; }
 .memory-lead { margin: 0 0 12px; text-align: center; font-size: 16px; line-height: 1.6; text-wrap-style: balance; }

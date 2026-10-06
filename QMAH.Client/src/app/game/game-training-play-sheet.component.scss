@@ -3,14 +3,14 @@
 :host { display: contents; }
 
 .play-actions button { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
-.play-sheet { display:grid; width:100%; margin-inline:auto; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto; min-height:var(--arena-height); gap:12px; }
+.play-sheet { display:grid; width:100%; margin-inline:auto; grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto minmax(0,1fr) auto; min-height:var(--arena-height); gap:12px; }
 .play-heading { grid-template-columns:minmax(0,1fr) minmax(180px,240px) auto; padding-block:8px; }
 .collection-hint, .collection-hints { position: relative; max-width: min(360px, 100%); padding: 0; }
 .collection-hint summary, .collection-hints summary { min-height: 44px; padding: 10px 14px; border-radius: var(--qmah-radius-control); color: var(--qmah-jade); background: var(--qmah-surface); cursor: pointer; }
 .collection-hint[open], .collection-hints[open] { z-index: 30; }
 .collection-hints__grid { @include ui.paper-panel; position: absolute; inset-block-end: calc(100% + 8px); inset-inline-start: 0; width: min(440px, calc(100vw - 48px)); max-height: min(360px, 55dvh); overflow: auto; padding: 18px; color: var(--game-card-ink); box-shadow: 0 10px 24px #14291c50; }
 .collection-hint p, .collection-hints p { color: var(--qmah-muted); font-size: 14px; }
-.game-board { grid-row: 2; min-width: 0; display: grid; align-content: center; justify-items: center; gap: 12px; padding: 16px 0 24px; }
+.game-board { grid-row: 3; min-width: 0; display: grid; align-content: center; justify-items: center; gap: 12px; padding: 16px 0 24px; }
 .game-board > .game-prompt { text-align: center; }
 .memory-game > .game-prompt, .ordering-game > .game-prompt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .game-prompt h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
@@ -119,15 +119,15 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
   .game-board.locator-game, .game-board.memory-game { grid-template-rows: minmax(0, 1fr); align-content: stretch; overflow: hidden; }
   app-game-placement-board { --board-height: max(120px, calc(100cqh - 40px)); }
   .is-demo app-game-placement-board, :host(.is-focus-mode.is-playing) app-game-placement-board, :host(.is-focus-mode.is-playing) .is-demo app-game-placement-board { --board-height: max(120px, calc(100cqh - 40px)); }
-  app-game-scroll-board { width: min(100%, 1200px); --scroll-height-limit: max(120px, calc(100cqh - 64px)); }
+  app-game-scroll-board { width: 100%; --scroll-height-limit: max(120px, calc(100cqh - 64px)); }
   .play-sheet.is-demo .play-heading__title h2 { font-size: 24px; }
-  .memory-layout { width: min(100%, calc(100cqh + 464px)); height: 100%; grid-template-columns: minmax(0, 1fr) minmax(360px, 440px); align-items: start; gap: 24px; }
+  .memory-layout { width: 100%; height: 100%; grid-template-columns: minmax(0, 1fr) minmax(360px, .8fr); align-items: start; gap: 24px; }
   .memory-grid { width: min(100%, 100cqh); aspect-ratio: 1; grid-template-rows: repeat(4, minmax(0, 1fr)); gap: clamp(6px, 1cqh, 12px); padding: clamp(8px, 1.5cqh, 16px); }
   .memory-sidebar { height: 100%; overflow-y: auto; padding: 2px 6px 8px 2px; scrollbar-color: #bdad87 #244934; scrollbar-width: thin; }
   app-game-detail-locator-board { --locator-round-height: 100%; --locator-stage-min-height: 0px; }
 }
 @media (max-width: 999px) {
-  .play-sheet.is-demo { height: auto; grid-template-rows: auto auto auto; }
+  .play-sheet.is-demo { height: auto; grid-template-rows: auto auto auto auto; }
   .is-demo .locator-game { height: auto; }
   .is-demo app-game-detail-locator-board { --locator-round-height: auto; --locator-stage-min-height: 300px; }
   .play-hud { flex-wrap: wrap; max-width: 100%; }
@@ -139,15 +139,22 @@ app-game-scroll-board { display: block; width: min(100%, 900px); --scroll-height
   .play-sheet.is-demo .hud-bar { display: none; }
 }
 .play-actions button { @extend %ui-btn; }
+.play-actions .play-formal-link { @extend %ui-btn; --game-button-image: var(--game-button-ochre-image); --game-button-ink: var(--game-ink-yellow); display: inline-flex; align-items: center; justify-content: center; min-height: 48px; text-decoration: none; }
+.play-context { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 24px; min-width: 0; }
+.play-instruction { margin: 0; color: var(--game-table-muted); font-size: 16px; line-height: 1.5; }
+.play-context .progress-readout { color: var(--game-table-ink); font-size: 16px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.play-heading__title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; }
+.play-heading__title h2 { flex-basis: 100%; }
+.play-heading__title > .play-mode-label { display: inline-block; }
+.play-actions { flex-wrap: wrap; }
 .play-sheet.is-demo { width: 100%; }
 .locator-game { grid-template-columns: minmax(0, 1fr); width: 100%; }
-.is-demo .play-heading__title > span { display: none; }
 .memory-layout { display: grid; min-width: 0; min-height: 0; }
 .memory-sidebar { display: grid; grid-auto-rows: max-content; align-content: start; gap: 14px; min-width: 0; min-height: 0; }
 .memory-feedback { min-height: fit-content; }
 .memory-card:disabled { opacity: 1; filter: none; }
 @container playfield (max-height: 450px) {
-  .memory-layout { width: min(100%, calc(100cqh + 444px)); grid-template-columns: minmax(0, 1fr) 420px; }
+  .memory-layout { width: 100%; grid-template-columns: minmax(0, 1fr) minmax(360px, .8fr); }
   .memory-sidebar { gap: 10px; }
   .memory-deck ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
   .memory-deck button { box-sizing: border-box; min-height: 44px; }

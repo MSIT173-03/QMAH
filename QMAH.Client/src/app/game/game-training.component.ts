@@ -429,10 +429,10 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   get progressText(): string {
     if (!this.attempt) return '';
     switch (this.attempt.modeCode) {
-      case 'DETAIL_LOCATOR': return `定位 ${this.locatorAnswers.length} / ${this.locatorOptions.length} 件文物`;
+      case 'DETAIL_LOCATOR': return `已定位 ${this.locatorAnswers.length}／${this.locatorOptions.length} 件`;
       case 'MEMORY_MATCH': return `已配對 ${this.memoryMatched} / ${this.memoryPairCount}`;
-      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) ? '拼圖完成' : '拖曳碎片到目標格，可依完成比例調整';
-      default: return this.isSolved(this.restoreOrder) ? '滑拼完成' : `已歸位 ${this.restoreOrder.filter((piece, slot) => piece === slot).length} / 15 片`;
+      case 'ARTIFACT_PUZZLE': return this.isSolved(this.puzzleOrder) ? '拼圖完成' : `已歸位 ${this.puzzleOrder.filter((piece, slot) => piece === slot).length}／25 片 · 放置 ${this.moves} 次`;
+      default: return this.isSolved(this.restoreOrder) ? '拼貼完成' : `已歸位 ${this.restoreOrder.filter((piece, slot) => piece === slot).length}／15 片 · 移動 ${this.moves} 次`;
     }
   }
 

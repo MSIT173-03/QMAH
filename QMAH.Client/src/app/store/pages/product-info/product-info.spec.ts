@@ -182,4 +182,43 @@ describe('ProductInfo', () => {
     expect(el('.review-editor')).not.toBeNull();
     expect(el('.review-error')?.textContent?.trim()).toBe('評價內容不可只有空白。');
   });
+
+  it('does not treat a failed review lookup as permission to overwrite an existing review', async () => {
+    await openProduct(['p1']);
+    http.expectOne(urlEndsWith('/store/products/p1/reviews/me')).flush(null, { status: 503, statusText: 'Unavailable' });
+    await settle();
+    expect(el('.review-editor')).toBeNull();
+    expect(el('.review-error')?.textContent).toContain('無法讀取你的評價');
+  });
+
+  it('clears the previous product review while loading another purchased product', async () => {
+    await openProduct(['p1', 'p2']);
+    http.expectOne(urlEndsWith('/store/products/p1/reviews/me')).flush(reviewDto({ id: 'mine', content: '第一件商品評價' }));
+    await settle();
+    expect(el('.review-card--mine')?.textContent).toContain('第一件商品評價');
+
+    fixture.componentRef.setInput('id', 'p2');
+    fixture.detectChanges();
+    await settle();
+    expect(el('.review-card--mine')).toBeNull();
+    expect(el('.review-editor')).toBeNull();
+    http.expectOne(urlEndsWith('/store/products/p2/reviews/me')).flush(null, { status: 404, statusText: 'Not Found' });
+    await settle();
+    expect(el('.review-editor')).not.toBeNull();
+  });
+
+  it('ignores a save failure belonging to the previous product', async () => {
+    await openProduct(['p1', 'p2']);
+    http.expectOne(urlEndsWith('/store/products/p1/reviews/me')).flush(null, { status: 404, statusText: 'Not Found' });
+    await settle();
+    await fill(4, '第一件商品');
+    (el('.review-actions button[type="submit"]') as HTMLButtonElement).click();
+    const oldSave = http.expectOne((request) => request.method === 'PUT');
+    fixture.componentRef.setInput('id', 'p2');
+    fixture.detectChanges();
+    await settle();
+    oldSave.flush({ detail: '第一件商品失敗' }, { status: 500, statusText: 'Server Error' });
+    await settle();
+    expect(el('.review-error')).toBeNull();
+  });
 });

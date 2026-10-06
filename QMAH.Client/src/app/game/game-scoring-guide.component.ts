@@ -1,3 +1,4 @@
+import { singlePlayerMechanic } from './game-single-player-copy';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { MiniGameMode } from './game.models';
 
@@ -38,7 +39,8 @@ let guideSequence = 0;
     @if (rule(); as r) {
       @if (!inline()) { <button type="button" class="scoring-trigger" [attr.popovertarget]="id" aria-label="評分標準" title="評分標準">i</button> }
       <div class="scoring" [id]="id" [attr.popover]="inline() ? null : 'auto'" [class.is-inline]="inline()" [attr.aria-label]="r.name + '評分標準'">
-        <h3>{{ r.name }}怎麼計分</h3>
+        <h3>{{ r.name }}玩法與評分</h3>
+        <p>{{ mechanic()[0] }}</p><p>{{ mechanic()[1] }}</p>
         <p class="scoring-base">{{ r.base }}</p>
         @if (mode(); as m) {
           <ol class="grade-ladder" aria-label="評級門檻">
@@ -59,6 +61,7 @@ export class GameScoringGuideComponent {
   readonly code = input.required<string>();
   readonly mode = input<MiniGameMode | null>(null);
   readonly inline = input(false);
+  readonly mechanic = computed(() => singlePlayerMechanic(this.code()));
   readonly id = `game-scoring-${++guideSequence}`;
   protected readonly rule = computed(() => RULES[this.code()] ?? null);
 }

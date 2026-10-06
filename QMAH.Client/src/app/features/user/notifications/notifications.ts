@@ -1,7 +1,10 @@
+import { finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NotificationLive } from '../../../core/services/notification-live';
 import {
   ChangeDetectorRef,
   Component,
-  OnInit
+  OnInit, DestroyRef, inject
 } from '@angular/core';
 
 import {
@@ -62,6 +65,9 @@ type NotificationFilter =
   styleUrl: './notifications.scss'
 })
 export class Notifications implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly live = inject(NotificationLive);
+  private pendingRefresh = false;
 
   notifications: NotificationDto[] = [];
 
@@ -87,6 +93,10 @@ export class Notifications implements OnInit {
 
   ngOnInit(): void {
     this.loadNotifications();
+    this.live.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      if (this.loading) this.pendingRefresh = true;
+      else this.loadNotifications();
+    });
   }
 
 
@@ -247,6 +257,12 @@ export class Notifications implements OnInit {
           }
         }
       )
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        if (this.pendingRefresh && !this.destroyRef.destroyed) {
+          this.pendingRefresh = false;
+          this.loadNotifications();
+        }
+      }))
       .subscribe({
 
         next: (
@@ -321,6 +337,7 @@ export class Notifications implements OnInit {
         `/api/v1/me/notifications/${notification.id}/read`,
         {}
       )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
 
         next: () => {
@@ -407,6 +424,7 @@ export class Notifications implements OnInit {
         `/api/v1/me/notifications/${notification.id}/read`,
         {}
       )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
 
         next: () => {

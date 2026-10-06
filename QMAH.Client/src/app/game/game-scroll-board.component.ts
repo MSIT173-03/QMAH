@@ -174,9 +174,11 @@ export function solveSlide(start: readonly number[], limit = 40): number[] | nul
             }
           </div>
           <aside class="swap-side">
+            @if (showSummary()) {
             <p class="swap-count"><strong>{{ correct() }}</strong><span>／ 15 片歸位</span></p>
             <p class="swap-moves">已{{ hard() ? '滑動' : '移動' }} <b>{{ moves() }}</b> 次</p>
             <p class="swap-rule">{{ solved() ? '畫面接回來了！' : hard() ? '點空格旁邊的碎片滑進去，同一行或同一列會一起滑。困難沒有編號與勾號。' : '先點一片碎片，再點它旁邊的碎片，兩片就會交換。右下角那片已固定好，碎片左下角是編號。' }}</p>
+            }
           </aside>
         </div>
         <dialog #referenceDialog class="scroll-inspection" aria-labelledby="scroll-inspection-title">
@@ -192,6 +194,7 @@ export function solveSlide(start: readonly number[], limit = 40): number[] | nul
   styleUrl: './game-scroll-board.component.scss'
 })
 export class GameScrollBoardComponent {
+  readonly showSummary = input(true);
   private readonly audio = inject(GameAudio);
   readonly size = SLIDE_SIZE;
   readonly slots = Array.from({ length: PIECES }, (_, index) => index);
