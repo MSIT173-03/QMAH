@@ -50,6 +50,14 @@
       <h2 class="social-event-card__title">
         <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
       </h2>
+      <p class="social-meta social-icon-label social-event-card__organizer">
+        <app-user-avatar [userId]="event.organizerUserId" />
+        @if (event.organizerUserId) {
+          <a class="social-author-link" [routerLink]="['/social/members', event.organizerUserId]">{{ event.organizerDisplayName || '匿名會員' }}</a>
+        } @else {
+          {{ event.organizerDisplayName || '匿名會員' }}
+        }
+      </p>
       <ul class="social-facts">
         <li>
           <svg lucideCalendarClock aria-hidden="true" focusable="false"></svg>
@@ -64,15 +72,9 @@
         </li>
       </ul>
       <div class="social-panel__actions social-event-card__footer">
-        <p class="social-meta social-icon-label social-event-card__organizer">
-          <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
-          @if (event.organizerUserId) {
-            <a class="social-author-link" [routerLink]="['/social/members', event.organizerUserId]">{{ event.organizerDisplayName || '匿名會員' }}</a>
-          } @else {
-            {{ event.organizerDisplayName || '匿名會員' }}
-          }
-        </p>
-        <a class="btn btn-outline btn-primary" [routerLink]="['/social/events', event.id]">查看詳情</a>
+        <a class="social-event-card__open" [routerLink]="['/social/events', event.id]" [attr.aria-label]="'查看活動：' + event.title" title="查看活動">
+          <svg lucideArrowRight aria-hidden="true" focusable="false"></svg>
+        </a>
       </div>
     </article>
   } @empty {

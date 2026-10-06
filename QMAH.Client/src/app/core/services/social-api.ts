@@ -112,6 +112,18 @@ export interface SocialEventDetails extends EventListItem {
   publishStatus: string | null;
 }
 
+export interface EventRegistrant {
+  userId: string;
+  displayName: string | null;
+  status: 'REGISTERED' | 'ATTENDED' | 'CANCELLED';
+  registeredAt: string;
+}
+
+export interface EventRegistrations {
+  active: EventRegistrant[];
+  cancelled: EventRegistrant[];
+}
+
 export interface Announcement {
   id: string;
   title: string;
@@ -282,6 +294,11 @@ export class SocialApiService {
   // GET /api/v1/social/boards：標準看板清單 + 資料庫既有看板代碼合併
   getBoards(): Observable<string[]> {
     return this.http.get<string[]>(`${this.base}/boards`);
+  }
+
+  // 只有活動發起人與 Admin 可呼叫，其他人會得到 403。
+  getEventRegistrations(id: string): Observable<EventRegistrations> {
+    return this.http.get<EventRegistrations>(`${this.base}/events/${id}/registrations`);
   }
 
   getEvent(id: string): Observable<SocialEventDetails> {

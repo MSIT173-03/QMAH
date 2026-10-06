@@ -427,6 +427,7 @@
 }
 
 .social-post-card__author svg { width: 15px; height: 15px; }
+.social-post-card__author app-user-avatar { --user-avatar-size: 1.5rem; }
 
 .social-post-card__excerpt {
   display: -webkit-box;
@@ -475,29 +476,9 @@
 
 .social-post-card__report svg { width: 16px; height: 16px; }
 
-.social-post-card__read-more {
-  min-height: var(--qmah-control-height);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: 1px solid color-mix(in srgb, var(--qmah-social-action) 55%, var(--qmah-border));
-  border-radius: var(--qmah-radius-control);
-  background: color-mix(in srgb, var(--qmah-social-action) 10%, var(--qmah-surface));
-  color: var(--qmah-social-action);
-  font-weight: 800;
-  text-decoration: none;
-}
-
 .social-post-card__report:hover {
   color: var(--qmah-danger);
   background: color-mix(in srgb, var(--qmah-danger) 10%, transparent);
-}
-
-.social-post-card__read-more:hover {
-  color: var(--qmah-on-dark);
-  border-color: var(--qmah-social-action);
-  background: var(--qmah-social-action);
 }
 
 @media (max-width: 640px) {
@@ -538,14 +519,32 @@
   .social-post-card__title { max-width: none; font-size: 21px; }
 }
 
-/* 沒有封面圖的貼文：改成「文字卡」，標題放大、摘要多給幾行、背景微微染色，和圖片卡錯落出節奏。 */
-.social-post-card--text {
-  background: color-mix(in srgb, var(--qmah-surface-muted) 55%, var(--qmah-surface-elevated));
-}
-
+/* 沒有封面圖的貼文：改成「文字卡」，標題放大、摘要多給幾行；卡片底色與圖片卡一致。 */
 .social-post-card--text .social-post-card__title {
   font-size: clamp(22px, 2.4vw, 28px);
   -webkit-line-clamp: 3;
 }
 
 .social-post-card--text .social-post-card__excerpt { -webkit-line-clamp: 6; }
+
+/* 卡片右下角只放一個圖示按鈕（箭頭）進入貼文；標題仍是一般連結，檢舉旗標在它左邊。 */
+.social-post-card__open {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: var(--qmah-control-height);
+  height: var(--qmah-control-height);
+  border: 1.5px solid color-mix(in srgb, var(--qmah-social-action) 60%, transparent);
+  border-radius: var(--qmah-radius-control);
+  background: transparent;
+  color: var(--qmah-social-action);
+  text-decoration: none;
+}
+
+.social-post-card__open:hover {
+  border-color: var(--qmah-social-action);
+  background: var(--qmah-social-action);
+  color: var(--qmah-on-dark);
+}
+
+.social-post-card__open svg { width: 1.15rem; height: 1.15rem; stroke-width: 2.25; }

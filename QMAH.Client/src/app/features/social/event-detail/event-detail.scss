@@ -1,0 +1,26 @@
+
+.social-registrants { margin-top: var(--qmah-space-6); }
+
+.social-registrants__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 名單每列之間用淡淡的分隔線（和留言列表同一種寫法），第一列上方也有，讓標題與名單分開。 */
+.social-registrants__list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: var(--qmah-space-3) 0;
+  border-top: 1px solid color-mix(in srgb, var(--qmah-border) 70%, transparent);
+}
+.social-registrants__list--muted { color: var(--qmah-muted); }
+
+.social-registrants__sub {
+  margin: var(--qmah-space-4) 0 var(--qmah-space-2);
+  color: var(--qmah-muted);
+  font-size: var(--qmah-type-body-sm-size);
+  font-weight: 700;
+}

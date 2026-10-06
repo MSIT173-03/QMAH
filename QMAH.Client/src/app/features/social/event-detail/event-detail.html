@@ -17,7 +17,7 @@
     </span>
     <h1 class="social-panel__title">{{ event.title }}</h1>
     <p class="social-meta social-icon-label">
-      <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+      <app-user-avatar [userId]="event.organizerUserId" />
       @if (event.organizerUserId) {
         <a class="social-author-link" [routerLink]="['/social/members', event.organizerUserId]">{{ event.organizerDisplayName || '匿名會員' }}</a>
       } @else {
@@ -86,6 +86,41 @@
       }
     </div>
   </article>
+
+  @if (canViewRegistrations) {
+    <section class="social-panel social-registrants" aria-labelledby="event-registrants-title">
+      <h2 id="event-registrants-title" class="social-section-title social-icon-label">
+        <svg lucideUsers aria-hidden="true" focusable="false"></svg>
+        參加者名單
+      </h2>
+      @if (registrationsError) {
+        <div class="alert alert-warning" role="alert">{{ registrationsError }}</div>
+      } @else if (!registrations) {
+        <div class="social-state" role="status" aria-live="polite"><span class="loading loading-spinner"></span></div>
+      } @else {
+        @if (registrations.active.length === 0) {
+          <p class="social-meta">還沒有人報名。</p>
+        } @else {
+          <ol class="social-registrants__list">
+            @for (person of registrations.active; track person.userId) {
+              <li>
+                <span class="social-registrants__who"><app-user-avatar [userId]="person.userId" /><a class="social-author-link" [routerLink]="['/social/members', person.userId]">{{ person.displayName || '匿名會員' }}</a></span>
+                <time class="social-meta" [attr.datetime]="person.registeredAt">報名於 {{ person.registeredAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+              </li>
+            }
+          </ol>
+        }
+        @if (registrations.cancelled.length > 0) {
+          <h3 class="social-registrants__sub">曾報名後取消（{{ registrations.cancelled.length }}）</h3>
+          <ul class="social-registrants__list social-registrants__list--muted">
+            @for (person of registrations.cancelled; track person.userId) {
+              <li><span class="social-registrants__who"><app-user-avatar [userId]="person.userId" /><a class="social-author-link" [routerLink]="['/social/members', person.userId]">{{ person.displayName || '匿名會員' }}</a></span></li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  }
 
   @if (showDiscussion && event.socialPostId) {
     <section id="event-discussion" aria-label="活動貼文與留言">
