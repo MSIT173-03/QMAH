@@ -24,81 +24,102 @@ public sealed class ArtifactDiscussionService(
         CancellationToken cancellationToken = default)
     {
         var content = initialComment.Trim();
-
-        // Serializable 讓「先查詢、沒有才建立」在同一件文物上取得範圍鎖，
-        // 避免兩位會員同時點擊時各自建立兩篇自動討論串；既有一般貼文仍可保留多篇，
-        // 只有這個「自動建立」入口需要保證一次只產生一篇可見的 canonical thread。
-        await using var transaction = await db.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
-
-        var artifact = await db.Artifacts
-            .AsNoTracking()
-            .Where(item => item.Id == artifactId && item.IsActive)
-            .Select(item => new { item.Id, item.Name })
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (artifact is null)
-            return null;
-
-        var post = await db.SocialPosts
-            .Where(item => item.ArtifactId == artifactId
-                && item.PostType == "POST"
-                && item.Status == "PUBLISHED")
-            .OrderBy(item => item.CreatedAt)
-            .ThenBy(item => item.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var created = false;
-        var now = DateTime.UtcNow;
-        if (post is null)
+        // 固定識別碼：若 SQL 已提交、但提交回應遺失，重試時找回同一則留言，
+        // 不再建立第二則留言或重送作者通知。
+        var postId = Guid.NewGuid();
+        var commentId = Guid.NewGuid();
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync<ArtifactDiscussionResult?>(async retryToken =>
         {
-            post = new SocialPost
+            // 此服務獨立保存整個討論流程；重試前清掉上一輪已回滾的貼文、留言與通知。
+            db.ChangeTracker.Clear();
+
+            // Serializable 讓「先查詢、沒有才建立」在同一件文物上取得範圍鎖，
+            // 避免兩位會員同時點擊時各自建立兩篇自動討論串；既有一般貼文仍可保留多篇，
+            // 只有這個「自動建立」入口需要保證一次只產生一篇可見的 canonical thread。
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                retryToken);
+
+            var committedComment = await db.SocialComments
+                .AsNoTracking()
+                .Where(item => item.Id == commentId)
+                .Select(item => new { item.PostId })
+                .SingleOrDefaultAsync(retryToken);
+            if (committedComment is not null)
             {
-                Id = Guid.NewGuid(),
-                BoardCode = "CATALOG",
+                await transaction.CommitAsync(retryToken);
+                return new ArtifactDiscussionResult(committedComment.PostId, committedComment.PostId == postId, commentId);
+            }
+
+            var artifact = await db.Artifacts
+                .AsNoTracking()
+                .Where(item => item.Id == artifactId && item.IsActive)
+                .Select(item => new { item.Id, item.Name })
+                .SingleOrDefaultAsync(retryToken);
+
+            if (artifact is null)
+                return null;
+
+            var post = await db.SocialPosts
+                .Where(item => item.ArtifactId == artifactId
+                    && item.PostType == "POST"
+                    && item.Status == "PUBLISHED")
+                .OrderBy(item => item.CreatedAt)
+                .ThenBy(item => item.Id)
+                .FirstOrDefaultAsync(retryToken);
+
+            var created = false;
+            var now = DateTime.UtcNow;
+            if (post is null)
+            {
+                post = new SocialPost
+                {
+                    Id = postId,
+                    BoardCode = "CATALOG",
+                    UserId = userId,
+                    ArtifactId = artifact.Id,
+                    PostType = "POST",
+                    PublisherType = "COMMUNITY",
+                    // 自動建立的外框內容跟著文物名稱產生；會員真正輸入的內容會保留在第一則留言。
+                    ContentMode = "TEMPLATE",
+                    Title = BuildTitle(artifact.Name),
+                    Content = $"這是「{artifact.Name}」的文物討論串，歡迎分享觀察、鑑賞與提問。",
+                    Status = "PUBLISHED",
+                    CreatedAt = now,
+                    UpdatedAt = now
+                };
+                db.SocialPosts.Add(post);
+                created = true;
+            }
+
+            var comment = new SocialComment
+            {
+                Id = commentId,
+                PostId = post.Id,
                 UserId = userId,
-                ArtifactId = artifact.Id,
-                PostType = "POST",
-                PublisherType = "COMMUNITY",
-                // 自動建立的外框內容跟著文物名稱產生；會員真正輸入的內容會保留在第一則留言。
-                ContentMode = "TEMPLATE",
-                Title = BuildTitle(artifact.Name),
-                Content = $"這是「{artifact.Name}」的文物討論串，歡迎分享觀察、鑑賞與提問。",
+                Content = content,
                 Status = "PUBLISHED",
                 CreatedAt = now,
                 UpdatedAt = now
             };
-            db.SocialPosts.Add(post);
-            created = true;
-        }
+            db.SocialComments.Add(comment);
 
-        var comment = new SocialComment
-        {
-            Id = Guid.NewGuid(),
-            PostId = post.Id,
-            UserId = userId,
-            Content = content,
-            Status = "PUBLISHED",
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-        db.SocialComments.Add(comment);
+            // 沿用既有站內通知；建立者自己不需要收到自己的留言通知。
+            if (post.UserId != userId)
+            {
+                notificationService.QueueNotification(
+                    post.UserId,
+                    "文物討論有新留言",
+                    $"文物討論「{post.Title}」有新的留言：{Truncate(content, 60)}",
+                    $"/social/posts/{post.Id}");
+            }
 
-        // 沿用既有站內通知；建立者自己不需要收到自己的留言通知。
-        if (post.UserId != userId)
-        {
-            notificationService.QueueNotification(
-                post.UserId,
-                "文物討論有新留言",
-                $"文物討論「{post.Title}」有新的留言：{Truncate(content, 60)}",
-                $"/social/posts/{post.Id}");
-        }
+            await db.SaveChangesAsync(retryToken);
+            await transaction.CommitAsync(retryToken);
 
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        return new ArtifactDiscussionResult(post.Id, created, comment.Id);
+            return new ArtifactDiscussionResult(post.Id, created, comment.Id);
+        }, cancellationToken);
     }
 
     private static string BuildTitle(string artifactName)
