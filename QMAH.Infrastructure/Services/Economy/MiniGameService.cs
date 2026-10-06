@@ -699,10 +699,16 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             && property.TryGetGuid(out value);
     }
 
-    /// <summary>實際操作門檻：至少操作幾次，或實際遊玩超過幾秒；全部由系統代完成則一律不算。</summary>
+    /// <summary>
+    /// 有沒有實際遊玩：沒用協助的對局，要有一定操作量或遊玩時間；用了協助的對局，要自己完成至少一半，
+    /// 或已經掙扎很久（時間與操作量都夠多）才算，避免亂點幾下就請系統代完成領獎。
+    /// </summary>
     private const int MinEngagedSeconds = 20;
     private const int MinEngagedMoves = 3;
-    private const int MinLocatorAnswers = 2;
+    private const double MinAssistedOwnRatio = 0.5;
+    private const int StruggleSeconds = 180;
+    private const int StruggleMoves = 10;
+    private const int LocatorStruggleSeconds = 120;
 
     private static bool HasMeaningfulPlay(MiniGameAttempt attempt, GameModeDefinition mode, JsonElement result)
     {
@@ -719,9 +725,13 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         var seconds = TryGetInt(result, "elapsedSeconds", out var elapsed) ? Math.Min(elapsed, wallSeconds) : wallSeconds;
         var ownUnits = units - assisted;
         if (ownUnits <= 0) return false;
-        return mode.Code == "DETAIL_LOCATOR"
-            ? ownUnits >= MinLocatorAnswers || seconds >= MinEngagedSeconds
-            : moves >= MinEngagedMoves || seconds >= MinEngagedSeconds;
+        var isLocator = mode.Code == "DETAIL_LOCATOR";
+        if (assisted <= 0)
+            return isLocator || moves >= MinEngagedMoves || seconds >= MinEngagedSeconds;
+        if (ownUnits >= Math.Ceiling(units * MinAssistedOwnRatio)) return true;
+        return isLocator
+            ? seconds >= LocatorStruggleSeconds
+            : seconds >= StruggleSeconds && moves >= StruggleMoves;
     }
 
     private static bool TryGetInt(JsonElement element, string propertyName, out int value)
