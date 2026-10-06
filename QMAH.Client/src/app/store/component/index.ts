@@ -17,6 +17,7 @@ export { ProductRow } from './product-row/product-row';
 export { Promobar } from './promobar/promobar';
 export { PromobarPanel } from './promobar-panel/promobar-panel';
 export { QtyStepper } from './qty-stepper/qty-stepper';
+export { ScrollTop } from './scroll-top/scroll-top';
 export { SearchBar } from './search-bar/search-bar';
 export { SectionHead } from './section-head/section-head';
 export { SessionBar } from './session-bar/session-bar';

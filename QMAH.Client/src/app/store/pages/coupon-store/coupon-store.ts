@@ -11,6 +11,7 @@ import {
   CouponRedeemDialog,
   EmptyState,
   PageTitleRow,
+  ScrollTop,
   SessionBar,
 } from '../../component';
 import { CouponApi, MemberApi } from '../../api';
@@ -35,7 +36,7 @@ const FEEDBACK_AUTO_DISMISS_MS = 5_000;
 const FEEDBACK_FADE_MS = 300;
 
 /**
- * 兌換商店頁面（上方為「我的折價券」，下方為「兌換商店」）：列出目前可用點數兌換的折價券（GET /store/coupons，後端已篩選啟用、期間內且有兌換點數者）。
+ * 兌換商店頁面（上方為「兌換商店」，下方為「我的折價券」）：列出目前可用點數兌換的折價券（GET /store/coupons，後端已篩選啟用、期間內且有兌換點數者）。
  * 按下券面右側的點數區塊即兌換：未登入先跳出登入提示，已登入則先跳出確認視窗，
  * 確認後呼叫 POST /store/coupons/{id}/redeem（點數檢查、扣點與發券都在後端同一個交易內完成）。
  */
@@ -43,6 +44,7 @@ const FEEDBACK_FADE_MS = 300;
   selector: 'app-coupon-store',
   host: { class: 'store-app' },
   imports: [
+    ScrollTop,
     SessionBar,
     Breadcrumb,
     PageTitleRow,

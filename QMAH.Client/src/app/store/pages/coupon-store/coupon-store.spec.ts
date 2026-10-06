@@ -240,16 +240,16 @@ describe('CouponStore', () => {
     expect(cards[0].querySelector('button')).toBeNull();
   });
 
-  it('stacks "my coupons" above the exchange store, each with its own title row and no coupon count', async () => {
+  it('stacks "my coupons" below the exchange store, each with its own title row and no coupon count', async () => {
     await loadOwned(true, [ownedCoupon]);
 
     const sections: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-store-main > .coupon-section'));
     expect(sections).toHaveLength(2);
-    expect(sections[0].classList.contains('my-coupons')).toBe(true);
-    expect(sections[1].classList.contains('coupon-shop')).toBe(true);
+    expect(sections[0].classList.contains('coupon-shop')).toBe(true);
+    expect(sections[1].classList.contains('my-coupons')).toBe(true);
     expect(sections.map((section) => section.querySelector('h1.page-title')?.textContent?.trim())).toEqual([
-      '我的折價券',
       '兌換商店',
+      '我的折價券',
     ]);
     // 標題旁不再有「n 張折價券」
     expect(fixture.nativeElement.querySelector('.page-title-count')).toBeNull();
@@ -257,14 +257,20 @@ describe('CouponStore', () => {
     expect(fixture.nativeElement.querySelector('.coupon-columns')).toBeNull();
   });
 
-  it('still shows the exchange store to guests, below the "my coupons" login prompt', async () => {
+  it('shows the exchange store first to guests, with the "my coupons" login prompt below it', async () => {
     await loadOwned(false, []);
 
     const sections: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-store-main > .coupon-section'));
     expect(sections).toHaveLength(2);
-    expect(sections[0].classList.contains('my-coupons')).toBe(true);
-    expect(sections[1].classList.contains('coupon-shop')).toBe(true);
-    expect(sections[1].querySelector('h1.page-title')?.textContent?.trim()).toBe('兌換商店');
+    expect(sections[0].classList.contains('coupon-shop')).toBe(true);
+    expect(sections[0].querySelector('h1.page-title')?.textContent?.trim()).toBe('兌換商店');
+    expect(sections[1].classList.contains('my-coupons')).toBe(true);
+  });
+
+  it('has a back-to-top button that only appears after scrolling', async () => {
+    await loadOwned(true, []);
+    expect(fixture.nativeElement.querySelector('app-scroll-top')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.scroll-top')).toBeNull();
   });
 
   it('no longer has a collapse button for "my coupons"', async () => {

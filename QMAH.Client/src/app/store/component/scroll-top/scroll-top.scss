@@ -1,0 +1,78 @@
+:host {
+  display: contents;
+}
+
+/* 出現：淡入並由下方微微上移；消失：淡出並向下移動 */
+@keyframes scroll-top-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes scroll-top-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* 捲動時固定在視窗下緣、靠容器的右緣（容器是直向 flex，align-self 決定水平位置）；
+   捲到容器底部時就停在容器的右下角 */
+.scroll-top {
+  position: sticky;
+  bottom: var(--qmah-space-5);
+  align-self: flex-end;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  box-shadow: var(--qmah-shadow-float);
+  cursor: pointer;
+  animation: scroll-top-in 200ms ease both;
+  transition: background 160ms, border-color 160ms;
+
+  &:hover {
+    border-color: var(--qmah-primary);
+    background: var(--qmah-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 2px;
+  }
+
+  &--leaving {
+    animation: scroll-top-out 200ms ease both;
+    pointer-events: none;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+
+    &--leaving {
+      animation: none;
+    }
+  }
+}
