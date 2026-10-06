@@ -39,7 +39,7 @@
       @if (selectedMode(); as mode) {
         <section class="mode-preview" aria-labelledby="mode-preview-title">
           <div class="mode-preview__insert">
-            <div class="mode-preview__actions"><button type="button" data-button-tone="start" (click)="startMode.emit(mode)" [disabled]="starting()">{{ starting() ? '準備中…' : '開始' + mode.name }}</button><app-game-scoring-guide [code]="mode.code" [mode]="mode" /><a routerLink="/game/how-to" data-button-tone="reversible" [queryParams]="{ mode: 'training', game: mode.code }">先試玩</a></div>
+            <div class="mode-preview__actions"><button type="button" data-button-tone="start" (click)="startMode.emit(mode)" [disabled]="starting()">{{ starting() ? '準備中…' : '開始' + mode.name }}</button><app-game-scoring-guide [code]="mode.code" [mode]="mode" /><a routerLink="/game/how-to" data-button-tone="reversible" [queryParams]="{ mode: 'training', game: mode.code }">玩法展示</a></div>
           </div>
         </section>
       }

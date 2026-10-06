@@ -1,4 +1,4 @@
-<section class="result-shell"><app-game-scroll-panel label="單人成績與文物，可上下捲動" cue="往下查看文物與獎勵">
+<section class="result-shell" aria-label="單人成績與文物" tabindex="0">
 <section class="result-sheet" [attr.data-grade]="complete().grade" aria-labelledby="result-title" animate.enter="game-result-enter">
   <header class="result-banner">
     <h2 id="result-title" tabindex="-1">{{ title() }}</h2>
@@ -45,4 +45,4 @@
   </section>
   <app-game-result-rules [attempt]="attempt()" [mode]="mode()" [hintsUsed]="hintsUsed()" [autoPlaced]="autoPlaced()" />
 </section>
-</app-game-scroll-panel></section>
+</section>

@@ -1,6 +1,6 @@
 @use './game-ui' as ui;
 :host { display: contents; }
-.scoring-trigger { @include ui.info-button; }
+.scoring-trigger { @include ui.info-button; width:var(--scoring-trigger-size,44px); height:var(--scoring-trigger-size,44px); }
 .scoring-trigger:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .scoring-trigger:focus-visible, .scoring-close:focus-visible { outline: 3px solid var(--qmah-focus, #fff2d9); outline-offset: 3px; }
 .scoring { @include ui.paper-panel; @include ui.reading-surface(true); display: grid; gap: 10px; box-sizing: border-box; padding: 22px 24px; color: var(--game-card-ink); }

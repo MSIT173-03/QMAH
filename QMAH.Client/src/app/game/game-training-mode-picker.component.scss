@@ -19,7 +19,10 @@
 .mode-preview__actions :focus-visible, .auth-actions :focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
 .mode-preview__actions button:disabled { opacity: .55; cursor: wait; }
 .mode-preview__actions > * { transition: transform 120ms ease-out, filter 120ms ease-out; }
-.mode-preview__actions button { min-width: 180px; min-height: 52px; }
+.mode-preview__actions { --scoring-trigger-size:52px; }
+.mode-preview__actions > button, .mode-preview__actions > a { height:52px; min-height:52px; }
+.mode-preview__actions > app-game-scoring-guide { display:inline-flex; height:52px; align-items:center; }
+.mode-preview__actions button { min-width: 180px; }
 .auth-state { margin-block: 32px; color: var(--qmah-ink); }
 .auth-state p { @include ui.prose; }
 .mode-stage--auth .auth-state { @include ui.paper-panel; @include ui.reading-surface(true); width: min(520px,100%); margin: auto; padding: 24px; }

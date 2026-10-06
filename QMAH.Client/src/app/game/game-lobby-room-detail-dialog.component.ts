@@ -2,12 +2,11 @@ import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, input, outpu
 import { FormsModule } from '@angular/forms';
 
 import { GameRoomDetails, JoinGameRoomRequest } from './game.models';
-import { GameScrollPanelComponent } from './game-scroll-panel.component';
 
 @Component({
   selector: 'app-game-lobby-room-detail-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, GameScrollPanelComponent],
+  imports: [FormsModule],
   templateUrl: './game-lobby-room-detail-dialog.component.html',
   styleUrl: './game-lobby-room-detail-dialog.component.scss'
 })

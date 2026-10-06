@@ -1,7 +1,8 @@
 @use './game-ui' as ui;
 :host { display: contents; }
 *, *::before, *::after { box-sizing: border-box; }
-.result-shell { position:absolute; inset:0; overflow:hidden; background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground); color:var(--game-table-ink); }
+.result-shell { position:absolute; inset:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-color:#7d8a85 #e8dbc7; background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground); color:var(--game-table-ink); }
+.result-shell:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:-3px; }
 .result-sheet { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto minmax(0,1fr); gap:20px 32px; min-height:100%; align-content:center; padding:clamp(16px,2.5vw,40px) clamp(16px,4vw,64px); color:var(--game-table-ink); }
 .result-gallery { align-self:center; min-width:0; width:min(100%,640px); justify-self:center; }
 .result-gallery figure:nth-child(2) { animation-delay:90ms; }

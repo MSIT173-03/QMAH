@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
 import { MiniGameComplete } from './game.models';
@@ -6,7 +7,7 @@ import { MiniGameComplete } from './game.models';
 /** 結算的「本局獎勵入帳」：點數與鑰匙數字往上跳，鑰匙進度條同步填滿。 */
 @Component({
   selector: 'app-game-result-tally',
-  imports: [QmahIconComponent],
+  imports: [QmahIconComponent, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './game-result-tally.component.scss',
   template: `
@@ -27,7 +28,13 @@ import { MiniGameComplete } from './game.models';
         <div class="tally-card" data-tone="keys" [class.is-zero]="complete().keyProgressReward === 0">
           <app-qmah-icon class="tile-icon" name="key-round" aria-hidden="true" />
           <span class="tally-label">鑰匙進度</span>
-          <b class="tally-num" [style.--to]="complete().keyProgressReward" [attr.aria-label]="'獲得 ' + complete().keyProgressReward + ' 片'"></b>
+          <small class="tally-key-meta">
+            <span>{{ complete().remainingKeyProgress | number:'1.0-6' }}／100 · 滿 100 換 1 把</span>
+            @if (complete().keyRewardDivisor > 1) {
+              <span title="依圖鑑完成度調整本局鑰匙獎勵">本局獎勵 × 1/{{ complete().keyRewardDivisor }}</span>
+            }
+          </small>
+          <b class="tally-num is-decimal" [attr.aria-label]="'獲得 ' + complete().keyProgressReward + ' 鑰匙進度'">+{{ complete().keyProgressReward | number:'1.0-6' }}</b>
           <span class="tally-bar" aria-hidden="true"><i [style.--w]="complete().remainingKeyProgress"></i></span>
         </div>
         @if (complete().convertedNormalKeys > 0) {
@@ -38,8 +45,6 @@ import { MiniGameComplete } from './game.models';
           </div>
         }
       </div>
-      <p class="tally-note">鑰匙進度每滿 100 換 1 把，目前 {{ complete().remainingKeyProgress }}／100。</p>
-      @if (complete().keyRewardDivisor > 1) { <p class="tally-note">依圖鑑完成度，本局鑰匙獎勵以原本的{{ complete().keyRewardDivisor === 2 ? '一半' : '四分之一' }}累積。</p> }
       @if (complete().alreadyCompleted) { <p class="tally-note">這是已結算的結果，不會重複發放獎勵。</p> }
     </section>
   `

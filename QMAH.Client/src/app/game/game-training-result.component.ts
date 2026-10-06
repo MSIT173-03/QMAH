@@ -6,14 +6,13 @@ import { CatalogService } from '../services/catalog-service';
 import { RouterLink } from '@angular/router';
 
 import { MiniGameArtifact, MiniGameComplete, MiniGameMode, MiniGameStart } from './game.models';
-import { GameScrollPanelComponent } from './game-scroll-panel.component';
 import { GameResultTallyComponent } from './game-result-tally.component';
 import { GameResultRulesComponent } from './game-result-rules.component';
 
 @Component({
   selector: 'app-game-training-result',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, GameScrollPanelComponent, GameResultTallyComponent, GameResultRulesComponent],
+  imports: [RouterLink, GameResultTallyComponent, GameResultRulesComponent],
   templateUrl: './game-training-result.component.html',
   styleUrls: ['./game-training-result.component.scss', './game-training-result-gallery.component.scss']
 })
