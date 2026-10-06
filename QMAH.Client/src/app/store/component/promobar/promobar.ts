@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, effect, input, untracked, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, effect, input, output, untracked, viewChild } from '@angular/core';
 import { bumpElement } from '../../shared/bump';
 import { CART_PATH, COUPON_STORE_PATH, productPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
@@ -10,7 +10,7 @@ import { formatDateMD, formatMoney } from '../../shared/format';
 const PANEL_MAX_ITEMS = 5;
 
 /**
- * 頁面頂部工具列：左側輪播跑馬燈公告，右側提供點數、折價券與購物車捷徑連結（登入前以停用狀態顯示），
+ * 頁面頂部工具列：左側輪播跑馬燈公告，右側提供點數、折價券與購物車捷徑連結（登入前的行為見各項說明），
  * 並可展開折價券與購物車懸浮面板，檢視目前可用的折價券與購物車內的商品。
  */
 @Component({
@@ -23,7 +23,7 @@ export class Promobar {
   /** 跑馬燈公告文字清單 */
   announcements = input<string[]>([]);
 
-  /** 是否已登入；null 代表尚未確認，與未登入一樣以停用狀態顯示會員捷徑 */
+  /** 是否已登入；null 代表尚未確認，與未登入一樣只顯示名稱（點數停用、折價券可前往兌換商店、購物車要求登入） */
   signedIn = input<boolean | null>(null);
   /** 「點數」連結網址 */
   pointsHref = input('/member/economy');
@@ -43,6 +43,9 @@ export class Promobar {
   cartLoaded = input(true);
   /** 購物車內的商品品項，供懸浮面板列出名稱與數量 */
   cartItems = input<CartItem[]>([]);
+
+  /** 未登入時點擊「購物車」；由外層開啟登入提示 */
+  cartLoginRequest = output<void>();
 
   /** 折價券懸浮面板的顯示資料：最多 PANEL_MAX_ITEMS 張，使用門檻與到期日合併為一行說明 */
   protected couponRows = computed(() =>

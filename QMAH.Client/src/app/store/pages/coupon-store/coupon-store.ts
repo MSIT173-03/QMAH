@@ -14,7 +14,8 @@ import {
   SessionBar,
 } from '../../component';
 import { CouponApi, MemberApi } from '../../api';
-import { HOME_PATH } from '../../shared/paths';
+import { COUPON_STORE_PATH, HOME_PATH, loginPath } from '../../shared/paths';
+import { StoreLink } from '../../shared/store-link';
 import { injectCartState } from '../../shared/page-state';
 import { formatDateMD, formatNumber } from '../../shared/format';
 
@@ -49,6 +50,7 @@ const FEEDBACK_FADE_MS = 300;
     CouponRedeemDialog,
     LucideX,
     NgTemplateOutlet,
+    StoreLink,
   ],
   templateUrl: './coupon-store.html',
   styleUrl: './coupon-store.scss',
@@ -100,16 +102,20 @@ export class CouponStore {
      我的折價券
      =============================== */
 
-  /** 是否顯示「我的折價券」：只有登入的會員才有持有的折價券 */
-  protected readonly showOwned = computed(() => this.cart.signedIn() === true);
+  /** 是否顯示「我的折價券」區塊：登入狀態確認後才顯示（未登入顯示登入按鈕，已登入顯示持有的券） */
+  protected readonly showOwned = computed(() => this.cart.signedIn() !== null);
+  /** 未登入：「我的折價券」改顯示登入按鈕 */
+  protected readonly isGuest = computed(() => this.cart.signedIn() === false);
+  /** 登入頁網址，登入後回到本頁 */
+  protected readonly loginHref = loginPath(COUPON_STORE_PATH);
 
-  /** 帳號持有且可使用的折價券；undefined 代表尚在載入，null 代表未登入（不顯示這個區塊） */
+  /** 帳號持有且可使用的折價券；undefined 代表尚在載入，null 代表未登入（改顯示登入按鈕） */
   private readonly ownedResult = toSignal(
     toObservable(this.cart.signedIn).pipe(
       switchMap((signedIn) => (signedIn ? this.memberApi.getCoupons() : of(null))),
     ),
   );
-  protected readonly ownedLoading = computed(() => this.showOwned() && this.ownedResult() === undefined);
+  protected readonly ownedLoading = computed(() => this.cart.signedIn() === true && this.ownedResult() === undefined);
   /** 供模板顯示的持有折價券，券面與商店的折價券同一個形式，右側改顯示到期日 */
   protected readonly ownedCoupons = computed(() =>
     (this.ownedResult() ?? []).map((coupon) => ({
@@ -129,6 +135,8 @@ export class CouponStore {
   protected readonly errorCtaLabel = '重新載入';
   /** 所需點數上方的動作字樣 */
   protected readonly costActionLabel = '兌換';
+  /** 訪客的「我的折價券」登入按鈕文字 */
+  protected readonly loginLabel = '登入';
   /** 我的折價券右側區塊的標示 */
   protected readonly ownedLabel = '持有中';
 

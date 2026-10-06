@@ -7,24 +7,34 @@
   <app-breadcrumb [items]="breadcrumbItems" />
 
   @if (!loading() && feedback(); as message) {
-  <!-- 兌換結果：成功訊息 5 秒後自動淡出，也可按右側叉號立刻關閉 -->
-  <div class="coupon-feedback" [class.coupon-feedback--error]="message.kind === 'error'"
-    [class.coupon-feedback--leaving]="feedbackLeaving()" [attr.role]="message.kind === 'error' ? 'alert' : 'status'">
-    <span class="coupon-feedback-text" [attr.title]="message.text">{{ message.text }}</span>
-    <button type="button" class="coupon-feedback-close" [attr.aria-label]="closeLabel" (click)="dismissFeedback()">
-      <svg lucideX aria-hidden="true" focusable="false"></svg>
-    </button>
+  <!-- 兌換結果：成功訊息 5 秒後自動淡出，也可按右側叉號立刻關閉；
+       淡出時外層的 slot 同時收合高度，下方內容順勢上移，而不是訊息消失後才跳到新位置 -->
+  <div class="coupon-feedback-slot" [class.coupon-feedback-slot--leaving]="feedbackLeaving()">
+    <div class="coupon-feedback-slot-inner">
+      <div class="coupon-feedback" [class.coupon-feedback--error]="message.kind === 'error'"
+        [class.coupon-feedback--leaving]="feedbackLeaving()" [attr.role]="message.kind === 'error' ? 'alert' : 'status'">
+        <span class="coupon-feedback-text" [attr.title]="message.text">{{ message.text }}</span>
+        <button type="button" class="coupon-feedback-close" [attr.aria-label]="closeLabel" (click)="dismissFeedback()">
+          <svg lucideX aria-hidden="true" focusable="false"></svg>
+        </button>
+      </div>
+    </div>
   </div>
   }
 
   <!-- 上下兩個區塊：上面「我的折價券」、下面「兌換商店」，各有一個同級的標題列。
-       只有登入的會員才有「我的折價券」，訪客只看到兌換商店。 -->
+       訪客的「我的折價券」顯示登入按鈕，登入的會員顯示持有的折價券。 -->
   @if (showOwned()) {
   <!-- 我的折價券：帳號持有且可使用的折價券，券面與兌換商店同一個形式，右側不是兌換而是到期日 -->
   <section class="coupon-section my-coupons">
     <app-page-title-row title="我的折價券" tag="MY COUPONS" />
 
-    @if (ownedLoading()) {
+    @if (isGuest()) {
+    <div class="my-coupons-login">
+      <p class="my-coupons-empty">登入後可以查看你持有的折價券。</p>
+      <a [storeLink]="loginHref" class="btn-outline my-coupons-login-btn">{{ loginLabel }}</a>
+    </div>
+    } @else if (ownedLoading()) {
     <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark"
         aria-hidden="true"></span><span>正在整理你的折價券…</span></section>
     } @else if (ownedCoupons().length === 0) {

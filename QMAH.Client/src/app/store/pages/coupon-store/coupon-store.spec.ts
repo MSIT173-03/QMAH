@@ -215,10 +215,13 @@ describe('CouponStore', () => {
     fixture.detectChanges();
   };
 
-  it('does not show "my coupons" to guests', async () => {
+  it('shows guests a login button in "my coupons" instead of coupons, without requesting any', async () => {
     await loadOwned(false, []);
 
-    expect(ownedSection()).toBeNull();
+    const login = ownedSection()?.querySelector('a.my-coupons-login-btn');
+    expect(login?.textContent?.trim()).toBe('登入');
+    expect(login?.getAttribute('href')).toBe('/login?returnUrl=%2Fstore%2Fcoupons');
+    expect(ownedSection()?.querySelectorAll('.coupon-card')).toHaveLength(0);
     expect(http.match((req) => req.url.endsWith('/me/coupons'))).toHaveLength(0);
   });
 
@@ -254,13 +257,14 @@ describe('CouponStore', () => {
     expect(fixture.nativeElement.querySelector('.coupon-columns')).toBeNull();
   });
 
-  it('shows only the exchange store to guests', async () => {
+  it('still shows the exchange store to guests, below the "my coupons" login prompt', async () => {
     await loadOwned(false, []);
 
     const sections: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-store-main > .coupon-section'));
-    expect(sections).toHaveLength(1);
-    expect(sections[0].classList.contains('coupon-shop')).toBe(true);
-    expect(sections[0].querySelector('h1.page-title')?.textContent?.trim()).toBe('兌換商店');
+    expect(sections).toHaveLength(2);
+    expect(sections[0].classList.contains('my-coupons')).toBe(true);
+    expect(sections[1].classList.contains('coupon-shop')).toBe(true);
+    expect(sections[1].querySelector('h1.page-title')?.textContent?.trim()).toBe('兌換商店');
   });
 
   it('no longer has a collapse button for "my coupons"', async () => {
@@ -306,10 +310,13 @@ describe('CouponStore', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
+    const slot = (): HTMLElement | null => fixture.nativeElement.querySelector('.coupon-feedback-slot');
+
     it('fades out and disappears 5 seconds after it is shown', async () => {
       await showNotice();
       expect(feedback()).not.toBeNull();
       expect(feedback()?.classList.contains('coupon-feedback--leaving')).toBe(false);
+      expect(slot()?.classList.contains('coupon-feedback-slot--leaving')).toBe(false);
 
       await advance(4_900);
       expect(feedback()).not.toBeNull();
@@ -318,9 +325,12 @@ describe('CouponStore', () => {
       // 滿 5 秒：先套用淡出樣式，淡出結束才移除。
       await advance(200);
       expect(feedback()?.classList.contains('coupon-feedback--leaving')).toBe(true);
+      // 同時收合外層，下方內容在淡出期間就開始上移
+      expect(slot()?.classList.contains('coupon-feedback-slot--leaving')).toBe(true);
 
       await advance(300);
       expect(feedback()).toBeNull();
+      expect(slot()).toBeNull();
     });
 
     it('closes right away with the cross button, fading out first', async () => {

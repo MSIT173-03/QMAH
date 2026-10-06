@@ -27,13 +27,22 @@ describe('Promobar', () => {
     expect(component).toBeTruthy();
   });
 
-  it('shows member shortcuts as disabled text before sign-in', () => {
+  it('before sign-in: points stay disabled, the coupon link still goes to the coupon store, the cart asks for login', () => {
     fixture.componentRef.setInput('signedIn', false);
     fixture.detectChanges();
 
-    const items = actions();
-    expect(items.map((item) => item.textContent?.trim())).toEqual(['點數', '折價券', '購物車']);
-    expect(items.every((item) => item.tagName === 'SPAN' && item.getAttribute('aria-disabled') === 'true')).toBe(true);
+    const [points, coupons, cart] = actions();
+    expect(actions().map((item) => item.textContent?.trim())).toEqual(['點數', '折價券', '購物車']);
+    expect(points.tagName).toBe('SPAN');
+    expect(points.getAttribute('aria-disabled')).toBe('true');
+    expect(coupons.tagName).toBe('A');
+    expect(coupons.getAttribute('href')).toBe('/store/coupons');
+    expect(cart.tagName).toBe('BUTTON');
+
+    const requested = vi.fn();
+    component.cartLoginRequest.subscribe(requested);
+    cart.click();
+    expect(requested).toHaveBeenCalledTimes(1);
   });
 
   it('shows points, coupons and cart links with counts after sign-in', () => {
@@ -141,6 +150,13 @@ describe('Promobar', () => {
     fixture.componentRef.setInput('coupons', Array.from({ length: count }, (_, i) => coupon(i + 1)));
     fixture.detectChanges();
   };
+
+  it('shows an empty hint when there are no coupons', () => {
+    showCoupons(0);
+
+    expect(couponPanelItems()).toHaveLength(0);
+    expect(notes('coupon')).toEqual(['目前沒有折價券']);
+  });
 
   it('lists all coupons without a summary line when there are five or fewer', () => {
     showCoupons(5);

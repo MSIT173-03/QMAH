@@ -1,7 +1,9 @@
-import { Component, input } from '@angular/core';
-import { DEFAULT_LOGIN_PROMPT_MESSAGE, LoginPrompt } from '../login-prompt/login-prompt';
+import { Component, inject, input, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { CART_LOGIN_PROMPT_MESSAGE, DEFAULT_LOGIN_PROMPT_MESSAGE, LoginPrompt } from '../login-prompt/login-prompt';
 import { Promobar } from '../promobar/promobar';
 import { CartState, injectSiteData } from '../../shared/page-state';
+import { CART_PATH } from '../../shared/paths';
 
 /**
  * 商城頁面共用的會員工具列：頂部公告列（公告、點數、折價券、購物車件數），
@@ -24,4 +26,26 @@ export class SessionBar {
 
   /** 頂部公告列所需的公告、會員點數與折價券 */
   protected readonly site = injectSiteData();
+
+  private readonly router = inject(Router);
+  /** 由頂部列購物車觸發的登入提示使用專屬的說明文字；關閉提示後恢復為頁面自訂的文字 */
+  protected readonly promptMessage = signal<string | null>(null);
+
+  /** 點擊頂部列的購物車：已登入前往購物車頁，未登入開啟登入提示 */
+  protected onCartLoginRequest(): void {
+    this.promptMessage.set(CART_LOGIN_PROMPT_MESSAGE);
+    this.cart().requireSignIn(() => this.router.navigateByUrl(CART_PATH));
+  }
+
+  /** 登入提示按下「前往登入」 */
+  protected onConfirmLogin(): void {
+    this.cart().confirmLogin();
+    this.promptMessage.set(null);
+  }
+
+  /** 登入提示按下「取消」 */
+  protected onCancelLogin(): void {
+    this.cart().cancelLogin();
+    this.promptMessage.set(null);
+  }
 }

@@ -4,6 +4,9 @@ import { ModalDialog } from '../../shared/modal-dialog';
 /** 登入提示的預設說明文字（使用情境為加入購物車） */
 export const DEFAULT_LOGIN_PROMPT_MESSAGE = '加入購物車需要先登入會員，是否前往登入頁？登入後會回到目前頁面。';
 
+/** 未登入點擊頂部列購物車時的說明文字 */
+export const CART_LOGIN_PROMPT_MESSAGE = '查看購物車需要先登入會員，是否前往登入頁？登入後會回到目前頁面。';
+
 /**
  * 登入提示對話框：未登入的訪客使用會員功能（例如加入購物車）時顯示，
  * 由使用者決定前往登入頁或取消留在目前頁面；本元件只負責顯示與回報選擇，實際導覽由頁面處理。

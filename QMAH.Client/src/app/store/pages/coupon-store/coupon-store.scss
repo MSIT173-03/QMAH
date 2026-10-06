@@ -131,6 +131,28 @@
 
 /* 兌換結果訊息：成功沿用強調色，失敗（例如點數不足）改用警示底色。
    右側有關閉用的叉號；移除前先淡出（--leaving），淡出時間需與 FEEDBACK_FADE_MS 一致。 */
+/* 訊息外層：收合時高度 1fr → 0fr，並以負的 margin-bottom 抵掉 flex 的 gap，
+   移除元素的當下版面已經在最終位置，下方內容不會再跳動。 */
+.coupon-feedback-slot {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 300ms ease, margin-bottom 300ms ease;
+
+  &--leaving {
+    grid-template-rows: 0fr;
+    margin-bottom: calc(-1 * var(--qmah-space-5));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.coupon-feedback-slot-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .coupon-feedback {
   display: flex;
   align-items: center;
@@ -206,6 +228,27 @@
   /* 兩個大標題相鄰時多留一點間距 */
   & + & {
     margin-top: var(--qmah-space-3);
+  }
+}
+
+/* 訪客的「我的折價券」：說明文字與登入按鈕同一列。
+   登入按鈕平常是灰框、無底色，只有滑鼠懸停時才填滿強調色（全站的 a:hover 文字色會蓋過按鈕文字，故明確指定） */
+.my-coupons-login {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--qmah-space-4);
+
+  .my-coupons-login-btn {
+    border-color: var(--color-line-mid);
+    background: transparent;
+    color: var(--color-ink);
+
+    &:hover {
+      border-color: var(--color-accent);
+      background: var(--color-accent);
+      color: var(--color-on-accent);
+    }
   }
 }
 

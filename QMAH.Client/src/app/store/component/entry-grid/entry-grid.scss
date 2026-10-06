@@ -16,10 +16,22 @@
   background: var(--color-surface);
   color: inherit;
   text-decoration: none;
-  transition: border-color 160ms;
+  position: relative;
+  transition: border-color 160ms, transform 160ms ease;
 
+  /* 懸停時放大 1.05 倍；提高層級，讓放大的卡片蓋在相鄰卡片之上 */
   &:hover {
+    z-index: 1;
     border-color: var(--color-line-mid);
+    transform: scale(1.05);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: border-color 160ms;
+
+    &:hover {
+      transform: none;
+    }
   }
 }
 
