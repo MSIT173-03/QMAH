@@ -1,6 +1,6 @@
 <div class="game-guide" [class.is-focus-mode]="focusMode.active()">
   <!-- ui-integration: 說明頁沿用 Game 子導覽，讓玩家可直接回到多人鑑定或切換單人玩法。 -->
-  <app-game-navigation><app-game-reward-meter /></app-game-navigation>
+  <app-game-navigation><app-game-reward-meter [frozen]="true" /></app-game-navigation>
 
   <div class="guide-stage">
   <header class="guide-head">

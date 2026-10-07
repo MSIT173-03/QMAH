@@ -177,7 +177,9 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       this.initializeTestFlow();
       this.clockSubscription = timer(0, 1000).subscribe(() => {
         if (!this.testMode || !this.testAutoPaused) this.now = Date.now();
+        if (this.testSpeed > 1 && !this.testAutoPaused && this.testStage !== 'WAITING' && this.testStage !== 'COMPLETED') this.warpTestTime((this.testSpeed - 1) * 1000);
         this.advanceTestFlow();
+        if (this.round && this.round.status !== 'ANSWERING') this.closeRoomPanel('answer');
         this.changeDetector.markForCheck();
       });
       return;
@@ -208,10 +210,13 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           this.artifactImageUnavailable = false;
           this.restoreVotedAnswers();
         }
+        // 回答視窗是跳出式對話框；階段已經離開作答（或這回合已經答過）就收起，不然會蓋住投票與揭曉畫面。
+        if (!this.round || this.round.status !== 'ANSWERING' || this.hasSubmittedAnswer()) this.closeRoomPanel('answer');
         this.changeDetector.markForCheck();
       });
     this.heartbeatSubscription = timer(15000, 15000)
-      .pipe(exhaustMap(() => this.currentPlayerId
+      // 房間結束或取消後伺服器不再接受心跳（404），不要每 15 秒對已結束的房間重複打 API 在主控台留紅字。
+      .pipe(exhaustMap(() => this.currentPlayerId && this.room?.status !== 'COMPLETED' && this.room?.status !== 'CANCELLED'
         ? this.game.heartbeat(this.roomId).pipe(catchError(() => EMPTY))
         : EMPTY))
       .subscribe();
@@ -415,6 +420,26 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (!this.testMode) return;
     this.testToolsOpen = !this.testToolsOpen;
     this.changeDetector.markForCheck();
+  }
+
+  /** 測試模式播放速度：1×→2×→4×→1×。 */
+  testSpeed = 1;
+
+  cycleTestSpeed(): void {
+    if (!this.testMode || this.testStage === 'WAITING' || this.testStage === 'COMPLETED') return;
+    this.testSpeed = this.testSpeed === 1 ? 2 : this.testSpeed === 2 ? 4 : 1;
+    this.actionMessage = this.testSpeed === 1 ? '已回到正常速度。' : `已加速到 ${this.testSpeed} 倍，模擬玩家與倒數都會變快。`;
+    this.changeDetector.markForCheck();
+  }
+
+  /** 加速的做法：每秒把「之後才會發生的事」（階段結束、模擬玩家作答、截止時間）往前拉，其餘流程不用改。 */
+  private warpTestTime(ms: number): void {
+    this.testStageEndsAt -= ms;
+    for (const plan of [...this.testBotPlans, ...this.testBotVotePlans]) if (!plan.submitted) plan.readyAt -= ms;
+    if (!this.round) return;
+    const earlier = (iso: string) => new Date(Date.parse(iso) - ms).toISOString();
+    if (this.round.status === 'ANSWERING') this.round = { ...this.round, answerDeadlineAt: earlier(this.round.answerDeadlineAt), votingDeadlineAt: earlier(this.round.votingDeadlineAt) };
+    else if (this.round.status === 'VOTING') this.round = { ...this.round, votingDeadlineAt: earlier(this.round.votingDeadlineAt) };
   }
 
   toggleTestAuto(): void {
@@ -761,6 +786,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.history = null;
     this.refreshError = '';
     this.testScenario = null;
+    this.testSpeed = 1;
     this.testAutoPaused = true;
     const loadRooms: Observable<unknown> = this.roomId.startsWith('test-room-virtual-') && !this.game.getRehearsalRoom(this.roomId)
       ? this.game.getRehearsalRooms({ pageSize: 100 }) : of(null);
@@ -1049,6 +1075,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   private completeTestRoom(): void {
     if (!this.room || !this.testScenario) return;
+    this.testSpeed = 1;
     const rounds: GameRoundSummary[] = this.testRounds.map((round) => ({
       id: round.id,
       roundNumber: round.roundNumber,
