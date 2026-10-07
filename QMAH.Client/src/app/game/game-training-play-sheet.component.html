@@ -1,7 +1,7 @@
 @if (attempt(); as current) {
   <section class="play-sheet" [class.is-demo]="demonstration()" [attr.inert]="paused() || isComplete() ? '' : null" [attr.aria-hidden]="isComplete() ? 'true' : null" animate.enter="scene-play-enter">
     <header class="play-heading">
-      <div class="play-heading__title"><h2>{{ current.modeName }}</h2><span class="play-mode-label">{{ demonstration() ? '玩法展示 · 不計成績與獎勵' : '正式挑戰 · ' + difficultyText(current.difficulty) }}</span><ng-content select="[play-status]" /></div>
+      <div class="play-heading__title"><h2>{{ current.modeName }}</h2><span class="play-mode-label">{{ demonstration() ? '玩法展示 · 不計成績與獎勵' : '正式挑戰 · ' + difficultyText(current) }}</span><ng-content select="[play-status]" /></div>
       <div class="play-hud">
         <app-game-scoring-guide [code]="current.modeCode" />
         @if (!demonstration()) { <span class="hud-time" title="已用時間" [attr.aria-label]="'已用時間 ' + elapsedLabel()"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2M9.5 3h5" /></svg>{{ elapsedLabel() }}</span> }

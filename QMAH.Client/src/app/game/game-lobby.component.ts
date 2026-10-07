@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, effect, inject, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -64,6 +64,16 @@ export class GameLobbyComponent implements OnInit, OnDestroy {
 
   // ui-integration: 管理員才有「測試模式」入口；一般玩家看不到。
   readonly isAdmin = computed(() => this.meApi.me()?.roles?.includes('Admin') ?? false);
+  // 建立／加入房間的顯示名稱預設用會員暱稱，而不是每個人都叫「玩家」；玩家已經自己改過就不覆蓋。
+  private readonly defaultPlayerName = effect(() => {
+    const name = this.meApi.me()?.displayName?.trim();
+    if (!name) return;
+    untracked(() => {
+      if (this.createForm.displayName === '玩家') this.createForm.displayName = name.slice(0, 80);
+      if (this.joinForm.displayName === '玩家') this.joinForm.displayName = name.slice(0, 80);
+      this.changeDetector.markForCheck();
+    });
+  });
   private readonly heroStorageKey = 'qmah.game.lobby.hero-collapsed';
 
   ngOnInit(): void {

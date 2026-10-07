@@ -121,8 +121,11 @@ export class GameTrainingPlaySheetComponent {
   @ViewChild(GameDetailLocatorBoardComponent) private locatorBoard?: GameDetailLocatorBoardComponent;
   locatorDimensions(): { imageWidth: number; imageHeight: number } | null { return this.locatorBoard?.dimensions() ?? null; }
 
-  difficultyText(difficulty: string): string {
-    return { EASY: '簡單', NORMAL: '一般', HARD: '困難', EXPERT: '專家' }[difficulty?.trim().toUpperCase()] ?? '一般';
+  /** 玩家選的難度記在種子尾碼（-h／-m 困難，-e／-r 簡單），伺服器的 difficulty 欄位只是玩法預設值，兩者不同時以種子為準。 */
+  difficultyText(attempt: { seed: string; difficulty: string }): string {
+    if (/-(h|m)$/.test(attempt.seed)) return '困難';
+    if (/-(e|r)$/.test(attempt.seed)) return '簡單';
+    return { EASY: '簡單', NORMAL: '一般', HARD: '困難', EXPERT: '專家' }[attempt.difficulty?.trim().toUpperCase()] ?? '一般';
   }
   imageFailed(key: string): boolean { return this.failedImageKeys().includes(key); }
   advanceDemonstration(): void {
