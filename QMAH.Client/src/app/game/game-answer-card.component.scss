@@ -61,7 +61,7 @@
 .revealed-author b { display: inline-block; margin-inline-start: 5px; border-radius: 999px; padding: 2px 6px; color: var(--qmah-accent-content); background: var(--qmah-accent); font-size:14px; }
 .vote-total { flex: none; color: var(--qmah-game-action); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .answer-text { min-width: 0; margin: 12px 0; color: var(--qmah-ink); font-size: var(--qmah-type-label-size); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
-.answer-text--clamped { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 6; }
+.answer-text--clamped { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 5; }
 // 紙面紋理來自 Mihaela Hinayon，採 CC BY 3.0，保留原圖
 // 來源：https://www.transparenttextures.com/natural-paper.html
 .revealed-answer { background: color-mix(in srgb, var(--answer-owner-color, #376d62) 13%, #f7f2e7); }
