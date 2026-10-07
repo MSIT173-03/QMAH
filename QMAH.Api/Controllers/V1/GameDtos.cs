@@ -1,4 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+using QMAH.Api.Infrastructure.Json;
 
 namespace QMAH.Api.Controllers.V1;
 
@@ -13,7 +16,7 @@ public sealed record GameRoomListItemDto(
     int PlayerCount,
     string? CategoryFilterCode,
     string? EraBucketFilterCode,
-    DateTime CreatedAt);
+    [property: JsonConverter(typeof(UtcDateTimeJsonConverter))] DateTime CreatedAt);
 
 public sealed record GamePlayerDto(
     Guid Id,
@@ -38,9 +41,9 @@ public sealed record GameRoomDetailsDto(
     Guid? CurrentRoundId,
     Guid? CurrentPlayerId,
     IReadOnlyList<GamePlayerDto> Players,
-    DateTime CreatedAt,
-    DateTime? StartedAt,
-    DateTime? EndedAt);
+    [property: JsonConverter(typeof(UtcDateTimeJsonConverter))] DateTime CreatedAt,
+    [property: JsonConverter(typeof(UtcNullableDateTimeJsonConverter))] DateTime? StartedAt,
+    [property: JsonConverter(typeof(UtcNullableDateTimeJsonConverter))] DateTime? EndedAt);
 
 public sealed record GameAnswerDto(
     Guid Id,
@@ -51,7 +54,7 @@ public sealed record GameAnswerDto(
     int VoteCount,
     int Rank,
     bool IsWinner,
-    DateTime SubmittedAt);
+    [property: JsonConverter(typeof(UtcDateTimeJsonConverter))] DateTime SubmittedAt);
 
 public sealed record GameRoundDetailsDto(
     Guid Id,
@@ -65,10 +68,10 @@ public sealed record GameRoundDetailsDto(
     int RoundNumber,
     string Status,
     bool IsSettled,
-    DateTime StartedAt,
-    DateTime AnswerDeadlineAt,
-    DateTime VotingDeadlineAt,
-    DateTime? SettledAt,
+    [property: JsonConverter(typeof(UtcDateTimeJsonConverter))] DateTime StartedAt,
+    [property: JsonConverter(typeof(UtcDateTimeJsonConverter))] DateTime AnswerDeadlineAt,
+    [property: JsonConverter(typeof(UtcDateTimeJsonConverter))] DateTime VotingDeadlineAt,
+    [property: JsonConverter(typeof(UtcNullableDateTimeJsonConverter))] DateTime? SettledAt,
     int ParticipantCount,
     int SubmittedAnswerCount,
     int TotalVoteCount,
@@ -83,8 +86,8 @@ public sealed record GameRoundSummaryDto(
     string ArtifactName,
     string Status,
     bool IsSettled,
-    DateTime StartedAt,
-    DateTime? SettledAt,
+    [property: JsonConverter(typeof(UtcDateTimeJsonConverter))] DateTime StartedAt,
+    [property: JsonConverter(typeof(UtcNullableDateTimeJsonConverter))] DateTime? SettledAt,
     int AnswerCount,
     int TotalVoteCount,
     Guid? WinnerAnswerId,

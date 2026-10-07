@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using QMAH.Api.Infrastructure.Json;
 using System.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -93,6 +95,6 @@ public sealed class GameAppreciationController(QmahDbContext db) : ApiController
 
 public sealed record AppreciationAnswerDto(Guid Id, Guid RoomId, string RoomCode, Guid ArtifactId,
     string ArtifactName, string CategoryName, string AnswerType, string Text, string Author,
-    DateTime CompletedAt, int GameVotes, int VoteCount, bool Voted, bool IsOwn, string? ImagePath);
+    [property: JsonConverter(typeof(UtcDateTimeJsonConverter))] DateTime CompletedAt, int GameVotes, int VoteCount, bool Voted, bool IsOwn, string? ImagePath);
 public sealed record AppreciationVoteRequest(bool Voted);
 public sealed record AppreciationVoteDto(bool Voted, int VoteCount);
