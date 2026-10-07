@@ -153,9 +153,10 @@ builder.Services.AddDbContext<QmahDbContext>(options =>
     options.UseSqlServer(
         qmahDatabaseResolution.ConnectionString,
         sqlOptions => sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 2,
+            maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(1),
-            errorNumbersToAdd: null));
+            // 1205 = 死結被選為犧牲者：Serializable 交易（準備、投票、結算）多人同時操作時會發生，重做整筆即可成功。
+            errorNumbersToAdd: [1205]));
 });
 
 // API 與 Web 共用會員資料表與登入票證；各端仍各自驗證帳號狀態與角色。
@@ -315,7 +316,7 @@ builder.Services.AddRateLimiter(options =>
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 12,
+                PermitLimit = 30,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
                 AutoReplenishment = true
@@ -468,15 +469,20 @@ app.Use(async (context, next) =>
             throw;
         }
 
+        var connectionFailure = QmahDatabaseDiagnostics.IsConnectionFailure(exception);
         context.Response.Clear();
-        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        context.Response.StatusCode = connectionFailure
+            ? StatusCodes.Status503ServiceUnavailable
+            : StatusCodes.Status500InternalServerError;
         context.Response.ContentType = "application/problem+json; charset=utf-8";
         context.Response.Headers.CacheControl = "no-store";
         await context.Response.WriteAsJsonAsync(new ProblemDetails
         {
-            Status = StatusCodes.Status503ServiceUnavailable,
-            Title = "資料庫無法連線",
-            Detail = "QMAH 資料庫目前無法連線，請稍後再試。"
+            Status = context.Response.StatusCode,
+            Title = connectionFailure ? "資料庫無法連線" : "操作暫時無法完成",
+            Detail = connectionFailure
+                ? "QMAH 資料庫目前無法連線，請稍後再試。"
+                : "伺服器處理時發生錯誤，請再試一次；若持續發生請聯絡管理員。"
         });
     }
 });
