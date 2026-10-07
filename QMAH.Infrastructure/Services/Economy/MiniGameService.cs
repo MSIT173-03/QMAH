@@ -392,7 +392,8 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         attempt.RawScore = rawScore;
         attempt.RawResultJson = rawResultJson;
         attempt.NormalizedScore = normalizedScore;
-        attempt.Grade = grade;
+        // MiniGameAttempts.Grade 欄位只有 nvarchar(2)，寫入 "FAIL" 會被 SQL Server 截斷而讓整筆結算失敗；資料庫存 "F"，回傳時再轉回 "FAIL"。
+        attempt.Grade = grade == "FAIL" ? "F" : grade;
         attempt.PointReward = pointReward;
         attempt.KeyProgressReward = grant.Value.GrantedProgress;
         attempt.KeyRewardDivisor = keyPolicy.Divisor;
@@ -441,7 +442,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         attempt.GameModeDefinition.Code,
         attempt.RawScore ?? 0,
         attempt.NormalizedScore ?? 0,
-        attempt.Grade ?? "FAIL",
+        attempt.Grade is null or "F" ? "FAIL" : attempt.Grade,
         attempt.PointReward,
         attempt.KeyProgressReward,
         attempt.ConvertedNormalKeys,
