@@ -998,7 +998,7 @@
 .coupon-card { --card-accent: #7a52b3; }         /* 優惠券：票券 → 紫 */
 .achievement-card { --card-accent: #b8860b; }    /* 成就：獎盃 → 金 */
 .daily-card { --card-accent: #d9531e; }          /* 每日登入：火焰 → 橘紅 */
-.notification-card { --card-accent: #1b8a94; }   /* 通知：鈴鐺 → 青 */
+.notification-card { --card-accent: #5f6b7a; }   /* 通知：鈴鐺 → 青 */
 :host-context([data-theme='qmahdark']) {
   .profile-card { --card-accent: #aab7ee; }
   .address-card { --card-accent: #f09c8c; }
@@ -1006,7 +1006,7 @@
   .coupon-card { --card-accent: #c3a6ee; }
   .achievement-card { --card-accent: #e8c566; }
   .daily-card { --card-accent: #f4a373; }
-  .notification-card { --card-accent: #7fcfd6; }
+  .notification-card { --card-accent: #b9c3d1; }
 }
 
 /* 動態：寶石不再有中間的光暈；每日登入的火焰像在晃動（只動圖示本身，不動底座）。 */
@@ -1025,16 +1025,16 @@
 .welcome-card {
   gap: 28px;
   padding: 32px 36px;
-  border-color: color-mix(in srgb, #a68a52 34%, var(--qmah-border));
+  border-color: color-mix(in srgb, #6f86b8 34%, var(--qmah-border));
   background:
-    linear-gradient(100deg, transparent 52%, color-mix(in srgb, #a68a52 9%, transparent)),
+    linear-gradient(100deg, transparent 52%, color-mix(in srgb, #6f86b8 9%, transparent)),
     var(--qmah-surface-elevated);
 }
 .welcome-mark {
   position: absolute;
   inset: 0 0 0 auto;
   width: 46%;
-  background: url('/patterns/temple-bronze.svg') right top / 152px 152px repeat;
+  background: url('/patterns/temple-blue.svg') right top / 152px 152px repeat;
   -webkit-mask: linear-gradient(90deg, transparent, #000 85%);
   mask: linear-gradient(90deg, transparent, #000 85%);
   pointer-events: none;
@@ -1042,7 +1042,7 @@
 
 .welcome-content { flex: 1 1 auto; }
 .welcome-content h1 { font-size: 32px; color: var(--qmah-ink); }
-.welcome-eyebrow { color: #9a7b3f; }
+.welcome-eyebrow { color: #4a5a9a; }
 .welcome-content p { margin-bottom: 14px; }
 .member-status {
   border-color: color-mix(in srgb, #3f8f5f 36%, var(--qmah-surface-elevated));
@@ -1081,7 +1081,7 @@
 }
 .quick-daily { --q: #d9531e; }
 .quick-coupon { --q: #7a52b3; }
-.quick-notice { --q: #1b8a94; }
+.quick-notice { --q: #5f6b7a; }
 @media (max-width: 900px) {
   .welcome-card { flex-direction: column; align-items: stretch; }
   .welcome-quick { grid-template-columns: repeat(3, 1fr); }
@@ -1101,7 +1101,7 @@
     box-shadow: 0 1px 0 rgb(255 255 255 / 7%) inset, 0 10px 26px rgb(0 0 0 / 38%);
   }
   .welcome-card {
-    background-image: linear-gradient(100deg, transparent 50%, rgb(201 164 95 / 10%));
+    background-image: linear-gradient(100deg, transparent 50%, rgb(111 134 184 / 12%));
   }
   .dashboard-card {
     background-image: linear-gradient(135deg, color-mix(in srgb, var(--card-accent) 14%, transparent), transparent 60%);
@@ -1109,7 +1109,7 @@
   .dashboard-card:hover { border-color: color-mix(in srgb, var(--card-accent) 65%, #fff 10%); }
   .dashboard-card .card-content p,
   .welcome-content p { color: #cfcdc6; }
-  .welcome-eyebrow { color: #d9bd83; }
+  .welcome-eyebrow { color: #aebcf0; }
   .member-status { color: #8fd3a8; }
   .quick-link { background: color-mix(in srgb, var(--q) 16%, #2b3033); border-color: color-mix(in srgb, var(--q) 40%, transparent); }
 }
@@ -1119,7 +1119,7 @@
 :host-context([data-theme='qmahdark']) {
   .quick-daily { --q: #ff8a4c; }
   .quick-coupon { --q: #b794f0; }
-  .quick-notice { --q: #4fd1dc; }
+  .quick-notice { --q: #b9c3d1; }
   .quick-link {
     color: #f4f2ec;
     background: color-mix(in srgb, var(--q) 20%, #2b3033);
@@ -1127,4 +1127,25 @@
   }
   .quick-link app-qmah-icon { background: color-mix(in srgb, var(--q) 28%, transparent); }
   .quick-link:hover { box-shadow: 0 8px 20px color-mix(in srgb, var(--q) 30%, transparent); }
+}
+
+/* ===== 卡片重新設計：實色圖示塊、無裝飾點的簡潔右上箭頭、底部一條細線 ===== */
+.dashboard-card::before, .dashboard-card::after { display: none; }
+.card-icon {
+  flex: 0 0 56px; width: 56px; height: 56px; border-radius: 14px; color: #fff;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--card-accent) 92%, #fff), color-mix(in srgb, var(--card-accent) 72%, #000));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--card-accent) 32%, transparent), inset 0 1px 0 rgb(255 255 255 / 30%);
+}
+.card-arrow {
+  flex: 0 0 36px; width: 36px; height: 36px; border: 0; border-radius: 10px;
+  background: color-mix(in srgb, var(--card-accent) 12%, transparent); color: var(--card-accent);
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.card-arrow app-qmah-icon { width: 18px; height: 18px; }
+.dashboard-card:hover .card-arrow, .dashboard-card:focus-visible .card-arrow { background: var(--card-accent); color: #fff; transform: translateX(3px); }
+.card-footer { border-top: 1px solid color-mix(in srgb, var(--card-accent) 18%, var(--qmah-line)); }
+.card-footer strong { color: var(--card-accent); }
+:host-context([data-theme='qmahdark']) {
+  .card-icon { color: #14182a; background: linear-gradient(145deg, color-mix(in srgb, var(--card-accent) 100%, #fff 12%), color-mix(in srgb, var(--card-accent) 82%, #000)); }
+  .dashboard-card:hover .card-arrow { color: #14182a; }
 }

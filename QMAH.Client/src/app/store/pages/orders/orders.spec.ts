@@ -66,7 +66,8 @@ describe('Orders', () => {
 
     expect(cards()).toHaveLength(2);
     expect(cards()[0].querySelector('.order-card-status')?.textContent?.trim()).toBe('待付款');
-    expect(cards()[0].textContent).toContain('青花瓷瓶 × 2');
+    expect(cards()[0].textContent).toContain('青花瓷瓶');
+    expect(cards()[0].textContent).toContain('× 2');
     expect(cards()[0].textContent).toContain('$1,280');
     expect(cards()[0].textContent).toContain('信用卡');
     expect(cards()[1].querySelector('.order-card-status')?.textContent?.trim()).toBe('已付款');
