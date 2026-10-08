@@ -154,3 +154,7 @@
   font-family: var(--qmah-font-sans);
   color: var(--color-accent);
 }
+
+/* 商城頂部列：底色比頁面略深一階、字級加大，點數與折價券數字以強調色呈現。 */
+.promobar { background: color-mix(in srgb, var(--color-ink) 4%, var(--color-bg)); border-bottom-color: var(--color-line-soft); }
+.promobar-row { font-size: 13px; padding-block: 9px; }
