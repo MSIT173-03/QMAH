@@ -650,8 +650,8 @@ textarea:focus-visible {
 
 /* 領域次導覽：文字維持原色，選取以中性底色＋底部一條該領域色細線表示，不整顆染色。 */
 .app-shell[data-area='user'] { --nav-accent: var(--qmah-user-accent); }
-.app-shell[data-area='catalog'] { --nav-accent: var(--qmah-catalog-accent); }
-.app-shell[data-area='game'] { --nav-accent: var(--qmah-game-accent); }
+.app-shell[data-area='catalog'] { --nav-accent: var(--qmah-bronze); }
+.app-shell[data-area='game'] { --nav-accent: var(--qmah-jade); }
 .app-shell[data-area='social'] { --nav-accent: var(--qmah-social-accent); }
 .app-shell[data-area='store'] { --nav-accent: var(--qmah-store-accent); }
 .app-context-navigation a { position: relative; }

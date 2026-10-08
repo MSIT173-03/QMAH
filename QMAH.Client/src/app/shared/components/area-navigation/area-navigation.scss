@@ -113,8 +113,8 @@ a:focus-visible {
 
 /* 選取／懸停：只有圖示換成該領域的顏色；文字維持原色，外框與底色一律中性，不再整顆染色。 */
 a[data-area='user'] { --nav-accent: var(--qmah-user-accent); }
-a[data-area='catalog'] { --nav-accent: var(--qmah-catalog-accent); }
-a[data-area='game'] { --nav-accent: var(--qmah-game-accent); }
+a[data-area='catalog'] { --nav-accent: var(--qmah-bronze); }
+a[data-area='game'] { --nav-accent: var(--qmah-jade); }
 a[data-area='social'] { --nav-accent: var(--qmah-social-accent); }
 a[data-area='store'] { --nav-accent: var(--qmah-store-accent); }
 a:hover,
