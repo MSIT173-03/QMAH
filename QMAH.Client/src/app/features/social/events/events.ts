@@ -23,6 +23,22 @@ const MAX_EVENT_CAPACITY = 10000;
   styleUrls: ['../social-common.scss', './events.scss']
 })
 export class EventsComponent implements OnInit {
+  /** 活動目前的狀態：開放報名／進行中／已結束／已額滿 */
+  phase(event: EventListItem): { key: string; label: string } {
+    const now = Date.now();
+    const start = new Date(event.startAt).getTime();
+    const end = new Date(event.endAt).getTime();
+    if (now > end) return { key: 'ended', label: '已結束' };
+    if (now >= start) return { key: 'live', label: '進行中' };
+    if (event.capacity && event.registrationCount >= event.capacity) return { key: 'full', label: '已額滿' };
+    return { key: 'open', label: '開放報名' };
+  }
+
+  /** 名額使用比例（0–100）；沒有名額上限時回傳 null */
+  fillPercent(event: EventListItem): number | null {
+    return event.capacity ? Math.min(100, Math.round((event.registrationCount / event.capacity) * 100)) : null;
+  }
+
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
