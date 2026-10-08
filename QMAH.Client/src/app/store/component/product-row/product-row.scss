@@ -3,7 +3,8 @@
 }
 
 .product-row {
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-line-soft);
+  box-shadow: var(--store-shadow-1);
   background: var(--color-surface);
   border-radius: var(--store-radius);
   padding: var(--qmah-space-3);
@@ -28,7 +29,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: 12px;
   color: var(--color-faint);
   text-decoration: none;
@@ -59,7 +60,7 @@
 
 /* mono 品牌／器類說明列 */
 .meta-brand {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.14em;
   color: var(--color-teal);
@@ -89,7 +90,7 @@
   gap: var(--qmah-space-4);
   flex-wrap: wrap;
   min-width: 0;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
@@ -122,7 +123,7 @@
 }
 
 .product-row-price {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: 18px;
   color: var(--color-ink);
 

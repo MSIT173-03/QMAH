@@ -40,7 +40,8 @@
   align-items: stretch;
   height: 136px;
   padding: 2px;
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-line-soft);
+  box-shadow: var(--store-shadow-1);
   border-radius: var(--store-radius);
   background: var(--color-surface);
   transition: border-color 160ms ease, box-shadow 160ms ease;
@@ -56,7 +57,7 @@
 .coupon-card-off {
   align-self: center;
   padding-left: calc(var(--qmah-space-4) - 2px);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-body-size);
   color: var(--color-accent);
   white-space: nowrap;
@@ -124,7 +125,7 @@
 }
 
 .coupon-card-cost-value {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-body-sm-size);
   color: var(--color-ink);
 }
@@ -266,3 +267,80 @@
     background: var(--color-bg);
   }
 }
+
+/* ===== 票券式券面：左側色塊（印有清明鑑定屋 mark 與折抵幅度）＋右側資訊＋虛線撕邊，與購物網站的折價券一致 ===== */
+.coupon-grid { --coupon-grid-gap: var(--qmah-space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); }
+.coupon-card {
+  --stub: 124px;
+  --cost: 108px;
+  position: relative;
+  grid-template-columns: var(--stub) minmax(0, 1fr) var(--cost);
+  column-gap: 0;
+  height: 128px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, #b8893a 28%, var(--color-line));
+  border-radius: 14px;
+  box-shadow: var(--store-shadow-1);
+  background: var(--color-surface);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+
+  &:hover { transform: translateY(-3px); box-shadow: var(--store-shadow-2); border-color: color-mix(in srgb, #b8893a 55%, var(--color-line)); }
+  /* 撕邊缺口：券面與右側按鈕之間、色塊與內容之間各一對上下半圓 */
+  &::before, &::after {
+    position: absolute; left: calc(var(--stub) - 9px); width: 18px; height: 18px; border-radius: 50%;
+    background: var(--color-bg); box-shadow: inset 0 0 0 1px color-mix(in srgb, #b8893a 28%, var(--color-line)); content: ''; z-index: 2;
+  }
+  &::before { top: -9px; }
+  &::after { bottom: -9px; }
+}
+.coupon-card-off {
+  position: relative; isolation: isolate;
+  display: grid; place-content: center; justify-items: center; gap: 2px;
+  align-self: stretch; padding: 0 10px;
+  background: linear-gradient(145deg, #d9b25c, #b07a2c);
+  color: #fff; font-size: 22px; font-weight: 800; letter-spacing: 0.02em; text-align: center; text-shadow: 0 1px 2px rgb(80 50 10 / 35%);
+  /* 色塊右緣的鋸齒虛線 */
+  border-right: 2px dashed rgb(255 255 255 / 55%);
+}
+.coupon-card-off::before {
+  position: absolute; z-index: -1; inset: auto -14px -18px auto; width: 92px; height: 92px; content: '';
+  background: rgb(255 255 255 / 22%);
+  -webkit-mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat; mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat;
+}
+.coupon-card-off::after { content: '折價券'; font-size: 12px; font-weight: 700; letter-spacing: 0.2em; opacity: 0.9; }
+.coupon-card-body { padding: 14px 16px; gap: 4px; }
+.coupon-card-title { font-size: 16px; font-weight: 700; line-height: 1.35; }
+.coupon-card-meta { font-size: 13px; }
+.coupon-card-cost {
+  border-left: 2px dashed color-mix(in srgb, #b8893a 40%, var(--color-line-mid));
+  border-radius: 0;
+  background: color-mix(in srgb, #d9b25c 10%, var(--color-surface));
+  gap: 6px;
+}
+.coupon-card-cost-label {
+  padding: 4px 14px; border-radius: 999px; background: #b07a2c; color: #fff; font-size: 13px; font-weight: 700; transition: background 160ms ease;
+}
+.coupon-card-cost-value { font-size: 15px; font-weight: 700; color: var(--color-ink); }
+button.coupon-card-cost:hover { background: color-mix(in srgb, #d9b25c 22%, var(--color-surface)); }
+button.coupon-card-cost:hover .coupon-card-cost-label { background: #8f5f1c; }
+.coupon-card-cost--static .coupon-card-cost-label { background: transparent; color: var(--color-muted); padding: 0; font-weight: 600; }
+.coupon-card-cost--static:hover { background: color-mix(in srgb, #d9b25c 10%, var(--color-surface)); }
+:host-context([data-theme='qmahdark']) .coupon-card-off { background: linear-gradient(145deg, #a8822f, #6e4a18); }
+:host-context([data-theme='qmahdark']) .coupon-card-cost { background: color-mix(in srgb, #d9b25c 9%, var(--color-surface)); }
+:host-context([data-theme='qmahdark']) .coupon-card-cost-label { background: #d9b25c; color: #2a1d08; }
+:host-context([data-theme='qmahdark']) .coupon-card { border-color: color-mix(in srgb, #d9b25c 30%, var(--color-line)); }
+:host-context([data-theme='qmahdark']) .coupon-card::before, :host-context([data-theme='qmahdark']) .coupon-card::after { box-shadow: inset 0 0 0 1px color-mix(in srgb, #d9b25c 30%, var(--color-line)); }
+@media (max-width: 460px) { .coupon-card { --stub: 104px; --cost: 92px; } .coupon-card-off { font-size: 19px; } }
+
+/* 「我的折價券」背包：區塊標題旁放品牌 mark，空狀態做成一張虛線券夾 */
+.my-coupons .page-title-row { position: relative; }
+.my-coupons-empty, .my-coupons-login {
+  display: flex; align-items: center; gap: 14px; padding: 22px 24px; border: 2px dashed color-mix(in srgb, #b8893a 40%, var(--color-line-mid));
+  border-radius: 14px; background: color-mix(in srgb, #d9b25c 7%, var(--color-surface)); box-shadow: var(--store-shadow-1); font-size: 15px;
+}
+.my-coupons-empty::before {
+  width: 44px; height: 44px; flex: none; background: #b07a2c; content: '';
+  -webkit-mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat; mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat;
+}
+.my-coupons-login .my-coupons-empty { padding: 0; border: 0; background: none; box-shadow: none; }

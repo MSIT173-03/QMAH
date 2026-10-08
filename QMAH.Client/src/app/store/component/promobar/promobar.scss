@@ -15,7 +15,7 @@
   flex-wrap: wrap;
   gap: var(--qmah-space-4);
   align-items: center;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-label-size);
   letter-spacing: 0.06em;
   color: var(--color-muted);
@@ -113,7 +113,7 @@
 
 /* 折價券的列：左側折抵幅度，右側名稱與說明 */
 .coupon-row-amount {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-body-sm-size);
   color: var(--color-accent);
   min-width: 52px;
@@ -151,6 +151,6 @@
 
 .cart-row-qty {
   flex: 0 0 auto;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   color: var(--color-accent);
 }

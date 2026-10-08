@@ -24,3 +24,8 @@
 .detail-paragraph span {
   white-space: pre-line;
 }
+
+/* 商品說明：字級 16px、行距 1.85，放進浮起的卡片中，段落之間留出呼吸空間。 */
+.detail-text { font-size: 16px; line-height: 1.85; }
+.detail-paragraph { margin-bottom: 20px; gap: 6px; }
+.detail-paragraph strong { font-size: 17px; }

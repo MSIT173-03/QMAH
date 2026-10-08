@@ -16,3 +16,10 @@
   color: var(--color-body);
 }
 
+
+/* 訂單摘要：像結帳側欄——標題、分項、一條虛線、合計放大，結帳鈕加大；整張卡浮起。 */
+.hero-sidebar .summary-row { font-size: 15px; }
+.hero-sidebar .summary-total-row { margin-top: 4px; padding-top: 14px; border-top: 2px dashed var(--color-line-mid); }
+.hero-sidebar .summary-total-value { font-size: 28px; font-weight: 800; }
+.hero-sidebar .btn-solid--full { min-height: 52px; font-size: 16px; font-weight: 800; border-radius: 12px; box-shadow: var(--store-shadow-1); }
+.summary-note { font-size: 13px; }

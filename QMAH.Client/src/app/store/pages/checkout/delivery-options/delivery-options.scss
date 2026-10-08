@@ -70,7 +70,7 @@
 
 /* 運費金額，以等寬字體與較小字級呈現 */
 .option-btn-fee {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.08em;
 }

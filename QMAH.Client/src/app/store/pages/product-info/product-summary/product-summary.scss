@@ -23,7 +23,7 @@
   display: flex;
   align-items: center;
   gap: var(--qmah-space-2);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: 12px;
   color: var(--color-muted);
 }
@@ -39,7 +39,7 @@
 }
 
 .product-price {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: 24px;
 }
 
@@ -80,3 +80,13 @@
     border-color: var(--color-accent);
   }
 }
+
+/* 商品資訊欄：整欄是一張浮起的卡片；價格區是淡色底塊而不是兩條線；字級加大、行距放鬆，閱讀更輕鬆。 */
+.product-info { padding: 28px; border: 1px solid var(--color-line-soft); border-radius: 18px; background: var(--color-surface); box-shadow: var(--store-shadow-1); gap: 18px; }
+.product-title { font-size: 30px; line-height: 1.35; }
+.product-rating-row { font-size: 14px; }
+.product-price-row { padding: 16px 18px; border: 0; border-radius: 14px; background: color-mix(in srgb, var(--color-gold) 9%, var(--color-swatch)); }
+.product-price { font-size: 34px; font-weight: 800; }
+.spec-list { font-size: 15px; line-height: 1.7; }
+.btn-outline--flex, .btn-solid--flex { min-height: 52px; font-size: 16px; font-weight: 800; border-radius: 12px; }
+@media (max-width: 800px) { .product-info { padding: 20px; } .product-title { font-size: 25px; } }

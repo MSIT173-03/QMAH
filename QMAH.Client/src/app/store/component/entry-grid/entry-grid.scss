@@ -65,7 +65,7 @@
 }
 
 .cat-count {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
@@ -90,7 +90,7 @@
 .cat-glyph[data-glyph='painting'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath%20d%3D%27M13%206h22M13%2042h22M24%206V4M24%2042v2%27%2F%3E%3Crect%20x%3D%2715%27%20y%3D%279%27%20width%3D%2718%27%20height%3D%2730%27%2F%3E%3Cpath%20d%3D%27M17%2033l6-9%204%205%203-4%203%208%27%20%2F%3E%3Ccircle%20cx%3D%2728%27%20cy%3D%2716%27%20r%3D%272.2%27%2F%3E%3Cpath%20d%3D%27M18%2020c2-1%204%200%206-1%27%20opacity%3D%27.55%27%2F%3E%3C/svg%3E"); }
 .cat-glyph[data-glyph='carving'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2713%27%20r%3D%275%27%2F%3E%3Cpath%20d%3D%27M24%2018c-8%200-12%206-12%2012%200%203%202%205%205%205h14c3%200%205-2%205-5%200-6-4-12-12-12z%27%2F%3E%3Cpath%20d%3D%27M10%2041h28M18%2035v6M30%2035v6M24%2021v6%27%20opacity%3D%27.7%27%2F%3E%3C/svg%3E"); }
 .cat-glyph[data-glyph='stone'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect%20x%3D%2713%27%20y%3D%277%27%20width%3D%2722%27%20height%3D%2713%27%20rx%3D%272%27%2F%3E%3Crect%20x%3D%279%27%20y%3D%2723%27%20width%3D%2730%27%20height%3D%2716%27%20rx%3D%272%27%2F%3E%3Cpath%20d%3D%27M16%2031h16%27%20opacity%3D%27.6%27%2F%3E%3C/svg%3E"); }
-.cat-glyph[data-glyph='era'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 19h38M9 19l15-11 15 11M12 19v17M36 19v17M20 36V26h8v10M7 41h34'/%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='era'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='10' width='34' height='31' rx='4'/%3E%3Cpath d='M7 20h34M16 6v8M32 6v8'/%3E%3Cpath d='M15 28h3M23 28h3M31 28h3M15 34h3M23 34h3' stroke-width='2.4'/%3E%3C/svg%3E"); }
 
 /* 寬版面：指定欄數時固定每列欄數（年代選藏 9 欄 ×2 列）；窄版面維持自動換行。 */
 @media (min-width: 1100px) {
@@ -109,3 +109,9 @@
   .cat-card .cat-count { color: var(--color-muted); }
   .cat-card:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--tone) 24%, transparent); }
 }
+
+/* 雙線修正：移除頂緣的內嵌色線，改成單一圓角描邊＋名稱上方一小段色條。 */
+.cat-card { padding: 0; border-width: 1.5px; border-color: color-mix(in srgb, var(--tone) 60%, var(--color-line)); box-shadow: var(--store-shadow-1); }
+.cat-card .cat-icon, :host-context([data-theme='qmahdark']) .cat-card .cat-icon { box-shadow: none; border-radius: calc(var(--store-radius) - 1px); padding: 14px 14px 12px; }
+.cat-card .cat-icon::before { width: 22px; height: 3px; margin-bottom: 6px; border-radius: 3px; background: var(--tone); content: ''; }
+.cat-card:hover { box-shadow: var(--store-shadow-2); }

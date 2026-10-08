@@ -81,7 +81,7 @@
 }
 
 .news-price {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-label-size);
   color: var(--color-ink);
 }
@@ -92,7 +92,7 @@
 
 /* 與商品卡片的 product-card-tag 同一套形狀：無外框，僅以底色與文字色區分。 */
 .news-tag {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-label-size);
   letter-spacing: 0.06em;
   /* --color-gold-text 是實心金色底上的文字色（淺色主題為近白），放在淺金底上會看不清楚，
@@ -109,7 +109,7 @@
 }
 
 .news-rating {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }

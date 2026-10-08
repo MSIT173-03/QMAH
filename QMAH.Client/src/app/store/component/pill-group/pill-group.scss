@@ -53,7 +53,7 @@
 
   &--mono,
   &--band {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--qmah-font-sans);
     letter-spacing: 0.08em;
     padding: 6px 12px;
   }
@@ -68,7 +68,7 @@
   }
 
   &--review {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--qmah-font-sans);
     padding: 6px 12px;
 
     /* 已選用：外框與底色加深提示選取狀態，文字維持一般顏色，不反白 */
@@ -107,7 +107,7 @@
   /* 結帳頁點數折抵方式：數字以等寬字體呈現 */
   &--point {
     padding: 7px 10px;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--qmah-font-sans);
   }
 
   &--active {

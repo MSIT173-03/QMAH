@@ -21,7 +21,7 @@
 }
 
 .page-title-count {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
