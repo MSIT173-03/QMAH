@@ -35,12 +35,14 @@ declare global {
         options: {
           sitekey: string;
           theme?: 'light' | 'dark' | 'auto';
+          execution?: 'render' | 'execute';
+          appearance?: 'always' | 'execute' | 'interaction-only';
           callback?: (token: string) => void;
           'expired-callback'?: () => void;
           'error-callback'?: () => void;
         }
       ) => string;
-
+      execute: (widgetId?: string) => void;
       reset: (
         widgetId?: string
       ) => void;
@@ -104,6 +106,8 @@ export class Register implements OnInit, OnDestroy {
   // =========================
 
   turnstileToken = '';
+
+  turnstileDemoFail = false;
 
   private turnstileWidgetId: string | null = null;
 
@@ -268,12 +272,12 @@ export class Register implements OnInit, OnDestroy {
             container,
             {
 
-              sitekey:
-                environment.turnstileSiteKey,
-
-              theme:
-                'dark',
-
+              sitekey: this.turnstileDemoFail
+                ? '2x00000000000000000000AB'
+                : environment.turnstileSiteKey,
+              theme: 'dark',
+              execution: 'execute',
+              appearance: 'execute',
               // =========================
               // 驗證成功
               // =========================
@@ -289,6 +293,7 @@ export class Register implements OnInit, OnDestroy {
                   '';
 
                 this.cdr.detectChanges();
+                this.submitRegistration();
 
               },
 
@@ -300,7 +305,7 @@ export class Register implements OnInit, OnDestroy {
 
                 this.turnstileToken =
                   '';
-
+                this.submitting = false;
                 this.cdr.detectChanges();
 
               },
@@ -313,6 +318,7 @@ export class Register implements OnInit, OnDestroy {
 
                 this.turnstileToken =
                   '';
+                this.submitting = false;
 
                 this.errorMessage =
                   '安全驗證失敗，請重新驗證。';
@@ -343,6 +349,24 @@ export class Register implements OnInit, OnDestroy {
 
     tryRender();
 
+  }
+
+
+  toggleTurnstileDemoFail(): void {
+    if (this.submitting) return;
+
+    this.turnstileDemoFail = !this.turnstileDemoFail;
+    this.turnstileToken = '';
+    this.errorMessage = '';
+
+    // 移除舊的 Turnstile Widget
+    if (this.turnstileWidgetId && window.turnstile) {
+      window.turnstile.remove(this.turnstileWidgetId);
+      this.turnstileWidgetId = null;
+    }
+
+    // 重新載入對應模式的 Widget
+    this.renderTurnstileWhenReady();
   }
 
 
@@ -548,14 +572,32 @@ export class Register implements OnInit, OnDestroy {
     // Turnstile 驗證
     // =========================
 
-    if (!this.turnstileToken) {
+if (this.submitting) return;
 
-      this.errorMessage =
-        '請先完成安全驗證。';
+if (!this.turnstileWidgetId || !window.turnstile) {
+  this.errorMessage = '安全驗證尚未準備完成，請稍後再試。';
+  return;
+}
 
-      return;
+this.submitting = true;
+this.turnstileToken = '';
 
-    }
+try {
+  window.turnstile.execute(this.turnstileWidgetId);
+} catch (error) {
+  console.error('Turnstile execute error:', error);
+  this.submitting = false;
+  this.errorMessage = '安全驗證啟動失敗，請稍後再試。';
+}
+
+return;
+
+
+}
+
+// Turnstile 驗證成功後才呼叫
+private submitRegistration(): void {
+  if (!this.turnstileToken) return;
 
 
     // =========================
@@ -619,6 +661,7 @@ export class Register implements OnInit, OnDestroy {
             '取得安全驗證資訊失敗，請稍後再試。';
 
           this.cdr.detectChanges();
+
 
         }
 
