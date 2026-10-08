@@ -101,6 +101,18 @@
     </button>
   </header>
 
+  <!-- 看板分類：桌面在左側固定欄，手機變成橫向可捲動的標籤；與下方「看板」下拉同步，兩邊都能切換。 -->
+  <div class="social-layout">
+  <nav class="social-boardnav" aria-label="看板分類">
+    <p class="social-boardnav__title">看板</p>
+    <ul class="social-boardnav__list">
+      <li><button type="button" class="social-boardnav__item" [class.is-active]="filterBoardCode === ''" [attr.aria-current]="filterBoardCode === '' ? 'true' : null" (click)="selectBoard('')">全部貼文</button></li>
+      @for (board of boardCodes; track board) {
+        <li><button type="button" class="social-boardnav__item" [class.is-active]="filterBoardCode === board" [attr.aria-current]="filterBoardCode === board ? 'true' : null" (click)="selectBoard(board)">{{ boardLabel(board) }}</button></li>
+      }
+    </ul>
+  </nav>
+  <div class="social-layout__main">
   <!-- ui-integration: 篩選列改用 social-filters／social-field；daisyUI 5 已移除 .form-control，舊寫法的欄位間距是碰運氣。看板顯示中文名稱，不直接露出 GENERAL 這類代碼。 -->
   <div class="social-filters" role="search">
     <label class="social-field">
@@ -178,10 +190,10 @@
         }
         <div class="social-post-card__footer">
           <p class="social-post-card__stats">
-            <span class="social-icon-label">
+            <a class="social-icon-label social-post-card__comments" [routerLink]="['/social/posts', post.id]" fragment="comments" [attr.aria-label]="'查看 ' + post.title + ' 的留言'">
               <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
               {{ post.commentCount || 0 }} 則留言
-            </span>
+            </a>
             @if (post.mediaCount > 0) {
               <span class="social-icon-label">
                 <svg lucideImage aria-hidden="true" focusable="false"></svg>
@@ -210,6 +222,8 @@
     <div class="social-state social-state--wide">目前還沒有貼文</div>
     }
     }
+  </div>
+  </div>
   </div>
 </div>
 

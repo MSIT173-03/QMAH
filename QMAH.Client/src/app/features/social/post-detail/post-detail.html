@@ -13,9 +13,22 @@
 } @else if (post) {
   <!-- ui-integration: 詳情改用與貼文牆同一組 social-panel／social-tag／social-meta，不再是 daisyUI 預設 card（shadow-xl）。 -->
   <article class="social-panel">
-    <div class="social-meta">
+    <div class="social-meta social-post-head">
       <span class="social-tag">{{ boardLabel(post.boardCode) }}</span>
       <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+      @if (!editingPost) {
+        <div class="dropdown dropdown-end social-post-head__menu">
+          <button type="button" tabindex="0" class="social-comment__menu" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
+          <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
+            @if (isOwnPost(post)) {
+              <li role="none"><button type="button" role="menuitem" class="social-icon-label" (click)="startEditPost(); closeMenu()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯貼文</button></li>
+              <li role="none"><button type="button" role="menuitem" class="social-icon-label social-menu__danger" (click)="deletePost(); closeMenu()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除貼文</button></li>
+            } @else {
+              <li role="none"><button type="button" role="menuitem" class="social-icon-label" (click)="reportModal.open('POST', post.id); closeMenu()"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉貼文</button></li>
+            }
+          </ul>
+        </div>
+      }
     </div>
 
     @if (editingPost) {
@@ -54,31 +67,42 @@
         }
       </div>
     }
-
-    @if (!editingPost) {
-      <!-- ui-integration: 自己的貼文只給編輯／刪除；檢舉只出現在別人的貼文，避免作者看到自己檢舉自己。 -->
-      <div class="social-panel__actions">
-        @if (isOwnPost(post)) {
-          <div class="dropdown dropdown-end dropdown-top">
-            <button type="button" tabindex="0" class="social-menu__trigger" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
-            <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
-            <li role="none"><button type="button" role="menuitem" class="social-icon-label " (click)="startEditPost(); closeMenu()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button></li>
-            <li role="none"><button type="button" role="menuitem" class="social-icon-label social-menu__danger" (click)="deletePost(); closeMenu()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button></li>
-            </ul>
-          </div>
-        } @else {
-          <div class="dropdown dropdown-end dropdown-top">
-            <button type="button" tabindex="0" class="social-menu__trigger" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
-            <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
-            <li role="none"><button type="button" role="menuitem" class="social-icon-label " (click)="reportModal.open('POST', post.id); closeMenu()"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉貼文</button></li>
-            </ul>
-          </div>
-        }
-      </div>
-    }
   </article>
 
-  <section class="social-comments-section" aria-labelledby="post-comments-title">
+  @if (artifact; as art) {
+    <!-- 文物卡：圖片、說明與資訊，沿用圖鑑的卡片語彙；玩家沒有該文物時全部顯示問號 -->
+    <aside class="social-artifact" [class.is-locked]="!art.unlocked" aria-label="討論的文物">
+      <div class="social-artifact__image">
+        @if (art.unlocked && art.imageUrl) {
+          <img [src]="art.imageUrl" [alt]="art.name || '文物圖片'" loading="lazy" />
+        } @else {
+          <span class="social-artifact__mark" aria-hidden="true">？</span>
+        }
+      </div>
+      <div class="social-artifact__body">
+        <p class="social-artifact__eyebrow">{{ art.unlocked ? '文物資料' : '尚未收藏的文物' }}</p>
+        <h2 class="social-artifact__name">{{ art.unlocked ? art.name : '？？？' }}</h2>
+        <dl class="social-artifact__facts">
+          <div><dt>分類</dt><dd>{{ art.unlocked ? (art.categoryName || '—') : '？' }}</dd></div>
+          <div><dt>年代</dt><dd>{{ art.unlocked ? (art.eraText || art.eraName || '—') : '？' }}</dd></div>
+          <div><dt>作者／產地</dt><dd>{{ art.unlocked ? (art.creator || '—') : '？' }}</dd></div>
+          <div><dt>尺寸</dt><dd>{{ art.unlocked ? (art.sizeText || '—') : '？' }}</dd></div>
+        </dl>
+        <p class="social-artifact__desc">{{ art.unlocked ? (art.description || '這件文物目前沒有說明。') : '收藏這件文物後，才會顯示圖片、說明與資訊。' }}</p>
+        <div class="social-artifact__actions">
+          @if (art.unlocked) {
+            <a class="btn btn-sm btn-outline" [routerLink]="['/artifact-list']" [queryParams]="{ focus: art.artifactId }">到圖鑑查看</a>
+          } @else if (art.hasUniversalKey) {
+            <a class="btn btn-sm btn-primary" [routerLink]="['/artifact-list']" [queryParams]="{ focus: art.artifactId }">用萬能鑰匙到圖鑑開啟</a>
+          } @else {
+            <a class="btn btn-sm btn-ghost" [routerLink]="['/artifact-list']" [queryParams]="{ focus: art.artifactId }">到圖鑑看看</a>
+          }
+        </div>
+      </div>
+    </aside>
+  }
+
+  <section id="post-comments" class="social-comments-section" aria-labelledby="post-comments-title">
     <h2 id="post-comments-title" class="social-section-title social-icon-label">
       <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
       留言（{{ post.comments.length }}）
@@ -92,54 +116,40 @@
       <div class="alert alert-success mb-3" role="status">{{ reportSuccessMessage }}</div>
     }
 
-    <!-- ui-integration: 留言輸入框移到留言列表上方；留言多時不必滾到頁尾才能回覆。 -->
-    <div class="social-composer">
-      <label class="sr-only" for="new-comment-content">留言內容</label>
-      <textarea
-        id="new-comment-content"
-        class="textarea textarea-bordered"
-        placeholder="留下你的想法…"
-        [(ngModel)]="newComment.content"
-      ></textarea>
-      <button type="button" class="social-composer__send" aria-label="送出留言" title="送出留言" [disabled]="!newComment.content.trim()" (click)="submitComment()"><svg lucideSendHorizontal aria-hidden="true" focusable="false"></svg></button>
-    </div>
+    <!-- 留言預設是純文字（換行有效）；按左邊的按鈕才進入進階模式（格式、圖片）。 -->
+    <app-social-editor [(value)]="newComment.content" label="留言內容" placeholder="留下你的想法…（Ctrl＋Enter 送出）" (submitted)="submitComment()" />
 
     <ul class="social-comments">
       @for (comment of post.comments; track comment.id) {
         <li class="social-comment">
-          <div class="social-comment__head">
-            <span class="social-comment__author"><app-user-avatar [userId]="comment.userId" /><a class="social-author-link" [routerLink]="['/social/members', comment.userId]">{{ comment.displayName || '匿名會員' }}</a></span>
-            <time class="social-meta" [attr.datetime]="comment.createdAt">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
-          </div>
-          @if (editingCommentId === comment.id) {
-            <div class="social-composer">
-              <textarea class="textarea textarea-bordered" [(ngModel)]="editCommentContent" aria-label="編輯留言內容"></textarea>
-              <div class="social-comment__actions">
-                <button type="button" class="btn btn-ghost" (click)="cancelEditComment()">取消</button>
-                <button type="button" class="btn btn-primary" (click)="saveEditComment(comment.id)">儲存</button>
+          <app-user-avatar class="social-comment__avatar" [userId]="comment.userId" />
+          <div class="social-comment__main">
+            <div class="social-comment__head">
+              <a class="social-author-link social-comment__author" [routerLink]="['/social/members', comment.userId]">{{ comment.displayName || '匿名會員' }}</a>
+              <time class="social-meta" [attr.datetime]="comment.createdAt">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+              <span class="social-comment__spacer"></span>
+              <div class="dropdown dropdown-end">
+                <button type="button" tabindex="0" class="social-comment__menu" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
+                <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
+                  @if (isOwnComment(comment)) {
+                    <li role="none"><button type="button" role="menuitem" class="social-icon-label" (click)="startEditComment(comment); closeMenu()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button></li>
+                    <li role="none"><button type="button" role="menuitem" class="social-icon-label social-menu__danger" (click)="deleteComment(comment.id); closeMenu()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button></li>
+                  } @else {
+                    <li role="none"><button type="button" role="menuitem" class="social-icon-label" (click)="reportModal.open('COMMENT', comment.id); closeMenu()"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉留言</button></li>
+                  }
+                </ul>
               </div>
             </div>
-          } @else {
-            <p class="social-comment__body">{{ comment.content }}</p>
-            <div class="social-comment__actions">
-              @if (isOwnComment(comment)) {
-                <div class="dropdown dropdown-end ">
-                  <button type="button" tabindex="0" class="social-menu__trigger" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
-                  <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
-                  <li role="none"><button type="button" role="menuitem" class="social-icon-label " (click)="startEditComment(comment); closeMenu()"><svg lucidePencil aria-hidden="true" focusable="false"></svg>編輯</button></li>
-                  <li role="none"><button type="button" role="menuitem" class="social-icon-label social-menu__danger" (click)="deleteComment(comment.id); closeMenu()"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg>刪除</button></li>
-                  </ul>
-                </div>
-              } @else {
-                <div class="dropdown dropdown-end ">
-                  <button type="button" tabindex="0" class="social-menu__trigger" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
-                  <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
-                  <li role="none"><button type="button" role="menuitem" class="social-icon-label " (click)="reportModal.open('COMMENT', comment.id); closeMenu()"><svg lucideFlag aria-hidden="true" focusable="false"></svg>檢舉留言</button></li>
-                  </ul>
-                </div>
-              }
-            </div>
-          }
+            @if (editingCommentId === comment.id) {
+              <app-social-editor [(value)]="editCommentContent" label="編輯留言內容" [startOpen]="hasMarkup(editCommentContent)" [showSend]="false" />
+              <div class="social-comment__edit-actions">
+                <button type="button" class="btn btn-ghost btn-sm" (click)="cancelEditComment()">取消</button>
+                <button type="button" class="btn btn-primary btn-sm" [disabled]="!editCommentContent.trim()" (click)="saveEditComment(comment.id)">儲存</button>
+              </div>
+            } @else {
+              <div class="social-comment__bubble"><app-social-post-content [content]="comment.content" /></div>
+            }
+          </div>
         </li>
       } @empty {
         <li class="social-state">目前還沒有留言，歡迎留下第一則。</li>
