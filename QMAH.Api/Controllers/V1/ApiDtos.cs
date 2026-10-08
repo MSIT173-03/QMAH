@@ -213,7 +213,14 @@ public sealed record SocialPostListItemDto(
     decimal? Latitude,
     decimal? Longitude,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    SocialPostEventSummaryDto? EventSummary = null);
+
+public sealed record SocialPostEventSummaryDto(
+    DateTime StartAt,
+    DateTime EndAt,
+    string? Location,
+    int? Capacity);
 
 public sealed record SocialMediaDto(
     Guid Id,

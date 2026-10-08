@@ -12,14 +12,14 @@
 
 <p align="center">
   <a href="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml"><img src="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main" alt="Build"></a>
-  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v0.12.1"><img src="https://img.shields.io/badge/database-db--v0.12.1-315E55" alt="Database snapshot db-v0.12.1"></a>
+  <a href="https://github.com/MSIT173-03/QMAH-Database/tree/db-v1.0.0"><img src="https://img.shields.io/badge/database-db--v1.0.0-315E55" alt="Database snapshot db-v1.0.0"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4" alt=".NET 10">
   <img src="https://img.shields.io/badge/SQL%20Server-DB--first-315E55" alt="SQL Server DB-first">
 </p>
 
 ## 目前正式 Release
 
-目前 QMAH 主程式版本是 [`v0.12.1`](https://github.com/MSIT173-03/QMAH/releases/tag/v0.12.1)，對應 [QMAH-Database `db-v0.12.1` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.12.1)。完整資料庫從後者下載同源的 `QMAH.sql`、`QMAH-0.12.1.bak` 與 `SHA256SUMS.txt`；主程式 Release 只提供版本與資料庫連結，不重複附上備份。
+目前 QMAH 主程式版本是 [`v1.0.0`](https://github.com/MSIT173-03/QMAH/releases/tag/v1.0.0)，對應 [QMAH-Database `db-v1.0.0` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.0)。完整資料庫從後者下載同源的 `QMAH.sql`、`QMAH-1.0.0.bak` 與 `SHA256SUMS.txt`；主程式 Release 只提供版本與資料庫連結，不重複附上備份。
 
 ## 專案簡介
 
@@ -93,7 +93,7 @@ Visual Studio 2022 不是本專案文件的優先版本，但仍可作為目前�
 
 ### 2. 建立本機 QMAH 資料庫
 
-目前主線使用 [QMAH-Database db-v0.12.1 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v0.12.1) 的完整 Snapshot。下載 `.bak` 與 `SHA256SUMS.txt`，確認校驗值後在 SSMS 使用 **Restore Database...** 還原為 `QMAH`；或執行同版本的 `QMAH.sql`。兩者由同一次匯出產生，已通過乾淨資料庫重建與逐表比對。本版要求所有組員備份舊資料庫並全新還原；新版包含獎勵、鑑賞與重整後的關聯資料，不提供增補升級，也不需重跑舊 Seed。
+目前主線使用 [QMAH-Database db-v1.0.0 Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.0) 的完整 Snapshot。下載 `.bak` 與 `SHA256SUMS.txt`，確認校驗值後在 SSMS 使用 **Restore Database...** 還原為 `QMAH`；或執行同版本的 `QMAH.sql`。兩者由同一次匯出產生，已通過乾淨資料庫重建與逐表比對。本版要求所有組員備份舊資料庫並全新還原；新版包含獎勵、鑑賞與重整後的關聯資料，不提供增補升級，也不需重跑舊 Seed。
 
 只有沿用舊 `db-v0.10.2` 的環境才須執行 [`database/upgrades/0.10.2-store-order-shipping.sql`](database/upgrades/0.10.2-store-order-shipping.sql)；若確認資料庫只有展示訂單，可再手動執行 [`database/seeds/store-showcase-orders-shipping.sql`](database/seeds/store-showcase-orders-shipping.sql)。一般既有訂單不會被當成假資料重整。以 `sqlcmd` 執行舊版升級時請加 `-f 65001 -b`。
 
@@ -238,7 +238,7 @@ Cookie 不包含連接埠，因此清除 `localhost` 的網站資料時，不只
 
 先確認資料庫名稱為 `QMAH`，再在 SSMS 查看實際連線的 instance 是否存在且為 `ONLINE`。啟動記錄會列出 `QmahDatabaseConnectionResolver` 的候選與選用結果；`(localdb)\MSSQLLocalDB` 只是候選之一。
 
-若只有空資料庫，使用 QMAH-Database `db-v0.12.1` 的 `.bak` 或同版本 `QMAH.sql` 建立；不以 Patch 或 Seed 補齊完整展示資料。
+若只有空資料庫，使用 QMAH-Database `db-v1.0.0` 的 `.bak` 或同版本 `QMAH.sql` 建立；不以 Patch 或 Seed 補齊完整展示資料。
 
 ### HTTPS 憑證警告
 

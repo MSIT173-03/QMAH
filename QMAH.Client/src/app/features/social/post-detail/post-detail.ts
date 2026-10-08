@@ -11,6 +11,7 @@ import { ReportModalComponent } from '../../../shared/components/report-modal/re
 import { SocialEditorComponent } from '../../../shared/components/social-editor/social-editor';
 import { SocialMediaLayout, SocialMediaManagerComponent } from '../../../shared/components/social-media-manager/social-media-manager';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
+import { SocialEventContentComponent } from '../../../shared/components/social-event-content/social-event-content';
 import { demoComment, isDemoAdmin } from '../social-demo';
 import { boardLabel } from '../social-labels';
 import { LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2 } from '@lucide/angular';
@@ -18,7 +19,7 @@ import { LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, Lucid
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEditorComponent, SocialMediaManagerComponent, LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEventContentComponent, SocialEditorComponent, SocialMediaManagerComponent, LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent],
   templateUrl: './post-detail.html',
   styleUrls: ['../social-common.scss', './post-detail.scss']
 })

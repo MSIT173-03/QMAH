@@ -124,7 +124,11 @@
       <h2 class="social-post-card__title">
         <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
       </h2>
-      <p class="social-post-card__excerpt">{{ stripMarkup(post.contentPreview) }}</p>
+      @if (post.postType === 'EVENT' || post.boardCode === 'EVENT' || post.boardCode === 'EVENTS' || post.eventId) {
+        <app-social-event-content [content]="post.contentPreview" [preview]="true" [eventId]="post.eventId" [eventSummary]="post.eventSummary" />
+      } @else {
+        <p class="social-post-card__excerpt">{{ stripMarkup(post.contentPreview) }}</p>
+      }
       @if (post.coverImageUrl) {
         <a class="social-post-card__cover" [routerLink]="['/social/posts', post.id]" tabindex="-1" aria-hidden="true">
           <img [src]="post.coverImageUrl" alt="" loading="lazy" />
@@ -132,7 +136,7 @@
       }
       <div class="social-post-card__footer">
         <p class="social-post-card__stats">
-          <a class="social-icon-label social-post-card__comments" [routerLink]="['/social/posts', post.id]" fragment="comments" [attr.aria-label]="'查看 ' + post.title + ' 的留言'">
+          <a class="social-icon-label social-post-card__comments" [routerLink]="['/social/posts', post.id]" fragment="post-comments" [attr.aria-label]="'查看 ' + post.title + ' 的留言'">
             <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
             {{ post.commentCount || 0 }} 則留言
           </a>
