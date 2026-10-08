@@ -441,9 +441,9 @@ a:focus-visible {
   z-index: -1;
   content: '';
   pointer-events: none;
-  background: color-mix(in srgb, var(--home-teal) 13%, transparent);
-  -webkit-mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
-  mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
+  background: color-mix(in srgb, var(--home-teal) 70%, transparent);
+  -webkit-mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
+  mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
   -webkit-mask-composite: source-in;
 }
 .home-page::after {
