@@ -540,9 +540,9 @@ textarea:focus-visible {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-    background: color-mix(in srgb, var(--qmah-social-action) 9%, transparent);
-  -webkit-mask: url('/patterns/connections.svg') center top / 72px 72px repeat;
-  mask: url('/patterns/connections.svg') center top / 72px 72px repeat;
+    background: color-mix(in srgb, var(--qmah-social-action) 7%, transparent);
+  -webkit-mask: url('/patterns/jigsaw.svg') center top / 192px 192px repeat;
+  mask: url('/patterns/jigsaw.svg') center top / 192px 192px repeat;
 }
 .app-shell[data-area='social'] .app-main {
   background-color: color-mix(in srgb, var(--qmah-social-soft) 38%, var(--qmah-page-surface));

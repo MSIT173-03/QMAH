@@ -237,7 +237,7 @@ body {
   --qmah-accent-content: var(--qmah-night);
   --qmah-danger: var(--qmah-cinnabar);
   --qmah-danger-content: var(--qmah-night);
-  --qmah-line: color-mix(in srgb, var(--qmah-ink) 16%, transparent);
+  --qmah-line: color-mix(in srgb, var(--qmah-ink) 24%, transparent);
   --qmah-on-dark: var(--qmah-paper);
 
   /* ui-integration: dark mode keeps the Area identities but remaps them for dark surfaces instead of inverting light values. */
