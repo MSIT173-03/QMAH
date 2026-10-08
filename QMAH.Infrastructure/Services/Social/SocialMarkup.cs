@@ -12,6 +12,7 @@ namespace QMAH.Infrastructure.Services.Social;
 ///   [b] [i] [u] [s]　[size=small|large|xlarge]　[color=red|brown|green|blue|gold|gray]
 ///   [h]小標題[/h]　[quote]引用[/quote]　[list][*]項目[/list]　[center]置中[/center]
 ///   [spoiler]劇透[/spoiler]　[url=https://…]連結文字[/url]（只允許 http／https）　[hr]分隔線
+///   [img=圖片識別碼]（留言附圖：只接受本站上傳圖片的 GUID，不接受外部網址）
 /// 輸出的 HTML 一律把使用者文字做 HTML 編碼，標籤只會由白名單產生，不可能夾帶 script 或事件屬性。
 /// </summary>
 public static class SocialMarkup
@@ -23,7 +24,7 @@ public static class SocialMarkup
     private const int MaxNodes = 4000;
 
     private static readonly Regex Tag = new(
-        @"\[(/?)(b|i|u|s|h|quote|list|size|color|url|center|spoiler|hr|\*)(?:=([^\]\s]{1,300}))?\]",
+        @"\[(/?)(b|i|u|s|h|quote|list|size|color|url|center|spoiler|hr|img|\*)(?:=([^\]\s]{1,300}))?\]",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private sealed class Node
@@ -68,6 +69,7 @@ public static class SocialMarkup
         "size" => arg is not null && Sizes.Contains(arg.ToLowerInvariant()),
         "color" => arg is not null && Colors.Contains(arg.ToLowerInvariant()),
         "url" => IsSafeUrl(arg),
+        "img" => arg is not null && Guid.TryParseExact(arg, "D", out _),
         _ => string.IsNullOrEmpty(arg),
     };
 
@@ -166,6 +168,13 @@ public static class SocialMarkup
                 continue;
             }
 
+            if (name == "img")
+            {
+                if (slash || !ValidArg("img", arg)) PushText(match.Value);
+                else { Current().Add(new Node { Name = "img", Arg = arg!.ToLowerInvariant() }); nodeCount++; }
+                continue;
+            }
+
             if (slash)
             {
                 var at = stack.FindLastIndex(frame => frame.Name == name);
@@ -199,6 +208,7 @@ public static class SocialMarkup
         {
             if (node.IsText) sb.Append(node.Text);
             else if (node.Name == "hr") sb.Append(' ');
+            else if (node.Name == "img") sb.Append("（圖片）");
             else if (node.Items is not null)
                 sb.Append(string.Join(' ', node.Items.Select(item => Plain(item).Trim()).Where(item => item.Length > 0)));
             else sb.Append(Plain(node.Children));
@@ -226,6 +236,7 @@ public static class SocialMarkup
                 case "center": sb.Append("<div style=\"text-align:center\">"); Render(node.Children, sb); sb.Append("</div>"); break;
                 case "spoiler": sb.Append("<span class=\"qmah-spoiler\">"); Render(node.Children, sb); sb.Append("</span>"); break;
                 case "hr": sb.Append("<hr>"); break;
+                case "img": sb.Append("<em>（附圖）</em>"); break;
                 case "size": sb.Append("<span class=\"qmah-size-").Append(node.Arg).Append("\">"); Render(node.Children, sb); sb.Append("</span>"); break;
                 case "color": sb.Append("<span class=\"qmah-color-").Append(node.Arg).Append("\">"); Render(node.Children, sb); sb.Append("</span>"); break;
                 case "url":
