@@ -62,7 +62,7 @@
   top: 0;
   z-index: 50;
   border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  background: color-mix(in srgb, var(--color-surface, #f7f4ee) 92%, transparent);
+  background: color-mix(in srgb, var(--color-surface, #fbfaf7) 92%, transparent);
   backdrop-filter: blur(14px);
 }
 
@@ -300,7 +300,7 @@
   padding: 10px var(--qmah-space-3);
   border-radius: var(--qmah-radius-control);
   background: var(--color-ink, #27363b);
-  color: var(--color-surface, #f7f4ee);
+  color: var(--color-surface, #fbfaf7);
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
@@ -415,7 +415,7 @@ textarea:focus-visible {
     border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent);
     border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
     border-radius: var(--qmah-radius-panel);
-    background: var(--color-surface, #f7f4ee);
+    background: var(--color-surface, #fbfaf7);
     box-shadow: 18px 0 42px rgba(20, 29, 33, 0.18);
     transition: transform 180ms ease, visibility 180ms ease;
   }
@@ -634,7 +634,7 @@ textarea:focus-visible {
 
 /* 社群：暖紙（淺色）／深灰（深色）底，疊同色系極淡的陶土紅 Temple 紋；不再沿用遊戲的藍綠底。 */
 .app-shell[data-area='social'] .app-main {
-  background-color: #faf6f0;
+  background-color: #fbfaf7;
   background-image: none;
 }
 .app-shell[data-area='social'] .app-main::before {
@@ -669,7 +669,7 @@ textarea:focus-visible {
 }
 
 /* 會員中心：暖紙（淺）／深灰（深）底，疊極淡的古銅色 Temple 紋；不使用青綠底。 */
-.app-shell[data-area='user'] .app-main { background-color: #f7f3ec; background-image: none; }
+.app-shell[data-area='user'] .app-main { background-color: #fbfaf7; background-image: none; }
 .app-shell[data-area='user'] .app-main::before {
   display: block;
   background: url('/patterns/temple-blue.svg') center top / 256px 256px repeat;
@@ -680,10 +680,10 @@ textarea:focus-visible {
 :host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main { background-color: #17181a; }
 :host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main::before { background: url('/patterns/temple-blue-dark.svg') center top / 256px 256px repeat; }
 
-/* 社群與會員中心：底紋只鋪左右邊緣，向中央漸層淡出。 */
+/* 社群與會員中心：底紋只鋪左右邊緣，以緩和的多段漸層向中央淡出，到最中間才幾乎看不見。 */
 .app-shell:is([data-area='social'], [data-area='user']) .app-main::before {
-  -webkit-mask: linear-gradient(90deg, #000 0, transparent 24%, transparent 76%, #000 100%);
-  mask: linear-gradient(90deg, #000 0, transparent 24%, transparent 76%, #000 100%);
+  -webkit-mask: linear-gradient(90deg, #000 0, rgb(0 0 0 / 82%) 10%, rgb(0 0 0 / 56%) 20%, rgb(0 0 0 / 32%) 30%, rgb(0 0 0 / 12%) 40%, rgb(0 0 0 / 3%) 47%, rgb(0 0 0 / 3%) 53%, rgb(0 0 0 / 12%) 60%, rgb(0 0 0 / 32%) 70%, rgb(0 0 0 / 56%) 80%, rgb(0 0 0 / 82%) 90%, #000 100%);
+  mask: linear-gradient(90deg, #000 0, rgb(0 0 0 / 82%) 10%, rgb(0 0 0 / 56%) 20%, rgb(0 0 0 / 32%) 30%, rgb(0 0 0 / 12%) 40%, rgb(0 0 0 / 3%) 47%, rgb(0 0 0 / 3%) 53%, rgb(0 0 0 / 12%) 60%, rgb(0 0 0 / 32%) 70%, rgb(0 0 0 / 56%) 80%, rgb(0 0 0 / 82%) 90%, #000 100%);
 }
 
 /* 回首頁的房子按鈕：與導覽之間以細線分隔。 */
@@ -752,5 +752,5 @@ textarea:focus-visible {
 /* 通知與狀態色：未讀數量＝紅（各大 SNS／系統通用）；成功綠、警告琥珀、錯誤紅、資訊藍。頭貼沒有圖片時用中性灰。 */
 .qmah-bell-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #c5493f; color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px var(--qmah-surface, #fff); }
 :host-context([data-theme='qmahdark']) .qmah-bell-badge { background: #e2675d; }
-.app-account__avatar { background: var(--qmah-surface-muted, #e6e0d3); color: var(--qmah-ink); }
-.app-account__avatar--image { background: var(--qmah-surface-muted, #e6e0d3); }
+.app-account__avatar { background: var(--qmah-surface-muted, #e9e6e0); color: var(--qmah-ink); }
+.app-account__avatar--image { background: var(--qmah-surface-muted, #e9e6e0); }

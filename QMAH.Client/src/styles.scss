@@ -6,12 +6,12 @@
   --qmah-font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --qmah-font-serif: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif;
   /* ui-integration: committed museum palette；Pantone 僅作色彩語彙參考，HEX／OKLCH 是瀏覽器工作值。 */
-  --qmah-paper: #f8f6ef;
+  --qmah-paper: #fbfaf7;
   --qmah-night: #18302f;
-  --qmah-page-surface: #f9f7f2;
+  --qmah-page-surface: #fbfaf7;
   --qmah-surface: var(--qmah-paper);
-  --qmah-surface-soft: #f0f4ef;
-  --qmah-surface-muted: #e2ece9;
+  --qmah-surface-soft: #f3f1ec;
+  --qmah-surface-muted: #e9e6e0;
   --qmah-ink: #1b3533;
   --qmah-muted: #556260;
   --qmah-jade: #26796e;
@@ -207,7 +207,7 @@ body {
   --color-ink: var(--qmah-ink);
   --color-primary: var(--qmah-jade);
   --color-error: var(--qmah-danger);
-  --qmah-paper: #efeae0;
+  --qmah-paper: #f3f1ec;
   --qmah-night: #101214;
   --qmah-page-surface: #15181a;
   --qmah-surface: #1c2022;
