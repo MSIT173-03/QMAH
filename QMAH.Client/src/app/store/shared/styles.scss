@@ -46,8 +46,8 @@
 
   /* 頁面重置樣式（由頁面根元件承載，而不是 body） */
   background-color: var(--color-bg);
-  /* 紋樣只鋪左右邊緣：中央用底色蓋住並向兩側漸層淡出 */
-  background-image: linear-gradient(90deg, transparent, var(--color-bg) 16%, var(--color-bg) 84%, transparent), var(--color-bg-image);
+  /* 紋樣只鋪左右邊緣：中央用底色蓋住，邊界為硬邊、不做漸層 */
+  background-image: linear-gradient(90deg, transparent calc(50% - 640px), var(--color-bg) calc(50% - 640px) calc(50% + 640px), transparent calc(50% + 640px)), var(--color-bg-image);
   /* 底紋原圖是 60px，放大三倍 */
   background-size: auto, 180px 180px;
   color: var(--color-ink);
