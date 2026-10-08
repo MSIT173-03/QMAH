@@ -119,7 +119,7 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
 .tool-progress li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 40px; padding: 4px 8px; border: 2px solid #d4c7a6; border-radius: 10px; color: var(--game-card-muted); background: #efe7d3; font-size: 14px; }
 .tool-progress b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: #fff8e9; background: #8a8470; font-size: 14px; font-variant-numeric: tabular-nums; }
 .tool-progress__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
-.tool-progress small { font-size: 13px; font-weight: 800; }
+.tool-progress small { font-size: 13px; font-weight: 800; white-space: nowrap; writing-mode: horizontal-tb; }
 .tool-progress li.is-current { border-color: #2c3a30; color: var(--game-card-ink); background: #fff8e9; }
 .tool-progress li.is-current b { background: #2f5aa8; }
 .tool-progress li.is-done { color: #285c45; border-color: #9fc2a8; background: #e5efdf; }

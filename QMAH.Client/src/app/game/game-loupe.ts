@@ -55,7 +55,7 @@ let controlsSequence = 0;
         <datalist [id]="id + '-ticks'"><option value="2"></option><option value="4"></option><option value="6"></option><option value="8"></option></datalist>
         <output class="loupe-value">{{ zoom() }}×</output>
       </div>
-      <small class="loupe-note">{{ on() ? '游標旁會浮出放大畫面，滾輪或拉條可調倍率（最高 8×）' : '放大鏡已關閉' }}</small>
+      <small class="loupe-note">{{ on() ? '滾輪或拉條調倍率，最高 8×' : '放大鏡已關閉' }}</small>
     </section>
     <section class="loupe-group" [class.is-off]="!on()">
       <span class="loupe-label" [id]="id + '-size'">鏡面大小</span>
