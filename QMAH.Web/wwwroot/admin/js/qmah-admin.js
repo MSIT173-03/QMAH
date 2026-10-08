@@ -1082,3 +1082,36 @@
         delete trigger.dataset.qmahConfirmBypass;
     }, true);
 })();
+
+// 側欄分組：每個有子功能的分組都有獨立的展開／收合鈕；目前所在分組預設展開，其餘狀態記在 localStorage。
+(function initSidebarGroups() {
+    const key = "qmah-admin-nav-open";
+    let saved = {};
+    try { saved = JSON.parse(window.localStorage.getItem(key) || "{}"); } catch { saved = {}; }
+    const save = () => { try { window.localStorage.setItem(key, JSON.stringify(saved)); } catch { /* 無法儲存時只影響記憶狀態 */ } };
+
+    document.querySelectorAll(".qmah-nav-group").forEach((group) => {
+        const link = group.querySelector(":scope > .nav-link");
+        const subnav = group.querySelector(":scope > .qmah-sidebar-subnav");
+        if (!link || !subnav) return;
+        const label = link.querySelector(".nav-link-title")?.textContent?.trim() || "分組";
+        const id = label;
+        group.classList.add("has-subnav");
+        const open = group.classList.contains("is-active") || saved[id] === true;
+        group.classList.toggle("is-open", open);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "qmah-nav-toggle";
+        button.setAttribute("aria-expanded", String(open));
+        button.setAttribute("aria-label", `展開或收合${label}子功能`);
+        button.addEventListener("click", () => {
+            const next = !group.classList.contains("is-open");
+            group.classList.toggle("is-open", next);
+            button.setAttribute("aria-expanded", String(next));
+            saved[id] = next;
+            save();
+        });
+        link.insertAdjacentElement("afterend", button);
+    });
+})();
