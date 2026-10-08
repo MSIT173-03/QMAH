@@ -395,6 +395,20 @@ public sealed class EnsureArtifactDiscussionRequest
     public string InitialComment { get; set; } = "";
 }
 
+/// <summary>文物討論串頂端的文物卡。玩家沒有解鎖該文物時，只回傳 Unlocked=false，其餘欄位全是 null（前台顯示問號）。</summary>
+public sealed record SocialPostArtifactDto(
+    Guid ArtifactId,
+    bool Unlocked,
+    bool HasUniversalKey,
+    string? Name,
+    string? ImageUrl,
+    string? Description,
+    string? CategoryName,
+    string? EraName,
+    string? EraText,
+    string? Creator,
+    string? SizeText);
+
 public sealed record EnsureArtifactDiscussionResultDto(
     Guid PostId,
     bool Created,
