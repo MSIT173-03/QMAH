@@ -12,7 +12,7 @@
 
 .qmah-social-page .social-page-title {
   margin: 0;
-  color: var(--qmah-primary);
+  color: var(--qmah-social-action);
   font-family: var(--qmah-font-serif);
   font-size: var(--qmah-type-page-title-size);
   font-weight: 700;
@@ -243,8 +243,8 @@
 }
 
 .qmah-social-page .social-tag--notice {
-  background: var(--qmah-accent);
-  color: var(--qmah-accent-content);
+  background: var(--qmah-social-soft);
+  color: var(--qmah-social-action);
 }
 
 .qmah-social-page .social-meta {
@@ -488,3 +488,8 @@
 .qmah-social-page .social-composer__send:hover:not(:disabled) { background: color-mix(in srgb, var(--qmah-social-action) 14%, transparent); }
 .qmah-social-page .social-composer__send:disabled { color: var(--qmah-muted); opacity: .5; cursor: not-allowed; }
 .qmah-social-page .social-composer__send svg { width: 1.25rem; height: 1.25rem; stroke-width: 2; }
+
+/* 社群頁的選取、焦點與連結一律使用棕紅主色，與按鈕一致。 */
+.qmah-social-page ::selection { background: color-mix(in srgb, var(--qmah-social-action) 24%, transparent); }
+.qmah-social-page :is(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+.qmah-social-page :is(input, textarea, select) { accent-color: var(--qmah-social-action); caret-color: var(--qmah-social-action); }
