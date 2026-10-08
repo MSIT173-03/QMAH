@@ -9,3 +9,8 @@
   color: var(--color-ink);
 }
 
+
+/* 尺寸說明：標籤不換行、固定欄寬對齊；面板改為淡底色塊，不再是一圈細框。 */
+.spec-row { align-items: baseline; gap: 14px; }
+.spec-label { min-width: 6em; white-space: nowrap; }
+.spec-value--dims { font-size: 14px; line-height: 1.6; }

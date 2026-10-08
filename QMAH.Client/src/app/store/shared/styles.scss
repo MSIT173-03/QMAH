@@ -207,7 +207,8 @@
   .spec-row { display: flex; gap: var(--qmah-space-2); min-width: 0; }
   .spec-row--sm { font-size: var(--qmah-type-label-size); }
   .spec-label {
-    width: 62px;
+    min-width: 5.5em;
+    white-space: nowrap;
     flex: 0 0 auto;
     color: var(--color-muted);
   }
