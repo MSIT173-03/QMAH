@@ -82,14 +82,20 @@
 }
 
 /* 商品資訊欄：一張乾淨的卡片——標題、評價、價格（赭紅大字）、規格、尺寸、按鈕依序排列，區塊之間只用留白與細線分隔。 */
-.product-info { padding: 32px 32px 28px; border: 0; border-radius: 20px; background: var(--color-surface); box-shadow: var(--store-shadow-2); gap: 16px; }
+.product-info { padding: 32px 32px 28px; border: 0; border-radius: var(--qmah-radius-card); background: var(--color-surface); box-shadow: var(--store-shadow-2); gap: 16px; }
 .product-title { font-size: 28px; line-height: 1.4; }
 .product-rating-row { font-size: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--color-line-soft); }
 .product-price-row { padding: 2px 0 6px; border: 0; background: none; gap: 12px; }
 .product-price { font-size: 38px; font-weight: 800; color: var(--color-accent); letter-spacing: -0.01em; }
 .spec-list { padding: 14px 0; border-top: 1px solid var(--color-line-soft); border-bottom: 1px solid var(--color-line-soft); font-size: 14px; line-height: 1.7; }
 .spec-list .spec-value { color: var(--color-body); word-break: break-all; }
-.btn-outline--flex, .btn-solid--flex { min-height: 54px; font-size: 16px; font-weight: 800; border-radius: 14px; }
+.btn-outline--flex, .btn-solid--flex { min-height: 54px; font-size: 16px; font-weight: 800; border-radius: var(--qmah-radius-card); }
 .btn-outline--flex { background: var(--color-surface); box-shadow: var(--store-shadow-1); }
 .btn-solid--flex { box-shadow: 0 6px 16px color-mix(in srgb, var(--color-accent) 30%, transparent); }
 @media (max-width: 800px) { .product-info { padding: 22px 20px; } .product-title { font-size: 24px; } .product-price { font-size: 32px; } }
+
+/* 尺寸收斂：標題、價格、按鈕不要過大；內距與其他頁面一致。 */
+.product-info { padding: 24px; gap: 14px; }
+.product-title { font-size: 24px; }
+.product-price { font-size: 30px; }
+.btn-outline--flex, .btn-solid--flex { min-height: 46px; font-size: 15px; border-radius: var(--qmah-radius-control); }

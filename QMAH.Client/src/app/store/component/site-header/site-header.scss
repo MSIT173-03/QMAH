@@ -28,3 +28,7 @@
 
 .site-header { background: var(--color-surface); border-bottom-color: var(--color-line-soft); box-shadow: 0 6px 16px rgb(60 48 30 / 5%); }
 .site-header-row { padding-block: 14px; }
+
+/* 頁首不要純白：與卡片同一個暖色調，下緣一條細線＋微弱陰影；內容與下方頁面容器左右對齊。 */
+.site-header { background: color-mix(in srgb, var(--color-surface) 70%, var(--color-bg)); }
+.site-header-row { padding-block: 12px; }

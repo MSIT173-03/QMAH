@@ -34,4 +34,4 @@
 }
 
 /* 尺寸面板：淡底色塊、無框，與商品資訊卡的層次一致。 */
-.panel--size { border: 0; background: color-mix(in srgb, var(--color-ink) 4%, var(--color-surface)); box-shadow: none; padding: 14px 18px; border-radius: 14px; }
+.panel--size { border: 0; background: color-mix(in srgb, var(--color-ink) 4%, var(--color-surface)); box-shadow: none; padding: 14px 18px; border-radius: var(--qmah-radius-card); }
