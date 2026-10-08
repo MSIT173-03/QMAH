@@ -233,6 +233,11 @@ export class SocialApiService {
     postType?: string;
     artifactId?: string;
     userId?: string;
+    /** 發布時間範圍：起（含）、迄（不含），ISO 時間 */
+    createdAfter?: string;
+    createdBefore?: string;
+    /** newest（預設，新到舊）或 oldest（舊到新） */
+    sort?: 'newest' | 'oldest';
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<SocialPostListItem>> {

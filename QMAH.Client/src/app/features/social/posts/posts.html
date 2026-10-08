@@ -143,11 +143,33 @@
     @if (filterKeyword.trim()) {
       <button type="button" class="social-chip" (click)="filterKeyword = ''; loadPosts()">「{{ filterKeyword.trim() }}」<svg lucideX aria-hidden="true" focusable="false"></svg></button>
     }
-    @if (filterBoardCode || filterKeyword.trim()) {
+    @if (hasDateFilter) {
+      <button type="button" class="social-chip" (click)="applyDatePreset(null)">{{ dateFilterLabel }}<svg lucideX aria-hidden="true" focusable="false"></svg></button>
+    }
+    @if (filterBoardCode || filterKeyword.trim() || hasDateFilter) {
       <button type="button" class="social-reset" title="清除所有篩選條件" aria-label="清除所有篩選條件" (click)="resetFilters()">
         <svg lucideFilterX aria-hidden="true" focusable="false"></svg>
       </button>
     }
+    <div class="social-datefilter">
+      <button type="button" class="social-tool" [class.is-on]="hasDateFilter || showDateFilter" [attr.aria-expanded]="showDateFilter" title="依發布時間篩選" aria-label="依發布時間篩選" (click)="showDateFilter = !showDateFilter">
+        <svg lucideCalendarRange aria-hidden="true" focusable="false"></svg>
+      </button>
+      @if (showDateFilter) {
+        <div class="social-datefilter__panel" role="dialog" aria-label="發布時間">
+          <div class="social-datefilter__presets">
+            @for (preset of datePresets; track preset.label) {
+              <button type="button" class="social-datefilter__preset" (click)="applyDatePreset(preset.days)">{{ preset.label }}</button>
+            }
+          </div>
+          <label class="social-datefilter__field"><span>從</span><input type="date" [(ngModel)]="filterFrom" [max]="filterTo || null" (change)="loadPosts()" /></label>
+          <label class="social-datefilter__field"><span>到</span><input type="date" [(ngModel)]="filterTo" [min]="filterFrom || null" (change)="loadPosts()" /></label>
+        </div>
+      }
+    </div>
+    <button type="button" class="social-tool" (click)="toggleSort()" [title]="sortOrder === 'newest' ? '目前：新到舊（點擊改為舊到新）' : '目前：舊到新（點擊改為新到舊）'" [attr.aria-label]="sortOrder === 'newest' ? '排序：新到舊，點擊切換為舊到新' : '排序：舊到新，點擊切換為新到舊'">
+      @if (sortOrder === 'newest') { <svg lucideArrowDownWideNarrow aria-hidden="true" focusable="false"></svg> } @else { <svg lucideArrowUpNarrowWide aria-hidden="true" focusable="false"></svg> }
+    </button>
     <div class="social-cols" role="group" aria-label="每列貼文數">
       <button type="button" class="social-cols__btn" [class.is-active]="wallCols === 1" [attr.aria-pressed]="wallCols === 1" title="一欄" aria-label="每列一則貼文" (click)="setWallCols(1)"><svg lucideSquare aria-hidden="true" focusable="false"></svg></button>
       <button type="button" class="social-cols__btn" [class.is-active]="wallCols === 2" [attr.aria-pressed]="wallCols === 2" title="兩欄" aria-label="每列兩則貼文" (click)="setWallCols(2)"><svg lucideColumns2 aria-hidden="true" focusable="false"></svg></button>

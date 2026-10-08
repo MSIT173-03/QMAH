@@ -781,3 +781,26 @@
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-upcoming__title { color: #f1eee7; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-upcoming__meta { color: #b9b5ab; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-upcoming__date { color: #ff8a80; }
+
+/* 時間篩選與排序：與欄數切換同一排，只用圖示；日期面板向下展開 */
+.qmah-social-page .social-cols { margin-left: 0; }
+.qmah-social-page .social-search__meta .social-datefilter { margin-left: auto; position: relative; }
+.qmah-social-page .social-tool {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--qmah-border); border-radius: 10px;
+  background: var(--qmah-surface-elevated, var(--qmah-surface)); color: var(--qmah-muted); cursor: pointer; transition: background 140ms, color 140ms, border-color 140ms;
+}
+.qmah-social-page .social-tool svg { width: 17px; height: 17px; }
+.qmah-social-page .social-tool:hover { color: var(--qmah-ink); border-color: var(--qmah-ink-faint, var(--qmah-muted)); }
+.qmah-social-page .social-tool.is-on { color: var(--qmah-social-action); border-color: var(--qmah-social-action); background: color-mix(in srgb, var(--qmah-social-action) 10%, transparent); }
+.qmah-social-page .social-tool:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 1px; }
+.qmah-social-page .social-datefilter__panel {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; gap: 10px; width: 260px; padding: 12px;
+  border: 1px solid var(--qmah-border); border-radius: 12px; background: var(--qmah-surface-elevated, var(--qmah-surface)); box-shadow: 0 10px 28px rgb(0 0 0 / 16%);
+}
+.qmah-social-page .social-datefilter__presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.qmah-social-page .social-datefilter__preset { padding: 4px 10px; border: 1px solid var(--qmah-border); border-radius: 999px; background: transparent; color: var(--qmah-ink); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.qmah-social-page .social-datefilter__preset:hover { border-color: var(--qmah-social-action); color: var(--qmah-social-action); }
+.qmah-social-page .social-datefilter__field { display: flex; align-items: center; gap: 8px; color: var(--qmah-muted); font-size: 0.8125rem; }
+.qmah-social-page .social-datefilter__field input { flex: 1; min-width: 0; height: 34px; padding: 0 8px; border: 1px solid var(--qmah-border); border-radius: 8px; background: transparent; color: var(--qmah-ink); font: inherit; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-tool, :host-context([data-theme='qmahdark']) .qmah-social-page .social-datefilter__panel { background: #25282a; border-color: #43474a; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-tool { color: #b9b5ab; }

@@ -30,6 +30,9 @@ public sealed class SocialController(
         string? postType,
         Guid? artifactId,
         Guid? userId,
+        DateTime? createdAfter,
+        DateTime? createdBefore,
+        string? sort,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -60,9 +63,16 @@ public sealed class SocialController(
         if (artifactId.HasValue)
             query = query.Where(post => post.ArtifactId == artifactId.Value);
 
-        var projected = query
-            .OrderByDescending(post => post.CreatedAt)
-            .ThenBy(post => post.Id)
+        // 時間段：createdAfter（含）～createdBefore（不含）；排序預設新到舊，sort=oldest 為舊到新
+        if (createdAfter.HasValue)
+            query = query.Where(post => post.CreatedAt >= createdAfter.Value.ToUniversalTime());
+        if (createdBefore.HasValue)
+            query = query.Where(post => post.CreatedAt < createdBefore.Value.ToUniversalTime());
+        var ordered = string.Equals(sort, "oldest", StringComparison.OrdinalIgnoreCase)
+            ? query.OrderBy(post => post.CreatedAt).ThenBy(post => post.Id)
+            : query.OrderByDescending(post => post.CreatedAt).ThenBy(post => post.Id);
+
+        var projected = ordered
             .Select(post => new SocialPostListItemDto(
                 post.Id,
                 post.BoardCode,

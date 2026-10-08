@@ -25,7 +25,10 @@ import {
   LucideMessageCircle,
   LucideMegaphone,
   LucidePlus,
+  LucideArrowDownWideNarrow,
+  LucideArrowUpNarrowWide,
   LucideCalendarDays,
+  LucideCalendarRange,
   LucideChevronRight,
   LucideColumns2,
   LucideColumns3,
@@ -64,7 +67,10 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
     LucideMessageCircle,
     LucideMegaphone,
     LucidePlus,
+    LucideArrowDownWideNarrow,
+    LucideArrowUpNarrowWide,
     LucideCalendarDays,
+    LucideCalendarRange,
     LucideChevronRight,
     LucideColumns2,
     LucideColumns3,
@@ -129,6 +135,50 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
   filterBoardCode = '';
   filterKeyword = '';
+  /** 時間篩選（yyyy-MM-dd，空字串為不限）與排序（新到舊／舊到新） */
+  filterFrom = '';
+  filterTo = '';
+  sortOrder: 'newest' | 'oldest' = 'newest';
+  showDateFilter = false;
+  readonly datePresets: { label: string; days: number | null }[] = [
+    { label: '不限', days: null },
+    { label: '今天', days: 0 },
+    { label: '近 7 天', days: 6 },
+    { label: '近 30 天', days: 29 },
+  ];
+
+  get hasDateFilter(): boolean {
+    return !!(this.filterFrom || this.filterTo);
+  }
+
+  get dateFilterLabel(): string {
+    if (!this.hasDateFilter) return '時間';
+    return (this.filterFrom || '…') + ' ～ ' + (this.filterTo || '…');
+  }
+
+  private static ymd(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+  }
+
+  applyDatePreset(days: number | null): void {
+    if (days === null) {
+      this.filterFrom = '';
+      this.filterTo = '';
+    } else {
+      const today = new Date();
+      const from = new Date();
+      from.setDate(today.getDate() - days);
+      this.filterFrom = PostsComponent.ymd(from);
+      this.filterTo = PostsComponent.ymd(today);
+    }
+    this.loadPosts();
+  }
+
+  toggleSort(): void {
+    this.sortOrder = this.sortOrder === 'newest' ? 'oldest' : 'newest';
+    this.loadPosts();
+  }
 
   // 貼文牆頂端的公告輪播：只取最新 5 則公告貼文，每 5 秒自動切到下一則。
   announcements: SocialPostListItem[] = [];
@@ -326,6 +376,8 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   resetFilters(): void {
+    this.filterFrom = '';
+    this.filterTo = '';
     this.filterBoardCode = '';
     this.filterKeyword = '';
     this.loadPosts();
@@ -429,7 +481,11 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.socialApi.getPosts({
       pageSize: 20,
       boardCode: this.filterBoardCode || undefined,
-      q: this.filterKeyword || undefined
+      q: this.filterKeyword || undefined,
+      // 日期是本地時間：起＝當天 00:00，迄＝隔天 00:00（不含）
+      createdAfter: this.filterFrom ? new Date(this.filterFrom + 'T00:00:00').toISOString() : undefined,
+      createdBefore: this.filterTo ? new Date(new Date(this.filterTo + 'T00:00:00').getTime() + 86_400_000).toISOString() : undefined,
+      sort: this.sortOrder
     }).subscribe({
       next: (page) => {
         this.posts = page.items;
