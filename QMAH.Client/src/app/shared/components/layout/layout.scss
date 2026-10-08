@@ -578,3 +578,12 @@ textarea:focus-visible {
 }
 
 /* 首頁底紋加深一點，白天與深色模式都看得見。 */
+
+/* 會員中心底紋改用 Overlapping Hexagons，只出現在內容欄兩側的留白處並向內容淡出，不干擾閱讀。 */
+.app-shell[data-area='user'] .app-main::before {
+  background: color-mix(in srgb, var(--qmah-user-accent, var(--qmah-jade-deep)) 20%, transparent);
+  -webkit-mask: linear-gradient(90deg, #000 0, transparent calc(50% - 600px), transparent calc(50% + 600px), #000 100%), url('/patterns/overlapping-hexagons.svg') center top / 100px 80px repeat;
+  -webkit-mask-composite: source-in;
+  mask: linear-gradient(90deg, #000 0, transparent calc(50% - 600px), transparent calc(50% + 600px), #000 100%), url('/patterns/overlapping-hexagons.svg') center top / 100px 80px repeat;
+  mask-composite: intersect;
+}

@@ -951,3 +951,10 @@
 .card-arrow app-qmah-icon { width: 20px; height: 20px; }
 .card-icon app-qmah-icon ::ng-deep svg,
 .card-arrow app-qmah-icon ::ng-deep svg { display: block; width: 100%; height: 100%; }
+
+/* 排版：卡片欄數依數量自動填滿，兩張、三張都不會留下空洞；各區塊間距一致。 */
+.dashboard-grid,
+.dashboard-grid.three-columns {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+}
+.dashboard-section + .dashboard-section { margin-top: clamp(28px, 4vw, 44px); }
