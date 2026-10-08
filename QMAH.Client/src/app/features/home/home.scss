@@ -441,7 +441,7 @@ a:focus-visible {
   z-index: -1;
   content: '';
   pointer-events: none;
-  background: color-mix(in srgb, var(--home-teal) 9%, transparent);
+  background: color-mix(in srgb, var(--home-teal) 5%, transparent);
   -webkit-mask: url('/patterns/endless-clouds.svg') center top / 112px 56px repeat;
   mask: url('/patterns/endless-clouds.svg') center top / 112px 56px repeat;
   -webkit-mask-composite: source-in;
@@ -513,3 +513,160 @@ a:focus-visible {
 
 @media (max-width: 640px) { .home-route-list { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .home-route, .home-route__icon { transition: none; } .home-route:hover { transform: none; } }
+
+/* ============================================================
+   首頁「驚豔版」：全幅夜景英雄區（與登入頁同一組青黛暗影＋金色點綴），
+   方向不變：左文案、右夜景，只是把照片鋪滿並讓文案浮在影調上。
+   ============================================================ */
+.home-hero {
+  position: relative;
+  display: block;
+  min-height: clamp(520px, 78dvh, 760px);
+  border: 0;
+  border-radius: 28px;
+  background: var(--qmah-night);
+  box-shadow: 0 30px 80px color-mix(in srgb, var(--qmah-night) 38%, transparent), 0 2px 0 color-mix(in srgb, var(--home-gold) 40%, transparent) inset;
+  isolation: isolate;
+}
+.home-hero__image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  min-height: 0;
+  max-height: none;
+  order: 0;
+}
+.home-hero__image img {
+  filter: saturate(1.02) contrast(1.06) brightness(0.92);
+  transform-origin: 70% 40%;
+  animation: home-kenburns 26s ease-in-out infinite alternate;
+}
+/* 與登入頁相同的影調：左側深青、頂底漸暗，讓文字清楚又保留夜景亮部。 */
+.home-hero__image::after {
+  background:
+    linear-gradient(90deg, rgb(8 29 28 / 88%) 0%, rgb(12 42 40 / 62%) 34%, rgb(12 42 40 / 8%) 68%, rgb(12 42 40 / 22%) 100%),
+    linear-gradient(180deg, rgb(8 29 28 / 30%) 0%, transparent 26%, transparent 56%, rgb(8 29 28 / 72%) 100%);
+}
+/* 雲紋疊在左側影調上，向右淡出。 */
+.home-hero::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: '';
+  pointer-events: none;
+  background: color-mix(in srgb, var(--home-gold) 16%, transparent);
+  -webkit-mask: linear-gradient(90deg, #000 0%, transparent 62%), url('/patterns/endless-clouds.svg') center top / 112px 56px repeat;
+  -webkit-mask-composite: source-in;
+  mask: linear-gradient(90deg, #000 0%, transparent 62%), url('/patterns/endless-clouds.svg') center top / 112px 56px repeat;
+  mask-composite: intersect;
+}
+.home-hero__copy {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  min-height: inherit;
+  justify-content: center;
+  padding: clamp(32px, 6vw, 88px);
+  color: var(--qmah-paper);
+}
+.home-hero__copy::before { display: none; }
+.home-hero h1 {
+  max-width: 9.5em;
+  color: #fffaf0;
+  font-size: clamp(38px, 5.4vw, 72px);
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 24px rgb(0 0 0 / 45%);
+}
+.home-hero h1::after {
+  display: block;
+  width: 72px;
+  height: 3px;
+  margin-top: 22px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--home-gold), color-mix(in srgb, var(--home-gold) 20%, transparent));
+  content: '';
+}
+.home-hero__lead { color: rgb(255 250 240 / 86%); text-shadow: 0 1px 12px rgb(0 0 0 / 40%); }
+.home-button--primary {
+  border-color: var(--home-gold);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--home-gold) 92%, #fff) 0%, var(--home-gold) 100%);
+  color: #1d1a10;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 28%);
+}
+.home-button--primary:hover { background: color-mix(in srgb, var(--home-gold) 82%, #fff); }
+.home-button--secondary {
+  border-color: rgb(255 250 240 / 52%);
+  background: rgb(255 250 240 / 10%);
+  color: #fffaf0;
+  -webkit-backdrop-filter: blur(8px) saturate(1.08);
+  backdrop-filter: blur(8px) saturate(1.08);
+}
+.home-button--secondary:hover { border-color: #fffaf0; background: rgb(255 250 240 / 20%); }
+.home-hero__member-note {
+  align-self: flex-start;
+  max-width: 34ch;
+  padding: 10px 16px;
+  border: 1px solid rgb(255 250 240 / 22%);
+  border-radius: 14px;
+  background: rgb(8 29 28 / 42%);
+  color: rgb(255 250 240 / 88%);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.home-hero__image figcaption { z-index: 3; }
+.home-hero__image figcaption span { color: rgb(255 250 240 / 82%); text-shadow: 0 1px 8px rgb(0 0 0 / 50%); }
+
+/* 入場：文案逐項上浮，照片緩慢推近（一次性、可關閉）。 */
+@keyframes home-kenburns { from { transform: scale(1); } to { transform: scale(1.08); } }
+@keyframes home-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.home-hero__copy > * { animation: home-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.home-hero__copy > :nth-child(2) { animation-delay: 90ms; }
+.home-hero__copy > :nth-child(3) { animation-delay: 180ms; }
+.home-hero__copy > :nth-child(4) { animation-delay: 270ms; }
+
+/* 探索入口：金色細線與圖示光暈，卡片更立體。 */
+.home-route { position: relative; overflow: hidden; }
+.home-route::before {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--home-gold), transparent);
+  content: '';
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.home-route:hover::before { opacity: 1; }
+.home-route__icon { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--home-teal) 22%, transparent); }
+
+/* 館藏介紹區：夜色青黛底與金色連結，呼應英雄區。 */
+.home-museum-note {
+  border: 0;
+  background: linear-gradient(135deg, #0e2f2c 0%, #123a35 100%);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--qmah-night) 30%, transparent);
+}
+.home-museum-note h2 { color: #fffaf0; }
+.home-museum-note__copy p { color: rgb(255 250 240 / 78%); }
+.home-museum-note__links { display: flex; flex-wrap: wrap; gap: 12px 22px; margin-top: var(--qmah-space-5); }
+.home-museum-note__image img { transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1); }
+.home-museum-note:hover .home-museum-note__image img { transform: scale(1.05); }
+
+@media (max-width: 900px) {
+  .home-hero { min-height: clamp(560px, 82dvh, 720px); }
+  .home-hero__copy { padding: 36px 28px; }
+}
+@media (max-width: 640px) {
+  .home-hero { display: block; border-radius: 22px; min-height: 78dvh; }
+  .home-hero__image { max-height: none; }
+  .home-hero__image::after {
+    background:
+      linear-gradient(180deg, rgb(8 29 28 / 40%) 0%, rgb(8 29 28 / 30%) 30%, rgb(8 29 28 / 86%) 100%);
+  }
+  .home-hero__copy { order: 0; justify-content: flex-end; padding: 28px 20px 64px; }
+  .home-hero h1 { font-size: 36px; }
+  .home-museum-note { display: flex; flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__image img,
+  .home-hero__copy > * { animation: none; }
+  .home-museum-note__image img { transition: none; }
+}
