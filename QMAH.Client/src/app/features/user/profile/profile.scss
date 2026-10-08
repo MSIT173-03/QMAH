@@ -428,14 +428,9 @@
 
   border-radius: 18px;
 
-  background:
-    linear-gradient(
-      135deg,
-      var(--qmah-primary-hover),
-      var(--qmah-primary)
-    );
+  background: var(--qmah-primary);
 
-  color: var(--qmah-surface-elevated);
+  color: var(--qmah-primary-content, #fff);
 
   box-shadow: var(--qmah-shadow-card);
 }
@@ -1072,7 +1067,7 @@
 .avatar-hint {
   margin-top: -2px;
 
-  color: rgba(143, 220, 204, 0.72);
+  color: var(--qmah-text-muted);
   font-size: 14px;
   font-weight: 500;
 
@@ -1082,7 +1077,7 @@
 }
 
 .avatar-editor:hover .avatar-hint {
-  color: #8ce0cd;
+  color: var(--qmah-primary);
 }
 
 /* 個人資料頁：主色由青綠改為靛藍；邊框一律中性暖灰，不發綠。 */

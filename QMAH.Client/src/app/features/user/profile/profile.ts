@@ -50,6 +50,16 @@ interface UpdateProfileRequest {
   styleUrl: './profile.scss'
 })
 export class Profile implements OnInit {
+  /** 角色代碼轉成中文顯示名稱 */
+  roleLabel(role: string): string {
+    switch (role.toLowerCase()) {
+      case 'admin': return '管理員';
+      case 'member': case 'user': return '一般會員';
+      case 'moderator': return '版主';
+      default: return role;
+    }
+  }
+
 
   profile: MemberProfile | null = null;
 
