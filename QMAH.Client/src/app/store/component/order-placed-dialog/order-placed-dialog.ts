@@ -1,7 +1,9 @@
-import { Component, computed, input, output } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { formatMoney } from '../../shared/format';
 import { ModalDialog } from '../../shared/modal-dialog';
 import { EcpayCheckoutForm } from '../../api/api.models';
+import { submitEcpayForm } from '../../shared/ecpay-form';
 
 /**
  * 訂單送出成功的提示對話框：結帳頁確認下單後顯示，唯一的出路是回到商品列表，
@@ -34,30 +36,15 @@ export class OrderPlacedDialog {
   /** 應付總額顯示文字 */
   protected payableLabel = computed(() => formatMoney(this.payable()));
 
+  private readonly document = inject(DOCUMENT);
+
   /**
-   * 在新分頁開啟綠界測試付款頁：動態組一個真正的 <form> 並 submit，讓綠界收到的是
-   * 使用者瀏覽器自己送出的請求（POST，帶正確簽章），不是用 fetch／XHR 代打，
-   * 也因此才會看到綠界真正的付款頁面，不是被 CORS 擋下或拿到一段 HTML 字串。
-   * 直接在點擊事件裡同步組表單、同步 submit，避免非同步後才開新分頁被瀏覽器當成快顯視窗擋掉。
+   * 在新分頁開啟綠界測試付款頁。表單在點擊事件裡同步送出，避免新分頁被瀏覽器當成快顯視窗擋掉。
+   * 這份表單是下單時後端已記錄的付款嘗試；之後要重新付款請到我的訂單頁取得新表單。
    */
   protected onEcpayCheckout(): void {
     const checkoutForm = this.ecpayCheckout();
     if (!checkoutForm) return;
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = checkoutForm.actionUrl;
-    form.target = '_blank';
-    form.style.display = 'none';
-    for (const [name, value] of Object.entries(checkoutForm.fields)) {
-      const field = document.createElement('input');
-      field.type = 'hidden';
-      field.name = name;
-      field.value = value;
-      form.appendChild(field);
-    }
-    document.body.appendChild(form);
-    form.submit();
-    form.remove();
+    submitEcpayForm(this.document, checkoutForm, '_blank');
   }
 }

@@ -369,3 +369,27 @@ export interface OrderResult extends OrderAmounts {
   /** 信用卡付款才有值；其餘付款方式為 null */
   ecpayCheckout: EcpayCheckoutForm | null;
 }
+
+/** 我的訂單列表中的一筆訂單（GET /me/orders 的 OrderDto 中前端用得到的欄位） */
+export interface MyOrder {
+  id: string;
+  orderNo: string;
+  /** PENDING_PAYMENT、PAID、FULFILLING、SHIPPED、COMPLETED、CANCELLED */
+  status: string;
+  /** PENDING、PAID、FAILED、CANCELLED、REFUND_REQUIRED；舊訂單可能沒有付款紀錄 */
+  paymentStatus: string | null;
+  /** COD（貨到付款）或 CREDIT_CARD（綠界信用卡） */
+  paymentType: string | null;
+  totalAmount: number;
+  createdAt: string;
+  items: { productId: string; productName: string; quantity: number }[];
+}
+
+/** 我的訂單分頁結果（後端 ApiPage） */
+export interface MyOrderPage {
+  items: MyOrder[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}

@@ -561,7 +561,7 @@ public sealed record OrderDto(
     int PointsUsed,
     decimal ShippingFee,
     decimal TotalAmount,
-    // 依應付總額與 StoreCheckoutCatalog.PointEarnRate 即時換算，尚未在付款完成前實際入帳。
+    // 依應付總額與 StoreCheckoutCatalog.PointEarnRate 換算；信用卡付款完成（綠界 callback）時才實際入帳。
     int PointsEarned,
     string RecipientName,
     string RecipientPhone,
@@ -570,11 +570,14 @@ public sealed record OrderDto(
     string ShippingDistrict,
     string ShippingAddressLine,
     string? PaymentStatus,
+    // COD（貨到付款）或 CREDIT_CARD（綠界信用卡）；前端依此決定是否顯示「前往付款」。
+    string? PaymentType,
     DateTime CreatedAt,
     DateTime? PaidAt,
     DateTime? CancelledAt,
     IReadOnlyList<OrderLineDto> Items,
-    // 付款方式是信用卡（綠界）時才有值；瀏覽器可以直接拿這份內容組表單送出，導向綠界測試付款頁。
+    // 只有建立訂單的回應才有值（待付款的信用卡訂單）；讀取訂單時一律為 null，
+    // 重新付款改呼叫 POST /store/orders/{id}/ecpay-checkout 取得新表單。
     EcpayCheckoutFormDto? EcpayCheckout);
 
 public sealed record MeDto(

@@ -11,6 +11,7 @@
 - [`upgrades/0.10.0-to-0.10.1.sql`](upgrades/0.10.0-to-0.10.1.sql)：保留既有資料，貼文/留言新增 `SimHash` 重複偵測指紋、`ContentReports` 支援系統自動送出的檢舉，將 `db-v0.10.0` 升級至 `db-v0.10.1`。
 - [`upgrades/0.10.1-to-0.10.2.sql`](upgrades/0.10.1-to-0.10.2.sql)：新增 `ContentModerationSettings`（SimHash 比對天數／相似度門檻可由後台調整）；貼文/留言/圖片新增 `AiReviewedAt` 供 AI 內容審查背景排程追蹤進度，將 `db-v0.10.1` 升級至 `db-v0.10.2`。
 - [`upgrades/0.10.2-store-order-shipping.sql`](upgrades/0.10.2-store-order-shipping.sql)：僅供沿用 `db-v0.10.2` 舊 Snapshot 的環境升級訂單欄位；全新 `db-v0.11.0` 已包含，不需再執行。
+- [`upgrades/0.12.0-store-ecpay-payments.sql`](upgrades/0.12.0-store-ecpay-payments.sql)：保留既有資料，在 `db-v0.12.0` 上新增綠界付款嘗試 `PaymentAttempts`、付款狀態 `REFUND_REQUIRED` 與逾時取消用的訂單索引；可重複執行。
 - [`seeds/store-sale-prices.sql`](seeds/store-sale-prices.sql)：依穩定 `ExternalRef` 順序，對最多三件既有匯入商品寫入可追溯的示範折扣率；可重複執行。
 - [`seeds/store-showcase-orders-shipping.sql`](seeds/store-showcase-orders-shipping.sql)：**僅限純展示資料庫、手動選用**。沿用 `db-v0.10.2` 並套用上述欄位升級後，依目前商城規則重整展示訂單；新版 `db-v0.11.0` 已包含此結果，不需再執行。
 

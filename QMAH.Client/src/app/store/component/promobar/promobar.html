@@ -9,7 +9,7 @@
     <span>{{ note }}</span>
     }
 
-    <!-- 右側會員捷徑：點數、折價券、購物車；登入前的行為見下方 -->
+    <!-- 右側會員捷徑：點數、折價券、購物車、訂單；登入前的行為見下方 -->
     <div class="promobar-actions">
       @if (signedIn()) {
       <a [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
@@ -50,6 +50,9 @@
         <a [storeLink]="cartHref()" class="panel-item panel-note">以及另外 {{ cartRest() }} 項商品</a>
         }
       </app-promobar-panel>
+
+      <!-- 我的訂單：取消待付款訂單或重新前往付款 -->
+      <a [storeLink]="ordersHref()" class="promobar-link">訂單</a>
       } @else {
       <!-- 未登入（或登入狀態尚未確認）時沒有會員資料，只顯示名稱，不顯示數量：
            點數停用；折價券仍可前往兌換商店（頁面內會提示登入）；購物車按下後要求登入 -->

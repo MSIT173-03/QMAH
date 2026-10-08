@@ -1,0 +1,68 @@
+<!-- 頂部公告列與登入提示，與其他商城頁面一致 -->
+<app-session-bar [cart]="cart" />
+
+<div class="container orders-main">
+  <app-breadcrumb [items]="breadcrumbItems" />
+
+  @if (feedback(); as message) {
+  <!-- 取消或前往付款的結果；錯誤訊息直接顯示後端的說明 -->
+  <div class="orders-feedback" [class.orders-feedback--error]="message.kind === 'error'"
+    [attr.role]="message.kind === 'error' ? 'alert' : 'status'">
+    <span class="orders-feedback-text">{{ message.text }}</span>
+    <button type="button" class="orders-feedback-close" aria-label="關閉訊息" (click)="dismissFeedback()">×</button>
+  </div>
+  }
+
+  <section class="orders-section">
+    <app-page-title-row title="我的訂單" tag="MY ORDERS" />
+
+    @if (loading()) {
+    <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark"
+        aria-hidden="true"></span><span>正在整理你的訂單…</span></section>
+    } @else if (loadError()) {
+    <app-empty-state [title]="errorTitle" [desc]="errorDesc" [ctaLabel]="errorCtaLabel" ctaMode="button"
+      (ctaClick)="onReload()" />
+    } @else if (isEmpty()) {
+    <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" [ctaHref]="productListHref" />
+    } @else {
+    <ul class="order-list">
+      @for (order of orders(); track order.id) {
+      <li class="order-card" [attr.data-status]="order.status">
+        <div class="order-card-head">
+          <span class="order-card-no">{{ order.orderNo }}</span>
+          <span class="order-card-status">{{ order.statusLabel }}</span>
+        </div>
+        <p class="order-card-items" [attr.title]="order.itemsLabel">{{ order.itemsLabel }}</p>
+        <dl class="order-card-meta">
+          <div><dt>應付金額</dt><dd class="order-card-mono">{{ order.payableLabel }}</dd></div>
+          <div><dt>付款方式</dt><dd>{{ order.paymentLabel }}</dd></div>
+          <div><dt>建立時間</dt><dd class="order-card-mono">{{ order.createdLabel }}</dd></div>
+        </dl>
+        @if (order.paymentNote) {
+        <p class="order-card-note">{{ order.paymentNote }}</p>
+        }
+        @if (order.canCancel) {
+        <div class="order-card-actions">
+          @if (order.canPay) {
+          <p class="order-card-hint">{{ paidHint }}</p>
+          <button type="button" class="btn-solid order-pay" [disabled]="payingId() !== null" (click)="onPay(order)">
+            {{ payingId() === order.id ? payingLabel : payLabel }}
+          </button>
+          }
+          <button type="button" class="btn-outline order-cancel" (click)="onCancelClick(order)">{{ cancelLabel }}</button>
+        </div>
+        }
+      </li>
+      }
+    </ul>
+    <app-pagination [page]="page()" [totalPages]="totalPages()" (pick)="onPick($event)" />
+    }
+  </section>
+
+  <app-scroll-top />
+</div>
+
+<!-- 取消確認：列出訂單編號與金額，確認後才呼叫後端 -->
+<app-order-cancel-dialog [open]="pendingCancel() !== null" [orderNo]="pendingCancel()?.orderNo ?? ''"
+  [payable]="pendingCancel()?.payableLabel ?? ''" [pending]="cancelling()" (confirm)="onCancelConfirm()"
+  (cancel)="onCancelDismiss()" />

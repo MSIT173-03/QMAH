@@ -158,6 +158,12 @@ const appShellChildren: Routes = [
         canActivate: [authGuard],
         loadComponent: () => import('./store/pages/checkout/checkout').then((c) => c.Checkout),
       },
+      {
+        // 我的訂單：取消待付款訂單、重新前往綠界付款；綠界付款頁的「返回商店」也回到這裡。
+        path: 'orders',
+        canActivate: [authGuard],
+        loadComponent: () => import('./store/pages/orders/orders').then((c) => c.Orders),
+      },
     ],
   },
   {

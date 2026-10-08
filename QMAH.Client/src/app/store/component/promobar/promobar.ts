@@ -1,6 +1,6 @@
 import { Component, ElementRef, computed, effect, input, output, untracked, viewChild } from '@angular/core';
 import { bumpElement } from '../../shared/bump';
-import { CART_PATH, COUPON_STORE_PATH, productPath } from '../../shared/paths';
+import { CART_PATH, COUPON_STORE_PATH, ORDERS_PATH, productPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
 import { PromobarPanel } from '../promobar-panel/promobar-panel';
 import { CartItem, Coupon } from '../../api/api.models';
@@ -37,6 +37,8 @@ export class Promobar {
 
   /** 「購物車」連結網址 */
   cartHref = input(CART_PATH);
+  /** 「訂單」連結網址：我的訂單頁 */
+  ordersHref = input(ORDERS_PATH);
   /** 購物車內商品件數 */
   cartCount = input(0);
   /** 購物車內容是否已載入；載入前的 0 不是真的「變化」，載入完成帶出的初始件數也不播放動畫 */

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Api.Infrastructure.Payments;
+using QMAH.Api.Services;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
 
@@ -15,7 +16,10 @@ namespace QMAH.Api.Controllers.V1;
 
 [Authorize]
 [Route("api/v1/store/orders")]
-public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
+public sealed class StoreOrdersController(
+    QmahDbContext db,
+    EcpayPaymentService ecpayPayments,
+    IStoreOrderCancellationService cancellation) : ApiControllerBase
 {
     // integration: Store 分支原本把訂單流程拆到一半，留下兩套互相重疊的實作。
     // 目前集中成「輸入整理 → 商品／庫存檢查 → 折扣與點數檢查 → 建立訂單快照」四段，
@@ -72,10 +76,13 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                     retryToken);
             if (existingOrder is not null)
             {
+                // 重送的回應同樣附上新的付款嘗試，結帳完成對話框才有「前往付款」可用。
+                var replayCheckout = ecpayPayments.AddCheckoutForm(existingOrder);
+                await db.SaveChangesAsync(retryToken);
                 await transaction.CommitAsync(retryToken);
                 return Created(
                     $"/api/v1/me/orders/{existingOrder.Id}",
-                    ToOrderDto(existingOrder));
+                    StoreOrderMapping.ToOrderDto(existingOrder, replayCheckout));
             }
 
             var (products, productError) = await LoadAndValidateProductsAsync(groupedItems, retryToken);
@@ -116,9 +123,11 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 idempotencyMerchantTradeNo);
 
             db.StoreOrders.Add(order);
-            // integration: 目前 API 只建立「待付款」訂單與付款紀錄，尚未綁定第三方付款 callback；
-            // 商城負責人上線前必須用實際付款／取消／逾時情境確認這個狀態機，再接續付款與出貨流程。
+            // 訂單一律以「待付款」建立；信用卡訂單由綠界 callback（EcpayCallbackController）轉為已付款，
+            // 逾時未付款由 PendingOrderExpiryWorker 取消，貨到付款由後台流程處理。
             db.Payments.Add(order.Payment!);
+            // 信用卡訂單在同一筆交易裡記下第 1 筆付款嘗試，callback 才能以 MerchantTradeNo 找回訂單。
+            var ecpayCheckout = ecpayPayments.AddCheckoutForm(order);
             ApplyCouponRedemption(userCoupon, order.CreatedAt);
             await ApplyPointsRedemptionAsync(userId, request.PointsUsed, order, retryToken);
             await RemoveOrderedCartItemsAsync(userId, groupedItems, retryToken);
@@ -128,7 +137,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
 
             return Created(
                 $"/api/v1/me/orders/{order.Id}",
-                ToOrderDto(order));
+                StoreOrderMapping.ToOrderDto(order, ecpayCheckout));
         }, cancellationToken);
 
         return result;
@@ -433,6 +442,35 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         return Ok(productIds);
     }
 
+    /// <summary>
+    /// 為待付款的信用卡訂單產生新的綠界付款表單（新的付款嘗試與交易編號）。
+    /// 綠界不允許重複編號，所以每次「前往付款」都要換一個；舊編號的付款結果仍對應到同一筆訂單。
+    /// </summary>
+    [HttpPost("{id:guid}/ecpay-checkout")]
+    public async Task<ActionResult<EcpayCheckoutFormDto>> CreateEcpayCheckout(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var order = await db.StoreOrders
+            .Include(item => item.OrderDetails)
+            .Include(item => item.Payment)
+            .SingleOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+        if (order is null)
+            return MissingResource("找不到訂單", "這筆訂單不存在或不屬於目前帳號。");
+        if (order.Payment?.PaymentType != "CREDIT_CARD")
+            return InvalidWorkflow("訂單不需線上付款", "只有信用卡付款的訂單可以前往綠界付款。");
+
+        var form = ecpayPayments.AddCheckoutForm(order);
+        if (form is null)
+            return InvalidWorkflow("訂單目前不可付款", "只有待付款的訂單可以前往付款。");
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok(form);
+    }
+
     [HttpPost("{id:guid}/cancel")]
     public async Task<ActionResult> CancelOrder(
         Guid id,
@@ -441,113 +479,29 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         if (!TryGetCurrentUserId(out var userId))
             return Unauthorized();
 
-        // integration: 取消也使用完整 execution strategy，避免暫時性 SQL 失敗時只回補了部分資產。
-        var strategy = db.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(async retryToken =>
+        // 手動取消與逾時取消共用同一套流程：信用卡訂單先向綠界確認沒有付款，再回補庫存、優惠券與點數。
+        var result = await cancellation.CancelAsync(id, userId, cancellationToken);
+        return result switch
         {
-            db.ChangeTracker.Clear();
-            await using var transaction = await db.Database.BeginTransactionAsync(
-                IsolationLevel.Serializable,
-                retryToken);
-            var order = await db.StoreOrders
-                .Include(item => item.OrderDetails)
-                    .ThenInclude(detail => detail.Product)
-                .Include(item => item.Payment)
-                .Include(item => item.UserCoupon)
-                .SingleOrDefaultAsync(item => item.Id == id && item.UserId == userId, retryToken);
-            if (order is null)
-                return MissingResource("找不到訂單", "這筆訂單不存在或不屬於目前帳號。");
-            if (order.Status == "CANCELLED")
-                return NoContent();
-            // integration: 目前沒有第三方退款 callback；PAID 訂單不可由取消 API 假裝完成退款，
-            // 只允許尚未付款的訂單進入既有回補流程，避免外部金流與資料庫狀態分裂。
-            if (order.Status != "PENDING_PAYMENT")
-                return InvalidWorkflow("訂單目前不可取消", "已付款、出貨或完成後的訂單請交由退款／客服流程處理。");
-
-            // integration: 取消必須在同一交易中回補庫存、優惠券與點數，避免只回復部分資產。
-            var now = DateTime.UtcNow;
-            order.Status = "CANCELLED";
-            order.CancelledAt = now;
-            if (order.Payment is not null && order.Payment.Status == "PENDING")
-            {
-                order.Payment.Status = "CANCELLED";
-                order.Payment.CallbackReceivedAt = now;
-            }
-            foreach (var detail in order.OrderDetails)
-            {
-                detail.Product.Stock += detail.Quantity;
-                detail.Product.UpdatedAt = now;
-            }
-            if (order.UserCoupon is not null && order.UserCoupon.Status == "USED")
-            {
-                order.UserCoupon.Status = "AVAILABLE";
-                order.UserCoupon.UsedAt = null;
-            }
-            if (order.PointsUsed > 0)
-            {
-                var balance = await db.PointBalances
-                    .SingleOrDefaultAsync(item => item.UserId == userId, retryToken)
-                    ?? throw new InvalidOperationException("訂單點數退款時找不到會員點數帳戶。");
-                balance.Balance += order.PointsUsed;
-                balance.UpdatedAt = now;
-                db.PointTransactions.Add(new PointTransaction
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = userId,
-                    Amount = order.PointsUsed,
-                    Reason = "ORDER_CANCEL_REFUND",
-                    ReferenceType = "ORDER",
-                    ReferenceId = order.Id,
-                    CreatedAt = now
-                });
-            }
-
-            await db.SaveChangesAsync(retryToken);
-            await transaction.CommitAsync(retryToken);
-            return NoContent();
-        }, cancellationToken);
+            StoreOrderCancelResult.Cancelled or StoreOrderCancelResult.AlreadyCancelled => NoContent(),
+            StoreOrderCancelResult.NotFound => MissingResource("找不到訂單", "這筆訂單不存在或不屬於目前帳號。"),
+            StoreOrderCancelResult.AlreadyPaid => InvalidWorkflow(
+                "訂單已付款",
+                "綠界已確認這筆訂單付款完成，訂單已改為已付款，無法取消；如需退款請聯絡客服。"),
+            StoreOrderCancelResult.PaymentNeedsReview => InvalidWorkflow(
+                "付款待確認",
+                "綠界已收到這筆訂單的款項，但付款資料需要人工核對，目前無法取消；請聯絡客服。"),
+            StoreOrderCancelResult.PaymentStatusUnknown => Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "暫時無法取消",
+                detail: "目前無法向綠界確認付款狀態，請稍後再試。"),
+            _ => InvalidWorkflow("訂單目前不可取消", "已付款、出貨或完成後的訂單請交由退款／客服流程處理。")
+        };
     }
 
     private static string BuildOperationOrderNo(Guid operationId)
     {
         // operationId 已由 Guid 提供唯一性；固定取值讓 commit 結果不明時重試不會再查詢或改寫編號。
         return $"QMAH-{DateTime.UtcNow:yyyyMMddHHmmss}-{operationId:N}"[..28];
-    }
-
-    private static OrderDto ToOrderDto(StoreOrder order) => new(
-        order.Id,
-        order.OrderNo,
-        order.Status,
-        order.Subtotal,
-        order.DiscountAmount,
-        order.PointsUsed,
-        order.ShippingFee,
-        order.TotalAmount,
-        (int)Math.Floor(order.TotalAmount * StoreCheckoutCatalog.PointEarnRate),
-        order.RecipientName,
-        order.RecipientPhone,
-        order.ShippingPostalCode,
-        order.ShippingCity,
-        order.ShippingDistrict,
-        order.ShippingAddressLine,
-        order.Payment?.Status,
-        order.CreatedAt,
-        order.PaidAt,
-        order.CancelledAt,
-        order.OrderDetails
-            .OrderBy(detail => detail.Id)
-            .Select(detail => new OrderLineDto(
-                detail.ProductId,
-                detail.ProductNameSnapshot,
-                detail.UnitPrice,
-                detail.Quantity,
-                detail.LineTotal))
-            .ToList(),
-        BuildEcpayCheckoutForm(order));
-
-    private static EcpayCheckoutFormDto? BuildEcpayCheckoutForm(StoreOrder order)
-    {
-        var request = EcpayCheckoutFormBuilder.BuildRequestForOrder(order);
-        return request is null ? null : EcpayCheckoutFormBuilder.Build(request);
     }
 }

@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 
 using QMAH.Api.Infrastructure.Identity;
 using QMAH.Api.Infrastructure.Media;
@@ -57,6 +58,19 @@ builder.Services
 builder.Services
     .AddOptions<QmahMailjetOptions>()
     .Bind(builder.Configuration.GetSection(QmahMailjetOptions.SectionName));
+// 綠界商店代號、金鑰與網址只從設定讀取；正式金鑰用環境變數（Ecpay__HashKey 等）或 secret 管理服務提供。
+// 啟動時就驗證，漏設金鑰或在非開發環境把 ReturnURL 指向本機時直接啟動失敗，而不是等到付款才出錯。
+builder.Services
+    .AddOptions<EcpayOptions>()
+    .Bind(builder.Configuration.GetSection(EcpayOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<EcpayOptions>, EcpayOptionsValidator>();
+builder.Services
+    .AddOptions<StoreOrderOptions>()
+    .Bind(builder.Configuration.GetSection(StoreOrderOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 // 先嘗試設定檔指定的連線；失敗時才依 resolver 的候選順序尋找本機名稱為 QMAH 的 SQL Server／LocalDB。
 // 其他需要直接存取資料庫的 host 應重用 resolver，避免 Web、API 與工具程式各自猜測不同 instance。
@@ -298,6 +312,14 @@ builder.Services.AddHttpClient<IAiContentReviewService, OpenAiContentReviewServi
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 builder.Services.AddHostedService<AiContentReviewWorker>();
+// 綠界付款：表單與 callback 共用付款服務；取消（手動與逾時）共用同一套查詢＋還原流程。
+builder.Services.AddScoped<EcpayPaymentService>();
+builder.Services.AddHttpClient<EcpayQueryClient>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+builder.Services.AddScoped<IStoreOrderCancellationService, StoreOrderCancellationService>();
+builder.Services.AddHostedService<PendingOrderExpiryWorker>();
 
 // 只有登入端點跟發文/留言端點套用固定視窗限流：
 // 登入端點防止密碼嘗試拖慢其他 API 功能；發文/留言端點是緊急的洗版防護——
