@@ -757,3 +757,17 @@ a:focus-visible {
 .home-route::before { background: linear-gradient(90deg, var(--route-accent), transparent); }
 .home-route:hover .home-route__arrow { color: var(--route-accent); }
 .home-section-heading h2::after { background: var(--home-gold); }
+
+/* 英雄區兩顆按鈕：等寬等高、文字與圖示垂直置中，純色不用漸層。 */
+.home-hero__actions { align-items: stretch; }
+.home-hero__actions .home-button {
+  box-sizing: border-box;
+  min-width: 11.5rem;
+  min-height: 52px;
+  padding-block: 0;
+  line-height: 1;
+}
+.home-button--primary { background: #f0d38a; box-shadow: 0 8px 20px rgb(0 0 0 / 28%); }
+.home-button--primary:hover { background: #f7e0a2; }
+.home-button--secondary { background: rgb(255 250 240 / 12%); }
+@media (max-width: 640px) { .home-hero__actions .home-button { width: 100%; } }

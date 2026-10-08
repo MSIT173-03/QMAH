@@ -451,3 +451,10 @@ textarea {
   --depth: 1;
   --noise: 0;
 }
+
+/* 會員中心／社群：routed 元件的 host 與頁面容器各自畫了實色或漸層底，會把 app-main 的 Temple 底紋整個蓋掉。
+   這些元素不在 Layout 的樣板內，Layout 的元件樣式（emulated encapsulation）選不到，所以必須放在全域樣式。 */
+.app-shell[data-area='user'] .app-main > *,
+.app-shell[data-area='user'] .app-main > * > :is([class*='-page'], [class$='-container'], [class*='page-']) {
+  background: transparent !important;
+}
