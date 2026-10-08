@@ -83,6 +83,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
   readonly logoSrc = computed(() => this.themeService.theme() === 'qmahdark'
     ? '/images/brand/qmah-logo-dark.svg'
     : '/images/brand/qmah-logo.svg');
+  readonly showFixedScrollTop = computed(() => {
+    const path = this.currentUrl().split(/[?#]/)[0];
+    return this.activeArea() === 'social' || path === '/terms' || path === '/privacy-policy';
+  });
 
   onAvatarError(path: string): void {
     this.failedAvatarPath.set(path);
