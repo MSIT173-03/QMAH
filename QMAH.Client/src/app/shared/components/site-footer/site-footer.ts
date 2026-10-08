@@ -32,43 +32,30 @@ export class SiteFooter {
     ? '/images/brand/qmah-logo-dark.svg'
     : '/images/brand/qmah-logo.svg');
   protected readonly logoAlt = '清明鑑定屋';
-  protected readonly brandNote = '從文物出發，逛圖鑑、玩遊戲，也看看大家的分享。';
-  protected readonly githubUrl = 'https://github.com/MSIT173-03/QMAH';
   protected readonly copyright = '© 2026 清明鑑定屋';
   protected readonly columns: readonly FooterColumn[] = [
     {
-      title: '探索與玩法',
+      title: '探索與交流',
       links: [
-        { label: '首頁', href: '/home' },
         { label: '文物圖鑑', href: '/artifact-list' },
         { label: '遊戲大廳', href: '/game' },
-        { label: '玩法說明', href: '/game/how-to' },
-      ],
-    },
-    {
-      title: '社群與選物',
-      links: [
         { label: '社群廣場', href: '/social/posts' },
-        { label: '社群活動', href: '/social/events' },
-        { label: '站方公告', href: '/social/announcements' },
-        { label: '購物商城', href: '/store' },
       ],
     },
     {
-      title: '會員服務',
+      title: '商城與會員',
       links: [
+        { label: '點數與鑰匙', href: '/member/economy' },
+        { label: '購物商城', href: '/store' },
         { label: '會員中心', href: '/member' },
-        { label: '鑰匙背包', href: '/key-list' },
-        { label: '通知中心', href: '/member/notifications' },
-        { label: '購物車', href: '/store/cart' },
       ],
     },
     {
-      title: '網站資訊',
+      title: '服務與支援',
       links: [
         { label: '隱私權政策', href: '/privacy-policy' },
         { label: '服務條款', href: '/terms' },
-        { label: 'GitHub 專案', href: this.githubUrl, external: true },
+        { label: '聯絡我們', href: 'https://github.com/MSIT173-03/QMAH/issues', external: true },
       ],
     },
   ];
