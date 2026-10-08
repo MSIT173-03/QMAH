@@ -670,3 +670,51 @@ a:focus-visible {
   .home-hero__copy > * { animation: none; }
   .home-museum-note__image img { transition: none; }
 }
+
+/* ---- 可視度調整：卡片與英雄區不貼紋樣，全頁底紋只留極淡一層並向下淡出 ---- */
+.home-hero::before,
+.home-hero__copy::before { display: none; }
+.home-page::before {
+  background: color-mix(in srgb, var(--home-teal) 3.5%, transparent);
+  -webkit-mask: linear-gradient(180deg, #000 0%, transparent 70%), url('/patterns/endless-clouds.svg') center top / 112px 56px repeat;
+  -webkit-mask-composite: source-in;
+  mask: linear-gradient(180deg, #000 0%, transparent 70%), url('/patterns/endless-clouds.svg') center top / 112px 56px repeat;
+  mask-composite: intersect;
+}
+.home-page::after { display: none; }
+
+/* ---- 探索入口：標題與說明併成一列，卡片改 3＋2 排版，不再有左側大空白與卡片內空白 ---- */
+.home-explore {
+  display: block;
+  padding-block: clamp(40px, 6vw, 72px);
+}
+.home-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 32px;
+  margin-bottom: clamp(18px, 2.4vw, 28px);
+}
+.home-section-heading h2::after { display: inline-block; width: 36px; height: 3px; margin: 0 0 6px 14px; vertical-align: middle; }
+.home-section-heading p { max-width: 46ch; margin: 0; }
+.home-route-list {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--qmah-space-3);
+}
+.home-route,
+.home-route:nth-child(even) { grid-column: span 2; min-height: 0; align-items: center; padding: var(--qmah-space-4); }
+.home-route:nth-child(n + 4),
+.home-route:last-child:nth-child(odd) { grid-column: span 3; }
+.home-route__content { gap: 4px; }
+@media (max-width: 900px) {
+  .home-route-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-route,
+  .home-route:nth-child(even),
+  .home-route:nth-child(n + 4) { grid-column: span 1; }
+  .home-route:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .home-route-list { grid-template-columns: 1fr; }
+  .home-route:last-child:nth-child(odd) { grid-column: auto; }
+}
