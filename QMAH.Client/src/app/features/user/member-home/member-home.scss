@@ -979,3 +979,55 @@
 @media (prefers-reduced-motion: reduce) {
   .card-icon app-qmah-icon { animation: none !important; }
 }
+
+/* ---- 會員中心幾何裝飾重做 ----
+   舊的散落圓點、小方塊與實心圓改成兩個有秩序的語彙：
+   1. 歡迎卡：右上角一組同心圓漣漪（細線，像水面波紋，呼應清明上河圖）。
+   2. 功能卡：右上角四分之一同心弧；底邊一條強調色細條，懸停時由左向右展開。 */
+.welcome-decoration { border-radius: 50%; background: none; }
+.decoration-one {
+  top: -120px;
+  right: -60px;
+  width: 340px;
+  height: 340px;
+  background: repeating-radial-gradient(circle at 50% 50%, transparent 0 22px, color-mix(in srgb, var(--qmah-primary) 20%, transparent) 22px 23px);
+  -webkit-mask: radial-gradient(circle at 50% 50%, #000 30%, transparent 72%);
+  mask: radial-gradient(circle at 50% 50%, #000 30%, transparent 72%);
+}
+.decoration-two { display: none; }
+
+.dashboard-card::before {
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 0;
+  background: repeating-radial-gradient(circle at 100% 0, transparent 0 18px, color-mix(in srgb, var(--card-accent) 26%, transparent) 18px 19px);
+  box-shadow: none;
+  -webkit-mask: radial-gradient(circle at 100% 0, #000 20%, transparent 70%);
+  mask: radial-gradient(circle at 100% 0, #000 20%, transparent 70%);
+}
+.dashboard-card::after {
+  top: auto;
+  right: auto;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  border: 0;
+  border-radius: 0 3px 0 0;
+  background: var(--card-accent);
+  transform: none;
+  transition: width 320ms cubic-bezier(.22, 1, .36, 1);
+}
+.dashboard-card:hover::after,
+.dashboard-card:focus-visible::after { width: 100%; }
+
+/* 圖示動態只在滑鼠移到（或鍵盤聚焦）該張卡時播放。 */
+.card-icon app-qmah-icon,
+.daily-icon { animation-play-state: paused !important; }
+.dashboard-card:hover .card-icon app-qmah-icon,
+.dashboard-card:focus-visible .card-icon app-qmah-icon,
+.dashboard-card:hover .daily-icon,
+.dashboard-card:focus-visible .daily-icon { animation-play-state: running !important; }
+.dashboard-card:hover .card-icon app-qmah-icon { animation-duration: 1.6s; }

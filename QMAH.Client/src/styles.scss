@@ -13,14 +13,14 @@
   --qmah-surface-soft: #f0f4ef;
   --qmah-surface-muted: #e2ece9;
   --qmah-ink: #1b3533;
-  --qmah-muted: #5b6e6b;
+  --qmah-muted: #556260;
   --qmah-jade: #26796e;
   --qmah-jade-deep: #145a53;
-  --qmah-jade-bright: #6da49a;
+  --qmah-jade-bright: #3f8076;
   --qmah-jade-soft: #d7ebe6;
   --qmah-azurite: #527f99;
   --qmah-azurite-soft: #dcebef;
-  --qmah-slate: #748e8a;
+  --qmah-slate: #5d6f6c;
   --qmah-navy: #334260;
   --qmah-navy-soft: #e3e7f0;
   --qmah-terracotta: #b86f5b;
@@ -215,9 +215,9 @@ body {
   --qmah-surface-elevated: #252a2c;
   --qmah-ink: #e7e4dd;
   --qmah-muted: #a8aca8;
-  --qmah-jade: #8cbdb0;
-  --qmah-jade-deep: #9cc8bc;
-  --qmah-jade-bright: #9ec4ba;
+  --qmah-jade: #80ad9f;
+  --qmah-jade-deep: #cfdbd6;
+  --qmah-jade-bright: #b3c6bf;
   --qmah-jade-soft: #2a3935;
   --qmah-azurite: #9db8c6;
   --qmah-azurite-soft: #2a343a;
@@ -264,7 +264,7 @@ body {
 
   /* ui-integration: semantic aliases must be remapped at the same scope as dark primitives; otherwise they retain light computed values. */
   --qmah-primary: var(--qmah-jade-deep);
-  --qmah-primary-hover: var(--qmah-jade);
+  --qmah-primary-hover: var(--qmah-paper);
   --qmah-primary-content: var(--qmah-night);
   --qmah-focus: var(--qmah-bronze);
   --qmah-text-muted: var(--qmah-muted);
