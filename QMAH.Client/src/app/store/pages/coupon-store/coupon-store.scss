@@ -52,6 +52,34 @@
   }
 }
 
+/* 會員點數不夠兌換的券：文字一律改成次要灰色並淡化，外框與按鈕都沒有懸停效果 */
+.coupon-card--unaffordable {
+  &:hover {
+    border-color: var(--color-line);
+    box-shadow: none;
+  }
+
+  .coupon-card-off,
+  .coupon-card-body,
+  .coupon-card-cost {
+    opacity: 0.5;
+  }
+
+  .coupon-card-off,
+  .coupon-card-title,
+  .coupon-card-cost-value {
+    color: var(--color-muted);
+  }
+
+  .coupon-card-cost {
+    cursor: not-allowed;
+
+    &:hover {
+      background: var(--color-bg);
+    }
+  }
+}
+
 /* 折抵幅度（固定欄寬 98px = 左側間距 14px + 內容 84px） */
 .coupon-card-off {
   align-self: center;
