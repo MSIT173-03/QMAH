@@ -54,7 +54,7 @@ const COLOR_HEX: Record<string, string> = {
   styleUrl: './social-editor.scss',
   template: `
     <div class="sme" [class.is-open]="open()">
-      <textarea #field class="sme__field" [attr.aria-label]="label()" [placeholder]="placeholder()" [rows]="rows()" [value]="value()" (input)="value.set(field.value)" (keydown.control.enter)="submitted.emit()" (keydown.meta.enter)="submitted.emit()"></textarea>
+      <textarea #field class="sme__field" [attr.aria-label]="label()" [placeholder]="placeholder()" [rows]="rows()" [value]="shown()" (input)="commit(field.value)" (keydown.control.enter)="submitted.emit()" (keydown.meta.enter)="submitted.emit()"></textarea>
       @if (open()) {
         <div class="sme__toolbar" role="toolbar" aria-label="格式工具" (mousedown)="$event.preventDefault()">
           @for (group of groups; track $index) {
@@ -73,16 +73,25 @@ const COLOR_HEX: Record<string, string> = {
       }
       @if (images().length > 0) {
         <div class="sme__images">
-          @for (img of images(); track img.id) {
-            <div class="sme__image">
-              <img [src]="img.url" alt="" />
-              <button type="button" class="sme__image-remove" aria-label="移除這張圖片" (click)="removeImage(img)"><svg lucideX aria-hidden="true" focusable="false"></svg></button>
+          @for (img of images(); track img.id; let i = $index) {
+            <div class="sme__image" [class.is-inline]="isInline(i)">
+              <div class="sme__image-box">
+                <img [src]="img.url" [alt]="'圖 ' + (i + 1)" />
+                <span class="sme__image-no">圖{{ i + 1 }}</span>
+                <button type="button" class="sme__image-remove" aria-label="移除這張圖片" (click)="removeImage(img)"><svg lucideX aria-hidden="true" focusable="false"></svg></button>
+              </div>
+              @if (isInline(i)) {
+                <button type="button" class="sme__image-mode" title="取消插入，改成貼在留言最後" (click)="detach(i)">已插入 · 改為附圖</button>
+              } @else {
+                <button type="button" class="sme__image-mode" title="把這張圖放到輸入框游標所在位置" (click)="insertAtCaret(i)">插入內文</button>
+              }
             </div>
           }
+          <p class="sme__images-hint">圖片預設附在留言最後；要放在文字中間，按「插入內文」。</p>
         </div>
       }
       @if (error()) { <p class="sme__error" role="alert">{{ error() }}</p> }
-      @if (open() && value().trim()) {
+      @if (open() && previewOn() && shown().trim()) {
         <div class="sme__preview"><span class="sme__preview-label">預覽</span><app-social-post-content [content]="value()" /></div>
       }
       <div class="sme__bar">
@@ -97,6 +106,9 @@ const COLOR_HEX: Record<string, string> = {
           </div>
           <button type="button" class="sme__tool" title="附上日期小標" aria-label="附上日期小標" (click)="insertDate()"><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg></button>
           <button type="button" class="sme__tool" [class.is-on]="open()" [attr.aria-pressed]="open()" [title]="open() ? '收起進階格式' : '進階格式（粗體、連結、劇透…）'" [attr.aria-label]="open() ? '收起進階格式' : '進階格式'" (click)="open.set(!open())"><svg lucideTypeOutline aria-hidden="true" focusable="false"></svg></button>
+          @if (open()) {
+            <button type="button" class="sme__tool sme__tool--text" [class.is-on]="previewOn()" [attr.aria-pressed]="previewOn()" [title]="previewOn() ? '隱藏預覽' : '顯示預覽'" (click)="togglePreview()">預覽</button>
+          }
           @if (uploading()) { <span class="sme__status">圖片上傳中…</span> }
         </div>
         @if (showSend()) {
@@ -131,6 +143,16 @@ export class SocialEditorComponent implements OnInit {
   private cropQueue: File[] = [];
   private static readonly MAX_IMAGES = 4;
   private readonly resetImages = effect(() => { if (this.value() === '') this.images.set([]); });
+  /** 輸入框只顯示文字；本次附上的圖片以縮圖呈現，[img=識別碼] 標記不露出，送出時附在文字後面。 */
+  /** 輸入框的文字；圖片若插在內文，這裡以好懂的 [圖1] 表示，送出時才換成 [img=識別碼]。 */
+  protected readonly shown = signal('');
+  private readonly syncFromParent = effect(() => {
+    const v = this.value();
+    if (v === '') { this.shown.set(''); return; }
+    if (this.shown() === '' && this.images().length === 0) this.shown.set(v);
+  });
+  /** 預覽預設收起，可自己點開；開關狀態記在這個瀏覽器。 */
+  protected readonly previewOn = signal(SocialEditorComponent.readPreview());
   protected readonly canSend = computed(() => this.value().trim().length > 0);
   protected readonly colors = SOCIAL_COLORS;
   private readonly field = viewChild.required<ElementRef<HTMLTextAreaElement>>('field');
@@ -154,6 +176,16 @@ export class SocialEditorComponent implements OnInit {
       { kind: 'wrap', label: '劇透', title: '劇透：點擊才顯示', open: '[spoiler]', close: '[/spoiler]' },
     ],
   ];
+
+  private static readPreview(): boolean {
+    try { return localStorage.getItem('qmah.social.editorPreview') === '1'; } catch { return false; }
+  }
+
+  protected togglePreview(): void {
+    const next = !this.previewOn();
+    this.previewOn.set(next);
+    try { localStorage.setItem('qmah.social.editorPreview', next ? '1' : '0'); } catch { /* 無法儲存時只影響這次 */ }
+  }
 
   ngOnInit(): void {
     if (this.startOpen()) this.open.set(true);
@@ -187,13 +219,8 @@ export class SocialEditorComponent implements OnInit {
     this.api.uploadMedia(file).subscribe({
       next: (media) => {
         this.uploading.set(this.cropQueue.length > 0);
-        this.open.set(true);
         this.images.update((list) => [...list, { id: media.id, url: media.url }]);
-        const el = this.field().nativeElement;
-        const at = el.selectionEnd ?? el.value.length;
-        const head = el.value.slice(0, at);
-        const insert = (head.length === 0 || head.endsWith('\n') ? '' : '\n') + '[img=' + media.id + ']\n';
-        this.apply(head + insert + el.value.slice(at), at + insert.length, at + insert.length);
+        this.commit(this.field().nativeElement.value);
         this.nextInQueue();
       },
       error: (err) => {
@@ -205,9 +232,11 @@ export class SocialEditorComponent implements OnInit {
   }
 
   protected removeImage(img: { id: string; url: string }): void {
+    const at = this.images().findIndex((item) => item.id === img.id);
+    let text = this.field().nativeElement.value.split('[圖' + (at + 1) + ']').join('').replace(/\n{3,}/g, '\n\n');
+    for (let n = at + 2; n <= this.images().length; n++) text = text.split('[圖' + n + ']').join('[圖' + (n - 1) + ']');
     this.images.update((list) => list.filter((item) => item.id !== img.id));
-    const marker = new RegExp('\\n?\\[img=' + img.id + '\\]\\n?', 'i');
-    this.value.set(this.value().replace(marker, '\n').replace(/^\n/, ''));
+    this.commit(text);
     this.api.deleteMedia(img.id).subscribe({ error: () => undefined });
   }
 
@@ -269,9 +298,45 @@ export class SocialEditorComponent implements OnInit {
     }
   }
 
+  /** 文字變更：對外的值 = 文字 + 附圖標記（各佔一行）。 */
+  protected commit(text: string): void {
+    this.shown.set(text);
+    const images = this.images();
+    let body = text;
+    const tail: string[] = [];
+    images.forEach((img, i) => {
+      const mark = '[圖' + (i + 1) + ']';
+      if (body.includes(mark)) body = body.split(mark).join('[img=' + img.id + ']');
+      else tail.push('[img=' + img.id + ']');
+    });
+    this.value.set(tail.length ? (body.trim() ? body.replace(/\s+$/, '') + '\n' : '') + tail.join('\n') : body);
+  }
+
+  protected isInline(index: number): boolean {
+    return this.shown().includes('[圖' + (index + 1) + ']');
+  }
+
+  /** 把圖片放到輸入框游標處（獨立成段） */
+  protected insertAtCaret(index: number): void {
+    const el = this.field().nativeElement;
+    const mark = '[圖' + (index + 1) + ']';
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? start;
+    const before = el.value.slice(0, start);
+    const after = el.value.slice(end);
+    const insert = (before && !before.endsWith('\n') ? '\n' : '') + mark + (after && !after.startsWith('\n') ? '\n' : '');
+    this.apply(before + insert + after, (before + insert).length, (before + insert).length);
+  }
+
+  /** 取消插入：圖片回到留言最後 */
+  protected detach(index: number): void {
+    const mark = '[圖' + (index + 1) + ']';
+    this.commit(this.field().nativeElement.value.split(mark).join('').replace(/\n{3,}/g, '\n\n'));
+  }
+
   private apply(value: string, selStart: number, selEnd: number): void {
     const el = this.field().nativeElement;
-    this.value.set(value);
+    this.commit(value);
     el.value = value;
     el.focus();
     el.setSelectionRange(selStart, selEnd);
