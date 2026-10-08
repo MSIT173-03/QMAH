@@ -125,7 +125,8 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
 .tool-progress li.is-done { color: #285c45; border-color: #9fc2a8; background: #e5efdf; }
 .tool-progress li.is-done b { background: #2f6b50; }
 .tool-tips { display: grid; gap: 6px; margin: 0; padding: 0 0 0 1.2em; color: var(--game-card-muted); font-size: 14px; line-height: 1.6; }
-.locator-tools .locator-confirm { margin-top: auto; }
+.tool-confirm-group { display: grid; gap: 4px; }
+.tool-confirm-group .locator-pending-status { min-height: 1.4em; }
 @media (min-width: 1000px) { .locator-round-heading .locator-steps { display: none; } }
 @container locround (max-height: 780px) { .tool-tips { display: none; } }
 @container locround (max-height: 600px) { .tool-progress { gap: 4px; } .tool-progress li { min-height: 30px; padding-block: 1px; } .tool-progress small { display: none; } }

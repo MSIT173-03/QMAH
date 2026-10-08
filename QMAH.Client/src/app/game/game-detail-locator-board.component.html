@@ -27,6 +27,10 @@
       <aside class="locator-tools" aria-label="定位工具">
         <h4 class="tool-title">工具</h4>
         <app-game-loupe-controls [on]="loupeOn()" [zoom]="zoom()" [size]="lensSize()" (loupeChange)="setLoupe($event)" (sizeChange)="setLensSize($event)" />
+        <div class="tool-group tool-confirm-group">
+          <button type="button" class="locator-confirm" data-button-tone="reversible" [disabled]="!pendingPoint() || disabled() || finished() || reviewing()" (click)="confirmLocation()">確認位置</button>
+          <span class="locator-pending-status" role="status">{{ pendingPoint() ? '位置已選好，按確認才計分' : '' }}</span>
+        </div>
         <div class="tool-group tool-progress-group">
           <span class="tool-label" id="progress-label">本局進度</span>
           <ol class="tool-progress" aria-labelledby="progress-label">
@@ -42,14 +46,7 @@
           </ol>
         </div>
         @if (finished()) { <p class="tool-review">綠色十字是正確位置，紅色十字是你點的位置。點上面的題目可以來回檢視。</p> }
-        <ul class="tool-tips" aria-label="操作小技巧">
-          <li>把游標移到原圖上，放大畫面會跟著走。</li>
-          <li>對照左邊的細節，找出同一個紋樣或形狀。</li>
-          <li>點一下選位置，也可以用方向鍵微調。</li>
-        </ul>
-        @if (showInstructions()) { <p class="tool-hint">移動或拖曳準心，再確認位置。<span class="kb-only">方向鍵移動準心。</span></p> }
-        <span class="locator-pending-status" role="status">{{ pendingPoint() ? '位置已選好，確認後才計分。' : '' }}</span>
-        <button type="button" class="locator-confirm" data-button-tone="reversible" [disabled]="!pendingPoint() || disabled() || finished() || reviewing()" (click)="confirmLocation()">確認位置</button>
+        @if (showInstructions()) { <p class="tool-hint">點原圖選位置，方向鍵可微調。</p> }
       </aside>
     </div>
     @if (!ready()) { <p class="locator-status" role="status">{{ failed() ? '文物圖片無法載入，進度仍保留。' : '正在準備細節與原圖…' }}@if (failed()) { <button type="button" (click)="retry()">重新載入圖片</button> }</p> }
