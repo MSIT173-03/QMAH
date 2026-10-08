@@ -16,7 +16,9 @@ import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup'
 import { boardLabel } from '../social-labels';
 import {
   LucideExternalLink,
-  LucideShieldAlert,
+  LucideFlag,
+  LucideMaximize2,
+  LucideMinimize2,
   LucideImage,
   LucideMessageCircle,
   LucideMegaphone,
@@ -46,7 +48,9 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
     SocialPostContentComponent,
     QmahIconComponent,
     LucideExternalLink,
-    LucideShieldAlert,
+    LucideFlag,
+    LucideMaximize2,
+    LucideMinimize2,
     LucideImage,
     LucideMessageCircle,
     LucideMegaphone,
@@ -79,6 +83,13 @@ export class PostsComponent implements OnInit, OnDestroy {
 
   readonly boardLabel = boardLabel;
   boardCodes: string[] = [];
+  /** 發布器是否切成寬版（左寫右預覽），寫長文時使用 */
+  postWide = false;
+
+  /** 發布器可選的看板：與篩選選單同一份清單，不再只寫死兩個 */
+  get composerBoards(): string[] {
+    return this.boardCodes.length > 0 ? this.boardCodes : ['GENERAL'];
+  }
   filterBoardCode = '';
   filterKeyword = '';
 

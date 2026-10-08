@@ -197,7 +197,7 @@
               title="檢舉這篇貼文"
               (click)="reportModal.open('POST', post.id)"
             >
-              <svg lucideShieldAlert aria-hidden="true" focusable="false"></svg>
+              <svg lucideFlag aria-hidden="true" focusable="false"></svg>
             </button>
             <a class="social-post-card__open" [routerLink]="['/social/posts', post.id]" [attr.aria-label]="'開啟貼文：' + post.title" title="開啟貼文">
               <svg lucideExternalLink aria-hidden="true" focusable="false"></svg>
@@ -214,8 +214,14 @@
 </div>
 
 <dialog #createPostDialog id="create_post_modal" class="modal social-modal" aria-labelledby="create-post-title">
-  <div class="modal-box social-post-dialog">
-    <h2 id="create-post-title" class="social-post-dialog__title">發布新貼文</h2>
+  <div class="modal-box social-post-dialog" [class.is-wide]="postWide">
+    <header class="social-post-dialog__head">
+      <h2 id="create-post-title" class="social-post-dialog__title">發布新貼文</h2>
+      <button type="button" class="social-post-dialog__wide" (click)="postWide = !postWide" [attr.aria-pressed]="postWide" [title]="postWide ? '切回一般版面' : '切換寬版：左邊寫、右邊即時預覽'">
+        @if (postWide) { <svg lucideMinimize2 aria-hidden="true" focusable="false"></svg> } @else { <svg lucideMaximize2 aria-hidden="true" focusable="false"></svg> }
+        {{ postWide ? '一般版面' : '寬版' }}
+      </button>
+    </header>
     @if (createError) {
       <div class="alert alert-warning social-post-dialog__alert" role="alert">{{ createError }}</div>
     }
@@ -227,11 +233,12 @@
         <input id="social-post-title" name="title" type="text" placeholder="貼文標題…" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
       </div>
       <div class="social-post-form__field">
-        <label class="social-post-form__label" for="social-post-board">看板</label>
-        <select id="social-post-board" name="boardCode" class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
-          <option value="GENERAL">{{ boardLabel('GENERAL') }}</option>
-          <option value="EVENT">{{ boardLabel('EVENT') }}</option>
-        </select>
+        <span class="social-post-form__label" id="social-post-board-label">看板</span>
+        <div class="social-board-picker" role="radiogroup" aria-labelledby="social-post-board-label">
+          @for (code of composerBoards; track code) {
+            <button type="button" role="radio" class="social-board-chip" [class.is-active]="newPost.boardCode === code" [attr.aria-checked]="newPost.boardCode === code" (click)="newPost.boardCode = code">{{ boardLabel(code) }}</button>
+          }
+        </div>
       </div>
       <div class="social-post-form__field">
         <label class="social-post-form__label" for="social-post-content">內容</label>
@@ -268,10 +275,14 @@
         <textarea id="social-post-content" name="content" class="textarea textarea-bordered w-full social-post-form__textarea" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
         <span class="social-post-form__hint">先選取文字再按格式；沒選取時會插入成對標記，游標停在中間，在裡面輸入即可。再按一次可取消。字數 {{ newPost.content.length }}。</span>
       </div>
-      @if (newPost.content.trim()) {
-        <div class="social-post-form__preview rounded-box border border-base-300 bg-base-200/40">
+      @if (newPost.content.trim() || postWide) {
+        <div class="social-post-form__preview">
           <span class="social-post-form__hint">預覽</span>
-          <app-social-post-content [content]="newPost.content" />
+          @if (newPost.content.trim()) {
+            <app-social-post-content [content]="newPost.content" />
+          } @else {
+            <p class="social-post-form__empty">在左邊輸入內容，這裡會即時顯示發布後的樣子。</p>
+          }
         </div>
       }
 
