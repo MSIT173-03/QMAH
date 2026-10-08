@@ -549,9 +549,9 @@
 
 
 .status-badge.unread-badge {
-  background: var(--qmah-surface-soft);
+  background: color-mix(in srgb, #c5493f 12%, var(--qmah-surface-elevated));
 
-  color: var(--qmah-primary-hover);
+  color: #a63b32;
 }
 
 
@@ -1130,3 +1130,7 @@
   outline: 2px solid var(--qmah-focus);
   outline-offset: 3px;
 }
+
+.unread-dot { background: #c5493f; }
+:host-context([data-theme='qmahdark']) .unread-dot { background: #e2675d; }
+:host-context([data-theme='qmahdark']) .status-badge.unread-badge { color: #f0b0aa; }

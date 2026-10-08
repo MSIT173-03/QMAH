@@ -748,3 +748,9 @@ textarea:focus-visible {
   --qmah-primary: #b3bff0; --qmah-primary-hover: #cbd3f5; --qmah-primary-content: #14182a;
   --color-primary: #b3bff0; --color-primary-content: #14182a;
 }
+
+/* 通知與狀態色：未讀數量＝紅（各大 SNS／系統通用）；成功綠、警告琥珀、錯誤紅、資訊藍。頭貼沒有圖片時用中性灰。 */
+.qmah-bell-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #c5493f; color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px var(--qmah-surface, #fff); }
+:host-context([data-theme='qmahdark']) .qmah-bell-badge { background: #e2675d; }
+.app-account__avatar { background: var(--qmah-surface-muted, #e6e0d3); color: var(--qmah-ink); }
+.app-account__avatar--image { background: var(--qmah-surface-muted, #e6e0d3); }
