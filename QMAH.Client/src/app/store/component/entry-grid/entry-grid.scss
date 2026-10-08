@@ -110,7 +110,16 @@
   .cat-card:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--tone) 24%, transparent); }
 }
 
-/* 磚面頂緣：回到單一內嵌色線＋細框（不另加色條）。 */
-.cat-card { border-width: 1px; border-color: color-mix(in srgb, var(--tone) 55%, var(--color-line)); box-shadow: var(--store-shadow-1); }
-.cat-card .cat-icon { box-shadow: inset 0 3px 0 var(--tone); }
-.cat-card:hover { box-shadow: var(--store-shadow-2); }
+/* 單一色調：所有入口磚面共用同一套暖中性＋銅色；只有懸停時換成商城強調色，不再用四種顏色分類。 */
+.cat-card, .cat-card--gold, .cat-card--azurite, .cat-card--cinnabar, .cat-card--jade { --tone: var(--color-teal); }
+.cat-card { padding: 0; border: 1px solid var(--color-line); border-radius: var(--store-radius); background: var(--color-surface); box-shadow: var(--store-shadow-1); }
+.cat-card .cat-icon { gap: 4px; padding: 14px 14px 12px; border-radius: var(--store-radius); background: transparent; box-shadow: none; overflow: visible; }
+.cat-chip { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 8px; border-radius: var(--qmah-radius-control); background: color-mix(in srgb, var(--tone) 12%, var(--color-surface)); transition: background 160ms ease, transform 160ms ease; }
+.cat-card .cat-glyph { position: static; transform: none; z-index: auto; width: 28px; height: 28px; opacity: 1; background: var(--tone); }
+.cat-card .cat-name { font-size: 15px; font-weight: 700; color: var(--color-ink); }
+.cat-card .cat-count { font-size: 13px; color: var(--color-muted); }
+.cat-card:hover { border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-line)); box-shadow: var(--store-shadow-2); }
+.cat-card:hover .cat-chip { background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); transform: scale(1.06); }
+.cat-card:hover .cat-glyph { background: var(--color-accent); }
+:host-context([data-theme='qmahdark']) .cat-card .cat-icon { background: transparent; }
+:host-context([data-theme='qmahdark']) .cat-card .cat-name { color: var(--color-ink); }
