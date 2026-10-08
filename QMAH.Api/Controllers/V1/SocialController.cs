@@ -76,7 +76,7 @@ public sealed class SocialController(
                 post.PostType,
                 post.PublisherType,
                 post.Title,
-                post.Content.Length > 180 ? post.Content.Substring(0, 180) + "…" : post.Content,
+                post.Content.Length > 600 ? post.Content.Substring(0, 600) : post.Content,
                 post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
                 post.MediaAssets.Count(media => media.Status == "ACTIVE"),
                 post.MediaAssets
@@ -90,7 +90,9 @@ public sealed class SocialController(
                 post.CreatedAt,
                 post.UpdatedAt));
 
-        return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
+        var postPage = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
+        // 摘要要去掉格式標記（資料庫只截取前段文字，標記在這裡解析成純文字再截成 180 字）。
+        return Ok(postPage with { Items = postPage.Items.Select(item => item with { ContentPreview = SocialMarkup.ToPlainText(item.ContentPreview, 180) }).ToList() });
     }
 
     // 批次取得多位會員的頭像網址（社群列表一次要顯示很多作者）；只回傳公開個人檔案且有頭像的會員。
@@ -620,7 +622,7 @@ public sealed class SocialController(
             .Select(item => new AnnouncementDto(
                 item.Id,
                 item.Title,
-                item.Content.Length > 180 ? item.Content.Substring(0, 180) : item.Content,
+                item.Content.Length > 600 ? item.Content.Substring(0, 600) : item.Content,
                 item.Content,
                 item.BoardCode,
                 item.CreatedAt,
@@ -635,7 +637,8 @@ public sealed class SocialController(
                 item.EventId,
                 item.CreatedAt));
 
-        return Ok(await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken));
+        var announcementPage = await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken);
+        return Ok(announcementPage with { Items = announcementPage.Items.Select(item => item with { Summary = SocialMarkup.ToPlainText(item.Summary, 180) }).ToList() });
     }
 
     [Authorize]
@@ -810,7 +813,8 @@ public sealed class SocialController(
             post.Latitude,
             post.Longitude,
             post.CreatedAt,
-            post.UpdatedAt));
+            post.UpdatedAt,
+            SocialMarkup.ToHtml(post.Content)));
     }
 
     // 只有作者本人能改自己的貼文；活動的社群入口貼文改由活動編輯／審核流程管理，這裡不開放直接改。

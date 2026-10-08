@@ -25,6 +25,10 @@ import { parseSocialMarkup } from '../../social-markup';
             @case ('s') { <s><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></s> }
             @case ('size') { <span [attr.data-size]="node.a"><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></span> }
             @case ('color') { <span [attr.data-color]="node.a"><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></span> }
+            @case ('center') { <div class="is-center"><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></div> }
+            @case ('spoiler') { <span class="is-spoiler" tabindex="0" role="button" aria-label="劇透內容，點擊顯示" (click)="reveal($event)" (keydown.enter)="reveal($event)"><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></span> }
+            @case ('url') { <a [href]="node.a" target="_blank" rel="noopener noreferrer nofollow"><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></a> }
+            @case ('hr') { <hr /> }
             @case ('h') { <h3><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></h3> }
             @case ('quote') { <blockquote><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></blockquote> }
             @case ('list') {
@@ -48,4 +52,9 @@ export class SocialPostContentComponent {
   content = input.required<string>();
 
   protected readonly nodes = computed(() => parseSocialMarkup(this.content()));
+
+  /** 劇透內容：點一下才顯示 */
+  protected reveal(event: Event): void {
+    (event.currentTarget as HTMLElement).classList.add('is-revealed');
+  }
 }

@@ -275,6 +275,31 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.applyContent(textarea, next, caretStart, caretStart + selected.length);
   }
 
+  /** 插入連結：有選取文字就包起來，網址欄位預先選取好；沒選取就插入範例文字。 */
+  insertPostLink(): void {
+    const textarea = this.contentTextarea;
+    if (!textarea) return;
+    const value = textarea.value;
+    const { selectionStart: start, selectionEnd: end } = textarea;
+    const label = value.slice(start, end) || '連結文字';
+    const open = '[url=https://';
+    const insert = open + ']' + label + '[/url]';
+    const urlStart = start + open.length - 'https://'.length;
+    this.applyContent(textarea, value.slice(0, start) + insert + value.slice(end), urlStart, urlStart + 'https://'.length);
+  }
+
+  /** 在游標處插入分隔線（獨立一行）。 */
+  insertPostRule(): void {
+    const textarea = this.contentTextarea;
+    if (!textarea) return;
+    const value = textarea.value;
+    const at = textarea.selectionEnd;
+    const head = value.slice(0, at);
+    const lead = head.length === 0 || head.endsWith('\n') ? '' : '\n';
+    const insert = lead + '[hr]\n';
+    this.applyContent(textarea, head + insert + value.slice(at), at + insert.length, at + insert.length);
+  }
+
   /** 把選取的每一行變成清單項目；沒有選取時插入一個空清單並把游標放在第一項。 */
   insertPostList(): void {
     const textarea = this.contentTextarea;

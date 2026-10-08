@@ -250,7 +250,8 @@ public sealed record SocialPostDetailsDto(
     decimal? Latitude,
     decimal? Longitude,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string? ContentHtml = null);
 
 public sealed record EventListItemDto(
     Guid Id,
