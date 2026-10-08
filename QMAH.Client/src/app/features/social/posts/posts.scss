@@ -539,7 +539,7 @@
 
 /* 切換看板、時間或排序時，舊貼文先留著並變淡，新結果到了再換；版面高度不會塌掉跳動 */
 .social-post-wall { min-height: 60vh; transition: opacity 160ms ease; }
-.social-post-wall.is-loading { opacity: 0.45; pointer-events: none; }
+.social-post-wall.is-loading { opacity: 0.8; }
 
 @media (max-width: 640px) { .qmah-social-page .social-upcoming__list { grid-template-columns: 1fr; } }
 

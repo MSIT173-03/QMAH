@@ -64,7 +64,7 @@
 .qmah-social-page .social-artifact__mark { font-family: var(--qmah-font-serif, serif); font-size: 4.5rem; font-weight: 700; color: color-mix(in srgb, var(--qmah-ink) 38%, transparent); }
 .qmah-social-page .social-artifact__body { display: grid; align-content: start; gap: 10px; min-width: 0; }
 .qmah-social-page .social-artifact__eyebrow { margin: 0; color: var(--qmah-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; }
-.qmah-social-page .social-artifact__name { margin: 0; font-family: var(--qmah-font-display, serif); font-size: 1.375rem; color: var(--qmah-ink); }
+.qmah-social-page .social-artifact__name { margin: 0; font-family: var(--qmah-font-serif); font-size: 1.375rem; color: var(--qmah-ink); overflow-wrap: anywhere; }
 .qmah-social-page .social-artifact__facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 0; }
 .qmah-social-page .social-artifact__facts div { display: grid; gap: 1px; }
 .qmah-social-page .social-artifact__facts dt { color: var(--qmah-muted); font-size: 0.75rem; }

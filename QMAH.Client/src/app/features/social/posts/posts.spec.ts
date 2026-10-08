@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 
 import { PostsComponent } from './posts';
+import { SocialPostListItem } from '../../../core/services/social-api';
 
 describe('PostsComponent', () => {
   let component: PostsComponent;
@@ -24,6 +25,52 @@ describe('PostsComponent', () => {
 
   afterEach(() => {
     httpMock.verify();
+  });
+
+  function initializePosts(items: SocialPostListItem[] = []): void {
+    fixture.detectChanges();
+    httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({
+      items: req.request.params.has('postType') ? [] : items,
+      page: 1, pageSize: 20, totalCount: 100, totalPages: 5,
+    }));
+    httpMock.expectOne(r => r.url.endsWith('/social/boards')).flush([]);
+    httpMock.match(r => r.url.endsWith('/social/events')).forEach(req => req.flush({ items: [], totalCount: 0 }));
+  }
+
+  it('cancels an older sort request and restores a cached page immediately', () => {
+    const recent = { id: 'recent', createdAt: '2026-10-08T00:00:00Z' } as SocialPostListItem;
+    initializePosts([recent]);
+    component.toggleSort();
+    const pending = httpMock.expectOne(r => r.params.get('sort') === 'oldest');
+    component.toggleSort();
+    expect(pending.cancelled).toBe(true);
+    expect(component.posts).toEqual([recent]);
+    expect(component.loading).toBe(false);
+    httpMock.expectNone(r => r.url.endsWith('/social/posts'));
+  });
+
+  it('keeps the two server pages separate and invalidates them when filters change', () => {
+    const recent = { id: 'recent', createdAt: '2026-10-08T00:00:00Z' } as SocialPostListItem;
+    const old = { id: 'old', createdAt: '2025-01-01T00:00:00Z' } as SocialPostListItem;
+    initializePosts([recent]);
+    component.toggleSort();
+    httpMock.expectOne(r => r.params.get('sort') === 'oldest').flush({ items: [old], totalCount: 100 });
+    component.toggleSort();
+    expect(component.posts).toEqual([recent]);
+    component.toggleSort();
+    expect(component.posts).toEqual([old]);
+    component.selectBoard('EVENTS');
+    httpMock.expectOne(r => r.params.get('boardCode') === 'EVENTS').flush({ items: [], totalCount: 0 });
+    component.toggleSort();
+    httpMock.expectOne(r => r.params.get('sort') === 'newest' && r.params.get('boardCode') === 'EVENTS').flush({ items: [], totalCount: 0 });
+  });
+
+  it('cancels the active post request when leaving the page', () => {
+    initializePosts();
+    component.loadPosts();
+    const pending = httpMock.expectOne(r => r.url.endsWith('/social/posts'));
+    fixture.destroy();
+    expect(pending.cancelled).toBe(true);
   });
 
   it('should create', () => {

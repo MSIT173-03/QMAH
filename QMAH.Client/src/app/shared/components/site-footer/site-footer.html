@@ -1,16 +1,18 @@
-<footer class="site-footer">
+<footer class="site-footer" aria-label="清明鑑定屋網站資訊">
   <div class="footer-cols">
     <div class="footer-brand">
-      <img [src]="logoSrc()" [alt]="logoAlt" class="brand-logo-img brand-logo-img--lg self-start" />
-      <p class="footer-brand-note">{{ brandNote }}</p>
+      <a routerLink="/home" class="footer-brand-link" aria-label="清明鑑定屋首頁">
+        <img [src]="logoSrc()" [alt]="logoAlt" class="brand-logo-img" width="240" height="60" loading="lazy" />
+      </a>
+      <p class="footer-brand-note"><span>從文物出發，逛圖鑑、玩遊戲，</span><span>也看看大家的分享。</span></p>
     </div>
 
     @for (col of columns; track col.title) {
       <nav class="footer-col" [attr.aria-label]="col.title">
-        <h2 class="label-tag">{{ col.title }}</h2>
+        <h2>{{ col.title }}</h2>
         @for (link of col.links; track link.label) {
           @if (link.external) {
-            <a class="footer-col-link" [href]="link.href" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
+            <a class="footer-col-link" [href]="link.href" target="_blank" rel="noopener noreferrer">{{ link.label }} <span aria-hidden="true">↗</span></a>
           } @else {
             <a [routerLink]="link.href" class="footer-col-link">{{ link.label }}</a>
           }
@@ -23,7 +25,6 @@
     <div class="footer-bottom-row">
       <span>{{ copyright }}</span>
       <span>文物探索與交流平台</span>
-      <a class="footer-link" [href]="githubUrl" target="_blank" rel="noopener noreferrer">查看專案</a>
     </div>
   </div>
 </footer>

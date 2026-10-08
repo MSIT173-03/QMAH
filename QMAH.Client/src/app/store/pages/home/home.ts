@@ -25,7 +25,7 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 @Component({
   selector: 'app-home',
   host: { class: 'store-app' },
-  imports: [ScrollTop, 
+  imports: [
     SessionBar,
     SearchBar,
     HeroCarousel,

@@ -64,7 +64,11 @@
         </div>
       }
       }
-      <app-social-post-content [content]="post.content" />
+      @if (post.postType === 'EVENT' || post.boardCode === 'EVENT' || post.boardCode === 'EVENTS' || post.eventId) {
+        <app-social-event-content [content]="post.content" [eventId]="post.eventId" />
+      } @else {
+        <app-social-post-content [content]="post.content" />
+      }
       @if (post.mediaLayout !== 'PRIMARY') {
       @if (attachedMedia(post).length > 0) {
         <div class="social-gallery" [attr.data-count]="attachedMedia(post).length > 4 ? 'many' : attachedMedia(post).length">

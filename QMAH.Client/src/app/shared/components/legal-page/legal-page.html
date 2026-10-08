@@ -13,12 +13,36 @@
       <p class="legal-page__updated">最後更新：{{ updatedAt }}</p>
     </header>
 
+    <nav class="legal-page__navigation" aria-label="政策章節導覽">
+      <details open>
+        <summary>文章目錄</summary>
+        <ol>
+        @for (section of content().sections; track section.title; let index = $index) {
+          <li><a [href]="chapterHref(index)" (click)="jumpToSection(index, $event)">{{ section.title }}</a></li>
+        }
+        </ol>
+      </details>
+      <p>點選目錄前往章節，點選章節標題可展開或收合。</p>
+    </nav>
+
     <article class="legal-page__document">
-      @for (section of content().sections; track section.title) {
-        <section>
-          <h2>{{ section.title }}</h2>
+      @for (section of content().sections; track section.title; let index = $index) {
+        <section [id]="'legal-section-' + index">
+          <details open>
+          <summary><h2>{{ section.title }}</h2></summary>
+          <div class="legal-page__section-content">
           @for (paragraph of section.paragraphs; track paragraph) {
             <p>{{ paragraph }}</p>
+          }
+          </div>
+          </details>
+        </section>
+      }
+      @if (content().sources; as sources) {
+        <section>
+          <h2>相關法規</h2>
+          @for (source of sources; track source.url) {
+            <p><a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.label }}</a></p>
           }
         </section>
       }

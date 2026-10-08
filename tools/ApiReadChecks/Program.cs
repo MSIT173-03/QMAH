@@ -72,6 +72,19 @@ var notificationSql = db.UserNotifications.AsNoTracking().Where(item => new[] { 
         Created = group.Max(item => item.CreatedAt), Read = group.Max(item => item.ReadAt)
     }).ToQueryString();
 Check(notificationSql.Contains("GROUP BY") && notificationSql.Contains("WHERE"), "通知彙總由 SQL 篩選線上會員且不讀取通知內容");
+var mediaRoot = Path.Combine(Path.GetTempPath(), "qmah-media-checks");
+foreach (var storedPath in new[] { "social/pending/1.png", "social/posts/one/2.webp", "/media/catalog/sample.jpg" })
+{
+    Check(QMAH.Api.Infrastructure.Media.SocialMediaPath.TryResolve(mediaRoot, storedPath, out var resolved)
+        && resolved.StartsWith(mediaRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal), "媒體路徑可讀取：" + storedPath);
+}
+Check(QMAH.Api.Infrastructure.Media.SocialMediaPath.TryResolve(mediaRoot, "/media/catalog/sample.jpg", out var legacy)
+    && legacy == Path.Combine(mediaRoot, "catalog", "sample.jpg"), "舊公開媒體 URL 正確對應根目錄內的檔案");
+foreach (var storedPath in new[] { "../secret.png", "/media/../secret.png", "/etc/passwd", @"C:\secret.png", @"\\server\share\secret.png", "social/file.png:stream", "https://example.com/image.png", "", "/media/", "social/\0.png" })
+{
+    Check(!QMAH.Api.Infrastructure.Media.SocialMediaPath.TryResolve(mediaRoot, storedPath, out _), "拒絕不安全或無效媒體路徑");
+}
+
 static void Check(bool passed, string name)
 {
     if (!passed) throw new InvalidOperationException(name);

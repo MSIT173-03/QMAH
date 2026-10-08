@@ -127,7 +127,10 @@ public sealed class SocialController(
                 post.Latitude,
                 post.Longitude,
                 post.CreatedAt,
-                post.UpdatedAt));
+                post.UpdatedAt,
+                post.Event != null
+                    ? new SocialPostEventSummaryDto(post.Event.StartAt, post.Event.EndAt, post.Event.Location, post.Event.Capacity)
+                    : null));
 
         var postPage = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
         // 摘要要去掉格式標記（資料庫只截取前段文字，標記在這裡解析成純文字再截成 180 字）。
