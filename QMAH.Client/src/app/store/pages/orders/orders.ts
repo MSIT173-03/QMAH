@@ -40,6 +40,53 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
   CREDIT_CARD: '信用卡',
 };
 
+/** 篩選頁籤：全部、待付款、處理中（已付款／撿貨中）、已寄送、已完成、已取消 */
+export type OrderFilter = 'ALL' | 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED';
+
+const ORDER_FILTERS: { key: OrderFilter; label: string }[] = [
+  { key: 'ALL', label: '全部' },
+  { key: 'PENDING', label: '待付款' },
+  { key: 'PROCESSING', label: '處理中' },
+  { key: 'SHIPPED', label: '已寄送' },
+  { key: 'COMPLETED', label: '已完成' },
+  { key: 'CANCELLED', label: '已取消' },
+];
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: '尚未付款',
+  PAID: '已付款',
+  FAILED: '付款失敗',
+  CANCELLED: '已取消',
+  REFUND_REQUIRED: '待退款',
+};
+
+const FLOW: { status: string; label: string }[] = [
+  { status: 'PENDING_PAYMENT', label: '訂單成立' },
+  { status: 'PAID', label: '已付款' },
+  { status: 'FULFILLING', label: '撿貨中' },
+  { status: 'SHIPPED', label: '已寄送' },
+  { status: 'COMPLETED', label: '已完成' },
+];
+
+function filterGroupOf(status: string): OrderFilter {
+  if (status === 'PENDING_PAYMENT') return 'PENDING';
+  if (status === 'PAID' || status === 'FULFILLING') return 'PROCESSING';
+  if (status === 'SHIPPED') return 'SHIPPED';
+  if (status === 'COMPLETED') return 'COMPLETED';
+  return 'CANCELLED';
+}
+
+function buildSteps(status: string): OrderRow['steps'] {
+  if (status === 'CANCELLED') {
+    return [{ label: '訂單成立', state: 'done' }, { label: '已取消', state: 'cancelled' }];
+  }
+  const at = Math.max(0, FLOW.findIndex((step) => step.status === status));
+  return FLOW.map((step, index) => ({
+    label: step.label,
+    state: index < at ? 'done' : index === at ? (status === 'COMPLETED' ? 'done' : 'current') : 'todo',
+  }));
+}
+
 /** 畫面上一筆訂單需要的顯示文字與可用動作 */
 interface OrderRow {
   id: string;
@@ -50,6 +97,13 @@ interface OrderRow {
   payableLabel: string;
   createdLabel: string;
   itemsLabel: string;
+  /** 商品明細（名稱與數量） */
+  lines: { name: string; quantity: number }[];
+  totalQuantity: number;
+  /** 訂單進度：已完成／進行中／尚未到達的步驟；已取消的訂單只有「訂單成立」與「已取消」 */
+  steps: { label: string; state: 'done' | 'current' | 'todo' | 'cancelled' }[];
+  paymentStatusLabel: string;
+  filterGroup: OrderFilter;
   /** 付款狀態的補充說明（付款失敗、需人工退款）；沒有時為空字串 */
   paymentNote: string;
   canCancel: boolean;
@@ -101,6 +155,31 @@ export class Orders {
   protected readonly loading = computed(() => this.result() === undefined);
   protected readonly orders = computed(() => (this.result()?.items ?? []).map(toRow));
   protected readonly isEmpty = computed(() => !!this.result() && this.orders().length === 0);
+
+  /** 目前頁面的狀態篩選與每個頁籤的筆數 */
+  protected readonly filter = signal<OrderFilter>('ALL');
+  protected readonly filters = computed(() =>
+    ORDER_FILTERS.map((tab) => ({
+      ...tab,
+      count: tab.key === 'ALL' ? this.orders().length : this.orders().filter((order) => order.filterGroup === tab.key).length,
+    })),
+  );
+  protected readonly visibleOrders = computed(() =>
+    this.filter() === 'ALL' ? this.orders() : this.orders().filter((order) => order.filterGroup === this.filter()),
+  );
+
+  /** 展開查看詳情的訂單 */
+  protected readonly expanded = signal<ReadonlySet<string>>(new Set());
+  protected isExpanded(id: string): boolean {
+    return this.expanded().has(id);
+  }
+  protected toggle(id: string): void {
+    this.expanded.update((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }
   protected readonly page = computed(() => this.result()?.page ?? 1);
   protected readonly totalPages = computed(() => Math.max(1, this.result()?.totalPages ?? 1));
 
@@ -242,6 +321,11 @@ function toRow(order: MyOrder): OrderRow {
     payableLabel: formatMoney(order.totalAmount),
     createdLabel: formatDateTime(order.createdAt),
     itemsLabel: items.join('、'),
+    lines: order.items.map((item) => ({ name: item.productName, quantity: item.quantity })),
+    totalQuantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
+    steps: buildSteps(order.status),
+    paymentStatusLabel: PAYMENT_STATUS_LABELS[order.paymentStatus ?? ''] ?? '未記錄',
+    filterGroup: filterGroupOf(order.status),
     paymentNote:
       order.paymentStatus === 'REFUND_REQUIRED'
         ? '訂單取消後才收到付款，客服將為你辦理退款。'

@@ -672,13 +672,13 @@ textarea:focus-visible {
 .app-shell[data-area='user'] .app-main { background-color: #f7f3ec; background-image: none; }
 .app-shell[data-area='user'] .app-main::before {
   display: block;
-  background: url('/patterns/temple-bronze.svg') center top / 256px 256px repeat;
+  background: url('/patterns/temple-blue.svg') center top / 256px 256px repeat;
   -webkit-mask: none;
   mask: none;
   opacity: 1;
 }
 :host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main { background-color: #17181a; }
-:host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main::before { background: url('/patterns/temple-bronze-dark.svg') center top / 256px 256px repeat; }
+:host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main::before { background: url('/patterns/temple-blue-dark.svg') center top / 256px 256px repeat; }
 
 /* 社群與會員中心：底紋只鋪左右邊緣，向中央漸層淡出。 */
 .app-shell:is([data-area='social'], [data-area='user']) .app-main::before {
@@ -738,3 +738,13 @@ textarea:focus-visible {
 /* 次導覽的鍵盤焦點：圓角貼合、用該領域色，不再出現括號狀的外框。 */
 .app-context-navigation a:focus-visible { outline: 2px solid var(--nav-accent, currentColor); outline-offset: -2px; border-radius: var(--qmah-radius-control); }
 .app-context-navigation a:focus:not(:focus-visible) { outline: none; }
+
+/* 會員中心的主色統一為靛藍：返回鈕、連結、標題等凡取用 --qmah-primary 的元件都跟著變，不再出現青綠。 */
+.app-shell[data-area='user'] .app-main {
+  --qmah-primary: #3b4a7a; --qmah-primary-hover: #2f3d6a; --qmah-primary-content: #fff;
+  --color-primary: #3b4a7a; --color-primary-content: #fff;
+}
+:host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main {
+  --qmah-primary: #b3bff0; --qmah-primary-hover: #cbd3f5; --qmah-primary-content: #14182a;
+  --color-primary: #b3bff0; --color-primary-content: #14182a;
+}

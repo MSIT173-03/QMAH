@@ -110,16 +110,39 @@
   .cat-card:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--tone) 24%, transparent); }
 }
 
-/* 單一色調：所有入口磚面共用同一套暖中性＋銅色；只有懸停時換成商城強調色，不再用四種顏色分類。 */
-.cat-card, .cat-card--gold, .cat-card--azurite, .cat-card--cinnabar, .cat-card--jade { --tone: var(--color-teal); }
-.cat-card { padding: 0; border: 1px solid var(--color-line); border-radius: var(--store-radius); background: var(--color-surface); box-shadow: var(--store-shadow-1); }
-.cat-card .cat-icon { gap: 4px; padding: 14px 14px 12px; border-radius: var(--store-radius); background: transparent; box-shadow: none; overflow: visible; }
-.cat-chip { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 8px; border-radius: var(--qmah-radius-control); background: color-mix(in srgb, var(--tone) 12%, var(--color-surface)); transition: background 160ms ease, transform 160ms ease; }
-.cat-card .cat-glyph { position: static; transform: none; z-index: auto; width: 28px; height: 28px; opacity: 1; background: var(--tone); }
-.cat-card .cat-name { font-size: 15px; font-weight: 700; color: var(--color-ink); }
-.cat-card .cat-count { font-size: 13px; color: var(--color-muted); }
-.cat-card:hover { border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-line)); box-shadow: var(--store-shadow-2); }
-.cat-card:hover .cat-chip { background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); transform: scale(1.06); }
-.cat-card:hover .cat-glyph { background: var(--color-accent); }
-:host-context([data-theme='qmahdark']) .cat-card .cat-icon { background: transparent; }
-:host-context([data-theme='qmahdark']) .cat-card .cat-name { color: var(--color-ink); }
+/* 磚面頂緣：回到單一內嵌色線＋細框（不另加色條）。 */
+.cat-card { border-width: 1px; border-color: color-mix(in srgb, var(--tone) 55%, var(--color-line)); box-shadow: var(--store-shadow-1); }
+.cat-card .cat-icon { box-shadow: inset 0 3px 0 var(--tone); }
+.cat-card:hover { box-shadow: var(--store-shadow-2); }
+
+/* 配色沿用圖鑑的礦物顏料色（slate／bronze／cinnabar／ochre／jade／celadon／indigo／rouge／sumi／plum）。 */
+.cat-card--slate { --tone: rgb(96 128 142); }
+.cat-card--bronze { --tone: rgb(194 154 44); }
+.cat-card--cinnabar { --tone: rgb(200 74 58); }
+.cat-card--ochre { --tone: rgb(172 100 58); }
+.cat-card--jade { --tone: rgb(76 140 108); }
+.cat-card--celadon { --tone: rgb(84 140 162); }
+.cat-card--indigo { --tone: rgb(80 102 160); }
+.cat-card--rouge { --tone: rgb(184 88 128); }
+.cat-card--sumi { --tone: rgb(100 102 108); }
+.cat-card--plum { --tone: rgb(132 104 164); }
+.cat-card--stone { --tone: rgb(120 112 100); }
+:host-context([data-theme='qmahdark']) {
+  .cat-card--slate { --tone: rgb(140 176 190); }
+  .cat-card--bronze { --tone: rgb(230 192 84); }
+  .cat-card--cinnabar { --tone: rgb(240 120 104); }
+  .cat-card--ochre { --tone: rgb(222 148 100); }
+  .cat-card--jade { --tone: rgb(120 190 154); }
+  .cat-card--celadon { --tone: rgb(130 186 208); }
+  .cat-card--indigo { --tone: rgb(132 154 214); }
+  .cat-card--rouge { --tone: rgb(230 134 172); }
+  .cat-card--sumi { --tone: rgb(160 162 168); }
+  .cat-card--plum { --tone: rgb(180 152 212); }
+  .cat-card--stone { --tone: rgb(170 162 150); }
+}
+/* 改進：磚面底部帶一點色彩漸層，圖案放大並稍微淡化成浮水印，文字維持中性。 */
+.cat-card .cat-icon { background: linear-gradient(160deg, var(--color-surface) 45%, color-mix(in srgb, var(--tone) 14%, var(--color-surface))); }
+.cat-glyph { width: 92px; height: 92px; opacity: 0.6; }
+.cat-card:hover .cat-glyph { opacity: 0.85; }
+.cat-card .cat-icon { padding: 14px 14px 16px; min-height: 84px; }
+:host-context([data-theme='qmahdark']) .cat-card .cat-icon { background: linear-gradient(160deg, var(--color-surface) 45%, color-mix(in srgb, var(--tone) 16%, var(--color-surface))); }

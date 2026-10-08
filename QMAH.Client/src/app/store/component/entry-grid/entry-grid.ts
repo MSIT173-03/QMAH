@@ -3,7 +3,7 @@ import { SectionHead } from '../section-head/section-head';
 import { StoreLink } from '../../shared/store-link';
 
 /** 入口卡片的底色角色 */
-export type EntryTone = 'jade' | 'gold' | 'azurite' | 'cinnabar';
+export type EntryTone = 'slate' | 'bronze' | 'cinnabar' | 'ochre' | 'jade' | 'celadon' | 'indigo' | 'rouge' | 'sumi' | 'plum' | 'stone';
 
 /** 入口卡片的單一項目 */
 export interface EntryGridItem {

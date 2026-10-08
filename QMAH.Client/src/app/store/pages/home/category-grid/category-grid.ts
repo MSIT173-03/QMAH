@@ -42,10 +42,15 @@ export class CategoryGrid {
     return 'stone';
   }
 
+  /** 與圖鑑分類籤相同的顏色對應。 */
   private categoryTone(name: string): EntryTone {
-    if (name.includes('青銅') || name.includes('錢') || name.includes('幣')) return 'gold';
-    if (name.includes('繪') || name.includes('陶') || name.includes('瓷') || name.includes('琺瑯')) return 'azurite';
-    if (name.includes('雕')) return 'cinnabar';
-    return 'jade';
+    if (/漆/.test(name)) return 'cinnabar';
+    if (/陶|瓷|磚|瓦/.test(name)) return 'celadon';
+    if (/玉/.test(name)) return 'jade';
+    if (/琺瑯/.test(name)) return 'rouge';
+    if (/畫|書|紙|帖|絹|織|繡/.test(name)) return 'indigo';
+    if (/幣/.test(name)) return 'bronze';
+    if (/銅|金|銀|錫|鐵/.test(name)) return 'ochre';
+    return 'slate';
   }
 }

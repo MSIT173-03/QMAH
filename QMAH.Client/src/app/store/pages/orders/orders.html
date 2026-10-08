@@ -25,24 +25,62 @@
     } @else if (isEmpty()) {
     <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" [ctaLabel]="emptyCtaLabel" [ctaHref]="productListHref" />
     } @else {
+    <!-- 狀態頁籤：只篩選目前這一頁載入的訂單 -->
+    <div class="order-tabs" role="tablist" aria-label="訂單狀態">
+      @for (tab of filters(); track tab.key) {
+      <button type="button" role="tab" class="order-tab" [class.is-active]="filter() === tab.key"
+        [attr.aria-selected]="filter() === tab.key" (click)="filter.set(tab.key)">
+        {{ tab.label }}<span class="order-tab-count">{{ tab.count }}</span>
+      </button>
+      }
+    </div>
+
+    @if (visibleOrders().length === 0) {
+    <p class="order-empty-filter">這個狀態目前沒有訂單。</p>
+    }
     <ul class="order-list">
-      @for (order of orders(); track order.id) {
+      @for (order of visibleOrders(); track order.id) {
       <li class="order-card" [attr.data-status]="order.status">
         <div class="order-card-head">
-          <span class="order-card-no">{{ order.orderNo }}</span>
+          <div class="order-card-id">
+            <span class="order-card-no">訂單編號 {{ order.orderNo }}</span>
+            <span class="order-card-date">{{ order.createdLabel }} 成立</span>
+          </div>
           <span class="order-card-status">{{ order.statusLabel }}</span>
         </div>
-        <p class="order-card-items" [attr.title]="order.itemsLabel">{{ order.itemsLabel }}</p>
-        <dl class="order-card-meta">
-          <div><dt>應付金額</dt><dd class="order-card-mono">{{ order.payableLabel }}</dd></div>
-          <div><dt>付款方式</dt><dd>{{ order.paymentLabel }}</dd></div>
-          <div><dt>建立時間</dt><dd class="order-card-mono">{{ order.createdLabel }}</dd></div>
-        </dl>
+
+        <!-- 進度：訂單成立 → 已付款 → 撿貨中 → 已寄送 → 已完成 -->
+        <ol class="order-steps" aria-label="訂單進度">
+          @for (step of order.steps; track step.label) {
+          <li class="order-step" [attr.data-state]="step.state"><span class="order-step-dot"></span><span>{{ step.label }}</span></li>
+          }
+        </ol>
+
+        <div class="order-card-body">
+          <ul class="order-lines">
+            @for (line of order.lines.slice(0, 2); track $index) {
+            <li><span class="order-line-name">{{ line.name }}</span><span class="order-line-qty">× {{ line.quantity }}</span></li>
+            }
+            @if (order.lines.length > 2) {
+            <li class="order-line-more">另外 {{ order.lines.length - 2 }} 項商品…</li>
+            }
+          </ul>
+          <div class="order-card-total">
+            <span>{{ order.paymentLabel }}・共 {{ order.totalQuantity }} 件，應付金額</span>
+            <strong>{{ order.payableLabel }}</strong>
+          </div>
+        </div>
+
         @if (order.paymentNote) {
         <p class="order-card-note">{{ order.paymentNote }}</p>
         }
-        @if (order.canCancel) {
+
         <div class="order-card-actions">
+          <button type="button" class="order-toggle" [attr.aria-expanded]="isExpanded(order.id)" (click)="toggle(order.id)">
+            {{ isExpanded(order.id) ? '收合詳情' : '查看詳情' }}
+          </button>
+          <span class="order-actions-spacer"></span>
+          @if (order.canCancel) {
           @if (order.canPay) {
           <p class="order-card-hint">{{ paidHint }}</p>
           <button type="button" class="btn-solid order-pay" [disabled]="payingId() !== null" (click)="onPay(order)">
@@ -50,6 +88,34 @@
           </button>
           }
           <button type="button" class="btn-outline order-cancel" (click)="onCancelClick(order)">{{ cancelLabel }}</button>
+          }
+        </div>
+
+        @if (isExpanded(order.id)) {
+        <div class="order-detail">
+          <section>
+            <h3>商品明細</h3>
+            <ul class="order-detail-lines">
+              @for (line of order.lines; track $index) {
+              <li><span>{{ line.name }}</span><span>× {{ line.quantity }}</span></li>
+              }
+            </ul>
+          </section>
+          <section>
+            <h3>付款資訊</h3>
+            <dl class="order-card-meta">
+              <div><dt>付款方式</dt><dd>{{ order.paymentLabel }}</dd></div>
+              <div><dt>付款狀態</dt><dd>{{ order.paymentStatusLabel }}</dd></div>
+              <div><dt>應付金額</dt><dd class="order-card-mono">{{ order.payableLabel }}</dd></div>
+            </dl>
+          </section>
+          <section>
+            <h3>訂單紀錄</h3>
+            <ol class="order-history">
+              <li><span class="order-history-label">訂單成立</span><span class="order-card-mono">{{ order.createdLabel }}</span></li>
+              <li><span class="order-history-label">目前狀態</span><span>{{ order.statusLabel }}</span></li>
+            </ol>
+          </section>
         </div>
         }
       </li>

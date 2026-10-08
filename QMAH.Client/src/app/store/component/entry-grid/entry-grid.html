@@ -4,9 +4,9 @@
     @for (item of items(); track item.link) {
       <a [storeLink]="item.link" [class]="'cat-card cat-card--' + item.tone">
         <div class="cat-icon">
-          <span class="cat-chip"><span class="cat-glyph" [attr.data-glyph]="item.glyph" aria-hidden="true"></span></span>
           <span class="cat-name">{{ item.name }}</span>
           <span class="cat-count">{{ item.count }} 件</span>
+          <span class="cat-glyph" [attr.data-glyph]="item.glyph" aria-hidden="true"></span>
         </div>
       </a>
     }
