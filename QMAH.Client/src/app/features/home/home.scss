@@ -427,3 +427,89 @@ a:focus-visible {
     padding: 30px 22px 34px;
   }
 }
+
+/* —— 首頁美化：Temple 紋樣與排版細節（沿用既有配色與結構，不改內容）—— */
+.home-page {
+  position: relative;
+  isolation: isolate;
+}
+
+/* 全頁底紋：與遊戲相同的 Temple 紋樣，以玉石綠上色並在上下緣淡出，不干擾內容。 */
+.home-page::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  pointer-events: none;
+  background: color-mix(in srgb, var(--home-teal) 13%, transparent);
+  -webkit-mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
+  mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
+  -webkit-mask-composite: source-in;
+}
+.home-page::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 55%, var(--home-paper) 100%);
+}
+
+/* 英雄區：左側文案區角落加一小塊紋樣，和右側夜景照片形成呼應。 */
+.home-hero__copy {
+  position: relative;
+  isolation: isolate;
+}
+.home-hero__copy::before {
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: -1;
+  width: 168px;
+  height: 168px;
+  content: '';
+  pointer-events: none;
+  background: color-mix(in srgb, var(--home-gold) 36%, transparent);
+  -webkit-mask: url('/assets/game/hero-temple.svg') left top / 168px 168px no-repeat;
+  mask: url('/assets/game/hero-temple.svg') left top / 168px 168px no-repeat;
+}
+.home-hero h1 { text-wrap: balance; }
+.home-hero__lead { text-wrap: pretty; }
+
+/* 探索入口：改成各自獨立的圓角卡片，五項時最後一張橫跨整列，不留空洞。 */
+.home-route-list {
+  gap: var(--qmah-space-3);
+  border-top: 0;
+}
+.home-route,
+.home-route:nth-child(even) {
+  padding: var(--qmah-space-4) var(--qmah-space-4);
+  border: 1px solid var(--home-border);
+  border-radius: var(--qmah-radius-panel);
+  background: var(--home-white);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--home-ink) 6%, transparent);
+}
+.home-route:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.home-route:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--home-teal) 38%, transparent);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--home-teal) 14%, transparent);
+}
+.home-route:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
+.home-route__icon { transition: background-color 160ms ease, color 160ms ease; }
+.home-route:hover .home-route__icon { background: var(--home-teal); color: var(--qmah-paper); }
+
+/* 區塊標題下方補一條短金線，作為章節分隔。 */
+.home-section-heading h2::after {
+  display: block;
+  width: 44px;
+  height: 3px;
+  margin-top: 14px;
+  border-radius: 2px;
+  background: var(--home-gold);
+  content: '';
+}
+
+.home-museum-note { box-shadow: var(--qmah-shadow-float); }
+
+@media (max-width: 640px) { .home-route-list { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .home-route, .home-route__icon { transition: none; } .home-route:hover { transform: none; } }
