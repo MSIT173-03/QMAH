@@ -139,6 +139,6 @@ a[data-area='store'] { --nav-accent: #8b57c9; }
 :host-context([data-theme='qmahdark']) a[data-area='social'] { --nav-accent: #ff8a80; }
 :host-context([data-theme='qmahdark']) a[data-area='store'] { --nav-accent: #bf93f2; }
 .area-navigation--desktop a { gap: 8px; color: color-mix(in srgb, currentColor 78%, transparent); }
-.area-navigation--desktop a ::ng-deep svg { color: var(--nav-accent, currentColor); }
+.area-navigation--desktop a:not(:hover):not(.is-active) ::ng-deep svg { color: inherit; }
 .area-navigation--desktop a.is-active { color: var(--qmah-ink); font-weight: 800; }
-.area-navigation--mobile a ::ng-deep svg { color: var(--nav-accent, currentColor); }
+.area-navigation--mobile a:hover ::ng-deep svg, .area-navigation--mobile a.is-active ::ng-deep svg { color: var(--nav-accent, currentColor); }

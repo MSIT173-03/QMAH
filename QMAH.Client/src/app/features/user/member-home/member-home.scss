@@ -1113,3 +1113,18 @@
   .member-status { color: #8fd3a8; }
   .quick-link { background: color-mix(in srgb, var(--q) 16%, #2b3033); border-color: color-mix(in srgb, var(--q) 40%, transparent); }
 }
+
+/* 常用功能：圖示放大加底塊；深色模式用提亮的色、白字，確保一眼看得到。 */
+.quick-link app-qmah-icon { width: 30px; height: 30px; padding: 6px; box-sizing: content-box; border-radius: 12px; background: color-mix(in srgb, var(--q) 16%, transparent); }
+:host-context([data-theme='qmahdark']) {
+  .quick-daily { --q: #ff8a4c; }
+  .quick-coupon { --q: #b794f0; }
+  .quick-notice { --q: #4fd1dc; }
+  .quick-link {
+    color: #f4f2ec;
+    background: color-mix(in srgb, var(--q) 20%, #2b3033);
+    border-color: color-mix(in srgb, var(--q) 60%, transparent);
+  }
+  .quick-link app-qmah-icon { background: color-mix(in srgb, var(--q) 28%, transparent); }
+  .quick-link:hover { box-shadow: 0 8px 20px color-mix(in srgb, var(--q) 30%, transparent); }
+}
