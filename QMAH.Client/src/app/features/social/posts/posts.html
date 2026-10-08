@@ -147,43 +147,45 @@
     @if (!loading) {
     @for (post of posts; track post.id) {
     <article class="social-post-card" [class.social-post-card--text]="!post.coverImageUrl">
-      @if (post.coverImageUrl) {
-        <figure class="social-post-card__cover">
-          <img [src]="post.coverImageUrl" alt="" loading="lazy" />
-        </figure>
-      }
       <div class="social-post-card__body">
-        <div class="social-post-card__meta">
+        <header class="social-post-card__head">
+          <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
+          <div class="social-post-card__who">
+            <p class="social-post-card__author">
+              @if (post.publisherType === 'COMMUNITY' && post.userId) {
+                <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
+              } @else {
+                {{ post.displayName || '匿名會員' }}
+              }
+            </p>
+            <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+          </div>
           <div class="social-post-card__tags">
             <span class="social-tag">{{ boardLabel(post.boardCode) }}</span>
             @if (post.postType === 'ANNOUNCEMENT') {
               <span class="social-tag social-tag--notice">站方公告</span>
             }
           </div>
-          <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
-        </div>
+        </header>
         <h2 class="social-post-card__title">
           <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
         </h2>
-        <p class="social-post-card__author social-icon-label">
-          <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
-          @if (post.publisherType === 'COMMUNITY' && post.userId) {
-            <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
-          } @else {
-            {{ post.displayName || '匿名會員' }}
-          }
-        </p>
         <p class="social-post-card__excerpt">{{ stripMarkup(post.contentPreview) }}</p>
+        @if (post.coverImageUrl) {
+          <a class="social-post-card__cover" [routerLink]="['/social/posts', post.id]" tabindex="-1" aria-hidden="true">
+            <img [src]="post.coverImageUrl" alt="" loading="lazy" />
+          </a>
+        }
         <div class="social-post-card__footer">
           <p class="social-post-card__stats">
             <span class="social-icon-label">
               <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
-              {{ post.commentCount || 0 }} 則留言
+              {{ post.commentCount || 0 }}
             </span>
             @if (post.mediaCount > 0) {
               <span class="social-icon-label">
                 <svg lucideImage aria-hidden="true" focusable="false"></svg>
-                {{ post.mediaCount }} 張圖片
+                {{ post.mediaCount }}
               </span>
             }
           </p>

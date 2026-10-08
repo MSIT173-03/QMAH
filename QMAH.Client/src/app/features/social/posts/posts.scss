@@ -157,12 +157,12 @@
 
 .social-hero__title {
   margin: 0;
-  font-family: var(--qmah-font-serif);
+  font-family: var(--qmah-font-sans);
   /* ui-integration: 輪播標題不得大過頁面 h1（page-title 28–42px），避免層級顛倒。 */
   font-size: clamp(20px, 2.2vw, 26px);
   line-height: var(--qmah-type-heading-leading);
   font-weight: 700;
-  color: var(--qmah-social-action);
+  color: var(--qmah-ink);
   text-wrap: pretty;
   overflow-wrap: anywhere;
 }
@@ -558,3 +558,68 @@
 }
 .social-post-card__title a:hover { color: var(--qmah-social-action); }
 @media (prefers-reduced-motion: reduce) { .social-post-card { transition: none; } }
+
+/* ===== 貼文卡片：商業社群動態樣式（作者列在最上、標題無襯線、圖片在內文下方、互動列在最下） ===== */
+.social-post-card { border-radius: 16px; }
+.social-post-card__body { gap: 12px; padding: 16px 18px 12px; }
+.social-post-card__head { display: flex; align-items: center; gap: 10px; }
+.social-post-card__head app-user-avatar { --user-avatar-size: 2.5rem; flex: 0 0 auto; }
+.social-post-card__who { display: grid; flex: 1 1 auto; gap: 1px; min-width: 0; }
+.social-post-card__author { margin: 0; overflow: hidden; color: var(--qmah-ink); font-size: 15px; font-weight: 700; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.social-post-card__author .social-author-link { color: inherit; }
+.social-post-card__who time { color: var(--qmah-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.social-post-card__head .social-post-card__tags { flex: 0 0 auto; margin-left: auto; }
+.social-post-card__title,
+.social-post-card--text .social-post-card__title { font-family: var(--qmah-font-sans); font-size: clamp(17px, 1.6vw, 20px); font-weight: 800; letter-spacing: 0; line-height: 1.4; }
+.social-post-card--text .social-post-card__title { -webkit-line-clamp: 3; }
+.social-post-card__excerpt { color: color-mix(in srgb, var(--qmah-ink) 84%, var(--qmah-muted)); font-size: 15px; line-height: 1.65; }
+.social-post-card__cover { display: block; height: auto; margin: 2px 0 0; overflow: hidden; border-radius: 12px; aspect-ratio: 16 / 9; background: var(--qmah-surface-muted); }
+.social-post-card__cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 420ms cubic-bezier(.22, 1, .36, 1); }
+.social-post-card:hover .social-post-card__cover img { transform: scale(1.03); }
+.social-post-card__footer { padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--qmah-border) 70%, transparent); }
+.social-post-card__stats { display: inline-flex; gap: 16px; margin: 0; color: var(--qmah-muted); font-size: 13px; }
+.social-post-card__open { color: var(--qmah-muted); }
+.social-post-card__open:hover { color: var(--qmah-social-action); }
+
+/* ===== 發布對話框：固定標題列與按鈕列，中間內容捲動；工具列單排 ===== */
+.social-modal .social-post-dialog { width: min(100%, 680px); max-width: 680px; padding: 0; border-radius: 20px; }
+.social-post-dialog__title {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 0;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--qmah-border) 80%, transparent);
+  background: var(--qmah-surface-elevated);
+  font-size: 18px;
+  font-weight: 800;
+}
+.social-post-dialog > :is(.social-post-form__field, .social-post-dialog__alert) { margin-inline: 24px; }
+.social-post-dialog > .social-post-form__field:first-of-type { margin-top: 18px; }
+.social-post-dialog > .social-post-form__field + .social-post-form__field { margin-top: 18px; }
+.social-post-dialog__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: 20px 0 0;
+  padding: 14px 24px;
+  border-top: 1px solid color-mix(in srgb, var(--qmah-border) 80%, transparent);
+  background: var(--qmah-surface-elevated);
+}
+.social-post-form__label { font-size: 14px; font-weight: 800; }
+
+/* 工具列：單排、緊湊；global 的 44px 觸控高度在這裡改為 32px 以免撐出橢圓與多行。 */
+.social-post-form__toolbar { flex-wrap: wrap; gap: 6px 10px; padding: 4px 8px; border-radius: 12px; }
+.social-post-form__group { gap: 0; padding-right: 10px; }
+.social-fmt { min-width: 36px; min-height: 0; height: 32px; padding-inline: 8px; font-size: 14px; }
+.social-fmt--b { font-size: 15px; }
+.social-fmt--i { font-size: 15px; }
+.social-fmt--lg { font-size: 17px; }
+.social-fmt--sm { font-size: 12px; }
+.social-swatch { width: 20px; height: 20px; min-height: 0; margin: 6px 3px; border-radius: 50%; }
+.social-post-form__textarea { min-height: 9rem; font-size: 16px; line-height: 1.7; }
+.social-post-form__preview { padding: 12px 16px; }
+.qmah-social-page .social-post-card__author { padding-top: 0; border-top: 0; }
+.social-post-card__open { width: 36px; height: 36px; min-height: 0; border-color: transparent; background: transparent; }
+.social-post-card__open:hover { background: color-mix(in srgb, var(--qmah-social-action) 12%, transparent); }
+.social-post-card__report { min-height: 0; }
