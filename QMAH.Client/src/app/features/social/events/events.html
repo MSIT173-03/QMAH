@@ -7,6 +7,7 @@
   </button>
 </header>
 
+<app-social-shell [activeBoard]="null">
 <!-- ui-integration: 篩選列與貼文牆共用 social-filters／social-field；日期範圍只留一組「開始日期」起迄，欄位標籤持久可見。 -->
 <div class="social-filters" role="search">
   <label class="social-field">
@@ -100,6 +101,7 @@
     <div class="social-state social-state--wide">目前還沒有公開活動</div>
   }
 </div>
+</app-social-shell>
 
 <dialog #createEventDialog id="create_event_modal" class="modal social-modal" aria-labelledby="create-event-title">
   <div class="modal-box">

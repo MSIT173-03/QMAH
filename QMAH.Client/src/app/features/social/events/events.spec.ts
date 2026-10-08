@@ -22,6 +22,8 @@ describe('EventsComponent', () => {
   });
 
   afterEach(() => {
+    // 共用導覽（app-social-shell）會自己取得看板清單
+    httpMock.match((r) => r.url.endsWith('/social/boards')).forEach((r) => r.flush([]));
     httpMock.verify();
   });
 

@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 
 import { Announcement, SocialApiService } from '../../../core/services/social-api';
+import { LucideChevronDown } from '@lucide/angular';
+import { boardLabel } from '../social-labels';
+import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
 
 @Component({
   selector: 'app-announcements',
   standalone: true,
-  imports: [CommonModule, SocialPostContentComponent],
+  imports: [LucideChevronDown, SocialShellComponent, CommonModule, SocialPostContentComponent],
   templateUrl: './announcements.html',
   styleUrls: ['../social-common.scss', './announcements.scss']
 })
@@ -16,6 +19,7 @@ export class AnnouncementsComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   announcements: Announcement[] = [];
+  readonly label = boardLabel;
   loadError: string | null = null;
   /** 已展開全文的公告 */
   readonly expanded = new Set<string>();

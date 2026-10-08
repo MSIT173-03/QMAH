@@ -38,6 +38,7 @@ describe('PostsComponent', () => {
       totalPages: 0
     }));
     httpMock.expectOne((req) => req.url.endsWith('/social/boards')).flush([]);
+    httpMock.match((r) => r.url.endsWith('/social/events')).forEach((r) => r.flush({ items: [], page: 1, pageSize: 3, totalCount: 0 }));
 
     expect(component).toBeTruthy();
   });
@@ -87,6 +88,7 @@ describe('PostsComponent', () => {
       totalPages: 0
     });
     httpMock.expectOne((r) => r.url.endsWith('/social/boards')).flush([]);
+    httpMock.match((r) => r.url.endsWith('/social/events')).forEach((r) => r.flush({ items: [], page: 1, pageSize: 3, totalCount: 0 }));
 
     expect(component.posts.length).toBe(1);
     expect(component.posts[0].title).toBe('測試貼文');

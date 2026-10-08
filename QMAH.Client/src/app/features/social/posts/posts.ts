@@ -4,16 +4,18 @@ import { demoPost, isDemoAdmin } from '../social-demo';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { CreateSocialPostRequest, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
+import { CreateSocialPostRequest, EventListItem, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup';
 import { boardLabel } from '../social-labels';
+import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
+import { SocialBoardsStore } from '../social-boards';
 import {
   LucideExternalLink,
   LucideFlag,
@@ -23,6 +25,8 @@ import {
   LucideMessageCircle,
   LucideMegaphone,
   LucidePlus,
+  LucideCalendarDays,
+  LucideChevronRight,
   LucideColumns2,
   LucideColumns3,
   LucideFilterX,
@@ -44,7 +48,7 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [
+  imports: [SocialShellComponent, 
     CommonModule,
     FormsModule,
     RouterLink,
@@ -60,6 +64,8 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
     LucideMessageCircle,
     LucideMegaphone,
     LucidePlus,
+    LucideCalendarDays,
+    LucideChevronRight,
     LucideColumns2,
     LucideColumns3,
     LucideFilterX,
@@ -139,11 +145,40 @@ export class PostsComponent implements OnInit, OnDestroy {
   private announcementPointerPaused = false;
   private announcementFocusPaused = false;
 
+  // 實際欄數 = 使用者選的欄數，再依視窗寬度縮減（與 posts.scss 的斷點一致：≤1100px 最多 2 欄、≤640px 1 欄）。
+  private readonly narrowQuery = this.mediaQuery('(max-width: 640px)');
+  private readonly mediumQuery = this.mediaQuery('(max-width: 1100px)');
+  private readonly onWallResize = () => this.cdr.detectChanges();
+
+  private mediaQuery(query: string): MediaQueryList | null {
+    return typeof window.matchMedia === 'function' ? window.matchMedia(query) : null;
+  }
+
+  // 依序輪流分到各欄：第 1 篇第 1 欄、第 2 篇第 2 欄、…，所以閱讀順序就是新到舊。
+  get postColumns(): SocialPostListItem[][] {
+    if (this.posts.length === 0) return [];
+    let count: number = this.wallCols;
+    if (this.mediumQuery?.matches) count = Math.min(count, 2);
+    if (this.narrowQuery?.matches) count = 1;
+    const columns: SocialPostListItem[][] = Array.from({ length: count }, () => []);
+    this.posts.forEach((post, index) => columns[index % count].push(post));
+    return columns;
+  }
+
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly boardStore = inject(SocialBoardsStore);
+
   ngOnInit(): void {
+    // 從公告、活動頁點看板回來時，網址帶 ?board=，直接套用成目前看板
+    const board = this.route?.snapshot.queryParamMap.get('board');
+    if (board) this.filterBoardCode = board;
+    this.narrowQuery?.addEventListener('change', this.onWallResize);
+    this.mediumQuery?.addEventListener('change', this.onWallResize);
     this.announcementCollapsed.set(this.readAnnouncementCollapsePreference());
     this.loadPosts();
     this.loadAnnouncements();
-    this.socialApi.getBoards().subscribe({
+    this.loadUpcomingEvents();
+    this.boardStore.load().subscribe({
       next: (boards) => {
         this.boardCodes = boards;
         this.cdr.detectChanges();
@@ -153,7 +188,22 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.narrowQuery?.removeEventListener('change', this.onWallResize);
+    this.mediumQuery?.removeEventListener('change', this.onWallResize);
     if (this.announcementTimer) clearInterval(this.announcementTimer);
+  }
+
+  /** 近期活動（尚未開始的前三場），給貼文牆頂端的快速入口 */
+  upcomingEvents: EventListItem[] = [];
+
+  private loadUpcomingEvents(): void {
+    this.socialApi.getEvents({ startAfter: new Date().toISOString(), pageSize: 3 }).subscribe({
+      next: (page) => {
+        this.upcomingEvents = page.items;
+        this.cdr.detectChanges();
+      },
+      error: () => { this.upcomingEvents = []; }
+    });
   }
 
   private loadAnnouncements(): void {
