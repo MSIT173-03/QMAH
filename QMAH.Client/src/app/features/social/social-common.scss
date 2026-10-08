@@ -710,3 +710,9 @@
 }
 .qmah-social-page .social-announcement__more { justify-self: start; min-height: 36px; padding: 0 2px; border: 0; background: none; color: var(--qmah-terracotta); font-weight: 700; cursor: pointer; }
 .qmah-social-page .social-announcement__more:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* 活動來源分色：官方＝陶土紅，玩家發起＝金（不用藍綠） */
+.qmah-social-page .social-tag--kind[data-kind='OFFICIAL'] { background: color-mix(in srgb, #b9423c 13%, transparent); color: #a63b35; }
+.qmah-social-page .social-tag--kind[data-kind='PLAYER'] { background: color-mix(in srgb, #b8862a 18%, transparent); color: #8a5f12; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-tag--kind[data-kind='OFFICIAL'] { color: #ff8a80; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-tag--kind[data-kind='PLAYER'] { color: #e6b94d; }

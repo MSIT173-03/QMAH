@@ -55,7 +55,7 @@
         </div>
         <div class="social-event-card__headcopy">
           <div class="social-event-card__tags">
-            <span class="social-tag" [class.social-tag--notice]="event.eventType === 'OFFICIAL'">
+            <span class="social-tag social-tag--kind" [class.social-tag--notice]="event.eventType === 'OFFICIAL'" [attr.data-kind]="event.eventType">
               {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
             </span>
             @if (!event.coverImageUrl) {
