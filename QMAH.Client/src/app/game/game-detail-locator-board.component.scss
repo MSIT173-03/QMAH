@@ -9,46 +9,50 @@
 .locator-steps li[aria-current] { border-image-source:var(--game-button-blue-image); color:#fff8e9; font-weight:700; }
 .locator-steps span { font-size:14px; }
 .locator-steps .is-done { background:url('/assets/game/kenney-selected-mark.svg') right 4px center / 16px 16px no-repeat; padding-inline-end:24px; }
-.locator-workspace { display:grid; grid-template-columns:minmax(220px,280px) minmax(0,1fr); gap:24px; min-height:0; }
+.locator-workspace { display:grid; grid-template-columns:minmax(220px,280px) minmax(0,1fr); grid-template-rows:minmax(0,1fr); height:100%; gap:24px; min-height:0; }
 figure { margin:0; min-width:0; min-height:0; text-align:center; }
 .locator-clue, .locator-source { display:grid; grid-template-rows:auto minmax(0,1fr) auto; align-items:center; width:100%; padding:16px; }
-.locator-clue { @include ui.paper-panel; @include ui.reading-surface(true); grid-template-rows:auto minmax(0,1fr) auto; gap:12px; box-shadow:0 10px 22px #14291c40; }
-.locator-source { @include ui.ink-mat; padding:10px; border:3px solid #6d5841; border-radius:14px; box-shadow:inset 0 0 0 2px #c7b090,0 8px 18px #14291c40; }
+.locator-clue { @include ui.paper-panel; @include ui.reading-surface(true); grid-template-rows:auto minmax(0,1fr) auto; gap:16px; box-shadow:0 10px 22px #14291c40; }
+.locator-source { @include ui.ink-mat; padding:10px; border:3px solid #2c3a30; border-radius:14px; box-shadow:inset 0 0 0 2px #e3d2a8,0 8px 18px #14291c40; }
 .locator-surface-title { align-self:start; display:block; margin:0 0 8px; text-align:left; font-size:20px; }
 .locator-clue__image { position:relative; width:min(100%,200px); margin-inline:auto; }
 .locator-clue canvas { display:block; width:100%; height:auto; border-radius:3px; box-shadow:0 6px 12px #14291c35; }
-.locator-crosshair { position:absolute; top:50%; left:50%; width:32px; height:32px; transform:translate(-50%,-50%); pointer-events:none; }
+.locator-crosshair { position:absolute; top:50%; left:50%; width:76px; height:76px; transform:translate(-50%,-50%); pointer-events:none; filter:drop-shadow(0 1px 2px #0008); }
 .locator-image-stage { display:grid; place-items:center; container:locator-image / size; min-height:var(--locator-stage-min-height,480px); height:100%; }
-.locator-original { position:relative; display:block; width:min(100%,900px); max-height:100%; aspect-ratio:4 / 3; overflow:hidden; border:0; border-radius:6px; background:var(--game-card-ground); cursor:crosshair; box-shadow:0 6px 16px #14291c40; }
-.locator-original app-image-magnifier { display:block; width:100%; height:100%; --color-swatch:var(--game-card-ground); --color-ink:var(--game-card-ink); --qmah-surface-elevated:var(--game-card-ground); --magnifier-lens-size:clamp(112px,22cqw,176px); }
+.locator-original { position:relative; display:block; width:100%; height:100%; max-height:100%; overflow:hidden; border:0; border-radius:6px; background:var(--game-card-ground); cursor:crosshair; box-shadow:0 6px 16px #14291c40; }
 .locator-original:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; }
 figcaption { margin-top:14px; font-size:16px; line-height:1.6; color:var(--game-card-ink); }
 figcaption small { display:block; margin-top:4px; font-size:14px; color:var(--game-card-muted); }
-.locator-source figcaption { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:4px 16px; margin-top:8px; color:var(--stage-ink); }
-.locator-source figcaption > span:first-child, .locator-source figcaption small, .locator-pending-status { grid-column:1; }
-.locator-source figcaption small { margin:0; color:var(--stage-muted); }
-.locator-confirm { @include ui.button(true); grid-column:2; grid-row:1 / span 3; min-width:148px; }
-.locator-pending-status { color:#f1d99f; font-size:14px; }
-.locator-clue figcaption { text-align:left; color:var(--game-card-muted); }
+.locator-pending-status { color:#6a5a3a; font-size:14px; }
+.locator-clue figcaption { text-align:left; color:var(--game-card-muted); font-size:15px; line-height:1.65; }
 .locator-clue figcaption span { display:block; }
-.locator-cursor { position:absolute; z-index:1; width:26px; height:26px; transform:translate(-50%,-50%); border:3px solid #fff8e9; border-radius:50%; background:#376b8c80; box-shadow:0 0 0 2px #203b50,0 2px 8px #10233080; pointer-events:none; }
-.locator-cursor.is-pending { border-color:#f3dba4; background:#365f7a88; }
+.locator-cursor { position:absolute; z-index:1; width:48px; height:48px; transform:translate(-50%,-50%); border:0; border-radius:0; background:radial-gradient(circle, #e0453a 0 3.5px, #fff8e9 3.5px 5.5px, transparent 6px); pointer-events:none; }
+.locator-cursor::before, .locator-cursor::after { content:''; position:absolute; background:#fff8e9; box-shadow:0 0 0 2px #173c2a; }
+.locator-cursor::before { left:0; right:0; top:calc(50% - 1.5px); height:3px; -webkit-mask:linear-gradient(90deg,#000 0 38%,transparent 38% 62%,#000 62%); mask:linear-gradient(90deg,#000 0 38%,transparent 38% 62%,#000 62%); }
+.locator-cursor::after { top:0; bottom:0; left:calc(50% - 1.5px); width:3px; -webkit-mask:linear-gradient(#000 0 38%,transparent 38% 62%,#000 62%); mask:linear-gradient(#000 0 38%,transparent 38% 62%,#000 62%); }
+.locator-cursor { filter:drop-shadow(0 0 1px #173c2a) drop-shadow(0 0 2px #173c2a) drop-shadow(0 1px 3px #000a); }
+.locator-cursor.is-answer { background:radial-gradient(circle, #3f9c63 0 3.5px, #fff8e9 3.5px 5.5px, transparent 6px); }
 .locator-region { position:absolute; z-index:1; border:3px dashed #fff7e8; background:#376b8c35; pointer-events:none; }
 .locator-feedback { display:block; min-height:44px; margin-top:8px; font-size:14px; line-height:22px; color:var(--game-card-action); text-align:left; }
 .locator-feedback.is-empty { visibility:hidden; }
 .locator-status { display:grid; justify-items:center; gap:12px; }
-.locator-status button { @include ui.button(true); }
+.locator-status button { @extend %ui-btn-2; }
 button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; }
 [hidden] { display:none !important; }
 @media(min-width:601px) { .locator-steps li { min-width:0; } .locator-steps span { display:none; } }
 @media (min-width: 1000px) {
-  .locator-clue { display: flex; flex-direction: column; align-items: stretch; }
+  .locator-clue { display: flex; flex-direction: column; align-items: stretch; justify-content:flex-start; }
+  .locator-round { container: locround / size; }
+  // 題目（細節）與文物（原圖）是主角，各佔一半；工具只是右側窄窄一欄，靠右對齊其他控制項
+  .locator-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) clamp(220px, 18%, 280px); }
+  .locator-original { height: 100%; width: auto; max-width: 100%; aspect-ratio: var(--src-ratio, 1); }
   .locator-clue__image { flex: 1; container-type: size; display: grid; place-items: center; width: 100%; min-height: 0; }
   .locator-clue canvas { width: min(100%, 100cqh); height: auto; max-height: 100%; }
   .locator-clue figcaption { margin-top: 0; }
-  .locator-feedback.is-empty { display: none; }
+  .locator-clue figcaption .locator-feedback.is-empty { display: none; }
 }
 @media(max-width:600px) {
+  .locator-workspace { height:auto; grid-template-rows:auto auto; }
   .locator-round-heading { grid-column:1 / -1; grid-row:1; gap:8px; }
   .locator-round-heading .locator-steps { grid-template-columns:repeat(4,minmax(0,1fr)); }
   .locator-steps li { min-width:0; padding-inline:4px; gap:4px; }
@@ -57,19 +61,84 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
   .locator-clue__image { grid-column:1; grid-row:2; width:104px; }
   .locator-clue figcaption { grid-column:2; grid-row:2; margin:0; font-size:14px; }
   .locator-feedback { min-height:0; }
-  .locator-feedback.is-empty { display:none; }
+  .locator-clue figcaption .locator-feedback.is-empty { display:none; }
   .locator-source { padding:12px; }
   .locator-image-stage { container-type:inline-size; min-height:0; height:auto; aspect-ratio:4 / 3; }
-  .locator-original { width:100%; }
-  .locator-source figcaption { grid-template-columns:1fr; justify-items:stretch; }
-  .locator-confirm { grid-column:1; grid-row:auto; }
+  .locator-original { width:100%; height:auto; aspect-ratio:4 / 3; }
+}
+@media (min-width:601px) and (max-width:999px) {
+  .locator-workspace { height:auto; grid-template-columns:180px minmax(0,1fr); }
+  .locator-image-stage { height:clamp(340px,45dvh,520px); min-height:0; }
+  .locator-clue { padding:12px; gap:12px; }
 }
 
 // 落點旁的即時回饋：往上飄起後淡出
-.locator-verdict { position:absolute; z-index:3; padding:6px 14px; border:2px solid #6d5841; border-radius:999px; color:#273e33; background:#fff2d9; box-shadow:0 6px 14px #14291c59; font:800 18px/1.3 var(--qmah-font-sans); white-space:nowrap; pointer-events:none; transform:translate(-50%,-150%); animation:verdict-rise 1.3s cubic-bezier(.16,1,.3,1) both; }
+.locator-verdict { position:absolute; z-index:3; padding:6px 14px; border:2px solid #2c3a30; border-radius:999px; color:#273e33; background:#fff2d9; box-shadow:0 6px 14px #14291c59; font:800 18px/1.3 var(--qmah-font-sans); white-space:nowrap; pointer-events:none; transform:translate(-50%,-150%); animation:verdict-rise 1.3s cubic-bezier(.16,1,.3,1) both; }
 .locator-verdict[data-tier='great'] { color:#fff8e9; background:#2f6b50; border-color:#285c45; font-size:22px; }
 .locator-verdict[data-tier='nice'] { background:#e9f2dc; }
 .locator-verdict[data-tier='close'] { background:#f4e2b4; }
 .locator-verdict[data-tier='bad'] { color:#fff8e9; background:#963d32; border-color:#6f2c25; }
 @keyframes verdict-rise { 0% { opacity:0; transform:translate(-50%,-90%) scale(.7); } 18% { opacity:1; transform:translate(-50%,-150%) scale(1.08); } 30% { transform:translate(-50%,-150%) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform:translate(-50%,-230%) scale(1); } }
 @media (prefers-reduced-motion:reduce) { .locator-verdict { animation:none; transform:translate(-50%,-150%); } }
+.locator-clue figcaption .locator-howto { display: flex; align-items: flex-start; gap: 8px; font-weight: 800; }
+.locator-howto svg { flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; animation: locator-arrow 1.2s ease-in-out infinite; }
+.locator-gesture { position: absolute; z-index: 2; top: 12px; left: 50%; display: grid; justify-items: center; gap: 4px; pointer-events: none; transform: translateX(-50%); }
+.locator-gesture svg { width: 34px; height: 34px; fill: #fff8e9; stroke: #203b50; stroke-width: 1.6; stroke-linejoin: round; filter: drop-shadow(0 2px 3px #0008); animation: locator-tap 1.4s ease-in-out infinite; }
+.locator-gesture b { padding: 3px 10px; border-radius: 8px; color: #fff8e9; background: #203b50e6; font-size: 14px; }
+@keyframes locator-arrow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+@keyframes locator-tap { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(5px, 6px) scale(.92); } }
+@media (prefers-reduced-motion: reduce) { .locator-howto svg, .locator-gesture svg { animation: none; } }
+@media (hover: none) and (pointer: coarse), (max-width: 1000px) { .kb-only { display: none; } }
+
+// 放大鏡：游標移動就跟著，按住拖曳也行，放開就選定；觸控時鏡面浮在手指上方
+.locator-original { touch-action: none; user-select: none; --loupe: 132px; }
+.loupe-stage { position: absolute; inset: 0; display: grid; place-items: center; }
+.loupe-img { position: absolute; inset: 0; margin: auto; display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; user-select: none; pointer-events: none; }
+.loupe-lens { position: absolute; z-index: 5; width: var(--loupe); height: var(--loupe); transform: translate(-50%, -50%); border: 4px solid #fff8e9; border-radius: 50%; background-repeat: no-repeat; background-color: #ece4d0; box-shadow: 0 0 0 3px #0f1b14, 0 12px 22px #0009; pointer-events: none; animation: loupe-in 120ms ease-out; }
+.loupe-lens::before, .loupe-lens::after { content: ''; position: absolute; inset: 50% auto auto 50%; background: #fffaf0; box-shadow: 0 0 0 1px #173c2a; transform: translate(-50%, -50%); }
+.loupe-lens::before { width: 22px; height: 2px; }
+.loupe-lens::after { width: 2px; height: 22px; }
+@keyframes loupe-in { from { opacity: 0; scale: .7; } }
+@media (prefers-reduced-motion: reduce) { .loupe-lens { animation: none; } }
+@media (max-width: 600px) { .locator-steps span { display: none; } .locator-steps li { min-width: 0; } }
+
+// 原圖下方的操作列：名稱在左，倍率與確認在右，同一行；說明文字只在空間夠時顯示
+
+// 定位工具：開關與倍率都直接看得到目前狀態，不必猜按鈕代表「現在」還是「按了之後」
+.locator-tools { @include ui.paper-panel; @include ui.reading-surface(true); display: flex; flex-direction: column; gap: 14px; min-width: 0; padding: 14px; box-shadow: 0 10px 22px #14291c40; text-align: left; }
+.tool-hint { margin: -8px 0 0; color: var(--game-card-muted); font-size: 15px; line-height: 1.6; }
+.tool-group { display: grid; gap: 8px; }
+.locator-confirm { @extend %ui-btn-2; width: 100%; min-height: 52px; font-size: 17px; }
+.locator-pending-status { min-height: 1.6em; }
+@media (min-width: 601px) and (max-width: 999px) { .locator-tools { grid-column: 1 / -1; } }
+.locator-source { grid-template-rows: auto minmax(0, 1fr); }
+.locator-round-name { display: block; margin-top: 2px; color: var(--game-card-muted); font-size: 15px; font-weight: 700; }
+
+// 工具欄不只放按鈕：本局進度、操作小技巧也在這裡，確認位置固定在最底
+.tool-progress { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tool-progress li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 40px; padding: 4px 8px; border: 2px solid #d4c7a6; border-radius: 10px; color: var(--game-card-muted); background: #efe7d3; font-size: 14px; }
+.tool-progress b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: #fff8e9; background: #8a8470; font-size: 14px; font-variant-numeric: tabular-nums; }
+.tool-progress__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.tool-progress small { font-size: 13px; font-weight: 800; }
+.tool-progress li.is-current { border-color: #2c3a30; color: var(--game-card-ink); background: #fff8e9; }
+.tool-progress li.is-current b { background: #2f5aa8; }
+.tool-progress li.is-done { color: #285c45; border-color: #9fc2a8; background: #e5efdf; }
+.tool-progress li.is-done b { background: #2f6b50; }
+.tool-tips { display: grid; gap: 6px; margin: 0; padding: 0 0 0 1.2em; color: var(--game-card-muted); font-size: 14px; line-height: 1.6; }
+.locator-tools .locator-confirm { margin-top: auto; }
+@media (min-width: 1000px) { .locator-round-heading .locator-steps { display: none; } }
+@container locround (max-height: 780px) { .tool-tips { display: none; } }
+@container locround (max-height: 600px) { .tool-progress { gap: 4px; } .tool-progress li { min-height: 30px; padding-block: 1px; } .tool-progress small { display: none; } }
+.locator-tools { min-height: 0; overflow: hidden; }
+.locator-workspace { overflow: hidden; }
+.tool-label { color: var(--game-card-ink); font-size: 15px; font-weight: 800; }
+.tool-title { margin: 0; font: 800 18px/1.3 var(--qmah-font-sans); }
+
+// 完成後可以逐題復盤：本局進度每一列都是按鈕；紅十字是自己的點、綠十字是正解
+.tool-progress li { padding: 0; }
+.tool-progress li button { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 4px 8px; border: 0; border-radius: inherit; color: inherit; background: none; font: inherit; text-align: left; cursor: default; }
+.tool-progress li button:not(:disabled) { cursor: pointer; }
+.tool-progress li button:not(:disabled):hover { background: #0000000a; }
+.tool-progress li button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }
+.tool-review { margin: 0; padding: 8px 10px; border-radius: 10px; color: var(--game-card-ink); background: #e5efdf; font-size: 14px; font-weight: 700; line-height: 1.6; }
+@container locround (max-height: 780px) { .tool-review { display: none; } }

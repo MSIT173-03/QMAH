@@ -1,0 +1,55 @@
+.member-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.member-avatar {
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--qmah-surface-muted);
+  color: var(--qmah-muted);
+}
+
+.member-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.member-avatar svg { width: 40px; height: 40px; }
+
+.member-head__text { min-width: 0; display: grid; gap: 6px; }
+.member-name { margin: 0; font-family: var(--qmah-font-serif); font-size: clamp(24px, 3vw, 32px); }
+.member-bio { margin: 0; white-space: pre-line; }
+
+.member-section { margin-bottom: 32px; }
+
+/* 區塊標題：小字、主題強調色、字距加寬，下方一條比列表分隔線更實的線，和下面的資料列明確分開。 */
+.member-section h2 {
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid color-mix(in srgb, var(--qmah-social-action) 55%, transparent);
+  color: var(--qmah-social-action);
+  font-family: var(--qmah-font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.member-list { margin: 0; padding: 0; list-style: none; }
+
+/* 貼文／活動每列之間用淡淡的分隔線（和留言、參加者名單同一種寫法）。 */
+.member-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: var(--qmah-space-3) 0;
+  border-top: 1px solid color-mix(in srgb, var(--qmah-border) 70%, transparent);
+}
+
+.member-list li:first-child { border-top: 0; }
+
+.member-list a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

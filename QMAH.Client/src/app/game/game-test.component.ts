@@ -30,7 +30,7 @@ interface TestRoomOption {
     <div class="game-test-page" [class.is-focus-mode]="focusMode.active()">
       <!-- ui-integration: 管理員檢查中心沿用 Game 導覽，讓正式工具有清楚入口與返回大廳的出口。 -->
       <app-game-navigation />
-      <header class="tools-heading"><h1>流程演練</h1><a routerLink="/game">返回房間大廳</a></header>
+      <header class="tools-heading"><h1>流程測試</h1><a routerLink="/game">返回房間大廳</a></header>
       <div class="tools-tabs" role="group" aria-label="管理員工具內容">
         <button type="button" [attr.aria-pressed]="panel === 'rehearsal'" (click)="selectPanel('rehearsal')">遊戲流程</button>
         <button type="button" [attr.aria-pressed]="panel === 'service'" (click)="selectPanel('service')">服務檢查</button>
@@ -38,20 +38,20 @@ interface TestRoomOption {
       @if (panel === 'rehearsal') {
       <section class="test-launcher" aria-labelledby="test-launcher-title">
         <header>
-          <h2 id="test-launcher-title">選擇演練節奏</h2>
+          <h2 id="test-launcher-title">選擇測試節奏</h2>
           <p class="description">從現有會員抽出模擬玩家，使用同件文物的歷史回答。沿用正式遊戲畫面，不建立正式房間，也不發放獎勵。</p>
         </header>
         <div class="rehearsal-picker">
-          <div class="rehearsal-menu" role="group" aria-label="演練情境">
+          <div class="rehearsal-menu" role="group" aria-label="測試情境">
           @for (room of testRooms; track room.id) {
             <button type="button" [attr.aria-pressed]="selectedRoomId === room.id" (click)="selectedRoomId = room.id"><strong>{{ room.name }}</strong><span>{{ room.description }}</span></button>
           }
           </div>
           <section class="rehearsal-preview" aria-labelledby="rehearsal-title">
             <h3 id="rehearsal-title">{{ selectedScenario.name }}</h3>
-            <ol class="rehearsal-flow" aria-label="演練流程"><li>等待入席</li><li>觀察作答</li><li>匿名投票</li><li>揭曉館藏</li><li>本局結算</li></ol>
+            <ol class="rehearsal-flow" aria-label="測試流程"><li>等待入席</li><li>觀察作答</li><li>匿名投票</li><li>揭曉文物</li><li>本局結算</li></ol>
             <p>模擬玩家會在不同時間作答。可暫停、跳過等待或重新抽取，結束後再回來選擇其他節奏。</p>
-            <button type="button" class="rehearsal-start" (click)="joinTestRoom(selectedRoomId)">開始演練 <app-qmah-icon name="arrow-right" aria-hidden="true" /></button>
+            <button type="button" class="rehearsal-start" (click)="joinTestRoom(selectedRoomId)">開始測試 <app-qmah-icon name="arrow-right" aria-hidden="true" /></button>
           </section>
         </div>
       </section>

@@ -25,7 +25,8 @@ public sealed record GameRoomMutationResult(GameRoomMutationStatus Status, GameR
 
 public sealed class GameRoomLifecycleService(
     QmahDbContext db,
-    IPasswordHasher<GameRoom> passwordHasher)
+    IPasswordHasher<GameRoom> passwordHasher,
+    IGameRoomNotifier? notifier = null)
 {
     // integration: 所有房間狀態變更與背景推進都走同一個 service；時間常數集中在此，
     // 方便未來依部署負載調整，而不讓 Controller、Worker 各自維護一套逾時規則。
@@ -182,6 +183,33 @@ public sealed class GameRoomLifecycleService(
             room.CurrentRoundNo = 1;
             room.StateVersion++;
             room.GameRounds.Add(CreateRound(room, artifactIds[0], 1, now));
+            return Result(GameRoomMutationStatus.Success, room);
+        }, cancellationToken);
+
+    public Task<GameRoomMutationResult> CloseSoloAsync(
+        Guid roomId,
+        Guid userId,
+        CancellationToken cancellationToken = default) =>
+        InTransactionAsync(async token =>
+        {
+            if (!await IsActiveUserAsync(userId, token))
+                return Result(GameRoomMutationStatus.Forbidden);
+            var room = await LoadRoomAsync(roomId, token);
+            if (room is null)
+                return Result(GameRoomMutationStatus.NotFound);
+            var player = room.GamePlayers.SingleOrDefault(item => item.UserId == userId);
+            if (player is null || player.Role != "HOST")
+                return Result(GameRoomMutationStatus.Forbidden);
+            // 重複關閉已關閉的單人房可成功回覆，避免回應遺失後無法重試。
+            if (room.Status == "CANCELLED" && player.ConnectionStatus == "LEFT")
+                return Result(GameRoomMutationStatus.Success, room);
+            if (room.Status != "WAITING" || player.ConnectionStatus == "LEFT"
+                || room.GamePlayers.Any(item => item.Id != player.Id && item.ConnectionStatus != "LEFT"))
+                return Result(GameRoomMutationStatus.Conflict);
+            var now = DateTime.UtcNow;
+            MarkLeft(player, now);
+            room.StateVersion++;
+            CancelRoom(room, now);
             return Result(GameRoomMutationStatus.Success, room);
         }, cancellationToken);
 
@@ -546,8 +574,12 @@ public sealed class GameRoomLifecycleService(
                 if (!result.Succeeded)
                     return result;
 
+                var changedRooms = CollectChangedRooms();
                 await db.SaveChangesAsync(retryToken);
                 await transaction.CommitAsync(retryToken);
+                // 提交成功後才通知，客戶端重新讀取時一定看得到新狀態。
+                foreach (var roomId in changedRooms)
+                    notifier?.Changed(roomId);
                 return result;
             }, cancellationToken);
         }
@@ -556,6 +588,43 @@ public sealed class GameRoomLifecycleService(
             db.ChangeTracker.Clear();
             return Result(GameRoomMutationStatus.Conflict);
         }
+    }
+
+    /// <summary>
+    /// 從 ChangeTracker 找出有實質變動的房間。心跳只會更新 LastSeenAt 與 StateVersion，
+    /// 這種每 15 秒一次的更新不通知，否則人一多就變成推播風暴。
+    /// </summary>
+    private HashSet<Guid> CollectChangedRooms()
+    {
+        var rooms = new HashSet<Guid>();
+        if (notifier is null)
+            return rooms;
+
+        foreach (var entry in db.ChangeTracker.Entries())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+                continue;
+            if (entry.State == EntityState.Modified)
+            {
+                var ignored = entry.Entity switch
+                {
+                    GameRoom => new[] { nameof(GameRoom.StateVersion) },
+                    GamePlayer => new[] { nameof(GamePlayer.LastSeenAt) },
+                    _ => Array.Empty<string>()
+                };
+                if (!entry.Properties.Any(property => property.IsModified && !ignored.Contains(property.Metadata.Name)))
+                    continue;
+            }
+
+            switch (entry.Entity)
+            {
+                case GameRoom room: rooms.Add(room.Id); break;
+                case GamePlayer player: rooms.Add(player.RoomId); break;
+                case GameRound round: rooms.Add(round.RoomId); break;
+            }
+        }
+
+        return rooms;
     }
 
     private static void MarkOnline(GamePlayer player, DateTime now)

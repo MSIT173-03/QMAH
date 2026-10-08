@@ -9,7 +9,7 @@
 }
 
 :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) :where(h1, h2, h3, h4) {
-  text-wrap: balance;
+  text-wrap-style: balance;
 }
 html[data-theme='qmahdark'] :where(app-game-lobby, app-game-room, app-game-training, app-game-guide, app-game-how-to, app-game-test, app-game-appreciation, app-game-account) {
   --game-title-outline: #173c29;

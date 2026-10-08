@@ -1,57 +1,106 @@
 @use './game-ui' as ui;
 :host { display: block; min-width: 0; }
-.scroll-workbench { min-width: 0; width: min(100%, 1100px); margin-inline: auto; --board-height: var(--scroll-height-limit, 560px); }
+.scroll-workbench { min-width: 0; width: 100%; margin-inline: auto; --board-height: var(--scroll-height-limit, max(300px, calc(100dvh - 380px))); }
 .scroll-source { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.scroll-help { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.scroll-reference { margin: 0; }
-.scroll-reference button { min-height: 44px; border: 0; border-radius: var(--qmah-radius-control); padding: 8px 12px; color: var(--qmah-jade); background: var(--qmah-surface); font: inherit; font-weight: 700; cursor: pointer; }
-.scroll-inspection { position: fixed; inset: 0; margin: auto; width: min(960px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 20px; border: 0; border-radius: var(--qmah-radius-panel); color: var(--qmah-ink); background: var(--qmah-surface); }
-.scroll-inspection::backdrop { background: color-mix(in srgb, var(--qmah-night) 70%, transparent); }
-.scroll-inspection header { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
-.scroll-inspection h2 { margin: 0 0 16px; font: 700 24px/1.4 var(--qmah-font-serif); }
-.scroll-inspection button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); color: var(--qmah-ink); background: var(--qmah-surface-soft); white-space: nowrap; font: inherit; cursor: pointer; }
-.scroll-inspection label { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
-.scroll-inspection input { min-height: 44px; max-width: 100%; accent-color: var(--qmah-jade); }
-.scroll-reference-viewport { max-height: 480px; overflow: auto; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); background: var(--qmah-surface-soft); }
-.scroll-reference-viewport img { display: block; max-width: none; height: auto; }
-.scroll-reference-viewport:focus-visible, .scroll-inspection input:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
 .scroll-error { padding: var(--qmah-space-4); color: var(--qmah-danger); background: var(--qmah-surface-soft); }
 .scroll-error button { min-height: var(--qmah-control-height); border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); padding: 8px 16px; color: var(--qmah-ink); background: var(--qmah-surface); font: inherit; cursor: pointer; }
-.scroll-reference button, .scroll-inspection button, .scroll-error button { @include ui.button; }
-.scroll-inspection { @include ui.paper-panel; overflow-y: auto; }
 
-.scroll-help { color:var(--scroll-muted,var(--qmah-muted)); font-size:14px; line-height:1.6; }
-.scroll-reference-viewport { background:#e7e2d3; box-shadow:inset 0 3px 8px #382c2426; scrollbar-color:#7d969c #e7e2d3; }
 
-// 長卷接力：左邊是慢慢接起來的長卷，右邊每回合三塊候選，挑出接得上的那一塊
-.relay { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: clamp(14px, 2.4vw, 32px); }
-.relay-board { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 3px; width: calc(var(--board-height) * var(--scroll-ratio) - 20px); max-width: 52vw; aspect-ratio: var(--scroll-ratio); padding: 8px; border: 3px solid #6d5841; border-radius: 14px; background: #efe3c8; box-shadow: inset 0 0 0 3px #c7b090, 0 10px 22px #14291c40; box-sizing: content-box; }
-.relay-slot { position: relative; display: grid; place-items: center; min-width: 0; overflow: hidden; border: 2px dashed #b9a47c; border-radius: 6px; color: #8a7752; font: 800 15px/1 var(--qmah-font-sans); }
-.relay-slot.is-filled { border: 0; border-radius: 3px; }
-.relay-slot.is-next { border-color: #2f6b50; color: #2f6b50; background: #2f6b5022; animation: relay-pulse 1.4s ease-in-out infinite; }
-.relay-tile { position: absolute; inset: 0; overflow: hidden; }
-.relay-tile img { position: absolute; max-width: none; object-fit: fill; user-select: none; pointer-events: none; }
-.relay-tile.is-new { animation: relay-in 380ms cubic-bezier(.34, 1.56, .64, 1) both; }
-.relay-choices { display: grid; gap: 10px; justify-items: center; align-content: center; }
-.relay-ask { display: grid; gap: 2px; text-align: center; margin: 0; color: var(--stage-ink, var(--qmah-ink)); }
-.relay-ask span { color: var(--stage-muted, var(--qmah-muted)); font-size: 14px; }
-.relay-done { margin: 0; color: var(--stage-ink, var(--qmah-ink)); font: 800 22px/1.4 var(--qmah-font-serif); }
-.relay-choice { @include ui.tag-frame(#f7f2e7, 12px); position: relative; padding: 6px; cursor: pointer; transition: transform 160ms cubic-bezier(.16, 1, .3, 1), box-shadow 160ms; }
-.relay-choice .relay-tile { position: relative; display: block; height: calc((var(--board-height, 520px) - 150px) / 3); aspect-ratio: var(--tile-ratio); border-radius: 6px; }
-.relay-choice:hover:not(:disabled) { transform: translateY(-4px) rotate(-.6deg); box-shadow: inset 0 0 0 2px #c7b090, 0 10px 18px #14291c4d; }
-.relay-choice:active:not(:disabled) { transform: scale(.97); }
-.relay-choice.is-hint { box-shadow: inset 0 0 0 3px #c9a24d, 0 0 0 3px #fff2d9; }
-.relay-choice.is-wrong { opacity: .35; filter: grayscale(1); animation: relay-shake 320ms; }
-.relay-choice:disabled { cursor: default; }
-@keyframes relay-pulse { 50% { background: #2f6b5044; } }
-@keyframes relay-in { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
-@keyframes relay-shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+// 書畫滑拼：4×4 格少一片，把碎片滑進空格，拼回原本的畫面
+.swap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(180px, 240px); grid-template-rows:auto 1fr; align-items: start; gap: 16px 24px; }
+.swap-grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 3px; width: min(100%, calc(var(--board-height) * var(--scroll-ratio))); box-sizing: border-box; padding: 8px; border: 3px solid #2c3a30; border-radius: 12px; background: #d9cdb0; box-shadow: inset 0 0 0 3px #e3d2a8, 0 8px 18px #14291c40; outline-offset: 4px; }
+.swap-ref { grid-column: 2; grid-row: 1; justify-self: stretch; width: 100%; }
+.swap-grid { grid-column: 1; grid-row: 1 / span 2; justify-self: center; }
+.swap-side { grid-column: 2; grid-row: 2; min-width: 0; }
+.swap-blank { aspect-ratio: var(--tile-ratio); border-radius: 3px; background: repeating-linear-gradient(45deg, #cfc2a2 0 6px, #c4b793 6px 12px); box-shadow: inset 0 2px 6px #382c2433; }
+.swap-tile { position: relative; display: block; min-width: 0; aspect-ratio: var(--tile-ratio); padding: 0; overflow: hidden; border: 0; border-radius: 3px; background: #efe3c8; cursor: pointer; box-shadow: 0 2px 4px #14291c55; transition: transform 160ms cubic-bezier(.16, 1, .3, 1), box-shadow 160ms; }
+.swap-tile img { position: absolute; max-width: none; object-fit: fill; user-select: none; pointer-events: none; }
+.swap-tile.is-movable:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 12px #14291c66; z-index: 1; }
+.swap-tile:not(.is-movable) { cursor: not-allowed; }
+.swap-grid.is-swap .swap-tile:not(:disabled) { cursor: pointer; }
+.swap-tile.is-picked { outline: 4px solid #ffd45a; outline-offset: -4px; z-index: 1; }
+.swap-tile.is-correct::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 3px #3f9c63; pointer-events: none; }
+.swap-tile.is-hint { outline: 4px dashed #f0c24a; outline-offset: -4px; }
+.swap-tile.is-nudge { animation: swap-nudge 300ms; }
+.swap-tile b { position: absolute; left: 4px; bottom: 4px; min-width: 22px; padding: 0 5px; border: 2px solid #0f1b14; border-radius: 6px; color: #0f1b14; background: #fff8e9d9; font: 800 14px/1.4 var(--qmah-font-sans); text-align: center; font-variant-numeric: tabular-nums; }
+.swap-tile:focus-visible, .swap-grid:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 2px; }
+.swap-tile:disabled { cursor: default; }
+@keyframes swap-nudge { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.swap-side { display: grid; gap: 10px; justify-items: stretch; color: var(--stage-ink, var(--qmah-ink)); }
+.swap-count { margin: 0; display: flex; align-items: baseline; gap: 8px; }
+.swap-count strong { font: 800 34px/1 var(--qmah-font-sans); font-variant-numeric: tabular-nums; }
+.swap-count span { color: var(--stage-muted, var(--qmah-muted)); font-size: 15px; }
+.swap-moves { margin: 0; font-size: 15px; font-weight: 700; }
+.swap-moves b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.swap-rule { margin: 0; color: var(--stage-muted, var(--qmah-muted)); font-size: 14px; line-height: 1.6; text-wrap-style: balance; }
+.swap-ref { display: grid; gap: 8px; min-width: 0; }
+
 @media (max-width: 760px) {
-  .relay { grid-template-columns: minmax(0, 1fr); }
-  .relay-board { width: 100%; max-width: 100%; box-sizing: border-box; }
-  .relay-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; gap: 8px; }
-  .relay-choice { width: 100%; min-width: 0; }
-  .relay-choice .relay-tile { height: auto; width: 100%; }
-  .relay-ask, .relay-done, .relay-choices .scroll-reference { grid-column: 1 / -1; }
+  .swap { grid-template-columns: minmax(0, 1fr); }
+  .swap-grid, .swap-side, .swap-ref { grid-column: 1; }
+  .swap-grid { grid-row: 1; }
+  .swap-side { grid-row: 2; max-width: none; }
+  .swap-ref { grid-row: 3; justify-self: stretch; width: 100%; }
+  .swap-grid { width: 100%; max-width: 100%; box-sizing: border-box; }
+  .swap-side { grid-template-columns: 1fr auto; align-items: center; }
+  .swap-count, .swap-moves, .swap-rule { grid-column: 1; }
 }
-@media (prefers-reduced-motion: reduce) { .relay-slot.is-next, .relay-tile.is-new, .relay-choice.is-wrong { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .swap-tile, .swap-tile.is-nudge { transition: none; animation: none; } }
+
+// 與其他玩法同一個排法：盤面靠左，右邊的原圖填滿剩下的寬度並靠右對齊，原圖要夠大才看得清楚
+@media (min-width: 761px) {
+  .swap { grid-template-columns: minmax(0, min(calc(var(--board-height) * var(--scroll-ratio) + 22px), 52%)) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .swap-grid { justify-self: start; width: 100%; }
+  .swap-ref { align-self: stretch; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; }
+}
+
+// 原圖對照：就在頁面裡放大，不再開視窗
+.swap-ref__view { position: relative; min-height: 220px; overflow: hidden; border: 3px solid #2c3a30; border-radius: 12px; background: #d9d4c6; box-shadow: inset 0 0 0 3px #e3d2a8, 0 8px 18px #14291c40; cursor: zoom-in; touch-action: pan-y; }
+.swap-ref__view.is-zoomed { cursor: crosshair; touch-action: none; }
+.swap-ref__view img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; transition: transform 160ms ease-out; will-change: transform; pointer-events: none; }
+.swap-ref__view:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
+.swap-ref__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; color: var(--stage-ink, var(--qmah-ink)); font-weight: 800; }
+.swap-ref__bar small { margin-inline-start: auto; color: var(--stage-muted, var(--qmah-muted)); font-size: 14px; font-weight: 600; }
+.swap-ref__seg { display: inline-grid; grid-template-columns: repeat(4, 56px); overflow: hidden; border: 2px solid #0f1b14; border-radius: 10px; }
+.swap-ref__seg button { min-height: 40px; border: 0; color: #273e33; background: #efe7d3; font: 800 16px/1 var(--qmah-font-sans); cursor: pointer; }
+.swap-ref__seg button + button { border-left: 2px solid #0f1b14; }
+.swap-ref__seg button[aria-checked='true'] { color: #fff8e9; background: var(--game-button-blue-image); }
+.swap-ref__seg button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }
+@media (max-width: 760px) { .swap-ref__view { min-height: 0; aspect-ratio: var(--scroll-ratio, 1.4); } }
+@media (prefers-reduced-motion: reduce) { .swap-ref__view img { transition: none; } }
+
+// 原圖上的放大鏡鏡面：圓形、跟著游標，十字線標出中心
+.swap-ref__lens { position: absolute; z-index: 5; transform: translate(-50%, -50%); border: 4px solid #fff8e9; border-radius: 50%; background-repeat: no-repeat; background-color: #ece4d0; box-shadow: 0 0 0 3px #0f1b14, 0 12px 22px #0009; pointer-events: none; }
+.swap-ref__lens::before, .swap-ref__lens::after { content: ''; position: absolute; inset: 50% auto auto 50%; background: #fffaf0; box-shadow: 0 0 0 1px #173c2a; transform: translate(-50%, -50%); }
+.swap-ref__lens::before { width: 22px; height: 2px; }
+.swap-ref__lens::after { width: 2px; height: 22px; }
+.swap-ref__stat { flex: 1 1 100%; margin: 0; color: var(--stage-ink, #fff8e9); font-size: 15px; font-weight: 700; } .swap-ref__stat span { font-weight: 800; } .swap-ref__stat b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.swap-ref__title { flex: 1 1 100%; margin: 0; color: var(--stage-ink, #fff8e9); font: 800 18px/1.3 var(--qmah-font-sans); }
+
+// 原圖與工具合成同一塊紙面板（和其他玩法的工具面板同一個樣子）；滑鼠在面板的原圖上滾動就能調放大鏡
+@media (min-width: 761px) {
+  .swap-ref { @include ui.paper-panel; box-sizing: border-box; padding: 14px; gap: 12px; color: var(--game-card-ink); }
+  .swap-ref__title, .swap-ref__stat { color: var(--game-card-ink); }
+  .swap-ref__view { box-shadow: inset 0 0 0 3px #e3d2a8; }
+}
+
+// 電腦版三欄：左邊書畫介紹、中間盤面（偏向中央）、右邊窄窄的原圖與工具
+.swap-intro { display: none; }
+@media (min-width: 1000px) {
+  .swap { grid-template-columns: minmax(220px, .55fr) minmax(0, min(calc(var(--board-height) * var(--scroll-ratio) + 22px), 46%)) minmax(340px, 1fr); gap: 20px; }
+  .swap-intro { @include ui.paper-panel; grid-column: 1; grid-row: 1; align-self: stretch; box-sizing: border-box; display: block; min-height: 0; padding: 20px 22px; overflow: hidden; color: var(--game-card-ink); }
+  .swap-intro h4 { margin: 0 0 10px; font: 800 22px/1.35 var(--qmah-font-serif); }
+  .swap-intro p { margin: 0; font-size: 16px; line-height: 1.85; }
+  .swap-grid { grid-column: 2; justify-self: center; }
+  .swap-ref { grid-column: 3; grid-row: 1; overflow: hidden; }
+  .swap-ref__view { min-height: 150px; }
+  .swap-ref app-game-loupe-controls.is-row { display: grid; gap: 10px; }
+}
+@media (min-width: 1000px) {
+  .swap-intro { container-type: size; }
+  .swap-intro h4 { font-size: clamp(16px, 3.6cqh, 22px); }
+  .swap-intro p { font-size: clamp(12px, 2.5cqh, 16px); line-height: 1.7; }
+}
+@media (min-width: 1000px) {
+  .swap { grid-template-columns: minmax(240px, 25%) minmax(0, min(calc(var(--board-height) * var(--scroll-ratio) + 22px), 46%)) minmax(240px, 25%); justify-content: center; max-width: 1500px; margin-inline: auto; }
+}

@@ -126,7 +126,8 @@ internal static class QmahOpenApiSchemaCatalog
             ["SetEquippedTitleRequest"] = Fields(
                 ("userAchievementId", "UserAchievementId（會員成就取得紀錄識別碼）；只能選擇本人已取得的成就，送 null 可清除配戴稱號")),
             ["StartMiniGameRequest"] = Fields(
-                ("modeCode", "ModeCode（Mini Game 模式系統代碼）；使用 DETAIL_LOCATOR、ARTIFACT_PUZZLE、MEMORY_MATCH 或 STRIP_RESTORE")),
+                ("modeCode", "ModeCode（Mini Game 模式系統代碼）；使用 DETAIL_LOCATOR、ARTIFACT_PUZZLE、MEMORY_MATCH 或 STRIP_RESTORE"),
+                ("variant", "Variant（玩法變體）；僅 ARTIFACT_PUZZLE 使用，MEMORY 為只看十秒、滿分 100，REFERENCE 為隨時看原圖、上限 80，未提供時視為 REFERENCE")),
             ["CompleteMiniGameRequest"] = Fields(
                 ("rawScore", "RawScore（原始分數）；前端盤面計算值，伺服器會依 Attempt 重算並比對，範圍為 0 至 100"),
                 ("rawResultJson", "RawResultJson（原始結果 JSON）；必要，供伺服器依模式重算分數，最多 4000 個字元")),

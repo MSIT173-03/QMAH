@@ -24,18 +24,3 @@
 .detail-paragraph span {
   white-space: pre-line;
 }
-
-.detail-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--qmah-space-2);
-  font-size: var(--qmah-type-label-size);
-  color: var(--color-body);
-}
-
-.detail-row {
-  display: flex;
-  gap: var(--qmah-space-2);
-  border-top: 1px solid var(--color-line-soft);
-  padding-top: var(--qmah-space-2);
-}

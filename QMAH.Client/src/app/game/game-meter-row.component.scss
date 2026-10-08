@@ -1,0 +1,17 @@
+@use './game-ui' as ui;
+:host { display: grid; gap: 5px; min-width: 0; --fill: #f0c24a; --dot: #f0c24a; --gain: #f7d874; --track: #e3d9c3; --track-shadow: #3b2a0c40; --tick: #3b2a0c40; }
+:host([data-tone='keys']) { --fill: #d8605a; --dot: #d8605a; --gain: #f3a39e; }
+.mrow-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; }
+.mrow-label { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; }
+.meter-icon { display: inline-flex; flex: none; width: 22px; height: 22px; color: var(--dot); }
+.mrow-value { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mbar { position: relative; display: block; height: 18px; overflow: hidden; border: 2px solid #0f1b14; border-radius: 999px; background: var(--track); }
+.mbar-fill { position: absolute; inset: 0; transform-origin: 0 50%; background: var(--fill); transition: transform 400ms cubic-bezier(.16, 1, .3, 1); }
+.mbar-gain { position: absolute; top: 0; bottom: 0; min-width: 10px; border-inline: 2px solid #0f1b14; background: repeating-linear-gradient(135deg, #fff8e9 0 6px, var(--gain) 6px 12px); box-shadow: 0 0 10px 2px var(--gain); transform-origin: left; animation: gain-grow 900ms .25s cubic-bezier(.16, 1, .3, 1) both, gain-glow 1.6s 1.2s ease-in-out infinite; }
+@keyframes gain-glow { 50% { filter: brightness(1.18); } }
+.mbar-ticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(25% - 1px), var(--tick) calc(25% - 1px) 25%); }
+
+.meter-gain-tag { margin-left: 8px; padding: 2px 10px; border: 2px solid #0f1b14; border-radius: 999px; color: #0f1b14; background: var(--gain); font-size: 14px; font-weight: 800; animation: gain-pop 420ms .5s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes gain-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes gain-pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .mbar-gain, .meter-gain-tag { animation: none; } }

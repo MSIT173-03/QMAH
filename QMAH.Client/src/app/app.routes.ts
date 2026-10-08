@@ -1,4 +1,3 @@
-import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
 import { adminGameTestGuard, adminTestRoomGuard } from './core/guards/game-test-guard';
@@ -110,16 +109,6 @@ const appShellChildren: Routes = [
     loadComponent: () =>
       import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
   },
-  ...(isDevMode()
-    ? [
-      {
-        path: 'game/demo',
-        canActivate: [adminGameTestGuard],
-        loadComponent: () =>
-          import('./game/game-lobby.component').then(({ GameLobbyComponent }) => GameLobbyComponent)
-      }
-    ]
-    : []),
   {
     // ui-integration: 遊戲檢查中心是正式網站的一部分，但只讓管理員進入，避免把隔離測試工具混入一般玩家流程。
     path: 'game/test',
@@ -135,6 +124,7 @@ const appShellChildren: Routes = [
       { path: 'posts/:id', loadComponent: () => import('./features/social/post-detail/post-detail').then(m => m.PostDetailComponent) },
       { path: 'events', loadComponent: () => import('./features/social/events/events').then(m => m.EventsComponent) },
       { path: 'events/:id', loadComponent: () => import('./features/social/event-detail/event-detail').then(m => m.EventDetailComponent) },
+      { path: 'members/:id', loadComponent: () => import('./features/social/member-profile/member-profile').then(m => m.MemberProfileComponent) },
       { path: 'announcements', loadComponent: () => import('./features/social/announcements/announcements').then(m => m.AnnouncementsComponent) }
     ]
   },

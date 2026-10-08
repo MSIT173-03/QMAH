@@ -26,9 +26,7 @@ using QMAH.Infrastructure.Services.Social;
 var builder = WebApplication.CreateBuilder(args);
 // ASP.NET Core 已先載入 appsettings.json、環境別設定與環境變數。
 // Local 檔最後加入，因此只要檔案存在就具有最高優先權，適合保存每位組員不同的資料庫位置；部署環境不應放置此檔。
-var cookieSecurePolicy = builder.Environment.IsDevelopment()
-    ? CookieSecurePolicy.SameAsRequest
-    : CookieSecurePolicy.Always;
+var cookieSecurePolicy = QmahSharedAuthentication.GetSecurePolicy(builder.Environment);
 
 builder.Configuration.AddJsonFile(
     "appsettings.Local.json",

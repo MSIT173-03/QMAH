@@ -186,6 +186,108 @@ describe('CouponStore', () => {
   });
 
   /* ===============================
+     我的折價券
+     =============================== */
+
+  const ownedCoupon = {
+    id: 'u1',
+    name: '新會員圖鑑禮',
+    discountType: 'FIXED',
+    discountValue: 80,
+    minimumAmount: 500,
+    status: 'AVAILABLE',
+    endAt: '2026-12-31T00:00:00',
+    expiresAt: '2026-10-05T00:00:00',
+  };
+  const ownedSection = (): HTMLElement | null => fixture.nativeElement.querySelector('.my-coupons');
+
+  /** 載入商店券，依登入與否回應 GET /me，登入時再回應 GET /me/coupons */
+  const loadOwned = async (signedIn: boolean, owned: unknown[]): Promise<void> => {
+    couponRequests()[0].flush([coupon]);
+    for (const request of http.match((req) => req.url.endsWith('/me'))) {
+      if (signedIn) request.flush({ email: 'demo@qmah.test', displayName: 'Demo', pointBalance: 100 });
+      else request.flush(null, { status: 401, statusText: 'Unauthorized' });
+    }
+    await fixture.whenStable();
+    fixture.detectChanges();
+    for (const request of http.match((req) => req.url.endsWith('/me/coupons'))) request.flush(owned);
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  it('shows guests a login button in "my coupons" instead of coupons, without requesting any', async () => {
+    await loadOwned(false, []);
+
+    const login = ownedSection()?.querySelector('a.my-coupons-login-btn');
+    expect(login?.textContent?.trim()).toBe('登入');
+    expect(login?.getAttribute('href')).toBe('/login?returnUrl=%2Fstore%2Fcoupons');
+    expect(ownedSection()?.querySelectorAll('.coupon-card')).toHaveLength(0);
+    expect(http.match((req) => req.url.endsWith('/me/coupons'))).toHaveLength(0);
+  });
+
+  it('shows the coupons the account owns in the same card form, with the due date instead of a price', async () => {
+    await loadOwned(true, [ownedCoupon, { ...ownedCoupon, id: 'u2', name: '已使用的券', status: 'USED' }]);
+
+    const cards: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.my-coupons .coupon-card'));
+    // 只列出可使用（AVAILABLE）的券
+    expect(cards).toHaveLength(1);
+    expect(cards[0].querySelector('.coupon-card-off')?.textContent?.trim()).toBe('NT$80');
+    expect(cards[0].querySelector('.coupon-card-title')?.textContent?.trim()).toBe('新會員圖鑑禮');
+    expect(cards[0].querySelectorAll('.coupon-card-meta')[0]?.textContent?.trim()).toBe('最低消費 NT$500');
+    expect(cards[0].querySelector('.coupon-card-cost-label')?.textContent?.trim()).toBe('持有中');
+    expect(cards[0].querySelector('.coupon-card-cost-value')?.textContent?.trim()).toBe('10/05 到期');
+    // 持有中的券不能再兌換：右側不是按鈕
+    expect(cards[0].querySelector('button')).toBeNull();
+  });
+
+  it('stacks "my coupons" below the exchange store, each with its own title row and no coupon count', async () => {
+    await loadOwned(true, [ownedCoupon]);
+
+    const sections: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-store-main > .coupon-section'));
+    expect(sections).toHaveLength(2);
+    expect(sections[0].classList.contains('coupon-shop')).toBe(true);
+    expect(sections[1].classList.contains('my-coupons')).toBe(true);
+    expect(sections.map((section) => section.querySelector('h1.page-title')?.textContent?.trim())).toEqual([
+      '兌換商店',
+      '我的折價券',
+    ]);
+    // 標題旁不再有「n 張折價券」
+    expect(fixture.nativeElement.querySelector('.page-title-count')).toBeNull();
+    // 不再是兩欄
+    expect(fixture.nativeElement.querySelector('.coupon-columns')).toBeNull();
+  });
+
+  it('shows the exchange store first to guests, with the "my coupons" login prompt below it', async () => {
+    await loadOwned(false, []);
+
+    const sections: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-store-main > .coupon-section'));
+    expect(sections).toHaveLength(2);
+    expect(sections[0].classList.contains('coupon-shop')).toBe(true);
+    expect(sections[0].querySelector('h1.page-title')?.textContent?.trim()).toBe('兌換商店');
+    expect(sections[1].classList.contains('my-coupons')).toBe(true);
+  });
+
+  it('has a back-to-top button that only appears after scrolling', async () => {
+    await loadOwned(true, []);
+    expect(fixture.nativeElement.querySelector('app-scroll-top')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.scroll-top')).toBeNull();
+  });
+
+  it('no longer has a collapse button for "my coupons"', async () => {
+    await loadOwned(true, [ownedCoupon]);
+
+    expect(fixture.nativeElement.querySelector('.my-coupons-toggle')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.my-coupons .coupon-card')).toHaveLength(1);
+  });
+
+  it('says so when the account owns no coupon', async () => {
+    await loadOwned(true, []);
+
+    expect(ownedSection()?.textContent).toContain('目前沒有折價券');
+    expect(fixture.nativeElement.querySelectorAll('.my-coupons .coupon-card')).toHaveLength(0);
+  });
+
+  /* ===============================
      兌換成功訊息：自動消失與關閉
      =============================== */
 
@@ -214,21 +316,27 @@ describe('CouponStore', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
-    it('fades out and disappears 10 seconds after it is shown', async () => {
+    const slot = (): HTMLElement | null => fixture.nativeElement.querySelector('.coupon-feedback-slot');
+
+    it('fades out and disappears 5 seconds after it is shown', async () => {
       await showNotice();
       expect(feedback()).not.toBeNull();
       expect(feedback()?.classList.contains('coupon-feedback--leaving')).toBe(false);
+      expect(slot()?.classList.contains('coupon-feedback-slot--leaving')).toBe(false);
 
-      await advance(9_900);
+      await advance(4_900);
       expect(feedback()).not.toBeNull();
       expect(feedback()?.classList.contains('coupon-feedback--leaving')).toBe(false);
 
-      // 滿 10 秒：先套用淡出樣式，淡出結束才移除。
+      // 滿 5 秒：先套用淡出樣式，淡出結束才移除。
       await advance(200);
       expect(feedback()?.classList.contains('coupon-feedback--leaving')).toBe(true);
+      // 同時收合外層，下方內容在淡出期間就開始上移
+      expect(slot()?.classList.contains('coupon-feedback-slot--leaving')).toBe(true);
 
       await advance(300);
       expect(feedback()).toBeNull();
+      expect(slot()).toBeNull();
     });
 
     it('closes right away with the cross button, fading out first', async () => {
@@ -251,7 +359,7 @@ describe('CouponStore', () => {
       await click(costButton());
       await click(dialog().querySelector('.btn-solid')!);
       const [request] = http.match((req) => req.url.endsWith('/store/coupons/c1/redeem'));
-      request.flush({ detail: '鑑定點數不足，不能兌換這張優惠券。' }, { status: 409, statusText: 'Conflict' });
+      request.flush({ detail: '鑑定點數不足，不能兌換這張折價券。' }, { status: 409, statusText: 'Conflict' });
       await fixture.whenStable();
       fixture.detectChanges();
 
@@ -268,7 +376,7 @@ describe('CouponStore', () => {
 
     const [request] = http.match((req) => req.url.endsWith('/store/coupons/c1/redeem'));
     request.flush(
-      { title: '無法兌換這張折價券', detail: '鑑定點數不足，不能兌換這張優惠券。' },
+      { title: '無法兌換這張折價券', detail: '鑑定點數不足，不能兌換這張折價券。' },
       { status: 409, statusText: 'Conflict' },
     );
     await fixture.whenStable();

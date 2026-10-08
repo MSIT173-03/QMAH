@@ -15,7 +15,7 @@
 }
 
 @media (max-width: 600px) {
-  /* ui-integration: 步驟語意保留，但允許換行，避免結帳頁在手機產生水平捲動。 */
+  /* 允許步驟換行，避免結帳頁在手機產生水平捲動 */
   .step-indicator {
     width: 100%;
     margin-left: 0;

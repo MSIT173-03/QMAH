@@ -1,3 +1,5 @@
+import { Subject } from 'rxjs';
+import { NotificationLive } from '../../../core/services/notification-live';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -6,6 +8,7 @@ import { provideRouter } from '@angular/router';
 import { NotificationsBellComponent } from './notifications-bell';
 
 describe('NotificationsBellComponent', () => {
+  const changes = new Subject<void>();
   let component: NotificationsBellComponent;
   let fixture: ComponentFixture<NotificationsBellComponent>;
   let httpMock: HttpTestingController;
@@ -13,7 +16,7 @@ describe('NotificationsBellComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [NotificationsBellComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: NotificationLive, useValue: { changes } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NotificationsBellComponent);
@@ -22,8 +25,6 @@ describe('NotificationsBellComponent', () => {
   });
 
   afterEach(() => {
-    // 元件內有 setInterval 輪詢，測試結束要銷毀元件觸發 ngOnDestroy 清掉計時器，
-    // 避免計時器在測試結束後還存在、干擾到下一個測試檔案的 HttpTestingController。
     fixture.destroy();
     httpMock.verify();
   });
@@ -38,7 +39,8 @@ describe('NotificationsBellComponent', () => {
     expect(component.notifications.length).toBe(0);
   });
 
-  it('loads notifications and computes unread count', () => {
+  it('loads notifications and updates the visible bell without manual change detection', async () => {
+    fixture.autoDetectChanges();
     fixture.detectChanges();
 
     const req = httpMock.expectOne((r) => r.url.endsWith('/me/notifications'));
@@ -72,6 +74,16 @@ describe('NotificationsBellComponent', () => {
     expect(component.loggedIn).toBe(true);
     expect(component.notifications.length).toBe(2);
     expect(component.unreadCount).toBe(1);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('button[aria-label="開啟通知"]')).not.toBeNull();
+    expect(() => fixture.checkNoChanges()).not.toThrow();
+  });
+
+  it('cancels an in-flight notification request when the component is destroyed', () => {
+    fixture.detectChanges();
+    const request = httpMock.expectOne((r) => r.url.endsWith('/me/notifications'));
+    fixture.destroy();
+    expect(request.cancelled).toBe(true);
   });
 
   it('marks a notification as read', () => {
@@ -101,5 +113,54 @@ describe('NotificationsBellComponent', () => {
     req.flush(null);
 
     expect(component.notifications[0].isRead).toBe(true);
+  });
+
+  it('reloads immediately when the tab becomes visible again', () => {
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush({
+      items: [],
+      page: 1,
+      pageSize: 10,
+      totalCount: 0,
+      totalPages: 0
+    });
+
+    // jsdom 的 visibilityState 定義在 Document.prototype；在 document 上蓋一個可設定的 getter 模擬切換分頁。
+    let state: DocumentVisibilityState = 'hidden';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+
+    // 切到背景：不應發出請求。
+    document.dispatchEvent(new Event('visibilitychange'));
+    httpMock.expectNone((r) => r.url.endsWith('/me/notifications'));
+
+    // 切回前景：立刻查一次。
+    state = 'visible';
+    document.dispatchEvent(new Event('visibilitychange'));
+    httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush({
+      items: [],
+      page: 1,
+      pageSize: 10,
+      totalCount: 0,
+      totalPages: 0
+    });
+
+    delete (document as { visibilityState?: DocumentVisibilityState }).visibilityState;
+  });
+  it('coalesces push events while a notification read is in flight', () => {
+    fixture.detectChanges();
+    const first = httpMock.expectOne(r => r.url.endsWith('/me/notifications'));
+    changes.next(); changes.next();
+    httpMock.expectNone(r => r.url.endsWith('/me/notifications'));
+    first.flush({ items: [], totalCount: 0 });
+    httpMock.expectOne(r => r.url.endsWith('/me/notifications')).flush({ items: [], totalCount: 0 });
+    httpMock.expectNone(r => r.url.endsWith('/me/notifications'));
+  });
+  it('keeps existing notifications after a temporary server failure', () => {
+    fixture.detectChanges();
+    httpMock.expectOne(r => r.url.endsWith('/me/notifications')).flush({ items: [{ id: 'existing', isRead: false }], totalCount: 1 });
+    changes.next();
+    httpMock.expectOne(r => r.url.endsWith('/me/notifications')).flush({}, { status: 503, statusText: 'Unavailable' });
+    expect(component.loggedIn).toBe(true);
+    expect(component.notifications[0].id).toBe('existing');
   });
 });

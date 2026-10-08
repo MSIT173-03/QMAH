@@ -1,0 +1,1062 @@
+/* artifact-list.dialogs.scss
+   放大檢視／解鎖確認／一鍵解鎖視窗：沿用原本的樣式，從 artifact-list.scss 拆出來，
+   讓兩個樣式檔各自都在 angular.json 的 anyComponentStyle 32kB 預算內。 */
+
+/* ---------- overlay / focus stage ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--qmah-night) 60%, transparent);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  z-index: 70; // 要蓋過固定的標題列(60)／篩選欄(55)，打開放大檢視時兩者也要一起被蓋暗
+}
+
+.overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  width: min(1080px, 95vw);
+  /* 放大圖與資訊面板共用同一組寬高，確保兩者永遠是同一個尺寸的方框 */
+  --stage-w: clamp(320px, 36vw, 460px);
+  /* 高度獨立於寬度縮放，確保欄位不需捲動就能完整顯示 */
+  --stage-h: clamp(680px, 45vw, 740px);
+}
+
+.focus-card {
+  position: relative;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  border-radius: 20px;
+  border: 1px solid var(--qmah-border);
+  background: var(--qmah-surface-elevated);
+  box-shadow: var(--qmah-shadow-card);
+  transform: scale(0.9);
+  opacity: 0;
+  transition: transform 0.28s cubic-bezier(.2, .8, .2, 1), opacity 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  overflow: hidden;
+  flex: none;
+}
+
+.overlay.open .focus-card {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.focus-card.unlocked {
+  border-color: var(--qmah-primary-hover);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.focus-thumbnail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 28px;
+  box-sizing: border-box;
+  background: linear-gradient(160deg, var(--qmah-night) 0%, var(--qmah-night) 100%);
+  filter: grayscale(1) opacity(0.5);
+  transition: filter 0.4s ease;
+}
+
+.focus-card.unlocked .focus-thumbnail {
+  filter: none;
+}
+
+.focus-card .num {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--qmah-night) 50%, transparent);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  color: var(--qmah-on-dark);
+  z-index: 2;
+}
+
+.focus-card .category-tag {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--qmah-night) 50%, transparent);
+  color: var(--qmah-on-dark);
+  z-index: 2;
+}
+
+.focus-card .label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px 18px 18px;
+  background: linear-gradient(0deg, color-mix(in srgb, var(--qmah-night) 90%, transparent) 25%, transparent 100%);
+  z-index: 2;
+}
+
+.focus-card .label .name {
+  display: block;
+  font-size: clamp(20px, 2.2vw, 24px);
+  font-weight: 700;
+  color: var(--qmah-on-dark);
+  height: auto;
+  -webkit-line-clamp: unset;
+}
+
+.focus-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex: none;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 11px 22px;
+  border-radius: 999px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.action-btn:active { transform: translateY(1px); }
+
+.unlock-btn {
+  background: linear-gradient(135deg, var(--qmah-primary-hover), var(--qmah-primary));
+  color: var(--qmah-accent-content);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.unlock-btn:hover { box-shadow: var(--qmah-shadow-card); }
+
+.info-btn {
+  background: var(--qmah-surface-elevated);
+  color: var(--qmah-primary-hover);
+  border: 1px solid var(--qmah-border);
+}
+
+.info-btn:hover { background: var(--qmah-surface); }
+
+.info-btn.active {
+  background: var(--qmah-primary-hover);
+  color: var(--qmah-accent-content);
+  border-color: var(--qmah-primary-hover);
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--qmah-text-muted);
+  max-width: 140px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ---------- info panel ---------- */
+
+.info-panel {
+  width: 0;
+  height: var(--stage-h);
+  opacity: 0;
+  overflow: hidden;
+  flex: none;
+  transition: opacity 0.28s ease 0.05s;
+}
+
+.hint-button { border: 0; background: transparent; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+.stage.with-info .info-panel {
+  width: var(--stage-w);
+  opacity: 1;
+}
+
+.info-panel__inner {
+  width: var(--stage-w);
+  height: 100%;
+  box-sizing: border-box;
+  background: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-border);
+  border-radius: 16px;
+  padding: 20px 22px;
+  overflow-y: auto; /* 安全備援：正常情況下欄位已可完整顯示，不需捲動 */
+}
+
+.info-panel__inner .num {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  color: var(--qmah-text-muted);
+}
+
+.info-panel__inner h3 {
+  margin: 4px 0 12px;
+  font-size: 19px;
+  font-weight: 700;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--qmah-border);
+  color: var(--qmah-ink);
+}
+
+.field {
+  padding: 8px 0;
+  border-top: 1px solid var(--qmah-border);
+}
+
+.field:first-of-type { border-top: none; padding-top: 0; }
+
+.field .field-label {
+  display: block;
+  font-size: 11px;
+  color: var(--qmah-text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
+}
+
+.field .field-value {
+  display: block;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--qmah-ink);
+  word-break: break-word;
+}
+
+.field .field-value--en {
+  margin-top: 2px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--qmah-text-muted);
+}
+
+.field .field-value--muted { color: var(--qmah-text-muted); }
+
+.field .field-value--error { color: var(--qmah-danger); }
+
+.field-action {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-primary-hover);
+  color: var(--qmah-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.field-action:hover { background: var(--qmah-primary-hover); color: var(--qmah-accent-content); }
+
+.field-link {
+  font-size: 13px;
+  color: var(--qmah-primary);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--qmah-accent) 40%, transparent);
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.field-link:hover { color: var(--qmah-primary-hover); }
+
+.field-link-button {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--qmah-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.field-link-button {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--blue-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.field-link-button:hover {
+  color: var(--blue);
+}
+
+.field-link-button:disabled {
+  color: var(--ink-soft);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+
+.field-link-button:hover {
+  color: var(--qmah-primary-hover);
+}
+
+.field-link-button:disabled {
+  color: var(--ink-soft);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+/* ---------- unlock confirmation dialog ---------- */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--qmah-night) 55%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 100;
+}
+
+.confirm-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.confirm-dialog {
+  width: min(320px, 88vw);
+  background: var(--qmah-surface-elevated);
+  border: 1px solid var(--qmah-border);
+  border-radius: 18px;
+  padding: 26px 24px 22px;
+  text-align: center;
+  box-shadow: var(--qmah-shadow-card);
+  transform: translateY(6px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.confirm-overlay.open .confirm-dialog {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.confirm-dialog .key-icon {
+  width: 40px;
+  height: 40px;
+  display: block;
+  margin-bottom: 10px;
+  margin-inline: auto;
+  color: var(--qmah-primary);
+  stroke-width: 1.7;
+}
+
+.confirm-dialog h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--qmah-ink);
+}
+
+.confirm-dialog p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--qmah-text-muted);
+  line-height: 1.6;
+}
+
+.confirm-dialog .have {
+  font-size: 12px;
+  color: var(--qmah-text-muted);
+  margin-bottom: 18px;
+}
+
+.confirm-dialog .have strong { color: var(--qmah-primary); }
+
+.confirm-dialog .warn { color: var(--qmah-danger); }
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.confirm-actions .action-btn { flex: 1; }
+
+.cancel-btn {
+  background: var(--qmah-surface-elevated);
+  color: var(--qmah-ink);
+  border: 1px solid var(--qmah-border);
+}
+
+.cancel-btn:hover { background: var(--qmah-surface); }
+
+.confirm-btn:disabled {
+  background: var(--qmah-text-subtle);
+  color: var(--qmah-surface-elevated);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ---------- artifact discussion entry ---------- */
+
+.field--discussion {
+  align-items: flex-start;
+}
+
+.field-hint {
+  margin-top: 3px;
+  color: var(--qmah-text-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.field-action:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 720px) {
+  .stage {
+    flex-direction: column;
+    gap: 18px;
+    /* ui-integration: 詳情視窗在窄螢幕改成可捲動的單欄，避免固定桌面高度把操作按鈕推出 viewport。 */
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding: 12px 0;
+    --stage-w: min(340px, 88vw);
+    --stage-h: min(62vh, 480px);
+    --stage-h: min(62dvh, 480px);
+  }
+
+  .info-panel,
+  .stage.with-info .info-panel {
+    width: var(--stage-w);
+    height: auto;
+    max-height: 70vh;
+  }
+
+  .info-panel__inner {
+    width: var(--stage-w);
+    height: auto;
+    max-height: 70vh;
+  }
+}
+
+
+/* ui-integration: 浮層與按鈕對齊共用基線 */
+.focus-card {
+  border-radius: var(--qmah-radius-panel);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.confirm-dialog {
+  border-radius: var(--qmah-radius-card);
+  box-shadow: var(--qmah-shadow-card);
+}
+
+.action-btn,
+.field-action {
+  min-height: var(--qmah-control-height);
+}
+
+.action-btn {
+  padding-inline: var(--qmah-button-padding-x);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.action-btn app-qmah-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.field-action:focus-visible,
+.action-btn:focus-visible {
+  outline: 2px solid var(--qmah-focus);
+  outline-offset: 3px;
+}
+
+/* ================= 圖鑑書的配色：放大檢視／確認視窗／社群討論入口 =================
+   這些視窗都只在圖鑑元件裡出現。這裡在視窗外層重新定義共用色票（只影響這些視窗的子元素，
+   不會動到 styles.scss 的全域設定），讓它們跟書本一樣是羊皮紙＋皮革的配色，
+   淺色／深色主題下都一致。社群討論視窗是子元件，靠 CSS 變數繼承套用同一組色票。 */
+
+.overlay,
+.confirm-overlay,
+app-artifact-discussion-dialog {
+  --qmah-surface-elevated: #f4cbcb;
+  --qmah-surface: #ead8b0;
+  --qmah-surface-soft: #efe0bd;
+  --qmah-border: rgb(110 82 54 / 42%);
+  --qmah-ink: #3a2414;
+  --qmah-text-muted: #6e5236;
+  --qmah-text-subtle: #9c8566;
+  --qmah-primary: #6f4417;
+  --qmah-primary-hover: #9c7630;
+  --qmah-primary-content: #fbf3df;
+  --qmah-accent: #9c7630;
+  --qmah-accent-content: #fbf3df;
+  --qmah-night: #1f1208;
+  --qmah-on-dark: #f6e7c1;
+  --qmah-danger: #a3392b;
+  --qmah-focus: #c99a3e;
+  --qmah-shadow-card: 0 18px 40px rgb(20 10 4 / 45%);
+  --blue: #9c7630;
+  --blue-deep: #6f4417;
+  --ink-soft: #9c8566;
+}
+
+.overlay {
+  background: radial-gradient(ellipse at 50% 40%, rgb(40 22 10 / 62%), rgb(14 8 3 / 82%));
+}
+
+.confirm-overlay {
+  background: rgb(14 8 3 / 62%);
+}
+
+/* 放大圖：深色木框＋金邊 */
+.focus-card {
+  border: 2px solid #7d5b22;
+  box-shadow:
+    inset 0 0 0 4px rgb(243 217 142 / 18%),
+    0 24px 50px rgb(10 5 2 / 60%);
+}
+
+.focus-card.unlocked {
+  border-color: #d4ae5c;
+}
+
+.focus-thumbnail {
+  background: radial-gradient(circle at 50% 38%, #5a3d24, #1f1208 75%);
+}
+
+.focus-card:not(.unlocked) .focus-thumbnail {
+  filter: grayscale(1) sepia(0.4) brightness(0.6);
+}
+
+.focus-card .label .name {
+  font-family: var(--qmah-font-serif);
+  letter-spacing: 0.06em;
+}
+
+/* 資料面板：羊皮紙頁面 */
+.info-panel__inner {
+  border: 1px solid #9c7630;
+  background:
+    radial-gradient(ellipse at 30% 10%, rgb(255 251 238 / 65%), transparent 55%),
+    linear-gradient(180deg, #f4e8cb, #e8d4a8);
+  box-shadow: inset 0 0 40px rgb(120 80 30 / 18%), 0 24px 50px rgb(10 5 2 / 50%);
+}
+
+.info-panel__inner h3 {
+  font-family: var(--qmah-font-serif);
+  letter-spacing: 0.06em;
+  border-bottom: 3px double rgb(110 82 54 / 45%);
+}
+
+.field {
+  border-top-color: rgb(110 82 54 / 25%);
+}
+
+.field .field-label {
+  color: #8a6427;
+  font-weight: 700;
+}
+
+.field-link-button,
+.field-link {
+  color: #6e2230;
+}
+
+.field-link-button:hover,
+.field-link:hover {
+  color: #9c7630;
+}
+
+/* 按鈕：金色主按鈕、羊皮紙次按鈕 */
+.unlock-btn {
+  background: linear-gradient(180deg, #7a4a1c, #573111);
+  color: #fbf3df;
+  border: 1px solid #3a1f0d;
+}
+
+.info-btn {
+  background: linear-gradient(180deg, #f6ead0, #e6d2a7);
+  color: #3a2414;
+  border-color: #9c7630;
+}
+
+.info-btn.active {
+  background: linear-gradient(180deg, #7a4a1c, #573111);
+  border-color: #3a1f0d;
+  color: #fbf3df;
+}
+
+.hint {
+  color: rgb(246 231 193 / 80%);
+}
+
+/* 確認視窗：羊皮紙卡片 */
+.confirm-dialog {
+  border: 1px solid #9c7630;
+  background:
+    radial-gradient(ellipse at 30% 0%, rgb(255 251 238 / 70%), transparent 60%),
+    linear-gradient(180deg, #f6ead0, #e6d2a7);
+}
+
+.confirm-dialog h3 {
+  font-family: var(--qmah-font-serif);
+  letter-spacing: 0.1em;
+}
+
+.cancel-btn {
+  background: rgb(255 248 230 / 70%);
+  border-color: rgb(110 82 54 / 45%);
+}
+
+
+/* ================= 放大檢視：換掉棕色，右頁與圖鑑同一種書頁材質，左側依年代色 =================
+   左側面板是「深墨色」＋年代色的細框，不再是棕色木框；右側資料頁用跟圖鑑書頁一樣的紙面照片、
+   淡象牙色、頁緣陰影與疊層頁緣。顏色變數 --acc 來自 .stage 的 data-tone（見 artifact-list.ts 的 eraTone）。 */
+:where(.stage) {
+  --acc: 108 102 90; /* 預設色；年代色由 data-tone 的規則覆蓋（零權重，才蓋得過去） */
+}
+
+.stage {
+  --ink-dlg: #2d2218;
+}
+
+.overlay {
+  background: radial-gradient(ellipse at 50% 40%, rgb(30 34 40 / 62%), rgb(10 12 15 / 84%));
+  /* 上緣讓出固定標題列的高度，內容區（放大圖、資料頁）一律排在標題列下方，不會被擋住 */
+  box-sizing: border-box;
+  padding: calc(var(--app-header-height, 78px) + 14px) 14px 14px;
+}
+
+.stage {
+  /* 高度不超過「視窗扣掉標題列」所剩的空間；空間夠時維持原本的 740px */
+  --stage-h: clamp(460px, calc(100dvh - var(--app-header-height, 78px) - 40px), 740px);
+  max-height: 100%;
+}
+
+.confirm-overlay {
+  background: rgb(10 12 15 / 64%);
+}
+
+.focus-card {
+  border: 4px solid rgb(var(--acc));
+  background: color-mix(in srgb, rgb(var(--acc)) 38%, #0d0f12);
+  box-shadow:
+    inset 0 0 0 5px color-mix(in srgb, rgb(var(--acc)) 38%, #0d0f12),
+    inset 0 0 0 6px rgb(255 255 255 / 22%),
+    0 24px 50px rgb(5 6 8 / 60%);
+}
+
+.focus-card.unlocked {
+  border-color: rgb(var(--acc));
+}
+
+.focus-thumbnail {
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, rgb(var(--acc)) 48%, #20252b), color-mix(in srgb, rgb(var(--acc)) 26%, #0a0b0d) 80%);
+  /* 照片四邊羽化，融進深色底，不留硬邊 */
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  mask-composite: intersect;
+}
+
+.focus-card:not(.unlocked) .focus-thumbnail {
+  filter: grayscale(1) brightness(0.5);
+}
+
+.focus-card .num,
+.focus-card .category-tag {
+  border-radius: 2px;
+  background: color-mix(in srgb, rgb(var(--acc)) 70%, #000);
+  color: #fffaf0;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 28%);
+}
+
+.focus-card .label {
+  background: linear-gradient(0deg, color-mix(in srgb, rgb(var(--acc)) 30%, #08090b) 25%, transparent 100%);
+}
+
+/* 資料頁：與圖鑑書頁相同的材質 */
+.info-panel__inner {
+  border: 0;
+  border-radius: 3px;
+  background-image:
+    radial-gradient(ellipse at 30% 10%, rgb(255 252 240 / 40%), transparent 60%),
+    linear-gradient(90deg, rgb(var(--paper-shade, 110 72 28) / 18%) 0%, transparent 6%, transparent 94%, rgb(var(--paper-shade, 110 72 28) / 20%) 100%),
+    linear-gradient(color-mix(in srgb, rgb(var(--acc)) 14%, var(--paper-tint, #fbf6e8)), color-mix(in srgb, rgb(var(--acc)) 14%, var(--paper-tint, #fbf6e8))),
+    url('/assets/catalog/page-paper.jpg');
+  background-size: 100% 100%, 100% 100%, 100% 100%, 480px 480px;
+  background-blend-mode: normal, normal, multiply, normal;
+  border-top: 6px solid rgb(var(--acc));
+  box-shadow:
+    inset 0 0 30px rgb(var(--paper-shade, 110 72 28) / 12%),
+    2px 0 0 var(--paper-edge-1, #e0cfa2),
+    4px 1px 0 var(--paper-edge-2, #c7ae7a),
+    6px 2px 0 var(--paper-edge-3, #ae9262),
+    0 24px 50px rgb(5 6 8 / 50%);
+  color: var(--ink-dlg);
+}
+
+.info-panel__inner h3 {
+  color: #1f160d;
+  border-bottom: 3px double rgb(var(--acc) / 45%);
+}
+
+.info-panel__inner .num {
+  color: color-mix(in srgb, rgb(var(--acc)) 70%, #2a1c10);
+}
+
+.field {
+  border-top-color: rgb(var(--acc) / 22%);
+}
+
+.field .field-label {
+  color: color-mix(in srgb, rgb(var(--acc)) 78%, #1c120a);
+}
+
+.field-link-button,
+.field-link {
+  color: color-mix(in srgb, rgb(var(--acc)) 78%, #1c120a);
+  border-bottom-color: rgb(var(--acc) / 45%);
+}
+
+.field-link-button:hover,
+.field-link:hover {
+  color: color-mix(in srgb, rgb(var(--acc)) 95%, #000);
+}
+
+/* 按鈕：方正的紙籤，不用圓形藥丸；主要動作用年代色，次要動作是紙色 */
+.action-btn {
+  border-radius: 3px;
+}
+
+.unlock-btn {
+  background: linear-gradient(180deg, color-mix(in srgb, rgb(var(--acc)) 94%, #fff), color-mix(in srgb, rgb(var(--acc)) 86%, #000));
+  color: #fffaf0;
+  border: 1px solid color-mix(in srgb, rgb(var(--acc)) 60%, #000);
+}
+
+.info-btn {
+  background: linear-gradient(180deg, #f8f2e2, #ece3cb);
+  color: #2d2218;
+  border-color: rgb(var(--acc) / 70%);
+}
+
+.info-btn.active {
+  background: linear-gradient(180deg, color-mix(in srgb, rgb(var(--acc)) 94%, #fff), color-mix(in srgb, rgb(var(--acc)) 86%, #000));
+  border-color: color-mix(in srgb, rgb(var(--acc)) 60%, #000);
+  color: #fffaf0;
+}
+
+.hint {
+  color: rgb(240 236 224 / 80%);
+}
+
+/* 確認視窗：同一種紙面 */
+.confirm-dialog {
+  border: 1px solid rgb(120 98 66 / 45%);
+  border-radius: 3px;
+  background-image:
+    linear-gradient(var(--paper-tint, #fbf6e8), var(--paper-tint, #fbf6e8)),
+    url('/assets/catalog/page-paper.jpg');
+  background-size: 100% 100%, 400px 400px;
+  background-blend-mode: multiply, normal;
+}
+
+/* ================= 放大檢視：改成明亮的紙面，不再陰暗；深色／淺色模式觀感一致 =================
+   所有顏色都用固定值（不引用會隨深淺模式變的站內變數），所以兩種模式看起來完全一樣。 */
+.overlay {
+  background: rgb(44 36 28 / 46%);
+  backdrop-filter: blur(5px);
+}
+
+.confirm-overlay {
+  background: rgb(44 36 28 / 50%);
+}
+
+.focus-card {
+  background: linear-gradient(170deg, #fbf8ef, #f1ead8);
+  border: 4px solid rgb(var(--acc));
+  box-shadow:
+    inset 0 0 0 5px #fbf8ef,
+    inset 0 0 0 6px rgb(var(--acc) / 40%),
+    0 24px 50px rgb(40 30 20 / 38%);
+}
+
+.focus-thumbnail {
+  background: transparent;
+  filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.focus-card:not(.unlocked) .focus-thumbnail {
+  filter: grayscale(1) brightness(0.55) contrast(1.1);
+}
+
+.focus-card .label {
+  background: linear-gradient(0deg, #fbf8ef 45%, transparent 100%);
+}
+
+.focus-card .label .name {
+  color: #1f160d;
+}
+
+.hint {
+  color: #fff8e8;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 55%);
+}
+
+/* ---------- 左側外框：角花框（與圖鑑裡的文物卡同一語言，放大版）----------
+   外緣一道年代／分類色的實線框 → 內縮的紙面襯底（紙張照片＋淡色）→ 四角折線 → 再內縮一圈細線。 */
+.focus-card {
+  border: 3px solid rgb(var(--acc));
+  background-color: #fbf8ef;
+  background-image:
+    linear-gradient(color-mix(in srgb, rgb(var(--acc)) 6%, #fbf8ef), color-mix(in srgb, rgb(var(--acc)) 6%, #fbf8ef)),
+    url('/assets/catalog/page-paper.jpg');
+  background-size: 100% 100%, 420px 420px;
+  background-blend-mode: multiply, normal;
+  box-shadow:
+    inset 0 0 0 4px #fbf8ef,
+    inset 0 0 0 5px rgb(var(--acc) / 55%),
+    inset 0 0 22px rgb(var(--paper-shade, 110 72 28) / 12%),
+    0 24px 50px rgb(40 30 20 / 38%);
+}
+
+/* 四角折線 */
+.focus-card::before {
+  --c: rgb(var(--acc));
+  --l: 30px;
+  --w: 3px;
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--c), var(--c)), linear-gradient(var(--c), var(--c)),
+    linear-gradient(var(--c), var(--c)), linear-gradient(var(--c), var(--c)),
+    linear-gradient(var(--c), var(--c)), linear-gradient(var(--c), var(--c)),
+    linear-gradient(var(--c), var(--c)), linear-gradient(var(--c), var(--c));
+  background-size:
+    var(--l) var(--w), var(--w) var(--l), var(--l) var(--w), var(--w) var(--l),
+    var(--l) var(--w), var(--w) var(--l), var(--l) var(--w), var(--w) var(--l);
+  background-position:
+    11px 11px, 11px 11px, calc(100% - 11px) 11px, calc(100% - 11px) 11px,
+    11px calc(100% - 11px), 11px calc(100% - 11px), calc(100% - 11px) calc(100% - 11px), calc(100% - 11px) calc(100% - 11px);
+  background-repeat: no-repeat;
+}
+
+/* 內縮細線 */
+.focus-card::after {
+  content: '';
+  position: absolute;
+  inset: 19px;
+  z-index: 1;
+  border: 1px solid rgb(var(--acc) / 30%);
+  pointer-events: none;
+}
+
+.focus-thumbnail {
+  padding: 46px 40px 70px;
+}
+
+/* 編號與分類標籤避開四角折線，放在內縮細線之內 */
+.focus-card .num { top: 28px; left: 32px; }
+.focus-card .category-tag { top: 28px; right: 32px; }
+.focus-card .label { padding: 16px 32px 30px; }
+
+/* ================= 修正：右頁回到一般書頁的色彩；左側內框改虛線；照片更明亮清晰 ================= */
+
+/* 右頁：與圖鑑書頁完全相同的象牙紙（不染年代色、沒有色帶），文字色也用書頁的墨色／酒紅／古金 */
+.info-panel__inner {
+  border-top: 0;
+  background-image:
+    radial-gradient(ellipse at 30% 10%, rgb(255 252 240 / 40%), transparent 60%),
+    linear-gradient(90deg, rgb(var(--paper-shade, 110 72 28) / 18%) 0%, transparent 6%, transparent 94%, rgb(var(--paper-shade, 110 72 28) / 20%) 100%),
+    linear-gradient(var(--paper-tint, #f7f0de), var(--paper-tint, #f7f0de)),
+    url('/assets/catalog/page-paper.jpg');
+}
+
+.info-panel__inner h3 {
+  border-bottom: 3px double rgb(110 82 54 / 45%);
+}
+
+.info-panel__inner .num {
+  color: #6e5236;
+}
+
+.field {
+  border-top-color: rgb(110 82 54 / 25%);
+}
+
+.field .field-label {
+  color: #8a6427;
+}
+
+.field-link-button,
+.field-link {
+  color: #6e2230;
+  border-bottom-color: rgb(110 34 48 / 40%);
+}
+
+.field-link-button:hover,
+.field-link:hover {
+  color: #9c7630;
+}
+
+/* 左側：外緣實線框 + 內縮虛線框（不再有四角折線） */
+.focus-card::before {
+  content: none;
+}
+
+.focus-card::after {
+  inset: 14px;
+  border: 1.5px dashed rgb(var(--acc) / 65%);
+}
+
+.focus-card .num { top: 24px; left: 28px; }
+.focus-card .category-tag { top: 24px; right: 28px; }
+.focus-card .label { padding: 16px 28px 26px; }
+
+.focus-thumbnail {
+  padding: 56px 32px 72px;
+}
+
+/* 放大後的照片維持原樣，不做色彩加工（提亮只用在圖鑑裡尚未點開的縮圖） */
+.focus-card.unlocked .focus-thumbnail {
+  filter: none;
+}
+
+/* ================= 文物名稱：預留兩行的空間 =================
+   名稱區固定留兩行高，照片的下緣內距跟著加大，長名稱換到第二行時不會壓在照片上、也不會被裁掉；
+   超過兩行才以「…」收尾。短名稱在兩行高的區塊裡垂直置中。 */
+.focus-card .label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(16px + 26px + 2 * 1.35 * var(--focus-name-size));
+  box-sizing: border-box;
+  background: linear-gradient(0deg, #fbf8ef 72%, transparent 100%);
+  --focus-name-size: clamp(18px, 2vw, 22px);
+}
+
+.focus-card .label .name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: var(--focus-name-size);
+  line-height: 1.35;
+}
+
+.focus-thumbnail {
+  padding-bottom: calc(16px + 26px + 2 * 1.35 * clamp(18px, 2vw, 22px) + 8px);
+}
+
+.info-panel__inner h3 {
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* ================= 確認視窗的主按鈕：與鑰匙背包相同的深棕底＋hover 掃光 =================
+   前面那條 .unlock-btn 用的是年代色 --acc，但 --acc 只定義在放大檢視的 .stage 裡，
+   確認視窗不在 .stage 之內，取不到值就退成近白色，跟紙面融在一起。這裡直接指定鑰匙背包的深棕色。 */
+.confirm-dialog .unlock-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(180deg, #7a4a1c, #573111);
+  color: #fbf3df;
+  border: 1px solid #3a1f0d;
+  box-shadow: inset 0 1px 0 rgb(255 226 170 / 22%), 0 4px 10px rgb(40 20 6 / 30%);
+}
+
+/* 掃光：一道斜斜的亮光，平常停在按鈕左外側，hover 時由左往右掃過、反覆閃爍 */
+.confirm-dialog .unlock-btn::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 42%;
+  z-index: -1;
+  background: linear-gradient(100deg, transparent 0%, rgb(255 236 190 / 0%) 15%, rgb(255 236 190 / 55%) 50%, rgb(255 236 190 / 0%) 85%, transparent 100%);
+  transform: translateX(-130%) skewX(-18deg);
+  pointer-events: none;
+}
+
+.confirm-dialog .unlock-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #8a5524, #643a16);
+  box-shadow: inset 0 1px 0 rgb(255 226 170 / 30%), 0 0 0 1px rgb(212 174 92 / 55%), 0 6px 16px rgb(40 20 6 / 38%);
+}
+
+.confirm-dialog .unlock-btn:hover:not(:disabled)::after {
+  animation: confirm-btn-shimmer 1.2s ease-in-out infinite;
+}
+
+.confirm-dialog .unlock-btn:disabled {
+  background: linear-gradient(180deg, #7a4a1c, #573111);
+  color: #fbf3df;
+  opacity: 0.55;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+@keyframes confirm-btn-shimmer {
+  0% { transform: translateX(-130%) skewX(-18deg); }
+  65%, 100% { transform: translateX(300%) skewX(-18deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-dialog .unlock-btn:hover:not(:disabled)::after {
+    animation: none;
+  }
+}

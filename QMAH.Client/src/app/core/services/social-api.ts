@@ -34,6 +34,18 @@ export interface SocialPostListItem {
   updatedAt: string;
 }
 
+export interface SocialMemberProfile {
+  userId: string;
+  nickname: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  joinedAt: string | null;
+  email: string | null;
+  isPublic: boolean;
+  postCount: number;
+  eventCount: number;
+}
+
 export interface SocialComment {
   id: string;
   postId: string;
@@ -98,6 +110,18 @@ export interface SocialEventDetails extends EventListItem {
   media: SocialMedia[];
   reviewStatus: string | null;
   publishStatus: string | null;
+}
+
+export interface EventRegistrant {
+  userId: string;
+  displayName: string | null;
+  status: 'REGISTERED' | 'ATTENDED' | 'CANCELLED';
+  registeredAt: string;
+}
+
+export interface EventRegistrations {
+  active: EventRegistrant[];
+  cancelled: EventRegistrant[];
 }
 
 export interface Announcement {
@@ -193,12 +217,17 @@ export class SocialApiService {
     boardCode?: string;
     postType?: string;
     artifactId?: string;
+    userId?: string;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<SocialPostListItem>> {
     return this.http.get<ApiPage<SocialPostListItem>>(`${this.base}/posts`, {
       params: this.toHttpParams(params)
     });
+  }
+
+  getMember(userId: string): Observable<SocialMemberProfile> {
+    return this.http.get<SocialMemberProfile>(`${this.base}/members/${userId}`);
   }
 
   getPost(id: string): Observable<SocialPostDetails> {
@@ -253,6 +282,7 @@ export class SocialApiService {
     q?: string;
     startAfter?: string;
     startBefore?: string;
+    organizerUserId?: string;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<EventListItem>> {
@@ -264,6 +294,11 @@ export class SocialApiService {
   // GET /api/v1/social/boards：標準看板清單 + 資料庫既有看板代碼合併
   getBoards(): Observable<string[]> {
     return this.http.get<string[]>(`${this.base}/boards`);
+  }
+
+  // 只有活動發起人與 Admin 可呼叫，其他人會得到 403。
+  getEventRegistrations(id: string): Observable<EventRegistrations> {
+    return this.http.get<EventRegistrations>(`${this.base}/events/${id}/registrations`);
   }
 
   getEvent(id: string): Observable<SocialEventDetails> {

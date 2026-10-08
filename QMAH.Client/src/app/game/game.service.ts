@@ -122,7 +122,7 @@ export class GameService {
   createRehearsalRoom(request: CreateGameRoomRequest): Observable<GameRoomListItem> {
     const normalized = this.normalizeCreateRoomRequest({ ...request, visibility: 'PUBLIC', password: null });
     const errors = this.validateCreateRoomRequest(normalized);
-    if (normalized.maxPlayers > 6) errors.push('模擬房間最多使用 6 位玩家。');
+    if (normalized.maxPlayers > 6) errors.push('測試房間最多使用 6 位玩家。');
     if (errors.length) return this.invalid(errors);
     const room: GameRoomListItem = {
       id: `test-room-local-${crypto.randomUUID()}`,
@@ -218,6 +218,16 @@ export class GameService {
     }));
   }
 
+  closeSoloRoom(roomId: string): Observable<void> {
+    return this.mutate(() => this.http.post<void>(
+      `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/close-solo`, null,
+    )).pipe(tap(() => {
+      if (this.roomState()?.id === roomId) this.roomState.set(null);
+      this.roundState.set(null);
+      this.historyState.set(null);
+    }));
+  }
+
   heartbeat(roomId: string): Observable<void> {
     return this.mutate(() => this.http.post<void>(
       `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/heartbeat`,
@@ -268,7 +278,7 @@ export class GameService {
 
   /** 取得目前啟用的 Mini Game 模式與評分門檻。 */
   getMiniGameModes(): Observable<MiniGameMode[]> {
-    return this.http.get<MiniGameMode[]>(`${this.apiUrl}/modes`);
+    return this.http.get<MiniGameMode[]>(`${this.apiUrl}/modes`).pipe(map(modes => modes.map(mode => mode.code === 'STRIP_RESTORE' ? { ...mode, name: '書畫拼貼' } : mode)));
   }
   getMiniGameRewardStatus(): Observable<GameDailyRewardStatus> {
     return this.http.get<GameDailyRewardStatus>(`${this.apiUrl}/reward-status`);
@@ -295,12 +305,13 @@ export class GameService {
   /** 開始 Mini Game；素材、難度與 seed 必須採用 API 回傳值。 */
   startMiniGame(request: StartMiniGameRequest | string): Observable<MiniGameStart> {
     const normalized: StartMiniGameRequest = {
-      modeCode: typeof request === 'string' ? request.trim() : request.modeCode.trim()
+      modeCode: typeof request === 'string' ? request.trim() : request.modeCode.trim(),
+      ...(typeof request !== 'string' && request.variant ? { variant: request.variant } : {})
     };
     const errors = this.validateStartMiniGameRequest(normalized);
     if (errors.length > 0) return this.invalid(errors);
 
-    return this.mutate(() => this.http.post<MiniGameStart>(`${this.apiUrl}/attempts`, normalized));
+    return this.mutate(() => this.http.post<MiniGameStart>(`${this.apiUrl}/attempts`, normalized).pipe(map(attempt => attempt.modeCode === 'STRIP_RESTORE' ? { ...attempt, modeName: '書畫拼貼' } : attempt)));
   }
 
   /** 完成 Mini Game；等級與經濟獎勵由 API 依 Attempt 設定重新計算。 */
@@ -493,7 +504,7 @@ export class GameService {
     if (!value) return '遊戲服務目前無法完成這項操作，請稍後再試。';
     if (/\b(api|http|status code|status)\b/i.test(value)) return '遊戲服務目前無法完成這項操作，請稍後再試。';
     if (/找不到啟用中的 mini\s*game 模式/i.test(value)) return '目前沒有可用的單人玩法，請稍後再試。';
-    if (/沒有可供 mini\s*game 使用的啟用文物/i.test(value)) return '目前沒有可用的館藏，請稍後再試。';
+    if (/沒有可供 mini\s*game 使用的啟用文物/i.test(value)) return '目前沒有可用的文物，請稍後再試。';
     if (/找不到目前會員的 mini\s*game attempt/i.test(value)) return '找不到這次練習，請重新開始。';
     if (/\b(mini\s*game|visibility|modecode|rawresultjson)\b/i.test(value)) return '遊戲資料設定不正確，請重新開始。';
     if (/\bjson\b/i.test(value)) return '遊戲結果格式不正確，請重新開始。';

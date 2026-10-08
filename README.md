@@ -132,11 +132,15 @@ dotnet run --project .\QMAH.Web\QMAH.Web.csproj --launch-profile https
 
 ```powershell
 cd QMAH.Client
-npm ci
 npm start
 ```
 
+`npm start`、`npm run start:https`、`npm run start:http`（含 Visual Studio／VS Code 啟動）會在啟動 Angular 前檢查前台套件。首次下載或拉取更新後，若缺少套件（例如 `@microsoft/signalr`）或版本與 `package-lock.json` 不符，會自動執行 `npm ci` 安裝鎖定版本，再啟動 Angular；套件齊全時不會重裝。建置、watch 與測試也使用相同檢查。自動安裝需要可用的 Node.js、npm 與套件來源；安裝失敗時會停止啟動並顯示原因。需要手動完整重裝時仍可執行 `npm ci`。
+
 `npm start` 會偵測 API 的 HTTPS／HTTP profile 並選擇對應 proxy；`npm run start:https` 固定使用 `https://localhost:7249`。`/api`、公開 `/media`、頭貼與成就上傳圖會轉送至 API；其他 `/uploads` 在完整啟動時仍轉送至後台。
+
+三種 npm 啟動方式也會先檢查前台連接埠（預設 4200）。若已被使用，啟動器會保持執行並等待釋放，避免 Angular 的占埠錯誤讓 Visual Studio 整組偵錯停止；先前的前台仍可使用，關閉它後會自動啟動本次前台。等待時不會重裝套件，也不會終止占用連接埠的其他程序。正常停止啟動器時，會清理它啟動的 Angular 與子程序；驗證用的前台應在驗證結束後停止。可透過 `npm start -- --port 4201` 指定其他開發埠，但自訂埠仍須同步調整後台的前台入口設定。
+
 共用媒體素材集中在專案根目錄的 `QMAH.Media`：文物圖在 `media/catalog`，品牌、預設頭貼與 Web 圖片在 `images`，Web 字型在 `fonts`，會員頭貼與成就上傳圖在 `uploads`。API 與 Web 預設用同一個 `Media:AssetRootPath` 指向此資料夾，相對路徑以各專案的 ContentRoot 為基準。既有 `Media:RootPath`、`Avatar:RootPath`、`Avatar:PresetRootPath` 設定仍可個別覆寫對應目錄；成就上傳圖亦可用 `Achievement:RootPath` 覆寫。若兩個工作區共用一個資料庫，兩邊 API 與 Web 應設定相同的共用媒體絕對路徑。對外 `/media/catalog/...`、`/images/...`、`/fonts/...` 及 `/uploads/...` 網址不變，資料庫不需遷移。新上傳頭貼按會員 ID 分目錄，資料庫仍記錄目前使用的公開路徑。
 
 若既有 `appsettings.Local.json` 仍指向搬空的 `QMAH.Web/wwwroot` 舊目錄，程式會改用 `QMAH.Media`；有檔案的舊目錄或其他自訂目錄仍依原設定使用，部署前請把需要保留的本機上傳檔同步到選定的共用目錄。未指定頭貼網址時，才會使用會員目錄中最新的上傳檔；既有會員指定的頭貼網址優先。
@@ -179,7 +183,7 @@ npm run start:http
 
 這時 `/api`、公開 `/media`、頭像與 OpenAPI 請求會轉送到 `http://localhost:5147`，其他 `/uploads` 在完整啟動時轉送到 `http://localhost:5183`。HTTP 與 HTTPS 使用各自的 proxy 設定，避免把 HTTPS profile 的 307 redirect 當成 API 回應傳回前端。
 
-需要手動使用 Angular CLI 時，HTTPS profile 可在 `QMAH.Client` 目錄執行 `ng serve` 或 `npx ng serve`；HTTP profile 請執行 `ng serve --proxy-config proxy.http.conf.json` 或 `npx ng serve --proxy-config proxy.http.conf.json`。
+需要手動使用 Angular CLI 時，HTTPS profile 可在 `QMAH.Client` 目錄執行 `ng serve` 或 `npx ng serve`；HTTP profile 請執行 `ng serve --proxy-config proxy.http.conf.json` 或 `npx ng serve --proxy-config proxy.http.conf.json`。直接使用 Angular CLI 不會執行 npm 的套件檢查，請先執行 `npm ci`；日常啟動建議使用上面的 npm 指令。
 
 瀏覽器開啟 `http://localhost:4200/`。前台的 `/api`、`/openapi` 與 `/scalar` 會透過 `QMAH.Client/proxy.conf.json` 轉送到 `https://localhost:7249`。
 
@@ -214,7 +218,9 @@ npm run start:http
 
 ## 常見啟動問題
 
-前後台切換入口由伺服器讀取站台設定後轉址，元件內不指定主機或連接埠。API 的 `Backend:AdminUrl` 指向管理後台，Web 的 `Frontend:ClientUrl` 指向使用者前台。兩者都支援完整網址與部署子路徑，可在各自的 `appsettings.Local.json` 或環境變數 `Backend__AdminUrl`、`Frontend__ClientUrl` 覆寫。本機預設沿用標準 HTTPS 後台與 Angular 前台，若只啟動 HTTP 後台，請將 `Backend:AdminUrl` 改成該部署的 HTTP 網址。
+前後台切換入口由伺服器讀取站台設定後轉址，元件內不指定主機或連接埠。API 的 `Backend:AdminUrl` 指向管理後台，Web 的 `Frontend:ClientUrl` 指向使用者前台。兩者都支援完整網址與部署子路徑，可在各自的 `appsettings.Local.json` 或環境變數 `Backend__AdminUrl`、`Frontend__ClientUrl` 覆寫。本機預設後台入口為 `http://localhost:5183`，兩種標準啟動 profile 都會監聽此網址；HTTPS profile 會由後台轉至 HTTPS。Angular 前台預設為 `http://localhost:4200`。自訂連接埠、不同主機或部署時須設定實際網址，並確認目標服務已啟動。既有 Local 設定若仍指定 `https://localhost:7039`，只啟動 HTTP 後台時也須改成 HTTP 入口。
+
+切換入口僅轉往固定設定的站台，不讀取管理資料，也不接受使用者提供的任意轉址網址。登入過期時由後台導向登入頁，後台頁面仍檢查 Admin 權限。回到前台的轉址不要求有效票證。前後台在 Development 共用不標記 Secure 的 `.QMAH.Auth` Cookie，支援 HTTP Angular 代理與 HTTPS 後台；正式環境仍一律要求 Secure。開發時的 loopback 轉址保留目前的 `localhost`／`127.0.0.1`／`::1`，避免切換後落到不同 Cookie 主機；Angular 代理改寫 Host 時，使用 loopback Referer 辨識瀏覽器來源。不同部署網域不能只靠同名 Cookie 共用登入；應另外規劃登入流程。確認視窗無法使用時仍可透過原始連結切換。
 
 切換連結保留原有登入機制，不會透過網址傳遞登入票證。前台入口僅對 `Admin` 顯示，API 與後台轉址入口也檢查管理員權限。
 

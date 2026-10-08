@@ -1,3 +1,4 @@
+using QMAH.Api.Hubs;
 using System.IO.Compression;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
@@ -39,9 +40,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Angular dev server（ng serve）預設是 http，透過 proxy.conf.json 轉送時瀏覽器端看到的其實是
 // http，用 SameAsRequest 會依 Kestrel 收到的 request（永遠是 https）判斷，導致 cookie 被標成
 // Secure，卻沒有穩定的辦法送回純 http 的 4200——會員登入狀態因此不穩定地遺失。
-var cookieSecurePolicy = builder.Environment.IsDevelopment()
-    ? CookieSecurePolicy.None
-    : CookieSecurePolicy.Always;
+var cookieSecurePolicy = QmahSharedAuthentication.GetSecurePolicy(builder.Environment);
 
 builder.Configuration.AddJsonFile(
     "appsettings.Local.json",
@@ -154,9 +153,10 @@ builder.Services.AddDbContext<QmahDbContext>(options =>
     options.UseSqlServer(
         qmahDatabaseResolution.ConnectionString,
         sqlOptions => sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 2,
+            maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(1),
-            errorNumbersToAdd: null));
+            // 1205 = 死結被選為犧牲者：Serializable 交易（準備、投票、結算）多人同時操作時會發生，重做整筆即可成功。
+            errorNumbersToAdd: [1205]));
 });
 
 // API 與 Web 共用會員資料表與登入票證；各端仍各自驗證帳號狀態與角色。
@@ -266,6 +266,11 @@ builder.Services.AddScoped<GameRoomInvitationService>();
 builder.Services.AddScoped<DailyActivityService>();
 // integration: 房間生命週期由背景 worker 定期推進，和 HTTP 請求共用同一個 scoped service；
 // 不依賴前端持續輪詢，部署到不同主機時也只需沿用既有 DI 設定。
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<NotificationConnections>();
+builder.Services.AddHostedService<NotificationPushService>();
+// ponytail: 單機記憶體群組；多台主機部署時加 Redis backplane（AddStackExchangeRedis）即可，其餘程式不用動。
+builder.Services.AddSingleton<IGameRoomNotifier, SignalRGameRoomNotifier>();
 builder.Services.AddScoped<GameRoomLifecycleService>();
 builder.Services.AddSingleton<GameRoomSessionStore>();
 builder.Services.AddHostedService<GameRoomLifecycleWorker>();
@@ -311,7 +316,7 @@ builder.Services.AddRateLimiter(options =>
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 12,
+                PermitLimit = 30,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
                 AutoReplenishment = true
@@ -464,15 +469,20 @@ app.Use(async (context, next) =>
             throw;
         }
 
+        var connectionFailure = QmahDatabaseDiagnostics.IsConnectionFailure(exception);
         context.Response.Clear();
-        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        context.Response.StatusCode = connectionFailure
+            ? StatusCodes.Status503ServiceUnavailable
+            : StatusCodes.Status500InternalServerError;
         context.Response.ContentType = "application/problem+json; charset=utf-8";
         context.Response.Headers.CacheControl = "no-store";
         await context.Response.WriteAsJsonAsync(new ProblemDetails
         {
-            Status = StatusCodes.Status503ServiceUnavailable,
-            Title = "資料庫無法連線",
-            Detail = "QMAH 資料庫目前無法連線，請稍後再試。"
+            Status = context.Response.StatusCode,
+            Title = connectionFailure ? "資料庫無法連線" : "操作暫時無法完成",
+            Detail = connectionFailure
+                ? "QMAH 資料庫目前無法連線，請稍後再試。"
+                : "伺服器處理時發生錯誤，請再試一次；若持續發生請聯絡管理員。"
         });
     }
 });
@@ -607,6 +617,8 @@ if (File.Exists(mediaPaths.FaviconPath))
         () => Results.File(mediaPaths.FaviconPath, "image/x-icon"))
         .ExcludeFromDescription();
 app.MapControllers();
+app.MapHub<GameRoomHub>("/hubs/game-room");
+app.MapHub<NotificationHub>("/hubs/notifications", options => options.CloseOnAuthenticationExpiration = true);
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)
 {

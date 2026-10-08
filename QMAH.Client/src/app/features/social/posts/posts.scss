@@ -114,7 +114,8 @@
   isolation: isolate;
   flex: 0 0 100%;
   min-width: 0;
-  min-height: 340px;
+  /* ui-integration: 公告是 supporting context；輪播從 340px 降到 240px，貼文才有機會進首屏。 */
+  min-height: 240px;
   display: flex;
   align-items: flex-end;
   padding: var(--qmah-space-8);
@@ -154,22 +155,11 @@
   box-shadow: var(--qmah-shadow-float);
 }
 
-.social-hero__kicker {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.22em;
-  color: var(--social-hero-accent);
-}
-
-.qmah-social-page .social-hero__kicker svg {
-  width: 14px;
-  height: 14px;
-}
-
 .social-hero__title {
   margin: 0;
   font-family: var(--qmah-font-serif);
-  font-size: clamp(24px, 3vw, 36px);
+  /* ui-integration: 輪播標題不得大過頁面 h1（page-title 28–42px），避免層級顛倒。 */
+  font-size: clamp(20px, 2.2vw, 26px);
   line-height: var(--qmah-type-heading-leading);
   font-weight: 700;
   color: var(--qmah-primary);
@@ -347,14 +337,14 @@
 }
 
 .social-post-wall {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  align-items: stretch;
+  columns: 2;
+  column-gap: 18px;
 }
 
 .social-post-card {
   min-width: 0;
+  margin-bottom: 18px;
+  break-inside: avoid;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -379,30 +369,6 @@
   object-fit: cover;
 }
 
-.social-post-card__cover::after {
-  position: absolute;
-  inset: auto 0 0;
-  height: 42%;
-  background: linear-gradient(to top, color-mix(in srgb, var(--qmah-night) 78%, transparent), transparent);
-  content: '';
-  pointer-events: none;
-}
-
-.social-post-card__cover figcaption {
-  position: absolute;
-  right: 16px;
-  bottom: 14px;
-  left: 16px;
-  z-index: 1;
-  overflow: hidden;
-  color: var(--qmah-on-dark);
-  font-size: 12px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  text-shadow: 0 1px 3px color-mix(in srgb, var(--qmah-night) 72%, transparent);
-  white-space: nowrap;
-}
-
 .social-post-card__body {
   flex: 1;
   display: grid;
@@ -422,36 +388,15 @@
   justify-content: space-between;
   gap: 12px;
   color: var(--qmah-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .social-post-card__meta time { flex: 0 0 auto; color: var(--qmah-muted); font-variant-numeric: tabular-nums; }
 
 .social-post-card__tags { flex-wrap: wrap; gap: 6px; }
-.social-post-card__board,
-.social-post-card__type {
-  display: inline-flex;
-  min-height: 24px;
-  align-items: center;
-  border-radius: var(--qmah-radius-pill);
-  padding: 3px 9px;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.social-post-card__board {
-  color: var(--qmah-on-dark);
-  background: var(--qmah-social-soft);
-}
-
-.social-post-card__type {
-  color: var(--qmah-accent-content);
-  background: var(--qmah-accent);
-}
 
 .social-post-card__title {
   display: -webkit-box;
-  max-width: 34ch;
   margin: 0;
   font-family: var(--qmah-font-serif);
   font-size: clamp(19px, 2vw, 24px);
@@ -472,22 +417,22 @@
 
 .social-post-card__title a:hover { text-decoration: underline; }
 
-.social-post-card__author,
-.social-post-card__media-count,
-.social-post-card__report {
+.social-post-card__author {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
   color: var(--qmah-muted);
   font-size: 12px;
 }
 
-.social-post-card__author { margin: 0; }
-.social-post-card__author { display: inline-flex; align-items: center; gap: 6px; color: var(--qmah-muted); font-size: 12px; }
 .social-post-card__author svg { width: 15px; height: 15px; }
+.social-post-card__author app-user-avatar { --user-avatar-size: 1.5rem; }
 
 .social-post-card__excerpt {
   display: -webkit-box;
   overflow: hidden;
   max-width: 72ch;
-  min-height: 4.8em;
   margin: 2px 0 0;
   color: var(--qmah-ink);
   font-size: var(--qmah-type-body-sm-size);
@@ -497,78 +442,55 @@
   -webkit-line-clamp: 3;
 }
 
+/* ui-integration: 卡片底部只留一個主要動作「閱讀全文」；留言數與圖片數是純資訊，檢舉是低頻操作，降成圖示按鈕。 */
 .social-post-card__footer {
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 8px;
   margin-top: auto;
   padding-top: 14px;
   border-top: 1px solid color-mix(in srgb, var(--qmah-border) 60%, transparent);
 }
 
-.social-post-card__media-count { margin-right: auto; }
+.social-post-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: 0 auto 0 0;
+  color: var(--qmah-muted);
+  font-size: 12px;
+}
 
-.social-post-card__report,
-.social-post-card__read-more {
+.social-post-card__report {
+  width: var(--qmah-control-height);
   min-height: var(--qmah-control-height);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   border: 1px solid transparent;
   border-radius: var(--qmah-radius-control);
-  padding: 7px 11px;
   background: transparent;
-  text-decoration: none;
+  color: var(--qmah-muted);
   cursor: pointer;
 }
+
+.social-post-card__report svg { width: 16px; height: 16px; }
 
 .social-post-card__report:hover {
   color: var(--qmah-danger);
   background: color-mix(in srgb, var(--qmah-danger) 10%, transparent);
 }
 
-.social-post-card__read-more {
-  color: var(--qmah-social-action);
-  border-color: color-mix(in srgb, var(--qmah-social-action) 55%, var(--qmah-border));
-  background: color-mix(in srgb, var(--qmah-social-action) 10%, var(--qmah-surface));
-  font-weight: 800;
-}
-
-.social-post-card__read-more:hover {
-  color: var(--qmah-on-dark);
-  border-color: var(--qmah-social-action);
-  background: var(--qmah-social-action);
-}
-
-.social-posts-heading {
-  gap: 16px;
-}
-
-.social-posts-heading h1 {
-  margin: 0;
-  text-wrap: balance;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 @media (max-width: 640px) {
-  .social-post-wall { grid-template-columns: 1fr; gap: 14px; }
+  .social-post-wall { columns: 1; }
+  .social-post-card { margin-bottom: 14px; }
 
   .social-announcements {
     margin-bottom: 18px;
   }
 
   .social-hero__slide {
-    min-height: 300px;
+    min-height: 260px;
     padding: 20px 16px 64px;
   }
 
@@ -592,19 +514,37 @@
     gap: var(--qmah-space-4);
   }
 
-  .social-posts-heading {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .social-posts-heading .btn {
-    width: 100%;
-  }
-
   .social-post-card__body { padding: 16px; }
   .social-post-card__meta { align-items: flex-start; flex-direction: column; gap: 6px; }
   .social-post-card__title { max-width: none; font-size: 21px; }
-  .social-post-card__media-count { margin-right: 0; }
-  .social-post-card__footer { align-items: stretch; }
-  .social-post-card__read-more { margin-left: auto; }
 }
+
+/* 沒有封面圖的貼文：改成「文字卡」，標題放大、摘要多給幾行；卡片底色與圖片卡一致。 */
+.social-post-card--text .social-post-card__title {
+  font-size: clamp(22px, 2.4vw, 28px);
+  -webkit-line-clamp: 3;
+}
+
+.social-post-card--text .social-post-card__excerpt { -webkit-line-clamp: 6; }
+
+/* 卡片右下角只放一個圖示按鈕（箭頭）進入貼文；標題仍是一般連結，檢舉旗標在它左邊。 */
+.social-post-card__open {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: var(--qmah-control-height);
+  height: var(--qmah-control-height);
+  border: 1.5px solid color-mix(in srgb, var(--qmah-social-action) 60%, transparent);
+  border-radius: var(--qmah-radius-control);
+  background: transparent;
+  color: var(--qmah-social-action);
+  text-decoration: none;
+}
+
+.social-post-card__open:hover {
+  border-color: var(--qmah-social-action);
+  background: var(--qmah-social-action);
+  color: var(--qmah-on-dark);
+}
+
+.social-post-card__open svg { width: 1.15rem; height: 1.15rem; stroke-width: 2.25; }

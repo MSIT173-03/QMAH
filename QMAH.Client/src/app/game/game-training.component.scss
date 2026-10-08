@@ -3,19 +3,21 @@
 :host { display: block; color: var(--qmah-ink); background: var(--qmah-page-surface); font: 400 16px/1.5 var(--qmah-font-sans); @include scene.pattern; }
 .training-notebook { @include scene.surface; position: relative; --arena-height: max(580px, calc(100dvh - 200px)); --stage-surface: var(--qmah-surface); --stage-ink: var(--qmah-ink); --stage-muted: var(--qmah-muted); --stage-accent: var(--qmah-jade); color: var(--stage-ink); }
 .training-notebook.is-playing { background-image:none; }
+.training-notebook:is(.is-playing,.is-complete) { border-radius:0; }
+@media (min-width:1000px) {
+  .training-notebook:is(.is-playing,.is-complete) .chapter { display:flex; flex-direction:column; min-height:0; }
+  .training-notebook:is(.is-playing,.is-complete) .game-arena,
+  .training-notebook.is-focus-mode:is(.is-playing,.is-complete) .game-arena { flex:1 1 0; min-height:0; height:auto; }
+  .training-notebook .message { flex:none; max-height:150px; overflow:auto; }
+}
+.message.error { color:#713b31; background:#fff2df; }
 :host { min-height: 100dvh; }
 :host:has(.training-notebook.is-focus-mode.is-playing) { padding-block:0; }
 .training-notebook.is-playing, .training-notebook.is-complete { margin-block: 16px 32px; }
-// 選牌頁與大廳、說明、鑑賞同一個版心，專注模式只是少了站台頁首頁尾
-.training-notebook:not(.is-playing):not(.is-complete) { --stage-offset: 73px; position: relative; width: min(calc(100% - 24px), 1760px); min-height: calc(100dvh - var(--stage-offset)); margin: 0 auto; padding: 10px 0; background: transparent; display: flex; flex-direction: column; gap: 12px; }
-.training-notebook:not(.is-playing):not(.is-complete) > .chapter { flex: 1 1 0; min-height: 0; }
-@media (min-width: 1000px) { .training-notebook:not(.is-playing):not(.is-complete) { width: min(calc(100% - 24px), calc((100dvh - var(--stage-offset) - 20px) * 16 / 9)); aspect-ratio: 16 / 9; height: auto; min-height: 0; padding: 0; margin-block: 10px; } .training-notebook:not(.is-playing):not(.is-complete) > .chapter { display: flex; flex-direction: column; } .training-notebook:not(.is-playing):not(.is-complete) .chapter > app-game-training-mode-picker { flex: 1 1 0; min-height: 0; } }
-.training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { --stage-offset: 0px; padding: 0; }
-.training-notebook:not(.is-playing):not(.is-complete) > app-game-navigation { position: absolute; top: 16px; left: 18px; }
-@media (min-width: 1000px) { .training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) { width: min(100%, calc(100dvh * 16 / 9)); margin-block: 0; } .training-notebook.is-focus-mode:not(.is-playing):not(.is-complete) > app-game-navigation { top: 12px; } }
-.scene-toolbar { display: flex; justify-content: space-between; align-items: center; gap:12px; min-height: 48px; margin-bottom: 16px; }
+.training-notebook:not(.is-playing):not(.is-complete) { @include scene.stage-page; padding: 0; }
+.training-notebook:not(.is-playing):not(.is-complete) > .chapter { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.training-notebook:not(.is-playing):not(.is-complete) .chapter > app-game-training-mode-picker { flex: 1 1 0; min-height: 0; }
 app-game-navigation { --game-nav-ink: var(--stage-ink); --game-nav-muted: var(--stage-muted); --game-nav-line: color-mix(in srgb, var(--stage-ink) 25%, transparent); --game-nav-surface: transparent; --game-nav-hover: color-mix(in srgb, var(--stage-ink) 10%, transparent); }
-.scene-toolbar a, .scene-toolbar button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; color: var(--stage-ink); background: transparent; border: 1px solid color-mix(in srgb, var(--stage-ink) 25%, transparent); border-radius: var(--qmah-radius-control); text-decoration: none; font: inherit; font-size: 14px; }
 .training-notebook.is-focus-mode { --arena-height: max(580px, calc(100dvh - 88px)); }
 .training-notebook.is-focus-mode:is(.is-playing, .is-complete) { width: 100%; margin: 0; border-radius: 0; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -30,9 +32,6 @@ button:active:not(:disabled) { transform: translateY(1px); }
 .chapter-heading h1 { margin: 0; font: 700 clamp(26px, 3vw, 32px)/1.3 var(--qmah-font-serif); }
 .chapter-heading span { display: none; }
 .chapter-heading { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
-.pause-dialog button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 24px; border: 1px solid var(--qmah-game-action); border-radius: var(--qmah-radius-control); color: var(--qmah-game-content); background: var(--qmah-game-action); font-weight: 700; text-decoration: none; }
-.pause-dialog .secondary, .pause-trigger { color: var(--qmah-game-action); background: transparent; border: 1px solid var(--qmah-border); }
-.pause-trigger { min-height: 44px; padding: 8px 14px; border-radius: var(--qmah-radius-control); white-space: nowrap; }
 .message { position: relative; z-index: 10; padding: 20px; border-radius: var(--qmah-radius-card); background: var(--qmah-surface); }
 .message.error { display: grid; gap: 8px; color: var(--qmah-danger); border: 1px solid var(--qmah-danger); }
 .loading { padding: 48px 0; color: var(--qmah-muted); }
@@ -40,34 +39,17 @@ button:active:not(:disabled) { transform: translateY(1px); }
 .is-complete app-game-training-play-sheet { display:none; }
 /* Kenney Board Game Pack 的 CC0 寶藍牌背，保留原始比例並與綠絨桌面分色*/
 /* 來源：https://kenney.nl/assets/boardgame-pack*/
-.reward-status > span { display: block; line-height: 1.7; }
-.pause-trigger { color: var(--stage-ink); border-color: color-mix(in srgb, var(--stage-ink) 30%, transparent); }
-.pause-dialog { position: fixed; inset: 0; margin: auto; width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: clamp(20px, 5vw, 32px); border: 0; border-radius: var(--qmah-radius-panel); background: var(--qmah-surface); color: var(--qmah-ink); box-shadow: 0 16px 40px color-mix(in srgb, var(--qmah-night) 30%, transparent); }
-.pause-dialog::backdrop { background: color-mix(in srgb, var(--qmah-night) 70%, transparent); }
-.pause-dialog h2 { margin: 0; font: 700 clamp(24px, 4vw, 28px)/1.4 var(--qmah-font-serif); }
-.pause-dialog p { color: var(--qmah-muted); margin: 12px 0; font-size: 1rem; line-height: 1.65; word-break: normal; overflow-wrap: break-word; line-break: strict; text-wrap: pretty; }
-.pause-dialog button { width: 100%; margin-top: 12px; }
-.pause-dialog h2 { text-wrap: balance; }
-.help-options { display: grid; gap: 24px; margin-block: 24px; }
-.help-option h3 { margin: 0; font: 700 1.125rem/1.4 var(--qmah-font-sans); }
-.help-option p { margin-block: 8px; }
 .text-unit { white-space: nowrap; font-variant-numeric: tabular-nums; }
-.help-notes { display: grid; gap: 20px; margin: 0 0 24px; padding: 20px 0 0; border-top: 1px solid var(--game-card-line); list-style: none; }
-.help-notes strong { display: block; color: var(--qmah-ink); font-size: 1rem; font-weight: 700; line-height: 1.5; }
-.pause-dialog .help-notes p { margin: 6px 0 0; }
-.help-explanation summary { min-height:44px; align-content:center; color:var(--qmah-game-action); font-weight:700; cursor:pointer; }
 @keyframes card-turn { from { transform: rotateY(75deg); } to { transform: rotateY(0); } }
 @media (max-width: 600px) {
   .training-notebook { --arena-height: max(620px, calc(100dvh - 200px)); }
   .training-notebook.is-focus-mode { --arena-height: max(620px, calc(100dvh - 88px)); }
   .chapter-heading h1 { font-size: 26px; }
-  .pause-trigger { font-size: 14px; padding-inline: 10px; }
 }
 /* 短版手機先留出完整拼圖盤面，備選碎片與說明可往下捲動查看*/
 @media (max-width: 600px) and (max-height: 700px) {
   .training-notebook { --arena-height: max(540px, calc(100dvh - 120px)); }
   .training-notebook.is-focus-mode { --arena-height: max(520px, calc(100dvh - 64px)); }
-  .scene-toolbar { min-height: 44px; margin-bottom: 8px; }
 }
 @media (max-height: 550px) and (min-width: 650px) { .training-notebook { --arena-height: 540px; } }
 @media (min-width: 901px) {
@@ -75,25 +57,11 @@ button:active:not(:disabled) { transform: translateY(1px); }
 }
 
 /* 遊戲標題、木框控制項與進度條共用同一套素材，正文不套描邊*/
-.training-notebook.is-playing { @include ui.panel; --stage-surface:var(--game-table-ground); --stage-ink:var(--game-table-ink); --stage-muted:var(--game-table-muted); --stage-accent:var(--game-table-ink); --qmah-surface:var(--game-table-ground); --qmah-ink:var(--game-table-ink); --qmah-muted:var(--game-table-muted); --qmah-focus:#fff0c9; background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat,linear-gradient(var(--game-table-ground),var(--game-table-ground)) padding-box; color:var(--game-table-ink); }
+.training-notebook:is(.is-playing, .is-complete) { @include ui.panel; --stage-surface:var(--game-table-ground); --stage-ink:var(--game-table-ink); --stage-muted:var(--game-table-muted); --stage-accent:var(--game-table-ink); --qmah-surface:var(--game-table-ground); --qmah-ink:var(--game-table-ink); --qmah-muted:var(--game-table-muted); --qmah-focus:#fff0c9; background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat,linear-gradient(var(--game-table-ground),var(--game-table-ground)) padding-box; color:var(--game-table-ink); }
 .chapter-heading h1 { @include ui.title; }
-.scene-toolbar a, .scene-toolbar button, .pause-trigger { @include ui.button(true); }
-.pause-dialog button { @include ui.button; }
-.pause-dialog .secondary { @include ui.button(true); }
-.pause-lobby { @include ui.button(true); display:flex; justify-content:center; align-items:center; min-height:48px; text-decoration:none; }
-.pause-dialog { @include ui.paper-panel; --qmah-game-action:#334260; --qmah-game-content:#fff8e9; --game-primary-image:var(--game-button-blue-image); --game-primary-ink:#fff8e9; }
-.pause-dialog h2 { @include ui.title; }
-.pause-dialog__header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 12px; padding-bottom: 8px; background: var(--qmah-surface); }
-.pause-dialog__header h2 { flex: 1; min-width: 0; }
-.pause-dialog .pause-close { @include ui.button(true); flex: 0 0 44px; width: 44px; min-height: 44px; margin: 0; padding: 0; }
-.pause-utility-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.pause-utility-actions > :only-child { grid-column:1/-1; }
-.pause-exit-actions { margin-top:24px; padding-top:16px; border-top:1px solid var(--game-card-line); }
-.pause-exit-actions h3 { margin:0; font-size:17px; }
-.pause-exit-actions p { margin:8px 0 16px; font-size:14px; }
+// 暫停選單：置中的一張紙牌，標題列、一顆大的繼續、其餘依重要性往下排；內容少到不需要捲動。
+
 @media (max-width: 600px) {
-  .scene-toolbar a, .scene-toolbar button { padding-inline: 8px; font-size:14px; }
-  .pause-utility-actions { grid-template-columns:1fr; }
 }
 
 /* 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。*/
@@ -102,19 +70,93 @@ button:active:not(:disabled) { transform: translateY(1px); }
 
 
 /* 選單專注模式保留對稱邊距；不讓一般選單規則覆蓋全螢幕尺寸。 */
-.pause-dialog app-game-scroll-panel { --scroll-panel-height:auto; --scroll-panel-max-height:calc(100dvh - 240px); }
-.leave-warning span { display:inline-block; }
-.pause-dialog.is-confirming { scrollbar-gutter:auto; }
-.confirm-actions { display:grid; justify-items:center; gap:12px; margin-top:24px; }
-.pause-dialog .confirm-actions button { width:min(100%,240px); margin:0; }
 @media(min-width:901px) {
-  .training-notebook.is-focus-mode.is-playing { display:grid; grid-template-rows:minmax(0,1fr); gap:8px; height:100dvh; border-width:clamp(20px,2.4vw,34px); padding:12px 16px; }
+  .training-notebook.is-focus-mode.is-playing { display:grid; grid-template-rows:auto minmax(0,1fr); gap:8px; height:100dvh; border-width:clamp(20px,2.4vw,34px); padding:12px 16px; }
   .training-notebook.is-focus-mode.is-playing .chapter, .training-notebook.is-focus-mode.is-playing .game-arena { height:100%; min-height:0; }
-  .training-notebook.is-focus-mode.is-playing .scene-toolbar { margin-bottom:0; }
 }
-// 牌桌進行中：同樣收進 16:9，專注模式鋪滿螢幕，非專注模式讓出站台頁首
+// 牌桌進行中與結算：同樣收進 16:9，專注模式鋪滿螢幕，非專注模式讓出站台頁首
 @media (min-width: 901px) {
-  .training-notebook.is-playing { --off: 73px; --arena-height: 100%; display: grid; grid-template-rows: minmax(0, 1fr); gap: 8px; width: min(calc(100% - 24px), calc((100dvh - var(--off) - 20px) * 16 / 9)); height: auto; aspect-ratio: 16 / 9; margin: 10px auto; padding: 12px 16px; overflow: auto; }
-  .training-notebook.is-playing .chapter, .training-notebook.is-playing .game-arena { height: 100%; min-height: 0; }
-  .training-notebook.is-focus-mode.is-playing { --off: 0px; width: min(100%, calc(100dvh * 16 / 9)); margin: 0 auto; }
+  .training-notebook:is(.is-playing, .is-complete) { --off: 73px; --arena-height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; width: min(calc(100% - 24px), calc((100dvh - var(--off) - 20px) * 16 / 9)); height: auto; aspect-ratio: 16 / 9; margin: 10px auto; padding: 12px 16px; overflow: auto; }
+  .training-notebook.is-complete { grid-template-rows: auto minmax(0, 1fr); }
+  .training-notebook:is(.is-playing, .is-complete) .chapter, .training-notebook:is(.is-playing, .is-complete) .game-arena { height: 100%; min-height: 0; }
+  .training-notebook.is-focus-mode:is(.is-playing, .is-complete) { --off: 0px; width: min(100%, calc(100dvh * 16 / 9)); margin: 0 auto; }
 }
+@media (min-width: 901px) and (max-aspect-ratio: 8 / 5) {
+  .training-notebook:is(.is-playing, .is-complete) { width: calc(100% - 24px); aspect-ratio: auto; height: calc(100dvh - var(--off) - 20px); }
+  .training-notebook.is-focus-mode:is(.is-playing, .is-complete) { width: 100%; height: 100dvh; }
+}
+@media (max-width: 999px) { .training-notebook:not(.is-playing):not(.is-complete) > .chapter { flex: none; } .training-notebook:not(.is-playing):not(.is-complete) .chapter > app-game-training-mode-picker { flex: none; } }
+
+// 選難度：兩張並排的難度牌，選中的浮起並加選取框，下方是各自的規則
+.difficulty-stage { display: grid; align-content: start; gap: clamp(14px, 2.4vh, 24px); width: 100%; min-height: 100%; padding: 8px 28px 20px; color: var(--game-table-ink); }
+.difficulty-head { @include ui.page-head; }
+.difficulty-options { width: min(100%, 880px); margin-inline: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2.4vw, 28px); padding-top: 10px; }
+.difficulty-card { @include ui.exhibit-card(var(--diff-face, #f7f2e7), #c9a24d); position: relative; display: grid; align-content: start; gap: 8px; padding: 18px 20px 20px; color: var(--game-card-ink); text-align: start; cursor: pointer; transition: transform 200ms cubic-bezier(.16, 1, .3, 1), box-shadow 200ms; }
+.difficulty-card[data-difficulty='EASY'] { --diff-face: #cfe0ef; }
+.difficulty-card[data-difficulty='HARD'] { --diff-face: #efd8a0; }
+.difficulty-card:hover { transform: translateY(-4px); }
+.difficulty-card.is-selected { transform: translateY(-10px); box-shadow: 0 0 0 3px #fff8e9, 0 0 0 6px #0f1b14, 0 18px 26px #14291c80; }
+.difficulty-card:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 5px; }
+.difficulty-stars { display: inline-flex; gap: 4px; }
+.difficulty-stars i { width: 18px; height: 18px; background: #0f1b1426; clip-path: polygon(50% 0, 62% 36%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 36%); }
+.difficulty-stars i.is-on { background: #c9891a; }
+.difficulty-card strong { font: 800 32px/1.15 var(--qmah-font-sans); }
+.difficulty-tagline { font: 700 17px/1.5 var(--qmah-font-sans); }
+.difficulty-card dl { display: grid; gap: 0; margin: 10px 0 0; border-top: 2px dashed #0f1b1440; }
+.difficulty-card dl > div { display: flex; justify-content: space-between; gap: 12px; padding-block: 9px; border-bottom: 1px solid #0f1b1426; font-size: 15px; line-height: 1.5; }
+.difficulty-card dt { color: var(--game-card-muted); font-weight: 600; }
+.difficulty-card dd { margin: 0; font-weight: 800; text-align: end; }
+.difficulty-actions { width: min(100%, 880px); margin-inline: auto; display: flex; justify-content: center; gap: 14px; }
+.difficulty-actions button { @extend %ui-btn-2; min-height: 52px; min-width: 160px; font-size: 17px; }
+.difficulty-actions button[data-button-tone='start'] { @extend %ui-btn; min-width: 240px; }
+@media (max-width: 640px) { .difficulty-options { grid-template-columns: minmax(0, 1fr); } .difficulty-card strong { font-size: 26px; } .difficulty-actions { flex-direction: column-reverse; } .difficulty-actions button { width: 100%; min-width: 0; } }
+@media (prefers-reduced-motion: reduce) { .difficulty-card { transition: none; } }
+// 手機：兩張難度卡要一眼看完，說明列改成兩欄小磚
+@media (max-width: 640px) {
+  .difficulty-stage { align-content: start; gap: 10px; padding: 28px 12px 16px; }
+  .difficulty-options { gap: 12px; padding-top: 4px; }
+  .difficulty-card { gap: 4px; padding: 12px 14px 14px; }
+  .difficulty-card strong { font-size: 24px; }
+  .difficulty-tagline { font-size: 15px; }
+  .difficulty-card dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; border-top: 0; }
+  .difficulty-card dl > div { display: grid; gap: 0; padding: 6px 10px; border: 0; border-radius: 8px; background: #ffffff59; }
+  .difficulty-card dd { text-align: start; font-size: 15px; }
+  .difficulty-card dt { font-size: 14px; }
+}
+// 電腦版：難度選擇鋪滿整個板面，文字隨視窗高度放大
+@media (min-width: 1000px) {
+  .difficulty-stage { grid-template-rows: auto minmax(min-content, 1fr) auto; height: 100%; overflow-y: auto; padding-bottom: 28px; }
+  .difficulty-options { width: min(100%, 1400px); align-items: stretch; padding-top: clamp(8px, 2dvh, 24px); }
+  .difficulty-card { align-content: start; gap: clamp(8px, 1.4dvh, 16px); padding: clamp(18px, 3dvh, 36px) clamp(22px, 2.4vw, 44px); }
+  .difficulty-stars i { width: clamp(18px, 2.6dvh, 30px); height: clamp(18px, 2.6dvh, 30px); }
+  .difficulty-card strong { font-size: clamp(32px, 5.2dvh, 56px); }
+  .difficulty-tagline { font-size: clamp(17px, 2.5dvh, 28px); }
+  .difficulty-card dl > div { padding-block: clamp(9px, 1.7dvh, 20px); font-size: clamp(15px, 2.2dvh, 24px); }
+  .difficulty-actions button { min-height: clamp(52px, 7dvh, 72px); font-size: clamp(17px, 2.4dvh, 26px); }
+}
+.training-notebook:is(.is-playing,.is-complete) { border-radius:0; background-clip:border-box; }
+@media (min-width:1000px) {
+  .training-notebook:is(.is-playing,.is-complete) .chapter { display:flex; flex-direction:column; min-height:0; }
+  .training-notebook:is(.is-playing,.is-complete) .game-arena { flex:1 1 0; min-height:0; height:auto; }
+}
+
+// 短螢幕（1280×720 等）：卡片收緊，五列說明也放得下、不被按鈕蓋住
+@media (min-width: 1000px) and (max-height: 780px) {
+  .difficulty-stage { gap: 8px; padding-bottom: 12px; }
+  .difficulty-options { padding-top: 4px; gap: 18px; }
+  .difficulty-card { gap: 4px; padding: 10px 20px 12px; }
+  .difficulty-stars i { width: 16px; height: 16px; }
+  .difficulty-card strong { font-size: 28px; }
+  .difficulty-tagline { font-size: 15px; }
+  .difficulty-card dl { margin-top: 4px; }
+  .difficulty-card dl > div { padding-block: 3px; font-size: 14px; }
+  .difficulty-actions button { min-height: 44px; font-size: 16px; }
+}
+
+// 單人正式遊戲與其他遊戲頁同一道粗木框
+.training-notebook:is(.is-playing, .is-complete),
+.training-notebook.is-focus-mode.is-playing { --game-frame-width: clamp(14px, 1.5vw, 22px); border-width: var(--game-frame-width); }
+
+// 正式遊玩的內容與頂端選單同一條左右邊（跟試玩頁一樣縮進到選單按鈕的左緣）
+.training-notebook.training-notebook:is(.is-playing, .is-complete) { padding: 0; }
+.training-notebook:is(.is-playing, .is-complete) > .chapter { padding: 8px clamp(14px, 2vw, 28px) 20px; }

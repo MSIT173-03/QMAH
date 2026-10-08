@@ -30,37 +30,47 @@
   &.is-focus-mode { width: 100%; min-height: 100dvh; margin: 0; border-radius: 0; background-image: none; }
 }
 
-// 遊戲頁共用舞台：專注模式只隱藏站台頁首頁尾，舞台本身不變。
+// 遊戲頁共用舞台：木框加綠毯是同一個畫面，頂端狀態列（選單、專注）與內容都在框裡面。
+// 桌面寬度時整個畫面是 16:9；手機依內容長高，至少撐滿一個螢幕。
 @mixin stage-page {
   --stage-offset: 73px;
+  --game-frame-width: clamp(14px, 1.5vw, 22px);
+  --stage-ink: var(--game-table-ink);
+  --stage-muted: var(--game-table-muted);
   display: flex;
   flex-direction: column;
-  gap: 12px;
   box-sizing: border-box;
   position: relative;
   width: min(calc(100% - 24px), 1760px);
-  min-height: calc(100dvh - var(--stage-offset));
-  margin: 0 auto;
-  padding: 10px 0;
-  &.is-focus-mode { --stage-offset: 0px; padding: 0; }
-  // 選單收成左上角一顆按鈕，浮在牌桌木框上，不再佔一條縱向空間
-  > app-game-navigation { position: absolute; top: 16px; left: 18px; }
-  &.is-focus-mode > app-game-navigation { top: 12px; }
-  // 桌面寬度時牌桌就是一個 16:9 的畫面，內容多的地方在舞台裡捲動
+  min-height: calc(100dvh - var(--stage-offset) - 20px);
+  margin: 10px auto;
+  border: var(--game-frame-width) solid transparent;
+  border-image: var(--game-frame-image) 8 / 1 / 0 stretch;
+  border-radius: 0;
+  background: url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground);
+  background-clip: border-box;
+  box-shadow: 0 18px 36px #14291c40;
+  color: var(--game-table-ink);
+  &.is-focus-mode { --stage-offset: 0px; width: 100%; min-height: 100dvh; margin: 0; border-radius: 0; }
   @media (min-width: 1000px) {
     width: min(calc(100% - 24px), calc((100dvh - var(--stage-offset) - 20px) * 16 / 9));
-    height: auto;
     min-height: 0;
     aspect-ratio: 16 / 9;
-    margin-block: 10px;
-    padding: 0;
-    &.is-focus-mode { width: min(100%, calc(100dvh * 16 / 9)); margin-block: 0; }
+    overflow: hidden;
+    &.is-focus-mode { width: min(100%, calc(100dvh * 16 / 9)); min-height: 0; margin: 0 auto; border-radius: 0; }
   }
+  // iPad 這類 4:3 橫向螢幕：不硬切 16:9，直接用滿可用高度
+  @media (min-width: 1000px) and (max-aspect-ratio: 8 / 5) {
+    width: calc(100% - 24px);
+    aspect-ratio: auto;
+    height: calc(100dvh - var(--stage-offset) - 20px);
+    &.is-focus-mode { width: 100%; height: 100dvh; }
+  }
+  &.is-focus-mode { padding-inline: env(safe-area-inset-left) env(safe-area-inset-right); }
 }
 
-// 木框加綠毯：與單人選牌共用同一張牌桌。
+// 框裡的內容區：本身沒有框，桌面時佔滿狀態列以下的空間並在內部捲動。
 @mixin table-stage {
-  --game-frame-width: clamp(16px, 1.8vw, 28px);
   --stage-ink: var(--game-table-ink);
   --stage-muted: var(--game-table-muted);
   flex: 1 1 auto;
@@ -68,13 +78,7 @@
   flex-direction: column;
   gap: 14px;
   min-width: 0;
-  padding: max(18px, calc(72px - var(--game-frame-width))) clamp(14px, 2vw, 28px) 24px;
-  border: var(--game-frame-width) solid transparent;
-  border-image: var(--game-frame-image) 8 / 1 / 0 stretch;
-  border-radius: 16px;
-  background: url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground);
-  background-clip: padding-box;
-  box-shadow: 0 18px 36px #14291c40;
+  padding: 8px clamp(14px, 2vw, 28px) 20px;
   color: var(--game-table-ink);
-  @media (min-width: 1000px) { flex-basis: 0; min-height: 0; overflow: auto; }
+  @media (min-width: 1000px) { flex: 1 1 0; min-height: 0; overflow: auto; }
 }

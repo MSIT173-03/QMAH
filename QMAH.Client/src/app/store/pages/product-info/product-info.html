@@ -13,7 +13,7 @@
   <app-breadcrumb [items]="breadcrumbItems()" />
 
   <!-- 商品主視覺：左側商品圖庫、右側商品資訊與購買操作 -->
-  <!-- 詳情主視覺改成靜態切換：第一張是明信片正面，第二張是原文物／複製品展示圖。 -->
+  <!-- 圖庫可切換明信片正面與原文物原圖，或翻面查看明信片背面 -->
   <section class="product-hero-section">
     <app-product-gallery
       [name]="product.artifactName"
@@ -25,18 +25,14 @@
     <app-product-summary
       [brand]="product.brand"
       [name]="product.name"
-      [rating]="product.rating"
-      [reviews]="product.reviewCount"
+      [rating]="rating()"
+      [reviews]="reviewCount()"
       [sold]="product.soldCount"
       [price]="product.dealPrice"
       [was]="was()"
-      [material]="product.material"
       [source]="product.source"
-      [shipping]="product.shippingNote"
       [dims]="product.dimensions"
       [artifactDims]="product.artifactDimensions"
-      [condition]="product.condition"
-      [sizeNote]="sizeNote()"
       (addToCart)="onAddToCart($event)"
       (buyNow)="onBuyNow($event)"
     />
@@ -44,14 +40,19 @@
 
   <!-- 商品說明與評價並排 -->
   <section class="product-hero-section">
-    <app-product-detail [intro]="product.description" [rows]="policies()" />
+    <app-product-detail [intro]="product.description" />
     <app-product-reviews
-      [rating]="product.rating"
-      [reviewCount]="product.reviewCount"
+      [rating]="rating()"
+      [reviewCount]="reviewCount()"
       [reviews]="reviews()"
       [filterCounts]="reviewCounts()"
       [filterIndex]="reviewFilter()"
+      [canReview]="canReview()"
+      [myReview]="myReview()"
+      [saving]="reviewSaving()"
+      [saveError]="reviewError()"
       (filterChange)="reviewFilter.set($event)"
+      (reviewSave)="onSaveReview($event)"
     />
   </section>
 

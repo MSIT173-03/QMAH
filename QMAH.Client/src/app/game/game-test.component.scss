@@ -13,16 +13,14 @@
 .game-test-page {
   @include scene.surface;
   @include scene.stage-page;
-  overflow: auto;
 }
-.game-test-page, .game-test-page.is-focus-mode { padding: 72px clamp(16px, 3vw, 40px) 24px; }
-.game-test-page > app-game-navigation { z-index: 5; }
-.tools-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 28px 0 16px; color: var(--scene-ink); }
-.tools-heading h1 { margin: 0; font: 700 clamp(28px, 3vw, 36px)/1.3 var(--qmah-font-serif); }
-.tools-heading a { min-height: 44px; display: inline-flex; align-items: center; color: var(--scene-ink); font-size: 14px; text-underline-offset: 4px; }
+.game-test-page, .game-test-page.is-focus-mode { padding: 8px clamp(16px, 3vw, 40px) 24px; }
+.game-test-page { background: var(--scene-ground); color: var(--scene-ink); overflow: auto; }
+.tools-heading { @include ui.page-head; }
+.tools-heading a { min-height: 44px; display: inline-flex; align-items: center; color: var(--game-table-ink); font-size: 14px; text-underline-offset: 4px; }
 .tools-tabs { display: flex; gap: 8px; }
 .tools-tabs button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--game-nav-line); border-radius: var(--qmah-radius-control); color: var(--scene-ink); background: transparent; font: inherit; cursor: pointer; }
-.tools-tabs button[aria-pressed='true'] { color: var(--qmah-game-content); background: var(--qmah-game-action); }
+.tools-tabs button[aria-pressed='true'] { color: var(--qmah-game-content); }
 .game-test-page .test-launcher { border: 0; box-shadow: none; background: transparent; padding: 24px 0; margin: 0; color: var(--scene-ink); }
 .test-launcher h2 { margin: 0; font: 700 24px/1.3 var(--qmah-font-serif); }
 .test-launcher .description { color: var(--scene-muted); }
@@ -53,7 +51,6 @@
 }
 .test-launcher > header { max-width: 780px; margin-bottom: 18px; }
 .test-launcher h1 { margin: 4px 0 0; font: 700 clamp(32px, 4vw, 44px)/var(--qmah-type-heading-leading) var(--qmah-font-serif); letter-spacing: -.035em; }
-.eyebrow { margin: 0 0 6px; color: var(--qmah-cinnabar); font-size: var(--qmah-type-meta-size); font-weight: 800; letter-spacing: .12em; line-height: var(--qmah-type-meta-leading); }
 .description, .panel-heading p, .muted { color: var(--qmah-text-muted); }
 .description { max-width: 64ch; margin: 10px 0 0; }
 .test-safety-note {
@@ -69,17 +66,13 @@
   color: var(--qmah-text-muted);
   font-size: var(--qmah-type-body-sm-size);
 }
-.test-safety-note strong { color: var(--qmah-primary); }
 .test-section-heading, .diagnostics-heading {
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: 18px;
 }
-.test-section-heading { margin-bottom: 12px; }
-.test-section-heading h2, .diagnostics-heading h2 { margin: 0; font: 700 var(--qmah-type-section-title-size)/var(--qmah-type-heading-leading) var(--qmah-font-serif); }
-.section-note { color: var(--qmah-text-subtle); font-size: var(--qmah-type-label-size); }
-.test-room-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.diagnostics-heading h2 { margin: 0; font: 700 var(--qmah-type-section-title-size)/var(--qmah-type-heading-leading) var(--qmah-font-serif); }
 .test-room-card {
   display: flex;
   min-width: 0;
@@ -92,10 +85,6 @@
   background: var(--qmah-surface);
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
-.test-room-card:hover { border-color: color-mix(in srgb, var(--qmah-primary) 36%, var(--qmah-border)); box-shadow: var(--qmah-shadow-card); transform: translateY(-1px); }
-.test-room-code { color: var(--qmah-primary); font: 800 var(--qmah-type-label-size)/1.3 "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; }
-.test-room-card h2 { margin: 8px 0 0; font: 700 21px/1.3 var(--qmah-font-serif); }
-.test-room-card p { flex: 1; margin: 8px 0 16px; color: var(--qmah-text-muted); font-size: var(--qmah-type-body-sm-size); }
 .test-room-card button, .service-status button, .panel button, .fields button {
   min-height: var(--qmah-control-height);
   border: 0;
@@ -107,8 +96,6 @@
   font: inherit;
   font-weight: 750;
 }
-.test-room-card button { display: flex; width: 100%; align-items: center; justify-content: space-between; }
-.test-room-card button app-qmah-icon { width: 17px; height: 17px; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 3px; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 .diagnostics-heading { margin-top: 36px; padding: 0 2px; }
@@ -163,8 +150,6 @@ pre { max-height: 24rem; overflow: auto; margin: 14px 0 0; padding: 14px; border
 
 @media (max-width: 900px) {
   .game-test-page { padding-inline: 18px; }
-  .test-room-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .test-room-card:last-child { grid-column: 1 / -1; }
   .diagnostics-heading { align-items: flex-start; flex-direction: column; }
   .diagnostics-heading .description { max-width: 64ch; text-align: left; }
 }
@@ -172,9 +157,6 @@ pre { max-height: 24rem; overflow: auto; margin: 14px 0 0; padding: 14px; border
   .game-test-page { padding: 10px 14px 40px; }
   .test-launcher { margin-top: 20px; padding: 18px 16px; border-radius: var(--qmah-radius-card); }
   .test-launcher h1 { font-size: 34px; }
-  .test-section-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
-  .test-room-grid { grid-template-columns: 1fr; }
-  .test-room-card:last-child { grid-column: auto; }
   .service-status { grid-template-columns: auto minmax(0, 1fr); }
   .service-status button { grid-column: 1 / -1; width: 100%; }
   .panel { padding: 16px; border-radius: var(--qmah-radius-card); }
@@ -191,7 +173,7 @@ pre { max-height: 24rem; overflow: auto; margin: 14px 0 0; padding: 14px; border
 // 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
 .test-launcher .description, .rehearsal-preview > p { @include ui.prose; max-width: 70ch; }
 
-.tools-tabs button, .rehearsal-start { @include ui.button(true); }
+.tools-tabs button, .rehearsal-start { @extend %ui-btn-2; }
 .tools-tabs button[aria-pressed='true'] { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; background:transparent; }
 .rehearsal-menu button { @include ui.paper-panel; @include ui.reading-surface(true); box-shadow:0 4px 10px #14291c20; }
 .rehearsal-menu button[aria-pressed='true'] { outline:3px solid #334260; outline-offset:3px; }

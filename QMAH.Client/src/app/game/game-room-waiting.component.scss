@@ -1,0 +1,32 @@
+@use './game-ui' as ui;
+:host { display: contents; }
+*, *::before, *::after { box-sizing: border-box; }
+button { cursor: pointer; font: inherit; }
+.invite-actions button { @extend %ui-btn-2; }
+.invite-card { @include ui.paper-panel; }
+.waiting-table { grid-column:1/-1; text-align:center; color:var(--table-content); }
+.waiting-table h1 { font:800 clamp(28px,4vw,46px)/1.3 var(--qmah-font-serif); paint-order:stroke fill; -webkit-text-stroke:2px #205634; text-shadow:0 4px 6px #17352040; }
+.waiting-table p { margin:8px 0; }
+.invite-actions button { @extend %ui-btn-2; }
+.invite-card { @include ui.paper-panel; }
+.waiting-table { display:grid; justify-items:center; gap:10px; }
+.waiting-table h1 { margin:0; }
+.waiting-count, .waiting-hint { margin:0; font-size:16px; }
+.waiting-hint { color:var(--table-muted); }
+.invite-card { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px 20px; width:min(520px,100%); padding:14px 18px; text-align:start; }
+.invite-code small { display:block; font-size:14px; color:var(--game-card-muted); }
+.invite-code code { display:block; font:800 34px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:.14em; }
+.invite-actions { display:flex; gap:10px; }
+.invite-note { grid-column:1/-1; margin:0; padding-top:8px; border-top:2px dashed #e3d2a8; font-size:14px; line-height:1.6; color:var(--game-card-muted); }
+.tone-blue { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; }
+.invite-actions svg { flex:none; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.invite-actions button { gap:8px; white-space:nowrap; }
+.close-solo-room {
+  @extend %ui-btn-2;
+  --game-button-image: var(--game-button-marsala-image);
+  --game-button-ink: #fff8e9;
+  gap: 8px;
+  margin-top: 6px;
+}
+.close-solo-room svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+@media (max-width: 1000px) { .waiting-table h1 { font-size: 26px; -webkit-text-stroke-width: 1px; } .waiting-hint { display: none; } .invite-card { grid-template-columns: 1fr; } .invite-actions button { flex: 1; } .invite-code code { font-size: 28px; } }

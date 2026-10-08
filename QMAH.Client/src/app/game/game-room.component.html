@@ -1,9 +1,28 @@
 <div class="game-stage" [class.has-chat]="chatOpen" [class.is-focused]="isRoomFocused()">
-  <div class="table-mat" [class.is-waiting]="room?.status === 'WAITING'" [class.is-completed]="room?.status === 'COMPLETED'" [style.--mobile-seat-rows]="mobileSeatRows()">
+  <div class="table-mat" [class.is-waiting]="room?.status === 'WAITING'" [class.is-completed]="room?.status === 'COMPLETED'" [class.seats-collapsed]="!seatsOpen" [style.--mobile-seat-rows]="seatsOpen ? mobileSeatRows() : 1">
   <header class="table-hud">
-    <div class="hud-title"><strong>多人鑑定</strong><span>{{ room ? '牌桌 ' + room.roomCode : '準備牌桌' }}@if (testMode) { · 演練 }</span></div>
-    <div class="hud-turn">@if (round) { <span>第 {{ round.roundNumber }}／{{ room?.totalRounds }} 回合</span><strong>{{ phaseText(round.status) }} @if (round.status !== 'REVEALED') { {{ countdownText() }} }</strong> } @else if (room) { <strong>{{ statusText(room.status) }}</strong> }</div>
-    <button type="button" class="hud-menu" (click)="openRoomPanel('settings')" aria-label="開啟牌桌選單"><app-qmah-icon name="menu" />牌桌選單</button>
+    <div class="hud-left">
+      <button type="button" class="hud-btn hud-menu" (click)="openRoomPanel('settings')" aria-label="開啟牌桌選單"><app-qmah-icon name="menu" /><span class="hud-label">牌桌選單</span></button>
+      @if (isSpectator) { <span class="hud-spectator">觀戰中</span> }
+      @if (room) { <button type="button" class="hud-btn hud-code" (click)="qrOpen = true" aria-label="分享房間 {{ room.roomCode }}，顯示 QR 碼" title="分享這一桌"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v3M14 20h3M20 20h1" /></svg><span class="hud-code-text"><small>房間</small><b>{{ copiedCode ? '已複製' : room.roomCode }}</b></span></button> }
+    </div>
+    <div class="hud-turn" aria-live="polite">@if (round) { <span>第 {{ round.roundNumber }}／{{ room?.totalRounds }} 回合</span><i aria-hidden="true"></i><strong>{{ phaseText(round.status) }} @if (round.status !== 'REVEALED') { {{ countdownText() }} }</strong> }@else if (room) { <strong>{{ statusText(room.status) }}@if (testMode) { · 測試 }</strong> }</div>
+    <div class="hud-right">
+      @if (testMode) {
+        <button type="button" class="hud-btn hud-test-toggle" [attr.aria-pressed]="testToolsOpen" (click)="toggleTestTools()" aria-label="測試控制" title="測試控制"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3" /></svg>演練</button>
+        <div class="hud-test" [class.is-open]="testToolsOpen" role="group" aria-label="測試控制">
+          <button type="button" class="hud-btn hud-pause" [attr.aria-pressed]="testAutoPaused" [disabled]="testStage === 'WAITING' || testStage === 'COMPLETED'" (click)="toggleTestAuto()" [attr.aria-label]="testAutoPaused ? '繼續遊戲' : '暫停遊戲'" [attr.title]="testAutoPaused ? '繼續' : '暫停'"><svg viewBox="0 0 24 24" aria-hidden="true">@if (testAutoPaused) { <path d="M7 4.5v15l12-7.5z" /> } @else { <path d="M8 5v14M16 5v14" /> }</svg><span class="hud-label">{{ testAutoPaused ? '繼續' : '暫停' }}</span></button>
+          <button type="button" class="hud-btn hud-skip" [disabled]="testStage === 'WAITING' || testStage === 'COMPLETED'" (click)="skipTestStage()" aria-label="跳過目前階段" title="跳過目前階段"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5v14l9-7zM18 5v14" /></svg><span class="hud-label">跳過</span></button>
+          <button type="button" class="hud-btn hud-skip hud-speed" [attr.aria-pressed]="testSpeed > 1" [disabled]="testStage === 'WAITING' || testStage === 'COMPLETED'" (click)="cycleTestSpeed()" [attr.aria-label]="'播放速度 ' + testSpeed + ' 倍，點一下切換'" [attr.title]="'播放速度 ' + testSpeed + '×'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5v14l8-7zM12 5v14l8-7z" /></svg><span class="hud-label">加速</span><span class="hud-speed-value">{{ testSpeed }}×</span></button>
+          <button type="button" class="hud-btn hud-restart" [disabled]="loading" (click)="restartTestFlow()" aria-label="重新開始測試" title="重新開始"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" /></svg><span class="hud-label">重來</span></button>
+        </div>
+      }
+      <div class="hud-env">
+        @if (room) { <button type="button" class="hud-btn hud-seats" [attr.aria-pressed]="!seatsOpen" (click)="seatsOpen = !seatsOpen" [attr.aria-label]="seatsOpen ? '收起玩家席位' : '展開玩家席位'" title="玩家席位"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" /></svg>{{ room.players.length }}</button> }
+        <button type="button" class="hud-btn hud-icon hud-sound" (click)="audio.toggleMute()" [attr.aria-pressed]="audio.muted()" [attr.aria-label]="audio.muted() ? '開啟音樂與音效' : '一鍵靜音'" [attr.title]="audio.muted() ? '開啟聲音' : '靜音'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor" stroke="none" />@if (audio.muted()) { <path d="m16 9.5 5 5M21 9.5l-5 5" /> } @else { <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" /> }</svg></button>
+        <button type="button" class="hud-btn hud-icon" (click)="toggleRoomFocus()" [attr.aria-pressed]="isRoomFocused()" [attr.aria-label]="isRoomFocused() ? '離開專注模式與全螢幕' : '專注模式，進入全螢幕'" [attr.title]="isRoomFocused() ? '離開專注' : '專注模式'"><svg viewBox="0 0 24 24" aria-hidden="true">@if (isRoomFocused()) { <path d="M3 8h5V3M16 3v5h5M8 21v-5H3M21 16h-5v5" /> } @else { <path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5" /> }</svg></button>
+      </div>
+    </div>
   </header>
   @if (refreshError || roundLoadError || actionError) { <div class="table-notice" role="alert">{{ refreshError || roundLoadError || actionError }}@if (testMode && refreshError) { <button type="button" [disabled]="loading" (click)="restartTestFlow()">重新讀取</button> }</div> }
   @if (loading && !room) { <div class="table-loading" role="status">正在準備牌桌…</div> }
@@ -11,35 +30,43 @@
     <nav class="table-seats" aria-label="玩家席位">
       @for (player of currentRoom.players; track player.id) {
         <button type="button" class="table-seat" [class.is-self]="player.id === currentPlayerId" [attr.data-seat-position]="seatPosition(player, currentRoom.players, currentRoom.maxPlayers)" [style.--seat-x]="seatHorizontalPosition(seatPosition(player, currentRoom.players, currentRoom.maxPlayers))" [style.--seat-mobile-row]="mobileSeatRow(player, currentRoom.players)" [style.--seat-mobile-column]="mobileSeatColumn(player, currentRoom.players)" [style.--seat-color]="seatColor(player.id)" (click)="inspectSeat(player.id)">
-          <span class="seat-back" aria-hidden="true"></span><span><strong>{{ player.displayName }}</strong><small>{{ player.role === 'HOST' ? '房主' : '' }} {{ player.connectionStatus === 'ONLINE' ? (currentRoom.status === 'WAITING' ? (player.isReady ? '已準備' : '未準備') : '在桌') : '暫時離線' }}@if (player.id === currentPlayerId) { · 你 }</small></span>
+          <span class="seat-back" aria-hidden="true"></span><span><strong>{{ player.displayName }}</strong><small>{{ player.role === 'HOST' ? '房主' : '' }} {{ player.connectionStatus === 'ONLINE' ? (currentRoom.status === 'WAITING' ? (player.isReady ? '已準備' : '未準備') : '在桌') : '離線' }}@if (player.id === currentPlayerId) { · 你 }</small></span>
         </button>
       }
       @for (slot of [].constructor(currentRoom.maxPlayers - currentRoom.players.length); track $index) { <span class="empty-seat">空席</span> }
     </nav>
     <main class="table-playfield" [class.is-waiting]="currentRoom.status === 'WAITING'">
       @if (currentRoom.status === 'WAITING') {
-        <div class="waiting-table"><h1>等大家入座</h1><p>{{ currentRoom.players.length }}／{{ currentRoom.maxPlayers }} 位玩家 · {{ currentRoom.totalRounds }} 回合</p><p>選好牌背並準備，房主就能開始。</p></div>
+        <app-game-room-waiting [room]="currentRoom" [host]="this" />
       } @else if (currentRoom.status === 'COMPLETED') {
         <div class="table-settlement"><app-game-room-results [rehearsal]="testMode" [currentPlayerId]="currentPlayerId" [scenario]="currentRoom.id" [history]="history" [reward]="reward" [rewarding]="rewarding" [canClaim]="!!currentPlayer()" (claimReward)="claimReward()" /></div>
       } @else if (currentRoom.status === 'CANCELLED') { <div class="waiting-table"><h1>這場遊戲已結束</h1><a routerLink="/game">返回大廳</a></div>
       } @else if (round; as currentRound) {
-        <button type="button" class="artifact-on-table" (click)="openRoomPanel('artifact')" aria-label="放大查看本回合文物">
-          @if (!artifactImageUnavailable && (currentRound.primaryImagePath || currentRound.thumbnailPath)) { <img [src]="currentRound.primaryImagePath || currentRound.thumbnailPath" [alt]="currentRound.artifactName" (error)="artifactImageUnavailable = true" /> }
-          <strong>{{ currentRound.artifactName }}</strong><span>點圖放大觀察</span><app-qmah-icon class="artifact-zoom" name="zoom-in" />
+        <button type="button" class="artifact-on-table" (click)="openRoomPanel('artifact')" (pointermove)="lensMove($event)" (pointerleave)="lens = null" aria-label="放大查看本回合文物">
+          <span class="stage-spot" aria-hidden="true"></span>
+          <span class="stage-frame">
+            @if (!artifactImageUnavailable && (currentRound.primaryImagePath || currentRound.thumbnailPath)) { <img [src]="currentRound.primaryImagePath || currentRound.thumbnailPath" [alt]="currentRound.artifactName" (error)="artifactImageUnavailable = true" />
+              @if (lens; as l) { <span class="stage-lens" aria-hidden="true" [style.left.px]="l.x" [style.top.px]="l.y" [style.background-image]="'url(' + (currentRound.primaryImagePath || currentRound.thumbnailPath) + ')'" [style.background-size]="l.bw + 'px auto'" [style.background-position]="l.bx + 'px ' + l.by + 'px'"></span> } }
+            <span class="stage-hint"><app-qmah-icon name="zoom-in" />點擊放大</span>
+          </span>
+          <span class="stage-plate"><small>第 {{ currentRound.roundNumber }} 件展品</small><strong>{{ currentRound.artifactName }}</strong></span>
+          <app-qmah-icon class="artifact-zoom" name="zoom-in" />
         </button>
         <div class="central-board"><app-game-answer-table [players]="currentRoom.players" [round]="currentRound" [currentPlayerId]="currentPlayerId" [playerColors]="playerColors" [votedAnswerIds]="votedAnswerIds" [votingForAnswerId]="votingForAnswerId" [canVote]="canVoteAtTable" [showSeats]="false" [showHeader]="false" (vote)="submitVote($event)" /></div>
       } @else { <div class="waiting-table" role="status">正在準備下一回合…</div> }
     </main>
     <footer class="table-hand">
-      <div class="hand-action" [class.is-waiting]="currentRoom.status === 'WAITING'">
-        @if (currentRoom.status === 'WAITING') {
-          <button type="button" class="hand-card" [style.--seat-color]="seatColor(currentPlayerId)" (click)="openRoomPanel('colors')"><span class="hand-card-label">更換牌背</span></button>
+      <div class="hand-action" [class.is-waiting]="currentRoom.status === 'WAITING' && !isSpectator">
+        @if (isSpectator) {
+          <p class="spectator-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>觀戰中，看得到牌桌進行，不能作答、投票或聊天</p>
+        } @else if (currentRoom.status === 'WAITING') {
+          <button type="button" class="hand-card" (click)="openRoomPanel('colors')"><span class="card-chip" [style.--seat-color]="seatColor(currentPlayerId)" aria-hidden="true"></span>更換牌背</button>
           @if (currentPlayer(); as player) {
             <button type="button" class="primary-action" [attr.aria-pressed]="player.isReady" [attr.data-button-tone]="player.isReady ? 'neutral' : null" [disabled]="lobbyActionBusy" (click)="setReady()">{{ player.isReady ? '取消準備' : '準備好了' }}</button>
             @if (player.role === 'HOST') { <button type="button" class="primary-action" data-button-tone="start" [disabled]="lobbyActionBusy || !canStartRoom()" [title]="startDisabledReason()" (click)="startGame()">開始遊戲</button> }
           }
         } @else if (round?.status === 'ANSWERING') {
-          <button type="button" class="hand-card" [style.--seat-color]="seatColor(currentPlayerId)" [disabled]="hasSubmittedAnswer() || !round || !game.canAnswer(round, now)" (click)="openRoomPanel('answer')"><span class="hand-card-label">{{ hasSubmittedAnswer() ? '回答已入桌' : '寫下回答' }}</span></button>
+          <button type="button" class="hand-card is-primary" [disabled]="hasSubmittedAnswer() || !round || !game.canAnswer(round, now)" (click)="openRoomPanel('answer')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3" /></svg>{{ hasSubmittedAnswer() ? '回答已入桌' : '寫下回答' }}</button>
           <p>{{ hasSubmittedAnswer() ? '等大家出牌後，就能翻開回答。' : '觀察文物，再點手牌寫下你的說法。' }}</p>
         } @else if (round?.status === 'VOTING') { <p class="vote-instruction"><span>每類各投一票</span><span>點開回答卡閱讀後投票</span></p> }
         @else if (round?.status === 'REVEALED') { <p>本回合已揭曉，下一回合會自動開始。</p> }
@@ -47,12 +74,7 @@
       @if (currentPlayerId && currentRoom.status !== 'CANCELLED') { <app-game-room-chat [messages]="chatMessages" [playerColors]="playerColors" (panelOpenChange)="chatOpen = $event" [currentPlayerId]="currentPlayerId" [sending]="chatSending" [error]="chatError" [disabled]="currentRoom.status === 'COMPLETED'" (send)="sendChat($event)" /> }
     </footer>
   }
-  <dialog class="table-dialog" data-panel="settings" aria-labelledby="settings-title"><header><h2 id="settings-title">房間設定</h2><button type="button" (click)="closeRoomPanel('settings')" aria-label="關閉房間設定">關閉</button></header>@if (room) { <dl><dt>房間代碼</dt><dd>{{ room.roomCode }}</dd><dt>回合數</dt><dd>{{ room.totalRounds }}</dd><dt>作答時間</dt><dd>{{ room.answerSeconds / 60 }} 分鐘</dd><dt>投票時間</dt><dd>{{ room.votingSeconds / 60 }} 分鐘</dd><dt>房間類型</dt><dd>{{ room.visibility === 'PRIVATE' ? '私人房間' : '公開房間' }}</dd></dl> }<p>聊天只留在這張牌桌。所有玩家離線並逾時後，紀錄就會清除。</p>@if (testMode) { <p>演練不會新增正式回合、點數或鑰匙。</p> }<div class="settings-actions"><app-game-audio-toggle [inline]="true" /><button type="button" [attr.aria-pressed]="isRoomFocused()" (click)="toggleRoomFocus()">{{ isRoomFocused() ? '顯示網站導覽' : '專注模式' }}</button>@if (testMode) { <button type="button" aria-label="開啟測試工具" (click)="closeRoomPanel('settings'); openRoomPanel('test')">演練控制</button> }<button type="button" data-button-tone="danger" (click)="closeRoomPanel('settings'); requestLeaveRoom()">離開房間</button></div></dialog>
-  <dialog class="table-dialog" data-panel="seat" aria-labelledby="seat-title"><header><h2 id="seat-title">玩家席位</h2><button type="button" (click)="closeRoomPanel('seat')">關閉</button></header>@if (selectedSeat(); as player) { <h3>{{ player.displayName }}</h3><p>第 {{ player.seatNo }} 席 · {{ player.role === 'HOST' ? '房主' : '玩家' }}</p><p>{{ player.connectionStatus === 'ONLINE' ? '目前在線' : '暫時離線' }}</p>@if (player.id === currentPlayerId && room?.status === 'WAITING') { <button type="button" (click)="closeRoomPanel('seat'); openRoomPanel('colors')">更換我的牌背</button> } }</dialog>
-  <dialog class="table-dialog" data-panel="colors" aria-labelledby="colors-title"><header><h2 id="colors-title">選擇牌背顏色</h2><button type="button" (click)="closeRoomPanel('colors')">關閉</button></header><div class="color-grid">@for (color of cardColors; track color) { <button type="button" [attr.data-color]="color" [style.--seat-color]="colorHex(color)" [attr.aria-label]="cardColorNames[color] + '牌背' + (isCardColorTaken(color) ? '，已有玩家使用' : '')" [attr.aria-pressed]="playerColors[currentPlayerId] === color" [disabled]="colorBusy || isCardColorTaken(color)" (click)="chooseCardColor(color)"><span class="seat-back color-preview" aria-hidden="true"></span><span>{{ cardColorNames[color] }}</span><small>{{ playerColors[currentPlayerId] === color ? '已選擇' : isCardColorTaken(color) ? '使用中' : '可選擇' }}</small></button> }</div><p>開始遊戲後，這局的牌背顏色就會固定。</p></dialog>
-  <dialog class="table-dialog artifact-dialog" data-panel="artifact" aria-labelledby="artifact-title"><header><h2 id="artifact-title">{{ round?.artifactName }}</h2><button type="button" (click)="closeRoomPanel('artifact')">關閉</button></header>@if (round) { @if (!artifactImageUnavailable && (round.primaryImagePath || round.thumbnailPath)) { <img [src]="round.primaryImagePath || round.thumbnailPath" [alt]="round.artifactName" (error)="artifactImageUnavailable = true" /> } @else { <p>這件文物的圖片暫時無法顯示</p> } }</dialog>
-  <dialog class="table-dialog answer-dialog" data-panel="answer" aria-labelledby="answer-title"><header><h2 id="answer-title">你的回答</h2><button type="button" (click)="closeRoomPanel('answer')">先收起</button></header><form (ngSubmit)="submitAnswer()">@if (actionError) { <p class="answer-error" role="alert">送出失敗，內容仍保留。{{ actionError }}</p> }<fieldset class="answer-types"><legend>回答方式</legend><div>@for (type of answerTypes; track type.value) { <button type="button" [attr.aria-pressed]="answerType === type.value" [class.is-selected]="answerType === type.value" (click)="answerType = type.value">{{ type.label }}</button> }</div></fieldset><p>{{ answerTypes[0].value === answerType ? answerTypes[0].hint : answerTypes[1].value === answerType ? answerTypes[1].hint : answerTypes[2].hint }}</p><p>每回合只能送出一次，送出後不能修改。先收起視窗會保留草稿。</p><label for="answer-text">寫下你的說法</label><textarea id="answer-text" name="answerText" [(ngModel)]="answerText" (ngModelChange)="saveDraft($event)" maxlength="500" required rows="7" placeholder="從文物上的細節開始寫…"></textarea><div class="answer-foot"><span>{{ answerText.length }}／500</span><button type="submit" [disabled]="submittingAnswer || !answerText.trim()">{{ submittingAnswer ? '送出中…' : '送出回答' }}</button></div></form></dialog>
-  @if (testMode) { <dialog class="table-dialog" data-panel="test" aria-labelledby="test-title"><header><h2 id="test-title">演練控制</h2><button type="button" aria-label="收合測試工具" (click)="closeRoomPanel('test')">關閉</button></header><p>{{ testStageText() }} · 不寫入正式紀錄</p><div class="settings-actions"><button type="button" (click)="toggleTestAuto()">{{ testAutoPaused ? '繼續遊戲' : '暫停遊戲' }}</button><button type="button" [disabled]="loading" (click)="restartTestFlow(); closeRoomPanel('test')">重新開始</button></div></dialog> }
-  @if (showLeaveConfirm) { <div class="leave-dialog-backdrop" role="presentation" (click)="cancelLeaveRoom()"><section #leaveDialog class="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-dialog-title" tabindex="-1" (click)="$event.stopPropagation()"><h2 id="leave-dialog-title">要離開牌桌嗎？</h2><p>離開後會釋出你的座位。遊戲開始後，無法重新加入這一場。</p><button type="button" (click)="cancelLeaveRoom()">留在牌桌</button><button type="button" data-button-tone="danger" (click)="leaveRoom()" [disabled]="leaving">{{ leaving ? '離開中…' : '離開房間' }}</button></section></div> }
+  <app-game-room-dialogs [host]="this" />
   </div>
+  @if (qrOpen && room) { <app-game-room-qr-dialog [room]="room" (close)="qrOpen = false" (copy)="copyRoomCode($event)" /> }
 </div>

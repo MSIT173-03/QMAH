@@ -7,6 +7,46 @@
     </span>
   </app-section-head>
 
+  <!-- 自己的評價：買過這件商品才會出現 -->
+  @if (showForm()) {
+    <!-- 還沒有評價，或正在編輯：評分、輸入框與送出按鈕 -->
+    <form class="review-editor" (submit)="$event.preventDefault(); submit()">
+      <span class="review-editor-label">{{ myReviewLabel }}</span>
+      <div class="review-stars-input" role="radiogroup" [attr.aria-label]="ratingLabel">
+        @for (n of starValues; track n) {
+          <button type="button" role="radio" class="review-star" [class.review-star--on]="n <= draftRating()"
+            [attr.aria-checked]="n === draftRating()" [attr.aria-label]="n + ' 星'" (click)="draftRating.set(n)">★</button>
+        }
+      </div>
+      <textarea class="review-input" rows="3" [attr.aria-label]="contentLabel" [placeholder]="contentPlaceholder"
+        [attr.maxlength]="maxContentLength" [value]="draftContent()" (input)="onContentInput($event)"></textarea>
+      <div class="review-actions">
+        <button type="submit" class="btn-solid" [disabled]="!canSubmit()">{{ saving() ? submittingLabel : submitLabel }}</button>
+        @if (editing()) {
+          <button type="button" class="btn-outline" [disabled]="saving()" (click)="cancelEdit()">{{ cancelLabel }}</button>
+        }
+      </div>
+    </form>
+  } @else if (mine(); as review) {
+    <!-- 已送出：不可修改的文字，附編輯時間；按「編輯」才能修改 -->
+    <div class="review-card review-card--mine">
+      <div class="review-meta">
+        <span class="product-card-star">{{ review.stars }}</span><span>{{ myReviewLabel }}</span><span
+          class="product-card-split">|</span><span>{{ review.date }}</span>
+        @if (review.edited) {
+          <span class="product-card-split">|</span><span class="review-edited">{{ editedPrefix }} {{ review.edited }}</span>
+        }
+        <!-- 編輯：無外框、無底色的文字，與星等、時間同一行並置於尾端 -->
+        <button type="button" class="review-edit" (click)="startEdit()">{{ editLabel }}</button>
+      </div>
+      <p class="review-text">{{ review.text }}</p>
+    </div>
+  }
+
+  @if (saveError(); as message) {
+    <p class="review-error" role="alert">{{ message }}</p>
+  }
+
   <!-- 篩選按鈕：依星等篩選，括號內為符合的則數 -->
   <app-pill-group
     variant="review"
@@ -21,6 +61,9 @@
       <div class="review-meta">
         <span class="product-card-star">{{ review.stars }}</span><span>{{ review.user }}</span><span
           class="product-card-split">|</span><span>{{ review.date }}</span>
+        @if (review.edited) {
+          <span class="product-card-split">|</span><span class="review-edited">{{ editedPrefix }} {{ review.edited }}</span>
+        }
       </div>
       <p class="review-text">{{ review.text }}</p>
     </div>

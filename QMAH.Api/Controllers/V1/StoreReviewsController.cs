@@ -57,8 +57,7 @@ public sealed class StoreReviewsController(QmahDbContext db) : ApiControllerBase
         if (!await db.Products.AnyAsync(product => product.Id == productId && product.IsActive, cancellationToken))
             return MissingResource("找不到商品", "這件商品不存在或目前未上架。");
 
-        var review = await BuildReviewQuery(productId)
-            .Where(item => item.UserId == userId)
+        var review = await BuildReviewQuery(productId, userId: userId)
             .SingleOrDefaultAsync(cancellationToken);
         return review is null
             ? MissingResource("尚未留下評價", "這個會員還沒有留下這件商品的評價。")
@@ -106,8 +105,8 @@ public sealed class StoreReviewsController(QmahDbContext db) : ApiControllerBase
         review.UpdatedAt = now;
         await db.SaveChangesAsync(cancellationToken);
 
-        return Ok(await BuildReviewQuery(productId)
-            .SingleAsync(item => item.Id == review.Id, cancellationToken));
+        return Ok(await BuildReviewQuery(productId, reviewId: review.Id)
+            .SingleAsync(cancellationToken));
     }
 
     [Authorize]
@@ -132,7 +131,15 @@ public sealed class StoreReviewsController(QmahDbContext db) : ApiControllerBase
         return NoContent();
     }
 
-    private IQueryable<ProductReviewDto> BuildReviewQuery(Guid productId, bool publishedOnly = false)
+    /// <summary>
+    /// 商品評價的查詢；會員與評價 Id 的條件必須在投影成 DTO 之前套用，
+    /// 投影後的 DTO 建構式無法再被 EF 翻譯成 SQL 條件。
+    /// </summary>
+    private IQueryable<ProductReviewDto> BuildReviewQuery(
+        Guid productId,
+        bool publishedOnly = false,
+        Guid? userId = null,
+        Guid? reviewId = null)
     {
         var query = db.ProductReviews
             .AsNoTracking()
@@ -140,6 +147,10 @@ public sealed class StoreReviewsController(QmahDbContext db) : ApiControllerBase
 
         if (publishedOnly)
             query = query.Where(review => review.Status == "PUBLISHED");
+        if (userId is not null)
+            query = query.Where(review => review.UserId == userId);
+        if (reviewId is not null)
+            query = query.Where(review => review.Id == reviewId);
 
         return query
             .OrderByDescending(review => review.CreatedAt)

@@ -1,13 +1,13 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 
-export type GameSound = 'click' | 'select' | 'place' | 'flip' | 'success' | 'error' | 'win' | 'reveal';
+export type GameSound = 'click' | 'select' | 'place' | 'flip' | 'success' | 'error' | 'win' | 'reveal' | 'start' | 'finish' | 'cancel' | 'ui';
 export type GameMusicScene = 'hall' | 'play';
 
 const STORAGE_KEY = 'qmah.game.audio';
 const BASE = '/assets/game/audio/';
 // 音效：Kenney Casino Audio（CC0）；音樂：Tabletop Jazz Cafe（Ludo Loon Studio）。來源見 audio/CREDITS.txt
-const SOUND_VOLUME: Record<GameSound, number> = { click: .6, select: .6, place: .7, flip: .6, success: .7, error: .6, reveal: .65, win: .8 };
+const SOUND_VOLUME: Record<GameSound, number> = { click: .6, select: .6, place: .7, flip: .6, success: .7, error: .6, reveal: .65, win: .8, start: .75, finish: .75, cancel: .55, ui: .5 };
 const MUSIC_LIST: Record<GameMusicScene, string[]> = {
   hall: ['music-cafe.ogg'],
   play: ['music-cafe.ogg']
@@ -46,6 +46,15 @@ export class GameAudio {
     } catch { /* 沒有儲存空間時用預設值 */ }
   }
 
+  /** 一鍵靜音：兩個都關；再按一次還原成靜音前的設定。 */
+  readonly muted = computed(() => !this.musicOn() && !this.sfxOn());
+  private beforeMute = { music: true, sfx: true };
+  toggleMute(): void {
+    if (this.muted()) { this.musicOn.set(this.beforeMute.music || !this.beforeMute.sfx); this.sfxOn.set(this.beforeMute.sfx); }
+    else { this.beforeMute = { music: this.musicOn(), sfx: this.sfxOn() }; this.musicOn.set(false); this.sfxOn.set(false); }
+    this.persist();
+    this.syncMusic();
+  }
   toggleMusic(): void { this.musicOn.update(value => !value); this.persist(); this.syncMusic(); }
   toggleSfx(): void { this.sfxOn.update(value => !value); this.persist(); if (this.sfxOn()) this.play('select'); }
   setMusicVolume(value: number): void {
@@ -90,13 +99,26 @@ export class GameAudio {
       const control = (event.target as HTMLElement | null)?.closest<HTMLElement>('button, a[href], [role="button"], summary');
       this.syncMusic();
       if (!control || (control as HTMLButtonElement).disabled || control.closest('[data-no-sound]')) return;
-      this.play('click');
+      this.play(this.soundFor(control));
     };
     const onVisibility = () => this.syncMusic();
     win.addEventListener('click', onClick, true);
     this.document.addEventListener('visibilitychange', onVisibility);
     this.cleanup = () => { win.removeEventListener('click', onClick, true); this.document.removeEventListener('visibilitychange', onVisibility); };
     this.syncMusic();
+  }
+
+  /** 依按鈕用途挑音效：開始、完成、取消各有自己的聲音；也可用 data-sound 指定。 */
+  private soundFor(control: HTMLElement): GameSound {
+    // 頂端功能列（選單、靜音、專注）用較輕的專屬音，和牌桌上的操作分開
+    if (control.closest('.game-bar, .game-menu__panel')) return 'ui';
+    const tagged = control.getAttribute('data-sound');
+    if (tagged === 'start' || tagged === 'finish' || tagged === 'cancel' || tagged === 'click') return tagged;
+    const label = (control.getAttribute('aria-label') || control.textContent || '').trim();
+    if (/^(取消|關閉|返回|離開|收起|先不要|再想想|再想一下|稍後|不用了|知道了)/.test(label) || label === '×') return 'cancel';
+    if (/^(開始|建立房間|加入|再玩|重新開始|準備|進入)/.test(label)) return 'start';
+    if (/^(完成|送出|提交|確定|確認|結算|領取|突破)/.test(label)) return 'finish';
+    return 'click';
   }
 
   play(sound: GameSound): void {

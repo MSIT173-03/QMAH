@@ -2,6 +2,12 @@
   display: block;
 }
 
+/* 頁面背景（.store-app）至少撐滿 App Shell 的主要內容區（視窗高度扣掉頁首）：
+   兌換商店的內容可能很短，否則下方會露出外層底色。 */
+:host(.store-app) {
+  min-height: calc(100dvh - var(--app-header-height, 72px));
+}
+
 .coupon-store-main {
   padding-top: var(--qmah-space-4);
   padding-bottom: 72px;
@@ -125,6 +131,28 @@
 
 /* 兌換結果訊息：成功沿用強調色，失敗（例如點數不足）改用警示底色。
    右側有關閉用的叉號；移除前先淡出（--leaving），淡出時間需與 FEEDBACK_FADE_MS 一致。 */
+/* 訊息外層：收合時高度 1fr → 0fr，並以負的 margin-bottom 抵掉 flex 的 gap，
+   移除元素的當下版面已經在最終位置，下方內容不會再跳動。 */
+.coupon-feedback-slot {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 300ms ease, margin-bottom 300ms ease;
+
+  &--leaving {
+    grid-template-rows: 0fr;
+    margin-bottom: calc(-1 * var(--qmah-space-5));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.coupon-feedback-slot-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .coupon-feedback {
   display: flex;
   align-items: center;
@@ -187,5 +215,54 @@
   svg {
     width: 16px;
     height: 16px;
+  }
+}
+
+/* 上下兩個區塊（兌換商店、我的折價券）：各自是有標題列的區塊，券面列表依寬度自動換行（每行最多三張，見 .coupon-grid）。 */
+.coupon-section {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-5);
+
+  /* 兩個大標題相鄰時多留一點間距 */
+  & + & {
+    margin-top: var(--qmah-space-3);
+  }
+}
+
+/* 訪客的「我的折價券」：說明文字與登入按鈕同一列。
+   登入按鈕平常是灰框、無底色，只有滑鼠懸停時才填滿強調色（全站的 a:hover 文字色會蓋過按鈕文字，故明確指定） */
+.my-coupons-login {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--qmah-space-4);
+
+  .my-coupons-login-btn {
+    border-color: var(--color-line-mid);
+    background: transparent;
+    color: var(--color-ink);
+
+    &:hover {
+      border-color: var(--color-accent);
+      background: var(--color-accent);
+      color: var(--color-on-accent);
+    }
+  }
+}
+
+.my-coupons-empty {
+  margin: 0;
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+}
+
+/* 持有中的券右側只是資訊（到期日），不能點擊：沿用兌換區塊的外觀，但不要懸停變色與手形游標 */
+.coupon-card-cost--static {
+  cursor: default;
+
+  &:hover {
+    background: var(--color-bg);
   }
 }

@@ -10,7 +10,15 @@ function hash(value: string): number {
 }
 
 /** 與伺服器共用 FNV-1a 規則，位置只依已保存的種子與文物 ID 產生。 */
+const subjectTargets = new Map<string, { x: number; y: number }>();
+/** 記下伺服器算好的目標點（挑在文物本體上）；沒有的舊局退回雜湊位置。 */
+export function rememberLocatorTargets(seed: string, targets: readonly { artifactId: string; x: number; y: number }[] | null | undefined): void {
+  for (const target of targets ?? []) subjectTargets.set(`${seed}|${target.artifactId.toLowerCase()}`, { x: target.x, y: target.y });
+}
+
 export function locatorTarget(seed: string, artifactId: string): { x: number; y: number } {
+  const known = subjectTargets.get(`${seed}|${artifactId.toLowerCase()}`);
+  if (known) return known;
   const key = `${seed}|${artifactId.toLowerCase()}`;
   return { x: (3 + hash(key) % 5) / 10, y: (3 + hash(`${key}|y`) % 5) / 10 };
 }

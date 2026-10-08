@@ -1,5 +1,5 @@
 /**
- * 後端 API 的請求參數與回應資料格式，規格說明見 doc/api-requirements.html。
+ * 商城前端使用的 API 請求參數與回應資料格式（已由各 api 檔轉換成頁面直接可用的形狀）。
  */
 
 /* ===============================
@@ -11,6 +11,12 @@ export interface PageQuery {
   /** 頁碼，從 1 開始 */
   page?: number;
   pageSize?: number;
+}
+
+/** 連結 */
+export interface SiteLink {
+  label: string;
+  href: string;
 }
 
 /** 分頁回應 */
@@ -78,31 +84,16 @@ export interface Product {
   coverImage: string | null;
 }
 
-/** 商品圖片 */
-export interface ProductImage {
-  /** 視角名稱（正面、細節…），順序即縮圖列的顯示順序 */
-  view: string;
-  /** 圖片網址，為 null 時前端顯示佔位文字 */
-  url: string | null;
-}
-
 /** 商品詳情 */
 export interface ProductDetail extends Product {
   /** 原文物名稱；明信片正面不顯示套組後綴。 */
   artifactName: string;
   /** 關聯文物原始尺寸；明信片視圖只顯示這個尺寸，不重複顯示 A6。 */
   artifactDimensions: string;
-  /** 材質與工法說明 */
-  material: string;
   /** 套組商品說明段落，保留產生器寫入的段落分隔。 */
   description: string;
   /** 明信片／原文物視圖使用的精簡原文物說明。 */
   artifactDescription: string;
-  /** 商品狀態說明 */
-  condition: string;
-  /** 出貨說明 */
-  shippingNote: string;
-  images: ProductImage[];
 }
 
 /**
@@ -138,6 +129,8 @@ export interface Review {
   /** 評價日期（YYYY-MM-DD） */
   date: string;
   text: string;
+  /** 最後編輯時間（ISO 8601）；從未編輯過時為 null */
+  editedAt: string | null;
 }
 
 /** 商品評價篩選參數 */
@@ -156,42 +149,6 @@ export interface ReviewPage extends Page<Review> {
    首頁與行銷內容
    =============================== */
 
-/** 主視覺輪播投影片 */
-export interface HeroSlide {
-  /** 主視覺圖片的佔位說明文字 */
-  slot: string;
-  kicker: string;
-  title: string;
-  desc: string;
-}
-
-/** 限時特賣品項 */
-export interface FlashSaleItem {
-  productId: string;
-  name: string;
-  /** 特賣價 */
-  price: number;
-  /** 原價 */
-  originalPrice: number;
-  /** 剩餘庫存比例（0-1） */
-  stockRatio: number;
-}
-
-/** 限時特賣 */
-export interface FlashSale {
-  /** 特賣結束時間（ISO 8601） */
-  endsAt: string;
-  items: FlashSaleItem[];
-}
-
-/** 品牌館品牌 */
-export interface Brand {
-  en: string;
-  zh: string;
-  /** 品牌優惠說明 */
-  deal: string;
-}
-
 /** 熱銷排行查詢參數 */
 export interface RankingQuery {
   /** 器類名稱，未指定時為全站排行 */
@@ -203,23 +160,6 @@ export interface RankingQuery {
 export interface RecommendedProduct extends Product {
   /** 推薦理由，顯示為卡片角標 */
   reason: string;
-}
-
-/* ===============================
-   搜尋
-   =============================== */
-
-/** 熱門搜尋捷徑 */
-export interface HotSearchLink {
-  label: string;
-  href: string;
-}
-
-/** 搜尋建議關鍵字 */
-export interface KeywordSuggestion {
-  keyword: string;
-  /** 符合此關鍵字的商品件數 */
-  productCount: number;
 }
 
 /* ===============================
@@ -246,20 +186,14 @@ export interface CartItem {
   lineTotal: number;
 }
 
-/** 購物車金額摘要（以預設配送方式試算運費） */
+/** 購物車金額摘要；運費依配送方式與免運門檻決定，到結帳頁才試算，這裡不含運費 */
 export interface CartAmounts {
   /** 商品小計（折扣前） */
   subtotal: number;
   /** 商品折扣 */
   itemDiscount: number;
-  /** 預設配送方式的運費，已達免運門檻或購物車為空時為 0；後端尚未提供配送規則時為 null（結帳時計算） */
-  shippingFee: number | null;
-  /** 應付總額（不含尚未計算的運費） */
+  /** 應付商品金額（不含運費） */
   payable: number;
-  /** 滿額免運門檻；後端尚未提供配送規則時為 null */
-  freeShippingThreshold: number | null;
-  /** 距離免運門檻還差的金額，已達門檻時為 0；後端尚未提供配送規則時為 null */
-  freeShippingShortfall: number | null;
 }
 
 /** 購物車內容 */
@@ -299,10 +233,7 @@ export interface MemberProfile extends Recipient {
   pointBalance: number;
 }
 
-/** 折價券折抵方式：amount 折抵固定金額；percent 依比例折抵並以 cap 為上限；freeship 免除運費 */
-export type CouponKind = 'amount' | 'percent' | 'freeship';
-
-/** 折價券（頂部公告列、首頁側欄與結帳頁共用同一模型） */
+/** 折價券（頂部公告列與結帳頁共用同一模型） */
 export interface Coupon {
   id: string;
   /** 折抵幅度標示（例如「$100」「9 折」「免運」） */
@@ -312,16 +243,11 @@ export interface Coupon {
   cond: string;
   /** 可使用的最低應付金額門檻 */
   min: number;
-  kind: CouponKind;
-  /** amount：折抵金額；percent：折抵比例；freeship：不使用 */
-  value: number;
-  /** percent 的折抵金額上限，無上限時為 null */
-  cap: number | null;
   /** 到期日（YYYY-MM-DD），無期限時為 null */
   due: string | null;
 }
 
-/** 折價券商店中可用點數兌換的折價券（GET /store/coupons） */
+/** 兌換商店中可用點數兌換的折價券（GET /store/coupons） */
 export interface StoreCoupon {
   id: string;
   title: string;
@@ -423,7 +349,7 @@ export interface OrderQuote extends OrderAmounts {
   shippingOptions: ShippingOption[];
   /** 已達使用門檻的會員折價券 ID */
   usableCouponIds: string[];
-  /** 本次可折抵點數上限（持有點數與應付商品金額取小者） */
+  /** 本次可折抵點數上限（每單直接折抵上限、券後商品金額的 5% 與持有點數三者取小） */
   pointCap: number;
 }
 
@@ -442,36 +368,4 @@ export interface OrderResult extends OrderAmounts {
   orderNo: string;
   /** 信用卡付款才有值；其餘付款方式為 null */
   ecpayCheckout: EcpayCheckoutForm | null;
-}
-
-/* ===============================
-   全站設定
-   =============================== */
-
-/** 連結 */
-export interface SiteLink {
-  label: string;
-  href: string;
-}
-
-/** 頁尾連結欄位 */
-export interface SiteLinkColumn {
-  title: string;
-  links: SiteLink[];
-}
-
-/** 商品政策條列（保養、退換、鑑定） */
-export interface ProductPolicy {
-  label: string;
-  text: string;
-}
-
-/** 全站共通、低頻更新的文案與設定 */
-export interface SiteConfig {
-  /** 頂部公告列的公告文字 */
-  promoAnnouncements: string[];
-  footerColumns: SiteLinkColumn[];
-  productPolicies: ProductPolicy[];
-  /** 商品尺寸量測說明 */
-  sizeNote: string;
 }

@@ -35,6 +35,7 @@ describe('KeyList', () => {
   let component: KeyList;
   let fixture: ComponentFixture<KeyList>;
   let exchangedRuleIds: string[];
+  let recycled: { code: string; amount: number }[];
 
   const keys = [makeKey('NORMAL_A', 5), { ...makeKey('ERA_A', 2, 'ERA'), eraBucketId: 'era-taisho' }, makeKey('UNI', 0, 'UNIVERSAL')];
   const rules = [
@@ -45,6 +46,7 @@ describe('KeyList', () => {
 
   beforeEach(async () => {
     exchangedRuleIds = [];
+    recycled = [];
 
     const keyServiceStub = {
       getKeys: () => of(keys),
@@ -62,6 +64,10 @@ describe('KeyList', () => {
         });
       },
       unlockWithKey: () => of({ unlocked: false, artifactId: null, artifactName: null, remainingEligibleArtifactCount: 0, message: null }),
+      recycleKey: (code: string, amount: number) => {
+        recycled.push({ code, amount });
+        return of({ keyCode: code, keyAmount: amount, pointAmount: amount * 2, remainingEligibleArtifactCount: 0 });
+      },
     };
     const catalogServiceStub = {
       getCategories: () => of([
@@ -239,13 +245,13 @@ describe('KeyList', () => {
   });
 
   it('背包格的操作提示會區分萬能鑰匙', () => {
-    expect(component.bagTipHint(keys[0])).toBe('點擊使用');
-    expect(component.bagTipHint(keys[2])).toBe('請至圖鑑頁的文物卡片上使用');
+    expect(component.bagTipHint(keys[0])).toBe('點擊選擇兌換或使用');
+    expect(component.bagTipHint(keys[2])).toBe('點擊兌換點數（使用請至圖鑑的文物卡片）');
   });
 
   it('年代鑰匙依年代名稱算出字首，其他鑰匙不顯示', () => {
-    expect(component.eraMark(keys[1])).toEqual(['日', '大']);
-    expect(component.eraMarkByCode('ERA_A')).toEqual(['日', '大']);
+    expect(component.eraMark(keys[1])).toEqual(['大', '正']);
+    expect(component.eraMarkByCode('ERA_A')).toEqual(['大', '正']);
     expect(component.eraMark(keys[0])).toBeNull();
     expect(component.eraMark(undefined)).toBeNull();
   });
@@ -293,5 +299,83 @@ describe('KeyList', () => {
     expect(component.craftConfirm()).toBeNull();
     expect(exchangedRuleIds).toEqual(['r-era']);
     expect(component.craftSlots().length).toBe(0);
+  });
+
+  it('書本模式：篩選由外部頁籤控制，背包空格補滿整頁', () => {
+    component.bookMode = true;
+    component.filter = 'ERA';
+    expect(component.selectedFilter()).toBe('ERA');
+    expect(component.filteredKeys().map((key) => key.code)).toEqual(['ERA_A']);
+
+    // 寬 12+6*64+5*8+12＝448、高 12+4*64+3*8+12＝304 → 6 欄 × 4 列
+    component.bagBox.set({ w: 448, h: 304 });
+    const layout = component.bagLayout();
+    expect(layout.cols * layout.size + (layout.cols - 1) * 8).toBeLessThanOrEqual(448 - 24);
+    expect(layout.total % layout.cols).toBe(0);
+    expect(component.bagEmptySlots().length).toBe(layout.total - 1);
+
+    component.filter = 'ALL';
+    expect(component.bagEmptySlots().length).toBe(layout.total - component.filteredKeys().length);
+  });
+
+  it('鑰匙多到超過一頁時，總格數補滿最後一列', () => {
+    const many = Array.from({ length: 40 }, (_, i) => makeKey(`K${i}`, 1));
+    component.keys.set(many);
+    component.bagBox.set({ w: 448, h: 160 });
+    const { cols, total } = component.bagLayout();
+    expect(total).toBe(Math.ceil(40 / cols) * cols);
+  });
+
+  it('重新讀取鑰匙後回報給父層', () => {
+    const emitted: number[] = [];
+    component.keysChanged.subscribe((list) => emitted.push(list.length));
+    (component as any).loadKeys();
+    expect(emitted).toEqual([keys.length]);
+  });
+
+  it('兌換條件：範圍內文物全部解鎖（eligibleArtifactCount 為 0）才可兌換；萬能鑰匙不能從背包使用', () => {
+    const locked = makeKey('N1', 3);
+    const done = { ...makeKey('N2', 3), eligibleArtifactCount: 0 };
+    const universalDone = { ...makeKey('U1', 2, 'UNIVERSAL'), eligibleArtifactCount: 0 };
+    expect(component.canRecycle(locked)).toBe(false);
+    expect(component.canUse(locked)).toBe(true);
+    expect(component.canRecycle(done)).toBe(true);
+    expect(component.canUse(done)).toBe(false);
+    expect(component.canRecycle(universalDone)).toBe(true);
+    expect(component.canUse(universalDone)).toBe(false);
+    expect(component.canRecycle({ ...done, recyclePointValue: 0 })).toBe(false);
+    expect(component.keyActionHint(locked)).toContain('尚有 3 件未解鎖');
+  });
+
+  it('點開鑰匙出現選單；兌換會呼叫 recycle API 並顯示獲得點數', () => {
+    const done = { ...makeKey('N2', 5), eligibleArtifactCount: 0 };
+    const slot = document.createElement('button');
+    document.body.appendChild(slot);
+    component.onKeySlotClick(done, { currentTarget: slot } as unknown as Event);
+    expect(component.keyAction()?.key.code).toBe('N2');
+
+    component.chooseRecycle(done);
+    expect(component.keyAction()).toBeNull();
+    expect(component.recycleTarget()?.code).toBe('N2');
+
+    component.setRecycleAmount(99);
+    expect(component.recycleAmount()).toBe(5);
+    component.stepRecycleAmount(-1);
+    expect(component.recyclePoints()).toBe(4);
+
+    component.confirmRecycle();
+    expect(recycled).toEqual([{ code: 'N2', amount: 4 }]);
+    expect(component.recycleResult()?.pointAmount).toBe(8);
+
+    component.closeRecycle();
+    expect(component.recycleTarget()).toBeNull();
+    slot.remove();
+  });
+
+  it('條件不成立時兌換不會送出', () => {
+    const locked = makeKey('N1', 3);
+    component.chooseRecycle(locked);
+    expect(component.recycleTarget()).toBeNull();
+    expect(recycled.length).toBe(0);
   });
 });

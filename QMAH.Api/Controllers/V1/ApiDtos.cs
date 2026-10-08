@@ -736,3 +736,26 @@ public sealed record ApiMetadataDto(
     IReadOnlyList<MetadataOptionDto> EventReviewStatuses,
     IReadOnlyList<MetadataOptionDto> EventPublishStatuses,
     IReadOnlyList<MetadataOptionDto> MediaStatuses);
+
+/// <summary>其他會員可看到的公開個人頁資料；個人檔案非 PUBLIC 時只回傳暱稱與統計。</summary>
+public sealed record SocialMemberProfileDto(
+    Guid UserId,
+    string Nickname,
+    string? AvatarUrl,
+    string? Bio,
+    DateTime? JoinedAt,
+    string? Email,
+    bool IsPublic,
+    int PostCount,
+    int EventCount);
+
+/// <summary>活動發起人看到的參加者名單；取消報名的人另外放在 Cancelled，只記「來過並取消」，不保留每次操作的流水紀錄。</summary>
+public sealed record EventRegistrationsDto(
+    IReadOnlyList<EventRegistrantDto> Active,
+    IReadOnlyList<EventRegistrantDto> Cancelled);
+
+public sealed record EventRegistrantDto(
+    Guid UserId,
+    string? DisplayName,
+    string Status,
+    DateTime RegisteredAt);

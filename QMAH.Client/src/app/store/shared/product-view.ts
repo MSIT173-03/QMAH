@@ -15,8 +15,6 @@ export interface ProductViewData {
   rating: number;
   reviews: number;
   sold: number;
-  /** 紋樣／器型出處說明 */
-  source: string;
   /** 商品主圖網址，無圖片時為 null */
   coverImage: string | null;
 }
@@ -38,7 +36,6 @@ export function toProductView(product: Product): ProductViewData {
     rating: product.rating,
     reviews: product.reviewCount,
     sold: product.soldCount,
-    source: product.source,
     coverImage: product.coverImage,
   };
 }

@@ -1,17 +1,22 @@
 import { ChangeDetectorRef, Component, Input, OnChanges, inject } from '@angular/core';
+import { MeApiService } from '../../../core/services/me-api';
+import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { SocialApiService, SocialEventDetails } from '../../../core/services/social-api';
-import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideMapPin, LucideUserRound } from '@lucide/angular';
+import { EventRegistrations, SocialApiService, SocialEventDetails } from '../../../core/services/social-api';
+import { EventMapComponent } from '../../../shared/components/event-map/event-map';
+import { PostDetailComponent } from '../post-detail/post-detail';
+import { publishStatusLabel, reviewStatusLabel } from '../social-labels';
+import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUsers } from '@lucide/angular';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideMapPin, LucideUserRound],
+  imports: [CommonModule, RouterLink, EventMapComponent, PostDetailComponent, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUsers, UserAvatarComponent],
   templateUrl: './event-detail.html',
-  styleUrl: './event-detail.scss'
+  styleUrls: ['../social-common.scss', './event-detail.scss']
 })
 export class EventDetailComponent implements OnChanges {
   // 路由參數 :id 由 app.config.ts 的 withComponentInputBinding() 自動綁定
@@ -19,12 +24,57 @@ export class EventDetailComponent implements OnChanges {
 
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
+  private meApi = inject(MeApiService);
 
+  readonly reviewStatusLabel = reviewStatusLabel;
+  readonly publishStatusLabel = publishStatusLabel;
   event: SocialEventDetails | null = null;
   loading = false;
   loadError: string | null = null;
   actionError: string | null = null;
   actionPending = false;
+  // 活動貼文與留言直接展開在這一頁，使用者不會跳離報名頁面。
+  showDiscussion = false;
+  // 參加者名單：只有發起人／Admin 會載入，其他人完全不會呼叫這支 API。
+  registrations: EventRegistrations | null = null;
+  registrationsError: string | null = null;
+
+  get canViewRegistrations(): boolean {
+    const me = this.meApi.me();
+    return !!this.event && !!me && (this.event.organizerUserId === me.id || me.roles.includes('Admin'));
+  }
+
+  private loadRegistrations(): void {
+    this.registrations = null;
+    this.registrationsError = null;
+    if (!this.canViewRegistrations || !this.event) return;
+    this.socialApi.getEventRegistrations(this.event.id).subscribe({
+      next: (data) => {
+        this.registrations = data;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.registrationsError = '參加者名單載入失敗，請稍後再試。';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  toggleDiscussion(): void {
+    this.showDiscussion = !this.showDiscussion;
+  }
+
+  // 報名按鈕狀態：伺服器仍是最終裁判（會回 400/409），前端只是提早讓按鈕不可按並說明原因。
+  // 活動時間是不帶時區的台灣當地時間，new Date() 會以瀏覽器所在時區解讀，與使用者輸入時一致。
+  get registrationState(): 'OPEN' | 'FULL' | 'CLOSED' | 'ENDED' {
+    const event = this.event;
+    if (!event) return 'OPEN';
+    const now = Date.now();
+    if (new Date(event.endAt).getTime() <= now) return 'ENDED';
+    if (event.registrationEndAt && new Date(event.registrationEndAt).getTime() < now) return 'CLOSED';
+    if (event.capacity && event.registrationCount >= event.capacity) return 'FULL';
+    return 'OPEN';
+  }
 
   ngOnChanges(): void {
     if (this.id) this.loadEvent();
@@ -37,6 +87,7 @@ export class EventDetailComponent implements OnChanges {
     this.socialApi.getEvent(this.id).subscribe({
       next: (event) => {
         this.event = event;
+        this.loadRegistrations();
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -57,12 +108,15 @@ export class EventDetailComponent implements OnChanges {
     this.socialApi.registerEvent(this.event.id).subscribe({
       next: (event) => {
         this.event = event;
+        this.loadRegistrations();
         this.actionPending = false;
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
         this.actionPending = false;
-        this.actionError = err.status === 401 ? '請先登入才能報名。' : '報名失敗，請稍後再試。';
+        // 400/409 時 API 會回具體原因（已額滿、報名已截止、活動已結束），直接顯示給使用者。
+        const detail = typeof err.error?.detail === 'string' ? err.error.detail : null;
+        this.actionError = err.status === 401 ? '請先登入才能報名。' : (detail ?? '報名失敗，請稍後再試。');
         console.error('報名失敗:', err);
         this.cdr.detectChanges();
       }
@@ -77,6 +131,7 @@ export class EventDetailComponent implements OnChanges {
     this.socialApi.cancelEventRegistration(this.event.id).subscribe({
       next: (event) => {
         this.event = event;
+        this.loadRegistrations();
         this.actionPending = false;
         this.cdr.detectChanges();
       },

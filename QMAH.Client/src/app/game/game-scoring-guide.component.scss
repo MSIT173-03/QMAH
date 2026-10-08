@@ -1,0 +1,24 @@
+@use './game-ui' as ui;
+:host { display: contents; }
+.scoring-trigger { @include ui.info-button; width:var(--scoring-trigger-size,44px); height:var(--scoring-trigger-size,44px); }
+.scoring-trigger:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.scoring-trigger:focus-visible, .scoring-close:focus-visible { outline: 3px solid var(--qmah-focus, #fff2d9); outline-offset: 3px; }
+.scoring { @include ui.paper-panel; @include ui.reading-surface(true); display: grid; gap: 10px; box-sizing: border-box; padding: 22px 24px; color: var(--game-card-ink); }
+.scoring:not(.is-inline):not(:popover-open) { display: none; }
+.scoring:not(.is-inline) { position: fixed; inset: 0; margin: auto; width: min(520px, calc(100vw - 32px)); height: fit-content; max-height: calc(100dvh - 32px); overflow: auto; box-shadow: 0 20px 60px #14291c66; }
+.scoring:not(.is-inline)::backdrop { background: #14291c66; }
+.scoring.is-inline { padding: 0; border: 0; background: none; box-shadow: none; }
+h3 { margin: 0; font: 800 21px/1.4 var(--qmah-font-sans); }
+h4 { margin: 6px 0 0; font: 800 15px/1.4 var(--qmah-font-sans); color: var(--game-card-muted); }
+p { margin: 0; line-height: 1.7; }
+.scoring-note { color: var(--game-card-muted); font-size: 14px; }
+.grade-ladder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0; padding: 0; list-style: none; }
+.grade-ladder li { display: grid; justify-items: center; gap: 2px; padding: 10px 6px; border: 2px solid #e3d2a8; border-radius: 12px; background: #fffaf0; }
+.grade-ladder b { font: 800 26px/1 var(--qmah-font-serif); }
+.grade-ladder span { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.grade-ladder [data-grade='B'] b { color: #6a4a52; }
+.grade-ladder [data-grade='A'] b { color: #5f7381; }
+.grade-ladder [data-grade='S'] b { color: #b5871f; }
+.scoring-deductions { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.scoring-deductions li { padding: 8px 12px; border: 2px solid #e1b8ad; border-radius: 8px; background: #f6e6df; font-size: 15px; font-weight: 600; }
+.scoring-close { @extend %ui-btn-2; justify-self: end; margin-top: 4px; cursor: pointer; }

@@ -1,10 +1,13 @@
+import { GameRewardMeterComponent } from './game-reward-meter.component';
 import { GameFocusMode } from '../core/services/game-focus-mode';
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, HostListener, Component, DestroyRef, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { GameAppreciationRulesComponent } from './game-appreciation-rules.component';
+import { GameAppreciationConfirmComponent } from './game-appreciation-confirm.component';
 import { GameNavigationComponent } from './game-navigation.component';
 import { GameService } from './game.service';
 import { AppreciationAnswer, ApiPage } from './game.models';
@@ -13,44 +16,42 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
 
 @Component({
   selector: 'app-game-appreciation',
-  imports: [DatePipe, RouterLink, FormsModule, GameNavigationComponent],
+  imports: [GameAppreciationRulesComponent, GameAppreciationConfirmComponent, GameRewardMeterComponent, DatePipe, RouterLink, FormsModule, GameNavigationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './game-appreciation.component.scss',
   template: `
     <section class="appreciation-scene" [class.is-focus-mode]="focusMode.active()" aria-labelledby="appreciation-title">
-      <app-game-navigation />
+      <app-game-navigation><app-game-reward-meter /></app-game-navigation>
       <div class="appreciation-stage">
-      <header><h1 id="appreciation-title">鑑賞回答</h1><p>看看玩家怎麼解讀文物，把票投給你喜歡的回答。</p><a routerLink="/artifact-list">返回圖鑑</a></header>
-      <form class="filters" aria-label="篩選鑑賞回答" (ngSubmit)="search()">
+      <header><div><h1 id="appreciation-title">鑑賞回答</h1><p>看看玩家怎麼解讀文物，把票投給你喜歡的回答。</p></div><a routerLink="/artifact-list">返回圖鑑</a></header>
+      <div #sentinel class="filters-sentinel" aria-hidden="true"></div>
+      <div class="filters-slot" [class.is-sheet]="sheetOpen()" [style.--filters-h.px]="naturalHeight()">
+      <form #filtersForm class="filters" [class.is-sheet]="sheetOpen()" [attr.role]="sheetOpen() ? 'dialog' : null" [attr.aria-modal]="sheetOpen() ? 'true' : null" aria-label="篩選鑑賞回答" (ngSubmit)="search(); closeSheet()">
+        <div class="filters-sheet-head"><strong>篩選與搜尋</strong><button type="button" (click)="closeSheet()">完成</button></div>
         <div class="artifact-search">
           <label for="appreciation-search">找文物</label>
-          <div><input id="appreciation-search" type="search" name="keyword" [(ngModel)]="searchText" maxlength="100" placeholder="搜尋編號／名稱／年代／分類" /><button type="submit">搜尋</button></div>
+          <div><input id="appreciation-search" type="search" name="keyword" [(ngModel)]="searchText" maxlength="100" placeholder="名稱、編號或年代" aria-label="搜尋文物，可輸入名稱、編號、年代或分類" /><button type="submit">搜尋</button></div>
         </div>
-        <details class="filter-options"><summary>篩選與排序@if (hasFilters) { <span>已套用篩選</span> }</summary><div class="filter-options__fields">
+        <details class="filter-options"><summary><svg class="fo-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg><span class="fo-text">篩選與排序</span>@if (hasFilters) { <span class="fo-badge">已套用篩選</span> }</summary><div class="filter-options__fields">
         <label>排序<select name="sort" [(ngModel)]="sort" (ngModelChange)="load(1)"><option value="votes">鑑賞票數最多</option><option value="time">最新完成</option></select></label>
         <label>文物分類<select name="category" [(ngModel)]="categoryCode" (ngModelChange)="load(1)"><option value="">全部分類</option>@for (category of categories(); track category.id) { <option [value]="category.code">{{ category.name }}</option> }</select></label>
         <label>文物年代<select name="era" [(ngModel)]="eraCode" (ngModelChange)="load(1)"><option value="">全部年代</option>@for (era of eras(); track era.id) { <option [value]="era.code">{{ era.name }}</option> }</select></label>
         @if (hasFilters) { <button type="button" (click)="clearFilters()">清除篩選</button> }
         </div></details>
+        <div class="type-filter" role="group" aria-label="篩選回答類型">
+          <span>回答類型</span>
+          <div class="category-index">
+            @for (type of answerTypes; track type) { <button type="button" (click)="selectAnswerType(type)" [attr.aria-pressed]="answerType === type">{{ type ? typeLabel(type) : '全部' }}</button> }
+          </div>
+        </div>
       </form>
+      </div>
+      @if (sheetOpen()) { <div class="filters-backdrop" (click)="closeSheet()"></div> }
       @if (artifactId) { <div class="artifact-filter"><span>只看：<strong>{{ artifactName || '指定文物' }}</strong></span><button type="button" (click)="showAll()">取消文物限制</button></div> }
       @if (error()) { <p role="alert">{{ error() }} <button type="button" (click)="load(currentPage())">重新讀取</button></p> }
       @if (loading()) { <p role="status">正在整理鑑賞回答…</p> }
       <div class="collection-heading"><h2>入選回答</h2>@if (result(); as page) { <span>{{ page.totalCount }} 則符合條件</span> }
-        <button type="button" class="rules" popovertarget="appreciation-rules">哪些回答會入選？</button>
-        <div id="appreciation-rules" class="rules-content" popover="auto" aria-label="入選與投票規則">
-          <div class="rules-heading"><h3>入選與投票規則</h3><button type="button" popovertarget="appreciation-rules" popovertargetaction="hide">關閉</button></div>
-          <p>每局多人遊戲結束後，三種類型各取遊戲得票最高的一則回答。同票時先送出者優先，再依回答識別碼決定。</p>
-          <p>沒有回答的類型不會入選。鑑賞票另計，不影響遊戲勝負與獎勵。每則回答可投一票，也可收回，不能投自己的回答。</p>
-          <p>【史實推理】推測文物真正的名稱、用途、年代或背景。玩家的推測仍需與文物資料核對。</p>
-          <p>【擬真異說】看似合理的虛構說明。【妙想奇談】幽默、誇張或帶有故事性的創意回答。</p>
-        </div>
-      </div>
-      <div class="type-filter" role="group" aria-label="篩選回答類型">
-        <span>回答類型</span>
-        <div class="category-index">
-          @for (type of answerTypes; track type) { <button type="button" (click)="selectAnswerType(type)" [attr.aria-pressed]="answerType === type">{{ type ? typeLabel(type) : '全部' }}</button> }
-        </div>
+        <app-game-appreciation-rules />
       </div>
       <div class="collection-answers">
       @for (group of answerGroups(); track group.type) {
@@ -59,6 +60,7 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
       <ol class="answer-gallery" [attr.aria-busy]="loading()">
         @for (answer of group.items; track answer.id) {
           <li [attr.data-type]="answer.answerType">
+            @if (answer.imagePath) { <img class="answer-photo" [src]="answer.imagePath" [alt]="answer.artifactName" loading="lazy" (error)="$any($event.target).hidden = true" /> }
             <div class="answer-heading"><span>{{ typeLabel(answer.answerType) }}</span><h3>{{ answer.artifactName }}</h3><small>{{ answer.categoryName }}</small></div>
             @if (!artifactId) { <button type="button" class="artifact-pick" (click)="selectArtifact(answer)">只看這件文物</button> }
             <p class="answer-text">{{ answer.text }}</p>
@@ -74,23 +76,24 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
       </div>
       @if (result(); as page) { @if (page.totalPages > 1) { <nav class="pagination" aria-label="鑑賞回答分頁"><button type="button" [disabled]="loading() || page.page <= 1" (click)="load(page.page - 1)">上一頁</button><span>{{ page.page }}／{{ page.totalPages }} 頁</span><button type="button" [disabled]="loading() || page.page >= page.totalPages" (click)="load(page.page + 1)">下一頁</button></nav> } }
       </div>
-      <dialog #confirmationDialog class="confirm-card" aria-labelledby="vote-confirm-title" aria-describedby="vote-confirm-description" (close)="confirming.set(null)">
-        @if (confirming(); as target) {
-            <h3 id="vote-confirm-title">{{ target.voted ? '要收回這張鑑賞票嗎？' : '要投這則回答一票嗎？' }}</h3>
-            <p id="vote-confirm-description"><strong>{{ target.author }}</strong> 寫的「{{ target.artifactName }}」{{ target.voted ? '，收回後票數會少一票，之後還可以重新投。' : '，每則回答只能投一票，之後也可以收回。' }}</p>
-            <div class="confirm-actions"><button type="button" class="secondary" autofocus (click)="confirmationDialog.close()">先不要</button><button type="button" [disabled]="!!pendingVote()" (click)="confirmVote(target)">{{ target.voted ? '收回鑑賞票' : '投下這一票' }}</button></div>
-        }
-      </dialog>
+      @if (stuck()) {
+        <div class="jump-dock">
+          <button type="button" class="jump-btn jump-filter" (click)="openSheet()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>篩選@if (hasFilters) { <i class="jump-badge" aria-label="已套用篩選"></i> }</button>
+          <button type="button" class="jump-btn jump-top" data-button-tone="neutral" (click)="toTop()" aria-label="回到頂部"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6M12 8v11" /></svg><span>回到頂部</span></button>
+        </div>
+      }
+      <app-game-appreciation-confirm [pending]="pendingVote()" (confirmed)="vote($event)" />
     </section>
   `
 })
-export class GameAppreciationComponent {
+export class GameAppreciationComponent implements AfterViewInit {
   protected readonly focusMode = inject(GameFocusMode);
   readonly answerTypes = ['', 'FACTUAL_REASONING', 'PLAUSIBLE_FICTION', 'CREATIVE_TALE'];
   private readonly game = inject(GameService);
   private readonly catalog = inject(CatalogService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly result = signal<ApiPage<AppreciationAnswer> | null>(null);
   readonly answerGroups = computed(() => {
     const items = this.result()?.items ?? [];
@@ -102,8 +105,13 @@ export class GameAppreciationComponent {
   readonly loading = signal(false);
   readonly error = signal('');
   readonly pendingVote = signal('');
-  readonly confirming = signal<AppreciationAnswer | null>(null);
-  @ViewChild('confirmationDialog') private confirmationDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild(GameAppreciationConfirmComponent) private confirmation?: GameAppreciationConfirmComponent;
+  @ViewChild('sentinel') private sentinel?: ElementRef<HTMLElement>;
+  @ViewChild('filtersForm') private filtersForm?: ElementRef<HTMLElement>;
+  // 捲過篩選器後它會縮成一條，點開才展開；縮起來時保留原本高度，內容不會跳動
+  readonly stuck = signal(false);
+  readonly sheetOpen = signal(false);
+  readonly naturalHeight = signal(0);
   readonly currentPage = signal(1);
   sort = 'votes';
   answerType = '';
@@ -118,6 +126,33 @@ export class GameAppreciationComponent {
     this.catalog.getCategories().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: categories => this.categories.set(categories), error: () => this.error.set('文物分類暫時無法讀取，仍可查看回答。') });
     this.catalog.getEras().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: eras => this.eras.set(eras), error: () => this.error.set('文物年代暫時無法讀取，仍可查看回答。') });
     this.load(1);
+  }
+  ngAfterViewInit(): void {
+    const sentinel = this.sentinel?.nativeElement;
+    if (!sentinel || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => {
+      const stage = this.host.nativeElement.querySelector<HTMLElement>('.appreciation-stage');
+      const scrollsInside = stage && /(auto|scroll)/.test(getComputedStyle(stage).overflowY);
+      const visibleTop = Math.max(entry.rootBounds?.top ?? 0, scrollsInside ? stage.getBoundingClientRect().top : 0);
+      const out = !entry.isIntersecting && entry.boundingClientRect.top < visibleTop + 8;
+      if (out && !this.stuck()) this.naturalHeight.set(this.filtersForm?.nativeElement.offsetHeight ?? 0);
+      if (!out) this.sheetOpen.set(false);
+      this.stuck.set(out);
+    });
+    observer.observe(sentinel);
+    this.destroyRef.onDestroy(() => observer.disconnect());
+  }
+  openSheet(): void {
+    this.sheetOpen.set(true);
+    setTimeout(() => this.filtersForm?.nativeElement.querySelector<HTMLInputElement>('input[type="search"]')?.focus());
+  }
+  closeSheet(): void { this.sheetOpen.set(false); }
+  @HostListener('document:keydown.escape') protected onEscape(): void { this.closeSheet(); }
+  toTop(): void {
+    const stage = this.host.nativeElement.querySelector<HTMLElement>('.appreciation-stage');
+    const smooth: ScrollBehavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+    if (stage && stage.scrollHeight > stage.clientHeight + 2 && /(auto|scroll)/.test(getComputedStyle(stage).overflowY)) stage.scrollTo({ top: 0, behavior: smooth });
+    else window.scrollTo({ top: 0, behavior: smooth });
   }
   typeLabel(type: string): string { return ({ FACTUAL_REASONING: '史實推理', PLAUSIBLE_FICTION: '擬真異說', CREATIVE_TALE: '妙想奇談' } as Record<string, string>)[type] ?? type; }
   selectAnswerType(type: string): void { if (this.answerType !== type) { this.answerType = type; this.load(1); } }
@@ -140,11 +175,8 @@ export class GameAppreciationComponent {
   }
   openConfirmation(answer: AppreciationAnswer): void {
     if (this.pendingVote() || answer.isOwn || this.loading()) return;
-    this.confirming.set(answer);
-    this.confirmationDialog?.nativeElement.showModal();
-    queueMicrotask(() => this.confirmationDialog?.nativeElement.querySelector<HTMLButtonElement>('button')?.focus());
+    this.confirmation?.open(answer);
   }
-  confirmVote(answer: AppreciationAnswer): void { this.confirmationDialog?.nativeElement.close(); this.confirming.set(null); this.vote(answer); }
   vote(answer: AppreciationAnswer): void {
     if (this.pendingVote() || answer.isOwn) return;
     this.pendingVote.set(answer.id);

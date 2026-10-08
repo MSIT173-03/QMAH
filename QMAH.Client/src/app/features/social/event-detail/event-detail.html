@@ -1,73 +1,131 @@
 <div class="qmah-social-page">
-<div class="mb-4">
-  <a routerLink="/social/events" class="btn btn-ghost btn-sm social-icon-label">
+  <a routerLink="/social/events" class="btn btn-ghost social-back social-icon-label">
     <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
     返回活動列表
   </a>
-</div>
 
 @if (loading) {
-  <div class="text-center py-10 text-base-content/60">載入中…</div>
+  <div class="social-state" role="status" aria-live="polite"><span class="loading loading-spinner loading-lg"></span></div>
 } @else if (loadError) {
-  <div class="alert alert-error">{{ loadError }}</div>
+  <div class="alert alert-error" role="alert">{{ loadError }}</div>
 } @else if (event) {
-  <div class="card bg-base-100 shadow-xl border border-base-300">
-    <div class="card-body">
-      <span
-        class="badge w-fit"
-        [class.badge-secondary]="event.eventType === 'PLAYER'"
-        [class.badge-warning]="event.eventType === 'OFFICIAL'"
-      >
-        {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
-      </span>
-      <h2 class="card-title">{{ event.title }}</h2>
-      <p class="text-xs text-base-content/60 social-icon-label">
-        <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
+  <!-- ui-integration: 活動詳情與貼文詳情共用 social-panel；標題升為 h1（原本是 h2，頁面沒有 h1），
+       資訊用圖示事實列呈現，審核／發布狀態改成中文且只給發起人看，不再直接露出後端 enum。 -->
+  <article class="social-panel">
+    <span class="social-tag" [class.social-tag--notice]="event.eventType === 'OFFICIAL'">
+      {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
+    </span>
+    <h1 class="social-panel__title">{{ event.title }}</h1>
+    <p class="social-meta social-icon-label">
+      <app-user-avatar [userId]="event.organizerUserId" />
+      @if (event.organizerUserId) {
+        <a class="social-author-link" [routerLink]="['/social/members', event.organizerUserId]">{{ event.organizerDisplayName || '匿名會員' }}</a>
+      } @else {
         {{ event.organizerDisplayName || '匿名會員' }}
-      </p>
-      <p class="whitespace-pre-line">{{ event.content }}</p>
-
-      @if (event.media.length > 0) {
-        <div class="flex flex-col gap-2 mt-2">
-          @for (media of event.media; track media.id) {
-            <img src="{{ media.url }}" [alt]="media.altText || ''" class="rounded-lg w-full h-auto max-h-[36rem] object-contain bg-base-200" />
-          }
-        </div>
       }
+    </p>
 
-      <ul class="text-sm mt-2 space-y-1">
-        <li class="social-icon-label"><svg lucideCalendarClock aria-hidden="true" focusable="false"></svg>{{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}</li>
-        @if (event.location) {
-          <li class="social-icon-label"><svg lucideMapPin aria-hidden="true" focusable="false"></svg>{{ event.location }}</li>
-        }
-        @if (event.registrationEndAt) {
-          <li>報名截止：{{ event.registrationEndAt | date: 'yyyy-MM-dd HH:mm' }}</li>
-        }
-        <li>報名人數：{{ event.registrationCount }}{{ event.capacity ? ' / ' + event.capacity : '' }}</li>
-        @if (event.reviewStatus) {
-          <li>審核狀態：{{ event.reviewStatus }}（發布狀態：{{ event.publishStatus }}）</li>
-        }
-      </ul>
-
-      @if (event.socialPostId) {
-        <a class="btn btn-sm btn-ghost mt-2 w-fit social-icon-label" [routerLink]="['/social/posts', event.socialPostId]">
-          <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
-          查看活動貼文與留言
-        </a>
+    <ul class="social-facts">
+      <li><svg lucideCalendarClock aria-hidden="true" focusable="false"></svg><span>{{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}</span></li>
+      @if (event.location) {
+        <li><svg lucideMapPin aria-hidden="true" focusable="false"></svg><span>{{ event.location }}</span></li>
       }
-
-      @if (actionError) {
-        <div class="alert alert-warning mt-3">{{ actionError }}</div>
+      @if (event.registrationEndAt) {
+        <li><svg lucideHourglass aria-hidden="true" focusable="false"></svg><span>報名截止：{{ event.registrationEndAt | date: 'yyyy-MM-dd HH:mm' }}</span></li>
       }
+      <li><svg lucideUsers aria-hidden="true" focusable="false"></svg><span>已報名 {{ event.registrationCount }}{{ event.capacity ? ' / ' + event.capacity : '' }} 人</span></li>
+    </ul>
 
-      <div class="card-actions justify-end mt-4">
-        @if (event.isRegistered) {
-          <button class="btn btn-error" [disabled]="actionPending" (click)="cancelRegistration()">取消報名</button>
-        } @else {
-          <button class="btn btn-primary" [disabled]="actionPending" (click)="register()">報名參加</button>
+    <!-- 有座標用座標定位，沒有座標用地址搜尋；純線上活動不顯示地圖。 -->
+    <app-event-map [latitude]="event.latitude" [longitude]="event.longitude" [location]="event.location" />
+
+    <p class="social-event-detail__content">{{ event.content }}</p>
+
+    @if (event.media.length > 0) {
+      <div class="flex flex-col gap-2">
+        @for (media of event.media; track media.id) {
+          <figure class="social-event-detail__media">
+            <img [src]="media.url" [alt]="media.altText || ''" />
+          </figure>
         }
       </div>
+    }
+
+    @if (event.reviewStatus) {
+      <p class="social-meta">
+        審核狀態：{{ reviewStatusLabel(event.reviewStatus) }}・發布狀態：{{ publishStatusLabel(event.publishStatus) }}
+      </p>
+    }
+
+    @if (actionError) {
+      <div class="alert alert-warning" role="alert">{{ actionError }}</div>
+    }
+
+    <div class="social-panel__actions">
+      @if (event.socialPostId) {
+        <button
+          type="button"
+          class="btn btn-ghost social-icon-label"
+          [attr.aria-expanded]="showDiscussion"
+          aria-controls="event-discussion"
+          (click)="toggleDiscussion()"
+        >
+          <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
+          {{ showDiscussion ? '收合貼文與留言' : '活動貼文與留言' }}
+        </button>
+      }
+      @if (event.isRegistered) {
+        <button type="button" class="btn btn-error btn-outline" [disabled]="actionPending" (click)="cancelRegistration()">取消報名</button>
+      } @else {
+        @switch (registrationState) {
+          @case ('ENDED') { <button type="button" class="btn" disabled>活動已結束</button> }
+          @case ('CLOSED') { <button type="button" class="btn" disabled>報名已截止</button> }
+          @case ('FULL') { <button type="button" class="btn" disabled>名額已滿</button> }
+          @default { <button type="button" class="btn btn-primary" [disabled]="actionPending" (click)="register()">報名參加</button> }
+        }
+      }
     </div>
-  </div>
+  </article>
+
+  @if (canViewRegistrations) {
+    <section class="social-panel social-registrants" aria-labelledby="event-registrants-title">
+      <h2 id="event-registrants-title" class="social-section-title social-icon-label">
+        <svg lucideUsers aria-hidden="true" focusable="false"></svg>
+        參加者名單
+      </h2>
+      @if (registrationsError) {
+        <div class="alert alert-warning" role="alert">{{ registrationsError }}</div>
+      } @else if (!registrations) {
+        <div class="social-state" role="status" aria-live="polite"><span class="loading loading-spinner"></span></div>
+      } @else {
+        @if (registrations.active.length === 0) {
+          <p class="social-meta">還沒有人報名。</p>
+        } @else {
+          <ol class="social-registrants__list">
+            @for (person of registrations.active; track person.userId) {
+              <li>
+                <span class="social-registrants__who"><app-user-avatar [userId]="person.userId" /><a class="social-author-link" [routerLink]="['/social/members', person.userId]">{{ person.displayName || '匿名會員' }}</a></span>
+                <time class="social-meta" [attr.datetime]="person.registeredAt">報名於 {{ person.registeredAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+              </li>
+            }
+          </ol>
+        }
+        @if (registrations.cancelled.length > 0) {
+          <h3 class="social-registrants__sub">曾報名後取消（{{ registrations.cancelled.length }}）</h3>
+          <ul class="social-registrants__list social-registrants__list--muted">
+            @for (person of registrations.cancelled; track person.userId) {
+              <li><span class="social-registrants__who"><app-user-avatar [userId]="person.userId" /><a class="social-author-link" [routerLink]="['/social/members', person.userId]">{{ person.displayName || '匿名會員' }}</a></span></li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  }
+
+  @if (showDiscussion && event.socialPostId) {
+    <section id="event-discussion" aria-label="活動貼文與留言">
+      <app-post-detail [id]="event.socialPostId" [embedded]="true" />
+    </section>
+  }
 }
 </div>

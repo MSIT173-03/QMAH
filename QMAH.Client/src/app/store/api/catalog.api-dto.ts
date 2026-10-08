@@ -1,10 +1,9 @@
 /**
- * 商品型錄後端 API 的原始回應格式，對應 doc/apis.xml 中「商品清單」「商品」「商品評論列表」三支 API 的定義。
- * 後端目前只提供這些欄位；品牌、評分（清單）、已售件數、上架日期、材質、保存狀況、出貨說明、商品圖片集等
- * 前端顯示用欄位由 toProduct／toProductDetail 依正式 API 契約轉換；沒有值時才使用中性 fallback。
+ * 商品型錄後端 API（商品清單、商品詳情、商品評論）的原始回應格式，以及轉成前端模型的函式。
+ * 後端沒有提供的顯示欄位（品牌、材質、保存狀況、出貨說明等）一律以空字串補上，由畫面決定是否顯示。
  */
 
-import { Category, Product, ProductDetail, Review, ReviewPage, ReviewQuery, StorePromotion } from './api.models';
+import { Category, Product, ProductDetail, Review, ReviewPage, ReviewQuery } from './api.models';
 
 /** 器類代碼（categoryCode）與中文器類名稱對照表 */
 const CATEGORIES: readonly [code: string, label: string][] = [
@@ -23,7 +22,7 @@ const CATEGORY_CODE_BY_LABEL: Record<string, string> = Object.fromEntries(
   CATEGORIES.map(([code, label]) => [label, code]),
 );
 
-/** GET /categories 原始回應；後端的 Code 是篩選契約，Name 僅是資料庫顯示文字。 */
+/** GET /store/categories 原始回應；後端的 Code 是篩選契約，Name 僅是資料庫顯示文字。 */
 export interface ApiCategory {
   id: string;
   code: string;
@@ -46,7 +45,7 @@ export function toCategory(dto: ApiCategory): Category {
 
 /**
  * 圖鑑資料包把同一件文物的 display／thumbnail 放在同一個目錄；
- * 清單沿用後端既有 primaryImagePath，只替換檔名，避免為了縮圖再擴充 API 契約。
+ * 清單由後端回傳的 primaryImagePath 只替換檔名取得縮圖，不需要另外的縮圖欄位。
  */
 export function toCatalogThumbnail(path: string | null): string | null {
   return path?.replace(/\/display\.jpg(?:\?.*)?$/i, '/thumbnail.jpg') ?? null;
@@ -61,7 +60,7 @@ export function toCategoryCode(label: string): string {
   return CATEGORY_CODE_BY_LABEL[label] ?? label;
 }
 
-/** GET /products 清單項目 */
+/** GET /store/products 清單項目 */
 export interface ApiProductListItem {
   id: string;
   artifactId: string | null;
@@ -80,7 +79,7 @@ export interface ApiProductListItem {
   sellCount: number;
 }
 
-/** GET /products 回應 */
+/** GET /store/products 回應 */
 export interface ApiProductPage {
   items: ApiProductListItem[];
   page: number;
@@ -89,24 +88,7 @@ export interface ApiProductPage {
   totalPages: number;
 }
 
-/** GET /store/promotions：與社群公告共用的官方商城活動。 */
-export interface ApiStorePromotion {
-  id: string;
-  title: string;
-  content: string;
-  publishedAt: string;
-}
-
-export function toStorePromotion(dto: ApiStorePromotion): StorePromotion {
-  return {
-    id: dto.id,
-    title: dto.title,
-    content: dto.content,
-    publishedAt: dto.publishedAt,
-  };
-}
-
-/** GET /products/{id} 回應 */
+/** GET /store/products/{id} 回應 */
 export interface ApiProductDetail {
   id: string;
   artifactId: string | null;
@@ -174,17 +156,13 @@ export function toProductDetail(dto: ApiProductDetail): ProductDetail {
     artifactDimensions: dto.artifactSizeText ?? '官方資料未提供',
     dimensions: dto.sizeText ?? '官方資料未提供',
     source: dto.sourceUrl ?? dto.externalRef ?? '',
-    material: '',
     // 商品說明保留套組段落；明信片視圖另用 artifactDescription，避免把行銷段落塞進卡片。
     description: dto.description?.trim() || '官方資料未提供',
     artifactDescription: toArtifactDescription(dto.description),
-    condition: '',
-    shippingNote: '',
-    images: dto.primaryImagePath ? [{ view: '商品', url: dto.primaryImagePath }] : [],
   };
 }
 
-/** GET /products/{productId}/reviews 清單項目 */
+/** GET /store/products/{productId}/reviews 清單項目 */
 export interface ApiProductReview {
   id: string;
   productId: string;
@@ -197,7 +175,7 @@ export interface ApiProductReview {
   updatedAt: string;
 }
 
-/** GET /products/{productId}/reviews 回應 */
+/** GET /store/products/{productId}/reviews 回應 */
 export interface ApiProductReviewsResponse {
   summary: {
     averageRating: number;
@@ -220,11 +198,13 @@ export function toReview(dto: ApiProductReview): Review {
     user: dto.displayName ?? '匿名會員',
     date: dto.createdAt.slice(0, 10),
     text: dto.content,
+    // 新增時 UpdatedAt 與 CreatedAt 相同；之後有編輯才會比建立時間晚。
+    editedAt: Date.parse(dto.updatedAt) > Date.parse(dto.createdAt) ? dto.updatedAt : null,
   };
 }
 
 /**
- * 將商品的全部評論轉為前端的 ReviewPage：後端只支援分頁（見 doc/apis.xml），不支援依星等篩選，
+ * 將商品的全部評論轉為前端的 ReviewPage：後端只支援分頁，不支援依星等篩選，
  * 也不提供各星等則數，因此由 CatalogApi.getReviews 取回全部評論後，在前端計算篩選、分頁與統計。
  */
 export function toReviewPage(all: Review[], query: ReviewQuery): ReviewPage {

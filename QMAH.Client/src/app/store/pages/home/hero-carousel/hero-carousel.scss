@@ -56,7 +56,7 @@
   flex-direction: column;
   gap: var(--qmah-space-3);
   padding: var(--qmah-space-4) var(--qmah-space-5);
-  /* ui-integration: 主視覺以細邊界界定文案層，避免厚重側線破壞圖片與文字的閱讀比例。 */
+  /* 文案層以細邊界區隔，不用厚重側線，避免破壞圖片與文字的閱讀比例 */
   border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-line));
   background: color-mix(in srgb, var(--color-surface) 91%, transparent);
   border-radius: var(--store-radius);
@@ -89,33 +89,14 @@
   color: var(--color-body);
 }
 
-.hero-coupon {
-  display: flex;
-  align-items: baseline;
-  gap: var(--qmah-space-2);
-  width: fit-content;
-  max-width: 100%;
-  padding: 7px 10px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-line));
-  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
-  color: var(--color-body);
-  font-size: 12px;
-
-  strong {
-    color: var(--color-accent);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 15px;
-    white-space: nowrap;
-  }
-
-  span {
-    line-height: 1.5;
-  }
-}
-
 .hero-cta {
   align-self: flex-start;
   margin-top: 4px;
+
+  /* 立即選購是 <a>，全站的 a:hover 文字色會蓋過按鈕的白字；懸停時明確維持白字 */
+  &:hover {
+    color: var(--color-on-accent);
+  }
 }
 
 .hero-dots {
@@ -188,7 +169,7 @@
   }
 
   .hero-title {
-    /* ui-integration: 手機維持主視覺標題的份量，但讓中文標題以完整語意換行，不留下右側裁切或孤立短行。 */
+    /* 手機上維持主視覺標題的份量，並讓中文標題依語意換行，避免右側裁切或孤立短行 */
     font-size: clamp(26px, 7vw, 32px);
     text-wrap: balance;
   }
@@ -197,12 +178,6 @@
     width: min(100%, 430px);
     min-width: 0;
     padding: var(--qmah-space-4) var(--qmah-space-4);
-  }
-
-  .hero-coupon {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 2px;
   }
 
   .hero-controls {

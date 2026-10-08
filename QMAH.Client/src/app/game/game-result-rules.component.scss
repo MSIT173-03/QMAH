@@ -1,0 +1,6 @@
+@use './game-ui' as ui;
+:host { display: contents; }
+.result-rules { @include ui.paper-panel; @include ui.reading-surface(true); position:fixed; inset:0; margin:auto; width:min(480px,calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 32px); padding:24px; overflow:auto; box-shadow:0 20px 60px #14291c66; }
+.result-rules .result-own { margin-top: 12px; font-weight: 700; }
+.result-rules p { @include ui.prose; }
+.result-rules button { @extend %ui-btn-2; width:100%; }

@@ -30,8 +30,7 @@ function toCart(dto: ApiCartItem[]): ShoppingCart {
   const items: CartItem[] = dto.map((item) => ({
     productId: item.productId,
     coverImage: toCatalogThumbnail(item.primaryImagePath),
-    // 後端 CartItemDto 沒有品牌與規格欄位；adapter 以中性值保留既有頁面契約，
-    // 不在前端猜測商品資料，也不另外創造一組與資料庫不一致的商城 API。
+    // 後端 CartItemDto 沒有品牌與規格欄位，以空字串補上，不在前端猜測商品資料。
     brand: '',
     category: toCategoryLabel(item.categoryCode),
     name: item.productName,
@@ -50,11 +49,7 @@ function toCart(dto: ApiCartItem[]): ShoppingCart {
       subtotal,
       // 金額可能含小數（後端 decimal），相減後修正浮點誤差。
       itemDiscount: Math.round((subtotal - payable) * 100) / 100,
-      // 後端尚無配送規則（運費、免運門檻），以 null 表示「結帳時計算」，不以 0 假裝免運。
-      shippingFee: null,
       payable,
-      freeShippingThreshold: null,
-      freeShippingShortfall: null,
     },
   };
 }
@@ -68,11 +63,8 @@ export class CartApi {
     return this.http.get<ApiCartItem[]>(MEMBER_CART_API).pipe(map(toCart));
   }
 
-  // integration: develop 已有可用的正式購物車是 /me/cart；此處只做前端 adapter，
-  // 不新增 compatibility endpoint，也不讓尚未定義的 Store contract 進入正式 runtime。
-
   /**
-   * GET /me/cart：將既有 CartItemDto 陣列轉成 Store 頁面既有模型。
+   * GET /me/cart：將 CartItemDto 陣列轉成商城頁面使用的購物車模型。
    * 401（未登入）保留錯誤，讓呼叫端據此判斷登入狀態；其他錯誤（資料庫暫時不可用等）只顯示空車，
    * 不讓 Store 首頁整頁中止。寫入操作則保留所有錯誤，不假裝成功。
    */
@@ -88,8 +80,8 @@ export class CartApi {
   addItem(productId: string, qty: number): Observable<ShoppingCart> {
     return this.http
       .post<ApiCartItem>(MEMBER_CART_API, { productId, quantity: qty })
-      // integration: 異動成功後的 refresh 不能沿用初始化 GET 的空車 fallback；
-      // 否則寫入已成功但重新讀取失敗時，畫面會誤以為購物車真的變成空車。
+      // 異動後重新讀取不能沿用 getCart 的空車降級；否則寫入已成功但重新讀取失敗時，
+      // 畫面會誤以為購物車真的變成空車。
       .pipe(switchMap(() => this.requestCart()));
   }
 

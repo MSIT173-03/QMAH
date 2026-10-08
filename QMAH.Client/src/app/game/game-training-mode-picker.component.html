@@ -13,34 +13,33 @@
   }
   @if (!authRequired()) {
     <div class="mode-stage">
-      <header class="mode-stage__heading"><div><h2>選擇玩法</h2><p>挑一張遊戲牌，開始這一局。</p></div><app-game-reward-meter />@if (quickStart() && selectedMode(); as mode) { <button class="mode-stage__quick-start" type="button" data-button-tone="start" (click)="startMode.emit(mode)" [disabled]="starting()">{{ starting() ? '準備中…' : '開始' + mode.name }}</button> }</header>
-      <ol #modeRail id="training-mode-carousel" class="mode-index" aria-label="選擇單人玩法" (keydown)="navigateModes($event)" (scrollend)="settleMode()">
-        @for (mode of modes(); track mode.id) {
-          <li>
-            <app-game-training-mode-card [mode]="mode" [mechanic]="modeMechanic(mode.code)" [selected]="selectedMode()?.code === mode.code" [disabled]="starting()" (modeSelected)="chooseMode($event)" />
-          </li>
+      <header class="mode-stage__heading"><div><h2>選擇玩法</h2><p>挑一張遊戲牌，開始一局。</p></div></header>
+      <div class="mode-rail">
+        <ol #modeRail id="training-mode-carousel" class="mode-index" aria-label="選擇單人玩法" (keydown)="navigateModes($event)" (scrollend)="settleMode()" (wheel)="markUserAction()" (touchstart)="markUserAction()" (keydown.enter)="markUserAction()" (pointerdown)="dragStart($event)" (pointermove)="dragMove($event)" (pointerup)="dragEnd()" (pointercancel)="dragEnd()" (dragstart)="$event.preventDefault()" [class.is-dragging]="dragging">
+          @for (mode of modes(); track mode.id) {
+            <li>
+              <app-game-training-mode-card [mode]="mode" [mechanic]="modeMechanic(mode.code)" [selected]="selectedMode()?.code === mode.code" [disabled]="starting()" (modeSelected)="chooseMode($event)" />
+            </li>
+          }
+        </ol>
+        @if (modes().length > 1) {
+          <button type="button" class="mode-rail-arrow is-prev" aria-label="上一種玩法" aria-controls="training-mode-carousel" [disabled]="starting() || selectedModeIndex === 0" (click)="stepMode(-1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></button>
+          <button type="button" class="mode-rail-arrow is-next" aria-label="下一種玩法" aria-controls="training-mode-carousel" [disabled]="starting() || selectedModeIndex === modes().length - 1" (click)="stepMode(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></button>
         }
-      </ol>
+      </div>
       @if (modes().length > 1) {
         <nav class="mode-carousel-controls" aria-label="切換玩法" aria-controls="training-mode-carousel">
-          <button type="button" class="mode-carousel-arrow" aria-label="上一種玩法" [disabled]="starting() || selectedModeIndex === 0" (click)="stepMode(-1)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-          </button>
           <div class="mode-carousel-pages" role="group" aria-label="直接選擇玩法">
             @for (mode of modes(); track mode.id) {
               <button type="button" class="mode-carousel-page" [class.is-current]="selectedMode()?.code === mode.code" [attr.aria-label]="'切換到' + mode.name" [attr.aria-pressed]="selectedMode()?.code === mode.code" [attr.aria-controls]="'training-mode-carousel'" [disabled]="starting()" (click)="chooseMode(mode.code)"></button>
             }
           </div>
-          <button type="button" class="mode-carousel-arrow" aria-label="下一種玩法" [disabled]="starting() || selectedModeIndex === modes().length - 1" (click)="stepMode(1)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
-          </button>
         </nav>
       }
       @if (selectedMode(); as mode) {
         <section class="mode-preview" aria-labelledby="mode-preview-title">
           <div class="mode-preview__insert">
-            <div class="mode-preview__copy" animate.enter="scene-preview-enter"><h2 id="mode-preview-title">本局流程</h2><p>@for (line of modeDescription(mode); track $index) { <span>{{ line }}</span> }</p></div>
-            <div class="mode-preview__actions"><button type="button" data-button-tone="start" (click)="startMode.emit(mode)" [disabled]="starting()">{{ starting() ? '準備中…' : '開始' + mode.name }}</button><a routerLink="/game/how-to" data-button-tone="reversible" [queryParams]="{ mode: 'training', game: mode.code }">先試玩</a></div>
+            <div class="mode-preview__actions"><button type="button" data-button-tone="start" (click)="startMode.emit(mode)" [disabled]="starting()">{{ starting() ? '準備中…' : '開始正式挑戰' }}</button><app-game-scoring-guide [code]="mode.code" [mode]="mode" /><a routerLink="/game/how-to" data-button-tone="reversible" [queryParams]="{ mode: 'training', game: mode.code }">玩法展示</a></div>
           </div>
         </section>
       }

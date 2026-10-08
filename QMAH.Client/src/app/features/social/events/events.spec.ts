@@ -58,4 +58,34 @@ describe('EventsComponent', () => {
     expect(component.events.length).toBe(1);
     expect(component.events[0].title).toBe('測試活動');
   });
+
+  it('blocks an empty create form on the client without calling the API', () => {
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith('/social/events')).flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
+
+    component.submitEvent();
+
+    expect(component.createError).toContain('請輸入活動標題');
+    expect(component.createError).toContain('請選擇開始時間');
+    httpMock.expectNone((r) => r.url.endsWith('/social/events') && r.method === 'POST');
+  });
+
+  it('rejects a start time in the past and an end time before the start', () => {
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith('/social/events')).flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
+
+    component.newEvent = {
+      ...component.newEvent,
+      title: '測試',
+      content: '內容',
+      startAt: '2020-01-01T10:00',
+      endAt: '2020-01-01T09:00',
+      capacity: 0
+    };
+    component.submitEvent();
+
+    expect(component.createError).toContain('開始時間必須晚於現在');
+    expect(component.createError).toContain('結束時間必須晚於開始時間');
+    expect(component.createError).toContain('名額上限');
+  });
 });

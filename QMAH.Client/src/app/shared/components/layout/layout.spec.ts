@@ -1,3 +1,5 @@
+import { EMPTY } from 'rxjs';
+import { NotificationLive } from '../../../core/services/notification-live';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -13,7 +15,7 @@ describe('LayoutComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [LayoutComponent],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: NotificationLive, useValue: { changes: EMPTY } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(LayoutComponent);
@@ -69,5 +71,72 @@ describe('LayoutComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('a.app-admin-entry')).toBeNull();
     expect(fixture.nativeElement.querySelector('a.app-mobile-admin-entry')).toBeNull();
+  });
+
+  function loadAdmin(): void {
+    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({ roles: ['Admin'], email: 'admin@example.test' });
+    httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
+      { message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' }
+    );
+    fixture.detectChanges();
+  }
+
+  it('closes the mobile drawer before opening the confirmation', () => {
+    loadAdmin();
+    component.menuOpen.set(true);
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    let openedWithDrawer = true;
+    dialog.showModal = () => { openedWithDrawer = component.menuOpen(); };
+    const event = new MouseEvent('click', { cancelable: true });
+    component.confirmAdminNavigation(event);
+    expect(openedWithDrawer).toBe(false);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('keeps the link usable if the confirmation cannot open', () => {
+    loadAdmin();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    dialog.showModal = () => { throw new Error('dialog unavailable'); };
+    const event = new MouseEvent('click', { cancelable: true });
+    component.confirmAdminNavigation(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('does not cancel the confirmation link when its click bubbles through the dialog', () => {
+    loadAdmin();
+    const link = fixture.nativeElement.querySelector('dialog a') as HTMLAnchorElement;
+    link.removeAttribute('href');
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    link.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('keeps modified clicks available for opening another tab', () => {
+    loadAdmin();
+    const event = new MouseEvent('click', { ctrlKey: true, cancelable: true });
+    component.confirmAdminNavigation(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('does not reopen an already open confirmation', () => {
+    loadAdmin();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    dialog.open = true;
+    let opens = 0;
+    dialog.showModal = () => { opens++; };
+    component.confirmAdminNavigation(new MouseEvent('click', { cancelable: true }));
+    expect(opens).toBe(0);
+  });
+
+  it('preserves the admin entry on a transient refresh failure, then clears it on 401', () => {
+    loadAdmin();
+    component.meApi.refresh();
+    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({}, { status: 503, statusText: 'Unavailable' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('a.app-admin-entry')).not.toBeNull();
+    component.meApi.refresh();
+    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({}, { status: 401, statusText: 'Unauthorized' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('a.app-admin-entry')).toBeNull();
   });
 });

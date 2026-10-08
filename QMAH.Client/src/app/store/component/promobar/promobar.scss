@@ -42,9 +42,8 @@
   }
 }
 
-/* 登入前的會員捷徑：灰色、不可點擊，滑鼠移入也不變色 */
+/* 登入前的點數：灰色、不可點擊，滑鼠移入也不變色（不修改游標） */
 .promobar-link--disabled {
-  cursor: not-allowed;
   opacity: 0.5;
 
   &:hover {
@@ -52,8 +51,24 @@
   }
 }
 
+/* 以 <button> 呈現的捷徑（未登入的購物車）：外觀與連結一致；全站按鈕的 44px 最小高度在此取消，避免撐高工具列 */
+.promobar-link--button {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
 .promobar-accent {
   color: var(--color-accent);
+}
+
+/* 購物車件數：要有行內區塊才能套用縮放動畫（行內元素不吃 transform） */
+.promobar-count {
+  display: inline-block;
 }
 
 /* 懸浮面板內容的樣式（面板本身的外框與開關動畫在 app-promobar-panel）。

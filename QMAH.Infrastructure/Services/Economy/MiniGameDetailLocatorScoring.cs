@@ -18,13 +18,13 @@ public static class MiniGameDetailLocatorScoring
         return hash;
     }
 
-    public static int Calculate(JsonElement result, IReadOnlyCollection<Guid> artifactPool, string seed, IReadOnlyDictionary<Guid, (int Width, int Height)> imageSizes, out string? error)
+    public static int Calculate(JsonElement result, IReadOnlyCollection<Guid> artifactPool, string seed, IReadOnlyDictionary<Guid, (int Width, int Height)> imageSizes, out string? error, IReadOnlyDictionary<Guid, (double X, double Y)>? targets = null)
     {
         error = null;
         if (artifactPool.Count != 4 || !result.TryGetProperty("locatorAnswers", out var answers)
             || answers.ValueKind != JsonValueKind.Array || answers.GetArrayLength() > artifactPool.Count)
         {
-            error = "局部辨識必須送出本輪四件文物的定位座標。";
+            error = "細節追跡必須送出本局四件文物的定位座標。";
             return -1;
         }
         var pool = artifactPool.ToArray();
@@ -38,10 +38,10 @@ public static class MiniGameDetailLocatorScoring
                 || !imageSizes.TryGetValue(artifactId, out var size) || size.Width <= 0 || size.Height <= 0
                 || !Dimension(answer, "imageWidth", size.Width) || !Dimension(answer, "imageHeight", size.Height))
             {
-                error = "定位座標必須依本輪文物順序送出，且位於原圖內。";
+                error = "定位座標必須依本局文物順序送出，且位於原圖內。";
                 return -1;
             }
-            var target = Target(seed, artifactId);
+            var target = targets is not null && targets.TryGetValue(artifactId, out var subject) ? subject : Target(seed, artifactId);
             var halfSize = Math.Floor(Math.Min(size.Width, size.Height) / 5d) / 2;
             if (Math.Abs(x - target.X) <= halfSize / size.Width + 1e-9 && Math.Abs(y - target.Y) <= halfSize / size.Height + 1e-9) correct++;
         }
@@ -54,11 +54,11 @@ public static class MiniGameDetailLocatorScoring
             foreach (var id in assisted.EnumerateArray())
             {
                 if (id.ValueKind != JsonValueKind.String || !id.TryGetGuid(out var artifactId) || artifactId != pool[index++])
-                { error = "協助定位的文物必須依本輪順序送出。"; return -1; }
+                { error = "協助定位的文物必須依本局順序送出。"; return -1; }
                 correct++;
             }
         }
-        if (index != 4) { error = "本輪文物尚未全部定位。"; return -1; }
+        if (index != 4) { error = "本局文物尚未全部定位。"; return -1; }
         return correct * 25;
     }
 

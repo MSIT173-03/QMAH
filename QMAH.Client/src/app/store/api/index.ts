@@ -6,5 +6,4 @@ export { CheckoutApi } from './checkout.api';
 export { CouponApi } from './coupon.api';
 export { HomeApi } from './home.api';
 export { MemberApi } from './member.api';
-export { SearchApi } from './search.api';
-export { SiteApi } from './site.api';
+export { ReviewApi } from './review.api';

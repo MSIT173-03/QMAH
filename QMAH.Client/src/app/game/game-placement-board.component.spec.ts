@@ -56,9 +56,9 @@ describe('玩家自行選擇背景協助', () => {
     fixture.componentRef.setInput('assistedPieces', 1);
     board.backgroundPieces.set([1]);
     board.prepareBackground();
-    expect(board.backgroundPenalty()).toBe(2);
+    expect(board.backgroundPenalty()).toBe(4);
     fixture.componentRef.setInput('order', Array.from({ length: 25 }, (_, index) => index === 24 ? -1 : index));
-    expect(board.assistancePenalty()).toBe(2);
+    expect(board.assistancePenalty()).toBe(4);
     fixture.componentRef.setInput('order', Array(25).fill(-1));
     fixture.componentRef.setInput('disabled', true);
     board.placeBackground();

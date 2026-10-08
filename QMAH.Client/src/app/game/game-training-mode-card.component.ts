@@ -9,7 +9,7 @@ import { MiniGameMode } from './game.models';
 })
 export class GameTrainingModeCardComponent {
   readonly mode = input.required<MiniGameMode>();
-  readonly mechanic = input.required<string>();
+  readonly mechanic = input.required<readonly [string, string]>();
   readonly selected = input(false);
   readonly disabled = input(false);
   readonly modeSelected = output<string>();

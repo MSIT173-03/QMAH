@@ -1,192 +1,605 @@
-<div class="bac">
-
-<div class="artifact-page">
-
-  <div class="page-header">
-    <div class="page-header__bar">
-      <h2 class="page-header__title">圖鑑</h2>
-    </div>
+<div
+  class="artifact-page"
+  #artifactPage
+  [attr.data-book]="bookState()"
+  [attr.data-reveal]="reveal()"
+  [attr.data-reveal-scope]="revealScope()"
+  [attr.data-section]="bookSection()"
+  [attr.data-tab]="catalogTab()"
+  [attr.data-filter-open]="filterMode() ? '' : null"
+>
+  <!-- 書桌背景：燭光與漂浮的魔法微塵，純裝飾 -->
+  <div class="desk" aria-hidden="true">
+    <span class="desk__glow"></span>
+    <span class="desk__motes"></span>
   </div>
 
-  <div class="page-body">
-    <!-- 左側（占比 1，寬度已縮減為原本一半）：搜尋 bar + 年代／分類核取方塊，可複合式多選 -->
-    <aside
-      id="catalog-filter-panel"
-      class="search-sidebar"
-      *ngIf="catalogViewReady()"
-    >
-      <input
-        id="catalog-search"
-        name="catalogSearch"
-        type="search"
-        class="search-input"
-        aria-label="搜尋圖鑑"
-        autocomplete="off"
-        placeholder="搜尋編號／名稱／年代／分類"
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
-      />
+  <div class="book-stage">
+    <div class="book" [class.book--turning]="turning()">
 
-      <div class="filter-group filter-group--era">
-        <h4 class="filter-group__title">文物年代</h4>
-        <div class="filter-group__options">
-          <label class="filter-option" *ngFor="let era of eraOptions()">
-            <input
-              type="checkbox"
-              [checked]="isEraSelected(era)"
-              (change)="toggleEraFilter(era)"
-            />
-            <span>{{ era }}</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="filter-group filter-group--category">
-        <h4 class="filter-group__title">文物分類</h4>
-        <div class="filter-group__options">
-          <label class="filter-option" *ngFor="let category of categoryOptions()">
-            <input
-              type="checkbox"
-              [checked]="isCategorySelected(category)"
-              (change)="toggleCategoryFilter(category)"
-            />
-            <span>{{ category }}</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="sidebar-footer">
-        <button type="button" class="sidebar-footer__btn" (click)="clearFilters()">清除篩選</button>
-        <button type="button" class="sidebar-footer__btn sidebar-footer__btn--primary" (click)="goBackToMember()">返回會員</button>
-      </div>
-
-    </aside>
-
-    <!-- 右側（占比 5，寬度已補齊左側縮減的部分）：維持原本的年代分區＋卡片樣式 -->
-    <div class="content-area">
-      <br/>
-      <div class="content-area__meta" *ngIf="catalogViewReady()">
-        <span class="result-count">
-          符合 <strong>{{ filteredItems().length }}</strong> 筆
-          <span class="result-count__scope" *ngIf="filteredItems().length !== totalCount()">（圖鑑共 {{ totalCount() }} 筆）</span>
-          ・已解鎖 <strong>{{ filteredUnlockedCount() }}</strong>
-        </span>
-        <div class="content-area__meta-actions">
-          <button
-            type="button"
-            class="key-badge key-badge--btn quick-filter"
-            [class.is-active]="unlockedOnly()"
-            [attr.aria-pressed]="unlockedOnly()"
-            (click)="toggleUnlockedFilter()"
-          >
-            @if (unlockedOnly()) {
-              <span>🔓 顯示全部</span>
-            } @else {
-              <span>🔒 僅顯示已解鎖</span>
-            }
-            <strong>{{ unlockedCount() }}</strong>
-          </button>
-          <button
-            type="button"
-            class="key-badge key-badge--btn bulk-unlock-btn"
-            [disabled]="lockedTotalCount() === 0 || bulkUnlocking()"
-            (click)="openBulkUnlockConfirm()"
-          >
-            ⚡ 一鍵解鎖 <strong>{{ lockedTotalCount() }}</strong>
-          </button>
-          <button type="button" class="key-badge key-badge--btn" (click)="onKeyBagClick()">
-            🔑 鑰匙背包 <strong>{{ keys() }}</strong>
-          </button>
-        </div>
-      </div>
-
-      <!-- 只有這個捲動容器裡的內容會捲動；上面的 content-area__meta 固定不動 -->
-      <div class="content-area__scroll">
-
-        <div *ngIf="loading()" class="state state--loading">
-          <span class="spinner"></span>載入中...
-        </div>
-
-        <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
-        <div
-          *ngIf="!loading() && !errorMsg() && !unlockStatusReady() && !unlockStatusError()"
-          class="state state--loading"
+      <!-- ========== 上方頁籤：圖鑑／鑰匙背包 ========== -->
+      <div class="book__top-tabs" role="tablist" aria-label="書冊章節" [attr.inert]="bookState() === 'open' ? null : ''">
+        <button
+          type="button"
+          role="tab"
+          class="ribbon ribbon--top"
+          data-tone="jade"
+          [class.is-active]="bookSection() === 'catalog'"
+          [attr.aria-selected]="bookSection() === 'catalog'"
+          (click)="setSection('catalog')"
         >
-          <span class="spinner"></span>載入解鎖狀態中…
-        </div>
-        <div *ngIf="unlockStatusError()" class="state state--error" role="alert">{{ unlockStatusError() }}</div>
+          圖鑑
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="ribbon ribbon--top"
+          data-tone="wine"
+          [class.is-active]="bookSection() === 'keys'"
+          [attr.aria-selected]="bookSection() === 'keys'"
+          (click)="setSection('keys')"
+        >
+          鑰匙
+        </button>
+      </div>
 
-        <div class="era-sections" *ngIf="catalogViewReady()">
-          <section
-            class="era-section"
-            *ngFor="let group of eraGroups(); trackBy: trackByEraName"
-            [style.flex-grow]="visibleItemsForEra(group).length"
-          >
-            <div class="era-section__header">
-              <h3 class="era-section__title">{{ group.eraName }}</h3>
-              <button
-                type="button"
-                class="era-section__more"
-                *ngIf="group.items.length > 4"
-                (click)="toggleEraExpand(group.eraName)"
-              >
-                {{ isEraExpanded(group.eraName) ? '收合－' : '更多文物+' }}
-              </button>
+      <!-- ========== 左側頁籤：圖鑑＝全部／分類／年代；鑰匙背包＝鑰匙種類 ========== -->
+      <div
+        class="book__side-tabs"
+        role="tablist"
+        aria-orientation="vertical"
+        [attr.aria-label]="bookSection() === 'catalog' ? '圖鑑檢視方式' : '鑰匙種類'"
+        [attr.inert]="bookState() === 'open' ? null : ''"
+      >
+        @if (bookSection() === 'catalog') {
+          @for (tab of catalogTabs; track tab.id; let i = $index) {
+            <button
+              type="button"
+              role="tab"
+              class="ribbon ribbon--side"
+              [attr.data-index]="i"
+              [class.is-active]="catalogTab() === tab.id"
+              [attr.aria-selected]="catalogTab() === tab.id"
+              [attr.aria-expanded]="tab.id === 'ALL' ? null : catalogTab() === tab.id && filterPanelOpen()"
+              [attr.aria-controls]="tab.id === 'ALL' ? null : 'catalog-filter-sheet'"
+              [title]="tab.id === 'ALL' ? '顯示全部（清除年代／分類篩選）' : '叫出' + tab.label + '篩選'"
+              (click)="setCatalogTab(tab.id)"
+            >
+              <span class="ribbon__label">{{ tab.label }}</span>
+              @if (selectedFilterCount(tab.id); as count) {
+                <span class="ribbon__count">{{ count }}</span>
+              }
+            </button>
+          }
+        } @else {
+          @for (tab of keyTabs; track tab.id; let i = $index) {
+            <button
+              type="button"
+              role="tab"
+              class="ribbon ribbon--side"
+              [attr.data-index]="i"
+              [class.is-active]="keyFilter() === tab.id"
+              [attr.aria-selected]="keyFilter() === tab.id"
+              [attr.aria-label]="tab.label + '，' + keyFilterCount(tab.id) + ' 把'"
+              (click)="setKeyFilter(tab.id)"
+            >
+              <span class="ribbon__label">{{ tab.label }}</span>
+              <span class="ribbon__count">{{ keyFilterCount(tab.id) }}</span>
+            </button>
+          }
+        }
+      </div>
+
+      <button
+        type="button"
+        class="book__control book__close"
+        aria-label="闔上書本"
+        title="闔上書本"
+        [attr.inert]="bookState() === 'open' ? null : ''"
+        (click)="closeBook()"
+      >
+        <app-qmah-icon name="x" [size]="24" aria-hidden="true" />
+      </button>
+      @if (fullscreenSupported) {
+        <button
+          type="button"
+          class="book__control book__fullscreen"
+          [attr.aria-label]="isFullscreen() ? '退出全螢幕' : '全螢幕閱讀'"
+          [title]="isFullscreen() ? '退出全螢幕' : '全螢幕閱讀'"
+          [attr.aria-pressed]="isFullscreen()"
+          [attr.inert]="bookState() === 'open' ? null : ''"
+          [disabled]="fullscreenBusy()"
+          (click)="toggleFullscreen()"
+        >
+          <app-qmah-icon [name]="isFullscreen() ? 'minimize' : 'fullscreen'" [size]="24" aria-hidden="true" />
+        </button>
+      }
+      @if (fullscreenError()) {
+        <p class="book__fullscreen-error" role="status">{{ fullscreenError() }}</p>
+      }
+
+      <!-- 皮革書殼（攤開時襯在兩頁後方） -->
+      <div class="book__board" aria-hidden="true"></div>
+
+      <!-- ========== 攤開的兩頁 ========== -->
+      <div class="book__spread" [attr.inert]="bookState() === 'open' ? null : ''">
+        <div class="book__paper book__paper--left" aria-hidden="true"></div>
+        <div class="book__paper book__paper--right" aria-hidden="true"></div>
+        <div class="book__gutter" aria-hidden="true"></div>
+
+        <div
+          class="book__content"
+          [style.--cols]="layout()?.cols ?? 4"
+          [style.--card-w]="(layout()?.cardW ?? 96) + 'px'"
+          [style.--card-h]="(layout()?.cardH ?? 128) + 'px'"
+        >
+          <!-- 量測用的隱形方塊：大小等於一頁的內容區，分頁計算依據它 -->
+          <div class="page-measure" #pageMeasure aria-hidden="true"></div>
+
+          @if (bookSection() === 'catalog') {
+            <!-- ---------- 左頁 ---------- -->
+            <div class="page page--left">
+              <div class="page__head">
+                <label class="quill-search">
+                  <svg class="quill-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <circle cx="10.5" cy="10.5" r="6.5" />
+                    <path d="M15.5 15.5 21 21" />
+                  </svg>
+                  <input
+                    id="catalog-search"
+                    name="catalogSearch"
+                    type="search"
+                    aria-label="搜尋圖鑑"
+                    autocomplete="off"
+                    placeholder="搜尋編號／名稱／年代／分類"
+                    [ngModel]="searchQuery()"
+                    (ngModelChange)="onSearchChange($event)"
+                  />
+                </label>
+              </div>
+
+              <div class="page__body">
+                <ng-container *ngTemplateOutlet="catalogPageTpl; context: { $implicit: shownLeft(), first: !filterMode() }"></ng-container>
+              </div>
+
+              <!-- 分類／年代頁籤叫出的篩選單：疊在左頁上，勾選後兩頁的圖鑑即時更新 -->
+              @if (catalogTab() !== 'ALL' && filterPanelOpen() && catalogViewReady()) {
+                <div
+                  class="filter-sheet"
+                  id="catalog-filter-sheet"
+                  role="region"
+                  [attr.aria-label]="catalogTab() === 'ERA' ? '年代篩選' : '分類篩選'"
+                >
+                  <ng-container *ngTemplateOutlet="ledgerTpl"></ng-container>
+                </div>
+              }
+
+              <div class="page__foot">
+                <button
+                  type="button"
+                  class="page-turn page-turn--prev"
+                  aria-label="上一頁"
+                  [disabled]="!canTurnPrev()"
+                  (click)="turnPage(-1)"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5 8 12l7 7" /></svg>
+                </button>
+                @if (leftPageNumber(); as n) {
+                  <span class="page__num">{{ n }}</span>
+                }
+              </div>
             </div>
 
-            <div class="artifact-grid" [class.artifact-grid--collapsed]="!isEraExpanded(group.eraName)">
-              <button
-                class="artifact-card"
-                type="button"
-                [class.locked]="!item.unlocked"
-                [class.unlocked]="item.unlocked"
-                *ngFor="let item of visibleItemsForEra(group); trackBy: trackByArtifactId"
-                (click)="openCard(item.id)"
-                [attr.aria-label]="(item.unlocked ? item.name : '尚未解鎖的文物') + '，' + item.categoryName + '，' + item.eraName"
-              >
-                <div class="artifact-card__media">
-                  @if (item.thumbnailPath) {
-                    <img
-                      src="{{ getImageUrl(item.thumbnailPath) }}"
-                      [alt]="item.unlocked ? item.name : '尚未解鎖的文物縮圖'"
-                      class="thumbnail"
-                    />
-                  } @else {
-                    <span class="artifact-image-placeholder" aria-label="尚無文物縮圖">🖼️</span>
-                  }
-                  <span class="lock-badge" *ngIf="!item.unlocked">🔒</span>
-                </div>
-
-                <div class="artifact-card__info">
-                  <p class="ref">No. {{ item.artifactRef }}</p>
-                  <h3 class="name">{{ item.unlocked ? item.name : '？？？' }}</h3>
-                  <div class="tags">
-                    <span class="tag tag--category">{{ item.categoryName }}</span>
-                    <span class="tag tag--era">{{ item.eraName }}</span>
+            <!-- ---------- 右頁 ---------- -->
+            <div class="page page--right">
+              <div class="page__head">
+                @if (catalogViewReady()) {
+                  <div class="page-meta">
+                    <span class="page-meta__count">
+                      符合 <strong>{{ filteredItems().length }}</strong> 件・已解鎖 <strong>{{ filteredUnlockedCount() }}</strong>
+                    </span>
+                    <div class="page-meta__actions">
+                      <button
+                        type="button"
+                        class="seal-btn"
+                        [class.is-active]="unlockedOnly()"
+                        [attr.aria-pressed]="unlockedOnly()"
+                        (click)="toggleUnlockedFilter()"
+                      >
+                        <app-qmah-icon [name]="unlockedOnly() ? 'lock-keyhole-open' : 'lock-keyhole'" [size]="16" aria-hidden="true" />
+                        僅看已解鎖
+                        <strong>{{ unlockedCount() }}</strong>
+                      </button>
+                      <button
+                        type="button"
+                        class="seal-btn seal-btn--gold"
+                        [disabled]="lockedTotalCount() === 0 || bulkUnlocking()"
+                        (click)="openBulkUnlockConfirm()"
+                      >
+                        <app-qmah-icon name="zap" [size]="16" aria-hidden="true" />
+                        一鍵解鎖 <strong>{{ lockedTotalCount() }}</strong>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </button>
-            </div>
-          </section>
+                }
+              </div>
 
-          <div *ngIf="isEmpty()" class="empty">
-            <p class="empty__title">目前沒有資料</p>
-            <p class="empty__desc">請調整搜尋條件後再試一次</p>
+              <div class="page__body">
+                <ng-container *ngTemplateOutlet="catalogPageTpl; context: { $implicit: shownRight(), first: filterMode() }"></ng-container>
+              </div>
+
+              <div class="page__foot">
+                @if (rightPageNumber(); as n) {
+                  <span class="page__num">{{ n }} <small>/ {{ totalPageCount() }}</small></span>
+                }
+                <button
+                  type="button"
+                  class="page-turn page-turn--next"
+                  aria-label="下一頁"
+                  [disabled]="!canTurnNext()"
+                  (click)="turnPage(1)"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" /></svg>
+                </button>
+              </div>
+            </div>
+          } @else {
+            <!-- ---------- 鑰匙背包：左頁背包格、右頁魔法合成台 ---------- -->
+            <app-key-list
+              class="book-keys"
+              [bookMode]="true"
+              [filter]="keyFilter()"
+              (keysChanged)="onKeysChanged($event)"
+              (artifactFocusRequested)="onArtifactFocusRequestedFromKeyBag($event)"
+            ></app-key-list>
+          }
+        </div>
+
+        <!-- 翻頁時掠過的書頁 -->
+        <!-- 翻頁：一張真正的書頁，繞書脊翻過去。正面是翻走的那一頁、背面是翻過來的那一頁（內容與圖片都是真的），
+             只動 transform（GPU 合成）；底下的頁面在書頁翻開的同時就已經是新內容 -->
+        @if (turning()) {
+          <div
+            class="book__turn-layer"
+            aria-hidden="true"
+            inert
+            [style.--cols]="layout()?.cols ?? 4"
+            [style.--card-w]="(layout()?.cardW ?? 96) + 'px'"
+            [style.--card-h]="(layout()?.cardH ?? 128) + 'px'"
+          >
+            <div class="book__leaf" [attr.data-dir]="leafSide()">
+              <div class="leaf__face leaf__face--front">
+                <ng-container *ngTemplateOutlet="leafHeadTpl"></ng-container>
+                <ng-container *ngTemplateOutlet="catalogPageTpl; context: { $implicit: leafFront(), first: false }"></ng-container>
+              </div>
+              <div class="leaf__face leaf__face--back">
+                <ng-container *ngTemplateOutlet="leafHeadTpl"></ng-container>
+                @if (filterMode()) {
+                  <!-- 篩選單開著時，翻過來的是左頁：上面同樣印著篩選單，翻頁全程篩選單都在 -->
+                  <div class="filter-sheet leaf__sheet">
+                    <ng-container *ngTemplateOutlet="ledgerTpl"></ng-container>
+                  </div>
+                } @else {
+                  <ng-container *ngTemplateOutlet="catalogPageTpl; context: { $implicit: leafBack(), first: false }"></ng-container>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- ========== 封面：點擊後繞書脊翻開 ========== -->
+      <div
+        class="book__cover"
+        role="button"
+        tabindex="0"
+        aria-label="翻開《窺探歷史》圖鑑"
+        [attr.inert]="bookState() === 'closed' ? null : ''"
+        (click)="openBook()"
+        (keydown)="onCoverKeydown($event)"
+      >
+        <div class="cover__front">
+          <span class="cover__spine" aria-hidden="true"></span>
+          <span class="cover__frame" aria-hidden="true">
+            <i class="cover__corner cover__corner--tl"></i>
+            <i class="cover__corner cover__corner--tr"></i>
+            <i class="cover__corner cover__corner--bl"></i>
+            <i class="cover__corner cover__corner--br"></i>
+          </span>
+
+          <div class="cover__center">
+            <svg class="cover__emblem" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+              <defs>
+                <linearGradient id="cover-foil" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="200">
+                  <stop offset="0" stop-color="#ecd078" />
+                  <stop offset="1" stop-color="#d2a548" />
+                </linearGradient>
+                <path id="cover-rune-path" d="M100,100 m-73,0 a73,73 0 1,1 146,0 a73,73 0 1,1 -146,0" />
+                <!-- 燙金壓印：金色色塊 + 左上暗邊（壓進皮革）+ 右下亮邊 -->
+                <filter id="cover-stamp" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+                  <feOffset in="SourceAlpha" dx="-0.8" dy="-0.9" result="offA" />
+                  <feFlood flood-color="#120a04" flood-opacity="0.75" result="dark" />
+                  <feComposite in="dark" in2="offA" operator="in" result="deboss" />
+                  <feOffset in="SourceAlpha" dx="0.8" dy="1" result="offC" />
+                  <feFlood flood-color="#ffe9b0" flood-opacity="0.28" result="lite" />
+                  <feComposite in="lite" in2="offC" operator="in" result="rim" />
+                  <feMerge>
+                    <feMergeNode in="deboss" />
+                    <feMergeNode in="rim" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <g class="cover__emblem-ring">
+                <circle cx="100" cy="100" r="95" />
+                <circle cx="100" cy="100" r="91" />
+                <circle cx="100" cy="100" r="87.5" class="cover__tick" />
+                <circle cx="100" cy="100" r="62" />
+                <circle cx="100" cy="100" r="58.5" class="cover__dots" />
+                <polygon points="100,18 170.9,141 29.1,141" />
+                <polygon points="100,182 29.1,59 170.9,59" />
+                <path d="M100 3 l4 6 -4 6 -4 -6z" transform="rotate(0 100 100)" />
+                <path d="M100 3 l4 6 -4 6 -4 -6z" transform="rotate(60 100 100)" />
+                <path d="M100 3 l4 6 -4 6 -4 -6z" transform="rotate(120 100 100)" />
+                <path d="M100 3 l4 6 -4 6 -4 -6z" transform="rotate(180 100 100)" />
+                <path d="M100 3 l4 6 -4 6 -4 -6z" transform="rotate(240 100 100)" />
+                <path d="M100 3 l4 6 -4 6 -4 -6z" transform="rotate(300 100 100)" />
+              </g>
+              <!-- 盧恩文字（Elder Futhark 24 字母）一圈補滿，反向緩慢旋轉 -->
+              <g class="cover__runes">
+                <path d="M5 0V16M5 4L10 0M5 8L10 4" transform="rotate(0 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 16V0L8 5V16" transform="rotate(15 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M2 4L8 8L2 12" transform="rotate(30 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M2 2L8 6M2 7L8 11" transform="rotate(45 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M2 0L8 4L2 8L8 16" transform="rotate(60 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M8 3L2 8L8 13" transform="rotate(75 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 2L8 14M8 2L2 14" transform="rotate(90 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M2 0L8 4L2 8" transform="rotate(105 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M8 0V16M2 5L8 11" transform="rotate(120 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M5 0V16M2 5L8 10" transform="rotate(135 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M5 0V16" transform="rotate(150 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M3 3L6 6L3 9M7 7L4 10L7 13" transform="rotate(165 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M5 0V16M5 0L2 3M5 16L8 13" transform="rotate(180 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M2 1L8 5L2 9" transform="rotate(195 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M5 0V16M5 7L1 2M5 7L9 2" transform="rotate(210 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M7 1L3 6L7 10L3 15" transform="rotate(225 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M5 0V16M1 5L5 0L9 5" transform="rotate(240 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M2 0L8 4L2 8L8 12L2 16" transform="rotate(255 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M8 0V16M2 0L5 4L8 0" transform="rotate(270 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 0V16M8 0V16M2 3L5 8L8 3" transform="rotate(285 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M3 0V16M3 0L8 5" transform="rotate(300 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M5 2L9 8L5 14L1 8Z" transform="rotate(315 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M2 1V15M8 1V15M2 1L8 15M8 1L2 15" transform="rotate(330 100 100) translate(97.8 20.4) scale(.4)" />
+                <path d="M5 1L9 5L5 9L1 5ZM5 9L2 15M5 9L8 15" transform="rotate(345 100 100) translate(97.8 20.4) scale(.4)" />
+              </g>
+<!-- 中央的「窺探之眼」 -->
+              <path class="cover__eye" d="M52 100 Q100 58 148 100 Q100 142 52 100 Z" />
+              <circle class="cover__iris" cx="100" cy="100" r="17" />
+              <circle class="cover__pupil" cx="100" cy="100" r="7" />
+              <circle class="cover__glint" cx="106" cy="94" r="3" />
+            </svg>
+
+            <h1 class="cover__title">
+              <svg class="cover__title-svg" viewBox="0 0 560 150" aria-hidden="true" focusable="false">
+                <text class="cover__title-text" x="280" y="78">窺探歷史</text>
+                <line class="cover__title-rule" x1="150" y1="104" x2="410" y2="104" />
+                <text class="cover__subtitle-text" x="280" y="136">清明鑑定屋 ・ 文物圖鑑</text>
+              </svg>
+              <span class="cover__sr">窺探歷史</span>
+            </h1>
+            <p class="cover__sr">清明鑑定屋 ・ 文物圖鑑</p>
+          </div>
+
+          <p class="cover__hint">{{ catalogViewReady() ? '輕觸封面，翻開圖鑑' : '典籍整理中…' }}</p>
+          <span class="cover__clasp" aria-hidden="true"></span>
+        </div>
+        <!-- 夾在封面上的頁籤（背面）：書闔上時從封面的上緣與右緣探出來，翻開時跟著封面一起繞書脊翻到左邊 -->
+        <div class="cover__tabs cover__tabs--blank cover__tabs--top" aria-hidden="true">
+          <span class="ribbon ribbon--top" data-tone="wine" [class.is-active]="bookSection() === 'keys'">鑰匙</span>
+          <span class="ribbon ribbon--top" data-tone="jade" [class.is-active]="bookSection() === 'catalog'">圖鑑</span>
+        </div>
+        <div class="cover__tabs cover__tabs--blank cover__tabs--side" aria-hidden="true">
+          @if (bookSection() === 'catalog') {
+            @for (tab of catalogTabs; track tab.id; let i = $index) {
+              <span class="ribbon ribbon--side" [attr.data-index]="i" [class.is-active]="catalogTab() === tab.id"><span class="ribbon__label">{{ tab.label }}</span></span>
+            }
+          } @else {
+            @for (tab of keyTabs; track tab.id; let i = $index) {
+              <span class="ribbon ribbon--side" [attr.data-index]="i" [class.is-active]="keyFilter() === tab.id"><span class="ribbon__label">{{ tab.label }}</span></span>
+            }
+          }
+        </div>
+        <!-- 封面背面：翻開／闔上時，左頁連同內容「長在」封面背面上一起繞書脊翻（跟翻其他頁同一個做法），
+             所以內容全程跟著書頁走，不會先空白、也不會獨自淡出 -->
+        <div class="cover__back" aria-hidden="true">
+          <!-- 封面背面上的文字頁籤：封面翻過 90° 之後接手，位置與攤開後真正的頁籤完全相同，攤開瞬間直接換手 -->
+          <div class="cover__tabs cover__tabs--text cover__tabs--top" aria-hidden="true">
+            <span class="ribbon ribbon--top" data-tone="jade" [class.is-active]="bookSection() === 'catalog'">圖鑑</span>
+            <span class="ribbon ribbon--top" data-tone="wine" [class.is-active]="bookSection() === 'keys'">鑰匙</span>
+          </div>
+          <div class="cover__tabs cover__tabs--text cover__tabs--side" aria-hidden="true">
+            @if (bookSection() === 'catalog') {
+              @for (tab of catalogTabs; track tab.id; let i = $index) {
+                <span class="ribbon ribbon--side" [attr.data-index]="i" [class.is-active]="catalogTab() === tab.id">
+                  <span class="ribbon__label">{{ tab.label }}</span>
+                  @if (selectedFilterCount(tab.id); as count) {
+                    <span class="ribbon__count">{{ count }}</span>
+                  }
+                </span>
+              }
+            } @else {
+              @for (tab of keyTabs; track tab.id; let i = $index) {
+                <span class="ribbon ribbon--side" [attr.data-index]="i" [class.is-active]="keyFilter() === tab.id">
+                  <span class="ribbon__label">{{ tab.label }}</span>
+                  <span class="ribbon__count">{{ keyFilterCount(tab.id) }}</span>
+                </span>
+              }
+            }
+          </div>
+          <div
+            class="cover__page leaf__face"
+            [style.--cols]="layout()?.cols ?? 4"
+            [style.--card-w]="(layout()?.cardW ?? 96) + 'px'"
+            [style.--card-h]="(layout()?.cardH ?? 128) + 'px'"
+          >
+            <ng-container *ngTemplateOutlet="catalogPageTpl; context: { $implicit: leftPage(), first: false }"></ng-container>
           </div>
         </div>
-
       </div>
-
     </div>
 
   </div>
 
-  <!-- 版面已改成年代分區＋展開，原本「上一頁／下一頁」的分頁 nav 不再需要 -->
+  <!-- 單一書頁的文物內容（左右頁共用） -->
+  <!-- 篩選單內容（左頁上的篩選單與翻頁書頁上的那一份共用） -->
+  <ng-template #ledgerTpl>
+    <div class="ledger">
+      <div class="ledger__head">
+        <h4 class="ledger__title">{{ catalogTab() === 'ERA' ? '文物年代' : '文物分類' }}</h4>
+        <button
+          type="button"
+          class="ledger__clear"
+          [disabled]="selectedEras().size === 0 && selectedCategories().size === 0"
+          (click)="clearSelections()"
+        >清除篩選</button>
+      </div>
+      <div
+        class="ledger__options"
+        [class.ledger__options--categories]="catalogTab() === 'CATEGORY'"
+        [class.ledger__options--eras]="catalogTab() === 'ERA'"
+      >
+        @if (catalogTab() === 'ERA') {
+          @for (era of eraOptions(); track era) {
+            <label class="filter-option era-slip" [attr.data-tone]="eraTone(era)">
+              <input type="checkbox" [checked]="isEraSelected(era)" (change)="toggleEraFilter(era)" />
+              <span class="era-slip__name">{{ era }}</span>
+              @if (eraYears(era); as years) {
+                <span class="era-slip__years">{{ years }}</span>
+              }
+            </label>
+          }
+        } @else {
+          @for (category of categoryOptions(); track category) {
+            <label class="filter-option category-slip" [attr.data-tone]="categoryTone(category)">
+              <input type="checkbox" [checked]="isCategorySelected(category)" (change)="toggleCategoryFilter(category)" />
+              <span class="category-slip__glyph" [attr.data-glyph]="categoryGlyph(category)" aria-hidden="true"></span>
+              <span class="category-slip__name">{{ category }}</span>
+              <app-qmah-icon class="category-slip__check" name="check" [size]="16" aria-hidden="true" />
+            </label>
+          }
+        }
+      </div>
+      <div class="ledger__foot">
+        <span class="ledger__summary">{{ filterSummary() }}・符合 {{ filteredItems().length }} 件</span>
+      </div>
+    </div>
+  </ng-template>
 
-  <!-- ========== 以下併入原 artifact-unlock.html：放大檢視／解鎖確認／鑑賞流水 ========== -->
+  <!-- 翻頁書頁上的頁首：每一頁都印著同樣的搜尋列（左頁）與統計列（右頁），翻頁時頁首不會消失。
+       只是外觀的複本（書頁整層 inert、不能操作），真正可以操作的在底下的頁面上 -->
+  <ng-template #leafHeadTpl>
+    <div class="leaf__head leaf__head--left">
+      <span class="quill-search">
+        <svg class="quill-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="M15.5 15.5 21 21" />
+        </svg>
+        <input type="search" tabindex="-1" readonly placeholder="搜尋編號／名稱／年代／分類" [value]="searchQuery()" />
+      </span>
+    </div>
+    <div class="leaf__head leaf__head--right">
+      @if (catalogViewReady()) {
+        <div class="page-meta">
+          <span class="page-meta__count">
+            符合 <strong>{{ filteredItems().length }}</strong> 件・已解鎖 <strong>{{ filteredUnlockedCount() }}</strong>
+          </span>
+          <div class="page-meta__actions">
+            <button type="button" tabindex="-1" class="seal-btn" [class.is-active]="unlockedOnly()">
+              <app-qmah-icon [name]="unlockedOnly() ? 'lock-keyhole-open' : 'lock-keyhole'" [size]="16" aria-hidden="true" />
+              僅看已解鎖
+              <strong>{{ unlockedCount() }}</strong>
+            </button>
+            <button type="button" tabindex="-1" class="seal-btn seal-btn--gold" [disabled]="lockedTotalCount() === 0 || bulkUnlocking()">
+              <app-qmah-icon name="zap" [size]="16" aria-hidden="true" />
+              一鍵解鎖 <strong>{{ lockedTotalCount() }}</strong>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template #catalogPageTpl let-page let-first="first">
+    @if (first && loading()) {
+      <div class="state"><span class="spinner"></span>翻閱典籍中…</div>
+    } @else if (first && errorMsg()) {
+      <div class="state state--error">{{ errorMsg() }}</div>
+    } @else if (first && unlockStatusError()) {
+      <div class="state state--error" role="alert">{{ unlockStatusError() }}</div>
+    } @else if (first && !unlockStatusReady()) {
+      <div class="state"><span class="spinner"></span>載入解鎖狀態中…</div>
+    } @else if (catalogViewReady() && page) {
+      @for (line of page.lines; track line.key) {
+        @if (line.kind === 'header') {
+          <div class="group-head" [class.group-head--continued]="line.continued">
+            <h3 class="group-head__title">
+              {{ line.group.label }}
+              @if (line.continued) { <small>（續）</small> }
+            </h3>
+            <span class="group-head__count">{{ line.group.items.length }} 件</span>
+            @if (line.group.items.length > previewCount()) {
+              <button
+                type="button"
+                class="group-head__toggle"
+                [attr.aria-expanded]="isGroupExpanded(line.group)"
+                (click)="toggleGroupExpand(line.group)"
+              >{{ isGroupExpanded(line.group) ? '收合-' : '展開+' }}</button>
+            }
+          </div>
+        } @else if (line.kind === 'divider') {
+          <!-- 年代跨到右頁：不重複標題與收合按鈕，只留分隔線 -->
+          <div class="group-divider" aria-hidden="true"></div>
+        } @else {
+          <div class="card-row">
+            @for (item of line.items; track item.id) {
+              <button
+                type="button"
+                class="artifact-card"
+                [attr.data-tone]="cardTone(item)"
+                [class.locked]="!item.unlocked"
+                [class.unlocked]="item.unlocked"
+                [attr.aria-label]="cardLabel(item)"
+                [title]="cardTitle(item)"
+                (click)="openCard(item.id)"
+              >
+                <span class="artifact-card__frame" [style.--photo]="item.thumbnailPath ? 'url(&quot;' + getImageUrl(item.thumbnailPath) + '&quot;)' : null">
+                  @if (item.thumbnailPath) {
+                    <img class="thumbnail" [src]="getImageUrl(item.thumbnailPath)" alt="" loading="lazy" />
+                  } @else {
+                    <span class="artifact-image-placeholder" aria-hidden="true">🖼️</span>
+                  }
+                  @if (!item.unlocked) {
+                    <span class="lock-badge" aria-hidden="true">🔒</span>
+                  }
+                </span>
+                <span class="artifact-card__name">{{ item.unlocked ? item.name : '？？？' }}</span>
+              </button>
+            }
+          </div>
+        }
+      }
+    } @else if (first && isEmpty()) {
+      <div class="empty">
+        <p class="empty__title">這一頁還是空白的</p>
+        <p class="empty__desc">請調整搜尋或篩選條件後再試一次</p>
+      </div>
+    }
+  </ng-template>
+
+  <!-- ========== 放大檢視／解鎖確認／一鍵解鎖／社群討論（沿用原本功能） ========== -->
 
   <div class="overlay" [class.open]="isOverlayOpen()" role="presentation" (click)="onOverlayClick($event)">
-    <div class="stage" [class.with-info]="infoOpen() && focusedItem()?.unlocked" *ngIf="focusedItem() as item" role="dialog" aria-modal="true" aria-labelledby="artifact-focus-title" tabindex="-1">
+    <div class="stage" [class.with-info]="infoOpen() && focusedItem()?.unlocked" *ngIf="focusedItem() as item" [attr.data-tone]="cardTone(item)" role="dialog" aria-modal="true" aria-labelledby="artifact-focus-title" tabindex="-1">
 
       <div class="focus-card" [class.unlocked]="item.unlocked">
         <span class="num">{{ item.artifactRef }}</span>
@@ -204,11 +617,15 @@
       <div class="focus-actions">
         <ng-container *ngIf="item.unlocked; else lockedActions">
           <button type="button" class="action-btn info-btn" [class.active]="infoOpen()" (click)="toggleInfo()">
-            {{ infoOpen() ? '✕ 關閉' : 'ℹ️ 查看資料' }}
+            <app-qmah-icon [name]="infoOpen() ? 'x' : 'info'" [size]="18" aria-hidden="true" />
+            {{ infoOpen() ? '關閉' : '查看資料' }}
           </button>
         </ng-container>
         <ng-template #lockedActions>
-          <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">🔓 解鎖</button>
+          <button type="button" class="action-btn unlock-btn" (click)="openUnlockConfirm(item.id)">
+            <app-qmah-icon name="lock-keyhole-open" [size]="18" aria-hidden="true" />
+            解鎖
+          </button>
           <div class="hint">需消耗 {{ unlockKeyCost() }} 把萬能鑰匙解鎖</div>
         </ng-template>
       </div>
@@ -273,23 +690,23 @@
                 <span class="field-value field-value--error" role="alert">{{ discussionError() }}</span>
               }
             </div>
-              <div class="field">
-                  <span class="field-label">來源</span>
-                  <a
-                    *ngIf="detail.sourceUrl; else noSource"
-                    class="field-link"
-                    [href]="detail.sourceUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >前往故宮典藏頁面</a>
-                  <ng-template #noSource>
-                    <span class="field-value field-value--muted">尚無來源資料</span>
-                  </ng-template>
-                </div>
-                <div class="field" *ngIf="detail.attributionText">
-                  <span class="field-label">授權／署名</span>
-                  <span class="field-value field-value--muted">{{ detail.attributionText }}</span>
-                </div>
+            <div class="field">
+              <span class="field-label">來源</span>
+              <a
+                *ngIf="detail.sourceUrl; else noSource"
+                class="field-link"
+                [href]="detail.sourceUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往故宮典藏頁面</a>
+              <ng-template #noSource>
+                <span class="field-value field-value--muted">尚無來源資料</span>
+              </ng-template>
+            </div>
+            <div class="field" *ngIf="detail.attributionText">
+              <span class="field-label">授權／署名</span>
+              <span class="field-value field-value--muted">{{ detail.attributionText }}</span>
+            </div>
           </ng-container>
         </div>
       </div>
@@ -325,7 +742,7 @@
     </div>
   </div>
 
-  <!-- 一鍵解鎖全部（消耗萬能鑰匙）：確認／結果共用同一個視窗，依 bulkUnlockResult() 是否有值切換內容 -->
+  <!-- 一鍵解鎖全部（消耗萬能鑰匙）：確認／結果共用同一個視窗 -->
   <div
     class="confirm-overlay"
     [class.open]="bulkUnlockConfirmOpen()"
@@ -392,18 +809,5 @@
     (submitted)="submitDiscussion()"
     (backdropClicked)="onDiscussionOverlayClick($event)"
   />
-
-  <!-- 鑰匙背包彈出框：不再導頁到另一個頁面，點「鑰匙背包」按鈕後直接在這裡開一個放大框，
-       點旁邊空白處（backdrop）或 KeyList 自己標題列右上角的關閉按鈕都能關閉 -->
-  <div class="overlay" [class.open]="keyBagOpen()" (click)="onKeyBagOverlayClick($event)">
-    <div class="key-bag-stage" *ngIf="keyBagOpen()">
-      <app-key-list
-        [embedded]="true"
-        (artifactFocusRequested)="onArtifactFocusRequestedFromKeyBag($event)"
-      ></app-key-list>
-    </div>
-  </div>
-
-</div>
 
 </div>

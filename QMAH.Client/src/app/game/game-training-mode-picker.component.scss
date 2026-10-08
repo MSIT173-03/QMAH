@@ -2,68 +2,56 @@
 :host { display: block; height: 100%; }
 .training-list { height: 100%; }
 *, *::before, *::after { box-sizing: border-box; }
-.mode-stage { --game-frame-width: clamp(16px, 1.8vw, 28px); display: grid; grid-template-rows: auto 1fr auto; gap: 6px; width: 100%; margin-inline: auto; padding: 7px 16px; border: var(--game-frame-width, clamp(28px, 3vw, 48px)) solid transparent; border-image: var(--game-frame-image) 8 / 1 / 0 stretch; border-radius: 16px; background: url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground); background-clip: padding-box; box-shadow: 0 18px 36px #14291c40; }
+.mode-stage { --game-frame-width: clamp(16px, 1.8vw, 28px); display: grid; grid-template-rows: auto 1fr auto; gap: 6px; width: 100%; margin-inline: auto; padding: 4px clamp(14px, 2vw, 28px) clamp(14px, 2vw, 24px); }
 .mode-index { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; gap: 12px; margin: 0; padding: 8px 0 0; list-style: none; }
 .mode-index li { min-width: 0; }
 .mode-carousel-controls { display: none; }
-.mode-stage__heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; color: var(--game-table-ink); }
-.mode-stage__heading h2 { margin: 0; color: var(--game-table-ink); font: 800 30px/1.3 var(--qmah-font-sans); -webkit-text-stroke: .55px #285440; paint-order: stroke fill; text-shadow: 0 1px 0 #1d4635; }
-.mode-stage__heading p { margin: 4px 0 0; font-size: 14px; }
+.mode-stage__heading { @include ui.page-head; }
 .mode-stage__heading app-game-reward-meter { flex:0 1 460px; min-width:0; --reward-meter-margin:0; }
-.mode-stage__quick-start { @include ui.button; flex:0 0 auto; min-height:52px; cursor:pointer; font:800 16px/1.5 var(--qmah-font-sans); }
-.mode-stage__quick-start:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; }
-.mode-preview { @include ui.control-housing; --qmah-muted:#4f5044; display:block; padding:8px 16px; background-color:#e4ddcc; color:#26393e; }
-.mode-preview__insert { display: grid; background:transparent; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px 24px; min-width: 0; padding:0; color:inherit; }
-.mode-preview__copy { min-width: 0; }
+.mode-preview { @include ui.control-housing; --qmah-muted:#4f5044; display:block; background-color:#e4ddcc; color:#26393e; }
+.mode-preview__insert { display: grid; background:transparent; align-items: center; gap: 16px 24px; min-width: 0; padding:0; color:inherit; }
 .mode-preview h2 { margin: 0 0 6px; font: 700 22px/1.4 var(--qmah-font-sans); }
 .mode-preview p { @include ui.prose; display:grid; grid-template-rows:repeat(2, 1.55em); align-content:center; margin:0; min-height:3.1em; max-width:none; color:var(--qmah-muted); font-size:clamp(14px,1vw,15px); line-height:1.55; }
 .mode-preview p span { display:block; white-space:nowrap; }
 .mode-preview__actions, .auth-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.mode-preview__actions button, .auth-actions a { @include ui.button; }
-.mode-preview__actions a, .auth-actions button { @include ui.button(true); }
+.mode-preview__actions button, .auth-actions a { @extend %ui-btn; }
+.mode-preview__actions a, .auth-actions button { @extend %ui-btn-2; }
 .mode-preview__actions :focus-visible, .auth-actions :focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 4px; }
 .mode-preview__actions button:disabled { opacity: .55; cursor: wait; }
 .mode-preview__actions > * { transition: transform 120ms ease-out, filter 120ms ease-out; }
-.mode-preview__actions > *:active:not(:disabled) { transform: translateY(2px) scale(.98); box-shadow: 0 1px 3px #14291c30; }
-.mode-preview__actions button { min-width: 180px; min-height: 52px; }
-.mode-preview__actions [data-button-tone='start'] { box-shadow: 0 3px 0 #5d471e, 0 7px 12px #14291c35; }
-.mode-preview__actions [data-button-tone='reversible'] { box-shadow: 0 3px 0 #27445a, 0 7px 12px #14291c35; }
+.mode-preview__actions { --scoring-trigger-size:52px; }
+.mode-preview__actions > button, .mode-preview__actions > a { height:52px; min-height:52px; }
+.mode-preview__actions > app-game-scoring-guide { display:inline-flex; height:52px; align-items:center; }
+.mode-preview__actions button { min-width: 180px; }
 .auth-state { margin-block: 32px; color: var(--qmah-ink); }
 .auth-state p { @include ui.prose; }
 .mode-stage--auth .auth-state { @include ui.paper-panel; @include ui.reading-surface(true); width: min(520px,100%); margin: auto; padding: 24px; }
 .auth-state h2 { margin: 0; font: 800 26px/1.4 var(--qmah-font-sans); }
-.scene-preview-enter { animation: preview-enter 180ms ease-out; }
 @keyframes preview-enter { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
 @media (max-width: 1000px) { .mode-index { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1001px) {
   .training-list:has(.mode-stage) .mode-stage { height:100%; min-height:0; grid-template-rows:auto minmax(0,1fr) auto; }
-  .training-list:has(.mode-stage) .mode-index { min-height:0; padding-block:6px 44px; }
+  .training-list:has(.mode-stage) .mode-index { min-height:0; padding-block:30px 44px; }
   .training-list:has(.mode-stage) .mode-index li { height:100%; min-height:0; }
   .training-list:has(.mode-stage) .mode-index app-game-training-mode-card { height:100%; }
   .training-list:has(.mode-stage) .mode-index button[data-mode] { height:100%; min-height:0; aspect-ratio:auto; }
 }
 @media (max-width: 600px) {
-  .mode-stage { grid-template-rows: auto; gap: 16px; padding: 12px 8px; border-width: var(--game-frame-width, 18px); }
+  .mode-stage { grid-template-rows: auto; gap: 16px; padding: 12px 8px; }
   .mode-stage__heading { gap: 12px; }
-  .mode-stage__heading h2 { font-size: 24px; }
   .mode-stage__heading app-game-reward-meter { flex-basis: 100%; }
-  .mode-stage__quick-start { width:100%; }
-  .mode-index { position: relative; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #8da5b7 transparent; padding: 12px 8% 16px; gap: 16px; scroll-padding-inline: 8%; }
+  .mode-index { position: relative; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; padding: 28px 8% 20px; gap: 16px; scroll-padding-inline: 8%; }
   .mode-index li { flex: 0 0 92%; scroll-snap-align: center; }
   .mode-carousel-controls { display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 44px; color: #203b35; }
-  .mode-carousel-arrow { display: grid; flex: 0 0 48px; place-items: center; width: 48px; height: 48px; aspect-ratio: 1; padding: 0; border: 1px solid #806044; border-radius: 50%; color: inherit; background: #f3e8cf; box-shadow: 0 2px 0 #6d5841, inset 0 1px 0 #fff3d8; cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease; }
-  .mode-carousel-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .mode-carousel-pages { display: flex; align-items: center; gap: 0; }
   .mode-carousel-page { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; }
-  .mode-carousel-page::before { content: ''; width: 8px; height: 8px; border: 1px solid #806044; border-radius: 8px; background: #d2c09e; box-shadow: inset 0 1px 1px #6d584140; transition: width 160ms ease, background-color 160ms ease; }
+  .mode-carousel-page::before { content: ''; width: 8px; height: 8px; border: 1px solid #6b7a74; border-radius: 8px; background: #d2c09e; box-shadow: inset 0 1px 1px #6b7a7440; transition: background-color 160ms ease; }
   .mode-carousel-page.is-current::before { width: 18px; border-color: #1e3547; background: #1e3547; box-shadow: 0 1px 0 #fff3d8; }
-  .mode-carousel-arrow:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 1px 3px #55452d40; }
-  .mode-carousel-arrow:disabled { opacity: .4; cursor: default; }
   .mode-carousel-controls :focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
   .mode-preview__insert { grid-template-columns: 1fr; padding:0; gap:12px; }
-  .mode-preview__actions { display: grid; grid-template-columns: 1fr; }
+  .mode-preview__actions { display: flex; flex-wrap: nowrap; justify-content: center; }
   .mode-preview__actions > * { justify-content: center; }
-  .mode-preview__actions button { min-width: 0; }
+  .mode-preview__actions button { min-width: 0; flex: 0 1 auto; padding-inline: 22px; }
   .mode-preview h2 { font-size: 20px; }
 }
 @media (min-width: 1001px) {
@@ -75,15 +63,34 @@
 }
 @media (max-width: 360px) {
   .mode-carousel-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .mode-carousel-arrow { grid-row:1; justify-self:center; }
   .mode-carousel-pages { grid-column:1 / -1; grid-row:2; justify-content:center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scene-preview-enter { animation: none; }
-  .mode-preview__actions > *, .mode-carousel-arrow, .mode-carousel-page::before { transition: none; }
+  .mode-preview__actions > *, .mode-carousel-page::before { transition: none; }
   .mode-stage { box-shadow: 0 10px 24px #14291c30; }
   .mode-preview__actions > *:active:not(:disabled) { transform: none; }
 }
 .training-list.is-auth-gated .mode-stage { height: 100%; min-height: 420px; grid-template-rows: minmax(0,1fr); padding-top: 72px; }
 @media (max-width: 999px) { .training-list.is-auth-gated .mode-stage { height: auto; min-height: 480px; } }
+.mode-preview { border: 0; background: none; box-shadow: none; padding: 4px 0 0; }
+.mode-preview__insert { justify-items: center; grid-template-columns: minmax(0, 1fr); }
+.mode-preview__actions { justify-content: center; gap: 12px; }
+@media (max-width: 999px) { :host, .training-list, .mode-stage { height: auto; } }
+@media (max-width: 600px) { .mode-preview__actions { display: flex; flex-wrap: nowrap; justify-content: center; width: 100%; } .mode-preview__actions button { flex: 0 1 auto; min-width: 0; } .mode-preview__actions > a, .mode-preview__actions > app-game-scoring-guide { flex: none; } }
+.mode-index::-webkit-scrollbar { display: none; }
+// 手機的左右切換箭頭：貼在牌的兩側，除了滑動也能直接點
+.mode-rail { position: relative; display: grid; min-width: 0; min-height: 0; }
+.mode-index.is-dragging { scroll-snap-type: none; cursor: grabbing; user-select: none; }
+.mode-rail-arrow { display: none; }
+@media (max-width: 600px) {
+  .mode-rail { display: block; }
+  .mode-index { cursor: grab; }
+  .mode-rail-arrow { @include ui.button; --game-button-image: var(--game-button-blue-image); --game-button-ink: #fff8e9; position: absolute; top: 40%; z-index: 5; display: grid; place-items: center; width: 44px; min-height: 44px; height: 44px; padding: 0; border-radius: 50%; cursor: pointer; }
+  .mode-rail-arrow.is-prev { left: -4px; }
+  .mode-rail-arrow.is-next { right: -4px; }
+  .mode-rail-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .mode-rail-arrow:disabled { opacity: .35; cursor: default; }
+}
+// 拼圖的兩種玩法：同一組選項，選中是藍色
+.mode-preview__actions button { white-space: nowrap; }

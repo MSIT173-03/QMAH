@@ -1,0 +1,78 @@
+@use './game-ui' as ui;
+:host { display: contents; }
+.reward-tally { @include ui.paper-panel; display: grid; gap: 12px; padding: 16px 18px 14px; box-shadow: inset 0 0 0 2px #e3d2a8, 0 14px 26px #14291c66; }
+.reward-tally h3 { margin: 0; font: 800 18px/1.3 var(--qmah-font-sans); }
+.tally-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tally-card { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0 12px; padding: 12px 16px; overflow: hidden; border: 2px solid #0f1b14; border-radius: 14px; background: #fffaf0; box-shadow: 0 3px 0 #0f1b14; }
+.tally-card[data-tone='points'] { background: linear-gradient(#fff6d3, #fbe8a0); }
+.tally-card[data-tone='keys'] { background: linear-gradient(#ffe7e3, #f6c8c2); }
+.tally-card.is-zero { background: #f1ede1; }
+.tally-card .tile-icon { display: inline-flex; grid-row: 1 / span 2; width: 38px; height: 38px; color: #b8860b; animation: tally-pop 600ms .5s cubic-bezier(.22, 1, .36, 1) both; }
+.tally-card[data-tone='keys'] .tile-icon { color: #b8453f; }
+.tally-bar { grid-column: 1 / -1; height: 10px; margin-top: 8px; overflow: hidden; border: 2px solid #0f1b14; border-radius: 999px; background: #fffaf0; }
+.tally-bar i { display: block; width: calc(var(--w, 0) * 1%); height: 100%; background: #d8605a; animation: tally-fill 1.5s .5s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes tally-fill { from { width: 0; } }
+.tally-label { color: var(--game-card-muted); font-size: 14px; font-weight: 700; }
+.tally-num { --n: var(--to, 0); counter-reset: n var(--n); font: 800 40px/1.1 var(--qmah-font-sans); font-variant-numeric: tabular-nums; animation: tally-count 1.5s .5s cubic-bezier(.16, 1, .3, 1) both; }
+.tally-num::before { content: '+' counter(n); }
+.tally-num.is-decimal { animation: none; }
+.tally-num.is-decimal::before { content: none; }
+.tally-card:has(.tally-key-meta) { grid-template-columns: auto minmax(0, 1fr) auto; }
+.tally-key-meta { grid-column: 3; grid-row: 1 / span 2; align-self: start; display: grid; gap: 3px; text-align: right; color: var(--game-card-muted); font-size: 11px; line-height: 1.4; }
+.tally-card:has(.tally-key-meta) .tally-num { grid-column: 2; grid-row: 2; }
+@media (max-width: 1100px) {
+  .tally-key-meta { grid-column: 1 / -1; grid-row: 3; margin-top: 6px; }
+}
+@keyframes tally-count { from { --n: 0; } to { --n: var(--to); } }
+@keyframes tally-pop { from { opacity: 0; scale: .2; rotate: -30deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
+.tally-note { margin: 0; color: var(--game-card-muted); font-size: 14px; line-height: 1.6; text-wrap-style: balance; }
+.tally-card { isolation: isolate; }
+.tally-head { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
+.tally-warn { padding: 3px 12px; border: 2px solid #963d32; border-radius: 999px; color: #963d32; background: #fff1ee; font-size: 14px; font-weight: 800; white-space: nowrap; }
+@media (max-width: 450px) { .tally-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .tally-num, .tally-card .tile-icon, .tally-bar i { animation: none; } }
+@media (min-width: 801px) {
+  .reward-tally { padding: 10px 14px; gap: 8px; }
+  .tally-card { padding: 8px 12px; }
+  .tally-card .tile-icon { width: 30px; height: 30px; }
+  .tally-num { font-size: 30px; }
+}
+@media (min-width: 801px) and (min-height: 860px) {
+  .reward-tally { padding: 14px 18px; gap: 10px; }
+  .reward-tally h3 { font-size: 20px; }
+  .tally-card { padding: 10px 16px; }
+  .tally-card .tile-icon { width: 38px; height: 38px; }
+  .tally-num { font-size: 38px; }
+  .tally-label { font-size: 15px; }
+}
+@media (min-width: 801px) and (min-height: 1000px) {
+  .reward-tally { padding: 18px 22px; }
+  .reward-tally h3 { font-size: 22px; }
+  .tally-card { padding: 14px 20px; }
+  .tally-card .tile-icon { width: 46px; height: 46px; }
+  .tally-num { font-size: 46px; }
+  .tally-label { font-size: 16px; }
+  .tally-note { font-size: 15px; }
+}
+
+@media (min-width: 801px) and (max-height: 780px) {
+  .reward-tally { padding: 6px 12px; gap: 4px; }
+  .reward-tally h3 { font-size: 15px; }
+  .tally-card { padding: 4px 10px; }
+  .tally-card .tile-icon { width: 26px; height: 26px; }
+  .tally-num { font-size: 26px; }
+  .tally-bar { height: 8px; margin-top: 2px; }
+  .tally-note { font-size: 13px; }
+}
+.key-conversion-notice { position: absolute; z-index: 4; inset: 0; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 14px; color: #682f2a; background: #ffe7e3; pointer-events: none; animation: key-notice-in 240ms cubic-bezier(.16, 1, .3, 1) both; }
+.key-conversion-notice app-qmah-icon { flex: none; width: 24px; height: 24px; }
+.key-conversion-notice span { font-size: 14px; line-height: 1.4; }
+.key-conversion-notice strong { display: block; white-space: nowrap; font-size: 30px; font-weight: 800; }
+@keyframes key-notice-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .key-conversion-notice { animation: none; } }
+
+// 小數點的鑰匙進度（例如 +3.75）不換行；旁邊的說明讓出空間
+.tally-num { white-space: nowrap; }
+.tally-num.is-decimal { font-size: clamp(28px, 3.2vw, 38px); }
+.tally-card:has(.tally-key-meta) .tally-key-meta { max-width: 12em; }
+.tally-warn { white-space: normal; }

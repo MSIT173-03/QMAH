@@ -5,107 +5,84 @@ button, select, textarea { font:inherit; }
 button { cursor:pointer; }
 button:disabled { cursor:not-allowed; opacity:.45; }
 button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:3px; }
-.game-stage:not(.is-focused) { height:calc(100dvh - 73px); min-height:520px; }
-.game-stage:not(.is-focused) .table-mat { width:min(100%,calc((100dvh - 93px) * 16 / 9),1920px); }
-.game-stage { display:grid; place-items:center; width:100%; height:100dvh; min-height:520px; background:var(--game-stage-ground); }
+.game-stage:not(.is-focused) { height:calc(100dvh - 73px); min-height:min(520px,calc(100dvh - 73px)); }
+.game-stage:not(.is-focused) .table-mat { width:min(calc(100% - 24px),calc((100dvh - 93px) * 16 / 9),1760px); }
+.game-stage { display:grid; place-items:center; width:100%; height:100dvh; min-height:min(520px,100dvh); background:var(--game-stage-ground); }
 // 木框：Kenney，UI Pack - Adventure，CC0，保留原始形狀並配合明暗主題換色
 // 來源：https://kenney.nl/assets/ui-pack-adventure
-.table-mat { --table-content:var(--game-table-ink); --table-muted:var(--game-table-muted); --table-ground:var(--game-table-ground); position:relative; isolation:isolate; container:game-table / size; display:grid; grid-template-columns:180px repeat(3,minmax(0,1fr)) 180px; grid-template-rows:64px auto minmax(0,1fr) auto 88px; row-gap:clamp(8px,1vw,16px); width:min(100%,177.7778dvh,1920px); aspect-ratio:16/9; min-height:0; overflow:hidden; border:var(--game-frame-width, clamp(28px,3vw,48px)) solid transparent; border-image:var(--game-frame-image) 8 / 1 / 0 stretch; border-radius:20px; color:var(--table-content); background:linear-gradient(var(--table-ground),var(--table-ground)) padding-box; box-shadow:0 12px 28px #51341c33; }
-// 外框與內緣各自九宮格延展，四角保留原比例，桌面不跟著素材一起拉伸
-.table-mat::before { position:absolute; z-index:-1; inset:0; content:''; border:4px solid transparent; border-image:var(--game-frame-rim-image) 8 / 1 / 0 stretch; box-shadow:inset 0 5px 14px #143a2966; pointer-events:none; }
-// SVG 菱格只疊在平面綠底上，避免布料紋理干擾卡牌與文字
-.table-mat::after { position:absolute; z-index:-2; inset:0; content:''; background:url('/assets/game/hero-diamonds.svg') center / 96px 128px repeat; opacity:.14; pointer-events:none; }
-.table-hud { grid-column:1/-1; grid-row:1; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:16px; padding:8px 24px; z-index:2; color:var(--table-content); }
-.hud-title { display:grid; gap:4px; }
-.hud-title strong { font:800 22px/1.2 var(--qmah-font-serif); }
-.hud-title span { font-size:14px; color:var(--table-muted); }
-.hud-turn { @include ui.ink-mat; display:grid; gap:4px; min-width:0; text-align:center; font-variant-numeric:tabular-nums; border:2px solid #6d5841; border-radius:12px; padding:4px 12px; box-shadow:inset 0 0 0 2px #c7b090, 0 4px 9px #14291c40; }
-.hud-turn span { font-size:14px; color:var(--stage-muted, #d3dbd6); }
-.hud-turn strong { font-size:16px; }
-.hud-menu { display:flex; justify-self:end; align-items:center; gap:8px; min-height:44px; padding:8px; border:0; background:transparent; color:var(--table-content); font-weight:700; }
-.hud-menu app-qmah-icon { width:20px; height:20px; }
+.table-mat { --table-content:var(--game-table-ink); --table-muted:var(--game-table-muted); --table-ground:var(--game-table-ground); --game-frame-width:clamp(14px,1.5vw,22px); position:relative; isolation:isolate; container:game-table / size; display:grid; grid-template-columns:180px repeat(3,minmax(0,1fr)) 180px; grid-template-rows:64px auto minmax(0,1fr) auto 88px; row-gap:clamp(8px,1vw,16px); width:min(100%,177.7778dvh,1760px); aspect-ratio:16/9; min-height:0; overflow:hidden; border:var(--game-frame-width) solid transparent; border-image:var(--game-frame-image) 8 / 1 / 0 stretch; border-radius:16px; color:var(--table-content); background:url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--table-ground); background-clip:padding-box; box-shadow:0 18px 36px #14291c40; }
+.table-mat, .game-stage.is-focused .table-mat { border-radius:0; background-clip:border-box; }
+.table-hud { grid-column:1/-1; grid-row:1; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:12px; padding:8px 20px 0; z-index:2; color:var(--table-content); }
+.hud-left, .hud-right, .hud-test, .hud-env { display:flex; align-items:center; gap:10px; }
+.hud-right { justify-self:end; }
+// 藍＝可逆開關（選單、聲音、專注、暫停中）；石色＝一般動作（代號、跳過、重來）；墨綠牌＝目前階段
+.hud-btn { gap:8px; padding:4px 14px; font-size:16px; white-space:nowrap; }
+.hud-btn svg { flex:none; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.hud-btn app-qmah-icon { width:22px; height:22px; }
+.hud-code, .hud-pause, .hud-skip, .hud-restart { --game-button-image:var(--game-secondary-image); --game-button-ink:var(--game-secondary-ink); }
+.hud-pause[aria-pressed='true'] { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; }
+.hud-icon { width:44px; padding:4px; }
+.hud-code-text { display:inline-flex; align-items:baseline; gap:6px; }
+.hud-code-text small { font-size:14px; font-weight:700; opacity:.8; }
+.hud-code-text b { min-width:3.2em; font:800 16px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:.08em; font-variant-numeric:tabular-nums; }
+.hud-turn, .hud-spectator { @include ui.ink-mat; }
+.hud-turn { display:flex; align-items:center; justify-content:center; gap:12px; min-width:0; min-height:44px; padding:6px 18px; border:2px solid #2c3a30; border-radius:12px; box-shadow:inset 0 0 0 2px #e3d2a8, 0 4px 9px #14291c40; font-variant-numeric:tabular-nums; text-align:center; }
+.hud-turn span { font-size:15px; color:var(--stage-muted); white-space:nowrap; }
+.hud-turn i { flex:none; width:2px; height:18px; background:#c9b98a; }
+.hud-turn strong { font-size:16px; white-space:nowrap; }
+@container game-table (max-width:1500px) { .hud-test .hud-label { display:none; } .hud-test .hud-btn { width:44px; padding:4px; } }
+.hud-test .hud-speed { gap:4px; } .hud-speed-value { font-variant-numeric:tabular-nums; min-width:1.6em; text-align:left; }
 .table-seats { display:contents; }
 // 席位參與牌桌格線，長名稱限制兩行，點選席位可查看完整名稱。
-.table-seat { position:relative; z-index:2; display:grid; grid-template-columns:42px minmax(0,1fr); grid-row:3; justify-self:center; align-self:center; align-items:center; gap:4px 12px; width:160px; min-height:72px; padding:8px 12px; border:1px solid color-mix(in srgb,var(--seat-color) 42%,#fff8e8); border-radius:12px; color:#293e36; background:color-mix(in srgb,var(--seat-color) 18%,#fff8e8); box-shadow:0 4px 10px #0002; text-align:start; }
+.table-seat { position:relative; z-index:2; display:grid; grid-template-columns:42px minmax(0,1fr); grid-row:3; justify-self:center; align-self:center; align-items:center; gap:4px 12px; width:184px; min-height:72px; padding:8px 12px; border:1px solid color-mix(in srgb,var(--seat-color) 42%,#fff8e8); border-radius:12px; color:#293e36; background:color-mix(in srgb,var(--seat-color) 18%,#fff8e8); box-shadow:0 4px 10px #0002; text-align:start; }
 .table-seat[data-seat-position] { grid-column:1/-1; justify-self:start; margin-inline-start:var(--seat-x,50%); transform:translateX(-50%); }
 .table-seat[data-seat-position^='top-'] { grid-row:2; }
 .table-seat[data-seat-position^='bottom-'] { grid-row:4; }
-.table-seat>span:last-child { display:grid; gap:3px; }
-.table-seat strong { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; min-width:0; font-size:14px; line-height:1.4; white-space:normal; overflow-wrap:anywhere; text-wrap:balance; }
-.table-seat small { font-size:14px; color:#435b4f; }
+.table-seat>span:last-child { display:grid; grid-row:1 / span 2; align-self:center; gap:3px; }
+.table-seat strong { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; min-width:0; font-size:14px; line-height:1.4; white-space:normal; overflow-wrap:anywhere; text-wrap-style: balance; }
+.table-seat small { font-size:14px; color:#435b4f; white-space:nowrap; }
 .table-seat.is-self, .table-seat[data-seat-position='self'] { grid-row:4; width:min(100%,200px); outline:2px solid #527064; outline-offset:3px; }
-.seat-back, .hand-card { position:relative; isolation:isolate; flex-shrink:0; border:2px solid #e9e5d9; border-radius:6px; background:var(--seat-color); box-shadow:0 4px 8px #0003; }
-.seat-back { grid-row:span 2; width:42px; height:58px; transform:rotate(-4deg); }
+.seat-back, .card-chip { position:relative; isolation:isolate; flex-shrink:0; border:2px solid #e9e5d9; border-radius:6px; background:var(--seat-color); box-shadow:0 4px 8px #0003; }
+.seat-back { grid-row:1 / span 2; align-self:center; width:42px; height:58px; transform:rotate(-4deg); }
 // Kenney Board Game Pack，CC0，藍色牌背依席位顏色混色顯示
 // 來源：https://kenney.nl/assets/boardgame-pack
-.seat-back::before, .hand-card::before { position:absolute; z-index:-1; inset:0; content:''; background:url('/assets/game/kenney-card-back-blue.png') center / contain no-repeat; mix-blend-mode:luminosity; }
+.seat-back::before, .card-chip::before { position:absolute; z-index:-1; inset:0; content:''; background:url('/assets/game/kenney-card-back-blue.png') center / contain no-repeat; mix-blend-mode:luminosity; }
 .empty-seat { display:none; }
-.table-playfield { container:answer-playfield / size; grid-row:3; grid-column:2/5; display:grid; grid-template-columns:minmax(150px,24%) minmax(0,1fr); align-items:center; align-content:safe center; gap:32px; min-height:0; padding:8px 24px; overflow:auto; overscroll-behavior:contain; scrollbar-color:#cab48770 transparent; scrollbar-width:thin; }
+.table-playfield { container:answer-playfield / size; grid-row:3; grid-column:2/5; display:grid; grid-template-columns:minmax(240px,40%) minmax(0,1fr); grid-template-rows:minmax(0,1fr); align-items:center; align-content:safe center; gap:32px; min-height:0; padding:8px 24px; overflow:auto; overscroll-behavior:contain; scrollbar-color:#cab48770 transparent; scrollbar-width:thin; }
 .table-playfield.is-waiting { display:flex; justify-content:center; }
-.artifact-on-table { display:grid; justify-items:center; gap:10px; min-width:0; padding:12px; border:0; background:var(--game-card-ground); border-radius:6px; color:var(--game-card-ink); transform:rotate(-5deg); box-shadow:0 8px 18px #0004; }
-.artifact-on-table img { display:block; width:100%; height:clamp(130px,20dvh,240px); object-fit:contain; }
-.artifact-on-table strong { font:600 15px/1.5 var(--qmah-font-serif); text-wrap:balance; }
-.artifact-on-table span { font-size:14px; color:var(--game-card-muted); }
+.artifact-on-table { position:relative; isolation:isolate; display:grid; grid-template-rows:minmax(0,1fr) auto; gap:10px; align-self:stretch; width:100%; height:100%; min-height:0; min-width:0; padding:14px 14px 12px; overflow:hidden; border:2px solid #2c3a30; border-radius:16px; color:#273e33; background:linear-gradient(#fffaf0,#f1e9d6); box-shadow:inset 0 0 0 2px #e3d2a8, 0 10px 22px #14291c55; cursor:zoom-in; }
+.stage-spot { display:none; }
+.stage-frame { position:relative; display:grid; place-items:center; min-height:0; border-radius:10px; background:radial-gradient(70% 70% at 50% 45%, #ffffff, #e6e0cf); box-shadow:inset 0 0 0 1px #d6caa6, inset 0 4px 10px #3325141a; }
+.stage-frame img { display:block; width:100%; height:100%; min-height:0; object-fit:contain; filter:drop-shadow(0 10px 12px #3325142e); }
+.stage-lens { position:absolute; z-index:2; width:168px; height:168px; margin:-84px 0 0 -84px; border:3px solid #e3d2a8; border-radius:50%; background-repeat:no-repeat; box-shadow:0 0 0 2px #0f1b14, 0 12px 24px #000a; pointer-events:none; }
+.stage-hint { position:absolute; inset:8px 8px auto auto; display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border:2px solid #2c3a30; border-radius:99px; color:#273e33; background:#fffaf0; font-size:14px; font-weight:700; opacity:0; transition:opacity 180ms; }
+.stage-hint app-qmah-icon { width:16px; height:16px; }
+.artifact-on-table:hover .stage-hint, .artifact-on-table:focus-visible .stage-hint { opacity:1; }
+.stage-plate { display:grid; gap:2px; justify-items:center; padding:8px 12px 2px; border-top:2px dashed #d6caa6; text-align:center; }
+.stage-plate small { font-size:14px; letter-spacing:.12em; color:#6a5a3a; }
+.stage-plate strong { font:700 clamp(17px,1.5vw,22px)/1.4 var(--qmah-font-serif); text-wrap-style: balance; }
 .artifact-zoom { display:none; }
-.central-board { --table-answer-height:clamp(180px,calc(100cqh - 88px),280px); min-width:0; }
-.waiting-table { grid-column:1/-1; text-align:center; color:var(--table-content); }
-.waiting-table h1 { margin:0 0 14px; font:800 clamp(28px,4vw,46px)/1.3 var(--qmah-font-serif); paint-order:stroke fill; -webkit-text-stroke:2px #205634; text-shadow:0 4px 6px #17352040; }
-.waiting-table p { margin:8px 0; }
-.table-hand { grid-row:5; grid-column:1/-1; position:relative; display:flex; align-items:center; justify-content:center; gap:28px; min-height:0; padding:8px 24px 12px; color:var(--table-content); }
+.central-board { align-self:center; --table-answer-height:clamp(180px,calc(100cqh - 88px),280px); min-width:0; }
+.table-hand { grid-row:5; grid-column:1/-1; display:flex; align-items:center; justify-content:center; gap:28px; min-height:0; padding:8px 24px 12px; color:var(--table-content); }
+@media(max-width:1000px) { .table-hand { position:relative; } }
 .hand-action { display:flex; align-items:center; gap:16px; min-width:0; }
 .hand-action p { max-width:45ch; margin:0; font-size:15px; line-height:1.6; color:var(--table-muted); }
 .vote-instruction span { display:block; }
-.hand-card { width:84px; min-height:104px; color:white; padding:10px 6px; font-weight:750; text-shadow:0 1px 3px #000; transform:rotate(-7deg) translateY(-12px); transition:transform 160ms ease; }
-.hand-card:hover:not(:disabled) { transform:rotate(0) translateY(-20px); }
-.hand-card-label { display:block; padding:6px 10px; border-radius:4px; color:#2d463d; background:#fff9edf2; font-size:14px; line-height:1.5; text-shadow:none; }
+.hand-card { @extend %ui-btn; --game-button-image:var(--game-secondary-image); --game-button-ink:var(--game-secondary-ink); gap:10px; padding:6px 16px; font-size:16px; white-space:nowrap; }
+.hand-card.is-primary { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; padding-inline:16px; }
+.hand-card .card-chip { width:22px; height:30px; transform:rotate(-6deg); }
+.hand-card svg { flex:none; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .table-notice { position:absolute; z-index:8; inset:76px 20px auto; padding:12px 18px; color:var(--qmah-ink); background:var(--qmah-surface); border:2px solid var(--qmah-cinnabar); border-radius:8px; }
 .table-loading { margin:auto; }
-.table-settlement { grid-column:1/-1; max-width:1000px; width:100%; height:100%; min-height:0; margin-inline:auto; }
+.table-settlement { grid-column:1/-1; max-width:1280px; width:100%; height:100%; min-height:0; margin-inline:auto; }
 .table-mat.is-completed { grid-template-rows:auto minmax(0,1fr) auto; }
 .is-completed .table-seats { display:none; }
 .is-completed .table-playfield { grid-row:2; grid-column:1/-1; display:block; align-content:start; padding:12px; overflow:hidden; }
 .is-completed .table-hand { grid-row:3; padding-block:4px; }
-.settings-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
-.table-dialog { position:fixed; inset:0; width:min(560px,calc(100vw - 32px)); height:fit-content; max-height:calc(100dvh - 40px); margin:auto; padding:24px; overflow:auto; box-shadow:0 16px 40px #0004; }
-.table-dialog::backdrop { background:#0a151bb3; }
-.table-dialog header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-block-end:20px; }
-.table-dialog h2 { margin:0; font:650 24px/1.3 var(--qmah-font-serif); }
-.table-dialog p { margin:0 0 10px; }
-.table-dialog dl { display:grid; grid-template-columns:max-content 1fr; gap:10px 28px; margin:0 0 16px; padding:14px 18px; border:2px dashed #c7b090; border-radius:12px; }
-.table-dialog dt { margin:0; }
-.table-dialog dd { margin:0; font-weight:700; }
-.artifact-dialog { width:min(960px,calc(100vw - 32px)); }
-.artifact-dialog img { display:block; max-width:100%; max-height:72dvh; margin:auto; object-fit:contain; }
-.answer-dialog form { display:grid; gap:12px; }
-.answer-dialog form p { margin:0 0 8px; }
-.answer-dialog label { font-weight:700; }
-.answer-dialog textarea { width:100%; border:2px solid #{ui.$tag-line}; border-radius:10px; padding:12px; color:var(--qmah-ink); background:#eee9dc; box-shadow:inset 0 2px 4px #382c2420; }
-.answer-types { min-width:0; margin:0; padding:0; border:0; }
-.answer-types legend { margin-bottom:8px; font-weight:700; }
-.answer-types > div { display:flex; flex-wrap:wrap; gap:8px; }
-.answer-types button { flex:1 0 120px; }
-.answer-types button.is-selected { --game-button-image:var(--game-button-blue-image); --game-button-ink:#fff8e9; }
-.answer-dialog textarea { resize:vertical; min-height:160px; line-height:1.8; }
-.answer-foot { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px 12px; }
-.answer-foot span { font-size:14px; color:var(--qmah-muted); }
-.color-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
-.color-grid button { display:grid; place-items:center; gap:4px; min-height:120px; min-width:0; font-size:14px; }
-.color-preview { width:36px; height:50px; }
-.answer-error { color:var(--qmah-danger); }
-.color-grid button small { font-size:14px; font-weight:500; }
-.color-grid button[aria-pressed='true'] { outline:3px solid var(--qmah-ink); outline-offset:3px; }
-[data-color='jade'] { --card-color:#376d62; } [data-color='blue'] { --card-color:#406591; } [data-color='vermilion'] { --card-color:#a43f34; } [data-color='gold'] { --card-color:#806020; } [data-color='violet'] { --card-color:#66528f; } [data-color='teal'] { --card-color:#216c69; } [data-color='rose'] { --card-color:#a04660; } [data-color='slate'] { --card-color:#506471; } [data-color='olive'] { --card-color:#56682f; } [data-color='copper'] { --card-color:#92552e; } [data-color='indigo'] { --card-color:#435293; } [data-color='sand'] { --card-color:#806139; }
-.leave-dialog-backdrop { position:absolute; z-index:50; inset:0; display:grid; place-items:center; padding:20px; background:#0a151bb3; }
-.leave-dialog { max-width:440px; padding:28px; border-radius:14px; color:var(--qmah-ink); background:var(--qmah-surface); }
-.leave-dialog button+button { margin-inline-start:12px; }
 
 @media(max-width:1000px) {
- .table-mat { --mobile-hand-height:84px; width:100%; height:100%; aspect-ratio:auto; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:minmax(64px,auto) repeat(var(--mobile-seat-rows,2),max-content) minmax(0,1fr) max-content minmax(var(--mobile-hand-height),auto); row-gap:8px; column-gap:8px; padding-inline:12px; border-width:18px; border-radius:12px; }
+ .table-mat { --mobile-hand-height:84px; width:100%; height:100%; aspect-ratio:auto; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:minmax(64px,auto) repeat(var(--mobile-seat-rows,2),max-content) minmax(0,1fr) max-content minmax(var(--mobile-hand-height),auto); row-gap:8px; column-gap:8px; padding-inline:12px; }
  .table-mat.is-waiting { --mobile-hand-height:112px; }
- .table-hud { grid-template-columns:minmax(0,1fr) auto 56px; padding:8px 12px; gap:8px; }
- .hud-title strong { font-size:18px; } .hud-title span { font-size:14px; }
- .hud-turn strong { font-size:14px; } .hud-turn span { font-size:14px; }
- .hud-menu { flex-direction:column; gap:2px; padding-inline:0; font-size:14px; white-space:nowrap; }
  .table-seat { grid-template-columns:1fr; gap:4px; width:144px; min-width:0; min-height:64px; padding:8px; }
  // 手機將其他玩家集中在上方，盤面依席位列剩餘的實際高度分配。
  .table-seat[data-seat-position] { margin-inline-start:0; transform:none; }
@@ -114,43 +91,35 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
  .seat-back { grid-row:1; width:20px; height:28px; justify-self:center; }
  .table-seat>span:last-child { grid-row:2; }
  .table-seat.is-self .seat-back { grid-row:span 2; width:24px; height:34px; }
- .table-seat.is-self>span:last-child { grid-row:auto; }
+ .table-seat.is-self>span:last-child { grid-row:auto; align-self:center; }
  .table-seat.is-self, .table-seat[data-seat-position='self'] { grid-row:calc(var(--mobile-seat-rows,2) + 3); grid-column:1/-1; justify-self:center; grid-template-columns:24px minmax(0,1fr); gap:8px; width:min(100%,208px); }
- .table-playfield { position:relative; grid-row:calc(var(--mobile-seat-rows,2) + 2); grid-column:1/-1; grid-template-columns:1fr; padding:8px 0; gap:8px; }
+ .table-playfield { position:relative; grid-row:calc(var(--mobile-seat-rows,2) + 2); grid-column:1/-1; grid-template-columns:1fr; padding:8px 0; }
  // 文物縮圖與分類頁籤共用一列，回答卡保留完整寬度，原圖仍可點開
- .artifact-on-table { position:absolute; z-index:3; inset:8px auto auto 0; display:grid; grid-template-columns:1fr; width:64px; height:64px; padding:4px; gap:0; transform:rotate(-2deg); margin:0; }
- .artifact-on-table img { height:56px; width:56px; }
- .artifact-on-table strong, .artifact-on-table span { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); }
- .artifact-zoom { position:absolute; inset:auto 0 0 auto; display:block; width:20px; height:20px; padding:2px; border-radius:4px; background:#fff1d2; color:#293e36; }
- .central-board { --answer-tabs-start:72px; --table-answer-height:clamp(150px,calc(100cqh - 160px),280px); width:100%; }
+ .table-playfield { display:flex; flex-direction:column; gap:10px; overflow:auto; } .table-playfield > * { flex:none; } .central-board { align-self:stretch; }
+ // 手機：文物是桌面最上方的一張展示卡（寬幅、約四分之一個螢幕高），不再縮成角落的小圖
+ .artifact-on-table { position:relative; inset:auto; z-index:auto; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; width:100%; height:clamp(150px,26dvh,230px); padding:10px 10px 8px; gap:6px; margin:0; transform:none; align-self:auto; border-radius:14px; }
+ .stage-hint { display:none; } .stage-plate { padding:4px 8px 0; border-top:0; } .stage-plate small { display:none; } .stage-plate strong { font-size:16px; line-height:1.35; }
+ .artifact-zoom { position:absolute; inset:10px 10px auto auto; display:block; width:32px; height:32px; padding:6px; border:2px solid #2c3a30; border-radius:99px; color:#273e33; background:#fffaf0; }
+ .central-board { --answer-tabs-start:0px; --table-answer-height:clamp(150px,calc(100cqh - 250px),280px); width:100%; }
  .table-hand { grid-row:calc(var(--mobile-seat-rows,2) + 4); display:grid; grid-template-columns:minmax(0,1fr) 64px; padding:8px 0; gap:12px; }
- .hand-action { gap:12px; } .hand-action p { font-size:14px; max-width:28ch; text-wrap:pretty; }
- .hand-action.is-waiting { display:grid; grid-template-columns:62px minmax(0,1fr); gap:8px 12px; }
- .hand-action.is-waiting .hand-card { grid-row:span 2; align-self:center; }
- .hand-card { width:62px; min-height:80px; font-size:14px; transform:rotate(-4deg); } .hand-card:hover:not(:disabled) { transform:rotate(0); } .primary-action { padding:8px 10px; font-size:14px; }
- .table-dialog { padding:18px; } .color-grid { grid-template-columns:repeat(4,1fr); }
+ .hand-action { gap:12px; } .hand-action p { font-size:14px; max-width:28ch; text-wrap-style: balance; }
+ .hand-action.is-waiting { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; width:100%; } .hand-action.is-waiting .hand-card { grid-column:1/-1; } .primary-action { padding:8px 10px; font-size:15px; }
 }
 // 依牌墊實際高度縮排，中等寬度的直式螢幕也能保留席位與盤面的間距
 @media (min-width:1001px) {
  @container game-table (max-height:660px) {
  .table-seat { width:140px; min-height:54px; grid-template-columns:28px minmax(0,1fr); gap:4px 8px; padding:4px 8px; }
  .seat-back { width:27px; height:38px; }
- .table-playfield { grid-template-columns:minmax(112px,24%) minmax(0,1fr); padding-inline:20px; gap:20px; }
- .artifact-on-table img { height:120px; }
- .hand-card { width:54px; min-height:70px; font-size:14px; }
+ .table-playfield { grid-template-columns:minmax(200px,38%) minmax(0,1fr); padding-inline:20px; gap:20px; }
  }
 }
-@media(prefers-reduced-motion:reduce) { .hand-card { transition:none; } }
 
-.primary-action { @include ui.button; }
-.table-dialog button, .leave-dialog button { @include ui.button(true); }
-.table-dialog button[type='submit'] { --game-button-image:var(--game-primary-image); --game-button-ink:var(--game-primary-ink); }
+
+.primary-action, .hud-btn { @extend %ui-btn; }
 // 顏色選擇保留玩家實際牌色，避免共用按鈕素材遮住色票
-.table-dialog, .leave-dialog { @include ui.paper-panel; --qmah-surface-elevated:#fffaf0; --qmah-border:var(--game-card-line); }
-.table-dialog h2 { @include ui.title; }
 // 極窄且矮的畫面允許牌桌自然長高，完整名稱不壓縮席位或遮住操作
 @media (max-width:360px) {
-  .artifact-on-table { position:relative; inset:auto; margin-inline:auto; }
+  .artifact-on-table { margin-inline:auto; }
   .central-board { --answer-tabs-start:0px; }
 }
 @media (max-width: 360px) and (max-height: 640px) {
@@ -159,13 +128,69 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 }
 
 // 遊戲正文共用字級與中文斷行，短標籤保留原有盤面尺寸。
-.table-dialog p, .leave-dialog p { @include ui.prose; }
-.table-dialog header h2 { min-width: 0; }
-.table-dialog header > button { flex: none; }
 
 
 
-.leave-dialog button[data-button-tone='danger'] { --game-button-image:url('/assets/game/kenney-confirm-button.svg'); --game-button-ink:#fff8e9; }
 
 
-[data-button-tone='neutral'] { --game-button-image: var(--game-secondary-image); --game-button-ink: var(--game-secondary-ink); }
+
+
+// ── 邀請卡（等待中的牌桌）：代號、QR、複製放在同一張卡 ──
+@container game-table (max-height:660px) { .invite-note, .waiting-hint { display:none; } .invite-code code { font-size:26px; } .waiting-table { gap:6px; } }
+
+// ── 對話框共用：關閉鈕、藍色按鈕、圖示尺寸 ──
+
+// ── 牌桌選單 ──
+
+// ── 牌背選擇 ──
+
+// ── 離開確認 ──
+
+@media (max-width:1000px) {
+  .table-mat { border-width:14px; }
+  .table-hud { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:6px 0 0; }
+  .hud-left { order:1; }
+  .hud-right { display:contents; }
+  .hud-env { order:2; margin-inline-start:auto; }
+  .hud-turn { order:3; flex:1 1 calc(100% - 150px); padding:4px 10px; }
+  .hud-turn { flex-direction:column; gap:0; line-height:1.3; }
+  .hud-turn i { display:none; }
+  .hud-turn span, .hud-turn strong { font-size:14px; }
+  .hud-label { display:none; }
+  .hud-menu, .hud-test .hud-btn { width:44px; padding:4px; }
+}
+.hud-spectator { display:inline-flex; align-items:center; min-height:44px; padding:0 14px; border:2px solid #2c3a30; border-radius:12px; box-shadow:inset 0 0 0 2px #e3d2a8; font-weight:800; font-size:15px; white-space:nowrap; }
+.hand-action .spectator-note { display:inline-flex; align-items:center; gap:10px; max-width:none; padding:8px 18px; border:2px solid #2c3a30; border-radius:12px; color:#273e33; background:linear-gradient(#fffaf0,#f3ecda); box-shadow:inset 0 0 0 2px #e3d2a8; font-weight:700; font-size:15px; text-wrap-style:balance; }
+.spectator-note svg { flex:none; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+@media (max-width:1000px) { .hud-spectator { display:none; } }
+
+// 小螢幕（360 寬）：頂端列壓成兩排，展品與牌堆要完整放進桌面
+@media (max-width:1000px) {
+  .artifact-on-table { height:clamp(120px,21dvh,200px); }
+  .central-board { --table-answer-height:clamp(130px,calc(100cqh - 220px),280px); }
+}
+@media (max-width:420px) {
+  .hud-code-text small { display:none; }
+  .hud-code { padding-inline:10px; }
+}
+@media (max-width:420px) { .hud-test { gap:6px; } .hud-test .hud-btn { width:40px; min-height:40px; } }
+@media (max-width:1000px) { .table-playfield.is-waiting { justify-content:flex-start; } }
+
+// 手機：玩家席位、演練工具都可以收起來
+.hud-seats, .hud-test-toggle { display:none; gap:6px; }
+@media (max-width:1000px) {
+  .hud-seats, .hud-test-toggle { display:inline-flex; padding:4px 12px; font-size:15px; }
+  .hud-test-toggle { order:4; flex:none; }
+  .hud-test { display:none; order:5; flex:1 1 100%; justify-content:flex-end; }
+  .hud-test.is-open { display:flex; }
+  .seats-collapsed .table-seat { display:none; }
+}
+@media (max-width:420px) { .hud-sound { display:none; } }
+@media (max-width:1000px) { .seats-collapsed .artifact-on-table { height:clamp(160px,34dvh,320px); } .seats-collapsed .central-board { --table-answer-height:clamp(150px,calc(100cqh - 340px),280px); } }
+@media (max-width:1000px) { .table-seat.is-self>span:last-child { grid-row:1 / span 2; } }
+.waiting-table { grid-column:1/-1; text-align:center; color:var(--table-content); }
+.waiting-table h1 { font:800 clamp(28px,4vw,46px)/1.3 var(--qmah-font-serif); paint-order:stroke fill; -webkit-text-stroke:2px #205634; text-shadow:0 4px 6px #17352040; }
+.waiting-table p { margin:8px 0; }
+.waiting-table { display:grid; justify-items:center; gap:10px; }
+.waiting-table h1 { margin:0; }
+.hud-test .hud-btn.hud-speed { width:auto; padding:4px 10px; }

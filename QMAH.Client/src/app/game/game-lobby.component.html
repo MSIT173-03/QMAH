@@ -1,21 +1,26 @@
 <div class="game-notebook" [class.is-focus-mode]="focusMode.active()" [class.is-rehearsal]="isRehearsal">
   <!-- ui-integration: 遊戲子導覽固定放在 Global App Shell 之下，讓所有遊戲頁共用同一條操作脈絡。 -->
   <app-game-navigation>
-    @if (!isDemo && !isRehearsal && !meApi.me()) { <a class="account-link" routerLink="/login" [queryParams]="{ returnUrl: '/game' }">登入</a> }
+    @if (!meApi.me()) { <a class="account-link" routerLink="/login" [queryParams]="{ returnUrl: '/game' }">登入</a> }
+    @if (meApi.me()) { <app-game-reward-meter [frozen]="isRehearsal" /> }
   </app-game-navigation>
 
   <!-- ui-integration: 介紹橫幅可由玩家收合，且狀態會留在本機，避免每次回到大廳都擋住找房間。 -->
   <div class="lobby-stage">
   <header class="lobby-heading" [class.is-rehearsal]="isRehearsal">
     <div>
-      <h1>{{ isDemo ? '房間展示' : isRehearsal ? '多人流程排練' : '房間大廳' }}</h1>
-      <p>{{ isDemo ? '以下為範例房間，可查看排列與詳情，不能加入，也不會建立遊戲紀錄。' : isRehearsal ? '選一桌直接進入排練，練習作答、投票與揭曉流程。' : '搜尋房號或篩選房間，加入鑑定，或建立新房間。' }}</p>
+      <h1>房間大廳</h1>
+      <p>{{ '搜尋房號或篩選房間，加入鑑定，或建立新房間。' }}</p>
     </div>
     <div class="lobby-heading__actions">
-      @if (!isDemo && !isRehearsal && meApi.me()) { <app-game-reward-meter /> }
-    @if (isDemo) {
-      <a class="hero-create" routerLink="/game" [queryParams]="{ status: roomStatus === 'WAITING' ? null : roomStatus, sort: roomSort === 'RECOMMENDED' ? null : roomSort, page: rooms && rooms.page > 1 ? rooms.page : null }">返回正式大廳</a>
-    } @else { <button type="button" class="hero-create" (click)="toggleCreateForm()">建立房間</button> }
+    @if (isAdmin()) {
+      <button type="button" class="hero-more" popovertarget="lobby-more" aria-label="更多功能" title="更多功能"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg></button>
+      <div id="lobby-more" class="more-sheet" popover="auto">
+        <h2>更多功能</h2>
+        <a routerLink="/game" [queryParams]="isRehearsal ? null : { test: '1' }"><strong>{{ isRehearsal ? '離開測試模式' : '測試模式' }}</strong><small>{{ isRehearsal ? '回到正式大廳' : '用測試房間練習流程，不寫入正式紀錄' }}</small></a>
+      </div>
+    }
+    <button type="button" class="hero-create" (click)="toggleCreateForm()">建立房間</button>
     </div>
   </header>
 
@@ -24,7 +29,6 @@
 
   <section class="notebook-spread" [attr.aria-busy]="loading">
     <app-game-lobby-room-board
-      [isDemo]="isDemo"
       [isRehearsal]="isRehearsal"
       [isAdmin]="isAdmin()"
       [roomStatus]="roomStatus"
@@ -38,6 +42,7 @@
       [selectedRoomId]="selectedRoomId"
       [(roomCodeSearch)]="roomCodeSearch"
       (search)="searchRoomCode()"
+      (quickJoin)="quickJoin()"
       (clearRoomCode)="clearRoomCode()"
       (statusSelected)="setRoomStatus($event)"
       (sortSelected)="setRoomSort($event)"
@@ -47,7 +52,6 @@
       (retry)="loadRooms(1, false)"
       (roomSelected)="selectRoom($event)" />
   </section>
-  <app-game-prompt-bar [hints]="[{ keys: ['Q', 'E'], pad: ['LB', 'RB'], label: '切換分頁' }]" />
   </div>
 
   <!-- 房間詳情保留在大廳流程控制；視窗本身由專屬元件管理版面。 -->
@@ -56,7 +60,6 @@
     <app-game-lobby-room-detail-dialog
       [room]="currentRoom()"
       [detailLoading]="detailLoading"
-      [isDemo]="isDemo"
       [isAdmin]="isAdmin()"
       [isRehearsal]="isRehearsal"
       [canJoin]="canJoinSelectedRoom()"
@@ -65,7 +68,8 @@
       (close)="clearSelection()"
       (copyCode)="copyRoomCode($event)"
       (showQr)="openRoomQr($event)"
-      (join)="joinRoom()" />
+      (join)="joinRoom()"
+      (spectate)="spectateRoom()" />
   }
 
   @if (qrRoom; as room) {

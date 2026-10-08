@@ -64,18 +64,14 @@ export const DISPLAY_MODES: DisplayMode[] = [
 
 /** 由網址 view 參數對應的頁面標題文字 */
 export const VIEW_HEADINGS: Record<string, string> = {
-  deal: '限時特賣',
   new: '新品上架',
-  exhibit: '特展聯名',
 };
 
 /**
- * 由網址 view 參數對應的預設排序方式（未列出者使用 ORDER_OPTIONS 第一項）；
- * 特展聯名原以評價最多排序，因商品清單 API 的 order 參數未提供依評價排序，改以熱銷排行代替。
+ * 由網址 view 參數對應的預設排序方式（未列出者使用 ORDER_OPTIONS 第一項）
  */
 export const VIEW_DEFAULT_ORDER: Record<string, ProductOrder> = {
   new: 3,
-  exhibit: 1,
 };
 
 /** 不限器類時的標示文字，同時用於分類清單第一項與未指定條件時的頁面標題 */

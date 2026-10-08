@@ -1,24 +1,38 @@
 <div class="game-guide" [class.is-focus-mode]="focusMode.active()">
   <!-- ui-integration: 說明頁沿用 Game 子導覽，讓玩家可直接回到多人鑑定或切換單人玩法。 -->
-  <app-game-navigation>
-  </app-game-navigation>
+  <app-game-navigation><app-game-reward-meter [frozen]="true" /></app-game-navigation>
 
   <div class="guide-stage">
-  <header class="guide-bar">
-    <div class="guide-bar__lead">
-      <h1 id="game-guide-title" class="guide-title-hidden">{{ activeGuide() === 'multiplayer' ? '一回合怎麼玩？' : '單人小遊戲怎麼玩？' }}</h1>
+  <header class="guide-head">
+    <div><h1 id="game-guide-title">{{ activeGuide() === 'multiplayer' ? '一回合怎麼玩？' : '單人玩法展示' }}</h1><p>{{ activeGuide() === 'multiplayer' ? '跟著三個步驟走一遍，再進房間。' : '選擇玩法，觀看示範或自己操作。' }}</p></div>
+    <!-- 兩種玩法的頂部排列一致：標題、第二列（單人：玩法；多人：三步驟）、切換與說明，同一列 -->
+    @if (activeGuide() === 'multiplayer') {
+      <ol class="guide-round-progress" aria-label="示範進度">
+        <li [class.is-active]="!demoSubmitted()" [class.is-done]="demoSubmitted()" [attr.aria-current]="!demoSubmitted() ? 'step' : null"><svg class="step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/></svg>觀察作答</li>
+        <li [class.is-active]="demoSubmitted() && !demoRevealed()" [class.is-done]="demoRevealed()" [attr.aria-current]="demoSubmitted() && !demoRevealed() ? 'step' : null"><svg class="step-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11 6 7h12l-2 4M12 3v4"/></svg>匿名投票</li>
+        <li [class.is-active]="demoRevealed()" [attr.aria-current]="demoRevealed() ? 'step' : null"><svg class="step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>揭曉結果</li>
+      </ol>
+    } @else {
+      <div class="mode-list" role="group" aria-label="選擇單人玩法示範">
+        @for (mode of trainingModes; track mode.code) {
+          <button type="button" [class.is-active]="activeTrainingDemo() === mode.code" [attr.aria-pressed]="activeTrainingDemo() === mode.code" (click)="selectTrainingDemo(mode.code)">
+            <span>{{ mode.label }}</span><small>{{ mode.hint }}</small>
+          </button>
+        }
+      </div>
+    }
+    <div class="guide-bar__actions page-head__actions">
       <nav class="guide-tabs" aria-label="選擇玩法說明">
         <button id="guide-tab-multiplayer" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'multiplayer'" [class.is-active]="activeGuide() === 'multiplayer'" (click)="selectGuide('multiplayer')">
           <span>多人鑑定</span><small>選房、作答、投票</small>
         </button>
         <button id="guide-tab-training" type="button" aria-controls="guide-panel" [attr.aria-pressed]="activeGuide() === 'training'" [class.is-active]="activeGuide() === 'training'" (click)="selectGuide('training')">
-          <span>單人小遊戲</span><small>挑玩法、完成短局</small>
+          <span>單人遊戲</span><small>挑玩法、完成短局</small>
         </button>
       </nav>
-    </div>
-    <div class="guide-bar__actions">
-      <button type="button" class="guide-rules-button" popovertarget="guide-rules">文字說明</button>
-      <a class="guide-panel-link" [routerLink]="activeGuide() === 'multiplayer' ? '/game' : '/game/training'">{{ activeGuide() === 'multiplayer' ? '開始多人鑑定' : '開始單人遊戲' }}</a>
+      <button type="button" class="guide-rules-button" popovertarget="guide-rules" aria-label="文字說明" title="文字說明">i</button>
+      @if (activeGuide() === 'multiplayer') { <a class="guide-panel-link guide-start-top" routerLink="/game">開始多人鑑定</a> }
+      @else { <a class="guide-panel-link guide-start-top" routerLink="/game/training" [queryParams]="{ game: activeTrainingDemo() }">開始正式挑戰</a> }
     </div>
   </header>
   <div id="guide-rules" class="guide-rules" popover="auto" aria-label="玩法文字說明">
@@ -41,17 +55,11 @@
         (restart)="restartDemo()" />
     } @else {
       <section class="training-demo" animate.enter="game-panel-enter">
-        <div class="mode-list" role="group" aria-label="選擇單人玩法示範">
-          @for (mode of trainingModes; track mode.code) {
-            <button type="button" [class.is-active]="activeTrainingDemo() === mode.code" [attr.aria-pressed]="activeTrainingDemo() === mode.code" (click)="selectTrainingDemo(mode.code)">
-              <span>{{ mode.label }}</span><small>{{ mode.hint }}</small>
-            </button>
-          }
-        </div>
-
         <div class="training-demo__stage" [attr.data-mode]="activeTrainingDemo()"><app-game-training-demo [modeCode]="activeTrainingDemo()" /></div>
       </section>
     }
   </section>
+  @if (activeGuide() === 'multiplayer') { <a class="guide-panel-link guide-start-bottom" routerLink="/game">開始多人鑑定</a> }
+  @else { <a class="guide-panel-link guide-start-bottom" routerLink="/game/training" [queryParams]="{ game: activeTrainingDemo() }">開始正式挑戰</a> }
   </div>
 </div>

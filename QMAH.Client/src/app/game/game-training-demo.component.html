@@ -14,7 +14,7 @@
             [locatorCropX]="locatorCropX"
             [locatorCropY]="locatorCropY"
             [locatorAnswers]="locatorAnswers" [locatorHintArtifactId]="locatorHintArtifactId"
-            [locatorExcludedIds]="locatorExcludedIds"
+            [locatorExcludedIds]="locatorExcludedIds" [locatorAssistedIds]="locatorAssistedIds"
             [memoryCards]="memoryCards"
             [memoryBusy]="memoryBusy"
             [memoryMatched]="memoryMatched"
@@ -34,12 +34,13 @@
             [progressPercent]="progressPercent"
             [elapsedLabel]="elapsedLabel"
             [progressText]="progressText"
+            [hard]="isHard" [helpAvailable]="helpAvailable"
             [canAskForHelp]="false"
             [canComplete]="canComplete"
             (pauseRequested)="openPause()"
             (helpRequested)="openPause(); helpRequested = true"
             (completeRequested)="completeAttempt()"
-            (detailLocated)="locateDetail($event)"
+            (detailLocated)="locateDetail($event)" (locatorFeedback)="locatorFeedbackChanged($event)"
             (boardFocusMove)="moveBoardFocus($event.event, $event.slot, $event.columns)"
             (imageError)="markImageFailed($event)"
             (memoryFlipped)="flipMemory($event)"
@@ -52,15 +53,47 @@
             (locatorAvailability)="imageUnavailable = !$event"
             (puzzleAvailability)="setPuzzleAvailability($event)"
             (scrollAvailability)="setScrollAvailability($event)">
-            <span play-status class="demo-status" role="status">{{ phase === 'complete' ? '試玩完成' : autoPlaying ? '自動示範中' : '自行操作' }} · 不計成績與獎勵</span>
+            <span play-status class="demo-status" role="status">{{ phase === 'complete' ? '展示完成' : autoPlaying ? (autoPlaySpeed === 2 ? '2 倍速自動示範中' : '自動示範中') : '可自行操作' }}</span>
             <div play-controls class="demo-controls">
-              @if (phase === 'playing') { <button type="button" [attr.aria-pressed]="autoPlaying" (click)="toggleAutoPlay()">{{ autoPlaying ? '自己操作' : '自動示範' }}</button> }
-              <button type="button" (click)="restartDemo()">重新試玩</button>
-              @if (phase === 'complete') { <a class="demo-start" routerLink="/game/training" [queryParams]="{ game: modeCode() }">正式挑戰</a> }
+              @if (phase === 'playing') {
+                <div class="demo-playback" role="group" aria-label="自動示範控制">
+                  <button type="button" class="demo-auto" [attr.aria-pressed]="autoPlaying" (click)="toggleAutoPlay()">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">@if (autoPlaying) { <path d="M8 5v14M16 5v14" /> } @else { <path d="M7 4.5v15l12-7.5z" /> }</svg>{{ autoPlaying ? '暫停示範' : '自動示範' }}
+                  </button>
+                  <select class="demo-speed" aria-label="示範播放速度" [value]="autoPlaySpeed" (change)="setAutoPlaySpeed($event)">
+                    <option value="1">1×</option><option value="2">2×</option>
+                  </select>
+                </div>
+              }
+              @if (modeCode() !== 'ARTIFACT_PUZZLE') {
+                <div class="demo-level" role="group" aria-label="展示難度">
+                  <button type="button" [attr.aria-pressed]="!demoHard" (click)="setDemoHard(false)">簡單</button>
+                  <button type="button" [attr.aria-pressed]="demoHard" (click)="setDemoHard(true)">困難</button>
+                </div>
+              }
+              @if (phase === 'playing' && helpAvailable) {
+                <button type="button" class="demo-help" (click)="openHelp()" [disabled]="!canAskForHelp"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>協助完成</button>
+              }
+              <button type="button" class="demo-restart" (click)="restartDemo()" aria-label="重新展示" title="重新展示"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" /></svg></button>
+
+
             </div>
           </app-game-training-play-sheet>
   </div>
 }
 <dialog #pauseDialog class="demo-pause" aria-labelledby="demo-pause-title" (close)="resumeFromPause()">
-  <h2 id="demo-pause-title">試玩已暫停</h2><p>目前進度已保留，繼續後可接著{{ autoPlaying ? '觀看示範' : '操作盤面' }}。</p><button type="button" autofocus (click)="closePause()">繼續試玩</button>
+  <h2 id="demo-pause-title">展示已暫停</h2><p>目前進度已保留，繼續後可接著{{ autoPlaying ? '觀看示範' : '操作盤面' }}。</p><button type="button" autofocus (click)="closePause()">繼續展示</button>
+</dialog>
+<dialog #doneDialog class="demo-pause demo-done" aria-labelledby="demo-done-title">
+  <h2 id="demo-done-title">展示完成</h2><p>這一局不計成績與獎勵。可以再看一次，或直接開始正式挑戰。</p>
+  <div class="demo-done__actions">
+    <a class="demo-done__formal" routerLink="/game/training" [queryParams]="{ game: modeCode() }">開始正式挑戰</a>
+    <button type="button" class="demo-done__again" autofocus (click)="restartDemo()">重新展示</button>
+  </div>
+</dialog>
+<dialog #helpDialog class="demo-pause demo-help-pop" aria-labelledby="demo-help-title">
+  <h2 id="demo-help-title">協助完成</h2>
+  <button type="button" class="demo-help__hint" [disabled]="!canRequestHint" (click)="useDemoHelp(false)"><strong>{{ modeCode() === 'MEMORY_MATCH' ? '配對提示' : modeCode() === 'DETAIL_LOCATOR' ? '位置提示' : '區域提示' }}</strong><small>展示不扣分，可以放心試</small></button>
+  <button type="button" class="demo-help__finish" data-button-tone="danger" (click)="useDemoHelp(true)"><strong>完成剩餘內容</strong><small>系統代為完成，展示直接結束</small></button>
+  <button type="button" class="demo-help__close" (click)="helpDialog.close()">先不用</button>
 </dialog>

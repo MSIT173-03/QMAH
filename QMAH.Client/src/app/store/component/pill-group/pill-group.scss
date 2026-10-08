@@ -19,9 +19,19 @@
   }
 }
 
+/* 圖標元件預設只有 1em 見方，但 SVG 本身是 18px，會溢出下方而偏離垂直置中；
+   讓圖標元件的外框跟著 SVG 的實際大小，按鈕的 align-items: center 才能把它置中 */
+.pill app-qmah-icon {
+  width: auto;
+  height: auto;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
+  /* 選項高度為文字行高的兩倍（覆蓋全站按鈕 44px 的觸控最小高度，那會讓選項約是文字的 2.4 倍）；
+     結帳頁的付款方式與點數折抵（--pay／--point）要與配送方式按鈕等高，在下方另外指定 44px */
+  min-height: 2lh;
   gap: 6px;
   /* 未選取時不顯示外框，滑鼠停留才以淡入淡出顯示，與分類篩選清單一致 */
   border: 1px solid transparent;

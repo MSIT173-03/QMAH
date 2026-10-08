@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, ViewChild, input, output } from '@angular/core';
+import { AfterViewInit, Component, computed, ElementRef, HostListener, ViewChild, input, output } from '@angular/core';
 import { QRCodeComponent } from 'angularx-qrcode';
 
 import { GameRoomListItem } from './game.models';
@@ -16,6 +16,8 @@ export class GameRoomQrDialogComponent implements AfterViewInit {
   readonly room = input.required<Pick<GameRoomListItem, 'id' | 'roomCode'>>();
   readonly close = output<void>();
   readonly copy = output<string>();
+  /** 掃描後會開啟大廳並自動找到這一桌，不用再手動輸入代號。 */
+  readonly joinUrl = computed(() => `${location.origin}/game?code=${encodeURIComponent(this.room().roomCode)}`);
 
   @ViewChild('dialog') private dialog?: ElementRef<HTMLElement>;
 

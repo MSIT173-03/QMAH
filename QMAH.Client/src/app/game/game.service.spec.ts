@@ -18,6 +18,19 @@ describe('GameService', () => {
     expect(service.validateCreateRoomRequest(service.roomDefaults())).toEqual([]);
   });
 
+  it('單人房關閉使用獨立端點，衝突時不改送離開請求', () => {
+    const http = TestBed.inject(HttpTestingController);
+    let status = 0;
+    service.closeSoloRoom('room-id').subscribe({ error: error => { status = error.status; } });
+    http.expectOne(request => request.url.endsWith('/account/antiforgery-token')).flush(null);
+    const close = http.expectOne(request => request.url.endsWith('/rooms/room-id/close-solo'));
+    expect(close.request.method).toBe('POST');
+    close.flush({ title: '房間已有玩家加入' }, { status: 409, statusText: 'Conflict' });
+    expect(status).toBe(409);
+    http.expectNone(request => request.url.endsWith('/leave'));
+    http.verify();
+  });
+
   it('requires two to five minutes for answering and voting', () => {
     const defaults = service.roomDefaults();
     expect(service.validateCreateRoomRequest({ ...defaults, answerSeconds: 119, votingSeconds: 119 })).toHaveLength(2);

@@ -11,14 +11,4 @@
       </div>
     }
   </div>
-
-  <!-- 補充條列：保養、退換、鑑定；這些是商品政策，不混入文物說明本文。 -->
-  <div class="detail-list">
-    @for (row of rows(); track row.label) {
-      <div class="detail-row">
-        <span class="spec-label spec-label--wide">{{ row.label }}</span>
-        <span class="spec-value">{{ row.text }}</span>
-      </div>
-    }
-  </div>
 </section>

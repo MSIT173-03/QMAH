@@ -1,3 +1,4 @@
+import { GameRewardMeterComponent } from './game-reward-meter.component';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -13,7 +14,7 @@ type TrainingDemoCode = 'DETAIL_LOCATOR' | 'MEMORY_MATCH' | 'ARTIFACT_PUZZLE' | 
 @Component({
   selector: 'app-game-guide',
   standalone: true,
-  imports: [RouterLink, GameHowToComponent, GameNavigationComponent, GameTrainingDemoComponent, GameGuideMultiplayerDemoComponent],
+  imports: [GameRewardMeterComponent, RouterLink, GameHowToComponent, GameNavigationComponent, GameTrainingDemoComponent, GameGuideMultiplayerDemoComponent],
   templateUrl: './game-guide.component.html',
   styleUrl: './game-guide.component.scss'
 })
@@ -32,16 +33,17 @@ export class GameGuideComponent {
   readonly demoResponse = signal('');
   readonly demoSubmitted = signal(false);
 
+  // 順序與單人遊戲的選擇玩法一致（後端依模式代碼排序）
   readonly trainingModes = [
-    { code: 'DETAIL_LOCATOR', label: '局部辨識', hint: '看細節，在四件原圖上定位' },
-    { code: 'MEMORY_MATCH', label: '翻牌配對', hint: '記住圖樣位置，找齊配對' },
     { code: 'ARTIFACT_PUZZLE', label: '館藏拼圖', hint: '拖曳碎片，拼回文物原圖' },
-    { code: 'STRIP_RESTORE', label: '長卷復位', hint: '三選一，把長卷一片片接起來' },
+    { code: 'DETAIL_LOCATOR', label: '細節追跡', hint: '看細節，在四件原圖上定位' },
+    { code: 'MEMORY_MATCH', label: '館藏翻牌', hint: '記住圖樣位置，找齊配對' },
+    { code: 'STRIP_RESTORE', label: '書畫拼貼', hint: '相鄰碎片交換，拼回原樣' },
   ] as const;
   readonly activeTrainingDemo = signal<TrainingDemoCode>(this.initialDemo());
   private initialDemo(): TrainingDemoCode {
     const code = this.route.snapshot.queryParamMap.get('game');
-    return this.trainingModes.find(mode => mode.code === code)?.code ?? 'DETAIL_LOCATOR';
+    return this.trainingModes.find(mode => mode.code === code)?.code ?? this.trainingModes[0].code;
   }
   selectGuide(variant: GameHowToVariant): void {
     this.activeGuide.set(variant);

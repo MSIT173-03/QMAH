@@ -28,7 +28,6 @@ namespace QMAH.Api.Controllers.V1;
 
 
 [Route("api/v1/account")]
-[EnableRateLimiting("auth")]
 public sealed class AccountController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
@@ -102,6 +101,9 @@ public sealed class AccountController(
     }
 
     [AllowAnonymous]
+    // 限流只套在會被猜密碼或灌請求的端點；me、capabilities、antiforgery-token 每次載入頁面都會呼叫，
+    // 不能讓同一個網路出口的多位玩家共用額度而被擋住。
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
     public async Task<ActionResult> Login(
         LoginRequest request,
@@ -534,6 +536,7 @@ public sealed class AccountController(
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     [HttpPost("register")]
     public async Task<ActionResult> Register(
         RegisterRequest request,
@@ -726,6 +729,7 @@ public sealed class AccountController(
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     [HttpPost("forgot-password")]
     public async Task<ActionResult> ForgotPassword(
         ForgotPasswordRequest request,
@@ -770,6 +774,7 @@ public sealed class AccountController(
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     [HttpPost("reset-password")]
     public async Task<ActionResult> ResetPassword(
         ResetPasswordRequest request,

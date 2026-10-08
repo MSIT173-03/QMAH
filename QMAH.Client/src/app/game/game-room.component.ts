@@ -10,7 +10,10 @@ import {
   Observable,
   Subscription,
   catchError,
+  debounceTime,
   exhaustMap,
+  filter,
+  merge,
   finalize,
   map,
   of,
@@ -34,6 +37,11 @@ import {
 import { GameRoomResultsComponent } from './game-room-results.component';
 import { GameAnswerTableComponent } from './game-answer-table.component';
 import { GameRoomChatComponent } from './game-room-chat.component';
+import { GameRoomLive } from './game-room-live.service';
+import { watchRoomRefresh } from './game-room-refresh';
+import { GameRoomQrDialogComponent } from './game-room-qr-dialog.component';
+import { GameRoomDialogsComponent } from './game-room-dialogs.component';
+import { GameRoomWaitingComponent } from './game-room-waiting.component';
 import { gamePlayerColor } from './game-player-colors';
 import { GameFocusMode } from '../core/services/game-focus-mode';
 import { QmahIconComponent } from '../shared/components/qmah-icon/qmah-icon';
@@ -61,18 +69,20 @@ interface TestScenario {
 @Component({
   selector: 'app-game-room',
   hostDirectives: [GameFontsDirective],
-  imports: [FormsModule, RouterLink, GameRoomResultsComponent, GameAnswerTableComponent, GameRoomChatComponent, QmahIconComponent, GameAudioToggleComponent],
+  imports: [FormsModule, RouterLink, GameRoomResultsComponent, GameAnswerTableComponent, GameRoomChatComponent, QmahIconComponent, GameRoomQrDialogComponent, GameRoomDialogsComponent, GameRoomWaitingComponent],
   templateUrl: './game-room.component.html',
   styleUrl: './game-room.component.scss'
 })
 export class GameRoomComponent implements OnInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
-  private readonly audio = (() => { const audio = inject(GameAudio); this.destroyRef.onDestroy(audio.attach()); this.destroyRef.onDestroy(audio.useScene('play')); return audio; })();
+  readonly audio = (() => { const audio = inject(GameAudio); this.destroyRef.onDestroy(audio.attach()); this.destroyRef.onDestroy(audio.useScene('play')); return audio; })();
   readonly game = inject(GameService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly gameFocus = inject(GameFocusMode);
+  private readonly live = inject(GameRoomLive);
+  private liveConnected = false;
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private previousFocusMode = false;
   private focusTouched = false;
@@ -129,7 +139,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   lobbyActionBusy = false;
   leaving = false;
   showLeaveConfirm = false;
-  @ViewChild('leaveDialog') private leaveDialog?: ElementRef<HTMLElement>;
+  @ViewChild(GameRoomDialogsComponent) private dialogs?: GameRoomDialogsComponent;
   private leaveDialogTrigger: HTMLElement | null = null;
   rewarding = false;
   reward: MainGameReward | null = null;
@@ -138,6 +148,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   testMode = false;
   testToolsOpen = false;
   testAutoPaused = false;
+  qrOpen = false;
+  /** 手機：玩家席位可以收起來，把空間留給文物與作答。 */
+  seatsOpen = true;
+  copiedCode = false;
   private lastRoundId = '';
   private submittedRoundId = '';
 
@@ -163,18 +177,24 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       this.initializeTestFlow();
       this.clockSubscription = timer(0, 1000).subscribe(() => {
         if (!this.testMode || !this.testAutoPaused) this.now = Date.now();
+        if (this.testSpeed > 1 && !this.testAutoPaused && this.testStage !== 'WAITING' && this.testStage !== 'COMPLETED') this.warpTestTime((this.testSpeed - 1) * 1000);
         this.advanceTestFlow();
+        if (this.round && this.round.status !== 'ANSWERING') this.closeRoomPanel('answer');
         this.changeDetector.markForCheck();
       });
       return;
     }
 
-    // 房間生命週期每兩秒更新；同步頻率一致可減少換階段後仍顯示舊畫面的時間。
-    this.pollSubscription = timer(0, 2000)
-      .pipe(exhaustMap(() => this.loadSnapshot()))
+    // 即時同步：伺服器推「這桌有變」→ 立刻重讀（連續變動只讀一次）。
+    // 保底輪詢：連線正常時 20 秒一次，斷線時退回每 2 秒，確保任何情況下畫面都會更新。
+    const changed$ = this.live.watch(this.roomId, connected => { this.liveConnected = connected; }).pipe(debounceTime(50));
+    const fallback$ = timer(0, 1000).pipe(filter(tick => tick % (this.liveConnected ? 20 : 2) === 0));
+    this.pollSubscription = watchRoomRefresh(merge(changed$, fallback$), () => this.loadSnapshot())
       .subscribe((snapshot) => {
         const playerChanged = this.currentPlayerId !== (snapshot.room.currentPlayerId ?? '');
-        this.currentPlayerId = snapshot.round?.currentPlayerId ?? snapshot.room.currentPlayerId ?? '';
+        // 觀戰者的回合識別是全零 Guid，視為沒有玩家身分。
+        const roundPlayerId = snapshot.round?.currentPlayerId;
+        this.currentPlayerId = roundPlayerId && !/^0{8}-(0{4}-){3}0{12}$/.test(roundPlayerId) ? roundPlayerId : snapshot.room.currentPlayerId ?? '';
         this.room = snapshot.room;
         this.history = snapshot.history;
         this.round = snapshot.round;
@@ -190,10 +210,13 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           this.artifactImageUnavailable = false;
           this.restoreVotedAnswers();
         }
+        // 回答視窗是跳出式對話框；階段已經離開作答（或這回合已經答過）就收起，不然會蓋住投票與揭曉畫面。
+        if (!this.round || this.round.status !== 'ANSWERING' || this.hasSubmittedAnswer()) this.closeRoomPanel('answer');
         this.changeDetector.markForCheck();
       });
     this.heartbeatSubscription = timer(15000, 15000)
-      .pipe(exhaustMap(() => this.currentPlayerId
+      // 房間結束或取消後伺服器不再接受心跳（404），不要每 15 秒對已結束的房間重複打 API 在主控台留紅字。
+      .pipe(exhaustMap(() => this.currentPlayerId && this.room?.status !== 'COMPLETED' && this.room?.status !== 'CANCELLED'
         ? this.game.heartbeat(this.roomId).pipe(catchError(() => EMPTY))
         : EMPTY))
       .subscribe();
@@ -223,12 +246,43 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.host.nativeElement.querySelector<HTMLDialogElement>(`dialog[data-panel="${panel}"]`)?.close();
   }
 
+  /** 複製房間代號；HUD 上的代號鈕短暫顯示「已複製」。 */
+  copyRoomCode(code: string): void {
+    void navigator.clipboard?.writeText(code).then(() => {
+      this.copiedCode = true; this.changeDetector.markForCheck();
+      setTimeout(() => { this.copiedCode = false; this.changeDetector.markForCheck(); }, 1600);
+    }).catch(() => undefined);
+  }
+
+  /** 展品舞台的放大鏡：滑鼠滑過圖片時，在游標處顯示 2.6 倍的局部。觸控不啟用，點擊直接看大圖。 */
+  lens: { x: number; y: number; bx: number; by: number; bw: number } | null = null;
+  private readonly lensSize = 168;
+  private readonly lensZoom = 2.6;
+
+  lensMove(event: PointerEvent): void {
+    if (event.pointerType !== 'mouse') return;
+    const frame = (event.currentTarget as HTMLElement).querySelector<HTMLElement>('.stage-frame');
+    const img = frame?.querySelector('img');
+    if (!frame || !img || !img.naturalWidth) { this.lens = null; return; }
+    const f = frame.getBoundingClientRect(), i = img.getBoundingClientRect();
+    // 圖片以 contain 顯示：換算成實際畫出來的矩形，放大鏡才不會對到留白。
+    const ratio = img.naturalWidth / img.naturalHeight;
+    let w = i.width, h = i.height;
+    if (w / h > ratio) w = h * ratio; else h = w / ratio;
+    const px = event.clientX - (i.left + (i.width - w) / 2), py = event.clientY - (i.top + (i.height - h) / 2);
+    if (px < 0 || py < 0 || px > w || py > h) { this.lens = null; return; }
+    this.lens = { x: event.clientX - f.left, y: event.clientY - f.top, bx: this.lensSize / 2 - px * this.lensZoom, by: this.lensSize / 2 - py * this.lensZoom, bw: w * this.lensZoom };
+  }
+
   inspectSeat(id: string): void {
     this.selectedSeatId = id;
     this.openRoomPanel('seat');
   }
 
   selectedSeat() { return this.room?.players.find(player => player.id === this.selectedSeatId); }
+
+  /** 沒有席位卻看得到牌桌：滿座、已開始或已結束的公開房間，唯讀觀戰。 */
+  get isSpectator(): boolean { return !this.testMode && !!this.room && !this.currentPlayerId; }
 
   isRoomFocused(): boolean { return this.gameFocus.active(); }
 
@@ -368,6 +422,26 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.changeDetector.markForCheck();
   }
 
+  /** 測試模式播放速度：1×→2×→4×→1×。 */
+  testSpeed = 1;
+
+  cycleTestSpeed(): void {
+    if (!this.testMode || this.testStage === 'WAITING' || this.testStage === 'COMPLETED') return;
+    this.testSpeed = this.testSpeed === 1 ? 2 : this.testSpeed === 2 ? 4 : 1;
+    this.actionMessage = this.testSpeed === 1 ? '已回到正常速度。' : `已加速到 ${this.testSpeed} 倍，模擬玩家與倒數都會變快。`;
+    this.changeDetector.markForCheck();
+  }
+
+  /** 加速的做法：每秒把「之後才會發生的事」（階段結束、模擬玩家作答、截止時間）往前拉，其餘流程不用改。 */
+  private warpTestTime(ms: number): void {
+    this.testStageEndsAt -= ms;
+    for (const plan of [...this.testBotPlans, ...this.testBotVotePlans]) if (!plan.submitted) plan.readyAt -= ms;
+    if (!this.round) return;
+    const earlier = (iso: string) => new Date(Date.parse(iso) - ms).toISOString();
+    if (this.round.status === 'ANSWERING') this.round = { ...this.round, answerDeadlineAt: earlier(this.round.answerDeadlineAt), votingDeadlineAt: earlier(this.round.votingDeadlineAt) };
+    else if (this.round.status === 'VOTING') this.round = { ...this.round, votingDeadlineAt: earlier(this.round.votingDeadlineAt) };
+  }
+
   toggleTestAuto(): void {
     if (!this.testMode || this.testStage === 'COMPLETED') return;
     if (!this.testAutoPaused) {
@@ -488,7 +562,31 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (!this.room || this.leaving) return;
     this.leaveDialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.showLeaveConfirm = true;
-    setTimeout(() => this.leaveDialog?.nativeElement.querySelector<HTMLElement>('button:not([disabled])')?.focus(), 0);
+    setTimeout(() => this.dialogs?.leaveDialog?.nativeElement.querySelector<HTMLElement>('button:not([disabled])')?.focus(), 0);
+  }
+
+  canCloseSoloRoom(): boolean {
+    return !this.testMode && !this.isSpectator && this.room?.status === 'WAITING'
+      && this.currentPlayer()?.role === 'HOST'
+      && this.room.players.filter(player => player.connectionStatus !== 'LEFT').length === 1;
+  }
+
+  closeSoloRoom(): void {
+    if (!this.canCloseSoloRoom() || !this.room || this.leaving) return;
+    this.actionError = '';
+    this.leaving = true;
+    this.game.closeSoloRoom(this.room.id).pipe(
+      finalize(() => { this.leaving = false; this.changeDetector.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: () => void this.router.navigate(['/game']),
+      error: (error: unknown) => {
+        this.actionError = error instanceof HttpErrorResponse && error.status === 409
+          ? '房間已有其他玩家加入或已開始，無法直接關閉。請使用離開房間。'
+          : this.game.errorMessage(error);
+        this.changeDetector.markForCheck();
+      },
+    });
   }
 
   cancelLeaveRoom(): void {
@@ -499,10 +597,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   leaveRoom(): void {
     if (!this.room || this.leaving) return;
     this.showLeaveConfirm = false;
-    if (this.testMode) {
+    if (this.testMode || this.isSpectator) {
       this.leaving = true;
       this.changeDetector.markForCheck();
-      void this.router.navigate(['/game'], { queryParams: { test: '1' } });
+      void this.router.navigate(['/game'], this.testMode ? { queryParams: { test: '1' } } : {});
       return;
     }
     this.actionError = '';
@@ -688,6 +786,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.history = null;
     this.refreshError = '';
     this.testScenario = null;
+    this.testSpeed = 1;
     this.testAutoPaused = true;
     const loadRooms: Observable<unknown> = this.roomId.startsWith('test-room-virtual-') && !this.game.getRehearsalRoom(this.roomId)
       ? this.game.getRehearsalRooms({ pageSize: 100 }) : of(null);
@@ -792,6 +891,11 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           || this.round.answers.some(answer => answer.answerType === type.value && this.votedAnswerIds.has(answer.id)));
     if (this.testAutoPaused || (!allFinished && Date.now() < this.testStageEndsAt)) return;
 
+    this.nextTestStage();
+  }
+
+  private nextTestStage(): void {
+    if (!this.room || !this.testScenario) return;
     switch (this.testStage) {
       case 'ANSWERING':
         this.startTestVoting();
@@ -807,6 +911,19 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         }
         return;
     }
+  }
+
+  /** 演練用：直接跳到下一個階段；暫停中跳過時，新階段也維持暫停並保留完整剩餘時間。 */
+  skipTestStage(): void {
+    if (!this.testMode || !this.testScenario || this.testStage === 'WAITING' || this.testStage === 'COMPLETED') return;
+    const wasPaused = this.testAutoPaused;
+    this.nextTestStage();
+    if (wasPaused && this.room?.status !== 'COMPLETED') {
+      this.testPausedAt = Date.now();
+      this.testPausedRemainingMs = Math.max(0, this.testStageEndsAt - Date.now());
+      this.testAutoPaused = true;
+    }
+    this.changeDetector.markForCheck();
   }
 
   private startTestRound(roundNumber: number): void {
@@ -869,7 +986,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.votedAnswerIds = new Set<string>();
     this.answerText = '';
     this.actionError = '';
-    this.actionMessage = `第 ${roundNumber} 回合開始，請先觀察館藏並寫下判斷。`;
+    this.actionMessage = `第 ${roundNumber} 回合開始，請先觀察文物並寫下判斷。`;
     this.artifactImageUnavailable = false;
   }
 
@@ -958,6 +1075,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   private completeTestRoom(): void {
     if (!this.room || !this.testScenario) return;
+    this.testSpeed = 1;
     const rounds: GameRoundSummary[] = this.testRounds.map((round) => ({
       id: round.id,
       roundNumber: round.roundNumber,
@@ -1018,7 +1136,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.testAutoPaused = true;
     this.testPausedRemainingMs = 0;
     this.testStageEndsAt = 0;
-    this.actionMessage = '演練已完成，可以查看結算或返回模擬大廳。本局不會發放正式獎勵。';
+    this.actionMessage = '測試已完成，可以查看結算或返回大廳。本局不會發放正式獎勵。';
   }
 
   private submitTestAnswer(): void {
@@ -1095,6 +1213,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   private loadSnapshot(): Observable<RoomSnapshot> {
+    if (this.leaving) return EMPTY;
     this.loading = !this.room;
     this.refreshing = true;
     return this.game.getRoom(this.roomId).pipe(

@@ -6,6 +6,8 @@ export const PRODUCT_LIST_PATH = '/store/products';
 export const CART_PATH = '/store/cart';
 /** 結帳頁路徑 */
 export const CHECKOUT_PATH = '/store/checkout';
+/** 兌換商店頁路徑（我的折價券與點數兌換） */
+export const COUPON_STORE_PATH = '/store/coupons';
 /** 會員個人頁面路徑（app.routes 的 /member） */
 export const MEMBER_PATH = '/member';
 

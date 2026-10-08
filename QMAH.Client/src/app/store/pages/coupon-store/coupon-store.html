@@ -6,51 +6,99 @@
   <!-- 麵包屑導覽 -->
   <app-breadcrumb [items]="breadcrumbItems" />
 
-  <!-- 頁面標題列 -->
-  <app-page-title-row title="折價券商店" tag="COUPON STORE" [count]="loading() || loadError() ? null : countLabel()" />
-
   @if (!loading() && feedback(); as message) {
-  <!-- 兌換結果：成功訊息 10 秒後自動淡出，也可按右側叉號立刻關閉 -->
-  <div class="coupon-feedback" [class.coupon-feedback--error]="message.kind === 'error'"
-    [class.coupon-feedback--leaving]="feedbackLeaving()" [attr.role]="message.kind === 'error' ? 'alert' : 'status'">
-    <span class="coupon-feedback-text" [attr.title]="message.text">{{ message.text }}</span>
-    <button type="button" class="coupon-feedback-close" [attr.aria-label]="closeLabel" (click)="dismissFeedback()">
-      <svg lucideX aria-hidden="true" focusable="false"></svg>
-    </button>
+  <!-- 兌換結果：成功訊息 5 秒後自動淡出，也可按右側叉號立刻關閉；
+       淡出時外層的 slot 同時收合高度，下方內容順勢上移，而不是訊息消失後才跳到新位置 -->
+  <div class="coupon-feedback-slot" [class.coupon-feedback-slot--leaving]="feedbackLeaving()">
+    <div class="coupon-feedback-slot-inner">
+      <div class="coupon-feedback" [class.coupon-feedback--error]="message.kind === 'error'"
+        [class.coupon-feedback--leaving]="feedbackLeaving()" [attr.role]="message.kind === 'error' ? 'alert' : 'status'">
+        <span class="coupon-feedback-text" [attr.title]="message.text">{{ message.text }}</span>
+        <button type="button" class="coupon-feedback-close" [attr.aria-label]="closeLabel" (click)="dismissFeedback()">
+          <svg lucideX aria-hidden="true" focusable="false"></svg>
+        </button>
+      </div>
+    </div>
   </div>
   }
 
-  @if (loading()) {
-  <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark"
-      aria-hidden="true"></span><span>正在整理折價券…</span></section>
-  } @else if (loadError()) {
-  <app-empty-state [title]="errorTitle" [desc]="errorDesc" [ctaLabel]="errorCtaLabel" ctaMode="button"
-    (ctaClick)="onReload()" />
-  } @else if (isEmpty()) {
-  <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" />
-  } @else {
-  <!-- 可用點數兌換的折價券：左側為折抵幅度，中間為名稱、條件與期限，最右為所需點數 -->
-  <ul class="coupon-grid">
-    @for (coupon of coupons(); track coupon.id) {
-    <li class="coupon-card">
-      <span class="coupon-card-off">{{ coupon.off }}</span>
-      <span class="coupon-card-body">
-        <span class="coupon-card-title" [attr.title]="coupon.title">{{ coupon.title }}</span>
-        <span class="coupon-card-meta">{{ coupon.cond }}</span>
-        <span class="coupon-card-meta">{{ coupon.validityLabel }}</span>
-        <span class="coupon-card-meta">{{ coupon.endLabel }}</span>
-      </span>
-      <!-- 兌換所需點數：左側以虛線與券面內容分隔，上方標示「兌換」；按下後登入提示或兌換確認 -->
-      <button type="button" class="coupon-card-cost" [attr.aria-label]="costActionLabel + coupon.title + '，' + coupon.costLabel"
-        (click)="onRedeemClick(coupon)">
-        <span class="coupon-card-cost-label">{{ costActionLabel }}</span>
-        <span class="coupon-card-cost-value">{{ coupon.costLabel }}</span>
-      </button>
-    </li>
+  <!-- 上下兩個區塊：上面「兌換商店」、下面「我的折價券」，各有一個同級的標題列。 -->
+  <!-- 兌換商店：可用點數兌換的折價券，左側為折抵幅度，中間為名稱、條件與期限，最右為所需點數 -->
+  <section class="coupon-section coupon-shop">
+    <app-page-title-row title="兌換商店" tag="COUPON STORE" />
+
+    @if (loading()) {
+    <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark"
+        aria-hidden="true"></span><span>正在整理折價券…</span></section>
+    } @else if (loadError()) {
+    <app-empty-state [title]="errorTitle" [desc]="errorDesc" [ctaLabel]="errorCtaLabel" ctaMode="button"
+      (ctaClick)="onReload()" />
+    } @else if (isEmpty()) {
+    <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" />
+    } @else {
+    <ul class="coupon-grid">
+      @for (coupon of coupons(); track coupon.id) {
+      <li class="coupon-card">
+        <ng-container *ngTemplateOutlet="couponFace; context: { $implicit: coupon }" />
+        <!-- 兌換所需點數：左側以虛線與券面內容分隔，上方標示「兌換」；按下後登入提示或兌換確認 -->
+        <button type="button" class="coupon-card-cost"
+          [attr.aria-label]="costActionLabel + coupon.title + '，' + coupon.costLabel" (click)="onRedeemClick(coupon)">
+          <span class="coupon-card-cost-label">{{ costActionLabel }}</span>
+          <span class="coupon-card-cost-value">{{ coupon.costLabel }}</span>
+        </button>
+      </li>
+      }
+    </ul>
     }
-  </ul>
+  </section>
+
+  @if (showOwned()) {
+  <!-- 我的折價券：訪客顯示登入按鈕，登入的會員顯示持有的折價券；
+       帳號持有且可使用的折價券，券面與兌換商店同一個形式，右側不是兌換而是到期日 -->
+  <section class="coupon-section my-coupons">
+    <app-page-title-row title="我的折價券" tag="MY COUPONS" />
+
+    @if (isGuest()) {
+    <div class="my-coupons-login">
+      <p class="my-coupons-empty">登入後可以查看你持有的折價券。</p>
+      <a [storeLink]="loginHref" class="btn-outline my-coupons-login-btn">{{ loginLabel }}</a>
+    </div>
+    } @else if (ownedLoading()) {
+    <section class="store-loading" role="status" aria-live="polite"><span class="store-loading__mark"
+        aria-hidden="true"></span><span>正在整理你的折價券…</span></section>
+    } @else if (ownedCoupons().length === 0) {
+    <p class="my-coupons-empty">目前沒有折價券。</p>
+    } @else {
+    <ul class="coupon-grid">
+      @for (coupon of ownedCoupons(); track coupon.id) {
+      <li class="coupon-card">
+        <ng-container *ngTemplateOutlet="couponFace; context: { $implicit: coupon }" />
+        <span class="coupon-card-cost coupon-card-cost--static">
+          <span class="coupon-card-cost-label">{{ ownedLabel }}</span>
+          <span class="coupon-card-cost-value">{{ coupon.dueLabel }}</span>
+        </span>
+      </li>
+      }
+    </ul>
+    }
+  </section>
   }
+
+  <!-- 向下捲動後出現的回到頂端箭頭：容器的最後一個子元素，靠容器右緣、捲動時固定在視窗下緣 -->
+  <app-scroll-top />
 </div>
+
+<!-- 券面的左側兩欄（折抵幅度、名稱與說明）：兌換商店與我的折價券共用 -->
+<ng-template #couponFace let-coupon>
+  <span class="coupon-card-off">{{ coupon.off }}</span>
+  <span class="coupon-card-body">
+    <span class="coupon-card-title" [attr.title]="coupon.title">{{ coupon.title }}</span>
+    @for (meta of coupon.metas; track $index) {
+    <span class="coupon-card-meta">{{ meta }}</span>
+    }
+  </span>
+</ng-template>
+
 <!-- 兌換確認：列出折價券名稱與價格，確認後才呼叫後端 -->
 <app-coupon-redeem-dialog [open]="pendingCoupon() !== null" [name]="pendingCoupon()?.title ?? ''"
   [cost]="pendingCoupon()?.costLabel ?? ''" [pending]="redeeming()" (confirm)="onRedeemConfirm()"

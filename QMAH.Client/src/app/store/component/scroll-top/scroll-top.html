@@ -1,0 +1,7 @@
+<!-- 回到頁面頂端：向下捲動後才出現的箭頭，消失時淡出 -->
+@if (shown()) {
+  <button type="button" class="scroll-top" [class.scroll-top--leaving]="leaving()" [attr.aria-label]="label"
+    [attr.title]="label" (click)="scrollToTop()">
+    <svg lucideArrowUp aria-hidden="true" focusable="false"></svg>
+  </button>
+}

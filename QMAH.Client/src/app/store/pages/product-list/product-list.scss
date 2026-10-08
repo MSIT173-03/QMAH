@@ -7,6 +7,8 @@
    =============================== */
 
 .list-main {
+  /* 左側篩選側欄的寬度；分頁靠左留出同樣的寬度才會對齊商品區 */
+  --list-sidebar-width: 218px;
   padding-top: var(--qmah-space-4);
   padding-bottom: 72px;
   display: flex;
@@ -18,10 +20,17 @@
 /* 左側篩選側欄 + 右側商品區 */
 .list-body {
   display: grid;
-  grid-template-columns: minmax(0, 218px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--list-sidebar-width)) minmax(0, 1fr);
   gap: var(--qmah-space-5);
   align-items: start;
   min-width: 0;
+}
+
+/* 分頁在 .list-body 之外（原因見模板），靠左留出側欄的寬度，仍位於商品區正下方；
+   上方間距與商品區內的 16px 一致（版面間距 20px 再收回 4px）。 */
+.list-pagination {
+  margin-top: calc(var(--qmah-space-4) - var(--qmah-space-5));
+  margin-left: calc(var(--list-sidebar-width) + var(--qmah-space-5));
 }
 
 /* ===============================
@@ -58,11 +67,15 @@
 .store-loading__mark { width: 28px; height: 28px; border: 2px solid var(--color-line-mid); border-top-color: var(--color-accent); border-radius: 50%; animation: store-spin 700ms linear infinite; }
 @keyframes store-spin { to { transform: rotate(360deg); } }
 
-/* ui-integration: 商品篩選在手機改成上下排列，維持既有列表／卡片切換而不讓側欄擠壓內容。 */
+/* 手機上篩選側欄與商品區改成上下排列，避免側欄擠壓內容 */
 @media (max-width: 720px) {
-  /* ui-integration: 行動版把篩選側欄還原為正常流，避免 sticky top 值與雙層頁首重疊。 */
+  /* 側欄不固定，避免 sticky 的 top 與雙層頁首重疊 */
   .list-body {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .list-pagination {
+    margin-left: 0;
   }
 
   .tab-row {

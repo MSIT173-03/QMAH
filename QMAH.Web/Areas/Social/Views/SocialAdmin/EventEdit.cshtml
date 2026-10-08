@@ -57,6 +57,13 @@
                             <span asp-validation-for="Longitude" class="text-danger"></span>
                         </div>
                         <div class="col-12">
+                            <label class="form-label">在地圖上選擇地點（選填）</label>
+                            <div data-qmah-location-picker
+                                 data-location-input="#Location"
+                                 data-latitude-input="#Latitude"
+                                 data-longitude-input="#Longitude"></div>
+                        </div>
+                        <div class="col-12">
                             <div class="d-flex flex-wrap align-items-center gap-2">
                                 <div class="form-hint">地址可以只用文字輸入；若有座標，地圖會直接定位到這個位置。</div>
                                 <a class="btn btn-sm btn-outline-secondary"
@@ -73,7 +80,7 @@
                         </div>
                         <div class="col-12 col-md-6">
                             <label asp-for="Capacity" class="form-label"></label>
-                            <input asp-for="Capacity" class="form-control" type="number" min="1" />
+                            <input asp-for="Capacity" class="form-control" type="number" min="1" max="10000" />
                             <span asp-validation-for="Capacity" class="text-danger"></span>
                         </div>
                         <div class="col-12 col-md-4">
@@ -136,6 +143,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/areas/social-location-picker.js" asp-append-version="true"></script>
     <script>
         (() => {
             const mode = document.querySelector('[data-post-content-mode]');

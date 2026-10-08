@@ -42,7 +42,7 @@
   border: 2px solid var(--qmah-surface-elevated);
   border-radius: 50%;
   background-repeat: no-repeat;
-  /* Fallback before image metrics arrive; inline size is based on the source image container. */
+  /* 圖片尺寸量到之前的預設值；行內尺寸以來源圖片的容器為基準 */
   background-size: 100cqw 100cqh;
   background-color: var(--color-swatch);
   box-shadow: var(--qmah-shadow-float), inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 35%, transparent);
@@ -104,9 +104,9 @@
 }
 
 /*
- * 這幾組 keyframe 只在鑑賞器傳入 pan 時啟用；商品頁沒有 pan，避免共用元件改變既有節奏。
+ * 這幾組 keyframe 只在傳入 pan 時啟用（登入頁的清明上河圖）；沒有 pan 的使用端圖片靜止。
  * 以兩個 animation name 配合 panKey 重新掛載，手動切段後仍會從頭開始。
- * ui-integration: 只動畫 transform，讓長幅畫卷的慢速移動以 compositor-friendly 的方式執行，避免逐幀改 object-position。
+ * 只動畫 transform，讓長幅畫卷的慢速移動交給 compositor 執行，避免逐幀改 object-position。
  */
 .magnifier-host--pan-forward img,
 .magnifier-host--pan-backward img {
@@ -177,7 +177,7 @@
 
 /*
  * 第一張圖片淡入：大圖載入完成前先隱藏，載入後以同樣的 crossfade 時間淡入，
- * 避免進場時底色與逐步解碼的圖片交替造成閃爍。只在啟用 crossfade 的鑑賞頁生效。
+ * 避免進場時底色與逐步解碼的圖片交替造成閃爍。只在啟用 crossfade 時生效。
  */
 .magnifier-host--reveal img:not(.magnifier-fade) {
   opacity: 0;

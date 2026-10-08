@@ -26,7 +26,11 @@ public sealed record MiniGameStartDto(
     string Difficulty,
     string Seed,
     string? ConfigJson,
-    DateTime StartedAt);
+    DateTime StartedAt,
+    IReadOnlyList<MiniGameLocatorTargetDto>? LocatorTargets = null,
+    IReadOnlyList<int>? BackgroundPieces = null);
+
+public sealed record MiniGameLocatorTargetDto(Guid ArtifactId, double X, double Y);
 
 /// <summary>Mini Game 素材池中的單件文物與可供前端載入的圖片路徑。</summary>
 public sealed record MiniGameArtifactDto(
@@ -40,6 +44,10 @@ public sealed class StartMiniGameRequest
 {
     [Required, StringLength(40, MinimumLength = 1)]
     public string ModeCode { get; set; } = "";
+
+    /// <summary>館藏拼圖的玩法：MEMORY（只看十秒，滿分 100）或 REFERENCE（隨時看原圖，上限 80）；其他玩法忽略。</summary>
+    [StringLength(20)]
+    public string? Variant { get; set; }
 }
 
 /// <summary>完成 Mini Game 時送出的原始分數與供伺服器重算的結果資料。</summary>

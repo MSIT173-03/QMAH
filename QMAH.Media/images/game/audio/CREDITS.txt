@@ -1,16 +1,21 @@
 遊戲音效與背景音樂的來源與授權（音效為 CC0；音樂授權見下方）
 
-音效：Kenney「Casino Audio」（卡牌、籌碼、骰子的實錄音效）
+音效：Kenney「Casino Audio」（紙牌的實錄音效；全部取自紙牌類檔案）
   作者：Kenney（www.kenney.nl）
   來源：https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips
   授權：CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/
   使用的原檔 → 專案檔名：
-    chip-lay-2 → click.ogg        card-slide-2 → select.ogg
-    card-place-2 → place.ogg      card-slide-5 → flip.ogg
-    chips-stack-3 → success.ogg   chips-collide-1 → error.ogg
-    cards-pack-open-1 → reveal.ogg  dice-throw-3 → win.ogg
+    card-slide-1 → click.ogg      card-slide-6 → select.ogg
+    card-place-3 → place.ogg      card-slide-8 → flip.ogg
+    自製兩音提示（程式合成）→ success.ogg      card-shove-2 → error.ogg
+    cards-pack-open-2 → reveal.ogg
+    cards-pack-take-out-1 → start.ogg   cards-pack-take-out-2 → finish.ogg
+    card-shove-4 → cancel.ogg
 
 背景音樂：Tabletop Jazz Cafe（Ludo Loon Studio）
   來源：https://ludoloonstudio.itch.io/tabletop-jazz-cafe
   授權：以該頁面載明的條款為準（由專案成員提供，使用前請再確認）。
   已轉成 Ogg Vorbis（music-cafe.ogg）並移除中繼資料，選單與牌桌共用，單曲循環。
+
+ui.ogg：由 click.ogg 升調、截短並高通濾波而成，用於頂端功能列（選單、靜音、專注）。
+win.ogg：自製的四音清脆鈴聲（程式合成，無外部素材），用於結算。

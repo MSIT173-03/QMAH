@@ -9,7 +9,7 @@
     <span>{{ note }}</span>
     }
 
-    <!-- 右側會員捷徑：點數、折價券、購物車；登入後才能使用，登入前以灰色停用狀態顯示 -->
+    <!-- 右側會員捷徑：點數、折價券、購物車；登入前的行為見下方 -->
     <div class="promobar-actions">
       @if (signedIn()) {
       <a [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
@@ -26,16 +26,17 @@
             <span class="coupon-row-meta">{{ coupon.meta }}</span>
           </span>
         </a>
+        } @empty {
+        <span class="panel-item panel-note">目前沒有折價券</span>
         }
         @if (couponRest() > 0) {
         <a [storeLink]="couponsHref()" class="panel-item panel-note">以及另外 {{ couponRest() }} 張折價券</a>
         }
-        <a [storeLink]="couponStoreHref()" class="panel-item panel-note">兌換折價券 →</a>
       </app-promobar-panel>
 
       <!-- 購物車連結，滑鼠移入時展開懸浮面板，與折價券面板共用同一個元件 -->
       <app-promobar-panel class="cart-menu">
-        <a panelTrigger [storeLink]="cartHref()" class="promobar-link">購物車 <span class="promobar-accent">{{
+        <a panelTrigger [storeLink]="cartHref()" class="promobar-link">購物車 <span #cartCountLabel class="promobar-accent promobar-count">{{
             cartCount() }}</span> 件</a>
         @for (row of cartRows(); track row.id) {
         <a [storeLink]="row.href" class="panel-item panel-row cart-row">
@@ -50,10 +51,11 @@
         }
       </app-promobar-panel>
       } @else {
-      <!-- 未登入（或登入狀態尚未確認）時沒有會員資料，只顯示名稱，不顯示數量 -->
+      <!-- 未登入（或登入狀態尚未確認）時沒有會員資料，只顯示名稱，不顯示數量：
+           點數停用；折價券仍可前往兌換商店（頁面內會提示登入）；購物車按下後要求登入 -->
       <span class="promobar-link promobar-link--disabled" aria-disabled="true">點數</span>
-      <span class="promobar-link promobar-link--disabled" aria-disabled="true">折價券</span>
-      <span class="promobar-link promobar-link--disabled" aria-disabled="true">購物車</span>
+      <a [storeLink]="couponsHref()" class="promobar-link">折價券</a>
+      <button type="button" class="promobar-link promobar-link--button" (click)="cartLoginRequest.emit()">購物車</button>
       }
     </div>
   </div>

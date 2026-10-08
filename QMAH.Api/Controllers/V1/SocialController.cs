@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Services.Economy;
 using QMAH.Infrastructure.Services.Social;
@@ -17,7 +18,9 @@ public sealed class SocialController(
     INotificationService notificationService,
     ArtifactDiscussionService artifactDiscussionService,
     ContentSimilarityService contentSimilarityService,
-    KeywordFilterService keywordFilterService) : ApiControllerBase
+    KeywordFilterService keywordFilterService,
+    QmahMediaUrlResolver mediaUrlResolver,
+    AvatarStoragePaths avatarStorage) : ApiControllerBase
 {
     [HttpGet("posts")]
     [AllowAnonymous]
@@ -26,6 +29,7 @@ public sealed class SocialController(
         string? boardCode,
         string? postType,
         Guid? artifactId,
+        Guid? userId,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -51,6 +55,8 @@ public sealed class SocialController(
                 return Problem(statusCode: StatusCodes.Status400BadRequest, title: "貼文類型無效", detail: "貼文類型只能是一般貼文、公告貼文或活動貼文。");
             query = query.Where(post => post.PostType == postType);
         }
+        if (userId.HasValue)
+            query = query.Where(post => post.UserId == userId.Value);
         if (artifactId.HasValue)
             query = query.Where(post => post.ArtifactId == artifactId.Value);
 
@@ -85,6 +91,62 @@ public sealed class SocialController(
                 post.UpdatedAt));
 
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
+    }
+
+    // 批次取得多位會員的頭像網址（社群列表一次要顯示很多作者）；只回傳公開個人檔案且有頭像的會員。
+    [HttpGet("members/avatars")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyDictionary<Guid, string?>>> GetMemberAvatars(
+        [FromQuery] Guid[] ids,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = ids.Distinct().Take(100).ToList();
+        var profiles = await db.UserProfiles
+            .AsNoTracking()
+            .Where(profile => wanted.Contains(profile.UserId) && profile.Visibility == "PUBLIC")
+            .Select(profile => new { profile.UserId, profile.AvatarPath })
+            .ToListAsync(cancellationToken);
+
+        var result = wanted.ToDictionary(id => id, _ => (string?)null);
+        foreach (var profile in profiles)
+        {
+            result[profile.UserId] = mediaUrlResolver.Resolve(
+                avatarStorage.ResolvePublicPath(profile.UserId, profile.AvatarPath));
+        }
+        return Ok(result);
+    }
+
+    // 公開個人頁：貼文與活動本來就是公開的，所以統計永遠回傳；頭像、簡介、加入時間、Email 只在對方設為 PUBLIC 時回傳。
+    [HttpGet("members/{userId:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SocialMemberProfileDto>> GetMember(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var profile = await db.UserProfiles
+            .AsNoTracking()
+            .Include(item => item.User)
+            .FirstOrDefaultAsync(item => item.UserId == userId, cancellationToken);
+        if (profile is null)
+            return Problem(statusCode: StatusCodes.Status404NotFound, title: "找不到會員", detail: "這位會員不存在或尚未建立個人檔案。");
+
+        var postCount = await db.SocialPosts
+            .CountAsync(post => post.UserId == userId && post.PostType == "POST" && post.Status == "PUBLISHED", cancellationToken);
+        var eventCount = await db.Events
+            .CountAsync(item => item.OrganizerUserId == userId
+                && item.ReviewStatus == "APPROVED" && item.PublishStatus == "PUBLISHED", cancellationToken);
+
+        var isPublic = profile.Visibility == "PUBLIC";
+        return Ok(new SocialMemberProfileDto(
+            userId,
+            profile.Nickname,
+            isPublic ? mediaUrlResolver.Resolve(avatarStorage.ResolvePublicPath(userId, profile.AvatarPath)) : null,
+            isPublic ? profile.Bio : null,
+            isPublic ? profile.CreatedAt : null,
+            isPublic ? profile.User.Email : null,
+            isPublic,
+            postCount,
+            eventCount));
     }
 
     // 標準看板清單 + 資料庫既有的看板代碼合併，讓前端的篩選選單不會漏掉舊資料用過的看板
@@ -220,6 +282,7 @@ public sealed class SocialController(
         string? q,
         DateTime? startAfter,
         DateTime? startBefore,
+        Guid? organizerUserId,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -235,6 +298,8 @@ public sealed class SocialController(
                 item.Title.Contains(q)
                 || item.Content.Contains(q));
         }
+        if (organizerUserId.HasValue)
+            eventsQuery = eventsQuery.Where(item => item.OrganizerUserId == organizerUserId.Value);
         if (startAfter.HasValue)
             eventsQuery = eventsQuery.Where(item => item.StartAt >= startAfter.Value);
         if (startBefore.HasValue)
@@ -299,6 +364,7 @@ public sealed class SocialController(
     }
 
     [Authorize]
+    [EnableRateLimiting("socialContent")]
     [HttpPost("events")]
     public async Task<ActionResult<SocialEventDetailsDto>> CreateEvent(
         CreateSocialEventRequest request,
@@ -316,10 +382,16 @@ public sealed class SocialController(
             return Problem(statusCode: StatusCodes.Status400BadRequest, title: "活動類型無效", detail: "EventType 只能是 PLAYER 或 OFFICIAL。");
         if (eventType == "OFFICIAL" && !User.IsInRole("Admin"))
             return Forbid();
-        if (request.EndAt <= request.StartAt)
-            ModelState.AddModelError(nameof(request.EndAt), "結束時間必須晚於開始時間。");
-        if (request.RegistrationEndAt.HasValue && request.RegistrationEndAt.Value > request.StartAt)
-            ModelState.AddModelError(nameof(request.RegistrationEndAt), "報名截止時間不能晚於開始時間。");
+        // 時間與名額規則與後台共用（EventScheduleRules），避免前後台各寫一份而不一致。
+        foreach (var issue in EventScheduleRules.Validate(
+            request.StartAt,
+            request.EndAt,
+            request.RegistrationEndAt,
+            request.Capacity,
+            isNewEvent: true))
+        {
+            ModelState.AddModelError(issue.Field, issue.Message);
+        }
         if (request.Latitude.HasValue != request.Longitude.HasValue)
             ModelState.AddModelError(nameof(request.Latitude), "地點座標必須同時提供緯度與經度。");
         if (string.Equals(request.PostContentMode, EventSocialPostSynchronizer.CustomMode, StringComparison.OrdinalIgnoreCase)
@@ -407,7 +479,11 @@ public sealed class SocialController(
                 && item.PublishStatus == "PUBLISHED", cancellationToken);
         if (eventData is null)
             return MissingResource("找不到活動", "這場活動不存在或目前不可報名。");
-        if (eventData.RegistrationEndAt.HasValue && eventData.RegistrationEndAt.Value < DateTime.UtcNow)
+        // 活動時間是台灣當地時間，所以用同一個時間基準比較（不能用 UtcNow，會差 8 小時）。
+        var scheduleNow = EventScheduleRules.Now;
+        if (eventData.EndAt <= scheduleNow)
+            return InvalidWorkflow("活動已結束", "這場活動已經結束，無法報名。");
+        if (eventData.RegistrationEndAt.HasValue && eventData.RegistrationEndAt.Value < scheduleNow)
             return InvalidWorkflow("報名已截止", "這場活動已經超過報名截止時間。");
 
         var registration = eventData.EventRegistrations
@@ -489,6 +565,44 @@ public sealed class SocialController(
         }
 
         return Ok(await ToEventDetailsAsync(eventData, cancellationToken));
+    }
+
+    // 參加者名單：只有活動發起人與 Admin 看得到；只回傳暱稱，不含 Email。
+    // 報名與取消共用同一筆資料（EventId + UserId 唯一），重複報名／取消不會多出紀錄。
+    [Authorize]
+    [HttpGet("events/{id:guid}/registrations")]
+    public async Task<ActionResult<EventRegistrationsDto>> GetEventRegistrations(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var eventData = await db.Events
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (eventData is null)
+            return MissingResource("找不到活動", "這場活動不存在。");
+        if (eventData.OrganizerUserId != userId && !User.IsInRole("Admin"))
+            return Problem(statusCode: StatusCodes.Status403Forbidden, title: "沒有權限", detail: "只有活動發起人可以查看參加者名單。");
+
+        var rows = await db.EventRegistrations
+            .AsNoTracking()
+            .Where(item => item.EventId == id)
+            .OrderBy(item => item.RegisteredAt)
+            .Select(item => new EventRegistrantDto(
+                item.UserId,
+                db.UserProfiles
+                    .Where(profile => profile.UserId == item.UserId)
+                    .Select(profile => profile.Nickname)
+                    .FirstOrDefault(),
+                item.Status,
+                item.RegisteredAt))
+            .ToListAsync(cancellationToken);
+
+        return Ok(new EventRegistrationsDto(
+            rows.Where(row => row.Status != "CANCELLED").ToList(),
+            rows.Where(row => row.Status == "CANCELLED").ToList()));
     }
 
     [HttpGet("announcements")]

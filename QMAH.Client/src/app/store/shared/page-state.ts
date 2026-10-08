@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { StoreAuth } from './store-auth';
-import { CartApi, CatalogApi, MemberApi, SiteApi } from '../api';
+import { CartApi, CatalogApi, MemberApi } from '../api';
 import { ShoppingCart } from '../api/api.models';
 import { emptyCart } from '../api/cart.api';
 import { formatNumber } from './format';
@@ -53,22 +53,26 @@ export function injectCartState() {
           if (isWrite) loginPrompt.set(true);
           return;
         }
-        // integration: 寫入失敗時維持畫面上的上一份真實購物車，並結束移除動畫；
+        // 寫入失敗時維持畫面上的上一份購物車，並結束移除動畫；
         // 明確接住 Observable 錯誤，避免 Angular 將單一商城操作升級成全域未處理例外。
         error.set('購物車目前無法更新，請稍後再試。');
       },
     });
 
-  /** 確認登入狀態後才送出寫入請求；未登入時不送出注定 401 的請求，改為開啟登入提示 */
-  const write = (request: () => Observable<ShoppingCart>, callbacks: CartCallbacks = {}) =>
+  /** 確認登入狀態後已登入就執行 action；未登入先執行 onAnonymous，再開啟登入提示 */
+  const whenSignedIn = (action: () => void, onAnonymous?: () => void) =>
     auth.ensureLoaded().subscribe(() => {
       if (auth.status() === 'anonymous') {
-        callbacks.settled?.();
+        onAnonymous?.();
         loginPrompt.set(true);
-        return;
+      } else {
+        action();
       }
-      apply(request(), true, callbacks);
     });
+
+  /** 送出寫入請求；未登入時不送出注定 401 的請求，改為開啟登入提示 */
+  const write = (request: () => Observable<ShoppingCart>, callbacks: CartCallbacks = {}) =>
+    whenSignedIn(() => apply(request(), true, callbacks), callbacks.settled);
 
   // 未登入時直接顯示空購物車，不送出 GET /me/cart。
   auth.ensureLoaded().subscribe(() => {
@@ -94,11 +98,7 @@ export function injectCartState() {
     /** 登入提示按下「取消」：留在目前頁面 */
     cancelLogin: () => loginPrompt.set(false),
     /** 需要登入才能做的操作（例如兌換折價券）：確認登入狀態後，已登入就執行 action，未登入改為開啟登入提示 */
-    requireSignIn: (action: () => void) =>
-      auth.ensureLoaded().subscribe(() => {
-        if (auth.status() === 'anonymous') loginPrompt.set(true);
-        else action();
-      }),
+    requireSignIn: (action: () => void) => whenSignedIn(action),
     /** 商城 API 回應 401（登入已失效）時呼叫：清除全站登入狀態並開啟登入提示 */
     handleUnauthorized: () => {
       auth.markSignedOut();
@@ -121,22 +121,17 @@ export function injectCartState() {
 export type CartState = ReturnType<typeof injectCartState>;
 
 /**
- * 全站共用資料：全站設定，以及頂部公告列所需的公告文字、會員點數與折價券。
+ * 全站共用資料：頂部公告列所需的公告文字、會員點數與折價券。
  * 須於注入環境中呼叫（例如元件欄位初始化）。
  */
 export function injectSiteData() {
   const memberApi = inject(MemberApi);
-  const config = toSignal(inject(SiteApi).getConfig());
   const promotions = toSignal(inject(CatalogApi).getPromotions(), { initialValue: [] });
   const profile = toSignal(memberApi.getProfile());
 
   return {
-    /** 全站設定，尚未載入時為 undefined */
-    config,
-    /** 頂部公告列的公告文字：只顯示一則，優先取最新的官方商城優惠活動（API 已依發布時間新到舊排序） */
-    announcements: computed(() =>
-      [...promotions().map((promotion) => promotion.title), ...(config()?.promoAnnouncements ?? [])].slice(0, 1),
-    ),
+    /** 頂部公告列的公告文字：只顯示一則，取最新的官方商城優惠活動（API 已依發布時間新到舊排序） */
+    announcements: computed(() => promotions().slice(0, 1).map((promotion) => promotion.title)),
     /** 頂部公告列顯示的會員點數 */
     points: computed(() => formatNumber(profile()?.pointBalance ?? 0)),
     /** 頂部公告列的折價券清單 */

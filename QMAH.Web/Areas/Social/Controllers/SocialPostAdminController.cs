@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Services.Social;
 using QMAH.Web.Areas.Social.Models;
 using QMAH.Web.Areas.Social.Services;
 using QMAH.Web.Infrastructure;
@@ -25,15 +26,18 @@ public sealed class SocialPostAdminController : Controller
     private readonly QmahDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly SocialPostMediaService _mediaService;
+    private readonly INotificationService _notificationService;
 
     public SocialPostAdminController(
         QmahDbContext context,
         ICurrentUserService currentUserService,
-        SocialPostMediaService mediaService)
+        SocialPostMediaService mediaService,
+        INotificationService notificationService)
     {
         _context = context;
         _currentUserService = currentUserService;
         _mediaService = mediaService;
+        _notificationService = notificationService;
     }
 
     [HttpGet]
@@ -376,8 +380,25 @@ public sealed class SocialPostAdminController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        var previousStatus = post.Status;
         post.Status = status;
         post.UpdatedAt = DateTime.UtcNow;
+
+        // 管理員直接在貼文處理頁下架／恢復時也通知作者（經檢舉流程的處理另由檢舉管理通知）。
+        // 管理員處理自己的貼文時不用通知自己。
+        if (previousStatus != status && post.UserId != _currentUserService.GetCurrentUserId())
+        {
+            var message = ContentStatusNotification.ForPost(post.Title, previousStatus, status);
+            if (message is not null)
+            {
+                _notificationService.QueueNotification(
+                    post.UserId,
+                    message.Value.Title,
+                    message.Value.Content,
+                    status == "PUBLISHED" ? $"/social/posts/{post.Id}" : null);
+            }
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
         TempData["SuccessMessage"] = $"貼文狀態已更新為：{AdminDisplayLabels.Status(status)}。";
