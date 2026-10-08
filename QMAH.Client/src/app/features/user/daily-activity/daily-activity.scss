@@ -72,7 +72,7 @@
 
   color: var(--qmah-primary);
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -234,7 +234,7 @@
 .eyebrow {
   color: var(--qmah-primary);
 
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 800;
 
   letter-spacing: 1.6px;
@@ -359,7 +359,7 @@
     top: 28px;
     left: 24px;
 
-    font-size: 10px;
+    font-size: 13px;
 
     animation:
       particleTwo 0.9s ease 0.35s both;
@@ -369,7 +369,7 @@
     top: 5px;
     left: 50px;
 
-    font-size: 9px;
+    font-size: 13px;
 
     animation:
       particleThree 0.8s ease 0.45s both;
@@ -504,7 +504,7 @@
 
   color: var(--qmah-primary-content);
 
-  font-size: 11px;
+  font-size: 14px;
 }
 
 
@@ -547,7 +547,7 @@
   p {
     margin: 0;
 
-    font-size: 12px;
+    font-size: 14px;
   }
 }
 
@@ -625,7 +625,7 @@
 .streak-label {
   color: var(--qmah-text-muted);
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 650;
 }
 
@@ -665,7 +665,7 @@
 
   color: var(--qmah-text-subtle);
 
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .streak-side {
@@ -695,7 +695,7 @@
 
     color: var(--qmah-text-subtle);
 
-    font-size: 11px;
+    font-size: 14px;
   }
 
   strong {
@@ -766,7 +766,7 @@
 
   color: var(--qmah-primary-hover);
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -910,13 +910,13 @@
   strong {
     color: var(--qmah-text-muted);
 
-    font-size: 12px;
+    font-size: 14px;
   }
 
   span {
     color: var(--qmah-text-subtle);
 
-    font-size: 10px;
+    font-size: 13px;
   }
 }
 
@@ -969,7 +969,7 @@
 
     color: var(--qmah-text-muted);
 
-    font-size: 12px;
+    font-size: 14px;
   }
 
   p {
@@ -977,7 +977,7 @@
 
     color: var(--qmah-text-subtle);
 
-    font-size: 11px;
+    font-size: 14px;
   }
 }
 
@@ -995,7 +995,7 @@
 
     color: var(--qmah-text-subtle);
 
-    font-size: 10px;
+    font-size: 13px;
   }
 }
 
@@ -1060,7 +1060,7 @@
 .section-eyebrow {
   color: var(--qmah-primary);
 
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 800;
 
   letter-spacing: 1.5px;
@@ -1178,7 +1178,7 @@
 
   color: var(--qmah-text-muted);
 
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .stat-value {
@@ -1192,7 +1192,7 @@
 
     color: var(--qmah-text-muted);
 
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
   }
 }
@@ -1239,7 +1239,7 @@
   span {
     color: var(--qmah-text-subtle);
 
-    font-size: 11px;
+    font-size: 14px;
   }
 
   strong {
@@ -1874,7 +1874,7 @@
   display: grid;
   gap: 3px;
   min-width: 110px;
-  span { color: var(--qmah-text-muted); font-size: 12px; }
+  span { color: var(--qmah-text-muted); font-size: 14px; }
   strong { color: var(--qmah-primary); font-size: 42px; line-height: 1.15; font-variant-numeric: tabular-nums; }
   small { font-size: 15px; font-weight: 500; }
   &.reward-bonus strong { color: var(--qmah-honey-action); }
@@ -2007,7 +2007,7 @@
 .recent-activity-label {
   color: var(--qmah-text-subtle);
 
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -2023,7 +2023,7 @@
 
   color: var(--qmah-text-muted);
 
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -2051,7 +2051,7 @@
 .recent-mini-stat span {
   color: var(--qmah-text-subtle);
 
-  font-size: 11px;
+  font-size: 14px;
 
   white-space: nowrap;
 }
@@ -2072,7 +2072,7 @@
 
   color: var(--qmah-text-muted);
 
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -2110,7 +2110,7 @@
 
   color: var(--qmah-text-muted);
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 
   white-space: nowrap;
@@ -2239,6 +2239,6 @@
 
   color: var(--qmah-text-subtle);
 
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.5;
 }

@@ -77,7 +77,7 @@
 
 .social-announcements__collapsed-link > span:last-child {
   flex: 0 0 auto;
-  color: var(--qmah-primary);
+  color: var(--qmah-social-action);
   font-size: 11px;
 }
 
@@ -162,7 +162,7 @@
   font-size: clamp(20px, 2.2vw, 26px);
   line-height: var(--qmah-type-heading-leading);
   font-weight: 700;
-  color: var(--qmah-primary);
+  color: var(--qmah-social-action);
   text-wrap: pretty;
   overflow-wrap: anywhere;
 }
@@ -548,3 +548,13 @@
 }
 
 .social-post-card__open svg { width: 1.15rem; height: 1.15rem; stroke-width: 2.25; }
+
+/* 專業社群的互動細節：卡片懸停時邊框轉棕紅、陰影略升；標題連結懸停才著色。 */
+.social-post-card { transition: box-shadow 180ms cubic-bezier(.22, 1, .36, 1), border-color 180ms cubic-bezier(.22, 1, .36, 1); }
+.social-post-card:hover,
+.social-post-card:focus-within {
+  border-color: color-mix(in srgb, var(--qmah-social-action) 45%, var(--qmah-border));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--qmah-social-action) 14%, transparent);
+}
+.social-post-card__title a:hover { color: var(--qmah-social-action); }
+@media (prefers-reduced-motion: reduce) { .social-post-card { transition: none; } }

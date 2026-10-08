@@ -1,0 +1,13 @@
+/* 與主題切換鈕同為 44px 方塊，圖示 22px 置中，頁首右側對齊。 */
+button.btn-circle {
+  width: var(--qmah-control-height, 44px);
+  height: var(--qmah-control-height, 44px);
+  min-height: 0;
+  padding: 0;
+  border-radius: var(--qmah-radius-control, 12px);
+}
+:host { display: inline-flex; align-items: center; }
+.dropdown { display: flex; align-items: center; }
+button.btn-circle { display: inline-grid; place-items: center; }
+.indicator { display: inline-grid; place-items: center; line-height: 0; }
+/* 圖示容器與主題鈕一致：host 為 22px 方塊，避免 svg 溢出而偏右偏下。 */

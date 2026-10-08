@@ -450,8 +450,13 @@ app.Use(async (context, next) =>
     {
         await next();
     }
-    catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+    catch (Exception exception) when (context.RequestAborted.IsCancellationRequested
+        && (exception is OperationCanceledException
+            || exception is IOException
+            || QmahDatabaseDiagnostics.IsDatabaseFailure(exception)))
     {
+        // 客戶端已離開：除了 OperationCanceledException，SqlClient 取消命令時也可能丟 SqlException（Operation cancelled by user），
+        // 寫回應時則可能是 IOException；這些都不是伺服器錯誤，不能記成錯誤或回 500。
     }
     catch (Exception exception)
         when (QmahDatabaseDiagnostics.IsDatabaseFailure(exception)

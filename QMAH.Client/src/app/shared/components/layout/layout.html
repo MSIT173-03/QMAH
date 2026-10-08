@@ -12,7 +12,7 @@
         [attr.aria-expanded]="menuOpen()"
         (click)="toggleMenu()"
       >
-        <app-qmah-icon name="menu" aria-hidden="true" />
+        <app-qmah-icon name="menu" size="22" aria-hidden="true" />
       </button>
 
       <a class="app-brand" routerLink="/home" aria-label="回到清明鑑定屋首頁" (click)="closeMenu()">
@@ -76,8 +76,8 @@
             [checked]="themeService.theme() === 'qmahdark'"
             (change)="themeService.toggleTheme()"
           />
-          <app-qmah-icon class="theme-icon theme-icon--light" name="sun" aria-hidden="true" />
-          <app-qmah-icon class="theme-icon theme-icon--dark" name="moon" aria-hidden="true" />
+          <app-qmah-icon class="theme-icon theme-icon--light" name="sun" size="22" aria-hidden="true" />
+          <app-qmah-icon class="theme-icon theme-icon--dark" name="moon" size="22" aria-hidden="true" />
         </label>
 
       </div>
@@ -107,7 +107,7 @@
         <span>探索、遊玩與交流</span>
       </div>
       <button type="button" class="app-icon-button" aria-label="關閉主要導覽" (click)="closeMenu()">
-        <app-qmah-icon name="x" aria-hidden="true" />
+        <app-qmah-icon name="x" size="22" aria-hidden="true" />
       </button>
     </div>
 

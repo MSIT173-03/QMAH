@@ -1,8 +1,9 @@
-/* ui-integration: 所有一般功能圖示由同一個 Lucide renderer 產生，統一尺寸與筆畫；鑰匙道具不經過這裡。 */
+/* ui-integration: 所有一般功能圖示由同一個 Lucide renderer 產生，統一尺寸與筆畫；鑰匙道具不經過這裡。
+   容器尺寸跟著 svg 本身（size 輸入），並讓 svg 在容器內置中，避免 host 固定 1em 而 svg 較大時偏右下。 */
 :host {
   display: inline-flex;
-  width: 1em;
-  height: 1em;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
   line-height: 0;
   vertical-align: middle;

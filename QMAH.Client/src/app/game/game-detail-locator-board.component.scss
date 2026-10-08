@@ -119,13 +119,17 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
 .tool-progress li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 40px; padding: 4px 8px; border: 2px solid #d4c7a6; border-radius: 10px; color: var(--game-card-muted); background: #efe7d3; font-size: 14px; }
 .tool-progress b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: #fff8e9; background: #8a8470; font-size: 14px; font-variant-numeric: tabular-nums; }
 .tool-progress__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
-.tool-progress small { font-size: 13px; font-weight: 800; }
+.tool-progress small { font-size: 13px; font-weight: 800; white-space: nowrap; writing-mode: horizontal-tb; }
 .tool-progress li.is-current { border-color: #2c3a30; color: var(--game-card-ink); background: #fff8e9; }
 .tool-progress li.is-current b { background: #2f5aa8; }
 .tool-progress li.is-done { color: #285c45; border-color: #9fc2a8; background: #e5efdf; }
 .tool-progress li.is-done b { background: #2f6b50; }
 .tool-tips { display: grid; gap: 6px; margin: 0; padding: 0 0 0 1.2em; color: var(--game-card-muted); font-size: 14px; line-height: 1.6; }
-.locator-tools .locator-confirm { margin-top: auto; }
+.tool-last { display: grid; gap: 6px; }
+.tool-last__text { margin: 0; padding: 8px 10px; border-radius: 10px; color: var(--game-card-muted); background: #efe7d3; font-size: 15px; font-weight: 700; }
+.tool-last__text.is-ok { color: #285c45; background: #e5efdf; }
+.tool-confirm-group { display: grid; gap: 4px; }
+.tool-confirm-group .locator-pending-status { min-height: 1.4em; }
 @media (min-width: 1000px) { .locator-round-heading .locator-steps { display: none; } }
 @container locround (max-height: 780px) { .tool-tips { display: none; } }
 @container locround (max-height: 600px) { .tool-progress { gap: 4px; } .tool-progress li { min-height: 30px; padding-block: 1px; } .tool-progress small { display: none; } }
@@ -142,3 +146,23 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
 .tool-progress li button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }
 .tool-review { margin: 0; padding: 8px 10px; border-radius: 10px; color: var(--game-card-ink); background: #e5efdf; font-size: 14px; font-weight: 700; line-height: 1.6; }
 @container locround (max-height: 780px) { .tool-review { display: none; } }
+
+/* 視窗不高（非全螢幕）時，工具欄收斂成精簡版，避免內容被切掉。 */
+@container locround (max-height: 700px) {
+  .locator-tools { gap: 8px; padding: 10px; }
+  .tool-title { font-size: 16px; }
+  .tool-hint, .tool-review { display: none; }
+  .tool-last { gap: 3px; }
+  .tool-last__text { padding: 5px 10px; font-size: 14px; }
+  .tool-confirm-group .locator-pending-status { display: none; }
+  .locator-confirm { min-height: 40px; font-size: 16px; }
+  .tool-progress { grid-template-columns: 1fr 1fr; gap: 4px; }
+  .tool-progress li button { grid-template-columns: 22px minmax(0, 1fr); min-height: 34px; padding: 2px 6px; gap: 6px; }
+  .tool-progress b { width: 22px; height: 22px; font-size: 13px; }
+  .tool-progress__name { display: none; }
+  .tool-progress small { display: block; font-size: 13px; white-space: nowrap; }
+  .locator-tools ::ng-deep app-game-loupe-controls { gap: 8px; }
+  .locator-tools ::ng-deep .loupe-note { display: none; }
+  .locator-tools ::ng-deep .loupe-group { gap: 4px; }
+  .locator-tools ::ng-deep .loupe-seg button { min-height: 34px; font-size: 15px; }
+}

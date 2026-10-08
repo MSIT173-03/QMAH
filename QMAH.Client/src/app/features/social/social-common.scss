@@ -12,7 +12,7 @@
 
 .qmah-social-page .social-page-title {
   margin: 0;
-  color: var(--qmah-primary);
+  color: var(--qmah-social-action);
   font-family: var(--qmah-font-serif);
   font-size: var(--qmah-type-page-title-size);
   font-weight: 700;
@@ -243,8 +243,8 @@
 }
 
 .qmah-social-page .social-tag--notice {
-  background: var(--qmah-accent);
-  color: var(--qmah-accent-content);
+  background: var(--qmah-social-soft);
+  color: var(--qmah-social-action);
 }
 
 .qmah-social-page .social-meta {
@@ -488,3 +488,137 @@
 .qmah-social-page .social-composer__send:hover:not(:disabled) { background: color-mix(in srgb, var(--qmah-social-action) 14%, transparent); }
 .qmah-social-page .social-composer__send:disabled { color: var(--qmah-muted); opacity: .5; cursor: not-allowed; }
 .qmah-social-page .social-composer__send svg { width: 1.25rem; height: 1.25rem; stroke-width: 2; }
+
+/* 社群頁的選取、焦點與連結一律使用棕紅主色，與按鈕一致。 */
+.qmah-social-page ::selection { background: color-mix(in srgb, var(--qmah-social-action) 24%, transparent); }
+.qmah-social-page :is(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+.qmah-social-page :is(input, textarea, select) { accent-color: var(--qmah-social-action); caret-color: var(--qmah-social-action); }
+
+/* 社群潤飾：暖紙色表單欄位、發布器、互動動畫，以及活動／公告的資訊流版型。
+   以 @use 方式併入各頁樣式；僅覆寫配色與細節，不改既有結構。 */
+
+/* ===== 表單欄位：暖紙色，焦點用棕紅環（原本偏藍綠） ===== */
+.qmah-social-page :is(.input, .select, .textarea, .file-input),
+.social-modal :is(.input, .select, .textarea, .file-input) {
+  border-color: color-mix(in srgb, var(--qmah-social-action) 20%, var(--qmah-border));
+  background-color: color-mix(in srgb, var(--qmah-social-soft) 26%, var(--qmah-surface-elevated));
+  color: var(--qmah-ink);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.qmah-social-page :is(.input, .select, .textarea, .file-input):hover,
+.social-modal :is(.input, .select, .textarea, .file-input):hover {
+  border-color: color-mix(in srgb, var(--qmah-social-action) 45%, var(--qmah-border));
+}
+.qmah-social-page :is(.input, .select, .textarea, .file-input):focus,
+.qmah-social-page :is(.input, .select, .textarea, .file-input):focus-within,
+.social-modal :is(.input, .select, .textarea, .file-input):focus,
+.social-modal :is(.input, .select, .textarea, .file-input):focus-within {
+  border-color: var(--qmah-social-action);
+  background-color: var(--qmah-surface-elevated);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--qmah-social-action) 20%, transparent);
+}
+.qmah-social-page .file-input::file-selector-button,
+.social-modal .file-input::file-selector-button {
+  border: 0;
+  background: color-mix(in srgb, var(--qmah-social-action) 14%, var(--qmah-surface-elevated));
+  color: var(--qmah-social-action);
+  font-weight: 800;
+}
+.qmah-social-page .btn:not(.btn-primary):not(.btn-ghost),
+.social-modal .btn:not(.btn-primary):not(.btn-ghost) {
+  border-color: color-mix(in srgb, var(--qmah-social-action) 22%, var(--qmah-border));
+}
+
+/* ===== 貼文發布器：更像社群發文框 ===== */
+.social-modal .modal-box { border-radius: 20px; box-shadow: 0 24px 60px color-mix(in srgb, #000 28%, transparent); }
+.social-modal[open] .modal-box { animation: social-pop 260ms cubic-bezier(.22, 1, .36, 1); }
+.social-modal[open]::backdrop { animation: social-fade 240ms ease; }
+.social-post-form__toolbar {
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--qmah-social-action) 16%, var(--qmah-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--qmah-social-soft) 30%, var(--qmah-surface-elevated));
+}
+.social-post-form__toolbar .btn {
+  min-height: 34px;
+  height: 34px;
+  padding-inline: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--qmah-social-action);
+  font-weight: 800;
+}
+.social-post-form__toolbar .btn:hover { background: color-mix(in srgb, var(--qmah-social-action) 14%, transparent); }
+.social-post-form__preview {
+  border: 1px dashed color-mix(in srgb, var(--qmah-social-action) 32%, var(--qmah-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--qmah-social-soft) 22%, var(--qmah-surface-elevated));
+  animation: social-rise 200ms ease both;
+}
+.social-post-dialog__actions .btn-primary { min-width: 8.5rem; }
+
+/* ===== 互動動畫 ===== */
+@keyframes social-pop { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes social-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes social-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.qmah-social-page :is(.social-post-card, .social-event-card, .social-announcement-list > .social-panel) {
+  animation: social-rise 360ms cubic-bezier(.22, 1, .36, 1) both;
+}
+.qmah-social-page :is(.social-post-card, .social-event-card, .social-announcement-list > .social-panel):nth-child(2) { animation-delay: 50ms; }
+.qmah-social-page :is(.social-post-card, .social-event-card, .social-announcement-list > .social-panel):nth-child(3) { animation-delay: 100ms; }
+.qmah-social-page :is(.social-post-card, .social-event-card, .social-announcement-list > .social-panel):nth-child(n + 4) { animation-delay: 150ms; }
+.qmah-social-page .btn,
+.social-modal .btn { transition: transform 140ms cubic-bezier(.22, 1, .36, 1), box-shadow 160ms ease, background-color 160ms ease; }
+.qmah-social-page .btn:hover:not(:disabled),
+.social-modal .btn:hover:not(:disabled) { transform: translateY(-1px); }
+.qmah-social-page .btn:active:not(:disabled),
+.social-modal .btn:active:not(:disabled) { transform: scale(.96); }
+.qmah-social-page .social-event-card__open svg { transition: transform 180ms ease; }
+.qmah-social-page .social-event-card__open:hover svg { transform: translateX(3px); }
+.qmah-social-page .social-event-card__cover img { transition: transform 420ms cubic-bezier(.22, 1, .36, 1); }
+.qmah-social-page .social-event-card:hover .social-event-card__cover img { transform: scale(1.04); }
+
+/* ===== 活動與公告：更接近商業社群的資訊流版型 ===== */
+.qmah-social-page .social-announcement-list { width: min(100%, 780px); margin-inline: auto; }
+.qmah-social-page .social-announcement-list > .social-panel,
+.qmah-social-page .social-event-card {
+  border-radius: 16px;
+  transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+.qmah-social-page .social-announcement-list > .social-panel { display: grid; gap: var(--qmah-space-3); padding: clamp(16px, 2.5vw, 24px); }
+.qmah-social-page .social-announcement-list > .social-panel:hover,
+.qmah-social-page .social-event-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--qmah-social-action) 40%, var(--qmah-border));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--qmah-social-action) 13%, transparent);
+}
+.qmah-social-page .social-announcement-list .social-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--qmah-space-3); }
+.qmah-social-page .social-announcement-list .social-event-card__title { margin: 0; font-size: clamp(18px, 2vw, 22px); line-height: 1.4; text-wrap: balance; }
+.qmah-social-page .social-announcement-list .social-event-detail__content {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--qmah-muted);
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.qmah-social-page .social-announcement-list > .social-panel > .social-meta:last-child {
+  padding-top: var(--qmah-space-3);
+  border-top: 1px solid color-mix(in srgb, var(--qmah-border) 70%, transparent);
+}
+.qmah-social-page .social-event-card .social-facts {
+  padding-top: var(--qmah-space-3);
+  border-top: 1px solid color-mix(in srgb, var(--qmah-border) 70%, transparent);
+}
+.qmah-social-page .social-post-card__author {
+  padding-top: var(--qmah-space-3);
+  border-top: 1px solid color-mix(in srgb, var(--qmah-border) 60%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qmah-social-page *,
+  .social-modal,
+  .social-modal * { animation: none !important; transition: none !important; }
+}

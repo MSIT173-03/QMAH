@@ -60,6 +60,16 @@ export class GameDetailLocatorBoardComponent {
   readonly target = computed(() => { rememberLocatorTargets(this.seed(), this.targets()); return locatorTarget(this.seed(), this.current()?.artifactId ?? ''); });
   readonly finished = computed(() => this.artifacts().length > 0 && this.answers().length + this.assisted().length >= this.artifacts().length);
   readonly lastAnswer = computed(() => this.answers().at(-1));
+  /** 上一件的位置準確度（0–100）：正中心為 100，離命中範圍邊緣約 67，三倍範圍外為 0。 */
+  readonly lastAccuracy = computed(() => {
+    const answer = this.lastAnswer();
+    if (!answer) return null;
+    rememberLocatorTargets(this.seed(), this.targets());
+    const target = locatorTarget(this.seed(), answer.artifactId);
+    const half = Math.floor(Math.min(answer.imageWidth, answer.imageHeight) / 5) / 2;
+    const ratio = Math.max(Math.abs(answer.x - target.x) * answer.imageWidth, Math.abs(answer.y - target.y) * answer.imageHeight) / (half || 1);
+    return Math.round(Math.max(0, 1 - ratio / 3) * 100);
+  });
   readonly lastCorrect = computed(() => (rememberLocatorTargets(this.seed(), this.targets()), !!this.lastAnswer()) && locatorCorrect(this.seed(), this.lastAnswer()!));
   readonly hintVisible = computed(() => this.hintedArtifactId() === this.current()?.artifactId && !this.finished());
   @ViewChild('clueCanvas') private canvas?: ElementRef<HTMLCanvasElement>;
@@ -205,12 +215,18 @@ export class GameDetailLocatorBoardComponent {
       this.feedbackChange.emit(false);
     }, 1500);
   }
+  /** 偏離目標的程度，以命中範圍（碎片半邊長）為 1。 */
+  private missRatio(point: LocatorAnswer): number {
+    const target = this.target();
+    const half = Math.floor(Math.min(point.imageWidth, point.imageHeight) / 5) / 2;
+    return Math.max(Math.abs(point.x - target.x) * point.imageWidth, Math.abs(point.y - target.y) * point.imageHeight) / (half || 1);
+  }
   private showVerdict(point: LocatorAnswer): void {
     const target = this.target();
     const half = Math.floor(Math.min(point.imageWidth, point.imageHeight) / 5) / 2;
     const ratio = Math.max(Math.abs(point.x - target.x) * point.imageWidth, Math.abs(point.y - target.y) * point.imageHeight) / (half || 1);
     const [tier, text] = ratio <= .4 ? ['great', '太準了！'] as const : ratio <= 1 ? ['nice', '命中'] as const : ratio <= 2 ? ['close', '差一點'] as const : ['bad', '偏了'] as const;
-    this.verdict.set({ artifactId: point.artifactId, text, tier, x: point.x, y: point.y });
+    this.verdict.set({ artifactId: point.artifactId, text: `${text} ${Math.round(Math.max(0, 1 - ratio / 3) * 100)}%`, tier, x: point.x, y: point.y });
   }
   advanceDemonstration(): void {
     if (!this.ready() || this.disabled() || this.finished() || this.reviewing()) return;
