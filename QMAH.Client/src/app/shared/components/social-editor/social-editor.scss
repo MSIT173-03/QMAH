@@ -11,7 +11,6 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 18%, transparent);
 }
 
-.sme__row { display: flex; align-items: flex-end; gap: 6px; padding: 6px; }
 
 .sme__field {
   flex: 1;
@@ -98,3 +97,31 @@
 :host-context([data-theme='qmahdark']) .sme__fmt { color: #e6e2da; }
 :host-context([data-theme='qmahdark']) .sme__fmt:hover, :host-context([data-theme='qmahdark']) .sme__toggle:hover { background: #3a3e41; color: #fff; }
 :host-context([data-theme='qmahdark']) .sme__toolbar, :host-context([data-theme='qmahdark']) .sme__group { border-color: #43474a; }
+
+/* 版面：文字框在上、圖示列在下（附圖／表情／日期／進階格式…送出） */
+.sme__field { display: block; width: 100%; padding: 12px 14px 6px; }
+.sme__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 8px; }
+.sme__tools { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.sme__tool { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--qmah-muted); cursor: pointer; transition: background 140ms, color 140ms; }
+.sme__tool svg { width: 20px; height: 20px; }
+.sme__tool:hover:not(:disabled), .sme__tool.is-on { background: color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 12%, transparent); color: var(--qmah-social-action, var(--qmah-primary)); }
+.sme__tool:disabled { opacity: 0.4; cursor: wait; }
+.sme__tool:focus-visible { outline: 2px solid var(--qmah-social-action, var(--qmah-primary)); outline-offset: 1px; }
+.sme__status { margin-left: 8px; color: var(--qmah-muted); font-size: 0.75rem; }
+.sme__send { width: 38px; height: 34px; border-radius: 10px; background: var(--qmah-social-action, var(--qmah-primary)); color: #fff; }
+.sme__send:hover:not(:disabled) { background: color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 86%, #000); }
+.sme__send:disabled { background: color-mix(in srgb, var(--qmah-ink) 14%, transparent); color: var(--qmah-muted); opacity: 1; }
+.sme__toolbar { border-top: 1px solid var(--qmah-border); border-bottom: 0; }
+.sme__emoji-wrap { position: relative; }
+:host-context([data-theme='qmahdark']) .sme__tool { color: #b9b5ab; }
+
+/* 完整表情選擇器（emoji-picker-element，shadow DOM，用 CSS 變數上色） */
+.sme__emoji { position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 30; border-radius: 12px; box-shadow: 0 10px 28px rgb(0 0 0 / 18%); overflow: hidden; }
+.sme__emoji[hidden] { display: none; }
+
+/* 附圖縮圖列：與發文器相同，每張右上角可移除 */
+.sme__images { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 14px 10px; }
+.sme__image { position: relative; width: 64px; height: 64px; }
+.sme__image img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid var(--qmah-border); }
+.sme__image-remove { position: absolute; top: -7px; right: -7px; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: #3a3633; color: #fff; cursor: pointer; }
+.sme__image-remove svg { width: 12px; height: 12px; }

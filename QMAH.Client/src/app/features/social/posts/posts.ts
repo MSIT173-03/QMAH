@@ -23,6 +23,11 @@ import {
   LucideMessageCircle,
   LucideMegaphone,
   LucidePlus,
+  LucideColumns2,
+  LucideColumns3,
+  LucideFilterX,
+  LucideSearch,
+  LucideSquare,
   LucideX,
 } from '@lucide/angular';
 
@@ -55,6 +60,11 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
     LucideMessageCircle,
     LucideMegaphone,
     LucidePlus,
+    LucideColumns2,
+    LucideColumns3,
+    LucideFilterX,
+    LucideSearch,
+    LucideSquare,
     LucideX,
     UserAvatarComponent
   ],
@@ -85,6 +95,27 @@ export class PostsComponent implements OnInit, OnDestroy {
   boardCodes: string[] = [];
   /** 發布器是否切成寬版（左寫右預覽），寫長文時使用 */
   postWide = false;
+
+  /** 貼文牆每列幾則（1／2／3），記在瀏覽器裡，下次進來沿用 */
+  wallCols: 1 | 2 | 3 = this.readWallCols();
+
+  private readWallCols(): 1 | 2 | 3 {
+    try {
+      const saved = Number(localStorage.getItem('qmah-social-wall-cols'));
+      return saved === 1 || saved === 3 ? saved : 2;
+    } catch {
+      return 2;
+    }
+  }
+
+  setWallCols(cols: 1 | 2 | 3): void {
+    this.wallCols = cols;
+    try {
+      localStorage.setItem('qmah-social-wall-cols', String(cols));
+    } catch {
+      // 瀏覽器不給存就只在這次有效
+    }
+  }
 
   /** 發布器可選的看板：與篩選選單同一份清單，不再只寫死兩個 */
   get composerBoards(): string[] {

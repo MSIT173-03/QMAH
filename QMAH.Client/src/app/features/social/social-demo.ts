@@ -11,10 +11,10 @@ export function demoPost(): CreateSocialPostRequest {
   return {
     postType: 'POST',
     boardCode: 'GENERAL',
-    title: '週末在博物館看到一件很特別的青銅爵',
+    title: '分享今天的一點心得',
     content:
-      '這個週末去了一趟博物館，在商周展區看到一件青銅爵，器身的饕餮紋非常細緻。\n' +
-      '想請教大家：有沒有人知道這類器物的鑑定重點？我目前只注意到銹色與鑄痕，歡迎補充！',
+      '大家好，想跟大家分享最近的一點心得與觀察。\n' +
+      '也想聽聽你們的看法，歡迎留言交流、互相補充！',
     mediaIds: []
   };
 }
@@ -35,9 +35,9 @@ const DEMO_EVENT_CAPACITY = 6;
 export function demoEvent(): CreateSocialEventRequest {
   return {
     eventType: 'PLAYER',
-    title: '週末館藏交流：一起看古物的細節',
+    title: '週末交流聚會：一起聊聊、互相分享',
     content:
-      '帶著你最近入手或最想請教的古物來聊聊吧！現場分組交流鑑定心得，也歡迎只來看、不帶東西。\n' +
+      '歡迎來和大家聊聊最近的收穫與想法，也可以只是來聽聽看。\n' +
       '活動不收費，名額有限，額滿為止。',
     location: '臺北市信義區市府路45號',
     latitude: 25.033964,
@@ -51,9 +51,9 @@ export function demoEvent(): CreateSocialEventRequest {
 }
 
 const DEMO_COMMENTS = [
-  '感謝分享！這件看起來保存得很好，紋飾的層次很清楚。',
-  '我之前也看過類似的器物，建議可以留意底部的鑄造痕跡。',
-  '很有參考價值，下次展覽我也想去看看。'
+  '感謝分享，很有參考價值！',
+  '說得很清楚，學到不少。',
+  '期待後續更新，也歡迎大家一起交流。'
 ];
 let demoCommentIndex = 0;
 

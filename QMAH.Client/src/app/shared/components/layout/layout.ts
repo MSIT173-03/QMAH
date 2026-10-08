@@ -15,12 +15,13 @@ import { ToastContainerComponent } from '../toast-container/toast-container';
 import { SiteFooter } from '../site-footer/site-footer';
 import { AreaNavigationComponent, NavigationGroup } from '../area-navigation/area-navigation';
 import { QmahIconComponent } from '../qmah-icon/qmah-icon';
+import { ScrollTop } from '../../../store/component/scroll-top/scroll-top';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, ToastContainerComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
+  imports: [ScrollTop, RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, ToastContainerComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })

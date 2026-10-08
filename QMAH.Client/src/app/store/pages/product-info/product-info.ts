@@ -25,6 +25,7 @@ import { ProductSummary } from './product-summary/product-summary';
 import { ProductDetail } from './product-detail/product-detail';
 import { ProductReviews } from './product-reviews/product-reviews';
 import { RelatedProducts } from './related-products/related-products';
+import { ScrollTop } from '../../component/scroll-top/scroll-top';
 import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
 
 /**
@@ -36,7 +37,7 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
 @Component({
   selector: 'app-product-info',
   host: { class: 'store-app' },
-  imports: [
+  imports: [ScrollTop, 
     SessionBar,
     SiteHeader,
     SearchBar,
