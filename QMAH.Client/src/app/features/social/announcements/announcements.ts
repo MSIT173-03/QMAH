@@ -1,12 +1,13 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 
 import { Announcement, SocialApiService } from '../../../core/services/social-api';
 
 @Component({
   selector: 'app-announcements',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SocialPostContentComponent],
   templateUrl: './announcements.html',
   styleUrls: ['../social-common.scss', './announcements.scss']
 })
@@ -16,6 +17,17 @@ export class AnnouncementsComponent implements OnInit {
 
   announcements: Announcement[] = [];
   loadError: string | null = null;
+  /** 已展開全文的公告 */
+  readonly expanded = new Set<string>();
+
+  toggle(id: string): void {
+    if (!this.expanded.delete(id)) this.expanded.add(id);
+  }
+
+  /** 內容較長時才顯示「展開全文」 */
+  isLong(text: string): boolean {
+    return text.length > 140 || text.split('\n').length > 4;
+  }
 
   ngOnInit(): void {
     this.loadAnnouncements();
