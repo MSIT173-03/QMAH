@@ -1020,3 +1020,103 @@
   55% { transform: rotate(-3deg) scale(1.04, 1.12) skewX(-2deg); }
   75% { transform: rotate(5deg) scale(0.98, 1.02) skewX(4deg); }
 }
+
+/* 頂部卡片：左側古銅色豎條＋標題，右側三個常用入口；右上角以 Temple 紋做淡淡的裝飾。 */
+.welcome-card {
+  gap: 28px;
+  padding: 32px 36px 32px 44px;
+  border-color: color-mix(in srgb, #a68a52 34%, var(--qmah-border));
+  background:
+    linear-gradient(100deg, transparent 52%, color-mix(in srgb, #a68a52 9%, transparent)),
+    var(--qmah-surface-elevated);
+}
+.welcome-mark {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 46%;
+  background: url('/patterns/temple-bronze.svg') right top / 152px 152px repeat;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 85%);
+  mask: linear-gradient(90deg, transparent, #000 85%);
+  pointer-events: none;
+}
+.welcome-card::before {
+  position: absolute;
+  inset: 22px auto 22px 0;
+  width: 5px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #c9a45f, #a0522d);
+  content: '';
+}
+.welcome-content { flex: 1 1 auto; }
+.welcome-content h1 { font-size: 32px; color: var(--qmah-ink); }
+.welcome-eyebrow { color: #9a7b3f; }
+.welcome-content p { margin-bottom: 14px; }
+.member-status {
+  border-color: color-mix(in srgb, #3f8f5f 36%, var(--qmah-surface-elevated));
+  background: color-mix(in srgb, #3f8f5f 12%, var(--qmah-surface-elevated));
+  color: #2f7a4f;
+}
+.status-dot { background: #3f8f5f; }
+.welcome-quick {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 12px;
+}
+.quick-link {
+  --q: #4a5a9a;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-width: 96px;
+  padding: 16px 14px 13px;
+  border: 1px solid color-mix(in srgb, var(--q) 28%, var(--qmah-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--q) 9%, var(--qmah-surface-elevated));
+  color: var(--qmah-ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.quick-link app-qmah-icon { width: 24px; height: 24px; color: var(--q); }
+.quick-link:hover, .quick-link:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--q);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--q) 20%, transparent);
+}
+.quick-daily { --q: #d9531e; }
+.quick-coupon { --q: #7a52b3; }
+.quick-notice { --q: #1b8a94; }
+@media (max-width: 900px) {
+  .welcome-card { flex-direction: column; align-items: stretch; }
+  .welcome-quick { grid-template-columns: repeat(3, 1fr); }
+  .welcome-mark { width: 100%; opacity: 0.5; }
+}
+@media (max-width: 700px) {
+  .welcome-card { padding: 26px 20px 22px 28px; }
+  .welcome-content h1 { font-size: 26px; }
+  .quick-link { min-width: 0; padding: 13px 8px 11px; }
+}
+
+/* 深色模式：卡片底色再提亮一階、邊框與文字提高對比，與頁面底色拉開層次。 */
+:host-context([data-theme='qmahdark']) {
+  .welcome-card, .dashboard-card {
+    border-color: color-mix(in srgb, #fff 17%, transparent);
+    background-color: #2b3033;
+    box-shadow: 0 1px 0 rgb(255 255 255 / 7%) inset, 0 10px 26px rgb(0 0 0 / 38%);
+  }
+  .welcome-card {
+    background-image: linear-gradient(100deg, transparent 50%, rgb(201 164 95 / 10%));
+  }
+  .dashboard-card {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--card-accent) 14%, transparent), transparent 60%);
+  }
+  .dashboard-card:hover { border-color: color-mix(in srgb, var(--card-accent) 65%, #fff 10%); }
+  .dashboard-card .card-content p,
+  .welcome-content p { color: #cfcdc6; }
+  .welcome-eyebrow { color: #d9bd83; }
+  .member-status { color: #8fd3a8; }
+  .quick-link { background: color-mix(in srgb, var(--q) 16%, #2b3033); border-color: color-mix(in srgb, var(--q) 40%, transparent); }
+}
