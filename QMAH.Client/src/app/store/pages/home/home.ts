@@ -14,7 +14,6 @@ import { RankingSection } from './ranking-section/ranking-section';
 import { NewArrivals } from './new-arrivals/new-arrivals';
 import { EraGrid } from './era-grid/era-grid';
 import { Recommendations } from './recommendations/recommendations';
-import { ScrollTop } from '../../component/scroll-top/scroll-top';
 import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 
 /**
