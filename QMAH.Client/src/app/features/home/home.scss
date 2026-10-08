@@ -771,3 +771,19 @@ a:focus-visible {
 .home-button--primary:hover { background: #f7e0a2; }
 .home-button--secondary { background: rgb(255 250 240 / 12%); }
 @media (max-width: 640px) { .home-hero__actions .home-button { width: 100%; } }
+
+/* 與其他頁面統一：暖白／深灰底，紋樣只鋪左右邊緣並向中央淡出。 */
+.home-page {
+  background-color: var(--qmah-page-surface);
+  background-image:
+    linear-gradient(90deg, transparent, var(--qmah-page-surface) 18%, var(--qmah-page-surface) 82%, transparent),
+    url('/patterns/temple-bronze.svg');
+  background-size: auto, 256px 256px;
+  background-position: center, center top;
+  background-repeat: no-repeat, repeat;
+}
+:host-context([data-theme='qmahdark']) .home-page {
+  background-image:
+    linear-gradient(90deg, transparent, var(--qmah-page-surface) 18%, var(--qmah-page-surface) 82%, transparent),
+    url('/patterns/temple-bronze-dark.svg');
+}
