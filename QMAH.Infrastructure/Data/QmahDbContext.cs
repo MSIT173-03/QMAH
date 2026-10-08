@@ -90,6 +90,8 @@ public partial class QmahDbContext
 
     public virtual DbSet<Payment> Payments { get; set; }
 
+    public virtual DbSet<PaymentAttempt> PaymentAttempts { get; set; }
+
     public virtual DbSet<PointBalance> PointBalances { get; set; }
 
     public virtual DbSet<PointTransaction> PointTransactions { get; set; }
@@ -1051,6 +1053,34 @@ public partial class QmahDbContext
                 .HasConstraintName("FK_Payments_Order");
         });
 
+        modelBuilder.Entity<PaymentAttempt>(entity =>
+        {
+            entity.ToTable("PaymentAttempts", "store");
+
+            entity.HasIndex(e => e.PaymentId, "IX_PaymentAttempts_PaymentId");
+
+            entity.HasIndex(e => e.MerchantTradeNo, "UQ_PaymentAttempts_MerchantTradeNo").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CallbackReceivedAt).HasPrecision(3);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_PaymentAttempts_Created");
+            entity.Property(e => e.EcpayTradeNo).HasMaxLength(30);
+            entity.Property(e => e.MerchantTradeNo)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.RtnMsg).HasMaxLength(200);
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("CREATED", "DF_PaymentAttempts_Status");
+
+            entity.HasOne(d => d.Payment).WithMany(p => p.PaymentAttempts)
+                .HasForeignKey(d => d.PaymentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_PaymentAttempts_Payment");
+        });
+
         modelBuilder.Entity<PointBalance>(entity =>
         {
             entity.HasKey(e => e.UserId);
@@ -1313,6 +1343,8 @@ public partial class QmahDbContext
         modelBuilder.Entity<StoreOrder>(entity =>
         {
             entity.ToTable("StoreOrders", "store");
+
+            entity.HasIndex(e => new { e.Status, e.CreatedAt }, "IX_StoreOrders_Status_CreatedAt");
 
             entity.HasIndex(e => e.OrderNo, "UQ_StoreOrders_OrderNo").IsUnique();
 

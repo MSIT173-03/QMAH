@@ -21,6 +21,8 @@ public static class AdminDisplayLabels
         "PAID" => "已付款",
         "FAILED" => "付款失敗",
         "CANCELLED" => "已取消",
+        // 取消或逾時後才在綠界付款，需由客服在綠界後台人工退款。
+        "REFUND_REQUIRED" => "需人工退款",
         _ => string.IsNullOrWhiteSpace(value) ? "未記錄" : value
     };
 
