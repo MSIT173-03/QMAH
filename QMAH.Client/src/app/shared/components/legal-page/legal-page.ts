@@ -1,5 +1,5 @@
 import { Location } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, ElementRef, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 type LegalDocument = 'privacy' | 'terms';
@@ -253,12 +253,32 @@ export class LegalPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
   private readonly router = inject(Router);
+  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly content = computed(() => {
     const kind = this.route.snapshot.data['document'] as LegalDocument;
     return DOCUMENTS[kind] ?? DOCUMENTS.privacy;
   });
   protected readonly updatedAt = '2026 年 10 月 8 日';
   protected readonly returnLabel = history.state?.navigationId > 1 ? '返回上一頁' : '回到首頁';
+
+  protected chapterHref(index: number): string {
+    return this.router.url.split('#')[0] + '#legal-section-' + index;
+  }
+
+  protected jumpToSection(index: number, event: MouseEvent): void {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    const id = 'legal-section-' + index;
+    const section = this.element.nativeElement.querySelector<HTMLElement>(`#${id}`);
+    if (!section) return;
+    const details = section.querySelector('details');
+    if (details) details.open = true;
+    this.location.replaceState(this.chapterHref(index));
+    const reduceMotion = this.element.nativeElement.ownerDocument.defaultView
+      ?.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    section.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+    section.querySelector('summary')?.focus({ preventScroll: true });
+  }
 
   protected goBack(): void {
     if (history.state?.navigationId > 1) {
