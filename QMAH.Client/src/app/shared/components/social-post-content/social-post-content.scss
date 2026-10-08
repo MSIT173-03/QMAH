@@ -4,6 +4,7 @@
 
 /* ui-integration: 貼文內容是跨列表與詳情頁共用的閱讀元件，集中使用 SCSS，避免 inline style 與各頁規則分裂。 */
 .social-post-content {
+  white-space: pre-wrap;
   color: var(--qmah-ink);
   font-size: var(--qmah-type-body-size);
   line-height: 1.75;
@@ -57,18 +58,19 @@ blockquote {
   height: 0.35rem;
 }
 
-/* 行內格式：粗體、斜體、字級、顏色（顏色與字級只接受白名單值，由 data 屬性對應，不吃使用者提供的 CSS）。 */
-.b { font-weight: 800; }
-.i { font-style: italic; }
-[data-size='lg'] { font-size: 1.3em; line-height: 1.4; }
-[data-size='sm'] { font-size: 0.85em; }
+/* 行內格式：粗體、斜體、底線、刪除線、字級、顏色（只接受白名單值，由 data 屬性對應，不吃使用者提供的 CSS）。 */
+strong { font-weight: 800; }
+em { font-style: italic; }
+[data-size='small'] { font-size: 0.85em; }
+[data-size='large'] { font-size: 1.3em; line-height: 1.4; }
+[data-size='xlarge'] { font-size: 1.7em; line-height: 1.3; font-weight: 700; }
 [data-color='red'] { color: #b3402d; }
 [data-color='brown'] { color: #7a4b2a; }
 [data-color='green'] { color: #2f6b50; }
 [data-color='blue'] { color: #2f5aa8; }
 [data-color='gold'] { color: #8f6200; }
 [data-color='gray'] { color: #5f645f; }
-:host-context(:root[data-theme='qmahdark']) {
+:host-context([data-theme='qmahdark']) {
   [data-color='red'] { color: #ff9b8a; }
   [data-color='brown'] { color: #e0b48a; }
   [data-color='green'] { color: #8fd1ae; }

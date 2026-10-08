@@ -19,32 +19,32 @@
   color: var(--color-ink);
 }
 
-/* ui-integration: Area identity is a restrained Shell accent, not a full-page repaint. */
-.app-shell[data-area='user'] {
+/* 頁首（導覽、帳號、通知）全站同一組顏色，不隨領域切換；領域色只套在內容區（.app-main），避免頁首五種色造成不統一。 */
+.app-shell[data-area='user'] .app-main {
   --color-primary: var(--qmah-user-action);
   --color-primary-soft: var(--qmah-user-soft);
   --color-primary-content: var(--qmah-user-content);
 }
 
-.app-shell[data-area='catalog'] {
+.app-shell[data-area='catalog'] .app-main {
   --color-primary: var(--qmah-catalog-action);
   --color-primary-soft: var(--qmah-catalog-soft);
   --color-primary-content: var(--qmah-catalog-content);
 }
 
-.app-shell[data-area='game'] {
+.app-shell[data-area='game'] .app-main {
   --color-primary: var(--qmah-game-action);
   --color-primary-soft: var(--qmah-game-soft);
   --color-primary-content: var(--qmah-game-content);
 }
 
-.app-shell[data-area='social'] {
+.app-shell[data-area='social'] .app-main {
   --color-primary: var(--qmah-social-action);
   --color-primary-soft: var(--qmah-social-soft);
   --color-primary-content: var(--qmah-social-content);
 }
 
-.app-shell[data-area='store'] {
+.app-shell[data-area='store'] .app-main {
   --color-primary: var(--qmah-store-action);
   --color-primary-soft: var(--qmah-store-soft);
   --color-primary-content: var(--qmah-store-content);

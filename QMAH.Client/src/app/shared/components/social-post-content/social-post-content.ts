@@ -1,78 +1,51 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-import { SocialSegment, parseSocialInline } from '../../social-markup';
+import { parseSocialMarkup } from '../../social-markup';
 
-type SocialPostBlock =
-  | { kind: 'heading' | 'quote' | 'paragraph'; segments: SocialSegment[] }
-  | { kind: 'space' }
-  | { kind: 'list'; items: SocialSegment[][] };
-
+/**
+ * 貼文內容顯示：把「[b]…[/b]」這類標記解析成節點樹，再以 Angular 範本輸出元素與文字插值。
+ * 沒有使用 innerHTML，使用者輸入的 HTML 只會被當成文字，不會有注入問題；標記的白名單見 social-markup.ts。
+ */
 @Component({
   selector: 'app-social-post-content',
+  imports: [NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './social-post-content.scss',
   template: `
-    <article class="social-post-content" aria-label="貼文內容">
-      @for (block of blocks(); track $index) {
-        @switch (block.kind) {
-          @case ('heading') { <h3>@for (part of block.segments; track $index) { <span [class.b]="part.bold" [class.i]="part.italic" [attr.data-size]="part.size ?? null" [attr.data-color]="part.color ?? null">{{ part.text }}</span> }</h3> }
-          @case ('list') {
-            <ul class="bullet">
-              @for (item of block.items; track $index) {
-                <li>@for (part of item; track $index) { <span [class.b]="part.bold" [class.i]="part.italic" [attr.data-size]="part.size ?? null" [attr.data-color]="part.color ?? null">{{ part.text }}</span> }</li>
-              }
-            </ul>
+    <ng-template #tpl let-nodes>
+      @for (node of nodes; track $index) {
+        @if (node.t === 'text') {
+          {{ node.v }}
+        } @else {
+          @switch (node.n) {
+            @case ('b') { <strong><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></strong> }
+            @case ('i') { <em><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></em> }
+            @case ('u') { <u><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></u> }
+            @case ('s') { <s><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></s> }
+            @case ('size') { <span [attr.data-size]="node.a"><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></span> }
+            @case ('color') { <span [attr.data-color]="node.a"><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></span> }
+            @case ('h') { <h3><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></h3> }
+            @case ('quote') { <blockquote><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></blockquote> }
+            @case ('list') {
+              <ul class="bullet">
+                @for (item of node.items; track $index) {
+                  <li><ng-container *ngTemplateOutlet="tpl; context: { $implicit: item }" /></li>
+                }
+              </ul>
+            }
           }
-          @case ('quote') { <blockquote>@for (part of block.segments; track $index) { <span [class.b]="part.bold" [class.i]="part.italic" [attr.data-size]="part.size ?? null" [attr.data-color]="part.color ?? null">{{ part.text }}</span> }</blockquote> }
-          @case ('space') { <div class="space" aria-hidden="true"></div> }
-          @case ('paragraph') { <p>@for (part of block.segments; track $index) { <span [class.b]="part.bold" [class.i]="part.italic" [attr.data-size]="part.size ?? null" [attr.data-color]="part.color ?? null">{{ part.text }}</span> }</p> }
         }
       }
+    </ng-template>
+    <article class="social-post-content" aria-label="貼文內容">
+      <ng-container *ngTemplateOutlet="tpl; context: { $implicit: nodes() }" />
     </article>
-  `
+  `,
 })
 export class SocialPostContentComponent {
-  // 使用純文字標記而非儲存 HTML，保留既有 API 契約；行內格式由 parseSocialInline 轉成片段並以文字插值輸出（不用 innerHTML），所以不會有 HTML 注入。
+  // 貼文以純文字儲存（API 契約不變）；格式標記只在顯示時解析。
   content = input.required<string>();
 
-  blocks = computed<SocialPostBlock[]>(() => {
-    const blocks: SocialPostBlock[] = [];
-
-    for (const line of this.content().split('\n')) {
-      const text = line.trim();
-      if (!text) {
-        blocks.push({ kind: 'space' });
-        continue;
-      }
-
-      if (text.startsWith('【') && text.endsWith('】')) {
-        blocks.push({ kind: 'heading', segments: parseSocialInline(text) });
-        continue;
-      }
-
-      if (text.startsWith('• ')) {
-        const lastBlock = blocks[blocks.length - 1];
-        if (lastBlock?.kind === 'list') {
-          lastBlock.items.push(parseSocialInline(text.slice(2)));
-        } else {
-          blocks.push({ kind: 'list', items: [parseSocialInline(text.slice(2))] });
-        }
-        continue;
-      }
-
-      if (text.startsWith('> ')) {
-        blocks.push({ kind: 'quote', segments: parseSocialInline(text.slice(2)) });
-        continue;
-      }
-
-      if (text.startsWith('「') && text.endsWith('」')) {
-        blocks.push({ kind: 'quote', segments: parseSocialInline(text.slice(1, -1)) });
-        continue;
-      }
-
-      blocks.push({ kind: 'paragraph', segments: parseSocialInline(line) });
-    }
-
-    return blocks;
-  });
+  protected readonly nodes = computed(() => parseSocialMarkup(this.content()));
 }

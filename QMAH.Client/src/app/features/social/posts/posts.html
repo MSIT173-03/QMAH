@@ -161,7 +161,7 @@
             <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
           </div>
           <div class="social-post-card__tags">
-            <span class="social-tag">{{ boardLabel(post.boardCode) }}</span>
+            <span class="social-tag" [attr.data-board]="post.boardCode">{{ boardLabel(post.boardCode) }}</span>
             @if (post.postType === 'ANNOUNCEMENT') {
               <span class="social-tag social-tag--notice">站方公告</span>
             }
@@ -180,7 +180,7 @@
           <p class="social-post-card__stats">
             <span class="social-icon-label">
               <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
-              {{ post.commentCount || 0 }}
+              {{ post.commentCount || 0 }} 則留言
             </span>
             @if (post.mediaCount > 0) {
               <span class="social-icon-label">
@@ -189,18 +189,20 @@
               </span>
             }
           </p>
-          <button
-            class="social-post-card__report"
-            type="button"
-            [attr.aria-label]="'檢舉貼文：' + post.title"
-            title="檢舉這篇貼文"
-            (click)="reportModal.open('POST', post.id)"
-          >
-            <svg lucideFlag aria-hidden="true" focusable="false"></svg>
-          </button>
-          <a class="social-post-card__open" [routerLink]="['/social/posts', post.id]" [attr.aria-label]="'開啟貼文：' + post.title" title="開啟貼文">
-            <svg lucideArrowRight aria-hidden="true" focusable="false"></svg>
-          </a>
+          <div class="social-post-card__actions">
+            <button
+              class="social-post-card__report"
+              type="button"
+              [attr.aria-label]="'檢舉貼文：' + post.title"
+              title="檢舉這篇貼文"
+              (click)="reportModal.open('POST', post.id)"
+            >
+              <svg lucideShieldAlert aria-hidden="true" focusable="false"></svg>
+            </button>
+            <a class="social-post-card__open" [routerLink]="['/social/posts', post.id]" [attr.aria-label]="'開啟貼文：' + post.title" title="開啟貼文">
+              <svg lucideExternalLink aria-hidden="true" focusable="false"></svg>
+            </a>
+          </div>
         </div>
       </div>
     </article>
@@ -233,27 +235,32 @@
       </div>
       <div class="social-post-form__field">
         <label class="social-post-form__label" for="social-post-content">內容</label>
-        <div class="social-post-form__toolbar" role="toolbar" aria-label="貼文格式工具">
+        <div class="social-post-form__toolbar" role="toolbar" aria-label="貼文格式工具" (mousedown)="$event.preventDefault()">
           <div class="social-post-form__group" role="group" aria-label="段落">
-            <button type="button" class="social-fmt" (click)="formatPostContent('heading')" title="小標題">小標</button>
-            <button type="button" class="social-fmt" (click)="formatPostContent('bullet')" title="項目符號">項目</button>
-            <button type="button" class="social-fmt" (click)="formatPostContent('quote')" title="引用">引用</button>
-            <button type="button" class="social-fmt" (click)="formatPostContent('paragraph')" title="插入空行">分段</button>
+            <button type="button" class="social-fmt" (click)="wrapPostContent('[h]', '[/h]')" title="小標題 [h]">小標</button>
+            <button type="button" class="social-fmt" (click)="wrapPostContent('[quote]', '[/quote]')" title="引用 [quote]">引用</button>
+            <button type="button" class="social-fmt" (click)="insertPostList()" title="項目清單 [list]">清單</button>
+            <button type="button" class="social-fmt" (click)="insertPostBreak()" title="插入空行">分段</button>
           </div>
           <div class="social-post-form__group" role="group" aria-label="文字樣式">
-            <button type="button" class="social-fmt social-fmt--b" (click)="wrapPostContent('**', '**')" title="粗體" aria-label="粗體">B</button>
-            <button type="button" class="social-fmt social-fmt--i" (click)="wrapPostContent('*', '*')" title="斜體" aria-label="斜體">I</button>
-            <button type="button" class="social-fmt social-fmt--lg" (click)="wrapPostContent('{大:', '}')" title="大字" aria-label="大字">A</button>
-            <button type="button" class="social-fmt social-fmt--sm" (click)="wrapPostContent('{小:', '}')" title="小字" aria-label="小字">A</button>
+            <button type="button" class="social-fmt social-fmt--b" (click)="wrapPostContent('[b]', '[/b]')" title="粗體 [b]" aria-label="粗體">B</button>
+            <button type="button" class="social-fmt social-fmt--i" (click)="wrapPostContent('[i]', '[/i]')" title="斜體 [i]" aria-label="斜體">I</button>
+            <button type="button" class="social-fmt social-fmt--u" (click)="wrapPostContent('[u]', '[/u]')" title="底線 [u]" aria-label="底線">U</button>
+            <button type="button" class="social-fmt social-fmt--s" (click)="wrapPostContent('[s]', '[/s]')" title="刪除線 [s]" aria-label="刪除線">S</button>
+          </div>
+          <div class="social-post-form__group" role="group" aria-label="字級">
+            <button type="button" class="social-fmt social-fmt--sm" (click)="wrapPostContent('[size=small]', '[/size]')" title="小字" aria-label="小字">A</button>
+            <button type="button" class="social-fmt social-fmt--lg" (click)="wrapPostContent('[size=large]', '[/size]')" title="大字" aria-label="大字">A</button>
+            <button type="button" class="social-fmt social-fmt--xl" (click)="wrapPostContent('[size=xlarge]', '[/size]')" title="特大字" aria-label="特大字">A</button>
           </div>
           <div class="social-post-form__group" role="group" aria-label="文字顏色">
-            @for (c of socialColors; track c.key) {
-              <button type="button" class="social-swatch" [attr.data-color]="c.color" (click)="wrapPostContent('{' + c.key + ':', '}')" [title]="c.label" [attr.aria-label]="c.label"></button>
+            @for (c of socialColors; track c.color) {
+              <button type="button" class="social-swatch" [attr.data-color]="c.color" (click)="wrapPostContent('[color=' + c.color + ']', '[/color]')" [title]="c.label" [attr.aria-label]="c.label"></button>
             }
           </div>
         </div>
         <textarea id="social-post-content" name="content" class="textarea textarea-bordered w-full social-post-form__textarea" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
-        <span class="social-post-form__hint">先選取文字再按格式；再按一次可取消。內容以純文字儲存，發布後自動呈現格式。</span>
+        <span class="social-post-form__hint">先選取文字再按格式；沒選取時會插入成對標記，游標停在中間，在裡面輸入即可。再按一次可取消。</span>
       </div>
       @if (newPost.content.trim()) {
         <div class="social-post-form__preview rounded-box border border-base-300 bg-base-200/40">

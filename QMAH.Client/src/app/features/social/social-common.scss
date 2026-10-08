@@ -658,3 +658,6 @@
 .social-swatch[data-color='gray'] { background: #6b6f6a; }
 .social-post-form__hint { display: block; margin-top: 6px; color: var(--qmah-muted); font-size: 13px; line-height: 1.5; }
 .social-post-form__toolbar .social-post-form__hint { display: none; }
+.social-fmt--u { text-decoration: underline; text-underline-offset: 3px; }
+.social-fmt--s { text-decoration: line-through; }
+.social-fmt--xl { font-size: 20px; }

@@ -15,8 +15,8 @@ import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-ico
 import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup';
 import { boardLabel } from '../social-labels';
 import {
-  LucideArrowRight,
-  LucideFlag,
+  LucideExternalLink,
+  LucideShieldAlert,
   LucideImage,
   LucideMessageCircle,
   LucideMegaphone,
@@ -45,8 +45,8 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
     ReportModalComponent,
     SocialPostContentComponent,
     QmahIconComponent,
-    LucideArrowRight,
-    LucideFlag,
+    LucideExternalLink,
+    LucideShieldAlert,
     LucideImage,
     LucideMessageCircle,
     LucideMegaphone,
@@ -247,51 +247,56 @@ export class PostsComponent implements OnInit, OnDestroy {
     setTimeout(() => textarea.setSelectionRange(selStart, selEnd));
   }
 
-  // 編輯器只插入純文字標記；共用呈現元件會把小標、項目與引用轉成安全的視覺層次。
-  // 小標／項目／引用以「行」為單位，已套用時再按一次會取消；分段只在游標處加空行，不會刪掉選取的文字。
-  formatPostContent(kind: 'heading' | 'bullet' | 'quote' | 'paragraph'): void {
-    const textarea = this.contentTextarea;
-    if (!textarea) return;
-    const value = textarea.value;
-    const { selectionStart: start, selectionEnd: end } = textarea;
-
-    if (kind === 'paragraph') {
-      const at = end;
-      const insert = value.slice(0, at).endsWith('\n\n') ? '' : value.slice(0, at).endsWith('\n') ? '\n' : '\n\n';
-      this.applyContent(textarea, value.slice(0, at) + insert + value.slice(at), at + insert.length, at + insert.length);
-      return;
-    }
-
-    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-    const nextBreak = value.indexOf('\n', end);
-    const lineEnd = nextBreak === -1 ? value.length : nextBreak;
-    const [prefix, suffix] = kind === 'heading' ? ['【', '】'] : kind === 'bullet' ? ['• ', ''] : ['「', '」'];
-    const lines = value.slice(lineStart, lineEnd).split('\n');
-    const allWrapped = lines.every(line => !line.trim() || (line.startsWith(prefix) && line.endsWith(suffix) && line.length >= prefix.length + suffix.length));
-    const changed = lines.map(line => {
-      if (!line.trim()) return line;
-      if (allWrapped) return line.slice(prefix.length, line.length - suffix.length);
-      return line.startsWith(prefix) && line.endsWith(suffix) ? line : prefix + line + suffix;
-    });
-    const replaced = changed.join('\n');
-    const text = replaced.trim() ? replaced : prefix + '請填寫內容' + suffix;
-    this.applyContent(textarea, value.slice(0, lineStart) + text + value.slice(lineEnd), lineStart, lineStart + text.length);
-  }
-
-  /** 行內格式：用標記包住選取文字（粗體、斜體、字級、顏色）；再按一次相同格式會取消。 */
+  /**
+   * 用成對標記包住選取文字，例如 [b]…[/b]、[color=red]…[/color]。
+   * 沒有選取時插入「成對標記」並把游標放在中間；選取內容已被同一組標記包住（或游標正好在空標記中）時再按一次會取消。
+   */
   wrapPostContent(open: string, close: string): void {
     const textarea = this.contentTextarea;
     if (!textarea) return;
     const value = textarea.value;
     const { selectionStart: start, selectionEnd: end } = textarea;
     const selected = value.slice(start, end);
-    if (selected.startsWith(open) && selected.endsWith(close) && selected.length >= open.length + close.length) {
+    const same = (x: string, y: string) => x.toLowerCase() === y.toLowerCase();
+
+    if (selected.length >= open.length + close.length && same(selected.slice(0, open.length), open) && same(selected.slice(-close.length), close)) {
       const inner = selected.slice(open.length, selected.length - close.length);
       this.applyContent(textarea, value.slice(0, start) + inner + value.slice(end), start, start + inner.length);
       return;
     }
-    const body = selected || '文字';
-    this.applyContent(textarea, value.slice(0, start) + open + body + close + value.slice(end), start + open.length, start + open.length + body.length);
+    const before = value.slice(Math.max(0, start - open.length), start);
+    const after = value.slice(end, end + close.length);
+    if (same(before, open) && same(after, close)) {
+      this.applyContent(textarea, value.slice(0, start - open.length) + selected + value.slice(end + close.length), start - open.length, start - open.length + selected.length);
+      return;
+    }
+    const next = value.slice(0, start) + open + selected + close + value.slice(end);
+    const caretStart = start + open.length;
+    this.applyContent(textarea, next, caretStart, caretStart + selected.length);
+  }
+
+  /** 把選取的每一行變成清單項目；沒有選取時插入一個空清單並把游標放在第一項。 */
+  insertPostList(): void {
+    const textarea = this.contentTextarea;
+    if (!textarea) return;
+    const value = textarea.value;
+    const { selectionStart: start, selectionEnd: end } = textarea;
+    const lines = value.slice(start, end).split('\n').map(line => line.trim()).filter(Boolean);
+    const items = lines.length ? lines : [''];
+    const text = '[list]\n' + items.map(line => '[*]' + line).join('\n') + '\n[/list]';
+    const caret = lines.length ? start + text.length : start + '[list]\n[*]'.length;
+    this.applyContent(textarea, value.slice(0, start) + text + value.slice(end), caret, caret);
+  }
+
+  /** 在游標處插入空行（分段），不會刪掉選取的文字。 */
+  insertPostBreak(): void {
+    const textarea = this.contentTextarea;
+    if (!textarea) return;
+    const value = textarea.value;
+    const at = textarea.selectionEnd;
+    const head = value.slice(0, at);
+    const insert = head.endsWith('\n\n') ? '' : head.endsWith('\n') ? '\n' : '\n\n';
+    this.applyContent(textarea, head + insert + value.slice(at), at + insert.length, at + insert.length);
   }
 
   // GET /api/v1/social/posts（AllowAnonymous，回傳 ApiPage<SocialPostListItemDto>）
