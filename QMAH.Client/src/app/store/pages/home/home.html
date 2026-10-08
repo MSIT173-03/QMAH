@@ -25,4 +25,7 @@
 
   <!-- 為你推薦 -->
   <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)" />
+
+  <!-- 向下捲動後出現的回到頂端箭頭：容器的最後一個子元素，靠容器右緣、捲動時固定在視窗下緣 -->
+  <app-scroll-top />
 </div>

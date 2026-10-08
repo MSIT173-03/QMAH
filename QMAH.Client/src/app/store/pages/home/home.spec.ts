@@ -30,6 +30,14 @@ describe('Home', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('has a back-to-top button that only appears after scrolling', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.home-main > app-scroll-top')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.scroll-top')).toBeNull();
+    fixture.destroy();
+  });
 });
 
 describe('Home purchased products lookup', () => {

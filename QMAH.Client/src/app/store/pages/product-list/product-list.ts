@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, input, linkedSignal, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { catchError, of, switchMap, tap } from 'rxjs';
 
 import {
@@ -130,8 +130,13 @@ export class ProductList {
   protected eraCode = linkedSignal(() => this.era());
   /** 目前的主題入口，只影響頁面標題；清除篩選後歸零 */
   protected viewKey = linkedSignal(() => this.view());
+  /** 清除篩選時要保留的排序方式；移除主題入口參數會讓排序預設值重算，下一次重算時改用這個值 */
+  private keptSortIndex: number | null = null;
   /** 目前的排序方式索引，預設值依主題入口而定（例如新品上架預設為最新上架） */
   protected sortIndex = linkedSignal(() => {
+    const kept = this.keptSortIndex;
+    this.keptSortIndex = null;
+    if (kept !== null) return kept;
     const order = VIEW_DEFAULT_ORDER[this.view()];
     return order !== undefined ? ORDER_OPTIONS.findIndex((option) => option.order === order) : 0;
   });
@@ -351,7 +356,10 @@ export class ProductList {
     this.scrollToTop();
   }
 
-  /** 清除所有篩選條件（排序方式保持不變），並回到第 1 頁 */
+  /**
+   * 清除所有篩選條件（排序方式保持不變），並回到第 1 頁；
+   * 同時移除網址上的篩選參數（q、cat、era、view、page），並留下一筆瀏覽紀錄，可用上一頁回到清除前的篩選。
+   */
   protected onReset(): void {
     this.category.set('');
     this.eraCode.set('');
@@ -360,7 +368,12 @@ export class ProductList {
     this.searchInput.set('');
     this.keyword.set('');
     this.viewKey.set('');
-    this.showFirstPage();
+    this.pageIndex.set(1);
+    // 主題入口參數被移除時，排序預設值會重算；先記下目前的排序，讓它不被重設。
+    if (this.view() !== '') this.keptSortIndex = this.sortIndex();
+    // 只能有一次導覽：連續兩次 navigate 時，後者是以尚未更新的網址合併，會把前者移除的參數加回去。
+    this.updateQueryParams({ q: null, cat: null, era: null, view: null, page: null });
+    this.scrollToTop();
   }
 
   /** 查詢失敗後以相同條件重新查詢 */
@@ -389,10 +402,11 @@ export class ProductList {
    */
   private setPage(page: number): void {
     this.pageIndex.set(page);
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { page: page > 1 ? page : null },
-      queryParamsHandling: 'merge',
-    });
+    this.updateQueryParams({ page: page > 1 ? page : null });
+  }
+
+  /** 以合併方式更新網址查詢字串（null 代表移除該參數）；每次更新都會新增一筆瀏覽紀錄 */
+  private updateQueryParams(queryParams: Params): void {
+    this.router.navigate([], { relativeTo: this.route, queryParams, queryParamsHandling: 'merge' });
   }
 }
