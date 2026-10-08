@@ -146,3 +146,21 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
 .tool-progress li button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }
 .tool-review { margin: 0; padding: 8px 10px; border-radius: 10px; color: var(--game-card-ink); background: #e5efdf; font-size: 14px; font-weight: 700; line-height: 1.6; }
 @container locround (max-height: 780px) { .tool-review { display: none; } }
+
+/* 視窗不高（非全螢幕）時，工具欄收斂成精簡版，避免內容被切掉。 */
+@container locround (max-height: 700px) {
+  .locator-tools { gap: 8px; padding: 10px; }
+  .tool-title { font-size: 16px; }
+  .tool-hint, .tool-review, .tool-last .tool-label { display: none; }
+  .tool-last__text { padding: 5px 10px; font-size: 14px; }
+  .tool-confirm-group .locator-pending-status { display: none; }
+  .locator-confirm { min-height: 40px; font-size: 16px; }
+  .tool-progress { grid-template-columns: 1fr 1fr; gap: 4px; }
+  .tool-progress li button { grid-template-columns: 22px minmax(0, 1fr); min-height: 30px; padding: 2px 6px; gap: 6px; }
+  .tool-progress b { width: 22px; height: 22px; font-size: 13px; }
+  .tool-progress small, .tool-progress__name { display: none; }
+  .locator-tools ::ng-deep app-game-loupe-controls { gap: 8px; }
+  .locator-tools ::ng-deep .loupe-note { display: none; }
+  .locator-tools ::ng-deep .loupe-group { gap: 4px; }
+  .locator-tools ::ng-deep .loupe-seg button { min-height: 34px; font-size: 15px; }
+}

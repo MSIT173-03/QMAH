@@ -33,7 +33,7 @@
         </div>
         <div class="tool-group tool-last" role="status">
           <span class="tool-label">上一件結果</span>
-          <p class="tool-last__text" [class.is-ok]="lastAnswer() && lastCorrect()">{{ lastAnswer() ? (lastCorrect() ? '找到細節位置！' : '位置稍有偏差') : '完成第一件後顯示' }}</p>
+          <p class="tool-last__text" [class.is-ok]="lastAnswer() && lastCorrect()">@if (lastAnswer()) { <strong>{{ lastAccuracy() }}%</strong> <span>{{ lastCorrect() ? '找到細節位置' : '位置稍有偏差' }}</span> } @else { 完成第一件後顯示 }</p>
         </div>
         <div class="tool-group tool-progress-group">
           <span class="tool-label" id="progress-label">本局進度</span>
