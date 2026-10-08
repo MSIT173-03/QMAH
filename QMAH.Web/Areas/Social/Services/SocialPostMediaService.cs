@@ -12,7 +12,7 @@ namespace QMAH.Web.Areas.Social.Services;
 /// </summary>
 /// <remarks>
 /// 儲存規則刻意與 QMAH.Api 的 SocialMediaController 相同：檔名使用 MediaAssets.SequenceNo、
-/// 實體檔案放在 Media:RootPath（預設兩個 host 都指向 QMAH.Media/media），
+/// 實體檔案放在 Media:RootPath 底下該貼文的專屬資料夾 social/posts/{postId}/（預設兩個 host 都指向 QMAH.Media/media），
 /// 資料庫只保存相對檔名。前台因此能直接透過 /api/v1/social/media/{id}/content 讀到後台上傳的圖片，
 /// 貼文列表的封面（coverImageUrl）也會自動取第一張 ACTIVE 圖片。
 /// </remarks>
@@ -113,8 +113,10 @@ public sealed class SocialPostMediaService(
             db.MediaAssets.Add(asset);
             await db.SaveChangesAsync(cancellationToken);
 
-            var storedFileName = $"{asset.SequenceNo}{signature.Value.Extension}";
+            // 每篇貼文一個專屬資料夾：social/posts/{postId}/{流水號}.ext
+            var storedFileName = $"{SocialMediaStorage.PostFolder(postId)}/{asset.SequenceNo}{signature.Value.Extension}";
             var physicalPath = ResolvePhysicalPath(root, storedFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(physicalPath)!);
             try
             {
                 await using (var output = new FileStream(

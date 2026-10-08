@@ -12,7 +12,7 @@
   <!-- ui-integration: 活動詳情與貼文詳情共用 social-panel；標題升為 h1（原本是 h2，頁面沒有 h1），
        資訊用圖示事實列呈現，審核／發布狀態改成中文且只給發起人看，不再直接露出後端 enum。 -->
   <article class="social-panel">
-    <span class="social-tag" [class.social-tag--notice]="event.eventType === 'OFFICIAL'">
+    <span class="social-tag social-tag--kind" [class.social-tag--notice]="event.eventType === 'OFFICIAL'" [attr.data-kind]="event.eventType">
       {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
     </span>
     <h1 class="social-panel__title">{{ event.title }}</h1>

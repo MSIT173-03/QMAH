@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { AnnouncementsComponent } from './announcements';
+import { provideRouter } from '@angular/router';
 
 describe('AnnouncementsComponent', () => {
   let component: AnnouncementsComponent;
@@ -12,7 +13,7 @@ describe('AnnouncementsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AnnouncementsComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AnnouncementsComponent);
@@ -21,6 +22,10 @@ describe('AnnouncementsComponent', () => {
   });
 
   afterEach(() => {
+    // 共用導覽（app-social-shell）會自己取得看板清單
+    httpMock.match((r) => r.url.endsWith('/social/boards')).forEach((r) => r.flush([]));
+    // 頁面頂端共用的公告主視覺（app-social-spotlight）會取最新公告
+    httpMock.match((r) => r.url.endsWith('/social/posts')).forEach((r) => r.flush({ items: [], page: 1, pageSize: 5, totalCount: 0, totalPages: 0 }));
     httpMock.verify();
   });
 

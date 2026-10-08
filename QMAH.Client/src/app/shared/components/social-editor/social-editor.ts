@@ -1,13 +1,43 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnInit, computed, inject, input, model, output, signal, viewChild } from '@angular/core';
-import { LucideImagePlus, LucideSendHorizontal, LucideTypeOutline } from '@lucide/angular';
+import { ChangeDetectionStrategy, Component, ElementRef, OnInit, computed, effect, inject, input, model, output, signal, viewChild } from '@angular/core';
+import { LucideCalendarDays, LucideImage, LucideSendHorizontal, LucideSmile, LucideTypeOutline, LucideX } from '@lucide/angular';
 
 import { SocialApiService } from '../../../core/services/social-api';
 import { SOCIAL_COLORS } from '../../social-markup';
+import { ImageCropModalComponent } from '../image-crop-modal/image-crop-modal';
 import { SocialPostContentComponent } from '../social-post-content/social-post-content';
 
 type EditorAction =
   | { kind: 'wrap'; label: string; title: string; open: string; close: string; cls?: string }
   | { kind: 'link' | 'rule' | 'list' | 'break'; label: string; title: string; cls?: string };
+
+/** 表情選擇器的繁體中文介面文字（套件只附簡體版）。 */
+const EMOJI_I18N_ZH_TW = {
+  categoriesLabel: '類別',
+  emojiUnsupportedMessage: '您的瀏覽器不支援彩色表情符號。',
+  favoritesLabel: '常用',
+  loadingMessage: '載入中…',
+  networkErrorMessage: '無法載入表情符號。',
+  regionLabel: '表情符號選擇器',
+  searchDescription: '有搜尋結果時，按上下鍵選擇，按 Enter 插入。',
+  searchLabel: '搜尋',
+  searchResultsLabel: '搜尋結果',
+  skinToneDescription: '展開時，按上下鍵選擇，按 Enter 確認。',
+  skinToneLabel: '選擇膚色（目前為 {skinTone}）',
+  skinTonesLabel: '膚色',
+  skinTones: ['預設', '明亮', '偏亮', '中等', '偏暗', '深色'],
+  categories: {
+    custom: '自訂',
+    'smileys-emotion': '表情與情緒',
+    'people-body': '人物與身體',
+    'animals-nature': '動物與自然',
+    'food-drink': '飲食',
+    'travel-places': '旅行與地點',
+    activities: '活動',
+    objects: '物品',
+    symbols: '符號',
+    flags: '旗幟',
+  },
+};
 
 const COLOR_HEX: Record<string, string> = {
   red: '#b9423c', brown: '#7a5230', green: '#2f7a4f', blue: '#3b5ba8', gold: '#b8862a', gray: '#6f6a60',
@@ -19,24 +49,19 @@ const COLOR_HEX: Record<string, string> = {
  */
 @Component({
   selector: 'app-social-editor',
-  imports: [LucideImagePlus, LucideSendHorizontal, LucideTypeOutline, SocialPostContentComponent],
+  imports: [ImageCropModalComponent, LucideCalendarDays, LucideImage, LucideSendHorizontal, LucideSmile, LucideTypeOutline, LucideX, SocialPostContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './social-editor.scss',
   template: `
     <div class="sme" [class.is-open]="open()">
+      <textarea #field class="sme__field" [attr.aria-label]="label()" [placeholder]="placeholder()" [rows]="rows()" [value]="shown()" (input)="commit(field.value)" (keydown.control.enter)="submitted.emit()" (keydown.meta.enter)="submitted.emit()"></textarea>
       @if (open()) {
         <div class="sme__toolbar" role="toolbar" aria-label="格式工具" (mousedown)="$event.preventDefault()">
           @for (group of groups; track $index) {
             <div class="sme__group">
               @for (a of group; track a.title) {
-                <button type="button" class="sme__fmt" [class]="'sme__fmt ' + (a.cls ?? '')" [title]="a.title" [attr.aria-label]="a.title" (click)="run(a)">{{ a.label }}</button>
+                <button type="button" [class]="'sme__fmt ' + (a.cls ?? '')" [title]="a.title" [attr.aria-label]="a.title" (click)="run(a)">{{ a.label }}</button>
               }
-            </div>
-          }
-          @if (allowImage()) {
-            <div class="sme__group">
-              <button type="button" class="sme__fmt sme__fmt--icon" title="插入圖片" aria-label="插入圖片" [disabled]="uploading()" (click)="picker.click()"><svg lucideImagePlus aria-hidden="true" focusable="false"></svg>{{ uploading() ? '上傳中…' : '圖片' }}</button>
-              <input #picker type="file" hidden accept="image/jpeg,image/png,image/gif,image/webp" (change)="onPick($event)" />
             </div>
           }
           <div class="sme__group">
@@ -46,20 +71,52 @@ const COLOR_HEX: Record<string, string> = {
           </div>
         </div>
       }
-      <div class="sme__row">
-        <button type="button" class="sme__toggle" [attr.aria-pressed]="open()" [attr.aria-label]="open() ? '收起進階格式' : '進階格式'" [title]="open() ? '收起進階格式' : '進階格式（粗體、連結、劇透…）'" (click)="open.set(!open())">
-          <svg lucideTypeOutline aria-hidden="true" focusable="false"></svg>
-        </button>
-        <textarea #field class="sme__field" [attr.aria-label]="label()" [placeholder]="placeholder()" [rows]="rows()" [value]="value()" (input)="value.set(field.value)" (keydown.control.enter)="submitted.emit()" (keydown.meta.enter)="submitted.emit()"></textarea>
+      @if (images().length > 0) {
+        <div class="sme__images">
+          @for (img of images(); track img.id; let i = $index) {
+            <div class="sme__image" [class.is-inline]="isInline(i)">
+              <div class="sme__image-box">
+                <img [src]="img.url" [alt]="'圖 ' + (i + 1)" />
+                <span class="sme__image-no">圖{{ i + 1 }}</span>
+                <button type="button" class="sme__image-remove" aria-label="移除這張圖片" (click)="removeImage(img)"><svg lucideX aria-hidden="true" focusable="false"></svg></button>
+              </div>
+              @if (isInline(i)) {
+                <button type="button" class="sme__image-mode" title="取消插入，改成貼在留言最後" (click)="detach(i)">已插入 · 改為附圖</button>
+              } @else {
+                <button type="button" class="sme__image-mode" title="把這張圖放到輸入框游標所在位置" (click)="insertAtCaret(i)">插入內文</button>
+              }
+            </div>
+          }
+          <p class="sme__images-hint">圖片預設附在留言最後；要放在文字中間，按「插入內文」。</p>
+        </div>
+      }
+      @if (error()) { <p class="sme__error" role="alert">{{ error() }}</p> }
+      @if (open() && previewOn() && shown().trim()) {
+        <div class="sme__preview"><span class="sme__preview-label">預覽</span><app-social-post-content [content]="value()" /></div>
+      }
+      <div class="sme__bar">
+        <div class="sme__tools">
+          @if (allowImage()) {
+            <button type="button" class="sme__tool" title="附上圖片" aria-label="附上圖片" [disabled]="uploading()" (click)="picker.click()"><svg lucideImage aria-hidden="true" focusable="false"></svg></button>
+            <input #picker type="file" hidden multiple accept="image/jpeg,image/png,image/gif,image/webp" (change)="onPick($event)" />
+          }
+          <div class="sme__emoji-wrap">
+            <button type="button" class="sme__tool" title="表情符號" aria-label="表情符號" [attr.aria-expanded]="emojiOpen()" (click)="toggleEmoji()"><svg lucideSmile aria-hidden="true" focusable="false"></svg></button>
+            <div #emojiHost class="sme__emoji" [hidden]="!emojiOpen()" (mousedown)="$event.stopPropagation()"></div>
+          </div>
+          <button type="button" class="sme__tool" title="附上日期小標" aria-label="附上日期小標" (click)="insertDate()"><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg></button>
+          <button type="button" class="sme__tool" [class.is-on]="open()" [attr.aria-pressed]="open()" [title]="open() ? '收起進階格式' : '進階格式（粗體、連結、劇透…）'" [attr.aria-label]="open() ? '收起進階格式' : '進階格式'" (click)="open.set(!open())"><svg lucideTypeOutline aria-hidden="true" focusable="false"></svg></button>
+          @if (open()) {
+            <button type="button" class="sme__tool sme__tool--text" [class.is-on]="previewOn()" [attr.aria-pressed]="previewOn()" [title]="previewOn() ? '隱藏預覽' : '顯示預覽'" (click)="togglePreview()">預覽</button>
+          }
+          @if (uploading()) { <span class="sme__status">圖片上傳中…</span> }
+        </div>
         @if (showSend()) {
           <button type="button" class="sme__send" aria-label="送出" title="送出（Ctrl＋Enter）" [disabled]="!canSend()" (click)="submitted.emit()"><svg lucideSendHorizontal aria-hidden="true" focusable="false"></svg></button>
         }
       </div>
-      @if (error()) { <p class="sme__error" role="alert">{{ error() }}</p> }
-      @if (open() && value().trim()) {
-        <div class="sme__preview"><span class="sme__preview-label">預覽</span><app-social-post-content [content]="value()" /></div>
-      }
     </div>
+    <app-image-crop-modal (cropped)="onCropped($event)" (cancelled)="onCropCancelled()" />
   `,
 })
 export class SocialEditorComponent implements OnInit {
@@ -75,8 +132,27 @@ export class SocialEditorComponent implements OnInit {
   readonly submitted = output<void>();
 
   protected readonly open = signal(false);
+  protected readonly emojiOpen = signal(false);
+  private readonly emojiHost = viewChild<ElementRef<HTMLElement>>('emojiHost');
+  private emojiLoaded = false;
   protected readonly uploading = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** 已上傳、嵌在文字裡的圖片（縮圖列），最多 4 張 */
+  protected readonly images = signal<{ id: string; url: string }[]>([]);
+  private readonly cropModal = viewChild.required(ImageCropModalComponent);
+  private cropQueue: File[] = [];
+  private static readonly MAX_IMAGES = 4;
+  private readonly resetImages = effect(() => { if (this.value() === '') this.images.set([]); });
+  /** 輸入框只顯示文字；本次附上的圖片以縮圖呈現，[img=識別碼] 標記不露出，送出時附在文字後面。 */
+  /** 輸入框的文字；圖片若插在內文，這裡以好懂的 [圖1] 表示，送出時才換成 [img=識別碼]。 */
+  protected readonly shown = signal('');
+  private readonly syncFromParent = effect(() => {
+    const v = this.value();
+    if (v === '') { this.shown.set(''); return; }
+    if (this.shown() === '' && this.images().length === 0) this.shown.set(v);
+  });
+  /** 預覽預設收起，可自己點開；開關狀態記在這個瀏覽器。 */
+  protected readonly previewOn = signal(SocialEditorComponent.readPreview());
   protected readonly canSend = computed(() => this.value().trim().length > 0);
   protected readonly colors = SOCIAL_COLORS;
   private readonly field = viewChild.required<ElementRef<HTMLTextAreaElement>>('field');
@@ -101,31 +177,111 @@ export class SocialEditorComponent implements OnInit {
     ],
   ];
 
+  private static readPreview(): boolean {
+    try { return localStorage.getItem('qmah.social.editorPreview') === '1'; } catch { return false; }
+  }
+
+  protected togglePreview(): void {
+    const next = !this.previewOn();
+    this.previewOn.set(next);
+    try { localStorage.setItem('qmah.social.editorPreview', next ? '1' : '0'); } catch { /* 無法儲存時只影響這次 */ }
+  }
+
   ngOnInit(): void {
     if (this.startOpen()) this.open.set(true);
   }
 
+  /** 選檔：與發文器相同，先進裁切彈窗確認，再上傳。 */
   protected onPick(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const files = Array.from(input.files ?? []);
     input.value = '';
-    if (!file) return;
+    if (files.length === 0) return;
+    const room = SocialEditorComponent.MAX_IMAGES - this.images().length;
+    if (room <= 0) { this.error.set('留言最多附 ' + SocialEditorComponent.MAX_IMAGES + ' 張圖片。'); return; }
+    this.error.set(null);
+    this.cropQueue.push(...files.slice(0, room));
+    this.nextInQueue();
+  }
+
+  private nextInQueue(): void {
+    const next = this.cropQueue.shift();
+    if (next) this.cropModal().open(next);
+  }
+
+  protected onCropCancelled(): void {
+    this.nextInQueue();
+  }
+
+  protected onCropped(file: File): void {
     this.uploading.set(true);
     this.error.set(null);
     this.api.uploadMedia(file).subscribe({
       next: (media) => {
-        this.uploading.set(false);
-        const el = this.field().nativeElement;
-        const at = el.selectionEnd ?? el.value.length;
-        const head = el.value.slice(0, at);
-        const insert = (head.length === 0 || head.endsWith('\n') ? '' : '\n') + '[img=' + media.id + ']\n';
-        this.apply(head + insert + el.value.slice(at), at + insert.length, at + insert.length);
+        this.uploading.set(this.cropQueue.length > 0);
+        this.images.update((list) => [...list, { id: media.id, url: media.url }]);
+        this.commit(this.field().nativeElement.value);
+        this.nextInQueue();
       },
       error: (err) => {
-        this.uploading.set(false);
+        this.uploading.set(this.cropQueue.length > 0);
         this.error.set(err?.status === 401 ? '上傳圖片失敗：請先登入。' : err?.status === 413 ? '圖片不可超過 8 MB。' : '上傳圖片失敗，請確認格式是 JPEG／PNG／GIF／WebP。');
+        this.nextInQueue();
       },
     });
+  }
+
+  protected removeImage(img: { id: string; url: string }): void {
+    const at = this.images().findIndex((item) => item.id === img.id);
+    let text = this.field().nativeElement.value.split('[圖' + (at + 1) + ']').join('').replace(/\n{3,}/g, '\n\n');
+    for (let n = at + 2; n <= this.images().length; n++) text = text.split('[圖' + n + ']').join('[圖' + (n - 1) + ']');
+    this.images.update((list) => list.filter((item) => item.id !== img.id));
+    this.commit(text);
+    this.api.deleteMedia(img.id).subscribe({ error: () => undefined });
+  }
+
+  /** 開關完整表情選擇器；第一次開啟才載入（元件約 50 KB、資料放在 /emoji/，不連外部網站）。 */
+  protected async toggleEmoji(): Promise<void> {
+    if (this.emojiOpen()) { this.emojiOpen.set(false); return; }
+    this.emojiOpen.set(true);
+    if (this.emojiLoaded) return;
+    this.emojiLoaded = true;
+    const host = this.emojiHost()?.nativeElement;
+    if (!host) return;
+    const { Picker } = await import('emoji-picker-element');
+    const picker = new Picker({ dataSource: '/emoji/zh-emojibase.json', locale: 'zh', i18n: EMOJI_I18N_ZH_TW });
+    Object.assign(picker.style, { width: 'min(340px, calc(100vw - 32px))', height: '360px' });
+    picker.style.setProperty('--num-columns', '8');
+    picker.style.setProperty('--emoji-size', '1.35rem');
+    picker.style.setProperty('--emoji-font-family', '"Noto Color Emoji", sans-serif');
+    picker.style.setProperty('--border-radius', '12px');
+    picker.classList.add(document.documentElement.getAttribute('data-theme') === 'qmahdark' ? 'dark' : 'light');
+    picker.addEventListener('emoji-click', (event) => {
+      const unicode = (event as unknown as CustomEvent<{ unicode?: string }>).detail?.unicode;
+      if (unicode) this.insertText(unicode);
+    });
+    host.appendChild(picker);
+  }
+
+  /** 在游標處插入文字（表情）。 */
+  protected insertText(text: string): void {
+    const el = this.field().nativeElement;
+    const { selectionStart: start, selectionEnd: end } = el;
+    const caret = start + text.length;
+    this.apply(el.value.slice(0, start) + text + el.value.slice(end), caret, caret);
+    this.emojiOpen.set(false);
+  }
+
+  /** 附上日期：插入一個獨立一行的日期小標，例如「[h]2026-10-08[/h]」。 */
+  protected insertDate(): void {
+    const el = this.field().nativeElement;
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const label = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const at = el.selectionEnd ?? el.value.length;
+    const head = el.value.slice(0, at);
+    const insert = (head.length === 0 || head.endsWith('\n') ? '' : '\n') + '[h]' + label + '[/h]\n';
+    this.apply(head + insert + el.value.slice(at), at + insert.length, at + insert.length);
   }
 
   protected hex(color: string): string {
@@ -142,9 +298,45 @@ export class SocialEditorComponent implements OnInit {
     }
   }
 
+  /** 文字變更：對外的值 = 文字 + 附圖標記（各佔一行）。 */
+  protected commit(text: string): void {
+    this.shown.set(text);
+    const images = this.images();
+    let body = text;
+    const tail: string[] = [];
+    images.forEach((img, i) => {
+      const mark = '[圖' + (i + 1) + ']';
+      if (body.includes(mark)) body = body.split(mark).join('[img=' + img.id + ']');
+      else tail.push('[img=' + img.id + ']');
+    });
+    this.value.set(tail.length ? (body.trim() ? body.replace(/\s+$/, '') + '\n' : '') + tail.join('\n') : body);
+  }
+
+  protected isInline(index: number): boolean {
+    return this.shown().includes('[圖' + (index + 1) + ']');
+  }
+
+  /** 把圖片放到輸入框游標處（獨立成段） */
+  protected insertAtCaret(index: number): void {
+    const el = this.field().nativeElement;
+    const mark = '[圖' + (index + 1) + ']';
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? start;
+    const before = el.value.slice(0, start);
+    const after = el.value.slice(end);
+    const insert = (before && !before.endsWith('\n') ? '\n' : '') + mark + (after && !after.startsWith('\n') ? '\n' : '');
+    this.apply(before + insert + after, (before + insert).length, (before + insert).length);
+  }
+
+  /** 取消插入：圖片回到留言最後 */
+  protected detach(index: number): void {
+    const mark = '[圖' + (index + 1) + ']';
+    this.commit(this.field().nativeElement.value.split(mark).join('').replace(/\n{3,}/g, '\n\n'));
+  }
+
   private apply(value: string, selStart: number, selEnd: number): void {
     const el = this.field().nativeElement;
-    this.value.set(value);
+    this.commit(value);
     el.value = value;
     el.focus();
     el.setSelectionRange(selStart, selEnd);

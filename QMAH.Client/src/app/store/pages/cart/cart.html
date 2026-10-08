@@ -17,8 +17,8 @@
     <div class="cart-lines">
       @for (line of lines(); track line.id) {
       <app-cart-line [id]="line.id" [coverImage]="line.coverImage" [brand]="line.brand" [cat]="line.cat" [name]="line.name" [price]="line.price"
-        [was]="line.was" [qty]="line.qty" [lineTotal]="line.lineTotal" [leaving]="line.leaving" [entering]="line.entering"
-        (qtyChange)="onQtyChange(line.id, $event)" (remove)="onRemove(line.id)" />
+                     [was]="line.was" [qty]="line.qty" [lineTotal]="line.lineTotal" [leaving]="line.leaving" [entering]="line.entering"
+                     (qtyChange)="onQtyChange(line.id, $event)" (remove)="onRemove(line.id)" />
       }
     </div>
 
@@ -31,5 +31,6 @@
 
   <!-- 再加購 -->
   <app-cart-addons [items]="addons()" [addedIds]="addedAddons()" (addToCart)="onAddAddon($event)"
-    (refresh)="onRefreshAddons()" />
+                   (refresh)="onRefreshAddons()" />
+  <app-scroll-top />
 </div>

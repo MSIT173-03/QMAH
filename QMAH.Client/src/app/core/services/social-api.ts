@@ -94,6 +94,8 @@ export interface SocialPostDetails {
   content: string;
   comments: SocialComment[];
   media: SocialMedia[];
+  /** 圖片排版：SECONDARY 文字為主、PRIMARY 圖片為主（舊資料沒有時視為 SECONDARY） */
+  mediaLayout?: 'PRIMARY' | 'SECONDARY';
   locationName: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -166,6 +168,8 @@ export interface CreateSocialPostRequest {
   latitude?: number | null;
   longitude?: number | null;
   mediaIds?: string[];
+  /** 圖片排版：SECONDARY 文字為主（預設）、PRIMARY 圖片為主 */
+  mediaLayout?: 'PRIMARY' | 'SECONDARY';
 }
 
 export interface CreateSocialCommentRequest {
@@ -186,6 +190,9 @@ export interface EnsureArtifactDiscussionResult {
 export interface UpdateSocialPostRequest {
   title: string;
   content: string;
+  mediaLayout?: 'PRIMARY' | 'SECONDARY';
+  /** 最後要保留的圖片（順序即顯示順序）；不傳代表圖片不變，沒列出的既有圖片會被移除 */
+  mediaIds?: string[];
 }
 
 export interface UpdateSocialCommentRequest {
@@ -233,6 +240,11 @@ export class SocialApiService {
     postType?: string;
     artifactId?: string;
     userId?: string;
+    /** 發布時間範圍：起（含）、迄（不含），ISO 時間 */
+    createdAfter?: string;
+    createdBefore?: string;
+    /** newest（預設，新到舊）或 oldest（舊到新） */
+    sort?: 'newest' | 'oldest';
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<SocialPostListItem>> {

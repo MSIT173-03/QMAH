@@ -76,3 +76,13 @@
     }
   }
 }
+
+/* 固定模式：不依賴容器，直接貼在視窗右下角；顏色沿用各領域主色 */
+.scroll-top--fixed {
+  position: fixed;
+  right: max(16px, calc((100vw - 1320px) / 2 + 8px));
+  bottom: 24px;
+  border-color: var(--qmah-social-action, var(--color-accent));
+  background: var(--qmah-social-action, var(--color-accent));
+  color: #fff;
+}

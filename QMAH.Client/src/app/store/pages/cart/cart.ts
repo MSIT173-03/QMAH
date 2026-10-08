@@ -18,6 +18,7 @@ import { toProductView } from '../../shared/product-view';
 import { CartLine } from './cart-line/cart-line';
 import { CartSummary } from './cart-summary/cart-summary';
 import { CartAddons } from './cart-addons/cart-addons';
+import { ScrollTop } from '../../component/scroll-top/scroll-top';
 import { CartLineData, toCartLineData } from './cart.data';
 
 /** 移除一行購物車項目前，淡出動畫的播放時間（需與 cart-line.scss 的動畫時長一致） */
@@ -45,7 +46,7 @@ function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
 @Component({
   selector: 'app-cart',
   host: { class: 'store-app' },
-  imports: [SessionBar, Breadcrumb, PageTitleRow, EmptyState, CartLine, CartSummary, CartAddons],
+  imports: [ScrollTop, SessionBar, Breadcrumb, PageTitleRow, EmptyState, CartLine, CartSummary, CartAddons],
   templateUrl: './cart.html',
   styleUrl: './cart.scss',
 })

@@ -251,7 +251,8 @@ public sealed record SocialPostDetailsDto(
     decimal? Longitude,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    string? ContentHtml = null);
+    string? ContentHtml = null,
+    string MediaLayout = "SECONDARY");
 
 public sealed record EventListItemDto(
     Guid Id,
@@ -321,6 +322,10 @@ public sealed class CreateSocialPostRequest
 
     [Required, StringLength(4000, MinimumLength = 1)]
     public string Content { get; set; } = "";
+
+    /// <summary>圖片排版：SECONDARY 文字為主（預設）、PRIMARY 圖片為主。</summary>
+    [RegularExpression("PRIMARY|SECONDARY", ErrorMessage = "圖片排版只能是 PRIMARY 或 SECONDARY。")]
+    public string MediaLayout { get; set; } = "SECONDARY";
 
     public Guid? ArtifactId { get; set; }
 
@@ -421,6 +426,16 @@ public sealed class UpdateSocialPostRequest
 
     [Required, StringLength(4000, MinimumLength = 1)]
     public string Content { get; set; } = "";
+
+    /// <summary>圖片排版；null 代表不變。</summary>
+    [RegularExpression("PRIMARY|SECONDARY", ErrorMessage = "圖片排版只能是 PRIMARY 或 SECONDARY。")]
+    public string? MediaLayout { get; set; }
+
+    /// <summary>
+    /// 這篇貼文最後要保留的圖片（含新上傳、尚未綁定的）；null 代表圖片不變，沒列在內的既有圖片會被移除。
+    /// 抽換圖片＝先上傳新圖，再用新圖識別碼取代舊圖識別碼（內文裡的 [img=舊] 也要一併換成 [img=新]）。
+    /// </summary>
+    public List<Guid>? MediaIds { get; set; }
 }
 
 public sealed class UpdateSocialCommentRequest

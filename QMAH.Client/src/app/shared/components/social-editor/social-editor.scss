@@ -11,7 +11,6 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 18%, transparent);
 }
 
-.sme__row { display: flex; align-items: flex-end; gap: 6px; padding: 6px; }
 
 .sme__field {
   flex: 1;
@@ -80,10 +79,11 @@
 .sme__fmt--u { text-decoration: underline; }
 .sme__fmt--s { text-decoration: line-through; }
 .sme__swatch {
-  width: 18px; height: 18px; margin: 0 3px; padding: 0; border: 2px solid var(--qmah-surface-elevated, #fff);
-  border-radius: 50%; box-shadow: 0 0 0 1px var(--qmah-border); cursor: pointer;
+  flex: none; box-sizing: border-box; width: 18px; height: 18px; min-width: 18px; margin: 0 3px; padding: 0; border: 2px solid var(--qmah-surface-elevated, #fff);
+  border-radius: 50%; box-shadow: 0 0 0 1px var(--qmah-border); cursor: pointer; transition: transform 120ms;
 }
 .sme__swatch:hover { transform: scale(1.12); }
+.sme__tool--text { width: auto; padding: 0 10px; font: inherit; font-size: 0.8125rem; font-weight: 600; }
 
 .sme__fmt--icon { display: inline-flex; align-items: center; gap: 4px; }
 .sme__fmt--icon svg { width: 15px; height: 15px; }
@@ -98,3 +98,39 @@
 :host-context([data-theme='qmahdark']) .sme__fmt { color: #e6e2da; }
 :host-context([data-theme='qmahdark']) .sme__fmt:hover, :host-context([data-theme='qmahdark']) .sme__toggle:hover { background: #3a3e41; color: #fff; }
 :host-context([data-theme='qmahdark']) .sme__toolbar, :host-context([data-theme='qmahdark']) .sme__group { border-color: #43474a; }
+
+/* 版面：文字框在上、圖示列在下（附圖／表情／日期／進階格式…送出） */
+.sme__field { display: block; width: 100%; padding: 12px 14px 6px; }
+.sme__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 8px; }
+.sme__tools { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.sme__tool { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--qmah-muted); cursor: pointer; transition: background 140ms, color 140ms; }
+.sme__tool svg { width: 20px; height: 20px; }
+.sme__tool:hover:not(:disabled), .sme__tool.is-on { background: color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 12%, transparent); color: var(--qmah-social-action, var(--qmah-primary)); }
+.sme__tool:disabled { opacity: 0.4; cursor: wait; }
+.sme__tool:focus-visible { outline: 2px solid var(--qmah-social-action, var(--qmah-primary)); outline-offset: 1px; }
+.sme__status { margin-left: 8px; color: var(--qmah-muted); font-size: 0.75rem; }
+.sme__send { width: 38px; height: 34px; border-radius: 10px; background: var(--qmah-social-action, var(--qmah-primary)); color: #fff; }
+.sme__send:hover:not(:disabled) { background: color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 86%, #000); }
+.sme__send:disabled { background: color-mix(in srgb, var(--qmah-ink) 14%, transparent); color: var(--qmah-muted); opacity: 1; }
+.sme__toolbar { border-top: 1px solid var(--qmah-border); border-bottom: 0; }
+.sme__emoji-wrap { position: relative; }
+:host-context([data-theme='qmahdark']) .sme__tool { color: #b9b5ab; }
+
+/* 完整表情選擇器（emoji-picker-element，shadow DOM，用 CSS 變數上色） */
+.sme__emoji { position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 30; border-radius: 12px; box-shadow: 0 10px 28px rgb(0 0 0 / 18%); overflow: hidden; }
+.sme__emoji[hidden] { display: none; }
+
+/* 附圖縮圖列：與發文器相同，每張右上角可移除 */
+.sme__images { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 12px; padding: 4px 14px 10px; }
+.sme__image { display: grid; gap: 4px; width: 84px; }
+.sme__image-box { position: relative; width: 84px; height: 64px; }
+.sme__image-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid var(--qmah-border); }
+.sme__image.is-inline .sme__image-box img { border-color: var(--qmah-social-action, var(--qmah-primary)); }
+.sme__image-no { position: absolute; left: 4px; bottom: 4px; padding: 0 6px; border-radius: 999px; background: rgb(0 0 0 / 62%); color: #fff; font-size: 0.6875rem; font-weight: 700; }
+.sme__image-remove { position: absolute; top: -5px; right: -5px; display: grid; place-items: center; width: 15px; height: 15px; padding: 0; border: 0; border-radius: 50%; background: #3a3633; color: #fff; cursor: pointer; }
+.sme__image-remove svg { width: 9px; height: 9px; }
+.sme__image-mode { padding: 2px 0; border: 1px solid var(--qmah-border); border-radius: 6px; background: transparent; color: var(--qmah-ink); font: inherit; font-size: 0.6875rem; font-weight: 600; line-height: 1.3; cursor: pointer; }
+.sme__image-mode:hover { border-color: var(--qmah-social-action, var(--qmah-primary)); color: var(--qmah-social-action, var(--qmah-primary)); }
+.sme__image.is-inline .sme__image-mode { border-color: var(--qmah-social-action, var(--qmah-primary)); color: var(--qmah-social-action, var(--qmah-primary)); }
+.sme__images-hint { flex-basis: 100%; margin: 0; color: var(--qmah-muted); font-size: 0.75rem; }
+:host-context([data-theme='qmahdark']) .sme__image-mode { color: #e6e2da; border-color: #43474a; }

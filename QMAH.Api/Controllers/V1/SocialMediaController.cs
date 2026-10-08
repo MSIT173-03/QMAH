@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 using QMAH.Api.Infrastructure.Media;
 using QMAH.Infrastructure.Data;
+using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Api.Controllers.V1;
@@ -65,8 +66,10 @@ public sealed class SocialMediaController(
         db.MediaAssets.Add(asset);
         await db.SaveChangesAsync(cancellationToken);
 
-        var storedFileName = $"{asset.SequenceNo}{signature.Value.Extension}";
+        // 還沒綁到貼文／留言的圖片先放暫存資料夾，送出後會搬進該貼文專屬資料夾。
+        var storedFileName = $"{SocialMediaStorage.PendingFolder}/{asset.SequenceNo}{signature.Value.Extension}";
         var physicalPath = ResolvePhysicalPath(storedFileName);
+        Directory.CreateDirectory(Path.GetDirectoryName(physicalPath)!);
         try
         {
             await using (var output = new FileStream(

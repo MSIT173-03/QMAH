@@ -3,8 +3,8 @@
 @import "tailwindcss";
 
 :root {
-  --qmah-font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --qmah-font-serif: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif;
+  --qmah-font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif, "Noto Color Emoji";
+  --qmah-font-serif: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif, "Noto Color Emoji";
   /* ui-integration: committed museum palette；Pantone 僅作色彩語彙參考，HEX／OKLCH 是瀏覽器工作值。 */
   --qmah-paper: #fbfaf7;
   --qmah-night: #18302f;
@@ -459,3 +459,6 @@ textarea {
 .app-shell[data-area='user'] .app-main > * > :is([class*='-page'], [class$='-container'], [class*='page-']) {
   background: transparent !important;
 }
+
+/* 有無捲軸時版面寬度不變：換頁時內容不會左右跳 */
+html { scrollbar-gutter: stable; }

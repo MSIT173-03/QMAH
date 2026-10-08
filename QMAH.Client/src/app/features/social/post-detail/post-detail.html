@@ -37,6 +37,7 @@
         <input id="edit-post-title" type="text" class="input input-bordered w-full" [(ngModel)]="editPostTitle" placeholder="標題" />
         <label class="sr-only" for="edit-post-content">貼文內容</label>
         <textarea id="edit-post-content" class="textarea textarea-bordered" [(ngModel)]="editPostContent"></textarea>
+        <app-social-media-manager textareaId="edit-post-content" [content]="editPostContent" [(media)]="editMedia" [(layout)]="editLayout" />
         <div class="social-panel__actions">
           <button type="button" class="btn btn-ghost" (click)="cancelEditPost()">取消</button>
           <button type="button" class="btn btn-primary" (click)="saveEditPost()">儲存</button>
@@ -52,21 +53,31 @@
           {{ post.displayName || '匿名會員' }}
         }
       </p>
+      @if (post.mediaLayout === 'PRIMARY') {
+      @if (attachedMedia(post).length > 0) {
+        <div class="social-gallery" [class.social-gallery--primary]="post.mediaLayout === 'PRIMARY'" [attr.data-count]="attachedMedia(post).length > 4 ? 'many' : attachedMedia(post).length">
+          @for (media of attachedMedia(post); track media.id) {
+            <a class="social-gallery__item" [href]="media.url" target="_blank" rel="noopener" [attr.aria-label]="'開啟圖片：' + (media.altText || post.title)">
+              <img [src]="media.url" [alt]="media.altText || post.title" loading="lazy" />
+            </a>
+          }
+        </div>
+      }
+      }
       <app-social-post-content [content]="post.content" />
+      @if (post.mediaLayout !== 'PRIMARY') {
+      @if (attachedMedia(post).length > 0) {
+        <div class="social-gallery" [attr.data-count]="attachedMedia(post).length > 4 ? 'many' : attachedMedia(post).length">
+          @for (media of attachedMedia(post); track media.id) {
+            <a class="social-gallery__item" [href]="media.url" target="_blank" rel="noopener" [attr.aria-label]="'開啟圖片：' + (media.altText || post.title)">
+              <img [src]="media.url" [alt]="media.altText || post.title" loading="lazy" />
+            </a>
+          }
+        </div>
+      }
+      }
     }
 
-    @if (post.media.length > 0) {
-      <div class="flex flex-col gap-2">
-        @for (media of post.media; track media.id) {
-          <figure class="social-post-detail__media">
-            <img [src]="media.url" [alt]="media.altText || post.title" />
-            @if (media.altText) {
-              <figcaption>{{ media.altText }}</figcaption>
-            }
-          </figure>
-        }
-      </div>
-    }
   </article>
 
   @if (artifact; as art) {

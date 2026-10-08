@@ -1,4 +1,6 @@
 <div class="qmah-social-page">
+<app-social-spotlight />
+
 <header class="social-page-head">
   <h1 class="social-page-title">社群活動</h1>
   <button type="button" class="btn btn-primary social-icon-label" (click)="openCreateEvent()">
@@ -7,6 +9,7 @@
   </button>
 </header>
 
+<app-social-shell [activeBoard]="null">
 <!-- ui-integration: 篩選列與貼文牆共用 social-filters／social-field；日期範圍只留一組「開始日期」起迄，欄位標籤持久可見。 -->
 <div class="social-filters" role="search">
   <label class="social-field">
@@ -52,7 +55,7 @@
         </div>
         <div class="social-event-card__headcopy">
           <div class="social-event-card__tags">
-            <span class="social-tag" [class.social-tag--notice]="event.eventType === 'OFFICIAL'">
+            <span class="social-tag social-tag--kind" [class.social-tag--notice]="event.eventType === 'OFFICIAL'" [attr.data-kind]="event.eventType">
               {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
             </span>
             @if (!event.coverImageUrl) {
@@ -100,6 +103,7 @@
     <div class="social-state social-state--wide">目前還沒有公開活動</div>
   }
 </div>
+</app-social-shell>
 
 <dialog #createEventDialog id="create_event_modal" class="modal social-modal" aria-labelledby="create-event-title">
   <div class="modal-box">

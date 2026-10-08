@@ -1,0 +1,308 @@
+/* ui-integration: 公告區是貼文牆的 supporting context；桌面保留輪播，手機與收合狀態優先讓貼文進入首屏。 */
+.social-announcements {
+  position: relative;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--qmah-border) 86%, transparent);
+  border-radius: var(--qmah-radius-card);
+  /* ui-integration: Social 用低彩度 Potter's Clay surface 區隔公告，不把照片當成純裝飾底圖。 */
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 90%, var(--qmah-social-soft) 10%);
+}
+
+.social-announcements__head {
+  min-height: var(--qmah-control-height-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--qmah-space-3);
+  padding: var(--qmah-space-2) var(--qmah-space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--qmah-border) 86%, transparent);
+}
+
+.social-announcements__title,
+.social-announcements__collapsed-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.social-announcements__title {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.social-announcements__title svg {
+  width: 17px;
+  height: 17px;
+  color: var(--qmah-social-action);
+}
+
+.social-announcements__count {
+  color: color-mix(in srgb, currentColor 58%, transparent);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.social-announcements__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--qmah-control-height);
+  padding: var(--qmah-space-2) var(--qmah-space-3);
+  border: 1px solid var(--qmah-border);
+  border-radius: var(--qmah-radius-control);
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 160ms, color 160ms, background 160ms;
+}
+
+.social-announcements__toggle:focus:not(:focus-visible) { outline: none; }
+.social-announcements__toggle:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+
+.social-announcements__chev {
+  width: 14px;
+  height: 14px;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 展開時箭頭朝上（表示可收合），收合時朝下 */
+.social-announcements:not(.is-collapsed) .social-announcements__chev { transform: rotate(180deg); }
+
+/* 高度動畫：0fr ↔ 1fr，不需要量測內容高度 */
+.social-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 240ms ease;
+}
+.social-fold.is-open { grid-template-rows: 1fr; opacity: 1; }
+.social-fold__inner { min-height: 0; overflow: hidden; }
+.social-fold:not(.is-open) + .social-fold.is-open,
+.social-fold.is-open { transition-delay: 0s; }
+
+/* 收合時標題列下方不留框線：只有展開內容時才分隔 */
+.social-announcements__head { transition: border-color 360ms; }
+.social-announcements.is-collapsed .social-announcements__head { border-bottom-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .social-fold, .social-announcements__chev, .social-announcements__head { transition: none; }
+}
+
+.social-announcements__toggle:hover {
+  border-color: var(--qmah-social-accent);
+  color: var(--qmah-social-action);
+}
+
+.social-announcements__collapsed-link {
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 8px 14px;
+  color: inherit;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.social-announcements__collapsed-link > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-announcements__collapsed-link > span:last-child {
+  flex: 0 0 auto;
+  color: var(--qmah-social-action);
+  font-size: 11px;
+}
+
+.social-announcements__view-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.social-announcements__view-link app-qmah-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* ui-integration: 公告輪播對齊商城首頁主視覺（store/pages/home/hero-carousel.scss）的版型與節奏：
+   滿版底圖 + 淡色遮罩、左下浮動文案卡、右下細條指示點與暫停鈕。
+   強調色沿用 Social 的 --qmah-social-action，若要與商城完全同色，改成 --qmah-primary-hover 即可。 */
+.social-hero {
+  --social-hero-accent: var(--qmah-social-action);
+  position: relative;
+  overflow: hidden;
+  background: var(--qmah-surface-muted);
+}
+
+.social-hero__track {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  transition: transform 600ms cubic-bezier(.4, 0, .2, 1);
+}
+
+.social-hero__slide {
+  position: relative;
+  isolation: isolate;
+  flex: 0 0 100%;
+  min-width: 0;
+  /* ui-integration: 公告是 supporting context；輪播從 340px 降到 240px，貼文才有機會進首屏。 */
+  min-height: 240px;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--qmah-space-8);
+  color: var(--qmah-ink);
+  background: var(--qmah-surface-muted);
+  text-decoration: none;
+}
+
+.social-hero__image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.social-hero__slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 16%, transparent);
+}
+
+.social-hero__body {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-3);
+  padding: var(--qmah-space-4) var(--qmah-space-5);
+  border: 1px solid color-mix(in srgb, var(--social-hero-accent) 24%, var(--qmah-border));
+  border-radius: var(--qmah-radius-card);
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 91%, transparent);
+  box-shadow: var(--qmah-shadow-float);
+}
+
+.social-hero__title {
+  margin: 0;
+  font-family: var(--qmah-font-sans);
+  /* ui-integration: 輪播標題不得大過頁面 h1（page-title 28–42px），避免層級顛倒。 */
+  font-size: clamp(20px, 2.2vw, 26px);
+  line-height: var(--qmah-type-heading-leading);
+  font-weight: 700;
+  color: var(--qmah-ink);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.social-hero__desc {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--qmah-type-body-sm-size);
+  line-height: var(--qmah-type-body-leading);
+  color: var(--qmah-text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* 視覺上對應商城的「立即選購」實心按鈕；整張投影片本身就是連結，所以這裡只是 span。 */
+.social-hero__cta {
+  align-self: flex-start;
+  margin-top: 4px;
+  min-height: var(--qmah-control-height);
+  display: inline-flex;
+  align-items: center;
+  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
+  border: 1px solid var(--social-hero-accent);
+  border-radius: var(--qmah-radius-control);
+  background: var(--social-hero-accent);
+  color: var(--qmah-on-dark);
+  font-size: var(--qmah-type-label-size);
+  letter-spacing: 0.14em;
+  transition: filter 160ms;
+}
+
+.social-hero__slide:hover .social-hero__cta {
+  filter: brightness(0.92);
+}
+
+.social-hero__controls {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: var(--qmah-space-2);
+}
+
+.social-hero__dots {
+  display: flex;
+  align-items: center;
+  gap: var(--qmah-space-1);
+}
+
+.social-hero__dot {
+  width: 26px;
+  height: 3px;
+  /* 全站按鈕有 44px 觸控 min-height 基線，指示條要明確覆寫才不會被撐高（同商城輪播）。 */
+  min-height: 3px;
+  border: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--qmah-border) 82%, var(--qmah-ink));
+  cursor: pointer;
+}
+
+.social-hero__dot--active {
+  background: var(--social-hero-accent);
+}
+
+.social-hero__play-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--qmah-ink) 22%, transparent);
+  border-radius: var(--qmah-radius-control);
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 86%, transparent);
+  color: var(--qmah-ink);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 160ms, border-color 160ms, color 160ms;
+}
+
+.social-hero__play-toggle:hover {
+  border-color: var(--qmah-ink);
+  background: var(--qmah-surface-elevated);
+}
+
+.social-hero__play-toggle--paused {
+  border-color: var(--social-hero-accent);
+  background: color-mix(in srgb, var(--social-hero-accent) 18%, var(--qmah-surface-elevated));
+  color: var(--social-hero-accent);
+}
+
+.social-hero__play-toggle--paused:hover {
+  border-color: var(--social-hero-accent);
+  background: color-mix(in srgb, var(--social-hero-accent) 28%, var(--qmah-surface-elevated));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-hero__track {
+    transition: none;
+  }
+}
+
+
+/* 載入中的骨架：高度與展開後的輪播相同，換頁與首次載入時版面不會跳動 */
+:host { display: block; }
+.social-spotlight-skeleton { height: 120px; margin-bottom: 24px; border-radius: 12px; background: color-mix(in srgb, var(--qmah-ink) 6%, transparent); }

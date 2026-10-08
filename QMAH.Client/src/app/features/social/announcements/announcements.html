@@ -1,37 +1,40 @@
 <div class="qmah-social-page">
+<app-social-spotlight />
+
 <header class="social-page-head">
-  <h1 class="social-page-title">站方公告</h1>
+  <h1 class="social-page-title">歷史公告</h1>
 </header>
 
+<app-social-shell [activeBoard]="null">
 @if (loadError) {
   <div class="alert alert-error mb-4" role="alert">{{ loadError }}</div>
 }
 
-<!-- 公告動態：官方帳號卡頭（頭像、名稱、時間）＋分類標籤＋標題＋內文（支援格式標記，過長可展開）。 -->
-<div class="social-announcement-list">
-  @for (announcement of announcements; track announcement.id; let first = $first) {
-    <article class="social-panel social-announcement">
-      <header class="social-announcement__head">
-        <span class="social-announcement__avatar" aria-hidden="true">清</span>
-        <div class="social-announcement__who">
-          <strong>{{ announcement.displayName || '清明鑑定屋官方' }}</strong>
-          <time [attr.datetime]="announcement.createdAt">{{ announcement.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
-        </div>
-        <span class="social-tag social-tag--notice">{{ announcement.category }}</span>
-        @if (first) { <span class="social-announcement__new">最新</span> }
-      </header>
-      <h2 class="social-announcement__title">{{ announcement.title }}</h2>
-      <div class="social-announcement__body" [class.is-clamped]="isLong(announcement.content || announcement.summary || '') && !expanded.has(announcement.id)">
-        <app-social-post-content [content]="announcement.content || announcement.summary || ''" />
-      </div>
-      @if (isLong(announcement.content || announcement.summary || '')) {
-        <button type="button" class="social-announcement__more" (click)="toggle(announcement.id)" [attr.aria-expanded]="expanded.has(announcement.id)">
-          {{ expanded.has(announcement.id) ? '收合' : '展開全文' }}
-        </button>
+<!-- 公佈欄：最新一則是大卡片（可展開全文），其餘收成一列一則的清單，點一下在原地展開，不必捲很長。 -->
+@if (announcements.length === 0 && !loadError) {
+  <div class="social-state">目前還沒有公告</div>
+}
+@if (announcements.length > 0) {
+  <section class="notice-archive" aria-labelledby="notice-archive-title">
+    <h2 id="notice-archive-title" class="notice-archive__title">全部公告</h2>
+    <ul class="notice-list">
+      @for (item of announcements; track item.id) {
+        <li class="notice-item" [class.is-open]="expanded.has(item.id)">
+          <button type="button" class="notice-row" (click)="toggle(item.id)" [attr.aria-expanded]="expanded.has(item.id)">
+            <span class="notice-row__date" aria-hidden="true"><small>{{ item.createdAt | date: 'yyyy' }}</small><strong>{{ item.createdAt | date: 'MM/dd' }}</strong></span>
+            <span class="notice-row__main">
+              <span class="notice-row__title">{{ item.title }}</span>
+              <span class="notice-row__tag">{{ label(item.category) }}</span>
+            </span>
+            <svg class="notice-row__chev" lucideChevronDown aria-hidden="true" focusable="false"></svg>
+          </button>
+          @if (expanded.has(item.id)) {
+            <div class="notice-item__body"><app-social-post-content [content]="item.content || item.summary || ''" /></div>
+          }
+        </li>
       }
-    </article>
-  } @empty {
-    <div class="social-state">目前還沒有公告</div>
-  }
-</div>
+    </ul>
+  </section>
+}
+</app-social-shell>
 </div>

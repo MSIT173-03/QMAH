@@ -25,6 +25,9 @@ public partial class SocialPost
 
     public string Content { get; set; } = null!;
 
+    // 圖片排版：SECONDARY（預設）文字為主、未插入內文的圖片收成貼文下方的縮圖；PRIMARY 圖片為主，置頂大圖／相簿。
+    public string MediaLayout { get; set; } = "SECONDARY";
+
     public string? LocationName { get; set; }
 
     public decimal? Latitude { get; set; }
