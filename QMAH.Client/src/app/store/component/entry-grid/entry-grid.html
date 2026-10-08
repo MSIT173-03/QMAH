@@ -1,6 +1,6 @@
 <section class="section-block">
   <app-section-head [title]="title()" [tag]="tag()" />
-  <div class="cat-grid">
+  <div class="cat-grid" [style.--cols]="columns()">
     @for (item of items(); track item.link) {
       <a [storeLink]="item.link" [class]="'cat-card cat-card--' + item.tone">
         <div class="cat-icon">

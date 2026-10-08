@@ -623,3 +623,22 @@
 .social-post-card__open { width: 36px; height: 36px; min-height: 0; border-color: transparent; background: transparent; }
 .social-post-card__open:hover { background: color-mix(in srgb, var(--qmah-social-action) 12%, transparent); }
 .social-post-card__report { min-height: 0; }
+
+/* ===== 發文器排版修正：欄位左右留白、標題與看板同列、工具列與輸入框合成一體 ===== */
+.social-post-dialog > .social-post-dialog__alert { margin: 14px 24px 0; }
+.social-post-dialog > .social-post-form__field { margin-inline: 0; }
+.social-post-form {
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 210px);
+  gap: 16px 14px;
+  padding: 20px 24px 4px;
+}
+.social-post-form > .social-post-form__field:nth-child(n + 3),
+.social-post-form > .social-post-form__preview { grid-column: 1 / -1; }
+.social-post-form__toolbar { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
+.social-post-form__toolbar + .social-post-form__textarea { margin-top: -8px; border-top-left-radius: 0; border-top-right-radius: 0; }
+.social-post-dialog__actions { margin-top: 12px; }
+@media (max-width: 560px) {
+  .social-post-form { grid-template-columns: 1fr; padding-inline: 16px; }
+  .social-post-dialog__title,
+  .social-post-dialog__actions { padding-inline: 16px; }
+}

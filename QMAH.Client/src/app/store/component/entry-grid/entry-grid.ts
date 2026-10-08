@@ -27,4 +27,6 @@ export class EntryGrid {
   title = input.required<string>();
   tag = input<string | null>(null);
   items = input<EntryGridItem[]>([]);
+  /** 寬版面固定每列幾欄（例如年代選藏 9 欄＝18 項剛好兩列）；未設定則自動換行。 */
+  columns = input<number | null>(null);
 }

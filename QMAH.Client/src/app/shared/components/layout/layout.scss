@@ -631,3 +631,19 @@ textarea:focus-visible {
   pointer-events: none;
   background: radial-gradient(ellipse 70% 100% at 50% 0%, rgb(255 244 224 / 6%), transparent 70%);
 }
+
+/* 社群：暖紙（淺色）／深灰（深色）底，疊同色系極淡的陶土紅 Temple 紋；不再沿用遊戲的藍綠底。 */
+.app-shell[data-area='social'] .app-main {
+  background-color: #faf6f0;
+  background-image: none;
+}
+.app-shell[data-area='social'] .app-main::before {
+  background: url('/patterns/temple-terracotta.svg') center top / 256px 256px repeat;
+  opacity: 1;
+}
+:host-context([data-theme='qmahdark']) .app-shell[data-area='social'] .app-main {
+  background-color: #17181a;
+}
+:host-context([data-theme='qmahdark']) .app-shell[data-area='social'] .app-main::before {
+  background: url('/patterns/temple-terracotta-dark.svg') center top / 256px 256px repeat;
+}
