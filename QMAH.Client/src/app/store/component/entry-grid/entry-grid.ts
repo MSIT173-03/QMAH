@@ -1,8 +1,6 @@
 import { Component, input } from '@angular/core';
 import { SectionHead } from '../section-head/section-head';
 import { StoreLink } from '../../shared/store-link';
-import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
-import type { QmahIconName } from '../../../shared/components/qmah-icon/qmah-icon';
 
 /** 入口卡片的底色角色 */
 export type EntryTone = 'jade' | 'gold' | 'azurite' | 'cinnabar';
@@ -12,14 +10,15 @@ export interface EntryGridItem {
   name: string;
   count: number;
   link: string;
-  icon: QmahIconName;
+  /** 底紋圖案代碼（對應 entry-grid.scss 的 data-glyph，與圖鑑分類籤同一組圖案）。 */
+  glyph: string;
   tone: EntryTone;
 }
 
 /** 首頁入口區塊（分類入口、年代選藏共用）：區塊標題與色塊入口卡片 */
 @Component({
   selector: 'app-entry-grid',
-  imports: [SectionHead, StoreLink, QmahIconComponent],
+  imports: [SectionHead, StoreLink],
   templateUrl: './entry-grid.html',
   styleUrl: './entry-grid.scss',
 })

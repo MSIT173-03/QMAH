@@ -24,7 +24,7 @@ export class EraGrid {
             name: era.name,
             count: era.productCount,
             link: eraPath(era.code),
-            icon: 'calendar-clock',
+            glyph: 'era',
             tone: ERA_TONES[index % ERA_TONES.length],
           })),
         ),

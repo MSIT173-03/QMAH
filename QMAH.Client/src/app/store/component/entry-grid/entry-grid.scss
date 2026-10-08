@@ -56,8 +56,7 @@
   width: 84px;
   height: 84px;
   transform: translate(50%, 50%);
-  color: var(--color-surface);
-}
+  }
 
 .cat-name {
   font-size: var(--qmah-type-body-sm-size);
@@ -71,16 +70,27 @@
   color: var(--color-muted);
 }
 
-/* 四種色調：每張磚面以該色為底（淺色為淡染、深色為提亮後的深染），名稱與底紋圖示用同色系，不再是黑塊。 */
-.cat-card { --tone: #4f86e0; --tone-ink: #1f3f7a; }
-.cat-card--gold { --tone: #e0a93a; --tone-ink: #7a5208; }
-.cat-card--azurite { --tone: #4f86e0; --tone-ink: #1f3f7a; }
-.cat-card--cinnabar { --tone: #e8705f; --tone-ink: #8a2b1f; }
-.cat-card--jade { --tone: #34b27b; --tone-ink: #14573a; }
-.cat-card .cat-icon { background: color-mix(in srgb, var(--tone) 20%, var(--color-surface)); box-shadow: inset 0 3px 0 var(--tone); }
-.cat-card .cat-name { color: var(--tone-ink); font-weight: 700; }
-.cat-card .cat-glyph { color: color-mix(in srgb, var(--tone) 34%, transparent); }
+/* 色彩只用在外框與底紋圖案：磚面本身是中性底，名稱與件數維持一般文字色。 */
+.cat-card { --tone: #4f86e0; border-color: color-mix(in srgb, var(--tone) 55%, var(--color-line)); }
+.cat-card--gold { --tone: #c48a18; }
+.cat-card--azurite { --tone: #4f6fd8; }
+.cat-card--cinnabar { --tone: #d6504a; }
+.cat-card--jade { --tone: #2f9a62; }
+.cat-card .cat-icon { background: var(--color-surface); box-shadow: inset 0 3px 0 var(--tone); }
+.cat-card .cat-name { color: var(--color-ink); font-weight: 700; }
 .cat-card:hover { border-color: var(--tone); }
+.cat-glyph { width: 88px; height: 88px; background: var(--tone); opacity: 0.85;
+  -webkit-mask: var(--glyph) center / contain no-repeat; mask: var(--glyph) center / contain no-repeat; }
+.cat-glyph[data-glyph='bronze'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath%20d%3D%27M9%2014h30M12%2014v7c0%206%205%2010%2012%2010s12-4%2012-10v-7M18%2031l-3%209M30%2031l3%209M24%2031v9M6%2014c0-3%202-5%205-5M42%2014c0-3-2-5-5-5%27%2F%3E%3Cpath%20d%3D%27M16%2020h16M17%2025h14M24%2014v-4%27%20opacity%3D%27.55%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='jade'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2717%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%276%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2711.5%27%20stroke-dasharray%3D%271.4%203.1%27%20opacity%3D%27.7%27%2F%3E%3Cpath%20d%3D%27M24%204v3M24%2041v3M4%2024h3M41%2024h3%27%20opacity%3D%27.6%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='clay'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath%20d%3D%27M20%206h8M21%206v5c0%203-7%205-7%2012v14c0%203%204%205%2010%205s10-2%2010-5V23c0-7-7-9-7-12V6%27%2F%3E%3Cpath%20d%3D%27M15%2026c3%202%2015%202%2018%200M15%2034c3%202%2015%202%2018%200%27%20opacity%3D%27.6%27%2F%3E%3Cpath%20d%3D%27M24%2028c-2%201-2%203%200%203s2-2%200-3z%27%20opacity%3D%27.7%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='lacquer'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect%20x%3D%277%27%20y%3D%2721%27%20width%3D%2734%27%20height%3D%2718%27%20rx%3D%273%27%2F%3E%3Cpath%20d%3D%27M7%2021c0-6%205-9%2017-9s17%203%2017%209M7%2028h34%27%2F%3E%3Cpath%20d%3D%27M18%2034c2-3%204%202%206-1s4%202%206-1%27%20opacity%3D%27.7%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724.5%27%20r%3D%271.3%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='rouge'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2717%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2712.5%27%20opacity%3D%27.55%27%2F%3E%3Cpath%20d%3D%27M24%2014c4%203%204%206%200%2010-4-4-4-7%200-10zM34%2024c-3%204-6%204-10%200%204-4%207-4%2010%200zM24%2034c-4-3-4-6%200-10%204%204%204%207%200%2010zM14%2024c3-4%206-4%2010%200-4%204-7%204-10%200z%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='coin'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%2717%27%2F%3E%3Crect%20x%3D%2718%27%20y%3D%2718%27%20width%3D%2712%27%20height%3D%2712%27%20rx%3D%271%27%2F%3E%3Cpath%20d%3D%27M9%2024h5M34%2024h5M24%209v5M24%2034v5%27%20opacity%3D%27.55%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='painting'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath%20d%3D%27M13%206h22M13%2042h22M24%206V4M24%2042v2%27%2F%3E%3Crect%20x%3D%2715%27%20y%3D%279%27%20width%3D%2718%27%20height%3D%2730%27%2F%3E%3Cpath%20d%3D%27M17%2033l6-9%204%205%203-4%203%208%27%20%2F%3E%3Ccircle%20cx%3D%2728%27%20cy%3D%2716%27%20r%3D%272.2%27%2F%3E%3Cpath%20d%3D%27M18%2020c2-1%204%200%206-1%27%20opacity%3D%27.55%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='carving'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2713%27%20r%3D%275%27%2F%3E%3Cpath%20d%3D%27M24%2018c-8%200-12%206-12%2012%200%203%202%205%205%205h14c3%200%205-2%205-5%200-6-4-12-12-12z%27%2F%3E%3Cpath%20d%3D%27M10%2041h28M18%2035v6M30%2035v6M24%2021v6%27%20opacity%3D%27.7%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='stone'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect%20x%3D%2713%27%20y%3D%277%27%20width%3D%2722%27%20height%3D%2713%27%20rx%3D%272%27%2F%3E%3Crect%20x%3D%279%27%20y%3D%2723%27%20width%3D%2730%27%20height%3D%2716%27%20rx%3D%272%27%2F%3E%3Cpath%20d%3D%27M16%2031h16%27%20opacity%3D%27.6%27%2F%3E%3C/svg%3E"); }
+.cat-glyph[data-glyph='era'] { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 19h38M9 19l15-11 15 11M12 19v17M36 19v17M20 36V26h8v10M7 41h34'/%3E%3C/svg%3E"); }
 
 /* 寬版面：指定欄數時固定每列欄數（年代選藏 9 欄 ×2 列）；窄版面維持自動換行。 */
 @media (min-width: 1100px) {
@@ -89,16 +99,13 @@
   }
 }
 
-/* 深色：磚面用該色 28% 疊在深藍底上，名稱改為亮色、頂緣與底紋圖示提亮，需要注意的標籤要夠亮。 */
+/* 深色：磚面為略亮於頁面的深灰，框線與圖案用提亮的點綴色，文字用一般亮色。 */
 :host-context([data-theme='qmahdark']) {
-  .cat-card { background: var(--color-surface); border-color: color-mix(in srgb, var(--tone) 38%, var(--color-line)); }
-  .cat-card--gold { --tone: #f0b94a; --tone-ink: #ffe0a0; }
-  .cat-card--azurite { --tone: #6c9cf2; --tone-ink: #cfe0ff; }
-  .cat-card--cinnabar { --tone: #f0806f; --tone-ink: #ffd0c8; }
-  .cat-card--jade { --tone: #4cc994; --tone-ink: #c4f2de; }
-  .cat-card .cat-icon { background: color-mix(in srgb, var(--tone) 26%, #141b2e); box-shadow: inset 0 3px 0 var(--tone); }
-  .cat-card .cat-glyph { color: color-mix(in srgb, var(--tone) 38%, transparent); }
-  .cat-card .cat-name { color: var(--tone-ink); }
-  .cat-card .cat-count { color: color-mix(in srgb, var(--tone-ink) 85%, transparent); }
-  .cat-card:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--tone) 28%, transparent); }
+  .cat-card--gold { --tone: #f0b94a; }
+  .cat-card--azurite { --tone: #8aa2ff; }
+  .cat-card--cinnabar { --tone: #ff8a80; }
+  .cat-card--jade { --tone: #5fd196; }
+  .cat-card .cat-icon { background: #252a2d; }
+  .cat-card .cat-count { color: var(--color-muted); }
+  .cat-card:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--tone) 24%, transparent); }
 }
