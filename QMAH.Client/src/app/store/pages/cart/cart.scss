@@ -35,3 +35,14 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ===== 版面：左右留白、置中；商品清單與加購各自是有底色的面板 ===== */
+.cart-main { max-width: 1120px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
+.cart-lines {
+  padding: clamp(12px, 2vw, 20px);
+  border: 1px solid #e6e3dd;
+  border-radius: 12px;
+  background: #fdfcfb;
+  box-shadow: 0 1px 2px rgb(40 36 30 / 5%), 0 4px 14px rgb(40 36 30 / 4%);
+}
+:host-context([data-theme='qmahdark']) .cart-lines { background: #1b1f22; border-color: #343a3e; box-shadow: none; }
