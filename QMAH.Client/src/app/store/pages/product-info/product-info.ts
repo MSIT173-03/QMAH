@@ -108,7 +108,7 @@ export class ProductInfo {
     const item = this.item();
     return item ? wasPrice(item) : null;
   });
-  /** 同類推薦清單：同器類的熱銷商品（排除目前商品），商品載入後才查詢 */
+  /** 同類推薦清單：買過這件商品的帳號合計購買數量最多的其他商品；還沒有人買過時退回同器類熱銷商品。商品載入後才查詢 */
   protected related = toSignal(
     toObservable(this.item).pipe(
       switchMap((item) =>

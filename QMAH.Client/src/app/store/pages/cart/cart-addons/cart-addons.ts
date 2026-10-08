@@ -16,4 +16,8 @@ export class CartAddons {
   addedIds = input<ReadonlySet<string>>(new Set());
   /** 點擊任一商品的加入購物車按鈕時觸發，帶出商品 ID */
   addToCart = output<string>();
+  /** 點擊「換一批」時觸發 */
+  refresh = output<void>();
+
+  protected readonly refreshLabel = '換一批';
 }

@@ -109,11 +109,36 @@
   }
 }
 
-.order-card-items {
+/* 商品明細：名稱（可換行）、數量、金額三欄，數量與金額固定欄寬並對齊；
+   限制最大寬度，避免卡片很寬時名稱與金額離太遠、難以對照 */
+.order-card-lines {
+  list-style: none;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding: 0;
+  max-width: 36rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-1, 4px);
+}
+
+.order-card-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3em 6.5em;
+  gap: var(--qmah-space-3);
+  align-items: baseline;
+}
+
+.order-card-line-name {
+  overflow-wrap: anywhere;
+}
+
+.order-card-line-qty {
+  text-align: right;
+  color: var(--color-muted);
+}
+
+.order-card-line-total {
+  text-align: right;
 }
 
 .order-card-meta {

@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { SearchBar, SessionBar, SiteHeader } from '../../component';
+import { ScrollTop, SearchBar, SessionBar, SiteHeader } from '../../component';
 import { HomeApi } from '../../api';
 import { searchPath } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
@@ -36,6 +36,7 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
     EraGrid,
     Recommendations,
     SiteHeader,
+    ScrollTop,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',

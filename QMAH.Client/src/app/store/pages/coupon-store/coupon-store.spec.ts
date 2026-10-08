@@ -119,6 +119,41 @@ describe('CouponStore', () => {
     await fixture.whenStable();
   };
 
+  /** 回應頁面在確認登入後另外發出的 GET /me（取得會員點數） */
+  const flushPoints = async (pointBalance: number): Promise<void> => {
+    for (const request of http.match((req) => req.url.endsWith('/me'))) {
+      request.flush({ email: 'demo@qmah.test', displayName: 'Demo', pointBalance });
+    }
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+  const card = (): HTMLElement => fixture.nativeElement.querySelector('.coupon-card');
+
+  it('greys out and disables coupons the member cannot afford', async () => {
+    await loadCoupon(true);
+    await flushPoints(49);
+
+    expect(card().classList).toContain('coupon-card--unaffordable');
+    expect(costButton().disabled).toBe(true);
+    expect(costButton().textContent).toContain('點數不足');
+    costButton().click();
+    await fixture.whenStable();
+    expect(dialog().hasAttribute('open')).toBe(false);
+  });
+
+  it('keeps coupons the member can exactly afford redeemable', async () => {
+    await loadCoupon(true);
+    await flushPoints(50);
+    expect(card().classList).not.toContain('coupon-card--unaffordable');
+    expect(costButton().disabled).toBe(false);
+  });
+
+  it('does not grey out coupons for guests', async () => {
+    await loadCoupon(false);
+    expect(card().classList).not.toContain('coupon-card--unaffordable');
+    expect(costButton().disabled).toBe(false);
+  });
+
   it('asks guests to sign in instead of redeeming', async () => {
     await loadCoupon(false);
 

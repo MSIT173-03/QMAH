@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { LucideX } from '@lucide/angular';
-import { catchError, of, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
   Breadcrumb,
@@ -89,15 +89,27 @@ export class CouponStore {
   );
 
   protected readonly loading = computed(() => this.result() === undefined);
+
+  /** 會員目前的點數；null 代表未登入或尚未取得，此時不判斷點數夠不夠 */
+  private readonly points = toSignal(
+    toObservable(this.cart.signedIn).pipe(
+      switchMap((signedIn) => (signedIn ? this.memberApi.getProfile().pipe(map((profile) => profile.pointBalance)) : of(null))),
+    ),
+    { initialValue: null },
+  );
+
   /** 供模板顯示的折價券，點數與期限已換算成顯示文字 */
-  protected readonly coupons = computed(() =>
-    (this.result() ?? []).map((coupon) => ({
+  protected readonly coupons = computed(() => {
+    const points = this.points();
+    return (this.result() ?? []).map((coupon) => ({
       ...coupon,
       costLabel: `${formatNumber(coupon.pointCost)} 點`,
+      // 點數不夠兌換：券面變灰、不能按（訪客與點數尚未取得時不判斷）
+      unaffordable: points !== null && coupon.pointCost > points,
       // 券面中間欄的說明行（與「我的折價券」共用同一個券面樣板）
       metas: [coupon.cond, `兌換後 ${coupon.validityDays} 天內有效`, `${coupon.endDate} 前可兌換`],
-    })),
-  );
+    }));
+  });
   protected readonly isEmpty = computed(() => !!this.result() && this.coupons().length === 0);
 
   /* ===============================
@@ -137,6 +149,8 @@ export class CouponStore {
   protected readonly errorCtaLabel = '重新載入';
   /** 所需點數上方的動作字樣 */
   protected readonly costActionLabel = '兌換';
+  /** 點數不夠兌換時取代「兌換」的字樣 */
+  protected readonly unaffordableLabel = '點數不足';
   /** 訪客的「我的折價券」登入按鈕文字 */
   protected readonly loginLabel = '登入';
   /** 我的折價券右側區塊的標示 */

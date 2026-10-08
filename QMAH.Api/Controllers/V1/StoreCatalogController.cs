@@ -294,4 +294,95 @@ public sealed class StoreCatalogController(
             PrimaryImagePath = mediaUrlResolver.Resolve(product.PrimaryImagePath)
         });
     }
+
+    /// <summary>
+    /// 同類推薦：找出買過這件商品的所有帳號，把這些帳號買過的商品依合計購買數量由多到少排序，取前 limit + 1 項；
+    /// 其中若有目前這件商品就排除它，否則排除最後一項，使結果剛好是 limit 項（符合條件的商品不足時則較少）。
+    /// 只計入訂單狀態不是待付款（PENDING_PAYMENT）或已取消（CANCELLED）的訂單，與評價的 IsVerifiedPurchase 判斷一致，
+    /// 也只列出上架中的商品。
+    /// </summary>
+    [HttpGet("products/{id:guid}/related")]
+    public async Task<ActionResult<IReadOnlyList<ProductListItemDto>>> GetRelatedProducts(
+        Guid id,
+        int limit = 5,
+        CancellationToken cancellationToken = default)
+    {
+        limit = Math.Clamp(limit, 1, 20);
+
+        var exists = await db.Products
+            .AsNoTracking()
+            .AnyAsync(item => item.Id == id && item.IsActive, cancellationToken);
+        if (!exists)
+            return MissingResource("找不到商品", "這件商品不存在或目前未上架。");
+
+        var buyerIds = db.OrderDetails
+            .Where(detail => detail.ProductId == id
+                && detail.Order.Status != "PENDING_PAYMENT"
+                && detail.Order.Status != "CANCELLED")
+            .Select(detail => detail.Order.UserId)
+            .Distinct();
+
+        var ranking = await db.OrderDetails
+            .AsNoTracking()
+            .Where(detail => detail.Order.Status != "PENDING_PAYMENT"
+                && detail.Order.Status != "CANCELLED"
+                && detail.Product.IsActive
+                && buyerIds.Contains(detail.Order.UserId))
+            .GroupBy(detail => detail.ProductId)
+            .Select(group => new { ProductId = group.Key, Quantity = group.Sum(detail => detail.Quantity) })
+            .OrderByDescending(row => row.Quantity)
+            .ThenBy(row => row.ProductId)
+            .Take(limit + 1)
+            .ToListAsync(cancellationToken);
+
+        var productIds = ranking.Select(row => row.ProductId).ToList();
+        if (!productIds.Remove(id) && productIds.Count > limit)
+            productIds.RemoveAt(productIds.Count - 1);
+        if (productIds.Count == 0)
+            return Ok(Array.Empty<ProductListItemDto>());
+
+        // 欄位與 GetProducts 的清單項目相同（有效售價、評價摘要、已完成訂單的販售數量）。
+        var products = await db.Products
+            .AsNoTracking()
+            .Where(product => productIds.Contains(product.Id))
+            .Select(g => new ProductListItemDto(
+                g.Id,
+                g.ArtifactId,
+                g.ExternalRef,
+                g.Name,
+                g.CategoryCode,
+                g.Price,
+                g.DiscountRate,
+                g.SalePrice.HasValue
+                    && g.SalePrice.Value > 0m
+                    && g.SalePrice.Value < g.Price
+                    ? g.SalePrice.Value
+                    : Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2),
+                g.SalePrice.HasValue
+                    && g.SalePrice.Value > 0m
+                    && g.SalePrice.Value < g.Price
+                    ? g.SalePrice
+                    : g.DiscountRate > 0m
+                        ? Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2)
+                        : (decimal?)null,
+                g.Stock,
+                g.PrimaryImagePath ?? (g.Artifact == null ? null : g.Artifact.PrimaryImagePath),
+                g.CreatedAt,
+                db.ProductReviews
+                    .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
+                    .Average(r => (decimal?)r.Rating) ?? 0m,
+                db.ProductReviews
+                    .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
+                db.OrderDetails
+                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
+                    .Sum(o => o.Quantity)))
+            .ToListAsync(cancellationToken);
+
+        // 依合計購買數量的順序回傳，並統一轉換公開圖片網址。
+        return Ok(productIds
+            .Select(productId => products.FirstOrDefault(product => product.Id == productId))
+            .OfType<ProductListItemDto>()
+            .Select(product => product with { PrimaryImagePath = mediaUrlResolver.Resolve(product.PrimaryImagePath) })
+            .ToList());
+    }
 }

@@ -1,4 +1,5 @@
-<!-- 同類推薦：商品卡片格狀清單 -->
+<!-- 同類推薦：商品卡片格狀清單；沒有任何推薦商品時整區不顯示 -->
+@if (items().length > 0) {
 <section class="section-block">
   <app-section-head headingLevel="h2" [title]="title" [tag]="tag" />
   <div class="card-grid">
@@ -8,3 +9,4 @@
     }
   </div>
 </section>
+}

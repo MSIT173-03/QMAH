@@ -382,7 +382,7 @@ export interface MyOrder {
   paymentType: string | null;
   totalAmount: number;
   createdAt: string;
-  items: { productId: string; productName: string; quantity: number }[];
+  items: { productId: string; productName: string; quantity: number; lineTotal: number }[];
 }
 
 /** 我的訂單分頁結果（後端 ApiPage） */

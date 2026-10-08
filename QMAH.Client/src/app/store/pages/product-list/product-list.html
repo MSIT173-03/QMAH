@@ -45,8 +45,8 @@
         <!-- 卡片格狀顯示 -->
         <div class="card-grid">
           @for (item of items(); track item.id) {
-            <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage" [badge]="item.cat"
-              badgeVariant="teal" [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
+            <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage"
+              [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
               [rating]="item.rating" [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
           }
         </div>
