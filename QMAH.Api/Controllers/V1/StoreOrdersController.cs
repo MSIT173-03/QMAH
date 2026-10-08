@@ -15,7 +15,9 @@ namespace QMAH.Api.Controllers.V1;
 
 [Authorize]
 [Route("api/v1/store/orders")]
-public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
+public sealed class StoreOrdersController(
+    QmahDbContext db,
+    EcpayPaymentService ecpayPayments) : ApiControllerBase
 {
     // integration: Store 分支原本把訂單流程拆到一半，留下兩套互相重疊的實作。
     // 目前集中成「輸入整理 → 商品／庫存檢查 → 折扣與點數檢查 → 建立訂單快照」四段，
@@ -72,10 +74,13 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                     retryToken);
             if (existingOrder is not null)
             {
+                // 重送的回應同樣附上新的付款嘗試，結帳完成對話框才有「前往付款」可用。
+                var replayCheckout = ecpayPayments.AddCheckoutForm(existingOrder);
+                await db.SaveChangesAsync(retryToken);
                 await transaction.CommitAsync(retryToken);
                 return Created(
                     $"/api/v1/me/orders/{existingOrder.Id}",
-                    ToOrderDto(existingOrder));
+                    StoreOrderMapping.ToOrderDto(existingOrder, replayCheckout));
             }
 
             var (products, productError) = await LoadAndValidateProductsAsync(groupedItems, retryToken);
@@ -116,9 +121,11 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
                 idempotencyMerchantTradeNo);
 
             db.StoreOrders.Add(order);
-            // integration: 目前 API 只建立「待付款」訂單與付款紀錄，尚未綁定第三方付款 callback；
-            // 商城負責人上線前必須用實際付款／取消／逾時情境確認這個狀態機，再接續付款與出貨流程。
+            // 訂單一律以「待付款」建立；信用卡訂單由綠界 callback（EcpayCallbackController）轉為已付款，
+            // 逾時未付款由 PendingOrderExpiryWorker 取消，貨到付款由後台流程處理。
             db.Payments.Add(order.Payment!);
+            // 信用卡訂單在同一筆交易裡記下第 1 筆付款嘗試，callback 才能以 MerchantTradeNo 找回訂單。
+            var ecpayCheckout = ecpayPayments.AddCheckoutForm(order);
             ApplyCouponRedemption(userCoupon, order.CreatedAt);
             await ApplyPointsRedemptionAsync(userId, request.PointsUsed, order, retryToken);
             await RemoveOrderedCartItemsAsync(userId, groupedItems, retryToken);
@@ -128,7 +135,7 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
 
             return Created(
                 $"/api/v1/me/orders/{order.Id}",
-                ToOrderDto(order));
+                StoreOrderMapping.ToOrderDto(order, ecpayCheckout));
         }, cancellationToken);
 
         return result;
@@ -433,6 +440,35 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
         return Ok(productIds);
     }
 
+    /// <summary>
+    /// 為待付款的信用卡訂單產生新的綠界付款表單（新的付款嘗試與交易編號）。
+    /// 綠界不允許重複編號，所以每次「前往付款」都要換一個；舊編號的付款結果仍對應到同一筆訂單。
+    /// </summary>
+    [HttpPost("{id:guid}/ecpay-checkout")]
+    public async Task<ActionResult<EcpayCheckoutFormDto>> CreateEcpayCheckout(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var order = await db.StoreOrders
+            .Include(item => item.OrderDetails)
+            .Include(item => item.Payment)
+            .SingleOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+        if (order is null)
+            return MissingResource("找不到訂單", "這筆訂單不存在或不屬於目前帳號。");
+        if (order.Payment?.PaymentType != "CREDIT_CARD")
+            return InvalidWorkflow("訂單不需線上付款", "只有信用卡付款的訂單可以前往綠界付款。");
+
+        var form = ecpayPayments.AddCheckoutForm(order);
+        if (form is null)
+            return InvalidWorkflow("訂單目前不可付款", "只有待付款的訂單可以前往付款。");
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok(form);
+    }
+
     [HttpPost("{id:guid}/cancel")]
     public async Task<ActionResult> CancelOrder(
         Guid id,
@@ -512,42 +548,5 @@ public sealed class StoreOrdersController(QmahDbContext db) : ApiControllerBase
     {
         // operationId 已由 Guid 提供唯一性；固定取值讓 commit 結果不明時重試不會再查詢或改寫編號。
         return $"QMAH-{DateTime.UtcNow:yyyyMMddHHmmss}-{operationId:N}"[..28];
-    }
-
-    private static OrderDto ToOrderDto(StoreOrder order) => new(
-        order.Id,
-        order.OrderNo,
-        order.Status,
-        order.Subtotal,
-        order.DiscountAmount,
-        order.PointsUsed,
-        order.ShippingFee,
-        order.TotalAmount,
-        (int)Math.Floor(order.TotalAmount * StoreCheckoutCatalog.PointEarnRate),
-        order.RecipientName,
-        order.RecipientPhone,
-        order.ShippingPostalCode,
-        order.ShippingCity,
-        order.ShippingDistrict,
-        order.ShippingAddressLine,
-        order.Payment?.Status,
-        order.CreatedAt,
-        order.PaidAt,
-        order.CancelledAt,
-        order.OrderDetails
-            .OrderBy(detail => detail.Id)
-            .Select(detail => new OrderLineDto(
-                detail.ProductId,
-                detail.ProductNameSnapshot,
-                detail.UnitPrice,
-                detail.Quantity,
-                detail.LineTotal))
-            .ToList(),
-        BuildEcpayCheckoutForm(order));
-
-    private static EcpayCheckoutFormDto? BuildEcpayCheckoutForm(StoreOrder order)
-    {
-        var request = EcpayCheckoutFormBuilder.BuildRequestForOrder(order);
-        return request is null ? null : EcpayCheckoutFormBuilder.Build(request);
     }
 }

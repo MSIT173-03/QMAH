@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
-using QMAH.Api.Infrastructure.Payments;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -293,7 +292,7 @@ public sealed class MeController(
             .Take(pageSize)
             .ToListAsync(cancellationToken);
         return Ok(new ApiPage<OrderDto>(
-            orders.Select(ToOrderDto).ToList(),
+            orders.Select(order => StoreOrderMapping.ToOrderDto(order)).ToList(),
             page,
             pageSize,
             totalCount,
@@ -316,7 +315,7 @@ public sealed class MeController(
             .SingleOrDefaultAsync(cancellationToken);
         return order is null
             ? MissingResource("找不到訂單", "這筆訂單不存在或不屬於目前帳號。")
-            : Ok(ToOrderDto(order));
+            : Ok(StoreOrderMapping.ToOrderDto(order));
     }
 
     /// <summary>取得目前登入會員的優惠券、期限與生命週期狀態。</summary>
@@ -816,43 +815,6 @@ public sealed class MeController(
         }
 
         return NoContent();
-    }
-
-    private static OrderDto ToOrderDto(StoreOrder order) => new(
-        order.Id,
-        order.OrderNo,
-        order.Status,
-        order.Subtotal,
-        order.DiscountAmount,
-        order.PointsUsed,
-        order.ShippingFee,
-        order.TotalAmount,
-        (int)Math.Floor(order.TotalAmount * StoreCheckoutCatalog.PointEarnRate),
-        order.RecipientName,
-        order.RecipientPhone,
-        order.ShippingPostalCode,
-        order.ShippingCity,
-        order.ShippingDistrict,
-        order.ShippingAddressLine,
-        order.Payment?.Status,
-        order.CreatedAt,
-        order.PaidAt,
-        order.CancelledAt,
-        order.OrderDetails
-            .OrderBy(detail => detail.Id)
-            .Select(detail => new OrderLineDto(
-                detail.ProductId,
-                detail.ProductNameSnapshot,
-                detail.UnitPrice,
-                detail.Quantity,
-                detail.LineTotal))
-            .ToList(),
-        BuildEcpayCheckoutForm(order));
-
-    private static EcpayCheckoutFormDto? BuildEcpayCheckoutForm(StoreOrder order)
-    {
-        var request = EcpayCheckoutFormBuilder.BuildRequestForOrder(order);
-        return request is null ? null : EcpayCheckoutFormBuilder.Build(request);
     }
 
     private static UserAddressDto ToAddressDto(UserAddress address) => new(
