@@ -260,7 +260,7 @@
   color:
     var(--economy-muted);
 
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
 
   strong {
@@ -276,7 +276,7 @@
 .asset-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .asset-number { min-width: 0; }
 .summary-value.long-value { font-size: 24px; }
-.asset-state { display: inline-block; margin-top: 5px; font-size: 12px; color: var(--economy-muted); }
+.asset-state { display: inline-block; margin-top: 5px; font-size: 14px; color: var(--economy-muted); }
 .asset-notes {
   margin: auto 0 0;
   padding-top: 16px;

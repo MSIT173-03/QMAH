@@ -10,3 +10,4 @@ button.btn-circle {
 .dropdown { display: flex; align-items: center; }
 button.btn-circle { display: inline-grid; place-items: center; }
 .indicator { display: inline-grid; place-items: center; line-height: 0; }
+/* 圖示容器與主題鈕一致：host 為 22px 方塊，避免 svg 溢出而偏右偏下。 */
