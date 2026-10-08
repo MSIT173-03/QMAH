@@ -22,6 +22,14 @@
           }
         </section>
       }
+      @if (content().sources; as sources) {
+        <section>
+          <h2>相關法規</h2>
+          @for (source of sources; track source.url) {
+            <p><a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.label }}</a></p>
+          }
+        </section>
+      }
     </article>
 
     <footer class="legal-page__footer">

@@ -7,6 +7,7 @@ import { GameDailyRewardStatus } from './game.models';
 import { GameMeterRowComponent, MeterRow } from './game-meter-row.component';
 import { KeyService } from '../services/key-service';
 import { GameService } from './game.service';
+import { MeApiService } from '../core/services/me-api';
 
 let rewardMeterSequence = 0;
 
@@ -64,7 +65,7 @@ let rewardMeterSequence = 0;
           @if (error()) { <p role="alert">{{ error() }}</p> }
         </div>
       </section>
-    } @else if (error()) { <p role="status">今日鑑定點數進度暫時無法讀取。<button type="button" (click)="load()">重新讀取</button></p> }
+    } @else if (meApi.me() && error()) { <p role="status">今日鑑定點數進度暫時無法讀取。<button type="button" (click)="load()">重新讀取</button></p> }
   `
 })
 export class GameRewardMeterComponent {
@@ -85,6 +86,7 @@ export class GameRewardMeterComponent {
   readonly error = signal('');
   readonly busy = signal(false);
   private readonly game = inject(GameService);
+  protected readonly meApi = inject(MeApiService);
   private readonly destroyRef = inject(DestroyRef);
   constructor() { effect(() => { this.refreshToken(); this.load(); }); }
   onDetailsToggle(event: Event): void {
@@ -105,6 +107,12 @@ export class GameRewardMeterComponent {
     return current.dailyLimit > 0 ? Math.max(0, Math.min(100, current.earned / current.dailyLimit * 100)) : 0;
   }
   load(): void {
+    if (!this.meApi.me()) {
+      this.status.set(null);
+      this.keys.set(null);
+      this.error.set('');
+      return;
+    }
     this.game.getMiniGameRewardStatus().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: status => { this.status.set(status); this.error.set(''); },
       error: () => this.error.set('請稍後重新讀取。')

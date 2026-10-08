@@ -29,6 +29,6 @@ export function keyAssetPath(scopeType: KeyScopeType, category?: string | null):
       return '/assets/catalog/keys/universal.png';
     case 'NORMAL':
     default:
-      return '/assets/catalog/keys/normal.png';
+      return '/assets/catalog/keys/key-normal.svg';
   }
 }

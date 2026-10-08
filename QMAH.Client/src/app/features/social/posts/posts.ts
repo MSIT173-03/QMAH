@@ -6,11 +6,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 
-import { CreateSocialPostRequest, EventListItem, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
+import { ApiPage, CreateSocialPostRequest, EventListItem, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
 import { SocialMediaLayout, SocialMediaManagerComponent } from '../../../shared/components/social-media-manager/social-media-manager';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
+import { SocialEventContentComponent } from '../../../shared/components/social-event-content/social-event-content';
 import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup';
 import { boardLabel } from '../social-labels';
 import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
@@ -47,6 +49,7 @@ import {
     SocialMediaManagerComponent,
     ReportModalComponent,
     SocialPostContentComponent,
+    SocialEventContentComponent,
     LucideExternalLink,
     LucideFlag,
     LucideMaximize2,
@@ -78,6 +81,9 @@ export class PostsComponent implements OnInit, OnDestroy {
   @ViewChild('createPostDialog') private createPostDialog?: ElementRef<HTMLDialogElement>;
 
   posts: SocialPostListItem[] = [];
+  private postsRequest?: Subscription;
+  private cacheFilterKey = '';
+  private readonly sortedPages = new Map<'newest' | 'oldest', ApiPage<SocialPostListItem>>();
   totalCount = 0;
   loading = false;
   loadError: string | null = null;
@@ -162,7 +168,7 @@ export class PostsComponent implements OnInit, OnDestroy {
 
   toggleSort(): void {
     this.sortOrder = this.sortOrder === 'newest' ? 'oldest' : 'newest';
-    this.loadPosts();
+    this.loadPosts(true);
   }
 
   // 實際欄數 = 使用者選的欄數，再依視窗寬度縮減（與 posts.scss 的斷點一致：≤1100px 最多 2 欄、≤640px 1 欄）。
@@ -206,6 +212,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.postsRequest?.unsubscribe();
     this.narrowQuery?.removeEventListener('change', this.onWallResize);
     this.mediumQuery?.removeEventListener('change', this.onWallResize);
   }
@@ -338,25 +345,37 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   // GET /api/v1/social/posts（AllowAnonymous，回傳 ApiPage<SocialPostListItemDto>）
-  loadPosts(): void {
-    this.loading = true;
+  loadPosts(allowCached = false): void {
+    this.postsRequest?.unsubscribe();
+    const order = this.sortOrder;
+    const filterKey = JSON.stringify([this.filterBoardCode, this.filterKeyword, this.filterFrom, this.filterTo]);
+    if (!allowCached || filterKey !== this.cacheFilterKey) {
+      this.sortedPages.clear();
+      this.cacheFilterKey = filterKey;
+    }
+    const applyPage = (page: ApiPage<SocialPostListItem>) => {
+      const dir = order === 'oldest' ? 1 : -1;
+      this.posts = [...page.items].sort((a, b) => dir * (Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id)));
+      this.totalCount = page.totalCount;
+      this.loading = false;
+      this.cdr.detectChanges();
+    };
     this.loadError = null;
-    this.socialApi.getPosts({
+    const cached = this.sortedPages.get(order);
+    if (cached) { applyPage(cached); return; }
+    this.loading = true;
+    this.postsRequest = this.socialApi.getPosts({
       pageSize: 20,
       boardCode: this.filterBoardCode || undefined,
       q: this.filterKeyword || undefined,
       // 日期是本地時間：起＝當天 00:00，迄＝隔天 00:00（不含）
       createdAfter: this.filterFrom ? new Date(this.filterFrom + 'T00:00:00').toISOString() : undefined,
       createdBefore: this.filterTo ? new Date(new Date(this.filterTo + 'T00:00:00').getTime() + 86_400_000).toISOString() : undefined,
-      sort: this.sortOrder
+      sort: order
     }).subscribe({
       next: (page) => {
-        // 後端新版會依 sort 排序；這裡再排一次，舊版 API 沒有 sort 參數時切換也有效。
-        const dir = this.sortOrder === 'oldest' ? 1 : -1;
-        this.posts = [...page.items].sort((a, b) => dir * (Date.parse(a.createdAt) - Date.parse(b.createdAt)));
-        this.totalCount = page.totalCount;
-        this.loading = false;
-        this.cdr.detectChanges();
+        this.sortedPages.set(order, page);
+        applyPage(page);
       },
       error: (err: HttpErrorResponse) => {
         console.error('取得貼文失敗:', err);

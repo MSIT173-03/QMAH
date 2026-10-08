@@ -130,7 +130,9 @@ public sealed class SocialMediaController(
         if (!isPublishedPostAsset && !isCommentAsset && !isOwner)
             return NotFound();
 
-        var physicalPath = ResolvePhysicalPath(asset.StoredPath);
+        // 舊資料可能使用公開 /media/... 路徑；無效路徑視為找不到圖片，不讓讀取拋出 500。
+        if (!SocialMediaPath.TryResolve(storageOptions.Value.RootPath, asset.StoredPath, out var physicalPath))
+            return NotFound();
         if (!System.IO.File.Exists(physicalPath))
             return NotFound();
 
@@ -196,11 +198,7 @@ public sealed class SocialMediaController(
 
     private string ResolvePhysicalPath(string relativePath)
     {
-        var root = Path.GetFullPath(storageOptions.Value.RootPath);
-        var fullPath = Path.GetFullPath(Path.Combine(root, relativePath));
-        var rootWithSeparator = root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            + Path.DirectorySeparatorChar;
-        if (!fullPath.StartsWith(rootWithSeparator, StringComparison.OrdinalIgnoreCase))
+        if (!SocialMediaPath.TryResolve(storageOptions.Value.RootPath, relativePath, out var fullPath))
             throw new InvalidOperationException("媒體檔案路徑超出設定的儲存根目錄。");
         return fullPath;
     }

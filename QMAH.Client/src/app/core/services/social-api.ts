@@ -14,6 +14,7 @@ export interface ApiPage<T> {
 }
 
 export interface SocialPostListItem {
+  eventSummary?: { startAt: string; endAt: string; location: string | null; capacity: number | null } | null;
   id: string;
   boardCode: string;
   userId: string;
