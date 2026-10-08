@@ -971,7 +971,7 @@
 
 @keyframes iconBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 @keyframes iconPinDrop { 0%, 55%, 100% { transform: translateY(0); } 25% { transform: translateY(-5px); } 40% { transform: translateY(0); } 48% { transform: translateY(-2px); } }
-@keyframes iconGemShine { 0%, 100% { transform: scale(1) rotate(0); filter: none; } 50% { transform: scale(1.12) rotate(-6deg); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--card-accent) 70%, transparent)); } }
+@keyframes iconGemShine { 0%, 100% { transform: scale(1) rotate(0); filter: none; } 50% { transform: scale(1.12) rotate(-6deg); filter: none; } }
 @keyframes iconTicketTilt { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-10deg); } 60% { transform: rotate(8deg); } }
 @keyframes iconTrophyLift { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-3px) scale(1.08); } }
 @keyframes iconBellRing { 0%, 60%, 100% { transform: rotate(0); } 66% { transform: rotate(14deg); } 72% { transform: rotate(-12deg); } 78% { transform: rotate(9deg); } 84% { transform: rotate(-6deg); } 90% { transform: rotate(3deg); } }
@@ -1149,3 +1149,24 @@
   .card-icon { color: #14182a; background: linear-gradient(145deg, color-mix(in srgb, var(--card-accent) 100%, #fff 12%), color-mix(in srgb, var(--card-accent) 82%, #000)); }
   .dashboard-card:hover .card-arrow { color: #14182a; }
 }
+
+/* 色彩克制：顏色只留給圖示與細邊，底色一律是中性的卡片底，不用漸層、不整塊染色。 */
+.welcome-card, :host-context([data-theme='qmahdark']) .welcome-card { background-image: none; background-color: var(--qmah-surface-elevated); }
+.welcome-content h1 { color: var(--qmah-ink); }
+.member-status, :host-context([data-theme='qmahdark']) .member-status { border-color: var(--qmah-border); background: color-mix(in srgb, var(--qmah-ink) 5%, var(--qmah-surface-elevated)); color: var(--qmah-text-muted); }
+.status-dot { background: #4f9a6a; }
+.quick-link, :host-context([data-theme='qmahdark']) .quick-link {
+  border: 1px solid var(--qmah-border); background: color-mix(in srgb, var(--qmah-ink) 3%, var(--qmah-surface-elevated)); color: var(--qmah-ink); box-shadow: none;
+}
+.quick-link app-qmah-icon, :host-context([data-theme='qmahdark']) .quick-link app-qmah-icon { background: transparent; color: var(--q); padding: 4px; }
+.quick-link:hover, .quick-link:focus-visible { border-color: var(--q); box-shadow: var(--qmah-shadow-card); }
+.card-icon, :host-context([data-theme='qmahdark']) .card-icon {
+  background: color-mix(in srgb, var(--card-accent) 12%, var(--qmah-surface-elevated)); color: var(--card-accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--card-accent) 22%, transparent);
+}
+.dashboard-card, :host-context([data-theme='qmahdark']) .dashboard-card { background-image: none; }
+
+/* 圖示不要光暈或陰影：圖示塊是乾淨的平色底，邊界清楚。 */
+.card-icon, :host-context([data-theme='qmahdark']) .card-icon { box-shadow: none; }
+.quick-link:hover, .quick-link:focus-visible { box-shadow: none; }
+.card-arrow, .dashboard-card:hover .card-arrow { box-shadow: none; }
+.quick-link app-qmah-icon { box-shadow: none; filter: none; }
