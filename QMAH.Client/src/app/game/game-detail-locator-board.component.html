@@ -31,6 +31,10 @@
           <button type="button" class="locator-confirm" data-button-tone="reversible" [disabled]="!pendingPoint() || disabled() || finished() || reviewing()" (click)="confirmLocation()">確認位置</button>
           <span class="locator-pending-status" role="status">{{ pendingPoint() ? '位置已選好，按確認才計分' : '' }}</span>
         </div>
+        <div class="tool-group tool-last" role="status">
+          <span class="tool-label">上一件結果</span>
+          <p class="tool-last__text" [class.is-ok]="lastAnswer() && lastCorrect()">{{ lastAnswer() ? (lastCorrect() ? '找到細節位置！' : '位置稍有偏差') : '完成第一件後顯示' }}</p>
+        </div>
         <div class="tool-group tool-progress-group">
           <span class="tool-label" id="progress-label">本局進度</span>
           <ol class="tool-progress" aria-labelledby="progress-label">

@@ -125,6 +125,9 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
 .tool-progress li.is-done { color: #285c45; border-color: #9fc2a8; background: #e5efdf; }
 .tool-progress li.is-done b { background: #2f6b50; }
 .tool-tips { display: grid; gap: 6px; margin: 0; padding: 0 0 0 1.2em; color: var(--game-card-muted); font-size: 14px; line-height: 1.6; }
+.tool-last { display: grid; gap: 6px; }
+.tool-last__text { margin: 0; padding: 8px 10px; border-radius: 10px; color: var(--game-card-muted); background: #efe7d3; font-size: 15px; font-weight: 700; }
+.tool-last__text.is-ok { color: #285c45; background: #e5efdf; }
 .tool-confirm-group { display: grid; gap: 4px; }
 .tool-confirm-group .locator-pending-status { min-height: 1.4em; }
 @media (min-width: 1000px) { .locator-round-heading .locator-steps { display: none; } }

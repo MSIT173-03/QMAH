@@ -45,7 +45,7 @@ let controlsSequence = 0;
   styleUrl: './game-loupe.scss',
   template: `
     <section class="loupe-group">
-      <span class="loupe-label" [id]="id + '-zoom'">放大鏡</span>
+      <div class="loupe-head"><span class="loupe-label" [id]="id + '-zoom'">放大鏡</span><output class="loupe-value">{{ zoom() }}×</output></div>
       <div class="loupe-zoom" title="滑鼠滾輪也能調整倍率">
         <div class="loupe-seg loupe-seg--2" role="radiogroup" [attr.aria-labelledby]="id + '-zoom'">
           <button type="button" role="radio" [attr.aria-checked]="!on()" (click)="loupeChange.emit(0)">關</button>
@@ -53,7 +53,6 @@ let controlsSequence = 0;
         </div>
         <input class="loupe-range" type="range" [min]="min" [max]="max" step="0.25" [attr.list]="id + '-ticks'" [value]="zoom()" aria-label="放大倍率" (input)="onRange($event)" />
         <datalist [id]="id + '-ticks'"><option value="2"></option><option value="4"></option><option value="6"></option><option value="8"></option></datalist>
-        <output class="loupe-value">{{ zoom() }}×</output>
       </div>
       <small class="loupe-note">{{ on() ? '滾輪或拉條調倍率，最高 8×' : '放大鏡已關閉' }}</small>
     </section>
