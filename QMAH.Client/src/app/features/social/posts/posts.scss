@@ -500,15 +500,15 @@
 .qmah-social-page .social-upcoming__head a { display: inline-flex; align-items: center; gap: 2px; color: var(--qmah-social-action); font-size: 0.8125rem; font-weight: 700; text-decoration: none; }
 .qmah-social-page .social-upcoming__head a svg { width: 14px; height: 14px; }
 .qmah-social-page .social-upcoming__head a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.qmah-social-page .social-upcoming__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
-.qmah-social-page .social-upcoming__item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; color: inherit; text-decoration: none; transition: background 140ms; }
+.qmah-social-page .social-upcoming__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.qmah-social-page .social-upcoming__item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 10px; color: inherit; text-decoration: none; transition: background 140ms; }
 .qmah-social-page .social-upcoming__item:hover { background: color-mix(in srgb, var(--qmah-ink) 5%, transparent); }
 .qmah-social-page .social-upcoming__date { flex: none; display: grid; place-items: center; width: 42px; height: 46px; border-radius: 8px; background: color-mix(in srgb, var(--qmah-social-action) 10%, transparent); color: var(--qmah-social-action); line-height: 1.1; }
 .qmah-social-page .social-upcoming__date small { font-size: 0.6875rem; font-weight: 700; }
 .qmah-social-page .social-upcoming__date strong { font-size: 1.125rem; font-weight: 800; }
 .qmah-social-page .social-upcoming__text { display: grid; min-width: 0; }
-.qmah-social-page .social-upcoming__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9375rem; font-weight: 700; color: var(--qmah-ink); }
-.qmah-social-page .social-upcoming__meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--qmah-muted); font-size: 0.8125rem; }
+.qmah-social-page .social-upcoming__title { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font-size: 0.8125rem; font-weight: 700; line-height: 1.4; color: var(--qmah-ink); }
+.qmah-social-page .social-upcoming__meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--qmah-muted); font-size: 0.75rem; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-upcoming { background: #25282a; border-color: #43474a; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-upcoming__title { color: #f1eee7; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-upcoming__meta { color: #b9b5ab; }

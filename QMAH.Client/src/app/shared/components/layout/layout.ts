@@ -1,11 +1,6 @@
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
-import {
-  LucideCalendarDays,
-  LucideLibrary,
-  LucideMegaphone,
-} from '@lucide/angular';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ThemeService } from '../../../core/services/theme';
 import { GameFocusMode } from '../../../core/services/game-focus-mode';
@@ -13,7 +8,7 @@ import { MeApiService } from '../../../core/services/me-api';
 import { NotificationsBellComponent } from '../notifications-bell/notifications-bell';
 import { ToastContainerComponent } from '../toast-container/toast-container';
 import { SiteFooter } from '../site-footer/site-footer';
-import { AreaNavigationComponent, NavigationGroup } from '../area-navigation/area-navigation';
+import { AreaNavigationComponent } from '../area-navigation/area-navigation';
 import { QmahIconComponent } from '../qmah-icon/qmah-icon';
 import { ScrollTop } from '../../../store/component/scroll-top/scroll-top';
 import { environment } from '../../../../environments/environment';
@@ -93,18 +88,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.failedAvatarPath.set(path);
   }
 
-  // ui-integration: Mobile 次級入口集中成資料，讓同一個 drawer 可延伸到其他 Area，而不複製 Layout markup。
-  readonly mobileNavigationGroups = computed<readonly NavigationGroup[]>(() => [
-    {
-      label: '社群',
-      items: [
-        { label: '貼文', path: '/social/posts', activePrefixes: ['/social/posts'], icon: LucideLibrary },
-        { label: '活動', path: '/social/events', activePrefixes: ['/social/events'], icon: LucideCalendarDays },
-        { label: '公告', path: '/social/announcements', activePrefixes: ['/social/announcements'], icon: LucideMegaphone }
-      ]
-    }
-  ]);
-
   ngOnInit(): void {
     this.meApi.refresh();
 
@@ -116,54 +99,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
         if (!event.urlAfterRedirects.startsWith('/game')) this.gameFocus.exit();
         this.closeMenu();
       });
-  }
-
-  /** 桌面 header 的領域次導覽；各領域的重要子頁面集中維護。 */
-  readonly contextNavigation = computed<{ label: string; links: readonly { label: string; path: string; exact?: boolean }[] }>(() => {
-    switch (this.activeArea()) {
-      case 'user':
-        return { label: '會員功能', links: [
-          { label: '總覽', path: '/member', exact: true },
-          { label: '個人資料', path: '/member/profile' },
-          { label: '會員資產', path: '/member/economy' },
-          { label: '成就', path: '/member/achievements' },
-          { label: '每日登入', path: '/member/daily-activity' },
-          { label: '通知', path: '/member/notifications' },
-        ] };
-      case 'catalog':
-        return { label: '圖鑑功能', links: [
-          { label: '文物圖鑑', path: '/artifact-list' },
-          { label: '我的鑰匙', path: '/key-list' },
-        ] };
-      case 'game':
-        return { label: '遊戲功能', links: [
-          { label: '總覽', path: '/game', exact: true },
-          { label: '單人玩法', path: '/game/training' },
-          { label: '多人房間', path: '/game/rooms' },
-          { label: '玩法說明', path: '/game/how-to' },
-        ] };
-      case 'social':
-        return { label: '社群功能', links: [
-          { label: '貼文', path: '/social/posts' },
-          { label: '活動', path: '/social/events' },
-          { label: '公告', path: '/social/announcements' },
-        ] };
-      case 'store':
-        return { label: '商城功能', links: [
-          { label: '總覽', path: '/store', exact: true },
-          { label: '商品', path: '/store/products' },
-          { label: '折價券', path: '/store/coupons' },
-          { label: '購物車', path: '/store/cart' },
-          { label: '訂單', path: '/store/orders' },
-        ] };
-      default:
-        return { label: '', links: [] };
-    }
-  });
-
-  isContextActive(link: { path: string; exact?: boolean }): boolean {
-    const url = this.currentUrl().split('?')[0].replace(/\/$/, '') || '/';
-    return link.exact ? url === link.path : url === link.path || url.startsWith(link.path + '/');
   }
 
   ngOnDestroy(): void {

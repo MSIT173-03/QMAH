@@ -51,7 +51,13 @@ export const appConfig: ApplicationConfig = {
         skipInitialTransition: true,
         onViewTransitionCreated: ({ from, to, transition }) => {
           const previousMode = gameMode(from);
-          if (!previousMode || previousMode !== gameMode(to)) transition.skipTransition();
+          if (!previousMode || previousMode !== gameMode(to)) {
+            // 主動略過的轉場會讓這三個 promise 以 AbortError 拒絕；這是預期行為，吞掉以免主控台出現未處理錯誤
+            transition.ready.catch(() => undefined);
+            transition.finished.catch(() => undefined);
+            transition.updateCallbackDone.catch(() => undefined);
+            transition.skipTransition();
+          }
         }
       })
     ),

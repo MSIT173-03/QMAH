@@ -45,14 +45,50 @@
 }
 
 .social-announcements__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-height: var(--qmah-control-height);
   padding: var(--qmah-space-2) var(--qmah-space-3);
   border: 1px solid var(--qmah-border);
   border-radius: var(--qmah-radius-control);
   background: transparent;
   color: inherit;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
+  transition: border-color 160ms, color 160ms, background 160ms;
+}
+
+.social-announcements__toggle:focus:not(:focus-visible) { outline: none; }
+.social-announcements__toggle:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+
+.social-announcements__chev {
+  width: 14px;
+  height: 14px;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 展開時箭頭朝上（表示可收合），收合時朝下 */
+.social-announcements:not(.is-collapsed) .social-announcements__chev { transform: rotate(180deg); }
+
+/* 高度動畫：0fr ↔ 1fr，不需要量測內容高度 */
+.social-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 240ms ease;
+}
+.social-fold.is-open { grid-template-rows: 1fr; opacity: 1; }
+.social-fold__inner { min-height: 0; overflow: hidden; }
+.social-fold:not(.is-open) + .social-fold.is-open,
+.social-fold.is-open { transition-delay: 0s; }
+
+/* 收合時標題列下方不留框線：只有展開內容時才分隔 */
+.social-announcements__head { transition: border-color 360ms; }
+.social-announcements.is-collapsed .social-announcements__head { border-bottom-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .social-fold, .social-announcements__chev, .social-announcements__head { transition: none; }
 }
 
 .social-announcements__toggle:hover {

@@ -24,15 +24,6 @@
           <app-qmah-icon name="home" size="22" aria-hidden="true" />
         </a>
         <app-area-navigation variant="desktop" />
-
-        @if (contextNavigation().links.length) {
-          <!-- 各領域的重要子頁面快速入口（桌面）；手機版仍由 drawer 提供。 -->
-          <nav class="app-context-navigation" [attr.aria-label]="contextNavigation().label">
-            @for (link of contextNavigation().links; track link.path) {
-              <a [routerLink]="link.path" [class.is-active]="isContextActive(link)" [attr.aria-current]="isContextActive(link) ? 'page' : null">{{ link.label }}</a>
-            }
-          </nav>
-        }
       </div>
 
       <div class="app-header__actions">
@@ -128,7 +119,7 @@
     <div class="app-mobile-drawer__body">
       <p class="app-mobile-drawer__label">主要功能</p>
       <!-- ui-integration: Mobile 主要與次級入口共用同一個泛用 renderer；不在 Shell 內硬編 Area 專屬 markup。 -->
-      <app-area-navigation variant="mobile" [groups]="mobileNavigationGroups()" (itemSelected)="closeMenu()" />
+      <app-area-navigation variant="mobile" (itemSelected)="closeMenu()" />
     </div>
 
     @if (!meApi.me()) {
