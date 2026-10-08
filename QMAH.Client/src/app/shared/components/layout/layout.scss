@@ -647,3 +647,23 @@ textarea:focus-visible {
 :host-context([data-theme='qmahdark']) .app-shell[data-area='social'] .app-main::before {
   background: url('/patterns/temple-terracotta-dark.svg') center top / 256px 256px repeat;
 }
+
+/* 領域次導覽：文字維持原色，選取以中性底色＋底部一條該領域色細線表示，不整顆染色。 */
+.app-shell[data-area='user'] { --nav-accent: var(--qmah-user-accent); }
+.app-shell[data-area='catalog'] { --nav-accent: var(--qmah-catalog-accent); }
+.app-shell[data-area='game'] { --nav-accent: var(--qmah-game-accent); }
+.app-shell[data-area='social'] { --nav-accent: var(--qmah-social-accent); }
+.app-shell[data-area='store'] { --nav-accent: var(--qmah-store-accent); }
+.app-context-navigation a { position: relative; }
+.app-context-navigation a:hover,
+.app-context-navigation a.is-active { color: var(--qmah-ink); background: color-mix(in srgb, currentColor 8%, transparent); }
+.app-context-navigation a.is-active::after {
+  position: absolute;
+  right: var(--qmah-space-2);
+  bottom: 3px;
+  left: var(--qmah-space-2);
+  height: 2px;
+  border-radius: 2px;
+  background: var(--nav-accent, currentColor);
+  content: '';
+}

@@ -9,6 +9,7 @@
     <a
       [routerLink]="link.path"
       (click)="notifyItemSelected()"
+      [attr.data-area]="link.area ?? null"
       [class.is-active]="isActive(link)"
       [attr.aria-current]="isActive(link) ? 'page' : null"
     >
@@ -25,7 +26,8 @@
           <a
             [routerLink]="link.path"
             (click)="notifyItemSelected()"
-            [class.is-active]="isActive(link)"
+            [attr.data-area]="link.area ?? null"
+      [class.is-active]="isActive(link)"
             [attr.aria-current]="isActive(link) ? 'page' : null"
           >
             @if (link.icon) { <ng-container *ngComponentOutlet="link.icon"></ng-container> }

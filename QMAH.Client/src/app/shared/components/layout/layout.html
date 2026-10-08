@@ -22,12 +22,12 @@
       <div class="app-header__navigation">
         <app-area-navigation variant="desktop" />
 
-        @if (isSocialArea()) {
-          <!-- ui-integration: 社群的貼文、活動與公告是同一 Area 的既有頁面；補上桌面次導覽，避免入口只藏在 Mobile drawer。 -->
-          <nav class="app-context-navigation" aria-label="社群功能">
-            <a routerLink="/social/posts" [class.is-active]="currentUrl().startsWith('/social/posts')">貼文</a>
-            <a routerLink="/social/events" [class.is-active]="currentUrl().startsWith('/social/events')">活動</a>
-            <a routerLink="/social/announcements" [class.is-active]="currentUrl().startsWith('/social/announcements')">公告</a>
+        @if (contextNavigation().links.length) {
+          <!-- 各領域的重要子頁面快速入口（桌面）；手機版仍由 drawer 提供。 -->
+          <nav class="app-context-navigation" [attr.aria-label]="contextNavigation().label">
+            @for (link of contextNavigation().links; track link.path) {
+              <a [routerLink]="link.path" [class.is-active]="isContextActive(link)" [attr.aria-current]="isContextActive(link) ? 'page' : null">{{ link.label }}</a>
+            }
           </nav>
         }
       </div>

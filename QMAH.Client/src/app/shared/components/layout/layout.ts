@@ -117,7 +117,53 @@ export class LayoutComponent implements OnInit, OnDestroy {
       });
   }
 
-  readonly isSocialArea = computed(() => this.currentUrl().startsWith('/social'));
+  /** 桌面 header 的領域次導覽；各領域的重要子頁面集中維護。 */
+  readonly contextNavigation = computed<{ label: string; links: readonly { label: string; path: string; exact?: boolean }[] }>(() => {
+    switch (this.activeArea()) {
+      case 'user':
+        return { label: '會員功能', links: [
+          { label: '總覽', path: '/member', exact: true },
+          { label: '個人資料', path: '/member/profile' },
+          { label: '資產', path: '/member/economy' },
+          { label: '成就', path: '/member/achievements' },
+          { label: '每日登入', path: '/member/daily-activity' },
+          { label: '通知', path: '/member/notifications' },
+        ] };
+      case 'catalog':
+        return { label: '圖鑑功能', links: [
+          { label: '文物圖鑑', path: '/artifact-list' },
+          { label: '我的鑰匙', path: '/key-list' },
+        ] };
+      case 'game':
+        return { label: '遊戲功能', links: [
+          { label: '大廳', path: '/game', exact: true },
+          { label: '單人玩法', path: '/game/training' },
+          { label: '多人房間', path: '/game/rooms' },
+          { label: '玩法說明', path: '/game/how-to' },
+          { label: '遊戲帳戶', path: '/game/account' },
+        ] };
+      case 'social':
+        return { label: '社群功能', links: [
+          { label: '貼文', path: '/social/posts' },
+          { label: '活動', path: '/social/events' },
+          { label: '公告', path: '/social/announcements' },
+        ] };
+      case 'store':
+        return { label: '商城功能', links: [
+          { label: '商城首頁', path: '/store', exact: true },
+          { label: '全部商品', path: '/store/products' },
+          { label: '優惠券', path: '/store/coupons' },
+          { label: '購物車', path: '/store/cart' },
+        ] };
+      default:
+        return { label: '', links: [] };
+    }
+  });
+
+  isContextActive(link: { path: string; exact?: boolean }): boolean {
+    const url = this.currentUrl().split('?')[0].replace(/\/$/, '') || '/';
+    return link.exact ? url === link.path : url === link.path || url.startsWith(link.path + '/');
+  }
 
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();

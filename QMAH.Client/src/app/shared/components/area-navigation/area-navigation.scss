@@ -110,3 +110,19 @@ a:focus-visible {
   height: 22px;
   stroke-width: 1.8;
 }
+
+/* 選取／懸停：只有圖示換成該領域的顏色；文字維持原色，外框與底色一律中性，不再整顆染色。 */
+a[data-area='user'] { --nav-accent: var(--qmah-user-accent); }
+a[data-area='catalog'] { --nav-accent: var(--qmah-catalog-accent); }
+a[data-area='game'] { --nav-accent: var(--qmah-game-accent); }
+a[data-area='social'] { --nav-accent: var(--qmah-social-accent); }
+a[data-area='store'] { --nav-accent: var(--qmah-store-accent); }
+a:hover,
+a.is-active {
+  border-color: transparent;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: var(--qmah-ink);
+}
+a.is-active { background: color-mix(in srgb, currentColor 11%, transparent); }
+a:hover ::ng-deep svg,
+a.is-active ::ng-deep svg { color: var(--nav-accent, currentColor); }

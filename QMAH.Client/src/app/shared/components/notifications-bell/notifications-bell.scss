@@ -11,3 +11,16 @@ button.btn-circle {
 button.btn-circle { display: inline-grid; place-items: center; }
 .indicator { display: inline-grid; place-items: center; line-height: 0; }
 /* 圖示容器與主題鈕一致：host 為 22px 方塊，避免 svg 溢出而偏右偏下。 */
+
+/* 通知視窗一律向下展開在按鈕下方，不使用 daisyUI 的 anchor 自動翻轉（在 sticky 頁首會翻到上方蓋住頁首）。 */
+.dropdown { position: relative; }
+.dropdown .dropdown-content {
+  position: absolute;
+  inset: calc(100% + 6px) 0 auto auto;
+  position-area: none;
+  position-try-fallbacks: none;
+  translate: none;
+  margin-top: 0;
+  z-index: 70;
+  max-width: calc(100vw - 16px);
+}

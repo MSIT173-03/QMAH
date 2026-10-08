@@ -17,6 +17,8 @@ export interface NavigationItem {
   /** Lucide icon component keeps the same 24px outline language in every navigation level. */
   icon?: Type<unknown>;
   badge?: string | number;
+  /** 領域代碼：只用來決定圖示在選取/懸停時的顏色。 */
+  area?: 'user' | 'catalog' | 'game' | 'social' | 'store';
 }
 
 export interface NavigationGroup {
@@ -54,30 +56,35 @@ export class AreaNavigationComponent {
       label: '會員中心',
       path: '/member',
       activePrefixes: ['/member'],
+      area: 'user',
       icon: LucideUserRound,
     },
     {
       label: '圖鑑鑰匙',
       path: '/artifact-list',
       activePrefixes: ['/artifact-list', '/key-list'],
+      area: 'catalog',
       icon: LucideBookOpen,
     },
     {
       label: '遊戲大廳',
       path: '/game',
       activePrefixes: ['/game'],
+      area: 'game',
       icon: LucideGamepad2,
     },
     {
       label: '社群廣場',
       path: '/social/posts',
       activePrefixes: ['/social'],
+      area: 'social',
       icon: LucideMessageCircle,
     },
     {
       label: '購物商城',
       path: '/store',
       activePrefixes: ['/store'],
+      area: 'store',
       icon: LucideShoppingBag,
     },
   ];
