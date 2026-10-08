@@ -139,7 +139,29 @@ export class PostsComponent implements OnInit, OnDestroy {
   private announcementPointerPaused = false;
   private announcementFocusPaused = false;
 
+  // 實際欄數 = 使用者選的欄數，再依視窗寬度縮減（與 posts.scss 的斷點一致：≤1100px 最多 2 欄、≤640px 1 欄）。
+  private readonly narrowQuery = this.mediaQuery('(max-width: 640px)');
+  private readonly mediumQuery = this.mediaQuery('(max-width: 1100px)');
+  private readonly onWallResize = () => this.cdr.detectChanges();
+
+  private mediaQuery(query: string): MediaQueryList | null {
+    return typeof window.matchMedia === 'function' ? window.matchMedia(query) : null;
+  }
+
+  // 依序輪流分到各欄：第 1 篇第 1 欄、第 2 篇第 2 欄、…，所以閱讀順序就是新到舊。
+  get postColumns(): SocialPostListItem[][] {
+    if (this.posts.length === 0) return [];
+    let count: number = this.wallCols;
+    if (this.mediumQuery?.matches) count = Math.min(count, 2);
+    if (this.narrowQuery?.matches) count = 1;
+    const columns: SocialPostListItem[][] = Array.from({ length: count }, () => []);
+    this.posts.forEach((post, index) => columns[index % count].push(post));
+    return columns;
+  }
+
   ngOnInit(): void {
+    this.narrowQuery?.addEventListener('change', this.onWallResize);
+    this.mediumQuery?.addEventListener('change', this.onWallResize);
     this.announcementCollapsed.set(this.readAnnouncementCollapsePreference());
     this.loadPosts();
     this.loadAnnouncements();
@@ -153,6 +175,8 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.narrowQuery?.removeEventListener('change', this.onWallResize);
+    this.mediumQuery?.removeEventListener('change', this.onWallResize);
     if (this.announcementTimer) clearInterval(this.announcementTimer);
   }
 

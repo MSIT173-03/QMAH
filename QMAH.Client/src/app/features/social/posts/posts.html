@@ -159,72 +159,81 @@
     </div>
   }
 
-  <div class="social-post-wall" [attr.data-cols]="wallCols">
-    @if (!loading) {
-    @for (post of posts; track post.id) {
-    <article class="social-post-card" [class.social-post-card--text]="!post.coverImageUrl">
-      <div class="social-post-card__body">
-        <header class="social-post-card__head">
-          <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
-          <div class="social-post-card__who">
-            <p class="social-post-card__author">
-              @if (post.publisherType === 'COMMUNITY' && post.userId) {
-                <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
-              } @else {
-                {{ post.displayName || '匿名會員' }}
-              }
-            </p>
-            <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
-          </div>
-          <div class="social-post-card__tags">
-            <span class="social-tag" [attr.data-board]="post.boardCode">{{ boardLabel(post.boardCode) }}</span>
-            @if (post.postType === 'ANNOUNCEMENT') {
-              <span class="social-tag social-tag--notice">站方公告</span>
-            }
-          </div>
-        </header>
-        <h2 class="social-post-card__title">
-          <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
-        </h2>
-        <p class="social-post-card__excerpt">{{ stripMarkup(post.contentPreview) }}</p>
-        @if (post.coverImageUrl) {
-          <a class="social-post-card__cover" [routerLink]="['/social/posts', post.id]" tabindex="-1" aria-hidden="true">
-            <img [src]="post.coverImageUrl" alt="" loading="lazy" />
-          </a>
-        }
-        <div class="social-post-card__footer">
-          <p class="social-post-card__stats">
-            <a class="social-icon-label social-post-card__comments" [routerLink]="['/social/posts', post.id]" fragment="comments" [attr.aria-label]="'查看 ' + post.title + ' 的留言'">
-              <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
-              {{ post.commentCount || 0 }} 則留言
-            </a>
-            @if (post.mediaCount > 0) {
-              <span class="social-icon-label">
-                <svg lucideImage aria-hidden="true" focusable="false"></svg>
-                {{ post.mediaCount }}
-              </span>
+  <!-- 由新到舊依序輪流分到各欄（2 欄：左、右、左、右；3 欄：左、中、右、左…），每欄各自由上往下排，卡片高度不同也不會留空白。 -->
+  <ng-template #postCard let-post>
+  <article class="social-post-card" [class.social-post-card--text]="!post.coverImageUrl">
+    <div class="social-post-card__body">
+      <header class="social-post-card__head">
+        <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
+        <div class="social-post-card__who">
+          <p class="social-post-card__author">
+            @if (post.publisherType === 'COMMUNITY' && post.userId) {
+              <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
+            } @else {
+              {{ post.displayName || '匿名會員' }}
             }
           </p>
-          <div class="social-post-card__actions">
-            <button
-              class="social-post-card__report"
-              type="button"
-              [attr.aria-label]="'檢舉貼文：' + post.title"
-              title="檢舉這篇貼文"
-              (click)="reportModal.open('POST', post.id)"
-            >
-              <svg lucideFlag aria-hidden="true" focusable="false"></svg>
-            </button>
-            <a class="social-post-card__open" [routerLink]="['/social/posts', post.id]" [attr.aria-label]="'開啟貼文：' + post.title" title="開啟貼文">
-              <svg lucideExternalLink aria-hidden="true" focusable="false"></svg>
-            </a>
-          </div>
+          <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+        </div>
+        <div class="social-post-card__tags">
+          <span class="social-tag" [attr.data-board]="post.boardCode">{{ boardLabel(post.boardCode) }}</span>
+          @if (post.postType === 'ANNOUNCEMENT') {
+            <span class="social-tag social-tag--notice">站方公告</span>
+          }
+        </div>
+      </header>
+      <h2 class="social-post-card__title">
+        <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
+      </h2>
+      <p class="social-post-card__excerpt">{{ stripMarkup(post.contentPreview) }}</p>
+      @if (post.coverImageUrl) {
+        <a class="social-post-card__cover" [routerLink]="['/social/posts', post.id]" tabindex="-1" aria-hidden="true">
+          <img [src]="post.coverImageUrl" alt="" loading="lazy" />
+        </a>
+      }
+      <div class="social-post-card__footer">
+        <p class="social-post-card__stats">
+          <a class="social-icon-label social-post-card__comments" [routerLink]="['/social/posts', post.id]" fragment="comments" [attr.aria-label]="'查看 ' + post.title + ' 的留言'">
+            <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
+            {{ post.commentCount || 0 }} 則留言
+          </a>
+          @if (post.mediaCount > 0) {
+            <span class="social-icon-label">
+              <svg lucideImage aria-hidden="true" focusable="false"></svg>
+              {{ post.mediaCount }}
+            </span>
+          }
+        </p>
+        <div class="social-post-card__actions">
+          <button
+            class="social-post-card__report"
+            type="button"
+            [attr.aria-label]="'檢舉貼文：' + post.title"
+            title="檢舉這篇貼文"
+            (click)="reportModal.open('POST', post.id)"
+          >
+            <svg lucideFlag aria-hidden="true" focusable="false"></svg>
+          </button>
+          <a class="social-post-card__open" [routerLink]="['/social/posts', post.id]" [attr.aria-label]="'開啟貼文：' + post.title" title="開啟貼文">
+            <svg lucideExternalLink aria-hidden="true" focusable="false"></svg>
+          </a>
         </div>
       </div>
-    </article>
-    } @empty {
-    <div class="social-state social-state--wide">目前還沒有貼文</div>
-    }
+    </div>
+  </article>
+  </ng-template>
+
+  <div class="social-post-wall">
+    @if (!loading) {
+      @for (column of postColumns; track $index) {
+        <div class="social-post-wall__column">
+          @for (post of column; track post.id) {
+            <ng-container [ngTemplateOutlet]="postCard" [ngTemplateOutletContext]="{ $implicit: post }" />
+          }
+        </div>
+      } @empty {
+        <div class="social-state social-state--wide">目前還沒有貼文</div>
+      }
     }
   </div>
   </div>
