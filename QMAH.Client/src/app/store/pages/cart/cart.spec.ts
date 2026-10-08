@@ -171,4 +171,33 @@ describe('Cart add-ons', () => {
     expect(entering().length).toBe(0);
     expect(buttons()[0].classList.contains('product-card-buy--added')).toBe(true);
   });
+
+  it('draws a new random batch of add-ons when "換一批" is pressed, dropping the ones added from the old batch', async () => {
+    const fixture = TestBed.createComponent(Cart);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const buttons = () => Array.from(element.querySelectorAll<HTMLButtonElement>('app-cart-addons .product-card-buy'));
+    const refresh = element.querySelector<HTMLButtonElement>('app-cart-addons .addon-refresh')!;
+    expect(refresh.textContent?.trim()).toBe('換一批');
+    expect(productQueries.length).toBe(1);
+
+    // 先從這一批加入一件，它會留在清單中並標示已加入。
+    buttons()[0].click();
+    fixture.detectChanges();
+    expect(buttons()[0].classList.contains('product-card-buy--added')).toBe(true);
+
+    refresh.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // 重新查詢一次（同樣是該器類的隨機排序）；已加入購物車的商品不再出現在新的一批。
+    expect(productQueries.length).toBe(2);
+    expect(productQueries[1]).toMatchObject({ cat: '青銅器', order: 6 });
+    expect(buttons().length).toBe(5);
+    expect(buttons().some((button) => button.classList.contains('product-card-buy--added'))).toBe(false);
+  });
 });

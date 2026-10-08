@@ -1,3 +1,10 @@
 :host {
   display: block;
 }
+
+/* 標題列右側的小按鈕：比一般外框按鈕矮，與標題同一行（較高特異度才能蓋過全站按鈕的最小高度） */
+.addon-refresh.btn-outline {
+  align-self: center;
+  min-height: 0;
+  padding: var(--qmah-space-1, 4px) var(--qmah-space-3);
+}

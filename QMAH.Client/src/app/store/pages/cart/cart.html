@@ -30,5 +30,6 @@
   }
 
   <!-- 再加購 -->
-  <app-cart-addons [items]="addons()" [addedIds]="addedAddons()" (addToCart)="onAddAddon($event)" />
+  <app-cart-addons [items]="addons()" [addedIds]="addedAddons()" (addToCart)="onAddAddon($event)"
+    (refresh)="onRefreshAddons()" />
 </div>
