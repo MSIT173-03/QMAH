@@ -679,3 +679,9 @@ textarea:focus-visible {
 }
 :host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main { background-color: #17181a; }
 :host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main::before { background: url('/patterns/temple-bronze-dark.svg') center top / 256px 256px repeat; }
+
+/* 社群與會員中心：底紋只鋪左右邊緣，向中央漸層淡出。 */
+.app-shell:is([data-area='social'], [data-area='user']) .app-main::before {
+  -webkit-mask: linear-gradient(90deg, #000 0, transparent 24%, transparent 76%, #000 100%);
+  mask: linear-gradient(90deg, #000 0, transparent 24%, transparent 76%, #000 100%);
+}

@@ -1084,3 +1084,15 @@
 .avatar-editor:hover .avatar-hint {
   color: #8ce0cd;
 }
+
+/* 個人資料頁：主色由青綠改為靛藍；邊框一律中性暖灰，不發綠。 */
+:host {
+  --qmah-primary: #3b4a7a;
+  --qmah-primary-hover: #4a5a9a;
+  --qmah-primary-content: #ffffff;
+}
+:host-context([data-theme='qmahdark']) {
+  --qmah-primary: #b3bff0;
+  --qmah-primary-hover: #cbd3f5;
+  --qmah-primary-content: #12141c;
+}

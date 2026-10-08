@@ -989,22 +989,34 @@
 .dashboard-card:focus-visible .daily-icon { animation-play-state: running !important; }
 .dashboard-card:hover .card-icon app-qmah-icon { animation-duration: 1.6s; }
 
-/* ===== 會員中心配色重整：七個分類各用不同、有意義的顏色，不再一片青綠 ===== */
+/* ===== 會員中心配色：顏色跟圖示的意圖一致（寶石＝藍、火焰＝橘紅、獎盃＝金…），依頁面順序排成一組不重複的色票 ===== */
 :host { --qmah-primary: #26303f; }
 :host-context([data-theme='qmahdark']) { --qmah-primary: #e7e4dd; }
-.profile-card { --card-accent: #4a5a9a; }        /* 個人資料：靛藍 */
-.address-card { --card-accent: #3e7a96; }        /* 地址：湖藍 */
-.economy-card { --card-accent: #2f7a62; }        /* 資產：唯一的綠（錢與寶石） */
-.coupon-card { --card-accent: #a67c1f; }         /* 優惠券：金 */
-.achievement-card { --card-accent: #8a4f7a; }    /* 成就：紫紅 */
-.daily-card { --card-accent: #c0592b; }          /* 每日登入：火焰橘 */
-.notification-card { --card-accent: #b3402d; }   /* 通知：朱紅 */
+.profile-card { --card-accent: #4a5a9a; }        /* 個人資料：身分 → 靛藍 */
+.address-card { --card-accent: #c4452d; }        /* 地址：地圖圖釘 → 紅 */
+.economy-card { --card-accent: #1f7fbf; }        /* 資產：寶石 → 藍 */
+.coupon-card { --card-accent: #7a52b3; }         /* 優惠券：票券 → 紫 */
+.achievement-card { --card-accent: #b8860b; }    /* 成就：獎盃 → 金 */
+.daily-card { --card-accent: #d9531e; }          /* 每日登入：火焰 → 橘紅 */
+.notification-card { --card-accent: #1b8a94; }   /* 通知：鈴鐺 → 青 */
 :host-context([data-theme='qmahdark']) {
-  .profile-card { --card-accent: #a9b6ee; }
-  .address-card { --card-accent: #8fc3da; }
-  .economy-card { --card-accent: #86cdb2; }
-  .coupon-card { --card-accent: #e8c566; }
-  .achievement-card { --card-accent: #d9a0cb; }
-  .daily-card { --card-accent: #f0a47a; }
-  .notification-card { --card-accent: #f09c8c; }
+  .profile-card { --card-accent: #aab7ee; }
+  .address-card { --card-accent: #f09c8c; }
+  .economy-card { --card-accent: #8fb8ee; }
+  .coupon-card { --card-accent: #c3a6ee; }
+  .achievement-card { --card-accent: #e8c566; }
+  .daily-card { --card-accent: #f4a373; }
+  .notification-card { --card-accent: #7fcfd6; }
+}
+
+/* 動態：寶石不再有中間的光暈；每日登入的火焰像在晃動（只動圖示本身，不動底座）。 */
+@keyframes iconGemShine { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.1) rotate(-5deg); } }
+.daily-icon { animation: none !important; }
+.daily-icon app-qmah-icon { transform-origin: 50% 100%; animation: iconFlame 1.3s ease-in-out infinite; }
+@keyframes iconFlame {
+  0%, 100% { transform: rotate(0) scale(1, 1) skewX(0); }
+  15% { transform: rotate(-5deg) scale(1.03, 1.1) skewX(-4deg); }
+  35% { transform: rotate(4deg) scale(0.97, 1.04) skewX(3deg); }
+  55% { transform: rotate(-3deg) scale(1.04, 1.12) skewX(-2deg); }
+  75% { transform: rotate(5deg) scale(0.98, 1.02) skewX(4deg); }
 }
