@@ -4,13 +4,13 @@
 
 .legal-page {
   min-height: 100%;
-  padding: clamp(24px, 5vw, 64px) 20px 72px;
+  padding: clamp(24px, 5vw, 64px) clamp(20px, 4vw, 48px) 72px;
   background: var(--qmah-page-surface);
   color: var(--qmah-ink);
 }
 
 .legal-page__inner {
-  width: min(820px, 100%);
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -52,7 +52,7 @@
 .legal-page__eyebrow {
   margin: 0 0 12px;
   color: var(--qmah-primary);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: 11px;
   letter-spacing: .12em;
 }
@@ -73,7 +73,7 @@ h1 {
 }
 
 .legal-page__intro {
-  max-width: 720px;
+  max-width: none;
   margin-bottom: 14px;
   color: var(--qmah-muted);
   font-size: 16px;
@@ -112,7 +112,7 @@ h2 {
 }
 
 .legal-page__document p {
-  max-width: 68ch;
+  max-width: none;
   margin-bottom: 0;
   color: var(--qmah-ink);
   font-size: 15px;
