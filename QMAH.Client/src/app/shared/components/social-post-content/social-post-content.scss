@@ -56,3 +56,23 @@ blockquote {
 .space {
   height: 0.35rem;
 }
+
+/* 行內格式：粗體、斜體、字級、顏色（顏色與字級只接受白名單值，由 data 屬性對應，不吃使用者提供的 CSS）。 */
+.b { font-weight: 800; }
+.i { font-style: italic; }
+[data-size='lg'] { font-size: 1.3em; line-height: 1.4; }
+[data-size='sm'] { font-size: 0.85em; }
+[data-color='red'] { color: #b3402d; }
+[data-color='brown'] { color: #7a4b2a; }
+[data-color='green'] { color: #2f6b50; }
+[data-color='blue'] { color: #2f5aa8; }
+[data-color='gold'] { color: #8f6200; }
+[data-color='gray'] { color: #5f645f; }
+:host-context(:root[data-theme='qmahdark']) {
+  [data-color='red'] { color: #ff9b8a; }
+  [data-color='brown'] { color: #e0b48a; }
+  [data-color='green'] { color: #8fd1ae; }
+  [data-color='blue'] { color: #9bbcff; }
+  [data-color='gold'] { color: #e8c566; }
+  [data-color='gray'] { color: #b9beb8; }
+}

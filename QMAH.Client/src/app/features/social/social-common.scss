@@ -622,3 +622,39 @@
   .social-modal,
   .social-modal * { animation: none !important; transition: none !important; }
 }
+
+/* ===== 貼文發布器工具列：分組、統一 36px 高、字級 14px ===== */
+.social-post-form__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.social-post-form__group { display: inline-flex; align-items: center; gap: 2px; padding-right: 14px; border-right: 1px solid color-mix(in srgb, var(--qmah-border) 80%, transparent); }
+.social-post-form__group:last-child { padding-right: 0; border-right: 0; }
+.social-fmt {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 36px;
+  padding-inline: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--qmah-social-action);
+  font: 800 14px/1 var(--qmah-font-sans);
+  cursor: pointer;
+  transition: background-color 140ms ease, transform 140ms cubic-bezier(.22, 1, .36, 1);
+}
+.social-fmt:hover { background: color-mix(in srgb, var(--qmah-social-action) 14%, transparent); }
+.social-fmt:active { transform: scale(.92); }
+.social-fmt--b { font-weight: 900; font-size: 16px; }
+.social-fmt--i { font-style: italic; font-family: var(--qmah-font-serif); font-size: 16px; }
+.social-fmt--lg { font-size: 18px; }
+.social-fmt--sm { font-size: 12px; }
+.social-swatch { width: 22px; height: 22px; margin: 7px 4px; padding: 0; border: 2px solid var(--qmah-surface-elevated); border-radius: 50%; box-shadow: 0 0 0 1px color-mix(in srgb, var(--qmah-ink) 28%, transparent); cursor: pointer; transition: transform 140ms cubic-bezier(.22, 1, .36, 1); }
+.social-swatch:hover { transform: scale(1.18); }
+.social-swatch:active { transform: scale(.9); }
+.social-swatch[data-color='red'] { background: #b3402d; }
+.social-swatch[data-color='brown'] { background: #7a4b2a; }
+.social-swatch[data-color='green'] { background: #2f6b50; }
+.social-swatch[data-color='blue'] { background: #2f5aa8; }
+.social-swatch[data-color='gold'] { background: #c58b12; }
+.social-swatch[data-color='gray'] { background: #6b6f6a; }
+.social-post-form__hint { display: block; margin-top: 6px; color: var(--qmah-muted); font-size: 13px; line-height: 1.5; }
+.social-post-form__toolbar .social-post-form__hint { display: none; }
