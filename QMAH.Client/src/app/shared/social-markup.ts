@@ -9,7 +9,7 @@
  *   [size=small]小字[/size]  [size=large]大字[/size]  [size=xlarge]特大字[/size]
  *   [color=red|brown|green|blue|gold|gray]彩色[/color]
  *   [h]小標題[/h]  [quote]引用[/quote]  [list][*]項目[*]項目[/list]  [center]置中[/center]
- *   [spoiler]劇透[/spoiler]  [url=https://…]連結文字[/url]（只允許 http／https）  [hr]分隔線
+ *   [spoiler]劇透[/spoiler]  [url=https://…]連結文字[/url]（只允許 http／https）  [hr]分隔線  [img=圖片識別碼]（留言附圖，只接受本站上傳圖片的 GUID）
  */
 export type SocialSize = 'small' | 'large' | 'xlarge';
 export type SocialColor = 'red' | 'brown' | 'green' | 'blue' | 'gold' | 'gray';
@@ -18,7 +18,7 @@ export type SocialNode =
   | { t: 'text'; v: string }
   | { t: 'el'; n: SocialTagName; a?: string; c: SocialNode[]; items?: SocialNode[][] };
 
-export type SocialTagName = 'b' | 'i' | 'u' | 's' | 'h' | 'quote' | 'list' | 'size' | 'color' | 'url' | 'center' | 'spoiler' | 'hr';
+export type SocialTagName = 'b' | 'i' | 'u' | 's' | 'h' | 'quote' | 'list' | 'size' | 'color' | 'url' | 'center' | 'spoiler' | 'hr' | 'img';
 
 export const SOCIAL_SIZES: readonly SocialSize[] = ['small', 'large', 'xlarge'];
 export const SOCIAL_COLORS: readonly { color: SocialColor; label: string }[] = [
@@ -31,7 +31,7 @@ export const SOCIAL_COLORS: readonly { color: SocialColor; label: string }[] = [
 ];
 
 const BLOCK_TAGS = new Set<string>(['h', 'quote', 'list', 'center', 'spoiler']);
-const TAG = /\[(\/?)(b|i|u|s|h|quote|list|size|color|url|center|spoiler|hr|\*)(?:=([^\]\s]{1,300}))?\]/gi;
+const TAG = /\[(\/?)(b|i|u|s|h|quote|list|size|color|url|center|spoiler|hr|img|\*)(?:=([^\]\s]{1,300}))?\]/gi;
 const MAX_DEPTH = 8;
 const MAX_NODES = 4000;
 
@@ -49,6 +49,7 @@ function validArg(name: string, arg: string | undefined): boolean {
   if (name === 'size') return !!arg && (SOCIAL_SIZES as readonly string[]).includes(arg);
   if (name === 'color') return !!arg && SOCIAL_COLORS.some(c => c.color === arg);
   if (name === 'url') return isSafeSocialUrl(arg);
+  if (name === 'img') return !!arg && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(arg);
   return !arg;
 }
 
@@ -124,6 +125,12 @@ export function parseSocialMarkup(source: string | null | undefined): SocialNode
       continue;
     }
 
+    if (name === 'img') {
+      if (slash || !validArg('img', arg)) pushText(raw);
+      else { current().push({ t: 'el', n: 'img', a: arg!.toLowerCase(), c: [] }); nodeCount++; }
+      continue;
+    }
+
     if (name === 'hr') {
       if (slash || arg) pushText(raw);
       else { current().push({ t: 'el', n: 'hr', c: [] }); nodeCount++; if (input[cursor] === '\n') cursor++; }
@@ -163,6 +170,7 @@ function plain(nodes: SocialNode[]): string {
     .map(node => {
       if (node.t === 'text') return node.v;
       if (node.n === 'hr') return ' ';
+      if (node.n === 'img') return '（圖片）';
       if (node.items) return node.items.map(item => plain(item).trim()).filter(Boolean).join(' ');
       return plain(node.c);
     })

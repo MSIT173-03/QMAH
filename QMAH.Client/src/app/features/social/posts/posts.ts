@@ -238,6 +238,12 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.createPostDialog?.nativeElement.showModal();
   }
 
+  /** 左側看板分類／手機標籤：切換看板並重新載入（與篩選列的下拉同一個狀態）。 */
+  selectBoard(code: string): void {
+    this.filterBoardCode = code;
+    this.loadPosts();
+  }
+
   resetFilters(): void {
     this.filterBoardCode = '';
     this.filterKeyword = '';

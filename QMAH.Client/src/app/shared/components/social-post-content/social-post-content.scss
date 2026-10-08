@@ -84,3 +84,5 @@ hr { margin: 0.9em 0; border: 0; border-top: 1px solid var(--qmah-line); }
 a { color: var(--qmah-social-accent, var(--qmah-terracotta)); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .is-spoiler { padding: 0 3px; border-radius: 3px; background: var(--qmah-ink); color: transparent; cursor: pointer; transition: background 0.15s, color 0.15s; }
 .is-spoiler.is-revealed { background: color-mix(in srgb, var(--qmah-ink) 10%, transparent); color: inherit; cursor: auto; }
+
+.is-img { display: block; max-width: min(100%, 420px); max-height: 360px; margin: 0.5rem 0; border-radius: 10px; border: 1px solid var(--qmah-border); object-fit: contain; background: var(--qmah-surface); }

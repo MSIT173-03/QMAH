@@ -66,6 +66,21 @@ export interface SocialMedia {
   createdAt: string;
 }
 
+/** 文物討論串的文物卡；玩家沒有該文物時 unlocked=false，其餘欄位為 null（畫面顯示問號）。 */
+export interface SocialPostArtifact {
+  artifactId: string;
+  unlocked: boolean;
+  hasUniversalKey: boolean;
+  name: string | null;
+  imageUrl: string | null;
+  description: string | null;
+  categoryName: string | null;
+  eraName: string | null;
+  eraText: string | null;
+  creator: string | null;
+  sizeText: string | null;
+}
+
 export interface SocialPostDetails {
   id: string;
   boardCode: string;
@@ -232,6 +247,10 @@ export class SocialApiService {
 
   getPost(id: string): Observable<SocialPostDetails> {
     return this.http.get<SocialPostDetails>(`${this.base}/posts/${id}`);
+  }
+
+  getPostArtifact(id: string): Observable<SocialPostArtifact> {
+    return this.http.get<SocialPostArtifact>(`${this.base}/posts/${id}/artifact`);
   }
 
   createPost(request: CreateSocialPostRequest): Observable<SocialPostDetails> {
