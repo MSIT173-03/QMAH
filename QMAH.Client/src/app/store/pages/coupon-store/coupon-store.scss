@@ -360,3 +360,7 @@ button.coupon-card-cost:hover .coupon-card-cost-label { background: #8f5f1c; }
 }
 .coupon-section + .coupon-section { margin-top: 0; }
 :host-context([data-theme='qmahdark']) .coupon-section { background: #1b1f22; border-color: #343a3e; box-shadow: none; }
+
+/* 底板改成高透明：只輕輕分出區塊，不蓋掉背景紋樣；寬度與內容欄一致 */
+.coupon-section { background: rgb(255 255 255 / 38%); border-color: rgb(40 36 30 / 8%); box-shadow: none; }
+:host-context([data-theme='qmahdark']) .coupon-section { background: rgb(255 255 255 / 4%); border-color: rgb(255 255 255 / 8%); }
