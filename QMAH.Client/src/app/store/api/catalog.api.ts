@@ -14,6 +14,7 @@ import {
 } from './api.models';
 import {
   ApiProductDetail,
+  ApiProductListItem,
   ApiProductPage,
   ApiProductReviewsResponse,
   ApiCategory,
@@ -86,13 +87,24 @@ export class CatalogApi {
   }
 
   /**
-   * 同類推薦：同器類的熱銷商品（依販售數量由多到少），排除目前商品。
-   * 後端沒有專用的 related route，直接沿用商品清單 API，多取一筆以補足排除自身後的數量。
+   * GET /store/products/{id}/related：同類推薦。後端找出買過這件商品的所有帳號，
+   * 依這些帳號買過的商品合計購買數量由多到少排序，取前 limit + 1 項；其中有這件商品就排除它，否則排除最後一項。
+   * 還沒有人買過這件商品（後端回傳空陣列）時，退回同器類的熱銷商品（依販售數量由多到少，排除目前商品）；
+   * 後端沒有專用的 route，直接沿用商品清單 API，多取一筆以補足排除自身後的數量。失敗時保留錯誤，由呼叫端決定如何降級。
    */
   getRelated(product: Pick<Product, 'id' | 'category'>, limit: number): Observable<Product[]> {
-    return this.getProducts({ cat: product.category, order: 1, pageSize: limit + 1 }).pipe(
-      map((page) => page.items.filter((item) => item.id !== product.id).slice(0, limit)),
-    );
+    return this.http
+      .get<ApiProductListItem[]>(apiUrl`/products/${product.id}/related`, { params: toParams({ limit }) })
+      .pipe(
+        map((items) => items.map(toProduct)),
+        switchMap((items) =>
+          items.length > 0
+            ? of(items)
+            : this.getProducts({ cat: product.category, order: 1, pageSize: limit + 1 }).pipe(
+                map((page) => page.items.filter((item) => item.id !== product.id).slice(0, limit)),
+              ),
+        ),
+      );
   }
 
   /**

@@ -3,7 +3,7 @@ import { SectionHead, ProductCard } from '../../../component';
 import { ProductViewData } from '../../../shared/product-view';
 
 /**
- * 商品頁「同類推薦」區塊：以商品卡片格狀列出同器類的其他商品。
+ * 商品頁「同類推薦」區塊：以商品卡片格狀列出買過這件商品的人也常買的其他商品。
  *
  * 版面與購物車頁的 app-cart-addons、首頁的 app-recommendations 相同
  * （區塊標題 + 商品卡片格狀清單），但三者的卡片變體與傳入欄位各不相同，

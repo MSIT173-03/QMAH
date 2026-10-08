@@ -30,6 +30,7 @@ internal static class QmahOpenApiOperationCatalog
             ["StoreCatalog.GetPromotions"] = ("查詢商城優惠官方活動", "回傳已發布的官方商城優惠公告；商城與社群共用同一份公告標題與全文，折扣能否使用仍以結帳時的優惠券定義檢查為準。"),
             ["StoreCatalog.GetProducts"] = ("查詢商品清單", "以 query string（查詢參數）的 `q`、`categoryCode`、`artifactId`、`page` 與 `pageSize` 查詢上架商品。`q` 搜尋商品名稱或 `ExternalRef`（外部商品編號），結果只包含 `IsActive` 的商品，回應為 `ApiPage<ProductListItemDto>`（標準分頁資料格式）。"),
             ["StoreCatalog.GetProduct"] = ("取得商品詳情", "以 path parameter（路徑參數）`id` 取得上架商品的價格、庫存、商品圖片、描述、尺寸、評價摘要與對應文物資料。商品不存在或未上架時回傳 `404`。"),
+            ["StoreCatalog.GetRelatedProducts"] = ("查詢同類推薦商品", "以 path parameter（路徑參數）`id` 與 query string（查詢參數）`limit`（預設 5、最多 20）取得推薦商品：找出買過這件商品的所有帳號，依這些帳號買過的商品合計購買數量由多到少排序，取前 `limit + 1` 項；其中有這件商品就排除它，否則排除最後一項。只計入訂單狀態不是 `PENDING_PAYMENT`（待付款）或 `CANCELLED`（已取消）的訂單，以及上架中的商品；沒有符合的商品時回傳空陣列，商品不存在或未上架時回傳 `404`。"),
             ["StoreReviews.GetReviews"] = ("查詢商品評價", "以 path parameter（路徑參數）`productId` 查詢商品的已發布評價，並以 `page` 與 `pageSize` 分頁。回應同時包含平均星等與評價總數；隱藏或刪除的評價不列入統計。"),
             ["StoreReviews.GetMyReview"] = ("取得我的商品評價", "需要登入，依 path parameter（路徑參數）`productId` 取得目前會員對該商品的評價。商品未上架或不存在時回傳 `404`；會員尚未評價時也回傳 `404`。"),
             ["StoreReviews.UpsertMyReview"] = ("新增或修改商品評價", "需要登入，依 path parameter（路徑參數）`productId` 與 request body（請求本文，送出的 JSON 內容）中的 `Rating`、`Content` 建立或更新目前會員的評價。`Rating` 限制為 1 至 5，成功回傳更新後的評價資料。"),
