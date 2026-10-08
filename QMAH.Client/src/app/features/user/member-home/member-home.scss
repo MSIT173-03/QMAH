@@ -988,3 +988,23 @@
 .dashboard-card:hover .daily-icon,
 .dashboard-card:focus-visible .daily-icon { animation-play-state: running !important; }
 .dashboard-card:hover .card-icon app-qmah-icon { animation-duration: 1.6s; }
+
+/* ===== 會員中心配色重整：七個分類各用不同、有意義的顏色，不再一片青綠 ===== */
+:host { --qmah-primary: #26303f; }
+:host-context([data-theme='qmahdark']) { --qmah-primary: #e7e4dd; }
+.profile-card { --card-accent: #4a5a9a; }        /* 個人資料：靛藍 */
+.address-card { --card-accent: #3e7a96; }        /* 地址：湖藍 */
+.economy-card { --card-accent: #2f7a62; }        /* 資產：唯一的綠（錢與寶石） */
+.coupon-card { --card-accent: #a67c1f; }         /* 優惠券：金 */
+.achievement-card { --card-accent: #8a4f7a; }    /* 成就：紫紅 */
+.daily-card { --card-accent: #c0592b; }          /* 每日登入：火焰橘 */
+.notification-card { --card-accent: #b3402d; }   /* 通知：朱紅 */
+:host-context([data-theme='qmahdark']) {
+  .profile-card { --card-accent: #a9b6ee; }
+  .address-card { --card-accent: #8fc3da; }
+  .economy-card { --card-accent: #86cdb2; }
+  .coupon-card { --card-accent: #e8c566; }
+  .achievement-card { --card-accent: #d9a0cb; }
+  .daily-card { --card-accent: #f0a47a; }
+  .notification-card { --card-accent: #f09c8c; }
+}

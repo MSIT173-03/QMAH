@@ -667,3 +667,15 @@ textarea:focus-visible {
   background: var(--nav-accent, currentColor);
   content: '';
 }
+
+/* 會員中心：暖紙（淺）／深灰（深）底，疊極淡的古銅色 Temple 紋；不使用青綠底。 */
+.app-shell[data-area='user'] .app-main { background-color: #f7f3ec; background-image: none; }
+.app-shell[data-area='user'] .app-main::before {
+  display: block;
+  background: url('/patterns/temple-bronze.svg') center top / 256px 256px repeat;
+  -webkit-mask: none;
+  mask: none;
+  opacity: 1;
+}
+:host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main { background-color: #17181a; }
+:host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main::before { background: url('/patterns/temple-bronze-dark.svg') center top / 256px 256px repeat; }
