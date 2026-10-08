@@ -6,6 +6,8 @@ export const PRODUCT_LIST_PATH = '/store/products';
 export const CART_PATH = '/store/cart';
 /** 結帳頁路徑 */
 export const CHECKOUT_PATH = '/store/checkout';
+/** 我的訂單頁路徑；綠界付款頁的「返回商店」也回到這裡（後端 EcpayRoutes.ClientOrders） */
+export const ORDERS_PATH = '/store/orders';
 /** 兌換商店頁路徑（我的折價券與點數兌換） */
 export const COUPON_STORE_PATH = '/store/coupons';
 /** 會員個人頁面路徑（app.routes 的 /member） */

@@ -8,6 +8,7 @@ export { FilterSidebar } from './filter-sidebar/filter-sidebar';
 export { ImageMagnifier } from './image-magnifier/image-magnifier';
 export { PageTitleRow } from './page-title-row/page-title-row';
 export { LoginPrompt } from './login-prompt/login-prompt';
+export { OrderCancelDialog } from './order-cancel-dialog/order-cancel-dialog';
 export { OrderPlacedDialog } from './order-placed-dialog/order-placed-dialog';
 export { Pagination } from './pagination/pagination';
 export { Panel } from './panel/panel';

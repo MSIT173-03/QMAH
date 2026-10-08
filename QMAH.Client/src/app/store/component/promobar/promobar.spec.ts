@@ -56,9 +56,11 @@ describe('Promobar', () => {
       '點數 120',
       '折價券 0 張',
       '購物車 3 件',
+      '訂單',
     ]);
     expect(items.every((item) => item.tagName === 'A')).toBe(true);
     expect(items[2].getAttribute('href')).toBe('/store/cart');
+    expect(items[3].getAttribute('href')).toBe('/store/orders');
   });
   const cartItem = (index: number, qty = 1): CartItem => ({
     productId: `p${index}`,

@@ -1,0 +1,23 @@
+<!-- 取消訂單確認：原生 modal dialog，確認後由頁面呼叫取消 API -->
+<dialog class="cancel-dialog" aria-labelledby="cancel-dialog-title" [appModalDialog]="open()" (dismiss)="onCancel()">
+  <div class="cancel-dialog-body">
+    <h2 id="cancel-dialog-title" class="cancel-dialog-title">{{ title }}</h2>
+    <dl class="cancel-dialog-detail">
+      <div class="cancel-dialog-row">
+        <dt>{{ orderNoLabel }}</dt>
+        <dd class="cancel-dialog-mono">{{ orderNo() }}</dd>
+      </div>
+      <div class="cancel-dialog-row">
+        <dt>{{ payableLabel }}</dt>
+        <dd class="cancel-dialog-mono">{{ payable() }}</dd>
+      </div>
+    </dl>
+    <p class="cancel-dialog-note">{{ note }}</p>
+    <div class="cancel-dialog-actions">
+      <button type="button" class="btn-outline" [disabled]="pending()" (click)="onCancel()">{{ cancelLabel }}</button>
+      <button type="button" class="btn-solid" [disabled]="pending()" (click)="confirm.emit()">
+        {{ pending() ? pendingLabel : confirmLabel }}
+      </button>
+    </div>
+  </div>
+</dialog>
