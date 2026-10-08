@@ -97,9 +97,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
     {
       label: '社群',
       items: [
-        { label: '貼文廣場', path: '/social/posts', activePrefixes: ['/social/posts'], icon: LucideLibrary },
-        { label: '活動總覽', path: '/social/events', activePrefixes: ['/social/events'], icon: LucideCalendarDays },
-        { label: '站方公告', path: '/social/announcements', activePrefixes: ['/social/announcements'], icon: LucideMegaphone }
+        { label: '貼文', path: '/social/posts', activePrefixes: ['/social/posts'], icon: LucideLibrary },
+        { label: '活動', path: '/social/events', activePrefixes: ['/social/events'], icon: LucideCalendarDays },
+        { label: '公告', path: '/social/announcements', activePrefixes: ['/social/announcements'], icon: LucideMegaphone }
       ]
     }
   ]);
@@ -124,7 +124,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
         return { label: '會員功能', links: [
           { label: '總覽', path: '/member', exact: true },
           { label: '個人資料', path: '/member/profile' },
-          { label: '資產', path: '/member/economy' },
+          { label: '會員資產', path: '/member/economy' },
           { label: '成就', path: '/member/achievements' },
           { label: '每日登入', path: '/member/daily-activity' },
           { label: '通知', path: '/member/notifications' },
@@ -136,11 +136,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
         ] };
       case 'game':
         return { label: '遊戲功能', links: [
-          { label: '大廳', path: '/game', exact: true },
+          { label: '總覽', path: '/game', exact: true },
           { label: '單人玩法', path: '/game/training' },
           { label: '多人房間', path: '/game/rooms' },
           { label: '玩法說明', path: '/game/how-to' },
-          { label: '遊戲帳戶', path: '/game/account' },
         ] };
       case 'social':
         return { label: '社群功能', links: [
@@ -150,10 +149,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
         ] };
       case 'store':
         return { label: '商城功能', links: [
-          { label: '商城首頁', path: '/store', exact: true },
-          { label: '全部商品', path: '/store/products' },
-          { label: '優惠券', path: '/store/coupons' },
+          { label: '總覽', path: '/store', exact: true },
+          { label: '商品', path: '/store/products' },
+          { label: '折價券', path: '/store/coupons' },
           { label: '購物車', path: '/store/cart' },
+          { label: '訂單', path: '/store/orders' },
         ] };
       default:
         return { label: '', links: [] };

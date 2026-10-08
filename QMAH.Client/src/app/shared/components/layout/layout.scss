@@ -734,3 +734,7 @@ textarea:focus-visible {
 .app-account-panel a:hover, .app-account-panel button:hover:not(:disabled) { background: color-mix(in srgb, currentColor 8%, transparent); }
 @media (max-width: 900px) { .app-home-button { display: none; } }
 @media (prefers-reduced-motion: reduce) { .app-account-panel { animation: none; } }
+
+/* 次導覽的鍵盤焦點：圓角貼合、用該領域色，不再出現括號狀的外框。 */
+.app-context-navigation a:focus-visible { outline: 2px solid var(--nav-accent, currentColor); outline-offset: -2px; border-radius: var(--qmah-radius-control); }
+.app-context-navigation a:focus:not(:focus-visible) { outline: none; }
