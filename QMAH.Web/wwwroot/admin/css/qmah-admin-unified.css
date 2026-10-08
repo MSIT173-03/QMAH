@@ -1,0 +1,56 @@
+/*
+ * 後台與前台統一色彩層（最後載入）：去掉藍綠色底，改成與前台相同的暖白／深灰中性色；
+ * 各系統主色與前台頁首圖示一致——會員藍、圖鑑金、遊戲綠、社群紅、商城紫；顏色只當點綴，不做大面積底色。
+ */
+.qmah-admin {
+  --qmah-area-accent: #3b4a7a; --qmah-area-accent-hover: #2f3d6a; --qmah-area-soft: #e9ecf5; --qmah-area-focus: rgba(59, 74, 122, .22);
+  --qmah-primary: #3b4a7a; --qmah-primary-hover: #2f3d6a; --qmah-primary-soft: #e9ecf5; --qmah-primary-soft-hover: #dde2f0;
+  --qmah-porcelain: #f6f3ec; --qmah-surface: #fbf9f4; --qmah-surface-soft: #efeae0; --qmah-surface-muted: #e6e0d3;
+  --qmah-ink: #2a2620; --qmah-ink-soft: #5b5449; --qmah-ink-faint: #7d766a; --qmah-line: #ddd7cc; --qmah-line-soft: #ebe6db;
+  --qmah-success: #2f7a4f; --qmah-warning: #8a6a2f; --qmah-danger: #a94434;
+}
+.qmah-admin[data-qmah-area="catalog"] { --qmah-area-accent: #9a6c12; --qmah-area-accent-hover: #7e570e; --qmah-area-soft: #f3ecd9; --qmah-area-focus: rgba(154, 108, 18, .22); }
+.qmah-admin[data-qmah-area="game"] { --qmah-area-accent: #2a7d52; --qmah-area-accent-hover: #21663f; --qmah-area-soft: #e1efe7; --qmah-area-focus: rgba(42, 125, 82, .22); }
+.qmah-admin[data-qmah-area="social"] { --qmah-area-accent: #b9423c; --qmah-area-accent-hover: #9a3530; --qmah-area-soft: #f6e5e3; --qmah-area-focus: rgba(185, 66, 60, .22); }
+.qmah-admin[data-qmah-area="store"] { --qmah-area-accent: #7a45b3; --qmah-area-accent-hover: #653a96; --qmah-area-soft: #eee6f6; --qmah-area-focus: rgba(122, 69, 179, .22); }
+.qmah-admin[data-qmah-area="user"] { --qmah-area-accent: #3f55b0; --qmah-area-accent-hover: #32459a; --qmah-area-soft: #e6eaf7; --qmah-area-focus: rgba(63, 85, 176, .22); }
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) {
+  --qmah-primary: var(--qmah-area-accent); --qmah-primary-hover: var(--qmah-area-accent-hover); --qmah-primary-soft: var(--qmah-area-soft);
+  --qmah-focus: var(--qmah-area-focus); --tblr-primary: var(--qmah-area-accent); --tblr-link-color: var(--qmah-area-accent); --tblr-link-hover-color: var(--qmah-area-accent-hover);
+}
+html[data-bs-theme="dark"] .qmah-admin {
+  --qmah-porcelain: #15181a; --qmah-surface: #1c2022; --qmah-surface-soft: #252a2c; --qmah-surface-muted: #2e3336;
+  --qmah-ink: #e7e4dd; --qmah-ink-soft: #bdb9b0; --qmah-ink-faint: #9d998f; --qmah-line: #3b4046; --qmah-line-soft: #2a2e30;
+  --qmah-primary: #b3bff0; --qmah-primary-hover: #cbd3f5; --qmah-primary-soft: #272c40; --qmah-primary-soft-hover: #303652; --qmah-primary-contrast: #14182a;
+  --qmah-area-accent: #b3bff0; --qmah-area-accent-hover: #cbd3f5; --qmah-area-soft: #272c40;
+}
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="catalog"] { --qmah-area-accent: #e6b94d; --qmah-area-accent-hover: #f0cc78; --qmah-area-soft: #35301f; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="game"] { --qmah-area-accent: #6fd09b; --qmah-area-accent-hover: #93dfb6; --qmah-area-soft: #1f3328; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="social"] { --qmah-area-accent: #ff8a80; --qmah-area-accent-hover: #ffaaa2; --qmah-area-soft: #3a2422; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="store"] { --qmah-area-accent: #bf93f2; --qmah-area-accent-hover: #d2b2f6; --qmah-area-soft: #2f2540; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="user"] { --qmah-area-accent: #8aa2ff; --qmah-area-accent-hover: #adbfff; --qmah-area-soft: #232a45; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) {
+  --qmah-primary: var(--qmah-area-accent); --qmah-primary-hover: var(--qmah-area-accent-hover); --qmah-primary-soft: var(--qmah-area-soft);
+  --tblr-primary: var(--qmah-area-accent); --tblr-link-color: var(--qmah-area-accent); --tblr-link-hover-color: var(--qmah-area-accent-hover);
+}
+
+/* 總覽的五個入口：識別色與前台頁首一致，卡片底色維持中性 */
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link { --qmah-portal-accent: #3b4a7a; --qmah-portal-soft: #e9ecf5; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Catalog"] { --qmah-portal-accent: #9a6c12; --qmah-portal-soft: #f3ecd9; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Game"] { --qmah-portal-accent: #2a7d52; --qmah-portal-soft: #e1efe7; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Social"] { --qmah-portal-accent: #b9423c; --qmah-portal-soft: #f6e5e3; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Store"] { --qmah-portal-accent: #7a45b3; --qmah-portal-soft: #eee6f6; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/User"] { --qmah-portal-accent: #3f55b0; --qmah-portal-soft: #e6eaf7; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link { --qmah-portal-accent: #b3bff0; --qmah-portal-soft: #272c40; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Catalog"] { --qmah-portal-accent: #e6b94d; --qmah-portal-soft: #35301f; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Game"] { --qmah-portal-accent: #6fd09b; --qmah-portal-soft: #1f3328; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Social"] { --qmah-portal-accent: #ff8a80; --qmah-portal-soft: #3a2422; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Store"] { --qmah-portal-accent: #bf93f2; --qmah-portal-soft: #2f2540; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/User"] { --qmah-portal-accent: #8aa2ff; --qmah-portal-soft: #232a45; }
+
+/* 與前台一致的卡片語彙：12px 圓角、微弱暖色陰影、標題用襯線字體、表格與按鈕用 8px 圓角 */
+.qmah-admin .card { border-radius: 12px; box-shadow: 0 1px 2px rgba(60, 48, 30, .05), 0 4px 14px rgba(60, 48, 30, .05); }
+html[data-bs-theme="dark"] .qmah-admin .card { box-shadow: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 6px 16px rgba(0, 0, 0, .32); }
+.qmah-admin .btn { border-radius: 8px; }
+.qmah-admin .page-title, .qmah-admin .card-title { font-family: var(--qmah-font-display); letter-spacing: 0.01em; }
+.qmah-table-actions .btn-outline-warning { color: var(--qmah-ink); }

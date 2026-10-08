@@ -241,6 +241,12 @@
             <button type="button" class="social-fmt" (click)="wrapPostContent('[quote]', '[/quote]')" title="引用 [quote]">引用</button>
             <button type="button" class="social-fmt" (click)="insertPostList()" title="項目清單 [list]">清單</button>
             <button type="button" class="social-fmt" (click)="insertPostBreak()" title="插入空行">分段</button>
+            <button type="button" class="social-fmt" (click)="wrapPostContent('[center]', '[/center]')" title="置中 [center]">置中</button>
+            <button type="button" class="social-fmt" (click)="insertPostRule()" title="分隔線 [hr]">分隔線</button>
+          </div>
+          <div class="social-post-form__group" role="group" aria-label="插入">
+            <button type="button" class="social-fmt" (click)="insertPostLink()" title="連結 [url]">連結</button>
+            <button type="button" class="social-fmt" (click)="wrapPostContent('[spoiler]', '[/spoiler]')" title="劇透：點擊才顯示 [spoiler]">劇透</button>
           </div>
           <div class="social-post-form__group" role="group" aria-label="文字樣式">
             <button type="button" class="social-fmt social-fmt--b" (click)="wrapPostContent('[b]', '[/b]')" title="粗體 [b]" aria-label="粗體">B</button>
@@ -260,7 +266,7 @@
           </div>
         </div>
         <textarea id="social-post-content" name="content" class="textarea textarea-bordered w-full social-post-form__textarea" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
-        <span class="social-post-form__hint">先選取文字再按格式；沒選取時會插入成對標記，游標停在中間，在裡面輸入即可。再按一次可取消。</span>
+        <span class="social-post-form__hint">先選取文字再按格式；沒選取時會插入成對標記，游標停在中間，在裡面輸入即可。再按一次可取消。字數 {{ newPost.content.length }}。</span>
       </div>
       @if (newPost.content.trim()) {
         <div class="social-post-form__preview rounded-box border border-base-300 bg-base-200/40">

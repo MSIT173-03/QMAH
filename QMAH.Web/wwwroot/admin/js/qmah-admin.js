@@ -173,7 +173,11 @@
             contentDetailSubtitle.textContent = trigger.dataset.qmahContentDetailSubtitle?.trim() || "";
         }
         if (contentDetailBody) {
-            contentDetailBody.textContent = trigger.dataset.qmahContentDetailBody?.trim() || "（沒有內容）";
+            // 貼文的格式標記由伺服器端 SocialMarkup 轉成已編碼的安全 HTML（使用者文字一律 HTML 編碼，標籤只來自白名單）。
+            const html = trigger.dataset.qmahContentDetailHtml;
+            contentDetailBody.classList.toggle("qmah-content-panel--rich", Boolean(html));
+            if (html) contentDetailBody.innerHTML = html;
+            else contentDetailBody.textContent = trigger.dataset.qmahContentDetailBody?.trim() || "（沒有內容）";
         }
 
         const extraText = trigger.dataset.qmahContentDetailExtra?.trim();
@@ -215,7 +219,7 @@
         const isDark = root.dataset.bsTheme === "dark";
         toggle?.setAttribute("aria-pressed", String(isDark));
         toggle?.setAttribute("aria-label", isDark ? "切換淺色模式" : "切換深色模式");
-        themeColor?.setAttribute("content", isDark ? "#151c1f" : "#f3f6f4");
+        themeColor?.setAttribute("content", isDark ? "#15181a" : "#f6f3ec");
     }
 
     function applyTheme(theme, persist = true) {
