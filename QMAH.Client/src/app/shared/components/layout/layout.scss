@@ -550,3 +550,7 @@ textarea:focus-visible {
 .app-shell[data-area='social'] .app-main::before {
   background: color-mix(in srgb, var(--qmah-social-action) 22%, transparent);
 }
+
+/* 頁首右側：帳號、通知、主題鈕同高（44px）並垂直置中。 */
+.app-header__actions > * { align-self: center; }
+.app-account { min-height: var(--qmah-control-height, 44px); align-items: center; }

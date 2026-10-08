@@ -6,3 +6,7 @@ button.btn-circle {
   padding: 0;
   border-radius: var(--qmah-radius-control, 12px);
 }
+:host { display: inline-flex; align-items: center; }
+.dropdown { display: flex; align-items: center; }
+button.btn-circle { display: inline-grid; place-items: center; }
+.indicator { display: inline-grid; place-items: center; line-height: 0; }
