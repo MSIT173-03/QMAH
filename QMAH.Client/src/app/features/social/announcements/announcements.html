@@ -1,6 +1,8 @@
 <div class="qmah-social-page">
+<app-social-spotlight />
+
 <header class="social-page-head">
-  <h1 class="social-page-title">站方公告</h1>
+  <h1 class="social-page-title">歷史公告</h1>
 </header>
 
 <app-social-shell [activeBoard]="null">
@@ -12,29 +14,11 @@
 @if (announcements.length === 0 && !loadError) {
   <div class="social-state">目前還沒有公告</div>
 }
-@if (announcements[0]; as latest) {
-  <article class="notice-featured">
-    <header class="notice-meta">
-      <span class="notice-badge">最新公告</span>
-      <span class="social-tag social-tag--notice">{{ label(latest.category) }}</span>
-      <time [attr.datetime]="latest.createdAt">{{ latest.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
-    </header>
-    <h2 class="notice-featured__title">{{ latest.title }}</h2>
-    <div class="notice-body" [class.is-clamped]="isLong(latest.content || latest.summary || '') && !expanded.has(latest.id)">
-      <app-social-post-content [content]="latest.content || latest.summary || ''" />
-    </div>
-    @if (isLong(latest.content || latest.summary || '')) {
-      <button type="button" class="notice-more" (click)="toggle(latest.id)" [attr.aria-expanded]="expanded.has(latest.id)">{{ expanded.has(latest.id) ? '收合' : '展開全文' }}</button>
-    }
-    <p class="notice-from">{{ latest.displayName || '清明鑑定屋官方' }}</p>
-  </article>
-}
-
-@if (announcements.length > 1) {
+@if (announcements.length > 0) {
   <section class="notice-archive" aria-labelledby="notice-archive-title">
-    <h2 id="notice-archive-title" class="notice-archive__title">過往公告</h2>
+    <h2 id="notice-archive-title" class="notice-archive__title">全部公告</h2>
     <ul class="notice-list">
-      @for (item of announcements.slice(1); track item.id) {
+      @for (item of announcements; track item.id) {
         <li class="notice-item" [class.is-open]="expanded.has(item.id)">
           <button type="button" class="notice-row" (click)="toggle(item.id)" [attr.aria-expanded]="expanded.has(item.id)">
             <span class="notice-row__date" aria-hidden="true"><small>{{ item.createdAt | date: 'yyyy' }}</small><strong>{{ item.createdAt | date: 'MM/dd' }}</strong></span>

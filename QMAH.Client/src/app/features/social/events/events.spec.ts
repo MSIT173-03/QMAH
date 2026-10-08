@@ -24,6 +24,8 @@ describe('EventsComponent', () => {
   afterEach(() => {
     // 共用導覽（app-social-shell）會自己取得看板清單
     httpMock.match((r) => r.url.endsWith('/social/boards')).forEach((r) => r.flush([]));
+    // 頁面頂端共用的公告主視覺（app-social-spotlight）會取最新公告
+    httpMock.match((r) => r.url.endsWith('/social/posts')).forEach((r) => r.flush({ items: [], page: 1, pageSize: 5, totalCount: 0, totalPages: 0 }));
     httpMock.verify();
   });
 

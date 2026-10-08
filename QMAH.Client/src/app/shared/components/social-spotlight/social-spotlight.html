@@ -1,0 +1,95 @@
+@if (!loaded()) {
+<div class="social-spotlight-skeleton" aria-hidden="true"></div>
+} @else if (announcements.length > 0) {
+  <!-- ui-integration: 公告保留在貼文牆入口，但以可記憶的折疊區承擔 supporting context，不再壓過貼文列表。 -->
+  <section class="social-announcements" [class.is-collapsed]="announcementCollapsed()" aria-labelledby="social-announcements-title">
+    <header class="social-announcements__head">
+      <h2 id="social-announcements-title" class="social-announcements__title m-0">
+        <svg lucideMegaphone aria-hidden="true" focusable="false"></svg>
+        <span>站方公告</span>
+        <span class="social-announcements__count">{{ announcements.length }} 則</span>
+      </h2>
+            <button
+        type="button"
+        class="social-announcements__toggle"
+        [attr.aria-expanded]="!announcementCollapsed()"
+        (click)="toggleAnnouncements()"
+      >{{ announcementCollapsed() ? '展開公告' : '收合公告' }}</button>
+    </header>
+
+    @if (announcementCollapsed()) {
+      @if (announcements[currentAnnouncementIndex]; as announcement) {
+        <a class="social-announcements__collapsed-link" [routerLink]="['/social/posts', announcement.id]">
+          <span>{{ announcement.title }}</span>
+          <span class="social-announcements__view-link" aria-hidden="true">查看 <app-qmah-icon name="arrow-right" /></span>
+        </a>
+      }
+    } @else {
+      <!-- ui-integration: 公告輪播與商城主視覺（store/pages/home/hero-carousel）共用同一套版型：
+           滿版底圖 + 左下浮動文案卡 + 右下指示條／暫停鈕；沒有封面時沿用商城的預設主視覺圖。 -->
+      <div
+        class="social-hero"
+        role="group"
+        aria-roledescription="carousel"
+        aria-label="站方公告輪播"
+        (mouseenter)="pauseAnnouncementsForPointer()"
+        (mouseleave)="resumeAnnouncementsForPointer()"
+        (focusin)="pauseAnnouncementsForFocus()"
+        (focusout)="resumeAnnouncementsForFocus($event)"
+      >
+        <div class="social-hero__track" [style.transform]="'translateX(-' + (currentAnnouncementIndex * 100) + '%)'">
+          @for (announcement of announcements; track announcement.id; let i = $index) {
+            <a
+              [routerLink]="['/social/posts', announcement.id]"
+              class="social-hero__slide"
+              [attr.aria-label]="(i + 1) + ' / ' + announcements.length + '：' + announcement.title"
+              [attr.aria-hidden]="i === currentAnnouncementIndex ? null : 'true'"
+              [tabindex]="i === currentAnnouncementIndex ? 0 : -1"
+            >
+              <img
+                class="social-hero__image"
+                [src]="announcementImage(announcement, i)"
+                alt=""
+                aria-hidden="true"
+                [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+                (error)="onAnnouncementImageError(announcement.id)"
+              />
+              <div class="social-hero__body">
+                <h2 class="social-hero__title">{{ announcement.title }}</h2>
+                <p class="social-hero__desc">{{ stripMarkup(announcement.contentPreview) }}</p>
+                <span class="social-hero__cta" aria-hidden="true">查看公告</span>
+              </div>
+            </a>
+          }
+        </div>
+
+        @if (announcements.length > 1) {
+          <div class="social-hero__controls" aria-label="輪播控制">
+            <div class="social-hero__dots">
+              @for (announcement of announcements; track announcement.id; let i = $index) {
+                <button
+                  type="button"
+                  class="social-hero__dot"
+                  [class.social-hero__dot--active]="i === currentAnnouncementIndex"
+                  [attr.aria-label]="'查看第 ' + (i + 1) + ' 則公告'"
+                  [attr.aria-current]="i === currentAnnouncementIndex ? 'true' : null"
+                  (click)="goToAnnouncement(i)"
+                ></button>
+              }
+            </div>
+            <button
+              type="button"
+              class="social-hero__play-toggle"
+              [class.social-hero__play-toggle--paused]="!announcementAutoplayEnabled()"
+              [attr.aria-pressed]="!announcementAutoplayEnabled()"
+              (click)="toggleAnnouncementAutoplay()"
+            >
+              <app-qmah-icon [name]="announcementAutoplayEnabled() ? 'pause' : 'play'" [size]="12" aria-hidden="true" />
+              {{ announcementAutoplayEnabled() ? '暫停輪播' : '播放輪播' }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </section>
+}

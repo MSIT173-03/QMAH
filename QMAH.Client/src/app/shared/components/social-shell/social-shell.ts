@@ -8,7 +8,7 @@ import { boardLabel } from '../../../features/social/social-labels';
 
 /**
  * 社群三大頁面（貼文牆、站方公告、社群活動）共用的左側導覽與版型：
- * 最上面是「站方公告」「社群活動」，下面是看板分類。內容放在 <ng-content>。
+ * 最上面是「歷史公告」「社群活動」，下面是看板分類。內容放在 <ng-content>。
  *
  * - 貼文牆：inline 模式，點看板只發出 boardSelect 事件，不換頁（activeBoard 為目前看板，'' 代表全部）。
  * - 公告、活動：點看板會回到貼文牆並帶上 ?board=（activeBoard 傳 null，不標示任何看板）。
@@ -24,7 +24,7 @@ import { boardLabel } from '../../../features/social/social-labels';
       <nav class="shell__nav" aria-label="社群導覽">
         <p class="shell__title">社群</p>
         <ul class="shell__list">
-          <li><a class="shell__item shell__item--link" routerLink="/social/announcements" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideMegaphone aria-hidden="true" focusable="false"></svg>站方公告<svg class="shell__go" lucideChevronRight aria-hidden="true" focusable="false"></svg></a></li>
+          <li><a class="shell__item shell__item--link" routerLink="/social/announcements" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideMegaphone aria-hidden="true" focusable="false"></svg>歷史公告<svg class="shell__go" lucideChevronRight aria-hidden="true" focusable="false"></svg></a></li>
           <li><a class="shell__item shell__item--link" routerLink="/social/events" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg>社群活動<svg class="shell__go" lucideChevronRight aria-hidden="true" focusable="false"></svg></a></li>
         </ul>
         <p class="shell__title shell__title--gap">看板</p>

@@ -5,12 +5,13 @@ import { SocialPostContentComponent } from '../../../shared/components/social-po
 import { Announcement, SocialApiService } from '../../../core/services/social-api';
 import { LucideChevronDown } from '@lucide/angular';
 import { boardLabel } from '../social-labels';
+import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
 import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
 
 @Component({
   selector: 'app-announcements',
   standalone: true,
-  imports: [LucideChevronDown, SocialShellComponent, CommonModule, SocialPostContentComponent],
+  imports: [SocialSpotlightComponent, LucideChevronDown, SocialShellComponent, CommonModule, SocialPostContentComponent],
   templateUrl: './announcements.html',
   styleUrls: ['../social-common.scss', './announcements.scss']
 })

@@ -459,3 +459,6 @@ textarea {
 .app-shell[data-area='user'] .app-main > * > :is([class*='-page'], [class$='-container'], [class*='page-']) {
   background: transparent !important;
 }
+
+/* 有無捲軸時版面寬度不變：換頁時內容不會左右跳 */
+html { scrollbar-gutter: stable; }
