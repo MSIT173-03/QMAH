@@ -70,6 +70,8 @@
   &--review {
     font-family: 'IBM Plex Mono', monospace;
     padding: 6px 12px;
+    /* 平常（未懸停、可點選）就有外框；停用時不顯示外框（見下方 :disabled 之後的覆寫） */
+    border-color: var(--color-line);
 
     /* 已選用：外框與底色加深提示選取狀態，文字維持一般顏色，不反白 */
     &.pill--active {
@@ -130,5 +132,10 @@
     border-color: var(--color-line-mid) !important;
     color: var(--color-faint) !important;
     cursor: not-allowed;
+  }
+
+  /* 評價篩選：停用時不顯示外框（其餘變體停用仍保留外框） */
+  &--review:disabled {
+    border-color: transparent !important;
   }
 }

@@ -49,7 +49,8 @@ interface OrderRow {
   paymentLabel: string;
   payableLabel: string;
   createdLabel: string;
-  itemsLabel: string;
+  /** 商品明細：名稱、數量、此品項金額各自一欄 */
+  lines: { productId: string; name: string; quantityLabel: string; totalLabel: string }[];
   /** 付款狀態的補充說明（付款失敗、需人工退款）；沒有時為空字串 */
   paymentNote: string;
   canCancel: boolean;
@@ -232,7 +233,6 @@ export class Orders {
 
 function toRow(order: MyOrder): OrderRow {
   const pending = order.status === 'PENDING_PAYMENT';
-  const items = order.items.map((item) => `${item.productName} × ${item.quantity}`);
   return {
     id: order.id,
     orderNo: order.orderNo,
@@ -241,7 +241,12 @@ function toRow(order: MyOrder): OrderRow {
     paymentLabel: PAYMENT_TYPE_LABELS[order.paymentType ?? ''] ?? '未記錄',
     payableLabel: formatMoney(order.totalAmount),
     createdLabel: formatDateTime(order.createdAt),
-    itemsLabel: items.join('、'),
+    lines: order.items.map((item) => ({
+      productId: item.productId,
+      name: item.productName,
+      quantityLabel: `× ${item.quantity}`,
+      totalLabel: formatMoney(item.lineTotal),
+    })),
     paymentNote:
       order.paymentStatus === 'REFUND_REQUIRED'
         ? '訂單取消後才收到付款，客服將為你辦理退款。'

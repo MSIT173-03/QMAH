@@ -32,7 +32,16 @@
           <span class="order-card-no">{{ order.orderNo }}</span>
           <span class="order-card-status">{{ order.statusLabel }}</span>
         </div>
-        <p class="order-card-items" [attr.title]="order.itemsLabel">{{ order.itemsLabel }}</p>
+        <!-- 商品明細：名稱可換行，數量與金額各自固定欄寬 -->
+        <ul class="order-card-lines">
+          @for (line of order.lines; track line.productId) {
+          <li class="order-card-line">
+            <span class="order-card-line-name">{{ line.name }}</span>
+            <span class="order-card-line-qty order-card-mono">{{ line.quantityLabel }}</span>
+            <span class="order-card-line-total order-card-mono">{{ line.totalLabel }}</span>
+          </li>
+          }
+        </ul>
         <dl class="order-card-meta">
           <div><dt>應付金額</dt><dd class="order-card-mono">{{ order.payableLabel }}</dd></div>
           <div><dt>付款方式</dt><dd>{{ order.paymentLabel }}</dd></div>

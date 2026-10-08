@@ -37,7 +37,7 @@ export class Promobar {
 
   /** 「購物車」連結網址 */
   cartHref = input(CART_PATH);
-  /** 「訂單」連結網址：我的訂單頁 */
+  /** 「我的訂單」連結網址：我的訂單頁 */
   ordersHref = input(ORDERS_PATH);
   /** 購物車內商品件數 */
   cartCount = input(0);
