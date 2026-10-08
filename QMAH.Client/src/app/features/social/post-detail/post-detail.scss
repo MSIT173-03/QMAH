@@ -94,3 +94,19 @@
 .qmah-social-page .social-back:hover { background: color-mix(in srgb, var(--qmah-ink) 7%, transparent); }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-post-head time { color: #b9b5ab; }
 
+
+/* 貼文圖片：沒插入內文的圖片收成相簿。文字為主＝小縮圖列；圖片為主＝置頂大圖（第一張）＋其餘縮圖。 */
+.social-gallery { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); margin: 12px 0; }
+.social-gallery__item { display: block; overflow: hidden; border: 1px solid var(--qmah-border); border-radius: 10px; background: var(--qmah-surface-muted); }
+.social-gallery__item img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform 240ms ease; }
+.social-gallery__item:hover img { transform: scale(1.03); }
+.social-gallery__item:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+.social-gallery--primary { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 4px; }
+.social-gallery--primary .social-gallery__item:first-child { grid-column: 1 / -1; }
+.social-gallery--primary .social-gallery__item:first-child img { aspect-ratio: 16 / 9; max-height: 30rem; }
+.social-gallery--primary[data-count='2'] .social-gallery__item { grid-column: span 2; }
+.social-gallery--primary[data-count='2'] .social-gallery__item:first-child { grid-column: span 2; }
+.social-gallery--primary[data-count='2'] .social-gallery__item img { aspect-ratio: 4 / 3; max-height: none; }
+.social-gallery--primary[data-count='1'] .social-gallery__item img { aspect-ratio: 16 / 9; }
+@media (max-width: 640px) { .social-gallery--primary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .social-gallery__item img { transition: none; } }

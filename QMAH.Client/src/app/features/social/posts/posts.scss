@@ -500,7 +500,7 @@
 .qmah-social-page .social-upcoming__head a { display: inline-flex; align-items: center; gap: 2px; color: var(--qmah-social-action); font-size: 0.8125rem; font-weight: 700; text-decoration: none; }
 .qmah-social-page .social-upcoming__head a svg { width: 14px; height: 14px; }
 .qmah-social-page .social-upcoming__head a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.qmah-social-page .social-upcoming__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.qmah-social-page .social-upcoming__list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .qmah-social-page .social-upcoming__item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 10px; color: inherit; text-decoration: none; transition: background 140ms; }
 .qmah-social-page .social-upcoming__item:hover { background: color-mix(in srgb, var(--qmah-ink) 5%, transparent); }
 .qmah-social-page .social-upcoming__date { flex: none; display: grid; place-items: center; width: 42px; height: 46px; border-radius: 8px; background: color-mix(in srgb, var(--qmah-social-action) 10%, transparent); color: var(--qmah-social-action); line-height: 1.1; }
@@ -540,3 +540,12 @@
 /* 切換看板、時間或排序時，舊貼文先留著並變淡，新結果到了再換；版面高度不會塌掉跳動 */
 .social-post-wall { min-height: 60vh; transition: opacity 160ms ease; }
 .social-post-wall.is-loading { opacity: 0.45; pointer-events: none; }
+
+@media (max-width: 640px) { .qmah-social-page .social-upcoming__list { grid-template-columns: 1fr; } }
+
+/* 時間面板：預設選項排成整齊的 2×2，日期欄位等寬對齊 */
+.qmah-social-page .social-datefilter__panel { width: min(280px, calc(100vw - 32px)); gap: 12px; }
+.qmah-social-page .social-datefilter__presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.qmah-social-page .social-datefilter__preset { padding: 7px 10px; border-radius: 10px; text-align: center; white-space: nowrap; }
+.qmah-social-page .social-datefilter__field { display: grid; grid-template-columns: 24px 1fr; }
+.qmah-social-page .social-datefilter__field input { width: 100%; }

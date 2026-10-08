@@ -8,7 +8,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { CreateSocialPostRequest, EventListItem, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
-import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
+import { SocialMediaLayout, SocialMediaManagerComponent } from '../../../shared/components/social-media-manager/social-media-manager';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup';
@@ -44,7 +44,7 @@ import {
     CommonModule,
     FormsModule,
     RouterLink,
-    ImageCropModalComponent,
+    SocialMediaManagerComponent,
     ReportModalComponent,
     SocialPostContentComponent,
     LucideExternalLink,
@@ -75,9 +75,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
 
-  @ViewChild(ImageCropModalComponent) private cropModal!: ImageCropModalComponent;
   @ViewChild('createPostDialog') private createPostDialog?: ElementRef<HTMLDialogElement>;
-  private cropQueue: File[] = [];
 
   posts: SocialPostListItem[] = [];
   totalCount = 0;
@@ -88,7 +86,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   newPost: CreateSocialPostRequest = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '', mediaIds: [] };
 
   pendingMedia: SocialMedia[] = [];
-  uploadPending = false;
+  pendingLayout: SocialMediaLayout = 'SECONDARY';
 
   readonly boardLabel = boardLabel;
   boardCodes: string[] = [];
@@ -212,11 +210,11 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.mediumQuery?.removeEventListener('change', this.onWallResize);
   }
 
-  /** 近期活動（尚未開始的前三場），給貼文牆頂端的快速入口 */
+  /** 近期活動（尚未開始的前兩場），給貼文牆頂端的快速入口 */
   upcomingEvents: EventListItem[] = [];
 
   private loadUpcomingEvents(): void {
-    this.socialApi.getEvents({ startAfter: new Date().toISOString(), pageSize: 3 }).subscribe({
+    this.socialApi.getEvents({ startAfter: new Date().toISOString(), pageSize: 2 }).subscribe({
       next: (page) => {
         this.upcomingEvents = page.items;
         this.cdr.detectChanges();
@@ -353,7 +351,9 @@ export class PostsComponent implements OnInit, OnDestroy {
       sort: this.sortOrder
     }).subscribe({
       next: (page) => {
-        this.posts = page.items;
+        // 後端新版會依 sort 排序；這裡再排一次，舊版 API 沒有 sort 參數時切換也有效。
+        const dir = this.sortOrder === 'oldest' ? 1 : -1;
+        this.posts = [...page.items].sort((a, b) => dir * (Date.parse(a.createdAt) - Date.parse(b.createdAt)));
         this.totalCount = page.totalCount;
         this.loading = false;
         this.cdr.detectChanges();
@@ -367,78 +367,16 @@ export class PostsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // 選好的圖片先逐張進裁切彈窗，裁切完（或略過裁切）才呼叫 POST /api/v1/social/media 上傳，
-  // 最多附 8 張，上傳成功才把 id 放進 newPost.mediaIds。
-  onFilesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const files = input.files;
-    if (!files || files.length === 0) return;
-
-    const remainingSlots = 8 - (this.newPost.mediaIds?.length ?? 0);
-    this.cropQueue.push(...Array.from(files).slice(0, Math.max(0, remainingSlots)));
-    input.value = '';
-    this.processNextInCropQueue();
-  }
-
-  private processNextInCropQueue(): void {
-    const next = this.cropQueue.shift();
-    if (next) this.cropModal.open(next);
-  }
-
-  onImageCropped(file: File): void {
-    this.uploadPending = true;
-    this.createError = null;
-    this.socialApi.uploadMedia(file).subscribe({
-      next: (media) => {
-        this.pendingMedia.push(media);
-        this.newPost.mediaIds = [...(this.newPost.mediaIds ?? []), media.id];
-        this.uploadPending = this.cropQueue.length > 0;
-        this.cdr.detectChanges();
-        this.processNextInCropQueue();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.uploadPending = this.cropQueue.length > 0;
-        this.createError = err.status === 401
-          ? '上傳圖片失敗：請先登入。'
-          : err.status === 413
-            ? '上傳圖片失敗：單一圖片不可超過 8 MB。'
-            : '上傳圖片失敗，請確認檔案格式是否為 JPEG／PNG／GIF／WebP。';
-        console.error('上傳圖片失敗:', err);
-        this.cdr.detectChanges();
-        this.processNextInCropQueue();
-      }
-    });
-  }
-
-  onCropCancelled(): void {
-    this.processNextInCropQueue();
-  }
-
-  removePendingMedia(media: SocialMedia): void {
-    this.socialApi.deleteMedia(media.id).subscribe({
-      next: () => this.dropPendingMedia(media.id),
-      error: (err: HttpErrorResponse) => {
-        console.error('移除圖片失敗:', err);
-        // 就算刪除 API 失敗（例如已經被刪過），也把它從草稿裡拿掉，不要卡住使用者。
-        this.dropPendingMedia(media.id);
-      }
-    });
-  }
-
-  private dropPendingMedia(mediaId: string): void {
-    this.pendingMedia = this.pendingMedia.filter((item) => item.id !== mediaId);
-    this.newPost.mediaIds = (this.newPost.mediaIds ?? []).filter((id) => id !== mediaId);
-  }
-
   // POST /api/v1/social/posts（需要登入 + XSRF token）
   // 送出按鈕是 type="button"，故意不靠 <form method="dialog"> 自動關閉視窗，
   // 避免請求還沒回來、或失敗時視窗就先關掉導致看不到錯誤訊息。
   submitPost(): void {
     this.createError = null;
-    this.socialApi.createPost(this.newPost).subscribe({
+    this.socialApi.createPost({ ...this.newPost, mediaIds: this.pendingMedia.map((item) => item.id), mediaLayout: this.pendingLayout }).subscribe({
       next: () => {
         this.newPost = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '', mediaIds: [] };
         this.pendingMedia = [];
+        this.pendingLayout = 'SECONDARY';
         this.loadPosts();
         this.createPostDialog?.nativeElement.close();
       },

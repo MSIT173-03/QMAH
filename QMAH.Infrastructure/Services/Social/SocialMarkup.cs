@@ -47,6 +47,16 @@ public static class SocialMarkup
     }
 
     /// <summary>移除所有標記，供列表摘要等純文字場合使用。</summary>
+    private static readonly Regex ImageTagRegex = new(
+        @"[img=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})]",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    /// <summary>取出內容中所有 [img=識別碼] 引用的圖片識別碼（去重）。</summary>
+    public static IReadOnlyList<Guid> ExtractImageIds(string? content) =>
+        string.IsNullOrEmpty(content)
+            ? []
+            : ImageTagRegex.Matches(content).Select(m => Guid.Parse(m.Groups[1].Value)).Distinct().ToList();
+
     public static string ToPlainText(string? content, int maxLength = 0)
     {
         if (string.IsNullOrEmpty(content)) return "";

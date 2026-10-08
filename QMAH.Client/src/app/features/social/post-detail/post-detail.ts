@@ -5,10 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialPostArtifact, SocialPostDetails } from '../../../core/services/social-api';
+import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialMedia, SocialPostArtifact, SocialPostDetails } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialEditorComponent } from '../../../shared/components/social-editor/social-editor';
+import { SocialMediaLayout, SocialMediaManagerComponent } from '../../../shared/components/social-media-manager/social-media-manager';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { demoComment, isDemoAdmin } from '../social-demo';
 import { boardLabel } from '../social-labels';
@@ -17,7 +18,7 @@ import { LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, Lucid
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEditorComponent, LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEditorComponent, SocialMediaManagerComponent, LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent],
   templateUrl: './post-detail.html',
   styleUrls: ['../social-common.scss', './post-detail.scss']
 })
@@ -45,12 +46,20 @@ export class PostDetailComponent implements OnChanges {
   editingPost = false;
   editPostTitle = '';
   editPostContent = '';
+  editMedia: SocialMedia[] = [];
+  editLayout: SocialMediaLayout = 'SECONDARY';
 
   editingCommentId: string | null = null;
   editCommentContent = '';
 
   get currentUserId(): string | null {
     return this.meApi.me()?.id ?? null;
+  }
+
+  /** 沒有插入內文的圖片才收在貼文旁（插入內文的由內文自己顯示） */
+  attachedMedia(post: SocialPostDetails): SocialMedia[] {
+    const text = post.content.toLowerCase();
+    return post.media.filter((item) => !text.includes(`[img=${item.id.toLowerCase()}]`));
   }
 
   isOwnPost(post: SocialPostDetails): boolean {
@@ -126,6 +135,8 @@ export class PostDetailComponent implements OnChanges {
     if (!this.post) return;
     this.editPostTitle = this.post.title;
     this.editPostContent = this.post.content;
+    this.editMedia = [...this.post.media];
+    this.editLayout = this.post.mediaLayout ?? 'SECONDARY';
     this.editingPost = true;
   }
 
@@ -137,7 +148,12 @@ export class PostDetailComponent implements OnChanges {
   saveEditPost(): void {
     if (!this.post) return;
     this.actionError = null;
-    this.socialApi.updatePost(this.post.id, { title: this.editPostTitle, content: this.editPostContent }).subscribe({
+    this.socialApi.updatePost(this.post.id, {
+      title: this.editPostTitle,
+      content: this.editPostContent,
+      mediaLayout: this.editLayout,
+      mediaIds: this.editMedia.map((item) => item.id)
+    }).subscribe({
       next: () => {
         this.editingPost = false;
         this.loadPost();

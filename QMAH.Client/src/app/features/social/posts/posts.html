@@ -251,47 +251,15 @@
         </div>
       }
 
-      <div class="social-post-form__field">
-        <label class="social-post-form__label" for="social-post-media">圖片（選填，最多 8 張）</label>
-        <input
-          id="social-post-media"
-          type="file"
-          class="file-input file-input-bordered w-full"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          multiple
-          [disabled]="uploadPending || (newPost.mediaIds?.length ?? 0) >= 8"
-          (change)="onFilesSelected($event)"
-        />
-        @if (uploadPending) {
-          <span class="social-post-form__hint" aria-live="polite">圖片上傳中…</span>
-        }
-        @if (pendingMedia.length > 0) {
-          <div class="social-post-form__media-list">
-            @for (media of pendingMedia; track media.id) {
-              <div class="relative">
-                <img src="{{ media.url }}" [alt]="media.altText || ''" class="w-16 h-16 object-cover rounded-lg" />
-                <button
-                  type="button"
-                  class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
-                  aria-label="移除這張圖片"
-                  (click)="removePendingMedia(media)"
-                >
-                  <svg lucideX aria-hidden="true" focusable="false"></svg>
-                </button>
-              </div>
-            }
-          </div>
-        }
-      </div>
+      <app-social-media-manager textareaId="social-post-content" [content]="newPost.content" [(media)]="pendingMedia" [(layout)]="pendingLayout" />
     </div>
     <div class="modal-action social-post-dialog__actions">
       <form method="dialog">
         <button type="submit" class="btn btn-ghost">取消</button>
-        <button type="button" class="btn btn-primary" [disabled]="uploadPending" (click)="submitPost()">送出發布</button>
+        <button type="button" class="btn btn-primary" (click)="submitPost()">送出發布</button>
       </form>
     </div>
   </div>
 </dialog>
 
-<app-image-crop-modal (cropped)="onImageCropped($event)" (cancelled)="onCropCancelled()" />
 <app-report-modal #reportModal (reported)="onReported()" />

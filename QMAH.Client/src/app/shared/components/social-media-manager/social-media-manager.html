@@ -1,0 +1,50 @@
+<section class="smm" aria-label="貼文圖片">
+  <header class="smm__head">
+    <h3 class="smm__title">圖片 <span class="smm__count">{{ media().length }} / {{ max }}</span></h3>
+    <label class="smm__add" [class.is-disabled]="busy() || media().length >= max">
+      <svg lucideImagePlus aria-hidden="true" focusable="false"></svg>
+      <span>新增圖片</span>
+      <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple [disabled]="busy() || media().length >= max" (change)="onFilesSelected($event)" />
+    </label>
+  </header>
+
+  @if (media().length > 0) {
+    <div class="smm__layout" role="radiogroup" aria-label="圖片排版">
+      <button type="button" role="radio" [attr.aria-checked]="layout() === 'SECONDARY'" [class.is-on]="layout() === 'SECONDARY'" (click)="layout.set('SECONDARY')">
+        <span class="smm__thumb smm__thumb--text" aria-hidden="true"><i></i><i></i><i class="short"></i><b></b></span>
+        <span><strong>文字為主</strong><small>圖片收成內文下方的縮圖</small></span>
+      </button>
+      <button type="button" role="radio" [attr.aria-checked]="layout() === 'PRIMARY'" [class.is-on]="layout() === 'PRIMARY'" (click)="layout.set('PRIMARY')">
+        <span class="smm__thumb smm__thumb--image" aria-hidden="true"><b></b><i></i><i class="short"></i></span>
+        <span><strong>圖片為主</strong><small>圖片置頂放大，文字在下方</small></span>
+      </button>
+    </div>
+
+    <ul class="smm__list">
+      @for (item of media(); track item.id; let i = $index) {
+        <li class="smm__item" [class.is-inserted]="inserted().has(item.id)">
+          <img [src]="item.url" [alt]="item.altText || ('圖片 ' + (i + 1))" loading="lazy" />
+          <span class="smm__badge">{{ inserted().has(item.id) ? '內文中' : '附圖' }}</span>
+          <div class="smm__actions">
+            @if (inserted().has(item.id)) {
+              <button type="button" (click)="uninsert(item)" title="取消插入，改為單純附圖">改為附圖</button>
+            } @else {
+              <button type="button" (click)="insert(item)" title="插入內文游標所在位置"><svg lucideTextCursorInput aria-hidden="true" focusable="false"></svg>插入內文</button>
+            }
+            <label class="smm__swap" title="換成另一張圖片（位置與插入處不變）">
+              <svg lucideReplace aria-hidden="true" focusable="false"></svg>更換
+              <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" [disabled]="busy()" (change)="onSwapSelected($event, item.id)" />
+            </label>
+            <button type="button" class="is-danger" (click)="remove(item)" aria-label="移除這張圖片"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg></button>
+          </div>
+        </li>
+      }
+    </ul>
+    <p class="smm__hint">「插入內文」會把圖片放在內文游標處；沒插入的圖片依上方排版顯示在貼文旁。</p>
+  }
+
+  @if (busy()) { <p class="smm__hint" aria-live="polite">圖片上傳中…</p> }
+  @if (error(); as message) { <p class="smm__error" role="alert">{{ message }}</p> }
+</section>
+
+<app-image-crop-modal (cropped)="onCropped($event)" (cancelled)="onCropCancelled()" />

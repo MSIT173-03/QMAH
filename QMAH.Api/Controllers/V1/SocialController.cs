@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 
+using QMAH.Api.Infrastructure.Media;
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
 using QMAH.Infrastructure.Models.Entities;
@@ -20,8 +22,35 @@ public sealed class SocialController(
     ContentSimilarityService contentSimilarityService,
     KeywordFilterService keywordFilterService,
     QmahMediaUrlResolver mediaUrlResolver,
-    AvatarStoragePaths avatarStorage) : ApiControllerBase
+    AvatarStoragePaths avatarStorage,
+    IOptions<MediaStorageOptions> mediaStorage) : ApiControllerBase
 {
+    /// <summary>留言用 [img=識別碼] 引用的自己的暫存圖片，搬進該貼文的 comments 資料夾（圖片仍不掛在貼文上，可見性規則不變）。</summary>
+    private async Task MoveCommentMediaAsync(Guid postId, Guid userId, string content, CancellationToken cancellationToken)
+    {
+        var ids = SocialMarkup.ExtractImageIds(content).ToList();
+        if (ids.Count == 0)
+            return;
+        var assets = await db.MediaAssets
+            .Where(asset => ids.Contains(asset.Id) && asset.OwnerUserId == userId && asset.PostId == null && asset.Status == "ACTIVE")
+            .ToListAsync(cancellationToken);
+        var moved = false;
+        foreach (var asset in assets)
+            moved |= SocialMediaStorage.TryRelocate(mediaStorage.Value.RootPath, asset, SocialMediaStorage.CommentFolder(postId));
+        if (moved)
+            await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>圖片綁到貼文後，把檔案從 social/pending 搬進該貼文專屬資料夾（搬不動時保持原路徑，圖片仍可讀）。</summary>
+    private async Task MovePostMediaAsync(Guid postId, IEnumerable<MediaAsset> assets, CancellationToken cancellationToken)
+    {
+        var moved = false;
+        foreach (var asset in assets)
+            moved |= SocialMediaStorage.TryRelocate(mediaStorage.Value.RootPath, asset, SocialMediaStorage.PostFolder(postId));
+        if (moved)
+            await db.SaveChangesAsync(cancellationToken);
+    }
+
     [HttpGet("posts")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiPage<SocialPostListItemDto>>> GetPosts(
@@ -278,6 +307,7 @@ public sealed class SocialController(
                 item.PublisherType,
                 item.Title,
                 item.Content,
+                item.MediaLayout,
                 item.LocationName,
                 item.Latitude,
                 item.Longitude,
@@ -349,7 +379,9 @@ public sealed class SocialController(
             post.Latitude,
             post.Longitude,
             post.CreatedAt,
-            post.UpdatedAt));
+            post.UpdatedAt,
+            null,
+            post.MediaLayout));
     }
 
     [HttpGet("events")]
@@ -531,6 +563,7 @@ public sealed class SocialController(
         db.Events.Add(eventData);
         db.SocialPosts.Add(socialPost);
         await db.SaveChangesAsync(cancellationToken);
+        await MovePostMediaAsync(socialPost.Id, mediaAssets, cancellationToken);
 
         var result = await ToEventDetailsAsync(eventData, cancellationToken);
         return CreatedAtAction(nameof(GetEvent), new { id = eventData.Id }, result);
@@ -836,6 +869,7 @@ public sealed class SocialController(
             ContentMode = "CUSTOM",
             Title = title,
             Content = content,
+            MediaLayout = request.MediaLayout,
             LocationName = string.IsNullOrWhiteSpace(request.LocationName) ? null : request.LocationName.Trim(),
             Latitude = request.Latitude,
             Longitude = request.Longitude,
@@ -866,6 +900,7 @@ public sealed class SocialController(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await MovePostMediaAsync(post.Id, mediaAssets, cancellationToken);
 
         return CreatedAtAction(nameof(GetPost), new { id = post.Id }, new SocialPostDetailsDto(
             post.Id,
@@ -888,7 +923,8 @@ public sealed class SocialController(
             post.Longitude,
             post.CreatedAt,
             post.UpdatedAt,
-            SocialMarkup.ToHtml(post.Content)));
+            SocialMarkup.ToHtml(post.Content),
+            post.MediaLayout));
     }
 
     // 只有作者本人能改自己的貼文；活動的社群入口貼文改由活動編輯／審核流程管理，這裡不開放直接改。
@@ -914,11 +950,60 @@ public sealed class SocialController(
         if (post.PostType == "EVENT")
             return InvalidWorkflow("活動貼文不可直接編輯", "這篇貼文是活動的社群入口，請到活動編輯調整內容。");
 
+        var now = DateTime.UtcNow;
+        var content = request.Content.Trim();
+        var newlyBound = new List<MediaAsset>();
+
+        // 圖片：MediaIds 是「最後要保留的圖片清單」（順序即顯示順序）。沒列出的既有圖片會被移除，
+        // 新上傳（尚未綁定、屬於自己）的圖片會綁上這篇貼文；抽換＝新圖取代舊圖並沿用舊圖的順序。
+        if (request.MediaIds is not null)
+        {
+            var ids = request.MediaIds.Distinct().ToList();
+            if (ids.Count > 8)
+                return Problem(statusCode: StatusCodes.Status400BadRequest, title: "圖片太多", detail: "每篇貼文最多 8 張圖片。");
+
+            var current = await db.MediaAssets
+                .Where(asset => asset.PostId == id && asset.Status == "ACTIVE")
+                .ToListAsync(cancellationToken);
+            var incoming = await db.MediaAssets
+                .Where(asset => ids.Contains(asset.Id) && asset.PostId == null && asset.OwnerUserId == userId && asset.Status == "ACTIVE")
+                .ToListAsync(cancellationToken);
+            var byId = current.Concat(incoming).ToDictionary(asset => asset.Id);
+            if (ids.Any(mediaId => !byId.ContainsKey(mediaId)))
+                return Problem(statusCode: StatusCodes.Status400BadRequest, title: "圖片無效", detail: "有圖片不存在、不屬於你，或已經用在其他貼文。");
+
+            foreach (var removed in current.Where(asset => !ids.Contains(asset.Id)))
+            {
+                removed.Status = "DELETED";
+                removed.UpdatedAt = now;
+                // 內文裡已經插入的這張圖也一併拿掉，避免留下破圖。
+                content = content.Replace($"[img={removed.Id:D}]", "", StringComparison.OrdinalIgnoreCase).Trim();
+            }
+
+            // 顯示順序以 CreatedAt 排序：依清單順序重排，起點取所有相關圖片中最早的時間。
+            var baseTime = byId.Values.Min(asset => asset.CreatedAt);
+            for (var index = 0; index < ids.Count; index++)
+            {
+                var asset = byId[ids[index]];
+                asset.CreatedAt = baseTime.AddMilliseconds(index);
+                if (asset.PostId is null)
+                {
+                    asset.PostId = id;
+                    asset.AiReviewedAt = null;
+                    asset.UpdatedAt = now;
+                    newlyBound.Add(asset);
+                }
+            }
+        }
+
         post.Title = request.Title.Trim();
-        post.Content = request.Content.Trim();
-        post.UpdatedAt = DateTime.UtcNow;
+        post.Content = content;
+        if (request.MediaLayout is not null)
+            post.MediaLayout = request.MediaLayout;
+        post.UpdatedAt = now;
         await db.SaveChangesAsync(cancellationToken);
-        return Ok(new { message = "貼文已更新", post.Id, post.Title, post.Content, post.UpdatedAt });
+        await MovePostMediaAsync(id, newlyBound, cancellationToken);
+        return Ok(new { message = "貼文已更新", post.Id, post.Title, post.Content, post.MediaLayout, post.UpdatedAt });
     }
 
     // 軟刪除：只把 Status 改成 DELETED，不從資料庫移除，保留稽核與留言關聯。
@@ -1037,6 +1122,7 @@ public sealed class SocialController(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await MoveCommentMediaAsync(postId, userId, content, cancellationToken);
 
         return CreatedAtAction(nameof(GetPost), new { id = postId }, new SocialCommentDto(
             comment.Id,
