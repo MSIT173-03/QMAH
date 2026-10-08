@@ -381,5 +381,5 @@
   --color-on-ink: var(--qmah-on-dark);
   --color-on-accent: var(--qmah-primary-content);
   --color-secondary-content: var(--qmah-secondary-content);
-  --color-shadow: var(--qmah-shadow-card);
+  --color-shadow: 0 8px 24px rgb(18 38 37 / 8%); /* 商城維持原本的陰影，不吃全站深色微光 */
 }

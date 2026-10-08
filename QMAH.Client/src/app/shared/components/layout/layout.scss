@@ -616,3 +616,18 @@ textarea:focus-visible {
   mask: none;
   opacity: 0.45;
 }
+
+/* 深色模式的微光：頁面頂部一層極淡的暖白光暈，讓卡片與底色有「被照亮」的層次（商城除外）。 */
+:host-context([data-theme='qmahdark']) .app-shell:not([data-area='store']) .app-main {
+  position: relative;
+  isolation: isolate;
+}
+:host-context([data-theme='qmahdark']) .app-shell:not([data-area='store']) .app-main::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: min(70vh, 640px);
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 70% 100% at 50% 0%, rgb(255 244 224 / 6%), transparent 70%);
+}
