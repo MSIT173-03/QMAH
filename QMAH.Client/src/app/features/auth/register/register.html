@@ -341,6 +341,17 @@
           class="turnstile-widget"
         ></div>
 
+        <label class="demo-turnstile">
+  <input
+    type="checkbox"
+    [checked]="turnstileDemoFail"
+    (change)="toggleTurnstileDemoFail()"
+  />
+
+  <span class="demo-robot">🤖</span>
+  <span>Demo：模擬 Turnstile 驗證失敗</span>
+</label>
+
 
         @if (turnstileToken) {
 
@@ -382,7 +393,7 @@
       <button
         type="submit"
         class="register-button"
-        [disabled]="submitting || !turnstileToken"
+        [disabled]="submitting"
       >
 
         @if (submitting) {
