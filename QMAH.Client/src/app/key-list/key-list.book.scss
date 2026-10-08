@@ -628,3 +628,25 @@
     animation: none;
   }
 }
+
+/* ---------- 書本模式：鑰匙、標題、合成台直接放在書頁上，不再另外套一層框 ----------
+   key-list.scss 後段的「簡潔版」把 .key-bag／.craft-panel 做成帶陰影的卡片（給獨立鑰匙頁用），
+   在書裡會變成「書頁上又浮著一張卡」；左頁背包格的底色與外框也一併拿掉，讓木框的鑰匙格直接落在羊皮紙上。
+   右頁的材料欄、魔法陣區維持原本的框。只作用在 .key-page--book，獨立鑰匙頁不受影響。 */
+.key-page--book .key-bag,
+.key-page--book .craft-panel {
+  background: none;
+  box-shadow: none;
+}
+
+.key-page--book .key-slot-grid--book {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* 沒有外框之後，格子與頁首、頁尾的文字左右對齊 */
+.key-page--book .key-slot-grid--book {
+  padding: 6px 0;
+}
