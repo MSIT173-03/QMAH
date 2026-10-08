@@ -83,6 +83,12 @@ builder.Services.AddControllersWithViews(options =>
 {
     // API 的 unsafe request 一律要求 Anti-forgery token；GET 不需要 token。
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+
+    // 開發環境：快速切換頁面造成的請求中止不要變成偵錯器中斷（見該類別說明）；正式環境維持可取消。
+    if (builder.Environment.IsDevelopment())
+    {
+        options.ModelBinderProviders.Insert(0, new QMAH.Api.Services.IgnoreAbortCancellationTokenBinderProvider());
+    }
 });
 builder.Services.AddAntiforgery(options =>
 {
