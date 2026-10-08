@@ -5,8 +5,8 @@
 .qmah-admin {
   --qmah-area-accent: #3b4a7a; --qmah-area-accent-hover: #2f3d6a; --qmah-area-soft: #e9ecf5; --qmah-area-focus: rgba(59, 74, 122, .22);
   --qmah-primary: #3b4a7a; --qmah-primary-hover: #2f3d6a; --qmah-primary-soft: #e9ecf5; --qmah-primary-soft-hover: #dde2f0;
-  --qmah-canvas: #f6f3ec; --qmah-sidebar-bg: #faf8f3; --qmah-sidebar-active-bg: #efeae0;
-  --qmah-porcelain: #f6f3ec; --qmah-surface: #fbf9f4; --qmah-surface-soft: #efeae0; --qmah-surface-muted: #e6e0d3;
+  --qmah-canvas: #fbfaf7; --qmah-sidebar-bg: #fbfaf7; --qmah-sidebar-active-bg: #f3f1ec;
+  --qmah-porcelain: #fbfaf7; --qmah-surface: #fdfcfb; --qmah-surface-soft: #f3f1ec; --qmah-surface-muted: #e9e6e0;
   --qmah-ink: #2a2620; --qmah-ink-soft: #5b5449; --qmah-ink-faint: #7d766a; --qmah-line: #ddd7cc; --qmah-line-soft: #ebe6db;
   --qmah-success: #2f7a4f; --qmah-warning: #8a6a2f; --qmah-danger: #a94434;
 }
@@ -61,10 +61,10 @@ html[data-bs-theme="dark"] .qmah-admin .card { box-shadow: 0 1px 0 rgba(255, 255
 .qmah-admin .page-header::before, .qmah-admin .page-header::after { display: none; }
 .qmah-page-title-icon { background: var(--qmah-surface-soft) !important; color: var(--qmah-area-accent) !important; border: 1px solid var(--qmah-line) !important; box-shadow: none !important; }
 .qmah-admin .btn-primary {
-  --tblr-btn-bg: #2f343a; --tblr-btn-border-color: #2f343a; --tblr-btn-color: #f6f3ec;
+  --tblr-btn-bg: #2f343a; --tblr-btn-border-color: #2f343a; --tblr-btn-color: #fbfaf7;
   --tblr-btn-hover-bg: #1f2327; --tblr-btn-hover-border-color: #1f2327; --tblr-btn-hover-color: #fff;
   --tblr-btn-active-bg: #1f2327; --tblr-btn-active-border-color: #1f2327;
-  background: #2f343a; border-color: #2f343a; color: #f6f3ec; box-shadow: none;
+  background: #2f343a; border-color: #2f343a; color: #fbfaf7; box-shadow: none;
 }
 .qmah-admin .btn-primary:hover { background: #1f2327; border-color: #1f2327; color: #fff; }
 html[data-bs-theme="dark"] .qmah-admin .btn-primary { background: #e7e4dd; border-color: #e7e4dd; color: #1f1e1c; }
@@ -110,9 +110,9 @@ html[data-qmah-sidebar="collapsed"] .qmah-admin .qmah-nav-toggle { display: none
 .qmah-admin { --qmah-surface-raised: #fffdf9; }
 html[data-bs-theme="dark"] .qmah-admin { --qmah-surface-raised: #252422; }
 .qmah-admin .navbar-vertical {
-  --qmah-sidebar-bg: #faf8f3; --qmah-sidebar-surface: #efeae0; --qmah-sidebar-border: #ddd7cc;
+  --qmah-sidebar-bg: #fbfaf7; --qmah-sidebar-surface: #f3f1ec; --qmah-sidebar-border: #ddd7cc;
   --qmah-sidebar-ink: #3d372e; --qmah-sidebar-ink-muted: #7d766a; --qmah-sidebar-icon: #6b6457;
-  --qmah-sidebar-active-bg: #efeae0; --qmah-sidebar-active-ink: var(--qmah-ink);
+  --qmah-sidebar-active-bg: #f3f1ec; --qmah-sidebar-active-ink: var(--qmah-ink);
 }
 html[data-bs-theme="dark"] .qmah-admin .navbar-vertical {
   --qmah-sidebar-bg: #1d1c1a; --qmah-sidebar-surface: #292826; --qmah-sidebar-border: rgba(231, 228, 221, .1);
