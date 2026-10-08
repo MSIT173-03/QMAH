@@ -67,11 +67,7 @@ const appShellChildren: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./key-list/key-list').then(m => m.KeyList)
   },
-  {
-    path: 'game/account',
-    loadComponent: () =>
-      import('./game/game-account.component').then(({ GameAccountComponent }) => GameAccountComponent)
-  },
+  { path: 'game/account', redirectTo: 'game', pathMatch: 'full' },
   {
     path: 'game/training',
     loadComponent: () =>

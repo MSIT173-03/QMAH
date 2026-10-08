@@ -10,7 +10,7 @@
     } @else if (accountService.account(); as account) {
       <h1 id="account-title">目前已登入會員帳號</h1>
       <p>{{ account.nickname || account.email }}</p>
-      <button type="button" (click)="logout()" [disabled]="loading || busy">{{ busy ? '登出中…' : '登出會員帳號' }}</button>
+      <button type="button" (click)="logout()" [disabled]="loading || busy">{{ busy ? '登出中…' : '登出' }}</button>
     } @else {
       <!-- ui-integration: 所有正式帳號與管理員共用 /login，避免玩家誤以為遊戲另有測試登入。 -->
       <h1 id="account-title">需要登入會員帳號</h1>

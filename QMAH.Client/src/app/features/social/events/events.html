@@ -38,30 +38,36 @@
 
 <div class="social-event-wall">
   @for (event of events; track event.id) {
-    <article class="social-panel social-event-card">
+    <article class="social-panel social-event-card" [attr.data-phase]="phase(event).key">
       @if (event.coverImageUrl) {
         <figure class="social-event-card__cover">
           <img [src]="event.coverImageUrl" alt="" loading="lazy" />
+          <span class="social-event-phase" [attr.data-phase]="phase(event).key">{{ phase(event).label }}</span>
         </figure>
       }
-      <span class="social-tag" [class.social-tag--notice]="event.eventType === 'OFFICIAL'">
-        {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
-      </span>
-      <h2 class="social-event-card__title">
-        <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
-      </h2>
-      <p class="social-meta social-icon-label social-event-card__organizer">
-        <app-user-avatar [userId]="event.organizerUserId" />
-        @if (event.organizerUserId) {
-          <a class="social-author-link" [routerLink]="['/social/members', event.organizerUserId]">{{ event.organizerDisplayName || '匿名會員' }}</a>
-        } @else {
-          {{ event.organizerDisplayName || '匿名會員' }}
-        }
-      </p>
+      <div class="social-event-card__head">
+        <div class="social-event-date" aria-hidden="true">
+          <span class="social-event-date__month">{{ event.startAt | date: 'M月' }}</span>
+          <strong class="social-event-date__day">{{ event.startAt | date: 'd' }}</strong>
+        </div>
+        <div class="social-event-card__headcopy">
+          <div class="social-event-card__tags">
+            <span class="social-tag" [class.social-tag--notice]="event.eventType === 'OFFICIAL'">
+              {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
+            </span>
+            @if (!event.coverImageUrl) {
+              <span class="social-event-phase social-event-phase--inline" [attr.data-phase]="phase(event).key">{{ phase(event).label }}</span>
+            }
+          </div>
+          <h2 class="social-event-card__title">
+            <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
+          </h2>
+        </div>
+      </div>
       <ul class="social-facts">
         <li>
           <svg lucideCalendarClock aria-hidden="true" focusable="false"></svg>
-          <span>{{ event.startAt | date: 'yyyy-MM-dd HH:mm' }} ～ {{ event.endAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+          <span>{{ event.startAt | date: 'MM/dd HH:mm' }} ～ {{ event.endAt | date: 'MM/dd HH:mm' }}</span>
         </li>
         @if (event.location) {
           <li><svg lucideMapPin aria-hidden="true" focusable="false"></svg><span>{{ event.location }}</span></li>
@@ -71,7 +77,20 @@
           <span>已報名 {{ event.registrationCount }}{{ event.capacity ? ' / ' + event.capacity : '' }} 人</span>
         </li>
       </ul>
-      <div class="social-panel__actions social-event-card__footer">
+      @if (fillPercent(event) !== null) {
+        <div class="social-event-fill" role="progressbar" aria-label="報名名額" [attr.aria-valuenow]="fillPercent(event)" aria-valuemin="0" aria-valuemax="100">
+          <span [style.width.%]="fillPercent(event)"></span>
+        </div>
+      }
+      <div class="social-event-card__footer">
+        <p class="social-meta social-icon-label social-event-card__organizer">
+          <app-user-avatar [userId]="event.organizerUserId" />
+          @if (event.organizerUserId) {
+            <a class="social-author-link" [routerLink]="['/social/members', event.organizerUserId]">{{ event.organizerDisplayName || '匿名會員' }}</a>
+          } @else {
+            {{ event.organizerDisplayName || '匿名會員' }}
+          }
+        </p>
         <a class="social-event-card__open" [routerLink]="['/social/events', event.id]" [attr.aria-label]="'查看活動：' + event.title" title="查看活動">
           <svg lucideArrowRight aria-hidden="true" focusable="false"></svg>
         </a>

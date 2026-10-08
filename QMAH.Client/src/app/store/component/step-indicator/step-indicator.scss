@@ -8,7 +8,7 @@
   gap: var(--qmah-space-2);
   align-items: center;
   margin-left: auto;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.16em;
   color: var(--color-muted);

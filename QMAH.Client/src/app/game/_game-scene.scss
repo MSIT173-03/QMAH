@@ -1,13 +1,13 @@
 // Shared scene frame. Website chrome remains outside and is hidden only by opt-in focus mode.
 // 現成 Temple 紋樣只作背景裝飾，中央以面板底色遮住，來源與授權見 SVG 署名。
 @mixin pattern($ground: null) {
+  // 紋樣只鋪在左右邊緣：中央用頁面底色蓋住，向兩側漸層淡出，視覺上更舒服。
+  $edge: var(--qmah-page-surface);
   @if $ground {
-    background-image: linear-gradient(90deg, transparent, $ground 18%, $ground 82%, transparent), var(--qmah-game-pattern, url('/assets/game/hero-temple.svg'));
-    background-size: auto, 256px 256px;
-  } @else {
-    background-image: var(--qmah-game-pattern, url('/assets/game/hero-temple.svg'));
-    background-size: 256px 256px;
+    $edge: $ground;
   }
+  background-image: linear-gradient(90deg, transparent, $edge 18%, $edge 82%, transparent), var(--qmah-game-pattern, url('/assets/game/hero-temple.svg'));
+  background-size: auto, 256px 256px;
   background-position: center, center top;
   background-repeat: repeat;
 }
@@ -46,9 +46,9 @@
   margin: 10px auto;
   border: var(--game-frame-width) solid transparent;
   border-image: var(--game-frame-image) 8 / 1 / 0 stretch;
-  border-radius: 0;
+  border-radius: 14px;
   background: url('/assets/game/hero-diamonds-subtle.svg') center / 96px 128px repeat, var(--game-table-ground);
-  background-clip: border-box;
+  background-clip: padding-box;
   box-shadow: 0 18px 36px #14291c40;
   color: var(--game-table-ink);
   &.is-focus-mode { --stage-offset: 0px; width: 100%; min-height: 100dvh; margin: 0; border-radius: 0; }

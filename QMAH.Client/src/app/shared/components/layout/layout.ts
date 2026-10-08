@@ -1,5 +1,5 @@
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import {
   LucideCalendarDays,
@@ -20,7 +20,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, NotificationsBellComponent, ToastContainerComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, ToastContainerComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })
@@ -97,9 +97,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
     {
       label: '社群',
       items: [
-        { label: '貼文廣場', path: '/social/posts', activePrefixes: ['/social/posts'], icon: LucideLibrary },
-        { label: '活動總覽', path: '/social/events', activePrefixes: ['/social/events'], icon: LucideCalendarDays },
-        { label: '站方公告', path: '/social/announcements', activePrefixes: ['/social/announcements'], icon: LucideMegaphone }
+        { label: '貼文', path: '/social/posts', activePrefixes: ['/social/posts'], icon: LucideLibrary },
+        { label: '活動', path: '/social/events', activePrefixes: ['/social/events'], icon: LucideCalendarDays },
+        { label: '公告', path: '/social/announcements', activePrefixes: ['/social/announcements'], icon: LucideMegaphone }
       ]
     }
   ]);
@@ -117,7 +117,53 @@ export class LayoutComponent implements OnInit, OnDestroy {
       });
   }
 
-  readonly isSocialArea = computed(() => this.currentUrl().startsWith('/social'));
+  /** 桌面 header 的領域次導覽；各領域的重要子頁面集中維護。 */
+  readonly contextNavigation = computed<{ label: string; links: readonly { label: string; path: string; exact?: boolean }[] }>(() => {
+    switch (this.activeArea()) {
+      case 'user':
+        return { label: '會員功能', links: [
+          { label: '總覽', path: '/member', exact: true },
+          { label: '個人資料', path: '/member/profile' },
+          { label: '會員資產', path: '/member/economy' },
+          { label: '成就', path: '/member/achievements' },
+          { label: '每日登入', path: '/member/daily-activity' },
+          { label: '通知', path: '/member/notifications' },
+        ] };
+      case 'catalog':
+        return { label: '圖鑑功能', links: [
+          { label: '文物圖鑑', path: '/artifact-list' },
+          { label: '我的鑰匙', path: '/key-list' },
+        ] };
+      case 'game':
+        return { label: '遊戲功能', links: [
+          { label: '總覽', path: '/game', exact: true },
+          { label: '單人玩法', path: '/game/training' },
+          { label: '多人房間', path: '/game/rooms' },
+          { label: '玩法說明', path: '/game/how-to' },
+        ] };
+      case 'social':
+        return { label: '社群功能', links: [
+          { label: '貼文', path: '/social/posts' },
+          { label: '活動', path: '/social/events' },
+          { label: '公告', path: '/social/announcements' },
+        ] };
+      case 'store':
+        return { label: '商城功能', links: [
+          { label: '總覽', path: '/store', exact: true },
+          { label: '商品', path: '/store/products' },
+          { label: '折價券', path: '/store/coupons' },
+          { label: '購物車', path: '/store/cart' },
+          { label: '訂單', path: '/store/orders' },
+        ] };
+      default:
+        return { label: '', links: [] };
+    }
+  });
+
+  isContextActive(link: { path: string; exact?: boolean }): boolean {
+    const url = this.currentUrl().split('?')[0].replace(/\/$/, '') || '/';
+    return link.exact ? url === link.path : url === link.path || url.startsWith(link.path + '/');
+  }
 
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();

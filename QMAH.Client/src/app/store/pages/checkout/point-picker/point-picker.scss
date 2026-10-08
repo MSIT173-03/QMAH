@@ -11,7 +11,7 @@
 
 /* 持有點數的數字，以等寬字體與較深文字色強調 */
 .balance-value {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   color: var(--color-ink);
 }
 
@@ -30,7 +30,7 @@
   border-radius: var(--qmah-radius-control);
   min-height: var(--qmah-control-height);
   padding: var(--qmah-space-2) var(--qmah-control-padding-x);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: 14px;
   color: var(--color-ink);
   outline: none;

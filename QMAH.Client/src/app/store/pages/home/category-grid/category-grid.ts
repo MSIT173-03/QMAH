@@ -4,7 +4,6 @@ import { map } from 'rxjs';
 import { EntryGrid, EntryGridItem, EntryTone } from '../../../component';
 import { CatalogApi } from '../../../api';
 import { categoryPath } from '../../../shared/paths';
-import type { QmahIconName } from '../../../../shared/components/qmah-icon/qmah-icon';
 
 /** 首頁「分類入口」區塊：各分類的色塊卡片與商品件數 */
 @Component({
@@ -22,7 +21,7 @@ export class CategoryGrid {
             name: category.name,
             count: category.productCount,
             link: categoryPath(category.name),
-            icon: this.categoryIcon(category.name),
+            glyph: this.categoryGlyph(category.name),
             tone: this.categoryTone(category.name),
           })),
         ),
@@ -30,21 +29,28 @@ export class CategoryGrid {
     { initialValue: [] },
   );
 
-  /** 依分類語意選擇圖示；未知分類回到通用圖示，避免資料新增時破版。 */
-  private categoryIcon(name: string): QmahIconName {
-    if (name.includes('陶') || name.includes('瓷')) return 'shapes';
-    if (name.includes('玉')) return 'gem';
-    if (name.includes('青銅') || name.includes('金屬')) return 'shield-check';
-    if (name.includes('畫') || name.includes('書') || name.includes('文獻')) return 'image';
-    if (name.includes('錢') || name.includes('幣')) return 'badge';
-    if (name.includes('飾') || name.includes('器')) return 'library';
-    return 'shapes';
+  /** 與圖鑑的分類籤使用同一組圖案。 */
+  private categoryGlyph(name: string): string {
+    if (/琺瑯/.test(name)) return 'rouge';
+    if (/銅|金|銀|錫|鐵/.test(name)) return 'bronze';
+    if (/幣/.test(name)) return 'coin';
+    if (/陶|瓷|磚|瓦/.test(name)) return 'clay';
+    if (/漆/.test(name)) return 'lacquer';
+    if (/玉/.test(name)) return 'jade';
+    if (/畫|書|紙|帖|絹|織|繡/.test(name)) return 'painting';
+    if (/雕|刻|佛|像/.test(name)) return 'carving';
+    return 'stone';
   }
 
+  /** 與圖鑑分類籤相同的顏色對應。 */
   private categoryTone(name: string): EntryTone {
-    if (name.includes('青銅') || name.includes('錢') || name.includes('幣')) return 'gold';
-    if (name.includes('繪') || name.includes('陶') || name.includes('瓷') || name.includes('琺瑯')) return 'azurite';
-    if (name.includes('雕')) return 'cinnabar';
-    return 'jade';
+    if (/漆/.test(name)) return 'cinnabar';
+    if (/陶|瓷|磚|瓦/.test(name)) return 'celadon';
+    if (/玉/.test(name)) return 'jade';
+    if (/琺瑯/.test(name)) return 'rouge';
+    if (/畫|書|紙|帖|絹|織|繡/.test(name)) return 'indigo';
+    if (/幣/.test(name)) return 'bronze';
+    if (/銅|金|銀|錫|鐵/.test(name)) return 'ochre';
+    return 'slate';
   }
 }

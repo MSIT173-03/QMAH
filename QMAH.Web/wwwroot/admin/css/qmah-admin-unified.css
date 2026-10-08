@@ -1,0 +1,144 @@
+/*
+ * 後台與前台統一色彩層（最後載入）：去掉藍綠色底，改成與前台相同的暖白／深灰中性色；
+ * 各系統主色與前台頁首圖示一致——會員藍、圖鑑金、遊戲綠、社群紅、商城紫；顏色只當點綴，不做大面積底色。
+ */
+.qmah-admin {
+  --qmah-area-accent: #3b4a7a; --qmah-area-accent-hover: #2f3d6a; --qmah-area-soft: #e9ecf5; --qmah-area-focus: rgba(59, 74, 122, .22);
+  --qmah-primary: #3b4a7a; --qmah-primary-hover: #2f3d6a; --qmah-primary-soft: #e9ecf5; --qmah-primary-soft-hover: #dde2f0;
+  --qmah-canvas: #fbfaf7; --qmah-sidebar-bg: #fbfaf7; --qmah-sidebar-active-bg: #f3f1ec;
+  --qmah-porcelain: #fbfaf7; --qmah-surface: #fdfcfb; --qmah-surface-soft: #f3f1ec; --qmah-surface-muted: #e9e6e0;
+  --qmah-ink: #2a2620; --qmah-ink-soft: #5b5449; --qmah-ink-faint: #7d766a; --qmah-line: #ddd7cc; --qmah-line-soft: #ebe6db;
+  --qmah-success: #2f7a4f; --qmah-warning: #8a6a2f; --qmah-danger: #a94434;
+}
+.qmah-admin[data-qmah-area="catalog"] { --qmah-area-accent: #9a6c12; --qmah-area-accent-hover: #7e570e; --qmah-area-soft: #f3ecd9; --qmah-area-focus: rgba(154, 108, 18, .22); }
+.qmah-admin[data-qmah-area="game"] { --qmah-area-accent: #2a7d52; --qmah-area-accent-hover: #21663f; --qmah-area-soft: #e1efe7; --qmah-area-focus: rgba(42, 125, 82, .22); }
+.qmah-admin[data-qmah-area="social"] { --qmah-area-accent: #b9423c; --qmah-area-accent-hover: #9a3530; --qmah-area-soft: #f6e5e3; --qmah-area-focus: rgba(185, 66, 60, .22); }
+.qmah-admin[data-qmah-area="store"] { --qmah-area-accent: #7a45b3; --qmah-area-accent-hover: #653a96; --qmah-area-soft: #eee6f6; --qmah-area-focus: rgba(122, 69, 179, .22); }
+.qmah-admin[data-qmah-area="user"] { --qmah-area-accent: #3f55b0; --qmah-area-accent-hover: #32459a; --qmah-area-soft: #e6eaf7; --qmah-area-focus: rgba(63, 85, 176, .22); }
+.qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) {
+  --qmah-primary: var(--qmah-area-accent); --qmah-primary-hover: var(--qmah-area-accent-hover); --qmah-primary-soft: var(--qmah-area-soft);
+  --qmah-focus: var(--qmah-area-focus); --tblr-primary: var(--qmah-area-accent); --tblr-link-color: var(--qmah-area-accent); --tblr-link-hover-color: var(--qmah-area-accent-hover);
+}
+html[data-bs-theme="dark"] .qmah-admin {
+  --qmah-canvas: #171615; --qmah-sidebar-bg: #1d1c1a; --qmah-sidebar-active-bg: #2a2825;
+  --qmah-porcelain: #171615; --qmah-surface: #1f1e1c; --qmah-surface-soft: #292826; --qmah-surface-muted: #32302d;
+  --qmah-ink: #e7e4dd; --qmah-ink-soft: #bdb9b0; --qmah-ink-faint: #9d998f; --qmah-line: #3d3b37; --qmah-line-soft: #2b2a27;
+  --qmah-primary: #b3bff0; --qmah-primary-hover: #cbd3f5; --qmah-primary-soft: #272c40; --qmah-primary-soft-hover: #303652; --qmah-primary-contrast: #14182a;
+  --qmah-area-accent: #b3bff0; --qmah-area-accent-hover: #cbd3f5; --qmah-area-soft: #272c40;
+}
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="catalog"] { --qmah-area-accent: #e6b94d; --qmah-area-accent-hover: #f0cc78; --qmah-area-soft: #35301f; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="game"] { --qmah-area-accent: #6fd09b; --qmah-area-accent-hover: #93dfb6; --qmah-area-soft: #1f3328; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="social"] { --qmah-area-accent: #ff8a80; --qmah-area-accent-hover: #ffaaa2; --qmah-area-soft: #3a2422; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="store"] { --qmah-area-accent: #bf93f2; --qmah-area-accent-hover: #d2b2f6; --qmah-area-soft: #2f2540; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="user"] { --qmah-area-accent: #8aa2ff; --qmah-area-accent-hover: #adbfff; --qmah-area-soft: #232a45; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area]:not([data-qmah-area="dashboard"]) {
+  --qmah-primary: var(--qmah-area-accent); --qmah-primary-hover: var(--qmah-area-accent-hover); --qmah-primary-soft: var(--qmah-area-soft);
+  --tblr-primary: var(--qmah-area-accent); --tblr-link-color: var(--qmah-area-accent); --tblr-link-hover-color: var(--qmah-area-accent-hover);
+}
+
+/* 總覽的五個入口：識別色與前台頁首一致，卡片底色維持中性 */
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link { --qmah-portal-accent: #3b4a7a; --qmah-portal-soft: #e9ecf5; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Catalog"] { --qmah-portal-accent: #9a6c12; --qmah-portal-soft: #f3ecd9; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Game"] { --qmah-portal-accent: #2a7d52; --qmah-portal-soft: #e1efe7; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Social"] { --qmah-portal-accent: #b9423c; --qmah-portal-soft: #f6e5e3; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Store"] { --qmah-portal-accent: #7a45b3; --qmah-portal-soft: #eee6f6; }
+.qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/User"] { --qmah-portal-accent: #3f55b0; --qmah-portal-soft: #e6eaf7; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link { --qmah-portal-accent: #b3bff0; --qmah-portal-soft: #272c40; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Catalog"] { --qmah-portal-accent: #e6b94d; --qmah-portal-soft: #35301f; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Game"] { --qmah-portal-accent: #6fd09b; --qmah-portal-soft: #1f3328; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Social"] { --qmah-portal-accent: #ff8a80; --qmah-portal-soft: #3a2422; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/Store"] { --qmah-portal-accent: #bf93f2; --qmah-portal-soft: #2f2540; }
+html[data-bs-theme="dark"] .qmah-admin[data-qmah-area="dashboard"] .qmah-dashboard-primary .qmah-quick-link[href*="/User"] { --qmah-portal-accent: #8aa2ff; --qmah-portal-soft: #232a45; }
+
+/* 與前台一致的卡片語彙：12px 圓角、微弱暖色陰影、標題用襯線字體、表格與按鈕用 8px 圓角 */
+.qmah-admin .card { border-radius: 12px; box-shadow: 0 1px 2px rgba(60, 48, 30, .05), 0 4px 14px rgba(60, 48, 30, .05); }
+html[data-bs-theme="dark"] .qmah-admin .card { box-shadow: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 6px 16px rgba(0, 0, 0, .32); }
+.qmah-admin .btn { border-radius: 8px; }
+.qmah-admin .page-title, .qmah-admin .card-title { font-family: var(--qmah-font-display); letter-spacing: 0.01em; }
+.qmah-table-actions .btn-outline-warning { color: var(--qmah-ink); }
+
+/* ===== 色彩克制：頁首不要光帶與斜切底色；主要按鈕用中性石墨，顏色只留給圖示、細線與連結 ===== */
+.qmah-admin .page-header::before, .qmah-admin .page-header::after { display: none; }
+.qmah-page-title-icon { background: var(--qmah-surface-soft) !important; color: var(--qmah-area-accent) !important; border: 1px solid var(--qmah-line) !important; box-shadow: none !important; }
+.qmah-admin .btn-primary {
+  --tblr-btn-bg: #2f343a; --tblr-btn-border-color: #2f343a; --tblr-btn-color: #fbfaf7;
+  --tblr-btn-hover-bg: #1f2327; --tblr-btn-hover-border-color: #1f2327; --tblr-btn-hover-color: #fff;
+  --tblr-btn-active-bg: #1f2327; --tblr-btn-active-border-color: #1f2327;
+  background: #2f343a; border-color: #2f343a; color: #fbfaf7; box-shadow: none;
+}
+.qmah-admin .btn-primary:hover { background: #1f2327; border-color: #1f2327; color: #fff; }
+html[data-bs-theme="dark"] .qmah-admin .btn-primary { background: #e7e4dd; border-color: #e7e4dd; color: #1f1e1c; }
+html[data-bs-theme="dark"] .qmah-admin .btn-primary:hover { background: #fff; border-color: #fff; color: #14182a; }
+.qmah-admin .btn-outline-primary { --tblr-btn-color: var(--qmah-ink); --tblr-btn-border-color: var(--qmah-line); --tblr-btn-hover-bg: var(--qmah-surface-soft); --tblr-btn-hover-color: var(--qmah-ink); --tblr-btn-hover-border-color: var(--qmah-ink-faint); }
+.qmah-admin .badge.bg-primary, .qmah-admin .bg-primary { background: var(--qmah-surface-soft) !important; color: var(--qmah-area-accent) !important; }
+.qmah-admin .qmah-quick-link, .qmah-admin .qmah-dashboard-primary .qmah-quick-link { background: var(--qmah-surface); border-color: var(--qmah-line); }
+.qmah-admin .qmah-quick-link .qmah-quick-link-icon, .qmah-admin .qmah-quick-link [class*="icon"] { background: var(--qmah-surface-soft); color: var(--qmah-portal-accent, var(--qmah-area-accent)); box-shadow: none; }
+
+/* ===== 側欄：選取＝中性底＋左側色條＋圖示著色；分組可獨立展開收合（右側箭頭），狀態記在瀏覽器 ===== */
+.qmah-admin .nav-link { position: relative; border-radius: 8px; transition: background-color 140ms ease, color 140ms ease; }
+.qmah-admin .navbar-vertical .nav-link:hover { background: color-mix(in srgb, var(--qmah-ink) 6%, transparent); color: var(--qmah-sidebar-ink); }
+.qmah-admin .navbar-vertical .nav-link.active,
+.qmah-admin .qmah-sidebar-subnav .nav-link.active,
+.qmah-admin .qmah-sidebar-subnav .nav-link[aria-current="page"] {
+  background: var(--qmah-surface-muted); color: var(--qmah-ink); font-weight: 700; box-shadow: none;
+}
+.qmah-admin .navbar-vertical .nav-link.active::before {
+  position: absolute; inset: 22% auto 22% 0; width: 3px; border-radius: 0 3px 3px 0; background: var(--qmah-area-accent); content: '';
+}
+.qmah-admin .navbar-vertical .nav-link.active .nav-link-icon { color: var(--qmah-area-accent); }
+.qmah-admin .qmah-nav-group.is-active > .nav-link { background: transparent; color: var(--qmah-ink); font-weight: 700; }
+.qmah-admin .qmah-nav-group.is-active > .nav-link .nav-link-icon { color: var(--qmah-area-accent); }
+.qmah-admin .qmah-nav-group { position: relative; }
+.qmah-admin .qmah-nav-group.has-subnav > .nav-link { padding-right: 2.4rem; }
+.qmah-admin .qmah-nav-toggle {
+  position: absolute; top: .3rem; right: .35rem; width: 2rem; height: 2rem; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: 6px; background: transparent; color: var(--qmah-sidebar-ink-muted); cursor: pointer;
+}
+.qmah-admin .qmah-nav-toggle::before {
+  width: .42rem; height: .42rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; content: '';
+  transform: rotate(45deg) translate(-1px, -1px); transition: transform 180ms ease;
+}
+.qmah-admin .qmah-nav-group.is-open > .qmah-nav-toggle::before { transform: rotate(225deg) translate(-1px, -1px); }
+.qmah-admin .qmah-nav-toggle:hover { background: color-mix(in srgb, var(--qmah-ink) 8%, transparent); color: var(--qmah-ink); }
+.qmah-admin .qmah-nav-toggle:focus-visible { outline: 2px solid var(--qmah-area-accent); outline-offset: -2px; }
+.qmah-admin .qmah-nav-group.is-open > .qmah-sidebar-subnav { display: flex; animation: qmah-subnav-in 200ms cubic-bezier(.16, 1, .3, 1) both; }
+.qmah-admin .qmah-sidebar-subnav { border-inline-start: 1px solid var(--qmah-sidebar-border); }
+html[data-qmah-sidebar="collapsed"] .qmah-admin .qmah-nav-toggle { display: none; }
+@media (prefers-reduced-motion: reduce) { .qmah-admin .qmah-nav-group.is-open > .qmah-sidebar-subnav { animation: none; } }
+
+/* ===== 底色單一來源：整個後台只用暖白（淺色）／暖深灰（深色），側邊欄與內容區同一色系，不再混入冷灰或青綠底 ===== */
+.qmah-admin { --qmah-surface-raised: #fffdf9; }
+html[data-bs-theme="dark"] .qmah-admin { --qmah-surface-raised: #252422; }
+.qmah-admin .navbar-vertical {
+  --qmah-sidebar-bg: #fbfaf7; --qmah-sidebar-surface: #f3f1ec; --qmah-sidebar-border: #ddd7cc;
+  --qmah-sidebar-ink: #3d372e; --qmah-sidebar-ink-muted: #7d766a; --qmah-sidebar-icon: #6b6457;
+  --qmah-sidebar-active-bg: #f3f1ec; --qmah-sidebar-active-ink: var(--qmah-ink);
+}
+html[data-bs-theme="dark"] .qmah-admin .navbar-vertical {
+  --qmah-sidebar-bg: #1d1c1a; --qmah-sidebar-surface: #292826; --qmah-sidebar-border: rgba(231, 228, 221, .1);
+  --qmah-sidebar-ink: #d4d0c8; --qmah-sidebar-ink-muted: #9d998f; --qmah-sidebar-icon: #a9a59b;
+  --qmah-sidebar-active-bg: #2a2825; --qmah-sidebar-active-ink: #f1eee7;
+}
+.qmah-admin .navbar-vertical, .qmah-admin .navbar-vertical .navbar-collapse { background: var(--qmah-sidebar-bg); border-color: var(--qmah-sidebar-border); }
+.qmah-admin .page-wrapper, .qmah-admin .page-body { background: var(--qmah-canvas); }
+
+/* ===== 表格操作鈕：全站同一套邏輯——淡色底＋同色系深字＋細框；深色模式改淺字＋半透明底。不再有實心深底配深字或淺底配淺字 ===== */
+.qmah-admin .qmah-table-actions .btn {
+  --act: var(--qmah-area-accent); --act-soft: var(--qmah-area-soft);
+  background: var(--act-soft) !important; color: var(--act) !important;
+  border: 1px solid color-mix(in srgb, var(--act) 32%, transparent) !important; box-shadow: none !important; font-weight: 600;
+}
+.qmah-admin .qmah-table-actions .btn:hover, .qmah-admin .qmah-table-actions .btn:focus-visible {
+  background: color-mix(in srgb, var(--act) 16%, var(--qmah-surface)) !important; border-color: var(--act) !important; color: var(--act) !important;
+}
+.qmah-admin .qmah-table-actions .btn-warning, .qmah-admin .qmah-table-actions .btn-outline-warning { --act: #8a5a00; --act-soft: #f6ecd6; }
+.qmah-admin .qmah-table-actions .btn-success, .qmah-admin .qmah-table-actions .btn-outline-success { --act: #2f7a4f; --act-soft: #e3f0e8; }
+.qmah-admin .qmah-table-actions .btn-danger, .qmah-admin .qmah-table-actions .btn-outline-danger { --act: #a94434; --act-soft: #f7e4e0; }
+.qmah-admin .qmah-table-actions .btn-secondary, .qmah-admin .qmah-table-actions .btn-outline-secondary, .qmah-admin .qmah-table-actions .btn-light { --act: var(--qmah-ink-soft); --act-soft: var(--qmah-surface-soft); }
+html[data-bs-theme="dark"] .qmah-admin .qmah-table-actions .btn-warning, html[data-bs-theme="dark"] .qmah-admin .qmah-table-actions .btn-outline-warning { --act: #e6b94d; --act-soft: #35301f; }
+html[data-bs-theme="dark"] .qmah-admin .qmah-table-actions .btn-success, html[data-bs-theme="dark"] .qmah-admin .qmah-table-actions .btn-outline-success { --act: #6fd09b; --act-soft: #1f3328; }
+html[data-bs-theme="dark"] .qmah-admin .qmah-table-actions .btn-danger, html[data-bs-theme="dark"] .qmah-admin .qmah-table-actions .btn-outline-danger { --act: #ff8a80; --act-soft: #3a2422; }
+html[data-bs-theme="dark"] .qmah-admin .qmah-table-actions .btn-secondary, html[data-bs-theme="dark"] .qmah-admin .qmah-table-actions .btn-outline-secondary { --act: var(--qmah-ink-soft); --act-soft: var(--qmah-surface-soft); }
+.qmah-admin .qmah-table-actions .btn:disabled, .qmah-admin .qmah-table-actions .btn.disabled {
+  --act: var(--qmah-ink-faint); --act-soft: var(--qmah-surface-soft); opacity: .6; cursor: not-allowed;
+}

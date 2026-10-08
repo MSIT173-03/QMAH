@@ -7,14 +7,14 @@
 .card-flip-button {
   /* 明信片設計本體固定淺色，不被全站深色模式染成深色紙面。 */
   color-scheme: light;
-  --color-ink: #203d3a;
-  --color-body: #536967;
-  --color-muted: #667d7a;
-  --color-line: #c5d4d0;
-  --color-line-soft: #d9e3df;
+  --color-ink: #2a2620;
+  --color-body: #5b5449;
+  --color-muted: #6b6458;
+  --color-line: #d9d1c0;
+  --color-line-soft: #e6dfd0;
   --color-surface: #f6f1e8;
   --color-swatch: #ebe5d8;
-  --color-teal: #2d7e78;
+  --color-teal: #8a6a2f;
   --magnifier-image-filter: none;
   /* 一單位代表紙面 1 mm；只縮放整張 A6，字級與間距不受像素上下限影響。 */
   --paper-mm: calc(100cqw / 148);

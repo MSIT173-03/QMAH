@@ -3,31 +3,31 @@
  * 這裡改的是跨 Area 的預設；營運中心圖表、導覽與 Footer 分別放在專屬分層檔案。
  */
 :root {
-  --qmah-porcelain: #f5f7f8;
-  --qmah-surface: #ffffff;
-  --qmah-surface-soft: #edf2f4;
-  --qmah-surface-muted: #e5ecef;
-  --qmah-ink: #1b2c34;
-  --qmah-ink-soft: #566a73;
-  --qmah-ink-faint: #74868e;
-  --qmah-line: #d7e1e5;
-  --qmah-line-soft: #e8eef1;
-  --qmah-primary: #3f6f86;
-  --qmah-primary-hover: #315d72;
+  --qmah-porcelain: #f6f3ec;
+  --qmah-surface: #fbf9f4;
+  --qmah-surface-soft: #efeae0;
+  --qmah-surface-muted: #e6e0d3;
+  --qmah-ink: #2a2620;
+  --qmah-ink-soft: #5b5449;
+  --qmah-ink-faint: #7d766a;
+  --qmah-line: #ddd7cc;
+  --qmah-line-soft: #ebe6db;
+  --qmah-primary: #3b4a7a;
+  --qmah-primary-hover: #2f3d6a;
   --qmah-primary-contrast: #ffffff;
-  --qmah-celadon: #9cb7b1;
+  --qmah-celadon: #b8b2a4;
   --qmah-cinnabar: #ad594a;
   --qmah-bronze: #8b7653;
-  --qmah-info: #356985;
-  --qmah-success: #2f765c;
+  --qmah-info: #3f55b0;
+  --qmah-success: #2f7a4f;
   --qmah-warning: #91611f;
   --qmah-danger: #a94434;
-  --qmah-focus: rgba(63, 111, 134, 0.28);
+  --qmah-focus: rgba(59, 74, 122, 0.28);
   --qmah-radius-sm: 5px;
   --qmah-radius: 8px;
   --qmah-radius-lg: 12px;
-  --qmah-shadow-sm: 0 1px 2px rgba(23, 42, 51, 0.06);
-  --qmah-shadow-md: 0 10px 28px rgba(23, 42, 51, 0.12);
+  --qmah-shadow-sm: 0 1px 2px rgba(60, 48, 30, 0.06);
+  --qmah-shadow-md: 0 10px 28px rgba(60, 48, 30, 0.12);
   /* Plus Jakarta Sans 讓英數介面更有辨識度；繁中與標題各自回到本地 Noto 字體。 */
   --qmah-font-ui: "QMAH Plus Jakarta", "QMAH Noto Sans TC", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
   --qmah-font-display: "QMAH Source Serif 4", "QMAH Noto Serif TC", "QMAH Noto Sans TC", "Noto Serif TC", "Microsoft JhengHei", serif;

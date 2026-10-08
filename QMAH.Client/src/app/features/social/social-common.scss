@@ -661,3 +661,176 @@
 .social-fmt--u { text-decoration: underline; text-underline-offset: 3px; }
 .social-fmt--s { text-decoration: line-through; }
 .social-fmt--xl { font-size: 20px; }
+
+/* ===== 活動：日期徽章＋狀態標籤＋名額進度，卡片底部是主辦人與前往按鈕 ===== */
+.qmah-social-page .social-event-card { gap: 12px; position: relative; }
+.qmah-social-page .social-event-card__cover { position: relative; }
+.qmah-social-page .social-event-card__head { display: flex; gap: 14px; align-items: flex-start; }
+.qmah-social-page .social-event-card__headcopy { min-width: 0; display: grid; gap: 6px; }
+.qmah-social-page .social-event-card__tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.qmah-social-page .social-event-date {
+  flex: none; width: 52px; padding: 6px 0 8px; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control);
+  background: var(--qmah-surface-elevated); text-align: center; line-height: 1.1;
+}
+.qmah-social-page .social-event-date__month { display: block; font-size: 12px; font-weight: 700; color: var(--qmah-terracotta); }
+.qmah-social-page .social-event-date__day { display: block; margin-top: 2px; font-size: 22px; font-weight: 800; color: var(--qmah-ink); }
+.qmah-social-page .social-event-phase {
+  padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+  background: var(--qmah-surface-elevated); color: var(--qmah-ink); border: 1px solid var(--qmah-border);
+}
+.qmah-social-page .social-event-card__cover .social-event-phase { position: absolute; top: 10px; right: 10px; box-shadow: var(--qmah-shadow-card); }
+.qmah-social-page .social-event-phase[data-phase='open'] { color: #2f7a4f; border-color: color-mix(in srgb, #2f7a4f 40%, var(--qmah-border)); }
+.qmah-social-page .social-event-phase[data-phase='live'] { color: #b45a1f; border-color: color-mix(in srgb, #b45a1f 40%, var(--qmah-border)); }
+.qmah-social-page .social-event-phase[data-phase='full'] { color: #a4472b; border-color: color-mix(in srgb, #a4472b 40%, var(--qmah-border)); }
+.qmah-social-page .social-event-phase[data-phase='ended'] { color: var(--qmah-muted); }
+.qmah-social-page .social-event-card[data-phase='ended'] { opacity: 0.78; }
+.qmah-social-page .social-event-fill { height: 6px; border-radius: 6px; background: color-mix(in srgb, var(--qmah-ink) 10%, transparent); overflow: hidden; }
+.qmah-social-page .social-event-fill span { display: block; height: 100%; border-radius: 6px; background: var(--qmah-terracotta); }
+.qmah-social-page .social-event-card__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--qmah-line); }
+.qmah-social-page .social-event-card__organizer { margin: 0; min-width: 0; }
+
+/* ===== 公告：官方動態卡 ===== */
+.qmah-social-page .social-announcement-list { max-width: 760px; margin-inline: auto; width: 100%; gap: 16px; }
+.qmah-social-page .social-announcement { display: grid; gap: 12px; }
+.qmah-social-page .social-announcement__head { display: flex; align-items: center; gap: 12px; }
+.qmah-social-page .social-announcement__avatar {
+  flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--qmah-ink); color: var(--qmah-surface-elevated); font-weight: 800; font-family: var(--qmah-font-serif);
+}
+.qmah-social-page .social-announcement__who { min-width: 0; flex: 1; display: grid; line-height: 1.3; }
+.qmah-social-page .social-announcement__who strong { font-size: 15px; }
+.qmah-social-page .social-announcement__who time { font-size: 13px; color: var(--qmah-muted); }
+.qmah-social-page .social-announcement__new { padding: 2px 8px; border-radius: 4px; background: var(--qmah-terracotta); color: #fff; font-size: 12px; font-weight: 700; }
+.qmah-social-page .social-announcement__title { margin: 0; font-family: var(--qmah-font-sans); font-size: 20px; font-weight: 800; line-height: 1.4; }
+.qmah-social-page .social-announcement__body { position: relative; font-size: 15px; line-height: 1.8; overflow-wrap: anywhere; }
+.qmah-social-page .social-announcement__body.is-clamped { max-height: 7.2em; overflow: hidden; }
+.qmah-social-page .social-announcement__body.is-clamped::after {
+  position: absolute; inset: auto 0 0 0; height: 3em; content: ''; pointer-events: none;
+  background: linear-gradient(transparent, var(--qmah-surface-elevated));
+}
+.qmah-social-page .social-announcement__more { justify-self: start; min-height: 36px; padding: 0 2px; border: 0; background: none; color: var(--qmah-terracotta); font-weight: 700; cursor: pointer; }
+.qmah-social-page .social-announcement__more:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ===== 貼文發布器：看板選擇列、頁首、寬版 ===== */
+.social-post-dialog__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.social-post-dialog__head .social-post-dialog__title { margin: 0; }
+.social-post-dialog__wide {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--qmah-border); border-radius: 8px;
+  background: var(--qmah-surface-elevated); color: var(--qmah-ink-soft, var(--qmah-muted)); font-size: 0.8125rem; font-weight: 700; cursor: pointer;
+}
+.social-post-dialog__wide svg { width: 15px; height: 15px; }
+.social-post-dialog__wide:hover, .social-post-dialog__wide[aria-pressed='true'] { color: var(--qmah-social-action); border-color: var(--qmah-social-action); }
+.social-board-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.social-board-chip {
+  padding: 7px 14px; border: 1px solid var(--qmah-border); border-radius: 999px; background: var(--qmah-surface-elevated);
+  color: var(--qmah-ink); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: border-color 140ms, background 140ms, color 140ms;
+}
+.social-board-chip:hover { border-color: var(--qmah-social-action); }
+.social-board-chip.is-active { border-color: var(--qmah-social-action); background: color-mix(in srgb, var(--qmah-social-action) 12%, var(--qmah-surface-elevated)); color: var(--qmah-social-action); font-weight: 800; }
+.social-board-chip:focus-visible, .social-post-dialog__wide:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+.social-post-form__preview { padding: 14px 16px; border: 1px dashed var(--qmah-border); border-radius: 12px; background: color-mix(in srgb, var(--qmah-ink) 3%, var(--qmah-surface-elevated)); }
+.social-post-form__empty { margin: 6px 0 0; color: var(--qmah-muted); font-size: 0.875rem; }
+.social-post-form__textarea { min-height: 220px; font-size: 1rem; line-height: 1.75; }
+.social-post-dialog { transition: max-width 200ms ease; }
+.social-post-dialog.is-wide { width: min(1200px, 96vw); max-width: min(1200px, 96vw); }
+@media (min-width: 900px) {
+  .social-post-dialog.is-wide .social-post-form {
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 24px; row-gap: 14px; align-items: start;
+  }
+  .social-post-dialog.is-wide .social-post-form > .social-post-form__field { grid-column: 1; }
+  .social-post-dialog.is-wide .social-post-form > .social-post-form__preview {
+    grid-column: 2; grid-row: 1 / span 4; position: sticky; top: 0; min-height: 50vh; max-height: 68vh; overflow: auto;
+  }
+  .social-post-dialog.is-wide .social-post-form__textarea { min-height: 42vh; }
+}
+
+/* ===== 留言區：頭貼＋氣泡，操作選單縮成小圖示 ===== */
+.qmah-social-page .social-comment { grid-template-columns: 36px minmax(0, 1fr); column-gap: 12px; padding: 14px 0; align-items: start; }
+.qmah-social-page .social-comment__avatar { --user-avatar-size: 36px; margin-top: 2px; }
+.qmah-social-page .social-comment__main { display: grid; gap: 6px; min-width: 0; }
+.qmah-social-page .social-comment__head { display: flex; align-items: center; gap: 8px; }
+.qmah-social-page .social-comment__author { font-size: 0.9375rem; font-weight: 700; color: var(--qmah-ink); }
+.qmah-social-page .social-comment__spacer { flex: 1; }
+.qmah-social-page .social-comment__menu {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--qmah-muted); cursor: pointer; transition: background 140ms, color 140ms;
+}
+.qmah-social-page .social-comment__menu svg { width: 16px; height: 16px; }
+.qmah-social-page .social-comment__menu:hover, .qmah-social-page .social-comment__menu:focus-visible { background: color-mix(in srgb, var(--qmah-ink) 8%, transparent); color: var(--qmah-ink); }
+.qmah-social-page .social-comment__bubble {
+  padding: 10px 14px; border-radius: 4px 14px 14px 14px; background: color-mix(in srgb, var(--qmah-ink) 4%, var(--qmah-surface-elevated, var(--qmah-surface)));
+  border: 1px solid color-mix(in srgb, var(--qmah-border) 70%, transparent);
+}
+.qmah-social-page .social-comment__bubble app-social-post-content { font-size: 0.9375rem; }
+.qmah-social-page .social-comment__edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.qmah-social-page .social-post-card__comments { color: inherit; text-decoration: none; border-radius: 6px; padding: 2px 6px; margin-left: -6px; }
+.qmah-social-page .social-post-card__comments:hover { background: color-mix(in srgb, var(--qmah-ink) 7%, transparent); color: var(--qmah-social-action); }
+.qmah-social-page .social-comments-section { scroll-margin-top: 80px; }
+
+/* ===== 文物討論串的文物卡 ===== */
+.qmah-social-page .social-artifact {
+  display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 20px; margin-top: 16px; padding: 16px;
+  border: 1px solid var(--qmah-border); border-radius: 12px; background: var(--qmah-surface-elevated, var(--qmah-surface)); box-shadow: var(--qmah-shadow-card);
+}
+.qmah-social-page .social-artifact__image {
+  display: grid; place-items: center; aspect-ratio: 1; overflow: hidden; border-radius: 10px;
+  background: color-mix(in srgb, var(--qmah-ink) 5%, var(--qmah-surface)); border: 1px solid var(--qmah-border);
+}
+.qmah-social-page .social-artifact__image img { width: 100%; height: 100%; object-fit: contain; }
+.qmah-social-page .social-artifact__mark { font-family: var(--qmah-font-serif, serif); font-size: 4.5rem; font-weight: 700; color: color-mix(in srgb, var(--qmah-ink) 38%, transparent); }
+.qmah-social-page .social-artifact__body { display: grid; align-content: start; gap: 10px; min-width: 0; }
+.qmah-social-page .social-artifact__eyebrow { margin: 0; color: var(--qmah-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; }
+.qmah-social-page .social-artifact__name { margin: 0; font-family: var(--qmah-font-display, serif); font-size: 1.375rem; color: var(--qmah-ink); }
+.qmah-social-page .social-artifact__facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 0; }
+.qmah-social-page .social-artifact__facts div { display: grid; gap: 1px; }
+.qmah-social-page .social-artifact__facts dt { color: var(--qmah-muted); font-size: 0.75rem; }
+.qmah-social-page .social-artifact__facts dd { margin: 0; color: var(--qmah-ink); font-size: 0.9375rem; font-weight: 600; overflow-wrap: anywhere; }
+.qmah-social-page .social-artifact__desc { margin: 0; color: var(--qmah-ink); font-size: 0.9375rem; line-height: 1.75; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.qmah-social-page .social-artifact__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 640px) { .qmah-social-page .social-artifact { grid-template-columns: 1fr; } .qmah-social-page .social-artifact__image { max-width: 260px; } }
+
+/* ===== 深色模式：留言與內文用高對比字色、氣泡比卡片亮一階，時間與次要文字不再灰到看不清 ===== */
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-comment__author { color: #f1eee7; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-comment .social-meta,
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-comment time { color: #b9b5ab; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-comment__bubble {
+  background: #2c2f31; border-color: #43474a; color: #ece9e2;
+}
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-comment__bubble app-social-post-content { color: #ece9e2; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-comment__menu { color: #b9b5ab; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-comment__menu:hover { background: #3a3e41; color: #f1eee7; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-artifact__image { background: #2a2d2f; border-color: #43474a; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-artifact__facts dt,
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-artifact__eyebrow { color: #b9b5ab; }
+
+/* 貼文右上角的更多選單（同留言）；返回鈕改成輕量文字鈕 */
+.qmah-social-page .social-post-head { display: flex; align-items: center; gap: 10px; }
+.qmah-social-page .social-post-head__menu { margin-left: auto; }
+.qmah-social-page .social-back { background: transparent; border-color: transparent; box-shadow: none; }
+.qmah-social-page .social-back:hover { background: color-mix(in srgb, var(--qmah-ink) 7%, transparent); }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-post-head time { color: #b9b5ab; }
+
+/* ===== 貼文牆：左側看板分類（桌面）／橫向標籤（手機） ===== */
+.qmah-social-page .social-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; align-items: start; }
+.qmah-social-page .social-layout__main { min-width: 0; }
+.qmah-social-page .social-boardnav { position: sticky; top: 88px; padding: 12px; border: 1px solid var(--qmah-border); border-radius: 12px; background: var(--qmah-surface-elevated, var(--qmah-surface)); box-shadow: var(--qmah-shadow-card); }
+.qmah-social-page .social-boardnav__title { margin: 2px 8px 8px; color: var(--qmah-muted); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; }
+.qmah-social-page .social-boardnav__list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.qmah-social-page .social-boardnav__item {
+  display: block; width: 100%; padding: 9px 12px; border: 0; border-left: 3px solid transparent; border-radius: 8px; background: transparent;
+  color: var(--qmah-ink); font-size: 0.9375rem; font-weight: 600; text-align: left; cursor: pointer; transition: background 140ms, color 140ms;
+}
+.qmah-social-page .social-boardnav__item:hover { background: color-mix(in srgb, var(--qmah-ink) 6%, transparent); }
+.qmah-social-page .social-boardnav__item.is-active { border-left-color: var(--qmah-social-action); background: color-mix(in srgb, var(--qmah-social-action) 10%, transparent); color: var(--qmah-social-action); font-weight: 800; }
+.qmah-social-page .social-boardnav__item:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 1px; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-boardnav { background: #25282a; border-color: #43474a; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-boardnav__item { color: #e6e2da; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-boardnav__item.is-active { color: #ff8a80; }
+@media (max-width: 900px) {
+  .qmah-social-page .social-layout { grid-template-columns: 1fr; gap: 14px; }
+  .qmah-social-page .social-boardnav { position: static; padding: 0; border: 0; background: transparent; box-shadow: none; }
+  .qmah-social-page .social-boardnav__title { display: none; }
+  .qmah-social-page .social-boardnav__list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .qmah-social-page .social-boardnav__item { width: auto; white-space: nowrap; border: 1px solid var(--qmah-border); border-radius: 999px; padding: 6px 14px; }
+  .qmah-social-page .social-boardnav__item.is-active { border-color: var(--qmah-social-action); }
+}

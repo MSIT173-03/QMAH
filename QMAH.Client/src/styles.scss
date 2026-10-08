@@ -6,12 +6,12 @@
   --qmah-font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --qmah-font-serif: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif;
   /* ui-integration: committed museum palette；Pantone 僅作色彩語彙參考，HEX／OKLCH 是瀏覽器工作值。 */
-  --qmah-paper: #f8f6ef;
+  --qmah-paper: #fbfaf7;
   --qmah-night: #18302f;
-  --qmah-page-surface: #e7efee;
+  --qmah-page-surface: #fbfaf7;
   --qmah-surface: var(--qmah-paper);
-  --qmah-surface-soft: #f0f4ef;
-  --qmah-surface-muted: #e2ece9;
+  --qmah-surface-soft: #f3f1ec;
+  --qmah-surface-muted: #e9e6e0;
   --qmah-ink: #1b3533;
   --qmah-muted: #556260;
   --qmah-jade: #26796e;
@@ -36,7 +36,7 @@
   --qmah-accent-content: var(--qmah-paper);
   --qmah-danger: var(--qmah-cinnabar);
   --qmah-danger-content: var(--qmah-paper);
-  --qmah-line: #c9dcd7;
+  --qmah-line: #ddd7cc;
   --qmah-on-dark: var(--qmah-paper);
 
   /* ui-integration: 五大 Area 只拿這組 mapping 做辨識；成功／警告／錯誤仍由全站 semantic token 負責。 */
@@ -75,7 +75,7 @@
   --qmah-radius-card: 12px;
   --qmah-radius-panel: 16px;
   --qmah-radius-pill: 999px;
-  --qmah-shadow-card: 0 8px 24px rgb(18 38 37 / 8%);
+  --qmah-shadow-card: 0 1px 2px rgb(60 48 30 / 5%), 0 4px 14px rgb(60 48 30 / 6%);
   --qmah-shadow-float: 0 16px 40px rgb(18 38 37 / 14%);
   --qmah-shadow-dialog: 0 24px 64px rgb(18 38 37 / 20%);
   --qmah-control-height: 44px;
@@ -207,7 +207,7 @@ body {
   --color-ink: var(--qmah-ink);
   --color-primary: var(--qmah-jade);
   --color-error: var(--qmah-danger);
-  --qmah-paper: #efeae0;
+  --qmah-paper: #f3f1ec;
   --qmah-night: #101214;
   --qmah-page-surface: #15181a;
   --qmah-surface: #1c2022;
@@ -376,9 +376,9 @@ textarea {
   prefersdark: false;
   color-scheme: light;
 
-  --color-base-100: oklch(98% 0.008 170);
-  --color-base-200: oklch(95% 0.012 170);
-  --color-base-300: oklch(90% 0.018 170);
+  --color-base-100: oklch(98.5% 0.006 85);
+  --color-base-200: oklch(95% 0.008 85);
+  --color-base-300: oklch(90% 0.01 85);
   --color-base-content: oklch(25% 0.03 180);
   --color-primary: oklch(52% 0.12 173);
   --color-primary-content: oklch(98% 0.01 170);

@@ -101,6 +101,18 @@
     </button>
   </header>
 
+  <!-- 看板分類：桌面在左側固定欄，手機變成橫向可捲動的標籤；與下方「看板」下拉同步，兩邊都能切換。 -->
+  <div class="social-layout">
+  <nav class="social-boardnav" aria-label="看板分類">
+    <p class="social-boardnav__title">看板</p>
+    <ul class="social-boardnav__list">
+      <li><button type="button" class="social-boardnav__item" [class.is-active]="filterBoardCode === ''" [attr.aria-current]="filterBoardCode === '' ? 'true' : null" (click)="selectBoard('')">全部貼文</button></li>
+      @for (board of boardCodes; track board) {
+        <li><button type="button" class="social-boardnav__item" [class.is-active]="filterBoardCode === board" [attr.aria-current]="filterBoardCode === board ? 'true' : null" (click)="selectBoard(board)">{{ boardLabel(board) }}</button></li>
+      }
+    </ul>
+  </nav>
+  <div class="social-layout__main">
   <!-- ui-integration: 篩選列改用 social-filters／social-field；daisyUI 5 已移除 .form-control，舊寫法的欄位間距是碰運氣。看板顯示中文名稱，不直接露出 GENERAL 這類代碼。 -->
   <div class="social-filters" role="search">
     <label class="social-field">
@@ -178,10 +190,10 @@
         }
         <div class="social-post-card__footer">
           <p class="social-post-card__stats">
-            <span class="social-icon-label">
+            <a class="social-icon-label social-post-card__comments" [routerLink]="['/social/posts', post.id]" fragment="comments" [attr.aria-label]="'查看 ' + post.title + ' 的留言'">
               <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
               {{ post.commentCount || 0 }} 則留言
-            </span>
+            </a>
             @if (post.mediaCount > 0) {
               <span class="social-icon-label">
                 <svg lucideImage aria-hidden="true" focusable="false"></svg>
@@ -197,7 +209,7 @@
               title="檢舉這篇貼文"
               (click)="reportModal.open('POST', post.id)"
             >
-              <svg lucideShieldAlert aria-hidden="true" focusable="false"></svg>
+              <svg lucideFlag aria-hidden="true" focusable="false"></svg>
             </button>
             <a class="social-post-card__open" [routerLink]="['/social/posts', post.id]" [attr.aria-label]="'開啟貼文：' + post.title" title="開啟貼文">
               <svg lucideExternalLink aria-hidden="true" focusable="false"></svg>
@@ -211,11 +223,19 @@
     }
     }
   </div>
+  </div>
+  </div>
 </div>
 
 <dialog #createPostDialog id="create_post_modal" class="modal social-modal" aria-labelledby="create-post-title">
-  <div class="modal-box social-post-dialog">
-    <h2 id="create-post-title" class="social-post-dialog__title">發布新貼文</h2>
+  <div class="modal-box social-post-dialog" [class.is-wide]="postWide">
+    <header class="social-post-dialog__head">
+      <h2 id="create-post-title" class="social-post-dialog__title">發布新貼文</h2>
+      <button type="button" class="social-post-dialog__wide" (click)="postWide = !postWide" [attr.aria-pressed]="postWide" [title]="postWide ? '切回一般版面' : '切換寬版：左邊寫、右邊即時預覽'">
+        @if (postWide) { <svg lucideMinimize2 aria-hidden="true" focusable="false"></svg> } @else { <svg lucideMaximize2 aria-hidden="true" focusable="false"></svg> }
+        {{ postWide ? '一般版面' : '寬版' }}
+      </button>
+    </header>
     @if (createError) {
       <div class="alert alert-warning social-post-dialog__alert" role="alert">{{ createError }}</div>
     }
@@ -227,11 +247,12 @@
         <input id="social-post-title" name="title" type="text" placeholder="貼文標題…" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
       </div>
       <div class="social-post-form__field">
-        <label class="social-post-form__label" for="social-post-board">看板</label>
-        <select id="social-post-board" name="boardCode" class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
-          <option value="GENERAL">{{ boardLabel('GENERAL') }}</option>
-          <option value="EVENT">{{ boardLabel('EVENT') }}</option>
-        </select>
+        <span class="social-post-form__label" id="social-post-board-label">看板</span>
+        <div class="social-board-picker" role="radiogroup" aria-labelledby="social-post-board-label">
+          @for (code of composerBoards; track code) {
+            <button type="button" role="radio" class="social-board-chip" [class.is-active]="newPost.boardCode === code" [attr.aria-checked]="newPost.boardCode === code" (click)="newPost.boardCode = code">{{ boardLabel(code) }}</button>
+          }
+        </div>
       </div>
       <div class="social-post-form__field">
         <label class="social-post-form__label" for="social-post-content">內容</label>
@@ -241,6 +262,12 @@
             <button type="button" class="social-fmt" (click)="wrapPostContent('[quote]', '[/quote]')" title="引用 [quote]">引用</button>
             <button type="button" class="social-fmt" (click)="insertPostList()" title="項目清單 [list]">清單</button>
             <button type="button" class="social-fmt" (click)="insertPostBreak()" title="插入空行">分段</button>
+            <button type="button" class="social-fmt" (click)="wrapPostContent('[center]', '[/center]')" title="置中 [center]">置中</button>
+            <button type="button" class="social-fmt" (click)="insertPostRule()" title="分隔線 [hr]">分隔線</button>
+          </div>
+          <div class="social-post-form__group" role="group" aria-label="插入">
+            <button type="button" class="social-fmt" (click)="insertPostLink()" title="連結 [url]">連結</button>
+            <button type="button" class="social-fmt" (click)="wrapPostContent('[spoiler]', '[/spoiler]')" title="劇透：點擊才顯示 [spoiler]">劇透</button>
           </div>
           <div class="social-post-form__group" role="group" aria-label="文字樣式">
             <button type="button" class="social-fmt social-fmt--b" (click)="wrapPostContent('[b]', '[/b]')" title="粗體 [b]" aria-label="粗體">B</button>
@@ -260,12 +287,16 @@
           </div>
         </div>
         <textarea id="social-post-content" name="content" class="textarea textarea-bordered w-full social-post-form__textarea" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
-        <span class="social-post-form__hint">先選取文字再按格式；沒選取時會插入成對標記，游標停在中間，在裡面輸入即可。再按一次可取消。</span>
+        <span class="social-post-form__hint">先選取文字再按格式；沒選取時會插入成對標記，游標停在中間，在裡面輸入即可。再按一次可取消。字數 {{ newPost.content.length }}。</span>
       </div>
-      @if (newPost.content.trim()) {
-        <div class="social-post-form__preview rounded-box border border-base-300 bg-base-200/40">
+      @if (newPost.content.trim() || postWide) {
+        <div class="social-post-form__preview">
           <span class="social-post-form__hint">預覽</span>
-          <app-social-post-content [content]="newPost.content" />
+          @if (newPost.content.trim()) {
+            <app-social-post-content [content]="newPost.content" />
+          } @else {
+            <p class="social-post-form__empty">在左邊輸入內容，這裡會即時顯示發布後的樣子。</p>
+          }
         </div>
       }
 

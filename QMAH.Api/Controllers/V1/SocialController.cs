@@ -76,7 +76,7 @@ public sealed class SocialController(
                 post.PostType,
                 post.PublisherType,
                 post.Title,
-                post.Content.Length > 180 ? post.Content.Substring(0, 180) + "…" : post.Content,
+                post.Content.Length > 600 ? post.Content.Substring(0, 600) : post.Content,
                 post.SocialComments.Count(comment => comment.Status == "PUBLISHED"),
                 post.MediaAssets.Count(media => media.Status == "ACTIVE"),
                 post.MediaAssets
@@ -90,7 +90,9 @@ public sealed class SocialController(
                 post.CreatedAt,
                 post.UpdatedAt));
 
-        return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
+        var postPage = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
+        // 摘要要去掉格式標記（資料庫只截取前段文字，標記在這裡解析成純文字再截成 180 字）。
+        return Ok(postPage with { Items = postPage.Items.Select(item => item with { ContentPreview = SocialMarkup.ToPlainText(item.ContentPreview, 180) }).ToList() });
     }
 
     // 批次取得多位會員的頭像網址（社群列表一次要顯示很多作者）；只回傳公開個人檔案且有頭像的會員。
@@ -174,6 +176,70 @@ public sealed class SocialController(
             .ToList();
 
         return Ok(boardCodes);
+    }
+
+    /// <summary>文物專屬討論串的文物卡：未登入或沒有該文物的玩家只拿到「未解鎖」，資訊一律不回傳。</summary>
+    [HttpGet("posts/{id:guid}/artifact")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SocialPostArtifactDto>> GetPostArtifact(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var artifactId = await db.SocialPosts
+            .AsNoTracking()
+            .Where(post => post.Id == id && post.Status == "PUBLISHED")
+            .Select(post => post.ArtifactId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (artifactId is null)
+            return NotFound();
+
+        var hasUser = TryGetCurrentUserId(out var userId);
+        var unlocked = hasUser
+            && await db.ArtifactUnlocks.AnyAsync(
+                unlock => unlock.UserId == userId && unlock.ArtifactId == artifactId.Value,
+                cancellationToken);
+        var hasUniversalKey = hasUser
+            && !unlocked
+            && await db.UserKeyBalances.AnyAsync(
+                balance => balance.UserId == userId
+                    && balance.Balance > 0
+                    && balance.KeyDefinition.ScopeType == "UNIVERSAL",
+                cancellationToken);
+
+        if (!unlocked)
+            return Ok(new SocialPostArtifactDto(artifactId.Value, false, hasUniversalKey, null, null, null, null, null, null, null, null));
+
+        var artifact = await db.Artifacts
+            .AsNoTracking()
+            .Where(item => item.Id == artifactId.Value && item.IsActive)
+            .Select(item => new
+            {
+                item.Name,
+                item.PrimaryImagePath,
+                item.ThumbnailPath,
+                item.Description,
+                CategoryName = item.Category.Name,
+                EraName = item.EraBucket.Name,
+                item.EraTextOriginal,
+                item.CreatorDisplay,
+                item.SizeText
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (artifact is null)
+            return NotFound();
+
+        return Ok(new SocialPostArtifactDto(
+            artifactId.Value,
+            true,
+            false,
+            artifact.Name,
+            mediaUrlResolver.Resolve(artifact.ThumbnailPath) ?? mediaUrlResolver.Resolve(artifact.PrimaryImagePath),
+            artifact.Description,
+            artifact.CategoryName,
+            artifact.EraName,
+            artifact.EraTextOriginal,
+            artifact.CreatorDisplay,
+            artifact.SizeText));
     }
 
     [HttpGet("posts/{id:guid}")]
@@ -620,7 +686,7 @@ public sealed class SocialController(
             .Select(item => new AnnouncementDto(
                 item.Id,
                 item.Title,
-                item.Content.Length > 180 ? item.Content.Substring(0, 180) : item.Content,
+                item.Content.Length > 600 ? item.Content.Substring(0, 600) : item.Content,
                 item.Content,
                 item.BoardCode,
                 item.CreatedAt,
@@ -635,7 +701,8 @@ public sealed class SocialController(
                 item.EventId,
                 item.CreatedAt));
 
-        return Ok(await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken));
+        var announcementPage = await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken);
+        return Ok(announcementPage with { Items = announcementPage.Items.Select(item => item with { Summary = SocialMarkup.ToPlainText(item.Summary, 180) }).ToList() });
     }
 
     [Authorize]
@@ -810,7 +877,8 @@ public sealed class SocialController(
             post.Latitude,
             post.Longitude,
             post.CreatedAt,
-            post.UpdatedAt));
+            post.UpdatedAt,
+            SocialMarkup.ToHtml(post.Content)));
     }
 
     // 只有作者本人能改自己的貼文；活動的社群入口貼文改由活動編輯／審核流程管理，這裡不開放直接改。
@@ -954,7 +1022,7 @@ public sealed class SocialController(
             notificationService.QueueNotification(
                 post.UserId,
                 "貼文有新留言",
-                $"你的貼文「{post.Title}」有新的留言：{Truncate(comment.Content, 60)}",
+                $"你的貼文「{post.Title}」有新的留言：{Truncate(SocialMarkup.ToPlainText(comment.Content), 60)}",
                 $"/social/posts/{postId}");
         }
 

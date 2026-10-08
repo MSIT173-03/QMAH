@@ -24,7 +24,7 @@
 
 /* 折抵幅度：固定寬度讓各列的名稱對齊 */
 .coupon-row-off {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: 18px;
   min-width: 76px;
   color: var(--color-ink);
@@ -47,7 +47,7 @@
 }
 
 .coupon-row-state {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-meta-size);
   letter-spacing: 0.16em;
   color: var(--color-muted);

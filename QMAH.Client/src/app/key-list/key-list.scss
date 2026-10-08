@@ -1508,3 +1508,57 @@
     outline-offset: 2px;
   }
 }
+
+/* ================= 簡潔版：與會員中心其他頁相同的扁平卡片，顏色只當點綴 ================= */
+.key-page {
+  --line: var(--qmah-border);
+  --card: var(--qmah-surface-elevated, var(--qmah-surface));
+  --blue: var(--qmah-ink);
+  --blue-deep: var(--qmah-ink);
+  --yellow: #b8862a;        // 年代／提示＝金
+  --sapphire: #6c7a8a;      // 分類鑰匙＝鋼灰
+  --ruby: #b9553a;          // 萬能鑰匙＝陶土紅
+  --panel-dark: #2f343a;
+}
+:host-context([data-theme='qmahdark']) .key-page {
+  --yellow: #e6b94d;
+  --sapphire: #9aa8b8;
+  --ruby: #ee8a68;
+  --panel-dark: #e7e4dd;
+}
+
+.page-header__bar { background: var(--card); border-bottom: 1px solid var(--line); }
+.page-header__bar::after { display: none; }
+.page-header__title { letter-spacing: 0.02em; text-transform: none; }
+.page-header__icon { color: var(--yellow); }
+
+.key-bag, .craft-panel { border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: var(--qmah-shadow-card); }
+.key-bag::before, .craft-panel::before { display: none; }
+.section-title, .craft-panel__header { border-bottom: 1px solid var(--line); }
+.craft-panel__title, .section-title h2, .craft-subtitle { letter-spacing: 0.02em; }
+.key-count { border-radius: 8px; background: var(--qmah-surface-soft, var(--card)); color: var(--qmah-ink); border: 1px solid var(--line); }
+
+.filter-bar { border-radius: 8px; background: var(--qmah-surface-soft, var(--card)); border: 1px solid var(--line); box-shadow: none; }
+.filter-button { border-radius: 8px; border: 1px solid transparent; background: transparent; box-shadow: none; }
+.filter-button.is-active, .filter-button[aria-pressed='true'], .filter-button--active {
+  background: var(--card); color: var(--qmah-ink); border-color: var(--line); border-bottom: 2px solid var(--yellow); box-shadow: var(--qmah-shadow-card);
+}
+
+.key-slot-grid { border-radius: 8px; background: var(--qmah-surface-soft, var(--card)); box-shadow: none; }
+.key-slot { border-radius: 8px; border: 1px solid var(--line); background: var(--card); box-shadow: none; }
+.key-slot:hover:not(:disabled) { border-color: var(--qmah-ink-faint, var(--yellow)); transform: none; }
+.key-slot[data-scope='CATEGORY'] { border-color: var(--sapphire); }
+.key-slot[data-scope='ERA'] { border-color: var(--yellow); }
+.key-slot[data-scope='UNIVERSAL'] { border-color: var(--ruby); }
+.key-slot__count { border-radius: 6px; background: var(--panel-dark); color: var(--card); font-variant-numeric: tabular-nums; }
+.key-era-mark { color: var(--yellow); text-shadow: none; }
+
+.craft-magic, .craft-magic__glow, .craft-ring__outline { display: none !important; }
+.craft-bench, .craft-tray { border-radius: 8px; border: 1px solid var(--line); background: var(--qmah-surface-soft, var(--card)); box-shadow: none; }
+.craft-tray__slot, .craft-slot { border-radius: 8px; }
+.craft-ring { border-radius: 8px; border: 1px dashed var(--line); background: transparent; box-shadow: none; }
+.craft-center, .craft-output { border-radius: 8px; border: 1px solid var(--line); background: var(--card); box-shadow: none; }
+.craft-output-stage--ready .craft-output { border-color: var(--yellow); box-shadow: none; }
+.craft-arrow { color: var(--qmah-ink-faint, var(--yellow)); }
+.craft-forge__progress { background: var(--yellow); }
+.craft-clear { border-radius: 8px; border: 1px solid var(--line); background: var(--card); letter-spacing: 0; }

@@ -6,7 +6,7 @@
         <div class="cat-icon">
           <span class="cat-name">{{ item.name }}</span>
           <span class="cat-count">{{ item.count }} 件</span>
-          <app-qmah-icon class="cat-glyph" [name]="item.icon" [size]="84" [strokeWidth]="1.4" aria-hidden="true" />
+          <span class="cat-glyph" [attr.data-glyph]="item.glyph" aria-hidden="true"></span>
         </div>
       </a>
     }

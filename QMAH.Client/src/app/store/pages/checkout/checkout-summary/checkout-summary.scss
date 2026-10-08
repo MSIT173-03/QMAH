@@ -21,13 +21,13 @@
 }
 
 .summary-line-qty {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-meta-size);
   color: var(--color-muted);
 }
 
 .summary-line-total {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--qmah-font-sans);
   font-size: var(--qmah-type-label-size);
 }
 

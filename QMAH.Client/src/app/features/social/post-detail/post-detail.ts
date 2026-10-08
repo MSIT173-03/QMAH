@@ -5,18 +5,19 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialPostDetails } from '../../../core/services/social-api';
+import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialPostArtifact, SocialPostDetails } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
+import { SocialEditorComponent } from '../../../shared/components/social-editor/social-editor';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { demoComment, isDemoAdmin } from '../social-demo';
 import { boardLabel } from '../social-labels';
-import { LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideSendHorizontal, LucideTrash2 } from '@lucide/angular';
+import { LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideSendHorizontal, LucideTrash2, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEditorComponent, LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent],
   templateUrl: './post-detail.html',
   styleUrls: ['../social-common.scss', './post-detail.scss']
 })
@@ -38,6 +39,8 @@ export class PostDetailComponent implements OnChanges {
   actionError: string | null = null;
   reportSuccessMessage: string | null = null;
   newComment: CreateSocialCommentRequest = { content: '' };
+  /** 文物專屬討論串的文物卡（沒有文物的貼文維持 null） */
+  artifact: SocialPostArtifact | null = null;
 
   editingPost = false;
   editPostTitle = '';
@@ -70,9 +73,11 @@ export class PostDetailComponent implements OnChanges {
     this.socialApi.getPost(this.id).subscribe({
       next: (post) => {
         this.post = post;
+        this.loadArtifact(post);
         this.prefillDemoComment();
         this.loading = false;
         this.cdr.detectChanges();
+        this.scrollToCommentsIfRequested();
       },
       error: (err: HttpErrorResponse) => {
         console.error('取得貼文失敗:', err);
@@ -81,6 +86,26 @@ export class PostDetailComponent implements OnChanges {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private loadArtifact(post: SocialPostDetails): void {
+    this.artifact = null;
+    if (!post.artifactId) return;
+    this.socialApi.getPostArtifact(post.id).subscribe({
+      next: (artifact) => { this.artifact = artifact; this.cdr.detectChanges(); },
+      error: () => { this.artifact = null; },
+    });
+  }
+
+  /** 從貼文牆點「N 則留言」進來（網址帶 #comments）時，直接捲到留言區。 */
+  private scrollToCommentsIfRequested(): void {
+    if (this.embedded || !this.router.url.includes('#comments')) return;
+    setTimeout(() => document.getElementById('post-comments')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  }
+
+  /** 已經含有格式標記的留言編輯時直接開啟進階模式，否則維持純文字。 */
+  hasMarkup(text: string): boolean {
+    return /\[\/?[a-z*]+(=[^\]\s]+)?\]/i.test(text);
   }
 
   // ---- 編輯／刪除自己的貼文 ----

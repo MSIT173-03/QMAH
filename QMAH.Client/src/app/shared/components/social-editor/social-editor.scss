@@ -1,0 +1,100 @@
+:host { display: block; }
+
+.sme {
+  border: 1px solid var(--qmah-border);
+  border-radius: 12px;
+  background: var(--qmah-surface-elevated, var(--qmah-surface));
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.sme:focus-within {
+  border-color: var(--qmah-social-action, var(--qmah-primary));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 18%, transparent);
+}
+
+.sme__row { display: flex; align-items: flex-end; gap: 6px; padding: 6px; }
+
+.sme__field {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 6px;
+  border: 0;
+  outline: none;
+  resize: vertical;
+  background: transparent;
+  color: var(--qmah-ink);
+  font: inherit;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+.sme__field::placeholder { color: var(--qmah-muted); }
+
+.sme__toggle, .sme__send {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--qmah-muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.sme__toggle svg, .sme__send svg { width: 18px; height: 18px; }
+.sme__toggle:hover { background: color-mix(in srgb, var(--qmah-ink) 7%, transparent); color: var(--qmah-ink); }
+.sme__toggle[aria-pressed='true'] { background: color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 14%, transparent); color: var(--qmah-social-action, var(--qmah-primary)); }
+.sme__send { color: var(--qmah-social-action, var(--qmah-primary)); }
+.sme__send:hover:not(:disabled) { background: color-mix(in srgb, var(--qmah-social-action, var(--qmah-primary)) 14%, transparent); }
+.sme__send:disabled { opacity: 0.35; cursor: not-allowed; }
+.sme__toggle:focus-visible, .sme__send:focus-visible, .sme__fmt:focus-visible, .sme__swatch:focus-visible {
+  outline: 2px solid var(--qmah-social-action, var(--qmah-primary)); outline-offset: 1px;
+}
+
+.sme__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--qmah-border);
+}
+.sme__group { display: inline-flex; align-items: center; gap: 2px; padding-right: 6px; margin-right: 4px; border-right: 1px solid var(--qmah-border); }
+.sme__group:last-child { padding-right: 0; margin-right: 0; border-right: 0; }
+.sme__fmt {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--qmah-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sme__fmt:hover { background: color-mix(in srgb, var(--qmah-ink) 8%, transparent); }
+.sme__fmt--b { font-weight: 900; }
+.sme__fmt--i { font-style: italic; font-family: var(--qmah-font-serif, serif); }
+.sme__fmt--u { text-decoration: underline; }
+.sme__fmt--s { text-decoration: line-through; }
+.sme__swatch {
+  width: 18px; height: 18px; margin: 0 3px; padding: 0; border: 2px solid var(--qmah-surface-elevated, #fff);
+  border-radius: 50%; box-shadow: 0 0 0 1px var(--qmah-border); cursor: pointer;
+}
+.sme__swatch:hover { transform: scale(1.12); }
+
+.sme__fmt--icon { display: inline-flex; align-items: center; gap: 4px; }
+.sme__fmt--icon svg { width: 15px; height: 15px; }
+.sme__fmt:disabled { opacity: 0.5; cursor: wait; }
+.sme__error { margin: 0; padding: 6px 12px 8px; color: var(--qmah-danger); font-size: 0.8125rem; }
+.sme__preview { padding: 10px 14px 12px; border-top: 1px dashed var(--qmah-border); }
+.sme__preview-label { display: block; margin-bottom: 4px; color: var(--qmah-muted); font-size: 0.75rem; }
+
+:host-context([data-theme='qmahdark']) .sme { background: #25282a; border-color: #43474a; }
+:host-context([data-theme='qmahdark']) .sme__field { color: #f1eee7; }
+:host-context([data-theme='qmahdark']) .sme__field::placeholder, :host-context([data-theme='qmahdark']) .sme__toggle { color: #b9b5ab; }
+:host-context([data-theme='qmahdark']) .sme__fmt { color: #e6e2da; }
+:host-context([data-theme='qmahdark']) .sme__fmt:hover, :host-context([data-theme='qmahdark']) .sme__toggle:hover { background: #3a3e41; color: #fff; }
+:host-context([data-theme='qmahdark']) .sme__toolbar, :host-context([data-theme='qmahdark']) .sme__group { border-color: #43474a; }

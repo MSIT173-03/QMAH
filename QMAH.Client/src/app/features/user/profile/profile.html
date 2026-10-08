@@ -52,7 +52,7 @@
 
       <img
         [src]="profile.avatarPath"
-        alt="會員頭像"
+        alt="會員頭貼"
         (error)="avatarUnavailable = true"
       />
 
@@ -72,7 +72,7 @@
   </div>
 
   <span class="avatar-hint">
-  點擊頭像更換
+  點擊頭貼更換
 </span>
 
   <input
@@ -149,7 +149,7 @@
                 ) {
 
                   <span class="role-badge">
-                    {{ role }}
+                    {{ roleLabel(role) }}
                   </span>
 
                 }
@@ -369,7 +369,7 @@
                     ) {
 
                       <span class="large-role-badge">
-                        {{ role }}
+                        {{ roleLabel(role) }}
                       </span>
 
                     }

@@ -7,17 +7,28 @@
   <div class="alert alert-error mb-4" role="alert">{{ loadError }}</div>
 }
 
-<!-- ui-integration: 公告列表改用 social-panel／social-tag／social-meta，並把 createdAt 以 date pipe 格式化（原本直接輸出 ISO 字串）。 -->
+<!-- 公告動態：官方帳號卡頭（頭像、名稱、時間）＋分類標籤＋標題＋內文（支援格式標記，過長可展開）。 -->
 <div class="social-announcement-list">
-  @for (announcement of announcements; track announcement.id) {
-    <article class="social-panel">
-      <div class="social-meta">
+  @for (announcement of announcements; track announcement.id; let first = $first) {
+    <article class="social-panel social-announcement">
+      <header class="social-announcement__head">
+        <span class="social-announcement__avatar" aria-hidden="true">清</span>
+        <div class="social-announcement__who">
+          <strong>{{ announcement.displayName || '清明鑑定屋官方' }}</strong>
+          <time [attr.datetime]="announcement.createdAt">{{ announcement.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+        </div>
         <span class="social-tag social-tag--notice">{{ announcement.category }}</span>
-        <time [attr.datetime]="announcement.createdAt">{{ announcement.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+        @if (first) { <span class="social-announcement__new">最新</span> }
+      </header>
+      <h2 class="social-announcement__title">{{ announcement.title }}</h2>
+      <div class="social-announcement__body" [class.is-clamped]="isLong(announcement.content || announcement.summary || '') && !expanded.has(announcement.id)">
+        <app-social-post-content [content]="announcement.content || announcement.summary || ''" />
       </div>
-      <h2 class="social-event-card__title">{{ announcement.title }}</h2>
-      <p class="social-event-detail__content">{{ announcement.summary || announcement.content }}</p>
-      <p class="social-meta">發布者：{{ announcement.displayName || '官方' }}</p>
+      @if (isLong(announcement.content || announcement.summary || '')) {
+        <button type="button" class="social-announcement__more" (click)="toggle(announcement.id)" [attr.aria-expanded]="expanded.has(announcement.id)">
+          {{ expanded.has(announcement.id) ? '收合' : '展開全文' }}
+        </button>
+      }
     </article>
   } @empty {
     <div class="social-state">目前還沒有公告</div>

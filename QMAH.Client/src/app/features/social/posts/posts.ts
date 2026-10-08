@@ -16,7 +16,9 @@ import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup'
 import { boardLabel } from '../social-labels';
 import {
   LucideExternalLink,
-  LucideShieldAlert,
+  LucideFlag,
+  LucideMaximize2,
+  LucideMinimize2,
   LucideImage,
   LucideMessageCircle,
   LucideMegaphone,
@@ -46,7 +48,9 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
     SocialPostContentComponent,
     QmahIconComponent,
     LucideExternalLink,
-    LucideShieldAlert,
+    LucideFlag,
+    LucideMaximize2,
+    LucideMinimize2,
     LucideImage,
     LucideMessageCircle,
     LucideMegaphone,
@@ -79,6 +83,13 @@ export class PostsComponent implements OnInit, OnDestroy {
 
   readonly boardLabel = boardLabel;
   boardCodes: string[] = [];
+  /** 發布器是否切成寬版（左寫右預覽），寫長文時使用 */
+  postWide = false;
+
+  /** 發布器可選的看板：與篩選選單同一份清單，不再只寫死兩個 */
+  get composerBoards(): string[] {
+    return this.boardCodes.length > 0 ? this.boardCodes : ['GENERAL'];
+  }
   filterBoardCode = '';
   filterKeyword = '';
 
@@ -227,6 +238,12 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.createPostDialog?.nativeElement.showModal();
   }
 
+  /** 左側看板分類／手機標籤：切換看板並重新載入（與篩選列的下拉同一個狀態）。 */
+  selectBoard(code: string): void {
+    this.filterBoardCode = code;
+    this.loadPosts();
+  }
+
   resetFilters(): void {
     this.filterBoardCode = '';
     this.filterKeyword = '';
@@ -273,6 +290,31 @@ export class PostsComponent implements OnInit, OnDestroy {
     const next = value.slice(0, start) + open + selected + close + value.slice(end);
     const caretStart = start + open.length;
     this.applyContent(textarea, next, caretStart, caretStart + selected.length);
+  }
+
+  /** 插入連結：有選取文字就包起來，網址欄位預先選取好；沒選取就插入範例文字。 */
+  insertPostLink(): void {
+    const textarea = this.contentTextarea;
+    if (!textarea) return;
+    const value = textarea.value;
+    const { selectionStart: start, selectionEnd: end } = textarea;
+    const label = value.slice(start, end) || '連結文字';
+    const open = '[url=https://';
+    const insert = open + ']' + label + '[/url]';
+    const urlStart = start + open.length - 'https://'.length;
+    this.applyContent(textarea, value.slice(0, start) + insert + value.slice(end), urlStart, urlStart + 'https://'.length);
+  }
+
+  /** 在游標處插入分隔線（獨立一行）。 */
+  insertPostRule(): void {
+    const textarea = this.contentTextarea;
+    if (!textarea) return;
+    const value = textarea.value;
+    const at = textarea.selectionEnd;
+    const head = value.slice(0, at);
+    const lead = head.length === 0 || head.endsWith('\n') ? '' : '\n';
+    const insert = lead + '[hr]\n';
+    this.applyContent(textarea, head + insert + value.slice(at), at + insert.length, at + insert.length);
   }
 
   /** 把選取的每一行變成清單項目；沒有選取時插入一個空清單並把游標放在第一項。 */

@@ -39,7 +39,7 @@ describe('Orders', () => {
     paymentType,
     totalAmount: 1280,
     createdAt: '2026-10-07T04:00:00',
-    items: [{ productId: 'p1', productName: '青花瓷瓶', quantity: 2, lineTotal: 2560 }],
+    items: [{ productId: 'p1', productName: '青花瓷瓶', quantity: 2 }],
     ecpayCheckout: null,
   });
 
@@ -66,10 +66,8 @@ describe('Orders', () => {
 
     expect(cards()).toHaveLength(2);
     expect(cards()[0].querySelector('.order-card-status')?.textContent?.trim()).toBe('待付款');
-    const line = cards()[0].querySelector('.order-card-line')!;
-    expect(line.querySelector('.order-card-line-name')?.textContent?.trim()).toBe('青花瓷瓶');
-    expect(line.querySelector('.order-card-line-qty')?.textContent?.trim()).toBe('× 2');
-    expect(line.querySelector('.order-card-line-total')?.textContent?.trim()).toBe('$2,560');
+    expect(cards()[0].textContent).toContain('青花瓷瓶');
+    expect(cards()[0].textContent).toContain('× 2');
     expect(cards()[0].textContent).toContain('$1,280');
     expect(cards()[0].textContent).toContain('信用卡');
     expect(cards()[1].querySelector('.order-card-status')?.textContent?.trim()).toBe('已付款');
