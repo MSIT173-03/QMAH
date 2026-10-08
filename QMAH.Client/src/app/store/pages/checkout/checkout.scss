@@ -35,3 +35,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 左右留白與置中（與購物車、訂單一致） */
+.checkout-main { max-width: 1120px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
