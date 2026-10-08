@@ -66,6 +66,11 @@ builder.Services
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<EcpayOptions>, EcpayOptionsValidator>();
+builder.Services
+    .AddOptions<StoreOrderOptions>()
+    .Bind(builder.Configuration.GetSection(StoreOrderOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 // 先嘗試設定檔指定的連線；失敗時才依 resolver 的候選順序尋找本機名稱為 QMAH 的 SQL Server／LocalDB。
 // 其他需要直接存取資料庫的 host 應重用 resolver，避免 Web、API 與工具程式各自猜測不同 instance。
@@ -307,8 +312,14 @@ builder.Services.AddHttpClient<IAiContentReviewService, OpenAiContentReviewServi
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 builder.Services.AddHostedService<AiContentReviewWorker>();
-// 綠界付款：表單與 callback 共用付款服務。
+// 綠界付款：表單與 callback 共用付款服務；取消（手動與逾時）共用同一套查詢＋還原流程。
 builder.Services.AddScoped<EcpayPaymentService>();
+builder.Services.AddHttpClient<EcpayQueryClient>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+builder.Services.AddScoped<IStoreOrderCancellationService, StoreOrderCancellationService>();
+builder.Services.AddHostedService<PendingOrderExpiryWorker>();
 
 // 只有登入端點跟發文/留言端點套用固定視窗限流：
 // 登入端點防止密碼嘗試拖慢其他 API 功能；發文/留言端點是緊急的洗版防護——
