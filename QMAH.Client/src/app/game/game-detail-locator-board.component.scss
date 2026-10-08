@@ -151,7 +151,8 @@ button:focus-visible { outline:3px solid var(--qmah-focus); outline-offset:4px; 
 @container locround (max-height: 700px) {
   .locator-tools { gap: 8px; padding: 10px; }
   .tool-title { font-size: 16px; }
-  .tool-hint, .tool-review, .tool-last .tool-label { display: none; }
+  .tool-hint, .tool-review { display: none; }
+  .tool-last { gap: 3px; }
   .tool-last__text { padding: 5px 10px; font-size: 14px; }
   .tool-confirm-group .locator-pending-status { display: none; }
   .locator-confirm { min-height: 40px; font-size: 16px; }

@@ -249,7 +249,7 @@
 }
 
 .theme-icon {
-  font-size: 18px;
+  font-size: 22px;
 }
 
 .theme-icon--dark {
@@ -289,7 +289,7 @@
 
 .app-menu-toggle app-qmah-icon,
 .app-icon-button app-qmah-icon {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .app-skip-link {
@@ -518,3 +518,12 @@ textarea:focus-visible {
 .app-account-panel .app-logout { color: var(--qmah-danger); }
 .app-account-panel button:disabled { cursor: not-allowed; opacity: .55; }
 .app-account-panel app-qmah-icon { width: 16px; height: 16px; }
+
+/* 會員中心與社群沿用遊戲系統的 Temple 紋樣（hero-temple.svg），深色模式自動換成淡色版。 */
+.app-shell:is([data-area='user'], [data-area='social']) .app-main {
+  background-color: var(--qmah-page-surface);
+  background-image: var(--qmah-game-pattern, url('/assets/game/hero-temple.svg'));
+  background-size: 256px 256px;
+  background-position: center top;
+  background-repeat: repeat;
+}
