@@ -6,10 +6,9 @@
     <header class="social-announcements__head">
       <h2 id="social-announcements-title" class="social-announcements__title m-0">
         <svg lucideMegaphone aria-hidden="true" focusable="false"></svg>
-        <span>站方公告</span>
-        <span class="social-announcements__count">{{ announcements.length }} 則</span>
+        <span>最新公告</span>
       </h2>
-            <button
+      <button
         type="button"
         class="social-announcements__toggle"
         [attr.aria-expanded]="!announcementCollapsed()"
@@ -31,7 +30,7 @@
         class="social-hero"
         role="group"
         aria-roledescription="carousel"
-        aria-label="站方公告輪播"
+        aria-label="最新公告輪播"
         (mouseenter)="pauseAnnouncementsForPointer()"
         (mouseleave)="resumeAnnouncementsForPointer()"
         (focusin)="pauseAnnouncementsForFocus()"
