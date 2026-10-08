@@ -142,6 +142,10 @@
   </main>
 
   <!-- ui-integration: 所有 App Shell route 共用同一個 footer，首頁與深層頁都保留合理的回站入口。 -->
+  @if (activeArea() === 'social') {
+    <app-scroll-top [fixed]="true" />
+  }
+
   <app-site-footer />
 </div>
 

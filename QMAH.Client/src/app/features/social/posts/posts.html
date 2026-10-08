@@ -113,32 +113,36 @@
     </ul>
   </nav>
   <div class="social-layout__main">
-  <!-- ui-integration: 篩選列改用 social-filters／social-field；daisyUI 5 已移除 .form-control，舊寫法的欄位間距是碰運氣。看板顯示中文名稱，不直接露出 GENERAL 這類代碼。 -->
-  <div class="social-filters" role="search">
-    <label class="social-field">
-      <span class="social-field__label">看板</span>
-      <select class="select select-bordered" [(ngModel)]="filterBoardCode" (change)="loadPosts()">
-        <option value="">全部看板</option>
-        @for (board of boardCodes; track board) {
-          <option [value]="board">{{ boardLabel(board) }}</option>
-        }
-      </select>
-    </label>
-    <label class="social-field social-field--grow">
-      <span class="social-field__label">關鍵字（標題／內容）</span>
-      <input
-        type="text"
-        class="input input-bordered w-full"
-        [(ngModel)]="filterKeyword"
-        (keyup.enter)="loadPosts()"
-        name="social-post-search"
-        autocomplete="off"
-        placeholder="輸入關鍵字"
-      />
+  <!-- 篩選：看板由左側分類（手機為上方標籤）負責，這裡只做關鍵字搜尋；目前的條件以標籤顯示，可單獨移除。 -->
+  <div class="social-search" role="search">
+    <label class="social-search__box">
+      <svg lucideSearch aria-hidden="true" focusable="false"></svg>
+      <span class="sr-only">搜尋貼文標題或內容</span>
+      <input type="search" [(ngModel)]="filterKeyword" (keyup.enter)="loadPosts()" name="social-post-search" autocomplete="off" placeholder="搜尋貼文標題或內容" />
+      @if (filterKeyword) {
+        <button type="button" class="social-search__clear" aria-label="清除關鍵字" (click)="filterKeyword = ''; loadPosts()"><svg lucideX aria-hidden="true" focusable="false"></svg></button>
+      }
     </label>
     <button type="button" class="btn btn-primary" (click)="loadPosts()">搜尋</button>
-    <button type="button" class="btn btn-ghost" (click)="resetFilters()">清除篩選</button>
-    <span class="social-filters__count" aria-live="polite">共 {{ totalCount }} 篇</span>
+  </div>
+  <div class="social-search__meta" aria-live="polite">
+    <span>共 {{ totalCount }} 篇</span>
+    @if (filterBoardCode) {
+      <button type="button" class="social-chip" (click)="selectBoard('')">{{ boardLabel(filterBoardCode) }}<svg lucideX aria-hidden="true" focusable="false"></svg></button>
+    }
+    @if (filterKeyword.trim()) {
+      <button type="button" class="social-chip" (click)="filterKeyword = ''; loadPosts()">「{{ filterKeyword.trim() }}」<svg lucideX aria-hidden="true" focusable="false"></svg></button>
+    }
+    @if (filterBoardCode || filterKeyword.trim()) {
+      <button type="button" class="social-reset" title="清除所有篩選條件" aria-label="清除所有篩選條件" (click)="resetFilters()">
+        <svg lucideFilterX aria-hidden="true" focusable="false"></svg>
+      </button>
+    }
+    <div class="social-cols" role="group" aria-label="每列貼文數">
+      <button type="button" class="social-cols__btn" [class.is-active]="wallCols === 1" [attr.aria-pressed]="wallCols === 1" title="一欄" aria-label="每列一則貼文" (click)="setWallCols(1)"><svg lucideSquare aria-hidden="true" focusable="false"></svg></button>
+      <button type="button" class="social-cols__btn" [class.is-active]="wallCols === 2" [attr.aria-pressed]="wallCols === 2" title="兩欄" aria-label="每列兩則貼文" (click)="setWallCols(2)"><svg lucideColumns2 aria-hidden="true" focusable="false"></svg></button>
+      <button type="button" class="social-cols__btn social-cols__btn--wide" [class.is-active]="wallCols === 3" [attr.aria-pressed]="wallCols === 3" title="三欄" aria-label="每列三則貼文" (click)="setWallCols(3)"><svg lucideColumns3 aria-hidden="true" focusable="false"></svg></button>
+    </div>
   </div>
 
   @if (loadError) {
@@ -155,7 +159,7 @@
     </div>
   }
 
-  <div class="social-post-wall">
+  <div class="social-post-wall" [attr.data-cols]="wallCols">
     @if (!loading) {
     @for (post of posts; track post.id) {
     <article class="social-post-card" [class.social-post-card--text]="!post.coverImageUrl">

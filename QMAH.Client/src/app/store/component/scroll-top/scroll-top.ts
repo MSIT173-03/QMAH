@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { LucideArrowUp } from '@lucide/angular';
 
 /** 離場動畫的時間（毫秒），需與 scroll-top.scss 的 scroll-top-out 動畫時間一致 */
@@ -19,6 +19,8 @@ const LEAVE_MS = 200;
   styleUrl: './scroll-top.scss',
 })
 export class ScrollTop {
+  /** 固定在視窗右下角（沒有 sticky 容器的頁面，例如社群）；商城維持預設的 sticky 位置 */
+  readonly fixed = input(false);
   /** 按鈕是否在畫面上（淡出期間仍然在） */
   protected readonly shown = signal(false);
   /** 按鈕正在淡出：套用離場動畫，結束後才真正移除 */

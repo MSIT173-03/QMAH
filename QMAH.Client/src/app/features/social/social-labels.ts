@@ -5,7 +5,7 @@ const BOARD_LABELS: Record<string, string> = {
   CATALOG: '文物討論',
   GAME: '鑑定遊戲',
   EVENTS: '活動消息',
-  EVENT: '活動',
+  EVENT: '活動專區',
   DISCOVERY: '探索發現',
   REVIEW: '鑑賞心得',
   QUESTION: '問題求助',

@@ -19,6 +19,7 @@ import { DeliveryOptions } from './delivery-options/delivery-options';
 import { CouponPicker } from './coupon-picker/coupon-picker';
 import { PointPicker } from './point-picker/point-picker';
 import { CheckoutSummary } from './checkout-summary/checkout-summary';
+import { ScrollTop } from '../../component/scroll-top/scroll-top';
 import {
   CHECKOUT_STEPS,
   CHECKOUT_STEP_INDEX,
@@ -39,7 +40,7 @@ import {
 @Component({
   selector: 'app-checkout',
   host: { class: 'store-app' },
-  imports: [
+  imports: [ScrollTop, 
     SiteHeader,
     StepIndicator,
     Breadcrumb,

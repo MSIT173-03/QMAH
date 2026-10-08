@@ -51,7 +51,12 @@ public static class SocialMarkup
     {
         if (string.IsNullOrEmpty(content)) return "";
         var text = Regex.Replace(Plain(Parse(content)), @"\s*\n\s*", " ").Trim();
-        if (maxLength > 0 && text.Length > maxLength) text = text[..maxLength] + "…";
+        if (maxLength > 0 && text.Length > maxLength)
+        {
+            // 不要切在表情符號（代理對）中間
+            var cut = char.IsHighSurrogate(text[maxLength - 1]) ? maxLength - 1 : maxLength;
+            text = text[..cut] + "…";
+        }
         return text;
     }
 
