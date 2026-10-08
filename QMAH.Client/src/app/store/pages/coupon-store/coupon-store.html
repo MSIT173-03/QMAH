@@ -38,12 +38,14 @@
     } @else {
     <ul class="coupon-grid">
       @for (coupon of coupons(); track coupon.id) {
-      <li class="coupon-card">
+      @let actionLabel = coupon.unaffordable ? unaffordableLabel : costActionLabel;
+      <!-- 會員點數不夠兌換的券：整張變灰、沒有懸停效果，右側按鈕停用 -->
+      <li class="coupon-card" [class.coupon-card--unaffordable]="coupon.unaffordable">
         <ng-container *ngTemplateOutlet="couponFace; context: { $implicit: coupon }" />
         <!-- 兌換所需點數：左側以虛線與券面內容分隔，上方標示「兌換」；按下後登入提示或兌換確認 -->
-        <button type="button" class="coupon-card-cost"
-          [attr.aria-label]="costActionLabel + coupon.title + '，' + coupon.costLabel" (click)="onRedeemClick(coupon)">
-          <span class="coupon-card-cost-label">{{ costActionLabel }}</span>
+        <button type="button" class="coupon-card-cost" [disabled]="coupon.unaffordable"
+          [attr.aria-label]="actionLabel + coupon.title + '，' + coupon.costLabel" (click)="onRedeemClick(coupon)">
+          <span class="coupon-card-cost-label">{{ actionLabel }}</span>
           <span class="coupon-card-cost-value">{{ coupon.costLabel }}</span>
         </button>
       </li>

@@ -364,3 +364,27 @@ button.coupon-card-cost:hover .coupon-card-cost-label { background: #8f5f1c; }
 /* 底板改成高透明：只輕輕分出區塊，不蓋掉背景紋樣；寬度與內容欄一致 */
 .coupon-section { background: rgb(255 255 255 / 38%); border-color: rgb(40 36 30 / 8%); box-shadow: none; }
 :host-context([data-theme='qmahdark']) .coupon-section { background: rgb(255 255 255 / 4%); border-color: rgb(255 255 255 / 8%); }
+
+/* 會員點數不夠兌換的券：整張變灰淡化，外框、券面與右側按鈕都沒有懸停效果（寫在票券式券面之後，才不會被它的懸停樣式蓋過） */
+.coupon-card.coupon-card--unaffordable {
+  filter: grayscale(1);
+  opacity: 0.55;
+
+  &:hover {
+    transform: none;
+    box-shadow: var(--store-shadow-1);
+    border-color: color-mix(in srgb, #b8893a 28%, var(--color-line));
+  }
+
+  button.coupon-card-cost {
+    cursor: not-allowed;
+
+    &:hover {
+      background: color-mix(in srgb, #d9b25c 10%, var(--color-surface));
+    }
+
+    &:hover .coupon-card-cost-label {
+      background: #b07a2c;
+    }
+  }
+}

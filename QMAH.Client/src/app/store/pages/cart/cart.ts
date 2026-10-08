@@ -111,14 +111,17 @@ export class Cart {
     },
   });
 
+  /** 按下「換一批」的次數，變動時重新抽選 */
+  private readonly addonBatch = signal(0);
+
   /**
-   * 同器類的隨機商品（排序 6：隨機）。只在器類改變時重新抽選，
+   * 同器類的隨機商品（排序 6：隨機）。只在器類改變或按下「換一批」時重新抽選，
    * 調整數量或加入其中一件時清單不會整組換掉；查詢失敗時靜默隱藏此區塊。
    * 隨機結果可能包含購物車內同器類的品項，因此連同這些品項數與備用件數一起多取，排除後再截到 ADDON_COUNT。
    */
   private readonly addonCandidates = toSignal(
-    toObservable(this.topCategory).pipe(
-      switchMap((cat) => {
+    toObservable(computed(() => ({ cat: this.topCategory(), batch: this.addonBatch() }))).pipe(
+      switchMap(({ cat }) => {
         if (!cat) return of([]);
         const inCategory = this.cartItems().filter((item) => item.category === cat).length;
         return this.catalogApi.getProducts({ cat, order: 6, pageSize: ADDON_COUNT + ADDON_SPARE + inCategory }).pipe(
@@ -147,6 +150,12 @@ export class Cart {
       .slice(0, ADDON_COUNT)
       .map(toProductView);
   });
+
+  /** 「換一批」：重新隨機抽選；上一批已加入購物車的商品不再保留在清單中 */
+  protected onRefreshAddons(): void {
+    this.addedAddonIds.set(new Set());
+    this.addonBatch.update((count) => count + 1);
+  }
 
   /** 變更某商品的購物車數量；數量減至 0 視同移除 */
   protected onQtyChange(id: string, qty: number): void {

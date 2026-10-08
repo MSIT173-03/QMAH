@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { SearchBar, SessionBar, SiteHeader } from '../../component';
+import { ScrollTop, SearchBar, SessionBar, SiteHeader } from '../../component';
 import { HomeApi } from '../../api';
 import { searchPath } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
@@ -14,7 +14,6 @@ import { RankingSection } from './ranking-section/ranking-section';
 import { NewArrivals } from './new-arrivals/new-arrivals';
 import { EraGrid } from './era-grid/era-grid';
 import { Recommendations } from './recommendations/recommendations';
-import { ScrollTop } from '../../component/scroll-top/scroll-top';
 import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 
 /**
@@ -26,7 +25,7 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 @Component({
   selector: 'app-home',
   host: { class: 'store-app' },
-  imports: [ScrollTop, 
+  imports: [
     SessionBar,
     SearchBar,
     HeroCarousel,
@@ -36,6 +35,7 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
     EraGrid,
     Recommendations,
     SiteHeader,
+    ScrollTop,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
