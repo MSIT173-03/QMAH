@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, linkedSignal, signal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { catchError, of, switchMap, tap } from 'rxjs';
+import { catchError, debounceTime, filter, finalize, map, mergeMap, of, switchMap, tap } from 'rxjs';
 
 import {
   SessionBar,
@@ -16,12 +16,12 @@ import {
   FilterSidebar,
   CategoryListItem,
   ProductCard,
-  ProductRow,
+  ProductPreviewList,
   EmptyState,
   ScrollTop,
 } from '../../component';
 import { CatalogApi } from '../../api';
-import { ProductQuery } from '../../api/api.models';
+import { ProductDetail, ProductQuery } from '../../api/api.models';
 import { HOME_PATH } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
 import { PurchasedProducts } from '../../shared/purchased-products';
@@ -53,9 +53,12 @@ function toPage(value: string | undefined): number {
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
+/** 列表顯示切換選取商品後，等這段時間（毫秒）沒有再切換才查詢商品詳情，避免滑鼠掃過整排時逐件查詢 */
+const PREVIEW_DETAIL_DELAY = 150;
+
 /**
  * 商品列表頁面。
- * 統整頁首、麵包屑、標題列、篩選側欄與商品清單（卡片／橫列兩種顯示模式）；
+ * 統整頁首、麵包屑、標題列、篩選側欄與商品清單（卡片／列表兩種顯示模式，列表為精簡清單加預覽欄）；
  * 搜尋關鍵字、器類與主題入口由路由查詢字串帶入作為初始值，之後可由使用者
  * 操作覆寫，篩選與排序條件變動時重新向 API 取得符合條件的商品清單。
  */
@@ -72,7 +75,7 @@ function toPage(value: string | undefined): number {
     PillGroup,
     FilterSidebar,
     ProductCard,
-    ProductRow,
+    ProductPreviewList,
     EmptyState,
     ScrollTop,
   ],
@@ -102,6 +105,23 @@ export class ProductList {
 
   constructor() {
     this.purchased.ensureLoaded();
+    // 列表顯示：選取的商品停留一小段時間後查詢詳情並記下來。已查到或查詢中的不再查；
+    // 用 mergeMap 而不是 switchMap，切到別件商品時進行中的查詢仍會完成並留下結果。
+    toObservable(this.previewId)
+      .pipe(
+        debounceTime(PREVIEW_DETAIL_DELAY),
+        filter((id): id is string => !!id && !this.previewDetails()[id] && !this.previewPending.has(id)),
+        mergeMap((id) => {
+          this.previewPending.add(id);
+          return this.catalogApi.getProduct(id).pipe(
+            catchError(() => of(null)),
+            map((detail) => ({ id, detail })),
+            finalize(() => this.previewPending.delete(id)),
+          );
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe(({ id, detail }) => this.previewDetails.update((details) => ({ ...details, [id]: detail })));
     // 從首頁或商品頁進入列表時捲回頂端；元件在同一路由內重用（例如再次點進不同器類）時，
     // 也以網址篩選參數變動觸發，而不是只在建立時執行。
     effect(() => {
@@ -147,7 +167,7 @@ export class ProductList {
 
   /** 目前選取的價格區間索引，0 為不篩選 */
   protected bandIndex = signal(0);
-  /** 目前的顯示模式（卡片格狀／橫列清單） */
+  /** 目前的顯示模式（卡片格狀／清單加預覽欄） */
   protected mode = signal<DisplayModeKey>('grid');
   /** 購物車狀態（件數顯示於頁首） */
   protected readonly cart = injectCartState();
@@ -213,7 +233,7 @@ export class ProductList {
   /** 是否尚在載入；載入中顯示載入狀態，不把「0 件商品」誤讀成真的沒有結果 */
   protected loading = computed(() => this.result() === undefined);
 
-  /** 供卡片與橫列共用的商品顯示資料 */
+  /** 供卡片與列表共用的商品顯示資料 */
   protected items = computed<ProductViewData[]>(() => (this.result()?.items ?? []).map(toProductView));
   /** 是否已載入且沒有任何符合條件的商品（查詢失敗不算） */
   protected isEmpty = computed(() => !!this.result() && this.items().length === 0);
@@ -223,6 +243,16 @@ export class ProductList {
   protected readonly errorCtaLabel = '重新載入';
   /** 是否使用卡片格狀顯示（有商品時才需判斷） */
   protected isGridMode = computed(() => this.mode() === 'grid');
+
+  /** 列表顯示目前選取（預覽中）的商品編號 */
+  private previewId = signal<string | null>(null);
+  /**
+   * 列表顯示已查過的商品詳情（文物說明、尺寸），以商品編號為鍵；null 代表查詢失敗，再次選取時會重查。
+   * 離開頁面前都不清除，換頁或改篩選後再回到同一件商品也不必重新讀取。
+   */
+  protected previewDetails = signal<Record<string, ProductDetail | null>>({});
+  /** 查詢中的商品編號，避免同一件商品同時查詢兩次 */
+  private readonly previewPending = new Set<string>();
 
   /** 每頁筆數，取自 API 回應；尚未載入時沿用後端預設值 20 */
   private pageSize = computed(() => this.result()?.pageSize ?? 20);
@@ -374,6 +404,11 @@ export class ProductList {
     // 只能有一次導覽：連續兩次 navigate 時，後者是以尚未更新的網址合併，會把前者移除的參數加回去。
     this.updateQueryParams({ q: null, cat: null, era: null, view: null, page: null });
     this.scrollToTop();
+  }
+
+  /** 列表顯示選取的商品改變：記下編號以查詢該商品的詳情 */
+  protected onPreviewSelect(productId: string): void {
+    this.previewId.set(productId);
   }
 
   /** 查詢失敗後以相同條件重新查詢 */
