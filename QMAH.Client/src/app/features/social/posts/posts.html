@@ -55,7 +55,7 @@
                 />
                 <div class="social-hero__body">
                   <h2 class="social-hero__title">{{ announcement.title }}</h2>
-                  <p class="social-hero__desc">{{ announcement.contentPreview }}</p>
+                  <p class="social-hero__desc">{{ stripMarkup(announcement.contentPreview) }}</p>
                   <span class="social-hero__cta" aria-hidden="true">查看公告</span>
                 </div>
               </a>
@@ -173,7 +173,7 @@
             {{ post.displayName || '匿名會員' }}
           }
         </p>
-        <p class="social-post-card__excerpt">{{ post.contentPreview }}</p>
+        <p class="social-post-card__excerpt">{{ stripMarkup(post.contentPreview) }}</p>
         <div class="social-post-card__footer">
           <p class="social-post-card__stats">
             <span class="social-icon-label">
@@ -231,14 +231,27 @@
       </div>
       <div class="social-post-form__field">
         <label class="social-post-form__label" for="social-post-content">內容</label>
-        <div class="social-post-form__toolbar" role="toolbar" aria-label="貼文基本排版工具">
-          <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('heading')">小標</button>
-          <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('bullet')">項目</button>
-          <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('quote')">引用</button>
-          <button type="button" class="btn btn-xs btn-outline" (click)="formatPostContent('paragraph')">分段</button>
-          <span class="social-post-form__hint">保留純文字，發布後會自動呈現段落層次。</span>
+        <div class="social-post-form__toolbar" role="toolbar" aria-label="貼文格式工具">
+          <div class="social-post-form__group" role="group" aria-label="段落">
+            <button type="button" class="social-fmt" (click)="formatPostContent('heading')" title="小標題">小標</button>
+            <button type="button" class="social-fmt" (click)="formatPostContent('bullet')" title="項目符號">項目</button>
+            <button type="button" class="social-fmt" (click)="formatPostContent('quote')" title="引用">引用</button>
+            <button type="button" class="social-fmt" (click)="formatPostContent('paragraph')" title="插入空行">分段</button>
+          </div>
+          <div class="social-post-form__group" role="group" aria-label="文字樣式">
+            <button type="button" class="social-fmt social-fmt--b" (click)="wrapPostContent('**', '**')" title="粗體" aria-label="粗體">B</button>
+            <button type="button" class="social-fmt social-fmt--i" (click)="wrapPostContent('*', '*')" title="斜體" aria-label="斜體">I</button>
+            <button type="button" class="social-fmt social-fmt--lg" (click)="wrapPostContent('{大:', '}')" title="大字" aria-label="大字">A</button>
+            <button type="button" class="social-fmt social-fmt--sm" (click)="wrapPostContent('{小:', '}')" title="小字" aria-label="小字">A</button>
+          </div>
+          <div class="social-post-form__group" role="group" aria-label="文字顏色">
+            @for (c of socialColors; track c.key) {
+              <button type="button" class="social-swatch" [attr.data-color]="c.color" (click)="wrapPostContent('{' + c.key + ':', '}')" [title]="c.label" [attr.aria-label]="c.label"></button>
+            }
+          </div>
         </div>
         <textarea id="social-post-content" name="content" class="textarea textarea-bordered w-full social-post-form__textarea" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
+        <span class="social-post-form__hint">先選取文字再按格式；再按一次可取消。內容以純文字儲存，發布後自動呈現格式。</span>
       </div>
       @if (newPost.content.trim()) {
         <div class="social-post-form__preview rounded-box border border-base-300 bg-base-200/40">

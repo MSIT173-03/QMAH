@@ -540,9 +540,9 @@ textarea:focus-visible {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: color-mix(in srgb, var(--qmah-social-action) 16%, transparent);
-  -webkit-mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
-  mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
+    background: color-mix(in srgb, var(--qmah-social-action) 9%, transparent);
+  -webkit-mask: url('/patterns/connections.svg') center top / 72px 72px repeat;
+  mask: url('/patterns/connections.svg') center top / 72px 72px repeat;
 }
 .app-shell[data-area='social'] .app-main {
   background-color: color-mix(in srgb, var(--qmah-social-soft) 38%, var(--qmah-page-surface));
@@ -568,9 +568,9 @@ textarea:focus-visible {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: color-mix(in srgb, var(--qmah-user-accent, var(--qmah-jade-deep)) 70%, transparent);
-  -webkit-mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
-  mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
+    background: color-mix(in srgb, var(--qmah-user-accent, var(--qmah-jade-deep)) 8%, transparent);
+  -webkit-mask: url('/patterns/formal-invitation.svg') center top / 200px 36px repeat;
+  mask: url('/patterns/formal-invitation.svg') center top / 200px 36px repeat;
 }
 .app-shell[data-area='user'] .app-main > *,
 .app-shell[data-area='user'] .app-main > * > [class*='-page'] {

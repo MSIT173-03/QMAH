@@ -441,9 +441,9 @@ a:focus-visible {
   z-index: -1;
   content: '';
   pointer-events: none;
-  background: color-mix(in srgb, var(--home-teal) 70%, transparent);
-  -webkit-mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
-  mask: url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat, url('/assets/game/hero-temple.svg') center top / 256px 256px repeat;
+  background: color-mix(in srgb, var(--home-teal) 9%, transparent);
+  -webkit-mask: url('/patterns/endless-clouds.svg') center top / 112px 56px repeat;
+  mask: url('/patterns/endless-clouds.svg') center top / 112px 56px repeat;
   -webkit-mask-composite: source-in;
 }
 .home-page::after {
@@ -469,8 +469,8 @@ a:focus-visible {
   content: '';
   pointer-events: none;
   background: color-mix(in srgb, var(--home-gold) 36%, transparent);
-  -webkit-mask: url('/assets/game/hero-temple.svg') left top / 168px 168px no-repeat;
-  mask: url('/assets/game/hero-temple.svg') left top / 168px 168px no-repeat;
+  -webkit-mask: url('/patterns/endless-clouds.svg') left top / 84px 42px repeat;
+  mask: url('/patterns/endless-clouds.svg') left top / 84px 42px repeat;
 }
 .home-hero h1 { text-wrap: balance; }
 .home-hero__lead { text-wrap: pretty; }

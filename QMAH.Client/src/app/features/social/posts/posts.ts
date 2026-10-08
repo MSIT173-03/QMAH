@@ -12,6 +12,7 @@ import { ImageCropModalComponent } from '../../../shared/components/image-crop-m
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup';
 import { boardLabel } from '../social-labels';
 import {
   LucideArrowRight,
@@ -232,25 +233,65 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.loadPosts();
   }
 
-  // 編輯器只插入純文字標記；共用呈現元件會把小標、項目與引用轉成安全的視覺層次。
-  formatPostContent(kind: 'heading' | 'bullet' | 'quote' | 'paragraph'): void {
-    const textarea = document.querySelector('#social-post-content') as HTMLTextAreaElement | null;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = textarea.value.slice(start, end) || '請填寫內容';
-    const [prefix, suffix] = kind === 'heading'
-      ? ['【', '】']
-      : kind === 'bullet'
-        ? ['• ', '']
-        : kind === 'quote'
-          ? ['「', '」']
-          : ['\n', ''];
-    const formatted = kind === 'paragraph'
-      ? `${textarea.value.slice(0, start)}\n${textarea.value.slice(end)}`
-      : `${textarea.value.slice(0, start)}${selected.split('\n').map(line => prefix + line + suffix).join('\n')}${textarea.value.slice(end)}`;
-    this.newPost.content = formatted;
+  readonly socialColors = SOCIAL_COLORS;
+  readonly stripMarkup = stripSocialMarkup;
+
+  private get contentTextarea(): HTMLTextAreaElement | null {
+    return document.querySelector('#social-post-content');
+  }
+
+  /** 更新內容並還原選取範圍（ngModel 會非同步寫回 DOM，所以延後一個 tick 再選取）。 */
+  private applyContent(textarea: HTMLTextAreaElement, value: string, selStart: number, selEnd: number): void {
+    this.newPost.content = value;
     textarea.focus();
+    setTimeout(() => textarea.setSelectionRange(selStart, selEnd));
+  }
+
+  // 編輯器只插入純文字標記；共用呈現元件會把小標、項目與引用轉成安全的視覺層次。
+  // 小標／項目／引用以「行」為單位，已套用時再按一次會取消；分段只在游標處加空行，不會刪掉選取的文字。
+  formatPostContent(kind: 'heading' | 'bullet' | 'quote' | 'paragraph'): void {
+    const textarea = this.contentTextarea;
+    if (!textarea) return;
+    const value = textarea.value;
+    const { selectionStart: start, selectionEnd: end } = textarea;
+
+    if (kind === 'paragraph') {
+      const at = end;
+      const insert = value.slice(0, at).endsWith('\n\n') ? '' : value.slice(0, at).endsWith('\n') ? '\n' : '\n\n';
+      this.applyContent(textarea, value.slice(0, at) + insert + value.slice(at), at + insert.length, at + insert.length);
+      return;
+    }
+
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    const nextBreak = value.indexOf('\n', end);
+    const lineEnd = nextBreak === -1 ? value.length : nextBreak;
+    const [prefix, suffix] = kind === 'heading' ? ['【', '】'] : kind === 'bullet' ? ['• ', ''] : ['「', '」'];
+    const lines = value.slice(lineStart, lineEnd).split('\n');
+    const allWrapped = lines.every(line => !line.trim() || (line.startsWith(prefix) && line.endsWith(suffix) && line.length >= prefix.length + suffix.length));
+    const changed = lines.map(line => {
+      if (!line.trim()) return line;
+      if (allWrapped) return line.slice(prefix.length, line.length - suffix.length);
+      return line.startsWith(prefix) && line.endsWith(suffix) ? line : prefix + line + suffix;
+    });
+    const replaced = changed.join('\n');
+    const text = replaced.trim() ? replaced : prefix + '請填寫內容' + suffix;
+    this.applyContent(textarea, value.slice(0, lineStart) + text + value.slice(lineEnd), lineStart, lineStart + text.length);
+  }
+
+  /** 行內格式：用標記包住選取文字（粗體、斜體、字級、顏色）；再按一次相同格式會取消。 */
+  wrapPostContent(open: string, close: string): void {
+    const textarea = this.contentTextarea;
+    if (!textarea) return;
+    const value = textarea.value;
+    const { selectionStart: start, selectionEnd: end } = textarea;
+    const selected = value.slice(start, end);
+    if (selected.startsWith(open) && selected.endsWith(close) && selected.length >= open.length + close.length) {
+      const inner = selected.slice(open.length, selected.length - close.length);
+      this.applyContent(textarea, value.slice(0, start) + inner + value.slice(end), start, start + inner.length);
+      return;
+    }
+    const body = selected || '文字';
+    this.applyContent(textarea, value.slice(0, start) + open + body + close + value.slice(end), start + open.length, start + open.length + body.length);
   }
 
   // GET /api/v1/social/posts（AllowAnonymous，回傳 ApiPage<SocialPostListItemDto>）
