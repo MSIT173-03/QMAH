@@ -685,3 +685,52 @@ textarea:focus-visible {
   -webkit-mask: linear-gradient(90deg, #000 0, transparent 24%, transparent 76%, #000 100%);
   mask: linear-gradient(90deg, #000 0, transparent 24%, transparent 76%, #000 100%);
 }
+
+/* 回首頁的房子按鈕：與導覽之間以細線分隔。 */
+.app-home-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  margin-right: 6px;
+  border: 1px solid var(--qmah-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  color: var(--qmah-ink);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.app-home-button:hover, .app-home-button.is-active { background: color-mix(in srgb, currentColor 12%, transparent); }
+.app-home-button:hover { transform: translateY(-1px); }
+.app-home-button:focus-visible { outline: 2px solid var(--qmah-focus, currentColor); outline-offset: 2px; }
+
+/* 帳號選單：頭貼＋名稱＋信箱的卡頭、有圖示底塊的選項、登出獨立在分隔線下。 */
+.app-account { border: 1px solid var(--qmah-border); background: color-mix(in srgb, currentColor 4%, transparent); border-radius: 999px; padding: 3px 10px 3px 3px; }
+.app-account:hover, .app-account[aria-expanded='true'] { border-color: color-mix(in srgb, currentColor 30%, transparent); background: color-mix(in srgb, currentColor 9%, transparent); color: var(--qmah-ink); }
+.app-account__avatar { width: 34px; height: 34px; }
+.app-account-panel {
+  width: min(280px, calc(100vw - 24px));
+  padding: 8px;
+  border-radius: 16px;
+  box-shadow: 0 18px 44px rgb(0 0 0 / 22%), 0 1px 0 rgb(255 255 255 / 6%) inset;
+  animation: accountPanelIn 0.16s ease-out;
+}
+@keyframes accountPanelIn { from { opacity: 0; transform: translateY(-6px) scale(0.98); } }
+.app-account-panel__who { display: flex; align-items: center; gap: 12px; padding: 10px 10px 12px; margin-bottom: 6px; border-radius: 12px; background: color-mix(in srgb, currentColor 5%, transparent); border-bottom: 0; }
+.app-account-panel__avatar { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; object-fit: cover; background: var(--qmah-surface-elevated); color: var(--qmah-ink); font-weight: 800; }
+.app-account-panel__id { min-width: 0; display: grid; gap: 2px; }
+.app-account-panel__id strong { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.app-account-panel__id small { overflow: hidden; color: var(--qmah-muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.app-account-panel a, .app-account-panel button { gap: 12px; padding: 8px 10px; font-size: 15px; }
+.app-account-panel__icon { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 9px; background: color-mix(in srgb, var(--i, currentColor) 14%, transparent); color: var(--i, currentColor); }
+.app-account-panel__icon app-qmah-icon { width: 18px; height: 18px; display: grid; place-items: center; }
+.app-account-panel .is-member { --i: #4f6fd8; }
+.app-account-panel .is-admin { --i: #c48a18; }
+.app-account-panel .app-logout { --i: var(--qmah-danger); }
+:host-context([data-theme='qmahdark']) .app-account-panel { background: #252a2c; border-color: color-mix(in srgb, #fff 16%, transparent); }
+:host-context([data-theme='qmahdark']) .app-account-panel .is-member { --i: #8aa2ff; }
+:host-context([data-theme='qmahdark']) .app-account-panel .is-admin { --i: #e6b94d; }
+.app-account-panel__sep { height: 1px; margin: 6px 6px; background: var(--qmah-line, var(--qmah-border)); }
+.app-account-panel a:hover, .app-account-panel button:hover:not(:disabled) { background: color-mix(in srgb, currentColor 8%, transparent); }
+@media (max-width: 900px) { .app-home-button { display: none; } }
+@media (prefers-reduced-motion: reduce) { .app-account-panel { animation: none; } }

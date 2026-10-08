@@ -126,3 +126,19 @@ a.is-active {
 a.is-active { background: color-mix(in srgb, currentColor 11%, transparent); }
 a:hover ::ng-deep svg,
 a.is-active ::ng-deep svg { color: var(--nav-accent, currentColor); }
+
+/* 五大領域圖示各用一個互不相近的色相（藍、金、綠、紅、紫），平常就上色；文字與底色維持中性。 */
+a[data-area='user'] { --nav-accent: #4f6fd8; }
+a[data-area='catalog'] { --nav-accent: #c48a18; }
+a[data-area='game'] { --nav-accent: #2f9a62; }
+a[data-area='social'] { --nav-accent: #d6504a; }
+a[data-area='store'] { --nav-accent: #8b57c9; }
+:host-context([data-theme='qmahdark']) a[data-area='user'] { --nav-accent: #8aa2ff; }
+:host-context([data-theme='qmahdark']) a[data-area='catalog'] { --nav-accent: #e6b94d; }
+:host-context([data-theme='qmahdark']) a[data-area='game'] { --nav-accent: #5fd196; }
+:host-context([data-theme='qmahdark']) a[data-area='social'] { --nav-accent: #ff8a80; }
+:host-context([data-theme='qmahdark']) a[data-area='store'] { --nav-accent: #bf93f2; }
+.area-navigation--desktop a { gap: 8px; color: color-mix(in srgb, currentColor 78%, transparent); }
+.area-navigation--desktop a ::ng-deep svg { color: var(--nav-accent, currentColor); }
+.area-navigation--desktop a.is-active { color: var(--qmah-ink); font-weight: 800; }
+.area-navigation--mobile a ::ng-deep svg { color: var(--nav-accent, currentColor); }

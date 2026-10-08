@@ -1024,7 +1024,7 @@
 /* 頂部卡片：左側古銅色豎條＋標題，右側三個常用入口；右上角以 Temple 紋做淡淡的裝飾。 */
 .welcome-card {
   gap: 28px;
-  padding: 32px 36px 32px 44px;
+  padding: 32px 36px;
   border-color: color-mix(in srgb, #a68a52 34%, var(--qmah-border));
   background:
     linear-gradient(100deg, transparent 52%, color-mix(in srgb, #a68a52 9%, transparent)),
@@ -1039,14 +1039,7 @@
   mask: linear-gradient(90deg, transparent, #000 85%);
   pointer-events: none;
 }
-.welcome-card::before {
-  position: absolute;
-  inset: 22px auto 22px 0;
-  width: 5px;
-  border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, #c9a45f, #a0522d);
-  content: '';
-}
+
 .welcome-content { flex: 1 1 auto; }
 .welcome-content h1 { font-size: 32px; color: var(--qmah-ink); }
 .welcome-eyebrow { color: #9a7b3f; }

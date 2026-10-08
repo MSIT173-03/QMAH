@@ -20,6 +20,9 @@
       </a>
 
       <div class="app-header__navigation">
+        <a class="app-home-button" routerLink="/home" routerLinkActive="is-active" aria-label="回到首頁" title="回到首頁" (click)="closeMenu()">
+          <app-qmah-icon name="home" size="22" aria-hidden="true" />
+        </a>
         <app-area-navigation variant="desktop" />
 
         @if (contextNavigation().links.length) {
@@ -54,12 +57,23 @@
               <span class="app-account__chevron" aria-hidden="true"></span>
             </button>
             <nav id="account-panel" class="app-account-panel" [hidden]="!accountOpen()" aria-label="帳號">
-              <div class="app-account-panel__who"><strong>{{ me.displayName || me.email }}</strong>@if (me.displayName) { <small>{{ me.email }}</small> }</div>
-              <a routerLink="/member" (click)="closeMenu()">會員中心</a>
+              <div class="app-account-panel__who">
+                @if (me.avatarPath && me.avatarPath !== failedAvatarPath()) {
+                  <img class="app-account-panel__avatar" [src]="me.avatarPath" alt="" />
+                } @else {
+                  <span class="app-account-panel__avatar" aria-hidden="true">{{ (me.displayName || me.email).charAt(0).toUpperCase() }}</span>
+                }
+                <span class="app-account-panel__id">
+                  <strong>{{ me.displayName || me.email }}</strong>
+                  @if (me.displayName) { <small>{{ me.email }}</small> }
+                </span>
+              </div>
+              <a routerLink="/member" class="is-member" (click)="closeMenu()"><span class="app-account-panel__icon"><app-qmah-icon name="user-round" size="18" aria-hidden="true" /></span>會員中心</a>
               @if (isAdmin()) {
-                <a class="app-admin-entry app-mobile-admin-entry" [href]="adminEntryUrl" (click)="confirmAdminNavigation($event)">管理後台</a>
+                <a class="app-admin-entry app-mobile-admin-entry is-admin" [href]="adminEntryUrl" (click)="confirmAdminNavigation($event)"><span class="app-account-panel__icon"><app-qmah-icon name="shield-check" size="18" aria-hidden="true" /></span>管理後台</a>
               }
-              <button type="button" class="app-logout" [disabled]="loggingOut()" (click)="logout()">{{ loggingOut() ? '登出中…' : '登出' }}</button>
+              <div class="app-account-panel__sep"></div>
+              <button type="button" class="app-logout" [disabled]="loggingOut()" (click)="logout()"><span class="app-account-panel__icon"><app-qmah-icon name="log-out" size="18" aria-hidden="true" /></span>{{ loggingOut() ? '登出中…' : '登出' }}</button>
             </nav>
           </div>
         } @else {
