@@ -4,44 +4,43 @@
       <div class="indicator">
         <app-qmah-icon name="bell" size="22" />
         @if (unreadCount > 0) {
-          <span class="badge badge-xs badge-primary indicator-item">{{ unreadCount }}</span>
+          <span class="qmah-bell-badge indicator-item">{{ unreadCount }}</span>
         }
       </div>
     </button>
-    <div
-      tabindex="0"
-      class="dropdown-content bg-base-100 rounded-box z-10 mt-3 w-80 max-h-96 overflow-y-auto p-2 shadow-lg border border-base-300"
-    >
-      <div class="px-2 py-1 text-sm font-bold">通知</div>
-      <div class="divide-y divide-base-200">
-        @for (notification of notifications; track notification.id) {
-          @if (notification.targetUrl) {
-            <a
-              [routerLink]="notification.targetUrl"
-              class="flex flex-col items-start gap-0.5 rounded-lg p-2 text-left hover:bg-base-200"
-              [class.opacity-60]="notification.isRead"
-              (click)="markRead(notification)"
-            >
-              <span class="text-sm font-semibold">{{ notification.title }}</span>
-              <span class="text-xs text-base-content/70 line-clamp-2">{{ notification.content }}</span>
-              <span class="text-[10px] text-base-content/50">{{ notification.createdAt }}</span>
-            </a>
-          } @else {
-            <button
-              type="button"
-              class="flex w-full flex-col items-start gap-0.5 rounded-lg p-2 text-left hover:bg-base-200"
-              [class.opacity-60]="notification.isRead"
-              (click)="markRead(notification)"
-            >
-              <span class="text-sm font-semibold">{{ notification.title }}</span>
-              <span class="text-xs text-base-content/70 line-clamp-2">{{ notification.content }}</span>
-              <span class="text-[10px] text-base-content/50">{{ notification.createdAt }}</span>
-            </button>
-          }
-        } @empty {
-          <div class="px-2 py-6 text-center text-sm text-base-content/50">目前沒有通知</div>
-        }
+    <div tabindex="0" class="dropdown-content qmah-bell-panel" role="region" aria-label="通知">
+      <div class="qmah-bell-panel__head">
+        <strong>通知</strong>
+        @if (unreadCount > 0) { <span class="qmah-bell-panel__count">{{ unreadCount }} 則未讀</span> }
+        <a class="qmah-bell-panel__all" routerLink="/member/notifications">查看全部</a>
       </div>
+      <ul class="qmah-bell-list">
+        @for (notification of notifications; track notification.id) {
+          <li>
+            @if (notification.targetUrl) {
+              <a class="qmah-bell-item" [class.is-unread]="!notification.isRead" [routerLink]="notification.targetUrl" (click)="markRead(notification)">
+                <span class="qmah-bell-item__dot" aria-hidden="true"></span>
+                <span class="qmah-bell-item__main">
+                  <span class="qmah-bell-item__title">{{ notification.title }}</span>
+                  <span class="qmah-bell-item__text">{{ notification.content }}</span>
+                  <time class="qmah-bell-item__time">{{ notification.createdAt | date: 'MM/dd HH:mm' }}</time>
+                </span>
+              </a>
+            } @else {
+              <button type="button" class="qmah-bell-item" [class.is-unread]="!notification.isRead" (click)="markRead(notification)">
+                <span class="qmah-bell-item__dot" aria-hidden="true"></span>
+                <span class="qmah-bell-item__main">
+                  <span class="qmah-bell-item__title">{{ notification.title }}</span>
+                  <span class="qmah-bell-item__text">{{ notification.content }}</span>
+                  <time class="qmah-bell-item__time">{{ notification.createdAt | date: 'MM/dd HH:mm' }}</time>
+                </span>
+              </button>
+            }
+          </li>
+        } @empty {
+          <li class="qmah-bell-empty">目前沒有通知</li>
+        }
+      </ul>
     </div>
   </div>
 }
