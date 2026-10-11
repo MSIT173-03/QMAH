@@ -41,7 +41,7 @@ export function findBackgroundPieces(
     const x = pixel % width, y = Math.floor(pixel / width);
     const horizontal = Math.max(...[0, 1, 2].map(channel => Math.abs(color(pixel - (x > 0 ? 1 : 0), channel) - color(pixel + (x < width - 1 ? 1 : 0), channel))));
     const vertical = Math.max(...[0, 1, 2].map(channel => Math.abs(color(pixel - (y > 0 ? width : 0), channel) - color(pixel + (y < height - 1 ? width : 0), channel))));
-    edges[pixel] = horizontal > 8 || vertical > 8 ? 1 : 0;
+    edges[pixel] = horizontal > 16 || vertical > 16 ? 1 : 0;
     const similar = [0, 1, 2].every(channel => {
       const value = color(pixel, channel);
       const localBackground = leftBackground[y * 3 + channel] * (1 - x / (width - 1))
@@ -81,7 +81,7 @@ export function findBackgroundPieces(
       if (x === left || x === right - 1 || y === top || y === bottom - 1) {
         const horizontal = Math.max(...[0, 1, 2].map(channel => Math.abs(color(pixel - (x > left ? 1 : 0), channel) - color(pixel + (x < right - 1 ? 1 : 0), channel))));
         const vertical = Math.max(...[0, 1, 2].map(channel => Math.abs(color(pixel - (y > top ? width : 0), channel) - color(pixel + (y < bottom - 1 ? width : 0), channel))));
-        ownEdge = horizontal > 8 || vertical > 8 ? 1 : 0;
+        ownEdge = horizontal > 16 || vertical > 16 ? 1 : 0;
       }
       edgePixels += ownEdge;
       const connectedNeighbor = (x > left && mask[pixel - 1] === 2) || (x < right - 1 && mask[pixel + 1] === 2)
@@ -90,7 +90,7 @@ export function findBackgroundPieces(
       if (mask[pixel] === 2 || (mask[pixel] === 1 && edges[pixel] && !ownEdge && connectedNeighbor)) backgroundPixels++;
     }
     const area = (right - left) * (bottom - top);
-    if (backgroundPixels / area >= .985 && edgePixels / area <= .005) candidates.push(piece);
+    if (backgroundPixels / area >= .97 && edgePixels / area <= .03) candidates.push(piece);
   }
 
   return candidates;
