@@ -104,6 +104,16 @@ describe('KeyList', () => {
     expect(component).toBeTruthy();
   });
 
+  it('書本模式保留魔法陣，背包的一般鑰匙使用原插畫', () => {
+    component.bookMode = true;
+    fixture.detectChanges();
+
+    const magic = fixture.nativeElement.querySelector('.craft-magic') as SVGElement;
+    expect(magic).not.toBeNull();
+    expect(getComputedStyle(magic).display).not.toBe('none');
+    expect(component.keySlotIcon(keys[0])).toBe('/assets/catalog/keys/normal.png');
+  });
+
   it('以分類 ID 查詢 API 代碼，背包與合成台共用八種材質圖示', () => {
     const codes = ['BRONZE', 'CARVING', 'CERAMIC', 'COIN', 'ENAMEL', 'JADE', 'LACQUER', 'PAINTING'];
     const categoryKeys = codes.map((code, index) => ({
