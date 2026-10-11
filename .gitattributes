@@ -5,3 +5,9 @@ QMAH.Web/wwwroot/lib/** -text -diff linguist-vendored
 
 # Database source and generated full restore script remain reviewable text.
 database/*.sql text eol=lf
+
+# Azure Linux 設定不能隨 Windows checkout 轉成 CRLF。
+deploy/azure-demo/*.sh text eol=lf
+deploy/azure-demo/*.service text eol=lf
+deploy/azure-demo/*.timer text eol=lf
+deploy/azure-demo/Caddyfile text eol=lf
