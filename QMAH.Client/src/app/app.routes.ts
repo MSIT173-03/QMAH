@@ -8,7 +8,6 @@ import { adminGameTestGuard, adminTestRoomGuard } from './core/guards/game-test-
 const appShellChildren: Routes = [
   {
     path: 'game/appreciation',
-    canActivate: [authGuard],
     loadComponent: () => import('./game/game-appreciation.component').then(m => m.GameAppreciationComponent)
   },
   {

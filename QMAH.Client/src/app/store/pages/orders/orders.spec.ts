@@ -91,6 +91,14 @@ describe('Orders', () => {
     expect(cancelled.querySelector('.order-cancel')).toBeNull();
   });
 
+  it('shows the actual legacy payment methods present in the release database', async () => {
+    await loadOrders([order('atm', 'PAID', 'ATM', 'PAID'), order('card', 'PAID', 'Credit_CreditCard', 'PAID'), order('web', 'PAID', 'WebATM', 'PAID')]);
+    expect(cards()[0].textContent).toContain('ATM 轉帳');
+    expect(cards()[1].textContent).toContain('信用卡');
+    expect(cards()[2].textContent).toContain('網路 ATM');
+    for (const card of cards()) expect(card.textContent).not.toContain('未記錄');
+  });
+
   it('shows an empty state when there are no orders', async () => {
     await loadOrders([]);
     expect(cards()).toHaveLength(0);

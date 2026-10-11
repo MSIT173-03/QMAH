@@ -35,6 +35,22 @@ Google 登入需允許 `https://qmah.eastus.cloudapp.azure.com/signin-google`，
 `https://qmah.eastus.cloudapp.azure.com/Callback`。Turnstile 需允許部署網域。
 這些設定由外部服務控制台管理，程式不會略過驗證。
 
+Turnstile Site Key 是公開設定，Secret Key 僅放在 API 的 `Turnstile__SecretKey`。
+直接 Google 登入讀取 `Authentication__Google__ClientId` 與 `Authentication__Google__ClientSecret`。
+經 Logto 的 Google 登入使用 Logto 控制台的 Google Connector，不會讀取 Azure 的 Google 設定。
+會員驗證信與重設密碼目前由 Brevo 寄送；其他郵件服務設定存在不代表已加入這條寄信流程。
+
+## 分支自動更新
+
+推送 `deploy/azure-demo` 會執行 `.github/workflows/azure-demo.yml`，也可手動啟動同一流程。
+前端既有測試、建置與 Linux 發佈通過後才會部署。Azure 授權使用只信任此分支的 GitHub OIDC，
+不在 GitHub 保存 SSH 金鑰或 Azure 長效密碼，也不放寬 VM 的 SSH 來源限制。
+
+更新不執行 `bootstrap.sh`、資料庫還原或 Migration，不替換環境檔、會員上傳與登入金鑰。
+舊版雜湊 JS/CSS 保留供已開啟的分頁讀取；HTML 不快取，找不到的 JS 不回傳首頁 HTML。
+API、前台或後台啟動檢查失敗時，`update.sh` 會復原前一版應用程式及 Caddy 設定。
+資料庫版本更新需另行明確執行，單純推送程式碼不會覆蓋線上資料。
+
 ## 本機相容性
 
 代理標頭、PathBase、安全標頭及金鑰保存路徑都由部署設定啟用。本機未提供設定時維持原本入口。

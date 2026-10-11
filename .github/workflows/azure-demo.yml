@@ -1,0 +1,85 @@
+name: Deploy Azure demo
+
+on:
+  push:
+    branches: [deploy/azure-demo]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qmah-azure-demo
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/deploy/azure-demo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: QMAH.Client/package-lock.json
+      - name: Build and check frontend
+        working-directory: QMAH.Client
+        run: |
+          npm ci
+          npm run test:setup
+          npm test -- --watch=false
+          npm run build
+      - name: Publish application
+        run: |
+          bash -n deploy/azure-demo/update.sh
+          dotnet publish QMAH.Api/QMAH.Api.csproj -c Release -r linux-x64 --self-contained true -o bundle/api
+          dotnet publish QMAH.Web/QMAH.Web.csproj -c Release -r linux-x64 --self-contained true -o bundle/web
+          cp -a QMAH.Client/dist/qmah-client/browser bundle/client
+          mkdir -p bundle/media
+          for name in images fonts; do
+            if [ -d "QMAH.Media/$name" ]; then cp -a "QMAH.Media/$name" bundle/media/; fi
+          done
+          cp -a deploy/azure-demo bundle/deploy
+          tar -czf qmah-update.tar.gz -C bundle .
+      - name: Azure login with branch-restricted OIDC
+        uses: azure/login@935127ca5bb3c4b02c9c2c10060028383878f33f # v3
+        with:
+          client-id: ${{ vars.QMAH_AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.QMAH_AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.QMAH_AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy and verify; restore previous version on failure
+        env:
+          REVISION: ${{ github.sha }}
+        run: |
+          blob="updates/$REVISION.tar.gz"
+          az storage blob upload --account-name qmahdemo1011hsuan --container-name deployment --name "$blob" --file qmah-update.tar.gz --overwrite --auth-mode login --output none
+          expiry=$(date -u -d '+45 minutes' '+%Y-%m-%dT%H:%MZ')
+          sas=$(az storage blob generate-sas --account-name qmahdemo1011hsuan --container-name deployment --name "$blob" --permissions r --expiry "$expiry" --as-user --auth-mode login --output tsv)
+          echo "::add-mask::$sas"
+          url="https://qmahdemo1011hsuan.blob.core.windows.net/deployment/$blob?$sas"
+          echo "::add-mask::$url"
+          cat > run-update.sh <<EOF
+          bash <<'QMAH_UPDATE'
+          set -euo pipefail
+          curl -fsS --retry 3 '$url' -o /tmp/qmah-update-$REVISION.tar.gz
+          tar -xOf /tmp/qmah-update-$REVISION.tar.gz ./deploy/update.sh > /tmp/qmah-update-$REVISION.sh
+          bash /tmp/qmah-update-$REVISION.sh /tmp/qmah-update-$REVISION.tar.gz '$REVISION'
+          QMAH_UPDATE
+          EOF
+          az vm run-command invoke --resource-group qmah-demo-rg --name qmah-demo-vm --command-id RunShellScript --scripts @run-update.sh --query 'value[].message' --output tsv > deployment-result.txt
+          cat deployment-result.txt
+          grep -q "QMAH_UPDATE_OK $REVISION" deployment-result.txt
+      - name: Deployment result
+        if: always()
+        run: |
+          echo "Deployment branch: deploy/azure-demo" >> "$GITHUB_STEP_SUMMARY"
+          echo "Frontend: https://qmah.eastus.cloudapp.azure.com/home" >> "$GITHUB_STEP_SUMMARY"
+          echo "Database, uploads and login keys are preserved during updates." >> "$GITHUB_STEP_SUMMARY"

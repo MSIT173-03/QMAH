@@ -34,7 +34,7 @@ describe('injectCartState', () => {
   afterEach(() => httpMock.verify());
 
   it('未登入時加入購物車只顯示登入提示，不送出購物車請求', () => {
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush(
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush(
       { message: 'Unauthorized' },
       { status: 401, statusText: 'Unauthorized' },
     );
@@ -50,7 +50,7 @@ describe('injectCartState', () => {
   });
 
   it('登入提示：取消留在原頁，確認則帶 returnUrl 前往登入頁', () => {
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush(
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush(
       { message: 'Unauthorized' },
       { status: 401, statusText: 'Unauthorized' },
     );
@@ -69,7 +69,7 @@ describe('injectCartState', () => {
   });
 
   it('已登入時正常加入購物車', () => {
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush(member);
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush(member);
     httpMock.expectOne((r) => r.url.endsWith('/me/cart') && r.method === 'GET').flush([]);
     expect(cart.signedIn()).toBe(true);
 
@@ -86,7 +86,7 @@ describe('injectCartState', () => {
   });
 
   it('登入已失效（寫入回應 401）時改為顯示登入提示', () => {
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush(member);
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush(member);
     httpMock.expectOne((r) => r.url.endsWith('/me/cart') && r.method === 'GET').flush([]);
 
     cart.add('p-1');

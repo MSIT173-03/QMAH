@@ -32,13 +32,14 @@ public sealed class GameAppreciationController(QmahDbContext db) : ApiController
             """).Select(answer => answer.Id);
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiPage<AppreciationAnswerDto>>> List(
         [FromQuery] Guid? artifactId, [FromQuery] string? categoryCode, [FromQuery] string? answerType,
         [FromQuery] string sort = "votes", [FromQuery] int page = 1, [FromQuery] int pageSize = 12,
         [FromQuery] string? keyword = null, [FromQuery] string? eraCode = null,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        var hasUser = TryGetCurrentUserId(out var userId);
         if (sort is not ("votes" or "time") || answerType is not (null or "" or "FACTUAL_REASONING" or "PLAUSIBLE_FICTION" or "CREATIVE_TALE"))
             return BadRequest();
         var winners = WinnerIds();
@@ -64,8 +65,8 @@ public sealed class GameAppreciationController(QmahDbContext db) : ApiController
             item.Answer.Round.Artifact.Category.Name, item.Answer.AnswerType, item.Answer.Text, item.Answer.GamePlayer.DisplayName,
             item.Answer.Round.Room.CompletedAt!.Value, item.Answer.Votes.Sum(vote => vote.Count),
             item.VoteCount,
-            db.ArtifactAppreciationVotes.Any(vote => vote.AnswerId == item.Answer.Id && vote.UserId == userId),
-            item.Answer.GamePlayer.UserId == userId,
+            hasUser && db.ArtifactAppreciationVotes.Any(vote => vote.AnswerId == item.Answer.Id && vote.UserId == userId),
+            hasUser && item.Answer.GamePlayer.UserId == userId,
             item.Answer.Round.Artifact.ThumbnailPath ?? item.Answer.Round.Artifact.PrimaryImagePath));
         return Ok(await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken));
     }

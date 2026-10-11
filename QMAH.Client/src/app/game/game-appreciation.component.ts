@@ -3,7 +3,8 @@ import { GameFocusMode } from '../core/services/game-focus-mode';
 import { DatePipe } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, HostListener, Component, DestroyRef, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MeApiService } from '../core/services/me-api';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { GameAppreciationRulesComponent } from './game-appreciation-rules.component';
@@ -23,7 +24,7 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
     <section class="appreciation-scene" [class.is-focus-mode]="focusMode.active()" aria-labelledby="appreciation-title">
       <app-game-navigation><app-game-reward-meter /></app-game-navigation>
       <div class="appreciation-stage">
-      <header><div><h1 id="appreciation-title">鑑賞回答</h1><p>看看玩家怎麼解讀文物，把票投給你喜歡的回答。</p></div><a routerLink="/artifact-list">返回圖鑑</a></header>
+      <header><div><h1 id="appreciation-title">鑑賞回答</h1><p>看看玩家怎麼解讀文物，登入後把票投給你喜歡的回答。</p></div><a routerLink="/artifact-list">返回圖鑑</a></header>
       <div #sentinel class="filters-sentinel" aria-hidden="true"></div>
       <div class="filters-slot" [class.is-sheet]="sheetOpen()" [style.--filters-h.px]="naturalHeight()">
       <form #filtersForm class="filters" [class.is-sheet]="sheetOpen()" [attr.role]="sheetOpen() ? 'dialog' : null" [attr.aria-modal]="sheetOpen() ? 'true' : null" aria-label="篩選鑑賞回答" (ngSubmit)="search(); closeSheet()">
@@ -87,6 +88,8 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
   `
 })
 export class GameAppreciationComponent implements AfterViewInit {
+  protected readonly meApi = inject(MeApiService);
+  private readonly router = inject(Router);
   protected readonly focusMode = inject(GameFocusMode);
   readonly answerTypes = ['', 'FACTUAL_REASONING', 'PLAUSIBLE_FICTION', 'CREATIVE_TALE'];
   private readonly game = inject(GameService);
@@ -174,10 +177,18 @@ export class GameAppreciationComponent implements AfterViewInit {
     });
   }
   openConfirmation(answer: AppreciationAnswer): void {
+    if (!this.meApi.me()) {
+      void this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     if (this.pendingVote() || answer.isOwn || this.loading()) return;
     this.confirmation?.open(answer);
   }
   vote(answer: AppreciationAnswer): void {
+    if (!this.meApi.me()) {
+      void this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     if (this.pendingVote() || answer.isOwn) return;
     this.pendingVote.set(answer.id);
     this.game.voteAppreciation(answer.id, !answer.voted).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.pendingVote.set(''))).subscribe({ next: () => this.load(this.currentPage()), error: () => this.error.set('投票尚未完成，請再試一次。') });

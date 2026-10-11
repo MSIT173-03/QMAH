@@ -40,7 +40,7 @@ export class MeApiService {
   readonly me = signal<Me | null>(null);
 
   refresh(): void {
-    this.http.get<Me>(this.base).subscribe({
+    this.http.get<Me | null>(`${this.base}/session`).subscribe({
       next: (me) => this.me.set(me),
       error: (error: HttpErrorResponse) => {
         // 暫時斷線或伺服器忙碌不代表登出，保留已確認的會員與切換入口。

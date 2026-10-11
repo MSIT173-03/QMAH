@@ -1,12 +1,13 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import {
   Observable,
   catchError,
   map,
   of,
   switchMap,
-  tap
+  tap,
+  throwError
 } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
@@ -62,13 +63,14 @@ export class AuthService {
   getCurrentUser(): Observable<CurrentUser> {
 
     return this.http
-      .get<CurrentUser>(
-        `${environment.apiBaseUrl}/me`
+      .get<CurrentUser | null>(
+        `${environment.apiBaseUrl}/me/session`
       )
       .pipe(
         tap(user => {
           this._currentUser.set(user);
-        })
+        }),
+        switchMap(user => user ? of(user) : throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Not signed in' })))
       );
 
   }

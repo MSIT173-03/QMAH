@@ -31,10 +31,7 @@ export class NotificationsBellComponent implements OnInit, OnDestroy {
   private readonly sessionEffect = effect(() => {
     const id = this.meApi.me()?.id ?? null;
     if (id === this.sessionId) return;
-    const previousId = this.sessionId;
     this.sessionId = id;
-    // 首次確認會員身分時，保留同一登入階段已送出的初始讀取。
-    if (previousId === null && id !== null) return;
     this.generation++;
     this.notifications = [];
     this.seenIds.clear();
@@ -42,13 +39,13 @@ export class NotificationsBellComponent implements OnInit, OnDestroy {
     this.loggedIn = false;
     this.changeDetector.markForCheck();
     this.pending = false;
+    if (id !== null) this.load();
   });
   private readonly onVisibilityChange = () => {
     if (this.document.visibilityState !== 'hidden') this.load();
   };
 
   ngOnInit(): void {
-    this.load();
     this.live.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.load());
     this.document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
@@ -59,6 +56,7 @@ export class NotificationsBellComponent implements OnInit, OnDestroy {
     return this.notifications.filter(notification => !notification.isRead).length;
   }
   load(): void {
+    if (!this.meApi.me()) return;
     if (this.loading) { this.pending = true; return; }
     this.loading = true;
     const generation = this.generation;

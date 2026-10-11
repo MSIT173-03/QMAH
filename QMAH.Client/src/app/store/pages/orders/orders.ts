@@ -38,6 +38,9 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 const PAYMENT_TYPE_LABELS: Record<string, string> = {
   COD: '貨到付款',
   CREDIT_CARD: '信用卡',
+  ATM: 'ATM 轉帳',
+  Credit_CreditCard: '信用卡',
+  WebATM: '網路 ATM',
 };
 
 /** 篩選頁籤：全部、待付款、處理中（已付款／撿貨中）、已寄送、已完成、已取消 */
@@ -317,7 +320,7 @@ function toRow(order: MyOrder): OrderRow {
     orderNo: order.orderNo,
     status: order.status,
     statusLabel: ORDER_STATUS_LABELS[order.status] ?? order.status,
-    paymentLabel: PAYMENT_TYPE_LABELS[order.paymentType ?? ''] ?? '未記錄',
+    paymentLabel: PAYMENT_TYPE_LABELS[order.paymentType ?? ''] ?? (order.paymentType?.trim() || '付款方式未提供'),
     payableLabel: formatMoney(order.totalAmount),
     createdLabel: formatDateTime(order.createdAt),
     itemsLabel: items.join('、'),

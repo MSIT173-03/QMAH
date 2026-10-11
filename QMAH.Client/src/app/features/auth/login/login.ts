@@ -165,7 +165,8 @@ export class Login implements OnInit, OnDestroy {
     });
 
     this.restoreCarouselSpeed();
-    this.preloadSegment(1);
+    // 先載入正在顯示的圖，下一段再預載，避免兩張大型圖片競爭登入頁首屏。
+    void this.preloadSegment(0).then(() => this.preloadSegment(1));
     // 減少動態偏好下沒有平移動畫，也就不會自動換段；維持暫停狀態讓控制列如實呈現。
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       this.carouselPaused.set(true);

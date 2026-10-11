@@ -29,18 +29,15 @@ describe('LayoutComponent', () => {
   });
 
   it('should create', () => {
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
-    httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
-      { message: 'Unauthorized' },
-      { status: 401, statusText: 'Unauthorized' }
-    );
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush(null);
+    httpMock.expectNone((r) => r.url.endsWith('/me/notifications'));
 
     expect(component).toBeTruthy();
     expect(fixture.nativeElement.querySelector('a.app-admin-entry')).toBeNull();
   });
 
   it('shows the display name once /me resolves', () => {
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush({
       id: '11111111-1111-1111-1111-111111111111',
       email: 'admin@qmah.local',
       displayName: '測試管理員',
@@ -52,6 +49,7 @@ describe('LayoutComponent', () => {
       visibility: 'PRIVATE',
       avatarPath: null
     });
+    fixture.detectChanges();
     httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
       { message: 'Unauthorized' },
       { status: 401, statusText: 'Unauthorized' }
@@ -64,7 +62,8 @@ describe('LayoutComponent', () => {
   });
 
   it('hides both admin entries for ordinary members', () => {
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({ roles: ['Member'], email: 'member@example.test' });
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush({ id: 'member-1', roles: ['Member'], email: 'member@example.test' });
+    fixture.detectChanges();
     httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
       { message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' }
     );
@@ -74,7 +73,8 @@ describe('LayoutComponent', () => {
   });
 
   function loadAdmin(): void {
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({ roles: ['Admin'], email: 'admin@example.test' });
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush({ id: 'admin-1', roles: ['Admin'], email: 'admin@example.test' });
+    fixture.detectChanges();
     httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
       { message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' }
     );
@@ -131,11 +131,11 @@ describe('LayoutComponent', () => {
   it('preserves the admin entry on a transient refresh failure, then clears it on 401', () => {
     loadAdmin();
     component.meApi.refresh();
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({}, { status: 503, statusText: 'Unavailable' });
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush({}, { status: 503, statusText: 'Unavailable' });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('a.app-admin-entry')).not.toBeNull();
     component.meApi.refresh();
-    httpMock.expectOne((r) => r.url.endsWith('/me')).flush({}, { status: 401, statusText: 'Unauthorized' });
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush({}, { status: 401, statusText: 'Unauthorized' });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('a.app-admin-entry')).toBeNull();
   });

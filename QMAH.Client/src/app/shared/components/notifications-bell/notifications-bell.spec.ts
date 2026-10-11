@@ -6,6 +6,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 
 import { NotificationsBellComponent } from './notifications-bell';
+import { MeApiService } from '../../../core/services/me-api';
 
 describe('NotificationsBellComponent', () => {
   const changes = new Subject<void>();
@@ -19,6 +20,8 @@ describe('NotificationsBellComponent', () => {
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: NotificationLive, useValue: { changes } }]
     }).compileComponents();
 
+    TestBed.inject(MeApiService).me.set({ id: 'member-1', email: 'member@example.com', displayName: '會員', status: 'ACTIVE', pointBalance: 0, roles: ['User'], createdAt: '', bio: null, visibility: 'PRIVATE', avatarPath: null });
+
     fixture = TestBed.createComponent(NotificationsBellComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
@@ -29,14 +32,22 @@ describe('NotificationsBellComponent', () => {
     httpMock.verify();
   });
 
-  it('hides itself when the visitor is not logged in (401)', () => {
+  it('does not request member notifications for a guest, including push and visibility events', () => {
+    TestBed.inject(MeApiService).clear();
     fixture.detectChanges();
-
-    const req = httpMock.expectOne((r) => r.url.endsWith('/me/notifications'));
-    req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+    changes.next();
+    document.dispatchEvent(new Event('visibilitychange'));
+    httpMock.expectNone((r) => r.url.endsWith('/me/notifications'));
 
     expect(component.loggedIn).toBe(false);
     expect(component.notifications.length).toBe(0);
+  });
+
+  it('clears notifications when an authenticated session expires', () => {
+    fixture.detectChanges();
+    httpMock.expectOne(r => r.url.endsWith('/me/notifications')).flush({}, { status: 401, statusText: 'Unauthorized' });
+    expect(component.loggedIn).toBe(false);
+    expect(component.notifications).toEqual([]);
   });
 
   it('loads notifications and updates the visible bell without manual change detection', async () => {

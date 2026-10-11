@@ -23,6 +23,17 @@ public sealed class MeController(
     EconomyService economyService,
     DailyActivityService dailyActivityService) : ApiControllerBase
 {
+    /// <summary>查詢目前登入狀態，訪客回傳 JSON null，不開放任何會員資源。</summary>
+    [AllowAnonymous]
+    [HttpGet("session")]
+    public async Task<IActionResult> GetSession(CancellationToken cancellationToken = default)
+    {
+        if (User.Identity?.IsAuthenticated != true)
+            return new JsonResult(null);
+        var result = await GetMe(cancellationToken);
+        return result.Result is UnauthorizedResult ? new JsonResult(null) : result.Result!;
+    }
+
     /// <summary>取得目前登入會員的基本資料、角色與鑑定點數。</summary>
     [HttpGet]
     public async Task<ActionResult<MeDto>> GetMe(CancellationToken cancellationToken = default)

@@ -98,7 +98,7 @@ describe('CouponStore', () => {
   /** 載入一張折價券，並依登入與否回應 GET /me（商城以它確認登入狀態） */
   const loadCoupon = async (signedIn: boolean): Promise<void> => {
     couponRequests()[0].flush([coupon]);
-    const me = http.match((request) => request.url.endsWith('/me'));
+    const me = http.match((request) => request.url.endsWith('/me/session'));
     for (const request of me) {
       if (signedIn) request.flush({ email: 'demo@qmah.test', displayName: 'Demo', pointBalance: 100 });
       else request.flush(null, { status: 401, statusText: 'Unauthorized' });
@@ -239,7 +239,7 @@ describe('CouponStore', () => {
   /** 載入商店券，依登入與否回應 GET /me，登入時再回應 GET /me/coupons */
   const loadOwned = async (signedIn: boolean, owned: unknown[]): Promise<void> => {
     couponRequests()[0].flush([coupon]);
-    for (const request of http.match((req) => req.url.endsWith('/me'))) {
+    for (const request of http.match((req) => req.url.endsWith('/me/session'))) {
       if (signedIn) request.flush({ email: 'demo@qmah.test', displayName: 'Demo', pointBalance: 100 });
       else request.flush(null, { status: 401, statusText: 'Unauthorized' });
     }
