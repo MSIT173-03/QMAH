@@ -21,7 +21,7 @@ const MUSIC_VOLUME = .45;
 @Injectable({ providedIn: 'root' })
 export class GameAudio {
   private readonly document = inject(DOCUMENT);
-  readonly musicOn = signal(true);
+  readonly musicOn = signal(false);
   readonly sfxOn = signal(true);
   readonly musicVolume = signal(.6);
   readonly sfxVolume = signal(.8);
@@ -48,7 +48,7 @@ export class GameAudio {
 
   /** 一鍵靜音：兩個都關；再按一次還原成靜音前的設定。 */
   readonly muted = computed(() => !this.musicOn() && !this.sfxOn());
-  private beforeMute = { music: true, sfx: true };
+  private beforeMute = { music: false, sfx: true };
   toggleMute(): void {
     if (this.muted()) { this.musicOn.set(this.beforeMute.music || !this.beforeMute.sfx); this.sfxOn.set(this.beforeMute.sfx); }
     else { this.beforeMute = { music: this.musicOn(), sfx: this.sfxOn() }; this.musicOn.set(false); this.sfxOn.set(false); }
