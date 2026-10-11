@@ -3,8 +3,6 @@
 }
 
 .app-content { position: relative; flex: 1; min-width: 0; }
-.app-content--preparing { flex: none; height: calc(100dvh - var(--app-header-height)); min-height: 520px; overflow: clip; }
-.app-content--preparing .app-main { min-height: 100%; }
 
 .app-shell.game-focus-mode > .app-header,
 .app-shell.game-focus-mode > app-site-footer { display: none; }
@@ -759,4 +757,4 @@ textarea:focus-visible {
 .app-account__avatar { background: var(--qmah-surface-muted, #e9e6e0); color: var(--qmah-ink); }
 .app-account__avatar--image { background: var(--qmah-surface-muted, #e9e6e0); }
 /* Keep layout measurable so first-screen media can load behind the route gate. */
-.app-main--preparing { opacity: 0; pointer-events: none; }
+.app-main--preparing { opacity: .65; filter: blur(2px); pointer-events: none; }
