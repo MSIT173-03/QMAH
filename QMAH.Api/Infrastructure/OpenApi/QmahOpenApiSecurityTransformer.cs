@@ -120,7 +120,10 @@ public sealed class QmahOpenApiSecurityTransformer(
         AddProblemResponse(operation.Responses, "400", "請求資料格式錯誤、欄位驗證失敗或流程條件不符合", context.Document!);
         AddProblemResponse(operation.Responses, "500", "服務發生未預期錯誤", context.Document!);
         if (operationKey.Equals("Account.Login", StringComparison.OrdinalIgnoreCase))
+        {
+            AddProblemResponse(operation.Responses, "403", "密碼正確，但信箱尚未驗證；code 為 email_verification_required", context.Document!);
             AddProblemResponse(operation.Responses, "503", "目前無法連線到 QMAH 資料庫", context.Document!);
+        }
 
         var relativePath = context.Description.RelativePath ?? string.Empty;
         if (relativePath.Contains('{'))
@@ -128,6 +131,12 @@ public sealed class QmahOpenApiSecurityTransformer(
 
         if (ConflictOperations.Contains(operationKey))
             AddProblemResponse(operation.Responses, "409", "請求與現有資料或目前流程狀態衝突", context.Document!);
+
+        if (operationKey == "Account.ChangePassword")
+        {
+            AddProblemResponse(operation.Responses, "409", "此會員尚未設定本網站密碼", context.Document!);
+            AddProblemResponse(operation.Responses, "423", "帳號因錯誤密碼次數過多暫時鎖定", context.Document!);
+        }
 
         if (operationKey.StartsWith("Account.", StringComparison.OrdinalIgnoreCase))
             AddProblemResponse(operation.Responses, "429", "短時間內請求過多，稍後再試", context.Document!);
@@ -326,6 +335,10 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Account.Register"] = "request body（請求本文，送出的 JSON 內容）：包含 `Email`（會員電子郵件）、`Nickname`（會員顯示名稱）、`Password`（會員密碼）與 `ConfirmPassword`（再次輸入的會員密碼）",
             ["Account.ForgotPassword"] = "request body（請求本文，送出的 JSON 內容）：包含 `Email`（會員電子郵件）",
             ["Account.ResetPassword"] = "request body（請求本文，送出的 JSON 內容）：包含 `Email`（會員電子郵件）、`Token`（密碼重設驗證字串）、`NewPassword`（新會員密碼）與 `ConfirmPassword`（再次輸入的新密碼）",
+            ["Account.ConfirmEmail"] = "request body：包含 Email 與驗證信內 Base64Url 編碼的 Token",
+            ["Account.ResendConfirmation"] = "request body：包含會員 Email 與 Password",
+            ["Account.ResendConfirmationFromLink"] = "request body：包含會員 Email 與原驗證信 Token",
+            ["Account.ChangePassword"] = "request body：目前密碼 CurrentPassword、新密碼 NewPassword 與確認新密碼 ConfirmPassword；會員身分取自登入 Cookie",
             ["StoreReviews.UpsertMyReview"] = "request body（請求本文，送出的 JSON 內容）：包含 `Rating`（星等，1 至 5）與 `Content`（評價內容）",
             ["Social.CreateEvent"] = "request body（請求本文，送出的 JSON 內容）：包含 `EventType`（活動類型系統代碼）、活動內容、時間、地點與 `PostContentMode`（活動貼文內容模式）",
             ["Social.CreatePost"] = "request body（請求本文，送出的 JSON 內容）：包含 `PostType`（貼文類型系統代碼）、`BoardCode`（社群板塊系統代碼）、標題、內容與選填關聯",
@@ -374,6 +387,10 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Account.Register"] = "已建立會員並回傳新會員識別碼",
             ["Account.ForgotPassword"] = "已接受密碼重設通知處理",
             ["Account.ResetPassword"] = "已更新會員密碼，不回傳 response body（回應本文）",
+            ["Account.ConfirmEmail"] = "信箱驗證完成，不回傳 response body",
+            ["Account.ResendConfirmation"] = "已接受重寄申請；無論帳號是否存在均回傳相同訊息",
+            ["Account.GetPasswordStatus"] = "回傳目前會員的 hasPassword 布林值",
+            ["Account.ChangePassword"] = "已修改會員密碼並登出，不回傳 response body",
             ["AdminDashboard.GetDashboard"] = "回傳管理儀表板的會員、內容、訂單與營運統計",
             ["AdminCatalog.ForceUnlockArtifact"] = "回傳管理員強制解鎖結果；已存在解鎖紀錄時 Created 為 false",
             ["Metadata.GetMetadata"] = "回傳前台表單與篩選器使用的選項資料",
@@ -477,6 +494,9 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["Account.GetAntiforgeryToken"] = "204", ["Account.Login"] = "204",
             ["Account.Logout"] = "204", ["Account.Register"] = "201",
             ["Account.ForgotPassword"] = "202", ["Account.ResetPassword"] = "204",
+            ["Account.ConfirmEmail"] = "204", ["Account.ResendConfirmation"] = "202",
+            ["Account.ResendConfirmationFromLink"] = "202",
+            ["Account.ChangePassword"] = "204",
             ["Game.CreateRoom"] = "201", ["Game.SubmitVote"] = "202",
             ["Me.CreateAddress"] = "201", ["Me.RemoveCartItem"] = "204",
             ["Me.DeleteAddress"] = "204", ["Me.MarkNotificationRead"] = "204",

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Antiforgery;
@@ -125,6 +125,18 @@ public sealed class AccountController(
                     Title = "登入失敗",
                     Detail = "Email 或密碼錯誤。"
                 });
+
+            // 先驗證密碼（包含失敗鎖定），才告知此帳號需要信箱驗證；此步驟不建立 cookie。
+            var passwordResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+            if (!passwordResult.Succeeded)
+                return Unauthorized(new ProblemDetails { Status = 401, Title = "登入失敗", Detail = "Email 或密碼錯誤。" });
+
+            if (!user.EmailConfirmed)
+            {
+                var problem = new ProblemDetails { Status = 403, Title = "信箱尚未驗證", Detail = "請先完成信箱驗證，再登入會員帳號。" };
+                problem.Extensions["code"] = "email_verification_required";
+                return StatusCode(403, problem);
+            }
 
             var result = await signInManager.PasswordSignInAsync(
                 user,
@@ -340,41 +352,52 @@ public sealed class AccountController(
             return Redirect(LoginErrorUrl());
         }
 
-        // 已經綁定此外部登入
-        var linkedUser = await userManager.FindByLoginAsync(
-            info.LoginProvider,
-            info.ProviderKey);
-
-        if (linkedUser is not null
-            && linkedUser.Status != "ACTIVE")
+        if (!string.Equals(info.LoginProvider, providerName, StringComparison.Ordinal))
         {
+            logger.LogWarning("{Provider} callback 收到非預期的外部登入來源。", providerName);
             return Redirect(LoginErrorUrl());
         }
 
-        var externalResult =
-            await signInManager.ExternalLoginSignInAsync(
+        async Task<IActionResult> SignInExternalUserAsync()
+        {
+            var result = await signInManager.ExternalLoginSignInAsync(
                 info.LoginProvider,
                 info.ProviderKey,
                 isPersistent: true,
                 bypassTwoFactor: false);
 
-        if (externalResult.Succeeded)
-        {
-            var signedInUser =
-                linkedUser
-                ?? await userManager.FindByLoginAsync(
-                    info.LoginProvider,
-                    info.ProviderKey);
+            if (!result.Succeeded)
+            {
+                var failure = result.IsLockedOut ? "LockedOut"
+                    : result.IsNotAllowed ? "NotAllowed"
+                    : result.RequiresTwoFactor ? "RequiresTwoFactor"
+                    : "Failed";
+                logger.LogWarning("{Provider} 外部登入未完成。Reason={Reason}", providerName, failure);
+                return Redirect(LoginErrorUrl());
+            }
 
-            if (signedInUser is null
-                || signedInUser.Status != "ACTIVE")
+            var signedInUser = await userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            if (signedInUser is null || signedInUser.Status != "ACTIVE")
             {
                 await signInManager.SignOutAsync();
-
                 return Redirect(LoginErrorUrl());
             }
 
             return Redirect($"{clientUrl}/member");
+        }
+
+        // 已經綁定此外部登入
+        var linkedUser = await userManager.FindByLoginAsync(
+            info.LoginProvider,
+            info.ProviderKey);
+
+        if (linkedUser is not null)
+        {
+            if (linkedUser.Status != "ACTIVE")
+                return Redirect(LoginErrorUrl());
+
+            // 已綁定會員的任何登入失敗都必須停止，不可轉入首次登入流程。
+            return await SignInExternalUserAsync();
         }
 
         // 第一次使用此外部登入，需要 Email
@@ -395,38 +418,23 @@ public sealed class AccountController(
         var user =
             await userManager.FindByEmailAsync(email);
 
-        // -------------------------
-        // 已有 QMAH 帳號 → 綁定外部登入
-        // -------------------------
-
+        // 首次外部登入依相同 Email 綁定既有會員，各環境使用一致規則。
         if (user is not null)
         {
-            if (user.Status != "ACTIVE")
+            // 一般密碼會員須先完成信箱驗證，並保留停權與鎖定限制。
+            if (!user.EmailConfirmed && await userManager.HasPasswordAsync(user))
+                return Redirect($"{clientUrl}/login?{errorQueryName}=email_verification_required");
+            if (user.Status != "ACTIVE"
+                || !await signInManager.CanSignInAsync(user)
+                || await userManager.IsLockedOutAsync(user))
                 return Redirect(LoginErrorUrl());
 
-            var addLoginResult =
-                await userManager.AddLoginAsync(
-                    user,
-                    info);
-
-            if (!addLoginResult.Succeeded)
-            {
-                logger.LogWarning(
-                    "{Provider} 帳號綁定失敗。UserId={UserId} Errors={Errors}",
-                    providerName,
-                    user.Id,
-                    string.Join(
-                        ", ",
-                        addLoginResult.Errors.Select(x => x.Code)));
-
+            var linkResult = await userManager.AddLoginAsync(user, info);
+            if (!linkResult.Succeeded)
                 return Redirect(LoginErrorUrl());
-            }
 
-            await signInManager.SignInAsync(
-                user,
-                isPersistent: true);
-
-            return Redirect($"{clientUrl}/member");
+            logger.LogInformation("已依相同 Email 建立 {Provider} 外部登入綁定。", providerName);
+            return await SignInExternalUserAsync();
         }
 
         // -------------------------
@@ -440,7 +448,7 @@ public sealed class AccountController(
             Id = Guid.NewGuid(),
             UserName = email,
             Email = email,
-            EmailConfirmed = true,
+            EmailConfirmed = false,
             Status = "ACTIVE",
             CreatedAt = now,
             UpdatedAt = now
@@ -507,11 +515,7 @@ public sealed class AccountController(
             return Redirect(LoginErrorUrl());
         }
 
-        await signInManager.SignInAsync(
-            user,
-            isPersistent: true);
-
-        return Redirect($"{clientUrl}/member");
+        return await SignInExternalUserAsync();
     }
 
 
@@ -720,12 +724,161 @@ public sealed class AccountController(
             return ValidationProblem(ModelState);
         }
 
+        var confirmationSent = await TrySendConfirmationAsync(user, cancellationToken);
+
         return Created(
             "/api/v1/account/login",
             new
             {
-                userId = user.Id
+                userId = user.Id,
+                requiresEmailConfirmation = true,
+                confirmationEmailSent = confirmationSent
             });
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("verificationEmail")]
+    [HttpPost("resend-confirmation")]
+    public async Task<ActionResult> ResendConfirmation(ResendConfirmationRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        var user = await userManager.FindByEmailAsync(request.Email.Trim());
+        if (user is not null && user.Status == "ACTIVE" && !user.EmailConfirmed)
+        {
+            var check = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+            if (check.Succeeded)
+                await TrySendConfirmationAsync(user, cancellationToken);
+        }
+
+        // 不透露帳號存在與否，也不從寄信服務的錯誤透露會員資料。
+        return Accepted(new { message = "若帳號密碼正確、帳號可用且信箱尚未驗證，驗證信將寄到該信箱。請查看收件匣與垃圾郵件；未收到可稍後重試。" });
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("verificationEmail")]
+    [HttpPost("resend-confirmation-link")]
+    public async Task<ActionResult> ResendConfirmationFromLink(ConfirmEmailRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        var user = await userManager.FindByEmailAsync(request.Email.Trim());
+        if (user is null || user.Status != "ACTIVE"
+            || !await IsValidConfirmationTokenAsync(user, request.Token))
+            return Problem(statusCode: 400, title: "驗證連結無效", detail: "驗證連結無效或已過期，請從重新申請驗證信入口操作。");
+
+        if (!user.EmailConfirmed)
+            await TrySendConfirmationAsync(user, cancellationToken);
+        return Accepted(new { message = "若此信箱尚未驗證，驗證信將寄到該信箱。" });
+    }
+
+    private async Task<bool> IsValidConfirmationTokenAsync(ApplicationUser user, string encodedToken)
+    {
+        string token;
+        try { token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encodedToken)); }
+        catch (Exception exception) when (exception is FormatException or ArgumentException) { return false; }
+        return await userManager.VerifyUserTokenAsync(user, userManager.Options.Tokens.EmailConfirmationTokenProvider,
+            UserManager<ApplicationUser>.ConfirmEmailTokenPurpose, token);
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("confirm-email")]
+    public async Task<ActionResult> ConfirmEmail(ConfirmEmailRequest request)
+    {
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        var user = await userManager.FindByEmailAsync(request.Email.Trim());
+        if (user is null || user.Status != "ACTIVE")
+            return Problem(statusCode: 400, title: "信箱驗證失敗", detail: "驗證連結無效或已過期，請重新寄送驗證信。");
+
+        string token;
+        try { token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token)); }
+        catch (Exception exception) when (exception is FormatException or ArgumentException)
+        {
+            return Problem(statusCode: 400, title: "信箱驗證失敗", detail: "驗證連結無效或已過期，請重新寄送驗證信。");
+        }
+
+        // 即使信箱已驗證，也先檢查 token，不能接受任意連結。
+        if (!await userManager.VerifyUserTokenAsync(user, userManager.Options.Tokens.EmailConfirmationTokenProvider,
+                UserManager<ApplicationUser>.ConfirmEmailTokenPurpose, token))
+            return Problem(statusCode: 400, title: "信箱驗證失敗", detail: "驗證連結無效或已過期，請重新寄送驗證信。");
+
+        if (!user.EmailConfirmed && !(await userManager.ConfirmEmailAsync(user, token)).Succeeded)
+            return Problem(statusCode: 400, title: "信箱驗證失敗", detail: "目前無法完成驗證，請稍後再試。");
+        return NoContent();
+    }
+
+    private async Task<bool> TrySendConfirmationAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var clientUrl = (configuration["Frontend:ClientUrl"] ?? "http://localhost:4200").TrimEnd('/');
+            var confirmationUrl = $"{clientUrl}/verify-email?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(encodedToken)}";
+            await emailSender.SendConfirmationAsync(user.Email!, confirmationUrl, cancellationToken);
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "信箱驗證郵件傳送失敗。RecipientDomain={RecipientDomain}", GetEmailDomain(user.Email!));
+            return false;
+        }
+    }
+
+    [Authorize]
+    [HttpGet("password-status")]
+    public async Task<ActionResult> GetPasswordStatus()
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user is null || user.Status != "ACTIVE") return Unauthorized();
+        return Ok(new { hasPassword = await userManager.HasPasswordAsync(user) });
+    }
+
+    [Authorize]
+    [EnableRateLimiting("auth")]
+    [HttpPost("change-password")]
+    public async Task<ActionResult> ChangePassword(ChangePasswordRequest request)
+    {
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        var user = await userManager.GetUserAsync(User);
+        if (user is null || user.Status != "ACTIVE") return Unauthorized();
+
+        if (!await userManager.HasPasswordAsync(user))
+            return Problem(statusCode: 409, title: "尚未設定密碼", detail: "此帳號目前使用第三方登入，請透過忘記密碼寄送重設連結來設定本網站密碼。");
+
+        // 修改密碼也受錯誤次數鎖定保護，避免利用已登入的 session 猜測目前密碼。
+        var check = await signInManager.CheckPasswordSignInAsync(user, request.CurrentPassword, lockoutOnFailure: true);
+        if (check.IsLockedOut)
+            return Problem(statusCode: 423, title: "帳號暫時鎖定", detail: "密碼錯誤次數過多，請稍後再試或使用忘記密碼。");
+        if (!check.Succeeded)
+            return Problem(statusCode: 400, title: "修改密碼失敗", detail: "目前密碼不正確，或帳號目前無法修改密碼。");
+
+        if (request.NewPassword == request.CurrentPassword)
+            return Problem(statusCode: 400, title: "修改密碼失敗", detail: "新密碼不可與目前密碼相同。");
+
+        var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                var message = error.Code switch
+                {
+                    "PasswordTooShort" => "新密碼長度不足。",
+                    "PasswordRequiresUpper" => "新密碼須包含大寫英文字母。",
+                    "PasswordRequiresLower" => "新密碼須包含小寫英文字母。",
+                    "PasswordRequiresDigit" => "新密碼須包含數字。",
+                    "PasswordRequiresNonAlphanumeric" => "新密碼須包含特殊符號。",
+                    "PasswordMismatch" => "目前密碼不正確。",
+                    _ => "密碼更新失敗，請確認新密碼規則或稍後再試。"
+                };
+                ModelState.AddModelError(nameof(request.NewPassword), message);
+            }
+            return ValidationProblem(ModelState);
+        }
+
+        // ChangePasswordAsync 更新 security stamp，使其他既有 cookie 在下次驗證時失效。
+        await signInManager.SignOutAsync();
+        return NoContent();
     }
 
     [AllowAnonymous]

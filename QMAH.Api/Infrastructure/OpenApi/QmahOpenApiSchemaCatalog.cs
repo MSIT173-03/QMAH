@@ -21,6 +21,16 @@ internal static class QmahOpenApiSchemaCatalog
                 ("confirmPassword", "ConfirmPassword（再次輸入的會員密碼）；必須與 Password（會員密碼）相同")),
             ["ForgotPasswordRequest"] = Fields(
                 ("email", "Email（會員電子郵件）；無論是否存在都使用相同成功回應")),
+            ["ConfirmEmailRequest"] = Fields(
+                ("email", "Email（會員電子郵件）；須與驗證信收件信箱相同"),
+                ("token", "Token（驗證信中的 Base64Url 信箱驗證字串）；不能使用密碼重設 token")),
+            ["ResendConfirmationRequest"] = Fields(
+                ("email", "會員註冊時的 Email"),
+                ("password", "會員密碼；必須驗證正確才能重寄，不建立登入 Cookie")),
+            ["ChangePasswordRequest"] = Fields(
+                ("currentPassword", "目前會員密碼；必須正確，不接受第三方平台密碼"),
+                ("newPassword", "新密碼；8–100 字元且須符合 Identity 密碼政策，不可與目前密碼相同"),
+                ("confirmPassword", "再次輸入新密碼；必須與 newPassword 相同")),
             ["ResetPasswordRequest"] = Fields(
                 ("email", "Email（會員電子郵件）"),
                 ("token", "Token（密碼重設驗證字串）"),

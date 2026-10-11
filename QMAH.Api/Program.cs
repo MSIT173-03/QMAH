@@ -349,7 +349,18 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
-    // 以登入帳號 Id 分桶（而不是 IP），因為要擋的是「同一個帳號」短時間狂發，不是同一個網路出口。
+    // 兩種重寄入口共用 IP 限流，避免切換入口繞過寄信次數限制。
+    options.AddPolicy("verificationEmail", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    // 社群內容依登入會員 Id 分桶。
     options.AddPolicy("socialContent", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)

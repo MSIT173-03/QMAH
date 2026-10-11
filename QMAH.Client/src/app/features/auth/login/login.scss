@@ -1152,6 +1152,30 @@ input:focus-visible {
   background: var(--qmah-line);
 }
 
+.demo-accounts {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--qmah-line);
+  border-radius: 10px;
+  color: var(--login-teal);
+  background: var(--qmah-surface);
+
+  summary { cursor: pointer; font-weight: 600; }
+  label { display: block; margin-top: 12px; font-size: 13px; }
+  select, button {
+    width: 100%;
+    min-height: 40px;
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid var(--qmah-line);
+    border-radius: 6px;
+    background: var(--qmah-surface);
+    color: inherit;
+    font: inherit;
+  }
+  button { cursor: pointer; font-weight: 600; }
+}
+
 :host-context([data-theme='qmahdark']) .login-side {
   background: transparent;
 }

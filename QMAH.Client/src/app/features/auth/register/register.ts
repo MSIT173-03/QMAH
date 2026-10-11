@@ -70,13 +70,6 @@ interface RegisterRequest {
   turnstileToken: string;
 }
 
-interface LoginRequest {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-}
-
-
 @Component({
   selector: 'app-register',
 
@@ -679,12 +672,9 @@ private submitRegistration(): void {
   ): void {
 
     this.http
-      .post(
+      .post<{ confirmationEmailSent: boolean }>(
         '/api/v1/account/register',
-        request,
-        {
-          responseType: 'text'
-        }
+        request
       )
       .subscribe({
 
@@ -692,13 +682,11 @@ private submitRegistration(): void {
         // 註冊成功
         // =========================
 
-        next: () => {
-
-          this.autoLogin(
-            request.email,
-            request.password
-          );
-
+        next: (response) => {
+          this.submitting = false;
+          void this.router.navigate(['/verify-email'], {
+            queryParams: { email: request.email, delivery: response.confirmationEmailSent ? 'sent' : 'failed' }
+          });
         },
 
 
@@ -743,7 +731,7 @@ private submitRegistration(): void {
           ) {
 
             this.errorMessage =
-              '這個 Email 已經註冊過了。';
+              '這個 Email 已經註冊過了。若尚未驗證，請至信箱驗證頁重寄驗證信。';
 
           }
           else if (
@@ -768,81 +756,4 @@ private submitRegistration(): void {
       });
 
   }
-
-
-  // =========================
-  // 註冊成功後自動登入
-  // =========================
-
-  private autoLogin(
-    email: string,
-    password: string
-  ): void {
-
-    const loginRequest: LoginRequest = {
-
-      email:
-        email,
-
-      password:
-        password,
-
-      rememberMe:
-        false
-
-    };
-
-
-    this.http
-      .post(
-        '/api/v1/account/login',
-        loginRequest,
-        {
-          responseType: 'text'
-        }
-      )
-      .subscribe({
-
-        // =========================
-        // 自動登入成功
-        // =========================
-
-        next: () => {
-
-          this.submitting = false;
-
-          this.router.navigate([
-            '/member'
-          ]);
-
-        },
-
-
-        // =========================
-        // 自動登入失敗
-        // =========================
-
-        error: (error) => {
-
-          console.error(
-            'auto login error:',
-            error
-          );
-
-          this.submitting = false;
-
-          alert(
-            '帳號已建立成功，但自動登入失敗，請手動登入。'
-          );
-
-          this.router.navigate([
-            '/login'
-          ]);
-
-        }
-
-      });
-
-  }
-
 }

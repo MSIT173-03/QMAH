@@ -83,3 +83,4 @@ $RECYCLE.BIN/
 CLAUDE.md
 .claude/launch.json
 QMAH.Client/start-dev.bat
+/QMAH.Client/.demo/

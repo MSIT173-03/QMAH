@@ -1,0 +1,19 @@
+form {
+  margin-top: var(--qmah-space-4);
+}
+
+.form-group input:disabled {
+  background: var(--qmah-surface-muted);
+  color: var(--qmah-text-muted);
+  border-color: var(--qmah-border);
+  opacity: 1;
+  -webkit-text-fill-color: var(--qmah-text-muted);
+  cursor: not-allowed;
+}
+
+.verification-email-hint {
+  margin: var(--qmah-space-2) 0 0;
+  color: var(--qmah-text-muted);
+  font-size: var(--qmah-type-label-size);
+  line-height: var(--qmah-type-body-leading);
+}

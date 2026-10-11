@@ -22,8 +22,12 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
-            "allowedCommonJsDependencies": ["qrcode"],
-            "polyfills": ["zone.js"],
+            "allowedCommonJsDependencies": [
+              "qrcode"
+            ],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -44,7 +48,9 @@
             ],
             "stylePreprocessorOptions": {
               "sass": {
-                "silenceDeprecations": ["import"]
+                "silenceDeprecations": [
+                  "import"
+                ]
               }
             },
             "inlineStyleLanguage": "scss"
@@ -74,7 +80,24 @@
               ],
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "public"
+                },
+                {
+                  "glob": "**/*",
+                  "input": ".game-assets",
+                  "followSymlinks": true,
+                  "output": "assets/game"
+                },
+                {
+                  "glob": "demo-accounts.json",
+                  "input": ".demo",
+                  "output": "demo"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"

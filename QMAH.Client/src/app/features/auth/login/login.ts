@@ -1,4 +1,5 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -15,6 +16,13 @@ interface QingmingSegment {
   location: string;
 }
 
+interface DemoAccount {
+  displayName: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
 @Component({
   selector: 'app-login',
   imports: [CommonModule, ReactiveFormsModule, RouterLink, QmahIconComponent, ImageMagnifier],
@@ -22,6 +30,16 @@ interface QingmingSegment {
   styleUrl: './login.scss',
 })
 export class Login implements OnInit, OnDestroy {
+  readonly demoAccounts = signal<DemoAccount[]>([]);
+  private readonly demoHttp = inject(HttpClient);
+
+  fillDemoAccount(email: string): void {
+    if (this.loading) return;
+    const account = this.demoAccounts().find(item => item.email === email);
+    if (!account) return;
+    this.form.patchValue({ email: account.email, password: account.password, rememberMe: false });
+    this.errorMessage = '';
+  }
   loading = false;
   errorMessage = '';
   /** API 沒有回報 OAuth 已啟用前先保持停用，避免顯示無法完成的登入入口。 */
@@ -122,6 +140,24 @@ export class Login implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // 帳密僅由 development 專用資產載入，正式建置不包含此資產。
+    if (!environment.production) {
+      this.demoHttp.get<DemoAccount[]>('/demo/demo-accounts.json').subscribe({
+        next: accounts => this.demoAccounts.set(accounts.filter(account =>
+          typeof account.displayName === 'string' && typeof account.email === 'string'
+          && typeof account.password === 'string' && typeof account.role === 'string')),
+        error: () => this.demoAccounts.set([]),
+      });
+    }
+    const externalError = this.route.snapshot.queryParamMap.get('googleError')
+      ?? this.route.snapshot.queryParamMap.get('logtoError');
+    if (externalError) {
+      this.errorMessage = externalError === 'account_link_required'
+        ? '此信箱已有會員帳號，但這個第三方登入方式尚未綁定，請使用原本的登入方式登入。'
+        : externalError === 'email_verification_required'
+        ? '此 Email 的會員帳號尚未完成信箱驗證，請先驗證再使用第三方登入。'
+        : '第三方登入未完成，請重試或使用電子郵件與密碼登入。';
+    }
     this.authService.getCapabilities().subscribe((capabilities) => {
       this.googleLoginEnabled = capabilities.googleLoginEnabled;
     });
@@ -362,6 +398,11 @@ microsoftLogin(): void {
       },
       error: (error) => {
         this.loading = false;
+
+        if (error.status === 403 && error.error?.code === 'email_verification_required') {
+          this.errorMessage = '信箱尚未驗證，請查收註冊時的驗證信；若未收到，可從註冊頁重寄驗證信。';
+          return;
+        }
 
         if (error.status === 401) {
           this.errorMessage = '電子郵件或密碼錯誤';

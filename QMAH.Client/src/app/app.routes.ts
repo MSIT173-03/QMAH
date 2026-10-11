@@ -28,6 +28,11 @@ const appShellChildren: Routes = [
     loadComponent: () => import('./features/user/profile/profile').then(m => m.Profile)
   },
   {
+    path: 'member/security',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/user/security/security').then(m => m.Security)
+  },
+  {
     path: 'member/economy',
     canActivate: [authGuard],
     loadComponent: () => import('./features/member/economy/economy').then(m => m.Economy)
@@ -178,6 +183,10 @@ const appShellChildren: Routes = [
 ];
 
 export const routes: Routes = [
+  {
+    path: 'verify-email',
+    loadComponent: () => import('./features/auth/verify-email/verify-email').then(m => m.VerifyEmail)
+  },
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login').then(m => m.Login)

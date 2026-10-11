@@ -724,6 +724,36 @@ public sealed class RegisterRequest
     public string TurnstileToken { get; set; } = "";
 }
 
+public sealed class ConfirmEmailRequest
+{
+    [Required, EmailAddress, StringLength(256)]
+    public string Email { get; set; } = "";
+
+    [Required, StringLength(4096)]
+    public string Token { get; set; } = "";
+}
+
+public sealed class ResendConfirmationRequest
+{
+    [Required, EmailAddress, StringLength(256)]
+    public string Email { get; set; } = "";
+
+    [Required, StringLength(100), DataType(DataType.Password)]
+    public string Password { get; set; } = "";
+}
+
+public sealed class ChangePasswordRequest
+{
+    [Required, StringLength(100), DataType(DataType.Password)]
+    public string CurrentPassword { get; set; } = "";
+
+    [Required, StringLength(100, MinimumLength = 8), DataType(DataType.Password)]
+    public string NewPassword { get; set; } = "";
+
+    [Required, Compare(nameof(NewPassword)), DataType(DataType.Password)]
+    public string ConfirmPassword { get; set; } = "";
+}
+
 public sealed class ResetPasswordRequest
 {
     [Required, EmailAddress, StringLength(256)]

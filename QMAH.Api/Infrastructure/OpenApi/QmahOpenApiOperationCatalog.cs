@@ -10,9 +10,14 @@ internal static class QmahOpenApiOperationCatalog
         {
             ["Account.GetAntiforgeryToken"] = ("取得防偽請求權杖", "在回應 Cookie（瀏覽器保存的小型資料）寫入前端執行寫入操作所需的 `XSRF-TOKEN-API`，成功回傳 `204 No Content`（成功且沒有回應本文）。response body（回應本文）不包含 token（驗證用的暫時字串）；後續 POST、PUT、DELETE 由同一 session（瀏覽器工作階段）沿用該 Cookie。"),
             ["Account.GetCapabilities"] = ("取得登入能力狀態", "只回傳選用登入能力是否已啟用，不暴露任何第三方 OAuth secret 或 client id；前端可依 `googleLoginEnabled` 停用單一入口，密碼登入不受影響。"),
-            ["Account.Login"] = ("登入會員帳號", "驗證 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Password` 與 `RememberMe`，成功建立 Identity Cookie（登入狀態 Cookie）並回傳 `204 No Content`（成功且沒有回應本文）。帳號不存在、帳號狀態不是 `ACTIVE` 或密碼不符時統一回傳 `401`，不揭露失敗欄位；QMAH 資料庫無法連線時回傳 `503`。"),
+            ["Account.Login"] = ("登入會員帳號", "驗證 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Password` 與 `RememberMe`，成功建立 Identity Cookie（登入狀態 Cookie）並回傳 `204 No Content`（成功且沒有回應本文）。帳號不存在、帳號狀態不是 `ACTIVE` 或密碼不符時統一回傳 `401`，不揭露失敗欄位；密碼正確但信箱尚未驗證時回傳 `403` 與 code=email_verification_required，不建立登入 Cookie；QMAH 資料庫無法連線時回傳 `503`。"),
             ["Account.Logout"] = ("登出會員帳號", "驗證目前 Identity Cookie（登入狀態 Cookie）後清除登入狀態，成功回傳 `204 No Content`（成功且沒有回應本文）。"),
-            ["Account.Register"] = ("註冊會員帳號", "以 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Nickname` 與 `Password` 建立會員、Profile（會員資料）及 `User` role（會員角色），成功回傳 `201 Created`（已建立資源）與新會員 `userId`（會員識別碼）。Email 已存在時回傳 `409`，不建立重複帳號。"),
+            ["Account.GetPasswordStatus"] = ("取得會員密碼設定狀態", "需要登入，僅回傳目前 ACTIVE 會員是否已設定本網站密碼（hasPassword），不回傳密碼、雜湊或第三方憑證。"),
+            ["Account.ChangePassword"] = ("修改會員密碼", "需要登入，提供 CurrentPassword、NewPassword 與 ConfirmPassword。驗證目前密碼並遵守錯誤次數鎖定，新密碼不得與目前相同，且須符合 Identity 密碼政策。成功更新密碼與 security stamp 並登出，回傳 204；目前密碼錯誤或新密碼無效回傳 400、無本網站密碼回傳 409、帳號鎖定回傳 423。此流程不寄信；忘記密碼另走 Brevo 重設信。"),
+            ["Account.Register"] = ("註冊會員帳號", "通過 Turnstile 後，以 Email、Nickname 與 Password 建立會員、Profile 與 User 角色並寄送信箱驗證信。成功回傳 201、userId、requiresEmailConfirmation 與 confirmationEmailSent；寄信失敗仍保留帳號，可重寄。尚未驗證信箱不能用密碼登入；Email 已存在回傳 409。"),
+            ["Account.ConfirmEmail"] = ("完成會員信箱驗證", "以 Email 與驗證信內的 Base64Url Token 完成信箱驗證；必須由前台明確 POST，避免郵件掃描器自動驗證。合法連結重複確認回傳 204；無效、過期或停權帳號回傳 400。"),
+            ["Account.ResendConfirmation"] = ("重新申請會員信箱驗證信", "提供 Email 與 Password，僅對密碼正確、ACTIVE 且尚未驗證的會員寄信。密碼檢查遵守失敗鎖定；不論帳號存在與否、密碼錯誤或寄信失敗均回傳相同 202。兩種重寄入口共用同一 IP 五分鐘三次限流與防偽驗證。"),
+            ["Account.ResendConfirmationFromLink"] = ("由驗證連結重寄驗證信", "提供 Email 與原驗證信 Token。後端先驗證 token 是否屬於該會員、用途與有效期；不匹配或過期回傳 400，且不寄信。有效連結回傳 202，僅對尚未驗證帳號寄信。與一般重寄共用 IP 五分鐘三次限流。"),
             ["Account.ForgotPassword"] = ("申請密碼重設", "依 request body（請求本文，送出的 JSON 內容）中的 `Email` 產生 password reset token（密碼重設 token，一次性密碼重設字串）並寄送重設指示，成功回傳 `202 Accepted`（已接受後續處理）。無論 Email 是否對應帳號都使用相同回應，避免 Email enumeration（由回應推測帳號是否存在）。"),
             ["Account.ResetPassword"] = ("完成密碼重設", "使用 request body（請求本文，送出的 JSON 內容）中的 `Email`、`Token` 與 `NewPassword` 驗證 password reset token（密碼重設 token，一次性密碼重設字串）並更新密碼，成功回傳 `204 No Content`（成功且沒有回應本文）。token（驗證用的暫時字串）無效、過期或新密碼不符合密碼政策時回傳 `400`。"),
 

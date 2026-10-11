@@ -1,0 +1,87 @@
+<div class="security-page">
+  <app-back-to-member />
+  <section class="security-card" aria-labelledby="security-title">
+    <header class="security-header">
+      <span class="security-icon"><app-qmah-icon name="lock-keyhole" /></span>
+      <span class="eyebrow">ACCOUNT SECURITY</span>
+      <h1 id="security-title">帳號安全</h1>
+      <p>定期更新密碼，保護你的會員資料與資產。</p>
+    </header>
+    @if (errorMessage) { <div class="message error" role="alert">{{ errorMessage }}</div> }
+    @if (changed) {
+      <div class="message success" role="status">密碼已修改。為保護帳號安全，已登出，請使用新密碼重新登入。</div>
+      <a class="primary-button" routerLink="/login">重新登入</a>
+    } @else if (loading) {
+      <p role="status">正在讀取帳號設定…</p>
+    } @else if (hasPassword === null) {
+      <button class="primary-button" type="button" (click)="loadStatus()">重新載入</button>
+      <a class="text-link" routerLink="/login">返回登入</a>
+    } @else if (!hasPassword) {
+      <h2>你目前使用第三方登入</h2>
+      <p class="help">此會員尚未設定本網站密碼，不需要輸入 Google、Facebook 或 Microsoft 的密碼。
+        若要增加密碼登入方式，請透過忘記密碼寄送重設連結至會員信箱。</p>
+      <a class="primary-button" routerLink="/forgot-password">寄送密碼設定連結</a>
+    } @else {
+      <h2>修改密碼</h2>
+      <p class="help">設定新的登入密碼，修改後需要重新登入。</p>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="current-password">目前密碼</label>
+          <div class="password-wrapper">
+            <input id="current-password" [type]="showCurrentPassword ? 'text' : 'password'" formControlName="currentPassword" placeholder="請輸入目前密碼" autocomplete="current-password" maxlength="100" />
+            <button type="button" class="password-toggle" (click)="showCurrentPassword = !showCurrentPassword" [attr.aria-label]="showCurrentPassword ? '隱藏目前密碼' : '顯示目前密碼'" [attr.aria-pressed]="showCurrentPassword">
+              <app-qmah-icon [name]="showCurrentPassword ? 'eye-off' : 'eye'" />
+            </button>
+          </div>
+          @if (form.controls.currentPassword.touched && form.controls.currentPassword.invalid) {
+            <p class="field-error">請輸入目前密碼。</p>
+          }
+        </div>
+        <div class="field">
+          <label for="new-password">新密碼</label>
+          <div class="password-wrapper" [class.is-valid]="passwordValid">
+            <input id="new-password" [type]="showPassword ? 'text' : 'password'" formControlName="newPassword" placeholder="請輸入新密碼" autocomplete="new-password" [attr.aria-describedby]="passwordValue.length > 0 && !passwordValid ? 'password-rules' : null" maxlength="100" />
+            @if (passwordValid) {
+              <span class="password-valid-icon" aria-label="密碼格式正確" title="密碼格式正確"><app-qmah-icon name="circle-check" /></span>
+            }
+            <button type="button" class="password-toggle" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? '隱藏新密碼' : '顯示新密碼'" [attr.aria-pressed]="showPassword">
+              <app-qmah-icon [name]="showPassword ? 'eye-off' : 'eye'" />
+            </button>
+          </div>
+          @if (passwordValue.length > 0 && !passwordValid) {
+            <div class="password-rules" id="password-rules">
+              @for (rule of passwordRules; track rule.label) {
+                <p class="password-rule" [class.valid]="rule.valid">
+                  <span><app-qmah-icon [name]="rule.valid ? 'circle-check' : 'circle-alert'" size="14" /></span>
+                  {{ rule.label }}
+                </p>
+              }
+            </div>
+          }
+          @if (form.controls.newPassword.touched && form.controls.newPassword.invalid) {
+            <p class="field-error">請輸入符合規則的新密碼。</p>
+          }
+        </div>
+        <div class="field">
+          <label for="confirm-password">確認新密碼</label>
+          <div class="password-wrapper" [class.is-valid]="passwordsMatch">
+            <input id="confirm-password" [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="再輸入一次新密碼" autocomplete="new-password" maxlength="100" />
+            @if (passwordsMatch) {
+              <span class="password-valid-icon" aria-label="兩次密碼一致" title="兩次密碼一致"><app-qmah-icon name="circle-check" /></span>
+            }
+            <button type="button" class="password-toggle" (click)="showConfirmPassword = !showConfirmPassword" [attr.aria-label]="showConfirmPassword ? '隱藏確認密碼' : '顯示確認密碼'" [attr.aria-pressed]="showConfirmPassword">
+              <app-qmah-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'" />
+            </button>
+          </div>
+          @if (form.controls.confirmPassword.value.length > 0 && !passwordsMatch) {
+            <div class="password-match"><app-qmah-icon name="circle-alert" />兩次輸入的密碼不一致</div>
+          } @else if (form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid) {
+            <p class="field-error">請再次輸入新密碼。</p>
+          }
+        </div>
+        <button class="primary-button" type="submit" [disabled]="saving" [attr.aria-busy]="saving">{{ saving ? '修改中…' : '確認修改密碼' }}</button>
+      </form>
+      <a class="text-link" routerLink="/forgot-password">忘記目前密碼？寄送重設連結</a>
+    }
+  </section>
+</div>

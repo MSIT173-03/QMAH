@@ -1,0 +1,52 @@
+<div class="forgot-page">
+  <section class="forgot-card" aria-labelledby="verify-title">
+    <div class="forgot-header">
+      <div class="forgot-icon"><app-qmah-icon name="circle-check" /></div>
+      <h1 id="verify-title">驗證會員信箱</h1>
+      <p>完成信箱驗證後，即可使用一般會員帳號登入。</p>
+    </div>
+    @if (successMessage) {
+      <div class="success-box" role="status">{{ successMessage }}</div>
+    }
+    @if (errorMessage) {
+      <div class="error-box" role="alert">{{ errorMessage }}</div>
+    }
+    @if (!verified) {
+      @if (hasLink) {
+        <p>請按下按鈕確認驗證信中的信箱。</p>
+        <button type="button" class="submit-button" [disabled]="busy" (click)="confirm()">
+          {{ busy ? '處理中…' : '確認驗證信箱' }}
+        </button>
+      }
+      <form [formGroup]="form" (ngSubmit)="resend()">
+        <div class="form-group">
+          @if (linkedEmail) {
+            <label for="verification-email">會員 Email</label>
+            <input id="verification-email" type="email" [value]="linkedEmail" disabled aria-describedby="verification-email-hint" />
+            <p id="verification-email-hint" class="verification-email-hint">此信箱僅供驗證，無法在此修改。</p>
+          } @else {
+            <label for="verification-email">會員 Email</label>
+            <input id="verification-email" type="email" autocomplete="email" formControlName="email" />
+          }
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <div class="field-error">請輸入有效的 Email。</div>
+          }
+        </div>
+        @if (!hasLink) {
+          <div class="form-group">
+            <label for="verification-password">會員密碼</label>
+            <input id="verification-password" type="password" autocomplete="current-password" formControlName="password" maxlength="100" />
+            @if (form.controls.password.touched && form.controls.password.invalid) {
+              <div class="field-error">請輸入註冊時設定的密碼，確認後才能重寄。</div>
+            }
+          </div>
+        }
+        <button type="submit" class="submit-button" [disabled]="busy">{{ busy ? '處理中…' : '重寄驗證信' }}</button>
+      </form>
+    }
+    @if (hasLink && !verified) {
+      <div class="back-link"><a href="/verify-email">驗證連結失效？重新申請驗證信</a></div>
+    }
+    <div class="back-link"><a routerLink="/login">返回登入</a></div>
+  </section>
+</div>

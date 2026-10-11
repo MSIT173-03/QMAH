@@ -5,6 +5,8 @@ namespace QMAH.Api.Infrastructure.Identity;
 
 public interface IPasswordResetEmailSender
 {
+    Task SendConfirmationAsync(string email, string confirmationUrl, CancellationToken cancellationToken = default);
+
     Task SendAsync(
         string email,
         string resetUrl,
@@ -16,10 +18,18 @@ public sealed class PasswordResetEmailSender(
     ILogger<PasswordResetEmailSender> logger,
     IConfiguration configuration) : IPasswordResetEmailSender
 {
+    public Task SendConfirmationAsync(string email, string confirmationUrl, CancellationToken cancellationToken = default)
+        => SendMessageAsync(email, confirmationUrl, true, cancellationToken);
+
     public async Task SendAsync(
         string email,
         string resetUrl,
         CancellationToken cancellationToken = default)
+    {
+        await SendMessageAsync(email, resetUrl, false, cancellationToken);
+    }
+
+    private async Task SendMessageAsync(string email, string resetUrl, bool confirmation, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -37,6 +47,7 @@ public sealed class PasswordResetEmailSender(
             email,
             resetUrl,
             apiKey,
+            confirmation,
             cancellationToken);
     }
 
@@ -44,9 +55,13 @@ public sealed class PasswordResetEmailSender(
         string email,
         string resetUrl,
         string apiKey,
+        bool confirmation,
         CancellationToken cancellationToken)
     {
         var encodedResetUrl = WebUtility.HtmlEncode(resetUrl);
+        var subject = confirmation ? "清明鑑定屋｜驗證信箱" : "清明鑑定屋｜重設密碼";
+        var introduction = confirmation ? "請驗證您的信箱，以完成清明鑑定屋會員註冊。" : "我們收到重設清明鑑定屋會員密碼的請求。";
+        var action = confirmation ? "驗證信箱" : "設定新密碼";
 
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
@@ -70,14 +85,14 @@ public sealed class PasswordResetEmailSender(
                     }
                 },
 
-                subject = "清明鑑定屋｜重設密碼",
+                subject,
 
                 textContent = $"""
                     您好，
 
-                    我們收到重設清明鑑定屋會員密碼的請求。
+                    {introduction}
 
-                    請開啟以下連結設定新密碼：
+                    請開啟以下連結{action}：
 
                     {resetUrl}
 
@@ -93,12 +108,12 @@ public sealed class PasswordResetEmailSender(
                         <p>您好，</p>
 
                         <p>
-                            我們收到重設清明鑑定屋會員密碼的請求。
+                            {introduction}
                         </p>
 
                         <p>
                             <a href="{encodedResetUrl}">
-                                點此設定新密碼
+                                點此{action}
                             </a>
                         </p>
 
@@ -132,16 +147,16 @@ public sealed class PasswordResetEmailSender(
         if (!response.IsSuccessStatusCode)
         {
             logger.LogError(
-                "Brevo 密碼重設郵件傳送失敗。StatusCode={StatusCode} Response={Response}",
+                "Brevo 帳號郵件傳送失敗。StatusCode={StatusCode} Response={Response}",
                 (int)response.StatusCode,
                 Truncate(responseBody));
 
             throw new InvalidOperationException(
-                "Brevo 密碼重設郵件傳送失敗。");
+                "Brevo 帳號郵件傳送失敗。");
         }
 
         logger.LogInformation(
-            "密碼重設郵件已交由 Brevo 處理。RecipientDomain={RecipientDomain}",
+            "帳號郵件已交由 Brevo 處理。RecipientDomain={RecipientDomain}",
             GetDomain(email));
     }
 

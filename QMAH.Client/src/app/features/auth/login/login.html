@@ -190,6 +190,19 @@
             <a routerLink="/forgot-password" class="forgot-password">忘記密碼？</a>
           </div>
 
+        @if (demoAccounts().length) {
+          <details class="demo-accounts">
+            <summary>展示帳號快速填入</summary>
+            <label for="demo-account">選擇展示帳號</label>
+            <select id="demo-account" #demoAccount [disabled]="loading">
+              @for (account of demoAccounts(); track account.email) {
+                <option [value]="account.email">{{ account.displayName }} · {{ account.email }}</option>
+              }
+            </select>
+            <button type="button" (click)="fillDemoAccount(demoAccount.value)" [disabled]="loading">填入帳號密碼</button>
+          </details>
+        }
+
           @if (errorMessage) {
             <div class="login-error" role="alert">{{ errorMessage }}</div>
           }

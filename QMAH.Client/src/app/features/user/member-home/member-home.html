@@ -44,7 +44,7 @@
           </h2>
 
           <p>
-            管理你的會員基本資料與配送資訊。
+            管理你的會員基本資料、帳號安全與配送資訊。
           </p>
 
         </div>
@@ -52,7 +52,7 @@
       </div>
 
 
-      <div class="dashboard-grid">
+      <div class="dashboard-grid three-columns">
 
         <!-- 個人資料 -->
 
@@ -96,6 +96,18 @@
 
         </a>
 
+
+        <a routerLink="/member/security" class="dashboard-card profile-card">
+          <div class="card-top">
+            <div class="card-icon profile-icon"><app-qmah-icon name="lock-keyhole" /></div>
+            <span class="card-arrow"><app-qmah-icon name="arrow-right" /></span>
+          </div>
+          <div class="card-content">
+            <h3>帳號安全</h3>
+            <p>修改登入密碼，保護你的會員帳號。</p>
+          </div>
+          <div class="card-footer"><span>SECURITY</span><strong>修改密碼</strong></div>
+        </a>
 
         <!-- 地址 -->
 
