@@ -44,7 +44,7 @@ export const ORDER_OPTIONS: OrderOption[] = [
   { label: '價格高→低', order: 5 },
 ];
 
-/** 顯示模式（卡片格狀／橫列清單） */
+/** 顯示模式（卡片格狀／清單加預覽欄） */
 export type DisplayModeKey = 'grid' | 'list';
 
 /** 顯示模式切換選項 */

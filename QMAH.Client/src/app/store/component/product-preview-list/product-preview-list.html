@@ -1,0 +1,105 @@
+<!-- 商品預覽清單（列表顯示模式）：左側精簡清單、右側預覽欄 -->
+<div class="preview-layout" [style.--preview-count]="rows().length" [style.--preview-selected]="selectedIndex()">
+
+  <!-- 精簡清單：每列只有縮圖、名稱與價格；選取的那一列會顯示在預覽欄，點擊可固定預覽（左右兩側出現色條） -->
+  <div class="preview-rows" role="listbox" [attr.aria-label]="listLabel">
+    @for (row of rows(); track row.item.id; let i = $index) {
+      @let active = i === selectedIndex();
+      @let pinned = row.item.id === pinnedId();
+      <div #row class="preview-row" role="option" [class.preview-row--selected]="active" [class.preview-row--pinned]="pinned"
+        [attr.title]="pinned ? unpinHint : pinHint"
+        [attr.aria-selected]="active ? 'true' : 'false'" [attr.tabindex]="active ? 0 : -1" [style.--preview-index]="i"
+        (mousemove)="onRowHover(row.item.id)" (click)="onRowClick(row.item.id, i)"
+        (keydown)="onRowKeydown($event, i)">
+        <span class="preview-row-thumb">
+          @if (row.thumb; as thumbUrl) {
+            <img class="preview-image" src="{{ thumbUrl }}" alt="" loading="lazy" decoding="async"
+              (error)="onThumbError(row.item.id)" />
+          } @else {
+            <app-qmah-icon name="image" [size]="18" aria-hidden="true" />
+          }
+        </span>
+        <span class="preview-row-info">
+          <span class="preview-row-title">{{ row.item.name }}</span>
+          <span class="preview-meta">{{ row.meta }}</span>
+        </span>
+        <span class="preview-row-price">
+          <span [class.text-accent]="row.priceView.hasDeal">{{ row.priceView.price }}</span>
+          @if (row.priceView.was) {
+            <span class="product-card-was">{{ row.priceView.was }}</span>
+          }
+        </span>
+      </div>
+    }
+  </div>
+
+  <!-- 預覽欄：選取商品的大圖、文物說明、尺寸、評價與購買操作；窄螢幕時是從選取列往下拉開的細節 -->
+  @for (product of previewed(); track product.id) {
+    @let pv = priceView();
+    @let info = selectedDetail();
+    <aside class="preview-pane" [attr.aria-label]="paneLabel">
+      <!-- 外層負責拉開時的裁切，內層才是實際版面 -->
+      <div class="preview-pane-clip">
+        <div class="preview-pane-content">
+          <a [storeLink]="link()" class="preview-pane-cover">
+            @if (image.src(); as imageUrl) {
+              <img class="preview-image" src="{{ imageUrl }}" [alt]="product.name" decoding="async" (error)="image.onError()" />
+            } @else {
+              <span class="preview-pane-slot"><app-qmah-icon name="image" [size]="22" aria-hidden="true" />{{ slotLabel }}</span>
+            }
+          </a>
+
+          <div class="preview-pane-body">
+            <span class="preview-meta">{{ meta() }}</span>
+            <a [storeLink]="link()" class="preview-pane-title">{{ product.name }}</a>
+
+            <!-- 文物說明與尺寸：固定預留三行說明與一行尺寸的高度；讀取中顯示有高光滑過的佔位條，查詢失敗則留白 -->
+            @if (info) {
+              <p class="preview-pane-desc">{{ info.artifactDescription }}</p>
+              <dl class="preview-specs">
+                <div class="preview-spec"><dt>{{ dimensionsLabel }}</dt><dd>{{ info.dimensions }}</dd></div>
+              </dl>
+            } @else {
+              <div class="preview-pane-desc" [class.preview-skeleton]="info === undefined" [attr.aria-busy]="info === undefined ? 'true' : null">
+                @if (info === undefined) {
+                  <span class="preview-skeleton-bar"></span>
+                  <span class="preview-skeleton-bar"></span>
+                  <span class="preview-skeleton-bar preview-skeleton-bar--short"></span>
+                }
+              </div>
+              <div class="preview-specs" aria-hidden="true">
+                @if (info === undefined) {
+                  <span class="preview-skeleton-bar preview-skeleton-bar--short"></span>
+                }
+              </div>
+            }
+
+            <div class="preview-pane-rating">
+              @if (ratingText(); as rating) {
+                <span><span class="product-card-star">★</span> {{ rating }}</span>
+              } @else {
+                <span>{{ noReviewsLabel }}</span>
+              }
+              <span>{{ soldText() }}</span>
+            </div>
+
+            <div class="preview-pane-price-row">
+              <span class="preview-pane-price" [class.text-accent]="pv.hasDeal">{{ pv.price }}</span>
+              @if (pv.was) {
+                <span class="product-card-was">{{ pv.was }}</span>
+              }
+              @if (pv.tag) {
+                <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
+              }
+            </div>
+
+            <div class="preview-pane-actions">
+              <button type="button" class="preview-pane-buy" (click)="onAddToCart($event, product.id)">{{ addCartLabel }}</button>
+              <a [storeLink]="link()" class="preview-pane-detail">{{ detailLabel }}</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  }
+</div>

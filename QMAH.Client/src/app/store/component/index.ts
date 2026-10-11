@@ -14,7 +14,7 @@ export { Pagination } from './pagination/pagination';
 export { Panel } from './panel/panel';
 export { PillGroup } from './pill-group/pill-group';
 export { ProductCard } from './product-card/product-card';
-export { ProductRow } from './product-row/product-row';
+export { ProductPreviewList } from './product-preview-list/product-preview-list';
 export { Promobar } from './promobar/promobar';
 export { PromobarPanel } from './promobar-panel/promobar-panel';
 export { QtyStepper } from './qty-stepper/qty-stepper';
