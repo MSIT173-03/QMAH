@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideCalendarDays, LucideChevronRight, LucideMegaphone } from '@lucide/angular';
+import { LucideCalendarDays, LucideChevronRight, LucideMegaphone, LucideMaximize2, LucideMinimize2 } from '@lucide/angular';
+import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
 
 import { SocialBoardsStore } from '../../../features/social/social-boards';
 import { boardLabel } from '../../../features/social/social-labels';
@@ -16,7 +17,7 @@ import { boardLabel } from '../../../features/social/social-labels';
  */
 @Component({
   selector: 'app-social-shell',
-  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronRight, LucideMegaphone],
+  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronRight, LucideMegaphone, LucideMaximize2, LucideMinimize2],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './social-shell.scss',
   template: `
@@ -42,12 +43,18 @@ import { boardLabel } from '../../../features/social/social-labels';
           }
         </ul>
       </nav>
-      <div class="shell__main"><ng-content /></div>
+      <div class="shell__main">
+        <div class="shell__view-tools"><button type="button" class="shell__width-toggle" [attr.aria-pressed]="view.wide()" (click)="view.toggle()">
+          @if (view.wide()) { <svg lucideMinimize2 aria-hidden="true"></svg>切回標準版 } @else { <svg lucideMaximize2 aria-hidden="true"></svg>寬版檢視 }
+        </button></div>
+        <ng-content />
+      </div>
     </div>
   `,
 })
 export class SocialShellComponent implements OnInit {
   private readonly store = inject(SocialBoardsStore);
+  readonly view = inject(SocialViewPreferences);
   private readonly destroyRef = inject(DestroyRef);
 
   /** 目前看板：'' 為全部；null 表示不在貼文牆，不標示 */

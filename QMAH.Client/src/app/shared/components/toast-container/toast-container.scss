@@ -1,0 +1,13 @@
+:host { position: fixed; z-index: 1500; top: 90px; right: 24px; width: min(390px, calc(100vw - 32px)); pointer-events: none; }
+.qmah-toasts { display: grid; gap: 10px; }
+.qmah-toast { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--qmah-radius-card); box-shadow: var(--qmah-shadow-float); background: var(--qmah-surface-elevated); color: var(--qmah-ink); pointer-events: auto; font: 400 15px/1.7 var(--qmah-font-sans); overflow-wrap: anywhere; }
+.qmah-toast__status { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--qmah-azurite); }
+.qmah-toast--success .qmah-toast__status { background: var(--qmah-jade); }
+.qmah-toast--warning .qmah-toast__status { background: var(--qmah-bronze); }
+.qmah-toast--error .qmah-toast__status { background: var(--qmah-danger); }
+.qmah-toast__text { flex: 1; }
+button { display: grid; place-items: center; width: 36px; height: 36px; flex: none; padding: 0; border: 0; border-radius: var(--qmah-radius-control); background: transparent; color: var(--qmah-muted); cursor: pointer; }
+button:hover { background: var(--qmah-surface); color: var(--qmah-ink); }
+button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 2px; }
+button svg { width: 18px; height: 18px; }
+@media (max-width: 600px) { :host { top: 78px; right: 16px; } }

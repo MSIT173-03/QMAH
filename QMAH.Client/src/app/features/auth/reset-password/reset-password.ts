@@ -18,6 +18,7 @@ import {
   RouterLink
 } from '@angular/router';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { ToastService } from '../../../core/services/toast';
 
 interface ResetPasswordRequest {
   email: string;
@@ -55,7 +56,8 @@ export class ResetPassword {
     private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toast: ToastService
   ) {
 
     this.resetForm = this.fb.group({
@@ -303,9 +305,7 @@ export class ResetPassword {
 
           this.submitting = false;
 
-          alert(
-            '密碼重設成功，請使用新密碼登入。'
-          );
+          this.toast.show('密碼已重設，請使用新密碼登入。', 'success');
 
           this.router.navigate([
             '/login'

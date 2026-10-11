@@ -126,6 +126,7 @@ export class SocialEditorComponent implements OnInit {
   readonly label = input('內容');
   readonly rows = input(3);
   readonly showSend = input(true);
+  readonly busy = input(false);
   readonly startOpen = input(false);
   /** 進階模式才會出現圖片按鈕；圖片以 [img=識別碼] 嵌入文字 */
   readonly allowImage = input(true);
@@ -153,7 +154,7 @@ export class SocialEditorComponent implements OnInit {
   });
   /** 預覽預設收起，可自己點開；開關狀態記在這個瀏覽器。 */
   protected readonly previewOn = signal(SocialEditorComponent.readPreview());
-  protected readonly canSend = computed(() => this.value().trim().length > 0);
+  protected readonly canSend = computed(() => !this.busy() && this.value().trim().length > 0);
   protected readonly colors = SOCIAL_COLORS;
   private readonly field = viewChild.required<ElementRef<HTMLTextAreaElement>>('field');
 

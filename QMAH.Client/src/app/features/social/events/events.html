@@ -172,7 +172,7 @@
     <div class="modal-action">
       <form method="dialog">
         <button type="submit" class="btn btn-ghost">取消</button>
-        <button type="button" class="btn btn-primary" [disabled]="uploadPending" (click)="submitEvent()">送出建立</button>
+        <button type="button" class="btn btn-primary" [disabled]="uploadPending || creating" [attr.aria-busy]="creating" (click)="submitEvent()">{{ creating ? '送出中…' : '送出建立' }}</button>
       </form>
     </div>
   </div>

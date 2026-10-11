@@ -549,3 +549,5 @@
 .qmah-social-page .social-datefilter__preset { padding: 7px 10px; border-radius: 10px; text-align: center; white-space: nowrap; }
 .qmah-social-page .social-datefilter__field { display: grid; grid-template-columns: 24px 1fr; }
 .qmah-social-page .social-datefilter__field input { width: 100%; }
+.social-load-more { display: grid; justify-items: center; gap: 12px; padding: 28px 0; color: var(--qmah-muted); font-size: 14px; }
+.social-load-more p { margin: 0; font-variant-numeric: tabular-nums; }

@@ -2,6 +2,12 @@
 
 .shell { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; align-items: start; }
 .shell__main { min-width: 0; }
+.shell__view-tools { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+.shell__width-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 14px; border: 1px solid var(--qmah-border); border-radius: var(--qmah-radius-control); background: var(--qmah-surface); color: var(--qmah-ink); font: 600 14px/1.5 var(--qmah-font-sans); cursor: pointer; }
+.shell__width-toggle svg { width: 17px; height: 17px; }
+.shell__width-toggle[aria-pressed='true'] { border-color: var(--qmah-social-action); color: var(--qmah-social-action); background: var(--qmah-social-soft); }
+.shell__width-toggle:hover { border-color: var(--qmah-social-action); }
+.shell__width-toggle:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: 3px; }
 
 .shell__nav {
   position: sticky; top: 88px; padding: 12px; border: 1px solid var(--qmah-border); border-radius: 12px;

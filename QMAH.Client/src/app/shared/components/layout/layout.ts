@@ -6,7 +6,6 @@ import { ThemeService } from '../../../core/services/theme';
 import { GameFocusMode } from '../../../core/services/game-focus-mode';
 import { MeApiService } from '../../../core/services/me-api';
 import { NotificationsBellComponent } from '../notifications-bell/notifications-bell';
-import { ToastContainerComponent } from '../toast-container/toast-container';
 import { SiteFooter } from '../site-footer/site-footer';
 import { AreaNavigationComponent } from '../area-navigation/area-navigation';
 import { QmahIconComponent } from '../qmah-icon/qmah-icon';
@@ -18,7 +17,7 @@ import { PageLoaderComponent } from '../page-loader/page-loader';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [PageLoaderComponent, ScrollTop, RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, ToastContainerComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
+  imports: [PageLoaderComponent, ScrollTop, RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })

@@ -25,6 +25,7 @@ import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { finalize, retry, throwError, timer } from 'rxjs';
 import { PageReadiness } from './core/services/page-readiness';
+import { SocialViewPreferences } from './core/services/social-view-preferences';
 
 const pageReadinessInterceptor: HttpInterceptorFn = (request, next) => {
   const ready = inject(PageReadiness);
@@ -62,7 +63,7 @@ const apiCredentialsInterceptor: HttpInterceptorFn = (request, next) => {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAppInitializer(() => { inject(PageReadiness); }),
+    provideAppInitializer(() => { inject(PageReadiness); inject(SocialViewPreferences); }),
     provideBrowserGlobalErrorListeners(),
 
     provideRouter(

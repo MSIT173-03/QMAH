@@ -12,8 +12,9 @@ export class ToastService {
   readonly toasts = signal<ToastMessage[]>([]);
 
   show(text: string, type: ToastMessage['type'] = 'info', durationMs = 6000): void {
+    if (this.toasts().some(toast => toast.text === text && toast.type === type)) return;
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    this.toasts.update((list) => [...list, { id, text, type }]);
+    this.toasts.update((list) => [...list.slice(-3), { id, text, type }]);
     setTimeout(() => this.dismiss(id), durationMs);
   }
 

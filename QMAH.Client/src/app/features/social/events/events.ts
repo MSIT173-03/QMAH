@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ToastService } from '../../../core/services/toast';
+import { finalize } from 'rxjs';
 
 import { CreateSocialEventRequest, EventListItem, SocialApiService, SocialMedia } from '../../../core/services/social-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
@@ -44,6 +46,8 @@ export class EventsComponent implements OnInit {
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
+  private readonly toast = inject(ToastService);
+  creating = false;
 
   @ViewChild(ImageCropModalComponent) private cropModal!: ImageCropModalComponent;
   @ViewChild('createEventDialog') private createEventDialog?: ElementRef<HTMLDialogElement>;
@@ -191,6 +195,7 @@ export class EventsComponent implements OnInit {
   // 送出按鈕是 type="button"，故意不靠 <form method="dialog"> 自動關閉視窗，
   // 避免請求還沒回來、或失敗時視窗就先關掉導致看不到錯誤訊息。
   submitEvent(): void {
+    if (this.creating || this.uploadPending) return;
     this.createError = null;
     const problems = this.validateNewEvent();
     if (problems.length > 0) {
@@ -198,13 +203,14 @@ export class EventsComponent implements OnInit {
       return;
     }
 
-    this.socialApi.createEvent(this.newEvent).subscribe({
+    this.creating = true;
+    this.socialApi.createEvent(this.newEvent).pipe(finalize(() => { this.creating = false; this.cdr.detectChanges(); })).subscribe({
       next: () => {
         this.newEvent = { eventType: 'PLAYER', title: '', content: '', startAt: '', endAt: '', mediaIds: [] };
         this.pendingMedia = [];
         this.loadEvents();
         this.createEventDialog?.nativeElement.close();
-        alert('活動已建立，等待管理員審核通過後才會公開顯示。');
+        this.toast.show('活動已送出，通過管理員審核後會公開顯示。', 'success');
       },
       error: (err: HttpErrorResponse) => {
         this.createError = this.describeCreateError(err);

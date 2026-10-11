@@ -64,10 +64,17 @@ API、前台或後台啟動檢查失敗時，`update.sh` 會復原前一版應�
 
 ## 首屏與導覽
 
-主要頁面先等首批 API、可見圖片、背景與字型，再顯示內容。最長等待十二秒，背景刷新不遮住正在使用的頁面。
-載入圓點動畫改自 [SpinKit](https://github.com/tobiasahlin/SpinKit)，MIT 授權保留在 `QMAH.Client/public/licenses/SpinKit.txt`。
+頁首與頁尾先顯示，主要內容等首批 API 回覆後顯示，首屏素材最多額外等待 650 ms，不強制延長動畫。最長等待十二秒，背景刷新不遮住正在使用的頁面。
+翻書動畫改自 [React Awesome Loaders 的 BookLoader](https://awesome-loaders.netlify.app/docs/loaders/bookloader/)，原作參考 Aaron Iker。授權保留在 `QMAH.Client/public/licenses/React-Awesome-Loaders.txt`；動畫以純 CSS 使用，沒有引入 React。
+404 書架動畫改自 [Valeriia 的 Missing Book](https://codepen.io/valerite-dev/pen/KMZyLz)，配合鑑定屋調整棕色與繁中文案，MIT 授權保留在 `QMAH.Client/public/licenses/Missing-Book-404.txt`。
 不存在的網址使用 404 頁，提供回首頁入口；未知 JS 檔仍回真正的 404，不傳回 HTML 冒充模組。
 商城列出最新已發佈的官方商城公告，每分鐘重新讀取；資料排序與公告發布條件由 API 決定。
+
+## 共用互動與社群
+
+社群寬版檢視使用 `qmah.social.width` localStorage，標準版 1120 px、寬版最大 1760 px；不因換頁、刷新或尺寸縮放改寫偏好。公告折疊與每列欄數沿用各自的偏好。
+貼文牆每次讀取二十篇，接近底部讀取下一頁，直到全部顯示；保留手動載入更多與錯誤重試入口，切換篩選或排序會取消舊請求並回到首批。
+共用確認視窗處理刪除貼文、留言與地址，取消／Escape 不寫入，切換路由會取消尚未確認的操作。成功提示由根元件顯示，登入頁也能收到提示。送出中的操作會防止重複請求。
 
 ## 本機相容性
 

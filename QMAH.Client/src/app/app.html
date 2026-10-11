@@ -1,1 +1,3 @@
 <router-outlet />
+@defer (when confirmation.current()) { <app-confirmation-dialog /> }
+@defer (when toast.toasts().length > 0) { <app-toast-container /> }

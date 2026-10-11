@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ConfirmationService } from '../../../core/services/confirmation';
+import { finalize } from 'rxjs';
 
 import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialMedia, SocialPostArtifact, SocialPostDetails } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
@@ -33,6 +35,8 @@ export class PostDetailComponent implements OnChanges {
   private meApi = inject(MeApiService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private readonly confirmation = inject(ConfirmationService);
+  pendingAction = false;
 
   readonly boardLabel = boardLabel;
   post: SocialPostDetails | null = null;
@@ -147,14 +151,15 @@ export class PostDetailComponent implements OnChanges {
 
   // PUT /api/v1/social/posts/{id}（只有作者本人能改）
   saveEditPost(): void {
-    if (!this.post) return;
+    if (!this.post || this.pendingAction) return;
+    this.pendingAction = true;
     this.actionError = null;
     this.socialApi.updatePost(this.post.id, {
       title: this.editPostTitle,
       content: this.editPostContent,
       mediaLayout: this.editLayout,
       mediaIds: this.editMedia.map((item) => item.id)
-    }).subscribe({
+    }).pipe(finalize(() => { this.pendingAction = false; this.cdr.detectChanges(); })).subscribe({
       next: () => {
         this.editingPost = false;
         this.loadPost();
@@ -168,10 +173,12 @@ export class PostDetailComponent implements OnChanges {
   }
 
   // DELETE /api/v1/social/posts/{id}（只有作者本人能刪，軟刪除）
-  deletePost(): void {
-    if (!this.post) return;
-    if (!confirm('確定要刪除這篇貼文嗎？刪除後無法復原。')) return;
-    this.socialApi.deletePost(this.post.id).subscribe({
+  async deletePost(): Promise<void> {
+    if (!this.post || this.pendingAction) return;
+    const postId = this.post.id;
+    this.pendingAction = true;
+    if (!await this.confirmation.ask({ title: '刪除這篇貼文？', message: '刪除後無法復原。', confirmLabel: '刪除貼文', danger: true })) { this.pendingAction = false; return; }
+    this.socialApi.deletePost(postId).pipe(finalize(() => { this.pendingAction = false; this.cdr.detectChanges(); })).subscribe({
       next: () => this.router.navigateByUrl('/social/posts'),
       error: (err: HttpErrorResponse) => {
         this.actionError = this.describeOwnershipError(err, '刪除貼文');
@@ -194,8 +201,10 @@ export class PostDetailComponent implements OnChanges {
 
   // PUT /api/v1/social/comments/{id}（只有留言作者本人能改）
   saveEditComment(commentId: string): void {
+    if (this.pendingAction) return;
+    this.pendingAction = true;
     this.actionError = null;
-    this.socialApi.updateComment(commentId, { content: this.editCommentContent }).subscribe({
+    this.socialApi.updateComment(commentId, { content: this.editCommentContent }).pipe(finalize(() => { this.pendingAction = false; this.cdr.detectChanges(); })).subscribe({
       next: () => {
         this.editingCommentId = null;
         this.loadPost();
@@ -209,9 +218,11 @@ export class PostDetailComponent implements OnChanges {
   }
 
   // DELETE /api/v1/social/comments/{id}（只有留言作者本人能刪，軟刪除）
-  deleteComment(commentId: string): void {
-    if (!confirm('確定要刪除這則留言嗎？刪除後無法復原。')) return;
-    this.socialApi.deleteComment(commentId).subscribe({
+  async deleteComment(commentId: string): Promise<void> {
+    if (this.pendingAction) return;
+    this.pendingAction = true;
+    if (!await this.confirmation.ask({ title: '刪除這則留言？', message: '刪除後無法復原。', confirmLabel: '刪除留言', danger: true })) { this.pendingAction = false; return; }
+    this.socialApi.deleteComment(commentId).pipe(finalize(() => { this.pendingAction = false; this.cdr.detectChanges(); })).subscribe({
       next: () => this.loadPost(),
       error: (err: HttpErrorResponse) => {
         this.actionError = this.describeOwnershipError(err, '刪除留言');
@@ -223,9 +234,10 @@ export class PostDetailComponent implements OnChanges {
 
   // POST /api/v1/social/posts/{id}/comments（需要登入）
   submitComment(): void {
-    if (!this.post || !this.newComment.content.trim()) return;
+    if (!this.post || !this.newComment.content.trim() || this.pendingAction) return;
+    this.pendingAction = true;
     this.actionError = null;
-    this.socialApi.createComment(this.post.id, this.newComment).subscribe({
+    this.socialApi.createComment(this.post.id, this.newComment).pipe(finalize(() => { this.pendingAction = false; this.cdr.detectChanges(); })).subscribe({
       next: () => {
         this.newComment = { content: '' };
         this.prefillDemoComment();

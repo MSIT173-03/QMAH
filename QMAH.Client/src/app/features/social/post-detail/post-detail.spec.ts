@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 
 import { PostDetailComponent } from './post-detail';
 import { MeApiService } from '../../../core/services/me-api';
+import { ConfirmationService } from '../../../core/services/confirmation';
 
 describe('PostDetailComponent', () => {
   let component: PostDetailComponent;
@@ -148,7 +149,7 @@ describe('PostDetailComponent', () => {
     expect(component.isOwnPost(component.post!)).toBe(true);
   });
 
-  it('deletes the post and navigates back to the list on success', () => {
+  it('deletes the post and navigates back to the list on success', async () => {
     fixture.componentRef.setInput('id', postId);
     fixture.detectChanges();
 
@@ -172,10 +173,10 @@ describe('PostDetailComponent', () => {
       updatedAt: '2026-01-01T00:00:00Z'
     });
 
-    const originalConfirm = window.confirm;
-    window.confirm = () => true;
-    component.deletePost();
-    window.confirm = originalConfirm;
+    const deletion = component.deletePost();
+    expect(TestBed.inject(ConfirmationService).current()?.confirmLabel).toBe('刪除貼文');
+    TestBed.inject(ConfirmationService).complete(true);
+    await deletion;
 
     const req = httpMock.expectOne((r) => r.url.endsWith(`/social/posts/${postId}`) && r.method === 'DELETE');
     req.flush(null);

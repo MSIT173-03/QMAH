@@ -31,6 +31,7 @@ import {
 
 import { BackToMember } from '../../../shared/back-to-member/back-to-member';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { ConfirmationService } from '../../../core/services/confirmation';
 
 
 @Component({
@@ -90,7 +91,8 @@ export class Addresses implements OnInit {
 
   constructor(
     private userApi: UserApi,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private confirmation: ConfirmationService
   ) { }
 
 
@@ -470,22 +472,21 @@ export class Addresses implements OnInit {
   // 刪除
   // ===============================
 
-  deleteAddress(
+  async deleteAddress(
     address: MemberAddress
-  ): void {
+  ): Promise<void> {
 
     if (this.deletingId) {
       return;
     }
 
 
-    const confirmed =
-      confirm(
-        `確定要刪除「${address.addressLabel}」嗎？`
-      );
+    this.deletingId = address.id;
+    const confirmed = await this.confirmation.ask({ title: '刪除這個地址？', message: `將刪除「${address.addressLabel}」，之後可重新新增。`, confirmLabel: '刪除地址', danger: true });
 
 
     if (!confirmed) {
+      this.deletingId = null;
       return;
     }
 

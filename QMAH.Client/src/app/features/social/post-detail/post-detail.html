@@ -40,7 +40,7 @@
         <app-social-media-manager textareaId="edit-post-content" [content]="editPostContent" [(media)]="editMedia" [(layout)]="editLayout" />
         <div class="social-panel__actions">
           <button type="button" class="btn btn-ghost" (click)="cancelEditPost()">取消</button>
-          <button type="button" class="btn btn-primary" (click)="saveEditPost()">儲存</button>
+          <button type="button" class="btn btn-primary" [disabled]="pendingAction" [attr.aria-busy]="pendingAction" (click)="saveEditPost()">{{ pendingAction ? '儲存中…' : '儲存' }}</button>
         </div>
       </div>
     } @else {
@@ -132,7 +132,7 @@
     }
 
     <!-- 留言預設是純文字（換行有效）；按左邊的按鈕才進入進階模式（格式、圖片）。 -->
-    <app-social-editor [(value)]="newComment.content" label="留言內容" placeholder="留下你的想法…（Ctrl＋Enter 送出）" (submitted)="submitComment()" />
+    <app-social-editor [(value)]="newComment.content" [busy]="pendingAction" label="留言內容" placeholder="留下你的想法…（Ctrl＋Enter 送出）" (submitted)="submitComment()" />
 
     <ul class="social-comments">
       @for (comment of post.comments; track comment.id) {
@@ -159,7 +159,7 @@
               <app-social-editor [(value)]="editCommentContent" label="編輯留言內容" [startOpen]="hasMarkup(editCommentContent)" [showSend]="false" />
               <div class="social-comment__edit-actions">
                 <button type="button" class="btn btn-ghost btn-sm" (click)="cancelEditComment()">取消</button>
-                <button type="button" class="btn btn-primary btn-sm" [disabled]="!editCommentContent.trim()" (click)="saveEditComment(comment.id)">儲存</button>
+                <button type="button" class="btn btn-primary btn-sm" [disabled]="pendingAction || !editCommentContent.trim()" (click)="saveEditComment(comment.id)">{{ pendingAction ? '儲存中…' : '儲存' }}</button>
               </div>
             } @else {
               <div class="social-comment__bubble"><app-social-post-content [content]="comment.content" /></div>

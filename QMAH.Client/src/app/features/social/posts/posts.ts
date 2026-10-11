@@ -79,6 +79,20 @@ export class PostsComponent implements OnInit, OnDestroy {
   private meApi = inject(MeApiService);
 
   @ViewChild('createPostDialog') private createPostDialog?: ElementRef<HTMLDialogElement>;
+  private postObserver?: IntersectionObserver;
+  private postSentinel?: HTMLElement;
+  private loadedPage = 1;
+  private totalPages = 1;
+  @ViewChild('postSentinel') set loadMoreSentinel(value: ElementRef<HTMLElement> | undefined) {
+    this.postObserver?.disconnect();
+    this.postSentinel = value?.nativeElement;
+    if (!this.postSentinel || typeof IntersectionObserver === 'undefined') return;
+    this.postObserver = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting) && !this.loadError) this.loadMorePosts();
+    }, { rootMargin: '0px 0px 400px 0px' });
+    this.postObserver.observe(this.postSentinel);
+  }
+  get hasMorePosts(): boolean { return this.loadedPage < this.totalPages && this.posts.length < this.totalCount; }
 
   posts: SocialPostListItem[] = [];
   private postsRequest?: Subscription;
@@ -88,6 +102,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   loading = false;
   loadError: string | null = null;
   createError: string | null = null;
+  creating = false;
   reportSuccessMessage: string | null = null;
   newPost: CreateSocialPostRequest = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '', mediaIds: [] };
 
@@ -212,6 +227,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.postObserver?.disconnect();
     this.postsRequest?.unsubscribe();
     this.narrowQuery?.removeEventListener('change', this.onWallResize);
     this.mediumQuery?.removeEventListener('change', this.onWallResize);
@@ -357,22 +373,17 @@ export class PostsComponent implements OnInit, OnDestroy {
       const dir = order === 'oldest' ? 1 : -1;
       this.posts = [...page.items].sort((a, b) => dir * (Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id)));
       this.totalCount = page.totalCount;
+      this.loadedPage = page.page || 1;
+      this.totalPages = page.totalPages || Math.ceil(page.totalCount / (page.pageSize || 20));
       this.loading = false;
       this.cdr.detectChanges();
+      if (this.postSentinel) { this.postObserver?.unobserve(this.postSentinel); this.postObserver?.observe(this.postSentinel); }
     };
     this.loadError = null;
     const cached = this.sortedPages.get(order);
     if (cached) { applyPage(cached); return; }
     this.loading = true;
-    this.postsRequest = this.socialApi.getPosts({
-      pageSize: 20,
-      boardCode: this.filterBoardCode || undefined,
-      q: this.filterKeyword || undefined,
-      // 日期是本地時間：起＝當天 00:00，迄＝隔天 00:00（不含）
-      createdAfter: this.filterFrom ? new Date(this.filterFrom + 'T00:00:00').toISOString() : undefined,
-      createdBefore: this.filterTo ? new Date(new Date(this.filterTo + 'T00:00:00').getTime() + 86_400_000).toISOString() : undefined,
-      sort: order
-    }).subscribe({
+    this.postsRequest = this.socialApi.getPosts(this.postQuery(1, order)).subscribe({
       next: (page) => {
         this.sortedPages.set(order, page);
         applyPage(page);
@@ -386,13 +397,51 @@ export class PostsComponent implements OnInit, OnDestroy {
     });
   }
 
+  private postQuery(page: number, sort = this.sortOrder) {
+    return {
+      page, pageSize: 20,
+      boardCode: this.filterBoardCode || undefined,
+      q: this.filterKeyword || undefined,
+      createdAfter: this.filterFrom ? new Date(this.filterFrom + 'T00:00:00').toISOString() : undefined,
+      createdBefore: this.filterTo ? new Date(new Date(this.filterTo + 'T00:00:00').getTime() + 86_400_000).toISOString() : undefined,
+      sort,
+    };
+  }
+
+  loadMorePosts(): void {
+    if (this.loading || !this.hasMorePosts) return;
+    this.loading = true;
+    this.loadError = null;
+    this.postsRequest = this.socialApi.getPosts(this.postQuery(this.loadedPage + 1)).subscribe({
+      next: page => {
+        const seen = new Set(this.posts.map(post => post.id));
+        this.posts = [...this.posts, ...page.items.filter(post => !seen.has(post.id))];
+        this.loadedPage = page.page;
+        this.totalPages = page.totalPages;
+        this.totalCount = page.totalCount;
+        this.loading = false;
+        this.cdr.detectChanges();
+        // Reobserve after layout settles; a still-visible sentinel must not stall.
+        if (this.postSentinel) { this.postObserver?.unobserve(this.postSentinel); this.postObserver?.observe(this.postSentinel); }
+      },
+      error: () => {
+        this.loading = false;
+        this.loadError = '後面的貼文暫時無法載入，請按「載入更多」再試一次。';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   // POST /api/v1/social/posts（需要登入 + XSRF token）
   // 送出按鈕是 type="button"，故意不靠 <form method="dialog"> 自動關閉視窗，
   // 避免請求還沒回來、或失敗時視窗就先關掉導致看不到錯誤訊息。
   submitPost(): void {
+    if (this.creating) return;
+    this.creating = true;
     this.createError = null;
     this.socialApi.createPost({ ...this.newPost, mediaIds: this.pendingMedia.map((item) => item.id), mediaLayout: this.pendingLayout }).subscribe({
       next: () => {
+        this.creating = false;
         this.newPost = { postType: 'POST', boardCode: 'GENERAL', title: '', content: '', mediaIds: [] };
         this.pendingMedia = [];
         this.pendingLayout = 'SECONDARY';
@@ -400,6 +449,7 @@ export class PostsComponent implements OnInit, OnDestroy {
         this.createPostDialog?.nativeElement.close();
       },
       error: (err: HttpErrorResponse) => {
+        this.creating = false;
         this.createError = err.status === 401 ? '發布失敗：請先登入。' : '發布貼文失敗，請確認欄位是否正確。';
         console.error('發布貼文失敗:', err);
       }

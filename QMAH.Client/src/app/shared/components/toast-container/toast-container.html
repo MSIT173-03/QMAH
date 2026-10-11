@@ -1,15 +1,8 @@
-<div class="toast toast-top toast-end z-50">
+<div class="qmah-toasts">
   @for (toast of toastService.toasts(); track toast.id) {
-    <div
-      role="alert"
-      class="alert cursor-pointer shadow-lg"
-      [class.alert-info]="toast.type === 'info'"
-      [class.alert-success]="toast.type === 'success'"
-      [class.alert-warning]="toast.type === 'warning'"
-      [class.alert-error]="toast.type === 'error'"
-      (click)="toastService.dismiss(toast.id)"
-    >
-      <span>{{ toast.text }}</span>
+    <div class="qmah-toast" [class.qmah-toast--success]="toast.type === 'success'" [class.qmah-toast--warning]="toast.type === 'warning'" [class.qmah-toast--error]="toast.type === 'error'" [attr.role]="toast.type === 'error' ? 'alert' : 'status'">
+      <span class="qmah-toast__status" aria-hidden="true"></span><span class="qmah-toast__text">{{ toast.text }}</span>
+      <button type="button" aria-label="關閉這則提示" (click)="toastService.dismiss(toast.id)"><svg lucideX aria-hidden="true"></svg></button>
     </div>
   }
 </div>

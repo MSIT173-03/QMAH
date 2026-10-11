@@ -1,6 +1,6 @@
 /* ui-integration: Social 的共用閱讀寬度、控制項與圖示語法集中在 Area 樣式，避免全域檔案承擔頁面專屬規則。 */
 .qmah-social-page {
-  width: min(1120px, 100%);
+  width: min(var(--qmah-social-width, 1120px), 100%);
   margin-inline: auto;
   padding: var(--qmah-space-8) var(--qmah-space-6) 64px;
   color: var(--qmah-ink);

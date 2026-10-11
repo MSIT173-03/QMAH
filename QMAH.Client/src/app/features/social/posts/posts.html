@@ -179,6 +179,12 @@
       }
     }
   </div>
+  <div #postSentinel class="social-load-more" aria-live="polite">
+    <p>已顯示 {{ posts.length }} ／ {{ totalCount }} 篇</p>
+    @if (hasMorePosts) {
+      <button type="button" class="btn btn-outline" [disabled]="loading" (click)="loadMorePosts()">{{ loading ? '正在載入更多貼文…' : '載入更多' }}</button>
+    } @else if (!loading && totalCount > 0) { <span>所有貼文都已顯示</span> }
+  </div>
   </app-social-shell>
 </div>
 
@@ -260,7 +266,7 @@
     <div class="modal-action social-post-dialog__actions">
       <form method="dialog">
         <button type="submit" class="btn btn-ghost">取消</button>
-        <button type="button" class="btn btn-primary" (click)="submitPost()">送出發布</button>
+        <button type="button" class="btn btn-primary" [disabled]="creating" [attr.aria-busy]="creating" (click)="submitPost()">{{ creating ? '發布中…' : '送出發布' }}</button>
       </form>
     </div>
   </div>

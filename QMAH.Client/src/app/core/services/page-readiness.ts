@@ -16,7 +16,6 @@ export class PageReadiness {
   private epoch = 0;
   private pending = 0;
   private navigationDone = false;
-  private started = 0;
   private settleTimer?: ReturnType<typeof setTimeout>;
   private deadline?: ReturnType<typeof setTimeout>;
 
@@ -35,7 +34,11 @@ export class PageReadiness {
     this.destroyRef.onDestroy(() => this.finish());
   }
 
-  attach(host: HTMLElement): void { this.host = host; this.settle(); }
+  attach(host: HTMLElement): void {
+    this.host = host;
+    this.document.getElementById('qmah-boot-loader')?.remove();
+    this.settle();
+  }
 
   track(url: string, method: string): () => void {
     if (!this.loading() || method !== 'GET' || /\/me\/(session|notifications)(?:[/?]|$)|\/antiforgery-token(?:[/?]|$)/.test(url)) return () => undefined;
@@ -50,7 +53,6 @@ export class PageReadiness {
     this.epoch++;
     this.pending = 0;
     this.navigationDone = false;
-    this.started = Date.now();
     const path = url.split(/[?#]/)[0].replace(/\/$/, '') || '/';
     this.loading.set(MAIN_PAGES.has(path));
     if (this.loading()) this.deadline = setTimeout(() => this.finish(), 12000);
@@ -60,7 +62,7 @@ export class PageReadiness {
     if (!this.loading() || !this.navigationDone || this.pending || !this.host?.isConnected) return;
     clearTimeout(this.settleTimer);
     const epoch = this.epoch;
-    this.settleTimer = setTimeout(() => void this.waitForFirstView(epoch), Math.max(120, 420 - (Date.now() - this.started)));
+    this.settleTimer = setTimeout(() => void this.waitForFirstView(epoch), 60);
   }
 
   private async waitForFirstView(epoch: number): Promise<void> {
@@ -78,9 +80,12 @@ export class PageReadiness {
       }
     }
     const backgroundImages = Array.from(backgrounds).map(url => { const img = this.document.createElement('img'); img.src = url; return img; });
-    await Promise.allSettled([
-      this.document.fonts?.ready ?? Promise.resolve(),
-      ...[...images, ...backgroundImages].map(img => img.decode().catch(() => undefined)),
+    await Promise.race([
+      Promise.allSettled([
+        this.document.fonts?.ready ?? Promise.resolve(),
+        ...[...images, ...backgroundImages].map(img => img.decode().catch(() => undefined)),
+      ]),
+      new Promise<void>(resolve => setTimeout(resolve, 650)),
     ]);
     if (epoch !== this.epoch) return;
     if (this.pending) { this.settle(); return; }
