@@ -35,7 +35,8 @@ export class PageReadiness {
 
   attach(host: HTMLElement): void {
     this.host = host;
-    this.hasShell.set(true);
+    // The shell attaches in AfterViewInit; publish to the parent after that render.
+    queueMicrotask(() => { if (this.host === host && host.isConnected) this.hasShell.set(true); });
     this.document.getElementById('qmah-boot-loader')?.remove();
     this.settle();
   }
