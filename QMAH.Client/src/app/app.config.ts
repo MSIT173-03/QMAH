@@ -26,6 +26,7 @@ import { environment } from '../environments/environment';
 import { finalize, retry, throwError, timer } from 'rxjs';
 import { PageReadiness } from './core/services/page-readiness';
 import { SocialViewPreferences } from './core/services/social-view-preferences';
+import { publicCatalogCacheInterceptor } from './core/services/public-catalog-cache';
 
 const pageReadinessInterceptor: HttpInterceptorFn = (request, next) => {
   const ready = inject(PageReadiness);
@@ -85,7 +86,7 @@ export const appConfig: ApplicationConfig = {
     ),
 
     provideHttpClient(
-      withInterceptors([apiCredentialsInterceptor, pageReadinessInterceptor]),
+      withInterceptors([apiCredentialsInterceptor, pageReadinessInterceptor, publicCatalogCacheInterceptor]),
       withXsrfConfiguration({
         cookieName: 'XSRF-TOKEN-API',
         headerName: 'X-XSRF-TOKEN'
