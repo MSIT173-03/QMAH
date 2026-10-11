@@ -36,6 +36,7 @@ builder.Configuration.AddJsonFile(
 // 與 API 使用相同的 Data Protection 應用識別，讓兩個程序可解讀同一張 Identity 登入票證。
 builder.Services.AddDataProtection()
     .SetApplicationName(QmahSharedAuthentication.DataProtectionApplicationName);
+builder.Services.AddQmahDeploymentHosting(builder.Configuration);
 
 builder.Services
     .AddOptions<MediaDeliveryOptions>()
@@ -219,6 +220,7 @@ var avatarStorage = mediaPaths.Avatars;
 builder.Services.AddSingleton(mediaPaths);
 builder.Services.AddSingleton(avatarStorage);
 var app = builder.Build();
+app.UseQmahDeploymentHosting(builder.Configuration);
 
 // ResolveAsync 只選出可用目標，不在啟動時建立或升級資料庫；Schema 仍由版本化 SQL 管理。
 // 多個候選同時存在時留下警告，避免組員在 SSMS 與應用程式看到不同的 QMAH 而誤判資料遺失。

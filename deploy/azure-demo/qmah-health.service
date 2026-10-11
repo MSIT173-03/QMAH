@@ -1,0 +1,8 @@
+[Unit]
+Description=Check QMAH services and recover consecutive failures
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/qmah-health-recover
+TimeoutStartSec=120

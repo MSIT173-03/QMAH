@@ -1,0 +1,20 @@
+[Unit]
+Description=QMAH Admin
+After=network-online.target docker.service
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+User=qmah
+Group=qmah
+WorkingDirectory=/opt/qmah/web
+ExecStart=/opt/qmah/web/QMAH.Web
+EnvironmentFile=/etc/qmah/web.env
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

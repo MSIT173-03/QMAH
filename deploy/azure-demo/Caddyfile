@@ -1,0 +1,33 @@
+{$QMAH_HOST} {
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        Content-Security-Policy "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+        Strict-Transport-Security "max-age=604800"
+        -Server
+    }
+    @admin path /admin /admin/*
+    handle @admin {
+        reverse_proxy 127.0.0.1:5102
+    }
+    @sharedMedia path /images/* /fonts/*
+    handle @sharedMedia {
+        root * /opt/qmah/client
+        route {
+            file_server {
+                pass_thru
+            }
+            reverse_proxy 127.0.0.1:5101
+        }
+    }
+    @api path /api/* /hubs/* /media/* /uploads/* /signin-google /Callback /signin-oidc /signout-callback-oidc
+    handle @api {
+        reverse_proxy 127.0.0.1:5101
+    }
+    handle {
+        root * /opt/qmah/client
+        try_files {path} /index.html
+        file_server
+    }
+}

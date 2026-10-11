@@ -51,6 +51,7 @@ builder.Configuration.AddJsonFile(
 // API 與 MVC 後台使用相同的 Identity Cookie 保護範圍；同一使用者設定檔中的金鑰可跨程序解讀。
 builder.Services.AddDataProtection()
     .SetApplicationName(QmahSharedAuthentication.DataProtectionApplicationName);
+builder.Services.AddQmahDeploymentHosting(builder.Configuration);
 
 builder.Services
     .AddOptions<QmahPasswordResetOptions>()
@@ -419,6 +420,7 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+app.UseQmahDeploymentHosting(builder.Configuration);
 
 if (app.Environment.IsDevelopment())
 {

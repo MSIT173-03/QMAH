@@ -1,0 +1,7 @@
+USE [master];
+ALTER DATABASE [QMAH] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+RESTORE DATABASE [QMAH] FROM DISK=N'/var/opt/mssql/backup/QMAH-release.bak'
+WITH REPLACE, CHECKSUM,
+ MOVE N'QMAH' TO N'/var/opt/mssql/data/QMAH.mdf',
+ MOVE N'QMAH_log' TO N'/var/opt/mssql/data/QMAH_log.ldf';
+ALTER DATABASE [QMAH] SET MULTI_USER;
