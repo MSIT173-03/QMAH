@@ -146,7 +146,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             ArtifactPoolJson = JsonSerializer.Serialize(pool.Select(item => item.Id)),
             Difficulty = ReadConfigString(mode.ConfigJson, "difficulty") ?? "NORMAL",
             // 難度記在 Seed 尾端：困難 -h（拼圖為 -m 只看十秒）、簡單 -e（拼圖為 -r 隨時看原圖，沒有尾碼的舊拼圖視為 -r）。簡單分數上限較低。
-            Seed = (isDetailLocator ? "v6-" : "v3-") + Guid.NewGuid().ToString("N")
+            Seed = (isDetailLocator ? "v7-" : "v3-") + Guid.NewGuid().ToString("N")
                 + VariantSuffix(mode.Code, variant),
             ConfigJson = mode.ConfigJson,
             Status = "STARTED",
@@ -172,7 +172,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             attempt.Seed,
             attempt.ConfigJson,
             attempt.StartedAt,
-            isDetailLocator ? pool.Select(item => { var point = subjectFinder.Target(attempt.Seed, item.Id, item.PrimaryImagePath); return new MiniGameLocatorTarget(item.Id, point.X, point.Y); }).ToList() : null,
+            isDetailLocator ? pool.Select(item => { var point = subjectFinder.Target(attempt.Seed, item.Id, item.PrimaryImagePath); return new MiniGameLocatorTarget(item.Id, point.X, point.Y, subjectFinder.CropFraction(attempt.Seed, item.Id, item.PrimaryImagePath)); }).ToList() : null,
             mode.Code == "ARTIFACT_PUZZLE" ? imageAnalyzer.BackgroundPieces(selected.PrimaryImagePath) : null));
     }
 
@@ -258,6 +258,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             return EconomyResult<MiniGameCompleteView>.Invalid("本局需要目前版本的評分資料，請重新整理後再送出。");
         var locatorSizes = new Dictionary<Guid, (int Width, int Height)>();
         var locatorTargets = new Dictionary<Guid, (double X, double Y)>();
+        var locatorFractions = new Dictionary<Guid, double>();
         if (mode.Code == "DETAIL_LOCATOR" && TryGetInt(result, "scoringVersion", out var locatorVersion) && locatorVersion == 4)
         {
             if (!TryReadArtifactPool(attempt.ArtifactPoolJson, out var locatorPool))
@@ -267,10 +268,14 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             foreach (var image in images)
             {
                 locatorSizes[image.Id] = scrollPaintingEligibility.ImageDimensions(image.PrimaryImagePath);
-                if (attempt.Seed.StartsWith("v5-", StringComparison.Ordinal) || attempt.Seed.StartsWith("v6-", StringComparison.Ordinal)) locatorTargets[image.Id] = subjectFinder.Target(attempt.Seed, image.Id, image.PrimaryImagePath);
+                if (attempt.Seed.StartsWith("v5-", StringComparison.Ordinal) || attempt.Seed.StartsWith("v6-", StringComparison.Ordinal) || attempt.Seed.StartsWith("v7-", StringComparison.Ordinal))
+                {
+                    locatorTargets[image.Id] = subjectFinder.Target(attempt.Seed, image.Id, image.PrimaryImagePath);
+                    locatorFractions[image.Id] = subjectFinder.CropFraction(attempt.Seed, image.Id, image.PrimaryImagePath);
+                }
             }
         }
-        if (!TryCalculateVerifiedScore(attempt, mode, rawScore, result, locatorSizes, locatorTargets, out var verifiedRawScore, out var scoreError))
+        if (!TryCalculateVerifiedScore(attempt, mode, rawScore, result, locatorSizes, locatorTargets, locatorFractions, out var verifiedRawScore, out var scoreError))
             return EconomyResult<MiniGameCompleteView>.Invalid(scoreError!);
         rawScore = verifiedRawScore;
         if (mode.GradeBThreshold < 0
@@ -553,6 +558,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         JsonElement result,
         IReadOnlyDictionary<Guid, (int Width, int Height)> locatorSizes,
         IReadOnlyDictionary<Guid, (double X, double Y)> locatorTargets,
+        IReadOnlyDictionary<Guid, double> locatorFractions,
         out int verifiedScore,
         out string? error)
     {
@@ -589,7 +595,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
 
         var calculatedScore = mode.Code switch
         {
-            "DETAIL_LOCATOR" => CalculateLocatorScore(result, artifactPool, artifactId, attempt.Seed, locatorSizes, locatorTargets, out error),
+            "DETAIL_LOCATOR" => CalculateLocatorScore(result, artifactPool, artifactId, attempt.Seed, locatorSizes, locatorTargets, locatorFractions, out error),
             "MEMORY_MATCH" => CalculateMemoryScore(result, artifactPool.Count, out error),
             "ARTIFACT_PUZZLE" => CalculateOrderScore(result, "puzzleOrder", PuzzlePieceCount, out error),
             "STRIP_RESTORE" => CalculateOrderScore(result, "restoreOrder", RestorePieceCount, out error),
@@ -614,12 +620,13 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         string seed,
         IReadOnlyDictionary<Guid, (int Width, int Height)> locatorSizes,
         IReadOnlyDictionary<Guid, (double X, double Y)> locatorTargets,
+        IReadOnlyDictionary<Guid, double> locatorFractions,
         out string? error)
     {
         error = null;
         if (TryGetInt(result, "scoringVersion", out var version) && version == 4)
-            return MiniGameDetailLocatorScoring.Calculate(result, artifactPool, seed, locatorSizes, out error, locatorTargets);
-        if (seed.StartsWith("v4-", StringComparison.Ordinal) || seed.StartsWith("v5-", StringComparison.Ordinal) || seed.StartsWith("v6-", StringComparison.Ordinal))
+            return MiniGameDetailLocatorScoring.Calculate(result, artifactPool, seed, locatorSizes, out error, locatorTargets, locatorFractions);
+        if (seed.StartsWith("v4-", StringComparison.Ordinal) || seed.StartsWith("v5-", StringComparison.Ordinal) || seed.StartsWith("v6-", StringComparison.Ordinal) || seed.StartsWith("v7-", StringComparison.Ordinal))
             return InvalidScore("這輪細節追跡必須使用原圖定位，請重新載入遊戲。", out error);
         // 已送出但等待重試的舊版結果仍可完成，不將新題目降回四選一。
         if (!TryGetGuid(result, "locatorChoice", out var choice) || !artifactPool.Contains(choice))
@@ -799,7 +806,7 @@ public sealed record MiniGameModeView(
     int GradeSThreshold);
 
 /// <summary>開始 Mini Game 後回傳的伺服器素材與不可由客戶端自行決定的執行資訊。</summary>
-public sealed record MiniGameLocatorTarget(Guid ArtifactId, double X, double Y);
+public sealed record MiniGameLocatorTarget(Guid ArtifactId, double X, double Y, double CropFraction = .20);
 
 public sealed record MiniGameStartView(
     Guid AttemptId,
