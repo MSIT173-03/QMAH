@@ -97,7 +97,7 @@
             <h3>商品明細</h3>
             <ul class="order-detail-lines">
               @for (line of order.lines; track $index) {
-              <li><span>{{ line.name }}</span><span>× {{ line.quantity }}</span></li>
+              <li><span>{{ line.name }}</span><span class="order-detail-qty">× {{ line.quantity }}</span></li>
               }
             </ul>
           </section>

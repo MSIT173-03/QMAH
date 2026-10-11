@@ -25,7 +25,7 @@ chmod -R o+rX "$release/new/client"
 # Old tabs may still import a lazy chunk from the preceding build.
 for source in "$root/client" "$root/client-before-catalog-repair"; do
     if [[ -d "$source" ]]; then
-        find "$source" -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) -exec cp -n -t "$release/new/client" {} +
+        find "$source" -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) -exec cp --update=none -t "$release/new/client" {} +
     fi
 done
 cp /etc/caddy/Caddyfile "$release/previous/Caddyfile"
@@ -56,7 +56,7 @@ systemctl restart qmah-api qmah-web
 systemctl reload caddy
 ready=false
 for attempt in $(seq 1 30); do
-    if curl -fsS --max-time 5 -H "Host: $QMAH_HOST" http://127.0.0.1:5101/api/v1/account/capabilities >/dev/null \
+    if curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/api/v1/account/capabilities" >/dev/null \
         && curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/home" >/dev/null \
         && curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/admin/" >/dev/null; then
         ready=true
