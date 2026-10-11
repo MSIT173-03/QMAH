@@ -14,6 +14,7 @@ describe('遊戲音訊生命週期', () => {
 
   it('關閉後立刻重新開啟音樂，舊淡出不能暫停目前曲目', async () => {
     const audio = TestBed.inject(GameAudio);
+    audio.toggleMusic();
     const release = audio.attach();
     await Promise.resolve();
     vi.advanceTimersByTime(300);
@@ -29,6 +30,7 @@ describe('遊戲音訊生命週期', () => {
 
   it('attach 清理可重入，最後一頁離開才停止音訊', async () => {
     const audio = TestBed.inject(GameAudio);
+    audio.toggleMusic();
     const first = audio.attach(), second = audio.attach();
     await Promise.resolve();
     first(); first();
@@ -41,6 +43,7 @@ describe('遊戲音訊生命週期', () => {
 
   it('淡入期間調整音量後，不被舊計時器拉回', async () => {
     const audio = TestBed.inject(GameAudio);
+    audio.toggleMusic();
     const release = audio.attach();
     await Promise.resolve();
     vi.advanceTimersByTime(120);

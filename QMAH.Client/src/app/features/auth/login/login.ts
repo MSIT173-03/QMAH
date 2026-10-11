@@ -40,7 +40,9 @@ export class Login implements OnInit, OnDestroy {
     this.form.patchValue({ email: account.email, password: account.password, rememberMe: false });
     this.errorMessage = '';
   }
-  loading = false;
+  private readonly loadingState = signal(false);
+  get loading(): boolean { return this.loadingState(); }
+  set loading(value: boolean) { this.loadingState.set(value); }
   errorMessage = '';
   /** API 沒有回報 OAuth 已啟用前先保持停用，避免顯示無法完成的登入入口。 */
   googleLoginEnabled = false;
