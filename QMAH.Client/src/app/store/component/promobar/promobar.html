@@ -1,12 +1,14 @@
 <!-- 頂部公告與快捷連結列 -->
 <div class="promobar">
   <div class="promobar-row">
-    <!-- 跑馬燈公告，項目間以 | 分隔 -->
+    <span>商城最新優惠活動</span><span class="promobar-sep">｜</span>
     @for (note of announcements(); track note; let first = $first) {
     @if (!first) {
     <span class="promobar-sep">|</span>
     }
     <span>{{ note }}</span>
+    } @empty {
+    <span>目前沒有新的優惠活動</span>
     }
 
     <!-- 右側會員捷徑：點數、折價券、購物車、我的訂單；登入前的行為見下方 -->

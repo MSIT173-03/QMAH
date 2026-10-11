@@ -10,11 +10,23 @@ Group=qmah
 WorkingDirectory=/opt/qmah/api
 ExecStart=/opt/qmah/api/QMAH.Api
 EnvironmentFile=/etc/qmah/api.env
+Environment=Hosting__StabilityLimitsEnabled=true
+Environment=Hosting__MaxConcurrentRequests=48
+Environment=Hosting__MaxQueuedRequests=48
+Environment=Logging__LogLevel__Microsoft=Warning
 Restart=always
 RestartSec=5
 NoNewPrivileges=true
 PrivateTmp=true
 UMask=0077
+MemoryHigh=1200M
+MemoryMax=1536M
+MemorySwapMax=256M
+OOMPolicy=kill
+TimeoutStopSec=30
+LimitNOFILE=65535
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=2000
 
 [Install]
 WantedBy=multi-user.target

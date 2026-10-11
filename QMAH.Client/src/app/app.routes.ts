@@ -178,7 +178,7 @@ const appShellChildren: Routes = [
     data: { document: 'terms' },
   },
   { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: '**', redirectTo: 'home' }
+  { path: '**', loadComponent: () => import('./shared/components/not-found/not-found').then(m => m.NotFoundComponent) }
 ];
 
 export const routes: Routes = [

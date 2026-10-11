@@ -128,7 +128,8 @@
   </aside>
 
   <!-- ui-integration: App Shell 擁有唯一主要內容 landmark；子 Area 的 wrapper 僅保留原本 class 與版面，不再巢狀使用 main。 -->
-  <main id="main-content" class="app-main">
+  @if (pageReady.loading()) { <app-page-loader /> }
+  <main #pageContent id="main-content" class="app-main" [class.app-main--preparing]="pageReady.loading()" [attr.aria-busy]="pageReady.loading()" [attr.aria-hidden]="pageReady.loading() ? 'true' : null" [attr.inert]="pageReady.loading() ? '' : null">
     <router-outlet></router-outlet>
   </main>
 
@@ -137,7 +138,7 @@
     <app-scroll-top [fixed]="true" />
   }
 
-  <app-site-footer />
+  @if (!pageReady.loading()) { <app-site-footer /> }
 </div>
 
 <dialog #siteSwitchDialog class="app-site-switch-dialog" aria-labelledby="site-switch-title"

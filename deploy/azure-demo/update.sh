@@ -8,6 +8,7 @@ revision="${2:?Git revision required}"
 exec 9>/var/lock/qmah-update.lock
 flock -w 300 9
 root=/opt/qmah
+[[ $(df --output=avail -k "$root" | tail -1) -ge 1048576 ]] || { echo 'Less than 1 GiB free; keeping the current application.'; exit 1; }
 release="$root/releases/$revision"
 [[ ! -e "$release" ]] || { echo 'Release already exists; refusing to overwrite rollback files.'; exit 2; }
 mkdir -p "$release/new" "$release/previous"
@@ -25,10 +26,11 @@ chmod -R o+rX "$release/new/client"
 # Old tabs may still import a lazy chunk from the preceding build.
 for source in "$root/client" "$root/client-before-catalog-repair"; do
     if [[ -d "$source" ]]; then
-        find "$source" -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) -exec cp --update=none -t "$release/new/client" {} +
+        find "$source" -maxdepth 1 -type f -mtime -14 \( -name '*.js' -o -name '*.css' \) -exec cp -p --update=none -t "$release/new/client" {} +
     fi
 done
 cp /etc/caddy/Caddyfile "$release/previous/Caddyfile"
+cp /etc/systemd/system/qmah-api.service /etc/systemd/system/qmah-web.service "$release/previous/"
 swapped=()
 rollback() {
     local status=$?
@@ -39,6 +41,8 @@ rollback() {
         mv "$release/previous/$name" "$root/$name"
     done
     cp "$release/previous/Caddyfile" /etc/caddy/Caddyfile
+    cp "$release/previous/qmah-api.service" "$release/previous/qmah-web.service" /etc/systemd/system/
+    systemctl daemon-reload
     systemctl restart qmah-api qmah-web
     systemctl reload caddy
     systemctl start qmah-health.timer
@@ -52,6 +56,8 @@ for name in api web client; do
     mv "$release/new/$name" "$root/$name"
 done
 install -m 644 "$release/new/deploy/Caddyfile" /etc/caddy/Caddyfile
+install -m 644 "$release/new/deploy/qmah-api.service" "$release/new/deploy/qmah-web.service" /etc/systemd/system/
+systemctl daemon-reload
 systemctl restart qmah-api qmah-web
 systemctl reload caddy
 ready=false
@@ -75,6 +81,20 @@ if [[ -d "$release/new/media" ]]; then
     done
 fi
 systemctl start qmah-health.timer
+install -m 755 "$release/new/deploy/backup-database.sh" "$root/deploy/backup-database.sh"
+install -m 644 "$release/new/deploy/qmah-backup.service" "$release/new/deploy/qmah-backup.timer" /etc/systemd/system/
+mkdir -p /etc/systemd/journald.conf.d
+install -m 644 "$release/new/deploy/qmah-journald.conf" /etc/systemd/journald.conf.d/qmah-demo.conf
+systemctl daemon-reload
+systemctl enable --now qmah-backup.timer
+systemctl restart systemd-journald
 printf '%s\n' "$revision" > "$root/current-revision"
 trap - ERR
+# Keep three releases. A validated SHA directory cannot point outside our release root.
+while read -r old; do
+    [[ "$old" =~ ^[0-9a-f]{40}$ && "$old" != "$revision" ]] || continue
+    [[ "$(realpath "$root/releases/$old")" == "$root/releases/$old" ]] || continue
+    rm -rf -- "$root/releases/$old"
+done < <(find "$root/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' | sort -nr | cut -d' ' -f2 | tail -n +4)
+if [[ "$archive" == "/tmp/qmah-update-$revision.tar.gz" ]]; then rm -f -- "$archive" "/tmp/qmah-update-$revision.sh"; fi
 echo "QMAH_UPDATE_OK $revision"

@@ -1,5 +1,6 @@
 import {
   HttpInterceptorFn,
+  HttpErrorResponse,
   provideHttpClient,
   withInterceptors,
   withXsrfConfiguration
@@ -7,6 +8,8 @@ import {
 
 import {
   ApplicationConfig,
+  inject,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners
 } from '@angular/core';
 
@@ -20,6 +23,23 @@ import {
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
+import { finalize, retry, throwError, timer } from 'rxjs';
+import { PageReadiness } from './core/services/page-readiness';
+
+const pageReadinessInterceptor: HttpInterceptorFn = (request, next) => {
+  const ready = inject(PageReadiness);
+  const isApi = request.url.startsWith(environment.apiBaseUrl);
+  const complete = isApi ? ready.track(request.url, request.method) : () => undefined;
+  return next(request).pipe(
+    retry({ count: 2, delay: (error: unknown, attempt) => {
+      if (!isApi || request.method !== 'GET' || !(error instanceof HttpErrorResponse) || ![0, 408, 429, 502, 503, 504].includes(error.status)) return throwError(() => error);
+      const seconds = Number(error.headers.get('Retry-After'));
+      const delay = seconds > 0 ? Math.min(seconds * 1000, 5000) : 800 * 2 ** (attempt - 1);
+      return timer(delay + Math.floor(Math.random() * 250));
+    } }),
+    finalize(complete),
+  );
+};
 
 function gameMode(route: ActivatedRouteSnapshot): 'multiplayer' | 'training' | 'guide' | null {
   const path = `/${route.pathFromRoot.flatMap(snapshot => snapshot.url.map(segment => segment.path)).filter(Boolean).join('/')}`;
@@ -42,6 +62,7 @@ const apiCredentialsInterceptor: HttpInterceptorFn = (request, next) => {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideAppInitializer(() => { inject(PageReadiness); }),
     provideBrowserGlobalErrorListeners(),
 
     provideRouter(
@@ -63,7 +84,7 @@ export const appConfig: ApplicationConfig = {
     ),
 
     provideHttpClient(
-      withInterceptors([apiCredentialsInterceptor]),
+      withInterceptors([apiCredentialsInterceptor, pageReadinessInterceptor]),
       withXsrfConfiguration({
         cookieName: 'XSRF-TOKEN-API',
         headerName: 'X-XSRF-TOKEN'

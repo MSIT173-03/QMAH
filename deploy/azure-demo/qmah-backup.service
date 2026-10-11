@@ -1,0 +1,13 @@
+[Unit]
+Description=QMAH daily verified database backup
+After=docker.service
+StartLimitIntervalSec=3600
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/qmah/deploy/backup-database.sh
+Restart=on-failure
+RestartSec=300
+TimeoutStartSec=240
+NoNewPrivileges=true

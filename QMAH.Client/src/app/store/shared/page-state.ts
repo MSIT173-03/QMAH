@@ -1,11 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { computed, inject, signal } from '@angular/core';
+import { NgZone, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { StoreAuth } from './store-auth';
 import { CartApi, CatalogApi, MemberApi } from '../api';
-import { ShoppingCart } from '../api/api.models';
+import { ShoppingCart, StorePromotion } from '../api/api.models';
 import { emptyCart } from '../api/cart.api';
 import { formatNumber } from './format';
 import { loginPath } from './paths';
@@ -126,12 +126,20 @@ export type CartState = ReturnType<typeof injectCartState>;
  */
 export function injectSiteData() {
   const memberApi = inject(MemberApi);
-  const promotions = toSignal(inject(CatalogApi).getPromotions(), { initialValue: [] });
+  const catalogApi = inject(CatalogApi);
+  const zone = inject(NgZone);
+  const promotions = toSignal(new Observable<StorePromotion[]>(subscriber => {
+    let active: Subscription | undefined;
+    const refresh = () => { active?.unsubscribe(); active = catalogApi.getPromotions().subscribe(value => subscriber.next(value)); };
+    refresh();
+    const interval = zone.runOutsideAngular(() => setInterval(refresh, 60000));
+    return () => { clearInterval(interval); active?.unsubscribe(); };
+  }), { initialValue: [] });
   const profile = toSignal(memberApi.getProfile());
 
   return {
     /** 頂部公告列的公告文字：只顯示一則，取最新的官方商城優惠活動（API 已依發布時間新到舊排序） */
-    announcements: computed(() => promotions().slice(0, 1).map((promotion) => promotion.title)),
+    announcements: computed(() => promotions().slice(0, 1).map((promotion) => promotion.title.replace(/^商城(?:最新)?優惠活動\s*[｜|：:]?\s*/u, ''))),
     /** 頂部公告列顯示的會員點數 */
     points: computed(() => formatNumber(profile()?.pointBalance ?? 0)),
     /** 頂部公告列的折價券清單 */

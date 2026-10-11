@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -12,15 +12,20 @@ import { AreaNavigationComponent } from '../area-navigation/area-navigation';
 import { QmahIconComponent } from '../qmah-icon/qmah-icon';
 import { ScrollTop } from '../../../store/component/scroll-top/scroll-top';
 import { environment } from '../../../../environments/environment';
+import { PageReadiness } from '../../../core/services/page-readiness';
+import { PageLoaderComponent } from '../page-loader/page-loader';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [ScrollTop, RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, ToastContainerComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
+  imports: [PageLoaderComponent, ScrollTop, RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, ToastContainerComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })
-export class LayoutComponent implements OnInit, OnDestroy {
+export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly pageReady = inject(PageReadiness);
+  @ViewChild('pageContent') private pageContent?: ElementRef<HTMLElement>;
+  ngAfterViewInit(): void { if (this.pageContent) this.pageReady.attach(this.pageContent.nativeElement); }
   readonly meApi = inject(MeApiService);
   readonly themeService = inject(ThemeService);
   readonly gameFocus = inject(GameFocusMode);

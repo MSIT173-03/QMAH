@@ -31,10 +31,24 @@
         header Cache-Control "public, max-age=31536000, immutable"
         file_server
     }
-    handle {
+    @staticAssets path /assets/* /patterns/* /favicon.ico /manifest.webmanifest
+    handle @staticAssets {
+        root * /opt/qmah/client
+        file_server
+    }
+    @spaRoutes path / /home /login /register /forgot-password /reset-password /verify-email /member /member/profile /member/security /member/economy /member/achievements /member/daily-activity /member/addresses /member/coupons /member/notifications /artifact-list /key-list /game /game/account /game/training /game/minigames /game/how-to /game/appreciation /game/rooms /game/room/* /game/test /social /social/posts /social/posts/* /social/events /social/events/* /social/members/* /social/announcements /store /store/products /store/product/* /store/coupons /store/cart /store/checkout /store/orders /privacy-policy /terms
+    handle @spaRoutes {
         root * /opt/qmah/client
         header Cache-Control "no-store"
         try_files {path} /index.html
         file_server
+    }
+    handle {
+        root * /opt/qmah/client
+        header Cache-Control "no-store"
+        rewrite * /index.html
+        file_server {
+            status 404
+        }
     }
 }

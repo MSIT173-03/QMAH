@@ -10,11 +10,23 @@ Group=qmah
 WorkingDirectory=/opt/qmah/web
 ExecStart=/opt/qmah/web/QMAH.Web
 EnvironmentFile=/etc/qmah/web.env
+Environment=Hosting__StabilityLimitsEnabled=true
+Environment=Hosting__MaxConcurrentRequests=24
+Environment=Hosting__MaxQueuedRequests=24
+Environment=Logging__LogLevel__Microsoft=Warning
 Restart=always
 RestartSec=5
 NoNewPrivileges=true
 PrivateTmp=true
 UMask=0077
+MemoryHigh=768M
+MemoryMax=1024M
+MemorySwapMax=128M
+OOMPolicy=kill
+TimeoutStopSec=30
+LimitNOFILE=65535
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=2000
 
 [Install]
 WantedBy=multi-user.target

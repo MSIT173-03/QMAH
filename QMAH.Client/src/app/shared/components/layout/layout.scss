@@ -754,3 +754,5 @@ textarea:focus-visible {
 :host-context([data-theme='qmahdark']) .qmah-bell-badge { background: #e2675d; }
 .app-account__avatar { background: var(--qmah-surface-muted, #e9e6e0); color: var(--qmah-ink); }
 .app-account__avatar--image { background: var(--qmah-surface-muted, #e9e6e0); }
+/* Keep layout measurable so first-screen media can load behind the route gate. */
+.app-main--preparing { opacity: 0; pointer-events: none; }
