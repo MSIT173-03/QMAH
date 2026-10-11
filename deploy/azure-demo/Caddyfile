@@ -12,8 +12,10 @@
         reverse_proxy 127.0.0.1:5102
     }
     @sharedMedia path /images/* /fonts/*
+    @referenceMedia path /images/brand/* /images/login/* /images/store/* /fonts/*
     handle @sharedMedia {
         root * /opt/qmah/client
+        header @referenceMedia Cache-Control "public, max-age=3600, stale-while-revalidate=86400"
         route {
             file_server {
                 pass_thru
@@ -34,6 +36,7 @@
     @staticAssets path /assets/* /patterns/* /favicon.ico /manifest.webmanifest
     handle @staticAssets {
         root * /opt/qmah/client
+        header Cache-Control "public, max-age=3600, stale-while-revalidate=86400"
         file_server
     }
     @spaRoutes path / /home /login /register /forgot-password /reset-password /verify-email /member /member/profile /member/security /member/economy /member/achievements /member/daily-activity /member/addresses /member/coupons /member/notifications /artifact-list /key-list /game /game/account /game/training /game/minigames /game/how-to /game/appreciation /game/rooms /game/room/* /game/test /social /social/posts /social/posts/* /social/events /social/events/* /social/members/* /social/announcements /store /store/products /store/product/* /store/coupons /store/cart /store/checkout /store/orders /privacy-policy /terms

@@ -2,6 +2,7 @@
   class="artifact-page"
   #artifactPage
   [attr.data-book]="bookState()"
+  [attr.data-qmah-first-view-ready]="bookState() === 'closed' ? '' : null"
   [attr.data-reveal]="reveal()"
   [attr.data-reveal-scope]="revealScope()"
   [attr.data-section]="bookSection()"

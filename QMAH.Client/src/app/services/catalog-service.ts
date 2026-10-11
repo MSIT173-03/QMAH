@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { CatalogModel, CatalogListResponse, CatalogDetailModel, CategoryModel, EraModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord } from '../models/artifact-unlock-model';
-import { catchError, map, of, switchMap, Observable, throwError } from 'rxjs';
+import { catchError, map, of, switchMap, mergeMap, range, toArray, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 /** 對應後端 ApiPage&lt;T&gt; 的分頁包裝，跟 CatalogListResponse 是同一套形狀 */
@@ -116,7 +116,14 @@ export class CatalogService {
     return this.http.get<ApiPage<ArtifactUnlockRecord>>(this.myUnlocksUrl, { params }).pipe(
       switchMap((res) => {
         const combined = [...acc, ...res.items];
-        return page < res.totalPages ? this.fetchAllUnlockPages(page + 1, combined) : of(combined);
+        if (page >= res.totalPages) return of(combined);
+        return range(page + 1, res.totalPages - page).pipe(
+          mergeMap(nextPage => this.http.get<ApiPage<ArtifactUnlockRecord>>(this.myUnlocksUrl, {
+            params: params.set('page', nextPage.toString()),
+          }).pipe(map(next => ({ page: nextPage, items: next.items }))), 3),
+          toArray(),
+          map(pages => [...combined, ...pages.sort((a, b) => a.page - b.page).flatMap(next => next.items)]),
+        );
       }),
       catchError(this.handleError)
     );

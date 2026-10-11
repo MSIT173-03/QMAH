@@ -64,7 +64,10 @@ API、前台或後台啟動檢查失敗時，`update.sh` 會復原前一版應�
 
 ## 首屏與導覽
 
-頁首與頁尾先顯示，主要內容等首批 API 回覆後顯示，首屏素材最多額外等待 650 ms，不強制延長動畫。最長等待十二秒，背景刷新不遮住正在使用的頁面。
+每個前台路由都適用同一個深／淺色載入畫面，不依頁面另造背景。頁首先顯示，內容區保留頁首下方整個視窗高度，頁尾維持原本位置。首批 API 回覆後，首屏素材最多額外等待 180 ms，不等待全部字型、不強制延長動畫；遮罩最多三秒，背景刷新不遮住正在使用的頁面。
+圖鑑與會員解鎖紀錄取得首批分頁資訊後，後續最多同時讀取三頁，再依頁碼組回原順序。個人資料仍每次向 API 讀取，不加入共用快取。
+圖鑑封面可先完整顯示時會標記首屏已準備好，全站遮罩不用等整本圖鑑的分頁預取；翻開書本的資料就緒條件仍保留。
+公開介面圖片、字型與木桌素材使用一小時瀏覽器快取，過期可在背景重新驗證；HTML、登入狀態、訂單及個人資產不套用這個快取。
 翻書動畫改自 [React Awesome Loaders 的 BookLoader](https://awesome-loaders.netlify.app/docs/loaders/bookloader/)，原作參考 Aaron Iker。授權保留在 `QMAH.Client/public/licenses/React-Awesome-Loaders.txt`；動畫以純 CSS 使用，沒有引入 React。
 404 書架動畫改自 [Valeriia 的 Missing Book](https://codepen.io/valerite-dev/pen/KMZyLz)，配合鑑定屋調整棕色與繁中文案，MIT 授權保留在 `QMAH.Client/public/licenses/Missing-Book-404.txt`。
 不存在的網址使用 404 頁，提供回首頁入口；未知 JS 檔仍回真正的 404，不傳回 HTML 冒充模組。

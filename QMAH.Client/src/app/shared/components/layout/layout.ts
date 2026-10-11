@@ -110,6 +110,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.pageReady.detach(this.pageContent?.nativeElement);
     this.routeSubscription?.unsubscribe();
   }
 

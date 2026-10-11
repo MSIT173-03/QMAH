@@ -18,7 +18,7 @@ import {
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, of, switchMap } from 'rxjs';
+import { Observable, of, switchMap, map, mergeMap, range, toArray } from 'rxjs';
 import { CatalogService } from '../services/catalog-service';
 import { CatalogModel, CatalogDetailModel, EraModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
@@ -1084,7 +1084,14 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     return this.catalogService.getArtifacts(page, bulkPageSize).pipe(
       switchMap((res) => {
         const combined = [...acc, ...res.items];
-        return page < res.totalPages ? this.fetchAllPages(page + 1, combined) : of(combined);
+        if (page >= res.totalPages) return of(combined);
+        return range(page + 1, res.totalPages - page).pipe(
+          mergeMap(nextPage => this.catalogService.getArtifacts(nextPage, bulkPageSize).pipe(
+            map(next => ({ page: nextPage, items: next.items }))
+          ), 3),
+          toArray(),
+          map(pages => [...combined, ...pages.sort((a, b) => a.page - b.page).flatMap(next => next.items)]),
+        );
       })
     );
   }

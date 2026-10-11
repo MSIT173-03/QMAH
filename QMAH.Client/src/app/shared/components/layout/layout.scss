@@ -3,7 +3,7 @@
 }
 
 .app-content { position: relative; flex: 1; min-width: 0; }
-.app-content--preparing { flex: none; height: clamp(380px, 58dvh, 660px); overflow: clip; }
+.app-content--preparing { flex: none; height: calc(100dvh - var(--app-header-height)); min-height: 520px; overflow: clip; }
 .app-content--preparing .app-main { min-height: 100%; }
 
 .app-shell.game-focus-mode > .app-header,
