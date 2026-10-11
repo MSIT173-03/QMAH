@@ -78,7 +78,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
     this.demoRound++;
     const target = modeCode === 'STRIP_RESTORE'
       ? PAINTING_SAMPLES[this.demoRound % PAINTING_SAMPLES.length]
-      : modeCode === 'MEMORY_MATCH' ? MEMORY_SAMPLES[0] : PUZZLE_SAMPLES[this.demoRound % PUZZLE_SAMPLES.length];
+      : modeCode === 'DETAIL_LOCATOR' ? LOCATOR_SAMPLES[0] : modeCode === 'MEMORY_MATCH' ? MEMORY_SAMPLES[0] : PUZZLE_SAMPLES[this.demoRound % PUZZLE_SAMPLES.length];
     this.beginAttempt({ attemptId: `demo-${modeCode}`, modeCode, modeName, ...target, artifactName: target.name,
       artifactPool: modeCode === 'DETAIL_LOCATOR' ? LOCATOR_SAMPLES : modeCode === 'MEMORY_MATCH' ? MEMORY_SAMPLES : modeCode === 'STRIP_RESTORE' ? PAINTING_SAMPLES : PUZZLE_SAMPLES,
       difficulty: this.demoHard ? 'HARD' : 'EASY', seed: `qmah-demo-v2-${this.demoHard ? 'h' : 'e'}-${this.demoRound}`, configJson: null,
