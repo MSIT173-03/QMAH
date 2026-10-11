@@ -139,16 +139,17 @@
 .social-post-card__tags { flex-wrap: wrap; gap: 6px; }
 
 .social-post-card__title {
-  display: -webkit-box;
+  display: block;
+  width: 100%;
+  max-width: none;
+  text-wrap: wrap;
+  overflow-wrap: anywhere;
   margin: 0;
   font-family: var(--qmah-font-serif);
   font-size: clamp(19px, 2vw, 24px);
   font-weight: 700;
   line-height: 1.35;
   letter-spacing: -.02em;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
 }
 
 .social-post-card__title a {
