@@ -17,12 +17,13 @@ import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup'
 import { boardLabel } from '../social-labels';
 import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
 import { SocialBoardsStore } from '../social-boards';
+import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
 import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
 import {
   LucideExternalLink,
   LucideFlag,
-  LucideMaximize2,
-  LucideMinimize2,
+  LucideMoveHorizontal,
+
   LucideImage,
   LucideMessageCircle,
   LucidePlus,
@@ -52,8 +53,8 @@ import {
     SocialEventContentComponent,
     LucideExternalLink,
     LucideFlag,
-    LucideMaximize2,
-    LucideMinimize2,
+    LucideMoveHorizontal,
+  
     LucideImage,
     LucideMessageCircle,
     LucidePlus,
@@ -111,8 +112,10 @@ export class PostsComponent implements OnInit, OnDestroy {
 
   readonly boardLabel = boardLabel;
   boardCodes: string[] = [];
-  /** 發布器是否切成寬版（左寫右預覽），寫長文時使用 */
+  /** 加寬編輯區；預覽獨立切換，不瓜分書寫空間。 */
   postWide = false;
+  postPreview = false;
+  readonly view = inject(SocialViewPreferences);
 
   /** 貼文牆每列幾則（1／2／3），記在瀏覽器裡，下次進來沿用 */
   wallCols: 1 | 2 | 3 = this.readWallCols();
@@ -247,6 +250,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   openCreatePost(): void {
+    this.postPreview = false;
     // ui-integration: 由 Angular 保留對話框的 focus／Escape 行為，避免依賴全域 id 變數開啟發布流程。
     // 管理員示範用：表單是空的才預填，不會蓋掉已經在寫的內容。
     if (isDemoAdmin(this.meApi.me()) && !this.newPost.title.trim() && !this.newPost.content.trim()) {

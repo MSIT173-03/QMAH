@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideCalendarDays, LucideChevronRight, LucideMegaphone, LucideMaximize2, LucideMinimize2 } from '@lucide/angular';
+import { LucideCalendarDays, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal } from '@lucide/angular';
 import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
 
 import { SocialBoardsStore } from '../../../features/social/social-boards';
@@ -17,7 +17,7 @@ import { boardLabel } from '../../../features/social/social-labels';
  */
 @Component({
   selector: 'app-social-shell',
-  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronRight, LucideMegaphone, LucideMaximize2, LucideMinimize2],
+  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './social-shell.scss',
   template: `
@@ -44,9 +44,9 @@ import { boardLabel } from '../../../features/social/social-labels';
         </ul>
       </nav>
       <div class="shell__main">
-        <div class="shell__view-tools"><button type="button" class="shell__width-toggle" [attr.aria-pressed]="view.wide()" (click)="view.toggle()">
-          @if (view.wide()) { <svg lucideMinimize2 aria-hidden="true"></svg>切回標準版 } @else { <svg lucideMaximize2 aria-hidden="true"></svg>寬版檢視 }
-        </button></div>
+        @if (!inline()) { <div class="shell__view-tools"><button type="button" class="shell__width-toggle" [attr.aria-pressed]="view.wide()" [attr.aria-label]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" [title]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" (click)="view.toggle()">
+          <svg lucideMoveHorizontal aria-hidden="true" focusable="false"></svg>
+        </button></div> }
         <ng-content />
       </div>
     </div>

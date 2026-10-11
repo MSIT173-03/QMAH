@@ -433,18 +433,6 @@
 .social-post-form__textarea { min-height: 220px; font-size: 1rem; line-height: 1.75; }
 .social-post-dialog { transition: max-width 200ms ease; }
 .social-post-dialog.is-wide { width: min(1200px, 96vw); max-width: min(1200px, 96vw); }
-@media (min-width: 900px) {
-  .social-post-dialog.is-wide .social-post-form {
-    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 24px; row-gap: 14px; align-items: start;
-  }
-  .social-post-dialog.is-wide .social-post-form > .social-post-form__field { grid-column: 1; }
-  .social-post-dialog.is-wide .social-post-form > .social-post-form__preview {
-    grid-column: 2; grid-row: 1 / span 4; position: sticky; top: 0; min-height: 50vh; max-height: 68vh; overflow: auto;
-  }
-  .social-post-dialog.is-wide .social-post-form__textarea { min-height: 42vh; }
-}
-
-
 /* ===== 貼文牆搜尋：一個搜尋框＋目前條件標籤；看板切換只在左側分類，不重複 ===== */
 .qmah-social-page .social-search { display: flex; gap: 10px; align-items: center; }
 .qmah-social-page .social-search__box {
@@ -551,3 +539,25 @@
 .qmah-social-page .social-datefilter__field input { width: 100%; }
 .social-load-more { display: grid; justify-items: center; gap: 12px; padding: 28px 0; color: var(--qmah-muted); font-size: 14px; }
 .social-load-more p { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* Writing always owns the full available width; preview is an explicit view. */
+.social-modal .social-post-dialog { width:min(760px,calc(100vw - 32px));max-width:760px; }
+.social-modal .social-post-dialog.is-wide { width:min(1400px,calc(100vw - 48px));max-width:1400px; }
+.social-post-dialog__head { position:sticky;top:0;z-index:4;padding:18px 24px;margin:0;border-bottom:1px solid var(--qmah-border);background:var(--qmah-surface-elevated); }
+.social-post-dialog__head .social-post-dialog__title { position:static;padding:0;border:0;background:transparent; }
+.social-post-dialog__tools { display:flex;align-items:center;gap:8px; }
+.social-post-dialog__wide { min-height:38px;min-width:38px;justify-content:center; }
+.social-post-form { grid-template-columns:minmax(0,1fr);align-items:start;gap:20px;padding:24px; }
+.social-post-form__field { align-content:start;gap:8px; }
+.social-post-form__field .input { height:46px;min-height:46px; }
+.social-post-form__toolbar { padding:8px;gap:6px;border:1px solid var(--qmah-border);background:color-mix(in srgb,var(--qmah-social-action) 4%,var(--qmah-surface-elevated)); }
+.social-post-form__group { display:flex;align-items:center;flex-wrap:wrap; }
+.social-fmt { min-height:32px;white-space:nowrap; }
+.social-swatch { flex:0 0 22px;width:22px;min-width:22px;height:22px;min-height:22px;max-height:22px;padding:0;aspect-ratio:1; }
+.social-post-form__textarea { box-sizing:border-box;min-height:260px;padding:16px;resize:vertical; }
+.social-post-dialog.is-wide .social-post-form__textarea { min-height:40vh; }
+.social-post-form__preview { display:block;min-height:260px; }
+.social-post-form__preview > .social-post-form__hint { display:block;margin-bottom:16px; }
+.social-post-form.is-preview > .social-post-form__field:nth-child(3) { display:none; }
+.social-board-picker { gap:6px; }.social-board-chip { min-height:36px;padding:6px 12px;border-radius:8px; }
+@media(max-width:600px) { .social-post-dialog__head { padding:16px; }.social-post-form { padding:16px; }.social-modal .social-post-dialog.is-wide { width:calc(100vw - 24px); } }

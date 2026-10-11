@@ -58,6 +58,7 @@
         <svg lucideFilterX aria-hidden="true" focusable="false"></svg>
       </button>
     }
+    <button type="button" class="social-tool" [class.is-on]="view.wide()" [attr.aria-pressed]="view.wide()" [attr.aria-label]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" [title]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" (click)="view.toggle()"><svg lucideMoveHorizontal aria-hidden="true" focusable="false"></svg></button>
     <div class="social-datefilter">
       <button type="button" class="social-tool" [class.is-on]="hasDateFilter || showDateFilter" [attr.aria-expanded]="showDateFilter" title="依發布時間篩選" aria-label="依發布時間篩選" (click)="showDateFilter = !showDateFilter">
         <svg lucideCalendarRange aria-hidden="true" focusable="false"></svg>
@@ -192,17 +193,17 @@
   <div class="modal-box social-post-dialog" [class.is-wide]="postWide">
     <header class="social-post-dialog__head">
       <h2 id="create-post-title" class="social-post-dialog__title">發布新貼文</h2>
-      <button type="button" class="social-post-dialog__wide" (click)="postWide = !postWide" [attr.aria-pressed]="postWide" [title]="postWide ? '切回一般版面' : '切換寬版：左邊寫、右邊即時預覽'">
-        @if (postWide) { <svg lucideMinimize2 aria-hidden="true" focusable="false"></svg> } @else { <svg lucideMaximize2 aria-hidden="true" focusable="false"></svg> }
-        {{ postWide ? '一般版面' : '寬版' }}
-      </button>
+      <div class="social-post-dialog__tools"><button type="button" class="social-post-dialog__wide" [attr.aria-pressed]="postPreview" (click)="postPreview = !postPreview">{{ postPreview ? '回到編輯' : '預覽' }}</button><button type="button" class="social-post-dialog__wide" [attr.aria-label]="postWide ? '切回一般編輯寬度' : '加寬編輯區'" (click)="postWide = !postWide" [attr.aria-pressed]="postWide" [title]="postWide ? '切回一般版面' : '加寬編輯區'">
+        <svg lucideMoveHorizontal aria-hidden="true" focusable="false"></svg>
+        
+      </button></div>
     </header>
     @if (createError) {
       <div class="alert alert-warning social-post-dialog__alert" role="alert">{{ createError }}</div>
     }
     <!-- daisyUI 5 已移除 .form-control，原本的 gap-3 沒有 flex/grid 容器可套用；
          改由 .social-post-form 自己宣告 grid 與間距，欄位之間才會真的有行距。 -->
-    <div class="social-post-form">
+    <div class="social-post-form" [class.is-preview]="postPreview">
       <div class="social-post-form__field">
         <label class="social-post-form__label" for="social-post-title">標題</label>
         <input id="social-post-title" name="title" type="text" placeholder="貼文標題…" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
@@ -250,13 +251,13 @@
         <textarea id="social-post-content" name="content" class="textarea textarea-bordered w-full social-post-form__textarea" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
         <span class="social-post-form__hint">先選取文字再按格式；沒選取時會插入成對標記，游標停在中間，在裡面輸入即可。再按一次可取消。字數 {{ newPost.content.length }}。</span>
       </div>
-      @if (newPost.content.trim() || postWide) {
+      @if (postPreview) {
         <div class="social-post-form__preview">
           <span class="social-post-form__hint">預覽</span>
           @if (newPost.content.trim()) {
             <app-social-post-content [content]="newPost.content" />
           } @else {
-            <p class="social-post-form__empty">在左邊輸入內容，這裡會即時顯示發布後的樣子。</p>
+            <p class="social-post-form__empty">先輸入內容，再看看發布後的樣子。</p>
           }
         </div>
       }
