@@ -1,7 +1,7 @@
 import { Product } from '../api/api.models';
 import { formatDiscountTag, formatMoney, formatNumber } from './format';
 
-/** 各頁面商品卡片、橫列、推薦區塊共用的商品顯示資料 */
+/** 各頁面商品卡片、預覽清單、推薦區塊共用的商品顯示資料 */
 export interface ProductViewData {
   id: string;
   /** 器類名稱 */
@@ -40,7 +40,7 @@ export function toProductView(product: Product): ProductViewData {
   };
 }
 
-/** 價格列的顯示字串（商品卡片、商品橫列、購物車行、商品頁資訊欄共用） */
+/** 價格列的顯示字串（商品卡片、商品預覽清單、購物車行、商品頁資訊欄共用） */
 export interface PriceView {
   /** 是否為折扣商品；有原價可比較即代表有折扣，價格顏色與標籤樣式皆以此判斷 */
   hasDeal: boolean;

@@ -44,21 +44,33 @@ public sealed class GameImageAnalyzer(ScrollPaintingEligibility eligibility)
             }
             int Median(Func<SKColor, byte> channel) => border.Select(channel).Order().ElementAt(border.Count / 2);
             var background = new[] { Median(p => p.Red), Median(p => p.Green), Median(p => p.Blue) };
+            var leftBackground = new SKColor[size];
+            var rightBackground = new SKColor[size];
+            SKColor Side(int y, int start)
+            {
+                byte Channel(Func<SKColor, byte> select) => Enumerable.Range(start, 5).Select(x => select(pixels[y * size + x])).Order().ElementAt(2);
+                return new SKColor(Channel(p => p.Red), Channel(p => p.Green), Channel(p => p.Blue));
+            }
+            for (var y = 0; y < size; y++)
+            {
+                leftBackground[y] = Side(y, 0);
+                rightBackground[y] = Side(y, size - 5);
+            }
             var mask = new byte[pixels.Length];
             var edges = new bool[pixels.Length];
             for (var y = 0; y < size; y++) for (var x = 0; x < size; x++)
             {
                 var index = y * size + x;
                 var pixel = pixels[index];
-                var left = pixels[y * size]; var right = pixels[y * size + size - 1];
+                var left = leftBackground[y]; var right = rightBackground[y];
                 var t = x / (double)(size - 1);
                 bool Similar(byte value, int global, byte localLeft, byte localRight) =>
                     Math.Abs(value - global) <= 28 || Math.Abs(value - (localLeft * (1 - t) + localRight * t)) <= 28;
                 if (Similar(pixel.Red, background[0], left.Red, right.Red)
                     && Similar(pixel.Green, background[1], left.Green, right.Green)
                     && Similar(pixel.Blue, background[2], left.Blue, right.Blue)) mask[index] = 1;
-                edges[index] = Difference(pixels[y * size + Math.Max(0, x - 1)], pixels[y * size + Math.Min(size - 1, x + 1)]) > 8
-                    || Difference(pixels[Math.Max(0, y - 1) * size + x], pixels[Math.Min(size - 1, y + 1) * size + x]) > 8;
+                edges[index] = Difference(pixels[y * size + Math.Max(0, x - 1)], pixels[y * size + Math.Min(size - 1, x + 1)]) > 16
+                    || Difference(pixels[Math.Max(0, y - 1) * size + x], pixels[Math.Min(size - 1, y + 1) * size + x]) > 16;
             }
             // 只接受與外框相連的平坦背景，避免把文物內部的素色區域當成背景。
             var queue = new Queue<int>();
@@ -87,11 +99,18 @@ public sealed class GameImageAnalyzer(ScrollPaintingEligibility eligibility)
                 for (var y = top; y < bottom; y++) for (var x = left; x < right; x++)
                 {
                     var index = y * size + x;
-                    if (mask[index] == 2) connected++;
-                    if (edges[index]) detail++;
+                    var ownEdge = edges[index];
+                    // 格線外的文物輪廓不算入這一片，與前端背景候選使用相同規則。
+                    if (x == left || x == right - 1 || y == top || y == bottom - 1)
+                        ownEdge = Difference(pixels[y * size + Math.Max(left, x - 1)], pixels[y * size + Math.Min(right - 1, x + 1)]) > 16
+                            || Difference(pixels[Math.Max(top, y - 1) * size + x], pixels[Math.Min(bottom - 1, y + 1) * size + x]) > 16;
+                    var neighbor = (x > left && mask[index - 1] == 2) || (x < right - 1 && mask[index + 1] == 2)
+                        || (y > top && mask[index - size] == 2) || (y < bottom - 1 && mask[index + size] == 2);
+                    if (mask[index] == 2 || (mask[index] == 1 && edges[index] && !ownEdge && neighbor)) connected++;
+                    if (ownEdge) detail++;
                 }
                 var area = (right - left) * (bottom - top);
-                if (connected >= area * .985 && detail <= area * .005) pieces.Add(piece);
+                if (connected >= area * .97 && detail <= area * .03) pieces.Add(piece);
             }
             return pieces.ToArray();
         }

@@ -2,7 +2,7 @@ import { Component, DestroyRef, ElementRef, ViewChild, computed, effect, inject,
 import { MiniGameArtifact } from './game.models';
 import { GameAudio } from './game-audio.service';
 import { GameLoupeControlsComponent, LoupeSizeId, loadLoupePrefs, loupePixels, saveLoupePrefs, wheelZoom } from './game-loupe';
-import { LocatorAnswer, locatorCorrect, locatorTarget, rememberLocatorTargets } from './game-detail-locator';
+import { LocatorAnswer, locatorCropSize, locatorCorrect, locatorTarget, rememberLocatorTargets } from './game-detail-locator';
 
 @Component({
   selector: 'app-game-detail-locator-board',
@@ -13,7 +13,7 @@ import { LocatorAnswer, locatorCorrect, locatorTarget, rememberLocatorTargets } 
 export class GameDetailLocatorBoardComponent {
   readonly artifacts = input.required<MiniGameArtifact[]>();
   readonly seed = input.required<string>();
-  readonly targets = input<readonly { artifactId: string; x: number; y: number }[] | null>(null);
+  readonly targets = input<readonly { artifactId: string; x: number; y: number; cropFraction?: number }[] | null>(null);
   readonly answers = input<LocatorAnswer[]>([]);
   /** 按「協助完成」代為完成的題目；盤面視為完成，可以檢視正解位置。 */
   readonly assisted = input<string[]>([]);
@@ -66,7 +66,7 @@ export class GameDetailLocatorBoardComponent {
     if (!answer) return null;
     rememberLocatorTargets(this.seed(), this.targets());
     const target = locatorTarget(this.seed(), answer.artifactId);
-    const half = Math.floor(Math.min(answer.imageWidth, answer.imageHeight) / 5) / 2;
+    const half = locatorCropSize(this.seed(), answer.artifactId, answer.imageWidth, answer.imageHeight) / 2;
     const ratio = Math.max(Math.abs(answer.x - target.x) * answer.imageWidth, Math.abs(answer.y - target.y) * answer.imageHeight) / (half || 1);
     return Math.round(Math.max(0, 1 - ratio / 3) * 100);
   });
@@ -98,7 +98,7 @@ export class GameDetailLocatorBoardComponent {
     const canvas = this.canvas?.nativeElement;
     const context = canvas?.getContext('2d');
     if (!canvas || !context || !image.naturalWidth || !image.naturalHeight) { this.unavailable(); return; }
-    const size = Math.max(1, Math.floor(Math.min(image.naturalWidth, image.naturalHeight) / 5));
+    const size = locatorCropSize(this.seed(), this.current()?.artifactId ?? "", image.naturalWidth, image.naturalHeight);
     canvas.width = size; canvas.height = size;
     this.dimensions.set({ imageWidth: image.naturalWidth, imageHeight: image.naturalHeight });
     context.drawImage(image, image.naturalWidth * this.target().x - size / 2, image.naturalHeight * this.target().y - size / 2, size, size, 0, 0, size, size);
@@ -218,12 +218,12 @@ export class GameDetailLocatorBoardComponent {
   /** 偏離目標的程度，以命中範圍（碎片半邊長）為 1。 */
   private missRatio(point: LocatorAnswer): number {
     const target = this.target();
-    const half = Math.floor(Math.min(point.imageWidth, point.imageHeight) / 5) / 2;
+    const half = locatorCropSize(this.seed(), point.artifactId, point.imageWidth, point.imageHeight) / 2;
     return Math.max(Math.abs(point.x - target.x) * point.imageWidth, Math.abs(point.y - target.y) * point.imageHeight) / (half || 1);
   }
   private showVerdict(point: LocatorAnswer): void {
     const target = this.target();
-    const half = Math.floor(Math.min(point.imageWidth, point.imageHeight) / 5) / 2;
+    const half = locatorCropSize(this.seed(), point.artifactId, point.imageWidth, point.imageHeight) / 2;
     const ratio = Math.max(Math.abs(point.x - target.x) * point.imageWidth, Math.abs(point.y - target.y) * point.imageHeight) / (half || 1);
     const [tier, text] = ratio <= .4 ? ['great', '太準了！'] as const : ratio <= 1 ? ['nice', '命中'] as const : ratio <= 2 ? ['close', '差一點'] as const : ['bad', '偏了'] as const;
     this.verdict.set({ artifactId: point.artifactId, text: `${text} ${Math.round(Math.max(0, 1 - ratio / 3) * 100)}%`, tier, x: point.x, y: point.y });

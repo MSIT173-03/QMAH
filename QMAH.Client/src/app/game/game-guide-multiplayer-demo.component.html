@@ -25,8 +25,16 @@
               <button type="button" [class.is-selected]="selectedAnswer() === index" [class.is-winner]="revealed() && index === 1" [attr.aria-pressed]="selectedAnswer() === index" [disabled]="revealed()" (click)="selectedAnswerChange.emit(index)">
                 <span><strong>回答 {{ (index + 1).toString().padStart(2, '0') }}</strong>@if (revealed()) { <small>{{ answer.author }} · {{ answer.votes }} 票@if (index === 1) { · 勝出 }</small> }</span>
                 <span class="guide-preview-answer-text"><strong>{{ answer.category }}</strong><br />{{ answer.text }}</span>
-                @if (!revealed() && selectedAnswer() === index) { <small class="answer-selection">已選擇</small> }
               </button>
+              <div class="answer-foot">
+                <small class="answer-selection">{{ selectedAnswer() === index ? '已選擇' : '' }}</small>
+                <button type="button" class="answer-read" [attr.popovertarget]="'demo-answer-' + index" [attr.aria-label]="'查看回答 ' + (index + 1) + ' 全文'">查看完整回答</button>
+              </div>
+              <section [id]="'demo-answer-' + index" class="answer-full" popover="auto" role="dialog" [attr.aria-labelledby]="'demo-answer-title-' + index">
+                <header><h3 [id]="'demo-answer-title-' + index">{{ answer.category }} · {{ revealed() ? answer.author : '匿名回答' }}</h3><button type="button" [attr.popovertarget]="'demo-answer-' + index" popovertargetaction="hide" aria-label="關閉完整回答">×</button></header>
+                <p>{{ answer.text }}</p>
+                @if (revealed()) { <small>{{ answer.votes }} 票@if (index === 1) { · 本回合勝出 }</small> }
+              </section>
             </li>
           }
         </ol>

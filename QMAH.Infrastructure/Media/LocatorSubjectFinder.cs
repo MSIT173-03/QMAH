@@ -5,25 +5,29 @@ namespace QMAH.Infrastructure.Media;
 
 /// <summary>
 /// 細節追跡的目標點：在文物本體上挑，不挑到空白背景。
-/// 縮小圖片後用「和邊緣背景色的差異」找出文物所在的格子（10×10），再依種子與文物 ID 挑一格；
-/// 同一張圖永遠得到同一組格子，所以每局的目標只由種子決定。
+/// 新局檢查原圖裁切區的覆蓋率與細節分布，依種子與文物 ID 選擇位置及裁切比例。
+/// v5／v6 保留舊格子規則，讓已開始的挑戰仍可依原規則結算。
 /// </summary>
-public sealed class LocatorSubjectFinder(ScrollPaintingEligibility eligibility)
+public sealed partial class LocatorSubjectFinder(ScrollPaintingEligibility eligibility)
 {
     private const int Grid = 10;
     private static readonly ConcurrentDictionary<string, double[]?> DetailCache = new();
     public bool HasDetail(string imagePath)
     {
-        var filled = Cache.GetOrAdd(imagePath, path => Subject(path));
-        var detail = DetailCache.GetOrAdd(imagePath, path => Detail(path));
-        return filled is not null && detail is not null && Enumerable.Range(0, Grid * Grid)
-            .Any(i => i / Grid is >= 2 and <= 7 && i % Grid is >= 2 and <= 7 && filled[i] && detail[i] >= .025);
+        return OriginalCandidates(imagePath).Length > 0;
     }
     private static readonly ConcurrentDictionary<string, bool[]?> Cache = new();
 
     public (double X, double Y) Target(string seed, Guid artifactId, string imagePath)
     {
         var key = $"{seed}|{artifactId:D}";
+        if (seed.StartsWith("v7-", StringComparison.Ordinal))
+        {
+            var candidates = OriginalCandidates(imagePath);
+            if (candidates.Length == 0) throw new InvalidOperationException("細節追跡原圖已無可用目標，請重新開始遊戲。");
+            var selected = candidates[(int)(Hash(key + "|v7") % (uint)candidates.Length)];
+            return (selected.X, selected.Y);
+        }
         var fallback = ((3 + Hash(key) % 5) / 10d, (3 + Hash(key + "|y") % 5) / 10d);
         var filled = Cache.GetOrAdd(imagePath, path => Subject(path));
         if (filled is null) return fallback;
@@ -61,6 +65,14 @@ public sealed class LocatorSubjectFinder(ScrollPaintingEligibility eligibility)
             if (best >= 0) return ((best % Grid + .5) / Grid, (best / Grid + .5) / Grid);
         }
         return fallback;
+    }
+
+    public double CropFraction(string seed, Guid artifactId, string imagePath)
+    {
+        if (!seed.StartsWith("v7-", StringComparison.Ordinal)) return .20;
+        var options = OriginalCandidates(imagePath);
+        if (options.Length == 0) throw new InvalidOperationException("細節追跡原圖已無可用目標。");
+        return options[(int)(Hash($"{seed}|{artifactId:D}|v7") % (uint)options.Length)].Fraction;
     }
 
     private double[]? Detail(string imagePath)

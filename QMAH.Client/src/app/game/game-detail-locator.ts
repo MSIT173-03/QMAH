@@ -10,10 +10,10 @@ function hash(value: string): number {
 }
 
 /** 與伺服器共用 FNV-1a 規則，位置只依已保存的種子與文物 ID 產生。 */
-const subjectTargets = new Map<string, { x: number; y: number }>();
+const subjectTargets = new Map<string, { x: number; y: number; cropFraction?: number }>();
 /** 記下伺服器算好的目標點（挑在文物本體上）；沒有的舊局退回雜湊位置。 */
-export function rememberLocatorTargets(seed: string, targets: readonly { artifactId: string; x: number; y: number }[] | null | undefined): void {
-  for (const target of targets ?? []) subjectTargets.set(`${seed}|${target.artifactId.toLowerCase()}`, { x: target.x, y: target.y });
+export function rememberLocatorTargets(seed: string, targets: readonly { artifactId: string; x: number; y: number; cropFraction?: number }[] | null | undefined): void {
+  for (const target of targets ?? []) subjectTargets.set(`${seed}|${target.artifactId.toLowerCase()}`, { x: target.x, y: target.y, cropFraction: target.cropFraction });
 }
 
 export function locatorTarget(seed: string, artifactId: string): { x: number; y: number } {
@@ -52,9 +52,14 @@ export function chooseLocatorTarget(seed: string, artifactId: string, pixels: Ui
   return null;
 }
 
+export function locatorCropSize(seed: string, artifactId: string, width: number, height: number): number {
+  const fraction = subjectTargets.get(`${seed}|${artifactId.toLowerCase()}`)?.cropFraction ?? .20;
+  return Math.max(1, Math.floor(Math.min(width, height) * fraction));
+}
+
 export function locatorCorrect(seed: string, answer: LocatorAnswer): boolean {
   const target = locatorTarget(seed, answer.artifactId);
-  const halfSize = Math.floor(Math.min(answer.imageWidth, answer.imageHeight) / 5) / 2;
+  const halfSize = locatorCropSize(seed, answer.artifactId, answer.imageWidth, answer.imageHeight) / 2;
   return Math.abs(answer.x - target.x) <= halfSize / answer.imageWidth + 1e-9
     && Math.abs(answer.y - target.y) <= halfSize / answer.imageHeight + 1e-9;
 }

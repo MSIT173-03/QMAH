@@ -1,0 +1,412 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+/* 兩欄版面：左欄每件商品一列，右欄是跨所有列的預覽欄。
+   最後多一條可伸縮的列，預覽欄比清單高時（商品只有幾件）多出的高度落在這條列上，不會把商品列撐開。 */
+.preview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  grid-template-rows: repeat(var(--preview-count), auto) 1fr;
+  gap: var(--qmah-space-2) var(--qmah-space-4);
+  align-items: start;
+  min-width: 0;
+}
+
+/* 清單容器不產生自己的方塊，讓各列與預覽欄同為版面格線的項目（窄螢幕才能把預覽欄排到選取列的正下方） */
+.preview-rows {
+  display: contents;
+}
+
+/* ===============================
+   清單單列
+   =============================== */
+
+.preview-row {
+  grid-column: 1;
+  border: 1px solid var(--color-line-soft);
+  /* 前兩層是固定預覽時左右兩側的色條，未固定時寬度為 0；先列出來，切換固定狀態時才能以過場長出與收回 */
+  box-shadow: inset 0 0 0 var(--color-accent), inset 0 0 0 var(--color-accent), var(--store-shadow-1);
+  background: var(--color-surface);
+  border-radius: var(--store-radius);
+  padding: var(--qmah-space-2) var(--qmah-space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--qmah-space-3);
+  min-width: 0;
+  cursor: pointer;
+  transition: border-color 160ms, box-shadow 220ms ease;
+
+  &--selected {
+    border-color: var(--color-accent);
+  }
+
+  /* 固定預覽中的列：左右兩側各加一道色條，與只是滑鼠經過的選取區別 */
+  &--pinned {
+    box-shadow: inset 3px 0 0 var(--color-accent), inset -3px 0 0 var(--color-accent), var(--store-shadow-1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+.preview-row-thumb {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  background: var(--color-swatch);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-faint);
+  overflow: hidden;
+}
+
+/* 縮圖與預覽圖都顯示完整商品圖片，不裁切 */
+.preview-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.preview-row-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preview-row-title {
+  font-size: var(--qmah-type-body-sm-size);
+  color: var(--color-ink);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 品牌／器類說明列 */
+.preview-meta {
+  font-size: var(--qmah-type-meta-size);
+  letter-spacing: 0.14em;
+  color: var(--color-teal);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.preview-row-price {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: var(--qmah-type-body-sm-size);
+  color: var(--color-ink);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+/* ===============================
+   預覽欄
+   =============================== */
+
+/* 捲動時固定在頁首下方（92px 為頁首高度，與篩選側欄相同）；視窗太矮時在欄內捲動 */
+.preview-pane {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  position: sticky;
+  top: 92px;
+  max-height: calc(100vh - 92px - var(--qmah-space-4));
+  overflow-y: auto;
+  border: 1px solid var(--color-line-soft);
+  box-shadow: var(--store-shadow-1);
+  background: var(--color-surface);
+  border-radius: var(--store-radius);
+  min-width: 0;
+}
+
+.preview-pane-content {
+  padding: var(--qmah-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-3);
+  min-width: 0;
+}
+
+.preview-pane-cover {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  background: var(--color-swatch);
+  font-size: var(--qmah-type-meta-size);
+  color: var(--color-faint);
+  text-decoration: none;
+  overflow: hidden;
+  transition: opacity 160ms;
+
+  &:hover {
+    opacity: 0.82;
+  }
+}
+
+.preview-pane-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preview-pane-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-2);
+  min-width: 0;
+}
+
+.preview-pane-title {
+  font-size: 18px;
+  line-height: var(--qmah-type-heading-leading);
+  color: var(--color-ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}
+
+/* 文物說明固定佔三行的高度（不足三行留白、超過則截斷），讀取完成時版面不會跳動；完整內容在商品頁 */
+.preview-pane-desc {
+  margin: 0;
+  font-size: var(--qmah-type-label-size);
+  line-height: 1.7;
+  height: calc(3 * 1.7em);
+  flex: 0 0 auto;
+  color: var(--color-body);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+/* 讀取中：三行說明各以一條佔位條代替 */
+.preview-pane-desc.preview-skeleton {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+/* 佔位條：底色之上有一道高光由左往右滑過，循環播放 */
+.preview-skeleton-bar {
+  display: block;
+  height: 0.85em;
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--color-ink) 9%, transparent);
+  background-image: linear-gradient(90deg, transparent 30%, var(--color-skeleton-shine) 50%, transparent 70%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: preview-shimmer 1.4s linear infinite;
+
+  &--short {
+    width: 60%;
+  }
+}
+
+/* 背景寬度是佔位條的兩倍、高光在正中央：位置由 150% 到 -50% 即高光從左緣外滑到右緣外 */
+@keyframes preview-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+
+  to {
+    background-position: -50% 0;
+  }
+}
+
+.preview-specs {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qmah-space-1);
+  font-size: var(--qmah-type-label-size);
+  line-height: 1.7;
+  /* 尺寸至少佔一行，讀取中以佔位條墊著 */
+  min-height: 1.7em;
+  justify-content: center;
+}
+
+.preview-spec {
+  display: grid;
+  grid-template-columns: 3em minmax(0, 1fr);
+  gap: var(--qmah-space-2);
+
+  dt {
+    color: var(--color-muted);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--color-body);
+    overflow-wrap: anywhere;
+  }
+}
+
+.preview-pane-rating {
+  display: flex;
+  gap: var(--qmah-space-4);
+  flex-wrap: wrap;
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+}
+
+.preview-pane-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preview-pane-price {
+  font-size: 22px;
+  color: var(--color-ink);
+}
+
+.preview-pane-actions {
+  display: flex;
+  gap: var(--qmah-space-2);
+  flex-wrap: wrap;
+}
+
+.preview-pane-buy,
+.preview-pane-detail {
+  border: 1px solid var(--color-line-mid);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-radius: var(--qmah-radius-control);
+  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
+  min-height: var(--qmah-control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--qmah-type-label-size);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 160ms, border-color 160ms, color 160ms;
+}
+
+/* 加入購物車是預覽欄的主要操作：實心並佔滿剩餘寬度 */
+.preview-pane-buy {
+  flex: 1 1 auto;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+
+  &:hover {
+    opacity: 0.88;
+  }
+}
+
+.preview-pane-detail:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* 放不下兩欄時：改成單欄，細節從選取的那一列往下拉開（各列與預覽欄以 order 排序，預覽欄排在選取列之後），
+   選取列與細節共用同一圈外框、中間只隔一條細線，看起來是同一個區塊；圖片縮到左側 */
+@media (max-width: 1100px) {
+  .preview-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .preview-row {
+    order: calc(var(--preview-index) * 2);
+    /* 點擊後捲進可視範圍時，不要被固定的頁首遮住 */
+    scroll-margin-top: 100px;
+
+    &--selected {
+      border-bottom-color: transparent;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+
+  /* 以列高 0fr → 1fr 的過場拉開，高度永遠等於內容的實際高度（做法同篩選側欄的面板收合） */
+  .preview-pane {
+    order: calc(var(--preview-selected) * 2 + 1);
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    margin-top: calc(-1 * var(--qmah-space-2));
+    border-color: var(--color-accent);
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    display: grid;
+    grid-template-rows: 1fr;
+    animation: preview-pull-open 260ms ease;
+  }
+
+  /* 負責裁切：列高收到 0 時內容被藏起來 */
+  .preview-pane-clip {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .preview-pane-content {
+    flex-direction: row;
+    align-items: flex-start;
+    margin: 0 var(--qmah-space-3);
+    padding: var(--qmah-space-3) 0;
+    border-top: 1px solid var(--color-line-soft);
+  }
+
+  .preview-pane-cover {
+    width: 120px;
+  }
+
+  .preview-pane-body {
+    flex: 1 1 auto;
+  }
+}
+
+@keyframes preview-pull-open {
+  from {
+    grid-template-rows: 0fr;
+  }
+
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .preview-pane-cover {
+    width: 88px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-row {
+    transition: none;
+  }
+
+  .preview-pane,
+  .preview-skeleton-bar {
+    animation: none;
+  }
+}

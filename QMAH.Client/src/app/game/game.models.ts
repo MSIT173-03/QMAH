@@ -205,7 +205,7 @@ export interface MiniGameStart {
   configJson: string | null;
   startedAt: string;
   /** 細節追跡：伺服器依文物本體算好的目標點（新的一局才有，舊局沿用雜湊位置）。 */
-  locatorTargets?: { artifactId: string; x: number; y: number }[] | null;
+  locatorTargets?: { artifactId: string; x: number; y: number; cropFraction?: number }[] | null;
   backgroundPieces?: number[] | null;
 }
 

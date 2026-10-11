@@ -18,7 +18,7 @@ public static class MiniGameDetailLocatorScoring
         return hash;
     }
 
-    public static int Calculate(JsonElement result, IReadOnlyCollection<Guid> artifactPool, string seed, IReadOnlyDictionary<Guid, (int Width, int Height)> imageSizes, out string? error, IReadOnlyDictionary<Guid, (double X, double Y)>? targets = null)
+    public static int Calculate(JsonElement result, IReadOnlyCollection<Guid> artifactPool, string seed, IReadOnlyDictionary<Guid, (int Width, int Height)> imageSizes, out string? error, IReadOnlyDictionary<Guid, (double X, double Y)>? targets = null, IReadOnlyDictionary<Guid, double>? cropFractions = null)
     {
         error = null;
         if (artifactPool.Count != 4 || !result.TryGetProperty("locatorAnswers", out var answers)
@@ -42,7 +42,8 @@ public static class MiniGameDetailLocatorScoring
                 return -1;
             }
             var target = targets is not null && targets.TryGetValue(artifactId, out var subject) ? subject : Target(seed, artifactId);
-            var halfSize = Math.Floor(Math.Min(size.Width, size.Height) / 5d) / 2;
+            var fraction = cropFractions is not null && cropFractions.TryGetValue(artifactId, out var crop) ? crop : .20;
+            var halfSize = Math.Floor(Math.Min(size.Width, size.Height) * fraction) / 2;
             if (Math.Abs(x - target.X) <= halfSize / size.Width + 1e-9 && Math.Abs(y - target.Y) <= halfSize / size.Height + 1e-9) correct++;
         }
         if (result.TryGetProperty("locatorAssistedIds", out var assisted))
