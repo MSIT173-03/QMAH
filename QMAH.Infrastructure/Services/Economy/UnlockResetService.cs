@@ -10,7 +10,7 @@ public sealed class UnlockResetService(QmahDbContext db)
 {
     public const string RefundReason = "後台返還鑰匙（清除解鎖）";
 
-    public async Task<(int Removed, int Refunded)> ResetAsync(Guid? userId, Guid? categoryId, Guid? adminId, CancellationToken cancellationToken, IReadOnlyCollection<Guid>? artifactIds = null, bool refund = true)
+    private async Task<(int Removed, int Refunded)> ResetCoreAsync(Guid? userId, Guid? categoryId, Guid? adminId, CancellationToken cancellationToken, IReadOnlyCollection<Guid>? artifactIds = null, bool refund = true)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var query = db.ArtifactUnlocks.Include(item => item.KeyTransaction).AsQueryable();
@@ -64,7 +64,7 @@ public sealed class UnlockResetService(QmahDbContext db)
     }
 
     /// <summary>逐件解鎖：keyDefinitionId 有值時每件扣 1 把該鑰匙並寫流水，鑰匙不足整批不做；為 null 則不扣鑰匙。</summary>
-    public async Task<(int Count, string? Error)> GrantSelectedAsync(Guid userId, IReadOnlyCollection<Guid> artifactIds, Guid? keyDefinitionId, Guid? adminId, CancellationToken cancellationToken)
+    private async Task<(int Count, string? Error)> GrantSelectedCoreAsync(Guid userId, IReadOnlyCollection<Guid> artifactIds, Guid? keyDefinitionId, Guid? adminId, CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var owned = db.ArtifactUnlocks.Where(item => item.UserId == userId).Select(item => item.ArtifactId);
@@ -104,4 +104,19 @@ public sealed class UnlockResetService(QmahDbContext db)
         await transaction.CommitAsync(cancellationToken);
         return (ids.Count, null);
     }
+
+    // API／Web 啟用 SQL retry，手動交易必須整段交給 execution strategy，否則會丟 InvalidOperationException。
+    public Task<(int Removed, int Refunded)> ResetAsync(Guid? userId, Guid? categoryId, Guid? adminId, CancellationToken cancellationToken, IReadOnlyCollection<Guid>? artifactIds = null, bool refund = true) =>
+        db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            db.ChangeTracker.Clear();
+            return await ResetCoreAsync(userId, categoryId, adminId, cancellationToken, artifactIds, refund);
+        });
+
+    public Task<(int Count, string? Error)> GrantSelectedAsync(Guid userId, IReadOnlyCollection<Guid> artifactIds, Guid? keyDefinitionId, Guid? adminId, CancellationToken cancellationToken) =>
+        db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            db.ChangeTracker.Clear();
+            return await GrantSelectedCoreAsync(userId, artifactIds, keyDefinitionId, adminId, cancellationToken);
+        });
 }
