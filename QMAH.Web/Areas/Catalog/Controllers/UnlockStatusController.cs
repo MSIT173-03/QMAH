@@ -10,6 +10,8 @@ using QMAH.Web.Infrastructure.AdminNavigation;
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
 public sealed record UnlockOwnerRow(Guid Id, string? Nickname, string? Email, int Unlocked, int Refundable);
+public sealed record UnlockArtifactRow(Guid Id, string Name, string? Method, DateTime? UnlockedAt);
+public sealed record UnlockKeyOption(Guid Id, string Name, int Balance);
 public sealed record UnlockCategoryStat(Guid Id, string Name, int Total, int Unlocked, int Refundable);
 
 [Area("Catalog")]
@@ -85,5 +87,71 @@ public class UnlockStatusController(QmahDbContext _db, UnlockResetService _unloc
         var granted = await _unlockReset.GrantAsync(userId, categoryId, cancellationToken);
         TempData["SuccessMessage"] = $"已替會員解鎖 {granted} 件文物。";
         return RedirectToAction(nameof(Index), new { userId });
+    }
+
+    /// <summary>逐件調整：列出分類內每件文物的解鎖狀態，勾選後選擇是否扣／退鑰匙。</summary>
+    [HttpGet]
+    public async Task<IActionResult> Category(Guid userId, Guid categoryId, string? q, CancellationToken cancellationToken)
+    {
+        var category = await _db.ArtifactCategories.AsNoTracking().SingleOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
+        var name = await _db.UserProfiles.Where(p => p.UserId == userId).Select(p => p.Nickname).FirstOrDefaultAsync(cancellationToken)
+            ?? await _db.Users.Where(u => u.Id == userId).Select(u => u.Email).FirstOrDefaultAsync(cancellationToken);
+        if (category is null || name is null) return NotFound();
+
+        var artifacts = _db.Artifacts.AsNoTracking().Where(a => a.IsActive && a.CategoryId == categoryId);
+        var keyword = q?.Trim();
+        if (!string.IsNullOrEmpty(keyword)) artifacts = artifacts.Where(a => a.Name.Contains(keyword));
+        ViewBag.Rows = await artifacts.OrderBy(a => a.Name).Select(a => new UnlockArtifactRow(
+            a.Id, a.Name,
+            _db.ArtifactUnlocks.Where(u => u.UserId == userId && u.ArtifactId == a.Id).Select(u => u.UnlockMethod).FirstOrDefault(),
+            _db.ArtifactUnlocks.Where(u => u.UserId == userId && u.ArtifactId == a.Id).Select(u => (DateTime?)u.UnlockedAt).FirstOrDefault()))
+            .Take(500).ToListAsync(cancellationToken);
+        ViewBag.Keys = await (
+            from key in _db.KeyDefinitions.AsNoTracking()
+            where key.IsActive
+            orderby key.Name
+            select new UnlockKeyOption(key.Id, key.Name, _db.UserKeyBalances.Where(b => b.UserId == userId && b.KeyDefinitionId == key.Id).Select(b => (int?)b.Balance).FirstOrDefault() ?? 0))
+            .ToListAsync(cancellationToken);
+        ViewBag.UserId = userId;
+        ViewBag.CategoryId = categoryId;
+        ViewBag.CategoryName = category.Name;
+        ViewBag.MemberName = name;
+        ViewBag.Keyword = keyword;
+        return View();
+    }
+
+    /// <summary>mode：unlock-key 解鎖並扣鑰匙、unlock-free 解鎖不扣、lock-refund 鎖回並退鑰匙、lock-keep 鎖回不退。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Apply(Guid userId, Guid categoryId, Guid[]? artifactIds, string mode, Guid? keyDefinitionId, CancellationToken cancellationToken)
+    {
+        var back = new { userId, categoryId };
+        if (artifactIds is not { Length: > 0 })
+        {
+            TempData["ErrorMessage"] = "請先勾選要調整的文物。";
+            return RedirectToAction(nameof(Category), back);
+        }
+        var adminId = Guid.TryParse(_userManager.GetUserId(User), out var parsed) ? parsed : (Guid?)null;
+        switch (mode)
+        {
+            case "unlock-key" or "unlock-free":
+                if (mode == "unlock-key" && keyDefinitionId is null)
+                {
+                    TempData["ErrorMessage"] = "請選擇要扣除的鑰匙。";
+                    break;
+                }
+                var (count, error) = await _unlockReset.GrantSelectedAsync(userId, artifactIds, mode == "unlock-key" ? keyDefinitionId : null, adminId, cancellationToken);
+                if (error is not null) TempData["ErrorMessage"] = error;
+                else TempData["SuccessMessage"] = mode == "unlock-key" ? $"已解鎖 {count} 件並扣除 {count} 把鑰匙，流水已記錄。" : $"已解鎖 {count} 件，沒有扣鑰匙。";
+                break;
+            case "lock-refund" or "lock-keep":
+                var (removed, refunded) = await _unlockReset.ResetAsync(userId, null, adminId, cancellationToken, artifactIds, mode == "lock-refund");
+                TempData["SuccessMessage"] = mode == "lock-refund" ? $"已鎖回 {removed} 件，退還 {refunded} 把鑰匙並寫入流水。" : $"已鎖回 {removed} 件，沒有退鑰匙。";
+                break;
+            default:
+                TempData["ErrorMessage"] = "未知的操作。";
+                break;
+        }
+        return RedirectToAction(nameof(Category), back);
     }
 }

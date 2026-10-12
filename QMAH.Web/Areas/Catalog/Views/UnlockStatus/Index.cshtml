@@ -80,6 +80,7 @@ else
                         <td>@stat.Refundable</td>
                         <td class="text-center pe-3 pe-md-4">
                             <div class="d-flex flex-wrap justify-content-center gap-2">
+                                <a asp-action="Category" asp-route-userId="@selectedUserId" asp-route-categoryId="@stat.Id" class="btn btn-sm btn-primary px-3"><i class="ti ti-edit me-1"></i>逐件調整</a>
                                 <form method="post" asp-action="Reset" onsubmit="return confirm('清除「@stat.Name」的 @stat.Unlocked 筆解鎖，退還 @stat.Refundable 把鑰匙？');">
                                     <input type="hidden" name="userId" value="@selectedUserId" /><input type="hidden" name="categoryId" value="@stat.Id" />
                                     <button class="btn btn-sm btn-outline-danger px-3" type="submit" disabled="@(stat.Unlocked == 0)">清除並退鑰匙</button>

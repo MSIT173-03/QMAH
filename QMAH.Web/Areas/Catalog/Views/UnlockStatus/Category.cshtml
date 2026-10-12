@@ -1,0 +1,79 @@
+@{
+    ViewData["Title"] = "逐件調整解鎖";
+    ViewData["AdminDescription"] = "勾選文物後，選擇解鎖或鎖回，並決定要不要扣除或退還鑰匙。";
+    var rows = ViewBag.Rows as List<QMAH.Web.Areas.Catalog.Controllers.UnlockArtifactRow> ?? [];
+    var keys = ViewBag.Keys as List<QMAH.Web.Areas.Catalog.Controllers.UnlockKeyOption> ?? [];
+    Guid userId = ViewBag.UserId;
+    Guid categoryId = ViewBag.CategoryId;
+    string categoryName = ViewBag.CategoryName;
+    string memberName = ViewBag.MemberName;
+    string? keyword = ViewBag.Keyword;
+    string MethodText(string? method) => method switch { null => "未解鎖", "KEY" => "鑰匙解鎖", "ADMIN" => "後台解鎖", "GAME" => "遊戲獲得", _ => method };
+}
+
+@section PageActions {
+    @await Html.PartialAsync("_KeyNav", "unlock")
+}
+
+<div class="card qmah-list-card">
+    <div class="card-header qmah-crud-toolbar">
+        <div>
+            <h2 class="card-title">@memberName ／ @categoryName</h2>
+            <div class="card-subtitle">已解鎖 @rows.Count(x => x.Method != null)／@rows.Count。勾選文物後在下方選擇操作。</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <form method="get" asp-action="Category" class="d-flex gap-2">
+                <input type="hidden" name="userId" value="@userId" /><input type="hidden" name="categoryId" value="@categoryId" />
+                <input class="form-control" name="q" value="@keyword" placeholder="搜尋文物名稱" />
+                <button class="btn btn-outline-secondary" type="submit"><i class="ti ti-search me-1"></i>搜尋</button>
+            </form>
+            <a asp-action="Index" asp-route-userId="@userId" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回分類</a>
+        </div>
+    </div>
+
+    <form method="post" asp-action="Apply">
+        <input type="hidden" name="userId" value="@userId" /><input type="hidden" name="categoryId" value="@categoryId" />
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table qmah-crud-table">
+                <thead><tr><th class="w-1"><input class="form-check-input" type="checkbox" id="checkAll" aria-label="全選" /></th><th>文物</th><th>狀態</th><th>解鎖時間</th></tr></thead>
+                <tbody>
+                @foreach (var row in rows)
+                {
+                    <tr>
+                        <td><input class="form-check-input row-check" type="checkbox" name="artifactIds" value="@row.Id" /></td>
+                        <td class="fw-semibold">@row.Name</td>
+                        <td><span class="badge @(row.Method is null ? "bg-secondary-lt" : "bg-green-lt")">@MethodText(row.Method)</span></td>
+                        <td>@(row.UnlockedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                    </tr>
+                }
+                @if (rows.Count == 0) { <tr><td colspan="4" class="text-center text-secondary py-4">沒有符合的文物</td></tr> }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex flex-wrap align-items-center gap-2">
+            <select class="form-select w-auto" name="mode" id="mode">
+                <option value="unlock-key">解鎖並扣除鑰匙</option>
+                <option value="unlock-free">解鎖，不扣鑰匙</option>
+                <option value="lock-refund">鎖回並退還鑰匙</option>
+                <option value="lock-keep">鎖回，不退鑰匙</option>
+            </select>
+            <select class="form-select w-auto" name="keyDefinitionId" id="keyDefinitionId">
+                @foreach (var key in keys)
+                {
+                    <option value="@key.Id">@key.Name（目前 @key.Balance 把）</option>
+                }
+            </select>
+            <button class="btn btn-primary" type="submit"><i class="ti ti-device-floppy me-1"></i>套用到勾選的文物</button>
+            <span class="text-secondary small">退還只針對當初用鑰匙解鎖的，遊戲獲得與後台解鎖沒有鑰匙可退。</span>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('checkAll')?.addEventListener('change', e => document.querySelectorAll('.row-check').forEach(c => c.checked = e.target.checked));
+        const mode = document.getElementById('mode'), key = document.getElementById('keyDefinitionId');
+        const sync = () => key.hidden = mode.value !== 'unlock-key';
+        mode.addEventListener('change', sync); sync();
+    </script>
+}
