@@ -1,4 +1,6 @@
 
+@use '../../../shared/styles/responsive-breakpoints' as qmah-responsive;
+
 .social-registrants { margin-top: var(--qmah-space-6); }
 
 .social-registrants__list {
@@ -23,4 +25,44 @@
   color: var(--qmah-muted);
   font-size: var(--qmah-type-body-sm-size);
   font-weight: 700;
+}
+
+@include qmah-responsive.phone {
+  .social-registrants__list li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .social-registrants__who {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--qmah-space-2);
+  }
+
+  .social-registrants__who a,
+  .social-registrants__list time {
+    overflow-wrap: anywhere;
+  }
+
+  .qmah-social-page .social-panel__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qmah-social-page .social-panel__actions > .btn {
+    width: 100%;
+  }
+
+  .social-event-detail__media {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .social-event-detail__media img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
 }

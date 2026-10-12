@@ -1,0 +1,8 @@
+// ui-integration: 手機版只看 CSS viewport 寬度；高像素密度手機仍會以 CSS px 落在相同斷點。
+$phone-max-width: 767.98px;
+
+@mixin phone {
+  @media (max-width: $phone-max-width) {
+    @content;
+  }
+}

@@ -1,3 +1,5 @@
+@use '../../../shared/styles/responsive-breakpoints' as qmah-responsive;
+
 .member-head {
   display: flex;
   align-items: center;
@@ -53,3 +55,43 @@
 .member-list li:first-child { border-top: 0; }
 
 .member-list a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@include qmah-responsive.phone {
+  .member-head {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .member-avatar {
+    width: 72px;
+    height: 72px;
+  }
+
+  .member-avatar svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .member-head__text {
+    flex: 1 1 auto;
+    overflow-wrap: anywhere;
+  }
+
+  .member-head__text .social-meta {
+    overflow-wrap: anywhere;
+  }
+
+  .member-list li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .member-list a {
+    max-width: 100%;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
+}

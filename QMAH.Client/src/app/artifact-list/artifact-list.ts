@@ -27,6 +27,7 @@ import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary 
 import { KeyService } from '../services/key-service';
 import { KeyFilter, KeyModel } from '../models/key-model';
 import { keyAssetPath } from '../shared/key-assets';
+import { isPhoneViewport } from '../shared/styles/responsive-breakpoints';
 import { SocialApiService } from '../core/services/social-api';
 import { ArtifactDiscussionDialog } from './artifact-discussion-dialog/artifact-discussion-dialog';
 import { KeyList } from '../key-list/key-list';
@@ -97,6 +98,8 @@ export const BOOK_LAYOUT = {
   headerH: 36,
   /** 書頁高度的安全餘量，避免小數點進位讓最後一列被裁掉 */
   slack: 6,
+  /** 手機書頁左右留白；要與 artifact-list.adaptive.scss 的 page__body 保持一致 */
+  mobilePagePaddingX: 22,
 } as const;
 
 /**
@@ -239,7 +242,7 @@ export function paginateCatalog(
 export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
-  readonly mobileBook = signal((this.document.defaultView?.innerWidth ?? 1080) <= 700);
+  readonly mobileBook = signal(isPhoneViewport(this.document.defaultView));
   @ViewChild('artifactPage', { static: true }) private artifactPage?: ElementRef<HTMLElement>;
   readonly fullscreenSupported = !!this.document.fullscreenEnabled;
   readonly isFullscreen = signal(false);
@@ -320,6 +323,8 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   filterPanelOpen = signal(false);
   /** 書本左側頁籤（鑰匙背包模式）：交給 KeyList 篩選 */
   keyFilter = signal<KeyFilter>('ALL');
+  /** 手機版把次級索引收進頁面內的選單，避免書口出現第二排頁籤。 */
+  mobileIndexOpen = signal(false);
 
   readonly catalogTabs: { id: CatalogTab; label: string }[] = [
     { id: 'ALL', label: '全部' },
@@ -334,6 +339,12 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     { id: 'UNIVERSAL', label: '萬能' },
     { id: 'NORMAL', label: '一般' },
   ];
+  mobileIndexLabel = computed(() => {
+    const tab = this.bookSection() === 'catalog'
+      ? this.catalogTabs.find((item) => item.id === this.catalogTab())
+      : this.keyTabs.find((item) => item.id === this.keyFilter());
+    return tab?.label ?? '全部';
+  });
 
   /** 目前翻到第幾個跨頁（全部頁籤＝左右兩頁一組；分類／年代頁籤＝右頁一頁一組） */
   spread = signal(0);
@@ -343,6 +354,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   pageBox = signal<{ w: number; h: number }>({ w: 0, h: 0 });
 
   @ViewChild('pageMeasure', { static: true }) private pageMeasure?: ElementRef<HTMLElement>;
+  @ViewChild('mobileIndexTrigger') private mobileIndexTrigger?: ElementRef<HTMLButtonElement>;
   private resizeObserver?: ResizeObserver;
   private timers: ReturnType<typeof setTimeout>[] = [];
 
@@ -558,12 +570,13 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     const desktopLayout = computeCatalogLayout(width, height);
     if (!desktopLayout || !this.mobileBook()) return desktopLayout;
 
-    const cols = Math.max(1, Math.min(2, Math.floor((width + BOOK_LAYOUT.gap) / (104 + BOOK_LAYOUT.gap))));
+    const contentWidth = Math.max(0, width - BOOK_LAYOUT.mobilePagePaddingX * 2);
+    const cols = Math.max(2, Math.min(6, Math.floor((contentWidth + BOOK_LAYOUT.gap) / (96 + BOOK_LAYOUT.gap))));
     const bodyH = Math.floor(height) - BOOK_LAYOUT.slack;
-    const availableW = Math.floor((width - BOOK_LAYOUT.gap * (cols - 1)) / cols);
+    const availableW = Math.floor((contentWidth - BOOK_LAYOUT.gap * (cols - 1)) / cols);
     const maxCardH = bodyH - BOOK_LAYOUT.headerH - BOOK_LAYOUT.gap;
     const maxCardW = Math.floor((maxCardH - BOOK_LAYOUT.labelH) / BOOK_LAYOUT.frameRatio);
-    const cardW = Math.min(availableW, Math.max(maxCardW, 72));
+    const cardW = Math.min(availableW, 120, Math.max(maxCardW, 72));
     const cardH = Math.round(cardW * BOOK_LAYOUT.frameRatio) + BOOK_LAYOUT.labelH;
     return { cols, cardW, cardH, rowH: cardH + BOOK_LAYOUT.gap, bodyH };
   });
@@ -710,11 +723,12 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:resize')
   onWindowResize(): void {
-    const mobile = (this.document.defaultView?.innerWidth ?? 1080) <= 700;
+    const mobile = isPhoneViewport(this.document.defaultView);
     if (mobile !== this.mobileBook()) {
       const pageIndex = this.currentSpread() * this.pagesPerSpread();
       this.mobileBook.set(mobile);
       this.spread.set(this.spreadOfPage(pageIndex));
+      this.mobileIndexOpen.set(false);
     }
     this.measurePage();
   }
@@ -818,6 +832,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   setSection(section: BookSection): void {
     if (this.bookSection() === section) return;
+    this.mobileIndexOpen.set(false);
     this.playReveal('section');
     this.bookSection.set(section);
     this.expandedGroupKey.set(null);
@@ -866,6 +881,31 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     this.keyFilter.set(filter);
   }
 
+  toggleMobileIndex(): void {
+    this.mobileIndexOpen.update((open) => !open);
+  }
+
+  closeMobileIndexIfOutside(event: MouseEvent): void {
+    if (!this.mobileIndexOpen()) return;
+    const target = event.target;
+    if (target instanceof Element && !target.closest('.mobile-index')) this.mobileIndexOpen.set(false);
+  }
+
+  selectMobileCatalogTab(tab: CatalogTab): void {
+    this.setCatalogTab(tab);
+    this.closeMobileIndex(true);
+  }
+
+  selectMobileKeyFilter(filter: KeyFilter): void {
+    this.setKeyFilter(filter);
+    this.closeMobileIndex(true);
+  }
+
+  private closeMobileIndex(returnFocus = false): void {
+    this.mobileIndexOpen.set(false);
+    if (returnFocus) this.mobileIndexTrigger?.nativeElement.focus();
+  }
+
   /** 左側鑰匙頁籤上的數量：該類型持有中鑰匙的把數總和 */
   keyFilterCount(filter: KeyFilter): number {
     return this.allKeys()
@@ -910,12 +950,14 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     const t = this.turning();
     if (!t) return null;
     const from = this.turnFrom();
+    if (this.mobileBook()) return this.pageAt(from);
     return t === 'prev' && !this.filterMode() ? this.pageAt(this.leftIndex(from)) : this.pageAt(this.rightIndex(from));
   });
   leafBack = computed<CatalogPage | null>(() => {
     const t = this.turning();
     if (!t || this.filterMode()) return null;
     const to = this.currentSpread();
+    if (this.mobileBook()) return this.pageAt(to);
     return t === 'next' ? this.pageAt(this.leftIndex(to)) : this.pageAt(this.rightIndex(to));
   });
 
@@ -930,6 +972,11 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   /** 書本攤開、停在圖鑑時，可用鍵盤左右鍵翻頁（輸入框內與彈出視窗開著時不處理） */
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.mobileIndexOpen()) {
+      event.preventDefault();
+      this.closeMobileIndex(true);
+      return;
+    }
     if (this.bookState() !== 'open' || this.bookSection() !== 'catalog') return;
     if (this.isOverlayOpen() || this.confirmTargetId() || this.bulkUnlockConfirmOpen() || this.discussionDialogOpen()) return;
     if (event.key === 'Escape' && this.filterPanelOpen()) {
@@ -1229,7 +1276,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
    */
   onOverlayClick(event: MouseEvent): void {
     const target = event.target as HTMLElement | null;
-    const solid = target?.closest?.('.focus-card, .info-panel__inner, .focus-actions .action-btn, .hint, a, button, input, textarea, select');
+    const solid = target?.closest?.('.stage.mobile-detail, .focus-card, .info-panel__inner, .focus-actions .action-btn, .hint, a, button, input, textarea, select');
     if (!solid) this.closeOverlay();
   }
 
