@@ -22,7 +22,8 @@ import { SocialSpotlightComponent } from '../../../shared/components/social-spot
 import {
   LucideExternalLink,
   LucideFlag,
-  LucideMoveHorizontal,
+  LucideFoldHorizontal,
+  LucideUnfoldHorizontal,
 
   LucideImage,
   LucideMessageCircle,
@@ -53,7 +54,8 @@ import {
     SocialEventContentComponent,
     LucideExternalLink,
     LucideFlag,
-    LucideMoveHorizontal,
+    LucideFoldHorizontal,
+  LucideUnfoldHorizontal,
   
     LucideImage,
     LucideMessageCircle,

@@ -58,7 +58,6 @@
         <svg lucideFilterX aria-hidden="true" focusable="false"></svg>
       </button>
     }
-    <button type="button" class="social-tool" [class.is-on]="view.wide()" [attr.aria-pressed]="view.wide()" [attr.aria-label]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" [title]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" (click)="view.toggle()"><svg lucideMoveHorizontal aria-hidden="true" focusable="false"></svg></button>
     <div class="social-datefilter">
       <button type="button" class="social-tool" [class.is-on]="hasDateFilter || showDateFilter" [attr.aria-expanded]="showDateFilter" title="依發布時間篩選" aria-label="依發布時間篩選" (click)="showDateFilter = !showDateFilter">
         <svg lucideCalendarRange aria-hidden="true" focusable="false"></svg>
@@ -83,6 +82,9 @@
       <button type="button" class="social-cols__btn" [class.is-active]="wallCols === 2" [attr.aria-pressed]="wallCols === 2" title="兩欄" aria-label="每列兩則貼文" (click)="setWallCols(2)"><svg lucideColumns2 aria-hidden="true" focusable="false"></svg></button>
       <button type="button" class="social-cols__btn social-cols__btn--wide" [class.is-active]="wallCols === 3" [attr.aria-pressed]="wallCols === 3" title="三欄" aria-label="每列三則貼文" (click)="setWallCols(3)"><svg lucideColumns3 aria-hidden="true" focusable="false"></svg></button>
     </div>
+    <button type="button" class="social-tool social-tool--width" [class.is-on]="view.wide()" [attr.aria-pressed]="view.wide()" [attr.aria-label]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" [title]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" (click)="view.toggle()">
+      @if (view.wide()) { <svg lucideFoldHorizontal aria-hidden="true" focusable="false"></svg> } @else { <svg lucideUnfoldHorizontal aria-hidden="true" focusable="false"></svg> }
+    </button>
   </div>
 
   @if (loadError) {

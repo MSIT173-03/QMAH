@@ -129,7 +129,7 @@
 
   <!-- ui-integration: App Shell 擁有唯一主要內容 landmark；子 Area 的 wrapper 僅保留原本 class 與版面，不再巢狀使用 main。 -->
   <div class="app-content" [class.app-content--preparing]="pageReady.loading()">
-  @if (pageReady.loading()) { <app-page-loader /> }
+  @if (pageReady.showLoader()) { <app-page-loader /> }
   <main #pageContent id="main-content" class="app-main" [class.app-main--preparing]="pageReady.loading()" [attr.aria-busy]="pageReady.loading()" [attr.aria-hidden]="pageReady.loading() ? 'true' : null" [attr.inert]="pageReady.loading() ? '' : null">
     <router-outlet></router-outlet>
   </main>
