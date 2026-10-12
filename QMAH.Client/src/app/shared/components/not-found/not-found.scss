@@ -35,3 +35,7 @@ nav { display:flex;flex-wrap:wrap;gap:24px;margin-top:26px; }nav a { color:var(-
 @keyframes lostGlow { 0%,100% { opacity:.6;transform:scale(.95); } 50% { opacity:1;transform:scale(1.06); } }
 @keyframes lostBreath { 0%,100% { border-color:#dec89c55; } 50% { border-color:#dec89ccc; } }
 @media(prefers-reduced-motion:reduce) { .scene-code,.shelf-caption,.lost-page__content > *,.lost-page__scene::before,.book.not-found { animation:none!important; } }
+
+/* 依語意斷行：每個子句不被拆開，放不下才整句換到下一行 */
+p { max-width:none; }
+p span { display:inline-block; }
