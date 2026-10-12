@@ -23,6 +23,7 @@ public sealed class OperationsController(
     QmahDbContext db,
     QmahMediaStoragePaths mediaPaths,
     BulkEconomyService bulkEconomyService,
+    UnlockResetService unlockReset,
     UserManager<ApplicationUser> userManager) : Controller
 {
     private static readonly HashSet<string> MediaStatuses = ["ACTIVE", "HIDDEN", "DELETED"];
@@ -1613,43 +1614,9 @@ public sealed class OperationsController(
         }
 
         var adminId = Guid.TryParse(userManager.GetUserId(User), out var parsedAdmin) ? parsedAdmin : (Guid?)null;
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var query = db.ArtifactUnlocks.Include(item => item.KeyTransaction).AsQueryable();
-        if (userId is { } uid) query = query.Where(item => item.UserId == uid);
-        if (categoryId is { } cid) query = query.Where(item => item.Artifact.CategoryId == cid);
-        var unlocks = await query.ToListAsync(cancellationToken);
+        var (removed, refundedKeys) = await unlockReset.ResetAsync(userId, categoryId, adminId, cancellationToken);
 
-        var now = DateTime.UtcNow;
-        var refunds = unlocks
-            .Where(item => item.UnlockMethod == "KEY" && item.KeyTransaction is not null)
-            .GroupBy(item => (item.UserId, item.KeyTransaction!.KeyDefinitionId))
-            .ToList();
-        var refundedKeys = 0;
-        foreach (var group in refunds)
-        {
-            var (memberId, keyId) = group.Key;
-            var amount = group.Count();
-            var balance = await db.UserKeyBalances.SingleOrDefaultAsync(item => item.UserId == memberId && item.KeyDefinitionId == keyId, cancellationToken);
-            if (balance is null)
-            {
-                balance = new UserKeyBalance { UserId = memberId, KeyDefinitionId = keyId, Balance = 0, UpdatedAt = now };
-                db.UserKeyBalances.Add(balance);
-            }
-            balance.Balance += amount;
-            balance.UpdatedAt = now;
-            db.KeyTransactions.Add(new KeyTransaction
-            {
-                Id = Guid.NewGuid(), UserId = memberId, KeyDefinitionId = keyId, Amount = amount,
-                Reason = "後台返還鑰匙（清除解鎖）", ReferenceType = "ADMIN_UNLOCK_RESET",
-                CreatedByAdminUserId = adminId, CreatedAt = now
-            });
-            refundedKeys += amount;
-        }
-        db.ArtifactUnlocks.RemoveRange(unlocks);
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        TempData["SuccessMessage"] = $"已清除 {unlocks.Count} 筆解鎖，退還 {refundedKeys} 把鑰匙並寫入流水。";
+        TempData["SuccessMessage"] = $"已清除 {removed} 筆解鎖，退還 {refundedKeys} 把鑰匙並寫入流水。";
         return RedirectToAction(nameof(UnlockReset), back);
     }
 
@@ -1664,14 +1631,8 @@ public sealed class OperationsController(
             TempData["ErrorMessage"] = "請先選擇要解鎖的會員。";
             return RedirectToAction(nameof(UnlockReset), back);
         }
-        var owned = db.ArtifactUnlocks.Where(item => item.UserId == userId).Select(item => item.ArtifactId);
-        var query = db.Artifacts.Where(item => item.IsActive && !owned.Contains(item.Id));
-        if (categoryId is { } cid) query = query.Where(item => item.CategoryId == cid);
-        var ids = await query.Select(item => item.Id).ToListAsync(cancellationToken);
-        var now = DateTime.UtcNow;
-        db.ArtifactUnlocks.AddRange(ids.Select(id => new ArtifactUnlock { Id = Guid.NewGuid(), UserId = userId, ArtifactId = id, UnlockMethod = "ADMIN", UnlockedAt = now }));
-        await db.SaveChangesAsync(cancellationToken);
-        TempData["SuccessMessage"] = $"已替該會員解鎖 {ids.Count} 件文物。";
+        var granted = await unlockReset.GrantAsync(userId, categoryId, cancellationToken);
+        TempData["SuccessMessage"] = $"已替該會員解鎖 {granted} 件文物。";
         return RedirectToAction(nameof(UnlockReset), back);
     }
 }

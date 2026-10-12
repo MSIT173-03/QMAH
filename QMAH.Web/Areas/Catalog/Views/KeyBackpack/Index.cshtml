@@ -246,4 +246,51 @@ else
             </div>
         }
     </div>
+
+    var stats = ViewBag.UnlockStats as List<QMAH.Web.Areas.Catalog.Controllers.UnlockCategoryStat> ?? [];
+    <div class="card qmah-list-card mt-3">
+        <div class="card-header qmah-crud-toolbar">
+            <div>
+                <h2 class="card-title">圖鑑解鎖狀態</h2>
+                <div class="card-subtitle">依圖鑑分類清除解鎖，當初用鑰匙解鎖的會退回上方背包並留下流水「後台返還鑰匙（清除解鎖）」。遊戲獎勵與管理員解鎖不退。</div>
+            </div>
+            <div class="d-flex gap-2">
+                <form method="post" asp-action="ResetUnlocks" onsubmit="return confirm('清除 @selectedNickname 的全部解鎖並退還鑰匙？');">
+                    <input type="hidden" name="userId" value="@selectedUserId" />
+                    <button class="btn btn-outline-danger" type="submit" disabled="@(stats.Sum(x => x.Unlocked) == 0)"><i class="ti ti-lock me-1"></i>清除全部並退鑰匙</button>
+                </form>
+                <form method="post" asp-action="GrantUnlocks" onsubmit="return confirm('替 @selectedNickname 解鎖全部尚未解鎖的文物（不扣鑰匙）？');">
+                    <input type="hidden" name="userId" value="@selectedUserId" />
+                    <button class="btn btn-outline-primary" type="submit"><i class="ti ti-lock-open me-1"></i>全部解鎖</button>
+                </form>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table qmah-crud-table">
+                <thead><tr><th>圖鑑分類</th><th>已解鎖／總數</th><th>可退鑰匙</th><th class="text-center pe-3 pe-md-4">操作</th></tr></thead>
+                <tbody>
+                @foreach (var stat in stats)
+                {
+                    <tr>
+                        <td class="fw-semibold">@stat.Name</td>
+                        <td>@stat.Unlocked／@stat.Total</td>
+                        <td>@stat.Refundable</td>
+                        <td class="text-center pe-3 pe-md-4">
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                <form method="post" asp-action="ResetUnlocks" onsubmit="return confirm('清除「@stat.Name」的 @stat.Unlocked 筆解鎖，退還 @stat.Refundable 把鑰匙？');">
+                                    <input type="hidden" name="userId" value="@selectedUserId" /><input type="hidden" name="categoryId" value="@stat.Id" />
+                                    <button class="btn btn-sm btn-outline-danger px-3" type="submit" disabled="@(stat.Unlocked == 0)">清除並退鑰匙</button>
+                                </form>
+                                <form method="post" asp-action="GrantUnlocks">
+                                    <input type="hidden" name="userId" value="@selectedUserId" /><input type="hidden" name="categoryId" value="@stat.Id" />
+                                    <button class="btn btn-sm btn-outline-secondary px-3" type="submit" disabled="@(stat.Unlocked >= stat.Total)">解鎖此分類</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }

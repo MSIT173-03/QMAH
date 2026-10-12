@@ -10,6 +10,8 @@ using QMAH.Infrastructure.Services.Economy;
 
 namespace QMAH.Web.Areas.Catalog.Controllers;
 
+public sealed record UnlockCategoryStat(Guid Id, string Name, int Total, int Unlocked, int Refundable);
+
 [Area("Catalog")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 [AdminNavigation("鑰匙背包", order: 30)]
@@ -18,12 +20,15 @@ public class KeyBackPackController : Controller
     private readonly QmahDbContext _db;
     private readonly EconomyService _economyService;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UnlockResetService _unlockReset;
 
     public KeyBackPackController(
         QmahDbContext db,
         EconomyService economyService,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        UnlockResetService unlockReset)
     {
+        _unlockReset = unlockReset;
         _db = db;
         _economyService = economyService;
         _userManager = userManager;
@@ -113,10 +118,41 @@ public class KeyBackPackController : Controller
             })
             .ToListAsync(cancellationToken);
 
+        ViewBag.UnlockStats = await (
+            from category in _db.ArtifactCategories.AsNoTracking()
+            orderby category.Name
+            select new UnlockCategoryStat(
+                category.Id,
+                category.Name,
+                _db.Artifacts.Count(a => a.CategoryId == category.Id && a.IsActive),
+                _db.ArtifactUnlocks.Count(u => u.UserId == userId.Value && u.Artifact.CategoryId == category.Id),
+                _db.ArtifactUnlocks.Count(u => u.UserId == userId.Value && u.Artifact.CategoryId == category.Id && u.UnlockMethod == "KEY" && u.KeyTransactionId != null)))
+            .ToListAsync(cancellationToken);
         ViewBag.SelectedUserId = userId.Value;
         ViewBag.SelectedNickname = member.Name;
 
         return View(records);
+    }
+
+    /// <summary>清除該會員的文物解鎖（可限定分類），鑰匙解鎖的退回背包並寫流水。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetUnlocks(Guid userId, Guid? categoryId, CancellationToken cancellationToken = default)
+    {
+        var adminId = Guid.TryParse(_userManager.GetUserId(User), out var parsed) ? parsed : (Guid?)null;
+        var (removed, refunded) = await _unlockReset.ResetAsync(userId, categoryId, adminId, cancellationToken);
+        TempData["SuccessMessage"] = $"已清除 {removed} 筆解鎖，退還 {refunded} 把鑰匙到背包並寫入流水。";
+        return RedirectToAction(nameof(Index), new { userId });
+    }
+
+    /// <summary>替該會員解鎖尚未解鎖的文物（可限定分類），不扣鑰匙。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GrantUnlocks(Guid userId, Guid? categoryId, CancellationToken cancellationToken = default)
+    {
+        var granted = await _unlockReset.GrantAsync(userId, categoryId, cancellationToken);
+        TempData["SuccessMessage"] = $"已替會員解鎖 {granted} 件文物。";
+        return RedirectToAction(nameof(Index), new { userId });
     }
 
     [HttpGet]
