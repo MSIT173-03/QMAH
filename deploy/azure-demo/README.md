@@ -29,6 +29,23 @@
 - `bootstrap.sh` 是新主機首次安裝腳本，包含資料庫還原，不是日常重啟或更新指令。
 - 準備安裝時，將本目錄的設定檔、健康檢查腳本及服務單元與建置包一起放入 `/home/qmahadmin`。
 
+### 程序故障的恢復保障
+
+API、管理後台與 Caddy 由 systemd 在退出後自動重啟。健康檢查先確認 Docker daemon，
+再確認 QMAH 資料庫能讀取文物與會員資料表，最後檢查 API、後台和 HTTPS 前台。
+連續三次失敗會嘗試恢復，只對故障服務處理，SQL 無法連線時不重啟 API/後台。
+重啟失敗會保留錯誤次數，五分鐘後再試，避免被 systemd 啟動限制或 Docker daemon 故障永久卡住。
+重啟成功也保留五分鐘冷卻，讓 SQL 有時間啟動。`/run/qmah-health/last-completed` 記錄最近完成時間。
+
+程式部署會同步安裝新版健康檢查與 timer，並在回滾時還原舊版本。
+部署收到中止訊號或檔案搬移中途失敗時，依實際保存的目錄回復程式，
+輸出 `QMAH_ROLLBACK_OK` 或 `QMAH_ROLLBACK_FAILED`，避免宣稱回復成功但服務仍無法啟動。
+隔離故障測試使用 `python3 -m unittest discover -s deploy/azure-demo/tests -v`，也會由部署 CI 執行。
+
+排查時先確認 `systemctl status qmah-api qmah-web caddy docker qmah-health.timer`，
+再查 `journalctl -t qmah-health --since '15 minutes ago'`。不要重跑 `bootstrap.sh` 或還原正式資料庫。
+這些機制針對程序與暫時無回應，VM 關機、磁碟損壞和持續的錯誤設定仍需要外部處理。
+
 ## 外部服務設定
 
 Google 登入需允許 `https://qmah.eastus.cloudapp.azure.com/signin-google`，Logto 需允許

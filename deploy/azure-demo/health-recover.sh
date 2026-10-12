@@ -1,24 +1,53 @@
 #!/usr/bin/env bash
-set -u
-exec 9>/run/qmah-health.lock
+set -uo pipefail
+run_dir="${QMAH_RUN_DIR:-/run}"
+state="$run_dir/qmah-health"
+mkdir -p "$state" || exit 1
+exec 9>"$run_dir/qmah-health.lock"
 flock -n 9 || exit 0
-mkdir -p /run/qmah-health
 recover() {
- local service="$1" healthy="$2" count=0
- local counter="/run/qmah-health/$service"
+ local service="$1" healthy="$2" count=0 last=0 now
+ local counter="$state/$service"
  if [ "$healthy" = 1 ]; then printf '0' > "$counter"; return; fi
  if [ -f "$counter" ]; then read -r count < "$counter" || true; fi
+ # A partial/corrupt counter must not disable every subsequent health check.
+ [[ "$count" =~ ^[0-9]{1,3}$ ]] || count=0
+ count=$((10#$count))
  count=$((count + 1))
+ (( count > 999 )) && count=999
  printf '%s' "$count" > "$counter"
  if [ "$count" -ge 3 ]; then
-  logger -t qmah-health "$service failed three consecutive checks; restarting"
-  if [ "$service" = sql ]; then docker restart qmah-sql >/dev/null; else systemctl restart "$service"; fi
-  printf '0' > "$counter"
+  now=$(date +%s)
+  if [ -f "$state/$service.last-attempt" ]; then read -r last < "$state/$service.last-attempt" || true; fi
+  [[ "$last" =~ ^[0-9]{1,12}$ ]] || last=0
+  last=$((10#$last))
+  # Give a restarting SQL Server time to recover; retry failed restarts later.
+  if (( now >= last && now - last < 300 )); then return; fi
+  printf '%s' "$now" > "$state/$service.last-attempt"
+  logger -t qmah-health "$service failed consecutive checks; attempting recovery"
+  local restarted=0
+  if [ "$service" = sql ]; then
+   timeout 45 docker restart qmah-sql >/dev/null 2>&1 && restarted=1
+  else
+   timeout 45 systemctl restart "$service" >/dev/null 2>&1 && restarted=1
+  fi
+  if [ "$restarted" = 1 ]; then
+   printf '0' > "$counter"
+   logger -t qmah-health "$service recovery started; next check will verify readiness"
+  else
+   logger -t qmah-health "$service recovery failed; failure count retained for retry"
+  fi
  fi
 }
+docker_ok=0
+if timeout 5 docker info --format '{{.ServerVersion}}' >/dev/null 2>&1; then docker_ok=1; fi
+# Recover the daemon too: docker restart cannot work if the daemon has stopped.
+recover docker "$docker_ok"
 db_ok=0
-if timeout 15 docker exec qmah-sql sh -c 'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -l 5 -t 5 -Q "SELECT 1"' >/dev/null 2>&1; then db_ok=1; fi
-recover sql "$db_ok"
+if [ "$docker_ok" = 1 ]; then
+ if timeout 15 docker exec qmah-sql sh -c 'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -l 5 -t 5 -d QMAH -Q "SET NOCOUNT ON; SELECT TOP (1) Id FROM [catalog].[Artifacts]; SELECT TOP (1) Id FROM [user].[AspNetUsers];"' >/dev/null 2>&1; then db_ok=1; fi
+ recover sql "$db_ok"
+fi
 # 資料庫故障時先恢復資料庫，避免重啟正常等待資料庫的應用程式。
 if [ "$db_ok" = 1 ]; then
  api_ok=0
@@ -31,3 +60,4 @@ fi
 proxy_ok=0
 if curl -fsS --max-time 15 --resolve 'qmah.eastus.cloudapp.azure.com:443:127.0.0.1' 'https://qmah.eastus.cloudapp.azure.com/' >/dev/null; then proxy_ok=1; fi
 recover caddy "$proxy_ok"
+printf '%s' "$(date +%s)" > "$state/last-completed"

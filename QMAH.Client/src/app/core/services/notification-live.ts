@@ -23,19 +23,26 @@ export class NotificationLive {
         if (!closed && !retry) retry = setTimeout(() => { retry = undefined; void start(); }, 15000);
       };
       const start = async () => {
-        if (closed || !hub) return;
-        try { await hub.start(); if (!closed) subscriber.next(); }
-        catch { schedule(); }
-      };
-      void import('@microsoft/signalr').then(({ HubConnectionBuilder, LogLevel }) => {
         if (closed) return;
-        hub = new HubConnectionBuilder().withUrl('/hubs/notifications')
-          .withAutomaticReconnect([0, 1000, 3000, 10000]).configureLogging(LogLevel.None).build();
-        hub.on('NotificationsChanged', () => subscriber.next());
-        hub.onreconnected(() => subscriber.next());
-        hub.onclose(schedule);
-        void start();
-      }).catch(schedule);
+        try {
+          if (!hub) {
+            const { HubConnectionBuilder, LogLevel } = await import('@microsoft/signalr');
+            if (closed) return;
+            hub = new HubConnectionBuilder().withUrl('/hubs/notifications')
+              .withAutomaticReconnect([0, 1000, 3000, 10000]).configureLogging(LogLevel.None).build();
+            hub.on('NotificationsChanged', () => subscriber.next());
+            hub.onreconnected(() => subscriber.next());
+            hub.onclose(schedule);
+          }
+          await hub.start();
+          if (!closed) subscriber.next();
+        } catch {
+          // A failed lazy chunk/build must retry initialization too. Refresh by
+          // HTTP meanwhile, so notifications do not stay frozen until reload.
+          if (!closed) { subscriber.next(); schedule(); }
+        }
+      };
+      void start();
       return () => {
         closed = true;
         if (retry) clearTimeout(retry);

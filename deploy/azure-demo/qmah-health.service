@@ -4,5 +4,5 @@ After=network-online.target docker.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/qmah-health-recover
-TimeoutStartSec=120
+ExecStart=/usr/bin/bash /opt/qmah/deploy/health-recover.sh
+TimeoutStartSec=300

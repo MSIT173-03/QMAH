@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 import { NotificationLive } from './notification-live';
 import { MeApiService } from './me-api';
 
-const state = vi.hoisted(() => ({ hubs: [] as any[] }));
+const state = vi.hoisted(() => ({ hubs: [] as any[], buildFailures: 0 }));
 vi.mock('@microsoft/signalr', () => ({
   LogLevel: { None: 0 },
   HubConnectionBuilder: class {
@@ -12,6 +12,7 @@ vi.mock('@microsoft/signalr', () => ({
     withAutomaticReconnect() { return this; }
     configureLogging() { return this; }
     build() {
+      if (state.buildFailures > 0) { state.buildFailures--; throw new Error('Temporary hub initialization failure'); }
       const hub = {
         start: vi.fn(async () => undefined), stop: vi.fn(async () => undefined),
         on: vi.fn(), onreconnected: vi.fn(), onclose: vi.fn()
@@ -26,6 +27,7 @@ describe('NotificationLive', () => {
   const me = signal<any>(null);
   beforeEach(() => {
     state.hubs.length = 0;
+    state.buildFailures = 0;
     me.set(null);
     TestBed.configureTestingModule({ providers: [{ provide: MeApiService, useValue: { me } }] });
   });
@@ -60,5 +62,26 @@ describe('NotificationLive', () => {
     me.set(null); await settle();
     expect(state.hubs[1].stop).toHaveBeenCalledTimes(1);
     subscription.unsubscribe();
+  });
+  it('retries a failed initialization and refreshes by HTTP while waiting', async () => {
+    vi.useFakeTimers();
+    let subscription: { unsubscribe(): void } | undefined;
+    try {
+      state.buildFailures = 1;
+      const listener = vi.fn();
+      subscription = TestBed.inject(NotificationLive).changes.subscribe(listener);
+      me.set({ id: 'member' });
+      TestBed.tick();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(state.hubs).toHaveLength(0);
+      expect(listener).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(15000);
+      expect(state.hubs).toHaveLength(1);
+      expect(state.hubs[0].start).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledTimes(2);
+    } finally {
+      subscription?.unsubscribe();
+      vi.useRealTimers();
+    }
   });
 });

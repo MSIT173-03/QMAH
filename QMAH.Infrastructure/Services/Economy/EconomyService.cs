@@ -249,6 +249,9 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
 
         return await strategy.ExecuteAsync(async () =>
         {
+            // A rolled-back attempt leaves mutated balances and Added ledger
+            // rows in memory. Reload persisted state before spending keys again.
+            db.ChangeTracker.Clear();
             await using var transaction = await db.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable,
                 cancellationToken);
@@ -336,6 +339,7 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
+            db.ChangeTracker.Clear();
             await using var transaction = await db.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable,
                 cancellationToken);

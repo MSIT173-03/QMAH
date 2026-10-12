@@ -31,32 +31,53 @@ for source in "$root/client" "$root/client-before-catalog-repair"; do
 done
 cp /etc/caddy/Caddyfile "$release/previous/Caddyfile"
 cp /etc/systemd/system/qmah-api.service /etc/systemd/system/qmah-web.service "$release/previous/"
-swapped=()
+# Health scripts were previously installed only by bootstrap, so later fixes
+# never reached the running VM. Preserve their old versions for rollback.
+cp -a "$root/deploy" "$release/previous/deploy"
+cp /etc/systemd/system/qmah-health.service /etc/systemd/system/qmah-health.timer "$release/previous/"
 rollback() {
-    local status=$?
-    trap - ERR
+    local status="${1:-1}" recovery_ok=true
+    trap - ERR HUP INT TERM
+    set +e
     echo 'Deployment failed; restoring the preceding application version.'
-    for name in "${swapped[@]}"; do
-        if [[ -e "$root/$name" ]]; then mv "$root/$name" "$release/failed-$name"; fi
-        mv "$release/previous/$name" "$root/$name"
+    # An interruption can arrive after mv but before bookkeeping runs. The
+    # presence of the preserved directory is the source of truth for rollback.
+    for name in api web client; do
+        if [[ -e "$release/previous/$name" ]]; then
+            if [[ -e "$root/$name" ]]; then
+                mv "$root/$name" "$release/failed-$name" || recovery_ok=false
+            fi
+            mv "$release/previous/$name" "$root/$name" || recovery_ok=false
+        fi
     done
-    cp "$release/previous/Caddyfile" /etc/caddy/Caddyfile
-    cp "$release/previous/qmah-api.service" "$release/previous/qmah-web.service" /etc/systemd/system/
-    systemctl daemon-reload
-    systemctl restart qmah-api qmah-web
-    systemctl reload caddy
-    systemctl start qmah-health.timer
+    cp "$release/previous/Caddyfile" /etc/caddy/Caddyfile || recovery_ok=false
+    cp "$release/previous/qmah-api.service" "$release/previous/qmah-web.service" /etc/systemd/system/ || recovery_ok=false
+    cp "$release/previous/qmah-health.service" "$release/previous/qmah-health.timer" /etc/systemd/system/ || recovery_ok=false
+    cp -a "$release/previous/deploy/." "$root/deploy/" || recovery_ok=false
+    systemctl daemon-reload || recovery_ok=false
+    systemctl restart qmah-api qmah-web || recovery_ok=false
+    systemctl reload caddy || recovery_ok=false
+    systemctl start qmah-health.timer || recovery_ok=false
+    if [[ "$recovery_ok" != true ]]; then
+        echo 'QMAH_ROLLBACK_FAILED: preserved files remain available for recovery.'
+    else
+        echo 'QMAH_ROLLBACK_OK'
+    fi
     exit "$status"
 }
-trap rollback ERR
+trap 'rollback $?' ERR
+trap 'rollback 129' HUP
+trap 'rollback 130' INT
+trap 'rollback 143' TERM
 systemctl stop qmah-health.timer
 for name in api web client; do
     mv "$root/$name" "$release/previous/$name"
-    swapped+=("$name")
     mv "$release/new/$name" "$root/$name"
 done
 install -m 644 "$release/new/deploy/Caddyfile" /etc/caddy/Caddyfile
 install -m 644 "$release/new/deploy/qmah-api.service" "$release/new/deploy/qmah-web.service" /etc/systemd/system/
+install -m 755 "$release/new/deploy/health-recover.sh" "$root/deploy/health-recover.sh"
+install -m 644 "$release/new/deploy/qmah-health.service" "$release/new/deploy/qmah-health.timer" /etc/systemd/system/
 systemctl daemon-reload
 systemctl restart qmah-api qmah-web
 systemctl reload caddy
@@ -89,7 +110,7 @@ systemctl daemon-reload
 systemctl enable --now qmah-backup.timer
 systemctl restart systemd-journald
 printf '%s\n' "$revision" > "$root/current-revision"
-trap - ERR
+trap - ERR HUP INT TERM
 # Keep three releases. A validated SHA directory cannot point outside our release root.
 while read -r old; do
     [[ "$old" =~ ^[0-9a-f]{40}$ && "$old" != "$revision" ]] || continue

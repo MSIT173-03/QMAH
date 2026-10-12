@@ -940,6 +940,8 @@ public sealed class SocialController(
     {
         if (!TryGetCurrentUserId(out var userId))
             return Unauthorized();
+        if (string.IsNullOrWhiteSpace(request.Title))
+            ModelState.AddModelError(nameof(request.Title), "標題不可為空白。");
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
@@ -984,7 +986,7 @@ public sealed class SocialController(
             }
 
             // 顯示順序以 CreatedAt 排序：依清單順序重排，起點取所有相關圖片中最早的時間。
-            var baseTime = byId.Values.Min(asset => asset.CreatedAt);
+            var baseTime = byId.Count == 0 ? now : byId.Values.Min(asset => asset.CreatedAt);
             for (var index = 0; index < ids.Count; index++)
             {
                 var asset = byId[ids[index]];

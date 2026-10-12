@@ -41,6 +41,9 @@ jobs:
         run: |
           bash -n deploy/azure-demo/update.sh
           bash -n deploy/azure-demo/backup-database.sh
+          bash -n deploy/azure-demo/health-recover.sh
+          python3 -m unittest discover -s deploy/azure-demo/tests -v
+          dotnet run --project tools/ResilienceChecks/ResilienceChecks.csproj --configuration Release
           dotnet publish QMAH.Api/QMAH.Api.csproj -c Release -r linux-x64 --self-contained true -o bundle/api
           dotnet publish QMAH.Web/QMAH.Web.csproj -c Release -r linux-x64 --self-contained true -o bundle/web
           cp -a QMAH.Client/dist/qmah-client/browser bundle/client
