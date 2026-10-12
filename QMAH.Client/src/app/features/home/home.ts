@@ -31,7 +31,7 @@ export class HomeComponent {
     {
       label: '遊戲大廳',
       description: '用互動挑戰複習文物知識，從練習開始也可以。',
-      path: '/game',
+      path: '/game/how-to',
       icon: 'gamepad-2',
     },
     {

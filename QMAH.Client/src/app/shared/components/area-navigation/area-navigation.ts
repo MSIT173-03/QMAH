@@ -68,7 +68,7 @@ export class AreaNavigationComponent {
     },
     {
       label: '遊戲大廳',
-      path: '/game',
+      path: '/game/how-to',
       activePrefixes: ['/game'],
       area: 'game',
       icon: LucideGamepad2,
