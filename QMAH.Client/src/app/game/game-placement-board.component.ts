@@ -70,12 +70,12 @@ export function placePiece(order: readonly number[], piece: number, slot: number
       @if (!memoryMode()) { <button type="button" data-button-tone="reversible" (click)="referenceDialog.showModal()" aria-haspopup="dialog">看原圖</button> }
       @if (hint(); as artifactHint) { <button type="button" (click)="hintDialog.showModal()" aria-haspopup="dialog">文物提示</button> }
       <button type="button" (click)="pieceDialog.showModal()" [disabled]="selected() === null">放大碎片</button>
-      @if (!memoryMode()) { <button type="button" (click)="prepareBackground(); backgroundDialog.showModal()" [disabled]="!ready() || disabled() || solved()">背景預覽</button> }
+      <button type="button" (click)="prepareBackground(); backgroundDialog.showModal()" [disabled]="!ready() || disabled() || solved()">背景輔助</button>
       @if (memoryMode()) { <button type="button" (click)="showRegion()" [disabled]="!ready() || disabled() || selected() === null || solved()">區域提示 −3</button> }
       @if (showHelp()) {
       <button type="button" class="more-trigger" [attr.popovertarget]="moreId" aria-label="協助完成" title="協助完成"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>協助完成</button>
       <div class="more-pop" [id]="moreId" popover="auto"><h5>協助完成</h5>
-        <button type="button" (click)="prepareBackground(); backgroundDialog.showModal(); closeMore()" [disabled]="!ready() || disabled() || solved()"><strong>背景預覽</strong><small>找出顏色接近外框的碎片，不扣分</small></button>
+        <button type="button" (click)="prepareBackground(); backgroundDialog.showModal(); closeMore()" [disabled]="!ready() || disabled() || solved()"><strong>背景輔助</strong><small>找出顏色接近外框的碎片，勾選歸位會扣分</small></button>
         <button type="button" data-button-tone="danger" (click)="confirmDialog.showModal(); closeMore()" [disabled]="!ready() || disabled() || solved()"><strong>完成剩餘碎片</strong><small>系統代為歸位，會扣分且無法拿 S 級</small></button>
       </div>
       }
