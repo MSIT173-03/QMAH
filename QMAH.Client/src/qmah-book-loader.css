@@ -161,3 +161,14 @@
 .qmah-loading-dots i:nth-child(1){animation-delay:-.3s}.qmah-loading-dots i:nth-child(2){animation-delay:-.15s}
 @keyframes qmah-dot-flow{0%,80%,100%{transform:scale(.3)}40%{transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.qmah-loading-dots i{animation:none}}
+
+/* 載入畫面：書本背後的暖色光暈、落地陰影與標題下方流動的金線。只用 transform／opacity 動畫，不加 blur。 */
+.qmah-prelude__book-stage{position:relative}
+.qmah-prelude__book-stage::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgb(198 168 109 / 26%),transparent 66%);animation:qmah-glow 3.2s ease-in-out infinite}
+.qmah-prelude__book-stage::after{content:'';position:absolute;bottom:14px;width:170px;height:16px;border-radius:50%;background:radial-gradient(ellipse,rgb(60 48 30 / 24%),transparent 70%)}
+.qmah-prelude__book-stage .qmah-book{position:relative;z-index:1}
+.qmah-prelude__copy::after{content:'';display:block;width:150px;height:3px;margin-top:6px;border-radius:3px;background:linear-gradient(90deg,transparent,var(--qmah-bronze,#b98b45),transparent) 0 0/200% 100%;animation:qmah-shimmer 1.8s linear infinite}
+@keyframes qmah-shimmer{to{background-position:-200% 0}}
+@keyframes qmah-glow{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.05)}}
+@media(max-width:700px){.qmah-prelude__copy::after{margin-inline:auto}.qmah-prelude__book-stage::before{width:220px;height:220px}}
+@media(prefers-reduced-motion:reduce){.qmah-prelude__copy::after,.qmah-prelude__book-stage::before{animation:none}}

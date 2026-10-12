@@ -10,6 +10,7 @@
       <span class="summary-total-value">{{ getTotal() }}</span>
     </div>
     <a [storeLink]="checkoutHref" class="btn-solid btn-solid--full">{{ checkoutLabel }}</a>
+    <p class="summary-coupon">{{ couponNote }}<a [storeLink]="couponHref">{{ couponLinkLabel }}</a></p>
   </app-panel>
 
   <app-panel variant="note">

@@ -54,7 +54,7 @@ const COLOR_HEX: Record<string, string> = {
   styleUrl: './social-editor.scss',
   template: `
     <div class="sme" [class.is-open]="open()">
-      <textarea #field class="sme__field" [attr.aria-label]="label()" [placeholder]="placeholder()" [rows]="rows()" [value]="shown()" (input)="commit(field.value)" (keydown.control.enter)="submitted.emit()" (keydown.meta.enter)="submitted.emit()"></textarea>
+      <textarea #field class="sme__field" [attr.aria-label]="label()" [placeholder]="placeholder()" [rows]="rows()" [value]="shown()" (input)="commit(field.value)" (keydown.control.enter)="submitted.emit()" (keydown.meta.enter)="submitted.emit()" (keydown.control.b)="shortcut($event, '[b]', '[/b]')" (keydown.control.i)="shortcut($event, '[i]', '[/i]')" (keydown.control.u)="shortcut($event, '[u]', '[/u]')"></textarea>
       @if (open()) {
         <div class="sme__toolbar" role="toolbar" aria-label="格式工具" (mousedown)="$event.preventDefault()">
           @for (group of groups; track $index) {
@@ -111,6 +111,7 @@ const COLOR_HEX: Record<string, string> = {
           }
           @if (uploading()) { <span class="sme__status">圖片上傳中…</span> }
         </div>
+        <span class="sme__count" [class.is-near]="nearLimit()" [class.is-over]="overLimit()" aria-live="polite">{{ value().length }} / {{ maxLength() }}</span>
         @if (showSend()) {
           <button type="button" class="sme__send" aria-label="送出" title="送出（Ctrl＋Enter）" [disabled]="!canSend()" (click)="submitted.emit()"><svg lucideSendHorizontal aria-hidden="true" focusable="false"></svg></button>
         }
@@ -127,6 +128,8 @@ export class SocialEditorComponent implements OnInit {
   readonly rows = input(3);
   readonly showSend = input(true);
   readonly busy = input(false);
+  /** 與後端留言上限一致（1～2000 字） */
+  readonly maxLength = input(2000);
   readonly startOpen = input(false);
   /** 進階模式才會出現圖片按鈕；圖片以 [img=識別碼] 嵌入文字 */
   readonly allowImage = input(true);
@@ -154,7 +157,15 @@ export class SocialEditorComponent implements OnInit {
   });
   /** 預覽預設收起，可自己點開；開關狀態記在這個瀏覽器。 */
   protected readonly previewOn = signal(SocialEditorComponent.readPreview());
-  protected readonly canSend = computed(() => !this.busy() && this.value().trim().length > 0);
+  protected readonly overLimit = computed(() => this.value().length > this.maxLength());
+  protected readonly nearLimit = computed(() => !this.overLimit() && this.value().length >= this.maxLength() * 0.9);
+  protected readonly canSend = computed(() => !this.busy() && this.value().trim().length > 0 && !this.overLimit());
+
+  /** Ctrl＋B／I／U：不必展開進階格式也能套用粗體、斜體、底線 */
+  protected shortcut(event: Event, open: string, close: string): void {
+    event.preventDefault();
+    this.wrap(open, close);
+  }
   protected readonly colors = SOCIAL_COLORS;
   private readonly field = viewChild.required<ElementRef<HTMLTextAreaElement>>('field');
 

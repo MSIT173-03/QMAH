@@ -2,7 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { Panel } from '../../../component';
 import { CartAmounts } from '../../../api/api.models';
 import { formatCut, formatMoney } from '../../../shared/format';
-import { CHECKOUT_PATH } from '../../../shared/paths';
+import { CHECKOUT_PATH, COUPON_STORE_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
 
 /**
@@ -36,6 +36,10 @@ export class CartSummary {
   protected readonly totalLabel = '應付總額';
   protected readonly checkoutLabel = '前往結帳';
   protected readonly checkoutHref = CHECKOUT_PATH;
+  /** 折價券在結帳頁選用，沒有券的人可以先到兌換商店換 */
+  protected readonly couponNote = '有折價券？結帳時可以直接選用。';
+  protected readonly couponLinkLabel = '去兌換折價券';
+  protected readonly couponHref = COUPON_STORE_PATH;
   protected readonly serviceLabel = 'SERVICE';
   protected readonly serviceNote =
     '每件商品附授權與考據說明卡；瓷器與琺瑯器採雙層防撞包裝，30 天內可退換。';

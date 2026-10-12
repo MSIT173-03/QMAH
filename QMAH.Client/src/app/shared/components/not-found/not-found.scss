@@ -23,3 +23,15 @@ nav { display:flex;flex-wrap:wrap;gap:24px;margin-top:26px; }nav a { color:var(-
 @media(max-width:700px) { .lost-page { grid-template-columns:1fr;gap:12px;padding:36px 32px 56px;text-align:center; }.lost-page::before { inset:14px; }.lost-page__scene { padding:0; }.scene-code { font-size:92px;margin-bottom:20px; }.shelf-caption { margin-top:8px; }.lost-page__content { max-width:440px;margin:auto; }p { margin-inline:auto; }nav { justify-content:center; } }
 @media(max-width:400px) { .shelf { transform:translateX(-50%) scale(.58); }.shelf-stage { height:150px; } }
 @media(prefers-reduced-motion:reduce) { .door,.book { animation:none!important; }.door.left { transform:rotateY(-110deg); }.door.right { transform:rotateY(120deg); } }
+/* 404：入場時由下往上淡入，找不到的那本書輕輕呼吸，背景加一盞暖光。 */
+.scene-code { background:linear-gradient(180deg,#d9b877,#a07638);-webkit-background-clip:text;background-clip:text;color:transparent;animation:lostRise .8s ease-out both; }
+.lost-page__scene::before { content:'';position:absolute;z-index:-1;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,#e2c58a40,transparent 68%);animation:lostGlow 4s ease-in-out infinite; }
+.lost-page__scene { position:relative; }
+.shelf-caption { animation:lostRise .8s .6s ease-out both; }
+.book.not-found { animation:lostBreath 2.8s ease-in-out infinite; }
+.lost-page__content > * { animation:lostRise .7s ease-out both; }.lost-page__content > :nth-child(2) { animation-delay:.12s; }.lost-page__content > :nth-child(3) { animation-delay:.24s; }
+.home-link { transition:transform .18s ease,box-shadow .18s ease,filter .18s ease; }.home-link:hover { transform:translateY(-2px);box-shadow:0 10px 20px -10px #29190d80; }
+@keyframes lostRise { from { opacity:0;transform:translateY(14px); } to { opacity:1;transform:none; } }
+@keyframes lostGlow { 0%,100% { opacity:.6;transform:scale(.95); } 50% { opacity:1;transform:scale(1.06); } }
+@keyframes lostBreath { 0%,100% { border-color:#dec89c55; } 50% { border-color:#dec89ccc; } }
+@media(prefers-reduced-motion:reduce) { .scene-code,.shelf-caption,.lost-page__content > *,.lost-page__scene::before,.book.not-found { animation:none!important; } }
