@@ -85,7 +85,10 @@ export class EventsComponent implements OnInit {
   }
 
   // ui-integration: 由 Angular 管理活動對話框的開啟，保留原本建立流程並避免 inline onclick 依賴全域 DOM 變數。
+  /** 地圖選點元件較重（會載入 Leaflet 與圖磚），第一次開啟建立視窗才建立，列表頁平常不載入。 */
+  createOpened = false;
   openCreateEvent(): void {
+    this.createOpened = true;
     // 管理員示範用：表單是空的才預填，不會蓋掉已經在寫的內容。
     if (isDemoAdmin(this.meApi.me()) && !this.newEvent.title.trim() && !this.newEvent.content.trim()) {
       this.newEvent = demoEvent();

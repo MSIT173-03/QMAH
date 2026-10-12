@@ -206,16 +206,18 @@
     <!-- daisyUI 5 已移除 .form-control，原本的 gap-3 沒有 flex/grid 容器可套用；
          改由 .social-post-form 自己宣告 grid 與間距，欄位之間才會真的有行距。 -->
     <div class="social-post-form" [class.is-preview]="postPreview">
-      <div class="social-post-form__field">
-        <label class="social-post-form__label" for="social-post-title">標題</label>
-        <input id="social-post-title" name="title" type="text" placeholder="貼文標題…" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
-      </div>
-      <div class="social-post-form__field">
-        <span class="social-post-form__label" id="social-post-board-label">看板</span>
-        <div class="social-board-picker" role="radiogroup" aria-labelledby="social-post-board-label">
-          @for (code of composerBoards; track code) {
-            <button type="button" role="radio" class="social-board-chip" [class.is-active]="newPost.boardCode === code" [attr.aria-checked]="newPost.boardCode === code" (click)="newPost.boardCode = code">{{ boardLabel(code) }}</button>
-          }
+      <div class="social-post-form__row">
+        <div class="social-post-form__field">
+          <label class="social-post-form__label" for="social-post-title">標題</label>
+          <input id="social-post-title" name="title" type="text" placeholder="貼文標題…" class="input input-bordered w-full" [(ngModel)]="newPost.title" />
+        </div>
+        <div class="social-post-form__field">
+          <label class="social-post-form__label" for="social-post-board">看板</label>
+          <select id="social-post-board" name="boardCode" class="select select-bordered w-full" [(ngModel)]="newPost.boardCode">
+            @for (code of composerBoards; track code) {
+              <option [value]="code">{{ boardLabel(code) }}</option>
+            }
+          </select>
         </div>
       </div>
       <div class="social-post-form__field">

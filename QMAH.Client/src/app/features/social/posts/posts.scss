@@ -421,6 +421,8 @@
 }
 .social-post-dialog__wide svg { width: 15px; height: 15px; }
 .social-post-dialog__wide:hover, .social-post-dialog__wide[aria-pressed='true'] { color: var(--qmah-social-action); border-color: var(--qmah-social-action); }
+.social-post-form__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 220px); gap: 12px; align-items: end; }
+@media (max-width: 640px) { .social-post-form__row { grid-template-columns: minmax(0, 1fr); } }
 .social-board-picker { display: flex; flex-wrap: wrap; gap: 8px; }
 .social-board-chip {
   padding: 7px 14px; border: 1px solid var(--qmah-border); border-radius: 999px; background: var(--qmah-surface-elevated);

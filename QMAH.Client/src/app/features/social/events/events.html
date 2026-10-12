@@ -117,12 +117,14 @@
       <label class="social-field"><span class="social-field__label">地點（選填，可手動輸入，或用下方地圖選點自動帶入）</span><input type="text" maxlength="200" placeholder="例如：線上或臺北市立場館" class="input input-bordered w-full" [(ngModel)]="newEvent.location" /></label>
       <div class="social-field">
         <span class="social-field__label">在地圖上選擇地點（選填）</span>
-        <app-location-picker
-          [latitude]="newEvent.latitude"
-          [longitude]="newEvent.longitude"
-          (picked)="onLocationPicked($event)"
-          (cleared)="onLocationCleared()"
-        />
+        @if (createOpened) {
+          <app-location-picker
+            [latitude]="newEvent.latitude"
+            [longitude]="newEvent.longitude"
+            (picked)="onLocationPicked($event)"
+            (cleared)="onLocationCleared()"
+          />
+        }
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label class="social-field">

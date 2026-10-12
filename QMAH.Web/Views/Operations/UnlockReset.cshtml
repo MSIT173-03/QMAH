@@ -44,6 +44,7 @@
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-danger"><i class="ti ti-lock me-1"></i>清除解鎖並退還鑰匙</button>
+                    <button type="submit" class="btn btn-outline-primary ms-2" formaction="@Url.Action("UnlockGrant")" onclick="return !!document.getElementById('userId').value || (alert('請先選擇會員'), false);"><i class="ti ti-lock-open me-1"></i>解鎖該會員全部（不扣鑰匙）</button>
                 </div>
             </div>
         </form>

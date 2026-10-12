@@ -1616,4 +1616,25 @@ public sealed class OperationsController(
         TempData["SuccessMessage"] = $"已清除 {unlocks.Count} 筆解鎖，退還 {refundedKeys} 把鑰匙。";
         return RedirectToAction(nameof(UnlockReset));
     }
+
+    /// <summary>替指定會員一次解鎖全部（或某分類）尚未解鎖的文物，不消耗鑰匙，記為管理員解鎖。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnlockGrant(Guid userId, Guid? categoryId, CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty)
+        {
+            TempData["ErrorMessage"] = "請先選擇要解鎖的會員。";
+            return RedirectToAction(nameof(UnlockReset));
+        }
+        var owned = db.ArtifactUnlocks.Where(item => item.UserId == userId).Select(item => item.ArtifactId);
+        var query = db.Artifacts.Where(item => item.IsActive && !owned.Contains(item.Id));
+        if (categoryId is { } cid) query = query.Where(item => item.CategoryId == cid);
+        var ids = await query.Select(item => item.Id).ToListAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+        db.ArtifactUnlocks.AddRange(ids.Select(id => new ArtifactUnlock { Id = Guid.NewGuid(), UserId = userId, ArtifactId = id, UnlockMethod = "ADMIN", UnlockedAt = now }));
+        await db.SaveChangesAsync(cancellationToken);
+        TempData["SuccessMessage"] = $"已替該會員解鎖 {ids.Count} 件文物。";
+        return RedirectToAction(nameof(UnlockReset));
+    }
 }
