@@ -20,6 +20,6 @@ export const publicCatalogCacheInterceptor: HttpInterceptorFn = (request, next) 
   return next(request).pipe(tap(event => {
     if (!(event instanceof HttpResponse) || !event.ok) return;
     if (entries.size >= 100) entries.delete(entries.keys().next().value!);
-    entries.set(request.urlWithParams, { expires: Date.now() + 60_000, response: event.clone({ body: structuredClone(event.body) }) });
+    entries.set(request.urlWithParams, { expires: Date.now() + 300_000, response: event.clone({ body: structuredClone(event.body) }) });
   }));
 };

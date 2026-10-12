@@ -16,6 +16,8 @@ import {
 import {
   ActivatedRouteSnapshot,
   provideRouter,
+  PreloadAllModules,
+  withPreloading,
   withComponentInputBinding,
   withViewTransitions
 } from '@angular/router';
@@ -70,6 +72,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(),
+      // 首頁載完後在閒置時把其餘頁面的程式碼先抓好，切頁時不用再等下載。
+      withPreloading(PreloadAllModules),
       withViewTransitions({
         skipInitialTransition: true,
         onViewTransitionCreated: ({ from, to, transition }) => {
