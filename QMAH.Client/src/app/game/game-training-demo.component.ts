@@ -63,6 +63,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
 
   restartDemo(): void {
     if (this.demoTimer !== null) clearInterval(this.demoTimer);
+    this.stopAttemptTimers();
     this.closePause();
     const done = this.doneDialog()?.nativeElement;
     if (done?.open) done.close();
@@ -85,7 +86,7 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
 
       locatorTargets: modeCode === 'DETAIL_LOCATOR' ? LOCATOR_TARGETS : null, startedAt: new Date().toISOString() });
     this.demoTimer = setInterval(() => {
-      if (this.paused || this.locatorReviewing || this.phase !== 'playing') return;
+      if (this.paused || document.hidden || this.locatorReviewing || this.phase !== 'playing') return;
       this.demoTicks++;
       this.elapsedSeconds = Math.floor(this.demoTicks / 2);
       // 盤面完成後（自動示範或自己操作都一樣）稍等一下，用彈出視窗告知，不再留一顆孤立的「完成展示」按鈕
@@ -118,6 +119,8 @@ export class GameTrainingDemoComponent extends GameTrainingComponent implements 
     if (this.demoTimer !== null) clearInterval(this.demoTimer);
     this.demoTimer = null;
     this.demoDetector.detectChanges();
+    // 細節追跡要能回頭複盤四題，所以改用頁面內的提示列，不蓋住盤面。
+    if (this.modeCode() === 'DETAIL_LOCATOR') return;
     const dialog = this.doneDialog()?.nativeElement;
     if (dialog && !dialog.open && typeof dialog.showModal === 'function') dialog.showModal();
   }

@@ -80,6 +80,13 @@
             </div>
           </app-game-training-play-sheet>
   </div>
+  @if (phase === 'complete' && modeCode() === 'DETAIL_LOCATOR') {
+    <div class="demo-done-inline" role="status">
+      <span>展示完成，這一局不計成績。可以點上方的題目回頭複盤四題。</span>
+      <button type="button" class="demo-done__again" (click)="restartDemo()">重新展示</button>
+      <a class="demo-done__formal" routerLink="/game/training" [queryParams]="{ game: modeCode() }">開始正式挑戰</a>
+    </div>
+  }
 }
 <dialog #pauseDialog class="demo-pause" aria-labelledby="demo-pause-title" (close)="resumeFromPause()">
   <h2 id="demo-pause-title">展示已暫停</h2><p>目前進度已保留，繼續後可接著{{ autoPlaying ? '觀看示範' : '操作盤面' }}。</p><button type="button" autofocus (click)="closePause()">繼續展示</button>

@@ -39,6 +39,10 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--qmah-focus); ou
 }
 
 .demo-done__actions { display: grid; gap: 10px; }
+.demo-done-inline { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 14px; margin-top: 12px; padding: 12px 16px; border-radius: 14px; background: #f6ecd2; color: #4a3b1f; font-weight: 700; }
+.demo-done-inline span { flex: 1 1 260px; }
+.demo-done-inline .demo-done__again { @extend %ui-btn; --game-button-image: var(--game-secondary-image); --game-button-ink: var(--game-secondary-ink); min-width: 120px; }
+.demo-done-inline .demo-done__formal { min-width: 140px; }
 .demo-done__formal { @extend %ui-btn; --game-button-image: var(--game-button-ochre-image); --game-button-ink: var(--game-ink-yellow); display: flex; align-items: center; justify-content: center; min-width: 160px; text-decoration: none; }
 .demo-done .demo-done__again { --game-button-image: var(--game-secondary-image); --game-button-ink: var(--game-secondary-ink); }
 

@@ -624,7 +624,7 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     this.memoryFeedback = `先記牌面：${left} 秒後全部蓋回去`;
     this.memoryPreviewTimer = setInterval(() => {
       if (this.attempt?.attemptId !== attemptId || this.phase !== 'playing') { clearInterval(this.memoryPreviewTimer!); this.memoryPreviewTimer = null; return; }
-      if (this.paused) return;
+      if (this.paused || document.hidden) return;
       left--;
       if (left > 0) this.memoryFeedback = `先記牌面：${left} 秒後全部蓋回去`;
       else {
