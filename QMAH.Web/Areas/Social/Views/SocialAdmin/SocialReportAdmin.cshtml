@@ -78,7 +78,7 @@
                             data-bs-target="#qmah-content-detail"
                             data-qmah-content-detail
                             data-qmah-content-detail-title="@(AdminDisplayLabels.TargetType(item.TargetType) + "：" + item.TargetTitle)"
-                            data-qmah-content-detail-subtitle="@($"檢舉人：{item.ReporterName} ・ 理由：{AdminDisplayLabels.ReportReason(item.Reason)} ・ {item.CreatedAt:yyyy-MM-dd HH:mm}")"
+                            data-qmah-content-detail-subtitle="@($"檢舉人：{item.ReporterName} ・ 理由：{AdminDisplayLabels.ReportReason(item.Reason)} ・ {QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.CreatedAt):yyyy-MM-dd HH:mm}")"
                             data-qmah-content-detail-body="@item.TargetContent"
                             data-qmah-content-detail-extra="@(string.IsNullOrWhiteSpace(item.Detail) ? null : $"檢舉說明：{item.Detail}")">
                         查看內容
@@ -86,7 +86,7 @@
                 </td>
                 <td><div class="text-secondary small">@item.ReporterName</div><div class="fw-semibold">@AdminDisplayLabels.ReportReason(item.Reason)</div>@if (!string.IsNullOrWhiteSpace(item.Detail)) { <div class="text-secondary small">@item.Detail</div> } @if (!string.IsNullOrWhiteSpace(item.Resolution)) { <div class="text-secondary small">處理：@item.Resolution</div> }</td>
                 <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
-                <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                <td class="text-secondary text-nowrap">@QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.CreatedAt).ToString("yyyy-MM-dd HH:mm")</td>
                 <td class="qmah-action-cell qmah-actions--4">
                     <div class="qmah-table-actions">
                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm">編輯</a>

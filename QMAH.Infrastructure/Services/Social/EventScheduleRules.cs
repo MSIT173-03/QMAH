@@ -20,6 +20,28 @@ public static class EventScheduleRules
     public static DateTime Now => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TaipeiZone.Value);
 
     /// <summary>
+    /// 把輸入的活動時間轉成要保存的 UTC。帶 Z 或偏移的值照原意換算；沒有時區的值（例如 datetime-local）
+    /// 視為台灣當地時間。資料庫、API 輸出與前台顯示都以 UTC 為準，輸入端統一在這裡換算，避免時間跑掉。
+    /// </summary>
+    public static DateTime InputToUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Utc => value,
+        DateTimeKind.Local => value.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(value, DateTimeKind.Unspecified), TaipeiZone.Value), DateTimeKind.Utc)
+    };
+
+    public static DateTime? InputToUtc(DateTime? value) => value.HasValue ? InputToUtc(value.Value) : null;
+
+    /// <summary>把保存的 UTC 時間轉成台灣當地時間，用於表單預填、後台顯示與通知文字。</summary>
+    public static DateTime ToTaipei(DateTime utc)
+    {
+        var asUtc = utc.Kind == DateTimeKind.Local ? utc.ToUniversalTime() : DateTime.SpecifyKind(utc, DateTimeKind.Utc);
+        return TimeZoneInfo.ConvertTimeFromUtc(asUtc, TaipeiZone.Value);
+    }
+
+    public static DateTime? ToTaipei(DateTime? utc) => utc.HasValue ? ToTaipei(utc.Value) : null;
+
+    /// <summary>
     /// 檢查活動時間與名額。回傳空清單代表通過。
     /// </summary>
     /// <param name="isNewEvent">新建活動才要求開始時間、報名截止不能早於現在；編輯既有活動時不追溯。</param>

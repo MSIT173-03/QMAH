@@ -56,7 +56,7 @@
                             data-bs-target="#qmah-content-detail"
                             data-qmah-content-detail
                             data-qmah-content-detail-title="@item.Title"
-                            data-qmah-content-detail-subtitle="@($"{eventTypeLabel} ・ {item.StartAt:yyyy-MM-dd HH:mm} ～ {item.EndAt:yyyy-MM-dd HH:mm}")"
+                            data-qmah-content-detail-subtitle="@($"{eventTypeLabel} ・ {QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.StartAt):yyyy-MM-dd HH:mm} ～ {QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.EndAt):yyyy-MM-dd HH:mm}")"
                             data-qmah-content-detail-body="@item.Description"
                             data-qmah-content-detail-images="@string.Join(",", item.MediaUrls)">
                         查看詳情
@@ -82,10 +82,10 @@
                         <i class="ti ti-map-pin me-1" aria-hidden="true"></i>查看地圖
                     </a>
                 </td>
-                <td class="text-secondary text-nowrap">@item.StartAt.ToString("yyyy-MM-dd HH:mm")<br /><span class="small">至 @item.EndAt.ToString("yyyy-MM-dd HH:mm")</span></td>
+                <td class="text-secondary text-nowrap">@QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.StartAt).ToString("yyyy-MM-dd HH:mm")<br /><span class="small">至 @QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.EndAt).ToString("yyyy-MM-dd HH:mm")</span></td>
                 <td><span class="badge @reviewClass">@AdminDisplayLabels.ReviewStatus(item.Status)</span></td>
                 <td><span class="badge @publishClass">@AdminDisplayLabels.PublishStatus(item.PublishStatus)</span></td>
-                <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                <td class="text-secondary text-nowrap">@QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.CreatedAt).ToString("yyyy-MM-dd HH:mm")</td>
                 <td class="qmah-action-cell qmah-actions--4">
                     <div class="qmah-table-actions">
                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">編輯</a>

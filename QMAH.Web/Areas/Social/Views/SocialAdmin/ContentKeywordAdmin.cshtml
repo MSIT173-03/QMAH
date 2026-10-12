@@ -130,7 +130,7 @@
                         <td><span class="badge @(item.Action == "BLOCK" ? "bg-red-lt" : "bg-yellow-lt")">@(item.Action == "BLOCK" ? "直接阻擋" : "送交審核")</span></td>
                         <td class="text-secondary">@(string.IsNullOrWhiteSpace(item.Category) ? "未分類" : item.Category)</td>
                         <td><span class="badge @(item.IsActive ? "bg-green-lt" : "bg-secondary-lt")">@(item.IsActive ? "已啟用" : "已停用")</span></td>
-                        <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="text-secondary text-nowrap">@QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.CreatedAt).ToString("yyyy-MM-dd HH:mm")</td>
                         <td class="qmah-action-cell qmah-actions--2">
                             <div class="qmah-table-actions">
                                 <form asp-action="ToggleActive" method="post">

@@ -134,14 +134,14 @@
                             <a class="list-group-item list-group-item-action qmah-area-list-link"
                                asp-area="Social" asp-controller="SocialPostAdmin" asp-action="Index" asp-route-keyword="@post.Title">
                                 <div class="d-flex justify-content-between gap-3"><strong class="text-truncate">@post.Title</strong><span class="badge bg-secondary-lt">@AdminDisplayLabels.Board(post.BoardCode)</span></div>
-                                <small class="text-secondary">@post.CreatedAt.ToString("yyyy/MM/dd HH:mm") · 進入內容處理</small>
+                                <small class="text-secondary">@QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(post.CreatedAt).ToString("yyyy/MM/dd HH:mm") · 進入內容處理</small>
                             </a>
                         }
                         else
                         {
                             <div class="list-group-item">
                                 <div class="d-flex justify-content-between gap-3"><strong class="text-truncate">@post.Title</strong><span class="badge bg-secondary-lt">@AdminDisplayLabels.Board(post.BoardCode)</span></div>
-                                <small class="text-secondary">@post.CreatedAt.ToString("yyyy/MM/dd HH:mm")</small>
+                                <small class="text-secondary">@QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(post.CreatedAt).ToString("yyyy/MM/dd HH:mm")</small>
                             </div>
                         }
                     }

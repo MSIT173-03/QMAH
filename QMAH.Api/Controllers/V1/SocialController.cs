@@ -495,9 +495,9 @@ public sealed class SocialController(
             return Forbid();
         // 時間與名額規則與後台共用（EventScheduleRules），避免前後台各寫一份而不一致。
         foreach (var issue in EventScheduleRules.Validate(
-            request.StartAt,
-            request.EndAt,
-            request.RegistrationEndAt,
+            EventScheduleRules.ToTaipei(EventScheduleRules.InputToUtc(request.StartAt)),
+            EventScheduleRules.ToTaipei(EventScheduleRules.InputToUtc(request.EndAt)),
+            EventScheduleRules.ToTaipei(EventScheduleRules.InputToUtc(request.RegistrationEndAt)),
             request.Capacity,
             isNewEvent: true))
         {
@@ -541,9 +541,9 @@ public sealed class SocialController(
             Location = string.IsNullOrWhiteSpace(request.Location) ? null : request.Location.Trim(),
             Latitude = request.Latitude,
             Longitude = request.Longitude,
-            StartAt = request.StartAt,
-            EndAt = request.EndAt,
-            RegistrationEndAt = request.RegistrationEndAt,
+            StartAt = EventScheduleRules.InputToUtc(request.StartAt),
+            EndAt = EventScheduleRules.InputToUtc(request.EndAt),
+            RegistrationEndAt = EventScheduleRules.InputToUtc(request.RegistrationEndAt),
             Capacity = request.Capacity,
             ReviewStatus = "PENDING",
             PublishStatus = "DRAFT",
@@ -591,8 +591,8 @@ public sealed class SocialController(
                 && item.PublishStatus == "PUBLISHED", cancellationToken);
         if (eventData is null)
             return MissingResource("找不到活動", "這場活動不存在或目前不可報名。");
-        // 活動時間是台灣當地時間，所以用同一個時間基準比較（不能用 UtcNow，會差 8 小時）。
-        var scheduleNow = EventScheduleRules.Now;
+        // 活動時間以 UTC 保存，所以用 UtcNow 比較。
+        var scheduleNow = DateTime.UtcNow;
         if (eventData.EndAt <= scheduleNow)
             return InvalidWorkflow("活動已結束", "這場活動已經結束，無法報名。");
         if (eventData.RegistrationEndAt.HasValue && eventData.RegistrationEndAt.Value < scheduleNow)

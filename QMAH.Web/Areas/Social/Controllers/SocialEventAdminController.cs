@@ -155,9 +155,9 @@ public sealed class SocialEventAdminController : Controller
             Location = NormalizeText(model.Location),
             Latitude = model.Latitude,
             Longitude = model.Longitude,
-            StartAt = model.StartAt,
-            EndAt = model.EndAt,
-            RegistrationEndAt = model.RegistrationEndAt,
+            StartAt = EventScheduleRules.InputToUtc(model.StartAt),
+            EndAt = EventScheduleRules.InputToUtc(model.EndAt),
+            RegistrationEndAt = EventScheduleRules.InputToUtc(model.RegistrationEndAt),
             Capacity = model.Capacity,
             ReviewStatus = "PENDING",
             PublishStatus = "DRAFT",
@@ -204,9 +204,9 @@ public sealed class SocialEventAdminController : Controller
             Location = item.Location,
             Latitude = item.Latitude,
             Longitude = item.Longitude,
-            StartAt = item.StartAt,
-            EndAt = item.EndAt,
-            RegistrationEndAt = item.RegistrationEndAt,
+            StartAt = EventScheduleRules.ToTaipei(item.StartAt),
+            EndAt = EventScheduleRules.ToTaipei(item.EndAt),
+            RegistrationEndAt = EventScheduleRules.ToTaipei(item.RegistrationEndAt),
             Capacity = item.Capacity,
             ReviewNote = item.ReviewNote,
             PostContentMode = socialPost?.ContentMode ?? EventSocialPostSynchronizer.TemplateMode,
@@ -247,9 +247,9 @@ public sealed class SocialEventAdminController : Controller
         item.Location = NormalizeText(model.Location);
         item.Latitude = model.Latitude;
         item.Longitude = model.Longitude;
-        item.StartAt = model.StartAt;
-        item.EndAt = model.EndAt;
-        item.RegistrationEndAt = model.RegistrationEndAt;
+        item.StartAt = EventScheduleRules.InputToUtc(model.StartAt);
+        item.EndAt = EventScheduleRules.InputToUtc(model.EndAt);
+        item.RegistrationEndAt = EventScheduleRules.InputToUtc(model.RegistrationEndAt);
         item.Capacity = model.Capacity;
         item.ReviewStatus = "PENDING";
         item.PublishStatus = "DRAFT";
@@ -428,7 +428,7 @@ public sealed class SocialEventAdminController : Controller
             .Distinct()
             .ToListAsync(cancellationToken);
 
-        var startAt = item.StartAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm");
+        var startAt = EventScheduleRules.ToTaipei(item.StartAt).ToString("yyyy/MM/dd HH:mm");
         foreach (var userId in registrantIds)
         {
             _notificationService.QueueNotification(

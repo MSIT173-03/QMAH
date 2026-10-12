@@ -99,5 +99,5 @@ public static class EventSocialPostSynchronizer
     }
 
     private static string FormatDate(DateTime value) =>
-        value.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture);
+        EventScheduleRules.ToTaipei(value).ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture);
 }

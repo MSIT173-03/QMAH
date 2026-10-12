@@ -142,7 +142,7 @@
                                     data-bs-target="#qmah-content-detail"
                                     data-qmah-content-detail
                                     data-qmah-content-detail-title="@item.Title"
-                                    data-qmah-content-detail-subtitle="@($"作者：{item.AuthorName} ・ 分類：{AdminDisplayLabels.Board(item.BoardCode)} ・ {item.CreatedAt:yyyy-MM-dd HH:mm}")"
+                                    data-qmah-content-detail-subtitle="@($"作者：{item.AuthorName} ・ 分類：{AdminDisplayLabels.Board(item.BoardCode)} ・ {QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.CreatedAt):yyyy-MM-dd HH:mm}")"
                                     data-qmah-content-detail-body="@item.Content"
                                     data-qmah-content-detail-html="@QMAH.Infrastructure.Services.Social.SocialMarkup.ToHtml(item.Content)"
                                     data-qmah-content-detail-images="@string.Join(",", item.MediaUrls)">
@@ -172,7 +172,7 @@
                         </td>
                         <td>@item.CommentCount</td>
                         <td><span class="badge @statusClass">@AdminDisplayLabels.Status(item.Status)</span></td>
-                        <td class="text-secondary text-nowrap">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="text-secondary text-nowrap">@QMAH.Infrastructure.Services.Social.EventScheduleRules.ToTaipei(item.CreatedAt).ToString("yyyy-MM-dd HH:mm")</td>
                         <td class="qmah-action-cell qmah-actions--3">
                             <div class="qmah-table-actions">
                                 @if (isEventPost)
