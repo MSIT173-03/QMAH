@@ -27,7 +27,7 @@ public sealed class UnlockResetService(QmahDbContext db)
         foreach (var group in groups)
         {
             var (memberId, keyId) = group.Key;
-            var amount = group.Count();
+            var amount = group.Sum(item => Math.Max(1, -item.KeyTransaction!.Amount));
             var balance = await db.UserKeyBalances.SingleOrDefaultAsync(item => item.UserId == memberId && item.KeyDefinitionId == keyId, cancellationToken);
             if (balance is null)
             {

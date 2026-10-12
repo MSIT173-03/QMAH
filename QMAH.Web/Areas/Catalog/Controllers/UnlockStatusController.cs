@@ -71,11 +71,11 @@ public class UnlockStatusController(QmahDbContext _db, UnlockResetService _unloc
     /// <summary>清除該會員的文物解鎖（可限定分類），鑰匙解鎖的退回背包並寫流水。</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Reset(Guid userId, Guid? categoryId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Reset(Guid userId, Guid? categoryId, bool refund = true, CancellationToken cancellationToken = default)
     {
         var adminId = Guid.TryParse(_userManager.GetUserId(User), out var parsed) ? parsed : (Guid?)null;
-        var (removed, refunded) = await _unlockReset.ResetAsync(userId, categoryId, adminId, cancellationToken);
-        TempData["SuccessMessage"] = $"已清除 {removed} 筆解鎖，退還 {refunded} 把鑰匙到背包並寫入流水。";
+        var (removed, refunded) = await _unlockReset.ResetAsync(userId, categoryId, adminId, cancellationToken, refund: refund);
+        TempData["SuccessMessage"] = refund ? $"已清除 {removed} 筆解鎖，退還 {refunded} 把當初花掉的鑰匙並寫入流水。" : $"已清除 {removed} 筆解鎖，沒有退鑰匙。";
         return RedirectToAction(nameof(Index), new { userId });
     }
 
