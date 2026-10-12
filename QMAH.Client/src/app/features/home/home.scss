@@ -787,3 +787,7 @@ a:focus-visible {
     linear-gradient(90deg, transparent, var(--qmah-page-surface) 18%, var(--qmah-page-surface) 82%, transparent),
     url('/patterns/temple-bronze-dark.svg');
 }
+
+/* picture 只負責挑 WebP／JPG，不參與版面 */
+.home-hero__image picture,
+.home-museum-note__image picture { display: contents; }
