@@ -15,17 +15,7 @@
 }
 
 @section PageActions {
-    <div class="qmah-actions d-flex flex-wrap gap-2">
-        <a asp-area="Catalog" asp-controller="Key" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="ti ti-key me-1"></i>鑰匙規則
-        </a>
-        <a asp-area="Catalog" asp-controller="KeyBackpack" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="ti ti-backpack me-1"></i>鑰匙背包
-        </a>
-        <a asp-area="Catalog" asp-controller="KeyTransactions" asp-action="Index" class="btn btn-secondary">
-            <i class="ti ti-receipt me-1"></i>鑰匙流水
-        </a>
-    </div>
+    @await Html.PartialAsync("_KeyNav", "transactions")
 }
 
 <div class="card qmah-filter-panel mb-3">
