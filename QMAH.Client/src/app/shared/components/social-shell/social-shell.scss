@@ -43,3 +43,9 @@
   .shell__item.is-active { border-color: var(--qmah-social-action); }
   .shell__go { display: none; }
 }
+
+@media(max-width:640px) {
+  .shell__main,.shell__nav { min-width:0; }
+  .shell__list { max-width:100%;overscroll-behavior-inline:contain; }
+  .shell__item { min-height:42px; }
+}

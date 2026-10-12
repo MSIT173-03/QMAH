@@ -1170,3 +1170,23 @@
 .quick-link:hover, .quick-link:focus-visible { box-shadow: none; }
 .card-arrow, .dashboard-card:hover .card-arrow { box-shadow: none; }
 .quick-link app-qmah-icon { box-shadow: none; filter: none; }
+
+/* Phone dashboard, isolated from desktop composition. */
+@media (max-width: 700px) {
+  .member-container { padding:20px 16px 40px; }
+  .welcome-card { padding:24px 20px;gap:20px; }
+  .welcome-content { min-width:0; }
+  .welcome-content h1 { font-size:clamp(23px,6.2vw,28px);line-height:1.45; }
+  .welcome-content p { font-size:14px;line-height:1.8; }
+  .welcome-quick { width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
+  .quick-link { min-width:0;min-height:76px;padding:12px 4px;font-size:12px; }
+  .dashboard-grid,.dashboard-grid.three-columns { grid-template-columns:minmax(0,1fr);gap:12px; }
+  .dashboard-card { min-height:0;padding:18px; }
+  .card-top { margin-bottom:12px; }
+  .card-content p { font-size:14px;line-height:1.75;overflow-wrap:anywhere; }
+  .card-footer { margin-top:18px; }
+  .section-header { margin-bottom:16px; }
+  .dashboard-section { margin-top:28px; }
+  .dashboard-bottom { gap:6px;line-height:1.6; }
+}
+@media(max-width:700px) { .quick-link { box-sizing:border-box;width:100%; }.welcome-quick { box-sizing:border-box; }.card-footer { flex-wrap:wrap;gap:8px; } }

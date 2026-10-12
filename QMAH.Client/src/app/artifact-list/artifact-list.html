@@ -15,7 +15,7 @@
     <span class="desk__motes"></span>
   </div>
 
-  <div class="book-stage">
+  <div class="book-stage" [class.book-stage--mobile-single]="mobileBook()">
     <div class="book" [class.book--turning]="turning()">
 
       <!-- ========== 上方頁籤：圖鑑／鑰匙背包 ========== -->
@@ -157,6 +157,19 @@
                     (ngModelChange)="onSearchChange($event)"
                   />
                 </label>
+                @if (mobileBook() && catalogViewReady()) {
+                  <div class="mobile-page-controls">
+                    <span class="page-meta__count">符合 <strong>{{ filteredItems().length }}</strong> 件・已解鎖 <strong>{{ filteredUnlockedCount() }}</strong></span>
+                    <div class="page-meta__actions">
+                      <button type="button" class="seal-btn" [class.is-active]="unlockedOnly()" [attr.aria-pressed]="unlockedOnly()" (click)="toggleUnlockedFilter()">
+                        <app-qmah-icon [name]="unlockedOnly() ? 'lock-keyhole-open' : 'lock-keyhole'" [size]="16" aria-hidden="true" />僅看已解鎖 <strong>{{ unlockedCount() }}</strong>
+                      </button>
+                      <button type="button" class="seal-btn seal-btn--gold" [disabled]="lockedTotalCount() === 0 || bulkUnlocking()" (click)="openBulkUnlockConfirm()">
+                        <app-qmah-icon name="zap" [size]="16" aria-hidden="true" />一鍵解鎖 <strong>{{ lockedTotalCount() }}</strong>
+                      </button>
+                    </div>
+                  </div>
+                }
               </div>
 
               <div class="page__body">
@@ -186,13 +199,18 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5 8 12l7 7" /></svg>
                 </button>
                 @if (leftPageNumber(); as n) {
-                  <span class="page__num">{{ n }}</span>
+                  <span class="page__num">{{ n }} @if (mobileBook()) { <small>/ {{ totalPageCount() }}</small> }</span>
+                }
+                @if (mobileBook()) {
+                  <button type="button" class="page-turn page-turn--next" aria-label="下一頁" [disabled]="!canTurnNext()" (click)="turnPage(1)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" /></svg>
+                  </button>
                 }
               </div>
             </div>
 
             <!-- ---------- 右頁 ---------- -->
-            <div class="page page--right">
+            <div class="page page--right" [class.page--mobile-hidden]="mobileBook()">
               <div class="page__head">
                 @if (catalogViewReady()) {
                   <div class="page-meta">
@@ -751,6 +769,7 @@
   >
     <div
       class="confirm-dialog"
+      [class.bulk-revealing]="bulkUnlockRevealing()"
       *ngIf="bulkUnlockConfirmOpen()"
       role="dialog"
       aria-modal="true"
@@ -789,7 +808,7 @@
 
       <ng-template #bulkUnlockDone>
         <h3 id="bulk-unlock-title">一鍵解鎖結果</h3>
-        <p>本次共解鎖了 <strong>{{ bulkUnlockResult()?.unlockedCount }}</strong> 件文物。</p>
+        <p [attr.aria-label]="'本次共解鎖了 ' + bulkUnlockResult()?.unlockedCount + ' 件文物。'">本次共解鎖了 <strong class="bulk-reveal__count" aria-hidden="true">{{ bulkUnlockDisplayCount() | number }}</strong> 件文物。</p>
         <p class="have warn" role="alert" *ngIf="bulkUnlockError()">{{ bulkUnlockError() }}</p>
         <p class="have" *ngIf="!bulkUnlockError() && lockedTotalCount() === 0">圖鑑內所有文物都已經解鎖囉！</p>
         <div class="confirm-actions">

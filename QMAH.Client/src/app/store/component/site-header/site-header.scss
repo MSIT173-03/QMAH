@@ -32,3 +32,5 @@
 /* 頁首不要純白：與卡片同一個暖色調，下緣一條細線＋微弱陰影；內容與下方頁面容器左右對齊。 */
 .site-header { background: color-mix(in srgb, var(--color-surface) 70%, var(--color-bg)); }
 .site-header-row { padding-block: 12px; }
+
+@media(max-width:640px) { .site-header-row { padding:12px 16px;gap:12px;flex-wrap:wrap;min-width:0; }.site-header-row > * { min-width:0; } }

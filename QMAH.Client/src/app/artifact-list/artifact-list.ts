@@ -2,6 +2,7 @@
 import {
   AfterViewInit,
   Component,
+  DestroyRef,
   ElementRef,
   EventEmitter,
   HostListener,
@@ -16,6 +17,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, switchMap, map, mergeMap, range, toArray } from 'rxjs';
@@ -232,10 +234,12 @@ export function paginateCatalog(
   templateUrl: './artifact-list.html',
   // 封面、書本、彈出視窗的樣式拆成三個檔案，避免單一樣式檔超過 angular.json 的 32kB 預算；
   // 封面要放在最前面，artifact-list.scss 裡的窄螢幕規則才能覆寫它。
-  styleUrls: ['./artifact-list.cover.scss', './artifact-list.scss', './artifact-list.filters.scss', './artifact-list.dialogs.scss'],
+  styleUrls: ['./artifact-list.cover.scss', './artifact-list.scss', './artifact-list.filters.scss', './artifact-list.dialogs.scss', './artifact-list.adaptive.scss'],
 })
 export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly mobileBook = signal((this.document.defaultView?.innerWidth ?? 1080) <= 700);
   @ViewChild('artifactPage', { static: true }) private artifactPage?: ElementRef<HTMLElement>;
   readonly fullscreenSupported = !!this.document.fullscreenEnabled;
   readonly isFullscreen = signal(false);
@@ -278,6 +282,9 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   bulkUnlocking = signal(false);
   bulkUnlockError = signal('');
   bulkUnlockResult = signal<{ unlockedCount: number } | null>(null);
+  bulkUnlockDisplayCount = signal(0);
+  bulkUnlockRevealing = signal(false);
+  private bulkRevealFrame?: number;
 
   focusedId = signal<string | null>(null);
   infoOpen = signal(false);
@@ -545,7 +552,21 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   });
 
   /** 書頁目前的卡片尺寸；書頁還沒量到大小前是 null */
-  layout = computed(() => computeCatalogLayout(this.pageBox().w, this.pageBox().h));
+  layout = computed(() => {
+    const width = this.pageBox().w;
+    const height = this.pageBox().h;
+    const desktopLayout = computeCatalogLayout(width, height);
+    if (!desktopLayout || !this.mobileBook()) return desktopLayout;
+
+    const cols = Math.max(1, Math.min(2, Math.floor((width + BOOK_LAYOUT.gap) / (104 + BOOK_LAYOUT.gap))));
+    const bodyH = Math.floor(height) - BOOK_LAYOUT.slack;
+    const availableW = Math.floor((width - BOOK_LAYOUT.gap * (cols - 1)) / cols);
+    const maxCardH = bodyH - BOOK_LAYOUT.headerH - BOOK_LAYOUT.gap;
+    const maxCardW = Math.floor((maxCardH - BOOK_LAYOUT.labelH) / BOOK_LAYOUT.frameRatio);
+    const cardW = Math.min(availableW, Math.max(maxCardW, 72));
+    const cardH = Math.round(cardW * BOOK_LAYOUT.frameRatio) + BOOK_LAYOUT.labelH;
+    return { cols, cardW, cardH, rowH: cardH + BOOK_LAYOUT.gap, bodyH };
+  });
 
   /** 收合時每個分區顯示的數量＝一列放得下的張數 */
   previewCount = computed(() => this.layout()?.cols ?? 4);
@@ -561,7 +582,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
       this.catalogGroups(),
       layout,
       (group) => group.key === key,
-      (index) => filterMode || index % 2 === 0,
+      (index) => this.mobileBook() || filterMode || index % 2 === 0,
     );
   });
 
@@ -571,17 +592,17 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
    */
   filterMode = computed(() => this.catalogTab() !== 'ALL' && this.filterPanelOpen());
 
-  private pagesPerSpread = computed(() => (this.filterMode() ? 1 : 2));
+  private pagesPerSpread = computed(() => (this.mobileBook() || this.filterMode() ? 1 : 2));
 
   spreadCount = computed(() => Math.max(1, Math.ceil(this.pages().length / this.pagesPerSpread())));
 
   currentSpread = computed(() => Math.min(Math.max(this.spread(), 0), this.spreadCount() - 1));
 
   leftPage = computed<CatalogPage | null>(() =>
-    this.filterMode() ? null : this.pages()[this.currentSpread() * 2] ?? null,
+    this.mobileBook() ? this.pages()[this.currentSpread()] ?? null : this.filterMode() ? null : this.pages()[this.currentSpread() * 2] ?? null,
   );
   rightPage = computed<CatalogPage | null>(() =>
-    this.filterMode()
+    this.mobileBook() ? null : this.filterMode()
       ? this.pages()[this.currentSpread()] ?? null
       : this.pages()[this.currentSpread() * 2 + 1] ?? null,
   );
@@ -589,7 +610,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   canTurnPrev = computed(() => this.currentSpread() > 0);
   canTurnNext = computed(() => this.currentSpread() < this.spreadCount() - 1);
 
-  leftPageNumber = computed(() => (this.filterMode() ? null : this.currentSpread() * 2 + 1));
+  leftPageNumber = computed(() => this.mobileBook() ? this.currentSpread() + 1 : (this.filterMode() ? null : this.currentSpread() * 2 + 1));
   rightPageNumber = computed(() => {
     const n = this.filterMode() ? this.currentSpread() + 1 : this.currentSpread() * 2 + 2;
     return n <= this.pages().length ? n : null;
@@ -689,10 +710,17 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:resize')
   onWindowResize(): void {
+    const mobile = (this.document.defaultView?.innerWidth ?? 1080) <= 700;
+    if (mobile !== this.mobileBook()) {
+      const pageIndex = this.currentSpread() * this.pagesPerSpread();
+      this.mobileBook.set(mobile);
+      this.spread.set(this.spreadOfPage(pageIndex));
+    }
     this.measurePage();
   }
 
   ngOnDestroy(): void {
+    this.stopBulkReveal();
     this.resizeObserver?.disconnect();
     this.timers.forEach((timer) => clearTimeout(timer));
   }
@@ -730,7 +758,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
    */
   openBook(): void {
     if (this.bookState() !== 'closed') return;
-    if (this.prefersReducedMotion()) {
+    if (this.mobileBook() || this.prefersReducedMotion()) {
       this.bookState.set('open');
       return;
     }
@@ -893,7 +921,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   /** 翻頁期間兩頁各自顯示的內容：被書頁蓋住的那一側維持舊內容，翻開的那一側已經是新內容 */
   shownLeft = computed<CatalogPage | null>(() =>
-    this.turning() === 'next' && !this.filterMode() ? this.pageAt(this.leftIndex(this.turnFrom())) : this.leftPage(),
+    !this.mobileBook() && this.turning() === 'next' && !this.filterMode() ? this.pageAt(this.leftIndex(this.turnFrom())) : this.leftPage(),
   );
   shownRight = computed<CatalogPage | null>(() =>
     this.turning() === 'prev' && !this.filterMode() ? this.pageAt(this.rightIndex(this.turnFrom())) : this.rightPage(),
@@ -1363,6 +1391,8 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   openBulkUnlockConfirm(): void {
     if (this.lockedTotalCount() === 0) return;
+    this.stopBulkReveal();
+    this.bulkUnlockDisplayCount.set(0);
     this.bulkUnlockError.set('');
     this.bulkUnlockResult.set(null);
     this.bulkUnlockConfirmOpen.set(true);
@@ -1370,6 +1400,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   cancelBulkUnlock(): void {
     if (this.bulkUnlocking()) return;
+    this.stopBulkReveal();
     this.bulkUnlockConfirmOpen.set(false);
   }
 
@@ -1380,14 +1411,14 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   closeBulkUnlockResult(): void {
+    this.stopBulkReveal();
     this.bulkUnlockConfirmOpen.set(false);
     this.bulkUnlockResult.set(null);
     this.bulkUnlockError.set('');
   }
 
   /**
-   * 一鍵解鎖全部：依「圖鑑由上至下」的順序（allEraGroups 攤平）逐一呼叫真正的解鎖 API，
-   * 後端對某一筆回 unlocked:false 就停止；停在哪筆由後端真實狀態決定。
+   * 一次批次解鎖；動畫只揭曉伺服器確認的結果，不逐件重送或延遲寫入。
    */
   confirmBulkUnlock(): void {
     if (this.bulkUnlocking()) return;
@@ -1409,7 +1440,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
     this.bulkUnlockError.set('');
     this.bulkUnlocking.set(true);
-    this.keyService.unlockAllWithKey(universal.code).subscribe({
+    this.keyService.unlockAllWithKey(universal.code).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (result) => {
         // 伺服器一次解鎖，這裡把剛解鎖的數量對應回畫面，細節以重新讀取的狀態為準。
         this.finishBulkUnlock(result.unlockedCount, result.message ?? undefined);
@@ -1424,6 +1455,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   private finishBulkUnlock(unlockedCount: number, message?: string): void {
     this.bulkUnlocking.set(false);
     this.bulkUnlockResult.set({ unlockedCount });
+    this.revealBulkUnlockCount(unlockedCount);
     if (message) this.bulkUnlockError.set(message);
     this.loadKeyBalance();
     this.loadUnlockStatus();
@@ -1431,6 +1463,37 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     if (this.focusedId()) {
       this.maybeLoadFocusedDetail();
     }
+  }
+
+  private stopBulkReveal(): void {
+    if (this.bulkRevealFrame !== undefined) this.document.defaultView?.cancelAnimationFrame(this.bulkRevealFrame);
+    this.bulkRevealFrame = undefined;
+    this.bulkUnlockRevealing.set(false);
+  }
+
+  private revealBulkUnlockCount(total: number): void {
+    this.stopBulkReveal();
+    const view = this.document.defaultView;
+    if (!view || total <= 1 || view.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.bulkUnlockDisplayCount.set(total);
+      return;
+    }
+    this.bulkUnlockDisplayCount.set(0);
+    this.bulkUnlockRevealing.set(true);
+    const duration = Math.min(2100, 700 + Math.log2(total + 1) * 150);
+    let started: number | undefined;
+    const frame = (time: number) => {
+      started ??= time;
+      const progress = Math.min(1, (time - started) / duration);
+      this.bulkUnlockDisplayCount.set(Math.floor(total * (1 - Math.pow(1 - progress, 2))));
+      if (progress < 1) this.bulkRevealFrame = view.requestAnimationFrame(frame);
+      else {
+        this.bulkRevealFrame = undefined;
+        this.bulkUnlockDisplayCount.set(total);
+        this.bulkUnlockRevealing.set(false);
+      }
+    };
+    this.bulkRevealFrame = view.requestAnimationFrame(frame);
   }
 
   onAppreciationClick(item: CardEntry): void {

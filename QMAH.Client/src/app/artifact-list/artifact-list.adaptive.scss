@@ -1,0 +1,67 @@
+/* Desktop geometry: preserve the spread's 3:2 ratio, without a pixel ceiling on large displays. */
+@media (min-width: 1080px) {
+  .book {
+    --book-h: min(calc((100vw - 152px) / 1.5), max(360px, calc(100dvh - var(--app-header-height, 72px) - 132px)));
+    width: calc(var(--book-h) * 1.5);
+    height: var(--book-h);
+  }
+  .artifact-page:fullscreen .book {
+    --book-h: min(calc((100vw - 152px) / 1.5), max(360px, calc(100dvh - 132px)));
+    width: calc(var(--book-h) * 1.5);
+    height: var(--book-h);
+  }
+  .cover__center { padding: 0 calc(var(--book-h) * .0795) 0 calc(var(--book-h) * .1136); }
+  .cover__emblem { width: min(calc(var(--book-h) * .2955), 100%); }
+  .cover__title { width: 100%; margin-top: calc(var(--book-h) * .0205); }
+  .cover__title-svg { width: min(100%, calc(var(--book-h) * .5455)); margin-inline: auto; }
+  .cover__frame { inset: calc(var(--book-h) * .0386) calc(var(--book-h) * .0386) calc(var(--book-h) * .0386) calc(var(--book-h) * .0705); }
+  .cover__spine { width: calc(var(--book-h) * .0455); }
+  .cover__corner { width: calc(var(--book-h) * .0727); height: calc(var(--book-h) * .0727); }
+  .cover__hint { bottom: calc(var(--book-h) * .0636); font-size: calc(var(--book-h) * .0148); }
+  .cover__clasp { width: calc(var(--book-h) * .0455); height: calc(var(--book-h) * .0795); margin-top: calc(var(--book-h) * -.0398); }
+  .cover__clasp::after { width: 45%; height: auto; aspect-ratio: 1; left: 22.5%; margin-top: 0; transform: translateY(-50%); }
+}
+
+/* Phone-only overrides: original desk, leather, foil, paper and controls remain. */
+@media (max-width: 700px) {
+  .artifact-page { padding: 64px 20px 28px; }
+  .book { --board: 10px; --pad-x: 12px; --book-head-h: 86px; --narrow-body-h: clamp(300px, 55svh, 520px); }
+  .artifact-page[data-book='closed'] .book {
+    --book-h: min(calc((100vw - 56px) / .75), calc(100svh - var(--app-header-height, 72px) - 108px));
+    width: calc(var(--book-h) * .75);
+    height: var(--book-h);
+  }
+  .cover__center { padding: 0 12% 0 17%; }
+  .cover__emblem { width: 78%; }
+  .cover__title { width: 100%; margin-top: 16px; }
+  .cover__title-svg { width: 100%; }
+  .cover__frame { inset: 20px 20px 20px 36px; }
+  .cover__spine { width: 26px; }
+  .cover__corner { width: 42px; height: 42px; }
+  .cover__hint { bottom: 28px; padding-left: 10px; font-size: 12px; }
+  .book__content { padding: 16px var(--pad-x); row-gap: 12px; }
+  .page__head { align-items: center; }
+  .page-meta { width: 100%; gap: 8px; }
+  .page-meta__actions { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+  .seal-btn { min-height: 36px; flex: 1 1 auto; justify-content: center; }
+  .quill-search { width: 100%; min-width: 0; height: 42px; }
+  .book__side-tabs { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; padding: 6px 0 12px; }
+  .ribbon--side { flex: 0 0 auto; border-radius: 6px; min-height: 40px; }
+  .page-turn { min-width: 44px; min-height: 40px; }
+  .book-stage--mobile-single .book__paper--right,
+  .book-stage--mobile-single .book__gutter { display:none; }
+  .book-stage--mobile-single .page--mobile-hidden { display:none; }
+  .book-stage--mobile-single .book__content { display:block; }
+  .book-stage--mobile-single .page--left { display:grid;grid-template-rows:auto minmax(300px,55svh) auto;row-gap:12px; }
+  .book-stage--mobile-single .page--left .page__head { display:grid;gap:10px;padding-bottom:10px;border-bottom:3px double var(--ink-line); }
+  .book-stage--mobile-single .mobile-page-controls { display:grid;gap:8px;width:100%; }
+  .book-stage--mobile-single .page__body { min-height:300px; }
+  .book-stage--mobile-single .page--left .page__foot { grid-column:1; }
+  .book-stage--mobile-single .book__side-tabs { margin-inline:4px; }
+  .book-stage--mobile-single .book__content:has(.filter-sheet) .page--left { grid-template-rows:auto minmax(360px,58svh) auto; }
+}
+
+.bulk-reveal__count { display: inline-block; min-width: 3ch; font-variant-numeric: tabular-nums; }
+.bulk-revealing .key-icon { animation: bulk-key-reveal .6s ease-in-out infinite alternate; }
+@keyframes bulk-key-reveal { to { transform: translateY(-5px) rotate(8deg); filter: drop-shadow(0 4px 8px #c69d4266); } }
+@media (prefers-reduced-motion: reduce) { .bulk-revealing .key-icon { animation: none; } }

@@ -179,3 +179,5 @@
     animation: none;
   }
 }
+
+@media(max-width:640px) { .product-card { min-width:0; }.product-card-title { font-size:14px;line-height:1.6;overflow-wrap:anywhere; }.product-card-cta { padding:8px; }.product-card-buy { min-height:44px;letter-spacing:.02em; } }

@@ -791,3 +791,17 @@ a:focus-visible {
 /* picture 只負責挑 WebP／JPG，不參與版面 */
 .home-hero__image picture,
 .home-museum-note__image picture { display: contents; }
+
+@media (max-width:640px) {
+  .home-page { padding-inline:16px; }
+  .home-hero { min-width:0; }
+  .home-hero__copy { padding:28px 20px; }
+  .home-hero__copy h1 { font-size:clamp(30px,8vw,42px);line-height:1.35;overflow-wrap:anywhere; }
+  .home-hero__actions { display:flex;flex-direction:column;gap:12px; }
+  .home-hero__actions .home-button { min-width:0;width:100%;min-height:48px; }
+  .home-hero__image { min-height:240px; }
+  .home-section-heading { gap:10px; }
+  .home-route { min-width:0;padding:18px; }
+  .home-route__content { min-width:0; }.home-route__content span { line-height:1.7; }
+  .home-museum-note { min-width:0; }
+}
