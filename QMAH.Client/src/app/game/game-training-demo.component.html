@@ -101,6 +101,9 @@
 <dialog #helpDialog class="demo-pause demo-help-pop" aria-labelledby="demo-help-title">
   <h2 id="demo-help-title">協助完成</h2>
   <button type="button" class="demo-help__hint" [disabled]="!canRequestHint" (click)="useDemoHelp(false)"><strong>{{ modeCode() === 'MEMORY_MATCH' ? '配對提示' : modeCode() === 'DETAIL_LOCATOR' ? '位置提示' : '區域提示' }}</strong><small>展示不扣分，可以放心試</small></button>
+  @if (modeCode() === 'ARTIFACT_PUZZLE') {
+    <button type="button" class="demo-help__hint" (click)="helpDialog.close(); playSheet?.openBackgroundAssist()"><strong>挑出背景片</strong><small>勾選要歸位的背景片，文物本體仍要自己拼</small></button>
+  }
   <button type="button" class="demo-help__finish" data-button-tone="danger" (click)="useDemoHelp(true)"><strong>完成剩餘內容</strong><small>系統代為完成，展示直接結束</small></button>
   <button type="button" class="demo-help__close" (click)="helpDialog.close()">先不用</button>
 </dialog>

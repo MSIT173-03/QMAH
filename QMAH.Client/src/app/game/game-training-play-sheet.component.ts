@@ -137,6 +137,7 @@ export class GameTrainingPlaySheetComponent {
   readonly hard = input(false);
   /** 困難玩法沒有求救（拼圖除外）。 */
   readonly helpAvailable = input(true);
+  openBackgroundAssist(): void { this.placement?.openBackgroundAssist(); }
   puzzleReady(): boolean { return !!this.placement?.ready(); }
   scrollReady(): boolean { return !!this.scrollBoard?.ready(); }
   scrollEligible(): boolean { return !!this.scrollBoard?.layout().eligible; }

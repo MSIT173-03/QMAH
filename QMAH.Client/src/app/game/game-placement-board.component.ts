@@ -309,6 +309,13 @@ export class GamePlacementBoardComponent {
       this.backgroundUnavailable.set(true);
     }
   }
+  private readonly backgroundDialogRef = viewChild<ElementRef<HTMLDialogElement>>('backgroundDialog');
+  /** 從暫停選單的協助入口打開背景片挑選視窗。 */
+  openBackgroundAssist(): void {
+    this.prepareBackground();
+    const dialog = this.backgroundDialogRef()?.nativeElement;
+    if (dialog && !dialog.open) dialog.showModal();
+  }
   prepareBackground(): void { this.backgroundSelection.set([...this.pendingBackground()]); }
   setBackgroundSelected(piece: number, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;

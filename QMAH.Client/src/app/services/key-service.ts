@@ -122,6 +122,16 @@ export class KeyService {
    * - 萬能鑰匙：帶 artifactId，指定玩家在圖鑑頁選中的那個文物
    *   （呼叫端是 artifact-list.ts 的解鎖按鈕，不是 key-list 的鑰匙格子）。
    */
+  /** 一次解鎖全部符合的文物（單一交易，數量以鑰匙餘額為上限）。 */
+  unlockAllWithKey(keyCode: string): Observable<{ unlockedCount: number; remainingEligibleArtifactCount: number; message: string | null }> {
+    return this.http
+      .post<{ unlockedCount: number; remainingEligibleArtifactCount: number; message: string | null }>(
+        `${environment.apiBaseUrl}/me/keys/${encodeURIComponent(keyCode)}/unlock-all`,
+        {}
+      )
+      .pipe(catchError(this.handleError));
+  }
+
   unlockWithKey(keyCode: string, artifactId?: string): Observable<UnlockWithKeyResult> {
     const body: UnlockWithKeyRequest = { artifactId: artifactId ?? null };
     return this.http

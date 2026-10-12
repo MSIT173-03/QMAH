@@ -73,6 +73,9 @@ public sealed record ArtifactUnlockResultDto(
     int RemainingEligibleArtifactCount,
     string? Message);
 
+/// <summary>一次解鎖的結果：解鎖數量與尚未解鎖的符合文物數量。</summary>
+public sealed record BulkUnlockResultDto(int UnlockedCount, int RemainingEligibleArtifactCount, string? Message);
+
 /// <summary>鑰匙兌換完成後的來源、目標與剩餘候選數量。</summary>
 public sealed record KeyExchangeResultDto(
     Guid RuleId,

@@ -1409,38 +1409,14 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
     this.bulkUnlockError.set('');
     this.bulkUnlocking.set(true);
-    this.runBulkUnlockStep(universal.code, queue, 0, 0);
-  }
-
-  private runBulkUnlockStep(
-    keyCode: string,
-    queue: CompendiumCardSummary[],
-    index: number,
-    unlockedCount: number
-  ): void {
-    if (index >= queue.length) {
-      this.finishBulkUnlock(unlockedCount);
-      return;
-    }
-
-    const target = queue[index];
-    this.keyService.unlockWithKey(keyCode, target.id).subscribe({
+    this.keyService.unlockAllWithKey(universal.code).subscribe({
       next: (result) => {
-        if (!result.unlocked) {
-          this.finishBulkUnlock(unlockedCount, result.message ?? undefined);
-          return;
-        }
-
-        this.catalogModel.update((list) =>
-          list.map((i) =>
-            i.id === target.id ? { ...i, unlocked: true, unlockedAt: new Date().toISOString() } : i
-          )
-        );
-        this.runBulkUnlockStep(keyCode, queue, index + 1, unlockedCount + 1);
+        // 伺服器一次解鎖，這裡把剛解鎖的數量對應回畫面，細節以重新讀取的狀態為準。
+        this.finishBulkUnlock(result.unlockedCount, result.message ?? undefined);
       },
       error: (err) => {
-        console.error('[ArtifactList] bulk unlock step failed', err);
-        this.finishBulkUnlock(unlockedCount, err?.message ?? '解鎖過程發生錯誤，已停止一鍵解鎖。');
+        console.error('[ArtifactList] bulk unlock failed', err);
+        this.finishBulkUnlock(0, err?.message ?? '解鎖過程發生錯誤，已停止一鍵解鎖。');
       },
     });
   }

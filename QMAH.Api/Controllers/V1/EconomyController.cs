@@ -88,6 +88,21 @@ public sealed class EconomyController(EconomyService economyService) : ApiContro
             value.Message));
     }
 
+    /// <summary>一次用同一種鑰匙解鎖所有符合範圍的文物，數量以鑰匙餘額為上限。</summary>
+    [HttpPost("keys/{keyCode}/unlock-all")]
+    public async Task<ActionResult<BulkUnlockResultDto>> UnlockAllArtifacts(
+        string keyCode,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        var result = await economyService.UnlockAllArtifactsAsync(userId, keyCode, cancellationToken);
+        if (!result.Succeeded)
+            return ToFailure(result);
+        var value = result.Value!;
+        return Ok(new BulkUnlockResultDto(value.UnlockedCount, value.RemainingEligibleArtifactCount, value.Message));
+    }
+
     /// <summary>依資料庫兌換規則交換鑰匙，並以同一交易更新來源與目標餘額。</summary>
     [HttpPost("keys/exchange")]
     public async Task<ActionResult<KeyExchangeResultDto>> ExchangeKeys(

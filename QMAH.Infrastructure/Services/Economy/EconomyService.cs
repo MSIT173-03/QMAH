@@ -315,6 +315,82 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
         });
     }
 
+    /// <summary>
+    /// 一次用同一種鑰匙解鎖所有符合範圍的文物，數量以鑰匙餘額為上限。
+    /// 單一交易、批次寫入，取代逐件呼叫 API 的做法（每件都要一次往返與一個 Serializable 交易）。
+    /// </summary>
+    public async Task<EconomyResult<BulkUnlockView>> UnlockAllArtifactsAsync(
+        Guid userId,
+        string keyCode,
+        CancellationToken cancellationToken = default)
+    {
+        keyCode = NormalizeCode(keyCode);
+        if (string.IsNullOrWhiteSpace(keyCode))
+            return EconomyResult<BulkUnlockView>.Invalid("鑰匙代碼不可為空。");
+
+        var key = await db.KeyDefinitions
+            .SingleOrDefaultAsync(item => item.Code == keyCode && item.IsActive, cancellationToken);
+        if (key is null)
+            return EconomyResult<BulkUnlockView>.NotFound("找不到啟用中的鑰匙定義。");
+
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                cancellationToken);
+
+            var candidates = await GetEligibleArtifactQuery(userId, key)
+                .Select(artifact => artifact.Id)
+                .ToListAsync(cancellationToken);
+            if (candidates.Count == 0)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return EconomyResult<BulkUnlockView>.Success(new BulkUnlockView(
+                    0, 0, "目前沒有符合這把鑰匙的未解鎖文物，因此沒有扣除鑰匙。"));
+            }
+
+            var balance = await GetOrCreateKeyBalanceAsync(userId, key.Id, cancellationToken);
+            if (balance.Balance < 1)
+                return EconomyResult<BulkUnlockView>.Conflict("鑰匙數量不足，無法解鎖文物。");
+
+            var count = Math.Min(balance.Balance, candidates.Count);
+            var now = DateTime.UtcNow;
+            balance.Balance -= count;
+            balance.UpdatedAt = now;
+            foreach (var artifactId in candidates.Take(count))
+            {
+                var keyTransaction = new KeyTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    KeyDefinitionId = key.Id,
+                    Amount = -1,
+                    Reason = "ARTIFACT_UNLOCK",
+                    ReferenceType = "ARTIFACT_UNLOCK",
+                    ReferenceId = artifactId,
+                    CreatedAt = now
+                };
+                db.KeyTransactions.Add(keyTransaction);
+                db.ArtifactUnlocks.Add(new ArtifactUnlock
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    ArtifactId = artifactId,
+                    UnlockMethod = "KEY",
+                    KeyTransactionId = keyTransaction.Id,
+                    UnlockedAt = now
+                });
+            }
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return EconomyResult<BulkUnlockView>.Success(new BulkUnlockView(
+                count, candidates.Count - count,
+                count < candidates.Count ? "鑰匙已用完，其餘文物尚未解鎖。" : null));
+        });
+    }
+
     /// <summary>由管理員替指定會員解鎖一件文物；重複操作維持冪等，並留下管理稽核紀錄。</summary>
     public async Task<EconomyResult<AdminArtifactUnlockView>> ForceUnlockArtifactAsync(
         Guid adminUserId,
@@ -1373,6 +1449,8 @@ public sealed record KeyExchangeRuleView(
     string? Description);
 
 /// <summary>使用鑰匙後的解鎖結果；沒有候選文物時 Unlocked 為 false 且不扣鑰匙。</summary>
+public sealed record BulkUnlockView(int UnlockedCount, int RemainingEligibleArtifactCount, string? Message);
+
 public sealed record ArtifactUnlockView(
     bool Unlocked,
     Guid? ArtifactId,

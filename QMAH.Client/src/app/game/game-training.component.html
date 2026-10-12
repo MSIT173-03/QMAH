@@ -94,5 +94,5 @@
         }
         @else if (!error) { <div class="loading">目前沒有可開始的單人小遊戲。</div> }
       </section>
-      <app-game-training-pause #pauseDialog [attempt]="attempt" [elapsedLabel]="elapsedLabel" [confirmLeaving]="confirmLeaving" [(helpRequested)]="helpRequested" [canRequestHint]="canRequestHint" [canAskForHelp]="canAskForHelp" [hintPenalty]="hintPenalty" [helpPenalty]="helpPenalty" (resume)="closePause()" (leave)="leaveFromPause()" (help)="useHelp($event)" (closed)="resumeFromPause()" />
+      <app-game-training-pause #pauseDialog [attempt]="attempt" [elapsedLabel]="elapsedLabel" [confirmLeaving]="confirmLeaving" [(helpRequested)]="helpRequested" [canRequestHint]="canRequestHint" [canAskForHelp]="canAskForHelp" [hintPenalty]="hintPenalty" [helpPenalty]="helpPenalty" (resume)="closePause()" (leave)="leaveFromPause()" (help)="useHelp($event)" (background)="useBackgroundHelp()" (closed)="resumeFromPause()" />
     </div>

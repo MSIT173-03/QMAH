@@ -1,0 +1,51 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    Layout = "~/Views/Shared/Admin/_AdminLayout.cshtml";
+    var categories = ViewBag.Categories as IEnumerable<QMAH.Infrastructure.Models.Entities.ArtifactCategory> ?? [];
+    var members = ViewBag.Members as IEnumerable<SelectListItem> ?? [];
+}
+
+@section PageActions {
+    <div class="qmah-actions d-flex flex-wrap gap-2">
+        <a asp-action="EconomyBatches" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-1"></i>返回資產異動</a>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="UnlockReset" method="post" onsubmit="return confirm('確定要清除這些解鎖並退還鑰匙嗎？');">
+            @Html.AntiForgeryToken()
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="userId">會員</label>
+                    <select class="form-select" id="userId" name="userId">
+                        <option value="">全部會員</option>
+                        @foreach (var member in members)
+                        {
+                            <option value="@member.Value">@member.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="categoryId">文物分類</label>
+                    <select class="form-select" id="categoryId" name="categoryId">
+                        <option value="">全部分類</option>
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-check">
+                        <input class="form-check-input" type="checkbox" name="confirmAll" value="true" />
+                        <span class="form-check-label">我確認會員選「全部會員」時，要清除所有人的解鎖</span>
+                    </label>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-danger"><i class="ti ti-lock me-1"></i>清除解鎖並退還鑰匙</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

@@ -137,6 +137,12 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
     return artifact && this.hintedArtifacts.has(artifact.artifactId) ? artifact.artifactId : null;
   }
   get canRequestHint(): boolean { return this.canAskForHelp && (this.attempt?.modeCode !== 'DETAIL_LOCATOR' || !this.locatorHintArtifactId); }
+  useBackgroundHelp(): void {
+    if (!this.canAskForHelp) return;
+    this.closePause();
+    this.resumeFromPause();
+    this.playSheet?.openBackgroundAssist();
+  }
   useHelp(automatic: boolean): void {
     if (!this.canAskForHelp || (!automatic && !this.canRequestHint)) return;
     this.closePause();

@@ -1553,4 +1553,67 @@ public sealed class OperationsController(
             from = toInclusive.AddDays(-364);
         return (from, toInclusive, toInclusive.AddDays(1));
     }
+
+    /// <summary>顯示解鎖重置頁：可清除單一會員或全部會員的文物解鎖，並依原本消耗的鑰匙退還。</summary>
+    [HttpGet]
+    public async Task<IActionResult> UnlockReset(CancellationToken cancellationToken = default)
+    {
+        ViewData["Title"] = "解鎖重置";
+        ViewData["AdminDescription"] = "清除會員的文物解鎖狀態，並把當初用鑰匙解鎖所花的鑰匙退還。遊戲獎勵與管理員強制解鎖不退鑰匙。";
+        ViewBag.Categories = await db.ArtifactCategories.AsNoTracking().OrderBy(item => item.Name).ToListAsync(cancellationToken);
+        ViewBag.Members = await userManager.Users.AsNoTracking().OrderBy(item => item.UserName).Select(item => new SelectListItem(item.UserName ?? item.Email ?? item.Id.ToString(), item.Id.ToString())).ToListAsync(cancellationToken);
+        return View();
+    }
+
+    /// <summary>清除解鎖並退還鑰匙；對象可限定會員與分類，同一交易內完成。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnlockReset(Guid? userId, Guid? categoryId, bool confirmAll, CancellationToken cancellationToken = default)
+    {
+        if (userId is null && !confirmAll)
+        {
+            TempData["ErrorMessage"] = "要清除全部會員的解鎖，請勾選確認。";
+            return RedirectToAction(nameof(UnlockReset));
+        }
+
+        var adminId = Guid.TryParse(userManager.GetUserId(User), out var parsedAdmin) ? parsedAdmin : (Guid?)null;
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var query = db.ArtifactUnlocks.Include(item => item.KeyTransaction).AsQueryable();
+        if (userId is { } uid) query = query.Where(item => item.UserId == uid);
+        if (categoryId is { } cid) query = query.Where(item => item.Artifact.CategoryId == cid);
+        var unlocks = await query.ToListAsync(cancellationToken);
+
+        var now = DateTime.UtcNow;
+        var refunds = unlocks
+            .Where(item => item.UnlockMethod == "KEY" && item.KeyTransaction is not null)
+            .GroupBy(item => (item.UserId, item.KeyTransaction!.KeyDefinitionId))
+            .ToList();
+        var refundedKeys = 0;
+        foreach (var group in refunds)
+        {
+            var (memberId, keyId) = group.Key;
+            var amount = group.Count();
+            var balance = await db.UserKeyBalances.SingleOrDefaultAsync(item => item.UserId == memberId && item.KeyDefinitionId == keyId, cancellationToken);
+            if (balance is null)
+            {
+                balance = new UserKeyBalance { UserId = memberId, KeyDefinitionId = keyId, Balance = 0, UpdatedAt = now };
+                db.UserKeyBalances.Add(balance);
+            }
+            balance.Balance += amount;
+            balance.UpdatedAt = now;
+            db.KeyTransactions.Add(new KeyTransaction
+            {
+                Id = Guid.NewGuid(), UserId = memberId, KeyDefinitionId = keyId, Amount = amount,
+                Reason = "ADMIN_UNLOCK_RESET", ReferenceType = "ADMIN_UNLOCK_RESET",
+                CreatedByAdminUserId = adminId, CreatedAt = now
+            });
+            refundedKeys += amount;
+        }
+        db.ArtifactUnlocks.RemoveRange(unlocks);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        TempData["SuccessMessage"] = $"已清除 {unlocks.Count} 筆解鎖，退還 {refundedKeys} 把鑰匙。";
+        return RedirectToAction(nameof(UnlockReset));
+    }
 }

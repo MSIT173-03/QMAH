@@ -281,7 +281,7 @@ public sealed class QmahOpenApiSecurityTransformer(
                      ("GameRoomInvitations.GetRoomRewardPolicy", "roomId") or ("GameRoomInvitations.ConfigureRoomRewardPolicy", "roomId") => "私人遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                  ("GameRoomInvitations.RespondInvitation", "invitationId") or ("GameRoomInvitations.CancelInvitation", "invitationId") => "房間邀請 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                  ("CommunityReward.GetEventRewardPolicy", "eventId") or ("CommunityReward.ConfigureEventRewardPolicy", "eventId") => "活動 Id（資源識別碼），GUID（全域唯一識別碼）格式",
-                ("Economy.UnlockArtifact", "keyCode") or ("Economy.RecycleKey", "keyCode") => "鑰匙 code（系統代碼），例如 KEY-NORMAL、KEY-CATEGORY-JADE、KEY-ERA-MING 或 KEY-UNIVERSAL；實際值以 GET /api/v1/me/economy 回傳為準",
+                ("Economy.UnlockArtifact", "keyCode") or ("Economy.UnlockAllArtifacts", "keyCode") or ("Economy.RecycleKey", "keyCode") => "鑰匙 code（系統代碼），例如 KEY-NORMAL、KEY-CATEGORY-JADE、KEY-ERA-MING 或 KEY-UNIVERSAL；實際值以 GET /api/v1/me/economy 回傳為準",
                 ("MiniGame.CompleteAttempt", "id") => "Mini Game 嘗試 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("MiniGame.RewardMainGame", "id") => "多人遊戲房間 Id（資源識別碼），GUID（全域唯一識別碼）格式",
                 ("Social.GetPost", "id") => "社群貼文 Id（資源識別碼），GUID（全域唯一識別碼）格式",
@@ -464,6 +464,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ["StoreOrders.CancelOrder"] = "已取消商城訂單，不回傳 response body（回應本文）",
             ["Economy.GetEconomy"] = "回傳會員鑑定點數、鑰匙進度、鑰匙餘額與動態可解鎖數量",
             ["Economy.GetKeyExchangeRules"] = "回傳目前可執行的鑰匙兌換規則",
+            ["Economy.UnlockAllArtifacts"] = "回傳本次解鎖數量與剩餘可解鎖數量",
             ["Economy.UnlockArtifact"] = "回傳鑰匙使用結果、解鎖文物與剩餘可解鎖數量",
             ["Economy.ExchangeKeys"] = "回傳來源與目標鑰匙的兌換結果",
             ["Economy.RecycleKey"] = "回傳回收鑰匙數量、取得點數與剩餘可解鎖數量",
@@ -516,7 +517,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             "Social.CreateComment", "Social.CreateReport", "Me.AddCartItem", "Me.UpdateCartItem",
             "Me.CreateAddress", "Me.UpdateAddress", "Me.SetDefaultAddress", "StoreOrders.CreateOrder",
             "StoreOrders.CancelOrder", "StoreReviews.UpsertMyReview"
-            , "Economy.UnlockArtifact", "Economy.ExchangeKeys", "Economy.RecycleKey",
+            , "Economy.UnlockArtifact", "Economy.UnlockAllArtifacts", "Economy.ExchangeKeys", "Economy.RecycleKey",
             "Economy.RedeemCoupon", "Economy.SetEquippedTitle", "MiniGame.StartAttempt",
             "MiniGame.CompleteAttempt", "MiniGame.RewardMainGame"
             , "GameRoomInvitations.CreateInvitation", "GameRoomInvitations.RespondInvitation",
