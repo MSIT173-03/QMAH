@@ -50,6 +50,7 @@ public class KeyBackPackController : Controller
                 from profile in profiles.DefaultIfEmpty()
                 join balance in _db.UserKeyBalances.AsNoTracking()
                     on user.Id equals balance.UserId into balances
+                orderby _db.UserRoles.Any(r => r.UserId == user.Id && _db.Roles.Any(x => x.Id == r.RoleId && x.Name == "Admin")) descending, user.CreatedAt
                 select new UserKeyOwnerSummaryViewModel
                 {
                     UserId = user.Id,
@@ -58,7 +59,6 @@ public class KeyBackPackController : Controller
                     KeyTypeCount = balances.Count(),
                     TotalBalance = balances.Sum(x => (int?)x.Balance) ?? 0
                 })
-                .OrderBy(x => x.Nickname ?? x.Email)
                 .ToListAsync(cancellationToken);
 
             if (!string.IsNullOrWhiteSpace(vm.txtKeyword))

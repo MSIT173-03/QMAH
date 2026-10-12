@@ -35,6 +35,7 @@ public class PointBackpackController : Controller
             join balance in _context.PointBalances.AsNoTracking()
                 on user.Id equals balance.UserId into balances
             from balance in balances.DefaultIfEmpty()
+            orderby _context.UserRoles.Any(r => r.UserId == user.Id && _context.Roles.Any(x => x.Id == r.RoleId && x.Name == "Admin")) descending, user.CreatedAt
             select new PointBackpackListItemViewModel
             {
                 UserId = user.Id,
@@ -66,7 +67,6 @@ public class PointBackpackController : Controller
         }
 
         var records = await query
-            .OrderBy(x => x.Nickname ?? x.Email)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

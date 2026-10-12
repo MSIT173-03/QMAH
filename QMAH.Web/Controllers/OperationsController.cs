@@ -1588,7 +1588,7 @@ public sealed class OperationsController(
         var totalMembers = await rows.CountAsync(cancellationToken);
         var pages = Math.Max(1, (int)Math.Ceiling(totalMembers / (double)UnlockResetPageSize));
         page = Math.Clamp(page, 1, pages);
-        ViewBag.Rows = await rows.OrderByDescending(item => item.Total).ThenBy(item => item.Name)
+        ViewBag.Rows = await rows.OrderByDescending(item => db.UserRoles.Any(r => r.UserId == item.Id && db.Roles.Any(x => x.Id == r.RoleId && x.Name == "Admin"))).ThenByDescending(item => item.Total).ThenBy(item => item.Name)
             .Skip((page - 1) * UnlockResetPageSize).Take(UnlockResetPageSize).ToListAsync(cancellationToken);
         ViewBag.ScopeUnlocks = await scope.CountAsync(cancellationToken);
         ViewBag.ScopeRefundable = await scope.CountAsync(item => item.UnlockMethod == "KEY" && item.KeyTransactionId != null, cancellationToken);
