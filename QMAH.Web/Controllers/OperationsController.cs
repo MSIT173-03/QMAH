@@ -1604,7 +1604,7 @@ public sealed class OperationsController(
             db.KeyTransactions.Add(new KeyTransaction
             {
                 Id = Guid.NewGuid(), UserId = memberId, KeyDefinitionId = keyId, Amount = amount,
-                Reason = "ADMIN_UNLOCK_RESET", ReferenceType = "ADMIN_UNLOCK_RESET",
+                Reason = "後台返還鑰匙（清除解鎖）", ReferenceType = "ADMIN_UNLOCK_RESET",
                 CreatedByAdminUserId = adminId, CreatedAt = now
             });
             refundedKeys += amount;
