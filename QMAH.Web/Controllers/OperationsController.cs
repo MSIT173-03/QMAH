@@ -1554,26 +1554,62 @@ public sealed class OperationsController(
         return (from, toInclusive, toInclusive.AddDays(1));
     }
 
-    /// <summary>顯示解鎖重置頁：可清除單一會員或全部會員的文物解鎖，並依原本消耗的鑰匙退還。</summary>
+    private const int UnlockResetPageSize = 20;
+
+    /// <summary>解鎖重置列：每位會員的解鎖數、可退還的鑰匙解鎖數與目前鑰匙背包。</summary>
+    public sealed record UnlockResetRow(Guid Id, string Name, string? Email, int Total, int KeyUnlocks, int KeyBalance);
+
+    /// <summary>解鎖重置頁：搜尋會員、依分類縮小範圍，逐位檢視解鎖與鑰匙背包後再操作。</summary>
     [HttpGet]
-    public async Task<IActionResult> UnlockReset(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> UnlockReset(string? q, Guid? categoryId, bool onlyUnlocked = true, int page = 1, CancellationToken cancellationToken = default)
     {
         ViewData["Title"] = "解鎖重置";
-        ViewData["AdminDescription"] = "清除會員的文物解鎖狀態，並把當初用鑰匙解鎖所花的鑰匙退還。遊戲獎勵與管理員強制解鎖不退鑰匙。";
+        ViewData["AdminDescription"] = "搜尋會員後清除文物解鎖，當初用鑰匙解鎖的會退還到鑰匙背包並留下流水。遊戲獎勵與管理員強制解鎖不退鑰匙。";
         ViewBag.Categories = await db.ArtifactCategories.AsNoTracking().OrderBy(item => item.Name).ToListAsync(cancellationToken);
-        ViewBag.Members = await userManager.Users.AsNoTracking().OrderBy(item => item.UserName).Select(item => new SelectListItem(item.UserName ?? item.Email ?? item.Id.ToString(), item.Id.ToString())).ToListAsync(cancellationToken);
+
+        var scope = db.ArtifactUnlocks.AsNoTracking().AsQueryable();
+        if (categoryId is { } cid) scope = scope.Where(item => item.Artifact.CategoryId == cid);
+
+        var users = userManager.Users.AsNoTracking();
+        var keyword = q?.Trim();
+        if (!string.IsNullOrEmpty(keyword))
+            users = users.Where(item => (item.UserName != null && item.UserName.Contains(keyword)) || (item.Email != null && item.Email.Contains(keyword)));
+
+        var rows = users.Select(item => new UnlockResetRow(
+            item.Id,
+            item.UserName ?? item.Email ?? item.Id.ToString(),
+            item.Email,
+            scope.Count(x => x.UserId == item.Id),
+            scope.Count(x => x.UserId == item.Id && x.UnlockMethod == "KEY"),
+            db.UserKeyBalances.Where(b => b.UserId == item.Id).Sum(b => (int?)b.Balance) ?? 0));
+        if (onlyUnlocked) rows = rows.Where(item => item.Total > 0);
+
+        var totalMembers = await rows.CountAsync(cancellationToken);
+        var pages = Math.Max(1, (int)Math.Ceiling(totalMembers / (double)UnlockResetPageSize));
+        page = Math.Clamp(page, 1, pages);
+        ViewBag.Rows = await rows.OrderByDescending(item => item.Total).ThenBy(item => item.Name)
+            .Skip((page - 1) * UnlockResetPageSize).Take(UnlockResetPageSize).ToListAsync(cancellationToken);
+        ViewBag.ScopeUnlocks = await scope.CountAsync(cancellationToken);
+        ViewBag.ScopeRefundable = await scope.CountAsync(item => item.UnlockMethod == "KEY" && item.KeyTransactionId != null, cancellationToken);
+        ViewBag.Query = keyword;
+        ViewBag.CategoryId = categoryId;
+        ViewBag.OnlyUnlocked = onlyUnlocked;
+        ViewBag.Page = page;
+        ViewBag.Pages = pages;
+        ViewBag.TotalMembers = totalMembers;
         return View();
     }
 
-    /// <summary>清除解鎖並退還鑰匙；對象可限定會員與分類，同一交易內完成。</summary>
+    /// <summary>清除解鎖並退還鑰匙。指定會員時只處理該會員；不指定時必須輸入「清除全部」確認字樣。</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UnlockReset(Guid? userId, Guid? categoryId, bool confirmAll, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> UnlockReset(Guid? userId, Guid? categoryId, string? confirmText, string? q, bool onlyUnlocked = true, int page = 1, CancellationToken cancellationToken = default)
     {
-        if (userId is null && !confirmAll)
+        var back = new { q, categoryId, onlyUnlocked, page };
+        if (userId is null && confirmText?.Trim() != "清除全部")
         {
-            TempData["ErrorMessage"] = "要清除全部會員的解鎖，請勾選確認。";
-            return RedirectToAction(nameof(UnlockReset));
+            TempData["ErrorMessage"] = "要清除全部會員的解鎖，請輸入「清除全部」。";
+            return RedirectToAction(nameof(UnlockReset), back);
         }
 
         var adminId = Guid.TryParse(userManager.GetUserId(User), out var parsedAdmin) ? parsedAdmin : (Guid?)null;
@@ -1613,19 +1649,20 @@ public sealed class OperationsController(
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        TempData["SuccessMessage"] = $"已清除 {unlocks.Count} 筆解鎖，退還 {refundedKeys} 把鑰匙。";
-        return RedirectToAction(nameof(UnlockReset));
+        TempData["SuccessMessage"] = $"已清除 {unlocks.Count} 筆解鎖，退還 {refundedKeys} 把鑰匙並寫入流水。";
+        return RedirectToAction(nameof(UnlockReset), back);
     }
 
     /// <summary>替指定會員一次解鎖全部（或某分類）尚未解鎖的文物，不消耗鑰匙，記為管理員解鎖。</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UnlockGrant(Guid userId, Guid? categoryId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> UnlockGrant(Guid userId, Guid? categoryId, string? q, bool onlyUnlocked = true, int page = 1, CancellationToken cancellationToken = default)
     {
+        var back = new { q, categoryId, onlyUnlocked, page };
         if (userId == Guid.Empty)
         {
             TempData["ErrorMessage"] = "請先選擇要解鎖的會員。";
-            return RedirectToAction(nameof(UnlockReset));
+            return RedirectToAction(nameof(UnlockReset), back);
         }
         var owned = db.ArtifactUnlocks.Where(item => item.UserId == userId).Select(item => item.ArtifactId);
         var query = db.Artifacts.Where(item => item.IsActive && !owned.Contains(item.Id));
@@ -1635,6 +1672,6 @@ public sealed class OperationsController(
         db.ArtifactUnlocks.AddRange(ids.Select(id => new ArtifactUnlock { Id = Guid.NewGuid(), UserId = userId, ArtifactId = id, UnlockMethod = "ADMIN", UnlockedAt = now }));
         await db.SaveChangesAsync(cancellationToken);
         TempData["SuccessMessage"] = $"已替該會員解鎖 {ids.Count} 件文物。";
-        return RedirectToAction(nameof(UnlockReset));
+        return RedirectToAction(nameof(UnlockReset), back);
     }
 }

@@ -12,7 +12,7 @@ export class PageReadiness {
   private readonly zone = inject(NgZone);
   readonly loading = signal(false);
   readonly hasShell = signal(false);
-  /** 動畫只在「讀得夠久」時才出現：第一次進某頁超過 250ms，看過的頁面超過 1.5 秒才顯示，快的載入完全看不到動畫。 */
+  /** 動畫只在「讀得夠久」時才出現：第一次進某頁超過 0.9 秒，看過的頁面幾乎不顯示才顯示，快的載入完全看不到動畫。 */
   readonly showLoader = signal(false);
   private readonly visited = new Set<string>();
   private currentKey = '';
@@ -75,7 +75,7 @@ export class PageReadiness {
   private begin(url = this.document.location?.pathname ?? ''): void {
     this.finish(false);
     this.currentKey = url.split(/[?#]/)[0];
-    this.loaderTimer = this.later(() => { if (this.loading()) this.showLoader.set(true); }, this.visited.has(this.currentKey) ? 1500 : 250);
+    this.loaderTimer = this.later(() => { if (this.loading()) this.showLoader.set(true); }, this.visited.has(this.currentKey) ? 3000 : 900);
     this.epoch++;
     this.pending = 0;
     this.navigationDone = false;
