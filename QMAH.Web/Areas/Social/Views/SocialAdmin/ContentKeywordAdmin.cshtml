@@ -39,7 +39,10 @@
                     <span class="badge bg-purple-lt">AI 檢舉共 @ViewData["AiReports"]</span>
                     <span class="badge bg-yellow-lt">其中待處理 @ViewData["AiReportsPending"]</span>
                 </div>
-                <a asp-controller="SocialReportAdmin" asp-action="Index" asp-route-keyword="AUTO_AI" class="small">查看 AI 檢舉</a>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <a href="#ai-review-log" class="btn btn-sm btn-outline-primary">查看 AI 審查紀錄（每次判斷）</a>
+                    <a asp-controller="SocialReportAdmin" asp-action="Index" asp-route-keyword="AUTO_AI" class="btn btn-sm btn-outline-secondary">查看 AI 檢舉（判定違規的內容）</a>
+                </div>
             </div>
         </div>
     </div>
@@ -78,7 +81,7 @@
     </div>
 </div>
 
-<div class="card mb-3">
+<div id="ai-review-log" class="card mb-3">
     <div class="card-header"><h2 class="card-title mb-0">AI 審查紀錄</h2></div>
     <div class="card-body">
         <div class="small mb-2">近 24 小時審查 <strong>@ViewData["AiReviewed24h"]</strong> 筆，判定違規 <strong>@ViewData["AiFlagged24h"]</strong> 筆。</div>
