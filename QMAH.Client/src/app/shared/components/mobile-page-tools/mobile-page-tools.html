@@ -1,8 +1,8 @@
 @if (useful() && !gameFocus.active() && !readiness.loading()) {
   <div class="page-tools">
     @if (open()) {
-      <div id="mobile-page-tools-panel" class="page-tools__panel" role="group" aria-label="手機頁面工具">
-        <strong>這一頁的工具</strong>
+      <div id="mobile-page-tools-panel" class="page-tools__panel" role="group" aria-label="手機導覽">
+        <strong>手機導覽</strong>
         <button type="button" (click)="top()">回到頂部</button>
         @for (item of sections(); track item.selector) {
           <button type="button" (click)="jump(item)">{{ item.label }}</button>
@@ -12,7 +12,7 @@
         }
       </div>
     }
-    <button #trigger type="button" class="page-tools__trigger" aria-label="手機頁面工具"
+    <button #trigger type="button" class="page-tools__trigger" aria-label="手機導覽"
       [attr.aria-expanded]="open()" [attr.aria-controls]="open() ? 'mobile-page-tools-panel' : null" (click)="toggle()">
       @if (open()) { <svg lucideX aria-hidden="true" focusable="false"></svg> }
       @else { <svg lucideList aria-hidden="true" focusable="false"></svg> }

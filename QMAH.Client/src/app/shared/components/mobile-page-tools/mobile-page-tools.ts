@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, ElementRef, HostListener, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
@@ -30,6 +30,7 @@ export class MobilePageTools {
   private dockFrame: number | null = null;
 
   constructor() {
+    effect(() => { if (!this.readiness.loading()) this.updateDock(); });
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed())
       .subscribe(event => { this.path.set(event.urlAfterRedirects); this.close(false); this.updateDock(); });
     inject(DestroyRef).onDestroy(() => {
