@@ -9,8 +9,10 @@
     </button>
   </header>
 
+  <app-mobile-page-jumps [items]="mobileSections" />
+
   <!-- 看板分類：桌面在左側固定欄，手機變成橫向可捲動的標籤；與下方「看板」下拉同步，兩邊都能切換。 -->
-  <app-social-shell [activeBoard]="filterBoardCode" [inline]="true" (boardSelect)="selectBoard($event)">
+  <app-social-shell id="social-boards" [activeBoard]="filterBoardCode" [inline]="true" (boardSelect)="selectBoard($event)">
   @if (upcomingEvents.length > 0) {
     <section class="social-upcoming" aria-labelledby="social-upcoming-title">
       <header class="social-upcoming__head">
@@ -31,7 +33,7 @@
   }
 
   <!-- 篩選：看板由左側分類（手機為上方標籤）負責，這裡只做關鍵字搜尋；目前的條件以標籤顯示，可單獨移除。 -->
-  <div class="social-search" role="search">
+  <div id="social-post-search" class="social-search" role="search">
     <label class="social-search__box">
       <svg lucideSearch aria-hidden="true" focusable="false"></svg>
       <span class="sr-only">搜尋貼文標題或內容</span>
@@ -169,7 +171,7 @@
   </article>
   </ng-template>
 
-  <div class="social-post-wall" [class.is-loading]="loading" [attr.aria-busy]="loading">
+  <div id="social-posts" class="social-post-wall" [class.is-loading]="loading" [attr.aria-busy]="loading">
     @if (!loading || posts.length > 0) {
       @for (column of postColumns; track $index) {
         <div class="social-post-wall__column">

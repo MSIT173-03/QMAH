@@ -7,24 +7,25 @@
 </app-site-header>
 
 <div class="container home-main">
+  <app-mobile-page-jumps [items]="mobileSections" />
 
   <!-- 主視覺輪播 -->
   <app-hero-carousel />
 
   <!-- 分類入口／年代選藏：上下分欄 -->
   <section class="entry-section">
-    <app-category-grid />
-    <app-era-grid />
+    <app-category-grid id="store-categories" />
+    <app-era-grid id="store-eras" />
   </section>
 
   <!-- 熱銷排行 -->
-  <app-ranking-section (addToCart)="onAddToCart($event)" />
+  <app-ranking-section id="store-ranking" (addToCart)="onAddToCart($event)" />
 
   <!-- 新品上架 -->
-  <app-new-arrivals (addToCart)="onAddToCart($event)" />
+  <app-new-arrivals id="store-new-arrivals" (addToCart)="onAddToCart($event)" />
 
   <!-- 為你推薦 -->
-  <app-recommendations [items]="recommendedItems()" (addToCart)="onAddToCart($event)" />
+  <app-recommendations id="store-recommendations" [items]="recommendedItems()" (addToCart)="onAddToCart($event)" />
 
   <!-- 向下捲動後出現的回到頂端箭頭：容器的最後一個子元素，靠容器右緣、捲動時固定在視窗下緣 -->
   <app-scroll-top />

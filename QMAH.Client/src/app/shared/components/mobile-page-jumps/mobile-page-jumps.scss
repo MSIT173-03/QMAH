@@ -1,0 +1,36 @@
+@use '../../styles/responsive-breakpoints' as responsive;
+
+:host { display: none; }
+
+@include responsive.phone {
+  :host {
+    display: block;
+    position: sticky;
+    top: calc(var(--app-header-height, 64px) + 8px);
+    z-index: 20;
+    margin-bottom: 12px;
+  }
+  .page-jumps {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+    border: 1px solid var(--qmah-border);
+    border-radius: var(--qmah-radius-control);
+    background: var(--qmah-surface-elevated);
+    color: var(--qmah-ink);
+    box-shadow: var(--qmah-shadow-card);
+  }
+  .page-jumps span { flex: 0 0 auto; font-size: 14px; font-weight: 700; }
+  select {
+    min-width: 0;
+    flex: 1;
+    min-height: 44px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 16px;
+  }
+  select:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 2px; }
+}

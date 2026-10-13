@@ -39,6 +39,15 @@ describe('ScrollTop', () => {
     expect(button()?.classList.contains('scroll-top--leaving')).toBe(false);
   });
 
+  it('respects the minimum scroll distance for mobile-only entry points', () => {
+    fixture.componentRef.setInput('minimumScroll', 320);
+    fixture.componentRef.setInput('mobileOnly', true);
+    scrollY(300);
+    expect(button()).toBeNull();
+    scrollY(400);
+    expect(button()?.classList.contains('scroll-top--mobile-only')).toBe(true);
+  });
+
   describe('going back to the top', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());

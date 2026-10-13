@@ -14,6 +14,7 @@ import { RankingSection } from './ranking-section/ranking-section';
 import { NewArrivals } from './new-arrivals/new-arrivals';
 import { EraGrid } from './era-grid/era-grid';
 import { Recommendations } from './recommendations/recommendations';
+import { MobilePageJumps } from '../../../shared/components/mobile-page-jumps/mobile-page-jumps';
 import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 
 /**
@@ -36,11 +37,19 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
     Recommendations,
     SiteHeader,
     ScrollTop,
+    MobilePageJumps,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
 export class Home {
+  readonly mobileSections = [
+    { targetId: 'store-categories', label: '分類入口' },
+    { targetId: 'store-eras', label: '年代選藏' },
+    { targetId: 'store-ranking', label: '熱銷排行' },
+    { targetId: 'store-new-arrivals', label: '新品上架' },
+    { targetId: 'store-recommendations', label: '為你推薦' },
+  ];
   private readonly router = inject(Router);
   private readonly homeApi = inject(HomeApi);
   private readonly purchased = inject(PurchasedProducts);

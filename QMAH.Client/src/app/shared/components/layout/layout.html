@@ -137,6 +137,8 @@
   <!-- ui-integration: 所有 App Shell route 共用同一個 footer，首頁與深層頁都保留合理的回站入口。 -->
   @if (showFixedScrollTop()) {
     <app-scroll-top [fixed]="true" />
+  } @else if (activeArea() !== 'store' && !gameFocus.active() && !menuOpen()) {
+    <app-scroll-top [fixed]="true" [mobileOnly]="true" [minimumScroll]="320" />
   }
 
   <app-site-footer />

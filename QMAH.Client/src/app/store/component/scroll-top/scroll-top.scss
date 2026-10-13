@@ -1,3 +1,5 @@
+@use '../../../shared/styles/responsive-breakpoints' as responsive;
+
 :host {
   display: contents;
 }
@@ -85,4 +87,15 @@
   border-color: var(--qmah-social-action, var(--color-accent));
   background: var(--qmah-social-action, var(--color-accent));
   color: #fff;
+}
+
+.scroll-top--mobile-only { display: none; }
+
+@include responsive.phone {
+  .scroll-top--mobile-only { display: inline-flex; }
+  .scroll-top {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(24px + env(safe-area-inset-bottom));
+  }
 }

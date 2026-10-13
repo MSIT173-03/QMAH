@@ -21,6 +21,8 @@ const LEAVE_MS = 200;
 export class ScrollTop {
   /** 固定在視窗右下角（沒有 sticky 容器的頁面，例如社群）；商城維持預設的 sticky 位置 */
   readonly fixed = input(false);
+  readonly mobileOnly = input(false);
+  readonly minimumScroll = input(0);
   /** 按鈕是否在畫面上（淡出期間仍然在） */
   protected readonly shown = signal(false);
   /** 按鈕正在淡出：套用離場動畫，結束後才真正移除 */
@@ -30,7 +32,7 @@ export class ScrollTop {
   protected readonly label = '回到頁面頂端';
 
   constructor() {
-    const update = () => this.setVisible(window.scrollY > 0);
+    const update = () => this.setVisible(window.scrollY > this.minimumScroll());
     update();
     window.addEventListener('scroll', update, { passive: true });
     inject(DestroyRef).onDestroy(() => {
