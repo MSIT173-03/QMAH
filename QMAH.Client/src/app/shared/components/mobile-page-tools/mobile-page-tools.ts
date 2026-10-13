@@ -19,6 +19,7 @@ export class MobilePageTools {
   readonly gameFocus = inject(GameFocusMode);
   readonly readiness = inject(PageReadiness);
   readonly open = signal(false);
+  readonly scrolled = signal(false);
   readonly sections = signal<PageToolTarget[]>([]);
   readonly hasNavigation = signal(false);
   readonly topColors = signal({ background: '', text: '' });
@@ -142,6 +143,7 @@ export class MobilePageTools {
       const lift = view.innerWidth < 768 && footer ? Math.max(0, view.innerHeight - footer.getBoundingClientRect().top) : 0;
       this.document.documentElement.style.setProperty('--qmah-mobile-footer-lift', `${lift}px`);
       this.document.documentElement.style.setProperty('--qmah-mobile-tools-visibility', lift > view.innerHeight - 252 ? 'hidden' : 'visible');
+      this.scrolled.set(view.innerWidth < 768 && view.scrollY > 320);
     });
   }
 }

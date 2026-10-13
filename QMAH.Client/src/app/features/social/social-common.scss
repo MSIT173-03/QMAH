@@ -261,6 +261,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.qmah-social-page .social-author-title {
+  max-width: min(100%, 28ch);
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+}
+
 .qmah-social-page .social-facts {
   display: grid;
   gap: var(--qmah-space-2);

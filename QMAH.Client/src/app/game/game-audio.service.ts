@@ -1,5 +1,7 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router } from '@angular/router';
 
 export type GameSound = 'click' | 'select' | 'place' | 'flip' | 'success' | 'error' | 'win' | 'reveal' | 'start' | 'finish' | 'cancel' | 'ui';
 export type GameMusicScene = 'hall' | 'play';
@@ -22,9 +24,9 @@ const MUSIC_VOLUME = .45;
 export class GameAudio {
   private readonly document = inject(DOCUMENT);
   readonly musicOn = signal(false);
-  readonly sfxOn = signal(true);
+  readonly sfxOn = signal(false);
   readonly musicVolume = signal(.6);
-  readonly sfxVolume = signal(.8);
+  readonly sfxVolume = signal(.25);
   readonly scene = signal<GameMusicScene>('hall');
   private users = 0;
   private cleanup: (() => void) | null = null;
@@ -39,11 +41,28 @@ export class GameAudio {
   constructor() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as { music?: boolean; sfx?: boolean; musicVolume?: number; sfxVolume?: number };
-      if (typeof saved.music === 'boolean') this.musicOn.set(saved.music);
-      if (typeof saved.sfx === 'boolean') this.sfxOn.set(saved.sfx);
+      // 只保留音量偏好，進場時不恢復任何已保存的開啟狀態。
       if (typeof saved.musicVolume === 'number') this.musicVolume.set(Math.min(1, Math.max(0, saved.musicVolume)));
       if (typeof saved.sfxVolume === 'number') this.sfxVolume.set(Math.min(1, Math.max(0, saved.sfxVolume)));
     } catch { /* 沒有儲存空間時用預設值 */ }
+    inject(Router, { optional: true })?.events.pipe(takeUntilDestroyed(inject(DestroyRef))).subscribe(event => {
+      if (event instanceof NavigationStart) this.resetForEntry();
+    });
+  }
+
+  /** 每個遊戲入口都從靜音開始；也處理同一個元件被路由參數重用。 */
+  private resetForEntry(): void {
+    this.musicOn.set(false);
+    this.sfxOn.set(false);
+    this.beforeMute = { music: false, sfx: true };
+    window.clearInterval(this.fade);
+    for (const timer of this.fadeOutTimers.values()) window.clearInterval(timer);
+    this.fadeOutTimers.clear();
+    for (const track of this.tracks.values()) { track.volume = 0; track.pause(); }
+    this.playing = null;
+    for (const sound of this.activeSounds) sound.pause();
+    this.activeSounds.clear();
+    this.persist();
   }
 
   /** 一鍵靜音：兩個都關；再按一次還原成靜音前的設定。 */
@@ -78,6 +97,7 @@ export class GameAudio {
   /** 遊戲頁進場時呼叫；回傳的函式在離開時呼叫，離開遊戲區後音樂自動停止。 */
   attach(): () => void {
     if (typeof window === 'undefined' || typeof Audio === 'undefined') return () => undefined;
+    this.resetForEntry();
     if (this.users++ === 0) this.start();
     let released = false;
     return () => {
@@ -127,7 +147,7 @@ export class GameAudio {
     if (!source) { source = new Audio(`${BASE}${sound}.ogg`); source.preload = 'auto'; this.sounds.set(sound, source); }
     // 複製一份再播放，連續點擊時聲音可以重疊
     const instance = source.cloneNode() as HTMLAudioElement;
-    instance.volume = Math.min(1, SOUND_VOLUME[sound] * this.sfxVolume());
+    instance.volume = Math.min(1, SOUND_VOLUME[sound] * this.sfxVolume() * .5);
     this.activeSounds.add(instance);
     const release = () => this.activeSounds.delete(instance);
     instance.addEventListener('ended', release, { once: true });

@@ -2,9 +2,9 @@ namespace QMAH.Infrastructure.Services.Social;
 
 /// <summary>
 /// AI 內容審查的判斷結果。<see cref="Category"/>／<see cref="Score"/> 是信心最高的違規分類與分數，
-/// 只有 <see cref="Flagged"/> 為 true 時才有意義；<see cref="Summary"/> 是給後台檢舉列表看的一句話說明。
+/// 只有 <see cref="Flagged"/> 為 true 時才有意義；<see cref="AutoHide"/> 為 true 代表信心高到可以先自動隱藏再請管理員確認；<see cref="Summary"/> 是給後台檢舉列表看的一句話說明。
 /// </summary>
-public sealed record AiReviewResult(bool Flagged, string? Category, double? Score, string? Summary);
+public sealed record AiReviewResult(bool Flagged, string? Category, double? Score, string? Summary, bool AutoHide = false);
 
 /// <summary>
 /// 呼叫外部 AI 內容安全服務，當作關鍵字表、SimHash 之外的第三道訊號，同時負責辨識文字裡的違規

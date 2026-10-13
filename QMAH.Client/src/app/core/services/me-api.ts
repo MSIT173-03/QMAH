@@ -28,6 +28,12 @@ export interface UserNotification {
   readAt: string | null;
 }
 
+export interface NotificationPage extends ApiPage<UserNotification> {
+  unreadCount: number;
+  readCount: number;
+  totalNotificationCount: number;
+}
+
 // 對應 QMAH.Api 的 MeController（User 領域，不是 Social 的一部分）。
 // 個人資料、通知都是「會員自己的」資源，統一走 /api/v1/me/*，不要在 Social 這邊另開一份。
 @Injectable({ providedIn: 'root' })
@@ -57,14 +63,23 @@ export class MeApiService {
     return this.http.get<Me>(this.base);
   }
 
-  getNotifications(params: { page?: number; pageSize?: number } = {}): Observable<ApiPage<UserNotification>> {
+  getNotifications(params: { page?: number; pageSize?: number; isRead?: boolean } = {}): Observable<NotificationPage> {
     let httpParams: Record<string, string> = {};
     if (params.page) httpParams['page'] = String(params.page);
     if (params.pageSize) httpParams['pageSize'] = String(params.pageSize);
-    return this.http.get<ApiPage<UserNotification>>(`${this.base}/notifications`, { params: httpParams });
+    if (params.isRead !== undefined) httpParams['isRead'] = String(params.isRead);
+    return this.http.get<NotificationPage>(`${this.base}/notifications`, { params: httpParams });
   }
 
   markNotificationRead(id: string): Observable<void> {
     return this.http.post<void>(`${this.base}/notifications/${id}/read`, {});
+  }
+
+  markNotificationUnread(id: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/notifications/${id}/unread`, {});
+  }
+
+  markAllNotificationsRead(): Observable<void> {
+    return this.http.post<void>(`${this.base}/notifications/read-all`, {});
   }
 }

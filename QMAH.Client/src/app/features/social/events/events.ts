@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { MeApiService } from '../../../core/services/me-api';
 import { demoEvent, isDemoAdmin } from '../social-demo';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
@@ -7,13 +7,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ToastService } from '../../../core/services/toast';
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 
 import { CreateSocialEventRequest, EventListItem, SocialApiService, SocialMedia } from '../../../core/services/social-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
 import { LocationPick, LocationPickerComponent } from '../../../shared/components/location-picker/location-picker';
 import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
 import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
+import { SocialLive } from '../../../core/services/social-live';
 import { LucideArrowRight, LucideCalendarClock, LucideMapPin, LucidePlus, LucideUsers, LucideX } from '@lucide/angular';
 
 // 與後端 EventScheduleRules.MaxCapacity 相同。
@@ -26,7 +27,7 @@ const MAX_EVENT_CAPACITY = 10000;
   templateUrl: './events.html',
   styleUrls: ['../social-common.scss', './events.scss']
 })
-export class EventsComponent implements OnInit {
+export class EventsComponent implements OnInit, OnDestroy {
   /** 活動目前的狀態：開放報名／進行中／已結束／已額滿 */
   phase(event: EventListItem): { key: string; label: string } {
     const now = Date.now();
@@ -47,6 +48,9 @@ export class EventsComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
   private readonly toast = inject(ToastService);
+  private readonly socialLive = inject(SocialLive);
+  private eventsRequest?: Subscription;
+  private liveSubscription?: Subscription;
   creating = false;
 
   @ViewChild(ImageCropModalComponent) private cropModal!: ImageCropModalComponent;
@@ -74,7 +78,13 @@ export class EventsComponent implements OnInit {
   filterStartBefore = '';
 
   ngOnInit(): void {
+    this.liveSubscription = this.socialLive.changes.subscribe(() => this.loadEvents());
     this.loadEvents();
+  }
+
+  ngOnDestroy(): void {
+    this.liveSubscription?.unsubscribe();
+    this.eventsRequest?.unsubscribe();
   }
 
   resetFilters(): void {
@@ -99,7 +109,8 @@ export class EventsComponent implements OnInit {
   // GET /api/v1/social/events（AllowAnonymous，只回傳審核通過且已發布的活動）
   loadEvents(): void {
     this.loadError = null;
-    this.socialApi.getEvents({
+    this.eventsRequest?.unsubscribe();
+    this.eventsRequest = this.socialApi.getEvents({
       pageSize: 20,
       q: this.filterKeyword || undefined,
       startAfter: this.filterStartAfter || undefined,

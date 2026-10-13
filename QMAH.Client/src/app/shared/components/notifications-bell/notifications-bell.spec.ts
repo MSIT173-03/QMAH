@@ -17,7 +17,7 @@ describe('NotificationsBellComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [NotificationsBellComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: NotificationLive, useValue: { changes } }]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: NotificationLive, useValue: { changes, refresh: vi.fn() } }]
     }).compileComponents();
 
     TestBed.inject(MeApiService).me.set({ id: 'member-1', email: 'member@example.com', displayName: '會員', status: 'ACTIVE', pointBalance: 0, roles: ['User'], createdAt: '', bio: null, visibility: 'PRIVATE', avatarPath: null });

@@ -11,17 +11,9 @@
 
     <div>
 
-      <span class="page-eyebrow">
-        NOTIFICATIONS
-      </span>
-
       <h1>
         我的通知
       </h1>
-
-      <p>
-        查看系統通知、會員訊息與目前的已讀狀態。
-      </p>
 
     </div>
 
@@ -43,10 +35,6 @@
         <strong>
           正在載入通知
         </strong>
-
-        <p>
-          請稍候一下...
-        </p>
 
       </div>
 
@@ -99,7 +87,7 @@
   @if (
     !loading &&
     !errorMessage &&
-    notifications.length === 0
+    totalNotificationCount === 0
   ) {
 
     <div class="empty-state">
@@ -108,18 +96,9 @@
         <app-qmah-icon name="bell" />
       </div>
 
-      <span class="empty-eyebrow">
-        ALL CAUGHT UP
-      </span>
-
       <h2>
         目前沒有通知
       </h2>
-
-      <p>
-        有新的系統通知或會員訊息時，
-        會顯示在這裡。
-      </p>
 
     </div>
 
@@ -129,116 +108,8 @@
   @if (
     !loading &&
     !errorMessage &&
-    notifications.length > 0
+    totalNotificationCount > 0
   ) {
-
-    <!-- =============================== -->
-    <!-- Summary -->
-    <!-- =============================== -->
-
-    <section class="summary-section">
-
-      <button
-        type="button"
-        class="summary-card"
-        [class.active]="selectedFilter === 'ALL'"
-        (click)="selectFilter('ALL')"
-      >
-
-        <div class="summary-icon all-icon">
-          <app-qmah-icon name="bell" />
-        </div>
-
-        <div class="summary-content">
-
-          <span class="summary-label">
-            本頁通知
-          </span>
-
-          <strong>
-            {{ notifications.length }}
-          </strong>
-
-        </div>
-
-      </button>
-
-
-      <button
-        type="button"
-        class="summary-card unread-summary"
-        [class.active]="selectedFilter === 'UNREAD'"
-        (click)="selectFilter('UNREAD')"
-      >
-
-        <div class="summary-icon unread-icon">
-          <app-qmah-icon name="circle-alert" />
-        </div>
-
-        <div class="summary-content">
-
-          <span class="summary-label">
-            本頁未讀
-          </span>
-
-          <strong>
-            {{ unreadCount }}
-          </strong>
-
-        </div>
-
-      </button>
-
-
-      <button
-        type="button"
-        class="summary-card read-summary"
-        [class.active]="selectedFilter === 'READ'"
-        (click)="selectFilter('READ')"
-      >
-
-        <div class="summary-icon read-icon">
-          <app-qmah-icon name="circle-check" />
-        </div>
-
-        <div class="summary-content">
-
-          <span class="summary-label">
-            本頁已讀
-          </span>
-
-          <strong>
-            {{ readCount }}
-          </strong>
-
-        </div>
-
-      </button>
-
-
-      <div class="summary-card total-summary">
-
-        <div class="summary-icon total-icon">
-          <app-qmah-icon name="inbox" />
-        </div>
-
-        <div class="summary-content">
-
-          <span class="summary-label">
-            全部通知
-          </span>
-
-          <strong>
-            {{ totalCount }}
-          </strong>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
     <!-- =============================== -->
     <!-- Notification Panel -->
     <!-- =============================== -->
@@ -246,33 +117,17 @@
     <section class="notification-section">
 
       <div class="section-title">
-
-        <div>
-
-          <span class="section-eyebrow">
-            MESSAGE CENTER
-          </span>
-
-          <h2>
-            通知列表
-          </h2>
-
-          <p>
-            點擊未讀通知即可標記為已讀。
-          </p>
-
-        </div>
-
-
         <div class="section-info">
-
-          <span class="filter-label">
-            {{ selectedFilterLabel }}
-          </span>
-
           <span class="notification-count">
             {{ filteredNotifications.length }} 則
           </span>
+
+          @if (unreadCount > 0) {
+            <button type="button" class="bulk-read-button" (click)="markAllAsRead()" [disabled]="updatingAll">
+              <app-qmah-icon name="circle-check" />
+              {{ updatingAll ? '處理中…' : '全部標為已讀' }}
+            </button>
+          }
 
         </div>
 
@@ -293,7 +148,7 @@
           全部
 
           <span>
-            {{ notifications.length }}
+            {{ totalNotificationCount }}
           </span>
 
         </button>
@@ -333,6 +188,10 @@
       <!-- Filter Empty -->
       <!-- =============================== -->
 
+      @if (actionError) {
+        <p class="notification-action-error" role="alert">{{ actionError }}</p>
+      }
+
       @if (
         filteredNotifications.length === 0
       ) {
@@ -343,13 +202,7 @@
             <app-qmah-icon name="circle-check" />
           </div>
 
-          <h3>
-            這個分類目前沒有通知
-          </h3>
-
-          <p>
-            可以切換其他分類查看。
-          </p>
+          <h3>目前沒有通知</h3>
 
         </div>
 
@@ -375,14 +228,13 @@
               class="notification-card"
               [class.unread]="!notification.isRead"
               [class.reading]="readingId === notification.id"
-              (click)="markAsRead(notification)"
             >
 
               <!-- 未讀圓點 -->
 
               @if (!notification.isRead) {
 
-                <span class="unread-dot"></span>
+                <span class="unread-dot" aria-hidden="true"></span>
 
               }
 
@@ -406,10 +258,6 @@
                 <div class="notification-top">
 
                   <div>
-
-                    <span class="notification-type">
-                      SYSTEM MESSAGE
-                    </span>
 
                     <h3>
                       {{ notification.title }}
@@ -465,40 +313,25 @@
 
                   </div>
 
-
-                  @if (notification.targetUrl) {
-
+                  <div class="notification-actions">
+                    @if (notification.targetUrl) {
+                      <button type="button" class="detail-button" (click)="openTarget($event, notification)">
+                        查看詳情
+                        <app-qmah-icon name="arrow-right" />
+                      </button>
+                    }
                     <button
                       type="button"
-                      class="detail-button"
-                      (click)="openTarget($event, notification)"
+                      class="read-state-button"
+                      [disabled]="updatingAll || readingId === notification.id"
+                      (click)="notification.isRead ? markAsUnread($event, notification) : markAsRead(notification)"
                     >
-
-                      查看詳情
-
-                      <app-qmah-icon name="arrow-right" />
-
+                      {{ readingId === notification.id ? '處理中…' : (notification.isRead ? '設為未讀' : '標為已讀') }}
                     </button>
-
-                  }
+                  </div>
 
                 </div>
 
-
-                @if (
-                  !notification.isRead &&
-                  readingId === notification.id
-                ) {
-
-                  <div class="reading-text">
-
-                    <span class="mini-spinner"></span>
-
-                    標記已讀中...
-
-                  </div>
-
-                }
 
               </div>
 
@@ -531,10 +364,6 @@
 
 
           <div class="page-status">
-
-            <span>
-              PAGE
-            </span>
 
             <strong>
               {{ page }}

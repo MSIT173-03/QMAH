@@ -214,7 +214,8 @@ public sealed record SocialPostListItemDto(
     decimal? Longitude,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    SocialPostEventSummaryDto? EventSummary = null);
+    SocialPostEventSummaryDto? EventSummary = null,
+    IReadOnlyList<string>? ImageUrls = null);
 
 public sealed record SocialPostEventSummaryDto(
     DateTime StartAt,
@@ -259,7 +260,13 @@ public sealed record SocialPostDetailsDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     string? ContentHtml = null,
-    string MediaLayout = "SECONDARY");
+    string MediaLayout = "SECONDARY",
+    string? AuthorTitle = null);
+
+public sealed record SocialPopularPostDto(Guid Id, string BoardCode, string Title, DateTime CreatedAt,
+    int ParticipantCount, int CommentCount, string? CoverImageUrl = null, string? DisplayName = null, int HeatPercent = 0);
+
+public sealed record SocialPopularPostsDto(string Window, IReadOnlyList<SocialPopularPostDto> Items);
 
 public sealed record EventListItemDto(
     Guid Id,
@@ -678,6 +685,9 @@ public sealed class UpsertCartItemRequest
     [Range(1, 99)]
     public int Quantity { get; set; }
 }
+
+public sealed record NotificationPageDto(IReadOnlyList<NotificationDto> Items, int Page, int PageSize,
+    int TotalCount, int TotalPages, int UnreadCount, int ReadCount, int TotalNotificationCount);
 
 public sealed record NotificationDto(
     Guid Id,

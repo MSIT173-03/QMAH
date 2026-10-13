@@ -44,6 +44,12 @@ public sealed class ContentKeywordAdminController : Controller
         CancellationToken cancellationToken = default)
     {
         var model = await BuildPageAsync(isActive, keyword, cancellationToken);
+
+        // 讓管理員看得到 AI 複審有沒有在跑：待複審數長期不降代表 API 端沒設定金鑰或額度用完。
+        ViewData["AiPending"] = await _context.SocialPosts.CountAsync(item => item.AiReviewedAt == null, cancellationToken)
+            + await _context.SocialComments.CountAsync(item => item.AiReviewedAt == null, cancellationToken);
+        ViewData["AiReports"] = await _context.ContentReports.CountAsync(item => item.Reason == "AUTO_AI", cancellationToken);
+        ViewData["AiReportsPending"] = await _context.ContentReports.CountAsync(item => item.Reason == "AUTO_AI" && item.Status == "PENDING", cancellationToken);
         return View("~/Areas/Social/Views/SocialAdmin/ContentKeywordAdmin.cshtml", model);
     }
 

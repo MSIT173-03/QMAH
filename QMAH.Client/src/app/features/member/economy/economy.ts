@@ -4,7 +4,8 @@ import {
   DestroyRef,
   ElementRef,
   ViewChild,
-  OnInit
+  OnInit,
+  inject
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -33,6 +34,7 @@ import {
 import {
   KeyList
 } from '../../../key-list/key-list';
+import { NotificationLive } from '../../../core/services/notification-live';
 
 
 interface EconomyResponse {
@@ -63,6 +65,10 @@ interface KeyProgressConversion {
   styleUrl: './economy.scss'
 })
 export class Economy implements OnInit {
+  private readonly live = inject(NotificationLive);
+  private initialized = false;
+  private refreshingRealtime = false;
+  private pendingRealtimeRefresh = false;
 
   economy: EconomyResponse | null = null;
 
@@ -81,6 +87,13 @@ export class Economy implements OnInit {
 
 
   ngOnInit(): void {
+    this.live.economyChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      if (!this.initialized || this.loading) {
+        this.pendingRealtimeRefresh = true;
+        return;
+      }
+      this.refreshBalances();
+    });
     this.loadEconomy();
   }
 
@@ -210,8 +223,10 @@ export class Economy implements OnInit {
 
           this.economy = data;
           this.loading = false;
+          this.initialized = true;
 
           this.cdr.detectChanges();
+          this.flushPendingRefresh();
         },
 
         error: (error) => {
@@ -220,10 +235,41 @@ export class Economy implements OnInit {
             '讀取點數與鑰匙資料失敗，請重試。';
 
           this.loading = false;
+          this.initialized = true;
 
           this.cdr.detectChanges();
+          this.flushPendingRefresh();
         }
 
       });
+  }
+
+  /** 即時推播只讀餘額，不重跑首次載入時的進度轉換 POST。 */
+  private refreshBalances(): void {
+    if (this.refreshingRealtime) {
+      this.pendingRealtimeRefresh = true;
+      return;
+    }
+    this.refreshingRealtime = true;
+    this.http.get<EconomyResponse>(`${environment.apiBaseUrl}/me/economy`).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: data => {
+        this.economy = data;
+        this.refreshingRealtime = false;
+        this.cdr.detectChanges();
+        this.flushPendingRefresh();
+      },
+      error: () => {
+        this.refreshingRealtime = false;
+        this.flushPendingRefresh();
+      }
+    });
+  }
+
+  private flushPendingRefresh(): void {
+    if (!this.pendingRealtimeRefresh || this.loading || this.refreshingRealtime) return;
+    this.pendingRealtimeRefresh = false;
+    this.refreshBalances();
   }
 }

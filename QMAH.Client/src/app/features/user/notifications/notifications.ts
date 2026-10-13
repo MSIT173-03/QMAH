@@ -1,10 +1,11 @@
-import { finalize } from 'rxjs';
+import { finalize, Subject, Subscription, takeUntil } from 'rxjs';
+import { MeApiService } from '../../../core/services/me-api';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationLive } from '../../../core/services/notification-live';
 import {
   ChangeDetectorRef,
   Component,
-  OnInit, DestroyRef, inject
+  OnInit, DestroyRef, effect, inject
 } from '@angular/core';
 
 import {
@@ -43,6 +44,9 @@ interface NotificationPage {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+  unreadCount: number;
+  readCount: number;
+  totalNotificationCount: number;
 }
 
 
@@ -67,19 +71,52 @@ type NotificationFilter =
 export class Notifications implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly live = inject(NotificationLive);
+  private readonly sessionChanges = new Subject<void>();
   private pendingRefresh = false;
+  private readonly meApi = inject(MeApiService);
+  private request?: Subscription;
+  private sessionId: string | null = null;
+  private generation = 0;
+  private loadSequence = 0;
+  private readonly sessionEffect = effect(() => {
+    const id = this.meApi.me()?.id ?? null;
+    if (id === this.sessionId) return;
+    this.generation++;
+    this.sessionChanges.next();
+    this.pendingRefresh = false;
+    this.request?.unsubscribe();
+    this.sessionId = id;
+    this.notifications = [];
+    this.loading = false;
+    this.readingId = null;
+    this.updatingAll = false;
+    this.page = 1;
+    this.totalCount = this.totalPages = 0;
+    this.unreadCount = this.readCount = this.totalNotificationCount = 0;
+    this.errorMessage = '';
+    this.actionError = '';
+    this.selectedFilter = 'ALL';
+    this.cdr.markForCheck();
+    if (id) this.loadNotifications();
+  });
+
 
   notifications: NotificationDto[] = [];
 
-  loading = true;
+  loading = false;
   errorMessage = '';
 
   page = 1;
   pageSize = 20;
   totalCount = 0;
   totalPages = 0;
+  unreadCount = 0;
+  readCount = 0;
+  totalNotificationCount = 0;
 
   readingId: string | null = null;
+  updatingAll = false;
+  actionError = '';
 
   selectedFilter: NotificationFilter = 'ALL';
 
@@ -92,7 +129,6 @@ export class Notifications implements OnInit {
 
 
   ngOnInit(): void {
-    this.loadNotifications();
     this.live.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       if (this.loading) this.pendingRefresh = true;
       else this.loadNotifications();
@@ -104,24 +140,6 @@ export class Notifications implements OnInit {
   // Statistics
   // ===============================
 
-  get unreadCount(): number {
-
-    return this.notifications.filter(
-      notification => !notification.isRead
-    ).length;
-
-  }
-
-
-  get readCount(): number {
-
-    return this.notifications.filter(
-      notification => notification.isRead
-    ).length;
-
-  }
-
-
   // ===============================
   // Filter
   // ===============================
@@ -131,17 +149,11 @@ export class Notifications implements OnInit {
     switch (this.selectedFilter) {
 
       case 'UNREAD':
-
-        return this.notifications.filter(
-          notification => !notification.isRead
-        );
+        return this.notifications;
 
 
       case 'READ':
-
-        return this.notifications.filter(
-          notification => notification.isRead
-        );
+        return this.notifications;
 
 
       default:
@@ -153,30 +165,16 @@ export class Notifications implements OnInit {
   }
 
 
-  get selectedFilterLabel(): string {
-
-    switch (this.selectedFilter) {
-
-      case 'UNREAD':
-        return '本頁未讀';
-
-      case 'READ':
-        return '本頁已讀';
-
-      default:
-        return '全部';
-
-    }
-
-  }
-
-
   selectFilter(
     filter: NotificationFilter
   ): void {
-
+    if (this.selectedFilter === filter) return;
     this.selectedFilter = filter;
-
+    this.page = 1;
+    this.request?.unsubscribe();
+    this.loading = false;
+    this.pendingRefresh = false;
+    this.loadNotifications();
   }
 
 
@@ -209,8 +207,6 @@ export class Notifications implements OnInit {
 
     this.page--;
 
-    this.selectedFilter = 'ALL';
-
     this.loadNotifications();
 
     this.scrollToTop();
@@ -229,8 +225,6 @@ export class Notifications implements OnInit {
 
     this.page++;
 
-    this.selectedFilter = 'ALL';
-
     this.loadNotifications();
 
     this.scrollToTop();
@@ -243,22 +237,29 @@ export class Notifications implements OnInit {
   // ===============================
 
   loadNotifications(): void {
+    if (!this.meApi.me()) return;
+    if (this.loading) { this.pendingRefresh = true; return; }
+    const generation = this.generation;
+    const sequence = ++this.loadSequence;
 
     this.loading = true;
     this.errorMessage = '';
 
-    this.http
+    this.request = this.http
       .get<NotificationPage>(
         '/api/v1/me/notifications',
         {
           params: {
             page: this.page,
-            pageSize: this.pageSize
+            pageSize: this.pageSize,
+            ...(this.selectedFilter === 'ALL' ? {} : { isRead: this.selectedFilter === 'READ' })
           }
         }
       )
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
-        if (this.pendingRefresh && !this.destroyRef.destroyed) {
+        if (sequence !== this.loadSequence) return;
+        this.loading = false;
+        if (generation === this.generation && this.pendingRefresh && !this.destroyRef.destroyed) {
           this.pendingRefresh = false;
           this.loadNotifications();
         }
@@ -269,11 +270,15 @@ export class Notifications implements OnInit {
           data: NotificationPage
         ) => {
 
+          if (generation !== this.generation) return;
           // integration: 通知內容可能含會員資料，不再於正式流程輸出整包回應。
           // console.log('notifications:', data);
 
           this.notifications =
             data.items ?? [];
+          this.totalNotificationCount = data.totalNotificationCount ?? data.totalCount;
+          this.unreadCount = data.unreadCount ?? 0;
+          this.readCount = data.readCount ?? 0;
 
           this.page =
             data.page;
@@ -295,10 +300,8 @@ export class Notifications implements OnInit {
 
         error: (error) => {
 
-          console.error(
-            'notifications error:',
-            error
-          );
+          if (generation !== this.generation) return;
+          if (error.status === 401 || error.status === 403) { this.notifications = []; this.meApi.clear(); }
 
           this.errorMessage =
             '讀取通知資料失敗';
@@ -331,34 +334,32 @@ export class Notifications implements OnInit {
 
     this.readingId =
       notification.id;
+    this.actionError = '';
 
+    const generation = this.generation;
     this.http
       .post(
         `/api/v1/me/notifications/${notification.id}/read`,
         {}
       )
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntil(this.sessionChanges), takeUntilDestroyed(this.destroyRef))
       .subscribe({
 
         next: () => {
+          if (generation !== this.generation) return;
 
-          notification.isRead = true;
-
-          notification.readAt =
-            new Date().toISOString();
+          this.applyReadState(notification, true);
 
           this.readingId = null;
 
           this.cdr.detectChanges();
+          this.live.refresh();
 
         },
 
-        error: (error) => {
-
-          console.error(
-            'mark notification as read error:',
-            error
-          );
+        error: () => {
+          if (generation !== this.generation) return;
+          this.actionError = '標記失敗，請稍後再試。';
 
           this.readingId = null;
 
@@ -368,6 +369,77 @@ export class Notifications implements OnInit {
 
       });
 
+  }
+
+  markAsUnread(event: MouseEvent, notification: NotificationDto): void {
+    event.stopPropagation();
+    if (!notification.isRead || this.readingId === notification.id) return;
+    this.readingId = notification.id;
+    this.actionError = '';
+    const generation = this.generation;
+    this.meApi.markNotificationUnread(notification.id).pipe(takeUntil(this.sessionChanges), takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        if (generation !== this.generation) return;
+        this.applyReadState(notification, false);
+        this.readingId = null;
+        this.cdr.detectChanges();
+        this.live.refresh();
+      },
+      error: () => {
+        if (generation !== this.generation) return;
+        this.actionError = '變更失敗，請稍後再試。';
+        this.readingId = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  markAllAsRead(): void {
+    if (!this.unreadCount || this.updatingAll) return;
+    this.updatingAll = true;
+    this.actionError = '';
+    const generation = this.generation;
+    this.meApi.markAllNotificationsRead().pipe(
+      takeUntilDestroyed(this.destroyRef),
+      takeUntil(this.sessionChanges),
+      finalize(() => { if (generation === this.generation) this.updatingAll = false; })
+    ).subscribe({
+      next: () => {
+        if (generation !== this.generation) return;
+        const readAt = new Date().toISOString();
+        if (this.selectedFilter === 'UNREAD') {
+          this.notifications = [];
+          this.totalCount = 0;
+          this.totalPages = 0;
+          this.page = 1;
+        } else {
+          this.notifications.forEach(item => { item.isRead = true; item.readAt = readAt; });
+        }
+        this.readCount += this.unreadCount;
+        this.unreadCount = 0;
+        this.cdr.detectChanges();
+        this.live.refresh();
+      },
+      error: () => {
+        if (generation !== this.generation) return;
+        this.actionError = '全部標記失敗，請稍後再試。';
+      }
+    });
+  }
+
+  private applyReadState(notification: NotificationDto, isRead: boolean): void {
+    if (notification.isRead === isRead) return;
+    notification.isRead = isRead;
+    notification.readAt = isRead ? new Date().toISOString() : null;
+    this.unreadCount += isRead ? -1 : 1;
+    this.readCount += isRead ? 1 : -1;
+    if ((this.selectedFilter === 'UNREAD' && isRead) || (this.selectedFilter === 'READ' && !isRead)) {
+      this.notifications = this.notifications.filter(item => item.id !== notification.id);
+      this.totalCount = Math.max(0, this.totalCount - 1);
+      this.totalPages = Math.ceil(this.totalCount / this.pageSize);
+      if (this.page > this.totalPages && this.totalPages > 0) this.page = this.totalPages;
+      if (this.notifications.length === 0 && this.totalCount > 0) this.loadNotifications();
+    }
   }
 
 
@@ -409,7 +481,7 @@ export class Notifications implements OnInit {
     notification: NotificationDto
   ): void {
 
-    if (!notification.targetUrl) {
+    if (!notification.targetUrl || this.readingId === notification.id) {
       return;
     }
 
@@ -419,37 +491,35 @@ export class Notifications implements OnInit {
     this.readingId =
       notification.id;
 
+    const generation = this.generation;
     this.http
       .post(
         `/api/v1/me/notifications/${notification.id}/read`,
         {}
       )
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntil(this.sessionChanges), takeUntilDestroyed(this.destroyRef))
       .subscribe({
 
         next: () => {
+          if (generation !== this.generation) return;
 
-          notification.isRead = true;
-
-          notification.readAt =
-            new Date().toISOString();
+          this.applyReadState(notification, true);
 
           this.readingId = null;
 
           this.cdr.detectChanges();
 
+          this.live.refresh();
           this.navigateToTarget(
             targetUrl
           );
 
         },
 
-        error: (error) => {
+        error: () => {
+          if (generation !== this.generation) return;
 
-          console.error(
-            'mark notification as read error:',
-            error
-          );
+          this.actionError = '標記失敗，請稍後再試。';
 
           this.readingId = null;
 

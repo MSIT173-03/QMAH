@@ -219,6 +219,7 @@ public static class AdminDisplayLabels
         "AUTO_DUPLICATE_ORIGIN" => "系統偵測：重複發布來源",
         "AUTO_KEYWORD" => "系統偵測：命中關鍵字",
         "AUTO_DUPLICATE_KEYWORD" => "系統偵測：重複發布＋關鍵字",
+        "AUTO_AI" => "系統偵測：AI 複審",
         _ => string.IsNullOrWhiteSpace(value) ? "未設定" : "其他檢舉理由"
     };
 

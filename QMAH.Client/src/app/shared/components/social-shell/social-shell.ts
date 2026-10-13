@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideCalendarDays, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal } from '@lucide/angular';
+import { LucideCalendarDays, LucideChevronDown, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal } from '@lucide/angular';
 import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
 
 import { SocialBoardsStore } from '../../../features/social/social-boards';
@@ -17,7 +17,7 @@ import { boardLabel } from '../../../features/social/social-labels';
  */
 @Component({
   selector: 'app-social-shell',
-  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal],
+  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronDown, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './social-shell.scss',
   template: `
@@ -28,8 +28,20 @@ import { boardLabel } from '../../../features/social/social-labels';
           <li><a class="shell__item shell__item--link" routerLink="/social/announcements" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideMegaphone aria-hidden="true" focusable="false"></svg>歷史公告<svg class="shell__go" lucideChevronRight aria-hidden="true" focusable="false"></svg></a></li>
           <li><a class="shell__item shell__item--link" routerLink="/social/events" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg>社群活動<svg class="shell__go" lucideChevronRight aria-hidden="true" focusable="false"></svg></a></li>
         </ul>
+        @if (inline()) {
+          <label class="shell__mobile-picker">
+            <span class="sr-only">貼文分類</span>
+            <select [value]="activeBoard() ?? ''" (change)="boardSelect.emit($any($event.target).value)">
+              <option value="">全部貼文</option>
+              @for (board of list(); track board) {
+                <option [value]="board">{{ label(board) }}</option>
+              }
+            </select>
+            <svg lucideChevronDown aria-hidden="true" focusable="false"></svg>
+          </label>
+        }
         <p class="shell__title shell__title--gap">看板</p>
-        <ul class="shell__list">
+        <ul class="shell__list" [class.shell__list--boards]="inline()">
           @if (inline()) {
             <li><button type="button" class="shell__item" [class.is-active]="activeBoard() === ''" [attr.aria-current]="activeBoard() === '' ? 'true' : null" (click)="boardSelect.emit('')">全部貼文</button></li>
             @for (board of list(); track board) {

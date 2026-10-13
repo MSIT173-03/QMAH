@@ -783,16 +783,22 @@ public sealed class MeController(
 
     /// <summary>分頁取得目前登入會員的通知。</summary>
     [HttpGet("notifications")]
-    public async Task<ActionResult<ApiPage<NotificationDto>>> GetNotifications(
+    public async Task<ActionResult<NotificationPageDto>> GetNotifications(
         int page = 1,
         int pageSize = 20,
+        bool? isRead = null,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var userId))
             return Unauthorized();
-        var query = db.UserNotifications
+        var allNotifications = db.UserNotifications
             .AsNoTracking()
-            .Where(notification => notification.UserId == userId)
+            .Where(notification => notification.UserId == userId);
+        var unreadCount = await allNotifications.CountAsync(item => !item.IsRead, cancellationToken);
+        var totalNotificationCount = await allNotifications.CountAsync(cancellationToken);
+        var readCount = totalNotificationCount - unreadCount;
+        var query = allNotifications
+            .Where(notification => isRead == null || notification.IsRead == isRead.Value)
             .OrderByDescending(notification => notification.CreatedAt)
             .Select(notification => new NotificationDto(
                 notification.Id,
@@ -802,7 +808,9 @@ public sealed class MeController(
                 notification.IsRead,
                 notification.CreatedAt,
                 notification.ReadAt));
-        return Ok(await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken));
+        var result = await ApiPaging.ToPageAsync(query, page, pageSize, cancellationToken);
+        return Ok(new NotificationPageDto(result.Items, result.Page, result.PageSize, result.TotalCount,
+            result.TotalPages, unreadCount, readCount, totalNotificationCount));
     }
 
     /// <summary>將目前登入會員的一筆通知標記為已讀。</summary>
@@ -825,6 +833,45 @@ public sealed class MeController(
             await db.SaveChangesAsync(cancellationToken);
         }
 
+        return NoContent();
+    }
+
+    /// <summary>將目前登入會員的一筆通知重新設為未讀。</summary>
+    [HttpPost("notifications/{id:guid}/unread")]
+    public async Task<IActionResult> MarkNotificationUnread(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var notification = await db.UserNotifications
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+        if (notification is null)
+            return NotFound();
+        if (notification.IsRead)
+        {
+            notification.IsRead = false;
+            notification.ReadAt = null;
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>將目前登入會員的所有未讀通知標記為已讀。</summary>
+    [HttpPost("notifications/read-all")]
+    public async Task<IActionResult> MarkAllNotificationsRead(CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        var now = DateTime.UtcNow;
+        await db.UserNotifications
+            .Where(item => item.UserId == userId && !item.IsRead)
+            .ExecuteUpdateAsync(updates => updates
+                .SetProperty(item => item.IsRead, true)
+                .SetProperty(item => item.ReadAt, now), cancellationToken);
         return NoContent();
     }
 

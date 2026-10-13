@@ -77,8 +77,7 @@ describe('LayoutComponent', () => {
     });
     fixture.detectChanges();
     httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
-      { message: 'Unauthorized' },
-      { status: 401, statusText: 'Unauthorized' }
+      { items: [], page: 1, pageSize: 10, totalCount: 0, totalPages: 0, unreadCount: 0, readCount: 0, totalNotificationCount: 0 }
     );
 
     expect(component.meApi.me()?.displayName).toBe('測試管理員');
@@ -102,7 +101,7 @@ describe('LayoutComponent', () => {
     httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush({ id: 'admin-1', roles: ['Admin'], email: 'admin@example.test' });
     fixture.detectChanges();
     httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
-      { message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' }
+      { items: [], page: 1, pageSize: 10, totalCount: 0, totalPages: 0, unreadCount: 0, readCount: 0, totalNotificationCount: 0 }
     );
     fixture.detectChanges();
   }
@@ -164,5 +163,15 @@ describe('LayoutComponent', () => {
     httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush({}, { status: 401, statusText: 'Unauthorized' });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('a.app-admin-entry')).toBeNull();
+  });
+
+  it('clears the member when notifications report an expired session', () => {
+    loadAdmin();
+    component.meApi.me.set({ id: 'member-1', roles: ['Member'], email: 'member@example.test' } as never);
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith('/me/notifications')).flush(
+      { message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' }
+    );
+    expect(component.meApi.me()).toBeNull();
   });
 });

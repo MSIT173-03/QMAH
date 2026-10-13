@@ -289,6 +289,7 @@ builder.Services.AddScoped<DailyActivityService>();
 // 不依賴前端持續輪詢，部署到不同主機時也只需沿用既有 DI 設定。
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<NotificationConnections>();
+builder.Services.AddSingleton<SocialUpdateConnections>();
 builder.Services.AddHostedService<NotificationPushService>();
 // ponytail: 單機記憶體群組；多台主機部署時加 Redis backplane（AddStackExchangeRedis）即可，其餘程式不用動。
 builder.Services.AddSingleton<IGameRoomNotifier, SignalRGameRoomNotifier>();
@@ -306,11 +307,15 @@ builder.Services.AddScoped<ContentSimilarityService>();
 builder.Services.AddSingleton<KeywordFilterService>();
 // API 與 MVC 後台是獨立程序；提交內容時重新讀取 SimHash 設定，讓後台調整生效。
 builder.Services.AddSingleton<ContentModerationSettingsService>();
-// AI 內容審查（OpenAI Moderation，omni-moderation-latest）：只由 AiContentReviewWorker 背景呼叫，
+// AI 內容審查（Azure AI Content Safety 優先，其次 OpenAI Moderation omni-moderation-latest）：只由 AiContentReviewWorker 背景呼叫，
 // 不會出現在發文/留言的同步路徑上，外部 API 逾時或額度用完最多讓審查排程晚一點處理，不影響發文。
-builder.Services.AddHttpClient<IAiContentReviewService, OpenAiContentReviewService>(client =>
+builder.Services.AddHttpClient<OpenAiContentReviewService>(client => client.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<AzureContentSafetyReviewService>(client => client.Timeout = TimeSpan.FromSeconds(30));
+// 有設定 Azure AI Content Safety（免費層）就用它，沒有才退回 OpenAI；兩者都沒設定時排程整批略過。
+builder.Services.AddScoped<IAiContentReviewService>(provider =>
 {
-    client.Timeout = TimeSpan.FromSeconds(30);
+    var azure = provider.GetRequiredService<AzureContentSafetyReviewService>();
+    return azure.IsConfigured ? azure : provider.GetRequiredService<OpenAiContentReviewService>();
 });
 builder.Services.AddHostedService<AiContentReviewWorker>();
 // 綠界付款：表單與 callback 共用付款服務；取消（手動與逾時）共用同一套查詢＋還原流程。
@@ -665,6 +670,7 @@ if (File.Exists(mediaPaths.FaviconPath))
 app.MapControllers();
 app.MapHub<GameRoomHub>("/hubs/game-room");
 app.MapHub<NotificationHub>("/hubs/notifications", options => options.CloseOnAuthenticationExpiration = true);
+app.MapHub<SocialUpdateHub>("/hubs/social-updates");
 
 if (app.Environment.IsDevelopment() || openApiOptions.Enabled)
 {

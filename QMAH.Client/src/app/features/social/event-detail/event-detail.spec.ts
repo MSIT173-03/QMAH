@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
+import { Subject } from 'rxjs';
+import { SocialLive } from '../../../core/services/social-live';
 
 import { EventDetailComponent } from './event-detail';
 
@@ -11,6 +13,7 @@ describe('EventDetailComponent', () => {
   let httpMock: HttpTestingController;
 
   const eventId = '11111111-1111-1111-1111-111111111111';
+  const socialChanges = new Subject<void>();
 
   const sampleEvent = {
     id: eventId,
@@ -38,7 +41,8 @@ describe('EventDetailComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [EventDetailComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        { provide: SocialLive, useValue: { changes: socialChanges } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(EventDetailComponent);
@@ -60,6 +64,18 @@ describe('EventDetailComponent', () => {
 
     expect(component.event?.title).toBe('測試活動');
     expect(component.event?.isRegistered).toBe(false);
+  });
+
+  it('refreshes counts on an open event after a live update', () => {
+    fixture.componentRef.setInput('id', eventId);
+    fixture.detectChanges();
+    httpMock.expectOne((r) => r.url.endsWith(`/social/events/${eventId}`)).flush(sampleEvent);
+
+    socialChanges.next();
+    const refresh = httpMock.expectOne((r) => r.url.endsWith(`/social/events/${eventId}`));
+    refresh.flush({ ...sampleEvent, registrationCount: 4 });
+
+    expect(component.event?.registrationCount).toBe(4);
   });
 
   it('disables registration with a reason once the event is full, closed or ended', () => {

@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
+import { Subject } from 'rxjs';
+import { SocialLive } from '../../../core/services/social-live';
 
 import { EventsComponent } from './events';
 
@@ -9,11 +11,13 @@ describe('EventsComponent', () => {
   let component: EventsComponent;
   let fixture: ComponentFixture<EventsComponent>;
   let httpMock: HttpTestingController;
+  const socialChanges = new Subject<void>();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [EventsComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        { provide: SocialLive, useValue: { changes: socialChanges } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(EventsComponent);
@@ -61,6 +65,24 @@ describe('EventsComponent', () => {
 
     expect(component.events.length).toBe(1);
     expect(component.events[0].title).toBe('測試活動');
+  });
+
+  it('refreshes event registration counts after a public live update', () => {
+    fixture.detectChanges();
+    const initial = httpMock.expectOne((r) => r.url.endsWith('/social/events'));
+    initial.flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
+
+    socialChanges.next();
+    const refresh = httpMock.expectOne((r) => r.url.endsWith('/social/events'));
+    refresh.flush({
+      items: [{ id: 'event-1', registrationCount: 4 }],
+      page: 1,
+      pageSize: 20,
+      totalCount: 1,
+      totalPages: 1
+    });
+
+    expect(component.events[0].registrationCount).toBe(4);
   });
 
   it('blocks an empty create form on the client without calling the API', () => {

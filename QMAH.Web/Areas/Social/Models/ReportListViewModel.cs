@@ -10,6 +10,7 @@ public class ReportListViewModel
     public string ReporterName { get; set; } = string.Empty;
     public string TargetTitle { get; set; } = string.Empty; // 貼文標題
     public string TargetContent { get; set; } = string.Empty; // 貼文完整內文 / 留言內容
+    public string? TargetStatus { get; set; } // 目標目前狀態（PUBLISHED / HIDDEN），目標已刪除為 null
     public string Reason { get; set; } = string.Empty; // 檢舉類別 (如 SPAM)
     public string? Detail { get; set; } // 檢舉人填寫的詳細說明
     public string Status { get; set; } = "PENDING";

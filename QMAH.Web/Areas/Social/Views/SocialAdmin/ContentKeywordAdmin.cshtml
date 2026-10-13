@@ -11,6 +11,32 @@
 }
 
 <div class="card mb-3">
+    <div class="card-header"><h2 class="card-title mb-0">審查流程總覽</h2></div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <div class="fw-semibold mb-1">① 關鍵字（下方表格）</div>
+                <div class="text-secondary small">直接阻擋：發文或留言當下擋下並提示作者。送交審核：先公開，同時自動送一筆檢舉。</div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="fw-semibold mb-1">② 洗版規則（固定）</div>
+                <div class="text-secondary small">同一個字連續出現 10 次以上，或 2～4 字的片段連續重複 5 次以上（例如 6767676767），發文與留言當下直接擋下。相似度重複發布則依下方 SimHash 設定送自動檢舉。</div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="fw-semibold mb-1">③ AI 複審</div>
+                <div class="text-secondary small">只複審疑似內容（例如大量驚嘆號、含網址）。命中送「系統偵測：AI 複審」檢舉；信心很高時會先隱藏，到檢舉管理核准＝維持隱藏、駁回＝還原。</div>
+                <div class="mt-2">
+                    <span class="badge bg-blue-lt">待複審 @ViewData["AiPending"]</span>
+                    <span class="badge bg-purple-lt">AI 檢舉共 @ViewData["AiReports"]</span>
+                    <span class="badge bg-yellow-lt">其中待處理 @ViewData["AiReportsPending"]</span>
+                </div>
+                <a asp-controller="SocialReportAdmin" asp-action="Index" asp-route-keyword="AUTO_AI" class="small">查看 AI 檢舉</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
     <div class="card-header"><h2 class="card-title mb-0">洗版防治（SimHash）設定</h2></div>
     <div class="card-body">
         <form method="post" asp-action="UpdateModerationSettings" asp-route-filterIsActive="@Model.IsActive" asp-route-filterKeyword="@Model.Keyword">

@@ -16,6 +16,6 @@ export class SocialViewPreferences {
     try { return this.document.defaultView?.localStorage.getItem(this.storageKey) === 'wide'; } catch { return false; }
   }
   private applyWidth(): void {
-    this.document.documentElement.style.setProperty('--qmah-social-width', this.wide() ? '1760px' : '1120px');
+    this.document.documentElement.style.setProperty('--qmah-social-width', this.wide() ? '1600px' : '1120px');
   }
 }

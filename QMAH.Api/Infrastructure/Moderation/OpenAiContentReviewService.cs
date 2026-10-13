@@ -70,8 +70,11 @@ public sealed class OpenAiContentReviewService(
                 "OpenAI Moderation 呼叫失敗。StatusCode={StatusCode} Response={Response}",
                 (int)response.StatusCode,
                 Truncate(body));
-            // 呼叫失敗不代表內容有問題，寧可略過這次、留給下一輪排程重試，也不要誤判成違規。
-            return new AiReviewResult(false, null, null, null);
+            // 400 類是這筆內容本身無法審查，重試也不會成功，視為沒有命中。
+            // 其餘（金鑰、限流、服務暫時異常）要保持待審、下一輪重試，不能當成「審查過沒問題」。
+            if (response.StatusCode is System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.RequestEntityTooLarge or System.Net.HttpStatusCode.UnprocessableEntity)
+                return new AiReviewResult(false, null, null, null);
+            throw new HttpRequestException($"OpenAI Moderation 回應 {(int)response.StatusCode}。", null, response.StatusCode);
         }
 
         using var document = JsonDocument.Parse(body);

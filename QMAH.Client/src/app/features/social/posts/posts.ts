@@ -6,9 +6,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subscription } from 'rxjs';
+import { catchError, forkJoin, map, of, Subscription } from 'rxjs';
 
-import { ApiPage, CreateSocialPostRequest, EventListItem, SocialApiService, SocialMedia, SocialPostListItem } from '../../../core/services/social-api';
+import { ApiPage, CreateSocialPostRequest, EventListItem, SocialApiService, SocialMedia, SocialPopularPosts, SocialPostListItem } from '../../../core/services/social-api';
 import { SocialMediaLayout, SocialMediaManagerComponent } from '../../../shared/components/social-media-manager/social-media-manager';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
@@ -18,10 +18,12 @@ import { boardLabel } from '../social-labels';
 import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
 import { SocialBoardsStore } from '../social-boards';
 import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
+import { SocialLive } from '../../../core/services/social-live';
 import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
 import {
   LucideExternalLink,
   LucideFlag,
+  LucideFlame,
   LucideFoldHorizontal,
   LucideUnfoldHorizontal,
 
@@ -32,6 +34,7 @@ import {
   LucideArrowUpNarrowWide,
   LucideCalendarDays,
   LucideCalendarRange,
+  LucideChevronLeft,
   LucideChevronRight,
   LucideColumns2,
   LucideColumns3,
@@ -54,6 +57,7 @@ import {
     SocialEventContentComponent,
     LucideExternalLink,
     LucideFlag,
+    LucideFlame,
     LucideFoldHorizontal,
   LucideUnfoldHorizontal,
   
@@ -64,13 +68,14 @@ import {
     LucideArrowUpNarrowWide,
     LucideCalendarDays,
     LucideCalendarRange,
+    LucideChevronLeft,
     LucideChevronRight,
     LucideColumns2,
     LucideColumns3,
     LucideFilterX,
     LucideSearch,
     LucideSquare,
-    LucideX,
+      LucideX,
     UserAvatarComponent
   ],
   templateUrl: './posts.html',
@@ -80,8 +85,10 @@ export class PostsComponent implements OnInit, OnDestroy {
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
+  private socialLive = inject(SocialLive);
 
   @ViewChild('createPostDialog') private createPostDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild('popularRail') private popularRail?: ElementRef<HTMLOListElement>;
   private postObserver?: IntersectionObserver;
   private postSentinel?: HTMLElement;
   private loadedPage = 1;
@@ -99,9 +106,19 @@ export class PostsComponent implements OnInit, OnDestroy {
 
   posts: SocialPostListItem[] = [];
   private postsRequest?: Subscription;
+  private liveSubscription?: Subscription;
+  private liveRefreshRequest?: Subscription;
+  private pendingLiveRefresh = false;
+  private refreshingLive = false;
   private cacheFilterKey = '';
   private readonly sortedPages = new Map<'newest' | 'oldest', ApiPage<SocialPostListItem>>();
   totalCount = 0;
+  popular: SocialPopularPosts | null = null;
+  popularSlideIndex = 0;
+  discoveryTab: 'events' | 'popular' = 'events';
+  private discoveryLoaded = false;
+  private discoveryRequest?: Subscription;
+  liveUpdateNotice = '';
   loading = false;
   loadError: string | null = null;
   createError: string | null = null;
@@ -221,7 +238,10 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.narrowQuery?.addEventListener('change', this.onWallResize);
     this.mediumQuery?.addEventListener('change', this.onWallResize);
     this.loadPosts();
-    this.loadUpcomingEvents();
+    this.loadDiscovery();
+    this.liveSubscription = this.socialLive.changes.subscribe(() => {
+      this.refreshFromSocial();
+    });
     this.boardStore.load().subscribe({
       next: (boards) => {
         this.boardCodes = boards;
@@ -234,21 +254,242 @@ export class PostsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.postObserver?.disconnect();
     this.postsRequest?.unsubscribe();
+    this.liveSubscription?.unsubscribe();
+    this.liveRefreshRequest?.unsubscribe();
+    this.discoveryRequest?.unsubscribe();
+    this.eventPageRequest?.unsubscribe();
+    if (this.suppressUpcomingClickTimer) clearTimeout(this.suppressUpcomingClickTimer);
     this.narrowQuery?.removeEventListener('change', this.onWallResize);
     this.mediumQuery?.removeEventListener('change', this.onWallResize);
   }
 
-  /** 近期活動（尚未開始的前兩場），給貼文牆頂端的快速入口 */
+  /** 貼文牆頂端的近期活動輪播：每次最多載入六筆，左右按鈕再逐頁載入。 */
   upcomingEvents: EventListItem[] = [];
+  upcomingEventsPage = 1;
+  upcomingEventsTotalPages = 1;
+  upcomingEventsTotalCount = 0;
+  upcomingEventsOffset = 0;
+  loadingEventPage = false;
+  private upcomingEventsAnchor = '';
+  private eventPageRequest?: Subscription;
+  private upcomingTouchStart: { x: number; y: number } | null = null;
+  private suppressUpcomingClick = false;
+  private suppressUpcomingClickTimer?: ReturnType<typeof setTimeout>;
 
-  private loadUpcomingEvents(): void {
-    this.socialApi.getEvents({ startAfter: new Date().toISOString(), pageSize: 2 }).subscribe({
-      next: (page) => {
-        this.upcomingEvents = page.items;
-        this.cdr.detectChanges();
-      },
-      error: () => { this.upcomingEvents = []; }
+  get eventsPerSlide(): number {
+    return this.narrowQuery?.matches ? 1 : 2;
+  }
+
+  get visibleUpcomingEvents(): EventListItem[] {
+    return this.upcomingEvents.slice(this.upcomingEventsOffset, this.upcomingEventsOffset + this.eventsPerSlide);
+  }
+
+  get canGoToPreviousEvents(): boolean {
+    return this.upcomingEventsOffset > 0 || this.upcomingEventsPage > 1;
+  }
+
+  get canGoToNextEvents(): boolean {
+    return this.upcomingEventsOffset + this.eventsPerSlide < this.upcomingEvents.length ||
+      this.upcomingEventsPage < this.upcomingEventsTotalPages;
+  }
+
+  get eventSlideLabel(): string {
+    const first = this.upcomingEventsOffset + 1;
+    const last = Math.min(this.upcomingEventsOffset + this.eventsPerSlide, this.upcomingEventsTotalCount);
+    return this.eventsPerSlide === 1
+      ? `${first} / ${this.upcomingEventsTotalCount}`
+      : `${first}–${last} / ${this.upcomingEventsTotalCount}`;
+  }
+
+  private loadDiscovery(): void {
+    this.discoveryRequest?.unsubscribe();
+    this.eventPageRequest?.unsubscribe();
+    this.loadingEventPage = false;
+    this.upcomingEventsAnchor = new Date().toISOString();
+    this.discoveryRequest = forkJoin({
+      events: this.socialApi.getEvents({ startAfter: this.upcomingEventsAnchor, pageSize: 6 })
+        .pipe(catchError(() => of(null))),
+      popular: this.socialApi.getPopularPosts().pipe(catchError(() => of(null)))
+    }).subscribe(({ events, popular }) => {
+      this.upcomingEvents = events?.items ?? [];
+      this.upcomingEventsPage = events?.page ?? 1;
+      this.upcomingEventsTotalPages = events?.totalPages ?? 1;
+      this.upcomingEventsTotalCount = events?.totalCount ?? this.upcomingEvents.length;
+      this.upcomingEventsOffset = 0;
+      this.popular = popular;
+      this.popularSlideIndex = 0;
+      if (!this.discoveryLoaded) {
+        this.discoveryTab = this.upcomingEvents.length ? 'events' : popular?.items.length ? 'popular' : 'events';
+        this.discoveryLoaded = true;
+      } else if (this.discoveryTab === 'events' && !this.upcomingEvents.length && popular?.items.length) {
+        this.discoveryTab = 'popular';
+      } else if (this.discoveryTab === 'popular' && !popular?.items.length && this.upcomingEvents.length) {
+        this.discoveryTab = 'events';
+      }
+      this.cdr.detectChanges();
     });
+  }
+
+  previousEventSlide(): void {
+    if (this.loadingEventPage || !this.canGoToPreviousEvents) return;
+    if (this.upcomingEventsOffset > 0) {
+      this.upcomingEventsOffset = Math.max(0, this.upcomingEventsOffset - this.eventsPerSlide);
+      return;
+    }
+    this.loadEventPage(this.upcomingEventsPage - 1, Number.MAX_SAFE_INTEGER);
+  }
+
+  nextEventSlide(): void {
+    if (this.loadingEventPage || !this.canGoToNextEvents) return;
+    if (this.upcomingEventsOffset + this.eventsPerSlide < this.upcomingEvents.length) {
+      this.upcomingEventsOffset += this.eventsPerSlide;
+      return;
+    }
+    this.loadEventPage(this.upcomingEventsPage + 1, 0);
+  }
+
+  onUpcomingTouchStart(event: TouchEvent): void {
+    const touch = event.touches[0];
+    if (touch) this.upcomingTouchStart = { x: touch.clientX, y: touch.clientY };
+  }
+
+  onUpcomingTouchEnd(event: TouchEvent): void {
+    const start = this.upcomingTouchStart;
+    const touch = event.changedTouches[0];
+    this.upcomingTouchStart = null;
+    if (!start || !touch) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+
+    this.suppressUpcomingClick = true;
+    if (this.suppressUpcomingClickTimer) clearTimeout(this.suppressUpcomingClickTimer);
+    this.suppressUpcomingClickTimer = setTimeout(() => (this.suppressUpcomingClick = false), 500);
+    if (deltaX < 0) this.nextEventSlide();
+    else this.previousEventSlide();
+  }
+
+  preventUpcomingSwipeNavigation(event: MouseEvent): void {
+    if (!this.suppressUpcomingClick) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.suppressUpcomingClick = false;
+    if (this.suppressUpcomingClickTimer) clearTimeout(this.suppressUpcomingClickTimer);
+  }
+
+  private loadEventPage(page: number, offset: number): void {
+    this.eventPageRequest?.unsubscribe();
+    this.loadingEventPage = true;
+    this.eventPageRequest = this.socialApi.getEvents({ startAfter: this.upcomingEventsAnchor, page, pageSize: 6 })
+      .pipe(catchError(() => of(null)))
+      .subscribe(result => {
+        if (result) {
+          this.upcomingEvents = result.items;
+          this.upcomingEventsPage = result.page;
+          this.upcomingEventsTotalPages = result.totalPages;
+          this.upcomingEventsTotalCount = result.totalCount;
+          this.upcomingEventsOffset = offset === Number.MAX_SAFE_INTEGER
+            ? Math.max(0, result.items.length - this.eventsPerSlide)
+            : offset;
+        }
+        this.loadingEventPage = false;
+        this.cdr.detectChanges();
+      });
+  }
+
+  get showingEvents(): boolean {
+    return this.upcomingEvents.length > 0 && (this.discoveryTab === 'events' || !this.popular?.items.length);
+  }
+
+  setDiscoveryTab(tab: 'events' | 'popular'): void {
+    if (tab === 'events' ? this.upcomingEvents.length : this.popular?.items.length) this.discoveryTab = tab;
+  }
+
+  onPopularRailScroll(event: Event): void {
+    const rail = event.currentTarget as HTMLOListElement | null;
+    if (!rail || rail.clientWidth <= 0) return;
+    this.popularSlideIndex = Math.max(0, Math.min(
+      (this.popular?.items.length ?? 1) - 1,
+      Math.round(rail.scrollLeft / rail.clientWidth)
+    ));
+  }
+
+  goToPopularSlide(index: number): void {
+    const rail = this.popularRail?.nativeElement;
+    if (!rail || !this.popular?.items[index]) return;
+    this.popularSlideIndex = index;
+    rail.scrollTo({
+      left: index * rail.clientWidth,
+      behavior: this.prefersReducedMotion() ? 'auto' : 'smooth'
+    });
+  }
+
+  private prefersReducedMotion(): boolean {
+    return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  }
+
+  /** 靜默更新已載入的牆面，確認被隱藏／刪除的文章後保留捲動位置。 */
+  private refreshFromSocial(): void {
+    if (this.loading || this.refreshingLive) {
+      this.pendingLiveRefresh = true;
+      return;
+    }
+    this.refreshingLive = true;
+    const anchor = this.captureScrollAnchor();
+    const currentIds = this.posts.map(post => post.id);
+    const batches = Array.from({ length: Math.ceil(currentIds.length / 100) }, (_, index) =>
+      this.socialApi.getVisiblePostIds(currentIds.slice(index * 100, (index + 1) * 100)));
+    const visibleIds$ = batches.length ? forkJoin(batches).pipe(map(groups => groups.flat())) : of([] as string[]);
+    this.liveRefreshRequest?.unsubscribe();
+    this.liveRefreshRequest = forkJoin({
+      firstPage: this.socialApi.getPosts(this.postQuery(1, this.sortOrder)),
+      visibleIds: visibleIds$
+    }).subscribe({
+      next: ({ firstPage, visibleIds }) => {
+        const visible = new Set(visibleIds);
+        const merged = new Map<string, SocialPostListItem>();
+        for (const post of this.posts) if (visible.has(post.id)) merged.set(post.id, post);
+        for (const post of firstPage.items) merged.set(post.id, post);
+        const direction = this.sortOrder === 'oldest' ? 1 : -1;
+        this.posts = [...merged.values()].sort((a, b) => direction * (Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id)));
+        this.totalCount = firstPage.totalCount;
+        this.totalPages = firstPage.totalPages || Math.ceil(firstPage.totalCount / (firstPage.pageSize || 20));
+        this.loadedPage = Math.min(this.loadedPage, Math.max(1, this.totalPages));
+        this.sortedPages.set(this.sortOrder, firstPage);
+        this.liveUpdateNotice = '';
+        this.refreshingLive = false;
+        this.cdr.detectChanges();
+        this.restoreScrollAnchor(anchor);
+        this.loadDiscovery();
+        this.flushPendingLiveRefresh();
+      },
+      error: () => {
+        this.refreshingLive = false;
+        this.liveUpdateNotice = '更新延遲，稍後重試';
+        this.cdr.detectChanges();
+        this.flushPendingLiveRefresh();
+      }
+    });
+  }
+
+  private captureScrollAnchor(): { id: string; top: number } | null {
+    const cards = [...document.querySelectorAll<HTMLElement>('[data-post-id]')];
+    const element = cards.find(card => card.getBoundingClientRect().bottom > 0);
+    return element ? { id: element.dataset['postId'] ?? '', top: element.getBoundingClientRect().top } : null;
+  }
+
+  private restoreScrollAnchor(anchor: { id: string; top: number } | null): void {
+    if (!anchor?.id) return;
+    requestAnimationFrame(() => {
+      const element = document.querySelector<HTMLElement>(`[data-post-id="${anchor.id}"]`);
+      if (element) window.scrollBy({ top: element.getBoundingClientRect().top - anchor.top, behavior: 'auto' });
+    });
+  }
+
+  private flushPendingLiveRefresh(): void {
+    if (!this.pendingLiveRefresh || this.loading || this.refreshingLive) return;
+    this.pendingLiveRefresh = false;
+    this.refreshFromSocial();
   }
 
   openCreatePost(): void {
@@ -384,6 +625,7 @@ export class PostsComponent implements OnInit, OnDestroy {
       this.loading = false;
       this.cdr.detectChanges();
       if (this.postSentinel) { this.postObserver?.unobserve(this.postSentinel); this.postObserver?.observe(this.postSentinel); }
+      this.flushPendingLiveRefresh();
     };
     this.loadError = null;
     const cached = this.sortedPages.get(order);
@@ -429,11 +671,13 @@ export class PostsComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
         // Reobserve after layout settles; a still-visible sentinel must not stall.
         if (this.postSentinel) { this.postObserver?.unobserve(this.postSentinel); this.postObserver?.observe(this.postSentinel); }
+        this.flushPendingLiveRefresh();
       },
       error: () => {
         this.loading = false;
         this.loadError = '後面的貼文暫時無法載入，請按「載入更多」再試一次。';
         this.cdr.detectChanges();
+        this.flushPendingLiveRefresh();
       },
     });
   }

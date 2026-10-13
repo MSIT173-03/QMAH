@@ -255,8 +255,46 @@
 .section-info {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
 
   gap: 8px;
+}
+
+.bulk-read-button,
+.read-state-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 8px 13px;
+  border: 1px solid var(--qmah-primary);
+  border-radius: 10px;
+  background: var(--qmah-surface-elevated);
+  color: var(--qmah-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 720;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--qmah-primary);
+    color: var(--qmah-on-primary, #fff);
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+}
+
+.notification-action-error {
+  margin: 0 0 14px;
+  color: var(--qmah-danger, #a63b32);
+  font-size: 14px;
 }
 
 
@@ -423,7 +461,7 @@
       var(--qmah-surface-elevated)
     );
 
-  cursor: pointer;
+  cursor: default;
 
   &:hover {
     transform: translateY(-1px);
@@ -570,8 +608,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
 
   gap: 15px;
+}
+
+.notification-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
 }
 
 
@@ -600,8 +647,10 @@
 .detail-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
 
   gap: 5px;
+  min-height: 42px;
 
   flex-shrink: 0;
 
@@ -627,6 +676,10 @@
 
     color: var(--qmah-primary);
   }
+}
+
+.read-state-button {
+  flex-shrink: 0;
 }
 
 
@@ -1012,9 +1065,7 @@
 
 
   .section-title {
-    align-items: flex-start;
-
-    flex-direction: column;
+    display: block;
   }
 
 
@@ -1032,6 +1083,20 @@
     align-items: flex-start;
 
     flex-direction: column;
+  }
+
+  .notification-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .section-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .bulk-read-button {
+    flex-shrink: 0;
   }
 
 

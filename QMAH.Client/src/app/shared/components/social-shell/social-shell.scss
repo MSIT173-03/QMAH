@@ -33,6 +33,7 @@
 :host-context([data-theme='qmahdark']) .shell__nav { background: #25282a; border-color: #43474a; }
 :host-context([data-theme='qmahdark']) .shell__item { color: #e6e2da; }
 :host-context([data-theme='qmahdark']) .shell__item.is-active { color: #ff8a80; }
+.shell__mobile-picker { display: none; }
 
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; gap: 14px; }
@@ -46,6 +47,46 @@
 
 @media(max-width:640px) {
   .shell__main,.shell__nav { min-width:0; }
-  .shell__list { max-width:100%;overscroll-behavior-inline:contain; }
-  .shell__item { min-height:42px; }
+  /* One compact mobile rail keeps social destinations and boards together. */
+  .shell__nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+  }
+  .shell__nav::-webkit-scrollbar { display: none; }
+  .shell__list { flex: 0 0 auto; max-width: none; overflow: visible; padding-bottom: 0; }
+  .shell__list + .shell__list { padding-left: 6px; border-left: 1px solid var(--qmah-border); }
+  .shell__list--boards { display: none; }
+  .shell__item { min-height:40px; padding-inline:8px; gap:6px; font-size:0.8125rem; }
+  .shell__nav .shell__mobile-picker {
+    position: relative;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    margin-left: auto;
+  }
+  .shell__mobile-picker select {
+    appearance: none;
+    min-width: 104px;
+    max-width: 42vw;
+    min-height: 40px;
+    padding: 0 34px 0 12px;
+    border: 1px solid var(--qmah-social-action);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--qmah-social-action) 9%, var(--qmah-surface-elevated, var(--qmah-surface)));
+    color: var(--qmah-social-action);
+    font: 700 0.8125rem/1.2 var(--qmah-font-sans);
+    text-overflow: ellipsis;
+  }
+  .shell__mobile-picker select:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+  .shell__mobile-picker > svg { position: absolute; right: 11px; width: 15px; height: 15px; pointer-events: none; color: var(--qmah-social-action); }
+}
+
+:host-context([data-theme='qmahdark']) .shell__mobile-picker select {
+  background: #25282a;
+  color: #ff8a80;
 }

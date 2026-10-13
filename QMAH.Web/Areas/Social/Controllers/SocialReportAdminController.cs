@@ -95,6 +95,9 @@ public sealed class SocialReportAdminController : Controller
                 TargetContent = report.TargetType == "POST"
                     ? (_context.SocialPosts.Where(post => post.Id == report.TargetId).Select(post => post.Content).FirstOrDefault() ?? "內容已不存在")
                     : (_context.SocialComments.Where(comment => comment.Id == report.TargetId).Select(comment => comment.Content).FirstOrDefault() ?? "內容已不存在"),
+                TargetStatus = report.TargetType == "POST"
+                    ? _context.SocialPosts.Where(post => post.Id == report.TargetId).Select(post => post.Status).FirstOrDefault()
+                    : _context.SocialComments.Where(comment => comment.Id == report.TargetId).Select(comment => comment.Status).FirstOrDefault(),
                 ReporterName = _context.UserProfiles
                     .Where(profile => profile.UserId == report.ReporterUserId)
                     .Select(profile => profile.Nickname)
@@ -252,6 +255,10 @@ public sealed class SocialReportAdminController : Controller
         {
             hiddenTarget = await HideTarget(report.TargetType, report.TargetId, cancellationToken);
         }
+        else if (status == "REJECTED")
+        {
+            await RestoreAutoHiddenTarget(report, cancellationToken);
+        }
 
         // 只有狀態真的從未結案變成結案時才通知，重複按同一個按鈕不會一直發。
         if (previousStatus != status && status is "RESOLVED" or "REJECTED")
@@ -343,6 +350,10 @@ public sealed class SocialReportAdminController : Controller
             {
                 hiddenTarget = await HideTarget(report.TargetType, report.TargetId, cancellationToken);
             }
+            else
+            {
+                await RestoreAutoHiddenTarget(report, cancellationToken);
+            }
 
             if (previousStatus == status)
             {
@@ -423,6 +434,27 @@ public sealed class SocialReportAdminController : Controller
         }
 
         return null;
+    }
+
+    // AI 複審信心夠高時，API 會先把內容隱藏再送檢舉。管理員駁回這類檢舉，代表判斷為誤判，內容要一併還原；
+    // 其他來源的檢舉（真人、關鍵字、洗版）本來就沒有動內容，駁回時不碰。
+    private async Task RestoreAutoHiddenTarget(ContentReport report, CancellationToken cancellationToken)
+    {
+        if (report.Reason != "AUTO_AI")
+        {
+            return;
+        }
+
+        if (report.TargetType == "POST")
+        {
+            var post = await _context.SocialPosts.FirstOrDefaultAsync(item => item.Id == report.TargetId && item.Status == "HIDDEN", cancellationToken);
+            if (post is not null) { post.Status = "PUBLISHED"; post.UpdatedAt = DateTime.UtcNow; }
+        }
+        else if (report.TargetType == "COMMENT")
+        {
+            var comment = await _context.SocialComments.FirstOrDefaultAsync(item => item.Id == report.TargetId && item.Status == "HIDDEN", cancellationToken);
+            if (comment is not null) { comment.Status = "PUBLISHED"; comment.UpdatedAt = DateTime.UtcNow; }
+        }
     }
 
     // 對應前台 API 送出檢舉時的承諾：「管理員審核後會有結果通知」。

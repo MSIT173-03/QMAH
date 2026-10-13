@@ -87,6 +87,8 @@ export interface SocialPostDetails {
   boardCode: string;
   userId: string;
   displayName: string | null;
+  /** 作者目前展示的稱號，只由詳情 API 回傳；貼文列表不顯示。 */
+  authorTitle?: string | null;
   artifactId: string | null;
   eventId: string | null;
   postType: 'POST' | 'ANNOUNCEMENT' | 'EVENT';
@@ -102,6 +104,20 @@ export interface SocialPostDetails {
   longitude: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SocialPopularPost {
+  id: string;
+  boardCode: string;
+  title: string;
+  createdAt: string;
+  participantCount: number;
+  commentCount: number;
+}
+
+export interface SocialPopularPosts {
+  window: 'WEEK' | 'ALL_TIME';
+  items: SocialPopularPost[];
 }
 
 export interface EventListItem {
@@ -252,6 +268,16 @@ export class SocialApiService {
     return this.http.get<ApiPage<SocialPostListItem>>(`${this.base}/posts`, {
       params: this.toHttpParams(params)
     });
+  }
+
+  getPopularPosts(): Observable<SocialPopularPosts> {
+    return this.http.get<SocialPopularPosts>(`${this.base}/posts/popular`);
+  }
+
+  getVisiblePostIds(ids: string[]): Observable<string[]> {
+    let params = new HttpParams();
+    for (const id of ids.slice(0, 100)) params = params.append('ids', id);
+    return this.http.get<string[]>(`${this.base}/posts/visible`, { params });
   }
 
   getMember(userId: string): Observable<SocialMemberProfile> {

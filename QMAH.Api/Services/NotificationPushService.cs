@@ -10,13 +10,20 @@ public sealed class NotificationPushService(
     IServiceScopeFactory scopes,
     NotificationConnections connections,
     IHubContext<NotificationHub> hub,
+    SocialUpdateConnections socialConnections,
+    IHubContext<SocialUpdateHub> socialHub,
     ILogger<NotificationPushService> logger) : BackgroundService
 {
     private sealed record Stamp(int Count, int Unread, DateTime Created, DateTime? Read);
+    private sealed record EconomyStamp(int Points, decimal KeyProgress, DateTime? PointUpdated, DateTime? ProgressUpdated);
+    private sealed record SocialStamp(int Posts, DateTime? LatestPostUpdate, int Comments, DateTime? LatestCommentUpdate, int Events, int EventDetailsHash);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var previous = new Dictionary<Guid, Stamp>();
+        var previousEconomy = new Dictionary<Guid, EconomyStamp>();
+        SocialStamp? previousSocial = null;
+        var nextSocialCheck = DateTime.MinValue;
         while (!stoppingToken.IsCancellationRequested)
         {
             var delay = TimeSpan.FromSeconds(2);
@@ -24,13 +31,16 @@ public sealed class NotificationPushService(
             {
                 var users = connections.Users;
                 foreach (var id in previous.Keys.Except(users).ToArray()) previous.Remove(id);
-                if (users.Length > 0)
+                foreach (var id in previousEconomy.Keys.Except(users).ToArray()) previousEconomy.Remove(id);
+                if (users.Length > 0 || socialConnections.HasConnections)
                 {
                     using var scope = scopes.CreateScope();
                     using var timeout = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-                    timeout.CancelAfter(TimeSpan.FromSeconds(3));
+                    timeout.CancelAfter(TimeSpan.FromSeconds(5));
                     var db = scope.ServiceProvider.GetRequiredService<QmahDbContext>();
-                    db.Database.SetCommandTimeout(3);
+                    db.Database.SetCommandTimeout(5);
+                    if (users.Length > 0)
+                    {
                     var current = await db.UserNotifications.AsNoTracking()
                         .Where(item => users.Contains(item.UserId))
                         .GroupBy(item => item.UserId)
@@ -51,6 +61,76 @@ public sealed class NotificationPushService(
                         {
                             await hub.Clients.User(userId.ToString()).SendAsync("NotificationsChanged", timeout.Token);
                             previous[userId] = stamp;
+                        }
+                    }
+
+                    var points = await db.PointBalances.AsNoTracking()
+                        .Where(item => users.Contains(item.UserId))
+                        .Select(item => new { item.UserId, item.Balance, item.UpdatedAt })
+                        .ToDictionaryAsync(item => item.UserId, timeout.Token);
+                    var progress = await db.KeyProgressBalances.AsNoTracking()
+                        .Where(item => users.Contains(item.UserId))
+                        .Select(item => new { item.UserId, item.Balance, item.UpdatedAt })
+                        .ToDictionaryAsync(item => item.UserId, timeout.Token);
+                    foreach (var userId in users)
+                    {
+                        var point = points.GetValueOrDefault(userId);
+                        var keyProgress = progress.GetValueOrDefault(userId);
+                        var stamp = new EconomyStamp(point?.Balance ?? 0, keyProgress?.Balance ?? 0,
+                            point?.UpdatedAt, keyProgress?.UpdatedAt);
+                        if (!previousEconomy.TryGetValue(userId, out var old) || old != stamp)
+                        {
+                            await hub.Clients.User(userId.ToString()).SendAsync("EconomyChanged", timeout.Token);
+                            previousEconomy[userId] = stamp;
+                        }
+                    }
+                    }
+
+                    if (socialConnections.HasConnections && DateTime.UtcNow >= nextSocialCheck)
+                    {
+                        nextSocialCheck = DateTime.UtcNow.AddSeconds(5);
+                        var publicPosts = db.SocialPosts.AsNoTracking()
+                            .Where(item => item.Status == "PUBLISHED" && item.PublisherType == "COMMUNITY" && item.PostType == "POST");
+                        var postStamp = await publicPosts.GroupBy(_ => 1)
+                            .Select(group => new { Count = group.Count(), Latest = group.Max(item => (DateTime?)item.UpdatedAt) })
+                            .SingleOrDefaultAsync(timeout.Token);
+                        var commentStamp = await db.SocialComments.AsNoTracking()
+                            .Where(item => item.Status == "PUBLISHED")
+                            .GroupBy(_ => 1)
+                            .Select(group => new { Count = group.Count(), Latest = group.Max(item => (DateTime?)item.UpdatedAt) })
+                            .SingleOrDefaultAsync(timeout.Token);
+                        var events = await db.Events.AsNoTracking()
+                            .Where(item => item.ReviewStatus == "APPROVED" && item.PublishStatus == "PUBLISHED")
+                            .OrderBy(item => item.Id)
+                            .Select(item => new
+                            {
+                                item.Id,
+                                item.Title,
+                                item.Location,
+                                item.StartAt,
+                                item.EndAt,
+                                Active = item.EventRegistrations.Count(registration =>
+                                    registration.Status == "REGISTERED" || registration.Status == "ATTENDED"),
+                                LatestRegistration = item.EventRegistrations.Max(registration => (DateTime?)registration.RegisteredAt)
+                            }).ToListAsync(timeout.Token);
+                        var eventHash = new HashCode();
+                        foreach (var item in events)
+                        {
+                            eventHash.Add(item.Id);
+                            eventHash.Add(item.Title, StringComparer.Ordinal);
+                            eventHash.Add(item.Location, StringComparer.Ordinal);
+                            eventHash.Add(item.StartAt);
+                            eventHash.Add(item.EndAt);
+                            eventHash.Add(item.Active);
+                            eventHash.Add(item.LatestRegistration);
+                        }
+                        var stamp = new SocialStamp(postStamp?.Count ?? 0, postStamp?.Latest,
+                            commentStamp?.Count ?? 0, commentStamp?.Latest, events.Count,
+                            eventHash.ToHashCode());
+                        if (previousSocial != stamp)
+                        {
+                            await socialHub.Clients.All.SendAsync("SocialChanged", timeout.Token);
+                            previousSocial = stamp;
                         }
                     }
                 }

@@ -71,7 +71,11 @@
                     {
                         <span class="badge bg-purple-lt ms-1">系統自動</span>
                     }
+                    @if (item.TargetStatus == "HIDDEN") { <span class="badge bg-red-lt ms-1">目前已隱藏</span> }
+                    else if (item.TargetStatus == "PUBLISHED") { <span class="badge bg-green-lt ms-1">目前公開</span> }
+                    else { <span class="badge bg-secondary-lt ms-1">內容已不存在</span> }
                     <div class="fw-semibold mt-1">@item.TargetTitle</div>
+                    @if (item.Reason == "AUTO_AI" && item.TargetStatus == "HIDDEN" && item.Status == "PENDING") { <div class="text-secondary small">AI 信心高，已先隱藏。核准＝維持隱藏；駁回＝判為誤判並還原公開。</div> }
                     <button type="button"
                             class="btn btn-sm btn-link p-0 mt-1"
                             data-bs-toggle="modal"

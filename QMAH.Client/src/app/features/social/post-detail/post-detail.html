@@ -49,6 +49,9 @@
         <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
         @if (post.publisherType === 'COMMUNITY' && post.userId) {
           <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
+          @if (post.authorTitle) {
+            <span class="social-tag social-author-title">{{ post.authorTitle }}</span>
+          }
         } @else {
           {{ post.displayName || '匿名會員' }}
         }

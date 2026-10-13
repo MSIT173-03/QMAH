@@ -130,11 +130,88 @@ public sealed class SocialController(
                 post.UpdatedAt,
                 post.Event != null
                     ? new SocialPostEventSummaryDto(post.Event.StartAt, post.Event.EndAt, post.Event.Location, post.Event.Capacity)
-                    : null));
+                    : null,
+                // 貼文牆卡片最多輪播 5 張，完整圖片在貼文頁。
+                post.MediaAssets
+                    .Where(media => media.Status == "ACTIVE")
+                    .OrderBy(media => media.CreatedAt).ThenBy(media => media.SequenceNo)
+                    .Take(5)
+                    .Select(media => "/api/v1/social/media/" + media.Id + "/content")
+                    .ToList()));
 
         var postPage = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
         // 摘要要去掉格式標記（資料庫只截取前段文字，標記在這裡解析成純文字再截成 180 字）。
         return Ok(postPage with { Items = postPage.Items.Select(item => item with { ContentPreview = SocialMarkup.ToPlainText(item.ContentPreview, 180) }).ToList() });
+    }
+
+    /// <summary>
+    /// 熱門貼文依「互動量 × 時間衰減」排序：互動量為其他會員的參與人數 × 3 加留言數，每 7 天減半。
+    /// 至少要有兩位其他會員參與才列入，作者自己的留言與洗版不會把貼文推上來；不設固定時間窗，
+    /// 近期沒有新貼文時，仍由累積互動最高的舊貼文遞補。
+    /// </summary>
+    [HttpGet("posts/popular")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SocialPopularPostsDto>> GetPopularPosts(CancellationToken cancellationToken = default)
+    {
+        var candidates = await db.SocialPosts.AsNoTracking()
+            .Where(post => post.Status == "PUBLISHED" && post.PublisherType == "COMMUNITY" && post.PostType == "POST")
+            .Select(post => new
+            {
+                post.Id,
+                post.BoardCode,
+                post.Title,
+                post.CreatedAt,
+                ParticipantCount = post.SocialComments
+                    .Where(comment => comment.Status == "PUBLISHED" && comment.UserId != post.UserId)
+                    .Select(comment => comment.UserId).Distinct().Count(),
+                CommentCount = post.SocialComments.Count(comment =>
+                    comment.Status == "PUBLISHED" && comment.UserId != post.UserId)
+            })
+            .Where(post => post.ParticipantCount >= PopularMinParticipants)
+            .OrderByDescending(post => post.CommentCount)
+            .Take(60)
+            .ToListAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+        var ranked = candidates
+            .Select(post => new { Post = post, Score = PopularityScore(post.ParticipantCount, post.CommentCount, post.CreatedAt, now) })
+            .OrderByDescending(item => item.Score)
+            .ThenByDescending(item => item.Post.CreatedAt)
+            .ThenByDescending(item => item.Post.Id)
+            .Take(3)
+            .ToList();
+        var topIds = ranked.Select(item => item.Post.Id).ToList();
+        // 前三名另外補封面圖與作者名稱，熱門區才能做成有圖的卡片；只多一次查詢，不影響排名。
+        var extras = await db.SocialPosts.AsNoTracking()
+            .Where(post => topIds.Contains(post.Id))
+            .Select(post => new
+            {
+                post.Id,
+                Cover = post.MediaAssets.Where(media => media.Status == "ACTIVE")
+                    .OrderBy(media => media.CreatedAt).ThenBy(media => media.SequenceNo)
+                    .Select(media => "/api/v1/social/media/" + media.Id + "/content").FirstOrDefault(),
+                Name = db.UserProfiles.Where(profile => profile.UserId == post.UserId).Select(profile => profile.Nickname).FirstOrDefault()
+            })
+            .ToDictionaryAsync(item => item.Id, cancellationToken);
+        var topScore = ranked.Count > 0 ? Math.Max(ranked[0].Score, 0.0001) : 1;
+        var items = ranked
+            .Select(item => new SocialPopularPostDto(item.Post.Id, item.Post.BoardCode, item.Post.Title,
+                item.Post.CreatedAt, item.Post.ParticipantCount, item.Post.CommentCount,
+                extras.TryGetValue(item.Post.Id, out var extra) ? extra.Cover : null,
+                extras.TryGetValue(item.Post.Id, out extra) ? extra.Name : null,
+                (int)Math.Round(item.Score / topScore * 100)))
+            .ToList();
+        var allRecent = items.Count > 0 && items.All(post => post.CreatedAt >= now.AddDays(-7));
+        return Ok(new SocialPopularPostsDto(allRecent ? "WEEK" : "ALL_TIME", items));
+    }
+
+    private const int PopularMinParticipants = 2;
+    private const double PopularHalfLifeDays = 7;
+
+    /// <summary>熱度分數：(參與人數 × 3 + 留言數) 依發文天數每 7 天減半。</summary>
+    internal static double PopularityScore(int participants, int comments, DateTime createdAtUtc, DateTime nowUtc)
+    {
+        var ageDays = Math.Max(0, (nowUtc - createdAtUtc).TotalDays);
+        return (participants * 3 + comments) * Math.Pow(0.5, ageDays / PopularHalfLifeDays);
     }
 
     // 批次取得多位會員的頭像網址（社群列表一次要顯示很多作者）；只回傳公開個人檔案且有頭像的會員。
@@ -158,6 +235,22 @@ public sealed class SocialController(
                 avatarStorage.ResolvePublicPath(profile.UserId, profile.AvatarPath));
         }
         return Ok(result);
+    }
+
+    /// <summary>批次回報指定貼文中仍公開的識別碼；不存在、刪除與隱藏一律省略，不回傳其他資料。</summary>
+    [HttpGet("posts/visible")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<Guid>>> GetVisiblePostIds(
+        [FromQuery] Guid[] ids,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = ids.Distinct().Take(100).ToArray();
+        if (wanted.Length == 0) return Ok(Array.Empty<Guid>());
+        var visible = await db.SocialPosts.AsNoTracking()
+            .Where(post => wanted.Contains(post.Id) && post.Status == "PUBLISHED")
+            .Select(post => post.Id)
+            .ToListAsync(cancellationToken);
+        return Ok(visible);
     }
 
     // 公開個人頁：貼文與活動本來就是公開的，所以統計永遠回傳；頭像、簡介、加入時間、Email 只在對方設為 PUBLIC 時回傳。
@@ -322,6 +415,14 @@ public sealed class SocialController(
         if (post is null)
             return MissingResource("找不到貼文", "這篇貼文不存在或目前不可見。");
 
+        var authorTitle = post.PublisherType == "COMMUNITY"
+            ? await db.UserAchievements.AsNoTracking()
+                .Where(item => item.UserId == post.UserId && item.IsDisplayed && item.Achievement.Status == "ACTIVE")
+                .OrderByDescending(item => item.DisplayedAt ?? item.AchievedAt)
+                .Select(item => item.Achievement.Title)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+
         var comments = await db.SocialComments
             .AsNoTracking()
             .Where(comment => comment.PostId == id && comment.Status == "PUBLISHED")
@@ -384,7 +485,8 @@ public sealed class SocialController(
             post.CreatedAt,
             post.UpdatedAt,
             null,
-            post.MediaLayout));
+            post.MediaLayout,
+            authorTitle));
     }
 
     [HttpGet("events")]
@@ -845,6 +947,13 @@ public sealed class SocialController(
                 title: "內容包含禁用字詞",
                 detail: "這篇內容包含被禁止發布的字詞，請修改後再發布。");
         }
+        if (ContentFloodRules.LooksLikeFlood($"{title}\n{content}"))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "內容重複過多",
+                detail: "這則內容有大量重複的字或片段，請調整後再發布。");
+        }
         var flaggedKeyword = keywordMatches.FirstOrDefault(match => match.Action == "FLAG");
 
         // 不直接擋發文：用 SimHash 找最近幾天內誰發過太像的內容，交給檢舉審核流程處理，不因為誤判就擋掉正常貼文。
@@ -1075,6 +1184,13 @@ public sealed class SocialController(
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "內容包含禁用字詞",
                 detail: "這則留言包含被禁止發布的字詞，請修改後再送出。");
+        }
+        if (ContentFloodRules.LooksLikeFlood(content))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "內容重複過多",
+                detail: "這則內容有大量重複的字或片段，請調整後再發布。");
         }
         var flaggedKeyword = keywordMatches.FirstOrDefault(match => match.Action == "FLAG");
 

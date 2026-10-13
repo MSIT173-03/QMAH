@@ -37,8 +37,8 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
         referrerpolicy="no-referrer-when-downgrade"
         allowfullscreen
       ></iframe>
-      <a class="event-map__link link link-primary" [href]="openUrl()" target="_blank" rel="noopener noreferrer">
-        在 Google 地圖開啟
+      <a class="event-map__link link link-primary" [href]="openUrl()" target="_blank" rel="noopener noreferrer" aria-label="在 Google 地圖開啟路線">
+        導航
       </a>
     }
   `
@@ -79,7 +79,7 @@ export class EventMapComponent {
   readonly openUrl = computed<string | null>(() => {
     const query = this.query();
     return query
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+      ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`
       : null;
   });
 }

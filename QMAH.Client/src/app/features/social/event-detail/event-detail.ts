@@ -1,14 +1,16 @@
-import { ChangeDetectorRef, Component, Input, OnChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, inject } from '@angular/core';
 import { MeApiService } from '../../../core/services/me-api';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 
 import { EventRegistrations, SocialApiService, SocialEventDetails } from '../../../core/services/social-api';
 import { EventMapComponent } from '../../../shared/components/event-map/event-map';
 import { PostDetailComponent } from '../post-detail/post-detail';
 import { publishStatusLabel, reviewStatusLabel } from '../social-labels';
+import { SocialLive } from '../../../core/services/social-live';
 import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUsers } from '@lucide/angular';
 
 @Component({
@@ -18,13 +20,18 @@ import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourgl
   templateUrl: './event-detail.html',
   styleUrls: ['../social-common.scss', './event-detail.scss']
 })
-export class EventDetailComponent implements OnChanges {
+export class EventDetailComponent implements OnChanges, OnInit, OnDestroy {
   // 路由參數 :id 由 app.config.ts 的 withComponentInputBinding() 自動綁定
   @Input() id!: string;
 
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
+  private readonly socialLive = inject(SocialLive);
+  private liveSubscription?: Subscription;
+  private eventRequest?: Subscription;
+  private registrationsRequest?: Subscription;
+  private pendingLiveRefresh = false;
 
   readonly reviewStatusLabel = reviewStatusLabel;
   readonly publishStatusLabel = publishStatusLabel;
@@ -45,10 +52,11 @@ export class EventDetailComponent implements OnChanges {
   }
 
   private loadRegistrations(): void {
+    this.registrationsRequest?.unsubscribe();
     this.registrations = null;
     this.registrationsError = null;
     if (!this.canViewRegistrations || !this.event) return;
-    this.socialApi.getEventRegistrations(this.event.id).subscribe({
+    this.registrationsRequest = this.socialApi.getEventRegistrations(this.event.id).subscribe({
       next: (data) => {
         this.registrations = data;
         this.cdr.detectChanges();
@@ -80,24 +88,67 @@ export class EventDetailComponent implements OnChanges {
     if (this.id) this.loadEvent();
   }
 
+  ngOnInit(): void {
+    this.liveSubscription = this.socialLive.changes.subscribe(() => {
+      if (!this.event) return;
+      if (this.actionPending) {
+        this.pendingLiveRefresh = true;
+        return;
+      }
+      this.loadEvent(true);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.liveSubscription?.unsubscribe();
+    this.eventRequest?.unsubscribe();
+    this.registrationsRequest?.unsubscribe();
+  }
+
   // GET /api/v1/social/events/{id}（AllowAnonymous；審核／發布狀態只有發起人看得到）
-  loadEvent(): void {
-    this.loading = true;
-    this.loadError = null;
-    this.socialApi.getEvent(this.id).subscribe({
+  loadEvent(silent = false): void {
+    const requestedId = this.id;
+    if (!silent) {
+      this.loading = true;
+      this.loadError = null;
+    }
+    this.eventRequest?.unsubscribe();
+    this.eventRequest = this.socialApi.getEvent(requestedId).subscribe({
       next: (event) => {
+        if (requestedId !== this.id) return;
         this.event = event;
         this.loadRegistrations();
         this.loading = false;
         this.cdr.detectChanges();
+        this.flushPendingLiveRefresh();
       },
       error: (err: HttpErrorResponse) => {
-        this.loading = false;
-        this.loadError = err.status === 404 ? '這場活動不存在或目前不可參加。' : '取得活動失敗，請稍後再試。';
-        console.error('取得活動詳情失敗:', err);
-        this.cdr.detectChanges();
+        if (requestedId !== this.id) return;
+        if (!silent) {
+          this.loading = false;
+          this.loadError = err.status === 404 ? '這場活動不存在或目前不可參加。' : '取得活動失敗，請稍後再試。';
+          this.cdr.detectChanges();
+        } else if (err.status === 404) {
+          this.event = null;
+          this.loading = false;
+          this.loadError = '這場活動不存在或目前不可參加。';
+          this.cdr.detectChanges();
+        }
+        this.flushPendingLiveRefresh();
       }
     });
+  }
+
+  private flushPendingLiveRefresh(): void {
+    if (!this.pendingLiveRefresh || this.actionPending) return;
+    this.pendingLiveRefresh = false;
+    this.loadEvent(true);
+  }
+
+  private finishAction(): void {
+    this.actionPending = false;
+    this.cdr.detectChanges();
+    this.flushPendingLiveRefresh();
   }
 
   // POST /api/v1/social/events/{id}/registration（需要登入）
@@ -109,8 +160,7 @@ export class EventDetailComponent implements OnChanges {
       next: (event) => {
         this.event = event;
         this.loadRegistrations();
-        this.actionPending = false;
-        this.cdr.detectChanges();
+        this.finishAction();
       },
       error: (err: HttpErrorResponse) => {
         this.actionPending = false;
@@ -119,6 +169,7 @@ export class EventDetailComponent implements OnChanges {
         this.actionError = err.status === 401 ? '請先登入才能報名。' : (detail ?? '報名失敗，請稍後再試。');
         console.error('報名失敗:', err);
         this.cdr.detectChanges();
+        this.flushPendingLiveRefresh();
       }
     });
   }
@@ -132,14 +183,14 @@ export class EventDetailComponent implements OnChanges {
       next: (event) => {
         this.event = event;
         this.loadRegistrations();
-        this.actionPending = false;
-        this.cdr.detectChanges();
+        this.finishAction();
       },
       error: (err: HttpErrorResponse) => {
         this.actionPending = false;
         this.actionError = err.status === 401 ? '請先登入才能取消報名。' : '取消報名失敗，請稍後再試。';
         console.error('取消報名失敗:', err);
         this.cdr.detectChanges();
+        this.flushPendingLiveRefresh();
       }
     });
   }

@@ -10,24 +10,89 @@
   </header>
 
 
-  <!-- 看板分類：桌面在左側固定欄，手機變成橫向可捲動的標籤；與下方「看板」下拉同步，兩邊都能切換。 -->
+  <!-- 桌面在左側選看板；手機顯示目前分類選單，公告／活動維持獨立導覽入口。 -->
   <app-social-shell id="social-boards" [activeBoard]="filterBoardCode" [inline]="true" (boardSelect)="selectBoard($event)">
-  @if (upcomingEvents.length > 0) {
-    <section class="social-upcoming" aria-labelledby="social-upcoming-title">
-      <header class="social-upcoming__head">
-        <h2 id="social-upcoming-title"><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg>近期活動</h2>
-        <a routerLink="/social/events">全部活動 <svg lucideChevronRight aria-hidden="true" focusable="false"></svg></a>
-      </header>
-      <ul class="social-upcoming__list">
-        @for (event of upcomingEvents; track event.id) {
-          <li>
-            <a class="social-upcoming__item" [routerLink]="['/social/events', event.id]">
-              <span class="social-upcoming__date" aria-hidden="true"><small>{{ event.startAt | date: 'M月' }}</small><strong>{{ event.startAt | date: 'd' }}</strong></span>
-              <span class="social-upcoming__text"><span class="social-upcoming__title">{{ event.title }}</span><span class="social-upcoming__meta">{{ event.startAt | date: 'HH:mm' }}{{ event.location ? '・' + event.location : '' }}</span></span>
-            </a>
-          </li>
+  @if (upcomingEvents.length > 0 || popular?.items?.length) {
+    <section class="social-discovery" aria-label="探索">
+      <header class="social-discovery__head">
+        @if (upcomingEvents.length > 0 && popular?.items?.length) {
+          <div class="social-discovery__tabs" role="group" aria-label="探索內容">
+            <button type="button" [class.is-active]="showingEvents" [attr.aria-pressed]="showingEvents" (click)="setDiscoveryTab('events')">
+              <svg lucideCalendarDays aria-hidden="true" focusable="false"></svg>近期活動
+            </button>
+            <button type="button" [class.is-active]="!showingEvents" [attr.aria-pressed]="!showingEvents" (click)="setDiscoveryTab('popular')">
+              <svg lucideFlame aria-hidden="true" focusable="false"></svg>熱門貼文
+            </button>
+          </div>
+        } @else if (showingEvents) {
+          <h2 id="social-discovery-title" class="social-discovery__title"><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg>近期活動</h2>
+        } @else {
+          <h2 id="social-discovery-title" class="social-discovery__title"><svg lucideFlame aria-hidden="true" focusable="false"></svg>熱門貼文</h2>
         }
-      </ul>
+        @if (!showingEvents) {
+          <span class="social-popular__period">{{ popular?.window === 'WEEK' ? '近 7 日' : '歷來' }}</span>
+        }
+      </header>
+      @if (showingEvents) {
+        <section class="social-upcoming" aria-label="近期活動" (touchstart)="onUpcomingTouchStart($event)" (touchend)="onUpcomingTouchEnd($event)" (click)="preventUpcomingSwipeNavigation($event)">
+          <div class="social-upcoming__carousel" [class.is-paginated]="canGoToPreviousEvents || canGoToNextEvents">
+            @if (canGoToPreviousEvents || canGoToNextEvents) {
+              <button type="button" class="social-upcoming__arrow" aria-label="上一組活動" [disabled]="!canGoToPreviousEvents || loadingEventPage" (click)="previousEventSlide()">
+                <svg lucideChevronLeft aria-hidden="true" focusable="false"></svg>
+              </button>
+            }
+            <ul class="social-upcoming__list">
+              @for (event of visibleUpcomingEvents; track event.id) {
+                <li>
+                  <a class="social-upcoming__item" [routerLink]="['/social/events', event.id]">
+                    <span class="social-upcoming__date" aria-hidden="true"><small>{{ event.startAt | date: 'M月' }}</small><strong>{{ event.startAt | date: 'd' }}</strong></span>
+                    <span class="social-upcoming__text"><span class="social-upcoming__title">{{ event.title }}</span><span class="social-upcoming__meta">{{ event.startAt | date: 'HH:mm' }}{{ event.location ? '・' + event.location : '' }}</span></span>
+                  </a>
+                </li>
+              }
+            </ul>
+            @if (canGoToPreviousEvents || canGoToNextEvents) {
+              <button type="button" class="social-upcoming__arrow" aria-label="下一組活動" [disabled]="!canGoToNextEvents || loadingEventPage" (click)="nextEventSlide()">
+                <svg lucideChevronRight aria-hidden="true" focusable="false"></svg>
+              </button>
+            }
+          </div>
+          <footer class="social-upcoming__footer">
+            @if (canGoToPreviousEvents || canGoToNextEvents) {
+              <span class="social-upcoming__position" aria-live="polite">{{ eventSlideLabel }}</span>
+            }
+            <a class="social-discovery__all" routerLink="/social/events">全部活動 <svg lucideChevronRight aria-hidden="true" focusable="false"></svg></a>
+          </footer>
+        </section>
+      }
+      @if (popular?.items?.length && (discoveryTab === 'popular' || !upcomingEvents.length)) {
+        <section class="social-popular" aria-label="熱門貼文排行榜">
+          <ol #popularRail class="social-popular__list" aria-label="熱門貼文，左右滑動瀏覽" tabindex="0" (scroll)="onPopularRailScroll($event)">
+            @for (post of popular?.items ?? []; track post.id; let rank = $index) {
+              <li>
+                <a [routerLink]="['/social/posts', post.id]" class="social-popular__item">
+                  <span class="social-popular__rank" aria-label="排名">{{ rank + 1 }}</span>
+                  <span class="social-popular__title">{{ post.title }}</span>
+                  <span class="social-popular__facts">{{ post.participantCount }} 位會員 · {{ post.commentCount }} 則留言</span>
+                </a>
+              </li>
+            }
+          </ol>
+          @if ((popular?.items?.length ?? 0) > 1) {
+            <div class="social-popular__pagination" role="group" aria-label="熱門貼文頁數">
+              <button type="button" class="social-popular__page-arrow" aria-label="上一則熱門貼文"
+                [disabled]="popularSlideIndex === 0" (click)="goToPopularSlide(popularSlideIndex - 1)">
+                <svg lucideChevronLeft aria-hidden="true" focusable="false"></svg>
+              </button>
+              <span class="social-popular__position" aria-live="polite">{{ popularSlideIndex + 1 }} / {{ popular?.items?.length }}</span>
+              <button type="button" class="social-popular__page-arrow" aria-label="下一則熱門貼文"
+                [disabled]="popularSlideIndex >= (popular?.items?.length ?? 0) - 1" (click)="goToPopularSlide(popularSlideIndex + 1)">
+                <svg lucideChevronRight aria-hidden="true" focusable="false"></svg>
+              </button>
+            </div>
+          }
+        </section>
+      }
     </section>
   }
 
@@ -88,6 +153,10 @@
     </button>
   </div>
 
+  @if (liveUpdateNotice) {
+    <p class="social-live-notice" role="status">{{ liveUpdateNotice }}</p>
+  }
+
   @if (loadError) {
     <div class="alert alert-error mb-4" role="alert">{{ loadError }}</div>
   }
@@ -104,7 +173,7 @@
 
   <!-- 由新到舊依序輪流分到各欄（2 欄：左、右、左、右；3 欄：左、中、右、左…），每欄各自由上往下排，卡片高度不同也不會留空白。 -->
   <ng-template #postCard let-post>
-  <article class="social-post-card" [class.social-post-card--text]="!post.coverImageUrl">
+  <article class="social-post-card" [attr.data-post-id]="post.id" [class.social-post-card--text]="!post.coverImageUrl">
     <div class="social-post-card__body">
       <header class="social-post-card__head">
         <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />

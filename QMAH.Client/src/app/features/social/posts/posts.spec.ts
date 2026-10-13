@@ -2,20 +2,24 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
+import { Subject } from 'rxjs';
 
 import { PostsComponent } from './posts';
-import { SocialPostListItem } from '../../../core/services/social-api';
+import { EventListItem, SocialPostListItem } from '../../../core/services/social-api';
+import { SocialLive } from '../../../core/services/social-live';
 
 describe('PostsComponent', () => {
   let component: PostsComponent;
   let fixture: ComponentFixture<PostsComponent>;
   let httpMock: HttpTestingController;
+  const socialChanges = new Subject<void>();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PostsComponent],
       // 貼文牆包含 RouterLink；測試環境也要提供最小 Router，才會和正式 App Shell 的 DI 條件一致。
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        { provide: SocialLive, useValue: { changes: socialChanges } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PostsComponent);
@@ -35,6 +39,7 @@ describe('PostsComponent', () => {
     }));
     httpMock.expectOne(r => r.url.endsWith('/social/boards')).flush([]);
     httpMock.match(r => r.url.endsWith('/social/events')).forEach(req => req.flush({ items: [], totalCount: 0 }));
+    httpMock.expectOne(r => r.url.endsWith('/social/posts/popular')).flush({ window: 'WEEK', items: [] });
   }
 
   it('cancels an older sort request and restores a cached page immediately', () => {
@@ -86,8 +91,88 @@ describe('PostsComponent', () => {
     }));
     httpMock.expectOne((req) => req.url.endsWith('/social/boards')).flush([]);
     httpMock.match((r) => r.url.endsWith('/social/events')).forEach((r) => r.flush({ items: [], page: 1, pageSize: 3, totalCount: 0 }));
+    httpMock.expectOne((r) => r.url.endsWith('/social/posts/popular')).flush({ window: 'WEEK', items: [] });
 
     expect(component).toBeTruthy();
+  });
+
+  it('shows recent events first and switches to popular posts with the cycle button', () => {
+    fixture.detectChanges();
+    httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 }));
+    httpMock.expectOne(r => r.url.endsWith('/social/boards')).flush([]);
+    httpMock.expectOne(r => r.url.endsWith('/social/events')).flush({
+      items: [{
+        id: 'event-1', socialPostId: null, eventType: 'PLAYER', organizerUserId: 'member-1',
+        organizerDisplayName: '測試會員', title: '本週文物交流', content: '', location: '臺北',
+        latitude: null, longitude: null, startAt: '2026-10-20T10:00:00Z', endAt: '2026-10-20T12:00:00Z',
+        registrationEndAt: null, capacity: 20, registrationCount: 4, coverImageUrl: null
+      }]
+    });
+    httpMock.expectOne(r => r.url.endsWith('/social/posts/popular')).flush({
+      window: 'WEEK', items: [{
+        id: 'popular-1', boardCode: 'GENERAL', title: '最近熱門的文物討論', createdAt: '2026-10-12T10:00:00Z',
+        participantCount: 8, commentCount: 15
+      }]
+    });
+    fixture.detectChanges();
+
+    expect(component.discoveryTab).toBe('events');
+    expect(fixture.nativeElement.querySelector('.social-upcoming')?.textContent).toContain('本週文物交流');
+    expect(fixture.nativeElement.querySelector('.social-popular')).toBeNull();
+
+    const tabs = fixture.nativeElement.querySelectorAll('.social-discovery__tabs button') as NodeListOf<HTMLButtonElement>;
+    expect(tabs[0].getAttribute('aria-pressed')).toBe('true');
+    tabs[1].click();
+    fixture.detectChanges();
+
+    expect(component.discoveryTab).toBe('popular');
+    expect(fixture.nativeElement.querySelector('.social-popular')?.textContent).toContain('最近熱門的文物討論');
+    expect(fixture.nativeElement.querySelector('.social-upcoming')).toBeNull();
+  });
+
+  it('shows popular posts when there are no upcoming events', () => {
+    fixture.detectChanges();
+    httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 }));
+    httpMock.expectOne(r => r.url.endsWith('/social/boards')).flush([]);
+    httpMock.expectOne(r => r.url.endsWith('/social/events')).flush({ items: [], page: 1, pageSize: 2, totalCount: 0, totalPages: 0 });
+    httpMock.expectOne(r => r.url.endsWith('/social/posts/popular')).flush({
+      window: 'WEEK', items: [{
+        id: 'popular-1', boardCode: 'GENERAL', title: '本週熱門貼文', createdAt: '2026-10-12T10:00:00Z',
+        participantCount: 8, commentCount: 15
+      }]
+    });
+    fixture.detectChanges();
+
+    expect(component.discoveryTab).toBe('popular');
+    expect(fixture.nativeElement.querySelector('.social-popular')?.textContent).toContain('本週熱門貼文');
+    expect(fixture.nativeElement.querySelector('.social-discovery__tabs')).toBeNull();
+  });
+
+  it('keeps activity cards manually navigable and links to the full event list', () => {
+    fixture.detectChanges();
+    httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 }));
+    httpMock.expectOne(r => r.url.endsWith('/social/boards')).flush([]);
+    const events: EventListItem[] = [1, 2, 3].map(n => ({
+      id: `event-${n}`, socialPostId: null, eventType: 'PLAYER', organizerUserId: `member-${n}`,
+      organizerDisplayName: '測試會員', title: `交流活動 ${n}`, content: '', location: '臺北', latitude: null, longitude: null,
+      startAt: `2026-10-${20 + n}T10:00:00Z`, endAt: `2026-10-${20 + n}T12:00:00Z`,
+      registrationEndAt: null, capacity: null, registrationCount: 0, coverImageUrl: null
+    }));
+    httpMock.expectOne(r => r.url.endsWith('/social/events')).flush({ items: events, page: 1, pageSize: 6, totalCount: 3, totalPages: 1 });
+    httpMock.expectOne(r => r.url.endsWith('/social/posts/popular')).flush({ window: 'WEEK', items: [] });
+    fixture.detectChanges();
+
+    expect(component.visibleUpcomingEvents.map(event => event.id)).toEqual(['event-1', 'event-2']);
+    expect(fixture.nativeElement.querySelector('.social-discovery__all')?.textContent).toContain('全部活動');
+    const next = fixture.nativeElement.querySelector('[aria-label="下一組活動"]') as HTMLButtonElement;
+    next.click();
+    fixture.detectChanges();
+    expect(component.visibleUpcomingEvents.map(event => event.id)).toEqual(['event-3']);
+
+    const previous = fixture.nativeElement.querySelector('[aria-label="上一組活動"]') as HTMLButtonElement;
+    previous.click();
+    fixture.detectChanges();
+    expect(component.visibleUpcomingEvents.map(event => event.id)).toEqual(['event-1', 'event-2']);
   });
 
   it('loads posts from the API on init', () => {
@@ -136,8 +221,24 @@ describe('PostsComponent', () => {
     });
     httpMock.expectOne((r) => r.url.endsWith('/social/boards')).flush([]);
     httpMock.match((r) => r.url.endsWith('/social/events')).forEach((r) => r.flush({ items: [], page: 1, pageSize: 3, totalCount: 0 }));
+    httpMock.expectOne((r) => r.url.endsWith('/social/posts/popular')).flush({ window: 'WEEK', items: [] });
 
     expect(component.posts.length).toBe(1);
     expect(component.posts[0].title).toBe('測試貼文');
+  });
+
+  it('removes posts that are no longer public when a live update arrives', () => {
+    initializePosts([{ id: 'post-1', createdAt: '2026-10-08T00:00:00Z' } as SocialPostListItem]);
+    socialChanges.next();
+
+    httpMock.expectOne(r => r.url.endsWith('/social/posts/visible')).flush([]);
+    httpMock.expectOne(r => r.url.endsWith('/social/posts') && !r.params.has('postType')).flush({
+      items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0
+    });
+    httpMock.expectOne(r => r.url.endsWith('/social/events')).flush({ items: [], page: 1, pageSize: 2, totalCount: 0, totalPages: 0 });
+    httpMock.expectOne(r => r.url.endsWith('/social/posts/popular')).flush({ window: 'WEEK', items: [] });
+
+    expect(component.posts).toEqual([]);
+    expect(component.totalCount).toBe(0);
   });
 });

@@ -20,6 +20,10 @@ public sealed class AiContentReviewWorker(
 {
     private const int BatchSize = 20;
 
+    // 結果標示 AutoHide（Azure 仇恨類中度以上、其他類別最高級）或 OpenAI 分數 0.95 以上才自動隱藏並送檢舉，
+    // 其餘只送檢舉待審，避免誤判太多造成管理壓力，也避免正常內容被擋掉。管理員可在後台還原。
+    private const double AutoHideScore = 0.95;
+
     // 金鑰缺少（例如經費還在申請）時只在第一次警告一次，避免排程每 10 秒洗一次 log；
     // 一旦偵測到又恢復未設定狀態（理論上不會發生，但保留彈性）會重新警告一次。
     private bool _hasWarnedNotConfigured;
@@ -91,6 +95,12 @@ public sealed class AiContentReviewWorker(
             {
                 throw;
             }
+            catch (HttpRequestException exception) when (exception.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.TooManyRequests)
+            {
+                // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
+                logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                return;
+            }
             catch (Exception exception)
             {
                 // 呼叫失敗就先跳過這篇，AiReviewedAt 保持 null，下一輪排程會重試，不會漏審。
@@ -99,7 +109,15 @@ public sealed class AiContentReviewWorker(
             }
 
             if (result.Flagged)
-                db.ContentReports.Add(CreateAiReport("POST", post.Id, now, result));
+            {
+                var hide = result.AutoHide || result.Score >= AutoHideScore;
+                db.ContentReports.Add(CreateAiReport("POST", post.Id, now, result, autoHidden: hide));
+                if (hide)
+                {
+                    post.Status = "HIDDEN";
+                    post.UpdatedAt = now;
+                }
+            }
             post.AiReviewedAt = now;
         }
 
@@ -127,6 +145,12 @@ public sealed class AiContentReviewWorker(
             {
                 throw;
             }
+            catch (HttpRequestException exception) when (exception.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.TooManyRequests)
+            {
+                // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
+                logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                return;
+            }
             catch (Exception exception)
             {
                 logger.LogError(exception, "AI 文字審查留言 {CommentId} 失敗，留待下次排程重試。", comment.Id);
@@ -134,7 +158,15 @@ public sealed class AiContentReviewWorker(
             }
 
             if (result.Flagged)
-                db.ContentReports.Add(CreateAiReport("COMMENT", comment.Id, now, result));
+            {
+                var hide = result.AutoHide || result.Score >= AutoHideScore;
+                db.ContentReports.Add(CreateAiReport("COMMENT", comment.Id, now, result, autoHidden: hide));
+                if (hide)
+                {
+                    comment.Status = "HIDDEN";
+                    comment.UpdatedAt = now;
+                }
+            }
             comment.AiReviewedAt = now;
         }
 
@@ -163,12 +195,30 @@ public sealed class AiContentReviewWorker(
                     var bytes = await File.ReadAllBytesAsync(physicalPath, cancellationToken);
                     var result = await aiReview.ReviewImageAsync(bytes, media.ContentType, cancellationToken);
                     if (result.Flagged && media.PostId.HasValue)
-                        db.ContentReports.Add(CreateAiReport("POST", media.PostId.Value, now, result, isImage: true));
+                    {
+                        var hide = result.AutoHide || result.Score >= AutoHideScore;
+                        db.ContentReports.Add(CreateAiReport("POST", media.PostId.Value, now, result, isImage: true, autoHidden: hide));
+                        if (hide)
+                        {
+                            var post = await db.SocialPosts.FirstOrDefaultAsync(item => item.Id == media.PostId.Value, cancellationToken);
+                            if (post is { Status: "PUBLISHED" })
+                            {
+                                post.Status = "HIDDEN";
+                                post.UpdatedAt = now;
+                            }
+                        }
+                    }
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 throw;
+            }
+            catch (HttpRequestException exception) when (exception.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.TooManyRequests)
+            {
+                // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
+                logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                return;
             }
             catch (Exception exception)
             {
@@ -187,7 +237,7 @@ public sealed class AiContentReviewWorker(
 
     // Reason 固定用 AUTO_AI，跟關鍵字表／SimHash 送出的 AUTO_KEYWORD、AUTO_DUPLICATE（見
     // SocialController.CreateAutoReport）分開，後台檢舉列表一眼就能看出這筆是 AI 判斷還是規則命中。
-    private static ContentReport CreateAiReport(string targetType, Guid targetId, DateTime now, AiReviewResult result, bool isImage = false)
+    private static ContentReport CreateAiReport(string targetType, Guid targetId, DateTime now, AiReviewResult result, bool isImage = false, bool autoHidden = false)
     {
         var subject = isImage ? "貼文中的圖片" : "內容";
         return new ContentReport
@@ -197,7 +247,7 @@ public sealed class AiContentReviewWorker(
             TargetType = targetType,
             TargetId = targetId,
             Reason = "AUTO_AI",
-            Detail = $"系統 AI 審查判定{subject}可能違規（分類：{result.Category ?? "未分類"}，信心值 {result.Score:0.00}）。",
+            Detail = $"系統 AI 審查判定{subject}可能違規（分類：{result.Category ?? "未分類"}，信心值 {result.Score:0.00}）。{(autoHidden ? "已先自動隱藏，請管理員確認後決定還原或維持。" : string.Empty)}",
             IsAutoGenerated = true,
             Status = "PENDING",
             CreatedAt = now
