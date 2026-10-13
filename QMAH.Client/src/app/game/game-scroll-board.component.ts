@@ -305,7 +305,12 @@ export class GameScrollBoardComponent {
   private refPressed = false;
   setLoupe(level: number): void { this.lens.set(null); this.loupeOn.set(level > 0); saveLoupePrefs({ on: level > 0 }); if (level > 0) { this.zoom.set(level); saveLoupePrefs({ zoom: level }); } }
   setLensSize(size: LoupeSizeId): void { this.lensSize.set(size); saveLoupePrefs({ size }); }
-  refDown(event: PointerEvent): void { this.refPressed = true; this.showRefLens(event); }
+  refDown(event: PointerEvent): void {
+    if (!event.isPrimary || event.button !== 0 || !this.loupeOn()) return;
+    this.refPressed = true;
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    this.showRefLens(event);
+  }
   refMove(event: PointerEvent): void { if (event.pointerType === 'mouse' || this.refPressed) this.showRefLens(event); }
   refLeave(): void { this.refPressed = false; this.lens.set(null); }
   /** 滾輪與按鈕兩種方式都能調倍率：每滾一格換一檔，鏡面留在游標下。 */

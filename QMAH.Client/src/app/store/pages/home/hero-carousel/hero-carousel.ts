@@ -88,6 +88,7 @@ export class HeroCarousel {
   /** 依目前投影片索引換算的輪播橫向位移量 */
   protected trackShift = computed(() => `translateX(-${this.activeSlide() * 100}%)`);
   private touchStartX: number | null = null;
+  private touchStartY: number | null = null;
 
   constructor() {
     // 自動播放，元件銷毀時自動停止
@@ -117,7 +118,8 @@ export class HeroCarousel {
   }
 
   protected onTouchStart(event: TouchEvent): void {
-    this.touchStartX = event.touches[0]?.clientX ?? null;
+    this.touchStartX = event.touches.length === 1 ? event.touches[0].clientX : null;
+    this.touchStartY = event.touches.length === 1 ? event.touches[0].clientY : null;
   }
 
   /** 水平滑動超過門檻才切換；垂直捲動不會誤切 */
@@ -125,7 +127,9 @@ export class HeroCarousel {
     if (this.touchStartX === null) return;
     const endX = event.changedTouches[0]?.clientX ?? this.touchStartX;
     const delta = endX - this.touchStartX;
+    const vertical = (event.changedTouches[0]?.clientY ?? this.touchStartY ?? 0) - (this.touchStartY ?? 0);
     this.touchStartX = null;
-    if (Math.abs(delta) >= SWIPE_MIN_PX) this.step(delta < 0 ? 1 : -1);
+    this.touchStartY = null;
+    if (Math.abs(delta) >= SWIPE_MIN_PX && Math.abs(delta) > Math.abs(vertical)) this.step(delta < 0 ? 1 : -1);
   }
 }

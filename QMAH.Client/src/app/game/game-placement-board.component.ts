@@ -41,7 +41,7 @@ export function placePiece(order: readonly number[], piece: number, slot: number
         <header class="piece-supply-header">
           <h4>待放置</h4><b class="supply-count">{{ tray().length }} 片</b>
           <button type="button" class="howto-trigger" [attr.popovertarget]="howtoId" aria-label="操作說明" title="操作說明">i</button>
-          <div class="howto" [id]="howtoId" popover="auto"><h5>怎麼拼</h5><p>把碎片拖到目標格，也可以先點碎片，再點目的格。</p><p>放錯時可以重新放置，被替換的碎片會回到待放置區。</p><p>空格上的數字是格子編號，碎片放上去就會隱藏。</p><button type="button" [attr.popovertarget]="howtoId" popovertargetaction="hide">知道了</button></div>
+          <div class="howto" [id]="howtoId" popover="auto"><h5>怎麼拼</h5><p>觸控時先點碎片，再點目的格。使用滑鼠也可以把碎片拖到目標格。</p><p>放錯時可以重新放置，被替換的碎片會回到待放置區。</p><p>空格上的數字是格子編號，碎片放上去就會隱藏。</p><button type="button" [attr.popovertarget]="howtoId" popovertargetaction="hide">知道了</button></div>
         </header>
         <div class="piece-tray-viewport" tabindex="0" aria-label="待放置碎片，可捲動查看">
         <div class="piece-tray" [class.is-compact]="compactTools()" [style.grid-template-columns]="compactTools() ? null : 'repeat(' + scattered().columns + ', 1fr)'">
@@ -394,7 +394,8 @@ export class GamePlacementBoardComponent {
     if (this.settleAfterHelp()) this.settlementRequested.emit();
   }
   beginDrag(event: PointerEvent, piece: number, fromSlot?: number): void {
-    if (piece < 0 || this.disabled() || this.solved() || event.button !== 0) return;
+    // 觸控保留原生捲動，點選碎片與目標格即可放置。
+    if (event.pointerType !== 'mouse' || !event.isPrimary || piece < 0 || this.disabled() || this.solved() || event.button !== 0) return;
     this.suppressClick = false;
     const source = event.currentTarget as HTMLElement;
     const width = (source.querySelector('.piece-face') ?? source).getBoundingClientRect().width;

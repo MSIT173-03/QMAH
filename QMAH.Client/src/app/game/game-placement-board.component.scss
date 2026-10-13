@@ -156,3 +156,10 @@ button:disabled { cursor: default; }
 .hint-dialog { width: min(92vw, 560px); }
 .hint-dialog h3 { margin: 0 0 10px; font: 800 22px/1.35 var(--qmah-font-serif); }
 .hint-dialog p { margin: 0 0 18px; font-size: 16px; line-height: 1.85; }
+
+@media (any-pointer: coarse) {
+  .piece { touch-action: pan-y; }
+}
+@media (max-width: 700px) {
+  .placement-toolbar button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+}

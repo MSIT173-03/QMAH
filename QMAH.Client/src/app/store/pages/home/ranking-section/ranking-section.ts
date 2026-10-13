@@ -2,7 +2,6 @@ import { Component, ElementRef, computed, inject, output, signal, viewChild } fr
 import { SectionHead, PillGroup, PillOption, ProductCard } from '../../../component';
 import { HomeApi } from '../../../api';
 import { Product } from '../../../api/api.models';
-import { pad } from '../../../shared/format';
 import { PRODUCT_LIST_PATH } from '../../../shared/paths';
 import { StoreLink } from '../../../shared/store-link';
 import { gridColumns } from '../../../shared/grid-columns';
@@ -64,7 +63,7 @@ export class RankingSection {
   protected rankingItems = computed((): BadgedProductView[] => {
     const list = this.cache()[this.activeCat() ?? ''];
     if (list) this.shown = list;
-    return this.shown.map((item, i) => ({ ...toProductView(item), badge: pad(i + 1), badgeVariant: i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank' }));
+    return this.shown.map((item, i) => ({ ...toProductView(item), badge: String(i + 1), badgeVariant: i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank' }));
   });
 
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
