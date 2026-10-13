@@ -124,7 +124,7 @@ export class GameTrainingModePickerComponent {
     const descriptions: Record<string, readonly [string, string]> = {
       DETAIL_LOCATOR: ['看細節，在原圖選出位置。', '四件各確認一次，再結算。'],
       MEMORY_MATCH: ['翻開 16 張牌，找齊配對。', '記住圖樣位置，配對再送出。'],
-      ARTIFACT_PUZZLE: ['拖曳 25 塊，拼回原圖。', '可看原圖或提示，再送出。'],
+      ARTIFACT_PUZZLE: ['點選放置 25 塊，拼回原圖。', '可看原圖或提示，再送出。'],
       STRIP_RESTORE: ['滑動碎片進空格。', '拼回原圖，再送出。']
     };
     return descriptions[mode.code] ?? ['開始一局挑戰。', '完成盤面後查看結算。'];

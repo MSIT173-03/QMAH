@@ -61,3 +61,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--qmah-focus); ou
 .demo-level button { min-height: 44px; padding: 0 14px; border: 0; color: var(--game-secondary-ink); background: var(--game-secondary-image); font: 800 15px/1 var(--qmah-font-sans); cursor: pointer; }
 .demo-level button[aria-pressed='true'] { color: #fff8e9; background: var(--game-button-blue-image); }
 .demo-level button:focus-visible { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }
+
+@media (max-width: 700px) {
+  .demo-controls { flex-wrap: wrap; width: 100%; min-width: 0; gap: 10px 8px; }
+  .demo-playback { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+  .demo-auto { white-space: nowrap; }
+  .demo-help { min-width: 0; white-space: normal; padding-inline: 12px; }
+  .demo-restart { flex: 0 0 44px; }
+}

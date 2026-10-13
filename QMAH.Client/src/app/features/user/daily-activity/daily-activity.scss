@@ -2335,3 +2335,53 @@
 .streak-card .fire-orb app-qmah-icon { color: #fff; }
 .weekly-checkin { background: var(--qmah-surface-elevated); }
 @media (prefers-reduced-motion: reduce) { .today-reward, .checkin-button { animation: none !important; } }
+
+// 手機優先呈現今日操作與七天進度，卡片保留可讀的文字尺寸。
+@media (max-width: 600px) {
+  .daily-page { padding: 20px 12px 36px; }
+  .checkin-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 16px 12px;
+    padding: 20px 16px;
+  }
+  .checkin-main { grid-column: 1 / -1; width: auto; gap: 12px; }
+  .checkin-icon { width: 52px; height: 52px; border-radius: 16px; }
+  .checkin-copy h2 { font-size: 21px; }
+  .checkin-copy p { margin-bottom: 0; font-size: 14px; }
+  .today-reward { min-width: 0; width: 100%; padding: 12px 8px; border-radius: 12px; }
+  .today-reward strong { font-size: 32px; }
+  .checkin-button, .completed-badge { min-width: 0; min-height: 48px; padding: 12px 8px; white-space: normal; }
+  .streak-card { padding: 20px 16px; gap: 16px; }
+  .streak-left { gap: 12px; min-width: 0; }
+  .streak-left > div:last-child { min-width: 0; }
+  .fire-orb { width: 52px; height: 52px; flex: 0 0 auto; }
+  .streak-value strong { font-size: 36px; }
+  .streak-side { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .mini-stat { padding: 12px; }
+  .weekly-checkin, .stats-section { padding: 20px 16px; }
+  .weekly-header { gap: 12px; margin-bottom: 16px; }
+  .weekly-track { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 8px; margin-bottom: 16px; }
+  .day-circle { width: 44px; height: 44px; }
+  .day-item { gap: 8px; }
+  .day-copy strong { font-size: 13px; }
+  .day-copy span { font-size: 12px; }
+  .day-copy .today-label { padding: 3px 4px; white-space: normal; }
+  .weekly-footer { gap: 12px; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stat-card { min-width: 0; padding: 14px 12px; }
+  .stat-value { font-size: 28px; overflow-wrap: anywhere; }
+  .stat-value small { font-size: 13px; }
+  .stat-icon { width: 36px; height: 36px; margin-bottom: 12px; }
+  .stat-label, .stat-note { font-size: 12px; }
+  .checkin-rules { margin-block: 20px; padding: 16px; }
+  .rules-heading { min-height: 44px; }
+  .makeup-controls { align-items: stretch; }
+  .makeup-field { flex-basis: 100%; }
+  .makeup-button { width: 100%; min-width: 0; white-space: normal; }
+  .recent-activity { padding: 20px 16px; }
+  .recent-activity-stats { flex-wrap: wrap; }
+  .recent-mini-stat { flex: 1 1 70px; }
+  .recent-activity-status { margin-left: 0; }
+}

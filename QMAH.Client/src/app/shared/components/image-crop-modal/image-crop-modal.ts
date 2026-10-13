@@ -8,7 +8,8 @@ import { ImageCroppedEvent, ImageCropperComponent } from 'ngx-image-cropper';
   selector: 'app-image-crop-modal',
   standalone: true,
   imports: [CommonModule, ImageCropperComponent],
-  templateUrl: './image-crop-modal.html'
+  templateUrl: './image-crop-modal.html',
+  styleUrl: './image-crop-modal.scss'
 })
 export class ImageCropModalComponent {
   @Output() cropped = new EventEmitter<File>();

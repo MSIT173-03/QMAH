@@ -1,0 +1,7 @@
+.modal-action { flex-wrap: wrap; }
+.modal-action button { min-height: 44px; white-space: normal; }
+@media (max-width: 600px) {
+  .modal-box { max-width: calc(100vw - 24px); padding: 20px 16px; }
+  .modal-action { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .modal-action button { width: 100%; min-width: 0; margin: 0; }
+}
