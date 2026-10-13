@@ -50,6 +50,14 @@ export class Achievements implements OnInit {
 
   achievements: Achievement[] = [];
 
+  /** 成就很多時先顯示前幾個（取得越新越前面由後端排序），其餘按「顯示全部」展開 */
+  readonly previewCount = 12;
+  expanded = false;
+
+  get visibleAchievements(): Achievement[] {
+    return this.expanded ? this.achievements : this.achievements.slice(0, this.previewCount);
+  }
+
   loading = true;
 
   errorMessage = '';

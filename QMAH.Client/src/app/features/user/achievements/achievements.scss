@@ -616,3 +616,17 @@
 .achievement-card .achievement-info span { color: var(--qmah-ink); opacity: .6; font-size: 13px; }
 .achievement-card .achievement-info strong { color: var(--qmah-ink); opacity: .85; font-size: 14.5px; font-weight: 600; text-align: right; }
 .achievement-card .description { color: var(--qmah-ink); opacity: .75; }
+
+/* 更低更緊湊：獎盃移到右上角，標題與稱號並排在左，欄數隨寬度增加（成就很多也不會拉很長） */
+.achievement-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.achievement-card { position: relative; padding: 18px 20px; gap: 2px; }
+.achievement-card .achievement-icon { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; margin: 0; border-radius: 12px; }
+.achievement-card .achievement-icon app-qmah-icon { width: 20px; height: 20px; }
+.achievement-card .achievement-card-header { padding-right: 52px; }
+.achievement-card .title { padding-right: 52px; margin: 0; font-size: 17px; }
+.achievement-card .description { margin: 4px 0 12px; font-size: 14px; }
+.achievement-card .achievement-info { margin: 0 0 12px; padding: 2px 16px; }
+.achievement-card .achievement-info > div { padding: 7px 0; }
+.achievement-card .display-button { min-height: 38px; }
+.achievement-more { display: block; margin: 18px auto 0; padding: 7px 24px; border: 1px solid color-mix(in srgb, var(--qmah-ink) 25%, transparent); border-radius: 999px; background: transparent; color: var(--qmah-ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.achievement-more:hover { background: color-mix(in srgb, var(--qmah-ink) 8%, transparent); }

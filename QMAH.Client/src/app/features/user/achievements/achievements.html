@@ -183,7 +183,7 @@
       <div class="achievement-grid">
 
         @for (
-          achievement of achievements;
+          achievement of visibleAchievements;
           track achievement.id
         ) {
 
@@ -367,6 +367,12 @@
         }
 
       </div>
+
+      @if (achievements.length > previewCount) {
+        <button type="button" class="achievement-more" [attr.aria-expanded]="expanded" (click)="expanded = !expanded">
+          {{ expanded ? '收合' : '顯示全部 ' + achievements.length + ' 個成就' }}
+        </button>
+      }
 
     </section>
 
