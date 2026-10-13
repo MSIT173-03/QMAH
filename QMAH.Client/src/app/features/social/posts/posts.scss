@@ -561,7 +561,7 @@
 .social-post-dialog.is-wide .social-post-form__textarea { min-height:40vh; }
 .social-post-form__preview { display:block;min-height:260px; }
 .social-post-form__preview > .social-post-form__hint { display:block;margin-bottom:16px; }
-.social-post-form.is-preview > .social-post-form__field:nth-child(3) { display:none; }
+.social-post-form.is-preview > .social-post-form__field { display:none; }
 .social-board-picker { gap:6px; }.social-board-chip { min-height:36px;padding:6px 12px;border-radius:8px; }
 @media(max-width:600px) { .social-post-dialog__head { padding:16px; }.social-post-form { padding:16px; }.social-modal .social-post-dialog.is-wide { width:calc(100vw - 24px); } }
 

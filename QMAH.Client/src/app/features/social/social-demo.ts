@@ -13,8 +13,19 @@ export function demoPost(): CreateSocialPostRequest {
     boardCode: 'GENERAL',
     title: '分享今天的一點心得',
     content:
-      '大家好，想跟大家分享最近的一點心得與觀察。\n' +
-      '也想聽聽你們的看法，歡迎留言交流、互相補充！',
+      '[size=large][b]大家好[/b][/size]，想跟大家分享最近的一點心得與觀察。\n\n' +
+      '[h]今天的三個重點[/h]\n' +
+      '[list]\n' +
+      '[*][b]觀察細節[/b]：多看一眼，常會發現[color=red]意想不到[/color]的線索\n' +
+      '[*][i]對照資料[/i]：用[u]不同來源[/u]互相印證，結論更可靠\n' +
+      '[*][color=blue]記錄下來[/color]：寫成筆記，日後回頭看更有收穫\n' +
+      '[/list]\n' +
+      '[quote]好的觀察，從放慢腳步開始。[/quote]\n' +
+      '[hr]\n' +
+      '[center][color=gold][b]也想聽聽你們的看法[/b][/color][/center]\n' +
+      '歡迎留言交流、互相補充！[s]不用客氣[/s]\n\n' +
+      '[size=small][color=gray]小提醒：下面是劇透內容，點一下才會顯示[/color][/size]\n' +
+      '[spoiler]其實我最大的收穫是：慢慢看，比快快看更有趣。[/spoiler]',
     mediaIds: []
   };
 }
@@ -37,8 +48,14 @@ export function demoEvent(): CreateSocialEventRequest {
     eventType: 'PLAYER',
     title: '週末交流聚會：一起聊聊、互相分享',
     content:
-      '歡迎來和大家聊聊最近的收穫與想法，也可以只是來聽聽看。\n' +
-      '活動不收費，名額有限，額滿為止。',
+      '[size=large][b]歡迎來和大家聊聊[/b][/size]最近的收穫與想法，也可以只是來聽聽看。\n\n' +
+      '[h]活動重點[/h]\n' +
+      '[list]\n' +
+      '[*][b]免費參加[/b]，不收任何費用\n' +
+      '[*]名額有限，[color=red]額滿為止[/color]\n' +
+      '[*]可自由[u]分享[/u]或只是[i]旁聽[/i]\n' +
+      '[/list]\n' +
+      '[quote]一個人的發現，加上大家的補充，才會更完整。[/quote]',
     location: '臺北市信義區市府路45號',
     latitude: 25.033964,
     longitude: 121.564468,

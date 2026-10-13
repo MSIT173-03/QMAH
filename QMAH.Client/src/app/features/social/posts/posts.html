@@ -197,7 +197,7 @@
     <header class="social-post-dialog__head">
       <h2 id="create-post-title" class="social-post-dialog__title">發布新貼文</h2>
       <div class="social-post-dialog__tools"><button type="button" class="social-post-dialog__wide" [attr.aria-pressed]="postPreview" (click)="postPreview = !postPreview">{{ postPreview ? '回到編輯' : '預覽' }}</button><button type="button" class="social-post-dialog__wide" [attr.aria-label]="postWide ? '切回一般編輯寬度' : '加寬編輯區'" (click)="postWide = !postWide" [attr.aria-pressed]="postWide" [title]="postWide ? '切回一般版面' : '加寬編輯區'">
-        <svg lucideMoveHorizontal aria-hidden="true" focusable="false"></svg>
+        @if (postWide) { <svg lucideFoldHorizontal aria-hidden="true" focusable="false"></svg> } @else { <svg lucideUnfoldHorizontal aria-hidden="true" focusable="false"></svg> }
         
       </button></div>
     </header>
