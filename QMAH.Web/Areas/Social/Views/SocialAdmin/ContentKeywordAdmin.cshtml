@@ -119,10 +119,15 @@
     <div class="card-header"><h2 class="card-title mb-0">AI 審查紀錄</h2></div>
     <div class="card-body">
         <div class="small mb-2">近 24 小時審查 <strong>@ViewData["AiReviewed24h"]</strong> 筆，判定違規 <strong>@ViewData["AiFlagged24h"]</strong> 筆。</div>
+        @{ var showPassed = (bool)ViewData["AiShowPassed"]!; }
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <span class="small text-secondary">@(showPassed ? "顯示全部審查結果（含通過）" : "預設只顯示判定違規的紀錄")</span>
+            <a asp-action="Index" asp-route-showPassed="@(!showPassed)" class="btn btn-sm btn-outline-secondary">@(showPassed ? "只看違規" : "顯示通過的紀錄")</a>
+        </div>
         @{ var reviewLog = (IReadOnlyList<QMAH.Infrastructure.Models.Entities.AiReviewLog>)ViewData["AiReviewLog"]!; }
         @if (reviewLog.Count == 0)
         {
-            <div class="text-secondary small">尚無審查紀錄。審查排程啟用後，每次判斷（含通過的）都會列在這裡。</div>
+            <div class="text-secondary small">@(showPassed ? "尚無審查紀錄。" : "目前沒有判定違規的紀錄。")</div>
         }
         else
         {
