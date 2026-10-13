@@ -50,6 +50,10 @@ public partial class QmahDbContext
 
     public virtual DbSet<ContentModerationSetting> ContentModerationSettings { get; set; }
 
+    public virtual DbSet<AiReviewRuntimeStatus> AiReviewRuntimeStatuses { get; set; }
+
+    public virtual DbSet<AiReviewLog> AiReviewLogs { get; set; }
+
     public virtual DbSet<CouponDefinition> CouponDefinitions { get; set; }
 
     public virtual DbSet<EraBucket> EraBuckets { get; set; }
@@ -408,6 +412,27 @@ public partial class QmahDbContext
             entity.Property(e => e.RowVersion)
                 .IsRowVersion()
                 .IsConcurrencyToken();
+        });
+
+        modelBuilder.Entity<AiReviewLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("AiReviewLogs", "social");
+            entity.Property(e => e.ReviewedAt).HasPrecision(3);
+            entity.Property(e => e.TargetType).HasMaxLength(10);
+            entity.Property(e => e.Provider).HasMaxLength(40);
+            entity.Property(e => e.Category).HasMaxLength(60);
+            entity.Property(e => e.Summary).HasMaxLength(400);
+            entity.HasIndex(e => e.ReviewedAt, "IX_AiReviewLogs_ReviewedAt").IsDescending();
+        });
+
+        modelBuilder.Entity<AiReviewRuntimeStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("AiReviewRuntimeStatus", "social");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Provider).HasMaxLength(40);
+            entity.Property(e => e.HeartbeatAt).HasPrecision(3);
         });
 
         modelBuilder.Entity<CouponDefinition>(entity =>
