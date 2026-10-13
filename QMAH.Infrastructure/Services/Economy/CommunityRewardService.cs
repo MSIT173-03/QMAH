@@ -613,6 +613,7 @@ public sealed class CommunityRewardService(QmahDbContext db)
         if (balance is not null)
             return balance;
 
+        await QMAH.Infrastructure.Services.Members.MemberAccountDeletionService.EnsureNotDeletedAsync(db, userId, cancellationToken);
         balance = new PointBalance { UserId = userId, Balance = 0, UpdatedAt = DateTime.UtcNow };
         db.PointBalances.Add(balance);
         return balance;
@@ -628,6 +629,7 @@ public sealed class CommunityRewardService(QmahDbContext db)
         if (balance is not null)
             return balance;
 
+        await QMAH.Infrastructure.Services.Members.MemberAccountDeletionService.EnsureNotDeletedAsync(db, userId, cancellationToken);
         balance = new UserKeyBalance
         {
             UserId = userId,

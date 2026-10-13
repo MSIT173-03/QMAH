@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization; //登入權限
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using QMAH.Infrastructure.Services.Members;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Web.Areas.User.ViewModels;
@@ -25,6 +27,7 @@ public class MembersController : Controller
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
     private readonly EconomyService _economyService;
     private readonly AvatarStoragePaths _avatarStorage;
+    private readonly MemberAccountDeletionService _deletion;
 
     public MembersController(
         UserManager<ApplicationUser> userManager,
@@ -32,7 +35,8 @@ public class MembersController : Controller
         QmahDbContext context,
         RoleManager<IdentityRole<Guid>> roleManager,
         EconomyService economyService,
-        AvatarStoragePaths avatarStorage)
+        AvatarStoragePaths avatarStorage,
+        MemberAccountDeletionService deletion)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -40,6 +44,56 @@ public class MembersController : Controller
         _roleManager = roleManager;
         _economyService = economyService;
         _avatarStorage = avatarStorage;
+        _deletion = deletion;
+    }
+
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        var targets = context.ActionArguments.Where(pair => pair.Key is "id" or "userId")
+            .Select(pair => pair.Value).OfType<Guid>().ToList();
+        foreach (var argument in context.ActionArguments.Values)
+            if (argument?.GetType().GetProperty("UserId")?.GetValue(argument) is Guid id) targets.Add(id);
+        if (targets.Count > 0 && await _context.Users.AnyAsync(user => targets.Contains(user.Id)
+            && user.Status == "DISABLED" && user.Email == null && user.UserName != null
+            && user.UserName.StartsWith(MemberAccountDeletionService.DeletedPrefix), context.HttpContext.RequestAborted))
+        {
+            context.Result = NotFound();
+            return;
+        }
+        await next();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var user = await _deletion.Accounts.AsNoTracking().SingleOrDefaultAsync(user => user.Id == id, cancellationToken);
+        if (user is null) return NotFound();
+        if (_userManager.GetUserId(User) == id.ToString())
+        {
+            TempData["ErrorMessage"] = "不能刪除目前登入的管理員帳號。";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        return View(new MemberDeleteViewModel { UserId = id, Email = user.Email ?? user.UserName ?? user.Id.ToString() });
+    }
+
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(Guid id, MemberDeleteViewModel model, CancellationToken cancellationToken)
+    {
+        if (id != model.UserId) return BadRequest();
+        if (!Guid.TryParse(_userManager.GetUserId(User), out var actorId)) return Challenge();
+        var user = await _deletion.Accounts.AsNoTracking().SingleOrDefaultAsync(user => user.Id == id, cancellationToken);
+        if (user is null) return NotFound();
+        model.Email = user.Email ?? user.UserName ?? user.Id.ToString();
+        if (!ModelState.IsValid) return View("Delete", model);
+        var result = await _deletion.DeleteAsync(actorId, id, model.ConfirmationEmail, cancellationToken);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError("", result.Message);
+            return View("Delete", model);
+        }
+        TempData["SuccessMessage"] = result.Message;
+        return RedirectToAction(nameof(Index));
     }
 
     // 先查會員基本資料，再批次補上個人資料、點數與角色，避免每列各打一次 Identity 查詢
@@ -59,7 +113,7 @@ public class MembersController : Controller
         status = string.IsNullOrWhiteSpace(status) ? null : status.Trim().ToUpperInvariant();
 
         // 先查帳號
-        var query = _userManager.Users.AsNoTracking();
+        var query = _deletion.Accounts.AsNoTracking();
 
         // 關鍵字搜尋
         if (keyword is not null)
@@ -166,10 +220,10 @@ public class MembersController : Controller
         // 統計卡代表全體會員，不跟目前頁面的筆數混在一起
         var now = DateTime.UtcNow;
         var thirtyDaysAgo = now.AddDays(-30);
-        ViewBag.TotalMembers = await _userManager.Users.CountAsync(cancellationToken);
-        ViewBag.NewMembers = await _userManager.Users
+        ViewBag.TotalMembers = await _deletion.Accounts.CountAsync(cancellationToken);
+        ViewBag.NewMembers = await _deletion.Accounts
             .CountAsync(x => x.CreatedAt >= thirtyDaysAgo, cancellationToken);
-        ViewBag.BannedMembers = await _userManager.Users
+        ViewBag.BannedMembers = await _deletion.Accounts
             .CountAsync(x => x.Status == "BANNED", cancellationToken);
 
         return View(members);
@@ -177,7 +231,7 @@ public class MembersController : Controller
 
     public async Task<IActionResult> Details(Guid id)
     {
-        var user = await _userManager.Users
+        var user = await _deletion.Accounts
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == id);
 
@@ -240,7 +294,7 @@ public class MembersController : Controller
         Guid? userAchievementId,
         CancellationToken cancellationToken = default)
     {
-        if (!await _userManager.Users.AnyAsync(user => user.Id == id, cancellationToken))
+        if (!await _deletion.Accounts.AnyAsync(user => user.Id == id, cancellationToken))
             return NotFound();
 
         var result = await _economyService.SetEquippedTitleAsync(id, userAchievementId, cancellationToken);
@@ -417,7 +471,7 @@ public class MembersController : Controller
 
     public IActionResult Edit(Guid id)
     {
-        var user = _userManager.Users
+        var user = _deletion.Accounts
             .SingleOrDefault(x => x.Id == id);
 
         if (user == null)
@@ -707,7 +761,7 @@ public class MembersController : Controller
 
     public IActionResult CreateAddress(Guid userId)
     {
-        var user = _userManager.Users
+        var user = _deletion.Accounts
             .AsNoTracking()
             .SingleOrDefault(x => x.Id == userId);
 
@@ -738,7 +792,7 @@ public class MembersController : Controller
             return View(model);
         }
 
-        var userExists = await _userManager.Users
+        var userExists = await _deletion.Accounts
             .AnyAsync(x => x.Id == model.UserId);
 
         if (!userExists)

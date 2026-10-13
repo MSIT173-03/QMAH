@@ -1,0 +1,33 @@
+@model QMAH.Web.Areas.User.ViewModels.MemberDeleteViewModel
+@{
+    ViewData["Title"] = "刪除會員帳號";
+    ViewData["AdminDescription"] = "刪除登入資料與個人資產，保留匿名的共用歷史紀錄。";
+}
+@section PageActions {
+    <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary">返回會員資料</a>
+}
+<div class="card">
+    <div class="card-header"><h2 class="card-title">確認刪除 @Model.Email</h2></div>
+    <div class="card-body">
+        <div class="alert alert-danger" role="note">
+            <div>
+                <strong>這不是停權，刪除後無法復原。</strong>
+                <p class="mb-0 mt-2">會移除密碼、第三方登入綁定、角色、個人資料、地址、點數、鑰匙、圖鑑解鎖與個人優惠券。牽涉他人的社群、遊戲與訂單紀錄保留，但會員身分及訂單收件資料會匿名化。</p>
+            </div>
+        </div>
+        <form asp-action="Delete" asp-route-id="@Model.UserId" method="post">
+            @Html.AntiForgeryToken()
+            <input asp-for="UserId" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="ConfirmationEmail" class="form-label">輸入這個會員的完整帳號識別，確認刪除對象</label>
+                <input asp-for="ConfirmationEmail" type="text" class="form-control" autocomplete="off" maxlength="256" required />
+                <span asp-validation-for="ConfirmationEmail" class="text-danger"></span>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-danger">永久刪除帳號與個人資產</button>
+                <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-outline-secondary">取消，保留帳號</a>
+            </div>
+        </form>
+    </div>
+</div>

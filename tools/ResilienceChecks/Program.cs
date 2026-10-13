@@ -11,6 +11,8 @@ using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Services.Economy;
 
+await MemberDeletionChecks.RunAsync();
+
 // Inject a transient failure after the balance and ledger have been changed in
 // memory. Each retry must reread persisted state, not spend the same keys twice.
 foreach (var bulk in new[] { false, true })

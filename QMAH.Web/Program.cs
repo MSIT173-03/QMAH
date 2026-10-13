@@ -220,6 +220,8 @@ var mediaRoot = mediaPaths.PublicRoot;
 var avatarStorage = mediaPaths.Avatars;
 builder.Services.AddSingleton(mediaPaths);
 builder.Services.AddSingleton(avatarStorage);
+builder.Services.AddScoped<QMAH.Infrastructure.Services.Members.MemberAccountDeletionService>();
+
 var app = builder.Build();
 app.UseQmahDeploymentHosting(builder.Configuration);
 

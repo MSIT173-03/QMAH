@@ -12,6 +12,7 @@
 }
 
 @section PageActions {
+    <a asp-action="Delete" asp-route-id="@Model.User.Id" class="btn btn-outline-danger">刪除帳號</a>
     <a asp-action="Index" class="btn btn-outline-secondary">
         <i class="ti ti-arrow-left me-1"></i>返回會員列表
     </a>

@@ -59,6 +59,7 @@
                     <td class="qmah-action-cell qmah-actions--4">
                         <div class="qmah-table-actions">
                             <a asp-action="Details" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-secondary">詳細</a>
+                            <a asp-action="Delete" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-danger">刪除</a>
                             <a asp-action="Edit" asp-route-id="@item.User.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
                             <a asp-area="" asp-controller="Operations" asp-action="EconomyAdjustmentPanel" asp-route-targetUserId="@item.User.Id" asp-route-assetType="POINT" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" data-economy-panel-url class="btn btn-sm btn-outline-warning">點數</a>
                             @if (item.User.Status == "ACTIVE")

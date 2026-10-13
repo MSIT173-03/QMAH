@@ -1319,6 +1319,7 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
             .SingleOrDefaultAsync(item => item.UserId == userId && item.KeyDefinitionId == keyDefinitionId, cancellationToken);
         if (balance is not null)
             return balance;
+        await QMAH.Infrastructure.Services.Members.MemberAccountDeletionService.EnsureNotDeletedAsync(db, userId, cancellationToken);
         balance = new UserKeyBalance
         {
             UserId = userId,
@@ -1338,6 +1339,7 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
             .SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
         if (balance is not null)
             return balance;
+        await QMAH.Infrastructure.Services.Members.MemberAccountDeletionService.EnsureNotDeletedAsync(db, userId, cancellationToken);
         balance = new PointBalance
         {
             UserId = userId,
