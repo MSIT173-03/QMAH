@@ -1,0 +1,16 @@
+:host { display: block; }
+.gallery { position: relative; overflow: hidden; border-radius: 12px; aspect-ratio: 16 / 9; max-height: 240px; width: 100%; background: var(--qmah-surface-muted); }
+.gallery__img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gallery__nav { position: absolute; top: 50%; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; transform: translateY(-50%); border: 0; border-radius: 50%; background: rgb(0 0 0 / 52%); color: #fff; cursor: pointer; opacity: 0; transition: opacity 140ms, background 140ms; }
+.gallery__nav svg { width: 18px; height: 18px; }
+.gallery__nav--prev { left: 8px; }
+.gallery__nav--next { right: 8px; }
+.gallery:hover .gallery__nav, .gallery:focus-within .gallery__nav { opacity: 1; }
+.gallery__nav:hover { background: rgb(0 0 0 / 72%); }
+.gallery__nav:focus-visible, .gallery__dot:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.gallery__count { position: absolute; top: 8px; right: 8px; padding: 1px 8px; border-radius: 999px; background: rgb(0 0 0 / 52%); color: #fff; font-size: 0.6875rem; font-weight: 700; }
+.gallery__dots { position: absolute; left: 0; right: 0; bottom: 8px; display: flex; justify-content: center; gap: 6px; }
+.gallery__dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: rgb(255 255 255 / 55%); cursor: pointer; }
+.gallery__dot.is-active { width: 18px; border-radius: 4px; background: #fff; }
+/* 觸控裝置沒有 hover：左右鈕一直顯示，才找得到切換方式。 */
+@media (hover: none) { .gallery__nav { opacity: 1; } }

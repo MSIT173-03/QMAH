@@ -8,20 +8,22 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, forkJoin, map, of, Subscription } from 'rxjs';
 
-import { ApiPage, CreateSocialPostRequest, EventListItem, SocialApiService, SocialMedia, SocialPopularPosts, SocialPostListItem } from '../../../core/services/social-api';
+import { ApiPage, CreateSocialPostRequest, EventListItem, SocialApiService, SocialMedia, SocialPopularPost, SocialPopularPosts, SocialPostListItem } from '../../../core/services/social-api';
+import { moderationMessage } from '../social-moderation';
 import { SocialMediaLayout, SocialMediaManagerComponent } from '../../../shared/components/social-media-manager/social-media-manager';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { SocialEventContentComponent } from '../../../shared/components/social-event-content/social-event-content';
 import { SOCIAL_COLORS, stripSocialMarkup } from '../../../shared/social-markup';
-import { boardLabel } from '../social-labels';
+import { boardLabel, eventMode, eventPlace } from '../social-labels';
 import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
 import { SocialBoardsStore } from '../social-boards';
 import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
 import { SocialLive } from '../../../core/services/social-live';
+import { BoardIconComponent } from '../../../shared/components/board-icon/board-icon';
+import { SocialCardGalleryComponent } from '../../../shared/components/social-card-gallery/social-card-gallery';
 import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
 import {
-  LucideExternalLink,
   LucideFlag,
   LucideFlame,
   LucideFoldHorizontal,
@@ -34,6 +36,7 @@ import {
   LucideArrowUpNarrowWide,
   LucideCalendarDays,
   LucideCalendarRange,
+  LucideArrowRightLeft,
   LucideChevronLeft,
   LucideChevronRight,
   LucideColumns2,
@@ -47,7 +50,7 @@ import {
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [SocialSpotlightComponent, SocialShellComponent,
+  imports: [SocialSpotlightComponent, SocialShellComponent, SocialCardGalleryComponent, BoardIconComponent,
     CommonModule,
     FormsModule,
     RouterLink,
@@ -55,7 +58,6 @@ import {
     ReportModalComponent,
     SocialPostContentComponent,
     SocialEventContentComponent,
-    LucideExternalLink,
     LucideFlag,
     LucideFlame,
     LucideFoldHorizontal,
@@ -68,6 +70,7 @@ import {
     LucideArrowUpNarrowWide,
     LucideCalendarDays,
     LucideCalendarRange,
+    LucideArrowRightLeft,
     LucideChevronLeft,
     LucideChevronRight,
     LucideColumns2,
@@ -88,7 +91,6 @@ export class PostsComponent implements OnInit, OnDestroy {
   private socialLive = inject(SocialLive);
 
   @ViewChild('createPostDialog') private createPostDialog?: ElementRef<HTMLDialogElement>;
-  @ViewChild('popularRail') private popularRail?: ElementRef<HTMLOListElement>;
   private postObserver?: IntersectionObserver;
   private postSentinel?: HTMLElement;
   private loadedPage = 1;
@@ -114,7 +116,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   private readonly sortedPages = new Map<'newest' | 'oldest', ApiPage<SocialPostListItem>>();
   totalCount = 0;
   popular: SocialPopularPosts | null = null;
-  popularSlideIndex = 0;
+  popularOffset = 0;
   discoveryTab: 'events' | 'popular' = 'events';
   private discoveryLoaded = false;
   private discoveryRequest?: Subscription;
@@ -139,12 +141,14 @@ export class PostsComponent implements OnInit, OnDestroy {
   /** 貼文牆每列幾則（1／2／3），記在瀏覽器裡，下次進來沿用 */
   wallCols: 1 | 2 | 3 = this.readWallCols();
 
+  // 沒存過偏好時：寬版預設三欄，窄版兩欄。
   private readWallCols(): 1 | 2 | 3 {
+    const fallback = this.view.wide() ? 3 : 2;
     try {
       const saved = Number(localStorage.getItem('qmah-social-wall-cols'));
-      return saved === 1 || saved === 3 ? saved : 2;
+      return saved === 1 || saved === 2 || saved === 3 ? saved : fallback;
     } catch {
-      return 2;
+      return fallback;
     }
   }
 
@@ -228,6 +232,14 @@ export class PostsComponent implements OnInit, OnDestroy {
     return columns;
   }
 
+  protected readonly eventMode = eventMode;
+  protected readonly eventPlace = eventPlace;
+
+  protected weekday(iso: string): string {
+    return new Date(iso).toLocaleDateString('zh-TW', { weekday: 'short' });
+  }
+
+  private lastLoadedAt = 0;
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly boardStore = inject(SocialBoardsStore);
 
@@ -240,6 +252,8 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.loadPosts();
     this.loadDiscovery();
     this.liveSubscription = this.socialLive.changes.subscribe(() => {
+      // SocialLive 一連上線就會通知一次；剛載入完的資料還是新的，這時再整頁重抓只是多打一輪請求。
+      if (Date.now() - this.lastLoadedAt < 8000) return;
       this.refreshFromSocial();
     });
     this.boardStore.load().subscribe({
@@ -294,11 +308,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   }
 
   get eventSlideLabel(): string {
-    const first = this.upcomingEventsOffset + 1;
-    const last = Math.min(this.upcomingEventsOffset + this.eventsPerSlide, this.upcomingEventsTotalCount);
-    return this.eventsPerSlide === 1
-      ? `${first} / ${this.upcomingEventsTotalCount}`
-      : `${first}–${last} / ${this.upcomingEventsTotalCount}`;
+    return this.slideRange(this.upcomingEventsOffset, this.upcomingEventsTotalCount);
   }
 
   private loadDiscovery(): void {
@@ -317,7 +327,7 @@ export class PostsComponent implements OnInit, OnDestroy {
       this.upcomingEventsTotalCount = events?.totalCount ?? this.upcomingEvents.length;
       this.upcomingEventsOffset = 0;
       this.popular = popular;
-      this.popularSlideIndex = 0;
+      this.popularOffset = 0;
       if (!this.discoveryLoaded) {
         this.discoveryTab = this.upcomingEvents.length ? 'events' : popular?.items.length ? 'popular' : 'events';
         this.discoveryLoaded = true;
@@ -365,8 +375,8 @@ export class PostsComponent implements OnInit, OnDestroy {
     this.suppressUpcomingClick = true;
     if (this.suppressUpcomingClickTimer) clearTimeout(this.suppressUpcomingClickTimer);
     this.suppressUpcomingClickTimer = setTimeout(() => (this.suppressUpcomingClick = false), 500);
-    if (deltaX < 0) this.nextEventSlide();
-    else this.previousEventSlide();
+    if (this.showingEvents) deltaX < 0 ? this.nextEventSlide() : this.previousEventSlide();
+    else deltaX < 0 ? this.nextPopularSlide() : this.previousPopularSlide();
   }
 
   preventUpcomingSwipeNavigation(event: MouseEvent): void {
@@ -401,31 +411,39 @@ export class PostsComponent implements OnInit, OnDestroy {
     return this.upcomingEvents.length > 0 && (this.discoveryTab === 'events' || !this.popular?.items.length);
   }
 
-  setDiscoveryTab(tab: 'events' | 'popular'): void {
-    if (tab === 'events' ? this.upcomingEvents.length : this.popular?.items.length) this.discoveryTab = tab;
+  toggleDiscoveryTab(): void {
+    if (!this.upcomingEvents.length || !this.popular?.items.length) return;
+    this.discoveryTab = this.showingEvents ? 'popular' : 'events';
   }
 
-  onPopularRailScroll(event: Event): void {
-    const rail = event.currentTarget as HTMLOListElement | null;
-    if (!rail || rail.clientWidth <= 0) return;
-    this.popularSlideIndex = Math.max(0, Math.min(
-      (this.popular?.items.length ?? 1) - 1,
-      Math.round(rail.scrollLeft / rail.clientWidth)
-    ));
+  get visiblePopular(): SocialPopularPost[] {
+    return (this.popular?.items ?? []).slice(this.popularOffset, this.popularOffset + this.eventsPerSlide);
   }
 
-  goToPopularSlide(index: number): void {
-    const rail = this.popularRail?.nativeElement;
-    if (!rail || !this.popular?.items[index]) return;
-    this.popularSlideIndex = index;
-    rail.scrollTo({
-      left: index * rail.clientWidth,
-      behavior: this.prefersReducedMotion() ? 'auto' : 'smooth'
-    });
+  get canGoToPreviousPopular(): boolean {
+    return this.popularOffset > 0;
   }
 
-  private prefersReducedMotion(): boolean {
-    return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  get canGoToNextPopular(): boolean {
+    return this.popularOffset + this.eventsPerSlide < (this.popular?.items.length ?? 0);
+  }
+
+  get popularSlideLabel(): string {
+    return this.slideRange(this.popularOffset, this.popular?.items.length ?? 0);
+  }
+
+  previousPopularSlide(): void {
+    this.popularOffset = Math.max(0, this.popularOffset - this.eventsPerSlide);
+  }
+
+  nextPopularSlide(): void {
+    if (this.canGoToNextPopular) this.popularOffset += this.eventsPerSlide;
+  }
+
+  private slideRange(offset: number, total: number): string {
+    const first = offset + 1;
+    const last = Math.min(offset + this.eventsPerSlide, total);
+    return first === last ? `${first} / ${total}` : `${first}–${last} / ${total}`;
   }
 
   /** 靜默更新已載入的牆面，確認被隱藏／刪除的文章後保留捲動位置。 */
@@ -623,6 +641,7 @@ export class PostsComponent implements OnInit, OnDestroy {
       this.loadedPage = page.page || 1;
       this.totalPages = page.totalPages || Math.ceil(page.totalCount / (page.pageSize || 20));
       this.loading = false;
+      this.lastLoadedAt = Date.now();
       this.cdr.detectChanges();
       if (this.postSentinel) { this.postObserver?.unobserve(this.postSentinel); this.postObserver?.observe(this.postSentinel); }
       this.flushPendingLiveRefresh();
@@ -700,8 +719,9 @@ export class PostsComponent implements OnInit, OnDestroy {
       },
       error: (err: HttpErrorResponse) => {
         this.creating = false;
-        this.createError = err.status === 401 ? '發布失敗：請先登入。' : '發布貼文失敗，請確認欄位是否正確。';
+        this.createError = err.status === 401 ? '發布失敗：請先登入。' : moderationMessage(err) ?? '發布貼文失敗，請確認欄位是否正確。';
         console.error('發布貼文失敗:', err);
+        this.cdr.detectChanges();
       }
     });
   }

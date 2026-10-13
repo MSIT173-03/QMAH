@@ -462,3 +462,21 @@ textarea {
 
 /* 有無捲軸時版面寬度不變：換頁時內容不會左右跳 */
 html { scrollbar-gutter: stable; }
+
+/* 社群看板色只分三族，同族同色，顏色代表「這個看板是做什麼的」，不是每個看板各配一色：
+   鑑賞知識（青藍）：文物討論、探索發現、鑑賞心得、研究筆記
+   活動與商城（琥珀）：活動專區、活動消息、商城活動
+   交流互動（梅紫）：綜合交流、問題求助、鑑定遊戲
+   主色仍是磚紅，看板色只做標籤、導覽圓點與卡片頂端的小面積點綴。 */
+[data-board='CATALOG'], [data-board='DISCOVERY'], [data-board='REVIEW'], [data-board='GUIDE'] { --board-c: #3e7a8a; }
+[data-board='EVENTS'], [data-board='EVENT'], [data-board='STORE'] { --board-c: #9a7226; }
+[data-board='GENERAL'], [data-board='QUESTION'], [data-board='GAME'] { --board-c: #8a5a8a; }
+
+
+
+/* 參加方式標籤：線上（青）、現場（琥珀）、線上線下皆可（綠）。活動列表、活動頁與貼文牆的活動資訊共用。 */
+.social-mode { display: inline-flex; align-items: center; width: fit-content; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--mode-c) 16%, transparent); color: color-mix(in srgb, var(--mode-c) 80%, var(--qmah-ink)); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1.6; white-space: nowrap; }
+.social-mode[data-mode='online'] { --mode-c: #2f8aa0; }
+.social-mode[data-mode='offline'] { --mode-c: #9a7226; }
+.social-mode[data-mode='hybrid'] { --mode-c: #4d8a5a; }
+:root[data-theme='qmahdark'] .social-mode { color: color-mix(in srgb, var(--mode-c) 45%, #fff); }

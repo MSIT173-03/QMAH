@@ -395,16 +395,7 @@
 .social-post-card__report:hover { background: color-mix(in srgb, #b3402d 12%, transparent); color: #b3402d; }
 .social-post-card__open:hover { background: color-mix(in srgb, var(--qmah-social-action) 12%, transparent); color: var(--qmah-social-action); }
 
-.qmah-social-page .social-tag[data-board] { --tag-c: #985545; background: color-mix(in srgb, var(--tag-c) 14%, var(--qmah-surface-elevated)); color: var(--tag-c); }
-.qmah-social-page .social-tag[data-board='CATALOG'] { --tag-c: #3e6f8a; }
-.qmah-social-page .social-tag[data-board='GAME'] { --tag-c: #4a5a9a; }
-.qmah-social-page .social-tag[data-board='EVENTS'],
-.qmah-social-page .social-tag[data-board='EVENT'] { --tag-c: #8a6b2c; }
-.qmah-social-page .social-tag[data-board='STORE'] { --tag-c: #a2561f; }
-.qmah-social-page .social-tag[data-board='DISCOVERY'] { --tag-c: #2f6b50; }
-.qmah-social-page .social-tag[data-board='REVIEW'] { --tag-c: #8a4f7a; }
-.qmah-social-page .social-tag[data-board='QUESTION'] { --tag-c: #b4571f; }
-.qmah-social-page .social-tag[data-board='GUIDE'] { --tag-c: #55696f; }
+.qmah-social-page .social-tag[data-board] { --tag-c: var(--board-c, #985545); background: color-mix(in srgb, var(--tag-c) 14%, var(--qmah-surface-elevated)); color: var(--tag-c); }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-tag[data-board] { color: color-mix(in srgb, var(--tag-c) 45%, #fff); background: color-mix(in srgb, var(--tag-c) 26%, var(--qmah-surface-elevated)); }
 
 .qmah-social-page { --qmah-border: #e5d9cc; --qmah-line: #e5d9cc; }
@@ -485,13 +476,13 @@
 
 .qmah-social-page .social-discovery { margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--qmah-border); border-radius: 12px; background: var(--qmah-surface-elevated, var(--qmah-surface)); }
 .qmah-social-page .social-discovery__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.qmah-social-page .social-discovery__heading { display: flex; min-width: 0; align-items: center; gap: 10px; }
 .qmah-social-page .social-discovery__title { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 0.9375rem; font-weight: 800; white-space: nowrap; }
-.qmah-social-page .social-discovery__title svg, .qmah-social-page .social-discovery__tabs svg { width: 16px; height: 16px; flex: none; }
-.qmah-social-page .social-discovery__tabs { display: inline-flex; gap: 4px; padding: 3px; border-radius: 10px; background: color-mix(in srgb, var(--qmah-ink) 6%, transparent); }
-.qmah-social-page .social-discovery__tabs button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--qmah-muted); font: 700 0.8125rem/1.2 var(--qmah-font-sans); cursor: pointer; transition: background 140ms ease, color 140ms ease; }
-.qmah-social-page .social-discovery__tabs button:hover { color: var(--qmah-ink); }
-.qmah-social-page .social-discovery__tabs button.is-active { background: var(--qmah-surface); color: var(--qmah-social-action); box-shadow: 0 1px 3px color-mix(in srgb, var(--qmah-ink) 14%, transparent); }
-.qmah-social-page .social-discovery__tabs button:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+.qmah-social-page .social-discovery__title svg { width: 16px; height: 16px; flex: none; }
+.qmah-social-page .social-discovery__toggle { display: inline-flex; flex: none; align-items: center; gap: 6px; min-height: 36px; padding: 5px 12px; border: 1px solid color-mix(in srgb, var(--qmah-social-action) 35%, var(--qmah-border)); border-radius: 999px; background: color-mix(in srgb, var(--qmah-social-action) 7%, var(--qmah-surface)); color: var(--qmah-social-action); font: 700 0.78rem/1.2 var(--qmah-font-sans); cursor: pointer; transition: background 140ms ease, border-color 140ms ease; }
+.qmah-social-page .social-discovery__toggle:hover { border-color: var(--qmah-social-action); background: color-mix(in srgb, var(--qmah-social-action) 13%, var(--qmah-surface)); }
+.qmah-social-page .social-discovery__toggle svg { width: 15px; height: 15px; }
+.qmah-social-page .social-discovery__toggle:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
 .qmah-social-page .social-discovery__all { display: inline-flex; align-items: center; gap: 2px; color: var(--qmah-social-action); font-size: 0.8125rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .qmah-social-page .social-discovery__all svg { width: 14px; height: 14px; }
 .qmah-social-page .social-discovery__all:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -523,39 +514,15 @@
 
 .qmah-social-page .social-popular { margin: 0; }
 .qmah-social-page .social-popular__period { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; background: color-mix(in srgb, var(--qmah-social-action) 9%, transparent); color: var(--qmah-muted); font-size: 0.75rem; white-space: nowrap; }
-.qmah-social-page .social-popular__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
 .qmah-social-page .social-popular__item { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: start; gap: 2px 8px; min-height: 66px; padding: 9px; border-radius: 10px; color: inherit; text-decoration: none; transition: background-color 140ms ease; }
 .qmah-social-page .social-popular__item:hover { background: color-mix(in srgb, var(--qmah-social-action) 7%, transparent); }
 .qmah-social-page .social-popular__rank { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--qmah-social-soft); color: var(--qmah-social-action); font-size: 0.8rem; font-weight: 850; }
+.qmah-social-page .social-popular__rank.is-top { background: var(--qmah-social-action); color: #fff; }
 .qmah-social-page .social-popular__title { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; color: var(--qmah-ink); font-size: 0.82rem; font-weight: 720; line-height: 1.4; }
 .qmah-social-page .social-popular__facts { grid-column: 2; color: var(--qmah-muted); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
-.qmah-social-page .social-popular__pagination { display: none; }
 .qmah-social-page .social-live-notice { margin: 0 0 12px; color: var(--qmah-muted); font-size: 0.8rem; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-discovery { background: #25282a; border-color: #43474a; }
-:host-context([data-theme='qmahdark']) .qmah-social-page .social-discovery__tabs button.is-active { background: #35393c; color: #ff8a80; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-popular__title { color: #f1eee7; }
-
-@media (max-width: 640px) {
-  .qmah-social-page .social-popular__list {
-    display: flex;
-    gap: 0;
-    overflow-x: auto;
-    padding-bottom: 0;
-    overscroll-behavior-inline: contain;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-  }
-  .qmah-social-page .social-popular__list::-webkit-scrollbar { display: none; }
-  .qmah-social-page .social-popular__list > li { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
-  .qmah-social-page .social-popular__item { min-height: 68px; height: 100%; grid-template-columns: 28px minmax(0, 1fr); padding: 9px 10px; }
-  .qmah-social-page .social-popular__facts { grid-column: 2; }
-  .qmah-social-page .social-popular__pagination { display: flex; justify-content: center; align-items: center; gap: 6px; padding-top: 7px; }
-  .qmah-social-page .social-popular__page-arrow { display: inline-grid; flex: 0 0 32px; place-items: center; width: 32px; height: 32px; min-height: 32px; padding: 0; border: 1px solid var(--qmah-border); border-radius: 50%; background: transparent; color: var(--qmah-social-action); cursor: pointer; }
-  .qmah-social-page .social-popular__page-arrow svg { width: 15px; height: 15px; }
-  .qmah-social-page .social-popular__page-arrow:disabled { opacity: 0.38; cursor: default; }
-  .qmah-social-page .social-popular__page-arrow:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
-  .qmah-social-page .social-popular__position { color: var(--qmah-muted); font-size: 0.7rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-}
 
 /* 時間篩選與排序：與欄數切換同一排，只用圖示；日期面板向下展開 */
 .qmah-social-page .social-cols { margin-left: 0; }
@@ -654,3 +621,59 @@
   .social-post-dialog__actions { padding:12px 16px; }
   .social-post-dialog__actions form { width:100%;gap:8px; }
 }
+
+/* 貼文卡片頂端帶一層很淡的看板色，整面牆不再只有米白一色。 */
+.qmah-social-page .social-post-card[data-board] { background-image: linear-gradient(180deg, color-mix(in srgb, var(--board-c, transparent) 7%, transparent), transparent 96px); }
+.qmah-social-page .social-discovery { background-image: linear-gradient(135deg, color-mix(in srgb, var(--qmah-social-action) 6%, transparent), transparent 62%); }
+
+/* 整張卡片就是「開啟貼文」：標題連結的 ::after 鋪滿卡片，作者、留言、檢舉與活動連結另外浮在上層，各自照常運作。 */
+.qmah-social-page .social-post-card { position: relative; cursor: pointer; }
+.qmah-social-page .social-post-card__title a::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.qmah-social-page .social-post-card a:not(.social-post-card__title a),
+.qmah-social-page .social-post-card button { position: relative; z-index: 2; }
+.qmah-social-page .social-post-card__title a:focus-visible::after { outline: 3px solid var(--qmah-focus); outline-offset: -3px; }
+
+/* 近期活動：日曆磚（月份色帶、大日期、星期）＋標題／時間地點／參加方式。 */
+.qmah-social-page .social-upcoming__item { align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--qmah-border); border-radius: 14px; background: var(--qmah-surface); transition: border-color 140ms, transform 140ms, box-shadow 140ms; }
+.qmah-social-page .social-upcoming__item:hover { border-color: color-mix(in srgb, var(--qmah-social-action) 55%, var(--qmah-border)); background: var(--qmah-surface); transform: translateY(-1px); box-shadow: 0 6px 16px rgb(0 0 0 / 10%); }
+.qmah-social-page .social-upcoming__date { position: relative; overflow: hidden; width: 54px; height: 62px; padding-top: 16px; grid-template-rows: 1fr auto; border: 1px solid color-mix(in srgb, var(--qmah-social-action) 35%, var(--qmah-border)); border-radius: 10px; background: var(--qmah-surface-elevated, var(--qmah-surface)); color: var(--qmah-ink); box-shadow: 0 2px 6px rgb(0 0 0 / 10%); }
+.qmah-social-page .social-upcoming__date small { position: absolute; inset: 0 0 auto; display: block; padding: 2px 0; background: var(--qmah-social-action); color: #fff; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.1em; text-align: center; }
+.qmah-social-page .social-upcoming__date strong { align-self: center; font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.qmah-social-page .social-upcoming__date em { padding-bottom: 4px; color: var(--qmah-muted); font-size: 0.6875rem; font-style: normal; font-weight: 700; line-height: 1; text-align: center; }
+.qmah-social-page .social-upcoming__text { gap: 3px; }
+.qmah-social-page .social-upcoming__title { font-size: 0.9375rem; }
+.qmah-social-page .social-upcoming__meta { font-size: 0.8125rem; }
+
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-upcoming__date { background: #2c3032; color: #f1eee7; }
+@media (max-width: 640px) {
+  .qmah-social-page .social-upcoming__item { padding: 8px 10px; }
+  .qmah-social-page .social-upcoming__date { width: 46px; height: 54px; }
+  .qmah-social-page .social-upcoming__date strong { font-size: 1.25rem; }
+}
+
+/* 熱門貼文：和近期活動同一張卡片語彙——左邊是封面縮圖（沒圖用看板色與火焰）加名次徽章，右邊標題、看板與作者、參與數與熱度條。 */
+.qmah-social-page .social-popular__item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--qmah-border); border-radius: 14px; background: var(--qmah-surface); color: inherit; text-decoration: none; transition: border-color 140ms, transform 140ms, box-shadow 140ms; }
+.qmah-social-page .social-popular__item:hover { border-color: color-mix(in srgb, #e0642b 55%, var(--qmah-border)); transform: translateY(-1px); box-shadow: 0 6px 16px rgb(0 0 0 / 10%); }
+.qmah-social-page .social-popular__thumb { position: relative; flex: none; display: grid; place-items: center; width: 72px; height: 72px; overflow: hidden; border-radius: 12px; background: color-mix(in srgb, var(--board-c, #9a7226) 28%, var(--qmah-surface-elevated, var(--qmah-surface))); color: color-mix(in srgb, var(--board-c, #9a7226) 70%, #fff); }
+.qmah-social-page .social-popular__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.qmah-social-page .social-popular__thumb svg { width: 30px; height: 30px; }
+.qmah-social-page .social-popular__rank { position: absolute; top: 0; left: 0; display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px 0 10px 0; background: #6b625a; color: #fff; font-size: 0.8125rem; font-weight: 800; }
+.qmah-social-page .social-popular__item[data-rank='1'] .social-popular__rank { background: linear-gradient(135deg, #f2c14e, #c98a12); color: #3a2a00; }
+.qmah-social-page .social-popular__item[data-rank='2'] .social-popular__rank { background: linear-gradient(135deg, #d7dce0, #9aa4ab); color: #222; }
+.qmah-social-page .social-popular__item[data-rank='3'] .social-popular__rank { background: linear-gradient(135deg, #e2a373, #a8622f); color: #2d1606; }
+.qmah-social-page .social-popular__body { display: grid; gap: 4px; min-width: 0; }
+.qmah-social-page .social-popular__title { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font-size: 0.9375rem; font-weight: 800; line-height: 1.35; }
+.qmah-social-page .social-popular__meta { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--qmah-muted); font-size: 0.75rem; }
+.qmah-social-page .social-popular__meta .social-tag { flex: none; padding: 0 8px; font-size: 0.6875rem; }
+.qmah-social-page .social-popular__author { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qmah-social-page .social-popular__facts { display: inline-flex; align-items: center; gap: 4px; color: #e0642b; font-size: 0.75rem; font-weight: 700; }
+.qmah-social-page .social-popular__facts svg { width: 14px; height: 14px; }
+.qmah-social-page .social-popular__heat { display: block; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--qmah-ink) 10%, transparent); overflow: hidden; }
+.qmah-social-page .social-popular__heat i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #f2a33a, #e0402b); }
+@media (max-width: 640px) { .qmah-social-page .social-popular__thumb { width: 60px; height: 60px; } }
+
+/* 配圖高度上限：單欄或寬版時 16:9 會變成很高的大圖，統一封頂並用 object-fit 裁切。 */
+.qmah-social-page .social-post-card__cover { max-height: 240px; }
+
+/* 看板圖示：標籤內的小圖示與文字同色、同高。 */
+.qmah-social-page .social-tag { display: inline-flex; align-items: center; gap: 4px; }

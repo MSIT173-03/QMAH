@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, OnInit, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LucideCalendarDays, LucideChevronDown, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal } from '@lucide/angular';
 import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
 
+import { BoardIconComponent } from '../board-icon/board-icon';
 import { SocialBoardsStore } from '../../../features/social/social-boards';
-import { boardLabel } from '../../../features/social/social-labels';
+import { boardLabel, groupBoards } from '../../../features/social/social-labels';
 
 /**
  * 社群三大頁面（貼文牆、站方公告、社群活動）共用的左側導覽與版型：
@@ -17,7 +18,7 @@ import { boardLabel } from '../../../features/social/social-labels';
  */
 @Component({
   selector: 'app-social-shell',
-  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronDown, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal],
+  imports: [BoardIconComponent, RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronDown, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './social-shell.scss',
   template: `
@@ -33,8 +34,12 @@ import { boardLabel } from '../../../features/social/social-labels';
             <span class="sr-only">貼文分類</span>
             <select [value]="activeBoard() ?? ''" (change)="boardSelect.emit($any($event.target).value)">
               <option value="">全部貼文</option>
-              @for (board of list(); track board) {
-                <option [value]="board">{{ label(board) }}</option>
+              @for (group of groups(); track group.key) {
+                <optgroup [label]="group.label">
+                  @for (board of group.boards; track board) {
+                    <option [value]="board">{{ label(board) }}</option>
+                  }
+                </optgroup>
               }
             </select>
             <svg lucideChevronDown aria-hidden="true" focusable="false"></svg>
@@ -43,17 +48,25 @@ import { boardLabel } from '../../../features/social/social-labels';
         <p class="shell__title shell__title--gap">看板</p>
         <ul class="shell__list" [class.shell__list--boards]="inline()">
           @if (inline()) {
-            <li><button type="button" class="shell__item" [class.is-active]="activeBoard() === ''" [attr.aria-current]="activeBoard() === '' ? 'true' : null" (click)="boardSelect.emit('')">全部貼文</button></li>
-            @for (board of list(); track board) {
-              <li><button type="button" class="shell__item" [class.is-active]="activeBoard() === board" [attr.aria-current]="activeBoard() === board ? 'true' : null" (click)="boardSelect.emit(board)">{{ label(board) }}</button></li>
-            }
+            <li><button type="button" class="shell__item shell__item--all" [class.is-active]="activeBoard() === ''" [attr.aria-current]="activeBoard() === '' ? 'true' : null" (click)="boardSelect.emit('')">全部貼文</button></li>
           } @else {
-            <li><a class="shell__item" routerLink="/social/posts">全部貼文</a></li>
-            @for (board of list(); track board) {
-              <li><a class="shell__item" routerLink="/social/posts" [queryParams]="{ board }">{{ label(board) }}</a></li>
-            }
+            <li><a class="shell__item shell__item--all" routerLink="/social/posts">全部貼文</a></li>
           }
         </ul>
+        @for (group of groups(); track group.key) {
+          <div class="shell__group" [class.shell__group--boards]="inline()" [attr.data-board]="group.boards[0]">
+            <p class="shell__group-title">{{ group.label }}</p>
+            <ul class="shell__list">
+              @for (board of group.boards; track board) {
+                @if (inline()) {
+                  <li><button type="button" class="shell__item" [class.is-active]="activeBoard() === board" [attr.aria-current]="activeBoard() === board ? 'true' : null" (click)="boardSelect.emit(board)"><app-board-icon [code]="board" />{{ label(board) }}</button></li>
+                } @else {
+                  <li><a class="shell__item" routerLink="/social/posts" [queryParams]="{ board }"><app-board-icon [code]="board" />{{ label(board) }}</a></li>
+                }
+              }
+            </ul>
+          </div>
+        }
       </nav>
       <div class="shell__main">
         @if (!inline()) { <div class="shell__view-tools"><button type="button" class="shell__width-toggle" [attr.aria-pressed]="view.wide()" [attr.aria-label]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" [title]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" (click)="view.toggle()">
@@ -76,7 +89,7 @@ export class SocialShellComponent implements OnInit {
 
   protected readonly label = boardLabel;
 
-  protected readonly list = this.store.boards;
+  protected readonly groups = computed(() => groupBoards(this.store.boards()));
 
   ngOnInit(): void {
     // 清單立即來自快取，這裡只是在背景更新

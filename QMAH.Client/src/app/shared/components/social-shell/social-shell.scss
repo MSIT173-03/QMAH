@@ -18,13 +18,22 @@
 .shell__list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
 
 .shell__item {
-  display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; border: 0; border-left: 3px solid transparent; border-radius: 8px;
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border: 0; border-left: 3px solid transparent; border-radius: 4px 8px 8px 4px;
   background: transparent; color: var(--qmah-ink); font: inherit; font-size: 0.9375rem; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer;
   transition: background 140ms, color 140ms;
 }
+.shell__item app-board-icon { font-size: 1rem; color: var(--group-c, var(--qmah-muted)); }
 .shell__item:hover { background: color-mix(in srgb, var(--qmah-ink) 6%, transparent); }
-.shell__item.is-active { border-left-color: var(--qmah-social-action); background: color-mix(in srgb, var(--qmah-social-action) 10%, transparent); color: var(--qmah-social-action); font-weight: 800; }
+.shell__item.is-active { border-left-color: var(--qmah-social-action); background: color-mix(in srgb, var(--qmah-social-action) 12%, transparent); font-weight: 800; }
 .shell__item:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 1px; }
+
+/* 三族看板：族名前有一小段色條，族內項目縮排；只有選取的項目會亮起該族的顏色。 */
+.shell__group { margin-top: 10px; --group-c: var(--board-c, var(--qmah-social-action)); }
+.shell__group-title { display: flex; align-items: center; gap: 8px; margin: 0 8px 4px; color: color-mix(in srgb, var(--group-c) 60%, var(--qmah-muted)); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; }
+.shell__group-title::before { content: ''; flex: none; width: 14px; height: 4px; border-radius: 2px; background: var(--group-c); }
+.shell__group .shell__item { padding-left: 22px; border-left-color: transparent; }
+.shell__group .shell__item:hover { background: color-mix(in srgb, var(--group-c) 9%, transparent); }
+.shell__group .shell__item.is-active { border-left-color: var(--group-c); background: color-mix(in srgb, var(--group-c) 20%, transparent); }
 .shell__item--link > svg:first-child { width: 17px; height: 17px; color: var(--qmah-muted); }
 .shell__item--link.is-active > svg:first-child { color: inherit; }
 .shell__go { width: 15px; height: 15px; margin-left: auto; color: var(--qmah-muted); opacity: 0; transition: opacity 140ms, transform 140ms; }
@@ -32,7 +41,7 @@
 
 :host-context([data-theme='qmahdark']) .shell__nav { background: #25282a; border-color: #43474a; }
 :host-context([data-theme='qmahdark']) .shell__item { color: #e6e2da; }
-:host-context([data-theme='qmahdark']) .shell__item.is-active { color: #ff8a80; }
+:host-context([data-theme='qmahdark']) .shell__item.is-active { color: #fff; }
 .shell__mobile-picker { display: none; }
 
 @media (max-width: 900px) {
@@ -42,6 +51,10 @@
   .shell__list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
   .shell__item { width: auto; white-space: nowrap; border: 1px solid var(--qmah-border); border-radius: 999px; padding: 6px 14px; }
   .shell__item.is-active { border-color: var(--qmah-social-action); }
+  .shell__group { display: flex; margin: 0; }
+  .shell__group-title { display: none; }
+  .shell__group .shell__item { padding-left: 14px; border-left-width: 1px; border-radius: 999px; }
+  .shell__group .shell__item.is-active { border-color: var(--group-c); }
   .shell__go { display: none; }
 }
 
@@ -60,7 +73,7 @@
   .shell__nav::-webkit-scrollbar { display: none; }
   .shell__list { flex: 0 0 auto; max-width: none; overflow: visible; padding-bottom: 0; }
   .shell__list + .shell__list { padding-left: 6px; border-left: 1px solid var(--qmah-border); }
-  .shell__list--boards { display: none; }
+  .shell__list--boards, .shell__group--boards { display: none; }
   .shell__item { min-height:40px; padding-inline:8px; gap:6px; font-size:0.8125rem; }
   .shell__nav .shell__mobile-picker {
     position: relative;

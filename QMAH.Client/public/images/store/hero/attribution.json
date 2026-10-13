@@ -4,8 +4,8 @@
   "usage": "QMAH Store hero fallback backgrounds",
   "textPolicy": "圖片不含文字；優惠金額與繁體中文標語由前端 HTML 疊印，確保與實際 Coupon 資料同步。",
   "assets": [
-    "museum-shop-still-life.png",
-    "gift-wrapping.png",
-    "museum-shop-shelf.png"
+    "museum-shop-still-life.webp",
+    "gift-wrapping.webp",
+    "museum-shop-shelf.webp"
   ]
 }

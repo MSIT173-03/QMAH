@@ -62,9 +62,9 @@ export class HeroCarousel {
 
   /** 本地的無文字素材只負責氛圍，文案由模板顯示，保持可讀、可更新 */
   private readonly slideImages = [
-    '/images/store/hero/museum-shop-still-life.png',
-    '/images/store/hero/gift-wrapping.png',
-    '/images/store/hero/museum-shop-shelf.png',
+    '/images/store/hero/museum-shop-still-life.webp',
+    '/images/store/hero/gift-wrapping.webp',
+    '/images/store/hero/museum-shop-shelf.webp',
   ];
 
   /** 目前顯示的投影片索引 */

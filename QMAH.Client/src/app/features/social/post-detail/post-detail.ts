@@ -8,6 +8,7 @@ import { ConfirmationService } from '../../../core/services/confirmation';
 import { finalize } from 'rxjs';
 
 import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialMedia, SocialPostArtifact, SocialPostDetails } from '../../../core/services/social-api';
+import { moderationMessage } from '../social-moderation';
 import { MeApiService } from '../../../core/services/me-api';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal';
 import { SocialEditorComponent } from '../../../shared/components/social-editor/social-editor';
@@ -244,7 +245,7 @@ export class PostDetailComponent implements OnChanges {
         this.loadPost();
       },
       error: (err: HttpErrorResponse) => {
-        this.actionError = err.status === 401 ? '請先登入才能留言。' : '留言失敗，請稍後再試。';
+        this.actionError = err.status === 401 ? '請先登入才能留言。' : moderationMessage(err) ?? '留言失敗，請稍後再試。';
         console.error('留言失敗:', err);
         this.cdr.detectChanges();
       }

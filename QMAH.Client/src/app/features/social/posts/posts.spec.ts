@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -120,9 +121,9 @@ describe('PostsComponent', () => {
     expect(fixture.nativeElement.querySelector('.social-upcoming')?.textContent).toContain('本週文物交流');
     expect(fixture.nativeElement.querySelector('.social-popular')).toBeNull();
 
-    const tabs = fixture.nativeElement.querySelectorAll('.social-discovery__tabs button') as NodeListOf<HTMLButtonElement>;
-    expect(tabs[0].getAttribute('aria-pressed')).toBe('true');
-    tabs[1].click();
+    const toggle = fixture.nativeElement.querySelector('.social-discovery__toggle') as HTMLButtonElement | null;
+    expect(toggle?.getAttribute('aria-label')).toBe('切換至熱門貼文');
+    toggle?.click();
     fixture.detectChanges();
 
     expect(component.discoveryTab).toBe('popular');
@@ -145,7 +146,32 @@ describe('PostsComponent', () => {
 
     expect(component.discoveryTab).toBe('popular');
     expect(fixture.nativeElement.querySelector('.social-popular')?.textContent).toContain('本週熱門貼文');
-    expect(fixture.nativeElement.querySelector('.social-discovery__tabs')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.social-discovery__toggle')).toBeNull();
+  });
+
+  it('lets members page through popular posts with the arrows', () => {
+    fixture.detectChanges();
+    httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 }));
+    httpMock.expectOne(r => r.url.endsWith('/social/boards')).flush([]);
+    httpMock.expectOne(r => r.url.endsWith('/social/events')).flush({ items: [], page: 1, pageSize: 6, totalCount: 0, totalPages: 0 });
+    httpMock.expectOne(r => r.url.endsWith('/social/posts/popular')).flush({
+      window: 'WEEK', items: [1, 2, 3].map(n => ({
+        id: `popular-${n}`, boardCode: 'GENERAL', title: `熱門 ${n}`, createdAt: '2026-10-12T10:00:00Z', participantCount: 0, commentCount: 0
+      }))
+    });
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const per = component.eventsPerSlide;
+    expect(root.querySelectorAll('.social-popular__item').length).toBe(per);
+    expect(root.querySelector('.social-popular__facts')).toBeNull();
+    const [prev, next] = Array.from(root.querySelectorAll('.social-popular .social-upcoming__arrow')) as HTMLButtonElement[];
+    expect(prev.disabled).toBe(true);
+    for (let i = 0; i < 3; i++) { next.click(); fixture.detectChanges(); }
+    expect(next.disabled).toBe(true);
+    expect(root.querySelector('.social-popular__rank')?.textContent?.trim()).toBe(String(3 - ((3 - 1) % per)));
+    prev.click(); fixture.detectChanges();
+    expect(root.querySelector('.social-popular__rank')?.textContent?.trim()).not.toBeNull();
   });
 
   it('keeps activity cards manually navigable and links to the full event list', () => {
@@ -229,6 +255,7 @@ describe('PostsComponent', () => {
 
   it('removes posts that are no longer public when a live update arrives', () => {
     initializePosts([{ id: 'post-1', createdAt: '2026-10-08T00:00:00Z' } as SocialPostListItem]);
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 60_000);
     socialChanges.next();
 
     httpMock.expectOne(r => r.url.endsWith('/social/posts/visible')).flush([]);
@@ -240,5 +267,12 @@ describe('PostsComponent', () => {
 
     expect(component.posts).toEqual([]);
     expect(component.totalCount).toBe(0);
+  });
+
+  it('ignores the live notification that arrives right after the first load', () => {
+    initializePosts([{ id: 'post-1', createdAt: '2026-10-08T00:00:00Z' } as SocialPostListItem]);
+    socialChanges.next();
+
+    httpMock.expectNone(r => r.url.endsWith('/social/posts/visible'));
   });
 });

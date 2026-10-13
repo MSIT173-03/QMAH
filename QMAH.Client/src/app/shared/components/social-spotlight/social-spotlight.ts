@@ -11,9 +11,9 @@ import { QmahIconComponent } from '../qmah-icon/qmah-icon';
  * （public/images/store/hero，來源與授權見同目錄 attribution.json）。
  */
 const ANNOUNCEMENT_FALLBACK_IMAGES = [
-  '/images/store/hero/museum-shop-still-life.png',
-  '/images/store/hero/gift-wrapping.png',
-  '/images/store/hero/museum-shop-shelf.png',
+  '/images/store/hero/museum-shop-still-life.webp',
+  '/images/store/hero/gift-wrapping.webp',
+  '/images/store/hero/museum-shop-shelf.webp',
 ];
 
 /** 換頁時不重抓：第二次進來直接用上一次的公告，版面一開始就是完整的，不會跳動。 */

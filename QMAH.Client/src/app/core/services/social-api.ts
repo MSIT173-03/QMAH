@@ -28,6 +28,8 @@ export interface SocialPostListItem {
   commentCount: number;
   mediaCount: number;
   coverImageUrl: string | null;
+  /** 貼文牆卡片輪播用，最多 5 張；沒有時退回 coverImageUrl */
+  imageUrls?: string[] | null;
   locationName: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -113,6 +115,10 @@ export interface SocialPopularPost {
   createdAt: string;
   participantCount: number;
   commentCount: number;
+  coverImageUrl?: string | null;
+  displayName?: string | null;
+  /** 與第一名相比的熱度（第一名 100），給熱門區的熱度條用 */
+  heatPercent?: number;
 }
 
 export interface SocialPopularPosts {
