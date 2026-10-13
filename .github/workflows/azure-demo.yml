@@ -15,7 +15,7 @@ concurrency:
 jobs:
   deploy:
     if: github.ref == 'refs/heads/deploy/azure-demo'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
       contents: read
@@ -82,7 +82,21 @@ jobs:
           bash /tmp/qmah-update-$REVISION.sh /tmp/qmah-update-$REVISION.tar.gz '$REVISION'
           QMAH_UPDATE
           EOF
-          az vm run-command invoke --resource-group qmah-demo-rg --name qmah-demo-vm --command-id RunShellScript --scripts @run-update.sh --query 'value[].message' --output tsv > deployment-result.txt
+          invoked=false
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if az vm run-command invoke --resource-group qmah-demo-rg --name qmah-demo-vm --command-id RunShellScript --scripts @run-update.sh --query 'value[].message' --output tsv > deployment-result.txt 2> run-command-error.txt; then
+              invoked=true
+              break
+            fi
+            # Conflict means the VM rejected this command before execution; never retry unknown outcomes.
+            if ! grep -Eq '\(Conflict\)|execution is in progress' run-command-error.txt; then
+              cat run-command-error.txt
+              exit 1
+            fi
+            echo "Azure command is busy; waiting before attempt $((attempt + 1))."
+            sleep 15
+          done
+          if [ "$invoked" != true ]; then cat run-command-error.txt; exit 1; fi
           cat deployment-result.txt
           grep -q "QMAH_UPDATE_OK $REVISION" deployment-result.txt
       - name: Deployment result
