@@ -50,8 +50,113 @@ public sealed class ContentKeywordAdminController : Controller
             + await _context.SocialComments.CountAsync(item => item.AiReviewedAt == null, cancellationToken);
         ViewData["AiReports"] = await _context.ContentReports.CountAsync(item => item.Reason == "AUTO_AI", cancellationToken);
         ViewData["AiReportsPending"] = await _context.ContentReports.CountAsync(item => item.Reason == "AUTO_AI" && item.Status == "PENDING", cancellationToken);
+        var aiReviewEnabled = await _context.ContentModerationSettings.AsNoTracking()
+            .Where(item => item.Id == ContentModerationSettingsService.SettingsRowId)
+            .Select(item => (bool?)item.AiReviewEnabled)
+            .FirstOrDefaultAsync(cancellationToken) ?? true;
+        ViewData["AiReviewEnabled"] = aiReviewEnabled;
+        ViewData["AiToggleLog"] = await LoadAiToggleLogAsync(cancellationToken);
+        var since = DateTime.UtcNow.AddHours(-24);
+        ViewData["AiReviewed24h"] = await _context.AiReviewLogs.CountAsync(item => item.ReviewedAt >= since, cancellationToken);
+        ViewData["AiFlagged24h"] = await _context.AiReviewLogs.CountAsync(item => item.ReviewedAt >= since && item.Flagged, cancellationToken);
+        // 只列判定違規的紀錄；通過的每次都會寫入，全部列出會淹沒真正需要看的內容。
+        ViewData["AiReviewLog"] = await _context.AiReviewLogs.AsNoTracking()
+            .Where(item => item.Flagged)
+            .OrderByDescending(item => item.ReviewedAt)
+            .ThenByDescending(item => item.Id)
+            .Take(20)
+            .ToListAsync(cancellationToken);
+        SetAiRuntimeStatus(await _context.AiReviewRuntimeStatuses.AsNoTracking().FirstOrDefaultAsync(item => item.Id == 1, cancellationToken), aiReviewEnabled);
         return View("~/Areas/Social/Views/SocialAdmin/ContentKeywordAdmin.cshtml", model);
     }
+
+    /// <summary>
+    /// 把 API 背景排程回報的狀態換成後台看得懂的一句話。排程超過 3 分鐘沒回報（心跳每分鐘一次）視為沒有在跑。
+    /// 字串與樣式類別固定在這裡，視圖只負責顯示。
+    /// </summary>
+    private void SetAiRuntimeStatus(QMAH.Infrastructure.Models.Entities.AiReviewRuntimeStatus? status, bool aiReviewEnabled)
+    {
+        const int StaleAfterMinutes = 3;
+        if (!aiReviewEnabled)
+        {
+            ViewData["AiStatusLevel"] = "warning";
+            ViewData["AiStatusText"] = "AI 審查已由管理員暫停：待複審內容不會送出審查，關鍵字與洗版規則照常運作。可按下方按鈕重新啟用，開關動作會記錄在下方紀錄。";
+            return;
+        }
+
+        if (status is null || status.HeartbeatAt < DateTime.UtcNow.AddMinutes(-StaleAfterMinutes))
+        {
+            ViewData["AiStatusLevel"] = "danger";
+            ViewData["AiStatusText"] = status is null
+                ? "AI 審查排程從未回報，API 程序可能沒有在執行；待複審的內容不會被處理。"
+                : $"AI 審查排程已超過 {StaleAfterMinutes} 分鐘沒有回報（最後 {status.HeartbeatAt.ToLocalTime():yyyy-MM-dd HH:mm}），API 程序可能已停止；待複審的內容不會被處理。";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(status.Provider))
+        {
+            ViewData["AiStatusLevel"] = "warning";
+            ViewData["AiStatusText"] = "AI 審查尚未啟用：API 沒有設定 ContentSafety:ApiKey 或 OpenAi:ApiKey，疑似內容只會累積在「待複審」，不會送出審查。金鑰設定後會自動補審。";
+            return;
+        }
+
+        ViewData["AiStatusLevel"] = "success";
+        ViewData["AiStatusText"] = $"AI 審查運作中，供應商：{status.Provider}（最後回報 {status.HeartbeatAt.ToLocalTime():yyyy-MM-dd HH:mm}）。";
+    }
+
+    /// <summary>
+    /// 開啟 AI 審查。動作名稱即是稽核紀錄的 Action，<see cref="QMAH.Web.Infrastructure.Audit.AdminAuditLogFilter"/> 會自動寫入 admin.AuditLogs，
+    /// 所以這裡不需要另外記錄；後台的「AI 審核開關紀錄」直接讀那張表。
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnableAiReview(CancellationToken cancellationToken = default) =>
+        await SetAiReviewEnabledAsync(true, cancellationToken);
+
+    /// <summary>暫停 AI 審查（見 <see cref="EnableAiReview"/> 的稽核說明）。</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DisableAiReview(CancellationToken cancellationToken = default) =>
+        await SetAiReviewEnabledAsync(false, cancellationToken);
+
+    private async Task<IActionResult> SetAiReviewEnabledAsync(bool enabled, CancellationToken cancellationToken)
+    {
+        var entity = await _context.ContentModerationSettings.SingleOrDefaultAsync(
+            item => item.Id == ContentModerationSettingsService.SettingsRowId, cancellationToken);
+        if (entity is null)
+        {
+            entity = new ContentModerationSetting
+            {
+                Id = ContentModerationSettingsService.SettingsRowId,
+                SimHashWindowDays = ContentModerationSettingsService.DefaultSimHashWindowDays,
+                SimHashHammingThreshold = ContentModerationSettingsService.DefaultSimHashHammingThreshold
+            };
+            _context.ContentModerationSettings.Add(entity);
+        }
+        entity.AiReviewEnabled = enabled;
+        entity.UpdatedByUserId = _currentUserService.GetCurrentUserId();
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        TempData["SuccessMessage"] = enabled ? "已啟用 AI 審查。" : "已暫停 AI 審查。";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<List<AiReviewToggleLogItem>> LoadAiToggleLogAsync(CancellationToken cancellationToken) =>
+        await _context.AuditLogs.AsNoTracking()
+            .Where(log => log.Area == "Social"
+                && log.Controller == "ContentKeywordAdmin"
+                && (log.Action == nameof(EnableAiReview) || log.Action == nameof(DisableAiReview)))
+            .OrderByDescending(log => log.OccurredAt)
+            .ThenByDescending(log => log.Id)
+            .Take(10)
+            .Select(log => new AiReviewToggleLogItem(
+                log.OccurredAt,
+                log.ActorUser == null ? null : log.ActorUser.UserName,
+                log.Action == nameof(EnableAiReview),
+                log.ResultStatusCode >= 200 && log.ResultStatusCode < 400))
+            .ToListAsync(cancellationToken);
 
     [HttpPost]
     [ValidateAntiForgeryToken]

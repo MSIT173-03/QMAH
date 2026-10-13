@@ -30,6 +30,8 @@ describe('EventsComponent', () => {
     httpMock.match((r) => r.url.endsWith('/social/boards')).forEach((r) => r.flush([]));
     // 頁面頂端共用的公告主視覺（app-social-spotlight）會取最新公告
     httpMock.match((r) => r.url.endsWith('/social/posts')).forEach((r) => r.flush({ items: [], page: 1, pageSize: 5, totalCount: 0, totalPages: 0 }));
+    // 精選公告不足時主視覺會再補一次最新貼文，第一批回應後才送出，所以多清一輪
+    httpMock.match((r) => r.url.endsWith('/social/posts')).forEach((r) => r.flush({ items: [], page: 1, pageSize: 5, totalCount: 0, totalPages: 0 }));
     httpMock.verify();
   });
 

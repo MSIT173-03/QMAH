@@ -20,6 +20,10 @@ public sealed class AiContentReviewWorker(
 {
     private const int BatchSize = 20;
 
+    // Azure AI Content Safety 免費層（F0）約每秒 1 次呼叫，連續呼叫會回 429；每次呼叫後等待一小段時間。
+    // 改用付費層後可把這個間隔調低或移除。
+    private static readonly TimeSpan CallInterval = TimeSpan.FromMilliseconds(1100);
+
     // 結果標示 AutoHide（Azure 仇恨類中度以上、其他類別最高級）或 OpenAI 分數 0.95 以上才自動隱藏並送檢舉，
     // 其餘只送檢舉待審，避免誤判太多造成管理壓力，也避免正常內容被擋掉。管理員可在後台還原。
     private const double AutoHideScore = 0.95;
@@ -27,6 +31,10 @@ public sealed class AiContentReviewWorker(
     // 金鑰缺少（例如經費還在申請）時只在第一次警告一次，避免排程每 10 秒洗一次 log；
     // 一旦偵測到又恢復未設定狀態（理論上不會發生，但保留彈性）會重新警告一次。
     private bool _hasWarnedNotConfigured;
+
+    // 心跳寫入間隔：排程每 10 秒跑一次，但狀態只需要每分鐘更新一次，避免每次 tick 都寫資料庫。
+    private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMinutes(1);
+    private DateTime _lastHeartbeatAt = DateTime.MinValue;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -41,6 +49,9 @@ public sealed class AiContentReviewWorker(
                     var db = scope.ServiceProvider.GetRequiredService<QmahDbContext>();
                     var aiReview = scope.ServiceProvider.GetRequiredService<IAiContentReviewService>();
 
+                    // 心跳放在金鑰檢查之前：未設定金鑰時後台仍要看得到「排程有在跑、但沒有供應商」。
+                    await RecordHeartbeatAsync(db, aiReview, stoppingToken);
+
                     if (!aiReview.IsConfigured)
                     {
                         // 沒有設定 API Key（例如經費申請中）：整批跳過，不去動 AiReviewedAt。
@@ -54,6 +65,17 @@ public sealed class AiContentReviewWorker(
                         continue;
                     }
                     _hasWarnedNotConfigured = false;
+
+                    // 管理員在後台關閉 AI 審查時整批略過；心跳照常寫入，後台會顯示「已暫停」而不是「沒有回報」。
+                    var aiReviewEnabled = await db.ContentModerationSettings
+                        .AsNoTracking()
+                        .Where(setting => setting.Id == ContentModerationSettingsService.SettingsRowId)
+                        .Select(setting => (bool?)setting.AiReviewEnabled)
+                        .FirstOrDefaultAsync(stoppingToken) ?? true;
+                    if (!aiReviewEnabled)
+                    {
+                        continue;
+                    }
 
                     await ReviewPostsAsync(db, aiReview, stoppingToken);
                     await ReviewCommentsAsync(db, aiReview, stoppingToken);
@@ -74,6 +96,42 @@ public sealed class AiContentReviewWorker(
             // 停止服務會取消計時器等待，屬於正常結束，不應回報背景服務故障。
         }
     }
+
+    // 寫入單一狀態列：先嘗試 UPDATE，沒有列才 INSERT（第一次啟動或列被清掉時）。
+    // 只用 ExecuteUpdate 不經過變更追蹤，不會干擾其他請求對同一個 DbContext 的使用。
+    private async Task RecordHeartbeatAsync(QmahDbContext db, IAiContentReviewService aiReview, CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        if (now - _lastHeartbeatAt < HeartbeatInterval) return;
+
+        var provider = aiReview.IsConfigured ? aiReview.ProviderName : null;
+        var updated = await db.AiReviewRuntimeStatuses
+            .Where(status => status.Id == 1)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(status => status.Provider, provider)
+                .SetProperty(status => status.HeartbeatAt, now), cancellationToken);
+        if (updated == 0)
+        {
+            db.AiReviewRuntimeStatuses.Add(new AiReviewRuntimeStatus { Id = 1, Provider = provider, HeartbeatAt = now });
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        _lastHeartbeatAt = now;
+    }
+
+    // 每次判斷都寫一筆審查紀錄（含通過的），後台才看得出 AI 實際審了什麼；違規時的檢舉仍由 CreateAiReport 另外建立。
+    private static AiReviewLog CreateAiLog(string targetType, Guid targetId, DateTime now, AiReviewResult result, string provider) =>
+        new()
+        {
+            ReviewedAt = now,
+            TargetType = targetType,
+            TargetId = targetId,
+            Provider = provider,
+            Flagged = result.Flagged,
+            AutoHidden = result.Flagged && (result.AutoHide || result.Score >= AutoHideScore),
+            Category = result.Category is { Length: > 60 } category ? category[..60] : result.Category,
+            Score = result.Score,
+            Summary = result.Summary is { Length: > 400 } summary ? summary[..400] : result.Summary,
+        };
 
     private async Task ReviewPostsAsync(QmahDbContext db, IAiContentReviewService aiReview, CancellationToken cancellationToken)
     {
@@ -99,6 +157,8 @@ public sealed class AiContentReviewWorker(
             {
                 // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
                 logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                // 先存下本批已完成的判斷（含審查紀錄），否則被 429 中斷時這些結果會全部遺失。
+                await db.SaveChangesAsync(cancellationToken);
                 return;
             }
             catch (Exception exception)
@@ -108,6 +168,7 @@ public sealed class AiContentReviewWorker(
                 continue;
             }
 
+            await Task.Delay(CallInterval, cancellationToken);
             if (result.Flagged)
             {
                 var hide = result.AutoHide || result.Score >= AutoHideScore;
@@ -118,6 +179,7 @@ public sealed class AiContentReviewWorker(
                     post.UpdatedAt = now;
                 }
             }
+            db.AiReviewLogs.Add(CreateAiLog("POST", post.Id, now, result, aiReview.ProviderName));
             post.AiReviewedAt = now;
         }
 
@@ -149,6 +211,8 @@ public sealed class AiContentReviewWorker(
             {
                 // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
                 logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                // 先存下本批已完成的判斷（含審查紀錄），否則被 429 中斷時這些結果會全部遺失。
+                await db.SaveChangesAsync(cancellationToken);
                 return;
             }
             catch (Exception exception)
@@ -157,6 +221,7 @@ public sealed class AiContentReviewWorker(
                 continue;
             }
 
+            await Task.Delay(CallInterval, cancellationToken);
             if (result.Flagged)
             {
                 var hide = result.AutoHide || result.Score >= AutoHideScore;
@@ -167,6 +232,7 @@ public sealed class AiContentReviewWorker(
                     comment.UpdatedAt = now;
                 }
             }
+            db.AiReviewLogs.Add(CreateAiLog("COMMENT", comment.Id, now, result, aiReview.ProviderName));
             comment.AiReviewedAt = now;
         }
 
@@ -194,6 +260,8 @@ public sealed class AiContentReviewWorker(
                 {
                     var bytes = await File.ReadAllBytesAsync(physicalPath, cancellationToken);
                     var result = await aiReview.ReviewImageAsync(bytes, media.ContentType, cancellationToken);
+                    db.AiReviewLogs.Add(CreateAiLog("MEDIA", media.Id, now, result, aiReview.ProviderName));
+                    await Task.Delay(CallInterval, cancellationToken);
                     if (result.Flagged && media.PostId.HasValue)
                     {
                         var hide = result.AutoHide || result.Score >= AutoHideScore;
@@ -218,6 +286,8 @@ public sealed class AiContentReviewWorker(
             {
                 // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
                 logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                // 先存下本批已完成的判斷（含審查紀錄），否則被 429 中斷時這些結果會全部遺失。
+                await db.SaveChangesAsync(cancellationToken);
                 return;
             }
             catch (Exception exception)

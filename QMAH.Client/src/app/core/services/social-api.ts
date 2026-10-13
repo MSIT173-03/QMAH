@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { EMPTY, Observable, catchError, concat, of, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { MeApiService } from './me-api';
 
 // 分頁包裝，對應 QMAH.Api 的 ApiPage<T>（QMAH.Api/Controllers/V1/ApiPaging.cs）
 export interface ApiPage<T> {
@@ -263,6 +264,32 @@ export interface CreateContentReportRequest {
 export class SocialApiService {
   private http = inject(HttpClient);
   private base = `${environment.apiBaseUrl}/social`;
+  private meApi = inject(MeApiService);
+
+  /** 讀取結果的記憶體快取：先把上次的結果秒顯示，網路永遠照常重抓並更新（資料不會因快取而過期）；以會員為單位分開，避免換帳號看到別人的內容 */
+  private cache = new Map<string, { at: number; value: unknown }>();
+  private static readonly CACHE_MAX = 120;
+  private static readonly CACHE_TTL_MS = 10 * 60_000;
+
+  private live<T>(key: string, load: () => Observable<T>): Observable<T> {
+    const full = `${this.meApi.me()?.id ?? 'guest'}|${key}`;
+    const hit = this.cache.get(full);
+    const fetch$ = load().pipe(
+      tap((value) => {
+        if (this.cache.size >= SocialApiService.CACHE_MAX) this.cache.delete(this.cache.keys().next().value!);
+        this.cache.set(full, { at: Date.now(), value: structuredClone(value) });
+      }),
+    );
+    if (hit && Date.now() - hit.at < SocialApiService.CACHE_TTL_MS) {
+      return concat(of(structuredClone(hit.value as T)), fetch$.pipe(catchError(() => EMPTY)));
+    }
+    return fetch$;
+  }
+
+  /** 預先載入（滑鼠移到卡片上、閒置時）：只填快取，不影響畫面，失敗靜默 */
+  prefetchPost(id: string): void { this.getPost(id).subscribe({ error: () => undefined }); }
+  prefetchEvent(id: string): void { this.getEvent(id).subscribe({ error: () => undefined }); }
+  prefetchMember(userId: string): void { this.getMember(userId).subscribe({ error: () => undefined }); }
 
   // ---- 貼文 ----
 
@@ -282,9 +309,9 @@ export class SocialApiService {
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<SocialPostListItem>> {
-    return this.http.get<ApiPage<SocialPostListItem>>(`${this.base}/posts`, {
+    return this.live(`posts?${JSON.stringify(params)}`, () => this.http.get<ApiPage<SocialPostListItem>>(`${this.base}/posts`, {
       params: this.toHttpParams(params)
-    });
+    }));
   }
 
   // 收藏／取消收藏（需要登入；重複操作不會出錯）
@@ -297,7 +324,7 @@ export class SocialApiService {
   }
 
   getPopularPosts(): Observable<SocialPopularPosts> {
-    return this.http.get<SocialPopularPosts>(`${this.base}/posts/popular`);
+    return this.live('popular', () => this.http.get<SocialPopularPosts>(`${this.base}/posts/popular`));
   }
 
   getVisiblePostIds(ids: string[]): Observable<string[]> {
@@ -307,7 +334,7 @@ export class SocialApiService {
   }
 
   getMember(userId: string): Observable<SocialMemberProfile> {
-    return this.http.get<SocialMemberProfile>(`${this.base}/members/${userId}`);
+    return this.live(`member/${userId}`, () => this.http.get<SocialMemberProfile>(`${this.base}/members/${userId}`));
   }
 
   /** 留言給會員：內容送進對方的通知中心。 */
@@ -316,7 +343,7 @@ export class SocialApiService {
   }
 
   getPost(id: string): Observable<SocialPostDetails> {
-    return this.http.get<SocialPostDetails>(`${this.base}/posts/${id}`);
+    return this.live(`post/${id}`, () => this.http.get<SocialPostDetails>(`${this.base}/posts/${id}`));
   }
 
   getPostArtifact(id: string): Observable<SocialPostArtifact> {
@@ -375,14 +402,14 @@ export class SocialApiService {
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<EventListItem>> {
-    return this.http.get<ApiPage<EventListItem>>(`${this.base}/events`, {
+    return this.live(`events?${JSON.stringify(params)}`, () => this.http.get<ApiPage<EventListItem>>(`${this.base}/events`, {
       params: this.toHttpParams(params)
-    });
+    }));
   }
 
   // GET /api/v1/social/boards：標準看板清單 + 資料庫既有看板代碼合併
   getBoards(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.base}/boards`);
+    return this.live('boards', () => this.http.get<string[]>(`${this.base}/boards`));
   }
 
   // 只有活動發起人與 Admin 可呼叫，其他人會得到 403。
@@ -391,7 +418,7 @@ export class SocialApiService {
   }
 
   getEvent(id: string): Observable<SocialEventDetails> {
-    return this.http.get<SocialEventDetails>(`${this.base}/events/${id}`);
+    return this.live(`event/${id}`, () => this.http.get<SocialEventDetails>(`${this.base}/events/${id}`));
   }
 
   createEvent(request: CreateSocialEventRequest): Observable<SocialEventDetails> {
@@ -409,9 +436,9 @@ export class SocialApiService {
   // ---- 公告 ----
 
   getAnnouncements(params: { page?: number; pageSize?: number } = {}): Observable<ApiPage<Announcement>> {
-    return this.http.get<ApiPage<Announcement>>(`${this.base}/announcements`, {
+    return this.live(`announcements?${JSON.stringify(params)}`, () => this.http.get<ApiPage<Announcement>>(`${this.base}/announcements`, {
       params: this.toHttpParams(params)
-    });
+    }));
   }
 
   // ---- 檢舉（一般使用者送出） ----

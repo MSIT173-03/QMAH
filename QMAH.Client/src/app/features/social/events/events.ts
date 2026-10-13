@@ -47,7 +47,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     return event.capacity ? Math.min(100, Math.round((event.registrationCount / event.capacity) * 100)) : null;
   }
 
-  private socialApi = inject(SocialApiService);
+  protected socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
   private readonly toast = inject(ToastService);

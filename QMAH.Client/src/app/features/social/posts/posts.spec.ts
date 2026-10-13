@@ -29,15 +29,23 @@ describe('PostsComponent', () => {
   });
 
   afterEach(() => {
+    // 公告主視覺補撈最新貼文的請求（精選公告不足時才送出）：不論測試有沒有走到 initializePosts 都清掉
+    for (let round = 0; round < 3; round++) {
+      httpMock.match((r) => r.url.endsWith('/social/posts') && r.params.has('postType'))
+        .forEach((req) => req.flush({ items: [], page: 1, pageSize: 12, totalCount: 0, totalPages: 0 }));
+    }
     httpMock.verify();
   });
 
   function initializePosts(items: SocialPostListItem[] = []): void {
     fixture.detectChanges();
-    httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({
-      items: req.request.params.has('postType') ? [] : items,
-      page: 1, pageSize: 20, totalCount: 100, totalPages: 5,
-    }));
+    // 公告主視覺在精選公告不足時會再補一次最新貼文（第一批回應後才送出），所以清兩輪
+    for (let round = 0; round < 2; round++) {
+      httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({
+        items: req.request.params.has('postType') ? [] : items,
+        page: 1, pageSize: 20, totalCount: 100, totalPages: 5,
+      }));
+    }
     httpMock.expectOne(r => r.url.endsWith('/social/boards')).flush([]);
     httpMock.match(r => r.url.endsWith('/social/events')).forEach(req => req.flush({ items: [], totalCount: 0 }));
     httpMock.expectOne(r => r.url.endsWith('/social/posts/popular')).flush({ window: 'WEEK', items: [] });

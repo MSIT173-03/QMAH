@@ -31,6 +31,8 @@ public sealed class AzureContentSafetyReviewService(
 
     public bool IsConfigured => !string.IsNullOrWhiteSpace(Endpoint) && !string.IsNullOrWhiteSpace(ApiKey);
 
+    public string ProviderName => "Azure AI Content Safety";
+
     public Task<AiReviewResult> ReviewTextAsync(string content, CancellationToken cancellationToken = default)
     {
         var text = content.Length <= MaxTextLength ? content : content[..MaxTextLength];

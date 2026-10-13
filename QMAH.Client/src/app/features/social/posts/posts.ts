@@ -89,7 +89,7 @@ import {
   styleUrls: ['../social-common.scss', './posts.scss']
 })
 export class PostsComponent implements OnInit, OnDestroy {
-  private socialApi = inject(SocialApiService);
+  protected socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
   private socialLive = inject(SocialLive);

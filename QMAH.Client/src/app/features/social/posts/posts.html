@@ -1,4 +1,4 @@
-<div class="qmah-social-page">
+<div class="qmah-social-page" [attr.data-board]="filterBoardCode || null">
   <app-social-spotlight />
 
   <header class="social-page-head">
@@ -83,7 +83,7 @@
             <ul class="social-upcoming__list">
               @for (post of visiblePopular; track post.id; let i = $index) {
                 <li>
-                  <a [routerLink]="['/social/posts', post.id]" class="social-popular__item" [attr.data-board]="post.boardCode" [attr.data-rank]="popularOffset + i + 1">
+                  <a [routerLink]="['/social/posts', post.id]" (pointerenter)="socialApi.prefetchPost(post.id)" class="social-popular__item" [attr.data-board]="post.boardCode" [attr.data-rank]="popularOffset + i + 1">
                     <span class="social-popular__thumb" aria-hidden="true">
                       @if (post.coverImageUrl) { <img [src]="post.coverImageUrl" alt="" decoding="async" width="72" height="72" /> } @else { <svg lucideFlame focusable="false"></svg> }
                       <span class="social-popular__rank" [class.is-top]="popularOffset + i === 0">{{ popularOffset + i + 1 }}</span>
@@ -201,7 +201,7 @@
     @if (post.imageUrls && post.imageUrls.length > 1) {
       <app-social-card-gallery class="social-post-card__gallery" [images]="post.imageUrls" [postId]="post.id" />
     } @else if (post.coverImageUrl) {
-      <a class="social-post-card__cover" [routerLink]="['/social/posts', post.id]" tabindex="-1" aria-hidden="true">
+      <a class="social-post-card__cover" [routerLink]="['/social/posts', post.id]" (pointerenter)="socialApi.prefetchPost(post.id)" tabindex="-1" aria-hidden="true">
         <img [src]="post.coverImageUrl" alt="" loading="lazy" decoding="async" />
       </a>
     }
@@ -234,7 +234,7 @@
         <ng-container [ngTemplateOutlet]="postMedia" [ngTemplateOutletContext]="{ $implicit: post }" />
       }
       <h2 class="social-post-card__title">
-        <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
+        <a [routerLink]="['/social/posts', post.id]" (pointerenter)="socialApi.prefetchPost(post.id)" (focus)="socialApi.prefetchPost(post.id)">{{ post.title }}</a>
       </h2>
       @if (isEventPost(post)) {
         <app-social-event-content [content]="post.contentPreview" [preview]="true" [eventId]="post.eventId" [eventSummary]="post.eventSummary" />

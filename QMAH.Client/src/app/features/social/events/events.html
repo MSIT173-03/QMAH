@@ -1,4 +1,4 @@
-<div class="qmah-social-page">
+<div class="qmah-social-page" data-board="EVENT">
 <app-social-spotlight />
 
 <header class="social-page-head">
@@ -59,7 +59,7 @@
             }
           </div>
           <h2 class="social-event-card__title">
-            <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
+            <a [routerLink]="['/social/events', event.id]" (pointerenter)="socialApi.prefetchEvent(event.id)" (focus)="socialApi.prefetchEvent(event.id)">{{ event.title }}</a>
           </h2>
         </div>
       </div>
