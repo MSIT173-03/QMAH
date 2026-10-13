@@ -24,6 +24,7 @@ import { BoardIconComponent } from '../../../shared/components/board-icon/board-
 import { SocialCardGalleryComponent } from '../../../shared/components/social-card-gallery/social-card-gallery';
 import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
 import {
+  LucideBookmark,
   LucideFlag,
   LucideFlame,
   LucideFoldHorizontal,
@@ -37,6 +38,7 @@ import {
   LucideCalendarDays,
   LucideCalendarRange,
   LucideArrowRightLeft,
+  LucideChevronDown,
   LucideChevronLeft,
   LucideChevronRight,
   LucideColumns2,
@@ -58,6 +60,7 @@ import {
     ReportModalComponent,
     SocialPostContentComponent,
     SocialEventContentComponent,
+    LucideBookmark,
     LucideFlag,
     LucideFlame,
     LucideFoldHorizontal,
@@ -71,6 +74,7 @@ import {
     LucideCalendarDays,
     LucideCalendarRange,
     LucideArrowRightLeft,
+    LucideChevronDown,
     LucideChevronLeft,
     LucideChevronRight,
     LucideColumns2,
@@ -232,6 +236,10 @@ export class PostsComponent implements OnInit, OnDestroy {
     return columns;
   }
 
+  isEventPost(post: SocialPostListItem): boolean {
+    return post.postType === 'EVENT' || post.boardCode === 'EVENT' || post.boardCode === 'EVENTS' || !!post.eventId;
+  }
+
   protected readonly eventMode = eventMode;
   protected readonly eventPlace = eventPlace;
 
@@ -328,6 +336,10 @@ export class PostsComponent implements OnInit, OnDestroy {
       this.upcomingEventsOffset = 0;
       this.popular = popular;
       this.popularOffset = 0;
+      // 熱門區預設收起，等切換才下載縮圖會有明顯空窗；資料一到就先在背景載好前幾張（瀏覽器會快取）。
+      for (const item of popular?.items ?? []) {
+        if (item.coverImageUrl) new Image().src = item.coverImageUrl;
+      }
       if (!this.discoveryLoaded) {
         this.discoveryTab = this.upcomingEvents.length ? 'events' : popular?.items.length ? 'popular' : 'events';
         this.discoveryLoaded = true;
@@ -657,17 +669,23 @@ export class PostsComponent implements OnInit, OnDestroy {
       },
       error: (err: HttpErrorResponse) => {
         console.error('取得貼文失敗:', err);
-        this.loadError = '取得貼文失敗，請稍後再試。';
+        this.loadError = err.status === 401 && this.bookmarksOnly ? '請先登入後再查看收藏的貼文。' : '取得貼文失敗，請稍後再試。';
         this.loading = false;
         this.cdr.detectChanges();
       }
     });
   }
 
+  /** 導覽的「我的收藏」不是真的看板，而是 bookmarked 篩選。 */
+  get bookmarksOnly(): boolean {
+    return this.filterBoardCode === '@bookmarks';
+  }
+
   private postQuery(page: number, sort = this.sortOrder) {
     return {
       page, pageSize: 20,
-      boardCode: this.filterBoardCode || undefined,
+      boardCode: this.bookmarksOnly ? undefined : this.filterBoardCode || undefined,
+      bookmarked: this.bookmarksOnly ? true : undefined,
       q: this.filterKeyword || undefined,
       createdAfter: this.filterFrom ? new Date(this.filterFrom + 'T00:00:00').toISOString() : undefined,
       createdBefore: this.filterTo ? new Date(new Date(this.filterTo + 'T00:00:00').getTime() + 86_400_000).toISOString() : undefined,
@@ -697,6 +715,35 @@ export class PostsComponent implements OnInit, OnDestroy {
         this.loadError = '後面的貼文暫時無法載入，請按「載入更多」再試一次。';
         this.cdr.detectChanges();
         this.flushPendingLiveRefresh();
+      },
+    });
+  }
+
+  bookmarkNotice: string | null = null;
+  private readonly bookmarking = new Set<string>();
+
+  // 收藏／取消收藏：先改畫面再送出，失敗就還原；「我的收藏」清單裡取消收藏會直接把該篇移走。
+  toggleBookmark(post: SocialPostListItem): void {
+    if (this.bookmarking.has(post.id)) return;
+    this.bookmarking.add(post.id);
+    this.bookmarkNotice = null;
+    const wanted = !post.isBookmarked;
+    post.isBookmarked = wanted;
+    const request = wanted ? this.socialApi.bookmarkPost(post.id) : this.socialApi.unbookmarkPost(post.id);
+    request.subscribe({
+      next: () => {
+        this.bookmarking.delete(post.id);
+        if (!wanted && this.bookmarksOnly) {
+          this.posts = this.posts.filter(item => item.id !== post.id);
+          this.totalCount = Math.max(0, this.totalCount - 1);
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.bookmarking.delete(post.id);
+        post.isBookmarked = !wanted;
+        this.bookmarkNotice = err.status === 401 ? '請先登入才能收藏貼文。' : '收藏失敗，請稍後再試。';
+        this.cdr.detectChanges();
       },
     });
   }

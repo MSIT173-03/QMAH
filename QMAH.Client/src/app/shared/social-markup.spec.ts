@@ -18,7 +18,7 @@ describe('social markup (BBCode 風格)', () => {
   it('不成對的標記自動補齊，多餘的結束標記與未知標記原樣顯示', () => {
     expect(stripSocialMarkup('[b]沒關')).toBe('沒關');
     expect(stripSocialMarkup('多餘[/b]')).toBe('多餘[/b]');
-    expect(stripSocialMarkup('[color=purple]x[/color]')).toBe('[color=purple]x[/color]');
+    expect(stripSocialMarkup('[color=cyan]x[/color]')).toBe('[color=cyan]x[/color]');
     expect(stripSocialMarkup('[url=javascript:alert(1)]點[/url]')).toBe('[url=javascript:alert(1)]點[/url]');
   });
 

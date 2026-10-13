@@ -85,7 +85,7 @@
                 <li>
                   <a [routerLink]="['/social/posts', post.id]" class="social-popular__item" [attr.data-board]="post.boardCode" [attr.data-rank]="popularOffset + i + 1">
                     <span class="social-popular__thumb" aria-hidden="true">
-                      @if (post.coverImageUrl) { <img [src]="post.coverImageUrl" alt="" loading="lazy" /> } @else { <svg lucideFlame focusable="false"></svg> }
+                      @if (post.coverImageUrl) { <img [src]="post.coverImageUrl" alt="" decoding="async" width="72" height="72" /> } @else { <svg lucideFlame focusable="false"></svg> }
                       <span class="social-popular__rank" [class.is-top]="popularOffset + i === 0">{{ popularOffset + i + 1 }}</span>
                     </span>
                     <span class="social-popular__body">
@@ -116,37 +116,21 @@
     </section>
   }
 
-  <!-- 篩選：看板由左側分類（手機為上方標籤）負責，這裡只做關鍵字搜尋；目前的條件以標籤顯示，可單獨移除。 -->
-  <div id="social-post-search" class="social-search" role="search">
+  <!-- 工具列一列到底：搜尋、發布時間、排序、欄數、版面寬度，每個控制項都有文字；下方一行只顯示筆數與目前套用的條件。 -->
+  <div id="social-post-search" class="social-bar" role="search">
     <label class="social-search__box">
       <svg lucideSearch aria-hidden="true" focusable="false"></svg>
       <span class="sr-only">搜尋貼文標題或內容</span>
-      <input type="search" [(ngModel)]="filterKeyword" (keyup.enter)="loadPosts()" name="social-post-search" autocomplete="off" placeholder="搜尋貼文標題或內容" />
+      <input type="search" [(ngModel)]="filterKeyword" (keyup.enter)="loadPosts()" name="social-post-search" autocomplete="off" placeholder="搜尋貼文標題或內容，按 Enter 搜尋" />
       @if (filterKeyword) {
         <button type="button" class="social-search__clear" aria-label="清除關鍵字" (click)="filterKeyword = ''; loadPosts()"><svg lucideX aria-hidden="true" focusable="false"></svg></button>
       }
     </label>
-    <button type="button" class="btn btn-primary" (click)="loadPosts()">搜尋</button>
-  </div>
-  <div class="social-search__meta" aria-live="polite">
-    <span>共 {{ totalCount }} 篇</span>
-    @if (filterBoardCode) {
-      <button type="button" class="social-chip" (click)="selectBoard('')">{{ boardLabel(filterBoardCode) }}<svg lucideX aria-hidden="true" focusable="false"></svg></button>
-    }
-    @if (filterKeyword.trim()) {
-      <button type="button" class="social-chip" (click)="filterKeyword = ''; loadPosts()">「{{ filterKeyword.trim() }}」<svg lucideX aria-hidden="true" focusable="false"></svg></button>
-    }
-    @if (hasDateFilter) {
-      <button type="button" class="social-chip" (click)="applyDatePreset(null)">{{ dateFilterLabel }}<svg lucideX aria-hidden="true" focusable="false"></svg></button>
-    }
-    @if (filterBoardCode || filterKeyword.trim() || hasDateFilter) {
-      <button type="button" class="social-reset" title="清除所有篩選條件" aria-label="清除所有篩選條件" (click)="resetFilters()">
-        <svg lucideFilterX aria-hidden="true" focusable="false"></svg>
-      </button>
-    }
     <div class="social-datefilter">
-      <button type="button" class="social-tool" [class.is-on]="hasDateFilter || showDateFilter" [attr.aria-expanded]="showDateFilter" title="依發布時間篩選" aria-label="依發布時間篩選" (click)="showDateFilter = !showDateFilter">
+      <button type="button" class="social-tool social-tool--text" [class.is-on]="hasDateFilter || showDateFilter" [attr.aria-expanded]="showDateFilter" aria-haspopup="dialog" (click)="showDateFilter = !showDateFilter">
         <svg lucideCalendarRange aria-hidden="true" focusable="false"></svg>
+        <span>{{ hasDateFilter ? dateFilterLabel : '發布時間' }}</span>
+        <svg class="social-tool__caret" lucideChevronDown aria-hidden="true" focusable="false"></svg>
       </button>
       @if (showDateFilter) {
         <div class="social-datefilter__panel" role="dialog" aria-label="發布時間">
@@ -160,17 +144,34 @@
         </div>
       }
     </div>
-    <button type="button" class="social-tool" (click)="toggleSort()" [title]="sortOrder === 'newest' ? '目前：新到舊（點擊改為舊到新）' : '目前：舊到新（點擊改為新到舊）'" [attr.aria-label]="sortOrder === 'newest' ? '排序：新到舊，點擊切換為舊到新' : '排序：舊到新，點擊切換為新到舊'">
+    <button type="button" class="social-tool social-tool--text" (click)="toggleSort()" [attr.aria-label]="sortOrder === 'newest' ? '排序：最新優先，點擊改為最舊優先' : '排序：最舊優先，點擊改為最新優先'">
       @if (sortOrder === 'newest') { <svg lucideArrowDownWideNarrow aria-hidden="true" focusable="false"></svg> } @else { <svg lucideArrowUpNarrowWide aria-hidden="true" focusable="false"></svg> }
+      <span>{{ sortOrder === 'newest' ? '最新優先' : '最舊優先' }}</span>
     </button>
     <div class="social-cols" role="group" aria-label="每列貼文數">
       <button type="button" class="social-cols__btn" [class.is-active]="wallCols === 1" [attr.aria-pressed]="wallCols === 1" title="一欄" aria-label="每列一則貼文" (click)="setWallCols(1)"><svg lucideSquare aria-hidden="true" focusable="false"></svg></button>
       <button type="button" class="social-cols__btn" [class.is-active]="wallCols === 2" [attr.aria-pressed]="wallCols === 2" title="兩欄" aria-label="每列兩則貼文" (click)="setWallCols(2)"><svg lucideColumns2 aria-hidden="true" focusable="false"></svg></button>
       <button type="button" class="social-cols__btn social-cols__btn--wide" [class.is-active]="wallCols === 3" [attr.aria-pressed]="wallCols === 3" title="三欄" aria-label="每列三則貼文" (click)="setWallCols(3)"><svg lucideColumns3 aria-hidden="true" focusable="false"></svg></button>
     </div>
-    <button type="button" class="social-tool social-tool--width" [class.is-on]="view.wide()" [attr.aria-pressed]="view.wide()" [attr.aria-label]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" [title]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" (click)="view.toggle()">
+    <button type="button" class="social-tool social-tool--text social-tool--width" [class.is-on]="view.wide()" [attr.aria-pressed]="view.wide()" (click)="view.toggle()">
       @if (view.wide()) { <svg lucideFoldHorizontal aria-hidden="true" focusable="false"></svg> } @else { <svg lucideUnfoldHorizontal aria-hidden="true" focusable="false"></svg> }
+      <span>{{ view.wide() ? '寬版' : '標準' }}</span>
     </button>
+  </div>
+  <div class="social-search__meta" aria-live="polite">
+    <span>共 {{ totalCount }} 篇</span>
+    @if (filterBoardCode) {
+      <button type="button" class="social-chip" (click)="selectBoard('')">{{ boardLabel(filterBoardCode) }}<svg lucideX aria-hidden="true" focusable="false"></svg></button>
+    }
+    @if (filterKeyword.trim()) {
+      <button type="button" class="social-chip" (click)="filterKeyword = ''; loadPosts()">「{{ filterKeyword.trim() }}」<svg lucideX aria-hidden="true" focusable="false"></svg></button>
+    }
+    @if (hasDateFilter) {
+      <button type="button" class="social-chip" (click)="applyDatePreset(null)">{{ dateFilterLabel }}<svg lucideX aria-hidden="true" focusable="false"></svg></button>
+    }
+    @if (filterBoardCode || filterKeyword.trim() || hasDateFilter) {
+      <button type="button" class="social-search__reset" (click)="resetFilters()">清除全部條件</button>
+    }
   </div>
 
   @if (liveUpdateNotice) {
@@ -179,6 +180,10 @@
 
   @if (loadError) {
     <div class="alert alert-error mb-4" role="alert">{{ loadError }}</div>
+  }
+
+  @if (bookmarkNotice) {
+    <div class="alert alert-warning mb-4" role="status">{{ bookmarkNotice }}</div>
   }
 
   @if (reportSuccessMessage) {
@@ -192,6 +197,16 @@
   }
 
   <!-- 由新到舊依序輪流分到各欄（2 欄：左、右、左、右；3 欄：左、中、右、左…），每欄各自由上往下排，卡片高度不同也不會留空白。 -->
+  <ng-template #postMedia let-post>
+    @if (post.imageUrls && post.imageUrls.length > 1) {
+      <app-social-card-gallery class="social-post-card__gallery" [images]="post.imageUrls" [postId]="post.id" />
+    } @else if (post.coverImageUrl) {
+      <a class="social-post-card__cover" [routerLink]="['/social/posts', post.id]" tabindex="-1" aria-hidden="true">
+        <img [src]="post.coverImageUrl" alt="" loading="lazy" decoding="async" />
+      </a>
+    }
+  </ng-template>
+
   <ng-template #postCard let-post>
   <article class="social-post-card" [attr.data-board]="post.boardCode" [attr.data-post-id]="post.id" [class.social-post-card--text]="!post.coverImageUrl">
     <div class="social-post-card__body">
@@ -214,20 +229,20 @@
           }
         </div>
       </header>
+      <!-- 活動貼文圖片放在標題上方（海報在前），其他貼文維持文字在前、圖片在後。 -->
+      @if (isEventPost(post)) {
+        <ng-container [ngTemplateOutlet]="postMedia" [ngTemplateOutletContext]="{ $implicit: post }" />
+      }
       <h2 class="social-post-card__title">
         <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
       </h2>
-      @if (post.postType === 'EVENT' || post.boardCode === 'EVENT' || post.boardCode === 'EVENTS' || post.eventId) {
+      @if (isEventPost(post)) {
         <app-social-event-content [content]="post.contentPreview" [preview]="true" [eventId]="post.eventId" [eventSummary]="post.eventSummary" />
       } @else {
         <p class="social-post-card__excerpt">{{ stripMarkup(post.contentPreview) }}</p>
       }
-      @if (post.imageUrls && post.imageUrls.length > 1) {
-        <app-social-card-gallery class="social-post-card__gallery" [images]="post.imageUrls" />
-      } @else if (post.coverImageUrl) {
-        <a class="social-post-card__cover" [routerLink]="['/social/posts', post.id]" tabindex="-1" aria-hidden="true">
-          <img [src]="post.coverImageUrl" alt="" loading="lazy" />
-        </a>
+      @if (!isEventPost(post)) {
+        <ng-container [ngTemplateOutlet]="postMedia" [ngTemplateOutletContext]="{ $implicit: post }" />
       }
       <div class="social-post-card__footer">
         <p class="social-post-card__stats">
@@ -243,6 +258,17 @@
           }
         </p>
         <div class="social-post-card__actions">
+          <button
+            class="social-post-card__bookmark"
+            type="button"
+            [class.is-on]="post.isBookmarked"
+            [attr.aria-pressed]="!!post.isBookmarked"
+            [attr.aria-label]="(post.isBookmarked ? '取消收藏：' : '收藏：') + post.title"
+            [title]="post.isBookmarked ? '取消收藏' : '收藏這篇貼文'"
+            (click)="toggleBookmark(post)"
+          >
+            <svg lucideBookmark aria-hidden="true" focusable="false"></svg>
+          </button>
           <button
             class="social-post-card__report"
             type="button"
@@ -267,7 +293,7 @@
           }
         </div>
       } @empty {
-        <div class="social-state social-state--wide">目前還沒有貼文</div>
+        <div class="social-state social-state--wide">{{ bookmarksOnly ? '還沒有收藏的貼文。看到想留著的貼文，按卡片右下角的書籤就會收進來。' : '目前還沒有貼文' }}</div>
       }
     }
   </div>

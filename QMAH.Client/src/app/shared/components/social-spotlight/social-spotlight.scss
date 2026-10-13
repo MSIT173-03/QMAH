@@ -306,3 +306,29 @@
 /* 載入中的骨架：高度與展開後的輪播相同，換頁與首次載入時版面不會跳動 */
 :host { display: block; }
 .social-spotlight-skeleton { height: 120px; margin-bottom: 24px; border-radius: 12px; background: color-mix(in srgb, var(--qmah-ink) 6%, transparent); }
+
+/* 更寬的文案卡、日期與分類一行、前後切換箭頭（置於左右兩側中間，手機也好按） */
+.social-hero__slide { min-height: 260px; padding: var(--qmah-space-6) 64px var(--qmah-space-6) 64px; }
+.social-hero__body { width: min(100%, 640px); max-width: none; gap: 8px; padding: 18px 22px; }
+.social-hero__meta { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--qmah-muted); font-size: 12px; }
+.social-hero__tag { padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, var(--social-hero-accent) 14%, transparent); color: var(--social-hero-accent); font-weight: 700; }
+.social-hero__title { font-size: clamp(18px, 1.9vw, 23px); line-height: 1.4; text-wrap: balance; }
+.social-hero__desc { -webkit-line-clamp: 3; line-clamp: 3; }
+.social-hero__cta { margin-top: 2px; min-height: 34px; padding: 4px 16px; letter-spacing: 0.08em; }
+.social-hero__arrow {
+  position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; min-height: 40px; padding: 0; transform: translateY(-50%);
+  border: 1px solid color-mix(in srgb, var(--qmah-ink) 18%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--qmah-surface-elevated) 92%, transparent); color: var(--qmah-ink);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 16%); cursor: pointer; transition: background 160ms, color 160ms, transform 160ms;
+}
+.social-hero__arrow svg { width: 20px; height: 20px; }
+.social-hero__arrow:hover { background: var(--social-hero-accent); color: #fff; }
+.social-hero__arrow:focus-visible { outline: 2px solid var(--social-hero-accent); outline-offset: 2px; }
+.social-hero__arrow--prev { left: 12px; }
+.social-hero__arrow--next { right: 12px; }
+@media (max-width: 640px) {
+  .social-hero__slide { padding: 14px 14px 56px; min-height: 280px; }
+  .social-hero__arrow { top: auto; bottom: 10px; transform: none; }
+  .social-hero__arrow--prev { left: 12px; }
+  .social-hero__arrow--next { left: 60px; right: auto; }
+  .social-hero__controls { left: 112px; right: 12px; justify-content: flex-end; }
+}

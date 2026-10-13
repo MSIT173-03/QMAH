@@ -1,6 +1,8 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { LucideMegaphone } from '@lucide/angular';
+import { LucideChevronLeft, LucideChevronRight, LucideMegaphone } from '@lucide/angular';
+import { boardLabel } from '../../../features/social/social-labels';
 
 import { SocialApiService, SocialPostListItem } from '../../../core/services/social-api';
 import { stripSocialMarkup } from '../../social-markup';
@@ -25,7 +27,7 @@ let cachedAnnouncements: SocialPostListItem[] | null = null;
  */
 @Component({
   selector: 'app-social-spotlight',
-  imports: [RouterLink, QmahIconComponent, LucideMegaphone],
+  imports: [DatePipe, RouterLink, QmahIconComponent, LucideChevronLeft, LucideChevronRight, LucideMegaphone],
   templateUrl: './social-spotlight.html',
   styleUrl: './social-spotlight.scss',
 })
@@ -49,6 +51,7 @@ export class SocialSpotlightComponent implements OnInit, OnDestroy {
   private announcementFocusPaused = false;
 
   readonly stripMarkup = stripSocialMarkup;
+  readonly boardLabel = boardLabel;
   /** 第一次載入完成前顯示骨架（有快取就不需要） */
   readonly loaded = signal(cachedAnnouncements !== null);
 
@@ -66,11 +69,13 @@ export class SocialSpotlightComponent implements OnInit, OnDestroy {
   }
 
   private loadAnnouncements(): void {
-    this.socialApi.getPosts({ postType: 'ANNOUNCEMENT', pageSize: 5 }).subscribe({
+    this.socialApi.getPosts({ postType: 'ANNOUNCEMENT', pageSize: 12 }).subscribe({
       next: (page) => {
-        cachedAnnouncements = page.items;
-        this.announcements = page.items;
-        if (this.currentAnnouncementIndex >= page.items.length) this.currentAnnouncementIndex = 0;
+        // 商城公告只在商城展示，社群輪播不放；要看全部類型到「歷史公告」。
+        const items = page.items.filter((item) => item.boardCode !== 'STORE').slice(0, 5);
+        cachedAnnouncements = items;
+        this.announcements = items;
+        if (this.currentAnnouncementIndex >= items.length) this.currentAnnouncementIndex = 0;
         this.loaded.set(true);
         this.syncAnnouncementTimer();
         this.cdr.detectChanges();
@@ -166,6 +171,12 @@ export class SocialSpotlightComponent implements OnInit, OnDestroy {
   nextAnnouncement(): void {
     if (this.announcements.length === 0) return;
     this.currentAnnouncementIndex = (this.currentAnnouncementIndex + 1) % this.announcements.length;
+    this.cdr.detectChanges();
+  }
+
+  previousAnnouncement(): void {
+    if (this.announcements.length === 0) return;
+    this.currentAnnouncementIndex = (this.currentAnnouncementIndex - 1 + this.announcements.length) % this.announcements.length;
     this.cdr.detectChanges();
   }
 

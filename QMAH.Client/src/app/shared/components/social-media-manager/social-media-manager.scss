@@ -40,3 +40,10 @@
 :host-context([data-theme='qmahdark']) .smm__add, :host-context([data-theme='qmahdark']) .smm__swap, :host-context([data-theme='qmahdark']) .smm__actions button { background: #25282a; border-color: #43474a; color: #f1eee7; }
 :host-context([data-theme='qmahdark']) .smm__error { color: #ff8a80; }
 @media (max-width: 480px) { .smm__layout { grid-template-columns: 1fr; } }
+
+.smm__item[draggable='true'] { cursor: grab; }
+.smm__item.is-dragging { opacity: 0.4; }
+.smm__item.is-over { border-color: var(--qmah-social-action); box-shadow: 0 0 0 2px color-mix(in srgb, var(--qmah-social-action) 40%, transparent); }
+.smm__order { position: absolute; left: 6px; top: 6px; z-index: 1; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgb(0 0 0 / 65%); color: #fff; font-size: 0.75rem; font-weight: 800; }
+.smm__actions .smm__move { padding: 0 6px; }
+.smm__actions .smm__move:disabled { opacity: 0.35; pointer-events: none; }

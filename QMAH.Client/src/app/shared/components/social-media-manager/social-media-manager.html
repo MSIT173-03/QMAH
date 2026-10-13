@@ -22,8 +22,10 @@
 
     <ul class="smm__list">
       @for (item of media(); track item.id; let i = $index) {
-        <li class="smm__item" [class.is-inserted]="inserted().has(item.id)">
+        <li class="smm__item" [class.is-inserted]="inserted().has(item.id)" [class.is-dragging]="dragId() === item.id" [class.is-over]="overId() === item.id && dragId() !== item.id"
+            draggable="true" (dragstart)="dragStart($event, item.id)" (dragover)="dragOver($event, item.id)" (drop)="drop($event, item.id)" (dragend)="dragEnd()">
           <img [src]="item.url" [alt]="item.altText || ('圖片 ' + (i + 1))" loading="lazy" />
+          <span class="smm__order" aria-hidden="true">{{ i + 1 }}</span>
           <span class="smm__badge">{{ inserted().has(item.id) ? '內文中' : '附圖' }}</span>
           <div class="smm__actions">
             @if (inserted().has(item.id)) {
@@ -35,12 +37,14 @@
               <svg lucideReplace aria-hidden="true" focusable="false"></svg>更換
               <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" [disabled]="busy()" (change)="onSwapSelected($event, item.id)" />
             </label>
+            <button type="button" class="smm__move" [disabled]="i === 0" (click)="move(i, -1)" aria-label="往前移"><svg lucideChevronLeft aria-hidden="true" focusable="false"></svg></button>
+            <button type="button" class="smm__move" [disabled]="i === media().length - 1" (click)="move(i, 1)" aria-label="往後移"><svg lucideChevronRight aria-hidden="true" focusable="false"></svg></button>
             <button type="button" class="is-danger" (click)="remove(item)" aria-label="移除這張圖片"><svg lucideTrash2 aria-hidden="true" focusable="false"></svg></button>
           </div>
         </li>
       }
     </ul>
-    <p class="smm__hint">「插入內文」會把圖片放在內文游標處；沒插入的圖片依上方排版顯示在貼文旁。</p>
+    <p class="smm__hint">「插入內文」會把圖片放在內文游標處；沒插入的圖片依上方排版顯示在貼文旁。拖曳圖片（或按左右箭頭）可調整順序，第 1 張是封面。</p>
   }
 
   @if (busy()) { <p class="smm__hint" aria-live="polite">圖片上傳中…</p> }

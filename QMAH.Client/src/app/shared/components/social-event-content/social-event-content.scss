@@ -12,3 +12,19 @@ dd { margin: 0; color: var(--qmah-ink); font-size: 1rem; line-height: 1.6; overf
 dd span { display: block; }
 .end { color: var(--qmah-muted); font-size: 0.875rem; }
 @media (max-width: 380px) { .event-info { padding: 12px; } dl > div { grid-template-columns: 58px minmax(0, 1fr); gap: 8px; } }
+
+/* 貼文牆預覽：緊湊的活動資訊列。 */
+.ev { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; margin-top: 4px; padding: 12px 14px; border: 1px solid var(--qmah-border); border-radius: 14px; background: color-mix(in srgb, var(--qmah-social-action) 6%, var(--qmah-surface)); }
+.ev__date { position: relative; overflow: hidden; display: grid; grid-template-rows: 1fr auto; width: 52px; height: 62px; padding-top: 15px; border: 1px solid color-mix(in srgb, var(--qmah-social-action) 35%, var(--qmah-border)); border-radius: 10px; background: var(--qmah-surface-elevated, var(--qmah-surface)); text-align: center; }
+.ev__date small { position: absolute; inset: 0 0 auto; padding: 1px 0; background: var(--qmah-social-action); color: #fff; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.08em; }
+.ev__date strong { align-self: center; font-size: 1.5rem; font-weight: 800; line-height: 1; color: var(--qmah-ink); }
+.ev__date em { padding-bottom: 4px; color: var(--qmah-muted); font-size: 0.6875rem; font-style: normal; font-weight: 700; line-height: 1; }
+.ev__facts { display: grid; gap: 4px; min-width: 0; }
+.ev__time { margin: 0; color: var(--qmah-ink); font-size: 0.9375rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ev__line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; color: var(--qmah-muted); font-size: 0.8125rem; line-height: 1.5; }
+.ev__line svg { width: 14px; height: 14px; }
+.ev__line span:not(.social-mode) { min-width: 0; overflow-wrap: anywhere; }
+.ev__go { align-self: start; min-height: 0; padding: 2px 0; font-size: 0.8125rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.ev__go:hover { text-decoration: underline; }
+.excerpt { display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; margin-top: 10px; font-size: 0.9375rem; }
+@media (max-width: 480px) { .ev { grid-template-columns: auto minmax(0, 1fr); } .ev__go { grid-column: 1 / -1; justify-self: end; } }

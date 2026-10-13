@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ViewChild, computed, inject, input, model, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { LucideImagePlus, LucideReplace, LucideTextCursorInput, LucideTrash2 } from '@lucide/angular';
+import { LucideChevronLeft, LucideChevronRight, LucideImagePlus, LucideReplace, LucideTextCursorInput, LucideTrash2 } from '@lucide/angular';
 
 import { SocialApiService, SocialMedia } from '../../../core/services/social-api';
 import { ImageCropModalComponent } from '../image-crop-modal/image-crop-modal';
@@ -16,7 +16,7 @@ const MAX_IMAGES = 8;
  */
 @Component({
   selector: 'app-social-media-manager',
-  imports: [ImageCropModalComponent, LucideImagePlus, LucideReplace, LucideTextCursorInput, LucideTrash2],
+  imports: [ImageCropModalComponent, LucideChevronLeft, LucideChevronRight, LucideImagePlus, LucideReplace, LucideTextCursorInput, LucideTrash2],
   templateUrl: './social-media-manager.html',
   styleUrl: './social-media-manager.scss',
 })
@@ -40,6 +40,43 @@ export class SocialMediaManagerComponent {
     const text = this.content().toLowerCase();
     return new Set(this.media().filter((item) => text.includes(`[img=${item.id.toLowerCase()}]`)).map((item) => item.id));
   });
+
+  protected readonly dragId = signal<string | null>(null);
+  protected readonly overId = signal<string | null>(null);
+
+  protected dragStart(event: DragEvent, id: string): void {
+    this.dragId.set(id);
+    event.dataTransfer?.setData('text/plain', id);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected dragOver(event: DragEvent, id: string): void {
+    if (!this.dragId()) return;
+    event.preventDefault();
+    this.overId.set(id);
+  }
+
+  protected drop(event: DragEvent, targetId: string): void {
+    event.preventDefault();
+    const from = this.media().findIndex((m) => m.id === this.dragId());
+    const to = this.media().findIndex((m) => m.id === targetId);
+    this.dragEnd();
+    if (from >= 0 && to >= 0 && from !== to) this.move(from, to - from);
+  }
+
+  protected dragEnd(): void {
+    this.dragId.set(null);
+    this.overId.set(null);
+  }
+
+  /** 把第 index 張移到 index+delta（拖曳與左右箭頭共用）；順序即顯示順序。 */
+  protected move(index: number, delta: number): void {
+    const list = [...this.media()];
+    const target = index + delta;
+    if (target < 0 || target >= list.length) return;
+    list.splice(target, 0, ...list.splice(index, 1));
+    this.media.set(list);
+  }
 
   /** 這次編輯中新上傳的圖片：移除或被抽換時可以直接刪檔；原本就在貼文上的圖片要等「儲存」才由伺服器移除。 */
   private readonly sessionUploads = new Set<string>();

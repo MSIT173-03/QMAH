@@ -9,61 +9,97 @@
   } @else if (loadError) {
     <div class="alert alert-error" role="alert">{{ loadError }}</div>
   } @else if (profile) {
-    <section class="social-panel member-head">
-      <div class="member-avatar">
-        @if (profile.avatarUrl && !avatarFailed) {
-          <img [src]="profile.avatarUrl" alt="" (error)="avatarFailed = true" />
-        } @else {
-          <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
-        }
-      </div>
-      <div class="member-head__text">
-        <h1 class="member-name">{{ profile.nickname }}</h1>
-        @if (profile.isPublic) {
-          @if (profile.bio) { <p class="member-bio">{{ profile.bio }}</p> }
-          @if (profile.email) {
-            <p class="social-meta">聯絡信箱：<a class="social-author-link" [href]="'mailto:' + profile.email">{{ profile.email }}</a></p>
+    <section class="mp-hero" [style.--mp-hue]="hue">
+      <div class="mp-hero__cover" aria-hidden="true"></div>
+      <div class="mp-hero__body">
+        <div class="member-avatar">
+          @if (profile.avatarUrl && !avatarFailed) {
+            <img [src]="profile.avatarUrl" alt="" (error)="avatarFailed = true" />
+          } @else {
+            <svg lucideUserRound aria-hidden="true" focusable="false"></svg>
           }
-          @if (profile.joinedAt) {
-            <p class="social-meta">加入於 {{ profile.joinedAt | date: 'yyyy-MM-dd' }}</p>
-          }
-        } @else {
-          <p class="social-meta">這位會員沒有公開個人檔案。</p>
-        }
-        <p class="social-meta">{{ profile.postCount }} 篇貼文 · {{ profile.eventCount }} 場活動</p>
+        </div>
+        <div class="mp-hero__text">
+          <h1 class="member-name">{{ profile.nickname }}</h1>
+          @if (profile.isPublic && profile.bio) { <p class="member-bio">{{ profile.bio }}</p> }
+          @else if (!profile.isPublic) { <p class="social-meta">這位會員沒有公開個人檔案。</p> }
+          <ul class="mp-facts">
+            <li><strong>{{ profile.postCount }}</strong> 篇貼文</li>
+            <li><strong>{{ profile.eventCount }}</strong> 場活動</li>
+            @if (profile.isPublic && profile.joinedAt) { <li>加入於 {{ profile.joinedAt | date: 'yyyy/MM/dd' }}</li> }
+            @if (profile.isPublic && profile.email) { <li><a class="social-author-link" [href]="'mailto:' + profile.email">{{ profile.email }}</a></li> }
+          </ul>
+        </div>
+        @if (!isSelf) { <a class="btn btn-primary mp-hero__cta" href="#mp-message"><svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>留言給 TA</a> }
       </div>
     </section>
 
-    <section class="member-section">
-      <h2>貼文</h2>
-      @if (posts.length === 0) {
-        <p class="social-meta">還沒有貼文。</p>
-      } @else {
-        <ul class="member-list">
-          @for (post of posts; track post.id) {
-            <li>
-              <a [routerLink]="['/social/posts', post.id]">{{ post.title }}</a>
-              <time class="social-meta" [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd' }}</time>
-            </li>
+    <div class="mp-grid">
+      <div class="mp-main">
+        <section class="member-section">
+          <h2><svg lucideFileText aria-hidden="true" focusable="false"></svg>貼文</h2>
+          @if (posts.length === 0) {
+            <p class="social-meta">還沒有貼文。</p>
+          } @else {
+            <ul class="mp-posts">
+              @for (post of posts; track post.id) {
+                <li>
+                  <a class="mp-post" [routerLink]="['/social/posts', post.id]">
+                    @if (post.coverImageUrl) { <img class="mp-post__img" [src]="post.coverImageUrl" alt="" loading="lazy" /> }
+                    <span class="mp-post__main">
+                      <span class="social-tag" [attr.data-board]="post.boardCode"><app-board-icon [code]="post.boardCode" />{{ boardLabel(post.boardCode) }}</span>
+                      <strong>{{ post.title }}</strong>
+                      <span class="mp-post__excerpt">{{ excerpt(post) }}</span>
+                      <span class="social-meta">{{ post.createdAt | date: 'yyyy/MM/dd' }} · {{ post.commentCount }} 則留言</span>
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
           }
-        </ul>
-      }
-    </section>
+        </section>
+      </div>
 
-    <section class="member-section">
-      <h2>舉辦的活動</h2>
-      @if (events.length === 0) {
-        <p class="social-meta">還沒有舉辦活動。</p>
-      } @else {
-        <ul class="member-list">
-          @for (event of events; track event.id) {
-            <li>
-              <a [routerLink]="['/social/events', event.id]">{{ event.title }}</a>
-              <time class="social-meta" [attr.datetime]="event.startAt">{{ event.startAt | date: 'yyyy-MM-dd' }}</time>
-            </li>
+      <aside class="mp-side">
+        <section class="member-section" id="mp-message">
+          <h2><svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>留言給 {{ profile.nickname }}</h2>
+          @if (isSelf) {
+            <p class="social-meta">這是你自己的頁面。別人留言給你時，會出現在通知中心。</p>
+          } @else if (!signedIn) {
+            <p class="social-meta">登入後可以留言給對方，對方會在通知中心收到。</p>
+            <a class="btn btn-outline btn-sm" routerLink="/login">登入</a>
+          } @else {
+            <textarea class="mp-message" rows="4" [maxLength]="messageMax" [(ngModel)]="message" (ngModelChange)="sentNotice = false" placeholder="想跟對方說什麼？對方會在通知中心看到。" aria-label="留言內容"></textarea>
+            <div class="mp-message__bar">
+              <span class="social-meta">{{ message.length }} / {{ messageMax }}</span>
+              <button type="button" class="btn btn-primary btn-sm" [disabled]="sending || !message.trim()" (click)="send()"><svg lucideSend aria-hidden="true" focusable="false"></svg>送出</button>
+            </div>
+            @if (sentNotice) { <p class="mp-message__ok" role="status">已送出，對方會在通知中心收到。</p> }
+            @if (sendError) { <p class="mp-message__err" role="alert">{{ sendError }}</p> }
           }
-        </ul>
-      }
-    </section>
+        </section>
+
+        <section class="member-section">
+          <h2><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg>舉辦的活動</h2>
+          @if (events.length === 0) {
+            <p class="social-meta">還沒有舉辦活動。</p>
+          } @else {
+            <ul class="mp-events">
+              @for (event of events; track event.id) {
+                <li>
+                  <a [routerLink]="['/social/events', event.id]">
+                    <span class="mp-date"><small>{{ event.startAt | date: 'M月' }}</small><strong>{{ event.startAt | date: 'd' }}</strong></span>
+                    <span class="mp-events__main">
+                      <strong>{{ event.title }}</strong>
+                      @if (eventMode(event.location); as m) { <span class="social-mode" [attr.data-mode]="m.key">{{ m.label }}</span> }
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </aside>
+    </div>
   }
 </div>

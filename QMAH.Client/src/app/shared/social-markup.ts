@@ -7,12 +7,12 @@
  * 支援的標記（不分大小寫，可巢狀；不成對的標記會自動補齊，未知標記原樣顯示）：
  *   [b]粗體[/b]  [i]斜體[/i]  [u]底線[/u]  [s]刪除線[/s]
  *   [size=small]小字[/size]  [size=large]大字[/size]  [size=xlarge]特大字[/size]
- *   [color=red|brown|green|blue|gold|gray]彩色[/color]
+ *   [color=red|brown|green|blue|gold|gray|orange|olive|teal|purple|pink|ink]彩色[/color]
  *   [h]小標題[/h]  [quote]引用[/quote]  [list][*]項目[*]項目[/list]  [center]置中[/center]
  *   [spoiler]劇透[/spoiler]  [url=https://…]連結文字[/url]（只允許 http／https）  [hr]分隔線  [img=圖片識別碼]（留言附圖，只接受本站上傳圖片的 GUID）
  */
 export type SocialSize = 'small' | 'large' | 'xlarge';
-export type SocialColor = 'red' | 'brown' | 'green' | 'blue' | 'gold' | 'gray';
+export type SocialColor = 'red' | 'brown' | 'green' | 'blue' | 'gold' | 'gray' | 'orange' | 'olive' | 'teal' | 'purple' | 'pink' | 'ink';
 
 export type SocialNode =
   | { t: 'text'; v: string }
@@ -28,6 +28,12 @@ export const SOCIAL_COLORS: readonly { color: SocialColor; label: string }[] = [
   { color: 'blue', label: '藍色' },
   { color: 'gold', label: '金色' },
   { color: 'gray', label: '灰色' },
+  { color: 'orange', label: '橘色' },
+  { color: 'olive', label: '橄欖綠' },
+  { color: 'teal', label: '青綠色' },
+  { color: 'purple', label: '紫色' },
+  { color: 'pink', label: '粉紅色' },
+  { color: 'ink', label: '墨黑色' },
 ];
 
 const BLOCK_TAGS = new Set<string>(['h', 'quote', 'list', 'center', 'spoiler']);

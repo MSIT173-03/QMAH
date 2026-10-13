@@ -1,16 +1,19 @@
-:host { display: block; }
-.gallery { position: relative; overflow: hidden; border-radius: 12px; aspect-ratio: 16 / 9; max-height: 240px; width: 100%; background: var(--qmah-surface-muted); }
-.gallery__img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.gallery__nav { position: absolute; top: 50%; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; transform: translateY(-50%); border: 0; border-radius: 50%; background: rgb(0 0 0 / 52%); color: #fff; cursor: pointer; opacity: 0; transition: opacity 140ms, background 140ms; }
-.gallery__nav svg { width: 18px; height: 18px; }
-.gallery__nav--prev { left: 8px; }
-.gallery__nav--next { right: 8px; }
-.gallery:hover .gallery__nav, .gallery:focus-within .gallery__nav { opacity: 1; }
-.gallery__nav:hover { background: rgb(0 0 0 / 72%); }
-.gallery__nav:focus-visible, .gallery__dot:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-.gallery__count { position: absolute; top: 8px; right: 8px; padding: 1px 8px; border-radius: 999px; background: rgb(0 0 0 / 52%); color: #fff; font-size: 0.6875rem; font-weight: 700; }
-.gallery__dots { position: absolute; left: 0; right: 0; bottom: 8px; display: flex; justify-content: center; gap: 6px; }
-.gallery__dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: rgb(255 255 255 / 55%); cursor: pointer; }
-.gallery__dot.is-active { width: 18px; border-radius: 4px; background: #fff; }
-/* 觸控裝置沒有 hover：左右鈕一直顯示，才找得到切換方式。 */
-@media (hover: none) { .gallery__nav { opacity: 1; } }
+/* 卡片有一層鋪滿的「開啟貼文」點擊層（z-index 1），圖片區必須浮在它上面，按鈕才點得到。 */
+:host { position: relative; z-index: 2; display: block; }
+.gallery { position: relative; overflow: hidden; border-radius: 12px; aspect-ratio: 16 / 9; max-height: 240px; width: 100%; background: var(--qmah-surface-muted); touch-action: pan-y; outline-offset: 2px; }
+.gallery:focus-visible { outline: 2px solid var(--qmah-social-action); }
+.gallery__link { display: block; width: 100%; height: 100%; }
+.gallery__img { display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; }
+.gallery__nav { position: absolute; top: 0; bottom: 0; display: grid; place-items: center; width: 44px; padding: 0; border: 0; background: transparent; color: #fff; cursor: pointer; }
+.gallery__nav svg { width: 30px; height: 30px; padding: 5px; border-radius: 50%; background: rgb(0 0 0 / 50%); filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%)); transition: background 140ms, transform 140ms; }
+.gallery__nav--prev { left: 0; }
+.gallery__nav--next { right: 0; }
+.gallery__nav:hover svg { background: rgb(0 0 0 / 75%); transform: scale(1.08); }
+.gallery__nav:focus-visible svg { outline: 2px solid #fff; outline-offset: 2px; }
+.gallery__count { position: absolute; top: 8px; right: 8px; padding: 1px 8px; border-radius: 999px; background: rgb(0 0 0 / 55%); color: #fff; font-size: 0.6875rem; font-weight: 700; pointer-events: none; }
+.gallery__dots { position: absolute; left: 50%; bottom: 2px; display: flex; transform: translateX(-50%); padding: 0 6px; border-radius: 999px; background: rgb(0 0 0 / 35%); }
+/* 圓點本身很小，但可點範圍是 24×24。 */
+.gallery__dot { position: relative; width: 24px; height: 24px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.gallery__dot::before { content: ''; position: absolute; top: 50%; left: 50%; width: 7px; height: 7px; transform: translate(-50%, -50%); border-radius: 50%; background: rgb(255 255 255 / 60%); transition: width 140ms, background 140ms; }
+.gallery__dot.is-active::before { width: 18px; border-radius: 4px; background: #fff; }
+.gallery__dot:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }

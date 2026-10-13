@@ -110,3 +110,12 @@
 .social-gallery--primary[data-count='1'] .social-gallery__item img { aspect-ratio: 16 / 9; }
 @media (max-width: 640px) { .social-gallery--primary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { .social-gallery__item img { transition: none; } }
+
+/* 收藏鈕：貼文標頭右側，已收藏時書籤填滿主色。 */
+.social-bookmark { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 4px 12px; border: 1px solid var(--qmah-border); border-radius: 999px; background: transparent; color: var(--qmah-muted); font: inherit; font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.social-bookmark svg { width: 16px; height: 16px; }
+.social-bookmark:hover { border-color: var(--qmah-social-action); color: var(--qmah-social-action); }
+.social-bookmark.is-on { border-color: var(--qmah-social-action); background: color-mix(in srgb, var(--qmah-social-action) 10%, transparent); color: var(--qmah-social-action); }
+.social-bookmark.is-on svg { fill: currentColor; }
+.social-bookmark:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
+.social-bookmark + .social-post-head__menu { margin-left: 0; }

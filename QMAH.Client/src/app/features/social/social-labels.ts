@@ -11,6 +11,8 @@ const BOARD_LABELS: Record<string, string> = {
   QUESTION: '問題求助',
   GUIDE: '研究筆記',
   STORE: '商城活動',
+  // 不是真的看板：導覽裡的「我的收藏」篩選用 @BOOKMARKS 當看板代碼。
+  '@BOOKMARKS': '我的收藏',
 };
 
 // 看板分三族，導覽依此分組、同族同色（顏色見 styles.scss 的 --board-c）。API 回來但不在表內的看板歸「其他」。

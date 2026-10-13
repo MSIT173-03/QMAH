@@ -17,12 +17,12 @@ import { SocialPostContentComponent } from '../../../shared/components/social-po
 import { SocialEventContentComponent } from '../../../shared/components/social-event-content/social-event-content';
 import { demoComment, isDemoAdmin } from '../social-demo';
 import { boardLabel } from '../social-labels';
-import { LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2 } from '@lucide/angular';
+import { LucideArrowLeft, LucideBookmark, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEventContentComponent, SocialEditorComponent, SocialMediaManagerComponent, LucideArrowLeft, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEventContentComponent, SocialEditorComponent, SocialMediaManagerComponent, LucideArrowLeft, LucideBookmark, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent],
   templateUrl: './post-detail.html',
   styleUrls: ['../social-common.scss', './post-detail.scss']
 })
@@ -230,6 +230,23 @@ export class PostDetailComponent implements OnChanges {
         console.error('刪除留言失敗:', err);
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  // 收藏／取消收藏：先改畫面，失敗就還原並提示。
+  toggleBookmark(): void {
+    const post = this.post;
+    if (!post) return;
+    const wanted = !post.isBookmarked;
+    post.isBookmarked = wanted;
+    this.actionError = null;
+    (wanted ? this.socialApi.bookmarkPost(post.id) : this.socialApi.unbookmarkPost(post.id)).subscribe({
+      next: () => this.cdr.detectChanges(),
+      error: (err: HttpErrorResponse) => {
+        post.isBookmarked = !wanted;
+        this.actionError = err.status === 401 ? '請先登入才能收藏貼文。' : '收藏失敗，請稍後再試。';
+        this.cdr.detectChanges();
+      },
     });
   }
 

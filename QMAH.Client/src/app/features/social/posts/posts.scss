@@ -673,7 +673,24 @@
 @media (max-width: 640px) { .qmah-social-page .social-popular__thumb { width: 60px; height: 60px; } }
 
 /* 配圖高度上限：單欄或寬版時 16:9 會變成很高的大圖，統一封頂並用 object-fit 裁切。 */
-.qmah-social-page .social-post-card__cover { max-height: 240px; }
+.qmah-social-page .social-post-card__cover { display: block; width: 100%; max-height: 240px; }
+.qmah-social-page .social-post-card--event-media { margin-top: 0; }
 
 /* 看板圖示：標籤內的小圖示與文字同色、同高。 */
 .qmah-social-page .social-tag { display: inline-flex; align-items: center; gap: 4px; }
+
+/* 工具列：一列、等高，每個控制項都有文字；窄螢幕自動換行。 */
+.qmah-social-page .social-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.qmah-social-page .social-bar .social-search__box { flex: 1 1 260px; min-width: 0; height: 44px; }
+.qmah-social-page .social-bar .social-datefilter { position: relative; margin: 0; }
+.qmah-social-page .social-bar .social-tool--text { display: inline-flex; align-items: center; gap: 6px; width: auto; height: 44px; padding: 0 12px; border-radius: 12px; font-size: 0.875rem; font-weight: 600; white-space: nowrap; }
+.qmah-social-page .social-bar .social-tool__caret { width: 14px; height: 14px; opacity: 0.7; }
+.qmah-social-page .social-bar .social-cols { height: 44px; margin: 0; align-items: center; border-radius: 12px; }
+.qmah-social-page .social-search__meta { margin: 10px 0 14px; }
+@media (max-width: 760px) { .qmah-social-page .social-bar .social-tool--width { display: none; } }
+
+/* 收藏鈕：書籤圖示，放在檢舉旁；已收藏時圖示填滿主色。 */
+.qmah-social-page .social-post-card__bookmark svg { transition: fill 140ms; }
+.qmah-social-page .social-post-card__bookmark:hover { background: color-mix(in srgb, var(--qmah-social-action) 12%, transparent); color: var(--qmah-social-action); }
+.qmah-social-page .social-post-card__bookmark.is-on { color: var(--qmah-social-action); }
+.qmah-social-page .social-post-card__bookmark.is-on svg { fill: currentColor; }

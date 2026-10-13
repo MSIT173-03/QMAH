@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, OnInit, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideCalendarDays, LucideChevronDown, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal } from '@lucide/angular';
-import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
+import { LucideBookmark, LucideCalendarDays, LucideChevronDown, LucideLayoutGrid, LucideMegaphone } from '@lucide/angular';
 
 import { BoardIconComponent } from '../board-icon/board-icon';
 import { SocialBoardsStore } from '../../../features/social/social-boards';
@@ -18,22 +17,45 @@ import { boardLabel, groupBoards } from '../../../features/social/social-labels'
  */
 @Component({
   selector: 'app-social-shell',
-  imports: [BoardIconComponent, RouterLink, RouterLinkActive, LucideCalendarDays, LucideChevronDown, LucideChevronRight, LucideMegaphone, LucideMoveHorizontal],
+  imports: [BoardIconComponent, RouterLink, RouterLinkActive, LucideBookmark, LucideCalendarDays, LucideChevronDown, LucideLayoutGrid, LucideMegaphone],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './social-shell.scss',
   template: `
     <div class="shell">
       <nav class="shell__nav" aria-label="社群導覽">
-        <p class="shell__title">社群</p>
-        <ul class="shell__list">
-          <li><a class="shell__item shell__item--link" routerLink="/social/announcements" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideMegaphone aria-hidden="true" focusable="false"></svg>歷史公告<svg class="shell__go" lucideChevronRight aria-hidden="true" focusable="false"></svg></a></li>
-          <li><a class="shell__item shell__item--link" routerLink="/social/events" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg>社群活動<svg class="shell__go" lucideChevronRight aria-hidden="true" focusable="false"></svg></a></li>
-        </ul>
+        <!-- 所有導覽項目同一種樣式（圖示＋文字，選取時左側色條與同色淡底）；分組標題前的色條就是該組的顏色。 -->
+        <div class="shell__group shell__group--site">
+          <p class="shell__group-title">社群</p>
+          <ul class="shell__list">
+            <li><a class="shell__item" routerLink="/social/announcements" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideMegaphone aria-hidden="true" focusable="false"></svg>歷史公告</a></li>
+            <li><a class="shell__item" routerLink="/social/events" routerLinkActive="is-active" ariaCurrentWhenActive="page"><svg lucideCalendarDays aria-hidden="true" focusable="false"></svg>社群活動</a></li>
+          </ul>
+        </div>
+        <div class="shell__group shell__group--site shell__group--divided" [class.shell__group--boards]="inline()">
+          <p class="shell__group-title">看板</p>
+          <ul class="shell__list">
+            <li>
+              @if (inline()) {
+                <button type="button" class="shell__item" [class.is-active]="activeBoard() === ''" [attr.aria-current]="activeBoard() === '' ? 'true' : null" (click)="boardSelect.emit('')"><svg lucideLayoutGrid aria-hidden="true" focusable="false"></svg>全部貼文</button>
+              } @else {
+                <a class="shell__item" routerLink="/social/posts"><svg lucideLayoutGrid aria-hidden="true" focusable="false"></svg>全部貼文</a>
+              }
+            </li>
+            <li>
+              @if (inline()) {
+                <button type="button" class="shell__item" [class.is-active]="activeBoard() === '@bookmarks'" [attr.aria-current]="activeBoard() === '@bookmarks' ? 'true' : null" (click)="boardSelect.emit('@bookmarks')"><svg lucideBookmark aria-hidden="true" focusable="false"></svg>我的收藏</button>
+              } @else {
+                <a class="shell__item" routerLink="/social/posts" [queryParams]="{ board: '@bookmarks' }"><svg lucideBookmark aria-hidden="true" focusable="false"></svg>我的收藏</a>
+              }
+            </li>
+          </ul>
+        </div>
         @if (inline()) {
           <label class="shell__mobile-picker">
             <span class="sr-only">貼文分類</span>
             <select [value]="activeBoard() ?? ''" (change)="boardSelect.emit($any($event.target).value)">
               <option value="">全部貼文</option>
+              <option value="@bookmarks">我的收藏</option>
               @for (group of groups(); track group.key) {
                 <optgroup [label]="group.label">
                   @for (board of group.boards; track board) {
@@ -45,14 +67,6 @@ import { boardLabel, groupBoards } from '../../../features/social/social-labels'
             <svg lucideChevronDown aria-hidden="true" focusable="false"></svg>
           </label>
         }
-        <p class="shell__title shell__title--gap">看板</p>
-        <ul class="shell__list" [class.shell__list--boards]="inline()">
-          @if (inline()) {
-            <li><button type="button" class="shell__item shell__item--all" [class.is-active]="activeBoard() === ''" [attr.aria-current]="activeBoard() === '' ? 'true' : null" (click)="boardSelect.emit('')">全部貼文</button></li>
-          } @else {
-            <li><a class="shell__item shell__item--all" routerLink="/social/posts">全部貼文</a></li>
-          }
-        </ul>
         @for (group of groups(); track group.key) {
           <div class="shell__group" [class.shell__group--boards]="inline()" [attr.data-board]="group.boards[0]">
             <p class="shell__group-title">{{ group.label }}</p>
@@ -69,9 +83,6 @@ import { boardLabel, groupBoards } from '../../../features/social/social-labels'
         }
       </nav>
       <div class="shell__main">
-        @if (!inline()) { <div class="shell__view-tools"><button type="button" class="shell__width-toggle" [attr.aria-pressed]="view.wide()" [attr.aria-label]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" [title]="view.wide() ? '切回標準寬度' : '切換寬版檢視'" (click)="view.toggle()">
-          <svg lucideMoveHorizontal aria-hidden="true" focusable="false"></svg>
-        </button></div> }
         <ng-content />
       </div>
     </div>
@@ -79,7 +90,6 @@ import { boardLabel, groupBoards } from '../../../features/social/social-labels'
 })
 export class SocialShellComponent implements OnInit {
   private readonly store = inject(SocialBoardsStore);
-  readonly view = inject(SocialViewPreferences);
   private readonly destroyRef = inject(DestroyRef);
 
   /** 目前看板：'' 為全部；null 表示不在貼文牆，不標示 */

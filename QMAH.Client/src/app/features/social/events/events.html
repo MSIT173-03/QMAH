@@ -10,36 +10,29 @@
 </header>
 
 <app-social-shell [activeBoard]="null">
-<!-- ui-integration: 篩選列與貼文牆共用 social-filters／social-field；日期範圍只留一組「開始日期」起迄，欄位標籤持久可見。 -->
-<div class="social-filters" role="search">
-  <label class="social-field">
-    <span class="social-field__label">開始日期（起）</span>
-    <input type="date" class="input input-bordered" [(ngModel)]="filterStartAfter" (change)="loadEvents()" />
-  </label>
-  <label class="social-field">
-    <span class="social-field__label">開始日期（迄）</span>
-    <input type="date" class="input input-bordered" [(ngModel)]="filterStartBefore" (change)="loadEvents()" />
-  </label>
-  <label class="social-field social-field--grow">
-    <span class="social-field__label">關鍵字（標題／內容）</span>
-    <input
-      type="text"
-      class="input input-bordered w-full"
-      [(ngModel)]="filterKeyword"
-      (keyup.enter)="loadEvents()"
-      autocomplete="off"
-      placeholder="輸入關鍵字"
-    />
-  </label>
-  <button type="button" class="btn btn-primary" (click)="loadEvents()">搜尋</button>
-  <button type="button" class="btn btn-ghost" (click)="resetFilters()">清除篩選</button>
+<app-social-toolbar
+  placeholder="搜尋活動標題或內容"
+  dateLabel="活動日期"
+  [presets]="datePresets"
+  [(keyword)]="filterKeyword"
+  [(from)]="filterStartAfter"
+  [(to)]="filterStartBefore"
+  [cols]="eventCols"
+  (colsChange)="setEventCols($event)"
+  (searched)="loadEvents()"
+/>
+<div class="social-search__meta" aria-live="polite">
+  <span>共 {{ totalCount }} 場活動</span>
+  @if (hasFilter) {
+    <button type="button" class="social-search__reset" (click)="resetFilters()">清除全部條件</button>
+  }
 </div>
 
 @if (loadError) {
   <div class="alert alert-error mb-4" role="alert">{{ loadError }}</div>
 }
 
-<div class="social-event-wall">
+<div class="social-event-wall" [style.--event-cols]="eventCols">
   @for (event of events; track event.id) {
     <article class="social-panel social-event-card" [attr.data-phase]="phase(event).key">
       @if (event.coverImageUrl) {
@@ -58,6 +51,9 @@
             <span class="social-tag social-tag--kind" [class.social-tag--notice]="event.eventType === 'OFFICIAL'" [attr.data-kind]="event.eventType">
               {{ event.eventType === 'OFFICIAL' ? '官方活動' : '玩家發起' }}
             </span>
+            @if (eventMode(event.location); as mode) {
+              <span class="social-mode" [attr.data-mode]="mode.key">{{ mode.label }}</span>
+            }
             @if (!event.coverImageUrl) {
               <span class="social-event-phase social-event-phase--inline" [attr.data-phase]="phase(event).key">{{ phase(event).label }}</span>
             }
@@ -72,8 +68,8 @@
           <svg lucideCalendarClock aria-hidden="true" focusable="false"></svg>
           <span>{{ event.startAt | date: 'MM/dd HH:mm' }} ～ {{ event.endAt | date: 'MM/dd HH:mm' }}</span>
         </li>
-        @if (event.location) {
-          <li><svg lucideMapPin aria-hidden="true" focusable="false"></svg><span>{{ event.location }}</span></li>
+        @if (eventPlace(event.location)) {
+          <li><svg lucideMapPin aria-hidden="true" focusable="false"></svg><span>{{ eventPlace(event.location) }}</span></li>
         }
         <li>
           <svg lucideUsers aria-hidden="true" focusable="false"></svg>

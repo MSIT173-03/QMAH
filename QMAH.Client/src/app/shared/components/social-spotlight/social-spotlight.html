@@ -33,6 +33,8 @@
           (mouseleave)="resumeAnnouncementsForPointer()"
           (focusin)="pauseAnnouncementsForFocus()"
           (focusout)="resumeAnnouncementsForFocus($event)"
+          (keydown.arrowleft)="previousAnnouncement()"
+          (keydown.arrowright)="nextAnnouncement()"
         >
           <div class="social-hero__track" [style.transform]="'translateX(-' + (currentAnnouncementIndex * 100) + '%)'">
             @for (announcement of announcements; track announcement.id; let i = $index) {
@@ -52,15 +54,18 @@
                   (error)="onAnnouncementImageError(announcement.id)"
                 />
                 <div class="social-hero__body">
+                  <p class="social-hero__meta"><span class="social-hero__tag">{{ boardLabel(announcement.boardCode) }}</span><time [attr.datetime]="announcement.createdAt">{{ announcement.createdAt | date: 'yyyy/MM/dd' }}</time></p>
                   <h2 class="social-hero__title">{{ announcement.title }}</h2>
                   <p class="social-hero__desc">{{ stripMarkup(announcement.contentPreview) }}</p>
-                  <span class="social-hero__cta" aria-hidden="true">查看公告</span>
+                  <span class="social-hero__cta" aria-hidden="true">閱讀全文</span>
                 </div>
               </a>
             }
           </div>
 
           @if (announcements.length > 1) {
+            <button type="button" class="social-hero__arrow social-hero__arrow--prev" (click)="previousAnnouncement()" aria-label="上一則公告"><svg lucideChevronLeft aria-hidden="true" focusable="false"></svg></button>
+            <button type="button" class="social-hero__arrow social-hero__arrow--next" (click)="nextAnnouncement()" aria-label="下一則公告"><svg lucideChevronRight aria-hidden="true" focusable="false"></svg></button>
             <div class="social-hero__controls" aria-label="輪播控制">
               <div class="social-hero__dots">
                 @for (announcement of announcements; track announcement.id; let i = $index) {
@@ -76,13 +81,13 @@
               </div>
               <button
                 type="button"
-                class="social-hero__play-toggle"
+                class="social-hero__play-toggle" [attr.aria-label]="announcementAutoplayEnabled() ? '暫停輪播' : '播放輪播'" [title]="announcementAutoplayEnabled() ? '暫停輪播' : '播放輪播'"
                 [class.social-hero__play-toggle--paused]="!announcementAutoplayEnabled()"
                 [attr.aria-pressed]="!announcementAutoplayEnabled()"
                 (click)="toggleAnnouncementAutoplay()"
               >
                 <app-qmah-icon [name]="announcementAutoplayEnabled() ? 'pause' : 'play'" [size]="12" aria-hidden="true" />
-                {{ announcementAutoplayEnabled() ? '暫停輪播' : '播放輪播' }}
+                {{ currentAnnouncementIndex + 1 }} / {{ announcements.length }}
               </button>
             </div>
           }

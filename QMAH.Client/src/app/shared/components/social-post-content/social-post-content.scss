@@ -70,6 +70,12 @@ em { font-style: italic; }
 [data-color='blue'] { color: #2f5aa8; }
 [data-color='gold'] { color: #8f6200; }
 [data-color='gray'] { color: #5f645f; }
+[data-color='orange'] { color: #b85a14; }
+[data-color='olive'] { color: #5f6b1f; }
+[data-color='teal'] { color: #1a7070; }
+[data-color='purple'] { color: #6a409a; }
+[data-color='pink'] { color: #b83e69; }
+[data-color='ink'] { color: #1f2321; }
 :host-context([data-theme='qmahdark']) {
   [data-color='red'] { color: #ff9b8a; }
   [data-color='brown'] { color: #e0b48a; }
@@ -77,6 +83,12 @@ em { font-style: italic; }
   [data-color='blue'] { color: #9bbcff; }
   [data-color='gold'] { color: #e8c566; }
   [data-color='gray'] { color: #b9beb8; }
+  [data-color='orange'] { color: #ffb27a; }
+  [data-color='olive'] { color: #c8d27a; }
+  [data-color='teal'] { color: #7fd6d0; }
+  [data-color='purple'] { color: #c6a8f0; }
+  [data-color='pink'] { color: #f4a0bd; }
+  [data-color='ink'] { color: #f1eee7; }
 }
 
 .is-center { text-align: center; }

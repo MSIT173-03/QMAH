@@ -30,6 +30,10 @@ export interface SocialPostListItem {
   coverImageUrl: string | null;
   /** 貼文牆卡片輪播用，最多 5 張；沒有時退回 coverImageUrl */
   imageUrls?: string[] | null;
+  /** 目前登入會員是否收藏了這篇；未登入一律 false */
+  isBookmarked?: boolean;
+  /** 作者目前展示的稱號 */
+  authorTitle?: string | null;
   locationName: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -89,7 +93,7 @@ export interface SocialPostDetails {
   boardCode: string;
   userId: string;
   displayName: string | null;
-  /** 作者目前展示的稱號，只由詳情 API 回傳；貼文列表不顯示。 */
+  /** 作者目前展示的稱號 */
   authorTitle?: string | null;
   artifactId: string | null;
   eventId: string | null;
@@ -101,6 +105,7 @@ export interface SocialPostDetails {
   media: SocialMedia[];
   /** 圖片排版：SECONDARY 文字為主、PRIMARY 圖片為主（舊資料沒有時視為 SECONDARY） */
   mediaLayout?: 'PRIMARY' | 'SECONDARY';
+  isBookmarked?: boolean;
   locationName: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -268,12 +273,23 @@ export class SocialApiService {
     createdBefore?: string;
     /** newest（預設，新到舊）或 oldest（舊到新） */
     sort?: 'newest' | 'oldest';
+    /** true：只看目前會員收藏的貼文（需要登入） */
+    bookmarked?: boolean;
     page?: number;
     pageSize?: number;
   } = {}): Observable<ApiPage<SocialPostListItem>> {
     return this.http.get<ApiPage<SocialPostListItem>>(`${this.base}/posts`, {
       params: this.toHttpParams(params)
     });
+  }
+
+  // 收藏／取消收藏（需要登入；重複操作不會出錯）
+  bookmarkPost(id: string): Observable<void> {
+    return this.http.put<void>(`${this.base}/posts/${id}/bookmark`, null);
+  }
+
+  unbookmarkPost(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/posts/${id}/bookmark`);
   }
 
   getPopularPosts(): Observable<SocialPopularPosts> {
@@ -288,6 +304,11 @@ export class SocialApiService {
 
   getMember(userId: string): Observable<SocialMemberProfile> {
     return this.http.get<SocialMemberProfile>(`${this.base}/members/${userId}`);
+  }
+
+  /** 留言給會員：內容送進對方的通知中心。 */
+  sendMemberMessage(userId: string, content: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/members/${userId}/message`, { content });
   }
 
   getPost(id: string): Observable<SocialPostDetails> {

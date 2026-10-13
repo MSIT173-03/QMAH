@@ -41,6 +41,7 @@ const EMOJI_I18N_ZH_TW = {
 
 const COLOR_HEX: Record<string, string> = {
   red: '#b9423c', brown: '#7a5230', green: '#2f7a4f', blue: '#3b5ba8', gold: '#b8862a', gray: '#6f6a60',
+  orange: '#d2691e', olive: '#6b7a2a', teal: '#1f8a8a', purple: '#7b4fb0', pink: '#d0547f', ink: '#1f2321',
 };
 
 /**

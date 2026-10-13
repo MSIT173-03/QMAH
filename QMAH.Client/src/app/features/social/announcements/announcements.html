@@ -6,30 +6,76 @@
 </header>
 
 <app-social-shell [activeBoard]="null">
+<div class="notice-tabs" role="tablist" aria-label="公告分類">
+  @for (s of scopes; track s.key) {
+    <button type="button" role="tab" [attr.aria-selected]="scope === s.key" [class.is-on]="scope === s.key" (click)="scope = s.key">{{ s.label }}</button>
+  }
+</div>
+<app-social-toolbar
+  placeholder="搜尋公告標題或內容"
+  dateLabel="發布日期"
+  [showCols]="false"
+  [(keyword)]="filterKeyword"
+  [(from)]="filterFrom"
+  [(to)]="filterTo"
+/>
+<div class="notice-meta">
+  <span>共 {{ filtered.length }} 則公告</span>
+  @if (hasFilter) {
+    <button type="button" class="notice-meta__reset" (click)="resetFilters()">清除全部條件</button>
+  }
+</div>
+
 @if (loadError) {
   <div class="alert alert-error mb-4" role="alert">{{ loadError }}</div>
 }
 
-<!-- 公佈欄：最新一則是大卡片（可展開全文），其餘收成一列一則的清單，點一下在原地展開，不必捲很長。 -->
-@if (announcements.length === 0 && !loadError) {
-  <div class="social-state">目前還沒有公告</div>
+@if (filtered.length === 0 && !loadError) {
+  <div class="social-state">{{ hasFilter ? '沒有符合條件的公告' : '目前還沒有公告' }}</div>
 }
-@if (announcements.length > 0) {
+
+<!-- 最新一則做成大卡片（預設展開全文），其餘為一列一則的卡片：日曆磚、標題、摘要，點一下在原地展開，不必捲很長。 -->
+@if (latest; as item) {
+  <article class="notice-hero">
+    <header class="notice-hero__head">
+      <span class="notice-hero__badge"><svg lucidePin aria-hidden="true" focusable="false"></svg>最新公告</span>
+      <time class="notice-hero__date" [attr.datetime]="item.createdAt">{{ item.createdAt | date: 'yyyy年M月d日' }}（{{ weekday(item.createdAt) }}）</time>
+      <span class="notice-tag">{{ label(item.category) }}</span>
+    </header>
+    <h2 class="notice-hero__title">{{ item.title }}</h2>
+    <div class="notice-hero__body" [class.is-clamped]="!expanded.has(item.id)">
+      <app-social-post-content [content]="item.content || item.summary || ''" />
+    </div>
+    <button type="button" class="notice-more" (click)="toggle(item.id)" [attr.aria-expanded]="expanded.has(item.id)">
+      {{ expanded.has(item.id) ? '收合' : '展開全文' }}
+      <svg lucideChevronDown aria-hidden="true" focusable="false"></svg>
+    </button>
+  </article>
+}
+
+@if (earlier.length > 0) {
   <section class="notice-archive" aria-labelledby="notice-archive-title">
-    <h2 id="notice-archive-title" class="notice-archive__title">全部公告</h2>
+    <h2 id="notice-archive-title" class="notice-archive__title">過往公告</h2>
     <ul class="notice-list">
-      @for (item of announcements; track item.id) {
-        <li class="notice-item" [class.is-open]="expanded.has(item.id)">
+      @for (item of earlier; track item.id) {
+        <li class="notice-card" [class.is-open]="expanded.has(item.id)">
           <button type="button" class="notice-row" (click)="toggle(item.id)" [attr.aria-expanded]="expanded.has(item.id)">
-            <span class="notice-row__date" aria-hidden="true"><small>{{ item.createdAt | date: 'yyyy' }}</small><strong>{{ item.createdAt | date: 'MM/dd' }}</strong></span>
+            <span class="notice-date" aria-hidden="true">
+              <small>{{ item.createdAt | date: 'M月' }}</small>
+              <strong>{{ item.createdAt | date: 'd' }}</strong>
+              <em>{{ item.createdAt | date: 'yyyy' }}</em>
+            </span>
             <span class="notice-row__main">
               <span class="notice-row__title">{{ item.title }}</span>
-              <span class="notice-row__tag">{{ label(item.category) }}</span>
+              @if (!expanded.has(item.id)) {
+                <span class="notice-row__excerpt">{{ excerpt(item) }}</span>
+              }
+              <span class="notice-tag">{{ label(item.category) }}</span>
             </span>
             <svg class="notice-row__chev" lucideChevronDown aria-hidden="true" focusable="false"></svg>
           </button>
           @if (expanded.has(item.id)) {
-            <div class="notice-item__body"><app-social-post-content [content]="item.content || item.summary || ''" /></div>
+            <div class="notice-card__body"><app-social-post-content [content]="item.content || item.summary || ''" /></div>
           }
         </li>
       }

@@ -12,7 +12,8 @@ describe('SocialEventContentComponent', () => {
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('.excerpt')?.textContent).toBe('歡迎參加');
-    expect(root.querySelectorAll('dd').length).toBe(3);
+    expect(root.querySelector('.ev__date')?.textContent).toContain('13');
+    expect(root.querySelector('.ev__time')?.textContent).toContain('14:00');
     expect(root.textContent).toContain('臺北市信義區市府路45號');
     expect(root.textContent).toContain('6 人');
   });

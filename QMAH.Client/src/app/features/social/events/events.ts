@@ -12,6 +12,9 @@ import { finalize, Subscription } from 'rxjs';
 import { CreateSocialEventRequest, EventListItem, SocialApiService, SocialMedia } from '../../../core/services/social-api';
 import { ImageCropModalComponent } from '../../../shared/components/image-crop-modal/image-crop-modal';
 import { LocationPick, LocationPickerComponent } from '../../../shared/components/location-picker/location-picker';
+import { SocialToolbarComponent, UPCOMING_DATE_PRESETS } from '../../../shared/components/social-toolbar/social-toolbar';
+import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
+import { eventMode, eventPlace } from '../social-labels';
 import { SocialShellComponent } from '../../../shared/components/social-shell/social-shell';
 import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
 import { SocialLive } from '../../../core/services/social-live';
@@ -23,7 +26,7 @@ const MAX_EVENT_CAPACITY = 10000;
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [SocialSpotlightComponent, SocialShellComponent, CommonModule, FormsModule, RouterLink, ImageCropModalComponent, LocationPickerComponent, LucideArrowRight, LucideCalendarClock, LucideMapPin, LucidePlus, LucideUsers, LucideX, UserAvatarComponent],
+  imports: [SocialSpotlightComponent, SocialShellComponent, SocialToolbarComponent, CommonModule, FormsModule, RouterLink, ImageCropModalComponent, LocationPickerComponent, LucideArrowRight, LucideCalendarClock, LucideMapPin, LucidePlus, LucideUsers, LucideX, UserAvatarComponent],
   templateUrl: './events.html',
   styleUrls: ['../social-common.scss', './events.scss']
 })
@@ -76,6 +79,34 @@ export class EventsComponent implements OnInit, OnDestroy {
   filterKeyword = '';
   filterStartAfter = '';
   filterStartBefore = '';
+  totalCount = 0;
+  readonly datePresets = UPCOMING_DATE_PRESETS;
+  readonly eventMode = eventMode;
+  readonly eventPlace = eventPlace;
+
+  private readonly view = inject(SocialViewPreferences);
+  /** 每列幾張活動卡：沒存過偏好時，寬版三欄、標準兩欄。 */
+  eventCols: 1 | 2 | 3 = this.readEventCols();
+
+  private readEventCols(): 1 | 2 | 3 {
+    const fallback = this.view.wide() ? 3 : 2;
+    try {
+      const saved = Number(localStorage.getItem('qmah-social-event-cols'));
+      return saved === 1 || saved === 2 || saved === 3 ? saved : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  setEventCols(cols: 1 | 2 | 3): void {
+    this.eventCols = cols;
+    try { localStorage.setItem('qmah-social-event-cols', String(cols)); } catch { /* 只在這次有效 */ }
+    this.cdr.detectChanges();
+  }
+
+  get hasFilter(): boolean {
+    return !!(this.filterKeyword.trim() || this.filterStartAfter || this.filterStartBefore);
+  }
 
   ngOnInit(): void {
     this.liveSubscription = this.socialLive.changes.subscribe(() => this.loadEvents());
@@ -118,6 +149,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (page) => {
         this.events = page.items;
+        this.totalCount = page.totalCount;
         this.cdr.detectChanges();
       },
       error: (err) => {

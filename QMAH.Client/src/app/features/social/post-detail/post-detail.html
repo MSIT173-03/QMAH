@@ -17,6 +17,9 @@
       <span class="social-tag">{{ boardLabel(post.boardCode) }}</span>
       <time [attr.datetime]="post.createdAt">{{ post.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
       @if (!editingPost) {
+        <button type="button" class="social-bookmark" [class.is-on]="post.isBookmarked" [attr.aria-pressed]="!!post.isBookmarked" (click)="toggleBookmark()">
+          <svg lucideBookmark aria-hidden="true" focusable="false"></svg>{{ post.isBookmarked ? '已收藏' : '收藏' }}
+        </button>
         <div class="dropdown dropdown-end social-post-head__menu">
           <button type="button" tabindex="0" class="social-comment__menu" aria-label="更多操作" aria-haspopup="menu"><svg lucideEllipsis aria-hidden="true" focusable="false"></svg></button>
           <ul tabindex="0" class="dropdown-content menu social-menu" role="menu">
