@@ -9,7 +9,7 @@ namespace QMAH.Infrastructure.Services.Social;
 /// 前端以節點樹輸出元素與文字插值，後端（API 摘要、後台預覽）用這個類別。語法與白名單必須與
 /// QMAH.Client/src/app/shared/social-markup.ts 保持一致。
 /// 支援的標記（不分大小寫，可巢狀；不成對的標記自動補齊，未知標記原樣顯示）：
-///   [b] [i] [u] [s]　[size=small|large|xlarge]　[color=red|brown|green|blue|gold|gray]
+///   [b] [i] [u] [s]　[size=small|large|xlarge]　[color=red|brown|green|blue|gold|gray|orange|olive|teal|purple|pink|ink]
 ///   [h]小標題[/h]　[quote]引用[/quote]　[list][*]項目[/list]　[center]置中[/center]
 ///   [spoiler]劇透[/spoiler]　[url=https://…]連結文字[/url]（只允許 http／https）　[hr]分隔線
 ///   [img=圖片識別碼]（留言附圖：只接受本站上傳圖片的 GUID，不接受外部網址）
@@ -18,7 +18,7 @@ namespace QMAH.Infrastructure.Services.Social;
 public static class SocialMarkup
 {
     private static readonly string[] Sizes = ["small", "large", "xlarge"];
-    private static readonly string[] Colors = ["red", "brown", "green", "blue", "gold", "gray"];
+    private static readonly string[] Colors = ["red", "brown", "green", "blue", "gold", "gray", "orange", "olive", "teal", "purple", "pink", "ink"];
     private static readonly HashSet<string> BlockTags = ["h", "quote", "list", "center", "spoiler"];
     private const int MaxDepth = 8;
     private const int MaxNodes = 4000;

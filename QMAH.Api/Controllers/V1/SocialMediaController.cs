@@ -136,6 +136,9 @@ public sealed class SocialMediaController(
         if (!System.IO.File.Exists(physicalPath))
             return NotFound();
 
+        // 圖片網址以識別碼為準、內容不會變：讓瀏覽器快取一小時（貼文被隱藏或圖片刪除後最多延遲一小時消失），
+        // PhysicalFile 另外會帶 ETag／Last-Modified，過期後只需要 304 重新驗證。
+        Response.Headers.CacheControl = "private, max-age=3600";
         return PhysicalFile(physicalPath, asset.ContentType, enableRangeProcessing: true);
     }
 

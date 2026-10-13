@@ -644,6 +644,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.Use(async (context, next) =>
 {
+    // 社群圖片內容是唯讀、可快取的：不發防偽 Cookie。一旦呼叫 GetAndStoreTokens，框架會把回應強制改成
+    // no-store，每張圖每次瀏覽都得重新下載，貼文牆與熱門區的縮圖就會明顯變慢。
+    if (HttpMethods.IsGet(context.Request.Method)
+        && context.Request.Path.StartsWithSegments("/api/v1/social/media")
+        && context.Request.Path.Value!.EndsWith("/content", StringComparison.OrdinalIgnoreCase))
+    {
+        await next(context);
+        return;
+    }
+
     var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
     var tokens = antiforgery.GetAndStoreTokens(context);
 

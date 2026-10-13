@@ -62,13 +62,19 @@ public sealed class SocialController(
         DateTime? createdAfter,
         DateTime? createdBefore,
         string? sort,
+        bool? bookmarked,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
+        var hasCurrentUser = TryGetCurrentUserId(out var currentUserId);
+        if (bookmarked == true && !hasCurrentUser)
+            return Unauthorized();
         var query = db.SocialPosts
             .AsNoTracking()
             .Where(post => post.Status == "PUBLISHED");
+        if (bookmarked == true)
+            query = query.Where(post => db.PostBookmarks.Any(mark => mark.UserId == currentUserId && mark.PostId == post.Id));
         q = q?.Trim();
         boardCode = boardCode?.Trim().ToUpperInvariant();
         postType = postType?.Trim().ToUpperInvariant();
@@ -137,7 +143,15 @@ public sealed class SocialController(
                     .OrderBy(media => media.CreatedAt).ThenBy(media => media.SequenceNo)
                     .Take(5)
                     .Select(media => "/api/v1/social/media/" + media.Id + "/content")
-                    .ToList()));
+                    .ToList(),
+                hasCurrentUser && db.PostBookmarks.Any(mark => mark.UserId == currentUserId && mark.PostId == post.Id),
+                post.PublisherType == "COMMUNITY"
+                    ? db.UserAchievements
+                        .Where(item => item.UserId == post.UserId && item.IsDisplayed && item.Achievement.Status == "ACTIVE")
+                        .OrderByDescending(item => item.DisplayedAt ?? item.AchievedAt)
+                        .Select(item => item.Achievement.Title)
+                        .FirstOrDefault()
+                    : null));
 
         var postPage = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
         // 摘要要去掉格式標記（資料庫只截取前段文字，標記在這裡解析成純文字再截成 180 字）。
@@ -284,6 +298,63 @@ public sealed class SocialController(
             isPublic,
             postCount,
             eventCount));
+    }
+
+    private const int MemberMessagesPerHour = 5;
+
+    // 留言給會員：不另開私訊表，直接送進對方的通知中心（點通知可回到留言者的個人頁回覆）。
+    // 比照貼文與留言，過關鍵字 BLOCK 與洗版規則；同一人對同一位會員每小時最多 5 則。
+    [Authorize]
+    [EnableRateLimiting("socialContent")]
+    [HttpPost("members/{userId:guid}/message")]
+    public async Task<IActionResult> SendMemberMessage(
+        Guid userId,
+        SendMemberMessageRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var senderId))
+            return Unauthorized();
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+        if (senderId == userId)
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "不能留言給自己", detail: "請到其他會員的個人頁留言。");
+
+        var sender = await db.UserProfiles.AsNoTracking()
+            .Where(item => item.UserId == senderId && item.User.Status == "ACTIVE")
+            .Select(item => item.Nickname)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (sender is null)
+            return Forbid();
+        if (!await db.Users.AnyAsync(user => user.Id == userId && user.Status == "ACTIVE", cancellationToken))
+            return MissingResource("找不到會員", "這位會員不存在或已停用。");
+
+        var content = request.Content.Trim();
+        if (content.Length == 0)
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "內容不可為空", detail: "請輸入想留給對方的話。");
+        var keywordMatches = await keywordFilterService.ScanAsync(content, cancellationToken);
+        if (keywordMatches.Any(match => match.Action == "BLOCK") || ContentFloodRules.LooksLikeFlood(content))
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "內容無法送出", detail: "留言包含被禁止的字詞或大量重複內容，請修改後再送出。");
+
+        var targetUrl = $"/social/members/{senderId}";
+        var since = DateTime.UtcNow.AddHours(-1);
+        var recent = await db.UserNotifications.CountAsync(
+            item => item.UserId == userId && item.TargetUrl == targetUrl && item.Title.EndsWith("留言給你") && item.CreatedAt >= since,
+            cancellationToken);
+        if (recent >= MemberMessagesPerHour)
+            return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "留言太頻繁", detail: "你在一小時內已經留了不少話，請稍後再試。");
+
+        db.UserNotifications.Add(new UserNotification
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Title = $"{sender} 留言給你",
+            Content = content,
+            TargetUrl = targetUrl,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync(cancellationToken);
+        return NoContent();
     }
 
     // 標準看板清單 + 資料庫既有的看板代碼合併，讓前端的篩選選單不會漏掉舊資料用過的看板
@@ -486,7 +557,41 @@ public sealed class SocialController(
             post.UpdatedAt,
             null,
             post.MediaLayout,
-            authorTitle));
+            authorTitle,
+            TryGetCurrentUserId(out var viewerId)
+                && await db.PostBookmarks.AnyAsync(mark => mark.UserId == viewerId && mark.PostId == post.Id, cancellationToken)));
+    }
+
+    // 收藏／取消收藏：都要登入，重複操作不會出錯（PUT 已收藏、DELETE 沒收藏都回 204）。
+    [HttpPut("posts/{id:guid}/bookmark")]
+    public async Task<IActionResult> BookmarkPost(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        if (!await db.SocialPosts.AnyAsync(post => post.Id == id && post.Status == "PUBLISHED", cancellationToken))
+            return MissingResource("找不到貼文", "這篇貼文不存在或目前不可見。");
+        if (!await db.PostBookmarks.AnyAsync(mark => mark.UserId == userId && mark.PostId == id, cancellationToken))
+        {
+            db.PostBookmarks.Add(new PostBookmark { UserId = userId, PostId = id });
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException)
+            {
+                // 同一位會員幾乎同時按兩次：另一個請求已經寫入，結果一致，視為成功。
+            }
+        }
+        return NoContent();
+    }
+
+    [HttpDelete("posts/{id:guid}/bookmark")]
+    public async Task<IActionResult> UnbookmarkPost(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        await db.PostBookmarks.Where(mark => mark.UserId == userId && mark.PostId == id).ExecuteDeleteAsync(cancellationToken);
+        return NoContent();
     }
 
     [HttpGet("events")]

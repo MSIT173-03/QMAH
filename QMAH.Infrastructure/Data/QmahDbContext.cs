@@ -44,6 +44,10 @@ public partial class QmahDbContext
 
     public virtual DbSet<ContentKeyword> ContentKeywords { get; set; }
 
+    public virtual DbSet<PostBookmark> PostBookmarks { get; set; }
+
+    public virtual DbSet<DirectMessage> DirectMessages { get; set; }
+
     public virtual DbSet<ContentModerationSetting> ContentModerationSettings { get; set; }
 
     public virtual DbSet<CouponDefinition> CouponDefinitions { get; set; }
@@ -361,6 +365,34 @@ public partial class QmahDbContext
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(3)
                 .HasDefaultValueSql("(sysutcdatetime())", "DF_ContentKeywords_Created");
+        });
+
+        // 收藏與私訊：和 ContentKeyword 一樣不建到 AspNetUsers 的導覽，FK 約束只在資料庫層面。
+        modelBuilder.Entity<PostBookmark>(entity =>
+        {
+            entity.ToTable("PostBookmarks", "social");
+            entity.HasKey(e => new { e.UserId, e.PostId });
+            entity.HasIndex(e => e.PostId, "IX_PostBookmarks_Post");
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_PostBookmarks_Created");
+            entity.HasOne<SocialPost>().WithMany()
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_PostBookmarks_Post");
+        });
+
+        modelBuilder.Entity<DirectMessage>(entity =>
+        {
+            entity.ToTable("DirectMessages", "social");
+            entity.HasIndex(e => new { e.SenderUserId, e.RecipientUserId, e.CreatedAt }, "IX_DirectMessages_Pair").IsDescending(false, false, true);
+            entity.HasIndex(e => new { e.RecipientUserId, e.ReadAt, e.CreatedAt }, "IX_DirectMessages_Inbox").IsDescending(false, false, true);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Content).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(3)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_DirectMessages_Created");
+            entity.Property(e => e.ReadAt).HasPrecision(3);
         });
 
         // 洗版防治的 SimHash 設定只會有一列（Id 固定為 1），寫法比照 GameEconomySettings：

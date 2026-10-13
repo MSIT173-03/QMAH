@@ -787,6 +787,7 @@ public sealed class MeController(
         int page = 1,
         int pageSize = 20,
         bool? isRead = null,
+        string? category = null,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var userId))
@@ -797,7 +798,15 @@ public sealed class MeController(
         var unreadCount = await allNotifications.CountAsync(item => !item.IsRead, cancellationToken);
         var totalNotificationCount = await allNotifications.CountAsync(cancellationToken);
         var readCount = totalNotificationCount - unreadCount;
-        var query = allNotifications
+        // 類別由通知要導向的頁面判斷：SOCIAL＝貼文／留言／會員，EVENT＝活動，SYSTEM＝其餘（圖鑑、訂單、帳號等）。
+        var byCategory = (category ?? "").ToUpperInvariant() switch
+        {
+            "SOCIAL" => allNotifications.Where(item => item.TargetUrl != null && (item.TargetUrl.StartsWith("/social/posts") || item.TargetUrl.StartsWith("/social/members"))),
+            "EVENT" => allNotifications.Where(item => item.TargetUrl != null && item.TargetUrl.StartsWith("/social/events")),
+            "SYSTEM" => allNotifications.Where(item => item.TargetUrl == null || !(item.TargetUrl.StartsWith("/social/posts") || item.TargetUrl.StartsWith("/social/members") || item.TargetUrl.StartsWith("/social/events"))),
+            _ => allNotifications,
+        };
+        var query = byCategory
             .Where(notification => isRead == null || notification.IsRead == isRead.Value)
             .OrderByDescending(notification => notification.CreatedAt)
             .Select(notification => new NotificationDto(

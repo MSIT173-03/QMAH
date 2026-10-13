@@ -215,7 +215,9 @@ public sealed record SocialPostListItemDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     SocialPostEventSummaryDto? EventSummary = null,
-    IReadOnlyList<string>? ImageUrls = null);
+    IReadOnlyList<string>? ImageUrls = null,
+    bool IsBookmarked = false,
+    string? AuthorTitle = null);
 
 public sealed record SocialPostEventSummaryDto(
     DateTime StartAt,
@@ -261,7 +263,8 @@ public sealed record SocialPostDetailsDto(
     DateTime UpdatedAt,
     string? ContentHtml = null,
     string MediaLayout = "SECONDARY",
-    string? AuthorTitle = null);
+    string? AuthorTitle = null,
+    bool IsBookmarked = false);
 
 public sealed record SocialPopularPostDto(Guid Id, string BoardCode, string Title, DateTime CreatedAt,
     int ParticipantCount, int CommentCount, string? CoverImageUrl = null, string? DisplayName = null, int HeatPercent = 0);
@@ -398,6 +401,12 @@ public sealed class CreateSocialEventRequest
 
     [MaxLength(8)]
     public List<Guid> MediaIds { get; set; } = [];
+}
+
+public sealed class SendMemberMessageRequest
+{
+    [Required, StringLength(300, MinimumLength = 1)]
+    public string Content { get; set; } = "";
 }
 
 public sealed class CreateSocialCommentRequest
