@@ -96,6 +96,9 @@
   .scroll-top {
     position: fixed;
     right: max(16px, env(safe-area-inset-right));
-    bottom: calc(24px + env(safe-area-inset-bottom));
+    bottom: calc(24px + env(safe-area-inset-bottom) + var(--qmah-mobile-footer-lift, 0px));
+    visibility: var(--qmah-mobile-tools-visibility, visible);
   }
+  :host-context(body:has(dialog[open])) .scroll-top,
+  :host-context(body:has(.app-mobile-drawer.is-open)) .scroll-top { visibility: hidden; pointer-events: none; }
 }

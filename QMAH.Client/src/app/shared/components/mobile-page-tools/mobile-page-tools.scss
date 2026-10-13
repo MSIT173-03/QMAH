@@ -1,0 +1,60 @@
+@use '../../styles/responsive-breakpoints' as responsive;
+
+:host { display: none; }
+
+@include responsive.phone {
+  :host {
+    display: block;
+    position: fixed;
+    left: max(12px, env(safe-area-inset-left));
+    bottom: calc(24px + env(safe-area-inset-bottom) + var(--qmah-mobile-footer-lift, 0px));
+    z-index: 45;
+    visibility: var(--qmah-mobile-tools-visibility, visible);
+  }
+  :host-context(body:has(dialog[open])),
+  :host-context(body:has(.app-mobile-drawer.is-open)) { visibility: hidden; pointer-events: none; }
+  .page-tools { display: grid; justify-items: start; gap: 8px; }
+  .page-tools__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 1px solid var(--qmah-border);
+    border-radius: 999px;
+    background: var(--qmah-surface-elevated);
+    color: var(--qmah-ink);
+    box-shadow: var(--qmah-shadow-float);
+    font: 700 14px/1 var(--qmah-font-sans);
+  }
+  .page-tools__trigger svg { width: 20px; height: 20px; }
+  .page-tools__panel {
+    width: min(248px, calc(100vw - 24px));
+    max-height: min(420px, calc(100dvh - 176px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px;
+    border: 1px solid var(--qmah-border);
+    border-radius: var(--qmah-radius-panel);
+    background: var(--qmah-surface-elevated);
+    color: var(--qmah-ink);
+    box-shadow: var(--qmah-shadow-float);
+  }
+  .page-tools__panel strong { display: block; padding: 8px 10px; font-size: 13px; color: var(--qmah-muted); }
+  .page-tools__panel button {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: var(--qmah-radius-control);
+    background: transparent;
+    color: inherit;
+    font: 600 15px/1.5 var(--qmah-font-sans);
+    text-align: left;
+  }
+  .page-tools__panel button:hover { background: var(--qmah-surface-soft); }
+  button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 2px; }
+}

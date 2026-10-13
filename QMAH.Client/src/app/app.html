@@ -1,4 +1,5 @@
 <router-outlet />
+@defer (when phoneViewport()) { <app-mobile-page-tools /> }
 @if (pageReady.showLoader() && !pageReady.hasShell()) { <app-page-loader style="position:fixed;inset:0;z-index:1200" /> }
 @defer (when confirmation.current()) { <app-confirmation-dialog /> }
 @defer (when toast.toasts().length > 0) { <app-toast-container /> }

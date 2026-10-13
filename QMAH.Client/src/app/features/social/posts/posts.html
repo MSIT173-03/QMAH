@@ -9,7 +9,6 @@
     </button>
   </header>
 
-  <app-mobile-page-jumps [items]="mobileSections" />
 
   <!-- 看板分類：桌面在左側固定欄，手機變成橫向可捲動的標籤；與下方「看板」下拉同步，兩邊都能切換。 -->
   <app-social-shell id="social-boards" [activeBoard]="filterBoardCode" [inline]="true" (boardSelect)="selectBoard($event)">

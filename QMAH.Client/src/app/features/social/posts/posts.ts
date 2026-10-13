@@ -19,7 +19,6 @@ import { SocialShellComponent } from '../../../shared/components/social-shell/so
 import { SocialBoardsStore } from '../social-boards';
 import { SocialViewPreferences } from '../../../core/services/social-view-preferences';
 import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
-import { MobilePageJumps } from '../../../shared/components/mobile-page-jumps/mobile-page-jumps';
 import {
   LucideExternalLink,
   LucideFlag,
@@ -45,7 +44,7 @@ import {
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [MobilePageJumps, SocialSpotlightComponent, SocialShellComponent,
+  imports: [SocialSpotlightComponent, SocialShellComponent,
     CommonModule,
     FormsModule,
     RouterLink,
@@ -78,11 +77,6 @@ import {
   styleUrls: ['../social-common.scss', './posts.scss']
 })
 export class PostsComponent implements OnInit, OnDestroy {
-  readonly mobileSections = [
-    { targetId: 'social-boards', label: '切換看板' },
-    { targetId: 'social-post-search', label: '搜尋與篩選' },
-    { targetId: 'social-posts', label: '貼文列表' },
-  ];
   private socialApi = inject(SocialApiService);
   private cdr = inject(ChangeDetectorRef);
   private meApi = inject(MeApiService);
