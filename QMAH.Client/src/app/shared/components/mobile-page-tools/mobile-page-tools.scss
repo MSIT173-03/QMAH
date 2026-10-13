@@ -32,7 +32,7 @@
   .page-tools__trigger svg { width: 20px; height: 20px; }
   .page-tools__panel {
     width: min(248px, calc(100vw - 24px));
-    max-height: min(420px, calc(100dvh - 176px));
+    max-height: min(420px, calc(100dvh - 148px - var(--qmah-mobile-footer-lift, 0px)));
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 8px;

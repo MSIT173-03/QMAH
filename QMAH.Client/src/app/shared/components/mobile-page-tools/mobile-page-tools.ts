@@ -134,7 +134,7 @@ export class MobilePageTools {
       const footer = this.document.querySelector('app-site-footer footer');
       const lift = view.innerWidth < 768 && footer ? Math.max(0, view.innerHeight - footer.getBoundingClientRect().top) : 0;
       this.document.documentElement.style.setProperty('--qmah-mobile-footer-lift', `${lift}px`);
-      this.document.documentElement.style.setProperty('--qmah-mobile-tools-visibility', lift > view.innerHeight - 120 ? 'hidden' : 'visible');
+      this.document.documentElement.style.setProperty('--qmah-mobile-tools-visibility', lift > view.innerHeight - 252 ? 'hidden' : 'visible');
     });
   }
 }
