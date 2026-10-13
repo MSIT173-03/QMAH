@@ -630,3 +630,13 @@
 .achievement-card .display-button { min-height: 38px; }
 .achievement-more { display: block; margin: 18px auto 0; padding: 7px 24px; border: 1px solid color-mix(in srgb, var(--qmah-ink) 25%, transparent); border-radius: 999px; background: transparent; color: var(--qmah-ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .achievement-more:hover { background: color-mix(in srgb, var(--qmah-ink) 8%, transparent); }
+
+/* 獎盃改成右上角的淡淡浮水印（不再是色塊按鈕），文字與資訊列全部左對齊、同一個內距 */
+.achievement-card { overflow: hidden; isolation: isolate; }
+.achievement-card .achievement-icon {
+  top: 6px; right: 8px; width: 96px; height: 96px; border-radius: 0; background: transparent; box-shadow: none;
+  color: color-mix(in srgb, var(--ac) 16%, transparent); transform: rotate(-12deg); pointer-events: none; z-index: -1;
+}
+.achievement-card .achievement-icon app-qmah-icon { width: 96px; height: 96px; }
+.achievement-card .title, .achievement-card .achievement-card-header { padding-right: 0; }
+.achievement-card .title, .achievement-card .description, .achievement-card .achievement-info, .achievement-card .title-action, .achievement-card .display-button { margin-left: 0; margin-right: 0; }
