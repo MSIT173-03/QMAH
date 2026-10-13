@@ -1,10 +1,10 @@
 <div class="security-page">
   <app-back-to-member />
+  <app-member-title title="帳號安全" tag="ACCOUNT SECURITY" />
   <section class="security-card" aria-labelledby="security-title">
     <header class="security-header">
       <span class="security-icon"><app-qmah-icon name="lock-keyhole" /></span>
-      <span class="eyebrow">ACCOUNT SECURITY</span>
-      <h1 id="security-title">帳號安全</h1>
+      <h2 id="security-title" class="security-heading">保護你的帳號</h2>
       <p>定期更新密碼，保護你的會員資料與資產。</p>
     </header>
     @if (errorMessage) { <div class="message error" role="alert">{{ errorMessage }}</div> }

@@ -11,31 +11,12 @@
   <!-- Header -->
   <!-- =============================== -->
 
-  <div class="page-header">
-
-    <div>
-      <span class="page-eyebrow">
-        SHIPPING ADDRESS
-      </span>
-
-      <h1>我的地址</h1>
-
-      <p>
-        管理你的收件地址與預設配送地址
-      </p>
-    </div>
-
-
-    <button
-      type="button"
-      class="add-address-button"
-      (click)="openAddForm()"
-    >
+  <app-member-title title="我的地址" tag="SHIPPING ADDRESS" desc="管理你的收件地址與預設配送地址">
+    <button type="button" class="add-address-button" (click)="openAddForm()">
       <app-qmah-icon name="plus" />
       新增地址
     </button>
-
-  </div>
+  </app-member-title>
 
 
   <!-- =============================== -->

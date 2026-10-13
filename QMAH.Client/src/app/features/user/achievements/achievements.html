@@ -8,21 +8,7 @@
   <!-- 頁面標題 -->
   <!-- ===================== -->
 
-  <div class="page-header">
-
-    <div>
-
-      <h1>
-        成就與稱號
-      </h1>
-
-      <p>
-        查看已取得的成就，並選擇你想展示的稱號。
-      </p>
-
-    </div>
-
-  </div>
+  <app-member-title title="成就與稱號" tag="ACHIEVEMENTS" desc="查看已取得的成就，並選擇你想展示的稱號。" />
 
 
   <!-- ===================== -->
@@ -203,6 +189,7 @@
 
           <div
             class="achievement-card"
+            [attr.data-kind]="achievementKind(achievement.conditionType)"
             [class.displayed]="achievement.isDisplayed"
           >
 

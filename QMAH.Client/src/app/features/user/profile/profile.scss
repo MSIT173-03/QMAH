@@ -1091,3 +1091,20 @@
   --qmah-primary-hover: #cbd3f5;
   --qmah-primary-content: #12141c;
 }
+
+/* ===== 個人資料卡片：資訊列加圖示色塊、點數卡簡化成單色、右欄小卡統一風格 ===== */
+.profile-page .info-row, .profile-page .detail-row { align-items: center; }
+.profile-page .section-card, .profile-page .info-card, .profile-page .side-card {
+  border-radius: 16px; box-shadow: 0 1px 2px rgb(30 36 60 / 8%), 0 8px 20px rgb(30 36 60 / 6%);
+}
+
+.profile-page .info-section { border-radius: 16px; }
+.profile-page .info-section h3 { display: flex; align-items: center; gap: 10px; color: var(--qmah-primary); }
+.profile-page .info-section h3::before { content: ''; width: 10px; height: 10px; border-radius: 3px; background: var(--qmah-primary); }
+.profile-page .detail-list .detail-row:nth-child(even) { background: color-mix(in srgb, var(--qmah-primary) 5%, transparent); }
+.profile-page .detail-list .detail-row { padding-inline: 12px; border-radius: 8px; }
+.profile-page .point-card { background: #b07a2c; color: #fff; border-color: transparent; box-shadow: 0 8px 22px color-mix(in srgb, #b07a2c 30%, transparent); }
+.profile-page .point-card .point-label, .profile-page .point-card .point-unit { color: rgb(255 255 255 / 88%); }
+.profile-page .point-card .point-value { color: #fff; }
+.profile-page .side-info:nth-of-type(2) { background: color-mix(in srgb, #2f7468 9%, var(--qmah-surface-elevated)); border-color: color-mix(in srgb, #2f7468 35%, var(--qmah-border)); }
+.profile-page .side-info:nth-of-type(3) { background: color-mix(in srgb, #43599a 9%, var(--qmah-surface-elevated)); border-color: color-mix(in srgb, #43599a 35%, var(--qmah-border)); }

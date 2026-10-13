@@ -678,7 +678,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
         const seq = ++this.revealSeq;
         this.revealScope.set('book');
         this.reveal.set('pending');
-        this.later(150, () => this.runReveal(seq));
+        this.later(30, () => this.runReveal(seq));
       }
     }
 
@@ -772,10 +772,10 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     this.revealScope.set('book');
     this.reveal.set('pending');
     this.bookState.set('opening');
-    this.later(1200, () => {
+    this.later(880, () => {
       this.bookState.set('open');
       // 攤平後停一拍再抽起選中的頁籤
-      this.later(150, () => this.runReveal(seq));
+      this.later(30, () => this.runReveal(seq));
     });
   }
 
@@ -813,7 +813,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.bookState.set('closing');
-    this.later(1100, finish);
+    this.later(800, finish);
   }
 
   onCoverKeydown(event: KeyboardEvent): void {

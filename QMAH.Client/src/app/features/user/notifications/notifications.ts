@@ -1,11 +1,12 @@
 import { finalize, Subject, Subscription, takeUntil } from 'rxjs';
+import { MemberTitle } from '../../../shared/member-title/member-title';
 import { MeApiService } from '../../../core/services/me-api';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationLive } from '../../../core/services/notification-live';
 import {
   ChangeDetectorRef,
   Component,
-  OnInit, DestroyRef, effect, inject
+  OnInit, DestroyRef, ElementRef, effect, inject, viewChild
 } from '@angular/core';
 
 import {
@@ -60,6 +61,7 @@ type NotificationFilter =
   selector: 'app-notifications',
 
   imports: [
+    MemberTitle,
     CommonModule,
     BackToMember,
     QmahIconComponent
@@ -78,6 +80,17 @@ export class Notifications implements OnInit {
   private sessionId: string | null = null;
   private generation = 0;
   private loadSequence = 0;
+  /** 清單底部的哨兵進入畫面（提前 300px）就載入下一頁 */
+  private readonly autoLoad = effect((onCleanup) => {
+    const el = this.sentinel()?.nativeElement;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) this.loadMore();
+    }, { rootMargin: '300px' });
+    observer.observe(el);
+    onCleanup(() => observer.disconnect());
+  });
+
   private readonly sessionEffect = effect(() => {
     const id = this.meApi.me()?.id ?? null;
     if (id === this.sessionId) return;
@@ -103,6 +116,9 @@ export class Notifications implements OnInit {
 
 
   notifications: NotificationDto[] = [];
+  /** 捲到底自動載入下一頁：新一頁接在現有清單後面，而不是換掉整頁 */
+  private appending = false;
+  private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
 
   loading = false;
   errorMessage = '';
@@ -231,6 +247,13 @@ export class Notifications implements OnInit {
   }
 
 
+  loadMore(): void {
+    if (this.loading || !this.hasNextPage) return;
+    this.page++;
+    this.appending = true;
+    this.loadNotifications();
+  }
+
   nextPage(): void {
 
     if (
@@ -292,8 +315,8 @@ export class Notifications implements OnInit {
           // integration: 通知內容可能含會員資料，不再於正式流程輸出整包回應。
           // console.log('notifications:', data);
 
-          this.notifications =
-            data.items ?? [];
+          this.notifications = this.appending ? [...this.notifications, ...(data.items ?? [])] : (data.items ?? []);
+          this.appending = false;
           this.totalNotificationCount = data.totalNotificationCount ?? data.totalCount;
           this.unreadCount = data.unreadCount ?? 0;
           this.readCount = data.readCount ?? 0;
@@ -321,6 +344,7 @@ export class Notifications implements OnInit {
           if (generation !== this.generation) return;
           if (error.status === 401 || error.status === 403) { this.notifications = []; this.meApi.clear(); }
 
+          this.appending = false;
           this.errorMessage =
             '讀取通知資料失敗';
 

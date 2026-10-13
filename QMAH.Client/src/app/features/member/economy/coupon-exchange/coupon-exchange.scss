@@ -1,0 +1,43 @@
+:host { display: block; }
+
+.exchange { margin-top: 24px; padding: 20px; border: 1px solid var(--economy-line, rgb(0 0 0 / 12%)); border-radius: 16px; background: var(--economy-surface, #fff); box-shadow: 0 1px 2px rgb(30 36 60 / 8%), 0 6px 18px rgb(30 36 60 / 6%); }
+.exchange-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.exchange-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--economy-gold-soft, #f6efdd); color: var(--economy-gold, #b99a55); }
+.exchange-titles { flex: 1; min-width: 200px; }
+.exchange-titles h2 { margin: 0; font-size: 1.125rem; }
+.exchange-titles p { margin: 2px 0 0; color: var(--economy-muted); font-size: 0.875rem; }
+.exchange-balance { padding: 6px 14px; border: 1px solid var(--economy-gold, #b99a55); border-radius: 999px; background: var(--economy-gold-soft, #f6efdd); font-size: 0.875rem; }
+.exchange-balance strong { font-size: 1.0625rem; font-variant-numeric: tabular-nums; }
+
+.exchange-message { margin: 14px 0 0; padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, #2f7d4f 12%, transparent); color: #2f7d4f; font-weight: 700; }
+.exchange-message.is-error { background: color-mix(in srgb, #b23b32 12%, transparent); color: #b23b32; }
+.exchange-empty { margin: 18px 0 0; color: var(--economy-muted); }
+
+.exchange-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.exchange-card { display: flex; align-items: stretch; gap: 12px; padding: 12px; border: 1px dashed var(--economy-line, rgb(0 0 0 / 18%)); border-radius: 14px; background: color-mix(in srgb, var(--economy-gold-soft, #f6efdd) 40%, var(--economy-surface, #fff)); }
+.exchange-card.is-locked { opacity: 0.55; filter: grayscale(0.4); }
+.exchange-off { display: grid; place-items: center; min-width: 88px; padding: 0 8px; border-right: 1px dashed var(--economy-line, rgb(0 0 0 / 18%)); font-size: 1.125rem; font-weight: 800; color: var(--economy-gold, #8a6710); text-align: center; }
+.exchange-body { display: grid; align-content: center; gap: 2px; flex: 1; min-width: 0; }
+.exchange-body small { color: var(--economy-muted); }
+.exchange-cost, .exchange-confirm button { cursor: pointer; font: inherit; }
+.exchange-cost { display: grid; place-items: center; min-width: 76px; padding: 6px 10px; border: 1px solid var(--economy-gold, #b99a55); border-radius: 12px; background: var(--economy-gold-soft, #f6efdd); color: var(--economy-ink); }
+.exchange-cost small { font-size: 0.75rem; color: var(--economy-muted); }
+.exchange-cost:hover:not(:disabled) { background: var(--economy-gold, #b99a55); color: #2a2012; }
+.exchange-cost:disabled { cursor: not-allowed; }
+.exchange-confirm { display: grid; gap: 6px; align-content: center; }
+.exchange-confirm button { padding: 6px 14px; border: 1px solid var(--economy-line, rgb(0 0 0 / 18%)); border-radius: 10px; background: transparent; color: var(--economy-ink); font-weight: 700; }
+.exchange-confirm .is-go { border-color: var(--economy-gold, #b99a55); background: var(--economy-gold-soft, #f6efdd); }
+
+.exchange-more { display: inline-block; margin-top: 14px; color: var(--economy-ink); font-size: 0.875rem; font-weight: 700; text-decoration: none; border-bottom: 1px dashed var(--economy-gold, #b99a55); }
+.exchange-more:hover { color: var(--economy-gold, #8a6710); }
+
+/* 券色與商城兌換商店一致：金、玉青、酒紅、靛藍、墨紫輪替，券面左塊填滿色彩 */
+.exchange-card { --ec: #b07a2c; border-style: solid; border-color: color-mix(in srgb, var(--ec) 35%, var(--economy-line, #ddd)); background: color-mix(in srgb, var(--ec) 7%, var(--economy-surface, #fff)); }
+.exchange-card:nth-child(5n+2) { --ec: #2f7468; }
+.exchange-card:nth-child(5n+3) { --ec: #8a3447; }
+.exchange-card:nth-child(5n+4) { --ec: #43599a; }
+.exchange-card:nth-child(5n) { --ec: #6b5390; }
+.exchange-off { border-right: 0; border-radius: 10px; background: var(--ec); color: #fff; text-shadow: 0 1px 2px rgb(0 0 0 / 25%); }
+.exchange-cost { border-color: var(--ec); background: color-mix(in srgb, var(--ec) 10%, transparent); }
+.exchange-cost:hover:not(:disabled) { background: var(--ec); color: #fff; }
+.exchange-cost:hover:not(:disabled) small { color: rgb(255 255 255 / 85%); }

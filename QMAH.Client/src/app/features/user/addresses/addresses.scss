@@ -1318,3 +1318,21 @@ input:checked
   outline: 2px solid var(--qmah-focus);
   outline-offset: 3px;
 }
+
+/* 「修改」按鈕帶文字，不能被鎖成正方形，否則字會一個一個直排 */
+.edit-icon-button {
+  width: auto;
+  min-width: var(--qmah-control-height);
+  padding-inline: 12px;
+  white-space: nowrap;
+}
+
+/* ===== 讓地址頁有點色彩：預設地址用金色強調、地址卡用玉青點綴、圖示是填滿的色塊 ===== */
+.address-page .default-address-card { background: color-mix(in srgb, #b07a2c 10%, var(--qmah-surface-elevated)); border-color: color-mix(in srgb, #b07a2c 45%, var(--qmah-border)); }
+.address-page .default-badge { background: #b07a2c; color: #fff; }
+.address-page .address-icon { background: #b07a2c; color: #fff; }
+.address-page .address-grid .address-card { background: color-mix(in srgb, #2f7468 6%, var(--qmah-surface-elevated)); border-color: color-mix(in srgb, #2f7468 28%, var(--qmah-border)); }
+.address-page .address-grid .address-card:hover { border-color: #2f7468; box-shadow: 0 8px 20px color-mix(in srgb, #2f7468 18%, transparent); }
+.address-page .address-grid .address-icon { background: #2f7468; }
+.address-page .add-address-button { background: #2f7468; color: #fff; border-color: transparent; }
+.address-page .add-address-button:hover { background: #235a50; }

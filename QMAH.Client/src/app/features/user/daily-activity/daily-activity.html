@@ -6,30 +6,14 @@
   <!-- 頁面標題 -->
   <!-- =============================== -->
 
-  <div class="page-header">
-
-    <div class="page-title-row">
-
-      <div>
-        <h1>每日登入</h1>
-
-        <p>
-          每天回來看看，累積你的登入紀錄與連續登入天數。
-        </p>
-      </div>
-
+  <app-member-title title="每日登入" tag="DAILY CHECK-IN" desc="每天回來看看，累積你的登入紀錄與連續登入天數。">
       @if (dailyActivity?.hasCheckedInToday) {
-
         <div class="today-status">
           <span class="today-status-dot"></span>
           今日獎勵已領取
         </div>
-
       }
-
-    </div>
-
-  </div>
+  </app-member-title>
 
 
   <!-- =============================== -->

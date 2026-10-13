@@ -1,3 +1,4 @@
+using QMAH.Infrastructure.Services.Economy;
 using System.ComponentModel.DataAnnotations;
 
 namespace QMAH.Api.Controllers.V1;
@@ -143,3 +144,6 @@ public sealed class SetEquippedTitleRequest
 {
     public Guid? UserAchievementId { get; set; }
 }
+
+/// <summary>點數／鑰匙流水的分頁回應。</summary>
+public sealed record LedgerPageDto(int Total, IReadOnlyList<LedgerRow> Items);

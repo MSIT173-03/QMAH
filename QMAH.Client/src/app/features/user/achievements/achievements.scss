@@ -573,3 +573,27 @@
   }
 
 }
+
+/* ===== 上色：摘要卡與每張成就卡各有自己的色彩，獎盃圖示填滿色塊、卡面淡淡染色 ===== */
+.achievement-card { --ac: #43599a; }
+.achievement-card[data-kind='artifact'] { --ac: #b07a2c; }
+.achievement-card[data-kind='login'] { --ac: #2f7468; }
+.achievement-card {
+  background: color-mix(in srgb, var(--ac) 7%, var(--qmah-surface-elevated));
+  border-color: color-mix(in srgb, var(--ac) 35%, var(--qmah-border));
+}
+.achievement-card .achievement-icon { background: var(--ac); color: #fff; box-shadow: 0 6px 14px color-mix(in srgb, var(--ac) 35%, transparent); }
+.achievement-card .title { color: var(--ac); }
+.achievement-card .achievement-info { background: color-mix(in srgb, var(--ac) 9%, transparent); border-radius: 10px; }
+.achievement-card .display-badge { background: var(--ac); color: #fff; }
+.achievement-card .display-button { border-color: var(--ac); color: var(--ac); }
+.achievement-card .display-button:hover { background: var(--ac); color: #fff; }
+.achievement-card .display-button.active { background: var(--ac); color: #fff; }
+
+.summary-section .summary-card { background: color-mix(in srgb, #b07a2c 10%, var(--qmah-surface-elevated)); border-color: color-mix(in srgb, #b07a2c 38%, var(--qmah-border)); }
+.summary-section .summary-card .summary-icon { background: #b07a2c; color: #fff; }
+.summary-section .summary-card .summary-value { color: #8a5d1a; }
+.summary-section .title-summary { background: color-mix(in srgb, #6b5390 10%, var(--qmah-surface-elevated)); border-color: color-mix(in srgb, #6b5390 38%, var(--qmah-border)); }
+.summary-section .title-summary .summary-icon { background: #6b5390; }
+.summary-section .title-summary .summary-value { color: #533f74; }
+.achievement-count { background: #b07a2c; color: #fff; }

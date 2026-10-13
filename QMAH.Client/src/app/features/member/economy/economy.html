@@ -1,22 +1,20 @@
 <div class="economy-page">
 
-  <app-back-to-member></app-back-to-member>
+  @if (fromStore) {
+    <!-- 從商城過來：返回商城的橫幅，標題改成商城點數的說明 -->
+    <nav class="store-return" aria-label="返回商城">
+      <a class="store-return-link" routerLink="/store">← 返回商城</a>
+      <span class="store-return-note">你正在查看商城點數，可用來兌換折價券與折抵訂單。</span>
+    </nav>
+  } @else {
+    <app-back-to-member></app-back-to-member>
+  }
 
   <!-- ===================== -->
   <!-- 頁面標題 -->
   <!-- ===================== -->
 
-  <div class="page-header">
-
-    <h1>
-      點數與鑰匙
-    </h1>
-
-    <p>
-      查看你的鑑定點數、鑰匙進度與持有鑰匙。
-    </p>
-
-  </div>
+  <app-member-title title="點數與鑰匙" tag="POINTS &amp; KEYS" desc="查看你的鑑定點數、鑰匙進度與持有鑰匙。" />
 
 
   <!-- ===================== -->
@@ -65,7 +63,7 @@
 
       <!-- 鑑定點數 -->
 
-      <article class="summary-card point-card" [attr.data-point-level]="pointLevel">
+      <article class="summary-card point-card" [attr.data-point-level]="pointLevel" [attr.data-point-tier]="pointTier" [style.--tier]="pointTier / 7">
         <div class="asset-heading">
           <div class="asset-number">
             <span class="summary-label">鑑定點數</span>
@@ -87,7 +85,7 @@
 
       <!-- 探索鑰匙累積進度 -->
 
-      <article class="summary-card key-progress-card" [class.almost-ready]="isKeyAlmostReady">
+      <article class="summary-card key-progress-card" [class.almost-ready]="isKeyAlmostReady" [attr.data-key-tier]="keyTier">
         <div class="asset-heading">
           <div class="asset-number">
             <span class="summary-label">探索鑰匙累積進度</span>
@@ -135,11 +133,79 @@
     <!-- 使用共用 KeyList -->
     <!-- ===================== -->
 
+    <!-- 點數的出口：兌換折價券改到「我的折價券」頁，這裡只留一個跳轉入口 -->
+    <a class="coupon-jump" routerLink="/member/coupons">
+      <span class="coupon-jump__icon"><app-qmah-icon name="ticket" [size]="26" aria-hidden="true" /></span>
+      <span class="coupon-jump__text">
+        <strong>用點數兌換折價券</strong>
+        <small>你有 {{ economy.pointBalance.toLocaleString('en-US') }} 點可以兌換，現金折抵、折扣券任你挑。</small>
+      </span>
+      <span class="coupon-jump__go">前往折價券<app-qmah-icon name="arrow-right" [size]="18" aria-hidden="true" /></span>
+    </a>
+
     <section class="key-backpack-section">
 
       <app-key-list class="key-list--economy"></app-key-list>
 
     </section>
+
+    <!-- 流水：預設收合，點開才載入 -->
+    <details class="ledger" open (toggle)="onLedgerToggle($event)">
+      <!-- 點數／鑰匙切換：放在右上角（只在展開時出現），附圖示 -->
+      <div class="ledger-tabs ledger-tabs--corner" role="tablist">
+        <button type="button" role="tab" [attr.aria-selected]="ledgerKind === 'points'" [class.is-active]="ledgerKind === 'points'" (click)="setLedgerKind('points')"><app-qmah-icon name="coins" [size]="16" aria-hidden="true" />點數</button>
+        <button type="button" role="tab" [attr.aria-selected]="ledgerKind === 'keys'" [class.is-active]="ledgerKind === 'keys'" (click)="setLedgerKind('keys')"><app-qmah-icon name="key-round" [size]="16" aria-hidden="true" />鑰匙</button>
+      </div>
+      <summary class="ledger-summary">
+        <span class="ledger-title">點數與鑰匙流水</span>
+        <span class="ledger-hint">點開查看取得與使用紀錄</span>
+      </summary>
+      <div class="ledger-body">
+        <div class="ledger-toolbar">
+          <div class="ledger-filter">
+            @for (range of ledgerRanges; track range.days) {
+              <button type="button" class="ledger-chip" [class.is-active]="ledgerActiveDays === range.days" (click)="setLedgerRange(range.days)">{{ range.label }}</button>
+            }
+            <label class="ledger-date">
+              <span>從</span><input type="date" [value]="ledgerFrom" [max]="ledgerTo || null" (change)="onLedgerDate('from', $event)" />
+            </label>
+            <label class="ledger-date">
+              <span>到</span><input type="date" [value]="ledgerTo" [min]="ledgerFrom || null" (change)="onLedgerDate('to', $event)" />
+            </label>
+          </div>
+        </div>
+        <ul class="ledger-list" [class.is-loading]="ledgerLoading">
+          @for (row of ledgerRows; track row.id) {
+            <li class="ledger-row">
+              <span class="ledger-main">
+                <span class="ledger-reason">{{ ledgerReason(row) }}</span>
+                <span class="ledger-meta">{{ row.createdAt | date: 'yyyy/MM/dd HH:mm' }}@if (row.itemName) { · {{ row.itemName }} }</span>
+              </span>
+              <span class="ledger-amount" [class.is-gain]="row.amount > 0" [class.is-spend]="row.amount < 0">{{ row.amount > 0 ? '+' : '' }}{{ row.amount | number }}</span>
+            </li>
+          } @empty {
+            <li class="ledger-empty">{{ ledgerLoading ? '載入中…' : '這段時間沒有紀錄' }}</li>
+          }
+        </ul>
+        @if (ledgerPages > 1) {
+          <nav class="ledger-pager" aria-label="流水分頁">
+            <button type="button" class="ledger-page" [disabled]="ledgerPage <= 1" (click)="goLedgerPage(ledgerPage - 1)" aria-label="上一頁">‹</button>
+            @for (n of ledgerPageList; track $index) {
+              @if (n === '…') { <span class="ledger-gap">…</span> }
+              @else { <button type="button" class="ledger-page" [class.is-active]="n === ledgerPage" [attr.aria-current]="n === ledgerPage ? 'page' : null" (click)="goLedgerPage(n)">{{ n }}</button> }
+            }
+            <button type="button" class="ledger-page" [disabled]="ledgerPage >= ledgerPages" (click)="goLedgerPage(ledgerPage + 1)" aria-label="下一頁">›</button>
+            <label class="ledger-jump">跳至第
+              <input type="number" min="1" [max]="ledgerPages" [value]="ledgerJump" (input)="ledgerJump = $any($event.target).value" (keydown.enter)="goLedgerPage(+ledgerJump)" />
+              頁 <button type="button" class="ledger-page" (click)="goLedgerPage(+ledgerJump)">前往</button>
+            </label>
+            <span class="ledger-total">共 {{ ledgerTotal }} 筆</span>
+          </nav>
+        } @else if (ledgerTotal > 0) {
+          <p class="ledger-total ledger-total--solo">共 {{ ledgerTotal }} 筆</p>
+        }
+      </div>
+    </details>
 
   }
 

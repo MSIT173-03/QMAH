@@ -26,6 +26,21 @@ public sealed class EconomyController(EconomyService economyService) : ApiContro
             value.RemainingKeyProgress, value.KeyProgressToNormalKey));
     }
 
+    /// <summary>取得目前會員自己的點數或鑰匙流水（kind=points|keys），新到舊分頁。</summary>
+    [HttpGet("economy/ledger")]
+    public async Task<ActionResult<LedgerPageDto>> GetLedger(
+        [FromQuery] string kind = "points", [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
+        [FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+        var (total, items) = await economyService.GetLedgerAsync(
+            userId, string.Equals(kind, "keys", StringComparison.OrdinalIgnoreCase), page, pageSize,
+            from?.ToDateTime(TimeOnly.MinValue), to?.AddDays(1).ToDateTime(TimeOnly.MinValue), cancellationToken);
+        return Ok(new LedgerPageDto(total, items));
+    }
+
     /// <summary>取得目前會員的鑑定點數、鑰匙進度、鑰匙餘額與可用兌換規則。</summary>
     [HttpGet("economy")]
     public async Task<ActionResult<MemberEconomyDto>> GetEconomy(

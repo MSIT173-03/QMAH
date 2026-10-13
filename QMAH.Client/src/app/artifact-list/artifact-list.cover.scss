@@ -15,7 +15,7 @@
   transform-style: preserve-3d;
   transform: perspective(2600px) rotateY(0deg);
   /* 注意：封面不能做 opacity 動畫——透明度小於 1 會讓 preserve-3d 壓平，封面正面的鏡像就會閃出來 */
-  transition: transform 1.1s cubic-bezier(0.65, 0.05, 0.3, 1);
+  transition: transform 0.8s cubic-bezier(0.65, 0.05, 0.3, 1);
   cursor: pointer;
   outline: none;
 }
@@ -531,19 +531,19 @@
    動畫本身用 linear 才能跟封面的曲線對齊。闔上時封面晚 0.14 秒開始轉，所以 delay 也一樣。
    （透明度只能加在封面的子元素上；加在 .book__cover 本身會讓 preserve-3d 壓平） */
 .artifact-page[data-book='opening'] .cover__tabs--blank {
-  animation: cover-tabs-front-out 1.1s linear both;
+  animation: cover-tabs-front-out 0.8s linear both;
 }
 
 .artifact-page[data-book='opening'] .cover__tabs--text {
-  animation: cover-tabs-back-in 1.1s linear both;
+  animation: cover-tabs-back-in 0.8s linear both;
 }
 
 .artifact-page[data-book='closing'] .cover__tabs--text {
-  animation: cover-tabs-back-out 1.1s linear 0.14s both;
+  animation: cover-tabs-back-out 0.8s linear 0.1s both;
 }
 
 .artifact-page[data-book='closing'] .cover__tabs--blank {
-  animation: cover-tabs-front-in 1.1s linear 0.14s both;
+  animation: cover-tabs-front-in 0.8s linear 0.1s both;
 }
 
 @keyframes cover-tabs-front-out {
@@ -615,7 +615,7 @@
 }
 
 .artifact-page[data-reveal='run']:not([data-reveal-scope='content']) .book__content {
-  animation: content-rise 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s both;
+  animation: content-rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s both;
 }
 
 /* 切換左側頁籤：只有文物格浮現，搜尋列、統計列、篩選單、頁碼都留在原地不閃
@@ -625,7 +625,7 @@
 }
 
 .artifact-page[data-reveal='run'][data-reveal-scope='content'] .page__body {
-  animation: content-rise 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) 0.04s both;
+  animation: content-rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s both;
 }
 
 @keyframes content-rise {

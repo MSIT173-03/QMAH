@@ -20,10 +20,18 @@ describe('Economy visual states', () => {
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);
   });
-  afterEach(() => { fixture.destroy(); http.verify(); });
+  afterEach(() => {
+    // 頁面載入時一併發出的流水與兌換商店請求（與本檔測的行為無關）
+    http.match((r) => r.url.endsWith('/me/economy/ledger')).forEach((r) => r.flush({ total: 0, items: [] }));
+    http.match((r) => r.url.endsWith('/store/coupons')).forEach((r) => r.flush([]));
+    fixture.destroy();
+    http.verify();
+  });
   it('uses bounded gem counts as points accumulate', () => {
+    // 八段視覺階段：寶石數隨點數遞增並有上限 9 顆（門檻不顯示在畫面上）
     for (const [points, level, count] of [[0, 'starter', 1], [99, 'starter', 1], [100, 'growing', 3],
-      [500, 'abundant', 5], [1000, 'treasury', 7], [2147483647, 'treasury', 7]] as const) {
+      [500, 'abundant', 4], [1000, 'treasury', 5], [5000, 'treasury', 6], [20000, 'treasury', 8],
+      [100000, 'treasury', 9], [2147483647, 'treasury', 9]] as const) {
       component.economy = {pointBalance: points, keyProgressBalance: 0, keyProgressToNormalKey: 100};
       expect(component.pointLevel).toBe(level);
       expect(component.pointGems.length).toBe(count);

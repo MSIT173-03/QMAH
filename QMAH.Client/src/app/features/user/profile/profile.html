@@ -4,6 +4,7 @@
 
     <div class="top-row">
       <app-back-to-member />
+      <app-member-title title="個人資料" tag="MY PROFILE" />
     </div>
 
     @if (loading) {
@@ -346,11 +347,11 @@
                   </span>
 
                   <strong class="point-value">
-                    {{ profile.pointBalance }}
+                    {{ profile.pointBalance.toLocaleString('en-US') }}
                   </strong>
 
                   <span class="point-unit">
-                    Points
+                    點・可到折價券頁兌換
                   </span>
 
                 </section>

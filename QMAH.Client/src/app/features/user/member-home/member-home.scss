@@ -25,7 +25,8 @@
 
 
 .member-container {
-  max-width: 1180px;
+  /* 與全站頁首、頁尾及商城的 1320px 版心一致 */
+  max-width: 1320px;
 
   margin: 0 auto;
 
@@ -1190,3 +1191,31 @@
   .dashboard-bottom { gap:6px;line-height:1.6; }
 }
 @media(max-width:700px) { .quick-link { box-sizing:border-box;width:100%; }.welcome-quick { box-sizing:border-box; }.card-footer { flex-wrap:wrap;gap:8px; } }
+
+/* 首頁右上角：四張即時數字卡（2×2），取代原本只有圖示與文字的三顆按鈕 */
+.welcome-stats { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 12px; align-self: center; }
+.stat-tile {
+  --q: #4a5a9a;
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center;
+  padding: 14px 18px; border: 1px solid color-mix(in srgb, var(--q) 30%, var(--qmah-border)); border-radius: 14px;
+  background: color-mix(in srgb, var(--q) 10%, var(--qmah-surface-elevated)); color: var(--qmah-ink); text-decoration: none;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  app-qmah-icon { grid-row: 1 / 3; width: 22px; height: 22px; padding: 10px; box-sizing: content-box; border-radius: 12px; color: #fff; background: var(--q); }
+  strong { font-size: 22px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  span { font-size: 12.5px; color: var(--qmah-muted, #6b7280); }
+  &:hover, &:focus-visible { transform: translateY(-3px); border-color: var(--q); box-shadow: 0 8px 18px color-mix(in srgb, var(--q) 22%, transparent); }
+}
+.stat-points { --q: #b8862b; }
+.stat-coupons { --q: #7a52b3; }
+.stat-daily { --q: #d9531e; }
+.stat-notice { --q: #4a6fa5; }
+.stat-daily.is-ready strong { color: var(--q); }
+.stat-notice.has-unread strong { color: var(--q); }
+@media (max-width: 900px) { .welcome-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .stat-tile { padding: 12px; } .stat-tile strong { font-size: 18px; } }
+
+/* 各區塊標題：英文標籤改成接在中文標題後面（與其他子頁的標題列一致），說明文字換到下一行 */
+.dashboard-section .section-header > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.dashboard-section .section-header h2 { order: 1; margin: 0; }
+.dashboard-section .section-eyebrow { order: 2; }
+.dashboard-section .section-header p { order: 3; flex-basis: 100%; margin: 0; }

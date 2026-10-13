@@ -1225,3 +1225,10 @@
 .category-tabs button:hover { border-color: var(--qmah-primary); }
 .category-tabs button.active { border-color: var(--qmah-primary); background: var(--qmah-primary); color: var(--qmah-primary-content, #fff); }
 .category-tabs button:focus-visible { outline: 2px solid var(--qmah-primary); outline-offset: 2px; }
+
+/* 頂部精簡成一行：狀態分頁、類型分頁、全部標為已讀排在同一列，不再有計數標籤與兩排分頁 */
+.notif-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-bottom: 16px; }
+.notif-toolbar .filter-tabs, .notif-toolbar .category-tabs { margin: 0; }
+.notif-toolbar .bulk-read-button { margin-left: auto; }
+.load-more { display: grid; place-items: center; padding: 16px 0 4px; }
+.load-end { margin: 16px 0 0; color: var(--qmah-text-muted, #777); font-size: 14px; text-align: center; }

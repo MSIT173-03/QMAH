@@ -18,6 +18,36 @@ public sealed class EconomyService(QmahDbContext db, GameDailyRewardService dail
 {
     public const decimal DailyKeyProgressLimit = 1000m;
 
+    /// <summary>會員自己的點數／鑰匙流水（新到舊分頁）；只讀取本人資料。</summary>
+    public async Task<(int Total, IReadOnlyList<LedgerRow> Items)> GetLedgerAsync(
+        Guid userId, bool keys, int page, int pageSize, DateTime? fromUtc, DateTime? toExclusiveUtc, CancellationToken cancellationToken)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        if (keys)
+        {
+            var query = db.KeyTransactions.AsNoTracking().Where(x => x.UserId == userId);
+            if (fromUtc is not null) query = query.Where(x => x.CreatedAt >= fromUtc);
+            if (toExclusiveUtc is not null) query = query.Where(x => x.CreatedAt < toExclusiveUtc);
+            var total = await query.CountAsync(cancellationToken);
+            var rows = await query.OrderByDescending(x => x.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize)
+                .Select(x => new LedgerRow(x.Id, x.Amount, x.Reason, x.KeyDefinition.Name, x.CreatedAt))
+                .ToListAsync(cancellationToken);
+            return (total, rows);
+        }
+        else
+        {
+            var query = db.PointTransactions.AsNoTracking().Where(x => x.UserId == userId);
+            if (fromUtc is not null) query = query.Where(x => x.CreatedAt >= fromUtc);
+            if (toExclusiveUtc is not null) query = query.Where(x => x.CreatedAt < toExclusiveUtc);
+            var total = await query.CountAsync(cancellationToken);
+            var rows = await query.OrderByDescending(x => x.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize)
+                .Select(x => new LedgerRow(x.Id, x.Amount, x.Reason, null, x.CreatedAt))
+                .ToListAsync(cancellationToken);
+            return (total, rows);
+        }
+    }
+
     /// <summary>在呼叫端的結算交易中累積遊戲鑰匙進度，保留小數並轉換完整鑰匙。</summary>
 
     public async Task<EconomyResult<GameKeyGrantView>> GrantGameKeyProgressAsync(
@@ -1541,3 +1571,6 @@ public sealed record GameRewardView(
     byte KeyRewardDivisor = 1);
 
 public sealed record GameKeyGrantView(int NormalKeys, decimal RemainingProgress, decimal GrantedProgress = 0m);
+
+/// <summary>流水列：Amount 正為取得、負為使用；ItemName 只用於鑰匙（鑰匙名稱）。</summary>
+public sealed record LedgerRow(Guid Id, int Amount, string Reason, string? ItemName, DateTime CreatedAt);

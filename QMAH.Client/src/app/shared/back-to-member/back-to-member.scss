@@ -1,5 +1,7 @@
 :host {
   display: block;
+  /* 所有會員子頁共用同樣的下方間距，頁面本身不必各自補 margin */
+  margin: 0 0 20px;
 }
 
 .back-button {

@@ -4,6 +4,7 @@ import {
   OnInit
 } from '@angular/core';
 
+import { MemberTitle } from '../../../shared/member-title/member-title';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
@@ -11,6 +12,8 @@ import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { MemberApi } from '../../../store/api/member.api';
+import { CouponExchange } from '../../member/economy/coupon-exchange/coupon-exchange';
 
 
 interface MemberCoupon {
@@ -35,9 +38,11 @@ interface MemberCoupon {
   selector: 'app-coupons',
 
   imports: [
+    MemberTitle,
     CommonModule,
     BackToMember,
-    QmahIconComponent
+    QmahIconComponent,
+    CouponExchange
   ],
 
   templateUrl: './coupons.html',
@@ -59,11 +64,16 @@ export class Coupons implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private memberApi: MemberApi
   ) { }
+
+  /** 目前點數（折價券兌換用）；兌換成功後由兌換元件帶回扣除後的餘額 */
+  points = 0;
 
 
   ngOnInit(): void {
+    this.memberApi.getProfile().subscribe({ next: (p) => { this.points = p.pointBalance; this.cdr.markForCheck(); }, error: () => undefined });
     this.loadCoupons();
   }
 
@@ -117,20 +127,23 @@ export class Coupons implements OnInit {
   // ===============================
 
   get filteredCoupons(): MemberCoupon[] {
+    const list = this.selectedStatus === 'ALL' ? this.coupons : this.coupons.filter((coupon) => coupon.status === this.selectedStatus);
+    // 可使用的排前面、快到期的最前；其餘維持原順序
+    const rank = (coupon: MemberCoupon) => (coupon.status === 'AVAILABLE' ? 0 : 1);
+    return [...list].sort((a, b) => rank(a) - rank(b) || new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime());
+  }
 
-    if (
-      this.selectedStatus === 'ALL'
-    ) {
-      return this.coupons;
-    }
+  /** 預設先顯示的張數（三欄兩排以上），其餘展開 */
+  readonly previewCount = 9;
+  expanded = false;
 
+  get visibleCoupons(): MemberCoupon[] {
+    return this.expanded ? this.filteredCoupons : this.filteredCoupons.slice(0, this.previewCount);
+  }
 
-    return this.coupons.filter(
-      coupon =>
-        coupon.status ===
-        this.selectedStatus
-    );
-
+  /** 票券左塊的大字：折扣券「15% OFF」、現金券「NT$300」，與商城票券一致 */
+  offText(coupon: MemberCoupon): string {
+    return ['PERCENTAGE', 'PERCENT'].includes(coupon.discountType) ? `${coupon.discountValue}% OFF` : `NT$${coupon.discountValue}`;
   }
 
 

@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { MemberTitle } from '../../../shared/member-title/member-title';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { switchMap } from 'rxjs';
@@ -27,6 +28,7 @@ interface DailyActivityResponse {
   selector: 'app-daily-activity',
 
   imports: [
+    MemberTitle,
     CommonModule,
     BackToMember,
     QmahIconComponent

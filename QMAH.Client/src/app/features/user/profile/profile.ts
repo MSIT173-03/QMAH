@@ -4,6 +4,7 @@ import {
   OnInit
 } from '@angular/core';
 
+import { MemberTitle } from '../../../shared/member-title/member-title';
 import {
   FormBuilder,
   FormGroup,
@@ -41,6 +42,7 @@ interface UpdateProfileRequest {
 @Component({
   selector: 'app-profile',
   imports: [
+    MemberTitle,
     CommonModule,
     ReactiveFormsModule,
     BackToMember,

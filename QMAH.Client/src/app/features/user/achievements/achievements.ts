@@ -4,6 +4,7 @@ import {
   OnInit
 } from '@angular/core';
 
+import { MemberTitle } from '../../../shared/member-title/member-title';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
@@ -36,6 +37,7 @@ interface Achievement {
   selector: 'app-achievements',
 
   imports: [
+    MemberTitle,
     CommonModule,
     BackToMember,
     QmahIconComponent
@@ -89,6 +91,13 @@ export class Achievements implements OnInit {
   // 條件名稱
   // ===============================
 
+  /** 成就色彩依類型分組（不是隨機輪替）：登入類＝玉青、文物解鎖類＝金、其他＝靛藍 */
+  achievementKind(conditionType: string): 'login' | 'artifact' | 'other' {
+    if (conditionType.includes('LOGIN')) return 'login';
+    if (conditionType.startsWith('ARTIFACT')) return 'artifact';
+    return 'other';
+  }
+
   getConditionTypeLabel(
     conditionType: string
   ): string {
@@ -102,7 +111,8 @@ export class Achievements implements OnInit {
         return '連續登入天數';
 
       default:
-        return conditionType;
+        // 內部代碼不給會員看：文物解鎖類顯示成白話，其餘一律顯示通用說明
+        return conditionType.startsWith('ARTIFACT_UNLOCK') ? '解鎖文物數' : '特殊條件';
 
     }
 

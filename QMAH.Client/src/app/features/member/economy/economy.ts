@@ -1,3 +1,5 @@
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { MemberTitle } from '../../../shared/member-title/member-title';
 import {
   ChangeDetectorRef,
   Component,
@@ -43,6 +45,14 @@ interface EconomyResponse {
   keyProgressToNormalKey: number;
 }
 
+interface LedgerRow {
+  id: string;
+  amount: number;
+  reason: string;
+  itemName: string | null;
+  createdAt: string;
+}
+
 interface KeyProgressConversion {
   convertedNormalKeys: number;
   consumedKeyProgress: number;
@@ -55,10 +65,12 @@ interface KeyProgressConversion {
   selector: 'app-economy',
 
   imports: [
+    MemberTitle,
+    RouterLink,
     CommonModule,
     BackToMember,
     QmahIconComponent,
-    KeyList
+    KeyList,
   ],
 
   templateUrl: './economy.html',
@@ -66,11 +78,135 @@ interface KeyProgressConversion {
 })
 export class Economy implements OnInit {
   private readonly live = inject(NotificationLive);
+  /** 從商城頂部「點數」連結過來（?from=store）：頂部改成返回商城的橫幅 */
+  protected readonly fromStore = inject(ActivatedRoute).snapshot.queryParamMap.get('from') === 'store';
   private initialized = false;
   private refreshingRealtime = false;
   private pendingRealtimeRefresh = false;
 
   economy: EconomyResponse | null = null;
+
+  /** 流水：預設收合，第一次展開才載入；可切點數／鑰匙、篩日期區間、分頁與跳頁 */
+  ledgerOpen = true;
+  ledgerKind: 'points' | 'keys' = 'points';
+  ledgerRows: LedgerRow[] = [];
+  ledgerTotal = 0;
+  ledgerLoading = false;
+  ledgerPage = 1;
+  ledgerFrom = '';
+  ledgerTo = '';
+  ledgerJump = '';
+  readonly ledgerPageSize = 10;
+  /** 快速區間：近 N 天（0 代表全部） */
+  readonly ledgerRanges = [
+    { label: '全部', days: 0 },
+    { label: '近 7 天', days: 7 },
+    { label: '近 30 天', days: 30 },
+    { label: '近 90 天', days: 90 },
+  ];
+
+  get ledgerPages(): number {
+    return Math.max(1, Math.ceil(this.ledgerTotal / this.ledgerPageSize));
+  }
+
+  /** 頁碼列：第一頁、最後一頁與目前頁前後各兩頁，中間以省略號隔開 */
+  get ledgerPageList(): (number | '…')[] {
+    const last = this.ledgerPages;
+    const keep = new Set([1, last]);
+    for (let n = this.ledgerPage - 2; n <= this.ledgerPage + 2; n++) if (n >= 1 && n <= last) keep.add(n);
+    const sorted = [...keep].sort((x, y) => x - y);
+    const list: (number | '…')[] = [];
+    sorted.forEach((n, i) => {
+      if (i > 0 && n - sorted[i - 1] > 1) list.push('…');
+      list.push(n);
+    });
+    return list;
+  }
+
+  get ledgerActiveDays(): number | null {
+    if (!this.ledgerFrom || this.ledgerTo !== this.dateString(new Date())) return this.ledgerFrom || this.ledgerTo ? null : 0;
+    const diff = Math.round((Date.now() - new Date(this.ledgerFrom + 'T00:00:00').getTime()) / 86_400_000);
+    return this.ledgerRanges.some((r) => r.days === diff) ? diff : null;
+  }
+
+  private dateString(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  onCouponRedeemed(remaining: number): void {
+    if (this.economy) this.economy = { ...this.economy, pointBalance: remaining };
+    this.cdr.markForCheck();
+  }
+
+  onLedgerToggle(event: Event): void {
+    this.ledgerOpen = (event.target as HTMLDetailsElement).open;
+    if (this.ledgerOpen && this.ledgerRows.length === 0 && !this.ledgerLoading) {
+      this.loadLedger(1);
+    }
+  }
+
+  setLedgerKind(kind: 'points' | 'keys'): void {
+    if (this.ledgerKind === kind) return;
+    this.ledgerKind = kind;
+    this.loadLedger(1);
+  }
+
+  setLedgerRange(days: number): void {
+    if (days === 0) {
+      this.ledgerFrom = '';
+      this.ledgerTo = '';
+    } else {
+      const from = new Date();
+      from.setDate(from.getDate() - days);
+      this.ledgerFrom = this.dateString(from);
+      this.ledgerTo = this.dateString(new Date());
+    }
+    this.loadLedger(1);
+  }
+
+  onLedgerDate(which: 'from' | 'to', event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    if (which === 'from') this.ledgerFrom = value;
+    else this.ledgerTo = value;
+    this.loadLedger(1);
+  }
+
+  goLedgerPage(page: number): void {
+    const target = Math.min(this.ledgerPages, Math.max(1, Math.floor(page) || 1));
+    this.ledgerJump = '';
+    if (target !== this.ledgerPage) this.loadLedger(target);
+  }
+
+  loadLedger(page: number): void {
+    this.ledgerPage = page;
+    this.ledgerLoading = true;
+    const params: Record<string, string | number> = { kind: this.ledgerKind, page, pageSize: this.ledgerPageSize };
+    if (this.ledgerFrom) params['from'] = this.ledgerFrom;
+    if (this.ledgerTo) params['to'] = this.ledgerTo;
+    this.http
+      .get<{ total: number; items: LedgerRow[] }>(`${environment.apiBaseUrl}/me/economy/ledger`, { params })
+      .pipe(
+        catchError(() => of({ total: 0, items: [] as LedgerRow[] })),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((result) => {
+        this.ledgerRows = result.items;
+        this.ledgerTotal = result.total;
+        this.ledgerLoading = false;
+        this.cdr.markForCheck();
+      });
+  }
+
+  /** 流水原因的顯示文字：系統代碼轉成中文，其餘原因本身就是中文敘述 */
+  ledgerReason(row: LedgerRow): string {
+    const map: Record<string, string> = {
+      ADMIN_GRANT: '管理員發放',
+      ARTIFACT_UNLOCK: '解鎖圖鑑文物',
+      ILLEGAL_CONTENT: '內容違規處置',
+    };
+    return map[row.reason] ?? row.reason.replace(/^展示資料：/, '');
+  }
 
   loading = true;
   errorMessage = '';
@@ -87,6 +223,7 @@ export class Economy implements OnInit {
 
 
   ngOnInit(): void {
+    this.loadLedger(1);
     this.live.economyChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       if (!this.initialized || this.loading) {
         this.pendingRealtimeRefresh = true;
@@ -132,21 +269,34 @@ export class Economy implements OnInit {
   // 進度條比例 0 ~ 1
   // ===============================
 
+  /** 鑰匙進度的視覺階段（0～4，每 20% 一階）：色相、光暈與進度條質感隨階段明顯不同 */
+  get keyTier(): number {
+    return Math.min(4, Math.floor(this.keyProgressPercent / 20));
+  }
+
   get keyProgressRatio(): number {
     return this.keyProgressPercent / 100;
   }
 
-  get pointLevel(): 'starter' | 'growing' | 'abundant' | 'treasury' {
+  /** 點數的視覺階段（0～7）：門檻不明說，畫面上只以光暈、寶石數量與質感逐段變化 */
+  get pointTier(): number {
     const points = this.economy?.pointBalance ?? 0;
-    return points >= 1000 ? 'treasury' : points >= 500 ? 'abundant' : points >= 100 ? 'growing' : 'starter';
+    const thresholds = [100, 500, 1000, 5000, 20000, 100000, 500000];
+    return thresholds.filter((limit) => points >= limit).length;
+  }
+
+  /** 沿用舊的四段（文案與既有樣式用） */
+  get pointLevel(): 'starter' | 'growing' | 'abundant' | 'treasury' {
+    const tier = this.pointTier;
+    return tier >= 3 ? 'treasury' : tier >= 2 ? 'abundant' : tier >= 1 ? 'growing' : 'starter';
   }
 
   get pointLevelLabel(): string {
-    return { starter: '慢慢累積', growing: '累積有成', abundant: '點數充裕', treasury: '點數滿載' }[this.pointLevel];
+    return ['慢慢累積', '累積有成', '點數充裕', '小有積蓄', '財力雄厚', '富甲一方', '寶庫滿溢', '傳說寶庫'][this.pointTier];
   }
 
   get pointGems(): number[] {
-    return Array.from({ length: { starter: 1, growing: 3, abundant: 5, treasury: 7 }[this.pointLevel] }, (_, index) => index);
+    return Array.from({ length: Math.min(9, 1 + this.pointTier * 1.2 + (this.pointTier > 0 ? 1 : 0)) | 0 }, (_, index) => index);
   }
 
   get isKeyAlmostReady(): boolean {

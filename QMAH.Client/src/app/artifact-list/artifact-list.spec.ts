@@ -126,10 +126,10 @@ describe('ArtifactList', () => {
       component.openBook();
       expect(component.reveal()).toBe('pending');
       expect(component.revealScope()).toBe('book'); // 翻書：上方與左側選中的頁籤攤開後才抽起
-      vi.advanceTimersByTime(1200);
+      vi.advanceTimersByTime(880);
       expect(component.bookState()).toBe('open');
       expect(component.reveal()).toBe('pending'); // 攤平後停一拍
-      vi.advanceTimersByTime(150);
+      vi.advanceTimersByTime(30);
       expect(component.reveal()).toBe('run');
       vi.advanceTimersByTime(900);
       expect(component.reveal()).toBe('done');

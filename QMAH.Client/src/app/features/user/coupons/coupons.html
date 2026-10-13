@@ -2,565 +2,61 @@
 
   <app-back-to-member></app-back-to-member>
 
-
-  <!-- =============================== -->
-  <!-- Header -->
-  <!-- =============================== -->
-
-  <div class="page-header">
-
-    <div>
-
-      <span class="page-eyebrow">
-        MY COUPONS
-      </span>
-
-      <h1>
-        我的折價券
-      </h1>
-
-      <p>
-        查看目前持有的折價券、使用狀態與有效期限。
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <!-- =============================== -->
-  <!-- Loading -->
-  <!-- =============================== -->
+  <!-- 與商城折價券頁同一套版型：標題列、分頁、票券卡片；會員版多了點數兌換與使用狀態 -->
+<app-member-title title="我的折價券" tag="MY COUPONS" desc="查看目前持有的折價券、使用狀態與有效期限。">
+    <span class="cp-points">可用點數 <strong>{{ points.toLocaleString('en-US') }}</strong></span>
+  </app-member-title>
 
   @if (loading) {
-
-  <div class="state-box">
-
-    <div class="loading-spinner"></div>
-
-    正在讀取折價券...
-
-  </div>
-
+  <div class="state-box"><div class="loading-spinner"></div>正在讀取折價券...</div>
   }
-
-
-  <!-- =============================== -->
-  <!-- Error -->
-  <!-- =============================== -->
-
   @if (errorMessage) {
-
-  <div class="state-box error">
-
-    <span>!</span>
-
-    {{ errorMessage }}
-
-  </div>
-
+  <div class="state-box error"><span>!</span>{{ errorMessage }}</div>
   }
 
+  <!-- 用點數兌換折價券：與商城兌換商店同一組 API，兌換後帶到商城使用 -->
+  <app-coupon-exchange [points]="points" (redeemed)="points = $event"></app-coupon-exchange>
 
-  <!-- =============================== -->
-  <!-- Empty -->
-  <!-- =============================== -->
-
-  @if (
-  !loading &&
-  !errorMessage &&
-  coupons.length === 0
-  ) {
-
-  <div class="empty-state">
-
-    <div class="empty-icon">
-      <app-qmah-icon name="ticket" />
+  @if (!loading && !errorMessage) {
+  <section class="cp-wallet">
+    <div class="cp-toolbar">
+      <div class="cp-tabs" role="tablist" aria-label="使用狀態">
+        <button type="button" role="tab" class="cp-tab" [class.is-active]="selectedStatus === 'ALL'" [attr.aria-selected]="selectedStatus === 'ALL'" (click)="selectStatus('ALL')">全部<span>{{ coupons.length }}</span></button>
+        <button type="button" role="tab" class="cp-tab" [class.is-active]="selectedStatus === 'AVAILABLE'" [attr.aria-selected]="selectedStatus === 'AVAILABLE'" (click)="selectStatus('AVAILABLE')">可使用<span>{{ availableCount }}</span></button>
+        <button type="button" role="tab" class="cp-tab" [class.is-active]="selectedStatus === 'USED'" [attr.aria-selected]="selectedStatus === 'USED'" (click)="selectStatus('USED')">已使用<span>{{ usedCount }}</span></button>
+        <button type="button" role="tab" class="cp-tab" [class.is-active]="selectedStatus === 'EXPIRED'" [attr.aria-selected]="selectedStatus === 'EXPIRED'" (click)="selectStatus('EXPIRED')">已過期<span>{{ expiredCount }}</span></button>
+      </div>
+      <span class="cp-toolbar__note">快到期的排前面</span>
     </div>
 
-    <h2>
-      目前沒有折價券
-    </h2>
-
-    <p>
-      取得折價券後，會顯示在這裡。
-    </p>
-
-  </div>
-
-  }
-
-
-  @if (
-  !loading &&
-  coupons.length > 0
-  ) {
-
-
-  <!-- =============================== -->
-  <!-- Summary / Filter -->
-  <!-- =============================== -->
-
-  <section class="summary-section">
-
-    <button type="button" class="summary-card all-card" [class.active]="selectedStatus === 'ALL'"
-      (click)="selectStatus('ALL')">
-
-      <div class="summary-icon">
-        <app-qmah-icon name="ticket" />
-      </div>
-
-      <div>
-
-        <span class="summary-label">
-          全部折價券
+    @if (filteredCoupons.length === 0) {
+    <p class="cp-empty">{{ coupons.length === 0 ? '目前沒有折價券，用上面的點數兌換一張吧。' : '此分類目前沒有折價券。' }}</p>
+    } @else {
+    <ul class="cp-grid">
+      @for (coupon of visibleCoupons; track coupon.id) {
+      <li class="cp-card" [class.is-dim]="coupon.status !== 'AVAILABLE'">
+        <span class="cp-card__off">{{ offText(coupon) }}</span>
+        <span class="cp-card__body">
+          <strong class="cp-card__title">{{ coupon.name }}</strong>
+          <span class="cp-card__meta">{{ getMinimumLabel(coupon) }}</span>
+          <span class="cp-card__meta">{{ getAcquisitionTypeLabel(coupon.acquisitionType) }}・{{ coupon.expiresAt | date: 'yyyy-MM-dd' }} 前有效</span>
         </span>
-
-        <strong>
-          {{ coupons.length }}
-        </strong>
-
-      </div>
-
-      <span class="filter-arrow"><app-qmah-icon name="arrow-right" /></span>
-
-    </button>
-
-
-    <button type="button" class="summary-card available-card" [class.active]="selectedStatus === 'AVAILABLE'"
-      (click)="selectStatus('AVAILABLE')">
-
-      <div class="summary-icon">
-        <app-qmah-icon name="circle-check" />
-      </div>
-
-      <div>
-
-        <span class="summary-label">
-          可使用
+        <span class="cp-card__state" [attr.data-status]="coupon.status">
+          <small>{{ getStatusLabel(coupon.status) }}</small>
+          @if (coupon.status === 'AVAILABLE') {
+          <strong [class.is-soon]="isExpiringSoon(coupon)">{{ isExpiringSoon(coupon) ? '剩 ' + getRemainingDays(coupon) + ' 天' : (coupon.expiresAt | date: 'MM/dd') + ' 到期' }}</strong>
+          } @else if (coupon.usedAt) {
+          <strong>{{ coupon.usedAt | date: 'MM/dd' }}</strong>
+          }
         </span>
-
-        <strong>
-          {{ availableCount }}
-        </strong>
-
-      </div>
-
-      <span class="filter-arrow"><app-qmah-icon name="arrow-right" /></span>
-
-    </button>
-
-
-    <button type="button" class="summary-card used-card" [class.active]="selectedStatus === 'USED'"
-      (click)="selectStatus('USED')">
-
-      <div class="summary-icon">
-        <app-qmah-icon name="circle-check" />
-      </div>
-
-      <div>
-
-        <span class="summary-label">
-          已使用
-        </span>
-
-        <strong>
-          {{ usedCount }}
-        </strong>
-
-      </div>
-
-      <span class="filter-arrow"><app-qmah-icon name="arrow-right" /></span>
-
-    </button>
-
-
-    <button type="button" class="summary-card expired-card" [class.active]="selectedStatus === 'EXPIRED'"
-      (click)="selectStatus('EXPIRED')">
-
-      <div class="summary-icon"><app-qmah-icon name="clock" /></div>
-
-      <div>
-
-        <span class="summary-label">
-          已過期
-        </span>
-
-        <strong>
-          {{ expiredCount }}
-        </strong>
-
-      </div>
-
-      <span class="filter-arrow"><app-qmah-icon name="arrow-right" /></span>
-
-    </button>
-
-  </section>
-
-
-  <!-- =============================== -->
-  <!-- Coupon Section -->
-  <!-- =============================== -->
-
-  <section class="coupon-section">
-
-    <div class="section-title">
-
-      <div>
-
-        <span class="section-eyebrow">
-          COUPON WALLET
-        </span>
-
-        <h2>
-          {{ selectedStatusLabel }}
-        </h2>
-
-        <p>
-          每張折價券皆有獨立的使用條件與有效期限。
-        </p>
-
-      </div>
-
-
-      <span class="coupon-count">
-
-        {{ filteredCoupons.length }}
-
-        張
-
-      </span>
-
-    </div>
-
-
-    <!-- =============================== -->
-    <!-- 篩選後無資料 -->
-    <!-- =============================== -->
-
-    @if (
-    filteredCoupons.length === 0
-    ) {
-
-    <div class="filter-empty">
-
-      <div>
-        <app-qmah-icon name="receipt" />
-      </div>
-
-      <strong>
-        此分類目前沒有折價券
-      </strong>
-
-      <span>
-        可以切換其他狀態查看。
-      </span>
-
-    </div>
-
-    }
-
-
-    <!-- =============================== -->
-    <!-- Coupon Grid -->
-    <!-- =============================== -->
-
-    <div class="coupon-grid">
-
-      @for (
-      coupon of filteredCoupons;
-      track coupon.id
-      ) {
-
-      <article class="coupon-ticket" [class.available]="coupon.status === 'AVAILABLE'"
-        [class.used]="coupon.status === 'USED'" [class.expired]="coupon.status === 'EXPIRED'"
-        [class.revoked]="coupon.status === 'REVOKED'">
-
-
-        <!-- 左缺口 -->
-        <div class="ticket-notch notch-left"></div>
-
-        <!-- 右缺口 -->
-        <div class="ticket-notch notch-right"></div>
-
-
-        <!-- =============================== -->
-        <!-- 上半部 -->
-        <!-- =============================== -->
-
-        <div class="ticket-main">
-
-
-          <div class="ticket-top">
-
-            <div class="coupon-brand">
-
-              <div class="coupon-icon">
-                <app-qmah-icon name="ticket" />
-              </div>
-
-              <span>
-                清明鑑定屋折價券
-              </span>
-
-            </div>
-
-
-            <div class="status-area">
-
-              @if (
-              isExpiringSoon(coupon)
-              ) {
-
-              <span class="expire-soon">
-
-                <app-qmah-icon name="flame" />
-
-                剩
-                {{ getRemainingDays(coupon) }}
-                天
-
-              </span>
-
-              }
-
-
-              <span class="status-badge" [class.available]="coupon.status === 'AVAILABLE'"
-                [class.used]="coupon.status === 'USED'" [class.expired]="coupon.status === 'EXPIRED'"
-                [class.revoked]="coupon.status === 'REVOKED'">
-
-                {{ getStatusLabel(coupon.status) }}
-
-              </span>
-
-            </div>
-
-          </div>
-
-
-          <div class="coupon-code">
-
-            {{ coupon.code }}
-
-          </div>
-
-
-          <h3>
-
-            {{ coupon.name }}
-
-          </h3>
-
-
-          <div class="discount-value">
-
-            {{ getDiscountLabel(coupon) }}
-
-          </div>
-
-
-          <div class="minimum-chip">
-
-            {{ getMinimumLabel(coupon) }}
-
-          </div>
-
-        </div>
-
-
-        <!-- =============================== -->
-        <!-- 虛線 -->
-        <!-- =============================== -->
-
-        <div class="ticket-divider">
-
-          <span></span>
-
-        </div>
-
-
-        <!-- =============================== -->
-        <!-- 下半部 -->
-        <!-- =============================== -->
-
-        <div class="ticket-details">
-
-
-          <div class="detail-item">
-
-            <span>
-              取得方式
-            </span>
-
-            <strong>
-
-              {{
-              getAcquisitionTypeLabel(
-              coupon.acquisitionType
-              )
-              }}
-
-            </strong>
-
-          </div>
-
-
-          @if (
-          coupon.pointCost !== null
-          ) {
-
-          <div class="detail-item">
-
-            <span>
-              兌換點數
-            </span>
-
-            <strong>
-
-              {{ coupon.pointCost }} 點
-
-            </strong>
-
-          </div>
-
-          }
-
-
-          <div class="detail-item">
-
-            <span>
-              發放日期
-            </span>
-
-            <strong>
-
-              {{
-              coupon.issuedAt
-              | date:'yyyy/MM/dd'
-              }}
-
-            </strong>
-
-          </div>
-
-
-          <div class="detail-item expiry-item" [class.warning]="isExpiringSoon(coupon)">
-
-            <span>
-              有效期限
-            </span>
-
-            <strong>
-
-              {{
-              coupon.expiresAt
-              | date:'yyyy/MM/dd'
-              }}
-
-            </strong>
-
-          </div>
-
-
-          @if (
-          coupon.usedAt
-          ) {
-
-          <div class="detail-item">
-
-            <span>
-              使用日期
-            </span>
-
-            <strong>
-
-              {{
-              coupon.usedAt
-              | date:'yyyy/MM/dd'
-              }}
-
-            </strong>
-
-          </div>
-
-          }
-
-        </div>
-
-
-        <!-- =============================== -->
-        <!-- Bottom -->
-        <!-- =============================== -->
-
-        <div class="ticket-footer">
-
-          @if (
-          coupon.status === 'AVAILABLE'
-          ) {
-
-          <span class="usable-text">
-
-            <span class="usable-dot"></span>
-
-            此折價券目前可使用
-
-          </span>
-
-          }
-
-          @else if (
-          coupon.status === 'USED'
-          ) {
-
-          <span class="inactive-text">
-
-            <app-qmah-icon name="circle-check" />
-            已完成使用
-
-          </span>
-
-          }
-
-          @else if (
-          coupon.status === 'EXPIRED'
-          ) {
-
-          <span class="inactive-text">
-
-            <app-qmah-icon name="clock" aria-hidden="true" /> 此折價券已過期
-
-          </span>
-
-          }
-
-          @else {
-
-          <span class="inactive-text">
-
-            此折價券目前無法使用
-
-          </span>
-
-          }
-
-
-          <span class="ticket-id">
-
-            #{{ coupon.id.slice(0, 8) }}
-
-          </span>
-
-        </div>
-
-      </article>
-
+      </li>
       }
-
-    </div>
-
+    </ul>
+    @if (filteredCoupons.length > previewCount) {
+    <button type="button" class="cp-more" [attr.aria-expanded]="expanded" (click)="expanded = !expanded">{{ expanded ? '收合' : '顯示全部 ' + filteredCoupons.length + ' 張' }}</button>
+    }
+    }
   </section>
-
   }
 
 </div>

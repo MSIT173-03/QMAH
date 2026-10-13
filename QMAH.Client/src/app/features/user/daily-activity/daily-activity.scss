@@ -2285,3 +2285,53 @@
 @keyframes dailyPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
 @keyframes dailyFlame { 0%, 100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.1) rotate(2deg); } }
 @media (prefers-reduced-motion: reduce) { .checkin-button, .fire-icon, .day-item.reward .day-circle { animation: none !important; } }
+
+/* ===== 每日登入重新設計：平面底色（不再用漸層）、實色圖示磚、金色領取區塊與呼吸光暈，讓人期待每天來領 ===== */
+.checkin-hero,
+.checkin-hero.completed {
+  background: color-mix(in srgb, #d9a431 11%, var(--qmah-surface-elevated));
+  border: 1px solid color-mix(in srgb, #d9a431 40%, var(--qmah-border));
+  box-shadow: inset 6px 0 0 #d9a431, var(--qmah-shadow-card);
+}
+.checkin-hero.completed {
+  background: color-mix(in srgb, #3f8f78 11%, var(--qmah-surface-elevated));
+  border-color: color-mix(in srgb, #3f8f78 40%, var(--qmah-border));
+  box-shadow: inset 6px 0 0 #3f8f78, var(--qmah-shadow-card);
+}
+.checkin-hero .hero-decoration { display: none; }
+.checkin-icon {
+  background: #d9a431;
+  box-shadow: 0 8px 20px color-mix(in srgb, #d9a431 40%, transparent);
+  color: #fff;
+}
+.checkin-icon app-qmah-icon, .checkin-icon span { color: #fff; }
+.checkin-hero.completed .checkin-icon { background: #3f8f78; box-shadow: 0 8px 20px color-mix(in srgb, #3f8f78 40%, transparent); }
+
+/* 領取區塊：置中、有內距的金色牌；未領取時外圈緩緩呼吸 */
+.today-reward {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 132px;
+  padding: 14px 22px;
+  border: 1px solid color-mix(in srgb, #d9a431 55%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, #d9a431 16%, var(--qmah-surface-elevated));
+  text-align: center;
+  box-shadow: none;
+}
+.today-reward span { font-size: 0.8125rem; font-weight: 700; color: color-mix(in srgb, #8a6710 85%, var(--qmah-ink)); letter-spacing: 0.06em; }
+.today-reward strong { font-size: 2.5rem; line-height: 1.1; color: #8a6710; }
+.today-reward small { font-size: 0.9375rem; }
+.checkin-hero:not(.completed) .today-reward { animation: reward-breathe 2.6s ease-in-out infinite; }
+@keyframes reward-breathe { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, #d9a431 40%, transparent); } 50% { box-shadow: 0 0 0 10px color-mix(in srgb, #d9a431 0%, transparent); } }
+.checkin-button { box-shadow: 0 8px 20px color-mix(in srgb, var(--qmah-primary) 35%, transparent); }
+.checkin-hero:not(.completed) .checkin-button { animation: button-nudge 3.2s ease-in-out infinite; }
+@keyframes button-nudge { 0%, 88%, 100% { transform: none; } 92% { transform: translateY(-3px); } 96% { transform: translateY(0); } }
+
+/* 連續登入卡：珊瑚色實色火焰磚，同樣去掉漸層 */
+.streak-card { background: color-mix(in srgb, #e8833a 8%, var(--qmah-surface-elevated)); border-color: color-mix(in srgb, #e8833a 35%, var(--qmah-border)); box-shadow: inset 6px 0 0 #e8833a, var(--qmah-shadow-card); }
+.streak-card .fire-orb { background: #e8833a; color: #fff; box-shadow: 0 8px 20px color-mix(in srgb, #e8833a 40%, transparent); }
+.streak-card .fire-orb app-qmah-icon { color: #fff; }
+.weekly-checkin { background: var(--qmah-surface-elevated); }
+@media (prefers-reduced-motion: reduce) { .today-reward, .checkin-button { animation: none !important; } }

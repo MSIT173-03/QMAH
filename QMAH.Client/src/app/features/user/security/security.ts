@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, OnInit, inject } from '@angular/core';
+import { MemberTitle } from '../../../shared/member-title/member-title';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -11,7 +12,8 @@ import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-ico
 
 @Component({
   selector: 'app-security',
-  imports: [ReactiveFormsModule, RouterLink, BackToMember, QmahIconComponent],
+  imports: [
+    MemberTitle,ReactiveFormsModule, RouterLink, BackToMember, QmahIconComponent],
   templateUrl: './security.html',
   styleUrl: './security.scss'
 })

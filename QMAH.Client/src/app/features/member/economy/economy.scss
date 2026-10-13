@@ -467,3 +467,157 @@ app-key-list {
 @media (prefers-reduced-motion: reduce) {
   .summary-card, .progress-fill { transition: none; }
 }
+
+/* 從商城過來時的返回橫幅 */
+.store-return {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--economy-line, rgb(0 0 0 / 12%));
+  background: color-mix(in srgb, var(--color-primary, #6b4f9e) 8%, var(--economy-surface, transparent));
+}
+
+.store-return-link {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--color-primary, #6b4f9e);
+  color: var(--color-primary-content, #fff);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.store-return-note { font-size: 0.9rem; color: var(--economy-muted); }
+
+/* ===== 點數與鑰匙流水（預設收合） ===== */
+.ledger { margin-top: 24px; border: 1px solid var(--economy-line); border-radius: 16px; background: var(--economy-surface); }
+.ledger-summary { display: flex; align-items: baseline; gap: 12px; padding: 16px 20px; cursor: pointer; list-style: none; }
+.ledger-summary::-webkit-details-marker { display: none; }
+.ledger-summary::after { content: '▾'; margin-left: auto; color: var(--economy-muted); transition: transform 160ms; }
+.ledger[open] .ledger-summary::after { transform: rotate(180deg); }
+.ledger-title { font-weight: 800; font-size: 1.0625rem; }
+.ledger-hint { color: var(--economy-muted); font-size: 0.875rem; }
+.ledger-body { padding: 0 20px 16px; border-top: 1px solid var(--economy-line); }
+.ledger-tabs { display: flex; gap: 6px; padding: 14px 0 8px; }
+.ledger-tabs button { padding: 6px 16px; border: 1px solid var(--economy-line); border-radius: 999px; background: transparent; color: var(--economy-muted); font-weight: 700; cursor: pointer; }
+.ledger-tabs button.is-active { border-color: var(--economy-gold); background: var(--economy-gold-soft); color: var(--economy-ink); }
+.ledger-list { margin: 0; padding: 0; list-style: none; transition: opacity 160ms; }
+.ledger-list.is-loading { opacity: 0.5; }
+.ledger-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, var(--economy-line) 70%, transparent); }
+.ledger-main { display: grid; gap: 2px; min-width: 0; }
+.ledger-reason { font-weight: 600; }
+.ledger-meta { color: var(--economy-muted); font-size: 0.8125rem; }
+.ledger-amount { flex: none; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ledger-amount.is-gain { color: #2f7d4f; }
+.ledger-amount.is-spend { color: #b23b32; }
+.ledger-empty { padding: 24px 0; text-align: center; color: var(--economy-muted); }
+
+
+/* 流水：工具列（分頁籤＋日期篩選）與分頁列（頁碼、跳頁） */
+.ledger-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 14px 0 6px; }
+.ledger-toolbar .ledger-tabs { padding: 0; }
+.ledger-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ledger-chip { padding: 5px 12px; border: 1px solid var(--economy-line); border-radius: 999px; background: transparent; color: var(--economy-muted); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.ledger-chip.is-active { border-color: var(--economy-gold); background: var(--economy-gold-soft); color: var(--economy-ink); }
+.ledger-date { display: inline-flex; align-items: center; gap: 6px; color: var(--economy-muted); font-size: 0.8125rem; }
+.ledger-date input { padding: 4px 8px; border: 1px solid var(--economy-line); border-radius: 8px; background: var(--economy-surface); color: var(--economy-ink); font: inherit; }
+.ledger-pager { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 14px; }
+.ledger-page { min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid var(--economy-line); border-radius: 10px; background: transparent; color: var(--economy-ink); font-weight: 700; cursor: pointer; }
+.ledger-page:disabled { opacity: 0.35; cursor: not-allowed; }
+.ledger-page.is-active { border-color: var(--economy-gold); background: var(--economy-gold-soft); }
+.ledger-gap { padding: 0 4px; color: var(--economy-muted); }
+.ledger-jump { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; color: var(--economy-muted); font-size: 0.8125rem; }
+.ledger-jump input { width: 56px; height: 34px; padding: 0 8px; border: 1px solid var(--economy-line); border-radius: 10px; background: var(--economy-surface); color: var(--economy-ink); font: inherit; text-align: center; }
+.ledger-total { color: var(--economy-muted); font-size: 0.8125rem; }
+.ledger-total--solo { margin: 12px 0 0; text-align: right; }
+
+/* 切換鈕在右上角：展開時才顯示，避開摺疊箭頭；按鈕內有圖示 */
+.ledger { position: relative; }
+.ledger-tabs--corner { position: absolute; top: 10px; right: 52px; z-index: 1; display: none; gap: 6px; padding: 0; }
+.ledger[open] .ledger-tabs--corner { display: flex; }
+.ledger-tabs--corner button { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 640px) { .ledger-tabs--corner { position: static; padding: 0 20px 8px; } .ledger[open] .ledger-tabs--corner { order: 2; } }
+
+/* ===== 點數卡的八段視覺：光暈、寶石與底色隨點數逐段加強（不標示門檻） ===== */
+.point-card {
+  --tier: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 calc(var(--tier) * 30px) color-mix(in srgb, var(--qmah-honey-action) calc(var(--tier) * 38%), transparent);
+  transition: box-shadow 400ms ease;
+}
+.point-card[data-point-tier='1'], .point-card[data-point-tier='2'] { background: color-mix(in srgb, var(--qmah-bronze) 4%, var(--economy-surface)); }
+.point-card[data-point-tier='3'] { background: color-mix(in srgb, var(--qmah-bronze) 9%, var(--economy-surface)); }
+.point-card[data-point-tier='4'] { background: linear-gradient(135deg, color-mix(in srgb, var(--qmah-bronze) 13%, var(--economy-surface)), color-mix(in srgb, var(--qmah-honey-action) 8%, var(--economy-surface))); }
+.point-card[data-point-tier='5'], .point-card[data-point-tier='6'], .point-card[data-point-tier='7'] {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--qmah-honey-action) 16%, var(--economy-surface)), color-mix(in srgb, var(--qmah-bronze) 10%, var(--economy-surface)));
+  border-color: color-mix(in srgb, var(--qmah-honey-action) 55%, var(--economy-line));
+}
+.point-card[data-point-tier='5'] .summary-value, .point-card[data-point-tier='6'] .summary-value, .point-card[data-point-tier='7'] .summary-value { text-shadow: 0 0 18px color-mix(in srgb, var(--qmah-honey-action) 45%, transparent); }
+.point-card[data-point-tier='4'] .gem-collection, .point-card[data-point-tier='5'] .gem-collection { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--qmah-honey-action) 55%, transparent)); }
+/* 第六段以上：一道緩慢掃過的光澤；傳說段再加上浮動的寶石 */
+.point-card[data-point-tier='6']::after, .point-card[data-point-tier='7']::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 35%) 50%, transparent 65%);
+  transform: translateX(-120%); animation: point-sheen 6s ease-in-out infinite;
+}
+.point-card[data-point-tier='7'] .gem-collection { animation: point-float 4s ease-in-out infinite; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--qmah-honey-action) 70%, transparent)); }
+@keyframes point-sheen { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+@keyframes point-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+@media (prefers-reduced-motion: reduce) { .point-card::after, .point-card .gem-collection { animation: none !important; } }
+
+/* ===== 整頁更寬、更扁：兩張摘要卡改成橫向排列、說明分兩欄，卡片內距收小 ===== */
+.economy-page { padding-top: 28px; }
+.summary-card { padding: 20px 28px; }
+.summary-card .asset-heading { align-items: center; }
+.summary-card .asset-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 28px; margin-top: 14px; padding-top: 14px; }
+@media (max-width: 900px) { .summary-card .asset-notes { grid-template-columns: 1fr; } }
+
+/* 區塊之間留出間距，不要黏在一起 */
+.key-backpack-section { margin-top: 32px; }
+app-coupon-exchange + .key-backpack-section { margin-top: 32px; }
+
+/* ===== 鑰匙進度的五段視覺：每 20% 換一種色相，進度條分段、圖示與光暈逐段加強 ===== */
+.key-progress-card { --kc: #4f86a8; --kc-soft: #e3eff6; }
+.key-progress-card[data-key-tier='1'] { --kc: #3f9a78; --kc-soft: #e1f3ec; }
+.key-progress-card[data-key-tier='2'] { --kc: #c99a2e; --kc-soft: #f8efd6; }
+.key-progress-card[data-key-tier='3'] { --kc: #d7762a; --kc-soft: #fbe9db; }
+.key-progress-card[data-key-tier='4'] { --kc: #c2403f; --kc-soft: #f9e0df; }
+.key-progress-card {
+  border-color: color-mix(in srgb, var(--kc) 40%, var(--economy-line));
+  background: color-mix(in srgb, var(--kc) 7%, var(--economy-surface));
+  box-shadow: 0 0 calc(var(--kt, 0) * 8px + 6px) color-mix(in srgb, var(--kc) 30%, transparent);
+  transition: background-color .4s ease, border-color .4s ease;
+  .progress-value, .asset-state, .progress-hint strong { color: var(--kc); }
+  .key-progress-icon { background: var(--kc); color: #fff; }
+  .progress-bar { height: 14px; background: color-mix(in srgb, var(--kc) 16%, var(--economy-line)); position: relative; }
+  .progress-fill { background: linear-gradient(90deg, color-mix(in srgb, var(--kc) 70%, #fff), var(--kc)); }
+  /* 五等分的刻度線 */
+  .progress-bar::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, transparent 0, transparent calc(20% - 2px), rgb(255 255 255 / 85%) calc(20% - 2px), rgb(255 255 255 / 85%) 20%); }
+}
+.key-progress-card[data-key-tier='1'] { --kt: 1; }
+.key-progress-card[data-key-tier='2'] { --kt: 2; }
+.key-progress-card[data-key-tier='3'] { --kt: 3; }
+.key-progress-card[data-key-tier='4'] { --kt: 4; }
+.key-progress-card[data-key-tier='3'] .key-progress-icon { transform: rotate(-8deg); }
+.key-progress-card[data-key-tier='4'] .key-progress-icon { animation: key-wiggle 1.8s ease-in-out infinite; }
+.key-progress-card[data-key-tier='4'] .progress-fill { animation: key-shimmer 2.4s ease-in-out infinite; }
+@keyframes key-wiggle { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg) scale(1.08); } }
+@keyframes key-shimmer { 50% { filter: brightness(1.25); } }
+@media (prefers-reduced-motion: reduce) { .key-progress-card .key-progress-icon, .key-progress-card .progress-fill { animation: none !important; } }
+
+/* 跳轉到折價券頁的入口：與其他卡片同一個底色，只用一塊主色圖示點綴 */
+.coupon-jump {
+  display: flex; align-items: center; gap: 16px; margin-top: 32px; padding: 16px 22px; border: 1px solid var(--economy-line); border-radius: 14px; text-decoration: none;
+  background: var(--economy-surface); color: var(--economy-ink);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  &:hover, &:focus-visible { transform: translateY(-2px); border-color: var(--qmah-primary); box-shadow: 0 8px 20px color-mix(in srgb, var(--economy-ink) 10%, transparent); }
+}
+.coupon-jump__icon { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 12px; background: var(--qmah-primary); color: #fff; }
+.coupon-jump__text { display: grid; gap: 2px; flex: 1; min-width: 0; strong { font-size: 17px; } small { font-size: 14px; color: var(--qmah-text-muted, #666); } }
+.coupon-jump__go { display: inline-flex; align-items: center; gap: 6px; flex: none; color: var(--qmah-primary); font-weight: 700; }
+@media (max-width: 640px) { .coupon-jump { flex-wrap: wrap; } .coupon-jump__go { width: 100%; } }

@@ -51,3 +51,20 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
 .field-error { margin: 8px 0 0; font-size: 14px; }
 .success { color: var(--qmah-primary); background: var(--qmah-jade-soft); }
 @media (max-width: 520px) { .security-page { padding: 24px 16px 40px; } .security-card { padding: 24px 20px; } }
+
+/* 寬螢幕：左側是品牌色的說明欄，右側是表單，不再是一條窄長表單加兩側空白 */
+@media (min-width: 900px) {
+  .security-card { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); column-gap: 40px; align-items: start; padding: 0; overflow: hidden; }
+  .security-card > * { grid-column: 2; margin-left: 0; margin-right: 32px; }
+  .security-card > :nth-child(2) { margin-top: 32px; }
+  .security-card > :last-child { margin-bottom: 32px; }
+  .security-card > .security-header {
+    grid-column: 1; grid-row: 1 / span 20; align-self: stretch; margin: 0; padding: 36px 28px; display: grid; align-content: start; gap: 12px;
+    background: color-mix(in srgb, var(--qmah-brand, #3b4a7a) 14%, var(--qmah-surface-elevated));
+    border-right: 1px solid var(--qmah-border);
+  }
+  .security-icon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 18px; background: var(--qmah-brand, #3b4a7a); color: #fff; }
+  .security-icon app-qmah-icon { width: 32px; height: 32px; }
+}
+
+.security-heading { margin: 0; font-size: 20px; }

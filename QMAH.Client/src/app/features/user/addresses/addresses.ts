@@ -4,6 +4,7 @@ import {
   OnInit
 } from '@angular/core';
 
+import { MemberTitle } from '../../../shared/member-title/member-title';
 import {
   CommonModule
 } from '@angular/common';
@@ -38,6 +39,7 @@ import { ConfirmationService } from '../../../core/services/confirmation';
   selector: 'app-addresses',
 
   imports: [
+    MemberTitle,
     CommonModule,
     FormsModule,
     BackToMember,
