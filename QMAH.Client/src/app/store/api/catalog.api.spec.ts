@@ -67,3 +67,21 @@ describe('CatalogApi.getRelated', () => {
     http.verify();
   });
 });
+
+describe('CatalogApi.getRecommended', () => {
+  it('asks the recommended endpoint for the given number of products', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const http = TestBed.inject(HttpTestingController);
+    let names: string[] = [];
+    TestBed.inject(CatalogApi)
+      .getRecommended(20)
+      .subscribe((items) => (names = items.map((item) => item.name)));
+
+    const request = http.expectOne((req) => req.url.endsWith('/store/products/recommended'));
+    expect(request.request.params.get('limit')).toBe('20');
+    request.flush([listItem('p2', '青花瓷瓶'), listItem('p3', '白瓷杯')]);
+
+    expect(names).toEqual(['青花瓷瓶', '白瓷杯']);
+    http.verify();
+  });
+});

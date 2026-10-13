@@ -26,6 +26,10 @@ export class CheckoutSummary {
   valid = input(false);
   /** 訂單是否已成立（送出訂單的 API 已回應） */
   placed = input(false);
+  /** 訂單送出中（請求尚未回應） */
+  submitting = input(false);
+  /** 訂單送出失敗的說明；沒有錯誤時為 null */
+  submitError = input<string | null>(null);
 
   /** 按下確認下單時觸發 */
   submitOrder = output<void>();
@@ -55,8 +59,10 @@ export class CheckoutSummary {
   /** 應付總額顯示文字 */
   protected totalLabel = computed(() => formatMoney(this.quote()?.payable ?? 0));
 
-  /** 下單按鈕文字：訂單成立後改為「訂單已送出」 */
-  protected submitLabel = computed(() => (this.placed() ? '訂單已送出' : '確認下單'));
+  /** 下單按鈕文字：送出中為「送出中…」，訂單成立後改為「訂單已送出」 */
+  protected submitLabel = computed(() =>
+    this.placed() ? '訂單已送出' : this.submitting() ? '送出中…' : '確認下單',
+  );
   /** 已送出但必填欄位未填妥時，顯示補填提示 */
   protected showMissing = computed(() => this.submitted() && !this.valid());
 

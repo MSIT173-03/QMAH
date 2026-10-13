@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, switchMap } from 'rxjs';
-import { apiUrl, meUrl } from './http';
+import { Observable, map } from 'rxjs';
+import { apiUrl } from './http';
 import {
   CheckoutOptions,
   EcpayCheckoutForm,
@@ -10,12 +10,6 @@ import {
   OrderRequest,
   OrderResult,
 } from './api.models';
-
-/** GET /me/cart 項目中下單用得到的欄位 */
-interface ApiCartLine {
-  productId: string;
-  quantity: number;
-}
 
 /** POST /store/orders 請求（後端 CreateStoreOrderRequest） */
 interface ApiCreateOrderRequest {
@@ -72,39 +66,27 @@ export class CheckoutApi {
   }
 
   /**
-   * POST /store/orders：以目前購物車內容送出訂單，回應中的金額（含運費、回饋點數）由後端重新計算。
-   * 送出前先重新試算一次，折抵點數以後端算出的上限為準，不在前端複製折抵規則。
+   * POST /store/orders：以結帳頁畫面上的試算明細送出訂單，回應中的金額（含運費、回饋點數）由後端重新計算。
+   * 商品取自試算的 lines，使用者確認過的摘要就是送出的內容；折抵點數以試算的上限為準，不在前端複製折抵規則。
+   * idempotencyKey 由結帳頁持有，同一次結帳重送時沿用同一把，後端才能找回已成立的訂單。
    * 收件人信箱、統編與備註後端尚無對應欄位，目前只保留在前端表單，不會送出。
    */
-  createOrder(order: OrderRequest): Observable<OrderResult> {
-    const idempotencyKey = crypto.randomUUID();
-    const quoteRequest: OrderQuoteRequest = {
+  createOrder(order: OrderRequest, quote: OrderQuote, idempotencyKey: string): Observable<OrderResult> {
+    const body: ApiCreateOrderRequest = {
+      items: quote.lines.map(({ productId, qty }) => ({ productId, quantity: qty })),
+      idempotencyKey,
+      userCouponId: order.couponId,
+      pointsUsed: Math.min(order.usePoints, quote.pointCap),
+      recipientName: order.recipient.name.trim(),
+      recipientPhone: order.recipient.phone.trim(),
+      shippingPostalCode: order.recipient.postalCode.trim(),
+      shippingCity: order.recipient.city.trim(),
+      shippingDistrict: order.recipient.district.trim(),
+      shippingAddressLine: order.recipient.address.trim(),
       shippingOptionId: order.shippingOptionId,
-      couponId: order.couponId,
-      usePoints: order.usePoints,
+      paymentOptionId: order.paymentOptionId,
     };
-    return this.http.get<ApiCartLine[]>(meUrl('/cart')).pipe(
-      switchMap((cart) =>
-        this.getQuote(quoteRequest).pipe(
-          switchMap((quote) => {
-            const body: ApiCreateOrderRequest = {
-              items: cart.map(({ productId, quantity }) => ({ productId, quantity })),
-              idempotencyKey,
-              userCouponId: order.couponId,
-              pointsUsed: Math.min(order.usePoints, quote.pointCap),
-              recipientName: order.recipient.name.trim(),
-              recipientPhone: order.recipient.phone.trim(),
-              shippingPostalCode: order.recipient.postalCode.trim(),
-              shippingCity: order.recipient.city.trim(),
-              shippingDistrict: order.recipient.district.trim(),
-              shippingAddressLine: order.recipient.address.trim(),
-              shippingOptionId: order.shippingOptionId,
-              paymentOptionId: order.paymentOptionId,
-            };
-            return this.http.post<ApiOrder>(apiUrl('/orders'), body);
-          }),
-        ),
-      ),
+    return this.http.post<ApiOrder>(apiUrl('/orders'), body).pipe(
       map((dto) => ({
         orderId: dto.id,
         orderNo: dto.orderNo,

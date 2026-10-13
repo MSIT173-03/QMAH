@@ -27,9 +27,14 @@
       <span class="summary-total-value">{{ totalLabel() }}</span>
     </div>
 
-    <!-- 訂單成立後停用（原生 disabled，避免重複送出） -->
-    <button type="button" class="btn-solid btn-solid--full" [disabled]="placed()"
+    <!-- 送出中與訂單成立後停用（原生 disabled，避免重複送出） -->
+    <button type="button" class="btn-solid btn-solid--full" [disabled]="placed() || submitting()"
       (click)="submitOrder.emit()">{{ submitLabel() }}</button>
+
+    <!-- 訂單送出失敗時顯示後端說明 -->
+    @if (submitError(); as error) {
+      <span class="field-warning" role="alert">{{ error }}</span>
+    }
 
     <!-- 必填欄位未填妥時的補填提示 -->
     @if (showMissing()) {

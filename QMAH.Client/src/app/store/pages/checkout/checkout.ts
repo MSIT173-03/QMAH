@@ -1,7 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { EMPTY, catchError, distinctUntilChanged, filter, switchMap } from 'rxjs';
+import { EMPTY, catchError, distinctUntilChanged, filter, finalize, switchMap } from 'rxjs';
 import {
   SiteHeader,
   StepIndicator,
@@ -13,7 +14,9 @@ import {
 import { CheckoutApi, MemberApi } from '../../api';
 import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
 import { EMPTY_RECIPIENT } from '../../api/member.api';
-import { CART_PATH, HOME_PATH, MEMBER_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
+import { CART_PATH, CHECKOUT_PATH, HOME_PATH, MEMBER_PATH, PRODUCT_LIST_PATH, loginPath } from '../../shared/paths';
+import { problemDetail } from '../../shared/problem-detail';
+import { StoreAuth } from '../../shared/store-auth';
 import { RecipientForm } from './recipient-form/recipient-form';
 import { DeliveryOptions } from './delivery-options/delivery-options';
 import { CouponPicker } from './coupon-picker/coupon-picker';
@@ -59,6 +62,7 @@ export class Checkout {
   private readonly checkoutApi = inject(CheckoutApi);
   private readonly memberApi = inject(MemberApi);
   private readonly router = inject(Router);
+  private readonly auth = inject(StoreAuth);
 
   /** 頁首的結帳流程步驟 */
   protected readonly steps = CHECKOUT_STEPS;
@@ -112,6 +116,14 @@ export class Checkout {
   protected customPoints = signal('');
   /** 是否已按下確認下單 */
   protected submitted = signal(false);
+  /** 訂單送出中（請求尚未回應）；期間不再送出第二次 */
+  protected submitting = signal(false);
+  /** 訂單送出失敗的說明；沒有錯誤時為 null */
+  protected submitError = signal<string | null>(null);
+  /** 同一次結帳安全重送用的識別：失敗後重送沿用同一把，訂單成立後才換新 */
+  private idempotencyKey = crypto.randomUUID();
+  /** 遞增即強制重新試算（選項沒變時也重送），下單被後端拒絕後使用 */
+  private readonly quoteRefresh = signal(0);
   /** 訂單成立後的 API 回應，未成立時為 null */
   protected order = signal<OrderResult | null>(null);
   /** 訂單送出成功提示是否顯示；跟 order() 是否成立同步 */
@@ -136,17 +148,23 @@ export class Checkout {
 
   /** 後端試算結果；選項變動時重新試算，試算失敗時保留上一次的結果 */
   protected quote = toSignal(
-    toObservable(this.quoteRequest).pipe(
-      filter((request): request is OrderQuoteRequest => request !== null),
+    toObservable(
+      computed(() => {
+        const request = this.quoteRequest();
+        return request ? { request, refresh: this.quoteRefresh() } : null;
+      }),
+    ).pipe(
+      filter((trigger): trigger is { request: OrderQuoteRequest; refresh: number } => trigger !== null),
       // quoteRequest 每次重算都是新物件（例如會員點數載入後），內容沒變就不重送，
       // 否則 switchMap 會取消還在途中的相同請求，API 端就會收到被中止的請求。
       distinctUntilChanged(
         (previous, current) =>
-          previous.shippingOptionId === current.shippingOptionId &&
-          previous.couponId === current.couponId &&
-          previous.usePoints === current.usePoints,
+          previous.refresh === current.refresh &&
+          previous.request.shippingOptionId === current.request.shippingOptionId &&
+          previous.request.couponId === current.request.couponId &&
+          previous.request.usePoints === current.request.usePoints,
       ),
-      switchMap((request) => this.checkoutApi.getQuote(request).pipe(catchError(() => EMPTY))),
+      switchMap(({ request }) => this.checkoutApi.getQuote(request).pipe(catchError(() => EMPTY))),
     ),
     { initialValue: null },
   );
@@ -180,14 +198,43 @@ export class Checkout {
     if (!options) return;
     this.submitted.set(true);
     const request = this.quoteRequest();
-    if (!this.valid() || !request) return;
+    const quote = this.quote();
+    // 試算尚未取得時不送出：下單商品就是畫面上的試算明細。
+    if (!this.valid() || !request || !quote || this.submitting()) return;
+
+    this.submitting.set(true);
+    this.submitError.set(null);
     this.checkoutApi
-      .createOrder({
-        ...request,
-        recipient: this.form(),
-        paymentOptionId: options.paymentOptions[this.payIndex()].id,
-      })
-      .subscribe((order) => this.order.set(order));
+      .createOrder(
+        {
+          ...request,
+          recipient: this.form(),
+          paymentOptionId: options.paymentOptions[this.payIndex()].id,
+        },
+        quote,
+        this.idempotencyKey,
+      )
+      .pipe(finalize(() => this.submitting.set(false)))
+      .subscribe({
+        next: (order) => {
+          this.order.set(order);
+          this.idempotencyKey = crypto.randomUUID();
+        },
+        error: (error: unknown) => {
+          const status = error instanceof HttpErrorResponse ? error.status : 0;
+          if (status === 401) {
+            // 登入已失效：清除登入狀態並導向登入頁，登入後回到結帳頁。
+            this.auth.markSignedOut();
+            this.router.navigateByUrl(loginPath(CHECKOUT_PATH));
+            return;
+          }
+          this.submitError.set(problemDetail(error, '訂單目前無法送出，請稍後再試。'));
+          // 後端明確拒絕（4xx）時訂單沒有成立，重新試算讓金額反映庫存或優惠券的最新狀態。
+          // 連線中斷或 5xx 時訂單可能其實已成立（購物車已清空），保留原試算，
+          // 重送才會帶同樣的商品與同一把 key，讓後端找回原訂單。
+          if (status >= 400 && status < 500) this.quoteRefresh.update((count) => count + 1);
+        },
+      });
   }
 
   /** 訂單送出成功提示唯一的出路：回到商品列表 */

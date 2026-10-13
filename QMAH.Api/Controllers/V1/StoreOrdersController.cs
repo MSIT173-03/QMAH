@@ -230,34 +230,19 @@ public sealed class StoreOrdersController(
         if (userCoupon is null)
             return (null, 0m, MissingResource("找不到優惠券", "這張優惠券不存在或不屬於目前帳號。"));
 
-        var definition = userCoupon.CouponDefinition;
-        var now = DateTime.UtcNow;
-        // integration: UserCoupon 自己的到期日與 CouponDefinition 的活動區間都要檢查，
-        // 前者保護會員實際領到的期限，後者保護商城營運設定；只檢查其中一層會讓失效券被使用。
-        if (!definition.IsActive
-            || definition.StartAt > now
-            || definition.EndAt <= now
-            || userCoupon.ExpiresAt <= now)
-            return (null, 0m, InvalidWorkflow("優惠券不可使用", "優惠券可能已使用、過期或尚未開始。"));
-
-        if (subtotal < definition.MinimumAmount)
-            return (null, 0m, InvalidWorkflow("未達優惠券門檻", $"訂單小計至少需要 {definition.MinimumAmount:0.##} 元。"));
-
-        if (definition.DiscountType is not ("PERCENT" or "FIXED"))
-            return (null, 0m, InvalidWorkflow("優惠券設定無效", "目前優惠券的折扣類型無法套用。"));
-
-        var discountAmount = definition.DiscountType switch
+        // 有效性與折抵金額由試算與下單共用的 StoreCouponRules 判斷，這裡只把結果對應成下單的錯誤訊息。
+        var (rejection, discountAmount) = StoreCouponRules.Evaluate(userCoupon, subtotal, DateTime.UtcNow);
+        return rejection switch
         {
-            "PERCENT" => subtotal * definition.DiscountValue / 100m,
-            "FIXED" => definition.DiscountValue,
-            _ => throw new InvalidOperationException("已通過折扣類型檢查，不應進入此分支。")
+            CouponRejection.None => (userCoupon, discountAmount, null),
+            CouponRejection.NotInEffect =>
+                (null, 0m, InvalidWorkflow("優惠券不可使用", "優惠券可能已使用、過期或尚未開始。")),
+            CouponRejection.BelowMinimum =>
+                (null, 0m, InvalidWorkflow(
+                    "未達優惠券門檻",
+                    $"訂單小計至少需要 {userCoupon.CouponDefinition.MinimumAmount:0.##} 元。")),
+            _ => (null, 0m, InvalidWorkflow("優惠券設定無效", "目前優惠券的折扣類型無法套用。"))
         };
-        discountAmount = Math.Clamp(
-            decimal.Round(discountAmount, 2, MidpointRounding.AwayFromZero),
-            0m,
-            subtotal);
-
-        return (userCoupon, discountAmount, null);
     }
 
     private async Task<ActionResult?> ValidatePointsUsageAsync(
