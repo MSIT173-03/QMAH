@@ -21,7 +21,7 @@ import { StoreLink } from '../../shared/store-link';
 import { injectCartState } from '../../shared/page-state';
 import { problemDetail } from '../../shared/problem-detail';
 import { formatDateMD, formatNumber } from '../../shared/format';
-import { couponToneOf } from '../../shared/coupon-tone';
+import { compareCouponOff, couponToneOf } from '../../shared/coupon-tone';
 
 /** 兌換成功後頁面會重新整理，結果訊息暫存在 sessionStorage，等重新載入完成後再顯示 */
 const REDEEM_NOTICE_KEY = 'qmah.store.couponRedeemNotice';
@@ -180,7 +180,7 @@ export class CouponStore {
   /** 供模板顯示的持有折價券：快到期的排前面，券面與商店同一個形式，右側改顯示到期日 */
   private readonly ownedAll = computed(() =>
     [...(this.ownedResult() ?? [])]
-      .sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'))
+      .sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999') || compareCouponOff(a.off, b.off))
       .map((coupon) => ({
         id: coupon.id,
         off: coupon.off,

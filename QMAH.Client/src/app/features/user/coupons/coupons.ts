@@ -12,7 +12,7 @@ import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
-import { couponToneOf } from '../../../store/shared/coupon-tone';
+import { compareCouponOff, couponToneOf } from '../../../store/shared/coupon-tone';
 import { MemberApi } from '../../../store/api/member.api';
 import { CouponExchange } from '../../member/economy/coupon-exchange/coupon-exchange';
 
@@ -131,7 +131,7 @@ export class Coupons implements OnInit {
     const list = this.selectedStatus === 'ALL' ? this.coupons : this.coupons.filter((coupon) => coupon.status === this.selectedStatus);
     // 可使用的排前面、快到期的最前；其餘維持原順序
     const rank = (coupon: MemberCoupon) => (coupon.status === 'AVAILABLE' ? 0 : 1);
-    return [...list].sort((a, b) => rank(a) - rank(b) || new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime());
+    return [...list].sort((a, b) => rank(a) - rank(b) || new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime() || compareCouponOff(this.offText(a), this.offText(b)));
   }
 
   /** 預設先顯示的張數（三欄兩排以上），其餘展開 */
@@ -237,6 +237,7 @@ export class Coupons implements OnInit {
     switch (type) {
 
       case 'POINT_REDEEM':
+      case 'POINT_EXCHANGE':
         return '點數兌換';
 
       case 'ADMIN_GRANT':

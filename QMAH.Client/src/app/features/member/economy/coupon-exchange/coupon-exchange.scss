@@ -38,12 +38,21 @@
 .exchange-cost:hover:not(:disabled) { background: var(--ec); color: #fff; }
 .exchange-cost:hover:not(:disabled) small { color: rgb(255 255 255 / 85%); }
 
-/* 券色規則與商城一致：現金折抵＝金、折扣券＝靛藍，面額越大色階越深 */
-.exchange-card[data-kind='cash'][data-tier='1'] { --ec: #c9a24a; }
-.exchange-card[data-kind='cash'][data-tier='2'] { --ec: #b07a2c; }
-.exchange-card[data-kind='cash'][data-tier='3'] { --ec: #8a4f14; }
-.exchange-card[data-kind='percent'][data-tier='1'] { --ec: #6f86c4; }
-.exchange-card[data-kind='percent'][data-tier='2'] { --ec: #43599a; }
-.exchange-card[data-kind='percent'][data-tier='3'] { --ec: #2f3a78; }
 
 @media (max-width: 700px) { .exchange-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* 券面規則與商城一致：現金折抵＝金、折扣券＝靛藍；面額高低用星星數表示，最高檔再加斜紋 */
+.exchange-card[data-kind='percent'] { --ec: #43599a; }
+.exchange-off { position: relative; flex-direction: column; }
+.exchange-card[data-tier='1'] .exchange-off::after { content: '★'; }
+.exchange-card[data-tier='2'] .exchange-off::after { content: '★★'; }
+.exchange-card[data-tier='3'] .exchange-off::after { content: '★★★'; }
+.exchange-off::after { display: block; margin-top: 2px; font-size: 11px; letter-spacing: .1em; opacity: .9; }
+.exchange-card[data-tier='3'] .exchange-off { background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 14%) 0 6px, transparent 6px 14px); }
+
+/* 蓋章：與商城票券相同的品牌印記 */
+.exchange-off { isolation: isolate; overflow: hidden; }
+.exchange-off::before {
+  content: ''; position: absolute; z-index: -1; inset: auto -10px -14px auto; width: 70px; height: 70px; background: rgb(255 255 255 / 22%);
+  -webkit-mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat; mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat;
+}

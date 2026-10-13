@@ -597,3 +597,22 @@
 .summary-section .title-summary .summary-icon { background: #6b5390; }
 .summary-section .title-summary .summary-value { color: #533f74; }
 .achievement-count { background: #b07a2c; color: #fff; }
+
+/* 卡片內距與資訊列：文字不再貼著邊緣，三個欄位等寬、上下留白一致 */
+.achievement-card { padding: 28px; gap: 6px; }
+.achievement-card .achievement-icon { margin-bottom: 6px; }
+.achievement-card .description { margin: 6px 0 18px; line-height: 1.7; }
+.achievement-card .achievement-info {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 18px; padding: 16px 18px;
+}
+.achievement-card .achievement-info > div { display: grid; gap: 6px; min-width: 0; }
+.achievement-card .achievement-info span { font-size: 12.5px; opacity: .75; }
+.achievement-card .achievement-info strong { font-size: 14.5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+/* 資訊列改成「左標籤、右數值」的清單：一行一項、文字用中性的內文色，不再三欄擠在一起 */
+.achievement-card .achievement-info { display: grid; grid-template-columns: 1fr; gap: 0; padding: 6px 18px; }
+.achievement-card .achievement-info > div { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
+.achievement-card .achievement-info > div + div { border-top: 1px solid color-mix(in srgb, var(--qmah-ink) 10%, transparent); }
+.achievement-card .achievement-info span { color: var(--qmah-ink); opacity: .6; font-size: 13px; }
+.achievement-card .achievement-info strong { color: var(--qmah-ink); opacity: .85; font-size: 14.5px; font-weight: 600; text-align: right; }
+.achievement-card .description { color: var(--qmah-ink); opacity: .75; }

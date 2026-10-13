@@ -112,7 +112,11 @@ export class Achievements implements OnInit {
 
       default:
         // 內部代碼不給會員看：文物解鎖類顯示成白話，其餘一律顯示通用說明
-        return conditionType.startsWith('ARTIFACT_UNLOCK') ? '解鎖文物數' : '特殊條件';
+        if (conditionType.includes('CONSECUTIVE')) return '連續登入天數';
+        if (conditionType.includes('LOGIN')) return '累積登入天數';
+        if (conditionType.startsWith('ARTIFACT_UNLOCK')) return '解鎖文物數';
+        if (conditionType.includes('ERA') || conditionType.includes('CATEGORY')) return '完成年代／器類';
+        return '特殊條件';
 
     }
 

@@ -1095,10 +1095,17 @@
 @media (max-width: 760px) { .cp-grid { grid-template-columns: 1fr; } }
 @media (max-width: 480px) { .cp-card { grid-template-columns: 100px minmax(0, 1fr) auto; } .cp-title h1 { font-size: 28px; } }
 
-/* 券色規則與商城一致：現金折抵＝金、折扣券＝靛藍，面額越大色階越深 */
-.cp-card[data-kind='cash'][data-tier='1'] { --cc: #c9a24a; --cc-line: #c9a24a; }
-.cp-card[data-kind='cash'][data-tier='2'] { --cc: #b07a2c; --cc-line: #b8893a; }
-.cp-card[data-kind='cash'][data-tier='3'] { --cc: #8a4f14; --cc-line: #8f5a22; }
-.cp-card[data-kind='percent'][data-tier='1'] { --cc: #6f86c4; --cc-line: #6f86c4; }
-.cp-card[data-kind='percent'][data-tier='2'] { --cc: #43599a; --cc-line: #5568a6; }
-.cp-card[data-kind='percent'][data-tier='3'] { --cc: #2f3a78; --cc-line: #3a4682; }
+
+/* 券面規則與商城一致：現金折抵＝金、折扣券＝靛藍；面額高低用星星數表示，最高檔再加斜紋 */
+.cp-card[data-kind='percent'] { --cc: #43599a; --cc-line: #5568a6; }
+.cp-card[data-tier='1'] .cp-card__off::after { content: '★  折價券'; }
+.cp-card[data-tier='2'] .cp-card__off::after { content: '★★  折價券'; }
+.cp-card[data-tier='3'] .cp-card__off::after { content: '★★★  折價券'; }
+.cp-card[data-tier='3'] .cp-card__off { background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 14%) 0 6px, transparent 6px 14px), linear-gradient(145deg, color-mix(in srgb, var(--cc) 78%, #fff), var(--cc)); }
+
+/* 蓋章：與商城票券相同，券面左塊右下角有淡淡的品牌印記 */
+.cp-card__off { position: relative; isolation: isolate; overflow: hidden; }
+.cp-card__off::before {
+  content: ''; position: absolute; z-index: -1; inset: auto -14px -18px auto; width: 92px; height: 92px; background: rgb(255 255 255 / 22%);
+  -webkit-mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat; mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat;
+}
