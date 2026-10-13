@@ -26,6 +26,9 @@ public sealed class StoreCatalogController(
         Random,
     }
 
+    /// <summary>商品關鍵字搜尋的字數上限；前端搜尋框的 maxlength 需與此一致。</summary>
+    private const int MaxKeywordLength = 100;
+
     [HttpGet("categories")]
     public async Task<ActionResult<IReadOnlyList<StoreCategoryDto>>> GetCategories(
         CancellationToken cancellationToken = default)
@@ -112,6 +115,12 @@ public sealed class StoreCatalogController(
             .AsNoTracking()
             .Where(product => product.IsActive);
         q = q?.Trim();
+        // 關鍵字以 LIKE '%q%' 比對、用不到索引；限制長度避免過長的字串拖慢整張表的掃描。
+        if (q?.Length > MaxKeywordLength)
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "搜尋文字過長",
+                detail: $"搜尋文字最多可輸入 {MaxKeywordLength} 字。");
         categoryCode = categoryCode?.Trim().ToUpperInvariant();
         eraCode = eraCode?.Trim().ToUpperInvariant();
 

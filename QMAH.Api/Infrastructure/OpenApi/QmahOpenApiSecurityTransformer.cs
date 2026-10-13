@@ -316,7 +316,7 @@ public sealed class QmahOpenApiSecurityTransformer(
             ("MemberCatalog.GetArtifacts", "q") or ("MemberCatalog.GetUnlocks", "q") => "搜尋文物名稱、故宮編號或原始年代文字",
             ("MemberCatalog.GetArtifacts", "categoryCode") or ("MemberCatalog.GetUnlocks", "categoryCode") => "文物分類 code（系統代碼）",
             ("MemberCatalog.GetArtifacts", "eraCode") or ("MemberCatalog.GetUnlocks", "eraCode") => "文物年代 code（系統代碼）",
-            ("StoreCatalog.GetProducts", "q") => "搜尋商品名稱或 ExternalRef（外部商品編號）",
+            ("StoreCatalog.GetProducts", "q") => "搜尋商品名稱或 ExternalRef（外部商品編號），最多 100 字，超過回傳 400",
             ("StoreCatalog.GetProducts", "categoryCode") => "商品分類 code（系統代碼）",
             ("StoreCatalog.GetProducts", "artifactId") => "關聯文物 Id（資源識別碼），GUID（全域唯一識別碼）格式",
             ("StoreCatalog.GetProducts", "eraCode") => "關聯文物的年代 code（系統代碼），對應 GET /store/eras 的 code",
