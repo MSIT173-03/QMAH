@@ -128,105 +128,41 @@ public sealed class StoreCatalogController(
         if (artifactId.HasValue)
             query = query.Where(product => product.ArtifactId == artifactId.Value);
 
-        // integration: 限時特賣接受有效單品售價或真正大於 0 的商品折扣率，不以前端標籤推測。
+        // 售價相關的篩選與排序都引用 WithPricing 算出的欄位，售價規則只有 Product.EffectivePriceExpression 一份。
+        var priced = query.WithPricing();
+
+        // integration: 限時特賣以後端算出的折扣後售價判斷（有效單品售價或大於 0 的折扣率），不以前端標籤推測。
         if (dealOnly == true)
-            query = query.Where(product =>
-                (product.SalePrice.HasValue
-                    && product.SalePrice.Value > 0m
-                    && product.SalePrice.Value < product.Price)
-                || product.DiscountRate > 0m);
-
+            priced = priced.Where(item => item.SalePrice != null);
         if (minPrice is not null and > 0)
-            query = query.Where(p =>
-                (p.SalePrice.HasValue
-                    && p.SalePrice.Value > 0m
-                    && p.SalePrice.Value < p.Price
-                    ? p.SalePrice.Value
-                    : Math.Round(p.Price * (100m - p.DiscountRate) / 100m, 2)) >= minPrice);
+            priced = priced.Where(item => item.EffectivePrice >= minPrice);
         if (maxPrice is not null and > 0)
-            query = query.Where(p =>
-                (p.SalePrice.HasValue
-                    && p.SalePrice.Value > 0m
-                    && p.SalePrice.Value < p.Price
-                    ? p.SalePrice.Value
-                    : Math.Round(p.Price * (100m - p.DiscountRate) / 100m, 2)) < maxPrice);
+            priced = priced.Where(item => item.EffectivePrice < maxPrice);
 
-        var query2 = query.Select(g => new
+        var rows = priced.SelectListRows();
+        var sorted = order switch
         {
-            g.Id,
-            g.ArtifactId,
-            g.ExternalRef,
-            g.Name,
-            g.CategoryCode,
-            g.Price,
-            g.DiscountRate,
-            EffectivePrice = g.SalePrice.HasValue
-                && g.SalePrice.Value > 0m
-                && g.SalePrice.Value < g.Price
-                ? g.SalePrice.Value
-                : Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2),
-            SalePrice = g.SalePrice.HasValue
-                && g.SalePrice.Value > 0m
-                && g.SalePrice.Value < g.Price
-                ? g.SalePrice
-                : g.DiscountRate > 0m
-                    ? Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2)
-                    : (decimal?)null,
-            g.Stock,
-            PrimaryImagePath = g.PrimaryImagePath ?? (g.Artifact == null ? null : g.Artifact.PrimaryImagePath),
-            g.CreatedAt,
-            AverageRating = db.ProductReviews
-                    .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
-                    .Average(r => (decimal?)r.Rating) ?? 0m,
-            ReviewCount = db.ProductReviews
-                    .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
-            SellCount = db.OrderDetails
-                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
-                    .Sum(o => o.Quantity)
-        });
-
-        // 排序
-        var query3 = order switch
-        {
-            OrderType.HotSell => query2
-                .OrderByDescending(g => g.SellCount)
-                .ThenBy(g => g.Id),
-            OrderType.Older => query2
-                .OrderBy(g => g.CreatedAt)
-                .ThenBy(g => g.Id),
-            OrderType.Newer => query2
-                .OrderByDescending(g => g.CreatedAt)
-                .ThenBy(g => g.Id),
-            OrderType.CheaperFirst => query2
-                .OrderBy(g => g.EffectivePrice)
-                .ThenBy(g => g.Id),
-            OrderType.PricierFirst => query2
-                .OrderByDescending(g => g.EffectivePrice)
-                .ThenBy(g => g.Id),
-            OrderType.Random => query2
-                .OrderBy(g => Guid.NewGuid()),
-            _ => query2.OrderBy(g => g.Id),
+            OrderType.HotSell => rows
+                .OrderByDescending(row => row.SellCount)
+                .ThenBy(row => row.Id),
+            OrderType.Older => rows
+                .OrderBy(row => row.CreatedAt)
+                .ThenBy(row => row.Id),
+            OrderType.Newer => rows
+                .OrderByDescending(row => row.CreatedAt)
+                .ThenBy(row => row.Id),
+            OrderType.CheaperFirst => rows
+                .OrderBy(row => row.EffectivePrice)
+                .ThenBy(row => row.Id),
+            OrderType.PricierFirst => rows
+                .OrderByDescending(row => row.EffectivePrice)
+                .ThenBy(row => row.Id),
+            OrderType.Random => rows
+                .OrderBy(row => Guid.NewGuid()),
+            _ => rows.OrderBy(row => row.Id),
         };
 
-        var res = query3.Select(g => new ProductListItemDto(
-            g.Id,
-            g.ArtifactId,
-            g.ExternalRef,
-            g.Name,
-            g.CategoryCode,
-            g.Price,
-            g.DiscountRate,
-            g.EffectivePrice,
-            g.SalePrice,
-            g.Stock,
-            g.PrimaryImagePath,
-            g.CreatedAt,
-            g.AverageRating,
-            g.ReviewCount,
-            g.SellCount
-        ));
-
-        var result = await ApiPaging.ToPageAsync(res, page, pageSize, cancellationToken);
+        var result = await ApiPaging.ToPageAsync(sorted.ToListItems(), page, pageSize, cancellationToken);
 
         // 原本直接回傳資料庫中的 PrimaryImagePath；棄用原因：CDN 模式需要統一轉換公開圖片網址。
         return Ok(result with
@@ -247,42 +183,34 @@ public sealed class StoreCatalogController(
     {
         var product = await db.Products
             .AsNoTracking()
-            .Where(item => item.Id == id && item.IsActive)
+            .Where(product => product.Id == id && product.IsActive)
+            .WithPricing()
             .Select(item => new ProductDetailsDto(
-                item.Id,
-                item.ArtifactId,
-                item.Artifact == null ? null : item.Artifact.ArtifactRef,
-                item.Artifact == null ? null : item.Artifact.Name,
-                item.ExternalRef,
-                item.Name,
-                item.CategoryCode,
-                item.Description,
-                item.SizeText,
+                item.Product.Id,
+                item.Product.ArtifactId,
+                item.Product.Artifact == null ? null : item.Product.Artifact.ArtifactRef,
+                item.Product.Artifact == null ? null : item.Product.Artifact.Name,
+                item.Product.ExternalRef,
+                item.Product.Name,
+                item.Product.CategoryCode,
+                item.Product.Description,
+                item.Product.SizeText,
                 // 同時提供關聯文物原始尺寸；商品尺寸不再承擔兩種語意。
-                item.Artifact == null ? null : item.Artifact.SizeText,
-                item.Price,
-                item.DiscountRate,
-                item.SalePrice.HasValue
-                    && item.SalePrice.Value > 0m
-                    && item.SalePrice.Value < item.Price
-                    ? item.SalePrice.Value
-                    : Math.Round(item.Price * (100m - item.DiscountRate) / 100m, 2),
-                item.SalePrice.HasValue
-                    && item.SalePrice.Value > 0m
-                    && item.SalePrice.Value < item.Price
-                    ? item.SalePrice
-                    : item.DiscountRate > 0m
-                        ? Math.Round(item.Price * (100m - item.DiscountRate) / 100m, 2)
-                        : (decimal?)null,
-                item.Stock,
-                item.PrimaryImagePath ?? (item.Artifact == null ? null : item.Artifact.PrimaryImagePath),
-                item.SourceUrl,
-                item.IsActive,
-                item.ProductReviews
+                item.Product.Artifact == null ? null : item.Product.Artifact.SizeText,
+                item.Product.Price,
+                item.Product.DiscountRate,
+                item.EffectivePrice,
+                item.SalePrice,
+                item.Product.Stock,
+                item.Product.PrimaryImagePath
+                    ?? (item.Product.Artifact == null ? null : item.Product.Artifact.PrimaryImagePath),
+                item.Product.SourceUrl,
+                item.Product.IsActive,
+                item.Product.ProductReviews
                     .Where(review => review.Status == "PUBLISHED")
                     .Select(review => (decimal?)review.Rating)
                     .Average() ?? 0m,
-                item.ProductReviews.Count(review => review.Status == "PUBLISHED")))
+                item.Product.ProductReviews.Count(review => review.Status == "PUBLISHED")))
             .SingleOrDefaultAsync(cancellationToken);
 
         if (product is null)
@@ -440,37 +368,9 @@ public sealed class StoreCatalogController(
         var products = await db.Products
             .AsNoTracking()
             .Where(product => productIds.Contains(product.Id))
-            .Select(g => new ProductListItemDto(
-                g.Id,
-                g.ArtifactId,
-                g.ExternalRef,
-                g.Name,
-                g.CategoryCode,
-                g.Price,
-                g.DiscountRate,
-                g.SalePrice.HasValue
-                    && g.SalePrice.Value > 0m
-                    && g.SalePrice.Value < g.Price
-                    ? g.SalePrice.Value
-                    : Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2),
-                g.SalePrice.HasValue
-                    && g.SalePrice.Value > 0m
-                    && g.SalePrice.Value < g.Price
-                    ? g.SalePrice
-                    : g.DiscountRate > 0m
-                        ? Math.Round(g.Price * (100m - g.DiscountRate) / 100m, 2)
-                        : (decimal?)null,
-                g.Stock,
-                g.PrimaryImagePath ?? (g.Artifact == null ? null : g.Artifact.PrimaryImagePath),
-                g.CreatedAt,
-                db.ProductReviews
-                    .Where(r => r.ProductId == g.Id && r.Status == "PUBLISHED")
-                    .Average(r => (decimal?)r.Rating) ?? 0m,
-                db.ProductReviews
-                    .Count(r => r.ProductId == g.Id && r.Status == "PUBLISHED"),
-                db.OrderDetails
-                    .Where(o => o.ProductId == g.Id && db.StoreOrders.Where(s => s.Id == o.OrderId && s.Status == "COMPLETED").Any())
-                    .Sum(o => o.Quantity)))
+            .WithPricing()
+            .SelectListRows()
+            .ToListItems()
             .ToListAsync(cancellationToken);
 
         return productIds
