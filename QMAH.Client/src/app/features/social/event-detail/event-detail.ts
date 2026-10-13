@@ -1,3 +1,4 @@
+import { SocialWidthToggleComponent } from '../../../shared/components/social-width-toggle/social-width-toggle';
 import { ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, inject } from '@angular/core';
 import { MeApiService } from '../../../core/services/me-api';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
@@ -16,7 +17,7 @@ import { LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourgl
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, EventMapComponent, PostDetailComponent, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUsers, UserAvatarComponent],
+  imports: [SocialWidthToggleComponent, CommonModule, RouterLink, EventMapComponent, PostDetailComponent, LucideArrowLeft, LucideCalendarClock, LucideMessageCircle, LucideHourglass, LucideMapPin, LucideUsers, UserAvatarComponent],
   templateUrl: './event-detail.html',
   styleUrls: ['../social-common.scss', './event-detail.scss']
 })

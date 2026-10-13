@@ -241,7 +241,8 @@ public sealed record SocialCommentDto(
     string? DisplayName,
     string Content,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string? AuthorTitle = null);
 
 public sealed record SocialPostDetailsDto(
     Guid Id,
@@ -836,7 +837,12 @@ public sealed record SocialMemberProfileDto(
     string? Email,
     bool IsPublic,
     int PostCount,
-    int EventCount);
+    int EventCount,
+    string DisplayTitle,
+    IReadOnlyList<MemberAchievementDto> Achievements);
+
+/// <summary>公開個人頁列出的已取得成就；配戴中的排最前。</summary>
+public sealed record MemberAchievementDto(string Name, string Title, string? Description, DateTime AchievedAt, bool IsDisplayed);
 
 /// <summary>活動發起人看到的參加者名單；取消報名的人另外放在 Cancelled，只記「來過並取消」，不保留每次操作的流水紀錄。</summary>
 public sealed record EventRegistrationsDto(

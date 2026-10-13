@@ -1,3 +1,4 @@
+import { SocialWidthToggleComponent } from '../../../shared/components/social-width-toggle/social-width-toggle';
 import { ChangeDetectorRef, Component, Input, OnChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +9,7 @@ import { forkJoin } from 'rxjs';
 import { EventListItem, SocialApiService, SocialMemberProfile, SocialPostListItem } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
 import { BoardIconComponent } from '../../../shared/components/board-icon/board-icon';
-import { LucideArrowLeft, LucideCalendarDays, LucideFileText, LucideMessageCircle, LucideSend, LucideUserRound } from '@lucide/angular';
+import { LucideArrowLeft, LucideCalendarDays, LucideFileText, LucideMessageCircle, LucideSend, LucideTrophy, LucideUserRound } from '@lucide/angular';
 import { boardLabel, eventMode } from '../social-labels';
 import { stripSocialMarkup } from '../../../shared/social-markup';
 
@@ -19,7 +20,7 @@ const MESSAGE_MAX = 300;
 @Component({
   selector: 'app-member-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BoardIconComponent, LucideArrowLeft, LucideCalendarDays, LucideFileText, LucideMessageCircle, LucideSend, LucideUserRound],
+  imports: [SocialWidthToggleComponent, CommonModule, FormsModule, RouterLink, BoardIconComponent, LucideArrowLeft, LucideCalendarDays, LucideFileText, LucideMessageCircle, LucideSend, LucideTrophy, LucideUserRound],
   templateUrl: './member-profile.html',
   styleUrls: ['../social-common.scss', './member-profile.scss']
 })

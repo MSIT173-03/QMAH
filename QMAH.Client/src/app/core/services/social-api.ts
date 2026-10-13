@@ -51,9 +51,13 @@ export interface SocialMemberProfile {
   isPublic: boolean;
   postCount: number;
   eventCount: number;
+  displayTitle: string;
+  achievements: { name: string; title: string; description: string | null; achievedAt: string; isDisplayed: boolean }[];
 }
 
 export interface SocialComment {
+  /** 留言者目前展示的稱號 */
+  authorTitle?: string | null;
   id: string;
   postId: string;
   parentCommentId: string | null;

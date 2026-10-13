@@ -3,6 +3,7 @@
     <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
     返回貼文牆
   </a>
+  <app-social-width-toggle />
 
   @if (loading) {
     <div class="social-state" role="status" aria-live="polite"><span class="loading loading-spinner loading-lg"></span></div>
@@ -20,7 +21,7 @@
           }
         </div>
         <div class="mp-hero__text">
-          <h1 class="member-name">{{ profile.nickname }}</h1>
+          <h1 class="member-name">{{ profile.nickname }}<span class="social-tag social-author-title mp-title">{{ profile.displayTitle }}</span></h1>
           @if (profile.isPublic && profile.bio) { <p class="member-bio">{{ profile.bio }}</p> }
           @else if (!profile.isPublic) { <p class="social-meta">這位會員沒有公開個人檔案。</p> }
           <ul class="mp-facts">
@@ -36,6 +37,19 @@
 
     <div class="mp-grid">
       <div class="mp-main">
+        @if (profile.achievements.length > 0) {
+          <section class="member-section">
+            <h2><svg lucideTrophy aria-hidden="true" focusable="false"></svg>成就<span class="social-meta">{{ profile.achievements.length }} 項</span></h2>
+            <ul class="mp-badges">
+              @for (a of profile.achievements; track a.name) {
+                <li class="mp-badge" [class.is-worn]="a.isDisplayed" [attr.title]="a.description">
+                  <strong>{{ a.title }}</strong>
+                  <small>{{ a.name }} · {{ a.achievedAt | date: 'yyyy/MM/dd' }}</small>
+                </li>
+              }
+            </ul>
+          </section>
+        }
         <section class="member-section">
           <h2><svg lucideFileText aria-hidden="true" focusable="false"></svg>貼文</h2>
           @if (posts.length === 0) {

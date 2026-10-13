@@ -145,13 +145,11 @@ public sealed class SocialController(
                     .Select(media => "/api/v1/social/media/" + media.Id + "/content")
                     .ToList(),
                 hasCurrentUser && db.PostBookmarks.Any(mark => mark.UserId == currentUserId && mark.PostId == post.Id),
-                post.PublisherType == "COMMUNITY"
-                    ? db.UserAchievements
-                        .Where(item => item.UserId == post.UserId && item.IsDisplayed && item.Achievement.Status == "ACTIVE")
-                        .OrderByDescending(item => item.DisplayedAt ?? item.AchievedAt)
-                        .Select(item => item.Achievement.Title)
-                        .FirstOrDefault()
-                    : null));
+                db.UserAchievements
+                    .Where(item => item.UserId == post.UserId && item.IsDisplayed && item.Achievement.Status == "ACTIVE")
+                    .OrderByDescending(item => item.DisplayedAt ?? item.AchievedAt)
+                    .Select(item => item.Achievement.Title)
+                    .FirstOrDefault() ?? (post.PublisherType == "OFFICIAL" ? OfficialAuthorTitle : DefaultAuthorTitle)));
 
         var postPage = await ApiPaging.ToPageAsync(projected, page, pageSize, cancellationToken);
         // 摘要要去掉格式標記（資料庫只截取前段文字，標記在這裡解析成純文字再截成 180 字）。
@@ -288,6 +286,12 @@ public sealed class SocialController(
                 && item.ReviewStatus == "APPROVED" && item.PublishStatus == "PUBLISHED", cancellationToken);
 
         var isPublic = profile.Visibility == "PUBLIC";
+        var achievements = await db.UserAchievements.AsNoTracking()
+            .Where(item => item.UserId == userId)
+            .OrderByDescending(item => item.IsDisplayed).ThenByDescending(item => item.AchievedAt)
+            .Select(item => new MemberAchievementDto(item.Achievement.Name, item.Achievement.Title, item.Achievement.Description, item.AchievedAt, item.IsDisplayed))
+            .ToListAsync(cancellationToken);
+        var displayTitle = achievements.FirstOrDefault(item => item.IsDisplayed)?.Title ?? DefaultAuthorTitle;
         return Ok(new SocialMemberProfileDto(
             userId,
             profile.Nickname,
@@ -297,10 +301,16 @@ public sealed class SocialController(
             isPublic ? profile.User.Email : null,
             isPublic,
             postCount,
-            eventCount));
+            eventCount,
+            displayTitle,
+            isPublic ? achievements : []));
     }
 
     private const int MemberMessagesPerHour = 5;
+
+    // 沒有配戴成就稱號時的預設稱號牌，讓每位作者名字旁都有牌子，版面一致。
+    private const string DefaultAuthorTitle = "鑑賞同好";
+    private const string OfficialAuthorTitle = "站方官方";
 
     // 留言給會員：不另開私訊表，直接送進對方的通知中心（點通知可回到留言者的個人頁回覆）。
     // 比照貼文與留言，過關鍵字 BLOCK 與洗版規則；同一人對同一位會員每小時最多 5 則。
@@ -486,13 +496,12 @@ public sealed class SocialController(
         if (post is null)
             return MissingResource("找不到貼文", "這篇貼文不存在或目前不可見。");
 
-        var authorTitle = post.PublisherType == "COMMUNITY"
-            ? await db.UserAchievements.AsNoTracking()
-                .Where(item => item.UserId == post.UserId && item.IsDisplayed && item.Achievement.Status == "ACTIVE")
-                .OrderByDescending(item => item.DisplayedAt ?? item.AchievedAt)
-                .Select(item => item.Achievement.Title)
-                .FirstOrDefaultAsync(cancellationToken)
-            : null;
+        var authorTitle = await db.UserAchievements.AsNoTracking()
+            .Where(item => item.UserId == post.UserId && item.IsDisplayed && item.Achievement.Status == "ACTIVE")
+            .OrderByDescending(item => item.DisplayedAt ?? item.AchievedAt)
+            .Select(item => item.Achievement.Title)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? (post.PublisherType == "OFFICIAL" ? OfficialAuthorTitle : DefaultAuthorTitle);
 
         var comments = await db.SocialComments
             .AsNoTracking()
@@ -510,7 +519,12 @@ public sealed class SocialController(
                     .FirstOrDefault(),
                 comment.Content,
                 comment.CreatedAt,
-                comment.UpdatedAt))
+                comment.UpdatedAt,
+                db.UserAchievements
+                    .Where(item => item.UserId == comment.UserId && item.IsDisplayed && item.Achievement.Status == "ACTIVE")
+                    .OrderByDescending(item => item.DisplayedAt ?? item.AchievedAt)
+                    .Select(item => item.Achievement.Title)
+                    .FirstOrDefault() ?? DefaultAuthorTitle))
             .ToListAsync(cancellationToken);
 
         var media = await db.MediaAssets
