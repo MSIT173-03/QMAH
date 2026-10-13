@@ -1,5 +1,6 @@
 <!-- 頂部公告列與登入提示，與其他商城頁面一致 -->
 <app-session-bar [cart]="cart" [loginMessage]="loginMessage" />
+<app-floating-cart [cart]="cart" />
 
 <div class="container coupon-store-main">
 
@@ -22,9 +23,24 @@
   </div>
   }
 
+  <!-- 主分頁：兌換商店／我的折價券，右側顯示目前點數 -->
+  <nav class="coupon-views" aria-label="折價券">
+    <div class="coupon-tabs coupon-tabs--lg" role="tablist">
+      <button type="button" role="tab" class="coupon-tab" [class.is-active]="view() === 'shop'"
+        [attr.aria-selected]="view() === 'shop'" (click)="view.set('shop')">兌換商店</button>
+      @if (showOwned()) {
+      <button type="button" role="tab" class="coupon-tab" [class.is-active]="view() === 'owned'"
+        [attr.aria-selected]="view() === 'owned'" (click)="view.set('owned')">我的折價券@if (!isGuest() && !ownedLoading()) {<span class="coupon-tab-count">{{ ownedTotal() }}</span>}</button>
+      }
+    </div>
+    @if (pointsLabel(); as pts) {
+    <span class="coupon-points">可用點數 <strong>{{ pts }}</strong></span>
+    }
+  </nav>
+
   <!-- 上下兩個區塊：上面「兌換商店」、下面「我的折價券」，各有一個同級的標題列。 -->
   <!-- 兌換商店：可用點數兌換的折價券，左側為折抵幅度，中間為名稱、條件與期限，最右為所需點數 -->
-  <section class="coupon-section coupon-shop">
+  <section class="coupon-section coupon-shop" [hidden]="view() !== 'shop'">
     <app-page-title-row title="兌換商店" tag="COUPON STORE" />
 
     @if (loading()) {
@@ -36,6 +52,19 @@
     } @else if (isEmpty()) {
     <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" />
     } @else {
+    <div class="coupon-toolbar">
+      <div class="coupon-tabs" role="tablist" aria-label="券種">
+        @for (tab of shopTabs; track tab.key) {
+        <button type="button" role="tab" class="coupon-tab" [class.is-active]="shopFilter() === tab.key"
+          [attr.aria-selected]="shopFilter() === tab.key" (click)="shopFilter.set(tab.key)">{{ tab.label }}</button>
+        }
+      </div>
+      @if (cart.signedIn()) {
+      <label class="coupon-toggle"><input type="checkbox" [checked]="onlyAffordable()"
+          (change)="onlyAffordable.set(!onlyAffordable())" />只看點數夠換的（{{ affordableCount() }}）</label>
+      }
+      <span class="coupon-toolbar-count">共 {{ shopCount() }} 種可兌換</span>
+    </div>
     @for (group of groups(); track group.key) {
     <div class="coupon-group">
       <h3 class="coupon-group-title">{{ group.title }}<span>{{ group.desc }}</span></h3>
@@ -54,7 +83,13 @@
       </li>
       }
     </ul>
+    @if (group.total > GROUP_PREVIEW) {
+    <button type="button" class="coupon-more" [attr.aria-expanded]="group.open" (click)="toggleGroup(group.key)">
+      {{ group.open ? '收合' : '顯示全部 ' + group.total + ' 張' }}</button>
+    }
     </div>
+    } @empty {
+    <p class="my-coupons-empty">沒有符合條件的折價券。</p>
     }
     }
   </section>
@@ -62,7 +97,7 @@
   @if (showOwned()) {
   <!-- 我的折價券：訪客顯示登入按鈕，登入的會員顯示持有的折價券；
        帳號持有且可使用的折價券，券面與兌換商店同一個形式，右側不是兌換而是到期日 -->
-  <section class="coupon-section my-coupons">
+  <section class="coupon-section my-coupons" [hidden]="view() !== 'owned'">
     <app-page-title-row title="我的折價券" tag="MY COUPONS" />
 
     @if (isGuest()) {
@@ -76,6 +111,15 @@
     } @else if (ownedCoupons().length === 0) {
     <p class="my-coupons-empty">目前沒有折價券。</p>
     } @else {
+    <div class="coupon-toolbar">
+      <div class="coupon-tabs" role="tablist" aria-label="券種">
+        @for (tab of shopTabs; track tab.key) {
+        <button type="button" role="tab" class="coupon-tab" [class.is-active]="ownedFilter() === tab.key"
+          [attr.aria-selected]="ownedFilter() === tab.key" (click)="ownedFilter.set(tab.key)">{{ tab.label }}</button>
+        }
+      </div>
+      <span class="coupon-toolbar-count">持有 {{ ownedTotal() }} 張・快到期的排前面</span>
+    </div>
     <ul class="coupon-grid">
       @for (coupon of ownedCoupons(); track coupon.id) {
       <li class="coupon-card">
@@ -87,6 +131,10 @@
       </li>
       }
     </ul>
+    @if (ownedFiltered().length > OWNED_PREVIEW) {
+    <button type="button" class="coupon-more" [attr.aria-expanded]="ownedExpanded()"
+      (click)="ownedExpanded.set(!ownedExpanded())">{{ ownedExpanded() ? '收合' : '顯示全部 ' + ownedFiltered().length + ' 張' }}</button>
+    }
     }
   </section>
   }

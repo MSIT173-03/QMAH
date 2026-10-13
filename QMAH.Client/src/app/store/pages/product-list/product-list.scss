@@ -9,6 +9,10 @@
 .list-main {
   /* 左側篩選側欄的寬度；分頁靠左留出同樣的寬度才會對齊商品區 */
   --list-sidebar-width: 218px;
+  /* 與其他商城頁同一版心寬度（頁面根元素同時套用 .container，這裡覆寫上限與左右留白） */
+  max-width: var(--store-page-max);
+  margin-inline: auto;
+  padding-inline: clamp(16px, 3vw, 40px);
   padding-top: var(--qmah-space-4);
   padding-bottom: 72px;
   display: flex;
@@ -81,3 +85,57 @@
     margin: var(--qmah-space-1) 0;
   }
 }
+
+/* 主題色隨篩選的器類／年代切換（只作用在 .list-main 內容區；頁首的搜尋與主打活動不變）（顏色與首頁分類小卡同一組）：排序、檢視切換、按鈕等取用 --color-accent 的地方都會一起換 */
+.list-main[data-tone='slate'],
+app-floating-cart[data-tone='slate'] { --color-accent: rgb(96 128 142); --color-on-accent: #fff; --store-tool-accent: rgb(96 128 142); --store-tool-on-accent: #fff; }
+.list-main[data-tone='bronze'],
+app-floating-cart[data-tone='bronze'] { --color-accent: rgb(160 124 24); --color-on-accent: #fff; --store-tool-accent: rgb(160 124 24); --store-tool-on-accent: #fff; }
+.list-main[data-tone='cinnabar'],
+app-floating-cart[data-tone='cinnabar'] { --color-accent: rgb(200 74 58); --color-on-accent: #fff; --store-tool-accent: rgb(200 74 58); --store-tool-on-accent: #fff; }
+.list-main[data-tone='ochre'],
+app-floating-cart[data-tone='ochre'] { --color-accent: rgb(172 100 58); --color-on-accent: #fff; --store-tool-accent: rgb(172 100 58); --store-tool-on-accent: #fff; }
+.list-main[data-tone='jade'],
+app-floating-cart[data-tone='jade'] { --color-accent: rgb(60 128 94); --color-on-accent: #fff; --store-tool-accent: rgb(60 128 94); --store-tool-on-accent: #fff; }
+.list-main[data-tone='celadon'],
+app-floating-cart[data-tone='celadon'] { --color-accent: rgb(70 126 150); --color-on-accent: #fff; --store-tool-accent: rgb(70 126 150); --store-tool-on-accent: #fff; }
+.list-main[data-tone='indigo'],
+app-floating-cart[data-tone='indigo'] { --color-accent: rgb(80 102 160); --color-on-accent: #fff; --store-tool-accent: rgb(80 102 160); --store-tool-on-accent: #fff; }
+.list-main[data-tone='rouge'],
+app-floating-cart[data-tone='rouge'] { --color-accent: rgb(184 88 128); --color-on-accent: #fff; --store-tool-accent: rgb(184 88 128); --store-tool-on-accent: #fff; }
+.list-main[data-tone='sumi'],
+app-floating-cart[data-tone='sumi'] { --color-accent: rgb(100 102 108); --color-on-accent: #fff; --store-tool-accent: rgb(100 102 108); --store-tool-on-accent: #fff; }
+.list-main[data-tone='plum'],
+app-floating-cart[data-tone='plum'] { --color-accent: rgb(132 104 164); --color-on-accent: #fff; --store-tool-accent: rgb(132 104 164); --store-tool-on-accent: #fff; }
+.list-main[data-tone='stone'],
+app-floating-cart[data-tone='stone'] { --color-accent: rgb(120 112 100); --color-on-accent: #fff; --store-tool-accent: rgb(120 112 100); --store-tool-on-accent: #fff; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='slate'],
+app-floating-cart[data-tone='slate'] { --color-accent: rgb(140 176 190); --color-on-accent: #16181a; --store-tool-accent: rgb(140 176 190); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='bronze'],
+app-floating-cart[data-tone='bronze'] { --color-accent: rgb(230 192 84); --color-on-accent: #16181a; --store-tool-accent: rgb(230 192 84); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='cinnabar'],
+app-floating-cart[data-tone='cinnabar'] { --color-accent: rgb(240 120 104); --color-on-accent: #16181a; --store-tool-accent: rgb(240 120 104); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='ochre'],
+app-floating-cart[data-tone='ochre'] { --color-accent: rgb(222 148 100); --color-on-accent: #16181a; --store-tool-accent: rgb(222 148 100); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='jade'],
+app-floating-cart[data-tone='jade'] { --color-accent: rgb(120 190 154); --color-on-accent: #16181a; --store-tool-accent: rgb(120 190 154); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='celadon'],
+app-floating-cart[data-tone='celadon'] { --color-accent: rgb(130 186 208); --color-on-accent: #16181a; --store-tool-accent: rgb(130 186 208); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='indigo'],
+app-floating-cart[data-tone='indigo'] { --color-accent: rgb(132 154 214); --color-on-accent: #16181a; --store-tool-accent: rgb(132 154 214); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='rouge'],
+app-floating-cart[data-tone='rouge'] { --color-accent: rgb(230 134 172); --color-on-accent: #16181a; --store-tool-accent: rgb(230 134 172); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='sumi'],
+app-floating-cart[data-tone='sumi'] { --color-accent: rgb(160 162 168); --color-on-accent: #16181a; --store-tool-accent: rgb(160 162 168); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='plum'],
+app-floating-cart[data-tone='plum'] { --color-accent: rgb(180 152 212); --color-on-accent: #16181a; --store-tool-accent: rgb(180 152 212); --store-tool-on-accent: #16181a; }
+:host-context([data-theme='qmahdark']) .list-main[data-tone='stone'],
+app-floating-cart[data-tone='stone'] { --color-accent: rgb(170 162 150); --color-on-accent: #16181a; --store-tool-accent: rgb(170 162 150); --store-tool-on-accent: #16181a; }
+
+/* 切換時色彩平順過渡（註冊成 <color> 才能對自訂屬性做 transition，避免換色時一閃一閃） */
+@property --color-accent { syntax: '<color>'; inherits: true; initial-value: #6b4f9e; }
+@property --store-tool-accent { syntax: '<color>'; inherits: true; initial-value: #6b4f9e; }
+@property --store-tool-on-accent { syntax: '<color>'; inherits: true; initial-value: #fbf9ff; }
+@property --color-on-accent { syntax: '<color>'; inherits: true; initial-value: #fbf9ff; }
+.list-main, app-floating-cart { transition: --color-accent 260ms ease, --color-on-accent 260ms ease, --store-tool-accent 260ms ease, --store-tool-on-accent 260ms ease; }
+@media (prefers-reduced-motion: reduce) { .list-main, app-floating-cart { transition: none; } }

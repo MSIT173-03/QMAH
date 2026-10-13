@@ -13,6 +13,7 @@ import {
   PageTitleRow,
   ScrollTop,
   SessionBar,
+  FloatingCart,
 } from '../../component';
 import { CouponApi, MemberApi } from '../../api';
 import { COUPON_STORE_PATH, HOME_PATH, loginPath } from '../../shared/paths';
@@ -47,6 +48,7 @@ const FEEDBACK_FADE_MS = 300;
   imports: [
     ScrollTop,
     SessionBar,
+    FloatingCart,
     Breadcrumb,
     PageTitleRow,
     EmptyState,
@@ -111,14 +113,46 @@ export class CouponStore {
       metas: [coupon.cond, `兌換後 ${coupon.validityDays} 天內有效`, `${coupon.endDate} 前可兌換`],
     }));
   });
-  /** 兌換商店分兩區：現金折抵（固定金額）與折扣券（百分比），各自依兌換點數由低到高 */
+  /** 頁面主分頁：兌換商店／我的折價券（兩大塊不再上下疊在一起） */
+  protected readonly view = signal<'shop' | 'owned'>('shop');
+  protected readonly pointsLabel = computed(() => (this.points() === null ? null : formatNumber(this.points() ?? 0)));
+
+  /** 每一區預設先顯示的張數（約兩排）；其餘按「顯示全部」展開 */
+  protected readonly GROUP_PREVIEW = 6;
+  protected readonly OWNED_PREVIEW = 6;
+  /** 券種篩選與「只看點數夠換的」 */
+  protected readonly shopFilter = signal<'all' | 'cash' | 'percent'>('all');
+  protected readonly onlyAffordable = signal(false);
+  protected readonly expandedGroups = signal<ReadonlySet<string>>(new Set());
+  protected readonly shopTabs = [
+    { key: 'all', label: '全部' },
+    { key: 'cash', label: '現金折抵' },
+    { key: 'percent', label: '折扣券' },
+  ] as const;
+  protected readonly shopCount = computed(() => this.coupons().length);
+  protected readonly affordableCount = computed(() => this.coupons().filter((c) => !c.unaffordable).length);
+
+  /** 兌換商店分兩區：現金折抵（固定金額）與折扣券（百分比），各自依兌換點數由低到高；可依券種、點數夠不夠篩選 */
   protected readonly groups = computed(() => {
-    const sorted = [...this.coupons()].sort((a, b) => a.pointCost - b.pointCost);
+    const filter = this.shopFilter();
+    const sorted = [...this.coupons()]
+      .filter((c) => !this.onlyAffordable() || !c.unaffordable)
+      .sort((a, b) => a.pointCost - b.pointCost);
+    const expanded = this.expandedGroups();
     return [
       { key: 'cash', title: '現金折抵', desc: '結帳直接扣掉固定金額，單筆訂單滿額即可使用。', items: sorted.filter((c) => !c.off.includes('%')) },
       { key: 'percent', title: '折扣券', desc: '依訂單金額打折，門檻較高，適合一次買齊的時候。', items: sorted.filter((c) => c.off.includes('%')) },
-    ].filter((g) => g.items.length > 0);
+    ]
+      .filter((g) => g.items.length > 0 && (filter === 'all' || filter === g.key))
+      .map((g) => ({ ...g, total: g.items.length, open: expanded.has(g.key), items: expanded.has(g.key) ? g.items : g.items.slice(0, this.GROUP_PREVIEW) }));
   });
+  protected toggleGroup(key: string): void {
+    this.expandedGroups.update((set) => {
+      const next = new Set(set);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  }
   protected readonly isEmpty = computed(() => !!this.result() && this.coupons().length === 0);
 
   /* ===============================
@@ -139,15 +173,27 @@ export class CouponStore {
     ),
   );
   protected readonly ownedLoading = computed(() => this.cart.signedIn() === true && this.ownedResult() === undefined);
-  /** 供模板顯示的持有折價券，券面與商店的折價券同一個形式，右側改顯示到期日 */
+  protected readonly ownedFilter = signal<'all' | 'cash' | 'percent'>('all');
+  protected readonly ownedExpanded = signal(false);
+  /** 供模板顯示的持有折價券：快到期的排前面，券面與商店同一個形式，右側改顯示到期日 */
+  private readonly ownedAll = computed(() =>
+    [...(this.ownedResult() ?? [])]
+      .sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'))
+      .map((coupon) => ({
+        id: coupon.id,
+        off: coupon.off,
+        title: coupon.title,
+        metas: [coupon.cond, coupon.due ? `${coupon.due} 前有效` : '長期有效'],
+        dueLabel: coupon.due ? `${formatDateMD(coupon.due)} 到期` : '長期有效',
+      })),
+  );
+  protected readonly ownedTotal = computed(() => this.ownedAll().length);
+  protected readonly ownedFiltered = computed(() => {
+    const f = this.ownedFilter();
+    return this.ownedAll().filter((c) => f === 'all' || (f === 'percent') === c.off.includes('%'));
+  });
   protected readonly ownedCoupons = computed(() =>
-    (this.ownedResult() ?? []).map((coupon) => ({
-      id: coupon.id,
-      off: coupon.off,
-      title: coupon.title,
-      metas: [coupon.cond, coupon.due ? `${coupon.due} 前有效` : '長期有效'],
-      dueLabel: coupon.due ? `${formatDateMD(coupon.due)} 到期` : '長期有效',
-    })),
+    this.ownedExpanded() ? this.ownedFiltered() : this.ownedFiltered().slice(0, this.OWNED_PREVIEW),
   );
 
   /** 固定的版面文字 */

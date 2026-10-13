@@ -5,7 +5,7 @@
   <div class="card-grid">
     @for (item of items(); track item.id) {
     <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage" [brand]="item.brand" [name]="item.name" [price]="item.price"
-      [was]="item.was" [rating]="item.rating" [reviews]="item.reviews" (addToCart)="addToCart.emit(item.id)" />
+      [was]="item.was" [rating]="item.rating" [reviews]="item.reviews" [sold]="item.sold" (addToCart)="addToCart.emit(item.id)" />
     }
   </div>
 </section>

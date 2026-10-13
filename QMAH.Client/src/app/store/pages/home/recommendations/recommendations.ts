@@ -15,6 +15,8 @@ export class Recommendations {
   items = input<BadgedProductView[]>([]);
   /** 點擊任一商品卡片的加入購物車按鈕時觸發，帶出商品 ID */
   addToCart = output<string>();
+  /** 按「換一批」時通知首頁重新向 API 取一批推薦 */
+  refresh = output<void>();
 
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
   private readonly columns = gridColumns(this.grid);

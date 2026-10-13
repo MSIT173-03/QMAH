@@ -4,6 +4,15 @@
   <div class="search-box">
     <input class="search-input" name="store-search" autocomplete="off" aria-label="搜尋商城商品" type="search" maxlength="100" [placeholder]="placeholder()" [value]="value()" (input)="onInput($event)"
       (keydown.enter)="submit()" />
-    <button type="button" class="search-submit" (click)="submit()">搜尋</button>
+    <button type="button" class="search-submit" aria-label="搜尋" (click)="submit()"><span class="search-icon" aria-hidden="true"></span><span class="search-submit-text">搜尋</span></button>
   </div>
+  <!-- 常見搜尋詞：只在完整版顯示，點一下直接搜尋 -->
+  @if (!compact() && suggestions().length) {
+  <div class="search-suggest">
+    <span class="search-suggest-label">常見搜尋</span>
+    @for (term of suggestions(); track term) {
+    <button type="button" class="search-chip" (click)="pickSuggestion(term)">{{ term }}</button>
+    }
+  </div>
+  }
 </div>

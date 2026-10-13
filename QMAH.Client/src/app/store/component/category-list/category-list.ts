@@ -8,6 +8,8 @@ export interface CategoryListItem {
   count: number;
   /** 是否為目前選取的分類 */
   active?: boolean;
+  /** 色調名稱（與首頁分類／年代小卡同色，見 shared/category-tone.ts）；「全部」不帶 */
+  tone?: string;
 }
 
 /**

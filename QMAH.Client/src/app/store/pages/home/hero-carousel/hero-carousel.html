@@ -1,44 +1,50 @@
-<section class="hero" aria-label="商城主視覺輪播" aria-roledescription="carousel">
+<section class="hero" aria-label="商城主視覺輪播" aria-roledescription="carousel" tabindex="0"
+  (keydown.arrowleft)="step(-1)" (keydown.arrowright)="step(1)"
+  (mouseenter)="setHovered(true)" (mouseleave)="setHovered(false)"
+  (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
   <div class="hero-track" [style.transform]="trackShift()">
-    @for (slide of slides; track $index) {
-      <div class="hero-slide" [class]="'hero-slide hero-slide--' + ($index % 3)" role="group"
-        [attr.aria-label]="($index + 1) + ' / ' + slides.length">
-        <img class="hero-slide-image" src="{{ slideImage($index) }}" alt="" aria-hidden="true"
-          [attr.loading]="$index === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="$index === 0 ? 'high' : 'low'" />
+    @for (slide of slides; track $index; let i = $index) {
+      <div class="hero-slide" role="group" aria-roledescription="slide"
+        [attr.aria-label]="(i + 1) + ' / ' + slides.length" [attr.inert]="i === activeSlide() ? null : ''">
+        <img class="hero-slide-image" src="{{ slide.image }}" alt="" aria-hidden="true"
+          [attr.loading]="i === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="i === 0 ? 'high' : 'low'" />
         <div class="hero-slide-body">
           <span class="hero-kicker">{{ slide.kicker }}</span>
           <h2 class="hero-title">{{ slide.title }}</h2>
           <p class="hero-desc">{{ slide.desc }}</p>
-          <a [storeLink]="productsPath" class="btn-solid hero-cta">立即選購</a>
+          <a [storeLink]="slide.link" class="btn-solid hero-cta">{{ slide.cta }}</a>
         </div>
       </div>
     }
   </div>
 
+  <!-- 前後切換在左右兩側垂直置中；指示條、張數與暫停鈕在文字面板底部，不蓋住照片也不蓋住文字 -->
   <button type="button" class="hero-arrow hero-arrow--prev" (click)="step(-1)" aria-label="上一張"><app-qmah-icon name="arrow-left" [size]="20" aria-hidden="true" /></button>
   <button type="button" class="hero-arrow hero-arrow--next" (click)="step(1)" aria-label="下一張"><app-qmah-icon name="arrow-right" [size]="20" aria-hidden="true" /></button>
-  <div class="hero-controls" aria-label="輪播控制">
+  <div class="hero-bar" aria-label="輪播控制">
     <div class="hero-dots">
       @for (slide of slides; track $index; let i = $index) {
         <button
           type="button"
           class="hero-dot"
           [class.hero-dot--active]="i === activeSlide()"
-          [attr.aria-label]="'查看第 ' + (i + 1) + ' 張主視覺'"
+          [attr.aria-label]="'查看第 ' + (i + 1) + ' 張：' + slide.kicker"
           [attr.aria-current]="i === activeSlide() ? 'true' : null"
           (click)="goToSlide(i)"
         ></button>
       }
     </div>
+    <span class="hero-counter" aria-hidden="true">{{ activeSlide() + 1 }} / {{ slides.length }}</span>
     <button
       type="button"
       class="hero-play-toggle"
       [class.hero-play-toggle--paused]="!autoplayEnabled()"
       [attr.aria-pressed]="!autoplayEnabled()"
+      [attr.aria-label]="autoplayEnabled() ? '暫停輪播' : '播放輪播'"
+      [title]="autoplayEnabled() ? '暫停輪播' : '播放輪播'"
       (click)="toggleAutoplay()"
     >
-      <app-qmah-icon [name]="autoplayEnabled() ? 'pause' : 'play'" [size]="12" aria-hidden="true" />
-      {{ autoplayEnabled() ? '暫停輪播' : '播放輪播' }}
+      <app-qmah-icon [name]="autoplayEnabled() ? 'pause' : 'play'" [size]="13" aria-hidden="true" />
     </button>
   </div>
 </section>

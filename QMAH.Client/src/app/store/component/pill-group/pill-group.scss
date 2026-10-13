@@ -91,6 +91,13 @@
    */
   &--pay,
   &--point {
+    &.pill--active {
+      border-color: var(--color-gold);
+      background: var(--color-gold-bg);
+      color: var(--color-ink);
+      box-shadow: inset 0 -3px 0 var(--color-gold);
+    }
+
     min-height: var(--qmah-control-height);
     border-radius: var(--qmah-radius-control);
     border-color: var(--color-line-mid);
@@ -138,4 +145,12 @@
   &--review:disabled {
     border-color: transparent !important;
   }
+}
+
+/* 側欄價格區間與折扣：選取態用金色淡底＋金框（與結帳頁一致），不整塊填主色 */
+.pill--band.pill--active, .pill--filter.pill--active {
+  border-color: var(--color-gold);
+  background: var(--color-gold-bg);
+  color: var(--color-ink);
+  font-weight: 700;
 }

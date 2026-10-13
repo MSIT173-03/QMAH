@@ -42,5 +42,5 @@ export class CartSummary {
   protected readonly couponHref = COUPON_STORE_PATH;
   protected readonly serviceLabel = 'SERVICE';
   protected readonly serviceNote =
-    '每件商品附授權與考據說明卡；瓷器與琺瑯器採雙層防撞包裝，30 天內可退換。';
+    '每件商品附授權與考據說明卡。瓷器與琺瑯器採雙層防撞包裝，30 天內可退換。';
 }

@@ -1,5 +1,10 @@
 <!-- 麵包屑導覽列 -->
 <div class="breadcrumb">
+  @if (parent(); as up) {
+    @if (up.href; as href) {
+      <a [storeLink]="href" class="breadcrumb-back" [attr.aria-label]="'返回' + up.label" [attr.title]="'返回' + up.label"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+    }
+  }
   @for (item of items(); track $index; let last = $last) {
     @if (last) {
       <!-- 最後一項為目前頁面，不可點擊 -->
@@ -11,7 +16,7 @@
       } @else {
         <span class="breadcrumb-current">{{ item.label }}</span>
       }
-      <span>/</span>
+      <span aria-hidden="true">›</span>
     }
   }
 </div>

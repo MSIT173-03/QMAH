@@ -13,6 +13,18 @@ import { LucidePackageSearch } from '@lucide/angular';
 
 /** 新品上架顯示的商品數量：兩欄各四列 */
 const NEW_ARRIVAL_COUNT = 8;
+/** 上架幾天內算「新」，顯示 NEW 標記 */
+const FRESH_DAYS = 3;
+
+/** 上架日相對今天的文字：今天／昨天／N 天前／MM/DD（只比日期，不比時間） */
+function listedLabel(iso: string | undefined): { text: string; fresh: boolean } {
+  if (!iso) return { text: '', fresh: false };
+  const day = new Date(`${iso.split('T')[0]}T00:00:00`);
+  const now = new Date();
+  const days = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - day.getTime()) / 86_400_000);
+  const text = days <= 0 ? '今天上架' : days === 1 ? '昨天上架' : days < 7 ? `${days} 天前上架` : `${formatDateMD(iso)} 上架`;
+  return { text, fresh: days <= FRESH_DAYS };
+}
 
 /** 首頁「新品上架」面板：橫列式商品清單 */
 @Component({
@@ -63,6 +75,7 @@ export class NewArrivals {
         reviewsText: formatReviews(view.reviews),
         /** 是否有評論；沒有評論時不顯示「0.0」「0 則評論」，改顯示提示文字 */
         hasReviews: view.reviews > 0,
+        listed: listedLabel(product.listedAt),
       };
     }),
   );

@@ -6,6 +6,7 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import {
   SessionBar,
+  FloatingCart,
   SiteHeader,
   SearchBar,
   Breadcrumb,
@@ -39,6 +40,7 @@ import { RELATED_LIMIT, REVIEW_FILTERS } from './product-info.data';
   host: { class: 'store-app' },
   imports: [ScrollTop, 
     SessionBar,
+    FloatingCart,
     SiteHeader,
     SearchBar,
     Breadcrumb,

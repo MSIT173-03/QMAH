@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { ScrollTop, SearchBar, SessionBar, SiteHeader } from '../../component';
+import { FloatingCart, ScrollTop, SearchBar, SessionBar, SiteHeader } from '../../component';
 import { HomeApi } from '../../api';
 import { searchPath } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
@@ -14,6 +14,7 @@ import { RankingSection } from './ranking-section/ranking-section';
 import { NewArrivals } from './new-arrivals/new-arrivals';
 import { EraGrid } from './era-grid/era-grid';
 import { Recommendations } from './recommendations/recommendations';
+import { categoryTone } from '../../shared/category-tone';
 import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
 
 /**
@@ -27,6 +28,7 @@ import { BadgedProductView, HOME_PRODUCT_COUNT } from './home.data';
   host: { class: 'store-app' },
   imports: [
     SessionBar,
+    FloatingCart,
     SearchBar,
     HeroCarousel,
     CategoryGrid,
@@ -67,13 +69,13 @@ export class Home {
   }
 
   /** 請求「為你推薦」的商品資料（一次取 HOME_PRODUCT_COUNT 件，實際顯示幾件由版位的欄數與固定行數決定）。 */
-  private loadRecommendations(): void {
+  protected loadRecommendations(): void {
     this.homeApi
       .getRecommendations(HOME_PRODUCT_COUNT)
       .subscribe((items) =>
         this.recommendedItems.set(
           items.map(
-            (item): BadgedProductView => ({ ...toProductView(item), badge: item.reason, badgeVariant: 'teal' }),
+            (item): BadgedProductView => ({ ...toProductView(item), badge: item.reason, badgeVariant: 'ink', badgeTone: categoryTone(item.reason) }),
           ),
         ),
       );

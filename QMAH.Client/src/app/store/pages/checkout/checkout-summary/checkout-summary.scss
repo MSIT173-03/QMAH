@@ -54,7 +54,7 @@
 
 /* 返回購物車連結 */
 .summary-back-link {
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
   text-align: center;
 }

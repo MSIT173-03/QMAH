@@ -1,14 +1,14 @@
 <!-- 再加購：精簡版商品卡片（僅品牌／名稱／價格），供快速加入購物車；沒有商品時整區不顯示 -->
 @if (items().length > 0) {
 <section class="section-block">
-  <app-section-head title="再加購" tag="ADD ON">
-    <!-- 換一批：重新隨機抽選一組商品 -->
+  <app-section-head title="再加購" tag="依購物車內容與熱銷排序">
+    <!-- 看下一組：依推薦排名往後看，不是重新亂抽 -->
     <button type="button" class="btn-outline section-meta addon-refresh" (click)="refresh.emit()">{{ refreshLabel }}</button>
   </app-section-head>
   <div class="card-grid">
     @for (item of items(); track item.id) {
     <app-product-card variant="compact" [id]="item.id" [brand]="item.brand" [name]="item.name" [price]="item.price"
-      [coverImage]="item.coverImage" [was]="item.was" [added]="addedIds().has(item.id)" (addToCart)="addToCart.emit(item.id)" />
+      [coverImage]="item.coverImage" [badge]="item.reason ?? null" [was]="item.was" [sold]="item.sold" [added]="addedIds().has(item.id)" (addToCart)="addToCart.emit(item.id)" />
     }
   </div>
 </section>

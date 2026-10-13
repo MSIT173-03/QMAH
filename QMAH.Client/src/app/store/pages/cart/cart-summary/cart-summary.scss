@@ -11,7 +11,7 @@
 }
 
 .summary-note {
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   line-height: 1.7;
   color: var(--color-body);
 }
@@ -21,7 +21,7 @@
 .hero-sidebar .summary-row { font-size: 15px; }
 .hero-sidebar .summary-total-row { margin-top: 4px; padding-top: 14px; border-top: 2px dashed var(--color-line-mid); }
 .hero-sidebar .summary-total-value { font-size: 28px; font-weight: 800; }
-.hero-sidebar .btn-solid--full { min-height: 52px; font-size: 16px; font-weight: 800; border-radius: 12px; box-shadow: var(--store-shadow-1); }
+.hero-sidebar .btn-solid--full { min-height: 52px; font-size: var(--qmah-type-body-size); font-weight: 800; border-radius: 12px; box-shadow: var(--store-shadow-1); }
 .summary-note { font-size: 13px; }
 
 .hero-sidebar .summary-total-value { font-size: 24px; }

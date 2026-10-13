@@ -13,7 +13,7 @@
 /* 標題列右側的評分摘要，推擠至最右側 */
 .reviews-summary {
   font-family: var(--qmah-font-sans);
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
 
@@ -162,3 +162,11 @@
   font-size: var(--qmah-type-label-size);
   color: var(--color-muted);
 }
+
+/* 評價卡：左側頭像，右側名稱＋「已購買」標籤＋星等時間＋內容 */
+.review-card--avatar { display: flex; align-items: flex-start; gap: 12px; }
+.review-body { min-width: 0; flex: 1; }
+.review-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--color-swatch); }
+.review-avatar--initial { display: grid; place-items: center; background: var(--color-gold-bg); color: var(--color-ink); font-weight: 800; border: 1px solid var(--color-gold); }
+.review-user { font-weight: 700; color: var(--color-ink); }
+.review-verified { padding: 0 8px; border-radius: 999px; background: color-mix(in srgb, #2f7d4f 14%, transparent); color: #2f7d4f; font-size: var(--qmah-type-meta-size); font-weight: 700; }

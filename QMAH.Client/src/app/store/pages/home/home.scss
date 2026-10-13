@@ -7,6 +7,10 @@
    =============================== */
 
 .home-main {
+  /* 與其他商城頁同一版心寬度（頁面根元素同時套用 .container，這裡覆寫上限與左右留白） */
+  max-width: var(--store-page-max);
+  margin-inline: auto;
+  padding-inline: clamp(16px, 3vw, 40px);
   padding-top: var(--qmah-space-5);
   padding-bottom: 72px;
   display: flex;
@@ -17,7 +21,7 @@
 .entry-section {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--qmah-space-6);
+  gap: 40px;
 
   /* 資料為空的區塊不佔列，避免多出一段空白間距。 */
   > :empty {

@@ -187,7 +187,7 @@
 
 .postcard-back-paper {
   color: var(--color-body);
-  font-family: 'Noto Serif TC', 'PMingLiU', 'Songti TC', serif;
+  font-family: var(--qmah-font-serif);
 }
 
 .postcard-back-left {
@@ -210,7 +210,7 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  font-family: 'Noto Serif TC', 'PMingLiU', serif;
+  font-family: var(--qmah-font-serif);
   letter-spacing: 0.03em;
   overflow-wrap: anywhere;
 }

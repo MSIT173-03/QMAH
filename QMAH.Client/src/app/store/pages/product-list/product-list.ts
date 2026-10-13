@@ -5,6 +5,7 @@ import { catchError, debounceTime, filter, finalize, map, mergeMap, of, switchMa
 
 import {
   SessionBar,
+  FloatingCart,
   SiteHeader,
   SearchBar,
   Breadcrumb,
@@ -23,6 +24,7 @@ import {
 import { CatalogApi } from '../../api';
 import { ProductDetail, ProductQuery } from '../../api/api.models';
 import { HOME_PATH } from '../../shared/paths';
+import { categoryTone, eraTone } from '../../shared/category-tone';
 import { injectCartState } from '../../shared/page-state';
 import { PurchasedProducts } from '../../shared/purchased-products';
 import { ProductViewData, toProductView } from '../../shared/product-view';
@@ -67,6 +69,7 @@ const PREVIEW_DETAIL_DELAY = 150;
   host: { class: 'store-app' },
   imports: [
     SessionBar,
+    FloatingCart,
     SiteHeader,
     SearchBar,
     Breadcrumb,
@@ -105,6 +108,16 @@ export class ProductList {
 
   constructor() {
     this.purchased.ensureLoaded();
+    // 閒置時把每個器類的第一頁預先放進快取：之後切換器類是秒開，不必等網路（商品資料與會員無關，可安全快取）
+    let prefetched = false;
+    effect(() => {
+      const categories = this.categories();
+      if (prefetched || categories.length === 0) return;
+      prefetched = true;
+      const order = ORDER_OPTIONS[0].order;
+      const idle = (cb: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(cb, { timeout: 2000 }) : setTimeout(cb, 500));
+      idle(() => categories.forEach((item) => this.catalogApi.prefetchProducts({ cat: item.name, order, page: 1 })));
+    });
     // 列表顯示：選取的商品停留一小段時間後查詢詳情並記下來。已查到或查詢中的不再查；
     // 用 mergeMap 而不是 switchMap，切到別件商品時進行中的查詢仍會完成並留下結果。
     toObservable(this.previewId)
@@ -314,8 +327,16 @@ export class ProductList {
         count: allCount,
         active: selected === '',
       },
-      ...categories.map((item) => ({ name: item.name, count: item.productCount, active: selected === item.name })),
+      ...categories.map((item) => ({ name: item.name, count: item.productCount, active: selected === item.name, tone: categoryTone(item.name) })),
     ];
+  });
+
+  /** 頁面主題色：選了器類就用該器類的顏色，沒選器類但選了年代就用該年代的顏色；都沒選維持站內主色 */
+  protected themeTone = computed(() => {
+    const category = this.category();
+    if (category) return categoryTone(category);
+    const era = this.eraItems().find((item, index) => index > 0 && item.active);
+    return era?.tone ?? null;
   });
 
   /** 年代篩選項目，第一項為「全部年代」；件數取自年代清單 API，不受其他篩選條件影響 */
@@ -329,7 +350,7 @@ export class ProductList {
         count: eras.reduce((sum, item) => sum + item.productCount, 0),
         active: selected === '',
       },
-      ...eras.map((item) => ({ name: item.name, count: item.productCount, active: selected === item.code })),
+      ...eras.map((item) => ({ name: item.name, count: item.productCount, active: selected === item.code, tone: eraTone(item.name) })),
     ];
   });
 

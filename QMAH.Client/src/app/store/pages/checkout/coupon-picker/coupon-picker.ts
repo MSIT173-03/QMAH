@@ -2,6 +2,8 @@ import { Component, computed, input, output } from '@angular/core';
 import { Panel, SectionHead } from '../../../component';
 import { Coupon } from '../../../api/api.models';
 import { NO_COUPON } from '../checkout.data';
+import { couponSaving } from '../../../shared/coupon-saving';
+import { formatMoney } from '../../../shared/format';
 
 /**
  * 結帳頁的折價券面板。
@@ -21,16 +23,23 @@ export class CouponPicker {
   usableIds = input<string[]>([]);
   /** 目前選用的折價券索引，NO_COUPON 代表未選用 */
   selected = input(NO_COUPON);
+  /** 商品小計，用來算每張券實際折多少、標出最划算的一張 */
+  subtotal = input(0);
 
   /** 選用或取消折價券時觸發，帶出新的索引（NO_COUPON 代表取消選用） */
   select = output<number>();
 
   /** 折價券列的顯示資料：是否可用、是否已選用與右側狀態文字 */
-  protected rows = computed(() =>
-    this.coupons().map((coupon, i) => {
+  protected rows = computed(() => {
+    const amount = this.subtotal();
+    const savings = this.coupons().map((coupon) => (this.usableIds().includes(coupon.id) ? couponSaving(coupon, amount) : 0));
+    const bestSaving = Math.max(0, ...savings);
+    return this.coupons().map((coupon, i) => {
       const usable = this.usableIds().includes(coupon.id);
       const active = i === this.selected();
       return {
+        best: usable && bestSaving > 0 && savings[i] === bestSaving,
+        saving: usable && savings[i] > 0 ? `折 ${formatMoney(savings[i])}` : '',
         off: coupon.off,
         title: coupon.title,
         cond: coupon.cond,
@@ -38,8 +47,8 @@ export class CouponPicker {
         active,
         state: active ? '已選用' : usable ? '可使用' : '未達門檻',
       };
-    }),
-  );
+    });
+  });
 
   /** 目前達到使用門檻的折價券張數 */
   protected usableCount = computed(() => this.rows().filter((row) => row.usable).length);

@@ -1,16 +1,42 @@
 <!-- 商品列表頁篩選側欄：捲動時固定於視窗上方 -->
 <aside #aside class="filter-sidebar" [style.top.px]="stickyTop()">
 
+  <!-- 手機專用：篩選內容預設收起，只留一顆按鈕，避免篩選區把商品往下擠到看不見 -->
+  <button type="button" class="filter-mobile-toggle" [attr.aria-expanded]="mobileOpen()" aria-controls="filter-body"
+    (click)="mobileOpen.set(!mobileOpen())">
+    <span>篩選條件</span>
+    <app-qmah-icon name="chevron-right" [size]="14" class="filter-panel-chevron" [class.filter-panel-chevron--open]="mobileOpen()" aria-hidden="true" />
+  </button>
+
+  <div id="filter-body" class="filter-body" [class.filter-body--open]="mobileOpen()">
+
   <!-- 清除所有篩選：放在側欄最上方，不受任一面板收合狀態影響 -->
-  <button type="button" class="filter-reset filter-reset--top" (click)="reset.emit()">{{ resetLabel }}</button>
+  <button type="button" class="filter-reset filter-reset--top" [class.filter-reset--idle]="activeCount() === 0" (click)="reset.emit()">
+    <svg class="filter-reset-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+    <span>{{ resetLabel }}</span>
+    @if (activeCount() > 0) { <span class="filter-reset-count">{{ activeCount() }}</span> }
+  </button>
 
   <!-- 可收合面板：標題列與收合外框共用，內容依面板種類切換；沒有年代資料時不顯示年代面板 -->
   @for (panel of panels(); track panel.section) {
     <app-panel variant="filter">
       <button type="button" class="filter-panel-head" [attr.aria-expanded]="isOpen(panel.section)" (click)="toggleSection(panel.section)">
-        <span class="label-tag label-tag--loose">{{ panel.label }}</span>
+        <span class="filter-panel-zh">{{ panel.zh }}</span>
+        <span class="label-tag label-tag--loose filter-panel-en">{{ panel.label }}</span>
+
         <app-qmah-icon name="chevron-right" [size]="14" class="filter-panel-chevron" [class.filter-panel-chevron--open]="isOpen(panel.section)" aria-hidden="true" />
       </button>
+      <!-- 收合時：只留下被選取的那一列（同展開時的設計），點它即展開面板 -->
+      @if (!isOpen(panel.section) && hasPicked(panel.section)) {
+        <div class="filter-panel-picked">
+          @switch (panel.section) {
+            @case ('category') { <app-category-list [items]="pickedCategory()" (pick)="toggleSection('category')" /> }
+            @case ('era') { <app-category-list [items]="pickedEra()" (pick)="toggleSection('era')" /> }
+            @case ('price') { <app-pill-group variant="band" layout="column" [options]="pickedBand()" (select)="toggleSection('price')" /> }
+            @case ('filter') { <app-pill-group variant="filter" layout="column" [options]="pickedDeal()" (select)="toggleSection('filter')" /> }
+          }
+        </div>
+      }
       <div class="filter-panel-collapse" [class.filter-panel-collapse--open]="isOpen(panel.section)">
         <div class="filter-panel-collapse-inner">
           @switch (panel.section) {
@@ -32,4 +58,5 @@
       </div>
     </app-panel>
   }
+  </div>
 </aside>

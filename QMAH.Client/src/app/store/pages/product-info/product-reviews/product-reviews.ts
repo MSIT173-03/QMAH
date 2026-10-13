@@ -1,4 +1,5 @@
-import { Component, computed, effect, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { AvatarService } from '../../../../core/services/avatar';
 import { SectionHead, PillGroup, PillOption } from '../../../component';
 import { Review } from '../../../api/api.models';
 import { ReviewDraft } from '../../../api/review.api';
@@ -23,6 +24,8 @@ interface ReviewCardData {
   /** 星等字串，例如 ★★★★☆ */
   stars: string;
   user: string;
+  userId: string | null;
+  verified: boolean;
   /** 評價日期，例如 2026.08.29 */
   date: string;
   text: string;
@@ -36,6 +39,8 @@ function toCardData(review: Review): ReviewCardData {
     key: review.id,
     stars: toStars(review.stars),
     user: review.user,
+    userId: review.userId ?? null,
+    verified: !!review.verified,
     date: review.date.replaceAll('-', '.'),
     text: review.text,
     edited: review.editedAt ? formatDateTime(review.editedAt) : null,
@@ -137,6 +142,15 @@ export class ProductReviews {
   );
 
   /** 評價顯示資料 */
+  private readonly avatars = inject(AvatarService);
+  /** 評價者頭像網址；沒有公開頭像時為 null，改顯示名字首字 */
+  protected avatarOf(userId: string | null): string | null {
+    return this.avatars.get(userId);
+  }
+  protected initialOf(name: string): string {
+    return (name || '匿').charAt(0);
+  }
+
   protected shown = computed<ReviewCardData[]>(() => this.reviews().map(toCardData));
 
   constructor() {

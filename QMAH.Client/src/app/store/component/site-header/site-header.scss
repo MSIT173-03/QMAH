@@ -5,6 +5,8 @@
 .site-header {
   /* 外層 App Shell 已有固定在頂端的全站頁首，商城頁首維持一般流，避免雙層 sticky 遮住內容 */
   position: relative;
+  /* 搜尋框的常見搜尋面板會浮出頁首下緣；頁首有 backdrop-filter 自成堆疊層，沒有層級就會被下方輪播蓋住 */
+  z-index: 30;
   background: color-mix(in srgb, var(--color-surface) 96%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-line);

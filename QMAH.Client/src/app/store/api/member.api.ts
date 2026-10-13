@@ -110,6 +110,8 @@ export class MemberApi {
           cond: formatCouponCondition(coupon.minimumAmount),
           min: coupon.minimumAmount,
           due: due.slice(0, 10),
+          kind: coupon.discountType,
+          value: coupon.discountValue,
         } satisfies Coupon;
       })),
       catchError(() => of<Coupon[]>([])),

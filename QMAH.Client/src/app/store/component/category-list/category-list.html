@@ -4,6 +4,7 @@
     type="button"
     class="cat-list-item"
     [class.cat-list-item--active]="item.active"
+    [attr.data-tone]="item.tone ?? null"
     (click)="pick.emit(i)"
   >
     <span class="cat-list-name">{{ item.name }}</span>

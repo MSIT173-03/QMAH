@@ -1,7 +1,8 @@
 <!-- 頂部公告與快捷連結列 -->
 <div class="promobar">
   <div class="promobar-row">
-    <span>商城最新優惠活動</span><span class="promobar-sep">｜</span>
+    <span class="promobar-notes">
+    <span>主打活動</span><span class="promobar-sep">｜</span>
     @for (note of announcements(); track note; let first = $first) {
     @if (!first) {
     <span class="promobar-sep">|</span>
@@ -10,16 +11,29 @@
     } @empty {
     <span>目前沒有新的優惠活動</span>
     }
+    </span>
 
     <!-- 右側會員捷徑：點數、折價券、購物車、我的訂單；登入前的行為見下方 -->
     <div class="promobar-actions">
       @if (signedIn()) {
-      <a [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
+      <app-promobar-panel class="points-menu">
+        <a panelTrigger [storeLink]="pointsHref()" class="promobar-link">點數 <span class="promobar-accent">{{ points() }}</span></a>
+        <span class="panel-head">點數折抵<span class="panel-head-count">1 點 = NT$1</span></span>
+        <span class="panel-summary">
+          <span class="panel-summary-line"><span>每單最多直接折抵</span><strong>NT$50</strong></span>
+          <span class="panel-summary-line"><span>上限比例</span><strong>商品金額的 5%</strong></span>
+          @if (cartItems().length > 0) {
+          <span class="panel-summary-line"><span>這張購物車可折抵</span><strong>{{ pointsUsable() }} 點</strong></span>
+          }
+        </span>
+        <a [storeLink]="pointsHref()" class="panel-foot">查看點數紀錄與兌換 →</a>
+      </app-promobar-panel>
 
       <!-- 折價券連結，滑鼠移入時展開懸浮面板（面板的開關與動畫由 app-promobar-panel 負責） -->
       <app-promobar-panel class="coupon-menu">
         <a panelTrigger [storeLink]="couponsHref()" class="promobar-link">折價券 <span class="promobar-accent">{{
             coupons().length }}</span> 張</a>
+        <span class="panel-head">我的折價券<span class="panel-head-count">{{ coupons().length }} 張</span></span>
         @for (coupon of couponRows(); track coupon.id) {
         <a [storeLink]="couponsHref()" class="panel-item panel-row coupon-row">
           <span class="coupon-row-amount">{{ coupon.off }}</span>
@@ -29,32 +43,101 @@
           </span>
         </a>
         } @empty {
-        <span class="panel-item panel-note">目前沒有折價券</span>
+        <span class="panel-empty">
+          <span class="panel-empty-mark panel-empty-mark--coupon" aria-hidden="true"></span>
+          <span class="panel-empty-title">目前沒有折價券</span>
+          <span class="panel-empty-desc">可以用點數到兌換商店換折價券（目前有 {{ points() }} 點）。</span>
+        </span>
         }
         @if (couponRest() > 0) {
         <a [storeLink]="couponsHref()" class="panel-item panel-note">以及另外 {{ couponRest() }} 張折價券</a>
         }
+        <a [storeLink]="couponsHref()" class="panel-foot">{{ coupons().length ? '前往折價券專區 →' : '用點數兌換折價券 →' }}</a>
       </app-promobar-panel>
 
       <!-- 購物車連結，滑鼠移入時展開懸浮面板，與折價券面板共用同一個元件 -->
       <app-promobar-panel class="cart-menu">
         <a panelTrigger [storeLink]="cartHref()" class="promobar-link">購物車 <span #cartCountLabel class="promobar-accent promobar-count">{{
             cartCount() }}</span> 件</a>
+        <span class="panel-head">購物車<span class="panel-head-count">{{ cartCount() }} 件</span></span>
         @for (row of cartRows(); track row.id) {
         <a [storeLink]="row.href" class="panel-item panel-row cart-row">
-          <span class="cart-row-name">{{ row.name }}</span>
-          <span class="cart-row-qty">× {{ row.qty }}</span>
+          <span class="cart-thumb">
+            @if (row.image) { <img [src]="row.image" [alt]="row.name" loading="lazy" decoding="async" /> }
+          </span>
+          <span class="cart-row-main">
+            <span class="cart-row-name">{{ row.name }}</span>
+            <span class="cart-row-meta">{{ row.unit }} × {{ row.qty }}</span>
+          </span>
+          <span class="cart-row-total">{{ row.total }}</span>
         </a>
         } @empty {
-        <span class="panel-item panel-note">購物車目前沒有商品</span>
+        <span class="panel-empty">
+          <span class="panel-empty-mark panel-empty-mark--cart" aria-hidden="true"></span>
+          <span class="panel-empty-title">購物車目前沒有商品</span>
+          <span class="panel-empty-desc">挑幾件喜歡的加進來，之後在這裡結帳。</span>
+        </span>
         }
         @if (cartRest() > 0) {
         <a [storeLink]="cartHref()" class="panel-item panel-note">以及另外 {{ cartRest() }} 項商品</a>
         }
+        @if (cartItems().length > 0) {
+        @if (cartTip(); as tip) {
+        <div class="cart-tip" [attr.data-kind]="tip.kind">
+          <span class="cart-tip-mark" aria-hidden="true"></span>
+          <span class="cart-tip-body">
+            <strong>{{ tip.title }}</strong>
+            <span>{{ tip.note }}</span>
+            @if (tip.points) { <span class="cart-tip-points">{{ tip.points }}</span> }
+          </span>
+        </div>
+        }
+        <div class="panel-summary">
+          <div class="panel-summary-line"><span>小計</span><strong>{{ cartSubtotal() }}</strong></div>
+          <div class="ship-meter" role="progressbar" aria-label="免運進度" [attr.aria-valuenow]="shipPercent()" aria-valuemin="0" aria-valuemax="100">
+            <span class="ship-meter-fill" [style.width.%]="shipPercent()"></span>
+          </div>
+          <span class="ship-hint">{{ shipHint() }}</span>
+        </div>
+        }
+        <a [storeLink]="cartHref()" class="panel-foot panel-foot--primary">前往購物車結帳</a>
       </app-promobar-panel>
 
       <!-- 我的訂單：取消待付款訂單或重新前往付款 -->
-      <a [storeLink]="ordersHref()" class="promobar-link">我的訂單</a>
+      <app-promobar-panel class="orders-menu" (opened)="loadOrders()">
+        <a panelTrigger [storeLink]="ordersHref()" class="promobar-link">我的訂單</a>
+        <span class="panel-head">我的訂單<span class="panel-head-count">最近 {{ orderTotal() }} 筆</span></span>
+        @if (ordersLoading()) {
+        <span class="panel-note" role="status">載入中…</span>
+        } @else if (orderTotal() === 0) {
+        <span class="panel-empty">
+          <span class="panel-empty-mark panel-empty-mark--cart" aria-hidden="true"></span>
+          <span class="panel-empty-title">還沒有訂單</span>
+          <span class="panel-empty-desc">下單後可以在這裡追蹤出貨進度。</span>
+        </span>
+        } @else {
+        <div class="order-chips">
+          @for (chip of orderCounts(); track chip.label) {
+          <a [storeLink]="ordersHref()" class="order-chip" [attr.data-tone]="chip.tone" [class.is-zero]="chip.n === 0">
+            <strong>{{ chip.n }}</strong><span>{{ chip.label }}</span>
+          </a>
+          }
+        </div>
+        @if (latestOrder(); as order) {
+        <a [storeLink]="ordersHref()" class="panel-item panel-row order-latest">
+          <span class="order-latest-main">
+            <span class="order-latest-no">{{ order.no }}</span>
+            <span class="order-latest-meta">{{ order.date }} · 共 {{ order.qty }} 件</span>
+          </span>
+          <span class="order-latest-side">
+            <strong>{{ order.amount }}</strong>
+            <span class="order-latest-status">{{ order.status }}</span>
+          </span>
+        </a>
+        }
+        }
+        <a [storeLink]="ordersHref()" class="panel-foot">查看全部訂單 →</a>
+      </app-promobar-panel>
       } @else {
       <!-- 未登入（或登入狀態尚未確認）時沒有會員資料，只顯示名稱，不顯示數量：
            點數停用；折價券仍可前往兌換商店（頁面內會提示登入）；購物車按下後要求登入 -->

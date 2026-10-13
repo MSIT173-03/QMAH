@@ -279,17 +279,17 @@
   height: 128px;
   padding: 0;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, #b8893a 28%, var(--color-line));
+  border: 1px solid color-mix(in srgb, var(--cc-line) 28%, var(--color-line));
   border-radius: var(--qmah-radius-card);
   box-shadow: var(--store-shadow-1);
   background: var(--color-surface);
   transition: transform 180ms ease, box-shadow 180ms ease;
 
-  &:hover { transform: translateY(-3px); box-shadow: var(--store-shadow-2); border-color: color-mix(in srgb, #b8893a 55%, var(--color-line)); }
+  &:hover { transform: translateY(-3px); box-shadow: var(--store-shadow-2); border-color: color-mix(in srgb, var(--cc-line) 55%, var(--color-line)); }
   /* 撕邊缺口：券面與右側按鈕之間、色塊與內容之間各一對上下半圓 */
   &::before, &::after {
     position: absolute; left: calc(var(--stub) - 9px); width: 18px; height: 18px; border-radius: 50%;
-    background: var(--color-bg); box-shadow: inset 0 0 0 1px color-mix(in srgb, #b8893a 28%, var(--color-line)); content: ''; z-index: 2;
+    background: var(--color-bg); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc-line) 28%, var(--color-line)); content: ''; z-index: 2;
   }
   &::before { top: -9px; }
   &::after { bottom: -9px; }
@@ -298,8 +298,8 @@
   position: relative; isolation: isolate;
   display: grid; place-content: center; justify-items: center; gap: 2px;
   align-self: stretch; padding: 0 10px;
-  background: linear-gradient(145deg, #d9b25c, #b07a2c);
-  color: #fff; font-size: 22px; font-weight: 800; letter-spacing: 0.02em; text-align: center; text-shadow: 0 1px 2px rgb(80 50 10 / 35%);
+  background: linear-gradient(145deg, var(--cc-lt), var(--cc-dk));
+  color: #fff; font-size: 22px; font-weight: 800; letter-spacing: 0.02em; text-align: center; text-shadow: 0 1px 2px rgb(0 0 0 / 30%);
   /* 色塊右緣的鋸齒虛線 */
   border-right: 2px dashed rgb(255 255 255 / 55%);
 }
@@ -308,29 +308,36 @@
   background: rgb(255 255 255 / 22%);
   -webkit-mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat; mask: url('/images/brand/qmah-mark.svg') center / contain no-repeat;
 }
-.coupon-card-off::after { content: '折價券'; font-size: 12px; font-weight: 700; letter-spacing: 0.2em; opacity: 0.9; }
+.coupon-card-off::after { content: '折價券'; font-size: var(--qmah-type-label-size); font-weight: 700; letter-spacing: 0.2em; opacity: 0.9; }
 .coupon-card-body { padding: 14px 16px; gap: 4px; }
-.coupon-card-title { font-size: 16px; font-weight: 700; line-height: 1.35; }
+.coupon-card-title { font-size: var(--qmah-type-body-size); font-weight: 700; line-height: 1.35; }
 .coupon-card-meta { font-size: 13px; }
 .coupon-card-cost {
-  border-left: 2px dashed color-mix(in srgb, #b8893a 40%, var(--color-line-mid));
+  border-left: 2px dashed color-mix(in srgb, var(--cc-line) 40%, var(--color-line-mid));
   border-radius: 0;
-  background: color-mix(in srgb, #d9b25c 10%, var(--color-surface));
+  background: color-mix(in srgb, var(--cc-lt) 10%, var(--color-surface));
   gap: 6px;
 }
 .coupon-card-cost-label {
-  padding: 4px 14px; border-radius: var(--qmah-radius-control); background: #b07a2c; color: #fff; font-size: 13px; font-weight: 700; transition: background 160ms ease;
+  padding: 4px 14px; border-radius: var(--qmah-radius-control); background: var(--cc-dk); color: #fff; font-size: 13px; font-weight: 700; transition: background 160ms ease;
 }
 .coupon-card-cost-value { font-size: 15px; font-weight: 700; color: var(--color-ink); }
-button.coupon-card-cost:hover { background: color-mix(in srgb, #d9b25c 22%, var(--color-surface)); }
-button.coupon-card-cost:hover .coupon-card-cost-label { background: #8f5f1c; }
+button.coupon-card-cost:hover { background: color-mix(in srgb, var(--cc-lt) 22%, var(--color-surface)); }
+button.coupon-card-cost:hover .coupon-card-cost-label { background: var(--cc-deep); }
 .coupon-card-cost--static .coupon-card-cost-label { background: transparent; color: var(--color-muted); padding: 0; font-weight: 600; }
-.coupon-card-cost--static:hover { background: color-mix(in srgb, #d9b25c 10%, var(--color-surface)); }
-:host-context([data-theme='qmahdark']) .coupon-card-off { background: linear-gradient(145deg, #a8822f, #6e4a18); }
-:host-context([data-theme='qmahdark']) .coupon-card-cost { background: color-mix(in srgb, #d9b25c 9%, var(--color-surface)); }
-:host-context([data-theme='qmahdark']) .coupon-card-cost-label { background: #d9b25c; color: #2a1d08; }
-:host-context([data-theme='qmahdark']) .coupon-card { border-color: color-mix(in srgb, #d9b25c 30%, var(--color-line)); }
-:host-context([data-theme='qmahdark']) .coupon-card::before, :host-context([data-theme='qmahdark']) .coupon-card::after { box-shadow: inset 0 0 0 1px color-mix(in srgb, #d9b25c 30%, var(--color-line)); }
+.coupon-card-cost--static:hover { background: color-mix(in srgb, var(--cc-lt) 10%, var(--color-surface)); }
+:host-context([data-theme='qmahdark']) .coupon-card-off { background: linear-gradient(145deg, var(--cc-dk), var(--cc-deep)); }
+:host-context([data-theme='qmahdark']) .coupon-card-cost { background: color-mix(in srgb, var(--cc-lt) 9%, var(--color-surface)); }
+:host-context([data-theme='qmahdark']) .coupon-card-cost-label { background: var(--cc-lt); color: #fff; }
+:host-context([data-theme='qmahdark']) .coupon-card { border-color: color-mix(in srgb, var(--cc-lt) 30%, var(--color-line)); }
+:host-context([data-theme='qmahdark']) .coupon-card::before, :host-context([data-theme='qmahdark']) .coupon-card::after { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc-lt) 30%, var(--color-line)); }
+
+/* 券色：金、玉青、酒紅、靛藍、墨紫依序輪替，皆為低飽和的深色調 */
+.coupon-card { --cc-lt:#d9b25c; --cc-dk:#b07a2c; --cc-deep:#8f5f1c; --cc-line:#b8893a; }
+.coupon-card:nth-child(5n+2) { --cc-lt:#5fa59a; --cc-dk:#2f7468; --cc-deep:#235a50; --cc-line:#3f8a7d; }
+.coupon-card:nth-child(5n+3) { --cc-lt:#b5586a; --cc-dk:#8a3447; --cc-deep:#6c2636; --cc-line:#9a4558; }
+.coupon-card:nth-child(5n+4) { --cc-lt:#6f86c4; --cc-dk:#43599a; --cc-deep:#33447a; --cc-line:#5568a6; }
+.coupon-card:nth-child(5n) { --cc-lt:#9a82bd; --cc-dk:#6b5390; --cc-deep:#533f74; --cc-line:#7c64a2; }
 @media (max-width: 460px) { .coupon-card { --stub: 104px; --cost: 92px; } .coupon-card-off { font-size: 19px; } }
 
 /* 「我的折價券」背包：區塊標題旁放品牌 mark，空狀態做成一張虛線券夾 */
@@ -350,7 +357,7 @@ button.coupon-card-cost:hover .coupon-card-cost-label { background: #8f5f1c; }
 .coupon-card-title { font-size: 15px; }
 
 /* ===== 版面：左右留白、置中，上下兩個區塊各自是有底色的面板 ===== */
-.coupon-store-main { max-width: 1120px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
+.coupon-store-main { max-width: var(--store-page-max); margin-inline: auto; padding-inline: clamp(16px, 3vw, 40px); }
 .coupon-section {
   padding: clamp(16px, 2.4vw, 28px);
   border: 1px solid #e6e3dd;
@@ -392,3 +399,26 @@ button.coupon-card-cost:hover .coupon-card-cost-label { background: #8f5f1c; }
 .coupon-group + .coupon-group { margin-top: var(--qmah-space-6, 32px); }
 .coupon-group-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 var(--qmah-space-3, 12px); font-size: 1.0625rem; }
 .coupon-group-title span { color: var(--qmah-muted); font-size: 0.875rem; font-weight: 400; }
+
+/* 券變多之後的整理：券種分頁、只看買得起的、每區先顯示兩排、其餘展開 */
+.coupon-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 4px 0 14px; }
+.coupon-tabs { display: inline-flex; gap: 4px; padding: 3px; border-radius: var(--qmah-radius-control); background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)); }
+.coupon-tab {
+  padding: 5px 16px; border: 0; border-radius: calc(var(--qmah-radius-control) - 2px); background: transparent; color: var(--color-muted);
+  font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 160ms ease, color 160ms ease;
+  &:hover { color: var(--color-ink); }
+  &.is-active { background: var(--color-accent); color: var(--color-on-accent, #fff); }
+}
+.coupon-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--color-muted); cursor: pointer; input { accent-color: var(--color-accent); } }
+.coupon-toolbar-count { margin-left: auto; font-size: 13px; color: var(--color-muted-2); }
+.coupon-more {
+  display: block; margin: 14px auto 0; padding: 6px 22px; border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-line));
+  border-radius: 999px; background: transparent; color: var(--color-accent); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  &:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+}
+
+.coupon-section[hidden] { display: none; }
+.coupon-views { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0 16px; }
+.coupon-tabs--lg .coupon-tab { padding: 8px 24px; font-size: 16px; }
+.coupon-tab-count { margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, currentColor 16%, transparent); font-size: 12px; }
+.coupon-points { padding: 6px 16px; border-radius: 999px; background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface)); color: var(--color-muted); font-size: 14px; strong { color: var(--color-ink); font-size: 17px; font-variant-numeric: tabular-nums; } }

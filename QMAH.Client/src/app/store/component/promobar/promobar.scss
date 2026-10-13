@@ -158,3 +158,278 @@
 /* 商城頂部列：底色比頁面略深一階、字級加大，點數與折價券數字以強調色呈現。 */
 .promobar { background: var(--color-bg); border-bottom-color: var(--color-line-soft); }
 .promobar-row { font-size: 13px; padding-block: 9px; }
+
+/* ===== 懸浮小窗改版：標題列、票券／商品列、底部行動鈕、有說明的空狀態 ===== */
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 6px 8px 8px;
+  font-family: var(--qmah-font-sans);
+  font-size: var(--qmah-type-body-sm-size);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.panel-head-count {
+  font-size: var(--qmah-type-label-size);
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.panel-item + .panel-item { margin-top: 2px; border-top: 0; }
+.panel-row { border-radius: 8px; outline: 0; transition: background 140ms; }
+.panel-row:hover { background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
+
+.coupon-row-amount {
+  display: grid;
+  place-items: center;
+  min-width: 58px;
+  padding: 8px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  color: var(--color-accent);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-row { align-items: center; padding-block: 9px; }
+.cart-row-qty {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-foot {
+  display: block;
+  margin: 8px 4px 2px;
+  padding: 9px 0;
+  border: 1px solid var(--color-line-mid);
+  border-radius: 8px;
+  text-align: center;
+  text-decoration: none;
+  font-family: var(--qmah-font-sans);
+  font-size: var(--qmah-type-label-size);
+  font-weight: 700;
+  color: var(--color-ink);
+  transition: background 140ms, border-color 140ms, color 140ms;
+}
+
+.panel-foot:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.panel-foot--primary { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-on-accent); }
+.panel-foot--primary:hover { background: color-mix(in srgb, var(--color-accent) 86%, var(--color-ink)); color: var(--color-on-accent); }
+
+.panel-empty {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 18px 12px 12px;
+  text-align: center;
+  font-family: var(--qmah-font-sans);
+}
+
+.panel-empty-mark {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+}
+
+.panel-empty-mark::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  background: var(--color-accent);
+  -webkit-mask: var(--mark) center / contain no-repeat;
+  mask: var(--mark) center / contain no-repeat;
+}
+
+.panel-empty-mark--coupon { --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 1 0-6V6H3z'/%3E%3Cpath d='M14 6v12' stroke-dasharray='2 2'/%3E%3C/svg%3E"); }
+.panel-empty-mark--cart { --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 7h12l1 13H5z'/%3E%3Cpath d='M9 7a3 3 0 0 1 6 0'/%3E%3C/svg%3E"); }
+.panel-empty-title { font-size: var(--qmah-type-body-sm-size); font-weight: 700; color: var(--color-ink); }
+.panel-empty-desc { font-size: var(--qmah-type-label-size); color: var(--color-muted); }
+
+.promobar-notes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--qmah-space-4);
+}
+
+/* ===== inline：成為頁首那一排的直接子項目（外層容器一律 display: contents）。
+   左：公告（窄螢幕只留第一則並以刪節號收尾）；中：搜尋框；右：點數／折價券／購物車／我的訂單。 ===== */
+:host(.is-inline) {
+  display: contents;
+
+  .promobar,
+  .promobar-row {
+    display: contents;
+  }
+
+  .promobar-notes {
+    order: 0;
+    flex: 0 1 280px;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    font-family: var(--qmah-font-sans);
+    font-size: var(--qmah-type-label-size);
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .promobar-actions {
+    order: 2;
+    flex: none;
+    margin-left: 0;
+    flex-wrap: nowrap;
+    gap: var(--qmah-space-4);
+    font-family: var(--qmah-font-sans);
+    font-size: var(--qmah-type-label-size);
+  }
+
+  @media (max-width: 1100px) {
+    .promobar-notes { display: none; }
+  }
+}
+
+/* inline 的公告：「主打活動」做成小標籤，後面最多兩則（活動＋倒數）整段不換行；第三則以後與標籤後的分隔線都隱藏 */
+:host(.is-inline) .promobar-notes {
+  flex: 0 0 auto;
+  max-width: 380px;
+  gap: 8px;
+  overflow: visible;
+
+  > :first-child {
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+
+  > :nth-child(2),
+  > :nth-child(n+6) { display: none; }
+}
+
+@media (max-width: 1280px) {
+  :host(.is-inline) .promobar-notes { display: none; }
+}
+
+/* ===== 購物車小窗：縮圖、兩行名稱、單價×數量、品項小計；底部小計與免運進度 ===== */
+.cart-thumb {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--color-swatch);
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.cart-row { gap: 10px; }
+.cart-row-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+
+.cart-row-name {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  line-height: 1.4;
+  color: var(--color-ink);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.cart-row-meta { color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.cart-row-total { flex: none; font-weight: 700; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+
+.panel-summary {
+  margin: 6px 4px 0;
+  padding: 10px 4px 0;
+  border-top: 1px dashed var(--color-line-mid);
+  display: grid;
+  gap: 6px;
+  font-family: var(--qmah-font-sans);
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+}
+
+.panel-summary-line { display: flex; justify-content: space-between; align-items: baseline; }
+.panel-summary-line strong { font-size: var(--qmah-type-body-sm-size); color: var(--color-ink); font-variant-numeric: tabular-nums; }
+
+.ship-meter { height: 6px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--color-ink) 12%, transparent); }
+.ship-meter-fill { display: block; height: 100%; border-radius: inherit; background: var(--color-accent); transition: width 240ms ease; }
+.ship-hint { color: var(--color-ink); }
+
+/* 折價券：票根與內文之間一條虛線，像撕得開的票券 */
+.coupon-row { padding: 6px; }
+.coupon-row-amount {
+  position: relative;
+  min-width: 64px;
+  min-height: 52px;
+  margin-right: 6px;
+  font-size: var(--qmah-type-body-sm-size);
+  border-radius: 8px;
+}
+.coupon-row-title { font-weight: 600; }
+
+/* 獨立公告列（購物車、訂單等沒有搜尋列的頁面）也當面板的定位基準，面板浮在整條公告列的下緣 */
+.promobar { position: relative; z-index: 30; }
+
+/* ===== 我的訂單小窗：五種狀態的件數＋最新一筆 ===== */
+.order-chips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding: 2px 4px 10px; }
+.order-chip {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-ink) 5%, var(--color-surface));
+  text-decoration: none;
+  font-family: var(--qmah-font-sans);
+  font-size: var(--qmah-type-label-size);
+  color: var(--color-muted);
+  transition: background 140ms;
+
+  strong { font-size: var(--qmah-type-body-sm-size); color: var(--color-ink); font-variant-numeric: tabular-nums; }
+  &:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+  &.is-zero strong { color: var(--color-faint); font-weight: 500; }
+  &[data-tone='warn']:not(.is-zero) strong { color: #c4503c; }
+  &[data-tone='ok']:not(.is-zero) strong { color: #2f8a5f; }
+}
+.order-latest { align-items: center; justify-content: space-between; }
+.order-latest-main, .order-latest-side { display: grid; gap: 2px; }
+.order-latest-side { justify-items: end; }
+.order-latest-no { color: var(--color-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.order-latest-meta { color: var(--color-muted); }
+.order-latest-side strong { color: var(--color-ink); font-variant-numeric: tabular-nums; }
+.order-latest-status { color: var(--color-accent); }
+
+/* 折價券票根固定寬度，不同金額的票根對齊成一欄 */
+.coupon-row-amount { flex: none; width: 96px; min-width: 0; text-align: center; font-size: var(--qmah-type-label-size); }
+
+/* 購物車面板的省錢建議：與懸浮購物車同一個樣式 */
+.cart-tip {
+  display: flex; gap: 10px; align-items: flex-start; margin: 10px 4px 2px; padding: 12px; border-radius: 12px;
+  border: 1px dashed color-mix(in srgb, var(--color-accent) 55%, var(--color-line-mid));
+  background: color-mix(in srgb, var(--color-accent) 9%, var(--color-surface));
+  font-size: var(--qmah-type-label-size); color: var(--color-muted);
+}
+.cart-tip-mark {
+  flex: none; position: relative; width: 32px; height: 32px; border-radius: 50%; background: var(--color-accent);
+  &::after {
+    content: ''; position: absolute; inset: 7px; background: var(--color-on-accent);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 1 0-6V6H3z'/%3E%3Cpath d='M14 6v12' stroke-dasharray='2 2'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 1 0-6V6H3z'/%3E%3Cpath d='M14 6v12' stroke-dasharray='2 2'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+}
+.cart-tip-body { display: grid; gap: 2px; }
+.cart-tip-body strong { color: var(--color-ink); font-size: var(--qmah-type-body-sm-size); line-height: 1.4; }
+.cart-tip-points { color: var(--color-accent); font-weight: 600; }

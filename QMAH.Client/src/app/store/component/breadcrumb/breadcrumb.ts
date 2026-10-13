@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { StoreLink } from '../../shared/store-link';
 
 export interface BreadcrumbItem {
@@ -18,4 +18,7 @@ export interface BreadcrumbItem {
 export class Breadcrumb {
   /** 麵包屑項目清單，最後一項會顯示為目前頁面（不可點擊），其餘項目需附上 href */
   items = input<BreadcrumbItem[]>([]);
+
+  /** 上一層（倒數第二項）；只有一層時不顯示返回鈕 */
+  protected readonly parent = computed(() => this.items().at(-2) ?? null);
 }

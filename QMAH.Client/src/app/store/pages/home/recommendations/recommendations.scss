@@ -1,3 +1,11 @@
 :host {
   display: block;
 }
+
+.refresh-btn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 0;
+  &:hover { color: var(--color-accent); }
+}

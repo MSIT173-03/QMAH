@@ -1,6 +1,6 @@
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, map, of } from 'rxjs';
 
 import {
   Breadcrumb,
@@ -10,7 +10,6 @@ import {
   SessionBar,
 } from '../../component';
 import { CatalogApi } from '../../api';
-import { CartItem } from '../../api/api.models';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { injectCartState } from '../../shared/page-state';
 import { toProductView } from '../../shared/product-view';
@@ -27,8 +26,8 @@ const REMOVE_ANIMATION_MS = 300;
 const ENTER_ANIMATION_MS = 300;
 /** 「再加購」顯示的商品件數 */
 const ADDON_COUNT = 5;
-/** 「再加購」多取的備用件數：使用者陸續加入其中幾件後，清單仍能補滿 ADDON_COUNT */
-const ADDON_SPARE = 5;
+/** 滿額免運門檻，與後端 CheckoutDtos.FreeShippingThreshold 一致 */
+const FREE_SHIPPING_THRESHOLD = 1500;
 
 /** 回傳移除指定 ID 後的新集合（不修改原集合，讓 signal 能偵測到變動） */
 function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
@@ -51,7 +50,7 @@ function withoutId(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
   styleUrl: './cart.scss',
 })
 export class Cart {
-  // inject() 只能在建立元件時呼叫；下方 switchMap 的回呼在之後才執行，必須先取好服務。
+  // inject() 只能在建立元件時呼叫；下方的回呼在之後才執行，必須先取好服務。
   private readonly catalogApi = inject(CatalogApi);
 
   /** 麵包屑導覽項目 */
@@ -90,48 +89,62 @@ export class Cart {
   /** 金額摘要（後端以預設配送方式試算），供 app-cart-summary 顯示 */
   protected amounts = computed(() => this.cartState.cart()?.amounts ?? null);
 
-  /**
-   * 購物車內件數加總最多的器類；件數相同時取購物車中較早加入的品項所屬器類。
-   * 購物車清空後保留上一次的器類（而非回到 null），避免「再加購」清單在
-   * 最後一件商品被移除的瞬間跟著消失。
-   */
-  private readonly topCategory = linkedSignal<CartItem[], string | null>({
-    source: this.cartItems,
-    computation: (items, previous) => {
-      const totals = new Map<string, number>();
-      for (const item of items) {
-        if (item.category) totals.set(item.category, (totals.get(item.category) ?? 0) + item.qty);
-      }
-      let top: string | null = null;
-      let topQty = 0;
-      for (const [category, qty] of totals) {
-        if (qty > topQty) [top, topQty] = [category, qty];
-      }
-      return top ?? previous?.value ?? null;
-    },
-  });
-
-  /** 按下「換一批」的次數，變動時重新抽選 */
+  /** 按下「換一批」的次數：每按一次就往後看下一組排名，不是重新亂抽 */
   private readonly addonBatch = signal(0);
 
-  /**
-   * 同器類的隨機商品（排序 6：隨機）。只在器類改變或按下「換一批」時重新抽選，
-   * 調整數量或加入其中一件時清單不會整組換掉；查詢失敗時靜默隱藏此區塊。
-   * 隨機結果可能包含購物車內同器類的品項，因此連同這些品項數與備用件數一起多取，排除後再截到 ADDON_COUNT。
-   */
-  private readonly addonCandidates = toSignal(
-    toObservable(computed(() => ({ cat: this.topCategory(), batch: this.addonBatch() }))).pipe(
-      switchMap(({ cat }) => {
-        if (!cat) return of([]);
-        const inCategory = this.cartItems().filter((item) => item.category === cat).length;
-        return this.catalogApi.getProducts({ cat, order: 6, pageSize: ADDON_COUNT + ADDON_SPARE + inCategory }).pipe(
-          map((page) => page.items),
-          catchError(() => of([])),
-        );
-      }),
+  /** 候選池：全站熱銷前 50 名（依累計銷量），只載入一次；查詢失敗時靜默隱藏此區塊 */
+  private readonly addonPool = toSignal(
+    this.catalogApi.getProducts({ order: 1, pageSize: 50 }).pipe(
+      map((page) => page.items),
+      catchError(() => of([])),
     ),
     { initialValue: [] },
   );
+
+  /** 購物車商品小計（折扣後）與距離免運門檻的差額；已達門檻為 0 */
+  private readonly shippingGap = computed(() => {
+    const subtotal = this.cartItems().reduce((sum, item) => sum + item.lineTotal, 0);
+    return Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  });
+
+  /**
+   * 「再加購」的推薦排序（每件候選商品打分，不隨機）：
+   * 1. 湊免運：還沒達免運門檻時，單價剛好補上差額（差額～差額＋600 元）的商品加最多分，標「加購免運」；
+   * 2. 搭配：與購物車同器類的加分，標「搭配同器類」；其餘器類只要熱銷也會入選，讓清單不全是同一種；
+   * 3. 口碑與熱銷：累計銷量與評分越高越前面；
+   * 4. 每個器類最多 2 件，避免整排同類；已在購物車的不再推薦。
+   * 「換一批」依序看下一組名次。
+   */
+  private readonly addonRanked = computed(() => {
+    const inCart = this.cartIds();
+    const cartCats = new Set(this.cartItems().map((item) => item.category));
+    const gap = this.shippingGap();
+    // 從「再加購」剛加入的商品要留在清單裡（標示已加入）；其餘已在購物車內的不再推薦
+    const added = this.addedAddonIds();
+    const pool = this.addonPool().filter((product) => !inCart.has(product.id) || added.has(product.id));
+    const maxSold = Math.max(1, ...pool.map((product) => product.soldCount));
+    const scored = pool.map((product) => {
+      const price = product.discountRate > 0 ? product.dealPrice : product.price;
+      let score = 0.5 * (product.soldCount / maxSold) + 0.2 * (product.rating / 5);
+      let reason = '熱銷';
+      if (cartCats.has(product.category)) {
+        score += 0.2;
+        reason = '搭配同器類';
+      }
+      if (gap > 0 && price >= gap && price <= gap + 600) {
+        score += 0.4 - (0.2 * (price - gap)) / 600;
+        reason = '加購免運';
+      }
+      return { product, score, reason };
+    });
+    scored.sort((x, y) => y.score - x.score);
+    const perCategory = new Map<string, number>();
+    return scored.filter(({ product }) => {
+      const used = perCategory.get(product.category) ?? 0;
+      perCategory.set(product.category, used + 1);
+      return used < 2;
+    });
+  });
 
   /** 本頁從「再加購」加入購物車的商品 ID */
   private readonly addedAddonIds = signal<ReadonlySet<string>>(new Set());
@@ -141,17 +154,16 @@ export class Cart {
     return new Set([...this.addedAddonIds()].filter((id) => inCart.has(id)));
   });
 
-  /** 「再加購」商品：排除已在購物車內的品項（從這裡加入的保留並顯示已加入），最多 ADDON_COUNT 件 */
+  /** 「再加購」商品：本批排名的前 ADDON_COUNT 件；從這裡加入的保留並顯示已加入 */
   protected addons = computed(() => {
-    const inCart = this.cartIds();
-    const added = this.addedAddonIds();
-    return this.addonCandidates()
-      .filter((product) => !inCart.has(product.id) || added.has(product.id))
-      .slice(0, ADDON_COUNT)
-      .map(toProductView);
+    const ranked = this.addonRanked();
+    if (ranked.length === 0) return [];
+    const start = (this.addonBatch() * ADDON_COUNT) % ranked.length;
+    const batch = [...ranked.slice(start), ...ranked.slice(0, start)].slice(0, ADDON_COUNT);
+    return batch.map(({ product, reason }) => ({ ...toProductView(product), reason }));
   });
 
-  /** 「換一批」：重新隨機抽選；上一批已加入購物車的商品不再保留在清單中 */
+  /** 「換一批」：看下一組名次；上一批已加入購物車的商品不再保留在清單中 */
   protected onRefreshAddons(): void {
     this.addedAddonIds.set(new Set());
     this.addonBatch.update((count) => count + 1);

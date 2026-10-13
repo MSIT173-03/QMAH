@@ -16,7 +16,9 @@
               }
             </div>
             <div class="news-info">
-              <span class="product-card-brand">{{ item.brand }}</span>
+              <span class="news-listed" [class.news-listed--fresh]="item.listed.fresh">
+                @if (item.listed.fresh) { <b class="news-new">NEW</b> }{{ item.listed.text }}
+              </span>
               <span class="news-name">{{ item.name }}</span>
               <div class="news-price-row">
                 <span class="news-price" [class.text-accent]="item.hasDeal">{{ item.priceText }}</span>

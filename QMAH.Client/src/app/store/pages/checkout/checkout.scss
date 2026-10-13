@@ -17,7 +17,7 @@
 /* 左側結帳資訊、右側訂單摘要 */
 .checkout-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
   gap: var(--qmah-space-5);
   align-items: start;
 }
@@ -37,4 +37,4 @@
 }
 
 /* 左右留白與置中（與購物車、訂單一致） */
-.checkout-main { max-width: 1120px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
+.checkout-main { max-width: 1440px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 40px); }

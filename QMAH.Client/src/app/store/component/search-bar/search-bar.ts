@@ -14,6 +14,8 @@ export class SearchBar {
   placeholder = input('搜尋文物周邊、紋樣');
   /** 精簡版：寬度可隨頁首伸縮，用於商品列表頁與商品頁 */
   compact = input(false);
+  /** 常見搜尋詞（完整版才顯示）；預設為商城現有的分類名稱 */
+  suggestions = input<string[]>(['青銅器', '陶瓷', '玉器', '繪畫', '錢幣', '漆器', '琺瑯器', '雕刻', '青花', '乾隆', '複製品', '明信片']);
 
   /** 搜尋框目前輸入值（雙向綁定） */
   value = model('');
@@ -28,5 +30,11 @@ export class SearchBar {
   /** 送出搜尋關鍵字 */
   protected submit() {
     this.search.emit(this.value().trim());
+  }
+
+  /** 點選常見搜尋詞：填入輸入框並直接送出 */
+  protected pickSuggestion(term: string) {
+    this.value.set(term);
+    this.submit();
   }
 }

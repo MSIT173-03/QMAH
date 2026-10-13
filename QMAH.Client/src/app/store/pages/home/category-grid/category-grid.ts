@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { EntryGrid, EntryGridItem, EntryTone } from '../../../component';
+import { categoryTone } from '../../../shared/category-tone';
 import { CatalogApi } from '../../../api';
 import { categoryPath } from '../../../shared/paths';
 
@@ -42,15 +43,8 @@ export class CategoryGrid {
     return 'stone';
   }
 
-  /** 與圖鑑分類籤相同的顏色對應。 */
+  /** 與圖鑑分類籤相同的顏色對應（與商品卡片的器類角標共用）。 */
   private categoryTone(name: string): EntryTone {
-    if (/漆/.test(name)) return 'cinnabar';
-    if (/陶|瓷|磚|瓦/.test(name)) return 'celadon';
-    if (/玉/.test(name)) return 'jade';
-    if (/琺瑯/.test(name)) return 'rouge';
-    if (/畫|書|紙|帖|絹|織|繡/.test(name)) return 'indigo';
-    if (/幣/.test(name)) return 'bronze';
-    if (/銅|金|銀|錫|鐵/.test(name)) return 'ochre';
-    return 'slate';
+    return categoryTone(name) as EntryTone;
   }
 }

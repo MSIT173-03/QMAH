@@ -1,0 +1,80 @@
+<!-- 懸浮購物車：左下角按鈕 + 向上展開的快覽面板 -->
+<div class="floating-cart" [class.is-open]="open()" [class.is-away]="!scrolled() && !open()" [attr.inert]="!scrolled() && !open() ? '' : null">
+  @if (open()) {
+  <section id="floating-cart-panel" class="floating-cart__panel" aria-label="購物車快覽">
+    <header class="floating-cart__head">
+      <h2 class="floating-cart__title">購物車</h2>
+      <span class="floating-cart__meta">{{ cart().count() }} 件</span>
+    </header>
+
+    @if (cart().signedIn() === false) {
+      <p class="floating-cart__note">登入後即可查看購物車內容。</p>
+      <button type="button" class="floating-cart__cta" (click)="onSignIn()">登入後查看</button>
+    } @else if (cart().cart() === null) {
+      <p class="floating-cart__note" role="status">購物車載入中…</p>
+    } @else if (items().length === 0) {
+      <p class="floating-cart__note">購物車目前是空的，去逛逛吧。</p>
+      <a [storeLink]="cartHref" class="floating-cart__cta">開始選購</a>
+    } @else {
+      <ul class="floating-cart__list">
+        @for (item of visibleItems(); track item.productId) {
+        <li class="floating-cart__row">
+          <a [storeLink]="productHref(item.productId)" class="floating-cart__thumb" [attr.aria-label]="item.name">
+            @if (item.coverImage) {
+              <img [src]="item.coverImage" [alt]="item.name" loading="lazy" decoding="async" />
+            }
+          </a>
+          <div class="floating-cart__info">
+            <a [storeLink]="productHref(item.productId)" class="floating-cart__name">{{ item.name }}</a>
+            <span class="floating-cart__price">{{ money(item.price) }}</span>
+          </div>
+          <div class="floating-cart__aside">
+            <app-qty-stepper [value]="item.qty" size="sm" (valueChange)="onQty(item.productId, $event)" />
+            <button type="button" class="floating-cart__remove" (click)="cart().remove(item.productId)">移除</button>
+          </div>
+        </li>
+        }
+      </ul>
+
+      @if (restCount() > 0) {
+        <p class="floating-cart__note">以及另外 {{ restCount() }} 項商品</p>
+      }
+
+      @if (cart().error(); as message) {
+        <p class="floating-cart__error" role="alert">{{ message }}</p>
+      }
+
+      @if (suggestion(); as tip) {
+      <div class="floating-cart__tip" [attr.data-kind]="tip.kind">
+        <span class="floating-cart__tip-mark" aria-hidden="true"></span>
+        <div class="floating-cart__tip-body">
+          <strong>{{ tip.title }}</strong>
+          <span>{{ tip.note }}</span>
+          @if (tip.points) { <span class="floating-cart__tip-points">{{ tip.points }}</span> }
+        </div>
+      </div>
+      }
+
+      <div class="floating-cart__ship">
+        <span class="floating-cart__ship-text">{{ shippingHint() }}</span>
+        <span class="floating-cart__bar" aria-hidden="true"><span class="floating-cart__bar-fill" [style.width.%]="shippingPercent()"></span></span>
+      </div>
+      <div class="floating-cart__total">
+        <span>應付金額</span>
+        <span class="floating-cart__total-value">{{ payable() }}</span>
+      </div>
+      <div class="floating-cart__actions">
+        <a [storeLink]="cartHref" class="floating-cart__btn">查看購物車</a>
+        <a [storeLink]="checkoutHref" class="floating-cart__btn floating-cart__btn--primary">前往結帳</a>
+      </div>
+    }
+  </section>
+  }
+
+  <button type="button" class="floating-cart__toggle" aria-controls="floating-cart-panel" [attr.aria-expanded]="open()"
+    [attr.aria-label]="'購物車，目前 ' + cart().count() + ' 件'" (click)="toggle()">
+    <svg lucideShoppingBag aria-hidden="true" focusable="false"></svg>
+    <span class="floating-cart__label">購物車</span>
+    <span class="floating-cart__count">{{ cart().count() }}</span>
+  </button>
+</div>

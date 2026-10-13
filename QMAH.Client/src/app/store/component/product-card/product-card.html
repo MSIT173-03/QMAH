@@ -1,7 +1,7 @@
 <!-- 商品卡片外層容器 -->
 <div class="product-card">
   <!-- 點擊整張卡片（圖片＋內容）導向商品頁 -->
-  <a [storeLink]="link()" class="product-card-link">
+  <a [storeLink]="link()" class="product-card-link" (pointerenter)="prefetch()" (focus)="prefetch()" (touchstart)="prefetch()">
 
     <!-- 商品圖片區：先顯示縮圖，失敗時改用同一件文物的大圖，兩者都失敗才顯示「影像待補」 -->
     <div class="product-card-cover">
@@ -18,7 +18,7 @@
 
       <!-- 角標（例如排名序號、器類），無 badge 時不顯示 -->
       @if (badge()) {
-      <span class="product-card-badge" [class.product-card-badge--teal]="badgeVariant() === 'teal'">{{ badge() }}</span>
+      <span class="product-card-badge" [class]="'product-card-badge product-card-badge--' + badgeVariant()" [attr.data-tone]="badgeTone()">{{ badge() }}</span>
       }
     </div>
 
@@ -27,7 +27,18 @@
       @if (brand()) {
       <span class="product-card-brand">{{ brand() }}</span>
       }
+      @if (isCompact()) {
       <span class="product-card-name">{{ name() }}</span>
+      } @else {
+      @let parts = nameParts();
+      <!-- 名稱與副標成一組，固定高度，同一列的價格與按鈕才會對齊 -->
+      <div class="product-card-titles">
+        <span class="product-card-name" [attr.title]="name()">{{ parts.main }}</span>
+        @if (parts.sub) {
+        <span class="product-card-sub">{{ parts.sub }}</span>
+        }
+      </div>
+      }
 
       @let pv = priceView();
       @if (isCompact()) {
@@ -43,21 +54,21 @@
         @if (pv.tag) {
         <span class="product-card-tag" [class.product-card-tag--deal]="pv.hasDeal">{{ pv.tag }}</span>
         }
+        @if (soldText(); as sold) {
+        <span class="product-card-sold-text">{{ sold }}</span>
+        }
       </div>
 
-      <div class="product-card-rating">
+      <!-- 評分一行：星級＋分數＋評論數；已售與價格同列、靠右 -->
+      <div class="product-card-meta">
         @if (hasReviews()) {
-          <span class="product-card-star">★</span><span>{{ ratingText() }}</span><span
-            class="product-card-split">|</span><span>{{ reviewsText() }}</span>
+          <span class="product-card-stars" role="img" [attr.aria-label]="'評分 ' + ratingText() + '，' + reviewsText()" [style.--fill]="fillPercent()"></span>
+          <span class="product-card-meta-strong">{{ ratingText() }}</span>
+          <span class="product-card-meta-count" aria-hidden="true">({{ reviews() }})</span>
         } @else {
           <span>{{ noReviewsLabel }}</span>
         }
       </div>
-
-      <!-- 次要說明：已售數量 -->
-      @if (soldText(); as sold) {
-      <span class="product-card-sold">{{ sold }}</span>
-      }
       }
     </div>
   </a>

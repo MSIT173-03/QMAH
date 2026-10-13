@@ -1,13 +1,13 @@
-<!-- 頂部公告列與登入提示 -->
-<app-session-bar [cart]="cart" />
+<app-floating-cart [cart]="cart" [attr.data-tone]="themeTone()" />
 
-<!-- 網站頁首：搜尋框 -->
+<!-- 頁首同一排：公告｜搜尋｜會員捷徑（同時負責登入提示） -->
 <app-site-header>
+  <app-session-bar [cart]="cart" [inline]="true" />
   <!-- 站內搜尋框（列表頁精簡版：寬度可隨頁首伸縮） -->
   <app-search-bar [compact]="true" [(value)]="searchInput" (search)="onSearch($event)" />
 </app-site-header>
 
-<div class="container list-main">
+<div class="container list-main" [attr.data-tone]="themeTone()">
 
   <!-- 麵包屑導覽 -->
   <app-breadcrumb [items]="breadcrumbItems()" />
@@ -47,7 +47,7 @@
           @for (item of items(); track item.id) {
             <app-product-card variant="list" [id]="item.id" [coverImage]="item.coverImage"
               [brand]="item.brand" [name]="item.name" [price]="item.price" [was]="item.was"
-              [rating]="item.rating" [reviews]="item.reviews" (addToCart)="onAddToCart(item.id)" />
+              [rating]="item.rating" [reviews]="item.reviews" [sold]="item.sold" (addToCart)="onAddToCart(item.id)" />
           }
         </div>
       } @else {

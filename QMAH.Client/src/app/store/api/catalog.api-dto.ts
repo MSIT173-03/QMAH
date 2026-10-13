@@ -196,6 +196,8 @@ export function toReview(dto: ApiProductReview): Review {
     // 後端 Rating 有 1–5 的驗證；仍夾在範圍內，避免異常資料讓星等統計寫到不存在的鍵。
     stars: Math.min(5, Math.max(1, Math.round(dto.rating))),
     user: dto.displayName ?? '匿名會員',
+    userId: dto.userId,
+    verified: dto.isVerifiedPurchase,
     date: dto.createdAt.slice(0, 10),
     text: dto.content,
     // 新增時 UpdatedAt 與 CreatedAt 相同；之後有編輯才會比建立時間晚。

@@ -1,7 +1,8 @@
-<!-- 頂部公告列與登入提示 -->
-<app-session-bar [cart]="cart" />
+<app-floating-cart [cart]="cart" />
 
+<!-- 頁首同一排：公告｜搜尋｜會員捷徑（同時負責登入提示） -->
 <app-site-header>
+  <app-session-bar [cart]="cart" [inline]="true" />
   <!-- 站內搜尋框 -->
   <app-search-bar (search)="onSearch($event)" />
 </app-site-header>
@@ -24,7 +25,7 @@
   <app-new-arrivals id="store-new-arrivals" (addToCart)="onAddToCart($event)" />
 
   <!-- 為你推薦 -->
-  <app-recommendations id="store-recommendations" [items]="recommendedItems()" (addToCart)="onAddToCart($event)" />
+  <app-recommendations id="store-recommendations" [items]="recommendedItems()" (addToCart)="onAddToCart($event)" (refresh)="loadRecommendations()" />
 
   <!-- 向下捲動後出現的回到頂端箭頭：容器的最後一個子元素，靠容器右緣、捲動時固定在視窗下緣 -->
   <app-scroll-top />

@@ -31,7 +31,7 @@ public static class StoreCheckoutCatalog
     /// <summary>訂單完成後回饋的點數比例，以應付總額計算。</summary>
     public const decimal PointEarnRate = 0.01m;
 
-    public const int DirectPointMaximum = 20;
+    public const int DirectPointMaximum = 50;
     public const decimal DirectPointRate = 0.05m;
 
     /// <summary>直接點數折抵只補小額差額，較大折扣保留給兌換券。</summary>

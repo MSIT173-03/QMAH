@@ -1,4 +1,5 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
+import { CatalogApi } from '../../api/catalog.api';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 import { bumpAddToCart } from '../../shared/bump';
 import { formatNumber } from '../../shared/format';
@@ -8,7 +9,7 @@ import { NO_REVIEWS_LABEL, formatRating, formatReviews, toPriceView } from '../.
 import { StoreLink } from '../../shared/store-link';
 
 /** 角標樣式變體 */
-export type ProductCardBadgeVariant = 'ink' | 'teal';
+export type ProductCardBadgeVariant = 'ink' | 'teal' | 'rank' | 'rank-1' | 'rank-2' | 'rank-3';
 
 /**
  * 商品卡片版面變體。
@@ -38,6 +39,8 @@ export class ProductCard {
   badge = input<string | null>(null);
   /** 角標樣式變體 */
   badgeVariant = input<ProductCardBadgeVariant>('ink');
+  /** 角標的器類色調名稱（與分類入口卡片同一組顏色），有值時角標前面加該色的圓點 */
+  badgeTone = input<string | null>(null);
 
   /** 品牌名稱，為 null 時不顯示 */
   brand = input<string | null>(null);
@@ -58,6 +61,9 @@ export class ProductCard {
 
   /** 點擊加入購物車按鈕時觸發 */
   addToCart = output<void>();
+  /** 滑鼠移入、聚焦或觸控時先預載商品詳情 */
+  private readonly catalog = inject(CatalogApi);
+  protected prefetch(): void { this.catalog.prefetchProduct(this.id()); }
   /** 已加入購物車：按鈕維持反白並在右下角顯示打勾（購物車頁「再加購」使用） */
   added = input(false);
 
@@ -86,10 +92,22 @@ export class ProductCard {
   protected hasReviews = computed(() => this.reviews() > 0);
   /** 尚無評論時的提示文字 */
   protected readonly noReviewsLabel = NO_REVIEWS_LABEL;
+  /** 星級填滿的百分比（評分 ÷ 5） */
+  protected fillPercent = computed(() => Math.max(0, Math.min(100, (this.rating() / 5) * 100)));
   /** 已售數量顯示字串，未提供時為 null */
   protected soldText = computed(() => {
     const sold = this.sold();
-    return sold === null ? null : `${formatNumber(sold)} 已售`;
+    return sold === null ? null : `已售 ${formatNumber(sold)}`;
+  });
+  /**
+   * 名稱拆成主標與副標：商品名稱慣用「文物名－商品型態」（例如「…方龕－複製品＆文物明信片套組」），
+   * 主標只放文物名（最多兩行），型態放到下一行小字，列表才好掃讀。沒有分隔符號時整串都是主標。
+   */
+  protected nameParts = computed(() => {
+    const full = this.name();
+    const at = full.search(/[－—–]/);
+    if (at <= 0 || at >= full.length - 1) return { main: full, sub: null as string | null };
+    return { main: full.slice(0, at).trim(), sub: full.slice(at + 1).trim() };
   });
 
   /** 按下加入購物車：通知外部，並讓按鈕放大再還原一下 */

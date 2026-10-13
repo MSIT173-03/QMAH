@@ -2,96 +2,97 @@
   display: block;
 }
 
+/* 分割式版型：左側文字面板、右側照片，照片左緣淡出融入面板。
+   高度隨寬度在 220–280px 之間伸縮，窄版改為上圖下文。社群公告輪播（social-spotlight）用同一套版型。 */
 .hero {
   position: relative;
   overflow: hidden;
-  background: var(--color-swatch);
+  background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--store-radius);
-  height: 100%;
+
+  &:focus-visible {
+    outline: 2px solid var(--qmah-focus);
+    outline-offset: 2px;
+  }
 }
 
 .hero-track {
   display: flex;
   width: 100%;
   min-width: 0;
-  height: 100%;
   transition: transform 600ms cubic-bezier(.4, 0, .2, 1);
 }
 
 .hero-slide {
+  position: relative;
   flex: 0 0 100%;
   min-width: 0;
-  min-height: 390px;
-  isolation: isolate;
-  background: var(--color-swatch);
+  min-height: clamp(250px, 19vw, 284px);
   display: flex;
-  align-items: flex-end;
-  padding: var(--qmah-space-8);
-  position: relative;
+  align-items: center;
+  background: var(--color-surface);
 }
 
 .hero-slide-image {
   position: absolute;
-  inset: 0;
-  z-index: -2;
+  top: 0;
+  right: 0;
+  bottom: 0;
   display: block;
-  width: 100%;
+  width: 58%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-}
-
-.hero-slide::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: color-mix(in srgb, var(--color-surface) 16%, transparent);
+  mask-image: linear-gradient(to right, transparent 0, #000 30%);
 }
 
 .hero-slide-body {
-  max-width: 480px;
+  position: relative;
+  z-index: 1;
+  width: 44%;
   display: flex;
   flex-direction: column;
-  gap: var(--qmah-space-3);
-  padding: var(--qmah-space-4) var(--qmah-space-5);
-  /* 文案層以細邊界區隔，不用厚重側線，避免破壞圖片與文字的閱讀比例 */
-  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-line));
-  background: color-mix(in srgb, var(--color-surface) 91%, transparent);
-  border-radius: var(--store-radius);
-  box-shadow: var(--qmah-shadow-float);
+  align-items: flex-start;
+  gap: var(--qmah-space-2);
+  padding: 14px 8px 52px 68px;
 }
 
 .hero-kicker {
   font-family: var(--qmah-font-sans);
-  font-size: 12px;
-  letter-spacing: 0.22em;
+  font-size: var(--qmah-type-label-size);
+  letter-spacing: 0.18em;
   color: var(--color-accent);
 }
 
 .hero-title {
   margin: 0;
-  font-family: 'Noto Serif TC', serif;
-  font-size: var(--qmah-type-display-size);
+  font-family: var(--qmah-font-serif);
+  font-size: clamp(22px, 2vw, 30px);
   line-height: var(--qmah-type-heading-leading);
   font-weight: 700;
   color: var(--color-ink-deep);
-  text-wrap: pretty;
+  text-wrap: balance;
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
 
 .hero-desc {
+  display: -webkit-box;
   margin: 0;
+  overflow: hidden;
   font-size: var(--qmah-type-body-sm-size);
   line-height: var(--qmah-type-body-leading);
   color: var(--color-body);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  white-space: pre-line;
+  text-wrap: pretty;
 }
 
 .hero-cta {
-  align-self: flex-start;
-  margin-top: 4px;
+  margin-top: 2px;
 
   /* 立即選購是 <a>，全站的 a:hover 文字色會蓋過按鈕的白字；懸停時明確維持白字 */
   &:hover {
@@ -99,107 +100,173 @@
   }
 }
 
-.hero-dots {
-  display: flex;
-  align-items: center;
-  gap: var(--qmah-space-1);
-}
-
-.hero-controls {
+/* 前後切換：左右兩側垂直置中，手機也好按 */
+.hero-arrow {
   position: absolute;
-  right: 16px;
-  bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: var(--qmah-space-2);
-}
-
-.hero-dot {
-  width: 26px;
-  height: 3px;
-  /* 全站 :where(button, ...) 的 44px 觸控基線只設定 min-height；
-     min-height 一律蓋過較小的 height，這裡要明確覆寫，指示點才不會被撐高。 */
-  min-height: 3px;
-  border: 0;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
   padding: 0;
-  background: var(--color-line-mid);
+  transform: translateY(-50%);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  color: var(--color-ink);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 16%);
+  cursor: pointer;
+  transition: background 160ms, color 160ms;
 
-  &--active {
+  &--prev { left: 12px; }
+  &--next { right: 12px; }
+
+  &:hover {
     background: var(--color-accent);
+    color: var(--color-on-accent);
   }
 }
 
-.hero-play-toggle {
-  display: inline-flex;
+/* 底部控制：指示條、張數、暫停鈕，沿文字面板左緣對齊 */
+.hero-bar {
+  position: absolute;
+  left: 62px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  min-height: 32px;
-  padding: 5px 10px;
-  border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
-  border-radius: var(--qmah-radius-control);
-  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  gap: 6px;
+}
+
+.hero-dots {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 指示條：外層是 28x24 的觸控區，內層才是可見的短條；目前這一張拉長並用強調色 */
+.hero-dot {
+  position: relative;
+  width: 28px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: width 200ms;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 4px;
+    border-radius: 999px;
+    transform: translateY(-50%);
+    background: color-mix(in srgb, var(--color-ink) 28%, transparent);
+    transition: background 160ms;
+  }
+
+  &:hover::before {
+    background: var(--color-accent);
+  }
+
+  &--active {
+    width: 40px;
+
+    &::before {
+      background: var(--color-accent);
+    }
+  }
+}
+
+.hero-counter {
+  min-width: 34px;
+  font-family: var(--qmah-font-sans);
+  font-size: var(--qmah-type-label-size);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.hero-play-toggle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid var(--color-line-mid);
+  border-radius: 50%;
+  background: transparent;
   color: var(--color-ink);
-  font-size: 11px;
   cursor: pointer;
   transition: background 160ms, border-color 160ms, color 160ms;
 
   &:hover {
     border-color: var(--color-ink);
-    background: var(--color-surface);
   }
 
-  /* 已暫停：換成強調色的外框、底色與文字／圖示，一眼就能看出輪播目前是停著的，
-     不用先讀按鈕文字才知道狀態。 */
+  /* 已暫停：強調色外框與圖示，狀態一眼可見 */
   &--paused {
     border-color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+    background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
     color: var(--color-accent);
-
-    &:hover {
-      background: color-mix(in srgb, var(--color-accent) 28%, var(--color-surface));
-      border-color: var(--color-accent);
-    }
   }
 }
 
-@media (max-width: 600px) {
-  .hero-slide {
-    min-height: 340px;
-    padding: 20px 16px 64px;
+/* 中等寬度：文字欄加寬，照片縮窄 */
+@media (max-width: 1000px) {
+  .hero-slide-body {
+    width: 52%;
+    padding-right: 0;
   }
 
-  .hero-title {
-    /* 手機上維持主視覺標題的份量，並讓中文標題依語意換行，避免右側裁切或孤立短行 */
-    font-size: clamp(26px, 7vw, 32px);
-    text-wrap: balance;
+  .hero-slide-image {
+    width: 50%;
+  }
+}
+
+/* 窄版：上圖下文，控制列置中在文字下方 */
+@media (max-width: 720px) {
+  .hero-slide {
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-slide-image {
+    position: static;
+    width: 100%;
+    height: 120px;
+    mask-image: linear-gradient(to bottom, #000 72%, transparent);
   }
 
   .hero-slide-body {
-    width: min(100%, 430px);
-    min-width: 0;
-    padding: var(--qmah-space-4) var(--qmah-space-4);
+    width: auto;
+    padding: 4px 18px 56px;
   }
 
-  .hero-controls {
-    right: 12px;
-    left: 12px;
-    justify-content: space-between;
+  .hero-bar {
+    left: 0;
+    right: 0;
+    justify-content: center;
+  }
+
+  .hero-arrow {
+    top: 60px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-track {
+  .hero-track,
+  .hero-dot {
     transition: none;
   }
 }
-
-.hero-arrow {
-  position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; min-height: 40px; padding: 0; transform: translateY(-50%);
-  border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--color-surface, #fff) 90%, transparent); color: inherit; cursor: pointer;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 16%); transition: background 160ms;
-}
-.hero-arrow:hover { background: var(--color-surface, #fff); }
-.hero-arrow:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-.hero-arrow--prev { left: 12px; }
-.hero-arrow--next { right: 12px; }
-@media (max-width: 640px) { .hero-arrow { top: auto; bottom: 10px; transform: none; } .hero-arrow--next { left: 60px; right: auto; } }

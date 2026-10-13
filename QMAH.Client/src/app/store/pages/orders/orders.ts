@@ -18,6 +18,8 @@ import { OrdersApi } from '../../api';
 import { MyOrder, MyOrderPage } from '../../api/api.models';
 import { submitEcpayForm } from '../../shared/ecpay-form';
 import { formatDateTime, formatMoney } from '../../shared/format';
+import { productPath } from '../../shared/paths';
+import { StoreLink } from '../../shared/store-link';
 import { injectCartState } from '../../shared/page-state';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
 import { problemDetail } from '../../shared/problem-detail';
@@ -64,12 +66,12 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
   REFUND_REQUIRED: '待退款',
 };
 
-const FLOW: { status: string; label: string }[] = [
-  { status: 'PENDING_PAYMENT', label: '訂單成立' },
-  { status: 'PAID', label: '已付款' },
-  { status: 'FULFILLING', label: '撿貨中' },
-  { status: 'SHIPPED', label: '已寄送' },
-  { status: 'COMPLETED', label: '已完成' },
+const FLOW: { status: string; label: string; icon: string }[] = [
+  { status: 'PENDING_PAYMENT', label: '訂單成立', icon: 'placed' },
+  { status: 'PAID', label: '已付款', icon: 'paid' },
+  { status: 'FULFILLING', label: '撿貨中', icon: 'packing' },
+  { status: 'SHIPPED', label: '已寄送', icon: 'shipped' },
+  { status: 'COMPLETED', label: '已完成', icon: 'done' },
 ];
 
 function filterGroupOf(status: string): OrderFilter {
@@ -82,11 +84,12 @@ function filterGroupOf(status: string): OrderFilter {
 
 function buildSteps(status: string): OrderRow['steps'] {
   if (status === 'CANCELLED') {
-    return [{ label: '訂單成立', state: 'done' }, { label: '已取消', state: 'cancelled' }];
+    return [{ label: '訂單成立', state: 'done', icon: 'placed' }, { label: '已取消', state: 'cancelled', icon: 'cancelled' }];
   }
   const at = Math.max(0, FLOW.findIndex((step) => step.status === status));
   return FLOW.map((step, index) => ({
     label: step.label,
+    icon: step.icon,
     state: index < at ? 'done' : index === at ? (status === 'COMPLETED' ? 'done' : 'current') : 'todo',
   }));
 }
@@ -102,10 +105,10 @@ interface OrderRow {
   createdLabel: string;
   itemsLabel: string;
   /** 商品明細（名稱與數量） */
-  lines: { name: string; quantity: number }[];
+  lines: { name: string; quantity: number; href: string }[];
   totalQuantity: number;
   /** 訂單進度：已完成／進行中／尚未到達的步驟；已取消的訂單只有「訂單成立」與「已取消」 */
-  steps: { label: string; state: 'done' | 'current' | 'todo' | 'cancelled' }[];
+  steps: { label: string; icon: string; state: 'done' | 'current' | 'todo' | 'cancelled' }[];
   paymentStatusLabel: string;
   filterGroup: OrderFilter;
   /** 付款狀態的補充說明（付款失敗、需人工退款）；沒有時為空字串 */
@@ -123,7 +126,7 @@ interface OrderRow {
 @Component({
   selector: 'app-orders',
   host: { class: 'store-app' },
-  imports: [ScrollTop, SessionBar, Breadcrumb, PageTitleRow, EmptyState, Pagination, OrderCancelDialog],
+  imports: [StoreLink, ScrollTop, SessionBar, Breadcrumb, PageTitleRow, EmptyState, Pagination, OrderCancelDialog],
   templateUrl: './orders.html',
   styleUrl: './orders.scss',
 })
@@ -325,7 +328,7 @@ function toRow(order: MyOrder): OrderRow {
     payableLabel: formatMoney(order.totalAmount),
     createdLabel: formatDateTime(order.createdAt),
     itemsLabel: items.join('、'),
-    lines: order.items.map((item) => ({ name: item.productName, quantity: item.quantity })),
+    lines: order.items.map((item) => ({ name: item.productName, quantity: item.quantity, href: productPath(item.productId) })),
     totalQuantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
     steps: buildSteps(order.status),
     paymentStatusLabel: PAYMENT_STATUS_LABELS[order.paymentStatus ?? ''] ?? '未記錄',

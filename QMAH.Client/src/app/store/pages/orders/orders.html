@@ -52,22 +52,23 @@
         <!-- 進度：訂單成立 → 已付款 → 撿貨中 → 已寄送 → 已完成 -->
         <ol class="order-steps" aria-label="訂單進度">
           @for (step of order.steps; track step.label) {
-          <li class="order-step" [attr.data-state]="step.state"><span class="order-step-dot"></span><span>{{ step.label }}</span></li>
+          <li class="order-step" [attr.data-state]="step.state" [attr.data-step]="step.icon"><span class="order-step-dot"></span><span>{{ step.label }}</span></li>
           }
         </ol>
 
         <div class="order-card-body">
           <ul class="order-lines">
             @for (line of order.lines.slice(0, 2); track $index) {
-            <li><span class="order-line-name">{{ line.name }}</span><span class="order-line-qty">× {{ line.quantity }}</span></li>
+            <li><a [storeLink]="line.href" class="order-line-name order-line-link">{{ line.name }}</a><span class="order-line-qty">× {{ line.quantity }}</span></li>
             }
             @if (order.lines.length > 2) {
             <li class="order-line-more">另外 {{ order.lines.length - 2 }} 項商品…</li>
             }
           </ul>
           <div class="order-card-total">
-            <span>{{ order.paymentLabel }}・共 {{ order.totalQuantity }} 件，應付金額</span>
+            <span class="order-total-label">應付金額</span>
             <strong>{{ order.payableLabel }}</strong>
+            <span class="order-total-meta">{{ order.paymentLabel }}・共 {{ order.totalQuantity }} 件</span>
           </div>
         </div>
 
@@ -97,7 +98,11 @@
             <h3>商品明細</h3>
             <ul class="order-detail-lines">
               @for (line of order.lines; track $index) {
-              <li><span>{{ line.name }}</span><span class="order-detail-qty">× {{ line.quantity }}</span></li>
+              <li>
+                <a [storeLink]="line.href" class="order-line-link">{{ line.name }}</a>
+                <span class="order-detail-qty">× {{ line.quantity }}</span>
+                @if (order.status === 'COMPLETED') { <a [storeLink]="line.href + '#reviews'" class="order-line-review">去評價</a> }
+              </li>
               }
             </ul>
           </section>

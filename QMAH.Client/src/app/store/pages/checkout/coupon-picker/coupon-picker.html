@@ -21,7 +21,7 @@
         <span class="coupon-row-cond">{{ row.cond }}</span>
       </span>
       <!-- 目前狀態：已選用／可使用／未達門檻 -->
-      <span class="coupon-row-state">{{ row.state }}</span>
+      <span class="coupon-row-state">@if (row.best) { <b class="coupon-row-best">最划算</b> }@if (row.saving) { <span class="coupon-row-saving">{{ row.saving }}</span> }{{ row.state }}</span>
     </button>
   }
 </app-panel>

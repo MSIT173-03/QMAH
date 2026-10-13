@@ -21,6 +21,8 @@ import { CART_PATH } from '../../shared/paths';
 export class SessionBar {
   /** 頁面持有的購物車狀態（injectCartState） */
   cart = input.required<CartState>();
+  /** 併入頁首那一排（放在 app-site-header 裡面使用） */
+  inline = input(false);
   /** 登入提示的說明文字；各頁面依使用情境（加入購物車、兌換折價券…）自訂，預設為加入購物車 */
   loginMessage = input(DEFAULT_LOGIN_PROMPT_MESSAGE);
 

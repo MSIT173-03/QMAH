@@ -98,3 +98,16 @@
   :host-context(body:has(dialog[open])) .scroll-top,
   :host-context(body:has(.app-mobile-drawer.is-open)) .scroll-top { visibility: hidden; pointer-events: none; }
 }
+
+/* 商城桌機：固定在視窗右下角，與上方的懸浮購物車同一條右緣線；顏色沿用商城的工具紫 */
+@media (min-width: 768px) {
+  :host-context(.store-app) .scroll-top {
+    position: fixed;
+    right: var(--store-tool-right);
+    bottom: 24px;
+    align-self: auto;
+    background: var(--store-tool-accent);
+    border-color: var(--store-tool-accent);
+    color: var(--store-tool-on-accent);
+  }
+}

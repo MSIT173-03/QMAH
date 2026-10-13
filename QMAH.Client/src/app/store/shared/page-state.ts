@@ -120,6 +120,9 @@ export function injectCartState() {
 /** 頁面持有的購物車狀態（injectCartState 的回傳值） */
 export type CartState = ReturnType<typeof injectCartState>;
 
+/** 頂部列的主打活動：名稱與結束時間（後端公告沒有結束日期，檔期更換時在這裡改） */
+const FEATURED_CAMPAIGN = { label: '歲末送禮季折扣券', endsAt: new Date('2026-12-31T23:59:59+08:00') };
+
 /**
  * 全站共用資料：頂部公告列所需的公告文字、會員點數與折價券。
  * 須於注入環境中呼叫（例如元件欄位初始化）。
@@ -138,8 +141,12 @@ export function injectSiteData() {
   const profile = toSignal(memberApi.getProfile());
 
   return {
-    /** 頂部公告列的公告文字：只顯示一則，取最新的官方商城優惠活動（API 已依發布時間新到舊排序） */
-    announcements: computed(() => promotions().slice(0, 1).map((promotion) => promotion.title.replace(/^商城(?:最新)?優惠活動\s*[｜|：:]?\s*/u, ''))),
+    /** 頂部列的主打活動檔期倒數（結束時間寫在前台設定，後端公告沒有結束日期）；公告來源為空時不顯示 */
+    announcements: computed(() => {
+      if (!promotions().length) return [];
+      const days = Math.ceil((FEATURED_CAMPAIGN.endsAt.getTime() - Date.now()) / 86_400_000);
+      return [days > 0 ? `${FEATURED_CAMPAIGN.label}｜距結束還有 ${days} 天` : `${FEATURED_CAMPAIGN.label}｜活動已結束`];
+    }),
     /** 頂部公告列顯示的會員點數 */
     points: computed(() => formatNumber(profile()?.pointBalance ?? 0)),
     /** 頂部公告列的折價券清單 */

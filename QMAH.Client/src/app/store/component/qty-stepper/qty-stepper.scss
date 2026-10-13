@@ -15,7 +15,7 @@
   background: var(--color-surface);
   padding: var(--qmah-space-2) var(--qmah-space-3);
   min-height: var(--qmah-control-height);
-  font-size: 14px;
+  font-size: var(--qmah-type-body-sm-size);
   color: var(--color-ink);
   transition: background 160ms, color 160ms;
 
@@ -42,7 +42,7 @@
   justify-content: center;
   background: var(--color-bg);
   font-family: var(--qmah-font-sans);
-  font-size: 12px;
+  font-size: var(--qmah-type-label-size);
   width: 34px;
   text-align: center;
 

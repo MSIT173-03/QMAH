@@ -97,7 +97,7 @@
   /* 緊貼功能區下緣，抵銷 .gallery 的 12px 間距的一部分，讀起來像功能區的註腳。 */
   margin: -4px 0 0;
   color: var(--color-muted);
-  font-size: 11px;
+  font-size: var(--qmah-type-meta-size);
   line-height: 1.3;
   white-space: nowrap;
   cursor: default;
@@ -232,7 +232,7 @@
 }
 
 .postcard-static__caption strong {
-  font-family: 'Noto Serif TC', serif;
+  font-family: var(--qmah-font-serif);
   font-size: clamp(16px, 1.7vw, 24px);
   line-height: 1.35;
   overflow-wrap: anywhere;

@@ -44,17 +44,19 @@ describe('Cart add-ons', () => {
     qty,
     lineTotal: 100 * qty,
   });
-  const product = (id: string): Product => ({
+  const CATEGORIES = ['青銅器', '陶瓷', '玉器', '漆器', '繪畫', '錢幣', '雕刻', '琺瑯器'];
+  const product = (id: string, index = 0): Product => ({
     id,
     name: id,
     brand: '',
-    category: '青銅器',
+    category: CATEGORIES[index % CATEGORIES.length],
     price: 100,
     dealPrice: 100,
     discountRate: 0,
-    rating: 0,
+    rating: 4,
     reviewCount: 0,
-    soldCount: 0,
+    // 銷量依序遞減，推薦排名應與此順序一致
+    soldCount: 100 - index,
     source: '',
     dimensions: '',
     listedAt: '2026-01-01',
@@ -103,9 +105,9 @@ describe('Cart add-ons', () => {
             getPromotions: () => of([]),
             getProducts: (query: ProductQuery) => {
               productQueries.push(query);
-              // 隨機結果中混入一件已在購物車內的商品，應被排除。
+              // 熱銷前段中混入一件已在購物車內的商品，應被排除。
               const ids = ['bronze-2', 'a', 'b', 'c', 'd', 'e', 'f', 'g'];
-              return of({ items: ids.map(product), total: ids.length, page: 1, pageSize: query.pageSize ?? ids.length });
+              return of({ items: ids.map((id, index) => product(id, index)), total: ids.length, page: 1, pageSize: query.pageSize ?? ids.length });
             },
           },
         },
@@ -113,7 +115,7 @@ describe('Cart add-ons', () => {
     }).compileComponents();
   });
 
-  it('renders cart lines and five random add-ons from the dominant category', async () => {
+  it('renders cart lines and five add-ons ranked from the best sellers, excluding what is already in the cart', async () => {
     const fixture = TestBed.createComponent(Cart);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -126,13 +128,15 @@ describe('Cart add-ons', () => {
     expect(promobarLinks).toContain('購物車 5 件');
     expect(element.querySelector('app-site-header')).toBeNull();
 
+    // 候選池是全站熱銷（依累計銷量），只查一次，不再依器類隨機抽。
     expect(productQueries.length).toBe(1);
-    expect(productQueries[0].cat).toBe('青銅器');
-    expect(productQueries[0].order).toBe(6);
+    expect(productQueries[0].cat).toBeUndefined();
+    expect(productQueries[0].order).toBe(1);
     expect(productQueries[0].pageSize).toBeGreaterThan(5);
 
     const addons = Array.from(element.querySelectorAll('app-cart-addons app-product-card'));
     expect(addons.length).toBe(5);
+    expect(element.querySelector('app-cart-addons')?.textContent).not.toContain('bronze-2');
   });
 
   it('keeps an added add-on marked as added and animates only its new cart line', async () => {
@@ -172,7 +176,7 @@ describe('Cart add-ons', () => {
     expect(buttons()[0].classList.contains('product-card-buy--added')).toBe(true);
   });
 
-  it('draws a new random batch of add-ons when "換一批" is pressed, dropping the ones added from the old batch', async () => {
+  it('shows the next ranked batch when "看下一組" is pressed, dropping the ones added from the old batch', async () => {
     const fixture = TestBed.createComponent(Cart);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -181,7 +185,7 @@ describe('Cart add-ons', () => {
     const element: HTMLElement = fixture.nativeElement;
     const buttons = () => Array.from(element.querySelectorAll<HTMLButtonElement>('app-cart-addons .product-card-buy'));
     const refresh = element.querySelector<HTMLButtonElement>('app-cart-addons .addon-refresh')!;
-    expect(refresh.textContent?.trim()).toBe('換一批');
+    expect(refresh.textContent?.trim()).toBe('看下一組');
     expect(productQueries.length).toBe(1);
 
     // 先從這一批加入一件，它會留在清單中並標示已加入。
@@ -194,9 +198,8 @@ describe('Cart add-ons', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // 重新查詢一次（同樣是該器類的隨機排序）；已加入購物車的商品不再出現在新的一批。
-    expect(productQueries.length).toBe(2);
-    expect(productQueries[1]).toMatchObject({ cat: '青銅器', order: 6 });
+    // 不重新查詢，只往後看下一組名次（排名不足一批時會從頭補上）；上一批加入的標示被清除。
+    expect(productQueries.length).toBe(1);
     expect(buttons().length).toBe(5);
     expect(buttons().some((button) => button.classList.contains('product-card-buy--added'))).toBe(false);
   });

@@ -4,6 +4,7 @@ export { CollectibleCard } from './collectible-card/collectible-card';
 export { CouponRedeemDialog } from './coupon-redeem-dialog/coupon-redeem-dialog';
 export { EmptyState } from './empty-state/empty-state';
 export { EntryGrid } from './entry-grid/entry-grid';
+export { FloatingCart } from './floating-cart/floating-cart';
 export { FilterSidebar } from './filter-sidebar/filter-sidebar';
 export { ImageMagnifier } from './image-magnifier/image-magnifier';
 export { PageTitleRow } from './page-title-row/page-title-row';

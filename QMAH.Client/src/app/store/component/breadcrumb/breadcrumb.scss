@@ -23,3 +23,37 @@
 .breadcrumb-current {
   color: var(--color-ink);
 }
+
+/* 站內層級導覽：放大字級、加底色與外框，並以 › 分隔，一眼看出目前位置與上一層 */
+.breadcrumb {
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 0;
+  font-size: var(--qmah-type-body-sm-size);
+  font-weight: 600;
+}
+
+.breadcrumb-link {
+  color: var(--color-accent);
+
+  &:hover {
+    color: var(--color-ink);
+    text-decoration: underline;
+  }
+}
+
+.breadcrumb-current { font-weight: 700; }
+
+.breadcrumb-back {
+  display: inline-grid; place-items: center; width: 34px; height: 34px; margin-right: 6px; border-radius: 50%;
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface)); color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 28%, transparent);
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+
+  svg { transition: transform 160ms ease; }
+  &:hover { background: var(--color-accent); color: var(--color-on-accent, #fff); }
+  &:hover svg { transform: translateX(-2px); }
+  &:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+}

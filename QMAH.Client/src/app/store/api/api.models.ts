@@ -126,6 +126,10 @@ export interface Review {
   stars: number;
   /** 評價者代稱 */
   user: string;
+  /** 評價者會員 Id（用來取頭像） */
+  userId?: string;
+  /** 是否為購買過此商品的評價 */
+  verified?: boolean;
   /** 評價日期（YYYY-MM-DD） */
   date: string;
   text: string;
@@ -245,6 +249,9 @@ export interface Coupon {
   min: number;
   /** 到期日（YYYY-MM-DD），無期限時為 null */
   due: string | null;
+  /** 折抵方式：PERCENT 為折抵百分比，FIXED 為折抵金額（供購物車建議計算折抵；舊資料可能沒有） */
+  kind?: string;
+  value?: number;
 }
 
 /** 兌換商店中可用點數兌換的折價券（GET /store/coupons） */

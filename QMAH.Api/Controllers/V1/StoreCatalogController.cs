@@ -283,10 +283,13 @@ public sealed class StoreCatalogController(
     }
 
     /// <summary>
-    /// 為你推薦：依目前會員買過的商品在各文物種類（CategoryCode）的數量比例分配 limit 個名額，
-    /// 每個種類隨機挑出對應件數的上架商品；種類內商品不足時，不足的名額以其他隨機商品補滿。
-    /// 未登入或沒有購買紀錄時整份都是隨機商品。「買過」與 GetPurchasedProductIds 相同：
-    /// 訂單狀態不是待付款（PENDING_PAYMENT）或已取消（CANCELLED）。
+    /// 為你推薦（依序套用，第一個成立的規則決定各器類的名額）：
+    /// 1. 會員有圖鑑解鎖紀錄：各器類的名額依「該器類已解鎖的文物數」比例分配；
+    ///    所有器類的文物都已全部解鎖時，各器類平均分配。同一器類內優先挑「已解鎖文物」的商品，再挑其他商品。
+    /// 2. 沒有解鎖紀錄但有購買紀錄：依買過的商品在各器類的數量比例分配。
+    /// 3. 未登入或兩者都沒有：整份都是隨機商品。
+    /// 已買過的商品不再推薦（除非不夠補滿名額）；最後打散順序，避免同一器類連在一起。
+    /// 「買過」與 GetPurchasedProductIds 相同：訂單狀態不是待付款（PENDING_PAYMENT）或已取消（CANCELLED）。
     /// </summary>
     [HttpGet("products/recommended")]
     public async Task<ActionResult<IReadOnlyList<ProductListItemDto>>> GetRecommendedProducts(
@@ -295,33 +298,90 @@ public sealed class StoreCatalogController(
     {
         limit = Math.Clamp(limit, 1, 50);
 
-        var purchased = new List<(string CategoryCode, int Quantity)>();
+        var weights = new List<(string CategoryCode, int Quantity)>();
+        var unlockedArtifactIds = new List<Guid>();
+        var purchasedProductIds = new List<Guid>();
         if (TryGetCurrentUserId(out var userId))
         {
-            var rows = await db.OrderDetails
+            var purchasedRows = await db.OrderDetails
                 .AsNoTracking()
                 .Where(detail => detail.Order.UserId == userId
                     && detail.Order.Status != "PENDING_PAYMENT"
                     && detail.Order.Status != "CANCELLED")
-                .GroupBy(detail => detail.Product.CategoryCode)
-                .Select(group => new { CategoryCode = group.Key, Quantity = group.Sum(detail => detail.Quantity) })
+                .Select(detail => new { detail.ProductId, detail.Product.CategoryCode, detail.Quantity })
                 .ToListAsync(cancellationToken);
-            purchased = rows.Select(row => (row.CategoryCode, row.Quantity)).ToList();
+            purchasedProductIds = purchasedRows.Select(row => row.ProductId).Distinct().ToList();
+
+            unlockedArtifactIds = await db.ArtifactUnlocks
+                .AsNoTracking()
+                .Where(unlock => unlock.UserId == userId)
+                .Select(unlock => unlock.ArtifactId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (unlockedArtifactIds.Count > 0)
+            {
+                // 各器類：上架商品對應的文物總數、已解鎖數。
+                var categoryRows = await db.Products
+                    .AsNoTracking()
+                    .Where(product => product.IsActive && product.ArtifactId != null)
+                    .Select(product => new { product.CategoryCode, ArtifactId = product.ArtifactId!.Value })
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+                var unlockedSet = unlockedArtifactIds.ToHashSet();
+                var perCategory = categoryRows
+                    .GroupBy(row => row.CategoryCode)
+                    .Select(group => (
+                        CategoryCode: group.Key,
+                        Total: group.Count(),
+                        Unlocked: group.Count(row => unlockedSet.Contains(row.ArtifactId))))
+                    .ToList();
+                var allUnlocked = perCategory.Count > 0 && perCategory.All(item => item.Unlocked == item.Total);
+                // 全部解鎖：各器類同權重（平均推薦）；否則已解鎖越多的器類名額越多，完全沒解鎖的器類不分配。
+                weights = perCategory
+                    .Select(item => (item.CategoryCode, Quantity: allUnlocked ? 1 : item.Unlocked))
+                    .Where(item => item.Quantity > 0)
+                    .ToList();
+            }
+
+            if (weights.Count == 0)
+            {
+                weights = purchasedRows
+                    .GroupBy(row => row.CategoryCode)
+                    .Select(group => (group.Key, Quantity: group.Sum(row => row.Quantity)))
+                    .ToList();
+            }
         }
 
         var productIds = new List<Guid>();
-        foreach (var (categoryCode, count) in AllocateByProportion(purchased, limit))
+        foreach (var (categoryCode, count) in AllocateByProportion(weights, limit))
         {
+            // 已解鎖文物的商品排前面，其餘隨機；已買過的先排除。
             productIds.AddRange(await db.Products
                 .AsNoTracking()
-                .Where(product => product.IsActive && product.CategoryCode == categoryCode)
-                .OrderBy(product => Guid.NewGuid())
+                .Where(product => product.IsActive
+                    && product.CategoryCode == categoryCode
+                    && !purchasedProductIds.Contains(product.Id))
+                .OrderBy(product => product.ArtifactId != null && unlockedArtifactIds.Contains(product.ArtifactId.Value) ? 0 : 1)
+                .ThenBy(product => Guid.NewGuid())
                 .Select(product => product.Id)
                 .Take(count)
                 .ToListAsync(cancellationToken));
         }
 
-        // 沒有購買紀錄，或某些種類的上架商品不夠分配的名額：以其他隨機商品補滿。
+        // 沒有可依據的紀錄，或某些器類的商品不夠分配的名額：先用沒買過的隨機商品補，仍不夠才允許買過的。
+        if (productIds.Count < limit)
+        {
+            productIds.AddRange(await db.Products
+                .AsNoTracking()
+                .Where(product => product.IsActive
+                    && !productIds.Contains(product.Id)
+                    && !purchasedProductIds.Contains(product.Id))
+                .OrderBy(product => Guid.NewGuid())
+                .Select(product => product.Id)
+                .Take(limit - productIds.Count)
+                .ToListAsync(cancellationToken));
+        }
         if (productIds.Count < limit)
         {
             productIds.AddRange(await db.Products

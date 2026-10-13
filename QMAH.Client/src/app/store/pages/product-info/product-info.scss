@@ -37,4 +37,4 @@
 }
 
 /* 左右留白與置中（與購物車、訂單一致） */
-.product-main { max-width: 1160px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
+.product-main { max-width: var(--store-page-max); margin-inline: auto; padding-inline: clamp(16px, 3vw, 40px); }

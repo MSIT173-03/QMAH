@@ -188,7 +188,7 @@
 .order-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--color-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: color 160ms, border-color 160ms; }
 .order-tab:hover { color: var(--color-ink); }
 .order-tab.is-active { color: var(--color-ink); border-bottom-color: var(--color-accent); font-weight: 800; }
-.order-tab-count { min-width: 20px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--color-ink) 8%, transparent); font-size: 12px; line-height: 20px; text-align: center; }
+.order-tab-count { min-width: 20px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--color-ink) 8%, transparent); font-size: var(--qmah-type-label-size); line-height: 20px; text-align: center; }
 .order-tab.is-active .order-tab-count { background: var(--color-accent); color: var(--color-on-accent); }
 .order-empty-filter { margin: 0; padding: 28px 0; text-align: center; color: var(--color-muted); }
 
@@ -203,7 +203,7 @@
 .order-card[data-status='CANCELLED'] .order-card-status { background: color-mix(in srgb, var(--color-ink) 8%, var(--color-surface)); color: var(--color-muted); }
 
 .order-steps { list-style: none; margin: 0; padding: 0; display: flex; gap: 0; }
-.order-step { position: relative; flex: 1 1 0; display: grid; justify-items: center; gap: 6px; font-size: 12.5px; color: var(--color-faint); text-align: center; }
+.order-step { position: relative; flex: 1 1 0; display: grid; justify-items: center; gap: 6px; font-size: var(--qmah-type-label-size); color: var(--color-faint); text-align: center; }
 .order-step::before { position: absolute; top: 6px; left: -50%; width: 100%; height: 2px; background: var(--color-line-mid); content: ''; }
 .order-step:first-child::before { display: none; }
 .order-step-dot { position: relative; z-index: 1; width: 14px; height: 14px; border: 2px solid var(--color-line-mid); border-radius: 50%; background: var(--color-surface); }
@@ -227,21 +227,21 @@
 
 .order-card-actions { justify-content: flex-start; padding-top: 12px; border-top: 1px solid var(--color-line-soft); margin-top: 0; }
 .order-actions-spacer { flex: 1 1 0; }
-.order-toggle { min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--color-accent); font-size: 14px; font-weight: 700; cursor: pointer; }
+.order-toggle { min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--color-accent); font-size: var(--qmah-type-body-sm-size); font-weight: 700; cursor: pointer; }
 .order-toggle:hover { text-decoration: underline; text-underline-offset: 3px; }
-.order-pay, .order-cancel { min-height: 40px; padding-inline: 18px; font-size: 14px; border-radius: var(--qmah-radius-control); }
+.order-pay, .order-cancel { min-height: 40px; padding-inline: 18px; font-size: var(--qmah-type-body-sm-size); border-radius: var(--qmah-radius-control); }
 
 .order-detail { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 1fr); gap: 24px; padding: 24px; border-radius: var(--qmah-radius-control); background: color-mix(in srgb, var(--color-ink) 3%, var(--color-surface)); }
 .order-detail section { min-width: 0; }
 .order-detail section + section { border-inline-start: 1px solid var(--color-line-soft); padding-inline-start: 24px; }
-.order-detail h3 { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: var(--color-ink); }
-.order-detail-lines, .order-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; font-size: 14px; line-height: 1.65; }
+.order-detail h3 { margin: 0 0 14px; font-size: var(--qmah-type-body-sm-size); font-weight: 700; color: var(--color-ink); }
+.order-detail-lines, .order-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; font-size: var(--qmah-type-body-sm-size); line-height: 1.65; }
 .order-detail-lines li { display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 16px; }
 .order-detail-qty { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--color-body); }
 .order-history li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
 .order-history .order-card-mono { white-space: nowrap; }
 .order-history-label { color: var(--color-muted); }
-.order-detail .order-card-meta { flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.65; }
+.order-detail .order-card-meta { flex-direction: column; gap: 12px; font-size: var(--qmah-type-body-sm-size); line-height: 1.65; }
 .order-detail .order-card-meta div { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; gap: 12px; }
 .order-detail .order-card-meta dd { margin: 0; text-align: end; }
 .order-detail .order-card-meta div:last-child { padding-top: 12px; border-top: 1px solid var(--color-line-soft); }
@@ -257,10 +257,10 @@
   .order-detail section + section { border: 0; padding-inline-start: 0; }
   .order-detail section:last-child { border-top: 1px solid var(--color-line-soft); padding-top: 20px; }
 }
-@media (max-width: 560px) { .order-step { font-size: 11.5px; } .order-card { padding: 16px; } }
+@media (max-width: 560px) { .order-step { font-size: var(--qmah-type-meta-size); } .order-card { padding: 16px; } }
 
 /* ===== 版面調整：左右留白、單欄置中、卡片改中性白（不再偏米黃）、進度條放進淺灰色帶 ===== */
-.orders-main { max-width: 1040px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
+.orders-main { max-width: var(--store-page-max); margin-inline: auto; padding-inline: clamp(16px, 3vw, 40px); }
 .order-card { background: #fdfcfb; border-color: #e6e3dd; box-shadow: 0 1px 2px rgb(40 36 30 / 5%), 0 4px 14px rgb(40 36 30 / 4%); border-radius: 12px; }
 :host-context([data-theme='qmahdark']) .order-card { background: #1f2326; border-color: #343a3e; box-shadow: none; }
 .order-card-status { background: #f1efeb; color: #5b5449; }
@@ -278,3 +278,56 @@
 .order-card-head, .order-card-actions { border-color: #efede8; }
 :host-context([data-theme='qmahdark']) .order-card-head, :host-context([data-theme='qmahdark']) .order-card-actions { border-color: #2f3539; }
 @media (max-width: 640px) { .order-card-body { grid-template-columns: 1fr; } .order-card-total { justify-items: start; } }
+
+/* ===== 進度節點：每個階段各自的圖示（文件／信用卡／紙箱／貨車／打勾），已完成實心、目前階段有光圈、未到的淡色 ===== */
+.order-step::before { top: 15px; height: 3px; border-radius: 2px; }
+.order-step-dot {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-width: 2px;
+  color: var(--color-faint);
+}
+.order-step-dot::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: var(--step-icon) center / contain no-repeat;
+  mask: var(--step-icon) center / contain no-repeat;
+}
+.order-step[data-state='done'] .order-step-dot { color: var(--color-on-accent); }
+.order-step[data-state='current'] .order-step-dot { color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface)); animation: step-pulse 2.4s ease-out infinite; }
+.order-step[data-state='cancelled'] .order-step-dot { color: #fff; }
+@keyframes step-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 35%, transparent); } 70%, 100% { box-shadow: 0 0 0 9px transparent; } }
+@media (prefers-reduced-motion: reduce) { .order-step[data-state='current'] .order-step-dot { animation: none; } }
+.order-step[data-step='placed'] { --step-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 3h8l4 4v14H7z'/%3E%3Cpath d='M14 3v5h5M10 13h6M10 17h6'/%3E%3C/svg%3E"); }
+.order-step[data-step='paid'] { --step-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='6' width='18' height='12' rx='2'/%3E%3Cpath d='M3 10h18M7 15h4'/%3E%3C/svg%3E"); }
+.order-step[data-step='packing'] { --step-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8l9-5 9 5v9l-9 5-9-5z'/%3E%3Cpath d='M3 8l9 5 9-5M12 13v9'/%3E%3C/svg%3E"); }
+.order-step[data-step='shipped'] { --step-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 6h11v10H2zM13 10h4l3 3v3h-7z'/%3E%3Ccircle cx='6.5' cy='18' r='1.8'/%3E%3Ccircle cx='16.5' cy='18' r='1.8'/%3E%3C/svg%3E"); }
+.order-step[data-step='done'] { --step-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E"); }
+.order-step[data-step='cancelled'] { --step-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E"); }
+
+/* ===== 卡片下半部：商品列在左，應付金額獨立成一塊（標籤→金額→付款方式） ===== */
+.order-card-body { align-items: stretch; }
+.order-card-total {
+  align-content: center;
+  justify-items: end;
+  gap: 2px;
+  min-width: 180px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-ink) 4%, var(--color-surface));
+  text-align: right;
+}
+.order-total-label { font-size: var(--qmah-type-label-size); color: var(--color-muted); letter-spacing: 0.08em; }
+.order-total-meta { font-size: var(--qmah-type-label-size); color: var(--color-muted); }
+.order-card-total strong { font-size: 26px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .order-card-total { justify-items: start; text-align: left; } }
+
+/* 訂單內的商品名稱可直接點進商品頁；已完成的訂單另有「去評價」 */
+.order-line-link { color: inherit; text-decoration: none; border-bottom: 1px dashed color-mix(in srgb, currentColor 40%, transparent); }
+.order-line-link:hover { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+.order-line-review { margin-left: 12px; padding: 1px 10px; border: 1px solid var(--color-gold); border-radius: 999px; background: var(--color-gold-bg); color: var(--color-ink); font-size: var(--qmah-type-meta-size); font-weight: 700; text-decoration: none; white-space: nowrap; }
+.order-line-review:hover { background: var(--color-gold); color: #2a2012; }

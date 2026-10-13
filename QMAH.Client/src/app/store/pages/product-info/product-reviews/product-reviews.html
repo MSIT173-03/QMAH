@@ -1,5 +1,5 @@
 <!-- 評價區塊 -->
-<section class="section-block">
+<section class="section-block" id="reviews">
   <!-- 標題列：標題、標籤與右側評分摘要 -->
   <app-section-head headingLevel="h2" [title]="title" [tag]="tag">
     <span class="reviews-summary section-meta">
@@ -57,15 +57,24 @@
 
   <!-- 評價清單；篩選後無結果時顯示提示 -->
   @for (review of shown(); track review.key) {
-    <div class="review-card">
-      <div class="review-meta">
-        <span class="product-card-star">{{ review.stars }}</span><span>{{ review.user }}</span><span
-          class="product-card-split">|</span><span>{{ review.date }}</span>
-        @if (review.edited) {
-          <span class="product-card-split">|</span><span class="review-edited">{{ editedPrefix }} {{ review.edited }}</span>
-        }
+    <div class="review-card review-card--avatar">
+      <!-- 頭像：公開頭像；沒有時用名字首字 -->
+      @if (avatarOf(review.userId); as src) {
+        <img class="review-avatar" [src]="src" alt="" loading="lazy" decoding="async" width="40" height="40" />
+      } @else {
+        <span class="review-avatar review-avatar--initial" aria-hidden="true">{{ initialOf(review.user) }}</span>
+      }
+      <div class="review-body">
+        <div class="review-meta">
+          <span class="review-user">{{ review.user }}</span>
+          @if (review.verified) { <span class="review-verified">已購買</span> }
+          <span class="product-card-star">{{ review.stars }}</span><span class="product-card-split">|</span><span>{{ review.date }}</span>
+          @if (review.edited) {
+            <span class="product-card-split">|</span><span class="review-edited">{{ editedPrefix }} {{ review.edited }}</span>
+          }
+        </div>
+        <p class="review-text">{{ review.text }}</p>
       </div>
-      <p class="review-text">{{ review.text }}</p>
     </div>
   } @empty {
     <div class="no-reviews">{{ emptyText }}</div>

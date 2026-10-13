@@ -92,7 +92,7 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-ink) 46%, transparent);
   color: var(--qmah-surface-elevated);
-  font-size: 11px;
+  font-size: var(--qmah-type-meta-size);
   font-variant-numeric: tabular-nums;
   font-weight: 750;
   pointer-events: none;

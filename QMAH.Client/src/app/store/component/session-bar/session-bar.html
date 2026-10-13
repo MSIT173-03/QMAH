@@ -1,6 +1,6 @@
 @let state = cart();
 <!-- 頂部公告與快捷連結列（點數、折價券、購物車） -->
-<app-promobar [announcements]="site.announcements()" [signedIn]="state.signedIn()" [points]="site.points()"
+<app-promobar [inline]="inline()" [announcements]="site.announcements()" [signedIn]="state.signedIn()" [points]="site.points()"
   [coupons]="site.coupons()" [cartCount]="state.count()" [cartLoaded]="state.cart() !== null" [cartItems]="state.cart()?.items ?? []"
   (cartLoginRequest)="onCartLoginRequest()" />
 

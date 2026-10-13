@@ -1,0 +1,35 @@
+{
+  "usage": "QMAH Store hero slides",
+  "assets": [
+    {
+      "file": "chinese-cash-coins-cma.jpg",
+      "source": "The Cleveland Museum of Art, Open Access (accession 1918.793, Coins, Qing dynasty, Qianlong reign)",
+      "license": "CC0",
+      "sourceUrl": "https://clevelandart.org/art/1918.793"
+    },
+    {
+      "file": "ceramic-blue-white-bowl-cma.jpg",
+      "source": "The Cleveland Museum of Art, Open Access (accession 1957.359, Bowl with Water Plants and Arabesques, Ming dynasty, Zhengde mark and reign)",
+      "license": "CC0",
+      "sourceUrl": "https://clevelandart.org/art/1957.359"
+    },
+    {
+      "file": "landscape-handscroll-cma.jpg",
+      "source": "The Cleveland Museum of Art, Open Access (accession 1966.367, Spring Landscape, Qing dynasty)",
+      "license": "CC0",
+      "sourceUrl": "https://clevelandart.org/art/1966.367"
+    },
+    {
+      "file": "gift-box-ribbon.jpg",
+      "source": "Unsplash (photo-1704727591509-14afa99f3410, white gift box with a burgundy ribbon)",
+      "license": "Unsplash License",
+      "sourceUrl": "https://images.unsplash.com/photo-1704727591509-14afa99f3410"
+    },
+    {
+      "file": "shipping-kraft-box.jpg",
+      "source": "Unsplash (photo-1740842028123-56fd319de33a, cardboard box in sunlight)",
+      "license": "Unsplash License",
+      "sourceUrl": "https://images.unsplash.com/photo-1740842028123-56fd319de33a"
+    }
+  ]
+}

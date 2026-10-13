@@ -39,7 +39,8 @@
         [coupons]="coupons()"
         [usableIds]="quote()?.usableCouponIds ?? []"
         [selected]="couponIndex()"
-        (select)="couponIndex.set($event); submitError.set(null)"
+        [subtotal]="quote()?.subtotal ?? 0"
+        (select)="onPickCoupon($event)"
       />
 
       <!-- 購物點數（id 供個人頁面等外部連結錨定） -->

@@ -19,12 +19,18 @@ export interface PriceBand {
   max?: number;
 }
 
-/** 價格區間篩選選項清單，索引 0 為不篩選 */
+/**
+ * 價格區間篩選選項清單，索引 0 為不篩選。
+ * 區段依實際售價分布切（目前商品落在約 NT$680～1,700，中位數約 1,150），五段的商品數大致均衡；
+ * 商品價格帶改變時要一併調整這裡。
+ */
 export const PRICE_BANDS: PriceBand[] = [
   { label: '全部價格' },
-  { label: '$0 – $1,000', max: 1000 },
-  { label: '$1,000 – $2,500', min: 1000, max: 2500 },
-  { label: '$2,500 以上', min: 2500 },
+  { label: 'NT$900 以下', max: 900 },
+  { label: 'NT$900 – 1,049', min: 900, max: 1050 },
+  { label: 'NT$1,050 – 1,199', min: 1050, max: 1200 },
+  { label: 'NT$1,200 – 1,399', min: 1200, max: 1400 },
+  { label: 'NT$1,400 以上', min: 1400 },
 ];
 
 /** 排序選項 */
@@ -72,6 +78,7 @@ export const VIEW_HEADINGS: Record<string, string> = {
  */
 export const VIEW_DEFAULT_ORDER: Record<string, ProductOrder> = {
   new: 3,
+  hot: 1,
 };
 
 /** 不限器類時的標示文字，同時用於分類清單第一項與未指定條件時的頁面標題 */

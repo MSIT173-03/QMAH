@@ -21,7 +21,9 @@
   transition: border-color 240ms ease, color 240ms ease, background 240ms ease;
 
   &:hover {
-    border-color: var(--color-line-mid);
+    border-color: var(--color-line-soft);
+    background: var(--color-swatch);
+    color: var(--color-ink);
   }
 
   /* 目前選取的分類 */
@@ -40,9 +42,56 @@
   flex: 1;
 }
 
+/* 件數以小標籤呈現，數字等寬對齊；選取時改為半透明白底 */
 .cat-list-count {
+  min-width: 2.2em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-swatch);
   font-family: var(--qmah-font-sans);
-  font-size: var(--qmah-type-label-size);
-  color: inherit;
-  opacity: 0.8;
+  font-size: var(--qmah-type-meta-size);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--color-muted);
 }
+
+.cat-list-item--active .cat-list-count {
+  background: rgb(255 255 255 / 20%);
+  color: inherit;
+}
+
+/* 與首頁分類／年代小卡同一組顏料色：每項前面一小段色條，選取時整列以該色淡底＋色框標示，不再一律用主色 */
+.cat-list-item { --tone: var(--color-line-mid); position: relative; padding-left: 16px; }
+.cat-list-item::before { content: ''; position: absolute; left: 6px; top: 25%; bottom: 25%; width: 3px; border-radius: 3px; background: var(--tone); opacity: 0.7; }
+.cat-list-item[data-tone='slate'] { --tone: rgb(96 128 142); }
+.cat-list-item[data-tone='bronze'] { --tone: rgb(194 154 44); }
+.cat-list-item[data-tone='cinnabar'] { --tone: rgb(200 74 58); }
+.cat-list-item[data-tone='ochre'] { --tone: rgb(172 100 58); }
+.cat-list-item[data-tone='jade'] { --tone: rgb(76 140 108); }
+.cat-list-item[data-tone='celadon'] { --tone: rgb(84 140 162); }
+.cat-list-item[data-tone='indigo'] { --tone: rgb(80 102 160); }
+.cat-list-item[data-tone='rouge'] { --tone: rgb(184 88 128); }
+.cat-list-item[data-tone='sumi'] { --tone: rgb(100 102 108); }
+.cat-list-item[data-tone='plum'] { --tone: rgb(132 104 164); }
+.cat-list-item[data-tone='stone'] { --tone: rgb(120 112 100); }
+:host-context([data-theme='qmahdark']) {
+  .cat-list-item[data-tone='slate'] { --tone: rgb(140 176 190); }
+  .cat-list-item[data-tone='bronze'] { --tone: rgb(230 192 84); }
+  .cat-list-item[data-tone='cinnabar'] { --tone: rgb(240 120 104); }
+  .cat-list-item[data-tone='ochre'] { --tone: rgb(222 148 100); }
+  .cat-list-item[data-tone='jade'] { --tone: rgb(120 190 154); }
+  .cat-list-item[data-tone='celadon'] { --tone: rgb(130 186 208); }
+  .cat-list-item[data-tone='indigo'] { --tone: rgb(132 154 214); }
+  .cat-list-item[data-tone='rouge'] { --tone: rgb(230 134 172); }
+  .cat-list-item[data-tone='sumi'] { --tone: rgb(160 162 168); }
+  .cat-list-item[data-tone='plum'] { --tone: rgb(180 152 212); }
+  .cat-list-item[data-tone='stone'] { --tone: rgb(170 162 150); }
+}
+.cat-list-item--active, .cat-list-item--active:hover {
+  border-color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 14%, var(--color-surface));
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.cat-list-item--active::before { opacity: 1; }
+.cat-list-item--active .cat-list-count { background: color-mix(in srgb, var(--tone) 22%, transparent); }

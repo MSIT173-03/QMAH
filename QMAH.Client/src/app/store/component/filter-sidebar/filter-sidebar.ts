@@ -24,11 +24,11 @@ const HEADER_OFFSET = 92;
 const BOTTOM_GAP = 16;
 
 /** 面板順序與標題文字（固定版面文字） */
-const FILTER_PANELS: readonly { section: FilterSection; label: string }[] = [
-  { section: 'category', label: 'CATEGORY' },
-  { section: 'era', label: 'ERA' },
-  { section: 'price', label: 'PRICE' },
-  { section: 'filter', label: 'FILTER' },
+const FILTER_PANELS: readonly { section: FilterSection; label: string; zh: string }[] = [
+  { section: 'category', label: 'CATEGORY', zh: '器類' },
+  { section: 'era', label: 'ERA', zh: '年代' },
+  { section: 'price', label: 'PRICE', zh: '價格' },
+  { section: 'filter', label: 'FILTER', zh: '其他' },
 ];
 
 /**
@@ -69,6 +69,8 @@ export class FilterSidebar {
   protected panels = computed(() =>
     FILTER_PANELS.filter((panel) => panel.section !== 'era' || this.eras().length > 0),
   );
+  /** 手機版篩選內容是否展開（桌面版不使用） */
+  protected readonly mobileOpen = signal(false);
   /** 折扣篩選按鈕文字 */
   protected readonly dealLabel = '只看折扣商品';
   /** 清除篩選按鈕文字 */
@@ -81,15 +83,40 @@ export class FilterSidebar {
   /** 折扣篩選選項，僅一項；選取狀態由 dealOnly 於元件內推導 */
   protected dealOptions = computed<PillOption[]>(() => [{ label: this.dealLabel, active: this.dealOnly() }]);
 
-  /** 目前展開的面板；預設展開器類篩選，同時只能展開一個，再次點擊已展開的面板會收合 */
-  protected expandedSection = signal<FilterSection | null>('category');
+  /** 目前展開的面板：同時只展開一個，點開別的面板時其餘自動收合（收合的面板仍會留著被選取的那一列）；預設展開器類篩選 */
+  protected expandedSections = signal<ReadonlySet<FilterSection>>(new Set<FilterSection>(['category']));
   /** 面板是否展開 */
   protected isOpen(section: FilterSection): boolean {
-    return this.expandedSection() === section;
+    return this.expandedSections().has(section);
   }
-  /** 切換面板收合狀態：點擊已展開的面板收合它，點擊其他面板則換成展開該面板 */
+  /** 點已展開的面板就收合它；點別的面板就換成展開那一個 */
   protected toggleSection(section: FilterSection): void {
-    this.expandedSection.update((current) => (current === section ? null : section));
+    this.expandedSections.update((current) => (current.has(section) ? new Set<FilterSection>() : new Set<FilterSection>([section])));
+  }
+  /** 各面板目前選取項目的文字（第一項是「全部」不算選取）；收合時仍顯示在標題列，讓人看得到目前的篩選 */
+  /** 收合時只留下目前選取的那一列（沿用展開時同一個列表設計）；選「全部」＝沒有篩選，整個收起來不顯示任何列 */
+  protected pickedCategory = computed(() => this.activeOnly(this.categories()));
+  protected pickedEra = computed(() => this.activeOnly(this.eras()));
+  protected pickedBand = computed<PillOption[]>(() =>
+    this.activeBand() > 0 ? [{ label: this.bands()[this.activeBand()] ?? '', active: true }] : [],
+  );
+  protected pickedDeal = computed<PillOption[]>(() => (this.dealOnly() ? [{ label: this.dealLabel, active: true }] : []));
+  /** 目前生效的篩選數（器類、年代、價格、折扣），顯示在「清除所有篩選」上 */
+  protected activeCount = computed(
+    () => this.pickedCategory().length + this.pickedEra().length + this.pickedBand().length + this.pickedDeal().length,
+  );
+  /** 該面板目前有沒有選取項目（收合時決定要不要掛出那一列） */
+  protected hasPicked(section: FilterSection): boolean {
+    switch (section) {
+      case 'category': return this.pickedCategory().length > 0;
+      case 'era': return this.pickedEra().length > 0;
+      case 'price': return this.pickedBand().length > 0;
+      default: return this.pickedDeal().length > 0;
+    }
+  }
+  private activeOnly(items: CategoryListItem[]): CategoryListItem[] {
+    const index = items.findIndex((item) => item.active);
+    return index > 0 ? [items[index]] : [];
   }
 
   private readonly aside = viewChild.required<ElementRef<HTMLElement>>('aside');

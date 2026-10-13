@@ -80,7 +80,7 @@
   align-items: center;
   gap: var(--qmah-space-2);
   font-family: var(--qmah-font-sans);
-  font-size: 11px;
+  font-size: var(--qmah-type-meta-size);
   color: var(--color-faint);
 }
 
@@ -153,5 +153,5 @@
 .cart-line-remove { font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
 
 .cart-line-thumb { width: 88px; height: 88px; border-radius: var(--qmah-radius-control); }
-.cart-line-name { font-size: 16px; }
-.cart-line-total { font-size: 16px; }
+.cart-line-name { font-size: var(--qmah-type-body-size); }
+.cart-line-total { font-size: var(--qmah-type-body-size); }

@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { EMPTY, catchError, distinctUntilChanged, filter, finalize, switchMap } from 'rxjs';
@@ -12,6 +12,7 @@ import {
   OrderPlacedDialog,
 } from '../../component';
 import { CheckoutApi, MemberApi } from '../../api';
+import { couponSaving } from '../../shared/coupon-saving';
 import { OrderQuoteRequest, OrderResult, Recipient } from '../../api/api.models';
 import { EMPTY_RECIPIENT } from '../../api/member.api';
 import { CART_PATH, CHECKOUT_PATH, HOME_PATH, MEMBER_PATH, PRODUCT_LIST_PATH, loginPath } from '../../shared/paths';
@@ -128,6 +129,35 @@ export class Checkout {
   protected order = signal<OrderResult | null>(null);
   /** 訂單送出成功提示是否顯示；跟 order() 是否成立同步 */
   protected orderPlacedOpen = computed(() => this.order() !== null);
+  /** 使用者是否自己動過折價券選擇；動過之後不再自動套用 */
+  private couponTouched = false;
+
+  /** 第一次試算出可用的折價券時，自動套用折得最多的一張（使用者自己選過就不再動） */
+  private readonly autoCoupon = effect(() => {
+    const quote = this.quote();
+    const coupons = this.coupons();
+    if (this.couponTouched || !quote || coupons.length === 0) return;
+    untracked(() => {
+      let best = -1;
+      let bestSaving = 0;
+      coupons.forEach((coupon, i) => {
+        if (!quote.usableCouponIds.includes(coupon.id)) return;
+        const saving = couponSaving(coupon, quote.subtotal);
+        if (saving > bestSaving) [best, bestSaving] = [i, saving];
+      });
+      if (best >= 0) {
+        this.couponTouched = true;
+        this.couponIndex.set(best);
+      }
+    });
+  });
+
+  protected onPickCoupon(index: number): void {
+    this.couponTouched = true;
+    this.couponIndex.set(index);
+    this.submitError.set(null);
+  }
+
   /** 選用的折價券，未選用時為 null */
   private readonly selectedCoupon = computed(() => this.coupons()[this.couponIndex()] ?? null);
 

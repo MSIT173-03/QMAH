@@ -76,3 +76,122 @@
 .search-box { border-radius: var(--qmah-radius-control); border-color: var(--color-line-mid); background: color-mix(in srgb, var(--color-ink) 3%, var(--color-surface)); box-shadow: inset 0 1px 2px rgb(60 48 30 / 6%); transition: border-color 160ms, box-shadow 160ms; }
 .search-box:focus-within { border-color: var(--color-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent); }
 .search-submit { border-radius: var(--qmah-radius-control); padding-inline: 20px; font-weight: 700; }
+
+/* 常見搜尋詞：搜尋框取得焦點時才從下方浮出，不佔頁首版面的行高；點按即搜尋 */
+.search-suggest {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  font-size: var(--qmah-type-label-size);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line-mid);
+  border-radius: var(--qmah-radius-control);
+  box-shadow: var(--qmah-shadow-float);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 160ms, transform 160ms, visibility 0s linear 160ms;
+}
+
+.search-wrap:focus-within .search-suggest {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 160ms, transform 160ms;
+}
+
+.search-suggest-label {
+  color: var(--color-muted);
+  margin-right: 2px;
+}
+
+.search-chip {
+  padding: 3px 12px;
+  border: 1px solid var(--color-line-mid);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: var(--qmah-type-label-size);
+  cursor: pointer;
+  transition: border-color 160ms, color 160ms;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/* ===== 熱門搜尋改成一般商城的清單：標題一行、關鍵字一列一個（放大鏡＋文字、無外框），兩欄，滑過整列反白 ===== */
+.search-suggest {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 12px;
+  padding: 10px 8px 8px;
+}
+
+.search-suggest-label {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 2px 10px 8px;
+  font-size: var(--qmah-type-label-size);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.search-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  font-size: var(--qmah-type-body-sm-size);
+  color: var(--color-ink);
+
+  &::before {
+    content: '';
+    flex: none;
+    width: 15px;
+    height: 15px;
+    background: var(--color-faint);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    color: var(--color-ink);
+
+    &::before { background: var(--color-accent); }
+  }
+}
+
+@media (max-width: 560px) { .search-suggest { grid-template-columns: minmax(0, 1fr); } }
+
+/* 頁首同一排（公告 | 搜尋 | 會員捷徑）：搜尋框排在中間 */
+.search-wrap { order: 1; }
+
+@media (max-width: 900px) {
+  .search-wrap { order: 3; flex-basis: 100%; max-width: none; }
+}
+
+/* 搜尋按鈕：放大鏡圖示＋文字，窄螢幕只留圖示 */
+.search-submit { display: inline-flex; align-items: center; gap: 6px; letter-spacing: 0.08em; }
+.search-icon {
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5L21 21'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5L21 21'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+@media (max-width: 560px) { .search-submit-text { display: none; } .search-submit { padding-inline: 12px; } }

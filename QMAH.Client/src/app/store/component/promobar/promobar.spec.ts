@@ -81,6 +81,10 @@ describe('Promobar', () => {
       (note.textContent ?? '').trim(),
     );
 
+  /** 空狀態標題（.panel-empty-title） */
+  const emptyTitle = (menu: 'cart' | 'coupon'): string =>
+    (fixture.nativeElement.querySelector(`.${menu}-menu .panel-empty-title`)?.textContent ?? '').trim();
+
   const cartPanelItems = (): HTMLElement[] =>
     Array.from(fixture.nativeElement.querySelectorAll('.cart-menu .cart-row'));
 
@@ -90,7 +94,7 @@ describe('Promobar', () => {
     fixture.detectChanges();
   };
 
-  it('opens the cart panel on hover and closes it on leave', () => {
+  it('opens the cart panel on hover and closes it when pressing outside', () => {
     showCart([cartItem(1)]);
     const trigger: HTMLElement = fixture.nativeElement.querySelector('.cart-menu .promobar-panel-trigger');
     const panel: HTMLElement = fixture.nativeElement.querySelector('.cart-menu .promobar-panel');
@@ -100,7 +104,12 @@ describe('Promobar', () => {
     fixture.detectChanges();
     expect(panel.classList.contains('promobar-panel--open')).toBe(true);
 
+    // 離開觸發區不會立刻關（避免一閃一閃）；點空白處才關
     trigger.dispatchEvent(new Event('mouseleave'));
+    fixture.detectChanges();
+    expect(panel.classList.contains('promobar-panel--open')).toBe(true);
+
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     fixture.detectChanges();
     expect(panel.classList.contains('promobar-panel--open')).toBe(false);
   });
@@ -109,7 +118,7 @@ describe('Promobar', () => {
     showCart([cartItem(1, 2), cartItem(2, 1)]);
 
     const rows = cartPanelItems();
-    expect(rows.map((row) => row.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['商品 1× 2', '商品 2× 1']);
+    expect(rows.map((row) => row.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['商品 1$100 × 2$200', '商品 2$100 × 1$100']);
     expect(rows.map((row) => row.getAttribute('href'))).toEqual(['/store/product/p1', '/store/product/p2']);
     expect(notes('cart')).toEqual([]);
   });
@@ -132,7 +141,7 @@ describe('Promobar', () => {
     showCart([]);
 
     expect(cartPanelItems()).toHaveLength(0);
-    expect(notes('cart')).toEqual(['購物車目前沒有商品']);
+    expect(emptyTitle('cart')).toBe('購物車目前沒有商品');
   });
 
   const coupon = (index: number): Coupon => ({
@@ -157,7 +166,7 @@ describe('Promobar', () => {
     showCoupons(0);
 
     expect(couponPanelItems()).toHaveLength(0);
-    expect(notes('coupon')).toEqual(['目前沒有折價券']);
+    expect(emptyTitle('coupon')).toBe('目前沒有折價券');
   });
 
   it('lists all coupons without a summary line when there are five or fewer', () => {
@@ -179,7 +188,9 @@ describe('Promobar', () => {
 
     expect(notes('coupon')).toEqual([]);
     const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('.coupon-menu a'));
+    // 觸發連結、兩列券、底部「前往折價券專區」都去折價券商店
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/store/coupons',
       '/store/coupons',
       '/store/coupons',
       '/store/coupons',
