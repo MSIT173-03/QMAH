@@ -20,6 +20,7 @@ import { submitEcpayForm } from '../../shared/ecpay-form';
 import { formatDateTime, formatMoney } from '../../shared/format';
 import { injectCartState } from '../../shared/page-state';
 import { HOME_PATH, PRODUCT_LIST_PATH } from '../../shared/paths';
+import { problemDetail } from '../../shared/problem-detail';
 
 /** 取消成功後頁面會重新整理（頂部列的點數與折價券張數才會更新），結果訊息暫存在 sessionStorage */
 const CANCEL_NOTICE_KEY = 'qmah.store.orderCancelNotice';
@@ -338,10 +339,4 @@ function toRow(order: MyOrder): OrderRow {
     canCancel: pending,
     canPay: pending && order.paymentType === 'CREDIT_CARD',
   };
-}
-
-/** 後端 ProblemDetails.detail 已是可直接顯示的說明 */
-function problemDetail(error: unknown, fallback: string): string {
-  const detail = error instanceof HttpErrorResponse ? error.error?.detail : null;
-  return typeof detail === 'string' && detail ? detail : fallback;
 }

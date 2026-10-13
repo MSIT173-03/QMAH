@@ -18,6 +18,7 @@ import { CouponApi, MemberApi } from '../../api';
 import { COUPON_STORE_PATH, HOME_PATH, loginPath } from '../../shared/paths';
 import { StoreLink } from '../../shared/store-link';
 import { injectCartState } from '../../shared/page-state';
+import { problemDetail } from '../../shared/problem-detail';
 import { formatDateMD, formatNumber } from '../../shared/format';
 
 /** 兌換成功後頁面會重新整理，結果訊息暫存在 sessionStorage，等重新載入完成後再顯示 */
@@ -245,8 +246,7 @@ export class CouponStore {
           return;
         }
         // 後端的 ProblemDetails.detail 已是可直接顯示的說明（例如「鑑定點數不足」）。
-        const detail = error instanceof HttpErrorResponse ? error.error?.detail : null;
-        this.feedback.set({ kind: 'error', text: typeof detail === 'string' && detail ? detail : '兌換失敗，請稍後再試。' });
+        this.feedback.set({ kind: 'error', text: problemDetail(error, '兌換失敗，請稍後再試。') });
       },
     });
   }

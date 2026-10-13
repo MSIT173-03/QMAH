@@ -29,7 +29,7 @@
         [selectedShipping]="shipIndex()"
         [payments]="payments()"
         [selectedPayment]="payIndex()"
-        (shippingSelect)="shipIndex.set($event)"
+        (shippingSelect)="shipIndex.set($event); submitError.set(null)"
         (paymentSelect)="payIndex.set($event)"
       />
 
@@ -39,7 +39,7 @@
         [coupons]="coupons()"
         [usableIds]="quote()?.usableCouponIds ?? []"
         [selected]="couponIndex()"
-        (select)="couponIndex.set($event)"
+        (select)="couponIndex.set($event); submitError.set(null)"
       />
 
       <!-- 購物點數（id 供個人頁面等外部連結錨定） -->
@@ -50,8 +50,8 @@
         [used]="quote()?.pointsUsed ?? 0"
         [mode]="pointMode()"
         [customPoints]="customPoints()"
-        (modeChange)="pointMode.set($event)"
-        (customPointsChange)="customPoints.set($event)"
+        (modeChange)="pointMode.set($event); submitError.set(null)"
+        (customPointsChange)="customPoints.set($event); submitError.set(null)"
       />
     </div>
 
@@ -62,6 +62,8 @@
       [submitted]="submitted()"
       [valid]="valid()"
       [placed]="order() !== null"
+      [submitting]="submitting()"
+      [submitError]="submitError()"
       (submitOrder)="onSubmit()"
     />
   </div>
