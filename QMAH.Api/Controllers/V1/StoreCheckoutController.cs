@@ -3,14 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using QMAH.Infrastructure.Data;
-using QMAH.Infrastructure.Models.Entities;
 
 namespace QMAH.Api.Controllers.V1;
 
 /// <summary>
 /// 結帳頁的配送／付款選項與訂單試算。選項目錄固定在 StoreCheckoutCatalog，
 /// 試算只讀取購物車、折價券與點數資產，不寫入任何資料；正式成立訂單仍由
-/// StoreOrdersController 的 POST /store/orders 負責，兩邊的折價券與點數規則需保持一致。
+/// StoreOrdersController 的 POST /store/orders 負責，兩邊共用 StoreCouponRules 的折價券規則與
+/// StoreCheckoutCatalog 的點數折抵上限。
 /// </summary>
 [Authorize]
 [Route("api/v1/store/checkout")]
@@ -64,7 +64,7 @@ public sealed class StoreCheckoutController(QmahDbContext db) : ApiControllerBas
             .Where(coupon => coupon.UserId == userId && coupon.Status == "AVAILABLE")
             .ToListAsync(cancellationToken);
         var usableCouponIds = userCoupons
-            .Where(coupon => IsCouponUsable(coupon, subtotal, now))
+            .Where(coupon => StoreCouponRules.Evaluate(coupon, subtotal, now).Rejection == CouponRejection.None)
             .Select(coupon => coupon.Id.ToString())
             .ToList();
 
@@ -72,12 +72,15 @@ public sealed class StoreCheckoutController(QmahDbContext db) : ApiControllerBas
         if (request.CouponId.HasValue)
         {
             var coupon = userCoupons.FirstOrDefault(item => item.Id == request.CouponId.Value);
-            if (coupon is null || !IsCouponUsable(coupon, subtotal, now))
+            var evaluation = coupon is null
+                ? (Rejection: CouponRejection.NotInEffect, Discount: 0m)
+                : StoreCouponRules.Evaluate(coupon, subtotal, now);
+            if (evaluation.Rejection != CouponRejection.None)
                 return Problem(
                     statusCode: StatusCodes.Status400BadRequest,
                     title: "優惠券不可使用",
                     detail: "這張優惠券不存在、不屬於目前帳號，或不適用於本次訂單金額。");
-            couponDiscount = ComputeCouponDiscount(coupon.CouponDefinition, subtotal);
+            couponDiscount = evaluation.Discount;
         }
 
         var pointBalance = await db.PointBalances
@@ -113,29 +116,5 @@ public sealed class StoreCheckoutController(QmahDbContext db) : ApiControllerBas
             shippingOptionsForOrder,
             usableCouponIds,
             pointCap));
-    }
-
-    // integration: 這條有效性規則必須跟 StoreOrdersController.ApplyCouponAsync 保持一致，
-    // 否則試算顯示「可使用」的券送出訂單時卻被拒絕，或反過來。
-    private static bool IsCouponUsable(UserCoupon coupon, decimal subtotal, DateTime now)
-    {
-        var definition = coupon.CouponDefinition;
-        return definition.IsActive
-            && definition.StartAt <= now
-            && definition.EndAt > now
-            && coupon.ExpiresAt > now
-            && subtotal >= definition.MinimumAmount
-            && definition.DiscountType is "PERCENT" or "FIXED";
-    }
-
-    private static decimal ComputeCouponDiscount(CouponDefinition definition, decimal subtotal)
-    {
-        var discount = definition.DiscountType switch
-        {
-            "PERCENT" => subtotal * definition.DiscountValue / 100m,
-            "FIXED" => definition.DiscountValue,
-            _ => 0m
-        };
-        return Math.Clamp(decimal.Round(discount, 2, MidpointRounding.AwayFromZero), 0m, subtotal);
     }
 }
