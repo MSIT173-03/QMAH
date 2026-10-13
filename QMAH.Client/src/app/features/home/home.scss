@@ -1,3 +1,5 @@
+@use '../../shared/styles/responsive-breakpoints' as responsive;
+
 :host {
   display: block;
   min-height: 100%;
@@ -804,4 +806,14 @@ a:focus-visible {
   .home-route { min-width:0;padding:18px; }
   .home-route__content { min-width:0; }.home-route__content span { line-height:1.7; }
   .home-museum-note { min-width:0; }
+}
+
+@include responsive.phone {
+  // The caption belongs to the photo; reserve its own space below the member note.
+  .home-hero__copy { padding-bottom: 96px; }
+  .home-hero__image figcaption {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+  }
 }

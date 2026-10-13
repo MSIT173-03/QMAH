@@ -13,9 +13,16 @@
     }
     @sharedMedia path /images/* /fonts/*
     @referenceMedia path /images/brand/* /images/login/* /images/store/* /fonts/*
+    @versionedScroll {
+        path /images/login/museum/qingming-court/*.webp
+        query v=*
+    }
     handle @sharedMedia {
         root * /opt/qmah/client
         header @referenceMedia Cache-Control "public, max-age=3600, stale-while-revalidate=86400"
+        # The query contains the image content hash; unchanged original images
+        # can be reused across visits and deployments without another download.
+        header @versionedScroll >Cache-Control "public, max-age=31536000, immutable"
         route {
             file_server {
                 pass_thru
@@ -43,12 +50,20 @@
     handle @spaRoutes {
         root * /opt/qmah/client
         header Cache-Control "no-store"
-        try_files {path} /index.html
+        header {
+            >Content-Type "text/html; charset=utf-8"
+            >Content-Disposition "inline"
+        }
+        rewrite * /index.html
         file_server
     }
     handle {
         root * /opt/qmah/client
         header Cache-Control "no-store"
+        header {
+            >Content-Type "text/html; charset=utf-8"
+            >Content-Disposition "inline"
+        }
         rewrite * /index.html
         file_server {
             status 404

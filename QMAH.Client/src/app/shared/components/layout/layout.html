@@ -103,7 +103,6 @@
     id="mobile-navigation"
     class="app-mobile-drawer"
     [class.is-open]="menuOpen()"
-    [attr.aria-hidden]="!menuOpen()"
     [attr.inert]="menuOpen() ? null : ''"
   >
     <div class="app-mobile-drawer__header">
@@ -119,18 +118,18 @@
     <div class="app-mobile-drawer__body">
       <p class="app-mobile-drawer__label">主要功能</p>
       <!-- ui-integration: Mobile 主要與次級入口共用同一個泛用 renderer；不在 Shell 內硬編 Area 專屬 markup。 -->
-      <app-area-navigation variant="mobile" (itemSelected)="closeMenu()" />
+      <app-area-navigation variant="mobile" (itemSelected)="closeMenuAfterSelection()" />
     </div>
 
     @if (!meApi.me()) {
-      <div class="app-mobile-drawer__footer"><a routerLink="/login" (click)="closeMenu()">登入會員</a></div>
+      <div class="app-mobile-drawer__footer"><a routerLink="/login" (click)="closeMenuAfterSelection()">登入會員</a></div>
     }
   </aside>
 
   <!-- ui-integration: App Shell 擁有唯一主要內容 landmark；子 Area 的 wrapper 僅保留原本 class 與版面，不再巢狀使用 main。 -->
   <div class="app-content" [class.app-content--preparing]="pageReady.loading()">
   @if (pageReady.showLoader()) { <app-page-loader /> }
-  <main #pageContent id="main-content" class="app-main" [class.app-main--preparing]="pageReady.loading()" [attr.aria-busy]="pageReady.loading()" [attr.aria-hidden]="pageReady.loading() ? 'true' : null" [attr.inert]="pageReady.loading() ? '' : null">
+  <main #pageContent id="main-content" class="app-main" [class.app-main--preparing]="pageReady.loading()" [attr.aria-busy]="pageReady.loading()" [attr.inert]="pageReady.loading() ? '' : null">
     <router-outlet></router-outlet>
   </main>
   </div>

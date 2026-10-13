@@ -134,10 +134,21 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   closeMenu(restoreFocus = true): void {
-    const restoreDrawerFocus = restoreFocus && this.menuOpen();
+    const drawer = this.mobileNavigation?.nativeElement;
+    // Move focus before Angular applies inert. Hiding first leaves a focused link
+    // inside an inaccessible drawer for the remainder of the click/navigation.
+    if (restoreFocus && this.menuOpen()) this.menuTrigger?.nativeElement.focus({ preventScroll: true });
+    if (drawer?.contains(drawer.ownerDocument.activeElement)) {
+      (drawer.ownerDocument.activeElement as HTMLElement | null)?.blur();
+    }
     this.menuOpen.set(false);
     this.accountOpen.set(false);
-    if (restoreDrawerFocus) setTimeout(() => this.menuTrigger?.nativeElement.focus(), 0);
+  }
+
+  closeMenuAfterSelection(): void {
+    // Let RouterLink handle the original click before making its anchor inert.
+    // Also closes the drawer when selecting the route already being displayed.
+    queueMicrotask(() => this.closeMenu());
   }
 
   // ui-integration: Drawer 使用 Escape 關閉，讓鍵盤使用者不必依賴滑鼠點擊遮罩。

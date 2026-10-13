@@ -59,37 +59,37 @@ export class Login implements OnInit, OnDestroy {
     {
       id: 'segment-01',
       // index.html 會在直接開啟登入頁時預先下載這張；更換路徑時需一併修改。
-      image: '/images/login/museum/qingming-court/segment-01.webp',
+      image: '/images/login/museum/qingming-court/segment-01.webp?v=79284e5d6c35',
       alt: '清院本《清明上河圖》畫卷第 01 段的高畫質細節',
       location: '清院本・畫卷第 01 段',
     },
     {
       id: 'segment-06',
-      image: '/images/login/museum/qingming-court/segment-06.webp',
+      image: '/images/login/museum/qingming-court/segment-06.webp?v=8bc97515f553',
       alt: '清院本《清明上河圖》畫卷第 06 段的高畫質細節',
       location: '清院本・畫卷第 06 段',
     },
     {
       id: 'segment-10',
-      image: '/images/login/museum/qingming-court/segment-10.webp',
+      image: '/images/login/museum/qingming-court/segment-10.webp?v=feebcf9173f4',
       alt: '清院本《清明上河圖》畫卷第 10 段的高畫質細節',
       location: '清院本・畫卷第 10 段',
     },
     {
       id: 'segment-14',
-      image: '/images/login/museum/qingming-court/segment-14.webp',
+      image: '/images/login/museum/qingming-court/segment-14.webp?v=00791eafd0d8',
       alt: '清院本《清明上河圖》畫卷第 14 段的高畫質細節',
       location: '清院本・畫卷第 14 段',
     },
     {
       id: 'segment-18',
-      image: '/images/login/museum/qingming-court/segment-18.webp',
+      image: '/images/login/museum/qingming-court/segment-18.webp?v=5894e96560bb',
       alt: '清院本《清明上河圖》畫卷第 18 段的高畫質細節',
       location: '清院本・畫卷第 18 段',
     },
     {
       id: 'segment-22',
-      image: '/images/login/museum/qingming-court/segment-22.webp',
+      image: '/images/login/museum/qingming-court/segment-22.webp?v=9b490abfce03',
       alt: '清院本《清明上河圖》畫卷第 22 段的高畫質細節',
       location: '清院本・畫卷第 22 段',
     },
@@ -165,8 +165,8 @@ export class Login implements OnInit, OnDestroy {
     });
 
     this.restoreCarouselSpeed();
-    // 先載入正在顯示的圖，下一段再預載，避免兩張大型圖片競爭登入頁首屏。
-    void this.preloadSegment(0).then(() => this.preloadSegment(1));
+    // 首張優先載入，完成後才以低優先序預載前後切片，避免與登入頁首屏競爭。
+    void this.preloadSegment(0, 'high').then(() => this.preloadAdjacentSegments(0));
     // 減少動態偏好下沒有平移動畫，也就不會自動換段；維持暫停狀態讓控制列如實呈現。
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       this.carouselPaused.set(true);
@@ -186,11 +186,11 @@ export class Login implements OnInit, OnDestroy {
 
     // 換段會同時換圖並重新開始平移動畫；若新圖還沒解碼，舊圖會先跳回動畫起點。
     // 先等新圖解碼完成再一起切換，畫面就直接從上一段的結尾換到下一段的開頭。
-    void this.preloadSegment(index).then(() => {
+    void this.preloadSegment(index, 'high').then(() => {
       if (request !== this.segmentRequest) return;
       this.activeSegmentIndex.set(index);
       this.panKey.update((key) => key + 1);
-      this.preloadSegment((index + 1) % this.qingmingSegments.length);
+      this.preloadAdjacentSegments(index);
     });
   }
 
@@ -249,7 +249,13 @@ export class Login implements OnInit, OnDestroy {
     this.nextSegment();
   }
 
-  private preloadSegment(index: number): Promise<void> {
+  private preloadAdjacentSegments(index: number): void {
+    // Keep both directions ready without downloading the entire high-resolution scroll.
+    void this.preloadSegment((index + 1) % this.qingmingSegments.length);
+    void this.preloadSegment((index - 1 + this.qingmingSegments.length) % this.qingmingSegments.length);
+  }
+
+  private preloadSegment(index: number, priority: 'high' | 'low' = 'low'): Promise<void> {
     const segment = this.qingmingSegments[index];
     if (!segment || typeof Image === 'undefined') return Promise.resolve();
 
@@ -257,6 +263,7 @@ export class Login implements OnInit, OnDestroy {
     if (!entry) {
       const image = new Image();
       image.decoding = 'async';
+      image.fetchPriority = priority;
       const loaded = new Promise<void>((resolve) => {
         image.onload = () => resolve();
         image.onerror = () => resolve();
@@ -271,6 +278,7 @@ export class Login implements OnInit, OnDestroy {
       entry = { image, ready };
       this.segmentImages.set(segment.image, entry);
     }
+    if (priority === 'high') entry.image.fetchPriority = 'high';
     return entry.ready;
   }
 

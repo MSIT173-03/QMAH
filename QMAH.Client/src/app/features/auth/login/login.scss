@@ -1,3 +1,5 @@
+@use '../../../shared/styles/responsive-breakpoints' as responsive;
+
 :host {
   display: block;
   min-height: 100dvh;
@@ -835,7 +837,7 @@ input:focus-visible {
   }
 }
 
-@media (max-width: 620px) {
+@include responsive.phone {
   /* ui-integration: 手機先完成登入，再進入畫卷鑑賞，避免內容體驗壓過主任務。 */
   .museum-side {
     order: 3;
@@ -1178,4 +1180,35 @@ input:focus-visible {
 
 :host-context([data-theme='qmahdark']) .login-side {
   background: transparent;
+}
+
+@include responsive.phone {
+  .museum-topbar {
+    // Keep the header in the document flow so it cannot cover the login title.
+    position: relative;
+    padding: max(16px, env(safe-area-inset-top)) 22px 16px;
+    gap: 16px;
+  }
+  .museum-topbar .brand-logo-shell {
+    display: inline-flex;
+    width: min(240px, calc(100% - 60px));
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .museum-topbar .brand-logo { width: 100%; }
+  .museum-topbar__actions { flex: none; gap: 0; }
+  .login-side { padding-top: 24px; }
+  .login-card { max-width: 460px; padding-top: 0; }
+  .login-header { margin-bottom: 24px; }
+  .login-options { align-items: center; gap: 12px; }
+  .remember-me { min-height: 44px; }
+  .forgot-password { display: inline-flex; align-items: center; min-height: 44px; }
+  .input-wrapper input { font-size: 16px; }
+  .google-button + .google-button { margin-top: 10px; }
+  .register-area { flex-wrap: wrap; align-items: center; }
+  .register-area a { display: inline-flex; align-items: center; min-height: 44px; }
+  .demo-accounts select { min-width: 0; max-width: 100%; }
 }

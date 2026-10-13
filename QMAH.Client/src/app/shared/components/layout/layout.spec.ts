@@ -36,6 +36,32 @@ describe('LayoutComponent', () => {
     expect(fixture.nativeElement.querySelector('a.app-admin-entry')).toBeNull();
   });
 
+  it('moves focus outside the drawer before making it inert', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush(null);
+    component.menuOpen.set(true);
+    fixture.detectChanges();
+    const drawer = fixture.nativeElement.querySelector('#mobile-navigation') as HTMLElement;
+    const link = drawer.querySelector('a') as HTMLAnchorElement;
+    link.focus();
+    expect(document.activeElement).toBe(link);
+
+    component.closeMenu();
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('.app-menu-toggle'));
+    fixture.detectChanges();
+    expect(drawer.hasAttribute('inert')).toBe(true);
+    expect(drawer.contains(document.activeElement)).toBe(false);
+  });
+
+  it('lets the navigation click finish before closing the drawer', async () => {
+    httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush(null);
+    component.menuOpen.set(true);
+    fixture.detectChanges();
+    component.closeMenuAfterSelection();
+    expect(component.menuOpen()).toBe(true);
+    await Promise.resolve();
+    expect(component.menuOpen()).toBe(false);
+  });
+
   it('shows the display name once /me resolves', () => {
     httpMock.expectOne((r) => r.url.endsWith('/me/session')).flush({
       id: '11111111-1111-1111-1111-111111111111',
