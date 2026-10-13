@@ -1,0 +1,33 @@
+SET NOCOUNT ON;
+BEGIN TRAN;
+
+-- 每個帳號最近 6 筆歷史訂單依序是：待付款、已付款、撿貨中、已寄送×2、已取消，日期往前排到 10/13 前後；其餘為已完成
+SELECT Id, UserId,
+       ROW_NUMBER() OVER (PARTITION BY UserId ORDER BY CreatedAt DESC) AS rk
+INTO #R FROM store.StoreOrders WHERE OrderNo LIKE 'QMAH-HIST-%';
+
+UPDATE o SET
+  Status = CASE r.rk WHEN 1 THEN 'PENDING_PAYMENT' WHEN 2 THEN 'PAID' WHEN 3 THEN 'FULFILLING'
+                     WHEN 4 THEN 'SHIPPED' WHEN 5 THEN 'SHIPPED' WHEN 6 THEN 'CANCELLED' ELSE 'COMPLETED' END,
+  CreatedAt = CASE WHEN r.rk <= 6 THEN DATEADD(MINUTE, ABS(CHECKSUM(NEWID())) % 600, CAST(DATEADD(DAY, -(r.rk - 1) * 2, '2026-10-13') AS datetime2)) ELSE o.CreatedAt END
+FROM store.StoreOrders o JOIN #R r ON r.Id = o.Id;
+
+UPDATE o SET
+  PaidAt = CASE WHEN o.Status IN ('PENDING_PAYMENT', 'CANCELLED') THEN NULL ELSE DATEADD(MINUTE, 5, o.CreatedAt) END,
+  CancelledAt = CASE WHEN o.Status = 'CANCELLED' THEN DATEADD(HOUR, 20, o.CreatedAt) ELSE NULL END
+FROM store.StoreOrders o WHERE o.OrderNo LIKE 'QMAH-HIST-%';
+
+UPDATE p SET
+  Status = CASE o.Status WHEN 'PENDING_PAYMENT' THEN 'PENDING' WHEN 'CANCELLED' THEN 'FAILED' ELSE 'PAID' END,
+  RtnCode = CASE o.Status WHEN 'PENDING_PAYMENT' THEN NULL WHEN 'CANCELLED' THEN 0 ELSE 1 END,
+  RtnMsg = CASE o.Status WHEN 'PENDING_PAYMENT' THEN NULL WHEN 'CANCELLED' THEN N'訂單已取消' ELSE N'付款成功' END,
+  PaymentType = CASE WHEN o.Status IN ('PENDING_PAYMENT', 'CANCELLED') THEN NULL ELSE p.PaymentType END,
+  EcpayTradeNo = CASE WHEN o.Status = 'PENDING_PAYMENT' THEN NULL ELSE p.EcpayTradeNo END,
+  CallbackReceivedAt = CASE WHEN o.Status = 'PENDING_PAYMENT' THEN NULL ELSE DATEADD(MINUTE, 5, o.CreatedAt) END,
+  CreatedAt = o.CreatedAt
+FROM store.Payments p JOIN store.StoreOrders o ON o.Id = p.OrderId WHERE o.OrderNo LIKE 'QMAH-HIST-%';
+
+COMMIT;
+SELECT Status, COUNT(*) n FROM store.StoreOrders WHERE UserId = 'CBA35ABC-B074-4D30-B5AB-3B793DD62330' GROUP BY Status;
+SELECT Status, COUNT(*) n FROM store.StoreOrders GROUP BY Status;
+GO

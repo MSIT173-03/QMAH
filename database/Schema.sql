@@ -189,12 +189,35 @@ BEGIN TRANSACTION;
         [Id] tinyint NOT NULL,
         [SimHashWindowDays] int NOT NULL CONSTRAINT [DF_ContentModerationSettings_WindowDays] DEFAULT ((7)),
         [SimHashHammingThreshold] int NOT NULL CONSTRAINT [DF_ContentModerationSettings_HammingThreshold] DEFAULT ((8)),
+        [AiReviewEnabled] bit NOT NULL CONSTRAINT [DF_ContentModerationSettings_AiReviewEnabled] DEFAULT ((1)),
         [UpdatedByUserId] uniqueidentifier NULL,
         [UpdatedAt] datetime2(3) NOT NULL CONSTRAINT [DF_ContentModerationSettings_Updated] DEFAULT ((sysutcdatetime())),
         [RowVersion] rowversion NOT NULL,
         CONSTRAINT [PK_ContentModerationSettings] PRIMARY KEY ([Id]),
         CONSTRAINT [CK_ContentModerationSettings_Values] CHECK (([SimHashWindowDays] BETWEEN 1 AND 90 AND [SimHashHammingThreshold] BETWEEN 0 AND 64))
     );
+
+    CREATE TABLE [social].[AiReviewRuntimeStatus] (
+        [Id] tinyint NOT NULL,
+        [Provider] nvarchar(40) NULL,
+        [HeartbeatAt] datetime2(3) NOT NULL CONSTRAINT [DF_AiReviewRuntimeStatus_Heartbeat] DEFAULT ((sysutcdatetime())),
+        CONSTRAINT [PK_AiReviewRuntimeStatus] PRIMARY KEY ([Id])
+    );
+
+    CREATE TABLE [social].[AiReviewLogs] (
+        [Id] bigint IDENTITY(1,1) NOT NULL,
+        [ReviewedAt] datetime2(3) NOT NULL CONSTRAINT [DF_AiReviewLogs_ReviewedAt] DEFAULT ((sysutcdatetime())),
+        [TargetType] nvarchar(10) NOT NULL,
+        [TargetId] uniqueidentifier NOT NULL,
+        [Provider] nvarchar(40) NOT NULL,
+        [Flagged] bit NOT NULL,
+        [AutoHidden] bit NOT NULL,
+        [Category] nvarchar(60) NULL,
+        [Score] float NULL,
+        [Summary] nvarchar(400) NULL,
+        CONSTRAINT [PK_AiReviewLogs] PRIMARY KEY ([Id])
+    );
+    CREATE INDEX [IX_AiReviewLogs_ReviewedAt] ON [social].[AiReviewLogs] ([ReviewedAt] DESC);
 
     CREATE TABLE [store].[CouponDefinitions] (
         [Id] uniqueidentifier NOT NULL,
