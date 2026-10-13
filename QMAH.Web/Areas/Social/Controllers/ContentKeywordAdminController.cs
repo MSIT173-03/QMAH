@@ -41,7 +41,6 @@ public sealed class ContentKeywordAdminController : Controller
     public async Task<IActionResult> Index(
         bool? isActive,
         string? keyword,
-        bool showPassed = false,
         CancellationToken cancellationToken = default)
     {
         var model = await BuildPageAsync(isActive, keyword, cancellationToken);
@@ -60,10 +59,9 @@ public sealed class ContentKeywordAdminController : Controller
         var since = DateTime.UtcNow.AddHours(-24);
         ViewData["AiReviewed24h"] = await _context.AiReviewLogs.CountAsync(item => item.ReviewedAt >= since, cancellationToken);
         ViewData["AiFlagged24h"] = await _context.AiReviewLogs.CountAsync(item => item.ReviewedAt >= since && item.Flagged, cancellationToken);
-        // 預設只列判定違規的紀錄；通過的每次都會寫入，全部列出會淹沒真正需要看的內容。
-        var reviewLogQuery = _context.AiReviewLogs.AsNoTracking().Where(item => showPassed || item.Flagged);
-        ViewData["AiShowPassed"] = showPassed;
-        ViewData["AiReviewLog"] = await reviewLogQuery
+        // 只列判定違規的紀錄；通過的每次都會寫入，全部列出會淹沒真正需要看的內容。
+        ViewData["AiReviewLog"] = await _context.AiReviewLogs.AsNoTracking()
+            .Where(item => item.Flagged)
             .OrderByDescending(item => item.ReviewedAt)
             .ThenByDescending(item => item.Id)
             .Take(20)
