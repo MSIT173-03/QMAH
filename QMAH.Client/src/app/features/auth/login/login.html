@@ -30,6 +30,9 @@
 
   <section class="museum-side" aria-label="清明上河圖鑑賞">
     <div class="museum-showcase">
+      @if (phoneViewport()) {
+        <h2 class="mobile-museum-heading">清明上河圖鑑賞</h2>
+      }
       <div class="museum-media" [style.--magnifier-pan-duration]="carouselDurationCss()">
         <app-image-magnifier
           #museumMagnifier
@@ -218,12 +221,7 @@
           </button>
         </form>
 
-<div class="login-divider" aria-hidden="true">
-  <span></span>
-  <p>或使用其他方式登入</p>
-  <span></span>
-</div>
-
+        <ng-template #externalLoginOptions>
 @if (googleLoginEnabled) {
   <button
     type="button"
@@ -252,6 +250,11 @@
   <app-qmah-icon name="log-in" aria-hidden="true" />
   <span>使用 Microsoft 登入</span>
 </button>
+        </ng-template>
+        <div class="login-divider" aria-hidden="true">
+          <span></span><p>或使用其他方式登入</p><span></span>
+        </div>
+        <ng-container *ngTemplateOutlet="externalLoginOptions" />
 
         <div class="register-area">
           <span>還沒有帳號？</span>

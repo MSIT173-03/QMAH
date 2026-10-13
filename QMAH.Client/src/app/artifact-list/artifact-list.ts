@@ -324,7 +324,6 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   /** 書本左側頁籤（鑰匙背包模式）：交給 KeyList 篩選 */
   keyFilter = signal<KeyFilter>('ALL');
   /** 手機版把次級索引收進頁面內的選單，避免書口出現第二排頁籤。 */
-  mobileIndexOpen = signal(false);
 
   readonly catalogTabs: { id: CatalogTab; label: string }[] = [
     { id: 'ALL', label: '全部' },
@@ -339,12 +338,6 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     { id: 'UNIVERSAL', label: '萬能' },
     { id: 'NORMAL', label: '一般' },
   ];
-  mobileIndexLabel = computed(() => {
-    const tab = this.bookSection() === 'catalog'
-      ? this.catalogTabs.find((item) => item.id === this.catalogTab())
-      : this.keyTabs.find((item) => item.id === this.keyFilter());
-    return tab?.label ?? '全部';
-  });
 
   /** 目前翻到第幾個跨頁（全部頁籤＝左右兩頁一組；分類／年代頁籤＝右頁一頁一組） */
   spread = signal(0);
@@ -354,7 +347,6 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   pageBox = signal<{ w: number; h: number }>({ w: 0, h: 0 });
 
   @ViewChild('pageMeasure', { static: true }) private pageMeasure?: ElementRef<HTMLElement>;
-  @ViewChild('mobileIndexTrigger') private mobileIndexTrigger?: ElementRef<HTMLButtonElement>;
   private resizeObserver?: ResizeObserver;
   private timers: ReturnType<typeof setTimeout>[] = [];
 
@@ -728,7 +720,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
       const pageIndex = this.currentSpread() * this.pagesPerSpread();
       this.mobileBook.set(mobile);
       this.spread.set(this.spreadOfPage(pageIndex));
-      this.mobileIndexOpen.set(false);
+
     }
     this.measurePage();
   }
@@ -832,7 +824,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   setSection(section: BookSection): void {
     if (this.bookSection() === section) return;
-    this.mobileIndexOpen.set(false);
+
     this.playReveal('section');
     this.bookSection.set(section);
     this.expandedGroupKey.set(null);
@@ -879,31 +871,6 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   setKeyFilter(filter: KeyFilter): void {
     if (filter !== this.keyFilter()) this.playReveal('content');
     this.keyFilter.set(filter);
-  }
-
-  toggleMobileIndex(): void {
-    this.mobileIndexOpen.update((open) => !open);
-  }
-
-  closeMobileIndexIfOutside(event: MouseEvent): void {
-    if (!this.mobileIndexOpen()) return;
-    const target = event.target;
-    if (target instanceof Element && !target.closest('.mobile-index')) this.mobileIndexOpen.set(false);
-  }
-
-  selectMobileCatalogTab(tab: CatalogTab): void {
-    this.setCatalogTab(tab);
-    this.closeMobileIndex(true);
-  }
-
-  selectMobileKeyFilter(filter: KeyFilter): void {
-    this.setKeyFilter(filter);
-    this.closeMobileIndex(true);
-  }
-
-  private closeMobileIndex(returnFocus = false): void {
-    this.mobileIndexOpen.set(false);
-    if (returnFocus) this.mobileIndexTrigger?.nativeElement.focus();
   }
 
   /** 左側鑰匙頁籤上的數量：該類型持有中鑰匙的把數總和 */
@@ -972,11 +939,6 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   /** 書本攤開、停在圖鑑時，可用鍵盤左右鍵翻頁（輸入框內與彈出視窗開著時不處理） */
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && this.mobileIndexOpen()) {
-      event.preventDefault();
-      this.closeMobileIndex(true);
-      return;
-    }
     if (this.bookState() !== 'open' || this.bookSection() !== 'catalog') return;
     if (this.isOverlayOpen() || this.confirmTargetId() || this.bulkUnlockConfirmOpen() || this.discussionDialogOpen()) return;
     if (event.key === 'Escape' && this.filterPanelOpen()) {

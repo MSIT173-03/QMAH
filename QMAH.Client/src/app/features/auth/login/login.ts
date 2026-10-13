@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { SiteTheme, ThemeService } from '../../../core/services/theme';
 import { environment } from '../../../../environments/environment';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { isPhoneViewport } from '../../../shared/styles/responsive-breakpoints';
 import { ImageMagnifier } from '../../../store/component';
 
 interface QingmingSegment {
@@ -102,6 +103,7 @@ export class Login implements OnInit, OnDestroy {
   readonly carouselSpeed = signal<number>(1);
   readonly magnifierEnabled = signal(true);
   readonly panKey = signal(0);
+  readonly phoneViewport = signal(isPhoneViewport(this.document.defaultView));
   readonly loginPanelOpen = signal(true);
   readonly loginPanelTransitioning = signal(false);
   readonly themeTransitioning = signal(false);
@@ -280,6 +282,11 @@ export class Login implements OnInit, OnDestroy {
     }
     if (priority === 'high') entry.image.fetchPriority = 'high';
     return entry.ready;
+  }
+
+  @HostListener('window:resize')
+  syncPhoneViewport(): void {
+    this.phoneViewport.set(isPhoneViewport(this.document.defaultView));
   }
 
   toggleMagnifier(): void {

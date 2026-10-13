@@ -37,6 +37,7 @@ declare global {
           theme?: 'light' | 'dark' | 'auto';
           execution?: 'render' | 'execute';
           appearance?: 'always' | 'execute' | 'interaction-only';
+          size?: 'normal' | 'compact';
           callback?: (token: string) => void;
           'expired-callback'?: () => void;
           'error-callback'?: () => void;
@@ -271,6 +272,7 @@ export class Register implements OnInit, OnDestroy {
               theme: 'dark',
               execution: 'execute',
               appearance: 'execute',
+              size: container.clientWidth < 300 ? 'compact' : 'normal',
               // =========================
               // 驗證成功
               // =========================

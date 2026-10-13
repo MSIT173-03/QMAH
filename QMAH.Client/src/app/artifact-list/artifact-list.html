@@ -8,7 +8,6 @@
   [attr.data-section]="bookSection()"
   [attr.data-tab]="catalogTab()"
   [attr.data-filter-open]="filterMode() ? '' : null"
-  (click)="closeMobileIndexIfOutside($event)"
 >
   <!-- 書桌背景：燭光與漂浮的魔法微塵，純裝飾 -->
   <div class="desk" aria-hidden="true">
@@ -157,6 +156,14 @@
                     </div>
                     @if (fullscreenError()) { <p class="mobile-book-toolbar__error" role="status">{{ fullscreenError() }}</p> }
                   </div>
+                  <div class="mobile-catalog-tabs" role="group" aria-label="圖鑑篩選方式">
+                    @for (tab of catalogTabs; track tab.id) {
+                      <button type="button" class="mobile-catalog-tab" [class.is-active]="catalogTab() === tab.id" [attr.aria-pressed]="catalogTab() === tab.id" (click)="setCatalogTab(tab.id)">
+                        {{ tab.label }}
+                        @if (tab.id !== 'ALL' && selectedFilterCount(tab.id); as count) { <span>{{ count }}</span> }
+                      </button>
+                    }
+                  </div>
                 }
                 <label class="quill-search">
                   <svg class="quill-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -178,40 +185,7 @@
                   <div class="mobile-page-controls">
                     <div class="mobile-page-controls__summary">
                       <span class="page-meta__count">符合 <strong>{{ filteredItems().length }}</strong> 件・已解鎖 <strong>{{ filteredUnlockedCount() }}</strong></span>
-                      <div class="mobile-index">
-                        <button
-                          #mobileIndexTrigger
-                          type="button"
-                          class="mobile-index__trigger"
-                          [attr.aria-label]="'圖鑑篩選：' + mobileIndexLabel()"
-                          [attr.aria-expanded]="mobileIndexOpen()"
-                          aria-controls="mobile-index-panel"
-                          [class.is-open]="mobileIndexOpen()"
-                          (click)="toggleMobileIndex()"
-                        >
-                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M7 12h10m-7 6h4" /><circle cx="8" cy="6" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="12" cy="18" r="1.5" /></svg>
-                          <span>{{ mobileIndexLabel() }}</span>
-                          <app-qmah-icon name="chevron-right" [size]="14" aria-hidden="true" />
-                        </button>
-                        @if (mobileIndexOpen()) {
-                          <div class="mobile-index__panel" id="mobile-index-panel" role="group" aria-label="圖鑑篩選方式">
-                            @for (tab of catalogTabs; track tab.id) {
-                              <button
-                                type="button"
-                                class="mobile-index__option"
-                                [class.is-active]="catalogTab() === tab.id"
-                                [attr.aria-pressed]="catalogTab() === tab.id"
-                                (click)="selectMobileCatalogTab(tab.id)"
-                              >
-                                <span>{{ tab.label }}</span>
-                                @if (tab.id !== 'ALL' && selectedFilterCount(tab.id); as count) {
-                                  <span class="mobile-index__count">{{ count }}</span>
-                                }
-                              </button>
-                            }
-                          </div>
-                        }
-                      </div>
+
                     </div>
                     <div class="page-meta__actions">
                       <button type="button" class="seal-btn" [class.is-active]="unlockedOnly()" [attr.aria-pressed]="unlockedOnly()" (click)="toggleUnlockedFilter()">
@@ -334,36 +308,9 @@
               </div>
               <div class="mobile-key-tools">
                 <span class="mobile-key-tools__count">持有 <strong>{{ keyFilterCount('ALL') }}</strong> 把</span>
-                <div class="mobile-index">
-                  <button
-                    #mobileIndexTrigger
-                    type="button"
-                    class="mobile-index__trigger"
-                    [attr.aria-label]="'鑰匙篩選：' + mobileIndexLabel()"
-                    [attr.aria-expanded]="mobileIndexOpen()"
-                    aria-controls="mobile-index-panel"
-                    [class.is-open]="mobileIndexOpen()"
-                    (click)="toggleMobileIndex()"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M7 12h10m-7 6h4" /><circle cx="8" cy="6" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="12" cy="18" r="1.5" /></svg>
-                    <span>{{ mobileIndexLabel() }}</span>
-                    <app-qmah-icon name="chevron-right" [size]="14" aria-hidden="true" />
-                  </button>
-                  @if (mobileIndexOpen()) {
-                    <div class="mobile-index__panel" id="mobile-index-panel" role="group" aria-label="鑰匙種類篩選">
-                      @for (tab of keyTabs; track tab.id) {
-                        <button
-                          type="button"
-                          class="mobile-index__option"
-                          [class.is-active]="keyFilter() === tab.id"
-                          [attr.aria-pressed]="keyFilter() === tab.id"
-                          (click)="selectMobileKeyFilter(tab.id)"
-                        >
-                          <span>{{ tab.label }}</span>
-                          <span class="mobile-index__count">{{ keyFilterCount(tab.id) }}</span>
-                        </button>
-                      }
-                    </div>
+                <div class="mobile-catalog-tabs" role="group" aria-label="鑰匙種類篩選">
+                  @for (tab of keyTabs; track tab.id) {
+                    <button type="button" class="mobile-catalog-tab" [class.is-active]="keyFilter() === tab.id" [attr.aria-pressed]="keyFilter() === tab.id" (click)="setKeyFilter(tab.id)">{{ tab.label }}</button>
                   }
                 </div>
               </div>

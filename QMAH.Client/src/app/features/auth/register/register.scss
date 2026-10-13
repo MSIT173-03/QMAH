@@ -1,3 +1,5 @@
+@use '../../../shared/styles/responsive-breakpoints' as responsive;
+
 :host {
   display: block;
   min-height: 100dvh;
@@ -345,4 +347,33 @@
   font-weight: 600;
 
   color: #3fa879;
+}
+
+@include responsive.phone {
+  .register-page {
+    align-items:flex-start;
+    padding:max(24px, env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+  }
+  .register-card {
+    box-sizing:border-box;
+    min-width:0;
+    padding:24px 20px;
+    border-radius:12px;
+  }
+  .register-header {
+    display:grid;
+    grid-template-columns:44px minmax(0,1fr);
+    align-items:center;
+    gap:12px;
+    margin-bottom:28px;
+    text-align:left;
+    h1 { margin:0;font-size:clamp(23px,6vw,28px);line-height:1.35; }
+    p { grid-column:1 / -1;font-size:14px;line-height:1.7; }
+  }
+  .register-icon { width:44px;height:44px;margin:0;border-radius:10px; }
+  .form-group { min-width:0;margin-bottom:18px; }
+  .form-group input { min-width:0;min-height:50px;font-size:16px; }
+  .field-error, .error-box, .success-box { overflow-wrap:anywhere; }
+  .register-button { min-height:50px;font-size:15px; }
+  .login-link a { display:inline-flex;align-items:center;min-height:44px; }
 }

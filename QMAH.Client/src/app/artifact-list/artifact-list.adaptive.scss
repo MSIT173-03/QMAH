@@ -40,7 +40,7 @@
   .cover__frame { inset: 20px 20px 20px 36px; }
   .cover__spine { width: 26px; }
   .cover__corner { width: 42px; height: 42px; }
-  .cover__hint { bottom: 28px; padding-left: 10px; font-size: 12px; }
+  .cover__hint { bottom: 48px; padding-left: 10px; font-size: 12px; }
   .book__content { padding: 16px var(--pad-x) 16px calc(var(--pad-x) + var(--book-fold-w)); row-gap: 12px; }
   .page__head { align-items: center; }
   .page-meta { width: 100%; gap: 8px; }
@@ -50,7 +50,7 @@
   /* 兩個章節只在書的外側露出短書籤，頁面上不再掛第二排索引列。 */
   .book__top-tabs {
     z-index: 6;
-    top: 22%;
+    top: 96px;
     right: -7px;
     bottom: auto;
     left: auto;
@@ -143,73 +143,46 @@
   .book-stage--mobile-single .mobile-page-controls .seal-btn { min-width:0;width:100%;padding-inline:6px;gap:4px;font-size:clamp(10px,3.2vw,12px);letter-spacing:0; }
   .book-stage--mobile-single .mobile-page-controls .seal-btn strong { font-size:inherit; }
   .book-stage--mobile-single .mobile-page-controls .seal-btn app-qmah-icon { flex:none;width:14px;height:14px; }
-  .book-stage--mobile-single .mobile-index { position:relative;z-index:8;flex:0 0 auto; }
-  .book-stage--mobile-single .mobile-index__trigger {
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:5px;
-    min-width:82px;
+  .book-stage--mobile-single .mobile-catalog-tabs {
+    display:flex;
+    gap:4px;
+    min-width:0;
+    width:100%;
+    overflow-x:auto;
+    scrollbar-width:thin;
+  }
+  .book-stage--mobile-single .mobile-catalog-tab {
+    flex:1 0 auto;
+    min-width:44px;
     min-height:44px;
-    padding:0 9px;
+    padding:6px 8px;
     border:1px solid var(--ink-line);
-    border-radius:5px;
-    color:var(--ink);
-    background:linear-gradient(#fbf5e6,#eee2c3);
-    box-shadow:0 2px 0 rgb(var(--paper-shade) / 22%),inset 0 1px 0 rgb(255 255 255 / 72%);
-    font:700 12px/1 var(--qmah-font-serif);
+    border-bottom:3px solid transparent;
+    border-radius:4px 4px 0 0;
+    background:rgb(var(--paper-shade) / 5%);
+    color:var(--ink-soft);
+    font:600 13px/1.2 var(--qmah-font-serif);
     white-space:nowrap;
     cursor:pointer;
   }
-  .book-stage--mobile-single .mobile-index__trigger > svg { width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none; }
-  .book-stage--mobile-single .mobile-index__trigger app-qmah-icon { display:grid;place-items:center;flex:none; }
-  .book-stage--mobile-single .mobile-index__trigger:focus-visible,
-  .book-stage--mobile-single .mobile-index__option:focus-visible { outline:3px solid var(--gold-deep);outline-offset:2px; }
-  .book-stage--mobile-single .mobile-index__panel {
-    position:absolute;
-    top:calc(100% + 6px);
-    right:0;
-    z-index:15;
-    display:grid;
-    gap:3px;
-    width:max-content;
-    min-width:164px;
-    max-width:calc(100vw - 48px);
-    padding:6px;
-    border:1px solid var(--ink-line);
-    border-radius:7px;
-    background:linear-gradient(145deg,#fbf5e7,var(--paper-tint));
-    box-shadow:0 12px 28px rgb(40 22 8 / 30%),inset 0 0 0 1px rgb(255 255 255 / 48%);
-  }
-  .book-stage--mobile-single .mobile-index__option {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    min-width:0;
-    min-height:44px;
-    padding:0 10px;
-    border:0;
-    border-radius:4px;
+  .book-stage--mobile-single .mobile-catalog-tab.is-active {
+    border-bottom-color:var(--gold-deep);
+    background:rgb(var(--paper-shade) / 12%);
     color:var(--ink);
-    background:transparent;
-    font:600 13px/1.2 var(--qmah-font-serif);
-    text-align:left;
-    cursor:pointer;
   }
-  .book-stage--mobile-single .mobile-index__option.is-active { background:rgb(var(--paper-shade) / 13%);box-shadow:inset 0 0 0 1px rgb(var(--paper-shade) / 22%); }
-  .book-stage--mobile-single .mobile-index__count { min-width:1.5em;color:var(--ink-soft);font:600 11px/1 var(--qmah-font-sans);text-align:right;font-variant-numeric:tabular-nums; }
+  .book-stage--mobile-single .mobile-catalog-tab span { margin-left:4px;font-size:11px; }
+  .book-stage--mobile-single .mobile-catalog-tab:focus-visible { outline:3px solid var(--gold-deep);outline-offset:-3px; }
   .book-stage--mobile-single .mobile-key-tools {
     position:relative;
     z-index:6;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin:0 22px 10px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+    margin:10px 0;
     padding-bottom:8px;
     border-bottom:1px solid var(--ink-line);
   }
+  .book-stage--mobile-single .mobile-key-tools .mobile-catalog-tabs { grid-row:1; }
   .book-stage--mobile-single .mobile-key-tools__count { color:var(--ink-soft);font-size:12px;white-space:nowrap; }
   .book-stage--mobile-single .mobile-key-tools__count strong { color:var(--ink);font-variant-numeric:tabular-nums; }
   .book-stage--mobile-single .page__body { min-height:300px;padding-inline:22px; }
@@ -267,8 +240,6 @@
   .book-stage--mobile-single .ledger__summary { font-size:12px;line-height:1.5;overflow-wrap:anywhere; }
   .book-stage--mobile-single .mobile-filter-done { width:100%;min-height:44px;justify-content:center; }
 
-  .book-stage--mobile-single .mobile-index__trigger app-qmah-icon { transform:rotate(90deg);transition:transform 160ms ease; }
-  .book-stage--mobile-single .mobile-index__trigger.is-open app-qmah-icon { transform:rotate(-90deg); }
 
   /* 文物詳情在手機改成可返回的展品閱讀頁，圖片、操作與紙面資料同欄連續閱讀。 */
   .overlay:has(.stage.mobile-detail) {

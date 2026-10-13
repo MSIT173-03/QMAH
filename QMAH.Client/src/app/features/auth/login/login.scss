@@ -1211,4 +1211,15 @@ input:focus-visible {
   .register-area { flex-wrap: wrap; align-items: center; }
   .register-area a { display: inline-flex; align-items: center; min-height: 44px; }
   .demo-accounts select { min-width: 0; max-width: 100%; }
+  .museum-media__logo-shell { display: none; }
+  .mobile-museum-heading {
+    margin: 0;
+    padding: 22px;
+    border-top: 1px solid var(--login-border);
+    color: var(--login-ink);
+    font-family: var(--qmah-font-serif);
+    font-size: 20px;
+    font-weight: 600;
+  }
+
 }
