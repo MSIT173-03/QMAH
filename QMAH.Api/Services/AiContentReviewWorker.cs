@@ -20,6 +20,10 @@ public sealed class AiContentReviewWorker(
 {
     private const int BatchSize = 20;
 
+    // Azure AI Content Safety 免費層（F0）約每秒 1 次呼叫，連續呼叫會回 429；每次呼叫後等待一小段時間。
+    // 改用付費層後可把這個間隔調低或移除。
+    private static readonly TimeSpan CallInterval = TimeSpan.FromMilliseconds(1100);
+
     // 結果標示 AutoHide（Azure 仇恨類中度以上、其他類別最高級）或 OpenAI 分數 0.95 以上才自動隱藏並送檢舉，
     // 其餘只送檢舉待審，避免誤判太多造成管理壓力，也避免正常內容被擋掉。管理員可在後台還原。
     private const double AutoHideScore = 0.95;
@@ -153,6 +157,8 @@ public sealed class AiContentReviewWorker(
             {
                 // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
                 logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                // 先存下本批已完成的判斷（含審查紀錄），否則被 429 中斷時這些結果會全部遺失。
+                await db.SaveChangesAsync(cancellationToken);
                 return;
             }
             catch (Exception exception)
@@ -162,6 +168,7 @@ public sealed class AiContentReviewWorker(
                 continue;
             }
 
+            await Task.Delay(CallInterval, cancellationToken);
             if (result.Flagged)
             {
                 var hide = result.AutoHide || result.Score >= AutoHideScore;
@@ -204,6 +211,8 @@ public sealed class AiContentReviewWorker(
             {
                 // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
                 logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                // 先存下本批已完成的判斷（含審查紀錄），否則被 429 中斷時這些結果會全部遺失。
+                await db.SaveChangesAsync(cancellationToken);
                 return;
             }
             catch (Exception exception)
@@ -212,6 +221,7 @@ public sealed class AiContentReviewWorker(
                 continue;
             }
 
+            await Task.Delay(CallInterval, cancellationToken);
             if (result.Flagged)
             {
                 var hide = result.AutoHide || result.Score >= AutoHideScore;
@@ -251,6 +261,7 @@ public sealed class AiContentReviewWorker(
                     var bytes = await File.ReadAllBytesAsync(physicalPath, cancellationToken);
                     var result = await aiReview.ReviewImageAsync(bytes, media.ContentType, cancellationToken);
                     db.AiReviewLogs.Add(CreateAiLog("MEDIA", media.Id, now, result, aiReview.ProviderName));
+                    await Task.Delay(CallInterval, cancellationToken);
                     if (result.Flagged && media.PostId.HasValue)
                     {
                         var hide = result.AutoHide || result.Score >= AutoHideScore;
@@ -275,6 +286,8 @@ public sealed class AiContentReviewWorker(
             {
                 // 金鑰失效或額度／頻率用完：整批停下等下一輪，內容保持待審，不逐筆重打。
                 logger.LogWarning("AI 內容審查被拒絕（{StatusCode}），本輪停止，內容保持待審。", (int)exception.StatusCode!.Value);
+                // 先存下本批已完成的判斷（含審查紀錄），否則被 429 中斷時這些結果會全部遺失。
+                await db.SaveChangesAsync(cancellationToken);
                 return;
             }
             catch (Exception exception)

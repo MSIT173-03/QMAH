@@ -25,23 +25,59 @@
             <div class="col-12 col-md-4">
                 <div class="fw-semibold mb-1">③ AI 複審</div>
                 <div class="text-secondary small">只複審疑似內容（例如大量驚嘆號、含網址）。命中送「系統偵測：AI 複審」檢舉；信心很高時會先隱藏，到檢舉管理核准＝維持隱藏、駁回＝還原。</div>
-                @{ var aiEnabled = (bool)ViewData["AiReviewEnabled"]!; }
-                <div class="alert alert-@ViewData["AiStatusLevel"] py-2 px-3 my-2 small" role="status">@ViewData["AiStatusText"]</div>
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                    <form method="post" asp-action="@(aiEnabled ? "DisableAiReview" : "EnableAiReview")" class="m-0">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm @(aiEnabled ? "btn-outline-danger" : "btn-primary")">@(aiEnabled ? "暫停 AI 審查" : "啟用 AI 審查")</button>
-                    </form>
-                    <span class="small text-secondary">目前：@(aiEnabled ? "開啟" : "暫停")</span>
-                    <span class="badge bg-blue-lt">待複審 @ViewData["AiPending"]</span>
-                    <span class="badge bg-purple-lt">AI 檢舉共 @ViewData["AiReports"]</span>
-                    <span class="badge bg-yellow-lt">其中待處理 @ViewData["AiReportsPending"]</span>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="#ai-review-log" class="btn btn-sm btn-outline-primary">查看 AI 審查紀錄</a>
-                    <a asp-controller="SocialReportAdmin" asp-action="Index" asp-route-keyword="AUTO_AI" class="btn btn-sm btn-outline-secondary">查看 AI 檢舉</a>
+                <div class="text-secondary small mt-2">目前狀態與操作請見下方「AI 審查狀態」。</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="card-title mb-0">AI 審查狀態</h2>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-controller="SocialReportAdmin" asp-action="Index" asp-route-source="AI" class="btn btn-sm btn-outline-secondary">查看 AI 判定違規的檢舉</a>
+            <a href="#ai-review-log" class="btn btn-sm btn-outline-primary">查看審查紀錄</a>
+        </div>
+    </div>
+    <div class="card-body">
+        @{ var aiEnabled = (bool)ViewData["AiReviewEnabled"]!; }
+        <div class="alert alert-@ViewData["AiStatusLevel"] py-2 px-3 mb-3" role="status">@ViewData["AiStatusText"]</div>
+        <div class="row g-3 align-items-stretch">
+            <div class="col-6 col-lg-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-secondary small">待複審</div>
+                    <div class="fs-2 fw-bold">@ViewData["AiPending"]</div>
+                    <div class="text-secondary small">尚未經過 AI 判斷的內容</div>
                 </div>
             </div>
+            <div class="col-6 col-lg-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-secondary small">近 24 小時審查</div>
+                    <div class="fs-2 fw-bold">@ViewData["AiReviewed24h"]</div>
+                    <div class="text-secondary small">含通過與違規</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-secondary small">近 24 小時判定違規</div>
+                    <div class="fs-2 fw-bold">@ViewData["AiFlagged24h"]</div>
+                    <div class="text-secondary small">已送出檢舉</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-secondary small">AI 檢舉待處理</div>
+                    <div class="fs-2 fw-bold">@ViewData["AiReportsPending"]</div>
+                    <div class="text-secondary small">共 @ViewData["AiReports"] 筆 AI 檢舉</div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-3 mt-3 pt-3 border-top">
+            <form method="post" asp-action="@(aiEnabled ? "DisableAiReview" : "EnableAiReview")" class="m-0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn @(aiEnabled ? "btn-outline-danger" : "btn-primary")">@(aiEnabled ? "暫停 AI 審查" : "啟用 AI 審查")</button>
+            </form>
+            <span class="text-secondary small">目前：<strong>@(aiEnabled ? "開啟" : "暫停")</strong>。暫停時不會送出新內容審查，關鍵字與洗版規則照常運作；每次開關都會記錄在下方「AI 審核開關紀錄」。</span>
         </div>
     </div>
 </div>
