@@ -249,6 +249,7 @@
   min-height: 0;
   padding: 0;
   container-type: size;
+  container-name: book-craft;
 }
 
 .key-page--book .craft-subtitle {
@@ -305,6 +306,28 @@
   background: radial-gradient(circle, rgb(157 132 238 / 25%), transparent 70%);
 }
 
+/* 書頁受視窗高度限制而變窄時，不能讓固定產出欄把魔法陣壓縮到幾十像素。
+   正常寬度的桌面版維持原排列；只收窄不足 406px 的合成區內部欄位。 */
+@container book-craft (max-width: 405px) {
+  .key-page--book .craft-bench {
+    --output-width: 64px;
+    grid-template-columns: minmax(150px, 1fr) 32px var(--output-width);
+    column-gap: 10px;
+  }
+}
+
+@container book-craft (max-width: 291px) {
+  .key-page--book .craft-bench {
+    grid-template-columns: minmax(0, min(180px, 100%));
+    grid-template-areas: "ring" "input-caption" "arrow" "output" "output-caption";
+    align-content: start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .key-page--book .craft-arrow { transform: rotate(90deg); }
+}
+
 .key-page--book .craft-ring__outline polygon,
 .key-page--book .craft-ring__outline polyline {
   stroke: #9c7630;
@@ -327,13 +350,13 @@
 .craft-magic polygon,
 .craft-magic line {
   fill: none;
-  stroke: url(#craft-magic-gold);
+  stroke: url(#craft-magic-gold) #9c7630;
   stroke-width: 1.2;
 }
 
-.craft-magic .craft-magic__glow { fill: url(#craft-magic-glow); stroke: none; animation: magic-breathe 5s ease-in-out infinite; }
+.craft-magic .craft-magic__glow { fill: url(#craft-magic-glow) rgb(226 178 80 / 16%); stroke: none; animation: magic-breathe 5s ease-in-out infinite; }
 .craft-magic .craft-magic__ticks { stroke-width: 3.2; stroke-dasharray: 0.8 3.15; }
-.craft-magic__nodes path { fill: url(#craft-magic-gold); stroke: none; }
+.craft-magic__nodes path { fill: url(#craft-magic-gold) #9c7630; stroke: none; }
 .craft-magic__spokes line { stroke-width: 0.9; }
 
 @keyframes magic-breathe {
@@ -341,7 +364,7 @@
 }
 
 .craft-magic__runes {
-  fill: url(#craft-magic-gold);
+  fill: url(#craft-magic-gold) #9c7630;
   font-size: 10px;
   letter-spacing: 2px;
 }

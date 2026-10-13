@@ -1553,10 +1553,8 @@
 .key-slot__count { border-radius: 6px; background: var(--panel-dark); color: var(--card); font-variant-numeric: tabular-nums; }
 .key-era-mark { color: var(--yellow); text-shadow: none; }
 
-// 會員背包使用簡潔卡片，圖鑑書本仍保留魔法陣與合成動畫。
-.key-page:not(.key-page--book) {
-  .craft-magic, .craft-magic__glow, .craft-ring__outline { display: none !important; }
-}
+// 魔法陣只在圖鑑模板中建立，不使用共用樣式隱藏它。
+.key-page:not(.key-page--book) .craft-ring__outline { display: none; }
 .craft-bench, .craft-tray { border-radius: 8px; border: 1px solid var(--line); background: var(--qmah-surface-soft, var(--card)); box-shadow: none; }
 .craft-tray__slot, .craft-slot { border-radius: 8px; }
 .craft-ring { border-radius: 8px; border: 1px dashed var(--line); background: transparent; box-shadow: none; }

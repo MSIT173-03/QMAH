@@ -22,13 +22,13 @@
   </div>
   }
 
-  <div *ngIf="loading()" class="state state--loading">
+  <div *ngIf="!bookMode && loading()" class="state state--loading">
     <span class="spinner"></span>載入中...
   </div>
 
-  <div *ngIf="errorMsg()" class="state state--error">{{ errorMsg() }}</div>
+  <div *ngIf="!bookMode && errorMsg()" class="state state--error">{{ errorMsg() }}</div>
 
-  <ng-container *ngIf="!loading() && !errorMsg()">
+  <ng-container *ngIf="bookMode || (!loading() && !errorMsg())">
   <!-- 背包（左）與合成台（右）並排；內嵌彈出框中只有背包的鑰匙格會捲動 -->
   <div class="key-layout">
 
@@ -36,7 +36,13 @@
     <div class="section-title">
       <h2>我的鑰匙</h2>
       <div class="section-title__tools">
-        <span class="key-count"><strong>{{ totalKeyCount() }} 把</strong><span>共 {{ ownedKeyTypeCount() }} 種</span></span>
+        @if (bookMode && loading()) {
+          <span class="key-count" role="status">載入中…</span>
+        } @else if (bookMode && errorMsg()) {
+          <span class="key-count" role="alert" [attr.title]="errorMsg()">鑰匙暫時無法讀取</span>
+        } @else {
+          <span class="key-count"><strong>{{ totalKeyCount() }} 把</strong><span>共 {{ ownedKeyTypeCount() }} 種</span></span>
+        }
       </div>
     </div>
 
@@ -190,7 +196,8 @@
       </div>
 
       <div class="craft-panel__body">
-        @if (craftableRules().length) {
+        <!-- 圖鑑的魔法陣不依賴 API 載入成功；規則未就緒時仍顯示合成台，兌換保持停用。 -->
+        @if (bookMode || craftableRules().length) {
           <h3 class="craft-subtitle">可放入的鑰匙</h3>
           @if (craftSourceKeys().length) {
             <div class="craft-tray">
@@ -222,7 +229,7 @@
               }
             </div>
           } @else {
-            <p class="exchange-message">目前沒有可用來兌換的鑰匙。</p>
+            <p class="exchange-message">{{ craftableRules().length ? '目前沒有可用來兌換的鑰匙。' : '兌換規則尚未就緒，暫時無法合成。' }}</p>
           }
 
           <!-- 第一列：放入區｜箭頭｜產出區，兩側等高、箭頭在正中間；第二列：兩側各自的說明文字 -->
@@ -374,7 +381,7 @@
                       <span class="craft-center__badge" aria-hidden="true">{{ craftOptions().length }}</span>
                     }
                   } @else {
-                    <span class="craft-center__empty">{{ craftSlots().length ? '沒有可兌換的鑰匙' : '放入鑰匙' }}</span>
+                    <span class="craft-center__empty">@if (craftSlots().length) {沒有可兌換的鑰匙} @else {放入<br />鑰匙}</span>
                   }
                 </button>
 
